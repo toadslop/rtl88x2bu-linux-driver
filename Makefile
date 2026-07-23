@@ -17,7 +17,8 @@ ccflags-y += -Wno-unused-variable
 #ccflags-y += -Wno-uninitialized
 
 # Clang (LLVM=1 / RfL out-of-tree) turns several noisy diagnostics into errors.
-# Keep GCC and Clang green for migration builds without mass C churn in Wave 0.
+# Keep these gated so default GCC / distro-header builds stay unchanged.
+ifeq ($(LLVM),1)
 ccflags-y += -Wno-missing-prototypes
 ccflags-y += -Wno-missing-declarations
 ccflags-y += -Wno-implicit-fallthrough
@@ -30,7 +31,6 @@ ccflags-y += -Wno-format
 ccflags-y += -Wno-frame-larger-than=
 ccflags-y += -Wno-vla
 # Drop platform soft/hard-float flags under Clang; they fight kernel code model.
-ifeq ($(LLVM),1)
 ccflags-remove-y += -mhard-float
 ccflags-remove-y += -mfloat-abi=hard
 endif

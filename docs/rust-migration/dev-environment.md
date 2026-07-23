@@ -97,7 +97,7 @@ nm 88x2bu.ko | grep rtw_rust_kbuild_probe   # W0-02 probe symbol
 
 ### Clang vs this C tree
 
-Modern kernels compile external modules with Clang `-Werror` on several diagnostics. This Realtek C tree trips **missing prototypes** and **implicit fallthrough** immediately. The Makefile already adds `-Wno-*` for those under migration builds; if a new Clang warning blocks L0, prefer a narrow `ccflags-y += -Wno-…` in the Makefile (Wave 0 style) over mass C edits unless the warning is a real bug.
+Modern kernels compile external modules with Clang `-Werror` on several diagnostics. This Realtek C tree trips **missing prototypes** and **implicit fallthrough** immediately. The Makefile adds `-Wno-*` for those **only when `LLVM=1`** (do not make them unconditional — Clang accepts `-Wno-frame-larger-than=` which GCC rejects). If a new Clang warning blocks L0, prefer a narrow flag inside that `ifeq ($(LLVM),1)` block over mass C edits unless the warning is a real bug.
 
 Under `LLVM=1`, platform `-mhard-float` / `-mfloat-abi=hard` is removed via `ccflags-remove-y` — those flags fight the kernel code model.
 

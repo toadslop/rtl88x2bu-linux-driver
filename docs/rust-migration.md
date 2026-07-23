@@ -52,7 +52,7 @@ make KDIR=/path/to/rust-enabled-kernel LLVM=1 -j"$(nproc)"
 Notes:
 
 - **`KDIR`** — path to the Rust-enabled kernel build tree (RfL out-of-tree pattern). When set, it overrides the platform `KSRC` default (`/lib/modules/$(uname -r)/build` on `CONFIG_PLATFORM_I386_PC`).
-- **`LLVM=1`** — forwarded to the kernel make; required for the Clang/LLVM toolchain path used with RfL out-of-tree modules. The Makefile also adds Clang-quieting `ccflags-y` (e.g. `-Wno-missing-prototypes`) so the existing C tree builds under Clang without Wave-0 mass churn.
+- **`LLVM=1`** — forwarded to the kernel make; required for the Clang/LLVM toolchain path used with RfL out-of-tree modules. When set, the Makefile adds Clang-quieting `ccflags-y` (e.g. `-Wno-missing-prototypes`, including Clang-only forms like `-Wno-frame-larger-than=`) so the C tree builds under Clang without Wave-0 mass churn. Default GCC builds omit that block.
 - **`.rs` objects** — linked into `88x2bu.ko` only when the target kernel has `CONFIG_RUST=y` (see `rust/kbuild_stub.rs`). Distro headers without Rust keep a C-only link (unchanged object list).
 - **C-only / legacy:** `make` and `make KSRC=...` still work as before when `KDIR` is unset.
 - **Product config** for Phase 1 exit remains default `CONFIG_RTL8822B=y` + `CONFIG_USB_HCI=y` (module name `88x2bu`).
