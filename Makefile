@@ -16,6 +16,25 @@ ccflags-y += -Wno-unused-variable
 #ccflags-y += -Wno-unused
 #ccflags-y += -Wno-uninitialized
 
+# Clang (LLVM=1 / RfL out-of-tree) turns several noisy diagnostics into errors.
+# Keep GCC and Clang green for migration builds without mass C churn in Wave 0.
+ccflags-y += -Wno-missing-prototypes
+ccflags-y += -Wno-missing-declarations
+ccflags-y += -Wno-implicit-fallthrough
+ccflags-y += -Wno-unused-function
+ccflags-y += -Wno-unused-label
+ccflags-y += -Wno-unused-parameter
+ccflags-y += -Wno-uninitialized
+ccflags-y += -Wno-address-of-packed-member
+ccflags-y += -Wno-format
+ccflags-y += -Wno-frame-larger-than=
+ccflags-y += -Wno-vla
+# Drop platform soft/hard-float flags under Clang; they fight kernel code model.
+ifeq ($(LLVM),1)
+ccflags-remove-y += -mhard-float
+ccflags-remove-y += -mfloat-abi=hard
+endif
+
 GCC_VER_49 := $(shell echo `$(CC) -dumpversion | cut -f1-2 -d.` \>= 4.9 | bc )
 ifeq ($(GCC_VER_49),1)
 ccflags-y += -Wno-date-time	# Fix compile error && warning on gcc 4.9 and later
