@@ -2,6 +2,18 @@
 
 Most incremental PRs will not be runnable on a real RTL8822BU dongle. This plan defines **offline gates** that must pass before merge, plus rarer optional hardware milestones.
 
+## Existing project coverage
+
+**There is no automated regression test suite to reuse.** This tree has no `tests/`, no `.github/workflows`, no KUnit/selftests, and no host unit tests.
+
+What exists instead (not a drop-in CI suite):
+
+- Ad-hoc bring-up scripts: `runwpa`, `wlan0dhcp`, `clean` (need a live interface)
+- **MP / manufacturing mode** (`CONFIG_MP_INCLUDED`, `core/rtw_mp.c`, `os_dep/linux/ioctl_mp.c`) — factory RF/ioctl tooling on real hardware, not vectorized offline tests
+- Manual debug via `/proc/net/rtl88x2bu/` and module params
+
+So the L0–L2 harness in this document is **new infrastructure**, not a port of an existing suite. The closest “reuse” is treating current **C crypto `.c` files as oracles** in host differential tests until each file is fully swapped to Rust.
+
 ## Principles
 
 1. **Every PR proves something without hardware** — at least build + symbol/ABI checks; pure code also gets host tests.
