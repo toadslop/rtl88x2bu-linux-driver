@@ -16,8 +16,8 @@ That script creates labels (if needed), opens epic issues, then child issues, an
 Properties:
 
 - **Idempotent** — skips draft IDs already in `ISSUE-MAP.md` (or matching open/closed titles); appends instead of truncating the map
-- **Dependencies** — appends a Tracking footer with resolved `#N` links for `epic` / `blocked_by`, then refreshes bodies after the batch
-- **Links** — rewrites relative markdown links to `https://github.com/<repo>/blob/<ref>/...` before create/edit
+- **Dependencies** — appends a Tracking footer with resolved `#N` links for `epic` / `blocked_by`; on re-run, refreshes **only** the `## Tracking` section when it still contains `(not filed yet)` (use `FORCE_REFRESH=1` to rewrite Tracking anyway)
+- **Links** — rewrites relative markdown links to `https://github.com/<repo>/blob/<ref>/...` using the repo **default branch** (override with `FILE_ISSUES_REF=<sha-or-branch>`). Prefer running after merge to the default branch so links stay stable.
 
 ## Sizing
 

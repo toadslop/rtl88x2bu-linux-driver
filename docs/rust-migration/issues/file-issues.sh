@@ -228,7 +228,7 @@ map_has_id() {
 find_existing_issue_by_title() {
   local title="$1"
   gh issue list --repo "$REPO" --state all --search "in:title \"$title\"" --json number,title \
-    --jq --arg title "$title" '.[] | select(.title == $title) | .number' | head -1
+    | jq --arg title "$title" -r '.[] | select(.title == $title) | .number' | head -1
 }
 
 # True if the live GitHub body still has unresolved draft-id placeholders in Tracking.
@@ -315,9 +315,6 @@ done
 echo ""
 echo "Refreshing Tracking footers where deps were unresolved..."
 refreshed=0
-declare -A CREATED_THIS_RUN=()
-# Re-walk creates: mark ids that were not skipped by checking map mtime is awkward;
-# instead refresh only when tracking_needs_refresh OR FORCE_REFRESH=1.
 for f in "${files[@]}"; do
   path="$ISSUE_DIR/$f"
   id="$(extract_field "$path" id)"
