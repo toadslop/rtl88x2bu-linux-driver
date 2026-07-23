@@ -50,12 +50,11 @@ make KDIR=/path/to/rust-enabled-kernel LLVM=1 -j"$(nproc)"
 
 Notes:
 
-- **`KDIR`** — post-W0-02 contract: path to the Rust-enabled kernel build tree (RfL out-of-tree pattern). W0-02 wires Makefile/Kbuild so `.rs` objects link into `88x2bu.ko` and honor `KDIR`.
-- **Pre-W0-02 C-only builds:** `make KDIR=...` is ignored today — the Makefile still uses `KSRC`. Use `KSRC=/path/to/kernel` (or the default `/lib/modules/$(uname -r)/build`).
-- **`LLVM=1`** — required for the Clang/LLVM toolchain path used with RfL out-of-tree modules (after W0-02).
+- **`KDIR`** — path to the Rust-enabled kernel build tree (RfL out-of-tree pattern). When set, it overrides the platform `KSRC` default (`/lib/modules/$(uname -r)/build` on `CONFIG_PLATFORM_I386_PC`).
+- **`LLVM=1`** — forwarded to the kernel make; required for the Clang/LLVM toolchain path used with RfL out-of-tree modules.
+- **`.rs` objects** — linked into `88x2bu.ko` only when the target kernel has `CONFIG_RUST=y` (see `rust/kbuild_stub.rs`). Distro headers without Rust keep a C-only link (unchanged object list).
+- **C-only / legacy:** `make` and `make KSRC=...` still work as before when `KDIR` is unset.
 - **Product config** for Phase 1 exit remains default `CONFIG_RTL8822B=y` + `CONFIG_USB_HCI=y` (module name `88x2bu`).
-
-Exact Make/Kbuild mechanics land in W0-02; the `KDIR` + `LLVM=1` snippet above is the intended contract once that PR lands.
 
 ## In-tree rtw88 blacklist
 

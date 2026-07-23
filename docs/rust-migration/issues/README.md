@@ -54,7 +54,8 @@ Architecture: `epic-11-architecture.md`, `arch-00-*.md` …
 |----|------|--------|
 | E01–E09 | `epic-*.md` | draft (not on GitHub yet) |
 | W0-01 | `wave0-01-docs.md` | done (docs landed; not filed on GitHub) |
-| W0-02… | `wave0-0[23]-*.md` | draft |
+| W0-02 | `wave0-02-kbuild.md` | done (KDIR/LLVM + CONFIG_RUST stub link; not filed on GitHub) |
+| W0-03 | `wave0-03-scaffold.md` | draft |
 | W1-01… | `wave1-*.md` | draft |
 | W2-01… | `wave2-*.md` | draft |
 | T0 / A0 | `test-00-*.md` / `arch-00-*.md` | done (plan docs + links via W0-01) |

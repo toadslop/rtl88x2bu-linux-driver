@@ -2458,16 +2458,33 @@ ifeq ($(CONFIG_RTL8723B), y)
 $(MODULE_NAME)-$(CONFIG_MP_INCLUDED)+= core/rtw_bt_mp.o
 endif
 
+# Rust-for-Linux: link .rs objects only when the target kernel has CONFIG_RUST=y.
+# C-only builds (distro headers without Rust) keep the previous object list.
+ifdef CONFIG_RUST
+$(MODULE_NAME)-y += rust/kbuild_stub.o
+endif
+
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
 
 else
 
 export CONFIG_RTL8822BU = m
 
+# RfL out-of-tree contract: KDIR overrides platform KSRC when set
+# (make KDIR=/path/to/rust-enabled-kernel LLVM=1).
+ifneq ($(KDIR),)
+KSRC := $(KDIR)
+endif
+
+KBUILD_OPTS := ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE)
+ifneq ($(LLVM),)
+KBUILD_OPTS += LLVM=$(LLVM)
+endif
+
 all: modules
 
 modules:
-	$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(KSRC) M=$(shell pwd)  modules
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) modules
 
 strip:
 	$(CROSS_COMPILE)strip $(MODULE_NAME).ko --strip-unneeded
@@ -2532,6 +2549,7 @@ clean:
 	cd os_dep/linux ; rm -fr *.mod.c *.mod *.o .*.cmd *.ko
 	cd os_dep ; rm -fr *.mod.c *.mod *.o .*.cmd *.ko
 	cd platform ; rm -fr *.mod.c *.mod *.o .*.cmd *.ko
+	cd rust ; rm -fr *.mod.c *.mod *.o .*.cmd *.ko *.rmeta 2>/dev/null || true
 	rm -fr Module.symvers ; rm -fr Module.markers ; rm -fr modules.order
 	rm -fr *.mod.c *.mod *.o .*.cmd *.ko *~
 	rm -fr .tmp_versions
