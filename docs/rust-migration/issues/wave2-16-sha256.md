@@ -14,4 +14,4 @@ Exact-translate [`core/crypto/sha256.c`](../../../core/crypto/sha256.c) (~88 LOC
 
 ## Acceptance
 
-- Object swapped; smoke passes
+- L0 build + L1 symbols + L2 host vectors (extend T2 harness); L4 only at Wave 2 milestone

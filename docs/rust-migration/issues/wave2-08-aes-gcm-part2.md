@@ -14,4 +14,4 @@ Finish exact-translation of [`core/crypto/aes-gcm.c`](../../../core/crypto/aes-g
 
 ## Acceptance
 
-- No `aes-gcm.c` in default object list; smoke passes
+- L0 build + L1 symbols + L2 host vectors (extend T2 harness); L4 only at Wave 2 milestone

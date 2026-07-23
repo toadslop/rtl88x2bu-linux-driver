@@ -14,4 +14,4 @@ Continue exact-translation of [`core/crypto/aes-internal.c`](../../../core/crypt
 
 ## Acceptance
 
-- Smoke passes
+- L0 build + L1 symbols + L2 host vectors (extend T2 harness); L4 only at Wave 2 milestone

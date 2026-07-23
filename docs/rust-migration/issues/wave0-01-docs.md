@@ -13,12 +13,12 @@ Add migration and verification docs so every later PR uses the same gate.
 
 ## Deliverables
 
-- `docs/rust-migration.md` — two phases, ABI rules, pinned Rust-enabled `KDIR`, `LLVM=1`, rtw88 blacklist note
-- `docs/smoke-test.md` — commands: build, blacklist check, insmod, scan, WPA2 associate, ping, rmmod, replug
+- `docs/rust-migration.md` — two phases, ABI rules, pinned Rust-enabled `KDIR`, `LLVM=1`, rtw88 blacklist note; link to offline [test-plan.md](../test-plan.md)
+- `docs/smoke-test.md` — L4 hardware commands only (blacklist, insmod, scan, associate, ping, rmmod)
 
 ## Acceptance
 
-- Docs exist and match the agreed plan (exact translation first; ~200 LOC PRs)
+- Docs exist and match the agreed plan (exact translation first; ~200 LOC PRs; L0–L2 default gates)
 - No driver code behavior change
 
 ## Out of scope

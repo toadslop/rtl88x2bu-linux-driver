@@ -17,9 +17,20 @@ That script creates labels (if needed), opens epic issues, then Wave 0–2 child
 
 Each implementable child targets about **~200 lines** of meaningful change (roughly 150–250). Do not bundle unrelated work.
 
+## Verification (required)
+
+Hardware is **not** the default gate. See [`../test-plan.md`](../test-plan.md):
+
+- **L0 build** + **L1 symbols** on every C→Rust swap
+- **L2 host differential tests** for crypto/pure chunks
+- **L3 VM insmod** when touching init
+- **L4 hardware** only at wave milestones
+
+Test-infra issues: `epic-10-test-infra.md`, `test-00-*.md` …
+
 ## Filing cadence
 
-- **Now:** Phase/wave epics + Wave 0–2 children.
+- **Now:** Phase/wave epics + Wave 0–2 children + test-infra epic/children.
 - **Later:** open Wave 3–6 / Phase 2 children only when the previous wave is mostly done.
 
 ## Status

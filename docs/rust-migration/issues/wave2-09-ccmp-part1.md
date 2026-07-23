@@ -14,4 +14,4 @@ Exact-translate first function group (~200 LOC) of [`core/crypto/ccmp.c`](../../
 
 ## Acceptance
 
-- Mixed C/Rust OK temporarily; smoke passes
+- L0 build + L1 symbols + L2 host vectors (extend T2 harness); L4 only at Wave 2 milestone

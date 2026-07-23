@@ -14,4 +14,4 @@ Finish [`core/crypto/aes-internal.c`](../../../core/crypto/aes-internal.c); remo
 
 ## Acceptance
 
-- No `aes-internal.c` in default object list; encrypted STA smoke passes
+- L0 build + L1 symbols + L2 host vectors (extend T2 harness); L4 only at Wave 2 milestone

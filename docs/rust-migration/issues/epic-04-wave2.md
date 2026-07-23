@@ -10,9 +10,10 @@ blocked_by: [E03]
 
 Translate bottom-up, low-kernel-coupling units starting with `core/crypto/*`, in ~200 LOC chunks.
 
-## Smoke gate
+## Verification gate
 
-WPA2 STA associate + encrypted ping/traffic after each crypto PR that touches the data path; otherwise Wave 0 load/iface gate.
+Per-PR: L0 build + L1 symbols + L2 host crypto vectors ([test-plan.md](../test-plan.md)).  
+Wave milestone (L4): WPA2 STA associate + encrypted ping when hardware is available.
 
 ## Children
 

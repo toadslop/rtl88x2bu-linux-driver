@@ -14,4 +14,4 @@ Exact-translate [`core/crypto/aes-internal-enc.c`](../../../core/crypto/aes-inte
 
 ## Acceptance
 
-- Object swapped; smoke passes
+- L0 build + L1 symbols + L2 host vectors (extend T2 harness); L4 only at Wave 2 milestone

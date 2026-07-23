@@ -20,9 +20,9 @@ Prove mixed C+Rust link in `88x2bu.ko`: one `extern "C"` symbol from Rust, calle
 
 ## Acceptance
 
-- `insmod` succeeds; dmesg shows scaffold ran
-- STA smoke checklist still passes
-- Clean `rmmod`
+- **L0:** builds with pinned KDIR + LLVM=1
+- **L3:** VM `insmod`/`rmmod` without device — dmesg shows scaffold ran; no WARN/Oops
+- L4 hardware STA smoke is a Wave 0 milestone, not required for this PR if L0+L3 pass
 
 ## Out of scope
 

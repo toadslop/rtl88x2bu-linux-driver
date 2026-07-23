@@ -14,4 +14,4 @@ Exact-translate [`core/crypto/sha256-internal.c`](../../../core/crypto/sha256-in
 
 ## Acceptance
 
-- C ABI preserved; module builds/loads; smoke passes
+- L0 build + L1 symbols + L2 host vectors (extend T2 harness); L4 only at Wave 2 milestone

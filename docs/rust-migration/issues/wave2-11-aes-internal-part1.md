@@ -14,4 +14,4 @@ Exact-translate first ~200 LOC / function group of [`core/crypto/aes-internal.c`
 
 ## Acceptance
 
-- No duplicate symbols; smoke passes
+- L0 build + L1 symbols + L2 host vectors (extend T2 harness); L4 only at Wave 2 milestone

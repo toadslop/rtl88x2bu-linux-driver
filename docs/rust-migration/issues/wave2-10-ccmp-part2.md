@@ -14,4 +14,4 @@ Finish [`core/crypto/ccmp.c`](../../../core/crypto/ccmp.c); remove C object from
 
 ## Acceptance
 
-- CCMP path works under WPA2 STA smoke
+- L0 build + L1 symbols + L2 host vectors (extend T2 harness); L4 only at Wave 2 milestone

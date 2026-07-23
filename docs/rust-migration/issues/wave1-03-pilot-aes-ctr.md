@@ -20,9 +20,11 @@ Exact translation of [`core/crypto/aes-ctr.c`](../../../core/crypto/aes-ctr.c) (
 
 ## Acceptance
 
-- Module builds/loads
-- Encrypted STA path still works (ping after WPA2 associate)
+- **L0:** module builds with pinned KDIR + LLVM=1
+- **L1:** symbols match previous `aes-ctr.o`
+- **L2:** host differential vectors pass (depends on T2 harness)
 - Diff stays near ~200 meaningful lines
+- L4 hardware encrypted ping is a Wave 1 milestone, not required to merge this PR if L0–L2 are green
 
 ## Out of scope
 

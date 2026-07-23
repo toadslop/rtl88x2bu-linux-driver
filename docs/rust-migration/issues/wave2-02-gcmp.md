@@ -14,4 +14,4 @@ Exact-translate [`core/crypto/gcmp.c`](../../../core/crypto/gcmp.c) (~194 LOC) t
 
 ## Acceptance
 
-- C ABI preserved; module builds/loads; encrypted STA smoke passes
+- L0 build + L1 symbols + L2 host vectors (extend T2 harness); L4 only at Wave 2 milestone
