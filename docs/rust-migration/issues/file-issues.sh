@@ -310,8 +310,8 @@ for f in "${files[@]}"; do
   created=$((created + 1))
 done
 
-# Second pass: refresh Tracking only when placeholders remain (or issue was created this run).
-# Do not clobber full issue bodies on every re-run.
+# Second pass: refresh ## Tracking only when the live body still has "(not filed yet)"
+# placeholders, or when FORCE_REFRESH=1. Never rewrite the full issue body on re-run.
 echo ""
 echo "Refreshing Tracking footers where deps were unresolved..."
 refreshed=0

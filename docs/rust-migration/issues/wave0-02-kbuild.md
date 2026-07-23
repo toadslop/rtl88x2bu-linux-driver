@@ -19,8 +19,10 @@ Extend the out-of-tree build so `88x2bu` can include `.rs` objects when built wi
 
 ## Acceptance
 
-- Module still builds and loads on the pinned Rust-enabled kernel
+- **L0:** builds with pinned `KDIR` + `LLVM=1`
+- **L3:** VM `insmod`/`rmmod` without a USB device (no WARN/Oops); do not rely on a hardware plug-in for this gate
 - C-only behavior unchanged if no Rust logic added yet
+- L4 hardware STA smoke is a Wave 0 milestone, not required for this PR if L0+L3 pass
 
 ## Out of scope
 
