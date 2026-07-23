@@ -12,9 +12,11 @@ Make `88x2bu.ko` build against a Rust-enabled kernel (`CONFIG_RUST=y`) and link 
 
 ## Verification gate
 
-Per-PR (W0-01…W0-03): **L0** build with pinned `KDIR` + `LLVM=1`, and **L3** VM `insmod`/`rmmod` without a USB device (see [`test-plan.md`](../test-plan.md)).
+See [`test-plan.md`](../test-plan.md):
 
-Wave milestone (**L4**, optional / when hardware available): iface present → STA smoke → clean `rmmod`. L4 is not required to merge Wave 0 child PRs.
+- **W0-01** (docs only): no L0/L3 module gate — docs accuracy / links only
+- **W0-02 / W0-03** (build + `.ko`): **L0** with pinned `KDIR` + `LLVM=1`, and **L3** VM `insmod`/`rmmod` without a USB device
+- Wave milestone (**L4**, optional / when hardware available): iface present → STA smoke → clean `rmmod`. Not required to merge Wave 0 child PRs.
 
 ## Children
 

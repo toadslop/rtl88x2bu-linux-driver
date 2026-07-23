@@ -9,7 +9,14 @@ ISSUE_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$ISSUE_DIR/../../.." && pwd)"
 MAP_FILE="$ISSUE_DIR/ISSUE-MAP.md"
 REPO="${GITHUB_REPOSITORY:-$(gh repo view --json nameWithOwner -q .nameWithOwner)}"
-REF="${FILE_ISSUES_REF:-$(git -C "$ROOT" rev-parse --abbrev-ref HEAD)}"
+# Prefer a long-lived ref so issue links survive branch deletion.
+# Override with FILE_ISSUES_REF=... (e.g. a commit SHA) if needed.
+if [[ -n "${FILE_ISSUES_REF:-}" ]]; then
+  REF="$FILE_ISSUES_REF"
+else
+  REF="$(gh repo view "$REPO" --json defaultBranchRef -q .defaultBranchRef.name)"
+fi
+echo "Using blob ref: $REF (set FILE_ISSUES_REF to override)"
 
 if ! gh api "repos/$REPO" --jq .has_issues | grep -q true; then
   echo "ERROR: Issues are disabled on $REPO." >&2
@@ -221,7 +228,34 @@ map_has_id() {
 find_existing_issue_by_title() {
   local title="$1"
   gh issue list --repo "$REPO" --state all --search "in:title \"$title\"" --json number,title \
-    --jq ".[] | select(.title == \"$title\") | .number" | head -1
+    --jq --arg title "$title" '.[] | select(.title == $title) | .number' | head -1
+}
+
+# True if the live GitHub body still has unresolved draft-id placeholders in Tracking.
+tracking_needs_refresh() {
+  local num="$1"
+  local body
+  body="$(gh issue view "$num" --repo "$REPO" --json body -q .body)"
+  [[ "$body" == *"(not filed yet)"* ]]
+}
+
+# Replace only the ## Tracking section (or append it), preserving any manual body edits above it.
+patch_tracking_section() {
+  local num="$1"
+  local new_footer="$2"
+  local current
+  current="$(gh issue view "$num" --repo "$REPO" --json body -q .body)"
+  local patched
+  patched="$(CURRENT_BODY="$current" NEW_FOOTER="$new_footer" python3 <<'PY'
+import os, re
+current = os.environ["CURRENT_BODY"]
+footer = os.environ["NEW_FOOTER"].rstrip() + "\n"
+parts = re.split(r"\n## Tracking\n", current, maxsplit=1)
+base = parts[0].rstrip()
+print(base + "\n\n## Tracking\n\n" + footer, end="")
+PY
+)"
+  gh issue edit "$num" --repo "$REPO" --body "$patched" >/dev/null
 }
 
 load_map
@@ -276,9 +310,14 @@ for f in "${files[@]}"; do
   created=$((created + 1))
 done
 
-# Second pass: refresh Tracking footers now that more IDs are resolved.
+# Second pass: refresh Tracking only when placeholders remain (or issue was created this run).
+# Do not clobber full issue bodies on every re-run.
 echo ""
-echo "Refreshing dependency footers where epic/blocked_by targets exist..."
+echo "Refreshing Tracking footers where deps were unresolved..."
+refreshed=0
+declare -A CREATED_THIS_RUN=()
+# Re-walk creates: mark ids that were not skipped by checking map mtime is awkward;
+# instead refresh only when tracking_needs_refresh OR FORCE_REFRESH=1.
 for f in "${files[@]}"; do
   path="$ISSUE_DIR/$f"
   id="$(extract_field "$path" id)"
@@ -287,13 +326,20 @@ for f in "${files[@]}"; do
   epic_id="$(extract_field "$path" epic)"
   blocked_csv="$(extract_field "$path" blocked_by)"
   [[ -z "$blocked_csv" ]] && blocked_csv="[]"
-  title="$(extract_field "$path" title | sed 's/^"//;s/"$//')"
-  body="$(body_without_frontmatter "$path")"
-  body="$(rewrite_links "$path" "$body")"
-  body="$(append_dependency_footer "$body" "$epic_id" "$blocked_csv")"
-  gh issue edit "$num" --repo "$REPO" --body "$body" >/dev/null
-  echo "  updated #$num ($id)"
+
+  if [[ "${FORCE_REFRESH:-0}" != "1" ]] && ! tracking_needs_refresh "$num"; then
+    continue
+  fi
+
+  # Build footer-only content via append_dependency_footer on empty body, then strip preamble.
+  footer_body="$(append_dependency_footer "" "$epic_id" "$blocked_csv")"
+  footer="$(printf '%s' "$footer_body" | awk 'BEGIN{p=0} /^## Tracking$/{p=1; next} p{print}')"
+  patch_tracking_section "$num" "$footer"
+  echo "  refreshed Tracking on #$num ($id)"
+  refreshed=$((refreshed + 1))
 done
 
 echo ""
-echo "Done. created=$created skipped=$skipped map=$MAP_FILE"
+echo "Done. created=$created skipped=$skipped refreshed=$refreshed map=$MAP_FILE"
+echo "Tip: run after merge to default branch so blob links use \$REF=$REF."
+echo "     FORCE_REFRESH=1 rewrites Tracking even when no placeholders remain."
