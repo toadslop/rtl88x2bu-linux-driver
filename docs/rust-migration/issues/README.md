@@ -2,6 +2,13 @@
 
 GitHub Issues are currently **disabled** on this repository, so work items live here until they can be filed.
 
+Landed docs (implementation, not GitHub Issues):
+
+- [`docs/rust-migration.md`](../../rust-migration.md) — phases, ABI, build contract, PR checklist
+- [`docs/smoke-test.md`](../../smoke-test.md) — L4 hardware STA checklist
+- [`../architecture.md`](../architecture.md) — domain types / layering
+- [`../test-plan.md`](../test-plan.md) — L0–L4 gates
+
 ## How to use
 
 1. Enable Issues: repo **Settings → General → Features → Issues**.
@@ -46,6 +53,9 @@ Architecture: `epic-11-architecture.md`, `arch-00-*.md` …
 | ID | File | Status |
 |----|------|--------|
 | E01–E09 | `epic-*.md` | draft (not on GitHub yet) |
-| W0-01… | `wave0-*.md` | draft |
+| W0-01 | `wave0-01-docs.md` | done (docs landed; not filed on GitHub) |
+| W0-02… | `wave0-0[23]-*.md` | draft |
 | W1-01… | `wave1-*.md` | draft |
 | W2-01… | `wave2-*.md` | draft |
+| T0 / A0 | `test-00-*.md` / `arch-00-*.md` | done (plan docs + links via W0-01) |
+| T1–T3 / A1 | remaining `test-*` / `arch-*` | draft |
