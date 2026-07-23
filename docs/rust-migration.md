@@ -50,11 +50,12 @@ make KDIR=/path/to/rust-enabled-kernel LLVM=1 -j"$(nproc)"
 
 Notes:
 
-- **`KDIR`** — path to the Rust-enabled kernel build tree (RfL out-of-tree pattern). Wave 0 (W0-02) wires Makefile/Kbuild so `.rs` objects link into `88x2bu.ko`. Until then, document the intended invocation; C-only builds may still use existing `KSRC=` / default `/lib/modules/$(uname -r)/build`.
-- **`LLVM=1`** — required for the Clang/LLVM toolchain path used with RfL out-of-tree modules.
+- **`KDIR`** — post-W0-02 contract: path to the Rust-enabled kernel build tree (RfL out-of-tree pattern). W0-02 wires Makefile/Kbuild so `.rs` objects link into `88x2bu.ko` and honor `KDIR`.
+- **Pre-W0-02 C-only builds:** `make KDIR=...` is ignored today — the Makefile still uses `KSRC`. Use `KSRC=/path/to/kernel` (or the default `/lib/modules/$(uname -r)/build`).
+- **`LLVM=1`** — required for the Clang/LLVM toolchain path used with RfL out-of-tree modules (after W0-02).
 - **Product config** for Phase 1 exit remains default `CONFIG_RTL8822B=y` + `CONFIG_USB_HCI=y` (module name `88x2bu`).
 
-Exact Make/Kbuild mechanics land in W0-02; this doc is the contract for the command line.
+Exact Make/Kbuild mechanics land in W0-02; the `KDIR` + `LLVM=1` snippet above is the intended contract once that PR lands.
 
 ## In-tree rtw88 blacklist
 
@@ -78,7 +79,7 @@ Check with `lsmod`: `rtw88_*` means in-tree; `88x2bu` means this driver. Full ST
 
 ## PR verification snippet
 
-Copy into translation PRs (full detail in the test plan):
+Copy into translation PRs. Source of truth: [test-plan.md § Per-PR checklist](rust-migration/test-plan.md#per-pr-checklist-copy-into-pr-template) (keep this block identical when editing either side):
 
 ```markdown
 ## Verification

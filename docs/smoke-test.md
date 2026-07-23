@@ -37,13 +37,19 @@ sudo iw dev "$IFACE" scan | head -n 80
 
 ## 4. Associate
 
-Use your usual userspace (NetworkManager, `wpa_supplicant`, etc.). Minimal example with `wpa_supplicant` + DHCP helpers already in-tree:
+Prefer IFACE-agnostic modern userspace (`NetworkManager`, or `wpa_supplicant` + `dhclient`/`dhcpcd` against `"$IFACE"`).
 
 ```bash
-# Edit SSID/PSK in a local wpa_supplicant.conf, then e.g.:
-sudo ./runwpa          # if using the repo helper
-# or start wpa_supplicant against $IFACE yourself
-sudo ./wlan0dhcp       # or: sudo dhclient "$IFACE" / NetworkManager
+# Example: wpa_supplicant + DHCP (edit SSID/PSK in a local conf first)
+sudo wpa_supplicant -B -i "$IFACE" -c ./wpa_supplicant.conf
+sudo dhclient "$IFACE"    # or: NetworkManager / dhcpcd
+```
+
+Optional legacy helpers in this repo (`runwpa`, `wlan0dhcp`) hardcode `wlan0` and older `wpa_supplicant`/ifcfg patterns — use only if you know them:
+
+```bash
+sudo ./runwpa
+sudo ./wlan0dhcp
 ```
 
 Confirm association:
