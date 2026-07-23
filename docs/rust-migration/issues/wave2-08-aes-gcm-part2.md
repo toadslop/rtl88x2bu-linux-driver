@@ -4,14 +4,15 @@ labels: [rust-migration, phase-1, wave-2, size/~200]
 type: child
 id: W2-08
 epic: E04
-blocked_by: [W2-07]
+blocked_by: [W2-07, T2]
 estimate_loc: 200
 ---
 
 ## Goal
 
-Finish exact-translation of [`core/crypto/aes-gcm.c`](../../../core/crypto/aes-gcm.c); remove the C object from the build.
+Finish porting the remaining C from W2-07 (`aes-gcm_rest.c` or equivalent); remove all C objects for this unit from the build.
 
 ## Acceptance
 
-- L0 build + L1 symbols + L2 host vectors (extend T2 harness); L4 only at Wave 2 milestone
+- No `aes-gcm*.c` in the default object list
+- L0 + L1 + L2 green; L4 only at Wave 2 milestone

@@ -11,7 +11,13 @@ GitHub Issues are currently **disabled** on this repository, so work items live 
 bash docs/rust-migration/issues/file-issues.sh
 ```
 
-That script creates labels (if needed), opens epic issues, then Wave 0–2 child issues, and writes `ISSUE-MAP.md` with number ↔ file mappings.
+That script creates labels (if needed), opens epic issues, then child issues, and maintains `ISSUE-MAP.md` with number ↔ draft-id mappings.
+
+Properties:
+
+- **Idempotent** — skips draft IDs already in `ISSUE-MAP.md` (or matching open/closed titles); appends instead of truncating the map
+- **Dependencies** — appends a Tracking footer with resolved `#N` links for `epic` / `blocked_by`, then refreshes bodies after the batch
+- **Links** — rewrites relative markdown links to `https://github.com/<repo>/blob/<ref>/...` before create/edit
 
 ## Sizing
 

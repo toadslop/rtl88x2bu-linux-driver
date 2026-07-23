@@ -105,8 +105,20 @@ Exact paths can adjust; the **layer dependencies** must not invert (`domain` mus
 - [ ] L0/L1/(L2) gates from test-plan.md
 ```
 
+## Multi-part file ports (Kbuild)
+
+Splitting a large `.c` across PRs is allowed only with an explicit link-safe mechanism:
+
+1. Move a function group to Rust (`extern "C"` names preserved).
+2. **Remove those definitions from C** (extract remainder to `foo_rest.c` or edit the original TU).
+3. Makefile links the Rust object **and** the remaining C object — never the original full TU plus Rust if both define the same symbols.
+4. Final part deletes the remaining C object.
+
+Do not describe this as “mixed ownership of one `.c` file” without the extract/remove step.
+
 ## Anti-goals
 
 - Translating C to Rust line-for-line while keeping `*mut u8` and `u32` flags as the primary API
 - “We’ll add types later” for ported modules (types land with the port, even if small)
 - Wide `unsafe` blocks around entire files “for convenience”
+- Partial ports that leave duplicate `extern "C"` symbols in C and Rust

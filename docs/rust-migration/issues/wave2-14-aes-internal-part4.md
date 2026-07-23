@@ -4,13 +4,17 @@ labels: [rust-migration, phase-1, wave-2, size/~200]
 type: child
 id: W2-14
 epic: E04
-blocked_by: [W2-13]
+blocked_by: [W2-13, T2]
 estimate_loc: 250
 ---
 
 ## Goal
 
 Finish [`core/crypto/aes-internal.c`](../../../core/crypto/aes-internal.c); remove C object from build.
+
+## Split-file mechanism
+
+Continue W2-11 approach: shrink `aes-internal_rest.c` as symbols move to Rust; no duplicate symbols.
 
 ## Acceptance
 

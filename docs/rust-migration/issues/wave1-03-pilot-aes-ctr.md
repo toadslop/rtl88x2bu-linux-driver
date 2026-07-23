@@ -4,7 +4,7 @@ labels: [rust-migration, phase-1, wave-1, size/~200]
 type: child
 id: W1-03
 epic: E03
-blocked_by: [W1-02]
+blocked_by: [W1-02, T2, A1]
 estimate_loc: 120
 ---
 
