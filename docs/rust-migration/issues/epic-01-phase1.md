@@ -7,11 +7,12 @@ id: E01
 
 ## Goal
 
-Mechanically translate the out-of-tree `88x2bu` driver from C to Rust while preserving behavior, C ABI, layouts, and symbol names. Prefer `unsafe` / `extern "C"` / `#[repr(C)]` over idiomatic redesign.
+Port the out-of-tree `88x2bu` driver from C to Rust with **observable behavior parity** (characterization tests), while adopting the layered architecture in [`architecture.md`](../architecture.md): domain types in Rust services, raw `extern "C"` / `#[repr(C)]` only at the mixed-C ABI edge.
 
 ## Out of scope
 
-- Idiomatic Rust refactors (Phase 2)
+- Intentional behavior changes (those are later, with test updates)
+- Full Phase 2 cleanup (RfL-heavy, delete ABI layer)
 - Rewriting onto mac80211 / in-tree rtw88 architecture
 - PCI/SDIO HCI product configurations (USB 8822B only for exit criteria)
 

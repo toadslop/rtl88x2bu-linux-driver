@@ -19,14 +19,16 @@ Each implementable child targets about **~200 lines** of meaningful change (roug
 
 ## Verification (required)
 
-Hardware is **not** the default gate. See [`../test-plan.md`](../test-plan.md):
+Hardware is **not** the default gate. See [`../test-plan.md`](../test-plan.md) and [`../architecture.md`](../architecture.md):
 
+- **Characterize C behavior → freeze Rust tests → port** (parity first)
 - **L0 build** + **L1 symbols** on every C→Rust swap
-- **L2 host differential tests** for crypto/pure chunks
-- **L3 VM insmod** when touching init
-- **L4 hardware** only at wave milestones
+- **L2 host/unit differential tests** for crypto/pure chunks
+- **Domain types** at Rust APIs; raw pointers only in abi/os shims
+- **L3 VM insmod** when touching init; **L4 hardware** at wave milestones
 
-Test-infra issues: `epic-10-test-infra.md`, `test-00-*.md` …
+Test-infra: `epic-10-test-infra.md`, `test-00-*.md` …  
+Architecture: `epic-11-architecture.md`, `arch-00-*.md` …
 
 ## Filing cadence
 

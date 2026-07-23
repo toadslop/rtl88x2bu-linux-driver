@@ -14,12 +14,33 @@ What exists instead (not a drop-in CI suite):
 
 So the L0–L2 harness in this document is **new infrastructure**, not a port of an existing suite. The closest “reuse” is treating current **C crypto `.c` files as oracles** in host differential tests until each file is fully swapped to Rust.
 
+Architecture (domain types, unsafe edges): [`architecture.md`](architecture.md).
+
 ## Principles
 
-1. **Every PR proves something without hardware** — at least build + symbol/ABI checks; pure code also gets host tests.
-2. **Compare against the still-present C** — differential tests beat “looks right.”
-3. **Hardware is a milestone, not the default CI** — use it when a whole wave lands or before Phase 1 exit.
-4. **Keep tests near ~200 LOC chunks** — grow the harness in small issues too.
+1. **Characterize, then port** — identify current C behavior, freeze it in Rust unit/host tests, then implement until tests pass.
+2. **Parity tests first, spec tests later** — initially assertions mean “same as C”; intentional behavior changes update tests in the same PR.
+3. **Every PR proves something without hardware** — at least build + symbol/ABI checks; pure code also gets host/unit tests.
+4. **Hardware is a milestone, not the default CI** — use it when a whole wave lands or before Phase 1 exit.
+5. **Keep tests near ~200 LOC chunks** — grow the harness in small issues too.
+
+## Characterization workflow (per ported chunk)
+
+```text
+Identify I/O & errors  →  Capture from C oracle  →  Freeze Rust tests
+        →  Port with domain types  →  Keep parity tests green
+```
+
+Minimum for a pure/leaf chunk (e.g. crypto):
+
+1. List functions/symbols and their contracts (buffers in-place? return -1?).
+2. Add vectors: known-answer plus edge cases (zero length, max key length, unaligned sizes if C allows).
+3. Run vectors against **C** in the host harness (oracle still green).
+4. Implement Rust (typed API + `extern "C"` shim if C callers remain).
+5. Same vectors run against Rust; require byte/return identity with C.
+6. Only after that, remove the C `.o` from the module link.
+
+Do **not** port first and “add tests later.”
 
 ## Gate levels
 
@@ -111,12 +132,18 @@ Failures at L4 block the wave epic, not every tiny PR, if L0–L2 were green—b
 
 ```markdown
 ## Verification
+- [ ] Characterization: C behavior identified; vectors/tests added before or with the port
 - [ ] L0: builds with pinned KDIR + LLVM=1
 - [ ] L1: symbol check vs previous .o (attached or CI log)
-- [ ] L2: host tests added/updated and passing (if pure chunk)
+- [ ] L2: host/unit parity tests passing (if pure chunk)
 - [ ] L3: VM insmod/rmmod (if init/USB registration touched)
 - [ ] L4: hardware smoke (only if this closes a wave/milestone)
-- [ ] Exact translation: no intentional behavior / lock / layout changes
+
+## Architecture
+- [ ] Domain types at Rust API (no new public raw pointers / mystery integers)
+- [ ] `unsafe` confined to abi/os shim
+- [ ] `extern "C"` shim only if C still calls this symbol
+- [ ] Behavior change vs C? If yes, tests updated and called out as spec change
 ```
 
 ## What we will automate first (issues)

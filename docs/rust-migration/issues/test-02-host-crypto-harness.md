@@ -10,11 +10,11 @@ estimate_loc: 220
 
 ## Goal
 
-Userspace harness under `tests/host/crypto/` that runs fixed vectors against the C `aes-ctr` implementation, ready to compare with the Rust translation in W1-03.
+Userspace characterization harness under `tests/host/crypto/` that **freezes current C `aes-ctr` behavior** as vectors, then compares Rust to that oracle in W1-03.
 
 ## Acceptance
 
 - `tests/host` builds on a normal Linux userspace toolchain (no kernel headers)
-- aes-ctr vectors pass against current C
-- Documented how W1-03 wires the Rust side into the same vectors
+- aes-ctr vectors pass against current C **before** the Rust port lands
+- Documented how W1-03 runs the same vectors against typed Rust + ABI shim
 - May split vector fixtures vs harness if diff > ~250 LOC

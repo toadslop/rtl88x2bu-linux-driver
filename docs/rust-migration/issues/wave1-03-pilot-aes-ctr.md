@@ -10,23 +10,23 @@ estimate_loc: 120
 
 ## Goal
 
-Exact translation of [`core/crypto/aes-ctr.c`](../../../core/crypto/aes-ctr.c) (~70 LOC C) to Rust with original `extern "C"` symbol names and behavior.
+Port [`core/crypto/aes-ctr.c`](../../../core/crypto/aes-ctr.c) with **parity to characterized C behavior**, using domain types at the Rust API and a thin `extern "C"` shim for remaining C callers.
 
 ## Deliverables
 
-- `rust/` (or `core/crypto/`) `.rs` equivalent
-- Preserve ABI for all exported functions
-- Remove or stop compiling the `.c` object once Rust replacement links
+- Characterization vectors already green on C (T2) — extend if gaps found
+- Typed Rust implementation (e.g. length-checked key/nonce types from A1)
+- `extern "C"` shim preserving original symbol names/ABI
+- Remove C `.o` from link once L0–L2 green
 
 ## Acceptance
 
-- **L0:** module builds with pinned KDIR + LLVM=1
-- **L1:** symbols match previous `aes-ctr.o`
-- **L2:** host differential vectors pass (depends on T2 harness)
-- Diff stays near ~200 meaningful lines
-- L4 hardware encrypted ping is a Wave 1 milestone, not required to merge this PR if L0–L2 are green
+- **Characterize→test→port** order followed
+- **L0 / L1 / L2** green; Rust API not a raw `*mut u8` soup
+- Diff stays near ~200 meaningful lines (split shim vs types if needed)
+- L4 hardware is a Wave 1 milestone only
 
 ## Out of scope
 
-- Idiomatic crypto redesign
+- Intentional crypto behavior changes (parity only)
 - Translating other crypto files (Wave 2)
