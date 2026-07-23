@@ -8,6 +8,7 @@ Landed docs (implementation, not GitHub Issues):
 - [`docs/smoke-test.md`](../../smoke-test.md) — L4 hardware STA checklist
 - [`../architecture.md`](../architecture.md) — domain types / layering
 - [`../test-plan.md`](../test-plan.md) — L0–L4 gates
+- [`../dev-environment.md`](../dev-environment.md) — toolchain / pinned kernel / L3 QEMU gotchas (Wave 0)
 
 ## How to use
 

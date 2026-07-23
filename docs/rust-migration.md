@@ -6,6 +6,7 @@ Normative companions:
 
 - [`rust-migration/architecture.md`](rust-migration/architecture.md) — layers, domain types, unsafe at edges
 - [`rust-migration/test-plan.md`](rust-migration/test-plan.md) — L0–L4 gates (offline-first)
+- [`rust-migration/dev-environment.md`](rust-migration/dev-environment.md) — toolchain, pinned kernel, L0/L3 gotchas (Wave 0 lessons)
 - [`smoke-test.md`](smoke-test.md) — L4 hardware STA checklist only
 
 ## Phases
@@ -55,6 +56,8 @@ Notes:
 - **`.rs` objects** — linked into `88x2bu.ko` only when the target kernel has `CONFIG_RUST=y` (see `rust/kbuild_stub.rs`). Distro headers without Rust keep a C-only link (unchanged object list).
 - **C-only / legacy:** `make` and `make KSRC=...` still work as before when `KDIR` is unset.
 - **Product config** for Phase 1 exit remains default `CONFIG_RTL8822B=y` + `CONFIG_USB_HCI=y` (module name `88x2bu`).
+
+First-time L0/L3 setup (packages, `ld.lld` symlinks, bindgen `--locked`, QEMU without KVM): see [`rust-migration/dev-environment.md`](rust-migration/dev-environment.md).
 
 ## In-tree rtw88 blacklist
 
