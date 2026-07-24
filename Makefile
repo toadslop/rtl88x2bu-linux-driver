@@ -2482,6 +2482,7 @@ endif
 ifdef CONFIG_RUST
 $(MODULE_NAME)-y += rust/kbuild_stub.o
 $(MODULE_NAME)-y += rust/scaffold.o
+$(MODULE_NAME)-y += rust/bindings.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
