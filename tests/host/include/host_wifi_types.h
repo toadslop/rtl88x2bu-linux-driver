@@ -79,6 +79,13 @@ static inline u16 le_to_host16(u16 val)
 		(a)[0] = (u8)(((u16)(val)) & 0xff); \
 	} while (0)
 
+/* Needed by core/crypto/aes-ccm.c under HOST_CRYPTO_TEST (W2-04a). */
+#define WPA_PUT_BE16(a, val)                     \
+	do {                                     \
+		(a)[0] = (u8)(((u16)(val)) >> 8); \
+		(a)[1] = (u8)(((u16)(val)) & 0xff); \
+	} while (0)
+
 #define WPA_GET_BE32(a)                                       \
 	(((u32)(((const u8 *)(a))[0]) << 24) |                \
 	 ((u32)(((const u8 *)(a))[1]) << 16) |                \

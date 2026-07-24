@@ -20,6 +20,8 @@ tests/host/
     test_gcmp.c          # C-oracle runner for GCMP (W2-02c)
     test_aes_siv.c       # C-oracle runner for AES-SIV (W2-03a)
     aes_siv_vectors.json
+    test_aes_ccm.c       # C-oracle runner for AES-CCM (W2-04a)
+    aes_ccm_vectors.json
     Makefile
 ```
 
@@ -123,6 +125,35 @@ AES-128/192/256 keys, zero/multi/long associated data, tampered decrypt, bad key
 `num_elem` overflow). A missing or non-array `elements` key is parsed as zero associated
 data (valid for SIV). `rust_only` vectors are skipped by the C runner and exercised on the
 Rust path.
+
+## Run (aes-ccm parity, W2-04a)
+
+```bash
+make -C tests/host/crypto test-aes-ccm-c
+```
+
+Compile-only gate (shim + `aes-ccm.c` build under `HOST_CRYPTO_TEST`):
+
+```bash
+make -C tests/host/crypto test-aes-ccm-compile
+```
+
+`make -C tests/host/crypto test-aes-ccm` currently runs the C oracle only; the Rust
+oracle lands in W2-04b. Both are included in the default `all` target once W2-04b
+extends `test-aes-ccm`.
+
+## aes-ccm details
+
+W2-04a adds `aes_ccm_vectors.json`, the C-oracle runner, and `WPA_PUT_BE16` in the
+host Wi-Fi shim (required by `aes-ccm.c` under `HOST_CRYPTO_TEST`).
+
+- **`test-aes-ccm-c`** — links in-tree C objects (`aes-internal*.c`, `aes-ccm.c`) and
+  exercises the C oracle against `aes_ccm_vectors.json`.
+- **`test-aes-ccm-compile`** — compile-only gate; no link/run.
+
+Vectors characterize observable behavior of `core/crypto/aes-ccm.c` (fixed `L=2`,
+`aad_len <= 30`): encrypt/decrypt, empty/partial/multi-block plaintext, zero and
+long AAD, AES-128/192/256 keys, `M=8`/`M=16`, auth mismatch, and reject paths.
 
 ## gcmp details
 
