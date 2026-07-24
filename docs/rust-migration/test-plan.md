@@ -98,6 +98,9 @@ drop legacy_symbol_only_in_c
 rename old_export_name new_export_name
 ```
 
+Dropping every OLD global requires `--allow-vacuous` (intentional smoke tests only;
+production swaps should leave at least one symbol to verify).
+
 Self-test against the W1-03 aes-ctr pilot (builds only `rust/aes_ctr.o`, not the full
 module). The C reference in the selftest uses host `gcc` + `HOST_CRYPTO_TEST` for
 speed; **production L1 on a swap should use a kbuild-produced `OLD.o` from `master`.**

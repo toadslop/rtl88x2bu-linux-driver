@@ -1,0 +1,4 @@
+# Smoke fixture: exercise rename parsing on the W1-03 aes_ctr pilot.
+# Identity mappings — OLD and NEW export the same symbol names.
+rename aes_ctr_encrypt aes_ctr_encrypt
+rename aes_128_ctr_encrypt aes_128_ctr_encrypt

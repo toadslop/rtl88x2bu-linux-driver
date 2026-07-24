@@ -2516,7 +2516,8 @@ rust-check-symbols:
 		echo "Usage: make rust-check-symbols OLD=path/to/old.o NEW=path/to/new.o [ALLOWLIST=path.allow]"; \
 		exit 1; }
 	NM=$(RUST_CHECK_NM) ./docs/rust-migration/scripts/check-symbols.sh "$(OLD)" "$(NEW)" \
-		$(if $(ALLOWLIST),--allowlist "$(ALLOWLIST)",)
+		$(if $(ALLOWLIST),--allowlist "$(ALLOWLIST)",) \
+		$(if $(ALLOW_VACUOUS),--allow-vacuous,)
 
 rust-objects-aes-ctr:
 	@test -n "$(KDIR)" || { \
@@ -2529,7 +2530,8 @@ rust-objects-aes-ctr:
 # L1 on a swap should compare against a kbuild-produced OLD.o from master.
 rust-check-symbols-selftest: rust-objects-aes-ctr
 	@set -e; \
-	fixture=docs/rust-migration/scripts/fixtures/omac1_vs_aes_ctr.allow; \
+	drop_fixture=docs/rust-migration/scripts/fixtures/omac1_vs_aes_ctr.allow; \
+	rename_fixture=docs/rust-migration/scripts/fixtures/aes_ctr_rename_smoke.allow; \
 	tmp_ctr=$$(mktemp /tmp/aes-ctr-ref.XXXXXX.o); \
 	tmp_omac=$$(mktemp /tmp/aes-omac1-ref.XXXXXX.o); \
 	gcc -c -Wall -I$(shell pwd)/tests/host/include -I$(shell pwd)/core/crypto \
@@ -2537,12 +2539,14 @@ rust-check-symbols-selftest: rust-objects-aes-ctr
 	gcc -c -Wall -I$(shell pwd)/tests/host/include -I$(shell pwd)/core/crypto \
 		-DHOST_CRYPTO_TEST -o "$$tmp_omac" core/crypto/aes-omac1.c; \
 	NM=$(RUST_CHECK_NM) ./docs/rust-migration/scripts/check-symbols.sh "$$tmp_ctr" rust/aes_ctr.o; \
+	NM=$(RUST_CHECK_NM) ./docs/rust-migration/scripts/check-symbols.sh "$$tmp_ctr" rust/aes_ctr.o \
+		--allowlist "$$rename_fixture"; \
 	if NM=$(RUST_CHECK_NM) ./docs/rust-migration/scripts/check-symbols.sh "$$tmp_omac" rust/aes_ctr.o 2>/dev/null; then \
 		echo "rust-check-symbols-selftest: expected mismatch without allowlist" >&2; \
 		exit 1; \
 	fi; \
 	NM=$(RUST_CHECK_NM) ./docs/rust-migration/scripts/check-symbols.sh "$$tmp_omac" rust/aes_ctr.o \
-		--allowlist "$$fixture"; \
+		--allowlist "$$drop_fixture" --allow-vacuous; \
 	rm -f "$$tmp_ctr" "$$tmp_omac"; \
 	echo "rust-check-symbols-selftest: OK"
 

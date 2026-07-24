@@ -7,10 +7,15 @@
 # Usage (from repo root):
 #   ./docs/rust-migration/scripts/check-symbols.sh OLD.o NEW.o
 #   ./docs/rust-migration/scripts/check-symbols.sh OLD.o NEW.o --allowlist path.allow
+#   ./docs/rust-migration/scripts/check-symbols.sh OLD.o NEW.o --allowlist path.allow --allow-vacuous
 #   make rust-check-symbols OLD=path/to/old.o NEW=path/to/new.o
 #
 # Environment:
 #   NM   nm/llvm-nm binary (default: nm). The Makefile target sets this when LLVM=1.
+#
+# Options:
+#   --allow-vacuous   Permit an allowlist that drops/renames away every OLD global
+#                     (default: fail — catches accidental "drop all" allowlists).
 #
 # Allowlist file format (one rule per line; # starts a comment):
 #   drop SYMBOL            OLD symbol may be absent from NEW
@@ -23,9 +28,10 @@ set -euo pipefail
 
 NM="${NM:-nm}"
 ALLOWLIST=""
+ALLOW_VACUOUS=0
 
 usage() {
-	sed -n '2,22p' "$0"
+	sed -n '2,26p' "$0"
 }
 
 die() {
@@ -46,6 +52,10 @@ while [[ $# -gt 0 ]]; do
 		shift
 		[[ $# -gt 0 ]] || die "--allowlist requires a path"
 		ALLOWLIST="$1"
+		shift
+		;;
+	--allow-vacuous)
+		ALLOW_VACUOUS=1
 		shift
 		;;
 	--)
@@ -92,7 +102,7 @@ declare -A DROP=()
 declare -A RENAME=()
 
 load_allowlist() {
-	local line rule op sym rest
+	local line rule sym rest
 	while IFS= read -r line || [[ -n "$line" ]]; do
 		line="${line%%#*}"
 		line="${line#"${line%%[![:space:]]*}"}"
@@ -151,9 +161,11 @@ read_symbols "$NEW_OBJ" NEW_SYMS
 missing=0
 binding=0
 checked=0
+dropped=0
 
 for sym in "${!OLD_SYMS[@]}"; do
 	if [[ -n "${DROP[$sym]+x}" ]]; then
+		dropped=$((dropped + 1))
 		continue
 	fi
 
@@ -184,6 +196,9 @@ if [[ "$missing" -ne 0 || "$binding" -ne 0 ]]; then
 fi
 
 old_count="${#OLD_SYMS[@]}"
+if [[ "$checked" -eq 0 && "$old_count" -gt 0 && "$ALLOW_VACUOUS" -eq 0 ]]; then
+	die "no OLD globals left to check (allowlist drops/renames everything?) — use --allow-vacuous only for intentional smoke tests"
+fi
+
 new_count="${#NEW_SYMS[@]}"
-dropped=${#DROP[@]}
 echo "check-symbols: OK — $checked required OLD global(s) satisfied ($old_count in OLD, $new_count in NEW, $dropped dropped)"
