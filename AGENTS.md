@@ -3,7 +3,8 @@
 ## Cursor Cloud specific instructions
 
 This repo is an **out-of-tree Linux kernel module** (`88x2bu`, the RTL88x2BU USB
-Wi-Fi driver) mid-way through a C→Rust migration. There is no web/app server: the
+Wi-Fi driver) in **early Wave 0** of a C→Rust migration (only W0-01/W0-02 landed;
+see `docs/rust-migration/issues/README.md`). There is no web/app server: the
 "application" is the `88x2bu.ko` module. The canonical dev workflow, gates, and
 gotchas already live in `docs/rust-migration/` (especially
 [`dev-environment.md`](docs/rust-migration/dev-environment.md),
@@ -11,7 +12,13 @@ gotchas already live in `docs/rust-migration/` (especially
 [`docs/smoke-test.md`](docs/smoke-test.md). Read those first; notes below only
 capture what is specific to the pre-provisioned cloud VM.
 
-### What is already provisioned (baked into the snapshot)
+### What the cloud snapshot should provide
+
+These were provisioned during environment setup and are expected to persist in the
+Cursor Cloud snapshot. **Verify they exist before relying on them** — on some agent
+hosts the snapshot may not carry them, in which case reprovision using
+[`dev-environment.md`](docs/rust-migration/dev-environment.md) (host packages,
+`ld.lld`/`llvm-*` symlinks, `bindgen --locked`, and the pinned-kernel recipe).
 
 - Toolchain: `clang-18` + `lld`, with **unsuffixed** `ld.lld`/`llvm-*` symlinks in
   `/usr/bin` (kernel `LLVM=1` requires unsuffixed names). `rustc`/`cargo` 1.83 with
@@ -19,11 +26,12 @@ capture what is specific to the pre-provisioned cloud VM.
 - A **pinned, pre-built Rust-enabled kernel tree at `/opt/linux`** (stable
   `v6.12.9`, `CONFIG_RUST=y`, built with `LLVM=1`). Use it as `KDIR`. Do not rebuild
   it unless you intentionally bump the pin — a full rebuild takes several minutes.
+  If `/opt/linux` is absent, rebuild it per `dev-environment.md`.
 
 ### Building the module (L0 gate)
 
-Run from the repo root. `LIBCLANG_PATH` must point at the clang-18 libs or bindgen
-fails:
+Run from the repo root. Export `LIBCLANG_PATH` so it points at the clang-18 libs;
+it is consulted when `bindgen` runs, so set it as a safety measure:
 
 ```bash
 export LIBCLANG_PATH=/usr/lib/llvm-18/lib
@@ -42,8 +50,9 @@ Because the pinned kernel has `CONFIG_RUST=y`, the build links the Rust object
   load modules; vermagic will not match `/opt/linux` either.
 - Load/unload in **QEMU (TCG, no `/dev/kvm`)** booting the same `/opt/linux`
   `bzImage` with a busybox initramfs. The copy-paste recipe is in
-  `docs/rust-migration/dev-environment.md` ("Reliable fallback: busybox initramfs +
-  QEMU (TCG)"). A clean pass shows `registered new interface driver rtl88x2bu` on
+  [`dev-environment.md`](docs/rust-migration/dev-environment.md#reliable-fallback-busybox-initramfs--qemu-tcg)
+  ("Reliable fallback: busybox initramfs + QEMU (TCG)"). A clean pass shows
+  `registered new interface driver rtl88x2bu` on
   `insmod` and `deregistering interface driver rtl88x2bu` on `rmmod`, with no
   Oops/WARN.
 
