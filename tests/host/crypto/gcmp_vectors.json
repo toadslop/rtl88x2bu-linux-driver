@@ -13,7 +13,7 @@
       "pn": "393837363534",
       "keyid": 0,
       "expect_ret": 1,
-      "ciphertext": "08000000aabbccddee01aabbccddee02aabbccddee03100034350020363738396d6ba2164a9db80a1de60e2c2bce737661fdde9e569bb892"
+      "ciphertext": "08000000aabbccddee01aabbccddee02aabbccddee03100034350020363738396d6ba2164a9db80a3ebc0b394cad971a2554286a3db946a4"
     },
     {
       "name": "gcmp_encrypt_embedded_pn",
@@ -26,7 +26,7 @@
       "null_pn": true,
       "keyid": 0,
       "expect_ret": 1,
-      "ciphertext": "08000000aabbccddee01aabbccddee02aabbccddee03100034350020363738396d6ba2164a9db80a1de60e2c2bce737661fdde9e569bb892"
+      "ciphertext": "08000000aabbccddee01aabbccddee02aabbccddee03100034350020363738396d6ba2164a9db80a3ebc0b394cad971a2554286a3db946a4"
     },
     {
       "name": "gcmp_decrypt_basic",
@@ -35,7 +35,7 @@
       "key_len": 16,
       "key": "000102030405060708090a0b0c0d0e0f",
       "hdr": "08000000aabbccddee01aabbccddee02aabbccddee031000",
-      "data": "34350020363738396d6ba2164a9db80a1de60e2c2bce737661fdde9e569bb892",
+      "data": "34350020363738396d6ba2164a9db80a3ebc0b394cad971a2554286a3db946a4",
       "expect_ret": 1,
       "plaintext": "68656c6c6f212121"
     },
@@ -50,7 +50,7 @@
       "pn": "010203040506",
       "keyid": 0,
       "expect_ret": 1,
-      "ciphertext": "08000000aabbccddee01aabbccddee02aabbccddee031000060500200403020193560899a275463f87857d63d0e6d49cf791"
+      "ciphertext": "08000000aabbccddee01aabbccddee02aabbccddee031000060500200403020193564726d0da15af2b07cec9cbee6041518d"
     },
     {
       "name": "gcmp_encrypt_qos",
@@ -63,7 +63,7 @@
       "pn": "010203040506",
       "keyid": 2,
       "expect_ret": 1,
-      "ciphertext": "8800000001020304050611121314151621222324252690008000060500a00403020134c7b213007b3328ada6d561623b94f484fb2cd2"
+      "ciphertext": "8800000001020304050611121314151621222324252690008000060500a00403020134c7b21332b89686b9d9afddf180c995c6cd1a3e"
     },
     {
       "name": "gcmp_encrypt_qos_spp",
@@ -76,7 +76,7 @@
       "pn": "010203040506",
       "keyid": 2,
       "expect_ret": 1,
-      "ciphertext": "8800000001020304050611121314151621222324252690088000060500a00403020134c7b213e5b531558f09ef478d8549d174fd7c4c"
+      "ciphertext": "8800000001020304050611121314151621222324252690088000060500a00403020134c7b2133dcd0a669e0b852e53ee327814921a5b"
     },
     {
       "name": "gcmp_decrypt_short_input",
@@ -95,7 +95,7 @@
       "key_len": 16,
       "key": "000102030405060708090a0b0c0d0e0f",
       "hdr": "08000000aabbccddee01aabbccddee02aabbccddee031000",
-      "data": "34350020363738396d6ba2164a9db80a1de60e2c2bce737661fdde9e569bb893",
+      "data": "34350020363738396d6ba2164a9db80a3ebc0b394cad971a2554286a3db946a5",
       "expect_ret": 0
     },
     {
