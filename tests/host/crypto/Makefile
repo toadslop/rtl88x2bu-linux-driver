@@ -36,7 +36,7 @@ test-c: test_aes_ctr
 test_aes_ctr: test_aes_ctr.c $(C_ORACLE_SRCS)
 	$(CC) $(CFLAGS) -o $@ test_aes_ctr.c $(C_ORACLE_SRCS)
 
-librust_aes_ctr.a: $(RUST_SRC) $(ROOT)/rust/domain/types.rs $(ROOT)/rust/bindings/generated.rs
+librust_aes_ctr.a: $(RUST_SRC) $(ROOT)/rust/domain/types.rs
 	$(RUSTC) $(RUSTFLAGS) --cfg host_crypto_test --crate-type staticlib $(RUST_SRC) -o $@
 
 test-rust: test_aes_ctr_rust

@@ -3,6 +3,11 @@
 //!
 //! Typed logic uses domain types; `extern "C"` symbols preserve the C ABI for
 //! remaining callers. AES block operations stay in C (`aes-internal*.c`).
+//!
+//! Domain types are included via `#[path]` because Kbuild compiles each `.rs`
+//! as its own crate (same pattern as `domain_types.rs`). That duplicates type
+//! code in `88x2bu.ko` for the pilot; consolidate into a shared crate or
+//! `include!` only if binary size or drift becomes a concern in Wave 2+.
 
 #![allow(
     dead_code,
@@ -62,6 +67,8 @@ pub fn aes_ctr_encrypt_typed(
     while left > 0 {
         let mut buf = [0u8; 16];
         let rc = unsafe { aes_encrypt(ctx, counter.as_ptr(), buf.as_mut_ptr()) };
+        // C `aes-ctr.c` ignores `aes_encrypt()`'s return; we check for safety.
+        // Today `aes_encrypt` always returns 0, so L2 parity holds.
         if rc != 0 {
             unsafe { aes_encrypt_deinit(ctx) };
             return Err(());
@@ -95,18 +102,16 @@ pub extern "C" fn aes_ctr_encrypt(
     data: *mut u8,
     data_len: usize,
 ) -> c_int {
-    let key = match unsafe { core::slice::from_raw_parts(key, key_len) } {
-        s => match AesKey::try_from_slice(s) {
-            Ok(k) => k,
-            Err(_) => return -1,
-        },
+    let key = match AesKey::try_from_slice(unsafe { core::slice::from_raw_parts(key, key_len) }) {
+        Ok(k) => k,
+        Err(_) => return -1,
     };
-    let nonce = match unsafe { core::slice::from_raw_parts(nonce, AesCtrNonce::SIZE) } {
-        s => match AesCtrNonce::try_from_slice(s) {
+    let nonce =
+        match AesCtrNonce::try_from_slice(unsafe { core::slice::from_raw_parts(nonce, AesCtrNonce::SIZE) })
+        {
             Ok(n) => n,
             Err(_) => return -1,
-        },
-    };
+        };
     let data = unsafe { core::slice::from_raw_parts_mut(data, data_len) };
 
     match aes_ctr_encrypt_typed(key, nonce, data) {
@@ -127,6 +132,7 @@ pub extern "C" fn aes_128_ctr_encrypt(
 }
 
 /// Link-time probe for L1 (distinct from the exported crypto symbols).
+/// Wire into `check-symbols.sh` when T1 lands.
 #[no_mangle]
 pub extern "C" fn rtw_rust_aes_ctr_probe() -> c_int {
     AES_BLOCK_SIZE as c_int
