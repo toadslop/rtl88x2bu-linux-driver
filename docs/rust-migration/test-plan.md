@@ -63,6 +63,8 @@ make KDIR=/path/to/rust-enabled-kernel LLVM=1 -j"$(nproc)"
 
 CI (when added) should run this on the pinned kernel tree or a cached build container. Distro headers without `CONFIG_RUST` are **not** sufficient.
 
+Host toolchain, kernel pin recipe, and Clang/`LLVM=1` pitfalls: [`dev-environment.md`](dev-environment.md).
+
 ## L1 — Symbol / ABI gate
 
 When replacing `foo.c` with `foo.rs` (or moving a function group):
@@ -117,6 +119,8 @@ Once Wave 0 lands, periodically (and always for init/USB table changes):
 3. Expect: module loads (or fails only for documented reasons), scaffold/init logs appear, `rmmod` is clean (no WARN/Oops).
 
 This does **not** prove TX/RX; it catches link errors, missing symbols, and init/exit regressions.
+
+**Practical note (W0-02):** `virtme-ng` needs a real PTY and working virtio-serial for `--script-sh`; agents without `/dev/kvm` should use the busybox initramfs + QEMU (TCG) recipe in [`dev-environment.md`](dev-environment.md#reliable-fallback-busybox-initramfs--qemu-tcg).
 
 ## L4 — Hardware milestones (infrequent)
 

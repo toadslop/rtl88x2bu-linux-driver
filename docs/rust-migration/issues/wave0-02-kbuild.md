@@ -24,6 +24,8 @@ Extend the out-of-tree build so `88x2bu` can include `.rs` objects when built wi
 - C-only behavior unchanged if no Rust logic added yet
 - L4 hardware STA smoke is a Wave 0 milestone, not required for this PR if L0+L3 pass
 
+Environment / toolchain / QEMU recipe for these gates: [`../dev-environment.md`](../dev-environment.md) (written from W0-02 bring-up).
+
 ## Out of scope
 
 - Real translation of driver logic

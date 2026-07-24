@@ -16,6 +16,25 @@ ccflags-y += -Wno-unused-variable
 #ccflags-y += -Wno-unused
 #ccflags-y += -Wno-uninitialized
 
+# Clang (LLVM=1 / RfL out-of-tree) turns several noisy diagnostics into errors.
+# Keep these gated so default GCC / distro-header builds stay unchanged.
+ifeq ($(LLVM),1)
+ccflags-y += -Wno-missing-prototypes
+ccflags-y += -Wno-missing-declarations
+ccflags-y += -Wno-implicit-fallthrough
+ccflags-y += -Wno-unused-function
+ccflags-y += -Wno-unused-label
+ccflags-y += -Wno-unused-parameter
+ccflags-y += -Wno-uninitialized
+ccflags-y += -Wno-address-of-packed-member
+ccflags-y += -Wno-format
+ccflags-y += -Wno-frame-larger-than=
+ccflags-y += -Wno-vla
+# Drop platform soft/hard-float flags under Clang; they fight kernel code model.
+ccflags-remove-y += -mhard-float
+ccflags-remove-y += -mfloat-abi=hard
+endif
+
 GCC_VER_49 := $(shell echo `$(CC) -dumpversion | cut -f1-2 -d.` \>= 4.9 | bc )
 ifeq ($(GCC_VER_49),1)
 ccflags-y += -Wno-date-time	# Fix compile error && warning on gcc 4.9 and later
@@ -2458,16 +2477,33 @@ ifeq ($(CONFIG_RTL8723B), y)
 $(MODULE_NAME)-$(CONFIG_MP_INCLUDED)+= core/rtw_bt_mp.o
 endif
 
+# Rust-for-Linux: link .rs objects only when the target kernel has CONFIG_RUST=y.
+# C-only builds (distro headers without Rust) keep the previous object list.
+ifdef CONFIG_RUST
+$(MODULE_NAME)-y += rust/kbuild_stub.o
+endif
+
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
 
 else
 
 export CONFIG_RTL8822BU = m
 
+# RfL out-of-tree contract: KDIR overrides platform KSRC when set
+# (make KDIR=/path/to/rust-enabled-kernel LLVM=1).
+ifneq ($(KDIR),)
+KSRC := $(KDIR)
+endif
+
+KBUILD_OPTS := ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE)
+ifneq ($(LLVM),)
+KBUILD_OPTS += LLVM=$(LLVM)
+endif
+
 all: modules
 
 modules:
-	$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(KSRC) M=$(shell pwd)  modules
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) modules
 
 strip:
 	$(CROSS_COMPILE)strip $(MODULE_NAME).ko --strip-unneeded
@@ -2532,6 +2568,7 @@ clean:
 	cd os_dep/linux ; rm -fr *.mod.c *.mod *.o .*.cmd *.ko
 	cd os_dep ; rm -fr *.mod.c *.mod *.o .*.cmd *.ko
 	cd platform ; rm -fr *.mod.c *.mod *.o .*.cmd *.ko
+	cd rust ; rm -fr *.mod.c *.mod *.o .*.cmd *.ko *.rmeta 2>/dev/null || true
 	rm -fr Module.symvers ; rm -fr Module.markers ; rm -fr modules.order
 	rm -fr *.mod.c *.mod *.o .*.cmd *.ko *~
 	rm -fr .tmp_versions
