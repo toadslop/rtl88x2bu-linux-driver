@@ -103,24 +103,24 @@ Compile-only gate (shim + `aes-siv.c` and dependencies build under `HOST_CRYPTO_
 make -C tests/host/crypto test-aes-siv-compile
 ```
 
-`make -C tests/host/crypto test-aes-siv` is included in the default `all` target
-(`make -C tests/host/crypto`) alongside ctr, omac1, and gcmp. W2-03b will add the
-Rust oracle (`test-aes-siv-rust`).
+`make -C tests/host/crypto test-aes-siv` runs both C and Rust oracles (`test-aes-siv-c` + `test-aes-siv-rust`).
 
 ## aes-siv details
 
-W2-03a adds the C-oracle runner and `aes_siv_vectors.json` fixture. W2-03b will add the
-Rust oracle.
+W2-03a adds `aes_siv_vectors.json` and the C-oracle runner. W2-03b adds the Rust
+oracle. W2-03c swaps `aes-siv.o` for `rust/aes_siv.o` in the module link.
 
 - **`test-aes-siv-c`** — links the in-tree C objects (`aes-omac1.c`, `aes-ctr.c`, `aes-siv.c`)
   and exercises the C oracle against `aes_siv_vectors.json`.
+- **`test-aes-siv-rust`** — links `rust/aes_siv.rs` as a userspace staticlib and
+  exercises the Rust `extern "C"` shims against the same vectors.
 - **`test-aes-siv-compile`** — compile-only gate; no link/run.
 
 Vectors characterize observable behavior of `core/crypto/aes-siv.c` (encrypt/decrypt,
 AES-128/192/256 keys, zero/multi/long associated data, tampered decrypt, bad key length,
 `num_elem` overflow). A missing or non-array `elements` key is parsed as zero associated
 data (valid for SIV). `rust_only` vectors are skipped by the C runner and exercised on the
-Rust path in W2-03b.
+Rust path.
 
 ## gcmp details
 
