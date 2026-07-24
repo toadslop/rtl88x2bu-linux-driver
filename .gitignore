@@ -8,3 +8,6 @@ Module.markers
 Module.symvers
 modules.order
 tests/host/crypto/test_aes_ctr
+tests/host/crypto/test_aes_ctr_rust
+tests/host/crypto/librust_aes_ctr.a
+tests/host/domain/test_domain_types

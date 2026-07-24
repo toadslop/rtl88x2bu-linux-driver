@@ -61,7 +61,8 @@ Architecture: `epic-11-architecture.md`, `arch-00-*.md` …
 | W1-02 | `wave1-02-ffi-module.md` | done (rust/ffi ownership map + re-exports; not filed on GitHub) |
 | T2 | `test-02-host-crypto-harness.md` | done (host aes-ctr vectors + C oracle runner; not filed on GitHub) |
 | A1 | `arch-01-domain-types-seed.md` | done (AesKey + AesCtrNonce + host tests; not filed on GitHub) |
-| W1-03 | `wave1-03-pilot-aes-ctr.md` | draft |
+| W1-03 | `wave1-03-pilot-aes-ctr.md` | done (Rust aes-ctr + L2 host test; not filed on GitHub) |
+| W1-04 | `wave1-04-pilot-makefile-smoke.md` | done (folded into W1-03 Makefile swap; not filed on GitHub) |
 | W2-01… | `wave2-*.md` | draft |
 | T0 / A0 | `test-00-*.md` / `arch-00-*.md` | done (plan docs + links via W0-01) |
 | T1–T3 / A1 | remaining `test-*` / `arch-*` | draft (A1 done; T1/T3 remain) |

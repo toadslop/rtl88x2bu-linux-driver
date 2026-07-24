@@ -31,7 +31,7 @@
 //! | `rtw_rust_bindings_probe` | **Rust** (this crate) | Confirms bindgen object linked (W1-01) |
 //! | `rtw_rust_domain_types_probe` | **Rust** (`domain_types.rs`) | Confirms domain types linked (A1) |
 //! | `aes_encrypt_*` / `aes_decrypt_*` / `AES_BLOCK_SIZE` | **C** (`aes-internal*.c`, `aes.h`) | Rust **binds** only — calls into C |
-//! | `aes_ctr_encrypt` / `aes_128_ctr_encrypt` | **C** today (`aes-ctr.c`); **Rust** after W1-03 | Not in bindgen allowlist (Rust will *define*) |
+//! | `aes_ctr_encrypt` / `aes_128_ctr_encrypt` | **Rust** (`aes_ctr.rs`); C TU removed (W1-03) |
 //! | Remaining `core/crypto/*.c` + rest of driver | **C** | Until later waves claim them |
 //!
 //! ## Rules
