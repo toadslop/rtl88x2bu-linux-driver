@@ -53,9 +53,26 @@ Notes:
 
 - **`KDIR`** — path to the Rust-enabled kernel build tree (RfL out-of-tree pattern). When set, it overrides the platform `KSRC` default (`/lib/modules/$(uname -r)/build` on `CONFIG_PLATFORM_I386_PC`).
 - **`LLVM=1`** — forwarded to the kernel make; required for the Clang/LLVM toolchain path used with RfL out-of-tree modules. When set, the Makefile adds Clang-quieting `ccflags-y` (e.g. `-Wno-missing-prototypes`, including Clang-only forms like `-Wno-frame-larger-than=`) so the C tree builds under Clang without Wave-0 mass churn. Default GCC builds omit that block.
-- **`.rs` objects** — linked into `88x2bu.ko` only when the target kernel has `CONFIG_RUST=y` (see `rust/kbuild_stub.rs`, `rust/scaffold.rs`). Distro headers without Rust keep a C-only link (unchanged object list). `rtw_drv_entry` calls `rtw_rust_scaffold_init()` once when Rust is enabled.
+- **`.rs` objects** — linked into `88x2bu.ko` only when the target kernel has `CONFIG_RUST=y` (see `rust/kbuild_stub.rs`, `rust/scaffold.rs`, `rust/bindings.rs`). Distro headers without Rust keep a C-only link (unchanged object list). `rtw_drv_entry` calls `rtw_rust_scaffold_init()` once when Rust is enabled.
 - **C-only / legacy:** `make` and `make KSRC=...` still work as before when `KDIR` is unset.
 - **Product config** for Phase 1 exit remains default `CONFIG_RTL8822B=y` + `CONFIG_USB_HCI=y` (module name `88x2bu`).
+
+### Regenerating bindgen bindings (W1-01)
+
+Allowlisted FFI for the crypto pilot lives under `rust/bindings/`. The generated blob is committed; regenerate after changing `rust/bindings/bindgen_helper.h` or the allowlist in the script:
+
+```bash
+export LIBCLANG_PATH=/usr/lib/llvm-18/lib   # adjust to host clang
+KDIR=/path/to/rust-enabled-kernel ./scripts/bindgen_rtw.sh
+# writes rust/bindings/generated.rs
+# Optional: fail if the committed blob is stale (for future CI):
+# ./scripts/bindgen_rtw.sh --check
+```
+
+`KDIR` defaults to `/opt/linux` and must exist (Wave 0 pin); the aes.h pilot
+surface does not pass kernel include paths to clang yet.
+
+Requires `bindgen` 0.65.1 (same pin as Wave 0). The script allowlists only `aes_encrypt_*` / `aes_decrypt_*` / `AES_BLOCK_SIZE` — not `aes_ctr_*` (those symbols will be defined by the Rust pilot). Full `drv_types.h` surface is intentionally excluded.
 
 First-time L0/L3 setup (packages, `ld.lld` symlinks, bindgen `--locked`, QEMU without KVM): see [`rust-migration/dev-environment.md`](rust-migration/dev-environment.md).
 
