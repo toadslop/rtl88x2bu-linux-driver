@@ -17,7 +17,8 @@ tests/host/
     test_aes_omac1.c # oracle runner for OMAC1/CMAC (W2-01)
     host_gcmp_vector.c   # GCMP vector parse/run helpers (W2-02b)
     gcmp_vectors.json
-    test_gcmp.c          # C-oracle runner for GCMP (W2-02c)
+    test_aes_siv.c   # C-oracle runner for AES-SIV (W2-03a)
+    aes_siv_vectors.json
     Makefile
 ```
 
@@ -88,6 +89,37 @@ make -C tests/host/crypto test-gcmp-compile
 ```
 
 `make -C tests/host/crypto test-gcmp` runs both C and Rust oracles (`test-gcmp-c` + `test-gcmp-rust`).
+
+## Run (aes-siv parity, W2-03a)
+
+```bash
+make -C tests/host/crypto test-aes-siv-c
+```
+
+Compile-only gate (shim + `aes-siv.c` and dependencies build under `HOST_CRYPTO_TEST`):
+
+```bash
+make -C tests/host/crypto test-aes-siv-compile
+```
+
+`make -C tests/host/crypto test-aes-siv` is included in the default `all` target
+(`make -C tests/host/crypto`) alongside ctr, omac1, and gcmp. W2-03b will add the
+Rust oracle (`test-aes-siv-rust`).
+
+## aes-siv details
+
+W2-03a adds the C-oracle runner and `aes_siv_vectors.json` fixture. W2-03b will add the
+Rust oracle.
+
+- **`test-aes-siv-c`** — links the in-tree C objects (`aes-omac1.c`, `aes-ctr.c`, `aes-siv.c`)
+  and exercises the C oracle against `aes_siv_vectors.json`.
+- **`test-aes-siv-compile`** — compile-only gate; no link/run.
+
+Vectors characterize observable behavior of `core/crypto/aes-siv.c` (encrypt/decrypt,
+AES-128/192/256 keys, zero/multi/long associated data, tampered decrypt, bad key length,
+`num_elem` overflow). A missing or non-array `elements` key is parsed as zero associated
+data (valid for SIV). `rust_only` vectors are skipped by the C runner and exercised on the
+Rust path in W2-03b.
 
 ## gcmp details
 

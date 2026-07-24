@@ -61,6 +61,10 @@ static int json_parse_fn_dispatch(const char *obj, size_t obj_len,
 	return -1;
 }
 
+/*
+ * Missing or non-array "elements" => zero associated data (valid for SIV).
+ * Omission is intentional — see aes_siv_encrypt_zero_ad.
+ */
 static int json_parse_elements_in(const char *obj, size_t obj_len, const char *key,
 				  struct vector *v)
 {
@@ -156,6 +160,20 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 	return 0;
 }
 
+static void dump_hex_mismatch(const char *label, const u8 *expected, size_t expected_len,
+			      const u8 *got, size_t got_len)
+{
+	size_t i;
+
+	fprintf(stderr, "  %s (%zu): ", label, expected_len);
+	for (i = 0; i < expected_len; i++)
+		fprintf(stderr, "%02x", expected[i]);
+	fprintf(stderr, "\n  got (%zu):      ", got_len);
+	for (i = 0; i < got_len; i++)
+		fprintf(stderr, "%02x", got[i]);
+	fprintf(stderr, "\n");
+}
+
 static int run_vector(const struct vector *v)
 {
 	const u8 *addr[MAX_ELEMENTS];
@@ -182,6 +200,8 @@ static int run_vector(const struct vector *v)
 			    memcmp(out, v->expected, out_len) != 0) {
 				fprintf(stderr, "%s: encrypt output mismatch\n",
 					v->name);
+				dump_hex_mismatch("expected", v->expected,
+						  v->expected_len, out, out_len);
 				return -1;
 			}
 		}
@@ -206,6 +226,8 @@ static int run_vector(const struct vector *v)
 			    memcmp(out, v->expected, plain_len) != 0) {
 				fprintf(stderr, "%s: decrypt plaintext mismatch\n",
 					v->name);
+				dump_hex_mismatch("expected", v->expected,
+						  v->expected_len, out, plain_len);
 				return -1;
 			}
 		}

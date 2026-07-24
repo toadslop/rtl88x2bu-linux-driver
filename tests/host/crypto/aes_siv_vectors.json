@@ -42,6 +42,26 @@
       "expect_ret": -1
     },
     {
+      "name": "aes_siv_encrypt_aes192",
+      "fn": "aes_siv_encrypt",
+      "key_len": 48,
+      "key": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e",
+      "elements": ["01010101"],
+      "pw": "0202020202",
+      "expected": "b89a2dfc91d7c2bb42bfc0bec13af63e5ea956219e",
+      "expect_ret": 0
+    },
+    {
+      "name": "aes_siv_decrypt_aes192",
+      "fn": "aes_siv_decrypt",
+      "key_len": 48,
+      "key": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e",
+      "elements": ["01010101"],
+      "iv_crypt": "b89a2dfc91d7c2bb42bfc0bec13af63e5ea956219e",
+      "expected_pw": "0202020202",
+      "expect_ret": 0
+    },
+    {
       "name": "aes_siv_encrypt_aes256",
       "fn": "aes_siv_encrypt",
       "key_len": 64,

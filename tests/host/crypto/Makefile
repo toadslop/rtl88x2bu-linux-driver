@@ -42,7 +42,7 @@ SIV_COMPILE_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-omac1.c $(CRYPTO)/aes-ctr.c \
         test-gcmp test-gcmp-c test-gcmp-rust test-gcmp-compile \
 	test-aes-siv test-aes-siv-c test-aes-siv-compile clean
 
-all: test test-omac1 test-gcmp
+all: test test-omac1 test-gcmp test-aes-siv
 
 test: test-c test-rust
 
