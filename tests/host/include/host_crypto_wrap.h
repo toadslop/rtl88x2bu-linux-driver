@@ -30,12 +30,25 @@ enum {
 #define MACSTR "%02x:%02x:%02x:%02x:%02x:%02x"
 #endif
 
+#ifndef ENOMEM
+#define ENOMEM 12
+#endif
+
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+#endif
+
 #define os_memset _rtw_memset
 #define os_memcpy _rtw_memcpy
 
 void *rtw_malloc(size_t sz);
 void *os_malloc(size_t sz);
 void rtw_mfree(void *ptr, size_t sz);
+
+int os_memcmp(const void *s1, const void *s2, size_t n);
+void *os_memdup(const void *src, u32 sz);
+void forced_memzero(void *ptr, size_t len);
+void bin_clear_free(void *bin, size_t len);
 
 u8 rtw_registrypriv_amsdu_mode(const _adapter *padapter);
 void host_adapter_set_amsdu_mode(_adapter *padapter, enum rtw_amsdu_mode mode);

@@ -1,4 +1,4 @@
-# Host L2 differential test harness for core/crypto (T2/W1-03 aes-ctr, W2-01 aes-omac1, W2-02 gcmp).
+# Host L2 differential test harness for core/crypto (T2/W1-03 aes-ctr, W2-01 aes-omac1, W2-02 gcmp, W2-03 aes-siv).
 # Builds with gcc only — no kernel headers or KDIR.
 
 ROOT     := ../../..
@@ -32,10 +32,17 @@ C_ORACLE_GCMP_SRCS := $(AES_LEAF_SRCS) $(GCM_SRCS) $(CRYPTO)/gcmp.c \
 GCMP_COMPILE_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-gcm.c $(CRYPTO)/gcmp.c \
 		     $(HOST_GCMP)
 
-.PHONY: all test test-c test-rust test-omac1 test-omac1-c test-omac1-rust \
-        test-gcmp test-gcmp-c test-gcmp-rust test-gcmp-compile clean
+C_ORACLE_SIV_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-omac1.c $(CRYPTO)/aes-ctr.c \
+		     $(CRYPTO)/aes-siv.c $(HOST_JSON)
 
-all: test test-omac1 test-gcmp
+SIV_COMPILE_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-omac1.c $(CRYPTO)/aes-ctr.c \
+		    $(CRYPTO)/aes-siv.c
+
+.PHONY: all test test-c test-rust test-omac1 test-omac1-c test-omac1-rust \
+        test-gcmp test-gcmp-c test-gcmp-rust test-gcmp-compile \
+	test-aes-siv test-aes-siv-c test-aes-siv-compile clean
+
+all: test test-omac1 test-gcmp test-aes-siv
 
 test: test-c test-rust
 
@@ -96,7 +103,23 @@ test-gcmp-rust: test_gcmp_rust
 test_gcmp_rust: test_gcmp.c librust_gcmp.a $(AES_LEAF_SRCS) $(GCM_SRCS) $(HOST_JSON) $(HOST_GCMP)
 	$(CC) $(CFLAGS) -DRUST_GCMP_ORACLE -o $@ test_gcmp.c $(AES_LEAF_SRCS) $(GCM_SRCS) $(HOST_JSON) $(HOST_GCMP) librust_gcmp.a
 
+test-aes-siv: test-aes-siv-c
+
+test-aes-siv-compile: $(SIV_COMPILE_SRCS)
+	@set -e; \
+	for src in $(SIV_COMPILE_SRCS); do \
+		obj="/tmp/$$(basename $$src .c)_siv_compile_probe.o"; \
+		$(CC) $(CFLAGS) -c -o $$obj $$src; \
+	done
+
+test-aes-siv-c: test_aes_siv
+	./test_aes_siv aes_siv_vectors.json
+
+test_aes_siv: test_aes_siv.c $(C_ORACLE_SIV_SRCS)
+	$(CC) $(CFLAGS) -o $@ test_aes_siv.c $(C_ORACLE_SIV_SRCS)
+
 clean:
 	rm -f test_aes_ctr test_aes_ctr_rust librust_aes_ctr.a \
 	      test_aes_omac1 test_aes_omac1_rust librust_aes_omac1.a \
-	      test_gcmp test_gcmp_rust librust_gcmp.a
+	      test_gcmp test_gcmp_rust librust_gcmp.a \
+	      test_aes_siv

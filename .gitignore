@@ -16,4 +16,5 @@ tests/host/crypto/librust_aes_omac1.a
 tests/host/crypto/test_gcmp
 tests/host/crypto/test_gcmp_rust
 tests/host/crypto/librust_gcmp.a
+tests/host/crypto/test_aes_siv
 tests/host/domain/test_domain_types
