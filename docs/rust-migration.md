@@ -77,7 +77,7 @@ KDIR=/path/to/rust-enabled-kernel ./scripts/bindgen_rtw.sh
 `KDIR` defaults to `/opt/linux` and must exist (Wave 0 pin); the aes.h pilot
 surface does not pass kernel include paths to clang yet.
 
-Requires `bindgen` 0.65.1 (same pin as Wave 0). The script allowlists only `aes_encrypt_*` / `aes_decrypt_*` / `AES_BLOCK_SIZE` — not `aes_ctr_*` (those symbols will be defined by the Rust pilot). Full `drv_types.h` surface is intentionally excluded.
+Requires `bindgen` 0.65.1 (same pin as Wave 0). The script allowlists only `aes_encrypt_*` / `aes_decrypt_*` / `AES_BLOCK_SIZE` — not `aes_ctr_*` (those symbols are defined in `rust/aes_ctr.rs`). Full `drv_types.h` surface is intentionally excluded.
 
 First-time L0/L3 setup (packages, `ld.lld` symlinks, bindgen `--locked`, QEMU without KVM): see [`rust-migration/dev-environment.md`](rust-migration/dev-environment.md).
 

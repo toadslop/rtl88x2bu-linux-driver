@@ -102,19 +102,19 @@ pub extern "C" fn aes_ctr_encrypt(
     data: *mut u8,
     data_len: usize,
 ) -> c_int {
-    let key = match AesKey::try_from_slice(unsafe { core::slice::from_raw_parts(key, key_len) }) {
+    let aes_key = match AesKey::try_from_slice(unsafe { core::slice::from_raw_parts(key, key_len) }) {
         Ok(k) => k,
         Err(_) => return -1,
     };
-    let nonce =
-        match AesCtrNonce::try_from_slice(unsafe { core::slice::from_raw_parts(nonce, AesCtrNonce::SIZE) })
-        {
-            Ok(n) => n,
-            Err(_) => return -1,
-        };
+    let ctr_nonce = match AesCtrNonce::try_from_slice(unsafe {
+        core::slice::from_raw_parts(nonce, AesCtrNonce::SIZE)
+    }) {
+        Ok(n) => n,
+        Err(_) => return -1,
+    };
     let data = unsafe { core::slice::from_raw_parts_mut(data, data_len) };
 
-    match aes_ctr_encrypt_typed(key, nonce, data) {
+    match aes_ctr_encrypt_typed(aes_key, ctr_nonce, data) {
         Ok(()) => 0,
         Err(()) => -1,
     }
