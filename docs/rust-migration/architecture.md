@@ -83,16 +83,20 @@ There is no legacy suite. For each chunk we port:
 
 ```text
 rust/
-  abi/           # bindgen + extern C shims (shrinks over time)
+  ffi.rs         # Phase-1 abi/ffi seam: ownership map + bindgen re-exports (W1-02)
+  bindings/      # bindgen helper + committed generated.rs (W1-01)
   domain/
     types/       # MacAddr, Channel, keys, frames, …
     crypto/      # typed crypto services
     mlme/        # …
   os/            # USB, netdev, cfg80211 shims → domain
   scaffold.rs    # Wave 0 only / temporary
+  kbuild_stub.rs # Wave 0 link probe
 ```
 
-Exact paths can adjust; the **layer dependencies** must not invert (`domain` must not depend on USB details).
+Phase 1 uses the name `ffi` for the architecture **abi** layer (bindgen + thin
+`extern "C"` shims). Exact paths can adjust; the **layer dependencies** must not
+invert (`domain` must not depend on USB details).
 
 ## PR checklist (architecture)
 

@@ -93,7 +93,7 @@ echo "bindgen: out=${OUT}"
 # Do not allowlist aes_ctr_* — those will be *defined* by the Rust pilot (W1-03).
 #
 # Note: no crate-level #![...] in the generated file — it is include!'d from
-# rust/bindings.rs (inner attributes belong on that crate root).
+# rust/ffi.rs (inner attributes belong on that crate root).
 "${BINDGEN_BIN}" \
 	"${HELPER}" \
 	--rust-target 1.68 \

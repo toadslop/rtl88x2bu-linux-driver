@@ -40,7 +40,7 @@ make KDIR=/opt/linux LLVM=1 -j"$(nproc)"
 ```
 
 Because the pinned kernel has `CONFIG_RUST=y`, the build links the Rust objects
-(`RUSTC [M] rust/kbuild_stub.o`, `rust/scaffold.o`, `rust/bindings.o`) into
+(`RUSTC [M] rust/kbuild_stub.o`, `rust/scaffold.o`, `rust/ffi.o`) into
 `88x2bu.ko`. Confirm with
 `nm 88x2bu.ko | grep -E 'rtw_rust_kbuild_probe|rtw_rust_scaffold_init|rtw_rust_bindings_probe'`.
 
