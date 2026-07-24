@@ -153,7 +153,9 @@ host Wi-Fi shim (required by `aes-ccm.c` under `HOST_CRYPTO_TEST`).
 
 Vectors characterize observable behavior of `core/crypto/aes-ccm.c` (fixed `L=2`,
 `aad_len <= 30`): encrypt/decrypt, empty/partial/multi-block plaintext, zero and
-long AAD, AES-128/192/256 keys, `M=8`/`M=16`, auth mismatch, and reject paths.
+long AAD (including the `aad_len == 30` accept boundary), AES-128/192/256 keys,
+`M=8`/`M=16`, `M=0` accept quirk, auth mismatch (including C's decrypt-before-MAC
+plaintext side-effect), bad key length, and reject paths.
 
 ## gcmp details
 

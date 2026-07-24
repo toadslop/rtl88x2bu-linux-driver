@@ -124,6 +124,15 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		if (v->expect_ret == 0 &&
 		    (v->plain_len != v->crypt_len || v->auth_len != v->M))
 			return -1;
+		/*
+		 * On auth mismatch, aes_ccm_ad still writes recovered plaintext
+		 * before returning -1. Non-empty plain on expect_ret != 0 freezes
+		 * that side-effect; empty plain means buffer contents are not
+		 * checked (early reject before decrypt).
+		 */
+		if (v->expect_ret != 0 && v->plain_len > 0 &&
+		    v->plain_len != v->crypt_len)
+			return -1;
 	}
 	return 0;
 }
@@ -187,9 +196,18 @@ static int run_vector(const struct vector *v)
 				v->expect_ret, ret);
 			return -1;
 		}
-		if (ret == 0 &&
-		    memcmp(plain, v->plain, v->crypt_len) != 0) {
-			fprintf(stderr, "%s: plaintext mismatch\n", v->name);
+		if (ret == 0) {
+			if (memcmp(plain, v->plain, v->crypt_len) != 0) {
+				fprintf(stderr, "%s: plaintext mismatch\n", v->name);
+				dump_hex_mismatch("expected", v->plain, v->plain_len,
+						  plain, v->crypt_len);
+				return -1;
+			}
+		} else if (v->plain_len > 0 &&
+			   memcmp(plain, v->plain, v->crypt_len) != 0) {
+			fprintf(stderr,
+				"%s: failure-path plaintext side-effect mismatch\n",
+				v->name);
 			dump_hex_mismatch("expected", v->plain, v->plain_len, plain,
 					  v->crypt_len);
 			return -1;
