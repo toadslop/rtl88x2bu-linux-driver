@@ -14,9 +14,6 @@
     unreachable_pub
 )]
 
-#[path = "domain/types.rs"]
-mod types;
-
 #[cfg(host_crypto_test)]
 mod bindings {
     use std::os::raw::c_int;
@@ -247,10 +244,7 @@ pub extern "C" fn aes_siv_encrypt(
     v[8] &= 0x7f;
     v[12] &= 0x7f;
 
-    if unsafe { aes_ctr_encrypt(k2, half_key, v.as_ptr(), out.add(16), pwlen) } != 0 {
-        return -1;
-    }
-    0
+    unsafe { aes_ctr_encrypt(k2, half_key, v.as_ptr(), out.add(16), pwlen) }
 }
 
 /// C ABI: `aes_siv_decrypt` from `core/crypto/aes-siv.c`.
@@ -298,13 +292,22 @@ pub extern "C" fn aes_siv_decrypt(
     iv[8] &= 0x7f;
     iv[12] &= 0x7f;
 
-    if unsafe { aes_ctr_encrypt(k2, half_key, iv.as_ptr(), out, crypt_len) } != 0 {
-        return -1;
+    let ret = unsafe { aes_ctr_encrypt(k2, half_key, iv.as_ptr(), out, crypt_len) };
+    if ret != 0 {
+        return ret;
     }
 
     let mut check = [0u8; 16];
-    if aes_s2v(k1, half_key, num_elem + 1, addrs.as_ptr(), lens.as_ptr(), check.as_mut_ptr()) != 0 {
-        return -1;
+    let ret = aes_s2v(
+        k1,
+        half_key,
+        num_elem + 1,
+        addrs.as_ptr(),
+        lens.as_ptr(),
+        check.as_mut_ptr(),
+    );
+    if ret != 0 {
+        return ret;
     }
 
     if unsafe { os_memcmp(check.as_ptr(), iv_crypt, 16) } == 0 {
