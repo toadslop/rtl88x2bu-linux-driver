@@ -57,11 +57,11 @@ Because the pinned kernel has `CONFIG_RUST=y`, the build links the Rust objects
   `insmod` and `deregistering interface driver rtl88x2bu` on `rmmod`, with no
   Oops/WARN.
 
-### Gates not yet wired up
+### Gate status
 
-- **L1** (`docs/rust-migration/scripts/check-symbols.sh`) and **L2** (host crypto
-  harness under `tests/`) are referenced by the plan but **do not exist in the tree
-  yet** — there is no `tests/` dir and no CI workflow. Don't assume `make`
-  test/lint targets exist.
-- **L4** (hardware STA smoke, `docs/smoke-test.md`) needs a real USB RTL8822BU
-  dongle and cannot run in this VM.
+- **L1** (`docs/rust-migration/scripts/check-symbols.sh`) — wired. Run after each
+  C→Rust object swap: `make rust-check-symbols OLD=… NEW=…` (see
+  `docs/rust-migration/test-plan.md`).
+- **L2** (host crypto harness under `tests/`) — wired. Run `make -C tests/host/crypto test`.
+- **L4** (hardware STA smoke, `docs/smoke-test.md`) — not automated in this VM;
+  needs a real USB RTL8822BU dongle.
