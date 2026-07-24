@@ -71,3 +71,9 @@ The Rust port landed in `rust/aes_ctr.rs`:
 
 See also [`docs/rust-migration/test-plan.md`](../../docs/rust-migration/test-plan.md)
 (L2 gate) and issue `wave1-03-pilot-aes-ctr.md`.
+
+## aes-omac1 / gcmp (W2-01 / W2-02)
+
+- **`make test-omac1`** / **`make test-gcmp`** — same C-oracle vs Rust-oracle pattern as aes-ctr.
+- GCMP host tests need `tests/host/include/host_wifi_types.h` plus `aes-gcm.c` in the oracle link set.
+- `gcmp.o` was removed from the module link; `rust/gcmp.o` is linked when `CONFIG_RUST=y`.

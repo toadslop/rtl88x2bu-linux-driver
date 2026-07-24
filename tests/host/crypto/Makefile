@@ -1,4 +1,4 @@
-# Host L2 differential test harness for core/crypto (T2/W1-03 aes-ctr, W2-01 aes-omac1).
+# Host L2 differential test harness for core/crypto (T2/W1-03 aes-ctr, W2-01 aes-omac1, W2-02 gcmp).
 # Builds with gcc only — no kernel headers or KDIR.
 
 ROOT     := ../../..
@@ -6,10 +6,11 @@ CRYPTO   := $(ROOT)/core/crypto
 HOST_INC := ../include
 RUST_CTR := $(ROOT)/rust/aes_ctr.rs
 RUST_OMAC := $(ROOT)/rust/aes_omac1.rs
+RUST_GCMP := $(ROOT)/rust/gcmp.rs
 
 CC      := gcc
 RUSTC   := rustc
-CFLAGS  := -Wall -Wextra -Werror -O2 \
+CFLAGS  := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
            -I$(HOST_INC) -I$(CRYPTO) \
            -DHOST_CRYPTO_TEST
 RUSTFLAGS := -C opt-level=2
@@ -19,18 +20,23 @@ AES_LEAF_SRCS := \
 	$(CRYPTO)/aes-internal-enc.c \
 	../shim/host_crypto_shim.c
 
+GCM_SRCS := $(CRYPTO)/aes-gcm.c
 HOST_JSON := host_vector_json.c
 
 C_ORACLE_CTR_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ctr.c $(HOST_JSON)
 C_ORACLE_OMAC_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-omac1.c $(HOST_JSON)
+C_ORACLE_GCMP_SRCS := $(AES_LEAF_SRCS) $(GCM_SRCS) $(CRYPTO)/gcmp.c $(HOST_JSON)
 
-.PHONY: all test test-c test-rust test-omac1 test-omac1-c test-omac1-rust clean
+.PHONY: all test test-c test-rust test-omac1 test-omac1-c test-omac1-rust \
+        test-gcmp test-gcmp-c test-gcmp-rust clean
 
-all: test test-omac1
+all: test test-omac1 test-gcmp
 
 test: test-c test-rust
 
 test-omac1: test-omac1-c test-omac1-rust
+
+test-gcmp: test-gcmp-c test-gcmp-rust
 
 test-c: test_aes_ctr
 	./test_aes_ctr aes_ctr_vectors.json
@@ -62,6 +68,22 @@ test-omac1-rust: test_aes_omac1_rust
 test_aes_omac1_rust: test_aes_omac1.c librust_aes_omac1.a $(AES_LEAF_SRCS) $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_OMAC1_ORACLE -o $@ test_aes_omac1.c $(AES_LEAF_SRCS) $(HOST_JSON) librust_aes_omac1.a
 
+test-gcmp-c: test_gcmp
+	./test_gcmp gcmp_vectors.json
+
+test_gcmp: test_gcmp.c $(C_ORACLE_GCMP_SRCS)
+	$(CC) $(CFLAGS) -o $@ test_gcmp.c $(C_ORACLE_GCMP_SRCS)
+
+librust_gcmp.a: $(RUST_GCMP) $(ROOT)/rust/domain/types.rs
+	$(RUSTC) $(RUSTFLAGS) --cfg host_crypto_test --crate-type staticlib $(RUST_GCMP) -o $@
+
+test-gcmp-rust: test_gcmp_rust
+	./test_gcmp_rust gcmp_vectors.json
+
+test_gcmp_rust: test_gcmp.c librust_gcmp.a $(AES_LEAF_SRCS) $(GCM_SRCS) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_GCMP_ORACLE -o $@ test_gcmp.c $(AES_LEAF_SRCS) $(GCM_SRCS) $(HOST_JSON) librust_gcmp.a
+
 clean:
 	rm -f test_aes_ctr test_aes_ctr_rust librust_aes_ctr.a \
-	      test_aes_omac1 test_aes_omac1_rust librust_aes_omac1.a
+	      test_aes_omac1 test_aes_omac1_rust librust_aes_omac1.a \
+	      test_gcmp test_gcmp_rust librust_gcmp.a

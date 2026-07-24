@@ -33,6 +33,7 @@
 //! | `aes_encrypt_*` / `aes_decrypt_*` / `AES_BLOCK_SIZE` | **C** (`aes-internal*.c`, `aes.h`) | Rust **binds** only — calls into C |
 //! | `aes_ctr_encrypt` / `aes_128_ctr_encrypt` | **Rust** (`aes_ctr.rs`); C TU removed (W1-03) |
 //! | `omac1_aes_*` | **Rust** (`aes_omac1.rs`); C TU removed (W2-01) |
+//! | `gcmp_*` | **Rust** (`gcmp.rs`); C TU removed (W2-02) |
 //! | Remaining `core/crypto/*.c` + rest of driver | **C** | Until later waves claim them |
 //!
 //! ## Rules
