@@ -2449,7 +2449,6 @@ rtk_core += \
 		core/crypto/aes-internal-enc.o \
 		core/crypto/aes-gcm.o \
 		core/crypto/aes-ccm.o \
-		core/crypto/aes-omac1.o \
 		core/crypto/ccmp.o \
 		core/crypto/gcmp.o \
 		core/crypto/aes-siv.o \
@@ -2484,6 +2483,7 @@ $(MODULE_NAME)-y += rust/scaffold.o
 $(MODULE_NAME)-y += rust/ffi.o
 $(MODULE_NAME)-y += rust/domain_types.o
 $(MODULE_NAME)-y += rust/aes_ctr.o
+$(MODULE_NAME)-y += rust/aes_omac1.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
@@ -2510,7 +2510,7 @@ all: modules
 #   make rust-check-symbols OLD=/tmp/aes-ctr-c.o NEW=rust/aes_ctr.o
 RUST_CHECK_NM ?= $(if $(filter 1,$(LLVM)),llvm-nm,nm)
 
-.PHONY: rust-check-symbols rust-check-symbols-selftest rust-objects-aes-ctr
+.PHONY: rust-check-symbols rust-check-symbols-selftest rust-objects-aes-ctr rust-objects-aes-omac1
 rust-check-symbols:
 	@test -n "$(OLD)" && test -n "$(NEW)" || { \
 		echo "Usage: make rust-check-symbols OLD=path/to/old.o NEW=path/to/new.o [ALLOWLIST=path.allow] [ALLOW_VACUOUS=1]"; \
@@ -2524,6 +2524,12 @@ rust-objects-aes-ctr:
 		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-aes-ctr"; \
 		exit 1; }
 	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/aes_ctr.o
+
+rust-objects-aes-omac1:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-aes-omac1"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/aes_omac1.o
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production

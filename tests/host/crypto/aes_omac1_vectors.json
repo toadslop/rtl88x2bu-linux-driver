@@ -1,0 +1,87 @@
+{
+  "oracle": "core/crypto/aes-omac1.c",
+  "comment": "Vectors freeze in-tree C OMAC1/CMAC behavior for L2 parity (W2-01 reuses this file).",
+  "vectors": [
+    {
+      "name": "aes128-empty",
+      "fn": "omac1_aes_128",
+      "key_len": 16,
+      "key": "2b7e151628aed2a6abf7158809cf4f3c",
+      "data": "",
+      "mac": "bb1d6929e95937287fa37d129b756746",
+      "expect_ret": 0
+    },
+    {
+      "name": "aes128-one-block",
+      "fn": "omac1_aes_128",
+      "key_len": 16,
+      "key": "2b7e151628aed2a6abf7158809cf4f3c",
+      "data": "6bc1bee22e409f96e93d7e117393172a",
+      "mac": "070a16b46b4d4144f79bdd9dd04a287c",
+      "expect_ret": 0
+    },
+    {
+      "name": "aes128-partial",
+      "fn": "omac1_aes_128",
+      "key_len": 16,
+      "key": "2b7e151628aed2a6abf7158809cf4f3c",
+      "data": "000102030405060708090a0b0c0d0e1011",
+      "mac": "fc58ac7ecab6ed0b4e78ee026b2a36fa",
+      "expect_ret": 0
+    },
+    {
+      "name": "aes128-two-blocks",
+      "fn": "omac1_aes_128",
+      "key_len": 16,
+      "key": "2b7e151628aed2a6abf7158809cf4f3c",
+      "data": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "mac": "e9085e5b1ceb861cd00b0bf72ff5111b",
+      "expect_ret": 0
+    },
+    {
+      "name": "aes256-one-block",
+      "fn": "omac1_aes_256",
+      "key_len": 32,
+      "key": "603deb1015ca71be2b73aef0857d77811f352c073b6108d2d9810a30914d334a",
+      "data": "6bc1bee22e409f96e93d7e117393172a",
+      "mac": "19fed6f1a11e670d70635d88c4310c4a",
+      "expect_ret": 0
+    },
+    {
+      "name": "aes128-vector-2elem",
+      "fn": "omac1_aes_128_vector",
+      "key_len": 16,
+      "key": "2b7e151628aed2a6abf7158809cf4f3c",
+      "elements": [
+        "6bc1bee22e409f96",
+        "e93d7e117393172a"
+      ],
+      "mac": "070a16b46b4d4144f79bdd9dd04a287c",
+      "expect_ret": 0
+    },
+    {
+      "name": "aes128-vector-3elem",
+      "fn": "omac1_aes_128_vector",
+      "key_len": 16,
+      "key": "2b7e151628aed2a6abf7158809cf4f3c",
+      "elements": [
+        "0001020304",
+        "05060708090a0b0c0d0e0f",
+        "101112131415161718191a1b1c1d1e1f"
+      ],
+      "mac": "e9085e5b1ceb861cd00b0bf72ff5111b",
+      "expect_ret": 0
+    },
+    {
+      "name": "aes192-one-block",
+      "fn": "omac1_aes_vector",
+      "key_len": 24,
+      "key": "8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b",
+      "elements": [
+        "6bc1bee22e409f96e93d7e117393172a"
+      ],
+      "mac": "9e99a7bf31e710900662f65e617c5184",
+      "expect_ret": 0
+    }
+  ]
+}

@@ -12,6 +12,8 @@ tests/host/
   crypto/
     aes_ctr_vectors.json
     test_aes_ctr.c   # oracle runner (C oracle + Rust staticlib)
+    aes_omac1_vectors.json
+    test_aes_omac1.c # oracle runner for OMAC1/CMAC (W2-01)
     Makefile
 ```
 
@@ -29,6 +31,19 @@ make -C tests/host/domain test
 ```bash
 make -C tests/host/crypto test
 ```
+
+## Run (aes-omac1 parity, W2-01)
+
+```bash
+make -C tests/host/crypto test-omac1
+```
+
+This runs both paths against `aes_omac1_vectors.json`:
+
+- **`test-omac1-c`** — links the in-tree C objects (`aes-omac1.c` + AES leaf) and exercises the C oracle.
+- **`test-omac1-rust`** — links `rust/aes_omac1.rs` as a userspace staticlib (no `aes-omac1.c`) and exercises the Rust `extern "C"` shims.
+
+## aes-ctr details
 
 This runs both paths against `aes_ctr_vectors.json`:
 
