@@ -109,7 +109,7 @@ pub mod bindings {
     }
 }
 
-pub use bindings::{AES_BLOCK_SIZE, Ieee80211Hdr};
+pub use self::bindings::{AES_BLOCK_SIZE, Ieee80211Hdr};
 
 #[cfg(host_crypto_test)]
 pub fn os_malloc(sz: usize) -> *mut core::ffi::c_void {

@@ -87,17 +87,19 @@ Compile-only gate (shim + `gcmp.c` / `aes-gcm.c` build under `HOST_CRYPTO_TEST`)
 make -C tests/host/crypto test-gcmp-compile
 ```
 
-`test-gcmp-c` is also pulled in by `make -C tests/host/crypto` (`all` → `test-gcmp`).
+`make -C tests/host/crypto test-gcmp` runs both C and Rust oracles (`test-gcmp-c` + `test-gcmp-rust`).
 
 ## gcmp details
 
 W2-02b added `host_gcmp_vector.c` (shared parse/run helpers). W2-02c adds the
-C-oracle runner and `gcmp_vectors.json` fixture.
+C-oracle runner and `gcmp_vectors.json` fixture. W2-02e adds the Rust oracle.
 
 - **`test-gcmp-c`** — links the in-tree C objects (`aes-gcm.c`, `gcmp.c`) and
   exercises the C oracle against `gcmp_vectors.json`.
+- **`test-gcmp-rust`** — links `rust/gcmp.rs` as a userspace staticlib and
+  exercises the Rust `extern "C"` shims against the same vectors.
 - **`test-gcmp-compile`** — compile-only gate; no link/run.
 
 Vectors characterize observable behavior of `core/crypto/gcmp.c` (encrypt/decrypt,
 QoS/SPP A-MSDU mode, embedded PN, return codes). `rust_only` vectors are skipped
-by the C runner and exercised later on the Rust path (W2-02e).
+by the C runner and exercised on the Rust path.
