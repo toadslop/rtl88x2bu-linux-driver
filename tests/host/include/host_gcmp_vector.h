@@ -8,9 +8,10 @@
 #include <stddef.h>
 
 #include "host_types.h"
+#include "host_vector_json.h"
+#include "host_wifi_types.h"
 
 #define HOST_GCMP_MAX_VECTORS 32
-#define HOST_GCMP_MAX_HEX 4096
 
 enum host_gcmp_fn {
 	HOST_GCMP_FN_ENCRYPT = 0,
@@ -20,23 +21,24 @@ enum host_gcmp_fn {
 struct host_gcmp_vector {
 	char name[128];
 	enum host_gcmp_fn fn;
-	int amsdu_mode;
+	enum rtw_amsdu_mode amsdu_mode;
 	size_t key_len;
 	u8 key[32];
-	u8 frame[HOST_GCMP_MAX_HEX / 2];
+	u8 frame[HOST_VECTOR_MAX_HEX_BUF / 2];
 	size_t frame_len;
 	u8 hdr[32];
 	size_t hdr_len;
-	u8 data[HOST_GCMP_MAX_HEX / 2];
+	u8 data[HOST_VECTOR_MAX_HEX_BUF / 2];
 	size_t data_len;
 	size_t hdrlen;
 	u8 pn[6];
-	int has_pn;
 	int null_pn;
 	int keyid;
-	u8 expected[HOST_GCMP_MAX_HEX / 2];
+	u8 expected[HOST_VECTOR_MAX_HEX_BUF / 2];
 	size_t expected_len;
+	/* 1 = gcmp_* returns non-NULL, 0 = returns NULL */
 	int expect_ret;
+	/* skipped by C oracle runners; consumed by test_gcmp.c */
 	int rust_only;
 };
 

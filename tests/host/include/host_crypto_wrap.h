@@ -38,6 +38,7 @@ void *os_malloc(size_t sz);
 void rtw_mfree(void *ptr, size_t sz);
 
 u8 rtw_registrypriv_amsdu_mode(const _adapter *padapter);
+void host_adapter_set_amsdu_mode(_adapter *padapter, enum rtw_amsdu_mode mode);
 
 void wpa_printf(int level, const char *fmt, ...);
 void wpa_hexdump(int level, const char *title, const void *buf, size_t len);

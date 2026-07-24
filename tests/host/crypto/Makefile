@@ -24,7 +24,9 @@ HOST_JSON := host_vector_json.c
 C_ORACLE_CTR_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ctr.c $(HOST_JSON)
 C_ORACLE_OMAC_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-omac1.c $(HOST_JSON)
 
-GCMP_COMPILE_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-gcm.c $(CRYPTO)/gcmp.c
+HOST_GCMP := host_gcmp_vector.c
+GCMP_COMPILE_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-gcm.c $(CRYPTO)/gcmp.c \
+		     $(HOST_GCMP)
 
 .PHONY: all test test-c test-rust test-omac1 test-omac1-c test-omac1-rust test-gcmp-compile clean
 
