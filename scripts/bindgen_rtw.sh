@@ -5,13 +5,19 @@
 #
 # Usage (from repo root):
 #   ./scripts/bindgen_rtw.sh
+#   ./scripts/bindgen_rtw.sh --check          # fail if committed blob is stale
+#   CHECK=1 ./scripts/bindgen_rtw.sh          # same as --check
 #   KDIR=/path/to/rust-enabled-kernel ./scripts/bindgen_rtw.sh
 #
 # Environment:
 #   KDIR            Pinned Rust-enabled kernel tree (default: /opt/linux).
-#                   Used for clang --sysroot / resource-dir consistency with L0.
+#                   Wave 0 contract pin: must exist so regenerate stays tied to
+#                   the same kernel used for L0. Not passed to clang yet — the
+#                   aes.h pilot surface only needs freestanding C types; future
+#                   waves may add kernel include paths here.
 #   BINDGEN         bindgen binary (default: bindgen on PATH).
 #   LIBCLANG_PATH   Optional; set if bindgen cannot find libclang.
+#   CHECK           If set to 1, verify without writing (see --check).
 #
 # Output:
 #   rust/bindings/generated.rs
@@ -23,6 +29,26 @@ KDIR="${KDIR:-/opt/linux}"
 BINDGEN_BIN="${BINDGEN:-bindgen}"
 HELPER="${REPO_ROOT}/rust/bindings/bindgen_helper.h"
 OUT="${REPO_ROOT}/rust/bindings/generated.rs"
+
+CHECK_MODE=0
+if [[ "${CHECK:-0}" == "1" ]]; then
+	CHECK_MODE=1
+fi
+for arg in "$@"; do
+	case "${arg}" in
+	--check) CHECK_MODE=1 ;;
+	-h | --help)
+		sed -n '2,28p' "$0"
+		exit 0
+		;;
+	*)
+		echo "error: unknown argument: ${arg}" >&2
+		echo "usage: $0 [--check]" >&2
+		exit 1
+		;;
+	esac
+done
+
 TMP_OUT="$(mktemp)"
 trap 'rm -f "${TMP_OUT}"' EXIT
 
@@ -45,14 +71,14 @@ fi
 
 CLANG_ARGS=(
 	"-I${REPO_ROOT}/rust/bindings"
+	"-I${REPO_ROOT}/core/crypto"
 	"-D__BINDGEN__"
 )
 if [[ -n "${CLANG_RESOURCE_DIR}" ]]; then
 	CLANG_ARGS+=("-resource-dir=${CLANG_RESOURCE_DIR}")
 fi
-# KDIR is reserved for future headers that need kernel include paths; for the
-# aes.h pilot surface we only need freestanding C types. Still require KDIR to
-# exist so regenerate stays tied to the Wave 0 pinned-kernel contract.
+
+# Wave 0 pinned-kernel contract (existence only for this pilot surface).
 if [[ ! -d "${KDIR}" ]]; then
 	echo "error: KDIR not a directory: ${KDIR}" >&2
 	echo "hint: build/pin a Rust-enabled kernel per docs/rust-migration/dev-environment.md" >&2
@@ -60,7 +86,7 @@ if [[ ! -d "${KDIR}" ]]; then
 fi
 
 echo "bindgen: helper=${HELPER}"
-echo "bindgen: KDIR=${KDIR}"
+echo "bindgen: KDIR=${KDIR} (pin only; not passed to clang for aes.h surface)"
 echo "bindgen: out=${OUT}"
 
 # Allowlist keeps review tractable: only AES leaf symbols the pilot needs.
@@ -83,6 +109,19 @@ echo "bindgen: out=${OUT}"
 	-o "${TMP_OUT}" \
 	-- \
 	"${CLANG_ARGS[@]}"
+
+if [[ "${CHECK_MODE}" -eq 1 ]]; then
+	if [[ ! -f "${OUT}" ]]; then
+		echo "error: missing committed bindings: ${OUT}" >&2
+		exit 1
+	fi
+	if ! diff -u "${OUT}" "${TMP_OUT}"; then
+		echo "error: ${OUT} is stale; run ./scripts/bindgen_rtw.sh and commit the result" >&2
+		exit 1
+	fi
+	echo "OK: ${OUT} matches bindgen output"
+	exit 0
+fi
 
 mv "${TMP_OUT}" "${OUT}"
 trap - EXIT

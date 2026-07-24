@@ -65,7 +65,12 @@ Allowlisted FFI for the crypto pilot lives under `rust/bindings/`. The generated
 export LIBCLANG_PATH=/usr/lib/llvm-18/lib   # adjust to host clang
 KDIR=/path/to/rust-enabled-kernel ./scripts/bindgen_rtw.sh
 # writes rust/bindings/generated.rs
+# Optional: fail if the committed blob is stale (for future CI):
+# ./scripts/bindgen_rtw.sh --check
 ```
+
+`KDIR` defaults to `/opt/linux` and must exist (Wave 0 pin); the aes.h pilot
+surface does not pass kernel include paths to clang yet.
 
 Requires `bindgen` 0.65.1 (same pin as Wave 0). The script allowlists only `aes_encrypt_*` / `aes_decrypt_*` / `AES_BLOCK_SIZE` — not `aes_ctr_*` (those symbols will be defined by the Rust pilot). Full `drv_types.h` surface is intentionally excluded.
 
