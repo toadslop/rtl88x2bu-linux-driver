@@ -2450,7 +2450,6 @@ rtk_core += \
 		core/crypto/aes-gcm.o \
 		core/crypto/aes-ccm.o \
 		core/crypto/ccmp.o \
-		core/crypto/gcmp.o \
 		core/crypto/aes-siv.o \
 		core/crypto/sha256-internal.o \
 		core/crypto/sha256.o \
@@ -2484,6 +2483,7 @@ $(MODULE_NAME)-y += rust/ffi.o
 $(MODULE_NAME)-y += rust/domain_types.o
 $(MODULE_NAME)-y += rust/aes_ctr.o
 $(MODULE_NAME)-y += rust/aes_omac1.o
+$(MODULE_NAME)-y += rust/gcmp.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
