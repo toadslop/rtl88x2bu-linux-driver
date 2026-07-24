@@ -10,8 +10,11 @@ tests/host/
   shim/              # allocator stubs for C oracle objects
   domain/            # A1 domain-type unit tests (rustc --test)
   crypto/
+    host_vector_json.c   # shared hex/JSON helpers for vector fixtures
     aes_ctr_vectors.json
     test_aes_ctr.c   # oracle runner (C oracle + Rust staticlib)
+    aes_omac1_vectors.json
+    test_aes_omac1.c # oracle runner for OMAC1/CMAC (W2-01)
     Makefile
 ```
 
@@ -29,6 +32,20 @@ make -C tests/host/domain test
 ```bash
 make -C tests/host/crypto test
 ```
+
+## Run (aes-omac1 parity, W2-01)
+
+```bash
+make -C tests/host/crypto test-omac1
+```
+
+Vectors characterize observable behavior of `core/crypto/aes-omac1.c` (CMAC
+output, multi-fragment inputs, return codes). Success-path vectors run against
+both the C oracle and Rust staticlib; `rust_only` vectors document stricter
+shim validation (`num_elem == 0`, null `mac`, etc.) and run only on the Rust
+path.
+
+## aes-ctr details
 
 This runs both paths against `aes_ctr_vectors.json`:
 

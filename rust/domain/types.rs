@@ -40,6 +40,31 @@ impl AesCtrNonce {
     }
 }
 
+/// AES-OMAC1 / CMAC output (128 bits).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct AesMac([u8; 16]);
+
+impl AesMac {
+    pub const SIZE: usize = 16;
+
+    pub fn from_bytes(bytes: [u8; Self::SIZE]) -> Self {
+        Self(bytes)
+    }
+
+    pub fn as_bytes(&self) -> &[u8; Self::SIZE] {
+        &self.0
+    }
+
+    pub fn write_to_slice(self, out: &mut [u8]) -> Result<(), DomainError> {
+        if out.len() != Self::SIZE {
+            return Err(DomainError::InvalidLength);
+        }
+        out.copy_from_slice(&self.0);
+        Ok(())
+    }
+}
+
 /// Length-checked AES key material for 128/192/256-bit variants.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AesKey {
@@ -154,5 +179,23 @@ mod tests {
             AesKey::try_from_slice(&[0u8; 33]),
             Err(DomainError::InvalidLength)
         );
+    }
+
+    #[test]
+    fn aes_mac_write_to_slice_rejects_bad_length() {
+        let mac = AesMac::from_bytes([0u8; 16]);
+        let mut short = [0u8; 15];
+        assert_eq!(
+            mac.write_to_slice(&mut short),
+            Err(DomainError::InvalidLength)
+        );
+    }
+
+    #[test]
+    fn aes_mac_write_to_slice_accepts_16_bytes() {
+        let mac = AesMac::from_bytes([0xabu8; 16]);
+        let mut out = [0u8; 16];
+        mac.write_to_slice(&mut out).unwrap();
+        assert_eq!(out, [0xabu8; 16]);
     }
 }
