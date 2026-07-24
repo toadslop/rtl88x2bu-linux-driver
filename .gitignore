@@ -17,4 +17,6 @@ tests/host/crypto/test_gcmp
 tests/host/crypto/test_gcmp_rust
 tests/host/crypto/librust_gcmp.a
 tests/host/crypto/test_aes_siv
+tests/host/crypto/test_aes_siv_rust
+tests/host/crypto/librust_aes_siv.a
 tests/host/domain/test_domain_types

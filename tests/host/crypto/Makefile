@@ -7,6 +7,7 @@ HOST_INC := ../include
 RUST_CTR := $(ROOT)/rust/aes_ctr.rs
 RUST_OMAC := $(ROOT)/rust/aes_omac1.rs
 RUST_GCMP := $(ROOT)/rust/gcmp.rs
+RUST_SIV := $(ROOT)/rust/aes_siv.rs
 
 CC      := gcc
 RUSTC   := rustc
@@ -40,7 +41,7 @@ SIV_COMPILE_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-omac1.c $(CRYPTO)/aes-ctr.c \
 
 .PHONY: all test test-c test-rust test-omac1 test-omac1-c test-omac1-rust \
         test-gcmp test-gcmp-c test-gcmp-rust test-gcmp-compile \
-	test-aes-siv test-aes-siv-c test-aes-siv-compile clean
+	test-aes-siv test-aes-siv-c test-aes-siv-rust test-aes-siv-compile clean
 
 all: test test-omac1 test-gcmp test-aes-siv
 
@@ -103,7 +104,7 @@ test-gcmp-rust: test_gcmp_rust
 test_gcmp_rust: test_gcmp.c librust_gcmp.a $(AES_LEAF_SRCS) $(GCM_SRCS) $(HOST_JSON) $(HOST_GCMP)
 	$(CC) $(CFLAGS) -DRUST_GCMP_ORACLE -o $@ test_gcmp.c $(AES_LEAF_SRCS) $(GCM_SRCS) $(HOST_JSON) $(HOST_GCMP) librust_gcmp.a
 
-test-aes-siv: test-aes-siv-c
+test-aes-siv: test-aes-siv-c test-aes-siv-rust
 
 test-aes-siv-compile: $(SIV_COMPILE_SRCS)
 	@set -e; \
@@ -118,8 +119,19 @@ test-aes-siv-c: test_aes_siv
 test_aes_siv: test_aes_siv.c $(C_ORACLE_SIV_SRCS)
 	$(CC) $(CFLAGS) -o $@ test_aes_siv.c $(C_ORACLE_SIV_SRCS)
 
+librust_aes_siv.a: $(RUST_SIV) $(ROOT)/rust/domain/types.rs
+	$(RUSTC) $(RUSTFLAGS) --cfg host_crypto_test --crate-type staticlib $(RUST_SIV) -o $@
+
+test-aes-siv-rust: test_aes_siv_rust
+	./test_aes_siv_rust aes_siv_vectors.json
+
+test_aes_siv_rust: test_aes_siv.c librust_aes_siv.a librust_aes_omac1.a librust_aes_ctr.a \
+		   $(AES_LEAF_SRCS) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_AES_SIV_ORACLE -o $@ test_aes_siv.c $(AES_LEAF_SRCS) \
+		$(HOST_JSON) librust_aes_siv.a librust_aes_omac1.a librust_aes_ctr.a
+
 clean:
 	rm -f test_aes_ctr test_aes_ctr_rust librust_aes_ctr.a \
 	      test_aes_omac1 test_aes_omac1_rust librust_aes_omac1.a \
 	      test_gcmp test_gcmp_rust librust_gcmp.a \
-	      test_aes_siv
+	      test_aes_siv test_aes_siv_rust librust_aes_siv.a
