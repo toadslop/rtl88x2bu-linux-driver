@@ -29,6 +29,12 @@ u8 rtw_registrypriv_amsdu_mode(const _adapter *padapter)
 	return padapter->registrypriv.amsdu_mode;
 }
 
+void host_adapter_set_amsdu_mode(_adapter *padapter, enum rtw_amsdu_mode mode)
+{
+	if (padapter)
+		padapter->registrypriv.amsdu_mode = (u8)mode;
+}
+
 void wpa_printf(int level, const char *fmt, ...)
 {
 	(void)level;

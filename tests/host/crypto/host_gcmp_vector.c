@@ -57,7 +57,10 @@ int host_gcmp_parse_vector_object(const char *obj, size_t obj_len, void *vec_voi
 		v->rust_only = 0;
 	if (host_json_parse_int_in(obj, obj_len, "amsdu_mode", &amsdu_mode))
 		return -1;
-	v->amsdu_mode = amsdu_mode;
+	if (amsdu_mode < RTW_AMSDU_MODE_NON_SPP ||
+	    amsdu_mode > RTW_AMSDU_MODE_ALL_DROP)
+		return -1;
+	v->amsdu_mode = (enum rtw_amsdu_mode)amsdu_mode;
 	if (host_json_parse_int_in(obj, obj_len, "key_len", &key_len))
 		return -1;
 	v->key_len = (size_t)key_len;
@@ -90,7 +93,6 @@ int host_gcmp_parse_vector_object(const char *obj, size_t obj_len, void *vec_voi
 				return -1;
 			if (decoded_pn_len != 6)
 				return -1;
-			v->has_pn = 1;
 		}
 		if (host_json_parse_int_in(obj, obj_len, "keyid", &v->keyid))
 			return -1;
@@ -115,16 +117,18 @@ int host_gcmp_parse_vector_object(const char *obj, size_t obj_len, void *vec_voi
 
 int host_gcmp_run_vector(const struct host_gcmp_vector *v)
 {
-	_adapter adapter = { .registrypriv = { .amsdu_mode = (u8)v->amsdu_mode } };
+	_adapter adapter;
 	size_t out_len = 0;
 	u8 *out = NULL;
 	int ok;
 
+	memset(&adapter, 0, sizeof(adapter));
+	host_adapter_set_amsdu_mode(&adapter, v->amsdu_mode);
+
 	switch (v->fn) {
 	case HOST_GCMP_FN_ENCRYPT:
 		out = gcmp_encrypt(&adapter, v->key, v->key_len, v->frame, v->frame_len,
-				   v->hdrlen, NULL,
-				   v->null_pn ? NULL : (v->has_pn ? v->pn : NULL),
+				   v->hdrlen, NULL, v->null_pn ? NULL : v->pn,
 				   v->keyid, &out_len);
 		break;
 	case HOST_GCMP_FN_DECRYPT:
