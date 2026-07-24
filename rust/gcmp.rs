@@ -3,6 +3,15 @@
 //!
 //! Shared logic in `gcmp_support.rs`; this crate root exports the C ABI shims.
 //! Kernel module link (swap gcmp.o) lands in W2-02f.
+//!
+//! Domain types are included via `#[path]` because Kbuild compiles each `.rs`
+//! as its own crate (same pattern as `domain_types.rs` / `aes_ctr.rs`). That
+//! duplicates type code in `88x2bu.ko` for the pilot; consolidate into a
+//! shared crate or `include!` only if binary size or drift becomes a concern.
+//!
+//! The `extern "C"` shims are intentionally stricter than C on invalid `tk_len`:
+//! `AesKey::try_from_slice` accepts only 16/24/32-byte keys and returns `NULL`
+//! otherwise, whereas C passes `tk_len` straight through to `aes_gcm_*`.
 
 #![allow(
     dead_code,
@@ -14,12 +23,15 @@
     unreachable_pub
 )]
 
+#[path = "domain/types.rs"]
+mod types;
+
 #[path = "gcmp_support.rs"]
 mod support;
 
 use support::bindings::{aes_gcm_ad, aes_gcm_ae, rtw_registrypriv_amsdu_mode, Adapter};
-use support::types::AesKey;
 use support::{gcmp_aad_nonce, os_malloc, rtw_mfree, AES_BLOCK_SIZE, Ieee80211Hdr};
+use types::AesKey;
 
 fn gcmp_decrypt_inner(
     amsdu_mode: u8,
