@@ -11,9 +11,6 @@
     unreachable_pub
 )]
 
-#[path = "domain/types.rs"]
-pub mod types;
-
 #[cfg(host_crypto_test)]
 pub mod bindings {
     use std::os::raw::{c_int, c_void};
@@ -146,6 +143,12 @@ const WLAN_FC_TYPE_DATA: u16 = 0x0008;
 const WLAN_FC_STYPE_QOS_DATA: u16 = 0x0080;
 const RTW_AMSDU_MODE_SPP: u8 = 1;
 
+#[cfg(target_endian = "little")]
+fn le_to_host16(v: u16) -> u16 {
+    v
+}
+
+#[cfg(target_endian = "big")]
 fn le_to_host16(v: u16) -> u16 {
     v.swap_bytes()
 }
@@ -167,6 +170,10 @@ fn wlan_fc_get_type(fc: u16) -> u16 {
     fc & 0x000c
 }
 
+/// Build GCMP AAD and nonce from an 802.11 header and PN prefix.
+///
+/// `data` must contain at least 8 bytes (the packet number). Returns `0` when
+/// `data` is too short; otherwise returns the AAD length in bytes.
 pub fn gcmp_aad_nonce(
     amsdu_mode: u8,
     hdr: &Ieee80211Hdr,
@@ -174,6 +181,11 @@ pub fn gcmp_aad_nonce(
     aad: &mut [u8; 30],
     nonce: &mut [u8; 12],
 ) -> usize {
+    if data.len() < 8 {
+        debug_assert!(false, "gcmp_aad_nonce: data must contain at least 8 PN bytes");
+        return 0;
+    }
+
     let mut fc = le_to_host16(hdr.frame_control);
     let stype = wlan_fc_get_stype(fc);
     let mut addr4 = false;
