@@ -55,7 +55,7 @@ static void gcmp_aad_nonce(_adapter * padapter, const struct ieee80211_hdr *hdr,
 	if (qos) {
 		pos[0] &= ~0x70;
 		/* only spp mode need to refer QoS bit7 */
-		if (padapter->registrypriv.amsdu_mode != RTW_AMSDU_MODE_SPP)
+		if (rtw_registrypriv_amsdu_mode(padapter) != RTW_AMSDU_MODE_SPP)
 			pos[0] &= ~0x80;
 		pos++;
 		*pos++ = 0x00;
@@ -141,6 +141,8 @@ u8 * gcmp_encrypt(_adapter *padapter, const u8 *tk, size_t tk_len, const u8 *fra
 		  const u8 *pn, int keyid, size_t *encrypted_len)
 {
 	u8 aad[30], nonce[12], *crypt, *pos;
+
+	(void)qos;
 	const u8 *pdata;
 	size_t aad_len, plen;
 	struct ieee80211_hdr *hdr;

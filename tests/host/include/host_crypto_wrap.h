@@ -2,6 +2,11 @@
 /*
  * Userspace shim for core/crypto when HOST_CRYPTO_TEST is defined (T2).
  * Included from core/crypto/rtw_crypto_wrap.h — do not include directly.
+ *
+ * Extend this header and tests/host/shim/ as each crypto unit is added for
+ * L2 differential tests. See core/crypto/rtw_crypto_wrap.h for the kernel-side
+ * symbol checklist. Host GCMP/aes-gcm tests link host_crypto_shim.c only —
+ * do not link core/crypto/rtw_crypto_wrap.c (duplicate wpa_* / os_memcmp_const).
  */
 #ifndef HOST_CRYPTO_WRAP_H
 #define HOST_CRYPTO_WRAP_H
