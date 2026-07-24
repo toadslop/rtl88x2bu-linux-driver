@@ -2483,6 +2483,7 @@ ifdef CONFIG_RUST
 $(MODULE_NAME)-y += rust/kbuild_stub.o
 $(MODULE_NAME)-y += rust/scaffold.o
 $(MODULE_NAME)-y += rust/ffi.o
+$(MODULE_NAME)-y += rust/domain_types.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o

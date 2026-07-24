@@ -8,6 +8,7 @@ Userspace parity tests for pure crypto units. No kernel headers or `KDIR` requir
 tests/host/
   include/           # userspace shims (types, crypto wrap)
   shim/              # allocator stubs for C oracle objects
+  domain/            # A1 domain-type unit tests (rustc --test)
   crypto/
     aes_ctr_vectors.json
     test_aes_ctr.c   # oracle runner (C today; Rust in W1-03)
@@ -16,6 +17,12 @@ tests/host/
 
 Driver crypto sources are compiled with `-DHOST_CRYPTO_TEST`, which makes
 `core/crypto/rtw_crypto_wrap.h` include the host shim instead of `drv_types.h`.
+
+## Run (domain types, A1)
+
+```bash
+make -C tests/host/domain test
+```
 
 ## Run (aes-ctr oracle)
 
