@@ -1,0 +1,266 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Host L2 oracle runner for aes-ccm.c (W2-04a).
+ *
+ * oracle: core/crypto/aes-ccm.c
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "host_types.h"
+#include "host_vector_json.h"
+#include "aes_wrap.h"
+
+#define MAX_VECTORS 32
+#define MAX_NAME 128
+#define MAX_BUF 256
+#define NONCE_LEN 13
+
+enum aes_ccm_fn {
+	FN_AES_CCM_AE = 0,
+	FN_AES_CCM_AD,
+};
+
+struct vector {
+	char name[MAX_NAME];
+	enum aes_ccm_fn fn;
+	size_t key_len;
+	u8 key[32];
+	u8 nonce[NONCE_LEN];
+	size_t M;
+	u8 plain[MAX_BUF];
+	size_t plain_len;
+	u8 aad[32];
+	size_t aad_len;
+	u8 crypt[MAX_BUF];
+	size_t crypt_len;
+	u8 auth[16];
+	size_t auth_len;
+	int expect_ret;
+	int rust_only;
+};
+
+static int json_parse_fn(const char *obj, size_t obj_len, enum aes_ccm_fn *out)
+{
+	char buf[32];
+
+	if (host_json_parse_string_in(obj, obj_len, "fn", buf, sizeof(buf)))
+		return -1;
+	if (strcmp(buf, "aes_ccm_ae") == 0) {
+		*out = FN_AES_CCM_AE;
+		return 0;
+	}
+	if (strcmp(buf, "aes_ccm_ad") == 0) {
+		*out = FN_AES_CCM_AD;
+		return 0;
+	}
+	return -1;
+}
+
+static int parse_hex_field(const char *obj, size_t obj_len, const char *key,
+			   u8 *out, size_t out_cap, size_t *out_len)
+{
+	char hex[HOST_VECTOR_MAX_HEX_BUF];
+
+	if (host_json_parse_string_in(obj, obj_len, key, hex, sizeof(hex)))
+		return -1;
+	return host_hex_decode(hex, out, out_cap, out_len);
+}
+
+static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
+{
+	struct vector *v = vec_void;
+	int key_len = 0;
+	int m = 0;
+	size_t nonce_len = 0;
+	size_t decoded_key_len = 0;
+
+	memset(v, 0, sizeof(*v));
+	if (host_json_parse_string_in(obj, obj_len, "name", v->name, sizeof(v->name)))
+		return -1;
+	if (json_parse_fn(obj, obj_len, &v->fn))
+		return -1;
+	if (host_json_parse_bool_in(obj, obj_len, "rust_only", &v->rust_only) != 0)
+		v->rust_only = 0;
+	if (host_json_parse_int_in(obj, obj_len, "key_len", &key_len) ||
+	    host_json_parse_int_in(obj, obj_len, "M", &m))
+		return -1;
+	v->key_len = (size_t)key_len;
+	v->M = (size_t)m;
+	if (parse_hex_field(obj, obj_len, "key", v->key, sizeof(v->key),
+			    &decoded_key_len) ||
+	    decoded_key_len != v->key_len)
+		return -1;
+	if (parse_hex_field(obj, obj_len, "nonce", v->nonce, sizeof(v->nonce),
+			    &nonce_len) ||
+	    nonce_len != NONCE_LEN)
+		return -1;
+	if (parse_hex_field(obj, obj_len, "aad", v->aad, sizeof(v->aad),
+			    &v->aad_len))
+		return -1;
+	if (parse_hex_field(obj, obj_len, "auth", v->auth, sizeof(v->auth),
+			    &v->auth_len))
+		return -1;
+	if (host_json_parse_int_in(obj, obj_len, "expect_ret", &v->expect_ret))
+		return -1;
+
+	if (v->fn == FN_AES_CCM_AE) {
+		if (parse_hex_field(obj, obj_len, "plain", v->plain, sizeof(v->plain),
+				    &v->plain_len) ||
+		    parse_hex_field(obj, obj_len, "crypt", v->crypt, sizeof(v->crypt),
+				    &v->crypt_len))
+			return -1;
+		if (v->expect_ret == 0 &&
+		    (v->crypt_len != v->plain_len || v->auth_len != v->M))
+			return -1;
+	} else {
+		if (parse_hex_field(obj, obj_len, "crypt", v->crypt, sizeof(v->crypt),
+				    &v->crypt_len) ||
+		    parse_hex_field(obj, obj_len, "plain", v->plain, sizeof(v->plain),
+				    &v->plain_len))
+			return -1;
+		if (v->expect_ret == 0 &&
+		    (v->plain_len != v->crypt_len || v->auth_len != v->M))
+			return -1;
+		/*
+		 * On auth mismatch, aes_ccm_ad still writes recovered plaintext
+		 * before returning -1. Non-empty plain on expect_ret != 0 freezes
+		 * that side-effect; empty plain means buffer contents are not
+		 * checked (early reject before decrypt).
+		 */
+		if (v->expect_ret != 0 && v->plain_len > 0 &&
+		    v->plain_len != v->crypt_len)
+			return -1;
+	}
+	return 0;
+}
+
+static void dump_hex_mismatch(const char *label, const u8 *expected,
+			      size_t expected_len, const u8 *got, size_t got_len)
+{
+	size_t i;
+
+	fprintf(stderr, "  %s (%zu): ", label, expected_len);
+	for (i = 0; i < expected_len; i++)
+		fprintf(stderr, "%02x", expected[i]);
+	fprintf(stderr, "\n  got (%zu):      ", got_len);
+	for (i = 0; i < got_len; i++)
+		fprintf(stderr, "%02x", got[i]);
+	fprintf(stderr, "\n");
+}
+
+static int run_vector(const struct vector *v)
+{
+	int ret;
+
+	if (v->fn == FN_AES_CCM_AE) {
+		u8 crypt[MAX_BUF];
+		u8 auth[16];
+
+		memset(crypt, 0x5a, sizeof(crypt));
+		memset(auth, 0x5a, sizeof(auth));
+		ret = aes_ccm_ae(v->key, v->key_len, v->nonce, v->M, v->plain,
+				 v->plain_len, v->aad, v->aad_len, crypt, auth);
+		if (ret != v->expect_ret) {
+			fprintf(stderr, "%s: expected ret %d, got %d\n", v->name,
+				v->expect_ret, ret);
+			return -1;
+		}
+		if (ret == 0) {
+			if (memcmp(crypt, v->crypt, v->plain_len) != 0) {
+				fprintf(stderr, "%s: crypt mismatch\n", v->name);
+				dump_hex_mismatch("expected", v->crypt, v->crypt_len,
+						  crypt, v->plain_len);
+				return -1;
+			}
+			if (memcmp(auth, v->auth, v->M) != 0) {
+				fprintf(stderr, "%s: auth mismatch\n", v->name);
+				dump_hex_mismatch("expected", v->auth, v->auth_len,
+						  auth, v->M);
+				return -1;
+			}
+		}
+		return 0;
+	}
+
+	{
+		u8 plain[MAX_BUF];
+
+		memset(plain, 0x5a, sizeof(plain));
+		ret = aes_ccm_ad(v->key, v->key_len, v->nonce, v->M, v->crypt,
+				 v->crypt_len, v->aad, v->aad_len, v->auth, plain);
+		if (ret != v->expect_ret) {
+			fprintf(stderr, "%s: expected ret %d, got %d\n", v->name,
+				v->expect_ret, ret);
+			return -1;
+		}
+		if (ret == 0) {
+			if (memcmp(plain, v->plain, v->crypt_len) != 0) {
+				fprintf(stderr, "%s: plaintext mismatch\n", v->name);
+				dump_hex_mismatch("expected", v->plain, v->plain_len,
+						  plain, v->crypt_len);
+				return -1;
+			}
+		} else if (v->plain_len > 0 &&
+			   memcmp(plain, v->plain, v->crypt_len) != 0) {
+			fprintf(stderr,
+				"%s: failure-path plaintext side-effect mismatch\n",
+				v->name);
+			dump_hex_mismatch("expected", v->plain, v->plain_len, plain,
+					  v->crypt_len);
+			return -1;
+		}
+	}
+	return 0;
+}
+
+int main(int argc, char **argv)
+{
+	const char *path = "aes_ccm_vectors.json";
+	struct vector vecs[MAX_VECTORS];
+	size_t nvec = 0;
+	size_t i;
+	size_t executed = 0;
+	size_t skipped = 0;
+	int failed = 0;
+
+	if (argc > 1)
+		path = argv[1];
+
+	if (host_load_vectors(path, vecs, sizeof(vecs[0]), MAX_VECTORS,
+			      parse_vector_object, &nvec)) {
+		fprintf(stderr, "failed to parse %s\n", path);
+		return 1;
+	}
+
+	for (i = 0; i < nvec; i++) {
+#ifndef RUST_AES_CCM_ORACLE
+		if (vecs[i].rust_only) {
+			printf("skip %s (rust-only)\n", vecs[i].name);
+			skipped++;
+			continue;
+		}
+#endif
+		executed++;
+		if (run_vector(&vecs[i]) != 0)
+			failed++;
+		else
+			printf("ok %s\n", vecs[i].name);
+	}
+
+	if (failed) {
+		fprintf(stderr, "%d vector(s) failed\n", failed);
+		return 1;
+	}
+	if (skipped)
+		printf("all %zu aes-ccm vectors passed (%zu rust-only skipped; "
+		       "oracle: core/crypto/aes-ccm.c)\n",
+		       executed, skipped);
+	else
+		printf("all %zu aes-ccm vectors passed "
+		       "(oracle: core/crypto/aes-ccm.c)\n",
+		       executed);
+	return 0;
+}
