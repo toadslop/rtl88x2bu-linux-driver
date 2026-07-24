@@ -1,17 +1,37 @@
 ---
 name: pr-review-delivery
 description: >-
-  Auto-applies on every code review in this RTL88x2BU driver repo. Layers on top
-  of Cursor's built-in /review — does not replace it. Adds mandatory PR comment
-  posting and migration-specific checks. Triggers on "review PR", "code review",
-  "look at this diff", re-reviews, and any PR feedback request.
+  Auto-applies when you are REVIEWING a PR in this RTL88x2BU driver repo (not when
+  addressing review feedback). Layers on top of Cursor's built-in /review — does
+  not replace it. Adds mandatory PR comment posting and migration-specific checks.
+  Triggers on "review PR", "code review", "look at this diff", re-reviews, and
+  similar reviewer tasks. Do NOT use for "address review comments", "respond to
+  review", or "fix PR feedback" — those are author tasks (fix code, push to the
+  same PR branch; do not open a new PR). Reviewers must not change PR state
+  (close, draft, ready-for-review, merge, etc.) — comments only.
 ---
 
 # PR Review Delivery (repo addendum)
 
-This skill **auto-applies** in this project whenever you are doing a code review.
-It **complements** Cursor's built-in review skills — it does **not** replace or
-override them.
+This skill **auto-applies** when you are **reviewing** someone else's pull request
+— checking whether the code is correct and posting findings on the PR.
+
+**You are the reviewer, not the author.** Do not write code, push commits, rebase
+the branch, merge, or otherwise act as the PR author. Your only job is to review
+the diff and post comments.
+
+**Do not change PR state.** Never close, reopen, mark as draft, mark ready for
+review, merge, or otherwise change the PR's lifecycle — even if you think it is
+superseded, redundant, or ready to land. State changes are the author's (or
+maintainer's) job, not yours.
+
+**This skill does not apply when you are the author addressing review feedback.**
+For "address review comments", "respond to review", or "fix PR feedback": read the
+PR comments, make the fixes, commit, and **push to the same PR branch** (do not
+create a new branch or a new PR unless the user explicitly asks).
+
+This skill **complements** Cursor's built-in review skills — it does **not**
+replace or override them.
 
 | Built-in skill | Role |
 |----------------|------|
@@ -25,7 +45,35 @@ top of whatever `/review` (or a specialized variant) produces:
 1. **Delivery** — publish every actionable finding on the pull request itself.
 2. **Migration context** — extra checks for this C→Rust kernel-module migration.
 
-## Workflow
+## Author workflow (out of scope for this skill)
+
+When the user asks you to **address**, **respond to**, or **fix** review
+comments on a PR, you are the **author**, not the reviewer. Do **not** invoke
+this skill or post new review findings. Instead:
+
+1. **Find the PR** — by number, URL, or branch name (`gh pr view`, `gh api` for
+   inline review threads).
+2. **Read all open review comments** — inline threads and top-level summaries.
+3. **Fix the code** — minimal diff that resolves each actionable comment.
+4. **Verify** — run the relevant gates (L0/L2 per `AGENTS.md` and `test-plan.md`).
+5. **Push to the same PR branch** — `git push origin <head-branch>`; do **not**
+   create a new branch or a new PR unless the user explicitly asks.
+6. **Recap in chat** — list which comments were addressed and what you verified.
+
+Optionally reply on resolved threads with `ManagePullRequest` `post_comment` and
+`in_reply_to` to note the fix — that is author follow-up, not a new review.
+
+## Workflow (reviewer only)
+
+**Reviewer boundaries — do only this:**
+
+| Do | Do not |
+|----|--------|
+| Read the PR diff and related context | Edit code or push commits to the PR branch |
+| Post inline and top-level review comments | Close, reopen, or merge the PR |
+| Reply on existing review threads | Mark draft / ready-for-review |
+| Summarize findings in chat (brief pointer to PR) | Rebase, force-push, or create a new PR |
+| Run read-only verification to inform comments | Change PR title, body, labels, or reviewers |
 
 1. **Run the built-in review** — invoke `/review` (or `/review-bugbot` /
    `/review-security` when appropriate) on the PR or branch. Let that skill
@@ -46,7 +94,9 @@ finishing. Chat output is a pointer to what you posted, not a substitute.
 
 1. **Identify the PR** — use `branch_name`, a PR number/URL from the user, or
    `gh pr list` / `gh pr view` if needed.
-2. **Post review comments** — use `ManagePullRequest` with `action: post_comment`.
+2. **Post review comments** — use `ManagePullRequest` with `action: post_comment`
+   only. Do **not** use `set_pr_status`, `create_pr`, `update_pr`, or any action
+   that changes PR state, metadata, or branch contents.
 3. **Confirm delivery** — your final message should link to or name the PR and
    state how many inline vs summary comments you posted.
 

@@ -61,10 +61,17 @@ typedef struct {
 	struct registry_priv registrypriv;
 } _adapter;
 
+#if defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+static inline u16 le_to_host16(u16 val)
+{
+	return val;
+}
+#else
 static inline u16 le_to_host16(u16 val)
 {
 	return (u16)((val & 0xff) << 8) | (val >> 8);
 }
+#endif
 
 #define WPA_PUT_LE16(a, val)                     \
 	do {                                     \

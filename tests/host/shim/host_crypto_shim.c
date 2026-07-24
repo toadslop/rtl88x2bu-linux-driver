@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /* Host allocator and driver stubs for core/crypto when built userspace (T2). */
 
-#include <stdarg.h>
 #include <stdlib.h>
 
 #include "host_crypto_wrap.h"
