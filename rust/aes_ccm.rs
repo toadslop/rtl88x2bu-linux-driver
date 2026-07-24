@@ -69,7 +69,9 @@ fn aes_ccm_auth_start(
     let mut b = [0u8; AES_BLOCK_SIZE as usize];
 
     b[0] = if aad.is_empty() { 0 } else { 0x40 };
-    b[0] |= (((m - 2) / 2) as u8) << 3;
+    // Match C `size_t` wrap for M<2 (frozen `ae-m-zero`); checked sub panics
+    // under kernel CONFIG_RUST_OVERFLOW_CHECKS / -C overflow-checks=y.
+    b[0] |= ((m.wrapping_sub(2) / 2) as u8) << 3;
     b[0] |= (L - 1) as u8;
     b[1..1 + NONCE_LEN].copy_from_slice(nonce);
     put_be16(&mut b[AES_BLOCK_SIZE as usize - L..], plain_len as u16);
