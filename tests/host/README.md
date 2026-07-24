@@ -34,6 +34,9 @@ This builds `test_aes_ctr`, links the in-tree C objects (`aes-internal.c`,
 `aes-internal-enc.c`, `aes-ctr.c`), and runs every vector in
 `aes_ctr_vectors.json` against the **current C implementation**.
 
+`make test-rust` runs the same JSON against the Rust port (`rust/aes_ctr.rs`)
+linked as a userspace staticlib (W1-03 L2 gate). `make test` runs both.
+
 Vectors characterize observable behavior of `core/crypto/aes-ctr.c` (in-place
 XOR, return codes, 128/192/256-bit keys, counter increment). They are **not**
 NIST/OpenSSL oracles unless they happen to match.
