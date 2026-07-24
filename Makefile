@@ -2513,7 +2513,7 @@ RUST_CHECK_NM ?= $(if $(filter 1,$(LLVM)),llvm-nm,nm)
 .PHONY: rust-check-symbols rust-check-symbols-selftest rust-objects-aes-ctr
 rust-check-symbols:
 	@test -n "$(OLD)" && test -n "$(NEW)" || { \
-		echo "Usage: make rust-check-symbols OLD=path/to/old.o NEW=path/to/new.o [ALLOWLIST=path.allow]"; \
+		echo "Usage: make rust-check-symbols OLD=path/to/old.o NEW=path/to/new.o [ALLOWLIST=path.allow] [ALLOW_VACUOUS=1]"; \
 		exit 1; }
 	NM=$(RUST_CHECK_NM) ./docs/rust-migration/scripts/check-symbols.sh "$(OLD)" "$(NEW)" \
 		$(if $(ALLOWLIST),--allowlist "$(ALLOWLIST)",) \

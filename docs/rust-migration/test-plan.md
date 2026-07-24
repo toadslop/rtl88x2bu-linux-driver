@@ -88,7 +88,7 @@ disappears or changes binding.
 
 ```bash
 ./docs/rust-migration/scripts/check-symbols.sh old.o new.o \
-  --allowlist docs/rust-migration/scripts/fixtures/omac1_vs_aes_ctr.allow
+  --allowlist docs/rust-migration/scripts/fixtures/aes_ctr_rename_smoke.allow
 ```
 
 Template (comment-only; copy per swap): `symbol-allowlist.example`. Format:
