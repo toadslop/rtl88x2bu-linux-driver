@@ -1450,7 +1450,8 @@ static int __init rtw_drv_entry(void)
 
 		RTW_PRINT("rust scaffold: rtw_rust_scaffold_init ret=%d\n", rust_ret);
 		if (rust_ret != 0) {
-			RTW_PRINT("rust scaffold: init failed, aborting module load\n");
+			RTW_ERR("rust scaffold: init failed, aborting module load\n");
+			/* Rust init returns errno-style negatives (unlike platform_wifi_power_on → -1). */
 			ret = -EINVAL;
 			goto exit;
 		}
