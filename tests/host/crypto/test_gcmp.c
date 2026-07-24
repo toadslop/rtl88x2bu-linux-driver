@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Host L2 oracle runner for gcmp.c (W2-02b).
+ * Host L2 oracle runner for gcmp.c (W2-02c).
  *
  * oracle: core/crypto/gcmp.c
  */
