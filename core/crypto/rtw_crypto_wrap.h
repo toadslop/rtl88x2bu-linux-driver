@@ -1,6 +1,10 @@
 #ifndef RTW_CRYTO_WRAP_H
 #define RTW_CRYTO_WRAP_H
 
+#ifdef HOST_CRYPTO_TEST
+#include "host_crypto_wrap.h"
+#else
+
 #include <drv_types.h>
 
 #define TEST_FAIL() 0
@@ -61,4 +65,5 @@ void wpa_printf(int level, const char *fmt, ...);
 void wpa_hexdump(int level, const char *title, const void *buf, size_t len);
 void wpa_hexdump_key(int level, const char *title, const void *buf, size_t len);
 
+#endif /* HOST_CRYPTO_TEST */
 #endif /* RTW_CRYTO_WRAP_H */
