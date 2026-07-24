@@ -1,18 +1,17 @@
 ---
 name: pr-review-delivery
 description: >-
-  Repo-specific addendum for pull request reviews in this RTL88x2BU driver project.
-  Use alongside Cursor's built-in /review (or /review-bugbot, /review-security) —
-  not as a replacement. Adds mandatory PR comment posting and migration-specific
-  checks. Invoke explicitly with /pr-review-delivery or @pr-review-delivery after
-  or during a /review run.
-disable-model-invocation: true
+  Auto-applies on every code review in this RTL88x2BU driver repo. Layers on top
+  of Cursor's built-in /review — does not replace it. Adds mandatory PR comment
+  posting and migration-specific checks. Triggers on "review PR", "code review",
+  "look at this diff", re-reviews, and any PR feedback request.
 ---
 
 # PR Review Delivery (repo addendum)
 
-This skill **complements** Cursor's built-in review skills. It does **not**
-replace them.
+This skill **auto-applies** in this project whenever you are doing a code review.
+It **complements** Cursor's built-in review skills — it does **not** replace or
+override them.
 
 | Built-in skill | Role |
 |----------------|------|
@@ -20,25 +19,25 @@ replace them.
 | `/review-bugbot` | Bug and regression focus |
 | `/review-security` | Security vulnerability focus |
 
-Use those skills (especially `/review`) for analysis, reasoning, and finding
-issues. Use **this skill** for two repo-specific additions:
+**Keep using the built-ins.** This skill adds two repo-specific requirements on
+top of whatever `/review` (or a specialized variant) produces:
 
 1. **Delivery** — publish every actionable finding on the pull request itself.
 2. **Migration context** — extra checks for this C→Rust kernel-module migration.
 
 ## Workflow
 
-1. **Run the built-in review** — invoke `/review` (or a specialized variant) on
-   the PR or branch. Let that skill drive the core review process.
+1. **Run the built-in review** — invoke `/review` (or `/review-bugbot` /
+   `/review-security` when appropriate) on the PR or branch. Let that skill
+   drive the core analysis.
 2. **Apply repo-specific checks** — walk the "Migration focus" section below for
    anything the general review may not cover.
 3. **Post all findings on the PR** — follow "Post on the PR" below. This includes
    findings from `/review` **and** any migration-specific items you found.
 4. **Recap in chat** — brief pointer to the PR; do not duplicate the full review.
 
-If the user only invokes this skill (not `/review`), still perform a thorough
-review — but treat Cursor's `/review` as the preferred primary workflow and
-mention that in your summary.
+When this skill auto-applies, you still run `/review` — this skill is the
+delivery and migration layer, not a substitute for Cursor's review agent.
 
 ## Post on the PR (mandatory)
 
