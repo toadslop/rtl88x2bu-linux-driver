@@ -139,13 +139,19 @@ static int json_parse_int_in(const char *obj, size_t obj_len, const char *key,
 	return 0;
 }
 
-static int json_parse_bool_fn_in(const char *obj, size_t obj_len, const char *key,
-				 int *out)
+static int json_parse_fn_dispatch(const char *obj, size_t obj_len,
+				  const char *key, int *out)
 {
 	char buf[64];
 
-	if (json_parse_string_in(obj, obj_len, key, buf, sizeof(buf)) == 0) {
-		*out = strcmp(buf, "aes_128_ctr_encrypt") == 0;
+	if (json_parse_string_in(obj, obj_len, key, buf, sizeof(buf)))
+		return -1;
+	if (strcmp(buf, "aes_128_ctr_encrypt") == 0) {
+		*out = 1;
+		return 0;
+	}
+	if (strcmp(buf, "aes_ctr_encrypt") == 0) {
+		*out = 0;
 		return 0;
 	}
 	return -1;
@@ -158,7 +164,7 @@ static int parse_vector_object(const char *obj, size_t obj_len, struct vector *v
 	memset(v, 0, sizeof(*v));
 	if (json_parse_string_in(obj, obj_len, "name", v->name, sizeof(v->name)))
 		return -1;
-	if (json_parse_bool_fn_in(obj, obj_len, "fn", &v->use_aes_128_ctr))
+	if (json_parse_fn_dispatch(obj, obj_len, "fn", &v->use_aes_128_ctr))
 		return -1;
 	{
 		int key_len = 0;
@@ -299,9 +305,8 @@ static int run_vector(const struct vector *v)
 			v->expect_ret, ret);
 		return -1;
 	}
-	if (ret != 0)
-		return 0;
-	if (memcmp(buf, v->expected, v->expected_len) != 0) {
+	if (v->expected_len > 0 &&
+	    memcmp(buf, v->expected, v->expected_len) != 0) {
 		size_t i;
 		fprintf(stderr, "%s: ciphertext mismatch\n", v->name);
 		fprintf(stderr, "  expected: ");

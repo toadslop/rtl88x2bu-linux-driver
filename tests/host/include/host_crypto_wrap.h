@@ -8,6 +8,13 @@
 
 #include "host_types.h"
 
+/*
+ * Minimal shim for aes-ctr host tests (T2). Wave 2 crypto ports will need
+ * additional symbols from core/crypto/rtw_crypto_wrap.h — use that file as
+ * the checklist (endian macros, os_memcmp, wpa_printf, …) and extend this
+ * header + tests/host/shim/ as each unit is added.
+ */
+
 #define TEST_FAIL() 0
 
 #define os_memset _rtw_memset

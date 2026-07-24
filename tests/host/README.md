@@ -31,6 +31,11 @@ Vectors characterize observable behavior of `core/crypto/aes-ctr.c` (in-place
 XOR, return codes, 128/192/256-bit keys, counter increment). They are **not**
 NIST/OpenSSL oracles unless they happen to match.
 
+`aes_ctr_vectors.json` is parsed by a tiny hand-rolled scanner in
+`test_aes_ctr.c` (not a full JSON library). Keep vector fields at the **top
+level** of each object — do not embed key names inside string values — or
+extend the parser / switch to `jq` in CI when fixtures grow.
+
 ## W1-03 (Rust pilot)
 
 When `aes-ctr.c` is ported to Rust:

@@ -6,4 +6,5 @@
 .tmp_versions
 Module.markers
 Module.symvers
-modules.ordertests/host/crypto/test_aes_ctr
+modules.order
+tests/host/crypto/test_aes_ctr

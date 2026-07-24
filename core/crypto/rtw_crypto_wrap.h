@@ -2,7 +2,7 @@
 #define RTW_CRYTO_WRAP_H
 
 #ifdef HOST_CRYPTO_TEST
-#include "../../../tests/host/include/host_crypto_wrap.h"
+#include "host_crypto_wrap.h"
 #else
 
 #include <drv_types.h>
