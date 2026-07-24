@@ -91,8 +91,16 @@ Out-of-tree driver:
 cd /path/to/rtl88x2bu-linux-driver
 make clean
 make KDIR=/path/to/linux LLVM=1 -j"$(nproc)"
-# Expect: RUSTC [M] .../rust/kbuild_stub.o .../rust/scaffold.o  then  LD [M] .../88x2bu.ko
+# Expect: RUSTC [M] .../rust/kbuild_stub.o .../rust/scaffold.o .../rust/bindings.o
+# then  LD [M] .../88x2bu.ko
 nm 88x2bu.ko | grep -E 'rtw_rust_kbuild_probe|rtw_rust_scaffold_init|rtw_rust_bindings_probe'
+```
+
+Regenerate allowlisted crypto FFI (after editing `rust/bindings/bindgen_helper.h` or the script allowlist):
+
+```bash
+export LIBCLANG_PATH=/usr/lib/llvm-18/lib
+KDIR=/path/to/linux ./scripts/bindgen_rtw.sh
 ```
 
 L3 should show a dmesg breadcrumb from C init after the Rust call, e.g. `rust scaffold: rtw_rust_scaffold_init ret=0` (W0-03).

@@ -57,27 +57,22 @@ Notes:
 - **C-only / legacy:** `make` and `make KSRC=...` still work as before when `KDIR` is unset.
 - **Product config** for Phase 1 exit remains default `CONFIG_RTL8822B=y` + `CONFIG_USB_HCI=y` (module name `88x2bu`).
 
-### Regenerating Rust bindgen output (W1-01)
+### Regenerating bindgen bindings (W1-01)
 
-Allowlisted FFI for the aes-ctr pilot lives under `rust/bindings/`. The generated
-blob is committed; regenerate after changing `rust/bindings/bindgen_helper.h` or
-the allowlists in the script:
+Allowlisted FFI for the crypto pilot lives under `rust/bindings/`. The generated blob is committed; regenerate after changing `rust/bindings/bindgen_helper.h` or the allowlist in the script:
 
 ```bash
-export LIBCLANG_PATH=/usr/lib/llvm-$(llvm-config --version | cut -d. -f1)/lib   # adjust
-./scripts/bindgen_rtw.sh
+export LIBCLANG_PATH=/usr/lib/llvm-18/lib   # adjust to host clang
+KDIR=/path/to/rust-enabled-kernel ./scripts/bindgen_rtw.sh
+# writes rust/bindings/generated.rs
 # Optional: fail if the committed blob is stale (for future CI):
 # ./scripts/bindgen_rtw.sh --check
-# Review rust/bindings/bindings_generated.rs, then rebuild:
-make KDIR=/path/to/rust-enabled-kernel LLVM=1 -j"$(nproc)"
-nm 88x2bu.ko | grep rtw_rust_bindings_probe
 ```
 
 `KDIR` defaults to `/opt/linux` and must exist (Wave 0 pin); the aes.h pilot
 surface does not pass kernel include paths to clang yet.
 
-Needs **bindgen 0.65.1** (same pin as the kernel). Do not widen the allowlist to
-full `drv_types.h` in this wave — add symbols only when a translation PR needs them.
+Requires `bindgen` 0.65.1 (same pin as Wave 0). The script allowlists only `aes_encrypt_*` / `aes_decrypt_*` / `AES_BLOCK_SIZE` — not `aes_ctr_*` (those symbols will be defined by the Rust pilot). Full `drv_types.h` surface is intentionally excluded.
 
 First-time L0/L3 setup (packages, `ld.lld` symlinks, bindgen `--locked`, QEMU without KVM): see [`rust-migration/dev-environment.md`](rust-migration/dev-environment.md).
 
