@@ -35,6 +35,7 @@
 //! | `omac1_aes_*` | **Rust** (`aes_omac1.rs`); C TU removed (W2-01) |
 //! | `gcmp_*` | **Rust** (`gcmp.rs`); C TU removed (W2-02) |
 //! | `aes_siv_*` | **Rust** (`aes_siv.rs`); C TU removed (W2-03) |
+//! | `aes_ccm_*` | **Rust** (`aes_ccm.rs`); C TU removed (W2-04) |
 //! | Remaining `core/crypto/*.c` + rest of driver | **C** | Until later waves claim them |
 //!
 //! ## Rules
