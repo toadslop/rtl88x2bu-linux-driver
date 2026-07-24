@@ -2473,7 +2473,8 @@ $(MODULE_NAME)-$(CONFIG_MP_INCLUDED)+= core/rtw_bt_mp.o
 endif
 
 # Rust-for-Linux: link .rs objects only when the target kernel has CONFIG_RUST=y.
-# C-only builds (distro headers without Rust) keep the previous object list.
+# C-only builds (distro headers without Rust) omit migrated crypto TUs — no
+# ifndef CONFIG_RUST fallback; use a Rust-enabled KDIR for migration work.
 ifdef CONFIG_RUST
 $(MODULE_NAME)-y += rust/kbuild_stub.o
 $(MODULE_NAME)-y += rust/scaffold.o
