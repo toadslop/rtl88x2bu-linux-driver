@@ -1,0 +1,7 @@
+# Example L1 allowlist for check-symbols.sh (T1).
+#
+# Intentional symbol drops/renames should be rare in Phase 1 parity ports.
+# Copy and trim for a specific C→Rust swap only when the PR documents why.
+#
+# drop legacy_helper_only_used_inside_c_file
+# rename old_export_name new_export_name

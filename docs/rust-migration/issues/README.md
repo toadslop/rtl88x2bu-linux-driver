@@ -65,4 +65,5 @@ Architecture: `epic-11-architecture.md`, `arch-00-*.md` …
 | W1-04 | `wave1-04-pilot-makefile-smoke.md` | done (folded into W1-03 Makefile swap; not filed on GitHub) |
 | W2-01… | `wave2-*.md` | draft |
 | T0 / A0 | `test-00-*.md` / `arch-00-*.md` | done (plan docs + links via W0-01) |
-| T1–T3 / A1 | remaining `test-*` / `arch-*` | draft (A1 done; T1/T3 remain) |
+| T1 | `test-01-symbol-check.md` | done (check-symbols.sh + Make target; not filed on GitHub) |
+| T3 | `test-03-ci-host-tests.md` | draft |

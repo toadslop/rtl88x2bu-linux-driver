@@ -71,13 +71,38 @@ When replacing `foo.c` with `foo.rs` (or moving a function group):
 
 1. Build the **pre-change** `foo.o` (or keep artifacts from `master`).
 2. Build the **post-change** Rust object.
-3. Compare global text symbols:
+3. Compare global defined symbols:
 
 ```bash
 ./docs/rust-migration/scripts/check-symbols.sh path/to/old.o path/to/new.o
+# or
+make rust-check-symbols OLD=path/to/old.o NEW=path/to/new.o
 ```
 
-(Script added in test-harness issues.) Fail if any previously global symbol disappears or changes binding unexpectedly (`T`/`R`/`D` as documented per file).
+Every global symbol defined in the OLD object must still be defined in NEW with the
+same nm type letter (`T` text, `R` rodata, `D` data, `B` bss, etc.). Extra symbols
+in NEW are allowed (e.g. `rtw_rust_*` probes). Fail if a previously global symbol
+disappears or changes binding.
+
+**Allowlist** (intentional renames/drops — rare in Phase 1):
+
+```bash
+./docs/rust-migration/scripts/check-symbols.sh old.o new.o \
+  --allowlist docs/rust-migration/scripts/symbol-allowlist.example
+```
+
+Format (`symbol-allowlist.example`):
+
+```text
+drop legacy_symbol_only_in_c
+rename old_export_name new_export_name
+```
+
+Self-test against the W1-03 aes-ctr pilot (needs L0 `rust/aes_ctr.o`):
+
+```bash
+make KDIR=/opt/linux LLVM=1 rust-check-symbols-selftest
+```
 
 Also required in the PR description:
 
@@ -153,7 +178,7 @@ Failures at L4 block the wave epic, not every tiny PR, if L0–L2 were green—b
 ## What we will automate first (issues)
 
 1. **T0** — Document this plan + PR checklist (this file).
-2. **T1** — `check-symbols.sh` + Make target `rust-check-symbols`.
+2. **T1** — `check-symbols.sh` + Make target `rust-check-symbols` (done).
 3. **T2** — Host crypto harness scaffolding + first vectors for `aes-ctr` (ties to W1-03).
 4. **T3** — Optional GitHub Actions: L0 on a Rust-kernel container when available; always run L2 host tests on ubuntu-latest.
 

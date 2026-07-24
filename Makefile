@@ -2505,6 +2505,28 @@ endif
 
 all: modules
 
+# L1 ABI gate (T1): compare global symbols in OLD.o vs NEW.o after a C→Rust swap.
+# Example (W1-03 aes-ctr pilot):
+#   make rust-check-symbols OLD=/tmp/aes-ctr-c.o NEW=rust/aes_ctr.o
+RUST_CHECK_NM ?= $(if $(filter 1,$(LLVM)),llvm-nm,nm)
+
+.PHONY: rust-check-symbols rust-check-symbols-selftest
+rust-check-symbols:
+	@test -n "$(OLD)" && test -n "$(NEW)" || { \
+		echo "Usage: make rust-check-symbols OLD=path/to/old.o NEW=path/to/new.o [ALLOWLIST=path.allow]"; \
+		exit 1; }
+	NM=$(RUST_CHECK_NM) ./docs/rust-migration/scripts/check-symbols.sh "$(OLD)" "$(NEW)" \
+		$(if $(ALLOWLIST),--allowlist "$(ALLOWLIST)",)
+
+rust-check-symbols-selftest: modules
+	@set -e; \
+	tmp_o=$$(mktemp /tmp/aes-ctr-ref.XXXXXX.o); \
+	gcc -c -Wall -I$(shell pwd)/tests/host/include -I$(shell pwd)/core/crypto \
+		-DHOST_CRYPTO_TEST -o "$$tmp_o" core/crypto/aes-ctr.c; \
+	NM=$(RUST_CHECK_NM) ./docs/rust-migration/scripts/check-symbols.sh "$$tmp_o" rust/aes_ctr.o; \
+	rm -f "$$tmp_o"; \
+	echo "rust-check-symbols-selftest: OK"
+
 modules:
 	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) modules
 

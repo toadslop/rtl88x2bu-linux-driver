@@ -90,7 +90,7 @@ When Rust takes over symbols that C used to define, swap objects in the Makefile
 1. Implement typed Rust logic + `extern "C"` shims preserving the original symbol names (`aes_ctr_encrypt`, `aes_128_ctr_encrypt`).
 2. Add `$(MODULE_NAME)-y += rust/aes_ctr.o` under the existing `ifdef CONFIG_RUST` block.
 3. Remove `core/crypto/aes-ctr.o` from the `rtk_core` object list.
-4. Run L0 (build), L1 (`nm` — Rust symbols present, no duplicate C defs), and L2 (`make -C tests/host/crypto test` — C oracle + Rust staticlib both green against `aes_ctr_vectors.json`).
+4. Run L0 (build), L1 (`make rust-check-symbols OLD=… NEW=…` or `check-symbols.sh`), and L2 (`make -C tests/host/crypto test` — C oracle + Rust staticlib both green against `aes_ctr_vectors.json`).
 5. Leave the C source file in-tree for reference until the wave is done; only the **object** is dropped from the link.
 
 Repeat this pattern for each Wave 2 crypto unit. For large `.c` files, extract remaining C to `foo_rest.c` rather than linking the full TU alongside Rust (see [architecture.md](rust-migration/architecture.md) “Multi-part file ports”).

@@ -60,8 +60,7 @@ Because the pinned kernel has `CONFIG_RUST=y`, the build links the Rust objects
 ### Gates not yet wired up
 
 - **L1** (`docs/rust-migration/scripts/check-symbols.sh`) and **L2** (host crypto
-  harness under `tests/`) are referenced by the plan but **do not exist in the tree
-  yet** — there is no `tests/` dir and no CI workflow. Don't assume `make`
-  test/lint targets exist.
+  harness under `tests/`) are referenced by the plan. L2 exists; run L1 via
+  `make rust-check-symbols OLD=… NEW=…` after each C→Rust object swap.
 - **L4** (hardware STA smoke, `docs/smoke-test.md`) needs a real USB RTL8822BU
   dongle and cannot run in this VM.

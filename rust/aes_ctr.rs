@@ -132,7 +132,7 @@ pub extern "C" fn aes_128_ctr_encrypt(
 }
 
 /// Link-time probe for L1 (distinct from the exported crypto symbols).
-/// Wire into `check-symbols.sh` when T1 lands.
+/// Run via `make rust-check-symbols` / `check-symbols.sh` (T1).
 #[no_mangle]
 pub extern "C" fn rtw_rust_aes_ctr_probe() -> c_int {
     AES_BLOCK_SIZE as c_int
