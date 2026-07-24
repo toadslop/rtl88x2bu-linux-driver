@@ -1,17 +1,27 @@
 ---
 name: pr-review-delivery
 description: >-
-  Auto-applies on every code review in this RTL88x2BU driver repo. Layers on top
-  of Cursor's built-in /review — does not replace it. Adds mandatory PR comment
-  posting and migration-specific checks. Triggers on "review PR", "code review",
-  "look at this diff", re-reviews, and any PR feedback request.
+  Auto-applies when you are REVIEWING a PR in this RTL88x2BU driver repo (not when
+  addressing review feedback). Layers on top of Cursor's built-in /review — does
+  not replace it. Adds mandatory PR comment posting and migration-specific checks.
+  Triggers on "review PR", "code review", "look at this diff", re-reviews, and
+  similar reviewer tasks. Do NOT use for "address review comments", "respond to
+  review", or "fix PR feedback" — those are author tasks (fix code, push to the
+  same PR branch; do not open a new PR).
 ---
 
 # PR Review Delivery (repo addendum)
 
-This skill **auto-applies** in this project whenever you are doing a code review.
-It **complements** Cursor's built-in review skills — it does **not** replace or
-override them.
+This skill **auto-applies** when you are **reviewing** someone else's pull request
+— checking whether the code is correct and posting findings on the PR.
+
+**This skill does not apply when you are the author addressing review feedback.**
+For "address review comments", "respond to review", or "fix PR feedback": read the
+PR comments, make the fixes, commit, and **push to the same PR branch** (do not
+create a new branch or a new PR unless the user explicitly asks).
+
+This skill **complements** Cursor's built-in review skills — it does **not**
+replace or override them.
 
 | Built-in skill | Role |
 |----------------|------|
