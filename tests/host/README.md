@@ -11,7 +11,7 @@ tests/host/
   domain/            # A1 domain-type unit tests (rustc --test)
   crypto/
     aes_ctr_vectors.json
-    test_aes_ctr.c   # oracle runner (C today; Rust in W1-03)
+    test_aes_ctr.c   # oracle runner (C oracle + Rust staticlib)
     Makefile
 ```
 
@@ -24,15 +24,16 @@ Driver crypto sources are compiled with `-DHOST_CRYPTO_TEST`, which makes
 make -C tests/host/domain test
 ```
 
-## Run (aes-ctr oracle)
+## Run (aes-ctr parity)
 
 ```bash
 make -C tests/host/crypto test
 ```
 
-This builds `test_aes_ctr`, links the in-tree C objects (`aes-internal.c`,
-`aes-internal-enc.c`, `aes-ctr.c`), and runs every vector in
-`aes_ctr_vectors.json` against the **current C implementation**.
+This runs both paths against `aes_ctr_vectors.json`:
+
+- **`test-c`** — links the in-tree C objects (`aes-internal.c`, `aes-internal-enc.c`, `aes-ctr.c`) and exercises the C oracle.
+- **`test-rust`** — links `rust/aes_ctr.rs` as a userspace staticlib (no `aes-ctr.c`) and exercises the Rust `extern "C"` shims.
 
 Vectors characterize observable behavior of `core/crypto/aes-ctr.c` (in-place
 XOR, return codes, 128/192/256-bit keys, counter increment). They are **not**
@@ -43,17 +44,13 @@ NIST/OpenSSL oracles unless they happen to match.
 level** of each object — do not embed key names inside string values — or
 extend the parser / switch to `jq` in CI when fixtures grow.
 
-## W1-03 (Rust pilot)
+## W1-03 pilot (done)
 
-When `aes-ctr.c` is ported to Rust:
+The Rust port landed in `rust/aes_ctr.rs`:
 
-1. Keep `aes_ctr_vectors.json` unchanged.
-2. Implement typed Rust logic + thin `extern "C"` shims for `aes_ctr_encrypt` /
-   `aes_128_ctr_encrypt`.
-3. Extend the harness (or add a sibling binary) to run the **same JSON** against
-   the Rust objects/userspace build and require byte/return parity with these
-   fixtures.
-4. Only after L0–L2 are green, drop `aes-ctr.o` from the module link (W1-04).
+1. `aes_ctr_vectors.json` is unchanged — both `test-c` and `test-rust` must pass.
+2. Typed logic lives in `aes_ctr_encrypt_typed()`; `aes_ctr_encrypt` / `aes_128_ctr_encrypt` are thin C ABI shims.
+3. `aes-ctr.o` was removed from the module link; `rust/aes_ctr.o` is linked instead (see `docs/rust-migration.md` swap recipe).
 
 See also [`docs/rust-migration/test-plan.md`](../../docs/rust-migration/test-plan.md)
 (L2 gate) and issue `wave1-03-pilot-aes-ctr.md`.
