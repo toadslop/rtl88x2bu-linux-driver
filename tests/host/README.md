@@ -103,7 +103,9 @@ Compile-only gate (shim + `aes-siv.c` and dependencies build under `HOST_CRYPTO_
 make -C tests/host/crypto test-aes-siv-compile
 ```
 
-`make -C tests/host/crypto test-aes-siv` runs both C and Rust oracles (`test-aes-siv-c` + `test-aes-siv-rust`).
+`make -C tests/host/crypto test-aes-siv` runs both C and Rust oracles
+(`test-aes-siv-c` + `test-aes-siv-rust`) and is included in the default `all` target
+(`make -C tests/host/crypto`) alongside ctr, omac1, and gcmp.
 
 ## aes-siv details
 
