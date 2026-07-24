@@ -1,5 +1,14 @@
 #include "rtw_crypto_wrap.h"
 
+#ifndef HOST_CRYPTO_TEST
+#include <drv_types.h>
+
+u8 rtw_registrypriv_amsdu_mode(const _adapter *padapter)
+{
+	if (!padapter)
+		return RTW_AMSDU_MODE_NON_SPP;
+	return padapter->registrypriv.amsdu_mode;
+}
 #ifndef DEBUG_CRYPTO
 #define DEBUG_CRYPTO 0
 #endif /* DEBUG_CRYTO */
@@ -83,3 +92,5 @@ void wpa_hexdump_key(int level, const char *title, const void *buf, size_t len)
 	RTW_INFO_DUMP((u8 *)title, buf, len);
 #endif /* DEBUG_CRYPTO */
 }
+
+#endif /* !HOST_CRYPTO_TEST */

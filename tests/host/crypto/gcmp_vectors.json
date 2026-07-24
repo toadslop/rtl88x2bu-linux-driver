@@ -1,0 +1,115 @@
+{
+  "oracle": "core/crypto/gcmp.c",
+  "comment": "Vectors freeze in-tree C GCMP behavior for L2 parity (W2-02).",
+  "vectors": [
+    {
+      "name": "gcmp_encrypt_basic",
+      "fn": "gcmp_encrypt",
+      "amsdu_mode": 0,
+      "key_len": 16,
+      "key": "000102030405060708090a0b0c0d0e0f",
+      "frame": "08000000aabbccddee01aabbccddee02aabbccddee03100068656c6c6f212121",
+      "hdrlen": 24,
+      "pn": "393837363534",
+      "keyid": 0,
+      "expect_ret": 1,
+      "ciphertext": "08000000aabbccddee01aabbccddee02aabbccddee03100034350020363738396d6ba2164a9db80a1de60e2c2bce737661fdde9e569bb892"
+    },
+    {
+      "name": "gcmp_encrypt_embedded_pn",
+      "fn": "gcmp_encrypt",
+      "amsdu_mode": 0,
+      "key_len": 16,
+      "key": "000102030405060708090a0b0c0d0e0f",
+      "frame": "08000000aabbccddee01aabbccddee02aabbccddee031000343500203637383968656c6c6f212121",
+      "hdrlen": 24,
+      "null_pn": true,
+      "keyid": 0,
+      "expect_ret": 1,
+      "ciphertext": "08000000aabbccddee01aabbccddee02aabbccddee03100034350020363738396d6ba2164a9db80a1de60e2c2bce737661fdde9e569bb892"
+    },
+    {
+      "name": "gcmp_decrypt_basic",
+      "fn": "gcmp_decrypt",
+      "amsdu_mode": 0,
+      "key_len": 16,
+      "key": "000102030405060708090a0b0c0d0e0f",
+      "hdr": "08000000aabbccddee01aabbccddee02aabbccddee031000",
+      "data": "34350020363738396d6ba2164a9db80a1de60e2c2bce737661fdde9e569bb892",
+      "expect_ret": 1,
+      "plaintext": "68656c6c6f212121"
+    },
+    {
+      "name": "gcmp_encrypt_aes256",
+      "fn": "gcmp_encrypt",
+      "amsdu_mode": 0,
+      "key_len": 32,
+      "key": "1111111111111111111111111111111111111111111111111111111111111111",
+      "frame": "08000000aabbccddee01aabbccddee02aabbccddee0310007879",
+      "hdrlen": 24,
+      "pn": "010203040506",
+      "keyid": 0,
+      "expect_ret": 1,
+      "ciphertext": "08000000aabbccddee01aabbccddee02aabbccddee031000060500200403020193560899a275463f87857d63d0e6d49cf791"
+    },
+    {
+      "name": "gcmp_encrypt_qos",
+      "fn": "gcmp_encrypt",
+      "amsdu_mode": 0,
+      "key_len": 16,
+      "key": "42424242424242424242424242424242",
+      "frame": "880000000102030405061112131415162122232425269000800074657374",
+      "hdrlen": 26,
+      "pn": "010203040506",
+      "keyid": 2,
+      "expect_ret": 1,
+      "ciphertext": "8800000001020304050611121314151621222324252690008000060500a00403020134c7b213007b3328ada6d561623b94f484fb2cd2"
+    },
+    {
+      "name": "gcmp_encrypt_qos_spp",
+      "fn": "gcmp_encrypt",
+      "amsdu_mode": 1,
+      "key_len": 16,
+      "key": "42424242424242424242424242424242",
+      "frame": "880000000102030405061112131415162122232425269008800074657374",
+      "hdrlen": 26,
+      "pn": "010203040506",
+      "keyid": 2,
+      "expect_ret": 1,
+      "ciphertext": "8800000001020304050611121314151621222324252690088000060500a00403020134c7b213e5b531558f09ef478d8549d174fd7c4c"
+    },
+    {
+      "name": "gcmp_decrypt_short_input",
+      "fn": "gcmp_decrypt",
+      "amsdu_mode": 0,
+      "key_len": 16,
+      "key": "000102030405060708090a0b0c0d0e0f",
+      "hdr": "08000000aabbccddee01aabbccddee02aabbccddee031000",
+      "data": "0102030405060708",
+      "expect_ret": 0
+    },
+    {
+      "name": "gcmp_decrypt_bad_mic",
+      "fn": "gcmp_decrypt",
+      "amsdu_mode": 0,
+      "key_len": 16,
+      "key": "000102030405060708090a0b0c0d0e0f",
+      "hdr": "08000000aabbccddee01aabbccddee02aabbccddee031000",
+      "data": "34350020363738396d6ba2164a9db80a1de60e2c2bce737661fdde9e569bb893",
+      "expect_ret": 0
+    },
+    {
+      "name": "gcmp_encrypt_bad_key_len",
+      "fn": "gcmp_encrypt",
+      "rust_only": true,
+      "amsdu_mode": 0,
+      "key_len": 15,
+      "key": "000102030405060708090a0b0c0d0e",
+      "frame": "08000000aabbccddee01aabbccddee02aabbccddee0310007879",
+      "hdrlen": 24,
+      "pn": "010203040506",
+      "keyid": 0,
+      "expect_ret": 0
+    }
+  ]
+}

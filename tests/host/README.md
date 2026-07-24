@@ -15,6 +15,9 @@ tests/host/
     test_aes_ctr.c   # oracle runner (C oracle + Rust staticlib)
     aes_omac1_vectors.json
     test_aes_omac1.c # oracle runner for OMAC1/CMAC (W2-01)
+    host_gcmp_vector.c   # GCMP vector parse/run helpers (W2-02b)
+    gcmp_vectors.json
+    test_gcmp.c          # C-oracle runner for GCMP (W2-02c)
     Makefile
 ```
 
@@ -71,3 +74,30 @@ The Rust port landed in `rust/aes_ctr.rs`:
 
 See also [`docs/rust-migration/test-plan.md`](../../docs/rust-migration/test-plan.md)
 (L2 gate) and issue `wave1-03-pilot-aes-ctr.md`.
+
+## Run (gcmp parity, W2-02c)
+
+```bash
+make -C tests/host/crypto test-gcmp-c
+```
+
+Compile-only gate (shim + `gcmp.c` / `aes-gcm.c` build under `HOST_CRYPTO_TEST`):
+
+```bash
+make -C tests/host/crypto test-gcmp-compile
+```
+
+`test-gcmp-c` is also pulled in by `make -C tests/host/crypto` (`all` → `test-gcmp`).
+
+## gcmp details
+
+W2-02b added `host_gcmp_vector.c` (shared parse/run helpers). W2-02c adds the
+C-oracle runner and `gcmp_vectors.json` fixture.
+
+- **`test-gcmp-c`** — links the in-tree C objects (`aes-gcm.c`, `gcmp.c`) and
+  exercises the C oracle against `gcmp_vectors.json`.
+- **`test-gcmp-compile`** — compile-only gate; no link/run.
+
+Vectors characterize observable behavior of `core/crypto/gcmp.c` (encrypt/decrypt,
+QoS/SPP A-MSDU mode, embedded PN, return codes). `rust_only` vectors are skipped
+by the C runner and exercised later on the Rust path (W2-02e).
