@@ -91,9 +91,9 @@ Out-of-tree driver:
 cd /path/to/rtl88x2bu-linux-driver
 make clean
 make KDIR=/path/to/linux LLVM=1 -j"$(nproc)"
-# Expect: RUSTC [M] .../rust/kbuild_stub.o .../rust/scaffold.o .../rust/ffi.o
+# Expect: RUSTC [M] .../rust/kbuild_stub.o .../rust/scaffold.o .../rust/ffi.o .../rust/domain_types.o
 # then  LD [M] .../88x2bu.ko
-nm 88x2bu.ko | grep -E 'rtw_rust_kbuild_probe|rtw_rust_scaffold_init|rtw_rust_bindings_probe'
+nm 88x2bu.ko | grep -E 'rtw_rust_kbuild_probe|rtw_rust_scaffold_init|rtw_rust_bindings_probe|rtw_rust_domain_types_probe'
 ```
 
 Regenerate allowlisted crypto FFI (after editing `rust/bindings/bindgen_helper.h` or the script allowlist):
