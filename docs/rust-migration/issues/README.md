@@ -64,7 +64,8 @@ Architecture: `epic-11-architecture.md`, `arch-00-*.md` …
 | W1-03 | `wave1-03-pilot-aes-ctr.md` | done (Rust aes-ctr + L2 host test; not filed on GitHub) |
 | W1-04 | `wave1-04-pilot-makefile-smoke.md` | done (folded into W1-03 Makefile swap; not filed on GitHub) |
 | W2-01 | `wave2-01-aes-omac1.md` | done (Rust aes-omac1 + L2 vectors; not filed on GitHub) |
-| W2-02… | `wave2-*.md` | draft |
+| W2-02 | `wave2-02-gcmp.md` | done (Rust gcmp + L2 vectors; not filed on GitHub) |
+| W2-03… | `wave2-*.md` | draft |
 | T0 / A0 | `test-00-*.md` / `arch-00-*.md` | done (plan docs + links via W0-01) |
 | T1 | `test-01-symbol-check.md` | done (#12) |
 | T3 | `test-03-ci-host-tests.md` | draft |

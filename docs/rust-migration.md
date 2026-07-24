@@ -53,8 +53,8 @@ Notes:
 
 - **`KDIR`** — path to the Rust-enabled kernel build tree (RfL out-of-tree pattern). When set, it overrides the platform `KSRC` default (`/lib/modules/$(uname -r)/build` on `CONFIG_PLATFORM_I386_PC`).
 - **`LLVM=1`** — forwarded to the kernel make; required for the Clang/LLVM toolchain path used with RfL out-of-tree modules. When set, the Makefile adds Clang-quieting `ccflags-y` (e.g. `-Wno-missing-prototypes`, including Clang-only forms like `-Wno-frame-larger-than=`) so the C tree builds under Clang without Wave-0 mass churn. Default GCC builds omit that block.
-- **`.rs` objects** — linked into `88x2bu.ko` only when the target kernel has `CONFIG_RUST=y` (see `rust/kbuild_stub.rs`, `rust/scaffold.rs`, `rust/ffi.rs`, `rust/domain_types.rs`, `rust/aes_ctr.rs`). Distro headers without Rust keep a C-only link (unchanged object list). `rtw_drv_entry` calls `rtw_rust_scaffold_init()` once when Rust is enabled.
-- **C-only / legacy:** `make` and `make KSRC=...` still work as before when `KDIR` is unset.
+- **`.rs` objects** — linked into `88x2bu.ko` only when the target kernel has `CONFIG_RUST=y` (see `rust/kbuild_stub.rs`, `rust/scaffold.rs`, `rust/ffi.rs`, `rust/domain_types.rs`, `rust/aes_ctr.rs`, `rust/aes_omac1.rs`, `rust/gcmp.rs`). `rtw_drv_entry` calls `rtw_rust_scaffold_init()` once when Rust is enabled.
+- **C-only / legacy:** `make` and `make KSRC=...` still build when `KDIR` is unset, but migrated crypto TUs (`aes-ctr`, `aes-omac1`, `gcmp`) are no longer in `rtk_core` — there is no `ifndef CONFIG_RUST` fallback to the old C objects. Phase 1 targets Rust-enabled kernels (`KDIR` + `LLVM=1`); distro headers without `CONFIG_RUST=y` will not provide those symbols.
 - **Product config** for Phase 1 exit remains default `CONFIG_RTL8822B=y` + `CONFIG_USB_HCI=y` (module name `88x2bu`).
 
 ### FFI seam + regenerating bindgen (W1-01 / W1-02)
@@ -89,9 +89,11 @@ When Rust takes over symbols that C used to define, swap objects in the Makefile
 
 1. Implement typed Rust logic + `extern "C"` shims preserving the original symbol names (`aes_ctr_encrypt`, `aes_128_ctr_encrypt`).
 2. Add `$(MODULE_NAME)-y += rust/aes_ctr.o` under the existing `ifdef CONFIG_RUST` block.
-3. Remove `core/crypto/aes-ctr.o` from the `rtk_core` object list.
+3. Remove `core/crypto/aes-ctr.o` from the `rtk_core` object list (unconditionally — only the Rust `.o` is gated on `CONFIG_RUST`).
 4. Run L0 (build), L1 (`make rust-check-symbols OLD=… NEW=…` or `check-symbols.sh`), and L2 (`make -C tests/host/crypto test` — C oracle + Rust staticlib both green against `aes_ctr_vectors.json`).
 5. Leave the C source file in-tree for reference until the wave is done; only the **object** is dropped from the link.
+
+**C-only builds:** Distro-header builds without `CONFIG_RUST=y` lose the migrated symbols (no `ifndef CONFIG_RUST` fallback to the old C objects). This is intentional for Phase 1 — use a Rust-enabled `KDIR` for migration work.
 
 Repeat this pattern for each Wave 2 crypto unit. For large `.c` files, extract remaining C to `foo_rest.c` rather than linking the full TU alongside Rust (see [architecture.md](rust-migration/architecture.md) “Multi-part file ports”).
 

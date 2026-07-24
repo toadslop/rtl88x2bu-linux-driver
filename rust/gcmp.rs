@@ -2,7 +2,6 @@
 //! GCMP (GCM with GMAC Protocol) — Rust port of `core/crypto/gcmp.c` (W2-02e).
 //!
 //! Shared logic in `gcmp_support.rs`; this crate root exports the C ABI shims.
-//! Kernel module link (swap gcmp.o) lands in W2-02f.
 //!
 //! Domain types are included via `#[path]` because Kbuild compiles each `.rs`
 //! as its own crate (same pattern as `domain_types.rs` / `aes_ctr.rs`). That
