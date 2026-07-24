@@ -17,7 +17,8 @@ tests/host/
     test_aes_omac1.c # oracle runner for OMAC1/CMAC (W2-01)
     host_gcmp_vector.c   # GCMP vector parse/run helpers (W2-02b)
     gcmp_vectors.json
-    test_aes_siv.c   # C-oracle runner for AES-SIV (W2-03a)
+    test_gcmp.c          # C-oracle runner for GCMP (W2-02c)
+    test_aes_siv.c       # C-oracle runner for AES-SIV (W2-03a)
     aes_siv_vectors.json
     Makefile
 ```
