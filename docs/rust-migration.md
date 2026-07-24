@@ -66,10 +66,15 @@ the allowlists in the script:
 ```bash
 export LIBCLANG_PATH=/usr/lib/llvm-$(llvm-config --version | cut -d. -f1)/lib   # adjust
 ./scripts/bindgen_rtw.sh
+# Optional: fail if the committed blob is stale (for future CI):
+# ./scripts/bindgen_rtw.sh --check
 # Review rust/bindings/bindings_generated.rs, then rebuild:
 make KDIR=/path/to/rust-enabled-kernel LLVM=1 -j"$(nproc)"
 nm 88x2bu.ko | grep rtw_rust_bindings_probe
 ```
+
+`KDIR` defaults to `/opt/linux` and must exist (Wave 0 pin); the aes.h pilot
+surface does not pass kernel include paths to clang yet.
 
 Needs **bindgen 0.65.1** (same pin as the kernel). Do not widen the allowlist to
 full `drv_types.h` in this wave — add symbols only when a translation PR needs them.
