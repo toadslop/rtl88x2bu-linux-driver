@@ -31,4 +31,6 @@ u8* gcmp_encrypt(_adapter *padapter, const u8 *tk, size_t tk_len, const u8 *fram
 	size_t hdrlen, const u8 *qos,
 	const u8 *pn, int keyid, size_t *encrypted_len);
 
+u8 rtw_registrypriv_amsdu_mode(const _adapter *padapter);
+
 #endif /* WLANCRYPTO_WRAP_H */
