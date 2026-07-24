@@ -6,6 +6,7 @@ CRYPTO   := $(ROOT)/core/crypto
 HOST_INC := ../include
 RUST_CTR := $(ROOT)/rust/aes_ctr.rs
 RUST_OMAC := $(ROOT)/rust/aes_omac1.rs
+RUST_GCMP := $(ROOT)/rust/gcmp.rs
 
 CC      := gcc
 RUSTC   := rustc
@@ -32,7 +33,7 @@ GCMP_COMPILE_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-gcm.c $(CRYPTO)/gcmp.c \
 		     $(HOST_GCMP)
 
 .PHONY: all test test-c test-rust test-omac1 test-omac1-c test-omac1-rust \
-        test-gcmp test-gcmp-c test-gcmp-compile clean
+        test-gcmp test-gcmp-c test-gcmp-rust test-gcmp-compile clean
 
 all: test test-omac1 test-gcmp
 
@@ -40,7 +41,7 @@ test: test-c test-rust
 
 test-omac1: test-omac1-c test-omac1-rust
 
-test-gcmp: test-gcmp-c
+test-gcmp: test-gcmp-c test-gcmp-rust
 
 test-c: test_aes_ctr
 	./test_aes_ctr aes_ctr_vectors.json
@@ -86,7 +87,16 @@ test-gcmp-c: test_gcmp
 test_gcmp: test_gcmp.c $(C_ORACLE_GCMP_SRCS)
 	$(CC) $(CFLAGS) -o $@ test_gcmp.c $(C_ORACLE_GCMP_SRCS)
 
+librust_gcmp.a: $(RUST_GCMP) $(ROOT)/rust/gcmp_support.rs $(ROOT)/rust/domain/types.rs
+	$(RUSTC) $(RUSTFLAGS) --cfg host_crypto_test --crate-type staticlib $(RUST_GCMP) -o $@
+
+test-gcmp-rust: test_gcmp_rust
+	./test_gcmp_rust gcmp_vectors.json
+
+test_gcmp_rust: test_gcmp.c librust_gcmp.a $(AES_LEAF_SRCS) $(GCM_SRCS) $(HOST_JSON) $(HOST_GCMP)
+	$(CC) $(CFLAGS) -DRUST_GCMP_ORACLE -o $@ test_gcmp.c $(AES_LEAF_SRCS) $(GCM_SRCS) $(HOST_JSON) $(HOST_GCMP) librust_gcmp.a
+
 clean:
 	rm -f test_aes_ctr test_aes_ctr_rust librust_aes_ctr.a \
 	      test_aes_omac1 test_aes_omac1_rust librust_aes_omac1.a \
-	      test_gcmp
+	      test_gcmp test_gcmp_rust librust_gcmp.a
