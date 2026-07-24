@@ -15,8 +15,9 @@
 //! rust/bindings/           ← bindgen helper + committed generated.rs (W1-01)
 //! ```
 //!
-//! Each listed `.rs` is its own Kbuild crate (`rustc` path resolution is next to
-//! the crate root, so submodules stay inline or use `#[path]` — see below).
+//! Each listed `.rs` is its own Kbuild crate (`rustc` resolves sibling modules
+//! next to the crate root, so this file keeps the generated include in an
+//! inline `mod bindings` rather than a `ffi/` directory).
 //! Pilot crypto TUs (W1-03+) may `include!` `bindings/generated.rs` directly,
 //! or call C-owned symbols through the same `extern "C"` names. Do not
 //! duplicate *definitions*.
