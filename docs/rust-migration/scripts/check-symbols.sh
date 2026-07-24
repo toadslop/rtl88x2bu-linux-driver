@@ -50,6 +50,17 @@ while [[ $# -gt 0 ]]; do
 		;;
 	--)
 		shift
+		while [[ $# -gt 0 ]]; do
+			if [[ -z "$OLD_OBJ" ]]; then
+				OLD_OBJ="$1"
+			elif [[ -z "$NEW_OBJ" ]]; then
+				NEW_OBJ="$1"
+			else
+				die "too many positional arguments (expected OLD.o NEW.o)"
+			fi
+			shift
+		done
+		break
 		;;
 	-*)
 		die "unknown option: $1 (try --help)"
@@ -139,12 +150,14 @@ read_symbols "$NEW_OBJ" NEW_SYMS
 
 missing=0
 binding=0
+checked=0
 
 for sym in "${!OLD_SYMS[@]}"; do
 	if [[ -n "${DROP[$sym]+x}" ]]; then
 		continue
 	fi
 
+	checked=$((checked + 1))
 	expected="$sym"
 	if [[ -n "${RENAME[$sym]+x}" ]]; then
 		expected="${RENAME[$sym]}"
@@ -172,4 +185,5 @@ fi
 
 old_count="${#OLD_SYMS[@]}"
 new_count="${#NEW_SYMS[@]}"
-echo "check-symbols: OK — all required OLD globals present ($old_count in OLD, $new_count in NEW)"
+dropped=${#DROP[@]}
+echo "check-symbols: OK — $checked required OLD global(s) satisfied ($old_count in OLD, $new_count in NEW, $dropped dropped)"

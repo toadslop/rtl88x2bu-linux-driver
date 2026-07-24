@@ -88,17 +88,19 @@ disappears or changes binding.
 
 ```bash
 ./docs/rust-migration/scripts/check-symbols.sh old.o new.o \
-  --allowlist docs/rust-migration/scripts/symbol-allowlist.example
+  --allowlist docs/rust-migration/scripts/fixtures/omac1_vs_aes_ctr.allow
 ```
 
-Format (`symbol-allowlist.example`):
+Template (comment-only; copy per swap): `symbol-allowlist.example`. Format:
 
 ```text
 drop legacy_symbol_only_in_c
 rename old_export_name new_export_name
 ```
 
-Self-test against the W1-03 aes-ctr pilot (needs L0 `rust/aes_ctr.o`):
+Self-test against the W1-03 aes-ctr pilot (builds only `rust/aes_ctr.o`, not the full
+module). The C reference in the selftest uses host `gcc` + `HOST_CRYPTO_TEST` for
+speed; **production L1 on a swap should use a kbuild-produced `OLD.o` from `master`.**
 
 ```bash
 make KDIR=/opt/linux LLVM=1 rust-check-symbols-selftest

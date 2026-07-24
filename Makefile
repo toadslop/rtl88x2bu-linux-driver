@@ -2510,7 +2510,7 @@ all: modules
 #   make rust-check-symbols OLD=/tmp/aes-ctr-c.o NEW=rust/aes_ctr.o
 RUST_CHECK_NM ?= $(if $(filter 1,$(LLVM)),llvm-nm,nm)
 
-.PHONY: rust-check-symbols rust-check-symbols-selftest
+.PHONY: rust-check-symbols rust-check-symbols-selftest rust-objects-aes-ctr
 rust-check-symbols:
 	@test -n "$(OLD)" && test -n "$(NEW)" || { \
 		echo "Usage: make rust-check-symbols OLD=path/to/old.o NEW=path/to/new.o [ALLOWLIST=path.allow]"; \
@@ -2518,13 +2518,32 @@ rust-check-symbols:
 	NM=$(RUST_CHECK_NM) ./docs/rust-migration/scripts/check-symbols.sh "$(OLD)" "$(NEW)" \
 		$(if $(ALLOWLIST),--allowlist "$(ALLOWLIST)",)
 
-rust-check-symbols-selftest: modules
+rust-objects-aes-ctr:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-aes-ctr"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/aes_ctr.o
+
+# Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
+# full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production
+# L1 on a swap should compare against a kbuild-produced OLD.o from master.
+rust-check-symbols-selftest: rust-objects-aes-ctr
 	@set -e; \
-	tmp_o=$$(mktemp /tmp/aes-ctr-ref.XXXXXX.o); \
+	fixture=docs/rust-migration/scripts/fixtures/omac1_vs_aes_ctr.allow; \
+	tmp_ctr=$$(mktemp /tmp/aes-ctr-ref.XXXXXX.o); \
+	tmp_omac=$$(mktemp /tmp/aes-omac1-ref.XXXXXX.o); \
 	gcc -c -Wall -I$(shell pwd)/tests/host/include -I$(shell pwd)/core/crypto \
-		-DHOST_CRYPTO_TEST -o "$$tmp_o" core/crypto/aes-ctr.c; \
-	NM=$(RUST_CHECK_NM) ./docs/rust-migration/scripts/check-symbols.sh "$$tmp_o" rust/aes_ctr.o; \
-	rm -f "$$tmp_o"; \
+		-DHOST_CRYPTO_TEST -o "$$tmp_ctr" core/crypto/aes-ctr.c; \
+	gcc -c -Wall -I$(shell pwd)/tests/host/include -I$(shell pwd)/core/crypto \
+		-DHOST_CRYPTO_TEST -o "$$tmp_omac" core/crypto/aes-omac1.c; \
+	NM=$(RUST_CHECK_NM) ./docs/rust-migration/scripts/check-symbols.sh "$$tmp_ctr" rust/aes_ctr.o; \
+	if NM=$(RUST_CHECK_NM) ./docs/rust-migration/scripts/check-symbols.sh "$$tmp_omac" rust/aes_ctr.o 2>/dev/null; then \
+		echo "rust-check-symbols-selftest: expected mismatch without allowlist" >&2; \
+		exit 1; \
+	fi; \
+	NM=$(RUST_CHECK_NM) ./docs/rust-migration/scripts/check-symbols.sh "$$tmp_omac" rust/aes_ctr.o \
+		--allowlist "$$fixture"; \
+	rm -f "$$tmp_ctr" "$$tmp_omac"; \
 	echo "rust-check-symbols-selftest: OK"
 
 modules:

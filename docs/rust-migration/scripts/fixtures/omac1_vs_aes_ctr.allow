@@ -1,0 +1,6 @@
+# Smoke fixture for allowlist parsing (T1 selftest).
+# C omac1 vs Rust aes_ctr exports disjoint symbol sets; drops silence the OLD-only names.
+drop omac1_aes_vector
+drop omac1_aes_128_vector
+drop omac1_aes_128
+drop omac1_aes_256
