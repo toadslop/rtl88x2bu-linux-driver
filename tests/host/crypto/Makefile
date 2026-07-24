@@ -19,8 +19,10 @@ AES_LEAF_SRCS := \
 	$(CRYPTO)/aes-internal-enc.c \
 	../shim/host_crypto_shim.c
 
-C_ORACLE_CTR_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ctr.c
-C_ORACLE_OMAC_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-omac1.c
+HOST_JSON := host_vector_json.c
+
+C_ORACLE_CTR_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ctr.c $(HOST_JSON)
+C_ORACLE_OMAC_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-omac1.c $(HOST_JSON)
 
 .PHONY: all test test-c test-rust test-omac1 test-omac1-c test-omac1-rust clean
 
@@ -42,8 +44,8 @@ librust_aes_ctr.a: $(RUST_CTR) $(ROOT)/rust/domain/types.rs
 test-rust: test_aes_ctr_rust
 	./test_aes_ctr_rust aes_ctr_vectors.json
 
-test_aes_ctr_rust: test_aes_ctr.c librust_aes_ctr.a $(AES_LEAF_SRCS)
-	$(CC) $(CFLAGS) -o $@ test_aes_ctr.c $(AES_LEAF_SRCS) librust_aes_ctr.a
+test_aes_ctr_rust: test_aes_ctr.c librust_aes_ctr.a $(AES_LEAF_SRCS) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_aes_ctr.c $(AES_LEAF_SRCS) $(HOST_JSON) librust_aes_ctr.a
 
 test-omac1-c: test_aes_omac1
 	./test_aes_omac1 aes_omac1_vectors.json
@@ -57,8 +59,8 @@ librust_aes_omac1.a: $(RUST_OMAC) $(ROOT)/rust/domain/types.rs
 test-omac1-rust: test_aes_omac1_rust
 	./test_aes_omac1_rust aes_omac1_vectors.json
 
-test_aes_omac1_rust: test_aes_omac1.c librust_aes_omac1.a $(AES_LEAF_SRCS)
-	$(CC) $(CFLAGS) -DRUST_OMAC1_ORACLE -o $@ test_aes_omac1.c $(AES_LEAF_SRCS) librust_aes_omac1.a
+test_aes_omac1_rust: test_aes_omac1.c librust_aes_omac1.a $(AES_LEAF_SRCS) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_OMAC1_ORACLE -o $@ test_aes_omac1.c $(AES_LEAF_SRCS) $(HOST_JSON) librust_aes_omac1.a
 
 clean:
 	rm -f test_aes_ctr test_aes_ctr_rust librust_aes_ctr.a \

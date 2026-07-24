@@ -10,6 +10,7 @@ tests/host/
   shim/              # allocator stubs for C oracle objects
   domain/            # A1 domain-type unit tests (rustc --test)
   crypto/
+    host_vector_json.c   # shared hex/JSON helpers for vector fixtures
     aes_ctr_vectors.json
     test_aes_ctr.c   # oracle runner (C oracle + Rust staticlib)
     aes_omac1_vectors.json
