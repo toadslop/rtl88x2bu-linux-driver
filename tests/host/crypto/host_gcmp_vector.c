@@ -126,11 +126,20 @@ int host_gcmp_run_vector(const struct host_gcmp_vector *v)
 	host_adapter_set_amsdu_mode(&adapter, v->amsdu_mode);
 
 	switch (v->fn) {
-	case HOST_GCMP_FN_ENCRYPT:
-		out = gcmp_encrypt(&adapter, v->key, v->key_len, v->frame, v->frame_len,
+	case HOST_GCMP_FN_ENCRYPT: {
+		size_t frame_len = v->frame_len;
+
+		if (v->null_pn) {
+			if (frame_len < v->hdrlen + 8)
+				return -1;
+			/* Kernel passes len = hdrlen + payload; PN is in-frame but excluded. */
+			frame_len -= 8;
+		}
+		out = gcmp_encrypt(&adapter, v->key, v->key_len, v->frame, frame_len,
 				   v->hdrlen, NULL, v->null_pn ? NULL : v->pn,
 				   v->keyid, &out_len);
 		break;
+	}
 	case HOST_GCMP_FN_DECRYPT:
 		if (v->hdr_len < 24)
 			return -1;
