@@ -180,4 +180,22 @@ mod tests {
             Err(DomainError::InvalidLength)
         );
     }
+
+    #[test]
+    fn aes_mac_write_to_slice_rejects_bad_length() {
+        let mac = AesMac::from_bytes([0u8; 16]);
+        let mut short = [0u8; 15];
+        assert_eq!(
+            mac.write_to_slice(&mut short),
+            Err(DomainError::InvalidLength)
+        );
+    }
+
+    #[test]
+    fn aes_mac_write_to_slice_accepts_16_bytes() {
+        let mac = AesMac::from_bytes([0xabu8; 16]);
+        let mut out = [0u8; 16];
+        mac.write_to_slice(&mut out).unwrap();
+        assert_eq!(out, [0xabu8; 16]);
+    }
 }

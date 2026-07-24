@@ -58,7 +58,7 @@ test-omac1-rust: test_aes_omac1_rust
 	./test_aes_omac1_rust aes_omac1_vectors.json
 
 test_aes_omac1_rust: test_aes_omac1.c librust_aes_omac1.a $(AES_LEAF_SRCS)
-	$(CC) $(CFLAGS) -o $@ test_aes_omac1.c $(AES_LEAF_SRCS) librust_aes_omac1.a
+	$(CC) $(CFLAGS) -DRUST_OMAC1_ORACLE -o $@ test_aes_omac1.c $(AES_LEAF_SRCS) librust_aes_omac1.a
 
 clean:
 	rm -f test_aes_ctr test_aes_ctr_rust librust_aes_ctr.a \

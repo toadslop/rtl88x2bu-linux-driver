@@ -38,10 +38,11 @@ make -C tests/host/crypto test
 make -C tests/host/crypto test-omac1
 ```
 
-This runs both paths against `aes_omac1_vectors.json`:
-
-- **`test-omac1-c`** — links the in-tree C objects (`aes-omac1.c` + AES leaf) and exercises the C oracle.
-- **`test-omac1-rust`** — links `rust/aes_omac1.rs` as a userspace staticlib (no `aes-omac1.c`) and exercises the Rust `extern "C"` shims.
+Vectors characterize observable behavior of `core/crypto/aes-omac1.c` (CMAC
+output, multi-fragment inputs, return codes). Success-path vectors run against
+both the C oracle and Rust staticlib; `rust_only` vectors document stricter
+shim validation (`num_elem == 0`, null `mac`, etc.) and run only on the Rust
+path.
 
 ## aes-ctr details
 

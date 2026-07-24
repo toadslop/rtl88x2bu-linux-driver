@@ -3,6 +3,16 @@
 //!
 //! Typed logic uses domain types; `extern "C"` symbols preserve the C ABI for
 //! remaining callers. AES block operations stay in C (`aes-internal*.c`).
+//!
+//! Domain types are included via `#[path]` because Kbuild compiles each `.rs`
+//! as its own crate (same pattern as `domain_types.rs` / `aes_ctr.rs`). That
+//! duplicates type code in `88x2bu.ko` for the pilot; consolidate into a
+//! shared crate or `include!` only if binary size or drift becomes a concern.
+//!
+//! The `extern "C"` shims are intentionally stricter than C on invalid inputs
+//! (`num_elem == 0`, null pointers, non-zero-length fragments with null data):
+//! they return `-1` instead of invoking UB. In-tree callers only pass valid
+//! single-fragment inputs today.
 
 #![allow(
     dead_code,
@@ -55,8 +65,88 @@ fn gf_mulx(pad: &mut [u8; 16]) {
     }
 }
 
-/// OMAC1 over one or more message fragments (oracle: `omac1_aes_vector`).
-pub fn omac1_aes_vector_typed(key: AesKey, fragments: &[&[u8]]) -> Result<AesMac, ()> {
+/// Walks one or more message fragments byte-by-byte (slice or C vector layout).
+struct FragCursor<'a> {
+    slices: Option<&'a [&'a [u8]]>,
+    addr: *const *const u8,
+    len: *const usize,
+    num_elem: usize,
+    elem: usize,
+    pos: usize,
+}
+
+impl<'a> FragCursor<'a> {
+    fn from_slices(fragments: &'a [&'a [u8]]) -> Self {
+        Self {
+            slices: Some(fragments),
+            addr: core::ptr::null(),
+            len: core::ptr::null(),
+            num_elem: 0,
+            elem: 0,
+            pos: 0,
+        }
+    }
+
+    fn from_c(addr: *const *const u8, len: *const usize, num_elem: usize) -> Self {
+        Self {
+            slices: None,
+            addr,
+            len,
+            num_elem,
+            elem: 0,
+            pos: 0,
+        }
+    }
+
+    fn num_fragments(&self) -> usize {
+        match self.slices {
+            Some(s) => s.len(),
+            None => self.num_elem,
+        }
+    }
+
+    fn current_end(&self) -> usize {
+        match self.slices {
+            Some(s) => {
+                if self.elem < s.len() {
+                    s[self.elem].len()
+                } else {
+                    0
+                }
+            }
+            None => unsafe {
+                if self.elem < self.num_elem {
+                    *self.len.add(self.elem)
+                } else {
+                    0
+                }
+            },
+        }
+    }
+
+    fn read_byte(&mut self) -> Result<u8, ()> {
+        let end = self.current_end();
+        if self.elem >= self.num_fragments() {
+            return Err(());
+        }
+        if self.pos >= end {
+            self.elem += 1;
+            self.pos = 0;
+            return self.read_byte();
+        }
+        let byte = match self.slices {
+            Some(s) => s[self.elem][self.pos],
+            None => unsafe {
+                let ptr = *self.addr.add(self.elem);
+                *ptr.add(self.pos)
+            },
+        };
+        self.pos += 1;
+        Ok(byte)
+    }
+}
+
+fn omac1_aes_compute(key: AesKey, cursor: &mut FragCursor<'_>, total_len: usize) -> Result<AesMac, ()> {
     let block_size = AES_BLOCK_SIZE as usize;
     let ctx = unsafe { aes_encrypt_init(key.as_bytes().as_ptr(), key.key_len()) };
     if ctx.is_null() {
@@ -65,36 +155,20 @@ pub fn omac1_aes_vector_typed(key: AesKey, fragments: &[&[u8]]) -> Result<AesMac
 
     let mut cbc = [0u8; 16];
     let mut pad = [0u8; 16];
-
-    let total_len: usize = fragments.iter().map(|f| f.len()).sum();
     let mut left = total_len;
-
-    let mut elem = 0usize;
-    let mut pos = 0usize;
-    let mut end = if fragments.is_empty() {
-        0
-    } else {
-        fragments[0].len()
-    };
+    let mut end = cursor.current_end();
 
     while left >= block_size {
         for i in 0..block_size {
-            if fragments.is_empty() {
+            if cursor.num_fragments() == 0 {
                 break;
             }
-            cbc[i] ^= fragments[elem][pos];
-            pos += 1;
-            if pos >= end {
+            cbc[i] ^= cursor.read_byte()?;
+            if cursor.pos >= end {
                 if i + 1 == block_size && left == block_size {
                     break;
                 }
-                elem += 1;
-                if elem >= fragments.len() {
-                    unsafe { aes_encrypt_deinit(ctx) };
-                    return Err(());
-                }
-                pos = 0;
-                end = fragments[elem].len();
+                end = cursor.current_end();
             }
         }
         if left > block_size {
@@ -116,21 +190,14 @@ pub fn omac1_aes_vector_typed(key: AesKey, fragments: &[&[u8]]) -> Result<AesMac
     gf_mulx(&mut pad);
 
     if left != 0 || total_len == 0 {
-        if !fragments.is_empty() {
+        if cursor.num_fragments() != 0 {
             for i in 0..left {
-                cbc[i] ^= fragments[elem][pos];
-                pos += 1;
-                if pos >= end {
+                cbc[i] ^= cursor.read_byte()?;
+                if cursor.pos >= end {
                     if i + 1 == left {
                         break;
                     }
-                    elem += 1;
-                    if elem >= fragments.len() {
-                        unsafe { aes_encrypt_deinit(ctx) };
-                        return Err(());
-                    }
-                    pos = 0;
-                    end = fragments[elem].len();
+                    end = cursor.current_end();
                 }
             }
         }
@@ -149,6 +216,13 @@ pub fn omac1_aes_vector_typed(key: AesKey, fragments: &[&[u8]]) -> Result<AesMac
         return Err(());
     }
     Ok(AesMac::from_bytes(mac))
+}
+
+/// OMAC1 over one or more message fragments (oracle: `omac1_aes_vector`).
+pub fn omac1_aes_vector_typed(key: AesKey, fragments: &[&[u8]]) -> Result<AesMac, ()> {
+    let total_len: usize = fragments.iter().map(|f| f.len()).sum();
+    let mut cursor = FragCursor::from_slices(fragments);
+    omac1_aes_compute(key, &mut cursor, total_len)
 }
 
 /// C ABI: `omac1_aes_vector` from `core/crypto/aes-omac1.c`.
@@ -170,18 +244,20 @@ pub extern "C" fn omac1_aes_vector(
         return -1;
     }
 
-    let mut fragments: [&[u8]; 32] = [&[]; 32];
-    let n = num_elem.min(fragments.len());
-    for i in 0..n {
+    for i in 0..num_elem {
         let slice_len = unsafe { *len.add(i) };
         let ptr = unsafe { *addr.add(i) };
         if slice_len > 0 && ptr.is_null() {
             return -1;
         }
-        fragments[i] = unsafe { core::slice::from_raw_parts(ptr, slice_len) };
     }
 
-    match omac1_aes_vector_typed(aes_key, &fragments[..n]) {
+    let total_len: usize = (0..num_elem)
+        .map(|i| unsafe { *len.add(i) })
+        .sum();
+    let mut cursor = FragCursor::from_c(addr, len, num_elem);
+
+    match omac1_aes_compute(aes_key, &mut cursor, total_len) {
         Ok(out) => {
             unsafe {
                 core::ptr::copy_nonoverlapping(out.as_bytes().as_ptr(), mac, AesMac::SIZE);

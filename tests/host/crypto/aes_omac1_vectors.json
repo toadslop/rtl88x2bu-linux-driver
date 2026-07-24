@@ -82,6 +82,37 @@
       ],
       "mac": "9e99a7bf31e710900662f65e617c5184",
       "expect_ret": 0
+    },
+    {
+      "name": "omac1-bad-key-length",
+      "fn": "omac1_aes_vector",
+      "key_len": 15,
+      "key": "000102030405060708090a0b0c0d0e",
+      "data": "6bc1bee22e409f96e93d7e117393172a",
+      "mac": "",
+      "expect_ret": -1
+    },
+    {
+      "name": "omac1-zero-num-elem",
+      "fn": "omac1_aes_128_vector",
+      "rust_only": true,
+      "key_len": 16,
+      "key": "2b7e151628aed2a6abf7158809cf4f3c",
+      "data": "6bc1bee22e409f96e93d7e117393172a",
+      "num_elem_override": 0,
+      "mac": "",
+      "expect_ret": -1
+    },
+    {
+      "name": "omac1-null-mac-pointer",
+      "fn": "omac1_aes_128",
+      "rust_only": true,
+      "key_len": 16,
+      "key": "2b7e151628aed2a6abf7158809cf4f3c",
+      "data": "6bc1bee22e409f96e93d7e117393172a",
+      "mac": "",
+      "expect_ret": -1,
+      "null_mac": true
     }
   ]
 }
