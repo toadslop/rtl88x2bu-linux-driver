@@ -138,17 +138,19 @@ Compile-only gate (shim + `aes-ccm.c` build under `HOST_CRYPTO_TEST`):
 make -C tests/host/crypto test-aes-ccm-compile
 ```
 
-`make -C tests/host/crypto test-aes-ccm` currently runs the C oracle only; the Rust
-oracle lands in W2-04b. Both are included in the default `all` target once W2-04b
-extends `test-aes-ccm`.
+`make -C tests/host/crypto test-aes-ccm` runs both C and Rust oracles
+(`test-aes-ccm-c` + `test-aes-ccm-rust`) and is included in the default `all` target.
 
 ## aes-ccm details
 
 W2-04a adds `aes_ccm_vectors.json`, the C-oracle runner, and `WPA_PUT_BE16` in the
-host Wi-Fi shim (required by `aes-ccm.c` under `HOST_CRYPTO_TEST`).
+host Wi-Fi shim (required by `aes-ccm.c` under `HOST_CRYPTO_TEST`). W2-04b adds the
+Rust oracle (`rust/aes_ccm.rs`).
 
 - **`test-aes-ccm-c`** — links in-tree C objects (`aes-internal*.c`, `aes-ccm.c`) and
   exercises the C oracle against `aes_ccm_vectors.json`.
+- **`test-aes-ccm-rust`** — links `rust/aes_ccm.rs` as a userspace staticlib and
+  exercises the Rust `extern "C"` shims against the same vectors.
 - **`test-aes-ccm-compile`** — compile-only gate; no link/run.
 
 Vectors characterize observable behavior of `core/crypto/aes-ccm.c` (fixed `L=2`,
