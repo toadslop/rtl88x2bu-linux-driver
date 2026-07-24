@@ -24,6 +24,8 @@ Prove mixed C+Rust link in `88x2bu.ko`: one `extern "C"` symbol from Rust, calle
 - **L3:** VM `insmod`/`rmmod` without device — dmesg shows scaffold ran; no WARN/Oops
 - L4 hardware STA smoke is a Wave 0 milestone, not required for this PR if L0+L3 pass
 
+Environment / toolchain / QEMU recipe for these gates: [`../dev-environment.md`](../dev-environment.md).
+
 ## Out of scope
 
 - Bindgen (Wave 1)
