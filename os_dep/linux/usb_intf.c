@@ -1430,6 +1430,10 @@ static void rtw_dev_remove(struct usb_interface *pusb_intf)
 extern int console_suspend_enabled;
 #endif
 
+#ifdef CONFIG_RUST
+extern int rtw_rust_scaffold_init(void);
+#endif
+
 static int __init rtw_drv_entry(void)
 {
 	int ret = 0;
@@ -1439,6 +1443,20 @@ static int __init rtw_drv_entry(void)
 #ifdef BTCOEXVERSION
 	RTW_PRINT(DRV_NAME" BT-Coex version = %s\n", BTCOEXVERSION);
 #endif /* BTCOEXVERSION */
+
+#ifdef CONFIG_RUST
+	{
+		int rust_ret = rtw_rust_scaffold_init();
+
+		RTW_PRINT("rust scaffold: rtw_rust_scaffold_init ret=%d\n", rust_ret);
+		if (rust_ret != 0) {
+			RTW_ERR("rust scaffold: init failed, aborting module load\n");
+			/* Rust init returns errno-style negatives (unlike platform_wifi_power_on → -1). */
+			ret = -EINVAL;
+			goto exit;
+		}
+	}
+#endif
 
 	ret = platform_wifi_power_on();
 	if (ret != 0) {

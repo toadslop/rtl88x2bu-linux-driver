@@ -2481,6 +2481,7 @@ endif
 # C-only builds (distro headers without Rust) keep the previous object list.
 ifdef CONFIG_RUST
 $(MODULE_NAME)-y += rust/kbuild_stub.o
+$(MODULE_NAME)-y += rust/scaffold.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
