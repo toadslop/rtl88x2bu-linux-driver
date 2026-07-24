@@ -35,7 +35,25 @@ top of whatever `/review` (or a specialized variant) produces:
 1. **Delivery** — publish every actionable finding on the pull request itself.
 2. **Migration context** — extra checks for this C→Rust kernel-module migration.
 
-## Workflow
+## Author workflow (out of scope for this skill)
+
+When the user asks you to **address**, **respond to**, or **fix** review
+comments on a PR, you are the **author**, not the reviewer. Do **not** invoke
+this skill or post new review findings. Instead:
+
+1. **Find the PR** — by number, URL, or branch name (`gh pr view`, `gh api` for
+   inline review threads).
+2. **Read all open review comments** — inline threads and top-level summaries.
+3. **Fix the code** — minimal diff that resolves each actionable comment.
+4. **Verify** — run the relevant gates (L0/L2 per `AGENTS.md` and `test-plan.md`).
+5. **Push to the same PR branch** — `git push origin <head-branch>`; do **not**
+   create a new branch or a new PR unless the user explicitly asks.
+6. **Recap in chat** — list which comments were addressed and what you verified.
+
+Optionally reply on resolved threads with `ManagePullRequest` `post_comment` and
+`in_reply_to` to note the fix — that is author follow-up, not a new review.
+
+## Workflow (reviewer only)
 
 1. **Run the built-in review** — invoke `/review` (or `/review-bugbot` /
    `/review-security` when appropriate) on the PR or branch. Let that skill
