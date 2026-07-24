@@ -132,6 +132,8 @@ int host_gcmp_run_vector(const struct host_gcmp_vector *v)
 				   v->keyid, &out_len);
 		break;
 	case HOST_GCMP_FN_DECRYPT:
+		if (v->hdr_len < 24)
+			return -1;
 		out = gcmp_decrypt(&adapter, v->key, v->key_len,
 				   (const struct ieee80211_hdr *)v->hdr,
 				   v->data, v->data_len, &out_len);
