@@ -71,3 +71,7 @@ The Rust port landed in `rust/aes_ctr.rs`:
 
 See also [`docs/rust-migration/test-plan.md`](../../docs/rust-migration/test-plan.md)
 (L2 gate) and issue `wave1-03-pilot-aes-ctr.md`.
+
+## gcmp (W2-02b)
+
+- **`make test-gcmp`** — C-oracle vectors for `core/crypto/gcmp.c` (needs `host_wifi_types.h` shim + `aes-gcm.c`).
