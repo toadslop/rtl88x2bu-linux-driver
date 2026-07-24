@@ -16,5 +16,5 @@ pub use types::*;
 /// is present alongside the Wave 0/1 Rust crates.
 #[no_mangle]
 pub extern "C" fn rtw_rust_domain_types_probe() -> core::ffi::c_int {
-  AesCtrNonce::SIZE as core::ffi::c_int
+    AesCtrNonce::SIZE as core::ffi::c_int
 }
