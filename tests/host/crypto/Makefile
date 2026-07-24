@@ -65,9 +65,12 @@ test_aes_omac1_rust: test_aes_omac1.c librust_aes_omac1.a $(AES_LEAF_SRCS) $(HOS
 	$(CC) $(CFLAGS) -DRUST_OMAC1_ORACLE -o $@ test_aes_omac1.c $(AES_LEAF_SRCS) $(HOST_JSON) librust_aes_omac1.a
 
 # Compile-only gate: shims must let gcmp.c / aes-gcm.c build under HOST_CRYPTO_TEST.
-test-gcmp-compile:
-	$(CC) $(CFLAGS) -c -o /tmp/gcmp_compile_probe.o $(CRYPTO)/gcmp.c
-	$(CC) $(CFLAGS) -c -o /tmp/aes_gcm_compile_probe.o $(CRYPTO)/aes-gcm.c
+test-gcmp-compile: $(GCMP_COMPILE_SRCS)
+	@set -e; \
+	for src in $(GCMP_COMPILE_SRCS); do \
+		obj="/tmp/$$(basename $$src .c)_compile_probe.o"; \
+		$(CC) $(CFLAGS) -c -o $$obj $$src; \
+	done
 
 clean:
 	rm -f test_aes_ctr test_aes_ctr_rust librust_aes_ctr.a \
