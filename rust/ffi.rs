@@ -34,6 +34,7 @@
 //! | `aes_ctr_encrypt` / `aes_128_ctr_encrypt` | **Rust** (`aes_ctr.rs`); C TU removed (W1-03) |
 //! | `omac1_aes_*` | **Rust** (`aes_omac1.rs`); C TU removed (W2-01) |
 //! | `gcmp_*` | **Rust** (`gcmp.rs`); C TU removed (W2-02) |
+//! | `aes_siv_*` | **Rust** (`aes_siv.rs`); C TU removed (W2-03) |
 //! | Remaining `core/crypto/*.c` + rest of driver | **C** | Until later waves claim them |
 //!
 //! ## Rules
