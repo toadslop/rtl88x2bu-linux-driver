@@ -21,6 +21,33 @@ void rtw_mfree(void *ptr, size_t sz)
 	free(ptr);
 }
 
+int os_memcmp(const void *s1, const void *s2, size_t n)
+{
+	return memcmp(s1, s2, n);
+}
+
+void *os_memdup(const void *src, u32 sz)
+{
+	void *r = rtw_malloc(sz);
+
+	if (r && src)
+		memcpy(r, src, sz);
+	return r;
+}
+
+void forced_memzero(void *ptr, size_t len)
+{
+	memset(ptr, 0, len);
+}
+
+void bin_clear_free(void *bin, size_t len)
+{
+	if (bin) {
+		forced_memzero(bin, len);
+		rtw_mfree(bin, len);
+	}
+}
+
 u8 rtw_registrypriv_amsdu_mode(const _adapter *padapter)
 {
 	if (!padapter)

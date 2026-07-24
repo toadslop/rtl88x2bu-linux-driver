@@ -1,0 +1,111 @@
+{
+  "oracle": "core/crypto/aes-siv.c",
+  "vectors": [
+    {
+      "name": "aes_siv_encrypt_rfc5297_a1",
+      "fn": "aes_siv_encrypt",
+      "key_len": 32,
+      "key": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e",
+      "elements": ["01010101"],
+      "pw": "0202020202",
+      "expected": "c0ba534b70ef6d6f01f6f45396742b49d3c1f1a7d5",
+      "expect_ret": 0
+    },
+    {
+      "name": "aes_siv_decrypt_rfc5297_a1",
+      "fn": "aes_siv_decrypt",
+      "key_len": 32,
+      "key": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e",
+      "elements": ["01010101"],
+      "iv_crypt": "c0ba534b70ef6d6f01f6f45396742b49d3c1f1a7d5",
+      "expected_pw": "0202020202",
+      "expect_ret": 0
+    },
+    {
+      "name": "aes_siv_encrypt_zero_ad",
+      "fn": "aes_siv_encrypt",
+      "key_len": 32,
+      "key": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e",
+      "elements": [],
+      "pw": "0202020202",
+      "expected": "0fd9e286fcdf41717b65808711f0917ae12b1c26b5",
+      "expect_ret": 0
+    },
+    {
+      "name": "aes_siv_encrypt_bad_key_len",
+      "fn": "aes_siv_encrypt",
+      "key_len": 24,
+      "key": "0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e",
+      "elements": [],
+      "pw": "0202020202",
+      "expected": "",
+      "expect_ret": -1
+    },
+    {
+      "name": "aes_siv_encrypt_aes256",
+      "fn": "aes_siv_encrypt",
+      "key_len": 64,
+      "key": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e",
+      "elements": ["01010101"],
+      "pw": "0202020202",
+      "expected": "c11010928db57ca999bcfdf9c9c96a6f10a8dfd0b2",
+      "expect_ret": 0
+    },
+    {
+      "name": "aes_siv_encrypt_multi_ad",
+      "fn": "aes_siv_encrypt",
+      "key_len": 32,
+      "key": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e",
+      "elements": [
+        "aabbccddeeff",
+        "112233445566",
+        "deadbeef"
+      ],
+      "pw": "0202020202",
+      "expected": "eca1cad489ffff8301a4c87b97f7c85e99cd3be191",
+      "expect_ret": 0
+    },
+    {
+      "name": "aes_siv_encrypt_long_ad",
+      "fn": "aes_siv_encrypt",
+      "key_len": 32,
+      "key": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e",
+      "elements": ["4242424242424242424242424242424242424242"],
+      "pw": "0202020202",
+      "expected": "4c5129d9a2b5272e96ed957d8f45a9b74868145d64",
+      "expect_ret": 0
+    },
+    {
+      "name": "aes_siv_decrypt_tampered",
+      "fn": "aes_siv_decrypt",
+      "key_len": 32,
+      "key": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e",
+      "elements": ["4242424242424242424242424242424242424242"],
+      "iv_crypt": "4d5129d9a2b5272e96ed957d8f45a9b74868145d64",
+      "expected_pw": "",
+      "expect_ret": -1
+    },
+    {
+      "name": "aes_siv_decrypt_short_iv_crypt",
+      "fn": "aes_siv_decrypt",
+      "key_len": 32,
+      "key": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e",
+      "elements": [],
+      "iv_crypt": "c0ba534b70ef6d6f01f6f45396742b",
+      "expected_pw": "",
+      "expect_ret": -1
+    },
+    {
+      "name": "aes_siv_encrypt_too_many_elements",
+      "fn": "aes_siv_encrypt",
+      "key_len": 32,
+      "key": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e",
+      "elements": [
+        "01", "02", "03", "04", "05", "06"
+      ],
+      "pw": "aa",
+      "expected": "",
+      "expect_ret": -1
+    }
+  ]
+}
