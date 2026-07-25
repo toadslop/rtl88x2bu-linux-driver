@@ -1,4 +1,6 @@
-/* Remaining C for aes-internal after W2-11 part 1 (Te0 in Rust). */
+/* Remaining C for aes-internal after W2-11 part 1 (Te0 in Rust).
+ * CONFIG_RUST builds link this TU, not aes-internal.c — keep in sync with C edits
+ * until W2-14 deletes this split and restores a single source file. */
 /*
  * AES (Rijndael) cipher
  *

@@ -12,11 +12,11 @@ RUST_GCMP := $(ROOT)/rust/gcmp.rs
 RUST_SIV := $(ROOT)/rust/aes_siv.rs
 RUST_CCM := $(ROOT)/rust/aes_ccm.rs
 RUST_GCM := $(ROOT)/rust/aes_gcm.rs
+RUST_AES_INTERNAL := $(ROOT)/rust/aes_internal.rs
 RUST_CCMP := $(ROOT)/rust/ccmp.rs
 RUST_SHA256 := $(ROOT)/rust/sha256_internal.rs
 RUST_SHA256_PRF := $(ROOT)/rust/sha256_prf.rs
 RUST_CRYPTO_WRAP := $(ROOT)/rust/rtw_crypto_wrap.rs
-RUST_CCMP := $(ROOT)/rust/ccmp.rs
 
 CC      := gcc
 RUSTC   := rustc
@@ -32,6 +32,12 @@ RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
 
 AES_LEAF_SRCS := \
 	$(CRYPTO)/aes-internal.c \
+	$(CRYPTO)/aes-internal-enc.c \
+	../shim/host_crypto_shim.c
+
+# W2-11 part 1: Te0 in Rust; remainder in aes-internal_rest.c (matches CONFIG_RUST link).
+AES_LEAF_REST_SRCS := \
+	$(CRYPTO)/aes-internal_rest.c \
 	$(CRYPTO)/aes-internal-enc.c \
 	../shim/host_crypto_shim.c
 
@@ -94,7 +100,8 @@ WRAP_COMPILE_SRCS := $(CRYPTO)/rtw_crypto_wrap.c ../shim/host_rtw_wrap_support.c
 	test-rtw-crypto-wrap test-rtw-crypto-wrap-c test-rtw-crypto-wrap-rust \
 	test-rtw-crypto-wrap-compile \
 	test-ccmp test-ccmp-c test-ccmp-rust test-ccmp-compile \
-	test-aes-internal test-aes-internal-c test-aes-internal-compile \
+	test-aes-internal test-aes-internal-c test-aes-internal-rust \
+	test-aes-internal-compile \
 	clean
 
 all: test test-omac1 test-gcmp test-aes-gcm test-aes-siv test-aes-ccm test-ccmp \
@@ -238,7 +245,7 @@ test_ccmp_rust: test_ccmp.c librust_ccmp.a librust_aes_ccm.a $(AES_LEAF_SRCS) $(
 	$(CC) $(CFLAGS) -DRUST_CCMP_ORACLE -o $@ test_ccmp.c $(AES_LEAF_SRCS) $(HOST_JSON) $(HOST_CCMP) \
 		librust_ccmp.a librust_aes_ccm.a
 
-test-aes-internal: test-aes-internal-c
+test-aes-internal: test-aes-internal-c test-aes-internal-rust
 
 test-aes-internal-compile: $(AES_INTERNAL_COMPILE_SRCS)
 	@set -e; \
@@ -252,6 +259,17 @@ test-aes-internal-c: test_aes_internal
 
 test_aes_internal: test_aes_internal.c $(C_ORACLE_AES_INTERNAL_SRCS)
 	$(CC) $(CFLAGS) -o $@ test_aes_internal.c $(C_ORACLE_AES_INTERNAL_SRCS)
+
+librust_aes_internal.a: $(RUST_AES_INTERNAL)
+	$(RUSTC) $(RUSTFLAGS) --cfg host_crypto_test --crate-type staticlib $(RUST_AES_INTERNAL) -o $@
+
+test-aes-internal-rust: test_aes_internal_rust
+	./test_aes_internal_rust aes_internal_vectors.json
+
+test_aes_internal_rust: test_aes_internal.c librust_aes_internal.a $(AES_LEAF_REST_SRCS) \
+			$(HOST_JSON) $(HOST_AES_INTERNAL)
+	$(CC) $(CFLAGS) -DRUST_AES_INTERNAL_ORACLE -o $@ test_aes_internal.c \
+		$(AES_LEAF_REST_SRCS) $(HOST_JSON) $(HOST_AES_INTERNAL) librust_aes_internal.a
 
 test-aes-ccm: test-aes-ccm-c test-aes-ccm-rust
 
@@ -363,7 +381,7 @@ clean:
 	      test_aes_siv test_aes_siv_rust librust_aes_siv.a \
 	      test_aes_ccm test_aes_ccm_rust librust_aes_ccm.a \
 	      test_ccmp test_ccmp_rust librust_ccmp.a \
-	      test_aes_internal \
+	      test_aes_internal test_aes_internal_rust librust_aes_internal.a \
 	      test_sha256_internal test_sha256_internal_rust librust_sha256_internal.a \
 	      test_sha256_prf test_sha256_prf_rust librust_sha256_prf.a \
 	      test_rtw_crypto_wrap test_rtw_crypto_wrap_rust librust_rtw_crypto_wrap.a
