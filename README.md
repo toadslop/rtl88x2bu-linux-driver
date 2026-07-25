@@ -13,6 +13,7 @@ The tree still builds the same `88x2bu.ko` driver, but the primary purpose here 
 | Test gates L0–L4 | [`docs/rust-migration/test-plan.md`](docs/rust-migration/test-plan.md) |
 | Toolchain, pinned kernel, QEMU L3 | [`docs/rust-migration/dev-environment.md`](docs/rust-migration/dev-environment.md) |
 | Hardware STA smoke checklist | [`docs/smoke-test.md`](docs/smoke-test.md) |
+| Arch laptop USB test (safe vs built-in Wi-Fi) | [`docs/host-test.md`](docs/host-test.md) |
 | Host L2 crypto harness | [`tests/host/README.md`](tests/host/README.md) |
 | Work tracker (until GitHub Issues are enabled) | [`docs/rust-migration/issues/README.md`](docs/rust-migration/issues/README.md) |
 | Rust sources | [`rust/`](rust/) |
@@ -29,7 +30,19 @@ Remaining Phase 1 scope: core logic, HAL, `os_dep`, and eventually a Rust `modul
 
 ## Building (contributors)
 
-Migration builds require a **Rust-enabled kernel tree** (`CONFIG_RUST=y`). Distro `linux-headers` packages are not sufficient.
+Migration builds require a **Rust-enabled kernel tree** (`CONFIG_RUST=y`) and **`KDIR`**. Match the C compiler to how that kernel was built.
+
+**Arch Linux:** stock `linux-headers` often have `CONFIG_RUST=y` but are **GCC-built** — omit `LLVM=1`, prefer pacman `rustc` over rustup, and install `bc`:
+
+```bash
+sudo pacman -S --needed bc
+export PATH="/usr/bin:$PATH"          # Arch rustc before rustup
+export LIBCLANG_PATH=/usr/lib
+make clean
+make KDIR=/lib/modules/$(uname -r)/build -j"$(nproc)"
+```
+
+**Ubuntu / pinned tree / cloud VM:** use a Clang-built Rust-enabled tree (or `/opt/linux` on the provisioned cloud snapshot) **with** `LLVM=1`:
 
 ```bash
 export LIBCLANG_PATH=/usr/lib/llvm-18/lib   # adjust for host clang
@@ -37,7 +50,7 @@ make clean
 make KDIR=/path/to/rust-enabled-kernel LLVM=1 -j"$(nproc)"
 ```
 
-First-time setup (packages, `ld.lld` symlinks, bindgen 0.65.1, pinning a kernel, L3 QEMU): [`docs/rust-migration/dev-environment.md`](docs/rust-migration/dev-environment.md).
+First-time setup (Arch pitfalls, Ubuntu packages, bindgen pin, pinning a kernel, L3 QEMU): [`docs/rust-migration/dev-environment.md`](docs/rust-migration/dev-environment.md).
 
 Migrated crypto objects are linked from `rust/` only when the target kernel has `CONFIG_RUST=y`. There is no fallback to the old C objects for those units.
 
@@ -81,7 +94,7 @@ On Linux 5.18+, some distributions ship experimental in-tree **rtw88** USB suppo
 echo "blacklist rtw88_8822bu" | sudo tee /etc/modprobe.d/rtw8822bu.conf
 ```
 
-Hardware bring-up steps: [`docs/smoke-test.md`](docs/smoke-test.md).
+Hardware bring-up steps: [`docs/smoke-test.md`](docs/smoke-test.md). Arch laptop build + USB test without disturbing built-in Wi-Fi: [`docs/host-test.md`](docs/host-test.md).
 
 For device lists, DKMS install, USB 3.0 mode (`rtw_switch_usb_mode`), debug logging (`rtw_drv_log_level` / `/proc/net/rtl88x2bu/log_level`), and unsupported USB ID troubleshooting, see [RinCat/RTL88x2BU-Linux-Driver](https://github.com/RinCat/RTL88x2BU-Linux-Driver).
 

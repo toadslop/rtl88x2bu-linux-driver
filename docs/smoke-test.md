@@ -2,7 +2,9 @@
 
 STA bring-up checklist for a real RTL8822BU (or compatible) USB adapter. Use this at **wave milestones** and Phase 1 exit — not as the default gate for every PR. Offline gates: [`rust-migration/test-plan.md`](rust-migration/test-plan.md).
 
-Requires a built `88x2bu.ko` (for migration work: pinned Rust-enabled `KDIR` + `LLVM=1`; see [`rust-migration.md`](rust-migration.md)).
+For an Arch laptop recipe (build against running headers, temporary `insmod`, keep built-in Intel Wi-Fi alone): [`host-test.md`](host-test.md).
+
+Requires a built `88x2bu.ko` (migration: Rust-enabled `KDIR`, with `LLVM=1` only if that kernel was Clang-built; see [`rust-migration.md`](rust-migration.md) and [`host-test.md`](host-test.md)).
 
 ## 1. Blacklist in-tree rtw88 (if needed)
 
