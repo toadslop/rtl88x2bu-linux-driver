@@ -1,178 +1,94 @@
-# REALTEK RTL88x2B USB Linux Driver
-**Current Driver Version**: 5.13.1-30
-**Support Kernel**: 2.6.24 ~ 7.1 (with unofficial patches)
+# RTL88x2BU driver — C→Rust migration
 
-Linux in-tree rtw8822bu driver is a work in progress. Check [this](https://lore.kernel.org/lkml/20220518082318.3898514-1-s.hauer@pengutronix.de/) patchset.
+This repository is an **incremental port** of the out-of-tree Linux kernel module `88x2bu` (Realtek RTL8812BU / RTL8822BU USB Wi-Fi) from C to [Rust for Linux](https://rust-for-linux.com/). The goal is **behavior parity first**, then idiomatic Rust once the mixed C/Rust module is complete.
 
-For official release notes please check ReleaseNotes.pdf.
+The tree still builds the same `88x2bu.ko` driver, but the primary purpose here is **migration work**: small, test-gated PRs, typed domain APIs, and offline verification—not a general-purpose distro driver fork.
 
-**Note:** if you believe your device is **RTL8812BU** or **RTL8822BU** but after loading the module no NIC shows up, the device ID maybe not be in the driver whitelist. In this case, please submit a new issue with `lsusb` result, and your device name, brand, website, etc.
+## What lives here
 
-This driver does *NOT* support newer Realtek 802.11ax (Wi-Fi 6) chipsets such as RTL8852BU.
+| Area | Location |
+|------|----------|
+| Migration plan, ABI rules, build contract | [`docs/rust-migration.md`](docs/rust-migration.md) |
+| Architecture (layers, domain types) | [`docs/rust-migration/architecture.md`](docs/rust-migration/architecture.md) |
+| Test gates L0–L4 | [`docs/rust-migration/test-plan.md`](docs/rust-migration/test-plan.md) |
+| Toolchain, pinned kernel, QEMU L3 | [`docs/rust-migration/dev-environment.md`](docs/rust-migration/dev-environment.md) |
+| Hardware STA smoke checklist | [`docs/smoke-test.md`](docs/smoke-test.md) |
+| Host L2 crypto harness | [`tests/host/README.md`](tests/host/README.md) |
+| Work tracker (until GitHub Issues are enabled) | [`docs/rust-migration/issues/README.md`](docs/rust-migration/issues/README.md) |
+| Rust sources | [`rust/`](rust/) |
 
-## Linux 5.18+ and RTW88 Driver
-Starting from Linux 5.18, some distributions have added experimental RTW88 USB support (include RTW88x2BU support).
-It is not yet stable but if it works well on your system, then you no longer need this driver.
-If it doesn't, then you need to manually blacklist it because it has a higher loading priority than this external drivers.
+## Migration status (Phase 1)
 
-Check the currently loaded modules using `lsmod`. If you see `rtw88_core`, `rtw88_usb`, or any name beginning with `rtw88_` then you are using the RTW88 driver.
-If you see `88x2bu` then you are using this RTW88x2BU driver.
+Work proceeds in waves of ~200-line PRs. Completed so far:
 
-To blacklist RTW88 8822bu USB driver run:
+- **Wave 0** — docs, Kbuild `.rs` integration, scaffold init hook
+- **Wave 1** — bindgen/FFI seam, domain-type seed, `aes-ctr` pilot
+- **Wave 2 (in progress)** — leaf crypto: W2-01…W2-05 landed (`aes-omac1` … `sha256-internal`); W2-06+ remaining
 
-```
-echo "blacklist rtw88_8822bu" > /etc/modprobe.d/rtw8822bu.conf
-```
+Remaining Phase 1 scope: core logic, HAL, `os_dep`, and eventually a Rust `module!` entry. See the wave map in [`docs/rust-migration.md`](docs/rust-migration.md).
 
-...and reboot your system.
+## Building (contributors)
 
-## Supported Devices
-<details>
-  <summary>
-    ASUS
-  </summary>
+Migration builds require a **Rust-enabled kernel tree** (`CONFIG_RUST=y`). Distro `linux-headers` packages are not sufficient.
 
-* ASUS AC1300 USB-AC55 B1
-* ASUS U2
-* ASUS USB-AC53 Nano
-* ASUS USB-AC58
-</details>
-
-<details>
-  <summary>
-    Dlink
-  </summary>
-
-* Dlink - DWA-181
-* Dlink - DWA-182
-* Dlink - DWA-183 D Version
-* Dlink - DWA-185
-* Dlink - DWA-T185
-</details>
-
-<details>
-  <summary>
-    Edimax
-  </summary>
-
-* Edimax EW-7822ULC
-* Edimax EW-7822UTC
-* Edimax EW-7822UAD
-</details>
-
-<details>
-  <summary>
-    Mercusys
-  </summary>
-
-* Mercusys MA30N
-* Mercusys MA30H V2
-</details>
-
-<details>
-  <summary>
-    NetGear
-  </summary>
-
-* NetGear A6150
-</details>
-
-<details>
-  <summary>
-    TP-Link
-  </summary>
-
-* TP-Link Archer T3U
-* TP-Link Archer T3U Plus
-* TP-Link Archer T3U Nano
-* TP-Link Archer T4U V3
-* TP-Link Archer T4U Plus
-</details>
-
-<details>
-  <summary>
-    TRENDnet
-  </summary>
-
-* TRENDnet TEW-808UBM
-</details>
-
-<details>
-  <summary>
-    ZYXEL
-  </summary>
-
-* ZYXEL NWD6602
-</details>
-
-
-And more.
-
-# How to use this kernel module
-* Ensure you have C compiler & toolchains, e.g. `build-essential` for Debian/Ubuntu, `base-devel` for Arch, etc.
-* Make sure you have installed the corresponding kernel headers
-* All commands need to be run in the driver directory
-* You need rebuild the kernel module everytime you update/change the kernel if you are not using DKMS
-
-
-## Manual installation
-### Clean
-* Make sure you clean old build files before building new ones
-```
+```bash
+export LIBCLANG_PATH=/usr/lib/llvm-18/lib   # adjust for host clang
 make clean
+make KDIR=/path/to/rust-enabled-kernel LLVM=1 -j"$(nproc)"
 ```
 
-### Building module for current running kernel
-```
-make
-```
+First-time setup (packages, `ld.lld` symlinks, bindgen 0.65.1, pinning a kernel, L3 QEMU): [`docs/rust-migration/dev-environment.md`](docs/rust-migration/dev-environment.md).
 
-### Building module for other kernels
-```
-make KSRC=/lib/modules/YOUR_KERNEL_VERSION/build
-```
+Migrated crypto objects are linked from `rust/` only when the target kernel has `CONFIG_RUST=y`. There is no fallback to the old C objects for those units.
 
-### Installing
-```
-sudo make install
-```
+## Verification gates
 
-### Uninstalling
-```
-sudo make uninstall
-```
+Every translation PR should pass the offline gates that apply to its scope:
 
-## Using DKMS (Dynamic Kernel Module Support)
+| Gate | What |
+|------|------|
+| **L0** | Module builds with pinned `KDIR` + `LLVM=1` |
+| **L1** | Exported `extern "C"` symbols match the replaced `.o` |
+| **L2** | Host differential tests (C oracle vs Rust) for pure/leaf code |
+| **L3** | `insmod` / `rmmod` in a VM (no USB dongle required) |
+| **L4** | Hardware STA smoke at wave milestones |
 
-Allows smooth integration with kernel updates.
+Details and commands: [`docs/rust-migration/test-plan.md`](docs/rust-migration/test-plan.md).
 
-### Initial DKMS installation
-```
-git clone "https://github.com/RinCat/RTL88x2BU-Linux-Driver.git" /usr/src/rtl88x2bu-git
-sed -i 's/PACKAGE_VERSION="@PKGVER@"/PACKAGE_VERSION="git"/g' /usr/src/rtl88x2bu-git/dkms.conf
-dkms add -m rtl88x2bu -v git
-dkms autoinstall
-```
-### Upgrading the driver, when already under DKMS
-```
-cd  /usr/src/rtl88x2bu-git
-git fetch
-git rebase origin/master --autostash
-dkms build rtl88x2bu/git --force
-dkms install rtl88x2bu/git --force
+```bash
+# Example: L2 host crypto harness
+make -C tests/host/crypto test
 ```
 
-# USB 3.0 Support
-You can try using `modprobe 88x2bu rtw_switch_usb_mode=1` to force the adapter to run under USB 3.0. But if your adapter/port/motherboard does not support it, the driver will be stuck in a restart loop. Remove the parameter and reload the driver to restore. Alternatively, `modprobe 88x2bu rtw_switch_usb_mode=2` runs it as a USB 2 device.
+## Contributing
 
-Notice: If you had already loaded the module, use `modprobe -r 88x2bu` to unload it first.
+1. Read [`docs/rust-migration.md`](docs/rust-migration.md) and [`docs/rust-migration/architecture.md`](docs/rust-migration/architecture.md).
+2. **Characterize C behavior → freeze tests → port** (do not port first and add tests later).
+3. Keep PRs to one coherent chunk (~200 LOC of meaningful change).
+4. Use domain types at Rust APIs; confine `unsafe` and raw pointers to ABI/OS shims.
 
-If you want to force a given mode permanently (even when switching the adapter across devices), create the file `/etc/modprobe.d/99-RTL88x2BU.conf` with the following content:
-`options 88x2bu rtw_switch_usb_mode=1`
+Work items are tracked in [`docs/rust-migration/issues/`](docs/rust-migration/issues/) until GitHub Issues are enabled on this repository.
 
+## Driver background
 
-# Debug
-To set debug log use `echo 5 > /proc/net/rtl88x2bu/log_level` or `modprobe 88x2bu rtw_drv_log_level=5`
+Underneath the migration, this is still the **RTL88x2BU** USB driver for Realtek **RTL8812BU** and **RTL8822BU** chipsets (802.11ac). It does **not** support newer 802.11ax (Wi-Fi 6) parts such as RTL8852BU.
 
-# Distribution
-* Archlinux AUR https://aur.archlinux.org/packages/rtl88x2bu-dkms-git/
+**Current driver version:** 5.13.1-30
+
+On Linux 5.18+, some distributions ship experimental in-tree **rtw88** USB support that can conflict with this out-of-tree module. If `lsmod` shows `rtw88_*` instead of `88x2bu`, blacklist the in-tree driver before hardware testing:
+
+```bash
+echo "blacklist rtw88_8822bu" | sudo tee /etc/modprobe.d/rtw8822bu.conf
+```
+
+Hardware bring-up steps: [`docs/smoke-test.md`](docs/smoke-test.md).
+
+For device lists, DKMS install, USB 3.0 mode (`rtw_switch_usb_mode`), debug logging (`rtw_drv_log_level` / `/proc/net/rtl88x2bu/log_level`), and unsupported USB ID troubleshooting, see [RinCat/RTL88x2BU-Linux-Driver](https://github.com/RinCat/RTL88x2BU-Linux-Driver).
+
+## Upstream lineage
+
+This tree descends from community out-of-tree RTL88x2BU drivers (Realtek vendor sources, maintained forks such as [RinCat/RTL88x2BU-Linux-Driver](https://github.com/RinCat/RTL88x2BU-Linux-Driver)). This fork adds Rust-for-Linux integration, migration documentation, and offline test infrastructure on top of that base.
+
+## License
+
+GPL-2.0 — see [`LICENSE`](LICENSE).
