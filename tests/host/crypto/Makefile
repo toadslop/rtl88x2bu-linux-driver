@@ -16,6 +16,7 @@ RUST_CCMP := $(ROOT)/rust/ccmp.rs
 RUST_SHA256 := $(ROOT)/rust/sha256_internal.rs
 RUST_SHA256_PRF := $(ROOT)/rust/sha256_prf.rs
 RUST_CRYPTO_WRAP := $(ROOT)/rust/rtw_crypto_wrap.rs
+RUST_CCMP := $(ROOT)/rust/ccmp.rs
 
 CC      := gcc
 RUSTC   := rustc
@@ -222,17 +223,15 @@ test-ccmp-c: test_ccmp
 test_ccmp: test_ccmp.c $(C_ORACLE_CCMP_SRCS)
 	$(CC) $(CFLAGS) -o $@ test_ccmp.c $(C_ORACLE_CCMP_SRCS)
 
-librust_ccmp.a: $(RUST_CCMP)
+librust_ccmp.a: $(RUST_CCMP) $(ROOT)/rust/ccmp_support.rs $(ROOT)/rust/domain/types.rs
 	$(RUSTC) $(RUSTFLAGS) --cfg host_crypto_test --crate-type staticlib $(RUST_CCMP) -o $@
 
-# Stub: links C ccmp.c until W2-09 exports the real Rust shims.
 test-ccmp-rust: test_ccmp_rust
 	./test_ccmp_rust ccmp_vectors.json
 
-test_ccmp_rust: test_ccmp.c librust_ccmp.a $(AES_LEAF_SRCS) $(CRYPTO)/aes-ccm.c \
-		$(CRYPTO)/ccmp.c $(HOST_JSON) $(HOST_CCMP)
-	$(CC) $(CFLAGS) -DRUST_CCMP_ORACLE -o $@ test_ccmp.c $(AES_LEAF_SRCS) \
-		$(CRYPTO)/aes-ccm.c $(CRYPTO)/ccmp.c $(HOST_JSON) $(HOST_CCMP) librust_ccmp.a
+test_ccmp_rust: test_ccmp.c librust_ccmp.a librust_aes_ccm.a $(AES_LEAF_SRCS) $(HOST_JSON) $(HOST_CCMP)
+	$(CC) $(CFLAGS) -DRUST_CCMP_ORACLE -o $@ test_ccmp.c $(AES_LEAF_SRCS) $(HOST_JSON) $(HOST_CCMP) \
+		librust_ccmp.a librust_aes_ccm.a
 
 test-aes-ccm: test-aes-ccm-c test-aes-ccm-rust
 
