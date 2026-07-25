@@ -20,4 +20,6 @@ tests/host/crypto/test_aes_siv
 tests/host/crypto/test_aes_siv_rust
 tests/host/crypto/librust_aes_siv.a
 tests/host/crypto/test_aes_ccm
+tests/host/crypto/test_aes_ccm_rust
+tests/host/crypto/librust_aes_ccm.a
 tests/host/domain/test_domain_types
