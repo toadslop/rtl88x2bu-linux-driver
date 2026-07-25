@@ -195,6 +195,160 @@ pub static rcons: [u8; 10] = [
     0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36,
 ];
 
+fn get_u32(pt: &[u8]) -> u32 {
+    ((pt[0] as u32) << 24)
+        ^ ((pt[1] as u32) << 16)
+        ^ ((pt[2] as u32) << 8)
+        ^ (pt[3] as u32)
+}
+
+fn rcon_val(i: usize) -> u32 {
+    (rcons[i] as u32) << 24
+}
+
+fn te421(i: u32) -> u32 {
+    (Te0[((i >> 16) & 0xff) as usize] << 8) & 0xff000000
+}
+
+fn te432(i: u32) -> u32 {
+    Te0[((i >> 8) & 0xff) as usize] & 0x00ff0000
+}
+
+fn te443(i: u32) -> u32 {
+    Te0[(i & 0xff) as usize] & 0x0000ff00
+}
+
+fn te414(i: u32) -> u32 {
+    (Te0[((i >> 24) & 0xff) as usize] >> 8) & 0x000000ff
+}
+
+fn te411(i: u32) -> u32 {
+    (Te0[((i >> 24) & 0xff) as usize] << 8) & 0xff000000
+}
+
+fn te422(i: u32) -> u32 {
+    Te0[((i >> 16) & 0xff) as usize] & 0x00ff0000
+}
+
+fn te433(i: u32) -> u32 {
+    Te0[((i >> 8) & 0xff) as usize] & 0x0000ff00
+}
+
+fn te444(i: u32) -> u32 {
+    (Te0[(i & 0xff) as usize] >> 8) & 0x000000ff
+}
+
+fn rijndael_key_setup_enc(rk: &mut [u32], cipher_key: &[u8], key_bits: i32) -> i32 {
+    if cipher_key.len() < 16 {
+        return -1;
+    }
+
+    rk[0] = get_u32(&cipher_key[0..4]);
+    rk[1] = get_u32(&cipher_key[4..8]);
+    rk[2] = get_u32(&cipher_key[8..12]);
+    rk[3] = get_u32(&cipher_key[12..16]);
+
+    if key_bits == 128 {
+        let mut idx = 0usize;
+        for i in 0..10 {
+            let temp = rk[idx + 3];
+            rk[idx + 4] = rk[idx]
+                ^ te421(temp)
+                ^ te432(temp)
+                ^ te443(temp)
+                ^ te414(temp)
+                ^ rcon_val(i);
+            rk[idx + 5] = rk[idx + 1] ^ rk[idx + 4];
+            rk[idx + 6] = rk[idx + 2] ^ rk[idx + 5];
+            rk[idx + 7] = rk[idx + 3] ^ rk[idx + 6];
+            idx += 4;
+        }
+        return 10;
+    }
+
+    if cipher_key.len() < 24 {
+        return -1;
+    }
+    rk[4] = get_u32(&cipher_key[16..20]);
+    rk[5] = get_u32(&cipher_key[20..24]);
+
+    if key_bits == 192 {
+        let mut idx = 0usize;
+        for i in 0..8 {
+            let temp = rk[idx + 5];
+            rk[idx + 6] = rk[idx]
+                ^ te421(temp)
+                ^ te432(temp)
+                ^ te443(temp)
+                ^ te414(temp)
+                ^ rcon_val(i);
+            rk[idx + 7] = rk[idx + 1] ^ rk[idx + 6];
+            rk[idx + 8] = rk[idx + 2] ^ rk[idx + 7];
+            rk[idx + 9] = rk[idx + 3] ^ rk[idx + 8];
+            if i == 7 {
+                return 12;
+            }
+            rk[idx + 10] = rk[idx + 4] ^ rk[idx + 9];
+            rk[idx + 11] = rk[idx + 5] ^ rk[idx + 10];
+            idx += 6;
+        }
+    }
+
+    if cipher_key.len() < 32 {
+        return -1;
+    }
+    rk[6] = get_u32(&cipher_key[24..28]);
+    rk[7] = get_u32(&cipher_key[28..32]);
+
+    if key_bits == 256 {
+        let mut idx = 0usize;
+        for i in 0..7 {
+            let temp = rk[idx + 7];
+            rk[idx + 8] = rk[idx]
+                ^ te421(temp)
+                ^ te432(temp)
+                ^ te443(temp)
+                ^ te414(temp)
+                ^ rcon_val(i);
+            rk[idx + 9] = rk[idx + 1] ^ rk[idx + 8];
+            rk[idx + 10] = rk[idx + 2] ^ rk[idx + 9];
+            rk[idx + 11] = rk[idx + 3] ^ rk[idx + 10];
+            if i == 6 {
+                return 14;
+            }
+            let temp = rk[idx + 11];
+            rk[idx + 12] = rk[idx + 4] ^ te411(temp) ^ te422(temp) ^ te433(temp) ^ te444(temp);
+            rk[idx + 13] = rk[idx + 5] ^ rk[idx + 12];
+            rk[idx + 14] = rk[idx + 6] ^ rk[idx + 13];
+            rk[idx + 15] = rk[idx + 7] ^ rk[idx + 14];
+            idx += 8;
+        }
+    }
+
+    -1
+}
+
+/// C ABI: `rijndaelKeySetupEnc` from `core/crypto/aes-internal.c` (W2-14).
+#[no_mangle]
+pub extern "C" fn rijndaelKeySetupEnc(
+    rk: *mut u32,
+    cipher_key: *const u8,
+    key_bits: i32,
+) -> i32 {
+    if rk.is_null() || cipher_key.is_null() {
+        return -1;
+    }
+    let key_len = match key_bits {
+        128 => 16,
+        192 => 24,
+        256 => 32,
+        _ => 16,
+    };
+    let cipher_key = unsafe { core::slice::from_raw_parts(cipher_key, key_len) };
+    let rk = unsafe { core::slice::from_raw_parts_mut(rk, 4 * 15) };
+    rijndael_key_setup_enc(rk, cipher_key, key_bits)
+}
+
 /// Link-time probe for L1 (distinct from exported data symbols).
 #[no_mangle]
 pub extern "C" fn rtw_rust_aes_internal_probe() -> core::ffi::c_int {

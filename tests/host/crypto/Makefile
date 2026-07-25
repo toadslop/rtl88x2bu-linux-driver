@@ -14,6 +14,7 @@ RUST_CCM := $(ROOT)/rust/aes_ccm.rs
 RUST_GCM := $(ROOT)/rust/aes_gcm.rs
 RUST_AES_INTERNAL := $(ROOT)/rust/aes_internal.rs
 RUST_CCMP := $(ROOT)/rust/ccmp.rs
+RUST_AES_INTERNAL := $(ROOT)/rust/aes_internal.rs
 RUST_SHA256 := $(ROOT)/rust/sha256_internal.rs
 RUST_SHA256_PRF := $(ROOT)/rust/sha256_prf.rs
 RUST_CRYPTO_WRAP := $(ROOT)/rust/rtw_crypto_wrap.rs
@@ -261,15 +262,28 @@ test_aes_internal: test_aes_internal.c $(C_ORACLE_AES_INTERNAL_SRCS)
 	$(CC) $(CFLAGS) -o $@ test_aes_internal.c $(C_ORACLE_AES_INTERNAL_SRCS)
 
 librust_aes_internal.a: $(RUST_AES_INTERNAL)
+<<<<<<< HEAD
 	$(RUSTC) $(RUSTFLAGS) --cfg host_crypto_test --crate-type staticlib $(RUST_AES_INTERNAL) -o $@
+=======
+	$(RUSTC) $(RUSTFLAGS) --crate-type staticlib $(RUST_AES_INTERNAL) -o $@
+>>>>>>> 44904a2 (Finish aes-internal.c Rust port (W2-14 part 4))
 
 test-aes-internal-rust: test_aes_internal_rust
 	./test_aes_internal_rust aes_internal_vectors.json
 
+<<<<<<< HEAD
 test_aes_internal_rust: test_aes_internal.c librust_aes_internal.a $(AES_LEAF_REST_SRCS) \
 			$(HOST_JSON) $(HOST_AES_INTERNAL)
 	$(CC) $(CFLAGS) -DRUST_AES_INTERNAL_ORACLE -o $@ test_aes_internal.c \
 		$(AES_LEAF_REST_SRCS) $(HOST_JSON) $(HOST_AES_INTERNAL) librust_aes_internal.a
+=======
+test_aes_internal_rust: test_aes_internal.c librust_aes_internal.a \
+			$(CRYPTO)/aes-internal-enc.c ../shim/host_crypto_shim.c \
+			$(HOST_JSON) $(HOST_AES_INTERNAL)
+	$(CC) $(CFLAGS) -DRUST_AES_INTERNAL_ORACLE -o $@ test_aes_internal.c \
+		$(CRYPTO)/aes-internal-enc.c ../shim/host_crypto_shim.c \
+		$(HOST_JSON) $(HOST_AES_INTERNAL) librust_aes_internal.a
+>>>>>>> 44904a2 (Finish aes-internal.c Rust port (W2-14 part 4))
 
 test-aes-ccm: test-aes-ccm-c test-aes-ccm-rust
 

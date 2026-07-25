@@ -2446,8 +2446,6 @@ endif
 ccflags-y += -I$(src)/core/crypto
 ifeq ($(CONFIG_RUST),)
 rtk_core += core/crypto/aes-internal.o
-else
-rtk_core += core/crypto/aes-internal_rest.o
 endif
 rtk_core += \
 		core/crypto/aes-internal-enc.o \
