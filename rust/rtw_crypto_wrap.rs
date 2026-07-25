@@ -67,6 +67,8 @@ mod bindings {
 
     /// `offsetof(struct _ADAPTER, registrypriv.amsdu_mode)` for this driver's
     /// `include/drv_types.h` layout (verified via `llvm-objdump` on the C TU).
+    /// Re-run L1 (`make rust-check-symbols OLD=core/crypto/rtw_crypto_wrap.o
+    /// NEW=rust/rtw_crypto_wrap.o`) after any `_adapter` / `registry_priv` layout change.
     pub const AMSDU_MODE_OFFSET: usize = 0x3859;
 }
 
@@ -146,9 +148,6 @@ pub extern "C" fn os_memcmp(s1: *const c_void, s2: *const c_void, n: usize) -> c
 /// C ABI: `os_strlen` from `core/crypto/rtw_crypto_wrap.c`.
 #[no_mangle]
 pub extern "C" fn os_strlen(s: *const c_char) -> usize {
-    if s.is_null() {
-        return 0;
-    }
     unsafe {
         let mut p = s;
         while *p != 0 {
@@ -171,9 +170,6 @@ pub extern "C" fn os_memdup(src: *const c_void, sz: u32) -> *mut c_void {
 /// C ABI: `forced_memzero` from `core/crypto/rtw_crypto_wrap.c`.
 #[no_mangle]
 pub extern "C" fn forced_memzero(ptr: *mut c_void, len: usize) {
-    if ptr.is_null() || len == 0 {
-        return;
-    }
     wrap_memset(ptr, len);
 }
 
