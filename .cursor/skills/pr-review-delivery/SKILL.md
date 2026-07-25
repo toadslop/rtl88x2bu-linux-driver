@@ -1,20 +1,56 @@
 ---
 name: pr-review-delivery
 description: >-
-  Auto-applies when you are REVIEWING a PR in this RTL88x2BU driver repo (not when
-  addressing review feedback). Layers on top of Cursor's built-in /review — does
-  not replace it. Adds mandatory PR comment posting and migration-specific checks.
-  Triggers on "review PR", "code review", "look at this diff", re-reviews, and
-  similar reviewer tasks. Do NOT use for "address review comments", "respond to
-  review", or "fix PR feedback" — those are author tasks (fix code, push to the
-  same PR branch; do not open a new PR). Reviewers must not change PR state
-  (close, draft, ready-for-review, merge, etc.) — comments only.
+  Delivery addendum for PR reviews in this RTL88x2BU driver repo. Auto-applies on
+  reviewer tasks ("review PR", "code review", "look at this diff", re-reviews) but
+  only AFTER Cursor's built-in /review skill is loaded and run — never as a
+  substitute. Adds mandatory PR comment posting and migration-specific checks on
+  top of /review output. Do NOT use for "address review comments", "respond to
+  review", or "fix PR feedback" (author tasks). Reviewers must not change PR
+  state (close, draft, ready-for-review, merge, etc.) — comments only.
+metadata:
+  requires-skill: review
+  layer: delivery-addendum
 ---
 
 # PR Review Delivery (repo addendum)
 
 This skill **auto-applies** when you are **reviewing** someone else's pull request
 — checking whether the code is correct and posting findings on the PR.
+
+## Prerequisite: load `/review` first (mandatory)
+
+**This skill is a delivery and migration addendum. It does not perform core code
+review.** Before following any other section of this file, you **must** load
+Cursor's built-in review skill into context and complete its analysis workflow.
+
+| Built-in skill | When to use |
+|----------------|-------------|
+| `/review` | Default — primary code review agent |
+| `/review-bugbot` | Bug and regression focus |
+| `/review-security` | Security vulnerability focus |
+
+**How to load the primary review skill:**
+
+1. **Check your skill catalog** for Cursor's built-in `/review` (or a specialized
+   variant above). If it is listed, **read its full instructions into context
+   before continuing** — treat that skill as step zero of this workflow.
+2. **Invoke it explicitly** when your environment supports slash commands: run
+   `/review` on the PR or branch (or `/review-bugbot` / `/review-security` when
+   the request calls for it). Do not skip invocation and improvise a substitute
+   review from this file alone.
+3. **Confirm in chat** (one line) which built-in review skill you loaded or
+   invoked — e.g. "Loaded `/review`; proceeding with delivery addendum."
+4. **Complete the built-in review analysis** before applying migration checks or
+   posting PR comments below.
+
+**Do not proceed** to "Migration focus" or "Post on the PR" until the built-in
+review skill's analysis is done. Findings you post must include everything from
+`/review` **plus** any migration-specific items from this skill.
+
+If the built-in `/review` skill is **not** available in your environment (e.g.
+some cloud agents), say so explicitly in chat before continuing. You may still
+apply this delivery addendum, but do not pretend `/review` ran — note the gap.
 
 **You are the reviewer, not the author.** Do not write code, push commits, rebase
 the branch, merge, or otherwise act as the PR author. Your only job is to review
@@ -31,16 +67,9 @@ PR comments, make the fixes, commit, and **push to the same PR branch** (do not
 create a new branch or a new PR unless the user explicitly asks).
 
 This skill **complements** Cursor's built-in review skills — it does **not**
-replace or override them.
+replace or override them. See **"Prerequisite: load `/review` first"** above.
 
-| Built-in skill | Role |
-|----------------|------|
-| `/review` | Primary code review — selects and runs the appropriate review agent |
-| `/review-bugbot` | Bug and regression focus |
-| `/review-security` | Security vulnerability focus |
-
-**Keep using the built-ins.** This skill adds two repo-specific requirements on
-top of whatever `/review` (or a specialized variant) produces:
+On top of whatever `/review` (or a specialized variant) produces, this skill adds:
 
 1. **Delivery** — publish every actionable finding on the pull request itself.
 2. **Migration context** — extra checks for this C→Rust kernel-module migration.
@@ -75,17 +104,17 @@ Optionally reply on resolved threads with `ManagePullRequest` `post_comment` and
 | Summarize findings in chat (brief pointer to PR) | Rebase, force-push, or create a new PR |
 | Run read-only verification to inform comments | Change PR title, body, labels, or reviewers |
 
-1. **Run the built-in review** — invoke `/review` (or `/review-bugbot` /
-   `/review-security` when appropriate) on the PR or branch. Let that skill
-   drive the core analysis.
+1. **Load and run `/review`** — follow **"Prerequisite: load `/review` first"**
+   above. This step is non-negotiable; do not skip to delivery or migration
+   checks without it.
 2. **Apply repo-specific checks** — walk the "Migration focus" section below for
    anything the general review may not cover.
 3. **Post all findings on the PR** — follow "Post on the PR" below. This includes
    findings from `/review` **and** any migration-specific items you found.
 4. **Recap in chat** — brief pointer to the PR; do not duplicate the full review.
 
-When this skill auto-applies, you still run `/review` — this skill is the
-delivery and migration layer, not a substitute for Cursor's review agent.
+When this skill auto-applies, you **still** load `/review` first — this skill is
+the delivery and migration layer, not a substitute for Cursor's review agent.
 
 ## Post on the PR (mandatory)
 
