@@ -13,6 +13,7 @@ RUST_SIV := $(ROOT)/rust/aes_siv.rs
 RUST_CCM := $(ROOT)/rust/aes_ccm.rs
 RUST_SHA256 := $(ROOT)/rust/sha256_internal.rs
 RUST_SHA256_PRF := $(ROOT)/rust/sha256_prf.rs
+RUST_CRYPTO_WRAP := $(ROOT)/rust/rtw_crypto_wrap.rs
 
 CC      := gcc
 RUSTC   := rustc
@@ -72,7 +73,8 @@ WRAP_COMPILE_SRCS := $(CRYPTO)/rtw_crypto_wrap.c ../shim/host_rtw_wrap_support.c
 	test-sha256-internal test-sha256-internal-c test-sha256-internal-rust \
 	test-sha256-internal-compile \
 	test-sha256-prf test-sha256-prf-c test-sha256-prf-rust test-sha256-prf-compile \
-	test-rtw-crypto-wrap test-rtw-crypto-wrap-c test-rtw-crypto-wrap-compile \
+	test-rtw-crypto-wrap test-rtw-crypto-wrap-c test-rtw-crypto-wrap-rust \
+	test-rtw-crypto-wrap-compile \
 	clean
 
 all: test test-omac1 test-gcmp test-aes-siv test-aes-ccm test-sha256-internal \
@@ -239,7 +241,7 @@ test_sha256_prf_rust: test_sha256_prf.c librust_sha256_prf.a librust_sha256_inte
 	$(CC) $(CFLAGS) -DRUST_SHA256_PRF_ORACLE -o $@ test_sha256_prf.c \
 		$(CRYPTO)/sha256.c $(HOST_JSON) librust_sha256_prf.a librust_sha256_internal.a
 
-test-rtw-crypto-wrap: test-rtw-crypto-wrap-c
+test-rtw-crypto-wrap: test-rtw-crypto-wrap-c test-rtw-crypto-wrap-rust
 
 test-rtw-crypto-wrap-compile: $(WRAP_COMPILE_SRCS)
 	@set -e; \
@@ -254,6 +256,17 @@ test-rtw-crypto-wrap-c: test_rtw_crypto_wrap
 test_rtw_crypto_wrap: test_rtw_crypto_wrap.c $(C_ORACLE_WRAP_SRCS)
 	$(CC) $(WRAP_CFLAGS) -o $@ test_rtw_crypto_wrap.c $(C_ORACLE_WRAP_SRCS)
 
+librust_rtw_crypto_wrap.a: $(RUST_CRYPTO_WRAP)
+	$(RUSTC) $(RUSTFLAGS) --cfg host_crypto_test --crate-type staticlib $(RUST_CRYPTO_WRAP) -o $@
+
+test-rtw-crypto-wrap-rust: test_rtw_crypto_wrap_rust
+	./test_rtw_crypto_wrap_rust rtw_crypto_wrap_vectors.json
+
+test_rtw_crypto_wrap_rust: test_rtw_crypto_wrap.c librust_rtw_crypto_wrap.a \
+			   ../shim/host_rtw_wrap_support.c $(HOST_JSON)
+	$(CC) $(WRAP_CFLAGS) -DRUST_RTW_CRYPTO_WRAP_ORACLE -o $@ test_rtw_crypto_wrap.c \
+		../shim/host_rtw_wrap_support.c $(HOST_JSON) librust_rtw_crypto_wrap.a
+
 clean:
 	rm -f test_aes_ctr test_aes_ctr_rust librust_aes_ctr.a \
 	      test_aes_omac1 test_aes_omac1_rust librust_aes_omac1.a \
@@ -262,4 +275,4 @@ clean:
 	      test_aes_ccm test_aes_ccm_rust librust_aes_ccm.a \
 	      test_sha256_internal test_sha256_internal_rust librust_sha256_internal.a \
 	      test_sha256_prf test_sha256_prf_rust librust_sha256_prf.a \
-	      test_rtw_crypto_wrap
+	      test_rtw_crypto_wrap test_rtw_crypto_wrap_rust librust_rtw_crypto_wrap.a
