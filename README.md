@@ -24,7 +24,7 @@ Work proceeds in waves of ~200-line PRs. Completed so far:
 
 - **Wave 0** — docs, Kbuild `.rs` integration, scaffold init hook
 - **Wave 1** — bindgen/FFI seam, domain-type seed, `aes-ctr` pilot
-- **Wave 2 (in progress)** — leaf crypto: W2-01…W2-05 landed (`aes-omac1` … `sha256-internal`); W2-06+ remaining
+- **Wave 2 (in progress)** — leaf crypto: W2-01…W2-06 landed (`aes-omac1` … `sha256-prf`, `rtw_crypto_wrap`); W2-07+ remaining
 
 Remaining Phase 1 scope: core logic, HAL, `os_dep`, and eventually a Rust `module!` entry. See the wave map in [`docs/rust-migration.md`](docs/rust-migration.md).
 
