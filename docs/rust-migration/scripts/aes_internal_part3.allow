@@ -1,0 +1,2 @@
+# L1 allowlist for W2-13 part 3: Rust owns tables; rijndaelKeySetupEnc in rest C.
+drop rijndaelKeySetupEnc

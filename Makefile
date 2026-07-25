@@ -2527,7 +2527,7 @@ all: modules
 #   make rust-check-symbols OLD=/tmp/aes-ctr-c.o NEW=rust/aes_ctr.o
 RUST_CHECK_NM ?= $(if $(filter 1,$(LLVM)),llvm-nm,nm)
 
-.PHONY: rust-check-symbols rust-check-symbols-selftest rust-check-symbols-aes-internal-part1 rust-check-symbols-aes-internal-part2 rust-objects-aes-ctr rust-objects-aes-omac1 rust-objects-gcmp rust-objects-aes-siv rust-objects-aes-ccm rust-objects-aes-gcm rust-objects-aes-gcm-c rust-objects-ccmp rust-objects-ccmp-c rust-objects-aes-internal rust-objects-aes-internal-c rust-objects-aes-internal-rest rust-objects-sha256-internal rust-objects-sha256-prf rust-objects-rtw-crypto-wrap rust-objects-rtw-crypto-wrap-c
+.PHONY: rust-check-symbols rust-check-symbols-selftest rust-check-symbols-aes-internal-part1 rust-check-symbols-aes-internal-part2 rust-check-symbols-aes-internal-part3 rust-objects-aes-ctr rust-objects-aes-omac1 rust-objects-gcmp rust-objects-aes-siv rust-objects-aes-ccm rust-objects-aes-gcm rust-objects-aes-gcm-c rust-objects-ccmp rust-objects-ccmp-c rust-objects-aes-internal rust-objects-aes-internal-c rust-objects-aes-internal-rest rust-objects-sha256-internal rust-objects-sha256-prf rust-objects-rtw-crypto-wrap rust-objects-rtw-crypto-wrap-c
 rust-check-symbols:
 	@test -n "$(OLD)" && test -n "$(NEW)" || { \
 		echo "Usage: make rust-check-symbols OLD=path/to/old.o NEW=path/to/new.o [ALLOWLIST=path.allow] [ALLOW_VACUOUS=1]"; \
@@ -2620,6 +2620,11 @@ rust-check-symbols-aes-internal-part1: rust-objects-aes-internal-c rust-objects-
 rust-check-symbols-aes-internal-part2: rust-objects-aes-internal-c rust-objects-aes-internal
 	$(MAKE) rust-check-symbols OLD=core/crypto/aes-internal.o NEW=rust/aes_internal.o \
 		ALLOWLIST=docs/rust-migration/scripts/aes_internal_part2.allow
+
+# W2-13 part 3 L1: Te0+Td0+Td4s+rcons in rust/aes_internal.o; rijndaelKeySetupEnc in rest.
+rust-check-symbols-aes-internal-part3: rust-objects-aes-internal-c rust-objects-aes-internal
+	$(MAKE) rust-check-symbols OLD=core/crypto/aes-internal.o NEW=rust/aes_internal.o \
+		ALLOWLIST=docs/rust-migration/scripts/aes_internal_part3.allow
 
 rust-objects-sha256-internal:
 	@test -n "$(KDIR)" || { \
