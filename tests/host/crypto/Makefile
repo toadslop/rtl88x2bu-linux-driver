@@ -1,6 +1,6 @@
 # Host L2 differential test harness for core/crypto (T2/W1-03 aes-ctr, W2-01
 # aes-omac1, W2-02 gcmp, W2-03 aes-siv, W2-04 aes-ccm, W2-05 sha256-internal,
-# W2-06 sha256-prf, W2-06d rtw-crypto-wrap, W2-07 aes-gcm part 1).
+# W2-06 sha256-prf, W2-06d rtw-crypto-wrap, W2-07 aes-gcm part 1, W2-11a aes-internal).
 # Builds with gcc only — no kernel headers or KDIR.
 
 ROOT     := ../../..
@@ -39,6 +39,7 @@ GCM_SRCS := $(CRYPTO)/aes-gcm.c
 HOST_JSON := host_vector_json.c
 HOST_GCMP := host_gcmp_vector.c
 HOST_CCMP := host_ccmp_vector.c
+HOST_AES_INTERNAL := host_aes_internal_vector.c
 
 C_ORACLE_CTR_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ctr.c $(HOST_JSON)
 C_ORACLE_OMAC_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-omac1.c $(HOST_JSON)
@@ -66,6 +67,9 @@ C_ORACLE_CCMP_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ccm.c $(CRYPTO)/ccmp.c \
 CCMP_COMPILE_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ccm.c $(CRYPTO)/ccmp.c \
 		     $(HOST_CCMP)
 
+C_ORACLE_AES_INTERNAL_SRCS := $(AES_LEAF_SRCS) $(HOST_JSON) $(HOST_AES_INTERNAL)
+AES_INTERNAL_COMPILE_SRCS := $(AES_LEAF_SRCS) $(HOST_AES_INTERNAL)
+
 C_ORACLE_SHA256_SRCS := $(CRYPTO)/sha256-internal.c $(HOST_JSON)
 SHA256_COMPILE_SRCS := $(CRYPTO)/sha256-internal.c
 
@@ -90,10 +94,11 @@ WRAP_COMPILE_SRCS := $(CRYPTO)/rtw_crypto_wrap.c ../shim/host_rtw_wrap_support.c
 	test-rtw-crypto-wrap test-rtw-crypto-wrap-c test-rtw-crypto-wrap-rust \
 	test-rtw-crypto-wrap-compile \
 	test-ccmp test-ccmp-c test-ccmp-rust test-ccmp-compile \
+	test-aes-internal test-aes-internal-c test-aes-internal-compile \
 	clean
 
 all: test test-omac1 test-gcmp test-aes-gcm test-aes-siv test-aes-ccm test-ccmp \
-     test-sha256-internal test-sha256-prf test-rtw-crypto-wrap
+     test-aes-internal test-sha256-internal test-sha256-prf test-rtw-crypto-wrap
 
 test: test-c test-rust
 
@@ -233,6 +238,21 @@ test_ccmp_rust: test_ccmp.c librust_ccmp.a librust_aes_ccm.a $(AES_LEAF_SRCS) $(
 	$(CC) $(CFLAGS) -DRUST_CCMP_ORACLE -o $@ test_ccmp.c $(AES_LEAF_SRCS) $(HOST_JSON) $(HOST_CCMP) \
 		librust_ccmp.a librust_aes_ccm.a
 
+test-aes-internal: test-aes-internal-c
+
+test-aes-internal-compile: $(AES_INTERNAL_COMPILE_SRCS)
+	@set -e; \
+	for src in $(AES_INTERNAL_COMPILE_SRCS); do \
+		obj="/tmp/$$(basename $$src .c)_aes_internal_compile_probe.o"; \
+		$(CC) $(CFLAGS) -c -o $$obj $$src; \
+	done
+
+test-aes-internal-c: test_aes_internal
+	./test_aes_internal aes_internal_vectors.json
+
+test_aes_internal: test_aes_internal.c $(C_ORACLE_AES_INTERNAL_SRCS)
+	$(CC) $(CFLAGS) -o $@ test_aes_internal.c $(C_ORACLE_AES_INTERNAL_SRCS)
+
 test-aes-ccm: test-aes-ccm-c test-aes-ccm-rust
 
 test-aes-ccm-compile: $(CCM_COMPILE_SRCS)
@@ -343,6 +363,7 @@ clean:
 	      test_aes_siv test_aes_siv_rust librust_aes_siv.a \
 	      test_aes_ccm test_aes_ccm_rust librust_aes_ccm.a \
 	      test_ccmp test_ccmp_rust librust_ccmp.a \
+	      test_aes_internal \
 	      test_sha256_internal test_sha256_internal_rust librust_sha256_internal.a \
 	      test_sha256_prf test_sha256_prf_rust librust_sha256_prf.a \
 	      test_rtw_crypto_wrap test_rtw_crypto_wrap_rust librust_rtw_crypto_wrap.a

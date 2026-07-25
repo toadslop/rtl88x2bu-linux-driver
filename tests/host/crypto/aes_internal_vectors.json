@@ -1,0 +1,50 @@
+{
+  "oracle": "core/crypto/aes-internal.c",
+  "comment": "Vectors freeze in-tree C AES key schedule + block encrypt for L2 parity (W2-11a).",
+  "vectors": [
+    {
+      "name": "rijndaelKeySetupEnc_128",
+      "fn": "rijndaelKeySetupEnc",
+      "key_bits": 128,
+      "key": "000102030405060708090a0b0c0d0e0f",
+      "expect_rounds": 10,
+      "expect_ret": 1,
+      "rk": "000102030405060708090a0b0c0d0e0fd6aa74fdd2af72fadaa678f1d6ab76feb692cf0b643dbdf1be9bc5006830b3feb6ff744ed2c2c9bf6c590cbf0469bf4147f7f7bc95353e03f96c32bcfd058dfd3caaa3e8a99f9deb50f3af57adf622aa5e390f7df7a69296a7553dc10aa31f6b14f9701ae35fe28c440adf4d4ea9c02647438735a41c65b9e016baf4aebf7ad2549932d1f08557681093ed9cbe2c974e13111d7fe3944a17f307a78b4d2b30c5"
+    },
+    {
+      "name": "rijndaelKeySetupEnc_192",
+      "fn": "rijndaelKeySetupEnc",
+      "key_bits": 192,
+      "key": "000102030405060708090a0b0c0d0e0faaaaaaaaaaaaaaaa",
+      "expect_rounds": 12,
+      "expect_ret": 1,
+      "rk": "000102030405060708090a0b0c0d0e0faaaaaaaaaaaaaaaaadadaeafa9a8a8a8a1a1a2a3adacacac07060606adacacac3e3c3f3a97949792363535319b99999d9c9f9f9b31333337f9ffa5fd6e6b326f585e075ec3c79ec35f5801586e6b326f8edc0d62e0b73f0db8e938537b2ea6902476a7c84a1d95a73af651b4da416eb962a856ea1986f07a3df057b277edc2154fd30841959266f8f73a3012eebcc068d34c97daa4a155cf3d2f8208a8bde4f05f87d4e2b13b148a62778350c6d6d69f4bd959bce364bd4cbce369ae0dd87d24"
+    },
+    {
+      "name": "rijndaelKeySetupEnc_256",
+      "fn": "rijndaelKeySetupEnc",
+      "key_bits": 256,
+      "key": "000102030405060708090a0b0c0d0e0fbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "expect_rounds": 14,
+      "expect_ret": 1,
+      "rk": "000102030405060708090a0b0c0d0e0fbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbebebe8e9efeeeeeee7e7e4e5ebeaeaea523c3c3ce9878787523c3c3ce9878787fefcfff711121119f6f5f5fc1d1f1f16f6fcfc7b1f7b7bfc4d4747c0a4c0c04740465fbe51544ea7a7a1bb5bbabea44d0252b5981d29ce64506e89a4f4ae49e3ac7d4e01fd2900a65a88bbfde0361fb0e357757ffe7ebb1bae1032bf5abe7b5c125c04bfef750419b5fdbfe455cba0541f48955fe1362e444f261cfb159867a774d958e69bac5cff2e51e31b7b9a434f3ef08fdbdfc6a19f90e0bd648578dac3888e767113222a8e3d73c99546e98ada"
+    },
+    {
+      "name": "rijndaelKeySetupEnc_invalid_bits",
+      "fn": "rijndaelKeySetupEnc",
+      "key_bits": 512,
+      "key": "000102030405060708090a0b0c0d0e0f",
+      "expect_rounds": -1,
+      "expect_ret": 1
+    },
+    {
+      "name": "aes_encrypt_one_block",
+      "fn": "aes_encrypt",
+      "key_len": 16,
+      "key": "000102030405060708090a0b0c0d0e0f",
+      "plaintext": "00112233445566778899aabbccddeeff",
+      "expect_ret": 1,
+      "ciphertext": "69c4e0d86a7b0430d8cdb78070b4c55a"
+    }
+  ]
+}
