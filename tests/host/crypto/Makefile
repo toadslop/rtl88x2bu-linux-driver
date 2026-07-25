@@ -46,12 +46,16 @@ SIV_COMPILE_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-omac1.c $(CRYPTO)/aes-ctr.c \
 C_ORACLE_CCM_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ccm.c $(HOST_JSON)
 CCM_COMPILE_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ccm.c
 
+C_ORACLE_SHA256_SRCS := $(CRYPTO)/sha256-internal.c $(HOST_JSON)
+SHA256_COMPILE_SRCS := $(CRYPTO)/sha256-internal.c
+
 .PHONY: all test test-c test-rust test-omac1 test-omac1-c test-omac1-rust \
         test-gcmp test-gcmp-c test-gcmp-rust test-gcmp-compile \
 	test-aes-siv test-aes-siv-c test-aes-siv-rust test-aes-siv-compile \
-	test-aes-ccm test-aes-ccm-c test-aes-ccm-rust test-aes-ccm-compile clean
+	test-aes-ccm test-aes-ccm-c test-aes-ccm-rust test-aes-ccm-compile \
+	test-sha256-internal test-sha256-internal-c test-sha256-internal-compile clean
 
-all: test test-omac1 test-gcmp test-aes-siv test-aes-ccm
+all: test test-omac1 test-gcmp test-aes-siv test-aes-ccm test-sha256-internal
 
 test: test-c test-rust
 
@@ -163,9 +167,25 @@ test_aes_ccm_rust: test_aes_ccm.c librust_aes_ccm.a $(AES_LEAF_SRCS) $(HOST_JSON
 	$(CC) $(CFLAGS) -DRUST_AES_CCM_ORACLE -o $@ test_aes_ccm.c $(AES_LEAF_SRCS) \
 		$(HOST_JSON) librust_aes_ccm.a
 
+test-sha256-internal: test-sha256-internal-c
+
+test-sha256-internal-compile: $(SHA256_COMPILE_SRCS)
+	@set -e; \
+	for src in $(SHA256_COMPILE_SRCS); do \
+		obj="/tmp/$$(basename $$src .c)_sha256_compile_probe.o"; \
+		$(CC) $(CFLAGS) -c -o $$obj $$src; \
+	done
+
+test-sha256-internal-c: test_sha256_internal
+	./test_sha256_internal sha256_internal_vectors.json
+
+test_sha256_internal: test_sha256_internal.c $(C_ORACLE_SHA256_SRCS)
+	$(CC) $(CFLAGS) -o $@ test_sha256_internal.c $(C_ORACLE_SHA256_SRCS)
+
 clean:
 	rm -f test_aes_ctr test_aes_ctr_rust librust_aes_ctr.a \
 	      test_aes_omac1 test_aes_omac1_rust librust_aes_omac1.a \
 	      test_gcmp test_gcmp_rust librust_gcmp.a \
 	      test_aes_siv test_aes_siv_rust librust_aes_siv.a \
-	      test_aes_ccm test_aes_ccm_rust librust_aes_ccm.a
+	      test_aes_ccm test_aes_ccm_rust librust_aes_ccm.a \
+	      test_sha256_internal
