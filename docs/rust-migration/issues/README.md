@@ -87,7 +87,7 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 | W2-19 | #110 | `wave2-19-chplan-country.md` | in progress (`cursor/w2-19-chplan-country-rust-3dd4`) |
 | W2-20 | #111 | `wave2-20-chplan-init.md` | draft |
 | T0 / A0 | #75 / #81 | `test-00-*.md` / `arch-00-*.md` | done |
-| T1 | #76 | `test-01-symbol-check.md` | done |
+| T1 | #76 | `test-01-symbol-check.md` | done (supersedes pre-migration #12) |
 | T3 | #78 | `test-03-ci-host-tests.md` | draft |
 | T4 | #79 | `test-04-host-chplan-harness.md` | in progress (`cursor/w2-17a-chplan-harness-3dd4`) |
 | T5 | #80 | `test-05-host-security-wlan-harness.md` | draft |

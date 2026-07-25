@@ -80,7 +80,7 @@ make -C tests/host/crypto test
 3. Keep PRs to one coherent chunk (~200 LOC of meaningful change).
 4. Use domain types at Rust APIs; confine `unsafe` and raw pointers to ABI/OS shims.
 
-Work items are tracked in [`docs/rust-migration/issues/`](docs/rust-migration/issues/) until GitHub Issues are enabled on this repository.
+Work items are tracked on [GitHub Issues](https://github.com/toadslop/rtl88x2bu-linux-driver/issues); draft specs and the ID map live in [`docs/rust-migration/issues/`](docs/rust-migration/issues/README.md).
 
 ## Driver background
 

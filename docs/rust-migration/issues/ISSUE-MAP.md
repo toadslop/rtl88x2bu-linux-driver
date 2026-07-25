@@ -61,3 +61,11 @@ Generated/updated by `docs/rust-migration/issues/file-issues.sh`.
 | W3-07 | #118 | [W3-07] Translate rtw_security.c part 4 — TKIP MIC + phase1/phase2 |
 | W3-08 | #119 | [W3-08] Translate rtw_wlan_util.c part 1 — pure rate classification |
 | W3-09 | #120 | [W3-09] Translate rtw_wlan_util.c part 2 — ratetbl + network type |
+
+## Superseded issues
+
+Some work was tracked before the bulk migration (`file-issues.sh`). Prefer the canonical GitHub number from the table above:
+
+| Draft ID | Canonical | Superseded | Notes |
+|----------|-----------|------------|-------|
+| T1 | #76 | #12 | Same title; filed manually before the migration tracker (no `rust-migration` label) |
