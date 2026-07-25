@@ -102,6 +102,8 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 			return -1;
 		if (parse_hex_field(obj, obj_len, "b", v->b, sizeof(v->b), &v->b_len))
 			return -1;
+		if (v->a_len != v->b_len)
+			return -1;
 		if (host_json_parse_int_in(obj, obj_len, "expect_result", &v->expect_result))
 			v->expect_result = -1;
 		if (host_json_parse_int_in(obj, obj_len, "expect_nonzero", &v->expect_nonzero))
@@ -153,7 +155,14 @@ static int run_vector(const struct vector *v)
 {
 	switch (v->fn) {
 	case FN_OS_MEMCMP_CONST: {
-		int rc = os_memcmp_const(v->a, v->b, v->a_len);
+		int rc;
+
+		if (v->a_len != v->b_len) {
+			fprintf(stderr, "%s: os_memcmp_const a_len (%zu) != b_len (%zu)\n",
+				v->name, v->a_len, v->b_len);
+			return -1;
+		}
+		rc = os_memcmp_const(v->a, v->b, v->a_len);
 
 		if (v->expect_result >= 0 && rc != v->expect_result) {
 			fprintf(stderr, "%s: os_memcmp_const returned %d, expected %d\n",

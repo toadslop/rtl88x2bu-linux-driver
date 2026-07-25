@@ -7,7 +7,9 @@ Userspace parity tests for pure crypto units. No kernel headers or `KDIR` requir
 ```text
 tests/host/
   include/           # userspace shims (types, crypto wrap)
+    drv_types.h        # minimal drv_types for rtw_crypto_wrap C oracle (W2-06d)
   shim/              # allocator stubs for C oracle objects
+    host_rtw_wrap_support.c  # allocator/memcmp stubs for rtw_crypto_wrap (W2-06d)
   domain/            # A1 domain-type unit tests (rustc --test)
   crypto/
     host_vector_json.c   # shared hex/JSON helpers for vector fixtures
@@ -26,6 +28,8 @@ tests/host/
     sha256_internal_vectors.json
     test_sha256_prf.c        # C-oracle runner for SHA256-PRF (W2-06a)
     sha256_prf_vectors.json
+    test_rtw_crypto_wrap.c   # C-oracle runner for rtw_crypto_wrap (W2-06d)
+    rtw_crypto_wrap_vectors.json
     Makefile
 ```
 

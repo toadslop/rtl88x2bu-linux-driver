@@ -14,7 +14,7 @@
       "fn": "os_memcmp_const",
       "a": "0102030405",
       "b": "0102030406",
-      "expect_nonzero": 1
+      "expect_result": 3
     },
     {
       "name": "memcmp_const-empty",
@@ -59,6 +59,12 @@
       "name": "amsdu-null-adapter",
       "fn": "rtw_registrypriv_amsdu_mode",
       "adapter_null": 1,
+      "expect_mode": 0
+    },
+    {
+      "name": "amsdu-non-spp",
+      "fn": "rtw_registrypriv_amsdu_mode",
+      "amsdu_mode": 0,
       "expect_mode": 0
     },
     {

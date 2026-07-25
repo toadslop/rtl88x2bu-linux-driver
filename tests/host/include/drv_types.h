@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Mirror of enum rtw_amsdu_mode in host_wifi_types.h (HOST_CRYPTO_TEST path). */
 enum rtw_amsdu_mode {
 	RTW_AMSDU_MODE_NON_SPP = 0,
 	RTW_AMSDU_MODE_SPP = 1,
