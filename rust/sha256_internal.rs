@@ -243,6 +243,13 @@ pub extern "C" fn sha256_vector(
     len: *const usize,
     mac: *mut u8,
 ) -> c_int {
+    if mac.is_null() {
+        return -1;
+    }
+    if num_elem > 0 && (addr.is_null() || len.is_null()) {
+        return -1;
+    }
+
     let mut ctx = Sha256State {
         length: 0,
         state: [0; 8],
@@ -254,6 +261,9 @@ pub extern "C" fn sha256_vector(
     for i in 0..num_elem {
         let inlen = unsafe { *len.add(i) };
         let ptr = unsafe { *addr.add(i) };
+        if inlen > 0 && ptr.is_null() {
+            return -1;
+        }
         let slice = if inlen == 0 {
             &[][..]
         } else {
@@ -296,6 +306,7 @@ pub extern "C" fn sha256_process(
     if md.is_null() {
         return -1;
     }
+    // C does not check `in` when `inlen > 0` (null is UB); return -1 instead.
     let slice = if inlen == 0 {
         &[][..]
     } else if input.is_null() {
