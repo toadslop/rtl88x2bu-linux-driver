@@ -306,10 +306,10 @@ pub extern "C" fn aes_gcm_ae(
     crypt: *mut u8,
     tag: *mut u8,
 ) -> c_int {
-    if key.is_null() || iv.is_null() || crypt.is_null() || tag.is_null() {
+    if key.is_null() || iv.is_null() || tag.is_null() {
         return -1;
     }
-    if plain_len > 0 && plain.is_null() {
+    if plain_len > 0 && (plain.is_null() || crypt.is_null()) {
         return -1;
     }
     if aad_len > 0 && aad.is_null() {
@@ -332,7 +332,11 @@ pub extern "C" fn aes_gcm_ae(
     } else {
         unsafe { core::slice::from_raw_parts(aad, aad_len) }
     };
-    let crypt_s = unsafe { core::slice::from_raw_parts_mut(crypt, plain_len) };
+    let crypt_s = if plain_len == 0 {
+        &mut [][..]
+    } else {
+        unsafe { core::slice::from_raw_parts_mut(crypt, plain_len) }
+    };
     let mut tag_arr = [0u8; 16];
 
     let rc = match aes_gcm_ae_typed(aes_key, iv_s, plain_s, aad_s, crypt_s, &mut tag_arr) {

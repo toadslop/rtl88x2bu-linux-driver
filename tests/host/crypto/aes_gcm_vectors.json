@@ -1,7 +1,27 @@
 {
   "oracle": "core/crypto/aes-gcm.c (aes_gcm_ae; W2-07)",
-  "comment": "Vectors freeze in-tree C AES-GCM encrypt behavior. Decrypt/gmac vectors land in W2-08.",
+  "comment": "Vectors freeze in-tree C AES-GCM encrypt behavior. aes_gmac exercises the NULL-crypt path via aes-gcm_rest.c until W2-08.",
   "vectors": [
+    {
+      "name": "gmac-empty-iv12",
+      "fn": "aes_gmac",
+      "key_len": 16,
+      "key": "00000000000000000000000000000000",
+      "iv": "000000000000000000000000",
+      "aad": "",
+      "tag": "58e2fccefa7e3061367f1d57a4e7455a",
+      "expect_ret": 0
+    },
+    {
+      "name": "gmac-aad-only-iv12",
+      "fn": "aes_gmac",
+      "key_len": 16,
+      "key": "404142434445464748494a4b4c4d4e4f",
+      "iv": "101112131415",
+      "aad": "0001020304050607",
+      "tag": "50e229b5c933adf1a2dd0a6ee33963b0",
+      "expect_ret": 0
+    },
     {
       "name": "ae-empty-iv12",
       "fn": "aes_gcm_ae",

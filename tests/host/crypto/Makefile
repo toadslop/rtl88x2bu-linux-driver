@@ -114,9 +114,9 @@ librust_aes_gcm.a: $(RUST_GCM) $(ROOT)/rust/domain/types.rs
 test-aes-gcm-rust: test_aes_gcm_rust
 	./test_aes_gcm_rust aes_gcm_vectors.json
 
-test_aes_gcm_rust: test_aes_gcm.c librust_aes_gcm.a $(AES_LEAF_SRCS) $(HOST_JSON)
+test_aes_gcm_rust: test_aes_gcm.c librust_aes_gcm.a $(AES_LEAF_SRCS) $(GCM_REST_SRCS) $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_AES_GCM_ORACLE -o $@ test_aes_gcm.c $(AES_LEAF_SRCS) \
-		$(HOST_JSON) librust_aes_gcm.a
+		$(GCM_REST_SRCS) $(HOST_JSON) librust_aes_gcm.a
 
 test-c: test_aes_ctr
 	./test_aes_ctr aes_ctr_vectors.json
