@@ -46,6 +46,7 @@ void *os_malloc(size_t sz);
 void rtw_mfree(void *ptr, size_t sz);
 
 int os_memcmp(const void *s1, const void *s2, size_t n);
+size_t os_strlen(const char *s);
 void *os_memdup(const void *src, u32 sz);
 void forced_memzero(void *ptr, size_t len);
 void bin_clear_free(void *bin, size_t len);

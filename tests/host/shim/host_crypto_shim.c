@@ -26,6 +26,15 @@ int os_memcmp(const void *s1, const void *s2, size_t n)
 	return memcmp(s1, s2, n);
 }
 
+size_t os_strlen(const char *s)
+{
+	const char *p = s;
+
+	while (*p)
+		p++;
+	return p - s;
+}
+
 void *os_memdup(const void *src, u32 sz)
 {
 	void *r = rtw_malloc(sz);

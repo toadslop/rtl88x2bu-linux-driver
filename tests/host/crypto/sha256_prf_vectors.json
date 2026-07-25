@@ -1,0 +1,66 @@
+{
+  "oracle": "core/crypto/sha256-prf.c",
+  "comment": "Vectors freeze in-tree C SHA256-PRF behavior for L2 parity (W2-06a).",
+  "vectors": [
+    {
+      "name": "ft-derivation-32",
+      "fn": "sha256_prf",
+      "key": "1111111111111111111111111111111111111111111111111111111111111111",
+      "label": "FT Derivation",
+      "data": "",
+      "buf_len": 32,
+      "out": "632dfac792d52b9b151ab8194908b41e8682764c4ff217dce3ade1ea58cd3e22",
+      "expect_ret": 0
+    },
+    {
+      "name": "ft-derivation-48",
+      "fn": "sha256_prf",
+      "key": "1111111111111111111111111111111111111111111111111111111111111111",
+      "label": "FT Derivation",
+      "data": "73656564",
+      "buf_len": 48,
+      "out": "aa9f81c2dd2d1d8f9378f68f5cafaa2949ed19804d00b52b43d4ad49341b198caa54176e35792a97ff1ed6a5072e5966",
+      "expect_ret": 0
+    },
+    {
+      "name": "bits-127",
+      "fn": "sha256_prf_bits",
+      "key": "11111111111111111111111111111111",
+      "label": "test",
+      "data": "64617461",
+      "buf_len_bits": 127,
+      "out": "0dbecf8fa9054f9a39728aac4d471dec",
+      "expect_ret": 0
+    },
+    {
+      "name": "bits-128",
+      "fn": "sha256_prf_bits",
+      "key": "11111111111111111111111111111111",
+      "label": "test",
+      "data": "64617461",
+      "buf_len_bits": 128,
+      "out": "418ad1d94caa93932fb721f13dc9b796",
+      "expect_ret": 0
+    },
+    {
+      "name": "short-key-64",
+      "fn": "sha256_prf",
+      "key": "5555555555555555",
+      "label": "label",
+      "data": "616263646566",
+      "buf_len": 64,
+      "out": "51d0091ac758ec865fe9017d622a1aaf6c657fdda2b91cf1c925d7615c851d028b50e044a65007012e53b31072b979cb5ea80f8de3e1a35f6518c124b141d6f5",
+      "expect_ret": 0
+    },
+    {
+      "name": "long-data-80",
+      "fn": "sha256_prf",
+      "key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "data": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "label": "long",
+      "buf_len": 80,
+      "out": "ea19a9e19b13c4f6265301bea45081aeb95883de5873bc3d1dded956c2c174d2d1c094f618c8b8b9f909f5586ce19f27168a222dfa4f8f69b43ba840b475249fb6762acc726de015e5ea9ee6eac83fd5",
+      "expect_ret": 0
+    }
+  ]
+}
