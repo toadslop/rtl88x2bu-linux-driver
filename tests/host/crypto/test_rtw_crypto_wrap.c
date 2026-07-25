@@ -127,6 +127,8 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		if (parse_hex_field(obj, obj_len, "expect", v->expect, sizeof(v->expect),
 				    &v->expect_len))
 			return -1;
+		if (v->expect_len != v->sz)
+			return -1;
 		break;
 	}
 	case FN_FORCED_MEMZERO:
@@ -186,7 +188,14 @@ static int run_vector(const struct vector *v)
 		return 0;
 	}
 	case FN_OS_MEMDUP: {
-		u8 *dup = os_memdup(v->src_len ? v->src : NULL, v->sz);
+		u8 *dup;
+
+		if (v->expect_len != v->sz) {
+			fprintf(stderr, "%s: os_memdup expect_len (%zu) != sz (%u)\n",
+				v->name, v->expect_len, v->sz);
+			return -1;
+		}
+		dup = os_memdup(v->src_len ? v->src : NULL, v->sz);
 
 		if (!dup && v->sz > 0) {
 			fprintf(stderr, "%s: os_memdup returned NULL\n", v->name);
@@ -250,6 +259,8 @@ int main(int argc, char **argv)
 	for (size_t i = 0; i < count; i++) {
 		if (run_vector(&vectors[i]) != 0)
 			failures++;
+		else
+			printf("ok %s\n", vectors[i].name);
 	}
 	if (failures) {
 		fprintf(stderr, "%d/%zu vectors failed\n", failures, count);
