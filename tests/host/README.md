@@ -219,10 +219,10 @@ Compile-only gate (`rtw_crypto_wrap.c` built without `HOST_CRYPTO_TEST` via
 make -C tests/host/crypto test-rtw-crypto-wrap-compile
 ```
 
-`make -C tests/host/crypto test-rtw-crypto-wrap` runs the C oracle
-(`test-rtw-crypto-wrap-c`) and is included in the default `all` target. W2-06e
-adds the Rust oracle (`rust/rtw_crypto_wrap.rs`). W2-06f swaps
-`rtw_crypto_wrap.o` for `rust/rtw_crypto_wrap.o` in the module link.
+`make -C tests/host/crypto test-rtw-crypto-wrap` runs both C and Rust oracles
+(`test-rtw-crypto-wrap-c` + `test-rtw-crypto-wrap-rust`) and is included in the
+default `all` target. W2-06e adds the Rust oracle (`rust/rtw_crypto_wrap.rs`).
+W2-06f swaps `rtw_crypto_wrap.o` for `rust/rtw_crypto_wrap.o` in the module link.
 
 Vectors characterize observable behavior of `core/crypto/rtw_crypto_wrap.c`
 (`os_memcmp_const`, `os_strlen`, `os_memdup`, `forced_memzero`,
