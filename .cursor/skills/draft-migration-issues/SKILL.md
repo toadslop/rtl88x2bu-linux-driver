@@ -4,7 +4,9 @@ description: >-
   Step 4 of pick-up-work-item (fallback). When no issue is ready, analyzes
   in-progress epics and drafts new ~200 LOC child issues as markdown specs.
   Can file via file-issues.sh. Auto-applies when select-ready-issue finds
-  nothing ready. Do NOT use to duplicate existing open issues.
+  nothing ready. Completes the pick-up workflow — do NOT select or implement
+  a newly drafted issue in the same run. Do NOT use to duplicate existing
+  open issues.
 metadata:
   parent-skill: pick-up-work-item
   step: 4
@@ -14,6 +16,11 @@ metadata:
 
 When **no open issue is ready**, figure out what tickets are missing to keep the
 migration moving, then draft them in the repo's issue format.
+
+**This step completes the pick-up workflow.** After drafting and/or filing,
+report results and **stop**. Do not re-run `select-ready-issue`, open a PR stack,
+or start implementation — even if a newly filed issue appears unblocked.
+Wait for an explicit follow-up from the user or a new pick-up run.
 
 ## 1. Diagnose the gap
 
@@ -138,8 +145,22 @@ Sub-issues roll up progress on the parent epic in GitHub Projects.
 
 **Unblocks:** W3-07 follow-on work after W3-10 merges
 
-**Recommended next:** pick up W3-04 (already open) or W3-10 after filing
+**For a future pick-up (not this run):** W3-04 is already open and ready; W3-10
+becomes eligible after its `blocked_by` issues close.
 ```
 
 If drafting does not unblock anything soon, say what human decision is needed
 (e.g. "choose Wave 3 tranche 2 scope" or "confirm L4 milestone timing").
+
+## 7. Completion criteria
+
+The job is **done** when one of these is true:
+
+| Outcome | Done when |
+|---------|-----------|
+| Local drafts only | Markdown specs + README rows committed; user informed |
+| Filed on GitHub | `file-issues.sh` run, `ISSUE-MAP.md` updated, report posted |
+| Nothing to draft | Gap analysis explains why; human decision documented |
+
+**Never** continue to `plan-stacked-prs` or `implement-stacked-prs` as part of
+this step. Newly created issues are backlog for a **later** session.
