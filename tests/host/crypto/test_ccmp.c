@@ -30,6 +30,14 @@ int main(int argc, char **argv)
 	}
 
 	for (i = 0; i < nvec; i++) {
+#ifdef RUST_CCMP_ORACLE
+		if (vecs[i].fn != HOST_CCMP_FN_DECRYPT &&
+		    vecs[i].fn != HOST_CCMP_FN_256_DECRYPT) {
+			printf("skip %s (rust part1)\n", vecs[i].name);
+			skipped++;
+			continue;
+		}
+#endif
 #ifndef RUST_CCMP_ORACLE
 		if (vecs[i].rust_only) {
 			printf("skip %s (rust-only)\n", vecs[i].name);
