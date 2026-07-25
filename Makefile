@@ -2451,11 +2451,9 @@ rtk_core += \
 		core/crypto/sha256.o \
 		core/rtw_swcrypto.o
 
-# W2-07: aes_gcm_ae in Rust when CONFIG_RUST; decrypt/gmac stay in aes-gcm_rest.c.
+# W2-07/W2-08: full aes-gcm unit in rust/aes_gcm.rs when CONFIG_RUST.
 ifeq ($(CONFIG_RUST),)
 rtk_core += core/crypto/aes-gcm.o
-else
-rtk_core += core/crypto/aes-gcm_rest.o
 endif
 
 $(MODULE_NAME)-y += $(rtk_core)

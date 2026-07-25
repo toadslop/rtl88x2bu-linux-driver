@@ -36,6 +36,7 @@
 //! | `gcmp_*` | **Rust** (`gcmp.rs`); C TU removed (W2-02) |
 //! | `aes_siv_*` | **Rust** (`aes_siv.rs`); C TU removed (W2-03) |
 //! | `aes_ccm_*` | **Rust** (`aes_ccm.rs`); C TU removed (W2-04) |
+//! | `aes_gcm_*` / `aes_gmac` | **Rust** (`aes_gcm.rs`); C TU removed (W2-07/W2-08) |
 //! | `sha256_vector` / `_sha256_*` | **Rust** (`sha256_internal.rs`); C TU removed (W2-05) |
 //! | `sha256_prf` / `sha256_prf_bits` | **Rust** (`sha256_prf.rs`); C TU removed (W2-06) |
 //! | `os_memcmp` / `os_memcmp_const` / `os_memdup` / `os_strlen` / `forced_memzero` / `bin_clear_free` / `rtw_registrypriv_amsdu_mode` / `wpa_*` | **Rust** (`rtw_crypto_wrap.rs`); C TU removed (W2-06) |

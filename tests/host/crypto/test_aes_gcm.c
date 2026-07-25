@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Host L2 oracle runner for aes-gcm.c aes_gcm_ae (W2-07).
+ * Host L2 oracle runner for aes-gcm.c (W2-07/W2-08).
  *
- * oracle: core/crypto/aes-gcm.c (part 1); decrypt/gmac via aes-gcm_rest.c until W2-08.
+ * oracle: core/crypto/aes-gcm.c
  */
 
 #include <stdio.h>
@@ -19,6 +19,7 @@
 
 enum aes_gcm_fn {
 	FN_AES_GCM_AE = 0,
+	FN_AES_GCM_AD,
 	FN_AES_GMAC,
 };
 
@@ -50,6 +51,10 @@ static int json_parse_fn(const char *obj, size_t obj_len, enum aes_gcm_fn *out)
 		*out = FN_AES_GCM_AE;
 		return 0;
 	}
+	if (strcmp(buf, "aes_gcm_ad") == 0) {
+		*out = FN_AES_GCM_AD;
+		return 0;
+	}
 	if (strcmp(buf, "aes_gmac") == 0) {
 		*out = FN_AES_GMAC;
 		return 0;
@@ -65,16 +70,6 @@ static int parse_hex_field(const char *obj, size_t obj_len, const char *key,
 	if (host_json_parse_string_in(obj, obj_len, key, hex, sizeof(hex)))
 		return -1;
 	return host_hex_decode(hex, out, out_cap, out_len);
-}
-
-static int parse_hex_field_optional(const char *obj, size_t obj_len, const char *key,
-				    u8 *out, size_t out_cap, size_t *out_len)
-{
-	if (!host_json_find_key_in(obj, obj_len, key)) {
-		*out_len = 0;
-		return 0;
-	}
-	return parse_hex_field(obj, obj_len, key, out, out_cap, out_len);
 }
 
 static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
@@ -99,23 +94,29 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 			    &decoded_key_len) ||
 	    decoded_key_len != v->key_len)
 		return -1;
-	if (parse_hex_field(obj, obj_len, "iv", v->iv, sizeof(v->iv), &v->iv_len))
-		return -1;
-	if (parse_hex_field_optional(obj, obj_len, "plain", v->plain, sizeof(v->plain),
-				     &v->plain_len))
-		return -1;
-	if (parse_hex_field_optional(obj, obj_len, "aad", v->aad, sizeof(v->aad),
-				     &v->aad_len))
-		return -1;
-	if (parse_hex_field_optional(obj, obj_len, "crypt", v->crypt, sizeof(v->crypt),
-				     &v->crypt_len))
-		return -1;
-	if (parse_hex_field(obj, obj_len, "tag", v->tag, sizeof(v->tag), &tag_len) ||
+	if (parse_hex_field(obj, obj_len, "iv", v->iv, sizeof(v->iv), &v->iv_len) ||
+	    parse_hex_field(obj, obj_len, "aad", v->aad, sizeof(v->aad), &v->aad_len) ||
+	    parse_hex_field(obj, obj_len, "tag", v->tag, sizeof(v->tag), &tag_len) ||
 	    tag_len != 16)
 		return -1;
-	if (v->fn == FN_AES_GCM_AE && v->expect_ret == 0 &&
-	    v->crypt_len != v->plain_len)
-		return -1;
+
+	if (v->fn == FN_AES_GCM_AE) {
+		if (parse_hex_field(obj, obj_len, "plain", v->plain, sizeof(v->plain),
+				    &v->plain_len) ||
+		    parse_hex_field(obj, obj_len, "crypt", v->crypt, sizeof(v->crypt),
+				    &v->crypt_len))
+			return -1;
+		if (v->expect_ret == 0 && v->crypt_len != v->plain_len)
+			return -1;
+	} else if (v->fn == FN_AES_GCM_AD) {
+		if (parse_hex_field(obj, obj_len, "crypt", v->crypt, sizeof(v->crypt),
+				    &v->crypt_len) ||
+		    parse_hex_field(obj, obj_len, "plain", v->plain, sizeof(v->plain),
+				    &v->plain_len))
+			return -1;
+		if (v->expect_ret == 0 && v->plain_len != v->crypt_len)
+			return -1;
+	}
 	return 0;
 }
 
@@ -135,37 +136,76 @@ static void dump_hex_mismatch(const char *label, const u8 *expected, size_t expe
 
 static int run_vector(const struct vector *v)
 {
-	u8 crypt[MAX_BUF];
-	u8 tag[16];
-	int ret;
+	if (v->fn == FN_AES_GCM_AE) {
+		u8 crypt[MAX_BUF];
+		u8 tag[16];
+		int ret;
 
-	memset(crypt, 0x5a, sizeof(crypt));
-	memset(tag, 0x5a, sizeof(tag));
-	if (v->fn == FN_AES_GMAC) {
+		memset(crypt, 0x5a, sizeof(crypt));
+		memset(tag, 0x5a, sizeof(tag));
+		ret = aes_gcm_ae(v->key, v->key_len, v->iv, v->iv_len, v->plain,
+				 v->plain_len, v->aad, v->aad_len, crypt, tag);
+		if (ret != v->expect_ret) {
+			fprintf(stderr, "%s: expected ret %d, got %d\n", v->name,
+				v->expect_ret, ret);
+			return -1;
+		}
+		if (ret != 0)
+			return 0;
+		if (memcmp(crypt, v->crypt, v->plain_len) != 0) {
+			fprintf(stderr, "%s: crypt mismatch\n", v->name);
+			dump_hex_mismatch("expected", v->crypt, v->plain_len, crypt,
+					  v->plain_len);
+			return -1;
+		}
+		if (memcmp(tag, v->tag, 16) != 0) {
+			fprintf(stderr, "%s: tag mismatch\n", v->name);
+			dump_hex_mismatch("expected", v->tag, 16, tag, 16);
+			return -1;
+		}
+		return 0;
+	}
+
+	if (v->fn == FN_AES_GCM_AD) {
+		u8 plain[MAX_BUF];
+		int ret;
+
+		memset(plain, 0x5a, sizeof(plain));
+		ret = aes_gcm_ad(v->key, v->key_len, v->iv, v->iv_len, v->crypt,
+				 v->crypt_len, v->aad, v->aad_len, v->tag, plain);
+		if (ret != v->expect_ret) {
+			fprintf(stderr, "%s: expected ret %d, got %d\n", v->name,
+				v->expect_ret, ret);
+			return -1;
+		}
+		if (ret == 0 && memcmp(plain, v->plain, v->crypt_len) != 0) {
+			fprintf(stderr, "%s: plain mismatch\n", v->name);
+			dump_hex_mismatch("expected", v->plain, v->plain_len, plain,
+					  v->crypt_len);
+			return -1;
+		}
+		return 0;
+	}
+
+	{
+		u8 tag[16];
+		int ret;
+
+		memset(tag, 0x5a, sizeof(tag));
 		ret = aes_gmac(v->key, v->key_len, v->iv, v->iv_len, v->aad, v->aad_len,
 			       tag);
-	} else {
-		ret = aes_gcm_ae(v->key, v->key_len, v->iv, v->iv_len, v->plain, v->plain_len,
-				 v->aad, v->aad_len, crypt, tag);
-	}
-	if (ret != v->expect_ret) {
-		fprintf(stderr, "%s: expected ret %d, got %d\n", v->name, v->expect_ret, ret);
-		return -1;
-	}
-	if (ret != 0)
+		if (ret != v->expect_ret) {
+			fprintf(stderr, "%s: expected ret %d, got %d\n", v->name,
+				v->expect_ret, ret);
+			return -1;
+		}
+		if (ret == 0 && memcmp(tag, v->tag, 16) != 0) {
+			fprintf(stderr, "%s: tag mismatch\n", v->name);
+			dump_hex_mismatch("expected", v->tag, 16, tag, 16);
+			return -1;
+		}
 		return 0;
-	if (v->fn == FN_AES_GCM_AE &&
-	    memcmp(crypt, v->crypt, v->plain_len) != 0) {
-		fprintf(stderr, "%s: crypt mismatch\n", v->name);
-		dump_hex_mismatch("expected", v->crypt, v->plain_len, crypt, v->plain_len);
-		return -1;
 	}
-	if (memcmp(tag, v->tag, 16) != 0) {
-		fprintf(stderr, "%s: tag mismatch\n", v->name);
-		dump_hex_mismatch("expected", v->tag, 16, tag, 16);
-		return -1;
-	}
-	return 0;
 }
 
 int main(int argc, char **argv)

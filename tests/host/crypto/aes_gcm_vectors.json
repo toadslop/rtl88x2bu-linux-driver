@@ -1,6 +1,6 @@
 {
-  "oracle": "core/crypto/aes-gcm.c (aes_gcm_ae; W2-07)",
-  "comment": "Vectors freeze in-tree C AES-GCM encrypt behavior. aes_gmac exercises the NULL-crypt path via aes-gcm_rest.c until W2-08.",
+  "oracle": "core/crypto/aes-gcm.c",
+  "comment": "Vectors freeze in-tree C AES-GCM behavior (ae/ad/gmac).",
   "vectors": [
     {
       "name": "gmac-empty-iv12",
@@ -106,6 +106,54 @@
       "tag": "00000000000000000000000000000000",
       "expect_ret": -1,
       "rust_only": true
+    },
+    {
+      "name": "ad-empty-iv12",
+      "fn": "aes_gcm_ad",
+      "key_len": 16,
+      "key": "00000000000000000000000000000000",
+      "iv": "000000000000000000000000",
+      "plain": "",
+      "aad": "",
+      "crypt": "",
+      "tag": "58e2fccefa7e3061367f1d57a4e7455a",
+      "expect_ret": 0
+    },
+    {
+      "name": "ad-long-iv",
+      "fn": "aes_gcm_ad",
+      "key_len": 16,
+      "key": "404142434445464748494a4b4c4d4e4f",
+      "iv": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c",
+      "plain": "30313233343536",
+      "aad": "00010203",
+      "crypt": "203d2b71d4fdcd",
+      "tag": "e7610f32361d20228882d9dd3693c0b7",
+      "expect_ret": 0
+    },
+    {
+      "name": "ad-partial-iv12",
+      "fn": "aes_gcm_ad",
+      "key_len": 16,
+      "key": "404142434445464748494a4b4c4d4e4f",
+      "iv": "101112131415",
+      "plain": "30313233343536",
+      "aad": "0001020304050607",
+      "crypt": "bd68ee29180e57",
+      "tag": "87dee3c15f907cb7a7a781419e73c6f7",
+      "expect_ret": 0
+    },
+    {
+      "name": "ad-bad-tag",
+      "fn": "aes_gcm_ad",
+      "key_len": 16,
+      "key": "404142434445464748494a4b4c4d4e4f",
+      "iv": "101112131415",
+      "plain": "",
+      "aad": "0001020304050607",
+      "crypt": "bd68ee29180e57",
+      "tag": "77dee3c15f907cb7a7a781419e73c6f7",
+      "expect_ret": -1
     }
   ]
 }
