@@ -1,0 +1,4 @@
+# L1 allowlist for W2-12 part 2: Rust owns Te0+Td0; remainder in aes-internal_rest.c.
+drop Td4s
+drop rcons
+drop rijndaelKeySetupEnc

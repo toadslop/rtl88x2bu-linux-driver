@@ -30,7 +30,7 @@
 //! | `rtw_rust_scaffold_init` | **Rust** (`scaffold.rs`) | Called once from C init (W0-03) |
 //! | `rtw_rust_bindings_probe` | **Rust** (this crate) | Confirms bindgen object linked (W1-01) |
 //! | `rtw_rust_domain_types_probe` | **Rust** (`domain_types.rs`) | Confirms domain types linked (A1) |
-//! | `aes_encrypt_*` / `aes_decrypt_*` / `AES_BLOCK_SIZE` | **C** (`aes-internal-enc.c`, `aes.h`); `Te0`… in **Rust** (`aes_internal.rs`, W2-11+) | Rust **binds** encrypt; tables split-migrating |
+//! | `aes_encrypt_*` / `aes_decrypt_*` / `AES_BLOCK_SIZE` | **C** (`aes-internal-enc.c`, `aes.h`); `Te0`/`Td0` in **Rust** (`aes_internal.rs`, W2-11/W2-12) | Rust **binds** encrypt; tables split-migrating |
 //! | `aes_ctr_encrypt` / `aes_128_ctr_encrypt` | **Rust** (`aes_ctr.rs`); C TU removed (W1-03) |
 //! | `omac1_aes_*` | **Rust** (`aes_omac1.rs`); C TU removed (W2-01) |
 //! | `gcmp_*` | **Rust** (`gcmp.rs`); C TU removed (W2-02) |
