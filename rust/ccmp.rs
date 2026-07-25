@@ -150,8 +150,8 @@ fn ccmp_encrypt_inner(
         (*hdr_ptr).frame_control |= WLAN_FC_ISWEP;
     }
 
-    let mut aad = [0u8; 30];
-    let mut nonce = [0u8; 13];
+    let mut aad: [u8; 30] = Default::default();
+    let mut nonce: [u8; 13] = Default::default();
     let data_for_nonce =
         unsafe { core::slice::from_raw_parts((crypt as *const u8).add(hdrlen), CCMP_HDR_LEN) };
     let aad_len = unsafe {
@@ -322,9 +322,8 @@ pub extern "C" fn ccmp_encrypt(
     )
 }
 
-/// C ABI: `ccmp_encrypt_pv1` from `core/crypto/ccmp.c`.
-#[no_mangle]
-pub extern "C" fn ccmp_encrypt_pv1(
+#[inline(never)]
+fn ccmp_encrypt_pv1_inner(
     tk: *const u8,
     a1: *const u8,
     a2: *const u8,
@@ -333,7 +332,6 @@ pub extern "C" fn ccmp_encrypt_pv1(
     len: usize,
     hdrlen: usize,
     pn: *const u8,
-    _keyid: i32,
     encrypted_len: *mut usize,
 ) -> *mut u8 {
     if tk.is_null() || a1.is_null() || a2.is_null() || frame.is_null() || pn.is_null()
@@ -380,8 +378,8 @@ pub extern "C" fn ccmp_encrypt_pv1(
     let pn_arr = unsafe { &*(pn as *const [u8; 6]) };
     let hdr_bytes = unsafe { core::slice::from_raw_parts(crypt as *const u8, hdrlen) };
 
-    let mut aad = [0u8; 24];
-    let mut nonce = [0u8; 13];
+    let mut aad: [u8; 24] = Default::default();
+    let mut nonce: [u8; 13] = Default::default();
     let aad_len = ccmp_aad_nonce_pv1(hdr_bytes, a1_arr, a2_arr, a3_opt, pn_arr, &mut aad, &mut nonce);
 
     let key = aes_key.as_bytes();
@@ -408,6 +406,23 @@ pub extern "C" fn ccmp_encrypt_pv1(
         *encrypted_len = hdrlen + plen + CCMP_MIC_LEN;
     }
     crypt as *mut u8
+}
+
+/// C ABI: `ccmp_encrypt_pv1` from `core/crypto/ccmp.c`.
+#[no_mangle]
+pub extern "C" fn ccmp_encrypt_pv1(
+    tk: *const u8,
+    a1: *const u8,
+    a2: *const u8,
+    a3: *const u8,
+    frame: *const u8,
+    len: usize,
+    hdrlen: usize,
+    pn: *const u8,
+    _keyid: i32,
+    encrypted_len: *mut usize,
+) -> *mut u8 {
+    ccmp_encrypt_pv1_inner(tk, a1, a2, a3, frame, len, hdrlen, pn, encrypted_len)
 }
 
 /// C ABI: `ccmp_256_encrypt` from `core/crypto/ccmp.c`.

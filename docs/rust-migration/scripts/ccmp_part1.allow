@@ -1,4 +1,0 @@
-# L1 allowlist for W2-09 part 1: Rust owns decrypt paths + get_pn; encrypt remains in ccmp_rest.c.
-drop ccmp_encrypt
-drop ccmp_encrypt_pv1
-drop ccmp_256_encrypt
