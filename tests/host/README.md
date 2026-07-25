@@ -145,7 +145,8 @@ make -C tests/host/crypto test-aes-ccm-compile
 
 W2-04a adds `aes_ccm_vectors.json`, the C-oracle runner, and `WPA_PUT_BE16` in the
 host Wi-Fi shim (required by `aes-ccm.c` under `HOST_CRYPTO_TEST`). W2-04b adds the
-Rust oracle (`rust/aes_ccm.rs`).
+Rust oracle (`rust/aes_ccm.rs`). W2-04c swaps `aes-ccm.o` for `rust/aes_ccm.o` in
+the module link.
 
 - **`test-aes-ccm-c`** — links in-tree C objects (`aes-internal*.c`, `aes-ccm.c`) and
   exercises the C oracle against `aes_ccm_vectors.json`.

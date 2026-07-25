@@ -40,9 +40,9 @@ make KDIR=/opt/linux LLVM=1 -j"$(nproc)"
 ```
 
 Because the pinned kernel has `CONFIG_RUST=y`, the build links the Rust objects
-(`RUSTC [M] rust/kbuild_stub.o`, `rust/scaffold.o`, `rust/ffi.o`, `rust/domain_types.o`, `rust/aes_ctr.o`, `rust/aes_omac1.o`, `rust/gcmp.o`, `rust/aes_siv.o`) into
+(`RUSTC [M] rust/kbuild_stub.o`, `rust/scaffold.o`, `rust/ffi.o`, `rust/domain_types.o`, `rust/aes_ctr.o`, `rust/aes_omac1.o`, `rust/gcmp.o`, `rust/aes_siv.o`, `rust/aes_ccm.o`) into
 `88x2bu.ko`. Confirm with
-`nm 88x2bu.ko | grep -E 'rtw_rust_kbuild_probe|rtw_rust_scaffold_init|rtw_rust_bindings_probe|rtw_rust_domain_types_probe|rtw_rust_aes_ctr_probe|rtw_rust_aes_omac1_probe|rtw_rust_gcmp_probe|rtw_rust_aes_siv_probe|aes_ctr_encrypt|aes_siv_encrypt'`.
+`nm 88x2bu.ko | grep -E 'rtw_rust_kbuild_probe|rtw_rust_scaffold_init|rtw_rust_bindings_probe|rtw_rust_domain_types_probe|rtw_rust_aes_ctr_probe|rtw_rust_aes_omac1_probe|rtw_rust_gcmp_probe|rtw_rust_aes_siv_probe|rtw_rust_aes_ccm_probe|aes_ctr_encrypt|aes_siv_encrypt|aes_ccm_ae|aes_ccm_ad'`.
 
 ### Running / loading the module (L3 gate)
 

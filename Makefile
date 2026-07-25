@@ -2448,7 +2448,6 @@ rtk_core += \
 		core/crypto/aes-internal.o \
 		core/crypto/aes-internal-enc.o \
 		core/crypto/aes-gcm.o \
-		core/crypto/aes-ccm.o \
 		core/crypto/ccmp.o \
 		core/crypto/sha256-internal.o \
 		core/crypto/sha256.o \
@@ -2474,7 +2473,8 @@ $(MODULE_NAME)-$(CONFIG_MP_INCLUDED)+= core/rtw_bt_mp.o
 endif
 
 # Rust-for-Linux: link .rs objects only when the target kernel has CONFIG_RUST=y.
-# C-only builds (distro headers without Rust) keep the previous object list.
+# C-only builds (distro headers without Rust) omit migrated crypto TUs — no
+# ifndef CONFIG_RUST fallback; use a Rust-enabled KDIR for migration work.
 ifdef CONFIG_RUST
 $(MODULE_NAME)-y += rust/kbuild_stub.o
 $(MODULE_NAME)-y += rust/scaffold.o
@@ -2484,6 +2484,7 @@ $(MODULE_NAME)-y += rust/aes_ctr.o
 $(MODULE_NAME)-y += rust/aes_omac1.o
 $(MODULE_NAME)-y += rust/gcmp.o
 $(MODULE_NAME)-y += rust/aes_siv.o
+$(MODULE_NAME)-y += rust/aes_ccm.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
@@ -2510,7 +2511,7 @@ all: modules
 #   make rust-check-symbols OLD=/tmp/aes-ctr-c.o NEW=rust/aes_ctr.o
 RUST_CHECK_NM ?= $(if $(filter 1,$(LLVM)),llvm-nm,nm)
 
-.PHONY: rust-check-symbols rust-check-symbols-selftest rust-objects-aes-ctr rust-objects-aes-omac1 rust-objects-gcmp rust-objects-aes-siv
+.PHONY: rust-check-symbols rust-check-symbols-selftest rust-objects-aes-ctr rust-objects-aes-omac1 rust-objects-gcmp rust-objects-aes-siv rust-objects-aes-ccm
 rust-check-symbols:
 	@test -n "$(OLD)" && test -n "$(NEW)" || { \
 		echo "Usage: make rust-check-symbols OLD=path/to/old.o NEW=path/to/new.o [ALLOWLIST=path.allow] [ALLOW_VACUOUS=1]"; \
@@ -2542,6 +2543,12 @@ rust-objects-aes-siv:
 		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-aes-siv"; \
 		exit 1; }
 	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/aes_siv.o
+
+rust-objects-aes-ccm:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-aes-ccm"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/aes_ccm.o
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production
