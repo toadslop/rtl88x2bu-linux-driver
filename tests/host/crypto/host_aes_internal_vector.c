@@ -74,6 +74,8 @@ int host_aes_internal_parse_vector_object(const char *obj, size_t obj_len,
 		if (host_json_parse_int_in(obj, obj_len, "expect_rounds",
 					   &v->expect_rounds))
 			return -1;
+		if (v->expect_rounds > 0 && decoded != (size_t)(key_bits / 8))
+			return -1;
 		if (v->expect_ret && v->expect_rounds > 0 &&
 		    parse_hex_field(obj, obj_len, "rk", v->expected_rk,
 				    sizeof(v->expected_rk), &v->expected_rk_len))
