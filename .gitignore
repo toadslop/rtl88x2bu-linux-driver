@@ -26,4 +26,6 @@ tests/host/crypto/test_sha256_internal
 tests/host/crypto/test_sha256_internal_rust
 tests/host/crypto/librust_sha256_internal.a
 tests/host/crypto/test_sha256_prf
+tests/host/crypto/test_sha256_prf_rust
+tests/host/crypto/librust_sha256_prf.a
 tests/host/domain/test_domain_types

@@ -197,9 +197,9 @@ Compile-only gate (shim + `sha256-prf.c` dependency chain under `HOST_CRYPTO_TES
 make -C tests/host/crypto test-sha256-prf-compile
 ```
 
-`make -C tests/host/crypto test-sha256-prf` runs the C oracle against
-`sha256_prf_vectors.json` and is included in the default `all` target. W2-06b
-adds the Rust oracle (`rust/sha256_prf.rs`). W2-06c swaps `sha256-prf.o` for
+`make -C tests/host/crypto test-sha256-prf` runs both C and Rust oracles
+(`test-sha256-prf-c` + `test-sha256-prf-rust`) and is included in the default
+`all` target. W2-06b adds the Rust oracle (`rust/sha256_prf.rs`). W2-06c swaps `sha256-prf.o` for
 `rust/sha256_prf.o` in the module link.
 
 Vectors characterize observable behavior of `core/crypto/sha256-prf.c`
