@@ -108,6 +108,11 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		v->buf_len_bits = (size_t)blb;
 		v->expected_out_len = (v->buf_len_bits + 7) / 8;
 	}
+	if (v->expected_out_len > MAX_OUT_LEN)
+		return -1;
+
+	if (host_json_parse_int_in(obj, obj_len, "expect_ret", &v->expect_ret))
+		return -1;
 
 	if (host_json_parse_string_in(obj, obj_len, "out", hex, sizeof(hex)))
 		return -1;
@@ -117,10 +122,9 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		if (host_hex_decode(hex, v->expected_out, sizeof(v->expected_out),
 				    &out_len))
 			return -1;
+		if (v->expect_ret == 0 && out_len != v->expected_out_len)
+			return -1;
 	}
-
-	if (host_json_parse_int_in(obj, obj_len, "expect_ret", &v->expect_ret))
-		return -1;
 	return 0;
 }
 
