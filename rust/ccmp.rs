@@ -51,8 +51,8 @@ fn ccmp_decrypt_inner(
     let crypt = &data[8..8 + mlen];
     let tag = &data[8 + mlen..];
 
-    let mut aad = [0u8; 30];
-    let mut nonce = [0u8; 13];
+    let mut aad: [u8; 30] = Default::default();
+    let mut nonce: [u8; 13] = Default::default();
     let aad_len = ccmp_aad_nonce(amsdu_mode, hdr, data, &mut aad, &mut nonce);
 
     let key = tk.as_bytes();
