@@ -13,6 +13,7 @@ The tree still builds the same `88x2bu.ko` driver, but the primary purpose here 
 | Test gates L0–L4 | [`docs/rust-migration/test-plan.md`](docs/rust-migration/test-plan.md) |
 | Toolchain, pinned kernel, QEMU L3 | [`docs/rust-migration/dev-environment.md`](docs/rust-migration/dev-environment.md) |
 | Hardware STA smoke checklist | [`docs/smoke-test.md`](docs/smoke-test.md) |
+| Host L2 crypto harness | [`tests/host/README.md`](tests/host/README.md) |
 | Work tracker (until GitHub Issues are enabled) | [`docs/rust-migration/issues/README.md`](docs/rust-migration/issues/README.md) |
 | Rust sources | [`rust/`](rust/) |
 
@@ -22,7 +23,7 @@ Work proceeds in waves of ~200-line PRs. Completed so far:
 
 - **Wave 0** — docs, Kbuild `.rs` integration, scaffold init hook
 - **Wave 1** — bindgen/FFI seam, domain-type seed, `aes-ctr` pilot
-- **Wave 2 (in progress)** — leaf crypto units (`aes-omac1`, `gcmp`, `aes-siv`, `aes-ccm`, `sha256-internal`, …)
+- **Wave 2 (in progress)** — leaf crypto: W2-01…W2-05 landed (`aes-omac1` … `sha256-internal`); W2-06+ remaining
 
 Remaining Phase 1 scope: core logic, HAL, `os_dep`, and eventually a Rust `module!` entry. See the wave map in [`docs/rust-migration.md`](docs/rust-migration.md).
 
@@ -82,7 +83,7 @@ echo "blacklist rtw88_8822bu" | sudo tee /etc/modprobe.d/rtw8822bu.conf
 
 Hardware bring-up steps: [`docs/smoke-test.md`](docs/smoke-test.md).
 
-For the upstream-focused device list, DKMS install notes, and distro packaging links, see [RinCat/RTL88x2BU-Linux-Driver](https://github.com/RinCat/RTL88x2BU-Linux-Driver).
+For device lists, DKMS install, USB 3.0 mode (`rtw_switch_usb_mode`), debug logging (`rtw_drv_log_level` / `/proc/net/rtl88x2bu/log_level`), and unsupported USB ID troubleshooting, see [RinCat/RTL88x2BU-Linux-Driver](https://github.com/RinCat/RTL88x2BU-Linux-Driver).
 
 ## Upstream lineage
 
@@ -90,4 +91,4 @@ This tree descends from community out-of-tree RTL88x2BU drivers (Realtek vendor 
 
 ## License
 
-GPL-2.0 — see [`LICENSE`](LICENSE). Official Realtek release notes: `ReleaseNotes.pdf`.
+GPL-2.0 — see [`LICENSE`](LICENSE).
