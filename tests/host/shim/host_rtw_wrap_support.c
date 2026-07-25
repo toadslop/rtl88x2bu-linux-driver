@@ -6,6 +6,21 @@
 
 #include "drv_types.h"
 
+static int g_expect_zero_on_free;
+static int g_zero_check_failed;
+
+void host_rtw_wrap_enable_bin_clear_free_check(int on)
+{
+	if (on)
+		g_zero_check_failed = 0;
+	g_expect_zero_on_free = on;
+}
+
+int host_rtw_wrap_zero_check_failed(void)
+{
+	return g_zero_check_failed;
+}
+
 void *rtw_malloc(size_t sz)
 {
 	return malloc(sz);
@@ -13,7 +28,16 @@ void *rtw_malloc(size_t sz)
 
 void rtw_mfree(void *ptr, size_t sz)
 {
-	(void)sz;
+	if (g_expect_zero_on_free && ptr && sz > 0) {
+		const u8 *p = ptr;
+
+		for (size_t i = 0; i < sz; i++) {
+			if (p[i]) {
+				g_zero_check_failed = 1;
+				break;
+			}
+		}
+	}
 	free(ptr);
 }
 

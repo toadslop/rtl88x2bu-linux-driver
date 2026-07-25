@@ -49,6 +49,7 @@ typedef struct {
 		RTW_PUT_LE32((a), (u32)((u64)(val)));            \
 		RTW_PUT_LE32((a) + 4, (u32)((u64)(val) >> 32)); \
 	} while (0)
+/* Unused by rtw_crypto_wrap.c; stubs satisfy WPA_GET_*64 in rtw_crypto_wrap.h. */
 #define RTW_GET_LE64(a) 0ULL
 #define RTW_PUT_BE16(a, val)                     \
 	do {                                     \
@@ -73,7 +74,7 @@ typedef struct {
 		RTW_PUT_BE32((a), (u32)((u64)(val) >> 32));    \
 		RTW_PUT_BE32((a) + 4, (u32)((u64)(val)));     \
 	} while (0)
-#define RTW_GET_BE64(a) 0ULL
+#define RTW_GET_BE64(a) 0ULL /* see RTW_GET_LE64 */
 
 static inline u16 le_to_host16(u16 val)
 {

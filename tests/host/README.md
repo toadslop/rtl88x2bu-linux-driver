@@ -229,8 +229,8 @@ adds the Rust oracle (`rust/rtw_crypto_wrap.rs`). W2-06f swaps
 `rtw_crypto_wrap.o` for `rust/rtw_crypto_wrap.o` in the module link.
 
 Vectors characterize observable behavior of `core/crypto/rtw_crypto_wrap.c`
-(`os_memcmp_const`, `os_strlen`, `os_memdup`, `forced_memzero`,
-`rtw_registrypriv_amsdu_mode`).
+(`os_memcmp_const`, `os_memcmp`, `os_strlen`, `os_memdup`, `forced_memzero`,
+`bin_clear_free`, `rtw_registrypriv_amsdu_mode`).
 
 ## gcmp details
 

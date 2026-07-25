@@ -19,9 +19,11 @@
 
 enum wrap_fn {
 	FN_OS_MEMCMP_CONST = 0,
+	FN_OS_MEMCMP,
 	FN_OS_STRLEN,
 	FN_OS_MEMDUP,
 	FN_FORCED_MEMZERO,
+	FN_BIN_CLEAR_FREE,
 	FN_RTW_REGISTRYPRIV_AMSDU_MODE,
 };
 
@@ -46,10 +48,16 @@ struct vector {
 	int adapter_null;
 	int amsdu_mode;
 	int expect_mode;
+	int bin_null;
 };
 
 void host_adapter_set_amsdu_mode(_adapter *padapter, enum rtw_amsdu_mode mode);
+void host_rtw_wrap_enable_bin_clear_free_check(int on);
+int host_rtw_wrap_zero_check_failed(void);
 u8 rtw_registrypriv_amsdu_mode(const _adapter *padapter);
+void *rtw_malloc(size_t sz);
+void bin_clear_free(void *bin, size_t len);
+int os_memcmp(const void *s1, const void *s2, size_t n);
 
 static int parse_fn(const char *obj, size_t obj_len, enum wrap_fn *out)
 {
@@ -59,12 +67,16 @@ static int parse_fn(const char *obj, size_t obj_len, enum wrap_fn *out)
 		return -1;
 	if (strcmp(fn, "os_memcmp_const") == 0)
 		*out = FN_OS_MEMCMP_CONST;
+	else if (strcmp(fn, "os_memcmp") == 0)
+		*out = FN_OS_MEMCMP;
 	else if (strcmp(fn, "os_strlen") == 0)
 		*out = FN_OS_STRLEN;
 	else if (strcmp(fn, "os_memdup") == 0)
 		*out = FN_OS_MEMDUP;
 	else if (strcmp(fn, "forced_memzero") == 0)
 		*out = FN_FORCED_MEMZERO;
+	else if (strcmp(fn, "bin_clear_free") == 0)
+		*out = FN_BIN_CLEAR_FREE;
 	else if (strcmp(fn, "rtw_registrypriv_amsdu_mode") == 0)
 		*out = FN_RTW_REGISTRYPRIV_AMSDU_MODE;
 	else
@@ -109,6 +121,18 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		if (host_json_parse_int_in(obj, obj_len, "expect_nonzero", &v->expect_nonzero))
 			v->expect_nonzero = 0;
 		break;
+	case FN_OS_MEMCMP:
+		if (parse_hex_field(obj, obj_len, "a", v->a, sizeof(v->a), &v->a_len))
+			return -1;
+		if (parse_hex_field(obj, obj_len, "b", v->b, sizeof(v->b), &v->b_len))
+			return -1;
+		if (v->a_len != v->b_len)
+			return -1;
+		if (host_json_parse_int_in(obj, obj_len, "expect_result", &v->expect_result))
+			v->expect_result = -1;
+		if (host_json_parse_int_in(obj, obj_len, "expect_nonzero", &v->expect_nonzero))
+			v->expect_nonzero = 0;
+		break;
 	case FN_OS_STRLEN:
 		if (host_json_parse_string_in(obj, obj_len, "string", v->string,
 					      sizeof(v->string)))
@@ -122,6 +146,8 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		if (parse_hex_field(obj, obj_len, "src", v->src, sizeof(v->src), &v->src_len))
 			return -1;
 		if (host_json_parse_int_in(obj, obj_len, "sz", &sz))
+			return -1;
+		if (sz < 0)
 			return -1;
 		v->sz = (u32)sz;
 		if (parse_hex_field(obj, obj_len, "expect", v->expect, sizeof(v->expect),
@@ -140,6 +166,19 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 			return -1;
 		if (v->input_len != v->expect_len)
 			return -1;
+		break;
+	case FN_BIN_CLEAR_FREE:
+		if (host_json_parse_int_in(obj, obj_len, "bin_null", &v->bin_null))
+			v->bin_null = 0;
+		if (host_json_parse_int_in(obj, obj_len, "len", (int *)&v->expect_len_out))
+			return -1;
+		if (!v->bin_null) {
+			if (parse_hex_field(obj, obj_len, "input", v->input,
+					    sizeof(v->input), &v->input_len))
+				return -1;
+			if (v->input_len != v->expect_len_out)
+				return -1;
+		}
 		break;
 	case FN_RTW_REGISTRYPRIV_AMSDU_MODE:
 		if (host_json_parse_int_in(obj, obj_len, "adapter_null", &v->adapter_null))
@@ -175,6 +214,27 @@ static int run_vector(const struct vector *v)
 		}
 		if (v->expect_nonzero && rc == 0) {
 			fprintf(stderr, "%s: os_memcmp_const expected non-zero\n", v->name);
+			return -1;
+		}
+		return 0;
+	}
+	case FN_OS_MEMCMP: {
+		int rc;
+
+		if (v->a_len != v->b_len) {
+			fprintf(stderr, "%s: os_memcmp a_len (%zu) != b_len (%zu)\n",
+				v->name, v->a_len, v->b_len);
+			return -1;
+		}
+		rc = os_memcmp(v->a, v->b, v->a_len);
+
+		if (v->expect_result >= 0 && rc != v->expect_result) {
+			fprintf(stderr, "%s: os_memcmp returned %d, expected %d\n",
+				v->name, rc, v->expect_result);
+			return -1;
+		}
+		if (v->expect_nonzero && rc == 0) {
+			fprintf(stderr, "%s: os_memcmp expected non-zero\n", v->name);
 			return -1;
 		}
 		return 0;
@@ -230,6 +290,36 @@ static int run_vector(const struct vector *v)
 		forced_memzero(buf, v->input_len);
 		if (memcmp(buf, v->expect, v->expect_len) != 0) {
 			fprintf(stderr, "%s: forced_memzero left non-zero bytes\n", v->name);
+			return -1;
+		}
+		return 0;
+	}
+	case FN_BIN_CLEAR_FREE: {
+		u8 *buf;
+
+		if (v->bin_null) {
+			bin_clear_free(NULL, v->expect_len_out);
+			return 0;
+		}
+		if (v->input_len != v->expect_len_out) {
+			fprintf(stderr,
+				"%s: bin_clear_free input_len (%zu) != len (%zu)\n",
+				v->name, v->input_len, v->expect_len_out);
+			return -1;
+		}
+		buf = rtw_malloc(v->expect_len_out);
+		if (!buf && v->expect_len_out > 0) {
+			fprintf(stderr, "%s: rtw_malloc returned NULL\n", v->name);
+			return -1;
+		}
+		if (v->input_len)
+			memcpy(buf, v->input, v->input_len);
+		host_rtw_wrap_enable_bin_clear_free_check(1);
+		bin_clear_free(buf, v->expect_len_out);
+		host_rtw_wrap_enable_bin_clear_free_check(0);
+		if (host_rtw_wrap_zero_check_failed()) {
+			fprintf(stderr, "%s: bin_clear_free left non-zero bytes\n",
+				v->name);
 			return -1;
 		}
 		return 0;

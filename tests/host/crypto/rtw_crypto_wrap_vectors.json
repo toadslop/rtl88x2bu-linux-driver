@@ -24,6 +24,39 @@
       "expect_result": 0
     },
     {
+      "name": "memcmp-equal",
+      "fn": "os_memcmp",
+      "a": "0102030405",
+      "b": "0102030405",
+      "expect_result": 0
+    },
+    {
+      "name": "memcmp-less",
+      "fn": "os_memcmp",
+      "a": "01",
+      "b": "02",
+      "expect_result": -1
+    },
+    {
+      "name": "memcmp-greater",
+      "fn": "os_memcmp",
+      "a": "02",
+      "b": "01",
+      "expect_result": 1
+    },
+    {
+      "name": "bin_clear_free-basic",
+      "fn": "bin_clear_free",
+      "input": "deadbeef",
+      "len": 4
+    },
+    {
+      "name": "bin_clear_free-null",
+      "fn": "bin_clear_free",
+      "bin_null": 1,
+      "len": 4
+    },
+    {
       "name": "strlen-empty",
       "fn": "os_strlen",
       "string": "",
