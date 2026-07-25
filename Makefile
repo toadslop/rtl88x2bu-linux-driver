@@ -2452,8 +2452,6 @@ rtk_core += \
 
 ifeq ($(CONFIG_RUST),)
 rtk_core += core/crypto/ccmp.o
-else
-rtk_core += core/crypto/ccmp_rest.o
 endif
 
 # W2-07/W2-08: full aes-gcm unit in rust/aes_gcm.rs when CONFIG_RUST.
