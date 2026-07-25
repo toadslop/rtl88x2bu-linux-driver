@@ -188,22 +188,6 @@ fn ccmp_encrypt_inner(
     crypt as *mut u8
 }
 
-/// C ABI: `ccmp_get_pn` from `core/crypto/ccmp.c`.
-#[no_mangle]
-pub extern "C" fn ccmp_get_pn(pn: *mut u8, data: *const u8) {
-    if pn.is_null() || data.is_null() {
-        return;
-    }
-    let data = unsafe { core::slice::from_raw_parts(data, 8) };
-    let pn = unsafe { core::slice::from_raw_parts_mut(pn, 6) };
-    pn[0] = data[7];
-    pn[1] = data[6];
-    pn[2] = data[5];
-    pn[3] = data[4];
-    pn[4] = data[1];
-    pn[5] = data[0];
-}
-
 /// C ABI: `ccmp_decrypt` from `core/crypto/ccmp.c`.
 #[no_mangle]
 pub extern "C" fn ccmp_decrypt(
@@ -322,6 +306,51 @@ pub extern "C" fn ccmp_encrypt(
     )
 }
 
+/// C ABI: `ccmp_256_encrypt` from `core/crypto/ccmp.c`.
+#[no_mangle]
+pub extern "C" fn ccmp_256_encrypt(
+    padapter: *const Adapter,
+    tk: *const u8,
+    frame: *mut u8,
+    len: usize,
+    hdrlen: usize,
+    qos: *mut u8,
+    pn: *mut u8,
+    keyid: i32,
+    encrypted_len: *mut usize,
+) -> *mut u8 {
+    let _ = qos;
+    if padapter.is_null() || tk.is_null() || frame.is_null() || encrypted_len.is_null() {
+        return core::ptr::null_mut();
+    }
+
+    let aes_key = match AesKey::try_from_slice(unsafe {
+        core::slice::from_raw_parts(tk, CCMP_256_KEY_LEN)
+    }) {
+        Ok(k) => k,
+        Err(_) => return core::ptr::null_mut(),
+    };
+
+    let frame_slice = unsafe { core::slice::from_raw_parts(frame, len) };
+    let amsdu_mode = unsafe { support::bindings::rtw_registrypriv_amsdu_mode(padapter) };
+    let pn_opt = if pn.is_null() {
+        None
+    } else {
+        Some(unsafe { &*(pn as *const [u8; 6]) })
+    };
+
+    ccmp_encrypt_inner(
+        amsdu_mode,
+        &aes_key,
+        frame_slice,
+        hdrlen,
+        pn_opt,
+        keyid,
+        CCMP_256_MIC_LEN,
+        unsafe { &mut *encrypted_len },
+    )
+}
+
 #[inline(never)]
 fn ccmp_encrypt_pv1_inner(
     tk: *const u8,
@@ -425,49 +454,20 @@ pub extern "C" fn ccmp_encrypt_pv1(
     ccmp_encrypt_pv1_inner(tk, a1, a2, a3, frame, len, hdrlen, pn, encrypted_len)
 }
 
-/// C ABI: `ccmp_256_encrypt` from `core/crypto/ccmp.c`.
+/// C ABI: `ccmp_get_pn` from `core/crypto/ccmp.c`.
 #[no_mangle]
-pub extern "C" fn ccmp_256_encrypt(
-    padapter: *const Adapter,
-    tk: *const u8,
-    frame: *mut u8,
-    len: usize,
-    hdrlen: usize,
-    qos: *mut u8,
-    pn: *mut u8,
-    keyid: i32,
-    encrypted_len: *mut usize,
-) -> *mut u8 {
-    let _ = qos;
-    if padapter.is_null() || tk.is_null() || frame.is_null() || encrypted_len.is_null() {
-        return core::ptr::null_mut();
+pub extern "C" fn ccmp_get_pn(pn: *mut u8, data: *const u8) {
+    if pn.is_null() || data.is_null() {
+        return;
     }
-
-    let aes_key = match AesKey::try_from_slice(unsafe {
-        core::slice::from_raw_parts(tk, CCMP_256_KEY_LEN)
-    }) {
-        Ok(k) => k,
-        Err(_) => return core::ptr::null_mut(),
-    };
-
-    let frame_slice = unsafe { core::slice::from_raw_parts(frame, len) };
-    let amsdu_mode = unsafe { support::bindings::rtw_registrypriv_amsdu_mode(padapter) };
-    let pn_opt = if pn.is_null() {
-        None
-    } else {
-        Some(unsafe { &*(pn as *const [u8; 6]) })
-    };
-
-    ccmp_encrypt_inner(
-        amsdu_mode,
-        &aes_key,
-        frame_slice,
-        hdrlen,
-        pn_opt,
-        keyid,
-        CCMP_256_MIC_LEN,
-        unsafe { &mut *encrypted_len },
-    )
+    let data = unsafe { core::slice::from_raw_parts(data, 8) };
+    let pn = unsafe { core::slice::from_raw_parts_mut(pn, 6) };
+    pn[0] = data[7];
+    pn[1] = data[6];
+    pn[2] = data[5];
+    pn[3] = data[4];
+    pn[4] = data[1];
+    pn[5] = data[0];
 }
 
 /// Link-time probe for L1 (distinct from the exported crypto symbols).
