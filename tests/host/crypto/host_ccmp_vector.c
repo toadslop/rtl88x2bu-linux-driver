@@ -38,6 +38,10 @@ static int json_parse_fn_dispatch(const char *obj, size_t obj_len,
 		*out = HOST_CCMP_FN_256_DECRYPT;
 		return 0;
 	}
+	if (strcmp(buf, "ccmp_get_pn") == 0) {
+		*out = HOST_CCMP_FN_GET_PN;
+		return 0;
+	}
 	return -1;
 }
 
@@ -92,6 +96,7 @@ static int parse_encrypt_fields(struct host_ccmp_vector *v, const char *obj,
 int host_ccmp_parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 {
 	struct host_ccmp_vector *v = vec_void;
+	int key_len = 0;
 	int amsdu_mode = 0;
 	char hex[HOST_VECTOR_MAX_HEX_BUF];
 	size_t decoded = 0;
@@ -106,9 +111,26 @@ int host_ccmp_parse_vector_object(const char *obj, size_t obj_len, void *vec_voi
 	if (host_json_parse_int_in(obj, obj_len, "expect_ret", &v->expect_ret))
 		return -1;
 
+	if (v->fn == HOST_CCMP_FN_GET_PN) {
+		if (parse_hex_field(obj, obj_len, "ccmp_hdr", v->data, sizeof(v->data),
+				    &v->data_len))
+			return -1;
+		if (v->data_len != 8)
+			return -1;
+		if (parse_hex_field(obj, obj_len, "expected_pn", v->expected,
+				    sizeof(v->expected), &v->expected_len))
+			return -1;
+		return v->expected_len == 6 ? 0 : -1;
+	}
+
+	if (host_json_parse_int_in(obj, obj_len, "key_len", &key_len))
+		return -1;
+	v->key_len = (size_t)key_len;
 	if (host_json_parse_string_in(obj, obj_len, "key", hex, sizeof(hex)))
 		return -1;
 	if (host_hex_decode(hex, v->key, sizeof(v->key), &decoded))
+		return -1;
+	if (decoded != v->key_len)
 		return -1;
 
 	switch (v->fn) {
@@ -215,6 +237,18 @@ int host_ccmp_run_vector(const struct host_ccmp_vector *v)
 				       (const struct ieee80211_hdr *)v->hdr,
 				       v->data, v->data_len, &out_len);
 		break;
+	case HOST_CCMP_FN_GET_PN: {
+		u8 pn[6];
+
+		if (v->data_len != 8)
+			return -1;
+		ccmp_get_pn(pn, v->data);
+		if (memcmp(pn, v->expected, 6) != 0) {
+			fprintf(stderr, "%s: PN mismatch\n", v->name);
+			return -1;
+		}
+		return v->expect_ret ? 0 : -1;
+	}
 	default:
 		return -1;
 	}

@@ -12,6 +12,7 @@ RUST_GCMP := $(ROOT)/rust/gcmp.rs
 RUST_SIV := $(ROOT)/rust/aes_siv.rs
 RUST_CCM := $(ROOT)/rust/aes_ccm.rs
 RUST_GCM := $(ROOT)/rust/aes_gcm.rs
+RUST_CCMP := $(ROOT)/rust/ccmp.rs
 RUST_SHA256 := $(ROOT)/rust/sha256_internal.rs
 RUST_SHA256_PRF := $(ROOT)/rust/sha256_prf.rs
 RUST_CRYPTO_WRAP := $(ROOT)/rust/rtw_crypto_wrap.rs
@@ -39,7 +40,7 @@ HOST_JSON := host_vector_json.c
 HOST_GCMP := host_gcmp_vector.c
 HOST_CCMP := host_ccmp_vector.c
 
-C_ORACLE_CTR_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ctr.c $(HOST_JSON) $(AES_LEAF_SRCS) $(CRYPTO)/aes-ctr.c $(HOST_JSON)
+C_ORACLE_CTR_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ctr.c $(HOST_JSON)
 C_ORACLE_OMAC_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-omac1.c $(HOST_JSON)
 C_ORACLE_GCM_SRCS := $(AES_LEAF_SRCS) $(GCM_SRCS) $(HOST_JSON)
 GCM_AE_COMPILE_SRCS := $(AES_LEAF_SRCS) $(GCM_SRCS)

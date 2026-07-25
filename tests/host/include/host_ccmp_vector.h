@@ -19,6 +19,7 @@ enum host_ccmp_fn {
 	HOST_CCMP_FN_ENCRYPT_PV1,
 	HOST_CCMP_FN_256_ENCRYPT,
 	HOST_CCMP_FN_256_DECRYPT,
+	HOST_CCMP_FN_GET_PN,
 };
 
 struct host_ccmp_vector {
@@ -26,6 +27,7 @@ struct host_ccmp_vector {
 	enum host_ccmp_fn fn;
 	enum rtw_amsdu_mode amsdu_mode;
 	u8 key[32];
+	size_t key_len;
 	u8 frame[HOST_VECTOR_MAX_HEX_BUF / 2];
 	size_t frame_len;
 	u8 hdr[32];
