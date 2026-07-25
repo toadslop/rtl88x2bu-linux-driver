@@ -69,7 +69,8 @@ Architecture: `epic-11-architecture.md`, `arch-00-*.md` …
 | W2-04 | `wave2-04-aes-ccm.md` | done (Rust aes-ccm + L2 vectors; not filed on GitHub) |
 | W2-05 | `wave2-05-sha256-internal.md` | done (Rust sha256-internal + L2 vectors; not filed on GitHub) |
 | W2-06 | `wave2-06-sha256-prf-wrap.md` | done (sha256-prf + rtw_crypto_wrap; not filed on GitHub) |
-| W2-07… | `wave2-*.md` | draft |
+| W2-07 | `wave2-07-aes-gcm-part1.md` | done (Rust aes_gcm_ae + L2 vectors; not filed on GitHub) |
+| W2-08… | `wave2-*.md` | draft |
 | T0 / A0 | `test-00-*.md` / `arch-00-*.md` | done (plan docs + links via W0-01) |
 | T1 | `test-01-symbol-check.md` | done (#12) |
 | T3 | `test-03-ci-host-tests.md` | draft |
