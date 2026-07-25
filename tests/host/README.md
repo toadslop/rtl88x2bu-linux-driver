@@ -174,8 +174,10 @@ Compile-only gate (shim + `sha256-internal.c` build under `HOST_CRYPTO_TEST`):
 make -C tests/host/crypto test-sha256-internal-compile
 ```
 
-`make -C tests/host/crypto test-sha256-internal` runs the C oracle and is included
-in the default `all` target. W2-05b will add the Rust oracle path.
+`make -C tests/host/crypto test-sha256-internal` runs both C and Rust oracles
+(`test-sha256-internal-c` + `test-sha256-internal-rust`) and is included in the
+default `all` target. W2-05b adds the Rust oracle (`rust/sha256_internal.rs`).
+W2-05c swaps `sha256-internal.o` for `rust/sha256_internal.o` in the module link.
 
 Vectors characterize observable behavior of `core/crypto/sha256-internal.c`
 (`sha256_vector`): empty/single/multi-block messages, multi-fragment inputs, and

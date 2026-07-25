@@ -10,6 +10,7 @@ RUST_OMAC := $(ROOT)/rust/aes_omac1.rs
 RUST_GCMP := $(ROOT)/rust/gcmp.rs
 RUST_SIV := $(ROOT)/rust/aes_siv.rs
 RUST_CCM := $(ROOT)/rust/aes_ccm.rs
+RUST_SHA256 := $(ROOT)/rust/sha256_internal.rs
 
 CC      := gcc
 RUSTC   := rustc
@@ -53,7 +54,8 @@ SHA256_COMPILE_SRCS := $(CRYPTO)/sha256-internal.c
         test-gcmp test-gcmp-c test-gcmp-rust test-gcmp-compile \
 	test-aes-siv test-aes-siv-c test-aes-siv-rust test-aes-siv-compile \
 	test-aes-ccm test-aes-ccm-c test-aes-ccm-rust test-aes-ccm-compile \
-	test-sha256-internal test-sha256-internal-c test-sha256-internal-compile clean
+	test-sha256-internal test-sha256-internal-c test-sha256-internal-rust \
+	test-sha256-internal-compile clean
 
 all: test test-omac1 test-gcmp test-aes-siv test-aes-ccm test-sha256-internal
 
@@ -167,7 +169,7 @@ test_aes_ccm_rust: test_aes_ccm.c librust_aes_ccm.a $(AES_LEAF_SRCS) $(HOST_JSON
 	$(CC) $(CFLAGS) -DRUST_AES_CCM_ORACLE -o $@ test_aes_ccm.c $(AES_LEAF_SRCS) \
 		$(HOST_JSON) librust_aes_ccm.a
 
-test-sha256-internal: test-sha256-internal-c
+test-sha256-internal: test-sha256-internal-c test-sha256-internal-rust
 
 test-sha256-internal-compile: $(SHA256_COMPILE_SRCS)
 	@set -e; \
@@ -182,10 +184,20 @@ test-sha256-internal-c: test_sha256_internal
 test_sha256_internal: test_sha256_internal.c $(C_ORACLE_SHA256_SRCS)
 	$(CC) $(CFLAGS) -o $@ test_sha256_internal.c $(C_ORACLE_SHA256_SRCS)
 
+librust_sha256_internal.a: $(RUST_SHA256)
+	$(RUSTC) $(RUSTFLAGS) --cfg host_crypto_test --crate-type staticlib $(RUST_SHA256) -o $@
+
+test-sha256-internal-rust: test_sha256_internal_rust
+	./test_sha256_internal_rust sha256_internal_vectors.json
+
+test_sha256_internal_rust: test_sha256_internal.c librust_sha256_internal.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_SHA256_INTERNAL_ORACLE -o $@ test_sha256_internal.c \
+		$(HOST_JSON) librust_sha256_internal.a
+
 clean:
 	rm -f test_aes_ctr test_aes_ctr_rust librust_aes_ctr.a \
 	      test_aes_omac1 test_aes_omac1_rust librust_aes_omac1.a \
 	      test_gcmp test_gcmp_rust librust_gcmp.a \
 	      test_aes_siv test_aes_siv_rust librust_aes_siv.a \
 	      test_aes_ccm test_aes_ccm_rust librust_aes_ccm.a \
-	      test_sha256_internal
+	      test_sha256_internal test_sha256_internal_rust librust_sha256_internal.a
