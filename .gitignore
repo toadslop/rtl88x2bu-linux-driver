@@ -23,4 +23,6 @@ tests/host/crypto/test_aes_ccm
 tests/host/crypto/test_aes_ccm_rust
 tests/host/crypto/librust_aes_ccm.a
 tests/host/crypto/test_sha256_internal
+tests/host/crypto/test_sha256_internal_rust
+tests/host/crypto/librust_sha256_internal.a
 tests/host/domain/test_domain_types
