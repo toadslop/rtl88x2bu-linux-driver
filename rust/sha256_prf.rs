@@ -41,6 +41,8 @@ mod bindings {
 
 #[cfg(not(host_crypto_test))]
 mod bindings {
+    use core::ffi::c_int;
+
     extern "C" {
         pub fn hmac_sha256_vector(
             key: *const u8,
