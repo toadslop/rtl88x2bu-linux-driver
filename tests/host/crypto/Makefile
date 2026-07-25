@@ -34,7 +34,6 @@ AES_LEAF_SRCS := \
 	../shim/host_crypto_shim.c
 
 GCM_SRCS := $(CRYPTO)/aes-gcm.c
-GCM_REST_SRCS := $(CRYPTO)/aes-gcm_rest.c
 HOST_JSON := host_vector_json.c
 HOST_GCMP := host_gcmp_vector.c
 
@@ -42,12 +41,11 @@ C_ORACLE_CTR_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ctr.c $(HOST_JSON)
 C_ORACLE_OMAC_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-omac1.c $(HOST_JSON)
 C_ORACLE_GCM_SRCS := $(AES_LEAF_SRCS) $(GCM_SRCS) $(HOST_JSON)
 GCM_AE_COMPILE_SRCS := $(AES_LEAF_SRCS) $(GCM_SRCS)
-GCM_SPLIT_COMPILE_SRCS := $(AES_LEAF_SRCS) $(GCM_REST_SRCS)
 
 C_ORACLE_GCMP_SRCS := $(AES_LEAF_SRCS) $(GCM_SRCS) $(CRYPTO)/gcmp.c \
 		      $(HOST_JSON) $(HOST_GCMP)
 
-GCMP_COMPILE_SRCS := $(AES_LEAF_SRCS) $(GCM_REST_SRCS) $(CRYPTO)/gcmp.c \
+GCMP_COMPILE_SRCS := $(AES_LEAF_SRCS) $(GCM_SRCS) $(CRYPTO)/gcmp.c \
 		     $(HOST_GCMP)
 
 C_ORACLE_SIV_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-omac1.c $(CRYPTO)/aes-ctr.c \
@@ -95,9 +93,9 @@ test-gcmp: test-gcmp-c test-gcmp-rust
 
 test-aes-gcm: test-aes-gcm-c test-aes-gcm-rust
 
-test-aes-gcm-compile: $(GCM_AE_COMPILE_SRCS) $(GCM_SPLIT_COMPILE_SRCS)
+test-aes-gcm-compile: $(GCM_AE_COMPILE_SRCS)
 	@set -e; \
-	for src in $(GCM_AE_COMPILE_SRCS) $(GCM_SPLIT_COMPILE_SRCS); do \
+	for src in $(GCM_AE_COMPILE_SRCS); do \
 		obj="/tmp/$$(basename $$src .c)_gcm_compile_probe.o"; \
 		$(CC) $(CFLAGS) -c -o $$obj $$src; \
 	done
@@ -168,10 +166,9 @@ librust_gcmp.a: $(RUST_GCMP) $(ROOT)/rust/gcmp_support.rs $(ROOT)/rust/domain/ty
 test-gcmp-rust: test_gcmp_rust
 	./test_gcmp_rust gcmp_vectors.json
 
-test_gcmp_rust: test_gcmp.c librust_gcmp.a librust_aes_gcm.a $(AES_LEAF_SRCS) \
-		$(GCM_REST_SRCS) $(HOST_JSON) $(HOST_GCMP)
+test_gcmp_rust: test_gcmp.c librust_gcmp.a librust_aes_gcm.a $(AES_LEAF_SRCS) $(HOST_JSON) $(HOST_GCMP)
 	$(CC) $(CFLAGS) -DRUST_GCMP_ORACLE -o $@ test_gcmp.c $(AES_LEAF_SRCS) \
-		$(GCM_REST_SRCS) $(HOST_JSON) $(HOST_GCMP) librust_gcmp.a librust_aes_gcm.a
+		$(HOST_JSON) $(HOST_GCMP) librust_gcmp.a librust_aes_gcm.a
 
 test-aes-siv: test-aes-siv-c test-aes-siv-rust
 

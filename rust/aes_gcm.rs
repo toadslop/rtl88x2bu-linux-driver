@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! AES-GCM (part 1/2) — Rust port of `aes_gcm_ae` from `core/crypto/aes-gcm.c` (W2-07).
-//!
-//! `aes_gcm_ad` and `aes_gmac` remain in `core/crypto/aes-gcm_rest.c` until W2-08.
+//! AES-GCM — Rust port of `core/crypto/aes-gcm.c` (W2-07/W2-08).
 
 #![allow(
     dead_code,
@@ -27,6 +25,7 @@ mod bindings {
         pub fn aes_encrypt(ctx: *mut c_void, plain: *const u8, crypt: *mut u8) -> c_int;
         pub fn aes_encrypt_deinit(ctx: *mut c_void);
         pub fn wpa_hexdump_key(level: c_int, title: *const u8, buf: *const u8, len: usize);
+        pub fn wpa_printf(level: c_int, fmt: *const u8, ...);
     }
 }
 
@@ -36,10 +35,11 @@ mod bindings {
 
     extern "C" {
         pub fn wpa_hexdump_key(level: core::ffi::c_int, title: *const u8, buf: *const u8, len: usize);
+        pub fn wpa_printf(level: core::ffi::c_int, fmt: *const u8, ...);
     }
 }
 
-use bindings::{aes_encrypt, aes_encrypt_deinit, aes_encrypt_init, wpa_hexdump_key, AES_BLOCK_SIZE};
+use bindings::{aes_encrypt, aes_encrypt_deinit, aes_encrypt_init, wpa_hexdump_key, wpa_printf, AES_BLOCK_SIZE};
 use types::AesKey;
 
 #[cfg(host_crypto_test)]
@@ -292,6 +292,59 @@ pub fn aes_gcm_ae_typed(
     Ok(())
 }
 
+fn memcmp_const(a: &[u8], b: &[u8]) -> u8 {
+    let mut res = 0u8;
+    for i in 0..a.len() {
+        res |= a[i] ^ b[i];
+    }
+    res
+}
+
+/// Typed AES-GCM authenticated decryption (oracle: `aes_gcm_ad`).
+pub fn aes_gcm_ad_typed(
+    key: AesKey,
+    iv: &[u8],
+    crypt: &[u8],
+    aad: &[u8],
+    tag: &[u8; 16],
+    plain: &mut [u8],
+) -> Result<(), ()> {
+    if plain.len() < crypt.len() {
+        return Err(());
+    }
+
+    let mut h = [0u8; 16];
+    let aes = aes_gcm_init_hash_subkey(key.as_bytes(), &mut h);
+    if aes.is_null() {
+        return Err(());
+    }
+
+    let mut j0 = [0u8; 16];
+    aes_gcm_prepare_j0(iv, &h, &mut j0);
+
+    aes_gcm_gctr(aes, &j0, crypt, &mut plain[..crypt.len()]);
+    let mut s = [0u8; 16];
+    aes_gcm_ghash(&h, aad, crypt, &mut s);
+
+    let mut t = [0u8; 16];
+    aes_gctr(aes, &j0, &s, &mut t);
+
+    unsafe { aes_encrypt_deinit(aes) };
+
+    if memcmp_const(tag, &t) != 0 {
+        unsafe {
+            wpa_printf(MSG_EXCESSIVE, b"GCM: Tag mismatch\0".as_ptr());
+        }
+        return Err(());
+    }
+    Ok(())
+}
+
+/// Typed AES-GMAC (oracle: `aes_gmac`).
+pub fn aes_gmac_typed(key: AesKey, iv: &[u8], aad: &[u8], tag: &mut [u8; 16]) -> Result<(), ()> {
+    aes_gcm_ae_typed(key, iv, &[], aad, &mut [], tag)
+}
+
 /// C ABI: `aes_gcm_ae` from `core/crypto/aes-gcm.c`.
 #[no_mangle]
 pub extern "C" fn aes_gcm_ae(
@@ -340,6 +393,98 @@ pub extern "C" fn aes_gcm_ae(
     let mut tag_arr = [0u8; 16];
 
     let rc = match aes_gcm_ae_typed(aes_key, iv_s, plain_s, aad_s, crypt_s, &mut tag_arr) {
+        Ok(()) => 0,
+        Err(()) => -1,
+    };
+    if rc == 0 {
+        unsafe {
+            core::ptr::copy_nonoverlapping(tag_arr.as_ptr(), tag, 16);
+        }
+    }
+    rc
+}
+
+/// C ABI: `aes_gcm_ad` from `core/crypto/aes-gcm.c`.
+#[no_mangle]
+pub extern "C" fn aes_gcm_ad(
+    key: *const u8,
+    key_len: usize,
+    iv: *const u8,
+    iv_len: usize,
+    crypt: *const u8,
+    crypt_len: usize,
+    aad: *const u8,
+    aad_len: usize,
+    tag: *const u8,
+    plain: *mut u8,
+) -> c_int {
+    if key.is_null() || iv.is_null() || tag.is_null() || plain.is_null() {
+        return -1;
+    }
+    if crypt_len > 0 && crypt.is_null() {
+        return -1;
+    }
+    if aad_len > 0 && aad.is_null() {
+        return -1;
+    }
+
+    let aes_key = match AesKey::try_from_slice(unsafe { core::slice::from_raw_parts(key, key_len) }) {
+        Ok(k) => k,
+        Err(_) => return -1,
+    };
+
+    let iv_s = unsafe { core::slice::from_raw_parts(iv, iv_len) };
+    let crypt_s = if crypt_len == 0 {
+        &[][..]
+    } else {
+        unsafe { core::slice::from_raw_parts(crypt, crypt_len) }
+    };
+    let aad_s = if aad_len == 0 {
+        &[][..]
+    } else {
+        unsafe { core::slice::from_raw_parts(aad, aad_len) }
+    };
+    let tag_arr: &[u8; 16] = unsafe { &*(tag as *const [u8; 16]) };
+    let plain_s = unsafe { core::slice::from_raw_parts_mut(plain, crypt_len) };
+
+    match aes_gcm_ad_typed(aes_key, iv_s, crypt_s, aad_s, tag_arr, plain_s) {
+        Ok(()) => 0,
+        Err(()) => -1,
+    }
+}
+
+/// C ABI: `aes_gmac` from `core/crypto/aes-gcm.c`.
+#[no_mangle]
+pub extern "C" fn aes_gmac(
+    key: *const u8,
+    key_len: usize,
+    iv: *const u8,
+    iv_len: usize,
+    aad: *const u8,
+    aad_len: usize,
+    tag: *mut u8,
+) -> c_int {
+    if key.is_null() || iv.is_null() || tag.is_null() {
+        return -1;
+    }
+    if aad_len > 0 && aad.is_null() {
+        return -1;
+    }
+
+    let aes_key = match AesKey::try_from_slice(unsafe { core::slice::from_raw_parts(key, key_len) }) {
+        Ok(k) => k,
+        Err(_) => return -1,
+    };
+
+    let iv_s = unsafe { core::slice::from_raw_parts(iv, iv_len) };
+    let aad_s = if aad_len == 0 {
+        &[][..]
+    } else {
+        unsafe { core::slice::from_raw_parts(aad, aad_len) }
+    };
+    let mut tag_arr = [0u8; 16];
+
+    let rc = match aes_gmac_typed(aes_key, iv_s, aad_s, &mut tag_arr) {
         Ok(()) => 0,
         Err(()) => -1,
     };
