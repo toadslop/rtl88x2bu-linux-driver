@@ -13,6 +13,7 @@ The tree still builds the same `88x2bu.ko` driver, but the primary purpose here 
 | Test gates L0–L4 | [`docs/rust-migration/test-plan.md`](docs/rust-migration/test-plan.md) |
 | Toolchain, pinned kernel, QEMU L3 | [`docs/rust-migration/dev-environment.md`](docs/rust-migration/dev-environment.md) |
 | Hardware STA smoke checklist | [`docs/smoke-test.md`](docs/smoke-test.md) |
+| Arch laptop USB test (safe vs built-in Wi-Fi) | [`docs/host-test.md`](docs/host-test.md) |
 | Host L2 crypto harness | [`tests/host/README.md`](tests/host/README.md) |
 | Work tracker (until GitHub Issues are enabled) | [`docs/rust-migration/issues/README.md`](docs/rust-migration/issues/README.md) |
 | Rust sources | [`rust/`](rust/) |
@@ -93,7 +94,7 @@ On Linux 5.18+, some distributions ship experimental in-tree **rtw88** USB suppo
 echo "blacklist rtw88_8822bu" | sudo tee /etc/modprobe.d/rtw8822bu.conf
 ```
 
-Hardware bring-up steps: [`docs/smoke-test.md`](docs/smoke-test.md).
+Hardware bring-up steps: [`docs/smoke-test.md`](docs/smoke-test.md). Arch laptop build + USB test without disturbing built-in Wi-Fi: [`docs/host-test.md`](docs/host-test.md).
 
 For device lists, DKMS install, USB 3.0 mode (`rtw_switch_usb_mode`), debug logging (`rtw_drv_log_level` / `/proc/net/rtl88x2bu/log_level`), and unsupported USB ID troubleshooting, see [RinCat/RTL88x2BU-Linux-Driver](https://github.com/RinCat/RTL88x2BU-Linux-Driver).
 
