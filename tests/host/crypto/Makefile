@@ -1,5 +1,5 @@
 # Host L2 differential test harness for core/crypto (T2/W1-03 aes-ctr, W2-01
-# aes-omac1, W2-02 gcmp, W2-03 aes-siv, W2-04 aes-ccm).
+# aes-omac1, W2-02 gcmp, W2-03 aes-siv, W2-04 aes-ccm, W2-05 sha256-internal).
 # Builds with gcc only — no kernel headers or KDIR.
 
 ROOT     := ../../..

@@ -77,9 +77,14 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 {
 	struct vector *v = vec_void;
 	char hex[HOST_VECTOR_MAX_HEX_BUF];
+	char fn[64];
 
 	memset(v, 0, sizeof(*v));
 	if (host_json_parse_string_in(obj, obj_len, "name", v->name, sizeof(v->name)))
+		return -1;
+	if (host_json_parse_string_in(obj, obj_len, "fn", fn, sizeof(fn)))
+		return -1;
+	if (strcmp(fn, "sha256_vector") != 0)
 		return -1;
 	if (host_json_parse_bool_in(obj, obj_len, "rust_only", &v->rust_only) != 0)
 		v->rust_only = 0;
