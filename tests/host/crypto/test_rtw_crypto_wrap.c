@@ -127,7 +127,7 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		if (parse_hex_field(obj, obj_len, "expect", v->expect, sizeof(v->expect),
 				    &v->expect_len))
 			return -1;
-		if (v->expect_len != v->sz)
+		if (v->expect_len != v->sz || v->src_len != v->sz)
 			return -1;
 		break;
 	}
@@ -137,6 +137,8 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 			return -1;
 		if (parse_hex_field(obj, obj_len, "expect", v->expect, sizeof(v->expect),
 				    &v->expect_len))
+			return -1;
+		if (v->input_len != v->expect_len)
 			return -1;
 		break;
 	case FN_RTW_REGISTRYPRIV_AMSDU_MODE:
@@ -195,6 +197,11 @@ static int run_vector(const struct vector *v)
 				v->name, v->expect_len, v->sz);
 			return -1;
 		}
+		if (v->src_len != v->sz) {
+			fprintf(stderr, "%s: os_memdup src_len (%zu) != sz (%u)\n",
+				v->name, v->src_len, v->sz);
+			return -1;
+		}
 		dup = os_memdup(v->src_len ? v->src : NULL, v->sz);
 
 		if (!dup && v->sz > 0) {
@@ -212,6 +219,11 @@ static int run_vector(const struct vector *v)
 	case FN_FORCED_MEMZERO: {
 		u8 buf[MAX_HEX];
 
+		if (v->input_len != v->expect_len) {
+			fprintf(stderr, "%s: forced_memzero input_len (%zu) != expect_len (%zu)\n",
+				v->name, v->input_len, v->expect_len);
+			return -1;
+		}
 		if (v->input_len > sizeof(buf))
 			return -1;
 		memcpy(buf, v->input, v->input_len);
