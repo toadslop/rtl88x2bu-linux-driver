@@ -225,7 +225,7 @@ pub extern "C" fn sha256_prf(
         data,
         data_len,
         buf,
-        buf_len.saturating_mul(8),
+        buf_len.wrapping_mul(8),
     )
 }
 
