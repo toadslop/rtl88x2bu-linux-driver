@@ -187,7 +187,6 @@ int host_ccmp_run_vector(const struct host_ccmp_vector *v)
 	host_adapter_set_amsdu_mode(&adapter, v->amsdu_mode);
 
 	switch (v->fn) {
-#ifndef RUST_CCMP_ORACLE
 	case HOST_CCMP_FN_ENCRYPT: {
 		size_t frame_len = v->frame_len;
 
@@ -222,7 +221,6 @@ int host_ccmp_run_vector(const struct host_ccmp_vector *v)
 				       v->frame, v->frame_len, v->hdrlen,
 				       v->pn, v->keyid, &out_len);
 		break;
-#endif
 	case HOST_CCMP_FN_DECRYPT:
 		if (v->hdr_len < 24)
 			return -1;
