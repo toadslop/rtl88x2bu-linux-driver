@@ -29,7 +29,17 @@ Remaining Phase 1 scope: core logic, HAL, `os_dep`, and eventually a Rust `modul
 
 ## Building (contributors)
 
-Migration builds require a **Rust-enabled kernel tree** (`CONFIG_RUST=y`). Distro `linux-headers` packages are not sufficient.
+Migration builds require a **Rust-enabled kernel tree** (`CONFIG_RUST=y`) plus **`KDIR`** and **`LLVM=1`**.
+
+**Arch Linux:** current `linux-headers` often already have `CONFIG_RUST=y`. Install `bindgen` to match the headers’ `scripts/min-tool-version.sh`, then:
+
+```bash
+export LIBCLANG_PATH=/usr/lib
+make clean
+make KDIR=/lib/modules/$(uname -r)/build LLVM=1 -j"$(nproc)"
+```
+
+**Ubuntu / pinned tree / cloud VM:** distro headers usually lack Rust metadata — use a Rust-enabled kernel source tree (or `/opt/linux` on the provisioned cloud snapshot):
 
 ```bash
 export LIBCLANG_PATH=/usr/lib/llvm-18/lib   # adjust for host clang
@@ -37,7 +47,7 @@ make clean
 make KDIR=/path/to/rust-enabled-kernel LLVM=1 -j"$(nproc)"
 ```
 
-First-time setup (packages, `ld.lld` symlinks, bindgen 0.65.1, pinning a kernel, L3 QEMU): [`docs/rust-migration/dev-environment.md`](docs/rust-migration/dev-environment.md).
+First-time setup (Arch and Ubuntu packages, `ld.lld` symlinks, bindgen pin, pinning a kernel, L3 QEMU): [`docs/rust-migration/dev-environment.md`](docs/rust-migration/dev-environment.md).
 
 Migrated crypto objects are linked from `rust/` only when the target kernel has `CONFIG_RUST=y`. There is no fallback to the old C objects for those units.
 

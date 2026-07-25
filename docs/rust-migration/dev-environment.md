@@ -8,10 +8,59 @@ Normative build contract: [`../rust-migration.md`](../rust-migration.md). Gates:
 
 | Tempting shortcut | Why it fails |
 |-------------------|--------------|
-| Distro `linux-headers-$(uname -r)` | Almost never ships `CONFIG_RUST=y` or Rust metadata (`scripts/target.json`, `rust/*.rmeta`). |
+| Distro `linux-headers-$(uname -r)` | Usually lacks `CONFIG_RUST=y` or Rust metadata (`scripts/target.json`, `rust/*.rmeta`). **Exception:** some Arch `linux-headers` packages do ship them — verify before relying on them (see [Arch Linux](#arch-linux)). |
 | `make KSRC=…` alone for migration | Pre-W0-02 habit. Migration builds must use **`KDIR`** + **`LLVM=1`**. |
 | Building the `.ko` against kernel A, `insmod` on host kernel B | Module vermagic / CRCs will not match. L3 needs the **same** kernel image that built the module. |
 | `make … \| tee log; echo $?` | `$?` is often **tee’s** exit (0). Use `echo EXIT:${PIPESTATUS[0]}` or avoid the pipe when checking success. |
+
+## Arch Linux
+
+Arch `linux` / `linux-headers` often ship with `CONFIG_RUST=y` and the `rust/` metadata needed for out-of-tree RfL modules. When that holds, you can build against the running kernel instead of pinning a separate tree.
+
+### Verify headers are Rust-capable
+
+```bash
+K=/lib/modules/$(uname -r)/build
+grep '^CONFIG_RUST=y' "$K/.config"   # or: grep CONFIG_RUST "$K/include/config/auto.conf"
+test -f "$K/scripts/target.json" && ls "$K/rust"/*.rmeta >/dev/null
+```
+
+If those fail, fall back to [pinning a Rust-enabled kernel](#pinning-and-building-a-rust-enabled-kernel).
+
+### Packages and bindgen
+
+```bash
+sudo pacman -S --needed linux-headers clang lld llvm rust
+
+K=/lib/modules/$(uname -r)/build
+# Match the headers tree — do not blindly use the Ubuntu 6.12.x pin (0.65.1):
+"$K/scripts/min-tool-version.sh" rustc     # e.g. 1.85.0 on 7.x
+"$K/scripts/min-tool-version.sh" bindgen   # e.g. 0.71.1 on 7.x
+cargo install bindgen-cli --version "$("$K/scripts/min-tool-version.sh" bindgen)" --locked
+
+# Arch libclang lives in /usr/lib (not /usr/lib/llvm-N/lib)
+export LIBCLANG_PATH=/usr/lib
+make -C "$K" LLVM=1 rustavailable   # must print: Rust is available!
+```
+
+`clang` / `lld` from Arch already provide unsuffixed `ld.lld` / `llvm-*`; the Ubuntu symlink dance is usually unnecessary.
+
+### Build (L0) and load on the host
+
+```bash
+export LIBCLANG_PATH=/usr/lib
+cd /path/to/rtl88x2bu-linux-driver
+make clean
+make KDIR=/lib/modules/$(uname -r)/build LLVM=1 -j"$(nproc)"
+nm 88x2bu.ko | grep -E 'rtw_rust_kbuild_probe|rtw_rust_scaffold_init|aes_ctr_encrypt'
+```
+
+Because `KDIR` matches `uname -r`, `insmod` / `modprobe` on this host is valid (unlike the cloud `/opt/linux` + QEMU path, where vermagic will not match the host).
+
+```bash
+sudo insmod ./88x2bu.ko
+# or: sudo make install && sudo modprobe 88x2bu
+```
 
 ## Host packages (Ubuntu-like)
 
