@@ -43,6 +43,7 @@ struct vector {
 	char string[64];
 	u32 sz;
 	int expect_result;
+	int has_cmp_len;
 	size_t cmp_len;
 	size_t expect_len_out;
 	int adapter_null;
@@ -124,6 +125,7 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		if (!host_json_parse_int_in(obj, obj_len, "len", &cmp_len)) {
 			if (cmp_len < 0 || (size_t)cmp_len > v->a_len)
 				return -1;
+			v->has_cmp_len = 1;
 			v->cmp_len = (size_t)cmp_len;
 		}
 		break;
@@ -142,6 +144,7 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		if (!host_json_parse_int_in(obj, obj_len, "len", &cmp_len)) {
 			if (cmp_len < 0 || (size_t)cmp_len > v->a_len)
 				return -1;
+			v->has_cmp_len = 1;
 			v->cmp_len = (size_t)cmp_len;
 		}
 		break;
@@ -232,7 +235,7 @@ static int run_vector(const struct vector *v)
 	switch (v->fn) {
 	case FN_OS_MEMCMP_CONST: {
 		int rc;
-		size_t len = v->cmp_len ? v->cmp_len : v->a_len;
+		size_t len = v->has_cmp_len ? v->cmp_len : v->a_len;
 
 		if (v->a_len != v->b_len) {
 			fprintf(stderr, "%s: os_memcmp_const a_len (%zu) != b_len (%zu)\n",
@@ -250,7 +253,7 @@ static int run_vector(const struct vector *v)
 	}
 	case FN_OS_MEMCMP: {
 		int rc;
-		size_t len = v->cmp_len ? v->cmp_len : v->a_len;
+		size_t len = v->has_cmp_len ? v->cmp_len : v->a_len;
 
 		if (v->a_len != v->b_len) {
 			fprintf(stderr, "%s: os_memcmp a_len (%zu) != b_len (%zu)\n",
