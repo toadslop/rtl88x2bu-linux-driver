@@ -1,5 +1,6 @@
 # Host L2 differential test harness for core/crypto (T2/W1-03 aes-ctr, W2-01
-# aes-omac1, W2-02 gcmp, W2-03 aes-siv, W2-04 aes-ccm, W2-05 sha256-internal).
+# aes-omac1, W2-02 gcmp, W2-03 aes-siv, W2-04 aes-ccm, W2-05 sha256-internal,
+# W2-06 sha256-prf).
 # Builds with gcc only — no kernel headers or KDIR.
 
 ROOT     := ../../..
@@ -50,14 +51,23 @@ CCM_COMPILE_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ccm.c
 C_ORACLE_SHA256_SRCS := $(CRYPTO)/sha256-internal.c $(HOST_JSON)
 SHA256_COMPILE_SRCS := $(CRYPTO)/sha256-internal.c
 
+C_ORACLE_SHA256_PRF_SRCS := $(CRYPTO)/sha256-internal.c $(CRYPTO)/sha256.c \
+			    $(CRYPTO)/sha256-prf.c ../shim/host_crypto_shim.c \
+			    $(HOST_JSON)
+SHA256_PRF_COMPILE_SRCS := $(CRYPTO)/sha256-internal.c $(CRYPTO)/sha256.c \
+			   $(CRYPTO)/sha256-prf.c ../shim/host_crypto_shim.c
+
 .PHONY: all test test-c test-rust test-omac1 test-omac1-c test-omac1-rust \
         test-gcmp test-gcmp-c test-gcmp-rust test-gcmp-compile \
 	test-aes-siv test-aes-siv-c test-aes-siv-rust test-aes-siv-compile \
 	test-aes-ccm test-aes-ccm-c test-aes-ccm-rust test-aes-ccm-compile \
 	test-sha256-internal test-sha256-internal-c test-sha256-internal-rust \
-	test-sha256-internal-compile clean
+	test-sha256-internal-compile \
+	test-sha256-prf test-sha256-prf-c test-sha256-prf-compile \
+	clean
 
-all: test test-omac1 test-gcmp test-aes-siv test-aes-ccm test-sha256-internal
+all: test test-omac1 test-gcmp test-aes-siv test-aes-ccm test-sha256-internal \
+     test-sha256-prf
 
 test: test-c test-rust
 
@@ -194,10 +204,26 @@ test_sha256_internal_rust: test_sha256_internal.c librust_sha256_internal.a $(HO
 	$(CC) $(CFLAGS) -DRUST_SHA256_INTERNAL_ORACLE -o $@ test_sha256_internal.c \
 		$(HOST_JSON) librust_sha256_internal.a
 
+test-sha256-prf: test-sha256-prf-c
+
+test-sha256-prf-compile: $(SHA256_PRF_COMPILE_SRCS)
+	@set -e; \
+	for src in $(SHA256_PRF_COMPILE_SRCS); do \
+		obj="/tmp/$$(basename $$src .c)_sha256_prf_compile_probe.o"; \
+		$(CC) $(CFLAGS) -c -o $$obj $$src; \
+	done
+
+test-sha256-prf-c: test_sha256_prf
+	./test_sha256_prf sha256_prf_vectors.json
+
+test_sha256_prf: test_sha256_prf.c $(C_ORACLE_SHA256_PRF_SRCS)
+	$(CC) $(CFLAGS) -o $@ test_sha256_prf.c $(C_ORACLE_SHA256_PRF_SRCS)
+
 clean:
 	rm -f test_aes_ctr test_aes_ctr_rust librust_aes_ctr.a \
 	      test_aes_omac1 test_aes_omac1_rust librust_aes_omac1.a \
 	      test_gcmp test_gcmp_rust librust_gcmp.a \
 	      test_aes_siv test_aes_siv_rust librust_aes_siv.a \
 	      test_aes_ccm test_aes_ccm_rust librust_aes_ccm.a \
-	      test_sha256_internal test_sha256_internal_rust librust_sha256_internal.a
+	      test_sha256_internal test_sha256_internal_rust librust_sha256_internal.a \
+	      test_sha256_prf

@@ -24,6 +24,8 @@ tests/host/
     aes_ccm_vectors.json
     test_sha256_internal.c   # C-oracle runner for SHA-256 (W2-05a)
     sha256_internal_vectors.json
+    test_sha256_prf.c        # C-oracle runner for SHA256-PRF (W2-06a)
+    sha256_prf_vectors.json
     Makefile
 ```
 
@@ -182,6 +184,27 @@ W2-05c swaps `sha256-internal.o` for `rust/sha256_internal.o` in the module link
 Vectors characterize observable behavior of `core/crypto/sha256-internal.c`
 (`sha256_vector`): empty/single/multi-block messages, multi-fragment inputs, and
 empty-element edge cases.
+
+## sha256-prf details (W2-06a)
+
+```bash
+make -C tests/host/crypto test-sha256-prf-c
+```
+
+Compile-only gate (shim + `sha256-prf.c` dependency chain under `HOST_CRYPTO_TEST`):
+
+```bash
+make -C tests/host/crypto test-sha256-prf-compile
+```
+
+`make -C tests/host/crypto test-sha256-prf` runs the C oracle against
+`sha256_prf_vectors.json` and is included in the default `all` target. W2-06b
+adds the Rust oracle (`rust/sha256_prf.rs`). W2-06c swaps `sha256-prf.o` for
+`rust/sha256_prf.o` in the module link.
+
+Vectors characterize observable behavior of `core/crypto/sha256-prf.c`
+(`sha256_prf` / `sha256_prf_bits`): FT derivation, non-byte-aligned bit
+lengths, short keys, and long data bindings.
 
 ## gcmp details
 
