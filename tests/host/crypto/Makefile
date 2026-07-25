@@ -1,6 +1,6 @@
 # Host L2 differential test harness for core/crypto (T2/W1-03 aes-ctr, W2-01
 # aes-omac1, W2-02 gcmp, W2-03 aes-siv, W2-04 aes-ccm, W2-05 sha256-internal,
-# W2-06 sha256-prf).
+# W2-06 sha256-prf, W2-06d rtw-crypto-wrap).
 # Builds with gcc only — no kernel headers or KDIR.
 
 ROOT     := ../../..
@@ -19,6 +19,9 @@ RUSTC   := rustc
 CFLAGS  := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
            -I$(HOST_INC) -I$(CRYPTO) \
            -DHOST_CRYPTO_TEST
+# C oracle for rtw_crypto_wrap.c: compile the real TU without HOST_CRYPTO_TEST.
+WRAP_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+               -I$(HOST_INC) -I$(CRYPTO)
 # Match kernel CONFIG_RUST_OVERFLOW_CHECKS so host L2 catches wrap panics
 # that would abort in extern "C" under /opt/linux.
 RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
@@ -58,6 +61,10 @@ C_ORACLE_SHA256_PRF_SRCS := $(CRYPTO)/sha256-internal.c $(CRYPTO)/sha256.c \
 SHA256_PRF_COMPILE_SRCS := $(CRYPTO)/sha256-internal.c $(CRYPTO)/sha256.c \
 			   $(CRYPTO)/sha256-prf.c ../shim/host_crypto_shim.c
 
+C_ORACLE_WRAP_SRCS := $(CRYPTO)/rtw_crypto_wrap.c ../shim/host_rtw_wrap_support.c \
+		      $(HOST_JSON)
+WRAP_COMPILE_SRCS := $(CRYPTO)/rtw_crypto_wrap.c ../shim/host_rtw_wrap_support.c
+
 .PHONY: all test test-c test-rust test-omac1 test-omac1-c test-omac1-rust \
         test-gcmp test-gcmp-c test-gcmp-rust test-gcmp-compile \
 	test-aes-siv test-aes-siv-c test-aes-siv-rust test-aes-siv-compile \
@@ -65,10 +72,11 @@ SHA256_PRF_COMPILE_SRCS := $(CRYPTO)/sha256-internal.c $(CRYPTO)/sha256.c \
 	test-sha256-internal test-sha256-internal-c test-sha256-internal-rust \
 	test-sha256-internal-compile \
 	test-sha256-prf test-sha256-prf-c test-sha256-prf-rust test-sha256-prf-compile \
+	test-rtw-crypto-wrap test-rtw-crypto-wrap-c test-rtw-crypto-wrap-compile \
 	clean
 
 all: test test-omac1 test-gcmp test-aes-siv test-aes-ccm test-sha256-internal \
-     test-sha256-prf
+     test-sha256-prf test-rtw-crypto-wrap
 
 test: test-c test-rust
 
@@ -231,6 +239,21 @@ test_sha256_prf_rust: test_sha256_prf.c librust_sha256_prf.a librust_sha256_inte
 	$(CC) $(CFLAGS) -DRUST_SHA256_PRF_ORACLE -o $@ test_sha256_prf.c \
 		$(CRYPTO)/sha256.c $(HOST_JSON) librust_sha256_prf.a librust_sha256_internal.a
 
+test-rtw-crypto-wrap: test-rtw-crypto-wrap-c
+
+test-rtw-crypto-wrap-compile: $(WRAP_COMPILE_SRCS)
+	@set -e; \
+	for src in $(WRAP_COMPILE_SRCS); do \
+		obj="/tmp/$$(basename $$src .c)_rtw_wrap_compile_probe.o"; \
+		$(CC) $(WRAP_CFLAGS) -c -o $$obj $$src; \
+	done
+
+test-rtw-crypto-wrap-c: test_rtw_crypto_wrap
+	./test_rtw_crypto_wrap rtw_crypto_wrap_vectors.json
+
+test_rtw_crypto_wrap: test_rtw_crypto_wrap.c $(C_ORACLE_WRAP_SRCS)
+	$(CC) $(WRAP_CFLAGS) -o $@ test_rtw_crypto_wrap.c $(C_ORACLE_WRAP_SRCS)
+
 clean:
 	rm -f test_aes_ctr test_aes_ctr_rust librust_aes_ctr.a \
 	      test_aes_omac1 test_aes_omac1_rust librust_aes_omac1.a \
@@ -238,4 +261,5 @@ clean:
 	      test_aes_siv test_aes_siv_rust librust_aes_siv.a \
 	      test_aes_ccm test_aes_ccm_rust librust_aes_ccm.a \
 	      test_sha256_internal test_sha256_internal_rust librust_sha256_internal.a \
-	      test_sha256_prf test_sha256_prf_rust librust_sha256_prf.a
+	      test_sha256_prf test_sha256_prf_rust librust_sha256_prf.a \
+	      test_rtw_crypto_wrap
