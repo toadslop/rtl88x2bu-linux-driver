@@ -4,10 +4,11 @@ description: >-
   Delivery addendum for PR reviews in this RTL88x2BU driver repo. Auto-applies on
   reviewer tasks ("review PR", "code review", "look at this diff", re-reviews) but
   only AFTER Cursor's native /code-review command is loaded and run — never as a
-  substitute. Adds mandatory PR comment posting and migration-specific checks on
-  top of /code-review output. Do NOT use for "address review comments", "respond
-  to review", or "fix PR feedback" (author tasks). Reviewers must not change PR
-  state (close, draft, ready-for-review, merge, etc.) — comments only.
+  substitute. Stops immediately if the PR is already merged. Adds mandatory PR
+  comment posting, strict approval policy (nits-only), and migration-specific
+  checks on top of /code-review output. Do NOT use for "address review comments",
+  "respond to review", or "fix PR feedback" (author tasks). Reviewers must not
+  change PR state (close, draft, ready-for-review, merge, etc.) — comments only.
 metadata:
   requires-skill: code-review
   layer: delivery-addendum
@@ -21,9 +22,8 @@ This skill **auto-applies** when you are **reviewing** someone else's pull reque
 ## Prerequisite: run `/code-review` first (mandatory)
 
 **This skill is a delivery and migration addendum. It does not perform core code
-review.** Before following any other section of this file, you **must** load
-Cursor's native `/code-review` command into context and complete its analysis
-workflow.
+review.** After the **Merged PR gate** (below), you **must** load Cursor's native
+`/code-review` command into context and complete its analysis workflow.
 
 `/code-review` is Cursor's built-in code review command. It instructs the agent
 to review with a code-review mindset: prioritize bugs, behavioral regressions,
@@ -55,6 +55,23 @@ delivery addendum, but do not pretend `/code-review` ran — note the gap.
 **You are the reviewer, not the author.** Do not write code, push commits, rebase
 the branch, merge, or otherwise act as the PR author. Your only job is to review
 the diff and post comments.
+
+## Merged PR gate (mandatory — run first)
+
+Before running `/code-review` or posting any review comments, **check whether the
+PR is already merged**.
+
+1. **Identify the PR** — by number, URL, or branch name.
+2. **Check merge status** — e.g. `gh pr view <number-or-branch> --json state,mergedAt`
+   or equivalent API. A PR is merged when `state` is `MERGED` (or `mergedAt` is set).
+3. **If merged — stop.** Do **not** run `/code-review`, do **not** post review
+   comments, and do **not** recommend changes. Reply in chat only, e.g.:
+
+   > This PR is already merged — no review needed.
+
+4. **If open** — continue with the workflow below.
+
+This gate applies to initial reviews and re-reviews alike.
 
 **Do not change PR state.** Never close, reopen, mark as draft, mark ready for
 review, merge, or otherwise change the PR's lifecycle — even if you think it is
@@ -92,6 +109,30 @@ this skill or post new review findings. Instead:
 Optionally reply on resolved threads with `ManagePullRequest` `post_comment` and
 `in_reply_to` to note the fix — that is author follow-up, not a new review.
 
+## Approval policy (strict)
+
+We hold a high bar for recommending approval. **Only recommend approval when the
+only remaining feedback is nit-level** — nothing else may be open.
+
+| Verdict | When to use |
+|---------|-------------|
+| **Request changes** | Any `blocking`, `important`, or `question` finding; any correctness, safety, ABI, or test-gap issue; any item you would not classify as a pure nit |
+| **Approve (nits only)** | Every actionable item is `nit` severity — style, naming, optional polish with no behavioral impact |
+| **Do not approve** | Anything in between — including **low** or **minor** issues you might otherwise defer to a follow-up PR |
+
+**Rules:**
+
+- **Never approve** if there is anything other than nits left — even if you label it
+  low, minor, or "could be a follow-up."
+- **Never approve** with open `important` or `question` threads unresolved.
+- If you find non-nit issues, your top-level summary must **request changes** (or
+  equivalent) and list what must be fixed before approval.
+- On re-review: approve only when **all** prior non-nit comments are resolved and
+  you found no new non-nit issues.
+
+When posting a top-level summary, state the verdict explicitly, e.g. "Request
+changes — …" or "Approve — nits only."
+
 ## Workflow (reviewer only)
 
 **Reviewer boundaries — do only this:**
@@ -104,17 +145,22 @@ Optionally reply on resolved threads with `ManagePullRequest` `post_comment` and
 | Summarize findings in chat (brief pointer to PR) | Rebase, force-push, or create a new PR |
 | Run read-only verification to inform comments | Change PR title, body, labels, or reviewers |
 
-1. **Run `/code-review`** — follow **"Prerequisite: run `/code-review` first"**
+1. **Merged PR gate** — follow **"Merged PR gate"** above. If the PR is merged,
+   stop; do not continue.
+2. **Run `/code-review`** — follow **"Prerequisite: run `/code-review` first"**
    above. This step is non-negotiable; do not skip to delivery or migration
    checks without it.
-2. **Apply repo-specific checks** — walk the "Migration focus" section below for
+3. **Apply repo-specific checks** — walk the "Migration focus" section below for
    anything the general review may not cover.
-3. **Post all findings on the PR** — follow "Post on the PR" below. This includes
+4. **Post all findings on the PR** — follow "Post on the PR" below. This includes
    findings from `/code-review` **and** any migration-specific items you found.
-4. **Recap in chat** — brief pointer to the PR; do not duplicate the full review.
+   Apply **"Approval policy"** when writing the top-level summary verdict.
+5. **Recap in chat** — brief pointer to the PR and verdict; do not duplicate the
+   full review.
 
-When this skill auto-applies, you **still** run `/code-review` first — this skill
-is the delivery and migration layer, not a substitute for Cursor's code review.
+When this skill auto-applies, run the **Merged PR gate** first, then `/code-review`
+— this skill is the delivery and migration layer, not a substitute for Cursor's
+code review.
 
 ## Post on the PR (mandatory)
 
@@ -160,10 +206,14 @@ Severity: `blocking`, `important`, `nit`, or `question`.
 
 When reviewing after the author pushed fixes:
 
-- Reply on existing threads with `in_reply_to` when addressing prior comments.
-- Post a new top-level summary noting which earlier items are resolved and what
-  remains open.
-- Do not re-post the same inline comment on an unchanged line.
+1. **Merged PR gate** — if the PR merged since the last review, stop and report
+   that no further review is needed.
+2. Reply on existing threads with `in_reply_to` when addressing prior comments.
+3. Post a new top-level summary noting which earlier items are resolved, what
+   remains open, and the verdict per **"Approval policy"**.
+4. Do not re-post the same inline comment on an unchanged line.
+5. **Approve only when nits remain** — if any non-nit item is still open or you
+   found new non-nit issues, request changes instead.
 
 ## Migration focus (repo-specific)
 
