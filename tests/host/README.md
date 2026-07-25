@@ -22,6 +22,8 @@ tests/host/
     aes_siv_vectors.json
     test_aes_ccm.c       # C-oracle runner for AES-CCM (W2-04a)
     aes_ccm_vectors.json
+    test_sha256_internal.c   # C-oracle runner for SHA-256 (W2-05a)
+    sha256_internal_vectors.json
     Makefile
 ```
 
@@ -159,6 +161,25 @@ Vectors characterize observable behavior of `core/crypto/aes-ccm.c` (fixed `L=2`
 long AAD (including the `aad_len == 30` accept boundary), AES-128/192/256 keys,
 `M=8`/`M=16`, `M=0` accept quirk, auth mismatch (including C's decrypt-before-MAC
 plaintext side-effect), bad key length, and reject paths.
+
+## sha256-internal details (W2-05a)
+
+```bash
+make -C tests/host/crypto test-sha256-internal-c
+```
+
+Compile-only gate (shim + `sha256-internal.c` build under `HOST_CRYPTO_TEST`):
+
+```bash
+make -C tests/host/crypto test-sha256-internal-compile
+```
+
+`make -C tests/host/crypto test-sha256-internal` runs the C oracle and is included
+in the default `all` target. W2-05b will add the Rust oracle path.
+
+Vectors characterize observable behavior of `core/crypto/sha256-internal.c`
+(`sha256_vector`): empty/single/multi-block messages, multi-fragment inputs, and
+empty-element edge cases.
 
 ## gcmp details
 

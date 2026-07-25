@@ -1,0 +1,89 @@
+{
+  "oracle": "core/crypto/sha256-internal.c",
+  "comment": "Vectors freeze in-tree C SHA-256 behavior for L2 parity (W2-05a).",
+  "vectors": [
+    {
+      "name": "empty",
+      "fn": "sha256_vector",
+      "elements": [],
+      "mac": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "expect_ret": 0
+    },
+    {
+      "name": "abc",
+      "fn": "sha256_vector",
+      "data": "616263",
+      "mac": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+      "expect_ret": 0
+    },
+    {
+      "name": "one-block",
+      "fn": "sha256_vector",
+      "data": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+      "mac": "fdeab9acf3710362bd2658cdc9a29e8f9c757fcf9811603a8c447cd1d9151108",
+      "expect_ret": 0
+    },
+    {
+      "name": "55-bytes",
+      "fn": "sha256_vector",
+      "data": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f30313233343536",
+      "mac": "463eb28e72f82e0a96c0a4cc53690c571281131f672aa229e0d45ae59b598b59",
+      "expect_ret": 0
+    },
+    {
+      "name": "65-bytes",
+      "fn": "sha256_vector",
+      "data": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f40",
+      "mac": "4bfd2c8b6f1eec7a2afeb48b934ee4b2694182027e6d0fc075074f2fabb31781",
+      "expect_ret": 0
+    },
+    {
+      "name": "two-blocks",
+      "fn": "sha256_vector",
+      "data": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f",
+      "mac": "471fb943aa23c511f6f72f8d1652d9c880cfa392ad80503120547703e56a2be5",
+      "expect_ret": 0
+    },
+    {
+      "name": "vector-2elem",
+      "fn": "sha256_vector",
+      "elements": [
+        "616263",
+        "646566"
+      ],
+      "mac": "bef57ec7f53a6d40beb640a780a639c83bc29ac8a9816f1fc6c5c6dcd93c4721",
+      "expect_ret": 0
+    },
+    {
+      "name": "vector-3elem",
+      "fn": "sha256_vector",
+      "elements": [
+        "616263",
+        "646566",
+        "676869"
+      ],
+      "mac": "19cc02f26df43cc571bc9ed7b0c4d29224a3ec229529221725ef76d021c8326f",
+      "expect_ret": 0
+    },
+    {
+      "name": "vector-empty-then-data",
+      "fn": "sha256_vector",
+      "elements": [
+        "",
+        "616263"
+      ],
+      "mac": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+      "expect_ret": 0
+    },
+    {
+      "name": "vector-data-then-empty",
+      "fn": "sha256_vector",
+      "elements": [
+        "616263",
+        ""
+      ],
+      "mac": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+      "expect_ret": 0
+    }
+  ]
+}
