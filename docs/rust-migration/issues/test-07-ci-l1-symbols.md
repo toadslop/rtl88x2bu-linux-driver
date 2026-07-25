@@ -32,7 +32,7 @@ Automate the **L1 symbol gate** in CI so translation PRs cannot merge if exporte
 
 - CI runs at least `rust-check-symbols-selftest` on `rust/**` changes
 - CI runs the relevant per-unit `rust-check-symbols-*` target when that unit's Rust or C oracle sources change
-- Failure message points to [`test-plan.md`](../test-plan.md#L1) and allowlist format
+- Failure message points to [`test-plan.md`](../test-plan.md#l1--symbol--abi-gate) and allowlist format
 - No false greens from host-`gcc` reference objects where kbuild `OLD.o` is required (document exceptions)
 
 ## Out of scope

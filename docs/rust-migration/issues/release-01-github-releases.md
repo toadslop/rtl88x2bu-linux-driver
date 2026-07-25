@@ -28,7 +28,7 @@ Design and implement automated **GitHub Releases** so each meaningful merge (or 
 1. **Version string:** e.g. `5.13.1-migration.<date>.<shortsha>` written into `dkms.conf` / module metadata at release time.
 2. **Workflow** `.github/workflows/release.yml`:
    - Trigger: `push` to `master` (with `paths-ignore` for docs-only if desired) **or** `workflow_dispatch`
-   - Depends on L0 CI job passing (T6)
+   - **L0 gating (T6):** do not publish a release unless L0 has passed for the same commit. Recommended pattern: trigger `release.yml` via `workflow_run` on successful completion of the L0 workflow (`types: [completed]`, job guard `if: github.event.workflow_run.conclusion == 'success'`). When L0 is skipped (path filter — e.g. docs-only merge), no release runs; that is intentional. Alternative: run L0 inline as the first job in `release.yml` (single workflow owns verify + package). Avoid a bare `push` trigger with mismatched `paths`/`paths-ignore` between release and L0 — that can ship artifacts without a verified build.
    - Steps: compute version → `sed` `dkms.conf` → `git archive` → attach `rtl88x2bu-<ver>-dkms.tar.gz` → `gh release create` (draft or prerelease during Phase 1)
 3. **Update `dkms.conf`:** use `KVER`/`KSRC` compatible with DKMS, document when users must set `LLVM=1` (Ubuntu) vs omit (Arch GCC).
 4. **Release notes template:** kernel pin, `CONFIG_RUST=y` requirement, link to [`dev-environment.md`](../dev-environment.md), smoke-test pointer.

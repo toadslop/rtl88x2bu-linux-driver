@@ -44,7 +44,8 @@ Hardware is **not** the default gate. See [`../test-plan.md`](../test-plan.md) a
 - **Domain types** at Rust APIs; raw pointers only in abi/os shims
 - **L3 VM insmod** when touching init; **L4 hardware** at wave milestones
 
-Test-infra: #73 (`E10`), #75–#80 (`T0`–`T5`)  
+Test-infra: #73 (`E10`), #75–#80 (`T0`–`T5`), #151–#154 (`T6`–`T9`)  
+Distribution: #150 (`E12`), #155 (`R1`)  
 Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 
 ## Filing cadence
