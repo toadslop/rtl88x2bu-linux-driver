@@ -43,12 +43,13 @@ struct vector {
 	char string[64];
 	u32 sz;
 	int expect_result;
-	int expect_nonzero;
+	size_t cmp_len;
 	size_t expect_len_out;
 	int adapter_null;
 	int amsdu_mode;
 	int expect_mode;
 	int bin_null;
+	int src_null;
 };
 
 void host_adapter_set_amsdu_mode(_adapter *padapter, enum rtw_amsdu_mode mode);
@@ -109,7 +110,9 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		return -1;
 
 	switch (v->fn) {
-	case FN_OS_MEMCMP_CONST:
+	case FN_OS_MEMCMP_CONST: {
+		int cmp_len = 0;
+
 		if (parse_hex_field(obj, obj_len, "a", v->a, sizeof(v->a), &v->a_len))
 			return -1;
 		if (parse_hex_field(obj, obj_len, "b", v->b, sizeof(v->b), &v->b_len))
@@ -117,11 +120,17 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		if (v->a_len != v->b_len)
 			return -1;
 		if (host_json_parse_int_in(obj, obj_len, "expect_result", &v->expect_result))
-			v->expect_result = -1;
-		if (host_json_parse_int_in(obj, obj_len, "expect_nonzero", &v->expect_nonzero))
-			v->expect_nonzero = 0;
+			return -1;
+		if (!host_json_parse_int_in(obj, obj_len, "len", &cmp_len)) {
+			if (cmp_len < 0 || (size_t)cmp_len > v->a_len)
+				return -1;
+			v->cmp_len = (size_t)cmp_len;
+		}
 		break;
-	case FN_OS_MEMCMP:
+	}
+	case FN_OS_MEMCMP: {
+		int cmp_len = 0;
+
 		if (parse_hex_field(obj, obj_len, "a", v->a, sizeof(v->a), &v->a_len))
 			return -1;
 		if (parse_hex_field(obj, obj_len, "b", v->b, sizeof(v->b), &v->b_len))
@@ -129,10 +138,14 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		if (v->a_len != v->b_len)
 			return -1;
 		if (host_json_parse_int_in(obj, obj_len, "expect_result", &v->expect_result))
-			v->expect_result = -1;
-		if (host_json_parse_int_in(obj, obj_len, "expect_nonzero", &v->expect_nonzero))
-			v->expect_nonzero = 0;
+			return -1;
+		if (!host_json_parse_int_in(obj, obj_len, "len", &cmp_len)) {
+			if (cmp_len < 0 || (size_t)cmp_len > v->a_len)
+				return -1;
+			v->cmp_len = (size_t)cmp_len;
+		}
 		break;
+	}
 	case FN_OS_STRLEN:
 		if (host_json_parse_string_in(obj, obj_len, "string", v->string,
 					      sizeof(v->string)))
@@ -143,18 +156,26 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 	case FN_OS_MEMDUP: {
 		int sz = 0;
 
-		if (parse_hex_field(obj, obj_len, "src", v->src, sizeof(v->src), &v->src_len))
+		if (host_json_parse_int_in(obj, obj_len, "src_null", &v->src_null))
+			v->src_null = 0;
+		if (!v->src_null &&
+		    parse_hex_field(obj, obj_len, "src", v->src, sizeof(v->src), &v->src_len))
 			return -1;
 		if (host_json_parse_int_in(obj, obj_len, "sz", &sz))
 			return -1;
 		if (sz < 0)
 			return -1;
 		v->sz = (u32)sz;
-		if (parse_hex_field(obj, obj_len, "expect", v->expect, sizeof(v->expect),
+		if (!v->src_null &&
+		    parse_hex_field(obj, obj_len, "expect", v->expect, sizeof(v->expect),
 				    &v->expect_len))
 			return -1;
-		if (v->expect_len != v->sz || v->src_len != v->sz)
+		if (v->src_null) {
+			if (v->expect_len != 0)
+				return -1;
+		} else if (v->expect_len != v->sz || v->src_len != v->sz) {
 			return -1;
+		}
 		break;
 	}
 	case FN_FORCED_MEMZERO:
@@ -199,42 +220,36 @@ static int run_vector(const struct vector *v)
 	switch (v->fn) {
 	case FN_OS_MEMCMP_CONST: {
 		int rc;
+		size_t len = v->cmp_len ? v->cmp_len : v->a_len;
 
 		if (v->a_len != v->b_len) {
 			fprintf(stderr, "%s: os_memcmp_const a_len (%zu) != b_len (%zu)\n",
 				v->name, v->a_len, v->b_len);
 			return -1;
 		}
-		rc = os_memcmp_const(v->a, v->b, v->a_len);
+		rc = os_memcmp_const(v->a, v->b, len);
 
-		if (v->expect_result >= 0 && rc != v->expect_result) {
+		if (rc != v->expect_result) {
 			fprintf(stderr, "%s: os_memcmp_const returned %d, expected %d\n",
 				v->name, rc, v->expect_result);
-			return -1;
-		}
-		if (v->expect_nonzero && rc == 0) {
-			fprintf(stderr, "%s: os_memcmp_const expected non-zero\n", v->name);
 			return -1;
 		}
 		return 0;
 	}
 	case FN_OS_MEMCMP: {
 		int rc;
+		size_t len = v->cmp_len ? v->cmp_len : v->a_len;
 
 		if (v->a_len != v->b_len) {
 			fprintf(stderr, "%s: os_memcmp a_len (%zu) != b_len (%zu)\n",
 				v->name, v->a_len, v->b_len);
 			return -1;
 		}
-		rc = os_memcmp(v->a, v->b, v->a_len);
+		rc = os_memcmp(v->a, v->b, len);
 
-		if (v->expect_result >= 0 && rc != v->expect_result) {
+		if (rc != v->expect_result) {
 			fprintf(stderr, "%s: os_memcmp returned %d, expected %d\n",
 				v->name, rc, v->expect_result);
-			return -1;
-		}
-		if (v->expect_nonzero && rc == 0) {
-			fprintf(stderr, "%s: os_memcmp expected non-zero\n", v->name);
 			return -1;
 		}
 		return 0;
@@ -252,23 +267,26 @@ static int run_vector(const struct vector *v)
 	case FN_OS_MEMDUP: {
 		u8 *dup;
 
-		if (v->expect_len != v->sz) {
-			fprintf(stderr, "%s: os_memdup expect_len (%zu) != sz (%u)\n",
-				v->name, v->expect_len, v->sz);
-			return -1;
+		if (!v->src_null) {
+			if (v->expect_len != v->sz) {
+				fprintf(stderr, "%s: os_memdup expect_len (%zu) != sz (%u)\n",
+					v->name, v->expect_len, v->sz);
+				return -1;
+			}
+			if (v->src_len != v->sz) {
+				fprintf(stderr, "%s: os_memdup src_len (%zu) != sz (%u)\n",
+					v->name, v->src_len, v->sz);
+				return -1;
+			}
 		}
-		if (v->src_len != v->sz) {
-			fprintf(stderr, "%s: os_memdup src_len (%zu) != sz (%u)\n",
-				v->name, v->src_len, v->sz);
-			return -1;
-		}
-		dup = os_memdup(v->src_len ? v->src : NULL, v->sz);
+		dup = os_memdup(v->src_null ? NULL : (v->src_len ? v->src : NULL), v->sz);
 
 		if (!dup && v->sz > 0) {
 			fprintf(stderr, "%s: os_memdup returned NULL\n", v->name);
 			return -1;
 		}
-		if (v->expect_len > 0 && memcmp(dup, v->expect, v->expect_len) != 0) {
+		if (!v->src_null && v->expect_len > 0 &&
+		    memcmp(dup, v->expect, v->expect_len) != 0) {
 			fprintf(stderr, "%s: os_memdup content mismatch\n", v->name);
 			bin_clear_free(dup, v->sz);
 			return -1;

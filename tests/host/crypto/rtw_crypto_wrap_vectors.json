@@ -45,6 +45,14 @@
       "expect_result": 1
     },
     {
+      "name": "memcmp-prefix-equal",
+      "fn": "os_memcmp",
+      "a": "010203",
+      "b": "010204",
+      "len": 2,
+      "expect_result": 0
+    },
+    {
       "name": "bin_clear_free-basic",
       "fn": "bin_clear_free",
       "input": "deadbeef",
@@ -83,10 +91,22 @@
       "expect": ""
     },
     {
+      "name": "memdup-null-src",
+      "fn": "os_memdup",
+      "src_null": 1,
+      "sz": 4
+    },
+    {
       "name": "forced_memzero",
       "fn": "forced_memzero",
       "input": "01020304",
       "expect": "00000000"
+    },
+    {
+      "name": "forced_memzero-empty",
+      "fn": "forced_memzero",
+      "input": "",
+      "expect": ""
     },
     {
       "name": "amsdu-null-adapter",
