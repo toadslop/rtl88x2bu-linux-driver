@@ -38,7 +38,7 @@ HOST_JSON := host_vector_json.c
 HOST_GCMP := host_gcmp_vector.c
 HOST_CCMP := host_ccmp_vector.c
 
-C_ORACLE_CTR_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ctr.c $(HOST_JSON) $(AES_LEAF_SRCS) $(CRYPTO)/aes-ctr.c $(HOST_JSON)
+C_ORACLE_CTR_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ctr.c $(HOST_JSON)
 C_ORACLE_OMAC_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-omac1.c $(HOST_JSON)
 C_ORACLE_GCM_SRCS := $(AES_LEAF_SRCS) $(GCM_SRCS) $(HOST_JSON)
 GCM_AE_COMPILE_SRCS := $(AES_LEAF_SRCS) $(GCM_SRCS)
