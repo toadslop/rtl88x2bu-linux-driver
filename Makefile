@@ -2450,7 +2450,6 @@ rtk_core += \
 		core/crypto/aes-gcm.o \
 		core/crypto/ccmp.o \
 		core/crypto/sha256.o \
-		core/crypto/sha256-prf.o \
 		core/crypto/rtw_crypto_wrap.o \
 		core/rtw_swcrypto.o
 
@@ -2485,6 +2484,7 @@ $(MODULE_NAME)-y += rust/gcmp.o
 $(MODULE_NAME)-y += rust/aes_siv.o
 $(MODULE_NAME)-y += rust/aes_ccm.o
 $(MODULE_NAME)-y += rust/sha256_internal.o
+$(MODULE_NAME)-y += rust/sha256_prf.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
@@ -2511,7 +2511,7 @@ all: modules
 #   make rust-check-symbols OLD=/tmp/aes-ctr-c.o NEW=rust/aes_ctr.o
 RUST_CHECK_NM ?= $(if $(filter 1,$(LLVM)),llvm-nm,nm)
 
-.PHONY: rust-check-symbols rust-check-symbols-selftest rust-objects-aes-ctr rust-objects-aes-omac1 rust-objects-gcmp rust-objects-aes-siv rust-objects-aes-ccm rust-objects-sha256-internal
+.PHONY: rust-check-symbols rust-check-symbols-selftest rust-objects-aes-ctr rust-objects-aes-omac1 rust-objects-gcmp rust-objects-aes-siv rust-objects-aes-ccm rust-objects-sha256-internal rust-objects-sha256-prf
 rust-check-symbols:
 	@test -n "$(OLD)" && test -n "$(NEW)" || { \
 		echo "Usage: make rust-check-symbols OLD=path/to/old.o NEW=path/to/new.o [ALLOWLIST=path.allow] [ALLOW_VACUOUS=1]"; \
@@ -2555,6 +2555,12 @@ rust-objects-sha256-internal:
 		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-sha256-internal"; \
 		exit 1; }
 	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/sha256_internal.o
+
+rust-objects-sha256-prf:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-sha256-prf"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/sha256_prf.o
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production
