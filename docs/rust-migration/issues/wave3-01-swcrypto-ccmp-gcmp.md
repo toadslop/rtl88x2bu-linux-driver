@@ -22,4 +22,4 @@ Port `_rtw_ccmp_*` and `_rtw_gcmp_*` from [`core/rtw_swcrypto.c`](../../../core/
 ## Acceptance
 
 - L0 build + L1 symbols + L2 host vectors (extend T2 harness where applicable)
-- `_tdls_generate_tpk` remains in C until a later slice (sta_info layout)
+- `_tdls_generate_tpk` remains in C; W3-02 extracts it to `rtw_swcrypto_rest.c` before dropping `rtw_swcrypto.o` (port deferred — `sta_info` layout)

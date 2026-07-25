@@ -17,7 +17,7 @@ Bridge from Wave 2 + leaf core units (low HAL coupling). **Issue IDs match in-fl
 | ID | File | Focus |
 |----|------|--------|
 | W3-01 | `wave3-01-swcrypto-ccmp-gcmp.md` | `rtw_swcrypto.c` CCMP/GCMP wrappers |
-| W3-02 | `wave3-02-swcrypto-bip-tdls.md` | `rtw_swcrypto.c` BIP/SIV remainder |
+| W3-02 | `wave3-02-swcrypto-bip-tdls.md` | `rtw_swcrypto.c` BIP/SIV wrappers; TDLS → `rtw_swcrypto_rest.c` |
 | W3-03 | `wave3-03-ie-parse.md` | `rtw_ieee80211.c` IE parse helpers |
 | W3-04 … W3-07 | `wave3-04-security-*.md` | `rtw_security.c` start (type str → WEP → TKIP MIC) |
 | W3-08 … W3-09 | `wave3-08-wlan-util-*.md` | `rtw_wlan_util.c` rate helpers |
