@@ -108,6 +108,30 @@
       "rust_only": true
     },
     {
+      "name": "ad-empty-iv12",
+      "fn": "aes_gcm_ad",
+      "key_len": 16,
+      "key": "00000000000000000000000000000000",
+      "iv": "000000000000000000000000",
+      "plain": "",
+      "aad": "",
+      "crypt": "",
+      "tag": "58e2fccefa7e3061367f1d57a4e7455a",
+      "expect_ret": 0
+    },
+    {
+      "name": "ad-long-iv",
+      "fn": "aes_gcm_ad",
+      "key_len": 16,
+      "key": "404142434445464748494a4b4c4d4e4f",
+      "iv": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c",
+      "plain": "30313233343536",
+      "aad": "00010203",
+      "crypt": "203d2b71d4fdcd",
+      "tag": "e7610f32361d20228882d9dd3693c0b7",
+      "expect_ret": 0
+    },
+    {
       "name": "ad-partial-iv12",
       "fn": "aes_gcm_ad",
       "key_len": 16,

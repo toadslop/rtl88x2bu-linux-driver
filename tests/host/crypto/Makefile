@@ -112,9 +112,10 @@ librust_aes_gcm.a: $(RUST_GCM) $(ROOT)/rust/domain/types.rs
 test-aes-gcm-rust: test_aes_gcm_rust
 	./test_aes_gcm_rust aes_gcm_vectors.json
 
-test_aes_gcm_rust: test_aes_gcm.c librust_aes_gcm.a $(AES_LEAF_SRCS) $(GCM_REST_SRCS) $(HOST_JSON)
+test_aes_gcm_rust: test_aes_gcm.c librust_aes_gcm.a $(AES_LEAF_SRCS) $(HOST_JSON) \
+		   ../shim/host_os_memcmp_const.c
 	$(CC) $(CFLAGS) -DRUST_AES_GCM_ORACLE -o $@ test_aes_gcm.c $(AES_LEAF_SRCS) \
-		$(GCM_REST_SRCS) $(HOST_JSON) librust_aes_gcm.a
+		../shim/host_os_memcmp_const.c $(HOST_JSON) librust_aes_gcm.a
 
 test-c: test_aes_ctr
 	./test_aes_ctr aes_ctr_vectors.json
@@ -166,9 +167,10 @@ librust_gcmp.a: $(RUST_GCMP) $(ROOT)/rust/gcmp_support.rs $(ROOT)/rust/domain/ty
 test-gcmp-rust: test_gcmp_rust
 	./test_gcmp_rust gcmp_vectors.json
 
-test_gcmp_rust: test_gcmp.c librust_gcmp.a librust_aes_gcm.a $(AES_LEAF_SRCS) $(HOST_JSON) $(HOST_GCMP)
+test_gcmp_rust: test_gcmp.c librust_gcmp.a librust_aes_gcm.a $(AES_LEAF_SRCS) $(HOST_JSON) $(HOST_GCMP) \
+		../shim/host_os_memcmp_const.c
 	$(CC) $(CFLAGS) -DRUST_GCMP_ORACLE -o $@ test_gcmp.c $(AES_LEAF_SRCS) \
-		$(HOST_JSON) $(HOST_GCMP) librust_gcmp.a librust_aes_gcm.a
+		../shim/host_os_memcmp_const.c $(HOST_JSON) $(HOST_GCMP) librust_gcmp.a librust_aes_gcm.a
 
 test-aes-siv: test-aes-siv-c test-aes-siv-rust
 

@@ -24,6 +24,7 @@ mod bindings {
         pub fn aes_encrypt_init(key: *const u8, len: usize) -> *mut c_void;
         pub fn aes_encrypt(ctx: *mut c_void, plain: *const u8, crypt: *mut u8) -> c_int;
         pub fn aes_encrypt_deinit(ctx: *mut c_void);
+        pub fn os_memcmp_const(a: *const c_void, b: *const c_void, len: usize) -> c_int;
         pub fn wpa_hexdump_key(level: c_int, title: *const u8, buf: *const u8, len: usize);
         pub fn wpa_printf(level: c_int, fmt: *const u8, ...);
     }
@@ -31,9 +32,12 @@ mod bindings {
 
 #[cfg(not(host_crypto_test))]
 mod bindings {
+    use core::ffi::{c_int, c_void};
+
     include!("bindings/generated.rs");
 
     extern "C" {
+        pub fn os_memcmp_const(a: *const c_void, b: *const c_void, len: usize) -> c_int;
         pub fn wpa_hexdump_key(level: core::ffi::c_int, title: *const u8, buf: *const u8, len: usize);
         pub fn wpa_printf(level: core::ffi::c_int, fmt: *const u8, ...);
     }
@@ -292,14 +296,6 @@ pub fn aes_gcm_ae_typed(
     Ok(())
 }
 
-fn memcmp_const(a: &[u8], b: &[u8]) -> u8 {
-    let mut res = 0u8;
-    for i in 0..a.len() {
-        res |= a[i] ^ b[i];
-    }
-    res
-}
-
 /// Typed AES-GCM authenticated decryption (oracle: `aes_gcm_ad`).
 pub fn aes_gcm_ad_typed(
     key: AesKey,
@@ -331,7 +327,7 @@ pub fn aes_gcm_ad_typed(
 
     unsafe { aes_encrypt_deinit(aes) };
 
-    if memcmp_const(tag, &t) != 0 {
+    if unsafe { bindings::os_memcmp_const(tag.as_ptr() as *const c_void, t.as_ptr() as *const c_void, 16) } != 0 {
         unsafe {
             wpa_printf(MSG_EXCESSIVE, b"GCM: Tag mismatch\0".as_ptr());
         }
