@@ -2444,8 +2444,12 @@ rtk_core += core/rtw_sdio.o
 endif
 
 ccflags-y += -I$(src)/core/crypto
+ifeq ($(CONFIG_RUST),)
+rtk_core += core/crypto/aes-internal.o
+else
+rtk_core += core/crypto/aes-internal_rest.o
+endif
 rtk_core += \
-		core/crypto/aes-internal.o \
 		core/crypto/aes-internal-enc.o \
 		core/crypto/sha256.o \
 		core/rtw_swcrypto.o
@@ -2491,6 +2495,7 @@ $(MODULE_NAME)-y += rust/aes_siv.o
 $(MODULE_NAME)-y += rust/aes_ccm.o
 $(MODULE_NAME)-y += rust/aes_gcm.o
 $(MODULE_NAME)-y += rust/ccmp.o
+$(MODULE_NAME)-y += rust/aes_internal.o
 $(MODULE_NAME)-y += rust/sha256_internal.o
 $(MODULE_NAME)-y += rust/sha256_prf.o
 # rtw_registrypriv_amsdu_mode uses AMSDU_MODE_OFFSET in rust/rtw_crypto_wrap.rs —
@@ -2522,7 +2527,7 @@ all: modules
 #   make rust-check-symbols OLD=/tmp/aes-ctr-c.o NEW=rust/aes_ctr.o
 RUST_CHECK_NM ?= $(if $(filter 1,$(LLVM)),llvm-nm,nm)
 
-.PHONY: rust-check-symbols rust-check-symbols-selftest rust-objects-aes-ctr rust-objects-aes-omac1 rust-objects-gcmp rust-objects-aes-siv rust-objects-aes-ccm rust-objects-aes-gcm rust-objects-aes-gcm-c rust-objects-ccmp rust-objects-ccmp-c rust-objects-sha256-internal rust-objects-sha256-prf rust-objects-rtw-crypto-wrap rust-objects-rtw-crypto-wrap-c
+.PHONY: rust-check-symbols rust-check-symbols-selftest rust-objects-aes-ctr rust-objects-aes-omac1 rust-objects-gcmp rust-objects-aes-siv rust-objects-aes-ccm rust-objects-aes-gcm rust-objects-aes-gcm-c rust-objects-ccmp rust-objects-ccmp-c rust-objects-aes-internal rust-objects-aes-internal-c rust-objects-sha256-internal rust-objects-sha256-prf rust-objects-rtw-crypto-wrap rust-objects-rtw-crypto-wrap-c
 rust-check-symbols:
 	@test -n "$(OLD)" && test -n "$(NEW)" || { \
 		echo "Usage: make rust-check-symbols OLD=path/to/old.o NEW=path/to/new.o [ALLOWLIST=path.allow] [ALLOW_VACUOUS=1]"; \
@@ -2586,6 +2591,19 @@ rust-objects-ccmp-c:
 		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-ccmp-c"; \
 		exit 1; }
 	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) core/crypto/ccmp.o
+
+rust-objects-aes-internal:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-aes-internal"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/aes_internal.o
+
+# L1 OLD reference for full aes-internal swap (C TU still in-tree for host oracle).
+rust-objects-aes-internal-c:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-aes-internal-c"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) core/crypto/aes-internal.o
 
 rust-objects-sha256-internal:
 	@test -n "$(KDIR)" || { \
