@@ -36,8 +36,9 @@ AES_LEAF_SRCS := \
 GCM_SRCS := $(CRYPTO)/aes-gcm.c
 HOST_JSON := host_vector_json.c
 HOST_GCMP := host_gcmp_vector.c
+HOST_CCMP := host_ccmp_vector.c
 
-C_ORACLE_CTR_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ctr.c $(HOST_JSON)
+C_ORACLE_CTR_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ctr.c $(HOST_JSON) $(AES_LEAF_SRCS) $(CRYPTO)/aes-ctr.c $(HOST_JSON)
 C_ORACLE_OMAC_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-omac1.c $(HOST_JSON)
 C_ORACLE_GCM_SRCS := $(AES_LEAF_SRCS) $(GCM_SRCS) $(HOST_JSON)
 GCM_AE_COMPILE_SRCS := $(AES_LEAF_SRCS) $(GCM_SRCS)
@@ -56,6 +57,12 @@ SIV_COMPILE_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-omac1.c $(CRYPTO)/aes-ctr.c \
 
 C_ORACLE_CCM_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ccm.c $(HOST_JSON)
 CCM_COMPILE_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ccm.c
+
+C_ORACLE_CCMP_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ccm.c $(CRYPTO)/ccmp.c \
+		      $(HOST_JSON) $(HOST_CCMP)
+
+CCMP_COMPILE_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ccm.c $(CRYPTO)/ccmp.c \
+		     $(HOST_CCMP)
 
 C_ORACLE_SHA256_SRCS := $(CRYPTO)/sha256-internal.c $(HOST_JSON)
 SHA256_COMPILE_SRCS := $(CRYPTO)/sha256-internal.c
@@ -80,10 +87,11 @@ WRAP_COMPILE_SRCS := $(CRYPTO)/rtw_crypto_wrap.c ../shim/host_rtw_wrap_support.c
 	test-sha256-prf test-sha256-prf-c test-sha256-prf-rust test-sha256-prf-compile \
 	test-rtw-crypto-wrap test-rtw-crypto-wrap-c test-rtw-crypto-wrap-rust \
 	test-rtw-crypto-wrap-compile \
+	test-ccmp test-ccmp-c test-ccmp-compile \
 	clean
 
-all: test test-omac1 test-gcmp test-aes-gcm test-aes-siv test-aes-ccm test-sha256-internal \
-     test-sha256-prf test-rtw-crypto-wrap
+all: test test-omac1 test-gcmp test-aes-gcm test-aes-siv test-aes-ccm test-ccmp \
+     test-sha256-internal test-sha256-prf test-rtw-crypto-wrap
 
 test: test-c test-rust
 
@@ -198,6 +206,21 @@ test_aes_siv_rust: test_aes_siv.c librust_aes_siv.a librust_aes_omac1.a librust_
 	$(CC) $(CFLAGS) -DRUST_AES_SIV_ORACLE -o $@ test_aes_siv.c $(AES_LEAF_SRCS) \
 		$(HOST_JSON) librust_aes_siv.a librust_aes_omac1.a librust_aes_ctr.a
 
+test-ccmp: test-ccmp-c
+
+test-ccmp-compile: $(CCMP_COMPILE_SRCS)
+	@set -e; \
+	for src in $(CCMP_COMPILE_SRCS); do \
+		obj="/tmp/$$(basename $$src .c)_ccmp_compile_probe.o"; \
+		$(CC) $(CFLAGS) -c -o $$obj $$src; \
+	done
+
+test-ccmp-c: test_ccmp
+	./test_ccmp ccmp_vectors.json
+
+test_ccmp: test_ccmp.c $(C_ORACLE_CCMP_SRCS)
+	$(CC) $(CFLAGS) -o $@ test_ccmp.c $(C_ORACLE_CCMP_SRCS)
+
 test-aes-ccm: test-aes-ccm-c test-aes-ccm-rust
 
 test-aes-ccm-compile: $(CCM_COMPILE_SRCS)
@@ -307,6 +330,7 @@ clean:
 	      test_aes_gcm test_aes_gcm_rust librust_aes_gcm.a \
 	      test_aes_siv test_aes_siv_rust librust_aes_siv.a \
 	      test_aes_ccm test_aes_ccm_rust librust_aes_ccm.a \
+	      test_ccmp \
 	      test_sha256_internal test_sha256_internal_rust librust_sha256_internal.a \
 	      test_sha256_prf test_sha256_prf_rust librust_sha256_prf.a \
 	      test_rtw_crypto_wrap test_rtw_crypto_wrap_rust librust_rtw_crypto_wrap.a
