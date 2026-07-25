@@ -12,7 +12,7 @@ estimate_loc: 150
 
 Extend [`rust/domain/types.rs`](../../../rust/domain/types.rs) with types needed by Wave 3 security ports:
 
-- `SecurityType` — validated enum mirroring `_SECURITY_TYPE_` / `security_type_str` inputs (`try_from` rejects unknown values)
+- `SecurityType` — validated enum mirroring `enum security_type` in [`include/rtw_security.h`](../../../include/rtw_security.h) (`_NO_PRIVACY_`, `_WEP40_`, …) and `security_type_str` inputs (`try_from` rejects unknown values)
 - `BipGmcs` or equivalent typed cipher selector for `security_type_bip_to_gmcs` (`CONFIG_IEEE80211W`)
 
 ## Acceptance
