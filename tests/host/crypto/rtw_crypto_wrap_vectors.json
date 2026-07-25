@@ -1,0 +1,160 @@
+{
+  "oracle": "core/crypto/rtw_crypto_wrap.c",
+  "comment": "Vectors freeze in-tree C crypto-wrap behavior for L2 parity (W2-06d).",
+  "vectors": [
+    {
+      "name": "memcmp_const-equal",
+      "fn": "os_memcmp_const",
+      "a": "0102030405",
+      "b": "0102030405",
+      "expect_result": 0
+    },
+    {
+      "name": "memcmp_const-diff-last",
+      "fn": "os_memcmp_const",
+      "a": "0102030405",
+      "b": "0102030406",
+      "expect_result": 3
+    },
+    {
+      "name": "memcmp_const-empty",
+      "fn": "os_memcmp_const",
+      "a": "",
+      "b": "",
+      "expect_result": 0
+    },
+    {
+      "name": "memcmp_const-prefix-equal",
+      "fn": "os_memcmp_const",
+      "a": "010203",
+      "b": "010204",
+      "len": 2,
+      "expect_result": 0
+    },
+    {
+      "name": "memcmp_const-zero-len",
+      "fn": "os_memcmp_const",
+      "a": "010203",
+      "b": "010204",
+      "len": 0,
+      "expect_result": 0
+    },
+    {
+      "name": "memcmp-equal",
+      "fn": "os_memcmp",
+      "a": "0102030405",
+      "b": "0102030405",
+      "expect_result": 0
+    },
+    {
+      "name": "memcmp-less",
+      "fn": "os_memcmp",
+      "a": "01",
+      "b": "02",
+      "expect_result": -1
+    },
+    {
+      "name": "memcmp-greater",
+      "fn": "os_memcmp",
+      "a": "02",
+      "b": "01",
+      "expect_result": 1
+    },
+    {
+      "name": "memcmp-prefix-equal",
+      "fn": "os_memcmp",
+      "a": "010203",
+      "b": "010204",
+      "len": 2,
+      "expect_result": 0
+    },
+    {
+      "name": "memcmp-zero-len",
+      "fn": "os_memcmp",
+      "a": "010203",
+      "b": "010204",
+      "len": 0,
+      "expect_result": 0
+    },
+    {
+      "name": "bin_clear_free-basic",
+      "fn": "bin_clear_free",
+      "input": "deadbeef",
+      "len": 4
+    },
+    {
+      "name": "bin_clear_free-null",
+      "fn": "bin_clear_free",
+      "bin_null": 1,
+      "len": 4
+    },
+    {
+      "name": "strlen-empty",
+      "fn": "os_strlen",
+      "string": "",
+      "expect_len": 0
+    },
+    {
+      "name": "strlen-hello",
+      "fn": "os_strlen",
+      "string": "hello",
+      "expect_len": 5
+    },
+    {
+      "name": "memdup-copy",
+      "fn": "os_memdup",
+      "src": "deadbeef",
+      "sz": 4,
+      "expect": "deadbeef"
+    },
+    {
+      "name": "memdup-zero-len",
+      "fn": "os_memdup",
+      "src": "",
+      "sz": 0,
+      "expect": ""
+    },
+    {
+      "name": "memdup-null-src",
+      "fn": "os_memdup",
+      "src_null": 1,
+      "sz": 4
+    },
+    {
+      "name": "forced_memzero",
+      "fn": "forced_memzero",
+      "input": "01020304",
+      "expect": "00000000"
+    },
+    {
+      "name": "forced_memzero-empty",
+      "fn": "forced_memzero",
+      "input": "",
+      "expect": ""
+    },
+    {
+      "name": "amsdu-null-adapter",
+      "fn": "rtw_registrypriv_amsdu_mode",
+      "adapter_null": 1,
+      "expect_mode": 0
+    },
+    {
+      "name": "amsdu-non-spp",
+      "fn": "rtw_registrypriv_amsdu_mode",
+      "amsdu_mode": 0,
+      "expect_mode": 0
+    },
+    {
+      "name": "amsdu-spp",
+      "fn": "rtw_registrypriv_amsdu_mode",
+      "amsdu_mode": 1,
+      "expect_mode": 1
+    },
+    {
+      "name": "amsdu-all-drop",
+      "fn": "rtw_registrypriv_amsdu_mode",
+      "amsdu_mode": 2,
+      "expect_mode": 2
+    }
+  ]
+}

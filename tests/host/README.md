@@ -7,7 +7,9 @@ Userspace parity tests for pure crypto units. No kernel headers or `KDIR` requir
 ```text
 tests/host/
   include/           # userspace shims (types, crypto wrap)
+    drv_types.h        # minimal drv_types for rtw_crypto_wrap C oracle (W2-06d)
   shim/              # allocator stubs for C oracle objects
+    host_rtw_wrap_support.c  # allocator/memcmp stubs for rtw_crypto_wrap (W2-06d)
   domain/            # A1 domain-type unit tests (rustc --test)
   crypto/
     host_vector_json.c   # shared hex/JSON helpers for vector fixtures
@@ -26,6 +28,8 @@ tests/host/
     sha256_internal_vectors.json
     test_sha256_prf.c        # C-oracle runner for SHA256-PRF (W2-06a)
     sha256_prf_vectors.json
+    test_rtw_crypto_wrap.c   # C-oracle runner for rtw_crypto_wrap (W2-06d)
+    rtw_crypto_wrap_vectors.json
     Makefile
 ```
 
@@ -205,6 +209,28 @@ make -C tests/host/crypto test-sha256-prf-compile
 Vectors characterize observable behavior of `core/crypto/sha256-prf.c`
 (`sha256_prf` / `sha256_prf_bits`): FT derivation, non-byte-aligned bit
 lengths, short keys, and long data bindings.
+
+## rtw-crypto-wrap details (W2-06d)
+
+```bash
+make -C tests/host/crypto test-rtw-crypto-wrap-c
+```
+
+Compile-only gate (`rtw_crypto_wrap.c` built without `HOST_CRYPTO_TEST` via
+`tests/host/include/drv_types.h`):
+
+```bash
+make -C tests/host/crypto test-rtw-crypto-wrap-compile
+```
+
+`make -C tests/host/crypto test-rtw-crypto-wrap` runs the C oracle
+(`test-rtw-crypto-wrap-c`) and is included in the default `all` target. W2-06e
+adds the Rust oracle (`rust/rtw_crypto_wrap.rs`). W2-06f swaps
+`rtw_crypto_wrap.o` for `rust/rtw_crypto_wrap.o` in the module link.
+
+Vectors characterize observable behavior of `core/crypto/rtw_crypto_wrap.c`
+(`os_memcmp_const`, `os_memcmp`, `os_strlen`, `os_memdup`, `forced_memzero`,
+`bin_clear_free`, `rtw_registrypriv_amsdu_mode`).
 
 ## gcmp details
 
