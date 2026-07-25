@@ -42,7 +42,7 @@ make KDIR=/opt/linux LLVM=1 -j"$(nproc)"
 Because the pinned kernel has `CONFIG_RUST=y`, the build links the Rust objects
 (`RUSTC [M] rust/kbuild_stub.o`, `rust/scaffold.o`, `rust/ffi.o`, `rust/domain_types.o`, `rust/aes_ctr.o`, `rust/aes_omac1.o`, `rust/gcmp.o`, `rust/aes_siv.o`, `rust/aes_ccm.o`, `rust/aes_gcm.o`, `rust/ccmp.o`, `rust/sha256_internal.o`, `rust/sha256_prf.o`, `rust/rtw_crypto_wrap.o`) into
 `88x2bu.ko`. Confirm with
-`nm 88x2bu.ko | grep -E 'rtw_rust_kbuild_probe|rtw_rust_scaffold_init|rtw_rust_bindings_probe|rtw_rust_domain_types_probe|rtw_rust_aes_ctr_probe|rtw_rust_aes_omac1_probe|rtw_rust_gcmp_probe|rtw_rust_aes_siv_probe|rtw_rust_aes_ccm_probe|rtw_rust_ccmp_probe|rtw_rust_sha256_internal_probe|rtw_rust_sha256_prf_probe|rtw_rust_rtw_crypto_wrap_probe|aes_ctr_encrypt|aes_siv_encrypt|aes_ccm_ae|aes_ccm_ad|ccmp_get_pn|ccmp_decrypt|ccmp_encrypt|ccmp_encrypt_pv1|ccmp_256_decrypt|ccmp_256_encrypt|sha256_vector|sha256_prf|sha256_prf_bits|os_memcmp_const|rtw_registrypriv_amsdu_mode'`.
+`nm 88x2bu.ko | grep -E 'rtw_rust_kbuild_probe|rtw_rust_scaffold_init|rtw_rust_bindings_probe|rtw_rust_domain_types_probe|rtw_rust_aes_ctr_probe|rtw_rust_aes_omac1_probe|rtw_rust_gcmp_probe|rtw_rust_aes_siv_probe|rtw_rust_aes_ccm_probe|rtw_rust_aes_gcm_probe|rtw_rust_ccmp_probe|rtw_rust_sha256_internal_probe|rtw_rust_sha256_prf_probe|rtw_rust_rtw_crypto_wrap_probe|aes_ctr_encrypt|aes_siv_encrypt|aes_ccm_ae|aes_ccm_ad|aes_gcm_ae|aes_gcm_ad|ccmp_get_pn|ccmp_decrypt|ccmp_encrypt|ccmp_encrypt_pv1|ccmp_256_decrypt|ccmp_256_encrypt|sha256_vector|sha256_prf|sha256_prf_bits|os_memcmp_const|rtw_registrypriv_amsdu_mode'`.
 
 ### Running / loading the module (L3 gate)
 
