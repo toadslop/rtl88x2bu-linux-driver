@@ -146,13 +146,19 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		}
 		break;
 	}
-	case FN_OS_STRLEN:
+	case FN_OS_STRLEN: {
+		int expect_len = 0;
+
 		if (host_json_parse_string_in(obj, obj_len, "string", v->string,
 					      sizeof(v->string)))
 			return -1;
-		if (host_json_parse_int_in(obj, obj_len, "expect_len", (int *)&v->expect_len_out))
+		if (host_json_parse_int_in(obj, obj_len, "expect_len", &expect_len))
 			return -1;
+		if (expect_len < 0)
+			return -1;
+		v->expect_len_out = (size_t)expect_len;
 		break;
+	}
 	case FN_OS_MEMDUP: {
 		int sz = 0;
 
@@ -188,11 +194,16 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		if (v->input_len != v->expect_len)
 			return -1;
 		break;
-	case FN_BIN_CLEAR_FREE:
+	case FN_BIN_CLEAR_FREE: {
+		int len = 0;
+
 		if (host_json_parse_int_in(obj, obj_len, "bin_null", &v->bin_null))
 			v->bin_null = 0;
-		if (host_json_parse_int_in(obj, obj_len, "len", (int *)&v->expect_len_out))
+		if (host_json_parse_int_in(obj, obj_len, "len", &len))
 			return -1;
+		if (len < 0)
+			return -1;
+		v->expect_len_out = (size_t)len;
 		if (!v->bin_null) {
 			if (parse_hex_field(obj, obj_len, "input", v->input,
 					    sizeof(v->input), &v->input_len))
@@ -201,6 +212,7 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 				return -1;
 		}
 		break;
+	}
 	case FN_RTW_REGISTRYPRIV_AMSDU_MODE:
 		if (host_json_parse_int_in(obj, obj_len, "adapter_null", &v->adapter_null))
 			v->adapter_null = 0;

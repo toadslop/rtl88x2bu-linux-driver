@@ -24,6 +24,14 @@
       "expect_result": 0
     },
     {
+      "name": "memcmp_const-prefix-equal",
+      "fn": "os_memcmp_const",
+      "a": "010203",
+      "b": "010204",
+      "len": 2,
+      "expect_result": 0
+    },
+    {
       "name": "memcmp-equal",
       "fn": "os_memcmp",
       "a": "0102030405",
