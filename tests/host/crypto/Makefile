@@ -1,6 +1,6 @@
 # Host L2 differential test harness for core/crypto (T2/W1-03 aes-ctr, W2-01
 # aes-omac1, W2-02 gcmp, W2-03 aes-siv, W2-04 aes-ccm, W2-05 sha256-internal,
-# W2-06 sha256-prf, W2-06d rtw-crypto-wrap).
+# W2-06 sha256-prf, W2-06d rtw-crypto-wrap, W2-07 aes-gcm part 1).
 # Builds with gcc only — no kernel headers or KDIR.
 
 ROOT     := ../../..
@@ -11,6 +11,7 @@ RUST_OMAC := $(ROOT)/rust/aes_omac1.rs
 RUST_GCMP := $(ROOT)/rust/gcmp.rs
 RUST_SIV := $(ROOT)/rust/aes_siv.rs
 RUST_CCM := $(ROOT)/rust/aes_ccm.rs
+RUST_GCM := $(ROOT)/rust/aes_gcm.rs
 RUST_SHA256 := $(ROOT)/rust/sha256_internal.rs
 RUST_SHA256_PRF := $(ROOT)/rust/sha256_prf.rs
 RUST_CRYPTO_WRAP := $(ROOT)/rust/rtw_crypto_wrap.rs
@@ -33,15 +34,20 @@ AES_LEAF_SRCS := \
 	../shim/host_crypto_shim.c
 
 GCM_SRCS := $(CRYPTO)/aes-gcm.c
+GCM_REST_SRCS := $(CRYPTO)/aes-gcm_rest.c
 HOST_JSON := host_vector_json.c
 HOST_GCMP := host_gcmp_vector.c
 
 C_ORACLE_CTR_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ctr.c $(HOST_JSON)
 C_ORACLE_OMAC_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-omac1.c $(HOST_JSON)
+C_ORACLE_GCM_SRCS := $(AES_LEAF_SRCS) $(GCM_SRCS) $(HOST_JSON)
+GCM_AE_COMPILE_SRCS := $(AES_LEAF_SRCS) $(GCM_SRCS)
+GCM_SPLIT_COMPILE_SRCS := $(AES_LEAF_SRCS) $(GCM_REST_SRCS)
+
 C_ORACLE_GCMP_SRCS := $(AES_LEAF_SRCS) $(GCM_SRCS) $(CRYPTO)/gcmp.c \
 		      $(HOST_JSON) $(HOST_GCMP)
 
-GCMP_COMPILE_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-gcm.c $(CRYPTO)/gcmp.c \
+GCMP_COMPILE_SRCS := $(AES_LEAF_SRCS) $(GCM_REST_SRCS) $(CRYPTO)/gcmp.c \
 		     $(HOST_GCMP)
 
 C_ORACLE_SIV_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-omac1.c $(CRYPTO)/aes-ctr.c \
@@ -68,6 +74,7 @@ WRAP_COMPILE_SRCS := $(CRYPTO)/rtw_crypto_wrap.c ../shim/host_rtw_wrap_support.c
 
 .PHONY: all test test-c test-rust test-omac1 test-omac1-c test-omac1-rust \
         test-gcmp test-gcmp-c test-gcmp-rust test-gcmp-compile \
+	test-aes-gcm test-aes-gcm-c test-aes-gcm-rust test-aes-gcm-compile \
 	test-aes-siv test-aes-siv-c test-aes-siv-rust test-aes-siv-compile \
 	test-aes-ccm test-aes-ccm-c test-aes-ccm-rust test-aes-ccm-compile \
 	test-sha256-internal test-sha256-internal-c test-sha256-internal-rust \
@@ -77,7 +84,7 @@ WRAP_COMPILE_SRCS := $(CRYPTO)/rtw_crypto_wrap.c ../shim/host_rtw_wrap_support.c
 	test-rtw-crypto-wrap-compile \
 	clean
 
-all: test test-omac1 test-gcmp test-aes-siv test-aes-ccm test-sha256-internal \
+all: test test-omac1 test-gcmp test-aes-gcm test-aes-siv test-aes-ccm test-sha256-internal \
      test-sha256-prf test-rtw-crypto-wrap
 
 test: test-c test-rust
@@ -85,6 +92,31 @@ test: test-c test-rust
 test-omac1: test-omac1-c test-omac1-rust
 
 test-gcmp: test-gcmp-c test-gcmp-rust
+
+test-aes-gcm: test-aes-gcm-c test-aes-gcm-rust
+
+test-aes-gcm-compile: $(GCM_AE_COMPILE_SRCS) $(GCM_SPLIT_COMPILE_SRCS)
+	@set -e; \
+	for src in $(GCM_AE_COMPILE_SRCS) $(GCM_SPLIT_COMPILE_SRCS); do \
+		obj="/tmp/$$(basename $$src .c)_gcm_compile_probe.o"; \
+		$(CC) $(CFLAGS) -c -o $$obj $$src; \
+	done
+
+test-aes-gcm-c: test_aes_gcm
+	./test_aes_gcm aes_gcm_vectors.json
+
+test_aes_gcm: test_aes_gcm.c $(C_ORACLE_GCM_SRCS)
+	$(CC) $(CFLAGS) -o $@ test_aes_gcm.c $(C_ORACLE_GCM_SRCS)
+
+librust_aes_gcm.a: $(RUST_GCM) $(ROOT)/rust/domain/types.rs
+	$(RUSTC) $(RUSTFLAGS) --cfg host_crypto_test --crate-type staticlib $(RUST_GCM) -o $@
+
+test-aes-gcm-rust: test_aes_gcm_rust
+	./test_aes_gcm_rust aes_gcm_vectors.json
+
+test_aes_gcm_rust: test_aes_gcm.c librust_aes_gcm.a $(AES_LEAF_SRCS) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_AES_GCM_ORACLE -o $@ test_aes_gcm.c $(AES_LEAF_SRCS) \
+		$(HOST_JSON) librust_aes_gcm.a
 
 test-c: test_aes_ctr
 	./test_aes_ctr aes_ctr_vectors.json
@@ -136,8 +168,10 @@ librust_gcmp.a: $(RUST_GCMP) $(ROOT)/rust/gcmp_support.rs $(ROOT)/rust/domain/ty
 test-gcmp-rust: test_gcmp_rust
 	./test_gcmp_rust gcmp_vectors.json
 
-test_gcmp_rust: test_gcmp.c librust_gcmp.a $(AES_LEAF_SRCS) $(GCM_SRCS) $(HOST_JSON) $(HOST_GCMP)
-	$(CC) $(CFLAGS) -DRUST_GCMP_ORACLE -o $@ test_gcmp.c $(AES_LEAF_SRCS) $(GCM_SRCS) $(HOST_JSON) $(HOST_GCMP) librust_gcmp.a
+test_gcmp_rust: test_gcmp.c librust_gcmp.a librust_aes_gcm.a $(AES_LEAF_SRCS) \
+		$(GCM_REST_SRCS) $(HOST_JSON) $(HOST_GCMP)
+	$(CC) $(CFLAGS) -DRUST_GCMP_ORACLE -o $@ test_gcmp.c $(AES_LEAF_SRCS) \
+		$(GCM_REST_SRCS) $(HOST_JSON) $(HOST_GCMP) librust_gcmp.a librust_aes_gcm.a
 
 test-aes-siv: test-aes-siv-c test-aes-siv-rust
 
@@ -271,6 +305,7 @@ clean:
 	rm -f test_aes_ctr test_aes_ctr_rust librust_aes_ctr.a \
 	      test_aes_omac1 test_aes_omac1_rust librust_aes_omac1.a \
 	      test_gcmp test_gcmp_rust librust_gcmp.a \
+	      test_aes_gcm test_aes_gcm_rust librust_aes_gcm.a \
 	      test_aes_siv test_aes_siv_rust librust_aes_siv.a \
 	      test_aes_ccm test_aes_ccm_rust librust_aes_ccm.a \
 	      test_sha256_internal test_sha256_internal_rust librust_sha256_internal.a \
