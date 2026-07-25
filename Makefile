@@ -2445,10 +2445,11 @@ endif
 
 ccflags-y += -I$(src)/core/crypto
 ifeq ($(CONFIG_RUST),)
-rtk_core += core/crypto/aes-internal.o
+rtk_core += \
+		core/crypto/aes-internal.o \
+		core/crypto/aes-internal-enc.o
 endif
 rtk_core += \
-		core/crypto/aes-internal-enc.o \
 		core/crypto/sha256.o \
 		core/rtw_swcrypto.o
 
@@ -2494,6 +2495,7 @@ $(MODULE_NAME)-y += rust/aes_ccm.o
 $(MODULE_NAME)-y += rust/aes_gcm.o
 $(MODULE_NAME)-y += rust/ccmp.o
 $(MODULE_NAME)-y += rust/aes_internal.o
+$(MODULE_NAME)-y += rust/aes_internal_enc.o
 $(MODULE_NAME)-y += rust/sha256_internal.o
 $(MODULE_NAME)-y += rust/sha256_prf.o
 # rtw_registrypriv_amsdu_mode uses AMSDU_MODE_OFFSET in rust/rtw_crypto_wrap.rs —
@@ -2525,7 +2527,7 @@ all: modules
 #   make rust-check-symbols OLD=/tmp/aes-ctr-c.o NEW=rust/aes_ctr.o
 RUST_CHECK_NM ?= $(if $(filter 1,$(LLVM)),llvm-nm,nm)
 
-.PHONY: rust-check-symbols rust-check-symbols-selftest rust-check-symbols-aes-internal rust-check-symbols-aes-internal-part1 rust-check-symbols-aes-internal-part2 rust-check-symbols-aes-internal-part3 rust-objects-aes-ctr rust-objects-aes-omac1 rust-objects-gcmp rust-objects-aes-siv rust-objects-aes-ccm rust-objects-aes-gcm rust-objects-aes-gcm-c rust-objects-ccmp rust-objects-ccmp-c rust-objects-aes-internal rust-objects-aes-internal-c rust-objects-sha256-internal rust-objects-sha256-prf rust-objects-rtw-crypto-wrap rust-objects-rtw-crypto-wrap-c
+.PHONY: rust-check-symbols rust-check-symbols-selftest rust-check-symbols-aes-internal rust-check-symbols-aes-internal-part1 rust-check-symbols-aes-internal-part2 rust-check-symbols-aes-internal-part3 rust-objects-aes-ctr rust-objects-aes-omac1 rust-objects-gcmp rust-objects-aes-siv rust-objects-aes-ccm rust-objects-aes-gcm rust-objects-aes-gcm-c rust-objects-ccmp rust-objects-ccmp-c rust-objects-aes-internal rust-objects-aes-internal-c rust-objects-aes-internal-enc rust-objects-aes-internal-enc-c rust-objects-sha256-internal rust-objects-sha256-prf rust-objects-rtw-crypto-wrap rust-objects-rtw-crypto-wrap-c
 rust-check-symbols:
 	@test -n "$(OLD)" && test -n "$(NEW)" || { \
 		echo "Usage: make rust-check-symbols OLD=path/to/old.o NEW=path/to/new.o [ALLOWLIST=path.allow] [ALLOW_VACUOUS=1]"; \
@@ -2621,6 +2623,18 @@ rust-check-symbols-aes-internal-part2: rust-objects-aes-internal-c rust-objects-
 rust-check-symbols-aes-internal-part3: rust-objects-aes-internal-c rust-objects-aes-internal
 	$(MAKE) rust-check-symbols OLD=core/crypto/aes-internal.o NEW=rust/aes_internal.o \
 		ALLOWLIST=docs/rust-migration/scripts/aes_internal_part3.allow
+
+rust-objects-aes-internal-enc:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-aes-internal-enc"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/aes_internal_enc.o
+
+rust-objects-aes-internal-enc-c:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-aes-internal-enc-c"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) core/crypto/aes-internal-enc.o
 
 rust-objects-sha256-internal:
 	@test -n "$(KDIR)" || { \

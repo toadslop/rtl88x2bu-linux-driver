@@ -31,7 +31,8 @@
 //! | `rtw_rust_bindings_probe` | **Rust** (this crate) | Confirms bindgen object linked (W1-01) |
 //! | `rtw_rust_domain_types_probe` | **Rust** (`domain_types.rs`) | Confirms domain types linked (A1) |
 //! | `Te0` / `Td0` / `Td4s` / `rcons` / `rijndaelKeySetupEnc` | **Rust** (`aes_internal.rs`, W2-11…W2-14) |
-//! | `aes_encrypt_*` / `aes_decrypt_*` / `AES_BLOCK_SIZE` | **C** (`aes-internal-enc.c`, `aes.h`) | Rust **binds** encrypt until W2-15 |
+//! | `aes_encrypt_*` | **Rust** (`aes_internal_enc.rs`, W2-15); C TU removed for CONFIG_RUST |
+//! | `aes_decrypt_*` / `AES_BLOCK_SIZE` | **C** (`aes.h` bindgen only — decrypt not implemented in-tree) |
 //! | `aes_ctr_encrypt` / `aes_128_ctr_encrypt` | **Rust** (`aes_ctr.rs`); C TU removed (W1-03) |
 //! | `omac1_aes_*` | **Rust** (`aes_omac1.rs`); C TU removed (W2-01) |
 //! | `gcmp_*` | **Rust** (`gcmp.rs`); C TU removed (W2-02) |
