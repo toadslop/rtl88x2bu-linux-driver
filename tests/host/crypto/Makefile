@@ -12,6 +12,7 @@ RUST_GCMP := $(ROOT)/rust/gcmp.rs
 RUST_SIV := $(ROOT)/rust/aes_siv.rs
 RUST_CCM := $(ROOT)/rust/aes_ccm.rs
 RUST_GCM := $(ROOT)/rust/aes_gcm.rs
+RUST_CCMP := $(ROOT)/rust/ccmp.rs
 RUST_SHA256 := $(ROOT)/rust/sha256_internal.rs
 RUST_SHA256_PRF := $(ROOT)/rust/sha256_prf.rs
 RUST_CRYPTO_WRAP := $(ROOT)/rust/rtw_crypto_wrap.rs
@@ -87,7 +88,7 @@ WRAP_COMPILE_SRCS := $(CRYPTO)/rtw_crypto_wrap.c ../shim/host_rtw_wrap_support.c
 	test-sha256-prf test-sha256-prf-c test-sha256-prf-rust test-sha256-prf-compile \
 	test-rtw-crypto-wrap test-rtw-crypto-wrap-c test-rtw-crypto-wrap-rust \
 	test-rtw-crypto-wrap-compile \
-	test-ccmp test-ccmp-c test-ccmp-compile \
+	test-ccmp test-ccmp-c test-ccmp-rust test-ccmp-compile \
 	clean
 
 all: test test-omac1 test-gcmp test-aes-gcm test-aes-siv test-aes-ccm test-ccmp \
@@ -206,7 +207,7 @@ test_aes_siv_rust: test_aes_siv.c librust_aes_siv.a librust_aes_omac1.a librust_
 	$(CC) $(CFLAGS) -DRUST_AES_SIV_ORACLE -o $@ test_aes_siv.c $(AES_LEAF_SRCS) \
 		$(HOST_JSON) librust_aes_siv.a librust_aes_omac1.a librust_aes_ctr.a
 
-test-ccmp: test-ccmp-c
+test-ccmp: test-ccmp-c test-ccmp-rust
 
 test-ccmp-compile: $(CCMP_COMPILE_SRCS)
 	@set -e; \
@@ -220,6 +221,18 @@ test-ccmp-c: test_ccmp
 
 test_ccmp: test_ccmp.c $(C_ORACLE_CCMP_SRCS)
 	$(CC) $(CFLAGS) -o $@ test_ccmp.c $(C_ORACLE_CCMP_SRCS)
+
+librust_ccmp.a: $(RUST_CCMP)
+	$(RUSTC) $(RUSTFLAGS) --cfg host_crypto_test --crate-type staticlib $(RUST_CCMP) -o $@
+
+# Stub: links C ccmp.c until W2-09 exports the real Rust shims.
+test-ccmp-rust: test_ccmp_rust
+	./test_ccmp_rust ccmp_vectors.json
+
+test_ccmp_rust: test_ccmp.c librust_ccmp.a $(AES_LEAF_SRCS) $(CRYPTO)/aes-ccm.c \
+		$(CRYPTO)/ccmp.c $(HOST_JSON) $(HOST_CCMP)
+	$(CC) $(CFLAGS) -DRUST_CCMP_ORACLE -o $@ test_ccmp.c $(AES_LEAF_SRCS) \
+		$(CRYPTO)/aes-ccm.c $(CRYPTO)/ccmp.c $(HOST_JSON) $(HOST_CCMP) librust_ccmp.a
 
 test-aes-ccm: test-aes-ccm-c test-aes-ccm-rust
 
@@ -330,7 +343,7 @@ clean:
 	      test_aes_gcm test_aes_gcm_rust librust_aes_gcm.a \
 	      test_aes_siv test_aes_siv_rust librust_aes_siv.a \
 	      test_aes_ccm test_aes_ccm_rust librust_aes_ccm.a \
-	      test_ccmp \
+	      test_ccmp test_ccmp_rust librust_ccmp.a \
 	      test_sha256_internal test_sha256_internal_rust librust_sha256_internal.a \
 	      test_sha256_prf test_sha256_prf_rust librust_sha256_prf.a \
 	      test_rtw_crypto_wrap test_rtw_crypto_wrap_rust librust_rtw_crypto_wrap.a

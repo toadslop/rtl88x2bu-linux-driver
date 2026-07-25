@@ -95,6 +95,30 @@
       "plaintext": "0774657374"
     },
     {
+      "name": "ccmp_encrypt_mgmt",
+      "fn": "ccmp_encrypt",
+      "amsdu_mode": 0,
+      "key_len": 16,
+      "key": "000102030405060708090a0b0c0d0e0f",
+      "frame": "00000000aabbccddee01aabbccddee02aabbccddee03100068656c6c6f212121",
+      "hdrlen": 24,
+      "pn": "393837363534",
+      "keyid": 0,
+      "expect_ret": 1,
+      "ciphertext": "00400000aabbccddee01aabbccddee02aabbccddee031000343500203637383977f42a9a1fbdee1af29193911e279d28"
+    },
+    {
+      "name": "ccmp_decrypt_mgmt",
+      "fn": "ccmp_decrypt",
+      "amsdu_mode": 0,
+      "key_len": 16,
+      "key": "000102030405060708090a0b0c0d0e0f",
+      "hdr": "00400000aabbccddee01aabbccddee02aabbccddee031000",
+      "data": "343500203637383977f42a9a1fbdee1af29193911e279d28",
+      "expect_ret": 1,
+      "plaintext": "68656c6c6f212121"
+    },
+    {
       "name": "ccmp_encrypt_4addr",
       "fn": "ccmp_encrypt",
       "amsdu_mode": 0,
