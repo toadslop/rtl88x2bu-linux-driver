@@ -105,7 +105,6 @@ extern "C" {
     fn rtw_rust_rfctl_channel_plan(adapter: *mut u8) -> u8;
     fn rtw_rust_rfctl_regd_src(adapter: *mut u8) -> u8;
     fn rtw_rust_rfctl_channel_set(adapter: *mut u8) -> *mut RtChannelInfo;
-    fn rtw_rust_rfctl_country_ent(adapter: *mut u8) -> *const CountryChplan;
     fn rtw_rust_regsty_wireless_mode(adapter: *mut u8) -> u8;
     fn rtw_rust_adapter_regsty(adapter: *mut u8) -> *mut u8;
 
