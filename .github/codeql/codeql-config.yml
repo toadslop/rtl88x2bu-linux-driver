@@ -1,9 +1,0 @@
-# RTL88x2BU CodeQL configuration (used by .github/workflows/codeql.yml).
-#
-# Host L2 oracles under tests/host/ intentionally exercise legacy WEP (ARC4/CRC32)
-# primitives copied from core/rtw_security.c for characterization parity. The
-# driver must retain WEP for interoperability.
-name: "RTL88x2BU CodeQL"
-query-filters:
-  - exclude:
-      id: cpp/weak-cryptographic-algorithm
