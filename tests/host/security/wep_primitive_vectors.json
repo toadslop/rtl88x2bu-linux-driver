@@ -1,0 +1,31 @@
+{
+  "oracle": "core/rtw_security.c",
+  "vectors": [
+    {
+      "name": "arcfour_hello",
+      "fn": "host_wep_arcfour_crypt",
+      "key": "0102030405",
+      "data": "48656c6c6f",
+      "expect": "fa5c0f699f"
+    },
+    {
+      "name": "arcfour_empty",
+      "fn": "host_wep_arcfour_crypt",
+      "key": "aa",
+      "data": "",
+      "expect": ""
+    },
+    {
+      "name": "crc32_ascii9",
+      "fn": "host_wep_getcrc32",
+      "data": "313233343536373839",
+      "expect_crc": 3421780262
+    },
+    {
+      "name": "crc32_empty",
+      "fn": "host_wep_getcrc32",
+      "data": "",
+      "expect_crc": 0
+    }
+  ]
+}
