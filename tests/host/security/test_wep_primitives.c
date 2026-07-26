@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
  * Host L2 oracle runner for WEP ARC4/CRC32 primitives (T5 / W3-05).
+ * codeql[cpp/weak-cryptographic-algorithm]: Exercises legacy WEP ARC4 via the C oracle for parity tests.
  */
 
 #include <stdio.h>

@@ -59,6 +59,7 @@ u32 security_type_bip_to_gmcs(enum security_type type)
 #endif
 
 /* ----- WEP primitives (ARC4 + CRC32) from core/rtw_security.c ----- */
+/* codeql[cpp/weak-cryptographic-algorithm]: Host L2 oracle for legacy WEP characterization only. */
 
 typedef int sint;
 
