@@ -14,7 +14,8 @@ Enforce the architecture in [`docs/rust-migration/architecture.md`](../architect
 
 - A0 — land architecture doc + wire into W0-01 / PR checklist
 - A1 — initial `domain/types` seed (MacAddr, length-checked buffers, pattern for `from_raw`/`to_raw`)
-- A2 — channel plan + rate domain types (Wave 3)
+- A2 — channel plan + rate domain types (Wave 2 chplan / Wave 3 wlan_util)
+- A3 — security domain types (`SecurityType`, Wave 3 security ports)
 - Characterization remains part of T2+ and every Wave 1/2 child (not optional)
 
 ## Non-negotiable

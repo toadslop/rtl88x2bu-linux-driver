@@ -15,7 +15,7 @@ Extend [`rust/domain/types.rs`](../../../rust/domain/types.rs) with types needed
 - `ChannelPlanId` — validated `u8` plan id (`try_from` rejects invalid/empty per `rtw_is_channel_plan_valid`)
 - `CountryCode` — two-letter ISO code (`try_from` rejects non-alpha)
 - `RegulatoryDomain` — typed txpwr limit enum where meaningful
-- `WifiRate` / `NetworkType` — rate-byte and BSS network classification (for W3-10)
+- `WifiRate` / `NetworkType` — rate-byte and BSS network classification (for W3-08 / W3-09)
 
 ## Acceptance
 

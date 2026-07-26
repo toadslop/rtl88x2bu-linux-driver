@@ -1,10 +1,10 @@
 ---
-title: "[W3-07] Translate rtw_security.c part 2 — WEP ARC4/CRC32 primitives"
+title: "[W3-05] Translate rtw_security.c part 2 — WEP ARC4/CRC32 primitives"
 labels: [rust-migration, phase-1, wave-3, size/~200]
 type: child
-id: W3-07
+id: W3-05
 epic: E05
-blocked_by: [W3-06]
+blocked_by: [W3-04]
 estimate_loc: 200
 ---
 
@@ -17,9 +17,9 @@ Port WEP crypto primitives from [`core/rtw_security.c`](../../../core/rtw_securi
 
 ## Notes
 
-- Pure logic; good L2 candidate. Freeze vectors from C oracle before port.
+- Pure logic; good L2 candidate. Freeze vectors from C oracle before port (T5 harness).
 - Keep static state (`bcrc32initialized`) behavior identical to C.
 
 ## Acceptance
 
-- L0 build + L1 symbols + L2 host vectors (extend T2 or new `tests/host/security` crate)
+- L0 build + L1 symbols + L2 host vectors (T5)

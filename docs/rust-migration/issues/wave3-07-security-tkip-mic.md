@@ -1,10 +1,10 @@
 ---
-title: "[W3-09] Translate rtw_security.c part 4 — TKIP MIC + phase1/phase2"
+title: "[W3-07] Translate rtw_security.c part 4 — TKIP MIC + phase1/phase2"
 labels: [rust-migration, phase-1, wave-3, size/~200]
 type: child
-id: W3-09
+id: W3-07
 epic: E05
-blocked_by: [W3-07]
+blocked_by: [W3-05]
 estimate_loc: 200
 ---
 
@@ -18,8 +18,8 @@ Port TKIP MIC and RC4 key-schedule helpers from [`core/rtw_security.c`](../../..
 ## Notes
 
 - `struct mic_data` crosses FFI — bindgen or explicit `#[repr(C)]` mirror.
-- L2: MIC vectors + phase1/phase2 key expansion golden values from C.
+- L2: MIC vectors + phase1/phase2 key expansion golden values from C (T5).
 
 ## Acceptance
 
-- L0 build + L1 symbols + L2 host vectors
+- L0 build + L1 symbols + L2 host vectors (T5)

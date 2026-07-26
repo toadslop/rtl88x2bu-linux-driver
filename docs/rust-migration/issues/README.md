@@ -46,7 +46,7 @@ Architecture: `epic-11-architecture.md`, `arch-00-*.md` …
 
 ## Filing cadence
 
-- **Now:** Phase/wave epics + Wave 0–2 children + test-infra epic/children; **Wave 3 tranche 1** (W3-01…W3-11, A2, T4).
+- **Now:** Phase/wave epics + Wave 0–2 children + test-infra epic/children; **Wave 2 chplan tail** (W2-17…W2-20, T4, A2); **Wave 3 tranche 1** (W3-01…W3-09, A3, T5).
 - **Later:** Wave 3 tranche 2 (large `core/` protocol TUs) and Wave 4–6 / Phase 2 children when the previous tranche is mostly done.
 
 ## Status
@@ -79,9 +79,15 @@ Architecture: `epic-11-architecture.md`, `arch-00-*.md` …
 | W2-14 | `wave2-14-aes-internal-part4.md` | done (Rust rijndaelKeySetupEnc; no aes-internal*.c in CONFIG_RUST build; not filed on GitHub) |
 | W2-15 | `wave2-15-aes-internal-enc.md` | done (Rust aes_encrypt_*; not filed on GitHub) |
 | W2-16 | `wave2-16-sha256.md` | done (Rust hmac_sha256_vector; no sha256.c in CONFIG_RUST build; not filed on GitHub) |
+| W2-17 | `wave2-17-chplan-lookup.md` | in progress (`cursor/w2-17a`/`w2-17b`; not filed on GitHub) |
+| W2-18 | `wave2-18-chplan-dfs.md` | in progress (`cursor/w2-18-chplan-dfs-rust-3dd4`; not filed on GitHub) |
+| W2-19 | `wave2-19-chplan-country.md` | in progress (`cursor/w2-19-chplan-country-rust-3dd4`; not filed on GitHub) |
+| W2-20 | `wave2-20-chplan-init.md` | draft (init_channel_set; not filed on GitHub) |
 | T0 / A0 | `test-00-*.md` / `arch-00-*.md` | done (plan docs + links via W0-01) |
 | T1 | `test-01-symbol-check.md` | done (#12) |
 | T3 | `test-03-ci-host-tests.md` | draft (only remaining Wave 0–2 infra item) |
-| T4 | `test-04-host-chplan-harness.md` | draft (Wave 3 L2 harness) |
+| T4 | `test-04-host-chplan-harness.md` | in progress (`cursor/w2-17a-chplan-harness-3dd4`; canonical test-infra ID) |
+| T5 | `test-05-host-security-wlan-harness.md` | draft (Wave 3 L2 harness for security/wlan_util/IE) |
 | A2 | `arch-02-domain-types-chplan.md` | draft (channel/rate domain types) |
-| W3-01 … W3-11 | `wave3-*.md` | draft (Wave 3 tranche 1 — see epic-05-wave3.md) |
+| A3 | `arch-03-domain-types-security.md` | draft (`SecurityType` for W3-04) |
+| W3-01 … W3-09 | `wave3-*.md` | draft / in progress (Wave 3 tranche 1 — see epic-05-wave3.md) |

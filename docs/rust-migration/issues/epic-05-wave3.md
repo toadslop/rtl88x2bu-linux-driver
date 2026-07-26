@@ -12,25 +12,29 @@ Translate `core/` protocol files (cmd/io/security/xmit/recv/mlme/…) behind sta
 
 ## Children (tranche 1 — filed)
 
-Bridge from Wave 2 + leaf core units (low HAL coupling):
+Bridge from Wave 2 + leaf core units (low HAL coupling). **Issue IDs match in-flight implementation branches** (`cursor/w3-0*-3dd4`):
 
 | ID | File | Focus |
 |----|------|--------|
-| W3-01 | `wave3-01-swcrypto.md` | `rtw_swcrypto.c` (Wave 2 tail) |
-| W3-02 … W3-05 | `wave3-02-chplan-part*.md` | `rtw_chplan.c` in four slices |
-| W3-06 … W3-09 | `wave3-06-security-*.md` | `rtw_security.c` start (type str → WEP → TKIP MIC) |
-| W3-10 … W3-11 | `wave3-10-wlan-util-*.md` | `rtw_wlan_util.c` rate helpers |
+| W3-01 | `wave3-01-swcrypto-ccmp-gcmp.md` | `rtw_swcrypto.c` CCMP/GCMP wrappers |
+| W3-02 | `wave3-02-swcrypto-bip-tdls.md` | `rtw_swcrypto.c` BIP/SIV remainder |
+| W3-03 | `wave3-03-ie-parse.md` | `rtw_ieee80211.c` IE parse helpers |
+| W3-04 … W3-07 | `wave3-04-security-*.md` | `rtw_security.c` start (type str → WEP → TKIP MIC) |
+| W3-08 … W3-09 | `wave3-08-wlan-util-*.md` | `rtw_wlan_util.c` rate helpers |
 
-Supporting: **A2** (channel/rate domain types), **T4** (host chplan harness).
+Chplan work is **Wave 2** (W2-17…W2-20), not Wave 3 — see `epic-04-wave2.md`.
+
+Supporting: **A2** (channel/rate domain types), **A3** (security domain types), **T5** (security/wlan_util L2 harness).
 
 ## Children (tranche 2 — open when tranche 1 is underway)
 
 Slice ~200 LOC function groups from larger protocol TUs; file new `wave3-*.md` issues as needed:
 
 - `rtw_security.c` remainder (TKIP/CCMP frame encrypt/decrypt paths)
+- `rtw_chplan.c` deferred: `rtw_process_beacon_hint`, `dump_*` debug helpers
 - `rtw_io.c`, `rtw_rf.c`, `rtw_pwrctrl.c`
 - `rtw_recv.c`, `rtw_xmit.c`, `rtw_cmd.c`
-- `rtw_mlme.c`, `rtw_mlme_ext.c`, `rtw_ap.c`, `rtw_ieee80211.c`
+- `rtw_mlme.c`, `rtw_mlme_ext.c`, `rtw_ap.c`, remaining `rtw_ieee80211.c`
 - `rtw_sta_mgt.c`, `rtw_vht.c`, smaller `rtw_*.c` (sreset, iol, roch, …)
 
 Wave 3 milestone (L4): WPA2 STA associate + encrypted ping when hardware available (same bar as Wave 2).
