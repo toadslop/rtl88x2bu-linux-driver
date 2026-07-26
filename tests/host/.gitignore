@@ -11,3 +11,4 @@ swcrypto/librust_swcrypto.a
 
 # T5 security harness
 security/test_security
+security/test_wep_primitives
