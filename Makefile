@@ -2537,7 +2537,7 @@ all: modules
 #   make rust-check-symbols OLD=/tmp/aes-ctr-c.o NEW=rust/aes_ctr.o
 RUST_CHECK_NM ?= $(if $(filter 1,$(LLVM)),llvm-nm,nm)
 
-.PHONY: rust-check-symbols rust-check-symbols-selftest rust-check-symbols-aes-internal rust-check-symbols-aes-internal-part1 rust-check-symbols-aes-internal-part2 rust-check-symbols-aes-internal-part3 rust-objects-aes-ctr rust-objects-aes-omac1 rust-objects-gcmp rust-objects-aes-siv rust-objects-aes-ccm rust-objects-aes-gcm rust-objects-aes-gcm-c rust-objects-ccmp rust-objects-ccmp-c rust-objects-aes-internal rust-objects-aes-internal-c rust-objects-aes-internal-enc rust-objects-aes-internal-enc-c rust-objects-sha256-internal rust-objects-sha256 rust-objects-sha256-c rust-objects-sha256-prf rust-objects-rtw-crypto-wrap rust-objects-rtw-crypto-wrap-c rust-objects-rtw-chplan rust-objects-rtw-chplan-c rust-check-symbols-rtw-chplan rust-objects-rtw-swcrypto rust-objects-rtw-swcrypto-c rust-check-symbols-rtw-swcrypto
+.PHONY: rust-check-symbols rust-check-symbols-selftest rust-check-symbols-aes-internal rust-check-symbols-aes-internal-part1 rust-check-symbols-aes-internal-part2 rust-check-symbols-aes-internal-part3 rust-objects-aes-ctr rust-objects-aes-omac1 rust-objects-gcmp rust-objects-aes-siv rust-objects-aes-ccm rust-objects-aes-gcm rust-objects-aes-gcm-c rust-objects-ccmp rust-objects-ccmp-c rust-objects-aes-internal rust-objects-aes-internal-c rust-objects-aes-internal-enc rust-objects-aes-internal-enc-c rust-objects-sha256-internal rust-objects-sha256 rust-objects-sha256-c rust-objects-sha256-prf rust-objects-rtw-crypto-wrap rust-objects-rtw-crypto-wrap-c rust-objects-rtw-chplan rust-objects-rtw-chplan-c rust-check-symbols-rtw-chplan rust-objects-rtw-swcrypto rust-objects-rtw-swcrypto-c rust-check-symbols-rtw-swcrypto rust-objects-rtw-ieee80211 rust-objects-rtw-ieee80211-c rust-check-symbols-rtw-ieee80211
 rust-check-symbols:
 	@test -n "$(OLD)" && test -n "$(NEW)" || { \
 		echo "Usage: make rust-check-symbols OLD=path/to/old.o NEW=path/to/new.o [ALLOWLIST=path.allow] [ALLOW_VACUOUS=1]"; \
@@ -2717,6 +2717,21 @@ rust-objects-rtw-swcrypto-c:
 rust-check-symbols-rtw-swcrypto: rust-objects-rtw-swcrypto-c rust-objects-rtw-swcrypto
 	$(MAKE) rust-check-symbols OLD=core/rtw_swcrypto_c_ref.o NEW=rust/rtw_swcrypto.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_swcrypto_wrappers.allow
+
+rust-objects-rtw-ieee80211:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-rtw-ieee80211"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_ieee80211.o
+
+rust-objects-rtw-ieee80211-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/ie/ie_c_ref.o tests/host/ie/ie_c_oracle.c
+
+rust-check-symbols-rtw-ieee80211: rust-objects-rtw-ieee80211-c rust-objects-rtw-ieee80211
+	$(MAKE) rust-check-symbols OLD=tests/host/ie/ie_c_ref.o NEW=rust/rtw_ieee80211.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_ieee80211.allow
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production

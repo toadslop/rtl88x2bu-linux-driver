@@ -19,6 +19,14 @@
       "expect_found": 0
     },
     {
+      "name": "get_ie_scan_past_limit",
+      "fn": "rtw_get_ie",
+      "ies": "0003616261",
+      "index": 1,
+      "limit": 3,
+      "expect_found": 0
+    },
+    {
       "name": "get_ie_ex_vendor",
       "fn": "rtw_get_ie_ex",
       "ies": "dd0411223301",
@@ -29,12 +37,51 @@
       "expect_found": 1
     },
     {
+      "name": "get_ie_ex_vendor_copy_out",
+      "fn": "rtw_get_ie_ex",
+      "ies": "dd0411223301",
+      "eid": 221,
+      "oui": "112233",
+      "oui_len": 3,
+      "copy_out": 1,
+      "expect_ielen": 6,
+      "expect_copy": "dd0411223301",
+      "expect_found": 1
+    },
+    {
+      "name": "get_ie_ex_vendor_oui_mismatch",
+      "fn": "rtw_get_ie_ex",
+      "ies": "dd0411223301",
+      "eid": 221,
+      "oui": "aabbcc",
+      "oui_len": 3,
+      "expect_found": 0
+    },
+    {
+      "name": "get_ie_ex_short_no_match",
+      "fn": "rtw_get_ie_ex",
+      "ies": "0003",
+      "eid": 221,
+      "expect_found": 0
+    },
+    {
       "name": "remove_ie_ssid",
       "fn": "rtw_ies_remove_ie",
       "ies": "00036162610405112233",
       "offset": 0,
       "eid": 0,
       "expect_len": 5,
+      "expect_ret": 1
+    },
+    {
+      "name": "remove_ie_multi_vendor",
+      "fn": "rtw_ies_remove_ie",
+      "ies": "dd0411223301dd0411223302",
+      "offset": 0,
+      "eid": 221,
+      "oui": "112233",
+      "oui_len": 3,
+      "expect_len": 0,
       "expect_ret": 1
     }
   ]

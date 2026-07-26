@@ -1,0 +1,4 @@
+# L1 allowlist for W3-03: Rust owns IE parse helpers; host oracle slice
+# retains _rtw_memcmp/_rtw_memmove shims not exported from Rust.
+drop _rtw_memcmp
+drop _rtw_memmove

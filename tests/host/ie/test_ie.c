@@ -37,6 +37,9 @@ struct vector {
 	int expect_ielen;
 	int expect_found;
 	int expect_ret;
+	int copy_out;
+	u8 expect_copy[MAX_IES];
+	size_t expect_copy_len;
 	u8 ies_mut[MAX_IES];
 };
 
@@ -81,6 +84,7 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 	host_json_parse_int_in(obj, obj_len, "expect_ielen", &v->expect_ielen);
 	host_json_parse_int_in(obj, obj_len, "expect_found", &v->expect_found);
 	host_json_parse_int_in(obj, obj_len, "expect_ret", &v->expect_ret);
+	host_json_parse_int_in(obj, obj_len, "copy_out", &v->copy_out);
 	if (host_json_parse_string_in(obj, obj_len, "ies", hex, sizeof(hex)))
 		return -1;
 	if (host_hex_decode(hex, v->ies, sizeof(v->ies), &v->ies_len))
@@ -91,6 +95,11 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		if (host_hex_decode(hex, v->oui, sizeof(v->oui), &oui_len))
 			return -1;
 		v->oui_len = (int)oui_len;
+	}
+	if (!host_json_parse_string_in(obj, obj_len, "expect_copy", hex, sizeof(hex))) {
+		if (host_hex_decode(hex, v->expect_copy, sizeof(v->expect_copy),
+				    &v->expect_copy_len))
+			return -1;
 	}
 	return 0;
 }
@@ -115,13 +124,25 @@ static int run_vector(struct vector *v)
 	}
 	case FN_GET_IE_EX: {
 		unsigned int ielen = 0;
+		u8 copy_buf[MAX_IES];
+		u8 *out_buf = NULL;
+
+		if (v->copy_out)
+			out_buf = copy_buf;
 		u8 *ie = rtw_get_ie_ex(v->ies, (unsigned int)v->ies_len, (u8)v->eid,
 				       v->oui_len ? v->oui : NULL, (u8)v->oui_len,
-				       NULL, &ielen);
+				       out_buf, &ielen);
 
 		if (v->expect_found) {
 			if (!ie || (int)ielen != v->expect_ielen) {
 				fprintf(stderr, "%s: get_ie_ex mismatch\n", v->name);
+				return -1;
+			}
+			if (v->copy_out && (ielen != v->expect_copy_len ||
+					    memcmp(copy_buf, v->expect_copy,
+						   v->expect_copy_len) != 0)) {
+				fprintf(stderr, "%s: get_ie_ex copy-out mismatch\n",
+					v->name);
 				return -1;
 			}
 		} else if (ie) {
