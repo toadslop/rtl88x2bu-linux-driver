@@ -84,7 +84,7 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 | W2-16 | #107 | `wave2-16-sha256.md` | done |
 | W2-17 | #108 | `wave2-17-chplan-lookup.md` | done (#57) |
 | W2-18 | #109 | `wave2-18-chplan-dfs.md` | done (#58) |
-| W2-19 | #110 | `wave2-19-chplan-country.md` | in progress (`cursor/w2-19-chplan-country-rust-3dd4`) |
+| W2-19 | #110 | `wave2-19-chplan-country.md` | done (#62) |
 | W2-20 | #111 | `wave2-20-chplan-init.md` | draft |
 | T0 / A0 | #75 / #81 | `test-00-*.md` / `arch-00-*.md` | done |
 | T1 | #76 | `test-01-symbol-check.md` | done (supersedes pre-migration #12) |
@@ -93,5 +93,6 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 | T5 | #80 | `test-05-host-security-wlan-harness.md` | draft |
 | A2 | #83 | `arch-02-domain-types-chplan.md` | draft |
 | A3 | #84 | `arch-03-domain-types-security.md` | draft |
-| W3-01 | #112 | `wave3-01-swcrypto-ccmp-gcmp.md` | in progress (#60) |
-| W3-02 … W3-09 | #113–#120 | `wave3-*.md` | draft / in progress (Wave 3 tranche 1 — see #68) |
+| W3-01 | #112 | `wave3-01-swcrypto-ccmp-gcmp.md` | done (#60) |
+| W3-02 | #113 | `wave3-02-swcrypto-bip-tdls.md` | in progress (#63) |
+| W3-03 … W3-09 | #114–#120 | `wave3-*.md` | draft / in progress (Wave 3 tranche 1 — see #68) |

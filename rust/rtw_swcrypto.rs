@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! Software crypto frame wrappers — Rust port of `core/rtw_swcrypto.c` (W3-01).
+//! Software crypto frame wrappers — Rust port of `core/rtw_swcrypto.c` (W3-01/W3-02).
 
 #![allow(
     dead_code,
@@ -18,6 +18,7 @@ use std::os::raw::{c_int, c_void};
 use core::ffi::{c_int, c_void};
 
 const AES_BLOCK_SIZE: usize = 16;
+const ETH_ALEN: usize = 6;
 const _SUCCESS: i32 = 1;
 const _FAIL: i32 = 0;
 
@@ -25,9 +26,9 @@ const _FAIL: i32 = 0;
 pub struct Ieee80211Hdr {
     pub frame_control: u16,
     pub duration_id: u16,
-    pub addr1: [u8; 6],
-    pub addr2: [u8; 6],
-    pub addr3: [u8; 6],
+    pub addr1: [u8; ETH_ALEN],
+    pub addr2: [u8; ETH_ALEN],
+    pub addr3: [u8; ETH_ALEN],
     pub seq_ctrl: u16,
 }
 
@@ -93,8 +94,48 @@ extern "C" {
         data_len: usize,
         decrypted_len: *mut usize,
     ) -> *mut u8;
+    fn omac1_aes_128(key: *const u8, data: *const u8, data_len: usize, mac: *mut u8) -> i32;
+    fn omac1_aes_256(key: *const u8, data: *const u8, data_len: usize, mac: *mut u8) -> i32;
+    fn aes_gmac(
+        key: *const u8,
+        key_len: usize,
+        nonce: *const u8,
+        nonce_len: usize,
+        data: *const u8,
+        data_len: usize,
+        tag: *mut u8,
+    ) -> i32;
+    fn aes_siv_encrypt(
+        key: *const u8,
+        key_len: usize,
+        pw: *const u8,
+        pwlen: usize,
+        num_elem: usize,
+        addr: *const *const u8,
+        len: *const usize,
+        out: *mut u8,
+    ) -> i32;
+    fn aes_siv_decrypt(
+        key: *const u8,
+        key_len: usize,
+        iv_crypt: *const u8,
+        iv_c_len: usize,
+        num_elem: usize,
+        addr: *const *const u8,
+        len: *const usize,
+        out: *mut u8,
+    ) -> i32;
+    fn rtw_swcrypto_log_err(msg: *const u8);
     fn _rtw_mfree(ptr: *mut c_void, sz: u32);
     fn _rtw_memcpy(dst: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+}
+
+fn get_addr2_ptr(frame: *const u8) -> *const u8 {
+    unsafe { frame.add(10) }
+}
+
+fn log_bip_err(msg: &[u8]) {
+    unsafe { rtw_swcrypto_log_err(msg.as_ptr()) };
 }
 
 #[no_mangle]
@@ -285,4 +326,102 @@ pub extern "C" fn _rtw_gcmp_decrypt(
         _rtw_mfree(plain as *mut c_void, ((plen - hdrlen) as usize + AES_BLOCK_SIZE) as u32);
     }
     _SUCCESS
+}
+
+#[no_mangle]
+pub extern "C" fn _bip_ccmp_protect(
+    key: *const u8,
+    key_len: usize,
+    data: *const u8,
+    data_len: usize,
+    mic: *mut u8,
+) -> u8 {
+    let res = if key_len == 16 {
+        unsafe { omac1_aes_128(key, data, data_len, mic) }
+    } else if key_len == 32 {
+        unsafe { omac1_aes_256(key, data, data_len, mic) }
+    } else {
+        log_bip_err(b"_bip_ccmp_protect : key_len not match!\0");
+        return _FAIL as u8;
+    };
+    if res != 0 {
+        if key_len == 16 {
+            log_bip_err(b"_bip_ccmp_protect : omac1_aes_128 fail!\0");
+        } else {
+            log_bip_err(b"_bip_ccmp_protect : omac1_aes_256 fail!\0");
+        }
+        _FAIL as u8
+    } else {
+        _SUCCESS as u8
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn _bip_gcmp_protect(
+    whdr_pos: *mut u8,
+    len: usize,
+    key: *const u8,
+    key_len: usize,
+    data: *const u8,
+    data_len: usize,
+    mic: *mut u8,
+) -> u8 {
+    let mic_len = 16usize;
+    let mut nonce = [0u8; 12];
+    unsafe {
+        let gcmp_ipn = whdr_pos.add(len - mic_len - 6);
+        _rtw_memcpy(
+            nonce.as_mut_ptr() as *mut c_void,
+            get_addr2_ptr(whdr_pos) as *const c_void,
+            ETH_ALEN,
+        );
+        nonce[6] = *gcmp_ipn.add(5);
+        nonce[7] = *gcmp_ipn.add(4);
+        nonce[8] = *gcmp_ipn.add(3);
+        nonce[9] = *gcmp_ipn.add(2);
+        nonce[10] = *gcmp_ipn.add(1);
+        nonce[11] = *gcmp_ipn.add(0);
+        if aes_gmac(
+            key,
+            key_len,
+            nonce.as_ptr(),
+            nonce.len(),
+            data,
+            data_len,
+            mic,
+        ) != 0
+        {
+            log_bip_err(b"_bip_gcmp_protect : aes_gmac fail!\0");
+            return _FAIL as u8;
+        }
+    }
+    _SUCCESS as u8
+}
+
+#[no_mangle]
+pub extern "C" fn _aes_siv_encrypt(
+    key: *const u8,
+    key_len: usize,
+    pw: *const u8,
+    pwlen: usize,
+    num_elem: usize,
+    addr: *const *const u8,
+    len: *const usize,
+    out: *mut u8,
+) -> i32 {
+    unsafe { aes_siv_encrypt(key, key_len, pw, pwlen, num_elem, addr, len, out) }
+}
+
+#[no_mangle]
+pub extern "C" fn _aes_siv_decrypt(
+    key: *const u8,
+    key_len: usize,
+    iv_crypt: *const u8,
+    iv_c_len: usize,
+    num_elem: usize,
+    addr: *const *const u8,
+    len: *const usize,
+    out: *mut u8,
+) -> i32 {
+    unsafe { aes_siv_decrypt(key, key_len, iv_crypt, iv_c_len, num_elem, addr, len, out) }
 }

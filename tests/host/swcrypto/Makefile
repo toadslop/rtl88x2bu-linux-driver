@@ -1,4 +1,4 @@
-# Host L2 differential tests for core/rtw_swcrypto.c CCMP/GCMP wrappers (W3-01).
+# Host L2 differential tests for core/rtw_swcrypto.c wrappers (W3-01/W3-02).
 # Builds with gcc only — no kernel headers or KDIR.
 
 ROOT     := ../../..
@@ -12,7 +12,7 @@ RUSTC   := rustc
 CFLAGS  := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
            -I$(HOST_INC) -I$(CRYPTO) \
            -include $(HOST_INC)/host_autoconf.h \
-           -DHOST_CRYPTO_TEST -DHOST_SWCRYPTO_TEST -DHOST_SWCRYPTO_WRAPPER_ONLY
+           -DHOST_CRYPTO_TEST -DHOST_SWCRYPTO_TEST
 RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
 
 AES_LEAF_SRCS := \
@@ -22,8 +22,9 @@ AES_LEAF_SRCS := \
 
 CCMP_SRCS := $(AES_LEAF_SRCS) $(CRYPTO)/aes-ccm.c $(CRYPTO)/ccmp.c
 GCMP_SRCS := $(CRYPTO)/aes-gcm.c $(CRYPTO)/gcmp.c
-CRYPTO_SRCS := $(CCMP_SRCS) $(GCMP_SRCS)
-SWCRYPTO_SRCS := $(CORE)/rtw_swcrypto.c
+CRYPTO_SRCS := $(CCMP_SRCS) $(GCMP_SRCS) $(CRYPTO)/aes-omac1.c $(CRYPTO)/aes-ctr.c \
+		$(CRYPTO)/aes-siv.c
+SWCRYPTO_SRCS := $(CORE)/rtw_swcrypto.c $(CORE)/rtw_swcrypto_rest.c
 SWCRYPTO_SHIM := ../shim/host_swcrypto_shim.c
 HOST_JSON := ../crypto/host_vector_json.c
 

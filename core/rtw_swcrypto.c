@@ -16,6 +16,8 @@
 #include "host_autoconf.h"
 #include "host_crypto_wrap.h"
 #include "aes.h"
+#include "aes_siv.h"
+#include "aes_wrap.h"
 #include "wlancrypto_wrap.h"
 #define RTW_INFO(...) do { } while (0)
 #define RTW_DBG_DUMP(...) do { } while (0)
@@ -121,8 +123,6 @@ int _rtw_ccmp_decrypt(_adapter * padapter, u8 *key, u32 key_len, uint hdrlen, u8
 	return _SUCCESS;
 }
 
-#endif /* !CONFIG_RUST */
-
 #ifdef CONFIG_RTW_MESH_AEK
 #ifndef HOST_SWCRYPTO_WRAPPER_ONLY
 /* wrapper to ase_siv_encrypt and aes_siv_decrypt */
@@ -140,8 +140,6 @@ int _aes_siv_decrypt(const u8 *key, size_t key_len,
 }
 #endif /* !HOST_SWCRYPTO_WRAPPER_ONLY */
 #endif /* CONFIG_RTW_MESH_AEK */
-
-#ifndef CONFIG_RUST
 
 /**
  * _rtw_gcmp_encrypt - 
@@ -210,8 +208,6 @@ int _rtw_gcmp_decrypt(_adapter *padapter, u8 *key, u32 key_len, uint hdrlen, u8 
 	return _SUCCESS;
 }
 
-#endif /* !CONFIG_RUST */
-
 #if defined(CONFIG_IEEE80211W) | defined(CONFIG_TDLS)
 #ifndef HOST_SWCRYPTO_WRAPPER_ONLY
 u8 _bip_ccmp_protect(const u8 *key, size_t key_len,
@@ -270,50 +266,4 @@ u8 _bip_gcmp_protect(u8 *whdr_pos, size_t len,
 #endif /* !HOST_SWCRYPTO_WRAPPER_ONLY */
 #endif /* CONFIG_IEEE80211W */
 
-#ifdef CONFIG_TDLS
-#ifndef HOST_SWCRYPTO_WRAPPER_ONLY
-void _tdls_generate_tpk(void *sta, const u8 *own_addr, const u8 *bssid)
-{
-	struct sta_info *psta = (struct sta_info *)sta;
-	u8 *SNonce = psta->SNonce;
-	u8 *ANonce = psta->ANonce;
-
-	u8 key_input[SHA256_MAC_LEN];
-	const u8 *nonce[2];
-	size_t len[2];
-	u8 data[3 * ETH_ALEN];
-
-	/* IEEE Std 802.11z-2010 8.5.9.1:
-	 * TPK-Key-Input = SHA-256(min(SNonce, ANonce) || max(SNonce, ANonce))
-	 */
-	len[0] = 32;
-	len[1] = 32;
-	if (_rtw_memcmp2(SNonce, ANonce, 32) < 0) {
-		nonce[0] = SNonce;
-		nonce[1] = ANonce;
-	} else {
-		nonce[0] = ANonce;
-		nonce[1] = SNonce;
-	}
-
-	sha256_vector(2, nonce, len, key_input);
-
-	/*
-	 * TPK = KDF-Hash-Length(TPK-Key-Input, "TDLS PMK",
-	 *	min(MAC_I, MAC_R) || max(MAC_I, MAC_R) || BSSID)
-	 */
-
-	if (_rtw_memcmp2(own_addr, psta->cmn.mac_addr, ETH_ALEN) < 0) {
-		_rtw_memcpy(data, own_addr, ETH_ALEN);
-		_rtw_memcpy(data + ETH_ALEN, psta->cmn.mac_addr, ETH_ALEN);
-	} else {
-		_rtw_memcpy(data, psta->cmn.mac_addr, ETH_ALEN);
-		_rtw_memcpy(data + ETH_ALEN, own_addr, ETH_ALEN);
-	}
-
-	_rtw_memcpy(data + 2 * ETH_ALEN, bssid, ETH_ALEN);
-
-	sha256_prf(key_input, SHA256_MAC_LEN, "TDLS PMK", data, sizeof(data), (u8 *)&psta->tpk, sizeof(psta->tpk));
-}
-#endif /* !HOST_SWCRYPTO_WRAPPER_ONLY */
-#endif /* CONFIG_TDLS */
+#endif /* !CONFIG_RUST */
