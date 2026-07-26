@@ -14,9 +14,9 @@ CFLAGS  := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variabl
            -DHOST_CHPLAN_TEST
 RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
 
-CHPLAN_SRCS := $(CORE)/rtw_chplan.c ../shim/host_chplan_rf.c \
+CHPLAN_SRCS := $(CORE)/rtw_chplan.c $(CORE)/rtw_chplan_rest.c ../shim/host_chplan_rf.c \
                ../crypto/host_vector_json.c
-CHPLAN_DATA_SRCS := $(CORE)/rtw_chplan.c
+CHPLAN_DATA_SRCS := $(CORE)/rtw_chplan_rest.c
 HOST_JSON := ../crypto/host_vector_json.c
 DATA_CFLAGS := $(CFLAGS) -DHOST_CHPLAN_DATA_ONLY
 
@@ -44,7 +44,7 @@ test_chplan_rust: test_chplan.c librust_chplan.a chplan_data.o $(HOST_JSON) ../s
 		../shim/host_chplan_rf.c chplan_data.o librust_chplan.a
 
 chplan_data.o: $(CHPLAN_DATA_SRCS)
-	$(CC) $(DATA_CFLAGS) -c -o $@ $(CORE)/rtw_chplan.c
+	$(CC) $(DATA_CFLAGS) -c -o $@ $(CORE)/rtw_chplan_rest.c
 
 clean:
 	rm -f test_chplan test_chplan_rust librust_chplan.a chplan_data.o

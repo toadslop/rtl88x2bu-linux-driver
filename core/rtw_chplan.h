@@ -17,6 +17,27 @@
 
 #define RTW_CHPLAN_UNSPECIFIED 0xFF
 
+struct chplan_ent_t {
+	u8 regd_2g;
+	u8 chd_2g;
+#if CONFIG_IEEE80211_BAND_5GHZ
+	u8 regd_5g;
+	u8 chd_5g;
+#endif
+};
+
+extern const struct chplan_ent_t RTW_ChannelPlanMap[];
+extern const int RTW_ChannelPlanMap_size;
+
+u8 rtw_chdef_2g_len(u8 chd);
+u8 rtw_chdef_2g_ch(u8 chd, u8 i);
+u8 rtw_chdef_2g_attrib(u8 chd);
+#if CONFIG_IEEE80211_BAND_5GHZ
+u8 rtw_chdef_5g_len(u8 chd);
+u8 rtw_chdef_5g_ch(u8 chd, u8 i);
+u8 rtw_chdef_5g_attrib(u8 chd);
+#endif
+
 u8 rtw_chplan_get_default_regd(u8 id);
 bool rtw_chplan_is_empty(u8 id);
 bool rtw_is_channel_plan_valid(u8 id);

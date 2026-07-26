@@ -2410,7 +2410,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_vht.o \
 		core/rtw_pwrctrl.o \
 		core/rtw_rf.o \
-		core/rtw_chplan.o \
+		core/rtw_chplan_rest.o \
 		core/monitor/rtw_radiotap.o \
 		core/rtw_recv.o \
 		core/rtw_sta_mgt.o \
@@ -2455,6 +2455,11 @@ rtk_core += \
 endif
 rtk_core += \
 		core/rtw_swcrypto_rest.o
+
+ifeq ($(CONFIG_RUST),)
+rtk_core += \
+		core/rtw_chplan.o
+endif
 
 ifeq ($(CONFIG_RUST),)
 rtk_core += core/crypto/ccmp.o
