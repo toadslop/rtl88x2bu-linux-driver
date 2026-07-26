@@ -121,8 +121,6 @@ int _rtw_ccmp_decrypt(_adapter * padapter, u8 *key, u32 key_len, uint hdrlen, u8
 	return _SUCCESS;
 }
 
-#endif /* !CONFIG_RUST */
-
 #ifdef CONFIG_RTW_MESH_AEK
 #ifndef HOST_SWCRYPTO_WRAPPER_ONLY
 /* wrapper to ase_siv_encrypt and aes_siv_decrypt */
@@ -140,8 +138,6 @@ int _aes_siv_decrypt(const u8 *key, size_t key_len,
 }
 #endif /* !HOST_SWCRYPTO_WRAPPER_ONLY */
 #endif /* CONFIG_RTW_MESH_AEK */
-
-#ifndef CONFIG_RUST
 
 /**
  * _rtw_gcmp_encrypt - 
@@ -210,8 +206,6 @@ int _rtw_gcmp_decrypt(_adapter *padapter, u8 *key, u32 key_len, uint hdrlen, u8 
 	return _SUCCESS;
 }
 
-#endif /* !CONFIG_RUST */
-
 #if defined(CONFIG_IEEE80211W) | defined(CONFIG_TDLS)
 #ifndef HOST_SWCRYPTO_WRAPPER_ONLY
 u8 _bip_ccmp_protect(const u8 *key, size_t key_len,
@@ -269,6 +263,8 @@ u8 _bip_gcmp_protect(u8 *whdr_pos, size_t len,
 }
 #endif /* !HOST_SWCRYPTO_WRAPPER_ONLY */
 #endif /* CONFIG_IEEE80211W */
+
+#endif /* !CONFIG_RUST */
 
 #ifdef CONFIG_TDLS
 #ifndef HOST_SWCRYPTO_WRAPPER_ONLY

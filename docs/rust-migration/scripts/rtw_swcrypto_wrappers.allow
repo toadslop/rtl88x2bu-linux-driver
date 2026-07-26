@@ -1,7 +1,2 @@
-# L1 allowlist for W3-01: Rust owns CCMP/GCMP frame wrappers; BIP/SIV/TDLS
-# remain in core/rtw_swcrypto.c until W3-02.
-drop _bip_ccmp_protect
-drop _bip_gcmp_protect
-drop _aes_siv_encrypt
-drop _aes_siv_decrypt
+# L1 allowlist for W3-02: Rust owns CCMP/GCMP/BIP/SIV wrappers; TDLS remains in C.
 drop _tdls_generate_tpk
