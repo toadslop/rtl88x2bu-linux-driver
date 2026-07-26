@@ -1,0 +1,2 @@
+# L1 allowlist for W3-04: Rust owns type-string helpers from core/rtw_security.c.
+drop rtw_rust_security_probe

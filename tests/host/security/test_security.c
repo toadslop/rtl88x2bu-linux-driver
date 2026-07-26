@@ -27,8 +27,13 @@ struct vector {
 	u32 expect_gmcs;
 };
 
+#ifdef RUST_SECURITY_ORACLE
+extern const char *security_type_str(u8 value);
+extern u32 security_type_bip_to_gmcs(enum security_type type);
+#else
 const char *security_type_str(u8 value);
 u32 security_type_bip_to_gmcs(enum security_type type);
+#endif
 
 static int parse_fn(const char *obj, size_t obj_len, enum security_fn *out)
 {
