@@ -112,8 +112,7 @@ bool rtw_regsty_is_excl_chs(struct registry_priv *regsty, u8 ch)
 
 #endif /* !CONFIG_RUST && !HOST_CHPLAN_DATA_ONLY */
 
-#if !defined(CONFIG_RUST) && !defined(HOST_CHPLAN_DATA_ONLY)
-#ifndef HOST_CHPLAN_TEST
+#if !defined(HOST_CHPLAN_DATA_ONLY) && (!defined(CONFIG_RUST) || defined(HOST_CHPLAN_TEST))
 
 static u8 init_channel_set_from_rtk_priv(_adapter *padapter, RT_CHANNEL_INFO *channel_set)
 {
@@ -251,8 +250,7 @@ u8 init_channel_set(_adapter *adapter)
 	return 0;
 }
 
-#endif /* !HOST_CHPLAN_TEST */
-#endif /* !CONFIG_RUST && !HOST_CHPLAN_DATA_ONLY */
+#endif /* !HOST_CHPLAN_DATA_ONLY && (!CONFIG_RUST || HOST_CHPLAN_TEST) */
 
 #if !defined(CONFIG_RUST) && !defined(HOST_CHPLAN_DATA_ONLY)
 

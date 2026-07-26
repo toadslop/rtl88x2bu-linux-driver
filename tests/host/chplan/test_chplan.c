@@ -14,6 +14,10 @@
 #include "host_vector_json.h"
 #include "rtw_chplan.h"
 
+#ifndef REGD_SRC_RTK_PRIV
+#define REGD_SRC_RTK_PRIV 0
+#endif
+
 u8 rtw_chplan_get_default_regd_2g(u8 id);
 u8 rtw_chplan_get_default_regd_5g(u8 id);
 
@@ -31,6 +35,7 @@ enum chplan_fn {
 	FN_DFS_RANGE,
 	FN_DFS_CHBW,
 	FN_COUNTRY,
+	FN_INIT_CHANNEL_SET,
 };
 
 struct vector {
@@ -47,6 +52,10 @@ struct vector {
 	int expect;
 	int expect_chplan;
 	int expect_null;
+	int wireless_mode;
+	int band_cap;
+	int expect_count;
+	char expect_chset[HOST_VECTOR_MAX_HEX_BUF];
 	char alpha2[3];
 	u8 excl_chs[MAX_CHANNEL_NUM];
 	RT_CHANNEL_INFO chset[MAX_CHANNEL_NUM];
@@ -78,6 +87,8 @@ static int parse_fn(const char *obj, size_t obj_len, enum chplan_fn *out)
 		*out = FN_DFS_CHBW;
 	else if (strcmp(fn, "rtw_get_chplan_from_country") == 0)
 		*out = FN_COUNTRY;
+	else if (strcmp(fn, "init_channel_set") == 0)
+		*out = FN_INIT_CHANNEL_SET;
 	else
 		return -1;
 	return 0;
@@ -123,7 +134,7 @@ static int parse_chset_hex(const char *hex, RT_CHANNEL_INFO *out)
 	size_t i;
 
 	if (!hex || !*hex)
-		return -1;
+		return 0;
 
 	memset(out, 0, sizeof(RT_CHANNEL_INFO) * MAX_CHANNEL_NUM);
 	for (i = 0; hex[i]; i++) {
@@ -178,6 +189,9 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 	host_json_parse_int_in(obj, obj_len, "expect", &v->expect);
 	host_json_parse_int_in(obj, obj_len, "expect_chplan", &v->expect_chplan);
 	host_json_parse_int_in(obj, obj_len, "expect_null", &v->expect_null);
+	host_json_parse_int_in(obj, obj_len, "wireless_mode", &v->wireless_mode);
+	host_json_parse_int_in(obj, obj_len, "band_cap", &v->band_cap);
+	host_json_parse_int_in(obj, obj_len, "expect_count", &v->expect_count);
 	if (!host_json_parse_string_in(obj, obj_len, "alpha2", v->alpha2, sizeof(v->alpha2))) {
 		if (strlen(v->alpha2) != 2)
 			return -1;
@@ -186,11 +200,27 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		if (parse_excl_chs(hex, v->excl_chs))
 			return -1;
 	}
-	if (!host_json_parse_string_in(obj, obj_len, "chset", hex, sizeof(hex))) {
+	if (!host_json_parse_string_in(obj, obj_len, "expect_chset", v->expect_chset,
+				       sizeof(v->expect_chset))) {
+		if (parse_chset_hex(v->expect_chset, v->chset))
+			return -1;
+	} else if (!host_json_parse_string_in(obj, obj_len, "chset", hex, sizeof(hex))) {
 		if (parse_chset_hex(hex, v->chset))
 			return -1;
 	}
 	return 0;
+}
+
+static int chset_matches(const RT_CHANNEL_INFO *got, const RT_CHANNEL_INFO *expect, u8 count)
+{
+	u8 i;
+
+	for (i = 0; i < count; i++) {
+		if (got[i].ChannelNum != expect[i].ChannelNum ||
+		    got[i].flags != expect[i].flags)
+			return 0;
+	}
+	return 1;
 }
 
 static int run_vector(const struct vector *v)
@@ -272,6 +302,41 @@ static int run_vector(const struct vector *v)
 		} else if ((int)ent->chplan != v->expect_chplan) {
 			fprintf(stderr, "%s: chplan mismatch (got %u, expected %d)\n",
 				v->name, ent->chplan, v->expect_chplan);
+			return -1;
+		}
+		break;
+	}
+	case FN_INIT_CHANNEL_SET: {
+		_adapter adapter;
+		struct rf_ctl_t *rfctl;
+		struct registry_priv *regsty;
+		u8 count;
+		u8 i;
+
+		memset(&adapter, 0, sizeof(adapter));
+		rfctl = adapter_to_rfctl(&adapter);
+		regsty = adapter_to_regsty(&adapter);
+		rfctl->regd_src = REGD_SRC_RTK_PRIV;
+		rfctl->ChannelPlan = (u8)v->id;
+		regsty->wireless_mode = (u8)v->wireless_mode;
+		_rtw_memcpy(regsty->excl_chs, v->excl_chs, sizeof(regsty->excl_chs));
+		host_chplan_set_band_cap((u8)v->band_cap);
+
+		count = init_channel_set(&adapter);
+		if ((int)count != v->expect_count) {
+			fprintf(stderr, "%s: count mismatch (got %u, expected %d)\n",
+				v->name, count, v->expect_count);
+			return -1;
+		}
+		if (!chset_matches(rfctl->channel_set, v->chset, count)) {
+			fprintf(stderr, "%s: channel_set mismatch\n", v->name);
+			for (i = 0; i < count; i++) {
+				fprintf(stderr, "  got ch=%u flags=0x%02x expect ch=%u flags=0x%02x\n",
+					rfctl->channel_set[i].ChannelNum,
+					rfctl->channel_set[i].flags,
+					v->chset[i].ChannelNum,
+					v->chset[i].flags);
+			}
 			return -1;
 		}
 		break;

@@ -119,6 +119,61 @@
       "fn": "rtw_get_chplan_from_country",
       "alpha2": "ZZ",
       "expect_null": 1
+    },
+    {
+      "name": "init_2g_plan_20",
+      "fn": "init_channel_set",
+      "id": 32,
+      "wireless_mode": 11,
+      "band_cap": 3,
+      "expect_count": 13,
+      "expect_chset": "01 00 02 00 03 00 04 00 05 00 06 00 07 00 08 00 09 00 0a 00 0b 00 0c 01 0d 01"
+    },
+    {
+      "name": "init_5g_plan_25",
+      "fn": "init_channel_set",
+      "id": 37,
+      "wireless_mode": 84,
+      "band_cap": 3,
+      "expect_count": 24,
+      "expect_chset": "24 00 28 00 2c 00 30 00 34 02 38 02 3c 02 40 02 64 02 68 02 6c 02 70 02 74 02 78 02 7c 02 80 02 84 02 88 02 8c 02 95 00 99 00 9d 00 a1 00 a5 00"
+    },
+    {
+      "name": "init_invalid_plan_05",
+      "fn": "init_channel_set",
+      "id": 5,
+      "wireless_mode": 11,
+      "band_cap": 3,
+      "expect_count": 0,
+      "expect_chset": ""
+    },
+    {
+      "name": "init_excl_ch_36",
+      "fn": "init_channel_set",
+      "id": 37,
+      "wireless_mode": 84,
+      "band_cap": 3,
+      "excl_chs": "24",
+      "expect_count": 23,
+      "expect_chset": "28 00 2c 00 30 00 34 02 38 02 3c 02 40 02 64 02 68 02 6c 02 70 02 74 02 78 02 7c 02 80 02 84 02 88 02 8c 02 95 00 99 00 9d 00 a1 00 a5 00"
+    },
+    {
+      "name": "init_no_band_cap",
+      "fn": "init_channel_set",
+      "id": 32,
+      "wireless_mode": 95,
+      "band_cap": 0,
+      "expect_count": 0,
+      "expect_chset": ""
+    },
+    {
+      "name": "init_2g_only_cap",
+      "fn": "init_channel_set",
+      "id": 37,
+      "wireless_mode": 95,
+      "band_cap": 1,
+      "expect_count": 11,
+      "expect_chset": "01 00 02 00 03 00 04 00 05 00 06 00 07 00 08 00 09 00 0a 00 0b 00"
     }
   ]
 }
