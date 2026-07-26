@@ -71,7 +71,14 @@ Architecture: `epic-11-architecture.md`, `arch-00-*.md` …
 | W2-06 | `wave2-06-sha256-prf-wrap.md` | done (sha256-prf + rtw_crypto_wrap; not filed on GitHub) |
 | W2-07 | `wave2-07-aes-gcm-part1.md` | done (Rust aes_gcm_ae + L2 vectors; not filed on GitHub) |
 | W2-08 | `wave2-08-aes-gcm-part2.md` | done (aes_gcm_ad/gmac; no aes-gcm*.c in CONFIG_RUST build; not filed on GitHub) |
-| W2-09… | `wave2-*.md` | draft |
+| W2-09 | `wave2-09-ccmp-part1.md` | done (Rust ccmp decrypt + ccmp_rest.c; not filed on GitHub) |
+| W2-10 | `wave2-10-ccmp-part2.md` | done (Rust ccmp encrypt; no ccmp*.c in CONFIG_RUST build; not filed on GitHub) |
+| W2-11 | `wave2-11-aes-internal-part1.md` | done (Rust Te0 + aes-internal_rest.c; not filed on GitHub) |
+| W2-12 | `wave2-12-aes-internal-part2.md` | done (Rust Td0; not filed on GitHub) |
+| W2-13 | `wave2-13-aes-internal-part3.md` | done (Rust Td4s/rcons; not filed on GitHub) |
+| W2-14 | `wave2-14-aes-internal-part4.md` | done (Rust rijndaelKeySetupEnc; no aes-internal*.c in CONFIG_RUST build; not filed on GitHub) |
+| W2-15 | `wave2-15-aes-internal-enc.md` | done (Rust aes_encrypt_*; not filed on GitHub) |
+| W2-16… | `wave2-*.md` | draft |
 | T0 / A0 | `test-00-*.md` / `arch-00-*.md` | done (plan docs + links via W0-01) |
 | T1 | `test-01-symbol-check.md` | done (#12) |
 | T3 | `test-03-ci-host-tests.md` | draft |
