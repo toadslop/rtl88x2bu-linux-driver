@@ -8,6 +8,8 @@ on:
     branches: [master]
     paths:
       - 'core/crypto/**'
+      - 'core/rtw_chplan.c'
+      - 'core/rtw_chplan.h'
       - 'rust/**'
       - 'tests/host/**'
       - 'Makefile'
@@ -15,6 +17,8 @@ on:
   pull_request:
     paths:
       - 'core/crypto/**'
+      - 'core/rtw_chplan.c'
+      - 'core/rtw_chplan.h'
       - 'rust/**'
       - 'tests/host/**'
       - 'Makefile'
@@ -39,3 +43,6 @@ jobs:
 
       - name: Host crypto parity (L2)
         run: make -C tests/host/crypto all
+
+      - name: Host chplan lookup parity (L2)
+        run: make -C tests/host/chplan test

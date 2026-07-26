@@ -14,7 +14,13 @@
  *****************************************************************************/
 #define _RTW_CHPLAN_C_
 
+#ifdef HOST_CHPLAN_TEST
+#include "host_chplan_types.h"
+#else
 #include <drv_types.h>
+#endif
+
+#include "rtw_chplan.h"
 
 #define RTW_DOMAIN_MAP_VER		"54"
 #define RTW_DOMAIN_MAP_M_VER	"g"
@@ -196,7 +202,11 @@ struct chplan_ent_t {
 
 #define CHPLAN_ENT_NOT_DEFINED CHPLAN_ENT(TXPWR_LMT_NONE, RTW_CHD_2G_NULL, TXPWR_LMT_NONE, RTW_CHD_5G_NULL)
 
+#ifdef HOST_CHPLAN_TEST
+const struct chplan_ent_t RTW_ChannelPlanMap[] = {
+#else
 static const struct chplan_ent_t RTW_ChannelPlanMap[] = {
+#endif
 	/* 0x00 */	CHPLAN_ENT(TXPWR_LMT_ETSI,		RTW_CHD_2G_02,	TXPWR_LMT_ETSI,		RTW_CHD_5G_49),
 	/* 0x01 */	CHPLAN_ENT(TXPWR_LMT_ETSI,		RTW_CHD_2G_02,	TXPWR_LMT_ETSI,		RTW_CHD_5G_50),
 	/* 0x02 */	CHPLAN_ENT(TXPWR_LMT_ETSI,		RTW_CHD_2G_03,	TXPWR_LMT_ETSI,		RTW_CHD_5G_07),
@@ -388,6 +398,8 @@ bool rtw_regsty_is_excl_chs(struct registry_priv *regsty, u8 ch)
 	return _FALSE;
 }
 
+#ifndef HOST_CHPLAN_TEST
+
 const char *_regd_src_str[] = {
 	[REGD_SRC_RTK_PRIV] = "RTK_PRIV",
 	[REGD_SRC_OS] = "OS",
@@ -530,6 +542,9 @@ u8 init_channel_set(_adapter *adapter)
 	return 0;
 }
 
+#endif /* !HOST_CHPLAN_TEST */
+
+
 bool rtw_chset_is_dfs_range(struct _RT_CHANNEL_INFO *chset, u32 hi, u32 lo)
 {
 	u8 hi_ch = rtw_freq2ch(hi);
@@ -568,6 +583,9 @@ bool rtw_chset_is_dfs_chbw(struct _RT_CHANNEL_INFO *chset, u8 ch, u8 bw, u8 offs
 	return rtw_chset_is_dfs_range(chset, hi, lo);
 }
 
+
+#ifndef HOST_CHPLAN_TEST
+
 u8 rtw_process_beacon_hint(_adapter *adapter, WLAN_BSSID_EX *bss)
 {
 #ifndef RTW_CHPLAN_BEACON_HINT_NON_WORLD_WIDE
@@ -604,6 +622,8 @@ u8 rtw_process_beacon_hint(_adapter *adapter, WLAN_BSSID_EX *bss)
 exit:
 	return act_cnt;
 }
+
+#endif /* !HOST_CHPLAN_TEST */
 
 const char *_rtw_dfs_regd_str[] = {
 	[RTW_DFS_REGD_NONE]	= "NONE",
@@ -2400,6 +2420,9 @@ const struct country_chplan *rtw_get_chplan_from_country(const char *country_cod
 	return ent;
 }
 
+
+#ifndef HOST_CHPLAN_TEST
+
 void dump_country_chplan(void *sel, const struct country_chplan *ent)
 {
 	char buf[16];
@@ -2514,3 +2537,5 @@ void dump_chplan_ver(void *sel)
 {
 	RTW_PRINT_SEL(sel, "%s%s-%s\n", RTW_DOMAIN_MAP_VER, RTW_DOMAIN_MAP_M_VER, RTW_COUNTRY_MAP_VER);
 }
+
+#endif /* !HOST_CHPLAN_TEST */
