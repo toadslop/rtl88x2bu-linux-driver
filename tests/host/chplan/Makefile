@@ -12,7 +12,7 @@ CFLAGS  := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variabl
            -I$(HOST_INC) -I$(CORE) \
            -include $(HOST_INC)/host_autoconf.h \
            -DHOST_CHPLAN_TEST
-RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
+RUSTFLAGS := -C opt-level=2 -C overflow-checks=on --cfg dfs
 
 CHPLAN_SRCS := $(CORE)/rtw_chplan.c $(CORE)/rtw_chplan_rest.c ../shim/host_chplan_rf.c \
                ../shim/host_chplan_hal.c ../crypto/host_vector_json.c

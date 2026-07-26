@@ -16,3 +16,10 @@ bool hal_chk_band_cap(_adapter *adapter, u8 cap)
 	(void)adapter;
 	return (host_band_cap & cap) != 0;
 }
+
+u8 rtw_os_init_channel_set(_adapter *padapter, RT_CHANNEL_INFO *channel_set)
+{
+	(void)padapter;
+	(void)channel_set;
+	return 0;
+}

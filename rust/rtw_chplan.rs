@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 //! Channel-plan lookup / DFS / country helpers — Rust port of `core/rtw_chplan.c`
-//! slices (W2-17..W2-19).
+//! slices (W2-17..W2-20).
 
 #![allow(
     dead_code,
@@ -22,9 +22,28 @@ const TXPWR_LMT_NONE: u8 = 0;
 const RTW_CHD_2G_NULL: u8 = 0;
 const RTW_CHD_5G_NULL: u8 = 0;
 const RTW_CHF_DFS: u8 = 1 << 1;
+const RTW_CHF_NO_IR: u8 = 1 << 0;
 const MAX_CHANNEL_NUM: usize = 59;
 const _TRUE: i32 = 1;
 const _FALSE: i32 = 0;
+
+const REGD_SRC_RTK_PRIV: u8 = 0;
+const REGD_SRC_OS: u8 = 1;
+
+const CLA_2G_12_14_PASSIVE: u8 = 1 << 0;
+const CLA_5G_B1_PASSIVE: u8 = 1 << 0;
+const CLA_5G_B2_PASSIVE: u8 = 1 << 1;
+const CLA_5G_B3_PASSIVE: u8 = 1 << 2;
+const CLA_5G_B4_PASSIVE: u8 = 1 << 3;
+const CLA_5G_B2_DFS: u8 = 1 << 4;
+const CLA_5G_B3_DFS: u8 = 1 << 5;
+const CLA_5G_B4_DFS: u8 = 1 << 6;
+
+const WIRELESS_MODE_24G: u8 = 0x0b; /* 11B|11G|11_24N */
+const WIRELESS_MODE_5G: u8 = 0x54; /* 11A|11_5N|11AC */
+
+const BAND_CAP_2G: u8 = 1 << 0;
+const BAND_CAP_5G: u8 = 1 << 1;
 
 #[repr(C)]
 pub struct ChplanEnt {
@@ -50,6 +69,7 @@ pub struct CountryChplan {
 #[cfg(host_chplan_test)]
 #[repr(C)]
 struct HostRegistryPriv {
+    wireless_mode: u8,
     excl_chs: [u8; MAX_CHANNEL_NUM],
 }
 
@@ -71,6 +91,29 @@ extern "C" {
     fn rtw_freq2ch(freq: c_int) -> c_int;
     fn rtw_chbw_to_freq_range(ch: u8, bw: u8, offset: u8, hi: *mut u32, lo: *mut u32) -> bool;
     fn rtw_chplan_warn_regd_mismatch(id: u8, regd_2g: u8, regd_5g: u8);
+
+    fn rtw_chdef_2g_len(chd: u8) -> u8;
+    fn rtw_chdef_2g_ch(chd: u8, i: u8) -> u8;
+    fn rtw_chdef_2g_attrib(chd: u8) -> u8;
+    #[cfg(ieee80211_band_5ghz)]
+    fn rtw_chdef_5g_len(chd: u8) -> u8;
+    #[cfg(ieee80211_band_5ghz)]
+    fn rtw_chdef_5g_ch(chd: u8, i: u8) -> u8;
+    #[cfg(ieee80211_band_5ghz)]
+    fn rtw_chdef_5g_attrib(chd: u8) -> u8;
+
+    fn rtw_rust_rfctl_channel_plan(adapter: *mut u8) -> u8;
+    fn rtw_rust_rfctl_regd_src(adapter: *mut u8) -> u8;
+    fn rtw_rust_rfctl_channel_set(adapter: *mut u8) -> *mut RtChannelInfo;
+    fn rtw_rust_rfctl_country_ent(adapter: *mut u8) -> *const CountryChplan;
+    fn rtw_rust_regsty_wireless_mode(adapter: *mut u8) -> u8;
+    fn rtw_rust_adapter_regsty(adapter: *mut u8) -> *mut u8;
+
+    fn hal_chk_band_cap(adapter: *mut u8, cap: u8) -> bool;
+    #[cfg(regd_src_from_os)]
+    fn rtw_os_init_channel_set(adapter: *mut u8, channel_set: *mut RtChannelInfo) -> u8;
+    fn memset(s: *mut u8, c: c_int, n: usize) -> *mut u8;
+    fn rtw_rust_chset_set_non_ocp(chset: *mut RtChannelInfo, count: u8);
 }
 
 fn alpha_to_upper(c: u8) -> u8 {
@@ -112,9 +155,30 @@ fn excl_chs_ptr(regsty: *const u8) -> *const u8 {
     unsafe { regsty.add(layout::EXCL_CHS_OFFSET) }
 }
 
+fn is_supported_24g(wireless_mode: u8) -> bool {
+    wireless_mode & WIRELESS_MODE_24G != 0
+}
+
+fn is_supported_5g(wireless_mode: u8) -> bool {
+    wireless_mode & WIRELESS_MODE_5G != 0
+}
+
+fn rtw_is_5g_band1(ch: u8) -> bool {
+    (36..=48).contains(&ch)
+}
+fn rtw_is_5g_band2(ch: u8) -> bool {
+    (52..=64).contains(&ch)
+}
+fn rtw_is_5g_band3(ch: u8) -> bool {
+    (100..=144).contains(&ch)
+}
+fn rtw_is_5g_band4(ch: u8) -> bool {
+    (149..=177).contains(&ch)
+}
+
 #[no_mangle]
 pub extern "C" fn rtw_rust_chplan_probe() -> c_int {
-    0x7717
+    0x7720
 }
 
 #[no_mangle]
@@ -269,4 +333,115 @@ pub extern "C" fn rtw_get_chplan_from_country(
         }
     }
     core::ptr::null()
+}
+
+unsafe fn init_channel_set_from_rtk_priv(adapter: *mut u8, channel_set: *mut RtChannelInfo) -> u8 {
+    let channel_plan = unsafe { rtw_rust_rfctl_channel_plan(adapter) };
+    let country_ent = unsafe { rtw_rust_rfctl_country_ent(adapter) };
+    let regsty = unsafe { rtw_rust_adapter_regsty(adapter) };
+    let wireless_mode = unsafe { rtw_rust_regsty_wireless_mode(adapter) };
+    let mut chanset_size: u8 = 0;
+
+    if !rtw_is_channel_plan_valid(channel_plan) {
+        return 0;
+    }
+
+    unsafe {
+        memset(
+            channel_set.cast(),
+            0,
+            core::mem::size_of::<RtChannelInfo>() * MAX_CHANNEL_NUM,
+        );
+    }
+
+    let b2_4g = is_supported_24g(wireless_mode)
+        && unsafe { hal_chk_band_cap(adapter, BAND_CAP_2G) };
+    let b5g = is_supported_5g(wireless_mode) && unsafe { hal_chk_band_cap(adapter, BAND_CAP_5G) };
+
+    if !b2_4g && !b5g {
+        return 0;
+    }
+
+    if b2_4g {
+        let chd_2g = unsafe { chplan_ent_unchecked(channel_plan).chd_2g };
+        let attrib = unsafe { rtw_chdef_2g_attrib(chd_2g) };
+        let len = unsafe { rtw_chdef_2g_len(chd_2g) };
+        for index in 0..len {
+            let ch = unsafe { rtw_chdef_2g_ch(chd_2g, index) };
+            if rtw_regsty_is_excl_chs(regsty, ch) {
+                continue;
+            }
+            if chanset_size as usize >= MAX_CHANNEL_NUM {
+                break;
+            }
+            let ent = unsafe { &mut *channel_set.add(chanset_size as usize) };
+            ent.channel_num = ch;
+            if (12..=14).contains(&ch) && attrib & CLA_2G_12_14_PASSIVE != 0 {
+                ent.flags |= RTW_CHF_NO_IR;
+            }
+            let _ = country_ent;
+            chanset_size += 1;
+        }
+    }
+
+    #[cfg(ieee80211_band_5ghz)]
+    if b5g {
+        let chd_5g = unsafe { chplan_ent_unchecked(channel_plan).chd_5g };
+        let attrib = unsafe { rtw_chdef_5g_attrib(chd_5g) };
+        let len = unsafe { rtw_chdef_5g_len(chd_5g) };
+        for index in 0..len {
+            let ch = unsafe { rtw_chdef_5g_ch(chd_5g, index) };
+            if rtw_regsty_is_excl_chs(regsty, ch) {
+                continue;
+            }
+            let dfs = (rtw_is_5g_band2(ch) && attrib & CLA_5G_B2_DFS != 0)
+                || (rtw_is_5g_band3(ch) && attrib & CLA_5G_B3_DFS != 0)
+                || (rtw_is_5g_band4(ch) && attrib & CLA_5G_B4_DFS != 0);
+            #[cfg(not(dfs))]
+            if dfs {
+                continue;
+            }
+            if chanset_size as usize >= MAX_CHANNEL_NUM {
+                break;
+            }
+            let ent = unsafe { &mut *channel_set.add(chanset_size as usize) };
+            ent.channel_num = ch;
+            if (rtw_is_5g_band1(ch) && attrib & CLA_5G_B1_PASSIVE != 0)
+                || (rtw_is_5g_band2(ch) && attrib & CLA_5G_B2_PASSIVE != 0)
+                || (rtw_is_5g_band3(ch) && attrib & CLA_5G_B3_PASSIVE != 0)
+                || (rtw_is_5g_band4(ch) && attrib & CLA_5G_B4_PASSIVE != 0)
+            {
+                ent.flags |= RTW_CHF_NO_IR;
+            }
+            if dfs {
+                ent.flags |= RTW_CHF_DFS;
+            }
+            let _ = country_ent;
+            chanset_size += 1;
+        }
+
+        unsafe { rtw_rust_chset_set_non_ocp(channel_set, chanset_size) };
+    }
+
+    chanset_size
+}
+
+#[no_mangle]
+pub extern "C" fn init_channel_set(adapter: *mut u8) -> u8 {
+    if adapter.is_null() {
+        return 0;
+    }
+    let regd_src = unsafe { rtw_rust_rfctl_regd_src(adapter) };
+    let channel_set = unsafe { rtw_rust_rfctl_channel_set(adapter) };
+    if channel_set.is_null() {
+        return 0;
+    }
+    if regd_src == REGD_SRC_RTK_PRIV {
+        return unsafe { init_channel_set_from_rtk_priv(adapter, channel_set) };
+    }
+    #[cfg(regd_src_from_os)]
+    if regd_src == REGD_SRC_OS {
+        return unsafe { rtw_os_init_channel_set(adapter, channel_set) };
+    }
+    0
 }

@@ -2321,3 +2321,52 @@ u8 rtw_chdef_5g_attrib(u8 chd)
 	return chdef_attrib(&rtw_channel_def_5g[chd]);
 }
 #endif /* CONFIG_IEEE80211_BAND_5GHZ */
+
+/* Adapter/registry accessors for Rust init_channel_set (W2-20). */
+u8 rtw_rust_rfctl_channel_plan(void *adapter)
+{
+	return adapter_to_rfctl((_adapter *)adapter)->ChannelPlan;
+}
+
+u8 rtw_rust_rfctl_regd_src(void *adapter)
+{
+	return (u8)adapter_to_rfctl((_adapter *)adapter)->regd_src;
+}
+
+struct _RT_CHANNEL_INFO *rtw_rust_rfctl_channel_set(void *adapter)
+{
+	return adapter_to_rfctl((_adapter *)adapter)->channel_set;
+}
+
+const struct country_chplan *rtw_rust_rfctl_country_ent(void *adapter)
+{
+	return adapter_to_rfctl((_adapter *)adapter)->country_ent;
+}
+
+u8 rtw_rust_regsty_wireless_mode(void *adapter)
+{
+	return adapter_to_regsty((_adapter *)adapter)->wireless_mode;
+}
+
+struct registry_priv *rtw_rust_adapter_regsty(void *adapter)
+{
+	return adapter_to_regsty((_adapter *)adapter);
+}
+
+#ifndef HOST_CHPLAN_DATA_ONLY
+void rtw_rust_chset_set_non_ocp(struct _RT_CHANNEL_INFO *chset, u8 count)
+{
+#ifdef CONFIG_DFS_MASTER
+	int i;
+
+	for (i = 0; i < count; i++)
+		chset[i].non_ocp_end_time = rtw_get_current_time();
+#endif
+}
+#else
+void rtw_rust_chset_set_non_ocp(struct _RT_CHANNEL_INFO *chset, u8 count)
+{
+	(void)chset;
+	(void)count;
+}
+#endif /* HOST_CHPLAN_DATA_ONLY */
