@@ -2501,6 +2501,10 @@ $(MODULE_NAME)-y += rust/sha256_prf.o
 # rtw_registrypriv_amsdu_mode uses AMSDU_MODE_OFFSET in rust/rtw_crypto_wrap.rs —
 # re-run L1 after any include/drv_types.h _adapter layout change.
 $(MODULE_NAME)-y += rust/rtw_crypto_wrap.o
+# rtw_regsty_is_excl_chs uses EXCL_CHS_OFFSET in rust/rtw_chplan.rs — re-run L1
+# after any registry_priv layout change.
+RUSTFLAGS_rtw_chplan.o += --cfg ieee80211_band_5ghz
+$(MODULE_NAME)-y += rust/rtw_chplan.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
@@ -2527,7 +2531,7 @@ all: modules
 #   make rust-check-symbols OLD=/tmp/aes-ctr-c.o NEW=rust/aes_ctr.o
 RUST_CHECK_NM ?= $(if $(filter 1,$(LLVM)),llvm-nm,nm)
 
-.PHONY: rust-check-symbols rust-check-symbols-selftest rust-check-symbols-aes-internal rust-check-symbols-aes-internal-part1 rust-check-symbols-aes-internal-part2 rust-check-symbols-aes-internal-part3 rust-objects-aes-ctr rust-objects-aes-omac1 rust-objects-gcmp rust-objects-aes-siv rust-objects-aes-ccm rust-objects-aes-gcm rust-objects-aes-gcm-c rust-objects-ccmp rust-objects-ccmp-c rust-objects-aes-internal rust-objects-aes-internal-c rust-objects-aes-internal-enc rust-objects-aes-internal-enc-c rust-objects-sha256-internal rust-objects-sha256 rust-objects-sha256-c rust-objects-sha256-prf rust-objects-rtw-crypto-wrap rust-objects-rtw-crypto-wrap-c
+.PHONY: rust-check-symbols rust-check-symbols-selftest rust-check-symbols-aes-internal rust-check-symbols-aes-internal-part1 rust-check-symbols-aes-internal-part2 rust-check-symbols-aes-internal-part3 rust-objects-aes-ctr rust-objects-aes-omac1 rust-objects-gcmp rust-objects-aes-siv rust-objects-aes-ccm rust-objects-aes-gcm rust-objects-aes-gcm-c rust-objects-ccmp rust-objects-ccmp-c rust-objects-aes-internal rust-objects-aes-internal-c rust-objects-aes-internal-enc rust-objects-aes-internal-enc-c rust-objects-sha256-internal rust-objects-sha256 rust-objects-sha256-c rust-objects-sha256-prf rust-objects-rtw-crypto-wrap rust-objects-rtw-crypto-wrap-c rust-objects-rtw-chplan rust-objects-rtw-chplan-c rust-check-symbols-rtw-chplan
 rust-check-symbols:
 	@test -n "$(OLD)" && test -n "$(NEW)" || { \
 		echo "Usage: make rust-check-symbols OLD=path/to/old.o NEW=path/to/new.o [ALLOWLIST=path.allow] [ALLOW_VACUOUS=1]"; \
@@ -2673,6 +2677,23 @@ rust-objects-rtw-crypto-wrap-c:
 		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-rtw-crypto-wrap-c"; \
 		exit 1; }
 	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) core/crypto/rtw_crypto_wrap.o
+
+# L1 helpers for rtw_chplan lookup swap (W2-17b).
+rust-objects-rtw-chplan:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-rtw-chplan"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_chplan.o
+
+rust-objects-rtw-chplan-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_CHPLAN_TEST -o core/rtw_chplan_c_ref.o core/rtw_chplan.c
+
+rust-check-symbols-rtw-chplan: rust-objects-rtw-chplan-c rust-objects-rtw-chplan
+	$(MAKE) rust-check-symbols OLD=core/rtw_chplan_c_ref.o NEW=rust/rtw_chplan.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_chplan_lookup.allow
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production

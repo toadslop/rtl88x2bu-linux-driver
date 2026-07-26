@@ -119,3 +119,10 @@ bool rtw_chbw_to_freq_range(u8 ch, u8 bw, u8 offset, u32 *hi, u32 *lo)
 exit:
 	return valid;
 }
+
+void rtw_chplan_warn_regd_mismatch(u8 id, u8 regd_2g, u8 regd_5g)
+{
+	(void)id;
+	(void)regd_2g;
+	(void)regd_5g;
+}
