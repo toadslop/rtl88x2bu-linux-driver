@@ -1,0 +1,21 @@
+{
+  "oracle": "core/rtw_security.c",
+  "vectors": [
+    {
+      "name": "mic_single_byte",
+      "fn": "host_tkip_mic_append",
+      "key": "0102030405060708",
+      "data": "61",
+      "expect_mic": "f857645866ddc950"
+    },
+    {
+      "name": "mic_tkip_frame",
+      "fn": "host_tkip_seccalctkipmic",
+      "key": "0102030405060708",
+      "header": "00000000000000000000000000000000000000000000000000000000000000",
+      "data": "7061796c6f6164",
+      "priority": 0,
+      "expect_mic": "7669f1422c738908"
+    }
+  ]
+}
