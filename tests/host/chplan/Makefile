@@ -33,14 +33,14 @@ test_chplan: test_chplan.c $(CHPLAN_SRCS)
 	$(CC) $(CFLAGS) -o $@ test_chplan.c $(CHPLAN_SRCS)
 
 librust_chplan.a: $(RUST_CHPLAN)
-	$(RUSTC) $(RUSTFLAGS) --cfg host_chplan_test --crate-type staticlib \
+	$(RUSTC) $(RUSTFLAGS) --cfg host_chplan_test --cfg ieee80211_band_5ghz --crate-type staticlib \
 		$(RUST_CHPLAN) -o $@
 
 test-rust: test_chplan_rust
 	./test_chplan_rust chplan_vectors.json
 
 test_chplan_rust: test_chplan.c librust_chplan.a chplan_data.o $(HOST_JSON) ../shim/host_chplan_rf.c
-	$(CC) $(CFLAGS) -DRUST_CHPLAN_ORACLE -o $@ test_chplan.c $(HOST_JSON) \
+	$(CC) $(CFLAGS) -o $@ test_chplan.c $(HOST_JSON) \
 		../shim/host_chplan_rf.c chplan_data.o librust_chplan.a
 
 chplan_data.o: $(CHPLAN_DATA_SRCS)

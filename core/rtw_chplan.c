@@ -335,7 +335,6 @@ const struct chplan_ent_t RTW_ChannelPlanMap[] = {
 
 const int RTW_ChannelPlanMap_size = sizeof(RTW_ChannelPlanMap) / sizeof(RTW_ChannelPlanMap[0]);
 
-
 #if !defined(CONFIG_RUST) && !defined(HOST_CHPLAN_DATA_ONLY)
 
 u8 rtw_chplan_get_default_regd_2g(u8 id)
@@ -398,6 +397,13 @@ bool rtw_regsty_is_excl_chs(struct registry_priv *regsty, u8 ch)
 }
 
 #endif /* !CONFIG_RUST && !HOST_CHPLAN_DATA_ONLY */
+
+#ifndef HOST_CHPLAN_TEST
+void rtw_chplan_warn_regd_mismatch(u8 id, u8 regd_2g, u8 regd_5g)
+{
+	RTW_WARN("channel_plan:0x%02x, regd_2g:%u, regd_5g:%u not the same\n", id, regd_2g, regd_5g);
+}
+#endif
 
 #ifndef HOST_CHPLAN_TEST
 

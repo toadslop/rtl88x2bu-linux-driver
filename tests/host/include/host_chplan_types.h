@@ -93,4 +93,6 @@ int rtw_ch2freq(int chan);
 u8 rtw_get_center_ch(u8 ch, u8 bw, u8 offset);
 bool rtw_chbw_to_freq_range(u8 ch, u8 bw, u8 offset, u32 *hi, u32 *lo);
 
+void rtw_chplan_warn_regd_mismatch(u8 id, u8 regd_2g, u8 regd_5g);
+
 #endif /* HOST_CHPLAN_TYPES_H */
