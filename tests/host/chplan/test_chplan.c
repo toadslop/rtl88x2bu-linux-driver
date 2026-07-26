@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Host L2 oracle runner for rtw_chplan.c lookup + DFS helpers (W2-17a/W2-18).
+ * Host L2 oracle runner for rtw_chplan.c lookup, DFS, and country helpers
+ * (W2-17a/W2-18/W2-19).
  *
  * oracle: core/rtw_chplan.c
  */
@@ -29,6 +30,7 @@ enum chplan_fn {
 	FN_DFS_CH,
 	FN_DFS_RANGE,
 	FN_DFS_CHBW,
+	FN_COUNTRY,
 };
 
 struct vector {
@@ -43,6 +45,9 @@ struct vector {
 	int bw;
 	int offset;
 	int expect;
+	int expect_chplan;
+	int expect_null;
+	char alpha2[3];
 	u8 excl_chs[MAX_CHANNEL_NUM];
 	RT_CHANNEL_INFO chset[MAX_CHANNEL_NUM];
 };
@@ -71,6 +76,8 @@ static int parse_fn(const char *obj, size_t obj_len, enum chplan_fn *out)
 		*out = FN_DFS_RANGE;
 	else if (strcmp(fn, "rtw_chset_is_dfs_chbw") == 0)
 		*out = FN_DFS_CHBW;
+	else if (strcmp(fn, "rtw_get_chplan_from_country") == 0)
+		*out = FN_COUNTRY;
 	else
 		return -1;
 	return 0;
@@ -169,6 +176,12 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 	host_json_parse_int_in(obj, obj_len, "bw", &v->bw);
 	host_json_parse_int_in(obj, obj_len, "offset", &v->offset);
 	host_json_parse_int_in(obj, obj_len, "expect", &v->expect);
+	host_json_parse_int_in(obj, obj_len, "expect_chplan", &v->expect_chplan);
+	host_json_parse_int_in(obj, obj_len, "expect_null", &v->expect_null);
+	if (!host_json_parse_string_in(obj, obj_len, "alpha2", v->alpha2, sizeof(v->alpha2))) {
+		if (strlen(v->alpha2) != 2)
+			return -1;
+	}
 	if (!host_json_parse_string_in(obj, obj_len, "excl_chs", hex, sizeof(hex))) {
 		if (parse_excl_chs(hex, v->excl_chs))
 			return -1;
@@ -244,6 +257,25 @@ static int run_vector(const struct vector *v)
 			return -1;
 		}
 		break;
+	case FN_COUNTRY: {
+		const struct country_chplan *ent;
+
+		ent = rtw_get_chplan_from_country(v->alpha2);
+		if (v->expect_null) {
+			if (ent != NULL) {
+				fprintf(stderr, "%s: expected NULL, got entry\n", v->name);
+				return -1;
+			}
+		} else if (ent == NULL) {
+			fprintf(stderr, "%s: expected entry, got NULL\n", v->name);
+			return -1;
+		} else if ((int)ent->chplan != v->expect_chplan) {
+			fprintf(stderr, "%s: chplan mismatch (got %u, expected %d)\n",
+				v->name, ent->chplan, v->expect_chplan);
+			return -1;
+		}
+		break;
+	}
 	default:
 		fprintf(stderr, "%s: unknown fn\n", v->name);
 		return -1;
