@@ -1,2 +1,2 @@
 # Host L2 build artifacts (W2-17a chplan harness)
-tests/host/chplan/test_chplan
+chplan/test_chplan
