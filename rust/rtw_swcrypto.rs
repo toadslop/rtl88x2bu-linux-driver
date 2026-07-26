@@ -398,6 +398,8 @@ pub extern "C" fn _bip_gcmp_protect(
     _SUCCESS as u8
 }
 
+// C gates these on CONFIG_RTW_MESH_AEK; Rust exports unconditionally for a stable
+// ABI across kernel configs (same pattern as other swcrypto wrappers in this file).
 #[no_mangle]
 pub extern "C" fn _aes_siv_encrypt(
     key: *const u8,
