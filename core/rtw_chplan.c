@@ -202,11 +202,7 @@ struct chplan_ent_t {
 
 #define CHPLAN_ENT_NOT_DEFINED CHPLAN_ENT(TXPWR_LMT_NONE, RTW_CHD_2G_NULL, TXPWR_LMT_NONE, RTW_CHD_5G_NULL)
 
-#ifdef HOST_CHPLAN_TEST
 const struct chplan_ent_t RTW_ChannelPlanMap[] = {
-#else
-static const struct chplan_ent_t RTW_ChannelPlanMap[] = {
-#endif
 	/* 0x00 */	CHPLAN_ENT(TXPWR_LMT_ETSI,		RTW_CHD_2G_02,	TXPWR_LMT_ETSI,		RTW_CHD_5G_49),
 	/* 0x01 */	CHPLAN_ENT(TXPWR_LMT_ETSI,		RTW_CHD_2G_02,	TXPWR_LMT_ETSI,		RTW_CHD_5G_50),
 	/* 0x02 */	CHPLAN_ENT(TXPWR_LMT_ETSI,		RTW_CHD_2G_03,	TXPWR_LMT_ETSI,		RTW_CHD_5G_07),
@@ -339,6 +335,9 @@ static const struct chplan_ent_t RTW_ChannelPlanMap[] = {
 
 const int RTW_ChannelPlanMap_size = sizeof(RTW_ChannelPlanMap) / sizeof(RTW_ChannelPlanMap[0]);
 
+
+#if !defined(CONFIG_RUST) && !defined(HOST_CHPLAN_DATA_ONLY)
+
 u8 rtw_chplan_get_default_regd_2g(u8 id)
 {
 	return RTW_ChannelPlanMap[id].regd_2g;
@@ -397,6 +396,8 @@ bool rtw_regsty_is_excl_chs(struct registry_priv *regsty, u8 ch)
 	}
 	return _FALSE;
 }
+
+#endif /* !CONFIG_RUST && !HOST_CHPLAN_DATA_ONLY */
 
 #ifndef HOST_CHPLAN_TEST
 
@@ -2142,7 +2143,7 @@ static u16 rtw_def_module_country_chplan_map(const struct country_chplan **hal_m
 }
 #else
 
-static const struct country_chplan country_chplan_map[] = {
+const struct country_chplan country_chplan_map[] = {
 	COUNTRY_CHPLAN_ENT("AD", 0x26, 1), /* Andorra */
 	COUNTRY_CHPLAN_ENT("AE", 0x35, 1), /* United Arab Emirates */
 	COUNTRY_CHPLAN_ENT("AF", 0x42, 1), /* Afghanistan */
@@ -2381,6 +2382,10 @@ static const struct country_chplan country_chplan_map[] = {
 	COUNTRY_CHPLAN_ENT("ZM", 0x26, 1), /* Zambia */
 	COUNTRY_CHPLAN_ENT("ZW", 0x26, 1), /* Zimbabwe */
 };
+
+const unsigned int rtw_country_chplan_map_size =
+	sizeof(country_chplan_map) / sizeof(country_chplan_map[0]);
+
 #endif /* CONFIG_CUSTOMIZED_COUNTRY_CHPLAN_MAP or RTW_DEF_MODULE_REGULATORY_CERT or newest */
 
 /*

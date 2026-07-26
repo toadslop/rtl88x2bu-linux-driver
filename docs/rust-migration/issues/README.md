@@ -82,14 +82,14 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 | W2-14 | #105 | `wave2-14-aes-internal-part4.md` | done |
 | W2-15 | #106 | `wave2-15-aes-internal-enc.md` | done |
 | W2-16 | #107 | `wave2-16-sha256.md` | done |
-| W2-17 | #108 | `wave2-17-chplan-lookup.md` | in progress (`cursor/w2-17a`/`w2-17b`) |
+| W2-17 | #108 | `wave2-17-chplan-lookup.md` | in progress (`cursor/w2-17b-chplan-lookup-rust-3dd4`) |
 | W2-18 | #109 | `wave2-18-chplan-dfs.md` | in progress (`cursor/w2-18-chplan-dfs-rust-3dd4`) |
 | W2-19 | #110 | `wave2-19-chplan-country.md` | in progress (`cursor/w2-19-chplan-country-rust-3dd4`) |
 | W2-20 | #111 | `wave2-20-chplan-init.md` | draft |
 | T0 / A0 | #75 / #81 | `test-00-*.md` / `arch-00-*.md` | done |
 | T1 | #76 | `test-01-symbol-check.md` | done (supersedes pre-migration #12) |
 | T3 | #78 | `test-03-ci-host-tests.md` | done (`.github/workflows/host-l2.yml`) |
-| T4 | #79 | `test-04-host-chplan-harness.md` | in progress (`cursor/w2-17a-chplan-harness-3dd4`) |
+| T4 | #79 | `test-04-host-chplan-harness.md` | done (#59) |
 | T5 | #80 | `test-05-host-security-wlan-harness.md` | draft |
 | A2 | #83 | `arch-02-domain-types-chplan.md` | draft |
 | A3 | #84 | `arch-03-domain-types-security.md` | draft |
