@@ -13,3 +13,6 @@ swcrypto/librust_swcrypto.a
 security/test_security
 security/test_wep_primitives
 security/test_tkip_mic
+
+# T5 wlan_util harness
+wlan_util/test_wlan_util
