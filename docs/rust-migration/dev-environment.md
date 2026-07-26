@@ -247,4 +247,4 @@ timeout 120 qemu-system-x86_64 -cpu qemu64 -m 1G -nographic \
 
 ## When to extend this doc
 
-Add a short bullet when a new Wave hits a **recurring** environment failure (bindgen skew, RfL API break on kernel bump, CI image gap). Keep recipes copy-pasteable; link issue IDs once GitHub Issues are enabled.
+Add a short bullet when a new Wave hits a **recurring** environment failure (bindgen skew, RfL API break on kernel bump, CI image gap). Keep recipes copy-pasteable; link relevant GitHub issue IDs (see [`issues/ISSUE-MAP.md`](issues/ISSUE-MAP.md)).

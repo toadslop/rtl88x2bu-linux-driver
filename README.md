@@ -15,7 +15,7 @@ The tree still builds the same `88x2bu.ko` driver, but the primary purpose here 
 | Hardware STA smoke checklist | [`docs/smoke-test.md`](docs/smoke-test.md) |
 | Arch laptop USB test (safe vs built-in Wi-Fi) | [`docs/host-test.md`](docs/host-test.md) |
 | Host L2 crypto harness | [`tests/host/README.md`](tests/host/README.md) |
-| Work tracker (until GitHub Issues are enabled) | [`docs/rust-migration/issues/README.md`](docs/rust-migration/issues/README.md) |
+| Work tracker (GitHub Issues + draft specs) | [Issues](https://github.com/toadslop/rtl88x2bu-linux-driver/issues) · [`docs/rust-migration/issues/`](docs/rust-migration/issues/README.md) |
 | Rust sources | [`rust/`](rust/) |
 
 ## Migration status (Phase 1)
@@ -80,7 +80,7 @@ make -C tests/host/crypto test
 3. Keep PRs to one coherent chunk (~200 LOC of meaningful change).
 4. Use domain types at Rust APIs; confine `unsafe` and raw pointers to ABI/OS shims.
 
-Work items are tracked in [`docs/rust-migration/issues/`](docs/rust-migration/issues/) until GitHub Issues are enabled on this repository.
+Work items are tracked on [GitHub Issues](https://github.com/toadslop/rtl88x2bu-linux-driver/issues); draft specs and the ID map live in [`docs/rust-migration/issues/`](docs/rust-migration/issues/README.md).
 
 ## Driver background
 

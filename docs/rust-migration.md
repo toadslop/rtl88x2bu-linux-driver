@@ -1,6 +1,6 @@
 # Rust migration (88x2bu)
 
-Incremental port of this out-of-tree `88x2bu` USB driver from C to Rust-for-Linux (RfL). Work is tracked under [`docs/rust-migration/issues/`](rust-migration/issues/README.md) until GitHub Issues are enabled.
+Incremental port of this out-of-tree `88x2bu` USB driver from C to Rust-for-Linux (RfL). Work is tracked on [GitHub Issues](https://github.com/toadslop/rtl88x2bu-linux-driver/issues) (draft specs and ID map: [`docs/rust-migration/issues/`](rust-migration/issues/README.md)).
 
 Normative companions:
 

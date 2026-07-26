@@ -30,6 +30,7 @@ labels=(
   phase-1
   phase-2
   wave-0 wave-1 wave-2 wave-3 wave-4 wave-5 wave-6
+  "size/~100"
   "size/~200"
 )
 
