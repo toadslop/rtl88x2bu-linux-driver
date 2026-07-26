@@ -1,5 +1,5 @@
-# L1 allowlist for W2-17b: Rust owns lookup helpers; tables and DFS/country
-# helpers remain in core/rtw_chplan.c.
+# L1 allowlist for W2-17b/W2-18: Rust owns lookup + DFS helpers; tables and
+# country helpers remain in core/rtw_chplan.c.
 drop country_chplan_map
 drop RTW_ChannelPlanMap
 drop RTW_ChannelPlanMap_size

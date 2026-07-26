@@ -68,6 +68,37 @@
       "excl_chs": "01 06 00",
       "ch": 11,
       "expect": 0
+    },
+    {
+      "name": "dfs_ch_52",
+      "fn": "rtw_chset_is_dfs_ch",
+      "chset": "3402000000000000",
+      "ch": 52,
+      "expect": 1
+    },
+    {
+      "name": "dfs_ch_36_not",
+      "fn": "rtw_chset_is_dfs_ch",
+      "chset": "2400000000000000",
+      "ch": 36,
+      "expect": 0
+    },
+    {
+      "name": "dfs_range_overlap",
+      "fn": "rtw_chset_is_dfs_range",
+      "chset": "3402000000000000",
+      "hi": 5300,
+      "lo": 5180,
+      "expect": 1
+    },
+    {
+      "name": "dfs_chbw_52_20",
+      "fn": "rtw_chset_is_dfs_chbw",
+      "chset": "3402000000000000",
+      "ch": 52,
+      "bw": 2,
+      "offset": 0,
+      "expect": 1
     }
   ]
 }

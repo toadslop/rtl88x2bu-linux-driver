@@ -551,6 +551,7 @@ u8 init_channel_set(_adapter *adapter)
 
 #endif /* !HOST_CHPLAN_TEST */
 
+#if !defined(CONFIG_RUST) && !defined(HOST_CHPLAN_DATA_ONLY)
 
 bool rtw_chset_is_dfs_range(struct _RT_CHANNEL_INFO *chset, u32 hi, u32 lo)
 {
@@ -590,6 +591,7 @@ bool rtw_chset_is_dfs_chbw(struct _RT_CHANNEL_INFO *chset, u8 ch, u8 bw, u8 offs
 	return rtw_chset_is_dfs_range(chset, hi, lo);
 }
 
+#endif /* !CONFIG_RUST && !HOST_CHPLAN_DATA_ONLY */
 
 #ifndef HOST_CHPLAN_TEST
 

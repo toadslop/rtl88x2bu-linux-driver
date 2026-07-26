@@ -193,3 +193,61 @@ pub extern "C" fn rtw_regsty_is_excl_chs(regsty: *const u8, ch: u8) -> bool {
     }
     false
 }
+
+#[no_mangle]
+pub extern "C" fn rtw_chset_is_dfs_range(chset: *mut RtChannelInfo, hi: u32, lo: u32) -> bool {
+    // Intentional hardening: legacy C dereferences chset unconditionally.
+    if chset.is_null() {
+        return false;
+    }
+    let hi_ch = unsafe { rtw_freq2ch(hi as c_int) } as u8;
+    let lo_ch = unsafe { rtw_freq2ch(lo as c_int) } as u8;
+    let chset = unsafe { core::slice::from_raw_parts(chset, MAX_CHANNEL_NUM) };
+
+    for ent in chset.iter() {
+        if ent.channel_num == 0 {
+            break;
+        }
+        if ent.flags & RTW_CHF_DFS == 0 {
+            continue;
+        }
+        if hi_ch > ent.channel_num && lo_ch < ent.channel_num {
+            return true;
+        }
+    }
+    false
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_chset_is_dfs_ch(chset: *mut RtChannelInfo, ch: u8) -> bool {
+    // See rtw_chset_is_dfs_range: NULL chset returns false instead of faulting.
+    if chset.is_null() {
+        return false;
+    }
+    let chset = unsafe { core::slice::from_raw_parts(chset, MAX_CHANNEL_NUM) };
+    for ent in chset.iter() {
+        if ent.channel_num == 0 {
+            break;
+        }
+        if ent.channel_num == ch {
+            return ent.flags & RTW_CHF_DFS != 0;
+        }
+    }
+    false
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_chset_is_dfs_chbw(
+    chset: *mut RtChannelInfo,
+    ch: u8,
+    bw: u8,
+    offset: u8,
+) -> bool {
+    let mut hi: u32 = 0;
+    let mut lo: u32 = 0;
+
+    if !unsafe { rtw_chbw_to_freq_range(ch, bw, offset, &mut hi, &mut lo) } {
+        return false;
+    }
+    rtw_chset_is_dfs_range(chset, hi, lo)
+}
