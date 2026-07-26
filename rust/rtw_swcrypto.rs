@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! Software crypto frame wrappers — Rust port of `core/rtw_swcrypto.c` (W3-01/W3-02).
+//! Software crypto frame wrappers — Rust port of `core/rtw_swcrypto.c` (W3-01).
 
 #![allow(
     dead_code,
@@ -18,8 +18,6 @@ use std::os::raw::{c_int, c_void};
 use core::ffi::{c_int, c_void};
 
 const AES_BLOCK_SIZE: usize = 16;
-const ETH_ALEN: usize = 6;
-const SHA256_MAC_LEN: usize = 32;
 const _SUCCESS: i32 = 1;
 const _FAIL: i32 = 0;
 
@@ -27,26 +25,13 @@ const _FAIL: i32 = 0;
 pub struct Ieee80211Hdr {
     pub frame_control: u16,
     pub duration_id: u16,
-    pub addr1: [u8; ETH_ALEN],
-    pub addr2: [u8; ETH_ALEN],
-    pub addr3: [u8; ETH_ALEN],
+    pub addr1: [u8; 6],
+    pub addr2: [u8; 6],
+    pub addr3: [u8; 6],
     pub seq_ctrl: u16,
 }
 
 pub type Adapter = c_void;
-
-#[repr(C)]
-pub struct StaMac {
-    pub mac_addr: [u8; ETH_ALEN],
-}
-
-#[repr(C)]
-pub struct StaInfo {
-    pub cmn: StaMac,
-    pub snonce: [u8; 32],
-    pub anonce: [u8; 32],
-    pub tpk: [u8; 32],
-}
 
 extern "C" {
     fn ccmp_encrypt(
@@ -108,54 +93,8 @@ extern "C" {
         data_len: usize,
         decrypted_len: *mut usize,
     ) -> *mut u8;
-    fn omac1_aes_128(key: *const u8, data: *const u8, data_len: usize, mac: *mut u8) -> i32;
-    fn omac1_aes_256(key: *const u8, data: *const u8, data_len: usize, mac: *mut u8) -> i32;
-    fn aes_gmac(
-        key: *const u8,
-        key_len: usize,
-        nonce: *const u8,
-        nonce_len: usize,
-        data: *const u8,
-        data_len: usize,
-        tag: *mut u8,
-    ) -> i32;
-    fn aes_siv_encrypt(
-        key: *const u8,
-        key_len: usize,
-        pw: *const u8,
-        pwlen: usize,
-        num_elem: usize,
-        addr: *const *const u8,
-        len: *const usize,
-        out: *mut u8,
-    ) -> i32;
-    fn aes_siv_decrypt(
-        key: *const u8,
-        key_len: usize,
-        iv_crypt: *const u8,
-        iv_c_len: usize,
-        num_elem: usize,
-        addr: *const *const u8,
-        len: *const usize,
-        out: *mut u8,
-    ) -> i32;
-    fn sha256_vector(num_elem: usize, addr: *const *const u8, len: *const usize, mac: *mut u8);
-    fn sha256_prf(
-        key: *const u8,
-        key_len: usize,
-        label: *const u8,
-        data: *const u8,
-        data_len: usize,
-        out: *mut u8,
-        out_len: usize,
-    );
     fn _rtw_mfree(ptr: *mut c_void, sz: u32);
     fn _rtw_memcpy(dst: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
-    fn _rtw_memcmp2(a: *const c_void, b: *const c_void, n: usize) -> i32;
-}
-
-fn get_addr2_ptr(frame: *const u8) -> *const u8 {
-    unsafe { frame.add(10) }
 }
 
 #[no_mangle]

@@ -54,7 +54,6 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 
 ## Status
 
-<<<<<<< HEAD
 | ID | GitHub | File | Status |
 |----|--------|------|--------|
 | E01–E11 | #64–#74 | `epic-*.md` | open (epics) |
