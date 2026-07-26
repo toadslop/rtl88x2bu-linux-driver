@@ -1,0 +1,27 @@
+/* SPDX-License-Identifier: GPL-2.0 */
+/*
+ * IEEE 802.11 rate constants for host wlan_util L2 tests (T5).
+ */
+#ifndef HOST_WLAN_UTIL_TYPES_H
+#define HOST_WLAN_UTIL_TYPES_H
+
+#include "host_types.h"
+
+#define IEEE80211_CCK_RATE_1MB		0x02
+#define IEEE80211_CCK_RATE_2MB		0x04
+#define IEEE80211_CCK_RATE_5MB		0x0B
+#define IEEE80211_CCK_RATE_11MB		0x16
+#define IEEE80211_OFDM_RATE_6MB		0x0C
+#define IEEE80211_OFDM_RATE_9MB		0x12
+#define IEEE80211_OFDM_RATE_12MB	0x18
+#define IEEE80211_OFDM_RATE_18MB	0x24
+#define IEEE80211_OFDM_RATE_24MB	0x30
+#define IEEE80211_OFDM_RATE_36MB	0x48
+#define IEEE80211_OFDM_RATE_48MB	0x60
+#define IEEE80211_OFDM_RATE_54MB	0x6C
+#define IEEE80211_BASIC_RATE_MASK	0x80
+
+#define _TRUE 1
+#define _FALSE 0
+
+#endif /* HOST_WLAN_UTIL_TYPES_H */

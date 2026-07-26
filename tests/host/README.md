@@ -37,6 +37,10 @@ tests/host/
     test_rtw_crypto_wrap.c   # C-oracle runner for rtw_crypto_wrap (W2-06d)
     rtw_crypto_wrap_vectors.json
     Makefile
+  security/          # T5: rtw_security.c type/WEP/TKIP MIC oracles (W3-04+)
+  wlan_util/         # T5: rtw_wlan_util.c rate/ratetbl oracles (W3-08+)
+  swcrypto/          # W3-01/W3-02: rtw_swcrypto wrappers
+  ie/                # W3-03: rtw_ieee80211 IE parse helpers
 ```
 
 Driver crypto sources are compiled with `-DHOST_CRYPTO_TEST`, which makes

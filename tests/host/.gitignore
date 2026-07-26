@@ -8,3 +8,12 @@ chplan/chplan_data.o
 swcrypto/test_swcrypto
 swcrypto/test_swcrypto_rust
 swcrypto/librust_swcrypto.a
+
+# T5 security harness
+security/test_security
+security/test_wep_primitives
+security/test_tkip_mic
+
+# T5 wlan_util harness
+wlan_util/test_wlan_util
+wlan_util/test_ratetbl
