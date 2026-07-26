@@ -1,0 +1,20 @@
+{
+  "oracle": "core/rtw_wlan_util.c",
+  "vectors": [
+    {"name": "cck_1m", "fn": "rtw_is_cck_rate", "rate": 2, "expect": 1},
+    {"name": "cck_11m", "fn": "rtw_is_cck_rate", "rate": 22, "expect": 1},
+    {"name": "not_cck_6m", "fn": "rtw_is_cck_rate", "rate": 12, "expect": 0},
+    {"name": "ofdm_6m", "fn": "rtw_is_ofdm_rate", "rate": 12, "expect": 1},
+    {"name": "ofdm_54m", "fn": "rtw_is_ofdm_rate", "rate": 108, "expect": 1},
+    {"name": "not_ofdm_1m", "fn": "rtw_is_ofdm_rate", "rate": 2, "expect": 0},
+    {"name": "basic_cck_2m", "fn": "rtw_is_basic_rate_cck", "rate": 4, "expect": 1},
+    {"name": "basic_cck_6m", "fn": "rtw_is_basic_rate_cck", "rate": 12, "expect": 0},
+    {"name": "basic_ofdm_24m", "fn": "rtw_is_basic_rate_ofdm", "rate": 48, "expect": 1},
+    {"name": "basic_mix_11m", "fn": "rtw_is_basic_rate_mix", "rate": 22, "expect": 1},
+    {"name": "basic_mix_36m", "fn": "rtw_is_basic_rate_mix", "rate": 72, "expect": 0},
+    {"name": "cck_included_yes", "fn": "cckrates_included", "rates": "020b", "expect": 1},
+    {"name": "cck_included_no", "fn": "cckrates_included", "rates": "0c12", "expect": 0},
+    {"name": "cck_only_yes", "fn": "cckratesonly_included", "rates": "0204", "expect": 1},
+    {"name": "cck_only_no", "fn": "cckratesonly_included", "rates": "020c", "expect": 0}
+  ]
+}
