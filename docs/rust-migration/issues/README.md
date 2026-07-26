@@ -90,7 +90,7 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 | T1 | #76 | `test-01-symbol-check.md` | done (supersedes pre-migration #12) |
 | T3 | #78 | `test-03-ci-host-tests.md` | done (`.github/workflows/host-l2.yml`) |
 | T4 | #79 | `test-04-host-chplan-harness.md` | done (#59) |
-| T5 | #80 | `test-05-host-security-wlan-harness.md` | draft |
+| T5 | #80 | `test-05-host-security-wlan-harness.md` | done |
 | A2 | #83 | `arch-02-domain-types-chplan.md` | draft |
 | A3 | #84 | `arch-03-domain-types-security.md` | draft |
 | W3-01 | #112 | `wave3-01-swcrypto-ccmp-gcmp.md` | done (#60) |
