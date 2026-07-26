@@ -8,7 +8,7 @@
       "name": "is_basic_yes",
       "fn": "is_basicrate",
       "oper_ch": 6,
-      "basicrate": "0001feffffffffffffffffffffff",
+      "basicrate": "0001feffffffffffffffffffff",
       "wifi_rate": 4,
       "expect": 1
     },
@@ -16,7 +16,7 @@
       "name": "is_basic_no",
       "fn": "is_basicrate",
       "oper_ch": 6,
-      "basicrate": "0001feffffffffffffffffffffff",
+      "basicrate": "0001feffffffffffffffffffff",
       "wifi_rate": 12,
       "expect": 0
     },
@@ -24,7 +24,7 @@
       "name": "rateset_2g_mix",
       "fn": "ratetbl2rateset",
       "oper_ch": 6,
-      "basicrate": "0001feffffffffffffffffffffff",
+      "basicrate": "0001feffffffffffffffffffff",
       "datarate": "000304ff",
       "expect_rates": "82160c",
       "expect_len": 3
@@ -33,7 +33,7 @@
       "name": "rateset_5g_skip_cck",
       "fn": "ratetbl2rateset",
       "oper_ch": 36,
-      "basicrate": "04feffffffffffffffffffffffff",
+      "basicrate": "04feffffffffffffffffffffff",
       "datarate": "0004ff",
       "expect_rates": "8c",
       "expect_len": 1

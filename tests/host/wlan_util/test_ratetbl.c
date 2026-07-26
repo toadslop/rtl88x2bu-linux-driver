@@ -63,14 +63,17 @@ static int parse_fn(const char *obj, size_t obj_len, enum ratetbl_fn *out)
 }
 
 static int parse_hex_tbl(const char *obj, size_t obj_len, const char *key,
-			 u8 *out, size_t out_cap)
+			 u8 *out, size_t out_cap, int required)
 {
 	char hex[HOST_VECTOR_MAX_HEX_BUF];
 	size_t len = 0;
 
 	memset(out, 0xff, out_cap);
-	if (host_json_parse_string_in(obj, obj_len, key, hex, sizeof(hex)))
+	if (host_json_parse_string_in(obj, obj_len, key, hex, sizeof(hex))) {
+		if (required)
+			return -1;
 		return 0;
+	}
 	if (host_hex_decode(hex, out, out_cap, &len))
 		return -1;
 	return 0;
@@ -100,10 +103,12 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		if (!host_json_parse_int_in(obj, obj_len, "oper_ch", &oper_ch))
 			v->adapter.oper_ch = (u8)oper_ch;
 	}
-	parse_hex_tbl(obj, obj_len, "basicrate", v->adapter.mlmeextpriv.basicrate,
-		      NumRates);
-	parse_hex_tbl(obj, obj_len, "datarate", v->adapter.mlmeextpriv.datarate,
-		      NumRates);
+	if (parse_hex_tbl(obj, obj_len, "basicrate", v->adapter.mlmeextpriv.basicrate,
+			  NumRates, v->fn != FN_TBL_TO_WIFI))
+		return -1;
+	if (parse_hex_tbl(obj, obj_len, "datarate", v->adapter.mlmeextpriv.datarate,
+			  NumRates, v->fn == FN_TO_RATESET))
+		return -1;
 	if (!host_json_parse_string_in(obj, obj_len, "expect_rates", hex,
 				       sizeof(hex))) {
 		if (host_hex_decode(hex, v->expect_rates, sizeof(v->expect_rates),
