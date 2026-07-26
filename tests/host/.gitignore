@@ -16,3 +16,4 @@ security/test_tkip_mic
 
 # T5 wlan_util harness
 wlan_util/test_wlan_util
+wlan_util/test_ratetbl
