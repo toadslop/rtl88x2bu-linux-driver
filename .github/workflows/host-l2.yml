@@ -8,6 +8,10 @@ on:
     branches: [master]
     paths:
       - 'core/crypto/**'
+      - 'core/rtw_chplan.c'
+      - 'core/rtw_chplan.h'
+      - 'core/rtw_chplan.c'
+      - 'core/rtw_chplan.h'
       - 'rust/**'
       - 'tests/host/**'
       - 'Makefile'
@@ -37,5 +41,12 @@ jobs:
       - name: Domain type unit tests (A1)
         run: make -C tests/host/domain test
 
+<<<<<<< HEAD
       - name: Host crypto parity (L2)
         run: make -C tests/host/crypto all
+=======
+      - name: Host crypto / chplan parity (L2)
+        run: |
+          make -C tests/host/crypto test
+          make -C tests/host/chplan test
+>>>>>>> 32628f4 (W2-17a: Add host L2 harness for chplan lookup helpers (C oracle))

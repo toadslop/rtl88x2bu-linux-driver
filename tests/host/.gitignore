@@ -1,0 +1,9 @@
+
+# Host L2 build artifacts
+tests/host/chplan/test_chplan
+tests/host/chplan/test_chplan_rust
+tests/host/chplan/librust_chplan.a
+tests/host/chplan/chplan_data.o
+tests/host/ie/test_ie
+tests/host/ie/test_ie_rust
+tests/host/ie/librust_ie.a
