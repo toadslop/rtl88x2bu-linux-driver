@@ -185,5 +185,5 @@ pub extern "C" fn hmac_sha256_vector(
 /// Link-time probe for L1 (distinct from the exported crypto symbols).
 #[no_mangle]
 pub extern "C" fn rtw_rust_sha256_probe() -> c_int {
-    0x16
+    SHA256_MAC_LEN as c_int
 }
