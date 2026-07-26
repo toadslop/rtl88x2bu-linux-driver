@@ -62,6 +62,6 @@ Because the pinned kernel has `CONFIG_RUST=y`, the build links the Rust objects
 - **L1** (`docs/rust-migration/scripts/check-symbols.sh`) — wired. Run after each
   C→Rust object swap: `make rust-check-symbols OLD=… NEW=…` (see
   `docs/rust-migration/test-plan.md`).
-- **L2** (host crypto harness under `tests/`) — wired. Run `make -C tests/host/crypto test`.
+- **L2** (host crypto harness under `tests/`) — wired. Run `make -C tests/host/crypto all` (full oracle suite; `test` is aes-ctr only).
 - **L4** (hardware STA smoke, `docs/smoke-test.md`) — not automated in this VM;
   needs a real USB RTL8822BU dongle.
