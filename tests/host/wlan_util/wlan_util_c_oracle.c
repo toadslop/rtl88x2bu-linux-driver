@@ -120,3 +120,108 @@ int cckratesonly_included(unsigned char *rate, int ratelen)
 	}
 	return _TRUE;
 }
+
+/* ----- ratetbl conversion helpers (W3-09) ----- */
+
+#define NumRates 13
+#define _6M_RATE_ 4
+
+typedef struct {
+	u8 oper_ch;
+	struct {
+		u8 basicrate[NumRates];
+		u8 datarate[NumRates];
+	} mlmeextpriv;
+} host_wlan_adapter;
+
+unsigned char host_ratetbl_val_2wifirate(unsigned char rate)
+{
+	unsigned char val = 0;
+
+	switch (rate & 0x7f) {
+	case 0:
+		val = IEEE80211_CCK_RATE_1MB;
+		break;
+	case 1:
+		val = IEEE80211_CCK_RATE_2MB;
+		break;
+	case 2:
+		val = IEEE80211_CCK_RATE_5MB;
+		break;
+	case 3:
+		val = IEEE80211_CCK_RATE_11MB;
+		break;
+	case 4:
+		val = IEEE80211_OFDM_RATE_6MB;
+		break;
+	case 5:
+		val = IEEE80211_OFDM_RATE_9MB;
+		break;
+	case 6:
+		val = IEEE80211_OFDM_RATE_12MB;
+		break;
+	case 7:
+		val = IEEE80211_OFDM_RATE_18MB;
+		break;
+	case 8:
+		val = IEEE80211_OFDM_RATE_24MB;
+		break;
+	case 9:
+		val = IEEE80211_OFDM_RATE_36MB;
+		break;
+	case 10:
+		val = IEEE80211_OFDM_RATE_48MB;
+		break;
+	case 11:
+		val = IEEE80211_OFDM_RATE_54MB;
+		break;
+	default:
+		break;
+	}
+	return val;
+}
+
+int host_is_basicrate(host_wlan_adapter *padapter, unsigned char rate)
+{
+	int i;
+	unsigned char val;
+
+	for (i = 0; i < NumRates; i++) {
+		val = padapter->mlmeextpriv.basicrate[i];
+		if ((val != 0xff) && (val != 0xfe)) {
+			if (rate == host_ratetbl_val_2wifirate(val))
+				return _TRUE;
+		}
+	}
+	return _FALSE;
+}
+
+unsigned int host_ratetbl2rateset(host_wlan_adapter *padapter,
+				  unsigned char *rateset)
+{
+	int i;
+	unsigned char rate;
+	unsigned int len = 0;
+
+	for (i = 0; i < NumRates; i++) {
+		rate = padapter->mlmeextpriv.datarate[i];
+
+		if (padapter->oper_ch > 14 && rate < _6M_RATE_)
+			continue;
+
+		switch (rate) {
+		case 0xff:
+			return len;
+		case 0xfe:
+			continue;
+		default:
+			rate = host_ratetbl_val_2wifirate(rate);
+			if (host_is_basicrate(padapter, rate) == _TRUE)
+				rate |= IEEE80211_BASIC_RATE_MASK;
+			rateset[len] = rate;
+			len++;
+			break;
+		}
+	}
+	return len;
+}
