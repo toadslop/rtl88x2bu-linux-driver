@@ -59,7 +59,6 @@ u32 security_type_bip_to_gmcs(enum security_type type)
 #endif
 
 /* ----- WEP primitives (ARC4 + CRC32) from core/rtw_security.c ----- */
-/* codeql[cpp/weak-cryptographic-algorithm]: Host L2 oracle for legacy WEP characterization only. */
 
 typedef int sint;
 
@@ -179,7 +178,6 @@ void host_wep_arcfour_crypt(const u8 *key, u32 key_len, const u8 *src, u8 *dest,
 {
 	struct arc4context ctx;
 
-	// codeql[cpp/weak-cryptographic-algorithm]
 	arcfour_init(&ctx, (u8 *)key, key_len);
 	arcfour_encrypt(&ctx, dest, (u8 *)src, len);
 }

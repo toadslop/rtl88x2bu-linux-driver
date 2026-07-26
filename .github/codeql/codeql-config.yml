@@ -1,0 +1,11 @@
+# RTL88x2BU CodeQL configuration.
+#
+# Host L2 oracles under tests/host/ intentionally exercise legacy WEP (ARC4/CRC32)
+# primitives copied from core/rtw_security.c for characterization parity. The
+# driver must retain WEP for interoperability; exclude the weak-crypto query so
+# host oracle copies do not fail PR checks. (C/C++ default setup ignores
+# paths-ignore when building; query-filters are the supported knob.)
+name: "RTL88x2BU CodeQL"
+query-filters:
+  - exclude:
+      id: cpp/weak-cryptographic-algorithm

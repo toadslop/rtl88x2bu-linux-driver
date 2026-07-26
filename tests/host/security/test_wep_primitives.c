@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
  * Host L2 oracle runner for WEP ARC4/CRC32 primitives (T5 / W3-05).
- * codeql[cpp/weak-cryptographic-algorithm]: Exercises legacy WEP ARC4 via the C oracle for parity tests.
  */
 
 #include <stdio.h>
@@ -86,7 +85,6 @@ static int run_vector(struct vector *v)
 	case FN_ARCFOUR: {
 		u8 out[MAX_BUF];
 
-		// codeql[cpp/weak-cryptographic-algorithm]
 		host_wep_arcfour_crypt(v->key, (u32)v->key_len, v->data, out,
 				       (u32)v->data_len);
 		if (v->expect_len != v->data_len ||
