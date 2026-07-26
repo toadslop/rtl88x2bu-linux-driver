@@ -41,9 +41,9 @@
 //! | `aes_gcm_*` / `aes_gmac` | **Rust** (`aes_gcm.rs`); C TU removed (W2-07/W2-08) |
 //! | `ccmp_*` | **Rust** (`ccmp.rs`); C TU removed (W2-09/W2-10) |
 //! | `sha256_vector` / `_sha256_*` | **Rust** (`sha256_internal.rs`); C TU removed (W2-05) |
+//! | `hmac_sha256_vector` | **Rust** (`sha256.rs`); C TU removed (W2-16) |
 //! | `sha256_prf` / `sha256_prf_bits` | **Rust** (`sha256_prf.rs`); C TU removed (W2-06) |
 //! | `os_memcmp` / `os_memcmp_const` / `os_memdup` / `os_strlen` / `forced_memzero` / `bin_clear_free` / `rtw_registrypriv_amsdu_mode` / `wpa_*` | **Rust** (`rtw_crypto_wrap.rs`); C TU removed (W2-06) |
-//! | `hmac_sha256_vector` | **C** (`sha256.c`) | Rust binds until W2-16 |
 //! | Remaining `core/crypto/*.c` + rest of driver | **C** | Until later waves claim them |
 //!
 //! ## Rules

@@ -28,6 +28,9 @@ tests/host/crypto/librust_sha256_internal.a
 tests/host/crypto/test_sha256_prf
 tests/host/crypto/test_sha256_prf_rust
 tests/host/crypto/librust_sha256_prf.a
+tests/host/crypto/test_hmac_sha256
+tests/host/crypto/test_hmac_sha256_rust
+tests/host/crypto/librust_sha256.a
 tests/host/crypto/test_rtw_crypto_wrap
 tests/host/crypto/test_rtw_crypto_wrap_rust
 tests/host/crypto/librust_rtw_crypto_wrap.a
