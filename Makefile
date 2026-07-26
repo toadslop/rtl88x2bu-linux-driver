@@ -2513,6 +2513,9 @@ $(MODULE_NAME)-y += rust/rtw_crypto_wrap.o
 # rtw_regsty_is_excl_chs uses EXCL_CHS_OFFSET in rust/rtw_chplan.rs — re-run L1
 # after any registry_priv layout change.
 RUSTFLAGS_rtw_chplan.o += --cfg ieee80211_band_5ghz
+ifeq ($(CONFIG_DFS),y)
+RUSTFLAGS_rtw_chplan.o += --cfg dfs
+endif
 $(MODULE_NAME)-y += rust/rtw_chplan.o
 $(MODULE_NAME)-y += rust/rtw_swcrypto.o
 $(MODULE_NAME)-y += rust/rtw_ieee80211.o
@@ -2705,6 +2708,8 @@ rust-objects-rtw-chplan-c:
 rust-check-symbols-rtw-chplan: rust-objects-rtw-chplan-c rust-objects-rtw-chplan
 	$(MAKE) rust-check-symbols OLD=core/rtw_chplan_c_ref.o NEW=rust/rtw_chplan.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_chplan_lookup.allow
+	$(MAKE) rust-check-symbols OLD=core/rtw_chplan_c_ref.o NEW=rust/rtw_chplan.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_chplan_init.allow
 
 rust-objects-rtw-swcrypto:
 	@test -n "$(KDIR)" || { \

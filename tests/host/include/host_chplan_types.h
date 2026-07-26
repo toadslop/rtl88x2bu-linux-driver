@@ -136,5 +136,6 @@ void rtw_chplan_warn_regd_mismatch(u8 id, u8 regd_2g, u8 regd_5g);
 
 void host_chplan_set_band_cap(u8 cap);
 bool hal_chk_band_cap(_adapter *adapter, u8 cap);
+u8 rtw_os_init_channel_set(_adapter *padapter, RT_CHANNEL_INFO *channel_set);
 
 #endif /* HOST_CHPLAN_TYPES_H */

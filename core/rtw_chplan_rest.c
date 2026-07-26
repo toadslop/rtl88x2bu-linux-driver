@@ -2324,143 +2324,62 @@ u8 rtw_chdef_5g_attrib(u8 chd)
 }
 #endif /* CONFIG_IEEE80211_BAND_5GHZ */
 
-#if !defined(HOST_CHPLAN_DATA_ONLY)
-
-/* Deferred C init path — stays in _rest.c until PR3 ports to Rust (W2-20). */
-static u8 init_channel_set_from_rtk_priv(_adapter *padapter, RT_CHANNEL_INFO *channel_set)
+/* Adapter/registry accessors for Rust init_channel_set (W2-20). */
+u8 rtw_rust_rfctl_channel_plan(void *adapter)
 {
-	struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
-	struct registry_priv *regsty = adapter_to_regsty(padapter);
-	u8 ChannelPlan = rfctl->ChannelPlan;
-	u8 index, chanset_size = 0;
-	u8 b5GBand = _FALSE, b2_4GBand = _FALSE;
-	u8 ch, attrib;
+	return adapter_to_rfctl((_adapter *)adapter)->ChannelPlan;
+}
+
+u8 rtw_rust_rfctl_regd_src(void *adapter)
+{
+	return (u8)adapter_to_rfctl((_adapter *)adapter)->regd_src;
+}
+
+struct _RT_CHANNEL_INFO *rtw_rust_rfctl_channel_set(void *adapter)
+{
+	return adapter_to_rfctl((_adapter *)adapter)->channel_set;
+}
+
+const struct country_chplan *rtw_rust_rfctl_country_ent(void *adapter)
+{
+	return adapter_to_rfctl((_adapter *)adapter)->country_ent;
+}
+
+u8 rtw_rust_regsty_wireless_mode(void *adapter)
+{
+	return adapter_to_regsty((_adapter *)adapter)->wireless_mode;
+}
+
+struct registry_priv *rtw_rust_adapter_regsty(void *adapter)
+{
+	return adapter_to_regsty((_adapter *)adapter);
+}
+
+void rtw_rust_chset_zero(struct _RT_CHANNEL_INFO *chset)
+{
+	_rtw_memset(chset, 0, sizeof(RT_CHANNEL_INFO) * MAX_CHANNEL_NUM);
+}
+
+void rtw_rust_chset_write(struct _RT_CHANNEL_INFO *chset, u8 index, u8 ch, u8 flags)
+{
+	chset[index].ChannelNum = ch;
+	chset[index].flags = flags;
+}
+
+#ifndef HOST_CHPLAN_DATA_ONLY
+void rtw_rust_chset_set_non_ocp(struct _RT_CHANNEL_INFO *chset, u8 count)
+{
 #ifdef CONFIG_DFS_MASTER
 	int i;
+
+	for (i = 0; i < count; i++)
+		chset[i].non_ocp_end_time = rtw_get_current_time();
 #endif
-
-	if (!rtw_is_channel_plan_valid(ChannelPlan)) {
-		RTW_ERR("ChannelPlan ID 0x%02X error !!!!!\n", ChannelPlan);
-		return chanset_size;
-	}
-
-	_rtw_memset(channel_set, 0, sizeof(RT_CHANNEL_INFO) * MAX_CHANNEL_NUM);
-
-	if (IsSupported24G(regsty->wireless_mode) && hal_chk_band_cap(padapter, BAND_CAP_2G))
-		b2_4GBand = _TRUE;
-
-	if (is_supported_5g(regsty->wireless_mode) && hal_chk_band_cap(padapter, BAND_CAP_5G))
-		b5GBand = _TRUE;
-
-	if (b2_4GBand == _FALSE && b5GBand == _FALSE) {
-		RTW_WARN("HW band_cap has no intersection with SW wireless_mode setting\n");
-		return chanset_size;
-	}
-
-	if (b2_4GBand) {
-		u8 chd_2g = RTW_ChannelPlanMap[ChannelPlan].chd_2g;
-
-		attrib = rtw_chdef_2g_attrib(chd_2g);
-
-		for (index = 0; index < rtw_chdef_2g_len(chd_2g); index++) {
-			ch = rtw_chdef_2g_ch(chd_2g, index);
-			if (rtw_regsty_is_excl_chs(regsty, ch) == _TRUE)
-				continue;
-
-			if (chanset_size >= MAX_CHANNEL_NUM) {
-				RTW_WARN("chset size can't exceed MAX_CHANNEL_NUM(%u)\n", MAX_CHANNEL_NUM);
-				break;
-			}
-
-			channel_set[chanset_size].ChannelNum = ch;
-
-			if (ch >= 12 && ch <= 14 && (attrib & CLA_2G_12_14_PASSIVE))
-				channel_set[chanset_size].flags |= RTW_CHF_NO_IR;
-
-			if (channel_set[chanset_size].flags & RTW_CHF_NO_IR) {
-				if (rfctl->country_ent || ch <= 11)
-					RTW_INFO("ch%u is PASSIVE\n", ch);
-			}
-
-			chanset_size++;
-		}
-	}
-
-#if CONFIG_IEEE80211_BAND_5GHZ
-	if (b5GBand) {
-		bool dfs;
-		u8 chd_5g = RTW_ChannelPlanMap[ChannelPlan].chd_5g;
-
-		attrib = rtw_chdef_5g_attrib(chd_5g);
-
-		for (index = 0; index < rtw_chdef_5g_len(chd_5g); index++) {
-			ch = rtw_chdef_5g_ch(chd_5g, index);
-			if (rtw_regsty_is_excl_chs(regsty, ch) == _TRUE)
-				continue;
-			dfs = (rtw_is_5g_band2(ch) && (attrib & CLA_5G_B2_DFS))
-				|| (rtw_is_5g_band3(ch) && (attrib & CLA_5G_B3_DFS))
-				|| (rtw_is_5g_band4(ch) && (attrib & CLA_5G_B4_DFS));
-			#if !CONFIG_DFS
-			if (dfs)
-				continue;
-			#endif
-
-			if (chanset_size >= MAX_CHANNEL_NUM) {
-				RTW_WARN("chset size can't exceed MAX_CHANNEL_NUM(%u)\n", MAX_CHANNEL_NUM);
-				break;
-			}
-
-			channel_set[chanset_size].ChannelNum = ch;
-
-			if ((rtw_is_5g_band1(ch) && (attrib & CLA_5G_B1_PASSIVE))
-				|| (rtw_is_5g_band2(ch) && (attrib & CLA_5G_B2_PASSIVE))
-				|| (rtw_is_5g_band3(ch) && (attrib & CLA_5G_B3_PASSIVE))
-				|| (rtw_is_5g_band4(ch) && (attrib & CLA_5G_B4_PASSIVE))
-			)
-				channel_set[chanset_size].flags |= RTW_CHF_NO_IR;
-
-			if (dfs)
-				channel_set[chanset_size].flags |= RTW_CHF_DFS;
-
-			if (channel_set[chanset_size].flags & RTW_CHF_NO_IR) {
-				if (rfctl->country_ent || (channel_set[chanset_size].flags & RTW_CHF_DFS))
-					RTW_INFO("ch%u is PASSIVE%s\n", ch, dfs ? " DFS" : "");
-			}
-
-			chanset_size++;
-		}
-	}
-
-	#ifdef CONFIG_DFS_MASTER
-	for (i = 0; i < chanset_size; i++)
-		channel_set[i].non_ocp_end_time = rtw_get_current_time();
-	#endif
-#endif /* CONFIG_IEEE80211_BAND_5GHZ */
-
-	if (chanset_size)
-		RTW_INFO(FUNC_ADPT_FMT" ChannelPlan ID:0x%02x, ch num:%d\n"
-			, FUNC_ADPT_ARG(padapter), ChannelPlan, chanset_size);
-	else
-		RTW_WARN(FUNC_ADPT_FMT" ChannelPlan ID:0x%02x, final chset has no channel\n"
-			, FUNC_ADPT_ARG(padapter), ChannelPlan);
-
-	return chanset_size;
 }
-
-u8 init_channel_set(_adapter *adapter)
+#else
+void rtw_rust_chset_set_non_ocp(struct _RT_CHANNEL_INFO *chset, u8 count)
 {
-	struct rf_ctl_t *rfctl = adapter_to_rfctl(adapter);
-
-	if (rfctl->regd_src == REGD_SRC_RTK_PRIV)
-		return init_channel_set_from_rtk_priv(adapter, rfctl->channel_set);
-#ifdef CONFIG_REGD_SRC_FROM_OS
-	else if (rfctl->regd_src == REGD_SRC_OS)
-		return rtw_os_init_channel_set(adapter, rfctl->channel_set);
-#endif
-	else
-		rtw_warn_on(1);
-
-	return 0;
+	(void)chset;
+	(void)count;
 }
-
-#endif /* !HOST_CHPLAN_DATA_ONLY */
+#endif /* HOST_CHPLAN_DATA_ONLY */
