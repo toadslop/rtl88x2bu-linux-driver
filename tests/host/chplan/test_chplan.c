@@ -354,6 +354,8 @@ int main(int argc, char **argv)
 	struct vector vectors[MAX_VECTORS];
 	size_t nvec = 0;
 	size_t i;
+	size_t executed = 0;
+	size_t skipped = 0;
 	int failed = 0;
 
 	if (argc > 1)
@@ -366,6 +368,14 @@ int main(int argc, char **argv)
 	}
 
 	for (i = 0; i < nvec; i++) {
+#ifdef RUST_CHPLAN_ORACLE
+		if (vectors[i].fn == FN_INIT_CHANNEL_SET) {
+			printf("skip %s (c-only until PR3)\n", vectors[i].name);
+			skipped++;
+			continue;
+		}
+#endif
+		executed++;
 		if (run_vector(&vectors[i]) != 0)
 			failed++;
 		else
@@ -376,6 +386,18 @@ int main(int argc, char **argv)
 		fprintf(stderr, "%d vector(s) failed\n", failed);
 		return 1;
 	}
-	printf("all %zu chplan vectors passed (oracle: core/rtw_chplan.c)\n", nvec);
+#ifdef RUST_CHPLAN_ORACLE
+	if (skipped)
+		printf("all %zu chplan vectors passed (%zu c-only skipped; oracle: rust/rtw_chplan.rs)\n",
+		       executed, skipped);
+	else
+		printf("all %zu chplan vectors passed (oracle: rust/rtw_chplan.rs)\n", executed);
+#else
+	if (skipped)
+		printf("all %zu chplan vectors passed (%zu skipped; oracle: core/rtw_chplan.c)\n",
+		       executed, skipped);
+	else
+		printf("all %zu chplan vectors passed (oracle: core/rtw_chplan.c)\n", executed);
+#endif
 	return 0;
 }

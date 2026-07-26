@@ -40,7 +40,7 @@ test-rust: test_chplan_rust
 	./test_chplan_rust chplan_vectors.json
 
 test_chplan_rust: test_chplan.c librust_chplan.a chplan_data.o $(HOST_JSON) ../shim/host_chplan_rf.c ../shim/host_chplan_hal.c
-	$(CC) $(CFLAGS) -o $@ test_chplan.c $(HOST_JSON) \
+	$(CC) $(CFLAGS) -DRUST_CHPLAN_ORACLE -o $@ test_chplan.c $(HOST_JSON) \
 		../shim/host_chplan_rf.c ../shim/host_chplan_hal.c chplan_data.o librust_chplan.a
 
 chplan_data.o: $(CHPLAN_DATA_SRCS)
