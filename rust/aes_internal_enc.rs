@@ -24,9 +24,21 @@ extern "C" {
 mod alloc {
     use std::os::raw::c_void;
 
-    extern "C" {
-        pub fn os_malloc(sz: usize) -> *mut c_void;
-        pub fn rtw_mfree(ptr: *mut c_void, sz: usize);
+    mod bindings {
+        use std::os::raw::c_void;
+
+        extern "C" {
+            pub fn os_malloc(sz: usize) -> *mut c_void;
+            pub fn rtw_mfree(ptr: *mut c_void, sz: usize);
+        }
+    }
+
+    pub fn os_malloc(sz: usize) -> *mut c_void {
+        unsafe { bindings::os_malloc(sz) }
+    }
+
+    pub fn rtw_mfree(ptr: *mut c_void, sz: usize) {
+        unsafe { bindings::rtw_mfree(ptr, sz) }
     }
 }
 
@@ -146,14 +158,14 @@ pub extern "C" fn aes_encrypt_init(key: *const u8, len: usize) -> *mut core::ffi
         return core::ptr::null_mut();
     }
 
-    let rk = unsafe { os_malloc(AES_PRIV_SIZE) };
+    let rk = os_malloc(AES_PRIV_SIZE);
     if rk.is_null() {
         return core::ptr::null_mut();
     }
 
     let res = unsafe { rijndaelKeySetupEnc(rk as *mut u32, key, (len * 8) as i32) };
     if res < 0 {
-        unsafe { rtw_mfree(rk, AES_PRIV_SIZE) };
+        rtw_mfree(rk, AES_PRIV_SIZE);
         return core::ptr::null_mut();
     }
 
