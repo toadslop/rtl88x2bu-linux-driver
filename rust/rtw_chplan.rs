@@ -13,10 +13,10 @@
 )]
 
 #[cfg(host_chplan_test)]
-use std::os::raw::{c_int, c_uint};
+use std::os::raw::{c_char, c_int, c_uint};
 
 #[cfg(not(host_chplan_test))]
-use core::ffi::{c_int, c_uint};
+use core::ffi::{c_char, c_int, c_uint};
 
 const TXPWR_LMT_NONE: u8 = 0;
 const RTW_CHD_2G_NULL: u8 = 0;
@@ -250,4 +250,23 @@ pub extern "C" fn rtw_chset_is_dfs_chbw(
         return false;
     }
     rtw_chset_is_dfs_range(chset, hi, lo)
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_get_chplan_from_country(
+    country_code: *const c_char,
+) -> *const CountryChplan {
+    if country_code.is_null() {
+        return core::ptr::null();
+    }
+    let c0 = unsafe { *country_code as u8 };
+    let c1 = unsafe { *country_code.add(1) as u8 };
+    let code = [alpha_to_upper(c0), alpha_to_upper(c1)];
+
+    for ent in country_map() {
+        if ent.alpha2 == code {
+            return ent as *const CountryChplan;
+        }
+    }
+    core::ptr::null()
 }

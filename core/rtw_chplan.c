@@ -2402,6 +2402,7 @@ const unsigned int rtw_country_chplan_map_size =
 *
 * Return pointer of struct country_chplan entry or NULL when unsupported country_code is given
 */
+#if !defined(CONFIG_RUST) && !defined(HOST_CHPLAN_DATA_ONLY)
 const struct country_chplan *rtw_get_chplan_from_country(const char *country_code)
 {
 	const struct country_chplan *ent = NULL;

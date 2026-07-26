@@ -99,6 +99,26 @@
       "bw": 2,
       "offset": 0,
       "expect": 1
+    },
+    {
+      "name": "country_us",
+      "fn": "rtw_get_chplan_from_country",
+      "alpha2": "US",
+      "expect_chplan": 118,
+      "expect_null": 0
+    },
+    {
+      "name": "country_lowercase_de",
+      "fn": "rtw_get_chplan_from_country",
+      "alpha2": "de",
+      "expect_chplan": 38,
+      "expect_null": 0
+    },
+    {
+      "name": "country_unknown",
+      "fn": "rtw_get_chplan_from_country",
+      "alpha2": "ZZ",
+      "expect_null": 1
     }
   ]
 }
