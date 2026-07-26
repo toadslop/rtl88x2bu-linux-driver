@@ -95,4 +95,5 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 | A3 | #84 | `arch-03-domain-types-security.md` | draft |
 | W3-01 | #112 | `wave3-01-swcrypto-ccmp-gcmp.md` | done (#60) |
 | W3-02 | #113 | `wave3-02-swcrypto-bip-tdls.md` | done (#63) |
-| W3-03 … W3-09 | #114–#120 | `wave3-*.md` | draft / in progress (Wave 3 tranche 1 — see #68) |
+| W3-03 | #114 | `wave3-03-ie-parse.md` | in progress (#61) |
+| W3-04 … W3-09 | #115–#120 | `wave3-*.md` | draft / in progress (Wave 3 tranche 1 — see #68) |

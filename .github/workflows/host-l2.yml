@@ -10,6 +10,8 @@ on:
       - 'core/crypto/**'
       - 'core/rtw_chplan.c'
       - 'core/rtw_chplan.h'
+      - 'core/rtw_swcrypto.c'
+      - 'core/rtw_ieee80211.c'
       - 'rust/**'
       - 'tests/host/**'
       - 'Makefile'
@@ -19,6 +21,8 @@ on:
       - 'core/crypto/**'
       - 'core/rtw_chplan.c'
       - 'core/rtw_chplan.h'
+      - 'core/rtw_swcrypto.c'
+      - 'core/rtw_ieee80211.c'
       - 'rust/**'
       - 'tests/host/**'
       - 'Makefile'
@@ -46,3 +50,6 @@ jobs:
 
       - name: Host chplan lookup parity (L2)
         run: make -C tests/host/chplan test
+
+      - name: Host IE parse parity (L2)
+        run: make -C tests/host/ie test

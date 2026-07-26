@@ -340,6 +340,7 @@ inline u8 *rtw_set_ie_mesh_ch_switch_parm(u8 *buf, u32 *buf_len, u8 ttl,
 /*----------------------------------------------------------------------------
 index: the information element id index, limit is the limit for search
 -----------------------------------------------------------------------------*/
+#ifndef CONFIG_RUST
 u8 *rtw_get_ie(const u8 *pbuf, sint index, sint *len, sint limit)
 {
 	sint tmp, i;
@@ -456,6 +457,8 @@ int rtw_ies_remove_ie(u8 *ies, uint *ies_len, uint offset, u8 eid, u8 *oui, u8 o
 exit:
 	return ret;
 }
+
+#endif /* !CONFIG_RUST */
 
 void rtw_set_supported_rate(u8 *SupportedRates, uint mode)
 {
