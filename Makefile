@@ -2505,6 +2505,7 @@ $(MODULE_NAME)-y += rust/rtw_crypto_wrap.o
 # after any registry_priv layout change.
 RUSTFLAGS_rtw_chplan.o += --cfg ieee80211_band_5ghz
 $(MODULE_NAME)-y += rust/rtw_chplan.o
+$(MODULE_NAME)-y += rust/rtw_swcrypto.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o

@@ -20,6 +20,8 @@
 #include <sha256.h>
 #include <wlancrypto_wrap.h>
 
+#ifndef CONFIG_RUST
+
 /**
  * rtw_ccmp_encrypt - 
  * @key: the temporal key 
@@ -248,6 +250,7 @@ u8 _bip_gcmp_protect(u8 *whdr_pos, size_t len,
 }
 #endif /* CONFIG_IEEE80211W */
 
+#endif /* !CONFIG_RUST */
 
 #ifdef CONFIG_TDLS
 void _tdls_generate_tpk(void *sta, const u8 *own_addr, const u8 *bssid)
