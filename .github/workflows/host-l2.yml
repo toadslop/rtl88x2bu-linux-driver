@@ -1,0 +1,41 @@
+# T3: Run L2 host differential tests on pull requests (no kernel / hardware).
+# See docs/rust-migration/issues/test-03-ci-host-tests.md
+
+name: Host L2 tests
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'core/crypto/**'
+      - 'rust/**'
+      - 'tests/host/**'
+      - 'Makefile'
+      - '.github/workflows/host-l2.yml'
+  pull_request:
+    paths:
+      - 'core/crypto/**'
+      - 'rust/**'
+      - 'tests/host/**'
+      - 'Makefile'
+      - '.github/workflows/host-l2.yml'
+
+jobs:
+  host-l2:
+    runs-on: ubuntu-latest
+    env:
+      RUSTUP_TOOLCHAIN: 1.83.0
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc make
+          rustup toolchain install 1.83.0 --profile minimal
+
+      - name: Domain type unit tests (A1)
+        run: make -C tests/host/domain test
+
+      - name: Host crypto parity (L2)
+        run: make -C tests/host/crypto all
