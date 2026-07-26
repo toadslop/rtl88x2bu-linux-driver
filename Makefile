@@ -2516,6 +2516,9 @@ RUSTFLAGS_rtw_chplan.o += --cfg ieee80211_band_5ghz
 ifeq ($(CONFIG_DFS),y)
 RUSTFLAGS_rtw_chplan.o += --cfg dfs
 endif
+ifeq ($(CONFIG_REGD_SRC_FROM_OS),y)
+RUSTFLAGS_rtw_chplan.o += --cfg regd_src_from_os
+endif
 $(MODULE_NAME)-y += rust/rtw_chplan.o
 $(MODULE_NAME)-y += rust/rtw_swcrypto.o
 $(MODULE_NAME)-y += rust/rtw_ieee80211.o

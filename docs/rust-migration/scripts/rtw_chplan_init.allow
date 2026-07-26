@@ -21,4 +21,7 @@ drop rtw_rust_rfctl_channel_set
 drop rtw_rust_rfctl_country_ent
 drop rtw_rust_regsty_wireless_mode
 drop rtw_rust_adapter_regsty
+drop rtw_rust_chset_zero
+drop rtw_rust_chset_write
 drop rtw_rust_chset_set_non_ocp
+drop rtw_rust_warn_on

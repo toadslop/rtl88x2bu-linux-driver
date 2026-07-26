@@ -112,8 +112,10 @@ extern "C" {
     fn hal_chk_band_cap(adapter: *mut u8, cap: u8) -> bool;
     #[cfg(regd_src_from_os)]
     fn rtw_os_init_channel_set(adapter: *mut u8, channel_set: *mut RtChannelInfo) -> u8;
-    fn memset(s: *mut u8, c: c_int, n: usize) -> *mut u8;
+    fn rtw_rust_chset_zero(chset: *mut RtChannelInfo);
+    fn rtw_rust_chset_write(chset: *mut RtChannelInfo, index: u8, ch: u8, flags: u8);
     fn rtw_rust_chset_set_non_ocp(chset: *mut RtChannelInfo, count: u8);
+    fn rtw_rust_warn_on(condition: c_int);
 }
 
 fn alpha_to_upper(c: u8) -> u8 {
@@ -337,7 +339,6 @@ pub extern "C" fn rtw_get_chplan_from_country(
 
 unsafe fn init_channel_set_from_rtk_priv(adapter: *mut u8, channel_set: *mut RtChannelInfo) -> u8 {
     let channel_plan = unsafe { rtw_rust_rfctl_channel_plan(adapter) };
-    let country_ent = unsafe { rtw_rust_rfctl_country_ent(adapter) };
     let regsty = unsafe { rtw_rust_adapter_regsty(adapter) };
     let wireless_mode = unsafe { rtw_rust_regsty_wireless_mode(adapter) };
     let mut chanset_size: u8 = 0;
@@ -347,11 +348,7 @@ unsafe fn init_channel_set_from_rtk_priv(adapter: *mut u8, channel_set: *mut RtC
     }
 
     unsafe {
-        memset(
-            channel_set.cast(),
-            0,
-            core::mem::size_of::<RtChannelInfo>() * MAX_CHANNEL_NUM,
-        );
+        rtw_rust_chset_zero(channel_set);
     }
 
     let b2_4g = is_supported_24g(wireless_mode)
@@ -374,12 +371,11 @@ unsafe fn init_channel_set_from_rtk_priv(adapter: *mut u8, channel_set: *mut RtC
             if chanset_size as usize >= MAX_CHANNEL_NUM {
                 break;
             }
-            let ent = unsafe { &mut *channel_set.add(chanset_size as usize) };
-            ent.channel_num = ch;
+            let mut flags: u8 = 0;
             if (12..=14).contains(&ch) && attrib & CLA_2G_12_14_PASSIVE != 0 {
-                ent.flags |= RTW_CHF_NO_IR;
+                flags |= RTW_CHF_NO_IR;
             }
-            let _ = country_ent;
+            unsafe { rtw_rust_chset_write(channel_set, chanset_size, ch, flags) };
             chanset_size += 1;
         }
     }
@@ -404,23 +400,25 @@ unsafe fn init_channel_set_from_rtk_priv(adapter: *mut u8, channel_set: *mut RtC
             if chanset_size as usize >= MAX_CHANNEL_NUM {
                 break;
             }
-            let ent = unsafe { &mut *channel_set.add(chanset_size as usize) };
-            ent.channel_num = ch;
+            let mut flags: u8 = 0;
             if (rtw_is_5g_band1(ch) && attrib & CLA_5G_B1_PASSIVE != 0)
                 || (rtw_is_5g_band2(ch) && attrib & CLA_5G_B2_PASSIVE != 0)
                 || (rtw_is_5g_band3(ch) && attrib & CLA_5G_B3_PASSIVE != 0)
                 || (rtw_is_5g_band4(ch) && attrib & CLA_5G_B4_PASSIVE != 0)
             {
-                ent.flags |= RTW_CHF_NO_IR;
+                flags |= RTW_CHF_NO_IR;
             }
             if dfs {
-                ent.flags |= RTW_CHF_DFS;
+                flags |= RTW_CHF_DFS;
             }
-            let _ = country_ent;
+            unsafe { rtw_rust_chset_write(channel_set, chanset_size, ch, flags) };
             chanset_size += 1;
         }
+    }
 
-        unsafe { rtw_rust_chset_set_non_ocp(channel_set, chanset_size) };
+    #[cfg(ieee80211_band_5ghz)]
+    unsafe {
+        rtw_rust_chset_set_non_ocp(channel_set, chanset_size);
     }
 
     chanset_size
@@ -442,6 +440,9 @@ pub extern "C" fn init_channel_set(adapter: *mut u8) -> u8 {
     #[cfg(regd_src_from_os)]
     if regd_src == REGD_SRC_OS {
         return unsafe { rtw_os_init_channel_set(adapter, channel_set) };
+    }
+    unsafe {
+        rtw_rust_warn_on(1);
     }
     0
 }

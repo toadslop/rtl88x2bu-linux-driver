@@ -2383,3 +2383,8 @@ void rtw_rust_chset_set_non_ocp(struct _RT_CHANNEL_INFO *chset, u8 count)
 	(void)count;
 }
 #endif /* HOST_CHPLAN_DATA_ONLY */
+
+void rtw_rust_warn_on(int condition)
+{
+	rtw_warn_on(condition);
+}

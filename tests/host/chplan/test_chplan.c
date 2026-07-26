@@ -368,9 +368,9 @@ int main(int argc, char **argv)
 	}
 
 	for (i = 0; i < nvec; i++) {
-#ifdef RUST_CHPLAN_ORACLE
+#ifndef RUST_CHPLAN_ORACLE
 		if (vectors[i].fn == FN_INIT_CHANNEL_SET) {
-			printf("skip %s (c-only until PR3)\n", vectors[i].name);
+			printf("skip %s (rust-only after PR3)\n", vectors[i].name);
 			skipped++;
 			continue;
 		}
@@ -388,13 +388,13 @@ int main(int argc, char **argv)
 	}
 #ifdef RUST_CHPLAN_ORACLE
 	if (skipped)
-		printf("all %zu chplan vectors passed (%zu c-only skipped; oracle: rust/rtw_chplan.rs)\n",
+		printf("all %zu chplan vectors passed (%zu skipped; oracle: rust/rtw_chplan.rs)\n",
 		       executed, skipped);
 	else
 		printf("all %zu chplan vectors passed (oracle: rust/rtw_chplan.rs)\n", executed);
 #else
 	if (skipped)
-		printf("all %zu chplan vectors passed (%zu skipped; oracle: core/rtw_chplan.c)\n",
+		printf("all %zu chplan vectors passed (%zu rust-only skipped; oracle: core/rtw_chplan.c)\n",
 		       executed, skipped);
 	else
 		printf("all %zu chplan vectors passed (oracle: core/rtw_chplan.c)\n", executed);

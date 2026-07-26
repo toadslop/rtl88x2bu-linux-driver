@@ -47,7 +47,10 @@ struct _RT_CHANNEL_INFO *rtw_rust_rfctl_channel_set(void *adapter);
 const struct country_chplan *rtw_rust_rfctl_country_ent(void *adapter);
 u8 rtw_rust_regsty_wireless_mode(void *adapter);
 struct registry_priv *rtw_rust_adapter_regsty(void *adapter);
+void rtw_rust_chset_zero(struct _RT_CHANNEL_INFO *chset);
+void rtw_rust_chset_write(struct _RT_CHANNEL_INFO *chset, u8 index, u8 ch, u8 flags);
 void rtw_rust_chset_set_non_ocp(struct _RT_CHANNEL_INFO *chset, u8 count);
+void rtw_rust_warn_on(int condition);
 
 u8 rtw_chplan_get_default_regd(u8 id);
 bool rtw_chplan_is_empty(u8 id);
