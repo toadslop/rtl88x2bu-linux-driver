@@ -1,6 +1,7 @@
 # Host L2 differential test harness for core/crypto (T2/W1-03 aes-ctr, W2-01
 # aes-omac1, W2-02 gcmp, W2-03 aes-siv, W2-04 aes-ccm, W2-05 sha256-internal,
-# W2-06 sha256-prf, W2-06d rtw-crypto-wrap, W2-07 aes-gcm part 1, W2-11a aes-internal).
+# W2-06 sha256-prf, W2-06d rtw-crypto-wrap, W2-07 aes-gcm part 1, W2-11a aes-internal,
+# W2-16 hmac-sha256).
 # Builds with gcc only — no kernel headers or KDIR.
 
 ROOT     := ../../..
@@ -17,6 +18,7 @@ RUST_CCMP := $(ROOT)/rust/ccmp.rs
 RUST_AES_INTERNAL_ENC := $(ROOT)/rust/aes_internal_enc.rs
 RUST_SHA256 := $(ROOT)/rust/sha256_internal.rs
 RUST_SHA256_PRF := $(ROOT)/rust/sha256_prf.rs
+RUST_SHA256_HMAC := $(ROOT)/rust/sha256.rs
 RUST_CRYPTO_WRAP := $(ROOT)/rust/rtw_crypto_wrap.rs
 
 CC      := gcc
@@ -80,6 +82,11 @@ C_ORACLE_SHA256_PRF_SRCS := $(CRYPTO)/sha256-internal.c $(CRYPTO)/sha256.c \
 SHA256_PRF_COMPILE_SRCS := $(CRYPTO)/sha256-internal.c $(CRYPTO)/sha256.c \
 			   $(CRYPTO)/sha256-prf.c ../shim/host_crypto_shim.c
 
+C_ORACLE_SHA256_HMAC_SRCS := $(CRYPTO)/sha256-internal.c $(CRYPTO)/sha256.c \
+			     ../shim/host_crypto_shim.c $(HOST_JSON)
+SHA256_HMAC_COMPILE_SRCS := $(CRYPTO)/sha256-internal.c $(CRYPTO)/sha256.c \
+			    ../shim/host_crypto_shim.c
+
 C_ORACLE_WRAP_SRCS := $(CRYPTO)/rtw_crypto_wrap.c ../shim/host_rtw_wrap_support.c \
 		      $(HOST_JSON)
 WRAP_COMPILE_SRCS := $(CRYPTO)/rtw_crypto_wrap.c ../shim/host_rtw_wrap_support.c
@@ -92,6 +99,7 @@ WRAP_COMPILE_SRCS := $(CRYPTO)/rtw_crypto_wrap.c ../shim/host_rtw_wrap_support.c
 	test-sha256-internal test-sha256-internal-c test-sha256-internal-rust \
 	test-sha256-internal-compile \
 	test-sha256-prf test-sha256-prf-c test-sha256-prf-rust test-sha256-prf-compile \
+	test-hmac-sha256 test-hmac-sha256-c test-hmac-sha256-rust test-hmac-sha256-compile \
 	test-rtw-crypto-wrap test-rtw-crypto-wrap-c test-rtw-crypto-wrap-rust \
 	test-rtw-crypto-wrap-compile \
 	test-ccmp test-ccmp-c test-ccmp-rust test-ccmp-compile \
@@ -100,7 +108,7 @@ WRAP_COMPILE_SRCS := $(CRYPTO)/rtw_crypto_wrap.c ../shim/host_rtw_wrap_support.c
 	clean
 
 all: test test-omac1 test-gcmp test-aes-gcm test-aes-siv test-aes-ccm test-ccmp \
-     test-aes-internal test-sha256-internal test-sha256-prf test-rtw-crypto-wrap
+     test-aes-internal test-sha256-internal test-sha256-prf test-hmac-sha256 test-rtw-crypto-wrap
 
 test: test-c test-rust
 
@@ -341,10 +349,35 @@ librust_sha256_prf.a: $(RUST_SHA256_PRF)
 test-sha256-prf-rust: test_sha256_prf_rust
 	./test_sha256_prf_rust sha256_prf_vectors.json
 
-test_sha256_prf_rust: test_sha256_prf.c librust_sha256_prf.a librust_sha256_internal.a \
-		       $(CRYPTO)/sha256.c $(HOST_JSON)
+test_sha256_prf_rust: test_sha256_prf.c librust_sha256_prf.a librust_sha256.a \
+		       librust_sha256_internal.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_SHA256_PRF_ORACLE -o $@ test_sha256_prf.c \
-		$(CRYPTO)/sha256.c $(HOST_JSON) librust_sha256_prf.a librust_sha256_internal.a
+		$(HOST_JSON) librust_sha256_prf.a librust_sha256.a librust_sha256_internal.a
+
+test-hmac-sha256: test-hmac-sha256-c test-hmac-sha256-rust
+
+test-hmac-sha256-compile: $(SHA256_HMAC_COMPILE_SRCS)
+	@set -e; \
+	for src in $(SHA256_HMAC_COMPILE_SRCS); do \
+		obj="/tmp/$$(basename $$src .c)_sha256_hmac_compile_probe.o"; \
+		$(CC) $(CFLAGS) -c -o $$obj $$src; \
+	done
+
+test-hmac-sha256-c: test_hmac_sha256
+	./test_hmac_sha256 hmac_sha256_vectors.json
+
+test_hmac_sha256: test_hmac_sha256.c $(C_ORACLE_SHA256_HMAC_SRCS)
+	$(CC) $(CFLAGS) -o $@ test_hmac_sha256.c $(C_ORACLE_SHA256_HMAC_SRCS)
+
+librust_sha256.a: $(RUST_SHA256_HMAC)
+	$(RUSTC) $(RUSTFLAGS) --cfg host_crypto_test --crate-type staticlib $(RUST_SHA256_HMAC) -o $@
+
+test-hmac-sha256-rust: test_hmac_sha256_rust
+	./test_hmac_sha256_rust hmac_sha256_vectors.json
+
+test_hmac_sha256_rust: test_hmac_sha256.c librust_sha256.a librust_sha256_internal.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_SHA256_ORACLE -o $@ test_hmac_sha256.c \
+		$(HOST_JSON) librust_sha256.a librust_sha256_internal.a
 
 test-rtw-crypto-wrap: test-rtw-crypto-wrap-c test-rtw-crypto-wrap-rust
 
@@ -383,4 +416,5 @@ clean:
 	      test_aes_internal test_aes_internal_rust librust_aes_internal.a librust_aes_internal_enc.a \
 	      test_sha256_internal test_sha256_internal_rust librust_sha256_internal.a \
 	      test_sha256_prf test_sha256_prf_rust librust_sha256_prf.a \
+	      test_hmac_sha256 test_hmac_sha256_rust librust_sha256.a \
 	      test_rtw_crypto_wrap test_rtw_crypto_wrap_rust librust_rtw_crypto_wrap.a

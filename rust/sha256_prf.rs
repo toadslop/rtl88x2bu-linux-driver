@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 //! SHA256-PRF — Rust port of `core/crypto/sha256-prf.c` (W2-06b).
 //!
-//! `hmac_sha256_vector` remains in C (`sha256.c`) until W2-16; this crate binds
-//! it at the FFI edge.
+//! `hmac_sha256_vector` is provided by `sha256.rs` (W2-16) at link time.
 
 #![allow(
     dead_code,
@@ -21,41 +20,16 @@ use core::ffi::{c_char, c_int};
 
 const SHA256_MAC_LEN: usize = 32;
 
-#[cfg(host_crypto_test)]
-mod bindings {
-    use std::os::raw::c_uchar;
-
-    pub type u8 = c_uchar;
-
-    extern "C" {
-        pub fn hmac_sha256_vector(
-            key: *const u8,
-            key_len: usize,
-            num_elem: usize,
-            addr: *const *const u8,
-            len: *const usize,
-            mac: *mut u8,
-        ) -> i32;
-    }
+extern "C" {
+    fn hmac_sha256_vector(
+        key: *const u8,
+        key_len: usize,
+        num_elem: usize,
+        addr: *const *const u8,
+        len: *const usize,
+        mac: *mut u8,
+    ) -> c_int;
 }
-
-#[cfg(not(host_crypto_test))]
-mod bindings {
-    use core::ffi::c_int;
-
-    extern "C" {
-        pub fn hmac_sha256_vector(
-            key: *const u8,
-            key_len: usize,
-            num_elem: usize,
-            addr: *const *const u8,
-            len: *const usize,
-            mac: *mut u8,
-        ) -> c_int;
-    }
-}
-
-use bindings::hmac_sha256_vector;
 
 fn wpa_put_le16(dst: &mut [u8; 2], val: u16) {
     dst[0] = (val & 0xff) as u8;

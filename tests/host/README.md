@@ -28,6 +28,8 @@ tests/host/
     sha256_internal_vectors.json
     test_sha256_prf.c        # C-oracle runner for SHA256-PRF (W2-06a)
     sha256_prf_vectors.json
+    test_hmac_sha256.c       # C-oracle runner for HMAC-SHA256 (W2-16a)
+    hmac_sha256_vectors.json
     test_rtw_crypto_wrap.c   # C-oracle runner for rtw_crypto_wrap (W2-06d)
     rtw_crypto_wrap_vectors.json
     Makefile
@@ -209,6 +211,27 @@ make -C tests/host/crypto test-sha256-prf-compile
 Vectors characterize observable behavior of `core/crypto/sha256-prf.c`
 (`sha256_prf` / `sha256_prf_bits`): FT derivation, non-byte-aligned bit
 lengths, short keys, and long data bindings.
+
+## hmac-sha256 details (W2-16a)
+
+```bash
+make -C tests/host/crypto test-hmac-sha256-c
+```
+
+Compile-only gate (shim + `sha256.c` dependency chain under `HOST_CRYPTO_TEST`):
+
+```bash
+make -C tests/host/crypto test-hmac-sha256-compile
+```
+
+`make -C tests/host/crypto test-hmac-sha256` runs both C and Rust oracles
+(`test-hmac-sha256-c` + `test-hmac-sha256-rust`) and is included in the default
+`all` target. W2-16b adds the Rust oracle (`rust/sha256.rs`). W2-16c swaps
+`sha256.o` for `rust/sha256.o` in the module link.
+
+Vectors characterize observable behavior of `core/crypto/sha256.c`
+(`hmac_sha256_vector`): RFC-style short keys/messages, long key (>64 B) pre-hash,
+multi-fragment inputs, `num_elem > 5` rejection, and empty key/data edge cases.
 
 ## rtw-crypto-wrap details (W2-06d)
 

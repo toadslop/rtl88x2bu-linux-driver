@@ -78,7 +78,7 @@ Architecture: `epic-11-architecture.md`, `arch-00-*.md` …
 | W2-13 | `wave2-13-aes-internal-part3.md` | done (Rust Td4s/rcons; not filed on GitHub) |
 | W2-14 | `wave2-14-aes-internal-part4.md` | done (Rust rijndaelKeySetupEnc; no aes-internal*.c in CONFIG_RUST build; not filed on GitHub) |
 | W2-15 | `wave2-15-aes-internal-enc.md` | done (Rust aes_encrypt_*; not filed on GitHub) |
-| W2-16… | `wave2-*.md` | draft |
+| W2-16 | `wave2-16-sha256.md` | done (Rust hmac_sha256_vector; no sha256.c in CONFIG_RUST build; not filed on GitHub) |
 | T0 / A0 | `test-00-*.md` / `arch-00-*.md` | done (plan docs + links via W0-01) |
 | T1 | `test-01-symbol-check.md` | done (#12) |
 | T3 | `test-03-ci-host-tests.md` | draft |

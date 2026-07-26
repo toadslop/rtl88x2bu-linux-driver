@@ -1,0 +1,91 @@
+{
+  "oracle": "core/crypto/sha256.c",
+  "comment": "Vectors freeze in-tree C HMAC-SHA256 behavior for L2 parity (W2-16a).",
+  "vectors": [
+    {
+      "name": "rfc4231-case1",
+      "fn": "hmac_sha256_vector",
+      "key": "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+      "elements": [
+        "4869205468657265"
+      ],
+      "mac": "b0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7",
+      "expect_ret": 0
+    },
+    {
+      "name": "rfc4231-case2",
+      "fn": "hmac_sha256_vector",
+      "key": "4a656665",
+      "elements": [
+        "7768617420646f2079612077616e7420666f72206e6f7468696e673f"
+      ],
+      "mac": "5bdcc146bf60754e6a042426089575c75a003f089d2739839dec58b964ec3843",
+      "expect_ret": 0
+    },
+    {
+      "name": "long-key",
+      "fn": "hmac_sha256_vector",
+      "key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f",
+      "elements": [
+        "74657374"
+      ],
+      "mac": "36b12079a5a2b79e2fe1714e390c6c576e4eb7e3521503571d59a841e93a8843",
+      "expect_ret": 0
+    },
+    {
+      "name": "two-frag",
+      "fn": "hmac_sha256_vector",
+      "key": "4a656665",
+      "elements": [
+        "6672616731",
+        "6672616732"
+      ],
+      "mac": "0d337fc8319f7904edbd65683486ae859e20f3f3c305d7443255f9483c0734a6",
+      "expect_ret": 0
+    },
+    {
+      "name": "three-frag",
+      "fn": "hmac_sha256_vector",
+      "key": "4a656665",
+      "elements": [
+        "01",
+        "0203",
+        "040506"
+      ],
+      "mac": "8a77111c51b41f0d716867664659bb39a67c372ffbad548c2f47c49f59cef9e3",
+      "expect_ret": 0
+    },
+    {
+      "name": "num-elem-6",
+      "fn": "hmac_sha256_vector",
+      "key": "4a656665",
+      "elements": [
+        "48",
+        "48",
+        "48",
+        "48",
+        "48",
+        "48"
+      ],
+      "expect_ret": -1
+    },
+    {
+      "name": "empty-key",
+      "fn": "hmac_sha256_vector",
+      "key": "",
+      "elements": [
+        "64617461"
+      ],
+      "mac": "e528c4d99e6177f5841f712a143b90843299a4aa181a06501422d9ca862bd2a5",
+      "expect_ret": 0
+    },
+    {
+      "name": "empty-data",
+      "fn": "hmac_sha256_vector",
+      "key": "4a656665",
+      "elements": [],
+      "mac": "923598ca6d64af2a5dba79dcd021a8a0fe5c5f557519adaaf0ad532d4506dd30",
+      "expect_ret": 0
+    }
+  ]
+}
