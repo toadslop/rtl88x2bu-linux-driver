@@ -2434,6 +2434,7 @@ const struct country_chplan *rtw_get_chplan_from_country(const char *country_cod
 	return ent;
 }
 
+#endif /* !CONFIG_RUST && !HOST_CHPLAN_DATA_ONLY */
 
 #ifndef HOST_CHPLAN_TEST
 
