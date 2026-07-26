@@ -110,10 +110,8 @@
  * generation per IEEE 802.11-1999/2003.  WEP is cryptographically broken; these
  * paths exist only for interoperability with peers that still require legacy
  * ciphers.  Modern associations use AES/CCMP/GCMP (migrated to Rust elsewhere).
- * This file is split from core/rtw_security.c for CONFIG_RUST builds (W3-04).
+ * W3-05: arcfour_* and getcrc32 live in rust/rtw_security.rs.
  */
-
-#define CRC32_POLY 0x04c11db7
 
 /* Expands to a CodeQL suppression for the following line (legacy WEP/TKIP RC4). */
 #define RTW_CODEQL_SUPPRESS_WEAK_RC4 /* codeql[cpp/weak-cryptographic-algorithm]: Legacy 802.11 WEP/TKIP RC4 (IEEE 802.11-1999/2003); interoperability-only — see .github/codeql/codeql-config.yml. */
@@ -124,115 +122,9 @@ struct arc4context {
 	u8 state[256];
 };
 
-
-RTW_CODEQL_SUPPRESS_WEAK_RC4
-static void arcfour_init(struct arc4context	*parc4ctx, u8 *key, u32	key_len)
-{
-	u32	t, u;
-	u32	keyindex;
-	u32	stateindex;
-	u8 *state;
-	u32	counter;
-	state = parc4ctx->state;
-	parc4ctx->x = 0;
-	parc4ctx->y = 0;
-	for (counter = 0; counter < 256; counter++)
-		state[counter] = (u8)counter;
-	keyindex = 0;
-	stateindex = 0;
-	for (counter = 0; counter < 256; counter++) {
-		t = state[counter];
-		stateindex = (stateindex + key[keyindex] + t) & 0xff;
-		u = state[stateindex];
-		state[stateindex] = (u8)t;
-		state[counter] = (u8)u;
-		if (++keyindex >= key_len)
-			keyindex = 0;
-	}
-}
-static u32 arcfour_byte(struct arc4context	*parc4ctx)
-{
-	u32 x;
-	u32 y;
-	u32 sx, sy;
-	u8 *state;
-	state = parc4ctx->state;
-	x = (parc4ctx->x + 1) & 0xff;
-	sx = state[x];
-	y = (sx + parc4ctx->y) & 0xff;
-	sy = state[y];
-	parc4ctx->x = x;
-	parc4ctx->y = y;
-	state[y] = (u8)sx;
-	state[x] = (u8)sy;
-	return state[(sx + sy) & 0xff];
-}
-
-
-RTW_CODEQL_SUPPRESS_WEAK_RC4
-static void arcfour_encrypt(struct arc4context	*parc4ctx,
-			    u8 *dest,
-			    u8 *src,
-			    u32 len)
-{
-	u32	i;
-	for (i = 0; i < len; i++)
-		dest[i] = src[i] ^ (unsigned char)arcfour_byte(parc4ctx);
-}
-
-static sint bcrc32initialized = 0;
-static u32 crc32_table[256];
-
-
-static u8 crc32_reverseBit(u8 data)
-{
-	return (u8)((data << 7) & 0x80) | ((data << 5) & 0x40) | ((data << 3) & 0x20) | ((data << 1) & 0x10) | ((data >> 1) & 0x08) | ((data >> 3) & 0x04) | ((data >> 5) & 0x02) | ((
-				data >> 7) & 0x01) ;
-}
-
-static void crc32_init(void)
-{
-	if (bcrc32initialized == 1)
-		goto exit;
-	else {
-		sint i, j;
-		u32 c;
-		u8 *p = (u8 *)&c, *p1;
-		u8 k;
-
-		c = 0x12340000;
-
-		for (i = 0; i < 256; ++i) {
-			k = crc32_reverseBit((u8)i);
-			for (c = ((u32)k) << 24, j = 8; j > 0; --j)
-				c = c & 0x80000000 ? (c << 1) ^ CRC32_POLY : (c << 1);
-			p1 = (u8 *)&crc32_table[i];
-
-			p1[0] = crc32_reverseBit(p[3]);
-			p1[1] = crc32_reverseBit(p[2]);
-			p1[2] = crc32_reverseBit(p[1]);
-			p1[3] = crc32_reverseBit(p[0]);
-		}
-		bcrc32initialized = 1;
-	}
-exit:
-	return;
-}
-
-static u32 getcrc32(u8 *buf, sint len)
-{
-	u8 *p;
-	u32  crc;
-	if (bcrc32initialized == 0)
-		crc32_init();
-
-	crc = 0xffffffff;       /* preload shift register, per CRC-32 spec */
-
-	for (p = buf; len > 0; ++p, --len)
-		crc = crc32_table[(crc ^ *p) & 0xff] ^ (crc >> 8);
-	return ~crc;    /* transmit complement, per CRC-32 spec */
-}
-
+extern void arcfour_init(struct arc4context *parc4ctx, u8 *key, u32 key_len);
+extern void arcfour_encrypt(struct arc4context *parc4ctx, u8 *dest, u8 *src, u32 len);
+extern u32 getcrc32(u8 *buf, sint len);
 
 /*
 	Need to consider the fragment  situation
@@ -2542,17 +2434,7 @@ u16 rtw_calc_crc(u8  *pdata, int length)
 
 u32 rtw_calc_crc32(u8 *data, size_t len)
 {
-	size_t i;
-	u32 crc = 0xFFFFFFFF;
-
-	if (bcrc32initialized == 0)
-		crc32_init();
-
-	for (i = 0; i < len; i++)
-		crc = crc32_table[(crc ^ data[i]) & 0xff] ^ (crc >> 8);
-
-	/* return 1' complement */
-	return ~crc;
+	return getcrc32(data, (sint)len);
 }
 
 
