@@ -2262,7 +2262,9 @@ void dump_chplan_ver(void *sel)
 
 #endif /* !HOST_CHPLAN_TEST */
 
-/* Channel-def accessors for Rust / cross-TU use (W2-20). */
+/* Channel-def accessors for Rust / cross-TU use (W2-20).
+ * Out-of-range chd returns 0 (no channels) instead of indexing past the table;
+ * valid channel-plan data never supplies invalid chd indices. */
 static u8 chdef_len(const struct ch_list_t *cl)
 {
 	return cl->len_ch_attr[0];
@@ -2324,6 +2326,7 @@ u8 rtw_chdef_5g_attrib(u8 chd)
 
 #if !defined(HOST_CHPLAN_DATA_ONLY)
 
+/* Deferred C init path — stays in _rest.c until PR3 ports to Rust (W2-20). */
 static u8 init_channel_set_from_rtk_priv(_adapter *padapter, RT_CHANNEL_INFO *channel_set)
 {
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
