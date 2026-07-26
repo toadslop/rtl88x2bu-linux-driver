@@ -2449,8 +2449,12 @@ rtk_core += \
 		core/crypto/aes-internal.o \
 		core/crypto/aes-internal-enc.o
 endif
+ifeq ($(CONFIG_RUST),)
 rtk_core += \
 		core/rtw_swcrypto.o
+endif
+rtk_core += \
+		core/rtw_swcrypto_rest.o
 
 ifeq ($(CONFIG_RUST),)
 rtk_core += core/crypto/ccmp.o

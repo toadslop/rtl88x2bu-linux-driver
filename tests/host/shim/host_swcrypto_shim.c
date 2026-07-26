@@ -15,3 +15,8 @@ void *_rtw_memcpy(void *dst, const void *src, size_t n)
 {
 	return memcpy(dst, src, n);
 }
+
+void rtw_swcrypto_log_err(const char *msg)
+{
+	(void)msg;
+}

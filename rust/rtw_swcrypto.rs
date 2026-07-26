@@ -19,7 +19,6 @@ use core::ffi::{c_int, c_void};
 
 const AES_BLOCK_SIZE: usize = 16;
 const ETH_ALEN: usize = 6;
-const SHA256_MAC_LEN: usize = 32;
 const _SUCCESS: i32 = 1;
 const _FAIL: i32 = 0;
 
@@ -34,19 +33,6 @@ pub struct Ieee80211Hdr {
 }
 
 pub type Adapter = c_void;
-
-#[repr(C)]
-pub struct StaMac {
-    pub mac_addr: [u8; ETH_ALEN],
-}
-
-#[repr(C)]
-pub struct StaInfo {
-    pub cmn: StaMac,
-    pub snonce: [u8; 32],
-    pub anonce: [u8; 32],
-    pub tpk: [u8; 32],
-}
 
 extern "C" {
     fn ccmp_encrypt(
@@ -139,23 +125,17 @@ extern "C" {
         len: *const usize,
         out: *mut u8,
     ) -> i32;
-    fn sha256_vector(num_elem: usize, addr: *const *const u8, len: *const usize, mac: *mut u8);
-    fn sha256_prf(
-        key: *const u8,
-        key_len: usize,
-        label: *const u8,
-        data: *const u8,
-        data_len: usize,
-        out: *mut u8,
-        out_len: usize,
-    );
+    fn rtw_swcrypto_log_err(msg: *const u8);
     fn _rtw_mfree(ptr: *mut c_void, sz: u32);
     fn _rtw_memcpy(dst: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
-    fn _rtw_memcmp2(a: *const c_void, b: *const c_void, n: usize) -> i32;
 }
 
 fn get_addr2_ptr(frame: *const u8) -> *const u8 {
     unsafe { frame.add(10) }
+}
+
+fn log_bip_err(msg: &[u8]) {
+    unsafe { rtw_swcrypto_log_err(msg.as_ptr()) };
 }
 
 #[no_mangle]
@@ -361,9 +341,15 @@ pub extern "C" fn _bip_ccmp_protect(
     } else if key_len == 32 {
         unsafe { omac1_aes_256(key, data, data_len, mic) }
     } else {
+        log_bip_err(b"_bip_ccmp_protect : key_len not match!\0");
         return _FAIL as u8;
     };
     if res != 0 {
+        if key_len == 16 {
+            log_bip_err(b"_bip_ccmp_protect : omac1_aes_128 fail!\0");
+        } else {
+            log_bip_err(b"_bip_ccmp_protect : omac1_aes_256 fail!\0");
+        }
         _FAIL as u8
     } else {
         _SUCCESS as u8
@@ -405,6 +391,7 @@ pub extern "C" fn _bip_gcmp_protect(
             mic,
         ) != 0
         {
+            log_bip_err(b"_bip_gcmp_protect : aes_gmac fail!\0");
             return _FAIL as u8;
         }
     }

@@ -81,6 +81,70 @@
       "plen": 8,
       "frame": "08000000aabbccddee01aabbccddee02aabbccddee031000000000000000000068656c6c6f212121",
       "expect_ret": 1
+    },
+    {
+      "name": "bip_ccmp_protect_aes128",
+      "fn": "_bip_ccmp_protect",
+      "key_len": 16,
+      "key": "2b7e151628aed2a6abf7158809cf4f3c",
+      "data": "6bc1bee22e409f96e93d7e117393172a",
+      "expected_mic": "070a16b46b4d4144f79bdd9dd04a287c",
+      "expect_ret": 1
+    },
+    {
+      "name": "bip_ccmp_protect_aes256",
+      "fn": "_bip_ccmp_protect",
+      "key_len": 32,
+      "key": "603deb1015ca71be2b73aef0857d77811f352c073b6108d2d9810a30914d334a",
+      "data": "6bc1bee22e409f96e93d7e117393172a",
+      "expected_mic": "19fed6f1a11e670d70635d88c4310c4a",
+      "expect_ret": 1
+    },
+    {
+      "name": "bip_ccmp_protect_bad_key_len",
+      "fn": "_bip_ccmp_protect",
+      "key_len": 12,
+      "key": "000102030405060708090a0b",
+      "data": "6bc1bee22e409f96e93d7e117393172a",
+      "expect_ret": 0
+    },
+    {
+      "name": "bip_gcmp_protect_aes128",
+      "fn": "_bip_gcmp_protect",
+      "key_len": 16,
+      "key": "000102030405060708090a0b0c0d0e0f",
+      "frame": "08000000aabbccddee00aabbccddee01aabbccddee02031001020304050600000000000000000000000000000000",
+      "data": "68656c6c6f",
+      "expected_mic": "3c8f8154fef6910c840658e26fe78c75",
+      "expect_ret": 1
+    },
+    {
+      "name": "aes_siv_encrypt_roundtrip",
+      "fn": "_aes_siv_encrypt",
+      "key_len": 32,
+      "key": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e",
+      "elements": ["01010101"],
+      "pw": "0202020202",
+      "expect_ret": 0
+    },
+    {
+      "name": "aes_siv_decrypt_rfc5297",
+      "fn": "_aes_siv_decrypt",
+      "key_len": 32,
+      "key": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e",
+      "elements": ["01010101"],
+      "iv_crypt": "c0ba534b70ef6d6f01f6f45396742b49d3c1f1a7d5",
+      "expected_out": "0202020202",
+      "expect_ret": 0
+    },
+    {
+      "name": "aes_siv_encrypt_bad_key_len",
+      "fn": "_aes_siv_encrypt",
+      "key_len": 24,
+      "key": "0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e",
+      "elements": [],
+      "pw": "0202020202",
+      "expect_ret": -1
     }
   ]
 }

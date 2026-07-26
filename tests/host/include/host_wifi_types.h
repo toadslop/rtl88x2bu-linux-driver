@@ -36,6 +36,7 @@
 #define WLAN_GET_SEQ_SEQ(seq) ((seq) & RTW_IEEE80211_SCTL_SEQ)
 
 #define GetAddr1Ptr(pbuf) ((u8 *)((uintptr_t)(pbuf) + 4))
+#define get_addr2_ptr(pbuf) ((u8 *)((uintptr_t)(pbuf) + 10))
 
 enum rtw_amsdu_mode {
 	RTW_AMSDU_MODE_NON_SPP = 0,
