@@ -8,3 +8,6 @@ chplan/chplan_data.o
 swcrypto/test_swcrypto
 swcrypto/test_swcrypto_rust
 swcrypto/librust_swcrypto.a
+
+# T5 security harness
+security/test_security
