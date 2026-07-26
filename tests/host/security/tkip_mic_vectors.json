@@ -3,19 +3,46 @@
   "vectors": [
     {
       "name": "mic_single_byte",
-      "fn": "host_tkip_mic_append",
+      "fn": "host_tkip_secmicappendbyte",
       "key": "0102030405060708",
       "data": "61",
       "expect_mic": "f857645866ddc950"
     },
     {
-      "name": "mic_tkip_frame",
+      "name": "mic_tkip_frame_tods0_fromds0",
       "fn": "host_tkip_seccalctkipmic",
       "key": "0102030405060708",
       "header": "00000000000000000000000000000000000000000000000000000000000000",
       "data": "7061796c6f6164",
       "priority": 0,
       "expect_mic": "7669f1422c738908"
+    },
+    {
+      "name": "mic_tkip_frame_tods1",
+      "fn": "host_tkip_seccalctkipmic",
+      "key": "0102030405060708",
+      "header": "00010000000000000000112233445566aabbccddeeff00000000000000000000",
+      "data": "7061796c6f6164",
+      "priority": 0,
+      "expect_mic": "2f98e573c00abc09"
+    },
+    {
+      "name": "mic_tkip_frame_fromds1",
+      "fn": "host_tkip_seccalctkipmic",
+      "key": "0102030405060708",
+      "header": "00020000aabbccddeeff00000000000011223344556600000000000000000000",
+      "data": "7061796c6f6164",
+      "priority": 0,
+      "expect_mic": "2f98e573c00abc09"
+    },
+    {
+      "name": "mic_tkip_frame_tods1_fromds1",
+      "fn": "host_tkip_seccalctkipmic",
+      "key": "0102030405060708",
+      "header": "00030000000000000000000000000000aabbccddeeff0000deadbeef00010000",
+      "data": "7061796c6f6164",
+      "priority": 0,
+      "expect_mic": "210f1a2340506ae3"
     }
   ]
 }

@@ -10,7 +10,7 @@
 #include "host_security_types.h"
 #include "host_vector_json.h"
 
-#define MAX_VECTORS 16
+#define MAX_VECTORS 32
 #define MAX_NAME 128
 #define MAX_BUF 512
 
@@ -52,7 +52,7 @@ static int parse_fn(const char *obj, size_t obj_len, enum tkip_fn *out)
 
 	if (host_json_parse_string_in(obj, obj_len, "fn", fn, sizeof(fn)))
 		return -1;
-	if (strcmp(fn, "host_tkip_mic_append") == 0)
+	if (strcmp(fn, "host_tkip_secmicappendbyte") == 0)
 		*out = FN_MIC_APPEND;
 	else if (strcmp(fn, "host_tkip_seccalctkipmic") == 0)
 		*out = FN_CALC_TKIPMIC;
