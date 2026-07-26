@@ -185,7 +185,7 @@ Failures at L4 block the wave epic, not every tiny PR, if L0–L2 were green—b
 1. **T0** — Document this plan + PR checklist (this file).
 2. **T1** — `check-symbols.sh` + Make target `rust-check-symbols` (done).
 3. **T2** — Host crypto harness scaffolding + first vectors for `aes-ctr` (ties to W1-03).
-4. **T3** — Optional GitHub Actions: L0 on a Rust-kernel container when available; always run L2 host tests on ubuntu-latest.
+4. **T3** — GitHub Actions (`.github/workflows/host-l2.yml`): L2 host tests on `ubuntu-latest` (`make -C tests/host/{domain,crypto,chplan,ie} test`). L0 on a Rust-kernel container deferred until a cached image exists.
 
 ## Out of scope (for now)
 

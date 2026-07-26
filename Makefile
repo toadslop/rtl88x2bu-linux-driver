@@ -2501,6 +2501,9 @@ $(MODULE_NAME)-y += rust/sha256_prf.o
 # rtw_registrypriv_amsdu_mode uses AMSDU_MODE_OFFSET in rust/rtw_crypto_wrap.rs —
 # re-run L1 after any include/drv_types.h _adapter layout change.
 $(MODULE_NAME)-y += rust/rtw_crypto_wrap.o
+$(MODULE_NAME)-y += rust/rtw_chplan.o
+$(MODULE_NAME)-y += rust/rtw_swcrypto.o
+$(MODULE_NAME)-y += rust/rtw_ieee80211.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o

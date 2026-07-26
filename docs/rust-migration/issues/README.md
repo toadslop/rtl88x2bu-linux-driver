@@ -81,4 +81,10 @@ Architecture: `epic-11-architecture.md`, `arch-00-*.md` …
 | W2-16 | `wave2-16-sha256.md` | done (Rust hmac_sha256_vector; no sha256.c in CONFIG_RUST build; not filed on GitHub) |
 | T0 / A0 | `test-00-*.md` / `arch-00-*.md` | done (plan docs + links via W0-01) |
 | T1 | `test-01-symbol-check.md` | done (#12) |
-| T3 | `test-03-ci-host-tests.md` | draft |
+| T3 | `test-03-ci-host-tests.md` | done (GitHub Actions host-l2.yml; not filed on GitHub) |
+| W2-17 | `wave2-17-chplan-lookup.md` | done (chplan lookup L2 + Rust port; not filed on GitHub) |
+| W2-18 | `wave2-18-chplan-dfs.md` | done (DFS helpers L2 + Rust; not filed on GitHub) |
+| W2-19 | `wave2-19-chplan-country.md` | done (country lookup L2 + Rust; not filed on GitHub) |
+| W3-01 | `wave3-01-swcrypto-ccmp-gcmp.md` | done (swcrypto CCMP/GCMP Rust; not filed on GitHub) |
+| W3-02 | `wave3-02-swcrypto-bip-tdls.md` | done (swcrypto BIP/TDLS/mesh Rust; not filed on GitHub) |
+| W3-03 | `wave3-03-ie-parse.md` | done (IE parse helpers L2 + Rust; not filed on GitHub) |

@@ -1,0 +1,124 @@
+{
+  "oracle": "core/rtw_chplan.c",
+  "vectors": [
+    {
+      "name": "regd_2g_plan_00",
+      "fn": "rtw_chplan_get_default_regd_2g",
+      "id": 0,
+      "expect": 3
+    },
+    {
+      "name": "regd_2g_plan_05_empty",
+      "fn": "rtw_chplan_get_default_regd_2g",
+      "id": 5,
+      "expect": 0
+    },
+    {
+      "name": "regd_5g_plan_00",
+      "fn": "rtw_chplan_get_default_regd_5g",
+      "id": 0,
+      "expect": 3
+    },
+    {
+      "name": "regd_combined_plan_00",
+      "fn": "rtw_chplan_get_default_regd",
+      "id": 0,
+      "expect": 3
+    },
+    {
+      "name": "is_empty_plan_05",
+      "fn": "rtw_chplan_is_empty",
+      "id": 5,
+      "expect": 1
+    },
+    {
+      "name": "is_empty_plan_00",
+      "fn": "rtw_chplan_is_empty",
+      "id": 0,
+      "expect": 0
+    },
+    {
+      "name": "valid_plan_00",
+      "fn": "rtw_is_channel_plan_valid",
+      "id": 0,
+      "expect": 1
+    },
+    {
+      "name": "invalid_plan_05",
+      "fn": "rtw_is_channel_plan_valid",
+      "id": 5,
+      "expect": 0
+    },
+    {
+      "name": "invalid_plan_oob",
+      "fn": "rtw_is_channel_plan_valid",
+      "id": 255,
+      "expect": 0
+    },
+    {
+      "name": "excl_ch_hit",
+      "fn": "rtw_regsty_is_excl_chs",
+      "excl_chs": "01 06 0c 00",
+      "ch": 6,
+      "expect": 1
+    },
+    {
+      "name": "excl_ch_miss",
+      "fn": "rtw_regsty_is_excl_chs",
+      "excl_chs": "01 06 00",
+      "ch": 11,
+      "expect": 0
+    },
+    {
+      "name": "dfs_ch_52",
+      "fn": "rtw_chset_is_dfs_ch",
+      "chset": "3402000000000000",
+      "ch": 52,
+      "expect": 1
+    },
+    {
+      "name": "dfs_ch_36_not",
+      "fn": "rtw_chset_is_dfs_ch",
+      "chset": "24000000000000",
+      "ch": 36,
+      "expect": 0
+    },
+    {
+      "name": "dfs_range_overlap",
+      "fn": "rtw_chset_is_dfs_range",
+      "chset": "3402000000000000",
+      "hi": 5300,
+      "lo": 5180,
+      "expect": 1
+    },
+    {
+      "name": "dfs_chbw_52_20",
+      "fn": "rtw_chset_is_dfs_chbw",
+      "chset": "3402000000000000",
+      "ch": 52,
+      "bw": 2,
+      "offset": 0,
+      "expect": 1
+    },
+    {
+      "name": "country_us",
+      "fn": "rtw_get_chplan_from_country",
+      "alpha2": "US",
+      "expect_chplan": 118,
+      "expect_null": 0
+    },
+    {
+      "name": "country_lowercase_de",
+      "fn": "rtw_get_chplan_from_country",
+      "alpha2": "de",
+      "expect_chplan": 38,
+      "expect_null": 0
+    },
+    {
+      "name": "country_unknown",
+      "fn": "rtw_get_chplan_from_country",
+      "alpha2": "ZZ",
+      "expect_null": 1
+    }
+  ]
+}

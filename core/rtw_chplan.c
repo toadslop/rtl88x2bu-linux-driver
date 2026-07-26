@@ -14,7 +14,13 @@
  *****************************************************************************/
 #define _RTW_CHPLAN_C_
 
+#ifdef HOST_CHPLAN_TEST
+#include "host_chplan_types.h"
+#else
 #include <drv_types.h>
+#endif
+
+#include "rtw_chplan.h"
 
 #define RTW_DOMAIN_MAP_VER		"54"
 #define RTW_DOMAIN_MAP_M_VER	"g"
@@ -196,7 +202,7 @@ struct chplan_ent_t {
 
 #define CHPLAN_ENT_NOT_DEFINED CHPLAN_ENT(TXPWR_LMT_NONE, RTW_CHD_2G_NULL, TXPWR_LMT_NONE, RTW_CHD_5G_NULL)
 
-static const struct chplan_ent_t RTW_ChannelPlanMap[] = {
+const struct chplan_ent_t RTW_ChannelPlanMap[] = {
 	/* 0x00 */	CHPLAN_ENT(TXPWR_LMT_ETSI,		RTW_CHD_2G_02,	TXPWR_LMT_ETSI,		RTW_CHD_5G_49),
 	/* 0x01 */	CHPLAN_ENT(TXPWR_LMT_ETSI,		RTW_CHD_2G_02,	TXPWR_LMT_ETSI,		RTW_CHD_5G_50),
 	/* 0x02 */	CHPLAN_ENT(TXPWR_LMT_ETSI,		RTW_CHD_2G_03,	TXPWR_LMT_ETSI,		RTW_CHD_5G_07),
@@ -329,6 +335,8 @@ static const struct chplan_ent_t RTW_ChannelPlanMap[] = {
 
 const int RTW_ChannelPlanMap_size = sizeof(RTW_ChannelPlanMap) / sizeof(RTW_ChannelPlanMap[0]);
 
+#if !defined(CONFIG_RUST) && !defined(HOST_CHPLAN_DATA_ONLY)
+
 u8 rtw_chplan_get_default_regd_2g(u8 id)
 {
 	return RTW_ChannelPlanMap[id].regd_2g;
@@ -387,6 +395,10 @@ bool rtw_regsty_is_excl_chs(struct registry_priv *regsty, u8 ch)
 	}
 	return _FALSE;
 }
+
+#endif /* !CONFIG_RUST && !HOST_CHPLAN_DATA_ONLY */
+
+#ifndef HOST_CHPLAN_TEST
 
 const char *_regd_src_str[] = {
 	[REGD_SRC_RTK_PRIV] = "RTK_PRIV",
@@ -530,6 +542,10 @@ u8 init_channel_set(_adapter *adapter)
 	return 0;
 }
 
+#endif /* !HOST_CHPLAN_TEST */
+
+#if !defined(CONFIG_RUST) && !defined(HOST_CHPLAN_DATA_ONLY)
+
 bool rtw_chset_is_dfs_range(struct _RT_CHANNEL_INFO *chset, u32 hi, u32 lo)
 {
 	u8 hi_ch = rtw_freq2ch(hi);
@@ -568,6 +584,10 @@ bool rtw_chset_is_dfs_chbw(struct _RT_CHANNEL_INFO *chset, u8 ch, u8 bw, u8 offs
 	return rtw_chset_is_dfs_range(chset, hi, lo);
 }
 
+#endif /* !CONFIG_RUST && !HOST_CHPLAN_DATA_ONLY */
+
+#ifndef HOST_CHPLAN_TEST
+
 u8 rtw_process_beacon_hint(_adapter *adapter, WLAN_BSSID_EX *bss)
 {
 #ifndef RTW_CHPLAN_BEACON_HINT_NON_WORLD_WIDE
@@ -604,6 +624,8 @@ u8 rtw_process_beacon_hint(_adapter *adapter, WLAN_BSSID_EX *bss)
 exit:
 	return act_cnt;
 }
+
+#endif /* !HOST_CHPLAN_TEST */
 
 const char *_rtw_dfs_regd_str[] = {
 	[RTW_DFS_REGD_NONE]	= "NONE",
@@ -2122,7 +2144,7 @@ static u16 rtw_def_module_country_chplan_map(const struct country_chplan **hal_m
 }
 #else
 
-static const struct country_chplan country_chplan_map[] = {
+const struct country_chplan country_chplan_map[] = {
 	COUNTRY_CHPLAN_ENT("AD", 0x26, 1), /* Andorra */
 	COUNTRY_CHPLAN_ENT("AE", 0x35, 1), /* United Arab Emirates */
 	COUNTRY_CHPLAN_ENT("AF", 0x42, 1), /* Afghanistan */
@@ -2361,6 +2383,10 @@ static const struct country_chplan country_chplan_map[] = {
 	COUNTRY_CHPLAN_ENT("ZM", 0x26, 1), /* Zambia */
 	COUNTRY_CHPLAN_ENT("ZW", 0x26, 1), /* Zimbabwe */
 };
+
+const unsigned int rtw_country_chplan_map_size =
+	sizeof(country_chplan_map) / sizeof(country_chplan_map[0]);
+
 #endif /* CONFIG_CUSTOMIZED_COUNTRY_CHPLAN_MAP or RTW_DEF_MODULE_REGULATORY_CERT or newest */
 
 /*
@@ -2369,6 +2395,7 @@ static const struct country_chplan country_chplan_map[] = {
 *
 * Return pointer of struct country_chplan entry or NULL when unsupported country_code is given
 */
+#if !defined(CONFIG_RUST) && !defined(HOST_CHPLAN_DATA_ONLY)
 const struct country_chplan *rtw_get_chplan_from_country(const char *country_code)
 {
 	const struct country_chplan *ent = NULL;
@@ -2399,6 +2426,10 @@ const struct country_chplan *rtw_get_chplan_from_country(const char *country_cod
 
 	return ent;
 }
+
+#endif /* !CONFIG_RUST && !HOST_CHPLAN_DATA_ONLY */
+
+#ifndef HOST_CHPLAN_TEST
 
 void dump_country_chplan(void *sel, const struct country_chplan *ent)
 {
@@ -2514,3 +2545,5 @@ void dump_chplan_ver(void *sel)
 {
 	RTW_PRINT_SEL(sel, "%s%s-%s\n", RTW_DOMAIN_MAP_VER, RTW_DOMAIN_MAP_M_VER, RTW_COUNTRY_MAP_VER);
 }
+
+#endif /* !HOST_CHPLAN_TEST */

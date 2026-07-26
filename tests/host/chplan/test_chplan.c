@@ -1,0 +1,299 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Host L2 oracle runner for rtw_chplan.c lookup / DFS / country helpers (W2-17+).
+ *
+ * oracle: core/rtw_chplan.c
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "host_chplan_types.h"
+#include "host_vector_json.h"
+#include "rtw_chplan.h"
+
+u8 rtw_chplan_get_default_regd_2g(u8 id);
+u8 rtw_chplan_get_default_regd_5g(u8 id);
+
+#define MAX_VECTORS 64
+#define MAX_NAME 128
+
+enum chplan_fn {
+	FN_REGD_2G = 0,
+	FN_REGD_5G,
+	FN_REGD,
+	FN_IS_EMPTY,
+	FN_IS_VALID,
+	FN_EXCL_CHS,
+	FN_DFS_CH,
+	FN_DFS_RANGE,
+	FN_DFS_CHBW,
+	FN_COUNTRY,
+};
+
+struct vector {
+	char name[MAX_NAME];
+	enum chplan_fn fn;
+	char obj[4096];
+	size_t obj_len;
+	int id;
+	int ch;
+	int bw;
+	int offset;
+	u32 hi;
+	u32 lo;
+	u8 excl_chs[MAX_CHANNEL_NUM];
+	char alpha2[3];
+	int expect;
+	int expect_chplan;
+	int expect_null;
+};
+
+static int parse_fn(const char *obj, size_t obj_len, enum chplan_fn *out)
+{
+	char fn[64];
+
+	if (host_json_parse_string_in(obj, obj_len, "fn", fn, sizeof(fn)))
+		return -1;
+	if (strcmp(fn, "rtw_chplan_get_default_regd_2g") == 0)
+		*out = FN_REGD_2G;
+	else if (strcmp(fn, "rtw_chplan_get_default_regd_5g") == 0)
+		*out = FN_REGD_5G;
+	else if (strcmp(fn, "rtw_chplan_get_default_regd") == 0)
+		*out = FN_REGD;
+	else if (strcmp(fn, "rtw_chplan_is_empty") == 0)
+		*out = FN_IS_EMPTY;
+	else if (strcmp(fn, "rtw_is_channel_plan_valid") == 0)
+		*out = FN_IS_VALID;
+	else if (strcmp(fn, "rtw_regsty_is_excl_chs") == 0)
+		*out = FN_EXCL_CHS;
+	else if (strcmp(fn, "rtw_chset_is_dfs_ch") == 0)
+		*out = FN_DFS_CH;
+	else if (strcmp(fn, "rtw_chset_is_dfs_range") == 0)
+		*out = FN_DFS_RANGE;
+	else if (strcmp(fn, "rtw_chset_is_dfs_chbw") == 0)
+		*out = FN_DFS_CHBW;
+	else if (strcmp(fn, "rtw_get_chplan_from_country") == 0)
+		*out = FN_COUNTRY;
+	else
+		return -1;
+	return 0;
+}
+
+static int parse_excl_chs(const char *hex, u8 *out)
+{
+	size_t n = 0;
+	size_t len = 0;
+	char byte[3];
+	size_t i;
+
+	if (!hex || !*hex)
+		return 0;
+
+	memset(out, 0, MAX_CHANNEL_NUM);
+	for (i = 0; hex[i]; i++) {
+		if (hex[i] == ' ' || hex[i] == '\t')
+			continue;
+		byte[n++] = hex[i];
+		if (n == 2) {
+			unsigned int val;
+
+			byte[2] = '\0';
+			if (sscanf(byte, "%x", &val) != 1)
+				return -1;
+			if (len >= MAX_CHANNEL_NUM)
+				return -1;
+			out[len++] = (u8)val;
+			n = 0;
+		}
+	}
+	return 0;
+}
+
+static int parse_chset(const char *hex, RT_CHANNEL_INFO *chset)
+{
+	size_t raw_len = 0;
+	u8 raw[64];
+	size_t i;
+
+	if (host_hex_decode(hex, raw, sizeof(raw), &raw_len))
+		return -1;
+	memset(chset, 0, sizeof(RT_CHANNEL_INFO) * MAX_CHANNEL_NUM);
+	for (i = 0; i + 1 < raw_len && i / 2 < MAX_CHANNEL_NUM; i += 2) {
+		chset[i / 2].ChannelNum = raw[i];
+		chset[i / 2].flags = raw[i + 1];
+	}
+	return 0;
+}
+
+static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
+{
+	struct vector *v = vec_void;
+	char hex[HOST_VECTOR_MAX_HEX_BUF];
+
+	memset(v, 0, sizeof(*v));
+	if (obj_len >= sizeof(v->obj))
+		return -1;
+	memcpy(v->obj, obj, obj_len);
+	v->obj_len = obj_len;
+	if (host_json_parse_string_in(obj, obj_len, "name", v->name, sizeof(v->name)))
+		return -1;
+	if (parse_fn(obj, obj_len, &v->fn))
+		return -1;
+	host_json_parse_int_in(obj, obj_len, "id", &v->id);
+	host_json_parse_int_in(obj, obj_len, "ch", &v->ch);
+	host_json_parse_int_in(obj, obj_len, "bw", &v->bw);
+	host_json_parse_int_in(obj, obj_len, "offset", &v->offset);
+	{
+		int hi = 0, lo = 0;
+
+		host_json_parse_int_in(obj, obj_len, "hi", &hi);
+		host_json_parse_int_in(obj, obj_len, "lo", &lo);
+		v->hi = (u32)hi;
+		v->lo = (u32)lo;
+	}
+	host_json_parse_int_in(obj, obj_len, "expect", &v->expect);
+	host_json_parse_int_in(obj, obj_len, "expect_chplan", &v->expect_chplan);
+	host_json_parse_int_in(obj, obj_len, "expect_null", &v->expect_null);
+	host_json_parse_string_in(obj, obj_len, "alpha2", v->alpha2, sizeof(v->alpha2));
+	if (!host_json_parse_string_in(obj, obj_len, "excl_chs", hex, sizeof(hex))) {
+		if (parse_excl_chs(hex, v->excl_chs))
+			return -1;
+	}
+	return 0;
+}
+
+static int run_vector(const struct vector *v)
+{
+	struct registry_priv regsty;
+	RT_CHANNEL_INFO chset[MAX_CHANNEL_NUM];
+	char hex[HOST_VECTOR_MAX_HEX_BUF];
+
+	memset(&regsty, 0, sizeof(regsty));
+	_rtw_memcpy(regsty.excl_chs, v->excl_chs, sizeof(regsty.excl_chs));
+
+	switch (v->fn) {
+	case FN_REGD_2G:
+		if ((int)rtw_chplan_get_default_regd_2g((u8)v->id) != v->expect) {
+			fprintf(stderr, "%s: regd_2g mismatch\n", v->name);
+			return -1;
+		}
+		break;
+	case FN_REGD_5G:
+		if ((int)rtw_chplan_get_default_regd_5g((u8)v->id) != v->expect) {
+			fprintf(stderr, "%s: regd_5g mismatch\n", v->name);
+			return -1;
+		}
+		break;
+	case FN_REGD:
+		if ((int)rtw_chplan_get_default_regd((u8)v->id) != v->expect) {
+			fprintf(stderr, "%s: regd mismatch\n", v->name);
+			return -1;
+		}
+		break;
+	case FN_IS_EMPTY:
+		if ((int)rtw_chplan_is_empty((u8)v->id) != v->expect) {
+			fprintf(stderr, "%s: is_empty mismatch\n", v->name);
+			return -1;
+		}
+		break;
+	case FN_IS_VALID:
+		if ((int)rtw_is_channel_plan_valid((u8)v->id) != v->expect) {
+			fprintf(stderr, "%s: is_valid mismatch\n", v->name);
+			return -1;
+		}
+		break;
+	case FN_EXCL_CHS:
+		if ((int)rtw_regsty_is_excl_chs(&regsty, (u8)v->ch) != v->expect) {
+			fprintf(stderr, "%s: excl_chs mismatch\n", v->name);
+			return -1;
+		}
+		break;
+	case FN_DFS_CH:
+		if (host_json_parse_string_in(v->obj, v->obj_len, "chset", hex, sizeof(hex)))
+			return -1;
+		if (parse_chset(hex, chset))
+			return -1;
+		if ((int)rtw_chset_is_dfs_ch(chset, (u8)v->ch) != v->expect) {
+			fprintf(stderr, "%s: dfs_ch mismatch\n", v->name);
+			return -1;
+		}
+		break;
+	case FN_DFS_RANGE:
+		if (host_json_parse_string_in(v->obj, v->obj_len, "chset", hex, sizeof(hex)))
+			return -1;
+		if (parse_chset(hex, chset))
+			return -1;
+		if ((int)rtw_chset_is_dfs_range(chset, v->hi, v->lo) != v->expect) {
+			fprintf(stderr, "%s: dfs_range mismatch\n", v->name);
+			return -1;
+		}
+		break;
+	case FN_DFS_CHBW:
+		if (host_json_parse_string_in(v->obj, v->obj_len, "chset", hex, sizeof(hex)))
+			return -1;
+		if (parse_chset(hex, chset))
+			return -1;
+		if ((int)rtw_chset_is_dfs_chbw(chset, (u8)v->ch, (u8)v->bw,
+						       (u8)v->offset) != v->expect) {
+			fprintf(stderr, "%s: dfs_chbw mismatch\n", v->name);
+			return -1;
+		}
+		break;
+	case FN_COUNTRY: {
+		const struct country_chplan *ent;
+
+		ent = rtw_get_chplan_from_country(v->alpha2);
+		if (v->expect_null) {
+			if (ent != NULL) {
+				fprintf(stderr, "%s: expected NULL country ent\n", v->name);
+				return -1;
+			}
+		} else {
+			if (!ent || ent->chplan != (u8)v->expect_chplan) {
+				fprintf(stderr, "%s: country chplan mismatch (got %u)\n",
+					v->name, ent ? ent->chplan : 255);
+				return -1;
+			}
+		}
+		break;
+	}
+	default:
+		fprintf(stderr, "%s: unknown fn\n", v->name);
+		return -1;
+	}
+	return 0;
+}
+
+int main(int argc, char **argv)
+{
+	const char *path = "chplan_vectors.json";
+	struct vector vectors[MAX_VECTORS];
+	size_t nvec = 0;
+	size_t i;
+	int failed = 0;
+
+	if (argc > 1)
+		path = argv[1];
+
+	if (host_load_vectors(path, vectors, sizeof(vectors[0]), MAX_VECTORS,
+			      parse_vector_object, &nvec)) {
+		fprintf(stderr, "failed to parse %s\n", path);
+		return 1;
+	}
+
+	for (i = 0; i < nvec; i++) {
+		if (run_vector(&vectors[i]) != 0)
+			failed++;
+		else
+			printf("ok %s\n", vectors[i].name);
+	}
+
+	if (failed) {
+		fprintf(stderr, "%d vector(s) failed\n", failed);
+		return 1;
+	}
+	printf("all %zu chplan vectors passed (oracle: core/rtw_chplan.c)\n", nvec);
+	return 0;
+}
