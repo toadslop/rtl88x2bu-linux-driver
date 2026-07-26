@@ -342,7 +342,7 @@ pub extern "C" fn rijndaelKeySetupEnc(
         128 => 16,
         192 => 24,
         256 => 32,
-        _ => 16,
+        _ => return -1,
     };
     let cipher_key = unsafe { core::slice::from_raw_parts(cipher_key, key_len) };
     let rk = unsafe { core::slice::from_raw_parts_mut(rk, 4 * 15) };
