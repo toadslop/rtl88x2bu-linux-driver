@@ -93,4 +93,5 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 | T5 | #80 | `test-05-host-security-wlan-harness.md` | draft |
 | A2 | #83 | `arch-02-domain-types-chplan.md` | draft |
 | A3 | #84 | `arch-03-domain-types-security.md` | draft |
-| W3-01 … W3-09 | #112–#120 | `wave3-*.md` | draft / in progress (Wave 3 tranche 1 — see #68) |
+| W3-01 | #112 | `wave3-01-swcrypto-ccmp-gcmp.md` | in progress (#60) |
+| W3-02 … W3-09 | #113–#120 | `wave3-*.md` | draft / in progress (Wave 3 tranche 1 — see #68) |

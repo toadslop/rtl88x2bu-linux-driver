@@ -1,0 +1,86 @@
+{
+  "oracle": "core/rtw_swcrypto.c",
+  "comment": "Round-trip vectors for _rtw_ccmp_* / _rtw_gcmp_* wrappers (W3-01). Frames include an 8-byte IV slot after the MAC header (driver convention). Encrypt uses embedded PN (NULL pn arg) so ciphertext is non-deterministic; success paths encrypt then decrypt and compare plaintext.",
+  "vectors": [
+    {
+      "name": "rtw_ccmp_roundtrip_128",
+      "fn": "_rtw_ccmp_encrypt",
+      "key_len": 16,
+      "key": "000102030405060708090a0b0c0d0e0f",
+      "hdrlen": 24,
+      "plen": 8,
+      "frame": "08000000aabbccddee01aabbccddee02aabbccddee031000000000000000000068656c6c6f212121",
+      "expect_ret": 1
+    },
+    {
+      "name": "rtw_ccmp_roundtrip_256",
+      "fn": "_rtw_ccmp_encrypt",
+      "key_len": 32,
+      "key": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "hdrlen": 24,
+      "plen": 8,
+      "frame": "08000000aabbccddee01aabbccddee02aabbccddee031000000000000000000068656c6c6f212121",
+      "expect_ret": 1
+    },
+    {
+      "name": "rtw_ccmp_roundtrip_qos_hdrlen26",
+      "fn": "_rtw_ccmp_encrypt",
+      "key_len": 16,
+      "key": "42424242424242424242424242424242",
+      "hdrlen": 26,
+      "plen": 5,
+      "frame": "880000000102030405061112131415162122232425269000800000000000000000000774657374",
+      "expect_ret": 1
+    },
+    {
+      "name": "rtw_ccmp_encrypt_bad_key_len",
+      "fn": "_rtw_ccmp_encrypt",
+      "key_len": 12,
+      "key": "000102030405060708090a0b",
+      "hdrlen": 24,
+      "plen": 8,
+      "frame": "08000000aabbccddee01aabbccddee02aabbccddee031000000000000000000068656c6c6f212121",
+      "expect_ret": 0
+    },
+    {
+      "name": "rtw_gcmp_roundtrip_128",
+      "fn": "_rtw_gcmp_encrypt",
+      "key_len": 16,
+      "key": "000102030405060708090a0b0c0d0e0f",
+      "hdrlen": 24,
+      "plen": 8,
+      "frame": "08000000aabbccddee01aabbccddee02aabbccddee031000000000000000000068656c6c6f212121",
+      "expect_ret": 1
+    },
+    {
+      "name": "rtw_gcmp_roundtrip_qos_hdrlen26",
+      "fn": "_rtw_gcmp_encrypt",
+      "key_len": 16,
+      "key": "42424242424242424242424242424242",
+      "hdrlen": 26,
+      "plen": 5,
+      "frame": "880000000102030405061112131415162122232425269000800000000000000000000774657374",
+      "expect_ret": 1
+    },
+    {
+      "name": "rtw_ccmp_decrypt_via_roundtrip",
+      "fn": "_rtw_ccmp_decrypt",
+      "key_len": 16,
+      "key": "000102030405060708090a0b0c0d0e0f",
+      "hdrlen": 24,
+      "plen": 8,
+      "frame": "08000000aabbccddee01aabbccddee02aabbccddee031000000000000000000068656c6c6f212121",
+      "expect_ret": 1
+    },
+    {
+      "name": "rtw_gcmp_decrypt_via_roundtrip",
+      "fn": "_rtw_gcmp_decrypt",
+      "key_len": 16,
+      "key": "000102030405060708090a0b0c0d0e0f",
+      "hdrlen": 24,
+      "plen": 8,
+      "frame": "08000000aabbccddee01aabbccddee02aabbccddee031000000000000000000068656c6c6f212121",
+      "expect_ret": 1
+    }
+  ]
+}

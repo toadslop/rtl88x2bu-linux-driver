@@ -12,6 +12,18 @@
  * more details.
  *
  *****************************************************************************/
+#ifdef HOST_SWCRYPTO_TEST
+#include "host_autoconf.h"
+#include "host_crypto_wrap.h"
+#include "aes.h"
+#include "wlancrypto_wrap.h"
+#define RTW_INFO(...) do { } while (0)
+#define RTW_DBG_DUMP(...) do { } while (0)
+#define AES_BLOCK_SIZE 16
+#define _SUCCESS 1
+#define _FAIL 0
+#define uint unsigned int
+#else
 #include <drv_types.h>
 #include <hal_data.h>
 #include <aes.h>
@@ -19,6 +31,9 @@
 #include <aes_wrap.h>
 #include <sha256.h>
 #include <wlancrypto_wrap.h>
+#endif /* HOST_SWCRYPTO_TEST */
+
+#ifndef CONFIG_RUST
 
 /**
  * rtw_ccmp_encrypt - 
@@ -106,8 +121,10 @@ int _rtw_ccmp_decrypt(_adapter * padapter, u8 *key, u32 key_len, uint hdrlen, u8
 	return _SUCCESS;
 }
 
+#endif /* !CONFIG_RUST */
 
 #ifdef CONFIG_RTW_MESH_AEK
+#ifndef HOST_SWCRYPTO_WRAPPER_ONLY
 /* wrapper to ase_siv_encrypt and aes_siv_decrypt */
 int _aes_siv_encrypt(const u8 *key, size_t key_len,
 	const u8 *pw, size_t pwlen,
@@ -121,8 +138,10 @@ int _aes_siv_decrypt(const u8 *key, size_t key_len,
 {
 	return aes_siv_decrypt(key, key_len, iv_crypt, iv_c_len, num_elem, addr, len, out);
 }
-#endif
+#endif /* !HOST_SWCRYPTO_WRAPPER_ONLY */
+#endif /* CONFIG_RTW_MESH_AEK */
 
+#ifndef CONFIG_RUST
 
 /**
  * _rtw_gcmp_encrypt - 
@@ -191,8 +210,10 @@ int _rtw_gcmp_decrypt(_adapter *padapter, u8 *key, u32 key_len, uint hdrlen, u8 
 	return _SUCCESS;
 }
 
+#endif /* !CONFIG_RUST */
 
-#if  defined(CONFIG_IEEE80211W) | defined(CONFIG_TDLS)
+#if defined(CONFIG_IEEE80211W) | defined(CONFIG_TDLS)
+#ifndef HOST_SWCRYPTO_WRAPPER_ONLY
 u8 _bip_ccmp_protect(const u8 *key, size_t key_len,
 	const u8 *data, size_t data_len, u8 *mic)
 {
@@ -246,10 +267,11 @@ u8 _bip_gcmp_protect(u8 *whdr_pos, size_t len,
 
 	return res;
 }
+#endif /* !HOST_SWCRYPTO_WRAPPER_ONLY */
 #endif /* CONFIG_IEEE80211W */
 
-
 #ifdef CONFIG_TDLS
+#ifndef HOST_SWCRYPTO_WRAPPER_ONLY
 void _tdls_generate_tpk(void *sta, const u8 *own_addr, const u8 *bssid)
 {
 	struct sta_info *psta = (struct sta_info *)sta;
@@ -293,4 +315,5 @@ void _tdls_generate_tpk(void *sta, const u8 *own_addr, const u8 *bssid)
 
 	sha256_prf(key_input, SHA256_MAC_LEN, "TDLS PMK", data, sizeof(data), (u8 *)&psta->tpk, sizeof(psta->tpk));
 }
+#endif /* !HOST_SWCRYPTO_WRAPPER_ONLY */
 #endif /* CONFIG_TDLS */

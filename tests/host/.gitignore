@@ -1,2 +1,10 @@
 # Host L2 build artifacts (W2-17a chplan harness)
 chplan/test_chplan
+chplan/test_chplan_rust
+chplan/librust_chplan.a
+chplan/chplan_data.o
+
+# W3-01 swcrypto wrapper harness
+swcrypto/test_swcrypto
+swcrypto/test_swcrypto_rust
+swcrypto/librust_swcrypto.a
