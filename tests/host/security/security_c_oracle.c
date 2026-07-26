@@ -188,3 +188,119 @@ u32 host_wep_getcrc32(u8 *buf, sint len)
 	return getcrc32(buf, len);
 }
 #endif /* HOST_WEP_ORACLE_BUILD */
+
+/* ----- TKIP MIC helpers from core/rtw_security.c ----- */
+
+#define ROL32(A, n) (((A) << (n)) | (((A) >> (32 - (n))) & ((1UL << (n)) - 1)))
+#define ROR32(A, n) ROL32((A), 32 - (n))
+
+struct mic_data {
+	u32 K0, K1;
+	u32 L, R;
+	u32 M;
+	u32 nBytesInM;
+};
+
+static u32 secmicgetuint32(u8 *p)
+{
+	s32 i;
+	u32 res = 0;
+
+	for (i = 0; i < 4; i++)
+		res |= ((u32)(*p++)) << (8 * i);
+	return res;
+}
+
+static void secmicputuint32(u8 *p, u32 val)
+{
+	long i;
+
+	for (i = 0; i < 4; i++) {
+		*p++ = (u8)(val & 0xff);
+		val >>= 8;
+	}
+}
+
+static void secmicclear(struct mic_data *pmicdata)
+{
+	pmicdata->L = pmicdata->K0;
+	pmicdata->R = pmicdata->K1;
+	pmicdata->nBytesInM = 0;
+	pmicdata->M = 0;
+}
+
+void host_tkip_secmicsetkey(struct mic_data *pmicdata, u8 *key)
+{
+	pmicdata->K0 = secmicgetuint32(key);
+	pmicdata->K1 = secmicgetuint32(key + 4);
+	secmicclear(pmicdata);
+}
+
+void host_tkip_secmicappendbyte(struct mic_data *pmicdata, u8 b)
+{
+	pmicdata->M |= ((unsigned long)b) << (8 * pmicdata->nBytesInM);
+	pmicdata->nBytesInM++;
+	if (pmicdata->nBytesInM >= 4) {
+		pmicdata->L ^= pmicdata->M;
+		pmicdata->R ^= ROL32(pmicdata->L, 17);
+		pmicdata->L += pmicdata->R;
+		pmicdata->R ^= ((pmicdata->L & 0xff00ff00) >> 8) |
+			       ((pmicdata->L & 0x00ff00ff) << 8);
+		pmicdata->L += pmicdata->R;
+		pmicdata->R ^= ROL32(pmicdata->L, 3);
+		pmicdata->L += pmicdata->R;
+		pmicdata->R ^= ROR32(pmicdata->L, 2);
+		pmicdata->L += pmicdata->R;
+		pmicdata->M = 0;
+		pmicdata->nBytesInM = 0;
+	}
+}
+
+void host_tkip_secmicappend(struct mic_data *pmicdata, u8 *src, u32 nbytes)
+{
+	while (nbytes > 0) {
+		host_tkip_secmicappendbyte(pmicdata, *src++);
+		nbytes--;
+	}
+}
+
+void host_tkip_secgetmic(struct mic_data *pmicdata, u8 *dst)
+{
+	host_tkip_secmicappendbyte(pmicdata, 0x5a);
+	host_tkip_secmicappendbyte(pmicdata, 0);
+	host_tkip_secmicappendbyte(pmicdata, 0);
+	host_tkip_secmicappendbyte(pmicdata, 0);
+	host_tkip_secmicappendbyte(pmicdata, 0);
+	while (pmicdata->nBytesInM != 0)
+		host_tkip_secmicappendbyte(pmicdata, 0);
+	secmicputuint32(dst, pmicdata->L);
+	secmicputuint32(dst + 4, pmicdata->R);
+	secmicclear(pmicdata);
+}
+
+void host_tkip_seccalctkipmic(u8 *key, u8 *header, u8 *data, u32 data_len,
+			      u8 *mic_code, u8 pri)
+{
+	struct mic_data micdata;
+	u8 priority[4] = {0x0, 0x0, 0x0, 0x0};
+
+	host_tkip_secmicsetkey(&micdata, key);
+	priority[0] = pri;
+
+	if (header[1] & 1) {
+		host_tkip_secmicappend(&micdata, &header[16], 6);
+		if (header[1] & 2)
+			host_tkip_secmicappend(&micdata, &header[24], 6);
+		else
+			host_tkip_secmicappend(&micdata, &header[10], 6);
+	} else {
+		host_tkip_secmicappend(&micdata, &header[4], 6);
+		if (header[1] & 2)
+			host_tkip_secmicappend(&micdata, &header[16], 6);
+		else
+			host_tkip_secmicappend(&micdata, &header[10], 6);
+	}
+	host_tkip_secmicappend(&micdata, &priority[0], 4);
+	host_tkip_secmicappend(&micdata, data, data_len);
+	host_tkip_secgetmic(&micdata, mic_code);
+}
