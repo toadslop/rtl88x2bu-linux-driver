@@ -2324,8 +2324,7 @@ u8 rtw_chdef_5g_attrib(u8 chd)
 }
 #endif /* CONFIG_IEEE80211_BAND_5GHZ */
 
-#ifndef HOST_CHPLAN_TEST
-#ifndef HOST_CHPLAN_DATA_ONLY
+#if !defined(HOST_CHPLAN_DATA_ONLY)
 
 /* Deferred C init path — stays in _rest.c until PR3 ports to Rust (W2-20). */
 static u8 init_channel_set_from_rtk_priv(_adapter *padapter, RT_CHANNEL_INFO *channel_set)
@@ -2465,4 +2464,3 @@ u8 init_channel_set(_adapter *adapter)
 }
 
 #endif /* !HOST_CHPLAN_DATA_ONLY */
-#endif /* !HOST_CHPLAN_TEST */

@@ -50,6 +50,7 @@ pub struct CountryChplan {
 #[cfg(host_chplan_test)]
 #[repr(C)]
 struct HostRegistryPriv {
+    wireless_mode: u8,
     excl_chs: [u8; MAX_CHANNEL_NUM],
 }
 
