@@ -3,6 +3,8 @@
  * Host L2 oracle runner for WEP ARC4/CRC32 primitives (T5 / W3-05).
  */
 
+#ifdef HOST_WEP_ORACLE_BUILD
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -142,3 +144,5 @@ int main(int argc, char **argv)
 	       nvec);
 	return 0;
 }
+
+#endif /* HOST_WEP_ORACLE_BUILD */

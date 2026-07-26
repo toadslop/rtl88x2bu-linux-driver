@@ -58,6 +58,7 @@ u32 security_type_bip_to_gmcs(enum security_type type)
 }
 #endif
 
+#ifdef HOST_WEP_ORACLE_BUILD
 /* ----- WEP primitives (ARC4 + CRC32) from core/rtw_security.c ----- */
 
 typedef int sint;
@@ -186,3 +187,4 @@ u32 host_wep_getcrc32(u8 *buf, sint len)
 {
 	return getcrc32(buf, len);
 }
+#endif /* HOST_WEP_ORACLE_BUILD */

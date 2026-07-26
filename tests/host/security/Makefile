@@ -27,7 +27,7 @@ test_security: test_security.c $(ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_security.c $(ORACLE) $(HOST_JSON)
 
 test_wep_primitives: test_wep_primitives.c $(ORACLE) $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ test_wep_primitives.c $(ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DHOST_WEP_ORACLE_BUILD -o $@ test_wep_primitives.c $(ORACLE) $(HOST_JSON)
 
 clean:
 	rm -f test_security test_wep_primitives
