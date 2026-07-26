@@ -1,0 +1,25 @@
+{
+  "oracle": "core/rtw_security.c",
+  "vectors": [
+    {"name": "noprivacy", "fn": "security_type_str", "value": 0, "expect_str": "N/A"},
+    {"name": "wep40", "fn": "security_type_str", "value": 1, "expect_str": "WEP40"},
+    {"name": "tkip", "fn": "security_type_str", "value": 2, "expect_str": "TKIP"},
+    {"name": "tkip_wm", "fn": "security_type_str", "value": 3, "expect_str": "TKIP_WM"},
+    {"name": "aes", "fn": "security_type_str", "value": 4, "expect_str": "AES"},
+    {"name": "wep104", "fn": "security_type_str", "value": 5, "expect_str": "WEP104"},
+    {"name": "sms4", "fn": "security_type_str", "value": 6, "expect_str": "SMS4"},
+    {"name": "gcmp", "fn": "security_type_str", "value": 7, "expect_str": "GCMP"},
+    {"name": "ccmp_256", "fn": "security_type_str", "value": 20, "expect_str": "CCMP_256"},
+    {"name": "gcmp_256", "fn": "security_type_str", "value": 23, "expect_str": "GCMP_256"},
+    {"name": "bip_cmac_128", "fn": "security_type_str", "value": 32, "expect_str": "BIP_CMAC_128"},
+    {"name": "bip_gmac_128", "fn": "security_type_str", "value": 33, "expect_str": "BIP_GMAC_128"},
+    {"name": "bip_gmac_256", "fn": "security_type_str", "value": 34, "expect_str": "BIP_GMAC_256"},
+    {"name": "bip_cmac_256", "fn": "security_type_str", "value": 35, "expect_str": "BIP_CMAC_256"},
+    {"name": "invalid_high", "fn": "security_type_str", "value": 8, "expect_null": true},
+    {"name": "bip_to_cmac_128", "fn": "security_type_bip_to_gmcs", "value": 32, "expect_gmcs": 256},
+    {"name": "bip_to_gmac_128", "fn": "security_type_bip_to_gmcs", "value": 33, "expect_gmcs": 512},
+    {"name": "bip_to_gmac_256", "fn": "security_type_bip_to_gmcs", "value": 34, "expect_gmcs": 1024},
+    {"name": "bip_to_cmac_256", "fn": "security_type_bip_to_gmcs", "value": 35, "expect_gmcs": 2048},
+    {"name": "bip_to_invalid", "fn": "security_type_bip_to_gmcs", "value": 4, "expect_gmcs": 0}
+  ]
+}
