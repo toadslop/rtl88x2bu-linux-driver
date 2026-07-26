@@ -115,7 +115,9 @@ Check with `lsmod`: `rtw88_*` means in-tree; `88x2bu` means this driver. Full ST
 | 0 | Docs, Kbuild `.rs` support, trivial scaffold |
 | 1 | bindgen / FFI + crypto pilot (`aes-ctr`) |
 | 2 | Leaf/pure units (remaining crypto) |
-| 3–6 | core → HAL → os_dep → `module!` (children filed later) |
+| 2 (tail) | `rtw_chplan.c` leaf ports (W2-17…W2-20; tables stay in C) |
+| 3 | Core protocol (`core/`) — tranche 1: swcrypto, IE parse, security start, wlan_util rates |
+| 3–6 | core (tranche 2) → HAL → os_dep → `module!` (children filed as tranches complete) |
 
 ## PR verification snippet
 
