@@ -35,12 +35,6 @@ AES_LEAF_SRCS := \
 	$(CRYPTO)/aes-internal-enc.c \
 	../shim/host_crypto_shim.c
 
-# W2-11 part 1: Te0 in Rust; remainder in aes-internal_rest.c (matches CONFIG_RUST link).
-AES_LEAF_REST_SRCS := \
-	$(CRYPTO)/aes-internal_rest.c \
-	$(CRYPTO)/aes-internal-enc.c \
-	../shim/host_crypto_shim.c
-
 GCM_SRCS := $(CRYPTO)/aes-gcm.c
 HOST_JSON := host_vector_json.c
 HOST_GCMP := host_gcmp_vector.c
@@ -261,15 +255,17 @@ test_aes_internal: test_aes_internal.c $(C_ORACLE_AES_INTERNAL_SRCS)
 	$(CC) $(CFLAGS) -o $@ test_aes_internal.c $(C_ORACLE_AES_INTERNAL_SRCS)
 
 librust_aes_internal.a: $(RUST_AES_INTERNAL)
-	$(RUSTC) $(RUSTFLAGS) --cfg host_crypto_test --crate-type staticlib $(RUST_AES_INTERNAL) -o $@
+	$(RUSTC) $(RUSTFLAGS) --crate-type staticlib $(RUST_AES_INTERNAL) -o $@
 
 test-aes-internal-rust: test_aes_internal_rust
 	./test_aes_internal_rust aes_internal_vectors.json
 
-test_aes_internal_rust: test_aes_internal.c librust_aes_internal.a $(AES_LEAF_REST_SRCS) \
+test_aes_internal_rust: test_aes_internal.c librust_aes_internal.a \
+			$(CRYPTO)/aes-internal-enc.c ../shim/host_crypto_shim.c \
 			$(HOST_JSON) $(HOST_AES_INTERNAL)
 	$(CC) $(CFLAGS) -DRUST_AES_INTERNAL_ORACLE -o $@ test_aes_internal.c \
-		$(AES_LEAF_REST_SRCS) $(HOST_JSON) $(HOST_AES_INTERNAL) librust_aes_internal.a
+		$(CRYPTO)/aes-internal-enc.c ../shim/host_crypto_shim.c \
+		$(HOST_JSON) $(HOST_AES_INTERNAL) librust_aes_internal.a
 
 test-aes-ccm: test-aes-ccm-c test-aes-ccm-rust
 
