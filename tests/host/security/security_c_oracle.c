@@ -179,6 +179,7 @@ void host_wep_arcfour_crypt(const u8 *key, u32 key_len, const u8 *src, u8 *dest,
 {
 	struct arc4context ctx;
 
+	// codeql[cpp/weak-cryptographic-algorithm]
 	arcfour_init(&ctx, (u8 *)key, key_len);
 	arcfour_encrypt(&ctx, dest, (u8 *)src, len);
 }
