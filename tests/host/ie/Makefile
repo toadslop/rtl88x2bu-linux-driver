@@ -1,0 +1,41 @@
+# Host L2 differential tests for core/rtw_ieee80211.c IE helpers (W3-03).
+
+ROOT     := ../../..
+CORE     := $(ROOT)/core
+HOST_INC := ../include
+RUST_IE  := $(ROOT)/rust/rtw_ieee80211.rs
+
+CC      := gcc
+RUSTC   := rustc
+CFLAGS  := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+           -I$(HOST_INC) -I$(CORE) \
+           -DHOST_IE_TEST
+RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
+
+IE_SRCS := ie_c_oracle.c ../crypto/host_vector_json.c
+
+.PHONY: all test test-c test-rust clean
+
+all: test
+
+test: test-c test-rust
+
+test-c: test_ie
+	./test_ie ie_vectors.json
+
+test_ie: test_ie.c $(IE_SRCS)
+	$(CC) $(CFLAGS) -o $@ test_ie.c $(IE_SRCS)
+
+librust_ie.a: $(RUST_IE)
+	$(RUSTC) $(RUSTFLAGS) --cfg host_ie_test --crate-type staticlib \
+		$(RUST_IE) -o $@
+
+test-rust: test_ie_rust
+	./test_ie_rust ie_vectors.json
+
+test_ie_rust: test_ie.c librust_ie.a ../crypto/host_vector_json.c
+	$(CC) $(CFLAGS) -DRUST_IE_ORACLE -o $@ test_ie.c ../crypto/host_vector_json.c \
+		librust_ie.a
+
+clean:
+	rm -f test_ie test_ie_rust librust_ie.a

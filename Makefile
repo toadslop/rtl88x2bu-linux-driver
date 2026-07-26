@@ -2510,6 +2510,7 @@ $(MODULE_NAME)-y += rust/rtw_crypto_wrap.o
 RUSTFLAGS_rtw_chplan.o += --cfg ieee80211_band_5ghz
 $(MODULE_NAME)-y += rust/rtw_chplan.o
 $(MODULE_NAME)-y += rust/rtw_swcrypto.o
+$(MODULE_NAME)-y += rust/rtw_ieee80211.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o

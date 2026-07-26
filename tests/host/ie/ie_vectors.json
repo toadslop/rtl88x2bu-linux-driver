@@ -1,0 +1,41 @@
+{
+  "oracle": "core/rtw_ieee80211.c",
+  "vectors": [
+    {
+      "name": "get_ie_ssid",
+      "fn": "rtw_get_ie",
+      "ies": "0003616261",
+      "index": 0,
+      "limit": 5,
+      "expect_len": 3,
+      "expect_found": 1
+    },
+    {
+      "name": "get_ie_missing",
+      "fn": "rtw_get_ie",
+      "ies": "0003616261",
+      "index": 1,
+      "limit": 5,
+      "expect_found": 0
+    },
+    {
+      "name": "get_ie_ex_vendor",
+      "fn": "rtw_get_ie_ex",
+      "ies": "dd0411223301",
+      "eid": 221,
+      "oui": "112233",
+      "oui_len": 3,
+      "expect_ielen": 6,
+      "expect_found": 1
+    },
+    {
+      "name": "remove_ie_ssid",
+      "fn": "rtw_ies_remove_ie",
+      "ies": "00036162610405112233",
+      "offset": 0,
+      "eid": 0,
+      "expect_len": 5,
+      "expect_ret": 1
+    }
+  ]
+}

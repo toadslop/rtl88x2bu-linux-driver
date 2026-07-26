@@ -188,7 +188,7 @@ Failures at L4 block the wave epic, not every tiny PR, if L0–L2 were green—b
 1. **T0** — Document this plan + PR checklist (this file).
 2. **T1** — `check-symbols.sh` + Make target `rust-check-symbols` (done).
 3. **T2** — Host crypto harness scaffolding + first vectors for `aes-ctr` (ties to W1-03).
-4. **T3** — GitHub Actions (`.github/workflows/host-l2.yml`): L2 host tests on `ubuntu-latest` (`make -C tests/host/domain test` + `make -C tests/host/crypto all` + `make -C tests/host/chplan test`). L0 on a Rust-kernel container deferred until a cached image exists.
+4. **T3** — GitHub Actions (`.github/workflows/host-l2.yml`): L2 host tests on `ubuntu-latest` (`make -C tests/host/domain test` + `make -C tests/host/crypto all` + `make -C tests/host/chplan test` + `make -C tests/host/ie test`). L0 on a Rust-kernel container deferred until a cached image exists.
 5. **T4** — Host chplan harness (`tests/host/chplan/`): C oracle for W2-17 lookup helpers via `HOST_CHPLAN_TEST` build of `core/rtw_chplan.c`. DFS/country vectors land with W2-18/W2-19.
 
 ## Out of scope (for now)
