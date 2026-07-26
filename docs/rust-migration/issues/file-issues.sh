@@ -61,8 +61,10 @@ files=(
   test-01-symbol-check.md
   test-02-host-crypto-harness.md
   test-03-ci-host-tests.md
+  test-04-host-chplan-harness.md
   arch-00-land-doc.md
   arch-01-domain-types-seed.md
+  arch-02-domain-types-chplan.md
   wave0-01-docs.md
   wave0-02-kbuild.md
   wave0-03-scaffold.md
@@ -86,6 +88,17 @@ files=(
   wave2-14-aes-internal-part4.md
   wave2-15-aes-internal-enc.md
   wave2-16-sha256.md
+  wave3-01-swcrypto.md
+  wave3-02-chplan-part1.md
+  wave3-03-chplan-part2.md
+  wave3-04-chplan-part3.md
+  wave3-05-chplan-part4.md
+  wave3-06-security-type-str.md
+  wave3-07-security-wep-primitives.md
+  wave3-08-security-wep-frames.md
+  wave3-09-security-tkip-mic.md
+  wave3-10-wlan-util-rates.md
+  wave3-11-wlan-util-ratetbl.md
 )
 
 # draft_id -> github issue number

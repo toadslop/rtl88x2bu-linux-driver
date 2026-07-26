@@ -46,8 +46,8 @@ Architecture: `epic-11-architecture.md`, `arch-00-*.md` …
 
 ## Filing cadence
 
-- **Now:** Phase/wave epics + Wave 0–2 children + test-infra epic/children.
-- **Later:** open Wave 3–6 / Phase 2 children only when the previous wave is mostly done.
+- **Now:** Phase/wave epics + Wave 0–2 children + test-infra epic/children; **Wave 3 tranche 1** (W3-01…W3-11, A2, T4).
+- **Later:** Wave 3 tranche 2 (large `core/` protocol TUs) and Wave 4–6 / Phase 2 children when the previous tranche is mostly done.
 
 ## Status
 
@@ -81,4 +81,7 @@ Architecture: `epic-11-architecture.md`, `arch-00-*.md` …
 | W2-16 | `wave2-16-sha256.md` | done (Rust hmac_sha256_vector; no sha256.c in CONFIG_RUST build; not filed on GitHub) |
 | T0 / A0 | `test-00-*.md` / `arch-00-*.md` | done (plan docs + links via W0-01) |
 | T1 | `test-01-symbol-check.md` | done (#12) |
-| T3 | `test-03-ci-host-tests.md` | draft |
+| T3 | `test-03-ci-host-tests.md` | draft (only remaining Wave 0–2 infra item) |
+| T4 | `test-04-host-chplan-harness.md` | draft (Wave 3 L2 harness) |
+| A2 | `arch-02-domain-types-chplan.md` | draft (channel/rate domain types) |
+| W3-01 … W3-11 | `wave3-*.md` | draft (Wave 3 tranche 1 — see epic-05-wave3.md) |

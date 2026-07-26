@@ -16,6 +16,7 @@ Provide hardware-free verification (L0–L3) so each ~200 LOC translation PR can
 - T1 — symbol/ABI check script
 - T2 — host crypto differential harness + aes-ctr vectors
 - T3 — CI wiring for L2 (and L0 when a Rust kernel image exists)
+- T4 — host chplan differential harness (Wave 3)
 
 ## Exit criteria
 
