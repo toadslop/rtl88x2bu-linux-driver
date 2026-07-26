@@ -13,6 +13,8 @@ on:
       - 'core/rtw_swcrypto.c'
       - 'core/rtw_swcrypto_rest.c'
       - 'core/rtw_ieee80211.c'
+      - 'core/rtw_security.c'
+      - 'core/rtw_wlan_util.c'
       - 'rust/**'
       - 'tests/host/**'
       - 'Makefile'
@@ -25,6 +27,8 @@ on:
       - 'core/rtw_swcrypto.c'
       - 'core/rtw_swcrypto_rest.c'
       - 'core/rtw_ieee80211.c'
+      - 'core/rtw_security.c'
+      - 'core/rtw_wlan_util.c'
       - 'rust/**'
       - 'tests/host/**'
       - 'Makefile'
@@ -58,3 +62,9 @@ jobs:
 
       - name: Host swcrypto parity (L2)
         run: make -C tests/host/swcrypto test
+
+      - name: Host security parity (L2)
+        run: make -C tests/host/security test
+
+      - name: Host wlan_util parity (L2)
+        run: make -C tests/host/wlan_util test
