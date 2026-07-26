@@ -83,7 +83,7 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 | W2-15 | #106 | `wave2-15-aes-internal-enc.md` | done |
 | W2-16 | #107 | `wave2-16-sha256.md` | done |
 | W2-17 | #108 | `wave2-17-chplan-lookup.md` | done (#57) |
-| W2-18 | #109 | `wave2-18-chplan-dfs.md` | done (#58) |
+| W2-18 | #109 | `wave2-18-chplan-dfs.md` | in progress (#58) |
 | W2-19 | #110 | `wave2-19-chplan-country.md` | in progress (`cursor/w2-19-chplan-country-rust-3dd4`) |
 | W2-20 | #111 | `wave2-20-chplan-init.md` | draft |
 | T0 / A0 | #75 / #81 | `test-00-*.md` / `arch-00-*.md` | done |

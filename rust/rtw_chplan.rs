@@ -196,6 +196,7 @@ pub extern "C" fn rtw_regsty_is_excl_chs(regsty: *const u8, ch: u8) -> bool {
 
 #[no_mangle]
 pub extern "C" fn rtw_chset_is_dfs_range(chset: *mut RtChannelInfo, hi: u32, lo: u32) -> bool {
+    // Intentional hardening: legacy C dereferences chset unconditionally.
     if chset.is_null() {
         return false;
     }
@@ -219,6 +220,7 @@ pub extern "C" fn rtw_chset_is_dfs_range(chset: *mut RtChannelInfo, hi: u32, lo:
 
 #[no_mangle]
 pub extern "C" fn rtw_chset_is_dfs_ch(chset: *mut RtChannelInfo, ch: u8) -> bool {
+    // See rtw_chset_is_dfs_range: NULL chset returns false instead of faulting.
     if chset.is_null() {
         return false;
     }

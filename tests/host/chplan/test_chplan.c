@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Host L2 oracle runner for rtw_chplan.c lookup helpers (W2-17a).
+ * Host L2 oracle runner for rtw_chplan.c lookup + DFS helpers (W2-17a/W2-18).
  *
  * oracle: core/rtw_chplan.c
  */
@@ -26,6 +26,9 @@ enum chplan_fn {
 	FN_IS_EMPTY,
 	FN_IS_VALID,
 	FN_EXCL_CHS,
+	FN_DFS_CH,
+	FN_DFS_RANGE,
+	FN_DFS_CHBW,
 };
 
 struct vector {
@@ -35,8 +38,13 @@ struct vector {
 	size_t obj_len;
 	int id;
 	int ch;
+	int hi;
+	int lo;
+	int bw;
+	int offset;
 	int expect;
 	u8 excl_chs[MAX_CHANNEL_NUM];
+	RT_CHANNEL_INFO chset[MAX_CHANNEL_NUM];
 };
 
 static int parse_fn(const char *obj, size_t obj_len, enum chplan_fn *out)
@@ -57,6 +65,12 @@ static int parse_fn(const char *obj, size_t obj_len, enum chplan_fn *out)
 		*out = FN_IS_VALID;
 	else if (strcmp(fn, "rtw_regsty_is_excl_chs") == 0)
 		*out = FN_EXCL_CHS;
+	else if (strcmp(fn, "rtw_chset_is_dfs_ch") == 0)
+		*out = FN_DFS_CH;
+	else if (strcmp(fn, "rtw_chset_is_dfs_range") == 0)
+		*out = FN_DFS_RANGE;
+	else if (strcmp(fn, "rtw_chset_is_dfs_chbw") == 0)
+		*out = FN_DFS_CHBW;
 	else
 		return -1;
 	return 0;
@@ -92,6 +106,48 @@ static int parse_excl_chs(const char *hex, u8 *out)
 	return 0;
 }
 
+static int parse_chset_hex(const char *hex, RT_CHANNEL_INFO *out)
+{
+	size_t n = 0;
+	size_t idx = 0;
+	char byte[3];
+	u8 cur_ch = 0;
+	int have_ch = 0;
+	size_t i;
+
+	if (!hex || !*hex)
+		return -1;
+
+	memset(out, 0, sizeof(RT_CHANNEL_INFO) * MAX_CHANNEL_NUM);
+	for (i = 0; hex[i]; i++) {
+		if (hex[i] == ' ' || hex[i] == '\t')
+			continue;
+		byte[n++] = hex[i];
+		if (n == 2) {
+			unsigned int val;
+
+			byte[2] = '\0';
+			if (sscanf(byte, "%x", &val) != 1)
+				return -1;
+			if (!have_ch) {
+				cur_ch = (u8)val;
+				have_ch = 1;
+			} else {
+				if (idx >= MAX_CHANNEL_NUM)
+					return -1;
+				out[idx].ChannelNum = cur_ch;
+				out[idx].flags = (u8)val;
+				idx++;
+				have_ch = 0;
+			}
+			n = 0;
+		}
+	}
+	if (n != 0 || have_ch)
+		return -1;
+	return 0;
+}
+
 static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 {
 	struct vector *v = vec_void;
@@ -108,9 +164,17 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		return -1;
 	host_json_parse_int_in(obj, obj_len, "id", &v->id);
 	host_json_parse_int_in(obj, obj_len, "ch", &v->ch);
+	host_json_parse_int_in(obj, obj_len, "hi", &v->hi);
+	host_json_parse_int_in(obj, obj_len, "lo", &v->lo);
+	host_json_parse_int_in(obj, obj_len, "bw", &v->bw);
+	host_json_parse_int_in(obj, obj_len, "offset", &v->offset);
 	host_json_parse_int_in(obj, obj_len, "expect", &v->expect);
 	if (!host_json_parse_string_in(obj, obj_len, "excl_chs", hex, sizeof(hex))) {
 		if (parse_excl_chs(hex, v->excl_chs))
+			return -1;
+	}
+	if (!host_json_parse_string_in(obj, obj_len, "chset", hex, sizeof(hex))) {
+		if (parse_chset_hex(hex, v->chset))
 			return -1;
 	}
 	return 0;
@@ -157,6 +221,26 @@ static int run_vector(const struct vector *v)
 	case FN_EXCL_CHS:
 		if ((int)rtw_regsty_is_excl_chs(&regsty, (u8)v->ch) != v->expect) {
 			fprintf(stderr, "%s: excl_chs mismatch\n", v->name);
+			return -1;
+		}
+		break;
+	case FN_DFS_CH:
+		if ((int)rtw_chset_is_dfs_ch((RT_CHANNEL_INFO *)v->chset, (u8)v->ch) != v->expect) {
+			fprintf(stderr, "%s: dfs_ch mismatch\n", v->name);
+			return -1;
+		}
+		break;
+	case FN_DFS_RANGE:
+		if ((int)rtw_chset_is_dfs_range((RT_CHANNEL_INFO *)v->chset, (u32)v->hi,
+						(u32)v->lo) != v->expect) {
+			fprintf(stderr, "%s: dfs_range mismatch\n", v->name);
+			return -1;
+		}
+		break;
+	case FN_DFS_CHBW:
+		if ((int)rtw_chset_is_dfs_chbw((RT_CHANNEL_INFO *)v->chset, (u8)v->ch,
+					       (u8)v->bw, (u8)v->offset) != v->expect) {
+			fprintf(stderr, "%s: dfs_chbw mismatch\n", v->name);
 			return -1;
 		}
 		break;

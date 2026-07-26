@@ -79,7 +79,7 @@
     {
       "name": "dfs_ch_36_not",
       "fn": "rtw_chset_is_dfs_ch",
-      "chset": "24000000000000",
+      "chset": "2400000000000000",
       "ch": 36,
       "expect": 0
     },
