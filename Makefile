@@ -2512,7 +2512,13 @@ $(MODULE_NAME)-y += rust/sha256_prf.o
 $(MODULE_NAME)-y += rust/rtw_crypto_wrap.o
 # rtw_regsty_is_excl_chs uses EXCL_CHS_OFFSET in rust/rtw_chplan.rs — re-run L1
 # after any registry_priv layout change.
-RUSTFLAGS_rtw_chplan.o += --cfg ieee80211_band_5ghz
+# RUSTFLAGS_<stem>.o is not applied to out-of-tree rustc; rustflags-y is.
+rustflags-y += --cfg ieee80211_band_5ghz
+# CONFIG_DFS defaults to 1 in include/drv_conf.h (#define), not a Makefile y var.
+rustflags-y += --cfg dfs
+ifneq ($(filter -DCONFIG_REGD_SRC_FROM_OS,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
+rustflags-y += --cfg regd_src_from_os
+endif
 $(MODULE_NAME)-y += rust/rtw_chplan.o
 $(MODULE_NAME)-y += rust/rtw_swcrypto.o
 $(MODULE_NAME)-y += rust/rtw_ieee80211.o
@@ -2703,8 +2709,13 @@ rust-objects-rtw-chplan-c:
 		-DHOST_CHPLAN_TEST -o core/rtw_chplan_c_ref.o core/rtw_chplan.c
 
 rust-check-symbols-rtw-chplan: rust-objects-rtw-chplan-c rust-objects-rtw-chplan
+	@$(RUST_CHECK_NM) rust/rtw_chplan.o | grep -q ' U rtw_chdef_5g_len' || { \
+		echo "rust/rtw_chplan.o missing rtw_chdef_5g_len — ieee80211_band_5ghz cfg not applied?"; \
+		exit 1; }
 	$(MAKE) rust-check-symbols OLD=core/rtw_chplan_c_ref.o NEW=rust/rtw_chplan.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_chplan_lookup.allow
+	$(MAKE) rust-check-symbols OLD=core/rtw_chplan_c_ref.o NEW=rust/rtw_chplan.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_chplan_init.allow
 
 rust-objects-rtw-swcrypto:
 	@test -n "$(KDIR)" || { \

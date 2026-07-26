@@ -38,6 +38,20 @@ u8 rtw_chdef_5g_ch(u8 chd, u8 i);
 u8 rtw_chdef_5g_attrib(u8 chd);
 #endif
 
+struct _RT_CHANNEL_INFO;
+
+/* Adapter/registry accessors for Rust init_channel_set (W2-20). */
+u8 rtw_rust_rfctl_channel_plan(void *adapter);
+u8 rtw_rust_rfctl_regd_src(void *adapter);
+struct _RT_CHANNEL_INFO *rtw_rust_rfctl_channel_set(void *adapter);
+const struct country_chplan *rtw_rust_rfctl_country_ent(void *adapter);
+u8 rtw_rust_regsty_wireless_mode(void *adapter);
+struct registry_priv *rtw_rust_adapter_regsty(void *adapter);
+void rtw_rust_chset_zero(struct _RT_CHANNEL_INFO *chset);
+void rtw_rust_chset_write(struct _RT_CHANNEL_INFO *chset, u8 index, u8 ch, u8 flags);
+void rtw_rust_chset_set_non_ocp(struct _RT_CHANNEL_INFO *chset, u8 count);
+void rtw_rust_warn_on(int condition);
+
 u8 rtw_chplan_get_default_regd(u8 id);
 bool rtw_chplan_is_empty(u8 id);
 bool rtw_is_channel_plan_valid(u8 id);
@@ -54,7 +68,6 @@ enum regd_src_t {
 extern const char *_regd_src_str[];
 #define regd_src_str(src) ((src) >= REGD_SRC_NUM ? _regd_src_str[REGD_SRC_NUM] : _regd_src_str[src])
 
-struct _RT_CHANNEL_INFO;
 u8 init_channel_set(_adapter *adapter);
 bool rtw_chset_is_dfs_range(struct _RT_CHANNEL_INFO *chset, u32 hi, u32 lo);
 bool rtw_chset_is_dfs_ch(struct _RT_CHANNEL_INFO *chset, u8 ch);

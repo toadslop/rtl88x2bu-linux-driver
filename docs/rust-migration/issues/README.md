@@ -85,7 +85,7 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 | W2-17 | #108 | `wave2-17-chplan-lookup.md` | done (#57) |
 | W2-18 | #109 | `wave2-18-chplan-dfs.md` | done (#58) |
 | W2-19 | #110 | `wave2-19-chplan-country.md` | done (#62) |
-| W2-20 | #111 | `wave2-20-chplan-init.md` | draft |
+| W2-20 | #111 | `wave2-20-chplan-init.md` | done |
 | T0 / A0 | #75 / #81 | `test-00-*.md` / `arch-00-*.md` | done |
 | T1 | #76 | `test-01-symbol-check.md` | done (supersedes pre-migration #12) |
 | T3 | #78 | `test-03-ci-host-tests.md` | done (`.github/workflows/host-l2.yml`) |

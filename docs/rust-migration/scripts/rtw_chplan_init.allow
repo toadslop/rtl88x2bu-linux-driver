@@ -1,0 +1,27 @@
+# L1 allowlist for W2-20: Rust owns init_channel_set; tables, accessors, and
+# adapter shims remain in core/rtw_chplan_rest.c.
+drop country_chplan_map
+drop RTW_ChannelPlanMap
+drop RTW_ChannelPlanMap_size
+drop rtw_chset_is_dfs_ch
+drop rtw_chset_is_dfs_chbw
+drop rtw_chset_is_dfs_range
+drop rtw_country_chplan_map_size
+drop _rtw_dfs_regd_str
+drop rtw_get_chplan_from_country
+drop rtw_chdef_2g_len
+drop rtw_chdef_2g_ch
+drop rtw_chdef_2g_attrib
+drop rtw_chdef_5g_len
+drop rtw_chdef_5g_ch
+drop rtw_chdef_5g_attrib
+drop rtw_rust_rfctl_channel_plan
+drop rtw_rust_rfctl_regd_src
+drop rtw_rust_rfctl_channel_set
+drop rtw_rust_rfctl_country_ent
+drop rtw_rust_regsty_wireless_mode
+drop rtw_rust_adapter_regsty
+drop rtw_rust_chset_zero
+drop rtw_rust_chset_write
+drop rtw_rust_chset_set_non_ocp
+drop rtw_rust_warn_on
