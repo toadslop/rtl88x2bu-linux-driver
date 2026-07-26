@@ -11,6 +11,10 @@ tests/host/
   shim/              # allocator stubs for C oracle objects
     host_rtw_wrap_support.c  # allocator/memcmp stubs for rtw_crypto_wrap (W2-06d)
   domain/            # A1 domain-type unit tests (rustc --test)
+  chplan/
+    chplan_vectors.json
+    test_chplan.c      # C-oracle runner for chplan lookup helpers (W2-17a)
+    Makefile
   crypto/
     host_vector_json.c   # shared hex/JSON helpers for vector fixtures
     aes_ctr_vectors.json
@@ -37,6 +41,18 @@ tests/host/
 
 Driver crypto sources are compiled with `-DHOST_CRYPTO_TEST`, which makes
 `core/crypto/rtw_crypto_wrap.h` include the host shim instead of `drv_types.h`.
+
+## Run (chplan lookup helpers, W2-17a)
+
+```bash
+make -C tests/host/chplan test
+```
+
+`core/rtw_chplan.c` is compiled with `-DHOST_CHPLAN_TEST`, which swaps in
+`tests/host/include/host_chplan_types.h` and `#ifndef HOST_CHPLAN_TEST` guards
+around kernel-only init/dump paths. Vectors in `chplan_vectors.json` cover the
+five W2-17 lookup getters plus `rtw_regsty_is_excl_chs`. DFS and country lookup
+vectors are added in W2-18/W2-19 follow-ups.
 
 ## Run (domain types, A1)
 
