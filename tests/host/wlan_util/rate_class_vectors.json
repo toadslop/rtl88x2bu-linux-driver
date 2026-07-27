@@ -15,6 +15,8 @@
     {"name": "cck_included_yes", "fn": "cckrates_included", "rates": "020b", "expect": 1},
     {"name": "cck_included_no", "fn": "cckrates_included", "rates": "0c12", "expect": 0},
     {"name": "cck_only_yes", "fn": "cckratesonly_included", "rates": "0204", "expect": 1},
-    {"name": "cck_only_no", "fn": "cckratesonly_included", "rates": "020c", "expect": 0}
+    {"name": "cck_only_no", "fn": "cckratesonly_included", "rates": "020c", "expect": 0},
+    {"name": "cck_included_empty", "fn": "cckrates_included", "expect": 0},
+    {"name": "cck_only_empty", "fn": "cckratesonly_included", "expect": 1}
   ]
 }
