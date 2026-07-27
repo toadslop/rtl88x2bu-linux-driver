@@ -12,6 +12,9 @@
 #define HOST_ETH_ALEN 6
 #define HOST_TXDESC_OFFSET 56
 #define HOST_MAX_WEP_FRAME 512
+#define HOST_MAX_TKIP_FRAME 512
+
+#define HOST_IS_MCAST(da) (((da)[0] & 0x01) != 0)
 
 typedef struct {
 	u8 skey[32];
@@ -21,12 +24,17 @@ struct host_security_priv {
 	u32 dot11_privacy_key_index;
 	host_keytype dot11_def_key[6];
 	u32 dot11_def_keylen[6];
+	u32 dot118021XGrpKeyid;
+	host_keytype dot118021XGrpKey[4];
 };
 
 struct host_xmit_priv {
 	u32 frag_len;
 };
 
+/*
+ * Field order after ra must match rust/rtw_security.rs host PktAttrib (W3-10).
+ */
 struct host_pkt_attrib {
 	u8 encrypt;
 	u8 nr_frags;
@@ -37,6 +45,8 @@ struct host_pkt_attrib {
 	u8 icv_len;
 	u8 _pad1[2];
 	u8 ra[HOST_ETH_ALEN];
+	u8 ta[HOST_ETH_ALEN];
+	host_keytype dot118021x_UncstKey;
 };
 
 struct host_xmit_frame {
