@@ -169,6 +169,18 @@ const size_t rtw_rust_tkip_off_securitypriv_tkip_sw_enc_cnt_mc =
 	offsetof(struct security_priv, tkip_sw_enc_cnt_mc);
 const size_t rtw_rust_tkip_off_securitypriv_tkip_sw_enc_cnt_uc =
 	offsetof(struct security_priv, tkip_sw_enc_cnt_uc);
+const size_t rtw_rust_tkip_off_securitypriv_binstallGrpkey =
+	offsetof(struct security_priv, binstallGrpkey);
+const size_t rtw_rust_tkip_off_securitypriv_tkip_sw_dec_cnt_bc =
+	offsetof(struct security_priv, tkip_sw_dec_cnt_bc);
+const size_t rtw_rust_tkip_off_securitypriv_tkip_sw_dec_cnt_mc =
+	offsetof(struct security_priv, tkip_sw_dec_cnt_mc);
+const size_t rtw_rust_tkip_off_securitypriv_tkip_sw_dec_cnt_uc =
+	offsetof(struct security_priv, tkip_sw_dec_cnt_uc);
+const size_t rtw_rust_tkip_off_adapter_stapriv =
+	offsetof(_adapter, stapriv);
+const size_t rtw_rust_tkip_off_sta_info_dot118021x_UncstKey =
+	offsetof(struct sta_info, dot118021x_UncstKey);
 #endif
 
 /* 3		=====TKIP related===== (W3-07a: MIC helpers in rust/rtw_security.rs) */
@@ -186,115 +198,8 @@ extern void phase2(u8 *rc4key, const u8 *tk, const u16 *p1k, u16 iv16);
 
 /* W3-10a: rtw_tkip_encrypt in rust/rtw_security.rs */
 extern u32 rtw_tkip_encrypt(_adapter *padapter, u8 *pxmitframe);
-u32 rtw_tkip_decrypt(_adapter *padapter, u8 *precvframe)
-{
-	/* exclude ICV */
-	u16 pnl;
-	u32 pnh;
-	u8   rc4key[16];
-	u8   ttkey[16];
-	u8	crc[4];
-	struct arc4context mycontext;
-	sint			length;
-	u32	prwskeylen;
-
-	u8	*pframe, *payload, *iv, *prwskey;
-	union pn48 dot11txpn;
-	struct	sta_info		*stainfo;
-	struct	rx_pkt_attrib	*prxattrib = &((union recv_frame *)precvframe)->u.hdr.attrib;
-	struct	security_priv	*psecuritypriv = &padapter->securitypriv;
-	/*	struct	recv_priv		*precvpriv=&padapter->recvpriv; */
-	u32		res = _SUCCESS;
-
-
-	pframe = (unsigned char *)((union recv_frame *)precvframe)->u.hdr.rx_data;
-
-	/* 4 start to decrypt recvframe */
-	if (prxattrib->encrypt == _TKIP_) {
-
-		stainfo = rtw_get_stainfo(&padapter->stapriv , &prxattrib->ta[0]);
-		if (stainfo != NULL) {
-
-			if (IS_MCAST(prxattrib->ra)) {
-				static systime start = 0;
-				static u32 no_gkey_bc_cnt = 0;
-				static u32 no_gkey_mc_cnt = 0;
-
-				if (psecuritypriv->binstallGrpkey == _FALSE) {
-					res = _FAIL;
-
-					if (start == 0)
-						start = rtw_get_current_time();
-
-					if (is_broadcast_mac_addr(prxattrib->ra))
-						no_gkey_bc_cnt++;
-					else
-						no_gkey_mc_cnt++;
-
-					if (rtw_get_passing_time_ms(start) > 1000) {
-						if (no_gkey_bc_cnt || no_gkey_mc_cnt) {
-							RTW_PRINT(FUNC_ADPT_FMT" no_gkey_bc_cnt:%u, no_gkey_mc_cnt:%u\n",
-								FUNC_ADPT_ARG(padapter), no_gkey_bc_cnt, no_gkey_mc_cnt);
-						}
-						start = rtw_get_current_time();
-						no_gkey_bc_cnt = 0;
-						no_gkey_mc_cnt = 0;
-					}
-					goto exit;
-				}
-
-				if (no_gkey_bc_cnt || no_gkey_mc_cnt) {
-					RTW_PRINT(FUNC_ADPT_FMT" gkey installed. no_gkey_bc_cnt:%u, no_gkey_mc_cnt:%u\n",
-						FUNC_ADPT_ARG(padapter), no_gkey_bc_cnt, no_gkey_mc_cnt);
-				}
-				start = 0;
-				no_gkey_bc_cnt = 0;
-				no_gkey_mc_cnt = 0;
-
-				/* RTW_INFO("rx bc/mc packets, to perform sw rtw_tkip_decrypt\n"); */
-				/* prwskey = psecuritypriv->dot118021XGrpKey[psecuritypriv->dot118021XGrpKeyid].skey; */
-				prwskey = psecuritypriv->dot118021XGrpKey[prxattrib->key_index].skey;
-				prwskeylen = 16;
-			} else {
-				prwskey = &stainfo->dot118021x_UncstKey.skey[0];
-				prwskeylen = 16;
-			}
-
-			iv = pframe + prxattrib->hdrlen;
-			payload = pframe + prxattrib->iv_len + prxattrib->hdrlen;
-			length = ((union recv_frame *)precvframe)->u.hdr.len - prxattrib->hdrlen - prxattrib->iv_len;
-
-			GET_TKIP_PN(iv, dot11txpn);
-
-			pnl = (u16)(dot11txpn.val);
-			pnh = (u32)(dot11txpn.val >> 16);
-
-			phase1((u16 *)&ttkey[0], prwskey, &prxattrib->ta[0], pnh);
-			phase2(&rc4key[0], prwskey, (unsigned short *)&ttkey[0], pnl);
-
-			/* 4 decrypt payload include icv */
-
-			RTW_CODEQL_SUPPRESS_WEAK_RC4
-			arcfour_init(&mycontext, rc4key, 16);
-			RTW_CODEQL_SUPPRESS_WEAK_RC4
-			arcfour_encrypt(&mycontext, payload, payload, length);
-
-			*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
-
-			if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] || crc[1] != payload[length - 3] || crc[0] != payload[length - 4]) {
-				res = _FAIL;
-			}
-
-			TKIP_SW_DEC_CNT_INC(psecuritypriv, prxattrib->ra);
-		} else {
-			res = _FAIL;
-		}
-
-	}
-exit:
-	return res;
-
-}
+/* W3-10d: rtw_tkip_decrypt in rust/rtw_security.rs */
+extern u32 rtw_tkip_decrypt(_adapter *padapter, u8 *precvframe);
 
 
 /* 3			=====AES related===== */

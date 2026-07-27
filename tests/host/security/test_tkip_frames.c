@@ -301,12 +301,6 @@ int main(int argc, char **argv)
 	}
 
 	for (i = 0; i < nvec; i++) {
-#if defined(RUST_SECURITY_ORACLE)
-		if (vectors[i].fn == FN_DECRYPT) {
-			printf("skip %s (decrypt pending Rust port)\n", vectors[i].name);
-			continue;
-		}
-#endif
 		if (run_vector(&vectors[i]) != 0)
 			failed++;
 		else
