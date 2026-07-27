@@ -32,6 +32,7 @@ struct vector {
 	u8 unicast_key[16];
 	u8 group_key[16];
 	u8 binstall_grpkey;
+	u8 no_stainfo;
 	u16 hdrlen;
 	u8 iv_len;
 	u8 icv_len;
@@ -105,6 +106,8 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		v->key_index = (u8)val;
 	if (!host_json_parse_int_in(obj, obj_len, "binstall_grpkey", &val))
 		v->binstall_grpkey = (u8)val;
+	if (!host_json_parse_int_in(obj, obj_len, "no_stainfo", &val))
+		v->no_stainfo = (u8)val;
 	if (parse_mac_field(obj, obj_len, "ta", v->ta))
 		return -1;
 	if (parse_mac_field(obj, obj_len, "ra", v->ra))
@@ -206,9 +209,11 @@ static void setup_adapter_decrypt(struct host_adapter *adapter, struct vector *v
 	memcpy(adapter->securitypriv.dot118021XGrpKey[v->key_index].skey,
 	       v->group_key, 16);
 	adapter->securitypriv.binstallGrpkey = v->binstall_grpkey;
-	adapter->stapriv.stas[0].used = 1;
-	memcpy(adapter->stapriv.stas[0].ta, v->ta, HOST_ETH_ALEN);
-	memcpy(adapter->stapriv.stas[0].dot118021x_UncstKey.skey, v->unicast_key, 16);
+	if (!v->no_stainfo) {
+		adapter->stapriv.stas[0].used = 1;
+		memcpy(adapter->stapriv.stas[0].ta, v->ta, HOST_ETH_ALEN);
+		memcpy(adapter->stapriv.stas[0].dot118021x_UncstKey.skey, v->unicast_key, 16);
+	}
 }
 
 static int run_decrypt_vector(struct vector *v)
