@@ -26,6 +26,17 @@ struct host_security_priv {
 	u32 dot11_def_keylen[6];
 	u32 dot118021XGrpKeyid;
 	host_keytype dot118021XGrpKey[4];
+	u8 binstallGrpkey;
+};
+
+struct host_sta_info {
+	u8 used;
+	u8 ta[HOST_ETH_ALEN];
+	host_keytype dot118021x_UncstKey;
+};
+
+struct host_stapriv {
+	struct host_sta_info stas[4];
 };
 
 struct host_xmit_priv {
@@ -66,6 +77,7 @@ struct host_rx_pkt_attrib {
 	u8 key_index;
 	u8 _pad3;
 	u8 ra[HOST_ETH_ALEN];
+	u8 ta[HOST_ETH_ALEN];
 };
 
 struct host_recv_frame_hdr {
@@ -83,6 +95,7 @@ union host_recv_frame {
 struct host_adapter {
 	struct host_security_priv securitypriv;
 	struct host_xmit_priv xmitpriv;
+	struct host_stapriv stapriv;
 };
 
 #endif /* HOST_SECURITY_FRAME_H */

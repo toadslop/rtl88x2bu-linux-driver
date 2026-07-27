@@ -332,4 +332,82 @@ uint32_t rtw_tkip_encrypt(struct host_adapter *padapter, uint8_t *pxmitframe)
 	return res;
 }
 
+static struct host_sta_info *host_get_stainfo(struct host_stapriv *stapriv, const uint8_t *ta)
+{
+	size_t i;
+
+	for (i = 0; i < sizeof(stapriv->stas) / sizeof(stapriv->stas[0]); i++) {
+		if (!stapriv->stas[i].used)
+			continue;
+		if (memcmp(stapriv->stas[i].ta, ta, HOST_ETH_ALEN) == 0)
+			return &stapriv->stas[i];
+	}
+	return NULL;
+}
+
+static uint32_t host_le32_to_cpu(uint32_t v)
+{
+	return v;
+}
+
+uint32_t rtw_tkip_decrypt(struct host_adapter *padapter, uint8_t *precvframe)
+{
+	uint16_t pnl;
+	uint32_t pnh;
+	uint8_t rc4key[16];
+	uint8_t ttkey[16];
+	uint8_t crc[4];
+	struct arc4context mycontext;
+	int length;
+	uint8_t *pframe, *payload, *iv, *prwskey;
+	union host_pn48 dot11txpn;
+	struct host_sta_info *stainfo;
+	struct host_rx_pkt_attrib *prxattrib =
+		&((union host_recv_frame *)precvframe)->u.hdr.attrib;
+	struct host_security_priv *psecuritypriv = &padapter->securitypriv;
+	uint32_t res = HOST_SUCCESS;
+
+	pframe = (uint8_t *)((union host_recv_frame *)precvframe)->u.hdr.rx_data;
+
+	if (prxattrib->encrypt == _TKIP_) {
+		stainfo = host_get_stainfo(&padapter->stapriv, &prxattrib->ta[0]);
+		if (stainfo != NULL) {
+			if (HOST_IS_MCAST(prxattrib->ra)) {
+				if (!psecuritypriv->binstallGrpkey) {
+					res = HOST_FAIL;
+					goto exit;
+				}
+				prwskey = psecuritypriv->dot118021XGrpKey[prxattrib->key_index].skey;
+			} else {
+				prwskey = stainfo->dot118021x_UncstKey.skey;
+			}
+
+			iv = pframe + prxattrib->hdrlen;
+			payload = pframe + prxattrib->iv_len + prxattrib->hdrlen;
+			length = ((union host_recv_frame *)precvframe)->u.hdr.len -
+				 prxattrib->hdrlen - prxattrib->iv_len;
+
+			HOST_GET_TKIP_PN(iv, dot11txpn);
+			pnl = (uint16_t)(dot11txpn.val);
+			pnh = (uint32_t)(dot11txpn.val >> 16);
+
+			host_tkip_phase1((uint16_t *)&ttkey[0], prwskey, &prxattrib->ta[0], pnh);
+			host_tkip_phase2(&rc4key[0], prwskey, (uint16_t *)&ttkey[0], pnl);
+
+			arcfour_init(&mycontext, rc4key, 16);
+			arcfour_encrypt(&mycontext, payload, payload, length);
+
+			*((uint32_t *)crc) = host_le32_to_cpu(getcrc32(payload, length - 4));
+
+			if (crc[3] != payload[length - 1] || crc[2] != payload[length - 2] ||
+			    crc[1] != payload[length - 3] || crc[0] != payload[length - 4])
+				res = HOST_FAIL;
+		} else {
+			res = HOST_FAIL;
+		}
+	}
+exit:
+	return res;
+}
+
 #endif /* HOST_TKIP_FRAME_ORACLE_BUILD */
