@@ -136,8 +136,11 @@ pub extern "C" fn cckrates_included(rate: *mut U8, ratelen: i32) -> i32 {
 
 #[no_mangle]
 pub extern "C" fn cckratesonly_included(rate: *mut U8, ratelen: i32) -> i32 {
-    if rate.is_null() || ratelen <= 0 {
+    if rate.is_null() {
         return _FALSE;
+    }
+    if ratelen <= 0 {
+        return _TRUE;
     }
     let rates = unsafe { core::slice::from_raw_parts(rate, ratelen as usize) };
     for &r in rates {
