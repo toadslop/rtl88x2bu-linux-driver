@@ -1,5 +1,11 @@
 name: "RTL88x2BU CodeQL"
 
+# Read by GitHub default CodeQL setup when present at this path.
+# See https://docs.github.com/en/code-security/code-scanning/managing-your-code-scanning-configuration/editing-your-configuration-of-code-scanning
+
+queries:
+  - uses: security-and-quality
+
 # cpp/weak-cryptographic-algorithm — legacy 802.11 WEP/TKIP RC4 (IEEE 802.11-1999/2003).
 #
 # This driver retains WEP40/WEP104/TKIP RC4 primitives for interoperability with
@@ -9,7 +15,7 @@ name: "RTL88x2BU CodeQL"
 #
 # The alert surfaces in core/rtw_security.c (non-Rust builds) and
 # core/rtw_security_rest.c (CONFIG_RUST split, W3-04). In-code markers use
-# codeql[cpp/weak-cryptographic-algorithm] at the arcfour_* definitions.
+# RTW_CODEQL_SUPPRESS_WEAK_RC4 before each arcfour_* call site.
 query-filters:
   - exclude:
       id: cpp/weak-cryptographic-algorithm
