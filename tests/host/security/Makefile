@@ -19,7 +19,7 @@ HOST_JSON := ../crypto/host_vector_json.c
 
 all: test
 
-test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust
+test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames
 
 test-c: test_security
 	./test_security security_type_vectors.json

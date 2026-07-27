@@ -401,6 +401,8 @@ pub struct HostPktAttrib {
     pub icv_len: U8,
     pub _pad1: [U8; 2],
     pub ra: [U8; 6],
+    pub ta: [U8; 6],
+    pub dot118021x_UncstKey: KeyType,
 }
 
 #[cfg(host_security_test)]
@@ -417,6 +419,8 @@ pub struct HostSecurityPriv {
     pub dot11_privacy_key_index: U32,
     pub dot11_def_key: [KeyType; 6],
     pub dot11_def_keylen: [U32; 6],
+    pub dot118021XGrpKeyid: U32,
+    pub dot118021XGrpKey: [KeyType; 4],
 }
 
 #[cfg(host_security_test)]
