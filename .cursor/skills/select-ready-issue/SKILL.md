@@ -57,8 +57,11 @@ An issue is **ready** when:
 1. **Dependencies closed** — every `blocked_by` issue is `CLOSED`
 2. **No conflicting in-flight work** — no open PR for the same draft ID
 3. **Spec exists** — matching `docs/rust-migration/issues/<file>.md` with Goal + Acceptance
-4. **Sized for ~200 LOC** — if the draft is too large, prefer splitting (step 4 /
-   `draft-migration-issues`) before implementing
+4. **Sized for ~200 LOC** — if the draft is larger than ~200 LOC, the issue is
+   still **ready**; continue to **`plan-stacked-prs`** to split it into a
+   multi-PR stack for the same issue. Do **not** route to
+   **`draft-migration-issues`** (that step runs only when step 2 finds nothing
+   ready).
 
 ## 4. Prioritization (default order)
 
@@ -87,7 +90,7 @@ gh issue view <number> --json number,title,body,labels,state
 
 | Outcome | Next step |
 |---------|-----------|
-| **Ready issue found** | Report selection; continue to **`plan-stacked-prs`** |
+| **Ready issue found** (including oversized) | Report selection; continue to **`plan-stacked-prs`** |
 | **Nothing ready** | Explain why (blocked, all in-flight, wave complete); continue to **`draft-migration-issues`** |
 | **Ambiguous** | List top 2–3 candidates with tradeoffs; ask user if they care |
 

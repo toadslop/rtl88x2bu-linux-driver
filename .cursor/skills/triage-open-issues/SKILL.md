@@ -80,6 +80,18 @@ Then update the local status table in
 [`docs/rust-migration/issues/README.md`](../../docs/rust-migration/issues/README.md)
 if the row still says `open`, `draft`, or `in progress`.
 
+Commit and push README updates on the current branch so repo docs stay in sync
+with the tracker:
+
+```bash
+git add docs/rust-migration/issues/README.md
+git commit -m "docs: sync README status after triage closes #<number>"
+git push
+```
+
+If triage runs without an active implementation branch, open a small docs-only PR
+for the README change before continuing to **select-ready-issue**.
+
 **Epics (`[Epic]` titles):** close only when **all** planned children for that
 wave/phase are done and the epic's verification gate is met (see the epic's
 `epic-*.md` file). Otherwise leave the epic open.
