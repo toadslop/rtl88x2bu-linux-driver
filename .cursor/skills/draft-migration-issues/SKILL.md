@@ -121,9 +121,12 @@ The script is idempotent — it skips IDs already in `ISSUE-MAP.md`.
 
 ## 5. Sub-issue linking (GitHub)
 
-After filing, link sub-issues to the epic parent when `gh` supports it:
+**Not available in current `gh` (2.91.0).** `--add-parent` / `--parent` are not
+supported yet. Skip this step unless you have a newer `gh` or use the GraphQL API
+manually. When supported, link sub-issues to the epic parent:
 
 ```bash
+# Future / newer gh only:
 gh issue edit <child-number> --add-parent <epic-number>
 # or during create:
 gh issue create --parent <epic-number> ...
