@@ -32,8 +32,7 @@ on:
 
 env:
   KERNEL_TAG: v6.12.9
-  KDIR: /opt/linux
-  LIBCLANG_PATH: /usr/lib/llvm-18/lib
+  L0_IMAGE: ghcr.io/${{ github.repository_owner }}/rtl88x2bu-l0:v6.12.9
 
 jobs:
   module-l0:
@@ -41,15 +40,40 @@ jobs:
     permissions:
       contents: read
       packages: read
-    container:
-      image: ghcr.io/${{ github.repository_owner }}/rtl88x2bu-l0:v6.12.9
     steps:
       - uses: actions/checkout@v4
 
-      - name: L0 build
-        run: |
-          make clean
-          make KDIR="${KDIR}" LLVM=1 -j"$(nproc)"
+      - name: Log in to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Verify Rust/C probes in 88x2bu.ko
-        run: ./scripts/ci/verify-ko-probes.sh 88x2bu.ko
+      - name: Pull published L0 image
+        id: pull
+        continue-on-error: true
+        run: docker pull "${L0_IMAGE}"
+
+      - name: Build L0 image (fallback when ghcr tag is missing)
+        if: steps.pull.outcome == 'failure'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: .github/docker/l0/Dockerfile
+          load: true
+          build-args: |
+            KERNEL_TAG=${{ env.KERNEL_TAG }}
+          tags: rtl88x2bu-l0:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: L0 build and probe verify
+        run: |
+          if [ "${{ steps.pull.outcome }}" = "success" ]; then
+            IMAGE="${L0_IMAGE}"
+          else
+            IMAGE="rtl88x2bu-l0:ci"
+          fi
+          docker run --rm -v "$PWD:/driver" -w /driver "${IMAGE}" \
+            bash -c 'make clean && make KDIR=/opt/linux LLVM=1 -j"$(nproc)" && ./scripts/ci/verify-ko-probes.sh 88x2bu.ko'
