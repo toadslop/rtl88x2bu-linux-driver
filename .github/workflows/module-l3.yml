@@ -47,8 +47,15 @@ jobs:
         continue-on-error: true
         run: docker pull "${L0_IMAGE}"
 
-      - name: Build L0 image (fallback when ghcr tag is missing)
-        if: steps.pull.outcome == 'failure'
+      - name: Probe pulled L0 image for L3 deps
+        id: probe
+        if: steps.pull.outcome == 'success'
+        continue-on-error: true
+        run: |
+          docker run --rm "${L0_IMAGE}" bash -c 'command -v qemu-system-x86_64 && command -v busybox'
+
+      - name: Build L0 image (fallback when ghcr tag is missing or stale)
+        if: steps.pull.outcome != 'success' || steps.probe.outcome == 'failure'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -63,17 +70,24 @@ jobs:
       - name: L3 build and QEMU insmod/rmmod
         id: l3
         run: |
-          if [ "${{ steps.pull.outcome }}" = "success" ]; then
+          if [ "${{ steps.pull.outcome }}" = "success" ] && [ "${{ steps.probe.outcome }}" = "success" ]; then
             IMAGE="${L0_IMAGE}"
           else
             IMAGE="rtl88x2bu-l0:ci"
           fi
           docker run --rm -v "$PWD:/driver" -w /driver "${IMAGE}" \
             bash -c 'set -euo pipefail
+              exec > >(tee /driver/l3-serial.log) 2>&1
               make clean
               make KDIR=/opt/linux LLVM=1 -j"$(nproc)"
+              set +e
               ./scripts/ci/run-l3-qemu.sh --ko 88x2bu.ko --log /tmp/l3-serial.log
-              cp /tmp/l3-serial.log /driver/l3-serial.log'
+              l3_status=$?
+              set -e
+              if [ -f /tmp/l3-serial.log ]; then
+                cat /tmp/l3-serial.log >> /driver/l3-serial.log
+              fi
+              exit "${l3_status}"'
 
       - name: Upload L3 serial log on failure
         if: failure()
