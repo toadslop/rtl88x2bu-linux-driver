@@ -15,11 +15,11 @@ CFLAGS  := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
 HOST_JSON := ../crypto/host_vector_json.c
 
-.PHONY: all test test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust clean
+.PHONY: all test test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust clean
 
 all: test
 
-test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust
+test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust
 
 test-c: test_security
 	./test_security security_type_vectors.json
@@ -50,6 +50,12 @@ test-tkip-phase: test_tkip_phase
 
 test-tkip-phase-rust: test_tkip_phase_rust
 	./test_tkip_phase_rust tkip_phase_vectors.json
+
+test-tkip-frames: test_tkip_frames
+	./test_tkip_frames tkip_frame_vectors.json
+
+test-tkip-frames-rust: test_tkip_frames_rust
+	./test_tkip_frames_rust tkip_frame_vectors.json
 
 test_security: test_security.c $(ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_security.c $(ORACLE) $(HOST_JSON)
@@ -90,8 +96,15 @@ test_tkip_phase_rust: test_tkip_phase.c librust_security.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_SECURITY_ORACLE -o $@ test_tkip_phase.c $(HOST_JSON) \
 		librust_security.a
 
+test_tkip_frames: test_tkip_frames.c $(SHIM) $(ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DHOST_TKIP_FRAME_ORACLE_BUILD -o $@ test_tkip_frames.c $(SHIM) $(ORACLE) $(HOST_JSON)
+
+test_tkip_frames_rust: test_tkip_frames.c librust_security.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_SECURITY_ORACLE -o $@ test_tkip_frames.c $(HOST_JSON) \
+		librust_security.a
+
 clean:
 	rm -f test_security test_security_rust test_wep_primitives test_wep_primitives_rust \
 		test_wep_frames test_wep_frames_rust test_tkip_mic test_tkip_mic_rust \
-		test_tkip_phase test_tkip_phase_rust \
+		test_tkip_phase test_tkip_phase_rust test_tkip_frames test_tkip_frames_rust \
 		librust_security.a

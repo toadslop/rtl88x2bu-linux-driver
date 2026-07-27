@@ -220,3 +220,116 @@ void rtw_wep_decrypt(struct host_adapter *padapter, uint8_t *precvframe)
 		*((uint32_t *)crc) = getcrc32(payload, length - 4);
 	}
 }
+
+#if defined(HOST_TKIP_FRAME_ORACLE_BUILD)
+
+/* ----- TKIP frame encrypt (W3-10 / T5) ----- */
+
+union host_pn48 {
+	uint64_t val;
+	struct {
+		uint8_t TSC0;
+		uint8_t TSC1;
+		uint8_t TSC2;
+		uint8_t TSC3;
+		uint8_t TSC4;
+		uint8_t TSC5;
+		uint8_t TSC6;
+		uint8_t TSC7;
+	} _byte_;
+};
+
+#define HOST_GET_TKIP_PN(iv, dot11txpn)                                          \
+	do {                                                                     \
+		(dot11txpn)._byte_.TSC0 = (iv)[2];                               \
+		(dot11txpn)._byte_.TSC1 = (iv)[0];                               \
+		(dot11txpn)._byte_.TSC2 = (iv)[4];                               \
+		(dot11txpn)._byte_.TSC3 = (iv)[5];                               \
+		(dot11txpn)._byte_.TSC4 = (iv)[6];                               \
+		(dot11txpn)._byte_.TSC5 = (iv)[7];                               \
+	} while (0)
+
+#define HOST_SUCCESS 0
+#define HOST_FAIL 1
+
+extern void host_tkip_phase1(uint16_t *p1k, const uint8_t *tk, const uint8_t *ta,
+			     uint32_t iv32);
+extern void host_tkip_phase2(uint8_t *rc4key, const uint8_t *tk, const uint16_t *p1k,
+			     uint16_t iv16);
+
+static uint32_t host_cpu_to_le32(uint32_t v)
+{
+	return v;
+}
+
+uint32_t rtw_tkip_encrypt(struct host_adapter *padapter, uint8_t *pxmitframe)
+{
+	uint16_t pnl;
+	uint32_t pnh;
+	uint8_t rc4key[16];
+	uint8_t ttkey[16];
+	uint8_t crc[4];
+	uint8_t hw_hdr_offset;
+	struct arc4context mycontext;
+	int curfragnum, length;
+	uint8_t *pframe, *payload, *iv, *prwskey;
+	union host_pn48 dot11txpn;
+	struct host_pkt_attrib *pattrib =
+		&((struct host_xmit_frame *)pxmitframe)->attrib;
+	struct host_security_priv *psecuritypriv = &padapter->securitypriv;
+	struct host_xmit_priv *pxmitpriv = &padapter->xmitpriv;
+	uint32_t res = HOST_SUCCESS;
+
+	if (((struct host_xmit_frame *)pxmitframe)->buf_addr == NULL)
+		return HOST_FAIL;
+
+	hw_hdr_offset = HOST_TXDESC_OFFSET +
+		(((struct host_xmit_frame *)pxmitframe)->pkt_offset * 8);
+
+	pframe = ((struct host_xmit_frame *)pxmitframe)->buf_addr + hw_hdr_offset;
+
+	if (pattrib->encrypt == _TKIP_) {
+		if (HOST_IS_MCAST(pattrib->ra))
+			prwskey = psecuritypriv->dot118021XGrpKey[psecuritypriv->dot118021XGrpKeyid].skey;
+		else
+			prwskey = pattrib->dot118021x_UncstKey.skey;
+
+		for (curfragnum = 0; curfragnum < pattrib->nr_frags; curfragnum++) {
+			iv = pframe + pattrib->hdrlen;
+			payload = pframe + pattrib->iv_len + pattrib->hdrlen;
+
+			HOST_GET_TKIP_PN(iv, dot11txpn);
+
+			pnl = (uint16_t)(dot11txpn.val);
+			pnh = (uint32_t)(dot11txpn.val >> 16);
+
+			host_tkip_phase1((uint16_t *)&ttkey[0], prwskey, &pattrib->ta[0], pnh);
+			host_tkip_phase2(&rc4key[0], prwskey, (uint16_t *)&ttkey[0], pnl);
+
+			if ((curfragnum + 1) == pattrib->nr_frags) {
+				length = pattrib->last_txcmdsz - pattrib->hdrlen -
+					 pattrib->iv_len - pattrib->icv_len;
+				*((uint32_t *)crc) =
+					host_cpu_to_le32(getcrc32(payload, length));
+				arcfour_init(&mycontext, rc4key, 16);
+				arcfour_encrypt(&mycontext, payload, payload, length);
+				arcfour_encrypt(&mycontext, payload + length, crc, 4);
+			} else {
+				length = pxmitpriv->frag_len - pattrib->hdrlen -
+					 pattrib->iv_len - pattrib->icv_len;
+				*((uint32_t *)crc) =
+					host_cpu_to_le32(getcrc32(payload, length));
+				arcfour_init(&mycontext, rc4key, 16);
+				arcfour_encrypt(&mycontext, payload, payload, length);
+				arcfour_encrypt(&mycontext, payload + length, crc, 4);
+
+				pframe += pxmitpriv->frag_len;
+				pframe = (uint8_t *)RND4((uintptr_t)(pframe));
+			}
+		}
+	}
+
+	return res;
+}
+
+#endif /* HOST_TKIP_FRAME_ORACLE_BUILD */
