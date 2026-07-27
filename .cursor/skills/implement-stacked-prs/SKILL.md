@@ -49,7 +49,7 @@ suffix is configured for the run.
 
 - Follow the draft spec and per-PR plan scope
 - Match existing code style in `rust/` and C shims
-- **Characterize C → freeze tests → port** (per `architecture.md`)
+- **Characterize C → freeze tests → port** (per [`architecture.md`](../../../docs/rust-migration/architecture.md))
 - Minimal diff — no drive-by refactors
 
 ### 3. Verify gates
@@ -67,7 +67,7 @@ make clean && make KDIR=/opt/linux LLVM=1 -j"$(nproc)"
 | **L0** | Every PR that touches module build |
 | **L1** | Every C→Rust object swap — `make rust-check-symbols OLD=… NEW=…` |
 | **L2** | Crypto / chplan / security / wlan harness — `make -C tests/host/crypto all` (or scoped target) |
-| **L3** | Init / load path changes — QEMU recipe in `dev-environment.md` |
+| **L3** | Init / load path changes — QEMU recipe in [`dev-environment.md`](../../../docs/rust-migration/dev-environment.md) |
 
 Do not open a PR with failing gates for its scope.
 
@@ -83,8 +83,8 @@ Reference the GitHub issue in the commit message (`#115`, `W3-04`).
 
 ### 5. Open stacked PR
 
-Prefer `ManagePullRequest` `create_pr` when available. Fallback for cloud agents
-or local shells without that tool:
+Prefer `ManagePullRequest` `create_pr` when available. Cloud agents may also use
+the `open_git_pr` MCP tool. Fallback for local shells without those tools:
 
 ```bash
 gh pr create --base <stack-parent> --head <branch> --title "<title>" --body "<body>"
