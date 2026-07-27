@@ -5,10 +5,10 @@ description: >-
   merge", "prepare for merge", "get PR ready to merge", or similar author tasks.
   Validates that stacked-PR ancestors are already merged; retargets stacked PRs to
   master; rebases on master; resolves conflicts; and addresses review feedback via
-  the pr-babysit skill. Do NOT use for reviewing PRs (use pr-review-delivery) or for
-  PRs whose stack base is not yet on master.
+  Cursor's built-in babysit skill. Do NOT use for reviewing PRs (use
+  pr-review-delivery) or for PRs whose stack base is not yet on master.
 metadata:
-  requires-skill: pr-babysit
+  requires-skill: babysit
 ---
 
 # Prepare PR for Merge
@@ -22,12 +22,26 @@ follow-up.
 metadata (base branch). You are **not** merging the PR unless the user explicitly
 asks you to merge.
 
-## Prerequisite: `pr-babysit` skill (mandatory for review feedback)
+## Prerequisite: run `babysit` (mandatory for review feedback)
 
-After rebase/conflict work, **load and follow the `pr-babysit` skill** to address
-open review comments, CI failures, and other blockers until the PR is clean.
+**`babysit` is Cursor's built-in skill** for addressing PR review comments, CI
+failures, and other blockers. After rebase/conflict work, **load and follow
+`babysit`** to completion on this PR.
 
-If `pr-babysit` is unavailable in your environment, apply its intent manually:
+**How to run the built-in babysit step:**
+
+1. **Check your environment** for Cursor's `babysit` skill. If it is available
+   (slash command, cursor command, or equivalent in your skill catalog), **load
+   its instructions into context** before continuing.
+2. **Invoke it explicitly** when your environment supports slash commands: run
+   `babysit` on the PR or branch. Do not skip invocation and improvise a
+   substitute from this file alone.
+3. **Confirm in chat** (one line) that `babysit` ran — e.g. "Ran `babysit`;
+   proceeding with final status."
+4. **Complete the `babysit` workflow** before marking the PR ready to merge.
+
+If `babysit` is **not** available in your environment (e.g. some cloud agents),
+say so explicitly in chat before continuing. Apply its intent manually:
 
 1. Read all open review threads and unresolved conversations on the PR.
 2. Fix each actionable item with minimal diffs.
@@ -138,9 +152,10 @@ git rebase origin/master
   a clean commit history over rushed conflict markers.
 - After a successful rebase: `git push --force-with-lease origin <head-branch>`.
 
-### 4. Address review feedback (`pr-babysit`)
+### 4. Address review feedback (`babysit`)
 
-Load the **`pr-babysit` skill** and run it to completion on this PR:
+Run Cursor's built-in **`babysit`** skill on this PR (see **"Prerequisite: run
+`babysit`"** above). It should:
 
 - Resolve open review comments and requested changes.
 - Fix CI failures tied to the branch.
@@ -160,7 +175,7 @@ Reply in chat with:
 | Base branch | should be `master` |
 | Rebased onto latest `master` | yes / no |
 | Conflicts | none / resolved (brief note) |
-| Review feedback | addressed via `pr-babysit` / remaining items |
+| Review feedback | addressed via `babysit` / remaining items |
 | Ready to merge | yes / no — and why |
 
 **Do not merge** unless the user explicitly asks.
@@ -173,15 +188,15 @@ Reply in chat with:
 | Rebase and force-push with `--force-with-lease` | Merge the PR without explicit instruction |
 | Fix conflicts and review feedback | Run the stack gate after destructive git ops |
 | Stop and report when stack parent is unmerged | Rebase a PR blocked by an open ancestor |
-| Use `pr-babysit` for review/CI follow-up | Post new review findings (reviewer role) |
+| Use `babysit` for review/CI follow-up | Post new review findings (reviewer role) |
 
 ## Relationship to other skills
 
 | Skill | Role |
 |-------|------|
-| **`pr-babysit`** | Address review comments, CI, and PR hygiene (invoked during prepare). |
+| **`babysit`** (Cursor built-in) | Address review comments, CI, and PR hygiene (invoked during prepare). |
 | **`pr-review-delivery`** | Reviewer-only — do **not** use when preparing for merge. |
-| **`code-review`** | Reviewer analysis — out of scope for this author workflow. |
+| **`code-review`** (Cursor built-in) | Reviewer analysis — out of scope for this author workflow. |
 
 ## Repo verification (this project)
 
