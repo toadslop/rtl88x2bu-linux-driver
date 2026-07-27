@@ -205,6 +205,136 @@ impl NetworkType {
     }
 }
 
+/// Channel plan table index (`RTW_ChannelPlanMap` in `rtw_chplan.c`).
+///
+/// `try_from` mirrors `rtw_is_channel_plan_valid` bounds and rejects
+/// `CHPLAN_ENT_NOT_DEFINED` slots (0x05–0x1f). Keep `MAP_SIZE` in sync with
+/// `RTW_ChannelPlanMap_size` when the table grows. If the map later adds empty
+/// slots outside that range, W2-17 chplan wiring should delegate to
+/// `rtw_is_channel_plan_valid` at the FFI boundary or add an exhaustive
+/// `0..MAP_SIZE` oracle test so drift is caught automatically.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct ChannelPlanId(u8);
+
+impl ChannelPlanId {
+    pub const MAP_SIZE: u8 = 0x80;
+
+    pub const fn to_raw(self) -> u8 {
+        self.0
+    }
+
+    pub const fn from_raw_unchecked(raw: u8) -> Self {
+        Self(raw)
+    }
+
+    const fn is_undefined_slot(raw: u8) -> bool {
+        raw >= 0x05 && raw <= 0x1f
+    }
+
+    pub fn try_from(raw: u8) -> Result<Self, DomainError> {
+        if raw >= Self::MAP_SIZE || Self::is_undefined_slot(raw) {
+            return Err(DomainError::InvalidValue);
+        }
+        Ok(Self(raw))
+    }
+}
+
+/// ISO 3166-1 alpha-2 country code (two ASCII letters).
+///
+/// `try_from` rejects non-alpha pairs per A2. C's `rtw_set_country_cmd` still
+/// accepts `"00"` as a worldwide sentinel before country-map lookup; handle that
+/// at the W2-19 command shim, not in this type.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct CountryCode([u8; 2]);
+
+impl CountryCode {
+    pub const fn to_bytes(self) -> [u8; 2] {
+        self.0
+    }
+
+    pub const fn from_bytes_unchecked(bytes: [u8; 2]) -> Self {
+        Self(bytes)
+    }
+
+    const fn is_alpha(byte: u8) -> bool {
+        (byte >= b'A' && byte <= b'Z') || (byte >= b'a' && byte <= b'z')
+    }
+
+    pub fn try_from(bytes: [u8; 2]) -> Result<Self, DomainError> {
+        if Self::is_alpha(bytes[0]) && Self::is_alpha(bytes[1]) {
+            Ok(Self(bytes))
+        } else {
+            Err(DomainError::InvalidValue)
+        }
+    }
+}
+
+/// Regulatory tx-power limit domain (`REGULATION_TXPWR_LMT` in `rtw_rf.h`).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u8)]
+pub enum RegulatoryDomain {
+    None = 0,
+    Fcc = 1,
+    Mkk = 2,
+    Etsi = 3,
+    Ic = 4,
+    Kcc = 5,
+    Ncc = 6,
+    Acma = 7,
+    Chile = 8,
+    Ukraine = 9,
+    Mexico = 10,
+    Cn = 11,
+    Ww = 12,
+}
+
+impl RegulatoryDomain {
+    pub const MAX: u8 = Self::Ww as u8;
+
+    pub const fn to_raw(self) -> u8 {
+        self as u8
+    }
+
+    /// ABI edge: unknown raw values clamp to `Ww`, mirroring C `regd_str()`.
+    pub const fn from_raw_unchecked(raw: u8) -> Self {
+        match raw {
+            0 => Self::None,
+            1 => Self::Fcc,
+            2 => Self::Mkk,
+            3 => Self::Etsi,
+            4 => Self::Ic,
+            5 => Self::Kcc,
+            6 => Self::Ncc,
+            7 => Self::Acma,
+            8 => Self::Chile,
+            9 => Self::Ukraine,
+            10 => Self::Mexico,
+            11 => Self::Cn,
+            _ => Self::Ww,
+        }
+    }
+
+    pub fn try_from(raw: u8) -> Result<Self, DomainError> {
+        match raw {
+            0 => Ok(Self::None),
+            1 => Ok(Self::Fcc),
+            2 => Ok(Self::Mkk),
+            3 => Ok(Self::Etsi),
+            4 => Ok(Self::Ic),
+            5 => Ok(Self::Kcc),
+            6 => Ok(Self::Ncc),
+            7 => Ok(Self::Acma),
+            8 => Ok(Self::Chile),
+            9 => Ok(Self::Ukraine),
+            10 => Ok(Self::Mexico),
+            11 => Ok(Self::Cn),
+            12 => Ok(Self::Ww),
+            _ => Err(DomainError::InvalidValue),
+        }
+    }
+}
+
 /// BIP cipher selector returned by `security_type_bip_to_gmcs` (`WPA_CIPHER_BIP_*`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(transparent)]
@@ -523,5 +653,57 @@ mod tests {
         assert!(bg.contains(NetworkType::WIRELESS_11B));
         assert!(bg.contains(NetworkType::WIRELESS_11G));
         assert!(!bg.contains(NetworkType::WIRELESS_11A));
+    }
+
+    #[test]
+    fn channel_plan_id_accepts_defined_slots() {
+        for raw in [0u8, 1, 4, 32, 118, 127] {
+            let id = ChannelPlanId::try_from(raw).unwrap();
+            assert_eq!(id.to_raw(), raw);
+        }
+    }
+
+    #[test]
+    fn channel_plan_id_rejects_undefined_and_oob() {
+        for raw in [5u8, 31, 128, 255] {
+            assert_eq!(
+                ChannelPlanId::try_from(raw),
+                Err(DomainError::InvalidValue),
+                "expected reject for {}",
+                raw
+            );
+        }
+    }
+
+    #[test]
+    fn country_code_accepts_alpha_pairs() {
+        let us = CountryCode::try_from(*b"US").unwrap();
+        assert_eq!(us.to_bytes(), *b"US");
+        let de = CountryCode::try_from(*b"de").unwrap();
+        assert_eq!(de.to_bytes(), *b"de");
+    }
+
+    #[test]
+    fn country_code_rejects_non_alpha() {
+        assert_eq!(
+            CountryCode::try_from(*b"U1"),
+            Err(DomainError::InvalidValue)
+        );
+        assert_eq!(
+            CountryCode::try_from([0u8, b'A']),
+            Err(DomainError::InvalidValue)
+        );
+    }
+
+    #[test]
+    fn regulatory_domain_round_trips() {
+        for raw in 0..=RegulatoryDomain::MAX {
+            let regd = RegulatoryDomain::try_from(raw).unwrap();
+            assert_eq!(regd.to_raw(), raw);
+        }
+        assert_eq!(
+            RegulatoryDomain::try_from(13),
+            Err(DomainError::InvalidValue)
+        );
     }
 }
