@@ -337,6 +337,7 @@ pub struct HostRxPktAttrib {
     pub key_index: U8,
     pub _pad3: U8,
     pub ra: [U8; 6],
+    pub ta: [U8; 6],
 }
 
 #[cfg(host_security_test)]
@@ -425,6 +426,7 @@ pub struct HostSecurityPriv {
     pub dot11_def_keylen: [U32; 6],
     pub dot118021XGrpKeyid: U32,
     pub dot118021XGrpKey: [KeyType; 4],
+    pub binstall_grpkey: U8,
 }
 
 #[cfg(host_security_test)]
@@ -435,9 +437,24 @@ pub struct HostXmitPriv {
 
 #[cfg(host_security_test)]
 #[repr(C)]
+pub struct HostStaInfo {
+    pub used: U8,
+    pub ta: [U8; 6],
+    pub dot118021x_UncstKey: KeyType,
+}
+
+#[cfg(host_security_test)]
+#[repr(C)]
+pub struct HostStapriv {
+    pub stas: [HostStaInfo; 4],
+}
+
+#[cfg(host_security_test)]
+#[repr(C)]
 pub struct HostAdapter {
     pub securitypriv: HostSecurityPriv,
     pub xmitpriv: HostXmitPriv,
+    pub stapriv: HostStapriv,
 }
 
 #[cfg(host_security_test)]

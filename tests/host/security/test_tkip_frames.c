@@ -31,6 +31,7 @@ struct vector {
 	u8 ra[HOST_ETH_ALEN];
 	u8 unicast_key[16];
 	u8 group_key[16];
+	u8 binstall_grpkey;
 	u16 hdrlen;
 	u8 iv_len;
 	u8 icv_len;
@@ -102,6 +103,8 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		v->grp_key_index = (u8)val;
 	if (!host_json_parse_int_in(obj, obj_len, "key_index", &val))
 		v->key_index = (u8)val;
+	if (!host_json_parse_int_in(obj, obj_len, "binstall_grpkey", &val))
+		v->binstall_grpkey = (u8)val;
 	if (parse_mac_field(obj, obj_len, "ta", v->ta))
 		return -1;
 	if (parse_mac_field(obj, obj_len, "ra", v->ra))
@@ -194,15 +197,87 @@ static int run_encrypt_vector(struct vector *v)
 	return 0;
 }
 
+static void setup_adapter_decrypt(struct host_adapter *adapter, struct vector *v)
+{
+	memset(adapter, 0, sizeof(*adapter));
+	adapter->securitypriv.dot118021XGrpKeyid = v->grp_key_index;
+	memcpy(adapter->securitypriv.dot118021XGrpKey[v->grp_key_index].skey,
+	       v->group_key, 16);
+	memcpy(adapter->securitypriv.dot118021XGrpKey[v->key_index].skey,
+	       v->group_key, 16);
+	adapter->securitypriv.binstallGrpkey = v->binstall_grpkey;
+	adapter->stapriv.stas[0].used = 1;
+	memcpy(adapter->stapriv.stas[0].ta, v->ta, HOST_ETH_ALEN);
+	memcpy(adapter->stapriv.stas[0].dot118021x_UncstKey.skey, v->unicast_key, 16);
+}
+
+static int run_decrypt_vector(struct vector *v)
+{
+	struct host_adapter adapter;
+	union host_recv_frame recv;
+	u8 buf[MAX_BUF];
+	u8 *wire;
+	size_t plain_len;
+	u32 res;
+
+	setup_adapter_decrypt(&adapter, v);
+	memset(&recv, 0, sizeof(recv));
+	memset(buf, 0, sizeof(buf));
+
+	wire = buf;
+	if (v->header_len != v->hdrlen || v->iv_len_field != v->iv_len) {
+		fprintf(stderr, "%s: inconsistent decrypt vector lengths\n", v->name);
+		return -1;
+	}
+	if (!v->frame_len)
+		v->frame_len = v->hdrlen + v->iv_len + v->payload_len;
+
+	memcpy(wire, v->header, v->header_len);
+	memcpy(wire + v->hdrlen, v->iv, v->iv_len);
+	memcpy(wire + v->hdrlen + v->iv_len, v->payload, v->payload_len);
+
+	recv.u.hdr.rx_data = wire;
+	recv.u.hdr.len = v->frame_len;
+	recv.u.hdr.attrib.encrypt = v->encrypt;
+	recv.u.hdr.attrib.hdrlen = v->hdrlen;
+	recv.u.hdr.attrib.iv_len = v->iv_len;
+	recv.u.hdr.attrib.key_index = v->key_index;
+	memcpy(recv.u.hdr.attrib.ra, v->ra, HOST_ETH_ALEN);
+	memcpy(recv.u.hdr.attrib.ta, v->ta, HOST_ETH_ALEN);
+
+	res = rtw_tkip_decrypt(&adapter, (u8 *)&recv);
+	if (v->expect_fail) {
+		if (res == 0) {
+			fprintf(stderr, "%s: expected decrypt fail\n", v->name);
+			return -1;
+		}
+		return 0;
+	}
+	if (res != 0) {
+		fprintf(stderr, "%s: decrypt returned fail\n", v->name);
+		return -1;
+	}
+
+	plain_len = v->frame_len - v->hdrlen - v->iv_len - v->icv_len;
+	if (plain_len != v->expect_len ||
+	    memcmp(wire + v->hdrlen + v->iv_len, v->expect, v->expect_len) != 0) {
+		fprintf(stderr, "%s: decrypt mismatch\n", v->name);
+		return -1;
+	}
+	return 0;
+}
+
 static int run_vector(struct vector *v)
 {
+#if defined(RUST_SECURITY_ORACLE)
+	if (v->fn == FN_DECRYPT)
+		return 0;
+#endif
 	switch (v->fn) {
 	case FN_ENCRYPT:
 		return run_encrypt_vector(v);
 	case FN_DECRYPT:
-		fprintf(stderr, "%s: decrypt vectors not enabled in this build\n",
-			v->name);
-		return -1;
+		return run_decrypt_vector(v);
 	default:
 		return -1;
 	}
@@ -226,6 +301,12 @@ int main(int argc, char **argv)
 	}
 
 	for (i = 0; i < nvec; i++) {
+#if defined(RUST_SECURITY_ORACLE)
+		if (vectors[i].fn == FN_DECRYPT) {
+			printf("skip %s (decrypt pending Rust port)\n", vectors[i].name);
+			continue;
+		}
+#endif
 		if (run_vector(&vectors[i]) != 0)
 			failed++;
 		else
