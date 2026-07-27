@@ -40,7 +40,7 @@ make KDIR=/opt/linux LLVM=1 -j"$(nproc)"
 ```
 
 Because the pinned kernel has `CONFIG_RUST=y`, the build links the Rust objects
-(`RUSTC [M] rust/kbuild_stub.o`, `rust/scaffold.o`, `rust/ffi.o`, `rust/domain_types.o`, `rust/aes_ctr.o`, `rust/aes_omac1.o`, `rust/gcmp.o`, `rust/aes_siv.o`, `rust/aes_ccm.o`, `rust/aes_gcm.o`, `rust/ccmp.o`, `rust/aes_internal.o`, `rust/aes_internal_enc.o`, `rust/sha256_internal.o`, `rust/sha256.o`, `rust/sha256_prf.o`, `rust/rtw_crypto_wrap.o`) into
+(`RUSTC [M] rust/kbuild_stub.o`, `rust/scaffold.o`, `rust/ffi.o`, `rust/domain_types.o`, `rust/aes_ctr.o`, `rust/aes_omac1.o`, `rust/gcmp.o`, `rust/aes_siv.o`, `rust/aes_ccm.o`, `rust/aes_gcm.o`, `rust/ccmp.o`, `rust/aes_internal.o`, `rust/aes_internal_enc.o`, `rust/sha256_internal.o`, `rust/sha256.o`, `rust/sha256_prf.o`, `rust/rtw_crypto_wrap.o`, `rust/rtw_chplan.o`, `rust/rtw_swcrypto.o`, `rust/rtw_ieee80211.o`, `rust/rtw_security.o`, `rust/rtw_wlan_util.o`) into
 `88x2bu.ko`. Confirm with:
 
 ```bash
