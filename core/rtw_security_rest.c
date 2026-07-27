@@ -122,6 +122,7 @@ struct arc4context {
 };
 
 
+// codeql[cpp/weak-cryptographic-algorithm]: Legacy 802.11 WEP/TKIP RC4 (IEEE 802.11-1999/2003); interoperability-only — see .github/codeql/codeql-config.yml.
 static void arcfour_init(struct arc4context	*parc4ctx, u8 *key, u32	key_len)
 {
 	u32	t, u;
@@ -165,6 +166,7 @@ static u32 arcfour_byte(struct arc4context	*parc4ctx)
 }
 
 
+// codeql[cpp/weak-cryptographic-algorithm]: Legacy 802.11 WEP/TKIP RC4 (IEEE 802.11-1999/2003); interoperability-only — see .github/codeql/codeql-config.yml.
 static void arcfour_encrypt(struct arc4context	*parc4ctx,
 			    u8 *dest,
 			    u8 *src,
@@ -173,19 +175,6 @@ static void arcfour_encrypt(struct arc4context	*parc4ctx,
 	u32	i;
 	for (i = 0; i < len; i++)
 		dest[i] = src[i] ^ (unsigned char)arcfour_byte(parc4ctx);
-}
-
-/* Wrappers centralize CodeQL suppressions for legacy RC4 used by WEP/TKIP. */
-static void rtw_arcfour_init(struct arc4context *ctx, u8 *key, u32 key_len)
-{
-	// codeql[cpp/weak-cryptographic-algorithm]: Legacy 802.11 WEP/TKIP RC4 (IEEE 802.11); interoperability-only, not used for new security modes.
-	arcfour_init(ctx, key, key_len);
-}
-
-static void rtw_arcfour_encrypt(struct arc4context *ctx, u8 *dest, u8 *src, u32 len)
-{
-	// codeql[cpp/weak-cryptographic-algorithm]: Legacy 802.11 WEP/TKIP RC4 (IEEE 802.11); interoperability-only, not used for new security modes.
-	arcfour_encrypt(ctx, dest, src, len);
 }
 
 static sint bcrc32initialized = 0;
@@ -297,16 +286,16 @@ void rtw_wep_encrypt(_adapter *padapter, u8 *pxmitframe)
 
 				*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
 
-				rtw_arcfour_init(&mycontext, wepkey, 3 + keylength);
-				rtw_arcfour_encrypt(&mycontext, payload, payload, length);
-				rtw_arcfour_encrypt(&mycontext, payload + length, crc, 4);
+				arcfour_init(&mycontext, wepkey, 3 + keylength);
+				arcfour_encrypt(&mycontext, payload, payload, length);
+				arcfour_encrypt(&mycontext, payload + length, crc, 4);
 
 			} else {
 				length = pxmitpriv->frag_len - pattrib->hdrlen - pattrib->iv_len - pattrib->icv_len ;
 				*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
-				rtw_arcfour_init(&mycontext, wepkey, 3 + keylength);
-				rtw_arcfour_encrypt(&mycontext, payload, payload, length);
-				rtw_arcfour_encrypt(&mycontext, payload + length, crc, 4);
+				arcfour_init(&mycontext, wepkey, 3 + keylength);
+				arcfour_encrypt(&mycontext, payload, payload, length);
+				arcfour_encrypt(&mycontext, payload + length, crc, 4);
 
 				pframe += pxmitpriv->frag_len;
 				pframe = (u8 *)RND4((SIZE_PTR)(pframe));
@@ -350,8 +339,8 @@ void rtw_wep_decrypt(_adapter  *padapter, u8 *precvframe)
 		payload = pframe + prxattrib->iv_len + prxattrib->hdrlen;
 
 		/* decrypt payload include icv */
-		rtw_arcfour_init(&mycontext, wepkey, 3 + keylength);
-		rtw_arcfour_encrypt(&mycontext, payload, payload,  length);
+		arcfour_init(&mycontext, wepkey, 3 + keylength);
+		arcfour_encrypt(&mycontext, payload, payload,  length);
 
 		/* calculate icv and compare the icv */
 		*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
@@ -780,16 +769,16 @@ u32	rtw_tkip_encrypt(_adapter *padapter, u8 *pxmitframe)
 					length = pattrib->last_txcmdsz - pattrib->hdrlen - pattrib->iv_len - pattrib->icv_len;
 					*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length)); /* modified by Amy*/
 
-					rtw_arcfour_init(&mycontext, rc4key, 16);
-					rtw_arcfour_encrypt(&mycontext, payload, payload, length);
-					rtw_arcfour_encrypt(&mycontext, payload + length, crc, 4);
+					arcfour_init(&mycontext, rc4key, 16);
+					arcfour_encrypt(&mycontext, payload, payload, length);
+					arcfour_encrypt(&mycontext, payload + length, crc, 4);
 
 				} else {
 					length = pxmitpriv->frag_len - pattrib->hdrlen - pattrib->iv_len - pattrib->icv_len ;
 					*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length)); /* modified by Amy*/
-					rtw_arcfour_init(&mycontext, rc4key, 16);
-					rtw_arcfour_encrypt(&mycontext, payload, payload, length);
-					rtw_arcfour_encrypt(&mycontext, payload + length, crc, 4);
+					arcfour_init(&mycontext, rc4key, 16);
+					arcfour_encrypt(&mycontext, payload, payload, length);
+					arcfour_encrypt(&mycontext, payload + length, crc, 4);
 
 					pframe += pxmitpriv->frag_len;
 					pframe = (u8 *)RND4((SIZE_PTR)(pframe));
@@ -901,8 +890,8 @@ u32 rtw_tkip_decrypt(_adapter *padapter, u8 *precvframe)
 
 			/* 4 decrypt payload include icv */
 
-			rtw_arcfour_init(&mycontext, rc4key, 16);
-			rtw_arcfour_encrypt(&mycontext, payload, payload, length);
+			arcfour_init(&mycontext, rc4key, 16);
+			arcfour_encrypt(&mycontext, payload, payload, length);
 
 			*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
 

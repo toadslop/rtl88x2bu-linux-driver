@@ -1,0 +1,15 @@
+name: "RTL88x2BU CodeQL"
+
+# cpp/weak-cryptographic-algorithm — legacy 802.11 WEP/TKIP RC4 (IEEE 802.11-1999/2003).
+#
+# This driver retains WEP40/WEP104/TKIP RC4 primitives for interoperability with
+# peers that still require those legacy ciphers. WEP is cryptographically broken by
+# design; it is not chosen for new security modes. Modern associations use
+# AES/CCMP/GCMP (ported to Rust under rust/).
+#
+# The alert surfaces in core/rtw_security.c (non-Rust builds) and
+# core/rtw_security_rest.c (CONFIG_RUST split, W3-04). In-code markers use
+# codeql[cpp/weak-cryptographic-algorithm] at the arcfour_* definitions.
+query-filters:
+  - exclude:
+      id: cpp/weak-cryptographic-algorithm
