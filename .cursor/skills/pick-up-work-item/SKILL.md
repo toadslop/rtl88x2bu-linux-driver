@@ -5,7 +5,8 @@ description: >-
   Auto-applies on "pick up work", "find open work item", "check GitHub issues",
   "what should we work on next", "triage issues and start work", or similar.
   Runs triage (close stale issues), selects a ready item, plans ~200-line stacked
-  PRs, implements them, or drafts new issues when nothing is ready. Do NOT use for
+  PRs, implements them, or drafts new issues when nothing is ready — then stops
+  after drafting (do not auto-implement newly filed issues). Do NOT use for
   reviewing PRs (pr-review-delivery) or preparing an existing PR for merge
   (prepare-pr-for-merge).
 metadata:
@@ -36,7 +37,7 @@ Run these steps **in order**. Do not skip ahead.
 | 2 | [`select-ready-issue`](../select-ready-issue/SKILL.md) | Pick one open, unblocked, ready issue — or report none |
 | 3a | [`plan-stacked-prs`](../plan-stacked-prs/SKILL.md) | Split the issue into ~200 LOC stacked PRs (plan only) |
 | 3b | [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) | Implement PRs one by one, open stacked PRs |
-| 4 | [`draft-migration-issues`](../draft-migration-issues/SKILL.md) | **Only if step 2 found nothing ready** — draft new tickets |
+| 4 | [`draft-migration-issues`](../draft-migration-issues/SKILL.md) | **Only if step 2 found nothing ready** — draft new tickets, then **stop** |
 
 ```mermaid
 flowchart TD
@@ -46,8 +47,23 @@ flowchart TD
   D --> E[3b. Implement stacked PRs]
   C -->|None ready| F[4. Draft new issues]
   E --> G[Report status]
-  F --> G
+  F --> H[Report status and stop]
 ```
+
+## Stop after drafting (step 4)
+
+When step 4 runs, the workflow **ends there**. Creating or filing new issues is a
+complete job — not a prelude to implementation.
+
+| After step 4 | Do | Do not |
+|--------------|-----|--------|
+| Issues drafted and/or filed | Report what was created, what it unblocks, and any human decisions needed | Re-run step 2 to select one of the new issues |
+| User asked only to draft/file issues | Commit/push draft markdown, README, and `ISSUE-MAP.md` updates; open a docs PR if appropriate | Continue to `plan-stacked-prs` or `implement-stacked-prs` |
+| Newly filed issues look ready | Note them in the report for a **future** pick-up | Start planning or coding in the same session unless the user explicitly asks |
+
+Do **not** treat "nothing was ready, so I filed new tickets" as permission to
+immediately implement one. Wait for an explicit follow-up (e.g. "pick up W3-10")
+or a new pick-up-work-item run in a later session.
 
 ## Boundaries
 
@@ -56,6 +72,7 @@ flowchart TD
 | Triage, select, plan, implement, or draft issues | Review someone else's PR (`pr-review-delivery`) |
 | Close issues with evidence they are done | Merge PRs without explicit user instruction |
 | Open stacked PRs for the selected issue | Pick up a second issue while the first stack is in flight (unless user asks) |
+| Stop after step 4 (draft/file issues) with a status report | Auto-select or implement a newly drafted issue in the same run |
 | Update `docs/rust-migration/issues/README.md` status when closing issues | Rewrite `ISSUE-MAP.md` by hand (use `file-issues.sh`) |
 
 ## Repo context (quick reference)
@@ -78,8 +95,12 @@ After completing the applicable steps, reply in chat with:
 | Plan | PR stack table (branch, scope, ~LOC, gates) — if planned |
 | Implementation | PR links opened, current stack position — if implemented |
 | New drafts | Files created / issues filed — if step 4 ran |
+| Workflow end | `implemented` (steps 3a–3b) or `stopped after drafting` (step 4 only) |
 
 Ask the user before starting implementation if they only wanted triage or selection.
+
+If step 4 ran, **do not** ask whether to implement a new issue — the answer is no
+unless the user sends a new, explicit instruction.
 
 ## Relationship to other skills
 
