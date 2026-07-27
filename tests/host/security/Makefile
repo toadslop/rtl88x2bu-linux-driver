@@ -3,6 +3,7 @@
 
 ROOT     := ../../..
 HOST_INC := ../include
+SHIM     := ../shim/host_security_shim.c
 ORACLE   := security_c_oracle.c
 RUST_SECURITY := $(ROOT)/rust/rtw_security.rs
 
@@ -14,11 +15,11 @@ CFLAGS  := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
 HOST_JSON := ../crypto/host_vector_json.c
 
-.PHONY: all test test-c test-rust test-wep test-wep-rust test-tkip clean
+.PHONY: all test test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip clean
 
 all: test
 
-test: test-c test-rust test-wep test-wep-rust test-tkip
+test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip
 
 test-c: test_security
 	./test_security security_type_vectors.json
@@ -31,6 +32,12 @@ test-wep: test_wep_primitives
 
 test-wep-rust: test_wep_primitives_rust
 	./test_wep_primitives_rust wep_primitive_vectors.json
+
+test-wep-frames: test_wep_frames
+	./test_wep_frames wep_frame_vectors.json
+
+test-wep-frames-rust: test_wep_frames_rust
+	./test_wep_frames_rust wep_frame_vectors.json
 
 test-tkip: test_tkip_mic
 	./test_tkip_mic tkip_mic_vectors.json
@@ -53,9 +60,16 @@ test_wep_primitives_rust: test_wep_primitives.c librust_security.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_SECURITY_ORACLE -o $@ test_wep_primitives.c $(HOST_JSON) \
 		librust_security.a
 
+test_wep_frames: test_wep_frames.c $(SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DHOST_WEP_FRAME_ORACLE_BUILD -o $@ test_wep_frames.c $(SHIM) $(HOST_JSON)
+
+test_wep_frames_rust: test_wep_frames.c librust_security.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_SECURITY_ORACLE -o $@ test_wep_frames.c $(HOST_JSON) \
+		librust_security.a
+
 test_tkip_mic: test_tkip_mic.c $(ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_tkip_mic.c $(ORACLE) $(HOST_JSON)
 
 clean:
 	rm -f test_security test_security_rust test_wep_primitives test_wep_primitives_rust \
-		test_tkip_mic librust_security.a
+		test_wep_frames test_wep_frames_rust test_tkip_mic librust_security.a

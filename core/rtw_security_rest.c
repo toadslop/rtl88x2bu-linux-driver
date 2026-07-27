@@ -126,136 +126,38 @@ extern void arcfour_init(struct arc4context *parc4ctx, u8 *key, u32 key_len);
 extern void arcfour_encrypt(struct arc4context *parc4ctx, u8 *dest, u8 *src, u32 len);
 extern u32 getcrc32(u8 *buf, sint len);
 
-/*
-	Need to consider the fragment  situation
-*/
-void rtw_wep_encrypt(_adapter *padapter, u8 *pxmitframe)
-{
-	/* exclude ICV */
+/* W3-06: rtw_wep_encrypt/decrypt in rust/rtw_security.rs */
+extern void rtw_wep_encrypt(_adapter *padapter, u8 *pxmitframe);
+extern void rtw_wep_decrypt(_adapter *padapter, u8 *precvframe);
 
-	unsigned char	crc[4];
-	struct arc4context	 mycontext;
-
-	sint	curfragnum, length;
-	u32	keylength;
-
-	u8	*pframe, *payload, *iv;   /* ,*wepkey */
-	u8	wepkey[16];
-	u8   hw_hdr_offset = 0;
-	struct	pkt_attrib	*pattrib = &((struct xmit_frame *)pxmitframe)->attrib;
-	struct	security_priv	*psecuritypriv = &padapter->securitypriv;
-	struct	xmit_priv		*pxmitpriv = &padapter->xmitpriv;
-
-
-
-	if (((struct xmit_frame *)pxmitframe)->buf_addr == NULL)
-		return;
-
-#ifdef CONFIG_USB_TX_AGGREGATION
-	hw_hdr_offset = TXDESC_SIZE +
-		(((struct xmit_frame *)pxmitframe)->pkt_offset * PACKET_OFFSET_SZ);
-#else
-#ifdef CONFIG_TX_EARLY_MODE
-	hw_hdr_offset = TXDESC_OFFSET + EARLY_MODE_INFO_SIZE;
-#else
-	hw_hdr_offset = TXDESC_OFFSET;
+#ifdef CONFIG_RUST
+#include <linux/types.h>
+const size_t rtw_rust_wep_off_adapter_securitypriv = offsetof(_adapter, securitypriv);
+const size_t rtw_rust_wep_off_adapter_xmitpriv = offsetof(_adapter, xmitpriv);
+const size_t rtw_rust_wep_off_xmitpriv_frag_len = offsetof(struct xmit_priv, frag_len);
+const size_t rtw_rust_wep_off_xmit_frame_attrib = offsetof(struct xmit_frame, attrib);
+const size_t rtw_rust_wep_off_xmit_frame_buf_addr = offsetof(struct xmit_frame, buf_addr);
+const size_t rtw_rust_wep_off_xmit_frame_pkt_offset = offsetof(struct xmit_frame, pkt_offset);
+const size_t rtw_rust_wep_off_recv_frame_hdr = offsetof(union recv_frame, u.hdr);
+const size_t rtw_rust_wep_off_recv_frame_hdr_attrib =
+	offsetof(struct recv_frame_hdr, attrib);
+const size_t rtw_rust_wep_off_recv_frame_hdr_len =
+	offsetof(struct recv_frame_hdr, len);
+const size_t rtw_rust_wep_off_recv_frame_hdr_rx_data =
+	offsetof(struct recv_frame_hdr, rx_data);
+const size_t rtw_rust_wep_off_securitypriv_wep_sw_enc_cnt_bc =
+	offsetof(struct security_priv, wep_sw_enc_cnt_bc);
+const size_t rtw_rust_wep_off_securitypriv_wep_sw_enc_cnt_mc =
+	offsetof(struct security_priv, wep_sw_enc_cnt_mc);
+const size_t rtw_rust_wep_off_securitypriv_wep_sw_enc_cnt_uc =
+	offsetof(struct security_priv, wep_sw_enc_cnt_uc);
+const size_t rtw_rust_wep_off_securitypriv_wep_sw_dec_cnt_bc =
+	offsetof(struct security_priv, wep_sw_dec_cnt_bc);
+const size_t rtw_rust_wep_off_securitypriv_wep_sw_dec_cnt_mc =
+	offsetof(struct security_priv, wep_sw_dec_cnt_mc);
+const size_t rtw_rust_wep_off_securitypriv_wep_sw_dec_cnt_uc =
+	offsetof(struct security_priv, wep_sw_dec_cnt_uc);
 #endif
-#endif
-
-	pframe = ((struct xmit_frame *)pxmitframe)->buf_addr + hw_hdr_offset;
-
-	/* start to encrypt each fragment */
-	if ((pattrib->encrypt == _WEP40_) || (pattrib->encrypt == _WEP104_)) {
-		keylength = psecuritypriv->dot11DefKeylen[psecuritypriv->dot11PrivacyKeyIndex];
-
-		for (curfragnum = 0; curfragnum < pattrib->nr_frags; curfragnum++) {
-			iv = pframe + pattrib->hdrlen;
-			_rtw_memcpy(&wepkey[0], iv, 3);
-			_rtw_memcpy(&wepkey[3], &psecuritypriv->dot11DefKey[psecuritypriv->dot11PrivacyKeyIndex].skey[0], keylength);
-			payload = pframe + pattrib->iv_len + pattrib->hdrlen;
-
-			if ((curfragnum + 1) == pattrib->nr_frags) {
-				/* the last fragment */
-
-				length = pattrib->last_txcmdsz - pattrib->hdrlen - pattrib->iv_len - pattrib->icv_len;
-
-				*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
-
-				RTW_CODEQL_SUPPRESS_WEAK_RC4
-				arcfour_init(&mycontext, wepkey, 3 + keylength);
-				RTW_CODEQL_SUPPRESS_WEAK_RC4
-				arcfour_encrypt(&mycontext, payload, payload, length);
-				RTW_CODEQL_SUPPRESS_WEAK_RC4
-				arcfour_encrypt(&mycontext, payload + length, crc, 4);
-
-			} else {
-				length = pxmitpriv->frag_len - pattrib->hdrlen - pattrib->iv_len - pattrib->icv_len ;
-				*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
-				RTW_CODEQL_SUPPRESS_WEAK_RC4
-				arcfour_init(&mycontext, wepkey, 3 + keylength);
-				RTW_CODEQL_SUPPRESS_WEAK_RC4
-				arcfour_encrypt(&mycontext, payload, payload, length);
-				RTW_CODEQL_SUPPRESS_WEAK_RC4
-				arcfour_encrypt(&mycontext, payload + length, crc, 4);
-
-				pframe += pxmitpriv->frag_len;
-				pframe = (u8 *)RND4((SIZE_PTR)(pframe));
-
-			}
-
-		}
-
-		WEP_SW_ENC_CNT_INC(psecuritypriv, pattrib->ra);
-	}
-
-
-}
-
-void rtw_wep_decrypt(_adapter  *padapter, u8 *precvframe)
-{
-	/* exclude ICV */
-	u8	crc[4];
-	struct arc4context	 mycontext;
-	sint	length;
-	u32	keylength;
-	u8	*pframe, *payload, *iv, wepkey[16];
-	u8	 keyindex;
-	struct	rx_pkt_attrib	*prxattrib = &(((union recv_frame *)precvframe)->u.hdr.attrib);
-	struct	security_priv	*psecuritypriv = &padapter->securitypriv;
-
-
-	pframe = (unsigned char *)((union recv_frame *)precvframe)->u.hdr.rx_data;
-
-	/* start to decrypt recvframe */
-	if ((prxattrib->encrypt == _WEP40_) || (prxattrib->encrypt == _WEP104_)) {
-		iv = pframe + prxattrib->hdrlen;
-		/* keyindex=(iv[3]&0x3); */
-		keyindex = prxattrib->key_index;
-		keylength = psecuritypriv->dot11DefKeylen[keyindex];
-		_rtw_memcpy(&wepkey[0], iv, 3);
-		/* _rtw_memcpy(&wepkey[3], &psecuritypriv->dot11DefKey[psecuritypriv->dot11PrivacyKeyIndex].skey[0],keylength); */
-		_rtw_memcpy(&wepkey[3], &psecuritypriv->dot11DefKey[keyindex].skey[0], keylength);
-		length = ((union recv_frame *)precvframe)->u.hdr.len - prxattrib->hdrlen - prxattrib->iv_len;
-
-		payload = pframe + prxattrib->iv_len + prxattrib->hdrlen;
-
-		/* decrypt payload include icv */
-		RTW_CODEQL_SUPPRESS_WEAK_RC4
-		arcfour_init(&mycontext, wepkey, 3 + keylength);
-		RTW_CODEQL_SUPPRESS_WEAK_RC4
-		arcfour_encrypt(&mycontext, payload, payload,  length);
-
-		/* calculate icv and compare the icv */
-		*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
-
-
-		WEP_SW_DEC_CNT_INC(psecuritypriv, prxattrib->ra);
-	}
-
-
-	return;
-
-}
 
 /* 3		=====TKIP related===== */
 
