@@ -94,6 +94,117 @@ impl SecurityType {
     }
 }
 
+/// IEEE 802.11 rate byte (CCK or OFDM, `rate & 0x7f` semantics).
+///
+/// Mirrors `WIFI_CCKRATES` / `WIFI_OFDMRATES` classification in `rtw_wlan_util.c`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct WifiRate(u8);
+
+impl WifiRate {
+    const CCK_RATES: [u8; 4] = [0x02, 0x04, 0x0b, 0x16];
+    const OFDM_RATES: [u8; 8] = [0x0c, 0x12, 0x18, 0x24, 0x30, 0x48, 0x60, 0x6c];
+
+    pub const fn to_raw(self) -> u8 {
+        self.0
+    }
+
+    pub const fn from_raw_unchecked(raw: u8) -> Self {
+        Self(raw)
+    }
+
+    pub fn rate_index(self) -> u8 {
+        self.0 & 0x7f
+    }
+
+    pub fn is_cck(self) -> bool {
+        let idx = self.rate_index();
+        let mut i = 0;
+        while i < Self::CCK_RATES.len() {
+            if Self::CCK_RATES[i] == idx {
+                return true;
+            }
+            i += 1;
+        }
+        false
+    }
+
+    pub fn is_ofdm(self) -> bool {
+        let idx = self.rate_index();
+        let mut i = 0;
+        while i < Self::OFDM_RATES.len() {
+            if Self::OFDM_RATES[i] == idx {
+                return true;
+            }
+            i += 1;
+        }
+        false
+    }
+
+    pub fn try_from(raw: u8) -> Result<Self, DomainError> {
+        let rate = Self(raw);
+        if rate.is_cck() || rate.is_ofdm() {
+            Ok(rate)
+        } else {
+            Err(DomainError::InvalidValue)
+        }
+    }
+}
+
+/// BSS / adapter wireless mode bitmask (`enum NETWORK_TYPE` in `ieee80211.h`).
+///
+/// Combinations are valid at the ABI edge; `try_from` rejects reserved bits.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(transparent)]
+pub struct NetworkType(u8);
+
+impl NetworkType {
+    /// Bits used by `WIRELESS_MODE_MAX` and `WIRELESS_AUTO`.
+    const VALID_MASK: u8 = 0x7f;
+
+    pub const INVALID: Self = Self(0);
+    pub const WIRELESS_11B: Self = Self(1 << 0);
+    pub const WIRELESS_11G: Self = Self(1 << 1);
+    pub const WIRELESS_11A: Self = Self(1 << 2);
+    pub const WIRELESS_11_24N: Self = Self(1 << 3);
+    pub const WIRELESS_11_5N: Self = Self(1 << 4);
+    pub const WIRELESS_AUTO: Self = Self(1 << 5);
+    pub const WIRELESS_11AC: Self = Self(1 << 6);
+
+    pub const WIRELESS_11BG: Self = Self(Self::WIRELESS_11B.0 | Self::WIRELESS_11G.0);
+    pub const WIRELESS_MODE_24G: Self =
+        Self(Self::WIRELESS_11B.0 | Self::WIRELESS_11G.0 | Self::WIRELESS_11_24N.0);
+    pub const WIRELESS_MODE_5G: Self =
+        Self(Self::WIRELESS_11A.0 | Self::WIRELESS_11_5N.0 | Self::WIRELESS_11AC.0);
+    pub const WIRELESS_MODE_MAX: Self = Self(
+        Self::WIRELESS_11A.0
+            | Self::WIRELESS_11B.0
+            | Self::WIRELESS_11G.0
+            | Self::WIRELESS_11_24N.0
+            | Self::WIRELESS_11_5N.0
+            | Self::WIRELESS_11AC.0,
+    );
+
+    pub const fn to_raw(self) -> u8 {
+        self.0
+    }
+
+    pub const fn from_raw_unchecked(raw: u8) -> Self {
+        Self(raw)
+    }
+
+    pub fn try_from(raw: u8) -> Result<Self, DomainError> {
+        if raw & !Self::VALID_MASK != 0 {
+            return Err(DomainError::InvalidValue);
+        }
+        Ok(Self(raw))
+    }
+
+    pub fn contains(self, flag: Self) -> bool {
+        self.0 & flag.0 == flag.0
+    }
+}
+
 /// BIP cipher selector returned by `security_type_bip_to_gmcs` (`WPA_CIPHER_BIP_*`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(transparent)]
@@ -364,5 +475,53 @@ mod tests {
             BipGmcs::try_from_security_type(SecurityType::Aes),
             Err(DomainError::InvalidValue)
         );
+    }
+
+    #[test]
+    fn wifi_rate_accepts_cck_and_ofdm_bytes() {
+        for raw in [2u8, 4, 11, 22, 12, 24, 48, 108] {
+            let rate = WifiRate::try_from(raw).unwrap();
+            assert_eq!(rate.to_raw(), raw);
+        }
+        let basic = WifiRate::try_from(0x82).unwrap();
+        assert_eq!(basic.rate_index(), 2);
+        assert!(basic.is_cck());
+    }
+
+    #[test]
+    fn wifi_rate_rejects_unknown_bytes() {
+        assert_eq!(WifiRate::try_from(0), Err(DomainError::InvalidValue));
+        assert_eq!(WifiRate::try_from(1), Err(DomainError::InvalidValue));
+        assert_eq!(WifiRate::try_from(255), Err(DomainError::InvalidValue));
+    }
+
+    #[test]
+    fn network_type_accepts_single_bits_and_combinations() {
+        for raw in [
+            0u8,
+            NetworkType::WIRELESS_11B.to_raw(),
+            NetworkType::WIRELESS_11G.to_raw(),
+            NetworkType::WIRELESS_11BG.to_raw(),
+            NetworkType::WIRELESS_MODE_24G.to_raw(),
+            NetworkType::WIRELESS_MODE_5G.to_raw(),
+            NetworkType::WIRELESS_MODE_MAX.to_raw(),
+        ] {
+            let nt = NetworkType::try_from(raw).unwrap();
+            assert_eq!(nt.to_raw(), raw);
+        }
+    }
+
+    #[test]
+    fn network_type_rejects_reserved_bits() {
+        assert_eq!(NetworkType::try_from(0x80), Err(DomainError::InvalidValue));
+        assert_eq!(NetworkType::try_from(0xff), Err(DomainError::InvalidValue));
+    }
+
+    #[test]
+    fn network_type_contains_flags() {
+        let bg = NetworkType::WIRELESS_11BG;
+        assert!(bg.contains(NetworkType::WIRELESS_11B));
+        assert!(bg.contains(NetworkType::WIRELESS_11G));
+        assert!(!bg.contains(NetworkType::WIRELESS_11A));
     }
 }
