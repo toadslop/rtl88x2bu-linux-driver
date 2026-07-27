@@ -46,7 +46,7 @@ Do **not** port first and “add tests later.”
 
 | Level | When | What | Hardware? |
 |-------|------|------|-----------|
-| L0 Build | Every PR | Module (or affected objects) compile with pinned `KDIR` + `LLVM=1` | No |
+| L0 Build | Every PR | Module (or affected objects) compile with pinned `KDIR` + `LLVM=1` | No (CI via `module-l0.yml`) |
 | L1 Symbols | Every file/chunk swap C→Rust | Exported `extern "C"` symbol set matches the old `.o` | No |
 | L2 Host diff | Pure / leaf units (crypto, IE helpers, chplan math) | Userspace tests: C reference vs Rust, fixed vectors | No |
 | L3 Link/init | After Wave 0 scaffold; module-entry changes | `modprobe`/`insmod` in VM **without** device (or with dummy), check dmesg + clean `rmmod` | No dongle |
@@ -62,6 +62,8 @@ make KDIR=/path/to/rust-enabled-kernel LLVM=1 -j"$(nproc)"
 ```
 
 CI (when added) should run this on the pinned kernel tree or a cached build container. Distro headers without `CONFIG_RUST` are **not** sufficient.
+
+**CI status:** automated via [`.github/workflows/module-l0.yml`](../../.github/workflows/module-l0.yml) using the pre-built image documented in [`dev-environment.md`](dev-environment.md#ci-l0-image). Probe verification: [`scripts/ci/verify-ko-probes.sh`](../../scripts/ci/verify-ko-probes.sh).
 
 Host toolchain, kernel pin recipe, and Clang/`LLVM=1` pitfalls: [`dev-environment.md`](dev-environment.md).
 
@@ -188,9 +190,10 @@ Failures at L4 block the wave epic, not every tiny PR, if L0–L2 were green—b
 1. **T0** — Document this plan + PR checklist (this file).
 2. **T1** — `check-symbols.sh` + Make target `rust-check-symbols` (done).
 3. **T2** — Host crypto harness scaffolding + first vectors for `aes-ctr` (ties to W1-03).
-4. **T3** — GitHub Actions (`.github/workflows/host-l2.yml`): L2 host tests on `ubuntu-latest` (`make -C tests/host/domain test` + `make -C tests/host/crypto all` + `make -C tests/host/chplan test` + `make -C tests/host/ie test` + `make -C tests/host/swcrypto test` + `make -C tests/host/security test` + `make -C tests/host/wlan_util test`). L0 on a Rust-kernel container deferred until a cached image exists.
+4. **T3** — GitHub Actions (`.github/workflows/host-l2.yml`): L2 host tests on `ubuntu-latest` (`make -C tests/host/domain test` + `make -C tests/host/crypto all` + `make -C tests/host/chplan test` + `make -C tests/host/ie test` + `make -C tests/host/swcrypto test` + `make -C tests/host/security test` + `make -C tests/host/wlan_util test`).
 5. **T4** — Host chplan harness (`tests/host/chplan/`): C oracle for W2-17 lookup helpers via `HOST_CHPLAN_TEST` build of `core/rtw_chplan.c`. DFS/country vectors land with W2-18/W2-19.
 6. **T5** — Host security + wlan_util harness (`tests/host/security/`, `tests/host/wlan_util/`): C oracles for Wave 3 security and wlan_util ports; wired in CI via `host-l2.yml`.
+7. **T6** — GitHub Actions (`.github/workflows/module-l0.yml`): L0 module build on `ghcr.io/<owner>/rtl88x2bu-l0:v6.12.9` with probe check via `scripts/ci/verify-ko-probes.sh`.
 
 ## Out of scope (for now)
 
