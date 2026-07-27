@@ -365,7 +365,7 @@ Path-filtered workflows skip when a PR does not touch matching paths (e.g. docs-
 
 Fork PRs may fail to pull the published L0 image from ghcr.io; workflows fall back to building the image inline (see [CI L0 image](#ci-l0-image) above). Ensure the `rtl88x2bu-l0` package is **public** in GitHub Packages so fork CI can pull it without rebuilding.
 
-Contributor overview: [`docs/contributing.md`](../../contributing.md).
+Contributor overview: [`docs/contributing.md`](../contributing.md).
 
 ## When to extend this doc
 
