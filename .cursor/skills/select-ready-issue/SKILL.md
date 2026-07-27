@@ -17,7 +17,7 @@ in the current active wave.
 
 ## 1. Determine the active frontier
 
-Read [`docs/rust-migration/issues/README.md`](../../docs/rust-migration/issues/README.md)
+Read [`docs/rust-migration/issues/README.md`](../../../docs/rust-migration/issues/README.md)
 and open epics to see which wave is in progress:
 
 - **Wave 3 tranche 1** (`E05`, #68): `W3-01`…`W3-09` — typical active frontier
@@ -43,7 +43,7 @@ Exclude:
 | Issues whose `blocked_by` deps are open | read Tracking footer or draft frontmatter |
 | Rows marked `done` in README (triage miss) | send back to triage |
 
-Resolve `blocked_by` via [`ISSUE-MAP.md`](../../docs/rust-migration/issues/ISSUE-MAP.md):
+Resolve `blocked_by` via [`ISSUE-MAP.md`](../../../docs/rust-migration/issues/ISSUE-MAP.md):
 
 ```bash
 gh issue view <number> --json body,state

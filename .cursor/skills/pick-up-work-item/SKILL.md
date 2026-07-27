@@ -23,7 +23,7 @@ Use this skill when the user wants you to **find and start the next piece of
 migration work** — not to review or land an existing PR.
 
 This repo tracks work on **GitHub Issues** with draft specs in
-[`docs/rust-migration/issues/`](../../docs/rust-migration/issues/README.md).
+[`docs/rust-migration/issues/`](../../../docs/rust-migration/issues/README.md).
 Each implementable child targets **~200 lines** of meaningful change.
 
 ## Workflow overview
@@ -60,12 +60,12 @@ flowchart TD
 
 ## Repo context (quick reference)
 
-- **Issue map:** [`ISSUE-MAP.md`](../../docs/rust-migration/issues/ISSUE-MAP.md) — draft ID ↔ GitHub `#N`
-- **Status table:** [`README.md`](../../docs/rust-migration/issues/README.md) — local done/draft/in-progress tracking
+- **Issue map:** [`ISSUE-MAP.md`](../../../docs/rust-migration/issues/ISSUE-MAP.md) — draft ID ↔ GitHub `#N`
+- **Status table:** [`README.md`](../../../docs/rust-migration/issues/README.md) — local done/draft/in-progress tracking
 - **Epics:** `epic-*.md` — wave/phase parents (`E01`–`E12`)
 - **Children:** `wave*`, `test-*`, `arch-*`, `release-*` — sized ~200 LOC slices
 - **Labels:** `rust-migration`, `wave-*`, `phase-*`, `size/~200`
-- **Gates:** L0 build, L1 symbols, L2 host tests, L3 QEMU, L4 hardware — see [`test-plan.md`](../../docs/rust-migration/test-plan.md) and [`AGENTS.md`](../../AGENTS.md)
+- **Gates:** L0 build, L1 symbols, L2 host tests, L3 QEMU, L4 hardware — see [`test-plan.md`](../../../docs/rust-migration/test-plan.md) and [`AGENTS.md`](../../../AGENTS.md)
 
 ## Final status report
 

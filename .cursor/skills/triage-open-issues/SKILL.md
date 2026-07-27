@@ -26,7 +26,7 @@ gh issue list --repo "$(gh repo view --json nameWithOwner -q .nameWithOwner)" \
 ```
 
 Also read the local status table in
-[`docs/rust-migration/issues/README.md`](../../docs/rust-migration/issues/README.md)
+[`docs/rust-migration/issues/README.md`](../../../docs/rust-migration/issues/README.md)
 — rows marked `done` with an open GitHub issue are prime triage candidates.
 
 ## 2. Evidence that an issue is complete
@@ -77,7 +77,7 @@ gh issue close <number> --comment "Closing: <evidence>.
 ```
 
 Then update the local status table in
-[`docs/rust-migration/issues/README.md`](../../docs/rust-migration/issues/README.md)
+[`docs/rust-migration/issues/README.md`](../../../docs/rust-migration/issues/README.md)
 if the row still says `open`, `draft`, or `in progress`.
 
 Commit and push README updates on the current branch so repo docs stay in sync

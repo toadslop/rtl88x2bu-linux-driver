@@ -30,7 +30,7 @@ chat. Do not skip planning and jump to implementation.
 
 ## Sizing rules
 
-From [`test-plan.md`](../../docs/rust-migration/test-plan.md) and issue README:
+From [`test-plan.md`](../../../docs/rust-migration/test-plan.md) and issue README:
 
 - Target **~200 meaningful lines** per PR (roughly 150–250)
 - One logical slice per PR — do not mix unrelated units

@@ -54,7 +54,7 @@ suffix is configured for the run.
 
 ### 3. Verify gates
 
-Run applicable gates from [`AGENTS.md`](../../AGENTS.md):
+Run applicable gates from [`AGENTS.md`](../../../AGENTS.md):
 
 ```bash
 export LIBCLANG_PATH=/usr/lib/llvm-18/lib

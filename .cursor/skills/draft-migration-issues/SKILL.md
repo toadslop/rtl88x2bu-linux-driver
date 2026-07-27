@@ -97,7 +97,7 @@ For a **new epic child batch**, also update the parent `epic-*.md` Children tabl
 When drafts are ready to publish:
 
 1. Add new filenames to the `files=(…)` array in
-   [`file-issues.sh`](../../docs/rust-migration/issues/file-issues.sh) if not
+   [`file-issues.sh`](../../../docs/rust-migration/issues/file-issues.sh) if not
    already listed
 2. Run from repo root:
 
