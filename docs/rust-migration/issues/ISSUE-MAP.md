@@ -15,12 +15,18 @@ Generated/updated by `docs/rust-migration/issues/file-issues.sh`.
 | E09 | #72 | [Epic] Phase 2 — Idiomatic Rust / reduce unsafe |
 | E10 | #73 | [Epic] Offline test infrastructure for Rust migration |
 | E11 | #74 | [Epic] Domain-typed architecture + characterization tests |
+| E12 | #150 | [Epic] Distribution — DKMS packages and GitHub Releases |
 | T0 | #75 | [T0] Land offline test plan + PR verification checklist |
 | T1 | #76 | [T1] Add check-symbols.sh for C→Rust object ABI gate (L1) |
 | T2 | #77 | [T2] Host differential test harness for crypto (L2) + aes-ctr vectors |
 | T3 | #78 | [T3] CI: run host L2 tests on every PR |
 | T4 | #79 | [T4] Host chplan differential harness + vectors |
 | T5 | #80 | [T5] Host security + wlan_util differential harness |
+| T6 | #151 | [T6] CI: L0 module build against pinned Rust kernel |
+| T7 | #152 | [T7] CI: L1 symbol/ABI checks on C→Rust swaps |
+| T8 | #153 | [T8] CI: L3 insmod/rmmod in QEMU on master merges |
+| T9 | #154 | [T9] Enforce merge gates: branch protection, PR template, required checks |
+| R1 | #155 | [R1] GitHub Releases: versioning, DKMS tarball, merge pipeline |
 | A0 | #81 | [A0] Land architecture.md and PR architecture checklist |
 | A1 | #82 | [A1] Seed rust/domain/types (MacAddr + validated buffer pattern) |
 | A2 | #83 | [A2] Domain types for channel plan + rates (Wave 3) |

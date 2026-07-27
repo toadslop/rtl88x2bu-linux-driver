@@ -58,12 +58,18 @@ files=(
   epic-09-phase2.md
   epic-10-test-infra.md
   epic-11-architecture.md
+  epic-12-distribution.md
   test-00-test-plan-doc.md
   test-01-symbol-check.md
   test-02-host-crypto-harness.md
   test-03-ci-host-tests.md
   test-04-host-chplan-harness.md
   test-05-host-security-wlan-harness.md
+  test-06-ci-l0-build.md
+  test-07-ci-l1-symbols.md
+  test-08-ci-l3-qemu.md
+  test-09-merge-gates.md
+  release-01-github-releases.md
   arch-00-land-doc.md
   arch-01-domain-types-seed.md
   arch-02-domain-types-chplan.md
