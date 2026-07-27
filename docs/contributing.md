@@ -32,7 +32,14 @@ GitHub shows status checks as **Workflow name / job id**. When branch protection
 
 **Post-merge on `master` (not a PR gate):** `Module L3 load / module-l3` runs after merge when driver/build paths change. See [`.github/workflows/module-l3.yml`](../../.github/workflows/module-l3.yml).
 
-Path-filtered workflows **skip** on docs-only PRs; skipped checks do not block merge under GitHub branch protection.
+### Path filters and required checks
+
+These workflows use **workflow-level** `paths:` filters. When a PR does not touch matching paths (e.g. docs-only), the workflow **does not run** — the check stays **Waiting for status to be reported** and branch protection **blocks merge** ([GitHub troubleshooting docs](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/troubleshooting-required-status-checks)).
+
+Until workflows are refactored (e.g. always trigger with job-level `if:` + `dorny/paths-filter` so out-of-scope jobs report Success), admins enabling these required checks should plan for:
+
+- **Docs-only PRs** — use an admin bypass, ruleset path exception, or temporarily relax required checks.
+- **Translation PRs** — all three checks should run when driver/build paths change.
 
 Repo admins: see [Branch protection](rust-migration/dev-environment.md#branch-protection) in [`dev-environment.md`](rust-migration/dev-environment.md) for Settings steps.
 

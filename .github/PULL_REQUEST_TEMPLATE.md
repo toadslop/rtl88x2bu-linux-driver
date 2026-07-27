@@ -1,4 +1,4 @@
-Before opening a translation PR, read [`docs/rust-migration/test-plan.md`](docs/rust-migration/test-plan.md) and [`docs/rust-migration/architecture.md`](docs/rust-migration/architecture.md).
+Before opening a translation PR, read [`docs/rust-migration/test-plan.md`](/toadslop/rtl88x2bu-linux-driver/blob/master/docs/rust-migration/test-plan.md) and [`docs/rust-migration/architecture.md`](/toadslop/rtl88x2bu-linux-driver/blob/master/docs/rust-migration/architecture.md).
 
 Check only the items that apply to this PR's scope. L1, L2, and L3 are required when the change touches a C→Rust swap, pure/leaf code, or init/USB registration respectively (see the merge rule in the test plan).
 

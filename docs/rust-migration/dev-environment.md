@@ -357,9 +357,17 @@ CI workflows exist, but merges stay unblocked until a **repo admin** enables bra
 
 Optional team preferences: dismiss stale pull request approvals, require linear history.
 
-### Skipped checks
+### Path filters and required checks
 
-Path-filtered workflows skip when a PR does not touch matching paths (e.g. docs-only changes). Skipped checks do not block merge under GitHub branch protection.
+Workflow-level `paths:` filters mean a PR that does not touch matching paths never triggers the workflow. If that check is **required** in branch protection, it stays **Waiting for status to be reported** and merge is blocked — this is not the same as a job that runs and is skipped ([GitHub troubleshooting docs](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/troubleshooting-required-status-checks)).
+
+**Mitigations until workflows are refactored:**
+
+1. Refactor workflows to always trigger on `pull_request`, with job-level `if:` (e.g. `dorny/paths-filter`) so out-of-scope jobs report Success.
+2. Use repository rulesets with path-aware requirements if available on your plan.
+3. For docs-only PRs, use an admin bypass or do not require L0/L1/L2 until (1) lands.
+
+This T9 PR is docs-only and would hit the blocked-merge case once the three PR checks above are required without a bypass.
 
 ### Fork pull requests
 
