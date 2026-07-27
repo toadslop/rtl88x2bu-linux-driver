@@ -17,7 +17,7 @@ HOST_JSON := ../crypto/host_vector_json.c
 
 all: test
 
-test: test-c test-rust test-ratetbl
+test: test-c test-rust test-ratetbl test-ratetbl-rust
 
 test-c: test_wlan_util
 	./test_wlan_util rate_class_vectors.json
@@ -27,6 +27,9 @@ test-rust: test_wlan_util_rust
 
 test-ratetbl: test_ratetbl
 	./test_ratetbl ratetbl_vectors.json
+
+test-ratetbl-rust: test_ratetbl_rust
+	./test_ratetbl_rust ratetbl_vectors.json
 
 test_wlan_util: test_wlan_util.c $(ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_wlan_util.c $(ORACLE) $(HOST_JSON)
@@ -42,5 +45,9 @@ test_wlan_util_rust: test_wlan_util.c librust_wlan_util.a $(HOST_JSON)
 test_ratetbl: test_ratetbl.c $(ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_ratetbl.c $(ORACLE) $(HOST_JSON)
 
+test_ratetbl_rust: test_ratetbl.c librust_wlan_util.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_WLAN_UTIL_ORACLE -o $@ test_ratetbl.c $(HOST_JSON) \
+		librust_wlan_util.a
+
 clean:
-	rm -f test_wlan_util test_wlan_util_rust test_ratetbl librust_wlan_util.a
+	rm -f test_wlan_util test_wlan_util_rust test_ratetbl test_ratetbl_rust librust_wlan_util.a
