@@ -281,6 +281,8 @@ docker pull ghcr.io/<owner>/rtl88x2bu-l0:v6.12.9
 
 Replace `<owner>` with the GitHub org or user that owns the repo (e.g. `toadslop`).
 
+**Package visibility:** images pushed via `GITHUB_TOKEN` default to **private** in GitHub Packages. Same-repo Actions jobs can pull them with `packages: read`, but fork PRs and external consumers cannot. After the first publish, set the `rtl88x2bu-l0` package to **public** in GitHub Packages settings (or document an inline image-build fallback for fork PRs in T6b). CI jobs should pin `ghcr.io/<owner>/rtl88x2bu-l0:v6.12.9` — avoid `:latest`, which moves on every rebuild.
+
 ### When to rebuild the image
 
 Rebuild and re-publish when:

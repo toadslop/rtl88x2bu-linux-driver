@@ -32,8 +32,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 		pkg-config \
 	&& rm -rf /var/lib/apt/lists/*
 
-# Kernel LLVM=1 expects unsuffixed llvm-* / ld.lld names.
+# Kernel LLVM=1 expects unsuffixed llvm-* / ld.lld / clang names.
 RUN ln -sf /usr/bin/ld.lld-18 /usr/bin/ld.lld \
+	&& ln -sf /usr/bin/clang-18 /usr/bin/clang \
+	&& ln -sf /usr/bin/clang++-18 /usr/bin/clang++ \
 	&& for f in /usr/bin/llvm-*-18; do \
 		base="$(basename "$f" -18)"; \
 		[ -e "/usr/bin/${base}" ] || ln -sf "$f" "/usr/bin/${base}"; \
