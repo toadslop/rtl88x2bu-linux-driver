@@ -29,7 +29,7 @@ Make CI gates **actually block bad merges**. Today workflows exist but `master` 
    - L4 hardware (wave milestones only)
    - Architecture / domain types
 
-3. **Contributing note** in [`README.md`](../../README.md): link PR template and list required CI checks.
+3. **Contributing note** in [`README.md`](../../../README.md): link PR template and list required CI checks.
 
 ## Acceptance
 
