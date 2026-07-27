@@ -242,11 +242,7 @@ unsafe fn datarate_slot(padapter: *mut U8, i: usize) -> U8 {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn is_basicrate(padapter: *mut U8, rate: U8) -> i32 {
-    if padapter.is_null() {
-        return _FALSE;
-    }
+unsafe fn is_basicrate_inner(padapter: *mut U8, rate: U8) -> i32 {
     unsafe {
         for i in 0..NUM_RATES {
             let val = basicrate_slot(padapter, i);
@@ -258,6 +254,14 @@ pub extern "C" fn is_basicrate(padapter: *mut U8, rate: U8) -> i32 {
         }
     }
     _FALSE
+}
+
+#[no_mangle]
+pub extern "C" fn is_basicrate(padapter: *mut U8, rate: U8) -> i32 {
+    if padapter.is_null() {
+        return _FALSE;
+    }
+    unsafe { is_basicrate_inner(padapter, rate) }
 }
 
 #[no_mangle]
@@ -278,7 +282,7 @@ pub extern "C" fn ratetbl2rateset(padapter: *mut U8, rateset: *mut U8) -> u32 {
                 0xfe => continue,
                 _ => {
                     rate = ratetbl_val_2wifirate_inner(rate);
-                    if is_basicrate(padapter, rate) == _TRUE {
+                    if is_basicrate_inner(padapter, rate) == _TRUE {
                         rate |= IEEE80211_BASIC_RATE_MASK;
                     }
                     *rateset.add(len as usize) = rate;
