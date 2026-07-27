@@ -101,29 +101,36 @@ static int run_vector(struct vector *v)
 {
 	u8 buf[MAX_BUF];
 	sint ret;
-
-	if (v->frame_len > MAX_BUF)
-		return -1;
-	memcpy(buf, v->frame, v->frame_len);
+	size_t need;
 
 	if (v->fn != FN_AES_CIPHER)
 		return -1;
 
-	ret = host_ccmp_aes_cipher(v->key, v->hdrlen, buf, v->plen);
-	if (ret != 1) {
-		fprintf(stderr, "%s: aes_cipher returned %d\n", v->name, ret);
+	if (v->key_len != 16) {
+		fprintf(stderr, "%s: key_len %zu != 16\n", v->name, v->key_len);
 		return -1;
 	}
 
-	if (v->hdrlen + 8 + v->plen + 8 > v->frame_len) {
-		fprintf(stderr, "%s: frame buffer too small for output region\n",
-			v->name);
+	need = (size_t)v->hdrlen + 8 + (size_t)v->plen + 8;
+	if (v->frame_len < need) {
+		fprintf(stderr, "%s: frame_len %zu < hdrlen+pn+plen+mic (%zu)\n",
+			v->name, v->frame_len, need);
 		return -1;
 	}
 
 	if (v->expect_len != v->plen + 8) {
 		fprintf(stderr, "%s: expect_len %zu != plen+8 (%u)\n", v->name,
 			v->expect_len, v->plen + 8);
+		return -1;
+	}
+
+	if (v->frame_len > MAX_BUF)
+		return -1;
+	memcpy(buf, v->frame, v->frame_len);
+
+	ret = host_ccmp_aes_cipher(v->key, v->hdrlen, buf, v->plen);
+	if (ret != 1) {
+		fprintf(stderr, "%s: aes_cipher returned %d\n", v->name, ret);
 		return -1;
 	}
 

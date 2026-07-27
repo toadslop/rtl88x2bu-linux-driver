@@ -21,7 +21,7 @@ HOST_JSON := ../crypto/host_vector_json.c
 
 all: test
 
-test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust test-ccmp-primitives test-ccmp-primitives-rust test-ccmp-construct test-ccmp-construct-rust test-ccmp-frames test-ccmp-frames-rust
+test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust test-ccmp-primitives test-ccmp-primitives-rust test-ccmp-construct test-ccmp-construct-rust test-ccmp-frames
 
 test-c: test_security
 	./test_security security_type_vectors.json
@@ -147,6 +147,7 @@ CCMP_ORACLE_FLAGS := -DHOST_CCMP_PRIMITIVE_ORACLE_BUILD -DHOST_CCMP_CONSTRUCT_OR
 test_ccmp_frames: test_ccmp_frames.c $(REST_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) $(CCMP_ORACLE_FLAGS) -o $@ test_ccmp_frames.c $(REST_ORACLE) $(HOST_JSON)
 
+# test-ccmp-frames-rust is added to aggregate `test` in W3-12 PR2 (stacked Rust port).
 test_ccmp_frames_rust: test_ccmp_frames.c librust_security_rest.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_SECURITY_REST_ORACLE -o $@ test_ccmp_frames.c $(HOST_JSON) \
 		librust_security_rest.a
