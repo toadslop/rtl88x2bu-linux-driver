@@ -124,6 +124,7 @@ test_tkip_frames_rust: test_tkip_frames.c librust_security.a $(HOST_JSON)
 test_ccmp_primitives: test_ccmp_primitives.c $(REST_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -DHOST_CCMP_PRIMITIVE_ORACLE_BUILD -o $@ test_ccmp_primitives.c $(REST_ORACLE) $(HOST_JSON)
 
+# librust_security_rest.a is added in W3-11 PR2 (stacked Rust port).
 test_ccmp_primitives_rust: test_ccmp_primitives.c librust_security_rest.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_SECURITY_REST_ORACLE -o $@ test_ccmp_primitives.c $(HOST_JSON) \
 		librust_security_rest.a

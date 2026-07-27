@@ -113,8 +113,22 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		break;
 	}
 
-	if (parse_hex_field(obj, obj_len, "expect", v->expect, sizeof(v->expect), &len))
-		return -1;
+	{
+		size_t expect_len;
+
+		switch (v->fn) {
+		case FN_XOR_32:
+			expect_len = 4;
+			break;
+		default:
+			expect_len = 16;
+			break;
+		}
+		if (parse_hex_field(obj, obj_len, "expect", v->expect, sizeof(v->expect),
+				    &len) ||
+		    len != expect_len)
+			return -1;
+	}
 	return 0;
 }
 
