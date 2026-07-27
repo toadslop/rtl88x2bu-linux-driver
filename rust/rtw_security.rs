@@ -854,6 +854,211 @@ pub extern "C" fn rtw_wep_decrypt(padapter: *mut WepAdapter, precvframe: *mut U8
     }
 }
 
+// ----- TKIP MIC helpers (W3-07a) -----
+
+#[repr(C)]
+pub struct mic_data {
+    pub K0: U32,
+    pub K1: U32,
+    pub L: U32,
+    pub R: U32,
+    pub M: U32,
+    pub nBytesInM: U32,
+}
+
+fn rol32(a: U32, n: u32) -> U32 {
+    a.rotate_left(n & 31)
+}
+
+fn ror32(a: U32, n: u32) -> U32 {
+    rol32(a, 32 - n)
+}
+
+fn secmicgetuint32(p: &[U8]) -> U32 {
+    let mut res = 0u32;
+    for (i, &byte) in p.iter().take(4).enumerate() {
+        res |= u32::from(byte) << (8 * i);
+    }
+    res
+}
+
+fn secmicputuint32(p: &mut [U8], val: U32) {
+    let mut v = val;
+    for slot in p.iter_mut().take(4) {
+        *slot = (v & 0xff) as U8;
+        v >>= 8;
+    }
+}
+
+fn secmicclear(pmicdata: &mut mic_data) {
+    pmicdata.L = pmicdata.K0;
+    pmicdata.R = pmicdata.K1;
+    pmicdata.nBytesInM = 0;
+    pmicdata.M = 0;
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_secmicsetkey(pmicdata: *mut mic_data, key: *mut U8) {
+    if pmicdata.is_null() || key.is_null() {
+        return;
+    }
+    unsafe {
+        let pmicdata = &mut *pmicdata;
+        let key = core::slice::from_raw_parts(key, 8);
+        pmicdata.K0 = secmicgetuint32(key);
+        pmicdata.K1 = secmicgetuint32(&key[4..]);
+        secmicclear(pmicdata);
+    }
+}
+
+fn secmicappendbyte_inner(pmicdata: &mut mic_data, b: U8) {
+    pmicdata.M |= u32::from(b) << (8 * pmicdata.nBytesInM);
+    pmicdata.nBytesInM += 1;
+    if pmicdata.nBytesInM >= 4 {
+        pmicdata.L ^= pmicdata.M;
+        pmicdata.R ^= rol32(pmicdata.L, 17);
+        pmicdata.L = pmicdata.L.wrapping_add(pmicdata.R);
+        pmicdata.R ^= ((pmicdata.L & 0xff00_ff00) >> 8) | ((pmicdata.L & 0x00ff_00ff) << 8);
+        pmicdata.L = pmicdata.L.wrapping_add(pmicdata.R);
+        pmicdata.R ^= rol32(pmicdata.L, 3);
+        pmicdata.L = pmicdata.L.wrapping_add(pmicdata.R);
+        pmicdata.R ^= ror32(pmicdata.L, 2);
+        pmicdata.L = pmicdata.L.wrapping_add(pmicdata.R);
+        pmicdata.M = 0;
+        pmicdata.nBytesInM = 0;
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_secmicappendbyte(pmicdata: *mut mic_data, b: U8) {
+    if pmicdata.is_null() {
+        return;
+    }
+    unsafe {
+        secmicappendbyte_inner(&mut *pmicdata, b);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_secmicappend(pmicdata: *mut mic_data, src: *mut U8, nbytes: U32) {
+    if pmicdata.is_null() || src.is_null() || nbytes == 0 {
+        return;
+    }
+    unsafe {
+        let src = core::slice::from_raw_parts(src, nbytes as usize);
+        let pmicdata = &mut *pmicdata;
+        for &byte in src {
+            secmicappendbyte_inner(pmicdata, byte);
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_secgetmic(pmicdata: *mut mic_data, dst: *mut U8) {
+    if pmicdata.is_null() || dst.is_null() {
+        return;
+    }
+    unsafe {
+        let pmicdata = &mut *pmicdata;
+        secmicappendbyte_inner(pmicdata, 0x5a);
+        secmicappendbyte_inner(pmicdata, 0);
+        secmicappendbyte_inner(pmicdata, 0);
+        secmicappendbyte_inner(pmicdata, 0);
+        secmicappendbyte_inner(pmicdata, 0);
+        while pmicdata.nBytesInM != 0 {
+            secmicappendbyte_inner(pmicdata, 0);
+        }
+        let dst = core::slice::from_raw_parts_mut(dst, 8);
+        secmicputuint32(&mut dst[..4], pmicdata.L);
+        secmicputuint32(&mut dst[4..], pmicdata.R);
+        secmicclear(pmicdata);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_seccalctkipmic(
+    key: *mut U8,
+    header: *mut U8,
+    data: *mut U8,
+    data_len: U32,
+    mic_code: *mut U8,
+    pri: U8,
+) {
+    if key.is_null() || header.is_null() || data.is_null() || mic_code.is_null() {
+        return;
+    }
+    unsafe {
+        let header_ptr = header;
+        let mut micdata = mic_data {
+            K0: 0,
+            K1: 0,
+            L: 0,
+            R: 0,
+            M: 0,
+            nBytesInM: 0,
+        };
+        let mut priority = [0u8; 4];
+        rtw_secmicsetkey(&mut micdata, key);
+        priority[0] = pri;
+
+        if *header_ptr.add(1) & 1 != 0 {
+            rtw_secmicappend(&mut micdata, header_ptr.add(16), 6);
+            if *header_ptr.add(1) & 2 != 0 {
+                rtw_secmicappend(&mut micdata, header_ptr.add(24), 6);
+            } else {
+                rtw_secmicappend(&mut micdata, header_ptr.add(10), 6);
+            }
+        } else {
+            rtw_secmicappend(&mut micdata, header_ptr.add(4), 6);
+            if *header_ptr.add(1) & 2 != 0 {
+                rtw_secmicappend(&mut micdata, header_ptr.add(16), 6);
+            } else {
+                rtw_secmicappend(&mut micdata, header_ptr.add(10), 6);
+            }
+        }
+        rtw_secmicappend(&mut micdata, priority.as_mut_ptr(), 4);
+        rtw_secmicappend(&mut micdata, data, data_len);
+        rtw_secgetmic(&mut micdata, mic_code);
+    }
+}
+
+#[cfg(host_security_test)]
+#[no_mangle]
+pub extern "C" fn host_tkip_secmicsetkey(pmicdata: *mut mic_data, key: *mut U8) {
+    rtw_secmicsetkey(pmicdata, key);
+}
+
+#[cfg(host_security_test)]
+#[no_mangle]
+pub extern "C" fn host_tkip_secmicappendbyte(pmicdata: *mut mic_data, b: U8) {
+    rtw_secmicappendbyte(pmicdata, b);
+}
+
+#[cfg(host_security_test)]
+#[no_mangle]
+pub extern "C" fn host_tkip_secmicappend(pmicdata: *mut mic_data, src: *mut U8, nbytes: U32) {
+    rtw_secmicappend(pmicdata, src, nbytes);
+}
+
+#[cfg(host_security_test)]
+#[no_mangle]
+pub extern "C" fn host_tkip_secgetmic(pmicdata: *mut mic_data, dst: *mut U8) {
+    rtw_secgetmic(pmicdata, dst);
+}
+
+#[cfg(host_security_test)]
+#[no_mangle]
+pub extern "C" fn host_tkip_seccalctkipmic(
+    key: *mut U8,
+    header: *mut U8,
+    data: *mut U8,
+    data_len: U32,
+    mic_code: *mut U8,
+    pri: U8,
+) {
+    rtw_seccalctkipmic(key, header, data, data_len, mic_code, pri);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

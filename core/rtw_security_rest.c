@@ -159,127 +159,13 @@ const size_t rtw_rust_wep_off_securitypriv_wep_sw_dec_cnt_uc =
 	offsetof(struct security_priv, wep_sw_dec_cnt_uc);
 #endif
 
-/* 3		=====TKIP related===== */
+/* 3		=====TKIP related===== (W3-07a: MIC helpers in rust/rtw_security.rs) */
 
-static u32 secmicgetuint32(u8 *p)
-/* Convert from Byte[] to Us4Byte32 in a portable way */
-{
-	s32 i;
-	u32 res = 0;
-	for (i = 0; i < 4; i++)
-		res |= ((u32)(*p++)) << (8 * i);
-	return res;
-}
-
-static void secmicputuint32(u8 *p, u32 val)
-/* Convert from Us4Byte32 to Byte[] in a portable way */
-{
-	long i;
-	for (i = 0; i < 4; i++) {
-		*p++ = (u8)(val & 0xff);
-		val >>= 8;
-	}
-}
-
-static void secmicclear(struct mic_data *pmicdata)
-{
-	/* Reset the state to the empty message. */
-	pmicdata->L = pmicdata->K0;
-	pmicdata->R = pmicdata->K1;
-	pmicdata->nBytesInM = 0;
-	pmicdata->M = 0;
-}
-
-void rtw_secmicsetkey(struct mic_data *pmicdata, u8 *key)
-{
-	/* Set the key */
-	pmicdata->K0 = secmicgetuint32(key);
-	pmicdata->K1 = secmicgetuint32(key + 4);
-	/* and reset the message */
-	secmicclear(pmicdata);
-}
-
-void rtw_secmicappendbyte(struct mic_data *pmicdata, u8 b)
-{
-	/* Append the byte to our word-sized buffer */
-	pmicdata->M |= ((unsigned long)b) << (8 * pmicdata->nBytesInM);
-	pmicdata->nBytesInM++;
-	/* Process the word if it is full. */
-	if (pmicdata->nBytesInM >= 4) {
-		pmicdata->L ^= pmicdata->M;
-		pmicdata->R ^= ROL32(pmicdata->L, 17);
-		pmicdata->L += pmicdata->R;
-		pmicdata->R ^= ((pmicdata->L & 0xff00ff00) >> 8) | ((pmicdata->L & 0x00ff00ff) << 8);
-		pmicdata->L += pmicdata->R;
-		pmicdata->R ^= ROL32(pmicdata->L, 3);
-		pmicdata->L += pmicdata->R;
-		pmicdata->R ^= ROR32(pmicdata->L, 2);
-		pmicdata->L += pmicdata->R;
-		/* Clear the buffer */
-		pmicdata->M = 0;
-		pmicdata->nBytesInM = 0;
-	}
-}
-
-void rtw_secmicappend(struct mic_data *pmicdata, u8 *src, u32 nbytes)
-{
-	/* This is simple */
-	while (nbytes > 0) {
-		rtw_secmicappendbyte(pmicdata, *src++);
-		nbytes--;
-	}
-}
-
-void rtw_secgetmic(struct mic_data *pmicdata, u8 *dst)
-{
-	/* Append the minimum padding */
-	rtw_secmicappendbyte(pmicdata, 0x5a);
-	rtw_secmicappendbyte(pmicdata, 0);
-	rtw_secmicappendbyte(pmicdata, 0);
-	rtw_secmicappendbyte(pmicdata, 0);
-	rtw_secmicappendbyte(pmicdata, 0);
-	/* and then zeroes until the length is a multiple of 4 */
-	while (pmicdata->nBytesInM != 0)
-		rtw_secmicappendbyte(pmicdata, 0);
-	/* The appendByte function has already computed the result. */
-	secmicputuint32(dst, pmicdata->L);
-	secmicputuint32(dst + 4, pmicdata->R);
-	/* Reset to the empty message. */
-	secmicclear(pmicdata);
-}
-
-
-void rtw_seccalctkipmic(u8 *key, u8 *header, u8 *data, u32 data_len, u8 *mic_code, u8 pri)
-{
-
-	struct mic_data	micdata;
-	u8 priority[4] = {0x0, 0x0, 0x0, 0x0};
-	rtw_secmicsetkey(&micdata, key);
-	priority[0] = pri;
-
-	/* Michael MIC pseudo header: DA, SA, 3 x 0, Priority */
-	if (header[1] & 1) { /* ToDS==1 */
-		rtw_secmicappend(&micdata, &header[16], 6);  /* DA */
-		if (header[1] & 2) /* From Ds==1 */
-			rtw_secmicappend(&micdata, &header[24], 6);
-		else
-			rtw_secmicappend(&micdata, &header[10], 6);
-	} else {	/* ToDS==0 */
-		rtw_secmicappend(&micdata, &header[4], 6);   /* DA */
-		if (header[1] & 2) /* From Ds==1 */
-			rtw_secmicappend(&micdata, &header[16], 6);
-		else
-			rtw_secmicappend(&micdata, &header[10], 6);
-
-	}
-	rtw_secmicappend(&micdata, &priority[0], 4);
-
-
-	rtw_secmicappend(&micdata, data, data_len);
-
-	rtw_secgetmic(&micdata, mic_code);
-}
-
+extern void rtw_secmicsetkey(struct mic_data *pmicdata, u8 *key);
+extern void rtw_secmicappendbyte(struct mic_data *pmicdata, u8 b);
+extern void rtw_secmicappend(struct mic_data *pmicdata, u8 *src, u32 nbytes);
+extern void rtw_secgetmic(struct mic_data *pmicdata, u8 *dst);
+extern void rtw_seccalctkipmic(u8 *key, u8 *header, u8 *data, u32 data_len, u8 *mic_code, u8 pri);
 
 
 
