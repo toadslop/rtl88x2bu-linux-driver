@@ -1,0 +1,46 @@
+{
+  "oracle": "core/rtw_security.c",
+  "vectors": [
+    {
+      "name": "phase1_basic",
+      "fn": "host_tkip_phase1",
+      "tk": "00112233445566778899aabbccddeeff",
+      "ta": "112233445566",
+      "iv32": "12345678",
+      "expect_p1k": "b6f75a5005f29c9b3902"
+    },
+    {
+      "name": "phase1_zero_inputs",
+      "fn": "host_tkip_phase1",
+      "tk": "00000000000000000000000000000000",
+      "ta": "000000000000",
+      "iv32": "00000000",
+      "expect_p1k": "bf06c823f7d9e559244e"
+    },
+    {
+      "name": "phase2_basic",
+      "fn": "host_tkip_phase2",
+      "tk": "00112233445566778899aabbccddeeff",
+      "p1k": "b6f75a5005f29c9b3902",
+      "iv16": "1234",
+      "expect_rc4key": "3434122a92dac7e900cf6ee9040155bd"
+    },
+    {
+      "name": "phase2_zero_iv16",
+      "fn": "host_tkip_phase2",
+      "tk": "00000000000000000000000000000000",
+      "p1k": "bf06c823f7d9e559244e",
+      "iv16": "0000",
+      "expect_rc4key": "002000430b9e0b2952764507efcf87dc"
+    },
+    {
+      "name": "phase_chain",
+      "fn": "host_tkip_phase_chain",
+      "tk": "00112233445566778899aabbccddeeff",
+      "ta": "112233445566",
+      "iv32": "12345678",
+      "iv16": "1234",
+      "expect_rc4key": "3434122a92dac7e900cf6ee9040155bd"
+    }
+  ]
+}

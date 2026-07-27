@@ -15,11 +15,11 @@ CFLAGS  := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
 HOST_JSON := ../crypto/host_vector_json.c
 
-.PHONY: all test test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust clean
+.PHONY: all test test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust clean
 
 all: test
 
-test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust
+test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust
 
 test-c: test_security
 	./test_security security_type_vectors.json
@@ -44,6 +44,12 @@ test-tkip: test_tkip_mic
 
 test-tkip-rust: test_tkip_mic_rust
 	./test_tkip_mic_rust tkip_mic_vectors.json
+
+test-tkip-phase: test_tkip_phase
+	./test_tkip_phase tkip_phase_vectors.json
+
+test-tkip-phase-rust: test_tkip_phase_rust
+	./test_tkip_phase_rust tkip_phase_vectors.json
 
 test_security: test_security.c $(ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_security.c $(ORACLE) $(HOST_JSON)
@@ -77,7 +83,15 @@ test_tkip_mic_rust: test_tkip_mic.c librust_security.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_SECURITY_ORACLE -o $@ test_tkip_mic.c $(HOST_JSON) \
 		librust_security.a
 
+test_tkip_phase: test_tkip_phase.c $(ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DHOST_TKIP_PHASE_ORACLE_BUILD -o $@ test_tkip_phase.c $(ORACLE) $(HOST_JSON)
+
+test_tkip_phase_rust: test_tkip_phase.c librust_security.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_SECURITY_ORACLE -o $@ test_tkip_phase.c $(HOST_JSON) \
+		librust_security.a
+
 clean:
 	rm -f test_security test_security_rust test_wep_primitives test_wep_primitives_rust \
 		test_wep_frames test_wep_frames_rust test_tkip_mic test_tkip_mic_rust \
+		test_tkip_phase test_tkip_phase_rust \
 		librust_security.a
