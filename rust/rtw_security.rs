@@ -266,6 +266,10 @@ pub extern "C" fn host_wep_getcrc32(buf: *mut U8, len: Sint) -> U32 {
 
 const _WEP40_: U8 = 0x01;
 const _WEP104_: U8 = 0x05;
+const _TKIP_: U8 = 0x02;
+
+const _SUCCESS: U32 = 0;
+const _FAIL: U32 = 1;
 
 #[cfg(host_security_test)]
 const WEP_TXDESC_OFFSET: usize = 48 + 8;
@@ -478,6 +482,12 @@ mod kernel_layout {
         static rtw_rust_wep_off_securitypriv_wep_sw_dec_cnt_bc: usize;
         static rtw_rust_wep_off_securitypriv_wep_sw_dec_cnt_mc: usize;
         static rtw_rust_wep_off_securitypriv_wep_sw_dec_cnt_uc: usize;
+        static rtw_rust_tkip_off_securitypriv_dot118021XGrpKeyid: usize;
+        static rtw_rust_tkip_off_securitypriv_dot118021XGrpKey: usize;
+        static rtw_rust_tkip_off_pkt_attrib_dot118021x_UncstKey: usize;
+        static rtw_rust_tkip_off_securitypriv_tkip_sw_enc_cnt_bc: usize;
+        static rtw_rust_tkip_off_securitypriv_tkip_sw_enc_cnt_mc: usize;
+        static rtw_rust_tkip_off_securitypriv_tkip_sw_enc_cnt_uc: usize;
     }
 
     pub unsafe fn adapter_securitypriv(padapter: *mut WepAdapter) -> *mut SecurityPriv {
@@ -560,6 +570,42 @@ mod kernel_layout {
                 rtw_rust_wep_off_securitypriv_wep_sw_dec_cnt_mc
             } else {
                 rtw_rust_wep_off_securitypriv_wep_sw_dec_cnt_uc
+            };
+            let cnt = (psecuritypriv.add(off)) as *mut u64;
+            *cnt = cnt.read().wrapping_add(1);
+        }
+    }
+
+    pub unsafe fn securitypriv_grp_keyid(psecuritypriv: *mut u8) -> U32 {
+        unsafe {
+            *((psecuritypriv.add(rtw_rust_tkip_off_securitypriv_dot118021XGrpKeyid))
+                as *const U32)
+        }
+    }
+
+    pub unsafe fn securitypriv_grp_key_skey(psecuritypriv: *mut u8, index: usize) -> *mut U8 {
+        unsafe {
+            let base = psecuritypriv.add(rtw_rust_tkip_off_securitypriv_dot118021XGrpKey);
+            let stride = core::mem::size_of::<KeyType>();
+            base.add(index * stride) as *mut U8
+        }
+    }
+
+    pub unsafe fn pkt_attrib_unicast_key_skey(pattrib: *mut PktAttrib) -> *mut U8 {
+        unsafe {
+            (pattrib as *mut u8)
+                .add(rtw_rust_tkip_off_pkt_attrib_dot118021x_UncstKey) as *mut U8
+        }
+    }
+
+    pub unsafe fn tkip_sw_enc_cnt_inc(psecuritypriv: *mut u8, ra: &[U8; 6]) {
+        unsafe {
+            let off = if is_broadcast_mac_addr(ra) {
+                rtw_rust_tkip_off_securitypriv_tkip_sw_enc_cnt_bc
+            } else if is_multicast_mac_addr(ra) {
+                rtw_rust_tkip_off_securitypriv_tkip_sw_enc_cnt_mc
+            } else {
+                rtw_rust_tkip_off_securitypriv_tkip_sw_enc_cnt_uc
             };
             let cnt = (psecuritypriv.add(off)) as *mut u64;
             *cnt = cnt.read().wrapping_add(1);
@@ -855,6 +901,207 @@ pub extern "C" fn rtw_wep_decrypt(padapter: *mut WepAdapter, precvframe: *mut U8
         if encrypt == _WEP40_ || encrypt == _WEP104_ {
             kernel_layout::wep_sw_dec_cnt_inc(psecuritypriv as *mut u8, &ra);
         }
+    }
+}
+
+// ----- TKIP frame encrypt (W3-10) -----
+
+fn is_mcast_ra(ra: &[U8; 6]) -> bool {
+    (ra[0] & 0x01) != 0
+}
+
+unsafe fn get_tkip_pn(iv: *const U8) -> (U16, U32) {
+    unsafe {
+        let iv = core::slice::from_raw_parts(iv, 8);
+        let pn_val = (iv[2] as u64)
+            | ((iv[0] as u64) << 8)
+            | ((iv[4] as u64) << 16)
+            | ((iv[5] as u64) << 24)
+            | ((iv[6] as u64) << 32)
+            | ((iv[7] as u64) << 40);
+        let pnl = pn_val as U16;
+        let pnh = (pn_val >> 16) as U32;
+        (pnl, pnh)
+    }
+}
+
+unsafe fn tkip_encrypt_inner(
+    prwskey: *const U8,
+    ta: &[U8; 6],
+    pxmitpriv_frag_len: U32,
+    pattrib: &PktAttrib,
+    buf_addr: *mut U8,
+    hw_hdr_offset: usize,
+) -> U32 {
+    unsafe {
+        if buf_addr.is_null() || prwskey.is_null() {
+            return _FAIL;
+        }
+
+        if pattrib.encrypt != _TKIP_ {
+            return _SUCCESS;
+        }
+
+        let mut tk = [0u8; 16];
+        rtw_memcpy(tk.as_mut_ptr(), prwskey, 16);
+
+        let mut pframe = buf_addr.add(hw_hdr_offset);
+        let mut curfragnum: i32 = 0;
+
+        while curfragnum < pattrib.nr_frags as i32 {
+            let iv = pframe.add(pattrib.hdrlen as usize);
+            let payload = pframe
+                .add(pattrib.iv_len as usize)
+                .add(pattrib.hdrlen as usize);
+
+            let (pnl, pnh) = get_tkip_pn(iv);
+            let mut p1k = [0u16; 5];
+            let mut rc4key = [0u8; 16];
+            phase1_inner(&mut p1k, &tk, ta, pnh);
+            phase2_inner(&mut rc4key, &tk, &p1k, pnl);
+
+            let length = if (curfragnum + 1) == pattrib.nr_frags as i32 {
+                pattrib.last_txcmdsz as i32
+                    - pattrib.hdrlen as i32
+                    - pattrib.iv_len as i32
+                    - pattrib.icv_len as i32
+            } else {
+                pxmitpriv_frag_len as i32
+                    - pattrib.hdrlen as i32
+                    - pattrib.iv_len as i32
+                    - pattrib.icv_len as i32
+            };
+
+            let mut crc = [0u8; 4];
+            let crc_val = cpu_to_le32(getcrc32(payload, length));
+            core::ptr::copy_nonoverlapping(crc_val.to_ne_bytes().as_ptr(), crc.as_mut_ptr(), 4);
+
+            let mut mycontext = arc4context {
+                x: 0,
+                y: 0,
+                state: [0; 256],
+            };
+            arcfour_init(&mut mycontext, rc4key.as_mut_ptr(), 16);
+            arcfour_encrypt(&mut mycontext, payload, payload, length as U32);
+            arcfour_encrypt(
+                &mut mycontext,
+                payload.add(length as usize),
+                crc.as_mut_ptr(),
+                4,
+            );
+
+            if (curfragnum + 1) != pattrib.nr_frags as i32 {
+                pframe = pframe.add(pxmitpriv_frag_len as usize);
+                pframe = rnd4(pframe as usize) as *mut U8;
+            }
+
+            curfragnum += 1;
+        }
+
+        _SUCCESS
+    }
+}
+
+#[cfg(host_security_test)]
+#[no_mangle]
+pub extern "C" fn rtw_tkip_encrypt(padapter: *mut HostAdapter, pxmitframe: *mut U8) -> U32 {
+    if padapter.is_null() || pxmitframe.is_null() {
+        return _FAIL;
+    }
+    unsafe {
+        let xmit = &*(pxmitframe as *const HostXmitFrame);
+        if xmit.buf_addr.is_null() {
+            return _FAIL;
+        }
+        let sec = &(*padapter).securitypriv;
+        let hw = wep_hw_hdr_offset(xmit.pkt_offset);
+        let prwskey = if is_mcast_ra(&xmit.attrib.ra) {
+            sec.dot118021XGrpKey[sec.dot118021XGrpKeyid as usize]
+                .skey
+                .as_ptr()
+        } else {
+            xmit.attrib.dot118021x_UncstKey.skey.as_ptr()
+        };
+        let mut attrib_mirror = PktAttrib {
+            type_: 0,
+            subtype: 0,
+            bswenc: 0,
+            dhcp_pkt: 0,
+            ether_type: 0,
+            seqnum: 0,
+            hw_ssn_sel: 0,
+            pkt_hdrlen: 0,
+            hdrlen: xmit.attrib.hdrlen,
+            pktlen: 0,
+            last_txcmdsz: xmit.attrib.last_txcmdsz,
+            nr_frags: xmit.attrib.nr_frags,
+            encrypt: xmit.attrib.encrypt,
+            bmc_camid: 0,
+            iv_len: xmit.attrib.iv_len,
+            icv_len: xmit.attrib.icv_len,
+            iv: [0; 18],
+            icv: [0; 16],
+            priority: 0,
+            ack_policy: 0,
+            mac_id: 0,
+            vcs_mode: 0,
+            dst: [0; 6],
+            src: [0; 6],
+            ta: xmit.attrib.ta,
+            ra: xmit.attrib.ra,
+        };
+        tkip_encrypt_inner(
+            prwskey,
+            &xmit.attrib.ta,
+            (*padapter).xmitpriv.frag_len,
+            &mut attrib_mirror,
+            xmit.buf_addr,
+            hw,
+        )
+    }
+}
+
+#[cfg(not(host_security_test))]
+#[no_mangle]
+pub extern "C" fn rtw_tkip_encrypt(padapter: *mut WepAdapter, pxmitframe: *mut U8) -> U32 {
+    if padapter.is_null() || pxmitframe.is_null() {
+        return _FAIL;
+    }
+    unsafe {
+        let px = pxmitframe;
+        let buf_addr = kernel_layout::xmit_frame_buf_addr(px);
+        if buf_addr.is_null() {
+            return _FAIL;
+        }
+        let hw = wep_hw_hdr_offset(px);
+        let psecuritypriv = kernel_layout::adapter_securitypriv(padapter);
+        let sec_base = psecuritypriv as *mut u8;
+        let pxmitpriv = kernel_layout::adapter_xmitpriv(padapter);
+        let frag_len = kernel_layout::xmitpriv_frag_len(pxmitpriv);
+        let pattrib = kernel_layout::xmit_frame_attrib(px);
+        let encrypt = (*pattrib).encrypt;
+        if encrypt != _TKIP_ {
+            return _SUCCESS;
+        }
+        let ra = (*pattrib).ra;
+        let prwskey = if is_mcast_ra(&ra) {
+            let kid = kernel_layout::securitypriv_grp_keyid(sec_base) as usize;
+            kernel_layout::securitypriv_grp_key_skey(sec_base, kid)
+        } else {
+            kernel_layout::pkt_attrib_unicast_key_skey(pattrib)
+        };
+        let res = tkip_encrypt_inner(
+            prwskey,
+            &(*pattrib).ta,
+            frag_len,
+            &*pattrib,
+            buf_addr,
+            hw,
+        );
+        if res == _SUCCESS {
+            kernel_layout::tkip_sw_enc_cnt_inc(sec_base, &ra);
+        }
+        res
     }
 }
 

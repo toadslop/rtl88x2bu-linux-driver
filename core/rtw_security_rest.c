@@ -157,6 +157,18 @@ const size_t rtw_rust_wep_off_securitypriv_wep_sw_dec_cnt_mc =
 	offsetof(struct security_priv, wep_sw_dec_cnt_mc);
 const size_t rtw_rust_wep_off_securitypriv_wep_sw_dec_cnt_uc =
 	offsetof(struct security_priv, wep_sw_dec_cnt_uc);
+const size_t rtw_rust_tkip_off_securitypriv_dot118021XGrpKeyid =
+	offsetof(struct security_priv, dot118021XGrpKeyid);
+const size_t rtw_rust_tkip_off_securitypriv_dot118021XGrpKey =
+	offsetof(struct security_priv, dot118021XGrpKey);
+const size_t rtw_rust_tkip_off_pkt_attrib_dot118021x_UncstKey =
+	offsetof(struct pkt_attrib, dot118021x_UncstKey);
+const size_t rtw_rust_tkip_off_securitypriv_tkip_sw_enc_cnt_bc =
+	offsetof(struct security_priv, tkip_sw_enc_cnt_bc);
+const size_t rtw_rust_tkip_off_securitypriv_tkip_sw_enc_cnt_mc =
+	offsetof(struct security_priv, tkip_sw_enc_cnt_mc);
+const size_t rtw_rust_tkip_off_securitypriv_tkip_sw_enc_cnt_uc =
+	offsetof(struct security_priv, tkip_sw_enc_cnt_uc);
 #endif
 
 /* 3		=====TKIP related===== (W3-07a: MIC helpers in rust/rtw_security.rs) */
@@ -172,133 +184,8 @@ extern void rtw_seccalctkipmic(u8 *key, u8 *header, u8 *data, u32 data_len,
 extern void phase1(u16 *p1k, const u8 *tk, const u8 *ta, u32 iv32);
 extern void phase2(u8 *rc4key, const u8 *tk, const u16 *p1k, u16 iv16);
 
-
-/* The hlen isn't include the IV */
-u32	rtw_tkip_encrypt(_adapter *padapter, u8 *pxmitframe)
-{
-	/* exclude ICV */
-	u16	pnl;
-	u32	pnh;
-	u8	rc4key[16];
-	u8   ttkey[16];
-	u8	crc[4];
-	u8   hw_hdr_offset = 0;
-	struct arc4context mycontext;
-	sint			curfragnum, length;
-	u32	prwskeylen;
-
-	u8	*pframe, *payload, *iv, *prwskey;
-	union pn48 dot11txpn;
-	/* struct	sta_info		*stainfo; */
-	struct	pkt_attrib	*pattrib = &((struct xmit_frame *)pxmitframe)->attrib;
-	struct	security_priv	*psecuritypriv = &padapter->securitypriv;
-	struct	xmit_priv		*pxmitpriv = &padapter->xmitpriv;
-	u32	res = _SUCCESS;
-
-	if (((struct xmit_frame *)pxmitframe)->buf_addr == NULL)
-		return _FAIL;
-
-#ifdef CONFIG_USB_TX_AGGREGATION
-	hw_hdr_offset = TXDESC_SIZE +
-		(((struct xmit_frame *)pxmitframe)->pkt_offset * PACKET_OFFSET_SZ);
-#else
-#ifdef CONFIG_TX_EARLY_MODE
-	hw_hdr_offset = TXDESC_OFFSET + EARLY_MODE_INFO_SIZE;
-#else
-	hw_hdr_offset = TXDESC_OFFSET;
-#endif
-#endif
-
-	pframe = ((struct xmit_frame *)pxmitframe)->buf_addr + hw_hdr_offset;
-	/* 4 start to encrypt each fragment */
-	if (pattrib->encrypt == _TKIP_) {
-
-		/*
-				if(pattrib->psta)
-				{
-					stainfo = pattrib->psta;
-				}
-				else
-				{
-					RTW_INFO("%s, call rtw_get_stainfo()\n", __func__);
-					stainfo=rtw_get_stainfo(&padapter->stapriv ,&pattrib->ra[0] );
-				}
-		*/
-		/* if (stainfo!=NULL) */
-		{
-			/*
-						if(!(stainfo->state &WIFI_ASOC_STATE))
-						{
-							RTW_INFO("%s, psta->state(0x%x) != WIFI_ASOC_STATE\n", __func__, stainfo->state);
-							return _FAIL;
-						}
-			*/
-
-			if (IS_MCAST(pattrib->ra))
-				prwskey = psecuritypriv->dot118021XGrpKey[psecuritypriv->dot118021XGrpKeyid].skey;
-			else {
-				/* prwskey=&stainfo->dot118021x_UncstKey.skey[0]; */
-				prwskey = pattrib->dot118021x_UncstKey.skey;
-			}
-
-			prwskeylen = 16;
-
-			for (curfragnum = 0; curfragnum < pattrib->nr_frags; curfragnum++) {
-				iv = pframe + pattrib->hdrlen;
-				payload = pframe + pattrib->iv_len + pattrib->hdrlen;
-
-				GET_TKIP_PN(iv, dot11txpn);
-
-				pnl = (u16)(dot11txpn.val);
-				pnh = (u32)(dot11txpn.val >> 16);
-
-				phase1((u16 *)&ttkey[0], prwskey, &pattrib->ta[0], pnh);
-
-				phase2(&rc4key[0], prwskey, (u16 *)&ttkey[0], pnl);
-
-				if ((curfragnum + 1) == pattrib->nr_frags) {	/* 4 the last fragment */
-					length = pattrib->last_txcmdsz - pattrib->hdrlen - pattrib->iv_len - pattrib->icv_len;
-					*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length)); /* modified by Amy*/
-
-					RTW_CODEQL_SUPPRESS_WEAK_RC4
-					arcfour_init(&mycontext, rc4key, 16);
-					RTW_CODEQL_SUPPRESS_WEAK_RC4
-					arcfour_encrypt(&mycontext, payload, payload, length);
-					RTW_CODEQL_SUPPRESS_WEAK_RC4
-					arcfour_encrypt(&mycontext, payload + length, crc, 4);
-
-				} else {
-					length = pxmitpriv->frag_len - pattrib->hdrlen - pattrib->iv_len - pattrib->icv_len ;
-					*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length)); /* modified by Amy*/
-					RTW_CODEQL_SUPPRESS_WEAK_RC4
-					arcfour_init(&mycontext, rc4key, 16);
-					RTW_CODEQL_SUPPRESS_WEAK_RC4
-					arcfour_encrypt(&mycontext, payload, payload, length);
-					RTW_CODEQL_SUPPRESS_WEAK_RC4
-					arcfour_encrypt(&mycontext, payload + length, crc, 4);
-
-					pframe += pxmitpriv->frag_len;
-					pframe = (u8 *)RND4((SIZE_PTR)(pframe));
-
-				}
-			}
-
-			TKIP_SW_ENC_CNT_INC(psecuritypriv, pattrib->ra);
-		}
-		/*
-				else{
-					RTW_INFO("%s, psta==NUL\n", __func__);
-					res=_FAIL;
-				}
-		*/
-
-	}
-	return res;
-
-}
-
-
-/* The hlen isn't include the IV */
+/* W3-10a: rtw_tkip_encrypt in rust/rtw_security.rs */
+extern u32 rtw_tkip_encrypt(_adapter *padapter, u8 *pxmitframe);
 u32 rtw_tkip_decrypt(_adapter *padapter, u8 *precvframe)
 {
 	/* exclude ICV */
