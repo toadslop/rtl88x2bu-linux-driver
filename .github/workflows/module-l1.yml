@@ -1,0 +1,69 @@
+# T7: L1 symbol/ABI gate on pull requests (pinned Rust kernel).
+# See docs/rust-migration/issues/test-07-ci-l1-symbols.md
+
+name: Module L1 symbols
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'rust/**'
+      - 'Makefile'
+      - 'docs/rust-migration/scripts/**'
+      - 'scripts/ci/**'
+      - '.github/workflows/module-l1.yml'
+  pull_request:
+    paths:
+      - 'rust/**'
+      - 'Makefile'
+      - 'docs/rust-migration/scripts/**'
+      - 'scripts/ci/**'
+      - '.github/workflows/module-l1.yml'
+
+env:
+  KERNEL_TAG: v6.12.9
+  L0_IMAGE: ghcr.io/${{ github.repository_owner }}/rtl88x2bu-l0:v6.12.9
+
+jobs:
+  module-l1:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull published L0 image
+        id: pull
+        continue-on-error: true
+        run: docker pull "${L0_IMAGE}"
+
+      - name: Build L0 image (fallback when ghcr tag is missing)
+        if: steps.pull.outcome == 'failure'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: .github/docker/l0/Dockerfile
+          load: true
+          build-args: |
+            KERNEL_TAG=${{ env.KERNEL_TAG }}
+          tags: rtl88x2bu-l0:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: L1 selftest (check-symbols.sh smoke)
+        run: |
+          if [ "${{ steps.pull.outcome }}" = "success" ]; then
+            IMAGE="${L0_IMAGE}"
+          else
+            IMAGE="rtl88x2bu-l0:ci"
+          fi
+          docker run --rm -v "$PWD:/driver" -w /driver "${IMAGE}" \
+            bash -c 'make KDIR=/opt/linux LLVM=1 rust-check-symbols-selftest'
