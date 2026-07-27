@@ -233,3 +233,194 @@ void host_ccmp_bitwise_xor(u8 *ina, u8 *inb, u8 *out)
 }
 
 #endif /* HOST_CCMP_PRIMITIVE_ORACLE_BUILD */
+
+#if defined(HOST_CCMP_CONSTRUCT_ORACLE_BUILD)
+
+typedef int sint;
+typedef unsigned int uint;
+
+static void construct_mic_iv(
+	u8 *mic_iv,
+	sint qc_exists,
+	sint a4_exists,
+	u8 *mpdu,
+	uint payload_length,
+	u8 *pn_vector,
+	uint frtype)
+{
+	sint i;
+
+	mic_iv[0] = 0x59;
+	if (qc_exists && a4_exists)
+		mic_iv[1] = mpdu[30] & 0x0f;
+	if (qc_exists && !a4_exists)
+		mic_iv[1] = mpdu[24] & 0x0f;
+	if (!qc_exists)
+		mic_iv[1] = 0x00;
+#if defined(CONFIG_IEEE80211W) || defined(CONFIG_RTW_MESH)
+	if (frtype == WIFI_MGT_TYPE)
+		mic_iv[1] |= BIT(4);
+#endif
+	for (i = 2; i < 8; i++)
+		mic_iv[i] = mpdu[i + 8];
+#ifndef CONSISTENT_PN_ORDER
+	for (i = 8; i < 14; i++)
+		mic_iv[i] = pn_vector[13 - i];
+#else
+	for (i = 8; i < 14; i++)
+		mic_iv[i] = pn_vector[i - 8];
+#endif
+	mic_iv[14] = (unsigned char)(payload_length / 256);
+	mic_iv[15] = (unsigned char)(payload_length % 256);
+}
+
+static void construct_mic_header1(
+	u8 *mic_header1,
+	sint header_length,
+	u8 *mpdu,
+	uint frtype)
+{
+	mic_header1[0] = (u8)((header_length - 2) / 256);
+	mic_header1[1] = (u8)((header_length - 2) % 256);
+#if defined(CONFIG_IEEE80211W) || defined(CONFIG_RTW_MESH)
+	if (frtype == WIFI_MGT_TYPE)
+		mic_header1[2] = mpdu[0];
+	else
+#endif
+		mic_header1[2] = mpdu[0] & 0xcf;
+
+	mic_header1[3] = mpdu[1] & 0xc7;
+	mic_header1[4] = mpdu[4];
+	mic_header1[5] = mpdu[5];
+	mic_header1[6] = mpdu[6];
+	mic_header1[7] = mpdu[7];
+	mic_header1[8] = mpdu[8];
+	mic_header1[9] = mpdu[9];
+	mic_header1[10] = mpdu[10];
+	mic_header1[11] = mpdu[11];
+	mic_header1[12] = mpdu[12];
+	mic_header1[13] = mpdu[13];
+	mic_header1[14] = mpdu[14];
+	mic_header1[15] = mpdu[15];
+}
+
+static void construct_mic_header2(
+	u8 *mic_header2,
+	u8 *mpdu,
+	sint a4_exists,
+	sint qc_exists)
+{
+	sint i;
+
+	for (i = 0; i < 16; i++)
+		mic_header2[i] = 0x00;
+
+	mic_header2[0] = mpdu[16];
+	mic_header2[1] = mpdu[17];
+	mic_header2[2] = mpdu[18];
+	mic_header2[3] = mpdu[19];
+	mic_header2[4] = mpdu[20];
+	mic_header2[5] = mpdu[21];
+	mic_header2[6] = 0x00;
+	mic_header2[7] = 0x00;
+
+	if (!qc_exists && a4_exists) {
+		for (i = 0; i < 6; i++)
+			mic_header2[8 + i] = mpdu[24 + i];
+	}
+
+	if (qc_exists && !a4_exists) {
+		mic_header2[8] = mpdu[24] & 0x0f;
+		mic_header2[9] = mpdu[25] & 0x00;
+	}
+
+	if (qc_exists && a4_exists) {
+		for (i = 0; i < 6; i++)
+			mic_header2[8 + i] = mpdu[24 + i];
+
+		mic_header2[14] = mpdu[30] & 0x0f;
+		mic_header2[15] = mpdu[31] & 0x00;
+	}
+}
+
+static void construct_ctr_preload(
+	u8 *ctr_preload,
+	sint a4_exists,
+	sint qc_exists,
+	u8 *mpdu,
+	u8 *pn_vector,
+	sint c,
+	uint frtype)
+{
+	sint i;
+
+	for (i = 0; i < 16; i++)
+		ctr_preload[i] = 0x00;
+
+	ctr_preload[0] = 0x01;
+	if (qc_exists && a4_exists)
+		ctr_preload[1] = mpdu[30] & 0x0f;
+	if (qc_exists && !a4_exists)
+		ctr_preload[1] = mpdu[24] & 0x0f;
+#if defined(CONFIG_IEEE80211W) || defined(CONFIG_RTW_MESH)
+	if (frtype == WIFI_MGT_TYPE)
+		ctr_preload[1] |= BIT(4);
+#endif
+	for (i = 2; i < 8; i++)
+		ctr_preload[i] = mpdu[i + 8];
+#ifndef CONSISTENT_PN_ORDER
+	for (i = 8; i < 14; i++)
+		ctr_preload[i] = pn_vector[13 - i];
+#else
+	for (i = 8; i < 14; i++)
+		ctr_preload[i] = pn_vector[i - 8];
+#endif
+	ctr_preload[14] = (unsigned char)(c / 256);
+	ctr_preload[15] = (unsigned char)(c % 256);
+}
+
+void host_ccmp_construct_mic_iv(
+	u8 *mic_iv,
+	int qc_exists,
+	int a4_exists,
+	u8 *mpdu,
+	unsigned int payload_length,
+	u8 *pn_vector,
+	unsigned int frtype)
+{
+	construct_mic_iv(mic_iv, qc_exists, a4_exists, mpdu, payload_length,
+			 pn_vector, frtype);
+}
+
+void host_ccmp_construct_mic_header1(
+	u8 *mic_header1,
+	int header_length,
+	u8 *mpdu,
+	unsigned int frtype)
+{
+	construct_mic_header1(mic_header1, header_length, mpdu, frtype);
+}
+
+void host_ccmp_construct_mic_header2(
+	u8 *mic_header2,
+	u8 *mpdu,
+	int a4_exists,
+	int qc_exists)
+{
+	construct_mic_header2(mic_header2, mpdu, a4_exists, qc_exists);
+}
+
+void host_ccmp_construct_ctr_preload(
+	u8 *ctr_preload,
+	int a4_exists,
+	int qc_exists,
+	u8 *mpdu,
+	u8 *pn_vector,
+	int c,
+	unsigned int frtype)
+{
+	construct_ctr_preload(ctr_preload, a4_exists, qc_exists, mpdu, pn_vector,
+			      c, frtype);
+}
+
+#endif /* HOST_CCMP_CONSTRUCT_ORACLE_BUILD */

@@ -1,0 +1,43 @@
+{
+  "oracle": "core/rtw_security_rest.c",
+  "vectors": [
+    {
+      "name": "mic_iv_qos_data",
+      "fn": "host_ccmp_construct_mic_iv",
+      "mpdu": "08000000010203040506112233445566aabbccddeeff00003000",
+      "pn": "010203040506",
+      "qc_exists": 1,
+      "a4_exists": 0,
+      "payload_length": 300,
+      "frtype": 8,
+      "expect": "5900112233445566060504030201012c"
+    },
+    {
+      "name": "mic_header1_qos_data",
+      "fn": "host_ccmp_construct_mic_header1",
+      "mpdu": "08000000010203040506112233445566aabbccddeeff00003000",
+      "header_length": 26,
+      "frtype": 8,
+      "expect": "00180800010203040506112233445566"
+    },
+    {
+      "name": "mic_header2_qos_no_a4",
+      "fn": "host_ccmp_construct_mic_header2",
+      "mpdu": "08000000010203040506112233445566aabbccddeeff00003000",
+      "qc_exists": 1,
+      "a4_exists": 0,
+      "expect": "aabbccddeeff00000000000000000000"
+    },
+    {
+      "name": "ctr_preload_qos_ctr2",
+      "fn": "host_ccmp_construct_ctr_preload",
+      "mpdu": "08000000010203040506112233445566aabbccddeeff00003000",
+      "pn": "010203040506",
+      "qc_exists": 1,
+      "a4_exists": 0,
+      "ctr": 2,
+      "frtype": 8,
+      "expect": "01001122334455660605040302010002"
+    }
+  ]
+}

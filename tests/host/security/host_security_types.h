@@ -41,4 +41,7 @@ enum security_type {
 #define BIT(x) (1U << (x))
 #endif
 
+#define WIFI_MGT_TYPE  0
+#define WIFI_DATA_TYPE (BIT(3))
+
 #endif /* HOST_SECURITY_TYPES_H */
