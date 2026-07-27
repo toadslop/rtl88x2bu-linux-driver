@@ -4,9 +4,10 @@ description: >-
   Prepares a pull request for merge into master. Auto-applies on "prepare PR for
   merge", "prepare for merge", "get PR ready to merge", or similar author tasks.
   Validates that stacked-PR ancestors are already merged; retargets stacked PRs to
-  master; rebases on master; resolves conflicts; and addresses review feedback via
-  Cursor's built-in babysit skill. Do NOT use for reviewing PRs (use
-  pr-review-delivery) or for PRs whose stack base is not yet on master.
+  master; rebases on master; resolves conflicts; addresses review feedback via
+  Cursor's built-in babysit skill; and opens a follow-up PR for any unresolved
+  reviewer knits. Do NOT use for reviewing PRs (use pr-review-delivery) or for
+  PRs whose stack base is not yet on master.
 metadata:
   requires-skill: babysit
 ---
@@ -15,8 +16,8 @@ metadata:
 
 Use this skill when the user (or you as the PR author) wants a pull request **ready
 to land on `master`** — not merely "address comments", but the full pre-merge
-prep: stack validation, base retarget, rebase, conflict resolution, and review
-follow-up.
+prep: stack validation, base retarget, rebase, conflict resolution, review
+follow-up, and a follow-up PR for any reviewer knits left open.
 
 **You are the author.** You may edit code, rebase, force-push, and update PR
 metadata (base branch). You are **not** merging the PR unless the user explicitly
@@ -51,6 +52,52 @@ say so explicitly in chat before continuing. Apply its intent manually:
 
 Do **not** skip review follow-up — "prepare for merge" includes clearing blocking
 feedback, not only git hygiene.
+
+### Knit follow-up PR (mandatory when knits remain)
+
+Reviewers in this repo may approve with **nits only** (see `pr-review-delivery`
+**"Approval policy"**). Those nits are intentionally **not** blockers for merge,
+but they still need to be tracked and addressed. When preparing for merge, **open
+a follow-up PR** for any unresolved knit feedback.
+
+**What counts as a knit:**
+
+- Review comments tagged `[nit]` (or equivalent nit severity in the thread).
+- Items called out in a top-level **"Approve — nits only"** summary that were not
+  fixed in the merge PR.
+- Optional polish the reviewer explicitly deferred (style, naming, minor cleanup)
+  with no behavioral impact.
+
+**What is not a knit** (must be fixed on the merge PR via `babysit`, not deferred):
+
+- `blocking`, `important`, or `question` threads.
+- Correctness, safety, ABI, or test-gap issues.
+- Any feedback that caused **request changes** or prevented approval.
+
+**Follow-up workflow:**
+
+1. **Inventory knits** — after `babysit`, list every open knit thread or deferred
+   nit from the latest review. If there are none, skip this section.
+2. **Branch** — from the prepared merge PR head (post-rebase):
+
+   ```bash
+   git checkout <head-branch>
+   git checkout -b cursor/<descriptive-knit-follow-up>-f18e
+   ```
+
+3. **Fix knits** — minimal diffs only; do not expand scope beyond the listed nits.
+4. **Verify** — run applicable gates from `AGENTS.md` for the knit fixes.
+5. **Push and open PR** — push the branch and create a PR targeting `master` via
+   `ManagePullRequest` `create_pr`. In the body:
+   - Link the parent PR (e.g. "Follow-up to #N — addresses reviewer nits").
+   - List each knit addressed (with thread links or short quotes).
+   - Note that it should merge **after** the parent PR lands (or rebase onto
+     `master` once the parent is merged if CI requires a clean base).
+6. **Do not fold knits into the merge PR** when the reviewer approved with nits
+   only — keep the merge PR focused; the follow-up carries the polish.
+
+If knits are ambiguous (nit vs important), treat them as blocking and fix them on
+the merge PR via `babysit` instead of deferring.
 
 ## Stack readiness gate (mandatory — run first)
 
@@ -173,7 +220,13 @@ Run Cursor's built-in **`babysit`** skill on this PR (see **"Prerequisite: run
 Loop until there are no blocking review items and CI is green (or the user
 accepts known flakes).
 
-### 5. Final status report
+### 5. Open knit follow-up PR (when applicable)
+
+After `babysit` clears blocking feedback, run the **"Knit follow-up PR"** workflow
+above if any reviewer knits remain open. This step is part of "ready to merge" —
+do not skip it when nits were left unresolved at approval time.
+
+### 6. Final status report
 
 Reply in chat with:
 
@@ -184,6 +237,7 @@ Reply in chat with:
 | Rebased onto latest `master` | yes / no |
 | Conflicts | none / resolved (brief note) |
 | Review feedback | addressed via `babysit` / remaining items |
+| Reviewer knits | none / listed — follow-up PR link if opened |
 | Ready to merge | yes / no — and why |
 
 **Do not merge** unless the user explicitly asks.
@@ -197,6 +251,7 @@ Reply in chat with:
 | Fix conflicts and review feedback | Run the stack gate after destructive git ops |
 | Stop and report when stack parent is unmerged | Rebase a PR blocked by an open ancestor |
 | Use `babysit` for review/CI follow-up | Post new review findings (reviewer role) |
+| Open a follow-up PR for unresolved reviewer knits | Fold deferred nits into the merge PR |
 
 ## Relationship to other skills
 
