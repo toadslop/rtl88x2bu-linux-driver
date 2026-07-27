@@ -81,23 +81,31 @@ A **stacked PR** targets another feature branch instead of `master`
 must already be integrated into `master`.
 
 1. If `base` is `master` → stack gate **passed**; continue to **Prepare workflow**.
-2. Otherwise the PR is stacked on branch `base`. Fetch and test whether `base` is
-   merged into `master`:
-
-   ```bash
-   git fetch origin master "$base" --prune
-   # Exit 0 = merged; exit 1 = not merged:
-   git merge-base --is-ancestor "origin/$base" origin/master
-   ```
-
-   Also resolve the open PR for `base`, if any:
+2. Otherwise the PR is stacked on branch `base`. Resolve the PR for `base`, if any:
 
    ```bash
    gh pr view "$base" --json number,state,mergedAt,url 2>/dev/null || true
    ```
 
-3. **If `base` is NOT merged into `master`** → **STOP immediately.** Do not change
-   base, rebase, or push. Report clearly, for example:
+3. **Parent PR merged (primary check).** If the PR for `base` has `state: MERGED`
+   (or `mergedAt` is set) → stack gate **passed**. This repo squash-merges PRs,
+   so the branch tip is often **not** a git ancestor of `origin/master` even after
+   merge — do not rely on ancestry alone.
+
+4. **Git ancestry (supplementary).** If there is no merged PR for `base`, fetch and
+   test whether `base` is integrated into `master`:
+
+   ```bash
+   git fetch origin master "$base" --prune
+   # Exit 0 = integrated; exit 1 = not integrated:
+   git merge-base --is-ancestor "origin/$base" origin/master
+   ```
+
+   Use this when the parent landed via a merge commit or branch was fast-forwarded
+   into `master` without a squash-merge PR record.
+
+5. **If neither check passes** → **STOP immediately.** Do not change base, rebase,
+   or push. Report clearly, for example:
 
    > This PR is **not ready** to prepare for merge. It is stacked on
    > `<base>` (PR #N), which is not merged into `master` yet. Merge or land
@@ -105,11 +113,11 @@ must already be integrated into `master`.
 
    Include the blocking PR link/number and what the user should do next.
 
-4. **If `base` IS merged into `master`** → stack gate **passed**. The prepare step
-   will retarget this PR's base from `base` to `master` and rebase onto `master`.
+6. **If either check passes** → stack gate **passed**. The prepare step will
+   retarget this PR's base from `base` to `master` and rebase onto `master`.
 
-Do not retarget or rebase while the direct `baseRefName` branch is not an ancestor
-of `origin/master`.
+Do not retarget or rebase while the direct parent PR is still open and `base` is
+not integrated into `origin/master`.
 
 ### 3. Confirm with the user (when ambiguous)
 
