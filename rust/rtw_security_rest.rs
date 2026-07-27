@@ -19,6 +19,12 @@ use core::ffi::c_int;
 
 type U8 = u8;
 type Sint = i32;
+type U32 = u32;
+
+const WIFI_MGT_TYPE: U32 = 0;
+#[allow(dead_code)]
+const WIFI_DATA_TYPE: U32 = 1 << 3;
+const BIT4: U8 = 1 << 4;
 
 const SBOX_TABLE: [U8; 256] = [
     0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
@@ -206,6 +212,121 @@ fn bitwise_xor(ina: &[U8; 16], inb: &[U8; 16], out: &mut [U8; 16]) {
     xor_128(ina, inb, out);
 }
 
+// ----- CCMP MIC/CTR construct helpers (W3-11) -----
+
+fn construct_mic_iv(
+    mic_iv: &mut [U8; 16],
+    qc_exists: Sint,
+    a4_exists: Sint,
+    mpdu: &[U8],
+    payload_length: U32,
+    pn_vector: &[U8; 6],
+    frtype: U32,
+) {
+    mic_iv[0] = 0x59;
+    if qc_exists != 0 && a4_exists != 0 {
+        mic_iv[1] = mpdu[30] & 0x0f;
+    }
+    if qc_exists != 0 && a4_exists == 0 {
+        mic_iv[1] = mpdu[24] & 0x0f;
+    }
+    if qc_exists == 0 {
+        mic_iv[1] = 0x00;
+    }
+    if frtype == WIFI_MGT_TYPE {
+        mic_iv[1] |= BIT4;
+    }
+    for i in 2..8 {
+        mic_iv[i] = mpdu[i + 8];
+    }
+    for i in 8..14 {
+        mic_iv[i] = pn_vector[(13 - i) as usize];
+    }
+    mic_iv[14] = (payload_length / 256) as U8;
+    mic_iv[15] = (payload_length % 256) as U8;
+}
+
+fn construct_mic_header1(
+    mic_header1: &mut [U8; 16],
+    header_length: Sint,
+    mpdu: &[U8],
+    frtype: U32,
+) {
+    mic_header1[0] = ((header_length - 2) / 256) as U8;
+    mic_header1[1] = ((header_length - 2) % 256) as U8;
+    if frtype == WIFI_MGT_TYPE {
+        mic_header1[2] = mpdu[0];
+    } else {
+        mic_header1[2] = mpdu[0] & 0xcf;
+    }
+    mic_header1[3] = mpdu[1] & 0xc7;
+    for i in 4..16 {
+        mic_header1[i] = mpdu[i];
+    }
+}
+
+fn construct_mic_header2(
+    mic_header2: &mut [U8; 16],
+    mpdu: &[U8],
+    a4_exists: Sint,
+    qc_exists: Sint,
+) {
+    mic_header2.fill(0);
+    mic_header2[0] = mpdu[16];
+    mic_header2[1] = mpdu[17];
+    mic_header2[2] = mpdu[18];
+    mic_header2[3] = mpdu[19];
+    mic_header2[4] = mpdu[20];
+    mic_header2[5] = mpdu[21];
+
+    if qc_exists == 0 && a4_exists != 0 {
+        for i in 0..6 {
+            mic_header2[8 + i] = mpdu[24 + i];
+        }
+    }
+    if qc_exists != 0 && a4_exists == 0 {
+        mic_header2[8] = mpdu[24] & 0x0f;
+        mic_header2[9] = 0x00;
+    }
+    if qc_exists != 0 && a4_exists != 0 {
+        for i in 0..6 {
+            mic_header2[8 + i] = mpdu[24 + i];
+        }
+        mic_header2[14] = mpdu[30] & 0x0f;
+        mic_header2[15] = 0x00;
+    }
+}
+
+fn construct_ctr_preload(
+    ctr_preload: &mut [U8; 16],
+    a4_exists: Sint,
+    qc_exists: Sint,
+    mpdu: &[U8],
+    pn_vector: &[U8; 6],
+    c: Sint,
+    frtype: U32,
+) {
+    ctr_preload.fill(0);
+    ctr_preload[0] = 0x01;
+    if qc_exists != 0 && a4_exists != 0 {
+        ctr_preload[1] = mpdu[30] & 0x0f;
+    }
+    if qc_exists != 0 && a4_exists == 0 {
+        ctr_preload[1] = mpdu[24] & 0x0f;
+    }
+    if frtype == WIFI_MGT_TYPE {
+        ctr_preload[1] |= BIT4;
+    }
+    for i in 2..8 {
+        ctr_preload[i] = mpdu[i + 8];
+    }
+    for i in 8..14 {
+        ctr_preload[i] = pn_vector[(13 - i) as usize];
+    }
+    ctr_preload[14] = ((c / 256) & 0xff) as U8;
+    ctr_preload[15] = ((c % 256) & 0xff) as U8;
+}
+
 // ----- Host L2 exports (W3-11) -----
 
 #[cfg(host_security_rest_test)]
@@ -253,5 +374,98 @@ pub extern "C" fn host_ccmp_bitwise_xor(ina: *mut U8, inb: *mut U8, out: *mut U8
     bitwise_xor(&ina_arr, &inb_arr, &mut result);
     unsafe {
         core::ptr::write_unaligned(out as *mut [U8; 16], result);
+    }
+}
+
+#[cfg(host_security_rest_test)]
+#[no_mangle]
+pub extern "C" fn host_ccmp_construct_mic_iv(
+    mic_iv: *mut U8,
+    qc_exists: c_int,
+    a4_exists: c_int,
+    mpdu: *mut U8,
+    payload_length: U32,
+    pn_vector: *mut U8,
+    frtype: U32,
+) {
+    let mpdu_slice = unsafe { core::slice::from_raw_parts(mpdu, 32) };
+    let pn: [U8; 6] = unsafe { core::ptr::read_unaligned(pn_vector as *const [U8; 6]) };
+    let mut out = [0u8; 16];
+    construct_mic_iv(
+        &mut out,
+        qc_exists as Sint,
+        a4_exists as Sint,
+        mpdu_slice,
+        payload_length,
+        &pn,
+        frtype,
+    );
+    unsafe {
+        core::ptr::write_unaligned(mic_iv as *mut [U8; 16], out);
+    }
+}
+
+#[cfg(host_security_rest_test)]
+#[no_mangle]
+pub extern "C" fn host_ccmp_construct_mic_header1(
+    mic_header1: *mut U8,
+    header_length: c_int,
+    mpdu: *mut U8,
+    frtype: U32,
+) {
+    let mpdu_slice = unsafe { core::slice::from_raw_parts(mpdu, 32) };
+    let mut out = [0u8; 16];
+    construct_mic_header1(&mut out, header_length as Sint, mpdu_slice, frtype);
+    unsafe {
+        core::ptr::write_unaligned(mic_header1 as *mut [U8; 16], out);
+    }
+}
+
+#[cfg(host_security_rest_test)]
+#[no_mangle]
+pub extern "C" fn host_ccmp_construct_mic_header2(
+    mic_header2: *mut U8,
+    mpdu: *mut U8,
+    a4_exists: c_int,
+    qc_exists: c_int,
+) {
+    let mpdu_slice = unsafe { core::slice::from_raw_parts(mpdu, 32) };
+    let mut out = [0u8; 16];
+    construct_mic_header2(
+        &mut out,
+        mpdu_slice,
+        a4_exists as Sint,
+        qc_exists as Sint,
+    );
+    unsafe {
+        core::ptr::write_unaligned(mic_header2 as *mut [U8; 16], out);
+    }
+}
+
+#[cfg(host_security_rest_test)]
+#[no_mangle]
+pub extern "C" fn host_ccmp_construct_ctr_preload(
+    ctr_preload: *mut U8,
+    a4_exists: c_int,
+    qc_exists: c_int,
+    mpdu: *mut U8,
+    pn_vector: *mut U8,
+    c: c_int,
+    frtype: U32,
+) {
+    let mpdu_slice = unsafe { core::slice::from_raw_parts(mpdu, 32) };
+    let pn: [U8; 6] = unsafe { core::ptr::read_unaligned(pn_vector as *const [U8; 6]) };
+    let mut out = [0u8; 16];
+    construct_ctr_preload(
+        &mut out,
+        a4_exists as Sint,
+        qc_exists as Sint,
+        mpdu_slice,
+        &pn,
+        c as Sint,
+        frtype,
+    );
+    unsafe {
+        core::ptr::write_unaligned(ctr_preload as *mut [U8; 16], out);
     }
 }
