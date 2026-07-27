@@ -25,7 +25,7 @@ struct host_security_priv {
 	host_keytype dot11_def_key[6];
 	u32 dot11_def_keylen[6];
 	u32 dot118021XGrpKeyid;
-	host_keytype dot118021XGrpKey[4];
+	host_keytype dot118021XGrpKey[6];
 	u8 binstallGrpkey;
 };
 
