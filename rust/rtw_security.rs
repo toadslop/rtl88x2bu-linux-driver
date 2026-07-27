@@ -534,7 +534,7 @@ mod kernel_layout {
         }
     }
 
-    unsafe fn wep_sw_enc_cnt_inc(psecuritypriv: *mut u8, ra: &[U8; 6]) {
+    pub unsafe fn wep_sw_enc_cnt_inc(psecuritypriv: *mut u8, ra: &[U8; 6]) {
         unsafe {
             let off = if is_broadcast_mac_addr(ra) {
                 rtw_rust_wep_off_securitypriv_wep_sw_enc_cnt_bc
@@ -548,7 +548,7 @@ mod kernel_layout {
         }
     }
 
-    unsafe fn wep_sw_dec_cnt_inc(psecuritypriv: *mut u8, ra: &[U8; 6]) {
+    pub unsafe fn wep_sw_dec_cnt_inc(psecuritypriv: *mut u8, ra: &[U8; 6]) {
         unsafe {
             let off = if is_broadcast_mac_addr(ra) {
                 rtw_rust_wep_off_securitypriv_wep_sw_dec_cnt_bc
