@@ -293,6 +293,26 @@ Rebuild and re-publish when:
 
 PR L0 verification uses [`.github/workflows/module-l0.yml`](../../.github/workflows/module-l0.yml) (T6b).
 
+## CI L1 symbol checks
+
+GitHub Actions L1 runs inside the same L0 container (T7, issue #152). No full `88x2bu.ko` rebuild — only `rust/*.o` via kbuild plus host-`gcc` C oracle objects where the Makefile defines them.
+
+| Item | Value |
+|------|-------|
+| Workflow | [`.github/workflows/module-l1.yml`](../../.github/workflows/module-l1.yml) |
+| Selftest | `make KDIR=/opt/linux LLVM=1 rust-check-symbols-selftest` |
+| Unit aggregates | [`scripts/ci/run-l1-unit-checks.sh`](../../scripts/ci/run-l1-unit-checks.sh) |
+| Diff scope | [`scripts/ci/l1-targets-from-diff.sh`](../../scripts/ci/l1-targets-from-diff.sh) |
+
+### Run locally (inside L0 image)
+
+```bash
+docker run --rm -v "$PWD:/driver" -w /driver rtl88x2bu-l0:v6.12.9 \
+  bash -c 'make KDIR=/opt/linux LLVM=1 rust-check-symbols-selftest && ./scripts/ci/run-l1-unit-checks.sh'
+```
+
+On failure, read the `check-symbols.sh` output and the per-unit allowlist under `docs/rust-migration/scripts/*.allow`. See [`test-plan.md`](test-plan.md#l1--symbol--abi-gate).
+
 ## When to extend this doc
 
 Add a short bullet when a new Wave hits a **recurring** environment failure (bindgen skew, RfL API break on kernel bump, CI image gap). Keep recipes copy-pasteable; link relevant GitHub issue IDs (see [`issues/ISSUE-MAP.md`](issues/ISSUE-MAP.md)).

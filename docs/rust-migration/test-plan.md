@@ -111,7 +111,16 @@ speed; **production L1 on a swap should use a kbuild-produced `OLD.o` from `mast
 make KDIR=/opt/linux LLVM=1 rust-check-symbols-selftest
 ```
 
-**CI status:** automated selftest via [`.github/workflows/module-l1.yml`](../../.github/workflows/module-l1.yml) inside the same L0 container image as the build gate (issue T7, #152).
+**CI status:** automated selftest via [`.github/workflows/module-l1.yml`](../../.github/workflows/module-l1.yml) inside the same L0 container image as the build gate (issue T7, #152). Per-unit aggregate targets run via [`scripts/ci/run-l1-unit-checks.sh`](../../scripts/ci/run-l1-unit-checks.sh); scope is narrowed by [`scripts/ci/l1-targets-from-diff.sh`](../../scripts/ci/l1-targets-from-diff.sh):
+
+| Changed paths | L1 unit target |
+|---------------|----------------|
+| `rust/rtw_chplan.rs`, `core/rtw_chplan.*` | `rust-check-symbols-rtw-chplan` |
+| `rust/rtw_swcrypto.rs`, `core/rtw_swcrypto*.c` | `rust-check-symbols-rtw-swcrypto` |
+| `rust/rtw_ieee80211.rs`, `tests/host/ie/**` | `rust-check-symbols-rtw-ieee80211` |
+| `rust/rtw_security.rs`, `tests/host/security/**` | `rust-check-symbols-rtw-security` |
+| `rust/rtw_wlan_util.rs`, `tests/host/wlan_util/**` | `rust-check-symbols-rtw-wlan-util` |
+| `Makefile`, `check-symbols.sh`, `*.allow`, unmapped `rust/**` | full suite (all five) |
 
 Also required in the PR description:
 

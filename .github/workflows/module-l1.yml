@@ -32,6 +32,26 @@ jobs:
       packages: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Select L1 unit targets from diff
+        id: l1_scope
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin "${{ github.base_ref }}"
+            BASE="origin/${{ github.base_ref }}"
+          else
+            BEFORE="${{ github.event.before }}"
+            if [ -z "${BEFORE}" ] || [ "${BEFORE}" = "0000000000000000000000000000000000000000" ]; then
+              BASE="HEAD~1"
+            else
+              BASE="${BEFORE}"
+            fi
+          fi
+          TARGETS=$(./scripts/ci/l1-targets-from-diff.sh "${BASE}")
+          echo "L1 unit targets: ${TARGETS}"
+          echo "targets=${TARGETS}" >> "${GITHUB_OUTPUT}"
 
       - name: Log in to ghcr.io
         uses: docker/login-action@v3
@@ -58,12 +78,13 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: L1 selftest (check-symbols.sh smoke)
+      - name: L1 symbol checks
         run: |
           if [ "${{ steps.pull.outcome }}" = "success" ]; then
             IMAGE="${L0_IMAGE}"
           else
             IMAGE="rtl88x2bu-l0:ci"
           fi
+          TARGETS="${{ steps.l1_scope.outputs.targets }}"
           docker run --rm -v "$PWD:/driver" -w /driver "${IMAGE}" \
-            bash -c 'make KDIR=/opt/linux LLVM=1 rust-check-symbols-selftest'
+            bash -c "make KDIR=/opt/linux LLVM=1 rust-check-symbols-selftest && ./scripts/ci/run-l1-unit-checks.sh ${TARGETS}"
