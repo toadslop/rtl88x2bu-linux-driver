@@ -33,33 +33,28 @@ for path in "${changed[@]}"; do
 		;;
 	rust/rtw_chplan.rs \
 	| core/rtw_chplan.c \
-	| core/rtw_chplan.h \
-	| docs/rust-migration/scripts/rtw_chplan*.allow)
+	| core/rtw_chplan.h)
 		add_target rust-check-symbols-rtw-chplan
 		;;
 	rust/rtw_swcrypto.rs \
 	| core/rtw_swcrypto.c \
-	| core/rtw_swcrypto_rest.c \
-	| docs/rust-migration/scripts/rtw_swcrypto*.allow)
+	| core/rtw_swcrypto_rest.c)
 		add_target rust-check-symbols-rtw-swcrypto
 		;;
 	rust/rtw_ieee80211.rs \
 	| core/rtw_ieee80211.c \
-	| tests/host/ie/* \
-	| docs/rust-migration/scripts/rtw_ieee80211.allow)
+	| tests/host/ie/*)
 		add_target rust-check-symbols-rtw-ieee80211
 		;;
 	rust/rtw_security.rs \
 	| core/rtw_security.c \
 	| core/rtw_security_rest.c \
-	| tests/host/security/* \
-	| docs/rust-migration/scripts/rtw_security*.allow)
+	| tests/host/security/*)
 		add_target rust-check-symbols-rtw-security
 		;;
 	rust/rtw_wlan_util.rs \
 	| core/rtw_wlan_util.c \
-	| tests/host/wlan_util/* \
-	| docs/rust-migration/scripts/rtw_wlan_util*.allow)
+	| tests/host/wlan_util/*)
 		add_target rust-check-symbols-rtw-wlan-util
 		;;
 	rust/*)

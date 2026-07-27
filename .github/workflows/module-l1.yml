@@ -42,7 +42,12 @@ jobs:
             git fetch origin "${{ github.base_ref }}"
             BASE="origin/${{ github.base_ref }}"
           else
-            BASE="HEAD~1"
+            BEFORE="${{ github.event.before }}"
+            if [ -z "${BEFORE}" ] || [ "${BEFORE}" = "0000000000000000000000000000000000000000" ]; then
+              BASE="HEAD~1"
+            else
+              BASE="${BEFORE}"
+            fi
           fi
           TARGETS=$(./scripts/ci/l1-targets-from-diff.sh "${BASE}")
           echo "L1 unit targets: ${TARGETS}"
