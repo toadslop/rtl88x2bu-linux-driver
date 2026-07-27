@@ -357,10 +357,6 @@ static int run_decrypt_vector(struct vector *v)
 
 static int run_vector(struct vector *v)
 {
-#if defined(RUST_SECURITY_ORACLE)
-	if (v->fn == FN_DECRYPT)
-		return 0;
-#endif
 	switch (v->fn) {
 	case FN_ENCRYPT:
 		return run_encrypt_vector(v);
