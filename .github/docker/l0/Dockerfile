@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 		bc \
 		bison \
 		build-essential \
+		busybox-static \
 		ca-certificates \
 		clang-18 \
 		cpio \
@@ -30,6 +31,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 		llvm-18 \
 		make \
 		pkg-config \
+		qemu-system-x86 \
 	&& rm -rf /var/lib/apt/lists/*
 
 # Kernel LLVM=1 expects unsuffixed llvm-* / ld.lld / clang names.

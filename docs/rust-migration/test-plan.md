@@ -168,6 +168,8 @@ This does **not** prove TX/RX; it catches link errors, missing symbols, and init
 
 **Practical note (W0-02):** `virtme-ng` needs a real PTY and working virtio-serial for `--script-sh`; agents without `/dev/kvm` should use the busybox initramfs + QEMU (TCG) recipe in [`dev-environment.md`](dev-environment.md#reliable-fallback-busybox-initramfs--qemu-tcg).
 
+**CI status:** automated on `master` merges via [`.github/workflows/module-l3.yml`](../../.github/workflows/module-l3.yml) inside the L0 container image (issue T8, #153). Builds `88x2bu.ko`, assembles the busybox initramfs ([`scripts/ci/build-l3-initrd.sh`](../../scripts/ci/build-l3-initrd.sh)), and runs QEMU TCG ([`scripts/ci/run-l3-qemu.sh`](../../scripts/ci/run-l3-qemu.sh)). Expect ~3–10 minutes (TCG). On failure, the workflow uploads `l3-serial.log`.
+
 ## L4 — Hardware milestones (infrequent)
 
 Use [`docs/smoke-test.md`](../smoke-test.md) (added in W0-01) at:

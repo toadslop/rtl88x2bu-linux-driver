@@ -313,6 +313,27 @@ docker run --rm -v "$PWD:/driver" -w /driver rtl88x2bu-l0:v6.12.9 \
 
 On failure, read the `check-symbols.sh` output and the per-unit allowlist under `docs/rust-migration/scripts/*.allow`. See [`test-plan.md`](test-plan.md#l1--symbol--abi-gate).
 
+## CI L3 module load (QEMU)
+
+GitHub Actions L3 runs inside the L0 container after a full module build (T8, issue #153). Uses busybox initramfs + QEMU (TCG) — no KVM required.
+
+| Item | Value |
+|------|-------|
+| Workflow | [`.github/workflows/module-l3.yml`](../../.github/workflows/module-l3.yml) |
+| Trigger | `push` to `master` (path-filtered driver/build inputs) |
+| Initramfs | [`scripts/ci/build-l3-initrd.sh`](../../scripts/ci/build-l3-initrd.sh) |
+| QEMU runner | [`scripts/ci/run-l3-qemu.sh`](../../scripts/ci/run-l3-qemu.sh) |
+| Image deps | `qemu-system-x86`, `busybox-static` in [`.github/docker/l0/Dockerfile`](../../.github/docker/l0/Dockerfile) |
+
+### Run locally (inside L0 image)
+
+```bash
+docker run --rm -v "$PWD:/driver" -w /driver rtl88x2bu-l0:v6.12.9 \
+  bash -c 'make clean && make KDIR=/opt/linux LLVM=1 -j"$(nproc)" && ./scripts/ci/run-l3-qemu.sh --ko 88x2bu.ko'
+```
+
+A clean pass prints `run-l3-qemu: OK` and the serial log contains `=== L3_PASS ===`. See [`test-plan.md`](test-plan.md#l3--module-load-without-device).
+
 ## When to extend this doc
 
 Add a short bullet when a new Wave hits a **recurring** environment failure (bindgen skew, RfL API break on kernel bump, CI image gap). Keep recipes copy-pasteable; link relevant GitHub issue IDs (see [`issues/ISSUE-MAP.md`](issues/ISSUE-MAP.md)).
