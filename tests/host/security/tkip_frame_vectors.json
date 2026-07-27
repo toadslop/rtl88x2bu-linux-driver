@@ -117,6 +117,47 @@
       "header": "080100000000000000000000000000000000000000000000",
       "iv": "a600000000000000",
       "payload": "e12d5c69cf69909186"
+    },
+    {
+      "name": "tkip_decrypt_multicast_no_grpkey",
+      "fn": "rtw_tkip_decrypt",
+      "encrypt": 2,
+      "grp_key_index": 0,
+      "key_index": 0,
+      "binstall_grpkey": 0,
+      "expect_fail": 1,
+      "ta": "aabbccddeeff",
+      "ra": "01005e000001",
+      "unicast_key": "00112233445566778899aabbccddeeff",
+      "group_key": "fedcba9876543210fedcba9876543210",
+      "hdrlen": 24,
+      "iv_len": 8,
+      "icv_len": 4,
+      "frame_len": 39,
+      "header": "080100000000000000000000000000000000000000000000",
+      "iv": "a600000000000001",
+      "payload": "d47622021260f6"
+    },
+    {
+      "name": "tkip_decrypt_unknown_ta",
+      "fn": "rtw_tkip_decrypt",
+      "encrypt": 2,
+      "grp_key_index": 0,
+      "key_index": 0,
+      "binstall_grpkey": 0,
+      "no_stainfo": 1,
+      "expect_fail": 1,
+      "ta": "aabbccddeeff",
+      "ra": "001122334455",
+      "unicast_key": "00112233445566778899aabbccddeeff",
+      "group_key": "00000000000000000000000000000000",
+      "hdrlen": 24,
+      "iv_len": 8,
+      "icv_len": 4,
+      "frame_len": 41,
+      "header": "080100000000000000000000000000000000000000000000",
+      "iv": "a600000000000000",
+      "payload": "e12d5c69cf69909185"
     }
   ]
 }
