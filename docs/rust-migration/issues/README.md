@@ -93,8 +93,8 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 | T4 | #79 | `test-04-host-chplan-harness.md` | done (#59) |
 | T5 | #80 | `test-05-host-security-wlan-harness.md` | done |
 | T6 | #151 | `test-06-ci-l0-build.md` | open |
-| T7 | #152 | `test-07-ci-l1-symbols.md` | open |
-| T8 | #153 | `test-08-ci-l3-qemu.md` | open |
+| T7 | #152 | `test-07-ci-l1-symbols.md` | done |
+| T8 | #153 | `test-08-ci-l3-qemu.md` | in progress (#172–#174) |
 | T9 | #154 | `test-09-merge-gates.md` | open |
 | E12 | #150 | `epic-12-distribution.md` | open (epic) |
 | R1 | #155 | `release-01-github-releases.md` | open |
