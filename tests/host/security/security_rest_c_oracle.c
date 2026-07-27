@@ -424,3 +424,176 @@ void host_ccmp_construct_ctr_preload(
 }
 
 #endif /* HOST_CCMP_CONSTRUCT_ORACLE_BUILD */
+
+#if defined(HOST_CCMP_FRAME_ORACLE_BUILD)
+
+typedef int sint;
+
+#define _SUCCESS 1
+#define WLAN_HDR_A3_LEN 24
+#define WLAN_HDR_A3_QOS_LEN 26
+#define WLAN_HDR_A4_QOS_LEN 32
+
+#define WIFI_DATA_CFACK (BIT(4) | WIFI_DATA_TYPE)
+#define WIFI_DATA_CFPOLL (BIT(5) | WIFI_DATA_TYPE)
+#define WIFI_DATA_CFACKPOLL (BIT(5) | BIT(4) | WIFI_DATA_TYPE)
+
+static inline u16 host_le16_to_cpu(u16 v)
+{
+	return (u16)((v & 0xffU) << 8 | (v >> 8));
+}
+
+static unsigned int host_get_frame_type(u8 *pbuf)
+{
+	return host_le16_to_cpu(*(u16 *)pbuf) & (BIT(3) | BIT(2));
+}
+
+static unsigned int host_get_frame_sub_type(u8 *pbuf)
+{
+	return host_le16_to_cpu(*(u16 *)pbuf) &
+	       (BIT(7) | BIT(6) | BIT(5) | BIT(4) | BIT(3) | BIT(2));
+}
+
+static void host_bitwise_xor(u8 *ina, u8 *inb, u8 *out)
+{
+	sint i;
+
+	for (i = 0; i < 16; i++)
+		out[i] = ina[i] ^ inb[i];
+}
+
+static sint host_aes_cipher(u8 *key, unsigned int hdrlen, u8 *pframe, unsigned int plen)
+{
+	unsigned int qc_exists, a4_exists, i, j, payload_remainder, num_blocks,
+		payload_index;
+	u8 pn_vector[6];
+	u8 mic_iv[16];
+	u8 mic_header1[16];
+	u8 mic_header2[16];
+	u8 ctr_preload[16];
+	u8 chain_buffer[16];
+	u8 aes_out[16];
+	u8 padded_buffer[16];
+	u8 mic[8];
+	unsigned int frtype = host_get_frame_type(pframe);
+	unsigned int frsubtype = host_get_frame_sub_type(pframe);
+
+	frsubtype >>= 4;
+
+	_rtw_memset(mic_iv, 0, 16);
+	_rtw_memset(mic_header1, 0, 16);
+	_rtw_memset(mic_header2, 0, 16);
+	_rtw_memset(ctr_preload, 0, 16);
+	_rtw_memset(chain_buffer, 0, 16);
+	_rtw_memset(aes_out, 0, 16);
+	_rtw_memset(padded_buffer, 0, 16);
+
+	if (hdrlen == WLAN_HDR_A3_LEN || hdrlen == WLAN_HDR_A3_QOS_LEN)
+		a4_exists = 0;
+	else
+		a4_exists = 1;
+
+	if (((frtype | frsubtype) == WIFI_DATA_CFACK) ||
+	    ((frtype | frsubtype) == WIFI_DATA_CFPOLL) ||
+	    ((frtype | frsubtype) == WIFI_DATA_CFACKPOLL)) {
+		qc_exists = 1;
+		if (hdrlen != WLAN_HDR_A3_QOS_LEN && hdrlen != WLAN_HDR_A4_QOS_LEN)
+			hdrlen += 2;
+	} else if (frtype == WIFI_DATA_TYPE &&
+		   (frsubtype == 0x08 || frsubtype == 0x09 || frsubtype == 0x0a ||
+		    frsubtype == 0x0b)) {
+		if (hdrlen != WLAN_HDR_A3_QOS_LEN && hdrlen != WLAN_HDR_A4_QOS_LEN)
+			hdrlen += 2;
+		qc_exists = 1;
+	} else {
+		qc_exists = 0;
+	}
+
+	pn_vector[0] = pframe[hdrlen];
+	pn_vector[1] = pframe[hdrlen + 1];
+	pn_vector[2] = pframe[hdrlen + 4];
+	pn_vector[3] = pframe[hdrlen + 5];
+	pn_vector[4] = pframe[hdrlen + 6];
+	pn_vector[5] = pframe[hdrlen + 7];
+
+	construct_mic_iv(mic_iv, qc_exists, a4_exists, pframe, plen, pn_vector,
+			 frtype);
+	construct_mic_header1(mic_header1, hdrlen, pframe, frtype);
+	construct_mic_header2(mic_header2, pframe, a4_exists, qc_exists);
+
+	payload_remainder = plen % 16;
+	num_blocks = plen / 16;
+	payload_index = hdrlen + 8;
+
+	aes128k128d(key, mic_iv, aes_out);
+	host_bitwise_xor(aes_out, mic_header1, chain_buffer);
+	aes128k128d(key, chain_buffer, aes_out);
+	host_bitwise_xor(aes_out, mic_header2, chain_buffer);
+	aes128k128d(key, chain_buffer, aes_out);
+
+	for (i = 0; i < num_blocks; i++) {
+		host_bitwise_xor(aes_out, &pframe[payload_index], chain_buffer);
+		payload_index += 16;
+		aes128k128d(key, chain_buffer, aes_out);
+	}
+
+	if (payload_remainder > 0) {
+		for (j = 0; j < 16; j++)
+			padded_buffer[j] = 0x00;
+		for (j = 0; j < payload_remainder; j++)
+			padded_buffer[j] = pframe[payload_index++];
+		host_bitwise_xor(aes_out, padded_buffer, chain_buffer);
+		aes128k128d(key, chain_buffer, aes_out);
+	}
+
+	for (j = 0; j < 8; j++)
+		mic[j] = aes_out[j];
+
+	for (j = 0; j < 8; j++)
+		pframe[payload_index + j] = mic[j];
+
+	payload_index = hdrlen + 8;
+	for (i = 0; i < num_blocks; i++) {
+		construct_ctr_preload(ctr_preload, a4_exists, qc_exists, pframe,
+				      pn_vector, i + 1, frtype);
+		aes128k128d(key, ctr_preload, aes_out);
+		host_bitwise_xor(aes_out, &pframe[payload_index], chain_buffer);
+		for (j = 0; j < 16; j++)
+			pframe[payload_index++] = chain_buffer[j];
+	}
+
+	if (payload_remainder > 0) {
+		construct_ctr_preload(ctr_preload, a4_exists, qc_exists, pframe,
+				      pn_vector, num_blocks + 1, frtype);
+		for (j = 0; j < 16; j++)
+			padded_buffer[j] = 0x00;
+		for (j = 0; j < payload_remainder; j++)
+			padded_buffer[j] = pframe[payload_index + j];
+		aes128k128d(key, ctr_preload, aes_out);
+		host_bitwise_xor(aes_out, padded_buffer, chain_buffer);
+		for (j = 0; j < payload_remainder; j++)
+			pframe[payload_index++] = chain_buffer[j];
+	}
+
+	construct_ctr_preload(ctr_preload, a4_exists, qc_exists, pframe, pn_vector,
+			      0, frtype);
+	for (j = 0; j < 16; j++)
+		padded_buffer[j] = 0x00;
+	for (j = 0; j < 8; j++)
+		padded_buffer[j] = pframe[j + hdrlen + 8 + plen];
+
+	aes128k128d(key, ctr_preload, aes_out);
+	host_bitwise_xor(aes_out, padded_buffer, chain_buffer);
+	for (j = 0; j < 8; j++)
+		pframe[payload_index++] = chain_buffer[j];
+
+	return _SUCCESS;
+}
+
+sint host_ccmp_aes_cipher(u8 *key, unsigned int hdrlen, u8 *pframe,
+			  unsigned int plen)
+{
+	return host_aes_cipher(key, hdrlen, pframe, plen);
+}
+
+#endif /* HOST_CCMP_FRAME_ORACLE_BUILD */
