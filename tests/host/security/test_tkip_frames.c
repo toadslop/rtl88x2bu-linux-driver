@@ -102,12 +102,16 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		v->grp_key_index = (u8)val;
 	if (!host_json_parse_int_in(obj, obj_len, "key_index", &val))
 		v->key_index = (u8)val;
-	parse_mac_field(obj, obj_len, "ta", v->ta);
-	parse_mac_field(obj, obj_len, "ra", v->ra);
-	parse_hex_field(obj, obj_len, "unicast_key", v->unicast_key,
-			sizeof(v->unicast_key), &key_len);
-	parse_hex_field(obj, obj_len, "group_key", v->group_key,
-			sizeof(v->group_key), &key_len);
+	if (parse_mac_field(obj, obj_len, "ta", v->ta))
+		return -1;
+	if (parse_mac_field(obj, obj_len, "ra", v->ra))
+		return -1;
+	if (parse_hex_field(obj, obj_len, "unicast_key", v->unicast_key,
+			    sizeof(v->unicast_key), &key_len))
+		return -1;
+	if (parse_hex_field(obj, obj_len, "group_key", v->group_key,
+			    sizeof(v->group_key), &key_len))
+		return -1;
 	if (host_json_parse_int_in(obj, obj_len, "hdrlen", &val))
 		return -1;
 	v->hdrlen = (u16)val;
