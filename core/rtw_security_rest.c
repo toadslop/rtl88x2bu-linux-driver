@@ -115,6 +115,9 @@
 
 #define CRC32_POLY 0x04c11db7
 
+/* Expands to a CodeQL suppression for the following line (legacy WEP/TKIP RC4). */
+#define RTW_CODEQL_SUPPRESS_WEAK_RC4 /* codeql[cpp/weak-cryptographic-algorithm]: Legacy 802.11 WEP/TKIP RC4 (IEEE 802.11-1999/2003); interoperability-only — see .github/codeql/codeql-config.yml. */
+
 struct arc4context {
 	u32 x;
 	u32 y;
@@ -122,7 +125,7 @@ struct arc4context {
 };
 
 
-// codeql[cpp/weak-cryptographic-algorithm]: Legacy 802.11 WEP/TKIP RC4 (IEEE 802.11-1999/2003); interoperability-only — see .github/codeql/codeql-config.yml.
+RTW_CODEQL_SUPPRESS_WEAK_RC4
 static void arcfour_init(struct arc4context	*parc4ctx, u8 *key, u32	key_len)
 {
 	u32	t, u;
@@ -166,7 +169,7 @@ static u32 arcfour_byte(struct arc4context	*parc4ctx)
 }
 
 
-// codeql[cpp/weak-cryptographic-algorithm]: Legacy 802.11 WEP/TKIP RC4 (IEEE 802.11-1999/2003); interoperability-only — see .github/codeql/codeql-config.yml.
+RTW_CODEQL_SUPPRESS_WEAK_RC4
 static void arcfour_encrypt(struct arc4context	*parc4ctx,
 			    u8 *dest,
 			    u8 *src,
@@ -286,15 +289,21 @@ void rtw_wep_encrypt(_adapter *padapter, u8 *pxmitframe)
 
 				*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
 
+				RTW_CODEQL_SUPPRESS_WEAK_RC4
 				arcfour_init(&mycontext, wepkey, 3 + keylength);
+				RTW_CODEQL_SUPPRESS_WEAK_RC4
 				arcfour_encrypt(&mycontext, payload, payload, length);
+				RTW_CODEQL_SUPPRESS_WEAK_RC4
 				arcfour_encrypt(&mycontext, payload + length, crc, 4);
 
 			} else {
 				length = pxmitpriv->frag_len - pattrib->hdrlen - pattrib->iv_len - pattrib->icv_len ;
 				*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length));
+				RTW_CODEQL_SUPPRESS_WEAK_RC4
 				arcfour_init(&mycontext, wepkey, 3 + keylength);
+				RTW_CODEQL_SUPPRESS_WEAK_RC4
 				arcfour_encrypt(&mycontext, payload, payload, length);
+				RTW_CODEQL_SUPPRESS_WEAK_RC4
 				arcfour_encrypt(&mycontext, payload + length, crc, 4);
 
 				pframe += pxmitpriv->frag_len;
@@ -339,7 +348,9 @@ void rtw_wep_decrypt(_adapter  *padapter, u8 *precvframe)
 		payload = pframe + prxattrib->iv_len + prxattrib->hdrlen;
 
 		/* decrypt payload include icv */
+		RTW_CODEQL_SUPPRESS_WEAK_RC4
 		arcfour_init(&mycontext, wepkey, 3 + keylength);
+		RTW_CODEQL_SUPPRESS_WEAK_RC4
 		arcfour_encrypt(&mycontext, payload, payload,  length);
 
 		/* calculate icv and compare the icv */
@@ -769,15 +780,21 @@ u32	rtw_tkip_encrypt(_adapter *padapter, u8 *pxmitframe)
 					length = pattrib->last_txcmdsz - pattrib->hdrlen - pattrib->iv_len - pattrib->icv_len;
 					*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length)); /* modified by Amy*/
 
+					RTW_CODEQL_SUPPRESS_WEAK_RC4
 					arcfour_init(&mycontext, rc4key, 16);
+					RTW_CODEQL_SUPPRESS_WEAK_RC4
 					arcfour_encrypt(&mycontext, payload, payload, length);
+					RTW_CODEQL_SUPPRESS_WEAK_RC4
 					arcfour_encrypt(&mycontext, payload + length, crc, 4);
 
 				} else {
 					length = pxmitpriv->frag_len - pattrib->hdrlen - pattrib->iv_len - pattrib->icv_len ;
 					*((u32 *)crc) = cpu_to_le32(getcrc32(payload, length)); /* modified by Amy*/
+					RTW_CODEQL_SUPPRESS_WEAK_RC4
 					arcfour_init(&mycontext, rc4key, 16);
+					RTW_CODEQL_SUPPRESS_WEAK_RC4
 					arcfour_encrypt(&mycontext, payload, payload, length);
+					RTW_CODEQL_SUPPRESS_WEAK_RC4
 					arcfour_encrypt(&mycontext, payload + length, crc, 4);
 
 					pframe += pxmitpriv->frag_len;
@@ -890,7 +907,9 @@ u32 rtw_tkip_decrypt(_adapter *padapter, u8 *precvframe)
 
 			/* 4 decrypt payload include icv */
 
+			RTW_CODEQL_SUPPRESS_WEAK_RC4
 			arcfour_init(&mycontext, rc4key, 16);
+			RTW_CODEQL_SUPPRESS_WEAK_RC4
 			arcfour_encrypt(&mycontext, payload, payload, length);
 
 			*((u32 *)crc) = le32_to_cpu(getcrc32(payload, length - 4));
