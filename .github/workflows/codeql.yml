@@ -1,4 +1,5 @@
 # Advanced CodeQL setup loads .github/codeql/codeql-config.yml (default setup ignores it).
+# C++ uses source-only extraction (no kernel module build on the GitHub runner).
 # See codeql-config.yml for cpp/weak-cryptographic-algorithm exclusion rationale.
 
 name: CodeQL
@@ -10,17 +11,13 @@ on:
 
 jobs:
   analyze:
-    name: Analyze (${{ matrix.language }})
+    name: Analyze (cpp)
     runs-on: ubuntu-latest
     permissions:
       security-events: write
       packages: read
       actions: read
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [cpp]
 
     steps:
       - uses: actions/checkout@v4
@@ -28,24 +25,20 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: ${{ matrix.language }}
+          languages: cpp
           config-file: ./.github/codeql/codeql-config.yml
-
-      - name: Autobuild
-        if: matrix.language == 'cpp'
-        uses: github/codeql-action/autobuild@v3
 
       - name: Perform CodeQL Analysis
         id: analyze
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:${{ matrix.language }}"
+          category: "/language:cpp"
           output: sarif-results
 
       - name: Dismiss suppressed alerts
         uses: advanced-security/dismiss-alerts@v2
         with:
           sarif-id: ${{ steps.analyze.outputs.sarif-id }}
-          sarif-file: sarif-results/${{ matrix.language }}.sarif
+          sarif-file: sarif-results/cpp.sarif
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
