@@ -95,12 +95,14 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 | T6 | #151 | `test-06-ci-l0-build.md` | done |
 | T7 | #152 | `test-07-ci-l1-symbols.md` | done |
 | T8 | #153 | `test-08-ci-l3-qemu.md` | done (#172–#174) |
-| T9 | #154 | `test-09-merge-gates.md` | in PR (#178) |
+| T9 | #154 | `test-09-merge-gates.md` | done (#178) |
 | E12 | #150 | `epic-12-distribution.md` | open (epic) |
 | R1 | #155 | `release-01-github-releases.md` | open |
-| A2 | #83 | `arch-02-domain-types-chplan.md` | draft |
-| A3 | #84 | `arch-03-domain-types-security.md` | draft |
+| A2 | #83 | `arch-02-domain-types-chplan.md` | done (#162–#164) |
+| A3 | #84 | `arch-03-domain-types-security.md` | done |
 | W3-01 | #112 | `wave3-01-swcrypto-ccmp-gcmp.md` | done (#60) |
 | W3-02 | #113 | `wave3-02-swcrypto-bip-tdls.md` | done (#63) |
-| W3-03 | #114 | `wave3-03-ie-parse.md` | in progress (#61) |
-| W3-04 … W3-09 | #115–#120 | `wave3-*.md` | draft / in progress (Wave 3 tranche 1 — see #68) |
+| W3-03 | #114 | `wave3-03-ie-parse.md` | done (#61) |
+| W3-04 … W3-09 | #115–#120 | `wave3-*.md` | done (#144–#166) |
+| W3-10 | #179 | (filed on GitHub only) | done (#189–#195) |
+| W3-11 … W3-18 | #180–#187 | (filed on GitHub only) | open (Wave 3 tranche 2 — see #68) |

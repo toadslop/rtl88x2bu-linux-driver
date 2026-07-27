@@ -1,0 +1,40 @@
+{
+  "oracle": "core/rtw_security_rest.c",
+  "vectors": [
+    {
+      "name": "aes128k128d_fips197",
+      "fn": "host_ccmp_aes128k128d",
+      "key": "2b7e151628aed2a6abf7158809cf4f3c",
+      "data": "3243f6a8885a308d313198a2e0370734",
+      "expect": "3925841d02dc09fbdc118597196a0b32"
+    },
+    {
+      "name": "aes128k128d_zeros",
+      "fn": "host_ccmp_aes128k128d",
+      "key": "00000000000000000000000000000000",
+      "data": "00000000000000000000000000000000",
+      "expect": "66e94bd4ef8a2c3b884cfa59ca342b2e"
+    },
+    {
+      "name": "xor_128_basic",
+      "fn": "host_ccmp_xor_128",
+      "a": "000102030405060708090a0b0c0d0e0f",
+      "b": "f0e0d0c0b0a090807060504030201000",
+      "expect": "f0e1d2c3b4a5968778695a4b3c2d1e0f"
+    },
+    {
+      "name": "xor_32_basic",
+      "fn": "host_ccmp_xor_32",
+      "a": "01020304",
+      "b": "f0e0d0c0",
+      "expect": "f1e2d3c4"
+    },
+    {
+      "name": "bitwise_xor_basic",
+      "fn": "host_ccmp_bitwise_xor",
+      "a": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "b": "55555555555555555555555555555555",
+      "expect": "ffffffffffffffffffffffffffffffff"
+    }
+  ]
+}
