@@ -3,7 +3,7 @@
  * Host L2 oracle runner for WEP ARC4/CRC32 primitives (T5 / W3-05).
  */
 
-#ifdef HOST_WEP_ORACLE_BUILD
+#if defined(HOST_WEP_ORACLE_BUILD) || defined(RUST_SECURITY_ORACLE)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,9 +33,15 @@ struct vector {
 	u32 expect_crc;
 };
 
+#ifdef RUST_SECURITY_ORACLE
+extern void host_wep_arcfour_crypt(const u8 *key, u32 key_len, const u8 *src,
+				   u8 *dest, u32 len);
+extern u32 host_wep_getcrc32(u8 *buf, int len);
+#else
 void host_wep_arcfour_crypt(const u8 *key, u32 key_len, const u8 *src, u8 *dest,
 			    u32 len);
 u32 host_wep_getcrc32(u8 *buf, int len);
+#endif
 
 static int parse_fn(const char *obj, size_t obj_len, enum wep_fn *out)
 {
@@ -145,4 +151,4 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-#endif /* HOST_WEP_ORACLE_BUILD */
+#endif /* HOST_WEP_ORACLE_BUILD || RUST_SECURITY_ORACLE */

@@ -13,6 +13,7 @@ swcrypto/librust_swcrypto.a
 security/test_security
 security/test_security_rust
 security/test_wep_primitives
+security/test_wep_primitives_rust
 security/test_tkip_mic
 security/librust_security.a
 security/security_type_c_ref.o
