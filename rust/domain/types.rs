@@ -209,7 +209,10 @@ impl NetworkType {
 ///
 /// `try_from` mirrors `rtw_is_channel_plan_valid` bounds and rejects
 /// `CHPLAN_ENT_NOT_DEFINED` slots (0x05–0x1f). Keep `MAP_SIZE` in sync with
-/// `RTW_ChannelPlanMap_size` when the table grows.
+/// `RTW_ChannelPlanMap_size` when the table grows. If the map later adds empty
+/// slots outside that range, W2-17 chplan wiring should delegate to
+/// `rtw_is_channel_plan_valid` at the FFI boundary or add an exhaustive
+/// `0..MAP_SIZE` oracle test so drift is caught automatically.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct ChannelPlanId(u8);
@@ -238,6 +241,10 @@ impl ChannelPlanId {
 }
 
 /// ISO 3166-1 alpha-2 country code (two ASCII letters).
+///
+/// `try_from` rejects non-alpha pairs per A2. C's `rtw_set_country_cmd` still
+/// accepts `"00"` as a worldwide sentinel before country-map lookup; handle that
+/// at the W2-19 command shim, not in this type.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CountryCode([u8; 2]);
 
@@ -289,6 +296,7 @@ impl RegulatoryDomain {
         self as u8
     }
 
+    /// ABI edge: unknown raw values clamp to `Ww`, mirroring C `regd_str()`.
     pub const fn from_raw_unchecked(raw: u8) -> Self {
         match raw {
             0 => Self::None,
