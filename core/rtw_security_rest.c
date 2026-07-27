@@ -201,6 +201,47 @@ extern u32 rtw_tkip_encrypt(_adapter *padapter, u8 *pxmitframe);
 /* W3-10d: rtw_tkip_decrypt in rust/rtw_security.rs */
 extern u32 rtw_tkip_decrypt(_adapter *padapter, u8 *precvframe);
 
+/*
+ * Multicast/broadcast group-key readiness check with rate-limited dmesg
+ * diagnostics (restores legacy C rtw_tkip_decrypt logging).
+ * Returns _TRUE when decrypt should fail (group key not installed).
+ */
+u8 rtw_tkip_decrypt_mcast_gkey_check(_adapter *padapter, u8 *ra, u8 grpkey_installed)
+{
+	static systime start = 0;
+	static u32 no_gkey_bc_cnt = 0;
+	static u32 no_gkey_mc_cnt = 0;
+
+	if (grpkey_installed == _FALSE) {
+		if (start == 0)
+			start = rtw_get_current_time();
+
+		if (is_broadcast_mac_addr(ra))
+			no_gkey_bc_cnt++;
+		else
+			no_gkey_mc_cnt++;
+
+		if (rtw_get_passing_time_ms(start) > 1000) {
+			if (no_gkey_bc_cnt || no_gkey_mc_cnt) {
+				RTW_PRINT(FUNC_ADPT_FMT" no_gkey_bc_cnt:%u, no_gkey_mc_cnt:%u\n",
+					FUNC_ADPT_ARG(padapter), no_gkey_bc_cnt, no_gkey_mc_cnt);
+			}
+			start = rtw_get_current_time();
+			no_gkey_bc_cnt = 0;
+			no_gkey_mc_cnt = 0;
+		}
+		return _TRUE;
+	}
+
+	if (no_gkey_bc_cnt || no_gkey_mc_cnt) {
+		RTW_PRINT(FUNC_ADPT_FMT" gkey installed. no_gkey_bc_cnt:%u, no_gkey_mc_cnt:%u\n",
+			FUNC_ADPT_ARG(padapter), no_gkey_bc_cnt, no_gkey_mc_cnt);
+	}
+	start = 0;
+	no_gkey_bc_cnt = 0;
+	no_gkey_mc_cnt = 0;
+	return _FALSE;
+}
 
 /* 3			=====AES related===== */
 #if (NEW_CRYPTO == 0)

@@ -1175,10 +1175,19 @@ mod tkip_decrypt_ffi {
 
     extern "C" {
         fn rtw_get_stainfo(stapriv: *mut core::ffi::c_void, hwaddr: *const U8) -> *mut core::ffi::c_void;
+        fn rtw_tkip_decrypt_mcast_gkey_check(
+            padapter: *mut WepAdapter,
+            ra: *const U8,
+            grpkey_installed: U8,
+        ) -> U8;
     }
 
     pub unsafe fn lookup(stapriv: *mut u8, ta: &[U8; 6]) -> *mut u8 {
         unsafe { rtw_get_stainfo(stapriv as *mut core::ffi::c_void, ta.as_ptr()) as *mut u8 }
+    }
+
+    pub unsafe fn mcast_gkey_check(padapter: *mut WepAdapter, ra: &[U8; 6], grpkey_installed: U8) -> U8 {
+        unsafe { rtw_tkip_decrypt_mcast_gkey_check(padapter, ra.as_ptr(), grpkey_installed) }
     }
 }
 
@@ -1294,7 +1303,8 @@ pub extern "C" fn rtw_tkip_decrypt(padapter: *mut WepAdapter, precvframe: *mut U
         }
         let stainfo_key = kernel_layout::sta_info_unicast_key_skey(stainfo);
         let prwskey = if is_mcast_ra(&ra) {
-            if kernel_layout::securitypriv_binstall_grpkey(sec_base) == _FALSE {
+            let grpkey_installed = kernel_layout::securitypriv_binstall_grpkey(sec_base);
+            if tkip_decrypt_ffi::mcast_gkey_check(padapter, &ra, grpkey_installed) != _FALSE {
                 return _FAIL;
             }
             kernel_layout::securitypriv_grp_key_skey(sec_base, (*attrib).key_index as usize)
@@ -1310,9 +1320,7 @@ pub extern "C" fn rtw_tkip_decrypt(padapter: *mut WepAdapter, precvframe: *mut U
             kernel_layout::recv_frame_rx_data(precvframe),
             kernel_layout::recv_frame_len(precvframe),
         );
-        if res == _SUCCESS {
-            kernel_layout::tkip_sw_dec_cnt_inc(sec_base, &ra);
-        }
+        kernel_layout::tkip_sw_dec_cnt_inc(sec_base, &ra);
         res
     }
 }
