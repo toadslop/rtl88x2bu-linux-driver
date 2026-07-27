@@ -1,0 +1,49 @@
+{
+  "oracle": "core/rtw_security_rest.c",
+  "vectors": [
+    {
+      "name": "wep40_encrypt_hello",
+      "fn": "rtw_wep_encrypt",
+      "encrypt": 1,
+      "key_index": 0,
+      "key": "0102030405",
+      "hdrlen": 24,
+      "iv_len": 4,
+      "icv_len": 4,
+      "last_txcmdsz": 37,
+      "header": "080100000000000000000000000000000000000000000000",
+      "iv": "aabbcc00",
+      "payload": "48656c6c6f",
+      "expect": "2b6b361e51e646fbc4"
+    },
+    {
+      "name": "wep40_decrypt_hello",
+      "fn": "rtw_wep_decrypt",
+      "encrypt": 1,
+      "key_index": 0,
+      "key": "0102030405",
+      "hdrlen": 24,
+      "iv_len": 4,
+      "frame_len": 37,
+      "header": "080100000000000000000000000000000000000000000000",
+      "iv": "aabbcc00",
+      "payload": "2b6b361e51e646fbc4",
+      "expect": "48656c6c6f"
+    },
+    {
+      "name": "wep104_encrypt_short",
+      "fn": "rtw_wep_encrypt",
+      "encrypt": 5,
+      "key_index": 0,
+      "key": "0102030405060708090a0b0c0d",
+      "hdrlen": 24,
+      "iv_len": 4,
+      "icv_len": 4,
+      "last_txcmdsz": 35,
+      "header": "080200000000000000000000000000000000000000000000",
+      "iv": "11223300",
+      "payload": "414243",
+      "expect": "02c072f0e29603"
+    }
+  ]
+}

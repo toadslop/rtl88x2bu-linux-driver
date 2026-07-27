@@ -262,6 +262,598 @@ pub extern "C" fn host_wep_getcrc32(buf: *mut U8, len: Sint) -> U32 {
     getcrc32(buf, len)
 }
 
+// ----- WEP frame encrypt/decrypt (W3-06) -----
+
+const _WEP40_: U8 = 0x01;
+const _WEP104_: U8 = 0x05;
+
+#[cfg(host_security_test)]
+const WEP_TXDESC_OFFSET: usize = 48 + 8;
+
+#[cfg(not(host_security_test))]
+const WEP_TXDESC_SIZE: usize = 48;
+#[cfg(not(host_security_test))]
+const WEP_PACKET_OFFSET_SZ: usize = 8;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct KeyType {
+    pub skey: [U8; 32],
+}
+
+#[repr(C)]
+pub struct SecurityPriv {
+    pub dot11_auth_algrthm: U32,
+    pub dot11_privacy_algrthm: U32,
+    pub dot11_privacy_key_index: U32,
+    pub dot11_def_key: [KeyType; 6],
+    pub dot11_def_keylen: [U32; 6],
+}
+
+#[repr(C)]
+pub struct PktAttrib {
+    pub type_: U8,
+    pub subtype: U8,
+    pub bswenc: U8,
+    pub dhcp_pkt: U8,
+    pub ether_type: u16,
+    pub seqnum: u16,
+    pub hw_ssn_sel: U8,
+    pub pkt_hdrlen: u16,
+    pub hdrlen: u16,
+    pub pktlen: U32,
+    pub last_txcmdsz: U32,
+    pub nr_frags: U8,
+    pub encrypt: U8,
+    pub bmc_camid: U8,
+    pub iv_len: U8,
+    pub icv_len: U8,
+    pub iv: [U8; 18],
+    pub icv: [U8; 16],
+    pub priority: U8,
+    pub ack_policy: U8,
+    pub mac_id: U8,
+    pub vcs_mode: U8,
+    pub dst: [U8; 6],
+    pub src: [U8; 6],
+    pub ta: [U8; 6],
+    pub ra: [U8; 6],
+}
+
+#[cfg(host_security_test)]
+#[repr(C)]
+pub struct HostRxPktAttrib {
+    pub pkt_len: u16,
+    pub _pad0: [U8; 3],
+    pub hdrlen: U8,
+    pub _pad1: [U8; 12],
+    pub encrypt: U8,
+    pub iv_len: U8,
+    pub _pad2: [U8; 32],
+    pub key_index: U8,
+    pub _pad3: U8,
+    pub ra: [U8; 6],
+}
+
+#[cfg(host_security_test)]
+#[repr(C)]
+pub struct HostRecvFrameHdr {
+    pub attrib: HostRxPktAttrib,
+    pub len: U32,
+    pub rx_data: *mut U8,
+}
+
+#[cfg(host_security_test)]
+#[repr(C)]
+pub struct HostRecvFrame {
+    pub hdr: HostRecvFrameHdr,
+}
+
+#[repr(C)]
+pub struct RxPktAttrib {
+    pub pkt_len: u16,
+    pub physt: U8,
+    pub drvinfo_sz: U8,
+    pub shift_sz: U8,
+    pub hdrlen: U8,
+    pub to_fr_ds: U8,
+    pub amsdu: U8,
+    pub qos: U8,
+    pub priority: U8,
+    pub pw_save: U8,
+    pub mdata: U8,
+    pub seq_num: u16,
+    pub frag_num: U8,
+    pub mfrag: U8,
+    pub order: U8,
+    pub privacy: U8,
+    pub bdecrypted: U8,
+    pub encrypt: U8,
+    pub iv_len: U8,
+    pub icv_len: U8,
+    pub crc_err: U8,
+    pub icv_err: U8,
+    pub dst: [U8; 6],
+    pub src: [U8; 6],
+    pub ta: [U8; 6],
+    pub ra: [U8; 6],
+    pub bssid: [U8; 6],
+    pub ack_policy: U8,
+    pub key_index: U8,
+}
+
+#[repr(C)]
+pub struct RecvFrameHdr {
+    pub attrib: RxPktAttrib,
+    pub len: U32,
+    pub rx_data: *mut U8,
+}
+
+#[cfg(host_security_test)]
+#[repr(C)]
+pub struct HostPktAttrib {
+    pub encrypt: U8,
+    pub nr_frags: U8,
+    pub _pad0: U8,
+    pub hdrlen: u16,
+    pub last_txcmdsz: U32,
+    pub iv_len: U8,
+    pub icv_len: U8,
+    pub _pad1: [U8; 2],
+    pub ra: [U8; 6],
+}
+
+#[cfg(host_security_test)]
+#[repr(C)]
+pub struct HostXmitFrame {
+    pub attrib: HostPktAttrib,
+    pub buf_addr: *mut U8,
+    pub pkt_offset: i8,
+}
+
+#[cfg(host_security_test)]
+#[repr(C)]
+pub struct HostSecurityPriv {
+    pub dot11_privacy_key_index: U32,
+    pub dot11_def_key: [KeyType; 6],
+    pub dot11_def_keylen: [U32; 6],
+}
+
+#[cfg(host_security_test)]
+#[repr(C)]
+pub struct HostXmitPriv {
+    pub frag_len: U32,
+}
+
+#[cfg(host_security_test)]
+#[repr(C)]
+pub struct HostAdapter {
+    pub securitypriv: HostSecurityPriv,
+    pub xmitpriv: HostXmitPriv,
+}
+
+#[cfg(host_security_test)]
+pub type WepAdapter = HostAdapter;
+
+#[cfg(not(host_security_test))]
+pub type WepAdapter = core::ffi::c_void;
+
+#[cfg(not(host_security_test))]
+fn is_multicast_mac_addr(addr: &[U8; 6]) -> bool {
+    (addr[0] & 0x01) == 0x01 && addr[0] != 0xff
+}
+
+#[cfg(not(host_security_test))]
+fn is_broadcast_mac_addr(addr: &[U8; 6]) -> bool {
+    addr[0] == 0xff
+        && addr[1] == 0xff
+        && addr[2] == 0xff
+        && addr[3] == 0xff
+        && addr[4] == 0xff
+        && addr[5] == 0xff
+}
+
+#[cfg(not(host_security_test))]
+mod kernel_layout {
+    use super::*;
+
+    extern "C" {
+        static rtw_rust_wep_off_adapter_securitypriv: usize;
+        static rtw_rust_wep_off_adapter_xmitpriv: usize;
+        static rtw_rust_wep_off_xmitpriv_frag_len: usize;
+        static rtw_rust_wep_off_xmit_frame_attrib: usize;
+        static rtw_rust_wep_off_xmit_frame_buf_addr: usize;
+        static rtw_rust_wep_off_xmit_frame_pkt_offset: usize;
+        static rtw_rust_wep_off_recv_frame_hdr: usize;
+        static rtw_rust_wep_off_recv_frame_hdr_attrib: usize;
+        static rtw_rust_wep_off_recv_frame_hdr_len: usize;
+        static rtw_rust_wep_off_recv_frame_hdr_rx_data: usize;
+        static rtw_rust_wep_off_securitypriv_wep_sw_enc_cnt_bc: usize;
+        static rtw_rust_wep_off_securitypriv_wep_sw_enc_cnt_mc: usize;
+        static rtw_rust_wep_off_securitypriv_wep_sw_enc_cnt_uc: usize;
+        static rtw_rust_wep_off_securitypriv_wep_sw_dec_cnt_bc: usize;
+        static rtw_rust_wep_off_securitypriv_wep_sw_dec_cnt_mc: usize;
+        static rtw_rust_wep_off_securitypriv_wep_sw_dec_cnt_uc: usize;
+    }
+
+    pub unsafe fn adapter_securitypriv(padapter: *mut WepAdapter) -> *mut SecurityPriv {
+        unsafe {
+            (padapter as *mut u8)
+                .add(rtw_rust_wep_off_adapter_securitypriv)
+                as *mut SecurityPriv
+        }
+    }
+
+    pub unsafe fn adapter_xmitpriv(padapter: *mut WepAdapter) -> *mut u8 {
+        unsafe { (padapter as *mut u8).add(rtw_rust_wep_off_adapter_xmitpriv) }
+    }
+
+    pub unsafe fn xmitpriv_frag_len(pxmitpriv: *mut u8) -> U32 {
+        unsafe {
+            *((pxmitpriv.add(rtw_rust_wep_off_xmitpriv_frag_len)) as *const U32)
+        }
+    }
+
+    pub unsafe fn xmit_frame_attrib(pxmitframe: *mut u8) -> *mut PktAttrib {
+        unsafe { (pxmitframe.add(rtw_rust_wep_off_xmit_frame_attrib)) as *mut PktAttrib }
+    }
+
+    pub unsafe fn xmit_frame_buf_addr(pxmitframe: *mut u8) -> *mut U8 {
+        unsafe {
+            *((pxmitframe.add(rtw_rust_wep_off_xmit_frame_buf_addr)) as *const *mut U8)
+        }
+    }
+
+    pub unsafe fn xmit_frame_pkt_offset(pxmitframe: *mut u8) -> i8 {
+        unsafe {
+            *((pxmitframe.add(rtw_rust_wep_off_xmit_frame_pkt_offset)) as *const i8)
+        }
+    }
+
+    pub unsafe fn recv_frame_base(precvframe: *mut u8) -> *mut u8 {
+        unsafe { precvframe.add(rtw_rust_wep_off_recv_frame_hdr) }
+    }
+
+    pub unsafe fn recv_frame_attrib(precvframe: *mut u8) -> *mut RxPktAttrib {
+        unsafe {
+            (recv_frame_base(precvframe).add(rtw_rust_wep_off_recv_frame_hdr_attrib))
+                as *mut RxPktAttrib
+        }
+    }
+
+    pub unsafe fn recv_frame_len(precvframe: *mut u8) -> U32 {
+        unsafe {
+            *((recv_frame_base(precvframe).add(rtw_rust_wep_off_recv_frame_hdr_len)) as *const U32)
+        }
+    }
+
+    pub unsafe fn recv_frame_rx_data(precvframe: *mut u8) -> *mut U8 {
+        unsafe {
+            *((recv_frame_base(precvframe).add(rtw_rust_wep_off_recv_frame_hdr_rx_data))
+                as *const *mut U8)
+        }
+    }
+
+    pub unsafe fn wep_sw_enc_cnt_inc(psecuritypriv: *mut u8, ra: &[U8; 6]) {
+        unsafe {
+            let off = if is_broadcast_mac_addr(ra) {
+                rtw_rust_wep_off_securitypriv_wep_sw_enc_cnt_bc
+            } else if is_multicast_mac_addr(ra) {
+                rtw_rust_wep_off_securitypriv_wep_sw_enc_cnt_mc
+            } else {
+                rtw_rust_wep_off_securitypriv_wep_sw_enc_cnt_uc
+            };
+            let cnt = (psecuritypriv.add(off)) as *mut u64;
+            *cnt = cnt.read().wrapping_add(1);
+        }
+    }
+
+    pub unsafe fn wep_sw_dec_cnt_inc(psecuritypriv: *mut u8, ra: &[U8; 6]) {
+        unsafe {
+            let off = if is_broadcast_mac_addr(ra) {
+                rtw_rust_wep_off_securitypriv_wep_sw_dec_cnt_bc
+            } else if is_multicast_mac_addr(ra) {
+                rtw_rust_wep_off_securitypriv_wep_sw_dec_cnt_mc
+            } else {
+                rtw_rust_wep_off_securitypriv_wep_sw_dec_cnt_uc
+            };
+            let cnt = (psecuritypriv.add(off)) as *mut u64;
+            *cnt = cnt.read().wrapping_add(1);
+        }
+    }
+}
+
+fn cpu_to_le32(v: U32) -> U32 {
+    v.to_le()
+}
+
+fn le32_to_cpu(v: U32) -> U32 {
+    U32::from_le(v)
+}
+
+fn rnd4(ptr: usize) -> usize {
+    ((ptr >> 2) + if ptr & 3 == 0 { 0 } else { 1 }) << 2
+}
+
+unsafe fn rtw_memcpy(dest: *mut u8, src: *const u8, len: usize) {
+    unsafe {
+        core::ptr::copy_nonoverlapping(src, dest, len);
+    }
+}
+
+#[cfg(host_security_test)]
+fn wep_hw_hdr_offset(pkt_offset: i8) -> usize {
+    WEP_TXDESC_OFFSET + (pkt_offset as usize) * 8
+}
+
+#[cfg(not(host_security_test))]
+unsafe fn wep_hw_hdr_offset(pxmitframe: *mut u8) -> usize {
+    unsafe {
+        WEP_TXDESC_SIZE
+            + (kernel_layout::xmit_frame_pkt_offset(pxmitframe) as usize) * WEP_PACKET_OFFSET_SZ
+    }
+}
+
+unsafe fn wep_encrypt_inner(
+    psecuritypriv: *mut SecurityPriv,
+    pxmitpriv_frag_len: U32,
+    pattrib: *mut PktAttrib,
+    buf_addr: *mut U8,
+    hw_hdr_offset: usize,
+) {
+    unsafe {
+    if buf_addr.is_null() {
+        return;
+    }
+
+    let pattrib = &mut *pattrib;
+    let psecuritypriv = &mut *psecuritypriv;
+
+    if pattrib.encrypt != _WEP40_ && pattrib.encrypt != _WEP104_ {
+        return;
+    }
+
+    let keylength =
+        psecuritypriv.dot11_def_keylen[psecuritypriv.dot11_privacy_key_index as usize];
+    let mut pframe = buf_addr.add(hw_hdr_offset);
+    let mut curfragnum: i32 = 0;
+
+    while curfragnum < pattrib.nr_frags as i32 {
+        let iv = pframe.add(pattrib.hdrlen as usize);
+        let mut wepkey = [0u8; 16];
+        rtw_memcpy(wepkey.as_mut_ptr(), iv, 3);
+        rtw_memcpy(
+            wepkey.as_mut_ptr().add(3),
+            psecuritypriv.dot11_def_key[psecuritypriv.dot11_privacy_key_index as usize]
+                .skey
+                .as_ptr(),
+            keylength as usize,
+        );
+        let payload = pframe
+            .add(pattrib.iv_len as usize)
+            .add(pattrib.hdrlen as usize);
+
+        let length = if (curfragnum + 1) == pattrib.nr_frags as i32 {
+            pattrib.last_txcmdsz as i32
+                - pattrib.hdrlen as i32
+                - pattrib.iv_len as i32
+                - pattrib.icv_len as i32
+        } else {
+            pxmitpriv_frag_len as i32
+                - pattrib.hdrlen as i32
+                - pattrib.iv_len as i32
+                - pattrib.icv_len as i32
+        };
+
+        let mut crc = [0u8; 4];
+        let crc_val = cpu_to_le32(getcrc32(payload, length));
+        core::ptr::copy_nonoverlapping(crc_val.to_ne_bytes().as_ptr(), crc.as_mut_ptr(), 4);
+
+        let mut mycontext = arc4context {
+            x: 0,
+            y: 0,
+            state: [0; 256],
+        };
+        arcfour_init(&mut mycontext, wepkey.as_mut_ptr(), 3 + keylength);
+        arcfour_encrypt(&mut mycontext, payload, payload, length as U32);
+        arcfour_encrypt(
+            &mut mycontext,
+            payload.add(length as usize),
+            crc.as_mut_ptr(),
+            4,
+        );
+
+        if (curfragnum + 1) != pattrib.nr_frags as i32 {
+            pframe = pframe.add(pxmitpriv_frag_len as usize);
+            pframe = rnd4(pframe as usize) as *mut U8;
+        }
+
+        curfragnum += 1;
+    }
+    }
+}
+
+#[cfg(host_security_test)]
+#[no_mangle]
+pub extern "C" fn rtw_wep_encrypt(padapter: *mut HostAdapter, pxmitframe: *mut U8) {
+    if padapter.is_null() || pxmitframe.is_null() {
+        return;
+    }
+    unsafe {
+    let xmit = &*(pxmitframe as *const HostXmitFrame);
+    if xmit.buf_addr.is_null() {
+        return;
+    }
+    let hw = wep_hw_hdr_offset(xmit.pkt_offset);
+    let sec = &(*padapter).securitypriv;
+    let mut sec_mirror = SecurityPriv {
+        dot11_auth_algrthm: 0,
+        dot11_privacy_algrthm: 0,
+        dot11_privacy_key_index: sec.dot11_privacy_key_index,
+        dot11_def_key: sec.dot11_def_key,
+        dot11_def_keylen: sec.dot11_def_keylen,
+    };
+    let mut attrib_mirror = PktAttrib {
+        type_: 0,
+        subtype: 0,
+        bswenc: 0,
+        dhcp_pkt: 0,
+        ether_type: 0,
+        seqnum: 0,
+        hw_ssn_sel: 0,
+        pkt_hdrlen: 0,
+        hdrlen: xmit.attrib.hdrlen,
+        pktlen: 0,
+        last_txcmdsz: xmit.attrib.last_txcmdsz,
+        nr_frags: xmit.attrib.nr_frags,
+        encrypt: xmit.attrib.encrypt,
+        bmc_camid: 0,
+        iv_len: xmit.attrib.iv_len,
+        icv_len: xmit.attrib.icv_len,
+        iv: [0; 18],
+        icv: [0; 16],
+        priority: 0,
+        ack_policy: 0,
+        mac_id: 0,
+        vcs_mode: 0,
+        dst: [0; 6],
+        src: [0; 6],
+        ta: [0; 6],
+        ra: xmit.attrib.ra,
+    };
+        wep_encrypt_inner(
+            &mut sec_mirror,
+            (*padapter).xmitpriv.frag_len,
+            &mut attrib_mirror,
+            xmit.buf_addr,
+            hw,
+        );
+    }
+}
+
+#[cfg(not(host_security_test))]
+#[no_mangle]
+pub extern "C" fn rtw_wep_encrypt(padapter: *mut WepAdapter, pxmitframe: *mut U8) {
+    if padapter.is_null() || pxmitframe.is_null() {
+        return;
+    }
+    unsafe {
+        let px = pxmitframe;
+        let buf_addr = kernel_layout::xmit_frame_buf_addr(px);
+        if buf_addr.is_null() {
+            return;
+        }
+        let hw = wep_hw_hdr_offset(px);
+        let psecuritypriv = kernel_layout::adapter_securitypriv(padapter);
+        let pxmitpriv = kernel_layout::adapter_xmitpriv(padapter);
+        let frag_len = kernel_layout::xmitpriv_frag_len(pxmitpriv);
+        let pattrib = kernel_layout::xmit_frame_attrib(px);
+        wep_encrypt_inner(psecuritypriv, frag_len, pattrib, buf_addr, hw);
+        let encrypt = (*pattrib).encrypt;
+        if encrypt == _WEP40_ || encrypt == _WEP104_ {
+            kernel_layout::wep_sw_enc_cnt_inc(psecuritypriv as *mut u8, &(*pattrib).ra);
+        }
+    }
+}
+
+unsafe fn wep_decrypt_inner(
+    psecuritypriv: *mut SecurityPriv,
+    encrypt: U8,
+    hdrlen: U8,
+    iv_len: U8,
+    key_index: U8,
+    pframe: *mut U8,
+    frame_len: U32,
+) {
+    unsafe {
+    let psecuritypriv = &*psecuritypriv;
+
+    if encrypt != _WEP40_ && encrypt != _WEP104_ {
+        return;
+    }
+
+    let iv = pframe.add(hdrlen as usize);
+    let keylength = psecuritypriv.dot11_def_keylen[key_index as usize];
+    let mut wepkey = [0u8; 16];
+    rtw_memcpy(wepkey.as_mut_ptr(), iv, 3);
+    rtw_memcpy(
+        wepkey.as_mut_ptr().add(3),
+        psecuritypriv.dot11_def_key[key_index as usize]
+            .skey
+            .as_ptr(),
+        keylength as usize,
+    );
+    let length = frame_len as i32 - hdrlen as i32 - iv_len as i32;
+    let payload = pframe.add(iv_len as usize).add(hdrlen as usize);
+
+    let mut mycontext = arc4context {
+        x: 0,
+        y: 0,
+        state: [0; 256],
+    };
+    arcfour_init(&mut mycontext, wepkey.as_mut_ptr(), 3 + keylength);
+    arcfour_encrypt(&mut mycontext, payload, payload, length as U32);
+
+    let mut crc = [0u8; 4];
+    let crc_val = le32_to_cpu(getcrc32(payload, length - 4));
+    core::ptr::copy_nonoverlapping(crc_val.to_ne_bytes().as_ptr(), crc.as_mut_ptr(), 4);
+    }
+}
+
+#[cfg(host_security_test)]
+#[no_mangle]
+pub extern "C" fn rtw_wep_decrypt(padapter: *mut HostAdapter, precvframe: *mut U8) {
+    if padapter.is_null() || precvframe.is_null() {
+        return;
+    }
+    unsafe {
+    let recv = &*(precvframe as *const HostRecvFrame);
+    let sec = &(*padapter).securitypriv;
+    let mut sec_mirror = SecurityPriv {
+        dot11_auth_algrthm: 0,
+        dot11_privacy_algrthm: 0,
+        dot11_privacy_key_index: sec.dot11_privacy_key_index,
+        dot11_def_key: sec.dot11_def_key,
+        dot11_def_keylen: sec.dot11_def_keylen,
+    };
+        wep_decrypt_inner(
+            &mut sec_mirror,
+            recv.hdr.attrib.encrypt,
+            recv.hdr.attrib.hdrlen,
+            recv.hdr.attrib.iv_len,
+            recv.hdr.attrib.key_index,
+            recv.hdr.rx_data,
+            recv.hdr.len,
+        );
+    }
+}
+
+#[cfg(not(host_security_test))]
+#[no_mangle]
+pub extern "C" fn rtw_wep_decrypt(padapter: *mut WepAdapter, precvframe: *mut U8) {
+    if padapter.is_null() || precvframe.is_null() {
+        return;
+    }
+    unsafe {
+        let attrib = kernel_layout::recv_frame_attrib(precvframe);
+        let psecuritypriv = kernel_layout::adapter_securitypriv(padapter);
+        let encrypt = (*attrib).encrypt;
+        let ra = (*attrib).ra;
+        wep_decrypt_inner(
+            psecuritypriv,
+            encrypt,
+            (*attrib).hdrlen,
+            (*attrib).iv_len,
+            (*attrib).key_index,
+            kernel_layout::recv_frame_rx_data(precvframe),
+            kernel_layout::recv_frame_len(precvframe),
+        );
+        if encrypt == _WEP40_ || encrypt == _WEP104_ {
+            kernel_layout::wep_sw_dec_cnt_inc(psecuritypriv as *mut u8, &ra);
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
