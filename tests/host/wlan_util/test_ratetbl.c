@@ -40,10 +40,17 @@ struct vector {
 	host_wlan_adapter adapter;
 };
 
+#ifdef RUST_WLAN_UTIL_ORACLE
+extern unsigned char ratetbl_val_2wifirate(unsigned char rate);
+extern int is_basicrate(host_wlan_adapter *padapter, unsigned char rate);
+extern unsigned int ratetbl2rateset(host_wlan_adapter *padapter,
+				      unsigned char *rateset);
+#else
 unsigned char host_ratetbl_val_2wifirate(unsigned char rate);
 int host_is_basicrate(host_wlan_adapter *padapter, unsigned char rate);
 unsigned int host_ratetbl2rateset(host_wlan_adapter *padapter,
 				  unsigned char *rateset);
+#endif
 
 static int parse_fn(const char *obj, size_t obj_len, enum ratetbl_fn *out)
 {
@@ -122,7 +129,13 @@ static int run_vector(struct vector *v)
 {
 	switch (v->fn) {
 	case FN_TBL_TO_WIFI: {
-		unsigned char got = host_ratetbl_val_2wifirate((unsigned char)v->tbl_rate);
+		unsigned char got =
+#ifdef RUST_WLAN_UTIL_ORACLE
+			ratetbl_val_2wifirate
+#else
+			host_ratetbl_val_2wifirate
+#endif
+			((unsigned char)v->tbl_rate);
 
 		if ((int)got != v->expect_rate) {
 			fprintf(stderr, "%s: tbl_to_wifi got=%u expect=%d\n",
@@ -132,7 +145,13 @@ static int run_vector(struct vector *v)
 		break;
 	}
 	case FN_IS_BASIC: {
-		int got = host_is_basicrate(&v->adapter, (unsigned char)v->wifi_rate);
+		int got =
+#ifdef RUST_WLAN_UTIL_ORACLE
+			is_basicrate
+#else
+			host_is_basicrate
+#endif
+			(&v->adapter, (unsigned char)v->wifi_rate);
 
 		if (got != v->expect) {
 			fprintf(stderr, "%s: is_basic got=%d expect=%d\n", v->name,
@@ -146,7 +165,13 @@ static int run_vector(struct vector *v)
 		unsigned int len;
 
 		memset(rateset, 0, sizeof(rateset));
-		len = host_ratetbl2rateset(&v->adapter, rateset);
+		len =
+#ifdef RUST_WLAN_UTIL_ORACLE
+			ratetbl2rateset
+#else
+			host_ratetbl2rateset
+#endif
+			(&v->adapter, rateset);
 		if ((int)len != v->expect_len ||
 		    memcmp(rateset, v->expect_rates, (size_t)v->expect_len) != 0) {
 			fprintf(stderr, "%s: rateset mismatch len=%u\n", v->name, len);
