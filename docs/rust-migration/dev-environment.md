@@ -302,6 +302,7 @@ GitHub Actions L1 runs inside the same L0 container (T7, issue #152). No full `8
 | Workflow | [`.github/workflows/module-l1.yml`](../../.github/workflows/module-l1.yml) |
 | Selftest | `make KDIR=/opt/linux LLVM=1 rust-check-symbols-selftest` |
 | Unit aggregates | [`scripts/ci/run-l1-unit-checks.sh`](../../scripts/ci/run-l1-unit-checks.sh) |
+| Diff scope | [`scripts/ci/l1-targets-from-diff.sh`](../../scripts/ci/l1-targets-from-diff.sh) |
 
 ### Run locally (inside L0 image)
 
