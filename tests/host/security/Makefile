@@ -5,6 +5,7 @@ ROOT     := ../../..
 HOST_INC := ../include
 SHIM     := ../shim/host_security_shim.c
 ORACLE   := security_c_oracle.c
+REST_ORACLE := security_rest_c_oracle.c
 RUST_SECURITY := $(ROOT)/rust/rtw_security.rs
 
 CC      := gcc
@@ -15,11 +16,11 @@ CFLAGS  := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
 HOST_JSON := ../crypto/host_vector_json.c
 
-.PHONY: all test test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust clean
+.PHONY: all test test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust test-ccmp-primitives test-ccmp-primitives-rust clean
 
 all: test
 
-test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames
+test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-ccmp-primitives
 
 test-c: test_security
 	./test_security security_type_vectors.json
@@ -56,6 +57,12 @@ test-tkip-frames: test_tkip_frames
 
 test-tkip-frames-rust: test_tkip_frames_rust
 	./test_tkip_frames_rust tkip_frame_vectors.json
+
+test-ccmp-primitives: test_ccmp_primitives
+	./test_ccmp_primitives ccmp_primitive_vectors.json
+
+test-ccmp-primitives-rust: test_ccmp_primitives_rust
+	./test_ccmp_primitives_rust ccmp_primitive_vectors.json
 
 test_security: test_security.c $(ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_security.c $(ORACLE) $(HOST_JSON)
@@ -103,8 +110,16 @@ test_tkip_frames_rust: test_tkip_frames.c librust_security.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_SECURITY_ORACLE -o $@ test_tkip_frames.c $(HOST_JSON) \
 		librust_security.a
 
+test_ccmp_primitives: test_ccmp_primitives.c $(REST_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DHOST_CCMP_PRIMITIVE_ORACLE_BUILD -o $@ test_ccmp_primitives.c $(REST_ORACLE) $(HOST_JSON)
+
+test_ccmp_primitives_rust: test_ccmp_primitives.c librust_security_rest.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_SECURITY_REST_ORACLE -o $@ test_ccmp_primitives.c $(HOST_JSON) \
+		librust_security_rest.a
+
 clean:
 	rm -f test_security test_security_rust test_wep_primitives test_wep_primitives_rust \
 		test_wep_frames test_wep_frames_rust test_tkip_mic test_tkip_mic_rust \
 		test_tkip_phase test_tkip_phase_rust test_tkip_frames test_tkip_frames_rust \
-		librust_security.a
+		test_ccmp_primitives test_ccmp_primitives_rust \
+		librust_security.a librust_security_rest.a
