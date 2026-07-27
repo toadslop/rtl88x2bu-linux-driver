@@ -352,7 +352,7 @@ fn get_frame_sub_type_le(pframe: &[U8]) -> U32 {
 fn aes_cipher(key: &[U8; 16], hdrlen: u32, pframe: &mut [U8], plen: u32) -> Sint {
     let mut hdrlen = hdrlen;
     let frtype = get_frame_type_le(pframe);
-    let mut frsubtype = get_frame_sub_type_le(pframe) >> 4;
+    let frsubtype = get_frame_sub_type_le(pframe) >> 4;
 
     let mut mic_iv = [0u8; 16];
     let mut mic_header1 = [0u8; 16];
