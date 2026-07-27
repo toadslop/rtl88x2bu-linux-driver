@@ -28,5 +28,7 @@ wlan_util/test_wlan_util
 wlan_util/test_wlan_util_rust
 wlan_util/test_ratetbl
 wlan_util/test_ratetbl_rust
+wlan_util/test_wlan_tail
+wlan_util/test_wlan_tail_rust
 wlan_util/librust_wlan_util.a
 wlan_util/wlan_util_rate_c_ref.o

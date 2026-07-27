@@ -286,3 +286,134 @@ pub extern "C" fn ratetbl2rateset(padapter: *mut U8, rateset: *mut U8) -> u32 {
     }
     len
 }
+
+const WIRELESS_11B: U8 = 1 << 0;
+const WIRELESS_11G: U8 = 1 << 1;
+const WIRELESS_11A: U8 = 1 << 2;
+const WIRELESS_11_24N: U8 = 1 << 3;
+const WIRELESS_11_5N: U8 = 1 << 4;
+const WIRELESS_11AC: U8 = 1 << 6;
+const WIRELESS_11BG: U8 = WIRELESS_11B | WIRELESS_11G;
+
+#[cfg(host_wlan_util_test)]
+#[repr(C)]
+struct HostNetworkAdapter {
+    _head: [u8; 0x844],
+    cur_channel: U8,
+    _mid: [u8; 0xc58 - 0x844 - 1],
+    ht_enable: U8,
+    _ht_pad: [u8; 0xc66 - 0xc58 - 1],
+    vht_enable: U8,
+}
+
+#[cfg(not(host_wlan_util_test))]
+mod network_layout {
+    pub const CUR_CHANNEL_OFFSET: usize = 0x844;
+    pub const HT_ENABLE_OFFSET: usize = 0xc58;
+    pub const VHT_ENABLE_OFFSET: usize = 0xc66;
+}
+
+unsafe fn cur_channel(padapter: *mut U8) -> U8 {
+    #[cfg(host_wlan_util_test)]
+    {
+        (*padapter.cast::<HostNetworkAdapter>()).cur_channel
+    }
+    #[cfg(not(host_wlan_util_test))]
+    {
+        unsafe { *padapter.add(network_layout::CUR_CHANNEL_OFFSET) }
+    }
+}
+
+unsafe fn ht_enable(padapter: *mut U8) -> U8 {
+    #[cfg(host_wlan_util_test)]
+    {
+        (*padapter.cast::<HostNetworkAdapter>()).ht_enable
+    }
+    #[cfg(not(host_wlan_util_test))]
+    {
+        unsafe { *padapter.add(network_layout::HT_ENABLE_OFFSET) }
+    }
+}
+
+unsafe fn vht_enable(padapter: *mut U8) -> U8 {
+    #[cfg(host_wlan_util_test)]
+    {
+        (*padapter.cast::<HostNetworkAdapter>()).vht_enable
+    }
+    #[cfg(not(host_wlan_util_test))]
+    {
+        unsafe { *padapter.add(network_layout::VHT_ENABLE_OFFSET) }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn judge_network_type(
+    padapter: *mut U8,
+    rate: *mut U8,
+    ratelen: i32,
+) -> U8 {
+    if padapter.is_null() {
+        return 0;
+    }
+    let mut network_type: U8 = 0;
+    unsafe {
+        if cur_channel(padapter) > 14 {
+            if vht_enable(padapter) != 0 {
+                network_type = WIRELESS_11AC;
+            } else if ht_enable(padapter) != 0 {
+                network_type = WIRELESS_11_5N;
+            }
+            network_type |= WIRELESS_11A;
+        } else {
+            if ht_enable(padapter) != 0 {
+                network_type = WIRELESS_11_24N;
+            }
+            if !rate.is_null() && ratelen > 0 {
+                if cckratesonly_included(rate, ratelen) == _TRUE {
+                    network_type |= WIRELESS_11B;
+                } else if cckrates_included(rate, ratelen) == _TRUE {
+                    network_type |= WIRELESS_11BG;
+                } else {
+                    network_type |= WIRELESS_11G;
+                }
+            } else {
+                network_type |= WIRELESS_11G;
+            }
+        }
+    }
+    network_type
+}
+
+#[no_mangle]
+pub extern "C" fn get_rate_set(padapter: *mut U8, pbssrate: *mut U8, bssrate_len: *mut i32) {
+    if padapter.is_null() || pbssrate.is_null() || bssrate_len.is_null() {
+        return;
+    }
+    let mut supportedrates = [0u8; NUM_RATES];
+    let len = ratetbl2rateset(padapter, supportedrates.as_mut_ptr()) as i32;
+    unsafe {
+        *bssrate_len = len;
+        core::ptr::copy_nonoverlapping(
+            supportedrates.as_ptr(),
+            pbssrate,
+            len as usize,
+        );
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn set_mcs_rate_by_mask(mcs_set: *mut U8, mask: u32) {
+    if mcs_set.is_null() {
+        return;
+    }
+    let mcs_rate_1r = (mask & 0xff) as U8;
+    let mcs_rate_2r = ((mask >> 8) & 0xff) as U8;
+    let mcs_rate_3r = ((mask >> 16) & 0xff) as U8;
+    let mcs_rate_4r = ((mask >> 24) & 0xff) as U8;
+    unsafe {
+        *mcs_set.add(0) &= mcs_rate_1r;
+        *mcs_set.add(1) &= mcs_rate_2r;
+        *mcs_set.add(2) &= mcs_rate_3r;
+        *mcs_set.add(3) &= mcs_rate_4r;
+    }
+}
