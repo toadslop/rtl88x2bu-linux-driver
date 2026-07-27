@@ -426,7 +426,7 @@ pub struct HostSecurityPriv {
     pub dot11_def_key: [KeyType; 6],
     pub dot11_def_keylen: [U32; 6],
     pub dot118021XGrpKeyid: U32,
-    pub dot118021XGrpKey: [KeyType; 4],
+    pub dot118021XGrpKey: [KeyType; 6],
     pub binstall_grpkey: U8,
 }
 

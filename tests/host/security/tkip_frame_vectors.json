@@ -38,6 +38,27 @@
       "expect": "d47622021260f6"
     },
     {
+      "name": "tkip_encrypt_two_frag_unicast",
+      "fn": "rtw_tkip_encrypt",
+      "encrypt": 2,
+      "grp_key_index": 0,
+      "nr_frags": 2,
+      "frag_len": 48,
+      "payload_frag0_len": 12,
+      "ta": "aabbccddeeff",
+      "ra": "112233445566",
+      "unicast_key": "00112233445566778899aabbccddeeff",
+      "group_key": "00000000000000000000000000000000",
+      "hdrlen": 24,
+      "iv_len": 8,
+      "icv_len": 4,
+      "last_txcmdsz": 44,
+      "header": "080100000000000000000000000000000000000000000000080100000000000000000000000000000000000000000000",
+      "iv": "a600000000000000a600000000000001",
+      "payload": "48656c6c6f212121216672616732706172742121",
+      "expect": "700d389a6598674a541c007f3fdb59a4bf519e30245081a1bd76ac6d"
+    },
+    {
       "name": "tkip_decrypt_unicast_hello",
       "fn": "rtw_tkip_decrypt",
       "encrypt": 2,

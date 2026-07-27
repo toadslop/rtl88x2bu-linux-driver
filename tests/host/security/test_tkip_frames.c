@@ -27,6 +27,9 @@ struct vector {
 	u8 encrypt;
 	u8 grp_key_index;
 	u8 key_index;
+	u8 nr_frags;
+	u32 frag_len;
+	size_t payload_frag0_len;
 	u8 ta[HOST_ETH_ALEN];
 	u8 ra[HOST_ETH_ALEN];
 	u8 unicast_key[16];
@@ -123,6 +126,12 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 	v->iv_len = (u8)val;
 	if (!host_json_parse_int_in(obj, obj_len, "icv_len", &val))
 		v->icv_len = (u8)val;
+	if (!host_json_parse_int_in(obj, obj_len, "nr_frags", &val))
+		v->nr_frags = (u8)val;
+	if (!host_json_parse_int_in(obj, obj_len, "frag_len", &val))
+		v->frag_len = (u32)val;
+	if (!host_json_parse_int_in(obj, obj_len, "payload_frag0_len", &val))
+		v->payload_frag0_len = (size_t)val;
 	if (!host_json_parse_int_in(obj, obj_len, "last_txcmdsz", &val))
 		v->last_txcmdsz = (u32)val;
 	if (!host_json_parse_int_in(obj, obj_len, "frame_len", &val))
@@ -145,7 +154,18 @@ static void setup_adapter_encrypt(struct host_adapter *adapter, struct vector *v
 	adapter->securitypriv.dot118021XGrpKeyid = v->grp_key_index;
 	memcpy(adapter->securitypriv.dot118021XGrpKey[v->grp_key_index].skey,
 	       v->group_key, 16);
-	adapter->xmitpriv.frag_len = 512;
+	if (v->frag_len)
+		adapter->xmitpriv.frag_len = v->frag_len;
+	else
+		adapter->xmitpriv.frag_len = 512;
+}
+
+#define RND4(x) ((((uintptr_t)(x) >> 2) + ((((uintptr_t)(x) & 3) == 0) ? 0 : 1)) << 2)
+
+static u8 *next_frag_start(u8 *pframe, u32 frag_len)
+{
+	pframe += frag_len;
+	return (u8 *)RND4((uintptr_t)pframe);
 }
 
 static int run_encrypt_vector(struct vector *v)
@@ -154,27 +174,73 @@ static int run_encrypt_vector(struct vector *v)
 	struct host_xmit_frame xmit;
 	u8 buf[MAX_BUF];
 	u8 *wire;
-	size_t wire_len;
+	u8 *frag;
+	size_t frag0_payload_len = 0;
+	size_t frag1_payload_len = 0;
+	size_t expect_off = 0;
+	size_t i;
+	u8 nr_frags = v->nr_frags ? v->nr_frags : 1;
 
 	setup_adapter_encrypt(&adapter, v);
 	memset(&xmit, 0, sizeof(xmit));
 	memset(buf, 0, sizeof(buf));
 
 	wire = buf + HOST_TXDESC_OFFSET;
-	if (v->header_len != v->hdrlen || v->iv_len_field != v->iv_len ||
-	    v->payload_len + v->hdrlen + v->iv_len + v->icv_len != v->last_txcmdsz) {
-		fprintf(stderr, "%s: inconsistent encrypt vector lengths\n", v->name);
+	if (v->header_len < (size_t)v->hdrlen * nr_frags ||
+	    v->iv_len_field < (size_t)v->iv_len * nr_frags) {
+		fprintf(stderr, "%s: header/iv too short for %u fragments\n",
+			v->name, nr_frags);
 		return -1;
 	}
 
-	memcpy(wire, v->header, v->header_len);
-	memcpy(wire + v->hdrlen, v->iv, v->iv_len);
-	memcpy(wire + v->hdrlen + v->iv_len, v->payload, v->payload_len);
+	if (nr_frags == 1) {
+		if (v->header_len != v->hdrlen || v->iv_len_field != v->iv_len ||
+		    v->payload_len + v->hdrlen + v->iv_len + v->icv_len !=
+			    v->last_txcmdsz) {
+			fprintf(stderr, "%s: inconsistent encrypt vector lengths\n",
+				v->name);
+			return -1;
+		}
+		frag0_payload_len = v->payload_len;
+	} else if (nr_frags == 2) {
+		u32 frag_len = v->frag_len ? v->frag_len : adapter.xmitpriv.frag_len;
+
+		frag0_payload_len = v->payload_frag0_len;
+		if (!frag0_payload_len)
+			frag0_payload_len = frag_len - v->hdrlen - v->iv_len - v->icv_len;
+		frag1_payload_len = v->payload_len - frag0_payload_len;
+		if (frag0_payload_len + frag1_payload_len != v->payload_len ||
+		    frag0_payload_len + v->hdrlen + v->iv_len + v->icv_len != frag_len ||
+		    frag1_payload_len + v->hdrlen + v->iv_len + v->icv_len !=
+			    v->last_txcmdsz) {
+			fprintf(stderr, "%s: inconsistent two-fragment vector lengths\n",
+				v->name);
+			return -1;
+		}
+	} else {
+		fprintf(stderr, "%s: unsupported nr_frags=%u\n", v->name, nr_frags);
+		return -1;
+	}
+
+	frag = wire;
+	memcpy(frag, v->header, v->hdrlen);
+	memcpy(frag + v->hdrlen, v->iv, v->iv_len);
+	memcpy(frag + v->hdrlen + v->iv_len, v->payload, frag0_payload_len);
+
+	if (nr_frags == 2) {
+		u32 frag_len = v->frag_len ? v->frag_len : adapter.xmitpriv.frag_len;
+
+		frag = next_frag_start(frag, frag_len);
+		memcpy(frag, v->header + v->hdrlen, v->hdrlen);
+		memcpy(frag + v->hdrlen, v->iv + v->iv_len, v->iv_len);
+		memcpy(frag + v->hdrlen + v->iv_len, v->payload + frag0_payload_len,
+		       frag1_payload_len);
+	}
 
 	xmit.buf_addr = buf;
 	xmit.pkt_offset = 0;
 	xmit.attrib.encrypt = v->encrypt;
-	xmit.attrib.nr_frags = 1;
+	xmit.attrib.nr_frags = nr_frags;
 	xmit.attrib.hdrlen = v->hdrlen;
 	xmit.attrib.iv_len = v->iv_len;
 	xmit.attrib.icv_len = v->icv_len;
@@ -188,10 +254,27 @@ static int run_encrypt_vector(struct vector *v)
 		return -1;
 	}
 
-	wire_len = v->payload_len + v->icv_len;
-	if (wire_len != v->expect_len ||
-	    memcmp(wire + v->hdrlen + v->iv_len, v->expect, v->expect_len) != 0) {
-		fprintf(stderr, "%s: encrypt mismatch\n", v->name);
+	frag = wire;
+	for (i = 0; i < nr_frags; i++) {
+		size_t payload_len = (i == 0) ? frag0_payload_len : frag1_payload_len;
+		size_t blob_len = payload_len + v->icv_len;
+		u8 *enc = frag + v->hdrlen + v->iv_len;
+
+		if (expect_off + blob_len > v->expect_len ||
+		    memcmp(enc, v->expect + expect_off, blob_len) != 0) {
+			fprintf(stderr, "%s: encrypt mismatch at fragment %zu\n",
+				v->name, i);
+			return -1;
+		}
+		expect_off += blob_len;
+		if (i + 1 < nr_frags) {
+			u32 frag_len = v->frag_len ? v->frag_len : adapter.xmitpriv.frag_len;
+
+			frag = next_frag_start(frag, frag_len);
+		}
+	}
+	if (expect_off != v->expect_len) {
+		fprintf(stderr, "%s: expect length mismatch\n", v->name);
 		return -1;
 	}
 	return 0;
