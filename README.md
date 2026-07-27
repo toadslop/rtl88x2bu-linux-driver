@@ -75,10 +75,20 @@ make -C tests/host/crypto test
 
 ## Contributing
 
+See [`docs/contributing.md`](docs/contributing.md) for the full workflow, verification gates, and CI check names.
+
 1. Read [`docs/rust-migration.md`](docs/rust-migration.md) and [`docs/rust-migration/architecture.md`](docs/rust-migration/architecture.md).
 2. **Characterize C behavior → freeze tests → port** (do not port first and add tests later).
 3. Keep PRs to one coherent chunk (~200 LOC of meaningful change).
 4. Use domain types at Rust APIs; confine `unsafe` and raw pointers to ABI/OS shims.
+
+New pull requests auto-load the verification checklist from [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md).
+
+When branch protection is enabled on `master`, these CI checks should be required for translation PRs:
+
+- `Host L2 tests / host-l2`
+- `Module L0 build / module-l0`
+- `Module L1 symbols / module-l1`
 
 Work items are tracked on [GitHub Issues](https://github.com/toadslop/rtl88x2bu-linux-driver/issues); draft specs and the ID map live in [`docs/rust-migration/issues/`](docs/rust-migration/issues/README.md).
 

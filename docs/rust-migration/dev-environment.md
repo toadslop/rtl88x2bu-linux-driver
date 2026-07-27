@@ -334,6 +334,47 @@ docker run --rm -v "$PWD:/driver" -w /driver rtl88x2bu-l0:v6.12.9 \
 
 A clean pass prints `run-l3-qemu: OK` and the serial log contains `=== L3_PASS ===`. See [`test-plan.md`](test-plan.md#l3--module-load-without-device).
 
+## Branch protection
+
+CI workflows exist, but merges stay unblocked until a **repo admin** enables branch protection on `master`. This section lists the exact check names to require (issue T9, #154).
+
+### Settings (repo admin)
+
+1. GitHub → **Settings** → **Branches** → **Add branch protection rule** (or edit existing rule for `master`).
+2. Enable **Require a pull request before merging**.
+3. Enable **Require status checks to pass before merging**.
+4. Search and select these checks (workflow name / job id):
+
+| Check name | When it runs |
+|------------|--------------|
+| `Host L2 tests / host-l2` | PRs touching `rust/**`, `core/**`, `tests/host/**`, etc. |
+| `Module L0 build / module-l0` | PRs touching driver/build inputs (`core/`, `hal/`, `Makefile`, …) |
+| `Module L1 symbols / module-l1` | PRs touching `rust/**`, `Makefile`, symbol scripts |
+
+5. **Do not require** `Module L3 load / module-l3` on pull requests — that workflow runs on `push` to `master` only (post-merge health gate).
+6. **Do not require** `Publish L0 CI image / build-and-push` — it runs only when Docker or kernel-pin files change.
+7. **CodeQL** (if enabled via GitHub Advanced Security) is optional; it is not an in-repo required workflow.
+
+Optional team preferences: dismiss stale pull request approvals, require linear history.
+
+### Path filters and required checks
+
+Workflow-level `paths:` filters mean a PR that does not touch matching paths never triggers the workflow. If that check is **required** in branch protection, it stays **Waiting for status to be reported** and merge is blocked — this is not the same as a job that runs and is skipped ([GitHub troubleshooting docs](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/troubleshooting-required-status-checks)).
+
+**Mitigations until workflows are refactored:**
+
+1. Refactor workflows to always trigger on `pull_request`, with job-level `if:` (e.g. `dorny/paths-filter`) so out-of-scope jobs report Success.
+2. Use repository rulesets with path-aware requirements if available on your plan.
+3. For docs-only PRs, use an admin bypass or do not require L0/L1/L2 until (1) lands.
+
+This T9 PR is docs-only and would hit the blocked-merge case once the three PR checks above are required without a bypass.
+
+### Fork pull requests
+
+Fork PRs may fail to pull the published L0 image from ghcr.io; workflows fall back to building the image inline (see [CI L0 image](#ci-l0-image) above). Ensure the `rtl88x2bu-l0` package is **public** in GitHub Packages so fork CI can pull it without rebuilding.
+
+Contributor overview: [`docs/contributing.md`](../contributing.md).
+
 ## When to extend this doc
 
 Add a short bullet when a new Wave hits a **recurring** environment failure (bindgen skew, RfL API break on kernel bump, CI image gap). Keep recipes copy-pasteable; link relevant GitHub issue IDs (see [`issues/ISSUE-MAP.md`](issues/ISSUE-MAP.md)).
