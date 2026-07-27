@@ -245,6 +245,52 @@ timeout 120 qemu-system-x86_64 -cpu qemu64 -m 1G -nographic \
 5. L3: same `bzImage` as `$KDIR`; do not `insmod` on the cloud/host kernel unless vermagic matches.
 6. Agent/CI without KVM: use the busybox+QEMU recipe, not virtme `--script-sh`, until virtio-serial is proven.
 
+## CI L0 image
+
+GitHub Actions L0 builds use a pre-built container with the pinned kernel at `/opt/linux` and the same toolchain as above (T6, issue #151).
+
+| Item | Value |
+|------|-------|
+| Kernel pin | `v6.12.9` (`CONFIG_RUST=y`, `LLVM=1`) |
+| Image tags | `ghcr.io/<owner>/rtl88x2bu-l0:v6.12.9`, `:latest` |
+| Publish workflow | [`.github/workflows/publish-l0-image.yml`](../../.github/workflows/publish-l0-image.yml) |
+| Dockerfile | [`.github/docker/l0/Dockerfile`](../../.github/docker/l0/Dockerfile) |
+
+### Build locally
+
+From the repo root (expect a long first build — full kernel compile):
+
+```bash
+docker build -f .github/docker/l0/Dockerfile -t rtl88x2bu-l0:v6.12.9 .
+```
+
+Smoke the driver inside the image:
+
+```bash
+docker run --rm -v "$PWD:/driver" -w /driver rtl88x2bu-l0:v6.12.9 \
+  bash -c 'make clean && make KDIR=/opt/linux LLVM=1 -j"$(nproc)"'
+```
+
+### Pull from ghcr.io
+
+After the publish workflow runs on `master`:
+
+```bash
+docker pull ghcr.io/<owner>/rtl88x2bu-l0:v6.12.9
+```
+
+Replace `<owner>` with the GitHub org or user that owns the repo (e.g. `toadslop`).
+
+### When to rebuild the image
+
+Rebuild and re-publish when:
+
+- The kernel pin changes (bump `KERNEL_TAG` in the Dockerfile, `build-pinned-kernel.sh`, and workflow env)
+- Minimum `rustc` / `bindgen` versions change for that kernel
+- Host packages required for `make LLVM=1` change materially
+
+PR L0 verification uses [`.github/workflows/module-l0.yml`](../../.github/workflows/module-l0.yml) (T6b).
+
 ## When to extend this doc
 
 Add a short bullet when a new Wave hits a **recurring** environment failure (bindgen skew, RfL API break on kernel bump, CI image gap). Keep recipes copy-pasteable; link relevant GitHub issue IDs (see [`issues/ISSUE-MAP.md`](issues/ISSUE-MAP.md)).
