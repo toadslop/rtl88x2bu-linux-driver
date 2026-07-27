@@ -270,6 +270,7 @@ const _TKIP_: U8 = 0x02;
 
 const _SUCCESS: U32 = 0;
 const _FAIL: U32 = 1;
+const _FALSE: U8 = 0;
 
 #[cfg(host_security_test)]
 const WEP_TXDESC_OFFSET: usize = 48 + 8;
@@ -505,6 +506,12 @@ mod kernel_layout {
         static rtw_rust_tkip_off_securitypriv_tkip_sw_enc_cnt_bc: usize;
         static rtw_rust_tkip_off_securitypriv_tkip_sw_enc_cnt_mc: usize;
         static rtw_rust_tkip_off_securitypriv_tkip_sw_enc_cnt_uc: usize;
+        static rtw_rust_tkip_off_securitypriv_binstallGrpkey: usize;
+        static rtw_rust_tkip_off_securitypriv_tkip_sw_dec_cnt_bc: usize;
+        static rtw_rust_tkip_off_securitypriv_tkip_sw_dec_cnt_mc: usize;
+        static rtw_rust_tkip_off_securitypriv_tkip_sw_dec_cnt_uc: usize;
+        static rtw_rust_tkip_off_adapter_stapriv: usize;
+        static rtw_rust_tkip_off_sta_info_dot118021x_UncstKey: usize;
     }
 
     pub unsafe fn adapter_securitypriv(padapter: *mut WepAdapter) -> *mut SecurityPriv {
@@ -623,6 +630,36 @@ mod kernel_layout {
                 rtw_rust_tkip_off_securitypriv_tkip_sw_enc_cnt_mc
             } else {
                 rtw_rust_tkip_off_securitypriv_tkip_sw_enc_cnt_uc
+            };
+            let cnt = (psecuritypriv.add(off)) as *mut u64;
+            *cnt = cnt.read().wrapping_add(1);
+        }
+    }
+
+    pub unsafe fn securitypriv_binstall_grpkey(psecuritypriv: *mut u8) -> U8 {
+        unsafe {
+            *((psecuritypriv.add(rtw_rust_tkip_off_securitypriv_binstallGrpkey)) as *const U8)
+        }
+    }
+
+    pub unsafe fn adapter_stapriv(padapter: *mut WepAdapter) -> *mut u8 {
+        unsafe { (padapter as *mut u8).add(rtw_rust_tkip_off_adapter_stapriv) }
+    }
+
+    pub unsafe fn sta_info_unicast_key_skey(stainfo: *mut u8) -> *mut U8 {
+        unsafe {
+            (stainfo.add(rtw_rust_tkip_off_sta_info_dot118021x_UncstKey)) as *mut U8
+        }
+    }
+
+    pub unsafe fn tkip_sw_dec_cnt_inc(psecuritypriv: *mut u8, ra: &[U8; 6]) {
+        unsafe {
+            let off = if is_broadcast_mac_addr(ra) {
+                rtw_rust_tkip_off_securitypriv_tkip_sw_dec_cnt_bc
+            } else if is_multicast_mac_addr(ra) {
+                rtw_rust_tkip_off_securitypriv_tkip_sw_dec_cnt_mc
+            } else {
+                rtw_rust_tkip_off_securitypriv_tkip_sw_dec_cnt_uc
             };
             let cnt = (psecuritypriv.add(off)) as *mut u64;
             *cnt = cnt.read().wrapping_add(1);
@@ -1117,6 +1154,164 @@ pub extern "C" fn rtw_tkip_encrypt(padapter: *mut WepAdapter, pxmitframe: *mut U
         );
         if res == _SUCCESS {
             kernel_layout::tkip_sw_enc_cnt_inc(sec_base, &ra);
+        }
+        res
+    }
+}
+
+#[cfg(host_security_test)]
+unsafe fn host_get_stainfo<'a>(stapriv: &'a HostStapriv, ta: &[U8; 6]) -> Option<&'a HostStaInfo> {
+    for sta in &stapriv.stas {
+        if sta.used != 0 && sta.ta == *ta {
+            return Some(sta);
+        }
+    }
+    None
+}
+
+#[cfg(not(host_security_test))]
+mod tkip_decrypt_ffi {
+    use super::*;
+
+    extern "C" {
+        fn rtw_get_stainfo(stapriv: *mut core::ffi::c_void, hwaddr: *const U8) -> *mut core::ffi::c_void;
+    }
+
+    pub unsafe fn lookup(stapriv: *mut u8, ta: &[U8; 6]) -> *mut u8 {
+        unsafe { rtw_get_stainfo(stapriv as *mut core::ffi::c_void, ta.as_ptr()) as *mut u8 }
+    }
+}
+
+unsafe fn tkip_decrypt_inner(
+    prwskey: *const U8,
+    ta: &[U8; 6],
+    encrypt: U8,
+    hdrlen: U8,
+    iv_len: U8,
+    pframe: *mut U8,
+    frame_len: U32,
+) -> U32 {
+    unsafe {
+        if encrypt != _TKIP_ {
+            return _SUCCESS;
+        }
+        if prwskey.is_null() {
+            return _FAIL;
+        }
+
+        let mut tk = [0u8; 16];
+        rtw_memcpy(tk.as_mut_ptr(), prwskey, 16);
+
+        let iv = pframe.add(hdrlen as usize);
+        let payload = pframe.add(iv_len as usize).add(hdrlen as usize);
+        let length = frame_len as i32 - hdrlen as i32 - iv_len as i32;
+
+        let (pnl, pnh) = get_tkip_pn(iv);
+        let mut p1k = [0u16; 5];
+        let mut rc4key = [0u8; 16];
+        phase1_inner(&mut p1k, &tk, ta, pnh);
+        phase2_inner(&mut rc4key, &tk, &p1k, pnl);
+
+        let mut mycontext = arc4context {
+            x: 0,
+            y: 0,
+            state: [0; 256],
+        };
+        arcfour_init(&mut mycontext, rc4key.as_mut_ptr(), 16);
+        arcfour_encrypt(&mut mycontext, payload, payload, length as U32);
+
+        let mut crc = [0u8; 4];
+        let crc_val = le32_to_cpu(getcrc32(payload, length - 4));
+        core::ptr::copy_nonoverlapping(crc_val.to_ne_bytes().as_ptr(), crc.as_mut_ptr(), 4);
+
+        if crc[3] != *payload.add((length - 1) as usize)
+            || crc[2] != *payload.add((length - 2) as usize)
+            || crc[1] != *payload.add((length - 3) as usize)
+            || crc[0] != *payload.add((length - 4) as usize)
+        {
+            return _FAIL;
+        }
+
+        _SUCCESS
+    }
+}
+
+#[cfg(host_security_test)]
+#[no_mangle]
+pub extern "C" fn rtw_tkip_decrypt(padapter: *mut HostAdapter, precvframe: *mut U8) -> U32 {
+    if padapter.is_null() || precvframe.is_null() {
+        return _FAIL;
+    }
+    unsafe {
+        let recv = &*(precvframe as *const HostRecvFrame);
+        let adapter = &*padapter;
+        let stainfo = match host_get_stainfo(&adapter.stapriv, &recv.hdr.attrib.ta) {
+            Some(sta) => sta,
+            None => return _FAIL,
+        };
+        let prwskey = if is_mcast_ra(&recv.hdr.attrib.ra) {
+            if adapter.securitypriv.binstall_grpkey == _FALSE {
+                return _FAIL;
+            }
+            adapter.securitypriv.dot118021XGrpKey[recv.hdr.attrib.key_index as usize]
+                .skey
+                .as_ptr()
+        } else {
+            stainfo.dot118021x_UncstKey.skey.as_ptr()
+        };
+        tkip_decrypt_inner(
+            prwskey,
+            &recv.hdr.attrib.ta,
+            recv.hdr.attrib.encrypt,
+            recv.hdr.attrib.hdrlen,
+            recv.hdr.attrib.iv_len,
+            recv.hdr.rx_data,
+            recv.hdr.len,
+        )
+    }
+}
+
+#[cfg(not(host_security_test))]
+#[no_mangle]
+pub extern "C" fn rtw_tkip_decrypt(padapter: *mut WepAdapter, precvframe: *mut U8) -> U32 {
+    if padapter.is_null() || precvframe.is_null() {
+        return _FAIL;
+    }
+    unsafe {
+        let psecuritypriv = kernel_layout::adapter_securitypriv(padapter);
+        let sec_base = psecuritypriv as *mut u8;
+        let attrib = kernel_layout::recv_frame_attrib(precvframe);
+        let encrypt = (*attrib).encrypt;
+        if encrypt != _TKIP_ {
+            return _SUCCESS;
+        }
+        let ra = (*attrib).ra;
+        let ta = (*attrib).ta;
+        let stapriv = kernel_layout::adapter_stapriv(padapter);
+        let stainfo = tkip_decrypt_ffi::lookup(stapriv, &ta);
+        if stainfo.is_null() {
+            return _FAIL;
+        }
+        let stainfo_key = kernel_layout::sta_info_unicast_key_skey(stainfo);
+        let prwskey = if is_mcast_ra(&ra) {
+            if kernel_layout::securitypriv_binstall_grpkey(sec_base) == _FALSE {
+                return _FAIL;
+            }
+            kernel_layout::securitypriv_grp_key_skey(sec_base, (*attrib).key_index as usize)
+        } else {
+            stainfo_key
+        };
+        let res = tkip_decrypt_inner(
+            prwskey,
+            &ta,
+            encrypt,
+            (*attrib).hdrlen,
+            (*attrib).iv_len,
+            kernel_layout::recv_frame_rx_data(precvframe),
+            kernel_layout::recv_frame_len(precvframe),
+        );
+        if res == _SUCCESS {
+            kernel_layout::tkip_sw_dec_cnt_inc(sec_base, &ra);
         }
         res
     }
