@@ -120,31 +120,54 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		return -1;
 	if (parse_hex_field(obj, obj_len, "mpdu", v->mpdu, sizeof(v->mpdu), &v->mpdu_len))
 		return -1;
-	parse_int_field(obj, obj_len, "qc_exists", &v->qc_exists);
-	parse_int_field(obj, obj_len, "a4_exists", &v->a4_exists);
-	parse_uint_field(obj, obj_len, "header_length", &v->header_length);
-	parse_uint_field(obj, obj_len, "payload_length", &v->payload_length);
-	parse_uint_field(obj, obj_len, "frtype", &v->frtype);
-	parse_int_field(obj, obj_len, "ctr", &v->ctr);
 
 	switch (v->fn) {
 	case FN_MIC_IV:
-	case FN_CTR_PRELOAD: {
-		size_t pn_len;
+		if (parse_int_field(obj, obj_len, "qc_exists", &v->qc_exists) ||
+		    parse_int_field(obj, obj_len, "a4_exists", &v->a4_exists) ||
+		    parse_uint_field(obj, obj_len, "payload_length", &v->payload_length) ||
+		    parse_uint_field(obj, obj_len, "frtype", &v->frtype))
+			return -1;
+		{
+			size_t pn_len;
 
-		if (parse_hex_field(obj, obj_len, "pn", v->pn, sizeof(v->pn), &pn_len) ||
-		    pn_len != 6)
+			if (parse_hex_field(obj, obj_len, "pn", v->pn, sizeof(v->pn), &pn_len) ||
+			    pn_len != 6)
+				return -1;
+		}
+		break;
+	case FN_MIC_HEADER1:
+		if (parse_uint_field(obj, obj_len, "header_length", &v->header_length) ||
+		    parse_uint_field(obj, obj_len, "frtype", &v->frtype))
 			return -1;
 		break;
-	}
-	default:
+	case FN_MIC_HEADER2:
+		if (parse_int_field(obj, obj_len, "qc_exists", &v->qc_exists) ||
+		    parse_int_field(obj, obj_len, "a4_exists", &v->a4_exists))
+			return -1;
 		break;
+	case FN_CTR_PRELOAD:
+		if (parse_int_field(obj, obj_len, "qc_exists", &v->qc_exists) ||
+		    parse_int_field(obj, obj_len, "a4_exists", &v->a4_exists) ||
+		    parse_uint_field(obj, obj_len, "frtype", &v->frtype) ||
+		    parse_int_field(obj, obj_len, "ctr", &v->ctr))
+			return -1;
+		{
+			size_t pn_len;
+
+			if (parse_hex_field(obj, obj_len, "pn", v->pn, sizeof(v->pn), &pn_len) ||
+			    pn_len != 6)
+				return -1;
+		}
+		break;
+	default:
+		return -1;
 	}
 	{
 		size_t expect_len;
 
 		if (parse_hex_field(obj, obj_len, "expect", v->expect, sizeof(v->expect),
-				    &expect_len))
+				    &expect_len) || expect_len != 16)
 			return -1;
 	}
 	return 0;
