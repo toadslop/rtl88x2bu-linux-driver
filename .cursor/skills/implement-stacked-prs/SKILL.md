@@ -83,12 +83,17 @@ Reference the GitHub issue in the commit message (`#115`, `W3-04`).
 
 ### 5. Open stacked PR
 
-Use `ManagePullRequest` `create_pr`:
+Prefer `ManagePullRequest` `create_pr` when available. Fallback for cloud agents
+or local shells without that tool:
+
+```bash
+gh pr create --base <stack-parent> --head <branch> --title "<title>" --body "<body>"
+```
 
 | Field | PR1 | PR2+ |
 |-------|-----|------|
-| `base_branch` | `master` | previous PR head branch |
-| `branch_name` | current head | current head |
+| `base_branch` / `--base` | `master` | previous PR head branch |
+| `branch_name` / `--head` | current head | current head |
 | `title` | from plan | from plan |
 | `body` | link issue, gates run, stack position | + "Stacked on #N" |
 
