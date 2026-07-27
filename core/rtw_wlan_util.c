@@ -48,6 +48,10 @@ extern unsigned char RSN_TKIP_CIPHER[4];
 
 #define R2T_PHY_DELAY	(0)
 
+unsigned char ratetbl_val_2wifirate(unsigned char rate);
+int is_basicrate(_adapter *padapter, unsigned char rate);
+unsigned int ratetbl2rateset(_adapter *padapter, unsigned char *rateset);
+
 /* #define WAIT_FOR_BCN_TO_MIN	(3000) */
 #define WAIT_FOR_BCN_TO_MIN	(6000)
 #define WAIT_FOR_BCN_TO_MAX	(20000)
@@ -144,120 +148,6 @@ u8 judge_network_type(_adapter *padapter, unsigned char *rate, int ratelen)
 	}
 
 	return	network_type;
-}
-
-unsigned char ratetbl_val_2wifirate(unsigned char rate);
-unsigned char ratetbl_val_2wifirate(unsigned char rate)
-{
-	unsigned char val = 0;
-
-	switch (rate & 0x7f) {
-	case 0:
-		val = IEEE80211_CCK_RATE_1MB;
-		break;
-
-	case 1:
-		val = IEEE80211_CCK_RATE_2MB;
-		break;
-
-	case 2:
-		val = IEEE80211_CCK_RATE_5MB;
-		break;
-
-	case 3:
-		val = IEEE80211_CCK_RATE_11MB;
-		break;
-
-	case 4:
-		val = IEEE80211_OFDM_RATE_6MB;
-		break;
-
-	case 5:
-		val = IEEE80211_OFDM_RATE_9MB;
-		break;
-
-	case 6:
-		val = IEEE80211_OFDM_RATE_12MB;
-		break;
-
-	case 7:
-		val = IEEE80211_OFDM_RATE_18MB;
-		break;
-
-	case 8:
-		val = IEEE80211_OFDM_RATE_24MB;
-		break;
-
-	case 9:
-		val = IEEE80211_OFDM_RATE_36MB;
-		break;
-
-	case 10:
-		val = IEEE80211_OFDM_RATE_48MB;
-		break;
-
-	case 11:
-		val = IEEE80211_OFDM_RATE_54MB;
-		break;
-
-	}
-
-	return val;
-
-}
-
-int is_basicrate(_adapter *padapter, unsigned char rate);
-int is_basicrate(_adapter *padapter, unsigned char rate)
-{
-	int i;
-	unsigned char val;
-	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
-
-	for (i = 0; i < NumRates; i++) {
-		val = pmlmeext->basicrate[i];
-
-		if ((val != 0xff) && (val != 0xfe)) {
-			if (rate == ratetbl_val_2wifirate(val))
-				return _TRUE;
-		}
-	}
-
-	return _FALSE;
-}
-
-unsigned int ratetbl2rateset(_adapter *padapter, unsigned char *rateset);
-unsigned int ratetbl2rateset(_adapter *padapter, unsigned char *rateset)
-{
-	int i;
-	unsigned char rate;
-	unsigned int	len = 0;
-	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
-
-	for (i = 0; i < NumRates; i++) {
-		rate = pmlmeext->datarate[i];
-
-		if (rtw_get_oper_ch(padapter) > 14 && rate < _6M_RATE_) /*5G no support CCK rate*/
-			continue;
-
-		switch (rate) {
-		case 0xff:
-			return len;
-
-		case 0xfe:
-			continue;
-
-		default:
-			rate = ratetbl_val_2wifirate(rate);
-
-			if (is_basicrate(padapter, rate) == _TRUE)
-				rate |= IEEE80211_BASIC_RATE_MASK;
-
-			rateset[len] = rate;
-			len++;
-			break;
-		}
-	}
-	return len;
 }
 
 void get_rate_set(_adapter *padapter, unsigned char *pbssrate, int *bssrate_len)
