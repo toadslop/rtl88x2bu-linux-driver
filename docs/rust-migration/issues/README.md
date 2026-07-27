@@ -97,3 +97,16 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 | W3-02 | #113 | `wave3-02-swcrypto-bip-tdls.md` | done (#63) |
 | W3-03 | #114 | `wave3-03-ie-parse.md` | in progress (#61) |
 | W3-04 … W3-09 | #115–#120 | `wave3-*.md` | draft / in progress (Wave 3 tranche 1 — see #68) |
+
+## Proposed (not filed yet)
+
+CI / merge confidence and releases — draft specs only; run `file-issues.sh` after review:
+
+| ID | File | Summary |
+|----|------|---------|
+| T6 | `test-06-ci-l0-build.md` | L0 `make KDIR=… LLVM=1` in GHA with pinned kernel image |
+| T7 | `test-07-ci-l1-symbols.md` | Automate `rust-check-symbols*` in CI |
+| T8 | `test-08-ci-l3-qemu.md` | QEMU insmod/rmmod on `master` push |
+| T9 | `test-09-merge-gates.md` | Branch protection + PR template + required checks |
+| E12 | `epic-12-distribution.md` | Epic: DKMS + GitHub Releases |
+| R1 | `release-01-github-releases.md` | Release versioning + tarball automation |
