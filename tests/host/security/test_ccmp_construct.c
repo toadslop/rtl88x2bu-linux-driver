@@ -120,17 +120,26 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		return -1;
 	if (parse_hex_field(obj, obj_len, "mpdu", v->mpdu, sizeof(v->mpdu), &v->mpdu_len))
 		return -1;
-	{
-		size_t pn_len;
-
-		parse_hex_field(obj, obj_len, "pn", v->pn, sizeof(v->pn), &pn_len);
-	}
 	parse_int_field(obj, obj_len, "qc_exists", &v->qc_exists);
 	parse_int_field(obj, obj_len, "a4_exists", &v->a4_exists);
 	parse_uint_field(obj, obj_len, "header_length", &v->header_length);
 	parse_uint_field(obj, obj_len, "payload_length", &v->payload_length);
 	parse_uint_field(obj, obj_len, "frtype", &v->frtype);
 	parse_int_field(obj, obj_len, "ctr", &v->ctr);
+
+	switch (v->fn) {
+	case FN_MIC_IV:
+	case FN_CTR_PRELOAD: {
+		size_t pn_len;
+
+		if (parse_hex_field(obj, obj_len, "pn", v->pn, sizeof(v->pn), &pn_len) ||
+		    pn_len != 6)
+			return -1;
+		break;
+	}
+	default:
+		break;
+	}
 	{
 		size_t expect_len;
 
