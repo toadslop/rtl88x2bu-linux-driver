@@ -42,7 +42,7 @@ jobs:
       contents: read
       packages: read
     container:
-      image: ghcr.io/${{ github.repository_owner }}/rtl88x2bu-l0:${{ env.KERNEL_TAG }}
+      image: ghcr.io/${{ github.repository_owner }}/rtl88x2bu-l0:v6.12.9
     steps:
       - uses: actions/checkout@v4
 
