@@ -1,0 +1,75 @@
+{
+  "oracle": "core/rtw_wlan_util.c",
+  "vectors": [
+    {
+      "name": "net_2g_cck_only",
+      "fn": "judge_network_type",
+      "cur_channel": 6,
+      "ht_enable": 0,
+      "vht_enable": 0,
+      "rates": "0204",
+      "expect": 1
+    },
+    {
+      "name": "net_2g_cck_mixed",
+      "fn": "judge_network_type",
+      "cur_channel": 1,
+      "ht_enable": 0,
+      "vht_enable": 0,
+      "rates": "020c",
+      "expect": 3
+    },
+    {
+      "name": "net_2g_ofdm_only",
+      "fn": "judge_network_type",
+      "cur_channel": 6,
+      "ht_enable": 0,
+      "vht_enable": 0,
+      "rates": "0c12",
+      "expect": 2
+    },
+    {
+      "name": "net_2g_ht",
+      "fn": "judge_network_type",
+      "cur_channel": 6,
+      "ht_enable": 1,
+      "vht_enable": 0,
+      "rates": "0c12",
+      "expect": 10
+    },
+    {
+      "name": "net_5g_a",
+      "fn": "judge_network_type",
+      "cur_channel": 36,
+      "ht_enable": 0,
+      "vht_enable": 0,
+      "rates": "0c12",
+      "expect": 4
+    },
+    {
+      "name": "net_5g_vht",
+      "fn": "judge_network_type",
+      "cur_channel": 36,
+      "ht_enable": 0,
+      "vht_enable": 1,
+      "rates": "0c12",
+      "expect": 68
+    },
+    {
+      "name": "mcs_mask_low",
+      "fn": "set_mcs_rate_by_mask",
+      "mcs_set": "ffffffff",
+      "mask": 65535,
+      "expect_mcs": "ffff0000"
+    },
+    {
+      "name": "get_rate_set_2g",
+      "fn": "get_rate_set",
+      "oper_ch": 6,
+      "basicrate": "0001feffffffffffffffffffff",
+      "datarate": "000304ff",
+      "expect_len": 3,
+      "expect_rates": "82160c"
+    }
+  ]
+}

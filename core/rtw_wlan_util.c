@@ -51,6 +51,9 @@ extern unsigned char RSN_TKIP_CIPHER[4];
 unsigned char ratetbl_val_2wifirate(unsigned char rate);
 int is_basicrate(_adapter *padapter, unsigned char rate);
 unsigned int ratetbl2rateset(_adapter *padapter, unsigned char *rateset);
+u8 judge_network_type(_adapter *padapter, unsigned char *rate, int ratelen);
+void get_rate_set(_adapter *padapter, unsigned char *pbssrate, int *bssrate_len);
+void set_mcs_rate_by_mask(u8 *mcs_set, u32 mask);
 
 /* #define WAIT_FOR_BCN_TO_MIN	(3000) */
 #define WAIT_FOR_BCN_TO_MIN	(6000)
@@ -119,57 +122,6 @@ s8 rtw_get_sta_tx_nss(_adapter *adapter, struct sta_info *psta)
 #endif /*CONFIG_80211N_HT*/
 	RTW_INFO("%s: %d SS\n", __func__, nss);
 	return nss;
-}
-
-u8 judge_network_type(_adapter *padapter, unsigned char *rate, int ratelen)
-{
-	u8 network_type = 0;
-	struct mlme_ext_priv	*pmlmeext = &padapter->mlmeextpriv;
-	struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
-
-
-	if (pmlmeext->cur_channel > 14) {
-		if (pmlmeinfo->VHT_enable)
-			network_type = WIRELESS_11AC;
-		else if (pmlmeinfo->HT_enable)
-			network_type = WIRELESS_11_5N;
-
-		network_type |= WIRELESS_11A;
-	} else {
-		if (pmlmeinfo->HT_enable)
-			network_type = WIRELESS_11_24N;
-
-		if ((cckratesonly_included(rate, ratelen)) == _TRUE)
-			network_type |= WIRELESS_11B;
-		else if ((cckrates_included(rate, ratelen)) == _TRUE)
-			network_type |= WIRELESS_11BG;
-		else
-			network_type |= WIRELESS_11G;
-	}
-
-	return	network_type;
-}
-
-void get_rate_set(_adapter *padapter, unsigned char *pbssrate, int *bssrate_len)
-{
-	unsigned char supportedrates[NumRates];
-
-	_rtw_memset(supportedrates, 0, NumRates);
-	*bssrate_len = ratetbl2rateset(padapter, supportedrates);
-	_rtw_memcpy(pbssrate, supportedrates, *bssrate_len);
-}
-
-void set_mcs_rate_by_mask(u8 *mcs_set, u32 mask)
-{
-	u8 mcs_rate_1r = (u8)(mask & 0xff);
-	u8 mcs_rate_2r = (u8)((mask >> 8) & 0xff);
-	u8 mcs_rate_3r = (u8)((mask >> 16) & 0xff);
-	u8 mcs_rate_4r = (u8)((mask >> 24) & 0xff);
-
-	mcs_set[0] &= mcs_rate_1r;
-	mcs_set[1] &= mcs_rate_2r;
-	mcs_set[2] &= mcs_rate_3r;
-	mcs_set[3] &= mcs_rate_4r;
 }
 
 void UpdateBrateTbl(
