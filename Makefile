@@ -2528,6 +2528,7 @@ $(MODULE_NAME)-y += rust/rtw_chplan.o
 $(MODULE_NAME)-y += rust/rtw_swcrypto.o
 $(MODULE_NAME)-y += rust/rtw_ieee80211.o
 $(MODULE_NAME)-y += rust/rtw_security.o
+$(MODULE_NAME)-y += rust/rtw_security_rest.o
 $(MODULE_NAME)-y += rust/rtw_wlan_util.o
 endif
 

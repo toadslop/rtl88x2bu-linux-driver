@@ -7,6 +7,7 @@ SHIM     := ../shim/host_security_shim.c
 ORACLE   := security_c_oracle.c
 REST_ORACLE := security_rest_c_oracle.c
 RUST_SECURITY := $(ROOT)/rust/rtw_security.rs
+RUST_SECURITY_REST := $(ROOT)/rust/rtw_security_rest.rs
 
 CC      := gcc
 RUSTC   := rustc
@@ -20,7 +21,7 @@ HOST_JSON := ../crypto/host_vector_json.c
 
 all: test
 
-test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-ccmp-primitives
+test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-ccmp-primitives test-ccmp-primitives-rust
 
 test-c: test_security
 	./test_security security_type_vectors.json
@@ -70,6 +71,10 @@ test_security: test_security.c $(ORACLE) $(HOST_JSON)
 librust_security.a: $(RUST_SECURITY) $(ROOT)/rust/domain/types.rs
 	$(RUSTC) $(RUSTFLAGS) --cfg host_security_test --crate-type staticlib \
 		$(RUST_SECURITY) -o $@
+
+librust_security_rest.a: $(RUST_SECURITY_REST)
+	$(RUSTC) $(RUSTFLAGS) --cfg host_security_rest_test --crate-type staticlib \
+		$(RUST_SECURITY_REST) -o $@
 
 test_security_rust: test_security.c librust_security.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_SECURITY_ORACLE -o $@ test_security.c $(HOST_JSON) \
