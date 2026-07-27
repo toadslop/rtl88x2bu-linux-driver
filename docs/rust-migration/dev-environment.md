@@ -334,6 +334,39 @@ docker run --rm -v "$PWD:/driver" -w /driver rtl88x2bu-l0:v6.12.9 \
 
 A clean pass prints `run-l3-qemu: OK` and the serial log contains `=== L3_PASS ===`. See [`test-plan.md`](test-plan.md#l3--module-load-without-device).
 
+## Branch protection
+
+CI workflows exist, but merges stay unblocked until a **repo admin** enables branch protection on `master`. This section lists the exact check names to require (issue T9, #154).
+
+### Settings (repo admin)
+
+1. GitHub → **Settings** → **Branches** → **Add branch protection rule** (or edit existing rule for `master`).
+2. Enable **Require a pull request before merging**.
+3. Enable **Require status checks to pass before merging**.
+4. Search and select these checks (workflow name / job id):
+
+| Check name | When it runs |
+|------------|--------------|
+| `Host L2 tests / host-l2` | PRs touching `rust/**`, `core/**`, `tests/host/**`, etc. |
+| `Module L0 build / module-l0` | PRs touching driver/build inputs (`core/`, `hal/`, `Makefile`, …) |
+| `Module L1 symbols / module-l1` | PRs touching `rust/**`, `Makefile`, symbol scripts |
+
+5. **Do not require** `Module L3 load / module-l3` on pull requests — that workflow runs on `push` to `master` only (post-merge health gate).
+6. **Do not require** `Publish L0 CI image / build-and-push` — it runs only when Docker or kernel-pin files change.
+7. **CodeQL** (if enabled via GitHub Advanced Security) is optional; it is not an in-repo required workflow.
+
+Optional team preferences: dismiss stale pull request approvals, require linear history.
+
+### Skipped checks
+
+Path-filtered workflows skip when a PR does not touch matching paths (e.g. docs-only changes). Skipped checks do not block merge under GitHub branch protection.
+
+### Fork pull requests
+
+Fork PRs may fail to pull the published L0 image from ghcr.io; workflows fall back to building the image inline (see [CI L0 image](#ci-l0-image) above). Ensure the `rtl88x2bu-l0` package is **public** in GitHub Packages so fork CI can pull it without rebuilding.
+
+Contributor overview: [`docs/contributing.md`](../../contributing.md).
+
 ## When to extend this doc
 
 Add a short bullet when a new Wave hits a **recurring** environment failure (bindgen skew, RfL API break on kernel bump, CI image gap). Keep recipes copy-pasteable; link relevant GitHub issue IDs (see [`issues/ISSUE-MAP.md`](issues/ISSUE-MAP.md)).
