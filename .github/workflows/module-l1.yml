@@ -58,7 +58,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: L1 selftest (check-symbols.sh smoke)
+      - name: L1 symbol checks
         run: |
           if [ "${{ steps.pull.outcome }}" = "success" ]; then
             IMAGE="${L0_IMAGE}"
@@ -66,4 +66,4 @@ jobs:
             IMAGE="rtl88x2bu-l0:ci"
           fi
           docker run --rm -v "$PWD:/driver" -w /driver "${IMAGE}" \
-            bash -c 'make KDIR=/opt/linux LLVM=1 rust-check-symbols-selftest'
+            bash -c 'make KDIR=/opt/linux LLVM=1 rust-check-symbols-selftest && ./scripts/ci/run-l1-unit-checks.sh'
