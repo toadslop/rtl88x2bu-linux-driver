@@ -1,0 +1,52 @@
+# T6b: L0 module build gate on pull requests (pinned Rust kernel).
+# See docs/rust-migration/issues/test-06-ci-l0-build.md
+
+name: Module L0 build
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'core/**'
+      - 'hal/**'
+      - 'os_dep/**'
+      - 'include/**'
+      - 'platform/**'
+      - 'rust/**'
+      - 'Makefile'
+      - 'dkms.conf'
+      - '.github/workflows/module-l0.yml'
+      - 'scripts/ci/verify-ko-probes.sh'
+  pull_request:
+    paths:
+      - 'core/**'
+      - 'hal/**'
+      - 'os_dep/**'
+      - 'include/**'
+      - 'platform/**'
+      - 'rust/**'
+      - 'Makefile'
+      - 'dkms.conf'
+      - '.github/workflows/module-l0.yml'
+      - 'scripts/ci/verify-ko-probes.sh'
+
+env:
+  KERNEL_TAG: v6.12.9
+  KDIR: /opt/linux
+  LIBCLANG_PATH: /usr/lib/llvm-18/lib
+
+jobs:
+  module-l0:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/rtl88x2bu-l0:${{ env.KERNEL_TAG }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: L0 build
+        run: |
+          make clean
+          make KDIR="${KDIR}" LLVM=1 -j"$(nproc)"
+
+      - name: Verify Rust/C probes in 88x2bu.ko
+        run: ./scripts/ci/verify-ko-probes.sh 88x2bu.ko
