@@ -34,6 +34,15 @@ struct vector {
 	int expect;
 };
 
+#ifdef RUST_WLAN_UTIL_ORACLE
+extern bool rtw_is_cck_rate(u8 rate);
+extern bool rtw_is_ofdm_rate(u8 rate);
+extern bool rtw_is_basic_rate_cck(u8 rate);
+extern bool rtw_is_basic_rate_ofdm(u8 rate);
+extern bool rtw_is_basic_rate_mix(u8 rate);
+extern int cckrates_included(unsigned char *rate, int ratelen);
+extern int cckratesonly_included(unsigned char *rate, int ratelen);
+#else
 bool rtw_is_cck_rate(u8 rate);
 bool rtw_is_ofdm_rate(u8 rate);
 bool rtw_is_basic_rate_cck(u8 rate);
@@ -41,6 +50,7 @@ bool rtw_is_basic_rate_ofdm(u8 rate);
 bool rtw_is_basic_rate_mix(u8 rate);
 int cckrates_included(unsigned char *rate, int ratelen);
 int cckratesonly_included(unsigned char *rate, int ratelen);
+#endif
 
 static int parse_fn(const char *obj, size_t obj_len, enum wlan_fn *out)
 {

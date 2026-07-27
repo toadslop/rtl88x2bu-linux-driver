@@ -4,20 +4,26 @@
 ROOT     := ../../..
 HOST_INC := ../include
 ORACLE   := wlan_util_c_oracle.c
+RUST_WLAN := $(ROOT)/rust/rtw_wlan_util.rs
 
 CC      := gcc
+RUSTC   := rustc
 CFLAGS  := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
            -I$(HOST_INC) -I.
+RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
 HOST_JSON := ../crypto/host_vector_json.c
 
-.PHONY: all test test-c test-ratetbl clean
+.PHONY: all test test-c test-rust test-ratetbl clean
 
 all: test
 
-test: test-c test-ratetbl
+test: test-c test-rust test-ratetbl
 
 test-c: test_wlan_util
 	./test_wlan_util rate_class_vectors.json
+
+test-rust: test_wlan_util_rust
+	./test_wlan_util_rust rate_class_vectors.json
 
 test-ratetbl: test_ratetbl
 	./test_ratetbl ratetbl_vectors.json
@@ -25,8 +31,16 @@ test-ratetbl: test_ratetbl
 test_wlan_util: test_wlan_util.c $(ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_wlan_util.c $(ORACLE) $(HOST_JSON)
 
+librust_wlan_util.a: $(RUST_WLAN) $(ROOT)/rust/domain/types.rs
+	$(RUSTC) $(RUSTFLAGS) --cfg host_wlan_util_test --crate-type staticlib \
+		$(RUST_WLAN) -o $@
+
+test_wlan_util_rust: test_wlan_util.c librust_wlan_util.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_WLAN_UTIL_ORACLE -o $@ test_wlan_util.c $(HOST_JSON) \
+		librust_wlan_util.a
+
 test_ratetbl: test_ratetbl.c $(ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_ratetbl.c $(ORACLE) $(HOST_JSON)
 
 clean:
-	rm -f test_wlan_util test_ratetbl
+	rm -f test_wlan_util test_wlan_util_rust test_ratetbl librust_wlan_util.a

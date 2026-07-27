@@ -69,89 +69,9 @@ static u8 rtw_basic_rate_mix[7] = {
 	IEEE80211_OFDM_RATE_24MB | IEEE80211_BASIC_RATE_MASK
 };
 
-extern u8	WIFI_CCKRATES[];
-bool rtw_is_cck_rate(u8 rate)
-{
-	int i;
-
-	for (i = 0; i < 4; i++)
-		if ((WIFI_CCKRATES[i] & 0x7F) == (rate & 0x7F))
-			return 1;
-	return 0;
-}
-
-extern u8	WIFI_OFDMRATES[];
-bool rtw_is_ofdm_rate(u8 rate)
-{
-	int i;
-
-	for (i = 0; i < 8; i++)
-		if ((WIFI_OFDMRATES[i] & 0x7F) == (rate & 0x7F))
-			return 1;
-	return 0;
-}
-
-/* test if rate is defined in rtw_basic_rate_cck */
-bool rtw_is_basic_rate_cck(u8 rate)
-{
-	int i;
-
-	for (i = 0; i < 4; i++)
-		if ((rtw_basic_rate_cck[i] & 0x7F) == (rate & 0x7F))
-			return 1;
-	return 0;
-}
-
-/* test if rate is defined in rtw_basic_rate_ofdm */
-bool rtw_is_basic_rate_ofdm(u8 rate)
-{
-	int i;
-
-	for (i = 0; i < 3; i++)
-		if ((rtw_basic_rate_ofdm[i] & 0x7F) == (rate & 0x7F))
-			return 1;
-	return 0;
-}
-
-/* test if rate is defined in rtw_basic_rate_mix */
-bool rtw_is_basic_rate_mix(u8 rate)
-{
-	int i;
-
-	for (i = 0; i < 7; i++)
-		if ((rtw_basic_rate_mix[i] & 0x7F) == (rate & 0x7F))
-			return 1;
-	return 0;
-}
 #ifdef CONFIG_BCN_CNT_CONFIRM_HDL
 int new_bcn_max = 3;
 #endif
-int cckrates_included(unsigned char *rate, int ratelen)
-{
-	int	i;
-
-	for (i = 0; i < ratelen; i++) {
-		if ((((rate[i]) & 0x7f) == 2)	|| (((rate[i]) & 0x7f) == 4) ||
-		    (((rate[i]) & 0x7f) == 11)  || (((rate[i]) & 0x7f) == 22))
-			return _TRUE;
-	}
-
-	return _FALSE;
-
-}
-
-int cckratesonly_included(unsigned char *rate, int ratelen)
-{
-	int	i;
-
-	for (i = 0; i < ratelen; i++) {
-		if ((((rate[i]) & 0x7f) != 2) && (((rate[i]) & 0x7f) != 4) &&
-		    (((rate[i]) & 0x7f) != 11)  && (((rate[i]) & 0x7f) != 22))
-			return _FALSE;
-	}
-
-	return _TRUE;
-}
 
 s8 rtw_get_sta_rx_nss(_adapter *adapter, struct sta_info *psta)
 {

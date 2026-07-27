@@ -1,0 +1,7 @@
+# L1 allowlist for W3-08: Rust owns rate-classification helpers; oracle retains
+# ratetbl helpers until W3-09.
+drop WIFI_CCKRATES
+drop WIFI_OFDMRATES
+drop host_ratetbl_val_2wifirate
+drop host_is_basicrate
+drop host_ratetbl2rateset
