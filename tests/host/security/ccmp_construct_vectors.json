@@ -1,0 +1,163 @@
+{
+  "oracle": "core/rtw_security_rest.c",
+  "vectors": [
+    {
+      "name": "mic_iv_qos_data",
+      "fn": "host_ccmp_construct_mic_iv",
+      "mpdu": "08000000010203040506112233445566aabbccddeeff00003000",
+      "pn": "010203040506",
+      "qc_exists": 1,
+      "a4_exists": 0,
+      "payload_length": 300,
+      "frtype": 8,
+      "expect": "5900112233445566060504030201012c"
+    },
+    {
+      "name": "mic_iv_noqos_data",
+      "fn": "host_ccmp_construct_mic_iv",
+      "mpdu": "08000000010203040506112233445566aabbccddeeff0000",
+      "pn": "010203040506",
+      "qc_exists": 0,
+      "a4_exists": 0,
+      "payload_length": 100,
+      "frtype": 8,
+      "expect": "59001122334455660605040302010064"
+    },
+    {
+      "name": "mic_iv_a4_noqos",
+      "fn": "host_ccmp_construct_mic_iv",
+      "mpdu": "08000000010203040506112233445566aabbccddeeff0000778899aabbcc",
+      "pn": "010203040506",
+      "qc_exists": 0,
+      "a4_exists": 1,
+      "payload_length": 100,
+      "frtype": 8,
+      "expect": "59001122334455660605040302010064"
+    },
+    {
+      "name": "mic_iv_qos_a4",
+      "fn": "host_ccmp_construct_mic_iv",
+      "mpdu": "88000000010203040506112233445566aabbccddeeff0000778899aabbcc3040",
+      "pn": "010203040506",
+      "qc_exists": 1,
+      "a4_exists": 1,
+      "payload_length": 200,
+      "frtype": 8,
+      "expect": "590011223344556606050403020100c8"
+    },
+    {
+      "name": "mic_iv_mgt",
+      "fn": "host_ccmp_construct_mic_iv",
+      "mpdu": "00000000010203040506112233445566aabbccddeeff0000",
+      "pn": "010203040506",
+      "qc_exists": 0,
+      "a4_exists": 0,
+      "payload_length": 50,
+      "frtype": 0,
+      "expect": "59101122334455660605040302010032"
+    },
+    {
+      "name": "mic_header1_qos_data",
+      "fn": "host_ccmp_construct_mic_header1",
+      "mpdu": "08000000010203040506112233445566aabbccddeeff00003000",
+      "header_length": 26,
+      "frtype": 8,
+      "expect": "00180800010203040506112233445566"
+    },
+    {
+      "name": "mic_header1_mgt",
+      "fn": "host_ccmp_construct_mic_header1",
+      "mpdu": "00000000010203040506112233445566aabbccddeeff0000",
+      "header_length": 24,
+      "frtype": 0,
+      "expect": "00160000010203040506112233445566"
+    },
+    {
+      "name": "mic_header2_qos_no_a4",
+      "fn": "host_ccmp_construct_mic_header2",
+      "mpdu": "08000000010203040506112233445566aabbccddeeff00003000",
+      "qc_exists": 1,
+      "a4_exists": 0,
+      "expect": "aabbccddeeff00000000000000000000"
+    },
+    {
+      "name": "mic_header2_noqos",
+      "fn": "host_ccmp_construct_mic_header2",
+      "mpdu": "08000000010203040506112233445566aabbccddeeff0000",
+      "qc_exists": 0,
+      "a4_exists": 0,
+      "expect": "aabbccddeeff00000000000000000000"
+    },
+    {
+      "name": "mic_header2_a4_noqos",
+      "fn": "host_ccmp_construct_mic_header2",
+      "mpdu": "08000000010203040506112233445566aabbccddeeff0000778899aabbcc",
+      "qc_exists": 0,
+      "a4_exists": 1,
+      "expect": "aabbccddeeff0000778899aabbcc0000"
+    },
+    {
+      "name": "mic_header2_qos_a4",
+      "fn": "host_ccmp_construct_mic_header2",
+      "mpdu": "88000000010203040506112233445566aabbccddeeff0000778899aabbcc3040",
+      "qc_exists": 1,
+      "a4_exists": 1,
+      "expect": "aabbccddeeff0000778899aabbcc0000"
+    },
+    {
+      "name": "ctr_preload_qos_ctr2",
+      "fn": "host_ccmp_construct_ctr_preload",
+      "mpdu": "08000000010203040506112233445566aabbccddeeff00003000",
+      "pn": "010203040506",
+      "qc_exists": 1,
+      "a4_exists": 0,
+      "ctr": 2,
+      "frtype": 8,
+      "expect": "01001122334455660605040302010002"
+    },
+    {
+      "name": "ctr_preload_noqos",
+      "fn": "host_ccmp_construct_ctr_preload",
+      "mpdu": "08000000010203040506112233445566aabbccddeeff0000",
+      "pn": "010203040506",
+      "qc_exists": 0,
+      "a4_exists": 0,
+      "ctr": 1,
+      "frtype": 8,
+      "expect": "01001122334455660605040302010001"
+    },
+    {
+      "name": "ctr_preload_a4_noqos",
+      "fn": "host_ccmp_construct_ctr_preload",
+      "mpdu": "08000000010203040506112233445566aabbccddeeff0000778899aabbcc",
+      "pn": "010203040506",
+      "qc_exists": 0,
+      "a4_exists": 1,
+      "ctr": 1,
+      "frtype": 8,
+      "expect": "01001122334455660605040302010001"
+    },
+    {
+      "name": "ctr_preload_qos_a4",
+      "fn": "host_ccmp_construct_ctr_preload",
+      "mpdu": "88000000010203040506112233445566aabbccddeeff0000778899aabbcc3040",
+      "pn": "010203040506",
+      "qc_exists": 1,
+      "a4_exists": 1,
+      "ctr": 3,
+      "frtype": 8,
+      "expect": "01001122334455660605040302010003"
+    },
+    {
+      "name": "ctr_preload_mgt",
+      "fn": "host_ccmp_construct_ctr_preload",
+      "mpdu": "00000000010203040506112233445566aabbccddeeff0000",
+      "pn": "010203040506",
+      "qc_exists": 0,
+      "a4_exists": 0,
+      "ctr": 1,
+      "frtype": 0,
+      "expect": "01101122334455660605040302010001"
+    }
+  ]
+}
