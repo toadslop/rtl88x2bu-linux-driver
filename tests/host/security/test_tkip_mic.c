@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Host L2 oracle runner for TKIP MIC helpers (T5 / W3-07).
+ * Host L2 oracle runner for TKIP MIC helpers (T5 / W3-07a).
  */
+
+#if defined(HOST_TKIP_ORACLE_BUILD) || defined(RUST_SECURITY_ORACLE)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,12 +41,21 @@ struct vector {
 	int priority;
 };
 
+#ifdef RUST_SECURITY_ORACLE
+extern void host_tkip_secmicsetkey(struct mic_data *pmicdata, u8 *key);
+extern void host_tkip_secmicappendbyte(struct mic_data *pmicdata, u8 b);
+extern void host_tkip_secmicappend(struct mic_data *pmicdata, u8 *src, u32 nbytes);
+extern void host_tkip_secgetmic(struct mic_data *pmicdata, u8 *dst);
+extern void host_tkip_seccalctkipmic(u8 *key, u8 *header, u8 *data, u32 data_len,
+				     u8 *mic_code, u8 pri);
+#else
 void host_tkip_secmicsetkey(struct mic_data *pmicdata, u8 *key);
 void host_tkip_secmicappendbyte(struct mic_data *pmicdata, u8 b);
 void host_tkip_secmicappend(struct mic_data *pmicdata, u8 *src, u32 nbytes);
 void host_tkip_secgetmic(struct mic_data *pmicdata, u8 *dst);
 void host_tkip_seccalctkipmic(u8 *key, u8 *header, u8 *data, u32 data_len,
 			      u8 *mic_code, u8 pri);
+#endif
 
 static int parse_fn(const char *obj, size_t obj_len, enum tkip_fn *out)
 {
@@ -160,3 +171,5 @@ int main(int argc, char **argv)
 	       nvec);
 	return 0;
 }
+
+#endif /* HOST_TKIP_ORACLE_BUILD || RUST_SECURITY_ORACLE */
