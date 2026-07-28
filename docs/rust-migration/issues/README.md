@@ -112,4 +112,6 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 | W3-15 | #184 | (filed on GitHub only) | done (#218–#219) |
 | W3-16 | #185 | (filed on GitHub only) | done (#221–#225) |
 | W3-17 | #186 | (filed on GitHub only) | done (#226–#227) |
-| W3-18 | #187 | (filed on GitHub only) | open (Wave 3 tranche 2 — see #68) |
+| W3-18 | #187 | (filed on GitHub only) | done (#232–#233) |
+| W3-19 | #235 | `wave3-19-rf-ch-layout.md` | open |
+| W3-20 | #236 | `wave3-20-rf-freq.md` | open |
