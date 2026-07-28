@@ -51,7 +51,8 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 ## Filing cadence
 
 - **Filed (Wave 0–3 tranche 1):** phase/wave epics (#64–#74) + Wave 0–2 children + test-infra + architecture children; Wave 2 chplan tail (W2-17…W2-20); Wave 3 tranche 1 (W3-01…W3-09). See [`ISSUE-MAP.md`](ISSUE-MAP.md).
-- **Later:** Wave 3 tranche 2 (large `core/` protocol TUs) and Wave 4–6 / Phase 2 children when the previous tranche is mostly done.
+- **Filed (Wave 3 tranche 2):** W3-19…W3-40 (#235–#257) — `rtw_rf`, `ieee80211_rest`, `rm_util`, `vht`, `sta_mgt`, `recv`, `xmit` leaf slices. W3-19 (#235) is the current ready frontier.
+- **Later:** Wave 3 tranche 2 remainder (large `core/` protocol TUs) and Wave 4–6 / Phase 2 children when the previous tranche is mostly done.
 
 ## Status
 
