@@ -91,7 +91,7 @@ gh issue view <number> --json number,title,body,labels,state
 | Outcome | Next step |
 |---------|-----------|
 | **Ready issue found** (including oversized) | Report selection; continue to **`plan-stacked-prs`** |
-| **Nothing ready** | Explain why (blocked, all in-flight, wave complete); continue to **`draft-migration-issues`** |
+| **Nothing ready** | Explain why (blocked, all in-flight, wave complete); continue to **`draft-migration-issues`** — which must draft a **large wave** (15–25+ issues) when the frontier is empty, not 1–2 tickets |
 | **Ambiguous** | List top 2–3 candidates with tradeoffs; ask user if they care |
 
 ## Selection report template
