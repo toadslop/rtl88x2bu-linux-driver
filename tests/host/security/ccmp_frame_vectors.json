@@ -27,6 +27,43 @@
       "plen": 16,
       "frame": "08010000aabbccddeeff00112233445566778899aabbccdd0102000003040506000102030405060708090a0b0c0d0e0f0000000000000000",
       "expect": "2141401c3c66545f69a0e938f87cf9e3d4f0de5a8b6eb1c0"
+    },
+    {
+      "name": "aes_decipher_unicast_hello",
+      "fn": "aes_decipher",
+      "key": "00112233445566778899aabbccddeeff",
+      "hdrlen": 24,
+      "plen": 13,
+      "frame": "080100000000000000000000000000000000000000000000a600000000000000f4274c7f432f0be06eb80ee23a",
+      "expect": "48656c6c6f"
+    },
+    {
+      "name": "aes_decipher_qos_west",
+      "fn": "aes_decipher",
+      "key": "42424242424242424242424242424242",
+      "hdrlen": 26,
+      "plen": 12,
+      "frame": "8800000001020304050611121314151621222324252690001000080000000000000081ce953f4e5aff88b1f38789",
+      "expect": "57657374"
+    },
+    {
+      "name": "aes_decipher_payload_16",
+      "fn": "aes_decipher",
+      "key": "00112233445566778899aabbccddeeff",
+      "hdrlen": 24,
+      "plen": 24,
+      "frame": "08010000aabbccddeeff00112233445566778899aabbccdd01020000030405062141401c3c66545f69a0e938f87cf9e3d4f0de5a8b6eb1c0",
+      "expect": "000102030405060708090a0b0c0d0e0f"
+    },
+    {
+      "name": "aes_decipher_bad_mic",
+      "fn": "aes_decipher",
+      "key": "00112233445566778899aabbccddeeff",
+      "hdrlen": 24,
+      "plen": 13,
+      "frame": "080100000000000000000000000000000000000000000000a600000000000000f4274c7f432f0be06eb80ee2ff",
+      "expect": "48656c6c6f",
+      "expect_fail": 1
     }
   ]
 }

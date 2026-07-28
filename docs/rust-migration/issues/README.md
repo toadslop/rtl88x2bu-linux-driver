@@ -105,4 +105,6 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 | W3-03 | #114 | `wave3-03-ie-parse.md` | done (#61) |
 | W3-04 … W3-09 | #115–#120 | `wave3-*.md` | done (#144–#166) |
 | W3-10 | #179 | (filed on GitHub only) | done (#189–#195) |
-| W3-11 … W3-18 | #180–#187 | (filed on GitHub only) | open (Wave 3 tranche 2 — see #68) |
+| W3-11 | #180 | (filed on GitHub only) | done (#197–#201) |
+| W3-12 | #181 | (filed on GitHub only) | done (#204–#206) |
+| W3-13 … W3-18 | #182–#187 | (filed on GitHub only) | open (Wave 3 tranche 2 — see #68) |
