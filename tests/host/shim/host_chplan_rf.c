@@ -126,3 +126,18 @@ void rtw_chplan_warn_regd_mismatch(u8 id, u8 regd_2g, u8 regd_5g)
 	(void)regd_2g;
 	(void)regd_5g;
 }
+
+int rtw_chset_search_ch(RT_CHANNEL_INFO *ch_set, const u32 ch)
+{
+	int i;
+
+	if (ch == 0)
+		return -1;
+
+	for (i = 0; i < MAX_CHANNEL_NUM && ch_set[i].ChannelNum != 0; i++) {
+		if (ch == ch_set[i].ChannelNum)
+			return i;
+	}
+
+	return -1;
+}

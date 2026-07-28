@@ -1,0 +1,76 @@
+{
+  "oracle": "core/rtw_chplan_rest.c",
+  "vectors": [
+    {
+      "name": "unknown_channel_noop",
+      "fn": "host_rest_process_beacon_hint",
+      "ch": 99,
+      "chset": "24 01",
+      "expect_act_cnt": 0,
+      "expect_chset": "24 01"
+    },
+    {
+      "name": "no_ir_worldwide_clears",
+      "fn": "host_rest_process_beacon_hint",
+      "ch": 36,
+      "chset": "24 01",
+      "alpha2": "00",
+      "expect_act_cnt": 1,
+      "expect_chset": "24 00"
+    },
+    {
+      "name": "no_ir_no_country_ent_clears",
+      "fn": "host_rest_process_beacon_hint",
+      "ch": 36,
+      "chset": "24 01",
+      "country_ent": 0,
+      "expect_act_cnt": 1,
+      "expect_chset": "24 00"
+    },
+    {
+      "name": "no_ir_non_worldwide_noop",
+      "fn": "host_rest_process_beacon_hint",
+      "ch": 36,
+      "chset": "24 01",
+      "alpha2": "US",
+      "expect_act_cnt": 0,
+      "expect_chset": "24 01"
+    },
+    {
+      "name": "no_ir_2g_ch6_noop",
+      "fn": "host_rest_process_beacon_hint",
+      "ch": 6,
+      "chset": "06 01",
+      "alpha2": "00",
+      "expect_act_cnt": 0,
+      "expect_chset": "06 01"
+    },
+    {
+      "name": "no_ir_dfs_noop",
+      "fn": "host_rest_process_beacon_hint",
+      "ch": 52,
+      "chset": "34 03",
+      "alpha2": "00",
+      "expect_act_cnt": 0,
+      "expect_chset": "34 03"
+    },
+    {
+      "name": "already_active_noop",
+      "fn": "host_rest_process_beacon_hint",
+      "ch": 36,
+      "chset": "24 00",
+      "alpha2": "00",
+      "expect_act_cnt": 0,
+      "expect_chset": "24 00"
+    },
+    {
+      "name": "no_ir_2g_ch12_clears",
+      "fn": "host_rest_process_beacon_hint",
+      "ch": 12,
+      "chset": "0c 01",
+      "alpha2": "00",
+      "expect_act_cnt": 1,
+      "expect_chset": "0c 00"
+    }
+  ]
+}
