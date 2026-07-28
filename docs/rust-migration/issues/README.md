@@ -107,4 +107,6 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 | W3-10 | #179 | (filed on GitHub only) | done (#189–#195) |
 | W3-11 | #180 | (filed on GitHub only) | done (#197–#201) |
 | W3-12 | #181 | (filed on GitHub only) | done (#204–#206) |
-| W3-13 … W3-18 | #182–#187 | (filed on GitHub only) | open (Wave 3 tranche 2 — see #68) |
+| W3-13 | #182 | (filed on GitHub only) | done (#208–#211) |
+| W3-14 | #183 | (filed on GitHub only) | in progress |
+| W3-15 … W3-18 | #184–#187 | (filed on GitHub only) | open (Wave 3 tranche 2 — see #68) |
