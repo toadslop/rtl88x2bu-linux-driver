@@ -38,6 +38,11 @@ const _SUCCESS: Sint = 1;
 const _FAIL: Sint = 0;
 const MAX_MSG_SIZE: usize = 2048;
 
+#[cfg(not(host_security_rest_test))]
+extern "C" {
+    fn rtw_aes_decipher_log_mic_mismatch(i: c_int, pframe_byte: U8, message_byte: U8);
+}
+
 const SBOX_TABLE: [U8; 256] = [
     0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
     0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
@@ -761,6 +766,14 @@ fn aes_decipher_inner(key: &[U8; 16], hdrlen: u32, pframe: &mut [U8], plen: u32)
     let mic_off = hdrlen as usize + 8 + plen as usize - 8;
     for i in 0..8 {
         if pframe[mic_off + i] != message[mic_off + i] {
+            #[cfg(not(host_security_rest_test))]
+            unsafe {
+                rtw_aes_decipher_log_mic_mismatch(
+                    i as c_int,
+                    pframe[mic_off + i],
+                    message[mic_off + i],
+                );
+            }
             res = _FAIL;
         }
     }
@@ -776,7 +789,7 @@ pub extern "C" fn aes_decipher(
     pframe: *mut U8,
     plen: u32,
 ) -> Sint {
-    if key.is_null() || pframe.is_null() {
+    if key.is_null() || pframe.is_null() || plen < 8 {
         return _FAIL;
     }
     let key_arr: [U8; 16] = unsafe { core::ptr::read_unaligned(key as *const [U8; 16]) };
