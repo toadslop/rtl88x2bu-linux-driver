@@ -35,7 +35,7 @@ HOST_JSON := ../crypto/host_vector_json.c
 
 all: test
 
-test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust test-ccmp-primitives test-ccmp-primitives-rust test-ccmp-construct test-ccmp-construct-rust test-ccmp-frames test-ccmp-frames-rust test-gcmp-frames test-gcmp-frames-rust test-rest-misc test-rest-misc-rust
+test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust test-ccmp-primitives test-ccmp-primitives-rust test-ccmp-construct test-ccmp-construct-rust test-ccmp-frames test-ccmp-frames-rust test-gcmp-frames test-gcmp-frames-rust test-rest-misc
 
 test-c: test_security
 	./test_security security_type_vectors.json
@@ -100,6 +100,7 @@ test-gcmp-frames-rust: test_gcmp_frames_rust
 test-rest-misc: test_rest_misc
 	./test_rest_misc rest_misc_vectors.json
 
+# test-rest-misc-rust is added to aggregate `test` in W3-15 PR2 (stacked Rust port).
 test-rest-misc-rust: test_rest_misc_rust
 	./test_rest_misc_rust rest_misc_vectors.json
 

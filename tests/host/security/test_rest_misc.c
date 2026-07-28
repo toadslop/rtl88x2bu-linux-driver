@@ -60,6 +60,16 @@ struct vector {
 	struct restore_call expect_calls[MAX_CALLS];
 };
 
+struct host_restore_wep_security_priv {
+	u32 dot11PrivacyAlgrthm;
+	u32 dot11PrivacyKeyIndex;
+	u8 key_mask;
+};
+
+struct host_restore_wep_adapter {
+	struct host_restore_wep_security_priv securitypriv;
+};
+
 #ifdef RUST_SECURITY_REST_ORACLE
 extern u32 host_rest_calc_crc32(u8 *data, size_t len);
 extern int host_rest_aes_siv_encrypt(const u8 *key, size_t key_len, const u8 *pw,
@@ -83,16 +93,6 @@ int host_rest_aes_siv_decrypt(const u8 *key, size_t key_len,
 			      const u8 *iv_crypt, size_t iv_c_len,
 			      size_t num_elem, const u8 *addr[], const size_t *len,
 			      u8 *out);
-struct host_restore_wep_security_priv {
-	u32 dot11PrivacyAlgrthm;
-	u32 dot11PrivacyKeyIndex;
-	u8 key_mask;
-};
-
-struct host_restore_wep_adapter {
-	struct host_restore_wep_security_priv securitypriv;
-};
-
 void host_rest_sec_restore_wep_key(struct host_restore_wep_adapter *adapter);
 void host_restore_wep_reset_calls(void);
 size_t host_restore_wep_get_call_count(void);
@@ -273,6 +273,12 @@ static int run_vector(struct vector *v)
 		if (ret != v->expect_ret) {
 			fprintf(stderr, "%s: aes_siv_encrypt ret=%d expect=%d\n",
 				v->name, ret, v->expect_ret);
+			return -1;
+		}
+		if (v->expected_out_len &&
+		    memcmp(out, v->expected_out, v->expected_out_len) != 0) {
+			fprintf(stderr, "%s: aes_siv_encrypt output mismatch\n",
+				v->name);
 			return -1;
 		}
 		break;

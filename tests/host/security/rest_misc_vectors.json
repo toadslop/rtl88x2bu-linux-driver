@@ -20,6 +20,7 @@
       "key": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e",
       "elements": ["01010101"],
       "pw": "0202020202",
+      "expected_out": "c0ba534b70ef6d6f01f6f45396742b49d3c1f1a7d5",
       "expect_ret": 0
     },
     {
