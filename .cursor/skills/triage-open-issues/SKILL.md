@@ -15,6 +15,9 @@ metadata:
 Close **open GitHub issues that are already done** before selecting new work.
 This keeps the tracker honest and prevents duplicate effort.
 
+**GitHub Issues are the only status tracker** — do not update local markdown
+tables or README rows to record open/closed state.
+
 ## 1. Gather open issues
 
 List open migration issues (adjust limit as needed):
@@ -22,12 +25,12 @@ List open migration issues (adjust limit as needed):
 ```bash
 gh issue list --repo "$(gh repo view --json nameWithOwner -q .nameWithOwner)" \
   --label rust-migration --state open --limit 200 \
-  --json number,title,labels,body
+  --json number,title,labels,body,state
 ```
 
-Also read the local status table in
-[`docs/rust-migration/issues/README.md`](../../../docs/rust-migration/issues/README.md)
-— rows marked `done` with an open GitHub issue are prime triage candidates.
+Cross-check against recently merged PRs and code on `master` — an open GitHub
+issue with landed acceptance criteria is a triage candidate even if local draft
+specs still exist in the repo.
 
 ## 2. Evidence that an issue is complete
 
@@ -35,15 +38,14 @@ An issue is **done** when **all** of the following hold:
 
 | Check | How to verify |
 |-------|---------------|
-| Acceptance criteria met | Read the draft spec (`docs/rust-migration/issues/<file>.md`) and the issue body |
+| Acceptance criteria met | Read the issue body (and local draft spec if linked) |
 | Code landed on `master` | Grep for the Rust object / Makefile swap / harness named in the issue; or inspect merged PR diff |
-| Blockers cleared | Any `blocked_by` issues in the Tracking footer are closed |
+| Blockers cleared | Every `blocked_by` issue in the `## Tracking` footer is `CLOSED` on GitHub |
 | Gates green for that slice | L0 (+ L1/L2 per issue spec) — check CI or run locally if unsure |
 
 **Strong signals (any one plus acceptance):**
 
 - Merged PR whose title or body references the draft ID (e.g. `W3-03`, `#114`)
-- `README.md` status row says `done` with a merged PR number
 - Issue body still says `In-flight: cursor/...` but that branch merged
 
 **Do not close** when:
@@ -76,21 +78,8 @@ gh issue close <number> --comment "Closing: <evidence>.
 - Gates: L0/L1/L2 verified via <CI or local run>"
 ```
 
-Then update the local status table in
-[`docs/rust-migration/issues/README.md`](../../../docs/rust-migration/issues/README.md)
-if the row still says `open`, `draft`, or `in progress`.
-
-Commit and push README updates on the current branch so repo docs stay in sync
-with the tracker:
-
-```bash
-git add docs/rust-migration/issues/README.md
-git commit -m "docs: sync README status after triage closes #<number>"
-git push
-```
-
-If triage runs without an active implementation branch, open a small docs-only PR
-for the README change before continuing to **select-ready-issue**.
+Do **not** mirror closed state into `README.md` or other repo files. GitHub is
+authoritative.
 
 **Epics (`[Epic]` titles):** close only when **all** planned children for that
 wave/phase are done and the epic's verification gate is met (see the epic's

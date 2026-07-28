@@ -4,7 +4,7 @@ This repo is an incremental C→Rust migration of the `88x2bu` kernel module. Ev
 
 ## Workflow
 
-1. Pick an open issue from [GitHub Issues](https://github.com/toadslop/rtl88x2bu-linux-driver/issues) (label `rust-migration`). Draft specs and the ID map live in [`docs/rust-migration/issues/`](rust-migration/issues/README.md).
+1. Pick an open issue from [GitHub Issues](https://github.com/toadslop/rtl88x2bu-linux-driver/issues) (label `rust-migration`). Draft spec templates and filing tooling live in [`docs/rust-migration/issues/`](rust-migration/issues/README.md).
 2. Read [`docs/rust-migration.md`](rust-migration.md) and [`docs/rust-migration/architecture.md`](rust-migration/architecture.md).
 3. **Characterize C behavior → freeze tests → port** (do not port first and add tests later).
 4. Use domain types at Rust APIs; confine `unsafe` and raw pointers to ABI/OS shims.

@@ -1,6 +1,10 @@
-# Issue map
+# Issue map (filing registry)
 
-Generated/updated by `docs/rust-migration/issues/file-issues.sh`.
+**Not a status tracker.** Open/closed state and dependencies live on GitHub Issues
+only. This file records which draft IDs have been filed and their GitHub numbers.
+
+Generated/updated by `docs/rust-migration/issues/file-issues.sh` — do not edit by
+hand except to fix filing mistakes, then prefer re-running the script.
 
 | Draft ID | GitHub | Title |
 |----------|--------|-------|
@@ -67,6 +71,37 @@ Generated/updated by `docs/rust-migration/issues/file-issues.sh`.
 | W3-07 | #118 | [W3-07] Translate rtw_security.c part 4 — TKIP MIC + phase1/phase2 |
 | W3-08 | #119 | [W3-08] Translate rtw_wlan_util.c part 1 — pure rate classification |
 | W3-09 | #120 | [W3-09] Translate rtw_wlan_util.c part 2 — ratetbl + network type |
+| W3-10 | #179 | [W3-10] Translate rtw_security_rest.c — TKIP frame encrypt/decrypt |
+| W3-11 | #180 | [W3-11] Translate rtw_security_rest.c — AES-CCMP software primitives |
+| W3-12 | #181 | [W3-12] Translate rtw_security_rest.c — AES-CCMP frame encrypt |
+| W3-13 | #182 | [W3-13] Translate rtw_security_rest.c — AES-CCMP frame decrypt |
+| W3-14 | #183 | [W3-14] Translate rtw_security_rest.c — GCMP frame encrypt/decrypt |
+| W3-15 | #184 | [W3-15] Translate rtw_security_rest.c — misc security helpers |
+| W3-16 | #185 | [W3-16] Translate rtw_security_rest.c — TDLS MIC helpers |
+| W3-17 | #186 | [W3-17] Translate rtw_chplan_rest.c — beacon hint + debug dumps |
+| W3-18 | #187 | [W3-18] Translate rtw_io_rest.c — continual I/O error + reg sniff matchers |
+| W3-19 | #235 | [W3-19] Translate rtw_rf.c — channel layout helpers |
+| W3-20 | #236 | [W3-20] Translate rtw_rf.c — channel/frequency conversion |
+| W3-21 | #238 | [W3-21] Translate rtw_rf.c — lookup/format tables |
+| W3-22 | #239 | [W3-22] Translate rtw_rf.c — global op-class lookup |
+| W3-23 | #240 | [W3-23] Translate rtw_rf.c — RF type and trx path helpers |
+| W3-24 | #241 | [W3-24] Translate rtw_rf.c — txpwr format and DFS CAC helpers |
+| W3-25 | #242 | [W3-25] Translate rtw_rf.c — tx path NSS and bb gain sel |
+| W3-26 | #243 | [W3-26] Translate rtw_ieee80211.c — rate and network type helpers |
+| W3-27 | #244 | [W3-27] Translate rtw_ieee80211.c — WPA/RSN cipher suite getters |
+| W3-28 | #245 | [W3-28] Translate rtw_ieee80211.c — WPA/RSN IE parse |
+| W3-29 | #246 | [W3-29] Translate rtw_ieee80211.c — WAPI/WPS/sec-IE getters |
+| W3-30 | #247 | [W3-30] Translate rtw_ieee80211.c — string and MAC address helpers |
+| W3-31 | #248 | [W3-31] Translate rtw_ieee80211.c — chbw grouping and sync |
+| W3-32 | #249 | [W3-32] Translate rtw_ieee80211.c — frame header and HT MCS helpers |
+| W3-33 | #250 | [W3-33] Translate rtw_rm_util.c — radio measurement pure helpers |
+| W3-34 | #251 | [W3-34] Translate rtw_rm_util.c — RM token generation |
+| W3-35 | #252 | [W3-35] Translate rtw_vht.c — VHT MCS and NSS helpers |
+| W3-36 | #253 | [W3-36] Translate rtw_vht.c — VHT IE restructure |
+| W3-37 | #254 | [W3-37] Translate rtw_sta_mgt.c — match rule and access control |
+| W3-38 | #255 | [W3-38] Translate rtw_sta_mgt.c — AID and pre-link sta helpers |
+| W3-39 | #256 | [W3-39] Translate rtw_recv.c — recv leaf helpers |
+| W3-40 | #257 | [W3-40] Translate rtw_xmit.c — tx rate bitmap helpers |
 
 ## Superseded issues
 

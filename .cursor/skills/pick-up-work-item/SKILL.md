@@ -5,8 +5,9 @@ description: >-
   Auto-applies on "pick up work", "find open work item", "check GitHub issues",
   "what should we work on next", "triage issues and start work", or similar.
   Runs triage (close stale issues), selects a ready item, plans ~200-line stacked
-  PRs, implements them, or drafts new issues when nothing is ready — then stops
-  after drafting (do not auto-implement newly filed issues). Do NOT use for
+  PRs, implements them, or drafts a large wave of new issues (15–25+ tickets
+  when the frontier is empty) when nothing is ready — then stops after drafting
+  (do not auto-implement newly filed issues). Do NOT use for
   reviewing PRs (pr-review-delivery) or preparing an existing PR for merge
   (prepare-pr-for-merge).
 metadata:
@@ -37,7 +38,7 @@ Run these steps **in order**. Do not skip ahead.
 | 2 | [`select-ready-issue`](../select-ready-issue/SKILL.md) | Pick one open, unblocked, ready issue — or report none |
 | 3a | [`plan-stacked-prs`](../plan-stacked-prs/SKILL.md) | Split the issue into ~200 LOC stacked PRs (plan only) |
 | 3b | [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) | Implement PRs one by one, open stacked PRs |
-| 4 | [`draft-migration-issues`](../draft-migration-issues/SKILL.md) | **Only if step 2 found nothing ready** — draft new tickets, then **stop** |
+| 4 | [`draft-migration-issues`](../draft-migration-issues/SKILL.md) | **Only if step 2 found nothing ready** — draft a **large wave** of new tickets (15–25+ when frontier empty), then **stop** |
 
 ```mermaid
 flowchart TD
@@ -53,12 +54,15 @@ flowchart TD
 ## Stop after drafting (step 4)
 
 When step 4 runs, the workflow **ends there**. Creating or filing new issues is a
-complete job — not a prelude to implementation.
+complete job — not a prelude to implementation. Step 4 should produce **enough
+backlog for multiple future pick-ups** (see `draft-migration-issues` batch-size
+rules); filing only 1–2 tickets when a whole tranche is unfiled is a workflow
+miss.
 
 | After step 4 | Do | Do not |
 |--------------|-----|--------|
 | Issues drafted and/or filed | Report what was created, what it unblocks, and any human decisions needed | Re-run step 2 to select one of the new issues |
-| User asked only to draft/file issues | Commit/push draft markdown, README, and `ISSUE-MAP.md` updates; open a docs PR if appropriate | Continue to `plan-stacked-prs` or `implement-stacked-prs` |
+| User asked only to draft/file issues | Commit/push draft markdown and `ISSUE-MAP.md` updates; open a docs PR if appropriate | Continue to `plan-stacked-prs` or `implement-stacked-prs` |
 | Newly filed issues look ready | Note them in the report for a **future** pick-up | Start planning or coding in the same session unless the user explicitly asks |
 
 Do **not** treat "nothing was ready, so I filed new tickets" as permission to
@@ -73,14 +77,14 @@ or a new pick-up-work-item run in a later session.
 | Close issues with evidence they are done | Merge PRs without explicit user instruction |
 | Open stacked PRs for the selected issue | Pick up a second issue while the first stack is in flight (unless user asks) |
 | Stop after step 4 (draft/file issues) with a status report | Auto-select or implement a newly drafted issue in the same run |
-| Update `docs/rust-migration/issues/README.md` status when closing issues | Rewrite `ISSUE-MAP.md` by hand (use `file-issues.sh`) |
+| Query GitHub for open/closed/blocked state | Rewrite `ISSUE-MAP.md` by hand (use `file-issues.sh`) |
 
 ## Repo context (quick reference)
 
-- **Issue map:** [`ISSUE-MAP.md`](../../../docs/rust-migration/issues/ISSUE-MAP.md) — draft ID ↔ GitHub `#N`
-- **Status table:** [`README.md`](../../../docs/rust-migration/issues/README.md) — local done/draft/in-progress tracking
-- **Epics:** `epic-*.md` — wave/phase parents (`E01`–`E12`)
-- **Children:** `wave*`, `test-*`, `arch-*`, `release-*` — sized ~200 LOC slices
+- **Tracker (authoritative):** GitHub Issues — `gh issue list` / `gh issue view`
+- **Filing registry:** [`ISSUE-MAP.md`](../../../docs/rust-migration/issues/ISSUE-MAP.md) — draft ID ↔ GitHub `#N` (not status)
+- **Draft specs:** `wave*`, `test-*`, `arch-*`, `release-*` — templates for filing (~200 LOC)
+- **Epics:** `epic-*.md` — wave/phase planning structure (`E01`–`E12`)
 - **Labels:** `rust-migration`, `wave-*`, `phase-*`, `size/~200`
 - **Gates:** L0 build, L1 symbols, L2 host tests, L3 QEMU, L4 hardware — see [`test-plan.md`](../../../docs/rust-migration/test-plan.md) and [`AGENTS.md`](../../../AGENTS.md)
 

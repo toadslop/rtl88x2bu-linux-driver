@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # File draft issues from docs/rust-migration/issues/*.md onto GitHub.
 # Idempotent: skips draft IDs already present in ISSUE-MAP.md; appends new rows.
+# ISSUE-MAP.md is a filing registry (draft ID ↔ #N), not a status tracker.
 # Requires: Issues enabled on the repo; gh authenticated with issue write scope.
 set -euo pipefail
 
@@ -110,6 +111,31 @@ files=(
   wave3-07-security-tkip-mic.md
   wave3-08-wlan-util-rates.md
   wave3-09-wlan-util-ratetbl.md
+  # W3-10..W3-18: filed on GitHub only (#179..#187); no local draft markdown.
+  # Excluded from files[] — Tracking refresh for those IDs is via gh issue edit
+  # or by adding draft specs in a future PR.
+  wave3-19-rf-ch-layout.md
+  wave3-20-rf-freq.md
+  wave3-21-rf-lookup-tables.md
+  wave3-22-rf-op-class.md
+  wave3-23-rf-trx-path.md
+  wave3-24-rf-txpwr-cac.md
+  wave3-25-rf-tx-path-nss.md
+  wave3-26-ieee80211-rates.md
+  wave3-27-ieee80211-wpa-rsn-p1.md
+  wave3-28-ieee80211-wpa-rsn-p2.md
+  wave3-29-ieee80211-wapi-wps.md
+  wave3-30-ieee80211-mac-str.md
+  wave3-31-ieee80211-chbw.md
+  wave3-32-ieee80211-frame-ht.md
+  wave3-33-rm-util-pure.md
+  wave3-34-rm-util-tokens.md
+  wave3-35-vht-mcs-nss.md
+  wave3-36-vht-ie-restructure.md
+  wave3-37-sta-mgt-acl.md
+  wave3-38-sta-mgt-aid.md
+  wave3-39-recv-leaf.md
+  wave3-40-xmit-rate-bmp.md
 )
 
 # draft_id -> github issue number
@@ -249,6 +275,39 @@ map_has_id() {
   [[ -n "${ID_TO_NUM[$id]:-}" ]]
 }
 
+# Append a row to the main map table (after the last table row, before ## Superseded issues).
+append_map_row() {
+  local row="$1"
+  MAP_ROW="$row" python3 - "$MAP_FILE" <<'PY'
+import os, sys
+path = sys.argv[1]
+row = os.environ["MAP_ROW"]
+with open(path) as f:
+    lines = f.readlines()
+main_lines = lines
+superseded_idx = next(
+    (i for i, line in enumerate(lines) if line.startswith("## Superseded issues")),
+    len(lines),
+)
+main_lines = lines[:superseded_idx]
+last_table_idx = None
+for i, line in enumerate(main_lines):
+    if line.startswith("| ") and not line.startswith("| Draft ID") and not line.startswith("|----------"):
+        last_table_idx = i
+if last_table_idx is not None:
+    out = lines[: last_table_idx + 1]
+    out.append(row + "\n")
+    out.extend(lines[last_table_idx + 1 :])
+else:
+    out = list(lines)
+    if out and not out[-1].endswith("\n"):
+        out[-1] += "\n"
+    out.append(row + "\n")
+with open(path, "w") as f:
+    f.writelines(out)
+PY
+}
+
 find_existing_issue_by_title() {
   local title="$1"
   gh issue list --repo "$REPO" --state all --search "in:title \"$title\"" --json number,title \
@@ -307,7 +366,7 @@ for f in "${files[@]}"; do
   if [[ -n "$existing" ]]; then
     echo "Skipping $id (found existing #$existing by title); recording in map"
     ID_TO_NUM["$id"]="$existing"
-    echo "| $id | #$existing | $title |" >>"$MAP_FILE"
+    append_map_row "| $id | #$existing | $title |"
     skipped=$((skipped + 1))
     continue
   fi
@@ -329,7 +388,7 @@ for f in "${files[@]}"; do
   url="$(gh issue create --repo "$REPO" --title "$title" --body "$body" "${label_args[@]}")"
   num="${url##*/}"
   ID_TO_NUM["$id"]="$num"
-  echo "| $id | #$num | $title |" >>"$MAP_FILE"
+  append_map_row "| $id | #$num | $title |"
   echo "  -> $url"
   created=$((created + 1))
 done
