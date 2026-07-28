@@ -35,6 +35,8 @@ const WIFI_DATA_CFPOLL: U32 = (1 << 5) | WIFI_DATA_TYPE;
 const WIFI_DATA_CFACKPOLL: U32 = (1 << 5) | (1 << 4) | WIFI_DATA_TYPE;
 
 const _SUCCESS: Sint = 1;
+const _FAIL: Sint = 0;
+const MAX_MSG_SIZE: usize = 2048;
 
 const SBOX_TABLE: [U8; 256] = [
     0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
@@ -521,6 +523,268 @@ fn aes_cipher(key: &[U8; 16], hdrlen: u32, pframe: &mut [U8], plen: u32) -> Sint
     _SUCCESS
 }
 
+fn aes_decipher_inner(key: &[U8; 16], hdrlen: u32, pframe: &mut [U8], plen: u32) -> Sint {
+    let mut hdrlen = hdrlen;
+    let frtype = get_frame_type_le(pframe);
+    let frsubtype = get_frame_sub_type_le(pframe) >> 4;
+
+    let mut message = [0u8; MAX_MSG_SIZE];
+    let mut mic_iv = [0u8; 16];
+    let mut mic_header1 = [0u8; 16];
+    let mut mic_header2 = [0u8; 16];
+    let mut ctr_preload = [0u8; 16];
+    let mut chain_buffer = [0u8; 16];
+    let mut aes_out = [0u8; 16];
+    let mut padded_buffer = [0u8; 16];
+    let mut mic = [0u8; 8];
+    let mut res = _SUCCESS;
+
+    let mut num_blocks = (plen - 8) / 16;
+    let mut payload_remainder = (plen - 8) % 16;
+
+    let mut pn_vector = [
+        pframe[hdrlen as usize],
+        pframe[hdrlen as usize + 1],
+        pframe[hdrlen as usize + 4],
+        pframe[hdrlen as usize + 5],
+        pframe[hdrlen as usize + 6],
+        pframe[hdrlen as usize + 7],
+    ];
+
+    let a4_exists = if hdrlen == WLAN_HDR_A3_LEN || hdrlen == WLAN_HDR_A3_QOS_LEN {
+        0
+    } else {
+        1
+    };
+
+    let qc_exists = if (frtype | frsubtype) == WIFI_DATA_CFACK
+        || (frtype | frsubtype) == WIFI_DATA_CFPOLL
+        || (frtype | frsubtype) == WIFI_DATA_CFACKPOLL
+    {
+        if hdrlen != WLAN_HDR_A3_QOS_LEN && hdrlen != WLAN_HDR_A4_QOS_LEN {
+            hdrlen += 2;
+        }
+        1
+    } else if frtype == WIFI_DATA_TYPE
+        && (frsubtype == 0x08
+            || frsubtype == 0x09
+            || frsubtype == 0x0a
+            || frsubtype == 0x0b)
+    {
+        if hdrlen != WLAN_HDR_A3_QOS_LEN && hdrlen != WLAN_HDR_A4_QOS_LEN {
+            hdrlen += 2;
+        }
+        1
+    } else {
+        0
+    };
+
+    let payload_base = hdrlen as usize + 8;
+    let mut payload_index = payload_base;
+
+    for i in 0..num_blocks {
+        construct_ctr_preload(
+            &mut ctr_preload,
+            a4_exists,
+            qc_exists,
+            pframe,
+            &pn_vector,
+            (i + 1) as Sint,
+            frtype,
+        );
+        aes128k128d(key, &ctr_preload, &mut aes_out);
+        let block = {
+            let src = &pframe[payload_index..payload_index + 16];
+            let mut arr = [0u8; 16];
+            arr.copy_from_slice(src);
+            arr
+        };
+        bitwise_xor(&aes_out, &block, &mut chain_buffer);
+        for j in 0..16 {
+            pframe[payload_index + j] = chain_buffer[j];
+        }
+        payload_index += 16;
+    }
+
+    if payload_remainder > 0 {
+        construct_ctr_preload(
+            &mut ctr_preload,
+            a4_exists,
+            qc_exists,
+            pframe,
+            &pn_vector,
+            (num_blocks + 1) as Sint,
+            frtype,
+        );
+        padded_buffer.fill(0);
+        for j in 0..payload_remainder as usize {
+            padded_buffer[j] = pframe[payload_index + j];
+        }
+        aes128k128d(key, &ctr_preload, &mut aes_out);
+        bitwise_xor(&aes_out, &padded_buffer, &mut chain_buffer);
+        for j in 0..payload_remainder as usize {
+            pframe[payload_index + j] = chain_buffer[j];
+        }
+    }
+
+    let copy_len = hdrlen as usize + plen as usize + 8;
+    if copy_len <= MAX_MSG_SIZE {
+        message[..copy_len].copy_from_slice(&pframe[..copy_len]);
+    }
+
+    pn_vector = [
+        pframe[hdrlen as usize],
+        pframe[hdrlen as usize + 1],
+        pframe[hdrlen as usize + 4],
+        pframe[hdrlen as usize + 5],
+        pframe[hdrlen as usize + 6],
+        pframe[hdrlen as usize + 7],
+    ];
+
+    construct_mic_iv(
+        &mut mic_iv,
+        qc_exists,
+        a4_exists,
+        &message,
+        plen - 8,
+        &pn_vector,
+        frtype,
+    );
+    construct_mic_header1(&mut mic_header1, hdrlen as Sint, &message, frtype);
+    construct_mic_header2(&mut mic_header2, &message, a4_exists, qc_exists);
+
+    payload_remainder = (plen - 8) % 16;
+    num_blocks = (plen - 8) / 16;
+    payload_index = payload_base;
+
+    aes128k128d(key, &mic_iv, &mut aes_out);
+    bitwise_xor(&aes_out, &mic_header1, &mut chain_buffer);
+    aes128k128d(key, &chain_buffer, &mut aes_out);
+    bitwise_xor(&aes_out, &mic_header2, &mut chain_buffer);
+    aes128k128d(key, &chain_buffer, &mut aes_out);
+
+    for _ in 0..num_blocks {
+        let block = {
+            let src = &message[payload_index..payload_index + 16];
+            let mut arr = [0u8; 16];
+            arr.copy_from_slice(src);
+            arr
+        };
+        bitwise_xor(&aes_out, &block, &mut chain_buffer);
+        payload_index += 16;
+        aes128k128d(key, &chain_buffer, &mut aes_out);
+    }
+
+    if payload_remainder > 0 {
+        padded_buffer.fill(0);
+        for j in 0..payload_remainder as usize {
+            padded_buffer[j] = message[payload_index + j];
+        }
+        payload_index += payload_remainder as usize;
+        bitwise_xor(&aes_out, &padded_buffer, &mut chain_buffer);
+        aes128k128d(key, &chain_buffer, &mut aes_out);
+    }
+
+    for j in 0..8 {
+        mic[j] = aes_out[j];
+    }
+    for j in 0..8 {
+        message[payload_index + j] = mic[j];
+    }
+
+    payload_index = payload_base;
+    for i in 0..num_blocks {
+        construct_ctr_preload(
+            &mut ctr_preload,
+            a4_exists,
+            qc_exists,
+            &message,
+            &pn_vector,
+            (i + 1) as Sint,
+            frtype,
+        );
+        aes128k128d(key, &ctr_preload, &mut aes_out);
+        let block = {
+            let src = &message[payload_index..payload_index + 16];
+            let mut arr = [0u8; 16];
+            arr.copy_from_slice(src);
+            arr
+        };
+        bitwise_xor(&aes_out, &block, &mut chain_buffer);
+        for j in 0..16 {
+            message[payload_index + j] = chain_buffer[j];
+        }
+        payload_index += 16;
+    }
+
+    if payload_remainder > 0 {
+        construct_ctr_preload(
+            &mut ctr_preload,
+            a4_exists,
+            qc_exists,
+            &message,
+            &pn_vector,
+            (num_blocks + 1) as Sint,
+            frtype,
+        );
+        padded_buffer.fill(0);
+        for j in 0..payload_remainder as usize {
+            padded_buffer[j] = message[payload_index + j];
+        }
+        aes128k128d(key, &ctr_preload, &mut aes_out);
+        bitwise_xor(&aes_out, &padded_buffer, &mut chain_buffer);
+        for j in 0..payload_remainder as usize {
+            message[payload_index + j] = chain_buffer[j];
+        }
+        payload_index += payload_remainder as usize;
+    }
+
+    construct_ctr_preload(
+        &mut ctr_preload,
+        a4_exists,
+        qc_exists,
+        &message,
+        &pn_vector,
+        0,
+        frtype,
+    );
+    padded_buffer.fill(0);
+    for j in 0..8 {
+        padded_buffer[j] = message[hdrlen as usize + 8 + plen as usize - 8 + j];
+    }
+    aes128k128d(key, &ctr_preload, &mut aes_out);
+    bitwise_xor(&aes_out, &padded_buffer, &mut chain_buffer);
+    for j in 0..8 {
+        message[payload_index + j] = chain_buffer[j];
+    }
+
+    let mic_off = hdrlen as usize + 8 + plen as usize - 8;
+    for i in 0..8 {
+        if pframe[mic_off + i] != message[mic_off + i] {
+            res = _FAIL;
+        }
+    }
+
+    res
+}
+
+#[cfg(not(host_security_rest_test))]
+#[no_mangle]
+pub extern "C" fn aes_decipher(
+    key: *mut U8,
+    hdrlen: u32,
+    pframe: *mut U8,
+    plen: u32,
+) -> Sint {
+    if key.is_null() || pframe.is_null() {
+        return _FAIL;
+    }
+    let key_arr: [U8; 16] = unsafe { core::ptr::read_unaligned(key as *const [U8; 16]) };
+    let need = hdrlen as usize + 8 + plen as usize;
+    let frame_slice = unsafe { core::slice::from_raw_parts_mut(pframe, need) };
+    aes_decipher_inner(&key_arr, hdrlen, frame_slice, plen)
+}
+
 // ----- Host L2 exports (W3-11) -----
 
 #[cfg(host_security_rest_test)]
@@ -679,6 +943,23 @@ pub extern "C" fn host_ccmp_aes_cipher(
     let need = hdrlen as usize + 8 + plen as usize + 8;
     let frame_slice = unsafe { core::slice::from_raw_parts_mut(pframe, need) };
     aes_cipher(&key_arr, hdrlen, frame_slice, plen)
+}
+
+#[cfg(host_security_rest_test)]
+#[no_mangle]
+pub extern "C" fn host_ccmp_aes_decipher(
+    key: *mut U8,
+    hdrlen: u32,
+    pframe: *mut U8,
+    plen: u32,
+) -> Sint {
+    if key.is_null() || pframe.is_null() {
+        return _FAIL;
+    }
+    let key_arr: [U8; 16] = unsafe { core::ptr::read_unaligned(key as *const [U8; 16]) };
+    let need = hdrlen as usize + 8 + plen as usize;
+    let frame_slice = unsafe { core::slice::from_raw_parts_mut(pframe, need) };
+    aes_decipher_inner(&key_arr, hdrlen, frame_slice, plen)
 }
 
 // ----- rtw_aes_encrypt frame path (W3-12c) -----
