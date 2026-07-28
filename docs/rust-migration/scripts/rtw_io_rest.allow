@@ -1,0 +1,21 @@
+# L1 allowlist for W3-18: Rust owns continual I/O error + sniff matchers;
+# sniff tables and Rust helper shims remain in core/rtw_io_rest.c.
+drop read_sniff
+drop read_sniff_num
+drop write_sniff
+drop write_sniff_num
+drop rf_read_sniff_ranges
+drop rf_write_sniff_ranges
+drop rf_read_sniff_num
+drop rf_write_sniff_num
+drop rtw_rust_dvobj_continual_io_error
+drop rtw_rust_atomic_inc_return
+drop rtw_rust_atomic_set
+drop rtw_rust_get_chip_type
+drop rtw_rust_get_intf_type
+drop rtw_rust_io_warn_on
+drop rtw_rust_io_dbg_tag
+drop rtw_rust_io_continual_io_error_log
+drop rtw_rust_io_sniff_assert_protsel
+drop rtw_rust_io_max_chip_type
+drop rtw_rust_io_max_rf_path
