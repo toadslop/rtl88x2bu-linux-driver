@@ -26,13 +26,20 @@ Chplan work is **Wave 2** (W2-17…W2-20), not Wave 3 — see `epic-04-wave2.md`
 
 Supporting: **A2** (channel/rate domain types), **A3** (security domain types), **T5** (security/wlan_util L2 harness).
 
-## Children (tranche 2 — open when tranche 1 is underway)
+## Children (tranche 2 — filed)
 
-Slice ~200 LOC function groups from larger protocol TUs; file new `wave3-*.md` issues as needed:
+| ID | File | Focus |
+|----|------|--------|
+| W3-10 … W3-16 | (GitHub only) | `rtw_security_rest.c` remainder |
+| W3-17 | (GitHub only) | `rtw_chplan_rest.c` beacon hint + debug dumps |
+| W3-18 | (GitHub only) | `rtw_io_rest.c` I/O error + reg sniff matchers |
+| W3-19 | `wave3-19-rf-ch-layout.md` | `rtw_rf.c` channel layout helpers |
+| W3-20 | `wave3-20-rf-freq.md` | `rtw_rf.c` ch2freq / freq2ch / freq range |
 
-- `rtw_security.c` remainder (TKIP/CCMP frame encrypt/decrypt paths)
-- `rtw_chplan.c` deferred: `rtw_process_beacon_hint`, `dump_*` debug helpers
-- `rtw_io.c`, `rtw_rf.c`, `rtw_pwrctrl.c`
+Further ~200 LOC slices from larger protocol TUs; file new `wave3-*.md` issues as needed:
+
+- `rtw_rf.c` remainder (op-class, txpwr, regd_exc, …)
+- `rtw_pwrctrl.c`
 - `rtw_recv.c`, `rtw_xmit.c`, `rtw_cmd.c`
 - `rtw_mlme.c`, `rtw_mlme_ext.c`, `rtw_ap.c`, remaining `rtw_ieee80211.c`
 - `rtw_sta_mgt.c`, `rtw_vht.c`, smaller `rtw_*.c` (sreset, iol, roch, …)

@@ -75,3 +75,5 @@ Some work was tracked before the bulk migration (`file-issues.sh`). Prefer the c
 | Draft ID | Canonical | Superseded | Notes |
 |----------|-----------|------------|-------|
 | T1 | #76 | #12 | Same title; filed manually before the migration tracker (no `rust-migration` label) |
+| W3-19 | #235 | [W3-19] Translate rtw_rf.c — channel layout helpers |
+| W3-20 | #236 | [W3-20] Translate rtw_rf.c — channel/frequency conversion |

@@ -110,6 +110,8 @@ files=(
   wave3-07-security-tkip-mic.md
   wave3-08-wlan-util-rates.md
   wave3-09-wlan-util-ratetbl.md
+  wave3-19-rf-ch-layout.md
+  wave3-20-rf-freq.md
 )
 
 # draft_id -> github issue number
