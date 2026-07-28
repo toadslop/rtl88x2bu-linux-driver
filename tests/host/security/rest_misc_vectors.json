@@ -1,0 +1,71 @@
+{
+  "oracle": "core/rtw_security_rest.c",
+  "vectors": [
+    {
+      "name": "calc_crc32_ascii9",
+      "fn": "host_rest_calc_crc32",
+      "data": "313233343536373839",
+      "expect_crc": 3421780262
+    },
+    {
+      "name": "calc_crc32_empty",
+      "fn": "host_rest_calc_crc32",
+      "data": "",
+      "expect_crc": 0
+    },
+    {
+      "name": "aes_siv_encrypt_success",
+      "fn": "host_rest_aes_siv_encrypt",
+      "key_len": 32,
+      "key": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e",
+      "elements": ["01010101"],
+      "pw": "0202020202",
+      "expected_out": "c0ba534b70ef6d6f01f6f45396742b49d3c1f1a7d5",
+      "expect_ret": 0
+    },
+    {
+      "name": "aes_siv_decrypt_rfc5297",
+      "fn": "host_rest_aes_siv_decrypt",
+      "key_len": 32,
+      "key": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e0e",
+      "elements": ["01010101"],
+      "iv_crypt": "c0ba534b70ef6d6f01f6f45396742b49d3c1f1a7d5",
+      "expected_out": "0202020202",
+      "expect_ret": 0
+    },
+    {
+      "name": "restore_wep_key_wep40_all_slots",
+      "fn": "host_rest_sec_restore_wep_key",
+      "privacy_alg": 1,
+      "privacy_key_index": 1,
+      "key_mask": 15,
+      "expect_call_count": 4,
+      "expect_calls": [
+        { "keyid": 0, "set_tx": 0 },
+        { "keyid": 1, "set_tx": 1 },
+        { "keyid": 2, "set_tx": 0 },
+        { "keyid": 3, "set_tx": 0 }
+      ]
+    },
+    {
+      "name": "restore_wep_key_non_wep_skip",
+      "fn": "host_rest_sec_restore_wep_key",
+      "privacy_alg": 4,
+      "privacy_key_index": 0,
+      "key_mask": 15,
+      "expect_call_count": 0
+    },
+    {
+      "name": "restore_wep_key_partial_mask",
+      "fn": "host_rest_sec_restore_wep_key",
+      "privacy_alg": 5,
+      "privacy_key_index": 2,
+      "key_mask": 5,
+      "expect_call_count": 2,
+      "expect_calls": [
+        { "keyid": 0, "set_tx": 0 },
+        { "keyid": 2, "set_tx": 1 }
+      ]
+    }
+  ]
+}
