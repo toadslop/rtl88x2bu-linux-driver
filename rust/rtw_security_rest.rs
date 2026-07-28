@@ -1830,3 +1830,304 @@ pub extern "C" fn rtw_gcmp_decrypt(padapter: *mut HostGcmpAdapter, precvframe: *
         HOST_GCMP_SUCCESS
     }
 }
+
+// ----- Misc security_rest helpers (W3-15) -----
+
+const _WEP40_: U32 = 0x01;
+const _WEP104_: U32 = 0x05;
+
+#[cfg(not(host_security_rest_test))]
+extern "C" {
+    fn getcrc32(buf: *mut U8, len: Sint) -> U32;
+    fn _aes_siv_encrypt(
+        key: *const U8,
+        key_len: usize,
+        pw: *const U8,
+        pwlen: usize,
+        num_elem: usize,
+        addr: *const *const U8,
+        len: *const usize,
+        out: *mut U8,
+    ) -> c_int;
+    fn _aes_siv_decrypt(
+        key: *const U8,
+        key_len: usize,
+        iv_crypt: *const U8,
+        iv_c_len: usize,
+        num_elem: usize,
+        addr: *const *const U8,
+        len: *const usize,
+        out: *mut U8,
+    ) -> c_int;
+    fn rtw_set_key(
+        adapter: *mut AesAdapter,
+        securitypriv: *mut u8,
+        keyid: Sint,
+        set_tx: U8,
+        enqueue: U8,
+    ) -> Sint;
+}
+
+#[cfg(not(host_security_rest_test))]
+mod wep_restore_kernel_layout {
+    use super::*;
+
+    extern "C" {
+        static rtw_rust_wep_restore_off_securitypriv_dot11PrivacyAlgrthm: usize;
+        static rtw_rust_wep_restore_off_securitypriv_dot11PrivacyKeyIndex: usize;
+        static rtw_rust_wep_restore_off_securitypriv_key_mask: usize;
+    }
+
+    pub unsafe fn privacy_algrthm(psecuritypriv: *mut u8) -> U32 {
+        unsafe {
+            *((psecuritypriv.add(rtw_rust_wep_restore_off_securitypriv_dot11PrivacyAlgrthm))
+                as *const U32)
+        }
+    }
+
+    pub unsafe fn privacy_key_index(psecuritypriv: *mut u8) -> U32 {
+        unsafe {
+            *((psecuritypriv.add(rtw_rust_wep_restore_off_securitypriv_dot11PrivacyKeyIndex))
+                as *const U32)
+        }
+    }
+
+    pub unsafe fn key_mask(psecuritypriv: *mut u8) -> U8 {
+        unsafe {
+            *((psecuritypriv.add(rtw_rust_wep_restore_off_securitypriv_key_mask)) as *const U8)
+        }
+    }
+}
+
+#[cfg(not(host_security_rest_test))]
+#[no_mangle]
+pub extern "C" fn rtw_calc_crc32(data: *mut U8, len: usize) -> U32 {
+    if data.is_null() {
+        return 0;
+    }
+    unsafe { getcrc32(data, len as Sint) }
+}
+
+#[cfg(not(host_security_rest_test))]
+#[no_mangle]
+pub extern "C" fn rtw_aes_siv_encrypt(
+    key: *const U8,
+    key_len: usize,
+    pw: *const U8,
+    pwlen: usize,
+    num_elem: usize,
+    addr: *const *const U8,
+    len: *const usize,
+    out: *mut U8,
+) -> c_int {
+    unsafe {
+        _aes_siv_encrypt(key, key_len, pw, pwlen, num_elem, addr, len, out)
+    }
+}
+
+#[cfg(not(host_security_rest_test))]
+#[no_mangle]
+pub extern "C" fn rtw_aes_siv_decrypt(
+    key: *const U8,
+    key_len: usize,
+    iv_crypt: *const U8,
+    iv_c_len: usize,
+    num_elem: usize,
+    addr: *const *const U8,
+    len: *const usize,
+    out: *mut U8,
+) -> c_int {
+    unsafe {
+        _aes_siv_decrypt(key, key_len, iv_crypt, iv_c_len, num_elem, addr, len, out)
+    }
+}
+
+#[cfg(not(host_security_rest_test))]
+#[no_mangle]
+pub extern "C" fn rtw_sec_restore_wep_key(adapter: *mut AesAdapter) {
+    if adapter.is_null() {
+        return;
+    }
+    unsafe {
+        let psecuritypriv = kernel_layout::adapter_securitypriv(adapter);
+        let privacy_alg = wep_restore_kernel_layout::privacy_algrthm(psecuritypriv);
+        if privacy_alg != _WEP40_ && privacy_alg != _WEP104_ {
+            return;
+        }
+        let key_index = wep_restore_kernel_layout::privacy_key_index(psecuritypriv);
+        let mask = wep_restore_kernel_layout::key_mask(psecuritypriv);
+        for keyid in 0..4 {
+            if (mask & (1u8 << keyid)) != 0 {
+                let set_tx = if keyid as U32 == key_index { 1 } else { 0 };
+                rtw_set_key(adapter, psecuritypriv, keyid as Sint, set_tx, _FALSE);
+            }
+        }
+    }
+}
+
+// ----- Host L2 exports (W3-15) -----
+
+#[cfg(host_rest_misc_test)]
+extern "C" {
+    fn host_wep_getcrc32(buf: *mut U8, len: Sint) -> U32;
+    fn aes_siv_encrypt(
+        key: *const U8,
+        key_len: usize,
+        pw: *const U8,
+        pwlen: usize,
+        num_elem: usize,
+        addr: *const *const U8,
+        len: *const usize,
+        out: *mut U8,
+    ) -> c_int;
+    fn aes_siv_decrypt(
+        key: *const U8,
+        key_len: usize,
+        iv_crypt: *const U8,
+        iv_c_len: usize,
+        num_elem: usize,
+        addr: *const *const U8,
+        len: *const usize,
+        out: *mut U8,
+    ) -> c_int;
+}
+
+#[cfg(host_rest_misc_test)]
+#[repr(C)]
+pub struct HostRestoreWepSecurityPriv {
+    pub dot11PrivacyAlgrthm: U32,
+    pub dot11PrivacyKeyIndex: U32,
+    pub key_mask: U8,
+}
+
+#[cfg(host_rest_misc_test)]
+#[repr(C)]
+pub struct HostRestoreWepAdapter {
+    pub securitypriv: HostRestoreWepSecurityPriv,
+}
+
+#[cfg(host_rest_misc_test)]
+#[derive(Copy, Clone)]
+struct HostRestoreWepSetKeyCall {
+    keyid: Sint,
+    set_tx: U8,
+}
+
+#[cfg(host_rest_misc_test)]
+static mut HOST_RESTORE_WEP_CALLS: [HostRestoreWepSetKeyCall; 8] =
+    [HostRestoreWepSetKeyCall { keyid: 0, set_tx: 0 }; 8];
+#[cfg(host_rest_misc_test)]
+static mut HOST_RESTORE_WEP_CALL_COUNT: usize = 0;
+
+#[cfg(host_rest_misc_test)]
+#[no_mangle]
+pub extern "C" fn host_restore_wep_reset_calls() {
+    unsafe {
+        HOST_RESTORE_WEP_CALL_COUNT = 0;
+    }
+}
+
+#[cfg(host_rest_misc_test)]
+#[no_mangle]
+pub extern "C" fn host_restore_wep_get_call_count() -> usize {
+    unsafe { HOST_RESTORE_WEP_CALL_COUNT }
+}
+
+#[cfg(host_rest_misc_test)]
+#[no_mangle]
+pub extern "C" fn host_restore_wep_get_call_keyid(idx: usize) -> Sint {
+    unsafe {
+        if idx >= HOST_RESTORE_WEP_CALL_COUNT {
+            return -1;
+        }
+        HOST_RESTORE_WEP_CALLS[idx].keyid
+    }
+}
+
+#[cfg(host_rest_misc_test)]
+#[no_mangle]
+pub extern "C" fn host_restore_wep_get_call_set_tx(idx: usize) -> U8 {
+    unsafe {
+        if idx >= HOST_RESTORE_WEP_CALL_COUNT {
+            return 0xff;
+        }
+        HOST_RESTORE_WEP_CALLS[idx].set_tx
+    }
+}
+
+#[cfg(host_rest_misc_test)]
+unsafe fn host_restore_wep_set_key(keyid: Sint, set_tx: U8) {
+    unsafe {
+        if HOST_RESTORE_WEP_CALL_COUNT >= HOST_RESTORE_WEP_CALLS.len() {
+            return;
+        }
+        HOST_RESTORE_WEP_CALLS[HOST_RESTORE_WEP_CALL_COUNT].keyid = keyid;
+        HOST_RESTORE_WEP_CALLS[HOST_RESTORE_WEP_CALL_COUNT].set_tx = set_tx;
+        HOST_RESTORE_WEP_CALL_COUNT += 1;
+    }
+}
+
+#[cfg(host_rest_misc_test)]
+#[no_mangle]
+pub extern "C" fn host_rest_calc_crc32(data: *mut U8, len: usize) -> U32 {
+    if data.is_null() {
+        return 0;
+    }
+    unsafe { host_wep_getcrc32(data, len as Sint) }
+}
+
+#[cfg(host_rest_misc_test)]
+#[no_mangle]
+pub extern "C" fn host_rest_aes_siv_encrypt(
+    key: *const U8,
+    key_len: usize,
+    pw: *const U8,
+    pwlen: usize,
+    num_elem: usize,
+    addr: *const *const U8,
+    len: *const usize,
+    out: *mut U8,
+) -> c_int {
+    unsafe { aes_siv_encrypt(key, key_len, pw, pwlen, num_elem, addr, len, out) }
+}
+
+#[cfg(host_rest_misc_test)]
+#[no_mangle]
+pub extern "C" fn host_rest_aes_siv_decrypt(
+    key: *const U8,
+    key_len: usize,
+    iv_crypt: *const U8,
+    iv_c_len: usize,
+    num_elem: usize,
+    addr: *const *const U8,
+    len: *const usize,
+    out: *mut U8,
+) -> c_int {
+    unsafe {
+        aes_siv_decrypt(key, key_len, iv_crypt, iv_c_len, num_elem, addr, len, out)
+    }
+}
+
+#[cfg(host_rest_misc_test)]
+#[no_mangle]
+pub extern "C" fn host_rest_sec_restore_wep_key(adapter: *mut HostRestoreWepAdapter) {
+    if adapter.is_null() {
+        return;
+    }
+    unsafe {
+        let sec = &mut (*adapter).securitypriv;
+        if sec.dot11PrivacyAlgrthm != _WEP40_ && sec.dot11PrivacyAlgrthm != _WEP104_ {
+            return;
+        }
+        for keyid in 0..4 {
+            if (sec.key_mask & (1u8 << keyid)) != 0 {
+                let set_tx = if keyid as U32 == sec.dot11PrivacyKeyIndex {
+                    1
+                } else {
+                    0
+                };
+                host_restore_wep_set_key(keyid as Sint, set_tx);
+            }
+        }
+    }
+}
