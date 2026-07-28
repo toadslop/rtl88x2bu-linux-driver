@@ -21,6 +21,7 @@
 #include <rtw_rf.h>
 #endif
 
+#if !defined(CONFIG_RUST) || defined(HOST_RF_TEST)
 u8 center_ch_2g[CENTER_CH_2G_NUM] = {
 /* G00 */1, 2,
 /* G01 */3, 4, 5,
@@ -538,3 +539,16 @@ u8 rtw_get_ch_group(u8 ch, u8 *group, u8 *cck_group)
 exit:
 	return band;
 }
+#endif /* !CONFIG_RUST || HOST_RF_TEST */
+
+#if defined(CONFIG_RUST) && !defined(HOST_RF_TEST)
+void rtw_rust_rf_warn_on(int condition)
+{
+	rtw_warn_on(condition);
+}
+
+void rtw_rust_rf_warn_invalid_ch(const char *func, u8 ch)
+{
+	RTW_WARN("%s invalid channel:%u", func, ch);
+}
+#endif /* CONFIG_RUST && !HOST_RF_TEST */

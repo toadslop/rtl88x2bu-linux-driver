@@ -2533,6 +2533,7 @@ endif
 $(MODULE_NAME)-y += rust/rtw_chplan.o
 $(MODULE_NAME)-y += rust/rtw_chplan_rest.o
 $(MODULE_NAME)-y += rust/rtw_io_rest.o
+$(MODULE_NAME)-y += rust/rtw_rf_rest.o
 $(MODULE_NAME)-y += rust/rtw_swcrypto.o
 $(MODULE_NAME)-y += rust/rtw_ieee80211.o
 $(MODULE_NAME)-y += rust/rtw_security.o
@@ -2778,6 +2779,23 @@ rust-objects-rtw-io-rest-c:
 rust-check-symbols-rtw-io-rest: rust-objects-rtw-io-rest-c rust-objects-rtw-io-rest
 	$(MAKE) rust-check-symbols OLD=tests/host/io/io_rest_c_ref.o NEW=rust/rtw_io_rest.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_io_rest.allow
+
+# W3-19: compare pre-port core/rtw_rf_rest.o against rust/rtw_rf_rest.o.
+rust-objects-rtw-rf-rest:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-rtw-rf-rest"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_rf_rest.o
+
+rust-objects-rtw-rf-rest-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_RF_TEST -o tests/host/rf/rf_rest_c_ref.o core/rtw_rf_rest.c
+
+rust-check-symbols-rtw-rf-rest: rust-objects-rtw-rf-rest-c rust-objects-rtw-rf-rest
+	$(MAKE) rust-check-symbols OLD=tests/host/rf/rf_rest_c_ref.o NEW=rust/rtw_rf_rest.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_rf_rest.allow
 
 rust-objects-rtw-swcrypto:
 	@test -n "$(KDIR)" || { \

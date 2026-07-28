@@ -1,0 +1,18 @@
+# L1 allowlist for W3-19: Rust owns channel layout helpers and static tables;
+# kernel warn shims remain in core/rtw_rf_rest.c when CONFIG_RUST.
+drop center_ch_2g
+drop center_ch_2g_40m
+drop center_ch_5g_20m
+drop center_ch_5g_40m
+drop center_ch_5g_80m
+drop center_ch_5g_160m
+drop op_chs_of_cch_2g_40m
+drop op_chs_of_cch_5g_40m
+drop op_chs_of_cch_5g_80m
+drop op_chs_of_cch_5g_160m
+drop center_chs_2g_by_bw
+drop center_chs_5g_by_bw
+drop op_chs_of_cch_2g_by_bw
+drop op_chs_of_cch_5g_by_bw
+drop rtw_rust_rf_warn_on
+drop rtw_rust_rf_warn_invalid_ch
