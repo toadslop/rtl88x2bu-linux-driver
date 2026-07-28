@@ -55,7 +55,7 @@ The script:
 
 - Creates labels (if needed), opens issues, and appends rows to `ISSUE-MAP.md`
 - Is **idempotent** — skips draft IDs already in `ISSUE-MAP.md` (or matching titles)
-- Inserts map rows before `## Superseded issues` when present
+- Appends map rows after the last table row (preserves filing order)
 - Appends a `## Tracking` footer with resolved `#N` links for `epic` / `blocked_by`
 - On re-run, refreshes **only** the `## Tracking` section when it still contains
   `(not filed yet)` (use `FORCE_REFRESH=1` to rewrite Tracking anyway)
@@ -63,6 +63,10 @@ The script:
   `FILE_ISSUES_REF=<sha-or-branch>`)
 
 After filing, verify on GitHub — do not add status rows to this README.
+
+**GitHub-only IDs:** W3-10…W3-18 (#179…#187) were filed before local draft specs
+existed. They are in `ISSUE-MAP.md` but not in `file-issues.sh`'s `files[]` list;
+use `gh issue edit` to refresh their Tracking footers until draft markdown is added.
 
 ## Sizing
 

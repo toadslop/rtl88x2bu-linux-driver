@@ -79,7 +79,7 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-15 | #184 | [W3-15] Translate rtw_security_rest.c — misc security helpers |
 | W3-16 | #185 | [W3-16] Translate rtw_security_rest.c — TDLS MIC helpers |
 | W3-17 | #186 | [W3-17] Translate rtw_chplan_rest.c — beacon hint + debug dumps |
-| W3-18 | #187 | [W3-18] Translate rtw_io.c — continual I/O error + reg sniff matchers |
+| W3-18 | #187 | [W3-18] Translate rtw_io_rest.c — continual I/O error + reg sniff matchers |
 | W3-19 | #235 | [W3-19] Translate rtw_rf.c — channel layout helpers |
 | W3-20 | #236 | [W3-20] Translate rtw_rf.c — channel/frequency conversion |
 | W3-21 | #238 | [W3-21] Translate rtw_rf.c — lookup/format tables |

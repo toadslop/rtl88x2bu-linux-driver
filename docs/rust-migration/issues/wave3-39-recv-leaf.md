@@ -17,7 +17,12 @@ Port leaf recv helpers from [`core/rtw_recv.c`](../../../core/rtw_recv.c) to [`r
 
 ## Notes
 
-- Same continual-error-counter pattern as W3-18 (`rtw_io_rest`).
+- `rtw_inc_and_chk_continual_no_rx_packet` / `rtw_reset_continual_no_rx_packet`
+  mutate `sta->continual_no_rx_packet[]` via `ATOMIC_*` on a live `struct sta_info`
+  (same continual-error-counter pattern as W3-18 / `rtw_io_rest.c`).
+- `rtw_rframe_del_wfd_ie` mutates `union recv_frame` buffer/length in place.
+- Expect populated `sta_info` / `recv_frame` fixtures or thin C shims for L2 (as W3-40
+  does for adapter state); `size/~200` includes harness scaffolding.
 - Frame validation, reordering, and HAL recv paths stay in C.
 - L2: host harness under `tests/host/recv/`.
 

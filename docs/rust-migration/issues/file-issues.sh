@@ -111,6 +111,9 @@ files=(
   wave3-07-security-tkip-mic.md
   wave3-08-wlan-util-rates.md
   wave3-09-wlan-util-ratetbl.md
+  # W3-10..W3-18: filed on GitHub only (#179..#187); no local draft markdown.
+  # Excluded from files[] — Tracking refresh for those IDs is via gh issue edit
+  # or by adding draft specs in a future PR.
   wave3-19-rf-ch-layout.md
   wave3-20-rf-freq.md
   wave3-21-rf-lookup-tables.md
@@ -272,33 +275,37 @@ map_has_id() {
   [[ -n "${ID_TO_NUM[$id]:-}" ]]
 }
 
-# Append a row to the main map table (before ## Superseded issues when present).
+# Append a row to the main map table (after the last table row, before ## Superseded issues).
 append_map_row() {
   local row="$1"
-  if grep -q '^## Superseded issues' "$MAP_FILE"; then
   MAP_ROW="$row" python3 - "$MAP_FILE" <<'PY'
 import os, sys
 path = sys.argv[1]
 row = os.environ["MAP_ROW"]
 with open(path) as f:
     lines = f.readlines()
-out = []
-inserted = False
-for line in lines:
-    if not inserted and line.startswith("## Superseded issues"):
-        out.append(row + "\n")
-        inserted = True
-    out.append(line)
-if not inserted:
+main_lines = lines
+superseded_idx = next(
+    (i for i, line in enumerate(lines) if line.startswith("## Superseded issues")),
+    len(lines),
+)
+main_lines = lines[:superseded_idx]
+last_table_idx = None
+for i, line in enumerate(main_lines):
+    if line.startswith("| ") and not line.startswith("| Draft ID") and not line.startswith("|----------"):
+        last_table_idx = i
+if last_table_idx is not None:
+    out = lines[: last_table_idx + 1]
+    out.append(row + "\n")
+    out.extend(lines[last_table_idx + 1 :])
+else:
+    out = list(lines)
     if out and not out[-1].endswith("\n"):
         out[-1] += "\n"
     out.append(row + "\n")
 with open(path, "w") as f:
     f.writelines(out)
 PY
-  else
-    echo "$row" >>"$MAP_FILE"
-  fi
 }
 
 find_existing_issue_by_title() {
