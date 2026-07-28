@@ -79,14 +79,6 @@ extern int host_rest_aes_siv_decrypt(const u8 *key, size_t key_len,
 				     const u8 *iv_crypt, size_t iv_c_len,
 				     size_t num_elem, const u8 *addr[],
 				     const size_t *len, u8 *out);
-struct host_restore_wep_security_priv {
-	u32 dot11PrivacyAlgrthm;
-	u32 dot11PrivacyKeyIndex;
-	u8 key_mask;
-};
-struct host_restore_wep_adapter {
-	struct host_restore_wep_security_priv securitypriv;
-};
 extern void host_rest_sec_restore_wep_key(struct host_restore_wep_adapter *adapter);
 extern void host_restore_wep_reset_calls(void);
 extern size_t host_restore_wep_get_call_count(void);
