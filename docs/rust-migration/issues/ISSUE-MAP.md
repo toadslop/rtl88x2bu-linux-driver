@@ -67,6 +67,15 @@ Generated/updated by `docs/rust-migration/issues/file-issues.sh`.
 | W3-07 | #118 | [W3-07] Translate rtw_security.c part 4 — TKIP MIC + phase1/phase2 |
 | W3-08 | #119 | [W3-08] Translate rtw_wlan_util.c part 1 — pure rate classification |
 | W3-09 | #120 | [W3-09] Translate rtw_wlan_util.c part 2 — ratetbl + network type |
+| W3-10 | #179 | [W3-10] Translate rtw_security_rest.c — TKIP frame encrypt/decrypt |
+| W3-11 | #180 | [W3-11] Translate rtw_security_rest.c — AES-CCMP software primitives |
+| W3-12 | #181 | [W3-12] Translate rtw_security_rest.c — AES-CCMP frame encrypt |
+| W3-13 | #182 | [W3-13] Translate rtw_security_rest.c — AES-CCMP frame decrypt |
+| W3-14 | #183 | [W3-14] Translate rtw_security_rest.c — GCMP frame encrypt/decrypt |
+| W3-15 | #184 | [W3-15] Translate rtw_security_rest.c — misc security helpers |
+| W3-16 | #185 | [W3-16] Translate rtw_security_rest.c — TDLS MIC helpers |
+| W3-17 | #186 | [W3-17] Translate rtw_chplan_rest.c — beacon hint + debug dumps |
+| W3-18 | #187 | [W3-18] Translate rtw_io.c — continual I/O error + reg sniff matchers |
 | W3-19 | #235 | [W3-19] Translate rtw_rf.c — channel layout helpers |
 | W3-20 | #236 | [W3-20] Translate rtw_rf.c — channel/frequency conversion |
 | W3-21 | #238 | [W3-21] Translate rtw_rf.c — lookup/format tables |
