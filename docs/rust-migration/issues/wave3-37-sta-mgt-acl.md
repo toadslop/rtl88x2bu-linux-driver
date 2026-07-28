@@ -17,9 +17,14 @@ Port station match and access-control helpers from [`core/rtw_sta_mgt.c`](../../
 
 ## Notes
 
-- Sta init/free/hash paths stay in C (adapter locks, list management).
+- `test_st_match_rule` is a pure port predicate; `_rtw_access_ctrl` / `rtw_access_ctrl`
+  walk `adapter->stapriv.acl_list[period]` under `_enter_critical_bh` and enforce
+  `RTW_ACL_MODE_*`. Preserve spinlock/queue invariants at the FFI edge.
+- Sta init/free/hash paths stay in C; ACL helpers need thin C shims or populated
+  `stapriv` fixtures for L2 (not host-harness-only oracle vectors).
 - L2: host harness under `tests/host/sta_mgt/` with match-rule and ACL vectors.
 
 ## Acceptance
 
-- L0 build + L2 host unit tests for match rule and access control
+- L0 build + L2 host unit tests for match rule and access control (adapter/shim
+  fixtures documented in harness)

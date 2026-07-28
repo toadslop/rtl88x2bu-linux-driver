@@ -26,7 +26,7 @@ That script creates labels (if needed), opens epic issues, then child issues, an
 
 Properties:
 
-- **Idempotent** — skips draft IDs already in `ISSUE-MAP.md` (or matching open/closed titles); appends instead of truncating the map
+- **Idempotent** — skips draft IDs already in `ISSUE-MAP.md` (or matching open/closed titles); appends new rows to the main table (before `## Superseded issues` when present)
 - **Dependencies** — appends a Tracking footer with resolved `#N` links for `epic` / `blocked_by`; on re-run, refreshes **only** the `## Tracking` section when it still contains `(not filed yet)` (use `FORCE_REFRESH=1` to rewrite Tracking anyway)
 - **Links** — rewrites relative markdown links to `https://github.com/<repo>/blob/<ref>/...` using the repo **default branch** (override with `FILE_ISSUES_REF=<sha-or-branch>`). Prefer running after merge to the default branch so links stay stable.
 
@@ -115,23 +115,23 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 | W3-18 | #187 | (filed on GitHub only) | done (#232–#233) |
 | W3-19 | #235 | `wave3-19-rf-ch-layout.md` | open |
 | W3-20 | #236 | `wave3-20-rf-freq.md` | open |
-| W3-21 | — | `wave3-21-rf-lookup-tables.md` | draft |
-| W3-22 | — | `wave3-22-rf-op-class.md` | draft |
-| W3-23 | — | `wave3-23-rf-trx-path.md` | draft |
-| W3-24 | — | `wave3-24-rf-txpwr-cac.md` | draft |
-| W3-25 | — | `wave3-25-rf-tx-path-nss.md` | draft |
-| W3-26 | — | `wave3-26-ieee80211-rates.md` | draft |
-| W3-27 | — | `wave3-27-ieee80211-wpa-rsn-p1.md` | draft |
-| W3-28 | — | `wave3-28-ieee80211-wpa-rsn-p2.md` | draft |
-| W3-29 | — | `wave3-29-ieee80211-wapi-wps.md` | draft |
-| W3-30 | — | `wave3-30-ieee80211-mac-str.md` | draft |
-| W3-31 | — | `wave3-31-ieee80211-chbw.md` | draft |
-| W3-32 | — | `wave3-32-ieee80211-frame-ht.md` | draft |
-| W3-33 | — | `wave3-33-rm-util-pure.md` | draft |
-| W3-34 | — | `wave3-34-rm-util-tokens.md` | draft |
-| W3-35 | — | `wave3-35-vht-mcs-nss.md` | draft |
-| W3-36 | — | `wave3-36-vht-ie-restructure.md` | draft |
-| W3-37 | — | `wave3-37-sta-mgt-acl.md` | draft |
-| W3-38 | — | `wave3-38-sta-mgt-aid.md` | draft |
-| W3-39 | — | `wave3-39-recv-leaf.md` | draft |
-| W3-40 | — | `wave3-40-xmit-rate-bmp.md` | draft |
+| W3-21 | #238 | `wave3-21-rf-lookup-tables.md` | open |
+| W3-22 | #239 | `wave3-22-rf-op-class.md` | open |
+| W3-23 | #240 | `wave3-23-rf-trx-path.md` | open |
+| W3-24 | #241 | `wave3-24-rf-txpwr-cac.md` | open |
+| W3-25 | #242 | `wave3-25-rf-tx-path-nss.md` | open |
+| W3-26 | #243 | `wave3-26-ieee80211-rates.md` | open |
+| W3-27 | #244 | `wave3-27-ieee80211-wpa-rsn-p1.md` | open |
+| W3-28 | #245 | `wave3-28-ieee80211-wpa-rsn-p2.md` | open |
+| W3-29 | #246 | `wave3-29-ieee80211-wapi-wps.md` | open |
+| W3-30 | #247 | `wave3-30-ieee80211-mac-str.md` | open |
+| W3-31 | #248 | `wave3-31-ieee80211-chbw.md` | open |
+| W3-32 | #249 | `wave3-32-ieee80211-frame-ht.md` | open |
+| W3-33 | #250 | `wave3-33-rm-util-pure.md` | open |
+| W3-34 | #251 | `wave3-34-rm-util-tokens.md` | open |
+| W3-35 | #252 | `wave3-35-vht-mcs-nss.md` | open |
+| W3-36 | #253 | `wave3-36-vht-ie-restructure.md` | open |
+| W3-37 | #254 | `wave3-37-sta-mgt-acl.md` | open |
+| W3-38 | #255 | `wave3-38-sta-mgt-aid.md` | open |
+| W3-39 | #256 | `wave3-39-recv-leaf.md` | open |
+| W3-40 | #257 | `wave3-40-xmit-rate-bmp.md` | open |

@@ -67,14 +67,6 @@ Generated/updated by `docs/rust-migration/issues/file-issues.sh`.
 | W3-07 | #118 | [W3-07] Translate rtw_security.c part 4 — TKIP MIC + phase1/phase2 |
 | W3-08 | #119 | [W3-08] Translate rtw_wlan_util.c part 1 — pure rate classification |
 | W3-09 | #120 | [W3-09] Translate rtw_wlan_util.c part 2 — ratetbl + network type |
-
-## Superseded issues
-
-Some work was tracked before the bulk migration (`file-issues.sh`). Prefer the canonical GitHub number from the table above:
-
-| Draft ID | Canonical | Superseded | Notes |
-|----------|-----------|------------|-------|
-| T1 | #76 | #12 | Same title; filed manually before the migration tracker (no `rust-migration` label) |
 | W3-19 | #235 | [W3-19] Translate rtw_rf.c — channel layout helpers |
 | W3-20 | #236 | [W3-20] Translate rtw_rf.c — channel/frequency conversion |
 | W3-21 | #238 | [W3-21] Translate rtw_rf.c — lookup/format tables |
@@ -97,3 +89,11 @@ Some work was tracked before the bulk migration (`file-issues.sh`). Prefer the c
 | W3-38 | #255 | [W3-38] Translate rtw_sta_mgt.c — AID and pre-link sta helpers |
 | W3-39 | #256 | [W3-39] Translate rtw_recv.c — recv leaf helpers |
 | W3-40 | #257 | [W3-40] Translate rtw_xmit.c — tx rate bitmap helpers |
+
+## Superseded issues
+
+Some work was tracked before the bulk migration (`file-issues.sh`). Prefer the canonical GitHub number from the table above:
+
+| Draft ID | Canonical | Superseded | Notes |
+|----------|-----------|------------|-------|
+| T1 | #76 | #12 | Same title; filed manually before the migration tracker (no `rust-migration` label) |
