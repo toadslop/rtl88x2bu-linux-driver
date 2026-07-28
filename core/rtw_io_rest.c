@@ -99,6 +99,11 @@ const struct rtw_io_sniff_ent read_sniff[] = {
 #endif
 #ifdef HOST_IO_TEST
 	RTW_IO_SNIFF_RANGE_ENT(1, RTW_USB, 0x600, 0x600, 0, "host chip1 usb read"),
+	RTW_IO_SNIFF_VALUE_ENT(MAX_CHIP_TYPE, 0, 0x100, 0xFF, 0xAB, 1, 0, "host read value equal len1"),
+	RTW_IO_SNIFF_VALUE_ENT(MAX_CHIP_TYPE, 0, 0x200, 0xFFFF, 0x1234, 1, 0, "host read value equal len2"),
+	RTW_IO_SNIFF_VALUE_ENT(MAX_CHIP_TYPE, 0, 0x300, 0xFFFFFFFF, 0x12345678, 1, 0, "host read value equal len4"),
+	RTW_IO_SNIFF_VALUE_ENT(MAX_CHIP_TYPE, 0, 0x102, 0xFF, 0x42, 1, 0, "host read unaligned len4 equal"),
+	RTW_IO_SNIFF_VALUE_ENT(MAX_CHIP_TYPE, 0, 0x201, 0xFF, 0x34, 1, 0, "host read unaligned len2 equal"),
 #endif
 #ifdef DBG_IO_PROT_SEL
 	RTW_IO_SNIFF_RANGE_PROT_ENT(MAX_CHIP_TYPE, 0, 0x1501, 0x1513, rtw_assert_protsel_port, "protsel port"),
@@ -128,6 +133,9 @@ const struct rtw_io_sniff_ent write_sniff[] = {
 #ifdef DBG_IO_SNIFF_EXAMPLE
 	RTW_IO_SNIFF_RANGE_ENT(MAX_CHIP_TYPE, 0, 0x522, 0x522, 0, "write TXPAUSE"),
 	RTW_IO_SNIFF_DIS_ENT(MAX_CHIP_TYPE, 0, 0x02, 0x3, 0, "0x02[1:0] not all 1"),
+#endif
+#ifdef HOST_IO_TEST
+	RTW_IO_SNIFF_VALUE_ENT(MAX_CHIP_TYPE, 0, 0x400, 0xFFFF, 0x5600, 1, 0, "host write value equal len2"),
 #endif
 };
 

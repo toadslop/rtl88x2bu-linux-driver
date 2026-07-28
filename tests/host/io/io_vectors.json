@@ -127,6 +127,76 @@
       "addr": 85,
       "mask": 0,
       "expect": 0
+    },
+    {
+      "name": "read_value_equal_len1_hit",
+      "fn": "match_read_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 256,
+      "len": 1,
+      "val": 171,
+      "expect": 1
+    },
+    {
+      "name": "read_value_equal_len2_hit",
+      "fn": "match_read_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 512,
+      "len": 2,
+      "val": 4660,
+      "expect": 1
+    },
+    {
+      "name": "read_value_equal_len4_hit",
+      "fn": "match_read_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 768,
+      "len": 4,
+      "val": 305419896,
+      "expect": 1
+    },
+    {
+      "name": "read_value_unaligned_len4_hit",
+      "fn": "match_read_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 256,
+      "len": 4,
+      "val": 4325376,
+      "expect": 1
+    },
+    {
+      "name": "read_value_unaligned_len2_hit",
+      "fn": "match_read_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 512,
+      "len": 2,
+      "val": 13312,
+      "expect": 1
+    },
+    {
+      "name": "read_value_equal_len1_miss",
+      "fn": "match_read_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 256,
+      "len": 1,
+      "val": 170,
+      "expect": 0
+    },
+    {
+      "name": "write_value_equal_len2_hit",
+      "fn": "match_write_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 1024,
+      "len": 2,
+      "val": 22016,
+      "expect": 1
     }
   ]
 }

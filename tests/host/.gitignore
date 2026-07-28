@@ -33,3 +33,6 @@ wlan_util/test_wlan_tail
 wlan_util/test_wlan_tail_rust
 wlan_util/librust_wlan_util.a
 wlan_util/wlan_util_rate_c_ref.o
+
+# W3-18 io harness
+io/test_io
