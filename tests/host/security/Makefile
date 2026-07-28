@@ -31,11 +31,11 @@ SWCRYPTO_CFLAGS := $(CFLAGS) -I$(CRYPTO_DIR) -include ../include/host_autoconf.h
 RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
 HOST_JSON := ../crypto/host_vector_json.c
 
-.PHONY: all test test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust test-ccmp-primitives test-ccmp-primitives-rust test-ccmp-construct test-ccmp-construct-rust test-ccmp-frames test-ccmp-frames-rust test-gcmp-frames test-gcmp-frames-rust test-rest-misc test-rest-misc-rust clean
+.PHONY: all test test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust test-ccmp-primitives test-ccmp-primitives-rust test-ccmp-construct test-ccmp-construct-rust test-ccmp-frames test-ccmp-frames-rust test-gcmp-frames test-gcmp-frames-rust test-rest-misc test-rest-misc-rust test-rest-tdls clean
 
 all: test
 
-test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust test-ccmp-primitives test-ccmp-primitives-rust test-ccmp-construct test-ccmp-construct-rust test-ccmp-frames test-ccmp-frames-rust test-gcmp-frames test-gcmp-frames-rust test-rest-misc
+test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust test-ccmp-primitives test-ccmp-primitives-rust test-ccmp-construct test-ccmp-construct-rust test-ccmp-frames test-ccmp-frames-rust test-gcmp-frames test-gcmp-frames-rust test-rest-misc test-rest-tdls
 
 test-c: test_security
 	./test_security security_type_vectors.json
@@ -103,6 +103,19 @@ test-rest-misc: test_rest_misc
 # test-rest-misc-rust is added to aggregate `test` in W3-15 PR2 (stacked Rust port).
 test-rest-misc-rust: test_rest_misc_rust
 	./test_rest_misc_rust rest_misc_vectors.json
+
+test-rest-tdls: test_rest_tdls
+	./test_rest_tdls tdls_vectors.json
+
+TDLS_CRYPTO_SRCS := $(CRYPTO_DIR)/aes-internal.c $(CRYPTO_DIR)/aes-internal-enc.c \
+	$(CRYPTO_DIR)/aes-omac1.c $(CRYPTO_DIR)/sha256-internal.c $(CRYPTO_DIR)/sha256.c \
+	$(CRYPTO_DIR)/sha256-prf.c ../shim/host_crypto_shim.c
+TDLS_SHIM_SRCS :=
+
+test_rest_tdls: test_rest_tdls.c $(REST_ORACLE) $(TDLS_CRYPTO_SRCS) $(TDLS_SHIM_SRCS) \
+		$(HOST_JSON)
+	$(CC) $(SWCRYPTO_CFLAGS) -DHOST_REST_TDLS_ORACLE_BUILD -o $@ test_rest_tdls.c \
+		$(REST_ORACLE) $(TDLS_CRYPTO_SRCS) $(TDLS_SHIM_SRCS) $(HOST_JSON)
 
 MISC_CRYPTO_SRCS := $(CRYPTO_DIR)/aes-internal.c $(CRYPTO_DIR)/aes-internal-enc.c \
 	$(CRYPTO_DIR)/aes-omac1.c $(CRYPTO_DIR)/aes-ctr.c $(CRYPTO_DIR)/aes-siv.c \
@@ -226,6 +239,6 @@ clean:
 		test_ccmp_construct test_ccmp_construct_rust \
 		test_ccmp_frames test_ccmp_frames_rust \
 		test_gcmp_frames test_gcmp_frames_rust \
-		test_rest_misc test_rest_misc_rust \
+		test_rest_misc test_rest_misc_rust test_rest_tdls \
 		librust_security.a librust_security_rest.a librust_security_rest_gcmp.a \
 		librust_security_rest_misc.a librust_swcrypto.a

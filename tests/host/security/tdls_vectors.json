@@ -1,0 +1,61 @@
+{
+  "oracle": "core/rtw_security_rest.c",
+  "vectors": [
+    {
+      "name": "generate_tpk_basic",
+      "fn": "host_rest_tdls_generate_tpk",
+      "own_addr": "000000000001",
+      "peer_addr": "000000000002",
+      "bssid": "000000000003",
+      "snonce": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "anonce": "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+      "expect_tpk": "83487fcd0ab97983425c01a4b3d5cff91ff6e8c88cad74780fb31c58bab7ce46"
+    },
+    {
+      "name": "ftie_mic_handshake",
+      "fn": "host_rest_wpa_tdls_ftie_mic",
+      "kck": "11111111111111111111111111111111",
+      "trans_seq": 2,
+      "lnkid": "6512aaaaaaaaaaaa020000000001020000000002",
+      "rsnie": "30120100000fac070100000fac040100000fac07",
+      "timeoutie": "5605020000003c",
+      "ftie": "48440000a0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedf0000",
+      "expect_mic": "5428cca75fa74b8fad15dd9ef137e6ca",
+      "expect_ret": 1
+    },
+    {
+      "name": "teardown_ftie_mic",
+      "fn": "host_rest_wpa_tdls_teardown_ftie_mic",
+      "kck": "11111111111111111111111111111111",
+      "lnkid": "6512aaaaaaaaaaaa020000000001020000000002",
+      "reason": 3,
+      "dialog_token": 7,
+      "trans_seq": 4,
+      "ftie": "48440000a0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedf0000",
+      "expect_mic": "e55ca1df60f367c90ba415dbe1f4535b",
+      "expect_ret": 1
+    },
+    {
+      "name": "verify_mic_valid",
+      "fn": "host_rest_tdls_verify_mic",
+      "kck": "11111111111111111111111111111111",
+      "trans_seq": 2,
+      "lnkid": "6512aaaaaaaaaaaa020000000001020000000002",
+      "rsnie": "30120100000fac070100000fac040100000fac07",
+      "timeoutie": "5605020000003c",
+      "ftie": "484400005428cca75fa74b8fad15dd9ef137e6cab0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedf0000",
+      "expect_ret": 1
+    },
+    {
+      "name": "verify_mic_invalid",
+      "fn": "host_rest_tdls_verify_mic",
+      "kck": "11111111111111111111111111111111",
+      "trans_seq": 2,
+      "lnkid": "6512aaaaaaaaaaaa020000000001020000000002",
+      "rsnie": "30120100000fac070100000fac040100000fac07",
+      "timeoutie": "5605020000003c",
+      "ftie": "48440000ab28cca75fa74b8fad15dd9ef137e6cab0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedf0000",
+      "expect_ret": 0
+    }
+  ]
+}
