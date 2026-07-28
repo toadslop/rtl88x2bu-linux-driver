@@ -680,3 +680,260 @@ pub extern "C" fn host_ccmp_aes_cipher(
     let frame_slice = unsafe { core::slice::from_raw_parts_mut(pframe, need) };
     aes_cipher(&key_arr, hdrlen, frame_slice, plen)
 }
+
+// ----- rtw_aes_encrypt frame path (W3-12c) -----
+
+const _AES_: U8 = 0x04;
+const _SEC_TYPE_256_: U8 = 0x10;
+const _CCMP_256_: U8 = _AES_ | _SEC_TYPE_256_;
+const AES_RTW_SUCCESS: U32 = 1;
+const AES_RTW_FAIL: U32 = 0;
+
+#[cfg(host_security_rest_test)]
+const TXDESC_OFFSET: usize = 48 + 8;
+
+#[cfg(not(host_security_rest_test))]
+const TXDESC_SIZE: usize = 48;
+#[cfg(not(host_security_rest_test))]
+const PACKET_OFFSET_SZ: usize = 8;
+
+#[repr(C)]
+pub struct KeyType {
+    pub skey: [U8; 32],
+}
+
+#[cfg(host_security_rest_test)]
+pub type AesAdapter = core::ffi::c_void;
+
+#[cfg(not(host_security_rest_test))]
+pub type AesAdapter = core::ffi::c_void;
+
+extern "C" {
+    fn _rtw_ccmp_encrypt(
+        padapter: *mut core::ffi::c_void,
+        key: *mut U8,
+        key_len: U32,
+        hdrlen: U32,
+        frame: *mut U8,
+        plen: U32,
+    ) -> i32;
+}
+
+fn rnd4(ptr: usize) -> usize {
+    ((ptr >> 2) + if ptr & 3 == 0 { 0 } else { 1 }) << 2
+}
+
+fn is_mcast_ra(ra: &[U8; 6]) -> bool {
+    (ra[0] & 0x01) != 0
+}
+
+fn is_broadcast_mac_addr(addr: &[U8; 6]) -> bool {
+    addr[0] == 0xff && addr[1] == 0xff && addr[2] == 0xff && addr[3] == 0xff
+        && addr[4] == 0xff && addr[5] == 0xff
+}
+
+fn is_multicast_mac_addr(addr: &[U8; 6]) -> bool {
+    (addr[0] & 0x01) != 0 && !is_broadcast_mac_addr(addr)
+}
+
+#[cfg(host_security_rest_test)]
+fn hw_hdr_offset(pkt_offset: i8) -> usize {
+    TXDESC_OFFSET + (pkt_offset as usize) * 8
+}
+
+#[cfg(not(host_security_rest_test))]
+fn hw_hdr_offset(pkt_offset: i8) -> usize {
+    TXDESC_SIZE + (pkt_offset as usize) * PACKET_OFFSET_SZ
+}
+
+#[cfg(not(host_security_rest_test))]
+mod kernel_layout {
+    use super::*;
+
+    extern "C" {
+        static rtw_rust_wep_off_adapter_securitypriv: usize;
+        static rtw_rust_wep_off_adapter_xmitpriv: usize;
+        static rtw_rust_wep_off_xmitpriv_frag_len: usize;
+        static rtw_rust_wep_off_xmit_frame_attrib: usize;
+        static rtw_rust_wep_off_xmit_frame_buf_addr: usize;
+        static rtw_rust_wep_off_xmit_frame_pkt_offset: usize;
+        static rtw_rust_tkip_off_securitypriv_dot118021XGrpKeyid: usize;
+        static rtw_rust_tkip_off_securitypriv_dot118021XGrpKey: usize;
+        static rtw_rust_tkip_off_pkt_attrib_dot118021x_UncstKey: usize;
+        static rtw_rust_aes_off_securitypriv_aes_sw_enc_cnt_bc: usize;
+        static rtw_rust_aes_off_securitypriv_aes_sw_enc_cnt_mc: usize;
+        static rtw_rust_aes_off_securitypriv_aes_sw_enc_cnt_uc: usize;
+    }
+
+    #[repr(C)]
+    pub struct PktAttrib {
+        pub encrypt: U8,
+        pub nr_frags: U8,
+        pub hdrlen: u16,
+        pub last_txcmdsz: U32,
+        pub iv_len: U8,
+        pub icv_len: U8,
+        pub ra: [U8; 6],
+    }
+
+    pub unsafe fn adapter_securitypriv(padapter: *mut AesAdapter) -> *mut u8 {
+        unsafe {
+            (padapter as *mut u8).add(rtw_rust_wep_off_adapter_securitypriv)
+        }
+    }
+
+    pub unsafe fn adapter_xmitpriv(padapter: *mut AesAdapter) -> *mut u8 {
+        unsafe { (padapter as *mut u8).add(rtw_rust_wep_off_adapter_xmitpriv) }
+    }
+
+    pub unsafe fn xmitpriv_frag_len(pxmitpriv: *mut u8) -> U32 {
+        unsafe {
+            *((pxmitpriv.add(rtw_rust_wep_off_xmitpriv_frag_len)) as *const U32)
+        }
+    }
+
+    pub unsafe fn xmit_frame_attrib(pxmitframe: *mut u8) -> *mut PktAttrib {
+        unsafe { (pxmitframe.add(rtw_rust_wep_off_xmit_frame_attrib)) as *mut PktAttrib }
+    }
+
+    pub unsafe fn xmit_frame_buf_addr(pxmitframe: *mut u8) -> *mut U8 {
+        unsafe {
+            *((pxmitframe.add(rtw_rust_wep_off_xmit_frame_buf_addr)) as *const *mut U8)
+        }
+    }
+
+    pub unsafe fn xmit_frame_pkt_offset(pxmitframe: *mut u8) -> i8 {
+        unsafe {
+            *((pxmitframe.add(rtw_rust_wep_off_xmit_frame_pkt_offset)) as *const i8)
+        }
+    }
+
+    pub unsafe fn securitypriv_grp_keyid(psecuritypriv: *mut u8) -> U32 {
+        unsafe {
+            *((psecuritypriv.add(rtw_rust_tkip_off_securitypriv_dot118021XGrpKeyid))
+                as *const U32)
+        }
+    }
+
+    pub unsafe fn securitypriv_grp_key_skey(psecuritypriv: *mut u8, index: usize) -> *mut U8 {
+        unsafe {
+            let base = psecuritypriv.add(rtw_rust_tkip_off_securitypriv_dot118021XGrpKey);
+            let stride = core::mem::size_of::<KeyType>();
+            base.add(index * stride) as *mut U8
+        }
+    }
+
+    pub unsafe fn pkt_attrib_unicast_key_skey(pattrib: *mut PktAttrib) -> *mut U8 {
+        unsafe {
+            (pattrib as *mut u8)
+                .add(rtw_rust_tkip_off_pkt_attrib_dot118021x_UncstKey) as *mut U8
+        }
+    }
+
+    pub unsafe fn aes_sw_enc_cnt_inc(psecuritypriv: *mut u8, ra: &[U8; 6]) {
+        unsafe {
+            let off = if is_broadcast_mac_addr(ra) {
+                rtw_rust_aes_off_securitypriv_aes_sw_enc_cnt_bc
+            } else if is_multicast_mac_addr(ra) {
+                rtw_rust_aes_off_securitypriv_aes_sw_enc_cnt_mc
+            } else {
+                rtw_rust_aes_off_securitypriv_aes_sw_enc_cnt_uc
+            };
+            let cnt = (psecuritypriv.add(off)) as *mut u64;
+            *cnt = cnt.read().wrapping_add(1);
+        }
+    }
+}
+
+unsafe fn aes_encrypt_frag_new_crypto(
+    padapter: *mut AesAdapter,
+    prwskey: *mut U8,
+    prwskeylen: U32,
+    pxmitpriv_frag_len: U32,
+    nr_frags: U8,
+    hdrlen: u16,
+    last_txcmdsz: U32,
+    iv_len: U8,
+    icv_len: U8,
+    buf_addr: *mut U8,
+    hw: usize,
+) {
+    unsafe {
+    let mut pframe = buf_addr.add(hw);
+    let mut curfragnum: i32 = 0;
+
+    while curfragnum < nr_frags as i32 {
+        let plen = if (curfragnum + 1) == nr_frags as i32 {
+            last_txcmdsz as i32 - hdrlen as i32 - iv_len as i32 - icv_len as i32
+        } else {
+            pxmitpriv_frag_len as i32 - hdrlen as i32 - iv_len as i32 - icv_len as i32
+        };
+
+        _rtw_ccmp_encrypt(
+            padapter as *mut core::ffi::c_void,
+            prwskey,
+            prwskeylen,
+            hdrlen as U32,
+            pframe,
+            plen as U32,
+        );
+
+        if (curfragnum + 1) != nr_frags as i32 {
+            pframe = pframe.add(pxmitpriv_frag_len as usize);
+            pframe = rnd4(pframe as usize) as *mut U8;
+        }
+        curfragnum += 1;
+    }
+    }
+}
+
+#[cfg(not(host_security_rest_test))]
+#[no_mangle]
+pub extern "C" fn rtw_aes_encrypt(padapter: *mut AesAdapter, pxmitframe: *mut U8) -> U32 {
+    if padapter.is_null() || pxmitframe.is_null() {
+        return AES_RTW_FAIL;
+    }
+    unsafe {
+        let px = pxmitframe;
+        let buf_addr = kernel_layout::xmit_frame_buf_addr(px);
+        if buf_addr.is_null() {
+            return AES_RTW_FAIL;
+        }
+        let hw = hw_hdr_offset(kernel_layout::xmit_frame_pkt_offset(px));
+        let pattrib = kernel_layout::xmit_frame_attrib(px);
+        let encrypt = (*pattrib).encrypt;
+        if encrypt != _AES_ && encrypt != _CCMP_256_ {
+            return AES_RTW_SUCCESS;
+        }
+
+        let psecuritypriv = kernel_layout::adapter_securitypriv(padapter);
+        let pxmitpriv = kernel_layout::adapter_xmitpriv(padapter);
+        let frag_len = kernel_layout::xmitpriv_frag_len(pxmitpriv);
+        let ra = (*pattrib).ra;
+
+        let prwskey = if is_mcast_ra(&ra) {
+            let kid = kernel_layout::securitypriv_grp_keyid(psecuritypriv) as usize;
+            kernel_layout::securitypriv_grp_key_skey(psecuritypriv, kid)
+        } else {
+            kernel_layout::pkt_attrib_unicast_key_skey(pattrib)
+        };
+        let prwskeylen = if encrypt == _CCMP_256_ { 32 } else { 16 };
+
+        aes_encrypt_frag_new_crypto(
+            padapter,
+            prwskey,
+            prwskeylen,
+            frag_len,
+            (*pattrib).nr_frags,
+            (*pattrib).hdrlen,
+            (*pattrib).last_txcmdsz,
+            (*pattrib).iv_len,
+            (*pattrib).icv_len,
+            buf_addr,
+            hw,
+        );
+
+        kernel_layout::aes_sw_enc_cnt_inc(psecuritypriv, &ra);
+        AES_RTW_SUCCESS
+    }
+}
