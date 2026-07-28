@@ -1,11 +1,31 @@
 {
-  "oracle": "core/rtw_security_rest.c",
+  "oracle": "core/rtw_security_rest.c (MIC); core/rtw_swcrypto_rest.c (TPK)",
   "vectors": [
     {
       "name": "generate_tpk_basic",
       "fn": "host_rest_tdls_generate_tpk",
       "own_addr": "000000000001",
       "peer_addr": "000000000002",
+      "bssid": "000000000003",
+      "snonce": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "anonce": "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+      "expect_tpk": "83487fcd0ab97983425c01a4b3d5cff91ff6e8c88cad74780fb31c58bab7ce46"
+    },
+    {
+      "name": "generate_tpk_swapped_nonces",
+      "fn": "host_rest_tdls_generate_tpk",
+      "own_addr": "000000000001",
+      "peer_addr": "000000000002",
+      "bssid": "000000000003",
+      "snonce": "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+      "anonce": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "expect_tpk": "83487fcd0ab97983425c01a4b3d5cff91ff6e8c88cad74780fb31c58bab7ce46"
+    },
+    {
+      "name": "generate_tpk_swapped_macs",
+      "fn": "host_rest_tdls_generate_tpk",
+      "own_addr": "000000000002",
+      "peer_addr": "000000000001",
       "bssid": "000000000003",
       "snonce": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
       "anonce": "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
