@@ -35,7 +35,7 @@ HOST_JSON := ../crypto/host_vector_json.c
 
 all: test
 
-test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust test-ccmp-primitives test-ccmp-primitives-rust test-ccmp-construct test-ccmp-construct-rust test-ccmp-frames test-gcmp-frames
+test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust test-ccmp-primitives test-ccmp-primitives-rust test-ccmp-construct test-ccmp-construct-rust test-ccmp-frames test-ccmp-frames-rust test-gcmp-frames test-gcmp-frames-rust
 
 test-c: test_security
 	./test_security security_type_vectors.json
@@ -181,10 +181,13 @@ test_gcmp_frames: test_gcmp_frames.c $(SHIM) librust_swcrypto.a $(SWCRYPTO_SHIM)
 	$(CC) $(SWCRYPTO_CFLAGS) -DHOST_GCMP_FRAME_ORACLE_BUILD -o $@ test_gcmp_frames.c $(SHIM) \
 		$(SWCRYPTO_SHIM) $(SWCRYPTO_CRYPTO_SRCS) $(HOST_JSON) librust_swcrypto.a
 
-# test-gcmp-frames-rust is added to aggregate `test` in W3-14 PR2 (stacked Rust port).
-test_gcmp_frames_rust: test_gcmp_frames.c librust_security_rest.a librust_swcrypto.a $(SWCRYPTO_SHIM) $(HOST_JSON)
-	$(CC) $(CFLAGS) -DRUST_SECURITY_REST_ORACLE -o $@ test_gcmp_frames.c $(HOST_JSON) \
-		$(SWCRYPTO_SHIM) librust_security_rest.a librust_swcrypto.a
+# test-gcmp-frames-rust: Rust encrypt oracle + C decrypt until W3-14 PR3.
+test_gcmp_frames_rust: test_gcmp_frames.c librust_security_rest.a librust_swcrypto.a \
+		$(SWCRYPTO_SHIM) $(SWCRYPTO_CRYPTO_SRCS) $(HOST_JSON)
+	$(CC) $(SWCRYPTO_CFLAGS) -DRUST_SECURITY_REST_ORACLE \
+		-DHOST_GCMP_DECRYPT_ORACLE_BUILD -o $@ test_gcmp_frames.c $(HOST_JSON) \
+		../shim/host_security_shim.c $(SWCRYPTO_SHIM) $(SWCRYPTO_CRYPTO_SRCS) \
+		librust_security_rest.a librust_swcrypto.a
 
 clean:
 	rm -f test_security test_security_rust test_wep_primitives test_wep_primitives_rust \

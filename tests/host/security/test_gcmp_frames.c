@@ -521,8 +521,13 @@ int main(int argc, char **argv)
 		fprintf(stderr, "%d vector(s) failed\n", failed);
 		return 1;
 	}
+#ifdef RUST_SECURITY_REST_ORACLE
+	printf("all %zu gcmp frame vectors passed (oracle: rust/rtw_security_rest.rs encrypt)\n",
+	       nvec);
+#else
 	printf("all %zu gcmp frame vectors passed (oracle: core/rtw_security_rest.c)\n",
 	       nvec);
+#endif
 	return 0;
 }
 

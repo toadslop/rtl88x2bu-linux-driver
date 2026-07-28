@@ -1635,9 +1635,9 @@ pub extern "C" fn rtw_gcmp_encrypt(padapter: *mut HostGcmpAdapter, pxmitframe: *
         let prwskey = if is_mcast_ra(&attrib.ra) {
             sec.dot118021XGrpKey[sec.dot118021XGrpKeyid as usize]
                 .skey
-                .as_mut_ptr()
+                .as_ptr() as *mut U8
         } else {
-            attrib.dot118021x_UncstKey.skey.as_mut_ptr()
+            attrib.dot118021x_UncstKey.skey.as_ptr() as *mut U8
         };
         let prwskeylen = if attrib.encrypt == _GCMP_256_ { 32 } else { 16 };
 
