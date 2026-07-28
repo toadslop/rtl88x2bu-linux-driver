@@ -2788,7 +2788,7 @@ rust-objects-rtw-security-rest-misc-c:
 	backup=$$(mktemp); \
 	trap 'mv "$$backup" core/rtw_security_rest.c; rm -f core/rtw_security_rest.o' EXIT; \
 	cp core/rtw_security_rest.c "$$backup"; \
-	git show "$$ref_commit:core/rtw_security_rest.c" > core/rtw_security_rest.c; \
+	git -c safe.directory=* show "$$ref_commit:core/rtw_security_rest.c" > core/rtw_security_rest.c; \
 	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) core/rtw_security_rest.o; \
 	cp core/rtw_security_rest.o tests/host/security/security_rest_misc_c_ref.o; \
 	mv "$$backup" core/rtw_security_rest.c; \
