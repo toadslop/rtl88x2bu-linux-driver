@@ -8,6 +8,8 @@ on:
     branches: [master]
     paths:
       - 'core/crypto/**'
+      - 'core/rtw_io.c'
+      - 'core/rtw_io_rest.c'
       - 'core/rtw_chplan.c'
       - 'core/rtw_chplan.h'
       - 'core/rtw_swcrypto.c'
@@ -22,6 +24,8 @@ on:
   pull_request:
     paths:
       - 'core/crypto/**'
+      - 'core/rtw_io.c'
+      - 'core/rtw_io_rest.c'
       - 'core/rtw_chplan.c'
       - 'core/rtw_chplan.h'
       - 'core/rtw_swcrypto.c'
@@ -68,3 +72,6 @@ jobs:
 
       - name: Host wlan_util parity (L2)
         run: make -C tests/host/wlan_util test
+
+      - name: Host io_rest parity (L2)
+        run: make -C tests/host/io test

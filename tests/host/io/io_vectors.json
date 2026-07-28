@@ -1,0 +1,202 @@
+{
+  "oracle": "core/rtw_io_rest.c",
+  "vectors": [
+    {
+      "name": "inc_first_below_threshold",
+      "fn": "rtw_inc_and_chk_continual_io_error",
+      "initial_count": 0,
+      "expect_ret": 0,
+      "expect_count": 1
+    },
+    {
+      "name": "inc_at_threshold",
+      "fn": "rtw_inc_and_chk_continual_io_error",
+      "initial_count": 3,
+      "expect_ret": 0,
+      "expect_count": 4
+    },
+    {
+      "name": "inc_over_threshold",
+      "fn": "rtw_inc_and_chk_continual_io_error",
+      "initial_count": 4,
+      "expect_ret": 1,
+      "expect_count": 5
+    },
+    {
+      "name": "reset_clears_counter",
+      "fn": "rtw_reset_continual_io_error",
+      "initial_count": 7,
+      "expect_count": 0
+    },
+    {
+      "name": "read_sniff_range_hit",
+      "fn": "match_read_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 1314,
+      "len": 1,
+      "val": 0,
+      "expect": 1
+    },
+    {
+      "name": "read_sniff_range_miss",
+      "fn": "match_read_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 1313,
+      "len": 1,
+      "val": 0,
+      "expect": 0
+    },
+    {
+      "name": "read_sniff_dis_value_hit",
+      "fn": "match_read_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 2,
+      "len": 1,
+      "val": 0,
+      "expect": 1
+    },
+    {
+      "name": "write_sniff_range_hit",
+      "fn": "match_write_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 1314,
+      "len": 1,
+      "val": 0,
+      "expect": 1
+    },
+    {
+      "name": "read_sniff_chip_mismatch",
+      "fn": "match_read_sniff",
+      "chip": 2,
+      "hci": 2,
+      "addr": 1536,
+      "len": 1,
+      "val": 0,
+      "expect": 0
+    },
+    {
+      "name": "read_sniff_chip_hci_hit",
+      "fn": "match_read_sniff",
+      "chip": 1,
+      "hci": 2,
+      "addr": 1536,
+      "len": 1,
+      "val": 0,
+      "expect": 1
+    },
+    {
+      "name": "rf_read_sniff_hit",
+      "fn": "match_rf_read_sniff_ranges",
+      "path": 0,
+      "addr": 85,
+      "mask": 255,
+      "expect": 1
+    },
+    {
+      "name": "rf_read_sniff_miss_addr",
+      "fn": "match_rf_read_sniff_ranges",
+      "path": 0,
+      "addr": 86,
+      "mask": 255,
+      "expect": 0
+    },
+    {
+      "name": "rf_read_sniff_wildcard_path",
+      "fn": "match_rf_read_sniff_ranges",
+      "path": 2,
+      "addr": 102,
+      "mask": 15,
+      "expect": 1
+    },
+    {
+      "name": "rf_write_sniff_hit",
+      "fn": "match_rf_write_sniff_ranges",
+      "path": 1,
+      "addr": 85,
+      "mask": 255,
+      "expect": 1
+    },
+    {
+      "name": "rf_write_sniff_mask_miss",
+      "fn": "match_rf_write_sniff_ranges",
+      "path": 1,
+      "addr": 85,
+      "mask": 0,
+      "expect": 0
+    },
+    {
+      "name": "read_value_equal_len1_hit",
+      "fn": "match_read_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 256,
+      "len": 1,
+      "val": 171,
+      "expect": 1
+    },
+    {
+      "name": "read_value_equal_len2_hit",
+      "fn": "match_read_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 512,
+      "len": 2,
+      "val": 4660,
+      "expect": 1
+    },
+    {
+      "name": "read_value_equal_len4_hit",
+      "fn": "match_read_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 768,
+      "len": 4,
+      "val": 305419896,
+      "expect": 1
+    },
+    {
+      "name": "read_value_unaligned_len4_hit",
+      "fn": "match_read_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 256,
+      "len": 4,
+      "val": 4325376,
+      "expect": 1
+    },
+    {
+      "name": "read_value_unaligned_len2_hit",
+      "fn": "match_read_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 512,
+      "len": 2,
+      "val": 13312,
+      "expect": 1
+    },
+    {
+      "name": "read_value_equal_len1_miss",
+      "fn": "match_read_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 256,
+      "len": 1,
+      "val": 170,
+      "expect": 0
+    },
+    {
+      "name": "write_value_equal_len2_hit",
+      "fn": "match_write_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 1024,
+      "len": 2,
+      "val": 22016,
+      "expect": 1
+    }
+  ]
+}
