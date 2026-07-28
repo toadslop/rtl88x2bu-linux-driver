@@ -86,6 +86,8 @@ static int parse_chset_hex(const char *hex, RT_CHANNEL_INFO *out)
 			n = 0;
 		}
 	}
+	if (n != 0 || have_ch)
+		return -1;
 	return 0;
 }
 
