@@ -2,11 +2,11 @@
 name: draft-migration-issues
 description: >-
   Step 4 of pick-up-work-item (fallback). When no issue is ready, analyzes
-  in-progress epics and drafts new ~200 LOC child issues as markdown specs.
-  Can file via file-issues.sh. Auto-applies when select-ready-issue finds
-  nothing ready. Completes the pick-up workflow — do NOT select or implement
-  a newly drafted issue in the same run. Do NOT use to duplicate existing
-  open issues.
+  in-progress epics and drafts a **large wave** of new ~200 LOC child issues
+  (typically 15–25+ tickets, not 1–2) as markdown specs. Can file via
+  file-issues.sh. Auto-applies when select-ready-issue finds nothing ready.
+  Completes the pick-up workflow — do NOT select or implement a newly drafted
+  issue in the same run. Do NOT use to duplicate existing open issues.
 metadata:
   parent-skill: pick-up-work-item
   step: 4
@@ -16,6 +16,18 @@ metadata:
 
 When **no open issue is ready**, figure out what tickets are missing to keep the
 migration moving, then draft them in the repo's issue format.
+
+**Draft a large wave, not a token sample.** When the active wave has **zero**
+open implementable children (frontier exhausted), the default is to file **15–25+
+chained issues** covering the next tranche of work — enough backlog for several
+pick-up cycles. Do **not** stop after 1–2 tickets unless the remaining scope is
+genuinely tiny (e.g. one small C file left in the wave).
+
+| Situation | How many to draft |
+|-----------|-------------------|
+| Frontier empty — new tranche / wave slice needed | **15–25+** issues (default) |
+| Partial gap — a few large TUs still lack children | **5–10** issues for that TU cluster |
+| Single deferred helper named in an epic | **1–3** issues only when scope is truly that small |
 
 **This step completes the pick-up workflow.** After drafting and/or filing,
 report results and **stop**. Do not re-run `select-ready-issue`, open a PR stack,
@@ -49,6 +61,22 @@ Common gap patterns in this repo:
 - **Deferred scope** — epic Notes say "file separate issues when…"
 
 ## 2. Decide what to draft
+
+### Batch size (required)
+
+Before writing specs, scan the active epic's deferred list and remaining `core/`
+translation units. Split each large TU into ~200 LOC function groups (same
+pattern as W2-07/W2-08 part 1/2, or W3-10…W3-18 tranche 2). **Aim to exhaust
+the obvious next tranche in one drafting session** — e.g. all leaf helpers in
+`rtw_rf.c`, then `rtw_ieee80211_rest`, then `rtw_rm_util`, etc.
+
+Minimum bar when the frontier is empty:
+
+1. Cover **every** C file named in the epic's "deferred / tranche 2" list that
+   has clear ~200 LOC slices.
+2. Chain issues with `blocked_by` in dependency order (W3-N → W3-N+1).
+3. Stop only when the next files are HAL-heavy with no obvious leaf slices, or
+   you have filed **≥15** issues for the tranche.
 
 Each new issue must be:
 
@@ -137,23 +165,25 @@ Sub-issues roll up progress on the parent epic in GitHub Projects.
 ## 6. Report
 
 ```markdown
-**Gap:** Wave 3 tranche 1 complete; `rtw_security.c` TKIP still in C; no W3-10+ filed.
+**Gap:** Wave 3 tranche 1 complete; no W3-10+ filed; frontier empty.
 
-**Drafted:**
+**Drafted (22 issues):**
 | ID | File | Title | Blocked by |
 |----|------|-------|------------|
-| W3-10 | wave3-10-security-tkip-p1.md | TKIP phase1 helpers | W3-09 |
+| W3-10 | wave3-10-….md | … | W3-09 |
+| … | … | … | … |
+| W3-31 | wave3-31-….md | … | W3-30 |
 
-**Filed on GitHub:** yes / no — #121
+**Filed on GitHub:** yes — #179–#200
 
-**Unblocks:** W3-07 follow-on work after W3-10 merges
+**Unblocks:** W3-10 ready after W3-09 (closed); chain through W3-31
 
-**For a future pick-up (not this run):** W3-04 is already open and ready; W3-10
-becomes eligible after its `blocked_by` issues close.
+**For a future pick-up (not this run):** W3-10 is the next implementable issue.
 ```
 
-If drafting does not unblock anything soon, say what human decision is needed
-(e.g. "choose Wave 3 tranche 2 scope" or "confirm L4 milestone timing").
+Report the **total count** of drafted/filed issues. If you filed fewer than 15
+and the epic still lists large deferred TUs, explain why (e.g. "only
+`rtw_mem.c` left in wave — 1 issue sufficient").
 
 ## 7. Completion criteria
 

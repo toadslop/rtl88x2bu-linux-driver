@@ -5,8 +5,9 @@ description: >-
   Auto-applies on "pick up work", "find open work item", "check GitHub issues",
   "what should we work on next", "triage issues and start work", or similar.
   Runs triage (close stale issues), selects a ready item, plans ~200-line stacked
-  PRs, implements them, or drafts new issues when nothing is ready — then stops
-  after drafting (do not auto-implement newly filed issues). Do NOT use for
+  PRs, implements them, or drafts a large wave of new issues (15–25+ tickets
+  when the frontier is empty) when nothing is ready — then stops after drafting
+  (do not auto-implement newly filed issues). Do NOT use for
   reviewing PRs (pr-review-delivery) or preparing an existing PR for merge
   (prepare-pr-for-merge).
 metadata:
@@ -37,7 +38,7 @@ Run these steps **in order**. Do not skip ahead.
 | 2 | [`select-ready-issue`](../select-ready-issue/SKILL.md) | Pick one open, unblocked, ready issue — or report none |
 | 3a | [`plan-stacked-prs`](../plan-stacked-prs/SKILL.md) | Split the issue into ~200 LOC stacked PRs (plan only) |
 | 3b | [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) | Implement PRs one by one, open stacked PRs |
-| 4 | [`draft-migration-issues`](../draft-migration-issues/SKILL.md) | **Only if step 2 found nothing ready** — draft new tickets, then **stop** |
+| 4 | [`draft-migration-issues`](../draft-migration-issues/SKILL.md) | **Only if step 2 found nothing ready** — draft a **large wave** of new tickets (15–25+ when frontier empty), then **stop** |
 
 ```mermaid
 flowchart TD
@@ -53,7 +54,10 @@ flowchart TD
 ## Stop after drafting (step 4)
 
 When step 4 runs, the workflow **ends there**. Creating or filing new issues is a
-complete job — not a prelude to implementation.
+complete job — not a prelude to implementation. Step 4 should produce **enough
+backlog for multiple future pick-ups** (see `draft-migration-issues` batch-size
+rules); filing only 1–2 tickets when a whole tranche is unfiled is a workflow
+miss.
 
 | After step 4 | Do | Do not |
 |--------------|-----|--------|
