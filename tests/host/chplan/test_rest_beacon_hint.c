@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "host_chplan_types.h"
+#include "host_chplan_rest_types.h"
 #include "host_vector_json.h"
 
 #define MAX_VECTORS 16
@@ -26,13 +26,14 @@ struct vector {
 	RT_CHANNEL_INFO chset[MAX_CHANNEL_NUM];
 	char alpha2[3];
 	int has_country_ent;
-	struct country_chplan country;
+	struct host_country_chplan country;
 	int expect_act_cnt;
 	RT_CHANNEL_INFO expect_chset[MAX_CHANNEL_NUM];
 };
 
 #ifdef RUST_CHPLAN_REST_ORACLE
-extern u8 host_rest_process_beacon_hint(_adapter *adapter, WLAN_BSSID_EX *bss);
+extern u8 host_rest_process_beacon_hint(host_chplan_adapter *adapter,
+					host_wlan_bssid_ex *bss);
 #endif
 
 static int parse_fn(const char *obj, size_t obj_len, enum rest_beacon_fn *out)
@@ -142,8 +143,8 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 
 static int run_vector(const struct vector *v)
 {
-	_adapter adapter;
-	WLAN_BSSID_EX bss;
+	host_chplan_adapter adapter;
+	host_wlan_bssid_ex bss;
 	u8 act_cnt;
 
 	memset(&adapter, 0, sizeof(adapter));
@@ -151,7 +152,7 @@ static int run_vector(const struct vector *v)
 	memcpy(adapter.rf_ctl.channel_set, v->chset, sizeof(v->chset));
 	if (v->has_country_ent)
 		adapter.rf_ctl.country_ent = &v->country;
-	bss.Configuration.DSConfig = v->ch;
+	bss.configuration.ds_config = v->ch;
 
 	act_cnt = host_rest_process_beacon_hint(&adapter, &bss);
 	if (act_cnt != (u8)v->expect_act_cnt) {

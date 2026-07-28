@@ -344,6 +344,7 @@ const char *_regd_src_str[] = {
 
 #ifndef HOST_CHPLAN_TEST
 
+#if !defined(CONFIG_RUST)
 u8 rtw_process_beacon_hint(_adapter *adapter, WLAN_BSSID_EX *bss)
 {
 #ifndef RTW_CHPLAN_BEACON_HINT_NON_WORLD_WIDE
@@ -380,6 +381,7 @@ u8 rtw_process_beacon_hint(_adapter *adapter, WLAN_BSSID_EX *bss)
 exit:
 	return act_cnt;
 }
+#endif /* !CONFIG_RUST */
 
 #endif /* !HOST_CHPLAN_TEST */
 
@@ -2183,6 +2185,7 @@ void dump_country_chplan_map(void *sel)
 	}
 }
 
+#if !defined(CONFIG_RUST)
 void dump_chplan_id_list(void *sel)
 {
 	u8 first = 1;
@@ -2259,6 +2262,7 @@ void dump_chplan_ver(void *sel)
 {
 	RTW_PRINT_SEL(sel, "%s%s-%s\n", RTW_DOMAIN_MAP_VER, RTW_DOMAIN_MAP_M_VER, RTW_COUNTRY_MAP_VER);
 }
+#endif /* !CONFIG_RUST */
 
 #endif /* !HOST_CHPLAN_TEST */
 
@@ -2388,3 +2392,15 @@ void rtw_rust_warn_on(int condition)
 {
 	rtw_warn_on(condition);
 }
+
+#if defined(CONFIG_RUST) && !defined(HOST_CHPLAN_TEST)
+u8 rtw_rust_bss_ds_config(WLAN_BSSID_EX *bss)
+{
+	return (u8)bss->Configuration.DSConfig;
+}
+
+void rtw_rust_chplan_print_str(void *sel, const char *s)
+{
+	RTW_PRINT_SEL(sel, "%s", s);
+}
+#endif /* CONFIG_RUST && !HOST_CHPLAN_TEST */
