@@ -111,5 +111,5 @@ Architecture: #74 (`E11`), #81–#84 (`A0`–`A3`)
 | W3-14 | #183 | (filed on GitHub only) | done (#213–#214) |
 | W3-15 | #184 | (filed on GitHub only) | done (#218–#219) |
 | W3-16 | #185 | (filed on GitHub only) | done (#221–#225) |
-| W3-17 | #186 | (filed on GitHub only) | in progress (PR1 harness + PR2 port) |
+| W3-17 | #186 | (filed on GitHub only) | done (#226–#227) |
 | W3-18 | #187 | (filed on GitHub only) | open (Wave 3 tranche 2 — see #68) |
