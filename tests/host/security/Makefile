@@ -8,20 +8,34 @@ ORACLE   := security_c_oracle.c
 REST_ORACLE := security_rest_c_oracle.c
 RUST_SECURITY := $(ROOT)/rust/rtw_security.rs
 RUST_SECURITY_REST := $(ROOT)/rust/rtw_security_rest.rs
+RUST_SWCRYPTO := $(ROOT)/rust/rtw_swcrypto.rs
+SWCRYPTO_SHIM := ../shim/host_swcrypto_shim.c
+CRYPTO_DIR := $(ROOT)/core/crypto
+AES_LEAF_SRCS := \
+	$(CRYPTO_DIR)/aes-internal.c \
+	$(CRYPTO_DIR)/aes-internal-enc.c \
+	../shim/host_crypto_shim.c
+GCMP_CRYPTO_SRCS := $(CRYPTO_DIR)/aes-gcm.c $(CRYPTO_DIR)/gcmp.c
+SWCRYPTO_CRYPTO_SRCS := $(AES_LEAF_SRCS) $(GCMP_CRYPTO_SRCS) \
+	$(CRYPTO_DIR)/aes-ccm.c $(CRYPTO_DIR)/ccmp.c \
+	$(CRYPTO_DIR)/aes-omac1.c $(CRYPTO_DIR)/aes-ctr.c \
+	$(CRYPTO_DIR)/aes-siv.c
 
 CC      := gcc
 RUSTC   := rustc
 CFLAGS  := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
            -I$(HOST_INC) -I. \
            -DCONFIG_IEEE80211W
+SWCRYPTO_CFLAGS := $(CFLAGS) -I$(CRYPTO_DIR) -include ../include/host_autoconf.h \
+	-DHOST_CRYPTO_TEST -DHOST_SWCRYPTO_TEST
 RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
 HOST_JSON := ../crypto/host_vector_json.c
 
-.PHONY: all test test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust test-ccmp-primitives test-ccmp-primitives-rust test-ccmp-construct test-ccmp-construct-rust test-ccmp-frames test-ccmp-frames-rust clean
+.PHONY: all test test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust test-ccmp-primitives test-ccmp-primitives-rust test-ccmp-construct test-ccmp-construct-rust test-ccmp-frames test-ccmp-frames-rust test-gcmp-frames test-gcmp-frames-rust clean
 
 all: test
 
-test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust test-ccmp-primitives test-ccmp-primitives-rust test-ccmp-construct test-ccmp-construct-rust test-ccmp-frames
+test: test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust test-ccmp-primitives test-ccmp-primitives-rust test-ccmp-construct test-ccmp-construct-rust test-ccmp-frames test-gcmp-frames
 
 test-c: test_security
 	./test_security security_type_vectors.json
@@ -76,6 +90,12 @@ test-ccmp-frames: test_ccmp_frames
 
 test-ccmp-frames-rust: test_ccmp_frames_rust
 	./test_ccmp_frames_rust ccmp_frame_vectors.json
+
+test-gcmp-frames: test_gcmp_frames
+	./test_gcmp_frames gcmp_frame_vectors.json
+
+test-gcmp-frames-rust: test_gcmp_frames_rust
+	./test_gcmp_frames_rust gcmp_frame_vectors.json
 
 test_security: test_security.c $(ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_security.c $(ORACLE) $(HOST_JSON)
@@ -152,6 +172,20 @@ test_ccmp_frames_rust: test_ccmp_frames.c librust_security_rest.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_SECURITY_REST_ORACLE -o $@ test_ccmp_frames.c $(HOST_JSON) \
 		librust_security_rest.a
 
+librust_swcrypto.a: $(RUST_SWCRYPTO)
+	$(RUSTC) $(RUSTFLAGS) --cfg host_swcrypto_test --crate-type staticlib \
+		$(RUST_SWCRYPTO) -o $@
+
+test_gcmp_frames: test_gcmp_frames.c $(SHIM) librust_swcrypto.a $(SWCRYPTO_SHIM) \
+		$(SWCRYPTO_CRYPTO_SRCS) $(HOST_JSON)
+	$(CC) $(SWCRYPTO_CFLAGS) -DHOST_GCMP_FRAME_ORACLE_BUILD -o $@ test_gcmp_frames.c $(SHIM) \
+		$(SWCRYPTO_SHIM) $(SWCRYPTO_CRYPTO_SRCS) $(HOST_JSON) librust_swcrypto.a
+
+# test-gcmp-frames-rust is added to aggregate `test` in W3-14 PR2 (stacked Rust port).
+test_gcmp_frames_rust: test_gcmp_frames.c librust_security_rest.a librust_swcrypto.a $(SWCRYPTO_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_SECURITY_REST_ORACLE -o $@ test_gcmp_frames.c $(HOST_JSON) \
+		$(SWCRYPTO_SHIM) librust_security_rest.a librust_swcrypto.a
+
 clean:
 	rm -f test_security test_security_rust test_wep_primitives test_wep_primitives_rust \
 		test_wep_frames test_wep_frames_rust test_tkip_mic test_tkip_mic_rust \
@@ -159,4 +193,5 @@ clean:
 		test_ccmp_primitives test_ccmp_primitives_rust \
 		test_ccmp_construct test_ccmp_construct_rust \
 		test_ccmp_frames test_ccmp_frames_rust \
-		librust_security.a librust_security_rest.a
+		test_gcmp_frames test_gcmp_frames_rust \
+		librust_security.a librust_security_rest.a librust_swcrypto.a

@@ -411,3 +411,167 @@ exit:
 }
 
 #endif /* HOST_TKIP_FRAME_ORACLE_BUILD */
+
+#if defined(HOST_GCMP_FRAME_ORACLE_BUILD)
+
+/* ----- GCMP frame encrypt/decrypt (W3-14 / T5) ----- */
+
+#define HOST_GCMP_SUCCESS 0
+#define HOST_GCMP_FAIL 1
+
+#define RND4_GCMP(x) ((((uintptr_t)(x) >> 2) + ((((uintptr_t)(x) & 3) == 0) ? 0 : 1)) << 2)
+
+extern int _rtw_gcmp_encrypt(void *padapter, uint8_t *key, uint32_t key_len,
+			     unsigned int hdrlen, uint8_t *frame, uint32_t plen);
+extern int _rtw_gcmp_decrypt(void *padapter, uint8_t *key, uint32_t key_len,
+			     unsigned int hdrlen, uint8_t *frame, uint32_t plen);
+
+static struct host_sta_info *host_gcmp_get_stainfo(struct host_stapriv *stapriv,
+						   const uint8_t *ta)
+{
+	size_t i;
+
+	for (i = 0; i < sizeof(stapriv->stas) / sizeof(stapriv->stas[0]); i++) {
+		if (!stapriv->stas[i].used)
+			continue;
+		if (memcmp(stapriv->stas[i].ta, ta, HOST_ETH_ALEN) == 0)
+			return &stapriv->stas[i];
+	}
+	return NULL;
+}
+
+static int host_is_broadcast_mac_addr(const uint8_t *addr)
+{
+	return addr[0] == 0xff && addr[1] == 0xff && addr[2] == 0xff &&
+	       addr[3] == 0xff && addr[4] == 0xff && addr[5] == 0xff;
+}
+
+static uint32_t host_gcmp_get_current_time(void)
+{
+	return 0;
+}
+
+static uint32_t host_gcmp_get_passing_time_ms(uint32_t start)
+{
+	(void)start;
+	return 0;
+}
+
+uint32_t rtw_gcmp_encrypt(struct host_adapter *padapter, uint8_t *pxmitframe)
+{
+	int curfragnum;
+	uint32_t plen;
+	uint32_t prwskeylen;
+	uint8_t *pframe = NULL;
+	uint8_t *prwskey = NULL;
+	uint8_t hw_hdr_offset;
+	uint32_t res = HOST_GCMP_SUCCESS;
+	struct host_pkt_attrib *pattrib =
+		&((struct host_xmit_frame *)pxmitframe)->attrib;
+	struct host_security_priv *psecuritypriv = &padapter->securitypriv;
+	struct host_xmit_priv *pxmitpriv = &padapter->xmitpriv;
+
+	if (((struct host_xmit_frame *)pxmitframe)->buf_addr == NULL)
+		return HOST_GCMP_FAIL;
+
+	hw_hdr_offset = HOST_TXDESC_OFFSET +
+		(((struct host_xmit_frame *)pxmitframe)->pkt_offset * 8);
+
+	pframe = ((struct host_xmit_frame *)pxmitframe)->buf_addr + hw_hdr_offset;
+
+	if ((pattrib->encrypt == _GCMP_) || (pattrib->encrypt == _GCMP_256_)) {
+		if (HOST_IS_MCAST(pattrib->ra))
+			prwskey = psecuritypriv->dot118021XGrpKey[psecuritypriv->dot118021XGrpKeyid].skey;
+		else
+			prwskey = pattrib->dot118021x_UncstKey.skey;
+
+		prwskeylen = (pattrib->encrypt == _GCMP_256_) ? 32 : 16;
+
+		for (curfragnum = 0; curfragnum < pattrib->nr_frags; curfragnum++) {
+			if ((curfragnum + 1) == pattrib->nr_frags) {
+				plen = pattrib->last_txcmdsz - pattrib->hdrlen -
+				       pattrib->iv_len - pattrib->icv_len;
+
+				_rtw_gcmp_encrypt(padapter, prwskey, prwskeylen,
+						  pattrib->hdrlen, pframe, plen);
+			} else {
+				plen = pxmitpriv->frag_len - pattrib->hdrlen -
+				       pattrib->iv_len - pattrib->icv_len;
+
+				_rtw_gcmp_encrypt(padapter, prwskey, prwskeylen,
+						  pattrib->hdrlen, pframe, plen);
+				pframe += pxmitpriv->frag_len;
+				pframe = (uint8_t *)RND4_GCMP((uintptr_t)pframe);
+			}
+		}
+	}
+
+	return res;
+}
+
+uint32_t rtw_gcmp_decrypt(struct host_adapter *padapter, uint8_t *precvframe)
+{
+	uint32_t prwskeylen;
+	uint8_t *pframe, *prwskey;
+	struct host_sta_info *stainfo;
+	struct host_rx_pkt_attrib *prxattrib =
+		&((union host_recv_frame *)precvframe)->u.hdr.attrib;
+	struct host_security_priv *psecuritypriv = &padapter->securitypriv;
+	uint32_t res = HOST_GCMP_SUCCESS;
+	static uint32_t no_gkey_start;
+	static uint32_t no_gkey_bc_cnt;
+	static uint32_t no_gkey_mc_cnt;
+
+	pframe = (uint8_t *)((union host_recv_frame *)precvframe)->u.hdr.rx_data;
+
+	if ((prxattrib->encrypt == _GCMP_) || (prxattrib->encrypt == _GCMP_256_)) {
+		stainfo = host_gcmp_get_stainfo(&padapter->stapriv, &prxattrib->ta[0]);
+		if (stainfo != NULL) {
+			if (HOST_IS_MCAST(prxattrib->ra)) {
+				if (!psecuritypriv->binstallGrpkey) {
+					res = HOST_GCMP_FAIL;
+
+					if (no_gkey_start == 0)
+						no_gkey_start = host_gcmp_get_current_time();
+
+					if (host_is_broadcast_mac_addr(prxattrib->ra))
+						no_gkey_bc_cnt++;
+					else
+						no_gkey_mc_cnt++;
+
+					if (host_gcmp_get_passing_time_ms(no_gkey_start) > 1000) {
+						no_gkey_start = host_gcmp_get_current_time();
+						no_gkey_bc_cnt = 0;
+						no_gkey_mc_cnt = 0;
+					}
+
+					goto gcmp_exit;
+				}
+
+				no_gkey_start = 0;
+				no_gkey_bc_cnt = 0;
+				no_gkey_mc_cnt = 0;
+
+				prwskey = psecuritypriv->dot118021XGrpKey[prxattrib->key_index].skey;
+				if (psecuritypriv->dot118021XGrpKeyid != prxattrib->key_index) {
+					res = HOST_GCMP_FAIL;
+					goto gcmp_exit;
+				}
+			} else {
+				prwskey = stainfo->dot118021x_UncstKey.skey;
+			}
+
+			prwskeylen = (prxattrib->encrypt == _GCMP_256_) ? 32 : 16;
+			if (_rtw_gcmp_decrypt(padapter, prwskey, prwskeylen,
+					    prxattrib->hdrlen, pframe,
+					    ((union host_recv_frame *)precvframe)->u.hdr.len) == 0)
+				res = HOST_GCMP_FAIL;
+		} else {
+			res = HOST_GCMP_FAIL;
+		}
+	}
+gcmp_exit:
+	return res;
+}
+
+#endif /* HOST_GCMP_FRAME_ORACLE_BUILD */

@@ -1,0 +1,529 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Host L2 oracle runner for GCMP frame encrypt/decrypt (T5 / W3-14).
+ */
+
+#if defined(HOST_GCMP_FRAME_ORACLE_BUILD) || defined(RUST_SECURITY_REST_ORACLE)
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "host_security_frame.h"
+#include "host_vector_json.h"
+
+#define MAX_VECTORS 16
+#define MAX_NAME 128
+#define MAX_BUF HOST_MAX_GCMP_FRAME
+
+enum gcmp_frame_fn {
+	FN_ENCRYPT_ROUNDTRIP = 0,
+	FN_DECRYPT,
+};
+
+struct vector {
+	char name[MAX_NAME];
+	enum gcmp_frame_fn fn;
+	u8 encrypt;
+	u8 grp_key_index;
+	u8 key_index;
+	u8 key_len;
+	u8 nr_frags;
+	u32 frag_len;
+	size_t payload_frag0_len;
+	u8 ta[HOST_ETH_ALEN];
+	u8 ra[HOST_ETH_ALEN];
+	u8 unicast_key[32];
+	u8 group_key[32];
+	u8 binstall_grpkey;
+	u8 no_stainfo;
+	u16 hdrlen;
+	u8 iv_len;
+	u8 icv_len;
+	u32 last_txcmdsz;
+	u32 frame_len;
+	u8 header[MAX_BUF];
+	size_t header_len;
+	u8 iv[MAX_BUF];
+	size_t iv_len_field;
+	u8 payload[MAX_BUF];
+	size_t payload_len;
+	u8 expect[MAX_BUF];
+	size_t expect_len;
+	int expect_fail;
+	int tamper_mic;
+};
+
+uint32_t rtw_gcmp_encrypt(struct host_adapter *padapter, u8 *pxmitframe);
+uint32_t rtw_gcmp_decrypt(struct host_adapter *padapter, u8 *precvframe);
+
+static int parse_fn(const char *obj, size_t obj_len, enum gcmp_frame_fn *out)
+{
+	char fn[64];
+
+	if (host_json_parse_string_in(obj, obj_len, "fn", fn, sizeof(fn)))
+		return -1;
+	if (strcmp(fn, "rtw_gcmp_encrypt_roundtrip") == 0)
+		*out = FN_ENCRYPT_ROUNDTRIP;
+	else if (strcmp(fn, "rtw_gcmp_decrypt") == 0)
+		*out = FN_DECRYPT;
+	else
+		return -1;
+	return 0;
+}
+
+static int parse_hex_field(const char *obj, size_t obj_len, const char *key,
+			   u8 *out, size_t out_cap, size_t *out_len)
+{
+	char hex[HOST_VECTOR_MAX_HEX_BUF];
+
+	if (host_json_parse_string_in(obj, obj_len, key, hex, sizeof(hex)))
+		return -1;
+	return host_hex_decode(hex, out, out_cap, out_len);
+}
+
+static int parse_mac_field(const char *obj, size_t obj_len, const char *key,
+			   u8 *out)
+{
+	size_t len = 0;
+
+	return parse_hex_field(obj, obj_len, key, out, HOST_ETH_ALEN, &len) ||
+	       len != HOST_ETH_ALEN;
+}
+
+static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
+{
+	struct vector *v = vec_void;
+	int val = 0;
+	size_t key_len = 0;
+
+	memset(v, 0, sizeof(*v));
+	v->iv_len = 8;
+	v->icv_len = 16;
+	v->key_len = 16;
+	if (host_json_parse_string_in(obj, obj_len, "name", v->name, sizeof(v->name)))
+		return -1;
+	if (parse_fn(obj, obj_len, &v->fn))
+		return -1;
+	if (host_json_parse_int_in(obj, obj_len, "encrypt", &val))
+		return -1;
+	v->encrypt = (u8)val;
+	if (!host_json_parse_int_in(obj, obj_len, "grp_key_index", &val))
+		v->grp_key_index = (u8)val;
+	if (!host_json_parse_int_in(obj, obj_len, "key_index", &val))
+		v->key_index = (u8)val;
+	if (!host_json_parse_int_in(obj, obj_len, "key_len", &val))
+		v->key_len = (u8)val;
+	if (!host_json_parse_int_in(obj, obj_len, "binstall_grpkey", &val))
+		v->binstall_grpkey = (u8)val;
+	if (!host_json_parse_int_in(obj, obj_len, "no_stainfo", &val))
+		v->no_stainfo = (u8)val;
+	if (parse_mac_field(obj, obj_len, "ta", v->ta))
+		return -1;
+	if (parse_mac_field(obj, obj_len, "ra", v->ra))
+		return -1;
+	if (parse_hex_field(obj, obj_len, "unicast_key", v->unicast_key,
+			    sizeof(v->unicast_key), &key_len))
+		return -1;
+	if (parse_hex_field(obj, obj_len, "group_key", v->group_key,
+			    sizeof(v->group_key), &key_len))
+		return -1;
+	if (host_json_parse_int_in(obj, obj_len, "hdrlen", &val))
+		return -1;
+	v->hdrlen = (u16)val;
+	if (!host_json_parse_int_in(obj, obj_len, "iv_len", &val))
+		v->iv_len = (u8)val;
+	if (!host_json_parse_int_in(obj, obj_len, "icv_len", &val))
+		v->icv_len = (u8)val;
+	if (!host_json_parse_int_in(obj, obj_len, "nr_frags", &val))
+		v->nr_frags = (u8)val;
+	if (!host_json_parse_int_in(obj, obj_len, "frag_len", &val))
+		v->frag_len = (u32)val;
+	if (!host_json_parse_int_in(obj, obj_len, "payload_frag0_len", &val))
+		v->payload_frag0_len = (size_t)val;
+	if (!host_json_parse_int_in(obj, obj_len, "last_txcmdsz", &val))
+		v->last_txcmdsz = (u32)val;
+	if (!host_json_parse_int_in(obj, obj_len, "frame_len", &val))
+		v->frame_len = (u32)val;
+	parse_hex_field(obj, obj_len, "header", v->header, sizeof(v->header),
+			&v->header_len);
+	parse_hex_field(obj, obj_len, "iv", v->iv, sizeof(v->iv), &v->iv_len_field);
+	parse_hex_field(obj, obj_len, "payload", v->payload, sizeof(v->payload),
+			&v->payload_len);
+	parse_hex_field(obj, obj_len, "expect", v->expect, sizeof(v->expect),
+			&v->expect_len);
+	if (!host_json_parse_int_in(obj, obj_len, "expect_fail", &val))
+		v->expect_fail = val;
+	if (!host_json_parse_int_in(obj, obj_len, "tamper_mic", &val))
+		v->tamper_mic = val;
+	return 0;
+}
+
+static void setup_adapter_encrypt(struct host_adapter *adapter, struct vector *v)
+{
+	memset(adapter, 0, sizeof(*adapter));
+	adapter->securitypriv.dot118021XGrpKeyid = v->grp_key_index;
+	memcpy(adapter->securitypriv.dot118021XGrpKey[v->grp_key_index].skey,
+	       v->group_key, v->key_len);
+	if (v->frag_len)
+		adapter->xmitpriv.frag_len = v->frag_len;
+	else
+		adapter->xmitpriv.frag_len = 512;
+}
+
+static void setup_adapter_decrypt(struct host_adapter *adapter, struct vector *v)
+{
+	memset(adapter, 0, sizeof(*adapter));
+	adapter->securitypriv.dot118021XGrpKeyid = v->grp_key_index;
+	memcpy(adapter->securitypriv.dot118021XGrpKey[v->grp_key_index].skey,
+	       v->group_key, v->key_len);
+	memcpy(adapter->securitypriv.dot118021XGrpKey[v->key_index].skey,
+	       v->group_key, v->key_len);
+	adapter->securitypriv.binstallGrpkey = v->binstall_grpkey;
+	if (!v->no_stainfo) {
+		adapter->stapriv.stas[0].used = 1;
+		memcpy(adapter->stapriv.stas[0].ta, v->ta, HOST_ETH_ALEN);
+		memcpy(adapter->stapriv.stas[0].dot118021x_UncstKey.skey,
+		       v->unicast_key, v->key_len);
+	}
+}
+
+#define RND4(x) ((((uintptr_t)(x) >> 2) + ((((uintptr_t)(x) & 3) == 0) ? 0 : 1)) << 2)
+
+static u8 *next_frag_start(u8 *pframe, u32 frag_len)
+{
+	pframe += frag_len;
+	return (u8 *)RND4((uintptr_t)pframe);
+}
+
+static int build_encrypt_frame(struct vector *v, struct host_adapter *adapter,
+			       struct host_xmit_frame *xmit, u8 *buf,
+			       size_t *plain_len_out)
+{
+	u8 *wire;
+	u8 *frag;
+	size_t frag0_payload_len = 0;
+	size_t frag1_payload_len = 0;
+	u8 nr_frags = v->nr_frags ? v->nr_frags : 1;
+
+	setup_adapter_encrypt(adapter, v);
+	memset(xmit, 0, sizeof(*xmit));
+	memset(buf, 0, MAX_BUF);
+
+	wire = buf + HOST_TXDESC_OFFSET;
+	if (v->header_len < (size_t)v->hdrlen * nr_frags ||
+	    v->iv_len_field < (size_t)v->iv_len * nr_frags) {
+		fprintf(stderr, "%s: header/iv too short for %u fragments\n",
+			v->name, nr_frags);
+		return -1;
+	}
+
+	if (nr_frags == 1) {
+		if (v->header_len != v->hdrlen || v->iv_len_field != v->iv_len ||
+		    v->payload_len + v->hdrlen + v->iv_len + v->icv_len !=
+			    v->last_txcmdsz) {
+			fprintf(stderr, "%s: inconsistent encrypt vector lengths\n",
+				v->name);
+			return -1;
+		}
+		frag0_payload_len = v->payload_len;
+	} else if (nr_frags == 2) {
+		u32 frag_len = v->frag_len ? v->frag_len : adapter->xmitpriv.frag_len;
+
+		frag0_payload_len = v->payload_frag0_len;
+		if (!frag0_payload_len)
+			frag0_payload_len = frag_len - v->hdrlen - v->iv_len - v->icv_len;
+		frag1_payload_len = v->payload_len - frag0_payload_len;
+		if (frag0_payload_len + frag1_payload_len != v->payload_len ||
+		    frag0_payload_len + v->hdrlen + v->iv_len + v->icv_len != frag_len ||
+		    frag1_payload_len + v->hdrlen + v->iv_len + v->icv_len !=
+			    v->last_txcmdsz) {
+			fprintf(stderr, "%s: inconsistent two-fragment vector lengths\n",
+				v->name);
+			return -1;
+		}
+	} else {
+		fprintf(stderr, "%s: unsupported nr_frags=%u\n", v->name, nr_frags);
+		return -1;
+	}
+
+	frag = wire;
+	memcpy(frag, v->header, v->hdrlen);
+	memcpy(frag + v->hdrlen, v->iv, v->iv_len);
+	memcpy(frag + v->hdrlen + v->iv_len, v->payload, frag0_payload_len);
+
+	if (nr_frags == 2) {
+		u32 frag_len = v->frag_len ? v->frag_len : adapter->xmitpriv.frag_len;
+
+		frag = next_frag_start(frag, frag_len);
+		memcpy(frag, v->header + v->hdrlen, v->hdrlen);
+		memcpy(frag + v->hdrlen, v->iv + v->iv_len, v->iv_len);
+		memcpy(frag + v->hdrlen + v->iv_len, v->payload + frag0_payload_len,
+		       frag1_payload_len);
+	}
+
+	xmit->buf_addr = buf;
+	xmit->pkt_offset = 0;
+	xmit->attrib.encrypt = v->encrypt;
+	xmit->attrib.nr_frags = nr_frags;
+	xmit->attrib.hdrlen = v->hdrlen;
+	xmit->attrib.iv_len = v->iv_len;
+	xmit->attrib.icv_len = v->icv_len;
+	xmit->attrib.last_txcmdsz = v->last_txcmdsz;
+	memcpy(xmit->attrib.ta, v->ta, HOST_ETH_ALEN);
+	memcpy(xmit->attrib.ra, v->ra, HOST_ETH_ALEN);
+	memcpy(xmit->attrib.dot118021x_UncstKey.skey, v->unicast_key, v->key_len);
+
+	*plain_len_out = v->payload_len;
+	return 0;
+}
+
+static int run_encrypt_roundtrip_vector(struct vector *v)
+{
+	struct host_adapter enc_adapter;
+	struct host_adapter dec_adapter;
+	struct host_xmit_frame xmit;
+	union host_recv_frame recv;
+	u8 buf[MAX_BUF];
+	u8 plain_save[MAX_BUF];
+	size_t plain_len = 0;
+	u32 res;
+
+	if (build_encrypt_frame(v, &enc_adapter, &xmit, buf, &plain_len) != 0)
+		return -1;
+
+	memcpy(plain_save, v->payload, plain_len);
+
+	if (rtw_gcmp_encrypt(&enc_adapter, (u8 *)&xmit) != 0) {
+		fprintf(stderr, "%s: encrypt returned fail\n", v->name);
+		return -1;
+	}
+
+	setup_adapter_decrypt(&dec_adapter, v);
+	memset(&recv, 0, sizeof(recv));
+	{
+		u8 *wire = buf + HOST_TXDESC_OFFSET;
+		u8 *dec_frame = wire;
+		u8 nr_frags = v->nr_frags ? v->nr_frags : 1;
+
+		/*
+		 * Driver decrypts one fragment per rtw_gcmp_decrypt call; when
+		 * nr_frags == 2 we roundtrip only the last fragment (matches
+		 * recv path). Extend with a per-fragment loop if vectors add
+		 * multi-fragment coverage later.
+		 */
+		if (nr_frags == 2) {
+			u32 frag_len = v->frag_len ? v->frag_len : enc_adapter.xmitpriv.frag_len;
+
+			dec_frame = next_frag_start(wire, frag_len);
+		}
+		recv.u.hdr.rx_data = dec_frame;
+	}
+	recv.u.hdr.len = v->last_txcmdsz;
+	recv.u.hdr.attrib.encrypt = v->encrypt;
+	recv.u.hdr.attrib.hdrlen = v->hdrlen;
+	recv.u.hdr.attrib.iv_len = v->iv_len;
+	recv.u.hdr.attrib.key_index = v->key_index;
+	memcpy(recv.u.hdr.attrib.ra, v->ra, HOST_ETH_ALEN);
+	memcpy(recv.u.hdr.attrib.ta, v->ta, HOST_ETH_ALEN);
+
+	res = rtw_gcmp_decrypt(&dec_adapter, (u8 *)&recv);
+	if (res != 0) {
+		fprintf(stderr, "%s: decrypt after encrypt returned fail\n", v->name);
+		return -1;
+	}
+
+	{
+		u8 *wire = buf + HOST_TXDESC_OFFSET;
+		u8 *plain = wire + v->hdrlen + v->iv_len;
+		u8 nr_frags = v->nr_frags ? v->nr_frags : 1;
+		size_t check_len = plain_len;
+		u8 *check_plain = plain_save;
+
+		if (nr_frags == 2) {
+			u32 frag_len = v->frag_len ? v->frag_len : enc_adapter.xmitpriv.frag_len;
+			size_t frag0_len = v->payload_frag0_len;
+			u8 *dec_frame;
+
+			if (!frag0_len)
+				frag0_len = frag_len - v->hdrlen - v->iv_len - v->icv_len;
+			dec_frame = next_frag_start(wire, frag_len);
+			plain = dec_frame + v->hdrlen + v->iv_len;
+			check_len = plain_len - frag0_len;
+			check_plain = plain_save + frag0_len;
+		}
+
+		if (memcmp(plain, check_plain, check_len) != 0) {
+			fprintf(stderr, "%s: roundtrip plaintext mismatch\n", v->name);
+			return -1;
+		}
+	}
+	return 0;
+}
+
+static int run_decrypt_bad_mic_vector(struct vector *v)
+{
+	struct host_adapter enc_adapter;
+	struct host_adapter dec_adapter;
+	struct host_xmit_frame xmit;
+	union host_recv_frame recv;
+	u8 buf[MAX_BUF];
+	size_t plain_len = 0;
+	u32 res;
+	u8 *wire;
+
+	if (build_encrypt_frame(v, &enc_adapter, &xmit, buf, &plain_len) != 0)
+		return -1;
+
+	if (rtw_gcmp_encrypt(&enc_adapter, (u8 *)&xmit) != 0) {
+		fprintf(stderr, "%s: setup encrypt returned fail\n", v->name);
+		return -1;
+	}
+
+	wire = buf + HOST_TXDESC_OFFSET;
+	wire[v->last_txcmdsz - 1] ^= 0xff;
+
+	setup_adapter_decrypt(&dec_adapter, v);
+	memset(&recv, 0, sizeof(recv));
+	recv.u.hdr.rx_data = wire;
+	recv.u.hdr.len = v->last_txcmdsz;
+	recv.u.hdr.attrib.encrypt = v->encrypt;
+	recv.u.hdr.attrib.hdrlen = v->hdrlen;
+	recv.u.hdr.attrib.iv_len = v->iv_len;
+	recv.u.hdr.attrib.key_index = v->key_index;
+	memcpy(recv.u.hdr.attrib.ra, v->ra, HOST_ETH_ALEN);
+	memcpy(recv.u.hdr.attrib.ta, v->ta, HOST_ETH_ALEN);
+
+	res = rtw_gcmp_decrypt(&dec_adapter, (u8 *)&recv);
+	if (res == 0) {
+		fprintf(stderr, "%s: expected decrypt fail (bad MIC)\n", v->name);
+		return -1;
+	}
+	return 0;
+}
+
+static int run_decrypt_vector(struct vector *v)
+{
+	struct host_adapter enc_adapter;
+	struct host_adapter dec_adapter;
+	struct host_xmit_frame xmit;
+	union host_recv_frame recv;
+	u8 buf[MAX_BUF];
+	size_t plain_len = 0;
+	u32 res;
+
+	if (v->expect_fail && v->tamper_mic)
+		return run_decrypt_bad_mic_vector(v);
+
+	if (v->expect_fail) {
+		setup_adapter_decrypt(&dec_adapter, v);
+		memset(&recv, 0, sizeof(recv));
+		memset(buf, 0, sizeof(buf));
+
+		if (v->header_len != v->hdrlen || v->iv_len_field != v->iv_len) {
+			fprintf(stderr, "%s: inconsistent decrypt vector lengths\n", v->name);
+			return -1;
+		}
+		if (!v->frame_len)
+			v->frame_len = v->hdrlen + v->iv_len + v->payload_len;
+
+		memcpy(buf, v->header, v->header_len);
+		memcpy(buf + v->hdrlen, v->iv, v->iv_len);
+		memcpy(buf + v->hdrlen + v->iv_len, v->payload, v->payload_len);
+
+		recv.u.hdr.rx_data = buf;
+		recv.u.hdr.len = v->frame_len;
+		recv.u.hdr.attrib.encrypt = v->encrypt;
+		recv.u.hdr.attrib.hdrlen = v->hdrlen;
+		recv.u.hdr.attrib.iv_len = v->iv_len;
+		recv.u.hdr.attrib.key_index = v->key_index;
+		memcpy(recv.u.hdr.attrib.ra, v->ra, HOST_ETH_ALEN);
+		memcpy(recv.u.hdr.attrib.ta, v->ta, HOST_ETH_ALEN);
+
+		res = rtw_gcmp_decrypt(&dec_adapter, (u8 *)&recv);
+		if (res == 0) {
+			fprintf(stderr, "%s: expected decrypt fail\n", v->name);
+			return -1;
+		}
+		return 0;
+	}
+
+	if (build_encrypt_frame(v, &enc_adapter, &xmit, buf, &plain_len) != 0)
+		return -1;
+
+	if (rtw_gcmp_encrypt(&enc_adapter, (u8 *)&xmit) != 0) {
+		fprintf(stderr, "%s: setup encrypt returned fail\n", v->name);
+		return -1;
+	}
+
+	setup_adapter_decrypt(&dec_adapter, v);
+	memset(&recv, 0, sizeof(recv));
+	recv.u.hdr.rx_data = buf + HOST_TXDESC_OFFSET;
+	recv.u.hdr.len = v->last_txcmdsz;
+	recv.u.hdr.attrib.encrypt = v->encrypt;
+	recv.u.hdr.attrib.hdrlen = v->hdrlen;
+	recv.u.hdr.attrib.iv_len = v->iv_len;
+	recv.u.hdr.attrib.key_index = v->key_index;
+	memcpy(recv.u.hdr.attrib.ra, v->ra, HOST_ETH_ALEN);
+	memcpy(recv.u.hdr.attrib.ta, v->ta, HOST_ETH_ALEN);
+
+	res = rtw_gcmp_decrypt(&dec_adapter, (u8 *)&recv);
+	if (res != 0) {
+		fprintf(stderr, "%s: decrypt returned fail\n", v->name);
+		return -1;
+	}
+
+	if (memcmp(buf + HOST_TXDESC_OFFSET + v->hdrlen + v->iv_len, v->payload,
+		   plain_len) != 0) {
+		fprintf(stderr, "%s: decrypt mismatch\n", v->name);
+		return -1;
+	}
+	return 0;
+}
+
+static int run_vector(struct vector *v)
+{
+	switch (v->fn) {
+	case FN_ENCRYPT_ROUNDTRIP:
+		return run_encrypt_roundtrip_vector(v);
+	case FN_DECRYPT:
+		return run_decrypt_vector(v);
+	default:
+		return -1;
+	}
+}
+
+int main(int argc, char **argv)
+{
+	const char *path = "gcmp_frame_vectors.json";
+	struct vector vectors[MAX_VECTORS];
+	size_t nvec = 0;
+	size_t i;
+	int failed = 0;
+
+	if (argc > 1)
+		path = argv[1];
+
+	if (host_load_vectors(path, vectors, sizeof(vectors[0]), MAX_VECTORS,
+			      parse_vector_object, &nvec)) {
+		fprintf(stderr, "failed to parse %s\n", path);
+		return 1;
+	}
+
+	for (i = 0; i < nvec; i++) {
+		if (run_vector(&vectors[i]) != 0)
+			failed++;
+		else
+			printf("ok %s\n", vectors[i].name);
+	}
+
+	if (failed) {
+		fprintf(stderr, "%d vector(s) failed\n", failed);
+		return 1;
+	}
+	printf("all %zu gcmp frame vectors passed (oracle: core/rtw_security_rest.c)\n",
+	       nvec);
+	return 0;
+}
+
+#endif /* HOST_GCMP_FRAME_ORACLE_BUILD || RUST_SECURITY_REST_ORACLE */
