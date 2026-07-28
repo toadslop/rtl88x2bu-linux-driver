@@ -47,10 +47,12 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-ieee80211
 		;;
 	rust/rtw_security.rs \
+	| rust/rtw_security_rest.rs \
 	| core/rtw_security.c \
 	| core/rtw_security_rest.c \
 	| tests/host/security/*)
 		add_target rust-check-symbols-rtw-security
+		add_target rust-check-symbols-rtw-security-rest-misc
 		;;
 	rust/rtw_wlan_util.rs \
 	| core/rtw_wlan_util.c \
@@ -69,6 +71,7 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-swcrypto
 	rust-check-symbols-rtw-ieee80211
 	rust-check-symbols-rtw-security
+	rust-check-symbols-rtw-security-rest-misc
 	rust-check-symbols-rtw-wlan-util
 )
 
