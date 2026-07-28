@@ -32,6 +32,26 @@
       "expect_tpk": "83487fcd0ab97983425c01a4b3d5cff91ff6e8c88cad74780fb31c58bab7ce46"
     },
     {
+      "name": "generate_tpk_equal_nonces",
+      "fn": "host_rest_tdls_generate_tpk",
+      "own_addr": "000000000001",
+      "peer_addr": "000000000002",
+      "bssid": "000000000003",
+      "snonce": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "anonce": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "expect_tpk": "1da235508170a9f48e54ef336866bcc18b06fc3ba7b17f78eef8f909f89e83e3"
+    },
+    {
+      "name": "generate_tpk_equal_macs",
+      "fn": "host_rest_tdls_generate_tpk",
+      "own_addr": "000000000001",
+      "peer_addr": "000000000001",
+      "bssid": "000000000003",
+      "snonce": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+      "anonce": "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f",
+      "expect_tpk": "d1fce73b5cc7064cb76c60ec5bf9985d72bab386affd7df3b9993c6126ce5a5b"
+    },
+    {
       "name": "ftie_mic_handshake",
       "fn": "host_rest_wpa_tdls_ftie_mic",
       "kck": "11111111111111111111111111111111",
