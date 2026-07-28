@@ -370,6 +370,10 @@ int main(int argc, char **argv)
 {
 	struct vector vecs[MAX_VECTORS];
 	size_t count = 0;
+	size_t executed = 0;
+#ifdef RUST_RF_REST_ORACLE
+	size_t skipped = 0;
+#endif
 	size_t i;
 	const char *path = "rf_vectors.json";
 
@@ -381,11 +385,29 @@ int main(int argc, char **argv)
 		return 1;
 	}
 	for (i = 0; i < count; i++) {
+#ifdef RUST_RF_REST_ORACLE
+		if (vecs[i].fn == FN_CH2FREQ || vecs[i].fn == FN_FREQ2CH ||
+		    vecs[i].fn == FN_CHBW_TO_FREQ_RANGE) {
+			printf("skip %s (c-only until W3-20 PR2)\n", vecs[i].name);
+			skipped++;
+			continue;
+		}
+#endif
+		executed++;
 		if (run_vector(&vecs[i])) {
 			fprintf(stderr, "FAIL %s\n", vecs[i].name);
 			return 1;
 		}
 	}
-	printf("PASS %zu vectors (%s)\n", count, path);
+#ifdef RUST_RF_REST_ORACLE
+	if (skipped)
+		printf("PASS %zu vectors (%zu skipped; oracle: rust/rtw_rf_rest.rs) (%s)\n",
+		       executed, skipped, path);
+	else
+		printf("PASS %zu vectors (oracle: rust/rtw_rf_rest.rs) (%s)\n",
+		       executed, path);
+#else
+	printf("PASS %zu vectors (%s)\n", executed, path);
+#endif
 	return 0;
 }

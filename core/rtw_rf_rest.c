@@ -539,7 +539,12 @@ u8 rtw_get_ch_group(u8 ch, u8 *group, u8 *cck_group)
 exit:
 	return band;
 }
+#endif /* !CONFIG_RUST || HOST_RF_TEST */
 
+/*
+ * W3-20: frequency helpers extracted from core/rtw_rf.c.
+ * Keep C definitions unguarded until PR2 ports them to rust/rtw_rf_rest.rs.
+ */
 int rtw_ch2freq(int chan)
 {
 	/* see 802.11 17.3.8.3.2 and Annex J
@@ -623,7 +628,6 @@ bool rtw_chbw_to_freq_range(u8 ch, u8 bw, u8 offset, u32 *hi, u32 *lo)
 exit:
 	return valid;
 }
-#endif /* !CONFIG_RUST || HOST_RF_TEST */
 
 #if defined(CONFIG_RUST) && !defined(HOST_RF_TEST)
 void rtw_rust_rf_warn_on(int condition)
