@@ -11,7 +11,6 @@
 #define CONFIG_AP_MODE
 #define CONFIG_IEEE80211W 1
 #define CONFIG_RTW_MESH_AEK 1
-#define CONFIG_TDLS 1
 #define CONFIG_RTW_DEBUG 0
 #define RTW_DEF_MODULE_REGULATORY_CERT 0
 #define RTW_ERR(...) do { } while (0)
