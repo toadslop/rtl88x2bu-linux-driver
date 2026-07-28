@@ -205,6 +205,12 @@ const size_t rtw_rust_gcmp_off_securitypriv_gcmp_sw_dec_cnt_mc =
 	offsetof(struct security_priv, gcmp_sw_dec_cnt_mc);
 const size_t rtw_rust_gcmp_off_securitypriv_gcmp_sw_dec_cnt_uc =
 	offsetof(struct security_priv, gcmp_sw_dec_cnt_uc);
+const size_t rtw_rust_wep_restore_off_securitypriv_dot11PrivacyAlgrthm =
+	offsetof(struct security_priv, dot11PrivacyAlgrthm);
+const size_t rtw_rust_wep_restore_off_securitypriv_dot11PrivacyKeyIndex =
+	offsetof(struct security_priv, dot11PrivacyKeyIndex);
+const size_t rtw_rust_wep_restore_off_securitypriv_key_mask =
+	offsetof(struct security_priv, key_mask);
 #endif
 
 /* 3		=====TKIP related===== (W3-07a: MIC helpers in rust/rtw_security.rs) */
@@ -964,21 +970,7 @@ void rtw_aes_decipher_log_mic_mismatch(int i, u8 pframe_byte, u8 message_byte)
 /* W3-13: rtw_aes_decrypt in rust/rtw_security_rest.rs */
 
 #ifdef CONFIG_RTW_MESH_AEK
-/* for AES-SIV, wrapper to ase_siv_encrypt and aes_siv_decrypt */
-int rtw_aes_siv_encrypt(const u8 *key, size_t key_len, const u8 *pw,
-	size_t pwlen, size_t num_elem,
-	const u8 *addr[], const size_t *len, u8 *out)
-{
-	return _aes_siv_encrypt(key, key_len, pw, pwlen,
-		num_elem, addr, len, out);
-}
-
-int rtw_aes_siv_decrypt(const u8 *key, size_t key_len, const u8 *iv_crypt, size_t iv_c_len,
-	size_t num_elem, const u8 *addr[], const size_t *len, u8 *out)
-{
-	return _aes_siv_decrypt(key, key_len, iv_crypt,
-		iv_c_len, num_elem, addr, len, out);
-}
+/* W3-15: rtw_aes_siv_encrypt/decrypt in rust/rtw_security_rest.rs */
 #endif /* CONFIG_RTW_MESH_AEK */
 
 #ifdef CONFIG_TDLS
@@ -1162,23 +1154,7 @@ int tdls_verify_mic(u8 *kck, u8 trans_seq,
 }
 #endif /* CONFIG_TDLS */
 
-/* Restore HW wep key setting according to key_mask */
-void rtw_sec_restore_wep_key(_adapter *adapter)
-{
-	struct security_priv *securitypriv = &(adapter->securitypriv);
-	sint keyid;
-
-	if ((_WEP40_ == securitypriv->dot11PrivacyAlgrthm) || (_WEP104_ == securitypriv->dot11PrivacyAlgrthm)) {
-		for (keyid = 0; keyid < 4; keyid++) {
-			if (securitypriv->key_mask & BIT(keyid)) {
-				if (keyid == securitypriv->dot11PrivacyKeyIndex)
-					rtw_set_key(adapter, securitypriv, keyid, 1, _FALSE);
-				else
-					rtw_set_key(adapter, securitypriv, keyid, 0, _FALSE);
-			}
-		}
-	}
-}
+/* W3-15: rtw_sec_restore_wep_key in rust/rtw_security_rest.rs */
 
 u8 rtw_handle_tkip_countermeasure(_adapter *adapter, const char *caller)
 {
@@ -1268,10 +1244,7 @@ u16 rtw_calc_crc(u8  *pdata, int length)
 }
 #endif /*CONFIG_WOWLAN*/
 
-u32 rtw_calc_crc32(u8 *data, size_t len)
-{
-	return getcrc32(data, (sint)len);
-}
+/* W3-15: rtw_calc_crc32 in rust/rtw_security_rest.rs */
 
 
 /* W3-14a: rtw_gcmp_encrypt in rust/rtw_security_rest.rs */

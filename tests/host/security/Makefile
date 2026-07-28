@@ -117,9 +117,12 @@ librust_security_rest_misc.a: $(RUST_SECURITY_REST)
 	$(RUSTC) $(RUSTFLAGS) --cfg host_security_rest_test --cfg host_rest_misc_test \
 		--crate-type staticlib $(RUST_SECURITY_REST) -o $@
 
-test_rest_misc_rust: test_rest_misc.c librust_security_rest_misc.a $(HOST_JSON)
-	$(CC) $(CFLAGS) -DRUST_SECURITY_REST_ORACLE -o $@ test_rest_misc.c $(HOST_JSON) \
-		librust_security_rest_misc.a
+test_rest_misc_rust: test_rest_misc.c librust_security_rest_misc.a librust_security.a \
+		$(MISC_CRYPTO_SRCS) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_SECURITY_REST_ORACLE -I$(CRYPTO_DIR) \
+		-include ../include/host_autoconf.h -DHOST_CRYPTO_TEST \
+		-o $@ test_rest_misc.c $(MISC_CRYPTO_SRCS) $(HOST_JSON) \
+		librust_security_rest_misc.a librust_security.a
 
 test_security: test_security.c $(ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_security.c $(ORACLE) $(HOST_JSON)
