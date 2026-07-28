@@ -540,7 +540,7 @@
       "expect_valid": 0
     },
     {
-      "name": "chbw_invalid_bw5",
+      "name": "chbw_unhandled_bw5",
       "fn": "rtw_chbw_to_freq_range",
       "ch": 6,
       "bw": 5,
@@ -550,7 +550,7 @@
       "expect_lo": 0
     },
     {
-      "name": "chbw_invalid_bw10",
+      "name": "chbw_unhandled_bw10",
       "fn": "rtw_chbw_to_freq_range",
       "ch": 6,
       "bw": 6,
@@ -563,6 +563,12 @@
       "name": "freq2ch_gap_45001",
       "fn": "rtw_freq2ch",
       "freq": 45001,
+      "expect": 0
+    },
+    {
+      "name": "freq2ch_gap_58319",
+      "fn": "rtw_freq2ch",
+      "freq": 58319,
       "expect": 0
     }
   ]
