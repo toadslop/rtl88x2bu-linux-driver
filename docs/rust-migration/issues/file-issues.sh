@@ -112,6 +112,26 @@ files=(
   wave3-09-wlan-util-ratetbl.md
   wave3-19-rf-ch-layout.md
   wave3-20-rf-freq.md
+  wave3-21-rf-lookup-tables.md
+  wave3-22-rf-op-class.md
+  wave3-23-rf-trx-path.md
+  wave3-24-rf-txpwr-cac.md
+  wave3-25-rf-tx-path-nss.md
+  wave3-26-ieee80211-rates.md
+  wave3-27-ieee80211-wpa-rsn-p1.md
+  wave3-28-ieee80211-wpa-rsn-p2.md
+  wave3-29-ieee80211-wapi-wps.md
+  wave3-30-ieee80211-mac-str.md
+  wave3-31-ieee80211-chbw.md
+  wave3-32-ieee80211-frame-ht.md
+  wave3-33-rm-util-pure.md
+  wave3-34-rm-util-tokens.md
+  wave3-35-vht-mcs-nss.md
+  wave3-36-vht-ie-restructure.md
+  wave3-37-sta-mgt-acl.md
+  wave3-38-sta-mgt-aid.md
+  wave3-39-recv-leaf.md
+  wave3-40-xmit-rate-bmp.md
 )
 
 # draft_id -> github issue number
