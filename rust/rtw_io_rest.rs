@@ -190,7 +190,7 @@ mod kernel {
 mod kernel {
     use super::*;
 
-    static HOST_READ_SNIFF: [RtwIoSniffEnt; 8] = [
+    static HOST_READ_SNIFF: [RtwIoSniffEnt; 9] = [
         RtwIoSniffEnt {
             chip: MAX_CHIP_TYPE,
             hci: 0,
@@ -305,6 +305,22 @@ mod kernel {
             },
             trace: false,
             tag: b"host read unaligned len2 equal\0".as_ptr(),
+            assert_protsel: None,
+        },
+        RtwIoSniffEnt {
+            chip: MAX_CHIP_TYPE,
+            hci: 0,
+            addr: 0x500,
+            ent_type: RTW_IO_SNIFF_TYPE_VALUE,
+            u: SniffUnion {
+                vm: SniffValueMatch {
+                    mask: 0xFF_0000,
+                    val: 0x42_0000,
+                    equal: true,
+                },
+            },
+            trace: false,
+            tag: b"host read negative mask_shift\0".as_ptr(),
             assert_protsel: None,
         },
     ];
