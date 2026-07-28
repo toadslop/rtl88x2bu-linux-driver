@@ -974,6 +974,20 @@ void rtw_aes_decipher_log_mic_mismatch(int i, u8 pframe_byte, u8 message_byte)
 #endif /* CONFIG_RTW_MESH_AEK */
 
 #ifdef CONFIG_TDLS
+#if defined(CONFIG_RUST)
+void rtw_rust_tdls_adapter_own_mac(_adapter *adapter, u8 *out)
+{
+	_rtw_memcpy(out, adapter_mac_addr(adapter), ETH_ALEN);
+}
+
+void rtw_rust_tdls_adapter_bssid(_adapter *adapter, u8 *out)
+{
+	_rtw_memcpy(out, get_bssid(&adapter->mlmepriv), ETH_ALEN);
+}
+
+/* W3-16: wpa_tdls_generate_tpk, wpa_tdls_ftie_mic, wpa_tdls_teardown_ftie_mic,
+ * tdls_verify_mic in rust/rtw_security_rest.rs */
+#else /* !CONFIG_RUST */
 void wpa_tdls_generate_tpk(_adapter *padapter, void *sta)
 {
 	struct sta_info *psta = (struct sta_info *)sta;
@@ -1152,6 +1166,7 @@ int tdls_verify_mic(u8 *kck, u8 trans_seq,
 	return _FAIL;
 
 }
+#endif /* !CONFIG_RUST */
 #endif /* CONFIG_TDLS */
 
 /* W3-15: rtw_sec_restore_wep_key in rust/rtw_security_rest.rs */
