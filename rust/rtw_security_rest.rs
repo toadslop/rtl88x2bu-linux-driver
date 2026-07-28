@@ -1007,6 +1007,11 @@ extern "C" {
         plen: U32,
     ) -> i32;
     fn rtw_get_stainfo(stapriv: *mut core::ffi::c_void, hwaddr: *mut U8) -> *mut core::ffi::c_void;
+    fn rtw_tkip_decrypt_mcast_gkey_check(
+        padapter: *mut AesAdapter,
+        ra: *const U8,
+        grpkey_installed: U8,
+    ) -> U8;
 }
 
 fn rnd4(ptr: usize) -> usize {
@@ -1350,7 +1355,9 @@ pub extern "C" fn rtw_aes_decrypt(padapter: *mut AesAdapter, precvframe: *mut U8
 
         let ra = (*attrib).ra;
         let prwskey = if is_mcast_ra(&ra) {
-            if kernel_layout::securitypriv_binstall_grpkey(psecuritypriv) == _FALSE {
+            let grpkey_installed = kernel_layout::securitypriv_binstall_grpkey(psecuritypriv);
+            if rtw_tkip_decrypt_mcast_gkey_check(padapter, ra.as_ptr(), grpkey_installed) != _FALSE
+            {
                 return AES_RTW_FAIL;
             }
             let key_index = (*attrib).key_index as usize;
