@@ -26,6 +26,7 @@
 * @return _TRUE:
 * @return _FALSE:
 */
+#if !defined(CONFIG_RUST) || defined(HOST_IO_TEST)
 int rtw_inc_and_chk_continual_io_error(struct dvobj_priv *dvobj)
 {
 	int ret = _FALSE;
@@ -48,6 +49,7 @@ void rtw_reset_continual_io_error(struct dvobj_priv *dvobj)
 {
 	ATOMIC_SET(&dvobj->continual_io_error, 0);
 }
+#endif /* !CONFIG_RUST || HOST_IO_TEST */
 #ifdef DBG_IO
 #define RTW_IO_SNIFF_TYPE_RANGE	0 /* specific address range is accessed */
 #define RTW_IO_SNIFF_TYPE_VALUE	1 /* value match for sniffed range */
@@ -111,7 +113,7 @@ const struct rtw_io_sniff_ent read_sniff[] = {
 #endif
 };
 
-const int read_sniff_num = sizeof(read_sniff) / sizeof(struct rtw_io_sniff_ent);
+int read_sniff_num = sizeof(read_sniff) / sizeof(struct rtw_io_sniff_ent);
 
 const struct rtw_io_sniff_ent write_sniff[] = {
 #ifdef DBG_IO_HCI_EN_CHK
@@ -139,8 +141,9 @@ const struct rtw_io_sniff_ent write_sniff[] = {
 #endif
 };
 
-const int write_sniff_num = sizeof(write_sniff) / sizeof(struct rtw_io_sniff_ent);
+int write_sniff_num = sizeof(write_sniff) / sizeof(struct rtw_io_sniff_ent);
 
+#if !defined(CONFIG_RUST) || defined(HOST_IO_TEST)
 static bool match_io_sniff_ranges(_adapter *adapter
 	, const struct rtw_io_sniff_ent *sniff, int i, u32 addr, u16 len)
 {
@@ -329,5 +332,62 @@ bool match_rf_write_sniff_ranges(_adapter *adapter, u8 path, u32 addr, u32 mask)
 
 	return _FALSE;
 }
+#endif /* !CONFIG_RUST || HOST_IO_TEST */
 
 #endif /* DBG_IO */
+
+#if defined(CONFIG_RUST) && !defined(HOST_IO_TEST)
+ATOMIC_T *rtw_rust_dvobj_continual_io_error(struct dvobj_priv *dvobj)
+{
+	return &dvobj->continual_io_error;
+}
+
+int rtw_rust_atomic_inc_return(ATOMIC_T *v)
+{
+	return ATOMIC_INC_RETURN(v);
+}
+
+void rtw_rust_atomic_set(ATOMIC_T *v, int val)
+{
+	ATOMIC_SET(v, val);
+}
+
+u8 rtw_rust_get_chip_type(_adapter *adapter)
+{
+	return rtw_get_chip_type(adapter);
+}
+
+u8 rtw_rust_get_intf_type(_adapter *adapter)
+{
+	return rtw_get_intf_type(adapter);
+}
+
+void rtw_rust_io_warn_on(int condition)
+{
+	rtw_warn_on(condition);
+}
+
+void rtw_rust_io_dbg_tag(const char *tag)
+{
+	if (tag)
+		RTW_INFO("DBG_IO TAG %s\n", tag);
+}
+
+bool rtw_rust_io_sniff_assert_protsel(bool (*fn)(_adapter *, u32, u8),
+				      _adapter *adapter, u32 addr, u8 len)
+{
+	if (!fn)
+		return false;
+	return fn(adapter, addr, len);
+}
+
+u8 rtw_rust_io_max_chip_type(void)
+{
+	return MAX_CHIP_TYPE;
+}
+
+u8 rtw_rust_io_max_rf_path(void)
+{
+	return MAX_RF_PATH;
+}
+#endif /* CONFIG_RUST && !HOST_IO_TEST */
