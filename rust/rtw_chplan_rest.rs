@@ -127,6 +127,8 @@ extern "C" {
     fn rtw_rust_chplan_print_str(sel: *mut c_void, s: *const u8);
     #[cfg(not(host_chplan_rest_test))]
     fn rtw_rust_bss_ds_config(bss: *mut c_void) -> u8;
+    #[cfg(not(host_chplan_rest_test))]
+    fn rtw_rust_chplan_beacon_hint_info(ch: u8);
 }
 
 fn is_alpha2_worldwide(alpha2: &[u8; 2]) -> bool {
@@ -170,6 +172,10 @@ fn process_beacon_hint_inner(
         && (RTW_CHPLAN_BEACON_HINT_ON_DFS_CH || (chset[idx].flags & RTW_CHF_DFS) == 0)
     {
         chset[idx].flags &= !RTW_CHF_NO_IR;
+        #[cfg(not(host_chplan_rest_test))]
+        unsafe {
+            rtw_rust_chplan_beacon_hint_info(ch);
+        }
         return 1;
     }
     0
@@ -304,7 +310,16 @@ fn chplan_ent_equal(a: &ChplanEnt, b: &ChplanEnt) -> bool {
 #[cfg(not(host_chplan_rest_test))]
 #[no_mangle]
 pub extern "C" fn dump_chplan_ver(sel: *mut c_void) {
-    print_line(sel, "54g-27\n");
+    let mut buf = [0u8; 12];
+    let mut pos = 0;
+    write_bytes(RTW_DOMAIN_MAP_VER.as_bytes(), &mut buf, &mut pos);
+    write_bytes(RTW_DOMAIN_MAP_M_VER.as_bytes(), &mut buf, &mut pos);
+    write_bytes(b"-", &mut buf, &mut pos);
+    write_bytes(RTW_COUNTRY_MAP_VER.as_bytes(), &mut buf, &mut pos);
+    write_bytes(b"\n", &mut buf, &mut pos);
+    if let Ok(line) = core::str::from_utf8(&buf[..pos]) {
+        print_line(sel, line);
+    }
 }
 
 #[cfg(not(host_chplan_rest_test))]
