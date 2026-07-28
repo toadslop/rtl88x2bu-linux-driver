@@ -267,6 +267,48 @@ u8 rtw_tkip_decrypt_mcast_gkey_check(_adapter *padapter, u8 *ra, u8 grpkey_insta
 	return _FALSE;
 }
 
+/*
+ * GCMP multicast group-key readiness check with rate-limited dmesg diagnostics.
+ * Separate static state from rtw_tkip_decrypt_mcast_gkey_check (GCMP legacy path).
+ * Returns _TRUE when decrypt should fail (group key not installed).
+ */
+u8 rtw_gcmp_decrypt_mcast_gkey_check(_adapter *padapter, u8 *ra, u8 grpkey_installed)
+{
+	static systime start = 0;
+	static u32 no_gkey_bc_cnt = 0;
+	static u32 no_gkey_mc_cnt = 0;
+
+	if (grpkey_installed == _FALSE) {
+		if (start == 0)
+			start = rtw_get_current_time();
+
+		if (is_broadcast_mac_addr(ra))
+			no_gkey_bc_cnt++;
+		else
+			no_gkey_mc_cnt++;
+
+		if (rtw_get_passing_time_ms(start) > 1000) {
+			if (no_gkey_bc_cnt || no_gkey_mc_cnt) {
+				RTW_PRINT(FUNC_ADPT_FMT" no_gkey_bc_cnt:%u, no_gkey_mc_cnt:%u\n",
+					FUNC_ADPT_ARG(padapter), no_gkey_bc_cnt, no_gkey_mc_cnt);
+			}
+			start = rtw_get_current_time();
+			no_gkey_bc_cnt = 0;
+			no_gkey_mc_cnt = 0;
+		}
+		return _TRUE;
+	}
+
+	if (no_gkey_bc_cnt || no_gkey_mc_cnt) {
+		RTW_PRINT(FUNC_ADPT_FMT" gkey installed. no_gkey_bc_cnt:%u, no_gkey_mc_cnt:%u\n",
+			FUNC_ADPT_ARG(padapter), no_gkey_bc_cnt, no_gkey_mc_cnt);
+	}
+	start = 0;
+	no_gkey_bc_cnt = 0;
+	no_gkey_mc_cnt = 0;
+	return _FALSE;
+}
+
 /* 3			=====AES related===== */
 #if (NEW_CRYPTO == 0)
 
@@ -1228,94 +1270,7 @@ u32 rtw_calc_crc32(u8 *data, size_t len)
 
 /* W3-14a: rtw_gcmp_encrypt in rust/rtw_security_rest.rs */
 
-u32 rtw_gcmp_decrypt(_adapter *padapter, u8 *precvframe)
-{
-	u32 prwskeylen;
-	u8 * pframe,*prwskey;
-	struct sta_info *stainfo;
-	struct rx_pkt_attrib *prxattrib = &((union recv_frame *)precvframe)->u.hdr.attrib;
-	struct security_priv *psecuritypriv = &padapter->securitypriv;
-	u32 res = _SUCCESS;
-	pframe = (unsigned char *)((union recv_frame *)precvframe)->u.hdr.rx_data;
-
-	if ((prxattrib->encrypt == _GCMP_) ||
-		(prxattrib->encrypt == _GCMP_256_)) {
-		stainfo = rtw_get_stainfo(&padapter->stapriv, &prxattrib->ta[0]);
-		if (stainfo != NULL) {
-			if (IS_MCAST(prxattrib->ra)) {
-				static systime start = 0;
-				static u32 no_gkey_bc_cnt = 0;
-				static u32 no_gkey_mc_cnt = 0;
-
-				if ((!MLME_IS_MESH(padapter) && psecuritypriv->binstallGrpkey == _FALSE)
-					#ifdef CONFIG_RTW_MESH
-					|| !(stainfo->gtk_bmp | BIT(prxattrib->key_index))
-					#endif
-				) {
-					res = _FAIL;
-
-					if (start == 0)
-						start = rtw_get_current_time();
-
-					if (is_broadcast_mac_addr(prxattrib->ra))
-						no_gkey_bc_cnt++;
-					else
-						no_gkey_mc_cnt++;
-
-					if (rtw_get_passing_time_ms(start) > 1000) {
-						if (no_gkey_bc_cnt || no_gkey_mc_cnt) {
-							RTW_PRINT(FUNC_ADPT_FMT" no_gkey_bc_cnt:%u, no_gkey_mc_cnt:%u\n",
-								FUNC_ADPT_ARG(padapter), no_gkey_bc_cnt, no_gkey_mc_cnt);
-						}
-						start = rtw_get_current_time();
-						no_gkey_bc_cnt = 0;
-						no_gkey_mc_cnt = 0;
-					}
-
-					goto exit;
-				}
-
-				if (no_gkey_bc_cnt || no_gkey_mc_cnt) {
-					RTW_PRINT(FUNC_ADPT_FMT" gkey installed. no_gkey_bc_cnt:%u, no_gkey_mc_cnt:%u\n",
-						FUNC_ADPT_ARG(padapter), no_gkey_bc_cnt, no_gkey_mc_cnt);
-				}
-				start = 0;
-				no_gkey_bc_cnt = 0;
-				no_gkey_mc_cnt = 0;
-
-				#ifdef CONFIG_RTW_MESH
-				if (MLME_IS_MESH(padapter)) {
-					/* TODO: multiple GK? */
-					prwskey = &stainfo->gtk.skey[0];
-				} else
-				#endif
-				{
-					prwskey = psecuritypriv->dot118021XGrpKey[prxattrib->key_index].skey;
-					if (psecuritypriv->dot118021XGrpKeyid != prxattrib->key_index) {
-						RTW_DBG("not match packet_index=%d, install_index=%d\n"
-							, prxattrib->key_index, psecuritypriv->dot118021XGrpKeyid);
-						res = _FAIL;
-						goto exit;
-					}
-				}
-			} else
-				prwskey = &stainfo->dot118021x_UncstKey.skey[0];
-
-			res = _rtw_gcmp_decrypt(padapter, prwskey,
-				prxattrib->encrypt == _GCMP_256_ ? 32 : 16,
-				prxattrib->hdrlen, pframe,
-				((union recv_frame *)precvframe)->u.hdr.len);
-
-			GCMP_SW_DEC_CNT_INC(psecuritypriv, prxattrib->ra);
-		} else {
-			res = _FAIL;
-		}
-
-	}
-exit:
-	return res;
-}
-
+/* W3-14b: rtw_gcmp_decrypt in rust/rtw_security_rest.rs */
 
 #ifdef CONFIG_IEEE80211W
 u8 rtw_calculate_bip_mic(enum security_type gmcs, u8 *whdr_pos, s32 len,

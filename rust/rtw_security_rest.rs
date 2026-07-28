@@ -1025,6 +1025,11 @@ extern "C" {
         ra: *const U8,
         grpkey_installed: U8,
     ) -> U8;
+    fn rtw_gcmp_decrypt_mcast_gkey_check(
+        padapter: *mut AesAdapter,
+        ra: *const U8,
+        grpkey_installed: U8,
+    ) -> U8;
 }
 
 fn rnd4(ptr: usize) -> usize {
@@ -1419,7 +1424,7 @@ extern "C" {
         frame: *mut U8,
         plen: U32,
     ) -> i32;
-    #[cfg(not(host_security_rest_test))]
+    #[cfg(any(not(host_security_rest_test), host_gcmp_frame_test))]
     fn _rtw_gcmp_decrypt(
         padapter: *mut core::ffi::c_void,
         key: *mut U8,
@@ -1609,9 +1614,54 @@ pub struct HostGcmpXmitPriv {
 
 #[cfg(host_gcmp_frame_test)]
 #[repr(C)]
+pub struct HostGcmpStaInfo {
+    pub used: U8,
+    pub ta: [U8; 6],
+    pub dot118021x_UncstKey: KeyType,
+}
+
+#[cfg(host_gcmp_frame_test)]
+#[repr(C)]
+pub struct HostGcmpStapriv {
+    pub stas: [HostGcmpStaInfo; 4],
+}
+
+#[cfg(host_gcmp_frame_test)]
+#[repr(C)]
+pub struct HostGcmpRxPktAttrib {
+    pub pkt_len: u16,
+    pub _pad0: [U8; 3],
+    pub hdrlen: U8,
+    pub _pad1: [U8; 12],
+    pub encrypt: U8,
+    pub iv_len: U8,
+    pub _pad2: [U8; 32],
+    pub key_index: U8,
+    pub _pad3: U8,
+    pub ra: [U8; 6],
+    pub ta: [U8; 6],
+}
+
+#[cfg(host_gcmp_frame_test)]
+#[repr(C)]
+pub struct HostGcmpRecvFrameHdr {
+    pub attrib: HostGcmpRxPktAttrib,
+    pub len: U32,
+    pub rx_data: *mut U8,
+}
+
+#[cfg(host_gcmp_frame_test)]
+#[repr(C)]
+pub struct HostGcmpRecvFrame {
+    pub hdr: HostGcmpRecvFrameHdr,
+}
+
+#[cfg(host_gcmp_frame_test)]
+#[repr(C)]
 pub struct HostGcmpAdapter {
     pub securitypriv: HostGcmpSecurityPriv,
     pub xmitpriv: HostGcmpXmitPriv,
+    pub stapriv: HostGcmpStapriv,
 }
 
 #[cfg(host_gcmp_frame_test)]
@@ -1657,6 +1707,121 @@ pub extern "C" fn rtw_gcmp_encrypt(padapter: *mut HostGcmpAdapter, pxmitframe: *
             xmit.buf_addr,
             hw,
         );
+        HOST_GCMP_SUCCESS
+    }
+}
+
+#[cfg(host_gcmp_frame_test)]
+fn host_gcmp_get_stainfo<'a>(
+    stapriv: &'a HostGcmpStapriv,
+    ta: &[U8; 6],
+) -> Option<&'a HostGcmpStaInfo> {
+    for sta in &stapriv.stas {
+        if sta.used != 0 && sta.ta == *ta {
+            return Some(sta);
+        }
+    }
+    None
+}
+
+#[cfg(not(host_security_rest_test))]
+#[no_mangle]
+pub extern "C" fn rtw_gcmp_decrypt(padapter: *mut AesAdapter, precvframe: *mut U8) -> U32 {
+    if padapter.is_null() || precvframe.is_null() {
+        return GCMP_RTW_FAIL;
+    }
+    unsafe {
+        let psecuritypriv = kernel_layout::adapter_securitypriv(padapter);
+        let attrib = kernel_layout::recv_frame_attrib(precvframe);
+        let encrypt = (*attrib).encrypt;
+        if encrypt != _GCMP_ && encrypt != _GCMP_256_ {
+            return GCMP_RTW_SUCCESS;
+        }
+
+        let stapriv = kernel_layout::adapter_stapriv(padapter);
+        let stainfo =
+            rtw_get_stainfo(stapriv as *mut core::ffi::c_void, (*attrib).ta.as_mut_ptr());
+        if stainfo.is_null() {
+            return GCMP_RTW_FAIL;
+        }
+
+        let ra = (*attrib).ra;
+        let prwskey = if is_mcast_ra(&ra) {
+            let grpkey_installed = kernel_layout::securitypriv_binstall_grpkey(psecuritypriv);
+            if rtw_gcmp_decrypt_mcast_gkey_check(padapter, ra.as_ptr(), grpkey_installed) != _FALSE
+            {
+                return GCMP_RTW_FAIL;
+            }
+            let key_index = (*attrib).key_index as usize;
+            if kernel_layout::securitypriv_grp_keyid(psecuritypriv) as usize != key_index {
+                return GCMP_RTW_FAIL;
+            }
+            kernel_layout::securitypriv_grp_key_skey(psecuritypriv, key_index)
+        } else {
+            kernel_layout::sta_info_unicast_key_skey(stainfo as *mut u8)
+        };
+
+        let prwskeylen = if encrypt == _GCMP_256_ { 32 } else { 16 };
+        let res = _rtw_gcmp_decrypt(
+            padapter as *mut core::ffi::c_void,
+            prwskey,
+            prwskeylen,
+            (*attrib).hdrlen as U32,
+            kernel_layout::recv_frame_rx_data(precvframe),
+            kernel_layout::recv_frame_len(precvframe),
+        ) as U32;
+
+        gcmp_kernel_layout::gcmp_sw_dec_cnt_inc(psecuritypriv, &ra);
+        res
+    }
+}
+
+#[cfg(host_gcmp_frame_test)]
+#[no_mangle]
+pub extern "C" fn rtw_gcmp_decrypt(padapter: *mut HostGcmpAdapter, precvframe: *mut U8) -> U32 {
+    if padapter.is_null() || precvframe.is_null() {
+        return HOST_GCMP_FAIL;
+    }
+    unsafe {
+        let recv = &*(precvframe as *const HostGcmpRecvFrame);
+        let attrib = &recv.hdr.attrib;
+        if attrib.encrypt != _GCMP_ && attrib.encrypt != _GCMP_256_ {
+            return HOST_GCMP_SUCCESS;
+        }
+
+        let adapter = &*padapter;
+        let stainfo = match host_gcmp_get_stainfo(&adapter.stapriv, &attrib.ta) {
+            Some(sta) => sta,
+            None => return HOST_GCMP_FAIL,
+        };
+
+        let prwskey = if is_mcast_ra(&attrib.ra) {
+            if adapter.securitypriv.binstallGrpkey == _FALSE {
+                return HOST_GCMP_FAIL;
+            }
+            let key_index = attrib.key_index as usize;
+            if adapter.securitypriv.dot118021XGrpKeyid as usize != key_index {
+                return HOST_GCMP_FAIL;
+            }
+            adapter.securitypriv.dot118021XGrpKey[key_index]
+                .skey
+                .as_ptr() as *mut U8
+        } else {
+            stainfo.dot118021x_UncstKey.skey.as_ptr() as *mut U8
+        };
+
+        let prwskeylen = if attrib.encrypt == _GCMP_256_ { 32 } else { 16 };
+        if _rtw_gcmp_decrypt(
+            padapter as *mut core::ffi::c_void,
+            prwskey,
+            prwskeylen,
+            attrib.hdrlen as U32,
+            recv.hdr.rx_data,
+            recv.hdr.len,
+        ) == 0
+        {
+            return HOST_GCMP_FAIL;
+        }
         HOST_GCMP_SUCCESS
     }
 }
