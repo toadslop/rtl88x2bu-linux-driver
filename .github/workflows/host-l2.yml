@@ -10,6 +10,8 @@ on:
       - 'core/crypto/**'
       - 'core/rtw_io.c'
       - 'core/rtw_io_rest.c'
+      - 'core/rtw_rf.c'
+      - 'core/rtw_rf_rest.c'
       - 'core/rtw_chplan.c'
       - 'core/rtw_chplan.h'
       - 'core/rtw_swcrypto.c'
@@ -26,6 +28,8 @@ on:
       - 'core/crypto/**'
       - 'core/rtw_io.c'
       - 'core/rtw_io_rest.c'
+      - 'core/rtw_rf.c'
+      - 'core/rtw_rf_rest.c'
       - 'core/rtw_chplan.c'
       - 'core/rtw_chplan.h'
       - 'core/rtw_swcrypto.c'
@@ -75,3 +79,6 @@ jobs:
 
       - name: Host io_rest parity (L2)
         run: make -C tests/host/io test
+
+      - name: Host rf_rest parity (L2)
+        run: make -C tests/host/rf test
