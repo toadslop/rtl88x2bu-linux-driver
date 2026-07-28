@@ -190,7 +190,7 @@ mod kernel {
 mod kernel {
     use super::*;
 
-    static HOST_READ_SNIFF: [RtwIoSniffEnt; 3] = [
+    static HOST_READ_SNIFF: [RtwIoSniffEnt; 8] = [
         RtwIoSniffEnt {
             chip: MAX_CHIP_TYPE,
             hci: 0,
@@ -227,33 +227,132 @@ mod kernel {
             tag: b"host chip1 usb read\0".as_ptr(),
             assert_protsel: None,
         },
+        RtwIoSniffEnt {
+            chip: MAX_CHIP_TYPE,
+            hci: 0,
+            addr: 0x100,
+            ent_type: RTW_IO_SNIFF_TYPE_VALUE,
+            u: SniffUnion {
+                vm: SniffValueMatch {
+                    mask: 0xFF,
+                    val: 0xAB,
+                    equal: true,
+                },
+            },
+            trace: false,
+            tag: b"host read value equal len1\0".as_ptr(),
+            assert_protsel: None,
+        },
+        RtwIoSniffEnt {
+            chip: MAX_CHIP_TYPE,
+            hci: 0,
+            addr: 0x200,
+            ent_type: RTW_IO_SNIFF_TYPE_VALUE,
+            u: SniffUnion {
+                vm: SniffValueMatch {
+                    mask: 0xFFFF,
+                    val: 0x1234,
+                    equal: true,
+                },
+            },
+            trace: false,
+            tag: b"host read value equal len2\0".as_ptr(),
+            assert_protsel: None,
+        },
+        RtwIoSniffEnt {
+            chip: MAX_CHIP_TYPE,
+            hci: 0,
+            addr: 0x300,
+            ent_type: RTW_IO_SNIFF_TYPE_VALUE,
+            u: SniffUnion {
+                vm: SniffValueMatch {
+                    mask: 0xFFFF_FFFF,
+                    val: 0x1234_5678,
+                    equal: true,
+                },
+            },
+            trace: false,
+            tag: b"host read value equal len4\0".as_ptr(),
+            assert_protsel: None,
+        },
+        RtwIoSniffEnt {
+            chip: MAX_CHIP_TYPE,
+            hci: 0,
+            addr: 0x102,
+            ent_type: RTW_IO_SNIFF_TYPE_VALUE,
+            u: SniffUnion {
+                vm: SniffValueMatch {
+                    mask: 0xFF,
+                    val: 0x42,
+                    equal: true,
+                },
+            },
+            trace: false,
+            tag: b"host read unaligned len4 equal\0".as_ptr(),
+            assert_protsel: None,
+        },
+        RtwIoSniffEnt {
+            chip: MAX_CHIP_TYPE,
+            hci: 0,
+            addr: 0x201,
+            ent_type: RTW_IO_SNIFF_TYPE_VALUE,
+            u: SniffUnion {
+                vm: SniffValueMatch {
+                    mask: 0xFF,
+                    val: 0x34,
+                    equal: true,
+                },
+            },
+            trace: false,
+            tag: b"host read unaligned len2 equal\0".as_ptr(),
+            assert_protsel: None,
+        },
     ];
 
-    static HOST_WRITE_SNIFF: [RtwIoSniffEnt; 2] = [RtwIoSniffEnt {
-        chip: MAX_CHIP_TYPE,
-        hci: 0,
-        addr: 0x522,
-        ent_type: RTW_IO_SNIFF_TYPE_RANGE,
-        u: SniffUnion { end_addr: 0x522 },
-        trace: false,
-        tag: b"write TXPAUSE\0".as_ptr(),
-        assert_protsel: None,
-    }, RtwIoSniffEnt {
-        chip: MAX_CHIP_TYPE,
-        hci: 0,
-        addr: 0x02,
-        ent_type: RTW_IO_SNIFF_TYPE_VALUE,
-        u: SniffUnion {
-            vm: SniffValueMatch {
-                mask: 0x3,
-                val: 0xFFFF_FFFF,
-                equal: false,
-            },
+    static HOST_WRITE_SNIFF: [RtwIoSniffEnt; 3] = [
+        RtwIoSniffEnt {
+            chip: MAX_CHIP_TYPE,
+            hci: 0,
+            addr: 0x522,
+            ent_type: RTW_IO_SNIFF_TYPE_RANGE,
+            u: SniffUnion { end_addr: 0x522 },
+            trace: false,
+            tag: b"write TXPAUSE\0".as_ptr(),
+            assert_protsel: None,
         },
-        trace: false,
-        tag: b"0x02[1:0] not all 1\0".as_ptr(),
-        assert_protsel: None,
-    }];
+        RtwIoSniffEnt {
+            chip: MAX_CHIP_TYPE,
+            hci: 0,
+            addr: 0x02,
+            ent_type: RTW_IO_SNIFF_TYPE_VALUE,
+            u: SniffUnion {
+                vm: SniffValueMatch {
+                    mask: 0x3,
+                    val: 0xFFFF_FFFF,
+                    equal: false,
+                },
+            },
+            trace: false,
+            tag: b"0x02[1:0] not all 1\0".as_ptr(),
+            assert_protsel: None,
+        },
+        RtwIoSniffEnt {
+            chip: MAX_CHIP_TYPE,
+            hci: 0,
+            addr: 0x400,
+            ent_type: RTW_IO_SNIFF_TYPE_VALUE,
+            u: SniffUnion {
+                vm: SniffValueMatch {
+                    mask: 0xFFFF,
+                    val: 0x5600,
+                    equal: true,
+                },
+            },
+            trace: false,
+            tag: b"host write value equal len2\0".as_ptr(),
+            assert_protsel: None,
+        },
+    ];
 
     static HOST_RF_READ: [RfSniffEnt; 2] = [
         RfSniffEnt {
