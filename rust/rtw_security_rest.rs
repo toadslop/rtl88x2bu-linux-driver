@@ -2346,6 +2346,9 @@ mod tdls_kernel {
         ftie: *mut U8,
     ) -> Sint {
         unsafe {
+            if lnkid.is_null() || rsnie.is_null() || timeoutie.is_null() || ftie.is_null() {
+                return _FAIL;
+            }
             let len = 2 * ETH_ALEN_TDLS
                 + 1
                 + 2
