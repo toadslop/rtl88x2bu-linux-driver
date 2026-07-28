@@ -51,6 +51,7 @@ struct vector {
 	u8 expect[MAX_BUF];
 	size_t expect_len;
 	int expect_fail;
+	int tamper_mic;
 };
 
 uint32_t rtw_gcmp_encrypt(struct host_adapter *padapter, u8 *pxmitframe);
@@ -153,6 +154,8 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 			&v->expect_len);
 	if (!host_json_parse_int_in(obj, obj_len, "expect_fail", &val))
 		v->expect_fail = val;
+	if (!host_json_parse_int_in(obj, obj_len, "tamper_mic", &val))
+		v->tamper_mic = val;
 	return 0;
 }
 
@@ -303,6 +306,12 @@ static int run_encrypt_roundtrip_vector(struct vector *v)
 		u8 *dec_frame = wire;
 		u8 nr_frags = v->nr_frags ? v->nr_frags : 1;
 
+		/*
+		 * Driver decrypts one fragment per rtw_gcmp_decrypt call; when
+		 * nr_frags == 2 we roundtrip only the last fragment (matches
+		 * recv path). Extend with a per-fragment loop if vectors add
+		 * multi-fragment coverage later.
+		 */
 		if (nr_frags == 2) {
 			u32 frag_len = v->frag_len ? v->frag_len : enc_adapter.xmitpriv.frag_len;
 
@@ -352,6 +361,47 @@ static int run_encrypt_roundtrip_vector(struct vector *v)
 	return 0;
 }
 
+static int run_decrypt_bad_mic_vector(struct vector *v)
+{
+	struct host_adapter enc_adapter;
+	struct host_adapter dec_adapter;
+	struct host_xmit_frame xmit;
+	union host_recv_frame recv;
+	u8 buf[MAX_BUF];
+	size_t plain_len = 0;
+	u32 res;
+	u8 *wire;
+
+	if (build_encrypt_frame(v, &enc_adapter, &xmit, buf, &plain_len) != 0)
+		return -1;
+
+	if (rtw_gcmp_encrypt(&enc_adapter, (u8 *)&xmit) != 0) {
+		fprintf(stderr, "%s: setup encrypt returned fail\n", v->name);
+		return -1;
+	}
+
+	wire = buf + HOST_TXDESC_OFFSET;
+	wire[v->last_txcmdsz - 1] ^= 0xff;
+
+	setup_adapter_decrypt(&dec_adapter, v);
+	memset(&recv, 0, sizeof(recv));
+	recv.u.hdr.rx_data = wire;
+	recv.u.hdr.len = v->last_txcmdsz;
+	recv.u.hdr.attrib.encrypt = v->encrypt;
+	recv.u.hdr.attrib.hdrlen = v->hdrlen;
+	recv.u.hdr.attrib.iv_len = v->iv_len;
+	recv.u.hdr.attrib.key_index = v->key_index;
+	memcpy(recv.u.hdr.attrib.ra, v->ra, HOST_ETH_ALEN);
+	memcpy(recv.u.hdr.attrib.ta, v->ta, HOST_ETH_ALEN);
+
+	res = rtw_gcmp_decrypt(&dec_adapter, (u8 *)&recv);
+	if (res == 0) {
+		fprintf(stderr, "%s: expected decrypt fail (bad MIC)\n", v->name);
+		return -1;
+	}
+	return 0;
+}
+
 static int run_decrypt_vector(struct vector *v)
 {
 	struct host_adapter enc_adapter;
@@ -361,6 +411,9 @@ static int run_decrypt_vector(struct vector *v)
 	u8 buf[MAX_BUF];
 	size_t plain_len = 0;
 	u32 res;
+
+	if (v->expect_fail && v->tamper_mic)
+		return run_decrypt_bad_mic_vector(v);
 
 	if (v->expect_fail) {
 		setup_adapter_decrypt(&dec_adapter, v);
