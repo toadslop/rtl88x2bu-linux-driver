@@ -47,3 +47,4 @@ drop rtw_rust_wep_off_xmit_frame_pkt_offset
 drop rtw_rust_wep_off_xmitpriv_frag_len
 drop rtw_sec_restore_wep_key
 drop rtw_tkip_decrypt_mcast_gkey_check
+drop rtw_gcmp_decrypt_mcast_gkey_check
