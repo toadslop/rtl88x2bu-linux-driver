@@ -1404,11 +1404,12 @@ const _GCMP_256_: U8 = _GCMP_ | _SEC_TYPE_256_;
 const GCMP_RTW_SUCCESS: U32 = 1;
 const GCMP_RTW_FAIL: U32 = 0;
 
-#[cfg(host_security_rest_test)]
+#[cfg(host_gcmp_frame_test)]
 const HOST_GCMP_SUCCESS: U32 = 0;
-#[cfg(host_security_rest_test)]
+#[cfg(host_gcmp_frame_test)]
 const HOST_GCMP_FAIL: U32 = 1;
 
+#[cfg(any(not(host_security_rest_test), host_gcmp_frame_test))]
 extern "C" {
     fn _rtw_gcmp_encrypt(
         padapter: *mut core::ffi::c_void,
@@ -1418,6 +1419,7 @@ extern "C" {
         frame: *mut U8,
         plen: U32,
     ) -> i32;
+    #[cfg(not(host_security_rest_test))]
     fn _rtw_gcmp_decrypt(
         padapter: *mut core::ffi::c_void,
         key: *mut U8,
@@ -1428,6 +1430,7 @@ extern "C" {
     ) -> i32;
 }
 
+#[cfg(any(not(host_security_rest_test), host_gcmp_frame_test))]
 unsafe fn gcmp_encrypt_frags(
     padapter: *mut core::ffi::c_void,
     prwskey: *mut U8,
@@ -1563,7 +1566,7 @@ pub extern "C" fn rtw_gcmp_encrypt(padapter: *mut AesAdapter, pxmitframe: *mut U
     }
 }
 
-#[cfg(host_security_rest_test)]
+#[cfg(host_gcmp_frame_test)]
 #[repr(C)]
 pub struct HostGcmpPktAttrib {
     pub encrypt: U8,
@@ -1579,7 +1582,7 @@ pub struct HostGcmpPktAttrib {
     pub dot118021x_UncstKey: KeyType,
 }
 
-#[cfg(host_security_rest_test)]
+#[cfg(host_gcmp_frame_test)]
 #[repr(C)]
 pub struct HostGcmpXmitFrame {
     pub attrib: HostGcmpPktAttrib,
@@ -1587,7 +1590,7 @@ pub struct HostGcmpXmitFrame {
     pub pkt_offset: i8,
 }
 
-#[cfg(host_security_rest_test)]
+#[cfg(host_gcmp_frame_test)]
 #[repr(C)]
 pub struct HostGcmpSecurityPriv {
     pub dot11_privacy_key_index: U32,
@@ -1598,23 +1601,23 @@ pub struct HostGcmpSecurityPriv {
     pub binstallGrpkey: U8,
 }
 
-#[cfg(host_security_rest_test)]
+#[cfg(host_gcmp_frame_test)]
 #[repr(C)]
 pub struct HostGcmpXmitPriv {
     pub frag_len: U32,
 }
 
-#[cfg(host_security_rest_test)]
+#[cfg(host_gcmp_frame_test)]
 #[repr(C)]
 pub struct HostGcmpAdapter {
     pub securitypriv: HostGcmpSecurityPriv,
     pub xmitpriv: HostGcmpXmitPriv,
 }
 
-#[cfg(host_security_rest_test)]
+#[cfg(host_gcmp_frame_test)]
 const HOST_GCMP_TXDESC_OFFSET: usize = 56;
 
-#[cfg(host_security_rest_test)]
+#[cfg(host_gcmp_frame_test)]
 #[no_mangle]
 pub extern "C" fn rtw_gcmp_encrypt(padapter: *mut HostGcmpAdapter, pxmitframe: *mut U8) -> U32 {
     if padapter.is_null() || pxmitframe.is_null() {

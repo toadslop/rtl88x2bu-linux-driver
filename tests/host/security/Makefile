@@ -108,6 +108,10 @@ librust_security_rest.a: $(RUST_SECURITY_REST)
 	$(RUSTC) $(RUSTFLAGS) --cfg host_security_rest_test --crate-type staticlib \
 		$(RUST_SECURITY_REST) -o $@
 
+librust_security_rest_gcmp.a: $(RUST_SECURITY_REST)
+	$(RUSTC) $(RUSTFLAGS) --cfg host_security_rest_test --cfg host_gcmp_frame_test \
+		--crate-type staticlib $(RUST_SECURITY_REST) -o $@
+
 test_security_rust: test_security.c librust_security.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_SECURITY_ORACLE -o $@ test_security.c $(HOST_JSON) \
 		librust_security.a
@@ -182,12 +186,12 @@ test_gcmp_frames: test_gcmp_frames.c $(SHIM) librust_swcrypto.a $(SWCRYPTO_SHIM)
 		$(SWCRYPTO_SHIM) $(SWCRYPTO_CRYPTO_SRCS) $(HOST_JSON) librust_swcrypto.a
 
 # test-gcmp-frames-rust: Rust encrypt oracle + C decrypt until W3-14 PR3.
-test_gcmp_frames_rust: test_gcmp_frames.c librust_security_rest.a librust_swcrypto.a \
+test_gcmp_frames_rust: test_gcmp_frames.c librust_security_rest_gcmp.a librust_swcrypto.a \
 		$(SWCRYPTO_SHIM) $(SWCRYPTO_CRYPTO_SRCS) $(HOST_JSON)
 	$(CC) $(SWCRYPTO_CFLAGS) -DRUST_SECURITY_REST_ORACLE \
 		-DHOST_GCMP_DECRYPT_ORACLE_BUILD -o $@ test_gcmp_frames.c $(HOST_JSON) \
 		../shim/host_security_shim.c $(SWCRYPTO_SHIM) $(SWCRYPTO_CRYPTO_SRCS) \
-		librust_security_rest.a librust_swcrypto.a
+		librust_security_rest_gcmp.a librust_swcrypto.a
 
 clean:
 	rm -f test_security test_security_rust test_wep_primitives test_wep_primitives_rust \
@@ -197,4 +201,4 @@ clean:
 		test_ccmp_construct test_ccmp_construct_rust \
 		test_ccmp_frames test_ccmp_frames_rust \
 		test_gcmp_frames test_gcmp_frames_rust \
-		librust_security.a librust_security_rest.a librust_swcrypto.a
+		librust_security.a librust_security_rest.a librust_security_rest_gcmp.a librust_swcrypto.a
