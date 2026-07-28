@@ -171,11 +171,11 @@ fn process_beacon_hint_inner(
         && (RTW_CHPLAN_BEACON_HINT_ON_2G_CH_1_11 || ch > 11)
         && (RTW_CHPLAN_BEACON_HINT_ON_DFS_CH || (chset[idx].flags & RTW_CHF_DFS) == 0)
     {
-        chset[idx].flags &= !RTW_CHF_NO_IR;
         #[cfg(not(host_chplan_rest_test))]
         unsafe {
             rtw_rust_chplan_beacon_hint_info(ch);
         }
+        chset[idx].flags &= !RTW_CHF_NO_IR;
         return 1;
     }
     0
