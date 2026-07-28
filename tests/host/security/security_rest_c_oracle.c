@@ -438,20 +438,19 @@ typedef int sint;
 #define WIFI_DATA_CFPOLL (BIT(5) | WIFI_DATA_TYPE)
 #define WIFI_DATA_CFACKPOLL (BIT(5) | BIT(4) | WIFI_DATA_TYPE)
 
-static inline u16 host_le16_to_cpu(u16 v)
+static inline u16 host_frame_control(u8 *pbuf)
 {
-	return (u16)((v & 0xffU) << 8 | (v >> 8));
+	return *(u16 *)pbuf;
 }
 
 static unsigned int host_get_frame_type(u8 *pbuf)
 {
-	return host_le16_to_cpu(*(u16 *)pbuf) & (BIT(3) | BIT(2));
+	return host_frame_control(pbuf) & (BIT(3) | BIT(2));
 }
 
 static unsigned int host_get_frame_sub_type(u8 *pbuf)
 {
-	return host_le16_to_cpu(*(u16 *)pbuf) &
-	       (BIT(7) | BIT(6) | BIT(5) | BIT(4) | BIT(3) | BIT(2));
+	return host_frame_control(pbuf) & (BIT(7) | BIT(6) | BIT(5) | BIT(4) | BIT(3) | BIT(2));
 }
 
 static void host_bitwise_xor(u8 *ina, u8 *inb, u8 *out)
