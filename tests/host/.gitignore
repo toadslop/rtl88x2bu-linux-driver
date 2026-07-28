@@ -38,3 +38,6 @@ io/test_io
 io/test_io_rust
 io/librust_io_rest.a
 io/io_rest_c_ref.o
+# W3-19 rf harness
+rf/test_rf
+rf/rf_rest_c_ref.o

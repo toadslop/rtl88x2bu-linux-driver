@@ -1,0 +1,208 @@
+{
+  "oracle": "core/rtw_rf_rest.c",
+  "vectors": [
+    {
+      "name": "scch_20m_identity",
+      "fn": "rtw_get_scch_by_cch_offset",
+      "cch": 6,
+      "bw": 0,
+      "offset": 0,
+      "expect": 6
+    },
+    {
+      "name": "scch_2g40_upper",
+      "fn": "rtw_get_scch_by_cch_offset",
+      "cch": 7,
+      "bw": 1,
+      "offset": 2,
+      "expect": 9
+    },
+    {
+      "name": "scch_2g40_lower",
+      "fn": "rtw_get_scch_by_cch_offset",
+      "cch": 7,
+      "bw": 1,
+      "offset": 1,
+      "expect": 5
+    },
+    {
+      "name": "scch_5g80_upper",
+      "fn": "rtw_get_scch_by_cch_offset",
+      "cch": 58,
+      "bw": 2,
+      "offset": 2,
+      "expect": 62
+    },
+    {
+      "name": "scch_opch_upper",
+      "fn": "rtw_get_scch_by_cch_opch",
+      "cch": 7,
+      "bw": 1,
+      "opch": 8,
+      "expect": 9
+    },
+    {
+      "name": "scch_opch_lower",
+      "fn": "rtw_get_scch_by_cch_opch",
+      "cch": 7,
+      "bw": 1,
+      "opch": 6,
+      "expect": 5
+    },
+    {
+      "name": "center_chs_2g_num_20",
+      "fn": "center_chs_2g_num",
+      "bw": 0,
+      "expect": 14
+    },
+    {
+      "name": "center_chs_2g_num_40",
+      "fn": "center_chs_2g_num",
+      "bw": 1,
+      "expect": 9
+    },
+    {
+      "name": "center_chs_2g_first",
+      "fn": "center_chs_2g",
+      "bw": 0,
+      "id": 0,
+      "expect": 1
+    },
+    {
+      "name": "center_chs_2g_oob",
+      "fn": "center_chs_2g",
+      "bw": 0,
+      "id": 99,
+      "expect": 0
+    },
+    {
+      "name": "center_chs_5g_num_80",
+      "fn": "center_chs_5g_num",
+      "bw": 2,
+      "expect": 7
+    },
+    {
+      "name": "center_chs_5g_80_first",
+      "fn": "center_chs_5g",
+      "bw": 2,
+      "id": 0,
+      "expect": 42
+    },
+    {
+      "name": "op_chs_2g40_valid",
+      "fn": "rtw_get_op_chs_by_cch_bw",
+      "cch": 7,
+      "bw": 1,
+      "expect_valid": 1,
+      "expect_op_ch_num": 2,
+      "expect_op_chs": [5, 9]
+    },
+    {
+      "name": "op_chs_5g80_valid",
+      "fn": "rtw_get_op_chs_by_cch_bw",
+      "cch": 58,
+      "bw": 2,
+      "expect_valid": 1,
+      "expect_op_ch_num": 4,
+      "expect_op_chs": [52, 56, 60, 64]
+    },
+    {
+      "name": "op_chs_invalid_cch",
+      "fn": "rtw_get_op_chs_by_cch_bw",
+      "cch": 99,
+      "bw": 1,
+      "expect_valid": 0
+    },
+    {
+      "name": "offset_2g40_ch3",
+      "fn": "rtw_get_offset_by_chbw",
+      "ch": 3,
+      "bw": 1,
+      "r_offset_in": 0,
+      "expect_valid": 1,
+      "expect_offset": 1
+    },
+    {
+      "name": "offset_2g40_ch7_default",
+      "fn": "rtw_get_offset_by_chbw",
+      "ch": 7,
+      "bw": 1,
+      "r_offset_in": 0,
+      "expect_valid": 1,
+      "expect_offset": 2
+    },
+    {
+      "name": "offset_2g40_ch7_lower",
+      "fn": "rtw_get_offset_by_chbw",
+      "ch": 7,
+      "bw": 1,
+      "r_offset_in": 1,
+      "expect_valid": 1,
+      "expect_offset": 1
+    },
+    {
+      "name": "offset_5g36",
+      "fn": "rtw_get_offset_by_chbw",
+      "ch": 36,
+      "bw": 1,
+      "r_offset_in": 0,
+      "expect_valid": 1,
+      "expect_offset": 1
+    },
+    {
+      "name": "offset_ch14_invalid",
+      "fn": "rtw_get_offset_by_chbw",
+      "ch": 14,
+      "bw": 1,
+      "r_offset_in": 0,
+      "expect_valid": 0
+    },
+    {
+      "name": "center_ch_2g20",
+      "fn": "rtw_get_center_ch",
+      "ch": 6,
+      "bw": 0,
+      "offset": 0,
+      "expect": 6
+    },
+    {
+      "name": "center_ch_2g40_lower",
+      "fn": "rtw_get_center_ch",
+      "ch": 5,
+      "bw": 1,
+      "offset": 1,
+      "expect": 7
+    },
+    {
+      "name": "center_ch_5g80",
+      "fn": "rtw_get_center_ch",
+      "ch": 52,
+      "bw": 2,
+      "offset": 0,
+      "expect": 58
+    },
+    {
+      "name": "ch_group_2g_mid",
+      "fn": "rtw_get_ch_group",
+      "ch": 7,
+      "expect_band": 0,
+      "expect_group": 2,
+      "expect_cck_group": 2
+    },
+    {
+      "name": "ch_group_2g_ch14",
+      "fn": "rtw_get_ch_group",
+      "ch": 14,
+      "expect_band": 0,
+      "expect_group": 4,
+      "expect_cck_group": 5
+    },
+    {
+      "name": "ch_group_5g",
+      "fn": "rtw_get_ch_group",
+      "ch": 100,
+      "expect_band": 1,
+      "expect_group": 4
+    }
+  ]
+}
