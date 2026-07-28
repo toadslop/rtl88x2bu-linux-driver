@@ -303,6 +303,9 @@ static int run_encrypt_roundtrip_vector(struct vector *v)
 		u8 *dec_frame = wire;
 		u8 nr_frags = v->nr_frags ? v->nr_frags : 1;
 
+		/* Two-fragment roundtrip decrypts/verifies only the last fragment
+		 * (driver handles one recv frame per call). Extend with a loop if
+		 * multi-fragment vectors are added later. */
 		if (nr_frags == 2) {
 			u32 frag_len = v->frag_len ? v->frag_len : enc_adapter.xmitpriv.frag_len;
 

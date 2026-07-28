@@ -154,6 +154,25 @@
       "header": "080100000000000000000000000000000000000000000000",
       "iv": "a600000000000001",
       "payload": "00000000000000000000000000000000"
+    },
+    {
+      "name": "gcmp_decrypt_bad_mic",
+      "fn": "rtw_gcmp_decrypt",
+      "encrypt": 7,
+      "grp_key_index": 0,
+      "key_index": 0,
+      "expect_fail": 1,
+      "ta": "aabbccddeeff",
+      "ra": "001122334455",
+      "unicast_key": "00112233445566778899aabbccddeeff",
+      "group_key": "00000000000000000000000000000000",
+      "hdrlen": 24,
+      "iv_len": 8,
+      "icv_len": 16,
+      "frame_len": 53,
+      "header": "080100000000000000000000000000000000000000000000",
+      "iv": "a600000000000003",
+      "payload": "f37e1a46882356d6b83f36aa50cb21d305d2261ff"
     }
   ]
 }
