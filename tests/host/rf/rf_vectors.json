@@ -203,6 +203,125 @@
       "ch": 100,
       "expect_band": 1,
       "expect_group": 4
+    },
+    {
+      "name": "scch_160_upper_50",
+      "fn": "rtw_get_scch_by_cch_offset",
+      "cch": 50,
+      "bw": 3,
+      "offset": 2,
+      "expect": 58
+    },
+    {
+      "name": "scch_160_lower_50",
+      "fn": "rtw_get_scch_by_cch_offset",
+      "cch": 50,
+      "bw": 3,
+      "offset": 1,
+      "expect": 42
+    },
+    {
+      "name": "scch_160_upper_114",
+      "fn": "rtw_get_scch_by_cch_offset",
+      "cch": 114,
+      "bw": 3,
+      "offset": 2,
+      "expect": 122
+    },
+    {
+      "name": "scch_160_lower_163",
+      "fn": "rtw_get_scch_by_cch_offset",
+      "cch": 163,
+      "bw": 3,
+      "offset": 1,
+      "expect": 155
+    },
+    {
+      "name": "scch_opch_160",
+      "fn": "rtw_get_scch_by_cch_opch",
+      "cch": 50,
+      "bw": 3,
+      "opch": 52,
+      "expect": 58
+    },
+    {
+      "name": "scch_dont_care_offset",
+      "fn": "rtw_get_scch_by_cch_offset",
+      "cch": 7,
+      "bw": 1,
+      "offset": 0,
+      "expect": 0
+    },
+    {
+      "name": "scch_invalid_cch_bw",
+      "fn": "rtw_get_scch_by_cch_offset",
+      "cch": 20,
+      "bw": 2,
+      "offset": 2,
+      "expect": 0
+    },
+    {
+      "name": "center_ch_2g80_special",
+      "fn": "rtw_get_center_ch",
+      "ch": 6,
+      "bw": 2,
+      "offset": 0,
+      "expect": 7
+    },
+    {
+      "name": "center_ch_160_5g",
+      "fn": "rtw_get_center_ch",
+      "ch": 36,
+      "bw": 3,
+      "offset": 0,
+      "expect": 50
+    },
+    {
+      "name": "center_chs_5g_num_160",
+      "fn": "center_chs_5g_num",
+      "bw": 3,
+      "expect": 3
+    },
+    {
+      "name": "op_chs_160_cch50",
+      "fn": "rtw_get_op_chs_by_cch_bw",
+      "cch": 50,
+      "bw": 3,
+      "expect_valid": 1,
+      "expect_op_ch_num": 8,
+      "expect_op_chs": [36, 40, 44, 48, 52, 56, 60, 64]
+    },
+    {
+      "name": "op_chs_160_cch114",
+      "fn": "rtw_get_op_chs_by_cch_bw",
+      "cch": 114,
+      "bw": 3,
+      "expect_valid": 1,
+      "expect_op_ch_num": 8,
+      "expect_op_chs": [100, 104, 108, 112, 116, 120, 124, 128]
+    },
+    {
+      "name": "op_chs_160_cch163",
+      "fn": "rtw_get_op_chs_by_cch_bw",
+      "cch": 163,
+      "bw": 3,
+      "expect_valid": 1,
+      "expect_op_ch_num": 8,
+      "expect_op_chs": [149, 153, 157, 161, 165, 169, 173, 177]
+    },
+    {
+      "name": "ch_group_invalid_ch0",
+      "fn": "rtw_get_ch_group",
+      "ch": 0,
+      "expect_band": 2,
+      "expect_group": 255
+    },
+    {
+      "name": "ch_group_invalid_gap",
+      "fn": "rtw_get_ch_group",
+      "ch": 15,
+      "expect_band": 2,
+      "expect_group": 255
     }
   ]
 }
