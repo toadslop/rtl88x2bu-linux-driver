@@ -344,6 +344,14 @@
       "ch": 99,
       "expect_band": 2,
       "expect_group": 255
+    },
+    {
+      "name": "offset_2g80_invalid",
+      "fn": "rtw_get_offset_by_chbw",
+      "ch": 6,
+      "bw": 2,
+      "r_offset_in": 0,
+      "expect_valid": 0
     }
   ]
 }
