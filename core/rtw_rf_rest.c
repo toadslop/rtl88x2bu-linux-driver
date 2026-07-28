@@ -541,9 +541,10 @@ exit:
 }
 #endif /* !CONFIG_RUST || HOST_RF_TEST */
 
+#if !defined(CONFIG_RUST) || defined(HOST_RF_TEST)
 /*
  * W3-20: frequency helpers extracted from core/rtw_rf.c.
- * Keep C definitions unguarded until PR2 ports them to rust/rtw_rf_rest.rs.
+ * C oracle for host L2; kernel builds use rust/rtw_rf_rest.rs when CONFIG_RUST.
  */
 int rtw_ch2freq(int chan)
 {
@@ -628,6 +629,7 @@ bool rtw_chbw_to_freq_range(u8 ch, u8 bw, u8 offset, u32 *hi, u32 *lo)
 exit:
 	return valid;
 }
+#endif /* !CONFIG_RUST || HOST_RF_TEST */
 
 #if defined(CONFIG_RUST) && !defined(HOST_RF_TEST)
 void rtw_rust_rf_warn_on(int condition)

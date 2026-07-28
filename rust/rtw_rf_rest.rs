@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
-//! RF rest helpers — Rust port of `core/rtw_rf_rest.c` channel layout (W3-19).
+//! RF rest helpers — Rust port of `core/rtw_rf_rest.c` channel layout (W3-19)
+//! and frequency conversion (W3-20).
 
 #![allow(
     dead_code,
@@ -546,4 +547,98 @@ pub extern "C" fn rtw_get_ch_group(ch: u8, group: *mut u8, cck_group: *mut u8) -
     }
 
     band
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_ch2freq(chan: i32) -> i32 {
+    if (1..=14).contains(&chan) {
+        if chan == 14 {
+            2484
+        } else {
+            2407 + chan * 5
+        }
+    } else if (36..=177).contains(&chan) {
+        5000 + chan * 5
+    } else {
+        0
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_freq2ch(freq: i32) -> i32 {
+    if freq == 2484 {
+        14
+    } else if freq < 2484 {
+        (freq - 2407) / 5
+    } else if (4910..=4980).contains(&freq) {
+        (freq - 4000) / 5
+    } else if freq <= 45000 {
+        (freq - 5000) / 5
+    } else if (58320..=64800).contains(&freq) {
+        (freq - 56160) / 2160
+    } else {
+        0
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_chbw_to_freq_range(
+    ch: u8,
+    bw: u8,
+    offset: u8,
+    hi: *mut u32,
+    lo: *mut u32,
+) -> bool {
+    let mut hi_ret = 0u32;
+    let mut lo_ret = 0u32;
+    let mut valid = false;
+
+    if !hi.is_null() {
+        unsafe {
+            *hi = 0;
+        }
+    }
+    if !lo.is_null() {
+        unsafe {
+            *lo = 0;
+        }
+    }
+
+    let c_ch = rtw_get_center_ch(ch, bw, offset);
+    let freq = rtw_ch2freq(c_ch as i32);
+
+    if freq == 0 {
+        kernel::warn_on(true);
+        return valid;
+    }
+
+    if bw == CHANNEL_WIDTH_160 {
+        hi_ret = (freq + 80) as u32;
+        lo_ret = (freq - 80) as u32;
+    } else if bw == CHANNEL_WIDTH_80 {
+        hi_ret = (freq + 40) as u32;
+        lo_ret = (freq - 40) as u32;
+    } else if bw == CHANNEL_WIDTH_40 {
+        hi_ret = (freq + 20) as u32;
+        lo_ret = (freq - 20) as u32;
+    } else if bw == CHANNEL_WIDTH_20 {
+        hi_ret = (freq + 10) as u32;
+        lo_ret = (freq - 10) as u32;
+    } else {
+        kernel::warn_on(true);
+    }
+
+    if !hi.is_null() {
+        unsafe {
+            *hi = hi_ret;
+        }
+    }
+    if !lo.is_null() {
+        unsafe {
+            *lo = lo_ret;
+        }
+    }
+
+    valid = true;
+    valid
 }
