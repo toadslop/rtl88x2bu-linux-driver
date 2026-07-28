@@ -13,6 +13,7 @@
 #define HOST_TXDESC_OFFSET 56
 #define HOST_MAX_WEP_FRAME 512
 #define HOST_MAX_TKIP_FRAME 512
+#define HOST_MAX_GCMP_FRAME 512
 
 #define HOST_IS_MCAST(da) (((da)[0] & 0x01) != 0)
 
