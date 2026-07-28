@@ -1030,6 +1030,7 @@ extern "C" {
         ra: *const U8,
         grpkey_installed: U8,
     ) -> U8;
+    fn rtw_gcmp_decrypt_key_index_mismatch_dbg(packet_index: U8, install_index: U8);
 }
 
 fn rnd4(ptr: usize) -> usize {
@@ -1754,6 +1755,10 @@ pub extern "C" fn rtw_gcmp_decrypt(padapter: *mut AesAdapter, precvframe: *mut U
             }
             let key_index = (*attrib).key_index as usize;
             if kernel_layout::securitypriv_grp_keyid(psecuritypriv) as usize != key_index {
+                rtw_gcmp_decrypt_key_index_mismatch_dbg(
+                    key_index as U8,
+                    kernel_layout::securitypriv_grp_keyid(psecuritypriv) as U8,
+                );
                 return GCMP_RTW_FAIL;
             }
             kernel_layout::securitypriv_grp_key_skey(psecuritypriv, key_index)

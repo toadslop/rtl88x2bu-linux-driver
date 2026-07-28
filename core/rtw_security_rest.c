@@ -309,6 +309,12 @@ u8 rtw_gcmp_decrypt_mcast_gkey_check(_adapter *padapter, u8 *ra, u8 grpkey_insta
 	return _FALSE;
 }
 
+void rtw_gcmp_decrypt_key_index_mismatch_dbg(u8 packet_index, u8 install_index)
+{
+	RTW_DBG("not match packet_index=%d, install_index=%d\n",
+		packet_index, install_index);
+}
+
 /* 3			=====AES related===== */
 #if (NEW_CRYPTO == 0)
 
