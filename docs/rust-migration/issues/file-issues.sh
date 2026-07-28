@@ -271,6 +271,35 @@ map_has_id() {
   [[ -n "${ID_TO_NUM[$id]:-}" ]]
 }
 
+# Append a row to the main map table (before ## Superseded issues when present).
+append_map_row() {
+  local row="$1"
+  if grep -q '^## Superseded issues' "$MAP_FILE"; then
+  MAP_ROW="$row" python3 - "$MAP_FILE" <<'PY'
+import os, sys
+path = sys.argv[1]
+row = os.environ["MAP_ROW"]
+with open(path) as f:
+    lines = f.readlines()
+out = []
+inserted = False
+for line in lines:
+    if not inserted and line.startswith("## Superseded issues"):
+        out.append(row + "\n")
+        inserted = True
+    out.append(line)
+if not inserted:
+    if out and not out[-1].endswith("\n"):
+        out[-1] += "\n"
+    out.append(row + "\n")
+with open(path, "w") as f:
+    f.writelines(out)
+PY
+  else
+    echo "$row" >>"$MAP_FILE"
+  fi
+}
+
 find_existing_issue_by_title() {
   local title="$1"
   gh issue list --repo "$REPO" --state all --search "in:title \"$title\"" --json number,title \
@@ -329,7 +358,7 @@ for f in "${files[@]}"; do
   if [[ -n "$existing" ]]; then
     echo "Skipping $id (found existing #$existing by title); recording in map"
     ID_TO_NUM["$id"]="$existing"
-    echo "| $id | #$existing | $title |" >>"$MAP_FILE"
+    append_map_row "| $id | #$existing | $title |"
     skipped=$((skipped + 1))
     continue
   fi
@@ -351,7 +380,7 @@ for f in "${files[@]}"; do
   url="$(gh issue create --repo "$REPO" --title "$title" --body "$body" "${label_args[@]}")"
   num="${url##*/}"
   ID_TO_NUM["$id"]="$num"
-  echo "| $id | #$num | $title |" >>"$MAP_FILE"
+  append_map_row "| $id | #$num | $title |"
   echo "  -> $url"
   created=$((created + 1))
 done
