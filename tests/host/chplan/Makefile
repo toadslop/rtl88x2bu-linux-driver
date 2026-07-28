@@ -27,7 +27,7 @@ RUST_CHPLAN_REST := $(ROOT)/rust/rtw_chplan_rest.rs
 
 all: test
 
-test: test-c test-rust test-rest-beacon-hint
+test: test-c test-rust test-rest-beacon-hint test-rest-beacon-hint-rust
 
 test-c: test_chplan
 	./test_chplan chplan_vectors.json

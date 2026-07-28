@@ -1,0 +1,31 @@
+# L1 allowlist for W3-17: Rust owns rtw_process_beacon_hint and dump_chplan_*;
+# static table data and adapter accessors remain in core/rtw_chplan_rest.c.
+drop rtw_channel_def_2g
+drop rtw_channel_def_5g
+drop RTW_ChannelPlanMap
+drop RTW_ChannelPlanMap_size
+drop country_chplan_map
+drop rtw_country_chplan_map_size
+drop _rtw_dfs_regd_str
+drop _regd_src_str
+drop dump_country_chplan
+drop dump_country_chplan_map
+drop rtw_chplan_warn_regd_mismatch
+drop rtw_chdef_2g_len
+drop rtw_chdef_2g_ch
+drop rtw_chdef_2g_attrib
+drop rtw_chdef_5g_len
+drop rtw_chdef_5g_ch
+drop rtw_chdef_5g_attrib
+drop rtw_rust_rfctl_channel_plan
+drop rtw_rust_rfctl_regd_src
+drop rtw_rust_rfctl_channel_set
+drop rtw_rust_rfctl_country_ent
+drop rtw_rust_regsty_wireless_mode
+drop rtw_rust_adapter_regsty
+drop rtw_rust_chset_zero
+drop rtw_rust_chset_write
+drop rtw_rust_chset_set_non_ocp
+drop rtw_rust_warn_on
+drop rtw_rust_bss_ds_config
+drop rtw_rust_chplan_print_str

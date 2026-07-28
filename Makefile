@@ -2526,6 +2526,7 @@ ifneq ($(filter -DCONFIG_REGD_SRC_FROM_OS,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg regd_src_from_os
 endif
 $(MODULE_NAME)-y += rust/rtw_chplan.o
+$(MODULE_NAME)-y += rust/rtw_chplan_rest.o
 $(MODULE_NAME)-y += rust/rtw_swcrypto.o
 $(MODULE_NAME)-y += rust/rtw_ieee80211.o
 $(MODULE_NAME)-y += rust/rtw_security.o
@@ -2725,6 +2726,29 @@ rust-check-symbols-rtw-chplan: rust-objects-rtw-chplan-c rust-objects-rtw-chplan
 		ALLOWLIST=docs/rust-migration/scripts/rtw_chplan_lookup.allow
 	$(MAKE) rust-check-symbols OLD=core/rtw_chplan_c_ref.o NEW=rust/rtw_chplan.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_chplan_init.allow
+
+# W3-17: compare pre-port core/rtw_chplan_rest.o against rust/rtw_chplan_rest.o.
+rust-objects-rtw-chplan-rest:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-rtw-chplan-rest"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_chplan_rest.o
+
+rust-objects-rtw-chplan-rest-c:
+	@set -e; \
+	backup=$$(mktemp); \
+	trap 'mv "$$backup" core/rtw_chplan_rest.c; rm -f core/rtw_chplan_rest.o' EXIT; \
+	cp core/rtw_chplan_rest.c "$$backup"; \
+	git -c safe.directory=* show origin/master:core/rtw_chplan_rest.c > core/rtw_chplan_rest.c; \
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) core/rtw_chplan_rest.o; \
+	cp core/rtw_chplan_rest.o tests/host/chplan/chplan_rest_c_ref.o; \
+	mv "$$backup" core/rtw_chplan_rest.c; \
+	rm -f core/rtw_chplan_rest.o; \
+	trap - EXIT
+
+rust-check-symbols-rtw-chplan-rest: rust-objects-rtw-chplan-rest-c rust-objects-rtw-chplan-rest
+	$(MAKE) rust-check-symbols OLD=tests/host/chplan/chplan_rest_c_ref.o NEW=rust/rtw_chplan_rest.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_chplan_rest.allow
 
 rust-objects-rtw-swcrypto:
 	@test -n "$(KDIR)" || { \
