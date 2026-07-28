@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Host L2 oracle runner for rtw_rf_rest channel layout helpers (W3-19 PR1).
+ * Host L2 oracle runner for rtw_rf_rest channel layout + freq helpers (W3-19, W3-20).
  */
 
 #include <stdio.h>
@@ -10,7 +10,7 @@
 #include "host_rf_types.h"
 #include "host_vector_json.h"
 
-#define MAX_VECTORS 64
+#define MAX_VECTORS 96
 #define MAX_NAME 128
 #define MAX_OP_CHS 8
 
@@ -25,6 +25,9 @@ enum rf_fn {
 	FN_OFFSET_BY_CHBW,
 	FN_CENTER_CH,
 	FN_CH_GROUP,
+	FN_CH2FREQ,
+	FN_FREQ2CH,
+	FN_CHBW_TO_FREQ_RANGE,
 };
 
 struct vector {
@@ -45,6 +48,9 @@ struct vector {
 	int expect_group;
 	int expect_cck_group;
 	int has_cck_group;
+	int freq;
+	int expect_hi;
+	int expect_lo;
 };
 
 u8 rtw_get_scch_by_cch_offset(u8 cch, u8 bw, u8 offset);
@@ -57,6 +63,9 @@ u8 rtw_get_op_chs_by_cch_bw(u8 cch, u8 bw, u8 **op_chs, u8 *op_ch_num);
 u8 rtw_get_offset_by_chbw(u8 ch, u8 bw, u8 *r_offset);
 u8 rtw_get_center_ch(u8 ch, u8 bw, u8 offset);
 u8 rtw_get_ch_group(u8 ch, u8 *group, u8 *cck_group);
+int rtw_ch2freq(int chan);
+int rtw_freq2ch(int freq);
+bool rtw_chbw_to_freq_range(u8 ch, u8 bw, u8 offset, u32 *hi, u32 *lo);
 
 static int parse_fn(const char *obj, size_t obj_len, enum rf_fn *out)
 {
@@ -84,6 +93,12 @@ static int parse_fn(const char *obj, size_t obj_len, enum rf_fn *out)
 		*out = FN_CENTER_CH;
 	else if (strcmp(fn, "rtw_get_ch_group") == 0)
 		*out = FN_CH_GROUP;
+	else if (strcmp(fn, "rtw_ch2freq") == 0)
+		*out = FN_CH2FREQ;
+	else if (strcmp(fn, "rtw_freq2ch") == 0)
+		*out = FN_FREQ2CH;
+	else if (strcmp(fn, "rtw_chbw_to_freq_range") == 0)
+		*out = FN_CHBW_TO_FREQ_RANGE;
 	else
 		return -1;
 	return 0;
@@ -141,6 +156,7 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 	host_json_parse_int_in(obj, obj_len, "offset", (int *)&v->offset);
 	host_json_parse_int_in(obj, obj_len, "opch", (int *)&v->opch);
 	host_json_parse_int_in(obj, obj_len, "ch", (int *)&v->ch);
+	host_json_parse_int_in(obj, obj_len, "freq", &v->freq);
 	host_json_parse_int_in(obj, obj_len, "id", (int *)&v->id);
 	host_json_parse_int_in(obj, obj_len, "r_offset_in", (int *)&v->r_offset_in);
 	host_json_parse_int_in(obj, obj_len, "expect", &v->expect);
@@ -149,6 +165,8 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 	host_json_parse_int_in(obj, obj_len, "expect_op_ch_num", &v->expect_op_ch_num);
 	host_json_parse_int_in(obj, obj_len, "expect_band", &v->expect_band);
 	host_json_parse_int_in(obj, obj_len, "expect_group", &v->expect_group);
+	host_json_parse_int_in(obj, obj_len, "expect_hi", &v->expect_hi);
+	host_json_parse_int_in(obj, obj_len, "expect_lo", &v->expect_lo);
 	if (!host_json_parse_int_in(obj, obj_len, "expect_cck_group", &tmp)) {
 		v->expect_cck_group = tmp;
 		v->has_cck_group = 1;
@@ -294,6 +312,49 @@ static int run_vector(struct vector *v)
 		if (v->has_cck_group && (int)cck_group != v->expect_cck_group) {
 			fprintf(stderr, "%s: cck_group=%u expect=%d\n",
 				v->name, cck_group, v->expect_cck_group);
+			return -1;
+		}
+		break;
+	}
+	case FN_CH2FREQ: {
+		int got = rtw_ch2freq(v->ch);
+
+		if (got != v->expect) {
+			fprintf(stderr, "%s: ch2freq got=%d expect=%d\n",
+				v->name, got, v->expect);
+			return -1;
+		}
+		break;
+	}
+	case FN_FREQ2CH: {
+		int got = rtw_freq2ch(v->freq);
+
+		if (got != v->expect) {
+			fprintf(stderr, "%s: freq2ch got=%d expect=%d\n",
+				v->name, got, v->expect);
+			return -1;
+		}
+		break;
+	}
+	case FN_CHBW_TO_FREQ_RANGE: {
+		u32 hi = 0, lo = 0;
+		bool valid = rtw_chbw_to_freq_range(v->ch, v->bw, v->offset, &hi, &lo);
+
+		if ((int)valid != v->expect_valid) {
+			fprintf(stderr, "%s: chbw valid=%d expect=%d\n",
+				v->name, valid, v->expect_valid);
+			return -1;
+		}
+		if (!valid)
+			break;
+		if ((int)hi != v->expect_hi) {
+			fprintf(stderr, "%s: hi=%u expect=%d\n",
+				v->name, hi, v->expect_hi);
+			return -1;
+		}
+		if ((int)lo != v->expect_lo) {
+			fprintf(stderr, "%s: lo=%u expect=%d\n",
+				v->name, lo, v->expect_lo);
 			return -1;
 		}
 		break;
