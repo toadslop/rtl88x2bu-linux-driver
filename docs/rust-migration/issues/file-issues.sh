@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # File draft issues from docs/rust-migration/issues/*.md onto GitHub.
 # Idempotent: skips draft IDs already present in ISSUE-MAP.md; appends new rows.
+# ISSUE-MAP.md is a filing registry (draft ID ↔ #N), not a status tracker.
 # Requires: Issues enabled on the repo; gh authenticated with issue write scope.
 set -euo pipefail
 

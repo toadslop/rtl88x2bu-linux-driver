@@ -40,9 +40,9 @@ Answer these questions from epics, README, and GitHub:
 
 | Question | Sources |
 |----------|---------|
-| Which epic/wave is active? | `epic-*.md`, open `[Epic]` issues |
-| Which children are done vs open? | README status table, `gh issue list` |
-| What is blocked and why? | `blocked_by` chains, open PRs |
+| Which epic/wave is active? | `epic-*.md`, open `[Epic]` issues on GitHub |
+| Which children are done vs open? | `gh issue list` / `gh issue view` (state) |
+| What is blocked and why? | `## Tracking` footers on GitHub, open PRs |
 | What large units lack child slices? | Wave 4+ epics, oversized C files |
 | What test infra is missing? | `E10`, `test-*.md`, CI workflow gaps |
 
@@ -54,7 +54,7 @@ gh issue view 68 --json subIssues,subIssuesSummary 2>/dev/null || true
 
 Common gap patterns in this repo:
 
-- **Wave tranche 2 not filed** — README says "Later: Wave 3 tranche 2…"
+- **Wave tranche not filed** — epic lists deferred scope but no open `W3-*` issues on GitHub
 - **Oversized C TU** — needs splitting like `wave2-07` / `wave2-08` (part 1/2)
 - **Missing L2 harness** — translation issue blocked until `T4`/`T5`-style work exists
 - **Domain types** — `A2`/`A3` not done but wave children list them in `blocked_by`
@@ -94,7 +94,7 @@ Each new issue must be:
 | Architecture | `A4` | `arch-04-*.md` |
 | Release | `R2` | `release-02-*.md` |
 
-Increment IDs beyond the highest in `ISSUE-MAP.md` / README.
+Increment IDs beyond the highest in `ISSUE-MAP.md` (or GitHub titles `[W3-NN]`).
 
 ## 3. Write draft markdown
 
@@ -142,8 +142,8 @@ bash docs/rust-migration/issues/file-issues.sh
 
 The script is idempotent — it skips IDs already in `ISSUE-MAP.md`.
 
-3. Update README status table with new rows (`draft` / `open`)
-4. Commit draft markdown + README + `ISSUE-MAP.md` changes
+3. Verify new issues on GitHub (`gh issue view`); do **not** add status rows to README
+4. Commit draft markdown + `ISSUE-MAP.md` changes (if filed)
 
 **Ask the user** before filing to GitHub if they only wanted local drafts.
 
@@ -191,8 +191,8 @@ The job is **done** when one of these is true:
 
 | Outcome | Done when |
 |---------|-----------|
-| Local drafts only | Markdown specs + README rows committed; user informed |
-| Filed on GitHub | `file-issues.sh` run, `ISSUE-MAP.md` updated, report posted |
+| Local drafts only | Markdown specs committed; user informed |
+| Filed on GitHub | `file-issues.sh` run, `ISSUE-MAP.md` updated, verified on GitHub |
 | Nothing to draft | Gap analysis explains why; human decision documented |
 
 **Never** continue to `plan-stacked-prs` or `implement-stacked-prs` as part of
