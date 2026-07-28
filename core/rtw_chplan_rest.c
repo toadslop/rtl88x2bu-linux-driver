@@ -2406,6 +2406,6 @@ void rtw_rust_chplan_print_str(void *sel, const char *s)
 
 void rtw_rust_chplan_beacon_hint_info(u8 ch)
 {
-	RTW_INFO("%s: change ch:%d to active\n", __func__, ch);
+	RTW_INFO("rtw_process_beacon_hint: change ch:%d to active\n", ch);
 }
 #endif /* CONFIG_RUST && !HOST_CHPLAN_TEST */
