@@ -178,7 +178,6 @@ u8 rtw_os_init_channel_set(_adapter *padapter, RT_CHANNEL_INFO *channel_set);
 
 #if defined(HOST_CHPLAN_REST_ORACLE_BUILD) || defined(RUST_CHPLAN_REST_ORACLE)
 int rtw_chset_search_ch(RT_CHANNEL_INFO *ch_set, const u32 ch);
-u8 host_rest_process_beacon_hint(_adapter *adapter, WLAN_BSSID_EX *bss);
 #endif
 
 #endif /* HOST_CHPLAN_TYPES_H */
