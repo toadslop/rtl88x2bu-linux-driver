@@ -998,6 +998,15 @@ extern "C" {
         frame: *mut U8,
         plen: U32,
     ) -> i32;
+    fn _rtw_ccmp_decrypt(
+        padapter: *mut core::ffi::c_void,
+        key: *mut U8,
+        key_len: U32,
+        hdrlen: U32,
+        frame: *mut U8,
+        plen: U32,
+    ) -> i32;
+    fn rtw_get_stainfo(stapriv: *mut core::ffi::c_void, hwaddr: *mut U8) -> *mut core::ffi::c_void;
 }
 
 fn rnd4(ptr: usize) -> usize {
@@ -1044,6 +1053,49 @@ mod kernel_layout {
         static rtw_rust_aes_off_securitypriv_aes_sw_enc_cnt_bc: usize;
         static rtw_rust_aes_off_securitypriv_aes_sw_enc_cnt_mc: usize;
         static rtw_rust_aes_off_securitypriv_aes_sw_enc_cnt_uc: usize;
+        static rtw_rust_aes_off_securitypriv_aes_sw_dec_cnt_bc: usize;
+        static rtw_rust_aes_off_securitypriv_aes_sw_dec_cnt_mc: usize;
+        static rtw_rust_aes_off_securitypriv_aes_sw_dec_cnt_uc: usize;
+        static rtw_rust_wep_off_recv_frame_hdr: usize;
+        static rtw_rust_wep_off_recv_frame_hdr_attrib: usize;
+        static rtw_rust_wep_off_recv_frame_hdr_len: usize;
+        static rtw_rust_wep_off_recv_frame_hdr_rx_data: usize;
+        static rtw_rust_tkip_off_securitypriv_binstallGrpkey: usize;
+        static rtw_rust_tkip_off_adapter_stapriv: usize;
+        static rtw_rust_tkip_off_sta_info_dot118021x_UncstKey: usize;
+    }
+
+    #[repr(C)]
+    pub struct RxPktAttrib {
+        pub pkt_len: u16,
+        pub physt: U8,
+        pub drvinfo_sz: U8,
+        pub shift_sz: U8,
+        pub hdrlen: U8,
+        pub to_fr_ds: U8,
+        pub amsdu: U8,
+        pub qos: U8,
+        pub priority: U8,
+        pub pw_save: U8,
+        pub mdata: U8,
+        pub seq_num: u16,
+        pub frag_num: U8,
+        pub mfrag: U8,
+        pub order: U8,
+        pub privacy: U8,
+        pub bdecrypted: U8,
+        pub encrypt: U8,
+        pub iv_len: U8,
+        pub icv_len: U8,
+        pub crc_err: U8,
+        pub icv_err: U8,
+        pub dst: [U8; 6],
+        pub src: [U8; 6],
+        pub ta: [U8; 6],
+        pub ra: [U8; 6],
+        pub bssid: [U8; 6],
+        pub ack_policy: U8,
+        pub key_index: U8,
     }
 
     #[repr(C)]
@@ -1119,6 +1171,60 @@ mod kernel_layout {
                 rtw_rust_aes_off_securitypriv_aes_sw_enc_cnt_mc
             } else {
                 rtw_rust_aes_off_securitypriv_aes_sw_enc_cnt_uc
+            };
+            let cnt = (psecuritypriv.add(off)) as *mut u64;
+            *cnt = cnt.read().wrapping_add(1);
+        }
+    }
+
+    pub unsafe fn recv_frame_base(precvframe: *mut u8) -> *mut u8 {
+        unsafe { precvframe.add(rtw_rust_wep_off_recv_frame_hdr) }
+    }
+
+    pub unsafe fn recv_frame_attrib(precvframe: *mut u8) -> *mut RxPktAttrib {
+        unsafe {
+            (recv_frame_base(precvframe).add(rtw_rust_wep_off_recv_frame_hdr_attrib))
+                as *mut RxPktAttrib
+        }
+    }
+
+    pub unsafe fn recv_frame_len(precvframe: *mut u8) -> U32 {
+        unsafe {
+            *((recv_frame_base(precvframe).add(rtw_rust_wep_off_recv_frame_hdr_len)) as *const U32)
+        }
+    }
+
+    pub unsafe fn recv_frame_rx_data(precvframe: *mut u8) -> *mut U8 {
+        unsafe {
+            *((recv_frame_base(precvframe).add(rtw_rust_wep_off_recv_frame_hdr_rx_data))
+                as *const *mut U8)
+        }
+    }
+
+    pub unsafe fn adapter_stapriv(padapter: *mut AesAdapter) -> *mut u8 {
+        unsafe { (padapter as *mut u8).add(rtw_rust_tkip_off_adapter_stapriv) }
+    }
+
+    pub unsafe fn securitypriv_binstall_grpkey(psecuritypriv: *mut u8) -> U8 {
+        unsafe {
+            *((psecuritypriv.add(rtw_rust_tkip_off_securitypriv_binstallGrpkey)) as *const U8)
+        }
+    }
+
+    pub unsafe fn sta_info_unicast_key_skey(stainfo: *mut u8) -> *mut U8 {
+        unsafe {
+            (stainfo.add(rtw_rust_tkip_off_sta_info_dot118021x_UncstKey)) as *mut U8
+        }
+    }
+
+    pub unsafe fn aes_sw_dec_cnt_inc(psecuritypriv: *mut u8, ra: &[U8; 6]) {
+        unsafe {
+            let off = if is_broadcast_mac_addr(ra) {
+                rtw_rust_aes_off_securitypriv_aes_sw_dec_cnt_bc
+            } else if is_multicast_mac_addr(ra) {
+                rtw_rust_aes_off_securitypriv_aes_sw_dec_cnt_mc
+            } else {
+                rtw_rust_aes_off_securitypriv_aes_sw_dec_cnt_uc
             };
             let cnt = (psecuritypriv.add(off)) as *mut u64;
             *cnt = cnt.read().wrapping_add(1);
@@ -1216,5 +1322,57 @@ pub extern "C" fn rtw_aes_encrypt(padapter: *mut AesAdapter, pxmitframe: *mut U8
 
         kernel_layout::aes_sw_enc_cnt_inc(psecuritypriv, &ra);
         AES_RTW_SUCCESS
+    }
+}
+
+const _FALSE: U8 = 0;
+
+#[cfg(not(host_security_rest_test))]
+#[no_mangle]
+pub extern "C" fn rtw_aes_decrypt(padapter: *mut AesAdapter, precvframe: *mut U8) -> U32 {
+    if padapter.is_null() || precvframe.is_null() {
+        return AES_RTW_FAIL;
+    }
+    unsafe {
+        let psecuritypriv = kernel_layout::adapter_securitypriv(padapter);
+        let attrib = kernel_layout::recv_frame_attrib(precvframe);
+        let encrypt = (*attrib).encrypt;
+        if encrypt != _AES_ && encrypt != _CCMP_256_ {
+            return AES_RTW_SUCCESS;
+        }
+
+        let stapriv = kernel_layout::adapter_stapriv(padapter);
+        let stainfo =
+            rtw_get_stainfo(stapriv as *mut core::ffi::c_void, (*attrib).ta.as_mut_ptr());
+        if stainfo.is_null() {
+            return AES_RTW_FAIL;
+        }
+
+        let ra = (*attrib).ra;
+        let prwskey = if is_mcast_ra(&ra) {
+            if kernel_layout::securitypriv_binstall_grpkey(psecuritypriv) == _FALSE {
+                return AES_RTW_FAIL;
+            }
+            let key_index = (*attrib).key_index as usize;
+            if kernel_layout::securitypriv_grp_keyid(psecuritypriv) as usize != key_index {
+                return AES_RTW_FAIL;
+            }
+            kernel_layout::securitypriv_grp_key_skey(psecuritypriv, key_index)
+        } else {
+            kernel_layout::sta_info_unicast_key_skey(stainfo as *mut u8)
+        };
+
+        let prwskeylen = if encrypt == _CCMP_256_ { 32 } else { 16 };
+        let res = _rtw_ccmp_decrypt(
+            padapter as *mut core::ffi::c_void,
+            prwskey,
+            prwskeylen,
+            (*attrib).hdrlen as U32,
+            kernel_layout::recv_frame_rx_data(precvframe),
+            kernel_layout::recv_frame_len(precvframe),
+        ) as U32;
+
+        kernel_layout::aes_sw_dec_cnt_inc(psecuritypriv, &ra);
+        res
     }
 }
