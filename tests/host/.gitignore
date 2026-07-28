@@ -33,13 +33,8 @@ wlan_util/test_wlan_tail
 wlan_util/test_wlan_tail_rust
 wlan_util/librust_wlan_util.a
 wlan_util/wlan_util_rate_c_ref.o
-<<<<<<< HEAD
-
 # W3-18 io harness
-io/test_io
-=======
 io/test_io
 io/test_io_rust
 io/librust_io_rest.a
 io/io_rest_c_ref.o
->>>>>>> 07ac297 (feat(io): port rtw_io_rest helpers to Rust (W3-18 PR2))

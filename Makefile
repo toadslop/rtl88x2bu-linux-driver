@@ -2526,6 +2526,9 @@ rustflags-y += --cfg dfs
 ifneq ($(filter -DCONFIG_REGD_SRC_FROM_OS,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg regd_src_from_os
 endif
+ifneq ($(filter -DDBG_IO,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
+rustflags-y += --cfg dbg_io
+endif
 $(MODULE_NAME)-y += rust/rtw_chplan.o
 $(MODULE_NAME)-y += rust/rtw_chplan_rest.o
 $(MODULE_NAME)-y += rust/rtw_io_rest.o
@@ -2764,7 +2767,7 @@ rust-objects-rtw-io-rest-c:
 	backup=$$(mktemp); \
 	trap 'mv "$$backup" core/rtw_io_rest.c; rm -f core/rtw_io_rest.o' EXIT; \
 	cp core/rtw_io_rest.c "$$backup"; \
-	git -c safe.directory=* show cursor/w3-18a-io-harness-fae4:core/rtw_io_rest.c > core/rtw_io_rest.c; \
+	git -c safe.directory=* show origin/master:core/rtw_io_rest.c > core/rtw_io_rest.c; \
 	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) core/rtw_io_rest.o; \
 	cp core/rtw_io_rest.o tests/host/io/io_rest_c_ref.o; \
 	mv "$$backup" core/rtw_io_rest.c; \

@@ -280,6 +280,8 @@ u32 match_write_sniff(_adapter *adapter, u32 addr, u16 len, u32 val)
 	return match;
 }
 
+#endif /* !CONFIG_RUST || HOST_IO_TEST */
+
 struct rf_sniff_ent {
 	u8 path;
 	u16 reg;
@@ -307,6 +309,7 @@ struct rf_sniff_ent rf_write_sniff_ranges[] = {
 int rf_read_sniff_num = sizeof(rf_read_sniff_ranges) / sizeof(struct rf_sniff_ent);
 int rf_write_sniff_num = sizeof(rf_write_sniff_ranges) / sizeof(struct rf_sniff_ent);
 
+#if !defined(CONFIG_RUST) || defined(HOST_IO_TEST)
 bool match_rf_read_sniff_ranges(_adapter *adapter, u8 path, u32 addr, u32 mask)
 {
 	int i;
@@ -371,6 +374,11 @@ void rtw_rust_io_dbg_tag(const char *tag)
 {
 	if (tag)
 		RTW_INFO("DBG_IO TAG %s\n", tag);
+}
+
+void rtw_rust_io_continual_io_error_log(void *dvobj, int value, int max)
+{
+	RTW_INFO("[dvobj:%p][ERROR] continual_io_error:%d > %d\n", dvobj, value, max);
 }
 
 bool rtw_rust_io_sniff_assert_protsel(bool (*fn)(_adapter *, u32, u8),

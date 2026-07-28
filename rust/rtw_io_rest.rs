@@ -92,6 +92,7 @@ mod kernel {
         fn rtw_rust_get_intf_type(adapter: *mut c_void) -> u8;
         fn rtw_rust_io_warn_on(condition: c_int);
         fn rtw_rust_io_dbg_tag(tag: *const u8);
+        fn rtw_rust_io_continual_io_error_log(dvobj: *mut c_void, value: c_int, max: c_int);
         fn rtw_rust_io_sniff_assert_protsel(
             f: Option<AssertProtselFn>,
             adapter: *mut c_void,
@@ -133,6 +134,10 @@ mod kernel {
 
     pub(super) fn dbg_tag(tag: *const u8) {
         unsafe { rtw_rust_io_dbg_tag(tag) };
+    }
+
+    pub(super) fn continual_io_error_log(dvobj: *mut c_void, value: c_int, max: c_int) {
+        unsafe { rtw_rust_io_continual_io_error_log(dvobj, value, max) };
     }
 
     pub(super) fn sniff_assert_protsel(
@@ -294,6 +299,8 @@ mod kernel {
     pub(super) fn warn_on(_condition: bool) {}
 
     pub(super) fn dbg_tag(_tag: *const u8) {}
+
+    pub(super) fn continual_io_error_log(_dvobj: *mut c_void, _value: c_int, _max: c_int) {}
 
     pub(super) fn sniff_assert_protsel(
         _f: Option<AssertProtselFn>,
@@ -471,6 +478,7 @@ fn match_rf_sniff_table(
 fn inc_and_chk_continual_io_error_inner(dvobj: *mut c_void) -> c_int {
     let value = kernel::inc_continual_io_error(dvobj);
     if value > MAX_CONTINUAL_IO_ERR {
+        kernel::continual_io_error_log(dvobj, value, MAX_CONTINUAL_IO_ERR);
         _TRUE
     } else {
         _FALSE
