@@ -104,11 +104,13 @@ typedef struct _RT_CHANNEL_INFO {
 	u8 flags;
 } RT_CHANNEL_INFO;
 
+#if defined(HOST_CHPLAN_REST_ORACLE_BUILD) || defined(RUST_CHPLAN_REST_ORACLE)
 struct country_chplan {
 	u8 alpha2[2];
 	u8 chplan;
 	u8 en_11ac;
 };
+#endif
 
 struct rf_ctl_t {
 	u8 regd_src;
@@ -122,6 +124,7 @@ typedef struct {
 	struct rf_ctl_t rf_ctl;
 } _adapter;
 
+#if defined(HOST_CHPLAN_REST_ORACLE_BUILD) || defined(RUST_CHPLAN_REST_ORACLE)
 typedef struct {
 	u32 Length;
 	u32 BeaconPeriod;
@@ -148,6 +151,9 @@ typedef struct {
 
 #define IS_ALPHA2_WORLDWIDE(_alpha2) \
 	((_alpha2)[0] == '0' && (_alpha2)[1] == '0')
+#else
+typedef void WLAN_BSSID_EX;
+#endif
 
 #define adapter_to_regsty(adapter) (&(adapter)->registrypriv)
 #define adapter_to_rfctl(adapter) (&(adapter)->rf_ctl)
@@ -163,7 +169,6 @@ int rtw_freq2ch(int freq);
 int rtw_ch2freq(int chan);
 u8 rtw_get_center_ch(u8 ch, u8 bw, u8 offset);
 bool rtw_chbw_to_freq_range(u8 ch, u8 bw, u8 offset, u32 *hi, u32 *lo);
-int rtw_chset_search_ch(RT_CHANNEL_INFO *ch_set, const u32 ch);
 
 void rtw_chplan_warn_regd_mismatch(u8 id, u8 regd_2g, u8 regd_5g);
 
@@ -171,6 +176,9 @@ void host_chplan_set_band_cap(u8 cap);
 bool hal_chk_band_cap(_adapter *adapter, u8 cap);
 u8 rtw_os_init_channel_set(_adapter *padapter, RT_CHANNEL_INFO *channel_set);
 
+#if defined(HOST_CHPLAN_REST_ORACLE_BUILD) || defined(RUST_CHPLAN_REST_ORACLE)
+int rtw_chset_search_ch(RT_CHANNEL_INFO *ch_set, const u32 ch);
 u8 host_rest_process_beacon_hint(_adapter *adapter, WLAN_BSSID_EX *bss);
+#endif
 
 #endif /* HOST_CHPLAN_TYPES_H */
