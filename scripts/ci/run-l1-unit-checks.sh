@@ -11,6 +11,7 @@ targets=(
 	rust-check-symbols-rtw-swcrypto
 	rust-check-symbols-rtw-ieee80211
 	rust-check-symbols-rtw-security
+	rust-check-symbols-rtw-security-rest-misc
 	rust-check-symbols-rtw-wlan-util
 )
 

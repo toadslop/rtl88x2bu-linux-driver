@@ -2556,7 +2556,7 @@ all: modules
 #   make rust-check-symbols OLD=/tmp/aes-ctr-c.o NEW=rust/aes_ctr.o
 RUST_CHECK_NM ?= $(if $(filter 1,$(LLVM)),llvm-nm,nm)
 
-.PHONY: rust-check-symbols rust-check-symbols-selftest rust-check-symbols-aes-internal rust-check-symbols-aes-internal-part1 rust-check-symbols-aes-internal-part2 rust-check-symbols-aes-internal-part3 rust-objects-aes-ctr rust-objects-aes-omac1 rust-objects-gcmp rust-objects-aes-siv rust-objects-aes-ccm rust-objects-aes-gcm rust-objects-aes-gcm-c rust-objects-ccmp rust-objects-ccmp-c rust-objects-aes-internal rust-objects-aes-internal-c rust-objects-aes-internal-enc rust-objects-aes-internal-enc-c rust-objects-sha256-internal rust-objects-sha256 rust-objects-sha256-c rust-objects-sha256-prf rust-objects-rtw-crypto-wrap rust-objects-rtw-crypto-wrap-c rust-objects-rtw-chplan rust-objects-rtw-chplan-c rust-check-symbols-rtw-chplan rust-objects-rtw-swcrypto rust-objects-rtw-swcrypto-c rust-check-symbols-rtw-swcrypto rust-objects-rtw-ieee80211 rust-objects-rtw-ieee80211-c rust-check-symbols-rtw-ieee80211 rust-objects-rtw-security rust-objects-rtw-security-c rust-check-symbols-rtw-security rust-objects-rtw-wlan-util rust-objects-rtw-wlan-util-c rust-check-symbols-rtw-wlan-util
+.PHONY: rust-check-symbols rust-check-symbols-selftest rust-check-symbols-aes-internal rust-check-symbols-aes-internal-part1 rust-check-symbols-aes-internal-part2 rust-check-symbols-aes-internal-part3 rust-objects-aes-ctr rust-objects-aes-omac1 rust-objects-gcmp rust-objects-aes-siv rust-objects-aes-ccm rust-objects-aes-gcm rust-objects-aes-gcm-c rust-objects-ccmp rust-objects-ccmp-c rust-objects-aes-internal rust-objects-aes-internal-c rust-objects-aes-internal-enc rust-objects-aes-internal-enc-c rust-objects-sha256-internal rust-objects-sha256 rust-objects-sha256-c rust-objects-sha256-prf rust-objects-rtw-crypto-wrap rust-objects-rtw-crypto-wrap-c rust-objects-rtw-chplan rust-objects-rtw-chplan-c rust-check-symbols-rtw-chplan rust-objects-rtw-swcrypto rust-objects-rtw-swcrypto-c rust-check-symbols-rtw-swcrypto rust-objects-rtw-ieee80211 rust-objects-rtw-ieee80211-c rust-check-symbols-rtw-ieee80211 rust-objects-rtw-security rust-objects-rtw-security-c rust-check-symbols-rtw-security rust-objects-rtw-security-rest rust-objects-rtw-security-rest-misc-c rust-check-symbols-rtw-security-rest-misc rust-objects-rtw-wlan-util rust-objects-rtw-wlan-util-c rust-check-symbols-rtw-wlan-util
 rust-check-symbols:
 	@test -n "$(OLD)" && test -n "$(NEW)" || { \
 		echo "Usage: make rust-check-symbols OLD=path/to/old.o NEW=path/to/new.o [ALLOWLIST=path.allow] [ALLOW_VACUOUS=1]"; \
@@ -2771,6 +2771,33 @@ rust-objects-rtw-security-c:
 rust-check-symbols-rtw-security: rust-objects-rtw-security-c rust-objects-rtw-security
 	$(MAKE) rust-check-symbols OLD=tests/host/security/security_type_c_ref.o NEW=rust/rtw_security.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_security_type_str.allow
+
+# W3-15 misc slice: compare pre-port core/rtw_security_rest.o (frozen at adf5beb)
+# against rust/rtw_security_rest.o.
+SECURITY_REST_MISC_C_REF_COMMIT ?= adf5beb
+
+rust-objects-rtw-security-rest:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-rtw-security-rest"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_security_rest.o
+
+rust-objects-rtw-security-rest-misc-c:
+	@set -e; \
+	ref_commit="$(SECURITY_REST_MISC_C_REF_COMMIT)"; \
+	backup=$$(mktemp); \
+	trap 'mv "$$backup" core/rtw_security_rest.c; rm -f core/rtw_security_rest.o' EXIT; \
+	cp core/rtw_security_rest.c "$$backup"; \
+	git -c safe.directory=* show "$$ref_commit:core/rtw_security_rest.c" > core/rtw_security_rest.c; \
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) core/rtw_security_rest.o; \
+	cp core/rtw_security_rest.o tests/host/security/security_rest_misc_c_ref.o; \
+	mv "$$backup" core/rtw_security_rest.c; \
+	rm -f core/rtw_security_rest.o; \
+	trap - EXIT
+
+rust-check-symbols-rtw-security-rest-misc: rust-objects-rtw-security-rest-misc-c rust-objects-rtw-security-rest
+	$(MAKE) rust-check-symbols OLD=tests/host/security/security_rest_misc_c_ref.o NEW=rust/rtw_security_rest.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_security_rest_misc.allow
 
 rust-objects-rtw-wlan-util:
 	@test -n "$(KDIR)" || { \

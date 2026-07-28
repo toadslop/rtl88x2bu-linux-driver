@@ -22,6 +22,7 @@ security/test_tkip_phase
 security/test_tkip_phase_rust
 security/librust_security.a
 security/security_type_c_ref.o
+security/security_rest_misc_c_ref.o
 
 # T5 wlan_util harness
 wlan_util/test_wlan_util
