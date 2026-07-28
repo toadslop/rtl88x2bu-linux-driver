@@ -689,7 +689,12 @@ const _CCMP_256_: U8 = _AES_ | _SEC_TYPE_256_;
 const AES_RTW_SUCCESS: U32 = 1;
 const AES_RTW_FAIL: U32 = 0;
 
+#[cfg(host_security_rest_test)]
 const TXDESC_OFFSET: usize = 48 + 8;
+
+#[cfg(not(host_security_rest_test))]
+const TXDESC_SIZE: usize = 48;
+#[cfg(not(host_security_rest_test))]
 const PACKET_OFFSET_SZ: usize = 8;
 
 #[repr(C)]
@@ -731,8 +736,14 @@ fn is_multicast_mac_addr(addr: &[U8; 6]) -> bool {
     (addr[0] & 0x01) != 0 && !is_broadcast_mac_addr(addr)
 }
 
+#[cfg(host_security_rest_test)]
 fn hw_hdr_offset(pkt_offset: i8) -> usize {
-    TXDESC_OFFSET + (pkt_offset as usize) * PACKET_OFFSET_SZ
+    TXDESC_OFFSET + (pkt_offset as usize) * 8
+}
+
+#[cfg(not(host_security_rest_test))]
+fn hw_hdr_offset(pkt_offset: i8) -> usize {
+    TXDESC_SIZE + (pkt_offset as usize) * PACKET_OFFSET_SZ
 }
 
 #[cfg(not(host_security_rest_test))]
