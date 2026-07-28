@@ -56,6 +56,18 @@
       "timeoutie": "5605020000003c",
       "ftie": "48440000ab28cca75fa74b8fad15dd9ef137e6cab0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedf0000",
       "expect_ret": 0
+    },
+    {
+      "name": "verify_mic_null_lnkid",
+      "fn": "host_rest_tdls_verify_mic",
+      "kck": "11111111111111111111111111111111",
+      "trans_seq": 2,
+      "lnkid": "6512aaaaaaaaaaaa020000000001020000000002",
+      "rsnie": "30120100000fac070100000fac040100000fac07",
+      "timeoutie": "5605020000003c",
+      "ftie": "484400005428cca75fa74b8fad15dd9ef137e6cab0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedf0000",
+      "null_ie": "lnkid",
+      "expect_ret": 0
     }
   ]
 }

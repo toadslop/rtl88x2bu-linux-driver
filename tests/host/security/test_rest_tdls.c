@@ -54,6 +54,7 @@ struct vector {
 	u8 expect_mic[MAX_MIC];
 	size_t expect_mic_len;
 	int expect_ret;
+	char null_ie[16];
 };
 
 #ifdef RUST_SECURITY_REST_ORACLE
@@ -143,6 +144,7 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 			sizeof(v->expect_mic), &v->expect_mic_len);
 	if (host_json_parse_int_in(obj, obj_len, "expect_ret", &v->expect_ret))
 		v->expect_ret = 0;
+	host_json_parse_string_in(obj, obj_len, "null_ie", v->null_ie, sizeof(v->null_ie));
 	return 0;
 }
 
@@ -208,9 +210,26 @@ static int run_vector(struct vector *v)
 	}
 	case FN_VERIFY_MIC: {
 		int ret;
+		u8 *lnkid = v->lnkid_len ? v->lnkid : NULL;
+		u8 *rsnie = v->rsnie_len ? v->rsnie : NULL;
+		u8 *timeoutie = v->timeoutie_len ? v->timeoutie : NULL;
+		u8 *ftie = v->ftie_len ? v->ftie : NULL;
 
-		ret = host_rest_tdls_verify_mic(v->kck, v->trans_seq, v->lnkid,
-						v->rsnie, v->timeoutie, v->ftie);
+		if (v->null_ie[0]) {
+			if (strcmp(v->null_ie, "lnkid") == 0)
+				lnkid = NULL;
+			else if (strcmp(v->null_ie, "rsnie") == 0)
+				rsnie = NULL;
+			else if (strcmp(v->null_ie, "timeoutie") == 0)
+				timeoutie = NULL;
+			else if (strcmp(v->null_ie, "ftie") == 0)
+				ftie = NULL;
+			else
+				return -1;
+		}
+
+		ret = host_rest_tdls_verify_mic(v->kck, v->trans_seq, lnkid,
+						rsnie, timeoutie, ftie);
 		if (ret != v->expect_ret) {
 			fprintf(stderr, "%s: verify_mic ret=%d expect=%d\n", v->name,
 				ret, v->expect_ret);
