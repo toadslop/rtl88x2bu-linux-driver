@@ -193,6 +193,18 @@ const size_t rtw_rust_aes_off_securitypriv_aes_sw_dec_cnt_mc =
 	offsetof(struct security_priv, aes_sw_dec_cnt_mc);
 const size_t rtw_rust_aes_off_securitypriv_aes_sw_dec_cnt_uc =
 	offsetof(struct security_priv, aes_sw_dec_cnt_uc);
+const size_t rtw_rust_gcmp_off_securitypriv_gcmp_sw_enc_cnt_bc =
+	offsetof(struct security_priv, gcmp_sw_enc_cnt_bc);
+const size_t rtw_rust_gcmp_off_securitypriv_gcmp_sw_enc_cnt_mc =
+	offsetof(struct security_priv, gcmp_sw_enc_cnt_mc);
+const size_t rtw_rust_gcmp_off_securitypriv_gcmp_sw_enc_cnt_uc =
+	offsetof(struct security_priv, gcmp_sw_enc_cnt_uc);
+const size_t rtw_rust_gcmp_off_securitypriv_gcmp_sw_dec_cnt_bc =
+	offsetof(struct security_priv, gcmp_sw_dec_cnt_bc);
+const size_t rtw_rust_gcmp_off_securitypriv_gcmp_sw_dec_cnt_mc =
+	offsetof(struct security_priv, gcmp_sw_dec_cnt_mc);
+const size_t rtw_rust_gcmp_off_securitypriv_gcmp_sw_dec_cnt_uc =
+	offsetof(struct security_priv, gcmp_sw_dec_cnt_uc);
 #endif
 
 /* 3		=====TKIP related===== (W3-07a: MIC helpers in rust/rtw_security.rs) */
@@ -1214,72 +1226,7 @@ u32 rtw_calc_crc32(u8 *data, size_t len)
 }
 
 
-/**
- * rtw_gcmp_encrypt - 
- * @padapter:
- * @pxmitframe:
- *
- */
-u32 rtw_gcmp_encrypt(_adapter *padapter, u8 *pxmitframe)
-{
-	struct pkt_attrib *pattrib = &((struct xmit_frame *)pxmitframe)->attrib;
-	struct security_priv *psecuritypriv = &padapter->securitypriv;
-	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
-	/* Intermediate Buffers */
-	sint curfragnum, plen;
-	u32 prwskeylen;
-	u8 *pframe = NULL;
-	u8 *prwskey = NULL;
-	u8 hw_hdr_offset = 0;
-	u32 res = _SUCCESS;
-
-	if (((struct xmit_frame *)pxmitframe)->buf_addr == NULL)
-		return _FAIL;
-
-#ifdef CONFIG_USB_TX_AGGREGATION
-	hw_hdr_offset = TXDESC_SIZE +
-		(((struct xmit_frame *)pxmitframe)->pkt_offset * PACKET_OFFSET_SZ);
-#else
-#ifdef CONFIG_TX_EARLY_MODE
-	hw_hdr_offset = TXDESC_OFFSET + EARLY_MODE_INFO_SIZE;
-#else
-	hw_hdr_offset = TXDESC_OFFSET;
-#endif
-#endif
-
-	pframe = ((struct xmit_frame *)pxmitframe)->buf_addr + hw_hdr_offset;
-
-	/* start to encrypt each fragment */
-	if ((pattrib->encrypt == _GCMP_) ||
-		(pattrib->encrypt == _GCMP_256_)) {
-
-		if (IS_MCAST(pattrib->ra))
-			prwskey = psecuritypriv->dot118021XGrpKey[psecuritypriv->dot118021XGrpKeyid].skey;
-		else
-			prwskey = pattrib->dot118021x_UncstKey.skey;
-
-		prwskeylen = (pattrib->encrypt == _GCMP_256_) ? 32 : 16;
-
-		for (curfragnum = 0; curfragnum < pattrib->nr_frags; curfragnum++) {
-			if ((curfragnum + 1) == pattrib->nr_frags) {
-				/* the last fragment */
-				plen = pattrib->last_txcmdsz - pattrib->hdrlen - pattrib->iv_len - pattrib->icv_len;
-
-				_rtw_gcmp_encrypt(padapter, prwskey, prwskeylen, pattrib->hdrlen, pframe, plen);
-			} else {
-				plen = pxmitpriv->frag_len - pattrib->hdrlen - pattrib->iv_len - pattrib->icv_len;
-
-				_rtw_gcmp_encrypt(padapter, prwskey, prwskeylen, pattrib->hdrlen, pframe, plen);
-				pframe += pxmitpriv->frag_len;
-				pframe = (u8 *)RND4((SIZE_PTR)(pframe));
-			}
-		}
-
-		GCMP_SW_ENC_CNT_INC(psecuritypriv, pattrib->ra);
-	}
-
-	return res;
-}
+/* W3-14a: rtw_gcmp_encrypt in rust/rtw_security_rest.rs */
 
 u32 rtw_gcmp_decrypt(_adapter *padapter, u8 *precvframe)
 {

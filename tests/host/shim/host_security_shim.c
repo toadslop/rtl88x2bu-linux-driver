@@ -412,7 +412,7 @@ exit:
 
 #endif /* HOST_TKIP_FRAME_ORACLE_BUILD */
 
-#if defined(HOST_GCMP_FRAME_ORACLE_BUILD)
+#if defined(HOST_GCMP_FRAME_ORACLE_BUILD) || defined(HOST_GCMP_DECRYPT_ORACLE_BUILD)
 
 /* ----- GCMP frame encrypt/decrypt (W3-14 / T5) ----- */
 
@@ -456,6 +456,8 @@ static uint32_t host_gcmp_get_passing_time_ms(uint32_t start)
 	(void)start;
 	return 0;
 }
+
+#if defined(HOST_GCMP_FRAME_ORACLE_BUILD)
 
 uint32_t rtw_gcmp_encrypt(struct host_adapter *padapter, uint8_t *pxmitframe)
 {
@@ -508,6 +510,8 @@ uint32_t rtw_gcmp_encrypt(struct host_adapter *padapter, uint8_t *pxmitframe)
 
 	return res;
 }
+
+#endif /* HOST_GCMP_FRAME_ORACLE_BUILD */
 
 uint32_t rtw_gcmp_decrypt(struct host_adapter *padapter, uint8_t *precvframe)
 {
@@ -574,4 +578,4 @@ gcmp_exit:
 	return res;
 }
 
-#endif /* HOST_GCMP_FRAME_ORACLE_BUILD */
+#endif /* HOST_GCMP_FRAME_ORACLE_BUILD || HOST_GCMP_DECRYPT_ORACLE_BUILD */

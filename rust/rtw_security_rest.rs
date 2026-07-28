@@ -1396,3 +1396,267 @@ pub extern "C" fn rtw_aes_decrypt(padapter: *mut AesAdapter, precvframe: *mut U8
         res
     }
 }
+
+// ----- GCMP frame encrypt/decrypt (W3-14) -----
+
+const _GCMP_: U8 = 0x07;
+const _GCMP_256_: U8 = _GCMP_ | _SEC_TYPE_256_;
+const GCMP_RTW_SUCCESS: U32 = 1;
+const GCMP_RTW_FAIL: U32 = 0;
+
+#[cfg(host_gcmp_frame_test)]
+const HOST_GCMP_SUCCESS: U32 = 0;
+#[cfg(host_gcmp_frame_test)]
+const HOST_GCMP_FAIL: U32 = 1;
+
+#[cfg(any(not(host_security_rest_test), host_gcmp_frame_test))]
+extern "C" {
+    fn _rtw_gcmp_encrypt(
+        padapter: *mut core::ffi::c_void,
+        key: *mut U8,
+        key_len: U32,
+        hdrlen: U32,
+        frame: *mut U8,
+        plen: U32,
+    ) -> i32;
+    #[cfg(not(host_security_rest_test))]
+    fn _rtw_gcmp_decrypt(
+        padapter: *mut core::ffi::c_void,
+        key: *mut U8,
+        key_len: U32,
+        hdrlen: U32,
+        frame: *mut U8,
+        plen: U32,
+    ) -> i32;
+}
+
+#[cfg(any(not(host_security_rest_test), host_gcmp_frame_test))]
+unsafe fn gcmp_encrypt_frags(
+    padapter: *mut core::ffi::c_void,
+    prwskey: *mut U8,
+    prwskeylen: U32,
+    pxmitpriv_frag_len: U32,
+    nr_frags: U8,
+    hdrlen: u16,
+    last_txcmdsz: U32,
+    iv_len: U8,
+    icv_len: U8,
+    buf_addr: *mut U8,
+    hw: usize,
+) {
+    unsafe {
+        let mut pframe = buf_addr.add(hw);
+        let mut curfragnum: i32 = 0;
+
+        while curfragnum < nr_frags as i32 {
+            let plen = if (curfragnum + 1) == nr_frags as i32 {
+                last_txcmdsz as i32 - hdrlen as i32 - iv_len as i32 - icv_len as i32
+            } else {
+                pxmitpriv_frag_len as i32 - hdrlen as i32 - iv_len as i32 - icv_len as i32
+            };
+
+            _rtw_gcmp_encrypt(
+                padapter,
+                prwskey,
+                prwskeylen,
+                hdrlen as U32,
+                pframe,
+                plen as U32,
+            );
+
+            if (curfragnum + 1) != nr_frags as i32 {
+                pframe = pframe.add(pxmitpriv_frag_len as usize);
+                pframe = rnd4(pframe as usize) as *mut U8;
+            }
+            curfragnum += 1;
+        }
+    }
+}
+
+#[cfg(not(host_security_rest_test))]
+mod gcmp_kernel_layout {
+    use super::*;
+
+    extern "C" {
+        static rtw_rust_gcmp_off_securitypriv_gcmp_sw_enc_cnt_bc: usize;
+        static rtw_rust_gcmp_off_securitypriv_gcmp_sw_enc_cnt_mc: usize;
+        static rtw_rust_gcmp_off_securitypriv_gcmp_sw_enc_cnt_uc: usize;
+        static rtw_rust_gcmp_off_securitypriv_gcmp_sw_dec_cnt_bc: usize;
+        static rtw_rust_gcmp_off_securitypriv_gcmp_sw_dec_cnt_mc: usize;
+        static rtw_rust_gcmp_off_securitypriv_gcmp_sw_dec_cnt_uc: usize;
+    }
+
+    pub unsafe fn gcmp_sw_enc_cnt_inc(psecuritypriv: *mut u8, ra: &[U8; 6]) {
+        unsafe {
+            let off = if is_broadcast_mac_addr(ra) {
+                rtw_rust_gcmp_off_securitypriv_gcmp_sw_enc_cnt_bc
+            } else if is_multicast_mac_addr(ra) {
+                rtw_rust_gcmp_off_securitypriv_gcmp_sw_enc_cnt_mc
+            } else {
+                rtw_rust_gcmp_off_securitypriv_gcmp_sw_enc_cnt_uc
+            };
+            let cnt = (psecuritypriv.add(off)) as *mut u64;
+            *cnt = cnt.read().wrapping_add(1);
+        }
+    }
+
+    pub unsafe fn gcmp_sw_dec_cnt_inc(psecuritypriv: *mut u8, ra: &[U8; 6]) {
+        unsafe {
+            let off = if is_broadcast_mac_addr(ra) {
+                rtw_rust_gcmp_off_securitypriv_gcmp_sw_dec_cnt_bc
+            } else if is_multicast_mac_addr(ra) {
+                rtw_rust_gcmp_off_securitypriv_gcmp_sw_dec_cnt_mc
+            } else {
+                rtw_rust_gcmp_off_securitypriv_gcmp_sw_dec_cnt_uc
+            };
+            let cnt = (psecuritypriv.add(off)) as *mut u64;
+            *cnt = cnt.read().wrapping_add(1);
+        }
+    }
+}
+
+#[cfg(not(host_security_rest_test))]
+#[no_mangle]
+pub extern "C" fn rtw_gcmp_encrypt(padapter: *mut AesAdapter, pxmitframe: *mut U8) -> U32 {
+    if padapter.is_null() || pxmitframe.is_null() {
+        return GCMP_RTW_FAIL;
+    }
+    unsafe {
+        let px = pxmitframe;
+        let buf_addr = kernel_layout::xmit_frame_buf_addr(px);
+        if buf_addr.is_null() {
+            return GCMP_RTW_FAIL;
+        }
+        let hw = hw_hdr_offset(kernel_layout::xmit_frame_pkt_offset(px));
+        let pattrib = kernel_layout::xmit_frame_attrib(px);
+        let encrypt = (*pattrib).encrypt;
+        if encrypt != _GCMP_ && encrypt != _GCMP_256_ {
+            return GCMP_RTW_SUCCESS;
+        }
+
+        let psecuritypriv = kernel_layout::adapter_securitypriv(padapter);
+        let pxmitpriv = kernel_layout::adapter_xmitpriv(padapter);
+        let frag_len = kernel_layout::xmitpriv_frag_len(pxmitpriv);
+        let ra = (*pattrib).ra;
+
+        let prwskey = if is_mcast_ra(&ra) {
+            let kid = kernel_layout::securitypriv_grp_keyid(psecuritypriv) as usize;
+            kernel_layout::securitypriv_grp_key_skey(psecuritypriv, kid)
+        } else {
+            kernel_layout::pkt_attrib_unicast_key_skey(pattrib)
+        };
+        let prwskeylen = if encrypt == _GCMP_256_ { 32 } else { 16 };
+
+        gcmp_encrypt_frags(
+            padapter as *mut core::ffi::c_void,
+            prwskey,
+            prwskeylen,
+            frag_len,
+            (*pattrib).nr_frags,
+            (*pattrib).hdrlen,
+            (*pattrib).last_txcmdsz,
+            (*pattrib).iv_len,
+            (*pattrib).icv_len,
+            buf_addr,
+            hw,
+        );
+
+        gcmp_kernel_layout::gcmp_sw_enc_cnt_inc(psecuritypriv, &ra);
+        GCMP_RTW_SUCCESS
+    }
+}
+
+#[cfg(host_gcmp_frame_test)]
+#[repr(C)]
+pub struct HostGcmpPktAttrib {
+    pub encrypt: U8,
+    pub nr_frags: U8,
+    pub _pad0: U8,
+    pub hdrlen: u16,
+    pub last_txcmdsz: U32,
+    pub iv_len: U8,
+    pub icv_len: U8,
+    pub _pad1: [U8; 2],
+    pub ra: [U8; 6],
+    pub ta: [U8; 6],
+    pub dot118021x_UncstKey: KeyType,
+}
+
+#[cfg(host_gcmp_frame_test)]
+#[repr(C)]
+pub struct HostGcmpXmitFrame {
+    pub attrib: HostGcmpPktAttrib,
+    pub buf_addr: *mut U8,
+    pub pkt_offset: i8,
+}
+
+#[cfg(host_gcmp_frame_test)]
+#[repr(C)]
+pub struct HostGcmpSecurityPriv {
+    pub dot11_privacy_key_index: U32,
+    pub dot11_def_key: [KeyType; 6],
+    pub dot11_def_keylen: [U32; 6],
+    pub dot118021XGrpKeyid: U32,
+    pub dot118021XGrpKey: [KeyType; 6],
+    pub binstallGrpkey: U8,
+}
+
+#[cfg(host_gcmp_frame_test)]
+#[repr(C)]
+pub struct HostGcmpXmitPriv {
+    pub frag_len: U32,
+}
+
+#[cfg(host_gcmp_frame_test)]
+#[repr(C)]
+pub struct HostGcmpAdapter {
+    pub securitypriv: HostGcmpSecurityPriv,
+    pub xmitpriv: HostGcmpXmitPriv,
+}
+
+#[cfg(host_gcmp_frame_test)]
+const HOST_GCMP_TXDESC_OFFSET: usize = 56;
+
+#[cfg(host_gcmp_frame_test)]
+#[no_mangle]
+pub extern "C" fn rtw_gcmp_encrypt(padapter: *mut HostGcmpAdapter, pxmitframe: *mut U8) -> U32 {
+    if padapter.is_null() || pxmitframe.is_null() {
+        return HOST_GCMP_FAIL;
+    }
+    unsafe {
+        let xmit = &*(pxmitframe as *const HostGcmpXmitFrame);
+        if xmit.buf_addr.is_null() {
+            return HOST_GCMP_FAIL;
+        }
+        let attrib = &xmit.attrib;
+        if attrib.encrypt != _GCMP_ && attrib.encrypt != _GCMP_256_ {
+            return HOST_GCMP_SUCCESS;
+        }
+
+        let sec = &(*padapter).securitypriv;
+        let hw = HOST_GCMP_TXDESC_OFFSET + (xmit.pkt_offset as usize) * 8;
+        let prwskey = if is_mcast_ra(&attrib.ra) {
+            sec.dot118021XGrpKey[sec.dot118021XGrpKeyid as usize]
+                .skey
+                .as_ptr() as *mut U8
+        } else {
+            attrib.dot118021x_UncstKey.skey.as_ptr() as *mut U8
+        };
+        let prwskeylen = if attrib.encrypt == _GCMP_256_ { 32 } else { 16 };
+
+        gcmp_encrypt_frags(
+            padapter as *mut core::ffi::c_void,
+            prwskey,
+            prwskeylen,
+            (*padapter).xmitpriv.frag_len,
+            attrib.nr_frags,
+            attrib.hdrlen,
+            attrib.last_txcmdsz,
+            attrib.iv_len,
+            attrib.icv_len,
+            xmit.buf_addr,
+            hw,
+        );
+        HOST_GCMP_SUCCESS
+    }
+}
