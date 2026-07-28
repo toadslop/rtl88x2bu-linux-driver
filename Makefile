@@ -1273,6 +1273,7 @@ endif
 
 ifeq ($(CONFIG_TDLS), y)
 ccflags-y += -DCONFIG_TDLS
+rustflags-y += --cfg tdls
 endif
 
 ifeq ($(CONFIG_WIFI_MONITOR), y)

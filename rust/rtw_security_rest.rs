@@ -2131,3 +2131,513 @@ pub extern "C" fn host_rest_sec_restore_wep_key(adapter: *mut HostRestoreWepAdap
         }
     }
 }
+// ----- TDLS security_rest helpers (W3-16) -----
+
+#[cfg(any(tdls, host_rest_tdls_test))]
+const TDLS_MIC_LEN: usize = 16;
+#[cfg(any(tdls, host_rest_tdls_test))]
+const ETH_ALEN_TDLS: usize = 6;
+
+#[cfg(any(tdls, host_rest_tdls_test))]
+#[repr(C)]
+struct WpaTdlsFtie {
+    ie_type: U8,
+    ie_len: U8,
+    mic_ctrl: [U8; 2],
+    mic: [U8; TDLS_MIC_LEN],
+    anonce: [U8; 32],
+    snonce: [U8; 32],
+}
+
+#[cfg(any(tdls, host_rest_tdls_test))]
+#[repr(C)]
+struct WpaTdlsLnkid {
+    ie_type: U8,
+    ie_len: U8,
+    bssid: [U8; ETH_ALEN_TDLS],
+    init_sta: [U8; ETH_ALEN_TDLS],
+    resp_sta: [U8; ETH_ALEN_TDLS],
+}
+
+#[cfg(host_rest_tdls_test)]
+#[repr(C)]
+pub struct HostTdlsPeerKey {
+    pub kck: [U8; 16],
+    pub tk: [U8; 16],
+}
+
+#[cfg(host_rest_tdls_test)]
+#[repr(C)]
+pub struct HostTdlsSta {
+    pub snonce: [U8; 32],
+    pub anonce: [U8; 32],
+    pub mac_addr: [U8; ETH_ALEN_TDLS],
+    pub tpk: HostTdlsPeerKey,
+}
+
+#[cfg(host_rest_tdls_test)]
+#[repr(C)]
+pub struct HostTdlsMlmePriv {
+    pub bssid: [U8; ETH_ALEN_TDLS],
+}
+
+#[cfg(host_rest_tdls_test)]
+#[repr(C)]
+pub struct HostTdlsAdapter {
+    pub mac_addr: [U8; ETH_ALEN_TDLS],
+    pub mlmepriv: HostTdlsMlmePriv,
+}
+
+#[cfg(any(tdls, host_rest_tdls_test))]
+fn tdls_memcmp2(a: *const U8, b: *const U8, len: usize) -> Sint {
+    for i in 0..len {
+        unsafe {
+            let av = *a.add(i);
+            let bv = *b.add(i);
+            if av != bv {
+                return (av as i32) - (bv as i32);
+            }
+        }
+    }
+    0
+}
+
+#[cfg(all(not(host_security_rest_test), tdls))]
+mod tdls_kernel {
+    use super::*;
+
+    extern "C" {
+        fn _rtw_zmalloc(sz: u32) -> *mut U8;
+        fn _rtw_mfree(ptr: *mut U8, sz: u32);
+        fn _rtw_memcpy(dst: *mut U8, src: *const U8, n: usize) -> *mut U8;
+        fn _rtw_memset(dst: *mut U8, val: c_int, n: usize) -> *mut U8;
+        fn _bip_ccmp_protect(
+            key: *const U8,
+            key_len: usize,
+            data: *const U8,
+            data_len: usize,
+            mic: *mut U8,
+        ) -> U8;
+        fn _tdls_generate_tpk(sta: *mut core::ffi::c_void, own_addr: *const U8, bssid: *const U8);
+        fn rtw_rust_tdls_adapter_own_mac(adapter: *mut core::ffi::c_void, out: *mut U8);
+        fn rtw_rust_tdls_adapter_bssid(adapter: *mut core::ffi::c_void, out: *mut U8);
+    }
+
+    unsafe fn ftie_mic(
+        kck: *mut U8,
+        trans_seq: U8,
+        lnkid: *mut U8,
+        rsnie: *mut U8,
+        timeoutie: *mut U8,
+        ftie: *mut U8,
+        mic: *mut U8,
+    ) -> Sint {
+        unsafe {
+        let len = 2 * ETH_ALEN_TDLS
+            + 1
+            + 2
+            + (*lnkid.add(1) as usize)
+            + 2
+            + (*rsnie.add(1) as usize)
+            + 2
+            + (*timeoutie.add(1) as usize)
+            + 2
+            + (*ftie.add(1) as usize);
+        let buf = _rtw_zmalloc(len as u32);
+        if buf.is_null() {
+            return -1;
+        }
+        let mut pos = buf;
+        let lnk = lnkid as *mut WpaTdlsLnkid;
+        _rtw_memcpy(pos, (*lnk).init_sta.as_ptr(), ETH_ALEN_TDLS);
+        pos = pos.add(ETH_ALEN_TDLS);
+        _rtw_memcpy(pos, (*lnk).resp_sta.as_ptr(), ETH_ALEN_TDLS);
+        pos = pos.add(ETH_ALEN_TDLS);
+        *pos = trans_seq;
+        pos = pos.add(1);
+        let lnk_ie_len = 2 + (*lnkid.add(1) as usize);
+        _rtw_memcpy(pos, lnkid, lnk_ie_len);
+        pos = pos.add(lnk_ie_len);
+        let rsn_ie_len = 2 + (*rsnie.add(1) as usize);
+        _rtw_memcpy(pos, rsnie, rsn_ie_len);
+        pos = pos.add(rsn_ie_len);
+        let to_ie_len = 2 + (*timeoutie.add(1) as usize);
+        _rtw_memcpy(pos, timeoutie, to_ie_len);
+        pos = pos.add(to_ie_len);
+        let ft_ie_len = 2 + (*ftie.add(1) as usize);
+        _rtw_memcpy(pos, ftie, ft_ie_len);
+        let ftie_pos = pos as *mut WpaTdlsFtie;
+        _rtw_memset((*ftie_pos).mic.as_mut_ptr(), 0, TDLS_MIC_LEN);
+        pos = pos.add(ft_ie_len);
+        let ret = _bip_ccmp_protect(kck, 16, buf, pos.offset_from(buf) as usize, mic);
+        _rtw_mfree(buf, len as u32);
+        ret as Sint
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wpa_tdls_generate_tpk(adapter: *mut core::ffi::c_void, sta: *mut core::ffi::c_void) {
+        let mut own = [0u8; ETH_ALEN_TDLS];
+        let mut bssid = [0u8; ETH_ALEN_TDLS];
+        unsafe {
+            rtw_rust_tdls_adapter_own_mac(adapter, own.as_mut_ptr());
+            rtw_rust_tdls_adapter_bssid(adapter, bssid.as_mut_ptr());
+            _tdls_generate_tpk(sta, own.as_ptr(), bssid.as_ptr());
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wpa_tdls_ftie_mic(
+        kck: *mut U8,
+        trans_seq: U8,
+        lnkid: *mut U8,
+        rsnie: *mut U8,
+        timeoutie: *mut U8,
+        ftie: *mut U8,
+        mic: *mut U8,
+    ) -> Sint {
+        unsafe { ftie_mic(kck, trans_seq, lnkid, rsnie, timeoutie, ftie, mic) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn wpa_tdls_teardown_ftie_mic(
+        kck: *mut U8,
+        lnkid: *mut U8,
+        reason: u16,
+        dialog_token: U8,
+        trans_seq: U8,
+        ftie: *mut U8,
+        mic: *mut U8,
+    ) -> Sint {
+        unsafe {
+            let len = 2 + (*lnkid.add(1) as usize) + 2 + 1 + 1 + 2 + (*ftie.add(1) as usize);
+            let buf = _rtw_zmalloc(len as u32);
+            if buf.is_null() {
+                return -1;
+            }
+            let mut pos = buf;
+            let lnk_ie_len = 2 + (*lnkid.add(1) as usize);
+            _rtw_memcpy(pos, lnkid, lnk_ie_len);
+            pos = pos.add(lnk_ie_len);
+            _rtw_memcpy(pos, &reason as *const u16 as *const U8, 2);
+            pos = pos.add(2);
+            *pos = dialog_token;
+            pos = pos.add(1);
+            *pos = trans_seq;
+            pos = pos.add(1);
+            let ft_ie_len = 2 + (*ftie.add(1) as usize);
+            _rtw_memcpy(pos, ftie, ft_ie_len);
+            let ftie_pos = pos as *mut WpaTdlsFtie;
+            _rtw_memset((*ftie_pos).mic.as_mut_ptr(), 0, TDLS_MIC_LEN);
+            pos = pos.add(ft_ie_len);
+            let ret = _bip_ccmp_protect(kck, 16, buf, pos.offset_from(buf) as usize, mic);
+            _rtw_mfree(buf, len as u32);
+            ret as Sint
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn tdls_verify_mic(
+        kck: *mut U8,
+        trans_seq: U8,
+        lnkid: *mut U8,
+        rsnie: *mut U8,
+        timeoutie: *mut U8,
+        ftie: *mut U8,
+    ) -> Sint {
+        unsafe {
+            if lnkid.is_null() || rsnie.is_null() || timeoutie.is_null() || ftie.is_null() {
+                return _FAIL;
+            }
+            let len = 2 * ETH_ALEN_TDLS
+                + 1
+                + 2
+                + 18
+                + 2
+                + (*rsnie.add(1) as usize)
+                + 2
+                + (*timeoutie.add(1) as usize)
+                + 2
+                + (*ftie.add(1) as usize);
+            let buf = _rtw_zmalloc(len as u32);
+            if buf.is_null() {
+                return _FAIL;
+            }
+            let mut pos = buf;
+            _rtw_memcpy(pos, lnkid.add(ETH_ALEN_TDLS + 2), ETH_ALEN_TDLS);
+            pos = pos.add(ETH_ALEN_TDLS);
+            _rtw_memcpy(pos, lnkid.add(2 * ETH_ALEN_TDLS + 2), ETH_ALEN_TDLS);
+            pos = pos.add(ETH_ALEN_TDLS);
+            *pos = trans_seq;
+            pos = pos.add(1);
+            _rtw_memcpy(pos, lnkid, 2 + 18);
+            pos = pos.add(2 + 18);
+            let rsn_ie_len = 2 + (*rsnie.add(1) as usize);
+            _rtw_memcpy(pos, rsnie, rsn_ie_len);
+            pos = pos.add(rsn_ie_len);
+            let to_ie_len = 2 + (*timeoutie.add(1) as usize);
+            _rtw_memcpy(pos, timeoutie, to_ie_len);
+            pos = pos.add(to_ie_len);
+            let ft_ie_len = 2 + (*ftie.add(1) as usize);
+            _rtw_memcpy(pos, ftie, ft_ie_len);
+            pos = pos.add(2);
+            _rtw_memset(pos.add(2), 0, TDLS_MIC_LEN);
+            pos = pos.add(*ftie.add(1) as usize);
+            let mut mic = [0u8; TDLS_MIC_LEN];
+            let ret = _bip_ccmp_protect(kck, 16, buf, pos.offset_from(buf) as usize, mic.as_mut_ptr());
+            _rtw_mfree(buf, len as u32);
+            if ret == _FAIL as U8 {
+                return _FAIL;
+            }
+            if tdls_memcmp2(mic.as_ptr(), ftie.add(4), TDLS_MIC_LEN) == 0 {
+                return _SUCCESS;
+            }
+            _FAIL
+        }
+    }
+}
+
+#[cfg(host_rest_tdls_test)]
+mod tdls_host {
+    use super::*;
+
+    extern "C" {
+        fn omac1_aes_128(key: *const U8, data: *const U8, data_len: usize, mac: *mut U8) -> Sint;
+        fn sha256_vector(num_elem: usize, addr: *const *const U8, len: *const usize, mac: *mut U8)
+            -> Sint;
+        fn sha256_prf(
+            key: *const U8,
+            key_len: usize,
+            label: *const u8,
+            data: *const U8,
+            data_len: usize,
+            buf: *mut U8,
+            buf_len: usize,
+        ) -> Sint;
+    }
+
+    unsafe fn host_bip_ccmp_protect(
+        key: *const U8,
+        key_len: usize,
+        data: *const U8,
+        data_len: usize,
+        mic: *mut U8,
+    ) -> Sint {
+        if key_len == 16 && omac1_aes_128(key, data, data_len, mic) == 0 {
+            return _SUCCESS;
+        }
+        _FAIL
+    }
+
+    unsafe fn host_generate_tpk(sta: *mut HostTdlsSta, own_addr: *const U8, bssid: *const U8) {
+        let psta = &mut *sta;
+        let mut key_input = [0u8; 32];
+        let mut nonce: [*const U8; 2] = [core::ptr::null(), core::ptr::null()];
+        let len = [32usize, 32usize];
+        if tdls_memcmp2(psta.snonce.as_ptr(), psta.anonce.as_ptr(), 32) < 0 {
+            nonce[0] = psta.snonce.as_ptr();
+            nonce[1] = psta.anonce.as_ptr();
+        } else {
+            nonce[0] = psta.anonce.as_ptr();
+            nonce[1] = psta.snonce.as_ptr();
+        }
+        sha256_vector(2, nonce.as_ptr(), len.as_ptr(), key_input.as_mut_ptr());
+        let mut data = [0u8; 3 * ETH_ALEN_TDLS];
+        if tdls_memcmp2(own_addr, psta.mac_addr.as_ptr(), ETH_ALEN_TDLS) < 0 {
+            core::ptr::copy_nonoverlapping(own_addr, data.as_mut_ptr(), ETH_ALEN_TDLS);
+            core::ptr::copy_nonoverlapping(
+                psta.mac_addr.as_ptr(),
+                data.as_mut_ptr().add(ETH_ALEN_TDLS),
+                ETH_ALEN_TDLS,
+            );
+        } else {
+            core::ptr::copy_nonoverlapping(psta.mac_addr.as_ptr(), data.as_mut_ptr(), ETH_ALEN_TDLS);
+            core::ptr::copy_nonoverlapping(
+                own_addr,
+                data.as_mut_ptr().add(ETH_ALEN_TDLS),
+                ETH_ALEN_TDLS,
+            );
+        }
+        core::ptr::copy_nonoverlapping(bssid, data.as_mut_ptr().add(2 * ETH_ALEN_TDLS), ETH_ALEN_TDLS);
+        let label = b"TDLS PMK\0";
+        sha256_prf(
+            key_input.as_ptr(),
+            32,
+            label.as_ptr(),
+            data.as_ptr(),
+            data.len(),
+            &mut psta.tpk as *mut HostTdlsPeerKey as *mut U8,
+            core::mem::size_of::<HostTdlsPeerKey>(),
+        );
+    }
+
+    #[no_mangle]
+    pub extern "C" fn host_rest_tdls_generate_tpk(adapter: *mut HostTdlsAdapter, sta: *mut HostTdlsSta) {
+        if adapter.is_null() || sta.is_null() {
+            return;
+        }
+        unsafe {
+            host_generate_tpk(
+                sta,
+                (*adapter).mac_addr.as_ptr(),
+                (*adapter).mlmepriv.bssid.as_ptr(),
+            );
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn host_rest_wpa_tdls_ftie_mic(
+        kck: *mut U8,
+        trans_seq: U8,
+        lnkid: *mut U8,
+        rsnie: *mut U8,
+        timeoutie: *mut U8,
+        ftie: *mut U8,
+        mic: *mut U8,
+    ) -> Sint {
+        unsafe {
+            use std::alloc::{alloc, dealloc, Layout};
+            let len = 2 * ETH_ALEN_TDLS
+                + 1
+                + 2
+                + (*lnkid.add(1) as usize)
+                + 2
+                + (*rsnie.add(1) as usize)
+                + 2
+                + (*timeoutie.add(1) as usize)
+                + 2
+                + (*ftie.add(1) as usize);
+            let layout = Layout::from_size_align(len, 1).unwrap();
+            let buf = alloc(layout);
+            if buf.is_null() {
+                return -1;
+            }
+            let mut pos = buf;
+            let lnk = lnkid as *mut WpaTdlsLnkid;
+            core::ptr::copy_nonoverlapping((*lnk).init_sta.as_ptr(), pos, ETH_ALEN_TDLS);
+            pos = pos.add(ETH_ALEN_TDLS);
+            core::ptr::copy_nonoverlapping((*lnk).resp_sta.as_ptr(), pos, ETH_ALEN_TDLS);
+            pos = pos.add(ETH_ALEN_TDLS);
+            *pos = trans_seq;
+            pos = pos.add(1);
+            let lnk_ie_len = 2 + (*lnkid.add(1) as usize);
+            core::ptr::copy_nonoverlapping(lnkid, pos, lnk_ie_len);
+            pos = pos.add(lnk_ie_len);
+            let rsn_ie_len = 2 + (*rsnie.add(1) as usize);
+            core::ptr::copy_nonoverlapping(rsnie, pos, rsn_ie_len);
+            pos = pos.add(rsn_ie_len);
+            let to_ie_len = 2 + (*timeoutie.add(1) as usize);
+            core::ptr::copy_nonoverlapping(timeoutie, pos, to_ie_len);
+            pos = pos.add(to_ie_len);
+            let ft_ie_len = 2 + (*ftie.add(1) as usize);
+            core::ptr::copy_nonoverlapping(ftie, pos, ft_ie_len);
+            let ftie_pos = pos as *mut WpaTdlsFtie;
+            core::ptr::write_bytes((*ftie_pos).mic.as_mut_ptr(), 0, TDLS_MIC_LEN);
+            pos = pos.add(ft_ie_len);
+            let ret = host_bip_ccmp_protect(kck, 16, buf, pos.offset_from(buf) as usize, mic);
+            dealloc(buf, layout);
+            ret
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn host_rest_wpa_tdls_teardown_ftie_mic(
+        kck: *mut U8,
+        lnkid: *mut U8,
+        reason: u16,
+        dialog_token: U8,
+        trans_seq: U8,
+        ftie: *mut U8,
+        mic: *mut U8,
+    ) -> Sint {
+        unsafe {
+            use std::alloc::{alloc, dealloc, Layout};
+            let len = 2 + (*lnkid.add(1) as usize) + 2 + 1 + 1 + 2 + (*ftie.add(1) as usize);
+            let layout = Layout::from_size_align(len, 1).unwrap();
+            let buf = alloc(layout);
+            if buf.is_null() {
+                return -1;
+            }
+            let mut pos = buf;
+            let lnk_ie_len = 2 + (*lnkid.add(1) as usize);
+            core::ptr::copy_nonoverlapping(lnkid, pos, lnk_ie_len);
+            pos = pos.add(lnk_ie_len);
+            core::ptr::copy_nonoverlapping(&reason as *const u16 as *const U8, pos, 2);
+            pos = pos.add(2);
+            *pos = dialog_token;
+            pos = pos.add(1);
+            *pos = trans_seq;
+            pos = pos.add(1);
+            let ft_ie_len = 2 + (*ftie.add(1) as usize);
+            core::ptr::copy_nonoverlapping(ftie, pos, ft_ie_len);
+            let ftie_pos = pos as *mut WpaTdlsFtie;
+            core::ptr::write_bytes((*ftie_pos).mic.as_mut_ptr(), 0, TDLS_MIC_LEN);
+            pos = pos.add(ft_ie_len);
+            let ret = host_bip_ccmp_protect(kck, 16, buf, pos.offset_from(buf) as usize, mic);
+            dealloc(buf, layout);
+            ret
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn host_rest_tdls_verify_mic(
+        kck: *mut U8,
+        trans_seq: U8,
+        lnkid: *mut U8,
+        rsnie: *mut U8,
+        timeoutie: *mut U8,
+        ftie: *mut U8,
+    ) -> Sint {
+        unsafe {
+            use std::alloc::{alloc, dealloc, Layout};
+            if lnkid.is_null() || rsnie.is_null() || timeoutie.is_null() || ftie.is_null() {
+                return _FAIL;
+            }
+            let len = 2 * ETH_ALEN_TDLS
+                + 1
+                + 2
+                + 18
+                + 2
+                + (*rsnie.add(1) as usize)
+                + 2
+                + (*timeoutie.add(1) as usize)
+                + 2
+                + (*ftie.add(1) as usize);
+            let layout = Layout::from_size_align(len, 1).unwrap();
+            let buf = alloc(layout);
+            if buf.is_null() {
+                return _FAIL;
+            }
+            let mut pos = buf;
+            core::ptr::copy_nonoverlapping(lnkid.add(ETH_ALEN_TDLS + 2), pos, ETH_ALEN_TDLS);
+            pos = pos.add(ETH_ALEN_TDLS);
+            core::ptr::copy_nonoverlapping(lnkid.add(2 * ETH_ALEN_TDLS + 2), pos, ETH_ALEN_TDLS);
+            pos = pos.add(ETH_ALEN_TDLS);
+            *pos = trans_seq;
+            pos = pos.add(1);
+            core::ptr::copy_nonoverlapping(lnkid, pos, 2 + 18);
+            pos = pos.add(2 + 18);
+            let rsn_ie_len = 2 + (*rsnie.add(1) as usize);
+            core::ptr::copy_nonoverlapping(rsnie, pos, rsn_ie_len);
+            pos = pos.add(rsn_ie_len);
+            let to_ie_len = 2 + (*timeoutie.add(1) as usize);
+            core::ptr::copy_nonoverlapping(timeoutie, pos, to_ie_len);
+            pos = pos.add(to_ie_len);
+            let ft_ie_len = 2 + (*ftie.add(1) as usize);
+            core::ptr::copy_nonoverlapping(ftie, pos, ft_ie_len);
+            pos = pos.add(2);
+            core::ptr::write_bytes(pos.add(2), 0, TDLS_MIC_LEN);
+            pos = pos.add(*ftie.add(1) as usize);
+            let mut mic = [0u8; TDLS_MIC_LEN];
+            let ret = host_bip_ccmp_protect(kck, 16, buf, pos.offset_from(buf) as usize, mic.as_mut_ptr());
+            dealloc(buf, layout);
+            if ret == _FAIL {
+                return _FAIL;
+            }
+            if tdls_memcmp2(mic.as_ptr(), ftie.add(4), TDLS_MIC_LEN) == 0 {
+                return _SUCCESS;
+            }
+            _FAIL
+        }
+    }
+}
