@@ -17,15 +17,22 @@ in the current active wave.
 
 ## 1. Determine the active frontier
 
-Read [`docs/rust-migration/issues/README.md`](../../../docs/rust-migration/issues/README.md)
-and open epics to see which wave is in progress:
+Query GitHub for the active wave — do not read a local status table:
 
-- **Wave 3 tranche 1** (`E05`, #68): `W3-01`…`W3-09` — typical active frontier
+```bash
+gh issue list --label rust-migration --state open --limit 200 \
+  --json number,title,labels
+```
+
+Read [`docs/rust-migration/issues/README.md`](../../../docs/rust-migration/issues/README.md)
+and open `epic-*.md` files for wave structure (not open/closed state):
+
+- **Wave 3** (`E05`, #68): `W3-*` children — typical active frontier
 - **Test infra** (`E10`): `T6`–`T9` can run in parallel when unblocked
 - **Architecture** (`E11`): `A2`, `A3` when Wave 3 needs domain types
 
 Epics for future waves (`E06`–`E09`) are usually **not** ready until the prior
-wave's children are mostly done.
+wave's children are mostly **closed on GitHub**.
 
 ## 2. Build the candidate list
 
@@ -40,10 +47,12 @@ Exclude:
 |---------|--------|
 | `[Epic]` issues | tracking parents, not implementable slices |
 | Issues with open PRs in flight | check `gh pr list --state open` and issue Notes (`In-flight: …`) |
-| Issues whose `blocked_by` deps are open | read Tracking footer or draft frontmatter |
-| Rows marked `done` in README (triage miss) | send back to triage |
+| Issues whose `blocked_by` deps are open | read `## Tracking` footer on GitHub (`gh issue view`) |
+| Issues already closed on GitHub | triage miss — skip |
 
-Resolve `blocked_by` via [`ISSUE-MAP.md`](../../../docs/rust-migration/issues/ISSUE-MAP.md):
+Resolve `blocked_by` via the issue's `## Tracking` footer on GitHub. Use
+[`ISSUE-MAP.md`](../../../docs/rust-migration/issues/ISSUE-MAP.md) only to map
+draft ID ↔ `#N` when the number is not already known:
 
 ```bash
 gh issue view <number> --json body,state

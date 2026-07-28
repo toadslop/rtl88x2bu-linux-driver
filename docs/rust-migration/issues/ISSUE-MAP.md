@@ -1,6 +1,10 @@
-# Issue map
+# Issue map (filing registry)
 
-Generated/updated by `docs/rust-migration/issues/file-issues.sh`.
+**Not a status tracker.** Open/closed state and dependencies live on GitHub Issues
+only. This file records which draft IDs have been filed and their GitHub numbers.
+
+Generated/updated by `docs/rust-migration/issues/file-issues.sh` — do not edit by
+hand except to fix filing mistakes, then prefer re-running the script.
 
 | Draft ID | GitHub | Title |
 |----------|--------|-------|

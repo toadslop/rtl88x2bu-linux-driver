@@ -10,6 +10,9 @@ blocked_by: [E04]
 
 Translate `core/` protocol files (cmd/io/security/xmit/recv/mlme/…) behind stable `extern "C"` boundaries, sliced into ~200 LOC issues.
 
+**Status:** see open/closed children on GitHub (`label:rust-migration` + `wave-3`).
+This file is planning structure only — not a second tracker.
+
 ## Children (tranche 1 — filed)
 
 Bridge from Wave 2 + leaf core units (low HAL coupling). **Issue IDs match in-flight implementation branches** (`cursor/w3-0*-3dd4`):
