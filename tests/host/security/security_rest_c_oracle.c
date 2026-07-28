@@ -899,3 +899,240 @@ void host_rest_sec_restore_wep_key(struct host_restore_wep_adapter *adapter)
 }
 
 #endif /* HOST_REST_MISC_ORACLE_BUILD */
+
+#if defined(HOST_REST_TDLS_ORACLE_BUILD)
+
+#include <stdlib.h>
+#include <string.h>
+
+#include "host_security_tdls.h"
+#include "host_wifi_types.h"
+
+typedef int sint;
+
+#define _SUCCESS 1
+#define _FAIL 0
+#define TDLS_MIC_LEN 16
+
+struct wpa_tdls_ftie {
+	u8 ie_type;
+	u8 ie_len;
+	union {
+		struct {
+			u8 mic_ctrl[2];
+			u8 mic[TDLS_MIC_LEN];
+			u8 Anonce[32];
+			u8 Snonce[32];
+		};
+		struct {
+			u8 data[2 + TDLS_MIC_LEN + 32 + 32];
+		};
+	};
+};
+
+struct wpa_tdls_lnkid {
+	u8 ie_type;
+	u8 ie_len;
+	u8 bssid[ETH_ALEN];
+	u8 init_sta[ETH_ALEN];
+	u8 resp_sta[ETH_ALEN];
+};
+
+static void *rtw_zmalloc(int len)
+{
+	void *p = malloc((size_t)len);
+
+	if (p)
+		memset(p, 0, (size_t)len);
+	return p;
+}
+
+static void rtw_mfree(void *p, int len)
+{
+	(void)len;
+	free(p);
+}
+
+static int _rtw_memcmp2(const void *dst, const void *src, u32 sz)
+{
+	return memcmp(dst, src, sz);
+}
+
+extern int omac1_aes_128(const u8 *key, const u8 *data, size_t data_len, u8 *mac);
+
+static u8 host_bip_ccmp_protect(const u8 *key, size_t key_len, const u8 *data,
+				size_t data_len, u8 *mic)
+{
+	if (key_len == 16) {
+		if (omac1_aes_128(key, data, data_len, mic))
+			return (u8)_FAIL;
+		return (u8)_SUCCESS;
+	}
+	return (u8)_FAIL;
+}
+
+extern int sha256_vector(size_t num_elem, const u8 *addr[], const size_t *len,
+			 u8 *mac);
+extern int sha256_prf(const u8 *key, size_t key_len, const char *label,
+		      const u8 *data, size_t data_len, u8 *buf, size_t buf_len);
+
+static void host_tdls_generate_tpk(struct host_tdls_sta *psta,
+				   const u8 *own_addr, const u8 *bssid)
+{
+	u8 *SNonce = psta->SNonce;
+	u8 *ANonce = psta->ANonce;
+	u8 key_input[32];
+	const u8 *nonce[2];
+	size_t len[2];
+	u8 data[3 * ETH_ALEN];
+
+	len[0] = 32;
+	len[1] = 32;
+	if (_rtw_memcmp2(SNonce, ANonce, 32) < 0) {
+		nonce[0] = SNonce;
+		nonce[1] = ANonce;
+	} else {
+		nonce[0] = ANonce;
+		nonce[1] = SNonce;
+	}
+
+	sha256_vector(2, nonce, len, key_input);
+
+	if (_rtw_memcmp2(own_addr, psta->mac_addr, ETH_ALEN) < 0) {
+		_rtw_memcpy(data, own_addr, ETH_ALEN);
+		_rtw_memcpy(data + ETH_ALEN, psta->mac_addr, ETH_ALEN);
+	} else {
+		_rtw_memcpy(data, psta->mac_addr, ETH_ALEN);
+		_rtw_memcpy(data + ETH_ALEN, own_addr, ETH_ALEN);
+	}
+
+	_rtw_memcpy(data + 2 * ETH_ALEN, bssid, ETH_ALEN);
+
+	sha256_prf(key_input, 32, "TDLS PMK", data, sizeof(data),
+		   (u8 *)&psta->tpk, sizeof(psta->tpk));
+}
+
+void host_rest_tdls_generate_tpk(struct host_tdls_adapter *adapter,
+				 struct host_tdls_sta *sta)
+{
+	host_tdls_generate_tpk(sta, adapter->mac_addr,
+			       adapter->mlmepriv.bssid);
+}
+
+int host_rest_wpa_tdls_ftie_mic(u8 *kck, u8 trans_seq, u8 *lnkid, u8 *rsnie,
+				u8 *timeoutie, u8 *ftie, u8 *mic)
+{
+	u8 *buf, *pos;
+	struct wpa_tdls_ftie *_ftie;
+	struct wpa_tdls_lnkid *_lnkid;
+	int ret;
+	int len = 2 * ETH_ALEN + 1 + 2 + lnkid[1] + 2 + rsnie[1] + 2 +
+		  timeoutie[1] + 2 + ftie[1];
+
+	buf = rtw_zmalloc(len);
+	if (!buf)
+		return -1;
+
+	pos = buf;
+	_lnkid = (struct wpa_tdls_lnkid *)lnkid;
+	_rtw_memcpy(pos, _lnkid->init_sta, ETH_ALEN);
+	pos += ETH_ALEN;
+	_rtw_memcpy(pos, _lnkid->resp_sta, ETH_ALEN);
+	pos += ETH_ALEN;
+	*pos++ = trans_seq;
+	_rtw_memcpy(pos, lnkid, 2 + lnkid[1]);
+	pos += 2 + lnkid[1];
+	_rtw_memcpy(pos, rsnie, 2 + rsnie[1]);
+	pos += 2 + rsnie[1];
+	_rtw_memcpy(pos, timeoutie, 2 + timeoutie[1]);
+	pos += 2 + timeoutie[1];
+	_rtw_memcpy(pos, ftie, 2 + ftie[1]);
+	_ftie = (struct wpa_tdls_ftie *)pos;
+	_rtw_memset(_ftie->mic, 0, TDLS_MIC_LEN);
+	pos += 2 + ftie[1];
+
+	ret = host_bip_ccmp_protect(kck, 16, buf, (size_t)(pos - buf), mic);
+	rtw_mfree(buf, len);
+	return ret;
+}
+
+int host_rest_wpa_tdls_teardown_ftie_mic(u8 *kck, u8 *lnkid, u16 reason,
+				       u8 dialog_token, u8 trans_seq, u8 *ftie,
+				       u8 *mic)
+{
+	u8 *buf, *pos;
+	struct wpa_tdls_ftie *_ftie;
+	int ret;
+	int len = 2 + lnkid[1] + 2 + 1 + 1 + 2 + ftie[1];
+
+	buf = rtw_zmalloc(len);
+	if (!buf)
+		return -1;
+
+	pos = buf;
+	_rtw_memcpy(pos, lnkid, 2 + lnkid[1]);
+	pos += 2 + lnkid[1];
+	_rtw_memcpy(pos, (u8 *)&reason, 2);
+	pos += 2;
+	*pos++ = dialog_token;
+	*pos++ = trans_seq;
+	_rtw_memcpy(pos, ftie, 2 + ftie[1]);
+	_ftie = (struct wpa_tdls_ftie *)pos;
+	_rtw_memset(_ftie->mic, 0, TDLS_MIC_LEN);
+	pos += 2 + ftie[1];
+
+	ret = host_bip_ccmp_protect(kck, 16, buf, (size_t)(pos - buf), mic);
+	rtw_mfree(buf, len);
+	return ret;
+}
+
+int host_rest_tdls_verify_mic(u8 *kck, u8 trans_seq, u8 *lnkid, u8 *rsnie,
+			      u8 *timeoutie, u8 *ftie)
+{
+	u8 *buf, *pos;
+	int len;
+	u8 mic[16];
+	int ret;
+	u8 *rx_ftie, *tmp_ftie;
+
+	if (!lnkid || !rsnie || !timeoutie || !ftie)
+		return _FAIL;
+
+	len = 2 * ETH_ALEN + 1 + 2 + 18 + 2 + *(rsnie + 1) + 2 + *(timeoutie + 1) +
+	      2 + *(ftie + 1);
+
+	buf = rtw_zmalloc(len);
+	if (!buf)
+		return _FAIL;
+
+	pos = buf;
+	_rtw_memcpy(pos, lnkid + ETH_ALEN + 2, ETH_ALEN);
+	pos += ETH_ALEN;
+	_rtw_memcpy(pos, lnkid + 2 * ETH_ALEN + 2, ETH_ALEN);
+	pos += ETH_ALEN;
+	*pos++ = trans_seq;
+	_rtw_memcpy(pos, lnkid, 2 + 18);
+	pos += 2 + 18;
+	_rtw_memcpy(pos, rsnie, 2 + *(rsnie + 1));
+	pos += 2 + *(rsnie + 1);
+	_rtw_memcpy(pos, timeoutie, 2 + *(timeoutie + 1));
+	pos += 2 + *(timeoutie + 1);
+	_rtw_memcpy(pos, ftie, 2 + *(ftie + 1));
+	pos += 2;
+	tmp_ftie = (u8 *)(pos + 2);
+	_rtw_memset(tmp_ftie, 0, 16);
+	pos += *(ftie + 1);
+
+	ret = host_bip_ccmp_protect(kck, 16, buf, (size_t)(pos - buf), mic);
+	rtw_mfree(buf, len);
+	if (ret == _FAIL)
+		return _FAIL;
+	rx_ftie = ftie + 4;
+
+	if (_rtw_memcmp2(mic, rx_ftie, 16) == 0)
+		return _SUCCESS;
+
+	return _FAIL;
+}
+
+#endif /* HOST_REST_TDLS_ORACLE_BUILD */
