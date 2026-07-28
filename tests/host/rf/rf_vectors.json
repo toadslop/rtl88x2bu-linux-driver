@@ -261,6 +261,14 @@
       "expect": 0
     },
     {
+      "name": "scch_invalid_bw",
+      "fn": "rtw_get_scch_by_cch_offset",
+      "cch": 6,
+      "bw": 3,
+      "offset": 1,
+      "expect": 0
+    },
+    {
       "name": "center_ch_2g80_special",
       "fn": "rtw_get_center_ch",
       "ch": 6,
@@ -281,6 +289,13 @@
       "fn": "center_chs_5g_num",
       "bw": 3,
       "expect": 3
+    },
+    {
+      "name": "center_chs_5g_160_first",
+      "fn": "center_chs_5g",
+      "bw": 3,
+      "id": 0,
+      "expect": 50
     },
     {
       "name": "op_chs_160_cch50",
@@ -320,6 +335,13 @@
       "name": "ch_group_invalid_gap",
       "fn": "rtw_get_ch_group",
       "ch": 15,
+      "expect_band": 2,
+      "expect_group": 255
+    },
+    {
+      "name": "ch_group_invalid",
+      "fn": "rtw_get_ch_group",
+      "ch": 99,
       "expect_band": 2,
       "expect_group": 255
     }

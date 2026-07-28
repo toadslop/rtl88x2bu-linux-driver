@@ -13,6 +13,7 @@ targets=(
 	rust-check-symbols-rtw-security
 	rust-check-symbols-rtw-security-rest-misc
 	rust-check-symbols-rtw-wlan-util
+	rust-check-symbols-rtw-rf-rest
 )
 
 # Optional: space-separated subset from l1-targets-from-diff.sh (T7 PR3).
