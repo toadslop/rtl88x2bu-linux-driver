@@ -895,6 +895,12 @@ static sint aes_cipher(u8 *key, uint	hdrlen,
 extern sint aes_decipher(u8 *key, uint hdrlen, u8 *pframe, uint plen);
 #endif /* (NEW_CRYPTO == 0) */
 
+void rtw_aes_decipher_log_mic_mismatch(int i, u8 pframe_byte, u8 message_byte)
+{
+	RTW_INFO("aes_decipher:mic check error mic[%d]: pframe(%x) != message(%x)\n",
+		 i, pframe_byte, message_byte);
+}
+
 /* W3-13: rtw_aes_decrypt in rust/rtw_security_rest.rs */
 
 #ifdef CONFIG_RTW_MESH_AEK
