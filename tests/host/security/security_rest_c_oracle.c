@@ -777,3 +777,125 @@ sint host_ccmp_aes_decipher(u8 *key, unsigned int hdrlen, u8 *pframe,
 }
 
 #endif /* HOST_CCMP_FRAME_ORACLE_BUILD */
+
+#if defined(HOST_REST_MISC_ORACLE_BUILD)
+
+typedef int sint;
+typedef unsigned long size_t;
+
+#define _WEP40_ 0x01
+#define _WEP104_ 0x05
+#define _FALSE 0
+
+extern u32 host_wep_getcrc32(u8 *buf, int len);
+
+u32 host_rest_calc_crc32(u8 *data, size_t len)
+{
+	return host_wep_getcrc32(data, (int)len);
+}
+
+extern int aes_siv_encrypt(const u8 *key, size_t key_len, const u8 *pw,
+			   size_t pwlen, size_t num_elem, const u8 *addr[],
+			   const size_t *len, u8 *out);
+extern int aes_siv_decrypt(const u8 *key, size_t key_len, const u8 *iv_crypt,
+			   size_t iv_c_len, size_t num_elem, const u8 *addr[],
+			   const size_t *len, u8 *out);
+
+int host_rest_aes_siv_encrypt(const u8 *key, size_t key_len, const u8 *pw,
+			      size_t pwlen, size_t num_elem, const u8 *addr[],
+			      const size_t *len, u8 *out)
+{
+	return aes_siv_encrypt(key, key_len, pw, pwlen, num_elem, addr, len, out);
+}
+
+int host_rest_aes_siv_decrypt(const u8 *key, size_t key_len,
+			      const u8 *iv_crypt, size_t iv_c_len,
+			      size_t num_elem, const u8 *addr[],
+			      const size_t *len, u8 *out)
+{
+	return aes_siv_decrypt(key, key_len, iv_crypt, iv_c_len, num_elem, addr,
+			       len, out);
+}
+
+struct host_restore_wep_security_priv {
+	u32 dot11PrivacyAlgrthm;
+	u32 dot11PrivacyKeyIndex;
+	u8 key_mask;
+};
+
+struct host_restore_wep_adapter {
+	struct host_restore_wep_security_priv securitypriv;
+};
+
+struct host_restore_wep_set_key_call {
+	sint keyid;
+	u8 set_tx;
+};
+
+#define HOST_RESTORE_WEP_MAX_CALLS 8
+
+static struct host_restore_wep_set_key_call host_restore_wep_calls[HOST_RESTORE_WEP_MAX_CALLS];
+static size_t host_restore_wep_call_count;
+
+void host_restore_wep_reset_calls(void)
+{
+	host_restore_wep_call_count = 0;
+}
+
+size_t host_restore_wep_get_call_count(void)
+{
+	return host_restore_wep_call_count;
+}
+
+sint host_restore_wep_get_call_keyid(size_t idx)
+{
+	if (idx >= host_restore_wep_call_count)
+		return -1;
+	return host_restore_wep_calls[idx].keyid;
+}
+
+u8 host_restore_wep_get_call_set_tx(size_t idx)
+{
+	if (idx >= host_restore_wep_call_count)
+		return 0xff;
+	return host_restore_wep_calls[idx].set_tx;
+}
+
+static sint host_restore_wep_set_key(struct host_restore_wep_adapter *adapter,
+				     struct host_restore_wep_security_priv *sec,
+				     sint keyid, u8 set_tx, int enqueue)
+{
+	(void)adapter;
+	(void)sec;
+	(void)enqueue;
+
+	if (host_restore_wep_call_count >= HOST_RESTORE_WEP_MAX_CALLS)
+		return -1;
+
+	host_restore_wep_calls[host_restore_wep_call_count].keyid = keyid;
+	host_restore_wep_calls[host_restore_wep_call_count].set_tx = set_tx;
+	host_restore_wep_call_count++;
+	return 1;
+}
+
+void host_rest_sec_restore_wep_key(struct host_restore_wep_adapter *adapter)
+{
+	struct host_restore_wep_security_priv *securitypriv = &adapter->securitypriv;
+	sint keyid;
+
+	if ((_WEP40_ == securitypriv->dot11PrivacyAlgrthm) ||
+	    (_WEP104_ == securitypriv->dot11PrivacyAlgrthm)) {
+		for (keyid = 0; keyid < 4; keyid++) {
+			if (securitypriv->key_mask & BIT(keyid)) {
+				if (keyid == (sint)securitypriv->dot11PrivacyKeyIndex)
+					host_restore_wep_set_key(adapter, securitypriv,
+								 keyid, 1, 0);
+				else
+					host_restore_wep_set_key(adapter, securitypriv,
+								 keyid, 0, 0);
+			}
+		}
+	}
+}
+
+#endif /* HOST_REST_MISC_ORACLE_BUILD */
