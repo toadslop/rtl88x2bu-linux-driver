@@ -352,6 +352,174 @@
       "bw": 2,
       "r_offset_in": 0,
       "expect_valid": 0
+    },
+    {
+      "name": "ch2freq_2g_ch1",
+      "fn": "rtw_ch2freq",
+      "ch": 1,
+      "expect": 2412
+    },
+    {
+      "name": "ch2freq_2g_ch6",
+      "fn": "rtw_ch2freq",
+      "ch": 6,
+      "expect": 2437
+    },
+    {
+      "name": "ch2freq_2g_ch14",
+      "fn": "rtw_ch2freq",
+      "ch": 14,
+      "expect": 2484
+    },
+    {
+      "name": "ch2freq_5g_ch36",
+      "fn": "rtw_ch2freq",
+      "ch": 36,
+      "expect": 5180
+    },
+    {
+      "name": "ch2freq_5g_ch149",
+      "fn": "rtw_ch2freq",
+      "ch": 149,
+      "expect": 5745
+    },
+    {
+      "name": "ch2freq_invalid_zero",
+      "fn": "rtw_ch2freq",
+      "ch": 0,
+      "expect": 0
+    },
+    {
+      "name": "ch2freq_invalid_gap",
+      "fn": "rtw_ch2freq",
+      "ch": 15,
+      "expect": 0
+    },
+    {
+      "name": "ch2freq_invalid_5g_oob",
+      "fn": "rtw_ch2freq",
+      "ch": 178,
+      "expect": 0
+    },
+    {
+      "name": "freq2ch_2g_ch1",
+      "fn": "rtw_freq2ch",
+      "freq": 2412,
+      "expect": 1
+    },
+    {
+      "name": "freq2ch_2g_ch6",
+      "fn": "rtw_freq2ch",
+      "freq": 2437,
+      "expect": 6
+    },
+    {
+      "name": "freq2ch_2g_ch14",
+      "fn": "rtw_freq2ch",
+      "freq": 2484,
+      "expect": 14
+    },
+    {
+      "name": "freq2ch_5g_ch36",
+      "fn": "rtw_freq2ch",
+      "freq": 5180,
+      "expect": 36
+    },
+    {
+      "name": "freq2ch_5g_ch149",
+      "fn": "rtw_freq2ch",
+      "freq": 5745,
+      "expect": 149
+    },
+    {
+      "name": "freq2ch_dmg_band",
+      "fn": "rtw_freq2ch",
+      "freq": 4910,
+      "expect": 182
+    },
+    {
+      "name": "freq2ch_invalid",
+      "fn": "rtw_freq2ch",
+      "freq": 64801,
+      "expect": 0
+    },
+    {
+      "name": "chbw_2g20_ch6",
+      "fn": "rtw_chbw_to_freq_range",
+      "ch": 6,
+      "bw": 0,
+      "offset": 0,
+      "expect_valid": 1,
+      "expect_hi": 2447,
+      "expect_lo": 2427
+    },
+    {
+      "name": "chbw_2g40_ch4_lower",
+      "fn": "rtw_chbw_to_freq_range",
+      "ch": 4,
+      "bw": 1,
+      "offset": 1,
+      "expect_valid": 1,
+      "expect_hi": 2457,
+      "expect_lo": 2417
+    },
+    {
+      "name": "chbw_2g80_ch6",
+      "fn": "rtw_chbw_to_freq_range",
+      "ch": 6,
+      "bw": 2,
+      "offset": 0,
+      "expect_valid": 1,
+      "expect_hi": 2482,
+      "expect_lo": 2402
+    },
+    {
+      "name": "chbw_5g20_ch36",
+      "fn": "rtw_chbw_to_freq_range",
+      "ch": 36,
+      "bw": 0,
+      "offset": 0,
+      "expect_valid": 1,
+      "expect_hi": 5190,
+      "expect_lo": 5170
+    },
+    {
+      "name": "chbw_5g40_ch36_lower",
+      "fn": "rtw_chbw_to_freq_range",
+      "ch": 36,
+      "bw": 1,
+      "offset": 1,
+      "expect_valid": 1,
+      "expect_hi": 5210,
+      "expect_lo": 5170
+    },
+    {
+      "name": "chbw_5g80_ch36",
+      "fn": "rtw_chbw_to_freq_range",
+      "ch": 36,
+      "bw": 2,
+      "offset": 0,
+      "expect_valid": 1,
+      "expect_hi": 5250,
+      "expect_lo": 5170
+    },
+    {
+      "name": "chbw_5g160_ch100",
+      "fn": "rtw_chbw_to_freq_range",
+      "ch": 100,
+      "bw": 3,
+      "offset": 0,
+      "expect_valid": 1,
+      "expect_hi": 5650,
+      "expect_lo": 5490
+    },
+    {
+      "name": "chbw_invalid_ch0",
+      "fn": "rtw_chbw_to_freq_range",
+      "ch": 0,
+      "bw": 0,
+      "offset": 0,
+      "expect_valid": 0
     }
   ]
 }

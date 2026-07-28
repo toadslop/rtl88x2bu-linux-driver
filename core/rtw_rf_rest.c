@@ -541,6 +541,94 @@ exit:
 }
 #endif /* !CONFIG_RUST || HOST_RF_TEST */
 
+/*
+ * W3-20: frequency helpers extracted from core/rtw_rf.c.
+ * Keep C definitions unguarded until PR2 ports them to rust/rtw_rf_rest.rs.
+ */
+int rtw_ch2freq(int chan)
+{
+	/* see 802.11 17.3.8.3.2 and Annex J
+	* there are overlapping channel numbers in 5GHz and 2GHz bands */
+
+	/*
+	* RTK: don't consider the overlapping channel numbers: 5G channel <= 14,
+	* because we don't support it. simply judge from channel number
+	*/
+
+	if (chan >= 1 && chan <= 14) {
+		if (chan == 14)
+			return 2484;
+		else if (chan < 14)
+			return 2407 + chan * 5;
+	} else if (chan >= 36 && chan <= 177)
+		return 5000 + chan * 5;
+
+	return 0; /* not supported */
+}
+
+int rtw_freq2ch(int freq)
+{
+	/* see 802.11 17.3.8.3.2 and Annex J */
+	if (freq == 2484)
+		return 14;
+	else if (freq < 2484)
+		return (freq - 2407) / 5;
+	else if (freq >= 4910 && freq <= 4980)
+		return (freq - 4000) / 5;
+	else if (freq <= 45000) /* DMG band lower limit */
+		return (freq - 5000) / 5;
+	else if (freq >= 58320 && freq <= 64800)
+		return (freq - 56160) / 2160;
+	else
+		return 0;
+}
+
+bool rtw_chbw_to_freq_range(u8 ch, u8 bw, u8 offset, u32 *hi, u32 *lo)
+{
+	u8 c_ch;
+	u32 freq;
+	u32 hi_ret = 0, lo_ret = 0;
+	bool valid = _FALSE;
+
+	if (hi)
+		*hi = 0;
+	if (lo)
+		*lo = 0;
+
+	c_ch = rtw_get_center_ch(ch, bw, offset);
+	freq = rtw_ch2freq(c_ch);
+
+	if (!freq) {
+		rtw_warn_on(1);
+		goto exit;
+	}
+
+	if (bw == CHANNEL_WIDTH_160) {
+		hi_ret = freq + 80;
+		lo_ret = freq - 80;
+	} else if (bw == CHANNEL_WIDTH_80) {
+		hi_ret = freq + 40;
+		lo_ret = freq - 40;
+	} else if (bw == CHANNEL_WIDTH_40) {
+		hi_ret = freq + 20;
+		lo_ret = freq - 20;
+	} else if (bw == CHANNEL_WIDTH_20) {
+		hi_ret = freq + 10;
+		lo_ret = freq - 10;
+	} else
+		rtw_warn_on(1);
+
+	if (hi)
+		*hi = hi_ret;
+	if (lo)
+		*lo = lo_ret;
+
+	valid = _TRUE;
+
+exit:
+	return valid;
+}
+
 #if defined(CONFIG_RUST) && !defined(HOST_RF_TEST)
 void rtw_rust_rf_warn_on(int condition)
 {

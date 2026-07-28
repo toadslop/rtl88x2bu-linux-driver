@@ -6,6 +6,8 @@
 #ifndef HOST_RF_TYPES_H
 #define HOST_RF_TYPES_H
 
+#include <stdbool.h>
+
 #include "host_types.h"
 
 #define _TRUE 1
