@@ -438,10 +438,22 @@
       "expect": 182
     },
     {
+      "name": "freq2ch_mmwave_band_lo",
+      "fn": "rtw_freq2ch",
+      "freq": 58320,
+      "expect": 1
+    },
+    {
       "name": "freq2ch_mmwave_band",
       "fn": "rtw_freq2ch",
       "freq": 60480,
       "expect": 2
+    },
+    {
+      "name": "freq2ch_mmwave_band_hi",
+      "fn": "rtw_freq2ch",
+      "freq": 64800,
+      "expect": 4
     },
     {
       "name": "freq2ch_invalid",
