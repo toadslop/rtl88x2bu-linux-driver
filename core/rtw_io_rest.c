@@ -106,6 +106,7 @@ const struct rtw_io_sniff_ent read_sniff[] = {
 	RTW_IO_SNIFF_VALUE_ENT(MAX_CHIP_TYPE, 0, 0x300, 0xFFFFFFFF, 0x12345678, 1, 0, "host read value equal len4"),
 	RTW_IO_SNIFF_VALUE_ENT(MAX_CHIP_TYPE, 0, 0x102, 0xFF, 0x42, 1, 0, "host read unaligned len4 equal"),
 	RTW_IO_SNIFF_VALUE_ENT(MAX_CHIP_TYPE, 0, 0x201, 0xFF, 0x34, 1, 0, "host read unaligned len2 equal"),
+	RTW_IO_SNIFF_VALUE_ENT(MAX_CHIP_TYPE, 0, 0x500, 0xFF0000, 0x420000, 1, 0, "host read negative mask_shift"),
 #endif
 #ifdef DBG_IO_PROT_SEL
 	RTW_IO_SNIFF_RANGE_PROT_ENT(MAX_CHIP_TYPE, 0, 0x1501, 0x1513, rtw_assert_protsel_port, "protsel port"),

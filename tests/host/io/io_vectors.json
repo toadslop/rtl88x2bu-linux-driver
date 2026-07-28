@@ -197,6 +197,16 @@
       "len": 2,
       "val": 22016,
       "expect": 1
+    },
+    {
+      "name": "read_value_negative_mask_shift_hit",
+      "fn": "match_read_sniff",
+      "chip": 255,
+      "hci": 0,
+      "addr": 1282,
+      "len": 2,
+      "val": 0,
+      "expect": 1
     }
   ]
 }
