@@ -193,3 +193,25 @@ u8 rtw_update_rate_bymode(WLAN_BSSID_EX *pbss_network, u32 mode)
 	return network_type;
 }
 #endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
+
+#if defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)
+u32 *rtw_ieee80211_rest_bss_dsconfig(WLAN_BSSID_EX *bss)
+{
+	return &bss->Configuration.DSConfig;
+}
+
+u32 *rtw_ieee80211_rest_bss_ielength(WLAN_BSSID_EX *bss)
+{
+	return &bss->IELength;
+}
+
+u8 *rtw_ieee80211_rest_bss_ies(WLAN_BSSID_EX *bss)
+{
+	return bss->IEs;
+}
+
+u8 *rtw_ieee80211_rest_bss_supported_rates(WLAN_BSSID_EX *bss)
+{
+	return bss->SupportedRates;
+}
+#endif /* CONFIG_RUST && !HOST_IEEE80211_REST_TEST */

@@ -1,0 +1,6 @@
+# L1 allowlist for W3-26: kernel accessor shims live in core/rtw_ieee80211_rest.c
+# when CONFIG_RUST; they are not part of the host C oracle slice.
+drop rtw_ieee80211_rest_bss_dsconfig
+drop rtw_ieee80211_rest_bss_ielength
+drop rtw_ieee80211_rest_bss_ies
+drop rtw_ieee80211_rest_bss_supported_rates
