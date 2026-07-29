@@ -1,5 +1,5 @@
 # Host L2 differential tests for core/rtw_ieee80211.c IE helpers (W3-03)
-# and core/rtw_ieee80211_rest.c rate helpers (W3-26).
+# and core/rtw_ieee80211_rest.c rate helpers (W3-26) and cipher getters (W3-27).
 
 ROOT     := ../../..
 CORE     := $(ROOT)/core
@@ -18,14 +18,17 @@ REST_CFLAGS := $(CFLAGS) -DHOST_IEEE80211_REST_TEST
 RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
 
 IE_SRCS := ie_c_oracle.c ../crypto/host_vector_json.c
-IE_REST_SRCS := $(IE_REST_SRC) ie_c_oracle.c $(WLAN_UTIL)/wlan_util_c_oracle.c \
-                ../crypto/host_vector_json.c
+IE_REST_SRCS := $(IE_REST_SRC) ie_cipher_c_oracle.c ie_c_oracle.c \
+                $(WLAN_UTIL)/wlan_util_c_oracle.c ../crypto/host_vector_json.c
 
-.PHONY: all test test-c test-rust test-rest test-rest-rust clean
+IE_REST_CIPHER_SRCS := $(IE_REST_SRC) ie_cipher_c_oracle.c ie_c_oracle.c \
+                       $(WLAN_UTIL)/wlan_util_c_oracle.c ../crypto/host_vector_json.c
+
+.PHONY: all test test-c test-rust test-rest test-rest-rust test-rest-cipher clean
 
 all: test
 
-test: test-c test-rust test-rest test-rest-rust
+test: test-c test-rust test-rest test-rest-rust test-rest-cipher
 
 test-c: test_ie
 	./test_ie ie_vectors.json
@@ -57,6 +60,12 @@ librust_ie_rest.a: $(RUST_IE_REST)
 test-rest-rust: test_ie_rest_rust
 	./test_ie_rest_rust ie_rest_vectors.json
 
+test-rest-cipher: test_ie_rest_cipher
+	./test_ie_rest_cipher ie_rest_cipher_vectors.json
+
+test_ie_rest_cipher: test_ie_rest_cipher.c $(IE_REST_CIPHER_SRCS)
+	$(CC) $(REST_CFLAGS) -o $@ test_ie_rest_cipher.c $(IE_REST_CIPHER_SRCS)
+
 test_ie_rest_rust: test_ie_rest.c librust_ie_rest.a ../wlan_util/wlan_util_c_oracle.c \
 		../crypto/host_vector_json.c ie_c_oracle.c
 	$(CC) $(REST_CFLAGS) -DRUST_IEEE80211_REST_ORACLE -o $@ test_ie_rest.c \
@@ -64,4 +73,5 @@ test_ie_rest_rust: test_ie_rest.c librust_ie_rest.a ../wlan_util/wlan_util_c_ora
 		librust_ie_rest.a
 
 clean:
-	rm -f test_ie test_ie_rust test_ie_rest test_ie_rest_rust librust_ie.a librust_ie_rest.a
+	rm -f test_ie test_ie_rust test_ie_rest test_ie_rest_rust test_ie_rest_cipher \
+		librust_ie.a librust_ie_rest.a

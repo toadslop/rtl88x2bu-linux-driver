@@ -9,6 +9,7 @@
 #include "host_wlan_util_types.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #define _TRUE 1
 #define _FALSE 0
@@ -96,6 +97,77 @@ typedef struct _WLAN_BSSID_EX {
 } WLAN_BSSID_EX;
 
 typedef int sint;
+
+#define WPA_CIPHER_NONE BIT(0)
+#define WPA_CIPHER_WEP40 BIT(1)
+#define WPA_CIPHER_WEP104 BIT(2)
+#define WPA_CIPHER_TKIP BIT(3)
+#define WPA_CIPHER_CCMP BIT(4)
+#define WPA_CIPHER_GCMP BIT(5)
+#define WPA_CIPHER_GCMP_256 BIT(6)
+#define WPA_CIPHER_CCMP_256 BIT(7)
+#define WPA_CIPHER_BIP_CMAC_128 BIT(8)
+#define WPA_CIPHER_BIP_GMAC_128 BIT(9)
+#define WPA_CIPHER_BIP_GMAC_256 BIT(10)
+#define WPA_CIPHER_BIP_CMAC_256 BIT(11)
+
+#define WPA_SELECTOR_LEN 4
+#define RSN_SELECTOR_LEN 4
+
+#define WLAN_AKM_TYPE_8021X BIT(0)
+#define WLAN_AKM_TYPE_PSK BIT(1)
+#define WLAN_AKM_TYPE_FT_8021X BIT(2)
+#define WLAN_AKM_TYPE_FT_PSK BIT(3)
+#define WLAN_AKM_TYPE_8021X_SHA256 BIT(4)
+#define WLAN_AKM_TYPE_PSK_SHA256 BIT(5)
+#define WLAN_AKM_TYPE_TDLS BIT(6)
+#define WLAN_AKM_TYPE_SAE BIT(7)
+#define WLAN_AKM_TYPE_FT_OVER_SAE BIT(8)
+#define WLAN_AKM_TYPE_8021X_SUITE_B BIT(9)
+#define WLAN_AKM_TYPE_8021X_SUITE_B_192 BIT(10)
+#define WLAN_AKM_TYPE_FILS_SHA256 BIT(11)
+#define WLAN_AKM_TYPE_FILS_SHA384 BIT(12)
+#define WLAN_AKM_TYPE_FT_FILS_SHA256 BIT(13)
+#define WLAN_AKM_TYPE_FT_FILS_SHA384 BIT(14)
+
+extern u8 WPA_CIPHER_SUITE_NONE[];
+extern u8 WPA_CIPHER_SUITE_WEP40[];
+extern u8 WPA_CIPHER_SUITE_TKIP[];
+extern u8 WPA_CIPHER_SUITE_CCMP[];
+extern u8 WPA_CIPHER_SUITE_WEP104[];
+extern u8 RSN_CIPHER_SUITE_NONE[];
+extern u8 RSN_CIPHER_SUITE_WEP40[];
+extern u8 RSN_CIPHER_SUITE_TKIP[];
+extern u8 RSN_CIPHER_SUITE_CCMP[];
+extern u8 RSN_CIPHER_SUITE_GCMP[];
+extern u8 RSN_CIPHER_SUITE_GCMP_256[];
+extern u8 RSN_CIPHER_SUITE_CCMP_256[];
+extern u8 RSN_CIPHER_SUITE_WEP104[];
+extern u8 RSN_CIPHER_SUITE_AES_128_CMAC[];
+extern u8 RSN_CIPHER_SUITE_BIP_GMAC_128[];
+extern u8 RSN_CIPHER_SUITE_BIP_GMAC_256[];
+extern u8 RSN_CIPHER_SUITE_BIP_CMAC_256[];
+extern u8 WLAN_AKM_8021X[];
+extern u8 WLAN_AKM_PSK[];
+extern u8 WLAN_AKM_FT_8021X[];
+extern u8 WLAN_AKM_FT_PSK[];
+extern u8 WLAN_AKM_8021X_SHA256[];
+extern u8 WLAN_AKM_PSK_SHA256[];
+extern u8 WLAN_AKM_TDLS[];
+extern u8 WLAN_AKM_SAE[];
+extern u8 WLAN_AKM_FT_OVER_SAE[];
+extern u8 WLAN_AKM_8021X_SUITE_B[];
+extern u8 WLAN_AKM_8021X_SUITE_B_192[];
+extern u8 WLAN_AKM_FILS_SHA256[];
+extern u8 WLAN_AKM_FILS_SHA384[];
+extern u8 WLAN_AKM_FT_FILS_SHA256[];
+extern u8 WLAN_AKM_FT_FILS_SHA384[];
+
+int _rtw_memcmp(const void *s1, const void *s2, size_t n);
+
+int rtw_get_wpa_cipher_suite(u8 *s);
+int rtw_get_rsn_cipher_suite(u8 *s);
+u32 rtw_get_akm_suite_bitmap(u8 *s);
 
 u8 *rtw_get_ie(const u8 *pbuf, sint index, sint *len, sint limit);
 int rtw_ies_remove_ie(u8 *ies, unsigned int *ies_len, unsigned int offset,
