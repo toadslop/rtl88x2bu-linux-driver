@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
 //! RF rest helpers — Rust port of `core/rtw_rf_rest.c` channel layout (W3-19),
 //! frequency conversion (W3-20), lookup/format tables (W3-21), global
-//! operating-class lookup (W3-22), RF type / trx-path helpers (W3-23), and
-//! txpwr format / DFS CAC helpers (W3-24).
+//! operating-class lookup (W3-22), RF type / trx-path helpers (W3-23),
+//! txpwr format / DFS CAC helpers (W3-24), and tx path NSS / bb gain sel (W3-25).
 
 #![allow(
     dead_code,
@@ -1485,4 +1485,85 @@ pub extern "C" fn rtw_is_long_cac_ch(ch: u8, bw: u8, offset: u8, dfs_region: u8)
     }
 
     rtw_is_long_cac_range(hi, lo, dfs_region)
+}
+
+const BB_GAIN_2G: i32 = 0;
+const BB_GAIN_5GLB1: i32 = 1;
+const BB_GAIN_5GLB2: i32 = 2;
+const BB_GAIN_5GMB1: i32 = 3;
+const BB_GAIN_5GMB2: i32 = 4;
+const BB_GAIN_5GHB: i32 = 5;
+
+#[no_mangle]
+pub extern "C" fn tx_path_nss_set_default(
+    txpath_nss: *mut u32,
+    txpath_num_nss: *mut u8,
+    txpath: u8,
+) {
+    if txpath_nss.is_null() || txpath_num_nss.is_null() {
+        return;
+    }
+
+    let nss_paths = unsafe { core::slice::from_raw_parts_mut(txpath_nss, 4) };
+    let nss_num = unsafe { core::slice::from_raw_parts_mut(txpath_num_nss, 4) };
+
+    for i in (1..=4).rev() {
+        let mut cnt = 0u8;
+        nss_paths[(i - 1) as usize] = 0;
+        for j in 0..RF_PATH_MAX {
+            if txpath & (1 << j) != 0 {
+                nss_paths[(i - 1) as usize] |= 1 << j;
+                cnt += 1;
+                if cnt == i as u8 {
+                    break;
+                }
+            }
+        }
+        nss_num[(i - 1) as usize] = i as u8;
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn tx_path_nss_set_full_tx(
+    txpath_nss: *mut u32,
+    txpath_num_nss: *mut u8,
+    txpath: u8,
+) {
+    if txpath_nss.is_null() || txpath_num_nss.is_null() {
+        return;
+    }
+
+    let nss_paths = unsafe { core::slice::from_raw_parts_mut(txpath_nss, 4) };
+    let nss_num = unsafe { core::slice::from_raw_parts_mut(txpath_num_nss, 4) };
+
+    let mut tx_num = 0u8;
+    for i in 0..RF_PATH_MAX {
+        if txpath & (1 << i) != 0 {
+            tx_num += 1;
+        }
+    }
+
+    for i in (1..=4).rev() {
+        nss_paths[(i - 1) as usize] = txpath as u32;
+        nss_num[(i - 1) as usize] = tx_num;
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_ch_to_bb_gain_sel(ch: i32) -> i32 {
+    if (1..=14).contains(&ch) {
+        BB_GAIN_2G
+    } else if (36..48).contains(&ch) {
+        BB_GAIN_5GLB1
+    } else if (52..=64).contains(&ch) {
+        BB_GAIN_5GLB2
+    } else if (100..=120).contains(&ch) {
+        BB_GAIN_5GMB1
+    } else if (124..=144).contains(&ch) {
+        BB_GAIN_5GMB2
+    } else if (149..=177).contains(&ch) {
+        BB_GAIN_5GHB
+    } else {
+        -1
+    }
 }

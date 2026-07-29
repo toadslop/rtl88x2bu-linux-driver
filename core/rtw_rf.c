@@ -585,6 +585,7 @@ const char *const _rf_type_to_rfpath_str[RF_TYPE_MAX] = {
 	[RF_4T4R] = "RF_4T4R",
 };
 
+#if !defined(CONFIG_RUST) || defined(HOST_RF_TEST)
 /* config to non N-TX value, path with lower index prefer */
 void tx_path_nss_set_default(enum bb_path txpath_nss[], u8 txpath_num_nss[], u8 txpath)
 {
@@ -620,6 +621,7 @@ void tx_path_nss_set_full_tx(enum bb_path txpath_nss[], u8 txpath_num_nss[], u8 
 		txpath_num_nss[i - 1] = tx_num;
 	}
 }
+#endif /* !CONFIG_RUST || HOST_RF_TEST */
 
 const char *const _regd_str[] = {
 	"NONE",
@@ -1218,6 +1220,7 @@ void rtw_txpwr_lmt_list_free(struct rf_ctl_t *rfctl)
 }
 #endif /* CONFIG_TXPWR_LIMIT */
 
+#if !defined(CONFIG_RUST) || defined(HOST_RF_TEST)
 int rtw_ch_to_bb_gain_sel(int ch)
 {
 	int sel = -1;
@@ -1239,6 +1242,7 @@ int rtw_ch_to_bb_gain_sel(int ch)
 
 	return sel;
 }
+#endif /* !CONFIG_RUST || HOST_RF_TEST */
 
 s8 rtw_rf_get_kfree_tx_gain_offset(_adapter *padapter, u8 path, u8 ch)
 {
