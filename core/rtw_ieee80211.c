@@ -812,6 +812,7 @@ u32 rtw_get_akm_suite_bitmap(u8 *s)
 }
 #endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
+#if !defined(CONFIG_RUST) || defined(HOST_IEEE80211_REST_TEST)
 int rtw_parse_wpa_ie(u8 *wpa_ie, int wpa_ie_len, int *group_cipher,
 	int *pairwise_cipher, u32 *akm)
 {
@@ -1043,6 +1044,7 @@ int rtw_parse_wpa2_ie(u8 *rsn_ie, int rsn_ie_len, int *group_cipher,
 exit:
 	return ret;
 }
+#endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
 /* #ifdef CONFIG_WAPI_SUPPORT */
 int rtw_get_wapi_ie(u8 *in_ie, uint in_len, u8 *wapi_ie, u16 *wapi_len)

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 //! IEEE 802.11 rest helpers — Rust port of `core/rtw_ieee80211_rest.c` rate
-//! classification slice (W3-26) and WPA/RSN cipher suite getters (W3-27).
+//! classification slice (W3-26), WPA/RSN cipher suite getters (W3-27), and
+//! WPA/RSN IE parse (W3-28).
 
 #![allow(
     dead_code,
@@ -334,6 +335,303 @@ pub extern "C" fn rtw_get_akm_suite_bitmap(s: *mut U8) -> u32 {
         return WLAN_AKM_TYPE_FT_FILS_SHA384;
     }
     0
+}
+
+const _FAIL: i32 = 0;
+
+const _WPA_IE_ID_: U8 = 0xdd;
+const WLAN_EID_RSN: U8 = 48;
+
+const RTW_WPA_OUI_TYPE: [U8; 4] = [0x00, 0x50, 0xf2, 1];
+const SUITE_1X: [U8; 4] = [0x00, 0x50, 0xf2, 1];
+
+const MFP_NO: U8 = 0;
+
+fn rtw_get_le16(a: *const U8) -> u16 {
+    unsafe { ((*(a.add(1)) as u16) << 8) | (*(a) as u16) }
+}
+
+fn le_bits_to_2byte(p: *const U8, bit_offset: u32, bit_len: u32) -> u16 {
+    let val = rtw_get_le16(p);
+    (val >> bit_offset) & ((1u16 << bit_len) - 1)
+}
+
+fn get_rsn_cap_mfp_option(cap: *const U8) -> U8 {
+    le_bits_to_2byte(cap, 6, 2) as U8
+}
+
+fn get_rsn_cap_spp_opt(cap: *const U8) -> U8 {
+    le_bits_to_2byte(cap, 10, 2) as U8
+}
+
+#[repr(C)]
+pub struct RsneInfo {
+    pub gcs: *mut U8,
+    pub pcs_cnt: u16,
+    pub pcs_list: *mut U8,
+    pub akm_cnt: u16,
+    pub akm_list: *mut U8,
+    pub cap: *mut U8,
+    pub pmkid_cnt: u16,
+    pub pmkid_list: *mut U8,
+    pub gmcs: *mut U8,
+    pub err: U8,
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_parse_wpa_ie(
+    wpa_ie: *mut U8,
+    wpa_ie_len: c_int,
+    group_cipher: *mut c_int,
+    pairwise_cipher: *mut c_int,
+    akm: *mut u32,
+) -> c_int {
+    if wpa_ie_len <= 0 {
+        return _FAIL;
+    }
+    unsafe {
+        if *wpa_ie != _WPA_IE_ID_
+            || *(wpa_ie.add(1)) != (wpa_ie_len - 2) as U8
+            || memcmp(
+                wpa_ie.add(2),
+                RTW_WPA_OUI_TYPE.as_ptr(),
+                WPA_SELECTOR_LEN,
+            ) != 0
+        {
+            return _FAIL;
+        }
+
+        let mut pos = wpa_ie.add(8);
+        let mut left = wpa_ie_len - 8;
+
+        if left >= WPA_SELECTOR_LEN as c_int {
+            *group_cipher = rtw_get_wpa_cipher_suite(pos);
+            pos = pos.add(WPA_SELECTOR_LEN);
+            left -= WPA_SELECTOR_LEN as c_int;
+        } else if left > 0 {
+            return _FAIL;
+        }
+
+        if left >= 2 {
+            let count = rtw_get_le16(pos) as c_int;
+            pos = pos.add(2);
+            left -= 2;
+
+            if count == 0 || left < count * WPA_SELECTOR_LEN as c_int {
+                return _FAIL;
+            }
+
+            for _ in 0..count {
+                *pairwise_cipher |= rtw_get_wpa_cipher_suite(pos);
+                pos = pos.add(WPA_SELECTOR_LEN);
+                left -= WPA_SELECTOR_LEN as c_int;
+            }
+        } else if left == 1 {
+            return _FAIL;
+        }
+
+        if !akm.is_null() && left >= 6 {
+            pos = pos.add(2);
+            if memcmp(pos, SUITE_1X.as_ptr(), 4) == 0 {
+                *akm = WLAN_AKM_TYPE_8021X;
+            }
+        }
+    }
+    _SUCCESS
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_rsne_info_parse(ie: *const U8, ie_len: c_uint, info: *mut RsneInfo) -> c_int {
+    unsafe {
+        memset(info as *mut U8, 0, core::mem::size_of::<RsneInfo>());
+
+        let mut pos = ie;
+        if ie.add(ie_len as usize) < pos.add(4) {
+            (*info).err = 1;
+            return _FAIL;
+        }
+
+        if *ie != WLAN_EID_RSN || *(ie.add(1)) != (ie_len - 2) as U8 {
+            (*info).err = 1;
+            return _FAIL;
+        }
+        pos = pos.add(2);
+
+        let ver = rtw_get_le16(pos);
+        if ver != 1 {
+            (*info).err = 1;
+            return _FAIL;
+        }
+        pos = pos.add(2);
+
+        if ie.add(ie_len as usize) < pos.add(4) {
+            if ie.add(ie_len as usize) != pos {
+                (*info).err = 1;
+                return _FAIL;
+            }
+            return _SUCCESS;
+        }
+        (*info).gcs = pos as *mut U8;
+        pos = pos.add(4);
+
+        if ie.add(ie_len as usize) < pos.add(2) {
+            if ie.add(ie_len as usize) != pos {
+                (*info).err = 1;
+                return _FAIL;
+            }
+            return _SUCCESS;
+        }
+        let mut cnt = rtw_get_le16(pos);
+        pos = pos.add(2);
+        if ie.add(ie_len as usize) < pos.add(4 * cnt as usize) {
+            if ie.add(ie_len as usize) != pos {
+                (*info).err = 1;
+                return _FAIL;
+            }
+            return _SUCCESS;
+        }
+        (*info).pcs_cnt = cnt;
+        (*info).pcs_list = pos as *mut U8;
+        pos = pos.add(4 * cnt as usize);
+
+        if ie.add(ie_len as usize) < pos.add(2) {
+            if ie.add(ie_len as usize) != pos {
+                (*info).err = 1;
+                return _FAIL;
+            }
+            return _SUCCESS;
+        }
+        cnt = rtw_get_le16(pos);
+        pos = pos.add(2);
+        if ie.add(ie_len as usize) < pos.add(4 * cnt as usize) {
+            if ie.add(ie_len as usize) != pos {
+                (*info).err = 1;
+                return _FAIL;
+            }
+            return _SUCCESS;
+        }
+        (*info).akm_cnt = cnt;
+        (*info).akm_list = pos as *mut U8;
+        pos = pos.add(4 * cnt as usize);
+
+        if ie.add(ie_len as usize) < pos.add(2) {
+            if ie.add(ie_len as usize) != pos {
+                (*info).err = 1;
+                return _FAIL;
+            }
+            return _SUCCESS;
+        }
+        (*info).cap = pos as *mut U8;
+        pos = pos.add(2);
+
+        if ie.add(ie_len as usize) < pos.add(2) {
+            if ie.add(ie_len as usize) != pos {
+                (*info).err = 1;
+                return _FAIL;
+            }
+            return _SUCCESS;
+        }
+        cnt = rtw_get_le16(pos);
+        pos = pos.add(2);
+        if ie.add(ie_len as usize) < pos.add(16 * cnt as usize) {
+            (*info).err = 1;
+            return _FAIL;
+        }
+        (*info).pmkid_cnt = cnt;
+        (*info).pmkid_list = pos as *mut U8;
+        pos = pos.add(16 * cnt as usize);
+
+        if ie.add(ie_len as usize) < pos.add(4) {
+            if ie.add(ie_len as usize) != pos {
+                (*info).err = 1;
+                return _FAIL;
+            }
+            return _SUCCESS;
+        }
+        (*info).gmcs = pos as *mut U8;
+    }
+    _SUCCESS
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_parse_wpa2_ie(
+    rsn_ie: *mut U8,
+    rsn_ie_len: c_int,
+    group_cipher: *mut c_int,
+    pairwise_cipher: *mut c_int,
+    gmcs: *mut c_int,
+    akm: *mut u32,
+    mfp_opt: *mut U8,
+    spp_opt: *mut U8,
+) -> c_int {
+    let mut info = RsneInfo {
+        gcs: core::ptr::null_mut(),
+        pcs_cnt: 0,
+        pcs_list: core::ptr::null_mut(),
+        akm_cnt: 0,
+        akm_list: core::ptr::null_mut(),
+        cap: core::ptr::null_mut(),
+        pmkid_cnt: 0,
+        pmkid_list: core::ptr::null_mut(),
+        gmcs: core::ptr::null_mut(),
+        err: 0,
+    };
+
+    if rtw_rsne_info_parse(rsn_ie, rsn_ie_len as c_uint, &mut info) != _SUCCESS {
+        return _FAIL;
+    }
+
+    unsafe {
+        if !group_cipher.is_null() {
+            if !info.gcs.is_null() {
+                *group_cipher = rtw_get_rsn_cipher_suite(info.gcs);
+            } else {
+                *group_cipher = 0;
+            }
+        }
+
+        if !pairwise_cipher.is_null() {
+            *pairwise_cipher = 0;
+            if !info.pcs_list.is_null() {
+                for i in 0..info.pcs_cnt {
+                    *pairwise_cipher |=
+                        rtw_get_rsn_cipher_suite(info.pcs_list.add(4 * i as usize));
+                }
+            }
+        }
+
+        if !gmcs.is_null() {
+            if !info.gmcs.is_null() {
+                *gmcs = rtw_get_rsn_cipher_suite(info.gmcs);
+            } else {
+                *gmcs = WPA_CIPHER_BIP_CMAC_128;
+            }
+        }
+
+        if !akm.is_null() {
+            *akm = 0;
+            if !info.akm_list.is_null() {
+                for i in 0..info.akm_cnt {
+                    *akm |= rtw_get_akm_suite_bitmap(info.akm_list.add(4 * i as usize));
+                }
+            }
+        }
+
+        if !mfp_opt.is_null() {
+            *mfp_opt = MFP_NO;
+            if !info.cap.is_null() {
+                *mfp_opt = get_rsn_cap_mfp_option(info.cap);
+            }
+        }
+
+        if !spp_opt.is_null() {
+            *spp_opt = 0;
+            if !info.cap.is_null() {
+                *spp_opt = get_rsn_cap_spp_opt(info.cap);
+            }
+        }
+    }
+    _SUCCESS
 }
 
 fn is_cck_rate_byte(rate: U8) -> bool {

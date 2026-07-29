@@ -30,12 +30,12 @@ IE_REST_WPA_RSN_PARSE_SRCS := $(IE_REST_SRC) ie_cipher_c_oracle.c \
 	$(WLAN_UTIL)/wlan_util_c_oracle.c ../crypto/host_vector_json.c
 
 .PHONY: all test test-c test-rust test-rest test-rest-rust test-rest-cipher \
-	test-rest-wpa-rsn-parse clean
+	test-rest-wpa-rsn-parse test-rest-wpa-rsn-parse-rust clean
 
 all: test
 
 test: test-c test-rust test-rest test-rest-rust test-rest-cipher \
-	test-rest-cipher-rust test-rest-wpa-rsn-parse
+	test-rest-cipher-rust test-rest-wpa-rsn-parse test-rest-wpa-rsn-parse-rust
 
 test-c: test_ie
 	./test_ie ie_vectors.json
@@ -88,6 +88,17 @@ test-rest-wpa-rsn-parse: test_ie_rest_wpa_rsn_parse
 test_ie_rest_wpa_rsn_parse: test_ie_rest_wpa_rsn_parse.c $(IE_REST_WPA_RSN_PARSE_SRCS)
 	$(CC) $(REST_CFLAGS) -o $@ test_ie_rest_wpa_rsn_parse.c $(IE_REST_WPA_RSN_PARSE_SRCS)
 
+test-rest-wpa-rsn-parse-rust: test_ie_rest_wpa_rsn_parse_rust
+	./test_ie_rest_wpa_rsn_parse_rust ie_rest_wpa_rsn_parse_vectors.json
+
+test_ie_rest_wpa_rsn_parse_rust: test_ie_rest_wpa_rsn_parse.c librust_ie_rest.a \
+		ie_cipher_c_oracle.c ie_wpa_rsn_parse_c_oracle.c ie_c_oracle.c \
+		../wlan_util/wlan_util_c_oracle.c ../crypto/host_vector_json.c
+	$(CC) $(REST_CFLAGS) -DRUST_IEEE80211_REST_ORACLE -o $@ test_ie_rest_wpa_rsn_parse.c \
+		ie_cipher_c_oracle.c ie_wpa_rsn_parse_c_oracle.c ie_c_oracle.c \
+		../wlan_util/wlan_util_c_oracle.c ../crypto/host_vector_json.c \
+		librust_ie_rest.a
+
 test_ie_rest_rust: test_ie_rest.c librust_ie_rest.a ../wlan_util/wlan_util_c_oracle.c \
 		../crypto/host_vector_json.c ie_c_oracle.c
 	$(CC) $(REST_CFLAGS) -DRUST_IEEE80211_REST_ORACLE -o $@ test_ie_rest.c \
@@ -96,4 +107,5 @@ test_ie_rest_rust: test_ie_rest.c librust_ie_rest.a ../wlan_util/wlan_util_c_ora
 
 clean:
 	rm -f test_ie test_ie_rust test_ie_rest test_ie_rest_rust test_ie_rest_cipher \
-		test_ie_rest_cipher_rust test_ie_rest_wpa_rsn_parse librust_ie.a librust_ie_rest.a
+		test_ie_rest_cipher_rust test_ie_rest_wpa_rsn_parse \
+		test_ie_rest_wpa_rsn_parse_rust librust_ie.a librust_ie_rest.a
