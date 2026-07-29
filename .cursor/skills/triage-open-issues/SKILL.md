@@ -1,12 +1,13 @@
 ---
 name: triage-open-issues
 description: >-
-  Step 1 of pick-up-work-item. Audits open rust-migration GitHub Issues, finds
-  ones already completed (merged PR, code landed, acceptance met), and closes
-  them with evidence. Auto-applies as part of pick-up-work-item triage. Do NOT
-  use standalone to close issues the user explicitly wants kept open.
+  Path B/C step 1 of pick-up-work-item. Audits open rust-migration GitHub Issues,
+  finds ones already completed (merged PR, code landed, acceptance met), and
+  closes them with evidence. Auto-applies as part of pick-up-work-item triage.
+  Do NOT use standalone to close issues the user explicitly wants kept open.
 metadata:
   parent-skill: pick-up-work-item
+  path: B/C
   step: 1
 ---
 

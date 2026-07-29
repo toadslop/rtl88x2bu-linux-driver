@@ -3,11 +3,13 @@ name: prepare-pr-for-merge
 description: >-
   Prepares a pull request for merge into master. Auto-applies on "prepare PR for
   merge", "prepare for merge", "get PR ready to merge", or similar author tasks.
-  Validates that stacked-PR ancestors are already merged; retargets stacked PRs to
-  master; rebases on master; resolves conflicts; addresses review feedback via
-  Cursor's built-in babysit skill; and opens a follow-up PR for any unresolved
-  reviewer knits. Do NOT use for reviewing PRs (use pr-review-delivery) or for
-  PRs whose stack base is not yet on master.
+  Marks draft PRs ready for review; validates that stacked-PR ancestors are
+  already merged; retargets stacked PRs to master; rebases on master; resolves
+  conflicts; babysits until CI is green and reviews are complete (via Cursor's
+  built-in babysit skill); and opens a follow-up PR for any unresolved reviewer
+  knits. Do NOT use for reviewing PRs (use pr-review-delivery) or for PRs whose
+  stack base is not yet on master. For batch prep across all eligible PRs, use
+  prepare-all-prs-for-merge.
 metadata:
   requires-skill: babysit
 ---
@@ -20,8 +22,26 @@ prep: stack validation, base retarget, rebase, conflict resolution, review
 follow-up, and a follow-up PR for any reviewer knits left open.
 
 **You are the author.** You may edit code, rebase, force-push, and update PR
-metadata (base branch). You are **not** merging the PR unless the user explicitly
-asks you to merge.
+metadata (base branch, draft state). You are **not** merging the PR unless the
+user explicitly asks you to merge.
+
+## Babysit until green (mandatory — not a one-shot)
+
+**"Prepare for merge" means babysitting the PR until it is actually ready** — not
+running a single pass and stopping. Stay on the PR until:
+
+1. **CI / checks** — all required status checks pass (re-run or fix failures;
+   retry known flakes once, then report).
+2. **Reviews** — no review is still **in progress**. If a reviewer has started a
+   review but not submitted (pending review, "review in progress", or equivalent
+   on GitHub), **wait** until it is submitted before treating feedback as final.
+3. **Feedback** — after reviews land, address all blocking items via `babysit`
+   (below) and loop until there are no open blocking threads or check failures.
+
+Poll with `gh pr checks <number>` and `gh pr view <number> --json
+reviewDecision,reviews,statusCheckRollup` (or the PR UI). Re-check after each
+push. Do not report "ready to merge" while checks are pending/failing or a review
+is still in flight.
 
 ## Prerequisite: run `babysit` (mandatory for review feedback)
 
@@ -109,7 +129,7 @@ passes.
 Resolve the target PR by number, URL, or current branch:
 
 ```bash
-gh pr view --json number,title,state,baseRefName,headRefName,url
+gh pr view --json number,title,state,isDraft,baseRefName,headRefName,url
 # or: gh pr view <number-or-branch> --json ...
 ```
 
@@ -118,8 +138,21 @@ gh pr view --json number,title,state,baseRefName,headRefName,url
 | No PR for current branch | Stop — ask the user which PR to prepare. |
 | `state` is `MERGED` | Stop — report the PR is already merged; nothing to prepare. |
 | `state` is `CLOSED` (not merged) | Stop — ask whether to reopen or use a different PR. |
+| `isDraft` is `true` | Mark ready for review (see **Draft → open** below), then continue. |
 
 Record: `PR`, `head` = `headRefName`, `base` = `baseRefName`.
+
+### Draft → open
+
+If the PR is a **draft**, mark it **ready for review** before retarget/rebase work
+(draft PRs often skip or delay required checks and reviews):
+
+```bash
+gh pr ready <number>
+```
+
+Use `ManagePullRequest` `update_pr` with draft-appropriate fields when available.
+Confirm with `gh pr view <number> --json isDraft` that `isDraft` is `false`.
 
 ### 2. Verify the stack parent is on `master`
 
@@ -207,18 +240,20 @@ git rebase origin/master
   a clean commit history over rushed conflict markers.
 - After a successful rebase: `git push --force-with-lease origin <head-branch>`.
 
-### 4. Address review feedback (`babysit`)
+### 4. Babysit until green (`babysit` + checks + reviews)
 
-Run Cursor's built-in **`babysit`** skill on this PR (see **"Prerequisite: run
-`babysit`"** above). It should:
+Follow **"Babysit until green"** above. Run Cursor's built-in **`babysit`** skill
+on this PR (see **"Prerequisite: run `babysit`"**). It should:
 
-- Resolve open review comments and requested changes.
-- Fix CI failures tied to the branch.
+- **Wait** for any in-progress review to finish before responding.
+- Resolve open review comments and requested changes (per `babysit` / manual
+  fallback rules in this file).
+- Fix CI failures tied to the branch; poll until `gh pr checks` is green.
 - Re-run verification gates after each fix pass.
 - Push to the **same head branch** (no new PR).
 
-Loop until there are no blocking review items and CI is green (or the user
-accepts known flakes).
+**Loop** until: all required checks pass, no review is in progress, and there are
+no blocking review items (or the user accepts known flakes).
 
 ### 5. Open knit follow-up PR (when applicable)
 
@@ -236,7 +271,9 @@ Reply in chat with:
 | Base branch | should be `master` |
 | Rebased onto latest `master` | yes / no |
 | Conflicts | none / resolved (brief note) |
-| Review feedback | addressed via `babysit` / remaining items |
+| Draft → open | yes / was already open |
+| CI / checks | all green / pending / failing (detail) |
+| Review feedback | addressed via `babysit` / waiting on in-progress review / remaining items |
 | Reviewer knits | none / listed — follow-up PR link if opened |
 | Ready to merge | yes / no — and why |
 
@@ -246,6 +283,8 @@ Reply in chat with:
 
 | Do | Do not |
 |----|--------|
+| Mark draft PRs ready for review (`gh pr ready`) | Leave a draft PR in draft state while "preparing" |
+| Babysit until CI is green and reviews are complete | Stop after one fix pass while checks fail or a review is in progress |
 | Retarget stacked PR base to `master` | Retarget onto another feature branch |
 | Rebase and force-push with `--force-with-lease` | Merge the PR without explicit instruction |
 | Fix conflicts and review feedback | Run the stack gate after destructive git ops |
@@ -257,6 +296,7 @@ Reply in chat with:
 
 | Skill | Role |
 |-------|------|
+| **`prepare-all-prs-for-merge`** | Batch wrapper — runs this skill on every eligible open PR. |
 | **`babysit`** (Cursor built-in) | Address review comments, CI, and PR hygiene (invoked during prepare). |
 | **`pr-review-delivery`** | Reviewer-only — do **not** use when preparing for merge. |
 | **`code-review`** (Cursor built-in) | Reviewer analysis — out of scope for this author workflow. |

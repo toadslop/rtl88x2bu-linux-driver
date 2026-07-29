@@ -1,13 +1,16 @@
 ---
 name: implement-stacked-prs
 description: >-
-  Step 3b of pick-up-work-item. Implements an approved stacked-PR plan one PR
-  at a time: branch, code, gates, push, open PR with stack base. Auto-applies
-  after plan-stacked-prs approval. Do NOT use without an approved plan or for
-  PRs unrelated to the selected issue.
+  Path B step 4 of pick-up-work-item. Implements an approved stacked-PR plan
+  one PR at a time: branch, code, gates, push, open PR ready for review (not
+  draft) with stack base, then babysit until CI is green. Auto-applies after
+  plan-stacked-prs approval. Do NOT use without an approved plan or for PRs
+  unrelated to the selected issue.
 metadata:
   parent-skill: pick-up-work-item
-  step: 3b
+  path: B
+  step: 4
+  requires-skill: babysit
 ---
 
 # Implement Stacked PRs
@@ -81,19 +84,24 @@ git push -u origin HEAD
 
 Reference the GitHub issue in the commit message (`#115`, `W3-04`).
 
-### 5. Open stacked PR
+### 5. Open stacked PR (ready for review — not draft)
 
-Prefer `ManagePullRequest` `create_pr` when available. Cloud agents may also use
-the `open_git_pr` MCP tool. Fallback for local shells without those tools:
+Open each PR in **open** (ready-for-review) state so CI and review can start
+immediately. Do **not** use `--draft` or `draft: true`.
+
+Prefer `ManagePullRequest` `create_pr` with `draft: false` (default). Fallback
+for local shells:
 
 ```bash
 gh pr create --base <stack-parent> --head <branch> --title "<title>" --body "<body>"
+# Do not pass --draft
 ```
 
 | Field | PR1 | PR2+ |
 |-------|-----|------|
 | `base_branch` / `--base` | `master` | previous PR head branch |
 | `branch_name` / `--head` | current head | current head |
+| `draft` | `false` / omit | `false` / omit |
 | `title` | from plan | from plan |
 | `body` | link issue, gates run, stack position | + "Stacked on #N" |
 
@@ -108,11 +116,30 @@ PR body should include:
 - Add `In-flight: <branch>` to the issue via comment if not already noted
 - Do not close the issue until the **last** PR merges and acceptance is met
 
-### 7. Continue or pause
+### 7. Babysit the PR you just opened
 
-- **Default:** implement the next PR in the stack in the same session if gates pass
-- **Pause** after opening a PR if the user asked for incremental delivery
-- After the **final** PR opens, summarize the full stack with links
+**Default: per-PR babysit.** After opening a PR, babysit it until required CI
+checks pass **before** opening the next PR in the stack. This catches base-layer
+failures early and matches step 8's per-PR loop.
+
+1. Load Cursor's built-in **`babysit`** skill when available; otherwise fix CI
+   failures, push to the same branch, and re-poll `gh pr checks <number>`.
+2. Address blocking review feedback if any arrives during babysit (same rules as
+   `prepare-pr-for-merge` manual `babysit` fallback).
+3. Loop until checks are green or you report a blocker — only then continue to
+   the next PR in the plan.
+
+Path B pick-up ends after the final PR opens and babysit passes — full merge prep
+(`prepare-all-prs-for-merge`) runs on a **future** pick-up once these PRs are
+open.
+
+### 8. Continue or pause
+
+- **Default:** after babysit passes on the current PR, implement the next PR in
+  the stack in the same session
+- **Pause** after opening a PR if the user asked for incremental delivery (babysit
+  still applies to the PR you opened before pausing)
+- After the **final** PR opens and babysit passes, summarize the full stack with links
 
 ## Stack hygiene
 
@@ -145,5 +172,7 @@ PR body should include:
 
 **Gates:** L0/L1/L2 green on PR2
 
-**Next:** review stack; run `prepare-pr-for-merge` on PR1 when ready to land
+**Babysit:** CI green on opened PRs
+
+**Next:** next pick-up will Path A (`prepare-all-prs-for-merge`) when PRs are open
 ```
