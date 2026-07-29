@@ -273,6 +273,220 @@ u32 rtw_get_akm_suite_bitmap(u8 *s)
 
 	return 0;
 }
+
+#ifdef HOST_IEEE80211_REST_TEST
+extern u8 RTW_WPA_OUI_TYPE[];
+#endif
+
+int rtw_parse_wpa_ie(u8 *wpa_ie, int wpa_ie_len, int *group_cipher,
+		     int *pairwise_cipher, u32 *akm)
+{
+	int i, ret = _SUCCESS;
+	int left, count;
+	u8 *pos;
+	u8 SUITE_1X[4] = {0x00, 0x50, 0xf2, 1};
+
+	if (wpa_ie_len <= 0)
+		return _FAIL;
+
+	if ((*wpa_ie != _WPA_IE_ID_) || (*(wpa_ie + 1) != (u8)(wpa_ie_len - 2)) ||
+	    (_rtw_memcmp(wpa_ie + 2, RTW_WPA_OUI_TYPE, WPA_SELECTOR_LEN) != _TRUE))
+		return _FAIL;
+
+	pos = wpa_ie;
+	pos += 8;
+	left = wpa_ie_len - 8;
+
+	if (left >= WPA_SELECTOR_LEN) {
+		*group_cipher = rtw_get_wpa_cipher_suite(pos);
+		pos += WPA_SELECTOR_LEN;
+		left -= WPA_SELECTOR_LEN;
+	} else if (left > 0) {
+		return _FAIL;
+	}
+
+	if (left >= 2) {
+		count = RTW_GET_LE16(pos);
+		pos += 2;
+		left -= 2;
+
+		if (count == 0 || left < count * WPA_SELECTOR_LEN)
+			return _FAIL;
+
+		for (i = 0; i < count; i++) {
+			*pairwise_cipher |= rtw_get_wpa_cipher_suite(pos);
+			pos += WPA_SELECTOR_LEN;
+			left -= WPA_SELECTOR_LEN;
+		}
+	} else if (left == 1) {
+		return _FAIL;
+	}
+
+	if (akm) {
+		if (left >= 6) {
+			pos += 2;
+			if (_rtw_memcmp(pos, SUITE_1X, 4) == 1)
+				*akm = WLAN_AKM_TYPE_8021X;
+		}
+	}
+
+	return ret;
+}
+
+int rtw_rsne_info_parse(const u8 *ie, uint ie_len, struct rsne_info *info)
+{
+	const u8 *pos = ie;
+	u16 ver;
+	u16 cnt;
+
+	_rtw_memset(info, 0, sizeof(struct rsne_info));
+
+	if (ie + ie_len < pos + 4)
+		goto err;
+
+	if (*ie != WLAN_EID_RSN || *(ie + 1) != ie_len - 2)
+		goto err;
+	pos += 2;
+
+	ver = RTW_GET_LE16(pos);
+	if (1 != ver)
+		goto err;
+	pos += 2;
+
+	if (ie + ie_len < pos + 4) {
+		if (ie + ie_len != pos)
+			goto err;
+		goto exit;
+	}
+	info->gcs = (u8 *)pos;
+	pos += 4;
+
+	if (ie + ie_len < pos + 2) {
+		if (ie + ie_len != pos)
+			goto err;
+		goto exit;
+	}
+	cnt = RTW_GET_LE16(pos);
+	pos += 2;
+	if (ie + ie_len < pos + 4 * cnt) {
+		if (ie + ie_len != pos)
+			goto err;
+		goto exit;
+	}
+	info->pcs_cnt = cnt;
+	info->pcs_list = (u8 *)pos;
+	pos += 4 * cnt;
+
+	if (ie + ie_len < pos + 2) {
+		if (ie + ie_len != pos)
+			goto err;
+		goto exit;
+	}
+	cnt = RTW_GET_LE16(pos);
+	pos += 2;
+	if (ie + ie_len < pos + 4 * cnt) {
+		if (ie + ie_len != pos)
+			goto err;
+		goto exit;
+	}
+	info->akm_cnt = cnt;
+	info->akm_list = (u8 *)pos;
+	pos += 4 * cnt;
+
+	if (ie + ie_len < pos + 2) {
+		if (ie + ie_len != pos)
+			goto err;
+		goto exit;
+	}
+	info->cap = (u8 *)pos;
+	pos += 2;
+
+	if (ie + ie_len < pos + 2) {
+		if (ie + ie_len != pos)
+			goto err;
+		goto exit;
+	}
+	cnt = RTW_GET_LE16(pos);
+	pos += 2;
+	if (ie + ie_len < pos + 16 * cnt)
+		goto err;
+	info->pmkid_cnt = cnt;
+	info->pmkid_list = (u8 *)pos;
+	pos += 16 * cnt;
+
+	if (ie + ie_len < pos + 4) {
+		if (ie + ie_len != pos)
+			goto err;
+		goto exit;
+	}
+	info->gmcs = (u8 *)pos;
+
+exit:
+	return _SUCCESS;
+
+err:
+	info->err = 1;
+	return _FAIL;
+}
+
+int rtw_parse_wpa2_ie(u8 *rsn_ie, int rsn_ie_len, int *group_cipher,
+		      int *pairwise_cipher, int *gmcs, u32 *akm, u8 *mfp_opt,
+		      u8 *spp_opt)
+{
+	struct rsne_info info;
+	int i, ret = _SUCCESS;
+
+	ret = rtw_rsne_info_parse(rsn_ie, rsn_ie_len, &info);
+	if (ret != _SUCCESS)
+		goto exit;
+
+	if (group_cipher) {
+		if (info.gcs)
+			*group_cipher = rtw_get_rsn_cipher_suite(info.gcs);
+		else
+			*group_cipher = 0;
+	}
+
+	if (pairwise_cipher) {
+		*pairwise_cipher = 0;
+		if (info.pcs_list) {
+			for (i = 0; i < info.pcs_cnt; i++)
+				*pairwise_cipher |= rtw_get_rsn_cipher_suite(
+					info.pcs_list + 4 * i);
+		}
+	}
+
+	if (gmcs) {
+		if (info.gmcs)
+			*gmcs = rtw_get_rsn_cipher_suite(info.gmcs);
+		else
+			*gmcs = WPA_CIPHER_BIP_CMAC_128;
+	}
+
+	if (akm) {
+		*akm = 0;
+		if (info.akm_list) {
+			for (i = 0; i < info.akm_cnt; i++)
+				*akm |= rtw_get_akm_suite_bitmap(info.akm_list +
+								 4 * i);
+		}
+	}
+
+	if (mfp_opt) {
+		*mfp_opt = MFP_NO;
+		if (info.cap)
+			*mfp_opt = GET_RSN_CAP_MFP_OPTION(info.cap);
+	}
+
+	if (spp_opt) {
+		*spp_opt = 0;
+		if (info.cap)
+			*spp_opt = GET_RSN_CAP_SPP_OPT(info.cap);
+	}
+
+exit:
+	return ret;
+}
 #endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
 #if defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)
