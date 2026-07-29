@@ -1368,6 +1368,103 @@
       "offset": 0,
       "rf_type": 3,
       "expect_valid": 0
+    },
+    {
+      "name": "tx_path_nss_default_ab",
+      "fn": "tx_path_nss_set_default",
+      "tx_bmp": 3,
+      "expect_nss_paths": [1, 3, 3, 3],
+      "expect_nss_num": [1, 2, 3, 4]
+    },
+    {
+      "name": "tx_path_nss_default_ac",
+      "fn": "tx_path_nss_set_default",
+      "tx_bmp": 5,
+      "expect_nss_paths": [1, 5, 5, 5],
+      "expect_nss_num": [1, 2, 3, 4]
+    },
+    {
+      "name": "tx_path_nss_default_all",
+      "fn": "tx_path_nss_set_default",
+      "tx_bmp": 15,
+      "expect_nss_paths": [1, 3, 7, 15],
+      "expect_nss_num": [1, 2, 3, 4]
+    },
+    {
+      "name": "tx_path_nss_default_none",
+      "fn": "tx_path_nss_set_default",
+      "tx_bmp": 0,
+      "expect_nss_paths": [0, 0, 0, 0],
+      "expect_nss_num": [1, 2, 3, 4]
+    },
+    {
+      "name": "tx_path_nss_full_ab",
+      "fn": "tx_path_nss_set_full_tx",
+      "tx_bmp": 3,
+      "expect_nss_paths": [3, 3, 3, 3],
+      "expect_nss_num": [2, 2, 2, 2]
+    },
+    {
+      "name": "tx_path_nss_full_all",
+      "fn": "tx_path_nss_set_full_tx",
+      "tx_bmp": 15,
+      "expect_nss_paths": [15, 15, 15, 15],
+      "expect_nss_num": [4, 4, 4, 4]
+    },
+    {
+      "name": "tx_path_nss_full_single",
+      "fn": "tx_path_nss_set_full_tx",
+      "tx_bmp": 4,
+      "expect_nss_paths": [4, 4, 4, 4],
+      "expect_nss_num": [1, 1, 1, 1]
+    },
+    {
+      "name": "bb_gain_sel_2g",
+      "fn": "rtw_ch_to_bb_gain_sel",
+      "ch": 6,
+      "expect": 0
+    },
+    {
+      "name": "bb_gain_sel_5glb1",
+      "fn": "rtw_ch_to_bb_gain_sel",
+      "ch": 36,
+      "expect": 1
+    },
+    {
+      "name": "bb_gain_sel_5glb2",
+      "fn": "rtw_ch_to_bb_gain_sel",
+      "ch": 52,
+      "expect": 2
+    },
+    {
+      "name": "bb_gain_sel_5gmb1",
+      "fn": "rtw_ch_to_bb_gain_sel",
+      "ch": 100,
+      "expect": 3
+    },
+    {
+      "name": "bb_gain_sel_5gmb2",
+      "fn": "rtw_ch_to_bb_gain_sel",
+      "ch": 124,
+      "expect": 4
+    },
+    {
+      "name": "bb_gain_sel_5ghb",
+      "fn": "rtw_ch_to_bb_gain_sel",
+      "ch": 149,
+      "expect": 5
+    },
+    {
+      "name": "bb_gain_sel_invalid",
+      "fn": "rtw_ch_to_bb_gain_sel",
+      "ch": 65,
+      "expect": -1
+    },
+    {
+      "name": "bb_gain_sel_gap",
+      "fn": "rtw_ch_to_bb_gain_sel",
+      "ch": 15,
+      "expect": -1
     }
   ]
 }

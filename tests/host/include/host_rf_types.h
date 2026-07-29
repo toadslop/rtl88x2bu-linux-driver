@@ -189,4 +189,16 @@ s16 mb_of_ntx(u8 ntx);
 bool rtw_is_long_cac_range(u32 hi, u32 lo, u8 dfs_region);
 bool rtw_is_long_cac_ch(u8 ch, u8 bw, u8 offset, u8 dfs_region);
 
+#define BB_GAIN_2G 0
+#define BB_GAIN_5GLB1 1
+#define BB_GAIN_5GLB2 2
+#define BB_GAIN_5GMB1 3
+#define BB_GAIN_5GMB2 4
+#define BB_GAIN_5GHB 5
+#define BB_GAIN_NUM 6
+
+void tx_path_nss_set_default(enum bb_path txpath_nss[], u8 txpath_num_nss[], u8 txpath);
+void tx_path_nss_set_full_tx(enum bb_path txpath_nss[], u8 txpath_num_nss[], u8 txpath);
+int rtw_ch_to_bb_gain_sel(int ch);
+
 #endif /* HOST_RF_TYPES_H */
