@@ -1025,6 +1025,97 @@
       "expect_rx": 15
     },
     {
+      "name": "rf_type_default_1t2r",
+      "fn": "rf_type_to_default_trx_bmp",
+      "rf_type": 1,
+      "expect_tx": 1,
+      "expect_rx": 3
+    },
+    {
+      "name": "rf_type_default_2t3r",
+      "fn": "rf_type_to_default_trx_bmp",
+      "rf_type": 3,
+      "expect_tx": 3,
+      "expect_rx": 7
+    },
+    {
+      "name": "rf_type_default_2t4r",
+      "fn": "rf_type_to_default_trx_bmp",
+      "rf_type": 4,
+      "expect_tx": 3,
+      "expect_rx": 15
+    },
+    {
+      "name": "rf_type_default_3t3r",
+      "fn": "rf_type_to_default_trx_bmp",
+      "rf_type": 5,
+      "expect_tx": 7,
+      "expect_rx": 7
+    },
+    {
+      "name": "rf_type_default_3t4r",
+      "fn": "rf_type_to_default_trx_bmp",
+      "rf_type": 6,
+      "expect_tx": 7,
+      "expect_rx": 15
+    },
+    {
+      "name": "rf_type_default_4t3r",
+      "fn": "rf_type_to_default_trx_bmp",
+      "rf_type": 8,
+      "expect_tx": 15,
+      "expect_rx": 7
+    },
+    {
+      "name": "rf_type_default_4t2r",
+      "fn": "rf_type_to_default_trx_bmp",
+      "rf_type": 9,
+      "expect_tx": 15,
+      "expect_rx": 3
+    },
+    {
+      "name": "rf_type_default_4t1r",
+      "fn": "rf_type_to_default_trx_bmp",
+      "rf_type": 10,
+      "expect_tx": 15,
+      "expect_rx": 1
+    },
+    {
+      "name": "rf_type_default_3t2r",
+      "fn": "rf_type_to_default_trx_bmp",
+      "rf_type": 11,
+      "expect_tx": 7,
+      "expect_rx": 3
+    },
+    {
+      "name": "rf_type_default_3t1r",
+      "fn": "rf_type_to_default_trx_bmp",
+      "rf_type": 12,
+      "expect_tx": 7,
+      "expect_rx": 1
+    },
+    {
+      "name": "rf_type_default_2t1r",
+      "fn": "rf_type_to_default_trx_bmp",
+      "rf_type": 13,
+      "expect_tx": 3,
+      "expect_rx": 1
+    },
+    {
+      "name": "rf_type_default_1t4r",
+      "fn": "rf_type_to_default_trx_bmp",
+      "rf_type": 14,
+      "expect_tx": 1,
+      "expect_rx": 15
+    },
+    {
+      "name": "rf_type_default_1t3r",
+      "fn": "rf_type_to_default_trx_bmp",
+      "rf_type": 15,
+      "expect_tx": 1,
+      "expect_rx": 7
+    },
+    {
       "name": "trx_num_to_rf_type_2t2r",
       "fn": "trx_num_to_rf_type",
       "tx_num": 2,

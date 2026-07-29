@@ -1061,6 +1061,9 @@ const RF_2T1R: u8 = 13;
 const RF_1T4R: u8 = 14;
 const RF_1T3R: u8 = 15;
 
+// Private copies of `core/rtw_rf.c` `_rf_type_to_rf_tx_cnt` /
+// `_rf_type_to_rf_rx_cnt`; update both when RF path counts change.
+// L2 `rf_type_to_default_trx_bmp` vectors exercise every RF_TYPE entry.
 static _RF_TYPE_TO_RF_TX_CNT: [u8; RF_TYPE_MAX as usize] = [
     1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 3, 3, 2, 1, 1,
 ];
@@ -1098,6 +1101,7 @@ fn rf_type_to_rf_rx_cnt(rf_type: u8) -> u8 {
 
 #[no_mangle]
 pub extern "C" fn rf_type_to_default_trx_bmp(rf: u8, tx: *mut u32, rx: *mut u32) {
+    // C dereferences unconditionally; in-tree callers always pass valid pointers.
     if tx.is_null() || rx.is_null() {
         return;
     }
