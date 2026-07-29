@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
-//! RF rest helpers — Rust port of `core/rtw_rf_rest.c` channel layout (W3-19)
-//! and frequency conversion (W3-20).
+//! RF rest helpers — Rust port of `core/rtw_rf_rest.c` channel layout (W3-19),
+//! frequency conversion (W3-20), and lookup/format tables (W3-21).
 
 #![allow(
     dead_code,
@@ -20,8 +20,99 @@ const CHANNEL_WIDTH_20: u8 = 0;
 const CHANNEL_WIDTH_40: u8 = 1;
 const CHANNEL_WIDTH_80: u8 = 2;
 const CHANNEL_WIDTH_160: u8 = 3;
+const CHANNEL_WIDTH_80_80: u8 = 4;
 const CHANNEL_WIDTH_5: u8 = 5;
 const CHANNEL_WIDTH_10: u8 = 6;
+const CHANNEL_WIDTH_MAX: usize = 7;
+
+const BW_CAP_5M: u8 = 1;
+const BW_CAP_10M: u8 = 2;
+const BW_CAP_20M: u8 = 4;
+const BW_CAP_40M: u8 = 8;
+const BW_CAP_80M: u8 = 16;
+const BW_CAP_160M: u8 = 32;
+const BW_CAP_80_80M: u8 = 64;
+
+const BAND_CAP_2G: u8 = 1;
+const BAND_CAP_5G: u8 = 2;
+
+const OPC_BW_NUM: usize = 6;
+
+#[repr(transparent)]
+pub struct CStrPtr(*const u8);
+
+unsafe impl Sync for CStrPtr {}
+
+static CH_WIDTH_STR_20: &[u8; 6] = b"20MHz\0";
+static CH_WIDTH_STR_40: &[u8; 6] = b"40MHz\0";
+static CH_WIDTH_STR_80: &[u8; 6] = b"80MHz\0";
+static CH_WIDTH_STR_160: &[u8; 7] = b"160MHz\0";
+static CH_WIDTH_STR_80_80: &[u8; 9] = b"80_80MHz\0";
+static CH_WIDTH_STR_5: &[u8; 5] = b"5MHz\0";
+static CH_WIDTH_STR_10: &[u8; 6] = b"10MHz\0";
+
+#[no_mangle]
+pub static _ch_width_str: [CStrPtr; CHANNEL_WIDTH_MAX] = [
+    CStrPtr(CH_WIDTH_STR_20.as_ptr()),
+    CStrPtr(CH_WIDTH_STR_40.as_ptr()),
+    CStrPtr(CH_WIDTH_STR_80.as_ptr()),
+    CStrPtr(CH_WIDTH_STR_160.as_ptr()),
+    CStrPtr(CH_WIDTH_STR_80_80.as_ptr()),
+    CStrPtr(CH_WIDTH_STR_5.as_ptr()),
+    CStrPtr(CH_WIDTH_STR_10.as_ptr()),
+];
+
+#[no_mangle]
+pub static _ch_width_to_bw_cap: [u8; CHANNEL_WIDTH_MAX] = [
+    BW_CAP_20M,
+    BW_CAP_40M,
+    BW_CAP_80M,
+    BW_CAP_160M,
+    BW_CAP_80_80M,
+    BW_CAP_5M,
+    BW_CAP_10M,
+];
+
+static BAND_STR_2G: &[u8; 5] = b"2.4G\0";
+static BAND_STR_5G: &[u8; 3] = b"5G\0";
+static BAND_STR_MAX: &[u8; 9] = b"BAND_MAX\0";
+
+#[no_mangle]
+pub static _band_str: [CStrPtr; 3] = [
+    CStrPtr(BAND_STR_2G.as_ptr()),
+    CStrPtr(BAND_STR_5G.as_ptr()),
+    CStrPtr(BAND_STR_MAX.as_ptr()),
+];
+
+#[no_mangle]
+pub static _band_to_band_cap: [u8; 3] = [BAND_CAP_2G, BAND_CAP_5G, 0];
+
+static OPC_BW_STR_20: &[u8; 5] = b"20M \0";
+static OPC_BW_STR_40PLUS: &[u8; 5] = b"40M+\0";
+static OPC_BW_STR_40MINUS: &[u8; 5] = b"40M-\0";
+static OPC_BW_STR_80: &[u8; 5] = b"80M \0";
+static OPC_BW_STR_160: &[u8; 6] = b"160M \0";
+static OPC_BW_STR_80P80: &[u8; 8] = b"80+80M \0";
+
+#[no_mangle]
+pub static _opc_bw_str: [CStrPtr; OPC_BW_NUM] = [
+    CStrPtr(OPC_BW_STR_20.as_ptr()),
+    CStrPtr(OPC_BW_STR_40PLUS.as_ptr()),
+    CStrPtr(OPC_BW_STR_40MINUS.as_ptr()),
+    CStrPtr(OPC_BW_STR_80.as_ptr()),
+    CStrPtr(OPC_BW_STR_160.as_ptr()),
+    CStrPtr(OPC_BW_STR_80P80.as_ptr()),
+];
+
+#[no_mangle]
+pub static _opc_bw_to_ch_width: [u8; OPC_BW_NUM] = [
+    CHANNEL_WIDTH_20,
+    CHANNEL_WIDTH_40,
+    CHANNEL_WIDTH_40,
+    CHANNEL_WIDTH_80,
+    CHANNEL_WIDTH_160,
+    CHANNEL_WIDTH_80_80,
+];
 
 const HAL_PRIME_CHNL_OFFSET_DONT_CARE: u8 = 0;
 const HAL_PRIME_CHNL_OFFSET_LOWER: u8 = 1;

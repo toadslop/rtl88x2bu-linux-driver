@@ -20,3 +20,9 @@ drop rtw_rust_rf_warn_invalid_ch
 drop rtw_ch2freq
 drop rtw_freq2ch
 drop rtw_chbw_to_freq_range
+drop _ch_width_str
+drop _ch_width_to_bw_cap
+drop _band_str
+drop _band_to_band_cap
+drop _opc_bw_str
+drop _opc_bw_to_ch_width
