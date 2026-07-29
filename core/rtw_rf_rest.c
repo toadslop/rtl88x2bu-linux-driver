@@ -895,6 +895,159 @@ exit:
 
 #endif /* !CONFIG_RUST || HOST_RF_TEST */
 
+#if !defined(CONFIG_RUST) || defined(HOST_RF_TEST)
+/*
+ * W3-23: RF type / trx-path helpers extracted from core/rtw_rf.c.
+ * C oracle for host L2; kernel builds use rust/rtw_rf_rest.rs when CONFIG_RUST.
+ */
+#ifdef HOST_RF_TEST
+const u8 _rf_type_to_rf_tx_cnt[RF_TYPE_MAX] = {
+	[RF_1T1R] = 1,
+	[RF_1T2R] = 1,
+	[RF_1T3R] = 1,
+	[RF_1T4R] = 1,
+	[RF_2T1R] = 2,
+	[RF_2T2R] = 2,
+	[RF_2T3R] = 2,
+	[RF_2T4R] = 2,
+	[RF_3T1R] = 3,
+	[RF_3T2R] = 3,
+	[RF_3T3R] = 3,
+	[RF_3T4R] = 3,
+	[RF_4T1R] = 4,
+	[RF_4T2R] = 4,
+	[RF_4T3R] = 4,
+	[RF_4T4R] = 4,
+};
+
+const u8 _rf_type_to_rf_rx_cnt[RF_TYPE_MAX] = {
+	[RF_1T1R] = 1,
+	[RF_1T2R] = 2,
+	[RF_1T3R] = 3,
+	[RF_1T4R] = 4,
+	[RF_2T1R] = 1,
+	[RF_2T2R] = 2,
+	[RF_2T3R] = 3,
+	[RF_2T4R] = 4,
+	[RF_3T1R] = 1,
+	[RF_3T2R] = 2,
+	[RF_3T3R] = 3,
+	[RF_3T4R] = 4,
+	[RF_4T1R] = 1,
+	[RF_4T2R] = 2,
+	[RF_4T3R] = 3,
+	[RF_4T4R] = 4,
+};
+#endif /* HOST_RF_TEST */
+
+void rf_type_to_default_trx_bmp(enum rf_type rf, enum bb_path *tx, enum bb_path *rx)
+{
+	u8 tx_num = rf_type_to_rf_tx_cnt(rf);
+	u8 rx_num = rf_type_to_rf_rx_cnt(rf);
+	int i;
+
+	*tx = *rx = 0;
+
+	for (i = 0; i < tx_num; i++)
+		*tx |= BIT(i);
+	for (i = 0; i < rx_num; i++)
+		*rx |= BIT(i);
+}
+
+static const u8 _trx_num_to_rf_type[RF_PATH_MAX][RF_PATH_MAX] = {
+	{RF_1T1R,	RF_1T2R,	RF_1T3R,	RF_1T4R},
+	{RF_2T1R,	RF_2T2R,	RF_2T3R,	RF_2T4R},
+	{RF_3T1R,	RF_3T2R,	RF_3T3R,	RF_3T4R},
+	{RF_4T1R,	RF_4T2R,	RF_4T3R,	RF_4T4R},
+};
+
+enum rf_type trx_num_to_rf_type(u8 tx_num, u8 rx_num)
+{
+	if (tx_num > 0 && tx_num <= RF_PATH_MAX && rx_num > 0 && rx_num <= RF_PATH_MAX)
+		return _trx_num_to_rf_type[tx_num - 1][rx_num - 1];
+	return RF_TYPE_MAX;
+}
+
+enum rf_type trx_bmp_to_rf_type(u8 tx_bmp, u8 rx_bmp)
+{
+	u8 tx_num = 0;
+	u8 rx_num = 0;
+	int i;
+
+	for (i = 0; i < RF_PATH_MAX; i++) {
+		if (tx_bmp >> i & BIT0)
+			tx_num++;
+		if (rx_bmp >> i & BIT0)
+			rx_num++;
+	}
+
+	return trx_num_to_rf_type(tx_num, rx_num);
+}
+
+bool rf_type_is_a_in_b(enum rf_type a, enum rf_type b)
+{
+	return rf_type_to_rf_tx_cnt(a) <= rf_type_to_rf_tx_cnt(b)
+		&& rf_type_to_rf_rx_cnt(a) <= rf_type_to_rf_rx_cnt(b);
+}
+
+static void rtw_path_bmp_limit_from_higher(u8 *bmp, u8 *bmp_bit_cnt, u8 bit_cnt_lmt)
+{
+	int i;
+
+	for (i = RF_PATH_MAX - 1; *bmp_bit_cnt > bit_cnt_lmt && i >= 0; i--) {
+		if (*bmp & BIT(i)) {
+			*bmp &= ~BIT(i);
+			(*bmp_bit_cnt)--;
+		}
+	}
+}
+
+u8 rtw_restrict_trx_path_bmp_by_trx_num_lmt(u8 trx_path_bmp, u8 tx_num_lmt, u8 rx_num_lmt, u8 *tx_num, u8 *rx_num)
+{
+	u8 bmp_tx = (trx_path_bmp & 0xF0) >> 4;
+	u8 bmp_rx = trx_path_bmp & 0x0F;
+	u8 bmp_tx_num = 0, bmp_rx_num = 0;
+	enum rf_type ret_type = RF_TYPE_MAX;
+	int i, j;
+
+	for (i = 0; i < RF_PATH_MAX; i++) {
+		if (bmp_tx & BIT(i))
+			bmp_tx_num++;
+		if (bmp_rx & BIT(i))
+			bmp_rx_num++;
+	}
+
+	if (tx_num_lmt)
+		rtw_path_bmp_limit_from_higher(&bmp_tx, &bmp_tx_num, tx_num_lmt);
+	if (rx_num_lmt)
+		rtw_path_bmp_limit_from_higher(&bmp_rx, &bmp_rx_num, rx_num_lmt);
+
+	for (j = bmp_rx_num; j > 0; j--) {
+		for (i = bmp_tx_num; i > 0; i--) {
+			ret_type = trx_num_to_rf_type(i, j);
+			if (RF_TYPE_VALID(ret_type)) {
+				rtw_path_bmp_limit_from_higher(&bmp_tx, &bmp_tx_num, i);
+				rtw_path_bmp_limit_from_higher(&bmp_rx, &bmp_rx_num, j);
+				if (tx_num)
+					*tx_num = bmp_tx_num;
+				if (rx_num)
+					*rx_num = bmp_rx_num;
+				goto exit;
+			}
+		}
+	}
+
+exit:
+	return RF_TYPE_VALID(ret_type) ? ((bmp_tx << 4) | bmp_rx) : 0x00;
+}
+
+u8 rtw_restrict_trx_path_bmp_by_rftype(u8 trx_path_bmp, enum rf_type type, u8 *tx_num, u8 *rx_num)
+{
+	return rtw_restrict_trx_path_bmp_by_trx_num_lmt(trx_path_bmp
+		, rf_type_to_rf_tx_cnt(type), rf_type_to_rf_rx_cnt(type), tx_num, rx_num);
+}
+#endif /* !CONFIG_RUST || HOST_RF_TEST */
+
 #if defined(CONFIG_RUST) && !defined(HOST_RF_TEST)
 void rtw_rust_rf_warn_on(int condition)
 {

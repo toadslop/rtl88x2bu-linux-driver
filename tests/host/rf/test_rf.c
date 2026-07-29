@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Host L2 oracle runner for rtw_rf_rest channel layout + freq + op-class helpers
- * (W3-19, W3-20, W3-22).
+ * Host L2 oracle runner for rtw_rf_rest channel layout + freq + op-class + trx-path helpers
+ * (W3-19, W3-20, W3-22, W3-23).
  */
 
 #include <stdio.h>
@@ -39,6 +39,12 @@ enum rf_fn {
 	FN_GET_SUB_OP_CLASS,
 	FN_GET_OP_CLASS_BY_CHBW,
 	FN_GET_BW_OFFSET_BY_OP_CLASS_CH,
+	FN_RF_TYPE_TO_DEFAULT_TRX_BMP,
+	FN_TRX_NUM_TO_RF_TYPE,
+	FN_TRX_BMP_TO_RF_TYPE,
+	FN_RF_TYPE_IS_A_IN_B,
+	FN_RESTRICT_TRX_PATH_BY_NUM_LMT,
+	FN_RESTRICT_TRX_PATH_BY_RFTYPE,
 };
 
 struct vector {
@@ -64,6 +70,17 @@ struct vector {
 	int expect_lo;
 	int expect_offset;
 	char expect_str[MAX_NAME];
+	u8 rf_type;
+	u8 rf_type_b;
+	u8 tx_bmp;
+	u8 rx_bmp;
+	u8 tx_num;
+	u8 rx_num;
+	u8 trx_path_bmp;
+	u8 tx_num_lmt;
+	u8 rx_num_lmt;
+	int expect_tx;
+	int expect_rx;
 };
 
 u8 rtw_get_scch_by_cch_offset(u8 cch, u8 bw, u8 offset);
@@ -84,6 +101,15 @@ bool is_valid_global_op_class_id(u8 gid);
 s16 get_sub_op_class(u8 gid, u8 ch);
 u8 rtw_get_op_class_by_chbw(u8 ch, u8 bw, u8 offset);
 u8 rtw_get_bw_offset_by_op_class_ch(u8 gid, u8 ch, u8 *bw, u8 *offset);
+
+void rf_type_to_default_trx_bmp(enum rf_type rf, enum bb_path *tx, enum bb_path *rx);
+enum rf_type trx_num_to_rf_type(u8 tx_num, u8 rx_num);
+enum rf_type trx_bmp_to_rf_type(u8 tx_bmp, u8 rx_bmp);
+bool rf_type_is_a_in_b(enum rf_type a, enum rf_type b);
+u8 rtw_restrict_trx_path_bmp_by_trx_num_lmt(u8 trx_path_bmp, u8 tx_num_lmt,
+					    u8 rx_num_lmt, u8 *tx_num, u8 *rx_num);
+u8 rtw_restrict_trx_path_bmp_by_rftype(u8 trx_path_bmp, enum rf_type type,
+				       u8 *tx_num, u8 *rx_num);
 
 static int parse_fn(const char *obj, size_t obj_len, enum rf_fn *out)
 {
@@ -137,6 +163,18 @@ static int parse_fn(const char *obj, size_t obj_len, enum rf_fn *out)
 		*out = FN_GET_OP_CLASS_BY_CHBW;
 	else if (strcmp(fn, "rtw_get_bw_offset_by_op_class_ch") == 0)
 		*out = FN_GET_BW_OFFSET_BY_OP_CLASS_CH;
+	else if (strcmp(fn, "rf_type_to_default_trx_bmp") == 0)
+		*out = FN_RF_TYPE_TO_DEFAULT_TRX_BMP;
+	else if (strcmp(fn, "trx_num_to_rf_type") == 0)
+		*out = FN_TRX_NUM_TO_RF_TYPE;
+	else if (strcmp(fn, "trx_bmp_to_rf_type") == 0)
+		*out = FN_TRX_BMP_TO_RF_TYPE;
+	else if (strcmp(fn, "rf_type_is_a_in_b") == 0)
+		*out = FN_RF_TYPE_IS_A_IN_B;
+	else if (strcmp(fn, "rtw_restrict_trx_path_bmp_by_trx_num_lmt") == 0)
+		*out = FN_RESTRICT_TRX_PATH_BY_NUM_LMT;
+	else if (strcmp(fn, "rtw_restrict_trx_path_bmp_by_rftype") == 0)
+		*out = FN_RESTRICT_TRX_PATH_BY_RFTYPE;
 	else
 		return -1;
 	return 0;
@@ -206,6 +244,17 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 	host_json_parse_int_in(obj, obj_len, "expect_hi", &v->expect_hi);
 	host_json_parse_int_in(obj, obj_len, "expect_lo", &v->expect_lo);
 	host_json_parse_int_in(obj, obj_len, "expect_offset", &v->expect_offset);
+	host_json_parse_int_in(obj, obj_len, "rf_type", (int *)&v->rf_type);
+	host_json_parse_int_in(obj, obj_len, "rf_type_b", (int *)&v->rf_type_b);
+	host_json_parse_int_in(obj, obj_len, "tx_bmp", (int *)&v->tx_bmp);
+	host_json_parse_int_in(obj, obj_len, "rx_bmp", (int *)&v->rx_bmp);
+	host_json_parse_int_in(obj, obj_len, "tx_num", (int *)&v->tx_num);
+	host_json_parse_int_in(obj, obj_len, "rx_num", (int *)&v->rx_num);
+	host_json_parse_int_in(obj, obj_len, "trx_path_bmp", (int *)&v->trx_path_bmp);
+	host_json_parse_int_in(obj, obj_len, "tx_num_lmt", (int *)&v->tx_num_lmt);
+	host_json_parse_int_in(obj, obj_len, "rx_num_lmt", (int *)&v->rx_num_lmt);
+	host_json_parse_int_in(obj, obj_len, "expect_tx", &v->expect_tx);
+	host_json_parse_int_in(obj, obj_len, "expect_rx", &v->expect_rx);
 	host_json_parse_string_in(obj, obj_len, "expect_str", v->expect_str,
 				  sizeof(v->expect_str));
 	if (!host_json_parse_int_in(obj, obj_len, "expect_cck_group", &tmp)) {
@@ -511,6 +560,103 @@ static int run_vector(struct vector *v)
 		if ((int)out_offset != v->expect_offset) {
 			fprintf(stderr, "%s: offset=%u expect=%d\n",
 				v->name, out_offset, v->expect_offset);
+			return -1;
+		}
+		break;
+	}
+	case FN_RF_TYPE_TO_DEFAULT_TRX_BMP: {
+		enum bb_path tx = 0;
+		enum bb_path rx = 0;
+
+		rf_type_to_default_trx_bmp((enum rf_type)v->rf_type, &tx, &rx);
+		if ((int)tx != v->expect_tx) {
+			fprintf(stderr, "%s: tx=%u expect=%d\n",
+				v->name, (unsigned)tx, v->expect_tx);
+			return -1;
+		}
+		if ((int)rx != v->expect_rx) {
+			fprintf(stderr, "%s: rx=%u expect=%d\n",
+				v->name, (unsigned)rx, v->expect_rx);
+			return -1;
+		}
+		break;
+	}
+	case FN_TRX_NUM_TO_RF_TYPE: {
+		enum rf_type got = trx_num_to_rf_type(v->tx_num, v->rx_num);
+
+		if ((int)got != v->expect) {
+			fprintf(stderr, "%s: trx_num_to_rf_type got=%d expect=%d\n",
+				v->name, got, v->expect);
+			return -1;
+		}
+		break;
+	}
+	case FN_TRX_BMP_TO_RF_TYPE: {
+		enum rf_type got = trx_bmp_to_rf_type(v->tx_bmp, v->rx_bmp);
+
+		if ((int)got != v->expect) {
+			fprintf(stderr, "%s: trx_bmp_to_rf_type got=%d expect=%d\n",
+				v->name, got, v->expect);
+			return -1;
+		}
+		break;
+	}
+	case FN_RF_TYPE_IS_A_IN_B: {
+		bool got = rf_type_is_a_in_b((enum rf_type)v->rf_type,
+					     (enum rf_type)v->rf_type_b);
+
+		if ((int)got != v->expect_valid) {
+			fprintf(stderr, "%s: rf_type_is_a_in_b got=%d expect=%d\n",
+				v->name, got, v->expect_valid);
+			return -1;
+		}
+		break;
+	}
+	case FN_RESTRICT_TRX_PATH_BY_NUM_LMT: {
+		u8 out_tx = 0xff;
+		u8 out_rx = 0xff;
+		u8 got = rtw_restrict_trx_path_bmp_by_trx_num_lmt(v->trx_path_bmp,
+								  v->tx_num_lmt,
+								  v->rx_num_lmt,
+								  &out_tx, &out_rx);
+
+		if ((int)got != v->expect) {
+			fprintf(stderr, "%s: restrict got=0x%02x expect=%d\n",
+				v->name, got, v->expect);
+			return -1;
+		}
+		if (v->expect_tx >= 0 && (int)out_tx != v->expect_tx) {
+			fprintf(stderr, "%s: out_tx=%u expect=%d\n",
+				v->name, out_tx, v->expect_tx);
+			return -1;
+		}
+		if (v->expect_rx >= 0 && (int)out_rx != v->expect_rx) {
+			fprintf(stderr, "%s: out_rx=%u expect=%d\n",
+				v->name, out_rx, v->expect_rx);
+			return -1;
+		}
+		break;
+	}
+	case FN_RESTRICT_TRX_PATH_BY_RFTYPE: {
+		u8 out_tx = 0xff;
+		u8 out_rx = 0xff;
+		u8 got = rtw_restrict_trx_path_bmp_by_rftype(v->trx_path_bmp,
+							     (enum rf_type)v->rf_type,
+							     &out_tx, &out_rx);
+
+		if ((int)got != v->expect) {
+			fprintf(stderr, "%s: restrict_rftype got=0x%02x expect=%d\n",
+				v->name, got, v->expect);
+			return -1;
+		}
+		if (v->expect_tx >= 0 && (int)out_tx != v->expect_tx) {
+			fprintf(stderr, "%s: out_tx=%u expect=%d\n",
+				v->name, out_tx, v->expect_tx);
+			return -1;
+		}
+		if (v->expect_rx >= 0 && (int)out_rx != v->expect_rx) {
+			fprintf(stderr, "%s: out_rx=%u expect=%d\n",
+				v->name, out_rx, v->expect_rx);
 			return -1;
 		}
 		break;

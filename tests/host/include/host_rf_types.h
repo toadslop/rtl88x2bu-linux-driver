@@ -50,6 +50,7 @@ typedef enum _BAND_TYPE {
 #define BIT4 (1 << 4)
 #define BIT5 (1 << 5)
 #define BIT6 (1 << 6)
+#define BIT(x) (1 << (x))
 
 #define BAND_CAP_2G BIT0
 #define BAND_CAP_5G BIT1
@@ -113,5 +114,53 @@ u8 rtw_get_bw_offset_by_op_class_ch(u8 gid, u8 ch, u8 *bw, u8 *offset);
 
 u8 rtw_get_offset_by_chbw(u8 ch, u8 bw, u8 *r_offset);
 u8 rtw_get_center_ch(u8 ch, u8 bw, u8 offset);
+
+#define RF_PATH_MAX 4
+
+enum rf_type {
+	RF_1T1R = 0,
+	RF_1T2R = 1,
+	RF_2T2R = 2,
+	RF_2T3R = 3,
+	RF_2T4R = 4,
+	RF_3T3R = 5,
+	RF_3T4R = 6,
+	RF_4T4R = 7,
+	RF_4T3R = 8,
+	RF_4T2R = 9,
+	RF_4T1R = 10,
+	RF_3T2R = 11,
+	RF_3T1R = 12,
+	RF_2T1R = 13,
+	RF_1T4R = 14,
+	RF_1T3R = 15,
+	RF_TYPE_MAX,
+};
+
+enum bb_path {
+	BB_PATH_A = 0x00000001,
+	BB_PATH_B = 0x00000002,
+	BB_PATH_C = 0x00000004,
+	BB_PATH_D = 0x00000008,
+};
+
+#define RF_TYPE_VALID(rf_type) ((rf_type) < RF_TYPE_MAX)
+
+extern const u8 _rf_type_to_rf_tx_cnt[];
+#define rf_type_to_rf_tx_cnt(rf_type) \
+	(RF_TYPE_VALID(rf_type) ? _rf_type_to_rf_tx_cnt[(rf_type)] : 0)
+
+extern const u8 _rf_type_to_rf_rx_cnt[];
+#define rf_type_to_rf_rx_cnt(rf_type) \
+	(RF_TYPE_VALID(rf_type) ? _rf_type_to_rf_rx_cnt[(rf_type)] : 0)
+
+void rf_type_to_default_trx_bmp(enum rf_type rf, enum bb_path *tx, enum bb_path *rx);
+enum rf_type trx_num_to_rf_type(u8 tx_num, u8 rx_num);
+enum rf_type trx_bmp_to_rf_type(u8 tx_bmp, u8 rx_bmp);
+bool rf_type_is_a_in_b(enum rf_type a, enum rf_type b);
+u8 rtw_restrict_trx_path_bmp_by_trx_num_lmt(u8 trx_path_bmp, u8 tx_num_lmt,
+					    u8 rx_num_lmt, u8 *tx_num, u8 *rx_num);
+u8 rtw_restrict_trx_path_bmp_by_rftype(u8 trx_path_bmp, enum rf_type type,
+				       u8 *tx_num, u8 *rx_num);
 
 #endif /* HOST_RF_TYPES_H */

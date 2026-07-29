@@ -1002,6 +1002,115 @@
       "bw": 4,
       "offset": 0,
       "expect": 0
+    },
+    {
+      "name": "rf_type_default_1t1r",
+      "fn": "rf_type_to_default_trx_bmp",
+      "rf_type": 0,
+      "expect_tx": 1,
+      "expect_rx": 1
+    },
+    {
+      "name": "rf_type_default_2t2r",
+      "fn": "rf_type_to_default_trx_bmp",
+      "rf_type": 2,
+      "expect_tx": 3,
+      "expect_rx": 3
+    },
+    {
+      "name": "rf_type_default_4t4r",
+      "fn": "rf_type_to_default_trx_bmp",
+      "rf_type": 7,
+      "expect_tx": 15,
+      "expect_rx": 15
+    },
+    {
+      "name": "trx_num_to_rf_type_2t2r",
+      "fn": "trx_num_to_rf_type",
+      "tx_num": 2,
+      "rx_num": 2,
+      "expect": 2
+    },
+    {
+      "name": "trx_num_to_rf_type_oob_tx",
+      "fn": "trx_num_to_rf_type",
+      "tx_num": 0,
+      "rx_num": 1,
+      "expect": 16
+    },
+    {
+      "name": "trx_num_to_rf_type_oob_rx",
+      "fn": "trx_num_to_rf_type",
+      "tx_num": 5,
+      "rx_num": 1,
+      "expect": 16
+    },
+    {
+      "name": "trx_bmp_to_rf_type_2t2r",
+      "fn": "trx_bmp_to_rf_type",
+      "tx_bmp": 3,
+      "rx_bmp": 3,
+      "expect": 2
+    },
+    {
+      "name": "trx_bmp_to_rf_type_2t1r_sparse",
+      "fn": "trx_bmp_to_rf_type",
+      "tx_bmp": 5,
+      "rx_bmp": 1,
+      "expect": 13
+    },
+    {
+      "name": "rf_type_is_a_in_b_subset",
+      "fn": "rf_type_is_a_in_b",
+      "rf_type": 0,
+      "rf_type_b": 2,
+      "expect_valid": 1
+    },
+    {
+      "name": "rf_type_is_a_in_b_not_subset",
+      "fn": "rf_type_is_a_in_b",
+      "rf_type": 2,
+      "rf_type_b": 0,
+      "expect_valid": 0
+    },
+    {
+      "name": "restrict_trx_4x4_to_2x2",
+      "fn": "rtw_restrict_trx_path_bmp_by_trx_num_lmt",
+      "trx_path_bmp": 255,
+      "tx_num_lmt": 2,
+      "rx_num_lmt": 2,
+      "expect": 51,
+      "expect_tx": 2,
+      "expect_rx": 2
+    },
+    {
+      "name": "restrict_trx_no_rx_paths",
+      "fn": "rtw_restrict_trx_path_bmp_by_trx_num_lmt",
+      "trx_path_bmp": 240,
+      "tx_num_lmt": 1,
+      "rx_num_lmt": 4,
+      "expect": 0,
+      "expect_tx": -1,
+      "expect_rx": -1
+    },
+    {
+      "name": "restrict_trx_by_rftype_2t2r",
+      "fn": "rtw_restrict_trx_path_bmp_by_rftype",
+      "trx_path_bmp": 255,
+      "rf_type": 2,
+      "expect": 51,
+      "expect_tx": 2,
+      "expect_rx": 2
+    },
+    {
+      "name": "restrict_trx_zero_bmp",
+      "fn": "rtw_restrict_trx_path_bmp_by_trx_num_lmt",
+      "trx_path_bmp": 0,
+      "tx_num_lmt": 2,
+      "rx_num_lmt": 2,
+      "expect": 0,
+      "expect_tx": -1,
+      "expect_rx": -1
     }
   ]
 }
