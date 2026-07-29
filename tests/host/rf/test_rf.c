@@ -10,7 +10,7 @@
 #include "host_rf_types.h"
 #include "host_vector_json.h"
 
-#define MAX_VECTORS 96
+#define MAX_VECTORS 128
 #define MAX_NAME 128
 #define MAX_OP_CHS 8
 
@@ -28,6 +28,12 @@ enum rf_fn {
 	FN_CH2FREQ,
 	FN_FREQ2CH,
 	FN_CHBW_TO_FREQ_RANGE,
+	FN_CH_WIDTH_STR,
+	FN_CH_WIDTH_TO_BW_CAP,
+	FN_BAND_STR,
+	FN_BAND_TO_BAND_CAP,
+	FN_OPC_BW_STR,
+	FN_OPC_BW_TO_CH_WIDTH,
 };
 
 struct vector {
@@ -51,6 +57,7 @@ struct vector {
 	int freq;
 	int expect_hi;
 	int expect_lo;
+	char expect_str[MAX_NAME];
 };
 
 u8 rtw_get_scch_by_cch_offset(u8 cch, u8 bw, u8 offset);
@@ -99,6 +106,18 @@ static int parse_fn(const char *obj, size_t obj_len, enum rf_fn *out)
 		*out = FN_FREQ2CH;
 	else if (strcmp(fn, "rtw_chbw_to_freq_range") == 0)
 		*out = FN_CHBW_TO_FREQ_RANGE;
+	else if (strcmp(fn, "ch_width_str") == 0)
+		*out = FN_CH_WIDTH_STR;
+	else if (strcmp(fn, "ch_width_to_bw_cap") == 0)
+		*out = FN_CH_WIDTH_TO_BW_CAP;
+	else if (strcmp(fn, "band_str") == 0)
+		*out = FN_BAND_STR;
+	else if (strcmp(fn, "band_to_band_cap") == 0)
+		*out = FN_BAND_TO_BAND_CAP;
+	else if (strcmp(fn, "opc_bw_str") == 0)
+		*out = FN_OPC_BW_STR;
+	else if (strcmp(fn, "opc_bw_to_ch_width") == 0)
+		*out = FN_OPC_BW_TO_CH_WIDTH;
 	else
 		return -1;
 	return 0;
@@ -167,6 +186,8 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 	host_json_parse_int_in(obj, obj_len, "expect_group", &v->expect_group);
 	host_json_parse_int_in(obj, obj_len, "expect_hi", &v->expect_hi);
 	host_json_parse_int_in(obj, obj_len, "expect_lo", &v->expect_lo);
+	host_json_parse_string_in(obj, obj_len, "expect_str", v->expect_str,
+				  sizeof(v->expect_str));
 	if (!host_json_parse_int_in(obj, obj_len, "expect_cck_group", &tmp)) {
 		v->expect_cck_group = tmp;
 		v->has_cck_group = 1;
@@ -355,6 +376,66 @@ static int run_vector(struct vector *v)
 		if ((int)lo != v->expect_lo) {
 			fprintf(stderr, "%s: lo=%u expect=%d\n",
 				v->name, lo, v->expect_lo);
+			return -1;
+		}
+		break;
+	}
+	case FN_CH_WIDTH_STR: {
+		const char *got = ch_width_str(v->bw);
+
+		if (strcmp(got, v->expect_str) != 0) {
+			fprintf(stderr, "%s: ch_width_str got=%s expect=%s\n",
+				v->name, got, v->expect_str);
+			return -1;
+		}
+		break;
+	}
+	case FN_CH_WIDTH_TO_BW_CAP: {
+		u8 got = ch_width_to_bw_cap(v->bw);
+
+		if ((int)got != v->expect) {
+			fprintf(stderr, "%s: ch_width_to_bw_cap got=%u expect=%d\n",
+				v->name, got, v->expect);
+			return -1;
+		}
+		break;
+	}
+	case FN_BAND_STR: {
+		const char *got = band_str(v->bw);
+
+		if (strcmp(got, v->expect_str) != 0) {
+			fprintf(stderr, "%s: band_str got=%s expect=%s\n",
+				v->name, got, v->expect_str);
+			return -1;
+		}
+		break;
+	}
+	case FN_BAND_TO_BAND_CAP: {
+		u8 got = band_to_band_cap(v->bw);
+
+		if ((int)got != v->expect) {
+			fprintf(stderr, "%s: band_to_band_cap got=%u expect=%d\n",
+				v->name, got, v->expect);
+			return -1;
+		}
+		break;
+	}
+	case FN_OPC_BW_STR: {
+		const char *got = opc_bw_str(v->bw);
+
+		if (strcmp(got, v->expect_str) != 0) {
+			fprintf(stderr, "%s: opc_bw_str got=%s expect=%s\n",
+				v->name, got, v->expect_str);
+			return -1;
+		}
+		break;
+	}
+	case FN_OPC_BW_TO_CH_WIDTH: {
+		u8 got = opc_bw_to_ch_width(v->bw);
+
+		if ((int)got != v->expect) {
+			fprintf(stderr, "%s: opc_bw_to_ch_width got=%u expect=%d\n",
+				v->name, got, v->expect);
 			return -1;
 		}
 		break;

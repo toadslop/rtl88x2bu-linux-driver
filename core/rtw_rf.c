@@ -62,57 +62,7 @@ u8 center_ch_5g_20m_40m[CENTER_CH_5G_20M_NUM + CENTER_CH_5G_40M_NUM] = {
 /* G13 */173, 175, 177
 };
 
-/* Channel layout + frequency helpers live in core/rtw_rf_rest.c (W3-19, W3-20). */
-
-const char *const _ch_width_str[CHANNEL_WIDTH_MAX] = {
-	[CHANNEL_WIDTH_20]		= "20MHz",
-	[CHANNEL_WIDTH_40]		= "40MHz",
-	[CHANNEL_WIDTH_80]		= "80MHz",
-	[CHANNEL_WIDTH_160]		= "160MHz",
-	[CHANNEL_WIDTH_80_80]	= "80_80MHz",
-	[CHANNEL_WIDTH_5]		= "5MHz",
-	[CHANNEL_WIDTH_10]		= "10MHz",
-};
-
-const u8 _ch_width_to_bw_cap[CHANNEL_WIDTH_MAX] = {
-	[CHANNEL_WIDTH_20]		= BW_CAP_20M,
-	[CHANNEL_WIDTH_40]		= BW_CAP_40M,
-	[CHANNEL_WIDTH_80]		= BW_CAP_80M,
-	[CHANNEL_WIDTH_160]		= BW_CAP_160M,
-	[CHANNEL_WIDTH_80_80]	= BW_CAP_80_80M,
-	[CHANNEL_WIDTH_5]		= BW_CAP_5M,
-	[CHANNEL_WIDTH_10]		= BW_CAP_10M,
-};
-
-const char *const _band_str[] = {
-	"2.4G",
-	"5G",
-	"BAND_MAX",
-};
-
-const u8 _band_to_band_cap[] = {
-	BAND_CAP_2G,
-	BAND_CAP_5G,
-	0,
-};
-
-const char *const _opc_bw_str[OPC_BW_NUM] = {
-	"20M ",		/* OPC_BW20 */
-	"40M+",		/* OPC_BW40PLUS */
-	"40M-",		/* OPC_BW40MINUS */
-	"80M ",		/* OPC_BW80 */
-	"160M ",	/* OPC_BW160 */
-	"80+80M ",	/* OPC_BW80P80 */
-};
-
-const u8 _opc_bw_to_ch_width[OPC_BW_NUM] = {
-	CHANNEL_WIDTH_20,		/* OPC_BW20 */
-	CHANNEL_WIDTH_40,		/* OPC_BW40PLUS */
-	CHANNEL_WIDTH_40,		/* OPC_BW40MINUS */
-	CHANNEL_WIDTH_80,		/* OPC_BW80 */
-	CHANNEL_WIDTH_160,		/* OPC_BW160 */
-	CHANNEL_WIDTH_80_80,	/* OPC_BW80P80 */
-};
+/* Channel layout, frequency, and lookup tables live in core/rtw_rf_rest.c (W3-19..W3-21). */
 
 /* global operating class database */
 

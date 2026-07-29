@@ -43,4 +43,51 @@ typedef enum _BAND_TYPE {
 	BAND_MAX,
 } BAND_TYPE;
 
+#define BIT0 (1 << 0)
+#define BIT1 (1 << 1)
+#define BIT2 (1 << 2)
+#define BIT3 (1 << 3)
+#define BIT4 (1 << 4)
+#define BIT5 (1 << 5)
+#define BIT6 (1 << 6)
+
+#define BAND_CAP_2G BIT0
+#define BAND_CAP_5G BIT1
+
+#define BW_CAP_5M BIT0
+#define BW_CAP_10M BIT1
+#define BW_CAP_20M BIT2
+#define BW_CAP_40M BIT3
+#define BW_CAP_80M BIT4
+#define BW_CAP_160M BIT5
+#define BW_CAP_80_80M BIT6
+
+enum opc_bw {
+	OPC_BW20 = 0,
+	OPC_BW40PLUS = 1,
+	OPC_BW40MINUS = 2,
+	OPC_BW80 = 3,
+	OPC_BW160 = 4,
+	OPC_BW80P80 = 5,
+	OPC_BW_NUM,
+};
+
+extern const char *const _ch_width_str[];
+#define ch_width_str(bw) (((bw) < CHANNEL_WIDTH_MAX) ? _ch_width_str[(bw)] : "CHANNEL_WIDTH_MAX")
+
+extern const u8 _ch_width_to_bw_cap[];
+#define ch_width_to_bw_cap(bw) (((bw) < CHANNEL_WIDTH_MAX) ? _ch_width_to_bw_cap[(bw)] : 0)
+
+extern const char *const _band_str[];
+#define band_str(band) (((band) >= BAND_MAX) ? _band_str[BAND_MAX] : _band_str[(band)])
+
+extern const u8 _band_to_band_cap[];
+#define band_to_band_cap(band) (((band) >= BAND_MAX) ? _band_to_band_cap[BAND_MAX] : _band_to_band_cap[(band)])
+
+extern const char *const _opc_bw_str[OPC_BW_NUM];
+#define opc_bw_str(bw) (((bw) < OPC_BW_NUM) ? _opc_bw_str[(bw)] : "N/A")
+
+extern const u8 _opc_bw_to_ch_width[OPC_BW_NUM];
+#define opc_bw_to_ch_width(bw) (((bw) < OPC_BW_NUM) ? _opc_bw_to_ch_width[(bw)] : CHANNEL_WIDTH_MAX)
+
 #endif /* HOST_RF_TYPES_H */
