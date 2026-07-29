@@ -1048,9 +1048,10 @@ u8 rtw_restrict_trx_path_bmp_by_rftype(u8 trx_path_bmp, enum rf_type type, u8 *t
 }
 #endif /* !CONFIG_RUST || HOST_RF_TEST */
 
+#if !defined(CONFIG_RUST) || defined(HOST_RF_TEST)
 /*
  * W3-24: txpwr formatting and DFS CAC helpers extracted from core/rtw_rf.c.
- * Keep C definitions unguarded until PR2 ports them to rust/rtw_rf_rest.rs.
+ * C oracle for host L2; kernel builds use rust/rtw_rf_rest.rs when CONFIG_RUST.
  */
 #ifdef HOST_RF_TEST
 #include <stdio.h>
@@ -1129,6 +1130,7 @@ bool rtw_is_long_cac_ch(u8 ch, u8 bw, u8 offset, u8 dfs_region)
 
 	return rtw_is_long_cac_range(hi, lo, dfs_region) ? _TRUE : _FALSE;
 }
+#endif /* !CONFIG_RUST || HOST_RF_TEST */
 
 #if defined(CONFIG_RUST) && !defined(HOST_RF_TEST)
 void rtw_rust_rf_warn_on(int condition)

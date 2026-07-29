@@ -2788,7 +2788,7 @@ rust-objects-rtw-rf-rest:
 	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_rf_rest.o
 
 rust-objects-rtw-rf-rest-c:
-	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -Wno-format-truncation -O2 \
 		-I$(shell pwd)/tests/host/include -I$(shell pwd)/include \
 		-include $(shell pwd)/tests/host/include/host_autoconf.h \
 		-DHOST_RF_TEST -o tests/host/rf/rf_rest_c_ref.o core/rtw_rf_rest.c

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
 //! RF rest helpers — Rust port of `core/rtw_rf_rest.c` channel layout (W3-19),
 //! frequency conversion (W3-20), lookup/format tables (W3-21), global
-//! operating-class lookup (W3-22), and RF type / trx-path helpers (W3-23).
+//! operating-class lookup (W3-22), RF type / trx-path helpers (W3-23), and
+//! txpwr format / DFS CAC helpers (W3-24).
 
 #![allow(
     dead_code,
@@ -1247,4 +1248,241 @@ pub extern "C" fn rtw_restrict_trx_path_bmp_by_rftype(
         tx_num,
         rx_num,
     )
+}
+
+const MBM_PDBM: i32 = 100;
+const UNSPECIFIED_MBM: i32 = 32767;
+const RTW_DFS_REGD_ETSI: u8 = 3;
+
+static MB_OF_NTX: [i16; 8] = [0, 301, 477, 602, 699, 778, 845, 903];
+
+fn rtw_abs_i32(v: i32) -> i32 {
+    if v < 0 {
+        -v
+    } else {
+        v
+    }
+}
+
+fn rtw_is_range_overlap(hi_a: u32, lo_a: u32, hi_b: u32, lo_b: u32) -> bool {
+    hi_a > lo_b && lo_a < hi_b
+}
+
+fn copy_cstr(out: *mut u8, out_len: u8, src: &[u8]) {
+    if out.is_null() || out_len == 0 {
+        return;
+    }
+    let max = (out_len as usize).saturating_sub(1);
+    let n = src.len().min(max);
+    unsafe {
+        core::ptr::copy_nonoverlapping(src.as_ptr(), out, n);
+        *out.add(n) = 0;
+    }
+}
+
+fn write_padded_bytes(buf: &mut [u8], pos: usize, data: &[u8], width: usize) -> usize {
+    let pad = width.saturating_sub(data.len());
+    let mut p = pos;
+    for _ in 0..pad {
+        if p < buf.len() {
+            buf[p] = b' ';
+            p += 1;
+        }
+    }
+    for &b in data {
+        if p < buf.len() {
+            buf[p] = b;
+            p += 1;
+        }
+    }
+    p
+}
+
+fn write_i32_padded(buf: &mut [u8], pos: usize, val: i32, width: usize) -> usize {
+    let mut tmp = [0u8; 16];
+    let mut n = 0usize;
+    let negative = val < 0;
+    let mut uval = if negative {
+        (-val) as u32
+    } else {
+        val as u32
+    };
+
+    if uval == 0 {
+        tmp[0] = b'0';
+        n = 1;
+    } else {
+        while uval > 0 {
+            tmp[n] = b'0' + (uval % 10) as u8;
+            uval /= 10;
+            n += 1;
+        }
+        tmp[..n].reverse();
+    }
+
+    let sign_len = if negative { 1usize } else { 0usize };
+    let num_width = width.saturating_sub(sign_len);
+    let pad = num_width.saturating_sub(n);
+    let mut p = pos;
+    for _ in 0..pad {
+        if p < buf.len() {
+            buf[p] = b' ';
+            p += 1;
+        }
+    }
+    if negative && p < buf.len() {
+        buf[p] = b'-';
+        p += 1;
+    }
+    for i in 0..n {
+        if p < buf.len() {
+            buf[p] = tmp[i];
+            p += 1;
+        }
+    }
+    p
+}
+
+fn write_frac2(buf: &mut [u8], pos: usize, frac: i32) -> usize {
+    let mut p = pos;
+    if p < buf.len() {
+        buf[p] = b'.';
+        p += 1;
+    }
+    let tens = (frac / 10).max(0) as u8;
+    let ones = (frac % 10).max(0) as u8;
+    if p < buf.len() {
+        buf[p] = b'0' + tens;
+        p += 1;
+    }
+    if p < buf.len() {
+        buf[p] = b'0' + ones;
+        p += 1;
+    }
+    p
+}
+
+fn txpwr_format_idx(idx: i8, txgi_max: u8, txgi_pdbm: u8, cwidth: usize) -> [u8; 32] {
+    let mut buf = [0u8; 32];
+    let idx_i = idx as i32;
+    let txgi_max_i = txgi_max as i32;
+    let txgi_pdbm_i = txgi_pdbm as i32;
+    let mut pos = 0usize;
+
+    if idx_i == txgi_max_i {
+        let width = if cwidth >= 6 { cwidth + 1 } else { 6 };
+        pos = write_padded_bytes(&mut buf, pos, b"NA", width);
+    } else if idx_i > -txgi_pdbm_i && idx_i < 0 {
+        let width = if cwidth >= 6 { cwidth - 4 } else { 1 };
+        let frac = (rtw_abs_i32(idx_i) % txgi_pdbm_i) * 100 / txgi_pdbm_i;
+        pos = write_padded_bytes(&mut buf, pos, b"", width);
+        if pos < buf.len() {
+            buf[pos] = b'-';
+            pos += 1;
+        }
+        if pos < buf.len() {
+            buf[pos] = b'0';
+            pos += 1;
+        }
+        pos = write_frac2(&mut buf, pos, frac);
+    } else if idx_i % txgi_pdbm_i != 0 {
+        let width = if cwidth >= 6 { cwidth - 2 } else { 3 };
+        let whole = idx_i / txgi_pdbm_i;
+        let frac = (rtw_abs_i32(idx_i) % txgi_pdbm_i) * 100 / txgi_pdbm_i;
+        pos = write_i32_padded(&mut buf, pos, whole, width);
+        pos = write_frac2(&mut buf, pos, frac);
+    } else {
+        let width = if cwidth >= 6 { cwidth + 1 } else { 6 };
+        let whole = idx_i / txgi_pdbm_i;
+        pos = write_i32_padded(&mut buf, pos, whole, width);
+    }
+
+    buf
+}
+
+fn txpwr_format_mbm(mbm: i16, cwidth: usize) -> [u8; 32] {
+    let mut buf = [0u8; 32];
+    let mbm_i = mbm as i32;
+    let mut pos = 0usize;
+
+    if mbm_i == UNSPECIFIED_MBM {
+        let width = if cwidth >= 6 { cwidth + 1 } else { 6 };
+        pos = write_padded_bytes(&mut buf, pos, b"NA", width);
+    } else if mbm_i > -MBM_PDBM && mbm_i < 0 {
+        let width = if cwidth >= 6 { cwidth - 4 } else { 1 };
+        let frac = (rtw_abs_i32(mbm_i) % MBM_PDBM) * 100 / MBM_PDBM;
+        pos = write_padded_bytes(&mut buf, pos, b"", width);
+        if pos < buf.len() {
+            buf[pos] = b'-';
+            pos += 1;
+        }
+        if pos < buf.len() {
+            buf[pos] = b'0';
+            pos += 1;
+        }
+        pos = write_frac2(&mut buf, pos, frac);
+    } else if mbm_i % MBM_PDBM != 0 {
+        let width = if cwidth >= 6 { cwidth - 2 } else { 3 };
+        let whole = mbm_i / MBM_PDBM;
+        let frac = (rtw_abs_i32(mbm_i) % MBM_PDBM) * 100 / MBM_PDBM;
+        pos = write_i32_padded(&mut buf, pos, whole, width);
+        pos = write_frac2(&mut buf, pos, frac);
+    } else {
+        let width = if cwidth >= 6 { cwidth + 1 } else { 6 };
+        let whole = mbm_i / MBM_PDBM;
+        pos = write_i32_padded(&mut buf, pos, whole, width);
+    }
+
+    buf
+}
+
+#[no_mangle]
+pub extern "C" fn txpwr_idx_get_dbm_str(
+    idx: i8,
+    txgi_max: u8,
+    txgi_pdbm: u8,
+    cwidth: usize,
+    dbm_str: *mut u8,
+    dbm_str_len: u8,
+) {
+    let formatted = txpwr_format_idx(idx, txgi_max, txgi_pdbm, cwidth);
+    let len = formatted.iter().position(|&b| b == 0).unwrap_or(formatted.len());
+    copy_cstr(dbm_str, dbm_str_len, &formatted[..len]);
+}
+
+#[no_mangle]
+pub extern "C" fn txpwr_mbm_get_dbm_str(
+    mbm: i16,
+    cwidth: usize,
+    dbm_str: *mut u8,
+    dbm_str_len: u8,
+) {
+    let formatted = txpwr_format_mbm(mbm, cwidth);
+    let len = formatted.iter().position(|&b| b == 0).unwrap_or(formatted.len());
+    copy_cstr(dbm_str, dbm_str_len, &formatted[..len]);
+}
+
+#[no_mangle]
+pub extern "C" fn mb_of_ntx(ntx: u8) -> i16 {
+    if ntx == 0 || ntx > 8 {
+        kernel::warn_on(true);
+    }
+    MB_OF_NTX[(ntx as usize).saturating_sub(1)]
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_is_long_cac_range(hi: u32, lo: u32, dfs_region: u8) -> bool {
+    dfs_region == RTW_DFS_REGD_ETSI && rtw_is_range_overlap(hi, lo, 5650, 5600)
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_is_long_cac_ch(ch: u8, bw: u8, offset: u8, dfs_region: u8) -> bool {
+    let mut hi = 0u32;
+    let mut lo = 0u32;
+
+    if !rtw_chbw_to_freq_range(ch, bw, offset, &mut hi, &mut lo) {
+        return false;
+    }
+
+    rtw_is_long_cac_range(hi, lo, dfs_region)
 }
