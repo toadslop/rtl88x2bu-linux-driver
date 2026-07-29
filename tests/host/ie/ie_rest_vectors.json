@@ -1,0 +1,138 @@
+{
+  "oracle": "core/rtw_ieee80211_rest.c",
+  "vectors": [
+    {
+      "name": "bit_value_1mb",
+      "fn": "rtw_get_bit_value_from_ieee_value",
+      "rates": "02",
+      "expect": 1
+    },
+    {
+      "name": "bit_value_2mb",
+      "fn": "rtw_get_bit_value_from_ieee_value",
+      "rates": "04",
+      "expect": 2
+    },
+    {
+      "name": "bit_value_6mb",
+      "fn": "rtw_get_bit_value_from_ieee_value",
+      "rates": "0c",
+      "expect": 16
+    },
+    {
+      "name": "bit_value_invalid",
+      "fn": "rtw_get_bit_value_from_ieee_value",
+      "rates": "99",
+      "expect": 0
+    },
+    {
+      "name": "network_type_11b",
+      "fn": "rtw_check_network_type",
+      "rates": "82848b96",
+      "ratelen": 4,
+      "channel": 6,
+      "expect": 1
+    },
+    {
+      "name": "network_type_11g",
+      "fn": "rtw_check_network_type",
+      "rates": "0c1218243048606c",
+      "ratelen": 8,
+      "channel": 6,
+      "expect": 2
+    },
+    {
+      "name": "network_type_11bg",
+      "fn": "rtw_check_network_type",
+      "rates": "82848b960c18",
+      "ratelen": 6,
+      "channel": 6,
+      "expect": 3
+    },
+    {
+      "name": "network_type_5g_cck_invalid",
+      "fn": "rtw_check_network_type",
+      "rates": "8284",
+      "ratelen": 2,
+      "channel": 36,
+      "expect": 0
+    },
+    {
+      "name": "network_type_11a",
+      "fn": "rtw_check_network_type",
+      "rates": "0c1218243048606c",
+      "ratelen": 8,
+      "channel": 36,
+      "expect": 4
+    },
+    {
+      "name": "set_supported_rate_11b",
+      "fn": "rtw_set_supported_rate",
+      "mode": 1,
+      "expect_rates": "82848b96"
+    },
+    {
+      "name": "set_supported_rate_11g",
+      "fn": "rtw_set_supported_rate",
+      "mode": 2,
+      "expect_rates": "0c1218243048606c"
+    },
+    {
+      "name": "set_supported_rate_11bg",
+      "fn": "rtw_set_supported_rate",
+      "mode": 3,
+      "expect_rates": "82848b960c1218243048606c"
+    },
+    {
+      "name": "filter_rateie_keep_cck",
+      "fn": "rtw_filter_suppport_rateie",
+      "ds_config": 6,
+      "keep": 0,
+      "ies": "000000000000000000000000010882848b960c121824",
+      "expect_ielength": 18,
+      "expect_ies": "000000000000000000000000010482848b96"
+    },
+    {
+      "name": "filter_rateie_keep_ofdm",
+      "fn": "rtw_filter_suppport_rateie",
+      "ds_config": 6,
+      "keep": 1,
+      "ies": "000000000000000000000000010882848b960c121824",
+      "expect_ielength": 18,
+      "expect_ies": "00000000000000000000000001048c129824"
+    },
+    {
+      "name": "update_rate_bymode_11b",
+      "fn": "rtw_update_rate_bymode",
+      "mode": 1,
+      "ds_config": 6,
+      "ies": "000000000000000000000000010882848b960c12182432043048606c",
+      "expect": 1,
+      "expect_ielength": 20,
+      "expect_ies": "000000000000000000000000010482848b963048",
+      "expect_supported": "82848b96"
+    },
+    {
+      "name": "update_rate_bymode_11g",
+      "fn": "rtw_update_rate_bymode",
+      "mode": 2,
+      "ds_config": 6,
+      "ies": "000000000000000000000000010882848b960c121824",
+      "expect": 2,
+      "expect_ielength": 18,
+      "expect_ies": "00000000000000000000000001048c129824",
+      "expect_supported": "0c1218243048606c"
+    },
+    {
+      "name": "update_rate_bymode_5g_ofdm",
+      "fn": "rtw_update_rate_bymode",
+      "mode": 4,
+      "ds_config": 36,
+      "ies": "000000000000000000000000010882848b960c121824",
+      "expect": 4,
+      "expect_ielength": 18,
+      "expect_ies": "00000000000000000000000001048c129824",
+      "expect_supported": "0c1218243048606c"
+    }
+  ]
+}
