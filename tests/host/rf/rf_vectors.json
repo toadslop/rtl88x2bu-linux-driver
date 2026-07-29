@@ -1074,6 +1074,13 @@
       "expect_valid": 0
     },
     {
+      "name": "rf_type_is_a_in_b_equal",
+      "fn": "rf_type_is_a_in_b",
+      "rf_type": 2,
+      "rf_type_b": 2,
+      "expect_valid": 1
+    },
+    {
       "name": "restrict_trx_4x4_to_2x2",
       "fn": "rtw_restrict_trx_path_bmp_by_trx_num_lmt",
       "trx_path_bmp": 255,
@@ -1111,6 +1118,16 @@
       "expect": 0,
       "expect_tx": -1,
       "expect_rx": -1
+    },
+    {
+      "name": "restrict_trx_zero_lmt_no_cap",
+      "fn": "rtw_restrict_trx_path_bmp_by_trx_num_lmt",
+      "trx_path_bmp": 255,
+      "tx_num_lmt": 0,
+      "rx_num_lmt": 0,
+      "expect": 255,
+      "expect_tx": 4,
+      "expect_rx": 4
     }
   ]
 }
