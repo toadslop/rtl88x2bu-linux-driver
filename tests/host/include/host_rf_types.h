@@ -33,8 +33,8 @@
 #define CENTER_CH_5G_80M_NUM 7
 #define CENTER_CH_5G_160M_NUM 3
 
-#define RTW_PRINT(...) do { } while (0)
 #define RTW_WARN(...) do { } while (0)
+#define RTW_ERR(...) do { } while (0)
 #define rtw_warn_on(cond) ((void)(cond))
 
 typedef enum _BAND_TYPE {
@@ -162,5 +162,31 @@ u8 rtw_restrict_trx_path_bmp_by_trx_num_lmt(u8 trx_path_bmp, u8 tx_num_lmt,
 					    u8 rx_num_lmt, u8 *tx_num, u8 *rx_num);
 u8 rtw_restrict_trx_path_bmp_by_rftype(u8 trx_path_bmp, enum rf_type type,
 				       u8 *tx_num, u8 *rx_num);
+
+#include <stddef.h>
+
+typedef size_t SIZE_T;
+
+#define MBM_PDBM 100
+#define UNSPECIFIED_MBM 32767
+#define rtw_abs(a) ((a) < 0 ? -(a) : (a))
+#define rtw_is_range_overlap(hi_a, lo_a, hi_b, lo_b) \
+	(((hi_a) > (lo_b)) && ((lo_a) < (hi_b)))
+
+enum rtw_dfs_regd {
+	RTW_DFS_REGD_NONE = 0,
+	RTW_DFS_REGD_FCC = 1,
+	RTW_DFS_REGD_MKK = 2,
+	RTW_DFS_REGD_ETSI = 3,
+	RTW_DFS_REGD_NUM,
+	RTW_DFS_REGD_AUTO = 0xFF,
+};
+
+void txpwr_idx_get_dbm_str(s8 idx, u8 txgi_max, u8 txgi_pdbm, SIZE_T cwidth,
+			   char dbm_str[], u8 dbm_str_len);
+void txpwr_mbm_get_dbm_str(s16 mbm, SIZE_T cwidth, char dbm_str[], u8 dbm_str_len);
+s16 mb_of_ntx(u8 ntx);
+bool rtw_is_long_cac_range(u32 hi, u32 lo, u8 dfs_region);
+bool rtw_is_long_cac_ch(u8 ch, u8 bw, u8 offset, u8 dfs_region);
 
 #endif /* HOST_RF_TYPES_H */

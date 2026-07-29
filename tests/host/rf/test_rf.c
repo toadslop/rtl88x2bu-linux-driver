@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Host L2 oracle runner for rtw_rf_rest channel layout + freq + op-class + trx-path helpers
- * (W3-19, W3-20, W3-22, W3-23).
+ * Host L2 oracle runner for rtw_rf_rest channel layout + freq + op-class + trx-path +
+ * txpwr/CAC helpers (W3-19, W3-20, W3-22, W3-23, W3-24).
  */
 
 #include <stdio.h>
@@ -11,7 +11,7 @@
 #include "host_rf_types.h"
 #include "host_vector_json.h"
 
-#define MAX_VECTORS 170
+#define MAX_VECTORS 210
 #define MAX_NAME 128
 #define MAX_OP_CHS 8
 
@@ -45,6 +45,11 @@ enum rf_fn {
 	FN_RF_TYPE_IS_A_IN_B,
 	FN_RESTRICT_TRX_PATH_BY_NUM_LMT,
 	FN_RESTRICT_TRX_PATH_BY_RFTYPE,
+	FN_TXPWR_IDX_GET_DBM_STR,
+	FN_TXPWR_MBM_GET_DBM_STR,
+	FN_MB_OF_NTX,
+	FN_IS_LONG_CAC_RANGE,
+	FN_IS_LONG_CAC_CH,
 };
 
 struct vector {
@@ -111,6 +116,13 @@ u8 rtw_restrict_trx_path_bmp_by_trx_num_lmt(u8 trx_path_bmp, u8 tx_num_lmt,
 u8 rtw_restrict_trx_path_bmp_by_rftype(u8 trx_path_bmp, enum rf_type type,
 				       u8 *tx_num, u8 *rx_num);
 
+void txpwr_idx_get_dbm_str(s8 idx, u8 txgi_max, u8 txgi_pdbm, SIZE_T cwidth,
+			   char dbm_str[], u8 dbm_str_len);
+void txpwr_mbm_get_dbm_str(s16 mbm, SIZE_T cwidth, char dbm_str[], u8 dbm_str_len);
+s16 mb_of_ntx(u8 ntx);
+bool rtw_is_long_cac_range(u32 hi, u32 lo, u8 dfs_region);
+bool rtw_is_long_cac_ch(u8 ch, u8 bw, u8 offset, u8 dfs_region);
+
 static int parse_fn(const char *obj, size_t obj_len, enum rf_fn *out)
 {
 	char fn[64];
@@ -175,6 +187,16 @@ static int parse_fn(const char *obj, size_t obj_len, enum rf_fn *out)
 		*out = FN_RESTRICT_TRX_PATH_BY_NUM_LMT;
 	else if (strcmp(fn, "rtw_restrict_trx_path_bmp_by_rftype") == 0)
 		*out = FN_RESTRICT_TRX_PATH_BY_RFTYPE;
+	else if (strcmp(fn, "txpwr_idx_get_dbm_str") == 0)
+		*out = FN_TXPWR_IDX_GET_DBM_STR;
+	else if (strcmp(fn, "txpwr_mbm_get_dbm_str") == 0)
+		*out = FN_TXPWR_MBM_GET_DBM_STR;
+	else if (strcmp(fn, "mb_of_ntx") == 0)
+		*out = FN_MB_OF_NTX;
+	else if (strcmp(fn, "rtw_is_long_cac_range") == 0)
+		*out = FN_IS_LONG_CAC_RANGE;
+	else if (strcmp(fn, "rtw_is_long_cac_ch") == 0)
+		*out = FN_IS_LONG_CAC_CH;
 	else
 		return -1;
 	return 0;
@@ -657,6 +679,60 @@ static int run_vector(struct vector *v)
 		if (v->expect_rx >= 0 && (int)out_rx != v->expect_rx) {
 			fprintf(stderr, "%s: out_rx=%u expect=%d\n",
 				v->name, out_rx, v->expect_rx);
+			return -1;
+		}
+		break;
+	}
+	case FN_TXPWR_IDX_GET_DBM_STR: {
+		char got[MAX_NAME];
+
+		txpwr_idx_get_dbm_str((s8)v->freq, v->tx_num, v->rx_num, (SIZE_T)v->id,
+				      got, sizeof(got));
+		if (strcmp(got, v->expect_str) != 0) {
+			fprintf(stderr, "%s: txpwr_idx got='%s' expect='%s'\n",
+				v->name, got, v->expect_str);
+			return -1;
+		}
+		break;
+	}
+	case FN_TXPWR_MBM_GET_DBM_STR: {
+		char got[MAX_NAME];
+
+		txpwr_mbm_get_dbm_str((s16)v->freq, (SIZE_T)v->id, got, sizeof(got));
+		if (strcmp(got, v->expect_str) != 0) {
+			fprintf(stderr, "%s: txpwr_mbm got='%s' expect='%s'\n",
+				v->name, got, v->expect_str);
+			return -1;
+		}
+		break;
+	}
+	case FN_MB_OF_NTX: {
+		s16 got = mb_of_ntx(v->tx_num_lmt);
+
+		if ((int)got != v->expect) {
+			fprintf(stderr, "%s: mb_of_ntx got=%d expect=%d\n",
+				v->name, got, v->expect);
+			return -1;
+		}
+		break;
+	}
+	case FN_IS_LONG_CAC_RANGE: {
+		bool got = rtw_is_long_cac_range((u32)v->expect_hi, (u32)v->expect_lo,
+						 v->rf_type);
+
+		if ((int)got != v->expect_valid) {
+			fprintf(stderr, "%s: long_cac_range got=%d expect=%d\n",
+				v->name, got, v->expect_valid);
+			return -1;
+		}
+		break;
+	}
+	case FN_IS_LONG_CAC_CH: {
+		bool got = rtw_is_long_cac_ch(v->ch, v->bw, v->offset, v->rf_type);
+
+		if ((int)got != v->expect_valid) {
+			fprintf(stderr, "%s: long_cac_ch got=%d expect=%d\n",
+				v->name, got, v->expect_valid);
 			return -1;
 		}
 		break;

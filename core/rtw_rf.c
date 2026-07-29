@@ -637,74 +637,6 @@ const char *const _regd_str[] = {
 	"WW",
 };
 
-/*
-* input with txpwr value in unit of txpwr index
-* return string in length 6 at least (for -xx.xx)
-*/
-void txpwr_idx_get_dbm_str(s8 idx, u8 txgi_max, u8 txgi_pdbm, SIZE_T cwidth, char dbm_str[], u8 dbm_str_len)
-{
-	char fmt[16];
-
-	if (idx == txgi_max) {
-		snprintf(fmt, 16, "%%%zus", cwidth >= 6 ? cwidth + 1 : 6);
-		snprintf(dbm_str, dbm_str_len, fmt, "NA");
-	} else if (idx > -txgi_pdbm && idx < 0) { /* -0.xx */
-		snprintf(fmt, 16, "%%%zus-0.%%02d", cwidth >= 6 ? cwidth - 4 : 1);
-		snprintf(dbm_str, dbm_str_len, fmt, "", (rtw_abs(idx) % txgi_pdbm) * 100 / txgi_pdbm);
-	} else if (idx % txgi_pdbm) { /* d.xx */
-		snprintf(fmt, 16, "%%%zud.%%02d", cwidth >= 6 ? cwidth - 2 : 3);
-		snprintf(dbm_str, dbm_str_len, fmt, idx / txgi_pdbm, (rtw_abs(idx) % txgi_pdbm) * 100 / txgi_pdbm);
-	} else { /* d */
-		snprintf(fmt, 16, "%%%zud", cwidth >= 6 ? cwidth + 1 : 6);
-		snprintf(dbm_str, dbm_str_len, fmt, idx / txgi_pdbm);
-	}
-}
-
-/*
-* input with txpwr value in unit of mbm
-* return string in length 6 at least (for -xx.xx)
-*/
-void txpwr_mbm_get_dbm_str(s16 mbm, SIZE_T cwidth, char dbm_str[], u8 dbm_str_len)
-{
-	char fmt[16];
-
-	if (mbm == UNSPECIFIED_MBM) {
-		snprintf(fmt, 16, "%%%zus", cwidth >= 6 ? cwidth + 1 : 6);
-		snprintf(dbm_str, dbm_str_len, fmt, "NA");
-	} else if (mbm > -MBM_PDBM && mbm < 0) { /* -0.xx */
-		snprintf(fmt, 16, "%%%zus-0.%%02d", cwidth >= 6 ? cwidth - 4 : 1);
-		snprintf(dbm_str, dbm_str_len, fmt, "", (rtw_abs(mbm) % MBM_PDBM) * 100 / MBM_PDBM);
-	} else if (mbm % MBM_PDBM) { /* d.xx */
-		snprintf(fmt, 16, "%%%zud.%%02d", cwidth >= 6 ? cwidth - 2 : 3);
-		snprintf(dbm_str, dbm_str_len, fmt, mbm / MBM_PDBM, (rtw_abs(mbm) % MBM_PDBM) * 100 / MBM_PDBM);
-	} else { /* d */
-		snprintf(fmt, 16, "%%%zud", cwidth >= 6 ? cwidth + 1 : 6);
-		snprintf(dbm_str, dbm_str_len, fmt, mbm / MBM_PDBM);
-	}
-}
-
-static const s16 _mb_of_ntx[] = {
-	0,		/* 1TX */
-	301,	/* 2TX */
-	477,	/* 3TX */
-	602,	/* 4TX */
-	699,	/* 5TX */
-	778,	/* 6TX */
-	845,	/* 7TX */
-	903,	/* 8TX */
-};
-
-/* get mB(100 *dB) for specifc TX count relative to 1TX */
-s16 mb_of_ntx(u8 ntx)
-{
-	if (ntx == 0 || ntx > 8) {
-		RTW_ERR("ntx=%u, out of range\n", ntx);
-		rtw_warn_on(1);
-	}
-
-	return _mb_of_ntx[ntx - 1];
-}
-
 #if CONFIG_TXPWR_LIMIT
 void _dump_regd_exc_list(void *sel, struct rf_ctl_t *rfctl)
 {
@@ -1447,17 +1379,3 @@ void rtw_rf_apply_tx_gain_offset(_adapter *adapter, u8 ch)
 	}
 }
 
-bool rtw_is_long_cac_range(u32 hi, u32 lo, u8 dfs_region)
-{
-	return (dfs_region == RTW_DFS_REGD_ETSI && rtw_is_range_overlap(hi, lo, 5650, 5600)) ? _TRUE : _FALSE;
-}
-
-bool rtw_is_long_cac_ch(u8 ch, u8 bw, u8 offset, u8 dfs_region)
-{
-	u32 hi, lo;
-
-	if (rtw_chbw_to_freq_range(ch, bw, offset, &hi, &lo) == _FALSE)
-		return _FALSE;
-
-	return rtw_is_long_cac_range(hi, lo, dfs_region) ? _TRUE : _FALSE;
-}
