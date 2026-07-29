@@ -1,0 +1,106 @@
+{
+  "oracle": "core/rtw_ieee80211_rest.c",
+  "vectors": [
+    {
+      "name": "wpa_tkip_ccmp",
+      "fn": "rtw_parse_wpa_ie",
+      "ie": "dd100050f20101000050f20201000050f204",
+      "ie_len": 18,
+      "expect_ret": 1,
+      "expect_group_cipher": 8,
+      "expect_pairwise_cipher": 16
+    },
+    {
+      "name": "wpa_tkip_ccmp_8021x",
+      "fn": "rtw_parse_wpa_ie",
+      "ie": "dd160050f20101000050f20201000050f20401000050f201",
+      "ie_len": 24,
+      "expect_ret": 1,
+      "expect_group_cipher": 8,
+      "expect_pairwise_cipher": 16,
+      "with_akm": 1,
+      "expect_akm": 1
+    },
+    {
+      "name": "wpa_zero_len",
+      "fn": "rtw_parse_wpa_ie",
+      "ie": "",
+      "ie_len": 0,
+      "expect_ret": 0
+    },
+    {
+      "name": "wpa_bad_oui",
+      "fn": "rtw_parse_wpa_ie",
+      "ie": "dd100050f2020101000050f20201000050f204",
+      "ie_len": 18,
+      "expect_ret": 0
+    },
+    {
+      "name": "rsn_tkip_ccmp_psk",
+      "fn": "rtw_rsne_info_parse",
+      "ie": "30140100000fac020100000fac040100000fac020000",
+      "ie_len": 22,
+      "expect_ret": 1,
+      "expect_err": 0,
+      "expect_pcs_cnt": 1,
+      "expect_akm_cnt": 1
+    },
+    {
+      "name": "rsn_version_only",
+      "fn": "rtw_rsne_info_parse",
+      "ie": "30020100",
+      "ie_len": 4,
+      "expect_ret": 1,
+      "expect_err": 0,
+      "expect_pcs_cnt": 0,
+      "expect_akm_cnt": 0
+    },
+    {
+      "name": "rsn_bad_version",
+      "fn": "rtw_rsne_info_parse",
+      "ie": "30020200",
+      "ie_len": 4,
+      "expect_ret": 0,
+      "expect_err": 1
+    },
+    {
+      "name": "wpa2_tkip_ccmp_psk",
+      "fn": "rtw_parse_wpa2_ie",
+      "ie": "30140100000fac020100000fac040100000fac020000",
+      "ie_len": 22,
+      "expect_ret": 1,
+      "expect_group_cipher": 8,
+      "expect_pairwise_cipher": 16,
+      "expect_gmcs": 256,
+      "expect_akm": 2,
+      "expect_mfp_opt": 0,
+      "expect_spp_opt": 0
+    },
+    {
+      "name": "wpa2_mfp_required",
+      "fn": "rtw_parse_wpa2_ie",
+      "ie": "30140100000fac040100000fac040100000fac02c000",
+      "ie_len": 22,
+      "expect_ret": 1,
+      "expect_group_cipher": 16,
+      "expect_pairwise_cipher": 16,
+      "expect_gmcs": 256,
+      "expect_akm": 2,
+      "expect_mfp_opt": 3,
+      "expect_spp_opt": 0
+    },
+    {
+      "name": "wpa2_dual_akm",
+      "fn": "rtw_parse_wpa2_ie",
+      "ie": "301c0100000fac040200000fac04000fac040200000fac02000fac080000",
+      "ie_len": 30,
+      "expect_ret": 1,
+      "expect_group_cipher": 16,
+      "expect_pairwise_cipher": 16,
+      "expect_gmcs": 256,
+      "expect_akm": 130,
+      "expect_mfp_opt": 0,
+      "expect_spp_opt": 0
+    }
+  ]
+}

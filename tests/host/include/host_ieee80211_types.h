@@ -130,6 +130,39 @@ typedef int sint;
 #define WLAN_AKM_TYPE_FT_FILS_SHA256 BIT(13)
 #define WLAN_AKM_TYPE_FT_FILS_SHA384 BIT(14)
 
+#define _WPA_IE_ID_ 0xdd
+#define _WPA2_IE_ID_ 0x30
+#define WLAN_EID_RSN 48
+
+#define LE_BITS_TO_2BYTE(__pStart, __BitOffset, __BitLen) \
+	(((((u16)(__pStart)[1] << 8) | (u16)(__pStart)[0]) >> (__BitOffset)) & \
+	 ((1U << (__BitLen)) - 1))
+
+#define GET_RSN_CAP_MFP_OPTION(cap) LE_BITS_TO_2BYTE(((u8 *)(cap)), 6, 2)
+#define GET_RSN_CAP_SPP_OPT(cap) LE_BITS_TO_2BYTE(((u8 *)(cap)), 10, 2)
+
+#define MFP_NO 0
+#define MFP_INVALID 1
+#define MFP_OPTIONAL 2
+#define MFP_REQUIRED 3
+
+#define RTW_GET_LE16(a) ((((u16)(a)[1]) << 8) | (u16)(a)[0])
+
+struct rsne_info {
+	u8 *gcs;
+	u16 pcs_cnt;
+	u8 *pcs_list;
+	u16 akm_cnt;
+	u8 *akm_list;
+	u8 *cap;
+	u16 pmkid_cnt;
+	u8 *pmkid_list;
+	u8 *gmcs;
+	u8 err;
+};
+
+extern u8 RTW_WPA_OUI_TYPE[];
+
 extern u8 WPA_CIPHER_SUITE_NONE[];
 extern u8 WPA_CIPHER_SUITE_WEP40[];
 extern u8 WPA_CIPHER_SUITE_TKIP[];
@@ -168,6 +201,13 @@ int _rtw_memcmp(const void *s1, const void *s2, size_t n);
 int rtw_get_wpa_cipher_suite(u8 *s);
 int rtw_get_rsn_cipher_suite(u8 *s);
 u32 rtw_get_akm_suite_bitmap(u8 *s);
+int rtw_parse_wpa_ie(u8 *wpa_ie, int wpa_ie_len, int *group_cipher,
+		     int *pairwise_cipher, u32 *akm);
+int rtw_rsne_info_parse(const u8 *ie, unsigned int ie_len,
+			struct rsne_info *info);
+int rtw_parse_wpa2_ie(u8 *rsn_ie, int rsn_ie_len, int *group_cipher,
+		      int *pairwise_cipher, int *gmcs, u32 *akm, u8 *mfp_opt,
+		      u8 *spp_opt);
 
 u8 *rtw_get_ie(const u8 *pbuf, sint index, sint *len, sint limit);
 int rtw_ies_remove_ie(u8 *ies, unsigned int *ies_len, unsigned int offset,
