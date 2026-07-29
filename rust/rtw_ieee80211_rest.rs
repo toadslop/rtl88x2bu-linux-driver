@@ -155,6 +155,8 @@ fn is_cck_rate_byte(rate: U8) -> bool {
     masked == 2 || masked == 4 || masked == 11 || masked == 22
 }
 
+// NULL pointers return false/no-op here; C dereferences unconditionally but
+// driver call sites always pass valid pointers (see W3-23/W3-25 ports).
 fn is_cckrates_included(rate: *const U8) -> bool {
     if rate.is_null() {
         return false;
