@@ -895,10 +895,9 @@ exit:
 
 #endif /* !CONFIG_RUST || HOST_RF_TEST */
 
-#if !defined(CONFIG_RUST) || defined(HOST_RF_TEST)
 /*
  * W3-23: RF type / trx-path helpers extracted from core/rtw_rf.c.
- * C oracle for host L2; kernel builds use rust/rtw_rf_rest.rs when CONFIG_RUST.
+ * Keep C definitions unguarded until PR2 ports them to rust/rtw_rf_rest.rs.
  */
 #ifdef HOST_RF_TEST
 const u8 _rf_type_to_rf_tx_cnt[RF_TYPE_MAX] = {
@@ -1046,7 +1045,6 @@ u8 rtw_restrict_trx_path_bmp_by_rftype(u8 trx_path_bmp, enum rf_type type, u8 *t
 	return rtw_restrict_trx_path_bmp_by_trx_num_lmt(trx_path_bmp
 		, rf_type_to_rf_tx_cnt(type), rf_type_to_rf_rx_cnt(type), tx_num, rx_num);
 }
-#endif /* !CONFIG_RUST || HOST_RF_TEST */
 
 #if defined(CONFIG_RUST) && !defined(HOST_RF_TEST)
 void rtw_rust_rf_warn_on(int condition)
