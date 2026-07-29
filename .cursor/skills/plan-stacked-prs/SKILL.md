@@ -1,13 +1,14 @@
 ---
 name: plan-stacked-prs
 description: >-
-  Step 3a of pick-up-work-item. Splits a selected migration issue into stacked
-  PRs of ~200 lines each and produces an implementation plan. Uses Cursor Plan
-  mode when available. Auto-applies after select-ready-issue. Do NOT implement
-  code in this step — use implement-stacked-prs next.
+  Path B step 3 of pick-up-work-item. Splits a selected migration issue into
+  stacked PRs of ~200 lines each and produces an implementation plan. Uses
+  Cursor Plan mode when available. Auto-applies after select-ready-issue. Do NOT
+  implement code in this step — use implement-stacked-prs next.
 metadata:
   parent-skill: pick-up-work-item
-  step: 3a
+  path: B
+  step: 3
   requires-skill: plan
 ---
 

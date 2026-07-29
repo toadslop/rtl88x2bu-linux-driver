@@ -1,12 +1,13 @@
 ---
 name: select-ready-issue
 description: >-
-  Step 2 of pick-up-work-item. Selects one open rust-migration issue that is
-  unblocked, not in-flight elsewhere, and ready to implement. Auto-applies after
-  triage-open-issues. Do NOT use to arbitrarily skip dependency order without
-  documenting why.
+  Path B step 2 of pick-up-work-item. Selects one open rust-migration issue that
+  is unblocked, not in-flight elsewhere, and ready to implement. Auto-applies
+  after triage-open-issues when no open PRs exist. Do NOT use to arbitrarily
+  skip dependency order without documenting why.
 metadata:
   parent-skill: pick-up-work-item
+  path: B
   step: 2
 ---
 
@@ -100,7 +101,7 @@ gh issue view <number> --json number,title,body,labels,state
 | Outcome | Next step |
 |---------|-----------|
 | **Ready issue found** (including oversized) | Report selection; continue to **`plan-stacked-prs`** |
-| **Nothing ready** | Explain why (blocked, all in-flight, wave complete); continue to **`draft-migration-issues`** — which must draft a **large wave** (15–25+ issues) when the frontier is empty, not 1–2 tickets |
+| **Nothing ready** | Explain why (blocked, all in-flight, wave complete); hand off to Path C **`draft-migration-issues`** — draft **10–20** issues when the frontier is empty, not 1–2 tickets |
 | **Ambiguous** | List top 2–3 candidates with tradeoffs; ask user if they care |
 
 ## Selection report template

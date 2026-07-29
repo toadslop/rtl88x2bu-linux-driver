@@ -1,14 +1,16 @@
 ---
 name: prepare-all-prs-for-merge
 description: >-
-  Batch wrapper that prepares every eligible open pull request for merge into
-  master. Auto-applies on "prepare all PRs for merge", "prepare all PRs",
-  "get all PRs ready to merge", or similar. Finds draft PRs and marks them ready
-  for review, then runs prepare-pr-for-merge on each eligible open PR. Only
-  considers PRs whose base is master or whose base branch has already been merged
-  into master. Do NOT use for a single PR (use prepare-pr-for-merge) or for
-  reviewing PRs (pr-review-delivery).
+  Path A of pick-up-work-item; also auto-applies on "prepare all PRs for merge",
+  "prepare all PRs", "get all PRs ready to merge", or similar. Prepares every
+  eligible open pull request for merge into master. Finds draft PRs and marks
+  them ready for review, then runs prepare-pr-for-merge on each eligible open
+  PR. Only considers PRs whose base is master or whose base branch has already
+  been merged into master. Do NOT use for a single PR (use prepare-pr-for-merge)
+  or for reviewing PRs (pr-review-delivery).
 metadata:
+  parent-skill: pick-up-work-item
+  path: A
   subskills:
     - prepare-pr-for-merge
   requires-skill: babysit
@@ -17,7 +19,8 @@ metadata:
 # Prepare All PRs for Merge
 
 Use this skill when the user wants **every eligible PR** prepared for landing on
-`master` — not one PR in isolation.
+`master` — or when **`pick-up-work-item`** chose **Path A** because open/draft
+PRs exist.
 
 This skill is a **thin orchestrator**. It does not duplicate the per-PR logic in
 [`prepare-pr-for-merge`](../prepare-pr-for-merge/SKILL.md). It discovers PRs,
@@ -159,7 +162,8 @@ Also list **`skipped`** PRs and why (e.g. stacked on unmerged `#M`).
 
 | Skill | Role |
 |-------|------|
+| **`pick-up-work-item`** | Parent orchestrator — invokes this skill as Path A. |
 | **`prepare-pr-for-merge`** | Per-PR prepare workflow (invoked once per eligible PR). |
 | **`babysit`** (Cursor built-in) | Used inside each prepare-pr-for-merge run. |
 | **`pr-review-delivery`** | Reviewer-only — out of scope. |
-| **`pick-up-work-item`** | Picks new work from issues — not for landing existing PRs. |
+| **`pick-up-work-item`** | Picks new work from issues — Path A invokes this skill when PRs exist. |

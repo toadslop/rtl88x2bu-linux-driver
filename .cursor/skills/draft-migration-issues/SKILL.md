@@ -1,15 +1,14 @@
 ---
 name: draft-migration-issues
 description: >-
-  Step 4 of pick-up-work-item (fallback). When no issue is ready, analyzes
-  in-progress epics and drafts a **large wave** of new ~200 LOC child issues
-  (typically 15–25+ tickets, not 1–2) as markdown specs. Can file via
-  file-issues.sh. Auto-applies when select-ready-issue finds nothing ready.
+  Path C of pick-up-work-item (fallback when no open PRs and no ready issue).
+  Analyzes in-progress epics and drafts a wave of new ~200 LOC child issues
+  (typically 10–20 tickets) as markdown specs. Can file via file-issues.sh.
   Completes the pick-up workflow — do NOT select or implement a newly drafted
   issue in the same run. Do NOT use to duplicate existing open issues.
 metadata:
   parent-skill: pick-up-work-item
-  step: 4
+  path: C
 ---
 
 # Draft Migration Issues
@@ -17,15 +16,15 @@ metadata:
 When **no open issue is ready**, figure out what tickets are missing to keep the
 migration moving, then draft them in the repo's issue format.
 
-**Draft a large wave, not a token sample.** When the active wave has **zero**
-open implementable children (frontier exhausted), the default is to file **15–25+
-chained issues** covering the next tranche of work — enough backlog for several
-pick-up cycles. Do **not** stop after 1–2 tickets unless the remaining scope is
-genuinely tiny (e.g. one small C file left in the wave).
+**Draft a meaningful wave, not a token sample.** When the active wave has **zero**
+open implementable children (frontier exhausted), draft **10–20 issues** based on
+repo state and migration direction — enough backlog for several pick-up cycles.
+Do **not** stop after 1–2 tickets unless the remaining scope is genuinely tiny
+(e.g. one small C file left in the wave).
 
 | Situation | How many to draft |
 |-----------|-------------------|
-| Frontier empty — new tranche / wave slice needed | **15–25+** issues (default) |
+| Frontier empty — new tranche / wave slice needed | **10–20** issues (default) |
 | Partial gap — a few large TUs still lack children | **5–10** issues for that TU cluster |
 | Single deferred helper named in an epic | **1–3** issues only when scope is truly that small |
 
@@ -76,7 +75,7 @@ Minimum bar when the frontier is empty:
    has clear ~200 LOC slices.
 2. Chain issues with `blocked_by` in dependency order (W3-N → W3-N+1).
 3. Stop only when the next files are HAL-heavy with no obvious leaf slices, or
-   you have filed **≥15** issues for the tranche.
+   you have filed **≥10** issues for the tranche (cap at ~20 unless scope is huge).
 
 Each new issue must be:
 
@@ -181,7 +180,7 @@ Sub-issues roll up progress on the parent epic in GitHub Projects.
 **For a future pick-up (not this run):** W3-10 is the next implementable issue.
 ```
 
-Report the **total count** of drafted/filed issues. If you filed fewer than 15
+Report the **total count** of drafted/filed issues. If you filed fewer than 10
 and the epic still lists large deferred TUs, explain why (e.g. "only
 `rtw_mem.c` left in wave — 1 issue sufficient").
 
