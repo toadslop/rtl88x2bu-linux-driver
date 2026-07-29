@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 //! IEEE 802.11 rest helpers — Rust port of `core/rtw_ieee80211_rest.c` rate
-//! classification slice (W3-26).
+//! classification slice (W3-26) and WPA/RSN cipher suite getters (W3-27).
 
 #![allow(
     dead_code,
@@ -63,6 +63,73 @@ const _BEACON_IE_OFFSET_: usize = 12;
 const _SUPPORTEDRATES_IE_: U8 = 1;
 const _EXT_SUPPORTEDRATES_IE_: U8 = 50;
 
+const WPA_SELECTOR_LEN: usize = 4;
+const RSN_SELECTOR_LEN: usize = 4;
+
+const WPA_CIPHER_NONE: i32 = 1 << 0;
+const WPA_CIPHER_WEP40: i32 = 1 << 1;
+const WPA_CIPHER_WEP104: i32 = 1 << 2;
+const WPA_CIPHER_TKIP: i32 = 1 << 3;
+const WPA_CIPHER_CCMP: i32 = 1 << 4;
+const WPA_CIPHER_GCMP: i32 = 1 << 5;
+const WPA_CIPHER_GCMP_256: i32 = 1 << 6;
+const WPA_CIPHER_CCMP_256: i32 = 1 << 7;
+const WPA_CIPHER_BIP_CMAC_128: i32 = 1 << 8;
+const WPA_CIPHER_BIP_GMAC_128: i32 = 1 << 9;
+const WPA_CIPHER_BIP_GMAC_256: i32 = 1 << 10;
+const WPA_CIPHER_BIP_CMAC_256: i32 = 1 << 11;
+
+const WLAN_AKM_TYPE_8021X: u32 = 1 << 0;
+const WLAN_AKM_TYPE_PSK: u32 = 1 << 1;
+const WLAN_AKM_TYPE_FT_8021X: u32 = 1 << 2;
+const WLAN_AKM_TYPE_FT_PSK: u32 = 1 << 3;
+const WLAN_AKM_TYPE_8021X_SHA256: u32 = 1 << 4;
+const WLAN_AKM_TYPE_PSK_SHA256: u32 = 1 << 5;
+const WLAN_AKM_TYPE_TDLS: u32 = 1 << 6;
+const WLAN_AKM_TYPE_SAE: u32 = 1 << 7;
+const WLAN_AKM_TYPE_FT_OVER_SAE: u32 = 1 << 8;
+const WLAN_AKM_TYPE_8021X_SUITE_B: u32 = 1 << 9;
+const WLAN_AKM_TYPE_8021X_SUITE_B_192: u32 = 1 << 10;
+const WLAN_AKM_TYPE_FILS_SHA256: u32 = 1 << 11;
+const WLAN_AKM_TYPE_FILS_SHA384: u32 = 1 << 12;
+const WLAN_AKM_TYPE_FT_FILS_SHA256: u32 = 1 << 13;
+const WLAN_AKM_TYPE_FT_FILS_SHA384: u32 = 1 << 14;
+
+const WPA_CIPHER_SUITE_NONE: [U8; 4] = [0x00, 0x50, 0xf2, 0];
+const WPA_CIPHER_SUITE_WEP40: [U8; 4] = [0x00, 0x50, 0xf2, 1];
+const WPA_CIPHER_SUITE_TKIP: [U8; 4] = [0x00, 0x50, 0xf2, 2];
+const WPA_CIPHER_SUITE_CCMP: [U8; 4] = [0x00, 0x50, 0xf2, 4];
+const WPA_CIPHER_SUITE_WEP104: [U8; 4] = [0x00, 0x50, 0xf2, 5];
+
+const RSN_CIPHER_SUITE_NONE: [U8; 4] = [0x00, 0x0f, 0xac, 0];
+const RSN_CIPHER_SUITE_WEP40: [U8; 4] = [0x00, 0x0f, 0xac, 1];
+const RSN_CIPHER_SUITE_TKIP: [U8; 4] = [0x00, 0x0f, 0xac, 2];
+const RSN_CIPHER_SUITE_CCMP: [U8; 4] = [0x00, 0x0f, 0xac, 4];
+const RSN_CIPHER_SUITE_AES_128_CMAC: [U8; 4] = [0x00, 0x0f, 0xac, 6];
+const RSN_CIPHER_SUITE_GCMP: [U8; 4] = [0x00, 0x0f, 0xac, 8];
+const RSN_CIPHER_SUITE_GCMP_256: [U8; 4] = [0x00, 0x0f, 0xac, 9];
+const RSN_CIPHER_SUITE_CCMP_256: [U8; 4] = [0x00, 0x0f, 0xac, 10];
+const RSN_CIPHER_SUITE_BIP_GMAC_128: [U8; 4] = [0x00, 0x0f, 0xac, 11];
+const RSN_CIPHER_SUITE_BIP_GMAC_256: [U8; 4] = [0x00, 0x0f, 0xac, 12];
+const RSN_CIPHER_SUITE_BIP_CMAC_256: [U8; 4] = [0x00, 0x0f, 0xac, 13];
+const RSN_CIPHER_SUITE_WEP104: [U8; 4] = [0x00, 0x0f, 0xac, 5];
+
+const WLAN_AKM_8021X: [U8; 4] = [0x00, 0x0f, 0xac, 1];
+const WLAN_AKM_PSK: [U8; 4] = [0x00, 0x0f, 0xac, 2];
+const WLAN_AKM_FT_8021X: [U8; 4] = [0x00, 0x0f, 0xac, 3];
+const WLAN_AKM_FT_PSK: [U8; 4] = [0x00, 0x0f, 0xac, 4];
+const WLAN_AKM_8021X_SHA256: [U8; 4] = [0x00, 0x0f, 0xac, 5];
+const WLAN_AKM_PSK_SHA256: [U8; 4] = [0x00, 0x0f, 0xac, 6];
+const WLAN_AKM_TDLS: [U8; 4] = [0x00, 0x0f, 0xac, 7];
+const WLAN_AKM_SAE: [U8; 4] = [0x00, 0x0f, 0xac, 8];
+const WLAN_AKM_FT_OVER_SAE: [U8; 4] = [0x00, 0x0f, 0xac, 9];
+const WLAN_AKM_8021X_SUITE_B: [U8; 4] = [0x00, 0x0f, 0xac, 11];
+const WLAN_AKM_8021X_SUITE_B_192: [U8; 4] = [0x00, 0x0f, 0xac, 12];
+const WLAN_AKM_FILS_SHA256: [U8; 4] = [0x00, 0x0f, 0xac, 14];
+const WLAN_AKM_FILS_SHA384: [U8; 4] = [0x00, 0x0f, 0xac, 15];
+const WLAN_AKM_FT_FILS_SHA256: [U8; 4] = [0x00, 0x0f, 0xac, 16];
+const WLAN_AKM_FT_FILS_SHA384: [U8; 4] = [0x00, 0x0f, 0xac, 17];
+
 static WIFI_CCKRATES: [U8; 4] = [
     IEEE80211_CCK_RATE_1MB | IEEE80211_BASIC_RATE_MASK,
     IEEE80211_CCK_RATE_2MB | IEEE80211_BASIC_RATE_MASK,
@@ -122,6 +189,7 @@ extern "C" {
     fn memcpy(dst: *mut u8, src: *const u8, n: usize) -> *mut u8;
     fn memmove(dst: *mut u8, src: *const u8, n: usize) -> *mut u8;
     fn memset(s: *mut u8, c: i32, n: usize) -> *mut u8;
+    fn memcmp(s1: *const u8, s2: *const u8, n: usize) -> i32;
 
     fn rtw_get_ie(pbuf: *const u8, index: Sint, len: *mut Sint, limit: Sint) -> *mut u8;
     fn rtw_ies_remove_ie(
@@ -148,6 +216,124 @@ extern "C" {
 
 fn bit(i: u32) -> i32 {
     1i32 << i
+}
+
+fn suite_matches(s: *const U8, suite: &[U8; 4], len: usize) -> bool {
+    if s.is_null() {
+        return false;
+    }
+    unsafe { memcmp(s, suite.as_ptr(), len) == 0 }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_get_wpa_cipher_suite(s: *mut U8) -> c_int {
+    if suite_matches(s, &WPA_CIPHER_SUITE_NONE, WPA_SELECTOR_LEN) {
+        return WPA_CIPHER_NONE;
+    }
+    if suite_matches(s, &WPA_CIPHER_SUITE_WEP40, WPA_SELECTOR_LEN) {
+        return WPA_CIPHER_WEP40;
+    }
+    if suite_matches(s, &WPA_CIPHER_SUITE_TKIP, WPA_SELECTOR_LEN) {
+        return WPA_CIPHER_TKIP;
+    }
+    if suite_matches(s, &WPA_CIPHER_SUITE_CCMP, WPA_SELECTOR_LEN) {
+        return WPA_CIPHER_CCMP;
+    }
+    if suite_matches(s, &WPA_CIPHER_SUITE_WEP104, WPA_SELECTOR_LEN) {
+        return WPA_CIPHER_WEP104;
+    }
+    0
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_get_rsn_cipher_suite(s: *mut U8) -> c_int {
+    if suite_matches(s, &RSN_CIPHER_SUITE_NONE, RSN_SELECTOR_LEN) {
+        return WPA_CIPHER_NONE;
+    }
+    if suite_matches(s, &RSN_CIPHER_SUITE_WEP40, RSN_SELECTOR_LEN) {
+        return WPA_CIPHER_WEP40;
+    }
+    if suite_matches(s, &RSN_CIPHER_SUITE_TKIP, RSN_SELECTOR_LEN) {
+        return WPA_CIPHER_TKIP;
+    }
+    if suite_matches(s, &RSN_CIPHER_SUITE_CCMP, RSN_SELECTOR_LEN) {
+        return WPA_CIPHER_CCMP;
+    }
+    if suite_matches(s, &RSN_CIPHER_SUITE_GCMP, RSN_SELECTOR_LEN) {
+        return WPA_CIPHER_GCMP;
+    }
+    if suite_matches(s, &RSN_CIPHER_SUITE_GCMP_256, RSN_SELECTOR_LEN) {
+        return WPA_CIPHER_GCMP_256;
+    }
+    if suite_matches(s, &RSN_CIPHER_SUITE_CCMP_256, RSN_SELECTOR_LEN) {
+        return WPA_CIPHER_CCMP_256;
+    }
+    if suite_matches(s, &RSN_CIPHER_SUITE_WEP104, RSN_SELECTOR_LEN) {
+        return WPA_CIPHER_WEP104;
+    }
+    if suite_matches(s, &RSN_CIPHER_SUITE_AES_128_CMAC, RSN_SELECTOR_LEN) {
+        return WPA_CIPHER_BIP_CMAC_128;
+    }
+    if suite_matches(s, &RSN_CIPHER_SUITE_BIP_GMAC_128, RSN_SELECTOR_LEN) {
+        return WPA_CIPHER_BIP_GMAC_128;
+    }
+    if suite_matches(s, &RSN_CIPHER_SUITE_BIP_GMAC_256, RSN_SELECTOR_LEN) {
+        return WPA_CIPHER_BIP_GMAC_256;
+    }
+    if suite_matches(s, &RSN_CIPHER_SUITE_BIP_CMAC_256, RSN_SELECTOR_LEN) {
+        return WPA_CIPHER_BIP_CMAC_256;
+    }
+    0
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_get_akm_suite_bitmap(s: *mut U8) -> u32 {
+    if suite_matches(s, &WLAN_AKM_8021X, RSN_SELECTOR_LEN) {
+        return WLAN_AKM_TYPE_8021X;
+    }
+    if suite_matches(s, &WLAN_AKM_PSK, RSN_SELECTOR_LEN) {
+        return WLAN_AKM_TYPE_PSK;
+    }
+    if suite_matches(s, &WLAN_AKM_FT_8021X, RSN_SELECTOR_LEN) {
+        return WLAN_AKM_TYPE_FT_8021X;
+    }
+    if suite_matches(s, &WLAN_AKM_FT_PSK, RSN_SELECTOR_LEN) {
+        return WLAN_AKM_TYPE_FT_PSK;
+    }
+    if suite_matches(s, &WLAN_AKM_8021X_SHA256, RSN_SELECTOR_LEN) {
+        return WLAN_AKM_TYPE_8021X_SHA256;
+    }
+    if suite_matches(s, &WLAN_AKM_PSK_SHA256, RSN_SELECTOR_LEN) {
+        return WLAN_AKM_TYPE_PSK_SHA256;
+    }
+    if suite_matches(s, &WLAN_AKM_TDLS, RSN_SELECTOR_LEN) {
+        return WLAN_AKM_TYPE_TDLS;
+    }
+    if suite_matches(s, &WLAN_AKM_SAE, RSN_SELECTOR_LEN) {
+        return WLAN_AKM_TYPE_SAE;
+    }
+    if suite_matches(s, &WLAN_AKM_FT_OVER_SAE, RSN_SELECTOR_LEN) {
+        return WLAN_AKM_TYPE_FT_OVER_SAE;
+    }
+    if suite_matches(s, &WLAN_AKM_8021X_SUITE_B, RSN_SELECTOR_LEN) {
+        return WLAN_AKM_TYPE_8021X_SUITE_B;
+    }
+    if suite_matches(s, &WLAN_AKM_8021X_SUITE_B_192, RSN_SELECTOR_LEN) {
+        return WLAN_AKM_TYPE_8021X_SUITE_B_192;
+    }
+    if suite_matches(s, &WLAN_AKM_FILS_SHA256, RSN_SELECTOR_LEN) {
+        return WLAN_AKM_TYPE_FILS_SHA256;
+    }
+    if suite_matches(s, &WLAN_AKM_FILS_SHA384, RSN_SELECTOR_LEN) {
+        return WLAN_AKM_TYPE_FILS_SHA384;
+    }
+    if suite_matches(s, &WLAN_AKM_FT_FILS_SHA256, RSN_SELECTOR_LEN) {
+        return WLAN_AKM_TYPE_FT_FILS_SHA256;
+    }
+    if suite_matches(s, &WLAN_AKM_FT_FILS_SHA384, RSN_SELECTOR_LEN) {
+        return WLAN_AKM_TYPE_FT_FILS_SHA384;
+    }
+    0
 }
 
 fn is_cck_rate_byte(rate: U8) -> bool {
