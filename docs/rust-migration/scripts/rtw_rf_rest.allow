@@ -26,3 +26,9 @@ drop _band_str
 drop _band_to_band_cap
 drop _opc_bw_str
 drop _opc_bw_to_ch_width
+drop global_op_class
+drop global_op_class_num
+drop is_valid_global_op_class_id
+drop get_sub_op_class
+drop rtw_get_op_class_by_chbw
+drop rtw_get_bw_offset_by_op_class_ch

@@ -687,9 +687,10 @@ const u8 _opc_bw_to_ch_width[OPC_BW_NUM] = {
 };
 #endif /* !CONFIG_RUST || HOST_RF_TEST */
 
+#if !defined(CONFIG_RUST) || defined(HOST_RF_TEST)
 /*
  * W3-22: global operating-class lookup extracted from core/rtw_rf.c.
- * Keep C definitions unguarded until PR2 ports them to rust/rtw_rf_rest.rs.
+ * C oracle for host L2; kernel builds use rust/rtw_rf_rest.rs when CONFIG_RUST.
  */
 #define OP_CLASS_ENT(_class, _band, _bw, _len, arg...) \
 	{.class_id = _class, .band = _band, .bw = _bw, .len_ch_attr = (uint8_t[_len + 1]) {_len, ##arg},}
@@ -891,6 +892,8 @@ u8 rtw_get_bw_offset_by_op_class_ch(u8 gid, u8 ch, u8 *bw, u8 *offset)
 exit:
 	return valid;
 }
+
+#endif /* !CONFIG_RUST || HOST_RF_TEST */
 
 #if defined(CONFIG_RUST) && !defined(HOST_RF_TEST)
 void rtw_rust_rf_warn_on(int condition)
