@@ -1132,6 +1132,68 @@ bool rtw_is_long_cac_ch(u8 ch, u8 bw, u8 offset, u8 dfs_region)
 }
 #endif /* !CONFIG_RUST || HOST_RF_TEST */
 
+#if !defined(CONFIG_RUST) || defined(HOST_RF_TEST)
+/*
+ * W3-25: tx path NSS and bb gain sel helpers extracted from core/rtw_rf.c.
+ * C oracle for host L2; kernel builds use rust/rtw_rf_rest.rs when CONFIG_RUST.
+ */
+void tx_path_nss_set_default(enum bb_path txpath_nss[], u8 txpath_num_nss[], u8 txpath)
+{
+	int i, j;
+	u8 cnt;
+
+	for (i = 4; i > 0; i--) {
+		cnt = 0;
+		txpath_nss[i - 1] = 0;
+		for (j = 0; j < RF_PATH_MAX; j++) {
+			if (txpath & BIT(j)) {
+				txpath_nss[i - 1] |= BIT(j);
+				if (++cnt == i)
+					break;
+			}
+		}
+		txpath_num_nss[i - 1] = i;
+	}
+}
+
+void tx_path_nss_set_full_tx(enum bb_path txpath_nss[], u8 txpath_num_nss[], u8 txpath)
+{
+	u8 tx_num = 0;
+	int i;
+
+	for (i = 0; i < RF_PATH_MAX; i++)
+		if (txpath & BIT(i))
+			tx_num++;
+
+	for (i = 4; i > 0; i--) {
+		txpath_nss[i - 1] = txpath;
+		txpath_num_nss[i - 1] = tx_num;
+	}
+}
+
+int rtw_ch_to_bb_gain_sel(int ch)
+{
+	int sel = -1;
+
+	if (ch >= 1 && ch <= 14)
+		sel = BB_GAIN_2G;
+#if CONFIG_IEEE80211_BAND_5GHZ
+	else if (ch >= 36 && ch < 48)
+		sel = BB_GAIN_5GLB1;
+	else if (ch >= 52 && ch <= 64)
+		sel = BB_GAIN_5GLB2;
+	else if (ch >= 100 && ch <= 120)
+		sel = BB_GAIN_5GMB1;
+	else if (ch >= 124 && ch <= 144)
+		sel = BB_GAIN_5GMB2;
+	else if (ch >= 149 && ch <= 177)
+		sel = BB_GAIN_5GHB;
+#endif
+
+	return sel;
+}
+#endif /* !CONFIG_RUST || HOST_RF_TEST */
+
 #if defined(CONFIG_RUST) && !defined(HOST_RF_TEST)
 void rtw_rust_rf_warn_on(int condition)
 {

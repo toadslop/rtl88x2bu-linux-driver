@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
  * Host L2 oracle runner for rtw_rf_rest channel layout + freq + op-class + trx-path +
- * txpwr/CAC helpers (W3-19, W3-20, W3-22, W3-23, W3-24).
+ * txpwr/CAC helpers (W3-19, W3-20, W3-22, W3-23, W3-24) + tx path NSS / bb gain sel (W3-25).
  */
 
 #include <stdio.h>
@@ -11,9 +11,10 @@
 #include "host_rf_types.h"
 #include "host_vector_json.h"
 
-#define MAX_VECTORS 210
+#define MAX_VECTORS 230
 #define MAX_NAME 128
 #define MAX_OP_CHS 8
+#define MAX_NSS 4
 
 enum rf_fn {
 	FN_SCCH_OFFSET = 0,
@@ -50,6 +51,9 @@ enum rf_fn {
 	FN_MB_OF_NTX,
 	FN_IS_LONG_CAC_RANGE,
 	FN_IS_LONG_CAC_CH,
+	FN_TX_PATH_NSS_SET_DEFAULT,
+	FN_TX_PATH_NSS_SET_FULL_TX,
+	FN_CH_TO_BB_GAIN_SEL,
 };
 
 struct vector {
@@ -86,6 +90,8 @@ struct vector {
 	u8 rx_num_lmt;
 	int expect_tx;
 	int expect_rx;
+	u8 expect_nss_paths[MAX_NSS];
+	u8 expect_nss_num[MAX_NSS];
 };
 
 u8 rtw_get_scch_by_cch_offset(u8 cch, u8 bw, u8 offset);
@@ -122,6 +128,9 @@ void txpwr_mbm_get_dbm_str(s16 mbm, SIZE_T cwidth, char dbm_str[], u8 dbm_str_le
 s16 mb_of_ntx(u8 ntx);
 bool rtw_is_long_cac_range(u32 hi, u32 lo, u8 dfs_region);
 bool rtw_is_long_cac_ch(u8 ch, u8 bw, u8 offset, u8 dfs_region);
+void tx_path_nss_set_default(enum bb_path txpath_nss[], u8 txpath_num_nss[], u8 txpath);
+void tx_path_nss_set_full_tx(enum bb_path txpath_nss[], u8 txpath_num_nss[], u8 txpath);
+int rtw_ch_to_bb_gain_sel(int ch);
 
 static int parse_fn(const char *obj, size_t obj_len, enum rf_fn *out)
 {
@@ -197,6 +206,12 @@ static int parse_fn(const char *obj, size_t obj_len, enum rf_fn *out)
 		*out = FN_IS_LONG_CAC_RANGE;
 	else if (strcmp(fn, "rtw_is_long_cac_ch") == 0)
 		*out = FN_IS_LONG_CAC_CH;
+	else if (strcmp(fn, "tx_path_nss_set_default") == 0)
+		*out = FN_TX_PATH_NSS_SET_DEFAULT;
+	else if (strcmp(fn, "tx_path_nss_set_full_tx") == 0)
+		*out = FN_TX_PATH_NSS_SET_FULL_TX;
+	else if (strcmp(fn, "rtw_ch_to_bb_gain_sel") == 0)
+		*out = FN_CH_TO_BB_GAIN_SEL;
 	else
 		return -1;
 	return 0;
@@ -285,6 +300,12 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 	}
 	if (!parse_u8_array_in(obj, obj_len, "expect_op_chs", v->expect_op_chs,
 			       MAX_OP_CHS, &op_n))
+		(void)op_n;
+	if (!parse_u8_array_in(obj, obj_len, "expect_nss_paths", v->expect_nss_paths,
+			       MAX_NSS, &op_n))
+		(void)op_n;
+	if (!parse_u8_array_in(obj, obj_len, "expect_nss_num", v->expect_nss_num,
+			       MAX_NSS, &op_n))
 		(void)op_n;
 	return 0;
 }
@@ -733,6 +754,45 @@ static int run_vector(struct vector *v)
 		if ((int)got != v->expect_valid) {
 			fprintf(stderr, "%s: long_cac_ch got=%d expect=%d\n",
 				v->name, got, v->expect_valid);
+			return -1;
+		}
+		break;
+	}
+	case FN_TX_PATH_NSS_SET_DEFAULT:
+	case FN_TX_PATH_NSS_SET_FULL_TX: {
+		enum bb_path nss_paths[MAX_NSS];
+		u8 nss_num[MAX_NSS];
+		size_t j;
+
+		if (v->fn == FN_TX_PATH_NSS_SET_DEFAULT)
+			tx_path_nss_set_default(nss_paths, nss_num, v->tx_bmp);
+		else
+			tx_path_nss_set_full_tx(nss_paths, nss_num, v->tx_bmp);
+
+		for (j = 0; j < MAX_NSS; j++) {
+			if ((u8)nss_paths[j] != v->expect_nss_paths[j]) {
+				fprintf(stderr,
+					"%s: nss_paths[%zu]=%u expect=%u\n",
+					v->name, j, (unsigned)nss_paths[j],
+					v->expect_nss_paths[j]);
+				return -1;
+			}
+			if (nss_num[j] != v->expect_nss_num[j]) {
+				fprintf(stderr,
+					"%s: nss_num[%zu]=%u expect=%u\n",
+					v->name, j, nss_num[j],
+					v->expect_nss_num[j]);
+				return -1;
+			}
+		}
+		break;
+	}
+	case FN_CH_TO_BB_GAIN_SEL: {
+		int got = rtw_ch_to_bb_gain_sel(v->ch);
+
+		if (got != v->expect) {
+			fprintf(stderr, "%s: bb_gain_sel got=%d expect=%d\n",
+				v->name, got, v->expect);
 			return -1;
 		}
 		break;
