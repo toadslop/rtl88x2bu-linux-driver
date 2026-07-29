@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 //! RF rest helpers — Rust port of `core/rtw_rf_rest.c` channel layout (W3-19),
-//! frequency conversion (W3-20), and lookup/format tables (W3-21).
+//! frequency conversion (W3-20), lookup/format tables (W3-21), and global
+//! operating-class lookup (W3-22).
 
 #![allow(
     dead_code,
@@ -733,4 +734,309 @@ pub extern "C" fn rtw_chbw_to_freq_range(
 
     valid = true;
     valid
+}
+
+// W3-22: global operating-class lookup (802.11-2016 Table E-4, partial).
+
+const OPC_BW20: u8 = 0;
+const OPC_BW40PLUS: u8 = 1;
+const OPC_BW40MINUS: u8 = 2;
+const OPC_BW80: u8 = 3;
+const OPC_BW160: u8 = 4;
+const OPC_BW_ENUM_NUM: u8 = 6;
+
+#[repr(C)]
+pub struct OpClassT {
+    pub class_id: u8,
+    pub band: i32,
+    pub bw: i32,
+    pub len_ch_attr: *const u8,
+}
+
+unsafe impl Sync for OpClassT {}
+
+static OP_CLASS_ATTR_81: [u8; 14] = [13, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+static OP_CLASS_ATTR_82: [u8; 2] = [1, 14];
+static OP_CLASS_ATTR_83: [u8; 10] = [9, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+static OP_CLASS_ATTR_84: [u8; 10] = [9, 5, 6, 7, 8, 9, 10, 11, 12, 13];
+static OP_CLASS_ATTR_115: [u8; 5] = [4, 36, 40, 44, 48];
+static OP_CLASS_ATTR_116: [u8; 3] = [2, 36, 44];
+static OP_CLASS_ATTR_117: [u8; 3] = [2, 40, 48];
+static OP_CLASS_ATTR_118: [u8; 5] = [4, 52, 56, 60, 64];
+static OP_CLASS_ATTR_119: [u8; 3] = [2, 52, 60];
+static OP_CLASS_ATTR_120: [u8; 3] = [2, 56, 64];
+static OP_CLASS_ATTR_121: [u8; 13] = [12, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144];
+static OP_CLASS_ATTR_122: [u8; 7] = [6, 100, 108, 116, 124, 132, 140];
+static OP_CLASS_ATTR_123: [u8; 7] = [6, 104, 112, 120, 128, 136, 144];
+static OP_CLASS_ATTR_124: [u8; 5] = [4, 149, 153, 157, 161];
+static OP_CLASS_ATTR_125: [u8; 7] = [6, 149, 153, 157, 161, 165, 169];
+static OP_CLASS_ATTR_126: [u8; 3] = [2, 149, 157];
+static OP_CLASS_ATTR_127: [u8; 3] = [2, 153, 161];
+static OP_CLASS_ATTR_128: [u8; 25] = [
+    24, 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140,
+    144, 149, 153, 157, 161,
+];
+static OP_CLASS_ATTR_129: [u8; 17] = [
+    16, 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
+];
+
+#[no_mangle]
+pub static global_op_class: [OpClassT; 19] = [
+    OpClassT {
+        class_id: 81,
+        band: BAND_ON_2_4G as i32,
+        bw: OPC_BW20 as i32,
+        len_ch_attr: OP_CLASS_ATTR_81.as_ptr(),
+    },
+    OpClassT {
+        class_id: 82,
+        band: BAND_ON_2_4G as i32,
+        bw: OPC_BW20 as i32,
+        len_ch_attr: OP_CLASS_ATTR_82.as_ptr(),
+    },
+    OpClassT {
+        class_id: 83,
+        band: BAND_ON_2_4G as i32,
+        bw: OPC_BW40PLUS as i32,
+        len_ch_attr: OP_CLASS_ATTR_83.as_ptr(),
+    },
+    OpClassT {
+        class_id: 84,
+        band: BAND_ON_2_4G as i32,
+        bw: OPC_BW40MINUS as i32,
+        len_ch_attr: OP_CLASS_ATTR_84.as_ptr(),
+    },
+    OpClassT {
+        class_id: 115,
+        band: BAND_ON_5G as i32,
+        bw: OPC_BW20 as i32,
+        len_ch_attr: OP_CLASS_ATTR_115.as_ptr(),
+    },
+    OpClassT {
+        class_id: 116,
+        band: BAND_ON_5G as i32,
+        bw: OPC_BW40PLUS as i32,
+        len_ch_attr: OP_CLASS_ATTR_116.as_ptr(),
+    },
+    OpClassT {
+        class_id: 117,
+        band: BAND_ON_5G as i32,
+        bw: OPC_BW40MINUS as i32,
+        len_ch_attr: OP_CLASS_ATTR_117.as_ptr(),
+    },
+    OpClassT {
+        class_id: 118,
+        band: BAND_ON_5G as i32,
+        bw: OPC_BW20 as i32,
+        len_ch_attr: OP_CLASS_ATTR_118.as_ptr(),
+    },
+    OpClassT {
+        class_id: 119,
+        band: BAND_ON_5G as i32,
+        bw: OPC_BW40PLUS as i32,
+        len_ch_attr: OP_CLASS_ATTR_119.as_ptr(),
+    },
+    OpClassT {
+        class_id: 120,
+        band: BAND_ON_5G as i32,
+        bw: OPC_BW40MINUS as i32,
+        len_ch_attr: OP_CLASS_ATTR_120.as_ptr(),
+    },
+    OpClassT {
+        class_id: 121,
+        band: BAND_ON_5G as i32,
+        bw: OPC_BW20 as i32,
+        len_ch_attr: OP_CLASS_ATTR_121.as_ptr(),
+    },
+    OpClassT {
+        class_id: 122,
+        band: BAND_ON_5G as i32,
+        bw: OPC_BW40PLUS as i32,
+        len_ch_attr: OP_CLASS_ATTR_122.as_ptr(),
+    },
+    OpClassT {
+        class_id: 123,
+        band: BAND_ON_5G as i32,
+        bw: OPC_BW40MINUS as i32,
+        len_ch_attr: OP_CLASS_ATTR_123.as_ptr(),
+    },
+    OpClassT {
+        class_id: 124,
+        band: BAND_ON_5G as i32,
+        bw: OPC_BW20 as i32,
+        len_ch_attr: OP_CLASS_ATTR_124.as_ptr(),
+    },
+    OpClassT {
+        class_id: 125,
+        band: BAND_ON_5G as i32,
+        bw: OPC_BW20 as i32,
+        len_ch_attr: OP_CLASS_ATTR_125.as_ptr(),
+    },
+    OpClassT {
+        class_id: 126,
+        band: BAND_ON_5G as i32,
+        bw: OPC_BW40PLUS as i32,
+        len_ch_attr: OP_CLASS_ATTR_126.as_ptr(),
+    },
+    OpClassT {
+        class_id: 127,
+        band: BAND_ON_5G as i32,
+        bw: OPC_BW40MINUS as i32,
+        len_ch_attr: OP_CLASS_ATTR_127.as_ptr(),
+    },
+    OpClassT {
+        class_id: 128,
+        band: BAND_ON_5G as i32,
+        bw: OPC_BW80 as i32,
+        len_ch_attr: OP_CLASS_ATTR_128.as_ptr(),
+    },
+    OpClassT {
+        class_id: 129,
+        band: BAND_ON_5G as i32,
+        bw: OPC_BW160 as i32,
+        len_ch_attr: OP_CLASS_ATTR_129.as_ptr(),
+    },
+];
+
+#[no_mangle]
+pub static global_op_class_num: i32 = 19;
+
+fn opc_bw_to_ch_width_bw(bw: i32) -> u8 {
+    if bw >= 0 && (bw as usize) < OPC_BW_NUM {
+        _opc_bw_to_ch_width[bw as usize]
+    } else {
+        CHANNEL_WIDTH_MAX as u8
+    }
+}
+
+fn rtw_is_2g_ch(ch: u8) -> bool {
+    (1..=14).contains(&ch)
+}
+
+fn rtw_is_5g_ch(ch: u8) -> bool {
+    (36..=177).contains(&ch)
+}
+
+fn get_global_op_class_by_id(gid: u8) -> Option<usize> {
+    (0..global_op_class.len()).find(|&i| global_op_class[i].class_id == gid)
+}
+
+fn is_valid_global_op_class_ch_idx(idx: usize, ch: u8) -> bool {
+    let ent = &global_op_class[idx];
+    if ent.len_ch_attr.is_null() {
+        return false;
+    }
+    unsafe {
+        let len = *ent.len_ch_attr as usize;
+        let attrs = core::slice::from_raw_parts(ent.len_ch_attr, len + 1);
+        attrs[1..=len].iter().any(|&c| c == ch)
+    }
+}
+
+fn get_global_opc_bw_by_id(gid: u8) -> i32 {
+    get_global_op_class_by_id(gid)
+        .map(|i| global_op_class[i].bw)
+        .unwrap_or(OPC_BW_ENUM_NUM as i32)
+}
+
+#[no_mangle]
+pub extern "C" fn is_valid_global_op_class_id(gid: u8) -> bool {
+    get_global_op_class_by_id(gid).is_some()
+}
+
+#[no_mangle]
+pub extern "C" fn get_sub_op_class(gid: u8, ch: u8) -> i16 {
+    let Some(idx) = get_global_op_class_by_id(gid) else {
+        return -1;
+    };
+
+    if !is_valid_global_op_class_ch_idx(idx, ch) {
+        return -1;
+    }
+
+    let opc = &global_op_class[idx];
+    if opc.bw == OPC_BW20 as i32 {
+        return 0;
+    }
+
+    let bw = opc_bw_to_ch_width_bw(opc.bw);
+    for i in 0..global_op_class.len() {
+        if bw != opc_bw_to_ch_width_bw(global_op_class[i].bw).wrapping_add(1) {
+            continue;
+        }
+        if is_valid_global_op_class_ch_idx(i, ch) {
+            return global_op_class[i].class_id as i16;
+        }
+    }
+
+    -2
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_get_op_class_by_chbw(ch: u8, bw: u8, offset: u8) -> u8 {
+    let band = if rtw_is_2g_ch(ch) {
+        BAND_ON_2_4G
+    } else if rtw_is_5g_ch(ch) {
+        BAND_ON_5G
+    } else {
+        return 0;
+    };
+
+    if !matches!(
+        bw,
+        CHANNEL_WIDTH_20 | CHANNEL_WIDTH_40 | CHANNEL_WIDTH_80 | CHANNEL_WIDTH_160
+    ) {
+        return 0;
+    }
+
+    for i in 0..global_op_class.len() {
+        let ent = &global_op_class[i];
+        if ent.band != band as i32 {
+            continue;
+        }
+        if opc_bw_to_ch_width_bw(ent.bw) != bw {
+            continue;
+        }
+        if (ent.bw == OPC_BW40PLUS as i32 && offset != HAL_PRIME_CHNL_OFFSET_LOWER)
+            || (ent.bw == OPC_BW40MINUS as i32 && offset != HAL_PRIME_CHNL_OFFSET_UPPER)
+        {
+            continue;
+        }
+        if is_valid_global_op_class_ch_idx(i, ch) {
+            return ent.class_id;
+        }
+    }
+
+    0
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_get_bw_offset_by_op_class_ch(
+    gid: u8,
+    ch: u8,
+    bw: *mut u8,
+    offset: *mut u8,
+) -> u8 {
+    if bw.is_null() || offset.is_null() {
+        return 0;
+    }
+
+    let opc_bw = get_global_opc_bw_by_id(gid);
+    if opc_bw == OPC_BW_ENUM_NUM as i32 {
+        return 0;
+    }
+
+    unsafe {
+        *bw = opc_bw_to_ch_width_bw(opc_bw);
+        if opc_bw == OPC_BW40PLUS as i32 {
+            *offset = HAL_PRIME_CHNL_OFFSET_LOWER;
+        } else if opc_bw == OPC_BW40MINUS as i32 {
+            *offset = HAL_PRIME_CHNL_OFFSET_UPPER;
+        }
+        if rtw_get_offset_by_chbw(ch, *bw, offset) != 0 {
+            1
+        } else {
+            0
+        }
+    }
 }
