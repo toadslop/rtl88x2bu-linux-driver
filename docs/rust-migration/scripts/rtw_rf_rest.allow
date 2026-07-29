@@ -32,3 +32,11 @@ drop is_valid_global_op_class_id
 drop get_sub_op_class
 drop rtw_get_op_class_by_chbw
 drop rtw_get_bw_offset_by_op_class_ch
+drop _rf_type_to_rf_tx_cnt
+drop _rf_type_to_rf_rx_cnt
+drop rf_type_to_default_trx_bmp
+drop trx_num_to_rf_type
+drop trx_bmp_to_rf_type
+drop rf_type_is_a_in_b
+drop rtw_restrict_trx_path_bmp_by_trx_num_lmt
+drop rtw_restrict_trx_path_bmp_by_rftype
