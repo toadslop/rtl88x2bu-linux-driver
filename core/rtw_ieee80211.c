@@ -178,6 +178,7 @@ struct rate_section_ent rates_by_sections[RATE_SECTION_NUM] = {
 	{RF_4TX, 10, mgn_rates_vht4ss},
 };
 
+#if !defined(CONFIG_RUST) || defined(HOST_IEEE80211_REST_TEST)
 int rtw_get_bit_value_from_ieee_value(u8 val)
 {
 	unsigned char dot11_rate_table[] = {2, 4, 11, 22, 12, 18, 24, 36, 48, 72, 96, 108, 0}; /* last element must be zero!! */
@@ -190,6 +191,8 @@ int rtw_get_bit_value_from_ieee_value(u8 val)
 	}
 	return 0;
 }
+#endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
+
 uint rtw_get_cckrate_size(u8 *rate, u32 rate_length)
 {
 	int i = 0;
@@ -235,6 +238,7 @@ uint	rtw_is_cckratesonly_included(u8 *rate)
 
 }
 
+#if !defined(CONFIG_RUST) || defined(HOST_IEEE80211_REST_TEST)
 int rtw_check_network_type(unsigned char *rate, int ratelen, int channel)
 {
 	if (channel > 14) {
@@ -252,6 +256,8 @@ int rtw_check_network_type(unsigned char *rate, int ratelen, int channel)
 	}
 
 }
+
+#endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
 u8 *rtw_set_fixed_ie(unsigned char *pbuf, unsigned int len, unsigned char *source,
 		     unsigned int *frlen)
@@ -460,6 +466,7 @@ exit:
 
 #endif /* !CONFIG_RUST */
 
+#if !defined(CONFIG_RUST) || defined(HOST_IEEE80211_REST_TEST)
 void rtw_set_supported_rate(u8 *SupportedRates, uint mode)
 {
 
@@ -560,6 +567,7 @@ u8 rtw_update_rate_bymode(WLAN_BSSID_EX *pbss_network, u32 mode)
 
 	return network_type;
 }
+#endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
 uint	rtw_get_rateset_len(u8	*rateset)
 {

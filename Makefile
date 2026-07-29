@@ -2536,6 +2536,7 @@ $(MODULE_NAME)-y += rust/rtw_io_rest.o
 $(MODULE_NAME)-y += rust/rtw_rf_rest.o
 $(MODULE_NAME)-y += rust/rtw_swcrypto.o
 $(MODULE_NAME)-y += rust/rtw_ieee80211.o
+$(MODULE_NAME)-y += rust/rtw_ieee80211_rest.o
 $(MODULE_NAME)-y += rust/rtw_security.o
 $(MODULE_NAME)-y += rust/rtw_security_rest.o
 $(MODULE_NAME)-y += rust/rtw_wlan_util.o
@@ -2828,6 +2829,23 @@ rust-objects-rtw-ieee80211-c:
 rust-check-symbols-rtw-ieee80211: rust-objects-rtw-ieee80211-c rust-objects-rtw-ieee80211
 	$(MAKE) rust-check-symbols OLD=tests/host/ie/ie_c_ref.o NEW=rust/rtw_ieee80211.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_ieee80211.allow
+
+# W3-26: compare pre-port core/rtw_ieee80211_rest.o against rust/rtw_ieee80211_rest.o.
+rust-objects-rtw-ieee80211-rest:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-rtw-ieee80211-rest"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_ieee80211_rest.o
+
+rust-objects-rtw-ieee80211-rest-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/include \
+		-I$(shell pwd)/tests/host/wlan_util \
+		-DHOST_IEEE80211_REST_TEST -o tests/host/ie/ie_rest_c_ref.o core/rtw_ieee80211_rest.c
+
+rust-check-symbols-rtw-ieee80211-rest: rust-objects-rtw-ieee80211-rest-c rust-objects-rtw-ieee80211-rest
+	$(MAKE) rust-check-symbols OLD=tests/host/ie/ie_rest_c_ref.o NEW=rust/rtw_ieee80211_rest.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_ieee80211_rest.allow
 
 rust-objects-rtw-security:
 	@test -n "$(KDIR)" || { \

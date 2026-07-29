@@ -6,6 +6,7 @@ CORE     := $(ROOT)/core
 HOST_INC := ../include
 WLAN_UTIL := ../wlan_util
 RUST_IE  := $(ROOT)/rust/rtw_ieee80211.rs
+RUST_IE_REST := $(ROOT)/rust/rtw_ieee80211_rest.rs
 IE_REST_SRC := $(CORE)/rtw_ieee80211_rest.c
 
 CC      := gcc
@@ -20,11 +21,11 @@ IE_SRCS := ie_c_oracle.c ../crypto/host_vector_json.c
 IE_REST_SRCS := $(IE_REST_SRC) ie_c_oracle.c $(WLAN_UTIL)/wlan_util_c_oracle.c \
                 ../crypto/host_vector_json.c
 
-.PHONY: all test test-c test-rust test-rest clean
+.PHONY: all test test-c test-rust test-rest test-rest-rust clean
 
 all: test
 
-test: test-c test-rust test-rest
+test: test-c test-rust test-rest test-rest-rust
 
 test-c: test_ie
 	./test_ie ie_vectors.json
@@ -49,5 +50,18 @@ test-rest: test_ie_rest
 test_ie_rest: test_ie_rest.c $(IE_REST_SRCS)
 	$(CC) $(REST_CFLAGS) -o $@ test_ie_rest.c $(IE_REST_SRCS)
 
+librust_ie_rest.a: $(RUST_IE_REST)
+	$(RUSTC) $(RUSTFLAGS) --cfg host_ieee80211_rest_test --crate-type staticlib \
+		$(RUST_IE_REST) -o $@
+
+test-rest-rust: test_ie_rest_rust
+	./test_ie_rest_rust ie_rest_vectors.json
+
+test_ie_rest_rust: test_ie_rest.c librust_ie_rest.a ../wlan_util/wlan_util_c_oracle.c \
+		../crypto/host_vector_json.c ie_c_oracle.c
+	$(CC) $(REST_CFLAGS) -DRUST_IEEE80211_REST_ORACLE -o $@ test_ie_rest.c \
+		../crypto/host_vector_json.c ie_c_oracle.c ../wlan_util/wlan_util_c_oracle.c \
+		librust_ie_rest.a
+
 clean:
-	rm -f test_ie test_ie_rust test_ie_rest librust_ie.a
+	rm -f test_ie test_ie_rust test_ie_rest test_ie_rest_rust librust_ie.a librust_ie_rest.a
