@@ -136,6 +136,19 @@ extern const char *const _opc_bw_str[OPC_BW_NUM];
 extern const u8 _opc_bw_to_ch_width[OPC_BW_NUM];
 #define opc_bw_to_ch_width(bw) (((bw) < OPC_BW_NUM) ? _opc_bw_to_ch_width[(bw)] : CHANNEL_WIDTH_MAX)
 
+struct op_class_t {
+	u8 class_id;
+	BAND_TYPE band;
+	enum opc_bw bw;
+	u8 *len_ch_attr;
+};
+
+#define OPC_CH_LIST_LEN(_opc) (_opc.len_ch_attr[0])
+#define OPC_CH_LIST_CH(_opc, _i) (_opc.len_ch_attr[_i + 1])
+
+extern const struct op_class_t global_op_class[];
+extern const int global_op_class_num;
+
 /* global op class APIs */
 bool is_valid_global_op_class_id(u8 gid);
 s16 get_sub_op_class(u8 gid, u8 ch);

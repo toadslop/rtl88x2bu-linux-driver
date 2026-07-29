@@ -120,7 +120,7 @@
       "bw": 1,
       "r_offset_in": 0,
       "expect_valid": 1,
-      "expect_offset": 1
+      "expect": 1
     },
     {
       "name": "offset_2g40_ch7_default",
@@ -129,7 +129,7 @@
       "bw": 1,
       "r_offset_in": 0,
       "expect_valid": 1,
-      "expect_offset": 2
+      "expect": 2
     },
     {
       "name": "offset_2g40_ch7_lower",
@@ -138,7 +138,7 @@
       "bw": 1,
       "r_offset_in": 1,
       "expect_valid": 1,
-      "expect_offset": 1
+      "expect": 1
     },
     {
       "name": "offset_5g36",
@@ -147,7 +147,7 @@
       "bw": 1,
       "r_offset_in": 0,
       "expect_valid": 1,
-      "expect_offset": 1
+      "expect": 1
     },
     {
       "name": "offset_ch14_invalid",
@@ -798,6 +798,171 @@
       "fn": "opc_bw_to_ch_width",
       "bw": 6,
       "expect": 7
+    },
+    {
+      "name": "valid_op_class_81",
+      "fn": "is_valid_global_op_class_id",
+      "gid": 81,
+      "expect_valid": 1
+    },
+    {
+      "name": "valid_op_class_128",
+      "fn": "is_valid_global_op_class_id",
+      "gid": 128,
+      "expect_valid": 1
+    },
+    {
+      "name": "valid_op_class_invalid_zero",
+      "fn": "is_valid_global_op_class_id",
+      "gid": 0,
+      "expect_valid": 0
+    },
+    {
+      "name": "valid_op_class_invalid_130",
+      "fn": "is_valid_global_op_class_id",
+      "gid": 130,
+      "expect_valid": 0
+    },
+    {
+      "name": "sub_op_class_40m_to_20m",
+      "fn": "get_sub_op_class",
+      "gid": 83,
+      "ch": 6,
+      "expect": 81
+    },
+    {
+      "name": "sub_op_class_already_20m",
+      "fn": "get_sub_op_class",
+      "gid": 81,
+      "ch": 6,
+      "expect": 0
+    },
+    {
+      "name": "sub_op_class_invalid_gid",
+      "fn": "get_sub_op_class",
+      "gid": 0,
+      "ch": 6,
+      "expect": -1
+    },
+    {
+      "name": "sub_op_class_invalid_ch",
+      "fn": "get_sub_op_class",
+      "gid": 81,
+      "ch": 20,
+      "expect": -1
+    },
+    {
+      "name": "sub_op_class_80m_to_40m",
+      "fn": "get_sub_op_class",
+      "gid": 128,
+      "ch": 36,
+      "expect": 116
+    },
+    {
+      "name": "op_class_by_chbw_2g20",
+      "fn": "rtw_get_op_class_by_chbw",
+      "ch": 6,
+      "bw": 0,
+      "offset": 0,
+      "expect": 81
+    },
+    {
+      "name": "op_class_by_chbw_2g40_lower",
+      "fn": "rtw_get_op_class_by_chbw",
+      "ch": 6,
+      "bw": 1,
+      "offset": 1,
+      "expect": 83
+    },
+    {
+      "name": "op_class_by_chbw_2g40_upper",
+      "fn": "rtw_get_op_class_by_chbw",
+      "ch": 10,
+      "bw": 1,
+      "offset": 2,
+      "expect": 84
+    },
+    {
+      "name": "op_class_by_chbw_5g20",
+      "fn": "rtw_get_op_class_by_chbw",
+      "ch": 36,
+      "bw": 0,
+      "offset": 0,
+      "expect": 115
+    },
+    {
+      "name": "op_class_by_chbw_5g40_lower",
+      "fn": "rtw_get_op_class_by_chbw",
+      "ch": 36,
+      "bw": 1,
+      "offset": 1,
+      "expect": 116
+    },
+    {
+      "name": "op_class_by_chbw_5g80",
+      "fn": "rtw_get_op_class_by_chbw",
+      "ch": 36,
+      "bw": 2,
+      "offset": 0,
+      "expect": 128
+    },
+    {
+      "name": "op_class_by_chbw_5g160",
+      "fn": "rtw_get_op_class_by_chbw",
+      "ch": 36,
+      "bw": 3,
+      "offset": 0,
+      "expect": 129
+    },
+    {
+      "name": "op_class_by_chbw_ch14",
+      "fn": "rtw_get_op_class_by_chbw",
+      "ch": 14,
+      "bw": 0,
+      "offset": 0,
+      "expect": 82
+    },
+    {
+      "name": "op_class_by_chbw_invalid_ch",
+      "fn": "rtw_get_op_class_by_chbw",
+      "ch": 99,
+      "bw": 0,
+      "offset": 0,
+      "expect": 0
+    },
+    {
+      "name": "bw_offset_op_class_40plus",
+      "fn": "rtw_get_bw_offset_by_op_class_ch",
+      "gid": 116,
+      "ch": 36,
+      "expect_valid": 1,
+      "expect": 1,
+      "expect_offset": 1
+    },
+    {
+      "name": "bw_offset_op_class_40minus",
+      "fn": "rtw_get_bw_offset_by_op_class_ch",
+      "gid": 117,
+      "ch": 40,
+      "expect_valid": 1,
+      "expect": 1,
+      "expect_offset": 2
+    },
+    {
+      "name": "bw_offset_op_class_20m",
+      "fn": "rtw_get_bw_offset_by_op_class_ch",
+      "gid": 81,
+      "ch": 6,
+      "expect_valid": 1,
+      "expect": 0,
+      "expect_offset": 0
+    },
+    {
+      "name": "bw_offset_op_class_invalid_gid",
+      "fn": "rtw_get_bw_offset_by_op_class_ch",
+      "gid": 0,
+      "ch": 6,
+      "expect_valid": 0
     }
   ]
 }
