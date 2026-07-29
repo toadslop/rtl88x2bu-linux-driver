@@ -112,8 +112,9 @@ run Path B or C instead. Note in the report which open PRs were deprioritized.
 
 ## Path B — Implement the next ready issue
 
-**When:** no open PRs, and [`select-ready-issue`](../select-ready-issue/SKILL.md)
-finds an unblocked issue after triage.
+**When:** no **eligible** PRs (no open PRs, or every open PR is `skipped`), and
+[`select-ready-issue`](../select-ready-issue/SKILL.md) finds an unblocked issue
+after triage. Skipped open PRs may still exist — note them in the report.
 
 | Step | Subskill | Outcome |
 |------|----------|---------|
@@ -131,11 +132,12 @@ draft:
 - `gh pr create` without `--draft`.
 - If a PR was opened as draft by mistake: `gh pr ready <number>`.
 
-After the stack is opened, **babysit** until CI is green on the opened PRs:
+**Babysit each PR** until CI is green before opening the next stack PR (see
+[`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) step 7):
 
 1. Load Cursor's built-in **`babysit`** skill when available; otherwise apply its
    intent manually (fix CI, address blocking review feedback, push, re-poll).
-2. Poll `gh pr checks` until required checks pass.
+2. Poll `gh pr checks` on the PR you just opened until required checks pass.
 3. Do **not** start Path A (`prepare-all-prs-for-merge`) in the same run — the
    PRs you just opened will be handled on the **next** pick-up when Path A
    triggers.
@@ -145,7 +147,8 @@ clear report). Do not draft new issues in the same run.
 
 ## Path C — Draft a new wave
 
-**When:** no open PRs, and step 2 finds **no** ready issue.
+**When:** no **eligible** PRs (skipped open PRs may remain), and step 2 finds
+**no** ready issue.
 
 | Step | Subskill | Outcome |
 |------|----------|---------|
@@ -218,5 +221,5 @@ no unless the user sends a new, explicit instruction.
 | **`prepare-pr-for-merge`** | Invoked inside Path A per eligible PR |
 | **`plan-stacked-prs`** | Path B — before writing code |
 | **`implement-stacked-prs`** | Path B — build, open (non-draft), babysit |
-| **`draft-migration-issues`** | Path C — no ready work and no open PRs |
+| **`draft-migration-issues`** | Path C — no ready work and no eligible PRs |
 | **`pr-review-delivery`** | Reviewer role only — not part of this workflow |
