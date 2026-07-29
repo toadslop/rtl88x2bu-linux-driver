@@ -21,8 +21,7 @@ IE_SRCS := ie_c_oracle.c ../crypto/host_vector_json.c
 IE_REST_SRCS := $(IE_REST_SRC) ie_cipher_c_oracle.c ie_c_oracle.c \
                 $(WLAN_UTIL)/wlan_util_c_oracle.c ../crypto/host_vector_json.c
 
-IE_REST_CIPHER_SRCS := $(IE_REST_SRC) ie_cipher_c_oracle.c ie_c_oracle.c \
-                       $(WLAN_UTIL)/wlan_util_c_oracle.c ../crypto/host_vector_json.c
+IE_REST_CIPHER_SRCS := $(IE_REST_SRCS)
 
 .PHONY: all test test-c test-rust test-rest test-rest-rust test-rest-cipher clean
 
