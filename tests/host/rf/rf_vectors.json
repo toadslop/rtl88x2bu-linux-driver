@@ -1219,6 +1219,155 @@
       "expect": 255,
       "expect_tx": 4,
       "expect_rx": 4
+    },
+    {
+      "name": "txpwr_idx_na",
+      "fn": "txpwr_idx_get_dbm_str",
+      "freq": 63,
+      "tx_num": 63,
+      "rx_num": 4,
+      "id": 6,
+      "expect_str": "     NA"
+    },
+    {
+      "name": "txpwr_idx_neg_fraction",
+      "fn": "txpwr_idx_get_dbm_str",
+      "freq": -1,
+      "tx_num": 63,
+      "rx_num": 4,
+      "id": 6,
+      "expect_str": "  -0.25"
+    },
+    {
+      "name": "txpwr_idx_positive_fraction",
+      "fn": "txpwr_idx_get_dbm_str",
+      "freq": 10,
+      "tx_num": 63,
+      "rx_num": 4,
+      "id": 6,
+      "expect_str": "   2.50"
+    },
+    {
+      "name": "txpwr_idx_whole",
+      "fn": "txpwr_idx_get_dbm_str",
+      "freq": 20,
+      "tx_num": 63,
+      "rx_num": 4,
+      "id": 6,
+      "expect_str": "      5"
+    },
+    {
+      "name": "txpwr_idx_narrow_cwidth",
+      "fn": "txpwr_idx_get_dbm_str",
+      "freq": 5,
+      "tx_num": 63,
+      "rx_num": 4,
+      "id": 3,
+      "expect_str": "  1.25"
+    },
+    {
+      "name": "txpwr_mbm_na",
+      "fn": "txpwr_mbm_get_dbm_str",
+      "freq": 32767,
+      "id": 6,
+      "expect_str": "     NA"
+    },
+    {
+      "name": "txpwr_mbm_neg_fraction",
+      "fn": "txpwr_mbm_get_dbm_str",
+      "freq": -50,
+      "id": 6,
+      "expect_str": "  -0.50"
+    },
+    {
+      "name": "txpwr_mbm_positive_fraction",
+      "fn": "txpwr_mbm_get_dbm_str",
+      "freq": 1234,
+      "id": 6,
+      "expect_str": "  12.34"
+    },
+    {
+      "name": "txpwr_mbm_whole",
+      "fn": "txpwr_mbm_get_dbm_str",
+      "freq": 1200,
+      "id": 6,
+      "expect_str": "     12"
+    },
+    {
+      "name": "txpwr_mbm_narrow_cwidth",
+      "fn": "txpwr_mbm_get_dbm_str",
+      "freq": 50,
+      "id": 3,
+      "expect_str": "  0.50"
+    },
+    {
+      "name": "mb_of_ntx_1",
+      "fn": "mb_of_ntx",
+      "tx_num_lmt": 1,
+      "expect": 0
+    },
+    {
+      "name": "mb_of_ntx_2",
+      "fn": "mb_of_ntx",
+      "tx_num_lmt": 2,
+      "expect": 301
+    },
+    {
+      "name": "mb_of_ntx_8",
+      "fn": "mb_of_ntx",
+      "tx_num_lmt": 8,
+      "expect": 903
+    },
+    {
+      "name": "long_cac_range_etsi_overlap",
+      "fn": "rtw_is_long_cac_range",
+      "expect_hi": 5700,
+      "expect_lo": 5600,
+      "rf_type": 3,
+      "expect_valid": 1
+    },
+    {
+      "name": "long_cac_range_fcc_no",
+      "fn": "rtw_is_long_cac_range",
+      "expect_hi": 5700,
+      "expect_lo": 5600,
+      "rf_type": 1,
+      "expect_valid": 0
+    },
+    {
+      "name": "long_cac_range_etsi_no_overlap",
+      "fn": "rtw_is_long_cac_range",
+      "expect_hi": 5500,
+      "expect_lo": 5400,
+      "rf_type": 3,
+      "expect_valid": 0
+    },
+    {
+      "name": "long_cac_ch_etsi_dfs",
+      "fn": "rtw_is_long_cac_ch",
+      "ch": 120,
+      "bw": 3,
+      "offset": 0,
+      "rf_type": 3,
+      "expect_valid": 1
+    },
+    {
+      "name": "long_cac_ch_2g_no",
+      "fn": "rtw_is_long_cac_ch",
+      "ch": 6,
+      "bw": 0,
+      "offset": 0,
+      "rf_type": 3,
+      "expect_valid": 0
+    },
+    {
+      "name": "long_cac_ch_invalid",
+      "fn": "rtw_is_long_cac_ch",
+      "ch": 200,
+      "bw": 2,
+      "offset": 0,
+      "rf_type": 3,
+      "expect_valid": 0
     }
   ]
 }

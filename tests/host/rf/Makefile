@@ -9,7 +9,7 @@ RUST_RF_REST := $(ROOT)/rust/rtw_rf_rest.rs
 
 CC     := gcc
 RUSTC  := rustc
-CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -Wno-format-truncation -O2 \
           -I$(HOST_INC) -I$(CORE) -I$(ROOT)/include \
           -include $(HOST_INC)/host_autoconf.h \
           -DHOST_RF_TEST
