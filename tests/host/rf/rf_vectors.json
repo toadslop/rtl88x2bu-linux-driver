@@ -570,6 +570,234 @@
       "fn": "rtw_freq2ch",
       "freq": 58319,
       "expect": 0
+    },
+    {
+      "name": "ch_width_str_20",
+      "fn": "ch_width_str",
+      "bw": 0,
+      "expect_str": "20MHz"
+    },
+    {
+      "name": "ch_width_str_40",
+      "fn": "ch_width_str",
+      "bw": 1,
+      "expect_str": "40MHz"
+    },
+    {
+      "name": "ch_width_str_80",
+      "fn": "ch_width_str",
+      "bw": 2,
+      "expect_str": "80MHz"
+    },
+    {
+      "name": "ch_width_str_160",
+      "fn": "ch_width_str",
+      "bw": 3,
+      "expect_str": "160MHz"
+    },
+    {
+      "name": "ch_width_str_80_80",
+      "fn": "ch_width_str",
+      "bw": 4,
+      "expect_str": "80_80MHz"
+    },
+    {
+      "name": "ch_width_str_5",
+      "fn": "ch_width_str",
+      "bw": 5,
+      "expect_str": "5MHz"
+    },
+    {
+      "name": "ch_width_str_10",
+      "fn": "ch_width_str",
+      "bw": 6,
+      "expect_str": "10MHz"
+    },
+    {
+      "name": "ch_width_str_oob",
+      "fn": "ch_width_str",
+      "bw": 7,
+      "expect_str": "CHANNEL_WIDTH_MAX"
+    },
+    {
+      "name": "ch_width_to_bw_cap_20",
+      "fn": "ch_width_to_bw_cap",
+      "bw": 0,
+      "expect": 4
+    },
+    {
+      "name": "ch_width_to_bw_cap_40",
+      "fn": "ch_width_to_bw_cap",
+      "bw": 1,
+      "expect": 8
+    },
+    {
+      "name": "ch_width_to_bw_cap_80",
+      "fn": "ch_width_to_bw_cap",
+      "bw": 2,
+      "expect": 16
+    },
+    {
+      "name": "ch_width_to_bw_cap_160",
+      "fn": "ch_width_to_bw_cap",
+      "bw": 3,
+      "expect": 32
+    },
+    {
+      "name": "ch_width_to_bw_cap_80_80",
+      "fn": "ch_width_to_bw_cap",
+      "bw": 4,
+      "expect": 64
+    },
+    {
+      "name": "ch_width_to_bw_cap_5",
+      "fn": "ch_width_to_bw_cap",
+      "bw": 5,
+      "expect": 1
+    },
+    {
+      "name": "ch_width_to_bw_cap_10",
+      "fn": "ch_width_to_bw_cap",
+      "bw": 6,
+      "expect": 2
+    },
+    {
+      "name": "ch_width_to_bw_cap_oob",
+      "fn": "ch_width_to_bw_cap",
+      "bw": 7,
+      "expect": 0
+    },
+    {
+      "name": "band_str_2g",
+      "fn": "band_str",
+      "bw": 0,
+      "expect_str": "2.4G"
+    },
+    {
+      "name": "band_str_5g",
+      "fn": "band_str",
+      "bw": 1,
+      "expect_str": "5G"
+    },
+    {
+      "name": "band_str_max",
+      "fn": "band_str",
+      "bw": 2,
+      "expect_str": "BAND_MAX"
+    },
+    {
+      "name": "band_str_oob",
+      "fn": "band_str",
+      "bw": 3,
+      "expect_str": "BAND_MAX"
+    },
+    {
+      "name": "band_to_band_cap_2g",
+      "fn": "band_to_band_cap",
+      "bw": 0,
+      "expect": 1
+    },
+    {
+      "name": "band_to_band_cap_5g",
+      "fn": "band_to_band_cap",
+      "bw": 1,
+      "expect": 2
+    },
+    {
+      "name": "band_to_band_cap_max",
+      "fn": "band_to_band_cap",
+      "bw": 2,
+      "expect": 0
+    },
+    {
+      "name": "band_to_band_cap_oob",
+      "fn": "band_to_band_cap",
+      "bw": 3,
+      "expect": 0
+    },
+    {
+      "name": "opc_bw_str_20",
+      "fn": "opc_bw_str",
+      "bw": 0,
+      "expect_str": "20M "
+    },
+    {
+      "name": "opc_bw_str_40plus",
+      "fn": "opc_bw_str",
+      "bw": 1,
+      "expect_str": "40M+"
+    },
+    {
+      "name": "opc_bw_str_40minus",
+      "fn": "opc_bw_str",
+      "bw": 2,
+      "expect_str": "40M-"
+    },
+    {
+      "name": "opc_bw_str_80",
+      "fn": "opc_bw_str",
+      "bw": 3,
+      "expect_str": "80M "
+    },
+    {
+      "name": "opc_bw_str_160",
+      "fn": "opc_bw_str",
+      "bw": 4,
+      "expect_str": "160M "
+    },
+    {
+      "name": "opc_bw_str_80p80",
+      "fn": "opc_bw_str",
+      "bw": 5,
+      "expect_str": "80+80M "
+    },
+    {
+      "name": "opc_bw_str_oob",
+      "fn": "opc_bw_str",
+      "bw": 6,
+      "expect_str": "N/A"
+    },
+    {
+      "name": "opc_bw_to_ch_width_20",
+      "fn": "opc_bw_to_ch_width",
+      "bw": 0,
+      "expect": 0
+    },
+    {
+      "name": "opc_bw_to_ch_width_40plus",
+      "fn": "opc_bw_to_ch_width",
+      "bw": 1,
+      "expect": 1
+    },
+    {
+      "name": "opc_bw_to_ch_width_40minus",
+      "fn": "opc_bw_to_ch_width",
+      "bw": 2,
+      "expect": 1
+    },
+    {
+      "name": "opc_bw_to_ch_width_80",
+      "fn": "opc_bw_to_ch_width",
+      "bw": 3,
+      "expect": 2
+    },
+    {
+      "name": "opc_bw_to_ch_width_160",
+      "fn": "opc_bw_to_ch_width",
+      "bw": 4,
+      "expect": 3
+    },
+    {
+      "name": "opc_bw_to_ch_width_80p80",
+      "fn": "opc_bw_to_ch_width",
+      "bw": 5,
+      "expect": 4
+    },
+    {
+      "name": "opc_bw_to_ch_width_oob",
+      "fn": "opc_bw_to_ch_width",
+      "bw": 6,
+      "expect": 7
     }
   ]
 }
