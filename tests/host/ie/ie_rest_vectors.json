@@ -133,6 +133,17 @@
       "expect_ielength": 18,
       "expect_ies": "00000000000000000000000001048c129824",
       "expect_supported": "0c1218243048606c"
+    },
+    {
+      "name": "update_rate_bymode_11bg",
+      "fn": "rtw_update_rate_bymode",
+      "mode": 3,
+      "ds_config": 6,
+      "ies": "000000000000000000000000010882848b960c121824",
+      "expect": 3,
+      "expect_ielength": 22,
+      "expect_ies": "000000000000000000000000010882848b960c121824",
+      "expect_supported": "82848b960c1218243048606c"
     }
   ]
 }
