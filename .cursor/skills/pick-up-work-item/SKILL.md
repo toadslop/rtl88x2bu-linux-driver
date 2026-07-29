@@ -9,7 +9,7 @@ description: >-
   when the frontier is empty) when nothing is ready — then stops after drafting
   (do not auto-implement newly filed issues). Do NOT use for
   reviewing PRs (pr-review-delivery) or preparing an existing PR for merge
-  (prepare-pr-for-merge).
+  (prepare-pr-for-merge; use prepare-all-prs-for-merge for batch prep).
 metadata:
   subskills:
     - triage-open-issues
