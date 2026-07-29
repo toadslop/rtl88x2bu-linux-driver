@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 //! RF rest helpers — Rust port of `core/rtw_rf_rest.c` channel layout (W3-19),
-//! frequency conversion (W3-20), lookup/format tables (W3-21), and global
-//! operating-class lookup (W3-22).
+//! frequency conversion (W3-20), lookup/format tables (W3-21), global
+//! operating-class lookup (W3-22), and RF type / trx-path helpers (W3-23).
 
 #![allow(
     dead_code,
@@ -1039,4 +1039,208 @@ pub extern "C" fn rtw_get_bw_offset_by_op_class_ch(
             0
         }
     }
+}
+
+const RF_PATH_MAX: usize = 4;
+const RF_TYPE_MAX: u8 = 16;
+
+const RF_1T1R: u8 = 0;
+const RF_1T2R: u8 = 1;
+const RF_2T2R: u8 = 2;
+const RF_2T3R: u8 = 3;
+const RF_2T4R: u8 = 4;
+const RF_3T3R: u8 = 5;
+const RF_3T4R: u8 = 6;
+const RF_4T4R: u8 = 7;
+const RF_4T3R: u8 = 8;
+const RF_4T2R: u8 = 9;
+const RF_4T1R: u8 = 10;
+const RF_3T2R: u8 = 11;
+const RF_3T1R: u8 = 12;
+const RF_2T1R: u8 = 13;
+const RF_1T4R: u8 = 14;
+const RF_1T3R: u8 = 15;
+
+static _RF_TYPE_TO_RF_TX_CNT: [u8; RF_TYPE_MAX as usize] = [
+    1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 3, 3, 2, 1, 1,
+];
+
+static _RF_TYPE_TO_RF_RX_CNT: [u8; RF_TYPE_MAX as usize] = [
+    1, 2, 2, 3, 4, 3, 4, 4, 3, 2, 1, 2, 1, 1, 4, 3,
+];
+
+static _TRX_NUM_TO_RF_TYPE: [[u8; RF_PATH_MAX]; RF_PATH_MAX] = [
+    [RF_1T1R, RF_1T2R, RF_1T3R, RF_1T4R],
+    [RF_2T1R, RF_2T2R, RF_2T3R, RF_2T4R],
+    [RF_3T1R, RF_3T2R, RF_3T3R, RF_3T4R],
+    [RF_4T1R, RF_4T2R, RF_4T3R, RF_4T4R],
+];
+
+fn rf_type_valid(rf_type: u8) -> bool {
+    rf_type < RF_TYPE_MAX
+}
+
+fn rf_type_to_rf_tx_cnt(rf_type: u8) -> u8 {
+    if rf_type_valid(rf_type) {
+        _RF_TYPE_TO_RF_TX_CNT[rf_type as usize]
+    } else {
+        0
+    }
+}
+
+fn rf_type_to_rf_rx_cnt(rf_type: u8) -> u8 {
+    if rf_type_valid(rf_type) {
+        _RF_TYPE_TO_RF_RX_CNT[rf_type as usize]
+    } else {
+        0
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rf_type_to_default_trx_bmp(rf: u8, tx: *mut u32, rx: *mut u32) {
+    if tx.is_null() || rx.is_null() {
+        return;
+    }
+
+    let tx_num = rf_type_to_rf_tx_cnt(rf);
+    let rx_num = rf_type_to_rf_rx_cnt(rf);
+    let mut tx_bmp = 0u32;
+    let mut rx_bmp = 0u32;
+
+    for i in 0..tx_num {
+        tx_bmp |= 1u32 << i;
+    }
+    for i in 0..rx_num {
+        rx_bmp |= 1u32 << i;
+    }
+
+    unsafe {
+        *tx = tx_bmp;
+        *rx = rx_bmp;
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn trx_num_to_rf_type(tx_num: u8, rx_num: u8) -> i32 {
+    if tx_num > 0 && tx_num <= RF_PATH_MAX as u8 && rx_num > 0 && rx_num <= RF_PATH_MAX as u8 {
+        _TRX_NUM_TO_RF_TYPE[(tx_num - 1) as usize][(rx_num - 1) as usize] as i32
+    } else {
+        RF_TYPE_MAX as i32
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn trx_bmp_to_rf_type(tx_bmp: u8, rx_bmp: u8) -> i32 {
+    let mut tx_num = 0u8;
+    let mut rx_num = 0u8;
+
+    for i in 0..RF_PATH_MAX {
+        if (tx_bmp >> i) & 1 != 0 {
+            tx_num += 1;
+        }
+        if (rx_bmp >> i) & 1 != 0 {
+            rx_num += 1;
+        }
+    }
+
+    trx_num_to_rf_type(tx_num, rx_num)
+}
+
+#[no_mangle]
+pub extern "C" fn rf_type_is_a_in_b(a: u8, b: u8) -> bool {
+    rf_type_to_rf_tx_cnt(a) <= rf_type_to_rf_tx_cnt(b)
+        && rf_type_to_rf_rx_cnt(a) <= rf_type_to_rf_rx_cnt(b)
+}
+
+fn rtw_path_bmp_limit_from_higher(bmp: &mut u8, bmp_bit_cnt: &mut u8, bit_cnt_lmt: u8) {
+    let mut i = RF_PATH_MAX as i32 - 1;
+    while *bmp_bit_cnt > bit_cnt_lmt && i >= 0 {
+        if *bmp & (1 << i) != 0 {
+            *bmp &= !(1 << i);
+            *bmp_bit_cnt -= 1;
+        }
+        i -= 1;
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_restrict_trx_path_bmp_by_trx_num_lmt(
+    trx_path_bmp: u8,
+    tx_num_lmt: u8,
+    rx_num_lmt: u8,
+    tx_num: *mut u8,
+    rx_num: *mut u8,
+) -> u8 {
+    let mut bmp_tx = (trx_path_bmp & 0xF0) >> 4;
+    let mut bmp_rx = trx_path_bmp & 0x0F;
+    let mut bmp_tx_num = 0u8;
+    let mut bmp_rx_num = 0u8;
+    let mut ret_type = RF_TYPE_MAX as i32;
+
+    for i in 0..RF_PATH_MAX {
+        if bmp_tx & (1 << i) != 0 {
+            bmp_tx_num += 1;
+        }
+        if bmp_rx & (1 << i) != 0 {
+            bmp_rx_num += 1;
+        }
+    }
+
+    if tx_num_lmt != 0 {
+        rtw_path_bmp_limit_from_higher(&mut bmp_tx, &mut bmp_tx_num, tx_num_lmt);
+    }
+    if rx_num_lmt != 0 {
+        rtw_path_bmp_limit_from_higher(&mut bmp_rx, &mut bmp_rx_num, rx_num_lmt);
+    }
+
+    let mut j = bmp_rx_num;
+    while j > 0 {
+        let mut i = bmp_tx_num;
+        while i > 0 {
+            ret_type = trx_num_to_rf_type(i, j);
+            if rf_type_valid(ret_type as u8) {
+                rtw_path_bmp_limit_from_higher(&mut bmp_tx, &mut bmp_tx_num, i);
+                rtw_path_bmp_limit_from_higher(&mut bmp_rx, &mut bmp_rx_num, j);
+                if !tx_num.is_null() {
+                    unsafe {
+                        *tx_num = bmp_tx_num;
+                    }
+                }
+                if !rx_num.is_null() {
+                    unsafe {
+                        *rx_num = bmp_rx_num;
+                    }
+                }
+                return if rf_type_valid(ret_type as u8) {
+                    (bmp_tx << 4) | bmp_rx
+                } else {
+                    0
+                };
+            }
+            i -= 1;
+        }
+        j -= 1;
+    }
+
+    if rf_type_valid(ret_type as u8) {
+        (bmp_tx << 4) | bmp_rx
+    } else {
+        0
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_restrict_trx_path_bmp_by_rftype(
+    trx_path_bmp: u8,
+    rf_type: u8,
+    tx_num: *mut u8,
+    rx_num: *mut u8,
+) -> u8 {
+    rtw_restrict_trx_path_bmp_by_trx_num_lmt(
+        trx_path_bmp,
+        rf_type_to_rf_tx_cnt(rf_type),
+        rf_type_to_rf_rx_cnt(rf_type),
+        tx_num,
+        rx_num,
+    )
 }
