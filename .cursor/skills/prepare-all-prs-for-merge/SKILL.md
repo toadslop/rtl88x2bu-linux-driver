@@ -19,8 +19,8 @@ metadata:
 # Prepare All PRs for Merge
 
 Use this skill when the user wants **every eligible PR** prepared for landing on
-`master` — or when **`pick-up-work-item`** chose **Path A** because open/draft
-PRs exist.
+`master` — or when **`pick-up-work-item`** chose **Path A** because at least one
+eligible open/draft PR exists.
 
 This skill is a **thin orchestrator**. It does not duplicate the per-PR logic in
 [`prepare-pr-for-merge`](../prepare-pr-for-merge/SKILL.md). It discovers PRs,
@@ -162,8 +162,7 @@ Also list **`skipped`** PRs and why (e.g. stacked on unmerged `#M`).
 
 | Skill | Role |
 |-------|------|
-| **`pick-up-work-item`** | Parent orchestrator — invokes this skill as Path A. |
+| **`pick-up-work-item`** | Parent orchestrator — invokes this skill as Path A when eligible open/draft PRs exist; otherwise runs Path B/C for new work. |
 | **`prepare-pr-for-merge`** | Per-PR prepare workflow (invoked once per eligible PR). |
 | **`babysit`** (Cursor built-in) | Used inside each prepare-pr-for-merge run. |
 | **`pr-review-delivery`** | Reviewer-only — out of scope. |
-| **`pick-up-work-item`** | Picks new work from issues — Path A invokes this skill when PRs exist. |

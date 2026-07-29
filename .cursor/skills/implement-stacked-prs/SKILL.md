@@ -116,24 +116,29 @@ PR body should include:
 - Add `In-flight: <branch>` to the issue via comment if not already noted
 - Do not close the issue until the **last** PR merges and acceptance is met
 
-### 7. Babysit opened PRs
+### 7. Babysit the PR you just opened
 
-After opening each PR (or after the full stack opens), **babysit** until required
-CI checks pass on the PRs you opened:
+**Default: per-PR babysit.** After opening a PR, babysit it until required CI
+checks pass **before** opening the next PR in the stack. This catches base-layer
+failures early and matches step 8's per-PR loop.
 
 1. Load Cursor's built-in **`babysit`** skill when available; otherwise fix CI
    failures, push to the same branch, and re-poll `gh pr checks <number>`.
 2. Address blocking review feedback if any arrives during babysit (same rules as
    `prepare-pr-for-merge` manual `babysit` fallback).
-3. Loop until checks are green or you report a blocker.
+3. Loop until checks are green or you report a blocker — only then continue to
+   the next PR in the plan.
 
-Path B pick-up ends after babysit — full merge prep (`prepare-all-prs-for-merge`)
-runs on a **future** pick-up once these PRs are open.
+Path B pick-up ends after the final PR opens and babysit passes — full merge prep
+(`prepare-all-prs-for-merge`) runs on a **future** pick-up once these PRs are
+open.
 
 ### 8. Continue or pause
 
-- **Default:** implement the next PR in the stack in the same session if gates pass
-- **Pause** after opening a PR if the user asked for incremental delivery
+- **Default:** after babysit passes on the current PR, implement the next PR in
+  the stack in the same session
+- **Pause** after opening a PR if the user asked for incremental delivery (babysit
+  still applies to the PR you opened before pausing)
 - After the **final** PR opens and babysit passes, summarize the full stack with links
 
 ## Stack hygiene
