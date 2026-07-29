@@ -45,3 +45,6 @@ drop txpwr_mbm_get_dbm_str
 drop mb_of_ntx
 drop rtw_is_long_cac_range
 drop rtw_is_long_cac_ch
+drop tx_path_nss_set_default
+drop tx_path_nss_set_full_tx
+drop rtw_ch_to_bb_gain_sel
