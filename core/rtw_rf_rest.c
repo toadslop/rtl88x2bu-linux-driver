@@ -631,9 +631,10 @@ exit:
 }
 #endif /* !CONFIG_RUST || HOST_RF_TEST */
 
+#if !defined(CONFIG_RUST) || defined(HOST_RF_TEST)
 /*
  * W3-21: lookup/format tables extracted from core/rtw_rf.c.
- * Keep C definitions unguarded until PR2 ports them to rust/rtw_rf_rest.rs.
+ * C oracle for host L2; kernel builds use rust/rtw_rf_rest.rs when CONFIG_RUST.
  */
 const char *const _ch_width_str[CHANNEL_WIDTH_MAX] = {
 	[CHANNEL_WIDTH_20]		= "20MHz",
@@ -684,6 +685,7 @@ const u8 _opc_bw_to_ch_width[OPC_BW_NUM] = {
 	CHANNEL_WIDTH_160,		/* OPC_BW160 */
 	CHANNEL_WIDTH_80_80,	/* OPC_BW80P80 */
 };
+#endif /* !CONFIG_RUST || HOST_RF_TEST */
 
 #if defined(CONFIG_RUST) && !defined(HOST_RF_TEST)
 void rtw_rust_rf_warn_on(int condition)
