@@ -38,6 +38,7 @@ const BAND_CAP_5G: u8 = 2;
 
 const OPC_BW_NUM: usize = 6;
 
+/// ABI-compatible wrapper for `const char *const` in exported string-pointer tables.
 #[repr(transparent)]
 pub struct CStrPtr(*const u8);
 
