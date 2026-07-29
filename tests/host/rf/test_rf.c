@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Host L2 oracle runner for rtw_rf_rest channel layout + freq helpers (W3-19, W3-20).
+ * Host L2 oracle runner for rtw_rf_rest channel layout + freq + op-class helpers
+ * (W3-19, W3-20, W3-22).
  */
 
 #include <stdio.h>
@@ -10,7 +11,7 @@
 #include "host_rf_types.h"
 #include "host_vector_json.h"
 
-#define MAX_VECTORS 128
+#define MAX_VECTORS 160
 #define MAX_NAME 128
 #define MAX_OP_CHS 8
 
@@ -34,6 +35,10 @@ enum rf_fn {
 	FN_BAND_TO_BAND_CAP,
 	FN_OPC_BW_STR,
 	FN_OPC_BW_TO_CH_WIDTH,
+	FN_VALID_GLOBAL_OP_CLASS_ID,
+	FN_GET_SUB_OP_CLASS,
+	FN_GET_OP_CLASS_BY_CHBW,
+	FN_GET_BW_OFFSET_BY_OP_CLASS_CH,
 };
 
 struct vector {
@@ -57,6 +62,7 @@ struct vector {
 	int freq;
 	int expect_hi;
 	int expect_lo;
+	int expect_offset;
 	char expect_str[MAX_NAME];
 };
 
@@ -73,6 +79,11 @@ u8 rtw_get_ch_group(u8 ch, u8 *group, u8 *cck_group);
 int rtw_ch2freq(int chan);
 int rtw_freq2ch(int freq);
 bool rtw_chbw_to_freq_range(u8 ch, u8 bw, u8 offset, u32 *hi, u32 *lo);
+
+bool is_valid_global_op_class_id(u8 gid);
+s16 get_sub_op_class(u8 gid, u8 ch);
+u8 rtw_get_op_class_by_chbw(u8 ch, u8 bw, u8 offset);
+u8 rtw_get_bw_offset_by_op_class_ch(u8 gid, u8 ch, u8 *bw, u8 *offset);
 
 static int parse_fn(const char *obj, size_t obj_len, enum rf_fn *out)
 {
@@ -118,6 +129,14 @@ static int parse_fn(const char *obj, size_t obj_len, enum rf_fn *out)
 		*out = FN_OPC_BW_STR;
 	else if (strcmp(fn, "opc_bw_to_ch_width") == 0)
 		*out = FN_OPC_BW_TO_CH_WIDTH;
+	else if (strcmp(fn, "is_valid_global_op_class_id") == 0)
+		*out = FN_VALID_GLOBAL_OP_CLASS_ID;
+	else if (strcmp(fn, "get_sub_op_class") == 0)
+		*out = FN_GET_SUB_OP_CLASS;
+	else if (strcmp(fn, "rtw_get_op_class_by_chbw") == 0)
+		*out = FN_GET_OP_CLASS_BY_CHBW;
+	else if (strcmp(fn, "rtw_get_bw_offset_by_op_class_ch") == 0)
+		*out = FN_GET_BW_OFFSET_BY_OP_CLASS_CH;
 	else
 		return -1;
 	return 0;
@@ -177,15 +196,16 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 	host_json_parse_int_in(obj, obj_len, "ch", (int *)&v->ch);
 	host_json_parse_int_in(obj, obj_len, "freq", &v->freq);
 	host_json_parse_int_in(obj, obj_len, "id", (int *)&v->id);
+	host_json_parse_int_in(obj, obj_len, "gid", (int *)&v->id);
 	host_json_parse_int_in(obj, obj_len, "r_offset_in", (int *)&v->r_offset_in);
 	host_json_parse_int_in(obj, obj_len, "expect", &v->expect);
-	host_json_parse_int_in(obj, obj_len, "expect_offset", &v->expect);
 	host_json_parse_int_in(obj, obj_len, "expect_valid", &v->expect_valid);
 	host_json_parse_int_in(obj, obj_len, "expect_op_ch_num", &v->expect_op_ch_num);
 	host_json_parse_int_in(obj, obj_len, "expect_band", &v->expect_band);
 	host_json_parse_int_in(obj, obj_len, "expect_group", &v->expect_group);
 	host_json_parse_int_in(obj, obj_len, "expect_hi", &v->expect_hi);
 	host_json_parse_int_in(obj, obj_len, "expect_lo", &v->expect_lo);
+	host_json_parse_int_in(obj, obj_len, "expect_offset", &v->expect_offset);
 	host_json_parse_string_in(obj, obj_len, "expect_str", v->expect_str,
 				  sizeof(v->expect_str));
 	if (!host_json_parse_int_in(obj, obj_len, "expect_cck_group", &tmp)) {
@@ -436,6 +456,61 @@ static int run_vector(struct vector *v)
 		if ((int)got != v->expect) {
 			fprintf(stderr, "%s: opc_bw_to_ch_width got=%u expect=%d\n",
 				v->name, got, v->expect);
+			return -1;
+		}
+		break;
+	}
+	case FN_VALID_GLOBAL_OP_CLASS_ID: {
+		bool got = is_valid_global_op_class_id(v->id);
+
+		if ((int)got != v->expect_valid) {
+			fprintf(stderr, "%s: is_valid_global_op_class_id got=%d expect=%d\n",
+				v->name, got, v->expect_valid);
+			return -1;
+		}
+		break;
+	}
+	case FN_GET_SUB_OP_CLASS: {
+		s16 got = get_sub_op_class(v->id, v->ch);
+
+		if ((int)got != v->expect) {
+			fprintf(stderr, "%s: get_sub_op_class got=%d expect=%d\n",
+				v->name, got, v->expect);
+			return -1;
+		}
+		break;
+	}
+	case FN_GET_OP_CLASS_BY_CHBW: {
+		u8 got = rtw_get_op_class_by_chbw(v->ch, v->bw, v->offset);
+
+		if ((int)got != v->expect) {
+			fprintf(stderr, "%s: rtw_get_op_class_by_chbw got=%u expect=%d\n",
+				v->name, got, v->expect);
+			return -1;
+		}
+		break;
+	}
+	case FN_GET_BW_OFFSET_BY_OP_CLASS_CH: {
+		u8 out_bw = 0;
+		u8 out_offset = 0;
+		u8 valid = rtw_get_bw_offset_by_op_class_ch(v->id, v->ch, &out_bw,
+							    &out_offset);
+
+		if ((int)valid != v->expect_valid) {
+			fprintf(stderr, "%s: rtw_get_bw_offset_by_op_class_ch valid=%u expect=%d\n",
+				v->name, valid, v->expect_valid);
+			return -1;
+		}
+		if (!valid)
+			break;
+		if ((int)out_bw != v->expect) {
+			fprintf(stderr, "%s: bw=%u expect=%d\n",
+				v->name, out_bw, v->expect);
+			return -1;
+		}
+		if ((int)out_offset != v->expect_offset) {
+			fprintf(stderr, "%s: offset=%u expect=%d\n",
+				v->name, out_offset, v->expect_offset);
 			return -1;
 		}
 		break;

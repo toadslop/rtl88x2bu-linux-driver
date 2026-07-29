@@ -90,4 +90,28 @@ extern const char *const _opc_bw_str[OPC_BW_NUM];
 extern const u8 _opc_bw_to_ch_width[OPC_BW_NUM];
 #define opc_bw_to_ch_width(bw) (((bw) < OPC_BW_NUM) ? _opc_bw_to_ch_width[(bw)] : CHANNEL_WIDTH_MAX)
 
+#define rtw_is_2g_ch(ch) ((ch) >= 1 && (ch) <= 14)
+#define rtw_is_5g_ch(ch) ((ch) >= 36 && (ch) <= 177)
+
+struct op_class_t {
+	u8 class_id;
+	BAND_TYPE band;
+	enum opc_bw bw;
+	u8 *len_ch_attr;
+};
+
+#define OPC_CH_LIST_LEN(_opc) (_opc.len_ch_attr[0])
+#define OPC_CH_LIST_CH(_opc, _i) (_opc.len_ch_attr[_i + 1])
+
+extern const struct op_class_t global_op_class[];
+extern const int global_op_class_num;
+
+bool is_valid_global_op_class_id(u8 gid);
+s16 get_sub_op_class(u8 gid, u8 ch);
+u8 rtw_get_op_class_by_chbw(u8 ch, u8 bw, u8 offset);
+u8 rtw_get_bw_offset_by_op_class_ch(u8 gid, u8 ch, u8 *bw, u8 *offset);
+
+u8 rtw_get_offset_by_chbw(u8 ch, u8 bw, u8 *r_offset);
+u8 rtw_get_center_ch(u8 ch, u8 bw, u8 offset);
+
 #endif /* HOST_RF_TYPES_H */
