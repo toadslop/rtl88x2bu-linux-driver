@@ -192,6 +192,87 @@ u8 rtw_update_rate_bymode(WLAN_BSSID_EX *pbss_network, u32 mode)
 
 	return network_type;
 }
+
+int rtw_get_wpa_cipher_suite(u8 *s)
+{
+	if (_rtw_memcmp(s, WPA_CIPHER_SUITE_NONE, WPA_SELECTOR_LEN) == _TRUE)
+		return WPA_CIPHER_NONE;
+	if (_rtw_memcmp(s, WPA_CIPHER_SUITE_WEP40, WPA_SELECTOR_LEN) == _TRUE)
+		return WPA_CIPHER_WEP40;
+	if (_rtw_memcmp(s, WPA_CIPHER_SUITE_TKIP, WPA_SELECTOR_LEN) == _TRUE)
+		return WPA_CIPHER_TKIP;
+	if (_rtw_memcmp(s, WPA_CIPHER_SUITE_CCMP, WPA_SELECTOR_LEN) == _TRUE)
+		return WPA_CIPHER_CCMP;
+	if (_rtw_memcmp(s, WPA_CIPHER_SUITE_WEP104, WPA_SELECTOR_LEN) == _TRUE)
+		return WPA_CIPHER_WEP104;
+
+	return 0;
+}
+
+int rtw_get_rsn_cipher_suite(u8 *s)
+{
+	if (_rtw_memcmp(s, RSN_CIPHER_SUITE_NONE, RSN_SELECTOR_LEN) == _TRUE)
+		return WPA_CIPHER_NONE;
+	if (_rtw_memcmp(s, RSN_CIPHER_SUITE_WEP40, RSN_SELECTOR_LEN) == _TRUE)
+		return WPA_CIPHER_WEP40;
+	if (_rtw_memcmp(s, RSN_CIPHER_SUITE_TKIP, RSN_SELECTOR_LEN) == _TRUE)
+		return WPA_CIPHER_TKIP;
+	if (_rtw_memcmp(s, RSN_CIPHER_SUITE_CCMP, RSN_SELECTOR_LEN) == _TRUE)
+		return WPA_CIPHER_CCMP;
+	if (_rtw_memcmp(s, RSN_CIPHER_SUITE_GCMP, RSN_SELECTOR_LEN) == _TRUE)
+		return WPA_CIPHER_GCMP;
+	if (_rtw_memcmp(s, RSN_CIPHER_SUITE_GCMP_256, RSN_SELECTOR_LEN) == _TRUE)
+		return WPA_CIPHER_GCMP_256;
+	if (_rtw_memcmp(s, RSN_CIPHER_SUITE_CCMP_256, RSN_SELECTOR_LEN) == _TRUE)
+		return WPA_CIPHER_CCMP_256;
+	if (_rtw_memcmp(s, RSN_CIPHER_SUITE_WEP104, RSN_SELECTOR_LEN) == _TRUE)
+		return WPA_CIPHER_WEP104;
+	if (_rtw_memcmp(s, RSN_CIPHER_SUITE_AES_128_CMAC, RSN_SELECTOR_LEN) == _TRUE)
+		return WPA_CIPHER_BIP_CMAC_128;
+	if (_rtw_memcmp(s, RSN_CIPHER_SUITE_BIP_GMAC_128, RSN_SELECTOR_LEN) == _TRUE)
+		return WPA_CIPHER_BIP_GMAC_128;
+	if (_rtw_memcmp(s, RSN_CIPHER_SUITE_BIP_GMAC_256, RSN_SELECTOR_LEN) == _TRUE)
+		return WPA_CIPHER_BIP_GMAC_256;
+	if (_rtw_memcmp(s, RSN_CIPHER_SUITE_BIP_CMAC_256, RSN_SELECTOR_LEN) == _TRUE)
+		return WPA_CIPHER_BIP_CMAC_256;
+	return 0;
+}
+
+u32 rtw_get_akm_suite_bitmap(u8 *s)
+{
+	if (_rtw_memcmp(s, WLAN_AKM_8021X, RSN_SELECTOR_LEN) == _TRUE)
+		return WLAN_AKM_TYPE_8021X;
+	if (_rtw_memcmp(s, WLAN_AKM_PSK, RSN_SELECTOR_LEN) == _TRUE)
+		return WLAN_AKM_TYPE_PSK;
+	if (_rtw_memcmp(s, WLAN_AKM_FT_8021X, RSN_SELECTOR_LEN) == _TRUE)
+		return WLAN_AKM_TYPE_FT_8021X;
+	if (_rtw_memcmp(s, WLAN_AKM_FT_PSK, RSN_SELECTOR_LEN) == _TRUE)
+		return WLAN_AKM_TYPE_FT_PSK;
+	if (_rtw_memcmp(s, WLAN_AKM_8021X_SHA256, RSN_SELECTOR_LEN) == _TRUE)
+		return WLAN_AKM_TYPE_8021X_SHA256;
+	if (_rtw_memcmp(s, WLAN_AKM_PSK_SHA256, RSN_SELECTOR_LEN) == _TRUE)
+		return WLAN_AKM_TYPE_PSK_SHA256;
+	if (_rtw_memcmp(s, WLAN_AKM_TDLS, RSN_SELECTOR_LEN) == _TRUE)
+		return WLAN_AKM_TYPE_TDLS;
+	if (_rtw_memcmp(s, WLAN_AKM_SAE, RSN_SELECTOR_LEN) == _TRUE)
+		return WLAN_AKM_TYPE_SAE;
+	if (_rtw_memcmp(s, WLAN_AKM_FT_OVER_SAE, RSN_SELECTOR_LEN) == _TRUE)
+		return WLAN_AKM_TYPE_FT_OVER_SAE;
+	if (_rtw_memcmp(s, WLAN_AKM_8021X_SUITE_B, RSN_SELECTOR_LEN) == _TRUE)
+		return WLAN_AKM_TYPE_8021X_SUITE_B;
+	if (_rtw_memcmp(s, WLAN_AKM_8021X_SUITE_B_192, RSN_SELECTOR_LEN) == _TRUE)
+		return WLAN_AKM_TYPE_8021X_SUITE_B_192;
+	if (_rtw_memcmp(s, WLAN_AKM_FILS_SHA256, RSN_SELECTOR_LEN) == _TRUE)
+		return WLAN_AKM_TYPE_FILS_SHA256;
+	if (_rtw_memcmp(s, WLAN_AKM_FILS_SHA384, RSN_SELECTOR_LEN) == _TRUE)
+		return WLAN_AKM_TYPE_FILS_SHA384;
+	if (_rtw_memcmp(s, WLAN_AKM_FT_FILS_SHA256, RSN_SELECTOR_LEN) == _TRUE)
+		return WLAN_AKM_TYPE_FT_FILS_SHA256;
+	if (_rtw_memcmp(s, WLAN_AKM_FT_FILS_SHA384, RSN_SELECTOR_LEN) == _TRUE)
+		return WLAN_AKM_TYPE_FT_FILS_SHA384;
+
+	return 0;
+}
 #endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
 #if defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)

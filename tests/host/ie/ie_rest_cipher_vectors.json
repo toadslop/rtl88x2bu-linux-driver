@@ -1,0 +1,215 @@
+{
+  "oracle": "core/rtw_ieee80211_rest.c",
+  "vectors": [
+    {
+      "name": "wpa_cipher_none",
+      "fn": "rtw_get_wpa_cipher_suite",
+      "suite": "0050f200",
+      "expect": 1
+    },
+    {
+      "name": "wpa_cipher_wep40",
+      "fn": "rtw_get_wpa_cipher_suite",
+      "suite": "0050f201",
+      "expect": 2
+    },
+    {
+      "name": "wpa_cipher_tkip",
+      "fn": "rtw_get_wpa_cipher_suite",
+      "suite": "0050f202",
+      "expect": 8
+    },
+    {
+      "name": "wpa_cipher_ccmp",
+      "fn": "rtw_get_wpa_cipher_suite",
+      "suite": "0050f204",
+      "expect": 16
+    },
+    {
+      "name": "wpa_cipher_wep104",
+      "fn": "rtw_get_wpa_cipher_suite",
+      "suite": "0050f205",
+      "expect": 4
+    },
+    {
+      "name": "wpa_cipher_unknown",
+      "fn": "rtw_get_wpa_cipher_suite",
+      "suite": "deadbeef",
+      "expect": 0
+    },
+    {
+      "name": "rsn_cipher_none",
+      "fn": "rtw_get_rsn_cipher_suite",
+      "suite": "000fac00",
+      "expect": 1
+    },
+    {
+      "name": "rsn_cipher_wep40",
+      "fn": "rtw_get_rsn_cipher_suite",
+      "suite": "000fac01",
+      "expect": 2
+    },
+    {
+      "name": "rsn_cipher_tkip",
+      "fn": "rtw_get_rsn_cipher_suite",
+      "suite": "000fac02",
+      "expect": 8
+    },
+    {
+      "name": "rsn_cipher_ccmp",
+      "fn": "rtw_get_rsn_cipher_suite",
+      "suite": "000fac04",
+      "expect": 16
+    },
+    {
+      "name": "rsn_cipher_gcmp",
+      "fn": "rtw_get_rsn_cipher_suite",
+      "suite": "000fac08",
+      "expect": 32
+    },
+    {
+      "name": "rsn_cipher_gcmp_256",
+      "fn": "rtw_get_rsn_cipher_suite",
+      "suite": "000fac09",
+      "expect": 64
+    },
+    {
+      "name": "rsn_cipher_ccmp_256",
+      "fn": "rtw_get_rsn_cipher_suite",
+      "suite": "000fac0a",
+      "expect": 128
+    },
+    {
+      "name": "rsn_cipher_wep104",
+      "fn": "rtw_get_rsn_cipher_suite",
+      "suite": "000fac05",
+      "expect": 4
+    },
+    {
+      "name": "rsn_cipher_bip_cmac_128",
+      "fn": "rtw_get_rsn_cipher_suite",
+      "suite": "000fac06",
+      "expect": 256
+    },
+    {
+      "name": "rsn_cipher_bip_gmac_128",
+      "fn": "rtw_get_rsn_cipher_suite",
+      "suite": "000fac0b",
+      "expect": 512
+    },
+    {
+      "name": "rsn_cipher_bip_gmac_256",
+      "fn": "rtw_get_rsn_cipher_suite",
+      "suite": "000fac0c",
+      "expect": 1024
+    },
+    {
+      "name": "rsn_cipher_bip_cmac_256",
+      "fn": "rtw_get_rsn_cipher_suite",
+      "suite": "000fac0d",
+      "expect": 2048
+    },
+    {
+      "name": "rsn_cipher_unknown",
+      "fn": "rtw_get_rsn_cipher_suite",
+      "suite": "cafebabe",
+      "expect": 0
+    },
+    {
+      "name": "akm_8021x",
+      "fn": "rtw_get_akm_suite_bitmap",
+      "suite": "000fac01",
+      "expect": 1
+    },
+    {
+      "name": "akm_psk",
+      "fn": "rtw_get_akm_suite_bitmap",
+      "suite": "000fac02",
+      "expect": 2
+    },
+    {
+      "name": "akm_ft_8021x",
+      "fn": "rtw_get_akm_suite_bitmap",
+      "suite": "000fac03",
+      "expect": 4
+    },
+    {
+      "name": "akm_ft_psk",
+      "fn": "rtw_get_akm_suite_bitmap",
+      "suite": "000fac04",
+      "expect": 8
+    },
+    {
+      "name": "akm_8021x_sha256",
+      "fn": "rtw_get_akm_suite_bitmap",
+      "suite": "000fac05",
+      "expect": 16
+    },
+    {
+      "name": "akm_psk_sha256",
+      "fn": "rtw_get_akm_suite_bitmap",
+      "suite": "000fac06",
+      "expect": 32
+    },
+    {
+      "name": "akm_tdls",
+      "fn": "rtw_get_akm_suite_bitmap",
+      "suite": "000fac07",
+      "expect": 64
+    },
+    {
+      "name": "akm_sae",
+      "fn": "rtw_get_akm_suite_bitmap",
+      "suite": "000fac08",
+      "expect": 128
+    },
+    {
+      "name": "akm_ft_over_sae",
+      "fn": "rtw_get_akm_suite_bitmap",
+      "suite": "000fac09",
+      "expect": 256
+    },
+    {
+      "name": "akm_8021x_suite_b",
+      "fn": "rtw_get_akm_suite_bitmap",
+      "suite": "000fac0b",
+      "expect": 512
+    },
+    {
+      "name": "akm_8021x_suite_b_192",
+      "fn": "rtw_get_akm_suite_bitmap",
+      "suite": "000fac0c",
+      "expect": 1024
+    },
+    {
+      "name": "akm_fils_sha256",
+      "fn": "rtw_get_akm_suite_bitmap",
+      "suite": "000fac0e",
+      "expect": 2048
+    },
+    {
+      "name": "akm_fils_sha384",
+      "fn": "rtw_get_akm_suite_bitmap",
+      "suite": "000fac0f",
+      "expect": 4096
+    },
+    {
+      "name": "akm_ft_fils_sha256",
+      "fn": "rtw_get_akm_suite_bitmap",
+      "suite": "000fac10",
+      "expect": 8192
+    },
+    {
+      "name": "akm_ft_fils_sha384",
+      "fn": "rtw_get_akm_suite_bitmap",
+      "suite": "000fac11",
+      "expect": 16384
+    },
+    {
+      "name": "akm_unknown",
+      "fn": "rtw_get_akm_suite_bitmap",
+      "suite": "badf00d0",
+      "expect": 0
+    }
+  ]
+}
