@@ -729,7 +729,7 @@ unsigned char *rtw_get_wpa2_ie(unsigned char *pie, int *rsn_ie_len, int limit)
 
 }
 
-#if !defined(CONFIG_RUST)
+#if !defined(CONFIG_RUST) || defined(HOST_IEEE80211_REST_TEST)
 int rtw_get_wpa_cipher_suite(u8 *s)
 {
 	if (_rtw_memcmp(s, WPA_CIPHER_SUITE_NONE, WPA_SELECTOR_LEN) == _TRUE)
@@ -810,7 +810,7 @@ u32 rtw_get_akm_suite_bitmap(u8 *s)
 
 	return 0;
 }
-#endif /* !CONFIG_RUST */
+#endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
 int rtw_parse_wpa_ie(u8 *wpa_ie, int wpa_ie_len, int *group_cipher,
 	int *pairwise_cipher, u32 *akm)
