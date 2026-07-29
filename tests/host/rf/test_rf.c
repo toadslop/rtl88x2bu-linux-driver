@@ -11,7 +11,7 @@
 #include "host_rf_types.h"
 #include "host_vector_json.h"
 
-#define MAX_VECTORS 160
+#define MAX_VECTORS 170
 #define MAX_NAME 128
 #define MAX_OP_CHS 8
 

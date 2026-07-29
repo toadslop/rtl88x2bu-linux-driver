@@ -963,6 +963,45 @@
       "gid": 0,
       "ch": 6,
       "expect_valid": 0
+    },
+    {
+      "name": "sub_op_class_160m_to_80m",
+      "fn": "get_sub_op_class",
+      "gid": 129,
+      "ch": 36,
+      "expect": 128
+    },
+    {
+      "name": "op_class_by_chbw_5g20_ch165",
+      "fn": "rtw_get_op_class_by_chbw",
+      "ch": 165,
+      "bw": 0,
+      "offset": 0,
+      "expect": 125
+    },
+    {
+      "name": "op_class_by_chbw_5g20_ch149",
+      "fn": "rtw_get_op_class_by_chbw",
+      "ch": 149,
+      "bw": 0,
+      "offset": 0,
+      "expect": 124
+    },
+    {
+      "name": "op_class_by_chbw_5g40_offset_mismatch",
+      "fn": "rtw_get_op_class_by_chbw",
+      "ch": 36,
+      "bw": 1,
+      "offset": 2,
+      "expect": 0
+    },
+    {
+      "name": "op_class_by_chbw_unsupported_bw",
+      "fn": "rtw_get_op_class_by_chbw",
+      "ch": 6,
+      "bw": 4,
+      "offset": 0,
+      "expect": 0
     }
   ]
 }
