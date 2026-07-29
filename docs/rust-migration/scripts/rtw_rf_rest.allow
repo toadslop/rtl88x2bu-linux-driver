@@ -40,3 +40,8 @@ drop trx_bmp_to_rf_type
 drop rf_type_is_a_in_b
 drop rtw_restrict_trx_path_bmp_by_trx_num_lmt
 drop rtw_restrict_trx_path_bmp_by_rftype
+drop txpwr_idx_get_dbm_str
+drop txpwr_mbm_get_dbm_str
+drop mb_of_ntx
+drop rtw_is_long_cac_range
+drop rtw_is_long_cac_ch
