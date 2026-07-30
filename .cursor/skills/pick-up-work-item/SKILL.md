@@ -4,8 +4,8 @@ description: >-
   Orchestrates the next rust-migration agent action. Auto-applies on "pick up
   work", "find open work item", "check GitHub issues", "what should we work on
   next", "triage issues and start work", or similar. Chooses exactly ONE of
-  three paths per run: (A) prepare all eligible open/draft PRs when at least one
-  is merge-ready; (B) otherwise triage issues, select ready work, plan ~200-line
+  three paths per run: (A) prepare eligible open/draft PRs when at least one
+  still needs prep; (B) otherwise triage issues, select ready work, plan ~200-line
   implement, open PRs ready for review, and babysit; (C) otherwise draft a wave
   of 10–20 new issues and stop. Do NOT use for reviewing PRs
   (pr-review-delivery) or for preparing a single named PR in isolation
@@ -63,23 +63,53 @@ For each PR, include it in **`eligible`** only if `baseRefName` is `master`, or
 that base branch is already merged into `master` (see prepare-all-prs Phase 1).
 All other open PRs go in **`skipped`** (stacked on an unmerged parent).
 
+### Needs-prep vs merge-ready (mandatory — do not stop early)
+
+**Eligible PRs alone do not trigger Path A.** After building `eligible`, classify
+each PR as **`needs_prep`** or **`merge_ready`** (nothing for the agent to do
+right now). Only PRs in **`needs_prep`** send you to Path A.
+
+For each PR in `eligible`, inspect:
+
+```bash
+gh pr view <number> --json isDraft,baseRefName,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup,reviews
+```
+
+| Classify **`needs_prep`** when any of | Classify **`merge_ready`** when all of |
+|---------------------------------------|----------------------------------------|
+| `isDraft` is `true` | `isDraft` is `false` |
+| `baseRefName` ≠ `master` (parent merged — retarget/rebase still required) | `baseRefName` is `master` |
+| `mergeable` is `CONFLICTING`, or `mergeStateStatus` is `BEHIND` / `DIRTY` / `BLOCKED` | `mergeable` is `MERGEABLE` and branch is current with `master` |
+| Required checks failing or still pending | All required checks **success** |
+| `reviewDecision` is `CHANGES_REQUESTED`, or a review is **in progress** | No in-progress review; no blocking requested-changes feedback |
+| Open blocking review threads the author must address | Approved or awaiting maintainer merge only (optional nits do **not** block Path B/C) |
+
+**Do not stop** just because open PRs exist. When every eligible PR is
+**`merge_ready`**, treat the PR queue as handled and **fall through** to Path B or
+C — triage issues, select ready work, or draft a new wave. Note merge-ready PRs in
+the final report (links + "awaiting merge / maintainer").
+
 | Condition | Path | Action |
 |-----------|------|--------|
-| **One or more eligible open PRs** (includes drafts — GitHub lists drafts under `--state open`) | **A — Prepare PRs** | Run [`prepare-all-prs-for-merge`](../prepare-all-prs-for-merge/SKILL.md), then **stop** |
-| **No eligible PRs** (no open PRs, or every open PR is `skipped`) and a ready issue exists after triage + selection | **B — New work** | Triage → select → plan → implement → open PRs → babysit, then **stop** |
-| **No eligible PRs** and no ready issue after triage + selection | **C — Draft wave** | Triage → draft 10–20 new issues, then **stop** |
+| **One or more `needs_prep` PRs** among `eligible` | **A — Prepare PRs** | Run [`prepare-all-prs-for-merge`](../prepare-all-prs-for-merge/SKILL.md) on those PRs only, then **stop** |
+| **No `needs_prep` PRs** (no open PRs, every open PR is `skipped`, or all `eligible` PRs are `merge_ready`) and a ready issue exists after triage + selection | **B — New work** | Triage → select → plan → implement → open PRs → babysit, then **stop** |
+| **No `needs_prep` PRs** and no ready issue after triage + selection | **C — Draft wave** | Triage → draft 10–20 new issues, then **stop** |
 
 When open PRs exist but **`eligible` is empty** (all `skipped`), **fall through**
-to Path B or C — do not enter Path A with nothing to prepare. Note the skipped
-PRs and blocking parents in the final report.
+to Path B or C — do not enter Path A with nothing to prepare. When `eligible` is
+non-empty but **`needs_prep` is empty**, **also fall through** — merge-ready PRs
+are not a reason to idle. Note skipped PRs, blocking parents, and merge-ready PRs
+in the final report.
 
 ```mermaid
 flowchart TD
   A[Start: pick up work] --> B[List open PRs + eligibility filter]
   B --> C{Any eligible PRs?}
-  C -->|Yes| D[Path A: prepare-all-prs-for-merge]
+  C -->|Yes| C2{Any needs_prep?}
+  C2 -->|Yes| D[Path A: prepare-all-prs-for-merge]
   D --> Z[Report and stop]
-  C -->|No| E[1. Triage open issues]
+  C2 -->|No — all merge_ready| E[1. Triage open issues]
+  C -->|No| E
   E --> F[2. Select ready issue]
   F -->|Found| G[3. Plan stacked PRs]
   G --> H[4. Implement + open PRs + babysit]
@@ -89,12 +119,16 @@ flowchart TD
 ```
 
 Announce which path you chose in chat (one line), e.g. "Path A — 2 eligible
-open PRs; running prepare-all-prs-for-merge" or "Path B — 1 open PR skipped
-(unmerged parent); no eligible PRs."
+open PRs need prep; running prepare-all-prs-for-merge", "Path B — 2 open PRs
+merge-ready (no prep needed); selecting next issue", or "Path B — 1 open PR
+skipped (unmerged parent); no eligible PRs."
 
 ## Path A — Prepare all PRs
 
-**When:** path selection found at least one **eligible** open PR (see above).
+**When:** path selection found at least one **eligible** PR classified as
+**`needs_prep`** (see **Needs-prep vs merge-ready** above). Do **not** enter Path
+A when every eligible PR is already **`merge_ready`** — continue to Path B or C
+instead.
 
 Load and follow [`prepare-all-prs-for-merge`](../prepare-all-prs-for-merge/SKILL.md)
 in full:
@@ -103,7 +137,7 @@ in full:
    `master` (should match path-selection `eligible` list).
 2. Mark eligible drafts ready for review (`gh pr ready`).
 3. Run [`prepare-pr-for-merge`](../prepare-pr-for-merge/SKILL.md) on each
-   eligible PR (babysit until CI green and reviews complete).
+   **`needs_prep`** PR (babysit until CI green and reviews complete).
 
 **Stop here.** Do not triage issues, implement new work, or draft tickets in
 the same run.
@@ -128,9 +162,11 @@ run Path B or C instead. Note in the report which open PRs were deprioritized.
 
 ## Path B — Implement the next ready issue
 
-**When:** no **eligible** PRs (no open PRs, or every open PR is `skipped`), and
+**When:** no **`needs_prep`** PRs (no open PRs, every open PR is `skipped`, or
+every `eligible` PR is **`merge_ready`**), and
 [`select-ready-issue`](../select-ready-issue/SKILL.md) finds an unblocked issue
-after triage. Skipped open PRs may still exist — note them in the report.
+after triage. Skipped and merge-ready open PRs may still exist — note them in the
+report.
 
 | Step | Subskill | Outcome |
 |------|----------|---------|
@@ -164,8 +200,8 @@ clear report). Do not draft new issues in the same run.
 
 ## Path C — Draft a new wave
 
-**When:** no **eligible** PRs (skipped open PRs may remain), and step 2 finds
-**no** ready issue.
+**When:** no **`needs_prep`** PRs (skipped or merge-ready open PRs may remain),
+and step 2 finds **no** ready issue.
 
 | Step | Subskill | Outcome |
 |------|----------|---------|
@@ -189,8 +225,9 @@ implement one immediately. Wait for an explicit follow-up or a new pick-up run
 | Do | Do not |
 |----|--------|
 | Choose **one** path per run and complete it | Chain Path A + B, or B + C, in one session |
-| Prefer Path A when **eligible** PRs are open | Start new implementation while eligible PRs need prep |
-| Fall through to B/C when open PRs are all `skipped` | Enter Path A with zero eligible PRs |
+| Prefer Path A when **eligible** PRs **`need_prep`** | Start new implementation while eligible PRs need prep |
+| Fall through to B/C when open PRs are all `skipped` or all `merge_ready` | Enter Path A with zero `needs_prep` PRs |
+| Continue to triage/select/draft when PRs are merge-ready | Stop the run only because open PRs exist |
 | Report `human action required` when eligible PRs stay blocked | Imply the next pick-up will fix blocked PRs automatically |
 | Honor explicit user override to skip PR prep | Ignore a clear "start new work" instruction |
 | Open new PRs ready for review (Path B) | Open implementation PRs as drafts |
@@ -216,7 +253,7 @@ After completing **one** path, reply in chat with:
 | Item | Value |
 |------|-------|
 | **Path chosen** | A (prepare PRs) / B (implement) / C (draft wave) |
-| Open PRs at start | total / eligible / skipped — or "none" |
+| Open PRs at start | total / eligible / needs_prep / merge_ready / skipped — or "none" |
 | Triage | Issues closed (`#N` + reason) or "none" / "n/a (Path A)" |
 | Selected issue | Draft ID, GitHub `#N`, title — Path B only |
 | Plan | PR stack table — Path B only |
@@ -235,7 +272,7 @@ no unless the user sends a new, explicit instruction.
 
 | Skill | When |
 |-------|------|
-| **`prepare-all-prs-for-merge`** | Path A — at least one eligible open/draft PR |
+| **`prepare-all-prs-for-merge`** | Path A — at least one eligible PR that `needs_prep` |
 | **`prepare-pr-for-merge`** | Invoked inside Path A per eligible PR |
 | **`plan-stacked-prs`** | Path B — before writing code |
 | **`implement-stacked-prs`** | Path B — build, open (non-draft), babysit |
