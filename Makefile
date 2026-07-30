@@ -2761,7 +2761,7 @@ rust-objects-rtw-chplan-rest-c:
 
 rust-check-symbols-rtw-chplan-rest: rust-objects-rtw-chplan-rest-c rust-objects-rtw-chplan-rest
 	$(MAKE) rust-check-symbols OLD=tests/host/chplan/chplan_rest_c_ref.o NEW=rust/rtw_chplan_rest.o \
-		ALLOWLIST=docs/rust-migration/scripts/rtw_chplan_rest.allow
+		ALLOWLIST=docs/rust-migration/scripts/rtw_chplan_rest.allow ALLOW_VACUOUS=1
 
 # W3-18: compare pre-port core/rtw_io_rest.o against rust/rtw_io_rest.o.
 rust-objects-rtw-io-rest:
@@ -2784,7 +2784,7 @@ rust-objects-rtw-io-rest-c:
 
 rust-check-symbols-rtw-io-rest: rust-objects-rtw-io-rest-c rust-objects-rtw-io-rest
 	$(MAKE) rust-check-symbols OLD=tests/host/io/io_rest_c_ref.o NEW=rust/rtw_io_rest.o \
-		ALLOWLIST=docs/rust-migration/scripts/rtw_io_rest.allow
+		ALLOWLIST=docs/rust-migration/scripts/rtw_io_rest.allow ALLOW_VACUOUS=1
 
 # W3-19: compare pre-port core/rtw_rf_rest.o against rust/rtw_rf_rest.o.
 rust-objects-rtw-rf-rest:

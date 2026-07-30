@@ -116,11 +116,16 @@ make KDIR=/opt/linux LLVM=1 rust-check-symbols-selftest
 | Changed paths | L1 unit target |
 |---------------|----------------|
 | `rust/rtw_chplan.rs`, `core/rtw_chplan.*` | `rust-check-symbols-rtw-chplan` |
+| `rust/rtw_chplan_rest.rs`, `core/rtw_chplan_rest.c`, `tests/host/chplan/*rest*` | `rust-check-symbols-rtw-chplan-rest` |
+| `rust/rtw_io_rest.rs`, `core/rtw_io_rest.c`, `tests/host/io/**` | `rust-check-symbols-rtw-io-rest` |
 | `rust/rtw_swcrypto.rs`, `core/rtw_swcrypto*.c` | `rust-check-symbols-rtw-swcrypto` |
-| `rust/rtw_ieee80211.rs`, `tests/host/ie/**` | `rust-check-symbols-rtw-ieee80211` |
-| `rust/rtw_security.rs`, `tests/host/security/**` | `rust-check-symbols-rtw-security` |
+| `rust/rtw_ieee80211.rs`, `core/rtw_ieee80211.c` | `rust-check-symbols-rtw-ieee80211` |
+| `rust/rtw_ieee80211_rest.rs`, `core/rtw_ieee80211_rest.c`, `tests/host/ie/*rest*` | `rust-check-symbols-rtw-ieee80211-rest` |
+| `tests/host/ie/**` (non-rest harnesses) | `rust-check-symbols-rtw-ieee80211` |
+| `rust/rtw_security.rs`, `rust/rtw_security_rest.rs`, `tests/host/security/**` | `rust-check-symbols-rtw-security`, `rust-check-symbols-rtw-security-rest-misc` |
 | `rust/rtw_wlan_util.rs`, `tests/host/wlan_util/**` | `rust-check-symbols-rtw-wlan-util` |
-| `Makefile`, `check-symbols.sh`, `*.allow`, unmapped `rust/**` | full suite (all five) |
+| `rust/rtw_rf_rest.rs`, `core/rtw_rf_rest.c`, `tests/host/rf/**` | `rust-check-symbols-rtw-rf-rest` |
+| `Makefile`, `check-symbols.sh`, `*.allow`, unmapped `rust/**` | full suite (all ten) |
 
 Also required in the PR description:
 

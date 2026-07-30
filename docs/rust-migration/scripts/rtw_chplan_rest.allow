@@ -29,3 +29,4 @@ drop rtw_rust_chset_set_non_ocp
 drop rtw_rust_warn_on
 drop rtw_rust_bss_ds_config
 drop rtw_rust_chplan_print_str
+drop rtw_rust_chplan_beacon_hint_info

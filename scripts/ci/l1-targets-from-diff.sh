@@ -36,14 +36,31 @@ for path in "${changed[@]}"; do
 	| core/rtw_chplan.h)
 		add_target rust-check-symbols-rtw-chplan
 		;;
+	rust/rtw_chplan_rest.rs \
+	| core/rtw_chplan_rest.c \
+	| tests/host/chplan/*rest*)
+		add_target rust-check-symbols-rtw-chplan-rest
+		;;
+	rust/rtw_io_rest.rs \
+	| core/rtw_io_rest.c \
+	| tests/host/io/*)
+		add_target rust-check-symbols-rtw-io-rest
+		;;
 	rust/rtw_swcrypto.rs \
 	| core/rtw_swcrypto.c \
 	| core/rtw_swcrypto_rest.c)
 		add_target rust-check-symbols-rtw-swcrypto
 		;;
 	rust/rtw_ieee80211.rs \
-	| core/rtw_ieee80211.c \
-	| tests/host/ie/*)
+	| core/rtw_ieee80211.c)
+		add_target rust-check-symbols-rtw-ieee80211
+		;;
+	rust/rtw_ieee80211_rest.rs \
+	| core/rtw_ieee80211_rest.c \
+	| tests/host/ie/*rest*)
+		add_target rust-check-symbols-rtw-ieee80211-rest
+		;;
+	tests/host/ie/*)
 		add_target rust-check-symbols-rtw-ieee80211
 		;;
 	rust/rtw_security.rs \
@@ -73,8 +90,11 @@ done
 
 ALL_TARGETS=(
 	rust-check-symbols-rtw-chplan
+	rust-check-symbols-rtw-chplan-rest
+	rust-check-symbols-rtw-io-rest
 	rust-check-symbols-rtw-swcrypto
 	rust-check-symbols-rtw-ieee80211
+	rust-check-symbols-rtw-ieee80211-rest
 	rust-check-symbols-rtw-security
 	rust-check-symbols-rtw-security-rest-misc
 	rust-check-symbols-rtw-wlan-util

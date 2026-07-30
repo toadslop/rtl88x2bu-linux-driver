@@ -8,8 +8,11 @@ MAKE=(make "KDIR=${KDIR}" LLVM=1)
 
 targets=(
 	rust-check-symbols-rtw-chplan
+	rust-check-symbols-rtw-chplan-rest
+	rust-check-symbols-rtw-io-rest
 	rust-check-symbols-rtw-swcrypto
 	rust-check-symbols-rtw-ieee80211
+	rust-check-symbols-rtw-ieee80211-rest
 	rust-check-symbols-rtw-security
 	rust-check-symbols-rtw-security-rest-misc
 	rust-check-symbols-rtw-wlan-util
