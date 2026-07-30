@@ -22,6 +22,13 @@ Provide hardware-free verification (L0–L3) so each ~200 LOC translation PR can
 - T7 — CI L1 symbol/ABI checks
 - T8 — CI L3 QEMU insmod/rmmod on `master` merges
 - T9 — branch protection, PR template, required checks
+- T10 — refactor PR workflow path filters for branch-protection compatibility
+- T11 — extend L1 CI for `*-rest` translation units
+- T12 — keep `verify-ko-probes.sh` in sync with linked Rust modules
+- T13 — close host-l2 path-filter gaps for `*_rest.c` sources
+- T14 — bindgen drift check (`generated.rs` freshness)
+- T15 — path-scoped L3 on PRs for init/USB/scaffold changes
+- T16 — `rustfmt --check` on `rust/**` changes
 
 ## Exit criteria
 
