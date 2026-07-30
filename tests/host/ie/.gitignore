@@ -3,3 +3,5 @@ test_ie_rest_wpa_rsn_parse
 test_ie_rest_wpa_rsn_parse_rust
 test_ie_rest_wapi_wps
 test_ie_rest_wapi_wps_rust
+test_ie_rest_mac_str
+test_ie_rest_mac_str_rust

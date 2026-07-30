@@ -16,6 +16,16 @@
 #define _FAIL 0
 #define _SUCCESS 1
 
+#define ETH_ALEN 6
+#define MAC_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
+#define MAC_ARG(x) \
+	((u8 *)(x))[0], ((u8 *)(x))[1], ((u8 *)(x))[2], ((u8 *)(x))[3], \
+	((u8 *)(x))[4], ((u8 *)(x))[5]
+
+#define RTW_ERR(...) do { } while (0)
+#define RTW_INFO(...) do { } while (0)
+#define rtw_warn_on(cond) ((void)(cond))
+
 #define BIT(n) (1U << (n))
 #define BIT0 BIT(0)
 #define BIT1 BIT(1)
@@ -224,5 +234,17 @@ int rtw_ies_remove_ie(u8 *ies, unsigned int *ies_len, unsigned int offset,
 bool rtw_is_cck_rate(u8 rate);
 bool rtw_is_ofdm_rate(u8 rate);
 bool rtw_is_basic_rate_ofdm(u8 rate);
+
+u8 str_2char2num(u8 hch, u8 lch);
+u8 key_2char2num(u8 hch, u8 lch);
+void macstr2num(u8 *dst, u8 *src);
+u8 convert_ip_addr(u8 hch, u8 mch, u8 lch);
+u8 rtw_check_invalid_mac_address(u8 *mac_addr, u8 check_local_bit);
+void rtw_macaddr_cfg(u8 *out, const u8 *hw_mac_addr);
+
+u32 rtw_random32(void);
+void host_mac_str_test_set_initmac(const char *mac);
+void host_mac_str_test_clear_initmac(void);
+void host_mac_str_test_set_random32(u32 val);
 
 #endif /* HOST_IEEE80211_TYPES_H */
