@@ -2,6 +2,7 @@
   "oracle": "core/rtw_rm_util_rest.c",
   "vectors": [
     {"name": "rcpi_min_dbm", "fn": "translate_dbm_to_rcpi", "signal_dbm": -110, "expect": 0},
+    {"name": "rcpi_below_min_dbm", "fn": "translate_dbm_to_rcpi", "signal_dbm": -111, "expect": 254},
     {"name": "rcpi_zero_dbm", "fn": "translate_dbm_to_rcpi", "signal_dbm": 0, "expect": 220},
     {"name": "rcpi_pct_zero", "fn": "translate_percentage_to_rcpi", "signal_pct": 0, "expect": 20},
     {"name": "rcpi_pct_100", "fn": "translate_percentage_to_rcpi", "signal_pct": 100, "expect": 220},
