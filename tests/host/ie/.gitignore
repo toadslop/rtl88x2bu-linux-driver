@@ -1,3 +1,5 @@
 test_ie_rest_cipher
 test_ie_rest_wpa_rsn_parse
 test_ie_rest_wpa_rsn_parse_rust
+test_ie_rest_wapi_wps
+test_ie_rest_wapi_wps_rust
