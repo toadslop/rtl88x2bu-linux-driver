@@ -819,6 +819,8 @@ pub extern "C" fn rtw_check_invalid_mac_address(mac_addr: *mut U8, check_local_b
 
 #[no_mangle]
 pub extern "C" fn rtw_macaddr_cfg(out: *mut U8, hw_mac_addr: *const U8) {
+    // Zero-init: C leaves `mac` uninitialized when no source is provided; production
+    // call sites always pass hw_mac_addr, but zeroing avoids UB on that edge path.
     let mut mac = [0u8; ETH_ALEN];
 
     if out.is_null() {
