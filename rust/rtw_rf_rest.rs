@@ -15,6 +15,9 @@
     unused_assignments
 )]
 
+#[cfg(host_rf_rest_test)]
+use std::os::raw::c_int;
+
 #[cfg(not(host_rf_rest_test))]
 use core::ffi::c_int;
 
@@ -1566,4 +1569,9 @@ pub extern "C" fn rtw_ch_to_bb_gain_sel(ch: i32) -> i32 {
     } else {
         -1
     }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_rf_rest_probe() -> c_int {
+    0x1919
 }
