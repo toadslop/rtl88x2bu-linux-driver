@@ -14,7 +14,7 @@ Run **L1 symbol/ABI checks** in CI for the `*-rest` Rust objects that already ha
 
 ## Background
 
-[`scripts/ci/run-l1-unit-checks.sh`](../../../scripts/ci/run-l1-unit-checks.sh) and [`scripts/ci/l1-targets-from-diff.sh`](../../../scripts/ci/l1-targets-from-diff.sh) cover six aggregate targets. The Makefile also defines:
+[`scripts/ci/run-l1-unit-checks.sh`](../../../scripts/ci/run-l1-unit-checks.sh) and [`scripts/ci/l1-targets-from-diff.sh`](../../../scripts/ci/l1-targets-from-diff.sh) cover seven aggregate targets. The Makefile also defines:
 
 - `rust-check-symbols-rtw-chplan-rest`
 - `rust-check-symbols-rtw-io-rest`

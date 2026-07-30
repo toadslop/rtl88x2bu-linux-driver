@@ -19,12 +19,12 @@ L0 runs `verify-ko-probes.sh` after every module build. The probe list is the si
 - `rtw_rust_chplan_rest_probe` (`rust/rtw_chplan_rest.rs`)
 - `rtw_rust_io_rest_probe` (`rust/rtw_io_rest.rs`)
 
-`rust/rtw_rf_rest.rs` has no probe yet — either add `rtw_rust_rf_rest_probe` in the same PR or document intentional omission in the script comment.
+`rust/rtw_rf_rest.rs` and `rust/rtw_ieee80211_rest.rs` are linked into `88x2bu.ko` but define no `rtw_rust_*_probe` yet — either add probes in the same PR or document intentional omission in the script comment.
 
 ## Proposed approach
 
 1. Add missing probe symbols to `PROBES` in `verify-ko-probes.sh`.
-2. Add `rtw_rust_rf_rest_probe` to `rtw_rf_rest.rs` if the module is linked into `88x2bu.ko` (mirror other `rtw_*` units).
+2. Add `rtw_rust_rf_rest_probe` and `rtw_rust_ieee80211_rest_probe` to their modules if linked into `88x2bu.ko` (mirror other `rtw_*` units), or document intentional omission in the script comment.
 3. Keep [`AGENTS.md`](../../../AGENTS.md), [`test-06-ci-l0-build.md`](test-06-ci-l0-build.md), and any `nm | grep` snippets in docs aligned with the script.
 
 ## Acceptance

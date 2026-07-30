@@ -21,9 +21,9 @@ The L0 Docker image installs `rustfmt` (see [`.github/docker/l0/Dockerfile`](../
 1. Add a job to `host-l2.yml` or a small `rust-lint.yml` workflow on `rust/**` changes:
    ```bash
    rustup toolchain install 1.83.0 --profile minimal --component rustfmt
-   rustfmt --edition 2021 --check rust/**/*.rs
+   find rust -name '*.rs' -print0 | xargs -0 rustfmt --edition 2021 --check
    ```
-   (Adjust glob/edition to match kbuild `RUSTFLAGS` / project convention.)
+   (Use `find` rather than `rust/**/*.rs` — default bash does not expand `**` without `globstar`. Adjust edition to match kbuild `RUSTFLAGS` / project convention.)
 2. Optionally add `clippy` in a follow-up — start with fmt only to keep signal high and noise low.
 3. If the tree is not yet fully formatted, one-time `rustfmt` commit can land before enabling the check.
 
