@@ -138,8 +138,8 @@ user input needed), **record the blocker**, skip or pause that PR, and continue
 with the remaining eligible PRs unless the user said to stop on first failure.
 
 If the **entire batch** is a true no-op — all eligible PRs were `skipped` or
-`merge_ready` before prep, or every `needs_prep` PR was successfully prepared with
-no blockers remaining — report that briefly and return control to
+`merge_ready` before prep, and Path A made **zero commits** (nothing to fix) —
+report that briefly and return control to
 [`pick-up-work-item`](../pick-up-work-item/SKILL.md) to **fall through** to issue
 triage (Path B/C).
 
