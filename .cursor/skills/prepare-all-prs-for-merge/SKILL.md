@@ -107,6 +107,7 @@ in one batch.
 For every PR in **`eligible`** where `isDraft` is `true`:
 
 ```bash
+export GH_TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"
 gh pr ready <number>
 ```
 

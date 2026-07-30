@@ -89,12 +89,26 @@ Reference the GitHub issue in the commit message (`#115`, `W3-04`).
 Open each PR in **open** (ready-for-review) state so CI and review can start
 immediately. Do **not** use `--draft` or `draft: true`.
 
-Prefer `ManagePullRequest` `create_pr` with `draft: false` (default). Fallback
-for local shells:
+Export the environment token first (see [`AGENTS.md`](../../../AGENTS.md#github-auth-automations-and-agents)):
+
+```bash
+export GH_TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"
+gh auth status   # Active account must be via GH_TOKEN
+```
+
+**Prefer shell `gh pr create`** (uses `GH_TOKEN`) over `open_git_pr` MCP — the
+MCP may use a separate Cursor token and open drafts:
 
 ```bash
 gh pr create --base <stack-parent> --head <branch> --title "<title>" --body "<body>"
 # Do not pass --draft
+```
+
+If you used `open_git_pr` MCP, immediately verify and fix draft state:
+
+```bash
+gh pr view <number> --json isDraft -q .isDraft   # must be false
+gh pr ready <number>                             # if true
 ```
 
 | Field | PR1 | PR2+ |

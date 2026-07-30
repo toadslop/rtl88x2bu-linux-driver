@@ -68,3 +68,28 @@ Because the pinned kernel has `CONFIG_RUST=y`, the build links the Rust objects
 - **L2** (host crypto harness under `tests/`) — wired. Run `make -C tests/host/crypto all` (full oracle suite; `test` is aes-ctr only).
 - **L4** (hardware STA smoke, `docs/smoke-test.md`) — not automated in this VM;
   needs a real USB RTL8822BU dongle.
+
+### GitHub auth (automations and agents)
+
+The Cloud Agent environment should provide **`GH_TOKEN`** (or **`GITHUB_TOKEN`**
+with the same scopes). All GitHub shell operations must use that token — not the
+secondary `gh` login stored in `~/.config/gh/hosts.yml` (Cursor agent token).
+
+At the start of any run that touches issues or PRs:
+
+```bash
+export GH_TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"
+gh auth status    # Active account must be the repo owner via GH_TOKEN
+```
+
+| Operation | Use |
+|-----------|-----|
+| `gh issue …`, `gh pr …`, `gh api …` | Shell `gh` with `GH_TOKEN` exported (default when set) |
+| `open_git_pr` MCP | May use a separate Cursor automation token and can open **draft** PRs |
+| After MCP PR create | Always verify and fix via shell: `gh pr view <n> --json isDraft -q .isDraft` then `gh pr ready <n>` if `true` |
+
+Prefer **`gh pr create`** (no `--draft`) over `open_git_pr` when the shell token
+has `pull_request` write + `markPullRequestReadyForReview`. If `gh pr ready`
+fails with “Resource not accessible by personal access token”, the active token
+is wrong — re-export `GH_TOKEN` and retry; do not assume the MCP token is
+authoritative.

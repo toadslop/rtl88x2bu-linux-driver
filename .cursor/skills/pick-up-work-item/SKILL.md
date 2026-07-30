@@ -52,11 +52,18 @@ PRs opened while preparing existing work. Do not omit the tag on stacked PRs
 
 ## Path selection (mandatory — run first)
 
-Before triage, planning, or implementation, list open PRs and apply the same
+Before triage, planning, or implementation, export the environment GitHub token
+(see [`AGENTS.md`](../../../AGENTS.md#github-auth-automations-and-agents)) and
+list open PRs:
 **eligibility filter** as [`prepare-all-prs-for-merge`](../prepare-all-prs-for-merge/SKILL.md#phase-1--discover-and-filter-prs) Phase 1:
 
 ```bash
+export GH_TOKEN="${GH_TOKEN:-$GITHUB_TOKEN}"
+gh auth status
 gh pr list --state open --json number,title,isDraft,baseRefName,headRefName,url
+```
+
+Apply the same **eligibility filter** as [`prepare-all-prs-for-merge`](../prepare-all-prs-for-merge/SKILL.md#phase-1--discover-and-filter-prs) Phase 1:
 ```
 
 For each PR, include it in **`eligible`** only if `baseRefName` is `master`, or
