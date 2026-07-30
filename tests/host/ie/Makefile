@@ -20,7 +20,7 @@ CFLAGS  := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 REST_CFLAGS := $(CFLAGS) -DHOST_IEEE80211_REST_TEST
 CHBW_CFLAGS := $(REST_CFLAGS) -I$(ROOT)/include \
            -include $(HOST_INC)/host_autoconf.h -DHOST_RF_TEST \
-           -Wno-format-truncation
+           -DHOST_IEEE80211_REST_CHBW_TEST -Wno-format-truncation
 RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
 
 IE_SRCS := ie_c_oracle.c ../crypto/host_vector_json.c
