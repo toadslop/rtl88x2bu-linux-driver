@@ -13,6 +13,7 @@ on:
       - 'core/rtw_io_rest.c'
       - 'core/rtw_rf.c'
       - 'core/rtw_rf_rest.c'
+      - 'core/rtw_rm_util_rest.c'
       - 'core/rtw_chplan.c'
       - 'core/rtw_chplan_rest.c'
       - 'core/rtw_chplan.h'
@@ -47,6 +48,7 @@ jobs:
               - 'core/rtw_io_rest.c'
               - 'core/rtw_rf.c'
               - 'core/rtw_rf_rest.c'
+              - 'core/rtw_rm_util_rest.c'
               - 'core/rtw_chplan.c'
               - 'core/rtw_chplan_rest.c'
               - 'core/rtw_chplan.h'
@@ -108,3 +110,7 @@ jobs:
       - name: Host rf_rest parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/rf test
+
+      - name: Host rm_rest parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/rm test
