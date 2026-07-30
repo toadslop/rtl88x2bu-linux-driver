@@ -137,6 +137,11 @@ If prepare stops on a PR (unmerged parent discovered mid-run, ambiguous stack,
 user input needed), **record the blocker**, skip or pause that PR, and continue
 with the remaining eligible PRs unless the user said to stop on first failure.
 
+If the **entire batch** results in zero PR changes (all skipped, all merge-ready,
+or every prepare attempt was a no-op), report that briefly and return control to
+[`pick-up-work-item`](../pick-up-work-item/SKILL.md) to **fall through** to issue
+triage (Path B/C) — do not treat an empty batch as a completed Path A stop.
+
 ## Phase 4 — Batch status report
 
 Reply in chat with a summary table:

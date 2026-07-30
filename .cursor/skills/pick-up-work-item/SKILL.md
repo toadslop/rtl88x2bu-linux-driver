@@ -7,7 +7,9 @@ description: >-
   three paths per run: (A) prepare eligible open/draft PRs when at least one
   still needs prep; (B) otherwise triage issues, select ready work, plan ~200-line
   implement, open PRs ready for review, and babysit; (C) otherwise draft a wave
-  of 10–20 new issues and stop. Do NOT use for reviewing PRs
+  of 10–20 new issues and stop. If Path A runs but no PR could be changed (e.g.
+  landed on a PR branch already merge-ready), fall through to B/C without
+  stopping. Do NOT use for reviewing PRs
   (pr-review-delivery) or for preparing a single named PR in isolation
   (prepare-pr-for-merge).
 metadata:
@@ -28,7 +30,10 @@ rust-migration — prepare existing PRs, start new implementation, or refill the
 issue backlog.
 
 **Choose exactly one path per invocation.** Do not chain paths in a single run
-(e.g. do not prepare PRs and then implement a new issue in the same session).
+(e.g. do not prepare PRs and then implement a new issue in the same session),
+**except** when Path A makes **no PR changes** — then fall through to Path B or C
+(issue triage/selection/drafting) without stopping (see **Landed on a PR branch
+but no PRs could be changed**).
 
 This repo tracks work on **GitHub Issues** with draft specs in
 [`docs/rust-migration/issues/`](../../../docs/rust-migration/issues/README.md).
@@ -89,9 +94,26 @@ gh pr view <number> --json isDraft,baseRefName,mergeable,mergeStateStatus,review
 C — triage issues, select ready work, or draft a new wave. Note merge-ready PRs in
 the final report (links + "awaiting merge / maintainer").
 
+### Landed on a PR branch but no PRs could be changed (mandatory fall-through)
+
+Cloud runs often **check out a registered PR branch** at start. That landing does
+**not** mean Path A must end the run. After path selection (or after a Path A prep
+attempt), if **no PR could be changed** — nothing to retarget/rebase, no draft to
+open, no CI/review fixes to push, every eligible PR is `skipped` or
+`merge_ready`, or prepare stopped immediately with zero edits/commits — **do not
+stop**. Treat PR prep as a no-op and **continue immediately** to Path B or C:
+
+1. [`triage-open-issues`](../triage-open-issues/SKILL.md)
+2. [`select-ready-issue`](../select-ready-issue/SKILL.md) or
+   [`draft-migration-issues`](../draft-migration-issues/SKILL.md)
+
+Announce in chat, e.g. "On PR branch `#N` / `cursor/…`; no PRs needed changes —
+falling through to issue triage." This overrides the usual Path A **stop here**
+rule when the prep batch was empty or made no changes.
+
 | Condition | Path | Action |
 |-----------|------|--------|
-| **One or more `needs_prep` PRs** among `eligible` | **A — Prepare PRs** | Run [`prepare-all-prs-for-merge`](../prepare-all-prs-for-merge/SKILL.md) on those PRs only, then **stop** |
+| **One or more `needs_prep` PRs** among `eligible` | **A — Prepare PRs** | Run [`prepare-all-prs-for-merge`](../prepare-all-prs-for-merge/SKILL.md) on those PRs only; **stop** only if at least one PR was actually changed — otherwise **fall through** to B/C (see **Landed on a PR branch but no PRs could be changed**) |
 | **No `needs_prep` PRs** (no open PRs, every open PR is `skipped`, or all `eligible` PRs are `merge_ready`) and a ready issue exists after triage + selection | **B — New work** | Triage → select → plan → implement → open PRs → babysit, then **stop** |
 | **No `needs_prep` PRs** and no ready issue after triage + selection | **C — Draft wave** | Triage → draft 10–20 new issues, then **stop** |
 
@@ -107,7 +129,9 @@ flowchart TD
   B --> C{Any eligible PRs?}
   C -->|Yes| C2{Any needs_prep?}
   C2 -->|Yes| D[Path A: prepare-all-prs-for-merge]
-  D --> Z[Report and stop]
+  D --> D2{Any PR actually changed?}
+  D2 -->|Yes| Z[Report and stop]
+  D2 -->|No — fall through| E
   C2 -->|No — all merge_ready| E[1. Triage open issues]
   C -->|No| E
   E --> F[2. Select ready issue]
@@ -139,8 +163,14 @@ in full:
 3. Run [`prepare-pr-for-merge`](../prepare-pr-for-merge/SKILL.md) on each
    **`needs_prep`** PR (babysit until CI green and reviews complete).
 
-**Stop here.** Do not triage issues, implement new work, or draft tickets in
-the same run.
+**Stop here** only when Path A **changed** at least one PR (commits pushed, base
+retargeted, draft opened, or blocking feedback addressed). If you landed on a PR
+branch or entered Path A but **no PRs could be changed**, do **not** stop — fall
+through to Path B or C per **Landed on a PR branch but no PRs could be changed**
+above.
+
+Do not triage issues, implement new work, or draft tickets in the same run **when
+Path A made real prep progress** — finish reporting that prep first, then stop.
 
 ### Path A blocked — human action required
 
@@ -224,9 +254,10 @@ implement one immediately. Wait for an explicit follow-up or a new pick-up run
 
 | Do | Do not |
 |----|--------|
-| Choose **one** path per run and complete it | Chain Path A + B, or B + C, in one session |
+| Choose **one** path per run and complete it | Chain Path A + B, or B + C, in one session (except empty Path A → fall through to B/C) |
 | Prefer Path A when **eligible** PRs **`need_prep`** | Start new implementation while eligible PRs need prep |
 | Fall through to B/C when open PRs are all `skipped` or all `merge_ready` | Enter Path A with zero `needs_prep` PRs |
+| Fall through to B/C when on a PR branch but no PRs could be changed | Stop after an empty Path A with no issue triage |
 | Continue to triage/select/draft when PRs are merge-ready | Stop the run only because open PRs exist |
 | Report `human action required` when eligible PRs stay blocked | Imply the next pick-up will fix blocked PRs automatically |
 | Honor explicit user override to skip PR prep | Ignore a clear "start new work" instruction |
