@@ -74,9 +74,6 @@ pub extern "C" fn rm_get_ch_set(
     op_class: u8,
     ch_num: u8,
 ) -> u8 {
-    if pch_set.is_null() {
-        return 0;
-    }
     let pch = unsafe { core::slice::from_raw_parts_mut(pch_set, MAX_CH_NUM_IN_OP_CLASS) };
     if ch_num != 0 {
         pch[0].hw_value = u16::from(ch_num);
@@ -108,9 +105,6 @@ pub extern "C" fn rm_get_oper_class_via_ch(ch: u8) -> u8 {
 
 #[no_mangle]
 pub extern "C" fn is_wildcard_bssid(bssid: *mut u8) -> c_int {
-    if bssid.is_null() {
-        return _FALSE;
-    }
     let b = unsafe { core::slice::from_raw_parts(bssid, 6) };
     let val8 = b.iter().fold(0xffu8, |acc, &x| acc & x);
     if val8 == 0xff {
