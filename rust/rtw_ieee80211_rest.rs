@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
 //! IEEE 802.11 rest helpers — Rust port of `core/rtw_ieee80211_rest.c` rate
 //! classification slice (W3-26), WPA/RSN cipher suite getters (W3-27), and
-//! WPA/RSN IE parse (W3-28), and WAPI/WPS/sec-IE getters (W3-29).
+//! WPA/RSN IE parse (W3-28), and WAPI/WPS/sec-IE getters (W3-29), and
+//! string/MAC address helpers (W3-30).
 
 #![allow(
     dead_code,
@@ -31,6 +32,10 @@ const IEEE80211_BASIC_RATE_MASK: U8 = 0x80;
 const IEEE80211_CCK_RATE_LEN: usize = 4;
 const IEEE80211_NUM_OFDM_RATESLEN: usize = 8;
 const NDIS_802_11_LENGTH_RATES_EX: usize = 16;
+
+const ETH_ALEN: usize = 6;
+const BIT0: U8 = 1;
+const BIT1: U8 = 2;
 
 const IEEE80211_CCK_RATE_1MB: U8 = 0x02;
 const IEEE80211_CCK_RATE_2MB: U8 = 0x04;
@@ -211,6 +216,11 @@ extern "C" {
     fn rtw_is_cck_rate(rate: U8) -> bool;
     fn rtw_is_ofdm_rate(rate: U8) -> bool;
     fn rtw_is_basic_rate_ofdm(rate: U8) -> bool;
+
+    static mut rtw_initmac: *mut U8;
+    fn rtw_random32() -> u32;
+    #[cfg(all(not(host_ieee80211_rest_test), CONFIG_PLATFORM_INTEL_BYT))]
+    fn rtw_get_mac_addr_intel(buf: *mut U8) -> c_int;
 
     #[cfg(not(host_ieee80211_rest_test))]
     fn rtw_ieee80211_rest_bss_dsconfig(bss: *mut c_void) -> *mut u32;
@@ -738,6 +748,113 @@ pub extern "C" fn rtw_is_wps_ie(ie_ptr: *mut U8, wps_ielen: *mut c_uint) -> U8 {
         }
     }
     _FALSE as U8
+}
+
+fn key_char2num(ch: U8) -> U8 {
+    match ch {
+        b'0'..=b'9' => ch - b'0',
+        b'a'..=b'f' => ch - b'a' + 10,
+        b'A'..=b'F' => ch - b'A' + 10,
+        _ => 0xff,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn str_2char2num(hch: U8, lch: U8) -> U8 {
+    key_char2num(hch)
+        .wrapping_mul(10)
+        .wrapping_add(key_char2num(lch))
+}
+
+#[no_mangle]
+pub extern "C" fn key_2char2num(hch: U8, lch: U8) -> U8 {
+    (key_char2num(hch) << 4) | key_char2num(lch)
+}
+
+#[no_mangle]
+pub extern "C" fn macstr2num(dst: *mut U8, src: *mut U8) {
+    if dst.is_null() || src.is_null() {
+        return;
+    }
+    unsafe {
+        for jj in 0..ETH_ALEN {
+            let kk = jj * 3;
+            *dst.add(jj) = key_2char2num(*src.add(kk), *src.add(kk + 1));
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn convert_ip_addr(hch: U8, mch: U8, lch: U8) -> U8 {
+    key_char2num(hch)
+        .wrapping_mul(100)
+        .wrapping_add(key_char2num(mch).wrapping_mul(10))
+        .wrapping_add(key_char2num(lch))
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_check_invalid_mac_address(mac_addr: *mut U8, check_local_bit: U8) -> U8 {
+    let null_mac_addr = [0u8; ETH_ALEN];
+    let multi_mac_addr = [0xffu8; ETH_ALEN];
+
+    if mac_addr.is_null() {
+        return _TRUE as U8;
+    }
+    unsafe {
+        if memcmp(mac_addr, null_mac_addr.as_ptr(), ETH_ALEN) == 0 {
+            return _TRUE as U8;
+        }
+        if memcmp(mac_addr, multi_mac_addr.as_ptr(), ETH_ALEN) == 0 {
+            return _TRUE as U8;
+        }
+        if *mac_addr & BIT0 != 0 {
+            return _TRUE as U8;
+        }
+        if check_local_bit == _TRUE as U8 && *mac_addr & BIT1 != 0 {
+            return _TRUE as U8;
+        }
+    }
+    _FALSE as U8
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_macaddr_cfg(out: *mut U8, hw_mac_addr: *const U8) {
+    let mut mac = [0u8; ETH_ALEN];
+
+    if out.is_null() {
+        return;
+    }
+
+    unsafe {
+        if !rtw_initmac.is_null() {
+            for jj in 0..ETH_ALEN {
+                let kk = jj * 3;
+                mac[jj] = key_2char2num(*rtw_initmac.add(kk), *rtw_initmac.add(kk + 1));
+            }
+        } else {
+            #[cfg(all(not(host_ieee80211_rest_test), CONFIG_PLATFORM_INTEL_BYT))]
+            let platform_ok = rtw_get_mac_addr_intel(mac.as_mut_ptr()) == 0;
+
+            #[cfg(all(not(host_ieee80211_rest_test), CONFIG_PLATFORM_INTEL_BYT))]
+            if !platform_ok && !hw_mac_addr.is_null() {
+                memcpy(mac.as_mut_ptr(), hw_mac_addr, ETH_ALEN);
+            }
+
+            #[cfg(any(host_ieee80211_rest_test, not(CONFIG_PLATFORM_INTEL_BYT)))]
+            if !hw_mac_addr.is_null() {
+                memcpy(mac.as_mut_ptr(), hw_mac_addr, ETH_ALEN);
+            }
+        }
+
+        if rtw_check_invalid_mac_address(mac.as_mut_ptr(), _TRUE as U8) == _TRUE as U8 {
+            core::ptr::write(mac.as_mut_ptr().add(2) as *mut u32, rtw_random32());
+            mac[0] = 0x00;
+            mac[1] = 0xe0;
+            mac[2] = 0x4c;
+        }
+
+        memcpy(out, mac.as_ptr(), ETH_ALEN);
+    }
 }
 
 fn is_cck_rate_byte(rate: U8) -> bool {
