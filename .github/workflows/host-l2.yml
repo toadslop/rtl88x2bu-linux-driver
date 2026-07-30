@@ -1,4 +1,5 @@
 # T3: Run L2 host differential tests on pull requests (no kernel / hardware).
+# T10: pull_request always triggers; job-level paths-filter skips out-of-scope PRs.
 # See docs/rust-migration/issues/test-03-ci-host-tests.md
 
 name: Host L2 tests
@@ -25,24 +26,6 @@ on:
       - 'Makefile'
       - '.github/workflows/host-l2.yml'
   pull_request:
-    paths:
-      - 'core/crypto/**'
-      - 'core/rtw_io.c'
-      - 'core/rtw_io_rest.c'
-      - 'core/rtw_rf.c'
-      - 'core/rtw_rf_rest.c'
-      - 'core/rtw_chplan.c'
-      - 'core/rtw_chplan.h'
-      - 'core/rtw_swcrypto.c'
-      - 'core/rtw_swcrypto_rest.c'
-      - 'core/rtw_ieee80211.c'
-      - 'core/rtw_ieee80211_rest.c'
-      - 'core/rtw_security.c'
-      - 'core/rtw_wlan_util.c'
-      - 'rust/**'
-      - 'tests/host/**'
-      - 'Makefile'
-      - '.github/workflows/host-l2.yml'
 
 jobs:
   host-l2:
@@ -52,35 +35,72 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            l2:
+              - 'core/crypto/**'
+              - 'core/rtw_io.c'
+              - 'core/rtw_io_rest.c'
+              - 'core/rtw_rf.c'
+              - 'core/rtw_rf_rest.c'
+              - 'core/rtw_chplan.c'
+              - 'core/rtw_chplan.h'
+              - 'core/rtw_swcrypto.c'
+              - 'core/rtw_swcrypto_rest.c'
+              - 'core/rtw_ieee80211.c'
+              - 'core/rtw_ieee80211_rest.c'
+              - 'core/rtw_security.c'
+              - 'core/rtw_wlan_util.c'
+              - 'rust/**'
+              - 'tests/host/**'
+              - 'Makefile'
+              - '.github/workflows/host-l2.yml'
+
+      - name: Out of scope — skip L2
+        if: steps.filter.outputs.l2 != 'true'
+        run: echo "PR does not touch L2 paths — reporting success without host tests"
+
       - name: Install toolchain
+        if: steps.filter.outputs.l2 == 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc make
           rustup toolchain install 1.83.0 --profile minimal
 
       - name: Domain type unit tests (A1)
+        if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/domain test
 
       - name: Host crypto parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/crypto all
 
       - name: Host chplan lookup parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/chplan test
 
       - name: Host IE parse parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/ie test
 
       - name: Host swcrypto parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/swcrypto test
 
       - name: Host security parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/security test
 
       - name: Host wlan_util parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/wlan_util test
 
       - name: Host io_rest parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/io test
 
       - name: Host rf_rest parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/rf test

@@ -357,17 +357,13 @@ CI workflows exist, but merges stay unblocked until a **repo admin** enables bra
 
 Optional team preferences: dismiss stale pull request approvals, require linear history.
 
-### Path filters and required checks
+### Path-scoped PR checks (T10)
 
-Workflow-level `paths:` filters mean a PR that does not touch matching paths never triggers the workflow. If that check is **required** in branch protection, it stays **Waiting for status to be reported** and merge is blocked — this is not the same as a job that runs and is skipped ([GitHub troubleshooting docs](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/troubleshooting-required-status-checks)).
+On **pull requests**, L0/L1/L2 workflows always trigger (no workflow-level `paths:` on `pull_request`). Each job uses [`dorny/paths-filter`](https://github.com/dorny/paths-filter) to decide whether to run the full gate or a no-op skip step. Out-of-scope PRs (e.g. docs-only) report **Success** on all three required checks instead of staying **Waiting for status to be reported** ([GitHub troubleshooting docs](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/troubleshooting-required-status-checks)).
 
-**Mitigations until workflows are refactored:**
+**Push to `master`** still uses workflow-level `paths:` filters so post-merge CI skips unrelated commits.
 
-1. Refactor workflows to always trigger on `pull_request`, with job-level `if:` (e.g. `dorny/paths-filter`) so out-of-scope jobs report Success.
-2. Use repository rulesets with path-aware requirements if available on your plan.
-3. For docs-only PRs, use an admin bypass or do not require L0/L1/L2 until (1) lands.
-
-This T9 PR is docs-only and would hit the blocked-merge case once the three PR checks above are required without a bypass.
+Admins can require `Host L2 tests / host-l2`, `Module L0 build / module-l0`, and `Module L1 symbols / module-l1` on pull requests without an admin bypass for docs-only PRs.
 
 ### Fork pull requests
 
