@@ -1046,6 +1046,7 @@ exit:
 }
 #endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
+#if !defined(CONFIG_RUST) || defined(HOST_IEEE80211_REST_TEST)
 /* #ifdef CONFIG_WAPI_SUPPORT */
 int rtw_get_wapi_ie(u8 *in_ie, uint in_len, u8 *wapi_ie, u16 *wapi_len)
 {
@@ -1151,6 +1152,7 @@ u8 rtw_is_wps_ie(u8 *ie_ptr, uint *wps_ielen)
 	}
 	return match;
 }
+#endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
 u8 *rtw_get_wps_ie_from_scan_queue(u8 *in_ie, uint in_len, u8 *wps_ie, uint *wps_ielen, enum bss_type frame_type)
 {

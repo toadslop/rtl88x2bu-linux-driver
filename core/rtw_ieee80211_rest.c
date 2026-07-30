@@ -487,6 +487,106 @@ int rtw_parse_wpa2_ie(u8 *rsn_ie, int rsn_ie_len, int *group_cipher,
 exit:
 	return ret;
 }
+
+/*
+ * W3-29: WAPI/WPS/sec-IE getter helpers extracted from core/rtw_ieee80211.c.
+ */
+
+/* #ifdef CONFIG_WAPI_SUPPORT */
+int rtw_get_wapi_ie(u8 *in_ie, uint in_len, u8 *wapi_ie, u16 *wapi_len)
+{
+	int len = 0;
+	u8 authmode;
+	uint cnt;
+	u8 wapi_oui1[4] = {0x0, 0x14, 0x72, 0x01};
+	u8 wapi_oui2[4] = {0x0, 0x14, 0x72, 0x02};
+
+	if (wapi_len)
+		*wapi_len = 0;
+
+	if (!in_ie || in_len <= 0)
+		return len;
+
+	cnt = (_TIMESTAMP_ + _BEACON_ITERVAL_ + _CAPABILITY_);
+
+	while (cnt < in_len) {
+		authmode = in_ie[cnt];
+
+		if (authmode == _WAPI_IE_ &&
+		    (_rtw_memcmp(&in_ie[cnt + 6], wapi_oui1, 4) == _TRUE ||
+		     _rtw_memcmp(&in_ie[cnt + 6], wapi_oui2, 4) == _TRUE)) {
+			if (wapi_ie)
+				_rtw_memcpy(wapi_ie, &in_ie[cnt], in_ie[cnt + 1] + 2);
+
+			if (wapi_len)
+				*wapi_len = in_ie[cnt + 1] + 2;
+
+			cnt += in_ie[cnt + 1] + 2;
+		} else {
+			cnt += in_ie[cnt + 1] + 2;
+		}
+	}
+
+	if (wapi_len)
+		len = *wapi_len;
+
+	return len;
+}
+/* #endif */
+
+int rtw_get_sec_ie(u8 *in_ie, uint in_len, u8 *rsn_ie, u16 *rsn_len,
+		   u8 *wpa_ie, u16 *wpa_len)
+{
+	u8 authmode;
+	u8 wpa_oui[4] = {0x0, 0x50, 0xf2, 0x01};
+	uint cnt;
+
+	cnt = (_TIMESTAMP_ + _BEACON_ITERVAL_ + _CAPABILITY_);
+
+	while (cnt < in_len) {
+		authmode = in_ie[cnt];
+
+		if ((authmode == _WPA_IE_ID_) &&
+		    (_rtw_memcmp(&in_ie[cnt + 2], &wpa_oui[0], 4) == _TRUE)) {
+			if (wpa_ie)
+				_rtw_memcpy(wpa_ie, &in_ie[cnt], in_ie[cnt + 1] + 2);
+
+			*wpa_len = in_ie[cnt + 1] + 2;
+			cnt += in_ie[cnt + 1] + 2;
+		} else {
+			if (authmode == _WPA2_IE_ID_) {
+				if (rsn_ie)
+					_rtw_memcpy(rsn_ie, &in_ie[cnt],
+						    in_ie[cnt + 1] + 2);
+
+				*rsn_len = in_ie[cnt + 1] + 2;
+				cnt += in_ie[cnt + 1] + 2;
+			} else {
+				cnt += in_ie[cnt + 1] + 2;
+			}
+		}
+	}
+
+	return *rsn_len + *wpa_len;
+}
+
+u8 rtw_is_wps_ie(u8 *ie_ptr, uint *wps_ielen)
+{
+	u8 match = _FALSE;
+	u8 eid, wps_oui[4] = {0x0, 0x50, 0xf2, 0x04};
+
+	if (ie_ptr == NULL)
+		return match;
+
+	eid = ie_ptr[0];
+
+	if ((eid == _WPA_IE_ID_) &&
+	    (_rtw_memcmp(&ie_ptr[2], wps_oui, 4) == _TRUE)) {
+		*wps_ielen = ie_ptr[1] + 2;
+		match = _TRUE;
+	}
+	return match;
+}
 #endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
 #if defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)

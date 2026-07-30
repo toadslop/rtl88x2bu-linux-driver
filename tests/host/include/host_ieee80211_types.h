@@ -132,6 +132,10 @@ typedef int sint;
 
 #define _WPA_IE_ID_ 0xdd
 #define _WPA2_IE_ID_ 0x30
+#define _WAPI_IE_ 68
+#define _TIMESTAMP_ 8
+#define _BEACON_ITERVAL_ 2
+#define _CAPABILITY_ 2
 #define WLAN_EID_RSN 48
 
 #define LE_BITS_TO_2BYTE(__pStart, __BitOffset, __BitLen) \
@@ -208,6 +212,11 @@ int rtw_rsne_info_parse(const u8 *ie, unsigned int ie_len,
 int rtw_parse_wpa2_ie(u8 *rsn_ie, int rsn_ie_len, int *group_cipher,
 		      int *pairwise_cipher, int *gmcs, u32 *akm, u8 *mfp_opt,
 		      u8 *spp_opt);
+
+int rtw_get_wapi_ie(u8 *in_ie, unsigned int in_len, u8 *wapi_ie, u16 *wapi_len);
+int rtw_get_sec_ie(u8 *in_ie, unsigned int in_len, u8 *rsn_ie, u16 *rsn_len,
+		   u8 *wpa_ie, u16 *wpa_len);
+u8 rtw_is_wps_ie(u8 *ie_ptr, unsigned int *wps_ielen);
 
 u8 *rtw_get_ie(const u8 *pbuf, sint index, sint *len, sint limit);
 int rtw_ies_remove_ie(u8 *ies, unsigned int *ies_len, unsigned int offset,

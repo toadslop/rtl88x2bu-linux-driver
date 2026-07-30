@@ -1,0 +1,110 @@
+{
+  "oracle": "core/rtw_ieee80211_rest.c",
+  "vectors": [
+    {
+      "name": "wapi_null_ie",
+      "fn": "rtw_get_wapi_ie",
+      "ie": "",
+      "ie_len": 0,
+      "expect_ret": 0,
+      "expect_wapi_len": 0
+    },
+    {
+      "name": "wapi_oui1_found",
+      "fn": "rtw_get_wapi_ie",
+      "ie": "000000000000000064000000440c01000000001472010000000000",
+      "ie_len": 26,
+      "expect_ret": 14,
+      "expect_wapi_len": 14,
+      "expect_wapi_ie": "440c01000000001472010000000000"
+    },
+    {
+      "name": "wapi_oui2_found",
+      "fn": "rtw_get_wapi_ie",
+      "ie": "000000000000000064000000440c01000000001472020000000000",
+      "ie_len": 26,
+      "expect_ret": 14,
+      "expect_wapi_len": 14,
+      "expect_wapi_ie": "440c01000000001472020000000000"
+    },
+    {
+      "name": "wapi_len_only",
+      "fn": "rtw_get_wapi_ie",
+      "ie": "000000000000000064000000440c01000000001472010000000000",
+      "ie_len": 26,
+      "expect_ret": 14,
+      "expect_wapi_len": 14,
+      "no_wapi_buf": 1
+    },
+    {
+      "name": "wapi_not_present",
+      "fn": "rtw_get_wapi_ie",
+      "ie": "000000000000000064000000020400",
+      "ie_len": 15,
+      "expect_ret": 0,
+      "expect_wapi_len": 0
+    },
+    {
+      "name": "sec_wpa_and_rsn",
+      "fn": "rtw_get_sec_ie",
+      "ie": "000000000000000064000000dd160050f20101000050f20201000050f20401000050f20130140100000fac020100000fac040100000fac020000",
+      "ie_len": 58,
+      "expect_ret": 46,
+      "expect_wpa_len": 24,
+      "expect_rsn_len": 22,
+      "expect_wpa_ie": "dd160050f20101000050f20201000050f20401000050f201",
+      "expect_rsn_ie": "30140100000fac020100000fac040100000fac020000"
+    },
+    {
+      "name": "sec_wpa_only",
+      "fn": "rtw_get_sec_ie",
+      "ie": "000000000000000064000000dd100050f20101000050f20201000050f204",
+      "ie_len": 30,
+      "expect_ret": 18,
+      "expect_wpa_len": 18,
+      "expect_rsn_len": 0
+    },
+    {
+      "name": "sec_rsn_only",
+      "fn": "rtw_get_sec_ie",
+      "ie": "00000000000000006400000030140100000fac020100000fac040100000fac020000",
+      "ie_len": 34,
+      "expect_ret": 22,
+      "expect_wpa_len": 0,
+      "expect_rsn_len": 22
+    },
+    {
+      "name": "sec_none",
+      "fn": "rtw_get_sec_ie",
+      "ie": "000000000000000064000000020400",
+      "ie_len": 15,
+      "expect_ret": 0,
+      "expect_wpa_len": 0,
+      "expect_rsn_len": 0
+    },
+    {
+      "name": "wps_ie_match",
+      "fn": "rtw_is_wps_ie",
+      "ie": "dd040050f204",
+      "ie_len": 6,
+      "expect_match": 1,
+      "expect_wps_ielen": 6
+    },
+    {
+      "name": "wps_null_ptr",
+      "fn": "rtw_is_wps_ie",
+      "ie": "",
+      "ie_len": 0,
+      "null_ie_ptr": 1,
+      "expect_match": 0
+    },
+    {
+      "name": "wps_wpa_oui_not_wps",
+      "fn": "rtw_is_wps_ie",
+      "ie": "dd040050f201",
+      "ie_len": 6,
+      "expect_match": 0,
+      "expect_wps_ielen": 0
+    }
+  ]
+}
