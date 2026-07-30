@@ -1954,6 +1954,7 @@ void dump_ies(void *sel, const u8 *buf, u32 buf_len)
 #endif	/*	CONFIG_RTW_DEBUG	*/
 }
 
+#if !defined(CONFIG_RUST) || defined(HOST_IEEE80211_REST_TEST)
 /**
  * rtw_ies_get_chbw - get operation ch, bw, offset from IEs of BSS.
  * @ies: pointer of the first tlv IE
@@ -2133,6 +2134,7 @@ void rtw_sync_chbw(u8 *req_ch, u8 *req_bw, u8 *req_offset
 		*g_offset = *req_offset;
 	}
 }
+#endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
 #ifdef CONFIG_P2P
 /**
