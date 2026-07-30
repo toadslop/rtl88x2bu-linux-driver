@@ -70,6 +70,13 @@ files=(
   test-07-ci-l1-symbols.md
   test-08-ci-l3-qemu.md
   test-09-merge-gates.md
+  test-10-ci-path-filter-refactor.md
+  test-11-ci-l1-rest-units.md
+  test-12-ci-ko-probes-sync.md
+  test-13-ci-host-l2-paths.md
+  test-14-ci-bindgen-check.md
+  test-15-ci-l3-pr-scope.md
+  test-16-ci-rustfmt.md
   release-01-github-releases.md
   arch-00-land-doc.md
   arch-01-domain-types-seed.md

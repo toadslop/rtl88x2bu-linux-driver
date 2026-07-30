@@ -102,6 +102,13 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-38 | #255 | [W3-38] Translate rtw_sta_mgt.c — AID and pre-link sta helpers |
 | W3-39 | #256 | [W3-39] Translate rtw_recv.c — recv leaf helpers |
 | W3-40 | #257 | [W3-40] Translate rtw_xmit.c — tx rate bitmap helpers |
+| T10 | #304 | [T10] CI: refactor workflow path filters for branch-protection compatibility |
+| T11 | #305 | [T11] CI: extend L1 checks for *-rest translation units |
+| T12 | #306 | [T12] CI: keep verify-ko-probes in sync with linked Rust modules |
+| T13 | #307 | [T13] CI: close host-l2 path-filter gaps for *_rest.c sources |
+| T14 | #308 | [T14] CI: bindgen drift check (generated.rs freshness) |
+| T15 | #309 | [T15] CI: path-scoped L3 on PRs for init/USB/scaffold changes |
+| T16 | #310 | [T16] CI: rustfmt --check on rust/** changes |
 
 ## Superseded issues
 
