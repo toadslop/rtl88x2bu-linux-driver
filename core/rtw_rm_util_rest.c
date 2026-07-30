@@ -18,7 +18,6 @@
 #include "host_rm_types.h"
 #else
 #include <drv_types.h>
-#include <hal_data.h>
 #endif
 
 #ifdef CONFIG_RTW_80211K
