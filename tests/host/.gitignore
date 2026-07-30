@@ -43,3 +43,4 @@ rf/test_rf
 rf/test_rf_rust
 rf/librust_rf_rest.a
 rf/rf_rest_c_ref.o
+test_rm

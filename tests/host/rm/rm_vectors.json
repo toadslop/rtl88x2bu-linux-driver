@@ -1,0 +1,14 @@
+{
+  "oracle": "core/rtw_rm_util_rest.c",
+  "vectors": [
+    {"name": "rcpi_min_dbm", "fn": "translate_dbm_to_rcpi", "signal_dbm": -110, "expect": 0},
+    {"name": "rcpi_zero_dbm", "fn": "translate_dbm_to_rcpi", "signal_dbm": 0, "expect": 220},
+    {"name": "rcpi_pct_zero", "fn": "translate_percentage_to_rcpi", "signal_pct": 0, "expect": 20},
+    {"name": "rcpi_pct_100", "fn": "translate_percentage_to_rcpi", "signal_pct": 100, "expect": 220},
+    {"name": "wildcard_bssid_all_ff", "fn": "is_wildcard_bssid", "bssid_hex": "ffffffffffff", "expect": 1},
+    {"name": "wildcard_bssid_zero", "fn": "is_wildcard_bssid", "bssid_hex": "000000000000", "expect": 0},
+    {"name": "oper_class_ch36", "fn": "rm_get_oper_class_via_ch", "ch": 36, "expect": 115},
+    {"name": "ch_set_op_class115", "fn": "rm_get_ch_set", "op_class": 115, "ch_num": 0, "expect_count": 4, "expect_chs_hex": "24282c30"},
+    {"name": "ch_set_single_ch", "fn": "rm_get_ch_set", "op_class": 0, "ch_num": 36, "expect_count": 1, "expect_chs_hex": "24"}
+  ]
+}
