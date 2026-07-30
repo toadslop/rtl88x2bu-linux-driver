@@ -50,14 +50,14 @@ IE_REST_RUST_SHIM := ie_mac_str_host_shim.c
 .PHONY: all test test-c test-rust test-rest test-rest-rust test-rest-cipher \
 	test-rest-wpa-rsn-parse test-rest-wpa-rsn-parse-rust test-rest-wapi-wps \
 	test-rest-wapi-wps-rust test-rest-mac-str test-rest-mac-str-rust \
-	test-rest-chbw test-rest-chbw-rust test-rest-frame-ht clean
+	test-rest-chbw test-rest-chbw-rust test-rest-frame-ht test-rest-frame-ht-rust clean
 
 all: test
 
 test: test-c test-rust test-rest test-rest-rust test-rest-cipher \
 	test-rest-cipher-rust test-rest-wpa-rsn-parse test-rest-wpa-rsn-parse-rust \
 	test-rest-wapi-wps test-rest-wapi-wps-rust test-rest-mac-str \
-	test-rest-mac-str-rust test-rest-chbw test-rest-frame-ht
+	test-rest-mac-str-rust test-rest-chbw test-rest-frame-ht test-rest-frame-ht-rust
 
 test-c: test_ie
 	./test_ie ie_vectors.json
@@ -183,6 +183,18 @@ test-rest-frame-ht: test_ie_rest_frame_ht
 test_ie_rest_frame_ht: test_ie_rest_frame_ht.c $(IE_REST_FRAME_HT_SRCS)
 	$(CC) $(FRAME_HT_CFLAGS) -o $@ test_ie_rest_frame_ht.c $(IE_REST_FRAME_HT_SRCS)
 
+test-rest-frame-ht-rust: test_ie_rest_frame_ht_rust
+	./test_ie_rest_frame_ht_rust ie_rest_frame_ht_vectors.json
+
+test_ie_rest_frame_ht_rust: test_ie_rest_frame_ht.c librust_ie_rest.a \
+		ie_cipher_c_oracle.c ie_wpa_rsn_parse_c_oracle.c ie_c_oracle.c \
+		../wlan_util/wlan_util_c_oracle.c ../crypto/host_vector_json.c \
+		$(IE_REST_RUST_SHIM)
+	$(CC) $(FRAME_HT_CFLAGS) -DRUST_IEEE80211_REST_ORACLE -o $@ test_ie_rest_frame_ht.c \
+		ie_cipher_c_oracle.c ie_wpa_rsn_parse_c_oracle.c ie_c_oracle.c \
+		../wlan_util/wlan_util_c_oracle.c ../crypto/host_vector_json.c \
+		$(IE_REST_RUST_SHIM) librust_ie_rest.a
+
 test_ie_rest_rust: test_ie_rest.c librust_ie_rest.a ../wlan_util/wlan_util_c_oracle.c \
 		../crypto/host_vector_json.c ie_c_oracle.c $(IE_REST_RUST_SHIM)
 	$(CC) $(REST_CFLAGS) -DRUST_IEEE80211_REST_ORACLE -o $@ test_ie_rest.c \
@@ -196,4 +208,4 @@ clean:
 		test_ie_rest_wapi_wps_rust test_ie_rest_mac_str \
 		test_ie_rest_mac_str_rust test_ie_rest_chbw \
 		test_ie_rest_chbw_rust test_ie_rest_frame_ht \
-		librust_ie.a librust_ie_rest.a
+		test_ie_rest_frame_ht_rust librust_ie.a librust_ie_rest.a
