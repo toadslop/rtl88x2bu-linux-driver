@@ -587,6 +587,129 @@ u8 rtw_is_wps_ie(u8 *ie_ptr, uint *wps_ielen)
 	}
 	return match;
 }
+
+/*
+ * W3-30: string/MAC address helpers extracted from core/rtw_ieee80211.c.
+ */
+
+static u8 key_char2num(u8 ch)
+{
+	if ((ch >= '0') && (ch <= '9'))
+		return ch - '0';
+	else if ((ch >= 'a') && (ch <= 'f'))
+		return ch - 'a' + 10;
+	else if ((ch >= 'A') && (ch <= 'F'))
+		return ch - 'A' + 10;
+	else
+		return 0xff;
+}
+
+u8 str_2char2num(u8 hch, u8 lch)
+{
+	return (key_char2num(hch) * 10) + key_char2num(lch);
+}
+
+u8 key_2char2num(u8 hch, u8 lch)
+{
+	return (key_char2num(hch) << 4) | key_char2num(lch);
+}
+
+void macstr2num(u8 *dst, u8 *src)
+{
+	int jj, kk;
+
+	for (jj = 0, kk = 0; jj < ETH_ALEN; jj++, kk += 3)
+		dst[jj] = key_2char2num(src[kk], src[kk + 1]);
+}
+
+u8 convert_ip_addr(u8 hch, u8 mch, u8 lch)
+{
+	return (key_char2num(hch) * 100) + (key_char2num(mch) * 10) +
+	       key_char2num(lch);
+}
+
+u8 rtw_check_invalid_mac_address(u8 *mac_addr, u8 check_local_bit)
+{
+	u8 null_mac_addr[ETH_ALEN] = {0, 0, 0, 0, 0, 0};
+	u8 multi_mac_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+	u8 res = _FALSE;
+
+	if (_rtw_memcmp(mac_addr, null_mac_addr, ETH_ALEN)) {
+		res = _TRUE;
+		goto func_exit;
+	}
+
+	if (_rtw_memcmp(mac_addr, multi_mac_addr, ETH_ALEN)) {
+		res = _TRUE;
+		goto func_exit;
+	}
+
+	if (mac_addr[0] & BIT0) {
+		res = _TRUE;
+		goto func_exit;
+	}
+
+	if (check_local_bit == _TRUE) {
+		if (mac_addr[0] & BIT1) {
+			res = _TRUE;
+			goto func_exit;
+		}
+	}
+
+func_exit:
+	return res;
+}
+
+extern char *rtw_initmac;
+
+void rtw_macaddr_cfg(u8 *out, const u8 *hw_mac_addr)
+{
+#define DEFAULT_RANDOM_MACADDR 1
+	u8 mac[ETH_ALEN];
+
+	if (out == NULL) {
+		rtw_warn_on(1);
+		return;
+	}
+
+	if (rtw_initmac) {
+		int jj, kk;
+
+		for (jj = 0, kk = 0; jj < ETH_ALEN; jj++, kk += 3)
+			mac[jj] = key_2char2num(rtw_initmac[kk], rtw_initmac[kk + 1]);
+
+		goto err_chk;
+	}
+
+	if (hw_mac_addr) {
+		_rtw_memcpy(mac, hw_mac_addr, ETH_ALEN);
+		goto err_chk;
+	}
+
+err_chk:
+	if (rtw_check_invalid_mac_address(mac, _TRUE) == _TRUE) {
+#if DEFAULT_RANDOM_MACADDR
+		RTW_ERR("invalid mac addr:" MAC_FMT ", assign random MAC\n",
+			MAC_ARG(mac));
+		*((u32 *)(&mac[2])) = rtw_random32();
+		mac[0] = 0x00;
+		mac[1] = 0xe0;
+		mac[2] = 0x4c;
+#else
+		RTW_ERR("invalid mac addr:" MAC_FMT ", assign default one\n",
+			MAC_ARG(mac));
+		mac[0] = 0x00;
+		mac[1] = 0xe0;
+		mac[2] = 0x4c;
+		mac[3] = 0x87;
+		mac[4] = 0x00;
+		mac[5] = 0x00;
+#endif
+	}
+
+	_rtw_memcpy(out, mac, ETH_ALEN);
+	RTW_INFO("%s mac addr:" MAC_FMT "\n", __func__, MAC_ARG(out));
+}
 #endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
 #if defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)

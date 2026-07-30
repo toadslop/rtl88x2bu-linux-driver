@@ -1,0 +1,108 @@
+{
+  "vectors": [
+    {
+      "name": "str_2char2num_decimal",
+      "fn": "str_2char2num",
+      "hch": "1",
+      "lch": "2",
+      "expect": 12
+    },
+    {
+      "name": "str_2char2num_invalid",
+      "fn": "str_2char2num",
+      "hch": "G",
+      "lch": "H",
+      "expect": 245
+    },
+    {
+      "name": "key_2char2num_hex",
+      "fn": "key_2char2num",
+      "hch": "a",
+      "lch": "b",
+      "expect": 171
+    },
+    {
+      "name": "key_2char2num_upper",
+      "fn": "key_2char2num",
+      "hch": "A",
+      "lch": "F",
+      "expect": 175
+    },
+    {
+      "name": "macstr2num_colon",
+      "fn": "macstr2num",
+      "macstr": "00:11:22:33:44:55",
+      "expect_mac": "001122334455"
+    },
+    {
+      "name": "convert_ip_addr_full",
+      "fn": "convert_ip_addr",
+      "hch": "1",
+      "mch": "2",
+      "lch": "3",
+      "expect": 123
+    },
+    {
+      "name": "convert_ip_addr_invalid",
+      "fn": "convert_ip_addr",
+      "hch": "X",
+      "mch": "Y",
+      "lch": "Z",
+      "expect": 145
+    },
+    {
+      "name": "invalid_mac_null",
+      "fn": "rtw_check_invalid_mac_address",
+      "mac": "000000000000",
+      "check_local_bit": 0,
+      "expect": 1
+    },
+    {
+      "name": "invalid_mac_broadcast",
+      "fn": "rtw_check_invalid_mac_address",
+      "mac": "ffffffffffff",
+      "check_local_bit": 0,
+      "expect": 1
+    },
+    {
+      "name": "invalid_mac_multicast",
+      "fn": "rtw_check_invalid_mac_address",
+      "mac": "010000000000",
+      "check_local_bit": 0,
+      "expect": 1
+    },
+    {
+      "name": "invalid_mac_local_bit",
+      "fn": "rtw_check_invalid_mac_address",
+      "mac": "020000000000",
+      "check_local_bit": 1,
+      "expect": 1
+    },
+    {
+      "name": "valid_mac_unicast",
+      "fn": "rtw_check_invalid_mac_address",
+      "mac": "001122334455",
+      "check_local_bit": 1,
+      "expect": 0
+    },
+    {
+      "name": "macaddr_cfg_hw",
+      "fn": "rtw_macaddr_cfg",
+      "hw_mac": "001122334455",
+      "expect_mac": "001122334455"
+    },
+    {
+      "name": "macaddr_cfg_initmac",
+      "fn": "rtw_macaddr_cfg",
+      "initmac": "00:11:22:33:44:55",
+      "expect_mac": "001122334455"
+    },
+    {
+      "name": "macaddr_cfg_invalid_random",
+      "fn": "rtw_macaddr_cfg",
+      "hw_mac": "000000000000",
+      "random32": 305419896,
+      "expect_mac": "00e04c563412"
+    }
+  ]
+}
