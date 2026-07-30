@@ -1,4 +1,5 @@
 # T7: L1 symbol/ABI gate on pull requests (pinned Rust kernel).
+# T10: pull_request always triggers; job-level paths-filter skips out-of-scope PRs.
 # See docs/rust-migration/issues/test-07-ci-l1-symbols.md
 
 name: Module L1 symbols
@@ -13,12 +14,6 @@ on:
       - 'scripts/ci/**'
       - '.github/workflows/module-l1.yml'
   pull_request:
-    paths:
-      - 'rust/**'
-      - 'Makefile'
-      - 'docs/rust-migration/scripts/**'
-      - 'scripts/ci/**'
-      - '.github/workflows/module-l1.yml'
 
 env:
   KERNEL_TAG: v6.12.9
@@ -35,7 +30,23 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            l1:
+              - 'rust/**'
+              - 'Makefile'
+              - 'docs/rust-migration/scripts/**'
+              - 'scripts/ci/**'
+              - '.github/workflows/module-l1.yml'
+
+      - name: Out of scope — skip L1
+        if: steps.filter.outputs.l1 != 'true'
+        run: echo "PR does not touch L1 paths — reporting success without symbol checks"
+
       - name: Select L1 unit targets from diff
+        if: steps.filter.outputs.l1 == 'true'
         id: l1_scope
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
@@ -54,6 +65,7 @@ jobs:
           echo "targets=${TARGETS}" >> "${GITHUB_OUTPUT}"
 
       - name: Log in to ghcr.io
+        if: steps.filter.outputs.l1 == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -61,12 +73,13 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pull published L0 image
+        if: steps.filter.outputs.l1 == 'true'
         id: pull
         continue-on-error: true
         run: docker pull "${L0_IMAGE}"
 
       - name: Build L0 image (fallback when ghcr tag is missing)
-        if: steps.pull.outcome == 'failure'
+        if: steps.filter.outputs.l1 == 'true' && steps.pull.outcome == 'failure'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -79,6 +92,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: L1 symbol checks
+        if: steps.filter.outputs.l1 == 'true'
         run: |
           if [ "${{ steps.pull.outcome }}" = "success" ]; then
             IMAGE="${L0_IMAGE}"

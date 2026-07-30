@@ -24,22 +24,19 @@ This repo is an incremental C→Rust migration of the `88x2bu` kernel module. Ev
 
 GitHub shows status checks as **Workflow name / job id**. When branch protection is enabled, require these three on `master` merges via pull request:
 
-| Check name | Workflow | Runs on PR? | Path-filtered? |
-|------------|----------|-------------|----------------|
-| `Host L2 tests / host-l2` | [`.github/workflows/host-l2.yml`](../../.github/workflows/host-l2.yml) | Yes | Yes |
-| `Module L0 build / module-l0` | [`.github/workflows/module-l0.yml`](../../.github/workflows/module-l0.yml) | Yes | Yes |
-| `Module L1 symbols / module-l1` | [`.github/workflows/module-l1.yml`](../../.github/workflows/module-l1.yml) | Yes | Yes |
+| Check name | Workflow | Runs on PR? | Path-scoped? |
+|------------|----------|-------------|--------------|
+| `Host L2 tests / host-l2` | [`.github/workflows/host-l2.yml`](../../.github/workflows/host-l2.yml) | Yes | Yes — skips heavy steps when out of scope |
+| `Module L0 build / module-l0` | [`.github/workflows/module-l0.yml`](../../.github/workflows/module-l0.yml) | Yes | Yes — skips heavy steps when out of scope |
+| `Module L1 symbols / module-l1` | [`.github/workflows/module-l1.yml`](../../.github/workflows/module-l1.yml) | Yes | Yes — skips heavy steps when out of scope |
 
 **Post-merge on `master` (not a PR gate):** `Module L3 load / module-l3` runs after merge when driver/build paths change. See [`.github/workflows/module-l3.yml`](../../.github/workflows/module-l3.yml).
 
-### Path filters and required checks
+### Path-scoped PR checks (T10)
 
-These workflows use **workflow-level** `paths:` filters. When a PR does not touch matching paths (e.g. docs-only), the workflow **does not run** — the check stays **Waiting for status to be reported** and branch protection **blocks merge** ([GitHub troubleshooting docs](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/troubleshooting-required-status-checks)).
+On **pull requests**, all three workflows **always trigger** and report a status check. Job-level [`dorny/paths-filter`](https://github.com/dorny/paths-filter) decides whether to run the full L0/L1/L2 jobs or a no-op skip step. Out-of-scope PRs (e.g. docs-only) show **Success** instead of staying **Waiting for status to be reported**, so branch protection can require these checks without blocking unrelated PRs.
 
-Until workflows are refactored (e.g. always trigger with job-level `if:` + `dorny/paths-filter` so out-of-scope jobs report Success), admins enabling these required checks should plan for:
-
-- **Docs-only PRs** — use an admin bypass, ruleset path exception, or temporarily relax required checks.
-- **Translation PRs** — all three checks should run when driver/build paths change.
+**Translation PRs** that touch driver/build paths still run the full gate jobs when relevant files change.
 
 Repo admins: see [Branch protection](rust-migration/dev-environment.md#branch-protection) in [`dev-environment.md`](rust-migration/dev-environment.md) for Settings steps.
 
