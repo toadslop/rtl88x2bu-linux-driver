@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 //! IEEE 802.11 rest helpers — Rust port of `core/rtw_ieee80211_rest.c` rate
 //! classification slice (W3-26), WPA/RSN cipher suite getters (W3-27), and
-//! WPA/RSN IE parse (W3-28).
+//! WPA/RSN IE parse (W3-28), and WAPI/WPS/sec-IE getters (W3-29).
 
 #![allow(
     dead_code,
@@ -63,6 +63,13 @@ const OFDM: U8 = 1;
 const _BEACON_IE_OFFSET_: usize = 12;
 const _SUPPORTEDRATES_IE_: U8 = 1;
 const _EXT_SUPPORTEDRATES_IE_: U8 = 50;
+
+const _WPA_IE_ID_: U8 = 0xdd;
+const _WPA2_IE_ID_: U8 = 0x30;
+const _WAPI_IE_: U8 = 68;
+const _TIMESTAMP_: usize = 8;
+const _BEACON_ITERVAL_: usize = 2;
+const _CAPABILITY_: usize = 2;
 
 const WPA_SELECTOR_LEN: usize = 4;
 const RSN_SELECTOR_LEN: usize = 4;
@@ -339,7 +346,6 @@ pub extern "C" fn rtw_get_akm_suite_bitmap(s: *mut U8) -> u32 {
 
 const _FAIL: i32 = 0;
 
-const _WPA_IE_ID_: U8 = 0xdd;
 const WLAN_EID_RSN: U8 = 48;
 
 const RTW_WPA_OUI_TYPE: [U8; 4] = [0x00, 0x50, 0xf2, 1];
@@ -632,6 +638,106 @@ pub extern "C" fn rtw_parse_wpa2_ie(
         }
     }
     _SUCCESS
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_get_wapi_ie(
+    in_ie: *mut U8,
+    in_len: c_uint,
+    wapi_ie: *mut U8,
+    wapi_len: *mut u16,
+) -> c_int {
+    let mut len = 0;
+    let wapi_oui1: [U8; 4] = [0x0, 0x14, 0x72, 0x01];
+    let wapi_oui2: [U8; 4] = [0x0, 0x14, 0x72, 0x02];
+
+    unsafe {
+        if !wapi_len.is_null() {
+            *wapi_len = 0;
+        }
+        if in_ie.is_null() || in_len == 0 {
+            return len;
+        }
+
+        let mut cnt = _TIMESTAMP_ + _BEACON_ITERVAL_ + _CAPABILITY_;
+        while cnt < in_len as usize {
+            let authmode = *in_ie.add(cnt);
+            if authmode == _WAPI_IE_
+                && (suite_matches(in_ie.add(cnt + 6), &wapi_oui1, 4)
+                    || suite_matches(in_ie.add(cnt + 6), &wapi_oui2, 4))
+            {
+                if !wapi_ie.is_null() {
+                    let ie_len = *in_ie.add(cnt + 1) as usize + 2;
+                    memcpy(wapi_ie, in_ie.add(cnt), ie_len);
+                }
+                if !wapi_len.is_null() {
+                    *wapi_len = (*in_ie.add(cnt + 1) as u16) + 2;
+                }
+                cnt += *in_ie.add(cnt + 1) as usize + 2;
+            } else {
+                cnt += *in_ie.add(cnt + 1) as usize + 2;
+            }
+        }
+
+        if !wapi_len.is_null() {
+            len = *wapi_len as c_int;
+        }
+    }
+    len
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_get_sec_ie(
+    in_ie: *mut U8,
+    in_len: c_uint,
+    rsn_ie: *mut U8,
+    rsn_len: *mut u16,
+    wpa_ie: *mut U8,
+    wpa_len: *mut u16,
+) -> c_int {
+    let wpa_oui: [U8; 4] = [0x0, 0x50, 0xf2, 0x01];
+
+    unsafe {
+        let mut cnt = _TIMESTAMP_ + _BEACON_ITERVAL_ + _CAPABILITY_;
+        while cnt < in_len as usize {
+            let authmode = *in_ie.add(cnt);
+            if authmode == _WPA_IE_ID_ && suite_matches(in_ie.add(cnt + 2), &wpa_oui, 4) {
+                if !wpa_ie.is_null() {
+                    let ie_len = *in_ie.add(cnt + 1) as usize + 2;
+                    memcpy(wpa_ie, in_ie.add(cnt), ie_len);
+                }
+                *wpa_len = (*in_ie.add(cnt + 1) as u16) + 2;
+                cnt += *in_ie.add(cnt + 1) as usize + 2;
+            } else if authmode == _WPA2_IE_ID_ {
+                if !rsn_ie.is_null() {
+                    let ie_len = *in_ie.add(cnt + 1) as usize + 2;
+                    memcpy(rsn_ie, in_ie.add(cnt), ie_len);
+                }
+                *rsn_len = (*in_ie.add(cnt + 1) as u16) + 2;
+                cnt += *in_ie.add(cnt + 1) as usize + 2;
+            } else {
+                cnt += *in_ie.add(cnt + 1) as usize + 2;
+            }
+        }
+        (*rsn_len as c_int) + (*wpa_len as c_int)
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_is_wps_ie(ie_ptr: *mut U8, wps_ielen: *mut c_uint) -> U8 {
+    let wps_oui: [U8; 4] = [0x0, 0x50, 0xf2, 0x04];
+
+    if ie_ptr.is_null() {
+        return _FALSE as U8;
+    }
+    unsafe {
+        let eid = *ie_ptr;
+        if eid == _WPA_IE_ID_ && suite_matches(ie_ptr.add(2), &wps_oui, 4) {
+            *wps_ielen = (*ie_ptr.add(1) as c_uint) + 2;
+            return _TRUE as U8;
+        }
+    }
+    _FALSE as U8
 }
 
 fn is_cck_rate_byte(rate: U8) -> bool {
