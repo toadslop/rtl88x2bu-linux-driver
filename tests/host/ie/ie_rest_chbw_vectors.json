@@ -139,6 +139,36 @@
       "expect_req_offset": 1,
       "expect_g_bw": 1,
       "expect_g_offset": 1
+    },
+    {
+      "name": "sync_5g_req40_group20_offset_lookup",
+      "fn": "rtw_sync_chbw",
+      "req_ch": 36,
+      "req_bw": 1,
+      "req_offset": 0,
+      "g_ch": 36,
+      "g_bw": 0,
+      "g_offset": 0,
+      "expect_req_ch": 36,
+      "expect_req_bw": 1,
+      "expect_req_offset": 1,
+      "expect_g_bw": 1,
+      "expect_g_offset": 1
+    },
+    {
+      "name": "sync_invalid_offset_downgrade_to_20",
+      "fn": "rtw_sync_chbw",
+      "req_ch": 38,
+      "req_bw": 1,
+      "req_offset": 0,
+      "g_ch": 38,
+      "g_bw": 0,
+      "g_offset": 0,
+      "expect_req_ch": 38,
+      "expect_req_bw": 0,
+      "expect_req_offset": 0,
+      "expect_g_bw": 0,
+      "expect_g_offset": 0
     }
   ]
 }
