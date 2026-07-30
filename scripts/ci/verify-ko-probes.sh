@@ -35,6 +35,7 @@ rtw_rust_ieee80211_probe
 rtw_rust_security_probe
 rtw_rust_security_rest_probe
 rtw_rust_wlan_util_probe
+rtw_rust_rm_util_probe
 aes_ctr_encrypt
 aes_siv_encrypt
 aes_ccm_ae

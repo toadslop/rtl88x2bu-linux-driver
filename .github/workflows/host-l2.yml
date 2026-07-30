@@ -19,6 +19,8 @@ on:
       - 'core/rtw_swcrypto_rest.c'
       - 'core/rtw_ieee80211.c'
       - 'core/rtw_ieee80211_rest.c'
+      - 'core/rtw_rm_util.c'
+      - 'core/rtw_rm_util_rest.c'
       - 'core/rtw_security.c'
       - 'core/rtw_wlan_util.c'
       - 'rust/**'
@@ -51,7 +53,9 @@ jobs:
               - 'core/rtw_swcrypto_rest.c'
               - 'core/rtw_ieee80211.c'
               - 'core/rtw_ieee80211_rest.c'
-              - 'core/rtw_security.c'
+              - 'core/rtw_rm_util.c'
+      - 'core/rtw_rm_util_rest.c'
+      - 'core/rtw_security.c'
               - 'core/rtw_wlan_util.c'
               - 'rust/**'
               - 'tests/host/**'
@@ -100,6 +104,10 @@ jobs:
       - name: Host io_rest parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/io test
+
+      - name: Host rm_util_rest parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/rm test
 
       - name: Host rf_rest parity (L2)
         if: steps.filter.outputs.l2 == 'true'

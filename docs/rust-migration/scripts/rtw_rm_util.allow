@@ -1,0 +1,2 @@
+# L1 allowlist for W3-33: Rust-only probe symbol.
+drop rtw_rust_rm_util_probe
