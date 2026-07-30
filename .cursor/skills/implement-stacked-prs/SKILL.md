@@ -67,7 +67,8 @@ that prevents 400–600 line PRs.
 ```bash
 BASE=<stack-base>   # master for PR1, or previous PR branch for PR2+
 git fetch origin "$BASE"
-STAT=$(git diff --shortstat "$(git merge-base HEAD "origin/$BASE")"..HEAD)
+# Merge-base → working tree (no ..HEAD): includes uncommitted + committed work
+STAT=$(git diff --shortstat "$(git merge-base HEAD "origin/$BASE")")
 echo "$STAT"
 # Parse insertions + deletions; sum must be ≤ 250
 ```
