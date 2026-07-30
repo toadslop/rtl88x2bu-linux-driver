@@ -872,6 +872,198 @@ void rtw_sync_chbw(u8 *req_ch, u8 *req_bw, u8 *req_offset, u8 *g_ch, u8 *g_bw,
 	}
 }
 #endif /* HOST_IEEE80211_REST_CHBW_TEST || !HOST_IEEE80211_REST_TEST */
+
+#if defined(HOST_IEEE80211_REST_FRAME_HT_TEST) || !defined(HOST_IEEE80211_REST_TEST)
+/*
+ * W3-32: frame header and HT MCS helpers extracted from core/rtw_ieee80211.c.
+ */
+
+#ifdef HOST_IEEE80211_REST_TEST
+static u8 rtw_ht_mcsset_to_nss_local(u8 *supp_mcs_set)
+{
+	u8 nss = 1;
+
+	if (supp_mcs_set[3])
+		nss = 4;
+	else if (supp_mcs_set[2])
+		nss = 3;
+	else if (supp_mcs_set[1])
+		nss = 2;
+	else if (supp_mcs_set[0])
+		nss = 1;
+	return nss;
+}
+#else
+extern u8 rtw_ht_mcsset_to_nss(u8 *supp_mcs_set);
+#define rtw_ht_mcsset_to_nss_local rtw_ht_mcsset_to_nss
+#endif /* HOST_IEEE80211_REST_TEST */
+
+int ieee80211_is_empty_essid(const char *essid, int essid_len)
+{
+	if (essid_len == 1 && essid[0] == ' ')
+		return 1;
+
+	while (essid_len) {
+		essid_len--;
+		if (essid[essid_len] != '\0')
+			return 0;
+	}
+
+	return 1;
+}
+
+int ieee80211_get_hdrlen(u16 fc)
+{
+	int hdrlen = 24;
+
+	switch (WLAN_FC_GET_TYPE(fc)) {
+	case RTW_IEEE80211_FTYPE_DATA:
+		if (fc & RTW_IEEE80211_STYPE_QOS_DATA)
+			hdrlen += 2;
+		if ((fc & RTW_IEEE80211_FCTL_FROMDS) && (fc & RTW_IEEE80211_FCTL_TODS))
+			hdrlen += 6;
+		break;
+	case RTW_IEEE80211_FTYPE_CTL:
+		switch (WLAN_FC_GET_STYPE(fc)) {
+		case RTW_IEEE80211_STYPE_CTS:
+		case RTW_IEEE80211_STYPE_ACK:
+			hdrlen = 10;
+			break;
+		default:
+			hdrlen = 16;
+			break;
+		}
+		break;
+	}
+
+	return hdrlen;
+}
+
+u16 rtw_ht_mcs_rate(u8 bw_40MHz, u8 short_GI, unsigned char *MCS_rate)
+{
+	u16 max_rate = 0;
+
+	if (MCS_rate[3]) {
+		if (MCS_rate[3] & BIT(7))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 6000 : 5400) : ((short_GI) ? 2889 : 2600);
+		else if (MCS_rate[3] & BIT(6))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 5400 : 4860) : ((short_GI) ? 2600 : 2340);
+		else if (MCS_rate[3] & BIT(5))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 4800 : 4320) : ((short_GI) ? 2311 : 2080);
+		else if (MCS_rate[3] & BIT(4))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 3600 : 3240) : ((short_GI) ? 1733 : 1560);
+		else if (MCS_rate[3] & BIT(3))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 2400 : 2160) : ((short_GI) ? 1156 : 1040);
+		else if (MCS_rate[3] & BIT(2))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 1800 : 1620) : ((short_GI) ? 867 : 780);
+		else if (MCS_rate[3] & BIT(1))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 1200 : 1080) : ((short_GI) ? 578 : 520);
+		else if (MCS_rate[3] & BIT(0))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 600 : 540) : ((short_GI) ? 289 : 260);
+	} else if (MCS_rate[2]) {
+		if (MCS_rate[2] & BIT(7))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 4500 : 4050) : ((short_GI) ? 2167 : 1950);
+		else if (MCS_rate[2] & BIT(6))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 4050 : 3645) : ((short_GI) ? 1950 : 1750);
+		else if (MCS_rate[2] & BIT(5))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 3600 : 3240) : ((short_GI) ? 1733 : 1560);
+		else if (MCS_rate[2] & BIT(4))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 2700 : 2430) : ((short_GI) ? 1300 : 1170);
+		else if (MCS_rate[2] & BIT(3))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 1800 : 1620) : ((short_GI) ? 867 : 780);
+		else if (MCS_rate[2] & BIT(2))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 1350 : 1215) : ((short_GI) ? 650 : 585);
+		else if (MCS_rate[2] & BIT(1))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 900 : 810) : ((short_GI) ? 433 : 390);
+		else if (MCS_rate[2] & BIT(0))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 450 : 405) : ((short_GI) ? 217 : 195);
+	} else if (MCS_rate[1]) {
+		if (MCS_rate[1] & BIT(7))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 3000 : 2700) : ((short_GI) ? 1444 : 1300);
+		else if (MCS_rate[1] & BIT(6))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 2700 : 2430) : ((short_GI) ? 1300 : 1170);
+		else if (MCS_rate[1] & BIT(5))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 2400 : 2160) : ((short_GI) ? 1156 : 1040);
+		else if (MCS_rate[1] & BIT(4))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 1800 : 1620) : ((short_GI) ? 867 : 780);
+		else if (MCS_rate[1] & BIT(3))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 1200 : 1080) : ((short_GI) ? 578 : 520);
+		else if (MCS_rate[1] & BIT(2))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 900 : 810) : ((short_GI) ? 433 : 390);
+		else if (MCS_rate[1] & BIT(1))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 600 : 540) : ((short_GI) ? 289 : 260);
+		else if (MCS_rate[1] & BIT(0))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 300 : 270) : ((short_GI) ? 144 : 130);
+	} else {
+		if (MCS_rate[0] & BIT(7))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 1500 : 1350) : ((short_GI) ? 722 : 650);
+		else if (MCS_rate[0] & BIT(6))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 1350 : 1215) : ((short_GI) ? 650 : 585);
+		else if (MCS_rate[0] & BIT(5))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 1200 : 1080) : ((short_GI) ? 578 : 520);
+		else if (MCS_rate[0] & BIT(4))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 900 : 810) : ((short_GI) ? 433 : 390);
+		else if (MCS_rate[0] & BIT(3))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 600 : 540) : ((short_GI) ? 289 : 260);
+		else if (MCS_rate[0] & BIT(2))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 450 : 405) : ((short_GI) ? 217 : 195);
+		else if (MCS_rate[0] & BIT(1))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 300 : 270) : ((short_GI) ? 144 : 130);
+		else if (MCS_rate[0] & BIT(0))
+			max_rate = (bw_40MHz) ? ((short_GI) ? 150 : 135) : ((short_GI) ? 72 : 65);
+	}
+
+	return max_rate;
+}
+
+u8 rtw_ht_cap_get_rx_nss(u8 *ht_cap)
+{
+	u8 *ht_mcs_set = HT_CAP_ELE_SUP_MCS_SET(ht_cap);
+
+	return rtw_ht_mcsset_to_nss_local(ht_mcs_set);
+}
+
+u8 rtw_ht_cap_get_tx_nss(u8 *ht_cap)
+{
+	if (GET_HT_CAP_ELE_TX_MCS_DEF(ht_cap) && GET_HT_CAP_ELE_TRX_MCS_NEQ(ht_cap))
+		return GET_HT_CAP_ELE_TX_MAX_SS(ht_cap) + 1;
+
+	return rtw_ht_cap_get_rx_nss(ht_cap);
+}
+
+int rtw_action_frame_parse(const u8 *frame, u32 frame_len, u8 *category, u8 *action)
+{
+	const u8 *frame_body = frame + sizeof(struct rtw_ieee80211_hdr_3addr);
+	u16 fc;
+	u8 c;
+	u8 a = ACT_PUBLIC_MAX;
+
+	(void)frame_len;
+
+	fc = le16_to_cpu(((struct rtw_ieee80211_hdr_3addr *)frame)->frame_ctl);
+
+	if ((fc & (RTW_IEEE80211_FCTL_FTYPE | RTW_IEEE80211_FCTL_STYPE))
+	    != (RTW_IEEE80211_FTYPE_MGMT | RTW_IEEE80211_STYPE_ACTION)
+	   )
+		return _FALSE;
+
+	c = frame_body[0];
+
+	switch (c) {
+	case RTW_WLAN_CATEGORY_P2P:
+		break;
+	default:
+		a = frame_body[1];
+	}
+
+	if (category)
+		*category = c;
+	if (action)
+		*action = a;
+
+	return _TRUE;
+}
+#endif /* HOST_IEEE80211_REST_FRAME_HT_TEST || !HOST_IEEE80211_REST_TEST */
 #endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
 #if defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)

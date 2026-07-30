@@ -296,4 +296,56 @@ bool rtw_is_chbw_grouped(u8 ch_a, u8 bw_a, u8 offset_a, u8 ch_b, u8 bw_b,
 void rtw_sync_chbw(u8 *req_ch, u8 *req_bw, u8 *req_offset, u8 *g_ch,
 		   u8 *g_bw, u8 *g_offset);
 
+#define le16_to_cpu(x) (x)
+
+#define RTW_IEEE80211_FCTL_FTYPE 0x000c
+#define RTW_IEEE80211_FCTL_STYPE 0x00f0
+#define RTW_IEEE80211_FCTL_FROMDS 0x0200
+#define RTW_IEEE80211_FCTL_TODS 0x0100
+#define RTW_IEEE80211_FTYPE_MGMT 0x0000
+#define RTW_IEEE80211_FTYPE_DATA 0x0008
+#define RTW_IEEE80211_FTYPE_CTL 0x0004
+#define RTW_IEEE80211_STYPE_QOS_DATA 0x0080
+#define RTW_IEEE80211_STYPE_ACTION 0x00D0
+#define RTW_IEEE80211_STYPE_CTS 0x00C0
+#define RTW_IEEE80211_STYPE_ACK 0x00D0
+
+#define WLAN_FC_GET_TYPE(fc) ((fc) & RTW_IEEE80211_FCTL_FTYPE)
+#define WLAN_FC_GET_STYPE(fc) ((fc) & RTW_IEEE80211_FCTL_STYPE)
+
+enum rtw_wlan_category {
+	RTW_WLAN_CATEGORY_PUBLIC = 4,
+	RTW_WLAN_CATEGORY_P2P = 0x7f,
+};
+
+enum rtw_public_action_field {
+	ACT_PUBLIC_BSSCOEXIST = 0,
+	ACT_PUBLIC_MAX = 32,
+};
+
+struct rtw_ieee80211_hdr_3addr {
+	u16 frame_ctl;
+	u16 duration_id;
+	u8 addr1[ETH_ALEN];
+	u8 addr2[ETH_ALEN];
+	u8 addr3[ETH_ALEN];
+	u16 seq_ctl;
+} __attribute__((packed));
+
+#define HT_CAP_ELE_SUP_MCS_SET(_pEleStart) (((u8 *)(_pEleStart)) + 3)
+#define GET_HT_CAP_ELE_TX_MCS_DEF(_pEleStart) \
+	LE_BITS_TO_1BYTE(((u8 *)(_pEleStart)) + 15, 0, 1)
+#define GET_HT_CAP_ELE_TRX_MCS_NEQ(_pEleStart) \
+	LE_BITS_TO_1BYTE(((u8 *)(_pEleStart)) + 15, 1, 1)
+#define GET_HT_CAP_ELE_TX_MAX_SS(_pEleStart) \
+	LE_BITS_TO_1BYTE(((u8 *)(_pEleStart)) + 15, 2, 2)
+
+int ieee80211_is_empty_essid(const char *essid, int essid_len);
+int ieee80211_get_hdrlen(u16 fc);
+u16 rtw_ht_mcs_rate(u8 bw_40MHz, u8 short_GI, unsigned char *MCS_rate);
+u8 rtw_ht_cap_get_rx_nss(u8 *ht_cap);
+u8 rtw_ht_cap_get_tx_nss(u8 *ht_cap);
+int rtw_action_frame_parse(const u8 *frame, u32 frame_len, u8 *category,
+			   u8 *action);
+
 #endif /* HOST_IEEE80211_TYPES_H */

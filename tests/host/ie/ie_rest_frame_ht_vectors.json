@@ -1,0 +1,120 @@
+{
+  "vectors": [
+    {
+      "name": "empty_essid_all_zero",
+      "fn": "ieee80211_is_empty_essid",
+      "essid_hex": "0000000000",
+      "expect": 1
+    },
+    {
+      "name": "empty_essid_single_space",
+      "fn": "ieee80211_is_empty_essid",
+      "essid_hex": "20",
+      "expect": 1
+    },
+    {
+      "name": "nonempty_essid_text",
+      "fn": "ieee80211_is_empty_essid",
+      "essid_hex": "7465737400",
+      "expect": 0
+    },
+    {
+      "name": "hdrlen_data_basic",
+      "fn": "ieee80211_get_hdrlen",
+      "fc": 8,
+      "expect": 24
+    },
+    {
+      "name": "hdrlen_data_qos",
+      "fn": "ieee80211_get_hdrlen",
+      "fc": 136,
+      "expect": 26
+    },
+    {
+      "name": "hdrlen_data_4addr",
+      "fn": "ieee80211_get_hdrlen",
+      "fc": 776,
+      "expect": 30
+    },
+    {
+      "name": "hdrlen_mgmt_beacon",
+      "fn": "ieee80211_get_hdrlen",
+      "fc": 128,
+      "expect": 24
+    },
+    {
+      "name": "hdrlen_ctl_ack",
+      "fn": "ieee80211_get_hdrlen",
+      "fc": 212,
+      "expect": 10
+    },
+    {
+      "name": "hdrlen_ctl_rts",
+      "fn": "ieee80211_get_hdrlen",
+      "fc": 180,
+      "expect": 16
+    },
+    {
+      "name": "ht_mcs_rate_mcs0_20mhz_long",
+      "fn": "rtw_ht_mcs_rate",
+      "bw_40": 0,
+      "short_gi": 0,
+      "mcs_rate_hex": "01000000",
+      "expect": 65
+    },
+    {
+      "name": "ht_mcs_rate_mcs7_40mhz_sgi",
+      "fn": "rtw_ht_mcs_rate",
+      "bw_40": 1,
+      "short_gi": 1,
+      "mcs_rate_hex": "80000000",
+      "expect": 1500
+    },
+    {
+      "name": "ht_cap_rx_nss_1ss",
+      "fn": "rtw_ht_cap_get_rx_nss",
+      "ht_cap_hex": "00000001000000000000000000000000",
+      "expect": 1
+    },
+    {
+      "name": "ht_cap_rx_nss_2ss",
+      "fn": "rtw_ht_cap_get_rx_nss",
+      "ht_cap_hex": "00000000010000000000000000000000",
+      "expect": 2
+    },
+    {
+      "name": "ht_cap_tx_nss_rx_fallback",
+      "fn": "rtw_ht_cap_get_tx_nss",
+      "ht_cap_hex": "00000001000000000000000000000000",
+      "expect": 1
+    },
+    {
+      "name": "ht_cap_tx_nss_explicit",
+      "fn": "rtw_ht_cap_get_tx_nss",
+      "ht_cap_hex": "0000000100000000000000000000000b",
+      "expect": 3
+    },
+    {
+      "name": "action_frame_public",
+      "fn": "rtw_action_frame_parse",
+      "frame_hex": "d000000000000000000000000000000000000000000000000401",
+      "expect": 1,
+      "expect_category": 4,
+      "expect_action": 1
+    },
+    {
+      "name": "action_frame_p2p",
+      "fn": "rtw_action_frame_parse",
+      "frame_hex": "d000000000000000000000000000000000000000000000007f02",
+      "expect": 1,
+      "expect_category": 127,
+      "expect_action": 32
+    },
+    {
+      "name": "action_frame_not_mgmt",
+      "fn": "rtw_action_frame_parse",
+      "frame_hex": "080000000000000000000000000000000000000000000000000401",
+      "expect": 0
+    }
+  ]
+}

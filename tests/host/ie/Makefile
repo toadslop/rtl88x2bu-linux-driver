@@ -1,7 +1,8 @@
 # Host L2 differential tests for core/rtw_ieee80211.c IE helpers (W3-03)
 # and core/rtw_ieee80211_rest.c rate helpers (W3-26), cipher getters (W3-27),
 # WPA/RSN IE parse (W3-28), and WAPI/WPS/sec-IE getters (W3-29), and
-# string/MAC address helpers (W3-30), and chbw grouping/sync (W3-31).
+# string/MAC address helpers (W3-30), and chbw grouping/sync (W3-31), and
+# frame header / HT MCS helpers (W3-32).
 
 ROOT     := ../../..
 CORE     := $(ROOT)/core
@@ -21,6 +22,7 @@ REST_CFLAGS := $(CFLAGS) -DHOST_IEEE80211_REST_TEST
 CHBW_CFLAGS := $(REST_CFLAGS) -I$(ROOT)/include \
            -include $(HOST_INC)/host_autoconf.h -DHOST_RF_TEST \
            -DHOST_IEEE80211_REST_CHBW_TEST -Wno-format-truncation
+FRAME_HT_CFLAGS := $(REST_CFLAGS) -DHOST_IEEE80211_REST_FRAME_HT_TEST
 RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
 
 IE_SRCS := ie_c_oracle.c ../crypto/host_vector_json.c
@@ -41,19 +43,21 @@ IE_REST_CHBW_SRCS := $(IE_REST_SRC) ie_cipher_c_oracle.c ie_wpa_rsn_parse_c_orac
                 ../crypto/host_vector_json.c ie_mac_str_host_shim.c \
                 $(RF_REST_SRC)
 
+IE_REST_FRAME_HT_SRCS := $(IE_REST_SRCS)
+
 IE_REST_RUST_SHIM := ie_mac_str_host_shim.c
 
 .PHONY: all test test-c test-rust test-rest test-rest-rust test-rest-cipher \
 	test-rest-wpa-rsn-parse test-rest-wpa-rsn-parse-rust test-rest-wapi-wps \
 	test-rest-wapi-wps-rust test-rest-mac-str test-rest-mac-str-rust \
-	test-rest-chbw test-rest-chbw-rust clean
+	test-rest-chbw test-rest-chbw-rust test-rest-frame-ht clean
 
 all: test
 
 test: test-c test-rust test-rest test-rest-rust test-rest-cipher \
 	test-rest-cipher-rust test-rest-wpa-rsn-parse test-rest-wpa-rsn-parse-rust \
 	test-rest-wapi-wps test-rest-wapi-wps-rust test-rest-mac-str \
-	test-rest-mac-str-rust test-rest-chbw
+	test-rest-mac-str-rust test-rest-chbw test-rest-frame-ht
 
 test-c: test_ie
 	./test_ie ie_vectors.json
@@ -173,6 +177,12 @@ test_ie_rest_chbw_rust: test_ie_rest_chbw.c librust_ie_rest.a \
 		../wlan_util/wlan_util_c_oracle.c ../crypto/host_vector_json.c \
 		$(IE_REST_RUST_SHIM) $(RF_REST_SRC) librust_ie_rest.a
 
+test-rest-frame-ht: test_ie_rest_frame_ht
+	./test_ie_rest_frame_ht ie_rest_frame_ht_vectors.json
+
+test_ie_rest_frame_ht: test_ie_rest_frame_ht.c $(IE_REST_FRAME_HT_SRCS)
+	$(CC) $(FRAME_HT_CFLAGS) -o $@ test_ie_rest_frame_ht.c $(IE_REST_FRAME_HT_SRCS)
+
 test_ie_rest_rust: test_ie_rest.c librust_ie_rest.a ../wlan_util/wlan_util_c_oracle.c \
 		../crypto/host_vector_json.c ie_c_oracle.c $(IE_REST_RUST_SHIM)
 	$(CC) $(REST_CFLAGS) -DRUST_IEEE80211_REST_ORACLE -o $@ test_ie_rest.c \
@@ -185,4 +195,5 @@ clean:
 		test_ie_rest_wpa_rsn_parse_rust test_ie_rest_wapi_wps \
 		test_ie_rest_wapi_wps_rust test_ie_rest_mac_str \
 		test_ie_rest_mac_str_rust test_ie_rest_chbw \
-		test_ie_rest_chbw_rust librust_ie.a librust_ie_rest.a
+		test_ie_rest_chbw_rust test_ie_rest_frame_ht \
+		librust_ie.a librust_ie_rest.a
