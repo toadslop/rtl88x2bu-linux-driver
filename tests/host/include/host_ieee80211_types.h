@@ -247,4 +247,53 @@ void host_mac_str_test_set_initmac(const char *mac);
 void host_mac_str_test_clear_initmac(void);
 void host_mac_str_test_set_random32(u32 val);
 
+#define LE_BITS_TO_1BYTE(__pStart, __BitOffset, __BitLen) \
+	(((*((u8 *)(__pStart)) >> (__BitOffset)) & ((1U << (__BitLen)) - 1)))
+
+#define CHANNEL_WIDTH_20 0
+#define CHANNEL_WIDTH_40 1
+#define CHANNEL_WIDTH_80 2
+#define HAL_PRIME_CHNL_OFFSET_DONT_CARE 0
+#define HAL_PRIME_CHNL_OFFSET_LOWER 1
+#define HAL_PRIME_CHNL_OFFSET_UPPER 2
+
+#define _DSSET_IE_ 3
+#define EID_HTCapability 45
+#define EID_HTInfo 61
+#define EID_VHTOperation 192
+
+enum secondary_ch_offset {
+	SCN = 0,
+	SCA = 1,
+	SCB = 3,
+};
+
+#define GET_HT_CAP_ELE_CHL_WIDTH(_pEleStart) \
+	LE_BITS_TO_1BYTE(((u8 *)(_pEleStart)), 1, 1)
+#define GET_HT_OP_ELE_PRI_CHL(_pEleStart) \
+	LE_BITS_TO_1BYTE(((u8 *)(_pEleStart)), 0, 8)
+#define GET_HT_OP_ELE_2ND_CHL_OFFSET(_pEleStart) \
+	LE_BITS_TO_1BYTE(((u8 *)(_pEleStart)) + 1, 0, 2)
+#define GET_HT_OP_ELE_STA_CHL_WIDTH(_pEleStart) \
+	LE_BITS_TO_1BYTE(((u8 *)(_pEleStart)) + 1, 2, 1)
+#define GET_VHT_OPERATION_ELE_CHL_WIDTH(_pEleStart) \
+	LE_BITS_TO_1BYTE(_pEleStart, 0, 8)
+
+typedef struct _NDIS_802_11_FIXED_IEs {
+	u8 Timestamp[8];
+	u16 BeaconInterval;
+	u16 Capabilities;
+} NDIS_802_11_FIXED_IEs;
+
+u8 rtw_get_offset_by_chbw(u8 ch, u8 bw, u8 *r_offset);
+
+void rtw_ies_get_chbw(u8 *ies, int ies_len, u8 *ch, u8 *bw, u8 *offset,
+		      u8 ht, u8 vht);
+void rtw_bss_get_chbw(WLAN_BSSID_EX *bss, u8 *ch, u8 *bw, u8 *offset, u8 ht,
+		      u8 vht);
+bool rtw_is_chbw_grouped(u8 ch_a, u8 bw_a, u8 offset_a, u8 ch_b, u8 bw_b,
+			 u8 offset_b);
+void rtw_sync_chbw(u8 *req_ch, u8 *req_bw, u8 *req_offset, u8 *g_ch,
+		   u8 *g_bw, u8 *g_offset);
+
 #endif /* HOST_IEEE80211_TYPES_H */

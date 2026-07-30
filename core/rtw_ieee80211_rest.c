@@ -710,6 +710,168 @@ err_chk:
 	_rtw_memcpy(out, mac, ETH_ALEN);
 	RTW_INFO("%s mac addr:" MAC_FMT "\n", __func__, MAC_ARG(out));
 }
+
+#if defined(HOST_IEEE80211_REST_CHBW_TEST) || !defined(HOST_IEEE80211_REST_TEST)
+/*
+ * W3-31: channel/bandwidth grouping helpers extracted from core/rtw_ieee80211.c.
+ */
+
+void rtw_ies_get_chbw(u8 *ies, int ies_len, u8 *ch, u8 *bw, u8 *offset, u8 ht,
+		      u8 vht)
+{
+	u8 *p;
+	int ie_len;
+
+	*ch = 0;
+	*bw = CHANNEL_WIDTH_20;
+	*offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+
+	p = rtw_get_ie(ies, _DSSET_IE_, &ie_len, ies_len);
+	if (p && ie_len > 0)
+		*ch = *(p + 2);
+
+#ifdef CONFIG_80211N_HT
+	if (ht || vht) {
+		u8 *ht_cap_ie, *ht_op_ie;
+		int ht_cap_ielen, ht_op_ielen;
+
+		ht_cap_ie = rtw_get_ie(ies, EID_HTCapability, &ht_cap_ielen,
+				       ies_len);
+		if (ht_cap_ie && ht_cap_ielen) {
+			if (GET_HT_CAP_ELE_CHL_WIDTH(ht_cap_ie + 2))
+				*bw = CHANNEL_WIDTH_40;
+		}
+
+		ht_op_ie = rtw_get_ie(ies, EID_HTInfo, &ht_op_ielen, ies_len);
+		if (ht_op_ie && ht_op_ielen) {
+			if (*ch == 0)
+				*ch = GET_HT_OP_ELE_PRI_CHL(ht_op_ie + 2);
+			else if (*ch != 0 &&
+				 *ch != GET_HT_OP_ELE_PRI_CHL(ht_op_ie + 2)) {
+				RTW_INFO("%s ch inconsistent, DSSS:%u, HT primary:%u\n",
+					 __func__, *ch,
+					 GET_HT_OP_ELE_PRI_CHL(ht_op_ie + 2));
+			}
+
+			if (!GET_HT_OP_ELE_STA_CHL_WIDTH(ht_op_ie + 2))
+				*bw = CHANNEL_WIDTH_20;
+
+			if (*bw == CHANNEL_WIDTH_40) {
+				switch (GET_HT_OP_ELE_2ND_CHL_OFFSET(
+						ht_op_ie + 2)) {
+				case SCA:
+					*offset = HAL_PRIME_CHNL_OFFSET_LOWER;
+					break;
+				case SCB:
+					*offset = HAL_PRIME_CHNL_OFFSET_UPPER;
+					break;
+				}
+			}
+		}
+
+#ifdef CONFIG_80211AC_VHT
+		if (vht) {
+			u8 *vht_op_ie;
+			int vht_op_ielen;
+
+			vht_op_ie = rtw_get_ie(ies, EID_VHTOperation,
+					       &vht_op_ielen, ies_len);
+			if (vht_op_ie && vht_op_ielen) {
+				if (GET_VHT_OPERATION_ELE_CHL_WIDTH(
+					    vht_op_ie + 2) >= 1)
+					*bw = CHANNEL_WIDTH_80;
+			}
+		}
+#endif /* CONFIG_80211AC_VHT */
+	}
+#endif /* CONFIG_80211N_HT */
+}
+
+void rtw_bss_get_chbw(WLAN_BSSID_EX *bss, u8 *ch, u8 *bw, u8 *offset, u8 ht,
+		      u8 vht)
+{
+	rtw_ies_get_chbw(bss->IEs + sizeof(NDIS_802_11_FIXED_IEs),
+			 bss->IELength - sizeof(NDIS_802_11_FIXED_IEs), ch, bw,
+			 offset, ht, vht);
+
+	if (*ch == 0)
+		*ch = bss->Configuration.DSConfig;
+	else if (*ch != bss->Configuration.DSConfig) {
+		RTW_INFO("inconsistent ch - ies:%u bss->Configuration.DSConfig:%u\n",
+			 *ch, bss->Configuration.DSConfig);
+		*ch = bss->Configuration.DSConfig;
+		rtw_warn_on(1);
+	}
+}
+
+bool rtw_is_chbw_grouped(u8 ch_a, u8 bw_a, u8 offset_a, u8 ch_b, u8 bw_b,
+			 u8 offset_b)
+{
+	bool is_grouped = _FALSE;
+
+	if (ch_a != ch_b)
+		goto exit;
+	else if ((bw_a == CHANNEL_WIDTH_40 || bw_a == CHANNEL_WIDTH_80) &&
+		 (bw_b == CHANNEL_WIDTH_40 || bw_b == CHANNEL_WIDTH_80)) {
+		if (offset_a != offset_b)
+			goto exit;
+	}
+
+	is_grouped = _TRUE;
+
+exit:
+	return is_grouped;
+}
+
+void rtw_sync_chbw(u8 *req_ch, u8 *req_bw, u8 *req_offset, u8 *g_ch, u8 *g_bw,
+		   u8 *g_offset)
+{
+	*req_ch = *g_ch;
+
+	if (*req_bw == CHANNEL_WIDTH_80 && *g_ch <= 14)
+		*req_bw = CHANNEL_WIDTH_40;
+
+	switch (*req_bw) {
+	case CHANNEL_WIDTH_80:
+		if (*g_bw == CHANNEL_WIDTH_40 || *g_bw == CHANNEL_WIDTH_80)
+			*req_offset = *g_offset;
+		else if (*g_bw == CHANNEL_WIDTH_20)
+			rtw_get_offset_by_chbw(*req_ch, *req_bw, req_offset);
+
+		if (*req_offset == HAL_PRIME_CHNL_OFFSET_DONT_CARE) {
+			RTW_ERR("%s req 80MHz BW without offset, down to 20MHz\n",
+				__func__);
+			rtw_warn_on(1);
+			*req_bw = CHANNEL_WIDTH_20;
+		}
+		break;
+	case CHANNEL_WIDTH_40:
+		if (*g_bw == CHANNEL_WIDTH_40 || *g_bw == CHANNEL_WIDTH_80)
+			*req_offset = *g_offset;
+		else if (*g_bw == CHANNEL_WIDTH_20)
+			rtw_get_offset_by_chbw(*req_ch, *req_bw, req_offset);
+
+		if (*req_offset == HAL_PRIME_CHNL_OFFSET_DONT_CARE) {
+			RTW_ERR("%s req 40MHz BW without offset, down to 20MHz\n",
+				__func__);
+			rtw_warn_on(1);
+			*req_bw = CHANNEL_WIDTH_20;
+		}
+		break;
+	case CHANNEL_WIDTH_20:
+		*req_offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+		break;
+	default:
+		RTW_ERR("%s req unsupported BW:%u\n", __func__, *req_bw);
+		rtw_warn_on(1);
+	}
+
+	if (*req_bw > *g_bw) {
+		*g_bw = *req_bw;
+		*g_offset = *req_offset;
+	}
+}
+#endif /* HOST_IEEE80211_REST_CHBW_TEST || !HOST_IEEE80211_REST_TEST */
 #endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
 #if defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)

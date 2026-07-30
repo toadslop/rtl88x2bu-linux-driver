@@ -2,7 +2,7 @@
 //! IEEE 802.11 rest helpers — Rust port of `core/rtw_ieee80211_rest.c` rate
 //! classification slice (W3-26), WPA/RSN cipher suite getters (W3-27), and
 //! WPA/RSN IE parse (W3-28), and WAPI/WPS/sec-IE getters (W3-29), and
-//! string/MAC address helpers (W3-30).
+//! string/MAC address helpers (W3-30), and chbw grouping/sync (W3-31).
 
 #![allow(
     dead_code,
@@ -143,6 +143,24 @@ const WLAN_AKM_FILS_SHA384: [U8; 4] = [0x00, 0x0f, 0xac, 15];
 const WLAN_AKM_FT_FILS_SHA256: [U8; 4] = [0x00, 0x0f, 0xac, 16];
 const WLAN_AKM_FT_FILS_SHA384: [U8; 4] = [0x00, 0x0f, 0xac, 17];
 
+const _DSSET_IE_: U8 = 3;
+const EID_HTCAPABILITY: Sint = 45;
+const EID_HTINFO: Sint = 61;
+const EID_VHTOPERATION: Sint = 192;
+
+const CHANNEL_WIDTH_20: U8 = 0;
+const CHANNEL_WIDTH_40: U8 = 1;
+const CHANNEL_WIDTH_80: U8 = 2;
+
+const HAL_PRIME_CHNL_OFFSET_DONT_CARE: U8 = 0;
+const HAL_PRIME_CHNL_OFFSET_LOWER: U8 = 1;
+const HAL_PRIME_CHNL_OFFSET_UPPER: U8 = 2;
+
+const SCA: U8 = 1;
+const SCB: U8 = 3;
+
+const NDIS_802_11_FIXED_IES_LEN: usize = 12;
+
 static WIFI_CCKRATES: [U8; 4] = [
     IEEE80211_CCK_RATE_1MB | IEEE80211_BASIC_RATE_MASK,
     IEEE80211_CCK_RATE_2MB | IEEE80211_BASIC_RATE_MASK,
@@ -230,6 +248,8 @@ extern "C" {
     fn rtw_ieee80211_rest_bss_ies(bss: *mut c_void) -> *mut u8;
     #[cfg(not(host_ieee80211_rest_test))]
     fn rtw_ieee80211_rest_bss_supported_rates(bss: *mut c_void) -> *mut u8;
+
+    fn rtw_get_offset_by_chbw(ch: U8, bw: U8, r_offset: *mut U8) -> U8;
 }
 
 fn bit(i: u32) -> i32 {
@@ -1109,4 +1129,215 @@ pub extern "C" fn rtw_update_rate_bymode(pbss_network: BssPtr, mode: u32) -> U8 
         network_type as U8
     };
     network_type
+}
+
+fn le_bits_to_1byte(start: *const U8, bit_offset: u32, bit_len: u32) -> U8 {
+    unsafe { (*start >> bit_offset) as U8 & ((1u32 << bit_len) - 1) as U8 }
+}
+
+fn get_ht_cap_ele_chl_width(ele_start: *const U8) -> U8 {
+    le_bits_to_1byte(ele_start, 1, 1)
+}
+
+fn get_ht_op_ele_pri_chl(ele_start: *const U8) -> U8 {
+    le_bits_to_1byte(ele_start, 0, 8)
+}
+
+fn get_ht_op_ele_2nd_chl_offset(ele_start: *const U8) -> U8 {
+    le_bits_to_1byte(unsafe { ele_start.add(1) }, 0, 2)
+}
+
+fn get_ht_op_ele_sta_chl_width(ele_start: *const U8) -> U8 {
+    le_bits_to_1byte(unsafe { ele_start.add(1) }, 2, 1)
+}
+
+fn get_vht_operation_ele_chl_width(ele_start: *const U8) -> U8 {
+    unsafe { *ele_start }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_ies_get_chbw(
+    ies: *mut U8,
+    ies_len: c_int,
+    ch: *mut U8,
+    bw: *mut U8,
+    offset: *mut U8,
+    ht: U8,
+    vht: U8,
+) {
+    if ies.is_null() || ch.is_null() || bw.is_null() || offset.is_null() {
+        return;
+    }
+
+    unsafe {
+        *ch = 0;
+        *bw = CHANNEL_WIDTH_20;
+        *offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+
+        let mut ie_len: Sint = 0;
+        let p = rtw_get_ie(ies, _DSSET_IE_ as Sint, &mut ie_len, ies_len);
+        if !p.is_null() && ie_len > 0 {
+            *ch = *p.add(2);
+        }
+
+        if ht != 0 || vht != 0 {
+            let mut ht_cap_ielen: Sint = 0;
+            let ht_cap_ie =
+                rtw_get_ie(ies, EID_HTCAPABILITY, &mut ht_cap_ielen, ies_len);
+            if !ht_cap_ie.is_null() && ht_cap_ielen != 0 {
+                if get_ht_cap_ele_chl_width(ht_cap_ie.add(2)) != 0 {
+                    *bw = CHANNEL_WIDTH_40;
+                }
+            }
+
+            let mut ht_op_ielen: Sint = 0;
+            let ht_op_ie = rtw_get_ie(ies, EID_HTINFO, &mut ht_op_ielen, ies_len);
+            if !ht_op_ie.is_null() && ht_op_ielen != 0 {
+                let pri_ch = get_ht_op_ele_pri_chl(ht_op_ie.add(2));
+                if *ch == 0 {
+                    *ch = pri_ch;
+                }
+
+                if get_ht_op_ele_sta_chl_width(ht_op_ie.add(2)) == 0 {
+                    *bw = CHANNEL_WIDTH_20;
+                }
+
+                if *bw == CHANNEL_WIDTH_40 {
+                    match get_ht_op_ele_2nd_chl_offset(ht_op_ie.add(2)) {
+                        SCA => *offset = HAL_PRIME_CHNL_OFFSET_LOWER,
+                        SCB => *offset = HAL_PRIME_CHNL_OFFSET_UPPER,
+                        _ => {}
+                    }
+                }
+            }
+
+            if vht != 0 {
+                let mut vht_op_ielen: Sint = 0;
+                let vht_op_ie =
+                    rtw_get_ie(ies, EID_VHTOPERATION, &mut vht_op_ielen, ies_len);
+                if !vht_op_ie.is_null() && vht_op_ielen != 0 {
+                    if get_vht_operation_ele_chl_width(vht_op_ie.add(2)) >= 1 {
+                        *bw = CHANNEL_WIDTH_80;
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_bss_get_chbw(
+    bss: BssPtr,
+    ch: *mut U8,
+    bw: *mut U8,
+    offset: *mut U8,
+    ht: U8,
+    vht: U8,
+) {
+    if bss.is_null() || ch.is_null() || bw.is_null() || offset.is_null() {
+        return;
+    }
+
+    unsafe {
+        let ies = bss_ies(bss);
+        let ie_length = *bss_ielength(bss);
+        let tlv_len = ie_length.saturating_sub(NDIS_802_11_FIXED_IES_LEN as u32) as c_int;
+        rtw_ies_get_chbw(
+            ies.add(NDIS_802_11_FIXED_IES_LEN),
+            tlv_len,
+            ch,
+            bw,
+            offset,
+            ht,
+            vht,
+        );
+
+        let ds_config = *bss_dsconfig(bss) as U8;
+        if *ch == 0 {
+            *ch = ds_config;
+        } else if *ch != ds_config {
+            *ch = ds_config;
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_is_chbw_grouped(
+    ch_a: U8,
+    bw_a: U8,
+    offset_a: U8,
+    ch_b: U8,
+    bw_b: U8,
+    offset_b: U8,
+) -> bool {
+    if ch_a != ch_b {
+        return false;
+    }
+    if (bw_a == CHANNEL_WIDTH_40 || bw_a == CHANNEL_WIDTH_80)
+        && (bw_b == CHANNEL_WIDTH_40 || bw_b == CHANNEL_WIDTH_80)
+        && offset_a != offset_b
+    {
+        return false;
+    }
+    true
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_sync_chbw(
+    req_ch: *mut U8,
+    req_bw: *mut U8,
+    req_offset: *mut U8,
+    g_ch: *mut U8,
+    g_bw: *mut U8,
+    g_offset: *mut U8,
+) {
+    if req_ch.is_null()
+        || req_bw.is_null()
+        || req_offset.is_null()
+        || g_ch.is_null()
+        || g_bw.is_null()
+        || g_offset.is_null()
+    {
+        return;
+    }
+
+    unsafe {
+        *req_ch = *g_ch;
+
+        if *req_bw == CHANNEL_WIDTH_80 && *g_ch <= 14 {
+            *req_bw = CHANNEL_WIDTH_40;
+        }
+
+        match *req_bw {
+            CHANNEL_WIDTH_80 => {
+                if *g_bw == CHANNEL_WIDTH_40 || *g_bw == CHANNEL_WIDTH_80 {
+                    *req_offset = *g_offset;
+                } else if *g_bw == CHANNEL_WIDTH_20 {
+                    rtw_get_offset_by_chbw(*req_ch, *req_bw, req_offset);
+                }
+                if *req_offset == HAL_PRIME_CHNL_OFFSET_DONT_CARE {
+                    *req_bw = CHANNEL_WIDTH_20;
+                }
+            }
+            CHANNEL_WIDTH_40 => {
+                if *g_bw == CHANNEL_WIDTH_40 || *g_bw == CHANNEL_WIDTH_80 {
+                    *req_offset = *g_offset;
+                } else if *g_bw == CHANNEL_WIDTH_20 {
+                    rtw_get_offset_by_chbw(*req_ch, *req_bw, req_offset);
+                }
+                if *req_offset == HAL_PRIME_CHNL_OFFSET_DONT_CARE {
+                    *req_bw = CHANNEL_WIDTH_20;
+                }
+            }
+            CHANNEL_WIDTH_20 => {
+                *req_offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+            }
+            _ => {}
+        }
+
+        if *req_bw > *g_bw {
+            *g_bw = *req_bw;
+            *g_offset = *req_offset;
+        }
+    }
 }
