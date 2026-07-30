@@ -22,6 +22,8 @@
 
 #ifdef CONFIG_RTW_80211K
 
+#if !defined(CONFIG_RUST) || defined(HOST_RM_TEST)
+
 /* 802.11-2012 Table E-1 Operating classes in United States */
 static RT_OPERATING_CLASS RTW_OP_CLASS_US[] = {
 	/* 0, OP_CLASS_NULL */	{  0,  0, {}},
@@ -111,5 +113,7 @@ u8 translate_percentage_to_rcpi(u32 SignalStrengthIndex)
 	/* Translate to dBm (x=y-100) */
 	return translate_dbm_to_rcpi(SignalStrengthIndex - 100);
 }
+
+#endif /* !CONFIG_RUST || HOST_RM_TEST */
 
 #endif /* CONFIG_RTW_80211K */
