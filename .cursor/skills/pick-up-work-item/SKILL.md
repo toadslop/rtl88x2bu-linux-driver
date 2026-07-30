@@ -37,7 +37,20 @@ but no PRs could be changed**).
 
 This repo tracks work on **GitHub Issues** with draft specs in
 [`docs/rust-migration/issues/`](../../../docs/rust-migration/issues/README.md).
-Each implementable child targets **~200 lines** of meaningful change.
+Each implementable child targets **~200 lines** of meaningful change
+(**≤250 changed lines per PR** — see [`plan-stacked-prs`](../plan-stacked-prs/SKILL.md)).
+
+## PR size (Path B — mandatory)
+
+Oversized PRs (400–600 lines) are a recurring failure mode. Path B **must**:
+
+1. **Plan:** every PR row in the stack table has an estimated Δ ≤ 250
+2. **Implement:** run `git diff --shortstat` against the stack base **before each
+   commit**; do not open a PR above 250 changed lines
+3. **Split:** when scope grows, add PRs to the stack — never ship one large PR
+
+Details: [`plan-stacked-prs`](../plan-stacked-prs/SKILL.md#pr-size-limit-mandatory--read-first)
+and [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md#3-pr-size-gate-mandatory--before-commit).
 
 ## PR descriptions — tag @toadslop (mandatory)
 
@@ -215,8 +228,8 @@ report.
 |------|----------|---------|
 | 1 | [`triage-open-issues`](../triage-open-issues/SKILL.md) | Close issues already done but still open |
 | 2 | [`select-ready-issue`](../select-ready-issue/SKILL.md) | Pick one open, unblocked, ready issue |
-| 3 | [`plan-stacked-prs`](../plan-stacked-prs/SKILL.md) | Split into ~200 LOC stacked PRs (plan only) |
-| 4 | [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) | Implement, open PRs **ready for review** (not draft), babysit |
+| 3 | [`plan-stacked-prs`](../plan-stacked-prs/SKILL.md) | Split into stacked PRs with **≤250 changed lines each** (target ~200); plan only |
+| 4 | [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) | Implement one PR at a time; **run size gate before each commit**; open PRs ready for review (not draft); babysit |
 
 ### Open state + babysit (Path B only)
 
@@ -300,7 +313,7 @@ After completing **one** path, reply in chat with:
 | Open PRs at start | total / eligible / needs_prep / merge_ready / skipped — or "none" |
 | Triage | Issues closed (`#N` + reason) or "none" / "n/a (Path A with changes)" / triage results after A no-op fall-through |
 | Selected issue | Draft ID, GitHub `#N`, title — Path B only |
-| Plan | PR stack table — Path B only |
+| Plan | PR stack table with **Est. Δ ≤ 250 per row** — Path B only |
 | Implementation | PR links, babysit/CI status — Path B only |
 | PR prep | Per-PR status from prepare-all — Path A only |
 | New drafts | Files/issues created — Path C only |

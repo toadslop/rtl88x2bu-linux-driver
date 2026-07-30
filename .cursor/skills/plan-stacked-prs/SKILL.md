@@ -2,9 +2,10 @@
 name: plan-stacked-prs
 description: >-
   Path B step 3 of pick-up-work-item. Splits a selected migration issue into
-  stacked PRs of ~200 lines each and produces an implementation plan. Uses
-  Cursor Plan mode when available. Auto-applies after select-ready-issue. Do NOT
-  implement code in this step — use implement-stacked-prs next.
+  stacked PRs of ~200 lines each (hard max 250 changed lines per PR) and
+  produces an implementation plan with per-PR LOC estimates. Uses Cursor Plan
+  mode when available. Auto-applies after select-ready-issue. Do NOT implement
+  code in this step — use implement-stacked-prs next.
 metadata:
   parent-skill: pick-up-work-item
   path: B
@@ -14,8 +15,51 @@ metadata:
 
 # Plan Stacked PRs
 
-Turn one selected issue into a **stack of ~200 LOC pull requests**. Planning
-only — no code changes in this step.
+Turn one selected issue into a **stack of small, independently mergeable pull
+requests**. Planning only — no code changes in this step.
+
+## PR size limit (mandatory — read first)
+
+**This is the most common planning failure.** Agents routinely open 400–600 line
+PRs when the repo standard is **~200 lines per PR**. Treat the limit as a **hard
+constraint**, not a suggestion.
+
+| Rule | Value |
+|------|-------|
+| **Target** | ~200 changed lines per PR |
+| **Hard maximum** | **250 changed lines** — never plan a PR above this |
+| **If over max** | Add another PR to the stack; do not ship one large PR |
+
+**How to measure (same check `implement-stacked-prs` runs before opening a PR):**
+
+```bash
+git add -A   # stage untracked files before measuring
+# Merge-base → working tree (no ..HEAD): includes staged + unstaged changes
+git diff --shortstat $(git merge-base HEAD origin/<base>)
+# Example output:  12 files changed, 187 insertions(+), 42 deletions(-)
+# Budget = insertions + deletions  →  187 + 42 = 229  (OK, under 250)
+```
+
+Count **insertions + deletions** against the PR's stack base (`master` for PR1,
+previous PR branch for PR2+). This matches what reviewers see on GitHub.
+
+**Plan-time estimation (before writing code):**
+
+1. Skim the C/Rust files in scope; note function groups and line counts.
+2. For **each planned PR**, list files and assign an **estimated Δ** (changed lines).
+3. If a single PR's estimate exceeds **250**, split it — use the axes below.
+4. If the **whole issue** estimates above 250, the stack has **at least 2 PRs**.
+   A `size/~200` label or `estimate_loc: 200` on the issue does **not** mean
+   "one PR" — it means one *slice*; oversized source still needs multiple PRs.
+
+**Wrong vs right:**
+
+| Wrong | Right |
+|-------|-------|
+| One 500-line PR for the whole issue | Stack of 3 PRs (~170 + ~190 + ~140) |
+| "Tests + port + Makefile swap" in one PR | PR1 vectors, PR2 Rust port, PR3 Makefile swap |
+| "I'll keep it small" with no LOC estimate | Every plan row has an estimated Δ ≤ 250 |
+| Treating ~200 as "up to 600 is fine" | >250 is a planning bug — split again |
 
 ## Prerequisite: Plan mode (preferred)
 
@@ -29,14 +73,14 @@ only — no code changes in this step.
 If Plan mode is **not** available, produce the same structured plan inline in
 chat. Do not skip planning and jump to implementation.
 
-## Sizing rules
+## Split axes (use when estimate > 250)
 
-From [`test-plan.md`](../../../docs/rust-migration/test-plan.md) and issue README:
+From [`test-plan.md`](../../../docs/rust-migration/test-plan.md) and
+[`issues/README.md`](../../../docs/rust-migration/issues/README.md):
 
-- Target **~200 meaningful lines** per PR (roughly 150–250)
 - One logical slice per PR — do not mix unrelated units
-- If the issue draft is already ~200 LOC (most `wave*` children), it may be **one PR**
-- If larger (or you discover more scope in the C source), split into **2+ stacked PRs**
+- Default to **more PRs, smaller diffs** when unsure
+- Re-split during implementation if the diff grows past 250 — return here
 
 **Good split axes for this repo:**
 
@@ -64,10 +108,13 @@ flowchart LR
   PR2 --> PR3[PR3 based on PR2]
 ```
 
-| PR | Base branch | Head branch | Scope (~LOC) | Gates |
-|----|-------------|-------------|--------------|-------|
-| 1 | `master` | `cursor/w3-04a-type-str-abc1` | Freeze L2 vectors (~180) | L2 |
-| 2 | `cursor/w3-04a-type-str-abc1` | `cursor/w3-04b-type-str-rust-abc1` | Rust port + Makefile swap (~200) | L0, L1, L2 |
+| PR | Base branch | Head branch | Est. Δ (lines) | Gates |
+|----|-------------|-------------|----------------|-------|
+| 1 | `master` | `cursor/w3-04a-type-str-abc1` | ~180 (must be ≤250) | L2 |
+| 2 | `cursor/w3-04a-type-str-abc1` | `cursor/w3-04b-type-str-rust-abc1` | ~200 (must be ≤250) | L0, L1, L2 |
+
+Every row **must** show an estimated Δ. Reject your own plan if any row is blank
+or above 250.
 
 ## Plan contents (required sections)
 
@@ -86,6 +133,7 @@ The table above — one row per PR.
 For each PR:
 
 - **Goal** — one sentence
+- **Estimated Δ** — insertions + deletions vs stack base (must be ≤250)
 - **Files touched** — explicit paths
 - **Out of scope** — what this PR deliberately does not do
 - **Verification** — commands (from `AGENTS.md` / `test-plan.md`)
