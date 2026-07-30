@@ -107,6 +107,7 @@ gh pr create --base <stack-parent> --head <branch> --title "<title>" --body "<bo
 
 PR body should include:
 
+- **`@toadslop`** — maintainer notification (required; near the top of the body)
 - `Closes #N` or `Part of #N` (use **Closes** only on the final PR of the stack)
 - Gates executed
 - Stack diagram or "PR 2 of 3 — base: `cursor/...`"

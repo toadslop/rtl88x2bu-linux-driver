@@ -34,6 +34,22 @@ This repo tracks work on **GitHub Issues** with draft specs in
 [`docs/rust-migration/issues/`](../../../docs/rust-migration/issues/README.md).
 Each implementable child targets **~200 lines** of meaningful change.
 
+## PR descriptions — tag @toadslop (mandatory)
+
+Every pull request opened or materially updated during this workflow must
+**tag `@toadslop`** in the description so the maintainer is notified for review.
+
+| When | Requirement |
+|------|-------------|
+| `ManagePullRequest` `create_pr` | Include `@toadslop` in `body` (first paragraph or a `**Reviewer:** @toadslop` line) |
+| `gh pr create` | Same — `@toadslop` in `--body` |
+| `ManagePullRequest` `update_pr` | If the existing body lacks `@toadslop`, add it in the same update |
+| Knit follow-up PRs (Path A via `prepare-pr-for-merge`) | Same rule |
+
+This applies to Path B implementation PRs, Path C docs PRs, and any follow-up
+PRs opened while preparing existing work. Do not omit the tag on stacked PRs
+(PR2+).
+
 ## Path selection (mandatory — run first)
 
 Before triage, planning, or implementation, list open PRs and apply the same
@@ -128,8 +144,9 @@ after triage. Skipped open PRs may still exist — note them in the report.
 New PRs from this path must land in **open** (ready-for-review) state — not
 draft:
 
-- `ManagePullRequest` `create_pr` with `draft: false` (default).
-- `gh pr create` without `--draft`.
+- `ManagePullRequest` `create_pr` with `draft: false` (default); **`body` must
+  include `@toadslop`** (see **PR descriptions** above).
+- `gh pr create` without `--draft`; include `@toadslop` in `--body`.
 - If a PR was opened as draft by mistake: `gh pr ready <number>`.
 
 **Babysit each PR** until CI is green before opening the next stack PR (see
@@ -177,6 +194,7 @@ implement one immediately. Wait for an explicit follow-up or a new pick-up run
 | Report `human action required` when eligible PRs stay blocked | Imply the next pick-up will fix blocked PRs automatically |
 | Honor explicit user override to skip PR prep | Ignore a clear "start new work" instruction |
 | Open new PRs ready for review (Path B) | Open implementation PRs as drafts |
+| Tag `@toadslop` in every PR description | Omit maintainer notification on new/updated PRs |
 | Babysit new PRs until CI is green (Path B) | Skip babysit after opening a stack |
 | Draft 10–20 issues when frontier is empty (Path C) | Draft only 1–2 tickets when a tranche is missing |
 | Close issues with evidence they are done | Merge PRs without explicit user instruction |

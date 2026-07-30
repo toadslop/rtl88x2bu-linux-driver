@@ -109,6 +109,7 @@ a follow-up PR** for any unresolved knit feedback.
 4. **Verify** — run applicable gates from `AGENTS.md` for the knit fixes.
 5. **Push and open PR** — push the branch and create a PR targeting `master` via
    `ManagePullRequest` `create_pr`. In the body:
+   - **`@toadslop`** — maintainer notification (required; near the top).
    - Link the parent PR (e.g. "Follow-up to #N — addresses reviewer nits").
    - List each knit addressed (with thread links or short quotes).
    - Note that it should merge **after** the parent PR lands (or rebase onto
