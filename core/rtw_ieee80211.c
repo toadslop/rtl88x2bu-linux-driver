@@ -2954,6 +2954,7 @@ u8 *rtw_set_multi_ap_ie_ext(u8 *pbuf, uint *frlen, u8 val)
 }
 #endif /* CONFIG_RTW_MULTI_AP */
 
+#if !defined(CONFIG_RUST) || defined(HOST_IEEE80211_REST_TEST)
 /* Baron adds to avoid FreeBSD warning */
 int ieee80211_is_empty_essid(const char *essid, int essid_len)
 {
@@ -2997,6 +2998,7 @@ int ieee80211_get_hdrlen(u16 fc)
 
 	return hdrlen;
 }
+#endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
 u8	rtw_ht_mcsset_to_nss(u8 *supp_mcs_set)
 {
@@ -3030,6 +3032,7 @@ u32	rtw_ht_mcs_set_to_bitmap(u8 *mcs_set, u8 nss)
 	return bitmap;
 }
 
+#if !defined(CONFIG_RUST) || defined(HOST_IEEE80211_REST_TEST)
 /* show MCS rate, unit: 100Kbps */
 u16 rtw_ht_mcs_rate(u8 bw_40MHz, u8 short_GI, unsigned char *MCS_rate)
 {
@@ -3155,6 +3158,7 @@ int rtw_action_frame_parse(const u8 *frame, u32 frame_len, u8 *category, u8 *act
 
 	return _TRUE;
 }
+#endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
 static const char *_action_public_str[] = {
 	[ACT_PUBLIC_BSSCOEXIST]				= "ACT_PUB_BSSCOEXIST",
