@@ -33,7 +33,8 @@ constraint**, not a suggestion.
 **How to measure (same check `implement-stacked-prs` runs before opening a PR):**
 
 ```bash
-# Merge-base → working tree (no ..HEAD): includes uncommitted + committed work
+git add -A   # stage untracked files before measuring
+# Merge-base → working tree (no ..HEAD): includes staged + unstaged changes
 git diff --shortstat $(git merge-base HEAD origin/<base>)
 # Example output:  12 files changed, 187 insertions(+), 42 deletions(-)
 # Budget = insertions + deletions  →  187 + 42 = 229  (OK, under 250)

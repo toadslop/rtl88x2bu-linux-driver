@@ -67,7 +67,8 @@ that prevents 400–600 line PRs.
 ```bash
 BASE=<stack-base>   # master for PR1, or previous PR branch for PR2+
 git fetch origin "$BASE"
-# Merge-base → working tree (no ..HEAD): includes uncommitted + committed work
+git add -A   # stage untracked files (new rust/*.rs, harness files) before measuring
+# Merge-base → working tree (no ..HEAD): includes staged + unstaged changes
 STAT=$(git diff --shortstat "$(git merge-base HEAD "origin/$BASE")")
 echo "$STAT"
 # Parse insertions + deletions; sum must be ≤ 250
@@ -101,6 +102,9 @@ make clean && make KDIR=/opt/linux LLVM=1 -j"$(nproc)"
 Do not open a PR with failing gates for its scope.
 
 ### 5. Commit and push
+
+Re-run the step 3 size gate (same commands) after gate fixes — L0/L2 repair
+edits must not push the PR over 250.
 
 ```bash
 git add -A
