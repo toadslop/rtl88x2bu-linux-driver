@@ -1652,6 +1652,7 @@ ParseRes rtw_ieee802_11_parse_elems(u8 *start, uint len,
 
 }
 
+#if !defined(CONFIG_RUST) || defined(HOST_IEEE80211_REST_TEST)
 static u8 key_char2num(u8 ch);
 static u8 key_char2num(u8 ch)
 {
@@ -1689,6 +1690,7 @@ u8 convert_ip_addr(u8 hch, u8 mch, u8 lch)
 {
 	return (key_char2num(hch) * 100) + (key_char2num(mch) * 10) + key_char2num(lch);
 }
+#endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
 #ifdef CONFIG_PLATFORM_INTEL_BYT
 #define MAC_ADDRESS_LEN 12
@@ -1719,6 +1721,7 @@ int rtw_get_mac_addr_intel(unsigned char *buf)
 }
 #endif /* CONFIG_PLATFORM_INTEL_BYT */
 
+#if !defined(CONFIG_RUST) || defined(HOST_IEEE80211_REST_TEST)
 /*
  * Description:
  * rtw_check_invalid_mac_address:
@@ -1826,6 +1829,7 @@ err_chk:
 	_rtw_memcpy(out, mac, ETH_ALEN);
 	RTW_INFO("%s mac addr:"MAC_FMT"\n", __func__, MAC_ARG(out));
 }
+#endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
 #ifdef CONFIG_RTW_DEBUG
 #ifdef CONFIG_80211N_HT
