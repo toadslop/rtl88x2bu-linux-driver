@@ -2439,6 +2439,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_wnm.o \
 		core/rtw_mbo.o \
 		core/rtw_rm_util.o \
+		core/rtw_rm_util_rest.o \
 		core/efuse/rtw_efuse.o \
 		core/rtw_roch.o
 
