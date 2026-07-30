@@ -711,6 +711,7 @@ err_chk:
 	RTW_INFO("%s mac addr:" MAC_FMT "\n", __func__, MAC_ARG(out));
 }
 
+#if defined(HOST_IEEE80211_REST_CHBW_TEST) || !defined(HOST_IEEE80211_REST_TEST)
 /*
  * W3-31: channel/bandwidth grouping helpers extracted from core/rtw_ieee80211.c.
  */
@@ -870,6 +871,7 @@ void rtw_sync_chbw(u8 *req_ch, u8 *req_bw, u8 *req_offset, u8 *g_ch, u8 *g_bw,
 		*g_offset = *req_offset;
 	}
 }
+#endif /* HOST_IEEE80211_REST_CHBW_TEST || !HOST_IEEE80211_REST_TEST */
 #endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
 #if defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)

@@ -27,3 +27,18 @@ void host_mac_str_test_set_random32(u32 val)
 {
 	host_random32 = val;
 }
+
+#if defined(RUST_IEEE80211_REST_ORACLE) && !defined(HOST_RF_TEST)
+/*
+ * Satisfy rust/rtw_ieee80211_rest.rs chbw link for non-chbw IE rest
+ * harnesses; only called if sync_chbw runs (chbw vectors use rf_rest).
+ */
+u8 rtw_get_offset_by_chbw(u8 ch, u8 bw, u8 *r_offset)
+{
+	(void)ch;
+	(void)bw;
+	if (r_offset)
+		*r_offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+	return 0;
+}
+#endif
