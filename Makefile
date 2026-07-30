@@ -2545,6 +2545,7 @@ $(MODULE_NAME)-y += rust/rtw_ieee80211_rest.o
 $(MODULE_NAME)-y += rust/rtw_security.o
 $(MODULE_NAME)-y += rust/rtw_security_rest.o
 $(MODULE_NAME)-y += rust/rtw_wlan_util.o
+$(MODULE_NAME)-y += rust/rtw_rm_util.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
@@ -2909,6 +2910,24 @@ rust-objects-rtw-wlan-util-c:
 rust-check-symbols-rtw-wlan-util: rust-objects-rtw-wlan-util-c rust-objects-rtw-wlan-util
 	$(MAKE) rust-check-symbols OLD=tests/host/wlan_util/wlan_util_rate_c_ref.o NEW=rust/rtw_wlan_util.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_wlan_util_rate.allow
+
+# W3-33: compare pre-port core/rtw_rm_util_rest.o against rust/rtw_rm_util.o.
+rust-objects-rtw-rm-util:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-rtw-rm-util"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_rm_util.o
+
+rust-objects-rtw-rm-util-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_RM_TEST -DCONFIG_RTW_80211K \
+		-o tests/host/rm/rm_rest_c_ref.o core/rtw_rm_util_rest.c
+
+rust-check-symbols-rtw-rm-util: rust-objects-rtw-rm-util-c rust-objects-rtw-rm-util
+	$(MAKE) rust-check-symbols OLD=tests/host/rm/rm_rest_c_ref.o NEW=rust/rtw_rm_util.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_rm_util.allow
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production
