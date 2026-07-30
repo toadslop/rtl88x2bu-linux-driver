@@ -8,3 +8,4 @@ test_ie_rest_mac_str_rust
 test_ie_rest_chbw
 test_ie_rest_chbw_rust
 test_ie_rest_frame_ht
+test_ie_rest_frame_ht_rust

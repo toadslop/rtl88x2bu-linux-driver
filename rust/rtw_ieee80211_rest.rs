@@ -2,7 +2,8 @@
 //! IEEE 802.11 rest helpers — Rust port of `core/rtw_ieee80211_rest.c` rate
 //! classification slice (W3-26), WPA/RSN cipher suite getters (W3-27), and
 //! WPA/RSN IE parse (W3-28), and WAPI/WPS/sec-IE getters (W3-29), and
-//! string/MAC address helpers (W3-30), and chbw grouping/sync (W3-31).
+//! string/MAC address helpers (W3-30), and chbw grouping/sync (W3-31), and
+//! frame header / HT MCS helpers (W3-32).
 
 #![allow(
     dead_code,
@@ -1340,4 +1341,271 @@ pub extern "C" fn rtw_sync_chbw(
             *g_offset = *req_offset;
         }
     }
+}
+
+// --- W3-32: frame header and HT MCS helpers ---
+
+const RTW_IEEE80211_FCTL_FTYPE: u16 = 0x000c;
+const RTW_IEEE80211_FCTL_STYPE: u16 = 0x00f0;
+const RTW_IEEE80211_FCTL_FROMDS: u16 = 0x0200;
+const RTW_IEEE80211_FCTL_TODS: u16 = 0x0100;
+const RTW_IEEE80211_FTYPE_MGMT: u16 = 0x0000;
+const RTW_IEEE80211_FTYPE_DATA: u16 = 0x0008;
+const RTW_IEEE80211_FTYPE_CTL: u16 = 0x0004;
+const RTW_IEEE80211_STYPE_QOS_DATA: u16 = 0x0080;
+const RTW_IEEE80211_STYPE_ACTION: u16 = 0x00d0;
+const RTW_IEEE80211_STYPE_CTS: u16 = 0x00c0;
+const RTW_IEEE80211_STYPE_ACK: u16 = 0x00d0;
+const RTW_WLAN_CATEGORY_P2P: U8 = 0x7f;
+const ACT_PUBLIC_MAX: U8 = 32;
+
+#[repr(C)]
+struct RtwIeee80211Hdr3Addr {
+    frame_ctl: u16,
+    duration_id: u16,
+    addr1: [U8; ETH_ALEN],
+    addr2: [U8; ETH_ALEN],
+    addr3: [U8; ETH_ALEN],
+    seq_ctl: u16,
+}
+
+fn wlan_fc_get_type(fc: u16) -> u16 {
+    fc & RTW_IEEE80211_FCTL_FTYPE
+}
+
+fn wlan_fc_get_stype(fc: u16) -> u16 {
+    fc & RTW_IEEE80211_FCTL_STYPE
+}
+
+fn ht_cap_ele_sup_mcs_set(ht_cap: *const U8) -> *const U8 {
+    unsafe { ht_cap.add(3) }
+}
+
+fn get_ht_cap_ele_tx_mcs_def(ht_cap: *const U8) -> U8 {
+    le_bits_to_1byte(unsafe { ht_cap.add(15) }, 0, 1)
+}
+
+fn get_ht_cap_ele_trx_mcs_neq(ht_cap: *const U8) -> U8 {
+    le_bits_to_1byte(unsafe { ht_cap.add(15) }, 1, 1)
+}
+
+fn get_ht_cap_ele_tx_max_ss(ht_cap: *const U8) -> U8 {
+    le_bits_to_1byte(unsafe { ht_cap.add(15) }, 2, 2)
+}
+
+#[cfg(host_ieee80211_rest_test)]
+fn rtw_ht_mcsset_to_nss_inner(supp_mcs_set: *const U8) -> U8 {
+    if supp_mcs_set.is_null() {
+        return 1;
+    }
+    unsafe {
+        if *supp_mcs_set.add(3) != 0 {
+            4
+        } else if *supp_mcs_set.add(2) != 0 {
+            3
+        } else if *supp_mcs_set.add(1) != 0 {
+            2
+        } else if *supp_mcs_set.add(0) != 0 {
+            1
+        } else {
+            1
+        }
+    }
+}
+
+#[cfg(not(host_ieee80211_rest_test))]
+extern "C" {
+    fn rtw_ht_mcsset_to_nss(supp_mcs_set: *mut U8) -> U8;
+}
+
+#[cfg(not(host_ieee80211_rest_test))]
+fn rtw_ht_mcsset_to_nss_inner(supp_mcs_set: *const U8) -> U8 {
+    unsafe { rtw_ht_mcsset_to_nss(supp_mcs_set as *mut U8) }
+}
+
+fn ht_mcs_rate_from_byte(byte: U8, idx: usize, bw_40: U8, short_gi: U8) -> u16 {
+    if byte == 0 {
+        return 0;
+    }
+    let bw40 = bw_40 != 0;
+    let sgi = short_gi != 0;
+    let bit = |n: u32| -> U8 { 1u8 << n };
+    macro_rules! rate {
+        ($b7:expr, $b6:expr, $b5:expr, $b4:expr, $b3:expr, $b2:expr, $b1:expr, $b0:expr) => {
+            if byte & bit(7) != 0 {
+                if bw40 { if sgi { $b7.0 } else { $b7.1 } } else if sgi { $b7.2 } else { $b7.3 }
+            } else if byte & bit(6) != 0 {
+                if bw40 { if sgi { $b6.0 } else { $b6.1 } } else if sgi { $b6.2 } else { $b6.3 }
+            } else if byte & bit(5) != 0 {
+                if bw40 { if sgi { $b5.0 } else { $b5.1 } } else if sgi { $b5.2 } else { $b5.3 }
+            } else if byte & bit(4) != 0 {
+                if bw40 { if sgi { $b4.0 } else { $b4.1 } } else if sgi { $b4.2 } else { $b4.3 }
+            } else if byte & bit(3) != 0 {
+                if bw40 { if sgi { $b3.0 } else { $b3.1 } } else if sgi { $b3.2 } else { $b3.3 }
+            } else if byte & bit(2) != 0 {
+                if bw40 { if sgi { $b2.0 } else { $b2.1 } } else if sgi { $b2.2 } else { $b2.3 }
+            } else if byte & bit(1) != 0 {
+                if bw40 { if sgi { $b1.0 } else { $b1.1 } } else if sgi { $b1.2 } else { $b1.3 }
+            } else if byte & bit(0) != 0 {
+                if bw40 { if sgi { $b0.0 } else { $b0.1 } } else if sgi { $b0.2 } else { $b0.3 }
+            } else {
+                0
+            }
+        };
+    }
+    match idx {
+        3 => rate!(
+            (6000, 5400, 2889, 2600),
+            (5400, 4860, 2600, 2340),
+            (4800, 4320, 2311, 2080),
+            (3600, 3240, 1733, 1560),
+            (2400, 2160, 1156, 1040),
+            (1800, 1620, 867, 780),
+            (1200, 1080, 578, 520),
+            (600, 540, 289, 260)
+        ),
+        2 => rate!(
+            (4500, 4050, 2167, 1950),
+            (4050, 3645, 1950, 1750),
+            (3600, 3240, 1733, 1560),
+            (2700, 2430, 1300, 1170),
+            (1800, 1620, 867, 780),
+            (1350, 1215, 650, 585),
+            (900, 810, 433, 390),
+            (450, 405, 217, 195)
+        ),
+        1 => rate!(
+            (3000, 2700, 1444, 1300),
+            (2700, 2430, 1300, 1170),
+            (2400, 2160, 1156, 1040),
+            (1800, 1620, 867, 780),
+            (1200, 1080, 578, 520),
+            (900, 810, 433, 390),
+            (600, 540, 289, 260),
+            (300, 270, 144, 130)
+        ),
+        _ => rate!(
+            (1500, 1350, 722, 650),
+            (1350, 1215, 650, 585),
+            (1200, 1080, 578, 520),
+            (900, 810, 433, 390),
+            (600, 540, 289, 260),
+            (450, 405, 217, 195),
+            (300, 270, 144, 130),
+            (150, 135, 72, 65)
+        ),
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn ieee80211_is_empty_essid(essid: *const i8, essid_len: c_int) -> c_int {
+    if essid.is_null() || essid_len <= 0 {
+        return 1;
+    }
+    unsafe {
+        if essid_len == 1 && *essid == b' ' as i8 {
+            return 1;
+        }
+        let mut len = essid_len;
+        while len > 0 {
+            len -= 1;
+            if *essid.add(len as usize) != 0 {
+                return 0;
+            }
+        }
+    }
+    1
+}
+
+#[no_mangle]
+pub extern "C" fn ieee80211_get_hdrlen(fc: u16) -> c_int {
+    let mut hdrlen = 24;
+    match wlan_fc_get_type(fc) {
+        RTW_IEEE80211_FTYPE_DATA => {
+            if fc & RTW_IEEE80211_STYPE_QOS_DATA != 0 {
+                hdrlen += 2;
+            }
+            if fc & RTW_IEEE80211_FCTL_FROMDS != 0 && fc & RTW_IEEE80211_FCTL_TODS != 0 {
+                hdrlen += 6;
+            }
+        }
+        RTW_IEEE80211_FTYPE_CTL => {
+            hdrlen = match wlan_fc_get_stype(fc) {
+                RTW_IEEE80211_STYPE_CTS | RTW_IEEE80211_STYPE_ACK => 10,
+                _ => 16,
+            };
+        }
+        _ => {}
+    }
+    hdrlen
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_ht_mcs_rate(bw_40mhz: U8, short_gi: U8, mcs_rate: *mut U8) -> u16 {
+    if mcs_rate.is_null() {
+        return 0;
+    }
+    unsafe {
+        for idx in (0..4).rev() {
+            let byte = *mcs_rate.add(idx);
+            if byte != 0 {
+                return ht_mcs_rate_from_byte(byte, idx, bw_40mhz, short_gi);
+            }
+        }
+        ht_mcs_rate_from_byte(*mcs_rate, 0, bw_40mhz, short_gi)
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_ht_cap_get_rx_nss(ht_cap: *mut U8) -> U8 {
+    if ht_cap.is_null() {
+        return 1;
+    }
+    rtw_ht_mcsset_to_nss_inner(ht_cap_ele_sup_mcs_set(ht_cap))
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_ht_cap_get_tx_nss(ht_cap: *mut U8) -> U8 {
+    if ht_cap.is_null() {
+        return 1;
+    }
+    if get_ht_cap_ele_tx_mcs_def(ht_cap) != 0 && get_ht_cap_ele_trx_mcs_neq(ht_cap) != 0 {
+        return get_ht_cap_ele_tx_max_ss(ht_cap) + 1;
+    }
+    rtw_ht_cap_get_rx_nss(ht_cap)
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_action_frame_parse(
+    frame: *const U8,
+    frame_len: u32,
+    category: *mut U8,
+    action: *mut U8,
+) -> c_int {
+    let _ = frame_len;
+    if frame.is_null() {
+        return _FALSE;
+    }
+    unsafe {
+        let hdr = frame as *const RtwIeee80211Hdr3Addr;
+        let fc = (*hdr).frame_ctl;
+        if (fc & (RTW_IEEE80211_FCTL_FTYPE | RTW_IEEE80211_FCTL_STYPE))
+            != (RTW_IEEE80211_FTYPE_MGMT | RTW_IEEE80211_STYPE_ACTION)
+        {
+            return _FALSE;
+        }
+        let frame_body = frame.add(core::mem::size_of::<RtwIeee80211Hdr3Addr>());
+        let c = *frame_body;
+        let mut a = ACT_PUBLIC_MAX;
+        if c != RTW_WLAN_CATEGORY_P2P {
+            a = *frame_body.add(1);
+        }
+        if !category.is_null() {
+            *category = c;
+        }
+        if !action.is_null() {
+            *action = a;
+        }
+    }
+    _TRUE
 }
