@@ -10,7 +10,9 @@ if [ ! -f "${KO}" ]; then
 	exit 1
 fi
 
-# One symbol per line.
+# One symbol per linked Rust unit (rtw_rust_*_probe) or exported API symbol below.
+# Add a probe when a new rust/*.rs object is linked into 88x2bu.ko; document
+# any intentional omission here rather than leaving silent unlink gaps.
 PROBES="$(cat <<'EOF'
 rtw_rust_kbuild_probe
 rtw_rust_scaffold_init
@@ -30,8 +32,12 @@ rtw_rust_sha256_probe
 rtw_rust_sha256_prf_probe
 rtw_rust_rtw_crypto_wrap_probe
 rtw_rust_chplan_probe
+rtw_rust_chplan_rest_probe
+rtw_rust_io_rest_probe
+rtw_rust_rf_rest_probe
 rtw_rust_swcrypto_probe
 rtw_rust_ieee80211_probe
+rtw_rust_ieee80211_rest_probe
 rtw_rust_security_probe
 rtw_rust_security_rest_probe
 rtw_rust_wlan_util_probe

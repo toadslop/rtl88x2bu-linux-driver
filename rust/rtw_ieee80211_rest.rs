@@ -1609,3 +1609,8 @@ pub extern "C" fn rtw_action_frame_parse(
     }
     _TRUE
 }
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_ieee80211_rest_probe() -> c_int {
+    0x1e26
+}

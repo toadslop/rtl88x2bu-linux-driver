@@ -28,10 +28,10 @@ Add a GitHub Actions job that runs the **L0 build gate** on every pull request t
    export LIBCLANG_PATH=/usr/lib/llvm-18/lib
    make clean
    make KDIR=/opt/linux LLVM=1 -j"$(nproc)"
-   nm 88x2bu.ko | grep -E 'rtw_rust_kbuild_probe|rtw_rust_scaffold_init|rtw_rust_bindings_probe|rtw_rust_domain_types_probe|rtw_rust_aes_ctr_probe|rtw_rust_aes_omac1_probe|rtw_rust_gcmp_probe|rtw_rust_aes_siv_probe|rtw_rust_aes_ccm_probe|rtw_rust_aes_gcm_probe|rtw_rust_ccmp_probe|rtw_rust_aes_internal_probe|rtw_rust_aes_internal_enc_probe|rtw_rust_sha256_internal_probe|rtw_rust_sha256_probe|rtw_rust_sha256_prf_probe|rtw_rust_rtw_crypto_wrap_probe|aes_ctr_encrypt|aes_siv_encrypt|aes_ccm_ae|aes_ccm_ad|aes_gcm_ae|aes_gcm_ad|ccmp_get_pn|ccmp_decrypt|ccmp_encrypt|ccmp_encrypt_pv1|ccmp_256_decrypt|ccmp_256_encrypt|rijndaelKeySetupEnc|aes_encrypt_init|aes_encrypt|sha256_vector|hmac_sha256_vector|sha256_prf|sha256_prf_bits|os_memcmp_const|rtw_registrypriv_amsdu_mode'
+   ./scripts/ci/verify-ko-probes.sh 88x2bu.ko
    ```
 
-   This is the same canonical probe set documented in [`AGENTS.md`](../../../AGENTS.md) and [`dev-environment.md`](../dev-environment.md); extend it when new Rust objects are linked into `88x2bu.ko`.
+   The probe list lives in [`scripts/ci/verify-ko-probes.sh`](../../../scripts/ci/verify-ko-probes.sh) (also referenced from [`AGENTS.md`](../../../AGENTS.md)); extend it when new Rust objects are linked into `88x2bu.ko`.
 
 3. **Path filters:** trigger on any change under `core/`, `hal/`, `os_dep/`, `include/`, `platform/`, `rust/`, top-level `Makefile`, `dkms.conf`, or the workflow itself. Do **not** require L2 path overlap.
 
