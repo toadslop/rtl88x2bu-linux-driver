@@ -2954,7 +2954,6 @@ u8 *rtw_set_multi_ap_ie_ext(u8 *pbuf, uint *frlen, u8 val)
 }
 #endif /* CONFIG_RTW_MULTI_AP */
 
-#if !defined(CONFIG_RUST) || defined(HOST_IEEE80211_REST_TEST)
 /* Baron adds to avoid FreeBSD warning */
 int ieee80211_is_empty_essid(const char *essid, int essid_len)
 {
@@ -3156,7 +3155,6 @@ int rtw_action_frame_parse(const u8 *frame, u32 frame_len, u8 *category, u8 *act
 
 	return _TRUE;
 }
-#endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
 static const char *_action_public_str[] = {
 	[ACT_PUBLIC_BSSCOEXIST]				= "ACT_PUB_BSSCOEXIST",
