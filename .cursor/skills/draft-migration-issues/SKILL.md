@@ -1,7 +1,7 @@
 ---
 name: draft-migration-issues
 description: >-
-  Path C of pick-up-work-item (fallback when no open PRs and no ready issue).
+  Path C of pick-up-work-item (fallback when no PRs need prep and no ready issue).
   Analyzes in-progress epics and drafts a wave of new ~200 LOC child issues
   (typically 10–20 tickets) as markdown specs. Can file via file-issues.sh.
   Completes the pick-up workflow — do NOT select or implement a newly drafted

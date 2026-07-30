@@ -3,7 +3,8 @@ name: select-ready-issue
 description: >-
   Path B step 2 of pick-up-work-item. Selects one open rust-migration issue that
   is unblocked, not in-flight elsewhere, and ready to implement. Auto-applies
-  after triage-open-issues when no open PRs exist. Do NOT use to arbitrarily
+  after triage-open-issues when no PRs need prep (no open PRs, all skipped, or all
+  merge-ready). Do NOT use to arbitrarily
   skip dependency order without documenting why.
 metadata:
   parent-skill: pick-up-work-item
