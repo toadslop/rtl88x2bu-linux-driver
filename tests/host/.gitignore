@@ -61,3 +61,5 @@ vht/test_vht_restructure
 vht/test_vht_restructure_rust
 vht/librust_vht_restructure.a
 vht/test_vht_restructure_smoke
+vht/vht_restructure_c_ref.o
+vht/vht_restructure_rust_ref.o

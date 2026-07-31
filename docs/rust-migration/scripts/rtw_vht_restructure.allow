@@ -1,0 +1,4 @@
+# L1 allowlist for W3-36 PR4: host restructure oracle compares C vs Rust;
+# nss helpers and probe remain Rust-only in the restructure-test object.
+drop rtw_vht_nss_to_mcsmap
+drop rtw_rust_vht_probe

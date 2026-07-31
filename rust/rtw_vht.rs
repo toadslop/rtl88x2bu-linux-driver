@@ -11,11 +11,14 @@
     unreachable_pub
 )]
 
-#[cfg(host_vht_test)]
+#[cfg(any(host_vht_test, host_vht_restructure_test))]
 use std::os::raw::c_int;
 
 #[cfg(host_vht_restructure_test)]
-use std::os::raw::c_int;
+use std::os::raw::c_uint;
+
+#[cfg(not(any(host_vht_test, host_vht_restructure_test)))]
+use core::ffi::c_uint;
 
 #[cfg(not(any(host_vht_test, host_vht_restructure_test)))]
 use core::ffi::c_int;
@@ -59,10 +62,10 @@ pub extern "C" fn VHT_get_ss_from_map(vht_mcs_map: *mut u8) -> u8 {
     ss
 }
 
-#[cfg(host_vht_restructure_test)]
+#[cfg(any(host_vht_restructure_test, not(host_vht_test)))]
 mod restructure {
     use super::c_int;
-    use std::os::raw::c_uint;
+    use super::c_uint;
 
     const CHANNEL_WIDTH_20: u8 = 0;
     const CHANNEL_WIDTH_40: u8 = 1;
@@ -111,7 +114,25 @@ mod restructure {
         fn rtw_get_center_ch(ch: u8, bw: u8, offset: u8) -> u8;
     }
 
-    fn warn_on(_cond: c_int) {}
+    #[cfg(not(host_vht_restructure_test))]
+    mod kernel {
+        use super::*;
+
+        extern "C" {
+            fn rtw_rust_vht_warn_on(condition: c_int);
+        }
+
+        pub(super) fn warn_on(condition: c_int) {
+            unsafe { rtw_rust_vht_warn_on(condition) };
+        }
+    }
+
+    #[cfg(host_vht_restructure_test)]
+    mod kernel {
+        use super::c_int;
+
+        pub(super) fn warn_on(_condition: c_int) {}
+    }
 
     fn le_bits(p: *const u8, o: u32, l: u32) -> u8 {
         unsafe { (*p >> o) as u8 & ((1u32 << l) - 1) as u8 }
@@ -194,11 +215,11 @@ mod restructure {
                 }
             }
 
-            warn_on((rtw_rust_vht_chset_is_chbw_valid(chset, oper_ch, oper_bw, oper_offset, 1, 1) == 0) as c_int);
+            kernel::warn_on((rtw_rust_vht_chset_is_chbw_valid(chset, oper_ch, oper_bw, oper_offset, 1, 1) == 0) as c_int);
             if rtw_rust_vht_is_dfs_slave_with_rd(rfctl) != 0
                 && rtw_rust_vht_rfctl_dfs_domain_unknown(rfctl) == 0
             {
-                warn_on((rtw_rust_vht_chset_is_chbw_non_ocp(chset, oper_ch, oper_bw, oper_offset) != 0)
+                kernel::warn_on((rtw_rust_vht_chset_is_chbw_non_ocp(chset, oper_ch, oper_bw, oper_offset) != 0)
                     as c_int);
             }
 
@@ -212,7 +233,7 @@ mod restructure {
                 set_bits(out_vht_op_ie.add(3), 0, 8, cch);
                 set_bits(out_vht_op_ie.add(4), 0, 8, 0);
             } else {
-                warn_on(1);
+                kernel::warn_on(1);
             }
 
             *pout_len += rtw_build_vht_op_mode_notify_ie(padapter, out_ie.add(*pout_len as usize), oper_bw);
@@ -222,14 +243,14 @@ mod restructure {
     }
 }
 
-#[cfg(host_vht_restructure_test)]
+#[cfg(any(host_vht_restructure_test, not(host_vht_test)))]
 #[no_mangle]
 pub extern "C" fn rtw_restructure_vht_ie(
     padapter: *mut u8,
     in_ie: *mut u8,
     out_ie: *mut u8,
-    in_len: std::os::raw::c_uint,
-    pout_len: *mut std::os::raw::c_uint,
+    in_len: c_uint,
+    pout_len: *mut c_uint,
 ) -> u32 {
     restructure::restructure_vht_ie_impl(padapter, in_ie, out_ie, in_len, pout_len)
 }

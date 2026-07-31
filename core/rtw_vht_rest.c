@@ -71,7 +71,8 @@ u8 VHT_get_ss_from_map(u8 *vht_mcs_map)
 
 #endif /* nss C oracle guard */
 
-#if !defined(HOST_VHT_TEST) || defined(HOST_VHT_RESTRUCTURE_TEST)
+#if (!defined(CONFIG_RUST) || defined(HOST_VHT_RESTRUCTURE_TEST)) && \
+	(!defined(HOST_VHT_TEST) || defined(HOST_VHT_RESTRUCTURE_TEST))
 
 u32 rtw_restructure_vht_ie(_adapter *padapter, u8 *in_ie, u8 *out_ie, uint in_len, uint *pout_len)
 {
