@@ -23,6 +23,8 @@ on:
       - 'core/rtw_ieee80211_rest.c'
       - 'core/rtw_rm_util.c'
       - 'core/rtw_rm_util_rest.c'
+      - 'core/rtw_vht.c'
+      - 'core/rtw_vht_rest.c'
       - 'core/rtw_security.c'
       - 'core/rtw_security_rest.c'
       - 'core/rtw_wlan_util.c'
@@ -59,6 +61,8 @@ jobs:
               - 'core/rtw_ieee80211.c'
               - 'core/rtw_ieee80211_rest.c'
               - 'core/rtw_rm_util.c'
+              - 'core/rtw_vht.c'
+              - 'core/rtw_vht_rest.c'
               - 'core/rtw_security.c'
               - 'core/rtw_security_rest.c'
               - 'core/rtw_wlan_util.c'
@@ -117,3 +121,7 @@ jobs:
       - name: Host rm_rest parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/rm test
+
+      - name: Host vht_rest parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/vht test
