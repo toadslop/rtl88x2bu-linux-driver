@@ -84,6 +84,30 @@ def git_line_count(path: str, ref: str) -> int:
         return 0
 
 
+def baseline_loc_for_path(path: str, baseline_ref: str) -> int:
+    """Baseline C LOC for a source file at the configured import ref.
+
+    Files added after ``baseline_ref`` (driver updates predating Rust) use LOC
+    at the commit that first introduced the path so Rust ports receive fair
+    credit and C fallbacks stay symmetric.
+    """
+    bl = git_line_count(path, baseline_ref)
+    if bl > 0:
+        return bl
+    try:
+        intro = subprocess.check_output(
+            ["git", "log", "--diff-filter=A", "--format=%H", "-1", "--", path],
+            cwd=REPO_ROOT,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+        if intro:
+            return git_line_count(path, intro)
+    except subprocess.CalledProcessError:
+        pass
+    return line_count_at(path, None)
+
+
 def git_file_bytes(path: str, ref: str) -> bytes | None:
     try:
         return subprocess.check_output(
@@ -131,6 +155,8 @@ def load_module_objects(objects_text: str | None = None) -> list[str]:
             )
             sys.exit(1)
         text = MODULE_OBJECTS.read_text()
+    if text == "":
+        return []
     objs = [
         normalize_object_path(line) for line in text.splitlines() if line.strip()
     ]
@@ -148,6 +174,24 @@ def classify_object(obj_path: str) -> tuple[str | None, str]:
     return None, "unknown"
 
 
+def _ported_loc_for_parent(
+    parent_c: str,
+    rest_c: str | None,
+    rust_objs: list[str],
+    baseline_ref: str,
+    tree_ref: str | None,
+) -> int:
+    full_baseline = baseline_loc_for_path(parent_c, baseline_ref)
+    if not rust_objs:
+        return 0
+    if rest_c and rest_c != parent_c:
+        cur_rest = line_count_at(rest_c, tree_ref)
+        return max(0, min(full_baseline, full_baseline - cur_rest))
+    if line_count_at(rust_objs[0].replace(".o", ".rs"), tree_ref) > 0:
+        return full_baseline
+    return 0
+
+
 def compute_module_metrics(
     baseline_ref: str,
     tree_ref: str | None = None,
@@ -161,6 +205,9 @@ def compute_module_metrics(
     current_c_loc = 0
     current_rust_loc = 0
 
+    # Group linked objects by canonical baseline C path (each counted once).
+    groups: dict[str, dict[str, list[str] | None]] = {}
+
     for obj in objs:
         c_path, kind = classify_object(obj)
         if kind == "infra":
@@ -169,17 +216,42 @@ def compute_module_metrics(
             rust_port += 1
             rust_src = obj.replace(".o", ".rs")
             current_rust_loc += line_count_at(rust_src, tree_ref)
-            if c_path:
-                bl = git_line_count(c_path, baseline_ref)
-                total_baseline_loc += bl
-                ported_baseline_loc += bl
+            canonical = c_path or f"__unmapped__:{Path(obj).stem}"
+            groups.setdefault(canonical, {"rust": [], "rest_c": None})
+            groups[canonical]["rust"].append(obj)  # type: ignore[index]
         elif kind == "c" and c_path:
             c_linked += 1
-            bl = git_line_count(c_path, baseline_ref)
-            if bl == 0:
-                bl = line_count_at(c_path, tree_ref)
-            total_baseline_loc += bl
             current_c_loc += line_count_at(c_path, tree_ref)
+            groups.setdefault(c_path, {"rust": [], "rest_c": None})
+        else:
+            continue
+
+    # Attach rest-file hints from partial-port stems.
+    for canonical, grp in groups.items():
+        if canonical.startswith("__unmapped__:"):
+            continue
+        rest_candidates: set[str] = set()
+        for obj in grp["rust"]:  # type: ignore[union-attr]
+            stem = Path(obj).stem
+            if stem in PARTIAL_UNITS:
+                parent_c, rest_c = PARTIAL_UNITS[stem]
+                if parent_c == canonical and rest_c != parent_c:
+                    rest_candidates.add(rest_c)
+        if rest_candidates:
+            grp["rest_c"] = sorted(rest_candidates)[0]
+
+    for canonical, grp in groups.items():
+        if canonical.startswith("__unmapped__:"):
+            continue
+        bl = baseline_loc_for_path(canonical, baseline_ref)
+        total_baseline_loc += bl
+        ported_baseline_loc += _ported_loc_for_parent(
+            canonical,
+            grp["rest_c"],  # type: ignore[arg-type]
+            grp["rust"],  # type: ignore[arg-type]
+            baseline_ref,
+            tree_ref,
+        )
 
     link_units = c_linked + rust_port
     module_loc_pct = (
@@ -227,6 +299,8 @@ def compute_migration_units_metrics(
     baseline_scope_loc = 0
     ported_loc_est = 0
     rust_loc = 0
+    parent_ported: dict[str, int] = {}
+    parent_baseline: dict[str, int] = {}
 
     for stem in units:
         rust_path = f"rust/{stem}.rs"
@@ -234,21 +308,38 @@ def compute_migration_units_metrics(
 
         if stem in PARTIAL_UNITS:
             parent_c, rest_c = PARTIAL_UNITS[stem]
-            full_baseline = git_line_count(parent_c, baseline_ref)
-            cur_rest = line_count_at(rest_c, tree_ref)
-            unit_baseline = full_baseline
-            unit_ported = max(0, full_baseline - cur_rest)
+            if parent_c not in parent_baseline:
+                full_baseline = baseline_loc_for_path(parent_c, baseline_ref)
+                parent_baseline[parent_c] = full_baseline
+                baseline_scope_loc += full_baseline
+            if parent_c not in parent_ported:
+                if parent_c == rest_c:
+                    parent_ported[parent_c] = (
+                        parent_baseline[parent_c]
+                        if line_count_at(rust_path, tree_ref) > 0
+                        else 0
+                    )
+                else:
+                    cur_rest = line_count_at(rest_c, tree_ref)
+                    parent_ported[parent_c] = max(
+                        0,
+                        min(
+                            parent_baseline[parent_c],
+                            parent_baseline[parent_c] - cur_rest,
+                        ),
+                    )
         else:
             baseline_c = RUST_TO_BASELINE_C.get(stem)
             if not baseline_c:
                 continue
-            unit_baseline = git_line_count(baseline_c, baseline_ref)
+            unit_baseline = baseline_loc_for_path(baseline_c, baseline_ref)
+            baseline_scope_loc += unit_baseline
             unit_ported = (
                 unit_baseline if line_count_at(rust_path, tree_ref) > 0 else 0
             )
+            ported_loc_est += min(unit_ported, unit_baseline)
 
-        baseline_scope_loc += unit_baseline
-        ported_loc_est += min(unit_ported, unit_baseline)
+    ported_loc_est += sum(parent_ported.values())
 
     units_loc_pct = (
         100.0 * ported_loc_est / baseline_scope_loc if baseline_scope_loc else 0.0
@@ -267,19 +358,28 @@ def snapshot_at_ref(tree_ref: str, baseline_ref: str) -> dict:
         "scripts/ci/migration-module-objects.txt", tree_ref
     )
     makefile_bytes = git_file_bytes("Makefile", tree_ref)
+    # Do not fall back to the worktree object list when the ref lacks the file.
     objects_text = (
-        objects_bytes.decode("utf-8", errors="replace") if objects_bytes else None
+        objects_bytes.decode("utf-8", errors="replace")
+        if objects_bytes is not None
+        else ""
     )
     makefile_text = (
         makefile_bytes.decode("utf-8", errors="replace") if makefile_bytes else None
     )
-    return {
-        "module": compute_module_metrics(
+    module_metrics: dict | None
+    if objects_bytes is None:
+        module_metrics = None
+    else:
+        module_metrics = compute_module_metrics(
             baseline_ref, tree_ref, objects_text=objects_text
-        ),
+        )
+    return {
+        "module": module_metrics,
         "units": compute_migration_units_metrics(
             baseline_ref, tree_ref, makefile_text=makefile_text
         ),
+        "has_module_objects": objects_bytes is not None,
     }
 
 
@@ -292,8 +392,19 @@ def format_markdown(data: dict, baseline_label: str, baseline_ref: str) -> str:
         delta_section = (
             "\n### Change vs base branch\n\n"
             "| Metric | Δ |\n|--------|---|\n"
-            f"| Module LOC % | {delta['module_loc_pct']:+.1f} |\n"
-            f"| Module objects % | {delta['module_object_pct']:+.1f} |\n"
+        )
+        if delta.get("module_loc_pct") is not None:
+            delta_section += f"| Module LOC % | {delta['module_loc_pct']:+.1f} |\n"
+            delta_section += (
+                f"| Module objects % | {delta['module_object_pct']:+.1f} |\n"
+            )
+        else:
+            delta_section += (
+                "| Module LOC % | _n/a (base ref lacks "
+                "`migration-module-objects.txt`)_ |\n"
+                "| Module objects % | _n/a_ |\n"
+            )
+        delta_section += (
             f"| Migration units LOC % | {delta['migration_units_loc_pct']:+.1f} |\n"
         )
 
@@ -348,21 +459,28 @@ def main() -> int:
 
     if args.compare_ref:
         base_snap = snapshot_at_ref(args.compare_ref, baseline_ref)
-        result["delta"] = {
-            "module_loc_pct": round(
-                module["module_loc_pct"] - base_snap["module"]["module_loc_pct"],
-                1,
-            ),
-            "module_object_pct": round(
-                module["module_object_pct"] - base_snap["module"]["module_object_pct"],
-                1,
-            ),
+        delta: dict[str, float | None] = {
+            "module_loc_pct": None,
+            "module_object_pct": None,
             "migration_units_loc_pct": round(
                 units["migration_units_loc_pct"]
                 - base_snap["units"]["migration_units_loc_pct"],
                 1,
             ),
         }
+        if base_snap["module"] is not None:
+            delta["module_loc_pct"] = round(
+                module["module_loc_pct"] - base_snap["module"]["module_loc_pct"],
+                1,
+            )
+            delta["module_object_pct"] = round(
+                module["module_object_pct"]
+                - base_snap["module"]["module_object_pct"],
+                1,
+            )
+        result["compare_ref"] = args.compare_ref
+        result["compare_has_module_objects"] = base_snap["has_module_objects"]
+        result["delta"] = delta
 
     if args.json:
         print(json.dumps(result, indent=2))
