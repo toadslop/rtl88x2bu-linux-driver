@@ -2985,6 +2985,23 @@ rust-check-symbols-rtw-vht: rust-objects-rtw-vht-c rust-objects-rtw-vht-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/vht/vht_rest_c_ref.o NEW=tests/host/vht/vht_rest_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_vht.allow
 
+# W3-36 PR4: compare host C oracle for rtw_restructure_vht_ie against Rust kernel export.
+rust-objects-rtw-vht-restructure-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_VHT_RESTRUCTURE_TEST \
+		-o tests/host/vht/vht_restructure_c_ref.o core/rtw_vht_rest.c
+
+rust-objects-rtw-vht-restructure-rust-ref:
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_vht_restructure_test \
+		--emit=obj=tests/host/vht/vht_restructure_rust_ref.o \
+		--crate-type lib rust/rtw_vht.rs
+
+rust-check-symbols-rtw-vht-restructure: rust-objects-rtw-vht-restructure-c rust-objects-rtw-vht-restructure-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/vht/vht_restructure_c_ref.o NEW=tests/host/vht/vht_restructure_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_vht_restructure.allow
+
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production
 # L1 on a swap should compare against a kbuild-produced OLD.o from master.
