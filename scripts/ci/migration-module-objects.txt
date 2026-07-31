@@ -11,6 +11,7 @@ core/rtw_mlme_ext.o
 core/rtw_mi.o
 core/rtw_wlan_util.o
 core/rtw_vht.o
+core/rtw_vht_rest.o
 core/rtw_pwrctrl.o
 core/rtw_rf.o
 core/rtw_rf_rest.o
@@ -194,3 +195,4 @@ rust/rtw_security.o
 rust/rtw_security_rest.o
 rust/rtw_wlan_util.o
 rust/rtw_rm_util.o
+rust/rtw_vht.o

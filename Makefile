@@ -2579,6 +2579,7 @@ $(MODULE_NAME)-y += rust/rtw_security.o
 $(MODULE_NAME)-y += rust/rtw_security_rest.o
 $(MODULE_NAME)-y += rust/rtw_wlan_util.o
 $(MODULE_NAME)-y += rust/rtw_rm_util.o
+$(MODULE_NAME)-y += rust/rtw_vht.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
@@ -2963,6 +2964,23 @@ rust-objects-rtw-rm-util-rust-ref:
 rust-check-symbols-rtw-rm-util: rust-objects-rtw-rm-util-c rust-objects-rtw-rm-util-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/rm/rm_rest_c_ref.o NEW=tests/host/rm/rm_rest_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_rm_util.allow
+
+# W3-35: compare host C oracle (rtw_vht_rest.c) against host Rust oracle.
+rust-objects-rtw-vht-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_VHT_TEST -DROKU_PRIVATE \
+		-o tests/host/vht/vht_rest_c_ref.o core/rtw_vht_rest.c
+
+rust-objects-rtw-vht-rust-ref:
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_vht_test \
+		--emit=obj=tests/host/vht/vht_rest_rust_ref.o \
+		--crate-type lib rust/rtw_vht.rs
+
+rust-check-symbols-rtw-vht: rust-objects-rtw-vht-c rust-objects-rtw-vht-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/vht/vht_rest_c_ref.o NEW=tests/host/vht/vht_rest_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_vht.allow
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production

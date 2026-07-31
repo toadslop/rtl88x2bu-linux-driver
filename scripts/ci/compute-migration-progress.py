@@ -49,6 +49,7 @@ RUST_TO_BASELINE_C: dict[str, str] = {
     "rtw_security_rest": "core/rtw_security.c",
     "rtw_wlan_util": "core/rtw_wlan_util.c",
     "rtw_rm_util": "core/rtw_rm_util.c",
+    "rtw_vht": "core/rtw_vht.c",
 }
 
 # Partial ports: estimate ported LOC as baseline(full parent) - current(split/rest C file).
@@ -59,6 +60,7 @@ PARTIAL_UNITS: dict[str, tuple[str, str]] = {
     "rtw_ieee80211_rest": ("core/rtw_ieee80211.c", "core/rtw_ieee80211_rest.c"),
     "rtw_security_rest": ("core/rtw_security.c", "core/rtw_security_rest.c"),
     "rtw_rm_util": ("core/rtw_rm_util.c", "core/rtw_rm_util_rest.c"),
+    "rtw_vht": ("core/rtw_vht.c", "core/rtw_vht_rest.c"),
     "rtw_wlan_util": ("core/rtw_wlan_util.c", "core/rtw_wlan_util.c"),
     "aes_internal": ("core/crypto/aes-internal.c", "core/crypto/aes-internal.c"),
     "rtw_security": ("core/rtw_security.c", "core/rtw_security_rest.c"),
@@ -75,6 +77,7 @@ REST_C_TO_PARENT: dict[str, str] = {
     "core/rtw_ieee80211_rest.c": "core/rtw_ieee80211.c",
     "core/rtw_security_rest.c": "core/rtw_security.c",
     "core/rtw_rm_util_rest.c": "core/rtw_rm_util.c",
+    "core/rtw_vht_rest.c": "core/rtw_vht.c",
     "core/rtw_swcrypto_rest.c": "core/rtw_swcrypto.c",
 }
 

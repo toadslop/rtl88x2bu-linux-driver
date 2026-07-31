@@ -81,6 +81,11 @@ for path in "${changed[@]}"; do
 	| tests/host/rf/*)
 		add_target rust-check-symbols-rtw-rf-rest
 		;;
+	rust/rtw_vht.rs \
+	| core/rtw_vht_rest.c \
+	| tests/host/vht/*)
+		add_target rust-check-symbols-rtw-vht
+		;;
 	rust/*)
 		FULL_SUITE=1
 		break
@@ -99,6 +104,7 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-security-rest-misc
 	rust-check-symbols-rtw-wlan-util
 	rust-check-symbols-rtw-rf-rest
+	rust-check-symbols-rtw-vht
 )
 
 emit() {
