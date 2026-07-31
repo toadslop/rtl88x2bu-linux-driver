@@ -13,7 +13,7 @@
 )]
 
 /// Te0 lookup table (W2-11 part 1).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub static Te0: [u32; 256] = [
 
     0xc66363a5, 0xf87c7c84, 0xee777799, 0xf67b7b8d,
@@ -84,7 +84,7 @@ pub static Te0: [u32; 256] = [
 
 
 /// Td0 lookup table (W2-12 part 2).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub static Td0: [u32; 256] = [
     0x51f4a750, 0x7e416553, 0x1a17a4c3, 0x3a275e96,
     0x3bab6bcb, 0x1f9d45f1, 0xacfa58ab, 0x4be30393,
@@ -153,7 +153,7 @@ pub static Td0: [u32; 256] = [
 ];
 
 /// Td4s lookup table (W2-13 part 3, AES_SMALL_TABLES).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub static Td4s: [u8; 256] = [
     0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38,
     0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb,
@@ -190,7 +190,7 @@ pub static Td4s: [u8; 256] = [
 ];
 
 /// Round constants (W2-13 part 3, AES_SMALL_TABLES).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub static rcons: [u8; 10] = [
     0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36,
 ];
@@ -329,7 +329,7 @@ fn rijndael_key_setup_enc(rk: &mut [u32], cipher_key: &[u8], key_bits: i32) -> i
 }
 
 /// C ABI: `rijndaelKeySetupEnc` from `core/crypto/aes-internal.c` (W2-14).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rijndaelKeySetupEnc(
     rk: *mut u32,
     cipher_key: *const u8,
@@ -350,7 +350,7 @@ pub extern "C" fn rijndaelKeySetupEnc(
 }
 
 /// Link-time probe for L1 (distinct from exported data symbols).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_aes_internal_probe() -> core::ffi::c_int {
     Te0[0] as core::ffi::c_int
         + Td0[0] as core::ffi::c_int

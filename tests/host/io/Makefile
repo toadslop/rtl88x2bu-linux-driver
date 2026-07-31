@@ -1,5 +1,7 @@
 # Host L2 differential tests for core/rtw_io_rest.c (W3-18).
 
+include ../rust.mk
+
 ROOT     := ../../..
 CORE     := $(ROOT)/core
 HOST_INC := ../include
@@ -27,7 +29,7 @@ test_io: test_io.c $(IO_SRC) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_io.c $(IO_SRC) $(HOST_JSON)
 
 librust_io_rest.a: $(RUST_IO_REST)
-	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_io_rest_test --cfg dbg_io \
+	$(RUSTC) $(RUST_BASE_FLAGS) --cfg host_io_rest_test --cfg dbg_io \
 		--crate-type staticlib $(RUST_IO_REST) -o $@
 
 test-rust: test_io_rust

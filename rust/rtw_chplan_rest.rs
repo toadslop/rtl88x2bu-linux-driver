@@ -103,7 +103,7 @@ pub struct HostChplanAdapter {
     pub rf_ctl: HostRfCtl,
 }
 
-extern "C" {
+unsafe extern "C" {
     static RTW_ChannelPlanMap: ChplanEnt;
     static RTW_ChannelPlanMap_size: c_int;
 
@@ -182,7 +182,7 @@ fn process_beacon_hint_inner(
 }
 
 #[cfg(not(host_chplan_rest_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_process_beacon_hint(adapter: *mut c_void, bss: *mut c_void) -> u8 {
     if adapter.is_null() || bss.is_null() {
         return 0;
@@ -204,7 +204,7 @@ pub extern "C" fn rtw_process_beacon_hint(adapter: *mut c_void, bss: *mut c_void
 }
 
 #[cfg(host_chplan_rest_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_rest_process_beacon_hint(
     adapter: *mut HostChplanAdapter,
     bss: *mut HostWlanBssidEx,
@@ -308,7 +308,7 @@ fn chplan_ent_equal(a: &ChplanEnt, b: &ChplanEnt) -> bool {
 }
 
 #[cfg(not(host_chplan_rest_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn dump_chplan_ver(sel: *mut c_void) {
     let mut buf = [0u8; 12];
     let mut pos = 0;
@@ -323,7 +323,7 @@ pub extern "C" fn dump_chplan_ver(sel: *mut c_void) {
 }
 
 #[cfg(not(host_chplan_rest_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn dump_chplan_id_list(sel: *mut c_void) {
     let map_size = unsafe { RTW_ChannelPlanMap_size } as usize;
     let mut first = true;
@@ -372,7 +372,7 @@ fn chdef_5g_same(i: u8, j: u8) -> bool {
 }
 
 #[cfg(not(host_chplan_rest_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn dump_chplan_test(sel: *mut c_void) {
     let mut buf = [0u8; 96];
     for i in 0..RTW_CHD_2G_MAX {
@@ -470,7 +470,7 @@ pub extern "C" fn dump_chplan_test(sel: *mut c_void) {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_chplan_rest_probe() -> c_int {
     0x1717
 }

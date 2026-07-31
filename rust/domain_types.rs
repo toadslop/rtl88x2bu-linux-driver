@@ -14,7 +14,7 @@ pub use types::*;
 
 /// Link-time probe: returns `AesCtrNonce::SIZE` so L1 can confirm this object
 /// is present alongside the Wave 0/1 Rust crates.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_domain_types_probe() -> core::ffi::c_int {
     AesCtrNonce::SIZE as core::ffi::c_int
 }

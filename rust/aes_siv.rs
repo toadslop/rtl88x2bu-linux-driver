@@ -20,7 +20,7 @@ mod bindings {
 
     pub const AES_BLOCK_SIZE: u32 = 16;
 
-    extern "C" {
+    unsafe extern "C" {
         pub fn omac1_aes_vector(
             key: *const u8,
             key_len: usize,
@@ -46,7 +46,7 @@ mod bindings {
 mod bindings {
     include!("bindings/generated.rs");
 
-    extern "C" {
+    unsafe extern "C" {
         pub fn omac1_aes_vector(
             key: *const u8,
             key_len: usize,
@@ -182,7 +182,7 @@ fn aes_s2v(
 }
 
 /// C ABI: `aes_siv_encrypt` from `core/crypto/aes-siv.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn aes_siv_encrypt(
     key: *const u8,
     key_len: usize,
@@ -238,7 +238,7 @@ pub extern "C" fn aes_siv_encrypt(
 }
 
 /// C ABI: `aes_siv_decrypt` from `core/crypto/aes-siv.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn aes_siv_decrypt(
     key: *const u8,
     key_len: usize,
@@ -308,7 +308,7 @@ pub extern "C" fn aes_siv_decrypt(
 }
 
 /// Link-time probe for L1 (distinct from the exported crypto symbols).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_aes_siv_probe() -> c_int {
     AES_BLOCK_SIZE as c_int
 }

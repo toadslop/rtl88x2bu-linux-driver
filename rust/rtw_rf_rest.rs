@@ -57,7 +57,7 @@ static CH_WIDTH_STR_80_80: &[u8; 9] = b"80_80MHz\0";
 static CH_WIDTH_STR_5: &[u8; 5] = b"5MHz\0";
 static CH_WIDTH_STR_10: &[u8; 6] = b"10MHz\0";
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub static _ch_width_str: [CStrPtr; CHANNEL_WIDTH_MAX] = [
     CStrPtr(CH_WIDTH_STR_20.as_ptr()),
     CStrPtr(CH_WIDTH_STR_40.as_ptr()),
@@ -68,7 +68,7 @@ pub static _ch_width_str: [CStrPtr; CHANNEL_WIDTH_MAX] = [
     CStrPtr(CH_WIDTH_STR_10.as_ptr()),
 ];
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub static _ch_width_to_bw_cap: [u8; CHANNEL_WIDTH_MAX] = [
     BW_CAP_20M,
     BW_CAP_40M,
@@ -83,14 +83,14 @@ static BAND_STR_2G: &[u8; 5] = b"2.4G\0";
 static BAND_STR_5G: &[u8; 3] = b"5G\0";
 static BAND_STR_MAX: &[u8; 9] = b"BAND_MAX\0";
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub static _band_str: [CStrPtr; 3] = [
     CStrPtr(BAND_STR_2G.as_ptr()),
     CStrPtr(BAND_STR_5G.as_ptr()),
     CStrPtr(BAND_STR_MAX.as_ptr()),
 ];
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub static _band_to_band_cap: [u8; 3] = [BAND_CAP_2G, BAND_CAP_5G, 0];
 
 static OPC_BW_STR_20: &[u8; 5] = b"20M \0";
@@ -100,7 +100,7 @@ static OPC_BW_STR_80: &[u8; 5] = b"80M \0";
 static OPC_BW_STR_160: &[u8; 6] = b"160M \0";
 static OPC_BW_STR_80P80: &[u8; 8] = b"80+80M \0";
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub static _opc_bw_str: [CStrPtr; OPC_BW_NUM] = [
     CStrPtr(OPC_BW_STR_20.as_ptr()),
     CStrPtr(OPC_BW_STR_40PLUS.as_ptr()),
@@ -110,7 +110,7 @@ pub static _opc_bw_str: [CStrPtr; OPC_BW_NUM] = [
     CStrPtr(OPC_BW_STR_80P80.as_ptr()),
 ];
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub static _opc_bw_to_ch_width: [u8; OPC_BW_NUM] = [
     CHANNEL_WIDTH_20,
     CHANNEL_WIDTH_40,
@@ -135,10 +135,10 @@ const CENTER_CH_5G_40M_NUM: usize = 14;
 const CENTER_CH_5G_80M_NUM: usize = 7;
 const CENTER_CH_5G_160M_NUM: usize = 3;
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub static center_ch_2g: [u8; CENTER_CH_2G_NUM] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub static center_ch_2g_40m: [u8; CENTER_CH_2G_40M_NUM] = [3, 4, 5, 6, 7, 8, 9, 10, 11];
 
 static OP_CHS_OF_CCH_2G_40M: [[u8; 2]; CENTER_CH_2G_40M_NUM] = [
@@ -153,13 +153,13 @@ static OP_CHS_OF_CCH_2G_40M: [[u8; 2]; CENTER_CH_2G_40M_NUM] = [
     [9, 13],
 ];
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub static center_ch_5g_20m: [u8; CENTER_CH_5G_20M_NUM] = [
     36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144,
     149, 153, 157, 161, 165, 169, 173, 177,
 ];
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub static center_ch_5g_40m: [u8; CENTER_CH_5G_40M_NUM] = [
     38, 46, 54, 62, 102, 110, 118, 126, 134, 142, 151, 159, 167, 175,
 ];
@@ -181,7 +181,7 @@ static OP_CHS_OF_CCH_5G_40M: [[u8; 2]; CENTER_CH_5G_40M_NUM] = [
     [173, 177],
 ];
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub static center_ch_5g_80m: [u8; CENTER_CH_5G_80M_NUM] = [42, 58, 106, 122, 138, 155, 171];
 
 static OP_CHS_OF_CCH_5G_80M: [[u8; 4]; CENTER_CH_5G_80M_NUM] = [
@@ -260,7 +260,7 @@ fn op_chs_5g_row(bw: u8, idx: usize) -> Option<&'static [u8]> {
 mod kernel {
     use super::*;
 
-    extern "C" {
+    unsafe extern "C" {
         fn rtw_rust_rf_warn_on(condition: c_int);
         fn rtw_rust_rf_warn_invalid_ch(func: *const u8, ch: u8);
     }
@@ -334,12 +334,12 @@ fn rtw_get_scch_by_cch_offset_inner(cch: u8, bw: u8, offset: u8) -> u8 {
     t_cch
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_get_scch_by_cch_offset(cch: u8, bw: u8, offset: u8) -> u8 {
     rtw_get_scch_by_cch_offset_inner(cch, bw, offset)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_get_scch_by_cch_opch(cch: u8, bw: u8, opch: u8) -> u8 {
     let mut offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
 
@@ -352,12 +352,12 @@ pub extern "C" fn rtw_get_scch_by_cch_opch(cch: u8, bw: u8, opch: u8) -> u8 {
     rtw_get_scch_by_cch_offset_inner(cch, bw, offset)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn center_chs_2g_num(bw: u8) -> u8 {
     center_chs_2g_table(bw).map(|t| t.len() as u8).unwrap_or(0)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn center_chs_2g(bw: u8, id: u8) -> u8 {
     let Some(table) = center_chs_2g_table(bw) else {
         return 0;
@@ -368,12 +368,12 @@ pub extern "C" fn center_chs_2g(bw: u8, id: u8) -> u8 {
     table[id as usize]
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn center_chs_5g_num(bw: u8) -> u8 {
     center_chs_5g_table(bw).map(|t| t.len() as u8).unwrap_or(0)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn center_chs_5g(bw: u8, id: u8) -> u8 {
     let Some(table) = center_chs_5g_table(bw) else {
         return 0;
@@ -384,7 +384,7 @@ pub extern "C" fn center_chs_5g(bw: u8, id: u8) -> u8 {
     table[id as usize]
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_get_op_chs_by_cch_bw(
     cch: u8,
     bw: u8,
@@ -445,7 +445,7 @@ pub extern "C" fn rtw_get_op_chs_by_cch_bw(
     1
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_get_offset_by_chbw(ch: u8, bw: u8, r_offset: *mut u8) -> u8 {
     let mut valid = 1u8;
     let mut offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
@@ -507,7 +507,7 @@ pub extern "C" fn rtw_get_offset_by_chbw(ch: u8, bw: u8, r_offset: *mut u8) -> u
     valid
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_get_center_ch(ch: u8, bw: u8, offset: u8) -> u8 {
     let mut cch = ch;
 
@@ -560,7 +560,7 @@ pub extern "C" fn rtw_get_center_ch(ch: u8, bw: u8, offset: u8) -> u8 {
     cch
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_get_ch_group(ch: u8, group: *mut u8, cck_group: *mut u8) -> u8 {
     let mut band = BAND_MAX;
     let mut gp: i8 = -1;
@@ -646,7 +646,7 @@ pub extern "C" fn rtw_get_ch_group(ch: u8, group: *mut u8, cck_group: *mut u8) -
     band
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_ch2freq(chan: i32) -> i32 {
     if (1..=14).contains(&chan) {
         if chan == 14 {
@@ -661,7 +661,7 @@ pub extern "C" fn rtw_ch2freq(chan: i32) -> i32 {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_freq2ch(freq: i32) -> i32 {
     if freq == 2484 {
         14
@@ -678,7 +678,7 @@ pub extern "C" fn rtw_freq2ch(freq: i32) -> i32 {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_chbw_to_freq_range(
     ch: u8,
     bw: u8,
@@ -784,7 +784,7 @@ static OP_CLASS_ATTR_129: [u8; 17] = [
     16, 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
 ];
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub static global_op_class: [OpClassT; 19] = [
     OpClassT {
         class_id: 81,
@@ -902,7 +902,7 @@ pub static global_op_class: [OpClassT; 19] = [
     },
 ];
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub static global_op_class_num: i32 = 19;
 
 fn opc_bw_to_ch_width_bw(bw: i32) -> u8 {
@@ -943,12 +943,12 @@ fn get_global_opc_bw_by_id(gid: u8) -> i32 {
         .unwrap_or(OPC_BW_ENUM_NUM as i32)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn is_valid_global_op_class_id(gid: u8) -> bool {
     get_global_op_class_by_id(gid).is_some()
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn get_sub_op_class(gid: u8, ch: u8) -> i16 {
     let Some(idx) = get_global_op_class_by_id(gid) else {
         return -1;
@@ -976,7 +976,7 @@ pub extern "C" fn get_sub_op_class(gid: u8, ch: u8) -> i16 {
     -2
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_get_op_class_by_chbw(ch: u8, bw: u8, offset: u8) -> u8 {
     let band = if rtw_is_2g_ch(ch) {
         BAND_ON_2_4G
@@ -1014,7 +1014,7 @@ pub extern "C" fn rtw_get_op_class_by_chbw(ch: u8, bw: u8, offset: u8) -> u8 {
     0
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_get_bw_offset_by_op_class_ch(
     gid: u8,
     ch: u8,
@@ -1103,7 +1103,7 @@ fn rf_type_to_rf_rx_cnt(rf_type: u8) -> u8 {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rf_type_to_default_trx_bmp(rf: u8, tx: *mut u32, rx: *mut u32) {
     // C dereferences unconditionally; in-tree callers always pass valid pointers.
     if tx.is_null() || rx.is_null() {
@@ -1128,7 +1128,7 @@ pub extern "C" fn rf_type_to_default_trx_bmp(rf: u8, tx: *mut u32, rx: *mut u32)
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn trx_num_to_rf_type(tx_num: u8, rx_num: u8) -> i32 {
     if tx_num > 0 && tx_num <= RF_PATH_MAX as u8 && rx_num > 0 && rx_num <= RF_PATH_MAX as u8 {
         _TRX_NUM_TO_RF_TYPE[(tx_num - 1) as usize][(rx_num - 1) as usize] as i32
@@ -1137,7 +1137,7 @@ pub extern "C" fn trx_num_to_rf_type(tx_num: u8, rx_num: u8) -> i32 {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn trx_bmp_to_rf_type(tx_bmp: u8, rx_bmp: u8) -> i32 {
     let mut tx_num = 0u8;
     let mut rx_num = 0u8;
@@ -1154,7 +1154,7 @@ pub extern "C" fn trx_bmp_to_rf_type(tx_bmp: u8, rx_bmp: u8) -> i32 {
     trx_num_to_rf_type(tx_num, rx_num)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rf_type_is_a_in_b(a: u8, b: u8) -> bool {
     rf_type_to_rf_tx_cnt(a) <= rf_type_to_rf_tx_cnt(b)
         && rf_type_to_rf_rx_cnt(a) <= rf_type_to_rf_rx_cnt(b)
@@ -1171,7 +1171,7 @@ fn rtw_path_bmp_limit_from_higher(bmp: &mut u8, bmp_bit_cnt: &mut u8, bit_cnt_lm
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_restrict_trx_path_bmp_by_trx_num_lmt(
     trx_path_bmp: u8,
     tx_num_lmt: u8,
@@ -1237,7 +1237,7 @@ pub extern "C" fn rtw_restrict_trx_path_bmp_by_trx_num_lmt(
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_restrict_trx_path_bmp_by_rftype(
     trx_path_bmp: u8,
     rf_type: u8,
@@ -1433,7 +1433,7 @@ fn null_terminate(buf: &mut [u8], end: usize) {
     buf[term] = 0;
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn txpwr_idx_get_dbm_str(
     idx: i8,
     txgi_max: u8,
@@ -1450,7 +1450,7 @@ pub extern "C" fn txpwr_idx_get_dbm_str(
     null_terminate(out, end);
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn txpwr_mbm_get_dbm_str(
     mbm: i16,
     cwidth: usize,
@@ -1465,7 +1465,7 @@ pub extern "C" fn txpwr_mbm_get_dbm_str(
     null_terminate(out, end);
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn mb_of_ntx(ntx: u8) -> i16 {
     if ntx == 0 || ntx > 8 {
         kernel::warn_on(true);
@@ -1473,12 +1473,12 @@ pub extern "C" fn mb_of_ntx(ntx: u8) -> i16 {
     MB_OF_NTX[(ntx as usize).saturating_sub(1)]
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_is_long_cac_range(hi: u32, lo: u32, dfs_region: u8) -> bool {
     dfs_region == RTW_DFS_REGD_ETSI && rtw_is_range_overlap(hi, lo, 5650, 5600)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_is_long_cac_ch(ch: u8, bw: u8, offset: u8, dfs_region: u8) -> bool {
     let mut hi = 0u32;
     let mut lo = 0u32;
@@ -1497,7 +1497,7 @@ const BB_GAIN_5GMB1: i32 = 3;
 const BB_GAIN_5GMB2: i32 = 4;
 const BB_GAIN_5GHB: i32 = 5;
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn tx_path_nss_set_default(
     txpath_nss: *mut u32,
     txpath_num_nss: *mut u8,
@@ -1526,7 +1526,7 @@ pub extern "C" fn tx_path_nss_set_default(
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn tx_path_nss_set_full_tx(
     txpath_nss: *mut u32,
     txpath_num_nss: *mut u8,
@@ -1552,7 +1552,7 @@ pub extern "C" fn tx_path_nss_set_full_tx(
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_ch_to_bb_gain_sel(ch: i32) -> i32 {
     if (1..=14).contains(&ch) {
         BB_GAIN_2G
@@ -1571,7 +1571,7 @@ pub extern "C" fn rtw_ch_to_bb_gain_sel(ch: i32) -> i32 {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_rf_rest_probe() -> c_int {
     0x1919
 }

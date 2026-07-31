@@ -15,7 +15,7 @@ const AES_BLOCK_SIZE: usize = 16;
 const AES_PRIV_SIZE: usize = 4 * 4 * 15 + 4;
 const AES_PRIV_NR_POS: usize = 4 * 15;
 
-extern "C" {
+unsafe extern "C" {
     static Te0: [u32; 256];
     fn rijndaelKeySetupEnc(rk: *mut u32, cipher_key: *const u8, key_bits: i32) -> i32;
 }
@@ -27,7 +27,7 @@ mod alloc {
     mod bindings {
         use std::os::raw::c_void;
 
-        extern "C" {
+        unsafe extern "C" {
             pub fn os_malloc(sz: usize) -> *mut c_void;
             pub fn rtw_mfree(ptr: *mut c_void, sz: usize);
         }
@@ -46,7 +46,7 @@ mod alloc {
 mod alloc {
     use core::ffi::c_void;
 
-    extern "C" {
+    unsafe extern "C" {
         fn _rtw_malloc(sz: u32) -> *mut c_void;
         fn _rtw_mfree(ptr: *mut c_void, sz: u32);
     }
@@ -152,7 +152,7 @@ fn rijndael_encrypt(rk: &[u32], nr: i32, pt: &[u8; 16], ct: &mut [u8; 16]) {
 }
 
 /// C ABI: `aes_encrypt_init` from `core/crypto/aes-internal-enc.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn aes_encrypt_init(key: *const u8, len: usize) -> *mut core::ffi::c_void {
     if key.is_null() {
         return core::ptr::null_mut();
@@ -176,7 +176,7 @@ pub extern "C" fn aes_encrypt_init(key: *const u8, len: usize) -> *mut core::ffi
 }
 
 /// C ABI: `aes_encrypt` from `core/crypto/aes-internal-enc.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn aes_encrypt(
     ctx: *mut core::ffi::c_void,
     plain: *const u8,
@@ -195,7 +195,7 @@ pub extern "C" fn aes_encrypt(
 }
 
 /// C ABI: `aes_encrypt_deinit` from `core/crypto/aes-internal-enc.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn aes_encrypt_deinit(ctx: *mut core::ffi::c_void) {
     if ctx.is_null() {
         return;
@@ -207,7 +207,7 @@ pub extern "C" fn aes_encrypt_deinit(ctx: *mut core::ffi::c_void) {
 }
 
 /// Link-time probe for L1.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_aes_internal_enc_probe() -> i32 {
     AES_BLOCK_SIZE as i32
 }

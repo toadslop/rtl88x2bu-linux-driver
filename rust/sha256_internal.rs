@@ -225,7 +225,7 @@ pub fn sha256_vector_typed(parts: &[&[u8]], mac: &mut [u8; SHA256_MAC_LEN]) -> R
 }
 
 /// C ABI: `sha256_vector` from `core/crypto/sha256-internal.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn sha256_vector(
     num_elem: usize,
     addr: *const *const u8,
@@ -272,13 +272,13 @@ pub extern "C" fn sha256_vector(
 }
 
 /// Link-time probe for L1 (distinct from the exported crypto symbols).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_sha256_internal_probe() -> c_int {
     SHA256_MAC_LEN as c_int
 }
 
 // C-internal symbols kept for parity with sha256_i.h (used by sha256.c later).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn _sha256_init(md: *mut Sha256State) {
     if md.is_null() {
         return;
@@ -286,7 +286,7 @@ pub extern "C" fn _sha256_init(md: *mut Sha256State) {
     sha256_init(unsafe { &mut *md });
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn sha256_process(md: *mut Sha256State, input: *const u8, inlen: c_ulong) -> c_int {
     if md.is_null() {
         return -1;
@@ -302,7 +302,7 @@ pub extern "C" fn sha256_process(md: *mut Sha256State, input: *const u8, inlen: 
     sha256_process_inner(unsafe { &mut *md }, slice)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn sha256_done(md: *mut Sha256State, out: *mut u8) -> c_int {
     if md.is_null() || out.is_null() {
         return -1;

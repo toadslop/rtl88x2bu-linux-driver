@@ -33,7 +33,7 @@ mod bindings {
 
     pub const AES_BLOCK_SIZE: u32 = 16;
 
-    extern "C" {
+    unsafe extern "C" {
         pub fn aes_encrypt_init(key: *const u8, len: usize) -> *mut c_void;
         pub fn aes_encrypt(ctx: *mut c_void, plain: *const u8, crypt: *mut u8) -> c_int;
         pub fn aes_encrypt_deinit(ctx: *mut c_void);
@@ -230,7 +230,7 @@ pub fn omac1_aes_vector_typed(key: AesKey, fragments: &[&[u8]]) -> Result<AesMac
 }
 
 /// C ABI: `omac1_aes_vector` from `core/crypto/aes-omac1.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn omac1_aes_vector(
     key: *const u8,
     key_len: usize,
@@ -272,7 +272,7 @@ pub extern "C" fn omac1_aes_vector(
 }
 
 /// C ABI: `omac1_aes_128_vector` from `core/crypto/aes-omac1.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn omac1_aes_128_vector(
     key: *const u8,
     num_elem: usize,
@@ -284,7 +284,7 @@ pub extern "C" fn omac1_aes_128_vector(
 }
 
 /// C ABI: `omac1_aes_128` from `core/crypto/aes-omac1.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn omac1_aes_128(
     key: *const u8,
     data: *const u8,
@@ -295,7 +295,7 @@ pub extern "C" fn omac1_aes_128(
 }
 
 /// C ABI: `omac1_aes_256` from `core/crypto/aes-omac1.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn omac1_aes_256(
     key: *const u8,
     data: *const u8,
@@ -306,7 +306,7 @@ pub extern "C" fn omac1_aes_256(
 }
 
 /// Link-time probe for L1 (distinct from the exported crypto symbols).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_aes_omac1_probe() -> c_int {
     AES_BLOCK_SIZE as c_int
 }

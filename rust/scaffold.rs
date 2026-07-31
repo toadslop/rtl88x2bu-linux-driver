@@ -8,7 +8,7 @@
 ///
 /// Returns `0` on success. Keep this side-effect free beyond the call itself;
 /// the C caller logs the breadcrumb (and any non-zero return).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_scaffold_init() -> core::ffi::c_int {
     0
 }

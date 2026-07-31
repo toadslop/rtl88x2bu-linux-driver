@@ -1,6 +1,8 @@
 # Host L2 differential tests for core/rtw_wlan_util.c helpers (T5).
 # Builds with gcc only — no kernel headers or KDIR.
 
+include ../rust.mk
+
 ROOT     := ../../..
 HOST_INC := ../include
 ORACLE   := wlan_util_c_oracle.c
@@ -10,7 +12,7 @@ CC      := gcc
 RUSTC   := rustc
 CFLAGS  := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
            -I$(HOST_INC) -I.
-RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
+RUSTFLAGS := $(RUST_BASE_FLAGS)
 HOST_JSON := ../crypto/host_vector_json.c
 
 .PHONY: all test test-c test-rust test-ratetbl clean

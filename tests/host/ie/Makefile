@@ -4,6 +4,8 @@
 # string/MAC address helpers (W3-30), and chbw grouping/sync (W3-31), and
 # frame header / HT MCS helpers (W3-32).
 
+include ../rust.mk
+
 ROOT     := ../../..
 CORE     := $(ROOT)/core
 HOST_INC := ../include
@@ -23,7 +25,7 @@ CHBW_CFLAGS := $(REST_CFLAGS) -I$(ROOT)/include \
            -include $(HOST_INC)/host_autoconf.h -DHOST_RF_TEST \
            -DHOST_IEEE80211_REST_CHBW_TEST -Wno-format-truncation
 FRAME_HT_CFLAGS := $(REST_CFLAGS) -DHOST_IEEE80211_REST_FRAME_HT_TEST
-RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
+RUSTFLAGS := $(RUST_BASE_FLAGS)
 
 IE_SRCS := ie_c_oracle.c ../crypto/host_vector_json.c
 IE_REST_SRCS := $(IE_REST_SRC) ie_cipher_c_oracle.c ie_wpa_rsn_parse_c_oracle.c \

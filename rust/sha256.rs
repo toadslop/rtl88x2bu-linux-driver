@@ -28,7 +28,7 @@ mod bindings {
 
     pub type u8 = c_uchar;
 
-    extern "C" {
+    unsafe extern "C" {
         pub fn sha256_vector(
             num_elem: usize,
             addr: *const *const u8,
@@ -42,7 +42,7 @@ mod bindings {
 mod bindings {
     use core::ffi::c_int;
 
-    extern "C" {
+    unsafe extern "C" {
         pub fn sha256_vector(
             num_elem: usize,
             addr: *const *const u8,
@@ -133,7 +133,7 @@ pub fn hmac_sha256_vector_typed(
 }
 
 /// C ABI: `hmac_sha256_vector` from `core/crypto/sha256.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn hmac_sha256_vector(
     key: *const u8,
     key_len: usize,
@@ -183,7 +183,7 @@ pub extern "C" fn hmac_sha256_vector(
 }
 
 /// Link-time probe for L1 (distinct from the exported crypto symbols).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_sha256_probe() -> c_int {
     SHA256_MAC_LEN as c_int
 }

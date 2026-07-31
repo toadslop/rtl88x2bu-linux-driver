@@ -28,7 +28,7 @@ mod bindings {
 
     pub const AES_BLOCK_SIZE: u32 = 16;
 
-    extern "C" {
+    unsafe extern "C" {
         pub fn aes_encrypt_init(key: *const u8, len: usize) -> *mut c_void;
         pub fn aes_encrypt(ctx: *mut c_void, plain: *const u8, crypt: *mut u8) -> c_int;
         pub fn aes_encrypt_deinit(ctx: *mut c_void);
@@ -94,7 +94,7 @@ pub fn aes_ctr_encrypt_typed(
 }
 
 /// C ABI: `aes_ctr_encrypt` from `core/crypto/aes-ctr.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn aes_ctr_encrypt(
     key: *const u8,
     key_len: usize,
@@ -121,7 +121,7 @@ pub extern "C" fn aes_ctr_encrypt(
 }
 
 /// C ABI: `aes_128_ctr_encrypt` from `core/crypto/aes-ctr.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn aes_128_ctr_encrypt(
     key: *const u8,
     nonce: *const u8,
@@ -133,7 +133,7 @@ pub extern "C" fn aes_128_ctr_encrypt(
 
 /// Link-time probe for L1 (distinct from the exported crypto symbols).
 /// Run via `make rust-check-symbols` / `check-symbols.sh` (T1).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_aes_ctr_probe() -> c_int {
     AES_BLOCK_SIZE as c_int
 }

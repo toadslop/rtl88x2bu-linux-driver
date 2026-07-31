@@ -20,7 +20,7 @@ Add a GitHub Actions job that runs the **L0 build gate** on every pull request t
 
 1. Publish (or document how to build) a **CI container image** with:
    - `clang-18` + unsuffixed `llvm-*` / `ld.lld` symlinks
-   - `rustc` 1.83 + `rust-src`, `bindgen` 0.65.1
+   - `rustc` 1.85+ + `rust-src`, `bindgen` 0.65.1 (edition 2024)
    - Pre-built kernel tree at a fixed path (e.g. `/opt/linux` from v6.12.9)
 2. Add `.github/workflows/module-l0.yml` (or extend an existing workflow) that runs:
 

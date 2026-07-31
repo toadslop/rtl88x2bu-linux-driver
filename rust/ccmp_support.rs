@@ -30,7 +30,7 @@ pub mod bindings {
 
     pub type Adapter = c_void;
 
-    extern "C" {
+    unsafe extern "C" {
         pub fn aes_ccm_ae(
             key: *const u8,
             key_len: usize,
@@ -78,7 +78,7 @@ pub mod bindings {
 
     pub type Adapter = core::ffi::c_void;
 
-    extern "C" {
+    unsafe extern "C" {
         pub fn aes_ccm_ae(
             key: *const u8,
             key_len: usize,

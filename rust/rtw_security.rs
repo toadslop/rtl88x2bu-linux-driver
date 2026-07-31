@@ -50,7 +50,7 @@ static SECURITY_TYPE_BIP_STR: [&[u8]; 4] = [
 static CCMP_256_STR: &[u8] = b"CCMP_256\0";
 static GCMP_256_STR: &[u8] = b"GCMP_256\0";
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_security_probe() -> c_int {
     0x1e04
 }
@@ -75,7 +75,7 @@ fn security_type_str_inner(value: U8) -> Option<&'static [u8]> {
     None
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn security_type_str(value: U8) -> *const c_char {
     match security_type_str_inner(value) {
         Some(s) => s.as_ptr() as *const c_char,
@@ -83,7 +83,7 @@ pub extern "C" fn security_type_str(value: U8) -> *const c_char {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn security_type_bip_to_gmcs(type_: U8) -> U32 {
     match SecurityType::try_from(type_) {
         Ok(sec) => match BipGmcs::try_from_security_type(sec) {
@@ -150,7 +150,7 @@ fn crc32_init_inner() {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn arcfour_init(parc4ctx: *mut arc4context, key: *mut U8, key_len: U32) {
     if parc4ctx.is_null() || key.is_null() {
         return;
@@ -195,7 +195,7 @@ fn arcfour_byte(ctx: &mut arc4context) -> U32 {
     state[((sx + sy) & 0xff) as usize] as U32
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn arcfour_encrypt(
     parc4ctx: *mut arc4context,
     dest: *mut U8,
@@ -215,7 +215,7 @@ pub extern "C" fn arcfour_encrypt(
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn getcrc32(buf: *mut U8, len: Sint) -> U32 {
     if buf.is_null() || len <= 0 {
         return 0;
@@ -232,7 +232,7 @@ pub extern "C" fn getcrc32(buf: *mut U8, len: Sint) -> U32 {
 }
 
 #[cfg(host_security_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_wep_arcfour_crypt(
     key: *const U8,
     key_len: U32,
@@ -257,7 +257,7 @@ pub extern "C" fn host_wep_arcfour_crypt(
 }
 
 #[cfg(host_security_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_wep_getcrc32(buf: *mut U8, len: Sint) -> U32 {
     getcrc32(buf, len)
 }
@@ -483,7 +483,7 @@ fn is_broadcast_mac_addr(addr: &[U8; 6]) -> bool {
 mod kernel_layout {
     use super::*;
 
-    extern "C" {
+    unsafe extern "C" {
         static rtw_rust_wep_off_adapter_securitypriv: usize;
         static rtw_rust_wep_off_adapter_xmitpriv: usize;
         static rtw_rust_wep_off_xmitpriv_frag_len: usize;
@@ -778,7 +778,7 @@ unsafe fn wep_encrypt_inner(
 }
 
 #[cfg(host_security_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_wep_encrypt(padapter: *mut HostAdapter, pxmitframe: *mut U8) {
     if padapter.is_null() || pxmitframe.is_null() {
         return;
@@ -836,7 +836,7 @@ pub extern "C" fn rtw_wep_encrypt(padapter: *mut HostAdapter, pxmitframe: *mut U
 }
 
 #[cfg(not(host_security_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_wep_encrypt(padapter: *mut WepAdapter, pxmitframe: *mut U8) {
     if padapter.is_null() || pxmitframe.is_null() {
         return;
@@ -905,7 +905,7 @@ unsafe fn wep_decrypt_inner(
 }
 
 #[cfg(host_security_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_wep_decrypt(padapter: *mut HostAdapter, precvframe: *mut U8) {
     if padapter.is_null() || precvframe.is_null() {
         return;
@@ -933,7 +933,7 @@ pub extern "C" fn rtw_wep_decrypt(padapter: *mut HostAdapter, precvframe: *mut U
 }
 
 #[cfg(not(host_security_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_wep_decrypt(padapter: *mut WepAdapter, precvframe: *mut U8) {
     if padapter.is_null() || precvframe.is_null() {
         return;
@@ -1057,7 +1057,7 @@ unsafe fn tkip_encrypt_inner(
 }
 
 #[cfg(host_security_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_tkip_encrypt(padapter: *mut HostAdapter, pxmitframe: *mut U8) -> U32 {
     if padapter.is_null() || pxmitframe.is_null() {
         return _FAIL;
@@ -1116,7 +1116,7 @@ pub extern "C" fn rtw_tkip_encrypt(padapter: *mut HostAdapter, pxmitframe: *mut 
 }
 
 #[cfg(not(host_security_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_tkip_encrypt(padapter: *mut WepAdapter, pxmitframe: *mut U8) -> U32 {
     if padapter.is_null() || pxmitframe.is_null() {
         return _FAIL;
@@ -1173,7 +1173,7 @@ unsafe fn host_get_stainfo<'a>(stapriv: &'a HostStapriv, ta: &[U8; 6]) -> Option
 mod tkip_decrypt_ffi {
     use super::*;
 
-    extern "C" {
+    unsafe extern "C" {
         fn rtw_get_stainfo(stapriv: *mut core::ffi::c_void, hwaddr: *const U8) -> *mut core::ffi::c_void;
         fn rtw_tkip_decrypt_mcast_gkey_check(
             padapter: *mut WepAdapter,
@@ -1246,7 +1246,7 @@ unsafe fn tkip_decrypt_inner(
 }
 
 #[cfg(host_security_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_tkip_decrypt(padapter: *mut HostAdapter, precvframe: *mut U8) -> U32 {
     if padapter.is_null() || precvframe.is_null() {
         return _FAIL;
@@ -1281,7 +1281,7 @@ pub extern "C" fn rtw_tkip_decrypt(padapter: *mut HostAdapter, precvframe: *mut 
 }
 
 #[cfg(not(host_security_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_tkip_decrypt(padapter: *mut WepAdapter, precvframe: *mut U8) -> U32 {
     if padapter.is_null() || precvframe.is_null() {
         return _FAIL;
@@ -1368,7 +1368,7 @@ fn secmicclear(pmicdata: &mut mic_data) {
     pmicdata.M = 0;
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_secmicsetkey(pmicdata: *mut mic_data, key: *mut U8) {
     if pmicdata.is_null() || key.is_null() {
         return;
@@ -1400,7 +1400,7 @@ fn secmicappendbyte_inner(pmicdata: &mut mic_data, b: U8) {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_secmicappendbyte(pmicdata: *mut mic_data, b: U8) {
     if pmicdata.is_null() {
         return;
@@ -1410,7 +1410,7 @@ pub extern "C" fn rtw_secmicappendbyte(pmicdata: *mut mic_data, b: U8) {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_secmicappend(pmicdata: *mut mic_data, src: *mut U8, nbytes: U32) {
     if pmicdata.is_null() || src.is_null() || nbytes == 0 {
         return;
@@ -1424,7 +1424,7 @@ pub extern "C" fn rtw_secmicappend(pmicdata: *mut mic_data, src: *mut U8, nbytes
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_secgetmic(pmicdata: *mut mic_data, dst: *mut U8) {
     if pmicdata.is_null() || dst.is_null() {
         return;
@@ -1446,7 +1446,7 @@ pub extern "C" fn rtw_secgetmic(pmicdata: *mut mic_data, dst: *mut U8) {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_seccalctkipmic(
     key: *mut U8,
     header: *mut U8,
@@ -1494,31 +1494,31 @@ pub extern "C" fn rtw_seccalctkipmic(
 }
 
 #[cfg(host_security_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_tkip_secmicsetkey(pmicdata: *mut mic_data, key: *mut U8) {
     rtw_secmicsetkey(pmicdata, key);
 }
 
 #[cfg(host_security_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_tkip_secmicappendbyte(pmicdata: *mut mic_data, b: U8) {
     rtw_secmicappendbyte(pmicdata, b);
 }
 
 #[cfg(host_security_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_tkip_secmicappend(pmicdata: *mut mic_data, src: *mut U8, nbytes: U32) {
     rtw_secmicappend(pmicdata, src, nbytes);
 }
 
 #[cfg(host_security_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_tkip_secgetmic(pmicdata: *mut mic_data, dst: *mut U8) {
     rtw_secgetmic(pmicdata, dst);
 }
 
 #[cfg(host_security_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_tkip_seccalctkipmic(
     key: *mut U8,
     header: *mut U8,
@@ -1675,7 +1675,7 @@ fn phase2_inner(rc4key: &mut [U8; 16], tk: &[U8; 16], p1k: &[U16; 5], iv16: U16)
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn phase1(p1k: *mut U16, tk: *const U8, ta: *const U8, iv32: U32) {
     if p1k.is_null() || tk.is_null() || ta.is_null() {
         return;
@@ -1691,7 +1691,7 @@ pub extern "C" fn phase1(p1k: *mut U16, tk: *const U8, ta: *const U8, iv32: U32)
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn phase2(rc4key: *mut U8, tk: *const U8, p1k: *const U16, iv16: U16) {
     if rc4key.is_null() || tk.is_null() || p1k.is_null() {
         return;
@@ -1708,13 +1708,13 @@ pub extern "C" fn phase2(rc4key: *mut U8, tk: *const U8, p1k: *const U16, iv16: 
 }
 
 #[cfg(host_security_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_tkip_phase1(p1k: *mut U16, tk: *const U8, ta: *const U8, iv32: U32) {
     phase1(p1k, tk, ta, iv32);
 }
 
 #[cfg(host_security_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_tkip_phase2(
     rc4key: *mut U8,
     tk: *const U8,

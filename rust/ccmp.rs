@@ -182,7 +182,7 @@ fn ccmp_encrypt_inner(
 }
 
 /// C ABI: `ccmp_decrypt` from `core/crypto/ccmp.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn ccmp_decrypt(
     padapter: *const Adapter,
     tk: *const u8,
@@ -216,7 +216,7 @@ pub extern "C" fn ccmp_decrypt(
 }
 
 /// C ABI: `ccmp_256_decrypt` from `core/crypto/ccmp.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn ccmp_256_decrypt(
     padapter: *const Adapter,
     tk: *const u8,
@@ -256,7 +256,7 @@ pub extern "C" fn ccmp_256_decrypt(
 }
 
 /// C ABI: `ccmp_encrypt` from `core/crypto/ccmp.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn ccmp_encrypt(
     padapter: *const Adapter,
     tk: *const u8,
@@ -300,7 +300,7 @@ pub extern "C" fn ccmp_encrypt(
 }
 
 /// C ABI: `ccmp_256_encrypt` from `core/crypto/ccmp.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn ccmp_256_encrypt(
     padapter: *const Adapter,
     tk: *const u8,
@@ -436,7 +436,7 @@ fn ccmp_encrypt_pv1_inner(
 }
 
 /// C ABI: `ccmp_encrypt_pv1` from `core/crypto/ccmp.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn ccmp_encrypt_pv1(
     tk: *const u8,
     a1: *const u8,
@@ -453,7 +453,7 @@ pub extern "C" fn ccmp_encrypt_pv1(
 }
 
 /// C ABI: `ccmp_get_pn` from `core/crypto/ccmp.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn ccmp_get_pn(pn: *mut u8, data: *const u8) {
     if pn.is_null() || data.is_null() {
         return;
@@ -469,7 +469,7 @@ pub extern "C" fn ccmp_get_pn(pn: *mut u8, data: *const u8) {
 }
 
 /// Link-time probe for L1 (distinct from the exported crypto symbols).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_ccmp_probe() -> core::ffi::c_int {
     AES_BLOCK_SIZE as core::ffi::c_int
 }

@@ -34,7 +34,7 @@ pub struct Ieee80211Hdr {
 
 pub type Adapter = c_void;
 
-extern "C" {
+unsafe extern "C" {
     fn ccmp_encrypt(
         padapter: *mut Adapter,
         tk: *const u8,
@@ -138,12 +138,12 @@ fn log_bip_err(msg: &[u8]) {
     unsafe { rtw_swcrypto_log_err(msg.as_ptr()) };
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_swcrypto_probe() -> c_int {
     0x5301
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn _rtw_ccmp_encrypt(
     padapter: *mut Adapter,
     key: *mut u8,
@@ -203,7 +203,7 @@ pub extern "C" fn _rtw_ccmp_encrypt(
     _SUCCESS
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn _rtw_ccmp_decrypt(
     padapter: *mut Adapter,
     key: *mut u8,
@@ -254,7 +254,7 @@ pub extern "C" fn _rtw_ccmp_decrypt(
     _SUCCESS
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn _rtw_gcmp_encrypt(
     padapter: *mut Adapter,
     key: *mut u8,
@@ -292,7 +292,7 @@ pub extern "C" fn _rtw_gcmp_encrypt(
     _SUCCESS
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn _rtw_gcmp_decrypt(
     padapter: *mut Adapter,
     key: *mut u8,
@@ -328,7 +328,7 @@ pub extern "C" fn _rtw_gcmp_decrypt(
     _SUCCESS
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn _bip_ccmp_protect(
     key: *const u8,
     key_len: usize,
@@ -356,7 +356,7 @@ pub extern "C" fn _bip_ccmp_protect(
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn _bip_gcmp_protect(
     whdr_pos: *mut u8,
     len: usize,
@@ -400,7 +400,7 @@ pub extern "C" fn _bip_gcmp_protect(
 
 // C gates these on CONFIG_RTW_MESH_AEK; Rust exports unconditionally for a stable
 // ABI across kernel configs (same pattern as other swcrypto wrappers in this file).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn _aes_siv_encrypt(
     key: *const u8,
     key_len: usize,
@@ -414,7 +414,7 @@ pub extern "C" fn _aes_siv_encrypt(
     unsafe { aes_siv_encrypt(key, key_len, pw, pwlen, num_elem, addr, len, out) }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn _aes_siv_decrypt(
     key: *const u8,
     key_len: usize,

@@ -21,8 +21,8 @@ hosts the snapshot may not carry them, in which case reprovision using
 `ld.lld`/`llvm-*` symlinks, `bindgen --locked`, and the pinned-kernel recipe).
 
 - Toolchain: `clang-18` + `lld`, with **unsuffixed** `ld.lld`/`llvm-*` symlinks in
-  `/usr/bin` (kernel `LLVM=1` requires unsuffixed names). `rustc`/`cargo` 1.83 with
-  the `rust-src` component, and `bindgen` 0.65.1 on `PATH`.
+  `/usr/bin` (kernel `LLVM=1` requires unsuffixed names). `rustc`/`cargo` 1.85+ with
+  the `rust-src` component (edition 2024), and `bindgen` 0.65.1 on `PATH`.
 - A **pinned, pre-built Rust-enabled kernel tree at `/opt/linux`** (stable
   `v6.12.9`, `CONFIG_RUST=y`, built with `LLVM=1`). Use it as `KDIR`. Do not rebuild
   it unless you intentionally bump the pin — a full rebuild takes several minutes.

@@ -25,6 +25,9 @@ git clone --depth 1 --branch "${KERNEL_TAG}" \
 
 cd "${WORKDIR}/linux"
 
+# Driver Rust uses edition 2024; upstream v6.12.9 kbuild defaults to 2021.
+sed -i 's/--edition=2021/--edition=2024/' Makefile
+
 make LLVM=1 defconfig
 ./scripts/config --enable CONFIG_RUST
 ./scripts/config --enable CONFIG_MODULES

@@ -217,7 +217,7 @@ pub struct HostWlanBssidEx {
     pub ies: [u8; 256],
 }
 
-extern "C" {
+unsafe extern "C" {
     fn memcpy(dst: *mut u8, src: *const u8, n: usize) -> *mut u8;
     fn memmove(dst: *mut u8, src: *const u8, n: usize) -> *mut u8;
     fn memset(s: *mut u8, c: i32, n: usize) -> *mut u8;
@@ -264,7 +264,7 @@ fn suite_matches(s: *const U8, suite: &[U8; 4], len: usize) -> bool {
     unsafe { memcmp(s, suite.as_ptr(), len) == 0 }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_get_wpa_cipher_suite(s: *mut U8) -> c_int {
     if suite_matches(s, &WPA_CIPHER_SUITE_NONE, WPA_SELECTOR_LEN) {
         return WPA_CIPHER_NONE;
@@ -284,7 +284,7 @@ pub extern "C" fn rtw_get_wpa_cipher_suite(s: *mut U8) -> c_int {
     0
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_get_rsn_cipher_suite(s: *mut U8) -> c_int {
     if suite_matches(s, &RSN_CIPHER_SUITE_NONE, RSN_SELECTOR_LEN) {
         return WPA_CIPHER_NONE;
@@ -325,7 +325,7 @@ pub extern "C" fn rtw_get_rsn_cipher_suite(s: *mut U8) -> c_int {
     0
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_get_akm_suite_bitmap(s: *mut U8) -> u32 {
     if suite_matches(s, &WLAN_AKM_8021X, RSN_SELECTOR_LEN) {
         return WLAN_AKM_TYPE_8021X;
@@ -415,7 +415,7 @@ pub struct RsneInfo {
     pub err: U8,
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_parse_wpa_ie(
     wpa_ie: *mut U8,
     wpa_ie_len: c_int,
@@ -477,7 +477,7 @@ pub extern "C" fn rtw_parse_wpa_ie(
     _SUCCESS
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rsne_info_parse(ie: *const U8, ie_len: c_uint, info: *mut RsneInfo) -> c_int {
     unsafe {
         memset(info as *mut U8, 0, core::mem::size_of::<RsneInfo>());
@@ -590,7 +590,7 @@ pub extern "C" fn rtw_rsne_info_parse(ie: *const U8, ie_len: c_uint, info: *mut 
     _SUCCESS
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_parse_wpa2_ie(
     rsn_ie: *mut U8,
     rsn_ie_len: c_int,
@@ -671,7 +671,7 @@ pub extern "C" fn rtw_parse_wpa2_ie(
     _SUCCESS
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_get_wapi_ie(
     in_ie: *mut U8,
     in_len: c_uint,
@@ -717,7 +717,7 @@ pub extern "C" fn rtw_get_wapi_ie(
     len
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_get_sec_ie(
     in_ie: *mut U8,
     in_len: c_uint,
@@ -754,7 +754,7 @@ pub extern "C" fn rtw_get_sec_ie(
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_is_wps_ie(ie_ptr: *mut U8, wps_ielen: *mut c_uint) -> U8 {
     let wps_oui: [U8; 4] = [0x0, 0x50, 0xf2, 0x04];
 
@@ -780,19 +780,19 @@ fn key_char2num(ch: U8) -> U8 {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn str_2char2num(hch: U8, lch: U8) -> U8 {
     key_char2num(hch)
         .wrapping_mul(10)
         .wrapping_add(key_char2num(lch))
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn key_2char2num(hch: U8, lch: U8) -> U8 {
     (key_char2num(hch) << 4) | key_char2num(lch)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn macstr2num(dst: *mut U8, src: *mut U8) {
     if dst.is_null() || src.is_null() {
         return;
@@ -805,7 +805,7 @@ pub extern "C" fn macstr2num(dst: *mut U8, src: *mut U8) {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn convert_ip_addr(hch: U8, mch: U8, lch: U8) -> U8 {
     key_char2num(hch)
         .wrapping_mul(100)
@@ -813,7 +813,7 @@ pub extern "C" fn convert_ip_addr(hch: U8, mch: U8, lch: U8) -> U8 {
         .wrapping_add(key_char2num(lch))
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_check_invalid_mac_address(mac_addr: *mut U8, check_local_bit: U8) -> U8 {
     let null_mac_addr = [0u8; ETH_ALEN];
     let multi_mac_addr = [0xffu8; ETH_ALEN];
@@ -838,7 +838,7 @@ pub extern "C" fn rtw_check_invalid_mac_address(mac_addr: *mut U8, check_local_b
     _FALSE as U8
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_macaddr_cfg(out: *mut U8, hw_mac_addr: *const U8) {
     // Zero-init: C leaves `mac` uninitialized when no source is provided; production
     // call sites always pass hw_mac_addr, but zeroing avoids UB on that edge path.
@@ -959,7 +959,7 @@ fn bss_supported_rates(bss: *mut c_void) -> *mut u8 {
     unsafe { rtw_ieee80211_rest_bss_supported_rates(bss) }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_get_bit_value_from_ieee_value(val: U8) -> c_int {
     static DOT11_RATE_TABLE: [U8; 13] = [2, 4, 11, 22, 12, 18, 24, 36, 48, 72, 96, 108, 0];
     for (i, &rate) in DOT11_RATE_TABLE.iter().enumerate() {
@@ -973,7 +973,7 @@ pub extern "C" fn rtw_get_bit_value_from_ieee_value(val: U8) -> c_int {
     0
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_check_network_type(rate: *mut U8, ratelen: c_int, channel: c_int) -> c_int {
     let _ = ratelen;
     if channel > 14 {
@@ -991,7 +991,7 @@ pub extern "C" fn rtw_check_network_type(rate: *mut U8, ratelen: c_int, channel:
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_set_supported_rate(supported_rates: *mut U8, mode: c_uint) {
     if supported_rates.is_null() {
         return;
@@ -1082,12 +1082,12 @@ fn filter_suppport_rateie_inner(pbss_network: BssPtr, keep: U8) {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_filter_suppport_rateie(pbss_network: BssPtr, keep: U8) {
     filter_suppport_rateie_inner(pbss_network, keep);
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_update_rate_bymode(pbss_network: BssPtr, mode: u32) -> U8 {
     if pbss_network.is_null() {
         return 0;
@@ -1156,7 +1156,7 @@ fn get_vht_operation_ele_chl_width(ele_start: *const U8) -> U8 {
     unsafe { *ele_start }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_ies_get_chbw(
     ies: *mut U8,
     ies_len: c_int,
@@ -1226,7 +1226,7 @@ pub extern "C" fn rtw_ies_get_chbw(
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_bss_get_chbw(
     bss: BssPtr,
     ch: *mut U8,
@@ -1262,7 +1262,7 @@ pub extern "C" fn rtw_bss_get_chbw(
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_is_chbw_grouped(
     ch_a: U8,
     bw_a: U8,
@@ -1283,7 +1283,7 @@ pub extern "C" fn rtw_is_chbw_grouped(
     true
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_sync_chbw(
     req_ch: *mut U8,
     req_bw: *mut U8,
@@ -1414,7 +1414,7 @@ fn rtw_ht_mcsset_to_nss_inner(supp_mcs_set: *const U8) -> U8 {
 }
 
 #[cfg(not(host_ieee80211_rest_test))]
-extern "C" {
+unsafe extern "C" {
     fn rtw_ht_mcsset_to_nss(supp_mcs_set: *mut U8) -> U8;
 }
 
@@ -1497,7 +1497,7 @@ fn ht_mcs_rate_from_byte(byte: U8, idx: usize, bw_40: U8, short_gi: U8) -> u16 {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn ieee80211_is_empty_essid(essid: *const i8, essid_len: c_int) -> c_int {
     if essid.is_null() || essid_len <= 0 {
         return 1;
@@ -1517,7 +1517,7 @@ pub extern "C" fn ieee80211_is_empty_essid(essid: *const i8, essid_len: c_int) -
     1
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn ieee80211_get_hdrlen(fc: u16) -> c_int {
     let mut hdrlen = 24;
     match wlan_fc_get_type(fc) {
@@ -1540,7 +1540,7 @@ pub extern "C" fn ieee80211_get_hdrlen(fc: u16) -> c_int {
     hdrlen
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_ht_mcs_rate(bw_40mhz: U8, short_gi: U8, mcs_rate: *mut U8) -> u16 {
     if mcs_rate.is_null() {
         return 0;
@@ -1556,7 +1556,7 @@ pub extern "C" fn rtw_ht_mcs_rate(bw_40mhz: U8, short_gi: U8, mcs_rate: *mut U8)
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_ht_cap_get_rx_nss(ht_cap: *mut U8) -> U8 {
     if ht_cap.is_null() {
         return 1;
@@ -1564,7 +1564,7 @@ pub extern "C" fn rtw_ht_cap_get_rx_nss(ht_cap: *mut U8) -> U8 {
     rtw_ht_mcsset_to_nss_inner(ht_cap_ele_sup_mcs_set(ht_cap))
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_ht_cap_get_tx_nss(ht_cap: *mut U8) -> U8 {
     if ht_cap.is_null() {
         return 1;
@@ -1575,7 +1575,7 @@ pub extern "C" fn rtw_ht_cap_get_tx_nss(ht_cap: *mut U8) -> U8 {
     rtw_ht_cap_get_rx_nss(ht_cap)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_action_frame_parse(
     frame: *const U8,
     frame_len: u32,
@@ -1610,7 +1610,7 @@ pub extern "C" fn rtw_action_frame_parse(
     _TRUE
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_ieee80211_rest_probe() -> c_int {
     0x1e26
 }

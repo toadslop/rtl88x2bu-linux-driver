@@ -84,7 +84,7 @@ pub struct HostIoAdapter {
 mod kernel {
     use super::*;
 
-    extern "C" {
+    unsafe extern "C" {
         fn rtw_rust_dvobj_continual_io_error(dvobj: *mut c_void) -> *mut c_int;
         fn rtw_rust_atomic_inc_return(v: *mut c_int) -> c_int;
         fn rtw_rust_atomic_set(v: *mut c_int, val: c_int);
@@ -596,7 +596,7 @@ fn inc_and_chk_continual_io_error_inner(dvobj: *mut c_void) -> c_int {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_inc_and_chk_continual_io_error(dvobj: *mut c_void) -> c_int {
     if dvobj.is_null() {
         return _FALSE;
@@ -604,7 +604,7 @@ pub extern "C" fn rtw_inc_and_chk_continual_io_error(dvobj: *mut c_void) -> c_in
     inc_and_chk_continual_io_error_inner(dvobj)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_reset_continual_io_error(dvobj: *mut c_void) {
     if dvobj.is_null() {
         return;
@@ -613,21 +613,21 @@ pub extern "C" fn rtw_reset_continual_io_error(dvobj: *mut c_void) {
 }
 
 #[cfg(any(dbg_io, host_io_rest_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn match_read_sniff(adapter: *mut c_void, addr: u32, len: u16, val: u32) -> u32 {
     let (table, count) = kernel::read_sniff_table();
     match_sniff_table(adapter, table, count, addr, len, val)
 }
 
 #[cfg(any(dbg_io, host_io_rest_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn match_write_sniff(adapter: *mut c_void, addr: u32, len: u16, val: u32) -> u32 {
     let (table, count) = kernel::write_sniff_table();
     match_sniff_table(adapter, table, count, addr, len, val)
 }
 
 #[cfg(any(dbg_io, host_io_rest_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn match_rf_read_sniff_ranges(
     _adapter: *mut c_void,
     path: u8,
@@ -639,7 +639,7 @@ pub extern "C" fn match_rf_read_sniff_ranges(
 }
 
 #[cfg(any(dbg_io, host_io_rest_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn match_rf_write_sniff_ranges(
     _adapter: *mut c_void,
     path: u8,
@@ -650,7 +650,7 @@ pub extern "C" fn match_rf_write_sniff_ranges(
     match_rf_sniff_table(table, count, path, addr, mask)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_io_rest_probe() -> c_int {
     0
 }

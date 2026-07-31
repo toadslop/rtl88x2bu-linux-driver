@@ -175,7 +175,7 @@ fn gcmp_encrypt_inner(
 }
 
 /// C ABI: `gcmp_decrypt` from `core/crypto/gcmp.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn gcmp_decrypt(
     padapter: *const Adapter,
     tk: *const u8,
@@ -208,7 +208,7 @@ pub extern "C" fn gcmp_decrypt(
 }
 
 /// C ABI: `gcmp_encrypt` from `core/crypto/gcmp.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn gcmp_encrypt(
     padapter: *const Adapter,
     tk: *const u8,
@@ -251,7 +251,7 @@ pub extern "C" fn gcmp_encrypt(
 }
 
 /// Link-time probe for L1 (distinct from the exported crypto symbols).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_gcmp_probe() -> core::ffi::c_int {
     AES_BLOCK_SIZE as core::ffi::c_int
 }

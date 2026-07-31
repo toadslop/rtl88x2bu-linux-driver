@@ -20,7 +20,7 @@ use core::ffi::{c_char, c_int};
 
 const SHA256_MAC_LEN: usize = 32;
 
-extern "C" {
+unsafe extern "C" {
     fn hmac_sha256_vector(
         key: *const u8,
         key_len: usize,
@@ -135,7 +135,7 @@ pub fn sha256_prf_bits_typed(
 }
 
 /// C ABI: `sha256_prf_bits` from `core/crypto/sha256-prf.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn sha256_prf_bits(
     key: *const u8,
     key_len: usize,
@@ -184,7 +184,7 @@ pub extern "C" fn sha256_prf_bits(
 }
 
 /// C ABI: `sha256_prf` from `core/crypto/sha256-prf.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn sha256_prf(
     key: *const u8,
     key_len: usize,
@@ -206,7 +206,7 @@ pub extern "C" fn sha256_prf(
 }
 
 /// Link-time probe for L1 (distinct from the exported crypto symbols).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_sha256_prf_probe() -> c_int {
     SHA256_MAC_LEN as c_int
 }

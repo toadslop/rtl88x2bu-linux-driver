@@ -1,5 +1,7 @@
 # Host L2 differential tests for core/rtw_vht_rest.c (W3-35, W3-36).
 
+include ../rust.mk
+
 ROOT     := ../../..
 CORE     := $(ROOT)/core
 HOST_INC := ../include
@@ -9,6 +11,7 @@ HOST_JSON := ../crypto/host_vector_json.c
 RUST_VHT := $(ROOT)/rust/rtw_vht.rs
 
 CC     := gcc
+RUSTC  := rustc
 BASE_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
           -I$(HOST_INC) -I$(CORE) -I$(ROOT)/include \
           -include $(HOST_INC)/host_autoconf.h \
@@ -29,7 +32,7 @@ test_vht: test_vht.c $(VHT_REST_SRC) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_vht.c $(VHT_REST_SRC) $(HOST_JSON)
 
 librust_vht.a: $(RUST_VHT)
-	rustc -C opt-level=2 -C overflow-checks=on --cfg host_vht_test \
+	$(RUSTC) $(RUST_BASE_FLAGS) --cfg host_vht_test \
 		--crate-type staticlib $(RUST_VHT) -o $@
 
 test-rust: test_vht_rust

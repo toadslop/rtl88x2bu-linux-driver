@@ -110,6 +110,9 @@ echo "bindgen: out=${OUT}"
 	-- \
 	"${CLANG_ARGS[@]}"
 
+# Edition 2024: extern blocks must be unsafe (bindgen 0.65 emits bare extern "C").
+sed -i 's/\bextern "C" {/unsafe extern "C" {/g' "${TMP_OUT}"
+
 if [[ "${CHECK_MODE}" -eq 1 ]]; then
 	if [[ ! -f "${OUT}" ]]; then
 		echo "error: missing committed bindings: ${OUT}" >&2

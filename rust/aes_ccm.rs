@@ -23,7 +23,7 @@ mod bindings {
 
     pub const AES_BLOCK_SIZE: u32 = 16;
 
-    extern "C" {
+    unsafe extern "C" {
         pub fn aes_encrypt_init(key: *const u8, len: usize) -> *mut c_void;
         pub fn aes_encrypt(ctx: *mut c_void, plain: *const u8, crypt: *mut u8) -> c_int;
         pub fn aes_encrypt_deinit(ctx: *mut c_void);
@@ -269,7 +269,7 @@ pub fn aes_ccm_ad_typed(
 }
 
 /// C ABI: `aes_ccm_ae` from `core/crypto/aes-ccm.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn aes_ccm_ae(
     key: *const u8,
     key_len: usize,
@@ -328,7 +328,7 @@ pub extern "C" fn aes_ccm_ae(
 }
 
 /// C ABI: `aes_ccm_ad` from `core/crypto/aes-ccm.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn aes_ccm_ad(
     key: *const u8,
     key_len: usize,
@@ -385,7 +385,7 @@ pub extern "C" fn aes_ccm_ad(
 }
 
 /// Link-time probe for L1 (distinct from the exported crypto symbols).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_aes_ccm_probe() -> c_int {
     AES_BLOCK_SIZE as c_int
 }

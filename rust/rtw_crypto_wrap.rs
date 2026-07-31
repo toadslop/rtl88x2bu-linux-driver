@@ -32,7 +32,7 @@ mod bindings {
         pub registrypriv: RegistryPriv,
     }
 
-    extern "C" {
+    unsafe extern "C" {
         pub fn _rtw_memcmp2(dst: *const c_void, src: *const c_void, sz: u32) -> c_int;
         pub fn rtw_malloc(sz: usize) -> *mut c_void;
         pub fn rtw_mfree(ptr: *mut c_void, sz: usize);
@@ -57,7 +57,7 @@ mod bindings {
 mod bindings {
     use super::*;
 
-    extern "C" {
+    unsafe extern "C" {
         pub fn _rtw_memcmp2(dst: *const c_void, src: *const c_void, sz: u32) -> c_int;
         pub fn _rtw_memset(s: *mut c_void, c: c_int, n: usize) -> *mut c_void;
         pub fn _rtw_memcpy(dest: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
@@ -132,7 +132,7 @@ pub fn os_memcmp_const_typed(a: &[u8], b: &[u8]) -> u8 {
 }
 
 /// C ABI: `os_memcmp_const` from `core/crypto/rtw_crypto_wrap.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn os_memcmp_const(a: *const c_void, b: *const c_void, len: usize) -> c_int {
     let a_slice = unsafe { core::slice::from_raw_parts(a as *const u8, len) };
     let b_slice = unsafe { core::slice::from_raw_parts(b as *const u8, len) };
@@ -140,13 +140,13 @@ pub extern "C" fn os_memcmp_const(a: *const c_void, b: *const c_void, len: usize
 }
 
 /// C ABI: `os_memcmp` from `core/crypto/rtw_crypto_wrap.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn os_memcmp(s1: *const c_void, s2: *const c_void, n: usize) -> c_int {
     unsafe { bindings::_rtw_memcmp2(s1, s2, n as u32) }
 }
 
 /// C ABI: `os_strlen` from `core/crypto/rtw_crypto_wrap.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn os_strlen(s: *const c_char) -> usize {
     unsafe {
         let mut p = s;
@@ -158,7 +158,7 @@ pub extern "C" fn os_strlen(s: *const c_char) -> usize {
 }
 
 /// C ABI: `os_memdup` from `core/crypto/rtw_crypto_wrap.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn os_memdup(src: *const c_void, sz: u32) -> *mut c_void {
     let r = wrap_malloc(sz);
     if !r.is_null() && !src.is_null() && sz > 0 {
@@ -168,13 +168,13 @@ pub extern "C" fn os_memdup(src: *const c_void, sz: u32) -> *mut c_void {
 }
 
 /// C ABI: `forced_memzero` from `core/crypto/rtw_crypto_wrap.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn forced_memzero(ptr: *mut c_void, len: usize) {
     wrap_memset(ptr, len);
 }
 
 /// C ABI: `bin_clear_free` from `core/crypto/rtw_crypto_wrap.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn bin_clear_free(bin: *mut c_void, len: usize) {
     if bin.is_null() {
         return;
@@ -184,7 +184,7 @@ pub extern "C" fn bin_clear_free(bin: *mut c_void, len: usize) {
 }
 
 /// C ABI: `rtw_registrypriv_amsdu_mode` from `core/crypto/rtw_crypto_wrap.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_registrypriv_amsdu_mode(padapter: *const c_void) -> u8 {
     if padapter.is_null() {
         return RTW_AMSDU_MODE_NON_SPP;
@@ -202,11 +202,11 @@ pub extern "C" fn rtw_registrypriv_amsdu_mode(padapter: *const c_void) -> u8 {
 }
 
 /// Debug printf stub — oracle: `wpa_printf` (no-op unless DEBUG_CRYPTO in C).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn wpa_printf(_level: c_int, _fmt: *const c_char) {}
 
 /// Debug hexdump stub — oracle: `wpa_hexdump`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn wpa_hexdump(
     _level: c_int,
     _title: *const c_char,
@@ -216,7 +216,7 @@ pub extern "C" fn wpa_hexdump(
 }
 
 /// Debug key hexdump stub — oracle: `wpa_hexdump_key`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn wpa_hexdump_key(
     _level: c_int,
     _title: *const c_char,
@@ -226,7 +226,7 @@ pub extern "C" fn wpa_hexdump_key(
 }
 
 /// Link-time probe for L1 (distinct from the exported crypto symbols).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_rtw_crypto_wrap_probe() -> c_int {
     RTW_AMSDU_MODE_NON_SPP as c_int
 }

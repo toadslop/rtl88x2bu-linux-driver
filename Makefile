@@ -2553,6 +2553,7 @@ $(MODULE_NAME)-y += rust/rtw_crypto_wrap.o
 # rtw_regsty_is_excl_chs uses EXCL_CHS_OFFSET in rust/rtw_chplan.rs — re-run L1
 # after any registry_priv layout change.
 # RUSTFLAGS_<stem>.o is not applied to out-of-tree rustc; rustflags-y is.
+# Edition 2024 is set via pinned-kernel rust_common_flags (see build-pinned-kernel.sh).
 rustflags-y += --cfg ieee80211_band_5ghz
 # CONFIG_DFS defaults to 1 in include/drv_conf.h (#define), not a Makefile y var.
 rustflags-y += --cfg dfs
@@ -2960,7 +2961,7 @@ rust-objects-rtw-rm-util-c:
 		-o tests/host/rm/rm_rest_c_ref.o core/rtw_rm_util_rest.c
 
 rust-objects-rtw-rm-util-rust-ref:
-	rustc -C opt-level=2 -C overflow-checks=on --cfg host_rm_test \
+	rustc --edition=2024 -C opt-level=2 -C overflow-checks=on --cfg host_rm_test \
 		--emit=obj=tests/host/rm/rm_rest_rust_ref.o \
 		--crate-type lib rust/rtw_rm_util.rs
 
@@ -2977,7 +2978,7 @@ rust-objects-rtw-vht-c:
 		-o tests/host/vht/vht_rest_c_ref.o core/rtw_vht_rest.c
 
 rust-objects-rtw-vht-rust-ref:
-	rustc -C opt-level=2 -C overflow-checks=on --cfg host_vht_test \
+	rustc --edition=2024 -C opt-level=2 -C overflow-checks=on --cfg host_vht_test \
 		--emit=obj=tests/host/vht/vht_rest_rust_ref.o \
 		--crate-type lib rust/rtw_vht.rs
 

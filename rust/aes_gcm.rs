@@ -20,7 +20,7 @@ mod bindings {
 
     pub const AES_BLOCK_SIZE: u32 = 16;
 
-    extern "C" {
+    unsafe extern "C" {
         pub fn aes_encrypt_init(key: *const u8, len: usize) -> *mut c_void;
         pub fn aes_encrypt(ctx: *mut c_void, plain: *const u8, crypt: *mut u8) -> c_int;
         pub fn aes_encrypt_deinit(ctx: *mut c_void);
@@ -36,7 +36,7 @@ mod bindings {
 
     include!("bindings/generated.rs");
 
-    extern "C" {
+    unsafe extern "C" {
         pub fn os_memcmp_const(a: *const c_void, b: *const c_void, len: usize) -> c_int;
         pub fn wpa_hexdump_key(level: core::ffi::c_int, title: *const u8, buf: *const u8, len: usize);
         pub fn wpa_printf(level: core::ffi::c_int, fmt: *const u8, ...);
@@ -342,7 +342,7 @@ pub fn aes_gmac_typed(key: AesKey, iv: &[u8], aad: &[u8], tag: &mut [u8; 16]) ->
 }
 
 /// C ABI: `aes_gcm_ae` from `core/crypto/aes-gcm.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn aes_gcm_ae(
     key: *const u8,
     key_len: usize,
@@ -401,7 +401,7 @@ pub extern "C" fn aes_gcm_ae(
 }
 
 /// C ABI: `aes_gcm_ad` from `core/crypto/aes-gcm.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn aes_gcm_ad(
     key: *const u8,
     key_len: usize,
@@ -450,7 +450,7 @@ pub extern "C" fn aes_gcm_ad(
 }
 
 /// C ABI: `aes_gmac` from `core/crypto/aes-gcm.c`.
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn aes_gmac(
     key: *const u8,
     key_len: usize,
@@ -493,7 +493,7 @@ pub extern "C" fn aes_gmac(
 }
 
 /// Link-time probe for L1 (distinct from the exported crypto symbols).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_aes_gcm_probe() -> c_int {
     AES_BLOCK_SIZE as c_int
 }

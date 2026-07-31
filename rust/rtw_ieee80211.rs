@@ -24,18 +24,18 @@ const _TRUE: i32 = 1;
 const _FAIL: i32 = 0;
 const _SUCCESS: i32 = 1;
 
-extern "C" {
+unsafe extern "C" {
     fn memcpy(dst: *mut u8, src: *const u8, n: usize) -> *mut u8;
     fn memmove(dst: *mut u8, src: *const u8, n: usize) -> *mut u8;
     fn memcmp(s1: *const u8, s2: *const u8, n: usize) -> i32;
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_ieee80211_probe() -> c_int {
     0x1e03
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_get_ie(pbuf: *const u8, index: Sint, len: *mut Sint, limit: Sint) -> *mut u8 {
     if limit < 1 {
         return core::ptr::null_mut();
@@ -60,7 +60,7 @@ pub extern "C" fn rtw_get_ie(pbuf: *const u8, index: Sint, len: *mut Sint, limit
     core::ptr::null_mut()
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_get_ie_ex(
     in_ie: *const u8,
     in_len: u32,
@@ -108,7 +108,7 @@ pub extern "C" fn rtw_get_ie_ex(
     target_ie as *mut u8
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_ies_remove_ie(
     ies: *mut u8,
     ies_len: *mut u32,

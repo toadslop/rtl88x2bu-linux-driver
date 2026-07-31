@@ -68,7 +68,7 @@ static RTW_OP_CLASS_US: [RtOperatingClass; 7] = [
     },
 ];
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rm_get_ch_set(
     pch_set: *mut rtw_ieee80211_channel,
     op_class: u8,
@@ -91,7 +91,7 @@ pub extern "C" fn rm_get_ch_set(
     0
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rm_get_oper_class_via_ch(ch: u8) -> u8 {
     for op in &RTW_OP_CLASS_US {
         for j in 0..op.len as usize {
@@ -103,7 +103,7 @@ pub extern "C" fn rm_get_oper_class_via_ch(ch: u8) -> u8 {
     0
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn is_wildcard_bssid(bssid: *mut u8) -> c_int {
     let b = unsafe { core::slice::from_raw_parts(bssid, 6) };
     let val8 = b.iter().fold(0xffu8, |acc, &x| acc & x);
@@ -114,12 +114,12 @@ pub extern "C" fn is_wildcard_bssid(bssid: *mut u8) -> c_int {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn translate_dbm_to_rcpi(signal_power: i8) -> u8 {
     ((i16::from(signal_power) + 110) * 2) as u8
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn translate_percentage_to_rcpi(signal_strength_index: u32) -> u8 {
     translate_dbm_to_rcpi((signal_strength_index as i32 - 100) as i8)
 }
@@ -177,7 +177,7 @@ struct HostRmObj {
 
 #[cfg(rtw_80211k)]
 mod kernel_layout {
-    extern "C" {
+    unsafe extern "C" {
         pub fn rtw_rust_rm_dialog_token_ptr(padapter: *mut u8) -> *mut u8;
         pub fn rtw_rust_rm_meas_token_ptr(padapter: *mut u8) -> *mut u8;
         pub fn rtw_rust_rm_obj_psta(prm: *mut u8) -> *mut u8;
@@ -199,7 +199,7 @@ fn gen_nonzero_token(token: &mut u8) -> u8 {
 }
 
 #[cfg(any(host_rm_test, rtw_80211k))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rm_gen_dialog_token(padapter: *mut u8) -> u8 {
     #[cfg(host_rm_test)]
     unsafe {
@@ -215,7 +215,7 @@ pub extern "C" fn rm_gen_dialog_token(padapter: *mut u8) -> u8 {
 }
 
 #[cfg(any(host_rm_test, rtw_80211k))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rm_gen_meas_token(padapter: *mut u8) -> u8 {
     #[cfg(host_rm_test)]
     unsafe {
@@ -231,7 +231,7 @@ pub extern "C" fn rm_gen_meas_token(padapter: *mut u8) -> u8 {
 }
 
 #[cfg(any(host_rm_test, rtw_80211k))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rm_gen_rmid(padapter: *mut u8, prm: *mut u8, role: u8) -> u32 {
     let _ = padapter;
     #[cfg(host_rm_test)]
@@ -257,7 +257,7 @@ pub extern "C" fn rm_gen_rmid(padapter: *mut u8, prm: *mut u8, role: u8) -> u32 
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_rm_util_probe() -> c_int {
     0x1e34
 }

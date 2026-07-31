@@ -4,6 +4,8 @@
 # W2-16 hmac-sha256).
 # Builds with gcc only — no kernel headers or KDIR.
 
+include ../rust.mk
+
 ROOT     := ../../..
 CRYPTO   := $(ROOT)/core/crypto
 HOST_INC := ../include
@@ -31,7 +33,7 @@ WRAP_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
                -I$(HOST_INC) -I$(CRYPTO)
 # Match kernel CONFIG_RUST_OVERFLOW_CHECKS so host L2 catches wrap panics
 # that would abort in extern "C" under /opt/linux.
-RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
+RUSTFLAGS := $(RUST_BASE_FLAGS)
 
 AES_LEAF_SRCS := \
 	$(CRYPTO)/aes-internal.c \

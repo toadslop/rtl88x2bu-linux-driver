@@ -83,7 +83,7 @@ static RTW_BASIC_RATE_MIX: [U8; 7] = [
     IEEE80211_OFDM_RATE_24MB | IEEE80211_BASIC_RATE_MASK,
 ];
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_wlan_util_probe() -> c_int {
     0x1e08
 }
@@ -93,32 +93,32 @@ fn rate_matches_table(rate: U8, table: &[U8]) -> bool {
     table.iter().any(|&entry| (entry & 0x7f) == idx)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_is_cck_rate(rate: U8) -> bool {
     rate_matches_table(rate, &WIFI_CCKRATES)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_is_ofdm_rate(rate: U8) -> bool {
     rate_matches_table(rate, &WIFI_OFDMRATES)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_is_basic_rate_cck(rate: U8) -> bool {
     rate_matches_table(rate, &RTW_BASIC_RATE_CCK)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_is_basic_rate_ofdm(rate: U8) -> bool {
     rate_matches_table(rate, &RTW_BASIC_RATE_OFDM)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_is_basic_rate_mix(rate: U8) -> bool {
     rate_matches_table(rate, &RTW_BASIC_RATE_MIX)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn cckrates_included(rate: *mut U8, ratelen: i32) -> i32 {
     if rate.is_null() || ratelen <= 0 {
         return _FALSE;
@@ -134,7 +134,7 @@ pub extern "C" fn cckrates_included(rate: *mut U8, ratelen: i32) -> i32 {
     _FALSE
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn cckratesonly_included(rate: *mut U8, ratelen: i32) -> i32 {
     if rate.is_null() {
         return _FALSE;
@@ -181,7 +181,7 @@ mod kernel_layout {
     /// `offsetof(struct _adapter, mlmeextpriv.datarate)`
     pub const MLMEEXT_DATARATE_OFFSET: usize = 0x855;
 
-    extern "C" {
+    unsafe extern "C" {
         pub fn rtw_get_oper_ch(adapter: *mut core::ffi::c_void) -> U8;
     }
 }
@@ -204,7 +204,7 @@ fn ratetbl_val_2wifirate_inner(rate: U8) -> U8 {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn ratetbl_val_2wifirate(rate: U8) -> U8 {
     ratetbl_val_2wifirate_inner(rate)
 }
@@ -256,7 +256,7 @@ unsafe fn is_basicrate_inner(padapter: *mut U8, rate: U8) -> i32 {
     _FALSE
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn is_basicrate(padapter: *mut U8, rate: U8) -> i32 {
     if padapter.is_null() {
         return _FALSE;
@@ -264,7 +264,7 @@ pub extern "C" fn is_basicrate(padapter: *mut U8, rate: U8) -> i32 {
     unsafe { is_basicrate_inner(padapter, rate) }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn ratetbl2rateset(padapter: *mut U8, rateset: *mut U8) -> u32 {
     if padapter.is_null() || rateset.is_null() {
         return 0;
@@ -353,7 +353,7 @@ unsafe fn vht_enable(padapter: *mut U8) -> U8 {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn judge_network_type(
     padapter: *mut U8,
     rate: *mut U8,
@@ -391,7 +391,7 @@ pub extern "C" fn judge_network_type(
     network_type
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn get_rate_set(padapter: *mut U8, pbssrate: *mut U8, bssrate_len: *mut i32) {
     if padapter.is_null() || pbssrate.is_null() || bssrate_len.is_null() {
         return;
@@ -408,7 +408,7 @@ pub extern "C" fn get_rate_set(padapter: *mut U8, pbssrate: *mut U8, bssrate_len
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn set_mcs_rate_by_mask(mcs_set: *mut U8, mask: u32) {
     if mcs_set.is_null() {
         return;

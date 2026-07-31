@@ -38,7 +38,7 @@ jobs:
   host-l2:
     runs-on: ubuntu-latest
     env:
-      RUSTUP_TOOLCHAIN: 1.83.0
+      RUSTUP_TOOLCHAIN: 1.85.0
     steps:
       - uses: actions/checkout@v4
 
@@ -80,7 +80,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc make
-          rustup toolchain install 1.83.0 --profile minimal
+          rustup toolchain install 1.85.0 --profile minimal
 
       - name: Domain type unit tests (A1)
         if: steps.filter.outputs.l2 == 'true'

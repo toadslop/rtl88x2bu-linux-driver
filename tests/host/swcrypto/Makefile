@@ -1,6 +1,8 @@
 # Host L2 differential tests for core/rtw_swcrypto.c wrappers (W3-01/W3-02).
 # Builds with gcc only — no kernel headers or KDIR.
 
+include ../rust.mk
+
 ROOT     := ../../..
 CORE     := $(ROOT)/core
 CRYPTO   := $(ROOT)/core/crypto
@@ -13,7 +15,7 @@ CFLAGS  := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variabl
            -I$(HOST_INC) -I$(CRYPTO) \
            -include $(HOST_INC)/host_autoconf.h \
            -DHOST_CRYPTO_TEST -DHOST_SWCRYPTO_TEST
-RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
+RUSTFLAGS := $(RUST_BASE_FLAGS)
 
 AES_LEAF_SRCS := \
 	$(CRYPTO)/aes-internal.c \

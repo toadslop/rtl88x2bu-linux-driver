@@ -79,7 +79,7 @@ pub use bindings::*;
 /// Link-time probe: returns `AES_BLOCK_SIZE` from the re-exported bindings.
 ///
 /// Confirms the FFI/bindings object is present in `88x2bu.ko` (`nm` / L1).
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_bindings_probe() -> core::ffi::c_int {
     AES_BLOCK_SIZE as core::ffi::c_int
 }

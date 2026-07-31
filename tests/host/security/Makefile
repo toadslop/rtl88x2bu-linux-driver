@@ -1,6 +1,8 @@
 # Host L2 differential tests for core/rtw_security.c helpers (T5).
 # Builds with gcc only — no kernel headers or KDIR.
 
+include ../rust.mk
+
 ROOT     := ../../..
 HOST_INC := ../include
 SHIM     := ../shim/host_security_shim.c
@@ -28,7 +30,7 @@ CFLAGS  := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
            -DCONFIG_IEEE80211W
 SWCRYPTO_CFLAGS := $(CFLAGS) -I$(CRYPTO_DIR) -include ../include/host_autoconf.h \
 	-DHOST_CRYPTO_TEST -DHOST_SWCRYPTO_TEST
-RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
+RUSTFLAGS := $(RUST_BASE_FLAGS)
 HOST_JSON := ../crypto/host_vector_json.c
 
 .PHONY: all test test-c test-rust test-wep test-wep-rust test-wep-frames test-wep-frames-rust test-tkip test-tkip-rust test-tkip-phase test-tkip-phase-rust test-tkip-frames test-tkip-frames-rust test-ccmp-primitives test-ccmp-primitives-rust test-ccmp-construct test-ccmp-construct-rust test-ccmp-frames test-ccmp-frames-rust test-gcmp-frames test-gcmp-frames-rust test-rest-misc test-rest-misc-rust test-rest-tdls test-rest-tdls-rust clean

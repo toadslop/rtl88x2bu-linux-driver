@@ -43,9 +43,9 @@ RUN ln -sf /usr/bin/ld.lld-18 /usr/bin/ld.lld \
 		[ -e "/usr/bin/${base}" ] || ln -sf "$f" "/usr/bin/${base}"; \
 	done
 
-# Rust toolchain (Linux 6.12.x min: rustc >= 1.78, bindgen 0.65.1).
+# Rust toolchain (edition 2024 requires rustc >= 1.85; Linux 6.12.x min bindgen 0.65.1).
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
-	| sh -s -- -y --default-toolchain 1.83.0 --profile minimal \
+	| sh -s -- -y --default-toolchain 1.85.0 --profile minimal \
 	&& . "$HOME/.cargo/env" \
 	&& rustup component add rust-src rustfmt clippy \
 	&& cargo install bindgen-cli --version 0.65.1 --locked

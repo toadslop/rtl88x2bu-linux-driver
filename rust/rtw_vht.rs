@@ -17,7 +17,7 @@ use std::os::raw::c_int;
 #[cfg(not(host_vht_test))]
 use core::ffi::c_int;
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_vht_nss_to_mcsmap(nss: u8, target_mcs_map: *mut u8, cur_mcs_map: *mut u8) {
     let cur = unsafe { core::slice::from_raw_parts(cur_mcs_map, 2) };
     let target = unsafe { core::slice::from_raw_parts_mut(target_mcs_map, 2) };
@@ -38,7 +38,7 @@ pub extern "C" fn rtw_vht_nss_to_mcsmap(nss: u8, target_mcs_map: *mut u8, cur_mc
 }
 
 #[cfg(any(host_vht_test, roku_private))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn VHT_get_ss_from_map(vht_mcs_map: *mut u8) -> u8 {
     let map = unsafe { core::slice::from_raw_parts(vht_mcs_map, 2) };
     let mut ss = 0u8;
@@ -56,7 +56,7 @@ pub extern "C" fn VHT_get_ss_from_map(vht_mcs_map: *mut u8) -> u8 {
     ss
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_vht_probe() -> c_int {
     0x1e35
 }

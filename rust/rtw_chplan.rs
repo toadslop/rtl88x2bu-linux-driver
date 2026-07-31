@@ -82,7 +82,7 @@ mod layout {
     pub const EXCL_CHS_OFFSET: usize = 0x43c;
 }
 
-extern "C" {
+unsafe extern "C" {
     static RTW_ChannelPlanMap: ChplanEnt;
     static RTW_ChannelPlanMap_size: c_int;
     static country_chplan_map: CountryChplan;
@@ -177,17 +177,17 @@ fn rtw_is_5g_band4(ch: u8) -> bool {
     (149..=177).contains(&ch)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_chplan_probe() -> c_int {
     0x7720
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_chplan_get_default_regd_2g(id: u8) -> u8 {
     unsafe { chplan_ent_unchecked(id).regd_2g }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_chplan_get_default_regd_5g(id: u8) -> u8 {
     #[cfg(ieee80211_band_5ghz)]
     {
@@ -200,7 +200,7 @@ pub extern "C" fn rtw_chplan_get_default_regd_5g(id: u8) -> u8 {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_chplan_get_default_regd(id: u8) -> u8 {
     let regd_2g = rtw_chplan_get_default_regd_2g(id);
     let regd_5g = rtw_chplan_get_default_regd_5g(id);
@@ -220,7 +220,7 @@ pub extern "C" fn rtw_chplan_get_default_regd(id: u8) -> u8 {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_chplan_is_empty(id: u8) -> bool {
     let ent = unsafe { chplan_ent_unchecked(id) };
     if ent.chd_2g != RTW_CHD_2G_NULL {
@@ -236,12 +236,12 @@ pub extern "C" fn rtw_chplan_is_empty(id: u8) -> bool {
     }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_is_channel_plan_valid(id: u8) -> bool {
     (id as i32) < unsafe { RTW_ChannelPlanMap_size } && !rtw_chplan_is_empty(id)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_regsty_is_excl_chs(regsty: *const u8, ch: u8) -> bool {
     if regsty.is_null() {
         return false;
@@ -259,7 +259,7 @@ pub extern "C" fn rtw_regsty_is_excl_chs(regsty: *const u8, ch: u8) -> bool {
     false
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_chset_is_dfs_range(chset: *mut RtChannelInfo, hi: u32, lo: u32) -> bool {
     // Intentional hardening: legacy C dereferences chset unconditionally.
     if chset.is_null() {
@@ -283,7 +283,7 @@ pub extern "C" fn rtw_chset_is_dfs_range(chset: *mut RtChannelInfo, hi: u32, lo:
     false
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_chset_is_dfs_ch(chset: *mut RtChannelInfo, ch: u8) -> bool {
     // See rtw_chset_is_dfs_range: NULL chset returns false instead of faulting.
     if chset.is_null() {
@@ -301,7 +301,7 @@ pub extern "C" fn rtw_chset_is_dfs_ch(chset: *mut RtChannelInfo, ch: u8) -> bool
     false
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_chset_is_dfs_chbw(
     chset: *mut RtChannelInfo,
     ch: u8,
@@ -317,7 +317,7 @@ pub extern "C" fn rtw_chset_is_dfs_chbw(
     rtw_chset_is_dfs_range(chset, hi, lo)
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_get_chplan_from_country(
     country_code: *const c_char,
 ) -> *const CountryChplan {
@@ -423,7 +423,7 @@ unsafe fn init_channel_set_from_rtk_priv(adapter: *mut u8, channel_set: *mut RtC
     chanset_size
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn init_channel_set(adapter: *mut u8) -> u8 {
     if adapter.is_null() {
         return 0;

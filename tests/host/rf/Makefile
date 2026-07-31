@@ -1,5 +1,7 @@
 # Host L2 differential tests for core/rtw_rf_rest.c (W3-19).
 
+include ../rust.mk
+
 ROOT     := ../../..
 CORE     := $(ROOT)/core
 HOST_INC := ../include
@@ -27,7 +29,7 @@ test_rf: test_rf.c $(RF_SRC) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_rf.c $(RF_SRC) $(HOST_JSON)
 
 librust_rf_rest.a: $(RUST_RF_REST)
-	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_rf_rest_test \
+	$(RUSTC) $(RUST_BASE_FLAGS) --cfg host_rf_rest_test \
 		--crate-type staticlib $(RUST_RF_REST) -o $@
 
 test-rust: test_rf_rust

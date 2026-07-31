@@ -39,7 +39,7 @@ const _FAIL: Sint = 0;
 const MAX_MSG_SIZE: usize = 2048;
 
 #[cfg(not(host_security_rest_test))]
-extern "C" {
+unsafe extern "C" {
     fn rtw_aes_decipher_log_mic_mismatch(i: c_int, pframe_byte: U8, message_byte: U8);
 }
 
@@ -62,7 +62,7 @@ const SBOX_TABLE: [U8; 256] = [
     0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16,
 ];
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_rust_security_rest_probe() -> c_int {
     0x1e11
 }
@@ -782,7 +782,7 @@ fn aes_decipher_inner(key: &[U8; 16], hdrlen: u32, pframe: &mut [U8], plen: u32)
 }
 
 #[cfg(not(host_security_rest_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn aes_decipher(
     key: *mut U8,
     hdrlen: u32,
@@ -801,7 +801,7 @@ pub extern "C" fn aes_decipher(
 // ----- Host L2 exports (W3-11) -----
 
 #[cfg(host_security_rest_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_ccmp_aes128k128d(key: *mut U8, data: *mut U8, ciphertext: *mut U8) {
     let key_arr: [U8; 16] = unsafe { core::ptr::read_unaligned(key as *const [U8; 16]) };
     let data_arr: [U8; 16] = unsafe { core::ptr::read_unaligned(data as *const [U8; 16]) };
@@ -813,7 +813,7 @@ pub extern "C" fn host_ccmp_aes128k128d(key: *mut U8, data: *mut U8, ciphertext:
 }
 
 #[cfg(host_security_rest_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_ccmp_xor_128(a: *mut U8, b: *mut U8, out: *mut U8) {
     let a_arr: [U8; 16] = unsafe { core::ptr::read_unaligned(a as *const [U8; 16]) };
     let b_arr: [U8; 16] = unsafe { core::ptr::read_unaligned(b as *const [U8; 16]) };
@@ -825,7 +825,7 @@ pub extern "C" fn host_ccmp_xor_128(a: *mut U8, b: *mut U8, out: *mut U8) {
 }
 
 #[cfg(host_security_rest_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_ccmp_xor_32(a: *mut U8, b: *mut U8, out: *mut U8) {
     let a_arr: [U8; 4] = unsafe { core::ptr::read_unaligned(a as *const [U8; 4]) };
     let b_arr: [U8; 4] = unsafe { core::ptr::read_unaligned(b as *const [U8; 4]) };
@@ -837,7 +837,7 @@ pub extern "C" fn host_ccmp_xor_32(a: *mut U8, b: *mut U8, out: *mut U8) {
 }
 
 #[cfg(host_security_rest_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_ccmp_bitwise_xor(ina: *mut U8, inb: *mut U8, out: *mut U8) {
     let ina_arr: [U8; 16] = unsafe { core::ptr::read_unaligned(ina as *const [U8; 16]) };
     let inb_arr: [U8; 16] = unsafe { core::ptr::read_unaligned(inb as *const [U8; 16]) };
@@ -849,7 +849,7 @@ pub extern "C" fn host_ccmp_bitwise_xor(ina: *mut U8, inb: *mut U8, out: *mut U8
 }
 
 #[cfg(host_security_rest_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_ccmp_construct_mic_iv(
     mic_iv: *mut U8,
     qc_exists: c_int,
@@ -877,7 +877,7 @@ pub extern "C" fn host_ccmp_construct_mic_iv(
 }
 
 #[cfg(host_security_rest_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_ccmp_construct_mic_header1(
     mic_header1: *mut U8,
     header_length: c_int,
@@ -893,7 +893,7 @@ pub extern "C" fn host_ccmp_construct_mic_header1(
 }
 
 #[cfg(host_security_rest_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_ccmp_construct_mic_header2(
     mic_header2: *mut U8,
     mpdu: *mut U8,
@@ -914,7 +914,7 @@ pub extern "C" fn host_ccmp_construct_mic_header2(
 }
 
 #[cfg(host_security_rest_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_ccmp_construct_ctr_preload(
     ctr_preload: *mut U8,
     a4_exists: c_int,
@@ -942,7 +942,7 @@ pub extern "C" fn host_ccmp_construct_ctr_preload(
 }
 
 #[cfg(host_security_rest_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_ccmp_aes_cipher(
     key: *mut U8,
     hdrlen: u32,
@@ -959,7 +959,7 @@ pub extern "C" fn host_ccmp_aes_cipher(
 }
 
 #[cfg(host_security_rest_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_ccmp_aes_decipher(
     key: *mut U8,
     hdrlen: u32,
@@ -1002,7 +1002,7 @@ pub type AesAdapter = core::ffi::c_void;
 #[cfg(not(host_security_rest_test))]
 pub type AesAdapter = core::ffi::c_void;
 
-extern "C" {
+unsafe extern "C" {
     fn _rtw_ccmp_encrypt(
         padapter: *mut core::ffi::c_void,
         key: *mut U8,
@@ -1064,7 +1064,7 @@ fn hw_hdr_offset(pkt_offset: i8) -> usize {
 mod kernel_layout {
     use super::*;
 
-    extern "C" {
+    unsafe extern "C" {
         static rtw_rust_wep_off_adapter_securitypriv: usize;
         static rtw_rust_wep_off_adapter_xmitpriv: usize;
         static rtw_rust_wep_off_xmitpriv_frag_len: usize;
@@ -1299,7 +1299,7 @@ unsafe fn aes_encrypt_frag_new_crypto(
 }
 
 #[cfg(not(host_security_rest_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_aes_encrypt(padapter: *mut AesAdapter, pxmitframe: *mut U8) -> U32 {
     if padapter.is_null() || pxmitframe.is_null() {
         return AES_RTW_FAIL;
@@ -1352,7 +1352,7 @@ pub extern "C" fn rtw_aes_encrypt(padapter: *mut AesAdapter, pxmitframe: *mut U8
 const _FALSE: U8 = 0;
 
 #[cfg(not(host_security_rest_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_aes_decrypt(padapter: *mut AesAdapter, precvframe: *mut U8) -> U32 {
     if padapter.is_null() || precvframe.is_null() {
         return AES_RTW_FAIL;
@@ -1416,7 +1416,7 @@ const HOST_GCMP_SUCCESS: U32 = 0;
 const HOST_GCMP_FAIL: U32 = 1;
 
 #[cfg(any(not(host_security_rest_test), host_gcmp_frame_test))]
-extern "C" {
+unsafe extern "C" {
     fn _rtw_gcmp_encrypt(
         padapter: *mut core::ffi::c_void,
         key: *mut U8,
@@ -1483,7 +1483,7 @@ unsafe fn gcmp_encrypt_frags(
 mod gcmp_kernel_layout {
     use super::*;
 
-    extern "C" {
+    unsafe extern "C" {
         static rtw_rust_gcmp_off_securitypriv_gcmp_sw_enc_cnt_bc: usize;
         static rtw_rust_gcmp_off_securitypriv_gcmp_sw_enc_cnt_mc: usize;
         static rtw_rust_gcmp_off_securitypriv_gcmp_sw_enc_cnt_uc: usize;
@@ -1522,7 +1522,7 @@ mod gcmp_kernel_layout {
 }
 
 #[cfg(not(host_security_rest_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_gcmp_encrypt(padapter: *mut AesAdapter, pxmitframe: *mut U8) -> U32 {
     if padapter.is_null() || pxmitframe.is_null() {
         return GCMP_RTW_FAIL;
@@ -1669,7 +1669,7 @@ pub struct HostGcmpAdapter {
 const HOST_GCMP_TXDESC_OFFSET: usize = 56;
 
 #[cfg(host_gcmp_frame_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_gcmp_encrypt(padapter: *mut HostGcmpAdapter, pxmitframe: *mut U8) -> U32 {
     if padapter.is_null() || pxmitframe.is_null() {
         return HOST_GCMP_FAIL;
@@ -1726,7 +1726,7 @@ fn host_gcmp_get_stainfo<'a>(
 }
 
 #[cfg(not(host_security_rest_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_gcmp_decrypt(padapter: *mut AesAdapter, precvframe: *mut U8) -> U32 {
     if padapter.is_null() || precvframe.is_null() {
         return GCMP_RTW_FAIL;
@@ -1782,7 +1782,7 @@ pub extern "C" fn rtw_gcmp_decrypt(padapter: *mut AesAdapter, precvframe: *mut U
 }
 
 #[cfg(host_gcmp_frame_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_gcmp_decrypt(padapter: *mut HostGcmpAdapter, precvframe: *mut U8) -> U32 {
     if padapter.is_null() || precvframe.is_null() {
         return HOST_GCMP_FAIL;
@@ -1837,7 +1837,7 @@ const _WEP40_: U32 = 0x01;
 const _WEP104_: U32 = 0x05;
 
 #[cfg(not(host_security_rest_test))]
-extern "C" {
+unsafe extern "C" {
     fn getcrc32(buf: *mut U8, len: Sint) -> U32;
     fn _aes_siv_encrypt(
         key: *const U8,
@@ -1872,7 +1872,7 @@ extern "C" {
 mod wep_restore_kernel_layout {
     use super::*;
 
-    extern "C" {
+    unsafe extern "C" {
         static rtw_rust_wep_restore_off_securitypriv_dot11PrivacyAlgrthm: usize;
         static rtw_rust_wep_restore_off_securitypriv_dot11PrivacyKeyIndex: usize;
         static rtw_rust_wep_restore_off_securitypriv_key_mask: usize;
@@ -1900,7 +1900,7 @@ mod wep_restore_kernel_layout {
 }
 
 #[cfg(not(host_security_rest_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_calc_crc32(data: *mut U8, len: usize) -> U32 {
     if data.is_null() {
         return 0;
@@ -1909,7 +1909,7 @@ pub extern "C" fn rtw_calc_crc32(data: *mut U8, len: usize) -> U32 {
 }
 
 #[cfg(not(host_security_rest_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_aes_siv_encrypt(
     key: *const U8,
     key_len: usize,
@@ -1926,7 +1926,7 @@ pub extern "C" fn rtw_aes_siv_encrypt(
 }
 
 #[cfg(not(host_security_rest_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_aes_siv_decrypt(
     key: *const U8,
     key_len: usize,
@@ -1943,7 +1943,7 @@ pub extern "C" fn rtw_aes_siv_decrypt(
 }
 
 #[cfg(not(host_security_rest_test))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn rtw_sec_restore_wep_key(adapter: *mut AesAdapter) {
     if adapter.is_null() {
         return;
@@ -1968,7 +1968,7 @@ pub extern "C" fn rtw_sec_restore_wep_key(adapter: *mut AesAdapter) {
 // ----- Host L2 exports (W3-15) -----
 
 #[cfg(host_rest_misc_test)]
-extern "C" {
+unsafe extern "C" {
     fn host_wep_getcrc32(buf: *mut U8, len: Sint) -> U32;
     fn aes_siv_encrypt(
         key: *const U8,
@@ -2020,7 +2020,7 @@ static mut HOST_RESTORE_WEP_CALLS: [HostRestoreWepSetKeyCall; 8] =
 static mut HOST_RESTORE_WEP_CALL_COUNT: usize = 0;
 
 #[cfg(host_rest_misc_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_restore_wep_reset_calls() {
     unsafe {
         HOST_RESTORE_WEP_CALL_COUNT = 0;
@@ -2028,13 +2028,13 @@ pub extern "C" fn host_restore_wep_reset_calls() {
 }
 
 #[cfg(host_rest_misc_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_restore_wep_get_call_count() -> usize {
     unsafe { HOST_RESTORE_WEP_CALL_COUNT }
 }
 
 #[cfg(host_rest_misc_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_restore_wep_get_call_keyid(idx: usize) -> Sint {
     unsafe {
         if idx >= HOST_RESTORE_WEP_CALL_COUNT {
@@ -2045,7 +2045,7 @@ pub extern "C" fn host_restore_wep_get_call_keyid(idx: usize) -> Sint {
 }
 
 #[cfg(host_rest_misc_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_restore_wep_get_call_set_tx(idx: usize) -> U8 {
     unsafe {
         if idx >= HOST_RESTORE_WEP_CALL_COUNT {
@@ -2068,7 +2068,7 @@ unsafe fn host_restore_wep_set_key(keyid: Sint, set_tx: U8) {
 }
 
 #[cfg(host_rest_misc_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_rest_calc_crc32(data: *mut U8, len: usize) -> U32 {
     if data.is_null() {
         return 0;
@@ -2077,7 +2077,7 @@ pub extern "C" fn host_rest_calc_crc32(data: *mut U8, len: usize) -> U32 {
 }
 
 #[cfg(host_rest_misc_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_rest_aes_siv_encrypt(
     key: *const U8,
     key_len: usize,
@@ -2092,7 +2092,7 @@ pub extern "C" fn host_rest_aes_siv_encrypt(
 }
 
 #[cfg(host_rest_misc_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_rest_aes_siv_decrypt(
     key: *const U8,
     key_len: usize,
@@ -2109,7 +2109,7 @@ pub extern "C" fn host_rest_aes_siv_decrypt(
 }
 
 #[cfg(host_rest_misc_test)]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn host_rest_sec_restore_wep_key(adapter: *mut HostRestoreWepAdapter) {
     if adapter.is_null() {
         return;
@@ -2206,7 +2206,7 @@ fn tdls_memcmp2(a: *const U8, b: *const U8, len: usize) -> Sint {
 mod tdls_kernel {
     use super::*;
 
-    extern "C" {
+    unsafe extern "C" {
         fn _rtw_zmalloc(sz: u32) -> *mut U8;
         fn _rtw_mfree(ptr: *mut U8, sz: u32);
         fn _rtw_memcpy(dst: *mut U8, src: *const U8, n: usize) -> *mut U8;
@@ -2275,7 +2275,7 @@ mod tdls_kernel {
         }
     }
 
-    #[no_mangle]
+    #[unsafe(no_mangle)]
     pub extern "C" fn wpa_tdls_generate_tpk(adapter: *mut core::ffi::c_void, sta: *mut core::ffi::c_void) {
         let mut own = [0u8; ETH_ALEN_TDLS];
         let mut bssid = [0u8; ETH_ALEN_TDLS];
@@ -2286,7 +2286,7 @@ mod tdls_kernel {
         }
     }
 
-    #[no_mangle]
+    #[unsafe(no_mangle)]
     pub extern "C" fn wpa_tdls_ftie_mic(
         kck: *mut U8,
         trans_seq: U8,
@@ -2299,7 +2299,7 @@ mod tdls_kernel {
         unsafe { ftie_mic(kck, trans_seq, lnkid, rsnie, timeoutie, ftie, mic) }
     }
 
-    #[no_mangle]
+    #[unsafe(no_mangle)]
     pub extern "C" fn wpa_tdls_teardown_ftie_mic(
         kck: *mut U8,
         lnkid: *mut U8,
@@ -2336,7 +2336,7 @@ mod tdls_kernel {
         }
     }
 
-    #[no_mangle]
+    #[unsafe(no_mangle)]
     pub extern "C" fn tdls_verify_mic(
         kck: *mut U8,
         trans_seq: U8,
@@ -2401,7 +2401,7 @@ mod tdls_kernel {
 mod tdls_host {
     use super::*;
 
-    extern "C" {
+    unsafe extern "C" {
         fn omac1_aes_128(key: *const U8, data: *const U8, data_len: usize, mac: *mut U8) -> Sint;
         fn sha256_vector(num_elem: usize, addr: *const *const U8, len: *const usize, mac: *mut U8)
             -> Sint;
@@ -2471,7 +2471,7 @@ mod tdls_host {
         );
     }
 
-    #[no_mangle]
+    #[unsafe(no_mangle)]
     pub extern "C" fn host_rest_tdls_generate_tpk(adapter: *mut HostTdlsAdapter, sta: *mut HostTdlsSta) {
         if adapter.is_null() || sta.is_null() {
             return;
@@ -2485,7 +2485,7 @@ mod tdls_host {
         }
     }
 
-    #[no_mangle]
+    #[unsafe(no_mangle)]
     pub extern "C" fn host_rest_wpa_tdls_ftie_mic(
         kck: *mut U8,
         trans_seq: U8,
@@ -2540,7 +2540,7 @@ mod tdls_host {
         }
     }
 
-    #[no_mangle]
+    #[unsafe(no_mangle)]
     pub extern "C" fn host_rest_wpa_tdls_teardown_ftie_mic(
         kck: *mut U8,
         lnkid: *mut U8,
@@ -2579,7 +2579,7 @@ mod tdls_host {
         }
     }
 
-    #[no_mangle]
+    #[unsafe(no_mangle)]
     pub extern "C" fn host_rest_tdls_verify_mic(
         kck: *mut U8,
         trans_seq: U8,

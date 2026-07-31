@@ -93,7 +93,7 @@ sudo apt-get install -y \
   libclang-dev
 ```
 
-Rust side (versions must satisfy the pinned kernel’s `scripts/min-tool-version.sh`; for Linux 6.12.x that was **rustc ≥ 1.78**, **bindgen 0.65.1**):
+Rust side (versions must satisfy the pinned kernel’s `scripts/min-tool-version.sh`; for Linux 6.12.x that was **rustc ≥ 1.78**, **bindgen 0.65.1**). Driver Rust code uses **edition 2024** (`rustflags-y += --edition=2024`), which requires **rustc ≥ 1.85** and a kernel tree whose `rust/*.rmeta` were built with the same rustc.
 
 ```bash
 rustup component add rust-src rustfmt clippy
