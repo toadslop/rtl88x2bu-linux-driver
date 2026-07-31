@@ -64,7 +64,23 @@ PARTIAL_UNITS: dict[str, tuple[str, str]] = {
     "rtw_security": ("core/rtw_security.c", "core/rtw_security_rest.c"),
     "rtw_chplan": ("core/rtw_chplan.c", "core/rtw_chplan_rest.c"),
     "rtw_ieee80211": ("core/rtw_ieee80211.c", "core/rtw_ieee80211_rest.c"),
+    "rtw_swcrypto": ("core/rtw_swcrypto.c", "core/rtw_swcrypto_rest.c"),
 }
+
+# Linked C rest stubs fold into their parent baseline group (not separate TUs).
+REST_C_TO_PARENT: dict[str, str] = {
+    "core/rtw_chplan_rest.c": "core/rtw_chplan.c",
+    "core/rtw_io_rest.c": "core/rtw_io.c",
+    "core/rtw_rf_rest.c": "core/rtw_rf.c",
+    "core/rtw_ieee80211_rest.c": "core/rtw_ieee80211.c",
+    "core/rtw_security_rest.c": "core/rtw_security.c",
+    "core/rtw_rm_util_rest.c": "core/rtw_rm_util.c",
+    "core/rtw_swcrypto_rest.c": "core/rtw_swcrypto.c",
+}
+
+
+def canonical_baseline_c(c_path: str) -> str:
+    return REST_C_TO_PARENT.get(c_path, c_path)
 
 
 def load_baseline_meta() -> dict:
@@ -174,6 +190,13 @@ def classify_object(obj_path: str) -> tuple[str | None, str]:
     return None, "unknown"
 
 
+def _rust_loc_for_objs(rust_objs: list[str], tree_ref: str | None) -> int:
+    total = 0
+    for obj in rust_objs:
+        total += line_count_at(obj.replace(".o", ".rs"), tree_ref)
+    return total
+
+
 def _ported_loc_for_parent(
     parent_c: str,
     rest_c: str | None,
@@ -186,8 +209,13 @@ def _ported_loc_for_parent(
         return 0
     if rest_c and rest_c != parent_c:
         cur_rest = line_count_at(rest_c, tree_ref)
-        return max(0, min(full_baseline, full_baseline - cur_rest))
-    if line_count_at(rust_objs[0].replace(".o", ".rs"), tree_ref) > 0:
+        delta = full_baseline - cur_rest
+        if delta > 0:
+            return min(full_baseline, delta)
+        # Rest stub outgrew the parent baseline (refactors); credit Rust LOC.
+        rust_loc = _rust_loc_for_objs(rust_objs, tree_ref)
+        return min(full_baseline, rust_loc) if rust_loc > 0 else 0
+    if _rust_loc_for_objs(rust_objs, tree_ref) > 0:
         return full_baseline
     return 0
 
@@ -222,7 +250,10 @@ def compute_module_metrics(
         elif kind == "c" and c_path:
             c_linked += 1
             current_c_loc += line_count_at(c_path, tree_ref)
-            groups.setdefault(c_path, {"rust": [], "rest_c": None})
+            canonical = canonical_baseline_c(c_path)
+            grp = groups.setdefault(canonical, {"rust": [], "rest_c": None})
+            if c_path in REST_C_TO_PARENT:
+                grp["rest_c"] = c_path  # type: ignore[index]
         else:
             continue
 
