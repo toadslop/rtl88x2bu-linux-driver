@@ -105,11 +105,10 @@ mod restructure {
             b: u8,
         ) -> u8;
         fn rtw_rust_vht_chset_is_chbw_non_ocp(ch_set: *mut u8, ch: u8, bw: u8, offset: u8) -> u8;
+        fn rtw_rust_vht_rfctl(padapter: *mut u8) -> *mut u8;
+        fn rtw_rust_vht_is_dfs_slave_with_rd(rfctl: *mut u8) -> u8;
+        fn rtw_rust_vht_rfctl_dfs_domain_unknown(rfctl: *mut u8) -> u8;
         fn rtw_get_center_ch(ch: u8, bw: u8, offset: u8) -> u8;
-    }
-
-    fn dfs_slave_with_rd(_rfctl: *mut u8) -> u8 {
-        0
     }
 
     fn warn_on(_cond: c_int) {}
@@ -133,6 +132,7 @@ mod restructure {
         pout_len: *mut c_uint,
     ) -> u32 {
         unsafe {
+            let rfctl = rtw_rust_vht_rfctl(padapter);
             let chset = rtw_rust_vht_channel_set(padapter);
             let vht_option = rtw_rust_vht_vht_option(padapter);
             let mut ielen: u32 = 0;
@@ -181,7 +181,8 @@ mod restructure {
                     }
                     oper_bw = core::cmp::min(oper_bw, max_bw);
                     while rtw_rust_vht_chset_is_chbw_valid(chset, oper_ch, oper_bw, oper_offset, 1, 1) == 0
-                        || (dfs_slave_with_rd(chset) != 0
+                        || (rtw_rust_vht_is_dfs_slave_with_rd(rfctl) != 0
+                            && rtw_rust_vht_rfctl_dfs_domain_unknown(rfctl) == 0
                             && rtw_rust_vht_chset_is_chbw_non_ocp(chset, oper_ch, oper_bw, oper_offset) != 0)
                     {
                         oper_bw = oper_bw.saturating_sub(1);
@@ -194,6 +195,12 @@ mod restructure {
             }
 
             warn_on((rtw_rust_vht_chset_is_chbw_valid(chset, oper_ch, oper_bw, oper_offset, 1, 1) == 0) as c_int);
+            if rtw_rust_vht_is_dfs_slave_with_rd(rfctl) != 0
+                && rtw_rust_vht_rfctl_dfs_domain_unknown(rfctl) == 0
+            {
+                warn_on((rtw_rust_vht_chset_is_chbw_non_ocp(chset, oper_ch, oper_bw, oper_offset) != 0)
+                    as c_int);
+            }
 
             if oper_bw < CHANNEL_WIDTH_80 {
                 set_bits(out_vht_op_ie.add(2), 0, 8, 0);

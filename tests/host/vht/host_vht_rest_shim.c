@@ -104,6 +104,21 @@ RT_CHANNEL_INFO *rtw_rust_vht_channel_set(_adapter *padapter)
 	return adapter_to_rfctl(padapter)->channel_set;
 }
 
+u8 *rtw_rust_vht_rfctl(_adapter *padapter)
+{
+	return (u8 *)adapter_to_rfctl(padapter);
+}
+
+u8 rtw_rust_vht_is_dfs_slave_with_rd(u8 *rfctl)
+{
+	return IS_DFS_SLAVE_WITH_RD((struct rf_ctl_t *)rfctl);
+}
+
+u8 rtw_rust_vht_rfctl_dfs_domain_unknown(u8 *rfctl)
+{
+	return rtw_rfctl_dfs_domain_unknown((struct rf_ctl_t *)rfctl);
+}
+
 u8 rtw_rust_vht_regsty_bw_5g(_adapter *padapter)
 {
 	return REGSTY_BW_5G(&padapter->registrypriv);
