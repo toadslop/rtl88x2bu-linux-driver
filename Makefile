@@ -2535,6 +2535,9 @@ endif
 ifneq ($(filter -DDBG_IO,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg dbg_io
 endif
+ifeq ($(CONFIG_RTW_MBO), y)
+rustflags-y += --cfg rtw_80211k
+endif
 $(MODULE_NAME)-y += rust/rtw_chplan.o
 $(MODULE_NAME)-y += rust/rtw_chplan_rest.o
 $(MODULE_NAME)-y += rust/rtw_io_rest.o
@@ -2911,13 +2914,7 @@ rust-check-symbols-rtw-wlan-util: rust-objects-rtw-wlan-util-c rust-objects-rtw-
 	$(MAKE) rust-check-symbols OLD=tests/host/wlan_util/wlan_util_rate_c_ref.o NEW=rust/rtw_wlan_util.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_wlan_util_rate.allow
 
-# W3-33: compare pre-port core/rtw_rm_util_rest.o against rust/rtw_rm_util.o.
-rust-objects-rtw-rm-util:
-	@test -n "$(KDIR)" || { \
-		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-rtw-rm-util"; \
-		exit 1; }
-	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_rm_util.o
-
+# W3-33/W3-34: compare host C oracle (rtw_rm_util_rest.c) against host Rust oracle.
 rust-objects-rtw-rm-util-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
 		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
@@ -2925,8 +2922,13 @@ rust-objects-rtw-rm-util-c:
 		-DHOST_RM_TEST -DCONFIG_RTW_80211K \
 		-o tests/host/rm/rm_rest_c_ref.o core/rtw_rm_util_rest.c
 
-rust-check-symbols-rtw-rm-util: rust-objects-rtw-rm-util-c rust-objects-rtw-rm-util
-	$(MAKE) rust-check-symbols OLD=tests/host/rm/rm_rest_c_ref.o NEW=rust/rtw_rm_util.o \
+rust-objects-rtw-rm-util-rust-ref:
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_rm_test \
+		--emit=obj=tests/host/rm/rm_rest_rust_ref.o \
+		--crate-type lib rust/rtw_rm_util.rs
+
+rust-check-symbols-rtw-rm-util: rust-objects-rtw-rm-util-c rust-objects-rtw-rm-util-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/rm/rm_rest_c_ref.o NEW=tests/host/rm/rm_rest_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_rm_util.allow
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the

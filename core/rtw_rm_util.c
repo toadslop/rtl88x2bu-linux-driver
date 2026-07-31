@@ -359,57 +359,29 @@ int rm_get_path_a_max_tx_power(_adapter *adapter, s8 *path_a)
 }
 
 #if defined(CONFIG_RUST)
-/*
- * C fallback for token helpers until W3-34 PR2 lands the Rust port.
- * rtw_rm_util_rest.c excludes these under CONFIG_RUST; keep symbols defined
- * for CONFIG_RTW_80211K builds until Rust exports exist.
- */
-u8 rm_gen_dialog_token(_adapter *padapter)
+u8 *rtw_rust_rm_dialog_token_ptr(_adapter *padapter)
 {
-	struct rm_priv *prmpriv = &(padapter->rmpriv);
-	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
-	struct mlme_ext_info *pmlmeinfo = &pmlmeext->mlmext_info;
-
-	(void)prmpriv;
-
-	do {
-		pmlmeinfo->dialogToken++;
-	} while (pmlmeinfo->dialogToken == 0);
-
-	return pmlmeinfo->dialogToken;
+	return &padapter->mlmeextpriv.mlmext_info.dialogToken;
 }
 
-u8 rm_gen_meas_token(_adapter *padapter)
+u8 *rtw_rust_rm_meas_token_ptr(_adapter *padapter)
 {
-	struct rm_priv *prmpriv = &(padapter->rmpriv);
-
-	do {
-		prmpriv->meas_token++;
-	} while (prmpriv->meas_token == 0);
-
-	return prmpriv->meas_token;
+	return &padapter->rmpriv.meas_token;
 }
 
-u32 rm_gen_rmid(_adapter *padapter, struct rm_obj *prm, u8 role)
+struct sta_info *rtw_rust_rm_obj_psta(struct rm_obj *prm)
 {
-	u32 rmid;
+	return prm->psta;
+}
 
-	(void)padapter;
+u8 rtw_rust_rm_obj_diag_token(struct rm_obj *prm)
+{
+	return prm->q.diag_token;
+}
 
-	if (prm->psta == NULL)
-		goto err;
-
-	if (prm->q.diag_token == 0)
-		goto err;
-
-	rmid = prm->psta->cmn.aid << 16
-		| prm->q.diag_token << 8
-		| role;
-
-	return rmid;
-err:
-	RTW_ERR("RM: unable to gen rmid\n");
-	return 0;
+u16 rtw_rust_sta_aid(struct sta_info *psta)
+{
+	return psta->cmn.aid;
 }
 #endif /* CONFIG_RUST */
 
