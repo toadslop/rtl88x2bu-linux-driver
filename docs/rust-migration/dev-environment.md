@@ -170,6 +170,7 @@ Regenerate allowlisted crypto FFI (after editing `rust/bindings/bindgen_helper.h
 ```bash
 export LIBCLANG_PATH=/usr/lib/llvm-18/lib
 KDIR=/path/to/linux ./scripts/bindgen_rtw.sh
+# CI (module-l0.yml) runs ./scripts/bindgen_rtw.sh --check before L0 build
 ```
 
 L3 should show a dmesg breadcrumb from C init after the Rust call, e.g. `rust scaffold: rtw_rust_scaffold_init ret=0` (W0-03).

@@ -215,7 +215,7 @@ Canonical checklist for new pull requests: [`.github/PULL_REQUEST_TEMPLATE.md`](
 4. **T3** — GitHub Actions (`.github/workflows/host-l2.yml`): L2 host tests on `ubuntu-latest` (`make -C tests/host/domain test` + `make -C tests/host/crypto all` + `make -C tests/host/chplan test` + `make -C tests/host/ie test` + `make -C tests/host/swcrypto test` + `make -C tests/host/security test` + `make -C tests/host/wlan_util test`).
 5. **T4** — Host chplan harness (`tests/host/chplan/`): C oracle for W2-17 lookup helpers via `HOST_CHPLAN_TEST` build of `core/rtw_chplan.c`. DFS/country vectors land with W2-18/W2-19.
 6. **T5** — Host security + wlan_util harness (`tests/host/security/`, `tests/host/wlan_util/`): C oracles for Wave 3 security and wlan_util ports; wired in CI via `host-l2.yml`.
-7. **T6** — GitHub Actions (`.github/workflows/module-l0.yml`): L0 module build on `ghcr.io/<owner>/rtl88x2bu-l0:v6.12.9` with probe check via `scripts/ci/verify-ko-probes.sh`.
+7. **T6** — GitHub Actions (`.github/workflows/module-l0.yml`): L0 module build on `ghcr.io/<owner>/rtl88x2bu-l0:v6.12.9` with bindgen freshness check (`scripts/bindgen_rtw.sh --check`) and probe verify via `scripts/ci/verify-ko-probes.sh` (T14, #308).
 8. **T7** — GitHub Actions (`.github/workflows/module-l1.yml`): L1 symbol/ABI checks on path-scoped `rust/*.o` swaps inside the L0 container (issue #152).
 9. **T8** — GitHub Actions (`.github/workflows/module-l3.yml`): L3 QEMU `insmod`/`rmmod` on `master` merges inside the L0 container (issue #153).
 10. **T9** — PR template (`.github/PULL_REQUEST_TEMPLATE.md`), contributing docs ([`docs/contributing.md`](../contributing.md)), and branch-protection admin notes ([`dev-environment.md`](dev-environment.md#branch-protection)) (done).
