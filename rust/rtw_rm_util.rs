@@ -183,6 +183,7 @@ mod kernel_layout {
         pub fn rtw_rust_rm_obj_psta(prm: *mut u8) -> *mut u8;
         pub fn rtw_rust_rm_obj_diag_token(prm: *mut u8) -> u8;
         pub fn rtw_rust_sta_aid(psta: *mut u8) -> u16;
+        pub fn rtw_rust_rm_log_err();
     }
 }
 
@@ -248,6 +249,7 @@ pub extern "C" fn rm_gen_rmid(padapter: *mut u8, prm: *mut u8, role: u8) -> u32 
         let psta = kernel_layout::rtw_rust_rm_obj_psta(prm);
         let diag_token = kernel_layout::rtw_rust_rm_obj_diag_token(prm);
         if psta.is_null() || diag_token == 0 {
+            kernel_layout::rtw_rust_rm_log_err();
             return 0;
         }
         let aid = kernel_layout::rtw_rust_sta_aid(psta);
