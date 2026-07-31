@@ -25,4 +25,44 @@ typedef struct _RT_OPERATING_CLASS {
 	u8 Channel[MAX_CH_NUM_IN_OP_CLASS];
 } RT_OPERATING_CLASS, *PRT_OPERATING_CLASS;
 
+#define RM_MASTER BIT(0)
+#define RM_SLAVE 0
+
+struct mlme_ext_info {
+	u8 dialogToken;
+};
+
+struct mlme_ext_priv {
+	struct mlme_ext_info mlmext_info;
+};
+
+struct cmn_sta_info {
+	u16 aid;
+};
+
+struct sta_info {
+	struct cmn_sta_info cmn;
+};
+
+struct rm_meas_req {
+	u8 diag_token;
+};
+
+struct rm_obj {
+	u32 rmid;
+	struct rm_meas_req q;
+	struct sta_info *psta;
+};
+
+struct rm_priv {
+	u8 meas_token;
+};
+
+struct _adapter {
+	struct rm_priv rmpriv;
+	struct mlme_ext_priv mlmeextpriv;
+};
+
+typedef struct _adapter _adapter;
+
 #endif /* HOST_RM_TYPES_H */

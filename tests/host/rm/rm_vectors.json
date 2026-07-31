@@ -10,6 +10,16 @@
     {"name": "wildcard_bssid_zero", "fn": "is_wildcard_bssid", "bssid_hex": "000000000000", "expect": 0},
     {"name": "oper_class_ch36", "fn": "rm_get_oper_class_via_ch", "ch": 36, "expect": 115},
     {"name": "ch_set_op_class115", "fn": "rm_get_ch_set", "op_class": 115, "ch_num": 0, "expect_count": 4, "expect_chs_hex": "24282c30"},
-    {"name": "ch_set_single_ch", "fn": "rm_get_ch_set", "op_class": 0, "ch_num": 36, "expect_count": 1, "expect_chs_hex": "24"}
+    {"name": "ch_set_single_ch", "fn": "rm_get_ch_set", "op_class": 0, "ch_num": 36, "expect_count": 1, "expect_chs_hex": "24"},
+    {"name": "dialog_token_from_zero", "fn": "rm_gen_dialog_token", "initial_dialog_token": 0, "expect": 1},
+    {"name": "dialog_token_increment", "fn": "rm_gen_dialog_token", "initial_dialog_token": 1, "expect": 2},
+    {"name": "dialog_token_skip_zero", "fn": "rm_gen_dialog_token", "initial_dialog_token": 255, "expect": 1},
+    {"name": "meas_token_from_zero", "fn": "rm_gen_meas_token", "initial_meas_token": 0, "expect": 1},
+    {"name": "meas_token_increment", "fn": "rm_gen_meas_token", "initial_meas_token": 1, "expect": 2},
+    {"name": "meas_token_skip_zero", "fn": "rm_gen_meas_token", "initial_meas_token": 255, "expect": 1},
+    {"name": "rmid_master", "fn": "rm_gen_rmid", "aid": 5, "diag_token": 7, "role": 1, "expect": 329473},
+    {"name": "rmid_slave", "fn": "rm_gen_rmid", "aid": 3, "diag_token": 4, "role": 0, "expect": 197632},
+    {"name": "rmid_null_sta", "fn": "rm_gen_rmid", "aid": 5, "diag_token": 7, "role": 1, "null_sta": 1, "expect": 0},
+    {"name": "rmid_zero_diag", "fn": "rm_gen_rmid", "aid": 5, "diag_token": 0, "role": 1, "expect": 0}
   ]
 }

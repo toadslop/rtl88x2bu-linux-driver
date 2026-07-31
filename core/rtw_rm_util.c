@@ -358,11 +358,19 @@ int rm_get_path_a_max_tx_power(_adapter *adapter, s8 *path_a)
 	return 0;
 }
 
+#if defined(CONFIG_RUST)
+/*
+ * C fallback for token helpers until W3-34 PR2 lands the Rust port.
+ * rtw_rm_util_rest.c excludes these under CONFIG_RUST; keep symbols defined
+ * for CONFIG_RTW_80211K builds until Rust exports exist.
+ */
 u8 rm_gen_dialog_token(_adapter *padapter)
 {
 	struct rm_priv *prmpriv = &(padapter->rmpriv);
 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
 	struct mlme_ext_info *pmlmeinfo = &pmlmeext->mlmext_info;
+
+	(void)prmpriv;
 
 	do {
 		pmlmeinfo->dialogToken++;
@@ -386,6 +394,8 @@ u32 rm_gen_rmid(_adapter *padapter, struct rm_obj *prm, u8 role)
 {
 	u32 rmid;
 
+	(void)padapter;
+
 	if (prm->psta == NULL)
 		goto err;
 
@@ -401,5 +411,6 @@ err:
 	RTW_ERR("RM: unable to gen rmid\n");
 	return 0;
 }
+#endif /* CONFIG_RUST */
 
 #endif /* CONFIG_RTW_80211K */
