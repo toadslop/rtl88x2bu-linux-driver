@@ -18,6 +18,7 @@ on:
       - 'dkms.conf'
       - '.github/workflows/module-l0.yml'
       - 'scripts/ci/verify-ko-probes.sh'
+      - 'scripts/bindgen_rtw.sh'
   pull_request:
 
 env:
@@ -48,6 +49,7 @@ jobs:
               - 'dkms.conf'
               - '.github/workflows/module-l0.yml'
               - 'scripts/ci/verify-ko-probes.sh'
+              - 'scripts/bindgen_rtw.sh'
 
       - name: Out of scope — skip L0
         if: steps.filter.outputs.l0 != 'true'
@@ -80,7 +82,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: L0 build and probe verify
+      - name: Bindgen freshness + L0 build and probe verify
         if: steps.filter.outputs.l0 == 'true'
         run: |
           if [ "${{ steps.pull.outcome }}" = "success" ]; then
@@ -89,4 +91,4 @@ jobs:
             IMAGE="rtl88x2bu-l0:ci"
           fi
           docker run --rm -v "$PWD:/driver" -w /driver "${IMAGE}" \
-            bash -c 'make clean && make KDIR=/opt/linux LLVM=1 -j"$(nproc)" && ./scripts/ci/verify-ko-probes.sh 88x2bu.ko'
+            bash -c 'KDIR=/opt/linux ./scripts/bindgen_rtw.sh --check && make clean && make KDIR=/opt/linux LLVM=1 -j"$(nproc)" && ./scripts/ci/verify-ko-probes.sh 88x2bu.ko'

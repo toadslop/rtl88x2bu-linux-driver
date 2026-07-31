@@ -70,7 +70,7 @@ The generated blob is committed; regenerate after changing
 export LIBCLANG_PATH=/usr/lib/llvm-18/lib   # adjust to host clang
 KDIR=/path/to/rust-enabled-kernel ./scripts/bindgen_rtw.sh
 # writes rust/bindings/generated.rs
-# Optional: fail if the committed blob is stale (for future CI):
+# Fail if the committed blob is stale (same check CI runs in module-l0.yml):
 # ./scripts/bindgen_rtw.sh --check
 ```
 
