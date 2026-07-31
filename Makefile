@@ -2535,7 +2535,7 @@ endif
 ifneq ($(filter -DDBG_IO,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg dbg_io
 endif
-ifeq ($(CONFIG_RTW_MBO), y)
+ifneq ($(filter -DCONFIG_RTW_80211K,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg rtw_80211k
 endif
 $(MODULE_NAME)-y += rust/rtw_chplan.o
