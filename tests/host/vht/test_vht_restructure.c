@@ -23,8 +23,13 @@ struct vector {
 	u8 expect_vht_op_cfreq1;
 };
 
+#ifndef RUST_VHT_ORACLE
 u32 rtw_restructure_vht_ie(_adapter *padapter, u8 *in_ie, u8 *out_ie, uint in_len,
 			   uint *pout_len);
+#else
+u32 rtw_restructure_vht_ie(_adapter *padapter, u8 *in_ie, u8 *out_ie, unsigned in_len,
+			   unsigned *pout_len);
+#endif
 
 static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 {

@@ -58,4 +58,6 @@ vht/vht_rest_rust_ref.o
 vht/vht_rest_host.o
 vht/vht_rest_shim_host.o
 vht/test_vht_restructure
+vht/test_vht_restructure_rust
+vht/librust_vht_restructure.a
 vht/test_vht_restructure_smoke
