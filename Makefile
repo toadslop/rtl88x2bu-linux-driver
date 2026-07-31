@@ -1354,10 +1354,21 @@ ccflags-y += -DCONFIG_RTW_80211R
 CONFIG_RTW_80211K := y
 endif
 
-# Match C #ifdef CONFIG_RTW_80211K when enabled via autoconf.h (uncommented define).
+# Match C #ifdef CONFIG_RTW_80211K when enabled via headers (autoconf.h or drv_conf.h).
 _autoconf_has_80211k := $(shell grep -E '^[[:space:]]*#define[[:space:]]+CONFIG_RTW_80211K' $(src)/include/autoconf.h 2>/dev/null)
+_autoconf_has_multi_ap := $(shell grep -E '^[[:space:]]*#define[[:space:]]+CONFIG_RTW_MULTI_AP' $(src)/include/autoconf.h 2>/dev/null)
+_skip_80211k_cflag :=
 ifneq ($(_autoconf_has_80211k),)
 CONFIG_RTW_80211K := y
+_skip_80211k_cflag := y
+endif
+ifneq ($(_autoconf_has_multi_ap),)
+CONFIG_RTW_80211K := y
+_skip_80211k_cflag := y
+endif
+ifneq ($(filter -DCONFIG_RTW_MULTI_AP,$(USER_EXTRA_CFLAGS)),)
+CONFIG_RTW_80211K := y
+_skip_80211k_cflag := y
 endif
 
 ifneq ($(filter -DCONFIG_RTW_80211K,$(USER_EXTRA_CFLAGS)),)
@@ -1365,9 +1376,7 @@ CONFIG_RTW_80211K := y
 endif
 
 ifeq ($(CONFIG_RTW_80211K), y)
-ifneq ($(_autoconf_has_80211k),)
-# autoconf.h already #defines CONFIG_RTW_80211K; omit -D to avoid -Wmacro-redefined.
-else
+ifeq ($(_skip_80211k_cflag),)
 ccflags-y += -DCONFIG_RTW_80211K
 endif
 endif
