@@ -383,6 +383,11 @@ u16 rtw_rust_sta_aid(struct sta_info *psta)
 {
 	return psta->cmn.aid;
 }
+
+void rtw_rust_rm_log_err(void)
+{
+	RTW_ERR("RM: unable to gen rmid\n");
+}
 #endif /* CONFIG_RUST */
 
 #endif /* CONFIG_RTW_80211K */
