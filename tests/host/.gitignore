@@ -45,3 +45,7 @@ rf/librust_rf_rest.a
 rf/rf_rest_c_ref.o
 # W3-33 rm harness
 rm/test_rm
+rm/test_rm_rust
+rm/librust_rm_util.a
+rm/rm_rest_c_ref.o
+rm/rm_rest_rust_ref.o

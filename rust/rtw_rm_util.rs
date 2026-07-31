@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! RM util pure helpers — Rust port of `core/rtw_rm_util_rest.c` (W3-33).
+//! RM util pure helpers — Rust port of `core/rtw_rm_util_rest.c` (W3-33, W3-34).
 
 #![allow(
     dead_code,
@@ -124,7 +124,138 @@ pub extern "C" fn translate_percentage_to_rcpi(signal_strength_index: u32) -> u8
     translate_dbm_to_rcpi((signal_strength_index as i32 - 100) as i8)
 }
 
+#[cfg(any(host_rm_test, rtw_80211k))]
+#[repr(C)]
+struct HostMlmeExtInfo {
+    dialog_token: u8,
+}
+
+#[cfg(any(host_rm_test, rtw_80211k))]
+#[repr(C)]
+struct HostMlmeExtPriv {
+    mlmext_info: HostMlmeExtInfo,
+}
+
+#[cfg(any(host_rm_test, rtw_80211k))]
+#[repr(C)]
+struct HostRmPriv {
+    meas_token: u8,
+}
+
+#[cfg(any(host_rm_test, rtw_80211k))]
+#[repr(C)]
+struct HostAdapter {
+    rmpriv: HostRmPriv,
+    mlmeextpriv: HostMlmeExtPriv,
+}
+
+#[cfg(any(host_rm_test, rtw_80211k))]
+#[repr(C)]
+struct HostRmMeasReq {
+    diag_token: u8,
+}
+
+#[cfg(any(host_rm_test, rtw_80211k))]
+#[repr(C)]
+struct HostCmnStaInfo {
+    aid: u16,
+}
+
+#[cfg(any(host_rm_test, rtw_80211k))]
+#[repr(C)]
+struct HostStaInfo {
+    cmn: HostCmnStaInfo,
+}
+
+#[cfg(any(host_rm_test, rtw_80211k))]
+#[repr(C)]
+struct HostRmObj {
+    rmid: u32,
+    q: HostRmMeasReq,
+    psta: *mut HostStaInfo,
+}
+
+#[cfg(rtw_80211k)]
+mod kernel_layout {
+    extern "C" {
+        pub fn rtw_rust_rm_dialog_token_ptr(padapter: *mut u8) -> *mut u8;
+        pub fn rtw_rust_rm_meas_token_ptr(padapter: *mut u8) -> *mut u8;
+        pub fn rtw_rust_rm_obj_psta(prm: *mut u8) -> *mut u8;
+        pub fn rtw_rust_rm_obj_diag_token(prm: *mut u8) -> u8;
+        pub fn rtw_rust_sta_aid(psta: *mut u8) -> u16;
+    }
+}
+
+#[cfg(any(host_rm_test, rtw_80211k))]
+fn gen_nonzero_token(token: &mut u8) -> u8 {
+    loop {
+        *token = token.wrapping_add(1);
+        if *token != 0 {
+            break;
+        }
+    }
+    *token
+}
+
+#[cfg(any(host_rm_test, rtw_80211k))]
+#[no_mangle]
+pub extern "C" fn rm_gen_dialog_token(padapter: *mut u8) -> u8 {
+    #[cfg(host_rm_test)]
+    unsafe {
+        let info = &mut (*padapter.cast::<HostAdapter>()).mlmeextpriv.mlmext_info;
+        return gen_nonzero_token(&mut info.dialog_token);
+    }
+    #[cfg(not(host_rm_test))]
+    #[cfg(rtw_80211k)]
+    unsafe {
+        let ptr = kernel_layout::rtw_rust_rm_dialog_token_ptr(padapter);
+        gen_nonzero_token(&mut *ptr)
+    }
+}
+
+#[cfg(any(host_rm_test, rtw_80211k))]
+#[no_mangle]
+pub extern "C" fn rm_gen_meas_token(padapter: *mut u8) -> u8 {
+    #[cfg(host_rm_test)]
+    unsafe {
+        let token = &mut (*padapter.cast::<HostAdapter>()).rmpriv.meas_token;
+        return gen_nonzero_token(token);
+    }
+    #[cfg(not(host_rm_test))]
+    #[cfg(rtw_80211k)]
+    unsafe {
+        let ptr = kernel_layout::rtw_rust_rm_meas_token_ptr(padapter);
+        gen_nonzero_token(&mut *ptr)
+    }
+}
+
+#[cfg(any(host_rm_test, rtw_80211k))]
+#[no_mangle]
+pub extern "C" fn rm_gen_rmid(padapter: *mut u8, prm: *mut u8, role: u8) -> u32 {
+    let _ = padapter;
+    #[cfg(host_rm_test)]
+    unsafe {
+        let prm = &*prm.cast::<HostRmObj>();
+        if prm.psta.is_null() || prm.q.diag_token == 0 {
+            return 0;
+        }
+        let aid = (*prm.psta).cmn.aid;
+        return (u32::from(aid) << 16) | (u32::from(prm.q.diag_token) << 8) | u32::from(role);
+    }
+    #[cfg(not(host_rm_test))]
+    #[cfg(rtw_80211k)]
+    unsafe {
+        let psta = kernel_layout::rtw_rust_rm_obj_psta(prm);
+        let diag_token = kernel_layout::rtw_rust_rm_obj_diag_token(prm);
+        if psta.is_null() || diag_token == 0 {
+            return 0;
+        }
+        let aid = kernel_layout::rtw_rust_sta_aid(psta);
+        (u32::from(aid) << 16) | (u32::from(diag_token) << 8) | u32::from(role)
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn rtw_rust_rm_util_probe() -> c_int {
-    0x1e33
+    0x1e34
 }
