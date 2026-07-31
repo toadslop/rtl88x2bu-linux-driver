@@ -76,7 +76,6 @@ static int run_vector(const struct vector *v)
 	memset(&adapter, 0, sizeof(adapter));
 	adapter.host_fixture.hal_max_bw = v->hal_max_bw;
 	adapter.host_fixture.chset_max_bw = v->chset_max_bw;
-	adapter.host_fixture.dfs_slave_with_rd = v->dfs_slave_with_rd;
 	adapter.host_fixture.dfs_domain_unknown = v->dfs_domain_unknown;
 	adapter.host_fixture.chbw_non_ocp_at_80 = v->chbw_non_ocp_at_80;
 	adapter.registrypriv.bw_mode = (u8)(v->regsty_bw << 4);

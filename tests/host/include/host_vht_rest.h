@@ -50,7 +50,6 @@ struct rf_ctl_t { u8 dfs_slave_with_rd; RT_CHANNEL_INFO channel_set[MAX_CHANNEL_
 struct host_vht_fixture {
 	u8 hal_max_bw;
 	u8 chset_max_bw;
-	u8 dfs_slave_with_rd;
 	u8 dfs_domain_unknown;
 	u8 chbw_non_ocp_at_80;
 	u8 cap_ie[VHT_CAP_IE_LEN];
