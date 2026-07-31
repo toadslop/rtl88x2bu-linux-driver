@@ -47,7 +47,15 @@ struct registry_priv { u8 bw_mode; };
 struct vht_priv { u8 vht_option; };
 struct mlme_priv { struct vht_priv vhtpriv; };
 struct rf_ctl_t { u8 dfs_slave_with_rd; RT_CHANNEL_INFO channel_set[MAX_CHANNEL_NUM]; };
-struct host_vht_fixture { u8 hal_max_bw; u8 chset_max_bw; u8 cap_ie[VHT_CAP_IE_LEN]; u8 opmode_notify; };
+struct host_vht_fixture {
+	u8 hal_max_bw;
+	u8 chset_max_bw;
+	u8 dfs_slave_with_rd;
+	u8 dfs_domain_unknown;
+	u8 chbw_non_ocp_at_80;
+	u8 cap_ie[VHT_CAP_IE_LEN];
+	u8 opmode_notify;
+};
 struct _adapter { struct registry_priv registrypriv; struct mlme_priv mlmepriv; struct rf_ctl_t rf_ctl; struct host_vht_fixture host_fixture; };
 typedef struct _adapter _adapter;
 #define adapter_to_rfctl(a) (&(a)->rf_ctl)

@@ -79,15 +79,18 @@ bool rtw_chset_is_chbw_non_ocp(RT_CHANNEL_INFO *ch_set, u8 ch, u8 bw, u8 offset)
 {
 	(void)ch_set;
 	(void)ch;
-	(void)bw;
 	(void)offset;
-	return false;
+	if (!host_vht_rest_adapter)
+		return false;
+	return host_vht_rest_adapter->host_fixture.chbw_non_ocp_at_80 && bw == CHANNEL_WIDTH_80;
 }
 
 u8 rtw_rfctl_dfs_domain_unknown(struct rf_ctl_t *rfctl)
 {
 	(void)rfctl;
-	return _TRUE;
+	if (!host_vht_rest_adapter)
+		return _TRUE;
+	return host_vht_rest_adapter->host_fixture.dfs_domain_unknown;
 }
 
 u8 rtw_get_center_ch(u8 ch, u8 bw, u8 offset)

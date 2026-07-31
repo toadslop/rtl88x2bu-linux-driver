@@ -35,6 +35,19 @@
       "name": "missing_vht_cap",
       "in_ie_hex": "0000000000000000000000003d1600000000000000000000000000000000000000000000000000000000c005010000ffff",
       "expect_vht_option": 0
+    },
+    {
+      "name": "dfs_non_ocp_downgrade_80_to_40",
+      "in_ie_hex": "0000000000000000000000003d1624050000000000000000000000000000000000000000bf0c000000000000000000000000c005010000ffff",
+      "hal_max_bw": 2,
+      "chset_max_bw": 2,
+      "regsty_bw": 2,
+      "dfs_slave_with_rd": 1,
+      "dfs_domain_unknown": 0,
+      "chbw_non_ocp_at_80": 1,
+      "expect_vht_option": 1,
+      "expect_vht_op_width": 0,
+      "expect_vht_op_cfreq1": 0
     }
   ]
 }
