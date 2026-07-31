@@ -37,6 +37,34 @@
       "expect_mcs_map_hex": "ffff"
     },
     {
+      "name": "nss5_high_ss_boundary",
+      "fn": "rtw_vht_nss_to_mcsmap",
+      "nss": 5,
+      "cur_mcs_map_hex": "aaaa",
+      "expect_mcs_map_hex": "aafe"
+    },
+    {
+      "name": "nss6_high_ss_boundary",
+      "fn": "rtw_vht_nss_to_mcsmap",
+      "nss": 6,
+      "cur_mcs_map_hex": "aaaa",
+      "expect_mcs_map_hex": "aafa"
+    },
+    {
+      "name": "nss7_high_ss_boundary",
+      "fn": "rtw_vht_nss_to_mcsmap",
+      "nss": 7,
+      "cur_mcs_map_hex": "aaaa",
+      "expect_mcs_map_hex": "aaea"
+    },
+    {
+      "name": "nss8_all_streams",
+      "fn": "rtw_vht_nss_to_mcsmap",
+      "nss": 8,
+      "cur_mcs_map_hex": "aaaa",
+      "expect_mcs_map_hex": "aaaa"
+    },
+    {
       "name": "ss_from_map_one_ss",
       "fn": "VHT_get_ss_from_map",
       "cur_mcs_map_hex": "feff",
@@ -59,6 +87,36 @@
       "fn": "VHT_get_ss_from_map",
       "cur_mcs_map_hex": "ffff",
       "expect": 0
+    },
+    {
+      "name": "ss_from_map_three_ss",
+      "fn": "VHT_get_ss_from_map",
+      "cur_mcs_map_hex": "c0ff",
+      "expect": 3
+    },
+    {
+      "name": "ss_from_map_four_ss",
+      "fn": "VHT_get_ss_from_map",
+      "cur_mcs_map_hex": "00ff",
+      "expect": 4
+    },
+    {
+      "name": "ss_from_map_five_ss",
+      "fn": "VHT_get_ss_from_map",
+      "cur_mcs_map_hex": "00fc",
+      "expect": 5
+    },
+    {
+      "name": "ss_from_map_six_ss",
+      "fn": "VHT_get_ss_from_map",
+      "cur_mcs_map_hex": "00f0",
+      "expect": 6
+    },
+    {
+      "name": "ss_from_map_seven_ss",
+      "fn": "VHT_get_ss_from_map",
+      "cur_mcs_map_hex": "00c0",
+      "expect": 7
     }
   ]
 }
