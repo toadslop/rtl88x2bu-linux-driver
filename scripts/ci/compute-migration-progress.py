@@ -479,9 +479,16 @@ def format_markdown(data: dict, baseline_label: str, baseline_ref: str) -> str:
                 "`migration-module-objects.txt`)_ |\n"
                 "| Module objects % | _n/a_ |\n"
             )
-        delta_section += (
-            f"| Migration units LOC % | {delta['migration_units_loc_pct']:+.1f} |\n"
-        )
+        units_delta = delta.get("migration_units_loc_pct")
+        if units_delta is not None:
+            delta_section += (
+                f"| Migration units LOC % | {units_delta:+.1f} |\n"
+            )
+        else:
+            delta_section += (
+                "| Migration units LOC % | _n/a (base ref lacks "
+                "`migration-module-objects.txt`)_ |\n"
+            )
 
     return (
         "## Rust migration progress (Phase 1)\n\n"
@@ -537,12 +544,14 @@ def main() -> int:
         delta: dict[str, float | None] = {
             "module_loc_pct": None,
             "module_object_pct": None,
-            "migration_units_loc_pct": round(
+            "migration_units_loc_pct": None,
+        }
+        if base_snap["has_module_objects"]:
+            delta["migration_units_loc_pct"] = round(
                 units["migration_units_loc_pct"]
                 - base_snap["units"]["migration_units_loc_pct"],
                 1,
-            ),
-        }
+            )
         if base_snap["module"] is not None:
             delta["module_loc_pct"] = round(
                 module["module_loc_pct"] - base_snap["module"]["module_loc_pct"],
