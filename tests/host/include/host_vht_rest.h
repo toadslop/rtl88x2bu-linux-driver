@@ -51,7 +51,8 @@ struct host_vht_fixture { u8 hal_max_bw; u8 chset_max_bw; u8 cap_ie[VHT_CAP_IE_L
 struct _adapter { struct registry_priv registrypriv; struct mlme_priv mlmepriv; struct rf_ctl_t rf_ctl; struct host_vht_fixture host_fixture; };
 typedef struct _adapter _adapter;
 #define adapter_to_rfctl(a) (&(a)->rf_ctl)
-#define REGSTY_BW_5G(r) ((r)->bw_mode)
+#define BW_MODE_5G(bw_mode) ((bw_mode) >> 4)
+#define REGSTY_BW_5G(r) BW_MODE_5G((r)->bw_mode)
 #define IS_DFS_SLAVE_WITH_RD(r) ((r)->dfs_slave_with_rd)
 
 extern _adapter *host_vht_rest_adapter;
