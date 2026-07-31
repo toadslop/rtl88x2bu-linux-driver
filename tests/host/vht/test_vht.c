@@ -68,6 +68,10 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 		int nss;
 		if (host_json_parse_int_in(obj, len, "nss", &nss))
 			return -1;
+		if (nss < 0 || nss > 8) {
+			fprintf(stderr, "invalid nss %d (expected 0..8)\n", nss);
+			return -1;
+		}
 		v->nss = (u8)nss;
 		return parse_mcs_map_hex(obj, len, "expect_mcs_map_hex", v->expect_mcs_map);
 	}
