@@ -49,4 +49,9 @@ rm/test_rm_rust
 rm/librust_rm_util.a
 rm/rm_rest_c_ref.o
 rm/rm_rest_rust_ref.o
+# W3-35 vht harness
 vht/test_vht
+vht/test_vht_rust
+vht/librust_vht.a
+vht/vht_rest_c_ref.o
+vht/vht_rest_rust_ref.o

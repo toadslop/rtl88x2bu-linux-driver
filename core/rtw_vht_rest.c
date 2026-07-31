@@ -23,6 +23,8 @@ typedef uint8_t u8;
 
 #ifdef CONFIG_80211AC_VHT
 
+#if !defined(CONFIG_RUST) || defined(HOST_VHT_TEST)
+
 void rtw_vht_nss_to_mcsmap(u8 nss, u8 *target_mcs_map, u8 *cur_mcs_map)
 {
 	u8	i, j;
@@ -63,5 +65,7 @@ u8 VHT_get_ss_from_map(u8 *vht_mcs_map)
 	return ss;
 }
 #endif /* ROKU_PRIVATE */
+
+#endif /* !CONFIG_RUST || HOST_VHT_TEST */
 
 #endif /* CONFIG_80211AC_VHT */
