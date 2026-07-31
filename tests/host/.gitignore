@@ -49,3 +49,4 @@ rm/test_rm_rust
 rm/librust_rm_util.a
 rm/rm_rest_c_ref.o
 rm/rm_rest_rust_ref.o
+vht/test_vht

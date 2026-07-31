@@ -1,0 +1,64 @@
+{
+  "oracle": "core/rtw_vht_rest.c",
+  "vectors": [
+    {
+      "name": "nss1_all_max_mcs",
+      "fn": "rtw_vht_nss_to_mcsmap",
+      "nss": 1,
+      "cur_mcs_map_hex": "aaaa",
+      "expect_mcs_map_hex": "feff"
+    },
+    {
+      "name": "nss2_all_max_mcs",
+      "fn": "rtw_vht_nss_to_mcsmap",
+      "nss": 2,
+      "cur_mcs_map_hex": "aaaa",
+      "expect_mcs_map_hex": "faff"
+    },
+    {
+      "name": "nss4_first_four_ss",
+      "fn": "rtw_vht_nss_to_mcsmap",
+      "nss": 4,
+      "cur_mcs_map_hex": "00ff",
+      "expect_mcs_map_hex": "00ff"
+    },
+    {
+      "name": "nss3_mixed_rates",
+      "fn": "rtw_vht_nss_to_mcsmap",
+      "nss": 3,
+      "cur_mcs_map_hex": "55aa",
+      "expect_mcs_map_hex": "d5ff"
+    },
+    {
+      "name": "nss0_masks_all",
+      "fn": "rtw_vht_nss_to_mcsmap",
+      "nss": 0,
+      "cur_mcs_map_hex": "aaaa",
+      "expect_mcs_map_hex": "ffff"
+    },
+    {
+      "name": "ss_from_map_one_ss",
+      "fn": "VHT_get_ss_from_map",
+      "cur_mcs_map_hex": "feff",
+      "expect": 1
+    },
+    {
+      "name": "ss_from_map_two_ss",
+      "fn": "VHT_get_ss_from_map",
+      "cur_mcs_map_hex": "fefe",
+      "expect": 2
+    },
+    {
+      "name": "ss_from_map_eight_ss",
+      "fn": "VHT_get_ss_from_map",
+      "cur_mcs_map_hex": "0000",
+      "expect": 8
+    },
+    {
+      "name": "ss_from_map_all_unsupported",
+      "fn": "VHT_get_ss_from_map",
+      "cur_mcs_map_hex": "ffff",
+      "expect": 0
+    }
+  ]
+}
