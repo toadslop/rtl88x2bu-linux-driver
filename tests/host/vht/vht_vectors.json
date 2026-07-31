@@ -117,6 +117,12 @@
       "fn": "VHT_get_ss_from_map",
       "cur_mcs_map_hex": "00c0",
       "expect": 7
+    },
+    {
+      "name": "ss_from_map_leading_ff_skipped",
+      "fn": "VHT_get_ss_from_map",
+      "cur_mcs_map_hex": "fffe",
+      "expect": 1
     }
   ]
 }
