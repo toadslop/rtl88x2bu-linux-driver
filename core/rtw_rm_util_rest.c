@@ -114,6 +114,54 @@ u8 translate_percentage_to_rcpi(u32 SignalStrengthIndex)
 	return translate_dbm_to_rcpi(SignalStrengthIndex - 100);
 }
 
+u8 rm_gen_dialog_token(_adapter *padapter)
+{
+	struct rm_priv *prmpriv = &(padapter->rmpriv);
+	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+	struct mlme_ext_info *pmlmeinfo = &pmlmeext->mlmext_info;
+
+	(void)prmpriv;
+
+	do {
+		pmlmeinfo->dialogToken++;
+	} while (pmlmeinfo->dialogToken == 0);
+
+	return pmlmeinfo->dialogToken;
+}
+
+u8 rm_gen_meas_token(_adapter *padapter)
+{
+	struct rm_priv *prmpriv = &(padapter->rmpriv);
+
+	do {
+		prmpriv->meas_token++;
+	} while (prmpriv->meas_token == 0);
+
+	return prmpriv->meas_token;
+}
+
+u32 rm_gen_rmid(_adapter *padapter, struct rm_obj *prm, u8 role)
+{
+	u32 rmid;
+
+	(void)padapter;
+
+	if (prm->psta == NULL)
+		goto err;
+
+	if (prm->q.diag_token == 0)
+		goto err;
+
+	rmid = prm->psta->cmn.aid << 16
+		| prm->q.diag_token << 8
+		| role;
+
+	return rmid;
+err:
+	RTW_ERR("RM: unable to gen rmid\n");
+	return 0;
+}
+
 #endif /* !CONFIG_RUST || HOST_RM_TEST */
 
 #endif /* CONFIG_RTW_80211K */
