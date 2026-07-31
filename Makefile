@@ -2565,6 +2565,9 @@ endif
 ifneq ($(filter -DDBG_IO,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg dbg_io
 endif
+ifneq ($(filter -DROKU_PRIVATE,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
+rustflags-y += --cfg roku_private
+endif
 ifeq ($(CONFIG_RTW_80211K), y)
 rustflags-y += --cfg rtw_80211k
 endif

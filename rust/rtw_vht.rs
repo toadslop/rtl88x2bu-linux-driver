@@ -37,7 +37,7 @@ pub extern "C" fn rtw_vht_nss_to_mcsmap(nss: u8, target_mcs_map: *mut u8, cur_mc
     }
 }
 
-#[cfg(host_vht_test)]
+#[cfg(any(host_vht_test, roku_private))]
 #[no_mangle]
 pub extern "C" fn VHT_get_ss_from_map(vht_mcs_map: *mut u8) -> u8 {
     let map = unsafe { core::slice::from_raw_parts(vht_mcs_map, 2) };
