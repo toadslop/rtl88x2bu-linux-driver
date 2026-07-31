@@ -18,6 +18,9 @@ struct vector {
 	u8 hal_max_bw;
 	u8 chset_max_bw;
 	u8 regsty_bw;
+	u8 dfs_slave_with_rd;
+	u8 dfs_domain_unknown;
+	u8 chbw_non_ocp_at_80;
 	u8 expect_vht_option;
 	u8 expect_vht_op_width;
 	u8 expect_vht_op_cfreq1;
@@ -53,6 +56,9 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	host_json_parse_int_in(obj, len, "hal_max_bw", (int *)&v->hal_max_bw);
 	host_json_parse_int_in(obj, len, "chset_max_bw", (int *)&v->chset_max_bw);
 	host_json_parse_int_in(obj, len, "regsty_bw", (int *)&v->regsty_bw);
+	host_json_parse_int_in(obj, len, "dfs_slave_with_rd", (int *)&v->dfs_slave_with_rd);
+	host_json_parse_int_in(obj, len, "dfs_domain_unknown", (int *)&v->dfs_domain_unknown);
+	host_json_parse_int_in(obj, len, "chbw_non_ocp_at_80", (int *)&v->chbw_non_ocp_at_80);
 	host_json_parse_int_in(obj, len, "expect_vht_option", (int *)&v->expect_vht_option);
 	host_json_parse_int_in(obj, len, "expect_vht_op_width", (int *)&v->expect_vht_op_width);
 	host_json_parse_int_in(obj, len, "expect_vht_op_cfreq1", (int *)&v->expect_vht_op_cfreq1);
@@ -70,7 +76,10 @@ static int run_vector(const struct vector *v)
 	memset(&adapter, 0, sizeof(adapter));
 	adapter.host_fixture.hal_max_bw = v->hal_max_bw;
 	adapter.host_fixture.chset_max_bw = v->chset_max_bw;
-	adapter.registrypriv.bw_mode = v->regsty_bw;
+	adapter.host_fixture.dfs_domain_unknown = v->dfs_domain_unknown;
+	adapter.host_fixture.chbw_non_ocp_at_80 = v->chbw_non_ocp_at_80;
+	adapter.registrypriv.bw_mode = (u8)(v->regsty_bw << 4);
+	adapter.rf_ctl.dfs_slave_with_rd = v->dfs_slave_with_rd;
 	host_vht_rest_adapter = &adapter;
 
 	if (rtw_restructure_vht_ie(&adapter, (u8 *)v->in_ie, out_ie, (uint)v->in_len,

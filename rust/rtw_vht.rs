@@ -211,6 +211,8 @@ mod restructure {
                 set_bits(out_vht_op_ie.add(2), 0, 8, 1);
                 set_bits(out_vht_op_ie.add(3), 0, 8, cch);
                 set_bits(out_vht_op_ie.add(4), 0, 8, 0);
+            } else {
+                warn_on(1);
             }
 
             *pout_len += rtw_build_vht_op_mode_notify_ie(padapter, out_ie.add(*pout_len as usize), oper_bw);
