@@ -168,12 +168,7 @@ mod kernel {
     }
 
     pub(super) fn rf_read_table() -> (*const RfSniffEnt, c_int) {
-        unsafe {
-            (
-                core::ptr::addr_of!(rf_read_sniff_ranges),
-                rf_read_sniff_num,
-            )
-        }
+        unsafe { (core::ptr::addr_of!(rf_read_sniff_ranges), rf_read_sniff_num) }
     }
 
     pub(super) fn rf_write_table() -> (*const RfSniffEnt, c_int) {
@@ -398,7 +393,13 @@ mod kernel {
     }
 
     pub(super) fn chip_type(adapter: *mut c_void) -> u8 {
-        unsafe { (*adapter.cast::<HostIoAdapter>()).dvobj.as_ref().map(|d| d.chip_type).unwrap_or(0) }
+        unsafe {
+            (*adapter.cast::<HostIoAdapter>())
+                .dvobj
+                .as_ref()
+                .map(|d| d.chip_type)
+                .unwrap_or(0)
+        }
     }
 
     pub(super) fn intf_type(adapter: *mut c_void) -> u8 {
@@ -465,12 +466,7 @@ fn bitshift(bitmask: u32) -> u32 {
     i
 }
 
-fn match_io_sniff_ranges(
-    adapter: *mut c_void,
-    sniff: &RtwIoSniffEnt,
-    addr: u32,
-    len: u8,
-) -> bool {
+fn match_io_sniff_ranges(adapter: *mut c_void, sniff: &RtwIoSniffEnt, addr: u32, len: u8) -> bool {
     if addr > unsafe { sniff.u.end_addr } {
         return false;
     }

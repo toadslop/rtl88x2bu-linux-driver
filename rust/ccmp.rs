@@ -19,7 +19,7 @@ mod support;
 
 use support::bindings::{aes_ccm_ad, aes_ccm_ae, Adapter};
 use support::{
-    ccmp_aad_nonce, ccmp_aad_nonce_pv1, os_malloc, rtw_mfree, AES_BLOCK_SIZE, Ieee80211Hdr,
+    ccmp_aad_nonce, ccmp_aad_nonce_pv1, os_malloc, rtw_mfree, Ieee80211Hdr, AES_BLOCK_SIZE,
 };
 use types::AesKey;
 
@@ -134,16 +134,16 @@ fn ccmp_encrypt_inner(
             *c.add(pos) = pn_bytes[0];
             pos += 1;
         }
-        (crypt as *mut Ieee80211Hdr, pos, unsafe { frame.as_ptr().add(hdrlen) })
+        (crypt as *mut Ieee80211Hdr, pos, unsafe {
+            frame.as_ptr().add(hdrlen)
+        })
     } else {
         unsafe {
             core::ptr::copy_nonoverlapping(frame.as_ptr(), crypt as *mut u8, hdrlen + CCMP_HDR_LEN);
         }
-        (
-            crypt as *mut Ieee80211Hdr,
-            hdrlen + CCMP_HDR_LEN,
-            unsafe { frame.as_ptr().add(hdrlen + CCMP_HDR_LEN) },
-        )
+        (crypt as *mut Ieee80211Hdr, hdrlen + CCMP_HDR_LEN, unsafe {
+            frame.as_ptr().add(hdrlen + CCMP_HDR_LEN)
+        })
     };
 
     unsafe {
@@ -154,15 +154,8 @@ fn ccmp_encrypt_inner(
     let mut nonce: [u8; 13] = Default::default();
     let data_for_nonce =
         unsafe { core::slice::from_raw_parts((crypt as *const u8).add(hdrlen), CCMP_HDR_LEN) };
-    let aad_len = unsafe {
-        ccmp_aad_nonce(
-            amsdu_mode,
-            &*hdr_ptr,
-            data_for_nonce,
-            &mut aad,
-            &mut nonce,
-        )
-    };
+    let aad_len =
+        unsafe { ccmp_aad_nonce(amsdu_mode, &*hdr_ptr, data_for_nonce, &mut aad, &mut nonce) };
 
     let key = tk.as_bytes();
     let rc = unsafe {
@@ -198,30 +191,28 @@ pub extern "C" fn ccmp_decrypt(
     data_len: usize,
     decrypted_len: *mut usize,
 ) -> *mut u8 {
-    if padapter.is_null() || tk.is_null() || hdr.is_null() || data.is_null()
+    if padapter.is_null()
+        || tk.is_null()
+        || hdr.is_null()
+        || data.is_null()
         || decrypted_len.is_null()
     {
         return core::ptr::null_mut();
     }
 
-    let aes_key = match AesKey::try_from_slice(unsafe {
-        core::slice::from_raw_parts(tk, CCMP_KEY_LEN)
-    }) {
-        Ok(k) => k,
-        Err(_) => return core::ptr::null_mut(),
-    };
+    let aes_key =
+        match AesKey::try_from_slice(unsafe { core::slice::from_raw_parts(tk, CCMP_KEY_LEN) }) {
+            Ok(k) => k,
+            Err(_) => return core::ptr::null_mut(),
+        };
 
     let data_slice = unsafe { core::slice::from_raw_parts(data, data_len) };
     let hdr_ref = unsafe { &*hdr };
     let amsdu_mode = unsafe { support::bindings::rtw_registrypriv_amsdu_mode(padapter) };
 
-    ccmp_decrypt_128_inner(
-        amsdu_mode,
-        &aes_key,
-        hdr_ref,
-        data_slice,
-        unsafe { &mut *decrypted_len },
-    )
+    ccmp_decrypt_128_inner(amsdu_mode, &aes_key, hdr_ref, data_slice, unsafe {
+        &mut *decrypted_len
+    })
 }
 
 /// C ABI: `ccmp_256_decrypt` from `core/crypto/ccmp.c`.
@@ -234,7 +225,10 @@ pub extern "C" fn ccmp_256_decrypt(
     data_len: usize,
     decrypted_len: *mut usize,
 ) -> *mut u8 {
-    if padapter.is_null() || tk.is_null() || hdr.is_null() || data.is_null()
+    if padapter.is_null()
+        || tk.is_null()
+        || hdr.is_null()
+        || data.is_null()
         || decrypted_len.is_null()
     {
         return core::ptr::null_mut();
@@ -279,12 +273,11 @@ pub extern "C" fn ccmp_encrypt(
         return core::ptr::null_mut();
     }
 
-    let aes_key = match AesKey::try_from_slice(unsafe {
-        core::slice::from_raw_parts(tk, CCMP_KEY_LEN)
-    }) {
-        Ok(k) => k,
-        Err(_) => return core::ptr::null_mut(),
-    };
+    let aes_key =
+        match AesKey::try_from_slice(unsafe { core::slice::from_raw_parts(tk, CCMP_KEY_LEN) }) {
+            Ok(k) => k,
+            Err(_) => return core::ptr::null_mut(),
+        };
 
     let frame_slice = unsafe { core::slice::from_raw_parts(frame, len) };
     let amsdu_mode = unsafe { support::bindings::rtw_registrypriv_amsdu_mode(padapter) };
@@ -363,7 +356,11 @@ fn ccmp_encrypt_pv1_inner(
     pn: *const u8,
     encrypted_len: *mut usize,
 ) -> *mut u8 {
-    if tk.is_null() || a1.is_null() || a2.is_null() || frame.is_null() || pn.is_null()
+    if tk.is_null()
+        || a1.is_null()
+        || a2.is_null()
+        || frame.is_null()
+        || pn.is_null()
         || encrypted_len.is_null()
     {
         return core::ptr::null_mut();
@@ -373,12 +370,11 @@ fn ccmp_encrypt_pv1_inner(
         return core::ptr::null_mut();
     }
 
-    let aes_key = match AesKey::try_from_slice(unsafe {
-        core::slice::from_raw_parts(tk, CCMP_KEY_LEN)
-    }) {
-        Ok(k) => k,
-        Err(_) => return core::ptr::null_mut(),
-    };
+    let aes_key =
+        match AesKey::try_from_slice(unsafe { core::slice::from_raw_parts(tk, CCMP_KEY_LEN) }) {
+            Ok(k) => k,
+            Err(_) => return core::ptr::null_mut(),
+        };
 
     let frame_slice = unsafe { core::slice::from_raw_parts(frame, len) };
     let plen = frame_slice.len() - hdrlen;
@@ -409,7 +405,9 @@ fn ccmp_encrypt_pv1_inner(
 
     let mut aad: [u8; 24] = Default::default();
     let mut nonce: [u8; 13] = Default::default();
-    let aad_len = ccmp_aad_nonce_pv1(hdr_bytes, a1_arr, a2_arr, a3_opt, pn_arr, &mut aad, &mut nonce);
+    let aad_len = ccmp_aad_nonce_pv1(
+        hdr_bytes, a1_arr, a2_arr, a3_opt, pn_arr, &mut aad, &mut nonce,
+    );
 
     let key = aes_key.as_bytes();
     let rc = unsafe {
