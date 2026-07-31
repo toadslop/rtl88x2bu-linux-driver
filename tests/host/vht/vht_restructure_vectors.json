@@ -1,0 +1,40 @@
+{
+  "oracle": "core/rtw_vht_rest.c:rtw_restructure_vht_ie",
+  "vectors": [
+    {
+      "name": "80mhz_ch36_sca",
+      "in_ie_hex": "0000000000000000000000003d1624050000000000000000000000000000000000000000bf0c000000000000000000000000c005010000ffff",
+      "hal_max_bw": 2,
+      "chset_max_bw": 2,
+      "regsty_bw": 2,
+      "expect_vht_option": 1,
+      "expect_vht_op_width": 1,
+      "expect_vht_op_cfreq1": 42
+    },
+    {
+      "name": "20mhz_no_ht40",
+      "in_ie_hex": "0000000000000000000000003d1624000000000000000000000000000000000000000000bf0c000000000000000000000000c005010000ffff",
+      "hal_max_bw": 2,
+      "chset_max_bw": 2,
+      "regsty_bw": 2,
+      "expect_vht_option": 1,
+      "expect_vht_op_width": 0,
+      "expect_vht_op_cfreq1": 0
+    },
+    {
+      "name": "downgrade_80_to_40",
+      "in_ie_hex": "0000000000000000000000003d1624050000000000000000000000000000000000000000bf0c000000000000000000000000c005010000ffff",
+      "hal_max_bw": 2,
+      "chset_max_bw": 1,
+      "regsty_bw": 2,
+      "expect_vht_option": 1,
+      "expect_vht_op_width": 0,
+      "expect_vht_op_cfreq1": 0
+    },
+    {
+      "name": "missing_vht_cap",
+      "in_ie_hex": "0000000000000000000000003d1600000000000000000000000000000000000000000000000000000000c005010000ffff",
+      "expect_vht_option": 0
+    }
+  ]
+}
