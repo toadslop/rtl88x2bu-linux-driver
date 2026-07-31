@@ -109,7 +109,7 @@ pub mod bindings {
     }
 }
 
-pub use self::bindings::{AES_BLOCK_SIZE, Ieee80211Hdr};
+pub use self::bindings::{Ieee80211Hdr, AES_BLOCK_SIZE};
 
 #[cfg(host_crypto_test)]
 pub fn os_malloc(sz: usize) -> *mut core::ffi::c_void {
@@ -182,7 +182,10 @@ pub fn gcmp_aad_nonce(
     nonce: &mut [u8; 12],
 ) -> usize {
     if data.len() < 8 {
-        debug_assert!(false, "gcmp_aad_nonce: data must contain at least 8 PN bytes");
+        debug_assert!(
+            false,
+            "gcmp_aad_nonce: data must contain at least 8 PN bytes"
+        );
         return 0;
     }
 

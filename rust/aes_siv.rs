@@ -72,10 +72,10 @@ use bindings::{
     aes_ctr_encrypt, bin_clear_free, omac1_aes_vector, os_memcmp, os_memdup, AES_BLOCK_SIZE,
 };
 
-#[cfg(host_crypto_test)]
-use std::os::raw::c_int;
 #[cfg(not(host_crypto_test))]
 use core::ffi::c_int;
+#[cfg(host_crypto_test)]
+use std::os::raw::c_int;
 
 const ZERO_BLOCK: [u8; 16] = [0u8; 16];
 
@@ -134,16 +134,7 @@ fn aes_s2v(
         tmp[block_size - 1] = 1;
         let data = tmp.as_ptr();
         let data_len = tmp.len();
-        return unsafe {
-            omac1_aes_vector(
-                key,
-                key_len,
-                1,
-                &data,
-                &data_len,
-                mac,
-            )
-        };
+        return unsafe { omac1_aes_vector(key, key_len, 1, &data, &data_len, mac) };
     }
 
     let zero = ZERO_BLOCK.as_ptr();
@@ -156,16 +147,7 @@ fn aes_s2v(
     for i in 0..num_elem - 1 {
         let elem_len = unsafe { *len.add(i) };
         let elem_ptr = unsafe { *addr.add(i) };
-        ret = unsafe {
-            omac1_aes_vector(
-                key,
-                key_len,
-                1,
-                &elem_ptr,
-                &elem_len,
-                tmp2.as_mut_ptr(),
-            )
-        };
+        ret = unsafe { omac1_aes_vector(key, key_len, 1, &elem_ptr, &elem_len, tmp2.as_mut_ptr()) };
         if ret != 0 {
             return ret;
         }
@@ -232,7 +214,15 @@ pub extern "C" fn aes_siv_encrypt(
     lens[num_elem] = pwlen;
 
     let mut v = [0u8; 16];
-    if aes_s2v(k1, half_key, num_elem + 1, addrs.as_ptr(), lens.as_ptr(), v.as_mut_ptr()) != 0 {
+    if aes_s2v(
+        k1,
+        half_key,
+        num_elem + 1,
+        addrs.as_ptr(),
+        lens.as_ptr(),
+        v.as_mut_ptr(),
+    ) != 0
+    {
         return -1;
     }
 

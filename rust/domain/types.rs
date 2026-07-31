@@ -514,10 +514,7 @@ mod tests {
 
     #[test]
     fn aes_key_rejects_bad_length() {
-        assert_eq!(
-            AesKey::try_from_slice(&[]),
-            Err(DomainError::InvalidLength)
-        );
+        assert_eq!(AesKey::try_from_slice(&[]), Err(DomainError::InvalidLength));
         assert_eq!(
             AesKey::try_from_slice(&[0u8; 15]),
             Err(DomainError::InvalidLength)
@@ -552,9 +549,7 @@ mod tests {
 
     #[test]
     fn security_type_accepts_vector_values() {
-        for raw in [
-            0u8, 1, 2, 3, 4, 5, 6, 7, 20, 23, 32, 33, 34, 35,
-        ] {
+        for raw in [0u8, 1, 2, 3, 4, 5, 6, 7, 20, 23, 32, 33, 34, 35] {
             assert!(
                 SecurityType::try_from(raw).is_ok(),
                 "expected valid security type for {}",
