@@ -2567,6 +2567,9 @@ endif
 
 all: modules
 
+migration-progress:
+	@./scripts/ci/compute-migration-progress.sh
+
 # L1 ABI gate (T1): compare global symbols in OLD.o vs NEW.o after a C→Rust swap.
 # Example (W1-03 aes-ctr pilot):
 #   make rust-check-symbols OLD=/tmp/aes-ctr-c.o NEW=rust/aes_ctr.o

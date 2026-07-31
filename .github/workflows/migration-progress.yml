@@ -1,0 +1,40 @@
+# Post Rust migration progress summary on pull requests.
+# See scripts/ci/compute-migration-progress.py
+
+name: Migration progress
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  migration-progress:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute progress report
+        id: report
+        run: |
+          git fetch origin "${{ github.base_ref }}"
+          BASE="origin/${{ github.base_ref }}"
+          BODY="$(./scripts/ci/compute-migration-progress.sh --compare-ref "${BASE}")"
+          {
+            echo 'body<<EOF'
+            echo "${BODY}"
+            echo EOF
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Post PR comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          edit-mode: replace
+          comment-id: find
+          body: ${{ steps.report.outputs.body }}
+          header: migration-progress
