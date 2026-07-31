@@ -16,11 +16,11 @@ BASE_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-var
 CFLAGS := $(BASE_CFLAGS) -DHOST_VHT_TEST
 RESTRUCT_CFLAGS := $(BASE_CFLAGS) -DHOST_VHT_RESTRUCTURE_TEST -Wno-pointer-sign
 
-.PHONY: all test test-c test-rust vht-restructure-compile test-restructure clean
+.PHONY: all test test-c test-rust vht-restructure-compile test-restructure test-restructure-rust clean
 
 all: test
 
-test: test-c test-rust test-restructure
+test: test-c test-rust test-restructure test-restructure-rust
 
 test-c: test_vht
 	./test_vht vht_vectors.json
@@ -42,6 +42,16 @@ vht-restructure-compile: $(VHT_REST_SRC) $(VHT_REST_SHIM)
 	$(CC) $(RESTRUCT_CFLAGS) -c $(VHT_REST_SRC) -o vht_rest_host.o
 	$(CC) $(RESTRUCT_CFLAGS) -c $(VHT_REST_SHIM) -o vht_rest_shim_host.o
 
+librust_vht_restructure.a: $(RUST_VHT)
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_vht_restructure_test \
+		--crate-type staticlib $(RUST_VHT) -o $@
+
+test-restructure-rust: test_vht_restructure_rust
+	./test_vht_restructure_rust vht_restructure_vectors.json
+
+test_vht_restructure_rust: test_vht_restructure.c librust_vht_restructure.a $(VHT_REST_SHIM) $(HOST_JSON)
+	$(CC) $(RESTRUCT_CFLAGS) -DRUST_VHT_ORACLE -o $@ test_vht_restructure.c $(VHT_REST_SHIM) $(HOST_JSON) librust_vht_restructure.a
+
 test-restructure: test_vht_restructure
 	./test_vht_restructure vht_restructure_vectors.json
 
@@ -49,4 +59,5 @@ test_vht_restructure: test_vht_restructure.c $(VHT_REST_SRC) $(VHT_REST_SHIM) $(
 	$(CC) $(RESTRUCT_CFLAGS) -o $@ test_vht_restructure.c $(VHT_REST_SRC) $(VHT_REST_SHIM) $(HOST_JSON)
 
 clean:
-	rm -f test_vht test_vht_rust test_vht_restructure librust_vht.a vht_rest_host.o vht_rest_shim_host.o
+	rm -f test_vht test_vht_rust test_vht_restructure test_vht_restructure_rust \
+		librust_vht.a librust_vht_restructure.a vht_rest_host.o vht_rest_shim_host.o

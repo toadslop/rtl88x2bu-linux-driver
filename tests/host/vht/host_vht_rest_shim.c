@@ -98,3 +98,35 @@ u8 rtw_get_center_ch(u8 ch, u8 bw, u8 offset)
 		return ch + 2;
 	return ch;
 }
+
+RT_CHANNEL_INFO *rtw_rust_vht_channel_set(_adapter *padapter)
+{
+	return adapter_to_rfctl(padapter)->channel_set;
+}
+
+u8 rtw_rust_vht_regsty_bw_5g(_adapter *padapter)
+{
+	return REGSTY_BW_5G(&padapter->registrypriv);
+}
+
+u8 *rtw_rust_vht_vht_option(_adapter *padapter)
+{
+	return &padapter->mlmepriv.vhtpriv.vht_option;
+}
+
+u8 *rtw_rust_vht_get_ie(const u8 *pbuf, sint index, u32 *len, sint limit)
+{
+	return rtw_get_ie(pbuf, index, len, limit);
+}
+
+u8 rtw_rust_vht_chset_is_chbw_valid(RT_CHANNEL_INFO *ch_set, u8 ch, u8 bw,
+				    u8 offset, u8 a, u8 b)
+{
+	return rtw_chset_is_chbw_valid(ch_set, ch, bw, offset, a, b) ? 1 : 0;
+}
+
+u8 rtw_rust_vht_chset_is_chbw_non_ocp(RT_CHANNEL_INFO *ch_set, u8 ch, u8 bw,
+				      u8 offset)
+{
+	return rtw_chset_is_chbw_non_ocp(ch_set, ch, bw, offset) ? 1 : 0;
+}
