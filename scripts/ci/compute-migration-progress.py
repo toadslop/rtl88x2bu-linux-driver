@@ -201,23 +201,29 @@ def _ported_loc_for_parent(
     parent_c: str,
     rest_c: str | None,
     rust_objs: list[str],
+    linked_c: list[str],
     baseline_ref: str,
     tree_ref: str | None,
 ) -> int:
     full_baseline = baseline_loc_for_path(parent_c, baseline_ref)
     if not rust_objs:
         return 0
-    if rest_c and rest_c != parent_c:
-        cur_rest = line_count_at(rest_c, tree_ref)
-        delta = full_baseline - cur_rest
-        if delta > 0:
-            return min(full_baseline, delta)
-        # Rest stub outgrew the parent baseline (refactors); credit Rust LOC.
-        rust_loc = _rust_loc_for_objs(rust_objs, tree_ref)
-        return min(full_baseline, rust_loc) if rust_loc > 0 else 0
-    if _rust_loc_for_objs(rust_objs, tree_ref) > 0:
+
+    remaining_c = 0
+    if parent_c in linked_c:
+        remaining_c += line_count_at(parent_c, tree_ref)
+    if rest_c and rest_c in linked_c:
+        remaining_c += line_count_at(rest_c, tree_ref)
+
+    if remaining_c == 0:
         return full_baseline
-    return 0
+
+    delta = full_baseline - remaining_c
+    if delta > 0:
+        return min(full_baseline, delta)
+
+    rust_loc = _rust_loc_for_objs(rust_objs, tree_ref)
+    return min(full_baseline, rust_loc) if rust_loc > 0 else 0
 
 
 def compute_module_metrics(
@@ -234,7 +240,7 @@ def compute_module_metrics(
     current_rust_loc = 0
 
     # Group linked objects by canonical baseline C path (each counted once).
-    groups: dict[str, dict[str, list[str] | None]] = {}
+    groups: dict[str, dict[str, list[str] | str | None]] = {}
 
     for obj in objs:
         c_path, kind = classify_object(obj)
@@ -245,15 +251,20 @@ def compute_module_metrics(
             rust_src = obj.replace(".o", ".rs")
             current_rust_loc += line_count_at(rust_src, tree_ref)
             canonical = c_path or f"__unmapped__:{Path(obj).stem}"
-            groups.setdefault(canonical, {"rust": [], "rest_c": None})
+            groups.setdefault(
+                canonical, {"rust": [], "rest_c": None, "linked_c": []}
+            )
             groups[canonical]["rust"].append(obj)  # type: ignore[index]
         elif kind == "c" and c_path:
             c_linked += 1
             current_c_loc += line_count_at(c_path, tree_ref)
             canonical = canonical_baseline_c(c_path)
-            grp = groups.setdefault(canonical, {"rust": [], "rest_c": None})
+            grp = groups.setdefault(
+                canonical, {"rust": [], "rest_c": None, "linked_c": []}
+            )
+            grp["linked_c"].append(c_path)  # type: ignore[index]
             if c_path in REST_C_TO_PARENT:
-                grp["rest_c"] = c_path  # type: ignore[index]
+                grp["rest_c"] = c_path
         else:
             continue
 
@@ -280,6 +291,7 @@ def compute_module_metrics(
             canonical,
             grp["rest_c"],  # type: ignore[arg-type]
             grp["rust"],  # type: ignore[arg-type]
+            grp["linked_c"],  # type: ignore[arg-type]
             baseline_ref,
             tree_ref,
         )
@@ -321,12 +333,44 @@ def discover_migration_units_from_makefile(makefile_text: str | None = None) -> 
     return sorted(set(stems))
 
 
+def linked_c_by_parent(objects_text: str | None) -> dict[str, list[str]]:
+    linked: dict[str, list[str]] = {}
+    for obj in load_module_objects(objects_text):
+        c_path, kind = classify_object(obj)
+        if kind != "c" or not c_path:
+            continue
+        canonical = canonical_baseline_c(c_path)
+        linked.setdefault(canonical, []).append(c_path)
+    return linked
+
+
+def rust_objs_for_parent(parent_c: str, units: list[str]) -> list[str]:
+    objs: list[str] = []
+    for stem in units:
+        mapped = RUST_TO_BASELINE_C.get(stem)
+        partial = PARTIAL_UNITS.get(stem)
+        if mapped == parent_c or (partial and partial[0] == parent_c):
+            objs.append(f"rust/{stem}.o")
+    return objs
+
+
+def rest_c_for_parent(parent_c: str, units: list[str]) -> str | None:
+    for stem in units:
+        if stem in PARTIAL_UNITS:
+            p, rest = PARTIAL_UNITS[stem]
+            if p == parent_c and rest != parent_c:
+                return rest
+    return None
+
+
 def compute_migration_units_metrics(
     baseline_ref: str,
     tree_ref: str | None = None,
     makefile_text: str | None = None,
+    objects_text: str | None = None,
 ) -> dict:
     units = discover_migration_units_from_makefile(makefile_text)
+    linked = linked_c_by_parent(objects_text)
     baseline_scope_loc = 0
     ported_loc_est = 0
     rust_loc = 0
@@ -344,31 +388,31 @@ def compute_migration_units_metrics(
                 parent_baseline[parent_c] = full_baseline
                 baseline_scope_loc += full_baseline
             if parent_c not in parent_ported:
-                if parent_c == rest_c:
-                    parent_ported[parent_c] = (
-                        parent_baseline[parent_c]
-                        if line_count_at(rust_path, tree_ref) > 0
-                        else 0
-                    )
-                else:
-                    cur_rest = line_count_at(rest_c, tree_ref)
-                    parent_ported[parent_c] = max(
-                        0,
-                        min(
-                            parent_baseline[parent_c],
-                            parent_baseline[parent_c] - cur_rest,
-                        ),
-                    )
+                parent_ported[parent_c] = _ported_loc_for_parent(
+                    parent_c,
+                    rest_c_for_parent(parent_c, units),
+                    rust_objs_for_parent(parent_c, units),
+                    linked.get(parent_c, []),
+                    baseline_ref,
+                    tree_ref,
+                )
         else:
             baseline_c = RUST_TO_BASELINE_C.get(stem)
             if not baseline_c:
                 continue
-            unit_baseline = baseline_loc_for_path(baseline_c, baseline_ref)
-            baseline_scope_loc += unit_baseline
-            unit_ported = (
-                unit_baseline if line_count_at(rust_path, tree_ref) > 0 else 0
-            )
-            ported_loc_est += min(unit_ported, unit_baseline)
+            if baseline_c not in parent_baseline:
+                unit_baseline = baseline_loc_for_path(baseline_c, baseline_ref)
+                parent_baseline[baseline_c] = unit_baseline
+                baseline_scope_loc += unit_baseline
+            if baseline_c not in parent_ported:
+                parent_ported[baseline_c] = _ported_loc_for_parent(
+                    baseline_c,
+                    None,
+                    rust_objs_for_parent(baseline_c, units),
+                    linked.get(baseline_c, []),
+                    baseline_ref,
+                    tree_ref,
+                )
 
     ported_loc_est += sum(parent_ported.values())
 
@@ -408,7 +452,7 @@ def snapshot_at_ref(tree_ref: str, baseline_ref: str) -> dict:
     return {
         "module": module_metrics,
         "units": compute_migration_units_metrics(
-            baseline_ref, tree_ref, makefile_text=makefile_text
+            baseline_ref, tree_ref, makefile_text=makefile_text, objects_text=objects_text
         ),
         "has_module_objects": objects_bytes is not None,
     }
@@ -485,7 +529,7 @@ def main() -> int:
     baseline_label = meta.get("baseline_label", baseline_ref)
 
     module = compute_module_metrics(baseline_ref)
-    units = compute_migration_units_metrics(baseline_ref)
+    units = compute_migration_units_metrics(baseline_ref, objects_text=None)
     result: dict = {"baseline_ref": baseline_ref, "module": module, "units": units}
 
     if args.compare_ref:
