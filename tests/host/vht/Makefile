@@ -16,11 +16,11 @@ BASE_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-var
 CFLAGS := $(BASE_CFLAGS) -DHOST_VHT_TEST
 RESTRUCT_CFLAGS := $(BASE_CFLAGS) -DHOST_VHT_RESTRUCTURE_TEST -Wno-pointer-sign
 
-.PHONY: all test test-c test-rust vht-restructure-compile clean
+.PHONY: all test test-c test-rust vht-restructure-compile test-restructure clean
 
 all: test
 
-test: test-c test-rust vht-restructure-compile
+test: test-c test-rust test-restructure
 
 test-c: test_vht
 	./test_vht vht_vectors.json
@@ -42,5 +42,11 @@ vht-restructure-compile: $(VHT_REST_SRC) $(VHT_REST_SHIM)
 	$(CC) $(RESTRUCT_CFLAGS) -c $(VHT_REST_SRC) -o vht_rest_host.o
 	$(CC) $(RESTRUCT_CFLAGS) -c $(VHT_REST_SHIM) -o vht_rest_shim_host.o
 
+test-restructure: test_vht_restructure
+	./test_vht_restructure vht_restructure_vectors.json
+
+test_vht_restructure: test_vht_restructure.c $(VHT_REST_SRC) $(VHT_REST_SHIM) $(HOST_JSON)
+	$(CC) $(RESTRUCT_CFLAGS) -o $@ test_vht_restructure.c $(VHT_REST_SRC) $(VHT_REST_SHIM) $(HOST_JSON)
+
 clean:
-	rm -f test_vht test_vht_rust librust_vht.a vht_rest_host.o vht_rest_shim_host.o
+	rm -f test_vht test_vht_rust test_vht_restructure librust_vht.a vht_rest_host.o vht_rest_shim_host.o
