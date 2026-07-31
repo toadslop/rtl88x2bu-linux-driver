@@ -110,6 +110,7 @@ CONFIG_IP_R_MONITOR = n #arp VOQ and high rate
 # user priority mapping rule : tos, dscp
 CONFIG_RTW_UP_MAPPING_RULE = tos
 CONFIG_RTW_MBO = n
+CONFIG_RTW_80211K = n
 CONFIG_RTW_IOCTL_SET_COUNTRY = y
 ########################## Android ###########################
 # CONFIG_RTW_ANDROID - 0: no Android, 4/5/6/7/8/9/10/11 : Android version
@@ -1348,8 +1349,27 @@ endif
 ccflags-y += -DDM_ODM_SUPPORT_TYPE=0x04
 
 ifeq ($(CONFIG_RTW_MBO), y)
-ccflags-y += -DCONFIG_RTW_MBO -DCONFIG_RTW_80211K -DCONFIG_RTW_WNM -DCONFIG_RTW_BTM_ROAM
+ccflags-y += -DCONFIG_RTW_MBO -DCONFIG_RTW_WNM -DCONFIG_RTW_BTM_ROAM
 ccflags-y += -DCONFIG_RTW_80211R
+CONFIG_RTW_80211K := y
+endif
+
+# Match C #ifdef CONFIG_RTW_80211K when enabled via autoconf.h (uncommented define).
+_autoconf_has_80211k := $(shell grep -E '^[[:space:]]*#define[[:space:]]+CONFIG_RTW_80211K' $(src)/include/autoconf.h 2>/dev/null)
+ifneq ($(_autoconf_has_80211k),)
+CONFIG_RTW_80211K := y
+endif
+
+ifneq ($(filter -DCONFIG_RTW_80211K,$(USER_EXTRA_CFLAGS)),)
+CONFIG_RTW_80211K := y
+endif
+
+ifeq ($(CONFIG_RTW_80211K), y)
+ifneq ($(_autoconf_has_80211k),)
+# autoconf.h already #defines CONFIG_RTW_80211K; omit -D to avoid -Wmacro-redefined.
+else
+ccflags-y += -DCONFIG_RTW_80211K
+endif
 endif
 
 ifeq ($(CONFIG_RTW_IOCTL_SET_COUNTRY), y)
@@ -2535,7 +2555,7 @@ endif
 ifneq ($(filter -DDBG_IO,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg dbg_io
 endif
-ifneq ($(filter -DCONFIG_RTW_80211K,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
+ifeq ($(CONFIG_RTW_80211K), y)
 rustflags-y += --cfg rtw_80211k
 endif
 $(MODULE_NAME)-y += rust/rtw_chplan.o
@@ -3027,4 +3047,3 @@ clean:
 	rm -fr *.mod.c *.mod *.o .*.cmd *.ko *~
 	rm -fr .tmp_versions
 endif
-
