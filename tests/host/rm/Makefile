@@ -16,7 +16,8 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable
 
 all: test
 
-test: test-c test-rust
+# W3-34 PR1: C oracle only; test-rust enabled in PR2 after Rust port lands.
+test: test-c
 
 test-c: test_rm
 	./test_rm rm_vectors.json
