@@ -192,29 +192,6 @@ u8	rtw_vht_mcsmap_to_nss(u8 *pvht_mcs_map)
 	return nss;
 }
 
-void rtw_vht_nss_to_mcsmap(u8 nss, u8 *target_mcs_map, u8 *cur_mcs_map)
-{
-	u8	i, j;
-	u8	cur_rate, target_rate;
-
-	for (i = 0; i < 2; i++) {
-		target_mcs_map[i] = 0;
-		for (j = 0; j < 8; j += 2) {
-			cur_rate = (cur_mcs_map[i] >> j) & 3;
-			if (cur_rate == 3) /* 0x3 indicates not supported that num of SS */
-				target_rate = 3;
-			else if (nss <= ((j / 2) + i * 4))
-				target_rate = 3;
-			else
-				target_rate = cur_rate;
-
-			target_mcs_map[i] |= (target_rate << j);
-		}
-	}
-
-	/* RTW_INFO("%s : %dSS\n", __FUNCTION__, nss); */
-}
-
 u16	rtw_vht_mcs_to_data_rate(u8 bw, u8 short_GI, u8 vht_mcs_rate)
 {
 	if (vht_mcs_rate > MGN_VHT4SS_MCS9)
@@ -491,25 +468,6 @@ void	update_hw_vht_param(_adapter *padapter)
 }
 
 #ifdef ROKU_PRIVATE
-u8 VHT_get_ss_from_map(u8 *vht_mcs_map)
-{
-	u8 i, j;
-	u8 ss = 0;
-
-	for (i = 0; i < 2; i++) {
-		if (vht_mcs_map[i] != 0xff) {
-			for (j = 0; j < 8; j += 2) {
-				if (((vht_mcs_map[i] >> j) & 0x03) == 0x03)
-					break;
-				ss++;
-			}
-		}
-
-	}
-
-return ss;
-}
-
 void VHT_caps_handler_infra_ap(_adapter *padapter, PNDIS_802_11_VARIABLE_IEs pIE)
 {
 	struct mlme_priv		*pmlmepriv = &padapter->mlmepriv;

@@ -171,6 +171,7 @@ void	update_hw_vht_param(_adapter *padapter);
 void	VHT_caps_handler(_adapter *padapter, PNDIS_802_11_VARIABLE_IEs pIE);
 #ifdef ROKU_PRIVATE
 void	VHT_caps_handler_infra_ap(_adapter *padapter, PNDIS_802_11_VARIABLE_IEs pIE);
+u8	VHT_get_ss_from_map(u8 *vht_mcs_map);
 #endif /* ROKU_PRIVATE */
 void	VHT_operation_handler(_adapter *padapter, PNDIS_802_11_VARIABLE_IEs pIE);
 void	rtw_process_vht_op_mode_notify(_adapter *padapter, u8 *pframe, void *sta);
