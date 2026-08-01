@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Host L2 oracle runner for continual no-rx recv helpers (W3-39 PR2).
+ * Host L2 oracle runner for recv_rest helpers (W3-39).
  */
 
 #include <stdio.h>
@@ -10,10 +10,14 @@
 #include "host_recv_types.h"
 #include "host_vector_json.h"
 
-#define MAX_VECTORS 16
+#define MAX_VECTORS 24
 #define MAX_NAME 128
 
-enum recv_fn { FN_INC_CHK = 0, FN_RESET };
+enum recv_fn {
+	FN_INC_CHK = 0,
+	FN_RESET,
+	FN_DEL_WFD,
+};
 
 struct vector {
 	char name[MAX_NAME];
@@ -22,10 +26,15 @@ struct vector {
 	int initial_count;
 	int expect_ret;
 	int expect_count;
+	u8 ies_offset;
+	u8 frame[HOST_RECV_MAX_FRAME];
+	size_t frame_len;
+	unsigned int expect_len;
 };
 
 int rtw_inc_and_chk_continual_no_rx_packet(struct sta_info *sta, int tid_index);
 void rtw_reset_continual_no_rx_packet(struct sta_info *sta, int tid_index);
+bool rtw_rframe_del_wfd_ie(union recv_frame *rframe, u8 ies_offset);
 
 static int parse_fn(const char *obj, size_t obj_len, enum recv_fn *out)
 {
@@ -37,9 +46,21 @@ static int parse_fn(const char *obj, size_t obj_len, enum recv_fn *out)
 		*out = FN_INC_CHK;
 	else if (!strcmp(fn, "rtw_reset_continual_no_rx_packet"))
 		*out = FN_RESET;
+	else if (!strcmp(fn, "rtw_rframe_del_wfd_ie"))
+		*out = FN_DEL_WFD;
 	else
 		return -1;
 	return 0;
+}
+
+static int parse_hex_field(const char *obj, size_t obj_len, const char *key,
+			   u8 *out, size_t out_cap, size_t *out_len)
+{
+	char hex[HOST_RECV_MAX_FRAME * 2 + 1];
+
+	if (host_json_parse_string_in(obj, obj_len, key, hex, sizeof(hex)))
+		return -1;
+	return host_hex_decode(hex, out, out_cap, out_len);
 }
 
 static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
@@ -55,13 +76,51 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 	host_json_parse_int_in(obj, obj_len, "initial_count", &v->initial_count);
 	host_json_parse_int_in(obj, obj_len, "expect_ret", &v->expect_ret);
 	host_json_parse_int_in(obj, obj_len, "expect_count", &v->expect_count);
+	if (v->fn == FN_DEL_WFD) {
+		int ies_offset = 0;
+
+		host_json_parse_int_in(obj, obj_len, "ies_offset", &ies_offset);
+		v->ies_offset = (u8)ies_offset;
+		if (parse_hex_field(obj, obj_len, "frame", v->frame, sizeof(v->frame),
+				    &v->frame_len))
+			return -1;
+		{
+			int expect_len = 0;
+
+			host_json_parse_int_in(obj, obj_len, "expect_len", &expect_len);
+			v->expect_len = (unsigned int)expect_len;
+		}
+	}
 	return 0;
 }
 
 static int run_vector(struct vector *v)
 {
 	struct sta_info sta;
+	union recv_frame rframe;
+	u8 frame_buf[HOST_RECV_MAX_FRAME];
 	int ret;
+
+	if (v->fn == FN_DEL_WFD) {
+		memcpy(frame_buf, v->frame, v->frame_len);
+		memset(&rframe, 0, sizeof(rframe));
+		rframe.u.hdr.rx_data = frame_buf;
+		rframe.u.hdr.len = (unsigned int)v->frame_len;
+
+		ret = (int)rtw_rframe_del_wfd_ie(&rframe, v->ies_offset);
+		if (ret != v->expect_ret) {
+			fprintf(stderr, "FAIL %s: expect_ret %d got %d\n", v->name,
+				v->expect_ret, ret);
+			return -1;
+		}
+		if (rframe.u.hdr.len != v->expect_len) {
+			fprintf(stderr, "FAIL %s: expect_len %u got %u\n", v->name,
+				v->expect_len, rframe.u.hdr.len);
+			return -1;
+		}
+		printf("PASS %s\n", v->name);
+		return 0;
+	}
 
 	memset(&sta, 0, sizeof(sta));
 	sta.continual_no_rx_packet[v->tid_index] = v->initial_count;
