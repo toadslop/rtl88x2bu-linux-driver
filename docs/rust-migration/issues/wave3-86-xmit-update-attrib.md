@@ -5,7 +5,7 @@ type: child
 id: W3-86
 epic: E05
 blocked_by: [W3-85]
-estimate_loc: 930
+estimate_loc: 690
 ---
 
 ## Goal
@@ -20,7 +20,7 @@ Port the `update_attrib` helper cluster from [`core/rtw_xmit.c`](../../../core/r
 
 ## Notes
 
-- **Multi-PR slice (~930 LOC total)** — `plan-stacked-prs` must split into stacked PRs (≤250 changed lines each); do not implement as a single PR.
+- **Multi-PR slice (~690 LOC total)** — `plan-stacked-prs` must split into stacked PRs (≤250 changed lines each); do not implement as a single PR.
 - W3-40/48/49 covered rate/QoS slices.
 - L2: host harness under `tests/host/` with JSON differential vectors (pattern from prior W3 issues).
 
