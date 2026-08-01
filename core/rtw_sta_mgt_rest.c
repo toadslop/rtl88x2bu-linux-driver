@@ -435,4 +435,32 @@ u8 rtw_rust_pre_link_drain(struct sta_priv *stapriv, u8 addrs[][ETH_ALEN], u8 ma
 #endif
 }
 
+#if CONFIG_RTW_PRE_LINK_STA
+void rtw_rust_pre_link_ctl_init(struct sta_priv *stapriv)
+{
+	struct pre_link_sta_ctl_t *ctl = &stapriv->pre_link_sta_ctl;
+	int i;
+
+	_rtw_spinlock_init(&ctl->lock);
+	ctl->num = 0;
+	for (i = 0; i < RTW_PRE_LINK_STA_NUM; i++)
+		ctl->node[i].valid = _FALSE;
+}
+
+void rtw_rust_pre_link_ctl_lock_free(struct sta_priv *stapriv)
+{
+	_rtw_spinlock_free(&stapriv->pre_link_sta_ctl.lock);
+}
+#else
+void rtw_rust_pre_link_ctl_init(struct sta_priv *stapriv)
+{
+	(void)stapriv;
+}
+
+void rtw_rust_pre_link_ctl_lock_free(struct sta_priv *stapriv)
+{
+	(void)stapriv;
+}
+#endif /* CONFIG_RTW_PRE_LINK_STA */
+
 #endif /* CONFIG_RUST && !HOST_STA_MGT_TEST */

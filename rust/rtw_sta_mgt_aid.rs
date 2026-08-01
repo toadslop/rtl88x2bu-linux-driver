@@ -129,6 +129,8 @@ mod kernel_layout {
         pub fn rtw_rust_pre_link_find(stapriv: *mut u8, addr: *mut u8) -> u8;
         pub fn rtw_rust_pre_link_remove(stapriv: *mut u8, addr: *mut u8) -> u8;
         pub fn rtw_rust_pre_link_drain(stapriv: *mut u8, addrs: *mut u8, max: u8) -> u8;
+        pub fn rtw_rust_pre_link_ctl_init(stapriv: *mut u8);
+        pub fn rtw_rust_pre_link_ctl_lock_free(stapriv: *mut u8);
         pub fn rtw_check_invalid_mac_address(mac: *const u8, check_local_bit: u8) -> u8;
         pub fn rtw_get_stainfo(stapriv: *mut u8, hwaddr: *const u8) -> *mut u8;
         pub fn rtw_free_stainfo(padapter: *mut u8, psta: *mut u8);
@@ -152,8 +154,7 @@ fn rtw_memcmp(dst: *const u8, src: *const u8, sz: usize) -> c_int {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn rtw_aid_alloc(adapter: *mut Adapter, sta: *mut StaInfo) -> u16 {
+fn rtw_aid_alloc_inner(adapter: *mut Adapter, sta: *mut StaInfo) -> u16 {
     if adapter.is_null() || sta.is_null() {
         return 0;
     }
@@ -223,6 +224,11 @@ pub extern "C" fn rtw_aid_alloc(adapter: *mut Adapter, sta: *mut StaInfo) -> u16
         }
         aid
     }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_aid_alloc(adapter: *mut Adapter, sta: *mut StaInfo) -> u16 {
+    rtw_aid_alloc_inner(adapter, sta)
 }
 
 #[no_mangle]
@@ -339,18 +345,32 @@ pub extern "C" fn rtw_pre_link_sta_ctl_reset(stapriv: *mut StaPriv) {
 }
 
 #[no_mangle]
-pub extern "C" fn rtw_pre_link_sta_ctl_init(_stapriv: *mut StaPriv) {
+pub extern "C" fn rtw_pre_link_sta_ctl_init(stapriv: *mut StaPriv) {
+    if stapriv.is_null() {
+        return;
+    }
     #[cfg(host_sta_mgt_test)]
-    if !_stapriv.is_null() {
-        let ctl = &mut unsafe { &mut *_stapriv }.pre_link_sta_ctl;
+    {
+        let ctl = &mut unsafe { &mut *stapriv }.pre_link_sta_ctl;
         ctl.num = 0;
         for node in &mut ctl.node {
             node.valid = _FALSE as u8;
         }
     }
+    #[cfg(not(host_sta_mgt_test))]
+    unsafe {
+        kernel_layout::rtw_rust_pre_link_ctl_init(stapriv.cast());
+    }
 }
 
 #[no_mangle]
 pub extern "C" fn rtw_pre_link_sta_ctl_deinit(stapriv: *mut StaPriv) {
+    if stapriv.is_null() {
+        return;
+    }
     rtw_pre_link_sta_ctl_reset(stapriv);
+    #[cfg(not(host_sta_mgt_test))]
+    unsafe {
+        kernel_layout::rtw_rust_pre_link_ctl_lock_free(stapriv.cast());
+    }
 }

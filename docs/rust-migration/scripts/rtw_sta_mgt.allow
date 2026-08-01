@@ -3,9 +3,6 @@ drop rtw_rust_sta_acl_pool
 drop rtw_rust_sta_acl_mode
 drop rtw_rust_sta_acl_mac_listed
 drop rtw_rust_sta_warn_on
-<<<<<<< HEAD
-# W3-38 PR5: AID/pre-link helpers live in rust/rtw_sta_mgt_aid.rs (separate L1 target).
-=======
 drop rtw_rust_sta_stapriv
 drop rtw_rust_sta_adapter
 drop rtw_rust_sta_max_aid
@@ -20,8 +17,9 @@ drop rtw_rust_sta_state
 drop rtw_rust_pre_link_find
 drop rtw_rust_pre_link_remove
 drop rtw_rust_pre_link_drain
+drop rtw_rust_pre_link_ctl_init
+drop rtw_rust_pre_link_ctl_lock_free
 # W3-38 symbols are checked via rust-check-symbols on rtw_sta_mgt_aid.o
->>>>>>> d542ea4 (feat(sta_mgt): kernel CONFIG_RUST swap for W3-38 AID/pre-link (#255))
 drop rtw_aid_alloc
 drop rtw_is_pre_link_sta
 drop rtw_pre_link_sta_del
