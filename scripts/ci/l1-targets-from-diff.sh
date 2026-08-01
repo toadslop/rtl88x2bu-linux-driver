@@ -92,10 +92,12 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-vht-restructure
 		;;
 	rust/rtw_sta_mgt.rs \
+	| rust/rtw_sta_mgt_aid.rs \
 	| core/rtw_sta_mgt.c \
 	| core/rtw_sta_mgt_rest.c \
 	| tests/host/sta_mgt/*)
 		add_target rust-check-symbols-rtw-sta-mgt
+		add_target rust-check-symbols-rtw-sta-mgt-aid
 		;;
 	rust/aes_*.rs \
 	| rust/sha256*.rs \
@@ -134,6 +136,7 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-vht
 	rust-check-symbols-rtw-vht-restructure
 	rust-check-symbols-rtw-sta-mgt
+	rust-check-symbols-rtw-sta-mgt-aid
 )
 
 emit() {

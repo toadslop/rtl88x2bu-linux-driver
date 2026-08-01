@@ -3021,6 +3021,16 @@ rust-check-symbols-rtw-sta-mgt: rust-objects-rtw-sta-mgt-c rust-objects-rtw-sta-
 	$(MAKE) rust-check-symbols OLD=tests/host/sta_mgt/sta_mgt_rest_c_ref.o NEW=tests/host/sta_mgt/sta_mgt_rest_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_sta_mgt.allow
 
+# W3-38 PR5: compare host C oracle AID/pre-link helpers against rtw_sta_mgt_aid.rs.
+rust-objects-rtw-sta-mgt-aid-rust-ref:
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_sta_mgt_test \
+		--emit=obj=tests/host/sta_mgt/sta_mgt_aid_rust_ref.o \
+		--crate-type lib rust/rtw_sta_mgt_aid.rs
+
+rust-check-symbols-rtw-sta-mgt-aid: rust-objects-rtw-sta-mgt-c rust-objects-rtw-sta-mgt-aid-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/sta_mgt/sta_mgt_rest_c_ref.o NEW=tests/host/sta_mgt/sta_mgt_aid_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_sta_mgt_aid.allow
+
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production
 # L1 on a swap should compare against a kbuild-produced OLD.o from master.
