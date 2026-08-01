@@ -25,7 +25,8 @@ add_target() {
 for path in "${changed[@]}"; do
 	case "${path}" in
 	scripts/ci/l1-targets-from-diff.sh \
-	| scripts/ci/rustfmt-check.sh)
+	| scripts/ci/rustfmt-check.sh \
+	| scripts/ci/run-l1-unit-checks.sh)
 		: # CI helper scripts — do not expand to full L1 suite
 		;;
 	.github/workflows/rust-lint.yml \
