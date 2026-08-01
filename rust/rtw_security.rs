@@ -476,8 +476,8 @@ fn is_broadcast_mac_addr(addr: &[U8; 6]) -> bool {
 }
 
 #[cfg(not(host_security_test))]
+#[rustfmt::skip]
 mod kernel_layout {
-    #![rustfmt::skip]
     use super::*;
 
     extern "C" {
@@ -1162,8 +1162,8 @@ unsafe fn host_get_stainfo<'a>(stapriv: &'a HostStapriv, ta: &[U8; 6]) -> Option
 }
 
 #[cfg(not(host_security_test))]
+#[rustfmt::skip]
 mod tkip_decrypt_ffi {
-    #![rustfmt::skip]
     use super::*;
 
     extern "C" {
