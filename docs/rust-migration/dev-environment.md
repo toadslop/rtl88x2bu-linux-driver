@@ -104,6 +104,13 @@ export LIBCLANG_PATH=/usr/lib/llvm-$(llvm-config --version | cut -d. -f1)/lib   
 make -C /path/to/linux LLVM=1 rustavailable   # must print: Rust is available!
 ```
 
+Before pushing Rust changes, run the T16 formatting gate locally:
+
+```bash
+./scripts/ci/rustfmt-check.sh
+# or: find rust -name '*.rs' ! -path 'rust/bindings/generated.rs' -print0 | xargs -0 rustfmt --edition 2021 --check
+```
+
 ### Distro LLVM is version-suffixed
 
 Packages often provide `llvm-ar-18`, `ld.lld-18`, not bare `llvm-ar` / `ld.lld`. Kernel `LLVM=1` looks for **unsuffixed** names. If configure fails with `linker 'ld.lld' not found` or `llvm-ar: not found`:

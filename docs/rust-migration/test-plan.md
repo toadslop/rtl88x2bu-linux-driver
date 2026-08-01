@@ -220,8 +220,13 @@ Canonical checklist for new pull requests: [`.github/PULL_REQUEST_TEMPLATE.md`](
 7. **T6** — GitHub Actions (`.github/workflows/module-l0.yml`): L0 module build on `ghcr.io/<owner>/rtl88x2bu-l0:v6.12.9` with bindgen freshness check (`scripts/bindgen_rtw.sh --check`) and probe verify via `scripts/ci/verify-ko-probes.sh` (T14, #308).
 8. **T7** — GitHub Actions (`.github/workflows/module-l1.yml`): L1 symbol/ABI checks on path-scoped `rust/*.o` swaps inside the L0 container (issue #152).
 9. **T8** — GitHub Actions (`.github/workflows/module-l3.yml`): L3 QEMU `insmod`/`rmmod` on `master` merges inside the L0 container (issue #153).
+<<<<<<< HEAD
 10. **T15** — Path-scoped L3 on pull requests touching init/USB/scaffold paths (issue #309).
 11. **T9** — PR template (`.github/PULL_REQUEST_TEMPLATE.md`), contributing docs ([`docs/contributing.md`](../contributing.md)), and branch-protection admin notes ([`dev-environment.md`](dev-environment.md#branch-protection)) (done).
+=======
+10. **T9** — PR template (`.github/PULL_REQUEST_TEMPLATE.md`), contributing docs ([`docs/contributing.md`](../contributing.md)), and branch-protection admin notes ([`dev-environment.md`](dev-environment.md#branch-protection)) (done).
+11. **T16** — GitHub Actions (`.github/workflows/rust-lint.yml`): `rustfmt --check` on `rust/**` PRs via `scripts/ci/rustfmt-check.sh` (issue #310). Skips `rust/bindings/generated.rs` (bindgen output).
+>>>>>>> cac1ecd (ci: add rustfmt --check gate for rust/** changes (T16 PR6, #310))
 
 ## Out of scope (for now)
 
