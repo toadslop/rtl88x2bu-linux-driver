@@ -124,6 +124,26 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-53 | #382 | [W3-53] Translate rtw_mlme.c — BSSID getters and same-network compare |
 | W3-54 | #383 | [W3-54] Translate rtw_mlme_ext.c — chset non-OCP and search/valid |
 | W3-55 | #384 | [W3-55] Translate sta_mgt st_ctl and AP TIM/VAPID helpers |
+| W3-56 | #391 | [W3-56] Translate rtw_rf.c — op_class_pref lifecycle and regulatory apply |
+| W3-57 | #392 | [W3-57] Translate rtw_rf.c — op-class debug dump helpers |
+| W3-58 | #393 | [W3-58] Translate rtw_rf.c — dump_txpwr_lmt debug formatter |
+| W3-59 | #394 | [W3-59] Translate rtw_rf.c — kfree TX gain offset apply |
+| W3-60 | #395 | [W3-60] Translate rtw_cmd.c — cmd/evt priv init and teardown |
+| W3-61 | #396 | [W3-61] Translate rtw_cmd.c — cmd/evt queue enqueue and filter |
+| W3-62 | #397 | [W3-62] Translate rtw_mlme.c — unassociated STA queue helpers |
+| W3-63 | #398 | [W3-63] Translate rtw_mlme.c — WMM/RSN IE restructure |
+| W3-64 | #399 | [W3-64] Translate rtw_mlme.c — roaming candidate check and select |
+| W3-65 | #400 | [W3-65] Translate rtw_mlme.c — scanned network update merge |
+| W3-66 | #401 | [W3-66] Translate rtw_mlme.c — 802.11d country IE processing |
+| W3-67 | #402 | [W3-67] Translate rtw_mlme.c — HT IE restructure |
+| W3-68 | #403 | [W3-68] Translate rtw_mlme_ext.c — mgnt frame attribute builders |
+| W3-69 | #404 | [W3-69] Translate rtw_mlme_ext.c — delba timeout and peer alive checks |
+| W3-70 | #405 | [W3-70] Translate rtw_mlme_ext.c — scan sparse and channel decision |
+| W3-71 | #406 | [W3-71] Translate rtw_mlme_ext.c — sitesurvey channel pick |
+| W3-72 | #407 | [W3-72] Translate rtw_mlme_ext.c — band-change beacon IE update |
+| W3-73 | #408 | [W3-73] Translate rtw_ap.c — STA assoc IE parse (cap/rates/HT/VHT) |
+| W3-74 | #409 | [W3-74] Translate rtw_ap.c — STA security IE parse and policy |
+| W3-75 | #410 | [W3-75] Translate rtw_ap.c — beacon TIM and generic IE update |
 
 ## Superseded issues
 

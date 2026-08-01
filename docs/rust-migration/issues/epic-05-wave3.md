@@ -79,13 +79,37 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-54 | `wave3-54-mlmeext-chset-nonocp.md` | `rtw_mlme_ext.c` chset non-OCP + search/valid |
 | W3-55 | `wave3-55-sta-mgt-stctl-ap-tim.md` | `rtw_sta_mgt.c` st_ctl + `rtw_ap.c` TIM/VAPID |
 
-Further ~200 LOC slices **not yet covered by W3-41…W3-55**; file new `wave3-*.md` issues as needed:
+## Children (tranche 4 — filed)
 
-- `rtw_rf.c` remainder (`op_class_pref`, `dump_*` — regd_exc/txpwr_lmt filed as W3-51/W3-52)
+| ID | File | Focus |
+|----|------|--------|
+| W3-56 | `wave3-56-rf-op-class-pref.md` | `rtw_rf.c` op_class_pref lifecycle + regulatory apply |
+| W3-57 | `wave3-57-rf-op-class-dump.md` | `rtw_rf.c` op-class debug dump helpers |
+| W3-58 | `wave3-58-rf-dump-txpwr-lmt.md` | `rtw_rf.c` dump_txpwr_lmt formatter |
+| W3-59 | `wave3-59-rf-kfree-tx-gain.md` | `rtw_rf.c` kfree TX gain offset apply |
+| W3-60 | `wave3-60-cmd-priv-init.md` | `rtw_cmd.c` cmd/evt priv init/teardown |
+| W3-61 | `wave3-61-cmd-queue-filter.md` | `rtw_cmd.c` cmd/evt queue enqueue/filter |
+| W3-62 | `wave3-62-mlme-unassoc-sta.md` | `rtw_mlme.c` unassoc STA queue helpers |
+| W3-63 | `wave3-63-mlme-wmm-rsn-ie.md` | `rtw_mlme.c` WMM/RSN IE restructure |
+| W3-64 | `wave3-64-mlme-roaming-candidate.md` | `rtw_mlme.c` roaming candidate check/select |
+| W3-65 | `wave3-65-mlme-network-update.md` | `rtw_mlme.c` scanned network update merge |
+| W3-66 | `wave3-66-mlme-80211d.md` | `rtw_mlme.c` 802.11d country IE processing |
+| W3-67 | `wave3-67-mlme-ht-ie-restructure.md` | `rtw_mlme.c` HT IE restructure |
+| W3-68 | `wave3-68-mlmeext-mgnt-attrib.md` | `rtw_mlme_ext.c` mgnt frame attribute builders |
+| W3-69 | `wave3-69-mlmeext-peer-alive.md` | `rtw_mlme_ext.c` delba/peer-alive checks |
+| W3-70 | `wave3-70-mlmeext-scan-decision.md` | `rtw_mlme_ext.c` scan sparse/channel decision |
+| W3-71 | `wave3-71-mlmeext-pick-ch.md` | `rtw_mlme_ext.c` sitesurvey channel pick |
+| W3-72 | `wave3-72-mlmeext-band-ie-format.md` | `rtw_mlme_ext.c` band-change beacon IE update (`CONFIG_AP_MODE`) |
+| W3-73 | `wave3-73-ap-sta-ie-parse.md` | `rtw_ap.c` STA assoc IE parse (cap/rates/HT/VHT) |
+| W3-74 | `wave3-74-ap-security-ie-parse.md` | `rtw_ap.c` STA security IE parse |
+| W3-75 | `wave3-75-ap-beacon-ie-update.md` | `rtw_ap.c` beacon TIM/generic IE update |
+
+Further ~200 LOC slices **not yet covered by W3-41…W3-75**; file new `wave3-*.md` issues as needed:
+
 - `rtw_pwrctrl.c`, `rtw_sreset.c`, `rtw_roch.c`
-- `rtw_cmd.c` (cmd dispatch/queue — distinct from W3-50 IOL append encoders)
-- `rtw_mlme.c` / `rtw_mlme_ext.c` / `rtw_ap.c` / `rtw_ieee80211.c` / `rtw_sta_mgt.c` /
-  `rtw_vht.c` / `rtw_recv.c` / `rtw_xmit.c` remainders after tranche 3 closes
-- smaller `rtw_*.c` (sreset, roch, …)
+- `rtw_ap.c` remainder (BMC rate, beacon HT/WPS refresh — after W3-73…W3-75)
+- `rtw_mlme_ext.c` / `rtw_mlme.c` FSM paths (join_cmd_hdl, sitesurvey_cmd_hdl, …)
+- `rtw_cmd.c` cmd thread and per-cmd dispatch handlers
+- `rtw_ieee80211.c` / `rtw_sta_mgt.c` / `rtw_vht.c` / `rtw_recv.c` / `rtw_xmit.c` remainders after tranche 3 closes
 
 Wave 3 milestone (L4): WPA2 STA associate + encrypted ping when hardware available (same bar as Wave 2).
