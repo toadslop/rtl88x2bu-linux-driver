@@ -202,7 +202,6 @@ int host_sta_mgt_pre_link_add(_adapter *adapter, const u8 *mac)
 	_exit_critical_bh(&ctl->lock, &irqL);
 	return -1;
 }
-}
 
 void host_sta_mgt_pre_link_init(_adapter *adapter)
 {
