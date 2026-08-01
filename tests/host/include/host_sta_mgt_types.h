@@ -1,11 +1,12 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /*
- * Minimal userspace types for host L2 sta_mgt tests (W3-37).
+ * Minimal userspace types for host L2 sta_mgt tests (W3-37, W3-38).
  */
 #ifndef HOST_STA_MGT_TYPES_H
 #define HOST_STA_MGT_TYPES_H
 
 #include <stdbool.h>
+#include <stdint.h>
 #include "host_types.h"
 
 #define _TRUE 1
@@ -15,16 +16,19 @@
 #define CONFIG_RTW_MACADDR_ACL 1
 #define CONFIG_RTW_PRE_LINK_STA 1
 #define NUM_ACL 16
-#define RTW_PRE_LINK_STA_NUM 8
 #define RTW_ACL_PERIOD_DEV 0
 #define RTW_ACL_PERIOD_BSS 1
 #define RTW_ACL_PERIOD_NUM 2
 #define RTW_ACL_MODE_DISABLED 0
 #define RTW_ACL_MODE_ACCEPT_UNLESS_LISTED 1
 #define RTW_ACL_MODE_DENY_UNLESS_LISTED 2
+#define RTW_PRE_LINK_STA_NUM 8
+#define WIFI_FW_PRE_LINK 0x00000800
+#define HOST_STA_MGT_MAX_STA 32
 
 typedef unsigned long _irqL;
 typedef int _lock;
+typedef unsigned int uint;
 
 struct _list {
 	struct _list *next;
@@ -66,14 +70,19 @@ struct pre_link_sta_ctl_t {
 
 struct cmn_sta_info {
 	u16 aid;
+	u8 mac_addr[ETH_ALEN];
 };
 
 struct sta_info {
 	struct cmn_sta_info cmn;
+	uint state;
 };
+
+struct _adapter;
 
 struct sta_priv {
 	struct wlan_acl_pool acl_list[RTW_ACL_PERIOD_NUM];
+	struct _adapter *padapter;
 	struct sta_info **sta_aid;
 	u16 max_aid;
 	u16 started_aid;
@@ -147,8 +156,26 @@ static inline u16 ntohs(u16 val)
 	return (u16)(((val & 0xff) << 8) | ((val >> 8) & 0xff));
 }
 
+static inline void _rtw_spinlock_init(_lock *lock)
+{
+	(void)lock;
+}
+
+static inline void _rtw_spinlock_free(_lock *lock)
+{
+	(void)lock;
+}
+
+int rtw_check_invalid_mac_address(const u8 *mac, u8 check_local_bit);
+struct sta_info *rtw_get_stainfo(struct sta_priv *stapriv, const u8 *hwaddr);
+void rtw_free_stainfo(_adapter *padapter, struct sta_info *psta);
+
 void host_sta_mgt_acl_reset(_adapter *adapter);
 void host_sta_mgt_acl_set_mode(_adapter *adapter, u8 period, int mode);
 int host_sta_mgt_acl_add(_adapter *adapter, u8 period, const u8 *addr);
+void host_sta_mgt_reset(_adapter *adapter);
+int host_sta_mgt_aid_setup(_adapter *adapter, u16 max_aid, u16 max_num_sta, u8 rr_aid);
+struct sta_info *host_sta_mgt_sta_add(_adapter *adapter, const u8 *mac, uint state);
+int host_sta_mgt_pre_link_add(_adapter *adapter, const u8 *mac);
 
 #endif /* HOST_STA_MGT_TYPES_H */
