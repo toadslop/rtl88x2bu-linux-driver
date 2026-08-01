@@ -28,6 +28,11 @@ for path in "${changed[@]}"; do
 	| scripts/ci/rustfmt-check.sh)
 		: # CI helper scripts — do not expand to full L1 suite
 		;;
+	.github/workflows/rust-lint.yml \
+	| docs/rust-migration/dev-environment.md \
+	| docs/rust-migration/test-plan.md)
+		: # docs / rustfmt workflow — no L1 swap
+		;;
 	Makefile \
 	| docs/rust-migration/scripts/* \
 	| scripts/ci/* \
@@ -179,8 +184,12 @@ emit() {
 	done
 }
 
-if [ "${FULL_SUITE}" = 1 ] || [ "${#changed[@]}" -eq 0 ] || [ "${#selected[@]}" -eq 0 ]; then
+if [ "${FULL_SUITE}" = 1 ] || [ "${#changed[@]}" -eq 0 ]; then
 	emit "${ALL_TARGETS[@]}"
+	exit 0
+fi
+
+if [ "${#selected[@]}" -eq 0 ]; then
 	exit 0
 fi
 
