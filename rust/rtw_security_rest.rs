@@ -1062,7 +1062,6 @@ fn hw_hdr_offset(pkt_offset: i8) -> usize {
 #[cfg(not(host_security_rest_test))]
 #[rustfmt::skip]
 mod kernel_layout {
-    #![rustfmt::skip]
     use super::*;
 
     extern "C" {
@@ -2214,7 +2213,6 @@ fn tdls_memcmp2(a: *const U8, b: *const U8, len: usize) -> Sint {
 #[cfg(all(not(host_security_rest_test), tdls))]
 #[rustfmt::skip]
 mod tdls_kernel {
-    #![rustfmt::skip]
     use super::*;
 
     extern "C" {
@@ -2411,7 +2409,6 @@ mod tdls_kernel {
 #[cfg(host_rest_tdls_test)]
 #[rustfmt::skip]
 mod tdls_host {
-    #![rustfmt::skip]
     use super::*;
 
     extern "C" {
