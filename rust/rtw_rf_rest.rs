@@ -769,7 +769,9 @@ static OP_CLASS_ATTR_117: [u8; 3] = [2, 40, 48];
 static OP_CLASS_ATTR_118: [u8; 5] = [4, 52, 56, 60, 64];
 static OP_CLASS_ATTR_119: [u8; 3] = [2, 52, 60];
 static OP_CLASS_ATTR_120: [u8; 3] = [2, 56, 64];
-static OP_CLASS_ATTR_121: [u8; 13] = [12, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144];
+static OP_CLASS_ATTR_121: [u8; 13] = [
+    12, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144,
+];
 static OP_CLASS_ATTR_122: [u8; 7] = [6, 100, 108, 116, 124, 132, 140];
 static OP_CLASS_ATTR_123: [u8; 7] = [6, 104, 112, 120, 128, 136, 144];
 static OP_CLASS_ATTR_124: [u8; 5] = [4, 149, 153, 157, 161];
@@ -777,8 +779,8 @@ static OP_CLASS_ATTR_125: [u8; 7] = [6, 149, 153, 157, 161, 165, 169];
 static OP_CLASS_ATTR_126: [u8; 3] = [2, 149, 157];
 static OP_CLASS_ATTR_127: [u8; 3] = [2, 153, 161];
 static OP_CLASS_ATTR_128: [u8; 25] = [
-    24, 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140,
-    144, 149, 153, 157, 161,
+    24, 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144,
+    149, 153, 157, 161,
 ];
 static OP_CLASS_ATTR_129: [u8; 17] = [
     16, 36, 40, 44, 48, 52, 56, 60, 64, 100, 104, 108, 112, 116, 120, 124, 128,
@@ -1068,13 +1070,11 @@ const RF_1T3R: u8 = 15;
 // Private copies of `core/rtw_rf.c` `_rf_type_to_rf_tx_cnt` /
 // `_rf_type_to_rf_rx_cnt`; update both when RF path counts change.
 // L2 `rf_type_to_default_trx_bmp` vectors exercise every RF_TYPE entry.
-static _RF_TYPE_TO_RF_TX_CNT: [u8; RF_TYPE_MAX as usize] = [
-    1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 3, 3, 2, 1, 1,
-];
+static _RF_TYPE_TO_RF_TX_CNT: [u8; RF_TYPE_MAX as usize] =
+    [1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 3, 3, 2, 1, 1];
 
-static _RF_TYPE_TO_RF_RX_CNT: [u8; RF_TYPE_MAX as usize] = [
-    1, 2, 2, 3, 4, 3, 4, 4, 3, 2, 1, 2, 1, 1, 4, 3,
-];
+static _RF_TYPE_TO_RF_RX_CNT: [u8; RF_TYPE_MAX as usize] =
+    [1, 2, 2, 3, 4, 3, 4, 4, 3, 2, 1, 2, 1, 1, 4, 3];
 
 static _TRX_NUM_TO_RF_TYPE: [[u8; RF_PATH_MAX]; RF_PATH_MAX] = [
     [RF_1T1R, RF_1T2R, RF_1T3R, RF_1T4R],
@@ -1293,11 +1293,7 @@ fn write_i32_padded(buf: &mut [u8], pos: usize, val: i32, width: usize) -> usize
     let mut tmp = [0u8; 16];
     let mut n = 0usize;
     let negative = val < 0;
-    let mut uval = if negative {
-        (-val) as u32
-    } else {
-        val as u32
-    };
+    let mut uval = if negative { (-val) as u32 } else { val as u32 };
 
     if uval == 0 {
         tmp[0] = b'0';
@@ -1353,7 +1349,13 @@ fn write_frac2(buf: &mut [u8], pos: usize, frac: i32) -> usize {
     p
 }
 
-fn txpwr_format_idx_into(buf: &mut [u8], idx: i8, txgi_max: u8, txgi_pdbm: u8, cwidth: usize) -> usize {
+fn txpwr_format_idx_into(
+    buf: &mut [u8],
+    idx: i8,
+    txgi_max: u8,
+    txgi_pdbm: u8,
+    cwidth: usize,
+) -> usize {
     let idx_i = idx as i32;
     let txgi_max_i = txgi_max as i32;
     let txgi_pdbm_i = txgi_pdbm as i32;
