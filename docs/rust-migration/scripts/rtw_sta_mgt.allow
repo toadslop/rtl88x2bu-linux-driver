@@ -1,9 +1,25 @@
-# L1 allowlist for W3-37: kernel-only ACL shim symbols (not in host oracle).
+# L1 allowlist for W3-37/W3-38: kernel-only shim symbols (not in host oracle).
 drop rtw_rust_sta_acl_pool
 drop rtw_rust_sta_acl_mode
 drop rtw_rust_sta_acl_mac_listed
 drop rtw_rust_sta_warn_on
-# W3-38 PR5: AID/pre-link helpers live in rust/rtw_sta_mgt_aid.rs (separate L1 target).
+drop rtw_rust_sta_stapriv
+drop rtw_rust_sta_adapter
+drop rtw_rust_sta_max_aid
+drop rtw_rust_sta_max_num_sta
+drop rtw_rust_sta_started_aid
+drop rtw_rust_sta_rr_aid
+drop rtw_rust_sta_aid_entry
+drop rtw_rust_sta_aid_entry_set
+drop rtw_rust_sta_started_aid_set
+drop rtw_rust_sta_cmn_aid_set
+drop rtw_rust_sta_state
+drop rtw_rust_pre_link_find
+drop rtw_rust_pre_link_remove
+drop rtw_rust_pre_link_drain
+drop rtw_rust_pre_link_ctl_init
+drop rtw_rust_pre_link_ctl_lock_free
+# W3-38 symbols are checked via rust-check-symbols on rtw_sta_mgt_aid.o
 drop rtw_aid_alloc
 drop rtw_is_pre_link_sta
 drop rtw_pre_link_sta_del

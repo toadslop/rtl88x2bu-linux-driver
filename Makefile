@@ -2585,6 +2585,7 @@ $(MODULE_NAME)-y += rust/rtw_wlan_util.o
 $(MODULE_NAME)-y += rust/rtw_rm_util.o
 $(MODULE_NAME)-y += rust/rtw_vht.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt.o
+$(MODULE_NAME)-y += rust/rtw_sta_mgt_aid.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
@@ -3009,7 +3010,7 @@ rust-objects-rtw-sta-mgt-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
 		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
 		-include $(shell pwd)/tests/host/include/host_autoconf.h \
-		-DHOST_STA_MGT_TEST -DCONFIG_RTW_MACADDR_ACL \
+		-DHOST_STA_MGT_TEST -DCONFIG_RTW_MACADDR_ACL -DCONFIG_RTW_PRE_LINK_STA \
 		-o tests/host/sta_mgt/sta_mgt_rest_c_ref.o core/rtw_sta_mgt_rest.c
 
 rust-objects-rtw-sta-mgt-rust-ref:
@@ -3017,16 +3018,18 @@ rust-objects-rtw-sta-mgt-rust-ref:
 		--emit=obj=tests/host/sta_mgt/sta_mgt_rest_rust_ref.o \
 		--crate-type lib rust/rtw_sta_mgt.rs
 
-rust-check-symbols-rtw-sta-mgt: rust-objects-rtw-sta-mgt-c rust-objects-rtw-sta-mgt-rust-ref
-	$(MAKE) rust-check-symbols OLD=tests/host/sta_mgt/sta_mgt_rest_c_ref.o NEW=tests/host/sta_mgt/sta_mgt_rest_rust_ref.o \
-		ALLOWLIST=docs/rust-migration/scripts/rtw_sta_mgt.allow
-
-# W3-38 PR5: compare host C oracle AID/pre-link helpers against rtw_sta_mgt_aid.rs.
 rust-objects-rtw-sta-mgt-aid-rust-ref:
 	rustc -C opt-level=2 -C overflow-checks=on --cfg host_sta_mgt_test \
 		--emit=obj=tests/host/sta_mgt/sta_mgt_aid_rust_ref.o \
 		--crate-type lib rust/rtw_sta_mgt_aid.rs
 
+rust-check-symbols-rtw-sta-mgt: rust-objects-rtw-sta-mgt-c rust-objects-rtw-sta-mgt-rust-ref rust-objects-rtw-sta-mgt-aid-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/sta_mgt/sta_mgt_rest_c_ref.o NEW=tests/host/sta_mgt/sta_mgt_rest_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_sta_mgt.allow
+	$(MAKE) rust-check-symbols OLD=tests/host/sta_mgt/sta_mgt_rest_c_ref.o NEW=tests/host/sta_mgt/sta_mgt_aid_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_sta_mgt_aid.allow
+
+# W3-38 PR5/PR6: aid-only L1 (CI l1-targets invokes this separately from ACL check).
 rust-check-symbols-rtw-sta-mgt-aid: rust-objects-rtw-sta-mgt-c rust-objects-rtw-sta-mgt-aid-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/sta_mgt/sta_mgt_rest_c_ref.o NEW=tests/host/sta_mgt/sta_mgt_aid_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_sta_mgt_aid.allow

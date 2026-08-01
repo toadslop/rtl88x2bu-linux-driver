@@ -1,7 +1,4 @@
-# W3-38 PR5: ACL helpers live in rust/rtw_sta_mgt.rs (separate L1 target).
+# L1 allowlist for W3-38 aid object: drop W3-37 ACL symbols from aid-only check.
 drop test_st_match_rule
 drop _rtw_access_ctrl
 drop rtw_access_ctrl
-# Host oracle PR5: init/deinit deferred to PR6 kernel swap.
-drop rtw_pre_link_sta_ctl_init
-drop rtw_pre_link_sta_ctl_deinit
