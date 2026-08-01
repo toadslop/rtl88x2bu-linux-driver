@@ -194,19 +194,6 @@ void _rtw_free_recv_priv(struct recv_priv *precvpriv)
 
 }
 
-bool rtw_rframe_del_wfd_ie(union recv_frame *rframe, u8 ies_offset)
-{
-#define DBG_RFRAME_DEL_WFD_IE 0
-	u8 *ies = rframe->u.hdr.rx_data + sizeof(struct rtw_ieee80211_hdr_3addr) + ies_offset;
-	uint ies_len_ori = rframe->u.hdr.len - (ies - rframe->u.hdr.rx_data);
-	uint ies_len;
-
-	ies_len = rtw_del_wfd_ie(ies, ies_len_ori, DBG_RFRAME_DEL_WFD_IE ? __func__ : NULL);
-	rframe->u.hdr.len -= ies_len_ori - ies_len;
-
-	return ies_len_ori != ies_len;
-}
-
 union recv_frame *_rtw_alloc_recvframe(_queue *pfree_recv_queue)
 {
 
@@ -4721,31 +4708,6 @@ void rx_query_phy_status(
 
 	rtw_odm_parse_rx_phy_status_chinfo(precvframe, pphy_status);
 }
-/*
-* Increase and check if the continual_no_rx_packet of this @param pmlmepriv is larger than MAX_CONTINUAL_NORXPACKET_COUNT
-* @return _TRUE:
-* @return _FALSE:
-*/
-int rtw_inc_and_chk_continual_no_rx_packet(struct sta_info *sta, int tid_index)
-{
-
-	int ret = _FALSE;
-	int value = ATOMIC_INC_RETURN(&sta->continual_no_rx_packet[tid_index]);
-
-	if (value >= MAX_CONTINUAL_NORXPACKET_COUNT)
-		ret = _TRUE;
-
-	return ret;
-}
-
-/*
-* Set the continual_no_rx_packet of this @param pmlmepriv to 0
-*/
-void rtw_reset_continual_no_rx_packet(struct sta_info *sta, int tid_index)
-{
-	ATOMIC_SET(&sta->continual_no_rx_packet[tid_index], 0);
-}
-
 u8 adapter_allow_bmc_data_rx(_adapter *adapter)
 {
 	if (check_fwstate(&adapter->mlmepriv, WIFI_MONITOR_STATE | WIFI_MP_STATE) == _TRUE)
