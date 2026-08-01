@@ -20,8 +20,9 @@
 #include <drv_types.h>
 #endif
 
-#if 1 /* PR3 adds: #if !defined(CONFIG_RUST) || defined(HOST_RECV_TEST) */
+/* Always compile C until PR4 adds rust/rtw_recv.o (CONFIG_RUST swap). */
 
+#if !defined(HOST_RECV_TEST) || defined(HOST_RECV_WFD_TEST)
 bool rtw_rframe_del_wfd_ie(union recv_frame *rframe, u8 ies_offset)
 {
 #define DBG_RFRAME_DEL_WFD_IE 0
@@ -34,6 +35,7 @@ bool rtw_rframe_del_wfd_ie(union recv_frame *rframe, u8 ies_offset)
 
 	return ies_len_ori != ies_len;
 }
+#endif /* !HOST_RECV_TEST || HOST_RECV_WFD_TEST */
 
 int rtw_inc_and_chk_continual_no_rx_packet(struct sta_info *sta, int tid_index)
 {
@@ -50,5 +52,3 @@ void rtw_reset_continual_no_rx_packet(struct sta_info *sta, int tid_index)
 {
 	ATOMIC_SET(&sta->continual_no_rx_packet[tid_index], 0);
 }
-
-#endif /* !CONFIG_RUST || HOST_RECV_TEST */

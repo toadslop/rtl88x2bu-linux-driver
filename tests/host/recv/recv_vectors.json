@@ -1,0 +1,36 @@
+{
+  "oracle": "core/rtw_recv_rest.c",
+  "vectors": [
+    {
+      "name": "inc_first_below_threshold",
+      "fn": "rtw_inc_and_chk_continual_no_rx_packet",
+      "tid_index": 0,
+      "initial_count": 0,
+      "expect_ret": 0,
+      "expect_count": 1
+    },
+    {
+      "name": "inc_at_threshold",
+      "fn": "rtw_inc_and_chk_continual_no_rx_packet",
+      "tid_index": 3,
+      "initial_count": 3,
+      "expect_ret": 1,
+      "expect_count": 4
+    },
+    {
+      "name": "inc_over_threshold",
+      "fn": "rtw_inc_and_chk_continual_no_rx_packet",
+      "tid_index": 5,
+      "initial_count": 4,
+      "expect_ret": 1,
+      "expect_count": 5
+    },
+    {
+      "name": "reset_clears_counter",
+      "fn": "rtw_reset_continual_no_rx_packet",
+      "tid_index": 2,
+      "initial_count": 7,
+      "expect_count": 0
+    }
+  ]
+}
