@@ -175,6 +175,8 @@ This does **not** prove TX/RX; it catches link errors, missing symbols, and init
 
 **CI status:** automated on `master` merges via [`.github/workflows/module-l3.yml`](../../.github/workflows/module-l3.yml) inside the L0 container image (issue T8, #153). Builds `88x2bu.ko`, assembles the busybox initramfs ([`scripts/ci/build-l3-initrd.sh`](../../scripts/ci/build-l3-initrd.sh)), and runs QEMU TCG ([`scripts/ci/run-l3-qemu.sh`](../../scripts/ci/run-l3-qemu.sh)). Expect ~3–10 minutes (TCG). On failure, the workflow uploads `l3-serial.log`.
 
+**PR-scoped L3 (T15, #309):** the same workflow also runs on pull requests that touch high-risk init/USB/scaffold paths (`os_dep/**`, `rust/scaffold.rs`, `rust/kbuild_stub.rs`, `rust/ffi.rs`, `include/drv_conf.h`, `include/autoconf.h`). Translation-only PRs (crypto, chplan, security, etc.) do not trigger PR L3 by default; they still get the post-merge `master` backstop when their paths appear in the push filter above.
+
 ## L4 — Hardware milestones (infrequent)
 
 Use [`docs/smoke-test.md`](../smoke-test.md) (added in W0-01) at:
@@ -218,7 +220,8 @@ Canonical checklist for new pull requests: [`.github/PULL_REQUEST_TEMPLATE.md`](
 7. **T6** — GitHub Actions (`.github/workflows/module-l0.yml`): L0 module build on `ghcr.io/<owner>/rtl88x2bu-l0:v6.12.9` with bindgen freshness check (`scripts/bindgen_rtw.sh --check`) and probe verify via `scripts/ci/verify-ko-probes.sh` (T14, #308).
 8. **T7** — GitHub Actions (`.github/workflows/module-l1.yml`): L1 symbol/ABI checks on path-scoped `rust/*.o` swaps inside the L0 container (issue #152).
 9. **T8** — GitHub Actions (`.github/workflows/module-l3.yml`): L3 QEMU `insmod`/`rmmod` on `master` merges inside the L0 container (issue #153).
-10. **T9** — PR template (`.github/PULL_REQUEST_TEMPLATE.md`), contributing docs ([`docs/contributing.md`](../contributing.md)), and branch-protection admin notes ([`dev-environment.md`](dev-environment.md#branch-protection)) (done).
+10. **T15** — Path-scoped L3 on pull requests touching init/USB/scaffold paths (issue #309).
+11. **T9** — PR template (`.github/PULL_REQUEST_TEMPLATE.md`), contributing docs ([`docs/contributing.md`](../contributing.md)), and branch-protection admin notes ([`dev-environment.md`](dev-environment.md#branch-protection)) (done).
 
 ## Out of scope (for now)
 

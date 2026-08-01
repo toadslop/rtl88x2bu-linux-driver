@@ -1,5 +1,6 @@
 # T8: L3 module load/unload gate on master merges (pinned Rust kernel + QEMU TCG).
-# See docs/rust-migration/issues/test-08-ci-l3-qemu.md
+# T15: path-scoped pull_request trigger for init/USB/scaffold changes.
+# See docs/rust-migration/issues/test-08-ci-l3-qemu.md and test-15-ci-l3-pr-scope.md
 
 name: Module L3 load
 
@@ -20,6 +21,22 @@ on:
       - 'scripts/ci/build-l3-initrd.sh'
       - 'scripts/ci/run-l3-qemu.sh'
       - 'scripts/ci/verify-ko-probes.sh'
+  pull_request:
+    branches: [master]
+    paths:
+      - 'os_dep/**'
+      - 'rust/scaffold.rs'
+      - 'rust/kbuild_stub.rs'
+      - 'rust/ffi.rs'
+      - 'include/drv_conf.h'
+      - 'include/autoconf.h'
+      - '.github/workflows/module-l3.yml'
+      - 'scripts/ci/build-l3-initrd.sh'
+      - 'scripts/ci/run-l3-qemu.sh'
+
+concurrency:
+  group: module-l3-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 env:
   KERNEL_TAG: v6.12.9
