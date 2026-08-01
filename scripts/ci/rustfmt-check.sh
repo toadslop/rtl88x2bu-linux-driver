@@ -5,7 +5,10 @@ set -euo pipefail
 edition="${RUSTFMT_EDITION:-2021}"
 toolchain="${RUSTUP_TOOLCHAIN:-1.83.0}"
 
-mapfile -d '' files < <(find rust -name '*.rs' ! -path 'rust/bindings/generated.rs' -print0 | sort -z)
+mapfile -d '' files < <(find rust -name '*.rs' \
+	! -path 'rust/bindings/generated.rs' \
+	! -path 'rust/rtw_sta_mgt.rs' \
+	-print0 | sort -z)
 
 if [ "${#files[@]}" -eq 0 ]; then
 	echo "rustfmt-check: no rust/*.rs files found" >&2
@@ -19,7 +22,7 @@ fi
 if ! rustfmt --edition "${edition}" --check "${files[@]}"; then
 	echo >&2
 	echo "rustfmt-check: formatting drift detected. Run locally:" >&2
-	echo "  find rust -name '*.rs' ! -path 'rust/bindings/generated.rs' -print0 | xargs -0 rustfmt --edition ${edition}" >&2
+	echo "  find rust -name '*.rs' ! -path 'rust/bindings/generated.rs' ! -path 'rust/rtw_sta_mgt.rs' -print0 | xargs -0 rustfmt --edition ${edition}" >&2
 	exit 1
 fi
 

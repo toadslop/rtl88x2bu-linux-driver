@@ -108,8 +108,10 @@ Before pushing Rust changes, run the T16 formatting gate locally:
 
 ```bash
 ./scripts/ci/rustfmt-check.sh
-# or: find rust -name '*.rs' ! -path 'rust/bindings/generated.rs' -print0 | xargs -0 rustfmt --edition 2021 --check
+# or: find rust -name '*.rs' ! -path 'rust/bindings/generated.rs' ! -path 'rust/rtw_sta_mgt.rs' -print0 | xargs -0 rustfmt --edition 2021 --check
 ```
+
+(`rtw_sta_mgt.rs` is excluded until W3-38 PR5 #361 lands — formatting it triggers L1 sta_mgt checks for symbols not yet on `master`.)
 
 ### Distro LLVM is version-suffixed
 
