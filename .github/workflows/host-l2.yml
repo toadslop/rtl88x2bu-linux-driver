@@ -25,6 +25,8 @@ on:
       - 'core/rtw_rm_util_rest.c'
       - 'core/rtw_vht.c'
       - 'core/rtw_vht_rest.c'
+      - 'core/rtw_sta_mgt.c'
+      - 'core/rtw_sta_mgt_rest.c'
       - 'core/rtw_security.c'
       - 'core/rtw_security_rest.c'
       - 'core/rtw_wlan_util.c'
@@ -63,6 +65,8 @@ jobs:
               - 'core/rtw_rm_util.c'
               - 'core/rtw_vht.c'
               - 'core/rtw_vht_rest.c'
+              - 'core/rtw_sta_mgt.c'
+              - 'core/rtw_sta_mgt_rest.c'
               - 'core/rtw_security.c'
               - 'core/rtw_security_rest.c'
               - 'core/rtw_wlan_util.c'
@@ -125,3 +129,7 @@ jobs:
       - name: Host vht_rest parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/vht test
+
+      - name: Host sta_mgt_rest parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/sta_mgt test

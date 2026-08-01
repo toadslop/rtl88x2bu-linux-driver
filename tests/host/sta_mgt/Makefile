@@ -15,7 +15,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable
 
 .PHONY: all test test-c sta_mgt-compile clean
 
-all: sta_mgt-compile
+all: test
 
 # PR2: compile-only gate; vector harness in PR3.
 sta_mgt-compile: $(STA_REST_SRC) $(HOST_SHIM)

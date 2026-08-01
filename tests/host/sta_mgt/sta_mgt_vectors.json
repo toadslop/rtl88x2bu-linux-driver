@@ -1,0 +1,14 @@
+{
+  "oracle": "core/rtw_sta_mgt_rest.c",
+  "vectors": [
+    {"name": "match_local_port_5001", "fn": "test_st_match_rule", "local_port": "1389", "remote_port": "0020", "expect": 1},
+    {"name": "match_remote_port_5001", "fn": "test_st_match_rule", "local_port": "0020", "remote_port": "1389", "expect": 1},
+    {"name": "match_no_port_5001", "fn": "test_st_match_rule", "local_port": "0020", "remote_port": "0030", "expect": 0},
+    {"name": "acl_disabled_allows", "fn": "_rtw_access_ctrl", "period": 0, "mac": "020000000001", "period0_mode": 0, "expect": 1},
+    {"name": "accept_unless_not_listed", "fn": "_rtw_access_ctrl", "period": 0, "mac": "020000000001", "period0_mode": 1, "period0_mac": "020000000002", "expect": 1},
+    {"name": "accept_unless_in_list", "fn": "_rtw_access_ctrl", "period": 0, "mac": "020000000001", "period0_mode": 1, "period0_mac": "020000000001", "expect": 0},
+    {"name": "deny_unless_not_listed", "fn": "_rtw_access_ctrl", "period": 0, "mac": "020000000001", "period0_mode": 2, "period0_mac": "020000000002", "expect": 0},
+    {"name": "deny_unless_in_list", "fn": "_rtw_access_ctrl", "period": 0, "mac": "020000000001", "period0_mode": 2, "period0_mac": "020000000001", "expect": 1},
+    {"name": "access_ctrl_multi_period_deny", "fn": "rtw_access_ctrl", "mac": "020000000001", "period0_mode": 0, "period1_mode": 1, "period1_mac": "020000000001", "expect": 0}
+  ]
+}
