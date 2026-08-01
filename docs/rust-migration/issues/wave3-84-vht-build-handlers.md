@@ -20,7 +20,7 @@ Port helpers from [`core/rtw_vht.c`](../../../core/rtw_vht.c) to [`rust/rtw_vht.
 
 ## Notes
 
-- W3-35/36/45 covered MCS/rate/restructure; this slice is build + handler path.
+- W3-35/36/45 covered MCS/rate/restructure; this slice is build + handler path and supersedes the W3-36/W3-45 deferral of `rtw_vht_ies_attach` and assoc handlers.
 - L2: host harness under `tests/host/` with JSON differential vectors (pattern from prior W3 issues).
 
 ## Acceptance
