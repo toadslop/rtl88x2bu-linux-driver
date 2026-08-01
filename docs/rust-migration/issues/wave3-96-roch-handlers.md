@@ -10,7 +10,7 @@ estimate_loc: 200
 
 ## Goal
 
-Port helpers from [`core/rtw_roch.c`](../../../core/rtw_roch.c) to [`rust/rust/rtw_roch.rs`](../../../rust/rust/rtw_roch.rs):
+Port helpers from [`core/rtw_roch.c`](../../../core/rtw_roch.c) to [`rust/rtw_roch.rs`](../../../rust/rtw_roch.rs):
 
 - `rtw_roch_stay_in_cur_chan`
 - `rtw_ro_ch_handler`

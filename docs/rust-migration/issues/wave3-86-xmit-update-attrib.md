@@ -10,7 +10,7 @@ estimate_loc: 200
 
 ## Goal
 
-Port helpers from [`core/rtw_xmit.c`](../../../core/rtw_xmit.c) to [`rust/rust/rtw_xmit.rs`](../../../rust/rust/rtw_xmit.rs):
+Port helpers from [`core/rtw_xmit.c`](../../../core/rtw_xmit.c) to [`rust/rtw_xmit.rs`](../../../rust/rtw_xmit.rs):
 
 - `update_attrib_phy_info`
 - `update_attrib_vcs_info`

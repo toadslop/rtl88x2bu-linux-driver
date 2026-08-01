@@ -10,7 +10,7 @@ estimate_loc: 200
 
 ## Goal
 
-Port helpers from [`core/rtw_cmd.c`](../../../core/rtw_cmd.c) to [`rust/rust/rtw_cmd_rest.rs`](../../../rust/rust/rtw_cmd_rest.rs):
+Port helpers from [`core/rtw_cmd.c`](../../../core/rtw_cmd.c) to [`rust/rtw_cmd_rest.rs`](../../../rust/rtw_cmd_rest.rs):
 
 - `rtw_joinbss_cmd`
 - `rtw_drvextra_cmd_hdl`

@@ -10,10 +10,10 @@ estimate_loc: 200
 
 ## Goal
 
-Port helpers from [`core/rtw_mlme.c`](../../../core/rtw_mlme.c) to [`rust/rust/rtw_mlme_rest.rs`](../../../rust/rust/rtw_mlme_rest.rs):
+Port helpers from [`core/rtw_mlme.c`](../../../core/rtw_mlme.c) to [`rust/rtw_mlme_rest.rs`](../../../rust/rtw_mlme_rest.rs):
 
 - `rtw_select_and_join_from_scanned_queue`
-- `_rtw_check_join_candidate`
+- `rtw_check_join_candidate` (static in C)
 - `_rtw_sitesurvey_condition_check`
 
 ## Notes

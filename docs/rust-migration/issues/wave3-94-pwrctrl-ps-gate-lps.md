@@ -10,7 +10,7 @@ estimate_loc: 200
 
 ## Goal
 
-Port helpers from [`core/rtw_pwrctrl.c`](../../../core/rtw_pwrctrl.c) to [`rust/rust/rtw_pwrctrl.rs`](../../../rust/rust/rtw_pwrctrl.rs):
+Port helpers from [`core/rtw_pwrctrl.c`](../../../core/rtw_pwrctrl.c) to [`rust/rtw_pwrctrl.rs`](../../../rust/rtw_pwrctrl.rs):
 
 - `rtw_ps_deny`
 - `rtw_ps_deny_cancel`

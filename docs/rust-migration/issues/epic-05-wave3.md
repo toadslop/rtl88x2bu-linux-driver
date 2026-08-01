@@ -131,12 +131,9 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-96 | `wave3-96-roch-handlers.md` | `rtw_roch.c` remain-on-channel handlers |
 | W3-97 | `wave3-97-roch-concurrent-init.md` | `rtw_roch.c` concurrent roch + init |
 
-Further ~200 LOC slices **not yet covered by W3-41…W3-97**; file new `wave3-*.md` issues as needed:
+Further ~200 LOC slices **not yet covered by W3-01…W3-97**; file new `wave3-*.md` issues as needed when tranche 5 closes:
 
-- `rtw_pwrctrl.c`, `rtw_sreset.c`, `rtw_roch.c`
-- `rtw_ap.c` remainder (BMC rate, beacon HT/WPS refresh — after W3-73…W3-75)
-- `rtw_mlme_ext.c` / `rtw_mlme.c` FSM paths (join_cmd_hdl, sitesurvey_cmd_hdl, …)
-- `rtw_cmd.c` cmd thread and per-cmd dispatch handlers
-- `rtw_ieee80211.c` / `rtw_sta_mgt.c` / `rtw_vht.c` / `rtw_recv.c` / `rtw_xmit.c` remainders after tranche 3 closes
+- `core/` files not yet sliced: `rtw_p2p.c`, `rtw_tdls.c`, `rtw_mp.c`, `rtw_br_ext.c`, `rtw_beamforming.c`, `rtw_wnm.c`, `rtw_wapi.c`, `rtw_ft.c`, `rtw_mbo.c`, `rtw_rson.c`, `rtw_rm.c`, `rtw_rm_fsm.c`, `rtw_btcoex*.c`, `rtw_eeprom.c`, `rtw_debug.c`, `rtw_mem.c`, `rtw_sdio.c`, `rtw_ioctl_*.c`, …
+- Remaining helpers in partially translated files after W3-97 lands (audit with migration progress / `grep`)
 
 Wave 3 milestone (L4): WPA2 STA associate + encrypted ping when hardware available (same bar as Wave 2).

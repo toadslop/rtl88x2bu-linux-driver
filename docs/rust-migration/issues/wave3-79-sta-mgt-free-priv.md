@@ -10,7 +10,7 @@ estimate_loc: 200
 
 ## Goal
 
-Port helpers from [`core/rtw_sta_mgt.c`](../../../core/rtw_sta_mgt.c) to [`rust/rust/rtw_sta_mgt_rest.rs`](../../../rust/rust/rtw_sta_mgt_rest.rs):
+Port helpers from [`core/rtw_sta_mgt.c`](../../../core/rtw_sta_mgt.c) to [`rust/rtw_sta_mgt_rest.rs`](../../../rust/rtw_sta_mgt_rest.rs):
 
 - `rtw_free_stainfo`
 - `_rtw_init_sta_priv`

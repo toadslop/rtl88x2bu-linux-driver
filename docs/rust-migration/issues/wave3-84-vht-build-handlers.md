@@ -10,7 +10,7 @@ estimate_loc: 200
 
 ## Goal
 
-Port helpers from [`core/rtw_vht.c`](../../../core/rtw_vht.c) to [`rust/rust/rtw_vht.rs`](../../../rust/rust/rtw_vht.rs):
+Port helpers from [`core/rtw_vht.c`](../../../core/rtw_vht.c) to [`rust/rtw_vht.rs`](../../../rust/rtw_vht.rs):
 
 - `rtw_build_vht_cap_ie`
 - `rtw_build_vht_operation_ie`

@@ -10,7 +10,7 @@ estimate_loc: 200
 
 ## Goal
 
-Port helpers from [`core/rtw_sreset.c`](../../../core/rtw_sreset.c) to [`rust/rust/rtw_sreset.rs`](../../../rust/rust/rtw_sreset.rs):
+Port helpers from [`core/rtw_sreset.c`](../../../core/rtw_sreset.c) to [`rust/rtw_sreset.rs`](../../../rust/rtw_sreset.rs):
 
 - `sreset_init_value`
 - `sreset_reset_value`

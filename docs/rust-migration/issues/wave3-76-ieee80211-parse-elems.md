@@ -10,7 +10,7 @@ estimate_loc: 200
 
 ## Goal
 
-Port helpers from [`core/rtw_ieee80211.c`](../../../core/rtw_ieee80211.c) to [`rust/rust/rtw_ieee80211_rest.rs`](../../../rust/rust/rtw_ieee80211_rest.rs):
+Port helpers from [`core/rtw_ieee80211.c`](../../../core/rtw_ieee80211.c) to [`rust/rtw_ieee80211_rest.rs`](../../../rust/rtw_ieee80211_rest.rs):
 
 - `rtw_ieee802_11_parse_elems`
 - `rtw_ieee802_11_parse_vendor_specific`

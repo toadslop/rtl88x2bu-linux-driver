@@ -10,7 +10,7 @@ estimate_loc: 200
 
 ## Goal
 
-Port helpers from [`core/rtw_ap.c`](../../../core/rtw_ap.c) to [`rust/rust/rtw_ap_rest.rs`](../../../rust/rust/rtw_ap_rest.rs):
+Port helpers from [`core/rtw_ap.c`](../../../core/rtw_ap.c) to [`rust/rtw_ap_rest.rs`](../../../rust/rtw_ap_rest.rs):
 
 - `rtw_ap_find_bmc_rate`
 - `rtw_ap_find_mini_tx_rate`

@@ -10,7 +10,7 @@ estimate_loc: 200
 
 ## Goal
 
-Port helpers from [`core/rtw_recv.c`](../../../core/rtw_recv.c) to [`rust/rust/rtw_recv.rs`](../../../rust/rust/rtw_recv.rs):
+Port helpers from [`core/rtw_recv.c`](../../../core/rtw_recv.c) to [`rust/rtw_recv.rs`](../../../rust/rtw_recv.rs):
 
 - `count_rx_stats`
 - `rtw_sta_rx_data_validate_hdr`
