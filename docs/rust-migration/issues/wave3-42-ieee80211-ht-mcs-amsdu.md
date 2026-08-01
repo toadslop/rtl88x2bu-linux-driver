@@ -19,7 +19,7 @@ Port HT MCS and AMSDU mode helpers from [`core/rtw_ieee80211.c`](../../../core/r
 
 - Builds on W3-32 frame/HT MCS work; these are pure bitmap/mode mutators on IE bytes.
 - Debug `dump_ht_*` printers stay in C.
-- L2: extend `tests/host/ie/` with MCS set and RSN AMSDU mode fixtures.
+- L2: extend `tests/host/ie/` with MCS set and SPP/HT AMSDU mode fixtures.
 
 ## Acceptance
 

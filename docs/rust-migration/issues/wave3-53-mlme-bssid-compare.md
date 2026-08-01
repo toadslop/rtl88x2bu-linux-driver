@@ -17,9 +17,16 @@ Port MLME BSSID/compare helpers from [`core/rtw_mlme.c`](../../../core/rtw_mlme.
 
 ## Notes
 
-- Pure compare/getter logic; scan/join/roam state machines stay in C.
+- **Pure compare/getter helpers:** `rtw_get_capability_from_ie`, `rtw_get_capability`,
+  `rtw_get_timestampe_from_ie`, `rtw_get_beacon_interval_from_ie`, `is_same_ess`,
+  `is_same_network`.
+- **`rtw_is_same_ibss` is adapter-coupled** — compares `adapter->securitypriv.dot11PrivacyAlgrthm`
+  against `pnetwork->network.Privacy`; L2 needs a minimal adapter/securitypriv fixture (same
+  pattern as W3-40), not just IE/BSSID byte vectors.
+- Scan/join/roam state machines stay in C.
 - `rtw_generate_random_ibss` needs deterministic `rtw_random32` stub for L2.
-- L2: new `tests/host/mlme/` with BSSID pair oracle (incl. hidden-AP cases).
+- L2: new `tests/host/mlme/` — BSSID/IE getters, same-ESS/network pairs, adapter fixture for
+  `rtw_is_same_ibss` (incl. hidden-AP cases).
 
 ## Acceptance
 

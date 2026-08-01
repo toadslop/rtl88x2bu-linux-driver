@@ -17,9 +17,17 @@ Port xmit QoS/SNAP/submit-context helpers from [`core/rtw_xmit.c`](../../../core
 
 ## Notes
 
-- Mostly pure logic; `tos_to_up` may need export or test via `qos_acm` if static in C.
+- **Pure helpers** (table/byte logic): `qos_acm`, `rtw_put_snap`,
+  `rtw_calculate_wlan_pkt_size_by_attribue`. `tos_to_up` may need export or test via
+  `qos_acm` if static in C.
+- **Submit-context group** (`rtw_sctx_*`) coordinates async xmit/cmd paths — uses kernel
+  completion/wait primitives (`init_completion`, `wait_for_completion_timeout`, `complete`)
+  guarded by `PLATFORM_LINUX`. Not table lookups; L2 should use host completion stubs for
+  init/wait/done paths and test status/state-machine helpers (`rtw_sctx_chk_waring_status`,
+  `rtw_sctx_done_err`, `rtw_sctx_done`) without a live wait queue where possible.
 - Frame queue/coalesce/HAL xmit paths stay in C (W3-40 covered rate bmp by bw).
-- L2: extend `tests/host/xmit/` with ToS→UP table, SNAP bytes, submit_ctx status transitions.
+- L2: extend `tests/host/xmit/` — ToS→UP table, SNAP bytes; separate submit_ctx vectors
+  (pure status transitions vs. stubbed completion init/wait).
 
 ## Acceptance
 

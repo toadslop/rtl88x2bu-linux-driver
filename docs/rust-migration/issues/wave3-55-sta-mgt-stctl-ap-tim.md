@@ -25,10 +25,15 @@ From [`core/rtw_ap.c`](../../../core/rtw_ap.c) → [`rust/rtw_ap_rest.rs`](../..
 ## Notes
 
 - W3-37/38 covered ACL and AID/pre-link; sta init/free/hash stay in C.
-- TIM IE bytes and VAPID bitmap are mostly pure; st_ctl needs adapter fixtures.
+- **Combined ~200 LOC estimate (two sub-slices, one issue):**
+  - ~120 LOC — `st_ctl` lifecycle/register/check helpers (`rtw_sta_mgt.rs`; queue/mutex
+    coupling; adapter fixtures for register/unregister rules).
+  - ~80 LOC — AP TIM/VAPID helpers (`rtw_ap_rest.rs`; mostly pure IE bytes + bitmap).
 - AP lifecycle/beacon core stays in C.
 - L2: extend `tests/host/sta_mgt/` for st_ctl rules; new `tests/host/ap/` for TIM/VAPID.
+  Acceptance is per sub-slice — both harnesses must pass before closing.
 
 ## Acceptance
 
-- L0 build + L2 host unit tests for st_ctl and AP TIM/VAPID helpers
+- L0 build + L2 host unit tests for st_ctl helpers (`tests/host/sta_mgt/`)
+- L0 build + L2 host unit tests for AP TIM/VAPID helpers (`tests/host/ap/`)
