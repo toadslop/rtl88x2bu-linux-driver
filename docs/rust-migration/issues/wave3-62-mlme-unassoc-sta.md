@@ -16,6 +16,8 @@ Port helpers from [`core/rtw_mlme.c`](../../../core/rtw_mlme.c) to [`rust/rtw_ml
 - `rtw_add_interested_unassoc_sta`
 - `rtw_undo_interested_unassoc_sta`
 - `rtw_search_unassoc_sta`
+- `rtw_del_unassoc_sta`
+- `rtw_del_unassoc_sta_queue`
 - static queue helpers: `alloc_unassoc_sta`, `del_unassoc_sta`, `del_unassoc_sta_chk`
 
 ## Notes

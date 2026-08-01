@@ -12,13 +12,16 @@ estimate_loc: 200
 
 Port helpers from [`core/rtw_mlme.c`](../../../core/rtw_mlme.c) to [`rust/rtw_mlme_rest.rs`](../../../rust/rtw_mlme_rest.rs):
 
-- `rtw_check_roaming_candidate`
-- `rtw_select_roaming_candidate`
+- `rtw_select_roaming_candidate` (exported)
+- static helper: `rtw_check_roaming_candidate` (called only from select)
 
 ## Notes
 
+- **`CONFIG_LAYER2_ROAMING` only** — both helpers live inside the same `#ifdef`
+  block; `rtw_check_roaming_candidate` is `static`.
 - Scanned-queue walk + compare; uses W3-53 same-network helpers.
-- L2: host harness under `tests/host/` with JSON differential vectors (pattern from prior W3 issues).
+- L2: new `tests/host/mlme/` harness with JSON differential vectors; include
+  `CONFIG_LAYER2_ROAMING` fixture for scanned-queue state.
 
 ## Acceptance
 
