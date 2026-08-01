@@ -11,7 +11,7 @@ CC     := gcc
 CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
           -I$(HOST_INC) -I$(CORE) -I$(ROOT)/include \
           -include $(HOST_INC)/host_autoconf.h \
-          -DHOST_STA_MGT_TEST -DCONFIG_RTW_MACADDR_ACL
+          -DHOST_STA_MGT_TEST -DCONFIG_RTW_MACADDR_ACL -DCONFIG_RTW_PRE_LINK_STA
 
 .PHONY: all test test-c test-rust sta_mgt-compile clean
 

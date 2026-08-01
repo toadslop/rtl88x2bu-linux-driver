@@ -96,6 +96,61 @@ u8 rtw_access_ctrl(_adapter *adapter, const u8 *mac_addr)
 
 #endif /* !CONFIG_RUST || HOST_STA_MGT_TEST */
 
+#ifdef CONFIG_AP_MODE
+u16 rtw_aid_alloc(_adapter *adapter, struct sta_info *sta)
+{
+	struct sta_priv *stapriv = &adapter->stapriv;
+	u16 aid, i, used_cnt = 0;
+
+	aid = 0;
+	for (i = 0; i < stapriv->max_aid; i++) {
+		aid = ((i + stapriv->started_aid - 1) % stapriv->max_aid) + 1;
+		if (stapriv->sta_aid[aid - 1] == NULL)
+			break;
+		if (++used_cnt >= stapriv->max_num_sta)
+			break;
+	}
+
+	/* check for aid limit and assoc limit  */
+	if (i >= stapriv->max_aid || used_cnt >= stapriv->max_num_sta)
+		aid = 0;
+
+	sta->cmn.aid = aid;
+	if (aid) {
+		stapriv->sta_aid[aid - 1] = sta;
+		if (stapriv->rr_aid)
+			stapriv->started_aid = (aid % stapriv->max_aid) + 1;
+	}
+
+	return aid;
+}
+#endif /* CONFIG_AP_MODE */
+
+bool rtw_is_pre_link_sta(struct sta_priv *stapriv, u8 *addr)
+{
+#if CONFIG_RTW_PRE_LINK_STA
+	struct pre_link_sta_ctl_t *pre_link_sta_ctl = &stapriv->pre_link_sta_ctl;
+	u8 exist = _FALSE;
+	int i;
+	_irqL irqL;
+
+	_enter_critical_bh(&(pre_link_sta_ctl->lock), &irqL);
+	for (i = 0; i < RTW_PRE_LINK_STA_NUM; i++) {
+		if (pre_link_sta_ctl->node[i].valid == _TRUE
+			&& _rtw_memcmp(pre_link_sta_ctl->node[i].addr, addr, ETH_ALEN) == _TRUE
+		) {
+			exist = _TRUE;
+			break;
+		}
+	}
+	_exit_critical_bh(&(pre_link_sta_ctl->lock), &irqL);
+
+	return exist;
+#else
+	return _FALSE;
+#endif
+}
+
 #if defined(CONFIG_RUST) && !defined(HOST_STA_MGT_TEST) && CONFIG_RTW_MACADDR_ACL
 
 struct wlan_acl_pool *rtw_rust_sta_acl_pool(_adapter *adapter, u8 period)
