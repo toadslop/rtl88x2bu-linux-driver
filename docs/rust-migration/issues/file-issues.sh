@@ -143,6 +143,21 @@ files=(
   wave3-38-sta-mgt-aid.md
   wave3-39-recv-leaf.md
   wave3-40-xmit-rate-bmp.md
+  wave3-41-ieee80211-rate-section.md
+  wave3-42-ieee80211-ht-mcs-amsdu.md
+  wave3-43-ieee80211-p2p-ie.md
+  wave3-44-ieee80211-wfd-multiap.md
+  wave3-45-vht-mcs-rate.md
+  wave3-46-recv-llc-ethhdr.md
+  wave3-47-recv-pn-decache.md
+  wave3-48-xmit-qos-submit-ctx.md
+  wave3-49-xmit-rate-bmp-aggregate.md
+  wave3-50-iol-append-cmds.md
+  wave3-51-rf-regd-exc.md
+  wave3-52-rf-txpwr-lmt.md
+  wave3-53-mlme-bssid-compare.md
+  wave3-54-mlmeext-chset-nonocp.md
+  wave3-55-sta-mgt-stctl-ap-tim.md
 )
 
 # draft_id -> github issue number

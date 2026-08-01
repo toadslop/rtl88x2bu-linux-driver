@@ -59,6 +59,26 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-39 | `wave3-39-recv-leaf.md` | `rtw_recv.c` recv leaf helpers |
 | W3-40 | `wave3-40-xmit-rate-bmp.md` | `rtw_xmit.c` tx rate bitmap helpers |
 
+## Children (tranche 3 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-41 | `wave3-41-ieee80211-rate-section.md` | `rtw_ieee80211.c` rate-section + ch-offset mapping |
+| W3-42 | `wave3-42-ieee80211-ht-mcs-amsdu.md` | `rtw_ieee80211.c` HT MCS bitmap + AMSDU mode |
+| W3-43 | `wave3-43-ieee80211-p2p-ie.md` | `rtw_ieee80211.c` P2P IE merge/delete |
+| W3-44 | `wave3-44-ieee80211-wfd-multiap.md` | `rtw_ieee80211.c` WFD + multi-AP IE helpers |
+| W3-45 | `wave3-45-vht-mcs-rate.md` | `rtw_vht.c` VHT MCS/rate pure helpers |
+| W3-46 | `wave3-46-recv-llc-ethhdr.md` | `rtw_recv.c` LLC parse + ethhdr + BMC gate |
+| W3-47 | `wave3-47-recv-pn-decache.md` | `rtw_recv.c` PN replay decache |
+| W3-48 | `wave3-48-xmit-qos-submit-ctx.md` | `rtw_xmit.c` QoS/SNAP/submit context |
+| W3-49 | `wave3-49-xmit-rate-bmp-aggregate.md` | `rtw_xmit.c` aggregate rate bitmap + RA short GI |
+| W3-50 | `wave3-50-iol-append-cmds.md` | `rtw_iol.c` IOL command-buffer append encoders |
+| W3-51 | `wave3-51-rf-regd-exc.md` | `rtw_rf.c` regd_exc list CRUD + search |
+| W3-52 | `wave3-52-rf-txpwr-lmt.md` | `rtw_rf.c` txpwr_lmt list CRUD |
+| W3-53 | `wave3-53-mlme-bssid-compare.md` | `rtw_mlme.c` BSSID getters + same-network compare |
+| W3-54 | `wave3-54-mlmeext-chset-nonocp.md` | `rtw_mlme_ext.c` chset non-OCP + search/valid |
+| W3-55 | `wave3-55-sta-mgt-stctl-ap-tim.md` | `rtw_sta_mgt.c` st_ctl + `rtw_ap.c` TIM/VAPID |
+
 Further ~200 LOC slices from larger protocol TUs; file new `wave3-*.md` issues as needed:
 
 - `rtw_rf.c` remainder (regd_exc, txpwr_lmt, op_class_pref, dump_*)
