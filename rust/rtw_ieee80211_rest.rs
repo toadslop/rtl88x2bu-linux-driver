@@ -429,11 +429,7 @@ pub extern "C" fn rtw_parse_wpa_ie(
     unsafe {
         if *wpa_ie != _WPA_IE_ID_
             || *(wpa_ie.add(1)) != (wpa_ie_len - 2) as U8
-            || memcmp(
-                wpa_ie.add(2),
-                RTW_WPA_OUI_TYPE.as_ptr(),
-                WPA_SELECTOR_LEN,
-            ) != 0
+            || memcmp(wpa_ie.add(2), RTW_WPA_OUI_TYPE.as_ptr(), WPA_SELECTOR_LEN) != 0
         {
             return _FAIL;
         }
@@ -631,8 +627,7 @@ pub extern "C" fn rtw_parse_wpa2_ie(
             *pairwise_cipher = 0;
             if !info.pcs_list.is_null() {
                 for i in 0..info.pcs_cnt {
-                    *pairwise_cipher |=
-                        rtw_get_rsn_cipher_suite(info.pcs_list.add(4 * i as usize));
+                    *pairwise_cipher |= rtw_get_rsn_cipher_suite(info.pcs_list.add(4 * i as usize));
                 }
             }
         }
@@ -997,11 +992,7 @@ pub extern "C" fn rtw_set_supported_rate(supported_rates: *mut U8, mode: c_uint)
         return;
     }
     unsafe {
-        memset(
-            supported_rates,
-            0,
-            NDIS_802_11_LENGTH_RATES_EX,
-        );
+        memset(supported_rates, 0, NDIS_802_11_LENGTH_RATES_EX);
         match mode {
             WIRELESS_11B => {
                 memcpy(
@@ -1183,8 +1174,7 @@ pub extern "C" fn rtw_ies_get_chbw(
 
         if ht != 0 || vht != 0 {
             let mut ht_cap_ielen: Sint = 0;
-            let ht_cap_ie =
-                rtw_get_ie(ies, EID_HTCAPABILITY, &mut ht_cap_ielen, ies_len);
+            let ht_cap_ie = rtw_get_ie(ies, EID_HTCAPABILITY, &mut ht_cap_ielen, ies_len);
             if !ht_cap_ie.is_null() && ht_cap_ielen != 0 {
                 if get_ht_cap_ele_chl_width(ht_cap_ie.add(2)) != 0 {
                     *bw = CHANNEL_WIDTH_40;
@@ -1214,8 +1204,7 @@ pub extern "C" fn rtw_ies_get_chbw(
 
             if vht != 0 {
                 let mut vht_op_ielen: Sint = 0;
-                let vht_op_ie =
-                    rtw_get_ie(ies, EID_VHTOPERATION, &mut vht_op_ielen, ies_len);
+                let vht_op_ie = rtw_get_ie(ies, EID_VHTOPERATION, &mut vht_op_ielen, ies_len);
                 if !vht_op_ie.is_null() && vht_op_ielen != 0 {
                     if get_vht_operation_ele_chl_width(vht_op_ie.add(2)) >= 1 {
                         *bw = CHANNEL_WIDTH_80;
@@ -1433,21 +1422,101 @@ fn ht_mcs_rate_from_byte(byte: U8, idx: usize, bw_40: U8, short_gi: U8) -> u16 {
     macro_rules! rate {
         ($b7:expr, $b6:expr, $b5:expr, $b4:expr, $b3:expr, $b2:expr, $b1:expr, $b0:expr) => {
             if byte & bit(7) != 0 {
-                if bw40 { if sgi { $b7.0 } else { $b7.1 } } else if sgi { $b7.2 } else { $b7.3 }
+                if bw40 {
+                    if sgi {
+                        $b7.0
+                    } else {
+                        $b7.1
+                    }
+                } else if sgi {
+                    $b7.2
+                } else {
+                    $b7.3
+                }
             } else if byte & bit(6) != 0 {
-                if bw40 { if sgi { $b6.0 } else { $b6.1 } } else if sgi { $b6.2 } else { $b6.3 }
+                if bw40 {
+                    if sgi {
+                        $b6.0
+                    } else {
+                        $b6.1
+                    }
+                } else if sgi {
+                    $b6.2
+                } else {
+                    $b6.3
+                }
             } else if byte & bit(5) != 0 {
-                if bw40 { if sgi { $b5.0 } else { $b5.1 } } else if sgi { $b5.2 } else { $b5.3 }
+                if bw40 {
+                    if sgi {
+                        $b5.0
+                    } else {
+                        $b5.1
+                    }
+                } else if sgi {
+                    $b5.2
+                } else {
+                    $b5.3
+                }
             } else if byte & bit(4) != 0 {
-                if bw40 { if sgi { $b4.0 } else { $b4.1 } } else if sgi { $b4.2 } else { $b4.3 }
+                if bw40 {
+                    if sgi {
+                        $b4.0
+                    } else {
+                        $b4.1
+                    }
+                } else if sgi {
+                    $b4.2
+                } else {
+                    $b4.3
+                }
             } else if byte & bit(3) != 0 {
-                if bw40 { if sgi { $b3.0 } else { $b3.1 } } else if sgi { $b3.2 } else { $b3.3 }
+                if bw40 {
+                    if sgi {
+                        $b3.0
+                    } else {
+                        $b3.1
+                    }
+                } else if sgi {
+                    $b3.2
+                } else {
+                    $b3.3
+                }
             } else if byte & bit(2) != 0 {
-                if bw40 { if sgi { $b2.0 } else { $b2.1 } } else if sgi { $b2.2 } else { $b2.3 }
+                if bw40 {
+                    if sgi {
+                        $b2.0
+                    } else {
+                        $b2.1
+                    }
+                } else if sgi {
+                    $b2.2
+                } else {
+                    $b2.3
+                }
             } else if byte & bit(1) != 0 {
-                if bw40 { if sgi { $b1.0 } else { $b1.1 } } else if sgi { $b1.2 } else { $b1.3 }
+                if bw40 {
+                    if sgi {
+                        $b1.0
+                    } else {
+                        $b1.1
+                    }
+                } else if sgi {
+                    $b1.2
+                } else {
+                    $b1.3
+                }
             } else if byte & bit(0) != 0 {
-                if bw40 { if sgi { $b0.0 } else { $b0.1 } } else if sgi { $b0.2 } else { $b0.3 }
+                if bw40 {
+                    if sgi {
+                        $b0.0
+                    } else {
+                        $b0.1
+                    }
+                } else if sgi {
+                    $b0.2
+                } else {
+                    $b0.3
+                }
             } else {
                 0
             }

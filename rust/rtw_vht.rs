@@ -87,7 +87,12 @@ mod restructure {
         fn rtw_rust_vht_channel_set(padapter: *mut u8) -> *mut u8;
         fn rtw_rust_vht_regsty_bw_5g(padapter: *mut u8) -> u8;
         fn rtw_rust_vht_vht_option(padapter: *mut u8) -> *mut u8;
-        fn rtw_rust_vht_get_ie(pbuf: *const u8, index: c_int, len: *mut u32, limit: c_int) -> *mut u8;
+        fn rtw_rust_vht_get_ie(
+            pbuf: *const u8,
+            index: c_int,
+            len: *mut u32,
+            limit: c_int,
+        ) -> *mut u8;
         fn rtw_set_ie(
             pbuf: *mut u8,
             index: c_int,
@@ -162,22 +167,43 @@ mod restructure {
 
             rtw_vht_use_default_setting(padapter);
 
-            let ht_op_ie = rtw_rust_vht_get_ie(in_ie.add(12), WLAN_EID_HT_OPERATION, &mut ielen, (in_len - 12) as c_int);
+            let ht_op_ie = rtw_rust_vht_get_ie(
+                in_ie.add(12),
+                WLAN_EID_HT_OPERATION,
+                &mut ielen,
+                (in_len - 12) as c_int,
+            );
             if ht_op_ie.is_null() || ielen != HT_OP_IE_LEN {
                 return u32::from(*vht_option);
             }
-            let vht_cap_ie = rtw_rust_vht_get_ie(in_ie.add(12), EID_VHTCapability, &mut ielen, (in_len - 12) as c_int);
+            let vht_cap_ie = rtw_rust_vht_get_ie(
+                in_ie.add(12),
+                EID_VHTCapability,
+                &mut ielen,
+                (in_len - 12) as c_int,
+            );
             if vht_cap_ie.is_null() || ielen != VHT_CAP_IE_LEN {
                 return u32::from(*vht_option);
             }
-            let vht_op_ie = rtw_rust_vht_get_ie(in_ie.add(12), EID_VHTOperation, &mut ielen, (in_len - 12) as c_int);
+            let vht_op_ie = rtw_rust_vht_get_ie(
+                in_ie.add(12),
+                EID_VHTOperation,
+                &mut ielen,
+                (in_len - 12) as c_int,
+            );
             if vht_op_ie.is_null() || ielen != VHT_OP_IE_LEN {
                 return u32::from(*vht_option);
             }
 
             *pout_len += rtw_build_vht_cap_ie(padapter, out_ie.add(*pout_len as usize));
             let out_vht_op_ie = out_ie.add(*pout_len as usize);
-            rtw_set_ie(out_vht_op_ie, EID_VHTOperation, VHT_OP_IE_LEN, vht_op_ie.add(2), pout_len);
+            rtw_set_ie(
+                out_vht_op_ie,
+                EID_VHTOperation,
+                VHT_OP_IE_LEN,
+                vht_op_ie.add(2),
+                pout_len,
+            );
 
             let oper_ch = le_bits(ht_op_ie.add(2), 0, 8);
             let max_bw = hal_largest_bw(padapter, rtw_rust_vht_regsty_bw_5g(padapter));
@@ -201,10 +227,22 @@ mod restructure {
                         oper_bw = CHANNEL_WIDTH_80;
                     }
                     oper_bw = core::cmp::min(oper_bw, max_bw);
-                    while rtw_rust_vht_chset_is_chbw_valid(chset, oper_ch, oper_bw, oper_offset, 1, 1) == 0
+                    while rtw_rust_vht_chset_is_chbw_valid(
+                        chset,
+                        oper_ch,
+                        oper_bw,
+                        oper_offset,
+                        1,
+                        1,
+                    ) == 0
                         || (rtw_rust_vht_is_dfs_slave_with_rd(rfctl) != 0
                             && rtw_rust_vht_rfctl_dfs_domain_unknown(rfctl) == 0
-                            && rtw_rust_vht_chset_is_chbw_non_ocp(chset, oper_ch, oper_bw, oper_offset) != 0)
+                            && rtw_rust_vht_chset_is_chbw_non_ocp(
+                                chset,
+                                oper_ch,
+                                oper_bw,
+                                oper_offset,
+                            ) != 0)
                     {
                         oper_bw = oper_bw.saturating_sub(1);
                         if oper_bw == CHANNEL_WIDTH_20 {
@@ -215,12 +253,17 @@ mod restructure {
                 }
             }
 
-            kernel::warn_on((rtw_rust_vht_chset_is_chbw_valid(chset, oper_ch, oper_bw, oper_offset, 1, 1) == 0) as c_int);
+            kernel::warn_on(
+                (rtw_rust_vht_chset_is_chbw_valid(chset, oper_ch, oper_bw, oper_offset, 1, 1) == 0)
+                    as c_int,
+            );
             if rtw_rust_vht_is_dfs_slave_with_rd(rfctl) != 0
                 && rtw_rust_vht_rfctl_dfs_domain_unknown(rfctl) == 0
             {
-                kernel::warn_on((rtw_rust_vht_chset_is_chbw_non_ocp(chset, oper_ch, oper_bw, oper_offset) != 0)
-                    as c_int);
+                kernel::warn_on(
+                    (rtw_rust_vht_chset_is_chbw_non_ocp(chset, oper_ch, oper_bw, oper_offset) != 0)
+                        as c_int,
+                );
             }
 
             if oper_bw < CHANNEL_WIDTH_80 {
@@ -236,7 +279,8 @@ mod restructure {
                 kernel::warn_on(1);
             }
 
-            *pout_len += rtw_build_vht_op_mode_notify_ie(padapter, out_ie.add(*pout_len as usize), oper_bw);
+            *pout_len +=
+                rtw_build_vht_op_mode_notify_ie(padapter, out_ie.add(*pout_len as usize), oper_bw);
             *vht_option = _TRUE;
             u32::from(*vht_option)
         }
