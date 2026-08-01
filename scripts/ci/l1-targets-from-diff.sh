@@ -115,6 +115,22 @@ for path in "${changed[@]}"; do
 	| rust/rtw_rm_util.rs)
 		: # Wave 1 crypto / scaffold — no per-module L1 swap target yet
 		;;
+	rust/aes_*.rs \
+	| rust/sha256*.rs \
+	| rust/gcmp.rs \
+	| rust/gcmp_support.rs \
+	| rust/ccmp.rs \
+	| rust/ccmp_support.rs \
+	| rust/domain/* \
+	| rust/scaffold.rs \
+	| rust/ffi.rs \
+	| rust/kbuild_stub.rs \
+	| rust/bindings/* \
+	| rust/domain_types.rs \
+	| rust/rtw_crypto_wrap.rs \
+	| rust/rtw_rm_util.rs)
+		;; # Wave 1 crypto / scaffold — no per-module L1 swap target yet
+		;;
 	rust/*)
 		FULL_SUITE=1
 		break
