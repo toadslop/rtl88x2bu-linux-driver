@@ -1104,6 +1104,11 @@ void dump_macaddr_acl(void *sel, _adapter *adapter)
 extern bool rtw_is_pre_link_sta(struct sta_priv *stapriv, u8 *addr);
 
 #if CONFIG_RTW_PRE_LINK_STA
+extern void rtw_pre_link_sta_del(struct sta_priv *stapriv, u8 *hwaddr);
+extern void rtw_pre_link_sta_ctl_reset(struct sta_priv *stapriv);
+extern void rtw_pre_link_sta_ctl_init(struct sta_priv *stapriv);
+extern void rtw_pre_link_sta_ctl_deinit(struct sta_priv *stapriv);
+
 struct sta_info *rtw_pre_link_sta_add(struct sta_priv *stapriv, u8 *hwaddr)
 {
 	struct pre_link_sta_ctl_t *pre_link_sta_ctl = &stapriv->pre_link_sta_ctl;
