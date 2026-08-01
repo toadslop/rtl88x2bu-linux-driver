@@ -67,7 +67,9 @@ vht/vht_restructure_rust_ref.o
 sta_mgt/test_sta_mgt
 sta_mgt/test_sta_mgt_aid
 sta_mgt/test_sta_mgt_rust
+sta_mgt/test_sta_mgt_aid_rust
 sta_mgt/librust_sta_mgt.a
+sta_mgt/librust_sta_mgt_aid.a
 sta_mgt/sta_mgt_rest_c_ref.o
 sta_mgt/sta_mgt_rest_rust_ref.o
 sta_mgt/sta_mgt_rest_host.o
