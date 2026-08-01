@@ -102,6 +102,7 @@ u16 rtw_aid_alloc(_adapter *adapter, struct sta_info *sta)
 	struct sta_priv *stapriv = &adapter->stapriv;
 	u16 aid, i, used_cnt = 0;
 
+	aid = 0;
 	for (i = 0; i < stapriv->max_aid; i++) {
 		aid = ((i + stapriv->started_aid - 1) % stapriv->max_aid) + 1;
 		if (stapriv->sta_aid[aid - 1] == NULL)

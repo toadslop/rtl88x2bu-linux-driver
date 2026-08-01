@@ -13,7 +13,9 @@
 #define ETH_ALEN 6
 
 #define CONFIG_RTW_MACADDR_ACL 1
+#define CONFIG_RTW_PRE_LINK_STA 1
 #define NUM_ACL 16
+#define RTW_PRE_LINK_STA_NUM 8
 #define RTW_ACL_PERIOD_DEV 0
 #define RTW_ACL_PERIOD_BSS 1
 #define RTW_ACL_PERIOD_NUM 2
@@ -51,8 +53,33 @@ struct wlan_acl_pool {
 	_queue acl_node_q;
 };
 
+struct pre_link_sta_node_t {
+	u8 valid;
+	u8 addr[ETH_ALEN];
+};
+
+struct pre_link_sta_ctl_t {
+	_lock lock;
+	u8 num;
+	struct pre_link_sta_node_t node[RTW_PRE_LINK_STA_NUM];
+};
+
+struct cmn_sta_info {
+	u16 aid;
+};
+
+struct sta_info {
+	struct cmn_sta_info cmn;
+};
+
 struct sta_priv {
 	struct wlan_acl_pool acl_list[RTW_ACL_PERIOD_NUM];
+	struct sta_info **sta_aid;
+	u16 max_aid;
+	u16 started_aid;
+	u8 rr_aid;
+	u16 max_num_sta;
+	struct pre_link_sta_ctl_t pre_link_sta_ctl;
 };
 
 struct _adapter {
