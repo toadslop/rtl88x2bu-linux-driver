@@ -158,6 +158,26 @@ files=(
   wave3-53-mlme-bssid-compare.md
   wave3-54-mlmeext-chset-nonocp.md
   wave3-55-sta-mgt-stctl-ap-tim.md
+  wave3-56-rf-op-class-pref.md
+  wave3-57-rf-op-class-dump.md
+  wave3-58-rf-dump-txpwr-lmt.md
+  wave3-59-rf-kfree-tx-gain.md
+  wave3-60-cmd-priv-init.md
+  wave3-61-cmd-queue-filter.md
+  wave3-62-mlme-unassoc-sta.md
+  wave3-63-mlme-wmm-rsn-ie.md
+  wave3-64-mlme-roaming-candidate.md
+  wave3-65-mlme-network-update.md
+  wave3-66-mlme-80211d.md
+  wave3-67-mlme-ht-ie-restructure.md
+  wave3-68-mlmeext-mgnt-attrib.md
+  wave3-69-mlmeext-peer-alive.md
+  wave3-70-mlmeext-scan-decision.md
+  wave3-71-mlmeext-pick-ch.md
+  wave3-72-mlmeext-band-ie-format.md
+  wave3-73-ap-sta-ie-parse.md
+  wave3-74-ap-security-ie-parse.md
+  wave3-75-ap-beacon-ie-update.md
 )
 
 # draft_id -> github issue number
