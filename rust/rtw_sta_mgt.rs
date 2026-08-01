@@ -112,7 +112,8 @@ fn access_ctrl_period(adapter: *mut Adapter, period: u8, mac_addr: *const u8) ->
         return _TRUE as u8;
     }
     let acl = &mut adapter.stapriv.acl_list[period as usize];
-    if acl.mode != RTW_ACL_MODE_ACCEPT_UNLESS_LISTED && acl.mode != RTW_ACL_MODE_DENY_UNLESS_LISTED
+    if acl.mode != RTW_ACL_MODE_ACCEPT_UNLESS_LISTED
+        && acl.mode != RTW_ACL_MODE_DENY_UNLESS_LISTED
     {
         return _TRUE as u8;
     }
@@ -189,7 +190,11 @@ pub extern "C" fn test_st_match_rule(
 }
 
 #[no_mangle]
-pub extern "C" fn _rtw_access_ctrl(adapter: *mut Adapter, period: u8, mac_addr: *const u8) -> u8 {
+pub extern "C" fn _rtw_access_ctrl(
+    adapter: *mut Adapter,
+    period: u8,
+    mac_addr: *const u8,
+) -> u8 {
     access_ctrl_period(adapter, period, mac_addr)
 }
 
