@@ -15,17 +15,20 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable
 
 .PHONY: all test test-c sta_mgt-compile clean
 
-all: sta_mgt-compile
+all: test
 
 # PR2: compile-only gate; vector harness in PR3.
 sta_mgt-compile: $(STA_REST_SRC) $(HOST_SHIM)
 	$(CC) $(CFLAGS) -c $(STA_REST_SRC) -o sta_mgt_rest_host.o
 	$(CC) $(CFLAGS) -c $(HOST_SHIM) -o sta_mgt_shim_host.o
 
-# Vector harness (test_sta_mgt.c, sta_mgt_vectors.json) lands in PR3 (#351).
-test test-c:
-	@echo "sta_mgt vector tests require PR3 (#351); use 'make all' for the PR2 compile-only gate"
-	@exit 1
+test: test-c
+
+test-c: test_sta_mgt
+	./test_sta_mgt sta_mgt_vectors.json
+
+test_sta_mgt: test_sta_mgt.c $(STA_REST_SRC) $(HOST_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_sta_mgt.c $(HOST_SHIM) $(STA_REST_SRC) $(HOST_JSON)
 
 clean:
 	rm -f test_sta_mgt sta_mgt_rest_host.o sta_mgt_shim_host.o
