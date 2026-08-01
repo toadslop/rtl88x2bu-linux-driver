@@ -1037,32 +1037,7 @@ struct sta_info *rtw_get_bcmc_stainfo(_adapter *padapter)
 }
 
 #ifdef CONFIG_AP_MODE
-u16 rtw_aid_alloc(_adapter *adapter, struct sta_info *sta)
-{
-	struct sta_priv *stapriv = &adapter->stapriv;
-	u16 aid, i, used_cnt = 0;
-
-	for (i = 0; i < stapriv->max_aid; i++) {
-		aid = ((i + stapriv->started_aid - 1) % stapriv->max_aid) + 1;
-		if (stapriv->sta_aid[aid - 1] == NULL)
-			break;
-		if (++used_cnt >= stapriv->max_num_sta)
-			break;
-	}
-
-	/* check for aid limit and assoc limit  */
-	if (i >= stapriv->max_aid || used_cnt >= stapriv->max_num_sta)
-		aid = 0;
-
-	sta->cmn.aid = aid;
-	if (aid) {
-		stapriv->sta_aid[aid - 1] = sta;
-		if (stapriv->rr_aid)
-			stapriv->started_aid = (aid % stapriv->max_aid) + 1;
-	}
-
-	return aid;
-}
+extern u16 rtw_aid_alloc(_adapter *adapter, struct sta_info *sta);
 
 void dump_aid_status(void *sel, _adapter *adapter)
 {
@@ -1126,31 +1101,7 @@ void dump_macaddr_acl(void *sel, _adapter *adapter)
 }
 #endif /* CONFIG_RTW_MACADDR_ACL */
 
-bool rtw_is_pre_link_sta(struct sta_priv *stapriv, u8 *addr)
-{
-#if CONFIG_RTW_PRE_LINK_STA
-	struct pre_link_sta_ctl_t *pre_link_sta_ctl = &stapriv->pre_link_sta_ctl;
-	struct sta_info *sta = NULL;
-	u8 exist = _FALSE;
-	int i;
-	_irqL irqL;
-
-	_enter_critical_bh(&(pre_link_sta_ctl->lock), &irqL);
-	for (i = 0; i < RTW_PRE_LINK_STA_NUM; i++) {
-		if (pre_link_sta_ctl->node[i].valid == _TRUE
-			&& _rtw_memcmp(pre_link_sta_ctl->node[i].addr, addr, ETH_ALEN) == _TRUE
-		) {
-			exist = _TRUE;
-			break;
-		}
-	}
-	_exit_critical_bh(&(pre_link_sta_ctl->lock), &irqL);
-
-	return exist;
-#else
-	return _FALSE;
-#endif
-}
+extern bool rtw_is_pre_link_sta(struct sta_priv *stapriv, u8 *addr);
 
 #if CONFIG_RTW_PRE_LINK_STA
 struct sta_info *rtw_pre_link_sta_add(struct sta_priv *stapriv, u8 *hwaddr)
@@ -1204,103 +1155,6 @@ odm_hook:
 
 exit:
 	return sta;
-}
-
-void rtw_pre_link_sta_del(struct sta_priv *stapriv, u8 *hwaddr)
-{
-	struct pre_link_sta_ctl_t *pre_link_sta_ctl = &stapriv->pre_link_sta_ctl;
-	struct pre_link_sta_node_t *node = NULL;
-	struct sta_info *sta = NULL;
-	u8 exist = _FALSE;
-	int i;
-	_irqL irqL;
-
-	if (rtw_check_invalid_mac_address(hwaddr, _FALSE) == _TRUE)
-		goto exit;
-
-	_enter_critical_bh(&(pre_link_sta_ctl->lock), &irqL);
-	for (i = 0; i < RTW_PRE_LINK_STA_NUM; i++) {
-		if (pre_link_sta_ctl->node[i].valid == _TRUE
-			&& _rtw_memcmp(pre_link_sta_ctl->node[i].addr, hwaddr, ETH_ALEN) == _TRUE
-		) {
-			node = &pre_link_sta_ctl->node[i];
-			exist = _TRUE;
-			break;
-		}
-	}
-
-	if (exist == _TRUE && node) {
-		node->valid = _FALSE;
-		pre_link_sta_ctl->num--;
-	}
-	_exit_critical_bh(&(pre_link_sta_ctl->lock), &irqL);
-
-	if (exist == _FALSE)
-		goto exit;
-
-	sta = rtw_get_stainfo(stapriv, hwaddr);
-	if (!sta)
-		goto exit;
-
-	if (sta->state == WIFI_FW_PRE_LINK)
-		rtw_free_stainfo(stapriv->padapter, sta);
-
-exit:
-	return;
-}
-
-void rtw_pre_link_sta_ctl_reset(struct sta_priv *stapriv)
-{
-	struct pre_link_sta_ctl_t *pre_link_sta_ctl = &stapriv->pre_link_sta_ctl;
-	struct pre_link_sta_node_t *node = NULL;
-	struct sta_info *sta = NULL;
-	int i, j = 0;
-	_irqL irqL;
-
-	u8 addrs[RTW_PRE_LINK_STA_NUM][ETH_ALEN];
-
-	_rtw_memset(addrs, 0, RTW_PRE_LINK_STA_NUM * ETH_ALEN);
-
-	_enter_critical_bh(&(pre_link_sta_ctl->lock), &irqL);
-	for (i = 0; i < RTW_PRE_LINK_STA_NUM; i++) {
-		if (pre_link_sta_ctl->node[i].valid == _FALSE)
-			continue;
-		_rtw_memcpy(&(addrs[j][0]), pre_link_sta_ctl->node[i].addr, ETH_ALEN);
-		pre_link_sta_ctl->node[i].valid = _FALSE;
-		pre_link_sta_ctl->num--;
-		j++;
-	}
-	_exit_critical_bh(&(pre_link_sta_ctl->lock), &irqL);
-
-	for (i = 0; i < j; i++) {
-		sta = rtw_get_stainfo(stapriv, &(addrs[i][0]));
-		if (!sta)
-			continue;
-
-		if (sta->state == WIFI_FW_PRE_LINK)
-			rtw_free_stainfo(stapriv->padapter, sta);
-	}
-}
-
-void rtw_pre_link_sta_ctl_init(struct sta_priv *stapriv)
-{
-	struct pre_link_sta_ctl_t *pre_link_sta_ctl = &stapriv->pre_link_sta_ctl;
-	int i;
-
-	_rtw_spinlock_init(&pre_link_sta_ctl->lock);
-	pre_link_sta_ctl->num = 0;
-	for (i = 0; i < RTW_PRE_LINK_STA_NUM; i++)
-		pre_link_sta_ctl->node[i].valid = _FALSE;
-}
-
-void rtw_pre_link_sta_ctl_deinit(struct sta_priv *stapriv)
-{
-	struct pre_link_sta_ctl_t *pre_link_sta_ctl = &stapriv->pre_link_sta_ctl;
-	int i;
-
-	rtw_pre_link_sta_ctl_reset(stapriv);
-
-	_rtw_spinlock_free(&pre_link_sta_ctl->lock);
 }
 
 void dump_pre_link_sta_ctl(void *sel, struct sta_priv *stapriv)
