@@ -1,0 +1,5 @@
+# L1 allowlist for W3-37: kernel-only ACL shim symbols (not in host oracle).
+drop rtw_rust_sta_acl_pool
+drop rtw_rust_sta_acl_mode
+drop rtw_rust_sta_acl_mac_listed
+drop rtw_rust_sta_warn_on
