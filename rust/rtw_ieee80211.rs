@@ -83,11 +83,7 @@ pub extern "C" fn rtw_get_ie_ex(
         while cnt < in_len {
             if eid == *in_ie.add(cnt as usize)
                 && (oui.is_null()
-                    || memcmp(
-                        in_ie.add(cnt as usize + 2),
-                        oui,
-                        oui_len as usize,
-                    ) == 0)
+                    || memcmp(in_ie.add(cnt as usize + 2), oui, oui_len as usize) == 0)
             {
                 target_ie = in_ie.add(cnt as usize);
                 if !ie.is_null() {

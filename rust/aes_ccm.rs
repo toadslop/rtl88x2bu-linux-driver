@@ -38,10 +38,10 @@ mod bindings {
 use bindings::{aes_encrypt, aes_encrypt_deinit, aes_encrypt_init, AES_BLOCK_SIZE};
 use types::AesKey;
 
-#[cfg(host_crypto_test)]
-use std::os::raw::{c_int, c_void};
 #[cfg(not(host_crypto_test))]
 use core::ffi::{c_int, c_void};
+#[cfg(host_crypto_test)]
+use std::os::raw::{c_int, c_void};
 
 const L: usize = 2;
 const NONCE_LEN: usize = 15 - L; // 13
@@ -237,10 +237,7 @@ pub fn aes_ccm_ad_typed(
     auth: &[u8],
     plain: &mut [u8],
 ) -> Result<(), ()> {
-    if aad.len() > 30
-        || m > AES_BLOCK_SIZE as usize
-        || auth.len() < m
-        || plain.len() < crypt.len()
+    if aad.len() > 30 || m > AES_BLOCK_SIZE as usize || auth.len() < m || plain.len() < crypt.len()
     {
         return Err(());
     }

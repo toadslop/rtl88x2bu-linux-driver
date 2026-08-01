@@ -249,7 +249,10 @@ pub extern "C" fn _rtw_ccmp_decrypt(
             plain as *const c_void,
             plain_len,
         );
-        _rtw_mfree(plain as *mut c_void, ((plen - hdrlen) as usize + AES_BLOCK_SIZE) as u32);
+        _rtw_mfree(
+            plain as *mut c_void,
+            ((plen - hdrlen) as usize + AES_BLOCK_SIZE) as u32,
+        );
     }
     _SUCCESS
 }
@@ -323,7 +326,10 @@ pub extern "C" fn _rtw_gcmp_decrypt(
             plain as *const c_void,
             plain_len,
         );
-        _rtw_mfree(plain as *mut c_void, ((plen - hdrlen) as usize + AES_BLOCK_SIZE) as u32);
+        _rtw_mfree(
+            plain as *mut c_void,
+            ((plen - hdrlen) as usize + AES_BLOCK_SIZE) as u32,
+        );
     }
     _SUCCESS
 }

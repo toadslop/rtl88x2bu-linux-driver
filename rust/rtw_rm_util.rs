@@ -35,7 +35,11 @@ struct RtOperatingClass {
 }
 
 static RTW_OP_CLASS_US: [RtOperatingClass; 7] = [
-    RtOperatingClass { global_op_class: 0, len: 0, channel: [0; MAX_CH_NUM_IN_OP_CLASS] },
+    RtOperatingClass {
+        global_op_class: 0,
+        len: 0,
+        channel: [0; MAX_CH_NUM_IN_OP_CLASS],
+    },
     RtOperatingClass {
         global_op_class: 115,
         len: 4,

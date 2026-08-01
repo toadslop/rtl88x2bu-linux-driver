@@ -193,8 +193,7 @@ pub extern "C" fn rtw_process_beacon_hint(adapter: *mut c_void, bss: *mut c_void
     }
     let country_ent = unsafe { rtw_rust_rfctl_country_ent(adapter) };
     let ch = unsafe { rtw_rust_bss_ds_config(bss) };
-    let chset_slice =
-        unsafe { core::slice::from_raw_parts_mut(chset, MAX_CHANNEL_NUM) };
+    let chset_slice = unsafe { core::slice::from_raw_parts_mut(chset, MAX_CHANNEL_NUM) };
     let country_alpha2 = if country_ent.is_null() {
         None
     } else {
@@ -301,10 +300,7 @@ fn write_hex_byte(buf: &mut [u8], val: u8) -> usize {
 
 #[cfg(not(host_chplan_rest_test))]
 fn chplan_ent_equal(a: &ChplanEnt, b: &ChplanEnt) -> bool {
-    a.regd_2g == b.regd_2g
-        && a.chd_2g == b.chd_2g
-        && a.regd_5g == b.regd_5g
-        && a.chd_5g == b.chd_5g
+    a.regd_2g == b.regd_2g && a.chd_2g == b.chd_2g && a.regd_5g == b.regd_5g && a.chd_5g == b.chd_5g
 }
 
 #[cfg(not(host_chplan_rest_test))]
@@ -445,9 +441,8 @@ pub extern "C" fn dump_chplan_test(sel: *mut c_void) {
     }
 
     let map_size = unsafe { RTW_ChannelPlanMap_size } as usize;
-    let map = unsafe {
-        core::slice::from_raw_parts(&RTW_ChannelPlanMap as *const ChplanEnt, map_size)
-    };
+    let map =
+        unsafe { core::slice::from_raw_parts(&RTW_ChannelPlanMap as *const ChplanEnt, map_size) };
     for i in 0..map_size {
         if !unsafe { rtw_is_channel_plan_valid(i as u8) } {
             continue;

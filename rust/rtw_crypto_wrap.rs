@@ -13,10 +13,10 @@
     unreachable_pub
 )]
 
-#[cfg(host_crypto_test)]
-use std::os::raw::{c_char, c_int, c_void};
 #[cfg(not(host_crypto_test))]
 use core::ffi::{c_char, c_int, c_void};
+#[cfg(host_crypto_test)]
+use std::os::raw::{c_char, c_int, c_void};
 
 #[cfg(host_crypto_test)]
 mod bindings {

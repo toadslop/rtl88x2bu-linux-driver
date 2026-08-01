@@ -38,18 +38,25 @@ mod bindings {
 
     extern "C" {
         pub fn os_memcmp_const(a: *const c_void, b: *const c_void, len: usize) -> c_int;
-        pub fn wpa_hexdump_key(level: core::ffi::c_int, title: *const u8, buf: *const u8, len: usize);
+        pub fn wpa_hexdump_key(
+            level: core::ffi::c_int,
+            title: *const u8,
+            buf: *const u8,
+            len: usize,
+        );
         pub fn wpa_printf(level: core::ffi::c_int, fmt: *const u8, ...);
     }
 }
 
-use bindings::{aes_encrypt, aes_encrypt_deinit, aes_encrypt_init, wpa_hexdump_key, wpa_printf, AES_BLOCK_SIZE};
+use bindings::{
+    aes_encrypt, aes_encrypt_deinit, aes_encrypt_init, wpa_hexdump_key, wpa_printf, AES_BLOCK_SIZE,
+};
 use types::AesKey;
 
-#[cfg(host_crypto_test)]
-use std::os::raw::{c_int, c_void};
 #[cfg(not(host_crypto_test))]
 use core::ffi::{c_int, c_void};
+#[cfg(host_crypto_test)]
+use std::os::raw::{c_int, c_void};
 
 const MSG_EXCESSIVE: c_int = 0;
 
@@ -327,7 +334,14 @@ pub fn aes_gcm_ad_typed(
 
     unsafe { aes_encrypt_deinit(aes) };
 
-    if unsafe { bindings::os_memcmp_const(tag.as_ptr() as *const c_void, t.as_ptr() as *const c_void, 16) } != 0 {
+    if unsafe {
+        bindings::os_memcmp_const(
+            tag.as_ptr() as *const c_void,
+            t.as_ptr() as *const c_void,
+            16,
+        )
+    } != 0
+    {
         unsafe {
             wpa_printf(MSG_EXCESSIVE, b"GCM: Tag mismatch\0".as_ptr());
         }
@@ -365,7 +379,8 @@ pub extern "C" fn aes_gcm_ae(
         return -1;
     }
 
-    let aes_key = match AesKey::try_from_slice(unsafe { core::slice::from_raw_parts(key, key_len) }) {
+    let aes_key = match AesKey::try_from_slice(unsafe { core::slice::from_raw_parts(key, key_len) })
+    {
         Ok(k) => k,
         Err(_) => return -1,
     };
@@ -424,7 +439,8 @@ pub extern "C" fn aes_gcm_ad(
         return -1;
     }
 
-    let aes_key = match AesKey::try_from_slice(unsafe { core::slice::from_raw_parts(key, key_len) }) {
+    let aes_key = match AesKey::try_from_slice(unsafe { core::slice::from_raw_parts(key, key_len) })
+    {
         Ok(k) => k,
         Err(_) => return -1,
     };
@@ -467,7 +483,8 @@ pub extern "C" fn aes_gmac(
         return -1;
     }
 
-    let aes_key = match AesKey::try_from_slice(unsafe { core::slice::from_raw_parts(key, key_len) }) {
+    let aes_key = match AesKey::try_from_slice(unsafe { core::slice::from_raw_parts(key, key_len) })
+    {
         Ok(k) => k,
         Err(_) => return -1,
     };

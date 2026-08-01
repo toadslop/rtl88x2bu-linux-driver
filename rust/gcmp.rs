@@ -29,7 +29,7 @@ mod types;
 mod support;
 
 use support::bindings::{aes_gcm_ad, aes_gcm_ae, rtw_registrypriv_amsdu_mode, Adapter};
-use support::{gcmp_aad_nonce, os_malloc, rtw_mfree, AES_BLOCK_SIZE, Ieee80211Hdr};
+use support::{gcmp_aad_nonce, os_malloc, rtw_mfree, Ieee80211Hdr, AES_BLOCK_SIZE};
 use types::AesKey;
 
 fn gcmp_decrypt_inner(
@@ -124,31 +124,24 @@ fn gcmp_encrypt_inner(
             *c.add(pos) = pn_bytes[0];
             pos += 1;
         }
-        (crypt as *mut Ieee80211Hdr, pos, unsafe { frame.as_ptr().add(hdrlen) })
+        (crypt as *mut Ieee80211Hdr, pos, unsafe {
+            frame.as_ptr().add(hdrlen)
+        })
     } else {
         unsafe {
             core::ptr::copy_nonoverlapping(frame.as_ptr(), crypt as *mut u8, hdrlen + 8);
         }
-        (
-            crypt as *mut Ieee80211Hdr,
-            hdrlen + 8,
-            unsafe { frame.as_ptr().add(hdrlen + 8) },
-        )
+        (crypt as *mut Ieee80211Hdr, hdrlen + 8, unsafe {
+            frame.as_ptr().add(hdrlen + 8)
+        })
     };
 
     let mut aad = [0u8; 30];
     let mut nonce = [0u8; 12];
     let data_for_nonce =
         unsafe { core::slice::from_raw_parts((crypt as *const u8).add(hdrlen), 8) };
-    let aad_len = unsafe {
-        gcmp_aad_nonce(
-            amsdu_mode,
-            &*hdr_ptr,
-            data_for_nonce,
-            &mut aad,
-            &mut nonce,
-        )
-    };
+    let aad_len =
+        unsafe { gcmp_aad_nonce(amsdu_mode, &*hdr_ptr, data_for_nonce, &mut aad, &mut nonce) };
 
     let key = tk.as_bytes();
     let rc = unsafe {
@@ -198,13 +191,9 @@ pub extern "C" fn gcmp_decrypt(
     let hdr_ref = unsafe { &*hdr };
     let amsdu_mode = unsafe { rtw_registrypriv_amsdu_mode(padapter) };
 
-    gcmp_decrypt_inner(
-        amsdu_mode,
-        aes_key,
-        hdr_ref,
-        data_slice,
-        unsafe { &mut *decrypted_len },
-    )
+    gcmp_decrypt_inner(amsdu_mode, aes_key, hdr_ref, data_slice, unsafe {
+        &mut *decrypted_len
+    })
 }
 
 /// C ABI: `gcmp_encrypt` from `core/crypto/gcmp.c`.

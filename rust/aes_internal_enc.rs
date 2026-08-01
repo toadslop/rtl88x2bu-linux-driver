@@ -67,10 +67,7 @@ fn rotr(val: u32, bits: u32) -> u32 {
 }
 
 fn get_u32(pt: &[u8]) -> u32 {
-    ((pt[0] as u32) << 24)
-        ^ ((pt[1] as u32) << 16)
-        ^ ((pt[2] as u32) << 8)
-        ^ (pt[3] as u32)
+    ((pt[0] as u32) << 24) ^ ((pt[1] as u32) << 16) ^ ((pt[2] as u32) << 8) ^ (pt[3] as u32)
 }
 
 fn put_u32(ct: &mut [u8], st: u32) {
