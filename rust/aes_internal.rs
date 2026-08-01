@@ -13,6 +13,8 @@
 )]
 
 /// Te0 lookup table (W2-11 part 1).
+#[rustfmt::skip]
+#[rustfmt::skip]
 #[no_mangle]
 pub static Te0: [u32; 256] = [
 
@@ -82,8 +84,9 @@ pub static Te0: [u32; 256] = [
     0x7bb0b0cb, 0xa85454fc, 0x6dbbbbd6, 0x2c16163a,
 ];
 
-
 /// Td0 lookup table (W2-12 part 2).
+#[rustfmt::skip]
+#[rustfmt::skip]
 #[no_mangle]
 pub static Td0: [u32; 256] = [
     0x51f4a750, 0x7e416553, 0x1a17a4c3, 0x3a275e96,
@@ -153,6 +156,8 @@ pub static Td0: [u32; 256] = [
 ];
 
 /// Td4s lookup table (W2-13 part 3, AES_SMALL_TABLES).
+#[rustfmt::skip]
+#[rustfmt::skip]
 #[no_mangle]
 pub static Td4s: [u8; 256] = [
     0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38,
@@ -190,16 +195,15 @@ pub static Td4s: [u8; 256] = [
 ];
 
 /// Round constants (W2-13 part 3, AES_SMALL_TABLES).
+#[rustfmt::skip]
+#[rustfmt::skip]
 #[no_mangle]
 pub static rcons: [u8; 10] = [
     0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36,
 ];
 
 fn get_u32(pt: &[u8]) -> u32 {
-    ((pt[0] as u32) << 24)
-        ^ ((pt[1] as u32) << 16)
-        ^ ((pt[2] as u32) << 8)
-        ^ (pt[3] as u32)
+    ((pt[0] as u32) << 24) ^ ((pt[1] as u32) << 16) ^ ((pt[2] as u32) << 8) ^ (pt[3] as u32)
 }
 
 fn rcon_val(i: usize) -> u32 {
@@ -252,12 +256,8 @@ fn rijndael_key_setup_enc(rk: &mut [u32], cipher_key: &[u8], key_bits: i32) -> i
         let mut idx = 0usize;
         for i in 0..10 {
             let temp = rk[idx + 3];
-            rk[idx + 4] = rk[idx]
-                ^ te421(temp)
-                ^ te432(temp)
-                ^ te443(temp)
-                ^ te414(temp)
-                ^ rcon_val(i);
+            rk[idx + 4] =
+                rk[idx] ^ te421(temp) ^ te432(temp) ^ te443(temp) ^ te414(temp) ^ rcon_val(i);
             rk[idx + 5] = rk[idx + 1] ^ rk[idx + 4];
             rk[idx + 6] = rk[idx + 2] ^ rk[idx + 5];
             rk[idx + 7] = rk[idx + 3] ^ rk[idx + 6];
@@ -276,12 +276,8 @@ fn rijndael_key_setup_enc(rk: &mut [u32], cipher_key: &[u8], key_bits: i32) -> i
         let mut idx = 0usize;
         for i in 0..8 {
             let temp = rk[idx + 5];
-            rk[idx + 6] = rk[idx]
-                ^ te421(temp)
-                ^ te432(temp)
-                ^ te443(temp)
-                ^ te414(temp)
-                ^ rcon_val(i);
+            rk[idx + 6] =
+                rk[idx] ^ te421(temp) ^ te432(temp) ^ te443(temp) ^ te414(temp) ^ rcon_val(i);
             rk[idx + 7] = rk[idx + 1] ^ rk[idx + 6];
             rk[idx + 8] = rk[idx + 2] ^ rk[idx + 7];
             rk[idx + 9] = rk[idx + 3] ^ rk[idx + 8];
@@ -304,12 +300,8 @@ fn rijndael_key_setup_enc(rk: &mut [u32], cipher_key: &[u8], key_bits: i32) -> i
         let mut idx = 0usize;
         for i in 0..7 {
             let temp = rk[idx + 7];
-            rk[idx + 8] = rk[idx]
-                ^ te421(temp)
-                ^ te432(temp)
-                ^ te443(temp)
-                ^ te414(temp)
-                ^ rcon_val(i);
+            rk[idx + 8] =
+                rk[idx] ^ te421(temp) ^ te432(temp) ^ te443(temp) ^ te414(temp) ^ rcon_val(i);
             rk[idx + 9] = rk[idx + 1] ^ rk[idx + 8];
             rk[idx + 10] = rk[idx + 2] ^ rk[idx + 9];
             rk[idx + 11] = rk[idx + 3] ^ rk[idx + 10];
@@ -330,11 +322,7 @@ fn rijndael_key_setup_enc(rk: &mut [u32], cipher_key: &[u8], key_bits: i32) -> i
 
 /// C ABI: `rijndaelKeySetupEnc` from `core/crypto/aes-internal.c` (W2-14).
 #[no_mangle]
-pub extern "C" fn rijndaelKeySetupEnc(
-    rk: *mut u32,
-    cipher_key: *const u8,
-    key_bits: i32,
-) -> i32 {
+pub extern "C" fn rijndaelKeySetupEnc(rk: *mut u32, cipher_key: *const u8, key_bits: i32) -> i32 {
     if rk.is_null() || cipher_key.is_null() {
         return -1;
     }
@@ -357,4 +345,3 @@ pub extern "C" fn rtw_rust_aes_internal_probe() -> core::ffi::c_int {
         + Td4s[0] as core::ffi::c_int
         + rcons[0] as core::ffi::c_int
 }
-

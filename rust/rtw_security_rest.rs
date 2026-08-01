@@ -87,12 +87,7 @@ fn next_key(key: &mut [U8; 16], round: Sint) {
     let rcon_table: [U8; 12] = [
         0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36, 0x36, 0x36,
     ];
-    let sbox_key = [
-        sbox(key[13]),
-        sbox(key[14]),
-        sbox(key[15]),
-        sbox(key[12]),
-    ];
+    let sbox_key = [sbox(key[13]), sbox(key[14]), sbox(key[15]), sbox(key[12])];
     let rcon = rcon_table[round as usize];
 
     let mut tmp = [0u8; 4];
@@ -102,9 +97,17 @@ fn next_key(key: &mut [U8; 16], round: Sint) {
     key[2] = tmp[2];
     key[3] = tmp[3];
 
-    xor_32(&[key[4], key[5], key[6], key[7]], &[key[0], key[1], key[2], key[3]], &mut tmp);
+    xor_32(
+        &[key[4], key[5], key[6], key[7]],
+        &[key[0], key[1], key[2], key[3]],
+        &mut tmp,
+    );
     key[4..8].copy_from_slice(&tmp);
-    xor_32(&[key[8], key[9], key[10], key[11]], &[key[4], key[5], key[6], key[7]], &mut tmp);
+    xor_32(
+        &[key[8], key[9], key[10], key[11]],
+        &[key[4], key[5], key[6], key[7]],
+        &mut tmp,
+    );
     key[8..12].copy_from_slice(&tmp);
     xor_32(
         &[key[12], key[13], key[14], key[15]],
@@ -356,6 +359,7 @@ fn get_frame_sub_type_le(pframe: &[U8]) -> U32 {
 
 // ----- AES-CCMP software encrypt (W3-12) -----
 
+#[rustfmt::skip]
 fn aes_cipher(key: &[U8; 16], hdrlen: u32, pframe: &mut [U8], plen: u32) -> Sint {
     let mut hdrlen = hdrlen;
     let frtype = get_frame_type_le(pframe);
@@ -528,6 +532,7 @@ fn aes_cipher(key: &[U8; 16], hdrlen: u32, pframe: &mut [U8], plen: u32) -> Sint
     _SUCCESS
 }
 
+#[rustfmt::skip]
 fn aes_decipher_inner(key: &[U8; 16], hdrlen: u32, pframe: &mut [U8], plen: u32) -> Sint {
     let mut hdrlen = hdrlen;
     let frtype = get_frame_type_le(pframe);
@@ -783,12 +788,7 @@ fn aes_decipher_inner(key: &[U8; 16], hdrlen: u32, pframe: &mut [U8], plen: u32)
 
 #[cfg(not(host_security_rest_test))]
 #[no_mangle]
-pub extern "C" fn aes_decipher(
-    key: *mut U8,
-    hdrlen: u32,
-    pframe: *mut U8,
-    plen: u32,
-) -> Sint {
+pub extern "C" fn aes_decipher(key: *mut U8, hdrlen: u32, pframe: *mut U8, plen: u32) -> Sint {
     if key.is_null() || pframe.is_null() || plen < 8 {
         return _FAIL;
     }
@@ -902,12 +902,7 @@ pub extern "C" fn host_ccmp_construct_mic_header2(
 ) {
     let mpdu_slice = unsafe { core::slice::from_raw_parts(mpdu, 32) };
     let mut out = [0u8; 16];
-    construct_mic_header2(
-        &mut out,
-        mpdu_slice,
-        a4_exists as Sint,
-        qc_exists as Sint,
-    );
+    construct_mic_header2(&mut out, mpdu_slice, a4_exists as Sint, qc_exists as Sint);
     unsafe {
         core::ptr::write_unaligned(mic_header2 as *mut [U8; 16], out);
     }
@@ -1042,8 +1037,12 @@ fn is_mcast_ra(ra: &[U8; 6]) -> bool {
 }
 
 fn is_broadcast_mac_addr(addr: &[U8; 6]) -> bool {
-    addr[0] == 0xff && addr[1] == 0xff && addr[2] == 0xff && addr[3] == 0xff
-        && addr[4] == 0xff && addr[5] == 0xff
+    addr[0] == 0xff
+        && addr[1] == 0xff
+        && addr[2] == 0xff
+        && addr[3] == 0xff
+        && addr[4] == 0xff
+        && addr[5] == 0xff
 }
 
 fn is_multicast_mac_addr(addr: &[U8; 6]) -> bool {
@@ -1062,6 +1061,7 @@ fn hw_hdr_offset(pkt_offset: i8) -> usize {
 
 #[cfg(not(host_security_rest_test))]
 mod kernel_layout {
+    #![rustfmt::skip]
     use super::*;
 
     extern "C" {
@@ -1256,6 +1256,7 @@ mod kernel_layout {
     }
 }
 
+#[rustfmt::skip]
 unsafe fn aes_encrypt_frag_new_crypto(
     padapter: *mut AesAdapter,
     prwskey: *mut U8,
@@ -1300,6 +1301,7 @@ unsafe fn aes_encrypt_frag_new_crypto(
 
 #[cfg(not(host_security_rest_test))]
 #[no_mangle]
+#[rustfmt::skip]
 pub extern "C" fn rtw_aes_encrypt(padapter: *mut AesAdapter, pxmitframe: *mut U8) -> U32 {
     if padapter.is_null() || pxmitframe.is_null() {
         return AES_RTW_FAIL;
@@ -1353,6 +1355,7 @@ const _FALSE: U8 = 0;
 
 #[cfg(not(host_security_rest_test))]
 #[no_mangle]
+#[rustfmt::skip]
 pub extern "C" fn rtw_aes_decrypt(padapter: *mut AesAdapter, precvframe: *mut U8) -> U32 {
     if padapter.is_null() || precvframe.is_null() {
         return AES_RTW_FAIL;
@@ -1437,6 +1440,7 @@ extern "C" {
 }
 
 #[cfg(any(not(host_security_rest_test), host_gcmp_frame_test))]
+#[rustfmt::skip]
 unsafe fn gcmp_encrypt_frags(
     padapter: *mut core::ffi::c_void,
     prwskey: *mut U8,
@@ -1523,6 +1527,7 @@ mod gcmp_kernel_layout {
 
 #[cfg(not(host_security_rest_test))]
 #[no_mangle]
+#[rustfmt::skip]
 pub extern "C" fn rtw_gcmp_encrypt(padapter: *mut AesAdapter, pxmitframe: *mut U8) -> U32 {
     if padapter.is_null() || pxmitframe.is_null() {
         return GCMP_RTW_FAIL;
@@ -1727,6 +1732,7 @@ fn host_gcmp_get_stainfo<'a>(
 
 #[cfg(not(host_security_rest_test))]
 #[no_mangle]
+#[rustfmt::skip]
 pub extern "C" fn rtw_gcmp_decrypt(padapter: *mut AesAdapter, precvframe: *mut U8) -> U32 {
     if padapter.is_null() || precvframe.is_null() {
         return GCMP_RTW_FAIL;
@@ -1910,6 +1916,7 @@ pub extern "C" fn rtw_calc_crc32(data: *mut U8, len: usize) -> U32 {
 
 #[cfg(not(host_security_rest_test))]
 #[no_mangle]
+#[rustfmt::skip]
 pub extern "C" fn rtw_aes_siv_encrypt(
     key: *const U8,
     key_len: usize,
@@ -1927,6 +1934,7 @@ pub extern "C" fn rtw_aes_siv_encrypt(
 
 #[cfg(not(host_security_rest_test))]
 #[no_mangle]
+#[rustfmt::skip]
 pub extern "C" fn rtw_aes_siv_decrypt(
     key: *const U8,
     key_len: usize,
@@ -2014,8 +2022,10 @@ struct HostRestoreWepSetKeyCall {
 }
 
 #[cfg(host_rest_misc_test)]
-static mut HOST_RESTORE_WEP_CALLS: [HostRestoreWepSetKeyCall; 8] =
-    [HostRestoreWepSetKeyCall { keyid: 0, set_tx: 0 }; 8];
+static mut HOST_RESTORE_WEP_CALLS: [HostRestoreWepSetKeyCall; 8] = [HostRestoreWepSetKeyCall {
+    keyid: 0,
+    set_tx: 0,
+}; 8];
 #[cfg(host_rest_misc_test)]
 static mut HOST_RESTORE_WEP_CALL_COUNT: usize = 0;
 
@@ -2103,9 +2113,7 @@ pub extern "C" fn host_rest_aes_siv_decrypt(
     len: *const usize,
     out: *mut U8,
 ) -> c_int {
-    unsafe {
-        aes_siv_decrypt(key, key_len, iv_crypt, iv_c_len, num_elem, addr, len, out)
-    }
+    unsafe { aes_siv_decrypt(key, key_len, iv_crypt, iv_c_len, num_elem, addr, len, out) }
 }
 
 #[cfg(host_rest_misc_test)]
@@ -2204,6 +2212,7 @@ fn tdls_memcmp2(a: *const U8, b: *const U8, len: usize) -> Sint {
 
 #[cfg(all(not(host_security_rest_test), tdls))]
 mod tdls_kernel {
+    #![rustfmt::skip]
     use super::*;
 
     extern "C" {
@@ -2399,6 +2408,7 @@ mod tdls_kernel {
 
 #[cfg(host_rest_tdls_test)]
 mod tdls_host {
+    #![rustfmt::skip]
     use super::*;
 
     extern "C" {
