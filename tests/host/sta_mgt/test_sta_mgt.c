@@ -22,6 +22,7 @@ struct vector {
 	u8 period;
 	int period_mode[RTW_ACL_PERIOD_NUM];
 	u8 period_macs[RTW_ACL_PERIOD_NUM][ETH_ALEN];
+	bool period_mac_set[RTW_ACL_PERIOD_NUM];
 	int expect;
 };
 
@@ -73,14 +74,21 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	if (host_json_parse_int_in(obj, len, "expect", &v->expect))
 		return -1;
 	host_json_parse_int_in(obj, len, "period", (int *)&v->period);
-	parse_hex_opt(obj, len, "local_port", v->local_port, 2);
-	parse_hex_opt(obj, len, "remote_port", v->remote_port, 2);
-	parse_hex_opt(obj, len, "mac", v->mac, ETH_ALEN);
+	if (parse_hex_opt(obj, len, "local_port", v->local_port, 2))
+		return -1;
+	if (parse_hex_opt(obj, len, "remote_port", v->remote_port, 2))
+		return -1;
+	if (parse_hex_opt(obj, len, "mac", v->mac, ETH_ALEN))
+		return -1;
 	for (i = 0; i < RTW_ACL_PERIOD_NUM; i++) {
 		snprintf(key, sizeof(key), "period%d_mode", i);
 		host_json_parse_int_in(obj, len, key, &v->period_mode[i]);
 		snprintf(key, sizeof(key), "period%d_mac", i);
-		parse_hex_opt(obj, len, key, v->period_macs[i], ETH_ALEN);
+		if (host_json_find_key_in(obj, len, key)) {
+			v->period_mac_set[i] = true;
+			if (parse_hex_opt(obj, len, key, v->period_macs[i], ETH_ALEN))
+				return -1;
+		}
 	}
 	return 0;
 }
@@ -92,7 +100,7 @@ static void setup_acl(_adapter *a, struct vector *v)
 	host_sta_mgt_acl_reset(a);
 	for (p = 0; p < RTW_ACL_PERIOD_NUM; p++) {
 		host_sta_mgt_acl_set_mode(a, p, v->period_mode[p]);
-		if (v->period_macs[p][0] || v->period_macs[p][1])
+		if (v->period_mac_set[p])
 			host_sta_mgt_acl_add(a, p, v->period_macs[p]);
 	}
 }
