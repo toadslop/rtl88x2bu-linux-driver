@@ -222,6 +222,7 @@ Canonical checklist for new pull requests: [`.github/PULL_REQUEST_TEMPLATE.md`](
 9. **T8** — GitHub Actions (`.github/workflows/module-l3.yml`): L3 QEMU `insmod`/`rmmod` on `master` merges inside the L0 container (issue #153).
 10. **T15** — Path-scoped L3 on pull requests touching init/USB/scaffold paths (issue #309).
 11. **T9** — PR template (`.github/PULL_REQUEST_TEMPLATE.md`), contributing docs ([`docs/contributing.md`](../contributing.md)), and branch-protection admin notes ([`dev-environment.md`](dev-environment.md#branch-protection)) (done).
+12. **T16** — GitHub Actions (`.github/workflows/rust-lint.yml`): `rustfmt --check` on `rust/**` PRs via `scripts/ci/rustfmt-check.sh` (issue #310). Skips `rust/bindings/generated.rs` (bindgen output).
 
 ## Out of scope (for now)
 

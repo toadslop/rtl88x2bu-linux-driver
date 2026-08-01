@@ -1,0 +1,42 @@
+# T16: rustfmt --check on rust/** changes.
+# See docs/rust-migration/issues/test-16-ci-rustfmt.md
+
+name: Rust lint
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'rust/**'
+      - 'scripts/ci/rustfmt-check.sh'
+      - '.github/workflows/rust-lint.yml'
+  pull_request:
+
+jobs:
+  rustfmt:
+    runs-on: ubuntu-latest
+    env:
+      RUSTUP_TOOLCHAIN: 1.83.0
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            rust:
+              - 'rust/**'
+              - 'scripts/ci/rustfmt-check.sh'
+              - '.github/workflows/rust-lint.yml'
+
+      - name: Out of scope — skip rustfmt
+        if: steps.filter.outputs.rust != 'true'
+        run: echo "PR does not touch rust/** — reporting success without rustfmt"
+
+      - name: Install rustfmt
+        if: steps.filter.outputs.rust == 'true'
+        run: rustup toolchain install 1.83.0 --profile minimal --component rustfmt
+
+      - name: rustfmt --check (rust/**)
+        if: steps.filter.outputs.rust == 'true'
+        run: ./scripts/ci/rustfmt-check.sh

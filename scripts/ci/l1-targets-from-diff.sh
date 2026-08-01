@@ -24,8 +24,15 @@ add_target() {
 
 for path in "${changed[@]}"; do
 	case "${path}" in
-	scripts/ci/l1-targets-from-diff.sh)
-		: # path-map update — do not expand to full L1 suite
+	scripts/ci/l1-targets-from-diff.sh \
+	| scripts/ci/rustfmt-check.sh \
+	| scripts/ci/run-l1-unit-checks.sh)
+		: # CI helper scripts — do not expand to full L1 suite
+		;;
+	.github/workflows/rust-lint.yml \
+	| docs/rust-migration/dev-environment.md \
+	| docs/rust-migration/test-plan.md)
+		: # docs / rustfmt workflow — no L1 swap
 		;;
 	Makefile \
 	| docs/rust-migration/scripts/* \
@@ -131,6 +138,22 @@ for path in "${changed[@]}"; do
 	| rust/rtw_rm_util.rs)
 		: # Wave 1 crypto / scaffold — no per-module L1 swap target yet
 		;;
+	rust/aes_*.rs \
+	| rust/sha256*.rs \
+	| rust/gcmp.rs \
+	| rust/gcmp_support.rs \
+	| rust/ccmp.rs \
+	| rust/ccmp_support.rs \
+	| rust/domain/* \
+	| rust/scaffold.rs \
+	| rust/ffi.rs \
+	| rust/kbuild_stub.rs \
+	| rust/bindings/* \
+	| rust/domain_types.rs \
+	| rust/rtw_crypto_wrap.rs \
+	| rust/rtw_rm_util.rs)
+		: # Wave 1 crypto / scaffold — no per-module L1 swap target yet
+		;;
 	rust/*)
 		FULL_SUITE=1
 		break
@@ -162,8 +185,12 @@ emit() {
 	done
 }
 
-if [ "${FULL_SUITE}" = 1 ] || [ "${#changed[@]}" -eq 0 ] || [ "${#selected[@]}" -eq 0 ]; then
+if [ "${FULL_SUITE}" = 1 ] || [ "${#changed[@]}" -eq 0 ]; then
 	emit "${ALL_TARGETS[@]}"
+	exit 0
+fi
+
+if [ "${#selected[@]}" -eq 0 ]; then
 	exit 0
 fi
 
