@@ -22,6 +22,10 @@ targets=(
 # Optional: space-separated subset from l1-targets-from-diff.sh (T7 PR3).
 if [ "$#" -gt 0 ]; then
 	read -r -a targets <<<"$*"
+	if [ "${#targets[@]}" -eq 0 ] || [ -z "${targets[0]:-}" ]; then
+		echo "run-l1-unit-checks: no targets in scope — skip"
+		exit 0
+	fi
 fi
 
 for target in "${targets[@]}"; do
