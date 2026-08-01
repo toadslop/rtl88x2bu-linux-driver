@@ -40,11 +40,22 @@ librust_sta_mgt.a: $(RUST_STA_MGT)
 	rustc -C opt-level=2 -C overflow-checks=on --cfg host_sta_mgt_test \
 		--crate-type staticlib $(RUST_STA_MGT) -o $@
 
-test-rust: test_sta_mgt_rust
+test-rust: test_sta_mgt_rust test_sta_mgt_aid_rust
 	./test_sta_mgt_rust sta_mgt_vectors.json
+	./test_sta_mgt_aid_rust sta_mgt_aid_vectors.json
+
+RUST_STA_MGT_AID := $(ROOT)/rust/rtw_sta_mgt_aid.rs
+
+librust_sta_mgt_aid.a: $(RUST_STA_MGT_AID)
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_sta_mgt_test \
+		--crate-type staticlib $(RUST_STA_MGT_AID) -o $@
+
+test_sta_mgt_aid_rust: test_sta_mgt_aid.c librust_sta_mgt_aid.a $(HOST_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_STA_MGT_ORACLE -o $@ test_sta_mgt_aid.c $(HOST_SHIM) $(HOST_JSON) librust_sta_mgt_aid.a
 
 test_sta_mgt_rust: test_sta_mgt.c librust_sta_mgt.a $(HOST_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_STA_MGT_ORACLE -o $@ test_sta_mgt.c $(HOST_SHIM) $(HOST_JSON) librust_sta_mgt.a
 
 clean:
-	rm -f test_sta_mgt test_sta_mgt_aid test_sta_mgt_rust librust_sta_mgt.a sta_mgt_rest_host.o sta_mgt_shim_host.o
+	rm -f test_sta_mgt test_sta_mgt_aid test_sta_mgt_rust test_sta_mgt_aid_rust \
+		librust_sta_mgt.a librust_sta_mgt_aid.a sta_mgt_rest_host.o sta_mgt_shim_host.o

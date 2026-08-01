@@ -3,3 +3,10 @@ drop rtw_rust_sta_acl_pool
 drop rtw_rust_sta_acl_mode
 drop rtw_rust_sta_acl_mac_listed
 drop rtw_rust_sta_warn_on
+# W3-38 PR5: AID/pre-link helpers live in rust/rtw_sta_mgt_aid.rs (separate L1 target).
+drop rtw_aid_alloc
+drop rtw_is_pre_link_sta
+drop rtw_pre_link_sta_del
+drop rtw_pre_link_sta_ctl_reset
+drop rtw_pre_link_sta_ctl_init
+drop rtw_pre_link_sta_ctl_deinit
