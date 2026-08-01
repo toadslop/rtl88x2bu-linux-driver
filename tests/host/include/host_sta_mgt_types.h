@@ -32,8 +32,8 @@ struct _list {
 typedef struct _list _list;
 
 struct __queue {
-	_lock lock;
 	struct _list queue;
+	_lock lock;
 };
 
 typedef struct __queue _queue;
