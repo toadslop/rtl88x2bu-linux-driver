@@ -16,7 +16,7 @@ Port helpers from [`core/rtw_mlme_ext.c`](../../../core/rtw_mlme_ext.c) to [`rus
 
 ## Notes
 
-- Part 1: SCAN_DISABLE through SCAN_PROCESS states of sitesurvey_cmd_hdl.
+- **`sitesurvey_cmd_hdl` (~417 LOC total)** split at FSM boundary: part 1 covers SCAN_DISABLE through SCAN_PROCESS states; part 2 (W3-90) covers backop/complete.
 - L2: host harness under `tests/host/` with JSON differential vectors (pattern from prior W3 issues).
 
 ## Acceptance

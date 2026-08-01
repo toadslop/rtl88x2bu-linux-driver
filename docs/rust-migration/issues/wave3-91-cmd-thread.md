@@ -5,7 +5,7 @@ type: child
 id: W3-91
 epic: E05
 blocked_by: [W3-90]
-estimate_loc: 200
+estimate_loc: 230
 ---
 
 ## Goal
