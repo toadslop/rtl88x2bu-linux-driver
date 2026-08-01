@@ -248,11 +248,7 @@ pub extern "C" fn host_wep_arcfour_crypt(
         y: 0,
         state: [0; 256],
     };
-    arcfour_init(
-        &mut ctx,
-        key as *mut U8,
-        key_len,
-    );
+    arcfour_init(&mut ctx, key as *mut U8, key_len);
     arcfour_encrypt(&mut ctx, dest, src as *mut U8, len);
 }
 
@@ -480,6 +476,7 @@ fn is_broadcast_mac_addr(addr: &[U8; 6]) -> bool {
 }
 
 #[cfg(not(host_security_test))]
+#[rustfmt::skip]
 mod kernel_layout {
     use super::*;
 
@@ -698,6 +695,7 @@ unsafe fn wep_hw_hdr_offset(pxmitframe: *mut u8) -> usize {
     }
 }
 
+#[rustfmt::skip]
 unsafe fn wep_encrypt_inner(
     psecuritypriv: *mut SecurityPriv,
     pxmitpriv_frag_len: U32,
@@ -784,47 +782,47 @@ pub extern "C" fn rtw_wep_encrypt(padapter: *mut HostAdapter, pxmitframe: *mut U
         return;
     }
     unsafe {
-    let xmit = &*(pxmitframe as *const HostXmitFrame);
-    if xmit.buf_addr.is_null() {
-        return;
-    }
-    let hw = wep_hw_hdr_offset(xmit.pkt_offset);
-    let sec = &(*padapter).securitypriv;
-    let mut sec_mirror = SecurityPriv {
-        dot11_auth_algrthm: 0,
-        dot11_privacy_algrthm: 0,
-        dot11_privacy_key_index: sec.dot11_privacy_key_index,
-        dot11_def_key: sec.dot11_def_key,
-        dot11_def_keylen: sec.dot11_def_keylen,
-    };
-    let mut attrib_mirror = PktAttrib {
-        type_: 0,
-        subtype: 0,
-        bswenc: 0,
-        dhcp_pkt: 0,
-        ether_type: 0,
-        seqnum: 0,
-        hw_ssn_sel: 0,
-        pkt_hdrlen: 0,
-        hdrlen: xmit.attrib.hdrlen,
-        pktlen: 0,
-        last_txcmdsz: xmit.attrib.last_txcmdsz,
-        nr_frags: xmit.attrib.nr_frags,
-        encrypt: xmit.attrib.encrypt,
-        bmc_camid: 0,
-        iv_len: xmit.attrib.iv_len,
-        icv_len: xmit.attrib.icv_len,
-        iv: [0; 18],
-        icv: [0; 16],
-        priority: 0,
-        ack_policy: 0,
-        mac_id: 0,
-        vcs_mode: 0,
-        dst: [0; 6],
-        src: [0; 6],
-        ta: [0; 6],
-        ra: xmit.attrib.ra,
-    };
+        let xmit = &*(pxmitframe as *const HostXmitFrame);
+        if xmit.buf_addr.is_null() {
+            return;
+        }
+        let hw = wep_hw_hdr_offset(xmit.pkt_offset);
+        let sec = &(*padapter).securitypriv;
+        let mut sec_mirror = SecurityPriv {
+            dot11_auth_algrthm: 0,
+            dot11_privacy_algrthm: 0,
+            dot11_privacy_key_index: sec.dot11_privacy_key_index,
+            dot11_def_key: sec.dot11_def_key,
+            dot11_def_keylen: sec.dot11_def_keylen,
+        };
+        let mut attrib_mirror = PktAttrib {
+            type_: 0,
+            subtype: 0,
+            bswenc: 0,
+            dhcp_pkt: 0,
+            ether_type: 0,
+            seqnum: 0,
+            hw_ssn_sel: 0,
+            pkt_hdrlen: 0,
+            hdrlen: xmit.attrib.hdrlen,
+            pktlen: 0,
+            last_txcmdsz: xmit.attrib.last_txcmdsz,
+            nr_frags: xmit.attrib.nr_frags,
+            encrypt: xmit.attrib.encrypt,
+            bmc_camid: 0,
+            iv_len: xmit.attrib.iv_len,
+            icv_len: xmit.attrib.icv_len,
+            iv: [0; 18],
+            icv: [0; 16],
+            priority: 0,
+            ack_policy: 0,
+            mac_id: 0,
+            vcs_mode: 0,
+            dst: [0; 6],
+            src: [0; 6],
+            ta: [0; 6],
+            ra: xmit.attrib.ra,
+        };
         wep_encrypt_inner(
             &mut sec_mirror,
             (*padapter).xmitpriv.frag_len,
@@ -860,6 +858,7 @@ pub extern "C" fn rtw_wep_encrypt(padapter: *mut WepAdapter, pxmitframe: *mut U8
     }
 }
 
+#[rustfmt::skip]
 unsafe fn wep_decrypt_inner(
     psecuritypriv: *mut SecurityPriv,
     encrypt: U8,
@@ -911,15 +910,15 @@ pub extern "C" fn rtw_wep_decrypt(padapter: *mut HostAdapter, precvframe: *mut U
         return;
     }
     unsafe {
-    let recv = &*(precvframe as *const HostRecvFrame);
-    let sec = &(*padapter).securitypriv;
-    let mut sec_mirror = SecurityPriv {
-        dot11_auth_algrthm: 0,
-        dot11_privacy_algrthm: 0,
-        dot11_privacy_key_index: sec.dot11_privacy_key_index,
-        dot11_def_key: sec.dot11_def_key,
-        dot11_def_keylen: sec.dot11_def_keylen,
-    };
+        let recv = &*(precvframe as *const HostRecvFrame);
+        let sec = &(*padapter).securitypriv;
+        let mut sec_mirror = SecurityPriv {
+            dot11_auth_algrthm: 0,
+            dot11_privacy_algrthm: 0,
+            dot11_privacy_key_index: sec.dot11_privacy_key_index,
+            dot11_def_key: sec.dot11_def_key,
+            dot11_def_keylen: sec.dot11_def_keylen,
+        };
         wep_decrypt_inner(
             &mut sec_mirror,
             recv.hdr.attrib.encrypt,
@@ -1144,14 +1143,7 @@ pub extern "C" fn rtw_tkip_encrypt(padapter: *mut WepAdapter, pxmitframe: *mut U
         } else {
             kernel_layout::pkt_attrib_unicast_key_skey(pattrib)
         };
-        let res = tkip_encrypt_inner(
-            prwskey,
-            &(*pattrib).ta,
-            frag_len,
-            &*pattrib,
-            buf_addr,
-            hw,
-        );
+        let res = tkip_encrypt_inner(prwskey, &(*pattrib).ta, frag_len, &*pattrib, buf_addr, hw);
         if res == _SUCCESS {
             kernel_layout::tkip_sw_enc_cnt_inc(sec_base, &ra);
         }
@@ -1170,6 +1162,7 @@ unsafe fn host_get_stainfo<'a>(stapriv: &'a HostStapriv, ta: &[U8; 6]) -> Option
 }
 
 #[cfg(not(host_security_test))]
+#[rustfmt::skip]
 mod tkip_decrypt_ffi {
     use super::*;
 
@@ -1536,6 +1529,7 @@ type U16 = u16;
 
 const PHASE1_LOOP_CNT: Sint = 8;
 
+#[rustfmt::skip]
 static SBOX1: [[U16; 256]; 2] = [
     [
         0xC6A5, 0xF884, 0xEE99, 0xF68D, 0xFF0D, 0xD6BD, 0xDEB1, 0x9154, 0x6050, 0x0203,
@@ -1715,12 +1709,7 @@ pub extern "C" fn host_tkip_phase1(p1k: *mut U16, tk: *const U8, ta: *const U8, 
 
 #[cfg(host_security_test)]
 #[no_mangle]
-pub extern "C" fn host_tkip_phase2(
-    rc4key: *mut U8,
-    tk: *const U8,
-    p1k: *const U16,
-    iv16: U16,
-) {
+pub extern "C" fn host_tkip_phase2(rc4key: *mut U8, tk: *const U8, p1k: *const U16, iv16: U16) {
     phase2(rc4key, tk, p1k, iv16);
 }
 
