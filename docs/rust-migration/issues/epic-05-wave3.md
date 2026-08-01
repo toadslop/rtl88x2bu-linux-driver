@@ -99,7 +99,7 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-69 | `wave3-69-mlmeext-peer-alive.md` | `rtw_mlme_ext.c` delba/peer-alive checks |
 | W3-70 | `wave3-70-mlmeext-scan-decision.md` | `rtw_mlme_ext.c` scan sparse/channel decision |
 | W3-71 | `wave3-71-mlmeext-pick-ch.md` | `rtw_mlme_ext.c` sitesurvey channel pick |
-| W3-72 | `wave3-72-mlmeext-band-ie-format.md` | `rtw_mlme_ext.c` band IE update + mgnt format |
+| W3-72 | `wave3-72-mlmeext-band-ie-format.md` | `rtw_mlme_ext.c` band-change beacon IE update (`CONFIG_AP_MODE`) |
 | W3-73 | `wave3-73-ap-sta-ie-parse.md` | `rtw_ap.c` STA assoc IE parse (cap/rates/HT/VHT) |
 | W3-74 | `wave3-74-ap-security-ie-parse.md` | `rtw_ap.c` STA security IE parse |
 | W3-75 | `wave3-75-ap-beacon-ie-update.md` | `rtw_ap.c` beacon TIM/generic IE update |

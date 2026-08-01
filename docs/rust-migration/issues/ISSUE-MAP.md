@@ -140,7 +140,7 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-69 | #404 | [W3-69] Translate rtw_mlme_ext.c — delba timeout and peer alive checks |
 | W3-70 | #405 | [W3-70] Translate rtw_mlme_ext.c — scan sparse and channel decision |
 | W3-71 | #406 | [W3-71] Translate rtw_mlme_ext.c — sitesurvey channel pick |
-| W3-72 | #407 | [W3-72] Translate rtw_mlme_ext.c — band IE update and mgnt format |
+| W3-72 | #407 | [W3-72] Translate rtw_mlme_ext.c — band-change beacon IE update |
 | W3-73 | #408 | [W3-73] Translate rtw_ap.c — STA assoc IE parse (cap/rates/HT/VHT) |
 | W3-74 | #409 | [W3-74] Translate rtw_ap.c — STA security IE parse and policy |
 | W3-75 | #410 | [W3-75] Translate rtw_ap.c — beacon TIM and generic IE update |

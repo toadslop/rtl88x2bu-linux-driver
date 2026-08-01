@@ -12,17 +12,21 @@ estimate_loc: 200
 
 Port helpers from [`core/rtw_mlme.c`](../../../core/rtw_mlme.c) to [`rust/rtw_mlme_rest.rs`](../../../rust/rtw_mlme_rest.rs):
 
-- `rtw_unassoc_sta_init`
-- `rtw_unassoc_sta_deinit`
 - `rtw_rx_add_unassoc_sta`
 - `rtw_add_interested_unassoc_sta`
 - `rtw_undo_interested_unassoc_sta`
 - `rtw_search_unassoc_sta`
+- static queue helpers: `alloc_unassoc_sta`, `del_unassoc_sta`, `del_unassoc_sta_chk`
 
 ## Notes
 
+- **`CONFIG_RTW_MULTI_AP` only.** Queue/buffer setup and teardown live inside
+  `rtw_init_mlme_priv` / `rtw_free_mlme_priv` (not separate exported
+  `rtw_unassoc_sta_init` / `rtw_unassoc_sta_deinit` symbols). Do not add init/deinit
+  exports — port the static helpers and public CRUD/search functions above.
 - Queue CRUD under mlme lock. Builds on W3-53 network compare helpers.
-- L2: host harness under `tests/host/` with JSON differential vectors (pattern from prior W3 issues).
+- L2: new `tests/host/mlme/` harness with JSON differential vectors (pattern from
+  W3-53); include `CONFIG_RTW_MULTI_AP` fixture for queue state.
 
 ## Acceptance
 
