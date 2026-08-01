@@ -54,7 +54,7 @@ fn gcmp_decrypt_inner(
     let tag = &data[8 + mlen..];
 
     let mut aad = [0u8; 30];
-    let mut nonce = [0u8; 12];
+    let mut nonce: [u8; 12] = Default::default();
     let aad_len = gcmp_aad_nonce(amsdu_mode, hdr, data, &mut aad, &mut nonce);
 
     let key = tk.as_bytes();
@@ -137,7 +137,7 @@ fn gcmp_encrypt_inner(
     };
 
     let mut aad = [0u8; 30];
-    let mut nonce = [0u8; 12];
+    let mut nonce: [u8; 12] = Default::default();
     let data_for_nonce =
         unsafe { core::slice::from_raw_parts((crypt as *const u8).add(hdrlen), 8) };
     let aad_len =
