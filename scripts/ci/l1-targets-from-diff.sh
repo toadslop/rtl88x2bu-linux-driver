@@ -24,8 +24,9 @@ add_target() {
 
 for path in "${changed[@]}"; do
 	case "${path}" in
-	scripts/ci/l1-targets-from-diff.sh)
-		: # path-map update — do not expand to full L1 suite
+	scripts/ci/l1-targets-from-diff.sh \
+	| scripts/ci/rustfmt-check.sh)
+		: # CI helper scripts — do not expand to full L1 suite
 		;;
 	Makefile \
 	| docs/rust-migration/scripts/* \
