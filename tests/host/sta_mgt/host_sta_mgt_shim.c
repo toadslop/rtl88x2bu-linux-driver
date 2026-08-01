@@ -194,3 +194,19 @@ int host_sta_mgt_pre_link_add(_adapter *adapter, const u8 *mac)
 	_exit_critical_bh(&ctl->lock, &irqL);
 	return -1;
 }
+
+void host_sta_mgt_pre_link_init(_adapter *adapter)
+{
+	struct pre_link_sta_ctl_t *ctl = &adapter->stapriv.pre_link_sta_ctl;
+	int i;
+
+	_rtw_spinlock_init(&ctl->lock);
+	ctl->num = 0;
+	for (i = 0; i < RTW_PRE_LINK_STA_NUM; i++)
+		ctl->node[i].valid = _FALSE;
+}
+
+int host_sta_mgt_pre_link_count(_adapter *adapter)
+{
+	return adapter->stapriv.pre_link_sta_ctl.num;
+}
