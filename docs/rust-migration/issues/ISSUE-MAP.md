@@ -144,6 +144,28 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-73 | #408 | [W3-73] Translate rtw_ap.c — STA assoc IE parse (cap/rates/HT/VHT) |
 | W3-74 | #409 | [W3-74] Translate rtw_ap.c — STA security IE parse and policy |
 | W3-75 | #410 | [W3-75] Translate rtw_ap.c — beacon TIM and generic IE update |
+| W3-76 | #413 | [W3-76] element parse (parse_elems) |
+| W3-77 | #414 | [W3-77] stainfo init and hash lookup |
+| W3-78 | #415 | [W3-78] stainfo alloc |
+| W3-79 | #416 | [W3-79] stainfo free and sta priv lifecycle |
+| W3-80 | #417 | [W3-80] BMC multicast tx rate helpers |
+| W3-81 | #418 | [W3-81] beacon HT/WPS/ERP refresh |
+| W3-82 | #419 | [W3-82] sta keepalive and expire timeout |
+| W3-83 | #420 | [W3-83] assoc sta info update |
+| W3-84 | #421 | [W3-84] VHT IE build and assoc handlers |
+| W3-85 | #422 | [W3-85] sta rx validate and stats |
+| W3-86 | #423 | [W3-86] update_attrib builders |
+| W3-87 | #424 | [W3-87] join candidate select |
+| W3-88 | #425 | [W3-88] join_cmd_hdl |
+| W3-89 | #426 | [W3-89] sitesurvey cmd handler (enter/process) |
+| W3-90 | #427 | [W3-90] sitesurvey cmd handler (backop/complete) |
+| W3-91 | #428 | [W3-91] cmd thread loop |
+| W3-92 | #429 | [W3-92] joinbss and drvextra dispatch |
+| W3-93 | #430 | [W3-93] traffic/LPS dynamic watchdog |
+| W3-94 | #431 | [W3-94] ps deny gate and LPS enter/leave |
+| W3-95 | #432 | [W3-95] silent reset lifecycle |
+| W3-96 | #433 | [W3-96] remain-on-channel handlers |
+| W3-97 | #434 | [W3-97] concurrent roch and init |
 
 ## Superseded issues
 

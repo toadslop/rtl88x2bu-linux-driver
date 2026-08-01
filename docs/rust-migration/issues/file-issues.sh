@@ -178,6 +178,28 @@ files=(
   wave3-73-ap-sta-ie-parse.md
   wave3-74-ap-security-ie-parse.md
   wave3-75-ap-beacon-ie-update.md
+  wave3-76-ieee80211-parse-elems.md
+  wave3-77-sta-mgt-lookup-init.md
+  wave3-78-sta-mgt-alloc.md
+  wave3-79-sta-mgt-free-priv.md
+  wave3-80-ap-bmc-rate.md
+  wave3-81-ap-beacon-ht-wps-update.md
+  wave3-82-ap-sta-expire-timeout.md
+  wave3-83-ap-update-sta-info.md
+  wave3-84-vht-build-handlers.md
+  wave3-85-recv-sta-validate-hdr.md
+  wave3-86-xmit-update-attrib.md
+  wave3-87-mlme-join-select.md
+  wave3-88-mlmeext-join-cmd-hdl.md
+  wave3-89-mlmeext-sitesurvey-hdl-p1.md
+  wave3-90-mlmeext-sitesurvey-hdl-p2.md
+  wave3-91-cmd-thread.md
+  wave3-92-cmd-join-drvextra.md
+  wave3-93-cmd-traffic-lps-watchdog.md
+  wave3-94-pwrctrl-ps-gate-lps.md
+  wave3-95-sreset-lifecycle.md
+  wave3-96-roch-handlers.md
+  wave3-97-roch-concurrent-init.md
 )
 
 # draft_id -> github issue number

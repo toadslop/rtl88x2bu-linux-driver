@@ -104,7 +104,34 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-74 | `wave3-74-ap-security-ie-parse.md` | `rtw_ap.c` STA security IE parse |
 | W3-75 | `wave3-75-ap-beacon-ie-update.md` | `rtw_ap.c` beacon TIM/generic IE update |
 
-Further ~200 LOC slices **not yet covered by W3-41…W3-75**; file new `wave3-*.md` issues as needed:
+## Children (tranche 5 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-76 | `wave3-76-ieee80211-parse-elems.md` | `rtw_ieee80211.c` element parse (`parse_elems`) |
+| W3-77 | `wave3-77-sta-mgt-lookup-init.md` | `rtw_sta_mgt.c` stainfo init + hash lookup |
+| W3-78 | `wave3-78-sta-mgt-alloc.md` | `rtw_sta_mgt.c` stainfo alloc |
+| W3-79 | `wave3-79-sta-mgt-free-priv.md` | `rtw_sta_mgt.c` stainfo free + sta priv lifecycle |
+| W3-80 | `wave3-80-ap-bmc-rate.md` | `rtw_ap.c` BMC multicast tx rate |
+| W3-81 | `wave3-81-ap-beacon-ht-wps-update.md` | `rtw_ap.c` beacon HT/WPS/ERP refresh |
+| W3-82 | `wave3-82-ap-sta-expire-timeout.md` | `rtw_ap.c` sta keepalive + expire timeout |
+| W3-83 | `wave3-83-ap-update-sta-info.md` | `rtw_ap.c` assoc sta info update |
+| W3-84 | `wave3-84-vht-build-handlers.md` | `rtw_vht.c` VHT IE build + assoc handlers |
+| W3-85 | `wave3-85-recv-sta-validate-hdr.md` | `rtw_recv.c` sta rx validate + stats |
+| W3-86 | `wave3-86-xmit-update-attrib.md` | `rtw_xmit.c` update_attrib builders |
+| W3-87 | `wave3-87-mlme-join-select.md` | `rtw_mlme.c` join candidate select |
+| W3-88 | `wave3-88-mlmeext-join-cmd-hdl.md` | `rtw_mlme_ext.c` join_cmd_hdl |
+| W3-89 | `wave3-89-mlmeext-sitesurvey-hdl-p1.md` | `rtw_mlme_ext.c` sitesurvey cmd handler (enter/process) |
+| W3-90 | `wave3-90-mlmeext-sitesurvey-hdl-p2.md` | `rtw_mlme_ext.c` sitesurvey cmd handler (backop/complete) |
+| W3-91 | `wave3-91-cmd-thread.md` | `rtw_cmd.c` cmd thread loop |
+| W3-92 | `wave3-92-cmd-join-drvextra.md` | `rtw_cmd.c` joinbss + drvextra dispatch |
+| W3-93 | `wave3-93-cmd-traffic-lps-watchdog.md` | `rtw_cmd.c` traffic/LPS dynamic watchdog |
+| W3-94 | `wave3-94-pwrctrl-ps-gate-lps.md` | `rtw_pwrctrl.c` ps deny gate + LPS enter/leave |
+| W3-95 | `wave3-95-sreset-lifecycle.md` | `rtw_sreset.c` silent reset lifecycle |
+| W3-96 | `wave3-96-roch-handlers.md` | `rtw_roch.c` remain-on-channel handlers |
+| W3-97 | `wave3-97-roch-concurrent-init.md` | `rtw_roch.c` concurrent roch + init |
+
+Further ~200 LOC slices **not yet covered by W3-41…W3-97**; file new `wave3-*.md` issues as needed:
 
 - `rtw_pwrctrl.c`, `rtw_sreset.c`, `rtw_roch.c`
 - `rtw_ap.c` remainder (BMC rate, beacon HT/WPS refresh — after W3-73…W3-75)
