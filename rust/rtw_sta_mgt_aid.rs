@@ -239,8 +239,7 @@ pub extern "C" fn rtw_is_pre_link_sta(stapriv: *mut StaPriv, addr: *mut u8) -> b
     #[cfg(host_sta_mgt_test)]
     {
         for node in &unsafe { &*stapriv }.pre_link_sta_ctl.node {
-            if node.valid == _TRUE as u8
-                && rtw_memcmp(node.addr.as_ptr(), addr, ETH_ALEN) == _TRUE
+            if node.valid == _TRUE as u8 && rtw_memcmp(node.addr.as_ptr(), addr, ETH_ALEN) == _TRUE
             {
                 return true;
             }
@@ -285,7 +284,8 @@ pub extern "C" fn rtw_pre_link_sta_del(stapriv: *mut StaPriv, hwaddr: *mut u8) {
     #[cfg(not(host_sta_mgt_test))]
     {
         let sp = stapriv.cast();
-        if unsafe { kernel_layout::rtw_check_invalid_mac_address(hwaddr, _FALSE as u8) } == _TRUE as u8
+        if unsafe { kernel_layout::rtw_check_invalid_mac_address(hwaddr, _FALSE as u8) }
+            == _TRUE as u8
             || unsafe { kernel_layout::rtw_rust_pre_link_remove(sp, hwaddr) } == 0
         {
             return;
@@ -330,13 +330,18 @@ pub extern "C" fn rtw_pre_link_sta_ctl_reset(stapriv: *mut StaPriv) {
         let sp = stapriv.cast();
         let mut addrs = [0u8; RTW_PRE_LINK_STA_NUM * ETH_ALEN];
         let n = unsafe {
-            kernel_layout::rtw_rust_pre_link_drain(sp, addrs.as_mut_ptr(), RTW_PRE_LINK_STA_NUM as u8)
+            kernel_layout::rtw_rust_pre_link_drain(
+                sp,
+                addrs.as_mut_ptr(),
+                RTW_PRE_LINK_STA_NUM as u8,
+            )
         };
         let padapter = unsafe { kernel_layout::rtw_rust_sta_adapter(sp) };
         for i in 0..n as usize {
             let mac = unsafe { addrs.as_ptr().add(i * ETH_ALEN) };
             let sta = unsafe { kernel_layout::rtw_get_stainfo(sp, mac) };
-            if !sta.is_null() && unsafe { kernel_layout::rtw_rust_sta_state(sta) } == WIFI_FW_PRE_LINK
+            if !sta.is_null()
+                && unsafe { kernel_layout::rtw_rust_sta_state(sta) } == WIFI_FW_PRE_LINK
             {
                 unsafe { kernel_layout::rtw_free_stainfo(padapter, sta) };
             }
