@@ -108,7 +108,7 @@ for path in "${changed[@]}"; do
 	| rust/domain_types.rs \
 	| rust/rtw_crypto_wrap.rs \
 	| rust/rtw_rm_util.rs)
-		;; # Wave 1 crypto / scaffold — no per-module L1 swap target yet
+		: # Wave 1 crypto / scaffold — no per-module L1 swap target yet
 		;;
 	rust/*)
 		FULL_SUITE=1
