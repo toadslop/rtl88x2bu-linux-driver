@@ -33,8 +33,8 @@ struct List {
 
 #[repr(C)]
 struct Queue {
-    lock: c_int,
     queue: List,
+    lock: c_int,
 }
 
 #[repr(C)]
