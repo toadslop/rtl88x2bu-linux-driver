@@ -1,0 +1,13 @@
+{
+  "oracle": "core/rtw_sta_mgt_rest.c",
+  "vectors": [
+    {"name": "aid_alloc_first", "fn": "rtw_aid_alloc", "max_aid": 4, "max_num_sta": 4, "expect": 1},
+    {"name": "aid_alloc_second", "fn": "rtw_aid_alloc", "max_aid": 4, "max_num_sta": 4, "occupied_aids": 1, "expect": 2},
+    {"name": "aid_alloc_full", "fn": "rtw_aid_alloc", "max_aid": 2, "max_num_sta": 2, "occupied_aids": 2, "expect": 0},
+    {"name": "aid_alloc_num_sta_cap", "fn": "rtw_aid_alloc", "max_aid": 4, "max_num_sta": 1, "occupied_aids": 1, "expect": 0},
+    {"name": "is_pre_link_miss", "fn": "rtw_is_pre_link_sta", "mac": "0200000000aa", "expect": 0},
+    {"name": "is_pre_link_hit", "fn": "rtw_is_pre_link_sta", "mac": "0200000000bb", "pre_link_mac0": "0200000000bb", "expect": 1},
+    {"name": "pre_link_del_clears_node", "fn": "rtw_pre_link_sta_del", "mac": "0200000000cc", "pre_link_mac0": "0200000000cc", "sta_state": 2048, "expect": 0},
+    {"name": "pre_link_ctl_reset_empty", "fn": "rtw_pre_link_sta_ctl_reset", "pre_link_mac0": "0200000000dd", "pre_link_mac1": "0200000000ee", "sta_state": 2048, "expect": 0}
+  ]
+}

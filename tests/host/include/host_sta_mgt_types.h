@@ -177,5 +177,7 @@ void host_sta_mgt_reset(_adapter *adapter);
 int host_sta_mgt_aid_setup(_adapter *adapter, u16 max_aid, u16 max_num_sta, u8 rr_aid);
 struct sta_info *host_sta_mgt_sta_add(_adapter *adapter, const u8 *mac, uint state);
 int host_sta_mgt_pre_link_add(_adapter *adapter, const u8 *mac);
+void host_sta_mgt_pre_link_init(_adapter *adapter);
+int host_sta_mgt_pre_link_count(_adapter *adapter);
 
 #endif /* HOST_STA_MGT_TYPES_H */

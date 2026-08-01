@@ -17,18 +17,22 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable
 
 all: test
 
-# PR2: compile-only gate; vector harness in PR3.
+# PR4: W3-38 AID/pre-link L2 vectors (W3-37 ACL vectors retained).
 sta_mgt-compile: $(STA_REST_SRC) $(HOST_SHIM)
 	$(CC) $(CFLAGS) -c $(STA_REST_SRC) -o sta_mgt_rest_host.o
 	$(CC) $(CFLAGS) -c $(HOST_SHIM) -o sta_mgt_shim_host.o
 
 test: test-c test-rust
 
-test-c: test_sta_mgt
+test-c: test_sta_mgt test_sta_mgt_aid
 	./test_sta_mgt sta_mgt_vectors.json
+	./test_sta_mgt_aid sta_mgt_aid_vectors.json
 
 test_sta_mgt: test_sta_mgt.c $(STA_REST_SRC) $(HOST_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_sta_mgt.c $(HOST_SHIM) $(STA_REST_SRC) $(HOST_JSON)
+
+test_sta_mgt_aid: test_sta_mgt_aid.c $(STA_REST_SRC) $(HOST_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_sta_mgt_aid.c $(HOST_SHIM) $(STA_REST_SRC) $(HOST_JSON)
 
 RUST_STA_MGT := $(ROOT)/rust/rtw_sta_mgt.rs
 
@@ -43,4 +47,4 @@ test_sta_mgt_rust: test_sta_mgt.c librust_sta_mgt.a $(HOST_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_STA_MGT_ORACLE -o $@ test_sta_mgt.c $(HOST_SHIM) $(HOST_JSON) librust_sta_mgt.a
 
 clean:
-	rm -f test_sta_mgt test_sta_mgt_rust librust_sta_mgt.a sta_mgt_rest_host.o sta_mgt_shim_host.o
+	rm -f test_sta_mgt test_sta_mgt_aid test_sta_mgt_rust librust_sta_mgt.a sta_mgt_rest_host.o sta_mgt_shim_host.o
