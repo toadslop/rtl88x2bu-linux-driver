@@ -37,6 +37,8 @@ int rtw_check_invalid_mac_address(const u8 *mac, u8 check_local_bit)
 	if (_rtw_memcmp(mac, zero, ETH_ALEN) == _TRUE ||
 	    _rtw_memcmp(mac, bcast, ETH_ALEN) == _TRUE)
 		return _TRUE;
+	if (mac[0] & 0x01)
+		return _TRUE;
 	return _FALSE;
 }
 
@@ -54,10 +56,16 @@ struct sta_info *rtw_get_stainfo(struct sta_priv *stapriv, const u8 *hwaddr)
 void rtw_free_stainfo(_adapter *padapter, struct sta_info *psta)
 {
 	int i;
+	struct sta_priv *stapriv;
 
-	(void)padapter;
 	if (!psta)
 		return;
+	if (padapter && psta->cmn.aid > 0) {
+		stapriv = &padapter->stapriv;
+		if (stapriv->sta_aid &&
+		    stapriv->sta_aid[psta->cmn.aid - 1] == psta)
+			stapriv->sta_aid[psta->cmn.aid - 1] = NULL;
+	}
 	for (i = 0; i < HOST_STA_MGT_MAX_STA; i++) {
 		if (&host_sta_pool[i].sta == psta) {
 			memset(&host_sta_pool[i], 0, sizeof(host_sta_pool[i]));
