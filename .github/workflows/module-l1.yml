@@ -91,8 +91,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Skip L1 — no symbol-relevant paths in diff
+        if: steps.filter.outputs.l1 == 'true' && steps.l1_scope.outputs.targets == ''
+        run: echo "No L1 unit targets in diff scope — skip symbol checks"
+
       - name: L1 symbol checks
-        if: steps.filter.outputs.l1 == 'true'
+        if: steps.filter.outputs.l1 == 'true' && steps.l1_scope.outputs.targets != ''
         run: |
           if [ "${{ steps.pull.outcome }}" = "success" ]; then
             IMAGE="${L0_IMAGE}"

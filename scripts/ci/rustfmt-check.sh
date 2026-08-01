@@ -19,10 +19,10 @@ if ! command -v rustfmt >/dev/null 2>&1; then
 	rustup toolchain install "${toolchain}" --profile minimal --component rustfmt
 fi
 
-if ! rustfmt --edition "${edition}" --check "${files[@]}"; then
+if ! rustup run "${toolchain}" rustfmt --edition "${edition}" --check "${files[@]}"; then
 	echo >&2
 	echo "rustfmt-check: formatting drift detected. Run locally:" >&2
-	echo "  find rust -name '*.rs' ! -path 'rust/bindings/generated.rs' ! -path 'rust/rtw_sta_mgt.rs' -print0 | xargs -0 rustfmt --edition ${edition}" >&2
+	echo "  find rust -name '*.rs' ! -path 'rust/bindings/generated.rs' ! -path 'rust/rtw_sta_mgt.rs' -print0 | xargs -0 rustup run ${toolchain} rustfmt --edition ${edition}" >&2
 	exit 1
 fi
 
