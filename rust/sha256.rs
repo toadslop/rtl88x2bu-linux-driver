@@ -13,10 +13,10 @@
     unreachable_pub
 )]
 
-#[cfg(host_crypto_test)]
-use std::os::raw::c_int;
 #[cfg(not(host_crypto_test))]
 use core::ffi::c_int;
+#[cfg(host_crypto_test)]
+use std::os::raw::c_int;
 
 const SHA256_MAC_LEN: usize = 32;
 const IPAD: u8 = 0x36;
@@ -67,14 +67,7 @@ pub fn hmac_sha256_vector_typed(
     let mut tk = [0u8; SHA256_MAC_LEN];
     let key = if key.len() > 64 {
         let key_len = key.len();
-        let rc = unsafe {
-            sha256_vector(
-                1,
-                &key.as_ptr(),
-                &key_len,
-                tk.as_mut_ptr(),
-            )
-        };
+        let rc = unsafe { sha256_vector(1, &key.as_ptr(), &key_len, tk.as_mut_ptr()) };
         if rc < 0 {
             return Err(());
         }
@@ -118,14 +111,7 @@ pub fn hmac_sha256_vector_typed(
 
     let outer_addr = [k_pad.as_ptr(), mac.as_ptr()];
     let outer_len = [64usize, SHA256_MAC_LEN];
-    let rc = unsafe {
-        sha256_vector(
-            2,
-            outer_addr.as_ptr(),
-            outer_len.as_ptr(),
-            mac.as_mut_ptr(),
-        )
-    };
+    let rc = unsafe { sha256_vector(2, outer_addr.as_ptr(), outer_len.as_ptr(), mac.as_mut_ptr()) };
     if rc < 0 {
         return Err(());
     }

@@ -43,17 +43,13 @@ mod bindings {
 use bindings::{aes_encrypt, aes_encrypt_deinit, aes_encrypt_init, AES_BLOCK_SIZE};
 use types::{AesCtrNonce, AesKey};
 
-#[cfg(host_crypto_test)]
-use std::os::raw::c_int;
 #[cfg(not(host_crypto_test))]
 use core::ffi::c_int;
+#[cfg(host_crypto_test)]
+use std::os::raw::c_int;
 
 /// In-place AES-CTR XOR (oracle: `core/crypto/aes-ctr.c`).
-pub fn aes_ctr_encrypt_typed(
-    key: AesKey,
-    nonce: AesCtrNonce,
-    data: &mut [u8],
-) -> Result<(), ()> {
+pub fn aes_ctr_encrypt_typed(key: AesKey, nonce: AesCtrNonce, data: &mut [u8]) -> Result<(), ()> {
     let block_size = AES_BLOCK_SIZE as usize;
     let ctx = unsafe { aes_encrypt_init(key.as_bytes().as_ptr(), key.key_len()) };
     if ctx.is_null() {
@@ -102,7 +98,8 @@ pub extern "C" fn aes_ctr_encrypt(
     data: *mut u8,
     data_len: usize,
 ) -> c_int {
-    let aes_key = match AesKey::try_from_slice(unsafe { core::slice::from_raw_parts(key, key_len) }) {
+    let aes_key = match AesKey::try_from_slice(unsafe { core::slice::from_raw_parts(key, key_len) })
+    {
         Ok(k) => k,
         Err(_) => return -1,
     };

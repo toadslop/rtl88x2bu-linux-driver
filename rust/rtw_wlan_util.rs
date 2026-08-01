@@ -354,11 +354,7 @@ unsafe fn vht_enable(padapter: *mut U8) -> U8 {
 }
 
 #[no_mangle]
-pub extern "C" fn judge_network_type(
-    padapter: *mut U8,
-    rate: *mut U8,
-    ratelen: i32,
-) -> U8 {
+pub extern "C" fn judge_network_type(padapter: *mut U8, rate: *mut U8, ratelen: i32) -> U8 {
     if padapter.is_null() {
         return 0;
     }
@@ -400,11 +396,7 @@ pub extern "C" fn get_rate_set(padapter: *mut U8, pbssrate: *mut U8, bssrate_len
     let len = ratetbl2rateset(padapter, supportedrates.as_mut_ptr()) as i32;
     unsafe {
         *bssrate_len = len;
-        core::ptr::copy_nonoverlapping(
-            supportedrates.as_ptr(),
-            pbssrate,
-            len as usize,
-        );
+        core::ptr::copy_nonoverlapping(supportedrates.as_ptr(), pbssrate, len as usize);
     }
 }
 

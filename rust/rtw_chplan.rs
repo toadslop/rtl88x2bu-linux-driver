@@ -318,9 +318,7 @@ pub extern "C" fn rtw_chset_is_dfs_chbw(
 }
 
 #[no_mangle]
-pub extern "C" fn rtw_get_chplan_from_country(
-    country_code: *const c_char,
-) -> *const CountryChplan {
+pub extern "C" fn rtw_get_chplan_from_country(country_code: *const c_char) -> *const CountryChplan {
     if country_code.is_null() {
         return core::ptr::null();
     }
@@ -350,8 +348,8 @@ unsafe fn init_channel_set_from_rtk_priv(adapter: *mut u8, channel_set: *mut RtC
         rtw_rust_chset_zero(channel_set);
     }
 
-    let b2_4g = is_supported_24g(wireless_mode)
-        && unsafe { hal_chk_band_cap(adapter, BAND_CAP_2G) };
+    let b2_4g =
+        is_supported_24g(wireless_mode) && unsafe { hal_chk_band_cap(adapter, BAND_CAP_2G) };
     let b5g = is_supported_5g(wireless_mode) && unsafe { hal_chk_band_cap(adapter, BAND_CAP_5G) };
 
     if !b2_4g && !b5g {

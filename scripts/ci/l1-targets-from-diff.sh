@@ -24,6 +24,9 @@ add_target() {
 
 for path in "${changed[@]}"; do
 	case "${path}" in
+	scripts/ci/l1-targets-from-diff.sh)
+		: # path-map update — do not expand to full L1 suite
+		;;
 	Makefile \
 	| docs/rust-migration/scripts/* \
 	| scripts/ci/* \
@@ -93,6 +96,22 @@ for path in "${changed[@]}"; do
 	| core/rtw_sta_mgt_rest.c \
 	| tests/host/sta_mgt/*)
 		add_target rust-check-symbols-rtw-sta-mgt
+		;;
+	rust/aes_*.rs \
+	| rust/sha256*.rs \
+	| rust/gcmp.rs \
+	| rust/gcmp_support.rs \
+	| rust/ccmp.rs \
+	| rust/ccmp_support.rs \
+	| rust/domain/* \
+	| rust/scaffold.rs \
+	| rust/ffi.rs \
+	| rust/kbuild_stub.rs \
+	| rust/bindings/* \
+	| rust/domain_types.rs \
+	| rust/rtw_crypto_wrap.rs \
+	| rust/rtw_rm_util.rs)
+		: # Wave 1 crypto / scaffold — no per-module L1 swap target yet
 		;;
 	rust/*)
 		FULL_SUITE=1
