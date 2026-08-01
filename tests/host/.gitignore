@@ -63,7 +63,9 @@ vht/librust_vht_restructure.a
 vht/test_vht_restructure_smoke
 vht/vht_restructure_c_ref.o
 vht/vht_restructure_rust_ref.o
-# W3-37 sta_mgt harness
+# W3-39 recv_rest harness
+recv/test_recv
+
 sta_mgt/test_sta_mgt
 sta_mgt/test_sta_mgt_aid
 sta_mgt/test_sta_mgt_rust
