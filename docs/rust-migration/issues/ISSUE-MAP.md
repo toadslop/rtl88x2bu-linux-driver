@@ -109,6 +109,21 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | T14 | #308 | [T14] CI: bindgen drift check (generated.rs freshness) |
 | T15 | #309 | [T15] CI: path-scoped L3 on PRs for init/USB/scaffold changes |
 | T16 | #310 | [T16] CI: rustfmt --check on rust/** changes |
+| W3-41 | #370 | [W3-41] Translate rtw_ieee80211.c — rate-section and ch-offset mapping |
+| W3-42 | #371 | [W3-42] Translate rtw_ieee80211.c — HT MCS bitmap and AMSDU mode |
+| W3-43 | #372 | [W3-43] Translate rtw_ieee80211.c — P2P IE merge and delete |
+| W3-44 | #373 | [W3-44] Translate rtw_ieee80211.c — WFD and multi-AP IE helpers |
+| W3-45 | #374 | [W3-45] Translate rtw_vht.c — VHT MCS and rate pure helpers |
+| W3-46 | #375 | [W3-46] Translate rtw_recv.c — LLC parse, ethhdr, and BMC gate |
+| W3-47 | #376 | [W3-47] Translate rtw_recv.c — PN replay decache |
+| W3-48 | #377 | [W3-48] Translate rtw_xmit.c — QoS, SNAP, and submit context |
+| W3-49 | #378 | [W3-49] Translate rtw_xmit.c — aggregate rate bitmap and RA short GI |
+| W3-50 | #379 | [W3-50] Translate rtw_iol.c — IOL command-buffer append encoders |
+| W3-51 | #380 | [W3-51] Translate rtw_rf.c — regd_exc list CRUD and search |
+| W3-52 | #381 | [W3-52] Translate rtw_rf.c — txpwr_lmt list CRUD |
+| W3-53 | #382 | [W3-53] Translate rtw_mlme.c — BSSID getters and same-network compare |
+| W3-54 | #383 | [W3-54] Translate rtw_mlme_ext.c — chset non-OCP and search/valid |
+| W3-55 | #384 | [W3-55] Translate sta_mgt st_ctl and AP TIM/VAPID helpers |
 
 ## Superseded issues
 
