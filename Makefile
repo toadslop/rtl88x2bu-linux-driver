@@ -2584,6 +2584,7 @@ $(MODULE_NAME)-y += rust/rtw_security_rest.o
 $(MODULE_NAME)-y += rust/rtw_wlan_util.o
 $(MODULE_NAME)-y += rust/rtw_rm_util.o
 $(MODULE_NAME)-y += rust/rtw_vht.o
+$(MODULE_NAME)-y += rust/rtw_sta_mgt.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
@@ -3002,6 +3003,23 @@ rust-objects-rtw-vht-restructure-rust-ref:
 rust-check-symbols-rtw-vht-restructure: rust-objects-rtw-vht-restructure-c rust-objects-rtw-vht-restructure-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/vht/vht_restructure_c_ref.o NEW=tests/host/vht/vht_restructure_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_vht_restructure.allow
+
+# W3-37: compare host C oracle (rtw_sta_mgt_rest.c) against host Rust oracle.
+rust-objects-rtw-sta-mgt-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_STA_MGT_TEST -DCONFIG_RTW_MACADDR_ACL \
+		-o tests/host/sta_mgt/sta_mgt_rest_c_ref.o core/rtw_sta_mgt_rest.c
+
+rust-objects-rtw-sta-mgt-rust-ref:
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_sta_mgt_test \
+		--emit=obj=tests/host/sta_mgt/sta_mgt_rest_rust_ref.o \
+		--crate-type lib rust/rtw_sta_mgt.rs
+
+rust-check-symbols-rtw-sta-mgt: rust-objects-rtw-sta-mgt-c rust-objects-rtw-sta-mgt-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/sta_mgt/sta_mgt_rest_c_ref.o NEW=tests/host/sta_mgt/sta_mgt_rest_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_sta_mgt.allow
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production

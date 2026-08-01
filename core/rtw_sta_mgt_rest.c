@@ -20,6 +20,8 @@
 #include <drv_types.h>
 #endif
 
+#if !defined(CONFIG_RUST) || defined(HOST_STA_MGT_TEST)
+
 bool test_st_match_rule(_adapter *adapter, u8 *local_naddr, u8 *local_port,
 			u8 *remote_naddr, u8 *remote_port)
 {
@@ -91,3 +93,56 @@ u8 rtw_access_ctrl(_adapter *adapter, const u8 *mac_addr)
 }
 
 #endif /* CONFIG_RTW_MACADDR_ACL */
+
+#endif /* !CONFIG_RUST || HOST_STA_MGT_TEST */
+
+#if defined(CONFIG_RUST) && !defined(HOST_STA_MGT_TEST) && CONFIG_RTW_MACADDR_ACL
+
+struct wlan_acl_pool *rtw_rust_sta_acl_pool(_adapter *adapter, u8 period)
+{
+	if (period >= RTW_ACL_PERIOD_NUM)
+		return NULL;
+	return &adapter->stapriv.acl_list[period];
+}
+
+int rtw_rust_sta_acl_mode(struct wlan_acl_pool *acl)
+{
+	return acl ? acl->mode : RTW_ACL_MODE_DISABLED;
+}
+
+u8 rtw_rust_sta_acl_mac_listed(struct wlan_acl_pool *acl, const u8 *mac_addr)
+{
+	_irqL irqL;
+	_list *list, *head;
+	struct rtw_wlan_acl_node *acl_node;
+	u8 match = _FALSE;
+	_queue *acl_node_q;
+
+	if (!acl || !mac_addr)
+		return _FALSE;
+
+	acl_node_q = &acl->acl_node_q;
+	_enter_critical_bh(&(acl_node_q->lock), &irqL);
+	head = get_list_head(acl_node_q);
+	list = get_next(head);
+	while (rtw_end_of_queue_search(head, list) == _FALSE) {
+		acl_node = LIST_CONTAINOR(list, struct rtw_wlan_acl_node, list);
+		list = get_next(list);
+
+		if (_rtw_memcmp(acl_node->addr, mac_addr, ETH_ALEN)) {
+			if (acl_node->valid == _TRUE) {
+				match = _TRUE;
+				break;
+			}
+		}
+	}
+	_exit_critical_bh(&(acl_node_q->lock), &irqL);
+	return match;
+}
+
+void rtw_rust_sta_warn_on(int condition)
+{
+	rtw_warn_on(condition);
+}
+
+#endif /* CONFIG_RUST && !HOST_STA_MGT_TEST && CONFIG_RTW_MACADDR_ACL */

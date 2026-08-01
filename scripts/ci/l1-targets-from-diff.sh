@@ -88,6 +88,12 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-vht
 		add_target rust-check-symbols-rtw-vht-restructure
 		;;
+	rust/rtw_sta_mgt.rs \
+	| core/rtw_sta_mgt.c \
+	| core/rtw_sta_mgt_rest.c \
+	| tests/host/sta_mgt/*)
+		add_target rust-check-symbols-rtw-sta-mgt
+		;;
 	rust/*)
 		FULL_SUITE=1
 		break
@@ -108,6 +114,7 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-rf-rest
 	rust-check-symbols-rtw-vht
 	rust-check-symbols-rtw-vht-restructure
+	rust-check-symbols-rtw-sta-mgt
 )
 
 emit() {
