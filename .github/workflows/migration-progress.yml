@@ -61,20 +61,26 @@ jobs:
             IMAGE="rtl88x2bu-l0:ci"
           fi
           # L0 image has no Python; run L0 builds in Docker, compute on the runner.
+          # Capture object lists via stdout so root-owned files in the bind mount
+          # are not moved onto runner-owned mktemp paths (cleanup would fail).
           HEAD_OBJECTS="$(mktemp)"
           BASE_OBJECTS=""
           WORKTREE=""
+          l0_object_list() {
+            local mount="$1"
+            local out_in_mount="$2"
+            docker run --rm -v "${mount}:/driver" -w /driver "${IMAGE}" \
+              bash -c "./scripts/ci/build-module-objects.sh ${out_in_mount} && cat ${out_in_mount} && rm -f ${out_in_mount}"
+          }
           cleanup() {
-            rm -f "$HEAD_OBJECTS"
-            [ -n "$BASE_OBJECTS" ] && rm -f "$BASE_OBJECTS"
+            rm -f "$HEAD_OBJECTS" 2>/dev/null || true
+            [ -n "$BASE_OBJECTS" ] && rm -f "$BASE_OBJECTS" 2>/dev/null || true
             if [ -n "$WORKTREE" ] && [ -d "$WORKTREE" ]; then
               git worktree remove -f "$WORKTREE" 2>/dev/null || rm -rf "$WORKTREE"
             fi
           }
           trap cleanup EXIT
-          docker run --rm -v "$PWD:/driver" -w /driver "${IMAGE}" \
-            ./scripts/ci/build-module-objects.sh /driver/.ci-migration-objects-head.txt
-          mv .ci-migration-objects-head.txt "$HEAD_OBJECTS"
+          l0_object_list "$PWD" /driver/.ci-migration-objects-head.txt > "$HEAD_OBJECTS"
           ARGS=(--module-objects "$HEAD_OBJECTS")
           if [ -n "$BASE_REF" ]; then
             BASE_OBJECTS="$(mktemp)"
@@ -83,9 +89,7 @@ jobs:
               git config --global --add safe.directory "$PWD"
               git config --global --add safe.directory "$WORKTREE"
               git worktree add --detach "$WORKTREE" "$BASE_REF"
-              docker run --rm -v "$WORKTREE:/driver" -w /driver "${IMAGE}" \
-                ./scripts/ci/build-module-objects.sh /driver/.ci-migration-objects-base.txt
-              mv "$WORKTREE/.ci-migration-objects-base.txt" "$BASE_OBJECTS"
+              l0_object_list "$WORKTREE" /driver/.ci-migration-objects-base.txt > "$BASE_OBJECTS"
             elif git cat-file -e "${BASE_REF}:scripts/ci/migration-module-objects.txt" 2>/dev/null; then
               git show "${BASE_REF}:scripts/ci/migration-module-objects.txt" > "$BASE_OBJECTS"
             else
