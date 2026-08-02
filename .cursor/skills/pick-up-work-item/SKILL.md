@@ -6,8 +6,9 @@ description: >-
   next", "triage issues and start work", or similar. Chooses exactly ONE of
   three paths per run: (A) prepare eligible open/draft PRs when at least one
   still needs prep; (B) otherwise triage issues, select ready work, plan ~200-line
-  implement, open PRs ready for review, and babysit; (C) otherwise draft a wave
-  of 10–20 new issues and stop. If Path A runs but no PR could be changed (e.g.
+  implement, open PRs ready for review, and babysit; (C) otherwise draft new
+  issues per allowlist when backlog is not saturated and chain head is not
+  in-flight, then stop. If Path A runs but no PR could be changed (e.g.
   landed on a PR branch already merge-ready), fall through to B/C without
   stopping. Do NOT use for reviewing PRs
   (pr-review-delivery) or for preparing a single named PR in isolation
