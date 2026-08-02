@@ -1188,6 +1188,86 @@ u8 hal_ch_offset_to_secondary_ch_offset(u8 ch_offset)
 }
 #endif /* W3-41 C oracle guard */
 
+#if !defined(HOST_IEEE80211_REST_TEST) || \
+	defined(HOST_IEEE80211_REST_HT_MCS_AMSDU_TEST)
+/*
+ * W3-42: HT MCS bitmap and AMSDU mode helpers extracted from
+ * core/rtw_ieee80211.c. Rust port replaces kernel build when CONFIG_RUST.
+ */
+u8 rtw_ht_mcsset_to_nss(u8 *supp_mcs_set)
+{
+	u8 nss = 1;
+
+	if (supp_mcs_set[3])
+		nss = 4;
+	else if (supp_mcs_set[2])
+		nss = 3;
+	else if (supp_mcs_set[1])
+		nss = 2;
+	else if (supp_mcs_set[0])
+		nss = 1;
+	else
+		RTW_INFO("%s,%d, warning! supp_mcs_set is zero\n", __func__, __LINE__);
+
+	return nss;
+}
+
+u32 rtw_ht_mcs_set_to_bitmap(u8 *mcs_set, u8 nss)
+{
+	u8 i;
+	u32 bitmap = 0;
+
+	for (i = 0; i < nss; i++)
+		bitmap |= mcs_set[i] << (i * 8);
+
+	RTW_INFO("ht_mcs_set=%02x %02x %02x %02x, nss=%u, bitmap=%08x\n"
+		, mcs_set[0], mcs_set[1], mcs_set[2], mcs_set[3], nss, bitmap);
+
+	return bitmap;
+}
+
+void rtw_set_spp_amsdu_mode(u8 mode, u8 *rsn_ie, int rsn_ie_len)
+{
+	struct rsne_info info;
+	int ret = _SUCCESS;
+	u8 spp_req_cap = 0;
+
+	ret = rtw_rsne_info_parse(rsn_ie, rsn_ie_len, &info);
+	if (ret != _SUCCESS)
+		return;
+
+	if (mode == RTW_AMSDU_MODE_NON_SPP) {
+		spp_req_cap = 0;
+	} else if (mode == RTW_AMSDU_MODE_SPP) {
+		spp_req_cap = SPP_CAP | SPP_REQ;
+	} else if (mode == RTW_AMSDU_MODE_ALL_DROP) {
+		spp_req_cap = SPP_REQ;
+	} else {
+		RTW_INFO("%s unexpected mode = %d, please check the config\n", __func__, mode);
+		return;
+	}
+
+	SET_RSN_CAP_SPP(info.cap, spp_req_cap);
+	RTW_INFO("%s set spp opt = %d\n", __func__, GET_RSN_CAP_SPP_OPT(info.cap));
+}
+
+u8 rtw_check_amsdu_disable(u8 mode, u8 spp_opt)
+{
+	u8 ret = _FALSE;
+
+	if ((mode == RTW_AMSDU_MODE_NON_SPP) && (spp_opt & SPP_REQ))
+		ret = _TRUE;
+	else if ((mode == RTW_AMSDU_MODE_SPP) && (!(spp_opt & SPP_CAP)))
+		ret = _TRUE;
+	else if (mode == RTW_AMSDU_MODE_ALL_DROP)
+		ret = _TRUE;
+	else
+		ret = _FALSE;
+
+	return ret;
+}
+#endif /* W3-42 C oracle guard */
+
 #if defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)
 u32 *rtw_ieee80211_rest_bss_dsconfig(WLAN_BSSID_EX *bss)
 {
