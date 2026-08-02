@@ -141,9 +141,9 @@ rule **only** when the prep batch was a true no-op (no `needs_prep` PRs remain).
 |-----------|------|--------|
 | **One or more `needs_prep` PRs** among `eligible` | **A — Prepare PRs** | Run [`prepare-all-prs-for-merge`](../prepare-all-prs-for-merge/SKILL.md) on those PRs only; **stop** if any PR was changed or any `needs_prep` PR remains blocked (**human action required**). **Fall through** to B/C only when prep completes with zero changes and no eligible PR is still `needs_prep` (see **Landed on a PR branch but no PRs could be changed**) |
 | **No `needs_prep` PRs** (no open PRs, every open PR is `skipped`, or all `eligible` PRs are `merge_ready`) and a ready issue exists after triage + selection | **B — New work** | Triage → select → plan → implement → open PRs → babysit, then **stop** |
-| **No `needs_prep` PRs** and selection reports **chain head in-flight** | **A or wait** | Prep/babysit the frontier PR stack if `needs_prep`; otherwise report frontier + merge-ready PRs and **stop** — **not** Path C |
-| **No `needs_prep` PRs** and no ready issue, backlog **not** saturated, true tranche gap | **C — Draft wave** | Triage → draft new issues per **`draft-migration-issues` allowlist**, then **stop** |
-| **No `needs_prep` PRs** and selection reports **backlog saturated** or in-flight head | **Stop** | Report chain head + open child count; do **not** draft more tickets |
+| **No `needs_prep` PRs** and selection reports **chain head in-flight (this issue only)** | **B — stack downstream** or **A** | If a **downstream** issue is ready (dep satisfied via open PR), run Path B and stack on the dependency PR branch. If only the chain-head issue itself is in-flight, prep/babysit (Path A) when `needs_prep`; otherwise report merge-ready PRs — **not** Path C |
+| **No `needs_prep` PRs** and selection reports **chain head blocked (no accessible code)** or **backlog saturated** | **Stop** or **C** | Blocked head: report blocker; saturated backlog: report count — do **not** draft more tickets unless true tranche gap |
+| **No `needs_prep` PRs** and no ready issue, backlog **not** saturated, true tranche gap (chain head has **no accessible code**) | **C — Draft wave** | Triage → draft new issues per **`draft-migration-issues` allowlist**, then **stop** |
 
 When open PRs exist but **`eligible` is empty** (all `skipped`), **fall through**
 to Path B or C — do not enter Path A with nothing to prepare. When `eligible` is
@@ -167,7 +167,7 @@ flowchart TD
   F -->|Found| G[3. Plan stacked PRs]
   G --> H[4. Implement + open PRs + babysit]
   H --> Z
-  F -->|None ready| I{Backlog saturated or in-flight head?}
+  F -->|None ready| I{Backlog saturated or blocked head?}
   I -->|Yes| Z3[Report frontier — stop]
   I -->|No — true gap| J[Path C: draft per allowlist]
   J --> Z
@@ -289,9 +289,13 @@ checks pass (not in-flight head, backlog not saturated, scope is allowlisted).
 
 **Do not enter Path C** when:
 
-- The chain head issue is unblocked but has open implementation PRs (finish those first)
+- The chain head issue is unblocked but has **its own** open implementation PR (prep or stack downstream instead)
 - ≥15 open children already exist behind the same `blocked_by` chain
 - The only "gap" is Wave 4+ HAL/USB/PHYDM scope
+
+**Open PRs on chain-head dependencies do not block Path B or Path C downstream
+selection** — dependents can stack on accessible dependency code (see
+[`select-ready-issue`](../select-ready-issue/SKILL.md#what-counts-as-blocked-mandatory--read-first)).
 
 Path C is a **complete job** — not a prelude to implementation.
 
@@ -321,7 +325,8 @@ implement one immediately. Wait for an explicit follow-up or a new pick-up run
 | Babysit new PRs until CI is green (Path B) | Skip babysit after opening a stack |
 | Complete the full planned stack (Path B) | Stop mid-stack and ask whether to continue |
 | File follow-up issue(s) when the stack cannot finish (Path B) | End with "next: implement PRn" and no tracker |
-| Draft new issues only when allowlist + gap checks pass (Path C) | Draft 10–20 tickets while chain head is in-flight or backlog is deep |
+| Draft new issues only when allowlist + gap checks pass (Path C) | Draft 10–20 tickets while backlog is deep behind a blocked head |
+| Stack new work on open dependency PR branches (Path B) | Wait for chain-head PRs to merge before implementing dependents |
 | Stop when backlog saturated — implement/merge instead | File HAL/USB/PHYDM slices without Wave 4 infra |
 | Close issues with evidence they are done | Merge PRs without explicit user instruction |
 | Query GitHub for open PRs, issues, blocked state | Rewrite `ISSUE-MAP.md` by hand (use `file-issues.sh`) |
@@ -344,7 +349,7 @@ After completing **one** path, reply in chat with:
 | **Path chosen** | A (prepare PRs) / A (no-op) → B / A (no-op) → C / B (implement) / C (draft wave) |
 | Open PRs at start | total / eligible / needs_prep / merge_ready / skipped — or "none" |
 | Triage | Issues closed (`#N` + reason) or "none" / "n/a (Path A with changes)" / triage results after A no-op fall-through |
-| Selected issue | Draft ID, GitHub `#N`, title — Path B only |
+| Selected issue | Draft ID, GitHub `#N`, title, **stack base** — Path B only |
 | Plan | PR stack table with **Est. Δ ≤ 250 per row** — Path B only |
 | Implementation | PR links, babysit/CI status, **`stack complete`** or **`stack partial — tracked`** + follow-up issue links — Path B only |
 | PR prep | Per-PR status from prepare-all — Path A only |

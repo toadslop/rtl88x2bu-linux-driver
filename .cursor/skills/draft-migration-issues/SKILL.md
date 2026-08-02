@@ -4,9 +4,10 @@ description: >-
   Path C of pick-up-work-item (fallback when no PRs need prep, no ready issue,
   and backlog is not saturated). Drafts implementable ~200 LOC child issues with
   local specs — only allowlisted leaf/pure slices with a clear L0/L1/L2 path.
-  Do NOT file when chain head is in-flight, backlog is deep, or scope is HAL/Wave 4.
-  Completes the pick-up workflow — do NOT select or implement a newly drafted
-  issue in the same run. Do NOT use to duplicate existing open issues.
+  Do NOT file when chain head has no accessible code but backlog is deep, or
+  scope is HAL/Wave 4. Completes the pick-up workflow — do NOT select or
+  implement a newly drafted issue in the same run. Do NOT use to duplicate
+  existing open issues.
 metadata:
   parent-skill: pick-up-work-item
   path: C
@@ -27,8 +28,9 @@ Stop and report instead of filing when **any** of these hold:
 
 | Condition | Action |
 |-----------|--------|
-| Chain head is **in-flight** (open PR for lowest unblocked child) | Prep/babysit existing PRs — backlog is not empty |
-| **≥15 open children** already filed behind the same chain head | Backlog saturated — implement/merge, do not extend the chain |
+| Chain head has **no accessible code** (open issue, no implementing PR) | True frontier — Path B cannot start here; Path C only if tranche gap |
+| Chain head has **its own** open PR and **no downstream** issue is ready | Prep/babysit existing PRs (Path A) — do not duplicate the chain head |
+| **≥15 open children** already filed behind the same chain head | Backlog saturated — implement/merge/stack, do not extend the chain |
 | Next slices are **HAL / PHYDM / USB HCI** (`hal/`, `halmac/`, `phydm/`, `hci/`) | Defer to Wave 4 epic — not Path C in Wave 3 |
 | Slice needs **new L2 harness** but no `T*` issue exists to add it | Draft a **test-infra** child first (`T*`), not a translation child |
 | Slice needs **domain types** (`A2`/`A3`) still open | Finish architecture issues first, or pick a leaf that does not list them |
@@ -36,8 +38,12 @@ Stop and report instead of filing when **any** of these hold:
 | Duplicate of an open issue | Skip — search `gh issue list` and `ISSUE-MAP.md` |
 
 **Wrong pattern (seen in production):** W3-39 in-flight with open PR stack, while
-80+ open W3-40…W3-129 issues already blocked behind it — yet another agent run
+80+ open W3-40…W3-129 issues already filed behind it — yet another agent run
 files W3-98…W3-129 again. That adds tickets with **no new implementable surface**.
+
+**Also wrong:** reporting "all tickets blocked" because W3-39 is open — when W3-39
+has an open PR, W3-40+ are **ready for Path B** (stack on the W3-39 PR branch).
+Only the chain-head issue itself is excluded while its PR is open.
 
 ## When TO draft
 
@@ -103,7 +109,7 @@ Answer these questions from epics, README, and GitHub:
 |----------|---------|
 | Which epic/wave is active? | `epic-*.md`, open `[Epic]` issues on GitHub |
 | Which children are done vs open? | `gh issue list` / `gh issue view` (state) |
-| What is blocked and why? | `## Tracking` footers on GitHub, open PRs |
+| What is blocked and why? | `## Tracking` footers on GitHub, open PRs — remember: open dep PR **unblocks** dependents |
 | What large units lack child slices? | Wave 4+ epics, oversized C files |
 | What test infra is missing? | `E10`, `test-*.md`, CI workflow gaps |
 
@@ -254,7 +260,7 @@ The job is **done** when one of these is true:
 |---------|-----------|
 | Local drafts only | Markdown specs committed; user informed |
 | Filed on GitHub | `file-issues.sh` run, `ISSUE-MAP.md` updated, verified on GitHub |
-| Nothing to draft | Gap analysis explains why (in-flight head, saturated backlog, HAL-only scope, or blocklist) |
+| Nothing to draft | Gap analysis explains why (blocked head with no accessible code, saturated backlog, HAL-only scope, or blocklist) |
 
 **Never** continue to `plan-stacked-prs` or `implement-stacked-prs` as part of
 this step. Newly created issues are backlog for a **later** session.

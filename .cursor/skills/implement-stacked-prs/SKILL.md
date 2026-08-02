@@ -26,12 +26,18 @@ above 250** (insertions + deletions vs stack base). See
 
 - [ ] Plan approved (explicit user OK or "go ahead and implement")
 - [ ] Issue selected and spec read
-- [ ] `master` fetched and up to date
+- [ ] **Stack base resolved** — `master` or dependency PR branch from selection report
+- [ ] Stack base branch fetched and up to date
 - [ ] No open PR already covers PR1 of this stack (avoid duplicates)
 
 ```bash
+# When all blocked_by deps are closed:
 git fetch origin master
 git checkout master && git pull origin master
+
+# When selection reported a dependency PR branch (e.g. cursor/w3-39-…):
+git fetch origin <dep-pr-branch>
+git checkout -b cursor/<name>-<suffix> origin/<dep-pr-branch>
 ```
 
 ## Per-PR loop
@@ -41,10 +47,11 @@ Repeat for each row in the plan table (PR1 → PR2 → …):
 ### 1. Branch
 
 ```bash
-# PR1 — base master
-git checkout -b cursor/<name>-<suffix> origin/master
+# PR1 — base from plan (master OR dependency PR branch)
+git fetch origin <pr1-base>
+git checkout -b cursor/<name>-<suffix> origin/<pr1-base>
 
-# PR2+ — base previous PR branch
+# PR2+ — base previous PR branch in this stack
 git fetch origin cursor/<prev-branch>
 git checkout -b cursor/<name>-<suffix> origin/cursor/<prev-branch>
 ```
@@ -241,7 +248,7 @@ the remainder is non-trivial (copy the per-PR detail from the plan).
 | Scope bigger than planned | Revise plan (return to `plan-stacked-prs`), then continue the stack — do not cram |
 | Blocked by missing harness | Implement harness PR first, **or** file follow-up issue(s) + parent comment and end **`stack partial — tracked`** |
 | Gate fails and cannot be fixed | File follow-up issue(s) for remaining rows; end **`stack partial — tracked`** — do not ask to continue |
-| Dependency issue still open | File follow-up issue(s) or return to `select-ready-issue`; do not stop mid-stack without tracking |
+| Dependency has no accessible code (open issue, no PR) | Return to `select-ready-issue` — true blocker; file follow-up only if mid-stack |
 
 ## Completion report
 
