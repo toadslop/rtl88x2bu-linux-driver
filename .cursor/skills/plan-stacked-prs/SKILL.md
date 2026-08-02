@@ -96,22 +96,39 @@ From [`test-plan.md`](../../../docs/rust-migration/test-plan.md) and
 
 Each PR in the stack:
 
-1. **Builds on the previous PR's branch** (not `master`) — stacked PRs
+1. **Builds on the previous PR's branch** (not necessarily `master`) — stacked PRs
 2. Has a **narrow title** — `[W3-04 PR1] …`, `[W3-04 PR2] …`
 3. Lists **gates** to run before opening (L0, L1, L2, L3 as applicable)
 4. Maps to a **branch name** — `cursor/<short-desc>-<suffix>` (match repo convention)
 
+### PR1 base when dependencies are on open PRs (mandatory)
+
+[`select-ready-issue`](../select-ready-issue/SKILL.md) may select an issue whose
+`blocked_by` dependency is **open on GitHub** but **satisfied via an open PR**.
+In that case PR1 does **not** branch from `master`:
+
+| Dep state | PR1 base |
+|-----------|----------|
+| All `blocked_by` issues **CLOSED** | `master` |
+| Latest unsatisfied-by-merge dep has open PR `#N` / `headRefName` | That PR's **`headRefName`** (tip of the dependency stack) |
+
+Record the stack base in the plan table and Context section. PR2+ still build on
+the previous PR in **this** issue's stack.
+
 ```mermaid
 flowchart LR
-  M[master] --> PR1[PR1 branch]
+  M[master] --> DEP[dependency PR branch]
+  DEP --> PR1[PR1 branch]
   PR1 --> PR2[PR2 based on PR1]
   PR2 --> PR3[PR3 based on PR2]
 ```
 
+When all deps are closed, omit the dependency node — PR1 branches from `master`.
+
 | PR | Base branch | Head branch | Est. Δ (lines) | Gates |
 |----|-------------|-------------|----------------|-------|
-| 1 | `master` | `cursor/w3-04a-type-str-abc1` | ~180 (must be ≤250) | L2 |
-| 2 | `cursor/w3-04a-type-str-abc1` | `cursor/w3-04b-type-str-rust-abc1` | ~200 (must be ≤250) | L0, L1, L2 |
+| 1 | `cursor/w3-39-…` (dep PR) or `master` | `cursor/w3-40a-…` | ~180 (must be ≤250) | L2 |
+| 2 | `cursor/w3-40a-…` | `cursor/w3-40b-…` | ~200 (must be ≤250) | L0, L1, L2 |
 
 Every row **must** show an estimated Δ. Reject your own plan if any row is blank
 or above 250.
@@ -141,7 +158,7 @@ For each PR:
 
 ### Dependency notes
 
-- `blocked_by` issues already satisfied
+- `blocked_by` issues satisfied (closed **or** accessible via open PR — record stack base)
 - Whether L2 harness must merge before port PR
 - Whether this stack blocks other issues
 

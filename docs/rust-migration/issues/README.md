@@ -31,10 +31,11 @@ gh issue view <number> --json number,title,state,body,labels
 grep 'W3-19' docs/rust-migration/issues/ISSUE-MAP.md
 ```
 
-**Ready frontier:** lowest-ID open child in the active wave whose `blocked_by`
-dependencies are all **closed** on GitHub (read each issue's `## Tracking` footer).
-Use `gh issue list` / `gh issue view` — not local markdown — to decide what is
-ready.
+**Ready frontier:** open children whose `blocked_by` dependencies are all
+**satisfied** — closed on GitHub **or** accessible via an open implementing PR
+(read each issue's `## Tracking` footer). Prefer selecting from **parallel
+lanes** (different C files) when multiple issues are ready. Use `gh issue list` /
+`gh issue view` — not local markdown — to decide what is ready.
 
 **Epic planning:** `epic-*.md` files describe wave structure and deferred scope.
 They are planning notes, not a substitute for GitHub issue state.
@@ -44,6 +45,24 @@ They are planning notes, not a substitute for GitHub issue state.
 Draft specs use YAML frontmatter (`id`, `epic`, `blocked_by`, `labels`) plus
 Goal / Notes / Acceptance sections. Use existing children as templates (e.g.
 `wave3-04-security-type-str.md`).
+
+### `blocked_by` — favor parallel work
+
+This port spans many independent `core/` translation units. **Default to wide
+graphs:** most new issues should be immediately workable in parallel (`blocked_by:
+[]` or infra-only deps like `T5` / `A2`).
+
+Use `blocked_by` **only** for real technical coupling:
+
+- Same C file, later slice needs Rust from an earlier slice
+- Missing harness or domain-type infra
+- True cross-file API dependency
+
+Do **not** chain issues just because IDs are sequential or because they appear in
+the same epic tranche table. Different C files (`rtw_rf.c`, `rtw_recv.c`,
+`rtw_mlme.c`, …) are normally **independent lanes**. See
+[`.cursor/skills/draft-migration-issues/SKILL.md`](../../../.cursor/skills/draft-migration-issues/SKILL.md)
+(**Favor wide graphs over deep chains**).
 
 From the repo root:
 
