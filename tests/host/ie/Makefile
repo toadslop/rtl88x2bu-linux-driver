@@ -24,6 +24,7 @@ CHBW_CFLAGS := $(REST_CFLAGS) -I$(ROOT)/include \
            -DHOST_IEEE80211_REST_CHBW_TEST -Wno-format-truncation
 FRAME_HT_CFLAGS := $(REST_CFLAGS) -DHOST_IEEE80211_REST_FRAME_HT_TEST
 RATE_SECTION_CFLAGS := $(REST_CFLAGS) -DHOST_IEEE80211_REST_RATE_SECTION_TEST
+HT_MCS_AMSDU_CFLAGS := $(REST_CFLAGS) -DHOST_IEEE80211_REST_HT_MCS_AMSDU_TEST
 RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
 
 IE_SRCS := ie_c_oracle.c ../crypto/host_vector_json.c
@@ -50,13 +51,18 @@ IE_REST_RATE_SECTION_SRCS := $(IE_REST_SRC) ie_cipher_c_oracle.c ie_wpa_rsn_pars
                 ie_c_oracle.c $(WLAN_UTIL)/wlan_util_c_oracle.c \
                 ../crypto/host_vector_json.c ie_mac_str_host_shim.c
 
+IE_REST_HT_MCS_AMSDU_SRCS := $(IE_REST_SRC) ie_cipher_c_oracle.c ie_wpa_rsn_parse_c_oracle.c \
+                ie_c_oracle.c $(WLAN_UTIL)/wlan_util_c_oracle.c \
+                ../crypto/host_vector_json.c ie_mac_str_host_shim.c
+
 IE_REST_RUST_SHIM := ie_mac_str_host_shim.c
 
 .PHONY: all test test-c test-rust test-rest test-rest-rust test-rest-cipher \
 	test-rest-wpa-rsn-parse test-rest-wpa-rsn-parse-rust test-rest-wapi-wps \
 	test-rest-wapi-wps-rust test-rest-mac-str test-rest-mac-str-rust \
 	test-rest-chbw test-rest-chbw-rust test-rest-frame-ht test-rest-frame-ht-rust \
-	test-rest-rate-section test-rest-rate-section-rust clean
+	test-rest-rate-section test-rest-rate-section-rust \
+	test-rest-ht-mcs-amsdu test-rest-ht-mcs-amsdu-rust clean
 
 all: test
 
@@ -64,7 +70,8 @@ test: test-c test-rust test-rest test-rest-rust test-rest-cipher \
 	test-rest-cipher-rust test-rest-wpa-rsn-parse test-rest-wpa-rsn-parse-rust \
 	test-rest-wapi-wps test-rest-wapi-wps-rust test-rest-mac-str \
 	test-rest-mac-str-rust 	test-rest-chbw test-rest-frame-ht test-rest-frame-ht-rust \
-	test-rest-rate-section test-rest-rate-section-rust
+	test-rest-rate-section test-rest-rate-section-rust \
+	test-rest-ht-mcs-amsdu test-rest-ht-mcs-amsdu-rust
 
 test-c: test_ie
 	./test_ie ie_vectors.json
@@ -221,6 +228,25 @@ test_ie_rest_rate_section_rust: test_ie_rest_rate_section.c librust_ie_rest.a \
 		ie_c_oracle.c ../wlan_util/wlan_util_c_oracle.c ../crypto/host_vector_json.c \
 		$(IE_REST_RUST_SHIM) librust_ie_rest.a
 
+test-rest-ht-mcs-amsdu: test_ie_rest_ht_mcs_amsdu
+	./test_ie_rest_ht_mcs_amsdu ie_rest_ht_mcs_amsdu_vectors.json
+
+test_ie_rest_ht_mcs_amsdu: test_ie_rest_ht_mcs_amsdu.c $(IE_REST_HT_MCS_AMSDU_SRCS)
+	$(CC) $(HT_MCS_AMSDU_CFLAGS) -o $@ test_ie_rest_ht_mcs_amsdu.c \
+		$(IE_REST_HT_MCS_AMSDU_SRCS)
+
+test-rest-ht-mcs-amsdu-rust: test_ie_rest_ht_mcs_amsdu_rust
+	./test_ie_rest_ht_mcs_amsdu_rust ie_rest_ht_mcs_amsdu_vectors.json
+
+test_ie_rest_ht_mcs_amsdu_rust: test_ie_rest_ht_mcs_amsdu.c librust_ie_rest.a \
+		ie_cipher_c_oracle.c ie_wpa_rsn_parse_c_oracle.c ie_c_oracle.c \
+		../wlan_util/wlan_util_c_oracle.c ../crypto/host_vector_json.c \
+		$(IE_REST_RUST_SHIM)
+	$(CC) $(HT_MCS_AMSDU_CFLAGS) -DRUST_IEEE80211_REST_ORACLE -o $@ \
+		test_ie_rest_ht_mcs_amsdu.c ie_cipher_c_oracle.c ie_wpa_rsn_parse_c_oracle.c \
+		ie_c_oracle.c ../wlan_util/wlan_util_c_oracle.c ../crypto/host_vector_json.c \
+		$(IE_REST_RUST_SHIM) librust_ie_rest.a
+
 test_ie_rest_rust: test_ie_rest.c librust_ie_rest.a ../wlan_util/wlan_util_c_oracle.c \
 		../crypto/host_vector_json.c ie_c_oracle.c $(IE_REST_RUST_SHIM)
 	$(CC) $(REST_CFLAGS) -DRUST_IEEE80211_REST_ORACLE -o $@ test_ie_rest.c \
@@ -235,4 +261,5 @@ clean:
 		test_ie_rest_mac_str_rust test_ie_rest_chbw \
 		test_ie_rest_chbw_rust test_ie_rest_frame_ht \
 		test_ie_rest_frame_ht_rust test_ie_rest_rate_section \
-		test_ie_rest_rate_section_rust librust_ie.a librust_ie_rest.a
+		test_ie_rest_rate_section_rust test_ie_rest_ht_mcs_amsdu \
+		test_ie_rest_ht_mcs_amsdu_rust librust_ie.a librust_ie_rest.a

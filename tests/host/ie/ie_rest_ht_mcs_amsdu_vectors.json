@@ -1,0 +1,17 @@
+{
+  "oracle": "core/rtw_ieee80211_rest.c",
+  "vectors": [
+    {"name":"nss_1ss","fn":"rtw_ht_mcsset_to_nss","mcs_set":"ff000000","expect_u8":1},
+    {"name":"nss_2ss","fn":"rtw_ht_mcsset_to_nss","mcs_set":"00ff0000","expect_u8":2},
+    {"name":"nss_3ss","fn":"rtw_ht_mcsset_to_nss","mcs_set":"0000ff00","expect_u8":3},
+    {"name":"nss_4ss","fn":"rtw_ht_mcsset_to_nss","mcs_set":"000000ff","expect_u8":4},
+    {"name":"bitmap_4ss","fn":"rtw_ht_mcs_set_to_bitmap","mcs_set":"01020304","nss":4,"expect_u32":67305985},
+    {"name":"bitmap_2ss","fn":"rtw_ht_mcs_set_to_bitmap","mcs_set":"aabb0000","nss":2,"expect_u32":48042},
+    {"name":"amsdu_non_spp_peer_req","fn":"rtw_check_amsdu_disable","mode":0,"spp_opt":2,"expect_u8":1},
+    {"name":"amsdu_spp_no_cap","fn":"rtw_check_amsdu_disable","mode":1,"spp_opt":0,"expect_u8":1},
+    {"name":"amsdu_all_drop","fn":"rtw_check_amsdu_disable","mode":2,"spp_opt":3,"expect_u8":1},
+    {"name":"amsdu_spp_ok","fn":"rtw_check_amsdu_disable","mode":1,"spp_opt":1,"expect_u8":0},
+    {"name":"set_spp_mode_spp","fn":"rtw_set_spp_amsdu_mode","mode":1,"ie":"30140100000fac020100000fac040100000fac020000","ie_len":22,"expect_u8":3},
+    {"name":"set_spp_mode_all_drop","fn":"rtw_set_spp_amsdu_mode","mode":2,"ie":"30140100000fac020100000fac040100000fac020000","ie_len":22,"expect_u8":2}
+  ]
+}
