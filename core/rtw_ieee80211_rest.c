@@ -1061,11 +1061,10 @@ int rtw_action_frame_parse(const u8 *frame, u32 frame_len, u8 *category, u8 *act
 #endif /* HOST_IEEE80211_REST_FRAME_HT_TEST || !HOST_IEEE80211_REST_TEST */
 #endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
-#if !defined(CONFIG_RUST) || defined(HOST_IEEE80211_REST_RATE_SECTION_TEST) || \
-	!defined(HOST_IEEE80211_REST_TEST)
+#if !defined(HOST_IEEE80211_REST_TEST)
 /*
  * W3-41: rate-section and channel-offset mapping helpers extracted from
- * core/rtw_ieee80211.c. Rust port replaces kernel build in PR3.
+ * core/rtw_ieee80211.c. Host L2 harness lands in PR2.
  */
 RATE_SECTION mgn_rate_to_rs(enum MGN_RATE rate)
 {
@@ -1097,7 +1096,7 @@ RATE_SECTION mgn_rate_to_rs(enum MGN_RATE rate)
 
 uint rtw_get_cckrate_size(u8 *rate, u32 rate_length)
 {
-	int i = 0;
+	uint i = 0;
 
 	while (i < rate_length) {
 		RTW_DBG("%s, rate[%d]=%u\n", __FUNCTION__, i, rate[i]);
@@ -1149,7 +1148,7 @@ u8 hal_ch_offset_to_secondary_ch_offset(u8 ch_offset)
 
 	return SCN;
 }
-#endif /* !CONFIG_RUST || HOST_IEEE80211_REST_RATE_SECTION_TEST || kernel */
+#endif /* !HOST_IEEE80211_REST_TEST */
 
 #if defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)
 u32 *rtw_ieee80211_rest_bss_dsconfig(WLAN_BSSID_EX *bss)
