@@ -156,6 +156,23 @@ typedef int sint;
 #define GET_RSN_CAP_MFP_OPTION(cap) LE_BITS_TO_2BYTE(((u8 *)(cap)), 6, 2)
 #define GET_RSN_CAP_SPP_OPT(cap) LE_BITS_TO_2BYTE(((u8 *)(cap)), 10, 2)
 
+#define SET_BITS_TO_LE_2BYTE(__pStart, __BitOffset, __BitLen, __Value) \
+	do { \
+		__pStart[0] = (__pStart[0] & ~(((1U << (__BitLen)) - 1) << (__BitOffset))) | \
+			      (((__Value) & ((1U << (__BitLen)) - 1)) << (__BitOffset)); \
+	} while (0)
+
+#define SET_RSN_CAP_SPP(cap, spp) SET_BITS_TO_LE_2BYTE(((u8 *)(cap)), 10, 2, spp)
+
+#define SPP_CAP BIT(0)
+#define SPP_REQ BIT(1)
+
+enum rtw_amsdu_mode {
+	RTW_AMSDU_MODE_NON_SPP = 0,
+	RTW_AMSDU_MODE_SPP = 1,
+	RTW_AMSDU_MODE_ALL_DROP = 2,
+};
+
 #define MFP_NO 0
 #define MFP_INVALID 1
 #define MFP_OPTIONAL 2

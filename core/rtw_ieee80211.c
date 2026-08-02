@@ -2888,38 +2888,6 @@ int ieee80211_get_hdrlen(u16 fc)
 }
 #endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
-u8	rtw_ht_mcsset_to_nss(u8 *supp_mcs_set)
-{
-	u8 nss = 1;
-
-	if (supp_mcs_set[3])
-		nss = 4;
-	else if (supp_mcs_set[2])
-		nss = 3;
-	else if (supp_mcs_set[1])
-		nss = 2;
-	else if (supp_mcs_set[0])
-		nss = 1;
-	else
-		RTW_INFO("%s,%d, warning! supp_mcs_set is zero\n", __func__, __LINE__);
-	/* RTW_INFO("%s HT: %dSS\n", __FUNCTION__, nss); */
-	return nss;
-}
-
-u32	rtw_ht_mcs_set_to_bitmap(u8 *mcs_set, u8 nss)
-{
-	u8 i;
-	u32 bitmap = 0;
-
-	for (i = 0; i < nss; i++)
-		bitmap |= mcs_set[i] << (i * 8);
-
-	RTW_INFO("ht_mcs_set=%02x %02x %02x %02x, nss=%u, bitmap=%08x\n"
-		, mcs_set[0], mcs_set[1], mcs_set[2], mcs_set[3], nss, bitmap);
-
-	return bitmap;
-}
-
 #if !defined(CONFIG_RUST) || defined(HOST_IEEE80211_REST_TEST)
 /* show MCS rate, unit: 100Kbps */
 u16 rtw_ht_mcs_rate(u8 bw_40MHz, u8 short_GI, unsigned char *MCS_rate)
@@ -3090,55 +3058,5 @@ const char *action_public_str(u8 action)
 {
 	action = (action >= ACT_PUBLIC_MAX) ? ACT_PUBLIC_MAX : action;
 	return _action_public_str[action];
-}
-
-#if 0
-/*tmp for sta mode, root cause have to wait supplicant's update.*/
-void rtw_set_spp_amsdu_mode(u8 mode, u8 *rsn_ie, int rsn_ie_len)
-{
-	struct rsne_info info;
-	int i, ret = _SUCCESS;
-	u8 spp_req_cap = 0;
-
-	ret = rtw_rsne_info_parse(rsn_ie, rsn_ie_len, &info);
-	if (ret != _SUCCESS)
-		return;
-
-	if (mode == RTW_AMSDU_MODE_NON_SPP ) {
-		spp_req_cap = 0; 						/* SPP_CAP=0, SPP_REQ=0 */
-	} else if (mode == RTW_AMSDU_MODE_SPP) {
-		spp_req_cap = SPP_CAP | SPP_REQ;
-	} else if (mode == RTW_AMSDU_MODE_ALL_DROP) {
-		spp_req_cap = SPP_REQ; 					/* SPP_CAP=0, SPP_REQ=1 */
-	} else {
-		RTW_INFO("%s unexpected mode = %d, please check the config\n", __func__, mode);
-		return;
-	}
-
-	SET_RSN_CAP_SPP(info.cap, spp_req_cap);
-	RTW_INFO("%s set spp opt = %d\n", __func__, GET_RSN_CAP_SPP_OPT(info.cap));
-}
-#endif
-
-/*	Returns:
-	_TRUE	-- 	Disable AMSDU
-	_FALSE	--	Enable AMSDU
-*/
-u8 rtw_check_amsdu_disable(u8 mode, u8 spp_opt)
-{
-	u8 ret = _FALSE;
-
-	/* pp amsdu: peer's required has to be 0, or disable */
-	if ((mode == RTW_AMSDU_MODE_NON_SPP) && (spp_opt & SPP_REQ))
-		ret = _TRUE;
-	/* spp amsdu: peer's cap has to be 1, or disable */
-	else if ((mode == RTW_AMSDU_MODE_SPP) && (!(spp_opt & SPP_CAP)))
-		ret = _TRUE;
-	/* mode = all drop */
-	else if (mode == RTW_AMSDU_MODE_ALL_DROP)
-		ret = _TRUE;
-	else
-		ret = _FALSE;
-	return ret;
 }
 
