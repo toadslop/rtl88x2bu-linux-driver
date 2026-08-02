@@ -135,8 +135,8 @@ gh issue view <number> --json number,title,body,labels,state
 |---------|-----------|
 | **Ready issue found** (including oversized) | Report selection; continue to **`plan-stacked-prs`** |
 | **Chain head in-flight** | Report frontier issue + open PR links; parent **`pick-up-work-item`** should prep/babysit those PRs (Path A) — **do not** draft new issues |
-| **Nothing ready — true gap** | Open children missing for the next tranche **and** no in-flight chain head **and** backlog not already deep — hand off to Path C **`draft-migration-issues`** |
-| **Nothing ready — backlog saturated** | Report chain head + count of open children behind it; **stop** — do not draft more tickets |
+| **Nothing ready — true gap** | Open children missing for the next tranche **and** no in-flight chain head **and** fewer than **≥15 open children** behind the same chain head — hand off to Path C **`draft-migration-issues`** |
+| **Nothing ready — backlog saturated** | **≥15 open children** already filed behind the same chain head — report chain head + count; **stop** — do not draft more tickets |
 | **Ambiguous** | List top 2–3 candidates with tradeoffs; ask user if they care |
 
 ## Selection report template
