@@ -24,6 +24,7 @@
 
 #define RTW_ERR(...) do { } while (0)
 #define RTW_INFO(...) do { } while (0)
+#define RTW_DBG(...) do { } while (0)
 #define rtw_warn_on(cond) ((void)(cond))
 
 #define BIT(n) (1U << (n))

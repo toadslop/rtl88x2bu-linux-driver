@@ -16,6 +16,9 @@
 
 #ifdef HOST_IEEE80211_REST_TEST
 #include "host_ieee80211_types.h"
+#ifdef HOST_IEEE80211_REST_RATE_SECTION_TEST
+#include "host_rate_section_types.h"
+#endif
 #define _rtw_memmove memmove
 #else
 #include <drv_types.h>
@@ -39,7 +42,8 @@ extern u8 WIFI_OFDMRATES[];
 uint rtw_is_cckrates_included(u8 *rate);
 uint rtw_is_cckratesonly_included(u8 *rate);
 
-#if defined(HOST_IEEE80211_REST_TEST)
+#if defined(HOST_IEEE80211_REST_TEST) && \
+    !defined(HOST_IEEE80211_REST_RATE_SECTION_TEST)
 uint rtw_is_cckrates_included(u8 *rate)
 {
 	u32 i = 0;
@@ -67,7 +71,7 @@ uint rtw_is_cckratesonly_included(u8 *rate)
 
 	return _TRUE;
 }
-#endif /* HOST_IEEE80211_REST_TEST */
+#endif /* generic HOST_IEEE80211_REST_TEST without rate-section harness */
 
 int rtw_get_bit_value_from_ieee_value(u8 val)
 {
@@ -1066,10 +1070,10 @@ int rtw_action_frame_parse(const u8 *frame, u32 frame_len, u8 *category, u8 *act
 #endif /* HOST_IEEE80211_REST_FRAME_HT_TEST || !HOST_IEEE80211_REST_TEST */
 #endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
-#if !defined(HOST_IEEE80211_REST_TEST)
+#if !defined(HOST_IEEE80211_REST_TEST) || defined(HOST_IEEE80211_REST_RATE_SECTION_TEST)
 /*
  * W3-41: rate-section and channel-offset mapping helpers extracted from
- * core/rtw_ieee80211.c. Host L2 harness lands in PR2.
+ * core/rtw_ieee80211.c. Rust port replaces kernel build in PR3.
  */
 uint rtw_is_cckrates_included(u8 *rate)
 {
@@ -1129,7 +1133,7 @@ RATE_SECTION mgn_rate_to_rs(enum MGN_RATE rate)
 
 uint rtw_get_cckrate_size(u8 *rate, u32 rate_length)
 {
-	uint i = 0;
+	u32 i = 0;
 
 	while (i < rate_length) {
 		RTW_DBG("%s, rate[%d]=%u\n", __FUNCTION__, i, rate[i]);
@@ -1181,7 +1185,7 @@ u8 hal_ch_offset_to_secondary_ch_offset(u8 ch_offset)
 
 	return SCN;
 }
-#endif /* !HOST_IEEE80211_REST_TEST */
+#endif /* W3-41 C oracle guard */
 
 #if defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)
 u32 *rtw_ieee80211_rest_bss_dsconfig(WLAN_BSSID_EX *bss)
