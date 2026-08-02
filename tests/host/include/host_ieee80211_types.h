@@ -158,8 +158,12 @@ typedef int sint;
 
 #define SET_BITS_TO_LE_2BYTE(__pStart, __BitOffset, __BitLen, __Value) \
 	do { \
-		__pStart[0] = (__pStart[0] & ~(((1U << (__BitLen)) - 1) << (__BitOffset))) | \
-			      (((__Value) & ((1U << (__BitLen)) - 1)) << (__BitOffset)); \
+		u16 __v = (u16)(__pStart)[0] | ((u16)(__pStart)[1] << 8); \
+		u16 __mask = ((1U << (__BitLen)) - 1) << (__BitOffset); \
+		__v = (__v & ~__mask) | \
+		      (((u16)(__Value) & ((1U << (__BitLen)) - 1)) << (__BitOffset)); \
+		(__pStart)[0] = (u8)(__v & 0xff); \
+		(__pStart)[1] = (u8)(__v >> 8); \
 	} while (0)
 
 #define SET_RSN_CAP_SPP(cap, spp) SET_BITS_TO_LE_2BYTE(((u8 *)(cap)), 10, 2, spp)
