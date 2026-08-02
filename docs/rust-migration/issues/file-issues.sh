@@ -216,6 +216,22 @@ files=(
   wave3-111-rm-parse-subelem.md
   wave3-112-rm-fsm-queue.md
   wave3-113-mp-pmac-generators.md
+  wave3-114-mem-premem-buffers.md
+  wave3-115-sdio-cmd-io.md
+  wave3-116-eeprom-bitbang.md
+  wave3-117-eeprom-read-write.md
+  wave3-118-odm-phydm-init.md
+  wave3-119-odm-adaptivity-leaf.md
+  wave3-120-odm-radar-txpwr.md
+  wave3-121-mi-ch-union.md
+  wave3-122-mi-status-leaf.md
+  wave3-123-mi-netif-buddy.md
+  wave3-124-ioctl-connect-leaf.md
+  wave3-125-ioctl-scan-channel.md
+  wave3-126-btcoex-init-notify.md
+  wave3-127-btcoex-handler-policy.md
+  wave3-128-bf-entry-packet-leaf.md
+  wave3-129-bf-init-cmd-leaf.md
 )
 
 # draft_id -> github issue number
