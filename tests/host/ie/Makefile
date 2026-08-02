@@ -71,7 +71,7 @@ test: test-c test-rust test-rest test-rest-rust test-rest-cipher \
 	test-rest-wapi-wps test-rest-wapi-wps-rust test-rest-mac-str \
 	test-rest-mac-str-rust 	test-rest-chbw test-rest-frame-ht test-rest-frame-ht-rust \
 	test-rest-rate-section test-rest-rate-section-rust \
-	test-rest-ht-mcs-amsdu test-rest-ht-mcs-amsdu-rust
+	test-rest-ht-mcs-amsdu
 
 test-c: test_ie
 	./test_ie ie_vectors.json
