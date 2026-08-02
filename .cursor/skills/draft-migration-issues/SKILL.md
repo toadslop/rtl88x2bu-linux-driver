@@ -4,10 +4,10 @@ description: >-
   Path C of pick-up-work-item (fallback when no PRs need prep, no ready issue,
   and backlog is not saturated). Drafts implementable ~200 LOC child issues with
   local specs — only allowlisted leaf/pure slices with a clear L0/L1/L2 path.
-  Do NOT file when chain head has no accessible code but backlog is deep, or
-  scope is HAL/Wave 4. Completes the pick-up workflow — do NOT select or
-  implement a newly drafted issue in the same run. Do NOT use to duplicate
-  existing open issues.
+  Favor wide parallel graphs over deep blocked_by chains. Do NOT file when a
+  single lane is saturated, or scope is HAL/Wave 4. Completes the pick-up
+  workflow — do NOT select or implement a newly drafted issue in the same run.
+  Do NOT use to duplicate existing open issues.
 metadata:
   parent-skill: pick-up-work-item
   path: C
@@ -19,8 +19,83 @@ When **no open issue is ready**, figure out what tickets are missing to keep the
 migration moving, then draft them in the repo's issue format.
 
 **Draft only when there is a clear implementation path.** Do not file issues that
-sit behind an in-flight chain head, lack a spec, depend on Wave 4 HAL, or cannot
-pass L0 (+ L1/L2 per slice) without new unplanned infra.
+lack a spec, depend on Wave 4 HAL, or cannot pass L0 (+ L1/L2 per slice) without
+new unplanned infra. **Favor tickets that enable parallel work** — see
+**Favor wide graphs over deep chains** below.
+
+## Favor wide graphs over deep chains (mandatory — read first)
+
+This is a **large port** across dozens of `core/` translation units. Most slices
+can be implemented **concurrently** by different agents. The tracker should look
+like a **wide** graph (many independent lanes), not a **deep** chain (everything
+waiting on everything else).
+
+```text
+BAD (deep chain):  W3-01 → W3-02 → … → W3-129   (one lane, one agent at a time)
+
+GOOD (wide graph): rtw_rf.c lane ──┐
+                   rtw_recv.c lane ├── many ready at once
+                   rtw_mlme.c lane ─┘
+                   (chain only *within* a lane when technically required)
+```
+
+**Default assumption:** a new slice in a **different C file** or **non-overlapping
+Rust module** is **not** blocked by unrelated slices. Do **not** set
+`blocked_by: [W3-NN-1]` just because the previous ID was filed in the same batch.
+
+### When to use `blocked_by` (narrow — real deps only)
+
+Add a blocker **only** when the slice cannot compile or pass gates without the
+predecessor:
+
+| Use `blocked_by` | Example |
+|----------------|---------|
+| **Same C file**, later slice calls Rust introduced in an earlier slice | W3-20 uses `rtw_get_center_ch` from W3-19 in `rtw_rf.c` |
+| **Same file**, Makefile object swap follows implementation | Part 2 swaps the `.o` only after Part 1's Rust exists |
+| **Missing shared infra** | `blocked_by: [T5]` harness, `[A2]` domain types |
+| **True cross-file API** | Slice B imports a `pub fn` that only exists after slice A lands |
+
+If the coupling is soft ("nice to have same PR stack"), put it in **Notes** — do
+**not** add a `blocked_by` edge.
+
+### When NOT to use `blocked_by`
+
+| Do **not** block on | Why |
+|---------------------|-----|
+| **Different C file** / module | `rtw_rf.c` vs `rtw_rm_util.c` vs `rtw_mlme.c` — independent |
+| **Issue ID sequence** | `W3-53` is not blocked by `W3-52` because numbering |
+| **Epic tranche / table order** | Tranches are planning batches, not pipelines |
+| **Unrelated wave child** | Prior slice closed is not required unless API-coupled |
+| **"File the whole TU in order"** | Split a TU into parallel part-1 slices when functions are independent |
+
+**Wrong pattern (seen in production):** filing W3-41…W3-83 as
+`blocked_by: [previous ID]` across `rtw_ieee80211.c`, `rtw_recv.c`, `rtw_mlme.c`,
+and `rtw_rf.c` — creating an 80-deep chain when most slices could run in parallel.
+
+### Draft batches for parallelism
+
+When filing **5–15** issues in one session:
+
+1. **Pick multiple independent lanes** — different C files or Rust modules (e.g.
+   one RF slice, one recv slice, one mlme slice, one `T*` harness).
+2. **Root each lane** at shared infra only — `blocked_by: []`, or `[T5]`, `[A2]`,
+   etc. — **not** the previous issue ID in the batch.
+3. **Chain only inside a lane** when same-file technical deps exist (part 1 → part 2).
+4. **Cap chain depth per lane** — prefer ≤3 sequential issues per C file before
+   parallel part-1 slices in the same file.
+5. **Report parallelism** — how many drafted issues are immediately ready vs chained.
+
+### `blocked_by` audit (before filing)
+
+For every proposed `blocked_by` entry, ask:
+
+> Can this slice build and pass L0/L1/L2 against current `master` (or an open dep
+> PR) **without** that predecessor?
+
+| Answer | Action |
+|--------|--------|
+| **Yes** | Remove the blocker (or use infra-only deps like `T5`) |
+| **No** | Keep it; document the **specific** function/API coupling in Notes |
 
 ## When NOT to draft (check first — mandatory)
 
@@ -30,7 +105,7 @@ Stop and report instead of filing when **any** of these hold:
 |-----------|--------|
 | Chain head has **no accessible code** (open issue, no implementing PR) | True frontier — Path B cannot start here; Path C only if tranche gap |
 | Chain head has **its own** open PR and **no downstream** issue is ready | Prep/babysit existing PRs (Path A) — do not duplicate the chain head |
-| **≥15 open children** already filed behind the same chain head | Backlog saturated — implement/merge/stack, do not extend the chain |
+| **≥15 open children** already filed behind the same **single-lane** chain head | That lane's backlog saturated — draft **other parallel lanes** instead, or implement/stack |
 | Next slices are **HAL / PHYDM / USB HCI** (`hal/`, `halmac/`, `phydm/`, `hci/`) | Defer to Wave 4 epic — not Path C in Wave 3 |
 | Slice needs **new L2 harness** but no `T*` issue exists to add it | Draft a **test-infra** child first (`T*`), not a translation child |
 | Slice needs **domain types** (`A2`/`A3`) still open | Finish architecture issues first, or pick a leaf that does not list them |
@@ -54,8 +129,9 @@ Only the chain-head issue itself is excluded while its PR is open.
 | Missing test harness blocks a **named** translation slice | **1–3** `T*` issues, not translation children |
 | Single small remainder (one C file, &lt;3 slices left in wave) | **1–3** issues |
 
-Do **not** default to **10–20** issues when the tracker already holds a long
-`blocked_by` chain for the active wave.
+Do **not** default to **10–20** issues in one **deep chain** when the tracker
+already holds a long single-lane `blocked_by` sequence. Prefer **new parallel
+lanes** over extending an existing chain.
 
 ## What kinds of issues to create (allowlist)
 
@@ -67,7 +143,8 @@ Each new issue must be an **implementable ~200 LOC C→Rust slice** with:
 - **Gates in Acceptance** — L0 + L1 on swap; L2 when behavior is testable on host
 - **Local draft markdown** — `docs/rust-migration/issues/<file>.md` with YAML
   frontmatter **before** filing to GitHub (no GitHub-only bodies)
-- **`blocked_by`** — only real predecessor slices (not epic parent)
+- **`blocked_by`** — **real** predecessor slices only (see **Favor wide graphs**);
+  empty `[]` is normal for independent lanes; not epic parent
 
 ### Good issue types
 
@@ -129,21 +206,36 @@ Common gap patterns in this repo:
 
 ## 2. Decide what to draft
 
-### Batch size (required)
+### Batch shape (required — wide over deep)
 
 Before writing specs, scan the active epic's deferred list and remaining `core/`
-translation units. Split each large TU into ~200 LOC function groups (same
-pattern as W2-07/W2-08 part 1/2, or W3-10…W3-18 tranche 2). Draft the next
-tranche slice in one session (typically **5–15** issues per **When NOT to draft**
-and the ≥15 open-child cap below) — e.g. leaf helpers in `rtw_rf.c`, then
-`rtw_ieee80211_rest`, then `rtw_rm_util`, etc.
+translation units. **Prioritize parallel lanes**, not one long chain:
+
+1. List **C files / modules** with unfiled or under-covered scope.
+2. Pick **3–6 independent lanes** (different files) when possible.
+3. Within each lane, split into ~200 LOC slices; **chain only** when same-file
+   functions truly depend on each other.
+4. Draft **5–15** issues total across lanes (see **When NOT to draft** and the
+   ≥15 per-lane cap).
+
+**Example batch (good):**
+
+| ID | C file | `blocked_by` | Ready when |
+|----|--------|--------------|------------|
+| W3-90 | `rtw_rf.c` part 1 | `[]` or `[T4]` | immediately |
+| W3-91 | `rtw_recv.c` leaf | `[]` | immediately |
+| W3-92 | `rtw_mlme.c` BSSID | `[]` | immediately |
+| W3-93 | `rtw_rf.c` part 2 | `[W3-90]` | after W3-90 (same file) |
+
+**Example batch (bad):** W3-90 → W3-91 → W3-92 → … all `blocked_by: [previous]`
+across unrelated files.
 
 Minimum bar when a tranche gap is confirmed (see **When NOT to draft**):
 
 1. Cover C files from the epic's deferred list that have **clear ~200 LOC leaf
    slices** and an **allowlisted** type above.
-2. Chain issues with `blocked_by` in dependency order — but **do not** extend a
-   chain that already has ≥15 open children behind the head.
+2. **Maximize parallel roots** — most new issues should have `blocked_by: []` or
+   infra-only deps; chain **only within** a lane when technically required.
 3. Commit local markdown for **every** issue before filing; cap at ~15 per session.
 
 Each new issue must be:
@@ -166,16 +258,32 @@ Increment IDs beyond the highest in `ISSUE-MAP.md` (or GitHub titles `[W3-NN]`).
 
 ## 3. Write draft markdown
 
-Use existing children as templates (e.g. `wave3-04-security-type-str.md`):
+Use existing children as templates (e.g. `wave3-04-security-type-str.md`).
+
+**Independent lane (preferred default):**
 
 ```yaml
 ---
-title: "[W3-10] Short title"
+title: "[W3-91] Translate rtw_recv.c — leaf helpers"
 labels: [rust-migration, phase-1, wave-3, size/~200]
 type: child
-id: W3-10
+id: W3-91
 epic: E05
-blocked_by: [W3-09]
+blocked_by: []
+estimate_loc: 200
+---
+```
+
+**Same-file sequence (only when technically required):**
+
+```yaml
+---
+title: "[W3-20] Translate rtw_rf.c — channel/frequency conversion"
+labels: [rust-migration, phase-1, wave-3, size/~200]
+type: child
+id: W3-20
+epic: E05
+blocked_by: [W3-19]   # W3-19 introduces rtw_get_center_ch used here
 estimate_loc: 200
 ---
 
@@ -187,6 +295,7 @@ Port … from [`core/...`](../../../core/...) to [`rust/...`](../../../rust/...)
 
 - Why this slice / split here
 - What stays in C until a later issue
+- **Dependency rationale:** name the specific function/API if `blocked_by` is non-empty
 
 ## Acceptance
 
@@ -233,19 +342,21 @@ Sub-issues roll up progress on the parent epic in GitHub Projects.
 ## 6. Report
 
 ```markdown
-**Gap:** Wave 3 tranche 1 complete; no W3-10+ filed; frontier empty.
+**Gap:** Wave 3 tranche 2 complete; `rtw_mlme.c` and `rtw_iol.c` have no open children.
 
-**Drafted (N issues):**
-| ID | File | Title | Blocked by |
-|----|------|-------|------------|
-| W3-10 | wave3-10-….md | … | W3-09 |
-| … | … | … | … |
+**Drafted (4 issues, 3 parallel lanes):**
+| ID | File | Title | Blocked by | Parallel lane |
+|----|------|-------|------------|---------------|
+| W3-90 | wave3-90-….md | rtw_rf.c part 1 | `[]` | rf (ready now) |
+| W3-91 | wave3-91-….md | rtw_recv.c leaf | `[]` | recv (ready now) |
+| W3-92 | wave3-92-….md | rtw_mlme.c BSSID | `[]` | mlme (ready now) |
+| W3-93 | wave3-93-….md | rtw_rf.c part 2 | W3-90 | rf (chained in-lane) |
 
-**Filed on GitHub:** yes — #179–#181 (example)
+**Parallelism:** 3 of 4 immediately ready; 1 same-file follow-up.
 
-**Unblocks:** W3-10 ready after W3-09 (closed)
+**Filed on GitHub:** yes — #300–#303 (example)
 
-**For a future pick-up (not this run):** W3-10 is the next implementable issue.
+**For a future pick-up:** W3-90, W3-91, W3-92 are independently selectable.
 ```
 
 Report the **total count** of drafted/filed issues. If the count is small and the

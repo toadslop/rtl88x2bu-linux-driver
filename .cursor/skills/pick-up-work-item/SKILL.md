@@ -325,7 +325,8 @@ implement one immediately. Wait for an explicit follow-up or a new pick-up run
 | Babysit new PRs until CI is green (Path B) | Skip babysit after opening a stack |
 | Complete the full planned stack (Path B) | Stop mid-stack and ask whether to continue |
 | File follow-up issue(s) when the stack cannot finish (Path B) | End with "next: implement PRn" and no tracker |
-| Draft new issues only when allowlist + gap checks pass (Path C) | Draft 10–20 tickets while backlog is deep behind a blocked head |
+| Draft new issues only when allowlist + gap checks pass (Path C) | Draft deep single-lane chains across unrelated C files |
+| Favor wide parallel issue graphs when drafting (Path C) | Chain every new ticket to the previous ID by default |
 | Stack new work on open dependency PR branches (Path B) | Wait for chain-head PRs to merge before implementing dependents |
 | Stop when backlog saturated — implement/merge instead | File HAL/USB/PHYDM slices without Wave 4 infra |
 | Close issues with evidence they are done | Merge PRs without explicit user instruction |

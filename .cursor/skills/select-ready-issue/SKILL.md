@@ -167,11 +167,15 @@ An issue is **ready** when:
 
 When multiple issues are ready, pick the **first** match:
 
-1. **Unblock others** — issues on the critical path for the current wave
-2. **Same wave, lowest ID** — e.g. `W3-04` before `W3-07`
-3. **Test infra** (`T*`) when it unblocks CI for in-flight translation work
-4. **Architecture** (`A*`) when a wave child lists it in `blocked_by`
-5. **User override** — if the user named an issue, use that
+1. **Parallel lanes** — prefer an issue in a C file / module with **no** other
+   open in-flight PR (spread work across `rtw_rf.c`, `rtw_recv.c`, `rtw_mlme.c`,
+   etc. instead of stacking only one lane)
+2. **Unblock others** — issues on the critical path for the current wave
+3. **Same wave, lowest ID** within the chosen lane — e.g. `W3-04` before `W3-07`
+   when both are in the same file and ready
+4. **Test infra** (`T*`) when it unblocks CI for in-flight translation work
+5. **Architecture** (`A*`) when a wave child lists it in `blocked_by`
+6. **User override** — if the user named an issue, use that
 
 ## 5. Load the full spec
 
