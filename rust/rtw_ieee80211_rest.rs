@@ -3,7 +3,8 @@
 //! classification slice (W3-26), WPA/RSN cipher suite getters (W3-27), and
 //! WPA/RSN IE parse (W3-28), and WAPI/WPS/sec-IE getters (W3-29), and
 //! string/MAC address helpers (W3-30), and chbw grouping/sync (W3-31), and
-//! frame header / HT MCS helpers (W3-32), and rate-section / ch-offset mapping (W3-41).
+//! frame header / HT MCS helpers (W3-32), and rate-section / ch-offset mapping (W3-41),
+//! and HT MCS bitmap / AMSDU mode helpers (W3-42).
 
 #![allow(
     dead_code,
@@ -434,6 +435,26 @@ fn get_rsn_cap_mfp_option(cap: *const U8) -> U8 {
 fn get_rsn_cap_spp_opt(cap: *const U8) -> U8 {
     le_bits_to_2byte(cap, 10, 2) as U8
 }
+
+fn set_bits_to_le_2byte(p: *mut U8, bit_offset: u32, bit_len: u32, value: u16) {
+    unsafe {
+        let mut v = rtw_get_le16(p);
+        let mask = ((1u16 << bit_len) - 1) << bit_offset;
+        v = (v & !mask) | ((value & ((1u16 << bit_len) - 1)) << bit_offset);
+        *p = (v & 0xff) as U8;
+        *p.add(1) = (v >> 8) as U8;
+    }
+}
+
+fn set_rsn_cap_spp(cap: *mut U8, spp: U8) {
+    set_bits_to_le_2byte(cap, 10, 2, spp as u16);
+}
+
+const SPP_CAP: U8 = 1;
+const SPP_REQ: U8 = 2;
+const RTW_AMSDU_MODE_NON_SPP: U8 = 0;
+const RTW_AMSDU_MODE_SPP: U8 = 1;
+const RTW_AMSDU_MODE_ALL_DROP: U8 = 2;
 
 #[repr(C)]
 pub struct RsneInfo {
@@ -1056,6 +1077,90 @@ pub extern "C" fn hal_ch_offset_to_secondary_ch_offset(ch_offset: U8) -> U8 {
     }
 }
 
+fn rtw_ht_mcsset_to_nss_impl(supp_mcs_set: *const U8) -> U8 {
+    if supp_mcs_set.is_null() {
+        return 1;
+    }
+    unsafe {
+        if *supp_mcs_set.add(3) != 0 {
+            4
+        } else if *supp_mcs_set.add(2) != 0 {
+            3
+        } else if *supp_mcs_set.add(1) != 0 {
+            2
+        } else if *supp_mcs_set.add(0) != 0 {
+            1
+        } else {
+            1
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_ht_mcsset_to_nss(supp_mcs_set: *mut U8) -> U8 {
+    rtw_ht_mcsset_to_nss_impl(supp_mcs_set)
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_ht_mcs_set_to_bitmap(mcs_set: *mut U8, nss: U8) -> u32 {
+    if mcs_set.is_null() {
+        return 0;
+    }
+    let mut bitmap = 0u32;
+    for i in 0..nss {
+        unsafe {
+            bitmap |= (*mcs_set.add(i as usize) as u32) << (i * 8);
+        }
+    }
+    bitmap
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_set_spp_amsdu_mode(mode: U8, rsn_ie: *mut U8, rsn_ie_len: c_int) {
+    let mut info = RsneInfo {
+        gcs: core::ptr::null_mut(),
+        pcs_cnt: 0,
+        pcs_list: core::ptr::null_mut(),
+        akm_cnt: 0,
+        akm_list: core::ptr::null_mut(),
+        cap: core::ptr::null_mut(),
+        pmkid_cnt: 0,
+        pmkid_list: core::ptr::null_mut(),
+        gmcs: core::ptr::null_mut(),
+        err: 0,
+    };
+
+    if rtw_rsne_info_parse(rsn_ie, rsn_ie_len as c_uint, &mut info) != _SUCCESS {
+        return;
+    }
+
+    let spp_req_cap = if mode == RTW_AMSDU_MODE_NON_SPP {
+        0
+    } else if mode == RTW_AMSDU_MODE_SPP {
+        SPP_CAP | SPP_REQ
+    } else if mode == RTW_AMSDU_MODE_ALL_DROP {
+        SPP_REQ
+    } else {
+        return;
+    };
+
+    if !info.cap.is_null() {
+        set_rsn_cap_spp(info.cap, spp_req_cap);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_check_amsdu_disable(mode: U8, spp_opt: U8) -> U8 {
+    if (mode == RTW_AMSDU_MODE_NON_SPP && (spp_opt & SPP_REQ) != 0)
+        || (mode == RTW_AMSDU_MODE_SPP && (spp_opt & SPP_CAP) == 0)
+        || mode == RTW_AMSDU_MODE_ALL_DROP
+    {
+        _TRUE as U8
+    } else {
+        _FALSE as U8
+    }
+}
+
 #[cfg(host_ieee80211_rest_test)]
 fn bss_dsconfig(bss: *mut HostWlanBssidEx) -> *mut u32 {
     unsafe { &mut (*bss).configuration.ds_config }
@@ -1524,34 +1629,8 @@ fn get_ht_cap_ele_tx_max_ss(ht_cap: *const U8) -> U8 {
     le_bits_to_1byte(unsafe { ht_cap.add(15) }, 2, 2)
 }
 
-#[cfg(host_ieee80211_rest_test)]
 fn rtw_ht_mcsset_to_nss_inner(supp_mcs_set: *const U8) -> U8 {
-    if supp_mcs_set.is_null() {
-        return 1;
-    }
-    unsafe {
-        if *supp_mcs_set.add(3) != 0 {
-            4
-        } else if *supp_mcs_set.add(2) != 0 {
-            3
-        } else if *supp_mcs_set.add(1) != 0 {
-            2
-        } else if *supp_mcs_set.add(0) != 0 {
-            1
-        } else {
-            1
-        }
-    }
-}
-
-#[cfg(not(host_ieee80211_rest_test))]
-extern "C" {
-    fn rtw_ht_mcsset_to_nss(supp_mcs_set: *mut U8) -> U8;
-}
-
-#[cfg(not(host_ieee80211_rest_test))]
-fn rtw_ht_mcsset_to_nss_inner(supp_mcs_set: *const U8) -> U8 {
-    unsafe { rtw_ht_mcsset_to_nss(supp_mcs_set as *mut U8) }
+    rtw_ht_mcsset_to_nss_impl(supp_mcs_set)
 }
 
 fn ht_mcs_rate_from_byte(byte: U8, idx: usize, bw_40: U8, short_gi: U8) -> u16 {
