@@ -6,9 +6,9 @@ Metrics:
   - module_object_pct: share of linked translation units that are Rust ports (excl. infra)
   - migration_units_loc_pct: share of baseline LOC within actively ported core/crypto units
 
-Reads scripts/ci/migration-module-objects.txt for the 88x2bu default link set
-(CONFIG_RTL8822B + USB). Regenerate after Makefile object-list changes via
-scripts/ci/update-migration-baseline.sh.
+The 88x2bu module link set is derived from an L0 build (``88x2bu.mod``) and passed via
+``--module-objects``. CI runs ``scripts/ci/run-migration-progress-ci.sh`` inside the L0
+image; locally use ``scripts/ci/build-module-objects.sh`` or an existing ``88x2bu.mod``.
 """
 from __future__ import annotations
 
@@ -20,7 +20,6 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BASELINE_JSON = REPO_ROOT / "scripts/ci/migration-baseline.json"
-MODULE_OBJECTS = REPO_ROOT / "scripts/ci/migration-module-objects.txt"
 
 RUST_INFRA = frozenset({"kbuild_stub", "scaffold", "ffi", "domain_types"})
 
@@ -164,16 +163,21 @@ def normalize_object_path(line: str) -> str:
     return line
 
 
+def read_objects_file(path: Path) -> str:
+    if not path.is_file():
+        sys.stderr.write(f"missing module object list: {path}\n")
+        sys.exit(1)
+    return path.read_text()
+
+
 def load_module_objects(objects_text: str | None = None) -> list[str]:
+    if objects_text is None:
+        sys.stderr.write(
+            "module object list required — pass --module-objects "
+            "(from scripts/ci/build-module-objects.sh or CI)\n"
+        )
+        sys.exit(1)
     text = objects_text
-    if text is None:
-        if not MODULE_OBJECTS.exists():
-            sys.stderr.write(
-                f"missing {MODULE_OBJECTS.relative_to(REPO_ROOT)} — "
-                "run scripts/ci/update-migration-baseline.sh\n"
-            )
-            sys.exit(1)
-        text = MODULE_OBJECTS.read_text()
     if text == "":
         return []
     objs = [
@@ -431,33 +435,27 @@ def compute_migration_units_metrics(
     }
 
 
-def snapshot_at_ref(tree_ref: str, baseline_ref: str) -> dict:
-    objects_bytes = git_file_bytes(
-        "scripts/ci/migration-module-objects.txt", tree_ref
-    )
+def snapshot_with_objects(
+    tree_ref: str,
+    baseline_ref: str,
+    objects_text: str,
+) -> dict:
     makefile_bytes = git_file_bytes("Makefile", tree_ref)
-    # Do not fall back to the worktree object list when the ref lacks the file.
-    objects_text = (
-        objects_bytes.decode("utf-8", errors="replace")
-        if objects_bytes is not None
-        else ""
-    )
     makefile_text = (
         makefile_bytes.decode("utf-8", errors="replace") if makefile_bytes else None
     )
-    module_metrics: dict | None
-    if objects_bytes is None:
-        module_metrics = None
-    else:
-        module_metrics = compute_module_metrics(
-            baseline_ref, tree_ref, objects_text=objects_text
-        )
+    module_metrics = compute_module_metrics(
+        baseline_ref, tree_ref, objects_text=objects_text
+    )
     return {
         "module": module_metrics,
         "units": compute_migration_units_metrics(
-            baseline_ref, tree_ref, makefile_text=makefile_text, objects_text=objects_text
+            baseline_ref,
+            tree_ref,
+            makefile_text=makefile_text,
+            objects_text=objects_text,
         ),
-        "has_module_objects": objects_bytes is not None,
+        "has_module_objects": True,
     }
 
 
@@ -478,8 +476,7 @@ def format_markdown(data: dict, baseline_label: str, baseline_ref: str) -> str:
             )
         else:
             delta_section += (
-                "| Module LOC % | _n/a (base ref lacks "
-                "`migration-module-objects.txt`)_ |\n"
+                "| Module LOC % | _n/a (base module link set not built)_ |\n"
                 "| Module objects % | _n/a_ |\n"
             )
         units_delta = delta.get("migration_units_loc_pct")
@@ -489,8 +486,7 @@ def format_markdown(data: dict, baseline_label: str, baseline_ref: str) -> str:
             )
         else:
             delta_section += (
-                "| Migration units LOC % | _n/a (base ref lacks "
-                "`migration-module-objects.txt`)_ |\n"
+                "| Migration units LOC % | _n/a (base module link set not built)_ |\n"
             )
 
     return (
@@ -528,8 +524,19 @@ def main() -> int:
         help="Git ref for baseline C LOC (default: migration-baseline.json)",
     )
     parser.add_argument(
+        "--module-objects",
+        type=Path,
+        required=True,
+        help="Path to 88x2bu link object list (from build-module-objects.sh)",
+    )
+    parser.add_argument(
         "--compare-ref",
         help="Optional ref to compute deltas against (e.g. origin/master)",
+    )
+    parser.add_argument(
+        "--compare-module-objects",
+        type=Path,
+        help="Base-ref link object list (required when --compare-ref is set)",
     )
     parser.add_argument("--json", action="store_true", help="Print JSON instead of markdown")
     args = parser.parse_args()
@@ -538,12 +545,18 @@ def main() -> int:
     baseline_ref = args.baseline_ref or meta["baseline_ref"]
     baseline_label = meta.get("baseline_label", baseline_ref)
 
-    module = compute_module_metrics(baseline_ref)
-    units = compute_migration_units_metrics(baseline_ref, objects_text=None)
+    objects_text = read_objects_file(args.module_objects)
+    module = compute_module_metrics(baseline_ref, objects_text=objects_text)
+    units = compute_migration_units_metrics(baseline_ref, objects_text=objects_text)
     result: dict = {"baseline_ref": baseline_ref, "module": module, "units": units}
 
     if args.compare_ref:
-        base_snap = snapshot_at_ref(args.compare_ref, baseline_ref)
+        if args.compare_module_objects is None:
+            parser.error("--compare-module-objects is required with --compare-ref")
+        base_objects_text = read_objects_file(args.compare_module_objects)
+        base_snap = snapshot_with_objects(
+            args.compare_ref, baseline_ref, base_objects_text
+        )
         delta: dict[str, float | None] = {
             "module_loc_pct": None,
             "module_object_pct": None,
