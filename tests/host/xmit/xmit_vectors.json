@@ -1,0 +1,96 @@
+{
+  "oracle": "core/rtw_xmit_rest.c",
+  "vectors": [
+    {
+      "name": "tx_bw_mode_assoc_2g_cap",
+      "fn": "rtw_get_tx_bw_mode",
+      "sta_bw": 3,
+      "fw_state": 1,
+      "cur_channel": 6,
+      "driver_tx_bw_mode": 34,
+      "expect_u8": 2
+    },
+    {
+      "name": "tx_bw_mode_assoc_5g_cap",
+      "fn": "rtw_get_tx_bw_mode",
+      "sta_bw": 3,
+      "fw_state": 1,
+      "cur_channel": 36,
+      "driver_tx_bw_mode": 35,
+      "expect_u8": 2
+    },
+    {
+      "name": "tx_bw_mode_not_assoc",
+      "fn": "rtw_get_tx_bw_mode",
+      "sta_bw": 3,
+      "fw_state": 0,
+      "cur_channel": 6,
+      "driver_tx_bw_mode": 35,
+      "expect_u8": 3
+    },
+    {
+      "name": "adapter_rate_bmp_ht_20",
+      "fn": "rtw_get_adapter_tx_rate_bmp_by_bw",
+      "bw": 0,
+      "iface_id": 0,
+      "macid_id": 0,
+      "macid_num": 2,
+      "macid_iface0": 0,
+      "macid_bw": 0,
+      "macid_vht_en": 0,
+      "rate_bmp0": 4095,
+      "expect_cck_ofdm": 4095,
+      "expect_ht": 0,
+      "expect_vht": 0
+    },
+    {
+      "name": "adapter_rate_bmp_vht_40",
+      "fn": "rtw_get_adapter_tx_rate_bmp_by_bw",
+      "bw": 1,
+      "iface_id": 0,
+      "macid_id": 0,
+      "macid_num": 2,
+      "macid_iface0": 0,
+      "macid_bw": 1,
+      "macid_vht_en": 1,
+      "rate_bmp0": 20480,
+      "expect_cck_ofdm": 0,
+      "expect_ht": 0,
+      "expect_vht": 5
+    },
+    {
+      "name": "shared_macid_rate_bmp",
+      "fn": "rtw_get_shared_macid_tx_rate_bmp_by_bw",
+      "bw": 0,
+      "macid_id": 0,
+      "macid_num": 2,
+      "macid_iface0": 0,
+      "macid_iface1": 1,
+      "macid_bw": 0,
+      "macid_vht_en": 0,
+      "rate_bmp0": 4095,
+      "expect_cck_ofdm": 4095,
+      "expect_ht": 0,
+      "expect_vht": 0
+    },
+    {
+      "name": "ht_bw_bmp_mcs7",
+      "fn": "rtw_get_tx_bw_bmp_of_ht_rate",
+      "rate": 135,
+      "max_bw": 1,
+      "ht_bmp_20": 128,
+      "ht_bmp_40": 128,
+      "expect_u8": 12
+    },
+    {
+      "name": "vht_bw_bmp_mcs0",
+      "fn": "rtw_get_tx_bw_bmp_of_vht_rate",
+      "rate": 160,
+      "max_bw": 2,
+      "vht_bmp_20": 1,
+      "vht_bmp_40": 1,
+      "vht_bmp_80": 1,
+      "expect_u8": 28
+    }
+  ]
+}
