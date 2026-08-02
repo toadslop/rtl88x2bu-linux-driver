@@ -1188,7 +1188,7 @@ u8 hal_ch_offset_to_secondary_ch_offset(u8 ch_offset)
 }
 #endif /* W3-41 C oracle guard */
 
-#if !defined(HOST_IEEE80211_REST_TEST) || \
+#if (!defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)) || \
 	defined(HOST_IEEE80211_REST_HT_MCS_AMSDU_TEST)
 /*
  * W3-42: HT MCS bitmap and AMSDU mode helpers extracted from
