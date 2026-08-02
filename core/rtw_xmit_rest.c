@@ -1,0 +1,173 @@
+/******************************************************************************
+ *
+ * Copyright(c) 2007 - 2019 Realtek Corporation.
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of version 2 of the GNU General Public License as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ *****************************************************************************/
+#define _RTW_XMIT_REST_C_
+
+#ifdef HOST_XMIT_TEST
+#include "host_xmit_types.h"
+#else
+#include <drv_types.h>
+#endif
+
+#ifndef HOST_XMIT_TEST
+
+u8 rtw_get_tx_bw_mode(_adapter *adapter, struct sta_info *sta)
+{
+	u8 bw;
+
+	bw = sta->cmn.bw_mode;
+	if (MLME_STATE(adapter) & WIFI_ASOC_STATE) {
+		if (adapter->mlmeextpriv.cur_channel <= 14)
+			bw = rtw_min(bw, ADAPTER_TX_BW_2G(adapter));
+		else
+			bw = rtw_min(bw, ADAPTER_TX_BW_5G(adapter));
+	}
+
+	return bw;
+}
+
+void rtw_get_adapter_tx_rate_bmp_by_bw(_adapter *adapter, u8 bw, u16 *r_bmp_cck_ofdm, u32 *r_bmp_ht, u64 *r_bmp_vht)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	struct macid_ctl_t *macid_ctl = dvobj_to_macidctl(dvobj);
+	u8 fix_bw = 0xFF;
+	u16 bmp_cck_ofdm = 0;
+	u32 bmp_ht = 0;
+	u64 bmp_vht = 0;
+	int i;
+
+	if (adapter->fix_rate != 0xFF && adapter->fix_bw != 0xFF)
+		fix_bw = adapter->fix_bw;
+
+	/* TODO: adapter->fix_rate */
+
+	for (i = 0; i < macid_ctl->num; i++) {
+		if (!rtw_macid_is_used(macid_ctl, i))
+			continue;
+		if (!rtw_macid_is_iface_specific(macid_ctl, i, adapter))
+			continue;
+
+		if (bw == CHANNEL_WIDTH_20) /* CCK, OFDM always 20MHz */
+			bmp_cck_ofdm |= macid_ctl->rate_bmp0[i] & 0x00000FFF;
+
+		/* bypass mismatch bandwidth for HT, VHT */
+		if ((fix_bw != 0xFF && fix_bw != bw) || (fix_bw == 0xFF && macid_ctl->bw[i] != bw))
+			continue;
+
+		if (macid_ctl->vht_en[i])
+			bmp_vht |= (macid_ctl->rate_bmp0[i] >> 12) | ((u64)macid_ctl->rate_bmp1[i] << 20);
+		else
+			bmp_ht |= (macid_ctl->rate_bmp0[i] >> 12) | (macid_ctl->rate_bmp1[i] << 20);
+	}
+
+	/* TODO: mlmeext->tx_rate*/
+
+	if (r_bmp_cck_ofdm)
+		*r_bmp_cck_ofdm = bmp_cck_ofdm;
+	if (r_bmp_ht)
+		*r_bmp_ht = bmp_ht;
+	if (r_bmp_vht)
+		*r_bmp_vht = bmp_vht;
+}
+
+void rtw_get_shared_macid_tx_rate_bmp_by_bw(struct dvobj_priv *dvobj, u8 bw, u16 *r_bmp_cck_ofdm, u32 *r_bmp_ht, u64 *r_bmp_vht)
+{
+	struct macid_ctl_t *macid_ctl = dvobj_to_macidctl(dvobj);
+	u16 bmp_cck_ofdm = 0;
+	u32 bmp_ht = 0;
+	u64 bmp_vht = 0;
+	int i;
+
+	for (i = 0; i < macid_ctl->num; i++) {
+		if (!rtw_macid_is_used(macid_ctl, i))
+			continue;
+		if (!rtw_macid_is_iface_shared(macid_ctl, i))
+			continue;
+
+		if (bw == CHANNEL_WIDTH_20) /* CCK, OFDM always 20MHz */
+			bmp_cck_ofdm |= macid_ctl->rate_bmp0[i] & 0x00000FFF;
+
+		/* bypass mismatch bandwidth for HT, VHT */
+		if (macid_ctl->bw[i] != bw)
+			continue;
+
+		if (macid_ctl->vht_en[i])
+			bmp_vht |= (macid_ctl->rate_bmp0[i] >> 12) | ((u64)macid_ctl->rate_bmp1[i] << 20);
+		else
+			bmp_ht |= (macid_ctl->rate_bmp0[i] >> 12) | (macid_ctl->rate_bmp1[i] << 20);
+	}
+
+	if (r_bmp_cck_ofdm)
+		*r_bmp_cck_ofdm = bmp_cck_ofdm;
+	if (r_bmp_ht)
+		*r_bmp_ht = bmp_ht;
+	if (r_bmp_vht)
+		*r_bmp_vht = bmp_vht;
+}
+
+u8 rtw_get_tx_bw_bmp_of_ht_rate(struct dvobj_priv *dvobj, u8 rate, u8 max_bw)
+{
+	struct rf_ctl_t *rf_ctl = dvobj_to_rfctl(dvobj);
+	u8 bw;
+	u8 bw_bmp = 0;
+	u32 rate_bmp;
+
+	if (!IS_HT_RATE(rate)) {
+		rtw_warn_on(1);
+		goto exit;
+	}
+
+	rate_bmp = 1 << (rate - MGN_MCS0);
+
+	if (max_bw > CHANNEL_WIDTH_40)
+		max_bw = CHANNEL_WIDTH_40;
+
+	for (bw = CHANNEL_WIDTH_20; bw <= max_bw; bw++) {
+		/* RA may use lower rate for retry */
+		if (rf_ctl->rate_bmp_ht_by_bw[bw] >= rate_bmp)
+			bw_bmp |= ch_width_to_bw_cap(bw);
+	}
+
+exit:
+	return bw_bmp;
+}
+
+u8 rtw_get_tx_bw_bmp_of_vht_rate(struct dvobj_priv *dvobj, u8 rate, u8 max_bw)
+{
+	struct rf_ctl_t *rf_ctl = dvobj_to_rfctl(dvobj);
+	u8 bw;
+	u8 bw_bmp = 0;
+	u64 rate_bmp;
+
+	if (!IS_VHT_RATE(rate)) {
+		rtw_warn_on(1);
+		goto exit;
+	}
+
+	rate_bmp = BIT_ULL(rate - MGN_VHT1SS_MCS0);
+
+	if (max_bw > CHANNEL_WIDTH_160)
+		max_bw = CHANNEL_WIDTH_160;
+
+	for (bw = CHANNEL_WIDTH_20; bw <= max_bw; bw++) {
+		/* RA may use lower rate for retry */
+		if (rf_ctl->rate_bmp_vht_by_bw[bw] >= rate_bmp)
+			bw_bmp |= ch_width_to_bw_cap(bw);
+	}
+
+exit:
+	return bw_bmp;
+}
+
+#endif /* !HOST_XMIT_TEST */
