@@ -234,7 +234,21 @@ report.
 | 1 | [`triage-open-issues`](../triage-open-issues/SKILL.md) | Close issues already done but still open |
 | 2 | [`select-ready-issue`](../select-ready-issue/SKILL.md) | Pick one open, unblocked, ready issue |
 | 3 | [`plan-stacked-prs`](../plan-stacked-prs/SKILL.md) | Split into stacked PRs with **≤250 changed lines each** (target ~200); plan only |
-| 4 | [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) | Implement one PR at a time; **run size gate before each commit**; open PRs ready for review (not draft); babysit |
+| 4 | [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) | Implement **every** planned PR in the stack (or file follow-up issues for any remainder); **run size gate before each commit**; open PRs ready for review (not draft); babysit |
+
+### Stack completion (Path B — mandatory)
+
+Autonomous pick-up has **no operator** to answer "should I continue?". During step 4
+the agent **must** either:
+
+1. **Complete the full stack** — every row in the plan table becomes an open PR
+   with green babysit, or
+2. **File follow-up GitHub issue(s)** for every unimplemented plan row before
+   stopping, with parent issue comment + blocker documented
+
+**Never** stop after opening some PRs (e.g. 2 of 3) and ask whether to continue,
+or end with an implied "next: implement PR3" and no filed tracker. See
+[`implement-stacked-prs`](../implement-stacked-prs/SKILL.md#9-continue-the-stack-mandatory--no-partial-stops).
 
 ### Open state + babysit (Path B only)
 
@@ -256,8 +270,11 @@ draft:
    PRs you just opened will be handled on the **next** pick-up when Path A
    triggers.
 
-**Stop here** after the stack is implemented and babysitted (or blocked with a
-clear report). Do not draft new issues in the same run.
+**Stop here** after the stack is **fully** implemented and babysitted
+(`stack complete`), or after a blocker forced **`stack partial — tracked`**
+(follow-up issue(s) filed for every remaining plan row). Do not stop mid-stack
+without filing trackers. Do not draft new issues in the same run (except the
+mandatory follow-up issues for unfinished stack rows).
 
 ## Path C — Draft a new wave
 
@@ -302,6 +319,8 @@ implement one immediately. Wait for an explicit follow-up or a new pick-up run
 | Open new PRs ready for review (Path B) | Open implementation PRs as drafts |
 | Tag `@toadslop` in every PR description | Omit maintainer notification on new/updated PRs |
 | Babysit new PRs until CI is green (Path B) | Skip babysit after opening a stack |
+| Complete the full planned stack (Path B) | Stop mid-stack and ask whether to continue |
+| File follow-up issue(s) when the stack cannot finish (Path B) | End with "next: implement PRn" and no tracker |
 | Draft new issues only when allowlist + gap checks pass (Path C) | Draft 10–20 tickets while chain head is in-flight or backlog is deep |
 | Stop when backlog saturated — implement/merge instead | File HAL/USB/PHYDM slices without Wave 4 infra |
 | Close issues with evidence they are done | Merge PRs without explicit user instruction |
@@ -327,10 +346,10 @@ After completing **one** path, reply in chat with:
 | Triage | Issues closed (`#N` + reason) or "none" / "n/a (Path A with changes)" / triage results after A no-op fall-through |
 | Selected issue | Draft ID, GitHub `#N`, title — Path B only |
 | Plan | PR stack table with **Est. Δ ≤ 250 per row** — Path B only |
-| Implementation | PR links, babysit/CI status — Path B only |
+| Implementation | PR links, babysit/CI status, **`stack complete`** or **`stack partial — tracked`** + follow-up issue links — Path B only |
 | PR prep | Per-PR status from prepare-all — Path A only |
 | New drafts | Files/issues created — Path C only |
-| Workflow end | `prepared PRs` / `human action required` / `A no-op → B/C` / `implemented` / `stopped after drafting` |
+| Workflow end | `prepared PRs` / `human action required` / `A no-op → B/C` / `stack complete` / `stack partial — tracked` / `stopped after drafting` |
 
 Ask the user before starting Path B implementation if they only wanted triage or
 selection.
