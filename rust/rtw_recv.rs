@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0
 //! Recv leaf helpers — Rust port of `core/rtw_recv_rest.c` (W3-39).
+//!
+//! Defensive null / negative-tid checks and a null `rx_data` early return are
+//! intentional additions over the C originals (which fault on invalid inputs).
+//! Production call sites always pass live `sta` / populated frames.
 
 #![allow(
     dead_code,
@@ -19,6 +23,7 @@ use std::os::raw::{c_int, c_uint, c_void};
 const _TRUE: c_int = 1;
 const _FALSE: c_int = 0;
 const MAX_CONTINUAL_NORXPACKET_COUNT: c_int = 4;
+// Matches `sizeof(struct rtw_ieee80211_hdr_3addr)` in `include/rtw_ieee80211.h`.
 const HDR_3ADDR_SZ: usize = 24;
 
 #[cfg(host_recv_test)]

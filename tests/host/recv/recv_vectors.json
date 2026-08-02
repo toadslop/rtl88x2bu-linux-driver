@@ -55,6 +55,14 @@
       "frame": "000000000000000000000000000000000000000000000000dd0411223344",
       "expect_ret": 0,
       "expect_len": 30
+    },
+    {
+      "name": "wfd_offset8_production_shape",
+      "fn": "rtw_rframe_del_wfd_ie",
+      "ies_offset": 8,
+      "frame": "0000000000000000000000000000000000000000000000000000000000000000dd04506f9a0a",
+      "expect_ret": 1,
+      "expect_len": 32
     }
   ]
 }
