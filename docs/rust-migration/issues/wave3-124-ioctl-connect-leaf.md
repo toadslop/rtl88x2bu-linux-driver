@@ -1,6 +1,6 @@
 ---
 title: "[W3-124] ioctl validate and connect/disassociate"
-labels: [rust-migration, phase-1, wave-3, size/~200]
+labels: [rust-migration, phase-1, wave-3, size/~250]
 type: child
 id: W3-124
 epic: E05

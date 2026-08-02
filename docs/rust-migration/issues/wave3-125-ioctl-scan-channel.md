@@ -1,6 +1,6 @@
 ---
 title: "[W3-125] ioctl scan/auth/channel setters"
-labels: [rust-migration, phase-1, wave-3, size/~200]
+labels: [rust-migration, phase-1, wave-3, size/~250]
 type: child
 id: W3-125
 epic: E05

@@ -26,6 +26,9 @@ Port helpers from [`core/rtw_br_ext.c`](../../../core/rtw_br_ext.c) to [`rust/rt
 ## Notes
 
 - Pure NAT25 address/hash/TLV leaf helpers; low HAL coupling.
+- Any `static` helpers in `rtw_br_ext.c` not listed above should be extracted to
+  `rtw_br_ext_rest.c` (same `*_rest.c` pattern as prior W3 issues) before the
+  CONFIG_RUST object swap.
 - L2: host harness under `tests/host/` with JSON differential vectors (pattern from prior W3 issues).
 
 ## Acceptance

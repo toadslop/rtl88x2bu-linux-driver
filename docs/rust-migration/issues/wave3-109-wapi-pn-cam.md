@@ -21,6 +21,8 @@ Port helpers from [`core/rtw_wapi.c`](../../../core/rtw_wapi.c) to [`rust/rtw_wa
 ## Notes
 
 - WAPI PN compare and CAM table leaf helpers; low-medium coupling.
+- **Kbuild / `CONFIG_*`:** `core/rtw_wapi.o` is linked only when **`CONFIG_WAPI_SUPPORT=y`**
+  (disabled in the default 88x2bu profile).
 - L2: host harness under `tests/host/` with JSON differential vectors (pattern from prior W3 issues).
 
 ## Acceptance

@@ -27,8 +27,10 @@ Port helpers from [`core/rtw_mi.c`](../../../core/rtw_mi.c) to [`rust/rtw_mi.rs`
 
 ## Notes
 
-- Multi-interface netif queue/carrier buddy helpers; completes initial `rtw_mi.c` export surface.
-- Remaining `_rtw_mi_process` dispatch paths stay in C until a later tranche.
+- Multi-interface netif queue/carrier buddy helpers; covers the listed exported
+  netif buddy surface in this slice.
+- Remaining `rtw_mi.c` exports (e.g. `rtw_mi_scan_abort`, `rtw_mi_start_drv_threads`,
+  buddy thread/timer paths) stay in C until a later tranche.
 - L2: host harness under `tests/host/` with JSON differential vectors (pattern from prior W3 issues).
 
 ## Acceptance
