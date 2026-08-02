@@ -1,0 +1,17 @@
+{
+  "oracle": "core/rtw_ieee80211_rest.c",
+  "vectors": [
+    {"name":"mgn_rate_cck","fn":"mgn_rate_to_rs","rate":2,"expect_u8":0},
+    {"name":"mgn_rate_ofdm","fn":"mgn_rate_to_rs","rate":108,"expect_u8":1},
+    {"name":"mgn_rate_ht1ss","fn":"mgn_rate_to_rs","rate":128,"expect_u8":2},
+    {"name":"mgn_rate_vht1ss","fn":"mgn_rate_to_rs","rate":160,"expect_u8":6},
+    {"name":"cckrate_size","fn":"rtw_get_cckrate_size","rates":"02040b16","rate_length":4,"expect_u32":4},
+    {"name":"cckrates_included","fn":"rtw_is_cckrates_included","rates":"820b00","expect_u32":1},
+    {"name":"cckratesonly","fn":"rtw_is_cckratesonly_included","rates":"02040b00","expect_u32":1},
+    {"name":"rateset_len","fn":"rtw_get_rateset_len","rates":"82060c9600","expect_u32":4},
+    {"name":"sec_to_hal_sca","fn":"secondary_ch_offset_to_hal_ch_offset","ch_offset":1,"expect_u8":1},
+    {"name":"sec_to_hal_scb","fn":"secondary_ch_offset_to_hal_ch_offset","ch_offset":3,"expect_u8":2},
+    {"name":"hal_to_sec_lower","fn":"hal_ch_offset_to_secondary_ch_offset","ch_offset":1,"expect_u8":1},
+    {"name":"hal_to_sec_upper","fn":"hal_ch_offset_to_secondary_ch_offset","ch_offset":2,"expect_u8":3}
+  ]
+}

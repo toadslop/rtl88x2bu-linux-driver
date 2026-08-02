@@ -16,6 +16,9 @@
 
 #ifdef HOST_IEEE80211_REST_TEST
 #include "host_ieee80211_types.h"
+#ifdef HOST_IEEE80211_REST_RATE_SECTION_TEST
+#include "host_rate_section_types.h"
+#endif
 #define _rtw_memmove memmove
 #else
 #include <drv_types.h>
@@ -1129,7 +1132,11 @@ RATE_SECTION mgn_rate_to_rs(enum MGN_RATE rate)
 
 uint rtw_get_cckrate_size(u8 *rate, u32 rate_length)
 {
+<<<<<<< HEAD
 	uint i = 0;
+=======
+	u32 i = 0;
+>>>>>>> a9e15d5 (test(ie): L2 harness for W3-41 rate-section helpers (#370))
 
 	while (i < rate_length) {
 		RTW_DBG("%s, rate[%d]=%u\n", __FUNCTION__, i, rate[i]);
