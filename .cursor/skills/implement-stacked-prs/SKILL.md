@@ -136,7 +136,7 @@ gh pr create --base <stack-parent> --head <branch> --title "<title>" --body "<bo
 
 | Field | PR1 | PR2+ |
 |-------|-----|------|
-| `base_branch` / `--base` | `master` | previous PR head branch |
+| `base_branch` / `--base` | `master` **or** dependency PR `headRefName` from plan (see [`plan-stacked-prs`](../plan-stacked-prs/SKILL.md#pr1-base-when-dependencies-are-on-open-prs-mandatory)) | previous PR head branch |
 | `branch_name` / `--head` | current head | current head |
 | `draft` | `false` / omit | `false` / omit |
 | `title` | from plan | from plan |
@@ -263,7 +263,7 @@ Use **`stack complete`** or **`stack partial — tracked`** — never an open-en
 **Stack opened:**
 | PR | Branch | Base | Status |
 |----|--------|------|--------|
-| #200 | cursor/w3-04a-… | master | open |
+| #200 | cursor/w3-04a-… | master (or `cursor/w3-39-…` when stacking on open dep PR) | open |
 | #201 | cursor/w3-04b-… | cursor/w3-04a-… | open |
 
 **Gates:** L0/L1/L2 green on PR2
