@@ -22,6 +22,12 @@ Port helpers from [`core/rtw_mem.c`](../../../core/rtw_mem.c) to [`rust/rtw_mem.
 
 - Premem skb pool helpers; low HAL coupling — first slice of `rtw_mem.c`.
 - Module init/exit (`rtw_mem_init` / `rtw_mem_exit`) stay in C until a later issue.
+- **Kbuild / `CONFIG_*` (default 88x2bu profile):** `core/rtw_mem.c` is **not linked**
+  into `88x2bu.ko` today (no `rtw_mem.o` in the top-level `Makefile`). Premem helpers
+  are additionally gated behind **`CONFIG_PREALLOC_RX_SKB_BUFFER`** (off in the default
+  config). At implement time, add a guarded `rtk_core += core/rtw_mem.o` entry (or port
+  from the file without linking) and enable the premem config before L0 can satisfy L1
+  for these symbols — or defer to a Wave 4 / optional-build tranche.
 - L2: host harness under `tests/host/` with JSON differential vectors (pattern from prior W3 issues).
 
 ## Acceptance

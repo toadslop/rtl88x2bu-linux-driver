@@ -22,6 +22,11 @@ Port helpers from [`core/rtw_sdio.c`](../../../core/rtw_sdio.c) to [`rust/rtw_sd
 
 - Thin SDIO I/O wrappers over `sdio_io`; starts tranche 7 on `rtw_sdio.c`.
 - Static `sdio_io` stays in C; Rust ports the exported cmd52/53 entry points.
+- **Kbuild / `CONFIG_*` (default 88x2bu profile):** `core/rtw_sdio.o` is appended to
+  `rtk_core` only when **`CONFIG_SDIO_HCI=y`**. The 88x2bu profile sets
+  `CONFIG_USB_HCI=y` / `CONFIG_SDIO_HCI=n`, so this object is **not in the default
+  module build**. Portable for SDIO HCI builds; document the profile guard at implement
+  time or defer until a SDIO-focused tranche.
 - L2: host harness under `tests/host/` with JSON differential vectors (pattern from prior W3 issues).
 
 ## Acceptance

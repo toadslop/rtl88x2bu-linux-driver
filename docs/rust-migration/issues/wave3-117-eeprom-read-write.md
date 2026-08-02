@@ -22,6 +22,9 @@ Port helpers from [`core/rtw_eeprom.c`](../../../core/rtw_eeprom.c) to [`rust/rt
 
 - EEPROM read/write API layer; builds on W3-116 bit-bang primitives.
 - Adapter-coupled paths may need thin C shims or populated fixtures for L2.
+- **Kbuild (default 88x2bu profile):** same as W3-116 — `core/rtw_eeprom.c` is **not
+  linked** into `88x2bu.ko`; efuse content uses **`core/efuse/rtw_efuse.o`**. Add
+  Kbuild or re-scope before L0/L1, or defer to Wave 4 / optional-build tranche.
 - L2: host harness under `tests/host/` with JSON differential vectors (pattern from prior W3 issues).
 
 ## Acceptance
