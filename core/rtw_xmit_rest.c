@@ -20,8 +20,6 @@
 #include <drv_types.h>
 #endif
 
-#ifndef HOST_XMIT_TEST
-
 u8 rtw_get_tx_bw_mode(_adapter *adapter, struct sta_info *sta)
 {
 	u8 bw;
@@ -169,5 +167,3 @@ u8 rtw_get_tx_bw_bmp_of_vht_rate(struct dvobj_priv *dvobj, u8 rate, u8 max_bw)
 exit:
 	return bw_bmp;
 }
-
-#endif /* !HOST_XMIT_TEST */
