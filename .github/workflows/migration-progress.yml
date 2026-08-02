@@ -1,14 +1,20 @@
 # Post Rust migration progress summary on pull requests.
-# See scripts/ci/compute-migration-progress.py
+# Derives the 88x2bu link set from L0 builds (no committed object list).
+# See scripts/ci/run-migration-progress-ci.sh
 
 name: Migration progress
 
 on:
   pull_request:
 
+env:
+  KERNEL_TAG: v6.12.9
+  L0_IMAGE: ghcr.io/${{ github.repository_owner }}/rtl88x2bu-l0:v6.12.9
+
 permissions:
   contents: read
   pull-requests: write
+  packages: read
 
 jobs:
   migration-progress:
@@ -18,12 +24,84 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Log in to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull published L0 image
+        id: pull
+        continue-on-error: true
+        run: docker pull "${L0_IMAGE}"
+
+      - name: Build L0 image (fallback when ghcr tag is missing)
+        if: steps.pull.outcome == 'failure'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: .github/docker/l0/Dockerfile
+          load: true
+          build-args: |
+            KERNEL_TAG=${{ env.KERNEL_TAG }}
+          tags: rtl88x2bu-l0:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       - name: Compute progress report
         id: report
+        env:
+          BASE_REF: origin/${{ github.event.pull_request.base.ref }}
         run: |
-          git fetch origin "${{ github.base_ref }}"
-          BASE="origin/${{ github.base_ref }}"
-          BODY="$(./scripts/ci/compute-migration-progress.sh --compare-ref "${BASE}")"
+          git fetch origin "${{ github.event.pull_request.base.ref }}"
+          if [ "${{ steps.pull.outcome }}" = "success" ]; then
+            IMAGE="${L0_IMAGE}"
+          else
+            IMAGE="rtl88x2bu-l0:ci"
+          fi
+          # L0 image has no Python; run L0 builds in Docker, compute on the runner.
+          # Capture object lists via stdout so root-owned files in the bind mount
+          # are not moved onto runner-owned mktemp paths (cleanup would fail).
+          HEAD_OBJECTS="$(mktemp)"
+          BASE_OBJECTS=""
+          WORKTREE=""
+          l0_object_list() {
+            local mount="$1"
+            local out_in_mount="$2"
+            docker run --rm -v "${mount}:/driver" -w /driver "${IMAGE}" \
+              bash -c "./scripts/ci/build-module-objects.sh ${out_in_mount} && cat ${out_in_mount} && rm -f ${out_in_mount}"
+          }
+          cleanup() {
+            rm -f "$HEAD_OBJECTS" 2>/dev/null || true
+            [ -n "$BASE_OBJECTS" ] && rm -f "$BASE_OBJECTS" 2>/dev/null || true
+            if [ -n "$WORKTREE" ] && [ -d "$WORKTREE" ]; then
+              git worktree remove -f "$WORKTREE" 2>/dev/null || rm -rf "$WORKTREE"
+            fi
+          }
+          trap cleanup EXIT
+          l0_object_list "$PWD" /driver/.ci-migration-objects-head.txt > "$HEAD_OBJECTS"
+          ARGS=(--module-objects "$HEAD_OBJECTS")
+          if [ -n "$BASE_REF" ]; then
+            BASE_OBJECTS="$(mktemp)"
+            if git cat-file -e "${BASE_REF}:scripts/ci/build-module-objects.sh" 2>/dev/null; then
+              WORKTREE="$(mktemp -d)"
+              git config --global --add safe.directory "$PWD"
+              git config --global --add safe.directory "$WORKTREE"
+              git worktree add --detach "$WORKTREE" "$BASE_REF"
+              l0_object_list "$WORKTREE" /driver/.ci-migration-objects-base.txt > "$BASE_OBJECTS"
+            elif git cat-file -e "${BASE_REF}:scripts/ci/migration-module-objects.txt" 2>/dev/null; then
+              git show "${BASE_REF}:scripts/ci/migration-module-objects.txt" > "$BASE_OBJECTS"
+            else
+              echo "migration-progress: no module object list at ${BASE_REF}" >&2
+              rm -f "$BASE_OBJECTS"
+              BASE_OBJECTS=""
+            fi
+            if [ -n "$BASE_OBJECTS" ]; then
+              ARGS+=(--compare-ref "$BASE_REF" --compare-module-objects "$BASE_OBJECTS")
+            fi
+          fi
+          BODY="$(python3 ./scripts/ci/compute-migration-progress.py "${ARGS[@]}")"
           {
             echo 'body<<EOF'
             echo "${BODY}"

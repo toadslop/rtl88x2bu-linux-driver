@@ -31,6 +31,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 		llvm-18 \
 		make \
 		pkg-config \
+		python3-minimal \
 		qemu-system-x86 \
 	&& rm -rf /var/lib/apt/lists/*
 

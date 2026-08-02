@@ -2,5 +2,5 @@
   "baseline_ref": "95374e4",
   "baseline_label": "RTL88x2B driver v5.3.1 import (pre-Rust migration)",
   "module_config": "CONFIG_RTL8822B=y, CONFIG_USB_HCI=y (88x2bu)",
-  "notes": "Baseline C LOC is measured per translation unit at baseline_ref. Module object list lives in migration-module-objects.txt — regenerate via scripts/ci/update-migration-baseline.sh when the Makefile link set changes."
+  "notes": "Baseline C LOC is measured per translation unit at baseline_ref. The live 88x2bu link set is derived from an L0 build (88x2bu.mod) at report time — see scripts/ci/build-module-objects.sh and run-migration-progress-ci.sh."
 }

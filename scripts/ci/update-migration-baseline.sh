@@ -1,33 +1,17 @@
 #!/usr/bin/env bash
-# Regenerate scripts/ci/migration-module-objects.txt from a local L0 build.
-# Requires a Rust-enabled kernel tree (KDIR) — same as L0 gate.
+# Deprecated wrapper — use build-module-objects.sh instead.
+# Writes the link object list to OUTPUT (default: stdout).
 set -euo pipefail
-
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-cd "$ROOT"
+OUT="${1:-}"
 
-KDIR="${KDIR:-/opt/linux}"
-LLVM="${LLVM:-1}"
+echo "update-migration-baseline.sh: use scripts/ci/build-module-objects.sh (see --help in migration-progress workflow)" >&2
 
-if [ ! -d "$KDIR" ]; then
-	echo "update-migration-baseline: KDIR=$KDIR not found" >&2
-	echo "Set KDIR to a Rust-enabled kernel build tree (see docs/rust-migration/dev-environment.md)." >&2
-	exit 1
+if [ -n "$OUT" ]; then
+	( cd "$ROOT" && "$ROOT/scripts/ci/build-module-objects.sh" "$OUT" )
+else
+	TMP="$(mktemp)"
+	trap 'rm -f "$TMP"' EXIT
+	( cd "$ROOT" && "$ROOT/scripts/ci/build-module-objects.sh" "$TMP" )
+	cat "$TMP"
 fi
-
-export LIBCLANG_PATH="${LIBCLANG_PATH:-/usr/lib/llvm-18/lib}"
-
-echo "Building 88x2bu.mod (KDIR=$KDIR LLVM=$LLVM)..."
-make clean
-make KDIR="$KDIR" LLVM="$LLVM" -j"$(nproc)"
-
-MOD="$ROOT/88x2bu.mod"
-if [ ! -f "$MOD" ]; then
-	echo "update-migration-baseline: $MOD not found after build" >&2
-	exit 1
-fi
-
-OUT="$ROOT/scripts/ci/migration-module-objects.txt"
-# Normalize to repo-relative paths for CI portability.
-sed "s|^$ROOT/||" "$MOD" > "$OUT"
-echo "Wrote $(wc -l < "$OUT") objects to ${OUT#"$ROOT"/}"
