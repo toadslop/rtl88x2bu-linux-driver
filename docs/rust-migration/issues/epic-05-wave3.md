@@ -131,7 +131,28 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-96 | `wave3-96-roch-handlers.md` | `rtw_roch.c` remain-on-channel handlers |
 | W3-97 | `wave3-97-roch-concurrent-init.md` | `rtw_roch.c` concurrent roch + init |
 
-Further ~200 LOC slices **not yet covered by W3-01…W3-97**; file new `wave3-*.md` issues as needed when tranche 5 closes:
+## Children (tranche 6 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-98 | `wave3-98-p2p-channel-leaf.md` | `rtw_p2p.c` channel/negotiation leaf |
+| W3-99 | `wave3-99-p2p-ie-builders.md` | `rtw_p2p.c` P2P IE frame builders |
+| W3-100 | `wave3-100-p2p-wfd-beacon-probe.md` | `rtw_p2p.c` WFD IE builders (beacon/probe) |
+| W3-101 | `wave3-101-p2p-wfd-probe-assoc.md` | `rtw_p2p.c` WFD IE builders (probe-resp/assoc) |
+| W3-102 | `wave3-102-tdls-lifecycle.md` | `rtw_tdls.c` lifecycle + prohibited checks |
+| W3-103 | `wave3-103-tdls-ht-vht-cap.md` | `rtw_tdls.c` HT/VHT cap process |
+| W3-104 | `wave3-104-nat25-addr-hash.md` | `rtw_br_ext.c` NAT25 addr/hash leaf |
+| W3-105 | `wave3-105-nat25-db.md` | `rtw_br_ext.c` NAT25 DB lifecycle |
+| W3-106 | `wave3-106-rson-leaf.md` | `rtw_rson.c` score/IE/choose leaf |
+| W3-107 | `wave3-107-mbo-ie-leaf.md` | `rtw_mbo.c` IE parse/build leaf |
+| W3-108 | `wave3-108-wnm-btm-parse.md` | `rtw_wnm.c` BTM parse/reset leaf |
+| W3-109 | `wave3-109-wapi-pn-cam.md` | `rtw_wapi.c` PN/IE/CAM table leaf |
+| W3-110 | `wave3-110-ft-ie-build.md` | `rtw_ft.c` IE update/build leaf |
+| W3-111 | `wave3-111-rm-parse-subelem.md` | `rtw_rm.c` meas subelem parse |
+| W3-112 | `wave3-112-rm-fsm-queue.md` | `rtw_rm_fsm.c` obj/queue/clock |
+| W3-113 | `wave3-113-mp-pmac-generators.md` | `rtw_mp.c` PMAC sig generators |
+
+Further ~200 LOC slices **not yet covered by W3-01…W3-113**; file new `wave3-*.md` issues as needed when tranche 6 closes:
 
 - `core/` files not yet sliced: `rtw_p2p.c`, `rtw_tdls.c`, `rtw_mp.c`, `rtw_br_ext.c`, `rtw_beamforming.c`, `rtw_wnm.c`, `rtw_wapi.c`, `rtw_ft.c`, `rtw_mbo.c`, `rtw_rson.c`, `rtw_rm.c`, `rtw_rm_fsm.c`, `rtw_btcoex*.c`, `rtw_eeprom.c`, `rtw_debug.c`, `rtw_mem.c`, `rtw_sdio.c`, `rtw_ioctl_*.c`, …
 - Remaining helpers in partially translated files after W3-97 lands (audit with migration progress / `grep`)

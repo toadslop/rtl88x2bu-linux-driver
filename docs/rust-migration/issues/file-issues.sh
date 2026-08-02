@@ -200,6 +200,22 @@ files=(
   wave3-95-sreset-lifecycle.md
   wave3-96-roch-handlers.md
   wave3-97-roch-concurrent-init.md
+  wave3-98-p2p-channel-leaf.md
+  wave3-99-p2p-ie-builders.md
+  wave3-100-p2p-wfd-beacon-probe.md
+  wave3-101-p2p-wfd-probe-assoc.md
+  wave3-102-tdls-lifecycle.md
+  wave3-103-tdls-ht-vht-cap.md
+  wave3-104-nat25-addr-hash.md
+  wave3-105-nat25-db.md
+  wave3-106-rson-leaf.md
+  wave3-107-mbo-ie-leaf.md
+  wave3-108-wnm-btm-parse.md
+  wave3-109-wapi-pn-cam.md
+  wave3-110-ft-ie-build.md
+  wave3-111-rm-parse-subelem.md
+  wave3-112-rm-fsm-queue.md
+  wave3-113-mp-pmac-generators.md
 )
 
 # draft_id -> github issue number
