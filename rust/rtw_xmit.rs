@@ -11,10 +11,10 @@
     unreachable_pub
 )]
 
-#[cfg(host_xmit_test)]
-use std::os::raw::c_void;
 #[cfg(not(host_xmit_test))]
 use core::ffi::c_void;
+#[cfg(host_xmit_test)]
+use std::os::raw::c_void;
 
 type U8 = u8;
 type U16 = u16;
@@ -66,7 +66,11 @@ fn ch_width_to_bw_cap(bw: U8) -> U8 {
 
 #[inline]
 fn rtw_min(a: U8, b: U8) -> U8 {
-    if a > b { b } else { a }
+    if a > b {
+        b
+    } else {
+        a
+    }
 }
 
 #[inline]
@@ -233,7 +237,11 @@ mod kernel {
 
     extern "C" {
         fn rtw_macid_is_used(macid_ctl: *mut c_void, id: U8) -> bool;
-        fn rtw_macid_is_iface_specific(macid_ctl: *mut c_void, id: U8, adapter: *mut c_void) -> bool;
+        fn rtw_macid_is_iface_specific(
+            macid_ctl: *mut c_void,
+            id: U8,
+            adapter: *mut c_void,
+        ) -> bool;
         fn rtw_macid_is_iface_shared(macid_ctl: *mut c_void, id: U8) -> bool;
         fn rtw_rust_xmit_adapter_dvobj(adapter: *mut c_void) -> *mut c_void;
         fn rtw_rust_xmit_sta_bw_mode(sta: *mut c_void) -> U8;
@@ -340,9 +348,15 @@ pub extern "C" fn rtw_get_tx_bw_mode(adapter: *mut c_void, sta: *mut c_void) -> 
         let mut bw = unsafe { kernel::sta_bw_mode(sta) };
         if unsafe { kernel::mlme_state(adapter) } & WIFI_ASOC_STATE != 0 {
             if unsafe { kernel::cur_channel(adapter) } <= 14 {
-                bw = rtw_min(bw, bw_mode_2g(unsafe { kernel::driver_tx_bw_mode(adapter) }));
+                bw = rtw_min(
+                    bw,
+                    bw_mode_2g(unsafe { kernel::driver_tx_bw_mode(adapter) }),
+                );
             } else {
-                bw = rtw_min(bw, bw_mode_5g(unsafe { kernel::driver_tx_bw_mode(adapter) }));
+                bw = rtw_min(
+                    bw,
+                    bw_mode_5g(unsafe { kernel::driver_tx_bw_mode(adapter) }),
+                );
             }
         }
         bw
@@ -428,7 +442,8 @@ pub extern "C" fn rtw_get_adapter_tx_rate_bmp_by_bw(
             return;
         }
         let mut fix_bw = 0xffu8;
-        if unsafe { kernel::fix_rate(adapter) } != 0xff && unsafe { kernel::fix_bw(adapter) } != 0xff
+        if unsafe { kernel::fix_rate(adapter) } != 0xff
+            && unsafe { kernel::fix_bw(adapter) } != 0xff
         {
             fix_bw = unsafe { kernel::fix_bw(adapter) };
         }
