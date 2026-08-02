@@ -3,7 +3,7 @@
 //! classification slice (W3-26), WPA/RSN cipher suite getters (W3-27), and
 //! WPA/RSN IE parse (W3-28), and WAPI/WPS/sec-IE getters (W3-29), and
 //! string/MAC address helpers (W3-30), and chbw grouping/sync (W3-31), and
-//! frame header / HT MCS helpers (W3-32).
+//! frame header / HT MCS helpers (W3-32), and rate-section / ch-offset mapping (W3-41).
 
 #![allow(
     dead_code,
@@ -159,6 +159,40 @@ const HAL_PRIME_CHNL_OFFSET_UPPER: U8 = 2;
 
 const SCA: U8 = 1;
 const SCB: U8 = 3;
+const SCN: U8 = 0;
+
+const MGN_1M: U8 = 0x02;
+const MGN_2M: U8 = 0x04;
+const MGN_5_5M: U8 = 0x0B;
+const MGN_6M: U8 = 0x0C;
+const MGN_11M: U8 = 0x16;
+const MGN_54M: U8 = 0x6C;
+const MGN_MCS0: U8 = 0x80;
+const MGN_MCS7: U8 = 0x87;
+const MGN_MCS8: U8 = 0x88;
+const MGN_MCS15: U8 = 0x8F;
+const MGN_MCS16: U8 = 0x90;
+const MGN_MCS23: U8 = 0x97;
+const MGN_MCS24: U8 = 0x98;
+const MGN_MCS31: U8 = 0x9F;
+const MGN_VHT1SS_MCS0: U8 = 0xA0;
+const MGN_VHT1SS_MCS9: U8 = 0xA9;
+const MGN_VHT2SS_MCS0: U8 = 0xAA;
+const MGN_VHT2SS_MCS9: U8 = 0xB3;
+const MGN_VHT3SS_MCS0: U8 = 0xB4;
+const MGN_VHT3SS_MCS9: U8 = 0xBD;
+const MGN_VHT4SS_MCS0: U8 = 0xBE;
+const MGN_VHT4SS_MCS9: U8 = 0xC7;
+
+const HT_1SS: U8 = 2;
+const HT_2SS: U8 = 3;
+const HT_3SS: U8 = 4;
+const HT_4SS: U8 = 5;
+const VHT_1SS: U8 = 6;
+const VHT_2SS: U8 = 7;
+const VHT_3SS: U8 = 8;
+const VHT_4SS: U8 = 9;
+const RATE_SECTION_NUM: U8 = 10;
 
 const NDIS_802_11_FIXED_IES_LEN: usize = 12;
 
@@ -912,6 +946,114 @@ fn is_cckratesonly_included(rate: *const U8) -> bool {
         }
     }
     true
+}
+
+#[inline]
+fn is_cck_mgn_rate(rate: U8) -> bool {
+    rate == MGN_1M || rate == MGN_2M || rate == MGN_5_5M || rate == MGN_11M
+}
+
+#[inline]
+fn is_ofdm_mgn_rate(rate: U8) -> bool {
+    rate >= MGN_6M && rate <= MGN_54M && rate != MGN_11M
+}
+
+#[no_mangle]
+pub extern "C" fn mgn_rate_to_rs(rate: c_int) -> c_int {
+    let rate = rate as U8;
+    if is_cck_mgn_rate(rate) {
+        0
+    } else if is_ofdm_mgn_rate(rate) {
+        1
+    } else if rate >= MGN_MCS0 && rate <= MGN_MCS7 {
+        2
+    } else if rate >= MGN_MCS8 && rate <= MGN_MCS15 {
+        3
+    } else if rate >= MGN_MCS16 && rate <= MGN_MCS23 {
+        4
+    } else if rate >= MGN_MCS24 && rate <= MGN_MCS31 {
+        5
+    } else if rate >= MGN_VHT1SS_MCS0 && rate <= MGN_VHT1SS_MCS9 {
+        6
+    } else if rate >= MGN_VHT2SS_MCS0 && rate <= MGN_VHT2SS_MCS9 {
+        7
+    } else if rate >= MGN_VHT3SS_MCS0 && rate <= MGN_VHT3SS_MCS9 {
+        8
+    } else if rate >= MGN_VHT4SS_MCS0 && rate <= MGN_VHT4SS_MCS9 {
+        9
+    } else {
+        10
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_get_cckrate_size(rate: *mut U8, rate_length: c_uint) -> c_uint {
+    if rate.is_null() {
+        return 0;
+    }
+    let mut i = 0u32;
+    while i < rate_length {
+        unsafe {
+            if !is_cck_rate_byte(*rate.add(i as usize)) {
+                break;
+            }
+        }
+        i += 1;
+    }
+    i
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_is_cckrates_included(rate: *mut U8) -> c_uint {
+    is_cckrates_included(rate) as c_uint
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_is_cckratesonly_included(rate: *mut U8) -> c_uint {
+    is_cckratesonly_included(rate) as c_uint
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_get_rateset_len(rateset: *mut U8) -> c_uint {
+    if rateset.is_null() {
+        return 0;
+    }
+    let mut i = 0u32;
+    loop {
+        unsafe {
+            if *rateset.add(i as usize) == 0 || i > 12 {
+                break;
+            }
+        }
+        i += 1;
+    }
+    i
+}
+
+#[no_mangle]
+pub extern "C" fn secondary_ch_offset_to_hal_ch_offset(ch_offset: U8) -> U8 {
+    if ch_offset == SCN {
+        HAL_PRIME_CHNL_OFFSET_DONT_CARE
+    } else if ch_offset == SCA {
+        HAL_PRIME_CHNL_OFFSET_LOWER
+    } else if ch_offset == SCB {
+        HAL_PRIME_CHNL_OFFSET_UPPER
+    } else {
+        HAL_PRIME_CHNL_OFFSET_DONT_CARE
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn hal_ch_offset_to_secondary_ch_offset(ch_offset: U8) -> U8 {
+    if ch_offset == HAL_PRIME_CHNL_OFFSET_DONT_CARE {
+        SCN
+    } else if ch_offset == HAL_PRIME_CHNL_OFFSET_LOWER {
+        SCA
+    } else if ch_offset == HAL_PRIME_CHNL_OFFSET_UPPER {
+        SCB
+    } else {
+        SCN
+    }
 }
 
 #[cfg(host_ieee80211_rest_test)]
