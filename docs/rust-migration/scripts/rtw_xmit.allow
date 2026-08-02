@@ -1,0 +1,17 @@
+# L1 allowlist for W3-40: Rust owns xmit rate-bmp helpers; macid helpers stay in C wlan_util.
+drop rtw_rust_xmit_adapter_dvobj
+drop rtw_rust_xmit_sta_bw_mode
+drop rtw_rust_xmit_mlme_state
+drop rtw_rust_xmit_cur_channel
+drop rtw_rust_xmit_driver_tx_bw_mode
+drop rtw_rust_xmit_fix_rate
+drop rtw_rust_xmit_fix_bw
+drop rtw_rust_xmit_macid_ctl
+drop rtw_rust_xmit_rfctl
+drop rtw_rust_xmit_macid_num
+drop rtw_rust_xmit_macid_bw
+drop rtw_rust_xmit_macid_vht_en
+drop rtw_rust_xmit_macid_rate_bmp0
+drop rtw_rust_xmit_macid_rate_bmp1
+drop rtw_rust_xmit_rf_ht_bmp
+drop rtw_rust_xmit_rf_vht_bmp

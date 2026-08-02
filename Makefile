@@ -2589,6 +2589,7 @@ $(MODULE_NAME)-y += rust/rtw_vht.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt_aid.o
 $(MODULE_NAME)-y += rust/rtw_recv.o
+$(MODULE_NAME)-y += rust/rtw_xmit.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
@@ -3049,6 +3050,19 @@ rust-objects-rtw-recv-rest-c:
 rust-check-symbols-rtw-recv: rust-objects-rtw-recv-rest-c rust-objects-rtw-recv
 	$(MAKE) rust-check-symbols OLD=tests/host/recv/recv_rest_c_ref.o NEW=rust/rtw_recv.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_recv.allow ALLOW_VACUOUS=1
+
+# W3-40: host C oracle xmit_rest vs rust/rtw_xmit.o.
+rust-objects-rtw-xmit:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-xmit"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_xmit.o
+rust-objects-rtw-xmit-rest-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_XMIT_TEST -o tests/host/xmit/xmit_rest_c_ref.o core/rtw_xmit_rest.c
+rust-check-symbols-rtw-xmit: rust-objects-rtw-xmit-rest-c rust-objects-rtw-xmit
+	$(MAKE) rust-check-symbols OLD=tests/host/xmit/xmit_rest_c_ref.o NEW=rust/rtw_xmit.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_xmit.allow ALLOW_VACUOUS=1
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production

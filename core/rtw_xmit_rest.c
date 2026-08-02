@@ -20,6 +20,8 @@
 #include <drv_types.h>
 #endif
 
+#if !defined(CONFIG_RUST) || defined(HOST_XMIT_TEST)
+
 u8 rtw_get_tx_bw_mode(_adapter *adapter, struct sta_info *sta)
 {
 	u8 bw;
@@ -167,3 +169,89 @@ u8 rtw_get_tx_bw_bmp_of_vht_rate(struct dvobj_priv *dvobj, u8 rate, u8 max_bw)
 exit:
 	return bw_bmp;
 }
+
+#endif /* !CONFIG_RUST || HOST_XMIT_TEST */
+
+#if defined(CONFIG_RUST) && !defined(HOST_XMIT_TEST)
+
+struct dvobj_priv *rtw_rust_xmit_adapter_dvobj(_adapter *adapter)
+{
+	return adapter_to_dvobj(adapter);
+}
+
+u8 rtw_rust_xmit_sta_bw_mode(struct sta_info *sta)
+{
+	return sta->cmn.bw_mode;
+}
+
+int rtw_rust_xmit_mlme_state(_adapter *adapter)
+{
+	return MLME_STATE(adapter);
+}
+
+u8 rtw_rust_xmit_cur_channel(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.cur_channel;
+}
+
+u8 rtw_rust_xmit_driver_tx_bw_mode(_adapter *adapter)
+{
+	return adapter->driver_tx_bw_mode;
+}
+
+u8 rtw_rust_xmit_fix_rate(_adapter *adapter)
+{
+	return adapter->fix_rate;
+}
+
+u8 rtw_rust_xmit_fix_bw(_adapter *adapter)
+{
+	return adapter->fix_bw;
+}
+
+struct macid_ctl_t *rtw_rust_xmit_macid_ctl(struct dvobj_priv *dvobj)
+{
+	return dvobj_to_macidctl(dvobj);
+}
+
+struct rf_ctl_t *rtw_rust_xmit_rfctl(struct dvobj_priv *dvobj)
+{
+	return dvobj_to_rfctl(dvobj);
+}
+
+u8 rtw_rust_xmit_macid_num(struct macid_ctl_t *macid_ctl)
+{
+	return macid_ctl->num;
+}
+
+u8 rtw_rust_xmit_macid_bw(struct macid_ctl_t *macid_ctl, u8 id)
+{
+	return macid_ctl->bw[id];
+}
+
+u8 rtw_rust_xmit_macid_vht_en(struct macid_ctl_t *macid_ctl, u8 id)
+{
+	return macid_ctl->vht_en[id];
+}
+
+u32 rtw_rust_xmit_macid_rate_bmp0(struct macid_ctl_t *macid_ctl, u8 id)
+{
+	return macid_ctl->rate_bmp0[id];
+}
+
+u32 rtw_rust_xmit_macid_rate_bmp1(struct macid_ctl_t *macid_ctl, u8 id)
+{
+	return macid_ctl->rate_bmp1[id];
+}
+
+u32 rtw_rust_xmit_rf_ht_bmp(struct rf_ctl_t *rfctl, u8 bw)
+{
+	return rfctl->rate_bmp_ht_by_bw[bw];
+}
+
+u64 rtw_rust_xmit_rf_vht_bmp(struct rf_ctl_t *rfctl, u8 bw)
+{
+	return rfctl->rate_bmp_vht_by_bw[bw];
+}
+
+#endif /* CONFIG_RUST && !HOST_XMIT_TEST */
