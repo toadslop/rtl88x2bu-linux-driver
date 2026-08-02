@@ -2,7 +2,7 @@
 name: pick-up-work-item
 description: >-
   Orchestrates the next rust-migration agent action. Auto-applies on "pick up
-  work", "find open work item", "check GitHub issues", "what should we work on
+  work", "find open work item", "find driver work", "check GitHub issues", "what should we work on
   next", "triage issues and start work", or similar. Chooses exactly ONE of
   three paths per run: (A) prepare eligible open/draft PRs when at least one
   still needs prep; (B) otherwise triage issues, select ready work, plan ~200-line
@@ -140,7 +140,9 @@ rule **only** when the prep batch was a true no-op (no `needs_prep` PRs remain).
 |-----------|------|--------|
 | **One or more `needs_prep` PRs** among `eligible` | **A — Prepare PRs** | Run [`prepare-all-prs-for-merge`](../prepare-all-prs-for-merge/SKILL.md) on those PRs only; **stop** if any PR was changed or any `needs_prep` PR remains blocked (**human action required**). **Fall through** to B/C only when prep completes with zero changes and no eligible PR is still `needs_prep` (see **Landed on a PR branch but no PRs could be changed**) |
 | **No `needs_prep` PRs** (no open PRs, every open PR is `skipped`, or all `eligible` PRs are `merge_ready`) and a ready issue exists after triage + selection | **B — New work** | Triage → select → plan → implement → open PRs → babysit, then **stop** |
-| **No `needs_prep` PRs** and no ready issue after triage + selection | **C — Draft wave** | Triage → draft 10–20 new issues, then **stop** |
+| **No `needs_prep` PRs** and selection reports **chain head in-flight** | **A or wait** | Prep/babysit the frontier PR stack if `needs_prep`; otherwise report frontier + merge-ready PRs and **stop** — **not** Path C |
+| **No `needs_prep` PRs** and no ready issue, backlog **not** saturated, true tranche gap | **C — Draft wave** | Triage → draft new issues per **`draft-migration-issues` allowlist**, then **stop** |
+| **No `needs_prep` PRs** and selection reports **backlog saturated** or in-flight head | **Stop** | Report chain head + open child count; do **not** draft more tickets |
 
 When open PRs exist but **`eligible` is empty** (all `skipped`), **fall through**
 to Path B or C — do not enter Path A with nothing to prepare. When `eligible` is
@@ -164,8 +166,10 @@ flowchart TD
   F -->|Found| G[3. Plan stacked PRs]
   G --> H[4. Implement + open PRs + babysit]
   H --> Z
-  F -->|None ready| I[Path C: draft 10–20 new issues]
-  I --> Z
+  F -->|None ready| I{Backlog saturated or in-flight head?}
+  I -->|Yes| Z3[Report frontier — stop]
+  I -->|No — true gap| J[Path C: draft per allowlist]
+  J --> Z
 ```
 
 Announce which path you chose in chat (one line), e.g. "Path A — 2 eligible
@@ -257,12 +261,19 @@ clear report). Do not draft new issues in the same run.
 ## Path C — Draft a new wave
 
 **When:** no **`needs_prep`** PRs (skipped or merge-ready open PRs may remain),
-and step 2 finds **no** ready issue.
+selection finds **no** ready issue, **`draft-migration-issues` When NOT to draft**
+checks pass (not in-flight head, backlog not saturated, scope is allowlisted).
 
 | Step | Subskill | Outcome |
 |------|----------|---------|
 | 1 | [`triage-open-issues`](../triage-open-issues/SKILL.md) | Close stale issues (same as Path B) |
-| 2 | [`draft-migration-issues`](../draft-migration-issues/SKILL.md) | Draft **10–20** new ~200 LOC tickets, then **stop** |
+| 2 | [`draft-migration-issues`](../draft-migration-issues/SKILL.md) | Draft only implementable slices with local specs, then **stop** |
+
+**Do not enter Path C** when:
+
+- The chain head issue is unblocked but has open implementation PRs (finish those first)
+- ≥15 open children already exist behind the same `blocked_by` chain
+- The only "gap" is Wave 4+ HAL/USB/PHYDM scope
 
 Path C is a **complete job** — not a prelude to implementation.
 
@@ -290,7 +301,8 @@ implement one immediately. Wait for an explicit follow-up or a new pick-up run
 | Open new PRs ready for review (Path B) | Open implementation PRs as drafts |
 | Tag `@toadslop` in every PR description | Omit maintainer notification on new/updated PRs |
 | Babysit new PRs until CI is green (Path B) | Skip babysit after opening a stack |
-| Draft 10–20 issues when frontier is empty (Path C) | Draft only 1–2 tickets when a tranche is missing |
+| Draft new issues only when allowlist + gap checks pass (Path C) | Draft 10–20 tickets while chain head is in-flight or backlog is deep |
+| Stop when backlog saturated — implement/merge instead | File HAL/USB/PHYDM slices without Wave 4 infra |
 | Close issues with evidence they are done | Merge PRs without explicit user instruction |
 | Query GitHub for open PRs, issues, blocked state | Rewrite `ISSUE-MAP.md` by hand (use `file-issues.sh`) |
 
