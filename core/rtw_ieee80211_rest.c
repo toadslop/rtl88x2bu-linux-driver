@@ -31,11 +31,16 @@
 #ifdef HOST_IEEE80211_REST_TEST
 typedef int sint;
 typedef unsigned int uint;
+#endif
 
 extern u8 WIFI_CCKRATES[];
 extern u8 WIFI_OFDMRATES[];
 
-static uint rtw_is_cckrates_included(u8 *rate)
+uint rtw_is_cckrates_included(u8 *rate);
+uint rtw_is_cckratesonly_included(u8 *rate);
+
+#if defined(HOST_IEEE80211_REST_TEST)
+uint rtw_is_cckrates_included(u8 *rate)
 {
 	u32 i = 0;
 
@@ -49,7 +54,7 @@ static uint rtw_is_cckrates_included(u8 *rate)
 	return _FALSE;
 }
 
-static uint rtw_is_cckratesonly_included(u8 *rate)
+uint rtw_is_cckratesonly_included(u8 *rate)
 {
 	u32 i = 0;
 
@@ -62,11 +67,6 @@ static uint rtw_is_cckratesonly_included(u8 *rate)
 
 	return _TRUE;
 }
-#else
-extern u8 WIFI_CCKRATES[];
-extern u8 WIFI_OFDMRATES[];
-extern uint rtw_is_cckrates_included(u8 *rate);
-extern uint rtw_is_cckratesonly_included(u8 *rate);
 #endif /* HOST_IEEE80211_REST_TEST */
 
 int rtw_get_bit_value_from_ieee_value(u8 val)
@@ -1065,6 +1065,123 @@ int rtw_action_frame_parse(const u8 *frame, u32 frame_len, u8 *category, u8 *act
 }
 #endif /* HOST_IEEE80211_REST_FRAME_HT_TEST || !HOST_IEEE80211_REST_TEST */
 #endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
+
+#if !defined(HOST_IEEE80211_REST_TEST)
+/*
+ * W3-41: rate-section and channel-offset mapping helpers extracted from
+ * core/rtw_ieee80211.c. Host L2 harness lands in PR2.
+ */
+uint rtw_is_cckrates_included(u8 *rate)
+{
+	u32 i = 0;
+
+	while (rate[i] != 0) {
+		if ((((rate[i]) & 0x7f) == 2) || (((rate[i]) & 0x7f) == 4) ||
+		    (((rate[i]) & 0x7f) == 11) || (((rate[i]) & 0x7f) == 22))
+			return _TRUE;
+		i++;
+	}
+
+	return _FALSE;
+}
+
+uint rtw_is_cckratesonly_included(u8 *rate)
+{
+	u32 i = 0;
+
+	while (rate[i] != 0) {
+		if ((((rate[i]) & 0x7f) != 2) && (((rate[i]) & 0x7f) != 4) &&
+		    (((rate[i]) & 0x7f) != 11) && (((rate[i]) & 0x7f) != 22))
+			return _FALSE;
+		i++;
+	}
+
+	return _TRUE;
+}
+
+RATE_SECTION mgn_rate_to_rs(enum MGN_RATE rate)
+{
+	RATE_SECTION rs = RATE_SECTION_NUM;
+
+	if (IS_CCK_RATE(rate))
+		rs = CCK;
+	else if (IS_OFDM_RATE(rate))
+		rs = OFDM;
+	else if (IS_HT1SS_RATE(rate))
+		rs = HT_1SS;
+	else if (IS_HT2SS_RATE(rate))
+		rs = HT_2SS;
+	else if (IS_HT3SS_RATE(rate))
+		rs = HT_3SS;
+	else if (IS_HT4SS_RATE(rate))
+		rs = HT_4SS;
+	else if (IS_VHT1SS_RATE(rate))
+		rs = VHT_1SS;
+	else if (IS_VHT2SS_RATE(rate))
+		rs = VHT_2SS;
+	else if (IS_VHT3SS_RATE(rate))
+		rs = VHT_3SS;
+	else if (IS_VHT4SS_RATE(rate))
+		rs = VHT_4SS;
+
+	return rs;
+}
+
+uint rtw_get_cckrate_size(u8 *rate, u32 rate_length)
+{
+	uint i = 0;
+
+	while (i < rate_length) {
+		RTW_DBG("%s, rate[%d]=%u\n", __FUNCTION__, i, rate[i]);
+		if (((rate[i] & 0x7f) == 2) || ((rate[i] & 0x7f) == 4) ||
+		    ((rate[i] & 0x7f) == 11) || ((rate[i] & 0x7f) == 22))
+			i++;
+		else
+			break;
+	}
+	return i;
+}
+
+uint rtw_get_rateset_len(u8 *rateset)
+{
+	uint i = 0;
+
+	while (1) {
+		if ((rateset[i]) == 0)
+			break;
+
+		if (i > 12)
+			break;
+
+		i++;
+	}
+	return i;
+}
+
+u8 secondary_ch_offset_to_hal_ch_offset(u8 ch_offset)
+{
+	if (ch_offset == SCN)
+		return HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+	else if (ch_offset == SCA)
+		return HAL_PRIME_CHNL_OFFSET_LOWER;
+	else if (ch_offset == SCB)
+		return HAL_PRIME_CHNL_OFFSET_UPPER;
+
+	return HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+}
+
+u8 hal_ch_offset_to_secondary_ch_offset(u8 ch_offset)
+{
+	if (ch_offset == HAL_PRIME_CHNL_OFFSET_DONT_CARE)
+		return SCN;
+	else if (ch_offset == HAL_PRIME_CHNL_OFFSET_LOWER)
+		return SCA;
+	else if (ch_offset == HAL_PRIME_CHNL_OFFSET_UPPER)
+		return SCB;
+
+	return SCN;
+}
+#endif /* !HOST_IEEE80211_REST_TEST */
 
 #if defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)
 u32 *rtw_ieee80211_rest_bss_dsconfig(WLAN_BSSID_EX *bss)

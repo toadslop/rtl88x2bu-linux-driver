@@ -117,34 +117,6 @@ u8 mgn_rates_vht4ss[10] = {MGN_VHT4SS_MCS0, MGN_VHT4SS_MCS1, MGN_VHT4SS_MCS2, MG
 	, MGN_VHT4SS_MCS5, MGN_VHT4SS_MCS6, MGN_VHT4SS_MCS7, MGN_VHT4SS_MCS8, MGN_VHT4SS_MCS9
 			  };
 
-RATE_SECTION mgn_rate_to_rs(enum MGN_RATE rate)
-{
-	RATE_SECTION rs = RATE_SECTION_NUM;
-
-	if (IS_CCK_RATE(rate))
-		rs = CCK;
-	else if (IS_OFDM_RATE(rate))
-		rs = OFDM;
-	else if (IS_HT1SS_RATE(rate))
-		rs = HT_1SS;
-	else if (IS_HT2SS_RATE(rate))
-		rs = HT_2SS;
-	else if (IS_HT3SS_RATE(rate))
-		rs = HT_3SS;
-	else if (IS_HT4SS_RATE(rate))
-		rs = HT_4SS;
-	else if (IS_VHT1SS_RATE(rate))
-		rs = VHT_1SS;
-	else if (IS_VHT2SS_RATE(rate))
-		rs = VHT_2SS;
-	else if (IS_VHT3SS_RATE(rate))
-		rs = VHT_3SS;
-	else if (IS_VHT4SS_RATE(rate))
-		rs = VHT_4SS;
-
-	return rs;
-}
-
 static const char *const _rate_section_str[] = {
 	"CCK",
 	"OFDM",
@@ -192,51 +164,6 @@ int rtw_get_bit_value_from_ieee_value(u8 val)
 	return 0;
 }
 #endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
-
-uint rtw_get_cckrate_size(u8 *rate, u32 rate_length)
-{
-	int i = 0;
-	while(i < rate_length){
-		RTW_DBG("%s, rate[%d]=%u\n", __FUNCTION__, i, rate[i]);
-		if (((rate[i] & 0x7f) == 2) || ((rate[i] & 0x7f) == 4) ||
-			((rate[i] & 0x7f) == 11)  || ((rate[i] & 0x7f) == 22))
-			i++;
-		else
-			break;
-	}
-	return i;
-}
-
-uint	rtw_is_cckrates_included(u8 *rate)
-{
-	u32	i = 0;
-
-	while (rate[i] != 0) {
-		if ((((rate[i]) & 0x7f) == 2)	|| (((rate[i]) & 0x7f) == 4) ||
-		    (((rate[i]) & 0x7f) == 11)  || (((rate[i]) & 0x7f) == 22))
-			return _TRUE;
-		i++;
-	}
-
-	return _FALSE;
-}
-
-uint	rtw_is_cckratesonly_included(u8 *rate)
-{
-	u32 i = 0;
-
-
-	while (rate[i] != 0) {
-		if ((((rate[i]) & 0x7f) != 2) && (((rate[i]) & 0x7f) != 4) &&
-		    (((rate[i]) & 0x7f) != 11)  && (((rate[i]) & 0x7f) != 22))
-			return _FALSE;
-
-		i++;
-	}
-
-	return _TRUE;
-
-}
 
 #if !defined(CONFIG_RUST) || defined(HOST_IEEE80211_REST_TEST)
 int rtw_check_network_type(unsigned char *rate, int ratelen, int channel)
@@ -299,30 +226,6 @@ inline u8 *rtw_set_ie_ch_switch(u8 *buf, u32 *buf_len, u8 ch_switch_mode,
 	ie_data[1] = new_ch;
 	ie_data[2] = ch_switch_cnt;
 	return rtw_set_ie(buf, WLAN_EID_CHANNEL_SWITCH,  3, ie_data, buf_len);
-}
-
-inline u8 secondary_ch_offset_to_hal_ch_offset(u8 ch_offset)
-{
-	if (ch_offset == SCN)
-		return HAL_PRIME_CHNL_OFFSET_DONT_CARE;
-	else if (ch_offset == SCA)
-		return HAL_PRIME_CHNL_OFFSET_LOWER;
-	else if (ch_offset == SCB)
-		return HAL_PRIME_CHNL_OFFSET_UPPER;
-
-	return HAL_PRIME_CHNL_OFFSET_DONT_CARE;
-}
-
-inline u8 hal_ch_offset_to_secondary_ch_offset(u8 ch_offset)
-{
-	if (ch_offset == HAL_PRIME_CHNL_OFFSET_DONT_CARE)
-		return SCN;
-	else if (ch_offset == HAL_PRIME_CHNL_OFFSET_LOWER)
-		return SCA;
-	else if (ch_offset == HAL_PRIME_CHNL_OFFSET_UPPER)
-		return SCB;
-
-	return SCN;
 }
 
 inline u8 *rtw_set_ie_secondary_ch_offset(u8 *buf, u32 *buf_len, u8 secondary_ch_offset)
@@ -568,21 +471,6 @@ u8 rtw_update_rate_bymode(WLAN_BSSID_EX *pbss_network, u32 mode)
 	return network_type;
 }
 #endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
-
-uint	rtw_get_rateset_len(u8	*rateset)
-{
-	uint i = 0;
-	while (1) {
-		if ((rateset[i]) == 0)
-			break;
-
-		if (i > 12)
-			break;
-
-		i++;
-	}
-	return i;
-}
 
 int rtw_generate_ie(struct registry_priv *pregistrypriv)
 {
