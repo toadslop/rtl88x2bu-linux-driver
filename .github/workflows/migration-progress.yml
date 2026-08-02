@@ -60,8 +60,34 @@ jobs:
           else
             IMAGE="rtl88x2bu-l0:ci"
           fi
-          BODY="$(docker run --rm -v "$PWD:/driver" -w /driver "${IMAGE}" \
-            ./scripts/ci/run-migration-progress-ci.sh "${BASE_REF}")"
+          # L0 image has no Python; run L0 builds in Docker, compute on the runner.
+          HEAD_OBJECTS="$(mktemp)"
+          BASE_OBJECTS=""
+          WORKTREE=""
+          cleanup() {
+            rm -f "$HEAD_OBJECTS"
+            [ -n "$BASE_OBJECTS" ] && rm -f "$BASE_OBJECTS"
+            if [ -n "$WORKTREE" ] && [ -d "$WORKTREE" ]; then
+              git worktree remove -f "$WORKTREE" 2>/dev/null || rm -rf "$WORKTREE"
+            fi
+          }
+          trap cleanup EXIT
+          docker run --rm -v "$PWD:/driver" -w /driver "${IMAGE}" \
+            ./scripts/ci/build-module-objects.sh /driver/.ci-migration-objects-head.txt
+          mv .ci-migration-objects-head.txt "$HEAD_OBJECTS"
+          ARGS=(--module-objects "$HEAD_OBJECTS")
+          if [ -n "$BASE_REF" ]; then
+            BASE_OBJECTS="$(mktemp)"
+            WORKTREE="$(mktemp -d)"
+            git config --global --add safe.directory "$PWD"
+            git config --global --add safe.directory "$WORKTREE"
+            git worktree add --detach "$WORKTREE" "$BASE_REF"
+            docker run --rm -v "$WORKTREE:/driver" -w /driver "${IMAGE}" \
+              ./scripts/ci/build-module-objects.sh /driver/.ci-migration-objects-base.txt
+            mv "$WORKTREE/.ci-migration-objects-base.txt" "$BASE_OBJECTS"
+            ARGS+=(--compare-ref "$BASE_REF" --compare-module-objects "$BASE_OBJECTS")
+          fi
+          BODY="$(python3 ./scripts/ci/compute-migration-progress.py "${ARGS[@]}")"
           {
             echo 'body<<EOF'
             echo "${BODY}"
