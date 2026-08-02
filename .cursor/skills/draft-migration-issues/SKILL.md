@@ -127,9 +127,10 @@ Common gap patterns in this repo:
 
 Before writing specs, scan the active epic's deferred list and remaining `core/`
 translation units. Split each large TU into ~200 LOC function groups (same
-pattern as W2-07/W2-08 part 1/2, or W3-10…W3-18 tranche 2). **Aim to exhaust
-the obvious next tranche in one drafting session** — e.g. all leaf helpers in
-`rtw_rf.c`, then `rtw_ieee80211_rest`, then `rtw_rm_util`, etc.
+pattern as W2-07/W2-08 part 1/2, or W3-10…W3-18 tranche 2). Draft the next
+tranche slice in one session (typically **5–15** issues per **When NOT to draft**
+and the ≥15 open-child cap below) — e.g. leaf helpers in `rtw_rf.c`, then
+`rtw_ieee80211_rest`, then `rtw_rm_util`, etc.
 
 Minimum bar when a tranche gap is confirmed (see **When NOT to draft**):
 
@@ -228,23 +229,22 @@ Sub-issues roll up progress on the parent epic in GitHub Projects.
 ```markdown
 **Gap:** Wave 3 tranche 1 complete; no W3-10+ filed; frontier empty.
 
-**Drafted (22 issues):**
+**Drafted (N issues):**
 | ID | File | Title | Blocked by |
 |----|------|-------|------------|
 | W3-10 | wave3-10-….md | … | W3-09 |
 | … | … | … | … |
-| W3-31 | wave3-31-….md | … | W3-30 |
 
-**Filed on GitHub:** yes — #179–#200
+**Filed on GitHub:** yes — #179–#181 (example)
 
-**Unblocks:** W3-10 ready after W3-09 (closed); chain through W3-31
+**Unblocks:** W3-10 ready after W3-09 (closed)
 
 **For a future pick-up (not this run):** W3-10 is the next implementable issue.
 ```
 
-Report the **total count** of drafted/filed issues. If you filed fewer than 10
-and the epic still lists large deferred TUs, explain why (e.g. "only
-`rtw_mem.c` left in wave — 1 issue sufficient").
+Report the **total count** of drafted/filed issues. If the count is small and the
+epic still lists large deferred TUs, explain why (e.g. "only `rtw_mem.c` left in
+wave — 1 issue sufficient").
 
 ## 7. Completion criteria
 
