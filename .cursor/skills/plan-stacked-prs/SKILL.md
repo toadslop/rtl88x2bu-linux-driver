@@ -157,3 +157,8 @@ Present the plan and **pause for approval** unless the user said to auto-impleme
 
 This skill ends at an approved plan. The next skill creates branches, writes
 code, runs gates, and opens PRs with correct stack bases.
+
+**Once implementation starts**, the agent must **complete every row** in the PR
+stack table or **file follow-up GitHub issue(s)** for any rows that could not be
+implemented — it must not stop mid-stack and ask whether to continue. See
+[`implement-stacked-prs`](../implement-stacked-prs/SKILL.md#9-continue-the-stack-mandatory--no-partial-stops).

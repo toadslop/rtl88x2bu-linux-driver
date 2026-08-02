@@ -8,7 +8,8 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
 # Git 2.35+ rejects repos owned by another UID (typical for docker -v "$PWD:/driver").
-GIT_SAFE=(git -c "safe.directory=$ROOT")
+# Apply session-wide so git worktree and Python subprocess git calls both succeed.
+git config --global --add safe.directory "$ROOT"
 
 COMPARE_REF="${1:-}"
 HEAD_OBJECTS="$(mktemp)"
@@ -19,7 +20,7 @@ cleanup() {
 	rm -f "$HEAD_OBJECTS"
 	[ -n "$BASE_OBJECTS" ] && rm -f "$BASE_OBJECTS"
 	if [ -n "$WORKTREE" ] && [ -d "$WORKTREE" ]; then
-		"${GIT_SAFE[@]}" worktree remove -f "$WORKTREE" 2>/dev/null || rm -rf "$WORKTREE"
+		git worktree remove -f "$WORKTREE" 2>/dev/null || rm -rf "$WORKTREE"
 	fi
 }
 trap cleanup EXIT
@@ -31,7 +32,7 @@ ARGS=(--module-objects "$HEAD_OBJECTS")
 if [ -n "$COMPARE_REF" ]; then
 	BASE_OBJECTS="$(mktemp)"
 	WORKTREE="$(mktemp -d)"
-	"${GIT_SAFE[@]}" worktree add --detach "$WORKTREE" "$COMPARE_REF"
+	git worktree add --detach "$WORKTREE" "$COMPARE_REF"
 	(
 		cd "$WORKTREE"
 		"$ROOT/scripts/ci/build-module-objects.sh" "$BASE_OBJECTS"
