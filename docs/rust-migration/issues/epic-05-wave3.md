@@ -152,9 +152,30 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-112 | `wave3-112-rm-fsm-queue.md` | `rtw_rm_fsm.c` obj/queue/clock |
 | W3-113 | `wave3-113-mp-pmac-generators.md` | `rtw_mp.c` PMAC sig generators |
 
-Further ~200 LOC slices **not yet covered by W3-01…W3-113**; file new `wave3-*.md` issues as needed when tranche 6 closes:
+## Children (tranche 7 — filed)
 
-- `core/` files not yet sliced: `rtw_p2p.c`, `rtw_tdls.c`, `rtw_mp.c`, `rtw_br_ext.c`, `rtw_beamforming.c`, `rtw_wnm.c`, `rtw_wapi.c`, `rtw_ft.c`, `rtw_mbo.c`, `rtw_rson.c`, `rtw_rm.c`, `rtw_rm_fsm.c`, `rtw_btcoex*.c`, `rtw_eeprom.c`, `rtw_debug.c`, `rtw_mem.c`, `rtw_sdio.c`, `rtw_ioctl_*.c`, …
-- Remaining helpers in partially translated files after W3-97 lands (audit with migration progress / `grep`)
+| ID | File | Focus |
+|----|------|--------|
+| W3-114 | `wave3-114-mem-premem-buffers.md` | `rtw_mem.c` premem buffer helpers |
+| W3-115 | `wave3-115-sdio-cmd-io.md` | `rtw_sdio.c` cmd52/53 I/O wrappers |
+| W3-116 | `wave3-116-eeprom-bitbang.md` | `rtw_eeprom.c` bit-bang primitives |
+| W3-117 | `wave3-117-eeprom-read-write.md` | `rtw_eeprom.c` read/write API |
+| W3-118 | `wave3-118-odm-phydm-init.md` | `rtw_odm.c` phydm ability + IC init |
+| W3-119 | `wave3-119-odm-adaptivity-leaf.md` | `rtw_odm.c` adaptivity msg/parm leaf |
+| W3-120 | `wave3-120-odm-radar-txpwr.md` | `rtw_odm.c` radar detect + tx power leaf |
+| W3-121 | `wave3-121-mi-ch-union.md` | `rtw_mi.c` channel union + stay-in checks |
+| W3-122 | `wave3-122-mi-status-leaf.md` | `rtw_mi.c` status + check_status leaf |
+| W3-123 | `wave3-123-mi-netif-buddy.md` | `rtw_mi.c` netif buddy queue/carrier leaf |
+| W3-124 | `wave3-124-ioctl-connect-leaf.md` | `rtw_ioctl_set.c` validate + connect/disassociate |
+| W3-125 | `wave3-125-ioctl-scan-channel.md` | `rtw_ioctl_set.c` scan/auth/channel setters |
+| W3-126 | `wave3-126-btcoex-init-notify.md` | `rtw_btcoex.c` init + notify leaf |
+| W3-127 | `wave3-127-btcoex-handler-policy.md` | `rtw_btcoex.c` handler + AMPDU policy leaf |
+| W3-128 | `wave3-128-bf-entry-packet-leaf.md` | `rtw_beamforming.c` entry lookup + packet leaf |
+| W3-129 | `wave3-129-bf-init-cmd-leaf.md` | `rtw_beamforming.c` init + cmd_hdl leaf |
+
+Further ~200 LOC slices **not yet covered by W3-01…W3-129**; file new `wave3-*.md` issues as needed when tranche 7 closes:
+
+- `core/` files not yet sliced: remaining `rtw_beamforming.c` sounding state machine, `rtw_btcoex*.c` remainder, `rtw_debug.c`, `rtw_ioctl_query.c`, `rtw_wapi_sms4.c`, …
+- Remaining helpers in partially translated files after W3-129 lands (audit with migration progress / `grep`)
 
 Wave 3 milestone (L4): WPA2 STA associate + encrypted ping when hardware available (same bar as Wave 2).
