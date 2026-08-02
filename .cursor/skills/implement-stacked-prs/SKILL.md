@@ -165,13 +165,64 @@ Path B pick-up ends after the final PR opens and babysit passes — full merge p
 (`prepare-all-prs-for-merge`) runs on a **future** pick-up once these PRs are
 open.
 
-### 9. Continue or pause
+### 9. Continue the stack (mandatory — no partial stops)
 
-- **Default:** after babysit passes on the current PR, implement the next PR in
-  the stack in the same session
-- **Pause** after opening a PR if the user asked for incremental delivery (babysit
-  still applies to the PR you opened before pausing)
-- After the **final** PR opens and babysit passes, summarize the full stack with links
+Path B pick-up and other autonomous runs have **no human on the line**. Once you
+start implementing a planned stack, you **must** reach one of these end states
+before ending the session:
+
+| End state | When |
+|-----------|------|
+| **`stack complete`** | Every row in the plan table has an open PR; babysit passed on each |
+| **`stack partial — tracked`** | A genuine blocker prevents the next PR; remaining rows are filed as follow-up issues (see below) |
+| **Plan revised** | Scope grew past 250 lines or the split changed; return to `plan-stacked-prs`, update the table, then continue implementing or file tracking |
+
+**Forbidden:** Opening PR1 and PR2 then asking "Should I implement PR3?", ending
+with "Next: implement PR3" as a suggestion, or otherwise stopping mid-stack
+without either finishing or filing tracking. Autonomous agents must not defer
+remaining PRs to a hypothetical future confirmation.
+
+**Per-PR loop (default):**
+
+- After babysit passes on the current PR, **immediately** implement the next PR
+  in the stack — same session, no pause for confirmation.
+- Continue until the plan table is fully implemented or you hit a blocker that
+  requires filing tracking.
+- **Pause** only when the user **explicitly** asked for incremental delivery in
+  this session (rare; not the default for Path B pick-up). Babysit still applies
+  to the PR you opened before pausing.
+- After the **final** PR opens and babysit passes, summarize the full stack with
+  links and mark workflow end **`stack complete`**.
+
+### 10. When you cannot finish the stack (mandatory tracking)
+
+If a blocker (gate failure you cannot fix, missing harness, dependency reopened,
+ambiguous spec, exhausted CI retries) prevents completing **all** remaining plan
+rows:
+
+1. **Do not ask** whether to continue — file tracking and end with a clear report.
+2. **Comment on the parent issue** with in-flight state: PRs opened (with links),
+   which plan rows remain, and the blocker.
+3. **File a follow-up GitHub issue** for the unimplemented work — one issue per
+   remaining plan row, or one umbrella issue if the rows are tightly coupled and
+   must land together. Minimum body:
+
+```markdown
+**Parent:** #<parent-issue>
+**Continues:** stack after <link to last opened PR>
+**Remaining from plan:**
+- [ ] PR3: <goal> — base `cursor/<pr2-branch>`, est. Δ ~N
+**Blocker:** <what stopped implementation>
+**Acceptance:** same gates as parent slice; complete rows PR3…PRn from original plan
+```
+
+Use `gh issue create` with labels `rust-migration`, the appropriate `wave-*` /
+`phase-*`, and `blocked_by` referencing the parent issue or the last merged PR
+in the stack. Add a local draft spec under `docs/rust-migration/issues/` when
+the remainder is non-trivial (copy the per-PR detail from the plan).
+
+4. End the run with status **`stack partial — tracked`** and link every filed
+   follow-up issue in the completion report.
 
 ## Stack hygiene
 
@@ -187,15 +238,20 @@ open.
 | Situation | Action |
 |-----------|--------|
 | Diff **> 250** lines at size gate | Split scope or return to `plan-stacked-prs` — **never** open an oversized PR |
-| Scope bigger than planned | Stop, revise plan (return to `plan-stacked-prs`), do not cram |
-| Blocked by missing harness | Implement harness PR first or switch to `draft-migration-issues` for a new `T*` ticket |
-| Gate fails | Fix on the same branch before opening PR |
-| Dependency issue still open | Stop stack; return to `select-ready-issue` |
+| Scope bigger than planned | Revise plan (return to `plan-stacked-prs`), then continue the stack — do not cram |
+| Blocked by missing harness | Implement harness PR first, **or** file follow-up issue(s) + parent comment and end **`stack partial — tracked`** |
+| Gate fails and cannot be fixed | File follow-up issue(s) for remaining rows; end **`stack partial — tracked`** — do not ask to continue |
+| Dependency issue still open | File follow-up issue(s) or return to `select-ready-issue`; do not stop mid-stack without tracking |
 
 ## Completion report
 
+Use **`stack complete`** or **`stack partial — tracked`** — never an open-ended
+"next step" that assumes a human will pick up mid-stack without a filed issue.
+
 ```markdown
 **Issue:** W3-04 / #115
+
+**Stack status:** stack complete | stack partial — tracked
 
 **Stack opened:**
 | PR | Branch | Base | Status |
@@ -206,6 +262,8 @@ open.
 **Gates:** L0/L1/L2 green on PR2
 
 **Babysit:** CI green on opened PRs
+
+**Follow-up issues filed:** none | #NNN (PR3 remainder — blocker: …)
 
 **Next:** next pick-up will Path A (`prepare-all-prs-for-merge`) when PRs are open
 ```
