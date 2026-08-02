@@ -14,8 +14,9 @@ metadata:
 
 # Select Ready Issue
 
-Pick **one** open issue to work on next. Prefer the **earliest unblocked child**
-in the current active wave.
+Pick **one** open issue to work on next. Prefer a **ready** issue in a parallel
+lane with no in-flight PR (see §4); when lanes tie, prefer the earliest unblocked
+child in the current active wave.
 
 ## 1. Determine the active frontier
 
@@ -118,7 +119,7 @@ gh pr list --state open --search "<N>" --json number,title,headRefName,baseRefNa
 | Dep state | Open PR found? | Satisfied? |
 |-----------|----------------|------------|
 | `CLOSED` | (any) | **Yes** — use `master` (or merged stack) as base |
-| `OPEN` | **Yes** — PR title/body/branch references the dep draft ID or `#N` | **Yes** — record `headRefName` as **stack base** for PR1 |
+| `OPEN` | **Yes** — PR title/body/branch references the dep draft ID or `#N` (do not rely on search alone — confirm `headRefName` or Notes `In-flight:` matches) | **Yes** — record `headRefName` as **stack base** for PR1 |
 | `OPEN` | **No** | **No** — issue is blocked; stop checking this candidate |
 
 When multiple deps are listed, **all** must be satisfied. For PR1 base, use the
@@ -139,9 +140,10 @@ When selection returns nothing, report **why** using this order:
    Report the PR link; hand off to Path A prep if `needs_prep`. **Downstream**
    children (e.g. W3-40 when W3-39 is in-flight) should already be selectable —
    if they are not, re-check dependency accessibility (step above).
-3. **Backlog already filed** — many open children exist behind a satisfied chain
-   head (deps closed or on open PRs). Path C should **not** file more issues in
-   the same chain.
+3. **Single-lane backlog saturated** — ≥15 open children already filed behind
+   the same **single-lane** chain head. Do **not** file more in that lane; hand
+   off to Path C to draft **other parallel lanes** (see
+   [`draft-migration-issues`](../draft-migration-issues/SKILL.md)).
 4. **Wave complete** — active wave children are closed; future-wave epics only.
 
 ## 3. Readiness rules
@@ -196,9 +198,10 @@ gh issue view <number> --json number,title,body,labels,state
 |---------|-----------|
 | **Ready issue found** (including oversized) | Report selection + **stack base** (`master` or dependency PR branch); continue to **`plan-stacked-prs`** |
 | **Chain head in-flight (this issue only)** | Report frontier issue + open PR links; parent **`pick-up-work-item`** should prep/babysit those PRs (Path A) if `needs_prep` — **do not** treat this as blocking downstream issues |
-| **Chain head blocked (no accessible code)** | Report blocker `#N` / draft ID; Path C only if true tranche gap and backlog not saturated |
-| **Nothing ready — true gap** | Open children missing for the next tranche **and** chain head has **no accessible code** **and** fewer than **≥15 open children** behind the same chain — hand off to Path C **`draft-migration-issues`** |
-| **Nothing ready — backlog saturated** | **≥15 open children** already filed behind the same chain head — report chain head + count; **stop** — do not draft more tickets |
+| **Chain head blocked (no accessible code)** | Report blocker `#N` / draft ID; Path C when a true tranche gap exists in another lane |
+| **Nothing ready — true gap** | Open children missing for the next tranche **and** chain head has **no accessible code** **and** fewer than 15 open children behind the same **single-lane** chain head — hand off to Path C **`draft-migration-issues`** |
+| **Nothing ready — single-lane saturated** | **≥15 open children** already filed behind the same **single-lane** chain head — report chain head + count; hand off to Path C to draft **other parallel lanes** (do not extend that lane) |
+| **Nothing ready — whole-wave saturated** | **Every** active parallel lane has ≥15 open children — report counts; **stop** — implement/merge instead |
 | **Ambiguous** | List top 2–3 candidates with tradeoffs; ask user if they care |
 
 ## Selection report template

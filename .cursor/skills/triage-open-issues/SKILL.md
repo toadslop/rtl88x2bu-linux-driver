@@ -41,7 +41,7 @@ An issue is **done** when **all** of the following hold:
 |-------|---------------|
 | Acceptance criteria met | Read the issue body (and local draft spec if linked) |
 | Code landed on `master` | Grep for the Rust object / Makefile swap / harness named in the issue; or inspect merged PR diff |
-| Blockers cleared | Every `blocked_by` issue in the `## Tracking` footer is `CLOSED` on GitHub |
+| Blockers cleared | Every `blocked_by` issue in the `## Tracking` footer is `CLOSED` on GitHub (merged to `master` — an open implementing PR satisfies deps for **starting** downstream work per [`select-ready-issue`](../select-ready-issue/SKILL.md), but does **not** clear blockers for **closing** this issue) |
 | Gates green for that slice | L0 (+ L1/L2 per issue spec) — check CI or run locally if unsure |
 
 **Strong signals (any one plus acceptance):**
