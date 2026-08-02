@@ -2894,7 +2894,8 @@ rust-objects-rtw-ieee80211-rest-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-I$(shell pwd)/tests/host/include -I$(shell pwd)/include \
 		-I$(shell pwd)/tests/host/wlan_util \
-		-DHOST_IEEE80211_REST_TEST -o tests/host/ie/ie_rest_c_ref.o core/rtw_ieee80211_rest.c
+		-DHOST_IEEE80211_REST_TEST -DHOST_IEEE80211_REST_RATE_SECTION_TEST \
+		-o tests/host/ie/ie_rest_c_ref.o core/rtw_ieee80211_rest.c
 
 rust-check-symbols-rtw-ieee80211-rest: rust-objects-rtw-ieee80211-rest-c rust-objects-rtw-ieee80211-rest
 	$(MAKE) rust-check-symbols OLD=tests/host/ie/ie_rest_c_ref.o NEW=rust/rtw_ieee80211_rest.o \

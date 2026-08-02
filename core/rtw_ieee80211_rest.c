@@ -1070,10 +1070,11 @@ int rtw_action_frame_parse(const u8 *frame, u32 frame_len, u8 *category, u8 *act
 #endif /* HOST_IEEE80211_REST_FRAME_HT_TEST || !HOST_IEEE80211_REST_TEST */
 #endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
-#if !defined(HOST_IEEE80211_REST_TEST) || defined(HOST_IEEE80211_REST_RATE_SECTION_TEST)
+#if (!defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)) || \
+	defined(HOST_IEEE80211_REST_RATE_SECTION_TEST)
 /*
  * W3-41: rate-section and channel-offset mapping helpers extracted from
- * core/rtw_ieee80211.c. Rust port replaces kernel build in PR3.
+ * core/rtw_ieee80211.c. Rust port replaces kernel build when CONFIG_RUST.
  */
 uint rtw_is_cckrates_included(u8 *rate)
 {

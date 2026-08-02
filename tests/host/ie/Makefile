@@ -63,8 +63,8 @@ all: test
 test: test-c test-rust test-rest test-rest-rust test-rest-cipher \
 	test-rest-cipher-rust test-rest-wpa-rsn-parse test-rest-wpa-rsn-parse-rust \
 	test-rest-wapi-wps test-rest-wapi-wps-rust test-rest-mac-str \
-	test-rest-mac-str-rust test-rest-chbw test-rest-frame-ht test-rest-frame-ht-rust \
-	test-rest-rate-section
+	test-rest-mac-str-rust 	test-rest-chbw test-rest-frame-ht test-rest-frame-ht-rust \
+	test-rest-rate-section test-rest-rate-section-rust
 
 test-c: test_ie
 	./test_ie ie_vectors.json
