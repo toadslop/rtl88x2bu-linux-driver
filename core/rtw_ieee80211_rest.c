@@ -36,34 +36,6 @@ typedef unsigned int uint;
 extern u8 WIFI_CCKRATES[];
 extern u8 WIFI_OFDMRATES[];
 
-uint rtw_is_cckrates_included(u8 *rate)
-{
-	u32 i = 0;
-
-	while (rate[i] != 0) {
-		if ((((rate[i]) & 0x7f) == 2) || (((rate[i]) & 0x7f) == 4) ||
-		    (((rate[i]) & 0x7f) == 11) || (((rate[i]) & 0x7f) == 22))
-			return _TRUE;
-		i++;
-	}
-
-	return _FALSE;
-}
-
-uint rtw_is_cckratesonly_included(u8 *rate)
-{
-	u32 i = 0;
-
-	while (rate[i] != 0) {
-		if ((((rate[i]) & 0x7f) != 2) && (((rate[i]) & 0x7f) != 4) &&
-		    (((rate[i]) & 0x7f) != 11) && (((rate[i]) & 0x7f) != 22))
-			return _FALSE;
-		i++;
-	}
-
-	return _TRUE;
-}
-
 int rtw_get_bit_value_from_ieee_value(u8 val)
 {
 	unsigned char dot11_rate_table[] = {
@@ -1061,11 +1033,74 @@ int rtw_action_frame_parse(const u8 *frame, u32 frame_len, u8 *category, u8 *act
 #endif /* HOST_IEEE80211_REST_FRAME_HT_TEST || !HOST_IEEE80211_REST_TEST */
 #endif /* !CONFIG_RUST || HOST_IEEE80211_REST_TEST */
 
+#if defined(HOST_IEEE80211_REST_TEST) && \
+    (!defined(CONFIG_RUST) || defined(HOST_IEEE80211_REST_TEST))
+/*
+ * W3-41 CCK helpers (host W3-26 oracle path): kept out of the kernel W3-41
+ * block so generic HOST_IEEE80211_REST_TEST builds stay unchanged on PR1.
+ */
+uint rtw_is_cckrates_included(u8 *rate)
+{
+	u32 i = 0;
+
+	while (rate[i] != 0) {
+		if ((((rate[i]) & 0x7f) == 2) || (((rate[i]) & 0x7f) == 4) ||
+		    (((rate[i]) & 0x7f) == 11) || (((rate[i]) & 0x7f) == 22))
+			return _TRUE;
+		i++;
+	}
+
+	return _FALSE;
+}
+
+uint rtw_is_cckratesonly_included(u8 *rate)
+{
+	u32 i = 0;
+
+	while (rate[i] != 0) {
+		if ((((rate[i]) & 0x7f) != 2) && (((rate[i]) & 0x7f) != 4) &&
+		    (((rate[i]) & 0x7f) != 11) && (((rate[i]) & 0x7f) != 22))
+			return _FALSE;
+		i++;
+	}
+
+	return _TRUE;
+}
+#endif /* HOST_IEEE80211_REST_TEST && (!CONFIG_RUST || HOST_IEEE80211_REST_TEST) */
+
 #if !defined(HOST_IEEE80211_REST_TEST)
 /*
  * W3-41: rate-section and channel-offset mapping helpers extracted from
  * core/rtw_ieee80211.c. Host L2 harness lands in PR2.
  */
+uint rtw_is_cckrates_included(u8 *rate)
+{
+	u32 i = 0;
+
+	while (rate[i] != 0) {
+		if ((((rate[i]) & 0x7f) == 2) || (((rate[i]) & 0x7f) == 4) ||
+		    (((rate[i]) & 0x7f) == 11) || (((rate[i]) & 0x7f) == 22))
+			return _TRUE;
+		i++;
+	}
+
+	return _FALSE;
+}
+
+uint rtw_is_cckratesonly_included(u8 *rate)
+{
+	u32 i = 0;
+
+	while (rate[i] != 0) {
+		if ((((rate[i]) & 0x7f) != 2) && (((rate[i]) & 0x7f) != 4) &&
+		    (((rate[i]) & 0x7f) != 11) && (((rate[i]) & 0x7f) != 22))
+			return _FALSE;
+		i++;
+	}
+
+	return _TRUE;
+}
+
 RATE_SECTION mgn_rate_to_rs(enum MGN_RATE rate)
 {
 	RATE_SECTION rs = RATE_SECTION_NUM;
