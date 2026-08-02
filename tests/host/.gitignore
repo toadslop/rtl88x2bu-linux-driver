@@ -76,3 +76,6 @@ sta_mgt/sta_mgt_rest_c_ref.o
 sta_mgt/sta_mgt_rest_rust_ref.o
 sta_mgt/sta_mgt_rest_host.o
 sta_mgt/sta_mgt_shim_host.o
+recv/test_recv_rust
+recv/librust_recv.a
+recv/recv_rest_c_ref.o

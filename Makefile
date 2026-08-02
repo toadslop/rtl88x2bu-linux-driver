@@ -2587,6 +2587,7 @@ $(MODULE_NAME)-y += rust/rtw_rm_util.o
 $(MODULE_NAME)-y += rust/rtw_vht.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt_aid.o
+$(MODULE_NAME)-y += rust/rtw_recv.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
@@ -3034,6 +3035,19 @@ rust-check-symbols-rtw-sta-mgt: rust-objects-rtw-sta-mgt-c rust-objects-rtw-sta-
 rust-check-symbols-rtw-sta-mgt-aid: rust-objects-rtw-sta-mgt-c rust-objects-rtw-sta-mgt-aid-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/sta_mgt/sta_mgt_rest_c_ref.o NEW=tests/host/sta_mgt/sta_mgt_aid_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_sta_mgt_aid.allow
+
+# W3-39: host C oracle recv_rest vs rust/rtw_recv.o.
+rust-objects-rtw-recv:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-recv"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_recv.o
+rust-objects-rtw-recv-rest-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_RECV_TEST -DHOST_RECV_WFD_TEST -o tests/host/recv/recv_rest_c_ref.o core/rtw_recv_rest.c
+rust-check-symbols-rtw-recv: rust-objects-rtw-recv-rest-c rust-objects-rtw-recv
+	$(MAKE) rust-check-symbols OLD=tests/host/recv/recv_rest_c_ref.o NEW=rust/rtw_recv.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_recv.allow ALLOW_VACUOUS=1
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production

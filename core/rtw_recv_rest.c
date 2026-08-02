@@ -24,7 +24,7 @@
 typedef unsigned int uint;
 #endif
 
-/* Always compile C until PR4 adds rust/rtw_recv.o (CONFIG_RUST swap). */
+#if !defined(CONFIG_RUST) || defined(HOST_RECV_TEST)
 
 #if !defined(HOST_RECV_TEST) || defined(HOST_RECV_WFD_TEST)
 bool rtw_rframe_del_wfd_ie(union recv_frame *rframe, u8 ies_offset)
@@ -56,3 +56,34 @@ void rtw_reset_continual_no_rx_packet(struct sta_info *sta, int tid_index)
 {
 	ATOMIC_SET(&sta->continual_no_rx_packet[tid_index], 0);
 }
+
+#endif /* !CONFIG_RUST || HOST_RECV_TEST */
+
+#if defined(CONFIG_RUST) && !defined(HOST_RECV_TEST)
+
+ATOMIC_T *rtw_rust_recv_continual_no_rx(struct sta_info *sta, int tid_index)
+{
+	return &sta->continual_no_rx_packet[tid_index];
+}
+
+u8 *rtw_rust_recv_frame_rx_data(union recv_frame *rframe)
+{
+	return rframe->u.hdr.rx_data;
+}
+
+uint rtw_rust_recv_frame_len(union recv_frame *rframe)
+{
+	return rframe->u.hdr.len;
+}
+
+void rtw_rust_recv_frame_set_len(union recv_frame *rframe, uint len)
+{
+	rframe->u.hdr.len = len;
+}
+
+uint rtw_rust_del_wfd_ie(u8 *ies, uint ies_len_ori, const char *msg)
+{
+	return rtw_del_wfd_ie(ies, ies_len_ori, msg);
+}
+
+#endif /* CONFIG_RUST && !HOST_RECV_TEST */

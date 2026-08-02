@@ -106,6 +106,11 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-sta-mgt
 		add_target rust-check-symbols-rtw-sta-mgt-aid
 		;;
+	rust/rtw_recv.rs \
+	| core/rtw_recv_rest.c \
+	| tests/host/recv/*)
+		add_target rust-check-symbols-rtw-recv
+		;;
 	rust/aes_*.rs \
 	| rust/sha256*.rs \
 	| rust/gcmp.rs \
@@ -176,6 +181,7 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-vht-restructure
 	rust-check-symbols-rtw-sta-mgt
 	rust-check-symbols-rtw-sta-mgt-aid
+	rust-check-symbols-rtw-recv
 )
 
 emit() {

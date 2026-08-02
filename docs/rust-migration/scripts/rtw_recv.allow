@@ -1,0 +1,6 @@
+# L1 allowlist for W3-39: Rust owns recv leaf helpers; WFD delete stays in C ieee80211.
+drop rtw_rust_recv_continual_no_rx
+drop rtw_rust_recv_frame_rx_data
+drop rtw_rust_recv_frame_len
+drop rtw_rust_recv_frame_set_len
+drop rtw_rust_del_wfd_ie
