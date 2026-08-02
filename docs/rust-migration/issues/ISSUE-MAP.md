@@ -182,6 +182,22 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-111 | #450 | [W3-111] rm meas subelem parse |
 | W3-112 | #451 | [W3-112] rm_fsm obj/queue/clock |
 | W3-113 | #452 | [W3-113] mp PMAC sig generators |
+| W3-114 | #454 | [W3-114] mem premem buffer helpers |
+| W3-115 | #455 | [W3-115] sdio cmd52/53 I/O wrappers |
+| W3-116 | #456 | [W3-116] eeprom bit-bang primitives |
+| W3-117 | #457 | [W3-117] eeprom read/write API |
+| W3-118 | #458 | [W3-118] odm phydm ability and IC init |
+| W3-119 | #459 | [W3-119] odm adaptivity msg/parm leaf |
+| W3-120 | #460 | [W3-120] odm radar detect and tx power leaf |
+| W3-121 | #461 | [W3-121] mi channel union and stay-in checks |
+| W3-122 | #462 | [W3-122] mi status and check_status leaf |
+| W3-123 | #463 | [W3-123] mi netif buddy queue/carrier leaf |
+| W3-124 | #464 | [W3-124] ioctl validate and connect/disassociate |
+| W3-125 | #465 | [W3-125] ioctl scan/auth/channel setters |
+| W3-126 | #466 | [W3-126] btcoex init and notify leaf |
+| W3-127 | #467 | [W3-127] btcoex handler and AMPDU policy leaf |
+| W3-128 | #468 | [W3-128] beamforming entry lookup and packet leaf |
+| W3-129 | #469 | [W3-129] beamforming init and cmd_hdl leaf |
 
 ## Superseded issues
 
