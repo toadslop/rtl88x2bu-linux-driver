@@ -7,6 +7,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
+# Git 2.35+ rejects repos owned by another UID (typical for docker -v "$PWD:/driver").
+GIT_SAFE=(git -c "safe.directory=$ROOT")
+
 COMPARE_REF="${1:-}"
 HEAD_OBJECTS="$(mktemp)"
 BASE_OBJECTS=""
@@ -16,7 +19,7 @@ cleanup() {
 	rm -f "$HEAD_OBJECTS"
 	[ -n "$BASE_OBJECTS" ] && rm -f "$BASE_OBJECTS"
 	if [ -n "$WORKTREE" ] && [ -d "$WORKTREE" ]; then
-		git worktree remove -f "$WORKTREE" 2>/dev/null || rm -rf "$WORKTREE"
+		"${GIT_SAFE[@]}" worktree remove -f "$WORKTREE" 2>/dev/null || rm -rf "$WORKTREE"
 	fi
 }
 trap cleanup EXIT
@@ -28,7 +31,7 @@ ARGS=(--module-objects "$HEAD_OBJECTS")
 if [ -n "$COMPARE_REF" ]; then
 	BASE_OBJECTS="$(mktemp)"
 	WORKTREE="$(mktemp -d)"
-	git worktree add --detach "$WORKTREE" "$COMPARE_REF"
+	"${GIT_SAFE[@]}" worktree add --detach "$WORKTREE" "$COMPARE_REF"
 	(
 		cd "$WORKTREE"
 		"$ROOT/scripts/ci/build-module-objects.sh" "$BASE_OBJECTS"
