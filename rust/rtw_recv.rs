@@ -1,12 +1,20 @@
 // SPDX-License-Identifier: GPL-2.0
 //! Recv leaf helpers — Rust port of `core/rtw_recv_rest.c` (W3-39).
 
-#![allow(dead_code, improper_ctypes, missing_docs, non_camel_case_types, non_snake_case, non_upper_case_globals, unreachable_pub)]
+#![allow(
+    dead_code,
+    improper_ctypes,
+    missing_docs,
+    non_camel_case_types,
+    non_snake_case,
+    non_upper_case_globals,
+    unreachable_pub
+)]
 
-#[cfg(host_recv_test)]
-use std::os::raw::{c_int, c_uint, c_void};
 #[cfg(not(host_recv_test))]
 use core::ffi::{c_int, c_uint, c_void};
+#[cfg(host_recv_test)]
+use std::os::raw::{c_int, c_uint, c_void};
 
 const _TRUE: c_int = 1;
 const _FALSE: c_int = 0;
@@ -71,7 +79,10 @@ extern "C" {
 }
 
 #[no_mangle]
-pub extern "C" fn rtw_inc_and_chk_continual_no_rx_packet(sta: *mut c_void, tid_index: c_int) -> c_int {
+pub extern "C" fn rtw_inc_and_chk_continual_no_rx_packet(
+    sta: *mut c_void,
+    tid_index: c_int,
+) -> c_int {
     if sta.is_null() || tid_index < 0 {
         return _FALSE;
     }
@@ -139,7 +150,9 @@ pub extern "C" fn rtw_rframe_del_wfd_ie(rframe: *mut c_void, ies_offset: u8) -> 
         }
         #[cfg(not(host_recv_test))]
         {
-            (unsafe { kernel::frame_rx_data(rframe) }, unsafe { kernel::frame_len(rframe) })
+            (unsafe { kernel::frame_rx_data(rframe) }, unsafe {
+                kernel::frame_len(rframe)
+            })
         }
     };
     if rx_data.is_null() {
