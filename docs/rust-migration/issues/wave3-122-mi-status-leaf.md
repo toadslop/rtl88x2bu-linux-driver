@@ -1,6 +1,6 @@
 ---
 title: "[W3-122] mi status and check_status leaf"
-labels: [rust-migration, phase-1, wave-3, size/~200]
+labels: [rust-migration, phase-1, wave-3, size/~250]
 type: child
 id: W3-122
 epic: E05
