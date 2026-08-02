@@ -20,6 +20,10 @@
 #include <drv_types.h>
 #endif
 
+#ifdef HOST_RECV_TEST
+typedef unsigned int uint;
+#endif
+
 /* Always compile C until PR4 adds rust/rtw_recv.o (CONFIG_RUST swap). */
 
 #if !defined(HOST_RECV_TEST) || defined(HOST_RECV_WFD_TEST)
