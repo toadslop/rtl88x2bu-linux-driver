@@ -1268,6 +1268,169 @@ u8 rtw_check_amsdu_disable(u8 mode, u8 spp_opt)
 }
 #endif /* W3-42 C oracle guard */
 
+#if defined(CONFIG_P2P) && \
+	(((!defined(CONFIG_RUST)) && (!defined(HOST_IEEE80211_REST_TEST))) || \
+	 defined(HOST_IEEE80211_REST_P2P_IE_TEST))
+/*
+ * W3-43: P2P IE merge/delete helpers extracted from core/rtw_ieee80211.c.
+ * Rust port replaces kernel build when CONFIG_RUST.
+ */
+u8 *rtw_get_p2p_ie(const u8 *in_ie, int in_len, u8 *p2p_ie, uint *p2p_ielen);
+u8 *rtw_get_p2p_attr(u8 *p2p_ie, uint p2p_ielen, u8 target_attr_id, u8 *buf_attr,
+		     u32 *len_attr);
+
+u32 rtw_get_p2p_merged_ies_len(u8 *in_ie, u32 in_len)
+{
+	PNDIS_802_11_VARIABLE_IEs	pIE;
+	u8 OUI[4] = { 0x50, 0x6f, 0x9a, 0x09 };
+	int i = 0;
+	int len = 0;
+
+	while (i < in_len) {
+		pIE = (PNDIS_802_11_VARIABLE_IEs)(in_ie + i);
+
+		if (pIE->ElementID == _VENDOR_SPECIFIC_IE_ && _rtw_memcmp(pIE->data, OUI, 4))
+			len += pIE->Length - 4;
+
+		i += (pIE->Length + 2);
+	}
+
+	return len + 4;
+}
+
+int rtw_p2p_merge_ies(u8 *in_ie, u32 in_len, u8 *merge_ie)
+{
+	PNDIS_802_11_VARIABLE_IEs	pIE;
+	u8 len = 0;
+	u8 OUI[4] = { 0x50, 0x6f, 0x9a, 0x09 };
+	u8 ELOUI[6] = { 0xDD, 0x00, 0x50, 0x6f, 0x9a, 0x09 };
+	int i = 0;
+
+	if (merge_ie != NULL) {
+		_rtw_memcpy(merge_ie, ELOUI, 6);
+		merge_ie += 6;
+
+		while (i < in_len) {
+			pIE = (PNDIS_802_11_VARIABLE_IEs)(in_ie + i);
+
+			if (pIE->ElementID == _VENDOR_SPECIFIC_IE_ && _rtw_memcmp(pIE->data, OUI, 4)) {
+				_rtw_memcpy(merge_ie, pIE->data + 4, pIE->Length - 4);
+				len += pIE->Length - 4;
+				merge_ie += pIE->Length - 4;
+			}
+
+			i += (pIE->Length + 2);
+		}
+
+		return len + 4;
+	}
+
+	return 0;
+}
+
+u32 rtw_set_p2p_attr_content(u8 *pbuf, u8 attr_id, u16 attr_len, u8 *pdata_attr)
+{
+	u32 a_len;
+
+	*pbuf = attr_id;
+	RTW_PUT_LE16(pbuf + 1, attr_len);
+
+	if (pdata_attr)
+		_rtw_memcpy(pbuf + 3, pdata_attr, attr_len);
+
+	a_len = attr_len + 3;
+
+	return a_len;
+}
+
+uint rtw_del_p2p_ie(u8 *ies, uint ies_len_ori, const char *msg)
+{
+	u8 *target_ie;
+	u32 target_ie_len;
+	uint ies_len = ies_len_ori;
+
+	(void)msg;
+
+	while (1) {
+		target_ie = rtw_get_p2p_ie(ies, ies_len, NULL, &target_ie_len);
+		if (target_ie && target_ie_len) {
+			u8 *next_ie = target_ie + target_ie_len;
+			uint remain_len = ies_len - (next_ie - ies);
+
+			_rtw_memmove(target_ie, next_ie, remain_len);
+			_rtw_memset(target_ie + remain_len, 0, target_ie_len);
+			ies_len -= target_ie_len;
+		} else
+			break;
+	}
+
+	return ies_len;
+}
+
+uint rtw_del_p2p_attr(u8 *ie, uint ielen_ori, u8 attr_id)
+{
+	u8 *target_attr;
+	u32 target_attr_len;
+	uint ielen = ielen_ori;
+
+	while (1) {
+		target_attr = rtw_get_p2p_attr(ie, ielen, attr_id, NULL, &target_attr_len);
+		if (target_attr && target_attr_len) {
+			u8 *next_attr = target_attr + target_attr_len;
+			uint remain_len = ielen - (next_attr - ie);
+
+			_rtw_memmove(target_attr, next_attr, remain_len);
+			_rtw_memset(target_attr + remain_len, 0, target_attr_len);
+			*(ie + 1) -= target_attr_len;
+			ielen -= target_attr_len;
+		} else
+			break;
+	}
+
+	return ielen;
+}
+
+void rtw_bss_ex_del_p2p_ie(WLAN_BSSID_EX *bss_ex)
+{
+	u8 *ies = BSS_EX_TLV_IES(bss_ex);
+	uint ies_len_ori = BSS_EX_TLV_IES_LEN(bss_ex);
+	uint ies_len;
+
+	ies_len = rtw_del_p2p_ie(ies, ies_len_ori, NULL);
+	bss_ex->IELength -= ies_len_ori - ies_len;
+}
+
+void rtw_bss_ex_del_p2p_attr(WLAN_BSSID_EX *bss_ex, u8 attr_id)
+{
+	u8 *ies = BSS_EX_TLV_IES(bss_ex);
+	uint ies_len = BSS_EX_TLV_IES_LEN(bss_ex);
+	u8 *ie;
+	uint ie_len, ie_len_ori;
+
+	while (1) {
+		ie = rtw_get_p2p_ie(ies, ies_len, NULL, &ie_len_ori);
+		if (ie) {
+			u8 *next_ie_ori = ie + ie_len_ori;
+			uint remain_len = bss_ex->IELength - (next_ie_ori - bss_ex->IEs);
+
+			ie_len = rtw_del_p2p_attr(ie, ie_len_ori, attr_id);
+			if (ie_len != ie_len_ori) {
+				u8 *next_ie = ie + ie_len;
+
+				_rtw_memmove(next_ie, next_ie_ori, remain_len);
+				_rtw_memset(next_ie + remain_len, 0, ie_len_ori - ie_len);
+				bss_ex->IELength -= ie_len_ori - ie_len;
+				ies = next_ie;
+			} else
+				ies = next_ie_ori;
+
+			ies_len = remain_len;
+		} else
+			break;
+	}
+}
+#endif /* W3-43 C oracle guard */
+
 #if defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)
 u32 *rtw_ieee80211_rest_bss_dsconfig(WLAN_BSSID_EX *bss)
 {
