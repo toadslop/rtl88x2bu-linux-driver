@@ -166,6 +166,22 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-95 | #432 | [W3-95] silent reset lifecycle |
 | W3-96 | #433 | [W3-96] remain-on-channel handlers |
 | W3-97 | #434 | [W3-97] concurrent roch and init |
+| W3-98 | #437 | [W3-98] p2p channel/negotiation leaf |
+| W3-99 | #438 | [W3-99] p2p P2P IE frame builders |
+| W3-100 | #439 | [W3-100] p2p WFD IE builders (beacon/probe) |
+| W3-101 | #440 | [W3-101] p2p WFD IE builders (probe-resp/assoc) |
+| W3-102 | #441 | [W3-102] tdls lifecycle + prohibited checks |
+| W3-103 | #442 | [W3-103] tdls HT/VHT cap process |
+| W3-104 | #443 | [W3-104] br_ext NAT25 addr/hash leaf |
+| W3-105 | #444 | [W3-105] br_ext NAT25 DB lifecycle |
+| W3-106 | #445 | [W3-106] rson score/IE/choose leaf |
+| W3-107 | #446 | [W3-107] mbo IE parse/build leaf |
+| W3-108 | #447 | [W3-108] wnm BTM parse/reset leaf |
+| W3-109 | #448 | [W3-109] wapi PN/IE/CAM table leaf |
+| W3-110 | #449 | [W3-110] ft IE update/build leaf |
+| W3-111 | #450 | [W3-111] rm meas subelem parse |
+| W3-112 | #451 | [W3-112] rm_fsm obj/queue/clock |
+| W3-113 | #452 | [W3-113] mp PMAC sig generators |
 
 ## Superseded issues
 
