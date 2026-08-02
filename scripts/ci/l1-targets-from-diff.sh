@@ -111,6 +111,11 @@ for path in "${changed[@]}"; do
 	| tests/host/recv/*)
 		add_target rust-check-symbols-rtw-recv
 		;;
+	rust/rtw_xmit.rs \
+	| core/rtw_xmit_rest.c \
+	| tests/host/xmit/*)
+		add_target rust-check-symbols-rtw-xmit
+		;;
 	rust/aes_*.rs \
 	| rust/sha256*.rs \
 	| rust/gcmp.rs \

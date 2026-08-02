@@ -1,1 +1,4 @@
 test_xmit
+test_xmit_rust
+librust_xmit.a
+xmit_rest_c_ref.o
