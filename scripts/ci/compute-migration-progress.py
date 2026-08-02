@@ -50,6 +50,10 @@ RUST_TO_BASELINE_C: dict[str, str] = {
     "rtw_wlan_util": "core/rtw_wlan_util.c",
     "rtw_rm_util": "core/rtw_rm_util.c",
     "rtw_vht": "core/rtw_vht.c",
+    "rtw_sta_mgt": "core/rtw_sta_mgt.c",
+    "rtw_sta_mgt_aid": "core/rtw_sta_mgt.c",
+    "rtw_recv": "core/rtw_recv.c",
+    "rtw_xmit": "core/rtw_xmit.c",
 }
 
 # Partial ports: estimate ported LOC as baseline(full parent) - current(split/rest C file).
@@ -61,6 +65,10 @@ PARTIAL_UNITS: dict[str, tuple[str, str]] = {
     "rtw_security_rest": ("core/rtw_security.c", "core/rtw_security_rest.c"),
     "rtw_rm_util": ("core/rtw_rm_util.c", "core/rtw_rm_util_rest.c"),
     "rtw_vht": ("core/rtw_vht.c", "core/rtw_vht_rest.c"),
+    "rtw_sta_mgt": ("core/rtw_sta_mgt.c", "core/rtw_sta_mgt_rest.c"),
+    "rtw_sta_mgt_aid": ("core/rtw_sta_mgt.c", "core/rtw_sta_mgt_rest.c"),
+    "rtw_recv": ("core/rtw_recv.c", "core/rtw_recv_rest.c"),
+    "rtw_xmit": ("core/rtw_xmit.c", "core/rtw_xmit_rest.c"),
     "rtw_wlan_util": ("core/rtw_wlan_util.c", "core/rtw_wlan_util.c"),
     "aes_internal": ("core/crypto/aes-internal.c", "core/crypto/aes-internal.c"),
     "rtw_security": ("core/rtw_security.c", "core/rtw_security_rest.c"),
@@ -78,6 +86,9 @@ REST_C_TO_PARENT: dict[str, str] = {
     "core/rtw_security_rest.c": "core/rtw_security.c",
     "core/rtw_rm_util_rest.c": "core/rtw_rm_util.c",
     "core/rtw_vht_rest.c": "core/rtw_vht.c",
+    "core/rtw_sta_mgt_rest.c": "core/rtw_sta_mgt.c",
+    "core/rtw_recv_rest.c": "core/rtw_recv.c",
+    "core/rtw_xmit_rest.c": "core/rtw_xmit.c",
     "core/rtw_swcrypto_rest.c": "core/rtw_swcrypto.c",
 }
 
@@ -164,6 +175,25 @@ def normalize_object_path(line: str) -> str:
     return line
 
 
+def merge_makefile_rust_objects(
+    objs: list[str], makefile_text: str | None = None
+) -> list[str]:
+    """Append rust/*.o from the Makefile that are missing from the object list.
+
+    ``migration-module-objects.txt`` is regenerated only after an L0 build; new
+  rust units land in the Makefile first. Merging keeps object % in sync with the
+    live link set without requiring a kernel build on every PR.
+    """
+    known = set(objs)
+    merged = list(objs)
+    for stem in discover_migration_units_from_makefile(makefile_text):
+        rust_obj = f"rust/{stem}.o"
+        if rust_obj not in known:
+            merged.append(rust_obj)
+            known.add(rust_obj)
+    return merged
+
+
 def load_module_objects(objects_text: str | None = None) -> list[str]:
     text = objects_text
     if text is None:
@@ -221,20 +251,23 @@ def _ported_loc_for_parent(
     if remaining_c == 0:
         return full_baseline
 
-    delta = full_baseline - remaining_c
-    if delta > 0:
-        return min(full_baseline, delta)
-
     rust_loc = _rust_loc_for_objs(rust_objs, tree_ref)
-    return min(full_baseline, rust_loc) if rust_loc > 0 else 0
+    c_based = max(0, full_baseline - remaining_c)
+    if rust_loc <= 0 and c_based <= 0:
+        return 0
+    # Credit whichever estimate is further along: C shrinkage or Rust growth.
+    return min(full_baseline, max(c_based, rust_loc))
 
 
 def compute_module_metrics(
     baseline_ref: str,
     tree_ref: str | None = None,
     objects_text: str | None = None,
+    makefile_text: str | None = None,
 ) -> dict:
-    objs = load_module_objects(objects_text)
+    objs = merge_makefile_rust_objects(
+        load_module_objects(objects_text), makefile_text
+    )
     c_linked = 0
     rust_port = 0
     total_baseline_loc = 0
@@ -336,9 +369,13 @@ def discover_migration_units_from_makefile(makefile_text: str | None = None) -> 
     return sorted(set(stems))
 
 
-def linked_c_by_parent(objects_text: str | None) -> dict[str, list[str]]:
+def linked_c_by_parent(
+    objects_text: str | None, makefile_text: str | None = None
+) -> dict[str, list[str]]:
     linked: dict[str, list[str]] = {}
-    for obj in load_module_objects(objects_text):
+    for obj in merge_makefile_rust_objects(
+        load_module_objects(objects_text), makefile_text
+    ):
         c_path, kind = classify_object(obj)
         if kind != "c" or not c_path:
             continue
@@ -373,7 +410,7 @@ def compute_migration_units_metrics(
     objects_text: str | None = None,
 ) -> dict:
     units = discover_migration_units_from_makefile(makefile_text)
-    linked = linked_c_by_parent(objects_text)
+    linked = linked_c_by_parent(objects_text, makefile_text)
     baseline_scope_loc = 0
     ported_loc_est = 0
     rust_loc = 0
@@ -450,7 +487,10 @@ def snapshot_at_ref(tree_ref: str, baseline_ref: str) -> dict:
         module_metrics = None
     else:
         module_metrics = compute_module_metrics(
-            baseline_ref, tree_ref, objects_text=objects_text
+            baseline_ref,
+            tree_ref,
+            objects_text=objects_text,
+            makefile_text=makefile_text,
         )
     return {
         "module": module_metrics,
@@ -476,6 +516,21 @@ def format_markdown(data: dict, baseline_label: str, baseline_ref: str) -> str:
             delta_section += (
                 f"| Module objects % | {delta['module_object_pct']:+.1f} |\n"
             )
+            ported_abs = delta.get("ported_baseline_c_loc")
+            if ported_abs is not None:
+                delta_section += (
+                    f"| Ported baseline LOC | {ported_abs:+,} lines |\n"
+                )
+            rust_abs = delta.get("current_rust_loc")
+            if rust_abs is not None:
+                delta_section += (
+                    f"| Rust migration source | {rust_abs:+,} lines |\n"
+                )
+            unit_count = delta.get("migration_unit_count")
+            if unit_count is not None:
+                delta_section += (
+                    f"| Migration units (Makefile) | {unit_count:+d} |\n"
+                )
         else:
             delta_section += (
                 "| Module LOC % | _n/a (base ref lacks "
@@ -487,6 +542,11 @@ def format_markdown(data: dict, baseline_label: str, baseline_ref: str) -> str:
             delta_section += (
                 f"| Migration units LOC % | {units_delta:+.1f} |\n"
             )
+            units_rust = delta.get("migration_units_rust_loc")
+            if units_rust is not None:
+                delta_section += (
+                    f"| Migration-unit Rust source | {units_rust:+,} lines |\n"
+                )
         else:
             delta_section += (
                 "| Migration units LOC % | _n/a (base ref lacks "
@@ -538,22 +598,39 @@ def main() -> int:
     baseline_ref = args.baseline_ref or meta["baseline_ref"]
     baseline_label = meta.get("baseline_label", baseline_ref)
 
-    module = compute_module_metrics(baseline_ref)
-    units = compute_migration_units_metrics(baseline_ref, objects_text=None)
+    makefile_text = (REPO_ROOT / "Makefile").read_text()
+    module = compute_module_metrics(
+        baseline_ref, makefile_text=makefile_text
+    )
+    units = compute_migration_units_metrics(
+        baseline_ref, makefile_text=makefile_text
+    )
     result: dict = {"baseline_ref": baseline_ref, "module": module, "units": units}
 
     if args.compare_ref:
         base_snap = snapshot_at_ref(args.compare_ref, baseline_ref)
-        delta: dict[str, float | None] = {
+        delta: dict[str, float | int | None] = {
             "module_loc_pct": None,
             "module_object_pct": None,
             "migration_units_loc_pct": None,
+            "ported_baseline_c_loc": None,
+            "current_rust_loc": None,
+            "migration_unit_count": None,
+            "migration_units_rust_loc": None,
         }
         if base_snap["has_module_objects"]:
             delta["migration_units_loc_pct"] = round(
                 units["migration_units_loc_pct"]
                 - base_snap["units"]["migration_units_loc_pct"],
                 1,
+            )
+            delta["migration_unit_count"] = (
+                units["migration_unit_count"]
+                - base_snap["units"]["migration_unit_count"]
+            )
+            delta["migration_units_rust_loc"] = (
+                units["migration_units_rust_loc"]
+                - base_snap["units"]["migration_units_rust_loc"]
             )
         if base_snap["module"] is not None:
             delta["module_loc_pct"] = round(
@@ -564,6 +641,13 @@ def main() -> int:
                 module["module_object_pct"]
                 - base_snap["module"]["module_object_pct"],
                 1,
+            )
+            delta["ported_baseline_c_loc"] = (
+                module["ported_baseline_c_loc"]
+                - base_snap["module"]["ported_baseline_c_loc"]
+            )
+            delta["current_rust_loc"] = (
+                module["current_rust_loc"] - base_snap["module"]["current_rust_loc"]
             )
         result["compare_ref"] = args.compare_ref
         result["compare_has_module_objects"] = base_snap["has_module_objects"]
