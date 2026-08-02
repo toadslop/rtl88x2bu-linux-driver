@@ -7,8 +7,8 @@ description: >-
   three paths per run: (A) prepare eligible open/draft PRs when at least one
   still needs prep; (B) otherwise triage issues, select ready work, plan ~200-line
   implement, open PRs ready for review, and babysit; (C) otherwise draft new
-  issues per allowlist when backlog is not saturated and chain head is not
-  in-flight, then stop. If Path A runs but no PR could be changed (e.g.
+  issues per allowlist when no lane is saturated (or parallel lanes remain
+  draftable) and chain head is not in-flight, then stop. If Path A runs but no PR could be changed (e.g.
   landed on a PR branch already merge-ready), fall through to B/C without
   stopping. Do NOT use for reviewing PRs
   (pr-review-delivery) or for preparing a single named PR in isolation
@@ -142,8 +142,8 @@ rule **only** when the prep batch was a true no-op (no `needs_prep` PRs remain).
 | **One or more `needs_prep` PRs** among `eligible` | **A — Prepare PRs** | Run [`prepare-all-prs-for-merge`](../prepare-all-prs-for-merge/SKILL.md) on those PRs only; **stop** if any PR was changed or any `needs_prep` PR remains blocked (**human action required**). **Fall through** to B/C only when prep completes with zero changes and no eligible PR is still `needs_prep` (see **Landed on a PR branch but no PRs could be changed**) |
 | **No `needs_prep` PRs** (no open PRs, every open PR is `skipped`, or all `eligible` PRs are `merge_ready`) and a ready issue exists after triage + selection | **B — New work** | Triage → select → plan → implement → open PRs → babysit, then **stop** |
 | **No `needs_prep` PRs** and selection reports **chain head in-flight (this issue only)** | **B — stack downstream** or **A** | If a **downstream** issue is ready (dep satisfied via open PR), run Path B and stack on the dependency PR branch. If only the chain-head issue itself is in-flight, prep/babysit (Path A) when `needs_prep`; otherwise report merge-ready PRs — **not** Path C |
-| **No `needs_prep` PRs** and selection reports **chain head blocked (no accessible code)** or **backlog saturated** | **Stop** or **C** | Blocked head: report blocker; saturated backlog: report count — do **not** draft more tickets unless true tranche gap |
-| **No `needs_prep` PRs** and no ready issue, backlog **not** saturated, true tranche gap (chain head has **no accessible code**) | **C — Draft wave** | Triage → draft new issues per **`draft-migration-issues` allowlist**, then **stop** |
+| **No `needs_prep` PRs** and selection reports **chain head blocked (no accessible code)** with no parallel-lane gap | **Stop** | Blocked head: report blocker — do **not** extend that lane |
+| **No `needs_prep` PRs** and no ready issue, but Path C gap exists (true tranche gap **or** single-lane saturated with other parallel lanes draftable) | **C — Draft wave** | Triage → draft new issues per **`draft-migration-issues` allowlist** (parallel lanes when one lane is saturated), then **stop** |
 
 When open PRs exist but **`eligible` is empty** (all `skipped`), **fall through**
 to Path B or C — do not enter Path A with nothing to prepare. When `eligible` is
@@ -167,9 +167,9 @@ flowchart TD
   F -->|Found| G[3. Plan stacked PRs]
   G --> H[4. Implement + open PRs + babysit]
   H --> Z
-  F -->|None ready| I{Backlog saturated or blocked head?}
-  I -->|Yes| Z3[Report frontier — stop]
-  I -->|No — true gap| J[Path C: draft per allowlist]
+  F -->|None ready| I{Path C gap?}
+  I -->|Blocked head, no parallel gap| Z3[Report frontier — stop]
+  I -->|True gap or single-lane saturated| J[Path C: draft per allowlist]
   J --> Z
 ```
 
@@ -280,7 +280,8 @@ mandatory follow-up issues for unfinished stack rows).
 
 **When:** no **`needs_prep`** PRs (skipped or merge-ready open PRs may remain),
 selection finds **no** ready issue, **`draft-migration-issues` When NOT to draft**
-checks pass (not in-flight head, backlog not saturated, scope is allowlisted).
+checks pass (not in-flight head, no **whole-wave** saturation blocking all lanes,
+scope is allowlisted).
 
 | Step | Subskill | Outcome |
 |------|----------|---------|
@@ -290,7 +291,7 @@ checks pass (not in-flight head, backlog not saturated, scope is allowlisted).
 **Do not enter Path C** when:
 
 - The chain head issue is unblocked but has **its own** open implementation PR (prep or stack downstream instead)
-- ≥15 open children already exist behind the same `blocked_by` chain
+- **Every** active parallel lane already has ≥15 open children (whole-wave saturation — implement/merge instead)
 - The only "gap" is Wave 4+ HAL/USB/PHYDM scope
 
 **Open PRs on chain-head dependencies do not block Path B or Path C downstream
@@ -328,7 +329,7 @@ implement one immediately. Wait for an explicit follow-up or a new pick-up run
 | Draft new issues only when allowlist + gap checks pass (Path C) | Draft deep single-lane chains across unrelated C files |
 | Favor wide parallel issue graphs when drafting (Path C) | Chain every new ticket to the previous ID by default |
 | Stack new work on open dependency PR branches (Path B) | Wait for chain-head PRs to merge before implementing dependents |
-| Stop when backlog saturated — implement/merge instead | File HAL/USB/PHYDM slices without Wave 4 infra |
+| Stop when **every** parallel lane is saturated — implement/merge instead | File HAL/USB/PHYDM slices without Wave 4 infra |
 | Close issues with evidence they are done | Merge PRs without explicit user instruction |
 | Query GitHub for open PRs, issues, blocked state | Rewrite `ISSUE-MAP.md` by hand (use `file-issues.sh`) |
 

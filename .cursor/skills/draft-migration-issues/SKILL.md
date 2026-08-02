@@ -2,10 +2,11 @@
 name: draft-migration-issues
 description: >-
   Path C of pick-up-work-item (fallback when no PRs need prep, no ready issue,
-  and backlog is not saturated). Drafts implementable ~200 LOC child issues with
+  and at least one parallel lane is draftable). Drafts implementable ~200 LOC child issues with
   local specs — only allowlisted leaf/pure slices with a clear L0/L1/L2 path.
   Favor wide parallel graphs over deep blocked_by chains. Do NOT file when a
-  single lane is saturated, or scope is HAL/Wave 4. Completes the pick-up
+  single lane is saturated (draft other lanes instead), every lane is saturated,
+  or scope is HAL/Wave 4. Completes the pick-up
   workflow — do NOT select or implement a newly drafted issue in the same run.
   Do NOT use to duplicate existing open issues.
 metadata:
