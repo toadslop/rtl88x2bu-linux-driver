@@ -71,6 +71,35 @@ PRs opened while preparing existing work. Do not omit the tag on stacked PRs
 
 ## Path selection (mandatory — run first)
 
+**Do not hand-classify PRs or issues.** Run the deterministic script and parse its
+JSON output:
+
+```bash
+./scripts/workflow/find-work.sh path
+# or: python3 scripts/workflow/find_work.py path
+```
+
+Use `pathDecision.path` (`A` / `B` / `C` / `stop`) and the nested `prs` /
+`issues` objects. The script implements the eligibility filter, `needs_prep` vs
+`merge_ready` rules, `blocked_by` resolution (closed issues **or** open
+implementing PRs), parallel-lane prioritization, and Path C gap detection — see
+[`scripts/workflow/README.md`](../../../scripts/workflow/README.md).
+
+| `pathDecision.path` | Action |
+|---------------------|--------|
+| `A` | Path A — `prs.needs_prep` |
+| `B` | Path B — `issues.selected` (+ stack base) |
+| `C` | Path C — `issues.pathCGap` |
+| `stop` | Report `chainHeadBlocked` or `chainHeadInFlight`; do not draft/implement |
+
+Optional: `./scripts/workflow/find-work.sh path --human` for a readable summary.
+User override: `--issue W3-40` when the user named a draft ID.
+
+**Fallback only:** if the script fails (no `gh`, auth error), use the manual
+steps below.
+
+### Manual fallback — PR eligibility
+
 Before triage, planning, or implementation, list open PRs and apply the same
 **eligibility filter** as [`prepare-all-prs-for-merge`](../prepare-all-prs-for-merge/SKILL.md#phase-1--discover-and-filter-prs) Phase 1:
 
@@ -332,6 +361,7 @@ implement one immediately. Wait for an explicit follow-up or a new pick-up run
 | Stop when **every** parallel lane is saturated — implement/merge instead | File HAL/USB/PHYDM slices without Wave 4 infra |
 | Close issues with evidence they are done | Merge PRs without explicit user instruction |
 | Query GitHub for open PRs, issues, blocked state | Rewrite `ISSUE-MAP.md` by hand (use `file-issues.sh`) |
+| Run `./scripts/workflow/find-work.sh path` for path/PR/issue decisions | Re-derive eligibility, `blocked_by`, or prioritization by hand when the script works |
 
 ## Repo context (quick reference)
 
