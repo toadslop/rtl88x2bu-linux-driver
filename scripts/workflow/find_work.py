@@ -167,6 +167,7 @@ class PullRequest:
     reviews: list[dict[str, Any]] = field(default_factory=list)
     draft_ids: set[str] = field(default_factory=set)
     issue_numbers: set[int] = field(default_factory=set)
+    enrichment_ok: bool = False
 
     @classmethod
     def from_summary(cls, data: dict[str, Any]) -> PullRequest:
@@ -184,6 +185,9 @@ class PullRequest:
         return pr
 
     def enrich(self, detail: dict[str, Any], body: str = "") -> None:
+        self.enrichment_ok = True
+        self.is_draft = detail.get("isDraft", self.is_draft)
+        self.base_ref = detail.get("baseRefName", self.base_ref)
         self.mergeable = detail.get("mergeable")
         self.merge_state = detail.get("mergeStateStatus")
         self.review_decision = detail.get("reviewDecision")
@@ -242,9 +246,13 @@ class PullRequest:
 
     def classify_prep(self) -> str:
         """Return needs_prep or merge_ready (eligible PRs only)."""
+        if not self.enrichment_ok:
+            return "needs_prep"
         if self.is_draft:
             return "needs_prep"
         if self.base_ref != DEFAULT_BRANCH:
+            return "needs_prep"
+        if self.mergeable is None or self.merge_state is None:
             return "needs_prep"
         if self.mergeable == "CONFLICTING":
             return "needs_prep"
@@ -257,7 +265,6 @@ class PullRequest:
         if not self.checks_ok():
             return "needs_prep"
         if self.mergeable == "MERGEABLE" and self.merge_state in (
-            None,
             "CLEAN",
             "HAS_HOOKS",
             "UNSTABLE",
@@ -266,7 +273,7 @@ class PullRequest:
             return "merge_ready"
         if self.mergeable == "UNKNOWN":
             return "needs_prep"
-        return "merge_ready"
+        return "needs_prep"
 
 
 def base_branch_merged(base_ref: str, owner: str, cache: dict[str, bool]) -> bool:
@@ -322,8 +329,11 @@ def fetch_open_prs(owner: str) -> list[PullRequest]:
             )
             body = detail.get("body") or ""
             pr.enrich(detail, body)
-        except RuntimeError:
-            pass
+        except RuntimeError as exc:
+            print(
+                f"warning: failed to enrich PR #{pr.number}: {exc}",
+                file=sys.stderr,
+            )
     return prs
 
 
@@ -480,14 +490,19 @@ def issue_has_open_pr(issue: Issue, prs: list[PullRequest]) -> PullRequest | Non
 
 
 def stack_base_from_deps(deps: list[dict[str, Any]]) -> str:
-    pr_heads = [
-        d["pr"]["headRefName"]
+    pr_deps = [
+        d
         for d in deps
         if d.get("satisfied") and d.get("via") == "open_pr" and d.get("pr")
     ]
-    if pr_heads:
-        return pr_heads[-1]
-    return DEFAULT_BRANCH
+    if not pr_deps:
+        return DEFAULT_BRANCH
+    tip = max(pr_deps, key=lambda d: wave_sort_key(d.get("draftId")))
+    return tip["pr"]["headRefName"]
+
+
+def frontier_sort_key(item: dict[str, Any]) -> tuple:
+    return (*wave_sort_key(item.get("draftId")), item["number"])
 
 
 def wave_sort_key(draft_id: str | None) -> tuple:
@@ -604,42 +619,64 @@ def analyze_issues(
     candidates.sort(key=rank)
     selected = candidates[0] if candidates else None
 
-    # Frontier diagnosis
-    blocked_issues.sort(key=lambda x: (x["number"]))
+    override_warning: str | None = None
+    if override_draft:
+        if selected and selected.get("draftId") != override_draft:
+            override_warning = (
+                f"override {override_draft} ignored — not ready; "
+                f"selected {selected.get('draftId')}"
+            )
+        elif not selected:
+            override_warning = f"override {override_draft} ignored — not ready"
+
+    # Frontier diagnosis (lowest draft ID, not lowest GitHub number)
+    blocked_issues.sort(key=frontier_sort_key)
     chain_head_blocked = blocked_issues[0] if blocked_issues else None
 
-    in_flight_heads.sort(key=lambda x: x["number"])
+    in_flight_heads.sort(key=frontier_sort_key)
     chain_head_in_flight = in_flight_heads[0] if in_flight_heads else None
 
-    # Single-lane saturation: count open children sharing the same chain-head blocker
+    # Per-lane saturation: ≥15 open children behind the same single blocker
+    lanes_with_children = {i.lane or "__unknown__" for i in children}
+    saturated_lanes: set[str] = set()
     saturation: dict[str, Any] | None = None
-    if chain_head_blocked:
-        blocker_nums = {d["number"] for d in chain_head_blocked["unsatisfiedDeps"]}
-        if len(blocker_nums) == 1:
-            blocker = next(iter(blocker_nums))
-            behind = [
-                i
-                for i in blocked_issues
-                if len(i["unsatisfiedDeps"]) == 1
-                and i["unsatisfiedDeps"][0]["number"] == blocker
-            ]
-            if len(behind) >= SINGLE_LANE_SATURATION:
+    lane_behind_counts: dict[tuple[str, int], int] = {}
+
+    for item in blocked_issues:
+        if len(item["unsatisfiedDeps"]) != 1:
+            continue
+        blocker = item["unsatisfiedDeps"][0]["number"]
+        issue = issues_by_num.get(item["number"])
+        lane = (issue.lane if issue else None) or "__unknown__"
+        key = (lane, blocker)
+        lane_behind_counts[key] = lane_behind_counts.get(key, 0) + 1
+
+    for (lane, blocker), count in lane_behind_counts.items():
+        if count >= SINGLE_LANE_SATURATION:
+            saturated_lanes.add(lane)
+            if saturation is None:
                 saturation = {
+                    "lane": None if lane == "__unknown__" else lane,
                     "chainHeadBlocker": blocker,
-                    "openChildrenBehind": len(behind),
+                    "openChildrenBehind": count,
                     "threshold": SINGLE_LANE_SATURATION,
                 }
 
+    whole_wave_saturated = bool(
+        lanes_with_children
+        and lanes_with_children.issubset(saturated_lanes)
+    )
+
+    # Path C only when one lane is saturated (≥15 behind same blocker) and other
+    # parallel lanes remain draftable. A blocked chain head with <15 filed children
+    # yields stop, not Path C (pick-up-work-item).
     path_c_gap = False
-    path_c_reason = None
-    if not selected:
-        if saturation:
+    path_c_reason: str | None = None
+    if not selected and not whole_wave_saturated:
+        other_lanes_draftable = bool(lanes_with_children - saturated_lanes)
+        if saturation and other_lanes_draftable:
             path_c_gap = True
             path_c_reason = "single_lane_saturated"
-        elif chain_head_blocked:
-            # True gap if parallel lanes may still be draftable
-            path_c_gap = True
-            path_c_reason = "chain_head_blocked_or_tranche_gap"
 
     return {
         "openChildren": len(children),
@@ -649,8 +686,10 @@ def analyze_issues(
         "chainHeadBlocked": chain_head_blocked,
         "chainHeadInFlight": chain_head_in_flight,
         "saturation": saturation,
+        "wholeWaveSaturated": whole_wave_saturated,
         "pathCGap": path_c_gap,
         "pathCReason": path_c_reason,
+        "overrideWarning": override_warning,
     }
 
 
@@ -667,17 +706,20 @@ def decide_path(
         }
     if issue_report.get("selected"):
         sel = issue_report["selected"]
-        return {
+        result = {
             "path": "B",
             "reason": f"ready issue {sel.get('draftId') or sel['number']}",
             "action": "triage → plan-stacked-prs → implement-stacked-prs",
             "selected": sel,
         }
-    if issue_report.get("pathCGap"):
+        if issue_report.get("overrideWarning"):
+            result["overrideWarning"] = issue_report["overrideWarning"]
+        return result
+    if issue_report.get("wholeWaveSaturated"):
         return {
-            "path": "C",
-            "reason": issue_report.get("pathCReason") or "no ready issue",
-            "action": "draft-migration-issues",
+            "path": "stop",
+            "reason": "whole-wave saturated — implement/merge instead of drafting",
+            "action": "report saturation counts",
         }
     if issue_report.get("chainHeadInFlight"):
         inf = issue_report["chainHeadInFlight"]
@@ -686,6 +728,12 @@ def decide_path(
             "reason": "chain head in-flight only",
             "action": "report frontier PR; prep if needs_prep on next run",
             "chainHeadInFlight": inf,
+        }
+    if issue_report.get("pathCGap"):
+        return {
+            "path": "C",
+            "reason": issue_report.get("pathCReason") or "no ready issue",
+            "action": "draft-migration-issues",
         }
     if issue_report.get("chainHeadBlocked"):
         blk = issue_report["chainHeadBlocked"]
@@ -754,6 +802,10 @@ def format_human(report: dict[str, Any]) -> str:
                 f"PR #{inf['pr']['number']}"
             )
         lines.append(f"Ready candidates: {issues.get('readyCount', 0)}")
+        if issues.get("overrideWarning"):
+            lines.append(f"Warning: {issues['overrideWarning']}")
+        if issues.get("wholeWaveSaturated"):
+            lines.append("Whole-wave saturated: yes")
     return "\n".join(lines)
 
 

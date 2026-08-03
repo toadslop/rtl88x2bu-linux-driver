@@ -42,7 +42,7 @@ Encodes:
 | Key | Contents |
 |-----|----------|
 | `prs` | `total`, `eligible`, `skipped`, `needs_prep`, `merge_ready` |
-| `issues` | `selected`, `readyCandidates`, `chainHeadBlocked`, `chainHeadInFlight`, `pathCGap` |
+| `issues` | `selected`, `readyCandidates`, `chainHeadBlocked`, `chainHeadInFlight`, `saturation`, `wholeWaveSaturated`, `pathCGap`, `overrideWarning` |
 | `pathDecision` | `path` (`A`/`B`/`C`/`stop`), `reason`, `action` |
 
 Agents should **parse this JSON** and follow the chosen path skill — not re-list
