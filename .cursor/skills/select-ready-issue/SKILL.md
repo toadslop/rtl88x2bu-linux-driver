@@ -18,6 +18,26 @@ Pick **one** open issue to work on next. Prefer a **ready** issue in a parallel
 lane with no in-flight PR (see §4); when lanes tie, prefer the earliest unblocked
 child in the current active wave.
 
+## 0. Run the selection script (mandatory)
+
+**Do not** manually `gh issue list` / `gh issue view` every candidate to decide
+readiness. Run:
+
+```bash
+./scripts/workflow/find-work.sh issues
+# full pick-up context (path + PRs + issues):
+./scripts/workflow/find-work.sh path
+```
+
+Parse `issues.selected` (draft ID, GitHub `#N`, `stackBase`, `specPath`, `lane`).
+If `selected` is null, use `chainHeadBlocked`, `chainHeadInFlight`, `saturation`,
+and `pathCGap` from the JSON for §6 hand-off — do not re-walk the graph by hand
+unless the script failed.
+
+User override: `./scripts/workflow/find-work.sh issues --issue W3-40`
+
+The sections below document the rules the script encodes (for fallback and review).
+
 ## 1. Determine the active frontier
 
 Query GitHub for the active wave — do not read a local status table:

@@ -53,7 +53,16 @@ flowchart TD
 
 ## Phase 1 — Discover and filter PRs
 
-### List open PRs
+**Run the script first** (do not hand-classify each PR):
+
+```bash
+./scripts/workflow/find-work.sh prs
+```
+
+Use `eligible`, `skipped`, `needs_prep`, and `merge_ready` from the JSON. For
+full path selection (Path A vs B/C), prefer `./scripts/workflow/find-work.sh path`.
+
+### Manual fallback — list open PRs
 
 ```bash
 gh pr list --state open --json number,title,isDraft,baseRefName,headRefName,url
