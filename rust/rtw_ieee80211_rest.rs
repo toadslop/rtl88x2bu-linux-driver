@@ -1918,7 +1918,10 @@ const WLAN_EID_VENDOR_SPECIFIC: U8 = 221;
 const P2P_OUI: [U8; 4] = [0x50, 0x6F, 0x9A, 0x09];
 
 fn put_le16(p: *mut U8, val: u16) {
-    unsafe { *p = (val & 0xff) as U8; *p.add(1) = (val >> 8) as U8; }
+    unsafe {
+        *p = (val & 0xff) as U8;
+        *p.add(1) = (val >> 8) as U8;
+    }
 }
 
 fn mem_eq(s1: *const U8, s2: *const U8, n: usize) -> bool {
@@ -2003,7 +2006,12 @@ pub extern "C" fn rtw_del_p2p_ie(ies: *mut U8, ies_len_ori: c_uint, _msg: *const
     loop {
         let mut target_ie_len: c_uint = 0;
         let target_ie = unsafe {
-            rtw_get_p2p_ie(ies, ies_len as c_int, core::ptr::null_mut(), &mut target_ie_len)
+            rtw_get_p2p_ie(
+                ies,
+                ies_len as c_int,
+                core::ptr::null_mut(),
+                &mut target_ie_len,
+            )
         };
         if target_ie.is_null() || target_ie_len == 0 {
             break;
@@ -2012,7 +2020,11 @@ pub extern "C" fn rtw_del_p2p_ie(ies: *mut U8, ies_len_ori: c_uint, _msg: *const
             let next_ie = target_ie.add(target_ie_len as usize);
             let remain_len = ies_len - (next_ie as usize - ies as usize) as c_uint;
             memmove(target_ie, next_ie, remain_len as usize);
-            memset(target_ie.add(remain_len as usize), 0, target_ie_len as usize);
+            memset(
+                target_ie.add(remain_len as usize),
+                0,
+                target_ie_len as usize,
+            );
             ies_len -= target_ie_len;
         }
     }
@@ -2027,8 +2039,15 @@ pub extern "C" fn rtw_del_p2p_attr(ie: *mut U8, ielen_ori: c_uint, attr_id: U8) 
     let mut ielen = ielen_ori;
     loop {
         let mut target_attr_len: u32 = 0;
-        let target_attr =
-            unsafe { rtw_get_p2p_attr(ie, ielen, attr_id, core::ptr::null_mut(), &mut target_attr_len) };
+        let target_attr = unsafe {
+            rtw_get_p2p_attr(
+                ie,
+                ielen,
+                attr_id,
+                core::ptr::null_mut(),
+                &mut target_attr_len,
+            )
+        };
         if target_attr.is_null() || target_attr_len == 0 {
             break;
         }
@@ -2036,7 +2055,11 @@ pub extern "C" fn rtw_del_p2p_attr(ie: *mut U8, ielen_ori: c_uint, attr_id: U8) 
             let next_attr = target_attr.add(target_attr_len as usize);
             let remain_len = ielen - (next_attr as usize - ie as usize) as c_uint;
             memmove(target_attr, next_attr, remain_len as usize);
-            memset(target_attr.add(remain_len as usize), 0, target_attr_len as usize);
+            memset(
+                target_attr.add(remain_len as usize),
+                0,
+                target_attr_len as usize,
+            );
             *ie.add(1) = (*ie.add(1)).saturating_sub(target_attr_len as u8);
             ielen -= target_attr_len as c_uint;
         }
@@ -2047,7 +2070,11 @@ pub extern "C" fn rtw_del_p2p_attr(ie: *mut U8, ielen_ori: c_uint, attr_id: U8) 
 #[cfg(host_ieee80211_rest_test)]
 fn bss_ex_tlv_ies_host(bss: *mut HostWlanBssidEx) -> (*mut U8, c_uint, *mut U8, *mut u32) {
     unsafe {
-        let off = if (*bss).reserved[0] == 1 { 0 } else { _BEACON_IE_OFFSET_ };
+        let off = if (*bss).reserved[0] == 1 {
+            0
+        } else {
+            _BEACON_IE_OFFSET_
+        };
         (
             (*bss).ies.as_mut_ptr().add(off),
             (*bss).ie_length.saturating_sub(off as u32),
@@ -2096,7 +2123,12 @@ pub extern "C" fn rtw_bss_ex_del_p2p_attr(bss_ex: BssPtr, attr_id: U8) {
         let (mut ies, mut ies_len, all_ies, ie_length) = bss_ex_tlv_ies_kernel(bss_ex);
         loop {
             let mut ie_len_ori: c_uint = 0;
-            let ie = rtw_get_p2p_ie(ies, ies_len as c_int, core::ptr::null_mut(), &mut ie_len_ori);
+            let ie = rtw_get_p2p_ie(
+                ies,
+                ies_len as c_int,
+                core::ptr::null_mut(),
+                &mut ie_len_ori,
+            );
             if ie.is_null() {
                 break;
             }
@@ -2107,7 +2139,11 @@ pub extern "C" fn rtw_bss_ex_del_p2p_attr(bss_ex: BssPtr, attr_id: U8) {
             if ie_len != ie_len_ori {
                 let next_ie = ie.add(ie_len as usize);
                 memmove(next_ie, next_ie_ori, remain_len as usize);
-                memset(next_ie.add(remain_len as usize), 0, (ie_len_ori - ie_len) as usize);
+                memset(
+                    next_ie.add(remain_len as usize),
+                    0,
+                    (ie_len_ori - ie_len) as usize,
+                );
                 *ie_length -= ie_len_ori - ie_len;
                 ies = next_ie;
             } else {

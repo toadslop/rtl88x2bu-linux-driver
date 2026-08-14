@@ -60,7 +60,7 @@ IE_REST_P2P_IE_SRCS := $(IE_REST_SRC) ie_cipher_c_oracle.c ie_wpa_rsn_parse_c_or
                 ie_c_oracle.c ie_p2p_c_oracle.c $(WLAN_UTIL)/wlan_util_c_oracle.c \
                 ../crypto/host_vector_json.c ie_mac_str_host_shim.c
 
-IE_REST_RUST_SHIM := ie_mac_str_host_shim.c
+IE_REST_RUST_SHIM := ie_mac_str_host_shim.c ie_p2p_c_oracle.c
 
 .PHONY: all test test-c test-rust test-rest test-rest-rust test-rest-cipher \
 	test-rest-wpa-rsn-parse test-rest-wpa-rsn-parse-rust test-rest-wapi-wps \
@@ -78,7 +78,7 @@ test: test-c test-rust test-rest test-rest-rust test-rest-cipher \
 	test-rest-mac-str-rust 	test-rest-chbw test-rest-frame-ht test-rest-frame-ht-rust \
 	test-rest-rate-section test-rest-rate-section-rust \
 	test-rest-ht-mcs-amsdu test-rest-ht-mcs-amsdu-rust \
-	test-rest-p2p-ie
+	test-rest-p2p-ie test-rest-p2p-ie-rust
 
 test-c: test_ie
 	./test_ie ie_vectors.json
