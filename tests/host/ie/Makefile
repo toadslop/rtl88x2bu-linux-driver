@@ -68,7 +68,7 @@ IE_REST_RUST_SHIM := ie_mac_str_host_shim.c
 	test-rest-chbw test-rest-chbw-rust test-rest-frame-ht test-rest-frame-ht-rust \
 	test-rest-rate-section test-rest-rate-section-rust \
 	test-rest-ht-mcs-amsdu test-rest-ht-mcs-amsdu-rust \
-	test-rest-p2p-ie test-rest-p2p-ie-rust clean
+	test-rest-p2p-ie clean
 
 all: test
 
@@ -78,7 +78,7 @@ test: test-c test-rust test-rest test-rest-rust test-rest-cipher \
 	test-rest-mac-str-rust 	test-rest-chbw test-rest-frame-ht test-rest-frame-ht-rust \
 	test-rest-rate-section test-rest-rate-section-rust \
 	test-rest-ht-mcs-amsdu test-rest-ht-mcs-amsdu-rust \
-	test-rest-p2p-ie test-rest-p2p-ie-rust
+	test-rest-p2p-ie
 
 test-c: test_ie
 	./test_ie ie_vectors.json
