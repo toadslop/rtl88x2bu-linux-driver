@@ -271,11 +271,11 @@ test-rest-p2p-ie-rust: test_ie_rest_p2p_ie_rust
 
 test_ie_rest_p2p_ie_rust: test_ie_rest_p2p_ie.c librust_ie_rest.a \
 		ie_cipher_c_oracle.c ie_wpa_rsn_parse_c_oracle.c ie_c_oracle.c \
-		ie_p2p_c_oracle.c ../wlan_util/wlan_util_c_oracle.c \
-		../crypto/host_vector_json.c $(IE_REST_RUST_SHIM)
+		../wlan_util/wlan_util_c_oracle.c ../crypto/host_vector_json.c \
+		$(IE_REST_RUST_SHIM)
 	$(CC) $(P2P_IE_CFLAGS) -DRUST_IEEE80211_REST_ORACLE -o $@ \
 		test_ie_rest_p2p_ie.c ie_cipher_c_oracle.c ie_wpa_rsn_parse_c_oracle.c \
-		ie_c_oracle.c ie_p2p_c_oracle.c ../wlan_util/wlan_util_c_oracle.c \
+		ie_c_oracle.c ../wlan_util/wlan_util_c_oracle.c \
 		../crypto/host_vector_json.c $(IE_REST_RUST_SHIM) librust_ie_rest.a
 
 clean:
