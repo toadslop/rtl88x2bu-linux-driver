@@ -1,0 +1,59 @@
+{
+  "oracle": "core/rtw_ieee80211_rest.c",
+  "vectors": [
+    {
+      "name": "merged_len_two_p2p",
+      "fn": "rtw_get_p2p_merged_ies_len",
+      "ie": "dd09506f9a09020200aabbdd07506f9a09000000",
+      "expect_u32": 12
+    },
+    {
+      "name": "merge_two_p2p",
+      "fn": "rtw_p2p_merge_ies",
+      "ie": "dd09506f9a09020200aabbdd07506f9a09000000",
+      "merge_out": "dd00506f9a09020200aabb000000",
+      "expect_i32": 12
+    },
+    {
+      "name": "set_p2p_attr",
+      "fn": "rtw_set_p2p_attr_content",
+      "attr_id": 2,
+      "attr_len": 2,
+      "attr_data": "0102",
+      "expect_out": "0202000102",
+      "expect_u32": 5
+    },
+    {
+      "name": "del_p2p_ie",
+      "fn": "rtw_del_p2p_ie",
+      "ie": "dd09506f9a09020200aabb01088204010203040506",
+      "expect_ie": "01088204010203040506",
+      "expect_u32": 10
+    },
+    {
+      "name": "del_p2p_attr",
+      "fn": "rtw_del_p2p_attr",
+      "ie": "dd09506f9a09020200aabb",
+      "attr_id": 2,
+      "expect_ie": "dd04506f9a09",
+      "expect_u32": 6
+    },
+    {
+      "name": "bss_ex_del_p2p_ie",
+      "fn": "rtw_bss_ex_del_p2p_ie",
+      "fixed_ies": "0000000000000000000000000000",
+      "ie": "dd09506f9a09020200aabb01088204010203040506",
+      "expect_ie": "01088204010203040506",
+      "expect_u32": 22
+    },
+    {
+      "name": "bss_ex_del_p2p_attr",
+      "fn": "rtw_bss_ex_del_p2p_attr",
+      "fixed_ies": "0000000000000000000000000000",
+      "ie": "dd09506f9a09020200aabb",
+      "attr_id": 2,
+      "expect_ie": "dd04506f9a09",
+      "expect_u32": 18
+    }
+  ]
+}

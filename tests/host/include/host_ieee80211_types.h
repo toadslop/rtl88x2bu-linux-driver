@@ -25,6 +25,15 @@
 #define RTW_ERR(...) do { } while (0)
 #define RTW_INFO(...) do { } while (0)
 #define RTW_DBG(...) do { } while (0)
+#define RTW_DBGDUMP ((void *)0)
+
+static inline void dump_ies(void *sel, const u8 *ies, unsigned int len)
+{
+	(void)sel;
+	(void)ies;
+	(void)len;
+}
+
 #define rtw_warn_on(cond) ((void)(cond))
 
 #define BIT(n) (1U << (n))
@@ -183,6 +192,47 @@ enum rtw_amsdu_mode {
 #define MFP_REQUIRED 3
 
 #define RTW_GET_LE16(a) ((((u16)(a)[1]) << 8) | (u16)(a)[0])
+
+#define RTW_PUT_LE16(a, val) \
+	do { \
+		(a)[0] = (u8)((u16)(val) & 0xff); \
+		(a)[1] = (u8)(((u16)(val) >> 8) & 0xff); \
+	} while (0)
+
+#define WLAN_EID_VENDOR_SPECIFIC 221
+#define _VENDOR_SPECIFIC_IE_ 221
+#define MAX_IE_SZ 256
+
+#define P2P_ATTR_STATUS 0x00
+#define P2P_ATTR_CAPABILITY 0x02
+#define P2P_ATTR_GROUP_INFO 0x0E
+
+#define BSS_EX_IES(bss_ex) ((bss_ex)->IEs)
+#define BSS_EX_IES_LEN(bss_ex) ((bss_ex)->IELength)
+#define BSS_EX_FIXED_IE_OFFSET(bss_ex) \
+	((bss_ex)->Reserved[0] == 1 ? 0 : 12)
+#define BSS_EX_TLV_IES(bss_ex) \
+	(BSS_EX_IES((bss_ex)) + BSS_EX_FIXED_IE_OFFSET((bss_ex)))
+#define BSS_EX_TLV_IES_LEN(bss_ex) \
+	(BSS_EX_IES_LEN((bss_ex)) - BSS_EX_FIXED_IE_OFFSET((bss_ex)))
+
+typedef struct _NDIS_802_11_VARIABLE_IEs {
+	u8 ElementID;
+	u8 Length;
+	u8 data[1];
+} NDIS_802_11_VARIABLE_IEs, *PNDIS_802_11_VARIABLE_IEs;
+
+u8 *rtw_get_p2p_ie(const u8 *in_ie, int in_len, u8 *p2p_ie, unsigned int *p2p_ielen);
+u8 *rtw_get_p2p_attr(u8 *p2p_ie, unsigned int p2p_ielen, u8 target_attr_id,
+		      u8 *buf_attr, u32 *len_attr);
+
+u32 rtw_get_p2p_merged_ies_len(u8 *in_ie, u32 in_len);
+int rtw_p2p_merge_ies(u8 *in_ie, u32 in_len, u8 *merge_ie);
+u32 rtw_set_p2p_attr_content(u8 *pbuf, u8 attr_id, u16 attr_len, u8 *pdata_attr);
+unsigned int rtw_del_p2p_ie(u8 *ies, unsigned int ies_len_ori, const char *msg);
+unsigned int rtw_del_p2p_attr(u8 *ie, unsigned int ielen_ori, u8 attr_id);
+void rtw_bss_ex_del_p2p_ie(WLAN_BSSID_EX *bss_ex);
+void rtw_bss_ex_del_p2p_attr(WLAN_BSSID_EX *bss_ex, u8 attr_id);
 
 struct rsne_info {
 	u8 *gcs;

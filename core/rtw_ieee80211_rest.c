@@ -1278,7 +1278,7 @@ u32 rtw_get_p2p_merged_ies_len(u8 *in_ie, u32 in_len)
 {
 	PNDIS_802_11_VARIABLE_IEs	pIE;
 	u8 OUI[4] = { 0x50, 0x6f, 0x9a, 0x09 };
-	int i = 0;
+	u32 i = 0;
 	int len = 0;
 
 	while (i < in_len) {
@@ -1300,7 +1300,7 @@ int rtw_p2p_merge_ies(u8 *in_ie, u32 in_len, u8 *merge_ie)
 	u8 len = 0;
 	u8 OUI[4] = { 0x50, 0x6f, 0x9a, 0x09 };
 	u8 ELOUI[6] = { 0xDD, 0x00, 0x50, 0x6f, 0x9a, 0x09 };	/* EID;Len;OUI, Len would copy at the end of function */
-	int i = 0;
+	u32 i = 0;
 
 	if (merge_ie != NULL) {
 		/* Set first P2P OUI */
