@@ -12,6 +12,9 @@ on:
       - '.github/workflows/rust-lint.yml'
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   rustfmt:
     runs-on: ubuntu-latest
