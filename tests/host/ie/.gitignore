@@ -12,3 +12,4 @@ test_ie_rest_frame_ht_rust
 librust_ie_rest.a
 test_ie_rest_ht_mcs_amsdu
 test_ie_rest_ht_mcs_amsdu_rust
+test_ie_rest_wfd_multiap
