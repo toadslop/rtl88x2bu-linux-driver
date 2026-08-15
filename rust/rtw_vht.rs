@@ -11,16 +11,31 @@
     unreachable_pub
 )]
 
-#[cfg(any(host_vht_test, host_vht_restructure_test, host_vht_mcs_rate_test))]
+#[cfg(any(
+    host_vht_test,
+    host_vht_restructure_test,
+    host_vht_mcs_rate_test,
+    host_vht_vht20_test
+))]
 use std::os::raw::c_int;
 
 #[cfg(host_vht_restructure_test)]
 use std::os::raw::c_uint;
 
-#[cfg(not(any(host_vht_test, host_vht_restructure_test, host_vht_mcs_rate_test)))]
+#[cfg(not(any(
+    host_vht_test,
+    host_vht_restructure_test,
+    host_vht_mcs_rate_test,
+    host_vht_vht20_test
+)))]
 use core::ffi::c_uint;
 
-#[cfg(not(any(host_vht_test, host_vht_restructure_test, host_vht_mcs_rate_test)))]
+#[cfg(not(any(
+    host_vht_test,
+    host_vht_restructure_test,
+    host_vht_mcs_rate_test,
+    host_vht_vht20_test
+)))]
 use core::ffi::c_int;
 
 mod mcs_rate {
@@ -228,7 +243,15 @@ pub extern "C" fn rtw_vht_mcs_map_to_bitmap(mcs_map: *mut u8, nss: u8) -> u64 {
     mcs_rate::rtw_vht_mcs_map_to_bitmap_impl(mcs_map, nss)
 }
 
-#[cfg(not(any(host_vht_test, host_vht_restructure_test, host_vht_mcs_rate_test)))]
+#[cfg(any(
+    not(any(
+        host_vht_test,
+        host_vht_restructure_test,
+        host_vht_mcs_rate_test,
+        host_vht_vht20_test
+    )),
+    host_vht_vht20_test
+))]
 #[no_mangle]
 pub extern "C" fn rtw_check_for_vht20(adapter: *mut u8, ies: *mut u8, ies_len: c_int) {
     mcs_rate::rtw_check_for_vht20_impl(adapter, ies, ies_len);
@@ -275,7 +298,11 @@ pub extern "C" fn VHT_get_ss_from_map(vht_mcs_map: *mut u8) -> u8 {
 
 #[cfg(any(
     host_vht_restructure_test,
-    all(not(host_vht_test), not(host_vht_mcs_rate_test))
+    all(
+        not(host_vht_test),
+        not(host_vht_mcs_rate_test),
+        not(host_vht_vht20_test)
+    )
 ))]
 mod restructure {
     use super::c_int;
@@ -503,7 +530,11 @@ mod restructure {
 
 #[cfg(any(
     host_vht_restructure_test,
-    all(not(host_vht_test), not(host_vht_mcs_rate_test))
+    all(
+        not(host_vht_test),
+        not(host_vht_mcs_rate_test),
+        not(host_vht_vht20_test)
+    )
 ))]
 #[no_mangle]
 pub extern "C" fn rtw_restructure_vht_ie(
