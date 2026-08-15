@@ -1269,10 +1269,11 @@ u8 rtw_check_amsdu_disable(u8 mode, u8 spp_opt)
 #endif /* W3-42 C oracle guard */
 
 #if defined(CONFIG_P2P) && \
-	(!defined(HOST_IEEE80211_REST_TEST) || defined(HOST_IEEE80211_REST_P2P_IE_TEST))
+	((!defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)) || \
+	 defined(HOST_IEEE80211_REST_P2P_IE_TEST))
 /*
  * W3-43: P2P IE merge/delete helpers extracted from core/rtw_ieee80211.c.
- * PR3 tightens this guard when the Rust port replaces the kernel build.
+ * Rust port replaces kernel build when CONFIG_RUST.
  */
 u32 rtw_get_p2p_merged_ies_len(u8 *in_ie, u32 in_len)
 {
@@ -1516,5 +1517,10 @@ u8 *rtw_ieee80211_rest_bss_ies(WLAN_BSSID_EX *bss)
 u8 *rtw_ieee80211_rest_bss_supported_rates(WLAN_BSSID_EX *bss)
 {
 	return bss->SupportedRates;
+}
+
+unsigned int rtw_ieee80211_rest_bss_fixed_ie_offset(WLAN_BSSID_EX *bss)
+{
+	return BSS_EX_FIXED_IE_OFFSET(bss);
 }
 #endif /* CONFIG_RUST && !HOST_IEEE80211_REST_TEST */

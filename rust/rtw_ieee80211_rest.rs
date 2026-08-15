@@ -4,7 +4,7 @@
 //! WPA/RSN IE parse (W3-28), and WAPI/WPS/sec-IE getters (W3-29), and
 //! string/MAC address helpers (W3-30), and chbw grouping/sync (W3-31), and
 //! frame header / HT MCS helpers (W3-32), and rate-section / ch-offset mapping (W3-41),
-//! and HT MCS bitmap / AMSDU mode helpers (W3-42).
+//! and HT MCS bitmap / AMSDU mode helpers (W3-42), and P2P IE merge/delete (W3-43).
 
 #![allow(
     dead_code,
@@ -284,8 +284,24 @@ extern "C" {
     fn rtw_ieee80211_rest_bss_ies(bss: *mut c_void) -> *mut u8;
     #[cfg(not(host_ieee80211_rest_test))]
     fn rtw_ieee80211_rest_bss_supported_rates(bss: *mut c_void) -> *mut u8;
+    #[cfg(not(host_ieee80211_rest_test))]
+    fn rtw_ieee80211_rest_bss_fixed_ie_offset(bss: *mut c_void) -> c_uint;
 
     fn rtw_get_offset_by_chbw(ch: U8, bw: U8, r_offset: *mut U8) -> U8;
+
+    fn rtw_get_p2p_ie(
+        in_ie: *const U8,
+        in_len: c_int,
+        p2p_ie: *mut U8,
+        p2p_ielen: *mut c_uint,
+    ) -> *mut U8;
+    fn rtw_get_p2p_attr(
+        p2p_ie: *mut U8,
+        p2p_ielen: c_uint,
+        target_attr_id: U8,
+        buf_attr: *mut U8,
+        len_attr: *mut u32,
+    ) -> *mut U8;
 }
 
 fn bit(i: u32) -> i32 {
@@ -1898,6 +1914,247 @@ pub extern "C" fn rtw_action_frame_parse(
         }
     }
     _TRUE
+}
+
+const WLAN_EID_VENDOR_SPECIFIC: U8 = 221;
+const P2P_OUI: [U8; 4] = [0x50, 0x6F, 0x9A, 0x09];
+
+fn put_le16(p: *mut U8, val: u16) {
+    unsafe {
+        *p = (val & 0xff) as U8;
+        *p.add(1) = (val >> 8) as U8;
+    }
+}
+
+fn mem_eq(s1: *const U8, s2: *const U8, n: usize) -> bool {
+    !s1.is_null() && !s2.is_null() && unsafe { memcmp(s1, s2, n) == 0 }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_get_p2p_merged_ies_len(in_ie: *mut U8, in_len: u32) -> u32 {
+    if in_ie.is_null() || in_len == 0 {
+        return 4;
+    }
+    let mut i: u32 = 0;
+    let mut len: u32 = 0;
+    unsafe {
+        while i < in_len {
+            let p_ie = in_ie.add(i as usize);
+            let eid = *p_ie;
+            let ie_len = *p_ie.add(1) as u32;
+            if eid == WLAN_EID_VENDOR_SPECIFIC && mem_eq(p_ie.add(2), P2P_OUI.as_ptr(), 4) {
+                len += ie_len.saturating_sub(4);
+            }
+            i += ie_len + 2;
+        }
+    }
+    len + 4
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_p2p_merge_ies(in_ie: *mut U8, in_len: u32, merge_ie: *mut U8) -> c_int {
+    if merge_ie.is_null() {
+        return 0;
+    }
+    let eloui: [U8; 6] = [0xDD, 0x00, 0x50, 0x6F, 0x9A, 0x09];
+    let mut out = merge_ie;
+    let mut payload_len: u32 = 0;
+    unsafe {
+        memcpy(out, eloui.as_ptr(), 6);
+        out = out.add(6);
+        let mut i: u32 = 0;
+        while i < in_len {
+            let p_ie = in_ie.add(i as usize);
+            let eid = *p_ie;
+            let ie_len = *p_ie.add(1) as u32;
+            if eid == WLAN_EID_VENDOR_SPECIFIC && mem_eq(p_ie.add(2), P2P_OUI.as_ptr(), 4) {
+                let copy_len = (ie_len - 4) as usize;
+                memcpy(out, p_ie.add(6), copy_len);
+                out = out.add(copy_len);
+                payload_len += ie_len - 4;
+            }
+            i += ie_len + 2;
+        }
+    }
+    (payload_len + 4) as c_int
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_set_p2p_attr_content(
+    pbuf: *mut U8,
+    attr_id: U8,
+    attr_len: u16,
+    pdata_attr: *mut U8,
+) -> u32 {
+    if pbuf.is_null() {
+        return 0;
+    }
+    unsafe {
+        *pbuf = attr_id;
+        put_le16(pbuf.add(1), attr_len);
+        if !pdata_attr.is_null() {
+            memcpy(pbuf.add(3), pdata_attr, attr_len as usize);
+        }
+    }
+    attr_len as u32 + 3
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_del_p2p_ie(ies: *mut U8, ies_len_ori: c_uint, _msg: *const u8) -> c_uint {
+    if ies.is_null() {
+        return ies_len_ori;
+    }
+    let mut ies_len = ies_len_ori;
+    loop {
+        let mut target_ie_len: c_uint = 0;
+        let target_ie = unsafe {
+            rtw_get_p2p_ie(
+                ies,
+                ies_len as c_int,
+                core::ptr::null_mut(),
+                &mut target_ie_len,
+            )
+        };
+        if target_ie.is_null() || target_ie_len == 0 {
+            break;
+        }
+        unsafe {
+            let next_ie = target_ie.add(target_ie_len as usize);
+            let remain_len = ies_len - (next_ie as usize - ies as usize) as c_uint;
+            memmove(target_ie, next_ie, remain_len as usize);
+            memset(
+                target_ie.add(remain_len as usize),
+                0,
+                target_ie_len as usize,
+            );
+            ies_len -= target_ie_len;
+        }
+    }
+    ies_len
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_del_p2p_attr(ie: *mut U8, ielen_ori: c_uint, attr_id: U8) -> c_uint {
+    if ie.is_null() {
+        return ielen_ori;
+    }
+    let mut ielen = ielen_ori;
+    loop {
+        let mut target_attr_len: u32 = 0;
+        let target_attr = unsafe {
+            rtw_get_p2p_attr(
+                ie,
+                ielen,
+                attr_id,
+                core::ptr::null_mut(),
+                &mut target_attr_len,
+            )
+        };
+        if target_attr.is_null() || target_attr_len == 0 {
+            break;
+        }
+        unsafe {
+            let next_attr = target_attr.add(target_attr_len as usize);
+            let remain_len = ielen - (next_attr as usize - ie as usize) as c_uint;
+            memmove(target_attr, next_attr, remain_len as usize);
+            memset(
+                target_attr.add(remain_len as usize),
+                0,
+                target_attr_len as usize,
+            );
+            *ie.add(1) = (*ie.add(1)).saturating_sub(target_attr_len as u8);
+            ielen -= target_attr_len as c_uint;
+        }
+    }
+    ielen
+}
+
+#[cfg(host_ieee80211_rest_test)]
+fn bss_ex_tlv_ies_host(bss: *mut HostWlanBssidEx) -> (*mut U8, c_uint, *mut U8, *mut u32) {
+    unsafe {
+        let off = if (*bss).reserved[0] == 1 {
+            0
+        } else {
+            _BEACON_IE_OFFSET_
+        };
+        (
+            (*bss).ies.as_mut_ptr().add(off),
+            (*bss).ie_length.saturating_sub(off as u32),
+            (*bss).ies.as_mut_ptr(),
+            &mut (*bss).ie_length,
+        )
+    }
+}
+
+#[cfg(not(host_ieee80211_rest_test))]
+fn bss_ex_tlv_ies_kernel(bss: BssPtr) -> (*mut U8, c_uint, *mut U8, *mut u32) {
+    unsafe {
+        let off = rtw_ieee80211_rest_bss_fixed_ie_offset(bss) as usize;
+        (
+            bss_ies(bss).add(off),
+            (*bss_ielength(bss)).saturating_sub(off as u32),
+            bss_ies(bss),
+            bss_ielength(bss),
+        )
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_bss_ex_del_p2p_ie(bss_ex: BssPtr) {
+    if bss_ex.is_null() {
+        return;
+    }
+    unsafe {
+        #[cfg(host_ieee80211_rest_test)]
+        let (ies, ies_len_ori, _, ie_length) = bss_ex_tlv_ies_host(bss_ex);
+        #[cfg(not(host_ieee80211_rest_test))]
+        let (ies, ies_len_ori, _, ie_length) = bss_ex_tlv_ies_kernel(bss_ex);
+        let ies_len = rtw_del_p2p_ie(ies, ies_len_ori, core::ptr::null());
+        *ie_length -= ies_len_ori - ies_len;
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_bss_ex_del_p2p_attr(bss_ex: BssPtr, attr_id: U8) {
+    if bss_ex.is_null() {
+        return;
+    }
+    unsafe {
+        #[cfg(host_ieee80211_rest_test)]
+        let (mut ies, mut ies_len, all_ies, ie_length) = bss_ex_tlv_ies_host(bss_ex);
+        #[cfg(not(host_ieee80211_rest_test))]
+        let (mut ies, mut ies_len, all_ies, ie_length) = bss_ex_tlv_ies_kernel(bss_ex);
+        loop {
+            let mut ie_len_ori: c_uint = 0;
+            let ie = rtw_get_p2p_ie(
+                ies,
+                ies_len as c_int,
+                core::ptr::null_mut(),
+                &mut ie_len_ori,
+            );
+            if ie.is_null() {
+                break;
+            }
+            let next_ie_ori = ie.add(ie_len_ori as usize);
+            let remain_len =
+                (*ie_length).saturating_sub((next_ie_ori as usize - all_ies as usize) as u32);
+            let ie_len = rtw_del_p2p_attr(ie, ie_len_ori, attr_id);
+            if ie_len != ie_len_ori {
+                let next_ie = ie.add(ie_len as usize);
+                memmove(next_ie, next_ie_ori, remain_len as usize);
+                memset(
+                    next_ie.add(remain_len as usize),
+                    0,
+                    (ie_len_ori - ie_len) as usize,
+                );
+                *ie_length -= ie_len_ori - ie_len;
+                ies = next_ie;
+            } else {
+                ies = next_ie_ori;
+            }
+            ies_len = remain_len;
+        }
+    }
 }
 
 #[no_mangle]
