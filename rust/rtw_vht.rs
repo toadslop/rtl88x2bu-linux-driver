@@ -37,14 +37,14 @@ mod mcs_rate {
     static VHT_MCS_DATA_RATE: [[&[u16; 40]; 2]; 3] = [
         [
             &[
-                13, 26, 39, 52, 78, 104, 117, 130, 156, 156, 26, 52, 78, 104, 156, 208, 234,
-                260, 312, 312, 39, 78, 117, 156, 234, 312, 351, 390, 468, 520, 52, 104, 156,
-                208, 312, 416, 468, 520, 624, 624,
+                13, 26, 39, 52, 78, 104, 117, 130, 156, 156, 26, 52, 78, 104, 156, 208, 234, 260,
+                312, 312, 39, 78, 117, 156, 234, 312, 351, 390, 468, 520, 52, 104, 156, 208, 312,
+                416, 468, 520, 624, 624,
             ],
             &[
-                14, 29, 43, 58, 87, 116, 130, 144, 173, 173, 29, 58, 87, 116, 173, 231, 260,
-                289, 347, 347, 43, 87, 130, 173, 260, 347, 390, 433, 520, 578, 58, 116, 173,
-                231, 347, 462, 520, 578, 693, 693,
+                14, 29, 43, 58, 87, 116, 130, 144, 173, 173, 29, 58, 87, 116, 173, 231, 260, 289,
+                347, 347, 43, 87, 130, 173, 260, 347, 390, 433, 520, 578, 58, 116, 173, 231, 347,
+                462, 520, 578, 693, 693,
             ],
         ],
         [
@@ -55,15 +55,15 @@ mod mcs_rate {
             ],
             &[
                 30, 60, 90, 120, 180, 240, 270, 300, 360, 400, 60, 120, 180, 240, 360, 480, 540,
-                600, 720, 800, 90, 180, 270, 360, 540, 720, 810, 900, 1080, 1200, 120, 240,
-                360, 480, 720, 960, 1080, 1200, 1440, 1600,
+                600, 720, 800, 90, 180, 270, 360, 540, 720, 810, 900, 1080, 1200, 120, 240, 360,
+                480, 720, 960, 1080, 1200, 1440, 1600,
             ],
         ],
         [
             &[
                 59, 117, 176, 234, 351, 468, 527, 585, 702, 780, 117, 234, 351, 468, 702, 936,
-                1053, 1170, 1404, 1560, 176, 351, 527, 702, 1053, 1404, 1580, 1755, 2106,
-                2340, 234, 468, 702, 936, 1404, 1872, 2106, 2340, 2808, 3120,
+                1053, 1170, 1404, 1560, 176, 351, 527, 702, 1053, 1404, 1580, 1755, 2106, 2340,
+                234, 468, 702, 936, 1404, 1872, 2106, 2340, 2808, 3120,
             ],
             &[
                 65, 130, 195, 260, 390, 520, 585, 650, 780, 867, 130, 260, 390, 520, 780, 1040,
@@ -105,8 +105,7 @@ mod mcs_rate {
             while j < 8 {
                 let bit_map = (map[i] >> j) & 3;
                 if bit_map != 3 {
-                    vht_mcs_rate =
-                        MGN_VHT1SS_MCS7 + 10 * (j / 2) as u8 + i as u8 * 40 + bit_map;
+                    vht_mcs_rate = MGN_VHT1SS_MCS7 + 10 * (j / 2) as u8 + i as u8 * 40 + bit_map;
                 }
                 j += 2;
             }
@@ -169,15 +168,7 @@ mod mcs_rate {
             let mut vht_ch = 0u8;
             let mut vht_bw = 0u8;
             let mut vht_offset = 0u8;
-            rtw_ies_get_chbw(
-                ies,
-                ies_len,
-                &mut ht_ch,
-                &mut ht_bw,
-                &mut ht_offset,
-                1,
-                0,
-            );
+            rtw_ies_get_chbw(ies, ies_len, &mut ht_ch, &mut ht_bw, &mut ht_offset, 1, 0);
             rtw_ies_get_chbw(
                 ies,
                 ies_len,
@@ -201,25 +192,37 @@ mod mcs_rate {
     }
 }
 
-#[cfg(any(not(any(host_vht_test, host_vht_restructure_test)), host_vht_mcs_rate_test))]
+#[cfg(any(
+    not(any(host_vht_test, host_vht_restructure_test)),
+    host_vht_mcs_rate_test
+))]
 #[no_mangle]
 pub extern "C" fn rtw_get_vht_highest_rate(pvht_mcs_map: *mut u8) -> u8 {
     mcs_rate::rtw_get_vht_highest_rate_impl(pvht_mcs_map)
 }
 
-#[cfg(any(not(any(host_vht_test, host_vht_restructure_test)), host_vht_mcs_rate_test))]
+#[cfg(any(
+    not(any(host_vht_test, host_vht_restructure_test)),
+    host_vht_mcs_rate_test
+))]
 #[no_mangle]
 pub extern "C" fn rtw_vht_mcsmap_to_nss(pvht_mcs_map: *mut u8) -> u8 {
     mcs_rate::rtw_vht_mcsmap_to_nss_impl(pvht_mcs_map)
 }
 
-#[cfg(any(not(any(host_vht_test, host_vht_restructure_test)), host_vht_mcs_rate_test))]
+#[cfg(any(
+    not(any(host_vht_test, host_vht_restructure_test)),
+    host_vht_mcs_rate_test
+))]
 #[no_mangle]
 pub extern "C" fn rtw_vht_mcs_to_data_rate(bw: u8, short_gi: u8, vht_mcs_rate: u8) -> u16 {
     mcs_rate::rtw_vht_mcs_to_data_rate_impl(bw, short_gi, vht_mcs_rate)
 }
 
-#[cfg(any(not(any(host_vht_test, host_vht_restructure_test)), host_vht_mcs_rate_test))]
+#[cfg(any(
+    not(any(host_vht_test, host_vht_restructure_test)),
+    host_vht_mcs_rate_test
+))]
 #[no_mangle]
 pub extern "C" fn rtw_vht_mcs_map_to_bitmap(mcs_map: *mut u8, nss: u8) -> u64 {
     mcs_rate::rtw_vht_mcs_map_to_bitmap_impl(mcs_map, nss)
@@ -270,7 +273,10 @@ pub extern "C" fn VHT_get_ss_from_map(vht_mcs_map: *mut u8) -> u8 {
     ss
 }
 
-#[cfg(any(host_vht_restructure_test, all(not(host_vht_test), not(host_vht_mcs_rate_test))))]
+#[cfg(any(
+    host_vht_restructure_test,
+    all(not(host_vht_test), not(host_vht_mcs_rate_test))
+))]
 mod restructure {
     use super::c_int;
     use super::c_uint;
@@ -495,7 +501,10 @@ mod restructure {
     }
 }
 
-#[cfg(any(host_vht_restructure_test, all(not(host_vht_test), not(host_vht_mcs_rate_test))))]
+#[cfg(any(
+    host_vht_restructure_test,
+    all(not(host_vht_test), not(host_vht_mcs_rate_test))
+))]
 #[no_mangle]
 pub extern "C" fn rtw_restructure_vht_ie(
     padapter: *mut u8,
