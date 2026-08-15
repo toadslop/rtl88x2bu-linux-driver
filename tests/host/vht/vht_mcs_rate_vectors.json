@@ -1,0 +1,41 @@
+{
+  "oracle": "tests/host/vht/vht_mcs_rate_c_oracle.c",
+  "vectors": [
+    {
+      "name": "highest_rate_two_ss_mcs9",
+      "fn": "rtw_get_vht_highest_rate",
+      "mcs_map_hex": "a9aa",
+      "expect": 239
+    },
+    {
+      "name": "highest_rate_high_byte_ff",
+      "fn": "rtw_get_vht_highest_rate",
+      "mcs_map_hex": "ff00",
+      "expect": 237
+    },
+    {
+      "name": "highest_rate_single_ss_mcs9",
+      "fn": "rtw_get_vht_highest_rate",
+      "mcs_map_hex": "feff",
+      "expect": 169
+    },
+    {
+      "name": "nss_two_streams_fefe",
+      "fn": "rtw_vht_mcsmap_to_nss",
+      "mcs_map_hex": "fefe",
+      "expect": 2
+    },
+    {
+      "name": "nss_eight_streams_aaaa",
+      "fn": "rtw_vht_mcsmap_to_nss",
+      "mcs_map_hex": "aaaa",
+      "expect": 8
+    },
+    {
+      "name": "nss_one_stream_feff",
+      "fn": "rtw_vht_mcsmap_to_nss",
+      "mcs_map_hex": "feff",
+      "expect": 1
+    }
+  ]
+}
