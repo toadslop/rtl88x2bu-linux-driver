@@ -1498,8 +1498,8 @@ void rtw_bss_ex_del_p2p_attr(WLAN_BSSID_EX *bss_ex, u8 attr_id)
 }
 #endif /* W3-43 P2P IE C oracle guard */
 
-#if !defined(HOST_IEEE80211_REST_TEST) || \
-    defined(HOST_IEEE80211_REST_WFD_MULTIAP_TEST)
+#if ((!defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)) || \
+     defined(HOST_IEEE80211_REST_WFD_MULTIAP_TEST))
 /*
  * W3-44: WFD IE delete helpers extracted from core/rtw_ieee80211.c.
  * Rust port replaces kernel build when CONFIG_RUST.
@@ -1558,8 +1558,8 @@ void rtw_bss_ex_del_wfd_ie(WLAN_BSSID_EX *bss_ex)
 #endif /* W3-44 WFD IE delete C oracle guard */
 
 #ifdef CONFIG_WFD
-#if !defined(HOST_IEEE80211_REST_TEST) || \
-    defined(HOST_IEEE80211_REST_WFD_MULTIAP_TEST)
+#if ((!defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)) || \
+     defined(HOST_IEEE80211_REST_WFD_MULTIAP_TEST))
 uint rtw_del_wfd_attr(u8 *ie, uint ielen_ori, u8 attr_id)
 {
 #define DBG_DEL_WFD_ATTR 0
@@ -1663,8 +1663,8 @@ void rtw_bss_ex_del_wfd_attr(WLAN_BSSID_EX *bss_ex, u8 attr_id)
 #endif /* CONFIG_WFD */
 
 #ifdef CONFIG_RTW_MULTI_AP
-#if !defined(HOST_IEEE80211_REST_TEST) || \
-    defined(HOST_IEEE80211_REST_WFD_MULTIAP_TEST)
+#if ((!defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)) || \
+     defined(HOST_IEEE80211_REST_WFD_MULTIAP_TEST))
 u8 rtw_get_multi_ap_ie_ext(const u8 *ies, int ies_len)
 {
 	u8 *ie;

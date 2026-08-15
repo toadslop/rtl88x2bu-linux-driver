@@ -76,8 +76,7 @@ IE_REST_RUST_SHIM := ie_mac_str_host_shim.c ie_p2p_c_oracle.c ie_wfd_multiap_c_o
 	test-rest-rate-section test-rest-rate-section-rust \
 	test-rest-ht-mcs-amsdu test-rest-ht-mcs-amsdu-rust \
 	test-rest-p2p-ie test-rest-p2p-ie-rust \
-	test-rest-wfd-multiap \
-	test-rest-wfd-multiap clean
+	test-rest-wfd-multiap test-rest-wfd-multiap-rust clean
 
 all: test
 
@@ -88,7 +87,7 @@ test: test-c test-rust test-rest test-rest-rust test-rest-cipher \
 	test-rest-rate-section test-rest-rate-section-rust \
 	test-rest-ht-mcs-amsdu test-rest-ht-mcs-amsdu-rust \
 	test-rest-p2p-ie test-rest-p2p-ie-rust \
-	test-rest-wfd-multiap
+	test-rest-wfd-multiap test-rest-wfd-multiap-rust
 
 test-c: test_ie
 	./test_ie ie_vectors.json
@@ -295,6 +294,18 @@ test_ie_rest_wfd_multiap: test_ie_rest_wfd_multiap.c $(IE_REST_WFD_MULTIAP_SRCS)
 	$(CC) $(WFD_MULTIAP_CFLAGS) -o $@ test_ie_rest_wfd_multiap.c \
 		$(IE_REST_WFD_MULTIAP_SRCS)
 
+test-rest-wfd-multiap-rust: test_ie_rest_wfd_multiap_rust
+	./test_ie_rest_wfd_multiap_rust ie_rest_wfd_multiap_vectors.json
+
+test_ie_rest_wfd_multiap_rust: test_ie_rest_wfd_multiap.c librust_ie_rest.a \
+		ie_cipher_c_oracle.c ie_wpa_rsn_parse_c_oracle.c ie_c_oracle.c \
+		../wlan_util/wlan_util_c_oracle.c ../crypto/host_vector_json.c \
+		$(IE_REST_RUST_SHIM)
+	$(CC) $(WFD_MULTIAP_CFLAGS) -DRUST_IEEE80211_REST_ORACLE -o $@ \
+		test_ie_rest_wfd_multiap.c ie_cipher_c_oracle.c ie_wpa_rsn_parse_c_oracle.c \
+		ie_c_oracle.c ../wlan_util/wlan_util_c_oracle.c \
+		../crypto/host_vector_json.c $(IE_REST_RUST_SHIM) librust_ie_rest.a
+
 clean:
 	rm -f test_ie test_ie_rust test_ie_rest test_ie_rest_rust test_ie_rest_cipher \
 		test_ie_rest_cipher_rust test_ie_rest_wpa_rsn_parse \
@@ -306,4 +317,4 @@ clean:
 		test_ie_rest_rate_section_rust test_ie_rest_ht_mcs_amsdu \
 		test_ie_rest_ht_mcs_amsdu_rust test_ie_rest_p2p_ie \
 		test_ie_rest_p2p_ie_rust test_ie_rest_wfd_multiap \
-		librust_ie.a librust_ie_rest.a
+		test_ie_rest_wfd_multiap_rust librust_ie.a librust_ie_rest.a

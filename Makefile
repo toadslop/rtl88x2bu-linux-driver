@@ -2897,6 +2897,7 @@ rust-objects-rtw-ieee80211-rest-c:
 		-DHOST_IEEE80211_REST_TEST -DHOST_IEEE80211_REST_RATE_SECTION_TEST \
 		-DHOST_IEEE80211_REST_HT_MCS_AMSDU_TEST \
 		-DHOST_IEEE80211_REST_P2P_IE_TEST \
+		-DHOST_IEEE80211_REST_WFD_MULTIAP_TEST -DCONFIG_WFD -DCONFIG_RTW_MULTI_AP \
 		-o tests/host/ie/ie_rest_c_ref.o core/rtw_ieee80211_rest.c
 
 rust-check-symbols-rtw-ieee80211-rest: rust-objects-rtw-ieee80211-rest-c rust-objects-rtw-ieee80211-rest

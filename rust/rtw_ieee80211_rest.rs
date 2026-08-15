@@ -4,7 +4,8 @@
 //! WPA/RSN IE parse (W3-28), and WAPI/WPS/sec-IE getters (W3-29), and
 //! string/MAC address helpers (W3-30), and chbw grouping/sync (W3-31), and
 //! frame header / HT MCS helpers (W3-32), and rate-section / ch-offset mapping (W3-41),
-//! and HT MCS bitmap / AMSDU mode helpers (W3-42), and P2P IE merge/delete (W3-43).
+//! and HT MCS bitmap / AMSDU mode helpers (W3-42), and P2P IE merge/delete (W3-43),
+//! and WFD/multi-AP IE helpers (W3-44).
 
 #![allow(
     dead_code,
@@ -302,7 +303,34 @@ extern "C" {
         buf_attr: *mut U8,
         len_attr: *mut u32,
     ) -> *mut U8;
+
+    fn rtw_get_wfd_ie(
+        in_ie: *const U8,
+        in_len: c_int,
+        wfd_ie: *mut U8,
+        wfd_ielen: *mut c_uint,
+    ) -> *mut U8;
+    fn rtw_get_wfd_attr(
+        wfd_ie: *mut U8,
+        wfd_ielen: c_uint,
+        target_attr_id: U8,
+        buf_attr: *mut U8,
+        len_attr: *mut u32,
+    ) -> *mut U8;
+
+    fn rtw_get_ie_ex(
+        in_ie: *const U8,
+        in_len: c_uint,
+        eid: U8,
+        oui: *const U8,
+        oui_len: U8,
+        ie: *mut U8,
+        ielen: *mut c_uint,
+    ) -> *mut U8;
 }
+
+const MULTI_AP_SUB_ELEM_TYPE: U8 = 0x06;
+const MULTI_AP_OUI: [U8; 4] = [0x50, 0x6F, 0x9A, 0x1B];
 
 fn bit(i: u32) -> i32 {
     1i32 << i
@@ -2154,6 +2182,160 @@ pub extern "C" fn rtw_bss_ex_del_p2p_attr(bss_ex: BssPtr, attr_id: U8) {
             }
             ies_len = remain_len;
         }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_del_wfd_ie(ies: *mut U8, ies_len_ori: c_uint, _msg: *const u8) -> c_uint {
+    if ies.is_null() {
+        return ies_len_ori;
+    }
+    let mut ies_len = ies_len_ori;
+    loop {
+        let mut target_ie_len: c_uint = 0;
+        let target_ie = unsafe {
+            rtw_get_wfd_ie(
+                ies,
+                ies_len as c_int,
+                core::ptr::null_mut(),
+                &mut target_ie_len,
+            )
+        };
+        if target_ie.is_null() || target_ie_len == 0 {
+            break;
+        }
+        unsafe {
+            let next_ie = target_ie.add(target_ie_len as usize);
+            let remain_len = ies_len - (next_ie as usize - ies as usize) as c_uint;
+            memmove(target_ie, next_ie, remain_len as usize);
+            memset(
+                target_ie.add(remain_len as usize),
+                0,
+                target_ie_len as usize,
+            );
+            ies_len -= target_ie_len;
+        }
+    }
+    ies_len
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_bss_ex_del_wfd_ie(bss_ex: BssPtr) {
+    if bss_ex.is_null() {
+        return;
+    }
+    unsafe {
+        #[cfg(host_ieee80211_rest_test)]
+        let (ies, ies_len_ori, _, ie_length) = bss_ex_tlv_ies_host(bss_ex);
+        #[cfg(not(host_ieee80211_rest_test))]
+        let (ies, ies_len_ori, _, ie_length) = bss_ex_tlv_ies_kernel(bss_ex);
+        let ies_len = rtw_del_wfd_ie(ies, ies_len_ori, core::ptr::null());
+        *ie_length -= ies_len_ori - ies_len;
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_del_wfd_attr(ie: *mut U8, ielen_ori: c_uint, attr_id: U8) -> c_uint {
+    if ie.is_null() {
+        return ielen_ori;
+    }
+    let mut ielen = ielen_ori;
+    loop {
+        let mut target_attr_len: u32 = 0;
+        let target_attr = unsafe {
+            rtw_get_wfd_attr(
+                ie,
+                ielen,
+                attr_id,
+                core::ptr::null_mut(),
+                &mut target_attr_len,
+            )
+        };
+        if target_attr.is_null() || target_attr_len == 0 {
+            break;
+        }
+        unsafe {
+            let next_attr = target_attr.add(target_attr_len as usize);
+            let remain_len = ielen - (next_attr as usize - ie as usize) as c_uint;
+            memmove(target_attr, next_attr, remain_len as usize);
+            memset(
+                target_attr.add(remain_len as usize),
+                0,
+                target_attr_len as usize,
+            );
+            *ie.add(1) = (*ie.add(1)).saturating_sub(target_attr_len as u8);
+            ielen -= target_attr_len as c_uint;
+        }
+    }
+    ielen
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_bss_ex_del_wfd_attr(bss_ex: BssPtr, attr_id: U8) {
+    if bss_ex.is_null() {
+        return;
+    }
+    unsafe {
+        #[cfg(host_ieee80211_rest_test)]
+        let (mut ies, mut ies_len, all_ies, ie_length) = bss_ex_tlv_ies_host(bss_ex);
+        #[cfg(not(host_ieee80211_rest_test))]
+        let (mut ies, mut ies_len, all_ies, ie_length) = bss_ex_tlv_ies_kernel(bss_ex);
+        loop {
+            let mut ie_len_ori: c_uint = 0;
+            let ie = rtw_get_wfd_ie(
+                ies,
+                ies_len as c_int,
+                core::ptr::null_mut(),
+                &mut ie_len_ori,
+            );
+            if ie.is_null() {
+                break;
+            }
+            let next_ie_ori = ie.add(ie_len_ori as usize);
+            let remain_len =
+                (*ie_length).saturating_sub((next_ie_ori as usize - all_ies as usize) as u32);
+            let ie_len = rtw_del_wfd_attr(ie, ie_len_ori, attr_id);
+            if ie_len != ie_len_ori {
+                let next_ie = ie.add(ie_len as usize);
+                memmove(next_ie, next_ie_ori, remain_len as usize);
+                memset(
+                    next_ie.add(remain_len as usize),
+                    0,
+                    (ie_len_ori - ie_len) as usize,
+                );
+                *ie_length -= ie_len_ori - ie_len;
+                ies = next_ie;
+            } else {
+                ies = next_ie_ori;
+            }
+            ies_len = remain_len;
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_get_multi_ap_ie_ext(ies: *const U8, ies_len: c_int) -> U8 {
+    if ies.is_null() || ies_len <= 0 {
+        return 0;
+    }
+    unsafe {
+        let mut ielen: c_uint = 0;
+        let ie = rtw_get_ie_ex(
+            ies,
+            ies_len as c_uint,
+            WLAN_EID_VENDOR_SPECIFIC,
+            MULTI_AP_OUI.as_ptr(),
+            4,
+            core::ptr::null_mut(),
+            &mut ielen,
+        );
+        if ie.is_null() || ielen < 9 {
+            return 0;
+        }
+        if *ie.add(6) != MULTI_AP_SUB_ELEM_TYPE {
+            return 0;
+        }
+        *ie.add(8)
     }
 }
 
