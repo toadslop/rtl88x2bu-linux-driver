@@ -1,0 +1,55 @@
+{
+  "oracle": "core/rtw_ieee80211_rest.c",
+  "vectors": [
+    {
+      "name": "del_wfd_ie",
+      "fn": "rtw_del_wfd_ie",
+      "ie": "dd08506f9a0a0000020101088204010203040506",
+      "expect_ie": "01088204010203040506",
+      "expect_u32": 10
+    },
+    {
+      "name": "del_wfd_attr",
+      "fn": "rtw_del_wfd_attr",
+      "ie": "dd09506f9a0a0000020102",
+      "attr_id": 0,
+      "expect_ie": "dd04506f9a0a",
+      "expect_u32": 6
+    },
+    {
+      "name": "bss_ex_del_wfd_ie",
+      "fn": "rtw_bss_ex_del_wfd_ie",
+      "fixed_ies": "000000000000000000000000",
+      "ie": "dd08506f9a0a0000020101088204010203040506",
+      "expect_ie": "01088204010203040506",
+      "expect_u32": 22
+    },
+    {
+      "name": "bss_ex_del_wfd_attr",
+      "fn": "rtw_bss_ex_del_wfd_attr",
+      "fixed_ies": "000000000000000000000000",
+      "ie": "dd09506f9a0a0000020102",
+      "attr_id": 0,
+      "expect_ie": "dd04506f9a0a",
+      "expect_u32": 18
+    },
+    {
+      "name": "multi_ap_ext_backhaul_sta",
+      "fn": "rtw_get_multi_ap_ie_ext",
+      "ie": "dd07506f9a1b060180",
+      "expect_u32": 128
+    },
+    {
+      "name": "multi_ap_ext_missing",
+      "fn": "rtw_get_multi_ap_ie_ext",
+      "ie": "01088204010203040506",
+      "expect_u32": 0
+    },
+    {
+      "name": "multi_ap_ext_wrong_subtype",
+      "fn": "rtw_get_multi_ap_ie_ext",
+      "ie": "dd07506f9a1b070180",
+      "expect_u32": 0
+    }
+  ]
+}
