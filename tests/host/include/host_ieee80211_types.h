@@ -192,6 +192,7 @@ enum rtw_amsdu_mode {
 #define MFP_REQUIRED 3
 
 #define RTW_GET_LE16(a) ((((u16)(a)[1]) << 8) | (u16)(a)[0])
+#define RTW_GET_BE16(a) ((((u16)(a)[0]) << 8) | (u16)(a)[1])
 
 #define RTW_PUT_LE16(a, val) \
 	do { \
@@ -206,6 +207,12 @@ enum rtw_amsdu_mode {
 #define P2P_ATTR_STATUS 0x00
 #define P2P_ATTR_CAPABILITY 0x02
 #define P2P_ATTR_GROUP_INFO 0x0E
+
+#define WFD_ATTR_DEVICE_INFO 0x00
+#define MULTI_AP_SUB_ELEM_TYPE 0x06
+#define MULTI_AP_BACKHAUL_STA BIT(7)
+
+extern u8 MULTI_AP_OUI[4];
 
 #define BSS_EX_IES(bss_ex) ((bss_ex)->IEs)
 #define BSS_EX_IES_LEN(bss_ex) ((bss_ex)->IELength)
@@ -233,6 +240,15 @@ unsigned int rtw_del_p2p_ie(u8 *ies, unsigned int ies_len_ori, const char *msg);
 unsigned int rtw_del_p2p_attr(u8 *ie, unsigned int ielen_ori, u8 attr_id);
 void rtw_bss_ex_del_p2p_ie(WLAN_BSSID_EX *bss_ex);
 void rtw_bss_ex_del_p2p_attr(WLAN_BSSID_EX *bss_ex, u8 attr_id);
+
+u8 *rtw_get_wfd_ie(const u8 *in_ie, int in_len, u8 *wfd_ie, unsigned int *wfd_ielen);
+u8 *rtw_get_wfd_attr(u8 *wfd_ie, unsigned int wfd_ielen, u8 target_attr_id,
+		      u8 *buf_attr, u32 *len_attr);
+unsigned int rtw_del_wfd_ie(u8 *ies, unsigned int ies_len_ori, const char *msg);
+unsigned int rtw_del_wfd_attr(u8 *ie, unsigned int ielen_ori, u8 attr_id);
+void rtw_bss_ex_del_wfd_ie(WLAN_BSSID_EX *bss_ex);
+void rtw_bss_ex_del_wfd_attr(WLAN_BSSID_EX *bss_ex, u8 attr_id);
+u8 rtw_get_multi_ap_ie_ext(const u8 *ies, int ies_len);
 
 struct rsne_info {
 	u8 *gcs;
