@@ -11,9 +11,9 @@
     {
       "name": "del_wfd_attr",
       "fn": "rtw_del_wfd_attr",
-      "ie": "dd08506f9a0a0000020102",
+      "ie": "dd09506f9a0a0000020102",
       "attr_id": 0,
-      "expect_ie": "dd03506f9a0a",
+      "expect_ie": "dd04506f9a0a",
       "expect_u32": 6
     },
     {
@@ -28,10 +28,10 @@
       "name": "bss_ex_del_wfd_attr",
       "fn": "rtw_bss_ex_del_wfd_attr",
       "fixed_ies": "000000000000000000000000",
-      "ie": "dd08506f9a0a0000020102",
+      "ie": "dd09506f9a0a0000020102",
       "attr_id": 0,
-      "expect_ie": "dd03506f9a0a",
-      "expect_u32": 19
+      "expect_ie": "dd04506f9a0a",
+      "expect_u32": 18
     },
     {
       "name": "multi_ap_ext_backhaul_sta",
