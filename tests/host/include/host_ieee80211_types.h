@@ -317,6 +317,8 @@ int rtw_get_sec_ie(u8 *in_ie, unsigned int in_len, u8 *rsn_ie, u16 *rsn_len,
 u8 rtw_is_wps_ie(u8 *ie_ptr, unsigned int *wps_ielen);
 
 u8 *rtw_get_ie(const u8 *pbuf, sint index, sint *len, sint limit);
+u8 *rtw_get_ie_ex(const u8 *in_ie, unsigned int in_len, u8 eid, const u8 *oui,
+		  u8 oui_len, u8 *ie, unsigned int *ielen);
 int rtw_ies_remove_ie(u8 *ies, unsigned int *ies_len, unsigned int offset,
 		      u8 eid, u8 *oui, u8 oui_len);
 bool rtw_is_cck_rate(u8 rate);
