@@ -1,0 +1,86 @@
+{
+  "oracle": "tests/host/vht/vht_mcs_rate_c_oracle.c",
+  "vectors": [
+    {
+      "name": "highest_rate_two_ss_mcs9",
+      "fn": "rtw_get_vht_highest_rate",
+      "mcs_map_hex": "a9aa",
+      "expect": 239
+    },
+    {
+      "name": "highest_rate_high_byte_ff",
+      "fn": "rtw_get_vht_highest_rate",
+      "mcs_map_hex": "ff00",
+      "expect": 237
+    },
+    {
+      "name": "highest_rate_single_ss_mcs9",
+      "fn": "rtw_get_vht_highest_rate",
+      "mcs_map_hex": "feff",
+      "expect": 169
+    },
+    {
+      "name": "nss_two_streams_fefe",
+      "fn": "rtw_vht_mcsmap_to_nss",
+      "mcs_map_hex": "fefe",
+      "expect": 2
+    },
+    {
+      "name": "nss_eight_streams_aaaa",
+      "fn": "rtw_vht_mcsmap_to_nss",
+      "mcs_map_hex": "aaaa",
+      "expect": 8
+    },
+    {
+      "name": "nss_one_stream_feff",
+      "fn": "rtw_vht_mcsmap_to_nss",
+      "mcs_map_hex": "feff",
+      "expect": 1
+    },
+    {
+      "name": "data_rate_80mhz_sgi_mcs0",
+      "fn": "rtw_vht_mcs_to_data_rate",
+      "bw": 2,
+      "short_gi": 1,
+      "vht_mcs_rate": 160,
+      "expect": 65
+    },
+    {
+      "name": "data_rate_20mhz_long_mcs7",
+      "fn": "rtw_vht_mcs_to_data_rate",
+      "bw": 0,
+      "short_gi": 0,
+      "vht_mcs_rate": 167,
+      "expect": 130
+    },
+    {
+      "name": "data_rate_clamps_above_mcs9",
+      "fn": "rtw_vht_mcs_to_data_rate",
+      "bw": 0,
+      "short_gi": 0,
+      "vht_mcs_rate": 255,
+      "expect": 624
+    },
+    {
+      "name": "bitmap_nss1_mcs9",
+      "fn": "rtw_vht_mcs_map_to_bitmap",
+      "mcs_map_hex": "aa00",
+      "nss": 1,
+      "expect_bitmap": "0x3ff"
+    },
+    {
+      "name": "bitmap_nss2_mcs9_both",
+      "fn": "rtw_vht_mcs_map_to_bitmap",
+      "mcs_map_hex": "aaaa",
+      "nss": 2,
+      "expect_bitmap": "0xfffff"
+    },
+    {
+      "name": "bitmap_nss1_mcs7",
+      "fn": "rtw_vht_mcs_map_to_bitmap",
+      "mcs_map_hex": "5500",
+      "nss": 1,
+      "expect_bitmap": "0x1ff"
+    }
+  ]
+}

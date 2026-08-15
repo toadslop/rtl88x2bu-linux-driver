@@ -150,6 +150,8 @@ const u16 VHT_MCS_DATA_RATE[3][2][40] = {	/* unit: 0.5M */
 	}	/* Short GI, 80MHz */
 };
 
+#if !defined(CONFIG_RUST) || defined(HOST_VHT_MCS_RATE_TEST)
+
 u8	rtw_get_vht_highest_rate(u8 *pvht_mcs_map)
 {
 	u8	i, j;
@@ -199,6 +201,8 @@ u16	rtw_vht_mcs_to_data_rate(u8 bw, u8 short_GI, u8 vht_mcs_rate)
 	/* RTW_INFO("bw=%d, short_GI=%d, ((vht_mcs_rate - MGN_VHT1SS_MCS0)&0x3f)=%d\n", bw, short_GI, ((vht_mcs_rate - MGN_VHT1SS_MCS0)&0x3f)); */
 	return VHT_MCS_DATA_RATE[bw][short_GI][((vht_mcs_rate - MGN_VHT1SS_MCS0) & 0x3f)];
 }
+
+#endif /* !CONFIG_RUST || HOST_VHT_MCS_RATE_TEST */
 
 void	rtw_vht_use_default_setting(_adapter *padapter)
 {
@@ -312,6 +316,8 @@ void	rtw_vht_use_default_setting(_adapter *padapter)
 	pvhtpriv->vht_highest_rate = rtw_get_vht_highest_rate(pvhtpriv->vht_mcs_map);
 }
 
+#if !defined(CONFIG_RUST) || defined(HOST_VHT_MCS_RATE_TEST)
+
 u64	rtw_vht_mcs_map_to_bitmap(u8 *mcs_map, u8 nss)
 {
 	u8 i, j, tmp;
@@ -342,6 +348,8 @@ u64	rtw_vht_mcs_map_to_bitmap(u8 *mcs_map, u8 nss)
 
 	return bitmap;
 }
+
+#endif /* !CONFIG_RUST || HOST_VHT_MCS_RATE_TEST */
 
 #ifdef CONFIG_BEAMFORMING
 void update_sta_vht_info_apmode_bf_cap(_adapter *padapter, struct sta_info *psta)
@@ -964,6 +972,7 @@ void rtw_vht_ies_detach(_adapter *padapter, WLAN_BSSID_EX *pnetwork)
 	pmlmepriv->vhtpriv.vht_option = _FALSE;
 }
 
+#if !defined(CONFIG_RUST) || defined(HOST_VHT_MCS_RATE_TEST)
 void rtw_check_for_vht20(_adapter *adapter, u8 *ies, int ies_len)
 {
 	u8 ht_ch, ht_bw, ht_offset;
@@ -986,6 +995,7 @@ void rtw_check_for_vht20(_adapter *adapter, u8 *ies, int ies_len)
 		}
 	}
 }
+#endif /* !CONFIG_RUST || HOST_VHT_MCS_RATE_TEST */
 #endif /* CONFIG_AP_MODE */
 
 #if defined(CONFIG_RUST)

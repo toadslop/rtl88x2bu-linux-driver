@@ -1,0 +1,5 @@
+# L1 allowlist for W3-45: host MCS/rate oracle compares C vs Rust exports.
+drop VHT_MCS_DATA_RATE
+drop rtw_vht_nss_to_mcsmap
+drop rtw_rust_vht_probe
+drop rtw_restructure_vht_ie
