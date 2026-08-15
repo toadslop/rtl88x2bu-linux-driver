@@ -1498,6 +1498,194 @@ void rtw_bss_ex_del_p2p_attr(WLAN_BSSID_EX *bss_ex, u8 attr_id)
 }
 #endif /* W3-43 P2P IE C oracle guard */
 
+#if !defined(HOST_IEEE80211_REST_TEST) || \
+    defined(HOST_IEEE80211_REST_WFD_MULTIAP_TEST)
+/*
+ * W3-44: WFD IE delete helpers extracted from core/rtw_ieee80211.c.
+ * Rust port replaces kernel build when CONFIG_RUST.
+ */
+uint rtw_del_wfd_ie(u8 *ies, uint ies_len_ori, const char *msg)
+{
+#define DBG_DEL_WFD_IE 0
+
+	u8 *target_ie;
+	u32 target_ie_len;
+	uint ies_len = ies_len_ori;
+	int index = 0;
+
+	while (1) {
+		target_ie = rtw_get_wfd_ie(ies, ies_len, NULL, &target_ie_len);
+		if (target_ie && target_ie_len) {
+			u8 *next_ie = target_ie + target_ie_len;
+			uint remain_len = ies_len - (next_ie - ies);
+
+			if (DBG_DEL_WFD_IE && msg) {
+				RTW_INFO("%s %d before\n", __func__, index);
+				dump_ies(RTW_DBGDUMP, ies, ies_len);
+
+				RTW_INFO("ies:%p, ies_len:%u\n", ies, ies_len);
+				RTW_INFO("target_ie:%p, target_ie_len:%u\n", target_ie, target_ie_len);
+				RTW_INFO("next_ie:%p, remain_len:%u\n", next_ie, remain_len);
+			}
+
+			_rtw_memmove(target_ie, next_ie, remain_len);
+			_rtw_memset(target_ie + remain_len, 0, target_ie_len);
+			ies_len -= target_ie_len;
+
+			if (DBG_DEL_WFD_IE && msg) {
+				RTW_INFO("%s %d after\n", __func__, index);
+				dump_ies(RTW_DBGDUMP, ies, ies_len);
+			}
+
+			index++;
+		} else
+			break;
+	}
+
+	return ies_len;
+}
+
+void rtw_bss_ex_del_wfd_ie(WLAN_BSSID_EX *bss_ex)
+{
+#define DBG_BSS_EX_DEL_WFD_IE 0
+	u8 *ies = BSS_EX_TLV_IES(bss_ex);
+	uint ies_len_ori = BSS_EX_TLV_IES_LEN(bss_ex);
+	uint ies_len;
+
+	ies_len = rtw_del_wfd_ie(ies, ies_len_ori, DBG_BSS_EX_DEL_WFD_IE ? __func__ : NULL);
+	bss_ex->IELength -= ies_len_ori - ies_len;
+}
+#endif /* W3-44 WFD IE delete C oracle guard */
+
+#ifdef CONFIG_WFD
+#if !defined(HOST_IEEE80211_REST_TEST) || \
+    defined(HOST_IEEE80211_REST_WFD_MULTIAP_TEST)
+uint rtw_del_wfd_attr(u8 *ie, uint ielen_ori, u8 attr_id)
+{
+#define DBG_DEL_WFD_ATTR 0
+
+	u8 *target_attr;
+	u32 target_attr_len;
+	uint ielen = ielen_ori;
+	int index = 0;
+
+	while (1) {
+		target_attr = rtw_get_wfd_attr(ie, ielen, attr_id, NULL, &target_attr_len);
+		if (target_attr && target_attr_len) {
+			u8 *next_attr = target_attr + target_attr_len;
+			uint remain_len = ielen - (next_attr - ie);
+
+			if (DBG_DEL_WFD_ATTR) {
+				RTW_INFO("%s %d before\n", __func__, index);
+				dump_ies(RTW_DBGDUMP, ie, ielen);
+
+				RTW_INFO("ie:%p, ielen:%u\n", ie, ielen);
+				RTW_INFO("target_attr:%p, target_attr_len:%u\n", target_attr, target_attr_len);
+				RTW_INFO("next_attr:%p, remain_len:%u\n", next_attr, remain_len);
+			}
+
+			_rtw_memmove(target_attr, next_attr, remain_len);
+			_rtw_memset(target_attr + remain_len, 0, target_attr_len);
+			*(ie + 1) -= target_attr_len;
+			ielen -= target_attr_len;
+
+			if (DBG_DEL_WFD_ATTR) {
+				RTW_INFO("%s %d after\n", __func__, index);
+				dump_ies(RTW_DBGDUMP, ie, ielen);
+			}
+
+			index++;
+		} else
+			break;
+	}
+
+	return ielen;
+}
+
+void rtw_bss_ex_del_wfd_attr(WLAN_BSSID_EX *bss_ex, u8 attr_id)
+{
+#define DBG_BSS_EX_DEL_WFD_ATTR 0
+
+	u8 *ies = BSS_EX_TLV_IES(bss_ex);
+	uint ies_len = BSS_EX_TLV_IES_LEN(bss_ex);
+
+	u8 *ie;
+	uint ie_len, ie_len_ori;
+
+	int index = 0;
+
+	while (1) {
+		ie = rtw_get_wfd_ie(ies, ies_len, NULL, &ie_len_ori);
+		if (ie) {
+			u8 *next_ie_ori = ie + ie_len_ori;
+			uint remain_len = bss_ex->IELength - (next_ie_ori - bss_ex->IEs);
+			u8 has_target_attr = 0;
+
+			if (DBG_BSS_EX_DEL_WFD_ATTR) {
+				if (rtw_get_wfd_attr(ie, ie_len_ori, attr_id, NULL, NULL)) {
+					RTW_INFO("%s %d before\n", __func__, index);
+					dump_ies(RTW_DBGDUMP, BSS_EX_TLV_IES(bss_ex), BSS_EX_TLV_IES_LEN(bss_ex));
+
+					RTW_INFO("ies:%p, ies_len:%u\n", ies, ies_len);
+					RTW_INFO("ie:%p, ie_len_ori:%u\n", ie, ie_len_ori);
+					RTW_INFO("next_ie_ori:%p, remain_len:%u\n", next_ie_ori, remain_len);
+					has_target_attr = 1;
+				}
+			}
+
+			ie_len = rtw_del_wfd_attr(ie, ie_len_ori, attr_id);
+			if (ie_len != ie_len_ori) {
+				u8 *next_ie = ie + ie_len;
+
+				_rtw_memmove(next_ie, next_ie_ori, remain_len);
+				_rtw_memset(next_ie + remain_len, 0, ie_len_ori - ie_len);
+				bss_ex->IELength -= ie_len_ori - ie_len;
+
+				ies = next_ie;
+			} else
+				ies = next_ie_ori;
+
+			if (DBG_BSS_EX_DEL_WFD_ATTR) {
+				if (has_target_attr) {
+					RTW_INFO("%s %d after\n", __func__, index);
+					dump_ies(RTW_DBGDUMP, BSS_EX_TLV_IES(bss_ex), BSS_EX_TLV_IES_LEN(bss_ex));
+				}
+			}
+
+			ies_len = remain_len;
+
+			index++;
+		} else
+			break;
+	}
+}
+#endif /* W3-44 WFD attr delete C oracle guard */
+#endif /* CONFIG_WFD */
+
+#ifdef CONFIG_RTW_MULTI_AP
+#if !defined(HOST_IEEE80211_REST_TEST) || \
+    defined(HOST_IEEE80211_REST_WFD_MULTIAP_TEST)
+u8 rtw_get_multi_ap_ie_ext(const u8 *ies, int ies_len)
+{
+	u8 *ie;
+	uint ielen;
+	u8 val = 0;
+
+	ie = rtw_get_ie_ex(ies, ies_len, WLAN_EID_VENDOR_SPECIFIC, MULTI_AP_OUI, 4, NULL, &ielen);
+	if (ielen < 9)
+		goto exit;
+
+	if (ie[6] != MULTI_AP_SUB_ELEM_TYPE)
+		goto exit;
+
+	val = ie[8];
+
+exit:
+	return val;
+}
+#endif /* W3-44 multi-AP C oracle guard */
+#endif /* CONFIG_RTW_MULTI_AP */
+
 #if defined(CONFIG_RUST) && !defined(HOST_IEEE80211_REST_TEST)
 u32 *rtw_ieee80211_rest_bss_dsconfig(WLAN_BSSID_EX *bss)
 {
