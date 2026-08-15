@@ -284,6 +284,8 @@ extern "C" {
     fn rtw_ieee80211_rest_bss_ies(bss: *mut c_void) -> *mut u8;
     #[cfg(not(host_ieee80211_rest_test))]
     fn rtw_ieee80211_rest_bss_supported_rates(bss: *mut c_void) -> *mut u8;
+    #[cfg(not(host_ieee80211_rest_test))]
+    fn rtw_ieee80211_rest_bss_fixed_ie_offset(bss: *mut c_void) -> c_uint;
 
     fn rtw_get_offset_by_chbw(ch: U8, bw: U8, r_offset: *mut U8) -> U8;
 
@@ -2087,9 +2089,10 @@ fn bss_ex_tlv_ies_host(bss: *mut HostWlanBssidEx) -> (*mut U8, c_uint, *mut U8, 
 #[cfg(not(host_ieee80211_rest_test))]
 fn bss_ex_tlv_ies_kernel(bss: BssPtr) -> (*mut U8, c_uint, *mut U8, *mut u32) {
     unsafe {
+        let off = rtw_ieee80211_rest_bss_fixed_ie_offset(bss) as usize;
         (
-            bss_ies(bss).add(_BEACON_IE_OFFSET_),
-            (*bss_ielength(bss)).saturating_sub(_BEACON_IE_OFFSET_ as u32),
+            bss_ies(bss).add(off),
+            (*bss_ielength(bss)).saturating_sub(off as u32),
             bss_ies(bss),
             bss_ielength(bss),
         )

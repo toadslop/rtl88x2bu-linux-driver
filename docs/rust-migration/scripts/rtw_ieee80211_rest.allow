@@ -4,3 +4,4 @@ drop rtw_ieee80211_rest_bss_dsconfig
 drop rtw_ieee80211_rest_bss_ielength
 drop rtw_ieee80211_rest_bss_ies
 drop rtw_ieee80211_rest_bss_supported_rates
+drop rtw_ieee80211_rest_bss_fixed_ie_offset

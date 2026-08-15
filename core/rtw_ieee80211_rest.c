@@ -1518,4 +1518,9 @@ u8 *rtw_ieee80211_rest_bss_supported_rates(WLAN_BSSID_EX *bss)
 {
 	return bss->SupportedRates;
 }
+
+unsigned int rtw_ieee80211_rest_bss_fixed_ie_offset(WLAN_BSSID_EX *bss)
+{
+	return BSS_EX_FIXED_IE_OFFSET(bss);
+}
 #endif /* CONFIG_RUST && !HOST_IEEE80211_REST_TEST */
