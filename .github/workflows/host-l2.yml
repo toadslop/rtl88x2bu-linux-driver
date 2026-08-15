@@ -4,6 +4,9 @@
 
 name: Host L2 tests
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [master]
