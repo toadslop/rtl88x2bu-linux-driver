@@ -3013,6 +3013,23 @@ rust-check-symbols-rtw-vht-restructure: rust-objects-rtw-vht-restructure-c rust-
 	$(MAKE) rust-check-symbols OLD=tests/host/vht/vht_restructure_c_ref.o NEW=tests/host/vht/vht_restructure_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_vht_restructure.allow
 
+# W3-45: compare host C oracle for VHT MCS/rate helpers against Rust export.
+rust-objects-rtw-vht-mcs-rate-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_VHT_MCS_RATE_TEST \
+		-o tests/host/vht/vht_mcs_rate_c_ref.o tests/host/vht/vht_mcs_rate_c_oracle.c
+
+rust-objects-rtw-vht-mcs-rate-rust-ref:
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_vht_mcs_rate_test \
+		--emit=obj=tests/host/vht/vht_mcs_rate_rust_ref.o \
+		--crate-type lib rust/rtw_vht.rs
+
+rust-check-symbols-rtw-vht-mcs-rate: rust-objects-rtw-vht-mcs-rate-c rust-objects-rtw-vht-mcs-rate-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/vht/vht_mcs_rate_c_ref.o NEW=tests/host/vht/vht_mcs_rate_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_vht_mcs_rate.allow
+
 # W3-37: compare host C oracle (rtw_sta_mgt_rest.c) against host Rust oracle.
 rust-objects-rtw-sta-mgt-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \

@@ -11,17 +11,225 @@
     unreachable_pub
 )]
 
-#[cfg(any(host_vht_test, host_vht_restructure_test))]
+#[cfg(any(host_vht_test, host_vht_restructure_test, host_vht_mcs_rate_test))]
 use std::os::raw::c_int;
 
 #[cfg(host_vht_restructure_test)]
 use std::os::raw::c_uint;
 
-#[cfg(not(any(host_vht_test, host_vht_restructure_test)))]
+#[cfg(not(any(host_vht_test, host_vht_restructure_test, host_vht_mcs_rate_test)))]
 use core::ffi::c_uint;
 
-#[cfg(not(any(host_vht_test, host_vht_restructure_test)))]
+#[cfg(not(any(host_vht_test, host_vht_restructure_test, host_vht_mcs_rate_test)))]
 use core::ffi::c_int;
+
+mod mcs_rate {
+    #[cfg(not(host_vht_mcs_rate_test))]
+    use super::c_int;
+
+    const MGN_VHT1SS_MCS0: u8 = 0xA0;
+    const MGN_VHT1SS_MCS7: u8 = 0xA7;
+    const MGN_VHT4SS_MCS9: u8 = 0xC7;
+    const CHANNEL_WIDTH_20: u8 = 0;
+    const CHANNEL_WIDTH_80: u8 = 2;
+    const EID_VHT_OPERATION: i32 = 192;
+
+    static VHT_MCS_DATA_RATE: [[&[u16; 40]; 2]; 3] = [
+        [
+            &[
+                13, 26, 39, 52, 78, 104, 117, 130, 156, 156, 26, 52, 78, 104, 156, 208, 234,
+                260, 312, 312, 39, 78, 117, 156, 234, 312, 351, 390, 468, 520, 52, 104, 156,
+                208, 312, 416, 468, 520, 624, 624,
+            ],
+            &[
+                14, 29, 43, 58, 87, 116, 130, 144, 173, 173, 29, 58, 87, 116, 173, 231, 260,
+                289, 347, 347, 43, 87, 130, 173, 260, 347, 390, 433, 520, 578, 58, 116, 173,
+                231, 347, 462, 520, 578, 693, 693,
+            ],
+        ],
+        [
+            &[
+                27, 54, 81, 108, 162, 216, 243, 270, 324, 360, 54, 108, 162, 216, 324, 432, 486,
+                540, 648, 720, 81, 162, 243, 324, 486, 648, 729, 810, 972, 1080, 108, 216, 324,
+                432, 648, 864, 972, 1080, 1296, 1440,
+            ],
+            &[
+                30, 60, 90, 120, 180, 240, 270, 300, 360, 400, 60, 120, 180, 240, 360, 480, 540,
+                600, 720, 800, 90, 180, 270, 360, 540, 720, 810, 900, 1080, 1200, 120, 240,
+                360, 480, 720, 960, 1080, 1200, 1440, 1600,
+            ],
+        ],
+        [
+            &[
+                59, 117, 176, 234, 351, 468, 527, 585, 702, 780, 117, 234, 351, 468, 702, 936,
+                1053, 1170, 1404, 1560, 176, 351, 527, 702, 1053, 1404, 1580, 1755, 2106,
+                2340, 234, 468, 702, 936, 1404, 1872, 2106, 2340, 2808, 3120,
+            ],
+            &[
+                65, 130, 195, 260, 390, 520, 585, 650, 780, 867, 130, 260, 390, 520, 780, 1040,
+                1170, 1300, 1560, 1734, 195, 390, 585, 780, 1170, 1560, 1755, 1950, 2340, 2600,
+                260, 520, 780, 1040, 1560, 2080, 2340, 2600, 3120, 3467,
+            ],
+        ],
+    ];
+
+    #[cfg(not(host_vht_mcs_rate_test))]
+    extern "C" {
+        fn rtw_ies_get_chbw(
+            ies: *mut u8,
+            ies_len: c_int,
+            ch: *mut u8,
+            bw: *mut u8,
+            offset: *mut u8,
+            ht: u8,
+            vht: u8,
+        );
+        fn rtw_get_ie(pbuf: *const u8, index: c_int, len: *mut c_int, limit: c_int) -> *mut u8;
+    }
+
+    fn set_bits_le_byte(p: *mut u8, offset: u32, length: u32, value: u8) {
+        unsafe {
+            let mask = (((1u32 << length) - 1) << offset) as u8;
+            *p = (*p & !mask) | ((value & ((1u32 << length) - 1) as u8) << offset);
+        }
+    }
+
+    pub fn rtw_get_vht_highest_rate_impl(pvht_mcs_map: *mut u8) -> u8 {
+        let map = unsafe { core::slice::from_raw_parts(pvht_mcs_map, 2) };
+        let mut vht_mcs_rate = 0u8;
+        for i in 0..2 {
+            if map[i] == 0xff {
+                continue;
+            }
+            let mut j = 0;
+            while j < 8 {
+                let bit_map = (map[i] >> j) & 3;
+                if bit_map != 3 {
+                    vht_mcs_rate =
+                        MGN_VHT1SS_MCS7 + 10 * (j / 2) as u8 + i as u8 * 40 + bit_map;
+                }
+                j += 2;
+            }
+        }
+        vht_mcs_rate
+    }
+
+    pub fn rtw_vht_mcsmap_to_nss_impl(pvht_mcs_map: *mut u8) -> u8 {
+        let map = unsafe { core::slice::from_raw_parts(pvht_mcs_map, 2) };
+        let mut nss = 0u8;
+        for i in 0..2 {
+            if map[i] == 0xff {
+                continue;
+            }
+            let mut j = 0;
+            while j < 8 {
+                if ((map[i] >> j) & 3) != 3 {
+                    nss = nss.saturating_add(1);
+                }
+                j += 2;
+            }
+        }
+        nss
+    }
+
+    pub fn rtw_vht_mcs_to_data_rate_impl(bw: u8, short_gi: u8, mut vht_mcs_rate: u8) -> u16 {
+        if vht_mcs_rate > MGN_VHT4SS_MCS9 {
+            vht_mcs_rate = MGN_VHT4SS_MCS9;
+        }
+        let idx = ((vht_mcs_rate - MGN_VHT1SS_MCS0) & 0x3f) as usize;
+        VHT_MCS_DATA_RATE[bw as usize][short_gi as usize][idx]
+    }
+
+    pub fn rtw_vht_mcs_map_to_bitmap_impl(mcs_map: *mut u8, nss: u8) -> u64 {
+        let map = unsafe { core::slice::from_raw_parts(mcs_map, 2) };
+        let mut bitmap = 0u64;
+        let bits_nss = nss * 2;
+        let mut i = 0u8;
+        let mut j = 0u8;
+        while i < bits_nss {
+            let tmp = (map[(i / 8) as usize] >> i) & 3;
+            match tmp {
+                2 => bitmap |= 0x03ff_u64 << j,
+                1 => bitmap |= 0x01ff_u64 << j,
+                0 => bitmap |= 0x00ff_u64 << j,
+                _ => {}
+            }
+            i += 2;
+            j += 10;
+        }
+        bitmap
+    }
+
+    #[cfg(not(host_vht_mcs_rate_test))]
+    pub fn rtw_check_for_vht20_impl(adapter: *mut u8, ies: *mut u8, ies_len: c_int) {
+        unsafe {
+            let mut ht_ch = 0u8;
+            let mut ht_bw = 0u8;
+            let mut ht_offset = 0u8;
+            let mut vht_ch = 0u8;
+            let mut vht_bw = 0u8;
+            let mut vht_offset = 0u8;
+            rtw_ies_get_chbw(
+                ies,
+                ies_len,
+                &mut ht_ch,
+                &mut ht_bw,
+                &mut ht_offset,
+                1,
+                0,
+            );
+            rtw_ies_get_chbw(
+                ies,
+                ies_len,
+                &mut vht_ch,
+                &mut vht_bw,
+                &mut vht_offset,
+                1,
+                1,
+            );
+            if ht_bw == CHANNEL_WIDTH_20 && vht_bw >= CHANNEL_WIDTH_80 {
+                let mut vht_op_ielen = 0;
+                let vht_op_ie = rtw_get_ie(ies, EID_VHT_OPERATION, &mut vht_op_ielen, ies_len);
+                if !vht_op_ie.is_null() && vht_op_ielen != 0 {
+                    set_bits_le_byte(vht_op_ie.add(2), 0, 8, 0);
+                    set_bits_le_byte(vht_op_ie.add(3), 0, 8, 0);
+                    set_bits_le_byte(vht_op_ie.add(4), 0, 8, 0);
+                }
+                let _ = adapter;
+            }
+        }
+    }
+}
+
+#[cfg(any(not(any(host_vht_test, host_vht_restructure_test)), host_vht_mcs_rate_test))]
+#[no_mangle]
+pub extern "C" fn rtw_get_vht_highest_rate(pvht_mcs_map: *mut u8) -> u8 {
+    mcs_rate::rtw_get_vht_highest_rate_impl(pvht_mcs_map)
+}
+
+#[cfg(any(not(any(host_vht_test, host_vht_restructure_test)), host_vht_mcs_rate_test))]
+#[no_mangle]
+pub extern "C" fn rtw_vht_mcsmap_to_nss(pvht_mcs_map: *mut u8) -> u8 {
+    mcs_rate::rtw_vht_mcsmap_to_nss_impl(pvht_mcs_map)
+}
+
+#[cfg(any(not(any(host_vht_test, host_vht_restructure_test)), host_vht_mcs_rate_test))]
+#[no_mangle]
+pub extern "C" fn rtw_vht_mcs_to_data_rate(bw: u8, short_gi: u8, vht_mcs_rate: u8) -> u16 {
+    mcs_rate::rtw_vht_mcs_to_data_rate_impl(bw, short_gi, vht_mcs_rate)
+}
+
+#[cfg(any(not(any(host_vht_test, host_vht_restructure_test)), host_vht_mcs_rate_test))]
+#[no_mangle]
+pub extern "C" fn rtw_vht_mcs_map_to_bitmap(mcs_map: *mut u8, nss: u8) -> u64 {
+    mcs_rate::rtw_vht_mcs_map_to_bitmap_impl(mcs_map, nss)
+}
+
+#[cfg(not(any(host_vht_test, host_vht_restructure_test, host_vht_mcs_rate_test)))]
+#[no_mangle]
+pub extern "C" fn rtw_check_for_vht20(adapter: *mut u8, ies: *mut u8, ies_len: c_int) {
+    mcs_rate::rtw_check_for_vht20_impl(adapter, ies, ies_len);
+}
 
 #[no_mangle]
 pub extern "C" fn rtw_vht_nss_to_mcsmap(nss: u8, target_mcs_map: *mut u8, cur_mcs_map: *mut u8) {
@@ -62,7 +270,7 @@ pub extern "C" fn VHT_get_ss_from_map(vht_mcs_map: *mut u8) -> u8 {
     ss
 }
 
-#[cfg(any(host_vht_restructure_test, not(host_vht_test)))]
+#[cfg(any(host_vht_restructure_test, all(not(host_vht_test), not(host_vht_mcs_rate_test))))]
 mod restructure {
     use super::c_int;
     use super::c_uint;
@@ -287,7 +495,7 @@ mod restructure {
     }
 }
 
-#[cfg(any(host_vht_restructure_test, not(host_vht_test)))]
+#[cfg(any(host_vht_restructure_test, all(not(host_vht_test), not(host_vht_mcs_rate_test))))]
 #[no_mangle]
 pub extern "C" fn rtw_restructure_vht_ie(
     padapter: *mut u8,
