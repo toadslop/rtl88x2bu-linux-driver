@@ -627,3 +627,44 @@ pub extern "C" fn rtw_get_tx_bw_bmp_of_vht_rate(dvobj: *mut c_void, rate: U8, ma
     }
     bw_bmp
 }
+
+#[no_mangle]
+pub extern "C" fn qos_acm(acm_mask: U8, priority: U8) -> U8 {
+    let mut change_priority = priority;
+    match priority {
+        0 | 3 if acm_mask & (1 << 1) != 0 => change_priority = 1,
+        4 | 5 if acm_mask & (1 << 2) != 0 => change_priority = 0,
+        6 | 7 if acm_mask & (1 << 3) != 0 => change_priority = 5,
+        _ => {}
+    }
+    change_priority
+}
+
+#[no_mangle]
+pub extern "C" fn tos_to_up(tos: U8) -> U8 {
+    #[cfg(not(rtw_up_mapping_dscp))]
+    {
+        return tos >> 5;
+    }
+    #[cfg(rtw_up_mapping_dscp)]
+    {
+        let dscp = tos >> 2;
+        if dscp == 0 {
+            0
+        } else if dscp <= 9 {
+            1
+        } else if dscp <= 16 {
+            2
+        } else if dscp <= 23 {
+            3
+        } else if dscp <= 31 {
+            4
+        } else if dscp >= 33 && dscp <= 40 {
+            5
+        } else if (dscp >= 41 && dscp <= 47) || dscp == 32 {
+            6
+        } else {
+            7
+        }
+    }
+}

@@ -1342,6 +1342,7 @@ endif
 
 ifeq ($(CONFIG_RTW_UP_MAPPING_RULE), dscp)
 ccflags-y += -DCONFIG_RTW_UP_MAPPING_RULE=1
+rustflags-y += --cfg rtw_up_mapping_dscp
 else
 ccflags-y += -DCONFIG_RTW_UP_MAPPING_RULE=0
 endif
@@ -2458,6 +2459,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/mesh/rtw_mesh_hwmp.o \
 		core/rtw_xmit.o	\
 		core/rtw_xmit_rest.o \
+		core/rtw_xmit_qos_rest.o \
 		core/rtw_p2p.o \
 		core/rtw_rson.o \
 		core/rtw_tdls.o \
