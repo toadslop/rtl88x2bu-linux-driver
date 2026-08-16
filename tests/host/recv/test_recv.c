@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /*
- * Host L2 oracle runner for recv_rest helpers (W3-39).
+ * Host L2 oracle runner for recv_rest helpers (W3-39, W3-46).
  */
 
 #include <stdio.h>
@@ -10,13 +10,17 @@
 #include "host_recv_types.h"
 #include "host_vector_json.h"
 
-#define MAX_VECTORS 24
+#define MAX_VECTORS 32
 #define MAX_NAME 128
+#define MAX_ETH 32
 
 enum recv_fn {
 	FN_INC_CHK = 0,
 	FN_RESET,
 	FN_DEL_WFD,
+	FN_LLC_PARSE,
+	FN_WLAN_TO_ETH,
+	FN_BMC_ALLOW,
 };
 
 struct vector {
@@ -30,6 +34,21 @@ struct vector {
 	u8 frame[HOST_RECV_MAX_FRAME];
 	size_t frame_len;
 	unsigned int expect_len;
+	u8 msdu[64];
+	size_t msdu_len;
+	int expect_llc;
+	u8 hdrlen;
+	u8 iv_len;
+	u8 icv_len;
+	u8 encrypt;
+	u8 llc_hdl;
+	u8 dst[ETH_ALEN];
+	u8 src[ETH_ALEN];
+	u8 expect_eth[MAX_ETH];
+	size_t expect_eth_len;
+	int adapter_fw_state;
+	u8 adapter_linked;
+	u8 expect_bmc;
 };
 
 int rtw_inc_and_chk_continual_no_rx_packet(struct sta_info *sta, int tid_index);
@@ -48,6 +67,12 @@ static int parse_fn(const char *obj, size_t obj_len, enum recv_fn *out)
 		*out = FN_RESET;
 	else if (!strcmp(fn, "rtw_rframe_del_wfd_ie"))
 		*out = FN_DEL_WFD;
+	else if (!strcmp(fn, "rtw_recv_llc_parse"))
+		*out = FN_LLC_PARSE;
+	else if (!strcmp(fn, "wlanhdr_to_ethhdr"))
+		*out = FN_WLAN_TO_ETH;
+	else if (!strcmp(fn, "adapter_allow_bmc_data_rx"))
+		*out = FN_BMC_ALLOW;
 	else
 		return -1;
 	return 0;
@@ -63,6 +88,16 @@ static int parse_hex_field(const char *obj, size_t obj_len, const char *key,
 	return host_hex_decode(hex, out, out_cap, out_len);
 }
 
+static int parse_mac_field(const char *obj, size_t obj_len, const char *key, u8 *mac)
+{
+	char hex[ETH_ALEN * 2 + 1];
+	size_t len = 0;
+
+	if (host_json_parse_string_in(obj, obj_len, key, hex, sizeof(hex)))
+		return -1;
+	return host_hex_decode(hex, mac, ETH_ALEN, &len) || len != ETH_ALEN;
+}
+
 static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 {
 	struct vector *v = vec_void;
@@ -76,11 +111,13 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 	host_json_parse_int_in(obj, obj_len, "initial_count", &v->initial_count);
 	host_json_parse_int_in(obj, obj_len, "expect_ret", &v->expect_ret);
 	host_json_parse_int_in(obj, obj_len, "expect_count", &v->expect_count);
-	if (v->fn == FN_DEL_WFD) {
+	if (v->fn == FN_DEL_WFD || v->fn == FN_WLAN_TO_ETH) {
 		int ies_offset = 0;
 
-		host_json_parse_int_in(obj, obj_len, "ies_offset", &ies_offset);
-		v->ies_offset = (u8)ies_offset;
+		if (v->fn == FN_DEL_WFD) {
+			host_json_parse_int_in(obj, obj_len, "ies_offset", &ies_offset);
+			v->ies_offset = (u8)ies_offset;
+		}
 		if (parse_hex_field(obj, obj_len, "frame", v->frame, sizeof(v->frame),
 				    &v->frame_len))
 			return -1;
@@ -91,6 +128,43 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 			v->expect_len = (unsigned int)expect_len;
 		}
 	}
+	if (v->fn == FN_LLC_PARSE) {
+		if (parse_hex_field(obj, obj_len, "msdu", v->msdu, sizeof(v->msdu),
+				    &v->msdu_len))
+			return -1;
+		host_json_parse_int_in(obj, obj_len, "expect_llc", &v->expect_llc);
+	}
+	if (v->fn == FN_WLAN_TO_ETH) {
+		int tmp;
+
+		host_json_parse_int_in(obj, obj_len, "hdrlen", &tmp);
+		v->hdrlen = (u8)tmp;
+		host_json_parse_int_in(obj, obj_len, "iv_len", &tmp);
+		v->iv_len = (u8)tmp;
+		host_json_parse_int_in(obj, obj_len, "icv_len", &tmp);
+		v->icv_len = (u8)tmp;
+		host_json_parse_int_in(obj, obj_len, "encrypt", &tmp);
+		v->encrypt = (u8)tmp;
+		host_json_parse_int_in(obj, obj_len, "llc_hdl", &tmp);
+		v->llc_hdl = (u8)tmp;
+		if (parse_mac_field(obj, obj_len, "dst", v->dst) ||
+		    parse_mac_field(obj, obj_len, "src", v->src))
+			return -1;
+		if (parse_hex_field(obj, obj_len, "expect_eth", v->expect_eth,
+				    sizeof(v->expect_eth), &v->expect_eth_len))
+			return -1;
+	}
+	if (v->fn == FN_BMC_ALLOW) {
+		int linked = 0;
+		int expect_bmc = 0;
+
+		host_json_parse_int_in(obj, obj_len, "adapter_fw_state",
+				       &v->adapter_fw_state);
+		host_json_parse_int_in(obj, obj_len, "adapter_linked", &linked);
+		v->adapter_linked = (u8)linked;
+		host_json_parse_int_in(obj, obj_len, "expect_bmc", &expect_bmc);
+		v->expect_bmc = (u8)expect_bmc;
+	}
 	return 0;
 }
 
@@ -99,7 +173,69 @@ static int run_vector(struct vector *v)
 	struct sta_info sta;
 	union recv_frame rframe;
 	u8 frame_buf[HOST_RECV_MAX_FRAME];
+	struct _adapter adapter;
 	int ret;
+
+	if (v->fn == FN_LLC_PARSE) {
+		ret = (int)rtw_recv_llc_parse(v->msdu, (u16)v->msdu_len);
+		if (ret != v->expect_llc) {
+			fprintf(stderr, "FAIL %s: expect_llc %d got %d\n", v->name,
+				v->expect_llc, ret);
+			return -1;
+		}
+		printf("PASS %s\n", v->name);
+		return 0;
+	}
+
+	if (v->fn == FN_BMC_ALLOW) {
+		memset(&adapter, 0, sizeof(adapter));
+		adapter.mlmepriv.fw_state = v->adapter_fw_state;
+		adapter.host_linked = v->adapter_linked;
+		ret = (int)adapter_allow_bmc_data_rx(&adapter);
+		if (ret != v->expect_bmc) {
+			fprintf(stderr, "FAIL %s: expect_bmc %d got %d\n", v->name,
+				v->expect_bmc, ret);
+			return -1;
+		}
+		printf("PASS %s\n", v->name);
+		return 0;
+	}
+
+	if (v->fn == FN_WLAN_TO_ETH) {
+		memcpy(frame_buf, v->frame, v->frame_len);
+		memset(&rframe, 0, sizeof(rframe));
+		rframe.u.hdr.rx_head = frame_buf;
+		rframe.u.hdr.rx_data = frame_buf;
+		rframe.u.hdr.rx_tail = frame_buf + v->frame_len;
+		rframe.u.hdr.rx_end = frame_buf + sizeof(frame_buf);
+		rframe.u.hdr.len = (unsigned int)v->frame_len;
+		rframe.u.hdr.attrib.hdrlen = v->hdrlen;
+		rframe.u.hdr.attrib.iv_len = v->iv_len;
+		rframe.u.hdr.attrib.icv_len = v->icv_len;
+		rframe.u.hdr.attrib.encrypt = v->encrypt;
+		memcpy(rframe.u.hdr.attrib.dst, v->dst, ETH_ALEN);
+		memcpy(rframe.u.hdr.attrib.src, v->src, ETH_ALEN);
+
+		ret = wlanhdr_to_ethhdr(&rframe, (enum rtw_rx_llc_hdl)v->llc_hdl);
+		if (ret != v->expect_ret) {
+			fprintf(stderr, "FAIL %s: expect_ret %d got %d\n", v->name,
+				v->expect_ret, ret);
+			return -1;
+		}
+		if (ret == _SUCCESS) {
+			if (rframe.u.hdr.len != v->expect_len) {
+				fprintf(stderr, "FAIL %s: expect_len %u got %u\n", v->name,
+					v->expect_len, rframe.u.hdr.len);
+				return -1;
+			}
+			if (memcmp(rframe.u.hdr.rx_data, v->expect_eth, v->expect_eth_len)) {
+				fprintf(stderr, "FAIL %s: eth header mismatch\n", v->name);
+				return -1;
+			}
+		}
+		printf("PASS %s\n", v->name);
+		return 0;
+	}
 
 	if (v->fn == FN_DEL_WFD) {
 		memcpy(frame_buf, v->frame, v->frame_len);
