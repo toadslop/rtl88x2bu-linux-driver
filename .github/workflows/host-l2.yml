@@ -77,7 +77,7 @@ jobs:
               - 'core/rtw_recv.c'
               - 'core/rtw_recv_rest.c'
               - 'core/rtw_recv_llc_rest.c'
-      - 'core/rtw_recv_pn_rest.c'
+              - 'core/rtw_recv_pn_rest.c'
               - 'core/rtw_xmit.c'
               - 'core/rtw_xmit_rest.c'
               - 'core/rtw_sta_mgt.c'
