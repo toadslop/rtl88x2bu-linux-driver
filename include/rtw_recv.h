@@ -864,6 +864,10 @@ extern void  mgt_dispatcher(_adapter *padapter, union recv_frame *precv_frame);
 enum rtw_rx_llc_hdl rtw_recv_llc_parse(u8 *msdu, u16 msdu_len);
 sint wlanhdr_to_ethhdr(union recv_frame *precvframe, enum rtw_rx_llc_hdl llc_hdl);
 u8 adapter_allow_bmc_data_rx(_adapter *adapter);
+
+sint recv_decache(union recv_frame *precv_frame);
+sint recv_ucast_pn_decache(union recv_frame *precv_frame);
+sint recv_bcast_pn_decache(union recv_frame *precv_frame);
 s32 pre_recv_entry(union recv_frame *precvframe, u8 *pphy_status);
 void count_rx_stats(_adapter *padapter, union recv_frame *prframe, struct sta_info *sta);
 

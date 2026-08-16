@@ -2448,6 +2448,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_recv.o \
 		core/rtw_recv_rest.o \
 		core/rtw_recv_llc_rest.o \
+		core/rtw_recv_pn_rest.o \
 		core/rtw_sta_mgt.o \
 		core/rtw_sta_mgt_rest.o \
 		core/rtw_ap.o \
