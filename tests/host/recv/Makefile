@@ -1,11 +1,12 @@
-# Host L2 differential tests for core/rtw_recv_rest.c (W3-39) and
-# core/rtw_recv_llc_rest.c (W3-46).
+# Host L2 differential tests for core/rtw_recv_rest.c (W3-39),
+# core/rtw_recv_llc_rest.c (W3-46), and core/rtw_recv_pn_rest.c (W3-47).
 
 ROOT     := ../../..
 CORE     := $(ROOT)/core
 HOST_INC := ../include
 RECV_REST_SRC := $(CORE)/rtw_recv_rest.c
 RECV_LLC_REST_SRC := $(CORE)/rtw_recv_llc_rest.c
+RECV_PN_REST_SRC := $(CORE)/rtw_recv_pn_rest.c
 LLC_SHIM := host_recv_llc_shim.c
 WFD_ORACLE := recv_wfd_c_oracle.c
 HOST_JSON := ../crypto/host_vector_json.c
@@ -16,7 +17,7 @@ RUSTC  := rustc
 CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
           -I$(HOST_INC) -I$(CORE) \
           -include $(HOST_INC)/host_autoconf.h \
-          -DHOST_RECV_TEST -DHOST_RECV_WFD_TEST -DHOST_RECV_LLC_TEST
+          -DHOST_RECV_TEST -DHOST_RECV_WFD_TEST -DHOST_RECV_LLC_TEST -DHOST_RECV_PN_TEST
 
 .PHONY: all test test-c test-rust clean
 
@@ -27,8 +28,8 @@ test: test-c test-rust
 test-c: test_recv
 	./test_recv recv_vectors.json
 
-test_recv: test_recv.c $(RECV_REST_SRC) $(RECV_LLC_REST_SRC) $(LLC_SHIM) $(WFD_ORACLE) $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ test_recv.c $(RECV_REST_SRC) $(RECV_LLC_REST_SRC) $(LLC_SHIM) $(WFD_ORACLE) $(HOST_JSON)
+test_recv: test_recv.c $(RECV_REST_SRC) $(RECV_LLC_REST_SRC) $(RECV_PN_REST_SRC) $(LLC_SHIM) $(WFD_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_recv.c $(RECV_REST_SRC) $(RECV_LLC_REST_SRC) $(RECV_PN_REST_SRC) $(LLC_SHIM) $(WFD_ORACLE) $(HOST_JSON)
 
 librust_recv.a: $(RUST_RECV)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_recv_test \

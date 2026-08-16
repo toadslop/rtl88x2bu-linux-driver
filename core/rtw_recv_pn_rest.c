@@ -14,6 +14,8 @@
 typedef unsigned int uint;
 #endif
 
+#if !defined(CONFIG_RUST) || defined(HOST_RECV_PN_TEST)
+
 #define PN_LESS_CHK(a, b)	(((a - b) & 0x800000000000) != 0)
 #define VALID_PN_CHK(new, old)	(((old) == 0) || PN_LESS_CHK(old, new))
 #ifndef HOST_RECV_PN_TEST
@@ -118,3 +120,59 @@ sint recv_decache(union recv_frame *precv_frame)
 
 	return _SUCCESS;
 }
+
+#endif /* !CONFIG_RUST || HOST_RECV_PN_TEST */
+
+#if defined(CONFIG_RUST) && !defined(HOST_RECV_PN_TEST)
+
+struct sta_info *rtw_rust_recv_frame_psta(union recv_frame *rframe)
+{
+	return rframe->u.hdr.psta;
+}
+
+_adapter *rtw_rust_recv_frame_adapter(union recv_frame *rframe)
+{
+	return rframe->u.hdr.adapter;
+}
+
+u16 *rtw_rust_recv_tid_rxseq(struct sta_info *sta, int tid)
+{
+	return &sta->sta_recvpriv.rxcache.tid_rxseq[tid];
+}
+
+u16 *rtw_rust_recv_bmc_tid_rxseq(struct sta_info *sta, int tid)
+{
+	return &sta->sta_recvpriv.bmc_tid_rxseq[tid];
+}
+
+u16 *rtw_rust_recv_nonqos_rxseq(struct sta_info *sta)
+{
+	return &sta->sta_recvpriv.nonqos_rxseq;
+}
+
+u16 *rtw_rust_recv_nonqos_bmc_rxseq(struct sta_info *sta)
+{
+	return &sta->sta_recvpriv.nonqos_bmc_rxseq;
+}
+
+u8 *rtw_rust_recv_sta_iv(struct sta_info *sta, int tid)
+{
+	return sta->sta_recvpriv.rxcache.iv[tid];
+}
+
+u8 *rtw_rust_recv_sta_last_tid(struct sta_info *sta)
+{
+	return &sta->sta_recvpriv.rxcache.last_tid;
+}
+
+u32 *rtw_rust_recv_sta_duplicate_cnt(struct sta_info *sta)
+{
+	return &sta->sta_stats.duplicate_cnt;
+}
+
+u8 *rtw_rust_recv_sec_iv_seq(_adapter *adapter, u8 key_id)
+{
+	return adapter->securitypriv.iv_seq[key_id];
+}
+
+#endif /* CONFIG_RUST && !HOST_RECV_PN_TEST */

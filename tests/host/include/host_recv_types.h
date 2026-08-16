@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /*
- * Minimal userspace types for host L2 recv_rest tests (W3-39, W3-46).
+ * Minimal userspace types for host L2 recv_rest tests (W3-39, W3-46, W3-47).
  */
 #ifndef HOST_RECV_TYPES_H
 #define HOST_RECV_TYPES_H
@@ -22,6 +22,7 @@
 #define HOST_RECV_MAX_FRAME 512
 
 #define WIFI_ASOC_STATE 0x00000001
+#define WIFI_STATION_STATE 0x00000008
 #define WIFI_AP_STATE 0x00000010
 #define WIFI_MP_STATE 0x00010000
 #define WIFI_MONITOR_STATE 0x80000000
@@ -31,13 +32,55 @@
 
 #define RTW_GET_BE16(a) ((u16)(((a)[0] << 8) | (a)[1]))
 
+#define _AES_ 0x04
+#define CCMPH_2_PN(ch) \
+	(((ch) & 0x000000000000ffffULL) | (((ch) & 0xffffffff00000000ULL) >> 16))
+#define CCMPH_2_KEYID(ch) (((ch) & 0x00000000c0000000ULL) >> 30)
+
 typedef int ATOMIC_T;
 typedef int sint;
 #define ATOMIC_INC_RETURN(v) __sync_add_and_fetch((v), 1)
 #define ATOMIC_SET(v, x) (*(v) = (x))
 
+static inline u64 host_le64_to_cpu(u64 v)
+{
+	return v;
+}
+
+static inline u64 host_cpu_to_le64(u64 v)
+{
+	return v;
+}
+
+static inline sint host_is_mcast(const u8 *da)
+{
+	return (da[0] & 0x01) ? _TRUE : _FALSE;
+}
+
+struct _adapter;
+
+struct sta_stats_host {
+	u32 duplicate_cnt;
+};
+
+struct stainfo_rxcache {
+	u16 tid_rxseq[TID_NUM];
+	u8 iv[TID_NUM][8];
+	u8 last_tid;
+};
+
+struct sta_recv_priv {
+	struct stainfo_rxcache rxcache;
+	u16 bmc_tid_rxseq[TID_NUM];
+	u16 nonqos_rxseq;
+	u16 nonqos_bmc_rxseq;
+};
+
 struct sta_info {
 	ATOMIC_T continual_no_rx_packet[TID_NUM];
+	struct _adapter *padapter;
+	struct sta_recv_priv sta_recvpriv;
+	struct sta_stats_host sta_stats;
 };
 
 struct rtw_ieee80211_hdr_3addr {
@@ -75,8 +118,13 @@ struct rx_pkt_attrib {
 	u8 encrypt;
 	u8 iv_len;
 	u8 icv_len;
+	u8 qos;
+	u8 priority;
+	u16 seq_num;
+	u8 frag_num;
 	u8 dst[ETH_ALEN];
 	u8 src[ETH_ALEN];
+	u8 ra[ETH_ALEN];
 };
 
 #define RATTRIB_GET_MCTRL_LEN(rattrib) 0
@@ -85,9 +133,14 @@ struct mlme_priv {
 	sint fw_state;
 };
 
+struct security_priv {
+	u8 iv_seq[4][8];
+};
+
 struct _adapter {
 	struct mlme_priv mlmepriv;
 	u8 host_linked;
+	struct security_priv securitypriv;
 };
 
 typedef struct _adapter _adapter;
@@ -100,6 +153,8 @@ struct recv_frame_hdr {
 	u8 *rx_tail;
 	u8 *rx_end;
 	struct rx_pkt_attrib attrib;
+	_adapter *adapter;
+	struct sta_info *psta;
 };
 
 union recv_frame {
@@ -176,5 +231,9 @@ sint wlanhdr_to_ethhdr(union recv_frame *precvframe, enum rtw_rx_llc_hdl llc_hdl
 u8 adapter_allow_bmc_data_rx(_adapter *adapter);
 void rtw_rframe_set_os_pkt(union recv_frame *rframe);
 sint rtw_linked_check(_adapter *adapter);
+
+sint recv_decache(union recv_frame *precv_frame);
+sint recv_ucast_pn_decache(union recv_frame *precv_frame);
+sint recv_bcast_pn_decache(union recv_frame *precv_frame);
 
 #endif /* HOST_RECV_TYPES_H */

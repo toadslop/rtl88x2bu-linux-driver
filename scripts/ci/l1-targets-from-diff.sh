@@ -109,8 +109,10 @@ for path in "${changed[@]}"; do
 	rust/rtw_recv.rs \
 	| core/rtw_recv_rest.c \
 	| core/rtw_recv_llc_rest.c \
+	| core/rtw_recv_pn_rest.c \
 	| tests/host/recv/*)
 		add_target rust-check-symbols-rtw-recv
+		add_target rust-check-symbols-rtw-recv-pn
 		;;
 	rust/rtw_xmit.rs \
 	| core/rtw_xmit_rest.c \
@@ -188,6 +190,7 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-sta-mgt
 	rust-check-symbols-rtw-sta-mgt-aid
 	rust-check-symbols-rtw-recv
+	rust-check-symbols-rtw-recv-pn
 )
 
 emit() {
