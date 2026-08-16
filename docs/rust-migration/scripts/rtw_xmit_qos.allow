@@ -1,1 +1,8 @@
 # L1 allowlist for W3-48 PR2: Rust attrib shims for pkt_size helper.
+drop rtw_rust_xmit_attrib_hdrlen
+drop rtw_rust_xmit_attrib_iv_len
+drop rtw_rust_xmit_attrib_pktlen
+drop rtw_rust_xmit_attrib_encrypt
+drop rtw_rust_xmit_attrib_bswenc
+drop rtw_rust_xmit_attrib_icv_len
+drop rtw_rust_xmit_attrib_meshctrl_len

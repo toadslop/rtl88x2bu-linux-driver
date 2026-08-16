@@ -265,6 +265,7 @@ mod kernel {
         fn rtw_rust_xmit_attrib_encrypt(pattrib: *mut c_void) -> U8;
         fn rtw_rust_xmit_attrib_bswenc(pattrib: *mut c_void) -> U8;
         fn rtw_rust_xmit_attrib_icv_len(pattrib: *mut c_void) -> U8;
+        fn rtw_rust_xmit_attrib_meshctrl_len(pattrib: *mut c_void) -> U8;
     }
 
     pub(super) unsafe fn adapter_dvobj(adapter: *mut c_void) -> *mut c_void {
@@ -345,6 +346,9 @@ mod kernel {
     }
     pub(super) unsafe fn attrib_icv_len(pattrib: *mut c_void) -> U8 {
         unsafe { rtw_rust_xmit_attrib_icv_len(pattrib) }
+    }
+    pub(super) unsafe fn attrib_meshctrl_len(pattrib: *mut c_void) -> U8 {
+        unsafe { rtw_rust_xmit_attrib_meshctrl_len(pattrib) }
     }
 }
 
@@ -698,16 +702,19 @@ const RFC1042_OUI: [U8; 3] = [0x00, 0x00, 0x00];
 const SNAP_HDR_SIZE: usize = 6;
 const _TKIP_: U8 = 0x02;
 
+#[cfg(host_xmit_qos_test)]
 #[repr(C)]
 struct PktAttrib {
-    bswenc: U8,
     hdrlen: U8,
+    iv_len: U8,
+    meshctrl_len: U8,
     pktlen: U32,
     encrypt: U8,
-    iv_len: U8,
+    bswenc: U8,
     icv_len: U8,
 }
 
+#[cfg(any(not(host_xmit_test), host_xmit_qos_test))]
 #[no_mangle]
 pub extern "C" fn rtw_calculate_wlan_pkt_size_by_attribue(pattrib: *mut c_void) -> U32 {
     if pattrib.is_null() {
@@ -716,18 +723,27 @@ pub extern "C" fn rtw_calculate_wlan_pkt_size_by_attribue(pattrib: *mut c_void) 
     #[cfg(host_xmit_qos_test)]
     {
         let a = unsafe { &*(pattrib as *const PktAttrib) };
-        return a.hdrlen as U32 + a.iv_len as U32 + (SNAP_HDR_SIZE + 2) as U32 + a.pktlen
+        return a.hdrlen as U32
+            + a.iv_len as U32
+            + a.meshctrl_len as U32
+            + (SNAP_HDR_SIZE + 2) as U32
+            + a.pktlen
             + if a.encrypt == _TKIP_ { 8 } else { 0 }
             + if a.bswenc != 0 { a.icv_len as U32 } else { 0 };
     }
-    #[cfg(not(host_xmit_qos_test))]
+    #[cfg(all(not(host_xmit_qos_test), not(host_xmit_test)))]
     {
         unsafe {
             kernel::attrib_hdrlen(pattrib) as U32
                 + kernel::attrib_iv_len(pattrib) as U32
+                + kernel::attrib_meshctrl_len(pattrib) as U32
                 + (SNAP_HDR_SIZE + 2) as U32
                 + kernel::attrib_pktlen(pattrib)
-                + if kernel::attrib_encrypt(pattrib) == _TKIP_ { 8 } else { 0 }
+                + if kernel::attrib_encrypt(pattrib) == _TKIP_ {
+                    8
+                } else {
+                    0
+                }
                 + if kernel::attrib_bswenc(pattrib) != 0 {
                     kernel::attrib_icv_len(pattrib) as U32
                 } else {
@@ -737,6 +753,7 @@ pub extern "C" fn rtw_calculate_wlan_pkt_size_by_attribue(pattrib: *mut c_void) 
     }
 }
 
+#[cfg(any(not(host_xmit_test), host_xmit_qos_test))]
 #[no_mangle]
 pub extern "C" fn rtw_put_snap(data: *mut U8, h_proto: U16) -> i32 {
     if data.is_null() {

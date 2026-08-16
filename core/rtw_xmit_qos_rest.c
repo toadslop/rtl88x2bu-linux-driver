@@ -144,4 +144,14 @@ u8 rtw_rust_xmit_attrib_icv_len(struct pkt_attrib *a)
 	return a->icv_len;
 }
 
+u8 rtw_rust_xmit_attrib_meshctrl_len(struct pkt_attrib *a)
+{
+#ifdef CONFIG_RTW_MESH
+	return a->meshctrl_len;
+#else
+	(void)a;
+	return 0;
+#endif
+}
+
 #endif /* CONFIG_RUST && !HOST_XMIT_QOS_TEST */
