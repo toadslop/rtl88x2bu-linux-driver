@@ -402,10 +402,8 @@ unsafe fn wlanhdr_to_ethhdr_kernel(rframe: *mut c_void, llc_hdl: u8) -> c_int {
         unsafe { kernel::frame_pull_tail(rframe, a.icv_len as c_int) };
     }
     let mctrl_len = unsafe { kernel::attrib_mesh_ctrl_len(attrib) } as c_int;
-    let rmv_len = a.hdrlen as c_int
-        + a.iv_len as c_int
-        + mctrl_len
-        + if llc_hdl != 0 { 6 } else { 0 };
+    let rmv_len =
+        a.hdrlen as c_int + a.iv_len as c_int + mctrl_len + if llc_hdl != 0 { 6 } else { 0 };
     let len = unsafe { kernel::frame_len(rframe) as c_int } - rmv_len;
     let pull = rmv_len - 14 + if llc_hdl != 0 { 2 } else { 0 };
     let ptr = unsafe { kernel::frame_pull(rframe, pull) };
