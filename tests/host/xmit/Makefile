@@ -34,7 +34,8 @@ test_xmit: test_xmit.c $(XMIT_REST_SRC) $(SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_xmit.c $(XMIT_REST_SRC) $(SHIM) $(HOST_JSON)
 
 librust_xmit.a: $(RUST_XMIT)
-	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_xmit_test \
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on \
+		--cfg host_xmit_test --cfg host_xmit_qos_test \
 		--crate-type staticlib $(RUST_XMIT) -o $@
 
 librust_xmit_qos.a: $(RUST_XMIT)

@@ -91,6 +91,72 @@
       "vht_bmp_40": 1,
       "vht_bmp_80": 1,
       "expect_u8": 28
+    },
+    {
+      "name": "adapter_agg_rate_bmp_20",
+      "fn": "rtw_get_adapter_tx_rate_bmp",
+      "iface_id": 0,
+      "macid_id": 0,
+      "macid_num": 2,
+      "macid_iface0": 0,
+      "macid_bw": 0,
+      "macid_vht_en": 0,
+      "rate_bmp0": 4095,
+      "expect_cck_ofdm_20": 4095,
+      "expect_ht_20": 0,
+      "expect_ht_40": 0,
+      "expect_vht_20": 0,
+      "expect_vht_40": 0,
+      "expect_vht_80": 0,
+      "expect_vht_160": 0
+    },
+    {
+      "name": "adapter_agg_rate_bmp_vht_40",
+      "fn": "rtw_get_adapter_tx_rate_bmp",
+      "iface_id": 0,
+      "macid_id": 0,
+      "macid_num": 2,
+      "macid_iface0": 0,
+      "macid_bw": 1,
+      "macid_vht_en": 1,
+      "rate_bmp0": 20480,
+      "expect_cck_ofdm_20": 0,
+      "expect_ht_20": 0,
+      "expect_ht_40": 0,
+      "expect_vht_20": 0,
+      "expect_vht_40": 5,
+      "expect_vht_80": 0,
+      "expect_vht_160": 0
+    },
+    {
+      "name": "query_ra_sgi_20m",
+      "fn": "query_ra_short_GI",
+      "bw": 0,
+      "sgi_20m": 1,
+      "sgi_40m": 0,
+      "sgi_80m": 0,
+      "vht_option": 0,
+      "expect_u8": 1
+    },
+    {
+      "name": "query_ra_sgi_40m",
+      "fn": "query_ra_short_GI",
+      "bw": 1,
+      "sgi_20m": 0,
+      "sgi_40m": 1,
+      "sgi_80m": 0,
+      "vht_option": 0,
+      "expect_u8": 1
+    },
+    {
+      "name": "query_ra_sgi_80m",
+      "fn": "query_ra_short_GI",
+      "bw": 2,
+      "sgi_20m": 0,
+      "sgi_40m": 0,
+      "sgi_80m": 1,
+      "vht_option": 1,
+      "expect_u8": 1
     }
   ]
 }
