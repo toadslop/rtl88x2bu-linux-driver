@@ -1342,6 +1342,7 @@ endif
 
 ifeq ($(CONFIG_RTW_UP_MAPPING_RULE), dscp)
 ccflags-y += -DCONFIG_RTW_UP_MAPPING_RULE=1
+rustflags-y += --cfg rtw_up_mapping_dscp
 else
 ccflags-y += -DCONFIG_RTW_UP_MAPPING_RULE=0
 endif

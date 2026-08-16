@@ -3301,13 +3301,6 @@ xmitframe_coalesce_fail:
  *	Organizationally Unique Identifier(OUI), 3 octets,
  *	type, defined by that organization, 2 octets.
  */
-/* Logical Link Control(LLC) SubNetwork Attachment Point(SNAP) header
- * IEEE LLC/SNAP header contains 8 octets
- * First 3 octets comprise the LLC portion
- * SNAP portion, 5 octets, is divided into two fields:
- *	Organizationally Unique Identifier(OUI), 3 octets,
- *	type, defined by that organization, 2 octets.
- */
 s32 rtw_put_snap(u8 *data, u16 h_proto)
 {
 	struct ieee80211_snap_hdr *snap;

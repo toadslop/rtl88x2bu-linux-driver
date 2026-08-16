@@ -642,5 +642,29 @@ pub extern "C" fn qos_acm(acm_mask: U8, priority: U8) -> U8 {
 
 #[no_mangle]
 pub extern "C" fn tos_to_up(tos: U8) -> U8 {
-    tos >> 5
+    #[cfg(not(rtw_up_mapping_dscp))]
+    {
+        return tos >> 5;
+    }
+    #[cfg(rtw_up_mapping_dscp)]
+    {
+        let dscp = tos >> 2;
+        if dscp == 0 {
+            0
+        } else if dscp <= 9 {
+            1
+        } else if dscp <= 16 {
+            2
+        } else if dscp <= 23 {
+            3
+        } else if dscp <= 31 {
+            4
+        } else if dscp >= 33 && dscp <= 40 {
+            5
+        } else if (dscp >= 41 && dscp <= 47) || dscp == 32 {
+            6
+        } else {
+            7
+        }
+    }
 }
