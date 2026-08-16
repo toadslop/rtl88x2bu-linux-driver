@@ -452,6 +452,8 @@ out:
 	return;
 }
 
+#if !defined(CONFIG_RUST)
+
 void rtw_get_adapter_tx_rate_bmp(_adapter *adapter, u16 r_bmp_cck_ofdm[], u32 r_bmp_ht[], u64 r_bmp_vht[])
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
@@ -483,6 +485,8 @@ void rtw_get_adapter_tx_rate_bmp(_adapter *adapter, u16 r_bmp_cck_ofdm[], u32 r_
 			r_bmp_vht[bw] = bmp_vht;
 	}
 }
+
+#endif /* !CONFIG_RUST */
 
 void rtw_update_tx_rate_bmp(struct dvobj_priv *dvobj)
 {
@@ -764,6 +768,8 @@ s16 rtw_rfctl_get_reg_max_txpwr_mbm(struct rf_ctl_t *rfctl, u8 ch, u8 bw, u8 off
 	return mbm;
 }
 
+#if !defined(CONFIG_RUST)
+
 u8 query_ra_short_GI(struct sta_info *psta, u8 bw)
 {
 	u8	sgi = _FALSE, sgi_20m = _FALSE, sgi_40m = _FALSE, sgi_80m = _FALSE;
@@ -792,6 +798,8 @@ u8 query_ra_short_GI(struct sta_info *psta, u8 bw)
 
 	return sgi;
 }
+
+#endif /* !CONFIG_RUST */
 
 /* This function references driver insmond parameters to decide vcs mode. */
 /* Driver insmond parameters: rtw_vrtl_carrier_sense and rtw_vcs_type */
