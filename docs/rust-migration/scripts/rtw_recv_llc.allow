@@ -1,0 +1,9 @@
+# L1 allowlist for W3-46: Rust owns LLC/ethhdr/BMC helpers; frame/adapter shims stay in C.
+drop rtw_rust_recv_frame_attrib
+drop rtw_rust_recv_frame_pull_tail
+drop rtw_rust_recv_frame_pull
+drop rtw_rust_rframe_set_os_pkt
+drop rtw_rust_adapter_fw_state
+drop rtw_rust_adapter_linked
+drop rtw_rfc1042_header
+drop rtw_bridge_tunnel_header

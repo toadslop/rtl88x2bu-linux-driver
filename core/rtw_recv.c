@@ -2500,64 +2500,6 @@ exit:
 	return retval;
 }
 
-/* Reture expected handling for LLC */
-enum rtw_rx_llc_hdl rtw_recv_llc_parse(u8 *msdu, u16 msdu_len)
-{
-	u16	eth_type;
-
-	if (msdu_len < 8)
-		return RTW_RX_LLC_KEEP;
-
-	eth_type = RTW_GET_BE16(msdu + SNAP_SIZE);
-
-	if ((_rtw_memcmp(msdu, rtw_rfc1042_header, SNAP_SIZE)
-			&& eth_type != ETH_P_AARP && eth_type != ETH_P_IPX)
-		|| _rtw_memcmp(msdu, rtw_bridge_tunnel_header, SNAP_SIZE)) {
-		/* remove RFC1042 or Bridge-Tunnel encapsulation and replace EtherType */
-		return RTW_RX_LLC_REMOVE;
-	} else {
-		/* Leave Ethernet header part of hdr and full payload */
-		return RTW_RX_LLC_KEEP;
-	}
-
-	/* TODO: VLAN tagged */
-}
-
-/* remove the wlanhdr and add the eth_hdr */
-sint wlanhdr_to_ethhdr(union recv_frame *precvframe, enum rtw_rx_llc_hdl llc_hdl)
-{
-	u8	*ptr = get_recvframe_data(precvframe) ; /* point to frame_ctrl field */
-	struct rx_pkt_attrib *pattrib = &precvframe->u.hdr.attrib;
-	sint rmv_len;
-	u16	eth_type, len;
-	sint ret = _SUCCESS;
-
-	if (pattrib->encrypt)
-		recvframe_pull_tail(precvframe, pattrib->icv_len);
-
-	rmv_len = pattrib->hdrlen + pattrib->iv_len + RATTRIB_GET_MCTRL_LEN(pattrib) + (llc_hdl ? SNAP_SIZE : 0);
-	len = precvframe->u.hdr.len - rmv_len;
-
-	ptr = recvframe_pull(precvframe, (rmv_len - sizeof(struct ethhdr) + (llc_hdl ? 2 : 0)));
-	if (!ptr) {
-		ret = _FAIL;
-		goto exiting;
-	}
-
-	_rtw_memcpy(ptr, pattrib->dst, ETH_ALEN);
-	_rtw_memcpy(ptr + ETH_ALEN, pattrib->src, ETH_ALEN);
-
-	if (!llc_hdl) {
-		len = htons(len);
-		_rtw_memcpy(ptr + 12, &len, 2);
-	}
-
-	rtw_rframe_set_os_pkt(precvframe);
-
-exiting:
-	return ret;
-}
-
 #if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
 #ifndef CONFIG_SDIO_RX_COPY
 #ifdef PLATFORM_LINUX
@@ -4707,25 +4649,6 @@ void rx_query_phy_status(
 	}
 
 	rtw_odm_parse_rx_phy_status_chinfo(precvframe, pphy_status);
-}
-u8 adapter_allow_bmc_data_rx(_adapter *adapter)
-{
-	if (check_fwstate(&adapter->mlmepriv, WIFI_MONITOR_STATE | WIFI_MP_STATE) == _TRUE)
-		return 1;
-
-#ifdef RTW_SIMPLE_CONFIG
-	/* allow AP to receive multicast packet for RtwSimpleConfigV4 */
-	if (MLME_IS_AP(adapter) && adapter->rtw_simple_config)
-		return 1;
-#endif
-
-	if (MLME_IS_AP(adapter))
-		return 0;
-
-	if (rtw_linked_check(adapter) == _FALSE)
-		return 0;
-
-	return 1;
 }
 
 s32 pre_recv_entry(union recv_frame *precvframe, u8 *pphy_status)

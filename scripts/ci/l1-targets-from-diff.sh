@@ -108,6 +108,7 @@ for path in "${changed[@]}"; do
 		;;
 	rust/rtw_recv.rs \
 	| core/rtw_recv_rest.c \
+	| core/rtw_recv_llc_rest.c \
 	| tests/host/recv/*)
 		add_target rust-check-symbols-rtw-recv
 		;;

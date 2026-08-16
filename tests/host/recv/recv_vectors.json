@@ -1,5 +1,5 @@
 {
-  "oracle": "core/rtw_recv_rest.c",
+  "oracle": "core/rtw_recv_rest.c + core/rtw_recv_llc_rest.c",
   "vectors": [
     {
       "name": "inc_first_below_threshold",
@@ -63,6 +63,116 @@
       "frame": "0000000000000000000000000000000000000000000000000000000000000000dd04506f9a0a",
       "expect_ret": 1,
       "expect_len": 32
+    },
+    {
+      "name": "llc_msdu_short",
+      "fn": "rtw_recv_llc_parse",
+      "msdu": "01020304",
+      "expect_llc": 0
+    },
+    {
+      "name": "llc_rfc1042_ip",
+      "fn": "rtw_recv_llc_parse",
+      "msdu": "aaaa030000000800",
+      "expect_llc": 1
+    },
+    {
+      "name": "llc_rfc1042_aarp",
+      "fn": "rtw_recv_llc_parse",
+      "msdu": "aaaa0300000080f3",
+      "expect_llc": 0
+    },
+    {
+      "name": "llc_bridge_tunnel",
+      "fn": "rtw_recv_llc_parse",
+      "msdu": "aaaa030000f80800",
+      "expect_llc": 1
+    },
+    {
+      "name": "llc_plain_payload",
+      "fn": "rtw_recv_llc_parse",
+      "msdu": "0011223344556677",
+      "expect_llc": 0
+    },
+    {
+      "name": "bmc_monitor",
+      "fn": "adapter_allow_bmc_data_rx",
+      "adapter_fw_state": -2147483648,
+      "adapter_linked": 0,
+      "expect_bmc": 1
+    },
+    {
+      "name": "bmc_mp",
+      "fn": "adapter_allow_bmc_data_rx",
+      "adapter_fw_state": 65536,
+      "adapter_linked": 0,
+      "expect_bmc": 1
+    },
+    {
+      "name": "bmc_ap",
+      "fn": "adapter_allow_bmc_data_rx",
+      "adapter_fw_state": 16,
+      "adapter_linked": 0,
+      "expect_bmc": 0
+    },
+    {
+      "name": "bmc_sta_unlinked",
+      "fn": "adapter_allow_bmc_data_rx",
+      "adapter_fw_state": 8,
+      "adapter_linked": 0,
+      "expect_bmc": 0
+    },
+    {
+      "name": "bmc_sta_linked",
+      "fn": "adapter_allow_bmc_data_rx",
+      "adapter_fw_state": 9,
+      "adapter_linked": 1,
+      "expect_bmc": 1
+    },
+    {
+      "name": "ethhdr_keep_payload_len",
+      "fn": "wlanhdr_to_ethhdr",
+      "hdrlen": 24,
+      "iv_len": 0,
+      "icv_len": 0,
+      "encrypt": 0,
+      "llc_hdl": 0,
+      "dst": "010203040506",
+      "src": "0a0b0c0d0e0f",
+      "frame": "000000000000000000000000000000000000000000000000deadbeefcafe0000",
+      "expect_ret": 0,
+      "expect_len": 22,
+      "expect_eth": "0102030405060a0b0c0d0e0f0008"
+    },
+    {
+      "name": "ethhdr_remove_snap",
+      "fn": "wlanhdr_to_ethhdr",
+      "hdrlen": 24,
+      "iv_len": 0,
+      "icv_len": 0,
+      "encrypt": 0,
+      "llc_hdl": 1,
+      "dst": "010203040506",
+      "src": "0a0b0c0d0e0f",
+      "frame": "000000000000000000000000000000000000000000000000aaaa030000000800deadbeef",
+      "expect_ret": 0,
+      "expect_len": 18,
+      "expect_eth": "0102030405060a0b0c0d0e0f0800"
+    },
+    {
+      "name": "ethhdr_pull_fail",
+      "fn": "wlanhdr_to_ethhdr",
+      "hdrlen": 24,
+      "iv_len": 0,
+      "icv_len": 0,
+      "encrypt": 0,
+      "llc_hdl": 1,
+      "dst": "010203040506",
+      "src": "0a0b0c0d0e0f",
+      "frame": "0000000000000000000000000000000000",
+      "expect_ret": -1,
+      "expect_len": 0,
+      "expect_eth": ""
     }
   ]
 }
