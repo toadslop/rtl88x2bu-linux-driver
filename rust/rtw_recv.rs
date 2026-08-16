@@ -129,6 +129,8 @@ mod kernel {
         fn rtw_rust_rframe_set_os_pkt(rframe: *mut c_void);
         fn rtw_rust_adapter_fw_state(adapter: *mut c_void) -> c_int;
         fn rtw_rust_adapter_linked(adapter: *mut c_void) -> u8;
+        fn rtw_rust_adapter_simple_config(adapter: *mut c_void) -> u8;
+        fn rtw_rust_attrib_mesh_ctrl_len(attrib: *mut c_void) -> u8;
     }
     pub(super) unsafe fn continual_no_rx(sta: *mut c_void, tid: c_int) -> *mut c_int {
         unsafe { rtw_rust_recv_continual_no_rx(sta, tid) }
@@ -168,6 +170,12 @@ mod kernel {
     }
     pub(super) unsafe fn adapter_linked(adapter: *mut c_void) -> u8 {
         unsafe { rtw_rust_adapter_linked(adapter) }
+    }
+    pub(super) unsafe fn adapter_simple_config(adapter: *mut c_void) -> u8 {
+        unsafe { rtw_rust_adapter_simple_config(adapter) }
+    }
+    pub(super) unsafe fn attrib_mesh_ctrl_len(attrib: *mut c_void) -> u8 {
+        unsafe { rtw_rust_attrib_mesh_ctrl_len(attrib) }
     }
 }
 
@@ -393,7 +401,11 @@ unsafe fn wlanhdr_to_ethhdr_kernel(rframe: *mut c_void, llc_hdl: u8) -> c_int {
     if a.encrypt != 0 {
         unsafe { kernel::frame_pull_tail(rframe, a.icv_len as c_int) };
     }
-    let rmv_len = a.hdrlen as c_int + a.iv_len as c_int + if llc_hdl != 0 { 6 } else { 0 };
+    let mctrl_len = unsafe { kernel::attrib_mesh_ctrl_len(attrib) } as c_int;
+    let rmv_len = a.hdrlen as c_int
+        + a.iv_len as c_int
+        + mctrl_len
+        + if llc_hdl != 0 { 6 } else { 0 };
     let len = unsafe { kernel::frame_len(rframe) as c_int } - rmv_len;
     let pull = rmv_len - 14 + if llc_hdl != 0 { 2 } else { 0 };
     let ptr = unsafe { kernel::frame_pull(rframe, pull) };
@@ -414,15 +426,38 @@ unsafe fn wlanhdr_to_ethhdr_kernel(rframe: *mut c_void, llc_hdl: u8) -> c_int {
     0
 }
 
+/// Kernel `struct rx_pkt_attrib` through `bssid` — matches `include/rtw_recv.h`
+/// field order (same layout as `rust/rtw_security.rs` `RxPktAttrib`).
 #[cfg(not(host_recv_test))]
 #[repr(C)]
 struct RxPktAttribKernel {
+    pkt_len: u16,
+    physt: u8,
+    drvinfo_sz: u8,
+    shift_sz: u8,
     hdrlen: u8,
+    to_fr_ds: u8,
+    amsdu: u8,
+    qos: u8,
+    priority: u8,
+    pw_save: u8,
+    mdata: u8,
+    seq_num: u16,
+    frag_num: u8,
+    mfrag: u8,
+    order: u8,
+    privacy: u8,
+    bdecrypted: u8,
     encrypt: u8,
     iv_len: u8,
     icv_len: u8,
+    crc_err: u8,
+    icv_err: u8,
     dst: [u8; 6],
     src: [u8; 6],
+    ta: [u8; 6],
+    ra: [u8; 6],
+    bssid: [u8; 6],
 }
 
 #[no_mangle]
@@ -482,6 +517,9 @@ pub extern "C" fn adapter_allow_bmc_data_rx(adapter: *mut c_void) -> u8 {
             return 1;
         }
         if fw & 0x00000010 != 0 {
+            if unsafe { kernel::adapter_simple_config(adapter) } != 0 {
+                return 1;
+            }
             return 0;
         }
         if unsafe { kernel::adapter_linked(adapter) } == 0 {

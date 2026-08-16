@@ -139,11 +139,24 @@ u8 rtw_rust_adapter_linked(_adapter *adapter)
 	return rtw_linked_check(adapter) == _TRUE ? 1 : 0;
 }
 
-#ifdef RTW_SIMPLE_CONFIG
 u8 rtw_rust_adapter_simple_config(_adapter *adapter)
 {
+#ifdef RTW_SIMPLE_CONFIG
 	return adapter->rtw_simple_config ? 1 : 0;
-}
+#else
+	(void)adapter;
+	return 0;
 #endif
+}
+
+u8 rtw_rust_attrib_mesh_ctrl_len(struct rx_pkt_attrib *a)
+{
+#ifdef CONFIG_RTW_MESH
+	return a->mesh_ctrl_len;
+#else
+	(void)a;
+	return 0;
+#endif
+}
 
 #endif /* CONFIG_RUST && !HOST_RECV_LLC_TEST */
