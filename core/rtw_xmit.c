@@ -17,9 +17,6 @@
 #include <drv_types.h>
 #include <hal_data.h>
 
-static u8 P802_1H_OUI[P80211_OUI_LEN] = { 0x00, 0x00, 0xf8 };
-static u8 RFC1042_OUI[P80211_OUI_LEN] = { 0x00, 0x00, 0x00 };
-
 static void _init_txservq(struct tx_servq *ptxservq)
 {
 	_rtw_init_listhead(&ptxservq->tx_pending);
@@ -2461,26 +2458,6 @@ exit:
 }
 #endif /* CONFIG_TDLS */
 
-/*
- * Calculate wlan 802.11 packet MAX size from pkt_attrib
- * This function doesn't consider fragment case
- */
-u32 rtw_calculate_wlan_pkt_size_by_attribue(struct pkt_attrib *pattrib)
-{
-	u32	len = 0;
-
-	len = pattrib->hdrlen /* WLAN Header */
-		+ pattrib->iv_len /* IV */
-		+ XATTRIB_GET_MCTRL_LEN(pattrib)
-		+ SNAP_SIZE + sizeof(u16) /* LLC */
-		+ pattrib->pktlen
-		+ (pattrib->encrypt == _TKIP_ ? 8 : 0) /* MIC */
-		+ (pattrib->bswenc ? pattrib->icv_len : 0) /* ICV */
-		;
-
-	return len;
-}
-
 #ifdef CONFIG_TX_AMSDU
 s32 check_amsdu(struct xmit_frame *pxmitframe)
 {
@@ -3301,32 +3278,6 @@ xmitframe_coalesce_fail:
  *	Organizationally Unique Identifier(OUI), 3 octets,
  *	type, defined by that organization, 2 octets.
  */
-s32 rtw_put_snap(u8 *data, u16 h_proto)
-{
-	struct ieee80211_snap_hdr *snap;
-	u8 *oui;
-
-
-	snap = (struct ieee80211_snap_hdr *)data;
-	snap->dsap = 0xaa;
-	snap->ssap = 0xaa;
-	snap->ctrl = 0x03;
-
-	if (h_proto == 0x8137 || h_proto == 0x80f3)
-		oui = P802_1H_OUI;
-	else
-		oui = RFC1042_OUI;
-
-	snap->oui[0] = oui[0];
-	snap->oui[1] = oui[1];
-	snap->oui[2] = oui[2];
-
-	*(u16 *)(data + SNAP_SIZE) = htons(h_proto);
-
-
-	return SNAP_SIZE + sizeof(u16);
-}
-
 void rtw_update_protection(_adapter *padapter, u8 *ie, uint ie_len)
 {
 

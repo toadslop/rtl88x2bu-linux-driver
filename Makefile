@@ -3105,6 +3105,15 @@ rust-check-symbols-rtw-xmit: rust-objects-rtw-xmit-rest-c rust-objects-rtw-xmit
 	$(MAKE) rust-check-symbols OLD=tests/host/xmit/xmit_rest_c_ref.o NEW=rust/rtw_xmit.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_xmit.allow ALLOW_VACUOUS=1
 
+rust-objects-rtw-xmit-qos-rest-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_XMIT_QOS_TEST -o tests/host/xmit/xmit_qos_c_ref.o core/rtw_xmit_qos_rest.c
+rust-check-symbols-rtw-xmit-qos: rust-objects-rtw-xmit-qos-rest-c rust-objects-rtw-xmit
+	$(MAKE) rust-check-symbols OLD=tests/host/xmit/xmit_qos_c_ref.o NEW=rust/rtw_xmit.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_xmit_qos.allow ALLOW_VACUOUS=1
+
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production
 # L1 on a swap should compare against a kbuild-produced OLD.o from master.

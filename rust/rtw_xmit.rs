@@ -259,6 +259,12 @@ mod kernel {
         fn rtw_rust_xmit_macid_rate_bmp1(macid_ctl: *mut c_void, id: U8) -> U32;
         fn rtw_rust_xmit_rf_ht_bmp(rfctl: *mut c_void, bw: U8) -> U32;
         fn rtw_rust_xmit_rf_vht_bmp(rfctl: *mut c_void, bw: U8) -> U64;
+        fn rtw_rust_xmit_attrib_hdrlen(pattrib: *mut c_void) -> U16;
+        fn rtw_rust_xmit_attrib_iv_len(pattrib: *mut c_void) -> U8;
+        fn rtw_rust_xmit_attrib_pktlen(pattrib: *mut c_void) -> U32;
+        fn rtw_rust_xmit_attrib_encrypt(pattrib: *mut c_void) -> U8;
+        fn rtw_rust_xmit_attrib_bswenc(pattrib: *mut c_void) -> U8;
+        fn rtw_rust_xmit_attrib_icv_len(pattrib: *mut c_void) -> U8;
     }
 
     pub(super) unsafe fn adapter_dvobj(adapter: *mut c_void) -> *mut c_void {
@@ -321,6 +327,24 @@ mod kernel {
     }
     pub(super) unsafe fn rf_vht_bmp(rfctl: *mut c_void, bw: U8) -> U64 {
         unsafe { rtw_rust_xmit_rf_vht_bmp(rfctl, bw) }
+    }
+    pub(super) unsafe fn attrib_hdrlen(pattrib: *mut c_void) -> U16 {
+        unsafe { rtw_rust_xmit_attrib_hdrlen(pattrib) }
+    }
+    pub(super) unsafe fn attrib_iv_len(pattrib: *mut c_void) -> U8 {
+        unsafe { rtw_rust_xmit_attrib_iv_len(pattrib) }
+    }
+    pub(super) unsafe fn attrib_pktlen(pattrib: *mut c_void) -> U32 {
+        unsafe { rtw_rust_xmit_attrib_pktlen(pattrib) }
+    }
+    pub(super) unsafe fn attrib_encrypt(pattrib: *mut c_void) -> U8 {
+        unsafe { rtw_rust_xmit_attrib_encrypt(pattrib) }
+    }
+    pub(super) unsafe fn attrib_bswenc(pattrib: *mut c_void) -> U8 {
+        unsafe { rtw_rust_xmit_attrib_bswenc(pattrib) }
+    }
+    pub(super) unsafe fn attrib_icv_len(pattrib: *mut c_void) -> U8 {
+        unsafe { rtw_rust_xmit_attrib_icv_len(pattrib) }
     }
 }
 
@@ -667,4 +691,71 @@ pub extern "C" fn tos_to_up(tos: U8) -> U8 {
             7
         }
     }
+}
+
+const P802_1H_OUI: [U8; 3] = [0x00, 0x00, 0xf8];
+const RFC1042_OUI: [U8; 3] = [0x00, 0x00, 0x00];
+const SNAP_HDR_SIZE: usize = 6;
+const _TKIP_: U8 = 0x02;
+
+#[repr(C)]
+struct PktAttrib {
+    bswenc: U8,
+    hdrlen: U8,
+    pktlen: U32,
+    encrypt: U8,
+    iv_len: U8,
+    icv_len: U8,
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_calculate_wlan_pkt_size_by_attribue(pattrib: *mut c_void) -> U32 {
+    if pattrib.is_null() {
+        return 0;
+    }
+    #[cfg(host_xmit_qos_test)]
+    {
+        let a = unsafe { &*(pattrib as *const PktAttrib) };
+        return a.hdrlen as U32 + a.iv_len as U32 + (SNAP_HDR_SIZE + 2) as U32 + a.pktlen
+            + if a.encrypt == _TKIP_ { 8 } else { 0 }
+            + if a.bswenc != 0 { a.icv_len as U32 } else { 0 };
+    }
+    #[cfg(not(host_xmit_qos_test))]
+    {
+        unsafe {
+            kernel::attrib_hdrlen(pattrib) as U32
+                + kernel::attrib_iv_len(pattrib) as U32
+                + (SNAP_HDR_SIZE + 2) as U32
+                + kernel::attrib_pktlen(pattrib)
+                + if kernel::attrib_encrypt(pattrib) == _TKIP_ { 8 } else { 0 }
+                + if kernel::attrib_bswenc(pattrib) != 0 {
+                    kernel::attrib_icv_len(pattrib) as U32
+                } else {
+                    0
+                }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_put_snap(data: *mut U8, h_proto: U16) -> i32 {
+    if data.is_null() {
+        return 0;
+    }
+    let data = unsafe { core::slice::from_raw_parts_mut(data, SNAP_HDR_SIZE + 2) };
+    data[0] = 0xaa;
+    data[1] = 0xaa;
+    data[2] = 0x03;
+    let oui = if h_proto == 0x8137 || h_proto == 0x80f3 {
+        P802_1H_OUI
+    } else {
+        RFC1042_OUI
+    };
+    data[3] = oui[0];
+    data[4] = oui[1];
+    data[5] = oui[2];
+    let be = h_proto.to_be().to_ne_bytes();
+    data[SNAP_HDR_SIZE] = be[0];
+    data[SNAP_HDR_SIZE + 1] = be[1];
+    (SNAP_HDR_SIZE + 2) as i32
 }
