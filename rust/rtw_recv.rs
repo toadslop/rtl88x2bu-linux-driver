@@ -323,9 +323,7 @@ fn recv_llc_parse(msdu: *mut u8, msdu_len: u16) -> u8 {
     static RFC1042: [u8; 6] = [0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00];
     static BRIDGE: [u8; 6] = [0xaa, 0xaa, 0x03, 0x00, 0x00, 0xf8];
     let eth_type = ((slice[6] as u16) << 8) | (slice[7] as u16);
-    if (slice[..6] == RFC1042 && eth_type != 0x80f3 && eth_type != 0x8137)
-        || slice[..6] == BRIDGE
-    {
+    if (slice[..6] == RFC1042 && eth_type != 0x80f3 && eth_type != 0x8137) || slice[..6] == BRIDGE {
         1
     } else {
         0
@@ -374,19 +372,11 @@ unsafe fn host_wlanhdr_to_ethhdr(rframe: *mut RecvFrame, llc_hdl: u8) -> c_int {
     };
 
     core::ptr::copy_nonoverlapping(rf.hdr.attrib.dst.as_ptr(), ptr, ETH_ALEN);
-    core::ptr::copy_nonoverlapping(
-        rf.hdr.attrib.src.as_ptr(),
-        ptr.add(ETH_ALEN),
-        ETH_ALEN,
-    );
+    core::ptr::copy_nonoverlapping(rf.hdr.attrib.src.as_ptr(), ptr.add(ETH_ALEN), ETH_ALEN);
 
     if llc_hdl == 0 {
         let nlen = host_htons(len as u16);
-        core::ptr::copy_nonoverlapping(
-            &nlen as *const u16 as *const u8,
-            ptr.add(12),
-            2,
-        );
+        core::ptr::copy_nonoverlapping(&nlen as *const u16 as *const u8, ptr.add(12), 2);
     }
 
     rtw_rframe_set_os_pkt(rframe);
@@ -403,9 +393,7 @@ unsafe fn wlanhdr_to_ethhdr_kernel(rframe: *mut c_void, llc_hdl: u8) -> c_int {
     if a.encrypt != 0 {
         unsafe { kernel::frame_pull_tail(rframe, a.icv_len as c_int) };
     }
-    let rmv_len = a.hdrlen as c_int
-        + a.iv_len as c_int
-        + if llc_hdl != 0 { 6 } else { 0 };
+    let rmv_len = a.hdrlen as c_int + a.iv_len as c_int + if llc_hdl != 0 { 6 } else { 0 };
     let len = unsafe { kernel::frame_len(rframe) as c_int } - rmv_len;
     let pull = rmv_len - 14 + if llc_hdl != 0 { 2 } else { 0 };
     let ptr = unsafe { kernel::frame_pull(rframe, pull) };
