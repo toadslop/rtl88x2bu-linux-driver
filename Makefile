@@ -3074,11 +3074,21 @@ rust-objects-rtw-recv-rest-c:
 		-I$(shell pwd)/tests/host/include -I$(shell pwd)/include \
 		-include $(shell pwd)/tests/host/include/host_autoconf.h \
 		-DHOST_RECV_TEST -DHOST_RECV_LLC_TEST -o tests/host/recv/recv_llc_c_ref.o core/rtw_recv_llc_rest.c
-rust-check-symbols-rtw-recv: rust-objects-rtw-recv-rest-c rust-objects-rtw-recv
+rust-check-symbols-rtw-recv: rust-objects-rtw-recv-rest-c rust-objects-rtw-recv-pn-rest-c rust-objects-rtw-recv
 	$(MAKE) rust-check-symbols OLD=tests/host/recv/recv_rest_c_ref.o NEW=rust/rtw_recv.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_recv.allow ALLOW_VACUOUS=1
 	$(MAKE) rust-check-symbols OLD=tests/host/recv/recv_llc_c_ref.o NEW=rust/rtw_recv.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_recv_llc.allow ALLOW_VACUOUS=1
+	$(MAKE) rust-check-symbols OLD=tests/host/recv/recv_pn_c_ref.o NEW=rust/rtw_recv.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_recv_pn.allow ALLOW_VACUOUS=1
+rust-objects-rtw-recv-pn-rest-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_RECV_TEST -DHOST_RECV_PN_TEST -o tests/host/recv/recv_pn_c_ref.o core/rtw_recv_pn_rest.c
+rust-check-symbols-rtw-recv-pn: rust-objects-rtw-recv-pn-rest-c rust-objects-rtw-recv
+	$(MAKE) rust-check-symbols OLD=tests/host/recv/recv_pn_c_ref.o NEW=rust/rtw_recv.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_recv_pn.allow ALLOW_VACUOUS=1
 
 # W3-40: host C oracle xmit_rest vs rust/rtw_xmit.o.
 rust-objects-rtw-xmit:

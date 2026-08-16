@@ -60,14 +60,46 @@ const WIFI_MP_STATE: c_int = 0x00010000;
 const WIFI_MONITOR_STATE: c_int = -2147483648;
 
 #[cfg(host_recv_test)]
+const WIFI_STATION_STATE: c_int = 0x00000008;
+
+#[cfg(host_recv_test)]
+const _AES_: u8 = 0x04;
+
+#[cfg(host_recv_test)]
 static RFC1042_HEADER: [u8; 6] = [0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00];
 #[cfg(host_recv_test)]
 static BRIDGE_TUNNEL_HEADER: [u8; 6] = [0xaa, 0xaa, 0x03, 0x00, 0x00, 0xf8];
 
 #[cfg(host_recv_test)]
 #[repr(C)]
+pub struct StaStatsHost {
+    pub duplicate_cnt: u32,
+}
+
+#[cfg(host_recv_test)]
+#[repr(C)]
+pub struct StainfoRxcache {
+    pub tid_rxseq: [u16; TID_NUM],
+    pub iv: [[u8; 8]; TID_NUM],
+    pub last_tid: u8,
+}
+
+#[cfg(host_recv_test)]
+#[repr(C)]
+pub struct StaRecvPriv {
+    pub rxcache: StainfoRxcache,
+    pub bmc_tid_rxseq: [u16; TID_NUM],
+    pub nonqos_rxseq: u16,
+    pub nonqos_bmc_rxseq: u16,
+}
+
+#[cfg(host_recv_test)]
+#[repr(C)]
 pub struct StaInfo {
     pub continual_no_rx_packet: [c_int; TID_NUM],
+    pub padapter: *mut Adapter,
+    pub sta_recvpriv: StaRecvPriv,
+    pub sta_stats: StaStatsHost,
 }
 
 #[cfg(host_recv_test)]
@@ -77,8 +109,13 @@ pub struct RxPktAttrib {
     pub encrypt: u8,
     pub iv_len: u8,
     pub icv_len: u8,
+    pub qos: u8,
+    pub priority: u8,
+    pub seq_num: u16,
+    pub frag_num: u8,
     pub dst: [u8; ETH_ALEN],
     pub src: [u8; ETH_ALEN],
+    pub ra: [u8; ETH_ALEN],
 }
 
 #[cfg(host_recv_test)]
@@ -91,6 +128,8 @@ pub struct RecvFrameHdr {
     pub rx_tail: *mut u8,
     pub rx_end: *mut u8,
     pub attrib: RxPktAttrib,
+    pub adapter: *mut Adapter,
+    pub psta: *mut StaInfo,
 }
 
 #[cfg(host_recv_test)]
@@ -107,9 +146,16 @@ pub struct MlmePriv {
 
 #[cfg(host_recv_test)]
 #[repr(C)]
+pub struct SecurityPriv {
+    pub iv_seq: [[u8; 8]; 4],
+}
+
+#[cfg(host_recv_test)]
+#[repr(C)]
 pub struct Adapter {
     pub mlmepriv: MlmePriv,
     pub host_linked: u8,
+    pub securitypriv: SecurityPriv,
 }
 
 #[cfg(not(host_recv_test))]
@@ -131,6 +177,16 @@ mod kernel {
         fn rtw_rust_adapter_linked(adapter: *mut c_void) -> u8;
         fn rtw_rust_adapter_simple_config(adapter: *mut c_void) -> u8;
         fn rtw_rust_attrib_mesh_ctrl_len(attrib: *mut c_void) -> u8;
+        fn rtw_rust_recv_frame_psta(rframe: *mut c_void) -> *mut c_void;
+        fn rtw_rust_recv_frame_adapter(rframe: *mut c_void) -> *mut c_void;
+        fn rtw_rust_recv_tid_rxseq(sta: *mut c_void, tid: c_int) -> *mut u16;
+        fn rtw_rust_recv_bmc_tid_rxseq(sta: *mut c_void, tid: c_int) -> *mut u16;
+        fn rtw_rust_recv_nonqos_rxseq(sta: *mut c_void) -> *mut u16;
+        fn rtw_rust_recv_nonqos_bmc_rxseq(sta: *mut c_void) -> *mut u16;
+        fn rtw_rust_recv_sta_iv(sta: *mut c_void, tid: c_int) -> *mut u8;
+        fn rtw_rust_recv_sta_last_tid(sta: *mut c_void) -> *mut u8;
+        fn rtw_rust_recv_sta_duplicate_cnt(sta: *mut c_void) -> *mut u32;
+        fn rtw_rust_recv_sec_iv_seq(adapter: *mut c_void, key_id: u8) -> *mut u8;
     }
     pub(super) unsafe fn continual_no_rx(sta: *mut c_void, tid: c_int) -> *mut c_int {
         unsafe { rtw_rust_recv_continual_no_rx(sta, tid) }
@@ -176,6 +232,36 @@ mod kernel {
     }
     pub(super) unsafe fn attrib_mesh_ctrl_len(attrib: *mut c_void) -> u8 {
         unsafe { rtw_rust_attrib_mesh_ctrl_len(attrib) }
+    }
+    pub(super) unsafe fn frame_psta(rframe: *mut c_void) -> *mut c_void {
+        unsafe { rtw_rust_recv_frame_psta(rframe) }
+    }
+    pub(super) unsafe fn frame_adapter(rframe: *mut c_void) -> *mut c_void {
+        unsafe { rtw_rust_recv_frame_adapter(rframe) }
+    }
+    pub(super) unsafe fn tid_rxseq(sta: *mut c_void, tid: c_int) -> *mut u16 {
+        unsafe { rtw_rust_recv_tid_rxseq(sta, tid) }
+    }
+    pub(super) unsafe fn bmc_tid_rxseq(sta: *mut c_void, tid: c_int) -> *mut u16 {
+        unsafe { rtw_rust_recv_bmc_tid_rxseq(sta, tid) }
+    }
+    pub(super) unsafe fn nonqos_rxseq(sta: *mut c_void) -> *mut u16 {
+        unsafe { rtw_rust_recv_nonqos_rxseq(sta) }
+    }
+    pub(super) unsafe fn nonqos_bmc_rxseq(sta: *mut c_void) -> *mut u16 {
+        unsafe { rtw_rust_recv_nonqos_bmc_rxseq(sta) }
+    }
+    pub(super) unsafe fn sta_iv(sta: *mut c_void, tid: c_int) -> *mut u8 {
+        unsafe { rtw_rust_recv_sta_iv(sta, tid) }
+    }
+    pub(super) unsafe fn sta_last_tid(sta: *mut c_void) -> *mut u8 {
+        unsafe { rtw_rust_recv_sta_last_tid(sta) }
+    }
+    pub(super) unsafe fn sta_duplicate_cnt(sta: *mut c_void) -> *mut u32 {
+        unsafe { rtw_rust_recv_sta_duplicate_cnt(sta) }
+    }
+    pub(super) unsafe fn sec_iv_seq(adapter: *mut c_void, key_id: u8) -> *mut u8 {
+        unsafe { rtw_rust_recv_sec_iv_seq(adapter, key_id) }
     }
 }
 
@@ -524,5 +610,306 @@ pub extern "C" fn adapter_allow_bmc_data_rx(adapter: *mut c_void) -> u8 {
             return 0;
         }
         1
+    }
+}
+
+const AES_ENCRYPT: u8 = 0x04;
+const WIFI_STA_STATE: u32 = 0x00000008;
+
+fn ccmph_2_pn(ch: u64) -> u64 {
+    (ch & 0xffff) | ((ch & 0xffffffff00000000) >> 16)
+}
+
+fn ccmph_2_keyid(ch: u64) -> u8 {
+    ((ch & 0x00000000c0000000) >> 30) as u8
+}
+
+fn pn_less_chk(a: u64, b: u64) -> bool {
+    (a.wrapping_sub(b) & 0x800000000000) != 0
+}
+
+fn valid_pn_chk(new_pn: u64, old_pn: u64) -> bool {
+    old_pn == 0 || pn_less_chk(old_pn, new_pn)
+}
+
+fn is_mcast_ra(ra: &[u8; 6]) -> bool {
+    ra[0] & 0x01 != 0
+}
+
+fn read_le64(ptr: *const u8) -> u64 {
+    let mut buf = [0u8; 8];
+    unsafe {
+        core::ptr::copy_nonoverlapping(ptr, buf.as_mut_ptr(), 8);
+    }
+    u64::from_le_bytes(buf)
+}
+
+fn write_le64(ptr: *mut u8, val: u64) {
+    let bytes = val.to_le_bytes();
+    unsafe {
+        core::ptr::copy_nonoverlapping(bytes.as_ptr(), ptr, 8);
+    }
+}
+
+#[cfg(host_recv_test)]
+unsafe fn host_recv_decache(rframe: *mut RecvFrame) -> c_int {
+    let rf = &mut *rframe;
+    if rf.hdr.psta.is_null() {
+        return _FAIL;
+    }
+    let psta = &mut *rf.hdr.psta;
+    let tid = rf.hdr.attrib.priority as c_int;
+    if tid > 15 {
+        return _FAIL;
+    }
+    let seq_ctrl = ((rf.hdr.attrib.seq_num as u16) << 4) | (rf.hdr.attrib.frag_num as u16 & 0xf);
+    let prxseq = if rf.hdr.attrib.qos != 0 {
+        if is_mcast_ra(&rf.hdr.attrib.ra) {
+            &mut psta.sta_recvpriv.bmc_tid_rxseq[tid as usize]
+        } else {
+            &mut psta.sta_recvpriv.rxcache.tid_rxseq[tid as usize]
+        }
+    } else if is_mcast_ra(&rf.hdr.attrib.ra) {
+        &mut psta.sta_recvpriv.nonqos_bmc_rxseq
+    } else {
+        &mut psta.sta_recvpriv.nonqos_rxseq
+    };
+    if seq_ctrl == *prxseq {
+        psta.sta_stats.duplicate_cnt += 1;
+        return _FAIL;
+    }
+    *prxseq = seq_ctrl;
+    _SUCCESS
+}
+
+#[cfg(not(host_recv_test))]
+fn kernel_recv_decache(rframe: *mut c_void) -> c_int {
+    unsafe {
+        let psta = kernel::frame_psta(rframe);
+        if psta.is_null() {
+            return _FAIL;
+        }
+        let attrib = kernel::frame_attrib(rframe);
+        if attrib.is_null() {
+            return _FAIL;
+        }
+        let a = &*(attrib as *const RxPktAttribKernel);
+        let tid = a.priority as c_int;
+        if tid > 15 {
+            return _FAIL;
+        }
+        let seq_ctrl = ((a.seq_num as u16) << 4) | (a.frag_num as u16 & 0xf);
+        let prxseq = if a.qos != 0 {
+            if is_mcast_ra(&a.ra) {
+                kernel::bmc_tid_rxseq(psta, tid)
+            } else {
+                kernel::tid_rxseq(psta, tid)
+            }
+        } else if is_mcast_ra(&a.ra) {
+            kernel::nonqos_bmc_rxseq(psta)
+        } else {
+            kernel::nonqos_rxseq(psta)
+        };
+        if prxseq.is_null() {
+            return _FAIL;
+        }
+        if seq_ctrl == *prxseq {
+            let dup = kernel::sta_duplicate_cnt(psta);
+            if !dup.is_null() {
+                *dup += 1;
+            }
+            return _FAIL;
+        }
+        *prxseq = seq_ctrl;
+        _SUCCESS
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn recv_decache(rframe: *mut c_void) -> c_int {
+    if rframe.is_null() {
+        return _FAIL;
+    }
+    #[cfg(host_recv_test)]
+    {
+        unsafe { host_recv_decache(rframe as *mut RecvFrame) }
+    }
+    #[cfg(not(host_recv_test))]
+    {
+        kernel_recv_decache(rframe)
+    }
+}
+
+#[cfg(host_recv_test)]
+unsafe fn host_recv_ucast_pn_decache(rframe: *mut RecvFrame) -> c_int {
+    let rf = &mut *rframe;
+    if rf.hdr.psta.is_null() {
+        return _FAIL;
+    }
+    let psta = &mut *rf.hdr.psta;
+    let tid = rf.hdr.attrib.priority as c_int;
+    if tid > 15 {
+        return _FAIL;
+    }
+    if rf.hdr.attrib.encrypt != _AES_ {
+        return _SUCCESS;
+    }
+    if rf.hdr.rx_data.is_null() {
+        return _SUCCESS;
+    }
+    let iv_off = rf.hdr.attrib.hdrlen as usize;
+    let pkt_pn = ccmph_2_pn(read_le64(rf.hdr.rx_data.add(iv_off)));
+    let curr_pn = ccmph_2_pn(read_le64(
+        psta.sta_recvpriv.rxcache.iv[tid as usize].as_ptr(),
+    ));
+    if valid_pn_chk(pkt_pn, curr_pn) {
+        psta.sta_recvpriv.rxcache.last_tid = tid as u8;
+        core::ptr::copy_nonoverlapping(
+            rf.hdr.rx_data.add(iv_off),
+            psta.sta_recvpriv.rxcache.iv[tid as usize].as_mut_ptr(),
+            8,
+        );
+    }
+    _SUCCESS
+}
+
+#[cfg(not(host_recv_test))]
+fn kernel_recv_ucast_pn_decache(rframe: *mut c_void) -> c_int {
+    unsafe {
+        let psta = kernel::frame_psta(rframe);
+        if psta.is_null() {
+            return _FAIL;
+        }
+        let attrib = kernel::frame_attrib(rframe);
+        if attrib.is_null() {
+            return _FAIL;
+        }
+        let a = &*(attrib as *const RxPktAttribKernel);
+        let tid = a.priority as c_int;
+        if tid > 15 {
+            return _FAIL;
+        }
+        if a.encrypt != AES_ENCRYPT {
+            return _SUCCESS;
+        }
+        let pdata = kernel::frame_rx_data(rframe);
+        if pdata.is_null() {
+            return _SUCCESS;
+        }
+        let pkt_pn = ccmph_2_pn(read_le64(pdata.add(a.hdrlen as usize)));
+        let iv = kernel::sta_iv(psta, tid);
+        if iv.is_null() {
+            return _SUCCESS;
+        }
+        let curr_pn = ccmph_2_pn(read_le64(iv));
+        if valid_pn_chk(pkt_pn, curr_pn) {
+            let last_tid = kernel::sta_last_tid(psta);
+            if !last_tid.is_null() {
+                *last_tid = tid as u8;
+            }
+            core::ptr::copy_nonoverlapping(pdata.add(a.hdrlen as usize), iv, 8);
+        }
+        _SUCCESS
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn recv_ucast_pn_decache(rframe: *mut c_void) -> c_int {
+    if rframe.is_null() {
+        return _FAIL;
+    }
+    #[cfg(host_recv_test)]
+    {
+        unsafe { host_recv_ucast_pn_decache(rframe as *mut RecvFrame) }
+    }
+    #[cfg(not(host_recv_test))]
+    {
+        kernel_recv_ucast_pn_decache(rframe)
+    }
+}
+
+#[cfg(host_recv_test)]
+unsafe fn host_recv_bcast_pn_decache(rframe: *mut RecvFrame) -> c_int {
+    let rf = &mut *rframe;
+    if rf.hdr.adapter.is_null() {
+        return _SUCCESS;
+    }
+    let adapter = &mut *rf.hdr.adapter;
+    if rf.hdr.attrib.encrypt != _AES_ {
+        return _SUCCESS;
+    }
+    if adapter.mlmepriv.fw_state & WIFI_STATION_STATE == 0 {
+        return _SUCCESS;
+    }
+    if rf.hdr.rx_data.is_null() {
+        return _SUCCESS;
+    }
+    let iv_off = rf.hdr.attrib.hdrlen as usize;
+    let tmp_iv = read_le64(rf.hdr.rx_data.add(iv_off));
+    let key_id = ccmph_2_keyid(tmp_iv);
+    let pkt_pn = ccmph_2_pn(tmp_iv);
+    let mut curr_pn = read_le64(adapter.securitypriv.iv_seq[key_id as usize].as_ptr());
+    curr_pn &= 0x0000ffffffffffff;
+    if !valid_pn_chk(pkt_pn, curr_pn) {
+        return _FAIL;
+    }
+    write_le64(
+        adapter.securitypriv.iv_seq[key_id as usize].as_mut_ptr(),
+        pkt_pn,
+    );
+    _SUCCESS
+}
+
+#[cfg(not(host_recv_test))]
+fn kernel_recv_bcast_pn_decache(rframe: *mut c_void) -> c_int {
+    unsafe {
+        let adapter = kernel::frame_adapter(rframe);
+        if adapter.is_null() {
+            return _SUCCESS;
+        }
+        let attrib = kernel::frame_attrib(rframe);
+        if attrib.is_null() {
+            return _SUCCESS;
+        }
+        let a = &*(attrib as *const RxPktAttribKernel);
+        if a.encrypt != AES_ENCRYPT {
+            return _SUCCESS;
+        }
+        if kernel::adapter_fw_state(adapter) & WIFI_STA_STATE as c_int == 0 {
+            return _SUCCESS;
+        }
+        let pdata = kernel::frame_rx_data(rframe);
+        if pdata.is_null() {
+            return _SUCCESS;
+        }
+        let tmp_iv = read_le64(pdata.add(a.hdrlen as usize));
+        let key_id = ccmph_2_keyid(tmp_iv);
+        let pkt_pn = ccmph_2_pn(tmp_iv);
+        let iv_seq = kernel::sec_iv_seq(adapter, key_id);
+        if iv_seq.is_null() {
+            return _SUCCESS;
+        }
+        let mut curr_pn = read_le64(iv_seq);
+        curr_pn &= 0x0000ffffffffffff;
+        if !valid_pn_chk(pkt_pn, curr_pn) {
+            return _FAIL;
+        }
+        write_le64(iv_seq, pkt_pn);
+        _SUCCESS
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn recv_bcast_pn_decache(rframe: *mut c_void) -> c_int {
+    if rframe.is_null() {
+        return _SUCCESS;
+    }
+    #[cfg(host_recv_test)]
+    {
+        unsafe { host_recv_bcast_pn_decache(rframe as *mut RecvFrame) }
+    }
+    #[cfg(not(host_recv_test))]
+    {
+        kernel_recv_bcast_pn_decache(rframe)
     }
 }

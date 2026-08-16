@@ -10,7 +10,7 @@
 #include "host_recv_types.h"
 #include "host_vector_json.h"
 
-#define MAX_VECTORS 32
+#define MAX_VECTORS 48
 #define MAX_NAME 128
 #define MAX_ETH 32
 
@@ -21,6 +21,9 @@ enum recv_fn {
 	FN_LLC_PARSE,
 	FN_WLAN_TO_ETH,
 	FN_BMC_ALLOW,
+	FN_RECV_DECACHE,
+	FN_RECV_UCAST_PN,
+	FN_RECV_BCAST_PN,
 };
 
 struct vector {
@@ -49,11 +52,27 @@ struct vector {
 	int adapter_fw_state;
 	u8 adapter_linked;
 	u8 expect_bmc;
+	int priority;
+	int qos;
+	int seq_num;
+	int frag_num;
+	u8 ra[ETH_ALEN];
+	u16 initial_seq;
+	u16 expect_seq;
+	u32 expect_dup_cnt;
+	u8 initial_iv[8];
+	u8 expect_iv[8];
+	u8 initial_iv_seq[8];
+	u8 expect_iv_seq[8];
+	u8 ccmp_iv[8];
 };
 
 int rtw_inc_and_chk_continual_no_rx_packet(struct sta_info *sta, int tid_index);
 void rtw_reset_continual_no_rx_packet(struct sta_info *sta, int tid_index);
 bool rtw_rframe_del_wfd_ie(union recv_frame *rframe, u8 ies_offset);
+sint recv_decache(union recv_frame *precv_frame);
+sint recv_ucast_pn_decache(union recv_frame *precv_frame);
+sint recv_bcast_pn_decache(union recv_frame *precv_frame);
 
 static int parse_fn(const char *obj, size_t obj_len, enum recv_fn *out)
 {
@@ -73,6 +92,12 @@ static int parse_fn(const char *obj, size_t obj_len, enum recv_fn *out)
 		*out = FN_WLAN_TO_ETH;
 	else if (!strcmp(fn, "adapter_allow_bmc_data_rx"))
 		*out = FN_BMC_ALLOW;
+	else if (!strcmp(fn, "recv_decache"))
+		*out = FN_RECV_DECACHE;
+	else if (!strcmp(fn, "recv_ucast_pn_decache"))
+		*out = FN_RECV_UCAST_PN;
+	else if (!strcmp(fn, "recv_bcast_pn_decache"))
+		*out = FN_RECV_BCAST_PN;
 	else
 		return -1;
 	return 0;
@@ -165,6 +190,130 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		host_json_parse_int_in(obj, obj_len, "expect_bmc", &expect_bmc);
 		v->expect_bmc = (u8)expect_bmc;
 	}
+	if (v->fn == FN_RECV_DECACHE || v->fn == FN_RECV_UCAST_PN ||
+	    v->fn == FN_RECV_BCAST_PN) {
+		int tmp;
+		size_t hex_len = 0;
+
+		host_json_parse_int_in(obj, obj_len, "expect_ret", &v->expect_ret);
+		host_json_parse_int_in(obj, obj_len, "priority", &v->priority);
+		host_json_parse_int_in(obj, obj_len, "qos", &tmp);
+		v->qos = (u8)tmp;
+		host_json_parse_int_in(obj, obj_len, "seq_num", &v->seq_num);
+		host_json_parse_int_in(obj, obj_len, "frag_num", &tmp);
+		v->frag_num = (u8)tmp;
+		parse_mac_field(obj, obj_len, "ra", v->ra);
+		host_json_parse_int_in(obj, obj_len, "initial_seq", &tmp);
+		v->initial_seq = (u16)tmp;
+		host_json_parse_int_in(obj, obj_len, "expect_seq", &tmp);
+		v->expect_seq = (u16)tmp;
+		host_json_parse_int_in(obj, obj_len, "expect_dup_cnt",
+				       (int *)&v->expect_dup_cnt);
+		host_json_parse_int_in(obj, obj_len, "hdrlen", &tmp);
+		v->hdrlen = (u8)tmp;
+		host_json_parse_int_in(obj, obj_len, "encrypt", &tmp);
+		v->encrypt = (u8)tmp;
+		host_json_parse_int_in(obj, obj_len, "adapter_fw_state",
+				       &v->adapter_fw_state);
+		parse_hex_field(obj, obj_len, "initial_iv", v->initial_iv,
+				sizeof(v->initial_iv), &hex_len);
+		parse_hex_field(obj, obj_len, "expect_iv", v->expect_iv,
+				sizeof(v->expect_iv), &hex_len);
+		parse_hex_field(obj, obj_len, "initial_iv_seq", v->initial_iv_seq,
+				sizeof(v->initial_iv_seq), &hex_len);
+		parse_hex_field(obj, obj_len, "expect_iv_seq", v->expect_iv_seq,
+				sizeof(v->expect_iv_seq), &hex_len);
+		parse_hex_field(obj, obj_len, "ccmp_iv", v->ccmp_iv,
+				sizeof(v->ccmp_iv), &hex_len);
+		if (v->fn == FN_RECV_DECACHE || v->fn == FN_RECV_UCAST_PN)
+			parse_hex_field(obj, obj_len, "frame", v->frame,
+					sizeof(v->frame), &v->frame_len);
+	}
+	return 0;
+}
+
+static u16 *decache_seq_slot(struct sta_info *sta, struct vector *v)
+{
+	sint tid = v->priority;
+
+	if (v->qos) {
+		if (v->ra[0] & 0x01)
+			return &sta->sta_recvpriv.bmc_tid_rxseq[tid];
+		return &sta->sta_recvpriv.rxcache.tid_rxseq[tid];
+	}
+	if (v->ra[0] & 0x01)
+		return &sta->sta_recvpriv.nonqos_bmc_rxseq;
+	return &sta->sta_recvpriv.nonqos_rxseq;
+}
+
+static int run_pn_vector(struct vector *v, sint (*fn)(union recv_frame *))
+{
+	struct sta_info sta;
+	struct _adapter adapter;
+	union recv_frame rframe;
+	u8 frame_buf[HOST_RECV_MAX_FRAME];
+	u16 *seq_slot;
+	int ret;
+
+	memset(&sta, 0, sizeof(sta));
+	memset(&adapter, 0, sizeof(adapter));
+	memset(&rframe, 0, sizeof(rframe));
+	adapter.mlmepriv.fw_state = v->adapter_fw_state;
+	sta.padapter = &adapter;
+	rframe.u.hdr.adapter = &adapter;
+	rframe.u.hdr.psta = &sta;
+	rframe.u.hdr.attrib.priority = (u8)v->priority;
+	rframe.u.hdr.attrib.qos = v->qos;
+	rframe.u.hdr.attrib.seq_num = (u16)v->seq_num;
+	rframe.u.hdr.attrib.frag_num = v->frag_num;
+	memcpy(rframe.u.hdr.attrib.ra, v->ra, ETH_ALEN);
+	rframe.u.hdr.attrib.hdrlen = v->hdrlen;
+	rframe.u.hdr.attrib.encrypt = v->encrypt;
+
+	seq_slot = decache_seq_slot(&sta, v);
+	*seq_slot = v->initial_seq;
+
+	if (v->fn == FN_RECV_UCAST_PN)
+		memcpy(sta.sta_recvpriv.rxcache.iv[v->priority], v->initial_iv, 8);
+	if (v->fn == FN_RECV_BCAST_PN)
+		memcpy(adapter.securitypriv.iv_seq[0], v->initial_iv_seq, 8);
+
+	memset(frame_buf, 0, sizeof(frame_buf));
+	if (v->frame_len)
+		memcpy(frame_buf, v->frame, v->frame_len);
+	if (v->ccmp_iv[0] || v->ccmp_iv[1] || v->fn != FN_RECV_DECACHE)
+		memcpy(frame_buf + v->hdrlen, v->ccmp_iv, 8);
+	rframe.u.hdr.rx_data = frame_buf;
+
+	ret = fn(&rframe);
+	if (ret != v->expect_ret) {
+		fprintf(stderr, "FAIL %s: expect_ret %d got %d\n", v->name,
+			v->expect_ret, ret);
+		return -1;
+	}
+	if (v->fn == FN_RECV_DECACHE && ret == _SUCCESS &&
+	    *seq_slot != v->expect_seq) {
+		fprintf(stderr, "FAIL %s: expect_seq %u got %u\n", v->name,
+			v->expect_seq, *seq_slot);
+		return -1;
+	}
+	if (v->fn == FN_RECV_DECACHE &&
+	    sta.sta_stats.duplicate_cnt != v->expect_dup_cnt) {
+		fprintf(stderr, "FAIL %s: expect_dup_cnt %u got %u\n", v->name,
+			v->expect_dup_cnt, sta.sta_stats.duplicate_cnt);
+		return -1;
+	}
+	if (v->fn == FN_RECV_UCAST_PN && ret == _SUCCESS &&
+	    memcmp(sta.sta_recvpriv.rxcache.iv[v->priority], v->expect_iv, 8)) {
+		fprintf(stderr, "FAIL %s: ucast iv mismatch\n", v->name);
+		return -1;
+	}
+	if (v->fn == FN_RECV_BCAST_PN && ret == _SUCCESS &&
+	    memcmp(adapter.securitypriv.iv_seq[0], v->expect_iv_seq, 8)) {
+		fprintf(stderr, "FAIL %s: bcast iv_seq mismatch\n", v->name);
+		return -1;
+	}
+	printf("PASS %s\n", v->name);
 	return 0;
 }
 
@@ -175,6 +324,13 @@ static int run_vector(struct vector *v)
 	u8 frame_buf[HOST_RECV_MAX_FRAME];
 	struct _adapter adapter;
 	int ret;
+
+	if (v->fn == FN_RECV_DECACHE)
+		return run_pn_vector(v, recv_decache);
+	if (v->fn == FN_RECV_UCAST_PN)
+		return run_pn_vector(v, recv_ucast_pn_decache);
+	if (v->fn == FN_RECV_BCAST_PN)
+		return run_pn_vector(v, recv_bcast_pn_decache);
 
 	if (v->fn == FN_LLC_PARSE) {
 		ret = (int)rtw_recv_llc_parse(v->msdu, (u16)v->msdu_len);

@@ -1,5 +1,5 @@
 {
-  "oracle": "core/rtw_recv_rest.c + core/rtw_recv_llc_rest.c",
+  "oracle": "core/rtw_recv_rest.c + core/rtw_recv_llc_rest.c + core/rtw_recv_pn_rest.c",
   "vectors": [
     {
       "name": "inc_first_below_threshold",
@@ -173,6 +173,157 @@
       "expect_ret": -1,
       "expect_len": 0,
       "expect_eth": ""
+    },
+    {
+      "name": "decache_tid_oob",
+      "fn": "recv_decache",
+      "priority": 16,
+      "qos": 1,
+      "seq_num": 0,
+      "frag_num": 0,
+      "ra": "020000000000",
+      "initial_seq": 0,
+      "expect_ret": -1
+    },
+    {
+      "name": "decache_qos_ucast_new",
+      "fn": "recv_decache",
+      "priority": 2,
+      "qos": 1,
+      "seq_num": 1,
+      "frag_num": 0,
+      "ra": "020000000000",
+      "initial_seq": 65535,
+      "expect_seq": 16,
+      "expect_ret": 0
+    },
+    {
+      "name": "decache_qos_ucast_dup",
+      "fn": "recv_decache",
+      "priority": 2,
+      "qos": 1,
+      "seq_num": 1,
+      "frag_num": 0,
+      "ra": "020000000000",
+      "initial_seq": 16,
+      "expect_ret": -1,
+      "expect_dup_cnt": 1
+    },
+    {
+      "name": "decache_qos_mcast_new",
+      "fn": "recv_decache",
+      "priority": 4,
+      "qos": 1,
+      "seq_num": 3,
+      "frag_num": 1,
+      "ra": "010000000000",
+      "initial_seq": 65535,
+      "expect_seq": 49,
+      "expect_ret": 0
+    },
+    {
+      "name": "decache_nonqos_ucast",
+      "fn": "recv_decache",
+      "priority": 0,
+      "qos": 0,
+      "seq_num": 7,
+      "frag_num": 0,
+      "ra": "020000000000",
+      "initial_seq": 65535,
+      "expect_seq": 112,
+      "expect_ret": 0
+    },
+    {
+      "name": "decache_nonqos_mcast_dup",
+      "fn": "recv_decache",
+      "priority": 0,
+      "qos": 0,
+      "seq_num": 2,
+      "frag_num": 0,
+      "ra": "010000000000",
+      "initial_seq": 32,
+      "expect_ret": -1,
+      "expect_dup_cnt": 1
+    },
+    {
+      "name": "ucast_pn_tid_oob",
+      "fn": "recv_ucast_pn_decache",
+      "priority": 16,
+      "hdrlen": 24,
+      "encrypt": 4,
+      "expect_ret": -1
+    },
+    {
+      "name": "ucast_pn_non_aes",
+      "fn": "recv_ucast_pn_decache",
+      "priority": 0,
+      "hdrlen": 24,
+      "encrypt": 0,
+      "expect_ret": 0
+    },
+    {
+      "name": "ucast_pn_valid",
+      "fn": "recv_ucast_pn_decache",
+      "priority": 3,
+      "hdrlen": 24,
+      "encrypt": 4,
+      "ccmp_iv": "0500000000000000",
+      "initial_iv": "0000000000000000",
+      "expect_iv": "0500000000000000",
+      "expect_ret": 0
+    },
+    {
+      "name": "ucast_pn_replay_still_ok",
+      "fn": "recv_ucast_pn_decache",
+      "priority": 3,
+      "hdrlen": 24,
+      "encrypt": 4,
+      "ccmp_iv": "0500000000000000",
+      "initial_iv": "0a00000000000000",
+      "expect_iv": "0a00000000000000",
+      "expect_ret": 0
+    },
+    {
+      "name": "bcast_pn_non_aes",
+      "fn": "recv_bcast_pn_decache",
+      "priority": 0,
+      "hdrlen": 24,
+      "encrypt": 0,
+      "adapter_fw_state": 8,
+      "expect_ret": 0
+    },
+    {
+      "name": "bcast_pn_ap_mode",
+      "fn": "recv_bcast_pn_decache",
+      "priority": 0,
+      "hdrlen": 24,
+      "encrypt": 4,
+      "adapter_fw_state": 16,
+      "ccmp_iv": "0500000000000000",
+      "expect_ret": 0
+    },
+    {
+      "name": "bcast_pn_sta_valid",
+      "fn": "recv_bcast_pn_decache",
+      "priority": 0,
+      "hdrlen": 24,
+      "encrypt": 4,
+      "adapter_fw_state": 8,
+      "ccmp_iv": "0a00000000000000",
+      "initial_iv_seq": "0000000000000000",
+      "expect_iv_seq": "0a00000000000000",
+      "expect_ret": 0
+    },
+    {
+      "name": "bcast_pn_sta_replay",
+      "fn": "recv_bcast_pn_decache",
+      "priority": 0,
+      "hdrlen": 24,
+      "encrypt": 4,
+      "adapter_fw_state": 8,
+      "ccmp_iv": "0500000000000000",
+      "initial_iv_seq": "0a00000000000000",
+      "expect_ret": -1
     }
   ]
 }

@@ -1,0 +1,11 @@
+# L1 allowlist for W3-47: Rust owns PN replay decache; frame/sta/sec accessors stay in C.
+drop rtw_rust_recv_frame_psta
+drop rtw_rust_recv_frame_adapter
+drop rtw_rust_recv_tid_rxseq
+drop rtw_rust_recv_bmc_tid_rxseq
+drop rtw_rust_recv_nonqos_rxseq
+drop rtw_rust_recv_nonqos_bmc_rxseq
+drop rtw_rust_recv_sta_iv
+drop rtw_rust_recv_sta_last_tid
+drop rtw_rust_recv_sta_duplicate_cnt
+drop rtw_rust_recv_sec_iv_seq
