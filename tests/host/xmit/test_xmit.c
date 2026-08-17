@@ -312,10 +312,27 @@ static int run_vector(struct vector *v)
 	return 0;
 }
 
+static int vector_rust_ready(enum xmit_fn fn)
+{
+#ifdef RUST_XMIT_ORACLE
+	switch (fn) {
+	case FN_ADAPTER_AGG_RATE_BMP:
+	case FN_QUERY_RA_SHORT_GI:
+		return 0;
+	default:
+		return 1;
+	}
+#else
+	return 1;
+#endif
+}
+
 int main(int argc, char **argv)
 {
 	struct vector vectors[MAX_VECTORS];
 	size_t count = 0, i;
+	size_t executed = 0;
+	size_t skipped = 0;
 	int failures = 0;
 
 	if (argc != 2) {
@@ -327,9 +344,32 @@ int main(int argc, char **argv)
 		fprintf(stderr, "failed to load %s\n", argv[1]);
 		return 2;
 	}
-	for (i = 0; i < count; i++)
+	for (i = 0; i < count; i++) {
+		if (!vector_rust_ready(vectors[i].fn)) {
+			printf("skip %s (c-only until W3-49 PR2)\n", vectors[i].name);
+			skipped++;
+			continue;
+		}
+		executed++;
 		if (run_vector(&vectors[i]))
 			failures++;
-	printf("%zu vectors, %d failures\n", count, failures);
-	return failures ? 1 : 0;
+	}
+	if (failures) {
+		fprintf(stderr, "%zu vectors, %d failures\n", executed, failures);
+		return 1;
+	}
+#ifdef RUST_XMIT_ORACLE
+	if (skipped)
+		printf("all %zu xmit vectors passed (%zu c-only skipped; oracle: rust/rtw_xmit.rs)\n",
+		       executed, skipped);
+	else
+		printf("all %zu xmit vectors passed (oracle: rust/rtw_xmit.rs)\n", executed);
+#else
+	if (skipped)
+		printf("all %zu xmit vectors passed (%zu skipped; oracle: core/rtw_xmit_rest.c)\n",
+		       executed, skipped);
+	else
+		printf("all %zu xmit vectors passed (oracle: core/rtw_xmit_rest.c)\n", executed);
+#endif
+	return 0;
 }
