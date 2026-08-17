@@ -1,0 +1,11 @@
+# L1 allowlist for W3-48 PR4: Rust owns submit_ctx helpers; completion shims stay in C.
+drop rtw_rust_sctx_get_current_time
+drop rtw_rust_sctx_field_init
+drop rtw_rust_sctx_field_set_status
+drop rtw_rust_sctx_field_get_status
+drop rtw_rust_sctx_field_get_timeout_ms
+drop rtw_rust_sctx_msecs_to_jiffies
+drop rtw_rust_sctx_wait_done
+drop rtw_rust_sctx_complete_done
+drop rtw_rust_sctx_log_timeout
+drop rtw_rust_sctx_log_warning_status
