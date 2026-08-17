@@ -140,6 +140,18 @@ mod host {
     }
 
     #[repr(C)]
+    struct HtPriv {
+        pub(super) sgi_20m: U8,
+        pub(super) sgi_40m: U8,
+    }
+
+    #[repr(C)]
+    struct VhtPriv {
+        pub(super) vht_option: U8,
+        pub(super) sgi_80m: U8,
+    }
+
+    #[repr(C)]
     struct StaCmn {
         bw_mode: U8,
     }
@@ -147,6 +159,8 @@ mod host {
     #[repr(C)]
     pub struct StaInfo {
         pub cmn: StaCmn,
+        pub htpriv: HtPriv,
+        pub vhtpriv: VhtPriv,
     }
 
     #[repr(C)]
@@ -158,6 +172,7 @@ mod host {
         pub fix_rate: U8,
         pub fix_bw: U8,
         pub iface_id: U8,
+        pub hal_bw_cap: U8,
     }
 
     fn macid_is_set(map: &MacidBmp, id: U8) -> bool {
@@ -229,6 +244,19 @@ mod host {
     pub(super) fn rfctl(dvobj: &DvobjPriv) -> &RfCtl {
         &dvobj.rf_ctl
     }
+
+    pub(super) fn hal_is_bw_support(adapter: &Adapter, bw: U8) -> bool {
+        adapter.hal_bw_cap & ch_width_to_bw_cap(bw) != 0
+    }
+
+    pub(super) fn sta_ra_sgi(sta: &StaInfo) -> (U8, U8, U8) {
+        let sgi_80m = if sta.vhtpriv.vht_option != 0 {
+            sta.vhtpriv.sgi_80m
+        } else {
+            0
+        };
+        (sta.htpriv.sgi_20m, sta.htpriv.sgi_40m, sgi_80m)
+    }
 }
 
 #[cfg(not(host_xmit_test))]
@@ -266,6 +294,11 @@ mod kernel {
         fn rtw_rust_xmit_attrib_bswenc(pattrib: *mut c_void) -> U8;
         fn rtw_rust_xmit_attrib_icv_len(pattrib: *mut c_void) -> U8;
         fn rtw_rust_xmit_attrib_meshctrl_len(pattrib: *mut c_void) -> U8;
+        fn rtw_rust_xmit_hal_is_bw_support(adapter: *mut c_void, bw: U8) -> bool;
+        fn rtw_rust_xmit_sta_ht_sgi_20m(sta: *mut c_void) -> U8;
+        fn rtw_rust_xmit_sta_ht_sgi_40m(sta: *mut c_void) -> U8;
+        fn rtw_rust_xmit_sta_vht_option(sta: *mut c_void) -> U8;
+        fn rtw_rust_xmit_sta_vht_sgi_80m(sta: *mut c_void) -> U8;
     }
 
     pub(super) unsafe fn adapter_dvobj(adapter: *mut c_void) -> *mut c_void {
@@ -349,6 +382,21 @@ mod kernel {
     }
     pub(super) unsafe fn attrib_meshctrl_len(pattrib: *mut c_void) -> U8 {
         unsafe { rtw_rust_xmit_attrib_meshctrl_len(pattrib) }
+    }
+    pub(super) unsafe fn hal_is_bw_support(adapter: *mut c_void, bw: U8) -> bool {
+        unsafe { rtw_rust_xmit_hal_is_bw_support(adapter, bw) }
+    }
+    pub(super) unsafe fn sta_ht_sgi_20m(sta: *mut c_void) -> U8 {
+        unsafe { rtw_rust_xmit_sta_ht_sgi_20m(sta) }
+    }
+    pub(super) unsafe fn sta_ht_sgi_40m(sta: *mut c_void) -> U8 {
+        unsafe { rtw_rust_xmit_sta_ht_sgi_40m(sta) }
+    }
+    pub(super) unsafe fn sta_vht_option(sta: *mut c_void) -> U8 {
+        unsafe { rtw_rust_xmit_sta_vht_option(sta) }
+    }
+    pub(super) unsafe fn sta_vht_sgi_80m(sta: *mut c_void) -> U8 {
+        unsafe { rtw_rust_xmit_sta_vht_sgi_80m(sta) }
     }
 }
 
@@ -654,6 +702,139 @@ pub extern "C" fn rtw_get_tx_bw_bmp_of_vht_rate(dvobj: *mut c_void, rate: U8, ma
         }
     }
     bw_bmp
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_get_adapter_tx_rate_bmp(
+    adapter: *mut c_void,
+    r_bmp_cck_ofdm: *mut U16,
+    r_bmp_ht: *mut U32,
+    r_bmp_vht: *mut U64,
+) {
+    if adapter.is_null() {
+        return;
+    }
+    #[cfg(host_xmit_test)]
+    {
+        let adapter_ref = unsafe { &*(adapter as *const host::Adapter) };
+        for bw in CHANNEL_WIDTH_20..=CHANNEL_WIDTH_160 {
+            let mut bmp_cck_ofdm = 0u16;
+            let mut bmp_ht = 0u32;
+            let mut bmp_vht = 0u64;
+            if host::hal_is_bw_support(adapter_ref, bw) {
+                let mut tmp_cck = 0u16;
+                let mut tmp_ht = 0u32;
+                let mut tmp_vht = 0u64;
+                rtw_get_adapter_tx_rate_bmp_by_bw(
+                    adapter,
+                    bw,
+                    &mut tmp_cck,
+                    &mut tmp_ht,
+                    &mut tmp_vht,
+                );
+                bmp_cck_ofdm |= tmp_cck;
+                bmp_ht |= tmp_ht;
+                bmp_vht |= tmp_vht;
+                rtw_get_shared_macid_tx_rate_bmp_by_bw(
+                    adapter_ref.dvobj as *mut c_void,
+                    bw,
+                    &mut tmp_cck,
+                    &mut tmp_ht,
+                    &mut tmp_vht,
+                );
+                bmp_cck_ofdm |= tmp_cck;
+                bmp_ht |= tmp_ht;
+                bmp_vht |= tmp_vht;
+            }
+            if bw == CHANNEL_WIDTH_20 && !r_bmp_cck_ofdm.is_null() {
+                unsafe { *r_bmp_cck_ofdm.add(bw as usize) = bmp_cck_ofdm };
+            }
+            if bw <= CHANNEL_WIDTH_40 && !r_bmp_ht.is_null() {
+                unsafe { *r_bmp_ht.add(bw as usize) = bmp_ht };
+            }
+            if bw <= CHANNEL_WIDTH_160 && !r_bmp_vht.is_null() {
+                unsafe { *r_bmp_vht.add(bw as usize) = bmp_vht };
+            }
+        }
+    }
+    #[cfg(not(host_xmit_test))]
+    {
+        let dvobj = unsafe { kernel::adapter_dvobj(adapter) };
+        if dvobj.is_null() {
+            return;
+        }
+        for bw in CHANNEL_WIDTH_20..=CHANNEL_WIDTH_160 {
+            let mut bmp_cck_ofdm = 0u16;
+            let mut bmp_ht = 0u32;
+            let mut bmp_vht = 0u64;
+            if unsafe { kernel::hal_is_bw_support(adapter, bw) } {
+                let mut tmp_cck = 0u16;
+                let mut tmp_ht = 0u32;
+                let mut tmp_vht = 0u64;
+                rtw_get_adapter_tx_rate_bmp_by_bw(
+                    adapter,
+                    bw,
+                    &mut tmp_cck,
+                    &mut tmp_ht,
+                    &mut tmp_vht,
+                );
+                bmp_cck_ofdm |= tmp_cck;
+                bmp_ht |= tmp_ht;
+                bmp_vht |= tmp_vht;
+                rtw_get_shared_macid_tx_rate_bmp_by_bw(
+                    dvobj,
+                    bw,
+                    &mut tmp_cck,
+                    &mut tmp_ht,
+                    &mut tmp_vht,
+                );
+                bmp_cck_ofdm |= tmp_cck;
+                bmp_ht |= tmp_ht;
+                bmp_vht |= tmp_vht;
+            }
+            if bw == CHANNEL_WIDTH_20 && !r_bmp_cck_ofdm.is_null() {
+                unsafe { *r_bmp_cck_ofdm.add(bw as usize) = bmp_cck_ofdm };
+            }
+            if bw <= CHANNEL_WIDTH_40 && !r_bmp_ht.is_null() {
+                unsafe { *r_bmp_ht.add(bw as usize) = bmp_ht };
+            }
+            if bw <= CHANNEL_WIDTH_160 && !r_bmp_vht.is_null() {
+                unsafe { *r_bmp_vht.add(bw as usize) = bmp_vht };
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn query_ra_short_GI(psta: *mut c_void, bw: U8) -> U8 {
+    if psta.is_null() {
+        return 0;
+    }
+    let (sgi_20m, sgi_40m, sgi_80m) = {
+        #[cfg(host_xmit_test)]
+        {
+            let sta = unsafe { &*(psta as *const host::StaInfo) };
+            host::sta_ra_sgi(sta)
+        }
+        #[cfg(not(host_xmit_test))]
+        {
+            let sgi_80m = if unsafe { kernel::sta_vht_option(psta) } != 0 {
+                unsafe { kernel::sta_vht_sgi_80m(psta) }
+            } else {
+                0
+            };
+            (
+                unsafe { kernel::sta_ht_sgi_20m(psta) },
+                unsafe { kernel::sta_ht_sgi_40m(psta) },
+                sgi_80m,
+            )
+        }
+    };
+    match bw {
+        CHANNEL_WIDTH_80 => sgi_80m,
+        CHANNEL_WIDTH_40 => sgi_40m,
+        _ => sgi_20m,
+    }
 }
 
 #[no_mangle]

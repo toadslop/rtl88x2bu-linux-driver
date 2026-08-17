@@ -15,3 +15,8 @@ drop rtw_rust_xmit_macid_rate_bmp0
 drop rtw_rust_xmit_macid_rate_bmp1
 drop rtw_rust_xmit_rf_ht_bmp
 drop rtw_rust_xmit_rf_vht_bmp
+drop rtw_rust_xmit_hal_is_bw_support
+drop rtw_rust_xmit_sta_ht_sgi_20m
+drop rtw_rust_xmit_sta_ht_sgi_40m
+drop rtw_rust_xmit_sta_vht_option
+drop rtw_rust_xmit_sta_vht_sgi_80m
