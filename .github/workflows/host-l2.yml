@@ -34,6 +34,7 @@ on:
       - 'core/rtw_recv_pn_rest.c'
       - 'core/rtw_xmit.c'
       - 'core/rtw_xmit_rest.c'
+      - 'core/rtw_xmit_qos_rest.c'
       - 'core/rtw_sta_mgt.c'
       - 'core/rtw_sta_mgt_rest.c'
       - 'core/rtw_security.c'
@@ -80,6 +81,7 @@ jobs:
               - 'core/rtw_recv_pn_rest.c'
               - 'core/rtw_xmit.c'
               - 'core/rtw_xmit_rest.c'
+              - 'core/rtw_xmit_qos_rest.c'
               - 'core/rtw_sta_mgt.c'
               - 'core/rtw_sta_mgt_rest.c'
               - 'core/rtw_security.c'
@@ -155,4 +157,5 @@ jobs:
 
       - name: Host xmit_rest parity (L2)
         if: steps.filter.outputs.l2 == 'true'
-        run: make -C tests/host/xmit test
+        run: make -C tests/host/xmit all
+

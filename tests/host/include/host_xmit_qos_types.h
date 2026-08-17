@@ -44,4 +44,9 @@ static inline u16 host_htons(u16 v)
 
 #define htons host_htons
 
+u8 qos_acm(u8 acm_mask, u8 priority);
+u8 tos_to_up(u8 tos);
+u32 rtw_calculate_wlan_pkt_size_by_attribue(struct pkt_attrib *pattrib);
+s32 rtw_put_snap(u8 *data, u16 h_proto);
+
 #endif /* HOST_XMIT_QOS_TYPES_H */
