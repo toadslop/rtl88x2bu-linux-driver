@@ -98,10 +98,10 @@ void rtw_rust_sctx_field_init(struct submit_ctx *sctx, int timeout_ms, systime s
 {
 	sctx->timeout_ms = timeout_ms;
 	sctx->submit_time = submit_time;
-	sctx->status = RTW_SCTX_SUBMITTED;
 #ifdef PLATFORM_LINUX
 	init_completion(&sctx->done);
 #endif
+	sctx->status = RTW_SCTX_SUBMITTED;
 }
 
 void rtw_rust_sctx_field_set_status(struct submit_ctx *sctx, int status)
