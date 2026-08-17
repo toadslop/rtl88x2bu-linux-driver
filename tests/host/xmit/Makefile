@@ -34,7 +34,8 @@ test_xmit: test_xmit.c $(XMIT_REST_SRC) $(SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_xmit.c $(XMIT_REST_SRC) $(SHIM) $(HOST_JSON)
 
 librust_xmit.a: $(RUST_XMIT)
-	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_xmit_test \
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on \
+		--cfg host_xmit_test --cfg host_xmit_qos_test \
 		--crate-type staticlib $(RUST_XMIT) -o $@
 
 librust_xmit_qos.a: $(RUST_XMIT)
@@ -46,7 +47,7 @@ test-rust: test_xmit_rust
 	./test_xmit_rust xmit_vectors.json
 
 test_xmit_rust: test_xmit.c librust_xmit.a $(SHIM) $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ test_xmit.c $(SHIM) $(HOST_JSON) librust_xmit.a
+	$(CC) $(CFLAGS) -DRUST_XMIT_ORACLE -o $@ test_xmit.c $(SHIM) $(HOST_JSON) librust_xmit.a
 
 test-qos-c: test_xmit_qos
 	./test_xmit_qos xmit_qos_vectors.json

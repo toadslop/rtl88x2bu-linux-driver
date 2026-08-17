@@ -170,6 +170,71 @@ exit:
 	return bw_bmp;
 }
 
+#ifdef HOST_XMIT_TEST
+
+void rtw_get_adapter_tx_rate_bmp(_adapter *adapter, u16 r_bmp_cck_ofdm[], u32 r_bmp_ht[],
+				 u64 r_bmp_vht[])
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	u8 bw;
+	u16 bmp_cck_ofdm, tmp_cck_ofdm;
+	u32 bmp_ht, tmp_ht;
+	u64 bmp_vht, tmp_vht;
+
+	for (bw = CHANNEL_WIDTH_20; bw <= CHANNEL_WIDTH_160; bw++) {
+		bmp_cck_ofdm = bmp_ht = bmp_vht = 0;
+		if (hal_is_bw_support(adapter, bw)) {
+			rtw_get_adapter_tx_rate_bmp_by_bw(adapter, bw, &tmp_cck_ofdm, &tmp_ht,
+							&tmp_vht);
+			bmp_cck_ofdm |= tmp_cck_ofdm;
+			bmp_ht |= tmp_ht;
+			bmp_vht |= tmp_vht;
+			rtw_get_shared_macid_tx_rate_bmp_by_bw(dvobj, bw, &tmp_cck_ofdm, &tmp_ht,
+							       &tmp_vht);
+			bmp_cck_ofdm |= tmp_cck_ofdm;
+			bmp_ht |= tmp_ht;
+			bmp_vht |= tmp_vht;
+		}
+		if (bw == CHANNEL_WIDTH_20)
+			r_bmp_cck_ofdm[bw] = bmp_cck_ofdm;
+		if (bw <= CHANNEL_WIDTH_40)
+			r_bmp_ht[bw] = bmp_ht;
+		if (bw <= CHANNEL_WIDTH_160)
+			r_bmp_vht[bw] = bmp_vht;
+	}
+}
+
+u8 query_ra_short_GI(struct sta_info *psta, u8 bw)
+{
+	u8 sgi = _FALSE, sgi_20m = _FALSE, sgi_40m = _FALSE, sgi_80m = _FALSE;
+
+#ifdef CONFIG_80211N_HT
+#ifdef CONFIG_80211AC_VHT
+	if (psta->vhtpriv.vht_option)
+		sgi_80m = psta->vhtpriv.sgi_80m;
+#endif
+	sgi_20m = psta->htpriv.sgi_20m;
+	sgi_40m = psta->htpriv.sgi_40m;
+#endif
+
+	switch (bw) {
+	case CHANNEL_WIDTH_80:
+		sgi = sgi_80m;
+		break;
+	case CHANNEL_WIDTH_40:
+		sgi = sgi_40m;
+		break;
+	case CHANNEL_WIDTH_20:
+	default:
+		sgi = sgi_20m;
+		break;
+	}
+
+	return sgi;
+}
+
+#endif /* HOST_XMIT_TEST */
+
 #endif /* !CONFIG_RUST || HOST_XMIT_TEST */
 
 #if defined(CONFIG_RUST) && !defined(HOST_XMIT_TEST)
@@ -252,6 +317,31 @@ u32 rtw_rust_xmit_rf_ht_bmp(struct rf_ctl_t *rfctl, u8 bw)
 u64 rtw_rust_xmit_rf_vht_bmp(struct rf_ctl_t *rfctl, u8 bw)
 {
 	return rfctl->rate_bmp_vht_by_bw[bw];
+}
+
+bool rtw_rust_xmit_hal_is_bw_support(_adapter *adapter, u8 bw)
+{
+	return hal_is_bw_support(adapter, bw);
+}
+
+u8 rtw_rust_xmit_sta_ht_sgi_20m(struct sta_info *sta)
+{
+	return sta->htpriv.sgi_20m;
+}
+
+u8 rtw_rust_xmit_sta_ht_sgi_40m(struct sta_info *sta)
+{
+	return sta->htpriv.sgi_40m;
+}
+
+u8 rtw_rust_xmit_sta_vht_option(struct sta_info *sta)
+{
+	return sta->vhtpriv.vht_option;
+}
+
+u8 rtw_rust_xmit_sta_vht_sgi_80m(struct sta_info *sta)
+{
+	return sta->vhtpriv.sgi_80m;
 }
 
 #endif /* CONFIG_RUST && !HOST_XMIT_TEST */
