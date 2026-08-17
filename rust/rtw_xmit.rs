@@ -963,15 +963,15 @@ const RTW_SCTX_DONE_SUCCESS: i32 = 0;
 const RTW_SCTX_DONE_UNKNOWN: i32 = 1;
 const RTW_SCTX_DONE_BUF_ALLOC: i32 = 3;
 const RTW_SCTX_DONE_BUF_FREE: i32 = 4;
-const RTW_SCTX_DONE_DRV_STOP: i32 = 8;
-const RTW_SCTX_DONE_DEV_REMOVE: i32 = 9;
+const RTW_SCTX_DONE_DRV_STOP: i32 = 9;
+const RTW_SCTX_DONE_DEV_REMOVE: i32 = 10;
 const RTW_SCTX_DONE_TIMEOUT: i32 = 2;
 
 const _SUCCESS: i32 = 1;
 const _FAIL: i32 = 0;
 const _TRUE: i32 = 1;
 
-#[cfg(not(host_xmit_test))]
+#[cfg(not(any(host_xmit_test, host_xmit_sctx_test)))]
 mod sctx_kernel {
     use super::*;
 
@@ -1045,6 +1045,7 @@ mod sctx_kernel {
     }
 }
 
+#[cfg(not(any(host_xmit_test, host_xmit_sctx_test)))]
 #[no_mangle]
 pub extern "C" fn rtw_sctx_chk_waring_status(status: i32) -> i32 {
     match status {
@@ -1057,25 +1058,25 @@ pub extern "C" fn rtw_sctx_chk_waring_status(status: i32) -> i32 {
     }
 }
 
-#[cfg(not(host_xmit_test))]
+#[cfg(not(any(host_xmit_test, host_xmit_sctx_test)))]
 #[no_mangle]
 pub extern "C" fn rtw_sctx_init(sctx: *mut c_void, timeout_ms: i32) {
     sctx_kernel::init(sctx, timeout_ms);
 }
 
-#[cfg(not(host_xmit_test))]
+#[cfg(not(any(host_xmit_test, host_xmit_sctx_test)))]
 #[no_mangle]
 pub extern "C" fn rtw_sctx_wait(sctx: *mut c_void, msg: *const u8) -> i32 {
     sctx_kernel::wait(sctx, msg)
 }
 
-#[cfg(not(host_xmit_test))]
+#[cfg(not(any(host_xmit_test, host_xmit_sctx_test)))]
 #[no_mangle]
 pub extern "C" fn rtw_sctx_done_err(sctx: *mut *mut c_void, status: i32) {
     sctx_kernel::done_err(sctx, status);
 }
 
-#[cfg(not(host_xmit_test))]
+#[cfg(not(any(host_xmit_test, host_xmit_sctx_test)))]
 #[no_mangle]
 pub extern "C" fn rtw_sctx_done(sctx: *mut *mut c_void) {
     sctx_kernel::done_err(sctx, RTW_SCTX_DONE_SUCCESS);

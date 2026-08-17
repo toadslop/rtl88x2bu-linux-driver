@@ -1,0 +1,54 @@
+{
+  "oracle": "core/rtw_xmit_sctx_rest.c",
+  "vectors": [
+    {
+      "name": "warning_unknown",
+      "fn": "rtw_sctx_chk_waring_status",
+      "status": 1,
+      "expect_u8": 1
+    },
+    {
+      "name": "warning_buf_alloc",
+      "fn": "rtw_sctx_chk_waring_status",
+      "status": 3,
+      "expect_u8": 1
+    },
+    {
+      "name": "warning_buf_free",
+      "fn": "rtw_sctx_chk_waring_status",
+      "status": 4,
+      "expect_u8": 1
+    },
+    {
+      "name": "warning_drv_stop",
+      "fn": "rtw_sctx_chk_waring_status",
+      "status": 2,
+      "expect_u8": 0
+    },
+    {
+      "name": "wait_success_precomplete",
+      "fn": "rtw_sctx_init_wait",
+      "timeout_ms": 100,
+      "pre_complete": 1,
+      "expect_ret": 1
+    },
+    {
+      "name": "wait_timeout",
+      "fn": "rtw_sctx_init_wait",
+      "timeout_ms": 10,
+      "pre_complete": 0,
+      "expect_ret": 0
+    },
+    {
+      "name": "done_err_nulls_ptr",
+      "fn": "rtw_sctx_done_err",
+      "status": 3,
+      "expect_u8": 0
+    },
+    {
+      "name": "done_success_nulls_ptr",
+      "fn": "rtw_sctx_done",
+      "expect_u8": 0
+    }
+  ]
+}

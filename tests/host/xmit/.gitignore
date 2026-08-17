@@ -1,4 +1,12 @@
 test_xmit
 test_xmit_rust
+test_xmit_qos
+test_xmit_qos_rust
+test_xmit_sctx
+test_xmit_sctx_rust
 librust_xmit.a
+librust_xmit_qos.a
+librust_xmit_sctx.a
 xmit_rest_c_ref.o
+xmit_qos_c_ref.o
+xmit_sctx_c_ref.o
