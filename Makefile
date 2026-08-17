@@ -2460,6 +2460,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_xmit.o	\
 		core/rtw_xmit_rest.o \
 		core/rtw_xmit_qos_rest.o \
+		core/rtw_xmit_sctx_rest.o \
 		core/rtw_p2p.o \
 		core/rtw_rson.o \
 		core/rtw_tdls.o \
