@@ -116,8 +116,10 @@ for path in "${changed[@]}"; do
 		;;
 	rust/rtw_xmit.rs \
 	| core/rtw_xmit_rest.c \
+	| core/rtw_xmit_qos_rest.c \
 	| tests/host/xmit/*)
 		add_target rust-check-symbols-rtw-xmit
+		add_target rust-check-symbols-rtw-xmit-qos
 		;;
 	rust/aes_*.rs \
 	| rust/sha256*.rs \
@@ -191,6 +193,8 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-sta-mgt-aid
 	rust-check-symbols-rtw-recv
 	rust-check-symbols-rtw-recv-pn
+	rust-check-symbols-rtw-xmit
+	rust-check-symbols-rtw-xmit-qos
 )
 
 emit() {

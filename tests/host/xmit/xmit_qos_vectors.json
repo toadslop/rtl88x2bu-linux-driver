@@ -1,0 +1,98 @@
+{
+  "oracle": "core/rtw_xmit_qos_rest.c",
+  "vectors": [
+    {
+      "name": "qos_acm_vo_no_acm",
+      "fn": "qos_acm",
+      "acm_mask": 0,
+      "priority": 6,
+      "expect_u8": 6
+    },
+    {
+      "name": "qos_acm_vo_downgrade",
+      "fn": "qos_acm",
+      "acm_mask": 8,
+      "priority": 6,
+      "expect_u8": 5
+    },
+    {
+      "name": "qos_acm_vi_downgrade",
+      "fn": "qos_acm",
+      "acm_mask": 4,
+      "priority": 5,
+      "expect_u8": 0
+    },
+    {
+      "name": "qos_acm_be_downgrade",
+      "fn": "qos_acm",
+      "acm_mask": 2,
+      "priority": 0,
+      "expect_u8": 1
+    },
+    {
+      "name": "tos_to_up_zero",
+      "fn": "tos_to_up",
+      "tos": 0,
+      "expect_u8": 0
+    },
+    {
+      "name": "tos_to_up_precedence_3",
+      "fn": "tos_to_up",
+      "tos": 96,
+      "expect_u8": 3
+    },
+    {
+      "name": "tos_to_up_precedence_7",
+      "fn": "tos_to_up",
+      "tos": 224,
+      "expect_u8": 7
+    },
+    {
+      "name": "pkt_size_basic",
+      "fn": "rtw_calculate_wlan_pkt_size_by_attribue",
+      "hdrlen": 24,
+      "iv_len": 0,
+      "pktlen": 100,
+      "encrypt": 0,
+      "bswenc": 0,
+      "icv_len": 0,
+      "expect_u32": 132
+    },
+    {
+      "name": "pkt_size_tkip_mic",
+      "fn": "rtw_calculate_wlan_pkt_size_by_attribue",
+      "hdrlen": 26,
+      "iv_len": 8,
+      "pktlen": 512,
+      "encrypt": 2,
+      "bswenc": 0,
+      "icv_len": 0,
+      "expect_u32": 562
+    },
+    {
+      "name": "pkt_size_bswenc_icv",
+      "fn": "rtw_calculate_wlan_pkt_size_by_attribue",
+      "hdrlen": 24,
+      "iv_len": 4,
+      "pktlen": 64,
+      "encrypt": 0,
+      "bswenc": 1,
+      "icv_len": 8,
+      "expect_u32": 108
+    },
+    {
+      "name": "snap_rfc1042_ip",
+      "fn": "rtw_put_snap",
+      "h_proto": 2048,
+      "expect_snap": "aa aa 03 00 00 00 08 00",
+      "expect_snap_len": 8
+    },
+    {
+      "name": "snap_p8021h",
+      "fn": "rtw_put_snap",
+      "h_proto": 33079,
+      "expect_snap": "aa aa 03 00 00 f8 81 37",
+      "expect_snap_len": 8
+    }
+  ]
+}
