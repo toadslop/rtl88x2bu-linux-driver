@@ -157,6 +157,35 @@
       "sgi_80m": 1,
       "vht_option": 1,
       "expect_u8": 1
+    },
+    {
+      "name": "query_ra_sgi_80m_no_vht",
+      "fn": "query_ra_short_GI",
+      "bw": 2,
+      "sgi_20m": 0,
+      "sgi_40m": 0,
+      "sgi_80m": 1,
+      "vht_option": 0,
+      "expect_u8": 0
+    },
+    {
+      "name": "adapter_agg_rate_bmp_no_80_cap",
+      "fn": "rtw_get_adapter_tx_rate_bmp",
+      "hal_bw_cap": 12,
+      "iface_id": 0,
+      "macid_id": 0,
+      "macid_num": 2,
+      "macid_iface0": 0,
+      "macid_bw": 2,
+      "macid_vht_en": 1,
+      "rate_bmp0": 20480,
+      "expect_cck_ofdm_20": 0,
+      "expect_ht_20": 0,
+      "expect_ht_40": 0,
+      "expect_vht_20": 0,
+      "expect_vht_40": 0,
+      "expect_vht_80": 0,
+      "expect_vht_160": 0
     }
   ]
 }

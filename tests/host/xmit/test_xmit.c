@@ -62,6 +62,7 @@ struct vector {
 	int sgi_40m;
 	int sgi_80m;
 	int vht_option;
+	int hal_bw_cap;
 };
 
 static int parse_fn(const char *obj, size_t obj_len, enum xmit_fn *out)
@@ -192,6 +193,7 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 	host_json_parse_int_in(obj, obj_len, "sgi_40m", &v->sgi_40m);
 	host_json_parse_int_in(obj, obj_len, "sgi_80m", &v->sgi_80m);
 	host_json_parse_int_in(obj, obj_len, "vht_option", &v->vht_option);
+	host_json_parse_int_in(obj, obj_len, "hal_bw_cap", &v->hal_bw_cap);
 	return 0;
 }
 
@@ -215,7 +217,8 @@ static int run_vector(struct vector *v)
 	adapter.iface_id = (u8)v->iface_id;
 	adapter.fix_rate = 0xFF;
 	adapter.fix_bw = 0xFF;
-	adapter.hal_bw_cap = BW_CAP_20M | BW_CAP_40M | BW_CAP_80M | BW_CAP_160M;
+	adapter.hal_bw_cap = v->hal_bw_cap ? (u8)v->hal_bw_cap :
+		(BW_CAP_20M | BW_CAP_40M | BW_CAP_80M | BW_CAP_160M);
 	sta.cmn.bw_mode = (u8)v->sta_bw;
 	setup_macid(&dvobj.macid_ctl, v);
 	dvobj.rf_ctl.rate_bmp_ht_by_bw[CHANNEL_WIDTH_20] = v->ht_bmp_20;
