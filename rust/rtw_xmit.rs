@@ -957,3 +957,126 @@ pub extern "C" fn rtw_put_snap(data: *mut U8, h_proto: U16) -> i32 {
     data[SNAP_HDR_SIZE + 1] = be[1];
     (SNAP_HDR_SIZE + 2) as i32
 }
+
+const RTW_SCTX_SUBMITTED: i32 = -1;
+const RTW_SCTX_DONE_SUCCESS: i32 = 0;
+const RTW_SCTX_DONE_UNKNOWN: i32 = 1;
+const RTW_SCTX_DONE_BUF_ALLOC: i32 = 3;
+const RTW_SCTX_DONE_BUF_FREE: i32 = 4;
+const RTW_SCTX_DONE_DRV_STOP: i32 = 8;
+const RTW_SCTX_DONE_DEV_REMOVE: i32 = 9;
+const RTW_SCTX_DONE_TIMEOUT: i32 = 2;
+
+const _SUCCESS: i32 = 1;
+const _FAIL: i32 = 0;
+const _TRUE: i32 = 1;
+
+#[cfg(not(host_xmit_test))]
+mod sctx_kernel {
+    use super::*;
+
+    type Systime = U64;
+
+    extern "C" {
+        fn rtw_rust_sctx_get_current_time() -> Systime;
+        fn rtw_rust_sctx_field_init(sctx: *mut c_void, timeout_ms: i32, submit_time: Systime);
+        fn rtw_rust_sctx_field_set_status(sctx: *mut c_void, status: i32);
+        fn rtw_rust_sctx_field_get_status(sctx: *mut c_void) -> i32;
+        fn rtw_rust_sctx_field_get_timeout_ms(sctx: *mut c_void) -> U32;
+        fn rtw_rust_sctx_msecs_to_jiffies(ms: i32) -> U64;
+        fn rtw_rust_sctx_max_schedule_timeout() -> U64;
+        fn rtw_rust_sctx_wait_done(sctx: *mut c_void, expire: U64) -> U64;
+        fn rtw_rust_sctx_complete_done(sctx: *mut c_void);
+        fn rtw_rust_sctx_log_timeout(msg: *const u8);
+        fn rtw_rust_sctx_log_warning_status(status: i32);
+    }
+
+    pub(super) fn init(sctx: *mut c_void, timeout_ms: i32) {
+        if sctx.is_null() {
+            return;
+        }
+        unsafe {
+            rtw_rust_sctx_field_init(sctx, timeout_ms, rtw_rust_sctx_get_current_time());
+        }
+    }
+
+    pub(super) fn wait(sctx: *mut c_void, msg: *const u8) -> i32 {
+        if sctx.is_null() {
+            return _FAIL;
+        }
+        let status = unsafe {
+            let timeout_ms = rtw_rust_sctx_field_get_timeout_ms(sctx) as i32;
+            let expire = if timeout_ms != 0 {
+                rtw_rust_sctx_msecs_to_jiffies(timeout_ms)
+            } else {
+                rtw_rust_sctx_max_schedule_timeout()
+            };
+            if rtw_rust_sctx_wait_done(sctx, expire) == 0 {
+                if !msg.is_null() {
+                    rtw_rust_sctx_log_timeout(msg);
+                }
+                RTW_SCTX_DONE_TIMEOUT
+            } else {
+                rtw_rust_sctx_field_get_status(sctx)
+            }
+        };
+        if status == RTW_SCTX_DONE_SUCCESS {
+            _SUCCESS
+        } else {
+            _FAIL
+        }
+    }
+
+    pub(super) fn done_err(sctx: *mut *mut c_void, status: i32) {
+        if sctx.is_null() {
+            return;
+        }
+        unsafe {
+            if (*sctx).is_null() {
+                return;
+            }
+            if rtw_sctx_chk_waring_status(status) != 0 {
+                rtw_rust_sctx_log_warning_status(status);
+            }
+            rtw_rust_sctx_field_set_status(*sctx, status);
+            rtw_rust_sctx_complete_done(*sctx);
+            *sctx = core::ptr::null_mut();
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_sctx_chk_waring_status(status: i32) -> i32 {
+    match status {
+        RTW_SCTX_DONE_UNKNOWN
+        | RTW_SCTX_DONE_BUF_ALLOC
+        | RTW_SCTX_DONE_BUF_FREE
+        | RTW_SCTX_DONE_DRV_STOP
+        | RTW_SCTX_DONE_DEV_REMOVE => _TRUE,
+        _ => 0,
+    }
+}
+
+#[cfg(not(host_xmit_test))]
+#[no_mangle]
+pub extern "C" fn rtw_sctx_init(sctx: *mut c_void, timeout_ms: i32) {
+    sctx_kernel::init(sctx, timeout_ms);
+}
+
+#[cfg(not(host_xmit_test))]
+#[no_mangle]
+pub extern "C" fn rtw_sctx_wait(sctx: *mut c_void, msg: *const u8) -> i32 {
+    sctx_kernel::wait(sctx, msg)
+}
+
+#[cfg(not(host_xmit_test))]
+#[no_mangle]
+pub extern "C" fn rtw_sctx_done_err(sctx: *mut *mut c_void, status: i32) {
+    sctx_kernel::done_err(sctx, status);
+}
+
+#[cfg(not(host_xmit_test))]
+#[no_mangle]
+pub extern "C" fn rtw_sctx_done(sctx: *mut *mut c_void) {
+    sctx_kernel::done_err(sctx, RTW_SCTX_DONE_SUCCESS);
+}
