@@ -318,7 +318,7 @@ static int vector_rust_ready(enum xmit_fn fn)
 	switch (fn) {
 	case FN_ADAPTER_AGG_RATE_BMP:
 	case FN_QUERY_RA_SHORT_GI:
-		return 0;
+		return 1;
 	default:
 		return 1;
 	}
