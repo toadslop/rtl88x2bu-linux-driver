@@ -15,6 +15,7 @@ What exists instead (not a drop-in CI suite):
 So the L0–L2 harness in this document is **new infrastructure**, not a port of an existing suite. The closest “reuse” is treating current **C crypto `.c` files as oracles** in host differential tests until each file is fully swapped to Rust.
 
 Architecture (domain types, unsafe edges): [`architecture.md`](architecture.md).
+Ecosystem reuse (Phase 2+ crate adoption / extraction): [`ecosystem.md`](ecosystem.md).
 
 ## Principles
 

@@ -13,6 +13,7 @@ Port the out-of-tree `88x2bu` driver from C to Rust with **observable behavior p
 
 - Intentional behavior changes (those are later, with test updates)
 - Full Phase 2 cleanup (RfL-heavy, delete ABI layer)
+- Phase 3 ecosystem work (crates.io adoption, publishing extract crates) — see [`ecosystem.md`](../ecosystem.md)
 - Rewriting onto mac80211 / in-tree rtw88 architecture
 - PCI/SDIO HCI product configurations (USB 8822B only for exit criteria)
 

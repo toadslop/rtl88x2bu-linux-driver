@@ -6,6 +6,7 @@ Normative companions:
 
 - [`rust-migration/architecture.md`](rust-migration/architecture.md) — layers, domain types, unsafe at edges
 - [`rust-migration/test-plan.md`](rust-migration/test-plan.md) — L0–L4 gates (offline-first)
+- [`rust-migration/ecosystem.md`](rust-migration/ecosystem.md) — adopt external crates, extract standalone libraries (Phase 2+)
 - [`rust-migration/dev-environment.md`](rust-migration/dev-environment.md) — toolchain, pinned kernel, L0/L3 gotchas (Wave 0 lessons)
 - [`smoke-test.md`](smoke-test.md) — L4 hardware STA checklist only
 
@@ -20,6 +21,12 @@ Exit (USB 8822B default config): no remaining `.c` objects in the module link; S
 ### Phase 2 — Idiomatic Rust
 
 After Phase 1 is green on hardware: RfL safe abstractions, tighter ownership, shrink `unsafe` / `extern "C"` between Rust-only units. Behavior changes only with deliberate test updates.
+
+Per-module **crate adoption** (e.g. `aes`, `sha2` instead of hand-rolled primitives) may start in late Phase 2 once L2 parity tests lock that module — see [`ecosystem.md`](rust-migration/ecosystem.md).
+
+### Phase 3 — Ecosystem contribution
+
+Reuse and publish: adopt mature crates.io dependencies where L2 parity holds, and extract standalone crates (`wlan-types`, IE helpers, 802.11 crypto) for the wider Rust community. USB/HAL/`cfg80211` integration stays in the driver. Full criteria and process: [`ecosystem.md`](rust-migration/ecosystem.md).
 
 ## Working rules
 

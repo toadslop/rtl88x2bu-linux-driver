@@ -10,6 +10,10 @@ blocked_by: [E01]
 
 After Phase 1 is green on hardware: adopt RfL safe abstractions (`kernel::usb`, sync types, eventual netdev/cfg80211 helpers), tighten ownership around `dvobj` / `_adapter`, and shrink `unsafe` / `extern "C"` between Rust-only units.
 
+Late Phase 2 may also start **ecosystem crate adoption** (replace hand-rolled crypto with
+`aes`/`sha2`/etc.) per module once L2 parity is locked — see
+[`ecosystem.md`](../ecosystem.md) and epic **E13**.
+
 ## Children
 
 **Not filed yet.** Slice into ~200 LOC issues only after Phase 1 exit criteria are met.
