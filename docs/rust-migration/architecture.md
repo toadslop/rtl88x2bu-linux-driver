@@ -53,6 +53,8 @@ During the mixed C/Rust era, **abi/ffi** exists so remaining C can call Rust (an
 | C ABI / remaining C | Raw `extern "C"` wrappers OK | Delete as C goes away |
 | `unsafe` | Allowed in abi/os shims | Minimize; RfL abstractions |
 | Control flow | Prefer faithful port inside services | Refactor once tests hold |
+| External crates | Hand-rolled ports matching C oracle | Adopt `aes`/`sha2`/… when L2 parity holds; see [`ecosystem.md`](ecosystem.md) |
+| Shared libraries | `#[path]` duplication across Kbuild units | Workspace crates; publish 802.11 helpers — [`ecosystem.md`](ecosystem.md) |
 
 **Important:** “Exact translation” means **same behavior**, not “same untyped shape forever.” A ported function may accept `KeyMaterial` instead of `*const u8` + `len` **if** tests prove identical outputs for all characterized inputs, and an `extern "C"` shim preserves the old symbol for C callers.
 
@@ -126,3 +128,5 @@ Do not describe this as “mixed ownership of one `.c` file” without the extra
 - “We’ll add types later” for ported modules (types land with the port, even if small)
 - Wide `unsafe` blocks around entire files “for convenience”
 - Partial ports that leave duplicate `extern "C"` symbols in C and Rust
+- Swapping in crates.io dependencies or publishing extract crates **before** L2 parity exists for that module ([`ecosystem.md`](ecosystem.md))
+- Building a generic WiFi driver toolkit — extraction targets wire-format and crypto helpers only
