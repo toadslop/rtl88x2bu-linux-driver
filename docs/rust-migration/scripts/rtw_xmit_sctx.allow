@@ -5,6 +5,7 @@ drop rtw_rust_sctx_field_set_status
 drop rtw_rust_sctx_field_get_status
 drop rtw_rust_sctx_field_get_timeout_ms
 drop rtw_rust_sctx_msecs_to_jiffies
+drop rtw_rust_sctx_max_schedule_timeout
 drop rtw_rust_sctx_wait_done
 drop rtw_rust_sctx_complete_done
 drop rtw_rust_sctx_log_timeout

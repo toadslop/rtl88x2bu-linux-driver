@@ -124,6 +124,11 @@ unsigned long rtw_rust_sctx_msecs_to_jiffies(int ms)
 	return msecs_to_jiffies(ms);
 }
 
+unsigned long rtw_rust_sctx_max_schedule_timeout(void)
+{
+	return MAX_SCHEDULE_TIMEOUT;
+}
+
 unsigned long rtw_rust_sctx_wait_done(struct submit_ctx *sctx, unsigned long expire)
 {
 #ifdef PLATFORM_LINUX

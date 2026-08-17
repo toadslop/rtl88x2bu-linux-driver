@@ -984,6 +984,7 @@ mod sctx_kernel {
         fn rtw_rust_sctx_field_get_status(sctx: *mut c_void) -> i32;
         fn rtw_rust_sctx_field_get_timeout_ms(sctx: *mut c_void) -> U32;
         fn rtw_rust_sctx_msecs_to_jiffies(ms: i32) -> U64;
+        fn rtw_rust_sctx_max_schedule_timeout() -> U64;
         fn rtw_rust_sctx_wait_done(sctx: *mut c_void, expire: U64) -> U64;
         fn rtw_rust_sctx_complete_done(sctx: *mut c_void);
         fn rtw_rust_sctx_log_timeout(msg: *const u8);
@@ -1008,7 +1009,7 @@ mod sctx_kernel {
             let expire = if timeout_ms != 0 {
                 rtw_rust_sctx_msecs_to_jiffies(timeout_ms)
             } else {
-                !0u64
+                rtw_rust_sctx_max_schedule_timeout()
             };
             if rtw_rust_sctx_wait_done(sctx, expire) == 0 {
                 if !msg.is_null() {
