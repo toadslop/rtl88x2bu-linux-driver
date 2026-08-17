@@ -83,7 +83,7 @@ jobs:
               - 'core/rtw_xmit.c'
               - 'core/rtw_xmit_rest.c'
               - 'core/rtw_xmit_qos_rest.c'
-      - 'core/rtw_xmit_sctx_rest.c'
+              - 'core/rtw_xmit_sctx_rest.c'
               - 'core/rtw_sta_mgt.c'
               - 'core/rtw_sta_mgt_rest.c'
               - 'core/rtw_security.c'
