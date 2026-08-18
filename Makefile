@@ -2564,6 +2564,7 @@ $(MODULE_NAME)-y += rust/rtw_crypto_wrap.o
 ifeq ($(CONFIG_TXPWR_LIMIT), y)
 rustflags-y += --cfg txpwr_limit
 endif
+rustflags-y += --cfg ieee80211_band_5ghz
 # CONFIG_DFS defaults to 1 in include/drv_conf.h (#define), not a Makefile y var.
 rustflags-y += --cfg dfs
 ifneq ($(filter -DCONFIG_REGD_SRC_FROM_OS,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
