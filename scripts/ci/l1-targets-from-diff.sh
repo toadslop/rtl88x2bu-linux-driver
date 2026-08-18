@@ -121,6 +121,7 @@ for path in "${changed[@]}"; do
 	| tests/host/xmit/*)
 		add_target rust-check-symbols-rtw-xmit
 		add_target rust-check-symbols-rtw-xmit-qos
+		add_target rust-check-symbols-rtw-xmit-sctx
 		;;
 	rust/aes_*.rs \
 	| rust/sha256*.rs \
@@ -196,6 +197,7 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-recv-pn
 	rust-check-symbols-rtw-xmit
 	rust-check-symbols-rtw-xmit-qos
+	rust-check-symbols-rtw-xmit-sctx
 )
 
 emit() {
