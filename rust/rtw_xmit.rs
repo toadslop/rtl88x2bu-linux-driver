@@ -299,6 +299,18 @@ mod kernel {
         fn rtw_rust_xmit_sta_ht_sgi_40m(sta: *mut c_void) -> U8;
         fn rtw_rust_xmit_sta_vht_option(sta: *mut c_void) -> U8;
         fn rtw_rust_xmit_sta_vht_sgi_80m(sta: *mut c_void) -> U8;
+        fn rtw_rust_xmit_dvobj_primary_adapter(dvobj: *mut c_void) -> *mut c_void;
+        fn rtw_rust_xmit_dvobj_iface_nums(dvobj: *mut c_void) -> U8;
+        fn rtw_rust_xmit_dvobj_adapter(dvobj: *mut c_void, idx: i32) -> *mut c_void;
+        fn rtw_rust_xmit_rf_set_cck_ofdm(rfctl: *mut c_void, val: U16);
+        fn rtw_rust_xmit_rf_set_ht_bmp(rfctl: *mut c_void, bw: U8, val: U32);
+        fn rtw_rust_xmit_rf_set_vht_bmp(rfctl: *mut c_void, bw: U8, val: U64);
+        fn rtw_rust_xmit_apply_txpwr_limit_after_rate_bmp(
+            adapter: *mut c_void,
+            rfctl: *mut c_void,
+            ori_bmp_ht: *const U32,
+            ori_bmp_vht: *const U64,
+        );
     }
 
     pub(super) unsafe fn adapter_dvobj(adapter: *mut c_void) -> *mut c_void {
@@ -397,6 +409,34 @@ mod kernel {
     }
     pub(super) unsafe fn sta_vht_sgi_80m(sta: *mut c_void) -> U8 {
         unsafe { rtw_rust_xmit_sta_vht_sgi_80m(sta) }
+    }
+    pub(super) unsafe fn dvobj_primary_adapter(dvobj: *mut c_void) -> *mut c_void {
+        unsafe { rtw_rust_xmit_dvobj_primary_adapter(dvobj) }
+    }
+    pub(super) unsafe fn dvobj_iface_nums(dvobj: *mut c_void) -> U8 {
+        unsafe { rtw_rust_xmit_dvobj_iface_nums(dvobj) }
+    }
+    pub(super) unsafe fn dvobj_adapter(dvobj: *mut c_void, idx: i32) -> *mut c_void {
+        unsafe { rtw_rust_xmit_dvobj_adapter(dvobj, idx) }
+    }
+    pub(super) unsafe fn rf_set_cck_ofdm(rfctl: *mut c_void, val: U16) {
+        unsafe { rtw_rust_xmit_rf_set_cck_ofdm(rfctl, val) }
+    }
+    pub(super) unsafe fn rf_set_ht_bmp(rfctl: *mut c_void, bw: U8, val: U32) {
+        unsafe { rtw_rust_xmit_rf_set_ht_bmp(rfctl, bw, val) }
+    }
+    pub(super) unsafe fn rf_set_vht_bmp(rfctl: *mut c_void, bw: U8, val: U64) {
+        unsafe { rtw_rust_xmit_rf_set_vht_bmp(rfctl, bw, val) }
+    }
+    pub(super) unsafe fn apply_txpwr_limit_after_rate_bmp(
+        adapter: *mut c_void,
+        rfctl: *mut c_void,
+        ori_bmp_ht: *const U32,
+        ori_bmp_vht: *const U64,
+    ) {
+        unsafe {
+            rtw_rust_xmit_apply_txpwr_limit_after_rate_bmp(adapter, rfctl, ori_bmp_ht, ori_bmp_vht)
+        }
     }
 }
 
@@ -834,6 +874,92 @@ pub extern "C" fn query_ra_short_GI(psta: *mut c_void, bw: U8) -> U8 {
         CHANNEL_WIDTH_80 => sgi_80m,
         CHANNEL_WIDTH_40 => sgi_40m,
         _ => sgi_20m,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_update_tx_rate_bmp(dvobj: *mut c_void) {
+    if dvobj.is_null() {
+        return;
+    }
+    #[cfg(not(host_xmit_test))]
+    {
+        let rfctl = unsafe { kernel::rfctl(dvobj) };
+        if rfctl.is_null() {
+            return;
+        }
+        let adapter = unsafe { kernel::dvobj_primary_adapter(dvobj) };
+        if adapter.is_null() {
+            return;
+        }
+        let iface_nums = unsafe { kernel::dvobj_iface_nums(dvobj) };
+        let mut ori_bmp_ht = [0u32; 2];
+        let mut ori_bmp_vht = [0u64; 4];
+
+        for bw in CHANNEL_WIDTH_20..=CHANNEL_WIDTH_160 {
+            if bw <= CHANNEL_WIDTH_40 {
+                ori_bmp_ht[bw as usize] = unsafe { kernel::rf_ht_bmp(rfctl, bw) };
+            }
+            if bw <= CHANNEL_WIDTH_160 {
+                ori_bmp_vht[bw as usize] = unsafe { kernel::rf_vht_bmp(rfctl, bw) };
+            }
+
+            let mut bmp_cck_ofdm = 0u16;
+            let mut bmp_ht = 0u32;
+            let mut bmp_vht = 0u64;
+            if unsafe { kernel::hal_is_bw_support(adapter, bw) } {
+                for i in 0..iface_nums {
+                    let padapter = unsafe { kernel::dvobj_adapter(dvobj, i as i32) };
+                    if padapter.is_null() {
+                        continue;
+                    }
+                    let mut tmp_cck = 0u16;
+                    let mut tmp_ht = 0u32;
+                    let mut tmp_vht = 0u64;
+                    rtw_get_adapter_tx_rate_bmp_by_bw(
+                        padapter,
+                        bw,
+                        &mut tmp_cck,
+                        &mut tmp_ht,
+                        &mut tmp_vht,
+                    );
+                    bmp_cck_ofdm |= tmp_cck;
+                    bmp_ht |= tmp_ht;
+                    bmp_vht |= tmp_vht;
+                }
+                let mut tmp_cck = 0u16;
+                let mut tmp_ht = 0u32;
+                let mut tmp_vht = 0u64;
+                rtw_get_shared_macid_tx_rate_bmp_by_bw(
+                    dvobj,
+                    bw,
+                    &mut tmp_cck,
+                    &mut tmp_ht,
+                    &mut tmp_vht,
+                );
+                bmp_cck_ofdm |= tmp_cck;
+                bmp_ht |= tmp_ht;
+                bmp_vht |= tmp_vht;
+            }
+            if bw == CHANNEL_WIDTH_20 {
+                unsafe { kernel::rf_set_cck_ofdm(rfctl, bmp_cck_ofdm) };
+            }
+            if bw <= CHANNEL_WIDTH_40 {
+                unsafe { kernel::rf_set_ht_bmp(rfctl, bw, bmp_ht) };
+            }
+            if bw <= CHANNEL_WIDTH_160 {
+                unsafe { kernel::rf_set_vht_bmp(rfctl, bw, bmp_vht) };
+            }
+        }
+
+        unsafe {
+            kernel::apply_txpwr_limit_after_rate_bmp(
+                adapter,
+                rfctl,
+                ori_bmp_ht.as_ptr(),
+                ori_bmp_vht.as_ptr(),
+            )
+        };
     }
 }
 

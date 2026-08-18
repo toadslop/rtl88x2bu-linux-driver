@@ -488,6 +488,7 @@ void rtw_get_adapter_tx_rate_bmp(_adapter *adapter, u16 r_bmp_cck_ofdm[], u32 r_
 
 #endif /* !CONFIG_RUST */
 
+#if !defined(CONFIG_RUST)
 void rtw_update_tx_rate_bmp(struct dvobj_priv *dvobj)
 {
 	struct rf_ctl_t *rf_ctl = dvobj_to_rfctl(dvobj);
@@ -596,6 +597,9 @@ void rtw_update_tx_rate_bmp(struct dvobj_priv *dvobj)
 	}
 #endif /* CONFIG_TXPWR_LIMIT */
 }
+
+
+#endif /* !CONFIG_RUST */
 
 s16 rtw_adapter_get_oper_txpwr_max_mbm(_adapter *adapter, bool eirp)
 {
