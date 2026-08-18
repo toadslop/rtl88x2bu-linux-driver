@@ -239,6 +239,9 @@ u8 query_ra_short_GI(struct sta_info *psta, u8 bw)
 
 #if defined(CONFIG_RUST) && !defined(HOST_XMIT_TEST)
 
+#include <hal_data.h>
+#include <hal_intf.h>
+
 struct dvobj_priv *rtw_rust_xmit_adapter_dvobj(_adapter *adapter)
 {
 	return adapter_to_dvobj(adapter);
@@ -342,6 +345,114 @@ u8 rtw_rust_xmit_sta_vht_option(struct sta_info *sta)
 u8 rtw_rust_xmit_sta_vht_sgi_80m(struct sta_info *sta)
 {
 	return sta->vhtpriv.sgi_80m;
+}
+
+_adapter *rtw_rust_xmit_dvobj_primary_adapter(struct dvobj_priv *dvobj)
+{
+	return dvobj_get_primary_adapter(dvobj);
+}
+
+u8 rtw_rust_xmit_dvobj_iface_nums(struct dvobj_priv *dvobj)
+{
+	return dvobj->iface_nums;
+}
+
+_adapter *rtw_rust_xmit_dvobj_adapter(struct dvobj_priv *dvobj, int idx)
+{
+	if (idx < 0 || idx >= CONFIG_IFACE_NUMBER)
+		return NULL;
+	return dvobj->padapters[idx];
+}
+
+void rtw_rust_xmit_rf_set_cck_ofdm(struct rf_ctl_t *rfctl, u16 val)
+{
+	rfctl->rate_bmp_cck_ofdm = val;
+}
+
+void rtw_rust_xmit_rf_set_ht_bmp(struct rf_ctl_t *rfctl, u8 bw, u32 val)
+{
+	if (bw <= CHANNEL_WIDTH_40)
+		rfctl->rate_bmp_ht_by_bw[bw] = val;
+}
+
+void rtw_rust_xmit_rf_set_vht_bmp(struct rf_ctl_t *rfctl, u8 bw, u64 val)
+{
+	if (bw <= CHANNEL_WIDTH_160)
+		rfctl->rate_bmp_vht_by_bw[bw] = val;
+}
+
+void rtw_rust_xmit_apply_txpwr_limit_after_rate_bmp(_adapter *adapter, struct rf_ctl_t *rfctl,
+	const u32 ori_bmp_ht[2], const u64 ori_bmp_vht[4])
+{
+#if CONFIG_TXPWR_LIMIT
+#ifndef DBG_HIGHEST_RATE_BMP_BW_CHANGE
+#define DBG_HIGHEST_RATE_BMP_BW_CHANGE 0
+#endif
+	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
+	u8 bw;
+
+	if (!hal_data->txpwr_limit_loaded)
+		return;
+
+	{
+		u8 ori_highest_ht_rate_bw_bmp;
+		u8 ori_highest_vht_rate_bw_bmp;
+		u8 highest_rate_bw;
+		u8 highest_rate_bw_bmp;
+		u8 update_ht_rs = _FALSE;
+		u8 update_vht_rs = _FALSE;
+
+		ori_highest_ht_rate_bw_bmp = rfctl->highest_ht_rate_bw_bmp;
+		ori_highest_vht_rate_bw_bmp = rfctl->highest_vht_rate_bw_bmp;
+
+		highest_rate_bw_bmp = BW_CAP_20M;
+		highest_rate_bw = CHANNEL_WIDTH_20;
+		for (bw = CHANNEL_WIDTH_20; bw <= CHANNEL_WIDTH_40; bw++) {
+			if (rfctl->rate_bmp_ht_by_bw[highest_rate_bw] < rfctl->rate_bmp_ht_by_bw[bw]) {
+				highest_rate_bw_bmp = ch_width_to_bw_cap(bw);
+				highest_rate_bw = bw;
+			} else if (rfctl->rate_bmp_ht_by_bw[highest_rate_bw] == rfctl->rate_bmp_ht_by_bw[bw])
+				highest_rate_bw_bmp |= ch_width_to_bw_cap(bw);
+		}
+		rfctl->highest_ht_rate_bw_bmp = highest_rate_bw_bmp;
+
+		if (ori_highest_ht_rate_bw_bmp != rfctl->highest_ht_rate_bw_bmp
+			|| largest_bit(ori_bmp_ht[highest_rate_bw]) != largest_bit(rfctl->rate_bmp_ht_by_bw[highest_rate_bw])
+		) {
+			if (DBG_HIGHEST_RATE_BMP_BW_CHANGE) {
+				RTW_INFO("highest_ht_rate_bw_bmp:0x%02x=>0x%02x\n", ori_highest_ht_rate_bw_bmp, rfctl->highest_ht_rate_bw_bmp);
+				RTW_INFO("rate_bmp_ht_by_bw[%u]:0x%08x=>0x%08x\n", highest_rate_bw, ori_bmp_ht[highest_rate_bw], rfctl->rate_bmp_ht_by_bw[highest_rate_bw]);
+			}
+			if (rfctl->rate_bmp_ht_by_bw[highest_rate_bw])
+				update_ht_rs = _TRUE;
+		}
+
+		highest_rate_bw_bmp = BW_CAP_20M;
+		highest_rate_bw = CHANNEL_WIDTH_20;
+		for (bw = CHANNEL_WIDTH_20; bw <= CHANNEL_WIDTH_160; bw++) {
+			if (rfctl->rate_bmp_vht_by_bw[highest_rate_bw] < rfctl->rate_bmp_vht_by_bw[bw]) {
+				highest_rate_bw_bmp = ch_width_to_bw_cap(bw);
+				highest_rate_bw = bw;
+			} else if (rfctl->rate_bmp_vht_by_bw[highest_rate_bw] == rfctl->rate_bmp_vht_by_bw[bw])
+				highest_rate_bw_bmp |= ch_width_to_bw_cap(bw);
+		}
+		rfctl->highest_vht_rate_bw_bmp = highest_rate_bw_bmp;
+
+		if (ori_highest_vht_rate_bw_bmp != rfctl->highest_vht_rate_bw_bmp
+			|| largest_bit_64(ori_bmp_vht[highest_rate_bw]) != largest_bit_64(rfctl->rate_bmp_vht_by_bw[highest_rate_bw])
+		) {
+			if (DBG_HIGHEST_RATE_BMP_BW_CHANGE) {
+				RTW_INFO("highest_vht_rate_bw_bmp:0x%02x=>0x%02x\n", ori_highest_vht_rate_bw_bmp, rfctl->highest_vht_rate_bw_bmp);
+				RTW_INFO("rate_bmp_vht_by_bw[%u]:0x%016llx=>0x%016llx\n", highest_rate_bw, ori_bmp_vht[highest_rate_bw], rfctl->rate_bmp_vht_by_bw[highest_rate_bw]);
+			}
+			if (rfctl->rate_bmp_vht_by_bw[highest_rate_bw])
+				update_vht_rs = _TRUE;
+		}
+
+		if (update_ht_rs == _TRUE || update_vht_rs == _TRUE)
+			rtw_hal_update_txpwr_level(adapter);
+	}
+#endif /* CONFIG_TXPWR_LIMIT */
 }
 
 #endif /* CONFIG_RUST && !HOST_XMIT_TEST */
