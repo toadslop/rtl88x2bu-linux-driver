@@ -20,3 +20,10 @@ drop rtw_rust_xmit_sta_ht_sgi_20m
 drop rtw_rust_xmit_sta_ht_sgi_40m
 drop rtw_rust_xmit_sta_vht_option
 drop rtw_rust_xmit_sta_vht_sgi_80m
+drop rtw_rust_xmit_dvobj_primary_adapter
+drop rtw_rust_xmit_dvobj_iface_nums
+drop rtw_rust_xmit_dvobj_adapter
+drop rtw_rust_xmit_rf_set_cck_ofdm
+drop rtw_rust_xmit_rf_set_ht_bmp
+drop rtw_rust_xmit_rf_set_vht_bmp
+drop rtw_rust_xmit_apply_txpwr_limit_after_rate_bmp
