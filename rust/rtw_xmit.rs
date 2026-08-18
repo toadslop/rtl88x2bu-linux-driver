@@ -1083,6 +1083,10 @@ pub extern "C" fn rtw_sctx_done(sctx: *mut *mut c_void) {
 }
 
 #[cfg(host_xmit_sctx_test)]
+// Host L2 builds `librust_xmit_sctx.a` with `host_xmit_sctx_test`; this stub mirrors
+// `host_xmit_sctx_types.h` and is what `test_xmit_sctx_rust` exercises. Kernel
+// production uses `sctx_kernel` + `rtw_rust_sctx_*` shims instead — drift there is
+// not caught by the current sctx vectors (same pattern as xmit/qos harnesses).
 mod sctx_host {
     use super::*;
 

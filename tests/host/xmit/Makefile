@@ -79,8 +79,8 @@ librust_xmit_sctx.a: $(RUST_XMIT)
 test-sctx-rust: test_xmit_sctx_rust
 	./test_xmit_sctx_rust xmit_sctx_vectors.json
 
-test_xmit_sctx_rust: test_xmit_sctx.c librust_xmit_sctx.a $(SHIM) $(HOST_JSON)
-	$(CC) $(SCTX_CFLAGS) -o $@ test_xmit_sctx.c $(SHIM) $(HOST_JSON) librust_xmit_sctx.a
+test_xmit_sctx_rust: test_xmit_sctx.c librust_xmit_sctx.a $(HOST_JSON)
+	$(CC) $(SCTX_CFLAGS) -o $@ test_xmit_sctx.c $(HOST_JSON) librust_xmit_sctx.a
 
 clean:
 	rm -f test_xmit test_xmit_rust test_xmit_qos test_xmit_qos_rust \
