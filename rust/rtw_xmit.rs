@@ -11,9 +11,9 @@
     unreachable_pub
 )]
 
-#[cfg(not(host_xmit_test))]
+#[cfg(not(any(host_xmit_test, host_xmit_sctx_test)))]
 use core::ffi::c_void;
-#[cfg(host_xmit_test)]
+#[cfg(any(host_xmit_test, host_xmit_sctx_test))]
 use std::os::raw::c_void;
 
 type U8 = u8;
@@ -1080,4 +1080,137 @@ pub extern "C" fn rtw_sctx_done_err(sctx: *mut *mut c_void, status: i32) {
 #[no_mangle]
 pub extern "C" fn rtw_sctx_done(sctx: *mut *mut c_void) {
     sctx_kernel::done_err(sctx, RTW_SCTX_DONE_SUCCESS);
+}
+
+#[cfg(host_xmit_sctx_test)]
+mod sctx_host {
+    use super::*;
+
+    #[repr(C)]
+    struct HostCompletion {
+        completed: u32,
+    }
+
+    #[repr(C)]
+    struct SubmitCtx {
+        submit_time: U64,
+        timeout_ms: U32,
+        status: i32,
+        done: HostCompletion,
+    }
+
+    fn ctx(sctx: *mut c_void) -> *mut SubmitCtx {
+        sctx as *mut SubmitCtx
+    }
+
+    fn init_completion(c: *mut HostCompletion) {
+        unsafe {
+            (*c).completed = 0;
+        }
+    }
+
+    fn complete(c: *mut HostCompletion) {
+        unsafe {
+            (*c).completed = 1;
+        }
+    }
+
+    fn wait_done(c: *mut HostCompletion, _expire: U64) -> U64 {
+        unsafe {
+            if (*c).completed != 0 {
+                1
+            } else {
+                0
+            }
+        }
+    }
+
+    pub(super) fn init(sctx: *mut c_void, timeout_ms: i32) {
+        if sctx.is_null() {
+            return;
+        }
+        unsafe {
+            let s = ctx(sctx);
+            (*s).timeout_ms = timeout_ms as U32;
+            (*s).submit_time = 0;
+            init_completion(&mut (*s).done);
+            (*s).status = RTW_SCTX_SUBMITTED;
+        }
+    }
+
+    pub(super) fn wait(sctx: *mut c_void, _msg: *const u8) -> i32 {
+        if sctx.is_null() {
+            return _FAIL;
+        }
+        let status = unsafe {
+            let s = ctx(sctx);
+            let expire = if (*s).timeout_ms != 0 {
+                (*s).timeout_ms as U64
+            } else {
+                u64::MAX
+            };
+            if wait_done(&mut (*s).done, expire) == 0 {
+                RTW_SCTX_DONE_TIMEOUT
+            } else {
+                (*s).status
+            }
+        };
+        if status == RTW_SCTX_DONE_SUCCESS {
+            _SUCCESS
+        } else {
+            _FAIL
+        }
+    }
+
+    pub(super) fn done_err(sctx: *mut *mut c_void, status: i32) {
+        if sctx.is_null() {
+            return;
+        }
+        unsafe {
+            if (*sctx).is_null() {
+                return;
+            }
+            let s = ctx(*sctx);
+            (*s).status = status;
+            complete(&mut (*s).done);
+            *sctx = core::ptr::null_mut();
+        }
+    }
+}
+
+#[cfg(host_xmit_sctx_test)]
+#[no_mangle]
+pub extern "C" fn rtw_sctx_chk_waring_status(status: i32) -> i32 {
+    match status {
+        RTW_SCTX_DONE_UNKNOWN
+        | RTW_SCTX_DONE_BUF_ALLOC
+        | RTW_SCTX_DONE_BUF_FREE
+        | RTW_SCTX_DONE_DRV_STOP
+        | RTW_SCTX_DONE_DEV_REMOVE => _TRUE,
+        _ => 0,
+    }
+}
+
+#[cfg(host_xmit_sctx_test)]
+#[no_mangle]
+pub extern "C" fn rtw_sctx_init(sctx: *mut c_void, timeout_ms: i32) {
+    sctx_host::init(sctx, timeout_ms);
+}
+
+#[cfg(host_xmit_sctx_test)]
+#[no_mangle]
+pub extern "C" fn rtw_sctx_wait(sctx: *mut c_void, msg: *const u8) -> i32 {
+    sctx_host::wait(sctx, msg)
+}
+
+#[cfg(host_xmit_sctx_test)]
+#[no_mangle]
+pub extern "C" fn rtw_sctx_done_err(sctx: *mut *mut c_void, status: i32) {
+    sctx_host::done_err(sctx, status);
+}
+
+#[cfg(host_xmit_sctx_test)]
+#[no_mangle]
+pub extern "C" fn rtw_sctx_done(sctx: *mut *mut c_void) {
+    sctx_host::done_err(sctx, RTW_SCTX_DONE_SUCCESS);
 }
