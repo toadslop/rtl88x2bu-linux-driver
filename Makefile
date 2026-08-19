@@ -2599,6 +2599,7 @@ $(MODULE_NAME)-y += rust/rtw_sta_mgt.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt_aid.o
 $(MODULE_NAME)-y += rust/rtw_recv.o
 $(MODULE_NAME)-y += rust/rtw_xmit.o
+$(MODULE_NAME)-y += rust/rtw_iol_rest.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
@@ -3127,6 +3128,19 @@ rust-objects-rtw-xmit-sctx-rest-c:
 rust-check-symbols-rtw-xmit-sctx: rust-objects-rtw-xmit-sctx-rest-c rust-objects-rtw-xmit
 	$(MAKE) rust-check-symbols OLD=tests/host/xmit/xmit_sctx_c_ref.o NEW=rust/rtw_xmit.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_xmit_sctx.allow ALLOW_VACUOUS=1
+
+# W3-50: host C oracle iol_rest vs rust/rtw_iol_rest.o.
+rust-objects-rtw-iol-rest:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-iol-rest"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_iol_rest.o
+rust-objects-rtw-iol-rest-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_IOL_TEST -o tests/host/iol/iol_rest_c_ref.o core/rtw_iol_rest.c
+rust-check-symbols-rtw-iol-rest: rust-objects-rtw-iol-rest-c rust-objects-rtw-iol-rest
+	$(MAKE) rust-check-symbols OLD=tests/host/iol/iol_rest_c_ref.o NEW=rust/rtw_iol_rest.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_iol_rest.allow ALLOW_VACUOUS=1
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production

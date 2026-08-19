@@ -16,9 +16,9 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable
 
 .PHONY: all test test-c test-rust clean
 
-all: test-c
+all: test
 
-test: test-c
+test: test-c test-rust
 
 test-c: test_iol
 	./test_iol iol_vectors.json

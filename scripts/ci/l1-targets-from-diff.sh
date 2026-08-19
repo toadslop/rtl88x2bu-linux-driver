@@ -118,6 +118,8 @@ for path in "${changed[@]}"; do
 	| core/rtw_xmit_rest.c \
 	| core/rtw_xmit_qos_rest.c \
 	| core/rtw_xmit_sctx_rest.c \
+	rust/rtw_iol_rest.rs \
+	| core/rtw_iol_rest.c \
 	| tests/host/xmit/*)
 		add_target rust-check-symbols-rtw-xmit
 		add_target rust-check-symbols-rtw-xmit-qos
