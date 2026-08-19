@@ -143,4 +143,10 @@ u32 rtw_rust_iol_max_xmitbuf_sz(void)
 	return MAX_XMITBUF_SZ;
 }
 
+void rtw_rust_iol_overflow_log(u32 needed, u32 max_sz)
+{
+	RTW_INFO("%s %u is large than MAX_XMITBUF_SZ:%u, can't accommodate new cmds\n",
+		 __func__, needed, max_sz);
+}
+
 #endif /* CONFIG_RUST && !HOST_IOL_TEST */
