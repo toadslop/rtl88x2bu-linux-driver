@@ -109,3 +109,38 @@ int rtw_IOL_append_END_cmd(struct xmit_frame *xmit_frame)
 }
 
 #endif /* !CONFIG_RUST || HOST_IOL_TEST */
+
+#if defined(CONFIG_RUST) && !defined(HOST_IOL_TEST)
+
+u32 rtw_rust_iol_attrib_pktlen(struct xmit_frame *xframe)
+{
+	return xframe->attrib.pktlen;
+}
+
+u32 rtw_rust_iol_attrib_last_txcmdsz(struct xmit_frame *xframe)
+{
+	return xframe->attrib.last_txcmdsz;
+}
+
+void rtw_rust_iol_set_attrib_lengths(struct xmit_frame *xframe, u32 pktlen, u32 last_txcmdsz)
+{
+	xframe->attrib.pktlen = pktlen;
+	xframe->attrib.last_txcmdsz = last_txcmdsz;
+}
+
+u8 *rtw_rust_iol_xframe_buf_addr(struct xmit_frame *xframe)
+{
+	return xframe->buf_addr;
+}
+
+u16 rtw_rust_iol_txdesc_offset(void)
+{
+	return TXDESC_OFFSET;
+}
+
+u32 rtw_rust_iol_max_xmitbuf_sz(void)
+{
+	return MAX_XMITBUF_SZ;
+}
+
+#endif /* CONFIG_RUST && !HOST_IOL_TEST */

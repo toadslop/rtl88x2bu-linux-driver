@@ -1,0 +1,7 @@
+# L1 allowlist for W3-50: Rust owns IOL append encoders; kernel FFI shims stay in C.
+drop rtw_rust_iol_attrib_pktlen
+drop rtw_rust_iol_attrib_last_txcmdsz
+drop rtw_rust_iol_set_attrib_lengths
+drop rtw_rust_iol_xframe_buf_addr
+drop rtw_rust_iol_txdesc_offset
+drop rtw_rust_iol_max_xmitbuf_sz

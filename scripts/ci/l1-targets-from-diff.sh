@@ -123,6 +123,11 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-xmit-qos
 		add_target rust-check-symbols-rtw-xmit-sctx
 		;;
+	rust/rtw_iol_rest.rs \
+	| core/rtw_iol_rest.c \
+	| tests/host/iol/*)
+		add_target rust-check-symbols-rtw-iol-rest
+		;;
 	rust/aes_*.rs \
 	| rust/sha256*.rs \
 	| rust/gcmp.rs \
