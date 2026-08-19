@@ -22,6 +22,15 @@ type U32 = u32;
 const _SUCCESS: i32 = 1;
 const _FAIL: i32 = 0;
 
+// Values from `include/rtw_iol.h` (IOL_CMD_*).
+const IOL_CMD_LLT: U8 = 0x00;
+const IOL_CMD_WB_REG: U8 = 0x02;
+const IOL_CMD_WW_REG: U8 = 0x03;
+const IOL_CMD_WD_REG: U8 = 0x04;
+const IOL_CMD_DELAY_US: U8 = 0x80;
+const IOL_CMD_DELAY_MS: U8 = 0x81;
+const IOL_CMD_END: U8 = 0x83;
+
 #[repr(C)]
 struct IolCmd {
     rsvd0: U8,
@@ -80,6 +89,7 @@ mod kernel {
         fn rtw_rust_iol_txdesc_offset() -> U16;
         fn rtw_rust_iol_max_xmitbuf_sz() -> U32;
         fn _rtw_memcpy(d: *mut c_void, s: *const c_void, n: usize) -> *mut c_void;
+        fn rtw_rust_iol_overflow_log(needed: U32, max_sz: U32);
     }
     pub(super) fn ctx(x: *mut c_void) -> (U16, U32, U32, *mut U8, U32) {
         unsafe {
@@ -102,9 +112,15 @@ mod kernel {
             _rtw_memcpy(dst as *mut c_void, src as *const c_void, n);
         }
     }
+    pub(super) fn overflow_log(needed: U32, max_sz: U32) {
+        unsafe {
+            rtw_rust_iol_overflow_log(needed, max_sz);
+        }
+    }
 }
 
 fn append_cmds(xframe: *mut c_void, iol_cmds: *const U8, cmd_len: U32) -> i32 {
+    // Rust hardening: C would dereference NULL; return _FAIL instead.
     if xframe.is_null() || iol_cmds.is_null() {
         return _FAIL;
     }
@@ -128,7 +144,10 @@ fn append_cmds(xframe: *mut c_void, iol_cmds: *const U8, cmd_len: U32) -> i32 {
     if buf.is_null() {
         return _FAIL;
     }
-    if off as U32 + pktlen + cmd_len + 8 > max_sz {
+    let needed = off as U32 + pktlen + cmd_len + 8;
+    if needed > max_sz {
+        #[cfg(not(host_iol_test))]
+        kernel::overflow_log(needed, max_sz);
         return _FAIL;
     }
     let dst = unsafe { buf.add(off as usize + pktlen as usize) };
@@ -187,29 +206,29 @@ pub extern "C" fn rtw_IOL_append_cmds(x: *mut c_void, cmds: *mut U8, len: U32) -
 }
 #[no_mangle]
 pub extern "C" fn rtw_IOL_append_LLT_cmd(x: *mut c_void, page: U8) -> i32 {
-    append_value(x, 0x00, page as U32)
+    append_value(x, IOL_CMD_LLT, page as U32)
 }
 #[no_mangle]
 pub extern "C" fn _rtw_IOL_append_WB_cmd(x: *mut c_void, addr: U16, val: U8) -> i32 {
-    append_reg(x, 0x02, addr, val as U32)
+    append_reg(x, IOL_CMD_WB_REG, addr, val as U32)
 }
 #[no_mangle]
 pub extern "C" fn _rtw_IOL_append_WW_cmd(x: *mut c_void, addr: U16, val: U16) -> i32 {
-    append_reg(x, 0x03, addr, val as U32)
+    append_reg(x, IOL_CMD_WW_REG, addr, val as U32)
 }
 #[no_mangle]
 pub extern "C" fn _rtw_IOL_append_WD_cmd(x: *mut c_void, addr: U16, val: U32) -> i32 {
-    append_reg(x, 0x04, addr, val)
+    append_reg(x, IOL_CMD_WD_REG, addr, val)
 }
 #[no_mangle]
 pub extern "C" fn rtw_IOL_append_DELAY_US_cmd(x: *mut c_void, us: U16) -> i32 {
-    append_value(x, 0x80, us as U32)
+    append_value(x, IOL_CMD_DELAY_US, us as U32)
 }
 #[no_mangle]
 pub extern "C" fn rtw_IOL_append_DELAY_MS_cmd(x: *mut c_void, ms: U16) -> i32 {
-    append_value(x, 0x81, ms as U32)
+    append_value(x, IOL_CMD_DELAY_MS, ms as U32)
 }
 #[no_mangle]
 pub extern "C" fn rtw_IOL_append_END_cmd(x: *mut c_void) -> i32 {
-    append_value(x, 0x83, 0)
+    append_value(x, IOL_CMD_END, 0)
 }
