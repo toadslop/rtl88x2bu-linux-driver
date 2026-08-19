@@ -1,0 +1,92 @@
+{
+  "oracle": "core/rtw_rf_rest.c regd_exc",
+  "vectors": [
+    {
+      "name": "add_search_exact",
+      "fn": "add_search",
+      "country_add": "US",
+      "domain_add": 1,
+      "regd_name": "FCC",
+      "country_search": "US",
+      "domain_search": 1,
+      "expect_found": 1,
+      "expect_num": 1
+    },
+    {
+      "name": "search_miss_empty",
+      "fn": "search",
+      "country_search": "US",
+      "domain_search": 1,
+      "expect_found": 0,
+      "expect_num": 0
+    },
+    {
+      "name": "wildcard_country",
+      "fn": "add_search",
+      "country_add": "",
+      "domain_add": 2,
+      "regd_name": "ETSI",
+      "country_search": "DE",
+      "domain_search": 2,
+      "expect_found": 1,
+      "expect_num": 1
+    },
+    {
+      "name": "wildcard_domain",
+      "fn": "add_search",
+      "country_add": "JP",
+      "domain_add": 255,
+      "regd_name": "MKK",
+      "country_search": "JP",
+      "domain_search": 7,
+      "expect_found": 1,
+      "expect_num": 1
+    },
+    {
+      "name": "country_mismatch",
+      "fn": "add_search",
+      "country_add": "US",
+      "domain_add": 1,
+      "regd_name": "FCC",
+      "country_search": "CA",
+      "domain_search": 1,
+      "expect_found": 0,
+      "expect_num": 1
+    },
+    {
+      "name": "domain_mismatch",
+      "fn": "add_search",
+      "country_add": "US",
+      "domain_add": 1,
+      "regd_name": "FCC",
+      "country_search": "US",
+      "domain_search": 2,
+      "expect_found": 0,
+      "expect_num": 1
+    },
+    {
+      "name": "list_free",
+      "fn": "add_free",
+      "country_add": "US",
+      "domain_add": 1,
+      "regd_name": "FCC",
+      "expect_num_after_add": 1,
+      "expect_num_after_free": 0
+    },
+    {
+      "name": "search_first_match",
+      "fn": "multi_search",
+      "entry1_country": "US",
+      "entry1_domain": 1,
+      "entry1_name": "FCC",
+      "entry2_country": "US",
+      "entry2_domain": 255,
+      "entry2_name": "WW",
+      "country_search": "US",
+      "domain_search": 1,
+      "expect_found": 1,
+      "expect_name": "FCC",
+      "expect_num": 2
+    }
+  ]
+}
