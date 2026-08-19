@@ -1,0 +1,82 @@
+{
+  "oracle": "core/rtw_iol_rest.c",
+  "vectors": [
+    {
+      "name": "append_wb_reg",
+      "fn": "_rtw_IOL_append_WB_cmd",
+      "addr": 4660,
+      "value8": 171,
+      "expect_ret": 1,
+      "expect_pktlen": 8,
+      "expect_hex": "00021234000000ab"
+    },
+    {
+      "name": "append_ww_reg",
+      "fn": "_rtw_IOL_append_WW_cmd",
+      "addr": 4660,
+      "value16": 4660,
+      "expect_ret": 1,
+      "expect_pktlen": 8,
+      "expect_hex": "0003123400001234"
+    },
+    {
+      "name": "append_wd_reg",
+      "fn": "_rtw_IOL_append_WD_cmd",
+      "addr": 4660,
+      "value32": 305419896,
+      "expect_ret": 1,
+      "expect_pktlen": 8,
+      "expect_hex": "0004123412345678"
+    },
+    {
+      "name": "append_delay_us",
+      "fn": "rtw_IOL_append_DELAY_US_cmd",
+      "delay_us": 1000,
+      "expect_ret": 1,
+      "expect_pktlen": 8,
+      "expect_hex": "00800000000003e8"
+    },
+    {
+      "name": "append_delay_ms",
+      "fn": "rtw_IOL_append_DELAY_MS_cmd",
+      "delay_ms": 5,
+      "expect_ret": 1,
+      "expect_pktlen": 8,
+      "expect_hex": "0081000000000005"
+    },
+    {
+      "name": "append_end",
+      "fn": "rtw_IOL_append_END_cmd",
+      "expect_ret": 1,
+      "expect_pktlen": 8,
+      "expect_hex": "0083000000000000"
+    },
+    {
+      "name": "append_llt",
+      "fn": "rtw_IOL_append_LLT_cmd",
+      "page_boundary": 90,
+      "expect_ret": 1,
+      "expect_pktlen": 8,
+      "expect_hex": "000000000000005a"
+    },
+    {
+      "name": "append_cmds_chain",
+      "fn": "chain_wb_end",
+      "addr": 4096,
+      "value8": 255,
+      "expect_ret": 1,
+      "expect_pktlen": 16,
+      "expect_hex": "00021000000000ff0083000000000000"
+    },
+    {
+      "name": "append_overflow",
+      "fn": "_rtw_IOL_append_WB_cmd",
+      "addr": 1,
+      "value8": 1,
+      "initial_pktlen": 20410,
+      "expect_ret": 0,
+      "expect_pktlen": 20410,
+      "expect_hex": ""
+    }
+  ]
+}
