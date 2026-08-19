@@ -39,8 +39,8 @@ librust_rf_rest.a: $(ROOT)/rust/rtw_rf_rest.rs
 test-rust: test_rf_rust
 	./test_rf_rust rf_vectors.json
 
-test_rf_rust: test_rf.c librust_rf_rest.a $(HOST_JSON)
-	$(CC) $(CFLAGS) -DRUST_RF_REST_ORACLE -o $@ test_rf.c $(HOST_JSON) librust_rf_rest.a
+test_rf_rust: test_rf.c librust_rf_rest.a $(REGD_EXC_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_RF_REST_ORACLE -o $@ test_rf.c $(REGD_EXC_SHIM) $(HOST_JSON) librust_rf_rest.a
 
 test_regd_exc_rust: test_regd_exc.c librust_rf_rest.a $(REGD_EXC_SHIM) $(HOST_JSON)
 	$(CC) $(REGD_EXC_CFLAGS) -DRUST_RF_REGD_EXC_ORACLE -o $@ test_regd_exc.c $(REGD_EXC_SHIM) $(HOST_JSON) librust_rf_rest.a

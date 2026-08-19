@@ -48,3 +48,12 @@ drop rtw_is_long_cac_ch
 drop tx_path_nss_set_default
 drop tx_path_nss_set_full_tx
 drop rtw_ch_to_bb_gain_sel
+drop _rtw_regd_exc_search
+drop rtw_regd_exc_search
+drop rtw_regd_exc_add_with_nlen
+drop rtw_regd_exc_add
+drop rtw_regd_exc_list_free
+drop rtw_rust_rf_reg_exc_list
+drop rtw_rust_rf_regd_exc_num
+drop rtw_rust_rf_txpwr_lmt_mutex_enter
+drop rtw_rust_rf_txpwr_lmt_mutex_exit
