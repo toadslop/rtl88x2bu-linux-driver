@@ -43,6 +43,17 @@
       "expect_num": 1
     },
     {
+      "name": "search_wildcard_domain",
+      "fn": "add_search",
+      "country_add": "GB",
+      "domain_add": 3,
+      "regd_name": "ETSI3",
+      "country_search": "GB",
+      "domain_search": 255,
+      "expect_found": 0,
+      "expect_num": 1
+    },
+    {
       "name": "country_mismatch",
       "fn": "add_search",
       "country_add": "US",

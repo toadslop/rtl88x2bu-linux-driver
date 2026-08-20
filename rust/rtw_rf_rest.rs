@@ -1600,9 +1600,9 @@ mod regd_exc {
         pub list: List,
         pub country: [u8; 2],
         pub domain: u8,
+        pub regd_name: [u8; 0],
     }
 
-    const REGD_NAME_OFF: usize = 19;
     const REGD_EXC_ALLOC_SZ: usize = 24;
     const _: [(); 24] = [(); mem::size_of::<RegdExcEnt>()];
     const _: [(); 24] = [(); REGD_EXC_ALLOC_SZ];
@@ -1750,7 +1750,7 @@ mod regd_exc {
     }
 
     fn regd_name_ptr(ent: *mut RegdExcEnt) -> *mut u8 {
-        unsafe { (ent as *mut u8).add(REGD_NAME_OFF) }
+        unsafe { (ent as *mut u8).add(mem::offset_of!(RegdExcEnt, regd_name)) }
     }
 
     fn end_of_queue_search(head: *mut List, cur: *mut List) -> bool {
