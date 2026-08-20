@@ -1198,6 +1198,7 @@ int rtw_ch_to_bb_gain_sel(int ch)
 #endif /* !CONFIG_RUST || HOST_RF_TEST */
 
 #if CONFIG_TXPWR_LIMIT
+#if !defined(CONFIG_RUST) || defined(HOST_RF_TEST)
 void _dump_regd_exc_list(void *sel, struct rf_ctl_t *rfctl)
 {
 	struct regd_exc_ent *ent;
@@ -1353,7 +1354,73 @@ void rtw_regd_exc_list_free(struct rf_ctl_t *rfctl)
 
 	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
 }
+#else /* CONFIG_RUST && !HOST_RF_TEST */
+void _dump_regd_exc_list(void *sel, struct rf_ctl_t *rfctl)
+{
+	struct regd_exc_ent *ent;
+	_list *cur, *head;
+
+	RTW_PRINT_SEL(sel, "regd_exc_num:%u\n", rfctl->regd_exc_num);
+
+	if (!rfctl->regd_exc_num)
+		goto exit;
+
+	RTW_PRINT_SEL(sel, "%-7s %-6s %-9s\n", "country", "domain", "regd_name");
+
+	head = &rfctl->reg_exc_list;
+	cur = get_next(head);
+
+	while ((rtw_end_of_queue_search(head, cur)) == _FALSE) {
+		u8 has_country;
+
+		ent = LIST_CONTAINOR(cur, struct regd_exc_ent, list);
+		cur = get_next(cur);
+		has_country = (ent->country[0] == '\0' && ent->country[1] == '\0') ? 0 : 1;
+
+		RTW_PRINT_SEL(sel, "     %c%c   0x%02x %s\n"
+			, has_country ? ent->country[0] : '0'
+			, has_country ? ent->country[1] : '0'
+			, ent->domain
+			, ent->regd_name
+		);
+	}
+
+exit:
+	return;
+}
+
+void dump_regd_exc_list(void *sel, struct rf_ctl_t *rfctl)
+{
+	_irqL irqL;
+
+	_enter_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_dump_regd_exc_list(sel, rfctl);
+	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+}
+#endif /* !CONFIG_RUST || HOST_RF_TEST */
 #endif /* CONFIG_TXPWR_LIMIT */
+
+#if defined(CONFIG_RUST) && !defined(HOST_RF_TEST) && CONFIG_TXPWR_LIMIT
+_list *rtw_rust_rf_reg_exc_list(struct rf_ctl_t *rfctl)
+{
+	return &rfctl->reg_exc_list;
+}
+
+u8 *rtw_rust_rf_regd_exc_num(struct rf_ctl_t *rfctl)
+{
+	return &rfctl->regd_exc_num;
+}
+
+void rtw_rust_rf_txpwr_lmt_mutex_enter(struct rf_ctl_t *rfctl, _irqL *irqL)
+{
+	_enter_critical_mutex(&rfctl->txpwr_lmt_mutex, irqL);
+}
+
+void rtw_rust_rf_txpwr_lmt_mutex_exit(struct rf_ctl_t *rfctl, _irqL *irqL)
+{
+	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, irqL);
+}
+#endif /* CONFIG_RUST && !HOST_RF_TEST && CONFIG_TXPWR_LIMIT */
 
 #if defined(CONFIG_RUST) && !defined(HOST_RF_TEST)
 void rtw_rust_rf_warn_on(int condition)

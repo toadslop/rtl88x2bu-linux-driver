@@ -1573,6 +1573,317 @@ pub extern "C" fn rtw_ch_to_bb_gain_sel(ch: i32) -> i32 {
     }
 }
 
+#[cfg(txpwr_limit)]
+mod regd_exc {
+    use super::*;
+
+    #[cfg(not(host_rf_rest_test))]
+    use core::ffi::{c_ulong, c_void};
+    #[cfg(host_rf_rest_test)]
+    use std::ffi::c_ulong;
+
+    #[cfg(not(host_rf_rest_test))]
+    use core::{mem, ptr};
+    #[cfg(host_rf_rest_test)]
+    use std::{mem, ptr};
+
+    type IrqL = c_ulong;
+
+    #[repr(C)]
+    pub struct List {
+        pub next: *mut List,
+        pub prev: *mut List,
+    }
+
+    #[repr(C)]
+    pub struct RegdExcEnt {
+        pub list: List,
+        pub country: [u8; 2],
+        pub domain: u8,
+    }
+
+    const REGD_NAME_OFF: usize = 19;
+    const REGD_EXC_ALLOC_SZ: usize = 24;
+    const _: [(); 24] = [(); mem::size_of::<RegdExcEnt>()];
+    const _: [(); 24] = [(); REGD_EXC_ALLOC_SZ];
+
+    #[cfg(host_rf_rest_test)]
+    #[repr(C)]
+    pub struct RfCtl {
+        pub txpwr_lmt_mutex: c_int,
+        pub reg_exc_list: List,
+        pub regd_exc_num: u8,
+    }
+
+    #[cfg(host_rf_rest_test)]
+    type RfCtlPtr = *mut RfCtl;
+
+    #[cfg(not(host_rf_rest_test))]
+    type RfCtlPtr = *mut c_void;
+
+    extern "C" {
+        fn strlen(s: *const u8) -> usize;
+    }
+
+    #[cfg(host_rf_rest_test)]
+    extern "C" {
+        fn rtw_zmalloc(sz: u32) -> *mut u8;
+        fn rtw_mfree(ptr: *mut u8, sz: u32);
+    }
+
+    #[cfg(not(host_rf_rest_test))]
+    extern "C" {
+        fn _rtw_zmalloc(sz: u32) -> *mut u8;
+        fn _rtw_mfree(ptr: *mut u8, sz: u32);
+        fn rtw_rust_rf_reg_exc_list(rfctl: RfCtlPtr) -> *mut List;
+        fn rtw_rust_rf_regd_exc_num(rfctl: RfCtlPtr) -> *mut u8;
+        fn rtw_rust_rf_txpwr_lmt_mutex_enter(rfctl: RfCtlPtr, irql: *mut IrqL);
+        fn rtw_rust_rf_txpwr_lmt_mutex_exit(rfctl: RfCtlPtr, irql: *mut IrqL);
+    }
+
+    fn zmalloc(sz: u32) -> *mut u8 {
+        unsafe {
+            #[cfg(host_rf_rest_test)]
+            {
+                rtw_zmalloc(sz)
+            }
+            #[cfg(not(host_rf_rest_test))]
+            {
+                _rtw_zmalloc(sz)
+            }
+        }
+    }
+
+    fn mfree(ptr: *mut u8, sz: u32) {
+        unsafe {
+            #[cfg(host_rf_rest_test)]
+            {
+                rtw_mfree(ptr, sz);
+            }
+            #[cfg(not(host_rf_rest_test))]
+            {
+                _rtw_mfree(ptr, sz);
+            }
+        }
+    }
+
+    fn reg_exc_list(rfctl: RfCtlPtr) -> *mut List {
+        unsafe {
+            #[cfg(host_rf_rest_test)]
+            {
+                &mut (*rfctl).reg_exc_list
+            }
+            #[cfg(not(host_rf_rest_test))]
+            {
+                rtw_rust_rf_reg_exc_list(rfctl)
+            }
+        }
+    }
+
+    fn regd_exc_num_ptr(rfctl: RfCtlPtr) -> *mut u8 {
+        unsafe {
+            #[cfg(host_rf_rest_test)]
+            {
+                &mut (*rfctl).regd_exc_num
+            }
+            #[cfg(not(host_rf_rest_test))]
+            {
+                rtw_rust_rf_regd_exc_num(rfctl)
+            }
+        }
+    }
+
+    fn mutex_enter(rfctl: RfCtlPtr, irql: &mut IrqL) {
+        unsafe {
+            #[cfg(host_rf_rest_test)]
+            {
+                let _ = (rfctl, irql);
+            }
+            #[cfg(not(host_rf_rest_test))]
+            {
+                rtw_rust_rf_txpwr_lmt_mutex_enter(rfctl, irql as *mut IrqL);
+            }
+        }
+    }
+
+    fn mutex_exit(rfctl: RfCtlPtr, irql: &mut IrqL) {
+        unsafe {
+            #[cfg(host_rf_rest_test)]
+            {
+                let _ = (rfctl, irql);
+            }
+            #[cfg(not(host_rf_rest_test))]
+            {
+                rtw_rust_rf_txpwr_lmt_mutex_exit(rfctl, irql as *mut IrqL);
+            }
+        }
+    }
+
+    fn init_listhead(list: *mut List) {
+        unsafe {
+            (*list).next = list;
+            (*list).prev = list;
+        }
+    }
+
+    fn list_insert_tail(n: *mut List, head: *mut List) {
+        unsafe {
+            let prev = (*head).prev;
+            (*n).next = head;
+            (*n).prev = prev;
+            (*prev).next = n;
+            (*head).prev = n;
+        }
+    }
+
+    fn list_delete(node: *mut List) {
+        unsafe {
+            (*(*node).prev).next = (*node).next;
+            (*(*node).next).prev = (*node).prev;
+            (*node).next = node;
+            (*node).prev = node;
+        }
+    }
+
+    fn ent_from_list(cur: *mut List) -> *mut RegdExcEnt {
+        unsafe { (cur as *mut u8).sub(mem::offset_of!(RegdExcEnt, list)) as *mut RegdExcEnt }
+    }
+
+    fn regd_name_ptr(ent: *mut RegdExcEnt) -> *mut u8 {
+        unsafe { (ent as *mut u8).add(REGD_NAME_OFF) }
+    }
+
+    fn end_of_queue_search(head: *mut List, cur: *mut List) -> bool {
+        cur == head
+    }
+
+    pub(super) fn regd_exc_search_inner(
+        rfctl: RfCtlPtr,
+        country: *const u8,
+        domain: u8,
+    ) -> *mut RegdExcEnt {
+        unsafe {
+            let head = reg_exc_list(rfctl);
+            let mut cur = (*head).next;
+
+            while !end_of_queue_search(head, cur) {
+                let ent = ent_from_list(cur);
+                cur = (*cur).next;
+
+                let entry_has_country = (*ent).country[0] != 0 || (*ent).country[1] != 0;
+                if entry_has_country {
+                    if country.is_null() {
+                        continue;
+                    }
+                    if (*ent).country[0] != *country || (*ent).country[1] != *country.add(1) {
+                        continue;
+                    }
+                }
+
+                if (*ent).domain != 0xFF {
+                    if domain == 0xFF || (*ent).domain != domain {
+                        continue;
+                    }
+                }
+
+                return ent;
+            }
+
+            ptr::null_mut()
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn _rtw_regd_exc_search(
+        rfctl: RfCtlPtr,
+        country: *const u8,
+        domain: u8,
+    ) -> *mut RegdExcEnt {
+        regd_exc_search_inner(rfctl, country, domain)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_regd_exc_search(
+        rfctl: RfCtlPtr,
+        country: *const u8,
+        domain: u8,
+    ) -> *mut RegdExcEnt {
+        let mut irql: IrqL = 0;
+        mutex_enter(rfctl, &mut irql);
+        let ent = regd_exc_search_inner(rfctl, country, domain);
+        mutex_exit(rfctl, &mut irql);
+        ent
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_regd_exc_add_with_nlen(
+        rfctl: RfCtlPtr,
+        country: *const u8,
+        domain: u8,
+        regd_name: *const u8,
+        nlen: u32,
+    ) {
+        if regd_name.is_null() || nlen == 0 {
+            kernel::warn_on(true);
+            return;
+        }
+
+        let mut irql: IrqL = 0;
+        unsafe {
+            let ent = zmalloc(REGD_EXC_ALLOC_SZ as u32 + nlen + 1) as *mut RegdExcEnt;
+            if ent.is_null() {
+                return;
+            }
+
+            init_listhead(&mut (*ent).list);
+            if !country.is_null() {
+                (*ent).country[0] = *country;
+                (*ent).country[1] = *country.add(1);
+            }
+            (*ent).domain = domain;
+            ptr::copy_nonoverlapping(regd_name, regd_name_ptr(ent), nlen as usize);
+
+            mutex_enter(rfctl, &mut irql);
+            list_insert_tail(&mut (*ent).list, reg_exc_list(rfctl));
+            *regd_exc_num_ptr(rfctl) = (*regd_exc_num_ptr(rfctl)).wrapping_add(1);
+            mutex_exit(rfctl, &mut irql);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_regd_exc_add(
+        rfctl: RfCtlPtr,
+        country: *const u8,
+        domain: u8,
+        regd_name: *const u8,
+    ) {
+        let nlen = unsafe { strlen(regd_name) as u32 };
+        rtw_regd_exc_add_with_nlen(rfctl, country, domain, regd_name, nlen);
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_regd_exc_list_free(rfctl: RfCtlPtr) {
+        let mut irql: IrqL = 0;
+        unsafe {
+            mutex_enter(rfctl, &mut irql);
+            let head = reg_exc_list(rfctl);
+            let mut cur = (*head).next;
+            while !end_of_queue_search(head, cur) {
+                let ent = ent_from_list(cur);
+                cur = (*cur).next;
+                list_delete(&mut (*ent).list);
+                let name_len = strlen(regd_name_ptr(ent));
+                mfree(
+                    ent as *mut u8,
+                    REGD_EXC_ALLOC_SZ as u32 + name_len as u32 + 1,
+                );
+            }
+            *regd_exc_num_ptr(rfctl) = 0;
+            mutex_exit(rfctl, &mut irql);
+        }
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn rtw_rust_rf_rest_probe() -> c_int {
     0x1919
