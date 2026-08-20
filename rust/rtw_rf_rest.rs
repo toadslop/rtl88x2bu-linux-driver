@@ -1919,8 +1919,8 @@ mod txpwr_lmt {
     #[repr(C)]
     pub struct TxpwrLmtEnt {
         pub list: List,
-        pub lmt_2g: [[[[s8; MAX_TX_COUNT]; CENTER_CH_2G_NUM]; TXPWR_LMT_RS_NUM_2G];
-            MAX_2_4G_BANDWIDTH_NUM],
+        pub lmt_2g:
+            [[[[s8; MAX_TX_COUNT]; CENTER_CH_2G_NUM]; TXPWR_LMT_RS_NUM_2G]; MAX_2_4G_BANDWIDTH_NUM],
         #[cfg(ieee80211_band_5ghz)]
         pub lmt_5g: [[[[s8; MAX_TX_COUNT]; CENTER_CH_5G_ALL_NUM]; TXPWR_LMT_RS_NUM_5G];
             MAX_5G_BANDWIDTH_NUM],
@@ -2173,8 +2173,7 @@ mod txpwr_lmt {
     ) {
         unsafe {
             if band == BAND_ON_2_4G {
-                (*ent).lmt_2g[bw as usize][tlrs as usize][ch_idx as usize][ntx_idx as usize] =
-                    lmt;
+                (*ent).lmt_2g[bw as usize][tlrs as usize][ch_idx as usize][ntx_idx as usize] = lmt;
             } else if band == BAND_ON_5G {
                 #[cfg(ieee80211_band_5ghz)]
                 {
