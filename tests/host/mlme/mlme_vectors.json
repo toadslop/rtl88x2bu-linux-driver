@@ -4,25 +4,25 @@
     {
       "name": "cap_from_ie_offset",
       "fn": "cap_from_ie",
-      "ie_hex": "00112233445566778800010001",
+      "ie_hex": "001122334455667788000100",
       "expect_offset": 10
     },
     {
       "name": "get_capability_le",
       "fn": "get_capability",
-      "ie_hex": "00112233445566778800010001",
+      "ie_hex": "001122334455667788000100",
       "expect_u16": 1
     },
     {
       "name": "timestamp_ptr",
       "fn": "timestamp_ptr",
-      "ie_hex": "00112233445566778800010001",
+      "ie_hex": "001122334455667788000100",
       "expect_offset": 0
     },
     {
       "name": "beacon_interval_ptr",
       "fn": "beacon_interval_ptr",
-      "ie_hex": "00112233445566778800010001",
+      "ie_hex": "001122334455667788000100",
       "expect_offset": 8
     },
     {
