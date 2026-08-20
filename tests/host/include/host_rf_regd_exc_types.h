@@ -36,6 +36,9 @@ struct rf_ctl_t {
 	_mutex txpwr_lmt_mutex;
 	_list reg_exc_list;
 	u8 regd_exc_num;
+	_list txpwr_lmt_list;
+	u8 txpwr_regd_num;
+	const char *regd_name;
 };
 
 #define RTW_PRINT_SEL(sel, fmt, ...) ((void)0)

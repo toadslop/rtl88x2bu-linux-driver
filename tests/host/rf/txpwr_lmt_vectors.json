@@ -1,0 +1,90 @@
+{
+  "oracle": "core/rtw_rf_rest.c txpwr_lmt",
+  "vectors": [
+    {
+      "name": "add_get_single",
+      "fn": "add_get",
+      "regd_name": "FCC",
+      "band": 0,
+      "bw": 0,
+      "tlrs": 0,
+      "ntx_idx": 0,
+      "ch_idx": 0,
+      "lmt": 30,
+      "expect_num": 1,
+      "expect_found": 1
+    },
+    {
+      "name": "get_miss_empty",
+      "fn": "get",
+      "regd_name": "FCC",
+      "expect_found": 0,
+      "expect_num": 0
+    },
+    {
+      "name": "merge_min_same_regd",
+      "fn": "add_merge",
+      "regd_name": "ETSI",
+      "band": 0,
+      "bw": 0,
+      "tlrs": 0,
+      "ntx_idx": 0,
+      "ch_idx": 0,
+      "lmt_first": 30,
+      "lmt_second": 25,
+      "expect_num": 1,
+      "expect_lmt": 25
+    },
+    {
+      "name": "merge_min_higher_second",
+      "fn": "add_merge",
+      "regd_name": "MKK",
+      "band": 0,
+      "bw": 0,
+      "tlrs": 1,
+      "ntx_idx": 0,
+      "ch_idx": 5,
+      "lmt_first": 20,
+      "lmt_second": 28,
+      "expect_num": 1,
+      "expect_lmt": 20
+    },
+    {
+      "name": "two_regd_entries",
+      "fn": "multi_add",
+      "regd_name1": "FCC",
+      "regd_name2": "ETSI",
+      "band": 0,
+      "bw": 0,
+      "tlrs": 0,
+      "ntx_idx": 0,
+      "ch_idx": 0,
+      "lmt": 30,
+      "expect_num": 2
+    },
+    {
+      "name": "list_free",
+      "fn": "add_free",
+      "regd_name": "FCC",
+      "band": 0,
+      "bw": 0,
+      "tlrs": 0,
+      "ntx_idx": 0,
+      "ch_idx": 0,
+      "lmt": 30,
+      "expect_num_after_add": 1,
+      "expect_num_after_free": 0
+    },
+    {
+      "name": "init_txgi_max",
+      "fn": "init_check",
+      "regd_name": "FCC",
+      "band": 0,
+      "bw": 0,
+      "tlrs": 0,
+      "ntx_idx": 0,
+      "ch_idx": 1,
+      "expect_lmt": 63
+    }
+  ]
+}

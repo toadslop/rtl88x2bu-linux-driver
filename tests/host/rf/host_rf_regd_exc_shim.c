@@ -21,4 +21,5 @@ void host_rf_regd_exc_reset(struct rf_ctl_t *rfctl)
 {
 	memset(rfctl, 0, sizeof(*rfctl));
 	_rtw_init_listhead(&rfctl->reg_exc_list);
+	_rtw_init_listhead(&rfctl->txpwr_lmt_list);
 }
