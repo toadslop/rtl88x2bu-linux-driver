@@ -17,10 +17,11 @@
 #ifdef HOST_RF_TEST
 #include "host_rf_types.h"
 #if CONFIG_TXPWR_LIMIT
-#include "host_rf_regd_exc_types.h"
+#include "host_rf_txpwr_lmt_types.h"
 #endif
 #else
 #include <drv_types.h>
+#include <hal_data.h>
 #include <rtw_rf.h>
 #endif
 
@@ -1354,7 +1355,170 @@ void rtw_regd_exc_list_free(struct rf_ctl_t *rfctl)
 
 	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
 }
-#else /* CONFIG_RUST && !HOST_RF_TEST */
+#endif /* !CONFIG_RUST || HOST_RF_TEST - regd_exc CRUD */
+
+#if !defined(CONFIG_RUST) || defined(HOST_RF_TEST) || !defined(CONFIG_RUST_TXPWR_LMT)
+/* search matcing first, if not found, alloc one */
+void rtw_txpwr_lmt_add_with_nlen(struct rf_ctl_t *rfctl, const char *regd_name, u32 nlen
+	, u8 band, u8 bw, u8 tlrs, u8 ntx_idx, u8 ch_idx, s8 lmt)
+{
+	struct hal_spec_t *hal_spec = GET_HAL_SPEC(dvobj_get_primary_adapter(rfctl_to_dvobj(rfctl)));
+	struct txpwr_lmt_ent *ent;
+	_irqL irqL;
+	_list *cur, *head;
+	s8 pre_lmt;
+
+	if (!regd_name || !nlen) {
+		rtw_warn_on(1);
+		goto exit;
+	}
+
+	_enter_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+
+	/* search for existed entry */
+	head = &rfctl->txpwr_lmt_list;
+	cur = get_next(head);
+	while ((rtw_end_of_queue_search(head, cur)) == _FALSE) {
+		ent = LIST_CONTAINOR(cur, struct txpwr_lmt_ent, list);
+		cur = get_next(cur);
+
+		if (strlen(ent->regd_name) == nlen
+			&& _rtw_memcmp(ent->regd_name, regd_name, nlen) == _TRUE)
+			goto chk_lmt_val;
+	}
+
+	/* alloc new one */
+	ent = (struct txpwr_lmt_ent *)rtw_zvmalloc(sizeof(struct txpwr_lmt_ent) + nlen + 1);
+	if (!ent)
+		goto release_lock;
+
+	_rtw_init_listhead(&ent->list);
+	_rtw_memcpy(ent->regd_name, regd_name, nlen);
+	{
+		u8 j, k, l, m;
+
+		for (j = 0; j < MAX_2_4G_BANDWIDTH_NUM; ++j)
+			for (k = 0; k < TXPWR_LMT_RS_NUM_2G; ++k)
+				for (m = 0; m < CENTER_CH_2G_NUM; ++m)
+					for (l = 0; l < MAX_TX_COUNT; ++l)
+						ent->lmt_2g[j][k][m][l] = hal_spec->txgi_max;
+		#if CONFIG_IEEE80211_BAND_5GHZ
+		for (j = 0; j < MAX_5G_BANDWIDTH_NUM; ++j)
+			for (k = 0; k < TXPWR_LMT_RS_NUM_5G; ++k)
+				for (m = 0; m < CENTER_CH_5G_ALL_NUM; ++m)
+					for (l = 0; l < MAX_TX_COUNT; ++l)
+						ent->lmt_5g[j][k][m][l] = hal_spec->txgi_max;
+		#endif
+	}
+
+	rtw_list_insert_tail(&ent->list, &rfctl->txpwr_lmt_list);
+	rfctl->txpwr_regd_num++;
+
+chk_lmt_val:
+	if (band == BAND_ON_2_4G)
+		pre_lmt = ent->lmt_2g[bw][tlrs][ch_idx][ntx_idx];
+	#if CONFIG_IEEE80211_BAND_5GHZ
+	else if (band == BAND_ON_5G)
+		pre_lmt = ent->lmt_5g[bw][tlrs - 1][ch_idx][ntx_idx];
+	#endif
+	else
+		goto release_lock;
+
+	if (pre_lmt != hal_spec->txgi_max)
+		RTW_PRINT("duplicate txpwr_lmt for [%s][%s][%s][%s][%uT][%d]\n"
+			, regd_name, band_str(band), ch_width_str(bw), txpwr_lmt_rs_str(tlrs), ntx_idx + 1
+			, band == BAND_ON_2_4G ? ch_idx + 1 : center_ch_5g_all[ch_idx]);
+
+	lmt = rtw_min(pre_lmt, lmt);
+	if (band == BAND_ON_2_4G)
+		ent->lmt_2g[bw][tlrs][ch_idx][ntx_idx] = lmt;
+	#if CONFIG_IEEE80211_BAND_5GHZ
+	else if (band == BAND_ON_5G)
+		ent->lmt_5g[bw][tlrs - 1][ch_idx][ntx_idx] = lmt;
+	#endif
+
+	if (0)
+		RTW_PRINT("%s, %4s, %6s, %7s, %uT, ch%3d = %d\n"
+			, regd_name, band_str(band), ch_width_str(bw), txpwr_lmt_rs_str(tlrs), ntx_idx + 1
+			, band == BAND_ON_2_4G ? ch_idx + 1 : center_ch_5g_all[ch_idx]
+			, lmt);
+
+release_lock:
+	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+
+exit:
+	return;
+}
+
+inline void rtw_txpwr_lmt_add(struct rf_ctl_t *rfctl, const char *regd_name
+	, u8 band, u8 bw, u8 tlrs, u8 ntx_idx, u8 ch_idx, s8 lmt)
+{
+	rtw_txpwr_lmt_add_with_nlen(rfctl, regd_name, strlen(regd_name)
+		, band, bw, tlrs, ntx_idx, ch_idx, lmt);
+}
+
+struct txpwr_lmt_ent *_rtw_txpwr_lmt_get_by_name(struct rf_ctl_t *rfctl, const char *regd_name)
+{
+	struct txpwr_lmt_ent *ent;
+	_list *cur, *head;
+	u8 found = 0;
+
+	head = &rfctl->txpwr_lmt_list;
+	cur = get_next(head);
+
+	while ((rtw_end_of_queue_search(head, cur)) == _FALSE) {
+		ent = LIST_CONTAINOR(cur, struct txpwr_lmt_ent, list);
+		cur = get_next(cur);
+
+		if (strcmp(ent->regd_name, regd_name) == 0) {
+			found = 1;
+			break;
+		}
+	}
+
+	if (found)
+		return ent;
+	return NULL;
+}
+
+inline struct txpwr_lmt_ent *rtw_txpwr_lmt_get_by_name(struct rf_ctl_t *rfctl, const char *regd_name)
+{
+	struct txpwr_lmt_ent *ent;
+	_irqL irqL;
+
+	_enter_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	ent = _rtw_txpwr_lmt_get_by_name(rfctl, regd_name);
+	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+
+	return ent;
+}
+
+void rtw_txpwr_lmt_list_free(struct rf_ctl_t *rfctl)
+{
+	struct txpwr_lmt_ent *ent;
+	_irqL irqL;
+	_list *cur, *head;
+
+	_enter_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+
+	head = &rfctl->txpwr_lmt_list;
+	cur = get_next(head);
+
+	while ((rtw_end_of_queue_search(head, cur)) == _FALSE) {
+		ent = LIST_CONTAINOR(cur, struct txpwr_lmt_ent, list);
+		cur = get_next(cur);
+		if (ent->regd_name == rfctl->regd_name)
+			rfctl->regd_name = regd_str(TXPWR_LMT_NONE);
+		rtw_list_delete(&ent->list);
+		rtw_vmfree((u8 *)ent, sizeof(struct txpwr_lmt_ent) + strlen(ent->regd_name) + 1);
+	}
+	rfctl->txpwr_regd_num = 0;
+
+	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+}
+#endif /* !CONFIG_RUST || HOST_RF_TEST || !CONFIG_RUST_TXPWR_LMT */
+
+#if defined(CONFIG_RUST) && !defined(HOST_RF_TEST)
 void _dump_regd_exc_list(void *sel, struct rf_ctl_t *rfctl)
 {
 	struct regd_exc_ent *ent;
@@ -1397,7 +1561,7 @@ void dump_regd_exc_list(void *sel, struct rf_ctl_t *rfctl)
 	_dump_regd_exc_list(sel, rfctl);
 	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
 }
-#endif /* !CONFIG_RUST || HOST_RF_TEST */
+#endif /* CONFIG_RUST && !HOST_RF_TEST */
 #endif /* CONFIG_TXPWR_LIMIT */
 
 #if defined(CONFIG_RUST) && !defined(HOST_RF_TEST) && CONFIG_TXPWR_LIMIT
