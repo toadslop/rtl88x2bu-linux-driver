@@ -1584,6 +1584,45 @@ void rtw_rust_rf_txpwr_lmt_mutex_exit(struct rf_ctl_t *rfctl, _irqL *irqL)
 {
 	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, irqL);
 }
+
+#if defined(CONFIG_RUST_TXPWR_LMT)
+_list *rtw_rust_rf_txpwr_lmt_list(struct rf_ctl_t *rfctl)
+{
+	return &rfctl->txpwr_lmt_list;
+}
+
+u8 *rtw_rust_rf_txpwr_regd_num(struct rf_ctl_t *rfctl)
+{
+	return &rfctl->txpwr_regd_num;
+}
+
+const char **_rtw_rust_rf_regd_name_slot(struct rf_ctl_t *rfctl)
+{
+	return &rfctl->regd_name;
+}
+
+u8 rtw_rust_rf_hal_txgi_max(struct rf_ctl_t *rfctl)
+{
+	struct hal_spec_t *hal_spec = GET_HAL_SPEC(dvobj_get_primary_adapter(rfctl_to_dvobj(rfctl)));
+
+	return hal_spec->txgi_max;
+}
+
+void *_rtw_rust_rf_zvmalloc(u32 sz)
+{
+	return _rtw_zvmalloc(sz);
+}
+
+void _rtw_rust_rf_vmfree(u8 *p, u32 sz)
+{
+	_rtw_vmfree(p, sz);
+}
+
+const char *rtw_rust_rf_regd_str_none(void)
+{
+	return regd_str(TXPWR_LMT_NONE);
+}
+#endif /* CONFIG_RUST_TXPWR_LMT */
 #endif /* CONFIG_RUST && !HOST_RF_TEST && CONFIG_TXPWR_LIMIT */
 
 #if defined(CONFIG_RUST) && !defined(HOST_RF_TEST)

@@ -57,3 +57,15 @@ drop rtw_rust_rf_reg_exc_list
 drop rtw_rust_rf_regd_exc_num
 drop rtw_rust_rf_txpwr_lmt_mutex_enter
 drop rtw_rust_rf_txpwr_lmt_mutex_exit
+drop _rtw_txpwr_lmt_get_by_name
+drop rtw_txpwr_lmt_get_by_name
+drop rtw_txpwr_lmt_add_with_nlen
+drop rtw_txpwr_lmt_add
+drop rtw_txpwr_lmt_list_free
+drop rtw_rust_rf_txpwr_lmt_list
+drop rtw_rust_rf_txpwr_regd_num
+drop _rtw_rust_rf_regd_name_slot
+drop rtw_rust_rf_hal_txgi_max
+drop _rtw_rust_rf_zvmalloc
+drop _rtw_rust_rf_vmfree
+drop rtw_rust_rf_regd_str_none

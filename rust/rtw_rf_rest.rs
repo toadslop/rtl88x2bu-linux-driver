@@ -1884,6 +1884,490 @@ mod regd_exc {
     }
 }
 
+#[cfg(all(txpwr_limit, rust_txpwr_lmt))]
+mod txpwr_lmt {
+    use super::*;
+
+    type s8 = i8;
+
+    #[cfg(not(host_rf_rest_test))]
+    use core::ffi::{c_ulong, c_void};
+    #[cfg(host_rf_rest_test)]
+    use std::ffi::c_ulong;
+
+    #[cfg(not(host_rf_rest_test))]
+    use core::{mem, ptr};
+    #[cfg(host_rf_rest_test)]
+    use std::{mem, ptr};
+
+    type IrqL = c_ulong;
+
+    const MAX_2_4G_BANDWIDTH_NUM: usize = 2;
+    const MAX_5G_BANDWIDTH_NUM: usize = 4;
+    const MAX_TX_COUNT: usize = 4;
+    const TXPWR_LMT_RS_NUM_2G: usize = 4;
+    const TXPWR_LMT_RS_NUM_5G: usize = 3;
+    const CENTER_CH_2G_NUM: usize = 14;
+    const CENTER_CH_5G_ALL_NUM: usize = 49;
+
+    #[repr(C)]
+    pub struct List {
+        pub next: *mut List,
+        pub prev: *mut List,
+    }
+
+    #[repr(C)]
+    pub struct TxpwrLmtEnt {
+        pub list: List,
+        pub lmt_2g: [[[[s8; MAX_TX_COUNT]; CENTER_CH_2G_NUM]; TXPWR_LMT_RS_NUM_2G];
+            MAX_2_4G_BANDWIDTH_NUM],
+        #[cfg(ieee80211_band_5ghz)]
+        pub lmt_5g: [[[[s8; MAX_TX_COUNT]; CENTER_CH_5G_ALL_NUM]; TXPWR_LMT_RS_NUM_5G];
+            MAX_5G_BANDWIDTH_NUM],
+        pub regd_name: [u8; 0],
+    }
+
+    const TXPWR_LMT_ENT_ALLOC_SZ: usize = mem::size_of::<TxpwrLmtEnt>();
+
+    #[cfg(host_rf_rest_test)]
+    #[repr(C)]
+    pub struct RfCtl {
+        pub txpwr_lmt_mutex: c_int,
+        pub reg_exc_list: List,
+        pub regd_exc_num: u8,
+        pub txpwr_lmt_list: List,
+        pub txpwr_regd_num: u8,
+        pub regd_name: *const u8,
+    }
+
+    #[cfg(host_rf_rest_test)]
+    type RfCtlPtr = *mut RfCtl;
+
+    #[cfg(not(host_rf_rest_test))]
+    type RfCtlPtr = *mut c_void;
+
+    extern "C" {
+        fn strlen(s: *const u8) -> usize;
+        fn strcmp(s1: *const u8, s2: *const u8) -> c_int;
+    }
+
+    #[cfg(host_rf_rest_test)]
+    extern "C" {
+        fn rtw_zvmalloc(sz: u32) -> *mut u8;
+        fn rtw_vmfree(ptr: *mut u8, sz: u32);
+        fn host_rf_hal_spec_ptr() -> *mut HalSpec;
+    }
+
+    #[cfg(host_rf_rest_test)]
+    #[repr(C)]
+    struct HalSpec {
+        txgi_max: u8,
+    }
+
+    #[cfg(not(host_rf_rest_test))]
+    extern "C" {
+        fn _rtw_rust_rf_zvmalloc(sz: u32) -> *mut u8;
+        fn _rtw_rust_rf_vmfree(ptr: *mut u8, sz: u32);
+        fn rtw_rust_rf_txpwr_lmt_list(rfctl: RfCtlPtr) -> *mut List;
+        fn rtw_rust_rf_txpwr_regd_num(rfctl: RfCtlPtr) -> *mut u8;
+        fn _rtw_rust_rf_regd_name_slot(rfctl: RfCtlPtr) -> *mut *const u8;
+        fn rtw_rust_rf_hal_txgi_max(rfctl: RfCtlPtr) -> u8;
+        fn rtw_rust_rf_txpwr_lmt_mutex_enter(rfctl: RfCtlPtr, irql: *mut IrqL);
+        fn rtw_rust_rf_txpwr_lmt_mutex_exit(rfctl: RfCtlPtr, irql: *mut IrqL);
+        fn rtw_rust_rf_regd_str_none() -> *const u8;
+        fn rtw_rust_rf_warn_on(condition: c_int);
+    }
+
+    fn zvmalloc(sz: u32) -> *mut u8 {
+        unsafe {
+            #[cfg(host_rf_rest_test)]
+            {
+                rtw_zvmalloc(sz)
+            }
+            #[cfg(not(host_rf_rest_test))]
+            {
+                _rtw_rust_rf_zvmalloc(sz)
+            }
+        }
+    }
+
+    fn vmfree(ptr: *mut u8, sz: u32) {
+        unsafe {
+            #[cfg(host_rf_rest_test)]
+            {
+                rtw_vmfree(ptr, sz);
+            }
+            #[cfg(not(host_rf_rest_test))]
+            {
+                _rtw_rust_rf_vmfree(ptr, sz);
+            }
+        }
+    }
+
+    fn txgi_max(rfctl: RfCtlPtr) -> u8 {
+        unsafe {
+            #[cfg(host_rf_rest_test)]
+            {
+                (*host_rf_hal_spec_ptr()).txgi_max
+            }
+            #[cfg(not(host_rf_rest_test))]
+            {
+                rtw_rust_rf_hal_txgi_max(rfctl)
+            }
+        }
+    }
+
+    fn txpwr_lmt_list(rfctl: RfCtlPtr) -> *mut List {
+        unsafe {
+            #[cfg(host_rf_rest_test)]
+            {
+                &mut (*rfctl).txpwr_lmt_list
+            }
+            #[cfg(not(host_rf_rest_test))]
+            {
+                rtw_rust_rf_txpwr_lmt_list(rfctl)
+            }
+        }
+    }
+
+    fn txpwr_regd_num_ptr(rfctl: RfCtlPtr) -> *mut u8 {
+        unsafe {
+            #[cfg(host_rf_rest_test)]
+            {
+                &mut (*rfctl).txpwr_regd_num
+            }
+            #[cfg(not(host_rf_rest_test))]
+            {
+                rtw_rust_rf_txpwr_regd_num(rfctl)
+            }
+        }
+    }
+
+    fn regd_name_slot(rfctl: RfCtlPtr) -> *mut *const u8 {
+        unsafe {
+            #[cfg(host_rf_rest_test)]
+            {
+                &mut (*rfctl).regd_name
+            }
+            #[cfg(not(host_rf_rest_test))]
+            {
+                _rtw_rust_rf_regd_name_slot(rfctl)
+            }
+        }
+    }
+
+    fn mutex_enter(rfctl: RfCtlPtr, irql: &mut IrqL) {
+        unsafe {
+            #[cfg(host_rf_rest_test)]
+            {
+                let _ = (rfctl, irql);
+            }
+            #[cfg(not(host_rf_rest_test))]
+            {
+                rtw_rust_rf_txpwr_lmt_mutex_enter(rfctl, irql as *mut IrqL);
+            }
+        }
+    }
+
+    fn mutex_exit(rfctl: RfCtlPtr, irql: &mut IrqL) {
+        unsafe {
+            #[cfg(host_rf_rest_test)]
+            {
+                let _ = (rfctl, irql);
+            }
+            #[cfg(not(host_rf_rest_test))]
+            {
+                rtw_rust_rf_txpwr_lmt_mutex_exit(rfctl, irql as *mut IrqL);
+            }
+        }
+    }
+
+    fn init_listhead(list: *mut List) {
+        unsafe {
+            (*list).next = list;
+            (*list).prev = list;
+        }
+    }
+
+    fn list_insert_tail(n: *mut List, head: *mut List) {
+        unsafe {
+            let prev = (*head).prev;
+            (*n).next = head;
+            (*n).prev = prev;
+            (*prev).next = n;
+            (*head).prev = n;
+        }
+    }
+
+    fn list_delete(node: *mut List) {
+        unsafe {
+            (*(*node).prev).next = (*node).next;
+            (*(*node).next).prev = (*node).prev;
+            (*node).next = node;
+            (*node).prev = node;
+        }
+    }
+
+    fn ent_from_list(cur: *mut List) -> *mut TxpwrLmtEnt {
+        unsafe { (cur as *mut u8).sub(mem::offset_of!(TxpwrLmtEnt, list)) as *mut TxpwrLmtEnt }
+    }
+
+    fn regd_name_ptr(ent: *mut TxpwrLmtEnt) -> *mut u8 {
+        unsafe { (ent as *mut u8).add(mem::offset_of!(TxpwrLmtEnt, regd_name)) }
+    }
+
+    fn end_of_queue_search(head: *mut List, cur: *mut List) -> bool {
+        cur == head
+    }
+
+    fn init_ent_limits(ent: *mut TxpwrLmtEnt, max: u8) {
+        unsafe {
+            for j in 0..MAX_2_4G_BANDWIDTH_NUM {
+                for k in 0..TXPWR_LMT_RS_NUM_2G {
+                    for m in 0..CENTER_CH_2G_NUM {
+                        for l in 0..MAX_TX_COUNT {
+                            (*ent).lmt_2g[j][k][m][l] = max as s8;
+                        }
+                    }
+                }
+            }
+            #[cfg(ieee80211_band_5ghz)]
+            for j in 0..MAX_5G_BANDWIDTH_NUM {
+                for k in 0..TXPWR_LMT_RS_NUM_5G {
+                    for m in 0..CENTER_CH_5G_ALL_NUM {
+                        for l in 0..MAX_TX_COUNT {
+                            (*ent).lmt_5g[j][k][m][l] = max as s8;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fn read_lmt(ent: *mut TxpwrLmtEnt, band: u8, bw: u8, tlrs: u8, ch_idx: u8, ntx_idx: u8) -> s8 {
+        unsafe {
+            if band == BAND_ON_2_4G {
+                (*ent).lmt_2g[bw as usize][tlrs as usize][ch_idx as usize][ntx_idx as usize]
+            } else {
+                #[cfg(ieee80211_band_5ghz)]
+                {
+                    (*ent).lmt_5g[bw as usize][(tlrs - 1) as usize][ch_idx as usize]
+                        [ntx_idx as usize]
+                }
+                #[cfg(not(ieee80211_band_5ghz))]
+                {
+                    0
+                }
+            }
+        }
+    }
+
+    fn write_lmt(
+        ent: *mut TxpwrLmtEnt,
+        band: u8,
+        bw: u8,
+        tlrs: u8,
+        ch_idx: u8,
+        ntx_idx: u8,
+        lmt: s8,
+    ) {
+        unsafe {
+            if band == BAND_ON_2_4G {
+                (*ent).lmt_2g[bw as usize][tlrs as usize][ch_idx as usize][ntx_idx as usize] =
+                    lmt;
+            } else if band == BAND_ON_5G {
+                #[cfg(ieee80211_band_5ghz)]
+                {
+                    (*ent).lmt_5g[bw as usize][(tlrs - 1) as usize][ch_idx as usize]
+                        [ntx_idx as usize] = lmt;
+                }
+            }
+        }
+    }
+
+    pub(super) fn txpwr_lmt_get_by_name_inner(
+        rfctl: RfCtlPtr,
+        regd_name: *const u8,
+    ) -> *mut TxpwrLmtEnt {
+        unsafe {
+            let head = txpwr_lmt_list(rfctl);
+            let mut cur = (*head).next;
+
+            while !end_of_queue_search(head, cur) {
+                let ent = ent_from_list(cur);
+                cur = (*cur).next;
+
+                if strcmp(regd_name_ptr(ent), regd_name) == 0 {
+                    return ent;
+                }
+            }
+
+            ptr::null_mut()
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn _rtw_txpwr_lmt_get_by_name(
+        rfctl: RfCtlPtr,
+        regd_name: *const u8,
+    ) -> *mut TxpwrLmtEnt {
+        txpwr_lmt_get_by_name_inner(rfctl, regd_name)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_txpwr_lmt_get_by_name(
+        rfctl: RfCtlPtr,
+        regd_name: *const u8,
+    ) -> *mut TxpwrLmtEnt {
+        let mut irql: IrqL = 0;
+        mutex_enter(rfctl, &mut irql);
+        let ent = txpwr_lmt_get_by_name_inner(rfctl, regd_name);
+        mutex_exit(rfctl, &mut irql);
+        ent
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_txpwr_lmt_add_with_nlen(
+        rfctl: RfCtlPtr,
+        regd_name: *const u8,
+        nlen: u32,
+        band: u8,
+        bw: u8,
+        tlrs: u8,
+        ntx_idx: u8,
+        ch_idx: u8,
+        mut lmt: s8,
+    ) {
+        if regd_name.is_null() || nlen == 0 {
+            #[cfg(not(host_rf_rest_test))]
+            unsafe {
+                rtw_rust_rf_warn_on(1);
+            }
+            #[cfg(host_rf_rest_test)]
+            {
+                let _ = ();
+            }
+            return;
+        }
+
+        let max = txgi_max(rfctl);
+        let mut irql: IrqL = 0;
+        unsafe {
+            mutex_enter(rfctl, &mut irql);
+
+            let head = txpwr_lmt_list(rfctl);
+            let mut cur = (*head).next;
+            let mut ent: *mut TxpwrLmtEnt = ptr::null_mut();
+
+            while !end_of_queue_search(head, cur) {
+                let candidate = ent_from_list(cur);
+                cur = (*cur).next;
+
+                if strlen(regd_name_ptr(candidate)) == nlen as usize
+                    && memcmp_bytes(regd_name_ptr(candidate), regd_name, nlen as usize)
+                {
+                    ent = candidate;
+                    break;
+                }
+            }
+
+            if ent.is_null() {
+                ent = zvmalloc(TXPWR_LMT_ENT_ALLOC_SZ as u32 + nlen + 1) as *mut TxpwrLmtEnt;
+                if ent.is_null() {
+                    mutex_exit(rfctl, &mut irql);
+                    return;
+                }
+
+                init_listhead(&mut (*ent).list);
+                ptr::copy_nonoverlapping(regd_name, regd_name_ptr(ent), nlen as usize);
+                init_ent_limits(ent, max);
+                list_insert_tail(&mut (*ent).list, head);
+                *txpwr_regd_num_ptr(rfctl) = (*txpwr_regd_num_ptr(rfctl)).wrapping_add(1);
+            }
+
+            if band != BAND_ON_2_4G && band != BAND_ON_5G {
+                mutex_exit(rfctl, &mut irql);
+                return;
+            }
+            #[cfg(not(ieee80211_band_5ghz))]
+            if band == BAND_ON_5G {
+                mutex_exit(rfctl, &mut irql);
+                return;
+            }
+
+            let pre_lmt = read_lmt(ent, band, bw, tlrs, ch_idx, ntx_idx);
+            lmt = core::cmp::min(pre_lmt, lmt);
+            write_lmt(ent, band, bw, tlrs, ch_idx, ntx_idx, lmt);
+
+            mutex_exit(rfctl, &mut irql);
+        }
+    }
+
+    fn memcmp_bytes(a: *const u8, b: *const u8, n: usize) -> bool {
+        unsafe {
+            for i in 0..n {
+                if *a.add(i) != *b.add(i) {
+                    return false;
+                }
+            }
+            true
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_txpwr_lmt_add(
+        rfctl: RfCtlPtr,
+        regd_name: *const u8,
+        band: u8,
+        bw: u8,
+        tlrs: u8,
+        ntx_idx: u8,
+        ch_idx: u8,
+        lmt: s8,
+    ) {
+        let nlen = unsafe { strlen(regd_name) as u32 };
+        rtw_txpwr_lmt_add_with_nlen(rfctl, regd_name, nlen, band, bw, tlrs, ntx_idx, ch_idx, lmt);
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_txpwr_lmt_list_free(rfctl: RfCtlPtr) {
+        let mut irql: IrqL = 0;
+        unsafe {
+            mutex_enter(rfctl, &mut irql);
+            let head = txpwr_lmt_list(rfctl);
+            let mut cur = (*head).next;
+
+            while !end_of_queue_search(head, cur) {
+                let ent = ent_from_list(cur);
+                cur = (*cur).next;
+
+                if regd_name_ptr(ent) as *const u8 == *regd_name_slot(rfctl) {
+                    #[cfg(not(host_rf_rest_test))]
+                    {
+                        *regd_name_slot(rfctl) = rtw_rust_rf_regd_str_none();
+                    }
+                    #[cfg(host_rf_rest_test)]
+                    {
+                        extern "C" {
+                            fn regd_str_none_ptr() -> *const u8;
+                        }
+                        *regd_name_slot(rfctl) = regd_str_none_ptr();
+                    }
+                }
+
+                list_delete(&mut (*ent).list);
+                let name_len = strlen(regd_name_ptr(ent));
+                vmfree(
+                    ent as *mut u8,
+                    TXPWR_LMT_ENT_ALLOC_SZ as u32 + name_len as u32 + 1,
+                );
+            }
+            *txpwr_regd_num_ptr(rfctl) = 0;
+            mutex_exit(rfctl, &mut irql);
+        }
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn rtw_rust_rf_rest_probe() -> c_int {
     0x1919

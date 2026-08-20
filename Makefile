@@ -2564,6 +2564,8 @@ $(MODULE_NAME)-y += rust/rtw_crypto_wrap.o
 # RUSTFLAGS_<stem>.o is not applied to out-of-tree rustc; rustflags-y is.
 ifeq ($(CONFIG_TXPWR_LIMIT), y)
 rustflags-y += --cfg txpwr_limit
+ccflags-y += -DCONFIG_RUST_TXPWR_LMT
+rustflags-y += --cfg rust_txpwr_lmt
 endif
 rustflags-y += --cfg ieee80211_band_5ghz
 # CONFIG_DFS defaults to 1 in include/drv_conf.h (#define), not a Makefile y var.
