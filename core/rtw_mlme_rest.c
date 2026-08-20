@@ -114,3 +114,12 @@ int is_same_network(WLAN_BSSID_EX *src, WLAN_BSSID_EX *dst, u8 feature)
 }
 
 #endif /* !CONFIG_RUST || HOST_MLME_TEST */
+
+#if defined(CONFIG_RUST) && !defined(HOST_MLME_TEST)
+u8 *rtw_mlme_rest_bss_ies(WLAN_BSSID_EX *bss) { return bss->IEs; }
+u32 *rtw_mlme_rest_bss_ssid_length(WLAN_BSSID_EX *bss) { return &bss->Ssid.SsidLength; }
+u8 *rtw_mlme_rest_bss_ssid(WLAN_BSSID_EX *bss) { return bss->Ssid.Ssid; }
+u8 *rtw_mlme_rest_bss_mac(WLAN_BSSID_EX *bss) { return bss->MacAddress; }
+u32 *rtw_mlme_rest_network_privacy(struct wlan_network *pnetwork) { return &pnetwork->network.Privacy; }
+u32 *rtw_mlme_rest_adapter_privacy(_adapter *adapter) { return &adapter->securitypriv.dot11PrivacyAlgrthm; }
+#endif /* CONFIG_RUST && !HOST_MLME_TEST */

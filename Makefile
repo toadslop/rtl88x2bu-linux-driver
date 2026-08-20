@@ -2603,6 +2603,7 @@ $(MODULE_NAME)-y += rust/rtw_sta_mgt_aid.o
 $(MODULE_NAME)-y += rust/rtw_recv.o
 $(MODULE_NAME)-y += rust/rtw_xmit.o
 $(MODULE_NAME)-y += rust/rtw_iol_rest.o
+$(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
