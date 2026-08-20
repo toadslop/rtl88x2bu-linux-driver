@@ -36,8 +36,9 @@ librust_rf_rest.a: $(ROOT)/rust/rtw_rf_rest.rs
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_rf_rest_test --cfg txpwr_limit \
 		--crate-type staticlib $(ROOT)/rust/rtw_rf_rest.rs -o $@
 
-test-rust: test_rf_rust
+test-rust: test_rf_rust test_regd_exc_rust
 	./test_rf_rust rf_vectors.json
+	./test_regd_exc_rust regd_exc_vectors.json
 
 test_rf_rust: test_rf.c librust_rf_rest.a $(REGD_EXC_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_RF_REST_ORACLE -o $@ test_rf.c $(REGD_EXC_SHIM) $(HOST_JSON) librust_rf_rest.a
