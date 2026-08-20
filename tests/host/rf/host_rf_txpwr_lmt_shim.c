@@ -43,6 +43,11 @@ u8 center_ch_5g_all[CENTER_CH_5G_ALL_NUM] = {
 	175, 177,
 };
 
+const char *regd_str_none_ptr(void)
+{
+	return regd_str(TXPWR_LMT_NONE);
+}
+
 void host_rf_txpwr_lmt_reset(struct rf_ctl_t *rfctl)
 {
 	memset(rfctl, 0, sizeof(*rfctl));
