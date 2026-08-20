@@ -33,9 +33,4 @@ static inline void *_rtw_memcpy(void *dest, const void *src, size_t n)
 	return memcpy(dest, src, n);
 }
 
-static inline int _rtw_memcmp(const void *dst, const void *src, size_t sz)
-{
-	return memcmp(dst, src, sz) == 0 ? 1 : 0;
-}
-
 #endif /* HOST_TYPES_H */

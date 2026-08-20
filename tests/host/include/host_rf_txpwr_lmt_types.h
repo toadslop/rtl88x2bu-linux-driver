@@ -73,6 +73,11 @@ struct _adapter;
 #define dvobj_get_primary_adapter(dvobj) ((void)(dvobj), (struct _adapter *)1)
 #define GET_HAL_SPEC(adapter) host_rf_hal_spec_ptr()
 
+static inline int _rtw_memcmp(const void *dst, const void *src, u32 sz)
+{
+	return memcmp(dst, src, sz) == 0 ? _TRUE : _FALSE;
+}
+
 void rtw_txpwr_lmt_add_with_nlen(struct rf_ctl_t *rfctl, const char *regd_name,
 				 u32 nlen, u8 band, u8 bw, u8 tlrs, u8 ntx_idx,
 				 u8 ch_idx, s8 lmt);
