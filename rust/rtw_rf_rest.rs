@@ -1927,7 +1927,9 @@ mod txpwr_lmt {
         pub regd_name: [u8; 0],
     }
 
-    const TXPWR_LMT_ENT_ALLOC_SZ: usize = mem::size_of::<TxpwrLmtEnt>();
+    const TXPWR_LMT_ENT_ALLOC_SZ: usize = 2816;
+    const _: [(); 2816] = [(); mem::size_of::<TxpwrLmtEnt>()];
+    const _: [(); 2816] = [(); TXPWR_LMT_ENT_ALLOC_SZ];
 
     #[cfg(host_rf_rest_test)]
     #[repr(C)]
@@ -1976,6 +1978,14 @@ mod txpwr_lmt {
         fn rtw_rust_rf_txpwr_lmt_mutex_exit(rfctl: RfCtlPtr, irql: *mut IrqL);
         fn rtw_rust_rf_regd_str_none() -> *const u8;
         fn rtw_rust_rf_warn_on(condition: c_int);
+        fn rtw_rust_rf_txpwr_lmt_duplicate_print(
+            regd_name: *const u8,
+            band: u8,
+            bw: u8,
+            tlrs: u8,
+            ntx_idx: u8,
+            ch_idx: u8,
+        );
     }
 
     fn zvmalloc(sz: u32) -> *mut u8 {
@@ -2295,6 +2305,14 @@ mod txpwr_lmt {
             }
 
             let pre_lmt = read_lmt(ent, band, bw, tlrs, ch_idx, ntx_idx);
+            if pre_lmt != max as s8 {
+                #[cfg(not(host_rf_rest_test))]
+                {
+                    rtw_rust_rf_txpwr_lmt_duplicate_print(
+                        regd_name, band, bw, tlrs, ntx_idx, ch_idx,
+                    );
+                }
+            }
             lmt = core::cmp::min(pre_lmt, lmt);
             write_lmt(ent, band, bw, tlrs, ch_idx, ntx_idx, lmt);
 

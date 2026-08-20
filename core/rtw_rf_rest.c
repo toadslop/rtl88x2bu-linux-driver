@@ -1622,6 +1622,14 @@ const char *rtw_rust_rf_regd_str_none(void)
 {
 	return regd_str(TXPWR_LMT_NONE);
 }
+
+void rtw_rust_rf_txpwr_lmt_duplicate_print(const char *regd_name, u8 band, u8 bw,
+	u8 tlrs, u8 ntx_idx, u8 ch_idx)
+{
+	RTW_PRINT("duplicate txpwr_lmt for [%s][%s][%s][%s][%uT][%d]\n"
+		, regd_name, band_str(band), ch_width_str(bw), txpwr_lmt_rs_str(tlrs), ntx_idx + 1
+		, band == BAND_ON_2_4G ? ch_idx + 1 : center_ch_5g_all[ch_idx]);
+}
 #endif /* CONFIG_RUST_TXPWR_LMT */
 #endif /* CONFIG_RUST && !HOST_RF_TEST && CONFIG_TXPWR_LIMIT */
 

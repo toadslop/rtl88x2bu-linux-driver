@@ -85,6 +85,20 @@
       "ntx_idx": 0,
       "ch_idx": 1,
       "expect_lmt": 63
+    },
+    {
+      "name": "merge_min_5g_tlrs1",
+      "fn": "add_merge",
+      "regd_name": "FCC",
+      "band": 1,
+      "bw": 0,
+      "tlrs": 1,
+      "ntx_idx": 0,
+      "ch_idx": 0,
+      "lmt_first": 30,
+      "lmt_second": 25,
+      "expect_num": 1,
+      "expect_lmt": 25
     }
   ]
 }
