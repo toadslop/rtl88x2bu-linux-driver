@@ -20,7 +20,11 @@ systime rtw_get_current_time(void)
 
 systime rtw_ms_to_systime(int ms)
 {
+<<<<<<< HEAD
 	/* Duration in ms (kernel: msecs_to_jiffies); not an absolute time. */
+=======
+	/* Delta only — callers add rtw_get_current_time() (matches _rtw_ms_to_systime). */
+>>>>>>> 9fae534 (fix(mlme_ext): match kernel RT_CHANNEL_INFO 32-byte stride)
 	return (systime)ms;
 }
 

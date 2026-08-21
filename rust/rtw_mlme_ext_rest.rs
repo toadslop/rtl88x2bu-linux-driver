@@ -40,13 +40,23 @@ const HAL_PRIME_CHNL_OFFSET_DONT_CARE: U8 = 0;
 #[cfg(any(dfs_master, host_mlme_ext_test))]
 const NON_OCP_TIME_MS: c_int = 30 * 60 * 1000;
 
+/// Kernel `RT_CHANNEL_INFO` layout (32 bytes with DFS master + cfg80211):
+/// `ChannelNum@0`, `flags@1`, `non_ocp_end_time@8`, `hidden_bss_cnt@16`, `os_chan@24`.
 #[repr(C)]
 pub struct RtChannelInfo {
     pub channel_num: U8,
     pub flags: U8,
-    #[cfg(any(dfs_master, host_mlme_ext_test))]
-    pub non_ocp_end_time: c_ulong,
+    _pad0: [U8; 6],
+    pub non_ocp_end_time: Systime,
+    pub hidden_bss_cnt: U8,
+    _pad1: [U8; 7],
+    pub os_chan: *mut core::ffi::c_void,
 }
+
+const _: () = assert!(core::mem::size_of::<RtChannelInfo>() == 32);
+const _: () = assert!(core::mem::offset_of!(RtChannelInfo, non_ocp_end_time) == 8);
+const _: () = assert!(core::mem::offset_of!(RtChannelInfo, hidden_bss_cnt) == 16);
+const _: () = assert!(core::mem::offset_of!(RtChannelInfo, os_chan) == 24);
 
 type Systime = c_ulong;
 
@@ -80,16 +90,24 @@ extern "C" {
     fn _rtw_ms_to_systime(ms: U32) -> Systime;
     fn _rtw_systime_to_ms(stime: Systime) -> U32;
     fn _rtw_time_after(a: Systime, b: Systime) -> Bool;
+    fn rtw_rust_warn_on(condition: c_int);
 }
 
 #[inline]
 fn rust_warn_on(cond: bool) {
-    #[cfg(host_mlme_ext_test)]
-    unsafe {
-        let _ = rtw_warn_on(cond as c_int);
+    if !cond {
+        return;
     }
-    #[cfg(not(host_mlme_ext_test))]
-    let _ = cond;
+    unsafe {
+        #[cfg(host_mlme_ext_test)]
+        {
+            let _ = rtw_warn_on(1);
+        }
+        #[cfg(not(host_mlme_ext_test))]
+        {
+            rtw_rust_warn_on(1);
+        }
+    }
 }
 
 fn current_time() -> Systime {
@@ -144,7 +162,6 @@ fn time_after(a: Systime, b: Systime) -> bool {
     }
 }
 
-#[cfg(any(dfs_master, host_mlme_ext_test))]
 fn ch_is_non_ocp(ent: &RtChannelInfo) -> bool {
     time_after(ent.non_ocp_end_time, current_time())
 }
