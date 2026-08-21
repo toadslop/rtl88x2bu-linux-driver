@@ -24,9 +24,8 @@ systime rtw_ms_to_systime(int ms)
 
 u32 rtw_systime_to_ms(systime stime)
 {
-	if (stime <= host_current_time)
-		return 0;
-	return (u32)(stime - host_current_time);
+	/* Duration in ms (kernel: jiffies_to_msecs); not relative to now. */
+	return (u32)stime;
 }
 
 bool _rtw_time_after(systime a, systime b)
