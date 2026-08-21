@@ -39,6 +39,7 @@ on:
       - 'core/rtw_mlme.c'
       - 'core/rtw_mlme_rest.c'
       - 'core/rtw_mlme_ext.c'
+      - 'core/rtw_mlme_ext_rest.c'
       - 'core/rtw_iol.c'
       - 'core/rtw_iol_rest.c'
       - 'core/rtw_sta_mgt.c'
@@ -92,6 +93,7 @@ jobs:
               - 'core/rtw_mlme.c'
               - 'core/rtw_mlme_rest.c'
               - 'core/rtw_mlme_ext.c'
+              - 'core/rtw_mlme_ext_rest.c'
               - 'core/rtw_iol.c'
               - 'core/rtw_iol_rest.c'
               - 'core/rtw_sta_mgt.c'
@@ -178,4 +180,8 @@ jobs:
       - name: Host mlme_rest parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/mlme test
+
+      - name: Host mlme_ext_rest parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/mlme_ext test
 

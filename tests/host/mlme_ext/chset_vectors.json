@@ -1,0 +1,119 @@
+{
+  "vectors": [
+    {
+      "name": "search_hit_36",
+      "fn": "search",
+      "chset": "182430",
+      "flags": "000000",
+      "ch": 36,
+      "expect_idx": 1
+    },
+    {
+      "name": "search_miss",
+      "fn": "search",
+      "chset": "01060b",
+      "flags": "000000",
+      "ch": 36,
+      "expect_idx": -1
+    },
+    {
+      "name": "search_zero",
+      "fn": "search",
+      "chset": "01060b",
+      "flags": "000000",
+      "ch": 0,
+      "expect_idx": -1
+    },
+    {
+      "name": "valid_20mhz_36",
+      "fn": "valid",
+      "chset": "24282c30",
+      "flags": "00000000",
+      "ch": 36,
+      "bw": 0,
+      "offset": 0,
+      "allow_primary_passive": 0,
+      "allow_passive": 0,
+      "expect_valid": 1
+    },
+    {
+      "name": "valid_no_ir_primary",
+      "fn": "valid",
+      "chset": "2428",
+      "flags": "0100",
+      "ch": 36,
+      "bw": 0,
+      "offset": 0,
+      "allow_primary_passive": 0,
+      "allow_passive": 0,
+      "expect_valid": 0
+    },
+    {
+      "name": "valid_no_ir_secondary_ok",
+      "fn": "valid",
+      "chset": "24282c30",
+      "flags": "00010000",
+      "ch": 36,
+      "bw": 1,
+      "offset": 1,
+      "allow_primary_passive": 0,
+      "allow_passive": 1,
+      "expect_valid": 1
+    },
+    {
+      "name": "sync_downgrade_bw",
+      "fn": "sync",
+      "chset": "2428",
+      "flags": "1000",
+      "req_ch": 36,
+      "req_bw": 1,
+      "req_offset": 1,
+      "g_ch": 36,
+      "g_bw": 1,
+      "g_offset": 1,
+      "allow_primary_passive": 0,
+      "allow_passive": 0,
+      "expect_req_ch": 36,
+      "expect_req_bw": 0,
+      "expect_req_offset": 0,
+      "expect_g_bw": 1
+    },
+    {
+      "name": "non_ocp_overlap_52",
+      "fn": "non_ocp",
+      "chset": "34383c40",
+      "flags": "00000000",
+      "non_ocp_end_ms": "0,600000,0,0",
+      "current_time_ms": 0,
+      "ch": 52,
+      "bw": 1,
+      "offset": 1,
+      "expect_non_ocp": 1,
+      "expect_non_ocp_ms": 600000
+    },
+    {
+      "name": "non_ocp_clear",
+      "fn": "non_ocp",
+      "chset": "24282c30",
+      "flags": "00000000",
+      "non_ocp_end_ms": "0,0,0,0",
+      "current_time_ms": 0,
+      "ch": 36,
+      "bw": 0,
+      "offset": 0,
+      "expect_non_ocp": 0,
+      "expect_non_ocp_ms": 0
+    },
+    {
+      "name": "update_non_ocp_40mhz",
+      "fn": "update_non_ocp",
+      "chset": "24282c30",
+      "flags": "00000000",
+      "ch": 36,
+      "bw": 1,
+      "offset": 1,
+      "update_ms": 120000,
+      "expect_updated": 1
+    }
+  ]
+}
