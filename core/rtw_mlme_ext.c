@@ -14805,7 +14805,6 @@ void sitesurvey_set_offch_state(_adapter *adapter, u8 scan_state)
 }
 
 #ifdef CONFIG_RTW_ROAM_QUICKSCAN
-extern inline int is_same_ess(WLAN_BSSID_EX *a, WLAN_BSSID_EX *b);
 extern int rtw_is_desired_network(_adapter *adapter, struct wlan_network *pnetwork);
 void generate_quickss(_adapter *padapter)
 {

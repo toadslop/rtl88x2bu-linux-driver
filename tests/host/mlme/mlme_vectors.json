@@ -1,0 +1,138 @@
+{
+  "oracle": "core/rtw_mlme_rest.c",
+  "vectors": [
+    {
+      "name": "cap_from_ie_offset",
+      "fn": "cap_from_ie",
+      "ie_hex": "001122334455667788000100",
+      "expect_offset": 10
+    },
+    {
+      "name": "get_capability_le",
+      "fn": "get_capability",
+      "ie_hex": "001122334455667788000100",
+      "expect_u16": 1
+    },
+    {
+      "name": "timestamp_ptr",
+      "fn": "timestamp_ptr",
+      "ie_hex": "001122334455667788000100",
+      "expect_offset": 0
+    },
+    {
+      "name": "beacon_interval_ptr",
+      "fn": "beacon_interval_ptr",
+      "ie_hex": "001122334455667788000100",
+      "expect_offset": 8
+    },
+    {
+      "name": "same_ess_match",
+      "fn": "same_ess",
+      "ssid_a": "RTK5G",
+      "ssid_b": "RTK5G",
+      "expect": 1
+    },
+    {
+      "name": "same_ess_mismatch",
+      "fn": "same_ess",
+      "ssid_a": "RTK5G",
+      "ssid_b": "OTHER",
+      "expect": 0
+    },
+    {
+      "name": "same_network_open",
+      "fn": "same_network",
+      "mac": "00e04c555001",
+      "ssid_a": "RTK5G",
+      "ssid_b": "RTK5G",
+      "cap_a": 1,
+      "cap_b": 1,
+      "feature": 0,
+      "expect": 1
+    },
+    {
+      "name": "same_network_hidden_probe",
+      "fn": "same_network",
+      "mac": "00e04c555001",
+      "ssid_a": "",
+      "ssid_b": "RTK5G",
+      "cap_a": 1,
+      "cap_b": 1,
+      "feature": 0,
+      "expect": 1
+    },
+    {
+      "name": "same_network_mac_mismatch",
+      "fn": "same_network",
+      "mac_a": "00e04c555001",
+      "mac_b": "00e04c555002",
+      "ssid_a": "RTK5G",
+      "ssid_b": "RTK5G",
+      "cap_a": 1,
+      "cap_b": 1,
+      "feature": 0,
+      "expect": 0
+    },
+    {
+      "name": "same_ibss_open_open",
+      "fn": "same_ibss",
+      "adapter_privacy": 0,
+      "network_privacy": 0,
+      "expect": 1
+    },
+    {
+      "name": "same_ibss_sec_open",
+      "fn": "same_ibss",
+      "adapter_privacy": 2,
+      "network_privacy": 0,
+      "expect": 0
+    },
+    {
+      "name": "same_ibss_open_sec",
+      "fn": "same_ibss",
+      "adapter_privacy": 0,
+      "network_privacy": 1,
+      "expect": 0
+    },
+    {
+      "name": "random_ibss",
+      "fn": "random_ibss",
+      "random32": 305419896,
+      "expect_bssid_hex": "021187563412"
+    },
+    {
+      "name": "same_network_p2p_feature",
+      "fn": "same_network",
+      "mac": "00e04c555001",
+      "ssid_a": "P2P-GO-1",
+      "ssid_b": "OTHER",
+      "cap_a": 1,
+      "cap_b": 2,
+      "feature": 1,
+      "expect": 1
+    },
+    {
+      "name": "same_network_hidden_null_bytes",
+      "fn": "same_network",
+      "mac": "00e04c555001",
+      "ssid_a": "",
+      "ssid_a_len": 5,
+      "ssid_b": "RTK5G",
+      "cap_a": 1,
+      "cap_b": 1,
+      "feature": 0,
+      "expect": 1
+    },
+    {
+      "name": "same_network_cap_ibss_bss_mismatch",
+      "fn": "same_network",
+      "mac": "00e04c555001",
+      "ssid_a": "RTK5G",
+      "ssid_b": "RTK5G",
+      "cap_a": 2,
+      "cap_b": 1,
+      "feature": 0,
+      "expect": 0
+    }
+  ]
+}

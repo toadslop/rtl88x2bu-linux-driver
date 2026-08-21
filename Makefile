@@ -1062,6 +1062,7 @@ endif
 
 ifeq ($(CONFIG_P2P), y)
 ccflags-y += -DCONFIG_P2P
+rustflags-y += --cfg config_p2p
 ifneq ($(CONFIG_AP_MODE), y)
 $(error "CONFIG_AP_MODE is required for CONFIG_P2P")
 endif
@@ -2436,6 +2437,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_ieee80211.o \
 		core/rtw_ieee80211_rest.o \
 		core/rtw_mlme.o \
+		core/rtw_mlme_rest.o \
 		core/rtw_mlme_ext.o \
 		core/rtw_mi.o \
 		core/rtw_wlan_util.o \
@@ -2602,6 +2604,7 @@ $(MODULE_NAME)-y += rust/rtw_sta_mgt_aid.o
 $(MODULE_NAME)-y += rust/rtw_recv.o
 $(MODULE_NAME)-y += rust/rtw_xmit.o
 $(MODULE_NAME)-y += rust/rtw_iol_rest.o
+$(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o

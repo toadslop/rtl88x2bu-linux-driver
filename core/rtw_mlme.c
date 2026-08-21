@@ -558,39 +558,7 @@ sint rtw_if_up(_adapter *padapter)
 }
 
 
-void rtw_generate_random_ibss(u8 *pibss)
-{
-	*((u32 *)(&pibss[2])) = rtw_random32();
-	pibss[0] = 0x02; /* in ad-hoc mode local bit must set to 1 */
-	pibss[1] = 0x11;
-	pibss[2] = 0x87;
-}
-
-u8 *rtw_get_capability_from_ie(u8 *ie)
-{
-	return ie + 8 + 2;
-}
-
-
-u16 rtw_get_capability(WLAN_BSSID_EX *bss)
-{
-	u16	val;
-
-	_rtw_memcpy((u8 *)&val, rtw_get_capability_from_ie(bss->IEs), 2);
-
-	return le16_to_cpu(val);
-}
-
-u8 *rtw_get_timestampe_from_ie(u8 *ie)
-{
-	return ie + 0;
-}
-
-u8 *rtw_get_beacon_interval_from_ie(u8 *ie)
-{
-	return ie + 8;
-}
-
+/* BSSID getters and same-network compare live in core/rtw_mlme_rest.c (W3-53). */
 
 int	rtw_init_mlme_priv(_adapter *padapter) /* (struct	mlme_priv *pmlmepriv) */
 {
@@ -690,84 +658,6 @@ struct wlan_network *rtw_find_network(_queue *scanned_queue, const u8 *addr)
 	_exit_critical_bh(&scanned_queue->lock, &irqL);
 
 	return pnetwork;
-}
-
-int rtw_is_same_ibss(_adapter *adapter, struct wlan_network *pnetwork)
-{
-	int ret = _TRUE;
-	struct security_priv *psecuritypriv = &adapter->securitypriv;
-
-	if ((psecuritypriv->dot11PrivacyAlgrthm != _NO_PRIVACY_) &&
-	    (pnetwork->network.Privacy == 0))
-		ret = _FALSE;
-	else if ((psecuritypriv->dot11PrivacyAlgrthm == _NO_PRIVACY_) &&
-		 (pnetwork->network.Privacy == 1))
-		ret = _FALSE;
-	else
-		ret = _TRUE;
-
-	return ret;
-
-}
-
-inline int is_same_ess(WLAN_BSSID_EX *a, WLAN_BSSID_EX *b)
-{
-	return (a->Ssid.SsidLength == b->Ssid.SsidLength)
-	       &&  _rtw_memcmp(a->Ssid.Ssid, b->Ssid.Ssid, a->Ssid.SsidLength) == _TRUE;
-}
-
-int is_same_network(WLAN_BSSID_EX *src, WLAN_BSSID_EX *dst, u8 feature)
-{
-	u16 s_cap, d_cap;
-
-
-	if (rtw_bug_check(dst, src, &s_cap, &d_cap) == _FALSE)
-		return _FALSE;
-
-	_rtw_memcpy((u8 *)&s_cap, rtw_get_capability_from_ie(src->IEs), 2);
-	_rtw_memcpy((u8 *)&d_cap, rtw_get_capability_from_ie(dst->IEs), 2);
-
-
-	s_cap = le16_to_cpu(s_cap);
-	d_cap = le16_to_cpu(d_cap);
-
-
-#ifdef CONFIG_P2P
-	if ((feature == 1) && /* 1: P2P supported */
-	    (_rtw_memcmp(src->MacAddress, dst->MacAddress, ETH_ALEN) == _TRUE)
-	   )
-		return _TRUE;
-#endif
-
-	/* Wi-Fi driver doesn't consider the situation of BCN and ProbRsp sent from the same hidden AP, 
-	  * it considers these two packets are sent from different AP. 
-	  * Therefore, the scan queue may store two scan results of the same hidden AP, likes below.
-	  *
-	  *  index            bssid              ch    RSSI   SdBm  Noise   age          flag             ssid
-	  *    1    00:e0:4c:55:50:01    153   -73     -73        0     7044   [WPS][ESS]     RTK5G
-	  *    3    00:e0:4c:55:50:01    153   -73     -73        0     7044   [WPS][ESS]
-	  *
-	  * Original rules will compare Ssid, SsidLength, MacAddress, s_cap, d_cap at the same time.
-	  * Wi-Fi driver will assume that the BCN and ProbRsp sent from the same hidden AP are the same network
-	  * after we add an additional rule to compare SsidLength and Ssid.
-	  * It means the scan queue will not store two scan results of the same hidden AP, it only store ProbRsp.
-	  * For customer request.
-	  */
-	  
-	if (((_rtw_memcmp(src->MacAddress, dst->MacAddress, ETH_ALEN)) == _TRUE) &&
-		((s_cap & WLAN_CAPABILITY_IBSS) == (d_cap & WLAN_CAPABILITY_IBSS)) &&
-		((s_cap & WLAN_CAPABILITY_BSS) == (d_cap & WLAN_CAPABILITY_BSS))) {
-		if ((src->Ssid.SsidLength == dst->Ssid.SsidLength) && 
-			(((_rtw_memcmp(src->Ssid.Ssid, dst->Ssid.Ssid, src->Ssid.SsidLength)) == _TRUE) || //Case of normal AP
-			(is_all_null(src->Ssid.Ssid, src->Ssid.SsidLength) == _TRUE || is_all_null(dst->Ssid.Ssid, dst->Ssid.SsidLength) == _TRUE))) //Case of hidden AP
-			return _TRUE;
-		else if ((src->Ssid.SsidLength == 0 || dst->Ssid.SsidLength == 0)) //Case of hidden AP
-			return _TRUE;
-		else
-			return _FALSE;
-	} else {
-		return _FALSE;
-	}
 }
 
 struct wlan_network *_rtw_find_same_network(_queue *scanned_queue, struct wlan_network *network)
