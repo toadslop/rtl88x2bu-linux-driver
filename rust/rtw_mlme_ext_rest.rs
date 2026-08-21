@@ -27,6 +27,8 @@ const MAX_CHANNEL_NUM: usize = 59;
 
 const CHANNEL_WIDTH_20: U8 = 0;
 const CHANNEL_WIDTH_40: U8 = 1;
+const CHANNEL_WIDTH_80: U8 = 2;
+const CHANNEL_WIDTH_160: U8 = 3;
 
 const RTW_CHF_NO_IR: U8 = 1 << 0;
 const RTW_CHF_NO_HT40U: U8 = 1 << 4;
@@ -386,10 +388,10 @@ pub extern "C" fn rtw_chset_is_chbw_valid(
                 break;
             }
         }
-        if bw >= 2 && (ent.flags & RTW_CHF_NO_80MHZ) != 0 {
+        if bw >= CHANNEL_WIDTH_80 && (ent.flags & RTW_CHF_NO_80MHZ) != 0 {
             break;
         }
-        if bw >= 3 && (ent.flags & RTW_CHF_NO_160MHZ) != 0 {
+        if bw >= CHANNEL_WIDTH_160 && (ent.flags & RTW_CHF_NO_160MHZ) != 0 {
             break;
         }
         i += 1;
