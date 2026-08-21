@@ -16,6 +16,8 @@
 
 #ifdef HOST_MLME_EXT_TEST
 #include "host_mlme_ext_types.h"
+#undef rtw_warn_on
+extern int rtw_warn_on(int cond);
 #else
 #include <drv_types.h>
 #endif

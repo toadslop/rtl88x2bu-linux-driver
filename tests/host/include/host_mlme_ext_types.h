@@ -28,7 +28,6 @@ typedef unsigned long systime;
 
 #define RTW_PRINT(...) do { } while (0)
 #define RTW_INFO(...) do { } while (0)
-#define rtw_warn_on(cond) ((void)(cond))
 
 typedef struct _RT_CHANNEL_INFO {
 	u8 ChannelNum;
@@ -48,8 +47,8 @@ systime rtw_get_current_time(void);
 systime rtw_ms_to_systime(int ms);
 u32 rtw_systime_to_ms(systime stime);
 bool _rtw_time_after(systime a, systime b);
+bool rtw_time_after(systime a, systime b);
 
-#define rtw_time_after(a, b) _rtw_time_after(a, b)
 #define CH_IS_NON_OCP(rt_ch_info) \
 	(rtw_time_after((rt_ch_info)->non_ocp_end_time, rtw_get_current_time()))
 
