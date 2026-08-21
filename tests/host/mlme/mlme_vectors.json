@@ -99,6 +99,40 @@
       "fn": "random_ibss",
       "random32": 305419896,
       "expect_bssid_hex": "021187563412"
+    },
+    {
+      "name": "same_network_p2p_feature",
+      "fn": "same_network",
+      "mac": "00e04c555001",
+      "ssid_a": "P2P-GO-1",
+      "ssid_b": "OTHER",
+      "cap_a": 1,
+      "cap_b": 2,
+      "feature": 1,
+      "expect": 1
+    },
+    {
+      "name": "same_network_hidden_null_bytes",
+      "fn": "same_network",
+      "mac": "00e04c555001",
+      "ssid_a": "",
+      "ssid_a_len": 5,
+      "ssid_b": "RTK5G",
+      "cap_a": 1,
+      "cap_b": 1,
+      "feature": 0,
+      "expect": 1
+    },
+    {
+      "name": "same_network_cap_ibss_bss_mismatch",
+      "fn": "same_network",
+      "mac": "00e04c555001",
+      "ssid_a": "RTK5G",
+      "ssid_b": "RTK5G",
+      "cap_a": 2,
+      "cap_b": 1,
+      "feature": 0,
+      "expect": 0
     }
   ]
 }

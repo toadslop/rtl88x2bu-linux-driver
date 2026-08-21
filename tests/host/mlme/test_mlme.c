@@ -24,6 +24,7 @@ struct vector {
 	char mac[13], mac_a[13], mac_b[13];
 	u16 cap_a, cap_b;
 	u8 feature;
+	int ssid_a_len, ssid_b_len;
 	int adapter_privacy, network_privacy, expect_offset, expect_u16, expect;
 	u32 random32;
 	char expect_bssid_hex[32];
@@ -55,13 +56,20 @@ static int parse_fn(const char *obj, size_t len, enum mlme_fn *out)
 	return 0;
 }
 
-static void fill_ssid(WLAN_BSSID_EX *bss, const char *ssid)
+static void fill_ssid(WLAN_BSSID_EX *bss, const char *ssid, int ssid_len_override)
 {
+	if (ssid_len_override >= 0) {
+		bss->Ssid.SsidLength = (u32)ssid_len_override;
+		if (ssid && ssid[0])
+			memcpy(bss->Ssid.Ssid, ssid, bss->Ssid.SsidLength);
+		return;
+	}
 	bss->Ssid.SsidLength = (u32)strlen(ssid);
 	memcpy(bss->Ssid.Ssid, ssid, bss->Ssid.SsidLength);
 }
 
-static void fill_bss(WLAN_BSSID_EX *bss, u16 cap, const char *mac_hex, const char *ssid)
+static void fill_bss(WLAN_BSSID_EX *bss, u16 cap, const char *mac_hex, const char *ssid,
+		     int ssid_len_override)
 {
 	u8 ie[12] = {0}, mac[ETH_ALEN];
 	size_t n = 0;
@@ -72,7 +80,7 @@ static void fill_bss(WLAN_BSSID_EX *bss, u16 cap, const char *mac_hex, const cha
 		memcpy(bss->MacAddress, mac, ETH_ALEN);
 	ie[8] = 1; ie[10] = cap & 0xff; ie[11] = cap >> 8;
 	memcpy(bss->IEs, ie, sizeof(ie));
-	fill_ssid(bss, ssid);
+	fill_ssid(bss, ssid, ssid_len_override);
 }
 
 static int parse_vector_object(const char *obj, size_t len, void *vec_void)
@@ -95,6 +103,10 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	if (!host_json_parse_int_in(obj, len, "cap_a", &tmp)) v->cap_a = (u16)tmp;
 	if (!host_json_parse_int_in(obj, len, "cap_b", &tmp)) v->cap_b = (u16)tmp;
 	if (!host_json_parse_int_in(obj, len, "feature", &tmp)) v->feature = (u8)tmp;
+	v->ssid_a_len = -1;
+	v->ssid_b_len = -1;
+	host_json_parse_int_in(obj, len, "ssid_a_len", &v->ssid_a_len);
+	host_json_parse_int_in(obj, len, "ssid_b_len", &v->ssid_b_len);
 	host_json_parse_int_in(obj, len, "adapter_privacy", &v->adapter_privacy);
 	host_json_parse_int_in(obj, len, "network_privacy", &v->network_privacy);
 	if (host_json_parse_int_in(obj, len, "random32", (int *)&v->random32)) v->random32 = 0;
@@ -129,21 +141,21 @@ static int run_vector(struct vector *v)
 			return fail(v, "beacon interval offset");
 		break;
 	case FN_GET_CAPABILITY:
-		fill_bss(&a, 1, NULL, "");
+		fill_bss(&a, 1, NULL, "", -1);
 		if (host_hex_decode(v->ie_hex, a.IEs, sizeof(a.IEs), &n) || n != 12)
 			return fail(v, "ie decode");
 		if (rtw_get_capability(&a) != (u16)v->expect_u16)
 			return fail(v, "capability");
 		break;
 	case FN_SAME_ESS:
-		fill_bss(&a, 0, NULL, v->ssid_a);
-		fill_bss(&b, 0, NULL, v->ssid_b);
+		fill_bss(&a, 0, NULL, v->ssid_a, -1);
+		fill_bss(&b, 0, NULL, v->ssid_b, -1);
 		if (is_same_ess(&a, &b) != v->expect)
 			return fail(v, "same_ess");
 		break;
 	case FN_SAME_NETWORK:
-		fill_bss(&a, v->cap_a, v->mac_a[0] ? v->mac_a : v->mac, v->ssid_a);
-		fill_bss(&b, v->cap_b, v->mac_b[0] ? v->mac_b : v->mac, v->ssid_b);
+		fill_bss(&a, v->cap_a, v->mac_a[0] ? v->mac_a : v->mac, v->ssid_a, v->ssid_a_len);
+		fill_bss(&b, v->cap_b, v->mac_b[0] ? v->mac_b : v->mac, v->ssid_b, v->ssid_b_len);
 		if (is_same_network(&a, &b, v->feature) != v->expect)
 			return fail(v, "same_network");
 		break;

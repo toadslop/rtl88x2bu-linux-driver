@@ -28,7 +28,7 @@ test_mlme: test_mlme.c $(MLME_REST_SRC) $(MLME_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_mlme.c $(MLME_REST_SRC) $(MLME_SHIM) $(HOST_JSON)
 
 librust_mlme_rest.a: $(RUST_MLME_REST)
-	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_mlme_test \
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_mlme_test --cfg config_p2p \
 		--crate-type staticlib $(RUST_MLME_REST) -o $@
 
 test-rust: test_mlme_rust

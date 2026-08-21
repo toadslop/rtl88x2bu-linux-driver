@@ -94,6 +94,10 @@ fn memcmp_bytes(a: *const u8, b: *const u8, n: usize) -> bool {
 fn all_null_bytes(s: *mut u8, len: u32) -> bool {
     unsafe { is_all_null(s as *mut i8, len as c_int) == _TRUE }
 }
+fn read_le_u16_from_cap(ie: *mut U8) -> U16 {
+    let p = cap_ptr(ie);
+    unsafe { u16::from_le_bytes([*p, *p.add(1)]) }
+}
 
 #[no_mangle]
 pub extern "C" fn rtw_generate_random_ibss(pibss: *mut U8) {
@@ -124,9 +128,7 @@ pub extern "C" fn rtw_get_capability(bss: *mut c_void) -> U16 {
     if bss.is_null() {
         return 0;
     }
-    let mut val = 0u16;
-    memcpy_bytes((&mut val as *mut u16) as *mut u8, cap_ptr(bss_ies(bss)), 2);
-    val
+    read_le_u16_from_cap(bss_ies(bss))
 }
 #[no_mangle]
 pub extern "C" fn rtw_is_same_ibss(adapter: *mut c_void, pnetwork: *mut c_void) -> c_int {
@@ -159,22 +161,18 @@ pub extern "C" fn is_same_ess(a: *mut c_void, b: *mut c_void) -> c_int {
     }
 }
 #[no_mangle]
-pub extern "C" fn is_same_network(src: *mut c_void, dst: *mut c_void, _feature: U8) -> c_int {
+pub extern "C" fn is_same_network(src: *mut c_void, dst: *mut c_void, feature: U8) -> c_int {
     if src.is_null() || dst.is_null() {
         return _FALSE;
     }
-    let mut s_cap = 0u16;
-    let mut d_cap = 0u16;
-    memcpy_bytes(
-        (&mut s_cap as *mut u16) as *mut u8,
-        cap_ptr(bss_ies(src)),
-        2,
-    );
-    memcpy_bytes(
-        (&mut d_cap as *mut u16) as *mut u8,
-        cap_ptr(bss_ies(dst)),
-        2,
-    );
+    #[cfg(config_p2p)]
+    {
+        if feature == 1 && memcmp_bytes(bss_mac(src), bss_mac(dst), ETH_ALEN) {
+            return _TRUE;
+        }
+    }
+    let s_cap = read_le_u16_from_cap(bss_ies(src));
+    let d_cap = read_le_u16_from_cap(bss_ies(dst));
     if memcmp_bytes(bss_mac(src), bss_mac(dst), ETH_ALEN)
         && (s_cap & 2) == (d_cap & 2)
         && (s_cap & 1) == (d_cap & 1)

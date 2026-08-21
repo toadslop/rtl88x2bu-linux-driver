@@ -1062,6 +1062,7 @@ endif
 
 ifeq ($(CONFIG_P2P), y)
 ccflags-y += -DCONFIG_P2P
+rustflags-y += --cfg config_p2p
 ifneq ($(CONFIG_AP_MODE), y)
 $(error "CONFIG_AP_MODE is required for CONFIG_P2P")
 endif
