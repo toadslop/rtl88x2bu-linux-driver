@@ -13,7 +13,7 @@ RUSTC  := rustc
 CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
           -I$(HOST_INC) -I$(CORE) \
           -include $(HOST_INC)/host_autoconf.h \
-          -DHOST_MLME_TEST
+          -DHOST_MLME_TEST -DCONFIG_P2P
 
 .PHONY: all test test-c test-rust clean
 
