@@ -198,7 +198,12 @@ pub extern "C" fn rtw_chset_is_chbw_non_ocp(
 #[cfg(any(dfs_master, host_mlme_ext_test))]
 #[no_mangle]
 pub extern "C" fn rtw_chset_is_ch_non_ocp(ch_set: *mut RtChannelInfo, ch: U8) -> Bool {
-    rtw_chset_is_chbw_non_ocp(ch_set, ch, CHANNEL_WIDTH_20, HAL_PRIME_CHNL_OFFSET_DONT_CARE)
+    rtw_chset_is_chbw_non_ocp(
+        ch_set,
+        ch,
+        CHANNEL_WIDTH_20,
+        HAL_PRIME_CHNL_OFFSET_DONT_CARE,
+    )
 }
 
 #[cfg(any(dfs_master, host_mlme_ext_test))]
@@ -212,9 +217,7 @@ pub extern "C" fn rtw_chset_get_ch_non_ocp_ms(
     let mut ms: i32 = 0;
     let mut hi: U32 = 0;
     let mut lo: U32 = 0;
-    if ch_set.is_null()
-        || unsafe { !rtw_chbw_to_freq_range(ch, bw, offset, &mut hi, &mut lo) }
-    {
+    if ch_set.is_null() || unsafe { !rtw_chbw_to_freq_range(ch, bw, offset, &mut hi, &mut lo) } {
         return 0;
     }
     let current_time = current_time();
