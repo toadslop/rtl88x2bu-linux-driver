@@ -112,8 +112,23 @@
       "ch": 36,
       "bw": 1,
       "offset": 1,
+      "current_time_ms": 0,
       "update_ms": 120000,
-      "expect_updated": 1
+      "expect_updated": 1,
+      "expect_non_ocp_end_ms": "120000,120000,0,0"
+    },
+    {
+      "name": "update_non_ocp_offset_time",
+      "fn": "update_non_ocp",
+      "chset": "24282c30",
+      "flags": "00000000",
+      "ch": 36,
+      "bw": 1,
+      "offset": 1,
+      "current_time_ms": 50000,
+      "update_ms": 120000,
+      "expect_updated": 1,
+      "expect_non_ocp_end_ms": "170000,170000,0,0"
     }
   ]
 }

@@ -18,7 +18,8 @@ systime rtw_get_current_time(void)
 
 systime rtw_ms_to_systime(int ms)
 {
-	return host_current_time + (systime)ms;
+	/* Duration in ms (kernel: msecs_to_jiffies); not an absolute time. */
+	return (systime)ms;
 }
 
 u32 rtw_systime_to_ms(systime stime)

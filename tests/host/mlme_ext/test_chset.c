@@ -40,6 +40,7 @@ struct vector {
 	u8 allow_passive;
 	s32 current_time_ms;
 	s32 non_ocp_end_ms[MAX_CHSET];
+	s32 expect_non_ocp_end_ms[MAX_CHSET];
 	int update_ms;
 	int expect_idx;
 	int expect_valid;
@@ -50,6 +51,7 @@ struct vector {
 	u8 expect_req_bw;
 	u8 expect_req_offset;
 	u8 expect_g_bw;
+	u8 has_expect_non_ocp_end_ms;
 };
 
 static RT_CHANNEL_INFO chset_buf[MAX_CHANNEL_NUM];
@@ -150,6 +152,12 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	if (parse_s32_array(obj, len, "non_ocp_end_ms", v->non_ocp_end_ms,
 			    MAX_CHSET))
 		return -1;
+	if (host_json_find_key_in(obj, len, "expect_non_ocp_end_ms")) {
+		v->has_expect_non_ocp_end_ms = 1;
+		if (parse_s32_array(obj, len, "expect_non_ocp_end_ms",
+				    v->expect_non_ocp_end_ms, MAX_CHSET))
+			return -1;
+	}
 	if (!host_json_parse_int_in(obj, len, "ch", &tmp))
 		v->ch = (u32)tmp;
 	if (!host_json_parse_int_in(obj, len, "bw", &tmp))
@@ -260,6 +268,7 @@ static int run_vector(struct vector *v)
 		break;
 	}
 	case FN_UPDATE_NON_OCP: {
+		size_t j;
 		bool updated = rtw_chset_update_non_ocp_ms(
 			chset_buf, v->ch, v->bw, v->offset, v->update_ms);
 
@@ -267,6 +276,20 @@ static int run_vector(struct vector *v)
 			fprintf(stderr, "%s: update -> %d expected %d\n",
 				v->name, updated, v->expect_updated);
 			return -1;
+		}
+		if (!v->has_expect_non_ocp_end_ms)
+			break;
+		for (j = 0; j < MAX_CHSET && v->chset[j]; j++) {
+			systime got = chset_buf[j].non_ocp_end_time;
+			s32 expect = v->expect_non_ocp_end_ms[j];
+
+			if ((s32)got != expect) {
+				fprintf(stderr,
+					"%s: ch %u non_ocp_end_time %ld expected %d\n",
+					v->name, v->chset[j], (long)got,
+					expect);
+				return -1;
+			}
 		}
 		break;
 	}
