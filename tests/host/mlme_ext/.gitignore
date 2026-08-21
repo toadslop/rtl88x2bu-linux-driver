@@ -1,1 +1,3 @@
 test_chset
+test_chset_rust
+librust_mlme_ext_rest.a

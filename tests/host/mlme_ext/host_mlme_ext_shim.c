@@ -4,6 +4,8 @@
  */
 #include "host_mlme_ext_types.h"
 
+#undef rtw_warn_on
+
 static systime host_current_time;
 
 void host_mlme_ext_set_current_time(systime t)
@@ -18,7 +20,7 @@ systime rtw_get_current_time(void)
 
 systime rtw_ms_to_systime(int ms)
 {
-	/* Duration in ms (kernel: msecs_to_jiffies); not an absolute time. */
+	/* Delta only — callers add rtw_get_current_time() (matches _rtw_ms_to_systime). */
 	return (systime)ms;
 }
 
@@ -31,6 +33,17 @@ u32 rtw_systime_to_ms(systime stime)
 bool _rtw_time_after(systime a, systime b)
 {
 	return a > b;
+}
+
+bool rtw_time_after(systime a, systime b)
+{
+	return _rtw_time_after(a, b);
+}
+
+int rtw_warn_on(int cond)
+{
+	(void)cond;
+	return 0;
 }
 
 bool rtw_is_chbw_grouped(u8 ch_a, u8 bw_a, u8 offset_a, u8 ch_b, u8 bw_b,

@@ -9,6 +9,14 @@
       "expect_idx": 1
     },
     {
+      "name": "search_stride_kernel_layout",
+      "fn": "search",
+      "chset": "182436484c",
+      "flags": "0000000000",
+      "ch": 36,
+      "expect_idx": 1
+    },
+    {
       "name": "search_miss",
       "fn": "search",
       "chset": "01060b",

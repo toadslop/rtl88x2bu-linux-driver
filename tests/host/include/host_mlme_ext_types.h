@@ -28,13 +28,19 @@ typedef unsigned long systime;
 
 #define RTW_PRINT(...) do { } while (0)
 #define RTW_INFO(...) do { } while (0)
-#define rtw_warn_on(cond) ((void)(cond))
 
+/* Mirror kernel RT_CHANNEL_INFO stride (32 bytes with DFS master + cfg80211). */
 typedef struct _RT_CHANNEL_INFO {
 	u8 ChannelNum;
 	u8 flags;
+	u8 _pad0[6];
 	systime non_ocp_end_time;
+	u8 hidden_bss_cnt;
+	u8 _pad1[7];
+	void *os_chan;
 } RT_CHANNEL_INFO;
+
+_Static_assert(sizeof(RT_CHANNEL_INFO) == 32, "host RT_CHANNEL_INFO must match kernel stride");
 
 bool rtw_chbw_to_freq_range(u8 ch, u8 bw, u8 offset, u32 *hi, u32 *lo);
 int rtw_ch2freq(int chan);
@@ -48,8 +54,8 @@ systime rtw_get_current_time(void);
 systime rtw_ms_to_systime(int ms);
 u32 rtw_systime_to_ms(systime stime);
 bool _rtw_time_after(systime a, systime b);
+bool rtw_time_after(systime a, systime b);
 
-#define rtw_time_after(a, b) _rtw_time_after(a, b)
 #define CH_IS_NON_OCP(rt_ch_info) \
 	(rtw_time_after((rt_ch_info)->non_ocp_end_time, rtw_get_current_time()))
 
