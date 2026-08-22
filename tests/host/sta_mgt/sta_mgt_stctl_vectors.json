@@ -43,6 +43,12 @@
       "expect": 2
     },
     {
+      "name": "stainfo_offset_oob_sta_index",
+      "fn": "rtw_stainfo_offset",
+      "sta_index": 4,
+      "expect_setup_fail": 1
+    },
+    {
       "name": "unregister_clears_trackers",
       "fn": "rtw_st_ctl_unregister",
       "with_reg": 1,

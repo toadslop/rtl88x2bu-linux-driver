@@ -230,4 +230,14 @@ u8 rtw_rust_stctl_any_reg(struct st_ctl_t *st_ctl)
 	return 0;
 }
 
+void rtw_rust_stctl_warn_on(int condition)
+{
+	rtw_warn_on(condition);
+}
+
+void rtw_rust_stainfo_offset_invalid_log(const char *func, int offset)
+{
+	RTW_INFO("%s invalid offset(%d), out of range!!!", func, offset);
+}
+
 #endif /* CONFIG_RUST && !HOST_STA_MGT_TEST */

@@ -100,11 +100,14 @@ for path in "${changed[@]}"; do
 		;;
 	rust/rtw_sta_mgt.rs \
 	| rust/rtw_sta_mgt_aid.rs \
+	| rust/rtw_sta_mgt_stctl.rs \
 	| core/rtw_sta_mgt.c \
 	| core/rtw_sta_mgt_rest.c \
+	| core/rtw_sta_mgt_stctl.c \
 	| tests/host/sta_mgt/*)
 		add_target rust-check-symbols-rtw-sta-mgt
 		add_target rust-check-symbols-rtw-sta-mgt-aid
+		add_target rust-check-symbols-rtw-sta-mgt-stctl
 		;;
 	rust/rtw_recv.rs \
 	| core/rtw_recv_rest.c \
@@ -198,6 +201,7 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-vht-restructure
 	rust-check-symbols-rtw-sta-mgt
 	rust-check-symbols-rtw-sta-mgt-aid
+	rust-check-symbols-rtw-sta-mgt-stctl
 	rust-check-symbols-rtw-recv
 	rust-check-symbols-rtw-recv-pn
 	rust-check-symbols-rtw-xmit

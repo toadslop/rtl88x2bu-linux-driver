@@ -115,7 +115,8 @@ mod kernel {
         pub fn rtw_rust_stctl_reg_set(st_ctl: *mut u8, idx: u8, s_proto: u8, rule: RuleFn);
         pub fn rtw_rust_stctl_reg_clear(st_ctl: *mut u8, idx: u8);
         pub fn rtw_rust_stctl_any_reg(st_ctl: *mut u8) -> u8;
-        pub fn rtw_rust_sta_warn_on(cond: c_int);
+        pub fn rtw_rust_stctl_warn_on(cond: c_int);
+        pub fn rtw_rust_stainfo_offset_invalid_log(func: *const u8, offset: c_int);
     }
 }
 
@@ -187,7 +188,14 @@ pub extern "C" fn rtw_st_ctl_deinit(st_ctl: *mut StCtl) {
 
 #[no_mangle]
 pub extern "C" fn rtw_st_ctl_register(st_ctl: *mut StCtl, st_reg_id: u8, reg: *mut StRegister) {
-    if st_ctl.is_null() || reg.is_null() || st_reg_id as usize >= SESSION_TRACKER_REG_ID_NUM {
+    if st_reg_id as usize >= SESSION_TRACKER_REG_ID_NUM {
+        #[cfg(not(host_sta_mgt_test))]
+        unsafe {
+            kernel::rtw_rust_stctl_warn_on(1);
+        }
+        return;
+    }
+    if st_ctl.is_null() || reg.is_null() {
         return;
     }
     #[cfg(host_sta_mgt_test)]
@@ -206,7 +214,14 @@ pub extern "C" fn rtw_st_ctl_register(st_ctl: *mut StCtl, st_reg_id: u8, reg: *m
 
 #[no_mangle]
 pub extern "C" fn rtw_st_ctl_unregister(st_ctl: *mut StCtl, st_reg_id: u8) {
-    if st_ctl.is_null() || st_reg_id as usize >= SESSION_TRACKER_REG_ID_NUM {
+    if st_reg_id as usize >= SESSION_TRACKER_REG_ID_NUM {
+        #[cfg(not(host_sta_mgt_test))]
+        unsafe {
+            kernel::rtw_rust_stctl_warn_on(1);
+        }
+        return;
+    }
+    if st_ctl.is_null() {
         return;
     }
     #[cfg(host_sta_mgt_test)]
@@ -305,7 +320,10 @@ pub extern "C" fn rtw_stainfo_offset(stapriv: *mut StaPriv, sta: *mut StaInfo) -
         }
         let offset = sta.cast::<u8>().offset_from(buf) / size;
         if kernel::rtw_rust_stainfo_offset_valid(offset as c_int) == 0 {
-            kernel::rtw_rust_sta_warn_on(1);
+            kernel::rtw_rust_stainfo_offset_invalid_log(
+                b"rtw_stainfo_offset\0".as_ptr(),
+                offset as c_int,
+            );
         }
         offset as c_int
     }
