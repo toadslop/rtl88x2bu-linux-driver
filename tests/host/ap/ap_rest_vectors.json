@@ -1,0 +1,8 @@
+{
+  "vectors": [
+    {"name":"tim_empty","fn":"rtw_set_tim_ie","dtim_cnt":0,"dtim_period":1,"tim_bmp":"","tim_bmp_len":2,"expect_len":6,"expect_ie":"050400010000"},
+    {"name":"tim_aid0","fn":"rtw_set_tim_ie","dtim_cnt":1,"dtim_period":3,"tim_bmp":"01","expect_len":6,"expect_ie":"050401030101"},
+    {"name":"vapid_alloc","fn":"rtw_ap_allocate_vapid","vap_map":0,"expect_vap_id":0,"expect_vap_map":1},
+    {"name":"vapid_release","fn":"rtw_ap_release_vapid","vap_map":3,"vap_id":1,"expect_ret":1,"expect_vap_map":1}
+  ]
+}
