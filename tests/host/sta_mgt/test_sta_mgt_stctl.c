@@ -29,6 +29,7 @@ struct vector {
 	int add_tracker;
 	int expect;
 	int expect_trackers;
+	int expect_setup_fail;
 };
 
 static int parse_fn(const char *obj, size_t len, enum stctl_fn *out)
@@ -68,6 +69,7 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	struct vector *v = vec_void;
 
 	memset(v, 0, sizeof(*v));
+	v->expect_trackers = -1;
 	if (host_json_parse_string_in(obj, len, "name", v->name, sizeof(v->name)))
 		return -1;
 	if (parse_fn(obj, len, &v->fn))
@@ -76,7 +78,10 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	host_json_parse_int_in(obj, len, "s_proto", (int *)&v->s_proto);
 	host_json_parse_int_in(obj, len, "with_reg", &v->with_reg);
 	host_json_parse_int_in(obj, len, "add_tracker", &v->add_tracker);
-	host_json_parse_int_in(obj, len, "expect_trackers", &v->expect_trackers);
+	if (host_json_parse_int_in(obj, len, "expect_trackers", &v->expect_trackers) == 0 &&
+	    v->fn == FN_UNREGISTER)
+		v->expect = v->expect_trackers;
+	host_json_parse_int_in(obj, len, "expect_setup_fail", &v->expect_setup_fail);
 	host_json_parse_int_in(obj, len, "sta_index", (int *)&v->sta_index);
 	if (parse_hex_opt(obj, len, "local_port", v->local_port, 2))
 		return -1;
@@ -111,15 +116,18 @@ static int run_vector(struct vector *v)
 		      0;
 		break;
 	case FN_OFFSET:
-		if (host_sta_mgt_offset_setup(&adapter, v->sta_index, &sta))
+		if (host_sta_mgt_offset_setup(&adapter, v->sta_index, &sta)) {
+			if (v->expect_setup_fail) {
+				printf("PASS %s\n", v->name);
+				return 0;
+			}
 			return -1;
+		}
 		got = rtw_stainfo_offset(&adapter.stapriv, sta);
 		break;
 	case FN_UNREGISTER:
 		rtw_st_ctl_unregister(&st_ctl, 0);
 		got = host_sta_mgt_stctl_tracker_count(&st_ctl);
-		if (v->expect_trackers >= 0)
-			v->expect = v->expect_trackers;
 		break;
 	default:
 		return -1;

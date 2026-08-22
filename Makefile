@@ -3083,6 +3083,22 @@ rust-check-symbols-rtw-sta-mgt-aid: rust-objects-rtw-sta-mgt-c rust-objects-rtw-
 	$(MAKE) rust-check-symbols OLD=tests/host/sta_mgt/sta_mgt_rest_c_ref.o NEW=tests/host/sta_mgt/sta_mgt_aid_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_sta_mgt_aid.allow
 
+# W3-55 PR3: stctl-only L1 (host C oracle vs host Rust oracle).
+rust-objects-rtw-sta-mgt-stctl-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_STA_MGT_TEST -o tests/host/sta_mgt/sta_mgt_stctl_c_ref.o core/rtw_sta_mgt_stctl.c
+
+rust-objects-rtw-sta-mgt-stctl-rust-ref:
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_sta_mgt_test \
+		--emit=obj=tests/host/sta_mgt/sta_mgt_stctl_rust_ref.o \
+		--crate-type lib rust/rtw_sta_mgt_stctl.rs
+
+rust-check-symbols-rtw-sta-mgt-stctl: rust-objects-rtw-sta-mgt-stctl-c rust-objects-rtw-sta-mgt-stctl-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/sta_mgt/sta_mgt_stctl_c_ref.o NEW=tests/host/sta_mgt/sta_mgt_stctl_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_sta_mgt_stctl.allow
+
 # W3-39: host C oracle recv_rest vs rust/rtw_recv.o.
 rust-objects-rtw-recv:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-recv"; exit 1; }
