@@ -1,0 +1,71 @@
+{
+  "vectors": [
+    {
+      "name": "init_dual_band_cap_count",
+      "fn": "op_class_pref_init",
+      "wireless_mode": 95,
+      "bw_mode": 49,
+      "vht_enable": 1,
+      "band_cap": 3,
+      "hal_bw_cap": 60,
+      "expect_ret": 1,
+      "expect_cap_num": 19
+    },
+    {
+      "name": "init_2g_only",
+      "fn": "op_class_pref_init",
+      "wireless_mode": 11,
+      "bw_mode": 1,
+      "band_cap": 1,
+      "hal_bw_cap": 12,
+      "expect_ret": 1,
+      "expect_cap_num": 4
+    },
+    {
+      "name": "deinit_clears_table",
+      "fn": "op_class_pref_deinit"
+    },
+    {
+      "name": "apply_reg_change_2g_class81",
+      "fn": "op_class_pref_apply_regulatory",
+      "reason": 2,
+      "class_id": 81,
+      "chset": "{6,0},{7,0},{8,0}",
+      "dfs_unknown": 0,
+      "expect_reg_num": 1,
+      "expect_cur_num": 1,
+      "expect_op_ch_num": 3,
+      "expect_ir_ch_num": 3,
+      "expect_static_non_op": 0,
+      "expect_no_ir": 0
+    },
+    {
+      "name": "apply_txpwr_change_class81_ch6",
+      "fn": "op_class_pref_apply_regulatory",
+      "reason": 1,
+      "class_id": 81,
+      "txpwr_mbm": 1800,
+      "chset": "{6,0}",
+      "expect_max_txpwr": 1800
+    },
+    {
+      "name": "apply_beacon_hint_skips_reg_counts",
+      "fn": "op_class_pref_apply_regulatory",
+      "reason": 0,
+      "class_id": 81,
+      "chset": "{6,0}",
+      "expect_reg_num": 0,
+      "expect_cur_num": 0
+    },
+    {
+      "name": "apply_reg_change_no_ir_channel",
+      "fn": "op_class_pref_apply_regulatory",
+      "reason": 2,
+      "class_id": 81,
+      "chset": "{6,1}",
+      "dfs_unknown": 0,
+      "expect_op_ch_num": 0,
+      "expect_ir_ch_num": 0
+    }
+  ]
+}

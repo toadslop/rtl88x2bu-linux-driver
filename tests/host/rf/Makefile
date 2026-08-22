@@ -18,16 +18,21 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable
 REGD_EXC_CFLAGS := $(CFLAGS) -DCONFIG_TXPWR_LIMIT -Wno-unused-but-set-variable
 TXPWR_LMT_CFLAGS := $(REGD_EXC_CFLAGS)
 
+OPC_PREF_SRC := $(CORE)/rtw_rf_op_class_pref.c
+OPC_PREF_SHIM := host_rf_op_class_pref_shim.c
+OPC_PREF_CFLAGS := $(CFLAGS) -DHOST_RF_OP_CLASS_PREF_TEST
+
 .PHONY: all test test-c test-rust clean
 
 all: test
 
 test: test-c test-rust
 
-test-c: test_rf test_regd_exc test_txpwr_lmt
+test-c: test_rf test_regd_exc test_txpwr_lmt test_op_class_pref
 	./test_rf rf_vectors.json
 	./test_regd_exc regd_exc_vectors.json
 	./test_txpwr_lmt txpwr_lmt_vectors.json
+	./test_op_class_pref op_class_pref_vectors.json
 
 test_rf: test_rf.c $(RF_SRC) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_rf.c $(RF_SRC) $(HOST_JSON)
@@ -37,6 +42,9 @@ test_regd_exc: test_regd_exc.c $(RF_SRC) $(REGD_EXC_SHIM) $(TXPWR_LMT_SHIM) $(HO
 
 test_txpwr_lmt: test_txpwr_lmt.c $(RF_SRC) $(REGD_EXC_SHIM) $(TXPWR_LMT_SHIM) $(HOST_JSON)
 	$(CC) $(TXPWR_LMT_CFLAGS) -o $@ test_txpwr_lmt.c $(REGD_EXC_SHIM) $(TXPWR_LMT_SHIM) $(RF_SRC) $(HOST_JSON)
+
+test_op_class_pref: test_op_class_pref.c $(RF_SRC) $(OPC_PREF_SRC) $(OPC_PREF_SHIM) $(HOST_JSON)
+	$(CC) $(OPC_PREF_CFLAGS) -o $@ test_op_class_pref.c $(OPC_PREF_SHIM) $(RF_SRC) $(OPC_PREF_SRC) $(HOST_JSON)
 
 librust_rf_rest.a: $(ROOT)/rust/rtw_rf_rest.rs
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_rf_rest_test --cfg txpwr_limit --cfg rust_txpwr_lmt \
@@ -59,4 +67,4 @@ test_txpwr_lmt_rust: test_txpwr_lmt.c librust_rf_rest.a $(REGD_EXC_SHIM) $(TXPWR
 	$(CC) $(TXPWR_LMT_CFLAGS) -DRUST_RF_TXPWR_LMT_ORACLE -o $@ test_txpwr_lmt.c $(REGD_EXC_SHIM) $(TXPWR_LMT_SHIM) $(HOST_JSON) librust_rf_rest.a
 
 clean:
-	rm -f test_rf test_regd_exc test_txpwr_lmt test_rf_rust test_regd_exc_rust test_txpwr_lmt_rust librust_rf_rest.a
+	rm -f test_rf test_regd_exc test_txpwr_lmt test_op_class_pref test_rf_rust test_regd_exc_rust test_txpwr_lmt_rust librust_rf_rest.a
