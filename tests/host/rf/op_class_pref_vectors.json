@@ -12,6 +12,17 @@
       "expect_cap_num": 19
     },
     {
+      "name": "init_dual_band_no_vht",
+      "fn": "op_class_pref_init",
+      "wireless_mode": 95,
+      "bw_mode": 49,
+      "vht_enable": 0,
+      "band_cap": 3,
+      "hal_bw_cap": 60,
+      "expect_ret": 1,
+      "expect_cap_num": 17
+    },
+    {
       "name": "init_2g_only",
       "fn": "op_class_pref_init",
       "wireless_mode": 11,
@@ -55,7 +66,7 @@
       "class_id": 81,
       "chset": "{6,0}",
       "expect_reg_num": 0,
-      "expect_cur_num": 0
+      "expect_cur_num": 1
     },
     {
       "name": "apply_reg_change_no_ir_channel",
@@ -64,8 +75,9 @@
       "class_id": 81,
       "chset": "{6,1}",
       "dfs_unknown": 0,
-      "expect_op_ch_num": 0,
-      "expect_ir_ch_num": 0
+      "expect_op_ch_num": 1,
+      "expect_ir_ch_num": 0,
+      "expect_no_ir": 1
     }
   ]
 }

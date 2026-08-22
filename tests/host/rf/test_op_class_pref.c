@@ -29,6 +29,7 @@ struct vector {
 	u8 wireless_mode;
 	u8 bw_mode;
 	u8 vht_enable;
+	u8 has_vht_enable;
 	u8 band_cap;
 	u8 hal_bw_cap;
 	u8 reason;
@@ -38,13 +39,19 @@ struct vector {
 	s16 txpwr_mbm;
 	int expect_ret;
 	int expect_cap_num;
+	u8 has_expect_cap_num;
 	int expect_reg_num;
+	u8 has_expect_reg_num;
 	int expect_cur_num;
+	u8 has_expect_cur_num;
 	int expect_op_ch_num;
+	u8 has_expect_op_ch_num;
 	int expect_ir_ch_num;
+	u8 has_expect_ir_ch_num;
 	int expect_static_non_op;
 	int expect_no_ir;
 	int expect_max_txpwr;
+	u8 has_expect_max_txpwr;
 	size_t chset_len;
 	struct chset_entry chset[MAX_CHSET];
 };
@@ -96,6 +103,16 @@ static int parse_chset_array(const char *obj, size_t len, struct vector *v)
 	return 0;
 }
 
+static int parse_u8_field(const char *obj, size_t len, const char *key, u8 *out)
+{
+	int tmp;
+
+	if (host_json_parse_int_in(obj, len, key, &tmp))
+		return -1;
+	*out = (u8)tmp;
+	return 0;
+}
+
 static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 {
 	struct vector *v = vec_void;
@@ -108,24 +125,46 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	if (parse_fn(obj, len, &v->fn))
 		return -1;
 	host_json_parse_int_in(obj, len, "expect_ret", &v->expect_ret);
-	host_json_parse_int_in(obj, len, "expect_cap_num", &v->expect_cap_num);
-	host_json_parse_int_in(obj, len, "expect_reg_num", &v->expect_reg_num);
-	host_json_parse_int_in(obj, len, "expect_cur_num", &v->expect_cur_num);
-	host_json_parse_int_in(obj, len, "expect_op_ch_num", &v->expect_op_ch_num);
-	host_json_parse_int_in(obj, len, "expect_ir_ch_num", &v->expect_ir_ch_num);
+	if (host_json_find_key_in(obj, len, "expect_cap_num")) {
+		v->has_expect_cap_num = 1;
+		host_json_parse_int_in(obj, len, "expect_cap_num", &v->expect_cap_num);
+	}
+	if (host_json_find_key_in(obj, len, "expect_reg_num")) {
+		v->has_expect_reg_num = 1;
+		host_json_parse_int_in(obj, len, "expect_reg_num", &v->expect_reg_num);
+	}
+	if (host_json_find_key_in(obj, len, "expect_cur_num")) {
+		v->has_expect_cur_num = 1;
+		host_json_parse_int_in(obj, len, "expect_cur_num", &v->expect_cur_num);
+	}
+	if (host_json_find_key_in(obj, len, "expect_op_ch_num")) {
+		v->has_expect_op_ch_num = 1;
+		host_json_parse_int_in(obj, len, "expect_op_ch_num", &v->expect_op_ch_num);
+	}
+	if (host_json_find_key_in(obj, len, "expect_ir_ch_num")) {
+		v->has_expect_ir_ch_num = 1;
+		host_json_parse_int_in(obj, len, "expect_ir_ch_num", &v->expect_ir_ch_num);
+	}
 	host_json_parse_int_in(obj, len, "expect_static_non_op", &v->expect_static_non_op);
 	host_json_parse_int_in(obj, len, "expect_no_ir", &v->expect_no_ir);
-	host_json_parse_int_in(obj, len, "expect_max_txpwr", &v->expect_max_txpwr);
-	host_json_parse_int_in(obj, len, "wireless_mode", (int *)&v->wireless_mode);
-	host_json_parse_int_in(obj, len, "bw_mode", (int *)&v->bw_mode);
-	host_json_parse_int_in(obj, len, "vht_enable", (int *)&v->vht_enable);
-	host_json_parse_int_in(obj, len, "band_cap", (int *)&v->band_cap);
-	host_json_parse_int_in(obj, len, "hal_bw_cap", (int *)&v->hal_bw_cap);
-	host_json_parse_int_in(obj, len, "reason", (int *)&v->reason);
-	host_json_parse_int_in(obj, len, "class_id", (int *)&v->class_id);
-	host_json_parse_int_in(obj, len, "country_en_11ac", (int *)&v->country_en_11ac);
-	host_json_parse_int_in(obj, len, "dfs_unknown", (int *)&v->dfs_unknown);
-	host_json_parse_int_in(obj, len, "txpwr_mbm", (int *)&v->txpwr_mbm);
+	if (host_json_find_key_in(obj, len, "expect_max_txpwr")) {
+		v->has_expect_max_txpwr = 1;
+		host_json_parse_int_in(obj, len, "expect_max_txpwr", &v->expect_max_txpwr);
+	}
+	parse_u8_field(obj, len, "wireless_mode", &v->wireless_mode);
+	parse_u8_field(obj, len, "bw_mode", &v->bw_mode);
+	if (host_json_find_key_in(obj, len, "vht_enable")) {
+		v->has_vht_enable = 1;
+		parse_u8_field(obj, len, "vht_enable", &v->vht_enable);
+	}
+	parse_u8_field(obj, len, "band_cap", &v->band_cap);
+	parse_u8_field(obj, len, "hal_bw_cap", &v->hal_bw_cap);
+	parse_u8_field(obj, len, "reason", &v->reason);
+	parse_u8_field(obj, len, "class_id", &v->class_id);
+	parse_u8_field(obj, len, "country_en_11ac", &v->country_en_11ac);
+	parse_u8_field(obj, len, "dfs_unknown", &v->dfs_unknown);
+	if (!host_json_parse_int_in(obj, len, "txpwr_mbm", (int *)&v->txpwr_mbm))
+		(void)0;
 	parse_chset_array(obj, len, v);
 	return 0;
 }
@@ -142,7 +181,7 @@ static void setup_adapter(struct vector *v, _adapter *adapter)
 		regsty->wireless_mode = v->wireless_mode;
 	if (v->bw_mode)
 		regsty->bw_mode = v->bw_mode;
-	if (v->vht_enable)
+	if (v->has_vht_enable)
 		regsty->vht_enable = v->vht_enable;
 	if (v->band_cap)
 		host_rf_op_class_pref_set_hal(v->band_cap, v->hal_bw_cap ? v->hal_bw_cap :
@@ -194,7 +233,7 @@ static int run_vector(struct vector *v)
 				v->expect_ret);
 			return -1;
 		}
-		if (v->expect_cap_num &&
+		if (v->has_expect_cap_num &&
 		    (int)rfctl->cap_spt_op_class_num != v->expect_cap_num) {
 			fprintf(stderr, "%s: cap_spt_op_class_num got %u expect %d\n",
 				v->name, rfctl->cap_spt_op_class_num, v->expect_cap_num);
@@ -217,13 +256,13 @@ static int run_vector(struct vector *v)
 			return -1;
 		}
 		op_class_pref_apply_regulatory(&adapter, v->reason);
-		if (v->expect_reg_num &&
+		if (v->has_expect_reg_num &&
 		    (int)rfctl->reg_spt_op_class_num != v->expect_reg_num) {
 			fprintf(stderr, "%s: reg_spt_op_class_num got %u expect %d\n",
 				v->name, rfctl->reg_spt_op_class_num, v->expect_reg_num);
 			return -1;
 		}
-		if (v->expect_cur_num &&
+		if (v->has_expect_cur_num &&
 		    (int)rfctl->cur_spt_op_class_num != v->expect_cur_num) {
 			fprintf(stderr, "%s: cur_spt_op_class_num got %u expect %d\n",
 				v->name, rfctl->cur_spt_op_class_num, v->expect_cur_num);
@@ -234,13 +273,13 @@ static int run_vector(struct vector *v)
 			fprintf(stderr, "%s: class_id %u not found\n", v->name, v->class_id);
 			return -1;
 		}
-		if (opc && v->expect_op_ch_num &&
+		if (opc && v->has_expect_op_ch_num &&
 		    (int)opc->op_ch_num != v->expect_op_ch_num) {
 			fprintf(stderr, "%s: op_ch_num got %u expect %d\n", v->name,
 				opc->op_ch_num, v->expect_op_ch_num);
 			return -1;
 		}
-		if (opc && v->expect_ir_ch_num &&
+		if (opc && v->has_expect_ir_ch_num &&
 		    (int)opc->ir_ch_num != v->expect_ir_ch_num) {
 			fprintf(stderr, "%s: ir_ch_num got %u expect %d\n", v->name,
 				opc->ir_ch_num, v->expect_ir_ch_num);
@@ -266,7 +305,7 @@ static int run_vector(struct vector *v)
 					v->chset[0].ch, ch_ent->no_ir, v->expect_no_ir);
 				return -1;
 			}
-			if (v->expect_max_txpwr &&
+			if (v->has_expect_max_txpwr &&
 			    ch_ent->max_txpwr != v->expect_max_txpwr) {
 				fprintf(stderr, "%s: ch%u max_txpwr got %d expect %d\n",
 					v->name, v->chset[0].ch, ch_ent->max_txpwr,
