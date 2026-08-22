@@ -2572,7 +2572,9 @@ ccflags-y += -DCONFIG_RUST_TXPWR_LMT
 rustflags-y += --cfg rust_txpwr_lmt
 endif
 ccflags-y += -DCONFIG_RUST_MLME_EXT_REST
+ccflags-y += -DCONFIG_RUST_STA_MGT_STCTL
 rustflags-y += --cfg rust_mlme_ext_rest
+rustflags-y += --cfg rust_sta_mgt_stctl
 rustflags-y += --cfg dfs_master
 rustflags-y += --cfg ieee80211_band_5ghz
 # CONFIG_DFS defaults to 1 in include/drv_conf.h (#define), not a Makefile y var.
@@ -2606,6 +2608,7 @@ $(MODULE_NAME)-y += rust/rtw_rm_util.o
 $(MODULE_NAME)-y += rust/rtw_vht.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt_aid.o
+$(MODULE_NAME)-y += rust/rtw_sta_mgt_stctl.o
 $(MODULE_NAME)-y += rust/rtw_recv.o
 $(MODULE_NAME)-y += rust/rtw_xmit.o
 $(MODULE_NAME)-y += rust/rtw_iol_rest.o
