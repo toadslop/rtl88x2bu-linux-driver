@@ -201,6 +201,7 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-vht-restructure
 	rust-check-symbols-rtw-sta-mgt
 	rust-check-symbols-rtw-sta-mgt-aid
+	rust-check-symbols-rtw-sta-mgt-stctl
 	rust-check-symbols-rtw-recv
 	rust-check-symbols-rtw-recv-pn
 	rust-check-symbols-rtw-xmit
