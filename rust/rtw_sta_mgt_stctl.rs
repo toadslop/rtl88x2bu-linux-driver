@@ -263,13 +263,7 @@ pub extern "C" fn rtw_st_ctl_chk_reg_rule(
     unsafe {
         for r in &(*st_ctl).reg {
             if rule_is_set(r.rule)
-                && (r.rule)(
-                    adapter,
-                    local_naddr,
-                    local_port,
-                    remote_naddr,
-                    remote_port,
-                )
+                && (r.rule)(adapter, local_naddr, local_port, remote_naddr, remote_port)
             {
                 return true;
             }
@@ -281,13 +275,7 @@ pub extern "C" fn rtw_st_ctl_chk_reg_rule(
         for i in 0..SESSION_TRACKER_REG_ID_NUM {
             let rule = kernel::rtw_rust_stctl_reg_rule(st_ctl.cast(), i as u8);
             if rule_is_set(rule)
-                && (rule)(
-                    adapter,
-                    local_naddr,
-                    local_port,
-                    remote_naddr,
-                    remote_port,
-                )
+                && (rule)(adapter, local_naddr, local_port, remote_naddr, remote_port)
             {
                 return true;
             }
