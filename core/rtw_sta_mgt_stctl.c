@@ -139,3 +139,95 @@ STCTL_API int rtw_stainfo_offset(struct sta_priv *stapriv, struct sta_info *sta)
 }
 
 #endif /* !CONFIG_RUST || HOST_STA_MGT_TEST || !CONFIG_RUST_STA_MGT_STCTL */
+
+#if defined(CONFIG_RUST) && !defined(HOST_STA_MGT_TEST)
+
+void rtw_rust_stctl_memzero_reg(struct st_ctl_t *st_ctl)
+{
+	_rtw_memset(st_ctl->reg, 0, sizeof(struct st_register) * SESSION_TRACKER_REG_ID_NUM);
+}
+
+void rtw_rust_stctl_queue_init(struct st_ctl_t *st_ctl)
+{
+	_rtw_init_queue(&st_ctl->tracker_q);
+}
+
+void rtw_rust_stctl_queue_deinit(struct st_ctl_t *st_ctl)
+{
+	_rtw_deinit_queue(&st_ctl->tracker_q);
+}
+
+void rtw_rust_stctl_clear_tracker_q(struct st_ctl_t *st_ctl)
+{
+	_irqL irqL;
+	_list *plist, *phead;
+	struct session_tracker *st;
+
+	_enter_critical_bh(&st_ctl->tracker_q.lock, &irqL);
+	phead = &st_ctl->tracker_q.queue;
+	plist = get_next(phead);
+	while (rtw_end_of_queue_search(phead, plist) == _FALSE) {
+		st = LIST_CONTAINOR(plist, struct session_tracker, list);
+		plist = get_next(plist);
+		rtw_list_delete(&st->list);
+		rtw_mfree((u8 *)st, sizeof(struct session_tracker));
+	}
+	_exit_critical_bh(&st_ctl->tracker_q.lock, &irqL);
+}
+
+u8 *rtw_rust_stainfo_buf(struct sta_priv *stapriv)
+{
+	return stapriv->pstainfo_buf;
+}
+
+u32 rtw_rust_sta_info_size(void)
+{
+	return (u32)sizeof(struct sta_info);
+}
+
+u8 rtw_rust_stainfo_offset_valid(int offset)
+{
+	return stainfo_offset_valid(offset) ? 1 : 0;
+}
+
+u8 rtw_rust_stctl_reg_s_proto(struct st_ctl_t *st_ctl, u8 idx)
+{
+	if (idx >= SESSION_TRACKER_REG_ID_NUM)
+		return 0;
+	return st_ctl->reg[idx].s_proto;
+}
+
+st_match_rule rtw_rust_stctl_reg_rule(struct st_ctl_t *st_ctl, u8 idx)
+{
+	if (idx >= SESSION_TRACKER_REG_ID_NUM)
+		return NULL;
+	return st_ctl->reg[idx].rule;
+}
+
+void rtw_rust_stctl_reg_set(struct st_ctl_t *st_ctl, u8 idx, u8 s_proto, st_match_rule rule)
+{
+	if (idx >= SESSION_TRACKER_REG_ID_NUM)
+		return;
+	st_ctl->reg[idx].s_proto = s_proto;
+	st_ctl->reg[idx].rule = rule;
+}
+
+void rtw_rust_stctl_reg_clear(struct st_ctl_t *st_ctl, u8 idx)
+{
+	if (idx >= SESSION_TRACKER_REG_ID_NUM)
+		return;
+	st_ctl->reg[idx].s_proto = 0;
+	st_ctl->reg[idx].rule = NULL;
+}
+
+u8 rtw_rust_stctl_any_reg(struct st_ctl_t *st_ctl)
+{
+	int i;
+
+	for (i = 0; i < SESSION_TRACKER_REG_ID_NUM; i++)
+		if (st_ctl->reg[i].s_proto != 0)
+			return 1;
+	return 0;
+}
+
+#endif /* CONFIG_RUST && !HOST_STA_MGT_TEST */
