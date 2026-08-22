@@ -16,107 +16,6 @@
 
 #include <drv_types.h>
 
-extern bool test_st_match_rule(_adapter *adapter, u8 *local_naddr, u8 *local_port,
-			       u8 *remote_naddr, u8 *remote_port);
-
-struct st_register test_st_reg = {
-	.s_proto = 0x06,
-	.rule = test_st_match_rule,
-};
-
-inline void rtw_st_ctl_init(struct st_ctl_t *st_ctl)
-{
-	_rtw_memset(st_ctl->reg, 0 , sizeof(struct st_register) * SESSION_TRACKER_REG_ID_NUM);
-	_rtw_init_queue(&st_ctl->tracker_q);
-}
-
-inline void rtw_st_ctl_clear_tracker_q(struct st_ctl_t *st_ctl)
-{
-	_irqL irqL;
-	_list *plist, *phead;
-	struct session_tracker *st;
-
-	_enter_critical_bh(&st_ctl->tracker_q.lock, &irqL);
-	phead = &st_ctl->tracker_q.queue;
-	plist = get_next(phead);
-	while (rtw_end_of_queue_search(phead, plist) == _FALSE) {
-		st = LIST_CONTAINOR(plist, struct session_tracker, list);
-		plist = get_next(plist);
-		rtw_list_delete(&st->list);
-		rtw_mfree((u8 *)st, sizeof(struct session_tracker));
-	}
-	_exit_critical_bh(&st_ctl->tracker_q.lock, &irqL);
-}
-
-inline void rtw_st_ctl_deinit(struct st_ctl_t *st_ctl)
-{
-	rtw_st_ctl_clear_tracker_q(st_ctl);
-	_rtw_deinit_queue(&st_ctl->tracker_q);
-}
-
-inline void rtw_st_ctl_register(struct st_ctl_t *st_ctl, u8 st_reg_id, struct st_register *reg)
-{
-	if (st_reg_id >= SESSION_TRACKER_REG_ID_NUM) {
-		rtw_warn_on(1);
-		return;
-	}
-
-	st_ctl->reg[st_reg_id].s_proto = reg->s_proto;
-	st_ctl->reg[st_reg_id].rule = reg->rule;
-}
-
-inline void rtw_st_ctl_unregister(struct st_ctl_t *st_ctl, u8 st_reg_id)
-{
-	int i;
-
-	if (st_reg_id >= SESSION_TRACKER_REG_ID_NUM) {
-		rtw_warn_on(1);
-		return;
-	}
-
-	st_ctl->reg[st_reg_id].s_proto = 0;
-	st_ctl->reg[st_reg_id].rule = NULL;
-
-	/* clear tracker queue if no session trecker registered */
-	for (i = 0; i < SESSION_TRACKER_REG_ID_NUM; i++)
-		if (st_ctl->reg[i].s_proto != 0)
-			break;
-	if (i >= SESSION_TRACKER_REG_ID_NUM)
-		rtw_st_ctl_clear_tracker_q(st_ctl);
-}
-
-inline bool rtw_st_ctl_chk_reg_s_proto(struct st_ctl_t *st_ctl, u8 s_proto)
-{
-	bool ret = _FALSE;
-	int i;
-
-	for (i = 0; i < SESSION_TRACKER_REG_ID_NUM; i++) {
-		if (st_ctl->reg[i].s_proto == s_proto) {
-			ret = _TRUE;
-			break;
-		}
-	}
-
-	return ret;
-}
-
-inline bool rtw_st_ctl_chk_reg_rule(struct st_ctl_t *st_ctl, _adapter *adapter, u8 *local_naddr, u8 *local_port, u8 *remote_naddr, u8 *remote_port)
-{
-	bool ret = _FALSE;
-	int i;
-	st_match_rule rule;
-
-	for (i = 0; i < SESSION_TRACKER_REG_ID_NUM; i++) {
-		rule = st_ctl->reg[i].rule;
-		if (rule && rule(adapter, local_naddr, local_port, remote_naddr, remote_port) == _TRUE) {
-			ret = _TRUE;
-			break;
-		}
-	}
-
-	return ret;
-}
-
 void rtw_st_ctl_rx(struct sta_info *sta, u8 *ehdr_pos)
 {
 	_adapter *adapter = sta->padapter;
@@ -335,16 +234,6 @@ exit:
 	}
 
 	return ret;
-}
-
-inline int rtw_stainfo_offset(struct sta_priv *stapriv, struct sta_info *sta)
-{
-	int offset = (((u8 *)sta) - stapriv->pstainfo_buf) / sizeof(struct sta_info);
-
-	if (!stainfo_offset_valid(offset))
-		RTW_INFO("%s invalid offset(%d), out of range!!!", __func__, offset);
-
-	return offset;
 }
 
 inline struct sta_info *rtw_get_stainfo_by_offset(struct sta_priv *stapriv, int offset)
