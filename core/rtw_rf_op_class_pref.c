@@ -21,6 +21,8 @@
 #include <hal_data.h>
 #endif
 
+#if !defined(CONFIG_RUST) || defined(HOST_RF_OP_CLASS_PREF_TEST) || !defined(CONFIG_RUST_RF_OP_CLASS_PREF)
+
 static struct op_class_pref_t *opc_pref_alloc(u8 class_id)
 {
 	int i, j;
@@ -349,3 +351,65 @@ void op_class_pref_apply_regulatory(_adapter *adapter, u8 reason)
 	rfctl->reg_spt_op_class_num = reg_op_class_num;
 	rfctl->cur_spt_op_class_num = op_class_num;
 }
+
+#endif /* !CONFIG_RUST || HOST_RF_OP_CLASS_PREF_TEST || !CONFIG_RUST_RF_OP_CLASS_PREF */
+
+#if defined(CONFIG_RUST) && !defined(HOST_RF_OP_CLASS_PREF_TEST) && defined(CONFIG_RUST_RF_OP_CLASS_PREF)
+
+void *rtw_rust_opc_pref_zmalloc(u32 sz)
+{
+	return rtw_zmalloc(sz);
+}
+
+void rtw_rust_opc_pref_mfree(void *p, u32 sz)
+{
+	rtw_mfree(p, sz);
+}
+
+u8 rtw_rust_opc_pref_hal_chk_band_cap(_adapter *adapter, u8 cap)
+{
+	return hal_chk_band_cap(adapter, cap) ? 1 : 0;
+}
+
+u8 rtw_rust_opc_pref_hal_bw_cap(_adapter *adapter)
+{
+	return GET_HAL_SPEC(adapter)->bw_cap;
+}
+
+u8 rtw_rust_opc_pref_wireless_mode(_adapter *adapter)
+{
+	return adapter_to_regsty(adapter)->wireless_mode;
+}
+
+u8 rtw_rust_opc_pref_bw_mode(_adapter *adapter)
+{
+	return adapter_to_regsty(adapter)->bw_mode;
+}
+
+u8 rtw_rust_opc_pref_vht_enable(_adapter *adapter)
+{
+	return adapter_to_regsty(adapter)->vht_enable;
+}
+
+struct rf_ctl_t *rtw_rust_opc_pref_rfctl(_adapter *adapter)
+{
+	return adapter_to_rfctl(adapter);
+}
+
+s16 rtw_rust_opc_pref_get_reg_max_txpwr_mbm(struct rf_ctl_t *rfctl, u8 ch,
+					    u8 bw, u8 offset, u8 eirp)
+{
+	return rtw_rfctl_get_reg_max_txpwr_mbm(rfctl, ch, bw, offset, eirp ? _TRUE : _FALSE);
+}
+
+u8 rtw_rust_opc_pref_dfs_domain_unknown(struct rf_ctl_t *rfctl)
+{
+	return rtw_rfctl_dfs_domain_unknown(rfctl) ? 1 : 0;
+}
+
+int rtw_rust_opc_pref_chset_search_ch(RT_CHANNEL_INFO *chset, u32 ch)
+{
+	return rtw_chset_search_ch(chset, ch);
+}
+
+#endif /* CONFIG_RUST && !HOST_RF_OP_CLASS_PREF_TEST && CONFIG_RUST_RF_OP_CLASS_PREF */

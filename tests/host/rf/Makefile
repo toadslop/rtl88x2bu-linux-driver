@@ -46,16 +46,26 @@ test_txpwr_lmt: test_txpwr_lmt.c $(RF_SRC) $(REGD_EXC_SHIM) $(TXPWR_LMT_SHIM) $(
 test_op_class_pref: test_op_class_pref.c $(RF_SRC) $(OPC_PREF_SRC) $(OPC_PREF_SHIM) $(HOST_JSON)
 	$(CC) $(OPC_PREF_CFLAGS) -o $@ test_op_class_pref.c $(OPC_PREF_SHIM) $(RF_SRC) $(OPC_PREF_SRC) $(HOST_JSON)
 
+RUST_RF_OP_CLASS_PREF := $(ROOT)/rust/rtw_rf_op_class_pref.rs
+
+librust_rf_op_class_pref.a: $(RUST_RF_OP_CLASS_PREF)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_rf_op_class_pref_test \
+		--crate-type staticlib $(RUST_RF_OP_CLASS_PREF) -o $@
+
+test_op_class_pref_rust: test_op_class_pref.c librust_rf_op_class_pref.a $(RF_SRC) $(OPC_PREF_SHIM) $(HOST_JSON)
+	$(CC) $(OPC_PREF_CFLAGS) -o $@ test_op_class_pref.c $(OPC_PREF_SHIM) $(RF_SRC) $(HOST_JSON) librust_rf_op_class_pref.a
+
 librust_rf_rest.a: $(ROOT)/rust/rtw_rf_rest.rs
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_rf_rest_test --cfg txpwr_limit --cfg rust_txpwr_lmt \
 		--cfg ieee80211_band_5ghz \
 		--crate-type staticlib $(ROOT)/rust/rtw_rf_rest.rs -o $@
 
 # PR2: enable Rust txpwr_lmt oracle (stacked on PR1 C harness).
-test-rust: test_rf_rust test_regd_exc_rust test_txpwr_lmt_rust
+test-rust: test_rf_rust test_regd_exc_rust test_txpwr_lmt_rust test_op_class_pref_rust
 	./test_rf_rust rf_vectors.json
 	./test_regd_exc_rust regd_exc_vectors.json
 	./test_txpwr_lmt_rust txpwr_lmt_vectors.json
+	./test_op_class_pref_rust op_class_pref_vectors.json
 
 test_rf_rust: test_rf.c librust_rf_rest.a $(REGD_EXC_SHIM) $(TXPWR_LMT_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_RF_REST_ORACLE -o $@ test_rf.c $(REGD_EXC_SHIM) $(TXPWR_LMT_SHIM) $(HOST_JSON) librust_rf_rest.a
@@ -67,4 +77,4 @@ test_txpwr_lmt_rust: test_txpwr_lmt.c librust_rf_rest.a $(REGD_EXC_SHIM) $(TXPWR
 	$(CC) $(TXPWR_LMT_CFLAGS) -DRUST_RF_TXPWR_LMT_ORACLE -o $@ test_txpwr_lmt.c $(REGD_EXC_SHIM) $(TXPWR_LMT_SHIM) $(HOST_JSON) librust_rf_rest.a
 
 clean:
-	rm -f test_rf test_regd_exc test_txpwr_lmt test_op_class_pref test_rf_rust test_regd_exc_rust test_txpwr_lmt_rust librust_rf_rest.a
+	rm -f test_rf test_regd_exc test_txpwr_lmt test_op_class_pref test_rf_rust test_regd_exc_rust test_txpwr_lmt_rust test_op_class_pref_rust librust_rf_rest.a librust_rf_op_class_pref.a

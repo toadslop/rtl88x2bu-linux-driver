@@ -87,9 +87,12 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-wlan-util
 		;;
 	rust/rtw_rf_rest.rs \
+	| rust/rtw_rf_op_class_pref.rs \
 	| core/rtw_rf_rest.c \
+	| core/rtw_rf_op_class_pref.c \
 	| tests/host/rf/*)
 		add_target rust-check-symbols-rtw-rf-rest
+		add_target rust-check-symbols-rtw-rf-op-class-pref
 		;;
 	rust/rtw_vht.rs \
 	| core/rtw_vht.c \
