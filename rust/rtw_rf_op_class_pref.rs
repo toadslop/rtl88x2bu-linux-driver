@@ -444,7 +444,10 @@ fn opc_pref_alloc(class_id: u8) -> *mut OpClassPrefT {
 
 fn opc_pref_free(opc_pref: *mut OpClassPrefT) {
     if !opc_pref.is_null() {
-        mfree(opc_pref as *mut c_void, core::mem::size_of::<OpClassPrefT>() as u32);
+        mfree(
+            opc_pref as *mut c_void,
+            core::mem::size_of::<OpClassPrefT>() as u32,
+        );
     }
 }
 
@@ -488,10 +491,8 @@ pub extern "C" fn op_class_pref_init(adapter: *mut Adapter) -> c_int {
             band_bmp |= BAND_CAP_5G;
         }
 
-        bw_bmp[BAND_ON_2_4G as usize] =
-            (ch_width_to_bw_cap(bw_mode_2g(bw_mode) + 1) - 1) & hal_cap;
-        bw_bmp[BAND_ON_5G as usize] =
-            (ch_width_to_bw_cap(bw_mode_5g(bw_mode) + 1) - 1) & hal_cap;
+        bw_bmp[BAND_ON_2_4G as usize] = (ch_width_to_bw_cap(bw_mode_2g(bw_mode) + 1) - 1) & hal_cap;
+        bw_bmp[BAND_ON_5G as usize] = (ch_width_to_bw_cap(bw_mode_5g(bw_mode) + 1) - 1) & hal_cap;
         if !regsty_is_11ac_enable(adapter) || !is_supported_vht(wireless_mode) {
             bw_bmp[BAND_ON_5G as usize] &= !(BW_CAP_80M | BW_CAP_160M);
         }
