@@ -14,17 +14,35 @@
  *****************************************************************************/
 #define _RTW_STA_MGT_STCTL_C_
 
+#ifdef HOST_STA_MGT_TEST
+#include "host_sta_mgt_types.h"
+#else
 #include <drv_types.h>
+#endif
 
-#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_STA_MGT_STCTL)
+#if !defined(CONFIG_RUST) || defined(HOST_STA_MGT_TEST) || !defined(CONFIG_RUST_STA_MGT_STCTL)
 
-inline void rtw_st_ctl_init(struct st_ctl_t *st_ctl)
+bool test_st_match_rule(_adapter *adapter, u8 *local_naddr, u8 *local_port,
+			u8 *remote_naddr, u8 *remote_port);
+
+struct st_register test_st_reg = {
+	.s_proto = 0x06,
+	.rule = test_st_match_rule,
+};
+
+#if defined(HOST_STA_MGT_TEST)
+#define STCTL_API
+#else
+#define STCTL_API inline
+#endif
+
+STCTL_API void rtw_st_ctl_init(struct st_ctl_t *st_ctl)
 {
 	_rtw_memset(st_ctl->reg, 0, sizeof(struct st_register) * SESSION_TRACKER_REG_ID_NUM);
 	_rtw_init_queue(&st_ctl->tracker_q);
 }
 
-inline void rtw_st_ctl_clear_tracker_q(struct st_ctl_t *st_ctl)
+STCTL_API void rtw_st_ctl_clear_tracker_q(struct st_ctl_t *st_ctl)
 {
 	_irqL irqL;
 	_list *plist, *phead;
@@ -42,13 +60,13 @@ inline void rtw_st_ctl_clear_tracker_q(struct st_ctl_t *st_ctl)
 	_exit_critical_bh(&st_ctl->tracker_q.lock, &irqL);
 }
 
-inline void rtw_st_ctl_deinit(struct st_ctl_t *st_ctl)
+STCTL_API void rtw_st_ctl_deinit(struct st_ctl_t *st_ctl)
 {
 	rtw_st_ctl_clear_tracker_q(st_ctl);
 	_rtw_deinit_queue(&st_ctl->tracker_q);
 }
 
-inline void rtw_st_ctl_register(struct st_ctl_t *st_ctl, u8 st_reg_id, struct st_register *reg)
+STCTL_API void rtw_st_ctl_register(struct st_ctl_t *st_ctl, u8 st_reg_id, struct st_register *reg)
 {
 	if (st_reg_id >= SESSION_TRACKER_REG_ID_NUM) {
 		rtw_warn_on(1);
@@ -59,7 +77,7 @@ inline void rtw_st_ctl_register(struct st_ctl_t *st_ctl, u8 st_reg_id, struct st
 	st_ctl->reg[st_reg_id].rule = reg->rule;
 }
 
-inline void rtw_st_ctl_unregister(struct st_ctl_t *st_ctl, u8 st_reg_id)
+STCTL_API void rtw_st_ctl_unregister(struct st_ctl_t *st_ctl, u8 st_reg_id)
 {
 	int i;
 
@@ -78,7 +96,7 @@ inline void rtw_st_ctl_unregister(struct st_ctl_t *st_ctl, u8 st_reg_id)
 		rtw_st_ctl_clear_tracker_q(st_ctl);
 }
 
-inline bool rtw_st_ctl_chk_reg_s_proto(struct st_ctl_t *st_ctl, u8 s_proto)
+STCTL_API bool rtw_st_ctl_chk_reg_s_proto(struct st_ctl_t *st_ctl, u8 s_proto)
 {
 	bool ret = _FALSE;
 	int i;
@@ -93,7 +111,7 @@ inline bool rtw_st_ctl_chk_reg_s_proto(struct st_ctl_t *st_ctl, u8 s_proto)
 	return ret;
 }
 
-inline bool rtw_st_ctl_chk_reg_rule(struct st_ctl_t *st_ctl, _adapter *adapter, u8 *local_naddr, u8 *local_port, u8 *remote_naddr, u8 *remote_port)
+STCTL_API bool rtw_st_ctl_chk_reg_rule(struct st_ctl_t *st_ctl, _adapter *adapter, u8 *local_naddr, u8 *local_port, u8 *remote_naddr, u8 *remote_port)
 {
 	bool ret = _FALSE;
 	int i;
@@ -110,7 +128,7 @@ inline bool rtw_st_ctl_chk_reg_rule(struct st_ctl_t *st_ctl, _adapter *adapter, 
 	return ret;
 }
 
-inline int rtw_stainfo_offset(struct sta_priv *stapriv, struct sta_info *sta)
+STCTL_API int rtw_stainfo_offset(struct sta_priv *stapriv, struct sta_info *sta)
 {
 	int offset = (((u8 *)sta) - stapriv->pstainfo_buf) / sizeof(struct sta_info);
 
@@ -120,4 +138,4 @@ inline int rtw_stainfo_offset(struct sta_priv *stapriv, struct sta_info *sta)
 	return offset;
 }
 
-#endif /* !CONFIG_RUST || !CONFIG_RUST_STA_MGT_STCTL */
+#endif /* !CONFIG_RUST || HOST_STA_MGT_TEST || !CONFIG_RUST_STA_MGT_STCTL */
