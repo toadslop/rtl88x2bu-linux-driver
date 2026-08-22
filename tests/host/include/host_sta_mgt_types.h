@@ -235,6 +235,7 @@ int host_sta_mgt_pre_link_count(_adapter *adapter);
 void host_sta_mgt_stctl_reset(struct st_ctl_t *st_ctl);
 int host_sta_mgt_stctl_tracker_count(struct st_ctl_t *st_ctl);
 void host_sta_mgt_stctl_tracker_add(struct st_ctl_t *st_ctl);
+void host_sta_mgt_stctl_clear(struct st_ctl_t *st_ctl);
 int host_sta_mgt_offset_setup(_adapter *adapter, u8 sta_index, struct sta_info **out_sta);
 
 void rtw_st_ctl_init(struct st_ctl_t *st_ctl);

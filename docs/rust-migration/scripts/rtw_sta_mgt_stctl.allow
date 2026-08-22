@@ -1,0 +1,2 @@
+# L1 allowlist for W3-55 stctl object.
+drop test_st_match_rule
