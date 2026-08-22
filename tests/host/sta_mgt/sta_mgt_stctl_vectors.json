@@ -1,0 +1,53 @@
+{
+  "oracle": "core/rtw_sta_mgt_stctl.c",
+  "vectors": [
+    {
+      "name": "chk_reg_s_proto_miss",
+      "fn": "rtw_st_ctl_chk_reg_s_proto",
+      "s_proto": 6,
+      "expect": 0
+    },
+    {
+      "name": "chk_reg_s_proto_hit",
+      "fn": "rtw_st_ctl_chk_reg_s_proto",
+      "with_reg": 1,
+      "s_proto": 6,
+      "expect": 1
+    },
+    {
+      "name": "chk_reg_rule_port5001_local",
+      "fn": "rtw_st_ctl_chk_reg_rule",
+      "with_reg": 1,
+      "local_port": "1389",
+      "remote_port": "0000",
+      "expect": 1
+    },
+    {
+      "name": "chk_reg_rule_no_match",
+      "fn": "rtw_st_ctl_chk_reg_rule",
+      "with_reg": 1,
+      "local_port": "0016",
+      "remote_port": "0016",
+      "expect": 0
+    },
+    {
+      "name": "stainfo_offset_zero",
+      "fn": "rtw_stainfo_offset",
+      "sta_index": 0,
+      "expect": 0
+    },
+    {
+      "name": "stainfo_offset_two",
+      "fn": "rtw_stainfo_offset",
+      "sta_index": 2,
+      "expect": 2
+    },
+    {
+      "name": "unregister_clears_trackers",
+      "fn": "rtw_st_ctl_unregister",
+      "with_reg": 1,
+      "add_tracker": 1,
+      "expect_trackers": 0
+    }
+  ]
+}
