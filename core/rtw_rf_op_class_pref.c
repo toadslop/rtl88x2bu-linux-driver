@@ -54,6 +54,79 @@ static void opc_pref_free(struct op_class_pref_t *opc_pref)
 	rtw_mfree(opc_pref, sizeof(*opc_pref));
 }
 
+#ifdef CONFIG_RTW_DEBUG
+static bool dbg_global_op_class_validate(u8 gid)
+{
+	u8 i;
+	u8 ch, bw, offset, cch;
+	bool ret = 1;
+
+	switch (global_op_class[gid].bw) {
+	case OPC_BW20:
+		bw = CHANNEL_WIDTH_20;
+		offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+		break;
+	case OPC_BW40PLUS:
+		bw = CHANNEL_WIDTH_40;
+		offset = HAL_PRIME_CHNL_OFFSET_LOWER;
+		break;
+	case OPC_BW40MINUS:
+		bw = CHANNEL_WIDTH_40;
+		offset = HAL_PRIME_CHNL_OFFSET_UPPER;
+		break;
+	case OPC_BW80:
+		bw = CHANNEL_WIDTH_80;
+		offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+		break;
+	case OPC_BW160:
+		bw = CHANNEL_WIDTH_160;
+		offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+		break;
+	case OPC_BW80P80: /* TODO */
+	default:
+		RTW_ERR("%s class:%u unsupported opc_bw:%u\n"
+			, __func__, global_op_class[gid].class_id, global_op_class[gid].bw);
+		ret = 0;
+		goto exit;
+	}
+
+	for (i = 0; i < OPC_CH_LIST_LEN(global_op_class[gid]); i++) {
+		u8 *op_chs;
+		u8 op_ch_num;
+		u8 k;
+
+		ch = OPC_CH_LIST_CH(global_op_class[gid], i);
+		cch = rtw_get_center_ch(ch ,bw, offset);
+		if (!cch) {
+			RTW_ERR("%s can't get cch from class:%u ch:%u\n"
+				, __func__, global_op_class[gid].class_id, ch);
+			ret = 0;
+			continue;
+		}
+
+		if (!rtw_get_op_chs_by_cch_bw(cch, bw, &op_chs, &op_ch_num)) {
+			RTW_ERR("%s can't get op chs from class:%u cch:%u\n"
+				, __func__, global_op_class[gid].class_id, cch);
+			ret = 0;
+			continue;
+		}
+
+		for (k = 0; k < op_ch_num; k++) {
+			if (*(op_chs + k) == ch)
+				break;
+		}
+		if (k >= op_ch_num) {
+			RTW_ERR("%s can't get ch:%u from op_chs class:%u cch:%u\n"
+				, __func__, ch, global_op_class[i].class_id, cch);
+			ret = 0;
+		}
+	}
+
+exit:
+	return ret;
+}
+#endif /* CONFIG_RTW_DEBUG */
+
 int op_class_pref_init(_adapter *adapter)
 {
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(adapter);
@@ -94,6 +167,10 @@ int op_class_pref_init(_adapter *adapter)
 	}
 
 	for (i = 0; i < global_op_class_num; i++) {
+		#ifdef CONFIG_RTW_DEBUG
+		rtw_warn_on(!dbg_global_op_class_validate(i));
+		#endif
+
 		if (!(band_bmp & band_to_band_cap(global_op_class[i].band)))
 			continue;
 
