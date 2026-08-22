@@ -14,8 +14,12 @@
  *****************************************************************************/
 #define _RTW_RF_OP_CLASS_PREF_C_
 
+#ifdef HOST_RF_OP_CLASS_PREF_TEST
+#include "host_rf_op_class_pref_types.h"
+#else
 #include <drv_types.h>
 #include <hal_data.h>
+#endif
 
 static struct op_class_pref_t *opc_pref_alloc(u8 class_id)
 {
