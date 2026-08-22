@@ -2458,6 +2458,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_sta_mgt_rest.o \
 		core/rtw_sta_mgt_stctl.o \
 		core/rtw_ap.o \
+		core/rtw_ap_rest.o \
 		core/wds/rtw_wds.o \
 		core/mesh/rtw_mesh.o \
 		core/mesh/rtw_mesh_pathtbl.o \

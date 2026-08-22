@@ -27,6 +27,10 @@ void init_mlme_ap_info(_adapter *padapter);
 void free_mlme_ap_info(_adapter *padapter);
 u8 rtw_set_tim_ie(u8 dtim_cnt, u8 dtim_period
 	, const u8 *tim_bmp, u8 tim_bmp_len, u8 *tim_ie);
+#ifdef CONFIG_FW_HANDLE_TXBCN
+u8 rtw_ap_allocate_vapid(struct dvobj_priv *dvobj);
+u8 rtw_ap_release_vapid(struct dvobj_priv *dvobj, u8 vap_id);
+#endif
 /* void update_BCNTIM(_adapter *padapter); */
 void rtw_add_bcn_ie(_adapter *padapter, WLAN_BSSID_EX *pnetwork, u8 index, u8 *data, u8 len);
 void rtw_remove_bcn_ie(_adapter *padapter, WLAN_BSSID_EX *pnetwork, u8 index);

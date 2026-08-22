@@ -42,49 +42,6 @@ void free_mlme_ap_info(_adapter *padapter)
 
 }
 
-/*
-* Set TIM IE
-* return length of total TIM IE
-*/
-u8 rtw_set_tim_ie(u8 dtim_cnt, u8 dtim_period
-	, const u8 *tim_bmp, u8 tim_bmp_len, u8 *tim_ie)
-{
-	u8 *p = tim_ie;
-	u8 i, n1, n2;
-	u8 bmp_len;
-
-	if (rtw_bmp_not_empty(tim_bmp, tim_bmp_len)) {
-		/* find the first nonzero octet in tim_bitmap */
-		for (i = 0; i < tim_bmp_len; i++)
-			if (tim_bmp[i])
-				break;
-		n1 = i & 0xFE;
-	
-		/* find the last nonzero octet in tim_bitmap, except octet 0 */
-		for (i = tim_bmp_len - 1; i > 0; i--)
-			if (tim_bmp[i])
-				break;
-		n2 = i;
-		bmp_len = n2 - n1 + 1;
-	} else {
-		n1 = n2 = 0;
-		bmp_len = 1;
-	}
-
-	*p++ = WLAN_EID_TIM;
-	*p++ = 2 + 1 + bmp_len;
-	*p++ = dtim_cnt;
-	*p++ = dtim_period;
-	*p++ = (rtw_bmp_is_set(tim_bmp, tim_bmp_len, 0) ? BIT0 : 0) | n1;
-	_rtw_memcpy(p, tim_bmp + n1, bmp_len);
-
-#if 0
-	RTW_INFO("n1:%u, n2:%u, bmp_offset:%u, bmp_len:%u\n", n1, n2, n1 / 2, bmp_len);
-	RTW_INFO_DUMP("tim_ie: ", tim_ie + 2, 2 + 1 + bmp_len);
-#endif
-	return 2 + 2 + 1 + bmp_len;
-}
-
 static void update_BCNTIM(_adapter *padapter)
 {
 	struct sta_priv *pstapriv = &padapter->stapriv;
@@ -1596,30 +1553,6 @@ bool rtw_ap_nums_check(_adapter *adapter)
 	if (rtw_ap_get_nums(adapter) < CONFIG_LIMITED_AP_NUM)
 		return _TRUE;
 	return _FALSE;
-}
-u8 rtw_ap_allocate_vapid(struct dvobj_priv *dvobj)
-{
-	u8 vap_id;
-
-	for (vap_id = 0; vap_id < CONFIG_LIMITED_AP_NUM; vap_id++) {
-		if (!(dvobj->vap_map & BIT(vap_id)))
-			break;
-	}
-
-	if (vap_id < CONFIG_LIMITED_AP_NUM)
-		dvobj->vap_map |= BIT(vap_id);
-
-	return vap_id;
-}
-u8 rtw_ap_release_vapid(struct dvobj_priv *dvobj, u8 vap_id)
-{
-	if (vap_id >= CONFIG_LIMITED_AP_NUM) {
-		RTW_ERR("%s - vapid(%d) failed\n", __func__, vap_id);
-		rtw_warn_on(1);
-		return _FAIL;
-	}
-	dvobj->vap_map &= ~ BIT(vap_id);
-	return _SUCCESS;
 }
 #endif
 static void _rtw_iface_undersurvey_chk(const char *func, _adapter *adapter)
