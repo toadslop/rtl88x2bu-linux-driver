@@ -193,7 +193,10 @@ mod kernel {
         pub fn rtw_rust_opc_pref_vht_enable(adapter: *mut Adapter) -> u8;
         pub fn rtw_rust_opc_pref_rfctl(adapter: *mut Adapter) -> RfCtlPtr;
         pub fn rtw_rust_opc_pref_spt_op_class_ch_get(rfctl: RfCtlPtr) -> *mut *mut OpClassPrefT;
-        pub fn rtw_rust_opc_pref_spt_op_class_ch_set(rfctl: RfCtlPtr, table: *mut *mut OpClassPrefT);
+        pub fn rtw_rust_opc_pref_spt_op_class_ch_set(
+            rfctl: RfCtlPtr,
+            table: *mut *mut OpClassPrefT,
+        );
         pub fn rtw_rust_opc_pref_country_ent(rfctl: RfCtlPtr) -> *const CountryChplan;
         pub fn rtw_rust_opc_pref_cap_spt_op_class_num(rfctl: RfCtlPtr) -> *mut u8;
         pub fn rtw_rust_opc_pref_reg_spt_op_class_num(rfctl: RfCtlPtr) -> *mut u8;
