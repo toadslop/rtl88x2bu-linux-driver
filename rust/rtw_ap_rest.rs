@@ -11,9 +11,6 @@
     unreachable_pub
 )]
 
-#[cfg(all(not(host_ap_rest_test), fw_handle_txbcn))]
-use core::ffi::c_int;
-
 const _SUCCESS: u8 = 1;
 const _FAIL: u8 = 0;
 const BIT0: u8 = 1;
@@ -22,10 +19,14 @@ const WLAN_EID_TIM: u8 = 5;
 #[cfg(host_ap_rest_test)]
 const CONFIG_LIMITED_AP_NUM: usize = 4;
 
+#[cfg(host_ap_rest_test)]
 #[repr(C)]
 pub struct DvobjPriv {
     pub vap_map: u8,
 }
+
+#[cfg(not(host_ap_rest_test))]
+pub type DvobjPriv = core::ffi::c_void;
 
 #[inline]
 fn bmp_is_set(bmp: &[u8], id: u8) -> bool {
@@ -38,14 +39,18 @@ fn bmp_not_empty(bmp: &[u8]) -> bool {
     bmp.iter().any(|&b| b != 0)
 }
 
-#[cfg(not(host_ap_rest_test))]
+#[cfg(all(not(host_ap_rest_test), fw_handle_txbcn))]
 mod kernel {
-    use super::*;
+    use core::ffi::c_int;
+
+    use super::DvobjPriv;
 
     extern "C" {
         pub fn rtw_rust_ap_limited_ap_num() -> u8;
         pub fn rtw_rust_ap_vapid_fail_log(vap_id: u8);
         pub fn rtw_rust_ap_warn_on(cond: c_int);
+        pub fn rtw_rust_ap_get_vap_map(dvobj: *mut DvobjPriv) -> u8;
+        pub fn rtw_rust_ap_set_vap_map(dvobj: *mut DvobjPriv, vap_map: u8);
     }
 }
 
@@ -113,13 +118,24 @@ pub extern "C" fn rtw_ap_allocate_vapid(dvobj: *mut DvobjPriv) -> u8 {
     let limited = CONFIG_LIMITED_AP_NUM;
     #[cfg(not(host_ap_rest_test))]
     let limited = unsafe { kernel::rtw_rust_ap_limited_ap_num() as usize };
+    #[cfg(host_ap_rest_test)]
     unsafe {
         let dvobj = &mut *dvobj;
         for vap_id in 0..limited {
             if (dvobj.vap_map & (1u8 << vap_id)) == 0 {
-                if vap_id < limited {
-                    dvobj.vap_map |= 1u8 << vap_id;
-                }
+                dvobj.vap_map |= 1u8 << vap_id;
+                return vap_id as u8;
+            }
+        }
+        vap_id_out_of_range(limited)
+    }
+    #[cfg(not(host_ap_rest_test))]
+    unsafe {
+        let mut vap_map = kernel::rtw_rust_ap_get_vap_map(dvobj);
+        for vap_id in 0..limited {
+            if (vap_map & (1u8 << vap_id)) == 0 {
+                vap_map |= 1u8 << vap_id;
+                kernel::rtw_rust_ap_set_vap_map(dvobj, vap_map);
                 return vap_id as u8;
             }
         }
@@ -149,8 +165,14 @@ pub extern "C" fn rtw_ap_release_vapid(dvobj: *mut DvobjPriv, vap_id: u8) -> u8 
         }
         return _FAIL;
     }
+    #[cfg(host_ap_rest_test)]
     unsafe {
         (*dvobj).vap_map &= !(1u8 << vap_id);
+    }
+    #[cfg(not(host_ap_rest_test))]
+    unsafe {
+        let vap_map = kernel::rtw_rust_ap_get_vap_map(dvobj);
+        kernel::rtw_rust_ap_set_vap_map(dvobj, vap_map & !(1u8 << vap_id));
     }
     _SUCCESS
 }

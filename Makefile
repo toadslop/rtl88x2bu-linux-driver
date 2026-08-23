@@ -2580,7 +2580,6 @@ ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_PREF
 rustflags-y += --cfg rust_mlme_ext_rest
 rustflags-y += --cfg rust_sta_mgt_stctl
 rustflags-y += --cfg rust_ap_rest
-rustflags-y += --cfg fw_handle_txbcn
 rustflags-y += --cfg rust_rf_op_class_pref
 rustflags-y += --cfg dfs_master
 rustflags-y += --cfg ieee80211_band_5ghz
@@ -2600,6 +2599,23 @@ rustflags-y += --cfg roku_private
 endif
 ifeq ($(CONFIG_RTW_80211K), y)
 rustflags-y += --cfg rtw_80211k
+endif
+# Match C #ifdef CONFIG_FW_HANDLE_TXBCN + CONFIG_SUPPORT_MULTI_BCN (drv_conf.h:
+# IFACE_NUMBER > 2 under CONFIG_AP_MODE, plus CONFIG_HWMPCAP_GEN2 for 8822B).
+_config_iface_gt2 := $(filter -DCONFIG_IFACE_NUMBER=3 -DCONFIG_IFACE_NUMBER=4 -DCONFIG_IFACE_NUMBER=5 -DCONFIG_IFACE_NUMBER=6 -DCONFIG_IFACE_NUMBER=7 -DCONFIG_IFACE_NUMBER=8,$(ccflags-y) $(USER_EXTRA_CFLAGS))
+ifneq ($(_config_iface_gt2),)
+CONFIG_SUPPORT_MULTI_BCN := y
+endif
+ifneq ($(filter -DCONFIG_FW_HANDLE_TXBCN,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
+CONFIG_FW_HANDLE_TXBCN := y
+endif
+ifeq ($(CONFIG_RTL8822B), y)
+ifeq ($(CONFIG_SUPPORT_MULTI_BCN), y)
+CONFIG_FW_HANDLE_TXBCN := y
+endif
+endif
+ifeq ($(CONFIG_FW_HANDLE_TXBCN), y)
+rustflags-y += --cfg fw_handle_txbcn
 endif
 $(MODULE_NAME)-y += rust/rtw_chplan.o
 $(MODULE_NAME)-y += rust/rtw_chplan_rest.o
