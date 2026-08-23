@@ -152,6 +152,9 @@ extern const int global_op_class_num;
 /* global op class APIs */
 bool is_valid_global_op_class_id(u8 gid);
 s16 get_sub_op_class(u8 gid, u8 ch);
+#ifdef CONFIG_RTW_DEBUG
+bool dbg_global_op_class_validate(u8 gid);
+#endif
 void dump_global_op_class(void *sel);
 u8 rtw_get_op_class_by_chbw(u8 ch, u8 bw, u8 offset);
 u8 rtw_get_bw_offset_by_op_class_ch(u8 gid, u8 ch, u8 *bw, u8 *offset);
