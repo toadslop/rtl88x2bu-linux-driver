@@ -391,9 +391,40 @@ u8 rtw_rust_opc_pref_vht_enable(_adapter *adapter)
 	return adapter_to_regsty(adapter)->vht_enable;
 }
 
-struct rf_ctl_t *rtw_rust_opc_pref_rfctl(_adapter *adapter)
+void *rtw_rust_opc_pref_rfctl(_adapter *adapter)
 {
 	return adapter_to_rfctl(adapter);
+}
+
+struct op_class_pref_t **rtw_rust_opc_pref_spt_op_class_ch_get(struct rf_ctl_t *rfctl)
+{
+	return rfctl->spt_op_class_ch;
+}
+
+void rtw_rust_opc_pref_spt_op_class_ch_set(struct rf_ctl_t *rfctl,
+					   struct op_class_pref_t **table)
+{
+	rfctl->spt_op_class_ch = table;
+}
+
+const struct country_chplan *rtw_rust_opc_pref_country_ent(struct rf_ctl_t *rfctl)
+{
+	return rfctl->country_ent;
+}
+
+u8 *rtw_rust_opc_pref_cap_spt_op_class_num(struct rf_ctl_t *rfctl)
+{
+	return &rfctl->cap_spt_op_class_num;
+}
+
+u8 *rtw_rust_opc_pref_reg_spt_op_class_num(struct rf_ctl_t *rfctl)
+{
+	return &rfctl->reg_spt_op_class_num;
+}
+
+u8 *rtw_rust_opc_pref_cur_spt_op_class_num(struct rf_ctl_t *rfctl)
+{
+	return &rfctl->cur_spt_op_class_num;
 }
 
 s16 rtw_rust_opc_pref_get_reg_max_txpwr_mbm(struct rf_ctl_t *rfctl, u8 ch,
@@ -407,9 +438,14 @@ u8 rtw_rust_opc_pref_dfs_domain_unknown(struct rf_ctl_t *rfctl)
 	return rtw_rfctl_dfs_domain_unknown(rfctl) ? 1 : 0;
 }
 
-int rtw_rust_opc_pref_chset_search_ch(RT_CHANNEL_INFO *chset, u32 ch)
+int rtw_rust_opc_pref_chset_search_ch(struct rf_ctl_t *rfctl, u32 ch)
 {
-	return rtw_chset_search_ch(chset, ch);
+	return rtw_chset_search_ch(rfctl->channel_set, ch);
+}
+
+u8 rtw_rust_opc_pref_chset_flags(struct rf_ctl_t *rfctl, int idx)
+{
+	return rfctl->channel_set[idx].flags;
 }
 
 #endif /* CONFIG_RUST && !HOST_RF_OP_CLASS_PREF_TEST && CONFIG_RUST_RF_OP_CLASS_PREF */

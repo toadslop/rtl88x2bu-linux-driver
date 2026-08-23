@@ -181,6 +181,8 @@ pub struct HalSpec {
 mod kernel {
     use super::*;
 
+    pub type RfCtlPtr = *mut c_void;
+
     extern "C" {
         pub fn rtw_rust_opc_pref_zmalloc(sz: u32) -> *mut c_void;
         pub fn rtw_rust_opc_pref_mfree(p: *mut c_void, sz: u32);
@@ -189,18 +191,31 @@ mod kernel {
         pub fn rtw_rust_opc_pref_wireless_mode(adapter: *mut Adapter) -> u8;
         pub fn rtw_rust_opc_pref_bw_mode(adapter: *mut Adapter) -> u8;
         pub fn rtw_rust_opc_pref_vht_enable(adapter: *mut Adapter) -> u8;
-        pub fn rtw_rust_opc_pref_rfctl(adapter: *mut Adapter) -> *mut RfCtlT;
+        pub fn rtw_rust_opc_pref_rfctl(adapter: *mut Adapter) -> RfCtlPtr;
+        pub fn rtw_rust_opc_pref_spt_op_class_ch_get(rfctl: RfCtlPtr) -> *mut *mut OpClassPrefT;
+        pub fn rtw_rust_opc_pref_spt_op_class_ch_set(rfctl: RfCtlPtr, table: *mut *mut OpClassPrefT);
+        pub fn rtw_rust_opc_pref_country_ent(rfctl: RfCtlPtr) -> *const CountryChplan;
+        pub fn rtw_rust_opc_pref_cap_spt_op_class_num(rfctl: RfCtlPtr) -> *mut u8;
+        pub fn rtw_rust_opc_pref_reg_spt_op_class_num(rfctl: RfCtlPtr) -> *mut u8;
+        pub fn rtw_rust_opc_pref_cur_spt_op_class_num(rfctl: RfCtlPtr) -> *mut u8;
         pub fn rtw_rust_opc_pref_get_reg_max_txpwr_mbm(
-            rfctl: *mut RfCtlT,
+            rfctl: RfCtlPtr,
             ch: u8,
             bw: u8,
             offset: u8,
             eirp: u8,
         ) -> i16;
-        pub fn rtw_rust_opc_pref_dfs_domain_unknown(rfctl: *mut RfCtlT) -> u8;
-        pub fn rtw_rust_opc_pref_chset_search_ch(chset: *mut RtChannelInfo, ch: u32) -> c_int;
+        pub fn rtw_rust_opc_pref_dfs_domain_unknown(rfctl: RfCtlPtr) -> u8;
+        pub fn rtw_rust_opc_pref_chset_search_ch(rfctl: RfCtlPtr, ch: u32) -> c_int;
+        pub fn rtw_rust_opc_pref_chset_flags(rfctl: RfCtlPtr, idx: c_int) -> u8;
     }
 }
+
+#[cfg(host_rf_op_class_pref_test)]
+type RfCtlPtr = *mut RfCtlT;
+
+#[cfg(not(host_rf_op_class_pref_test))]
+type RfCtlPtr = kernel::RfCtlPtr;
 
 fn opc_ch_list_len(opc: &OpClassT) -> u8 {
     unsafe { *opc.len_ch_attr }
@@ -311,7 +326,7 @@ fn adapter_regsty(adapter: *mut Adapter) -> *mut RegistryPriv {
     }
 }
 
-fn adapter_rfctl(adapter: *mut Adapter) -> *mut RfCtlT {
+fn adapter_rfctl(adapter: *mut Adapter) -> RfCtlPtr {
     #[cfg(host_rf_op_class_pref_test)]
     unsafe {
         return &mut (*adapter).rf_ctl;
@@ -319,6 +334,72 @@ fn adapter_rfctl(adapter: *mut Adapter) -> *mut RfCtlT {
     #[cfg(not(host_rf_op_class_pref_test))]
     unsafe {
         kernel::rtw_rust_opc_pref_rfctl(adapter)
+    }
+}
+
+fn rfctl_spt_op_class_ch_get(rfctl: RfCtlPtr) -> *mut *mut OpClassPrefT {
+    #[cfg(host_rf_op_class_pref_test)]
+    unsafe {
+        (*rfctl).spt_op_class_ch
+    }
+    #[cfg(not(host_rf_op_class_pref_test))]
+    unsafe {
+        kernel::rtw_rust_opc_pref_spt_op_class_ch_get(rfctl)
+    }
+}
+
+fn rfctl_spt_op_class_ch_set(rfctl: RfCtlPtr, table: *mut *mut OpClassPrefT) {
+    #[cfg(host_rf_op_class_pref_test)]
+    unsafe {
+        (*rfctl).spt_op_class_ch = table;
+    }
+    #[cfg(not(host_rf_op_class_pref_test))]
+    unsafe {
+        kernel::rtw_rust_opc_pref_spt_op_class_ch_set(rfctl, table);
+    }
+}
+
+fn rfctl_country_ent(rfctl: RfCtlPtr) -> *const CountryChplan {
+    #[cfg(host_rf_op_class_pref_test)]
+    unsafe {
+        (*rfctl).country_ent
+    }
+    #[cfg(not(host_rf_op_class_pref_test))]
+    unsafe {
+        kernel::rtw_rust_opc_pref_country_ent(rfctl)
+    }
+}
+
+fn rfctl_cap_spt_op_class_num_ptr(rfctl: RfCtlPtr) -> *mut u8 {
+    #[cfg(host_rf_op_class_pref_test)]
+    unsafe {
+        &mut (*rfctl).cap_spt_op_class_num
+    }
+    #[cfg(not(host_rf_op_class_pref_test))]
+    unsafe {
+        kernel::rtw_rust_opc_pref_cap_spt_op_class_num(rfctl)
+    }
+}
+
+fn rfctl_reg_spt_op_class_num_ptr(rfctl: RfCtlPtr) -> *mut u8 {
+    #[cfg(host_rf_op_class_pref_test)]
+    unsafe {
+        &mut (*rfctl).reg_spt_op_class_num
+    }
+    #[cfg(not(host_rf_op_class_pref_test))]
+    unsafe {
+        kernel::rtw_rust_opc_pref_reg_spt_op_class_num(rfctl)
+    }
+}
+
+fn rfctl_cur_spt_op_class_num_ptr(rfctl: RfCtlPtr) -> *mut u8 {
+    #[cfg(host_rf_op_class_pref_test)]
+    unsafe {
+        &mut (*rfctl).cur_spt_op_class_num
+    }
+    #[cfg(not(host_rf_op_class_pref_test))]
+    unsafe {
+        kernel::rtw_rust_opc_pref_cur_spt_op_class_num(rfctl)
     }
 }
 
@@ -359,7 +440,7 @@ fn regsty_is_11ac_enable(adapter: *mut Adapter) -> bool {
     regsty_vht_enable(adapter) != 0
 }
 
-fn get_reg_max_txpwr_mbm(rfctl: *mut RfCtlT, ch: u8, bw: u8, offset: u8) -> i16 {
+fn get_reg_max_txpwr_mbm(rfctl: RfCtlPtr, ch: u8, bw: u8, offset: u8) -> i16 {
     #[cfg(host_rf_op_class_pref_test)]
     unsafe {
         extern "C" {
@@ -379,7 +460,7 @@ fn get_reg_max_txpwr_mbm(rfctl: *mut RfCtlT, ch: u8, bw: u8, offset: u8) -> i16 
     }
 }
 
-fn dfs_domain_unknown(rfctl: *mut RfCtlT) -> bool {
+fn dfs_domain_unknown(rfctl: RfCtlPtr) -> bool {
     #[cfg(host_rf_op_class_pref_test)]
     unsafe {
         extern "C" {
@@ -393,17 +474,28 @@ fn dfs_domain_unknown(rfctl: *mut RfCtlT) -> bool {
     }
 }
 
-fn chset_search_ch(chset: *mut RtChannelInfo, ch: u32) -> c_int {
+fn chset_search_ch(rfctl: RfCtlPtr, ch: u32) -> c_int {
     #[cfg(host_rf_op_class_pref_test)]
     unsafe {
         extern "C" {
             fn rtw_chset_search_ch(ch_set: *mut RtChannelInfo, ch: u32) -> c_int;
         }
-        return rtw_chset_search_ch(chset, ch);
+        return rtw_chset_search_ch((*rfctl).channel_set.as_mut_ptr(), ch);
     }
     #[cfg(not(host_rf_op_class_pref_test))]
     unsafe {
-        kernel::rtw_rust_opc_pref_chset_search_ch(chset, ch)
+        kernel::rtw_rust_opc_pref_chset_search_ch(rfctl, ch)
+    }
+}
+
+fn chset_flags(rfctl: RfCtlPtr, idx: c_int) -> u8 {
+    #[cfg(host_rf_op_class_pref_test)]
+    unsafe {
+        (*rfctl).channel_set[idx as usize].flags
+    }
+    #[cfg(not(host_rf_op_class_pref_test))]
+    unsafe {
+        kernel::rtw_rust_opc_pref_chset_flags(rfctl, idx)
     }
 }
 
@@ -482,7 +574,7 @@ pub extern "C" fn op_class_pref_init(adapter: *mut Adapter) -> c_int {
         if table.is_null() {
             return _FAIL;
         }
-        (*rfctl).spt_op_class_ch = table;
+        rfctl_spt_op_class_ch_set(rfctl, table);
 
         if is_supported_24g(wireless_mode) && adapter_hal_chk_band_cap(adapter, BAND_CAP_2G) {
             band_bmp |= BAND_CAP_2G;
@@ -518,13 +610,13 @@ pub extern "C" fn op_class_pref_init(adapter: *mut Adapter) -> c_int {
                 return _FAIL;
             }
             if (*opc_pref).ch_num != 0 {
-                *(*rfctl).spt_op_class_ch.add(i) = opc_pref;
+                *rfctl_spt_op_class_ch_get(rfctl).add(i) = opc_pref;
                 op_class_num = op_class_num.wrapping_add(1);
             } else {
                 opc_pref_free(opc_pref);
             }
         }
-        (*rfctl).cap_spt_op_class_num = op_class_num;
+        *rfctl_cap_spt_op_class_num_ptr(rfctl) = op_class_num;
     }
     _SUCCESS
 }
@@ -536,7 +628,7 @@ pub extern "C" fn op_class_pref_deinit(adapter: *mut Adapter) {
     }
     let rfctl = adapter_rfctl(adapter);
     unsafe {
-        let table = (*rfctl).spt_op_class_ch;
+        let table = rfctl_spt_op_class_ch_get(rfctl);
         if table.is_null() {
             return;
         }
@@ -552,7 +644,7 @@ pub extern "C" fn op_class_pref_deinit(adapter: *mut Adapter) {
             table as *mut c_void,
             (core::mem::size_of::<*mut OpClassPrefT>() * n) as u32,
         );
-        (*rfctl).spt_op_class_ch = core::ptr::null_mut();
+        rfctl_spt_op_class_ch_set(rfctl, core::ptr::null_mut());
     }
 }
 
@@ -563,11 +655,10 @@ pub extern "C" fn op_class_pref_apply_regulatory(adapter: *mut Adapter, reason: 
     }
     let rfctl = adapter_rfctl(adapter);
     unsafe {
-        let table = (*rfctl).spt_op_class_ch;
+        let table = rfctl_spt_op_class_ch_get(rfctl);
         if table.is_null() {
             return;
         }
-        let chset = (*rfctl).channel_set.as_mut_ptr();
         let mut reg_op_class_num = 0u8;
         let mut op_class_num = 0u8;
         let n = global_op_class_num as usize;
@@ -602,7 +693,7 @@ pub extern "C" fn op_class_pref_apply_regulatory(adapter: *mut Adapter, reason: 
             if bw == CHANNEL_WIDTH_MAX {
                 continue;
             }
-            let country_ent = (*rfctl).country_ent;
+            let country_ent = rfctl_country_ent(rfctl);
             if !country_ent.is_null()
                 && country_chplan_en_11ac(country_ent) == 0
                 && (bw == CHANNEL_WIDTH_80 || bw == CHANNEL_WIDTH_160)
@@ -640,11 +731,11 @@ pub extern "C" fn op_class_pref_apply_regulatory(adapter: *mut Adapter, reason: 
                 let mut l = 0u8;
                 while (k as usize) < op_ch_num as usize {
                     let op_ch = *op_chs.add(k as usize);
-                    let chset_idx = chset_search_ch(chset, op_ch as u32);
+                    let chset_idx = chset_search_ch(rfctl, op_ch as u32);
                     if chset_idx == -1 {
                         break;
                     }
-                    let ch_flags = (*chset.add(chset_idx as usize)).flags;
+                    let ch_flags = chset_flags(rfctl, chset_idx);
                     if bw >= CHANNEL_WIDTH_40 {
                         if (ch_flags & RTW_CHF_NO_HT40U) != 0 && k % 2 == 0 {
                             break;
@@ -693,7 +784,7 @@ pub extern "C" fn op_class_pref_apply_regulatory(adapter: *mut Adapter, reason: 
                 op_class_num = op_class_num.wrapping_add(1);
             }
         }
-        (*rfctl).reg_spt_op_class_num = reg_op_class_num;
-        (*rfctl).cur_spt_op_class_num = op_class_num;
+        *rfctl_reg_spt_op_class_num_ptr(rfctl) = reg_op_class_num;
+        *rfctl_cur_spt_op_class_num_ptr(rfctl) = op_class_num;
     }
 }
