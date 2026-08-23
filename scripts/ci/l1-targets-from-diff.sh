@@ -104,13 +104,20 @@ for path in "${changed[@]}"; do
 	rust/rtw_sta_mgt.rs \
 	| rust/rtw_sta_mgt_aid.rs \
 	| rust/rtw_sta_mgt_stctl.rs \
+	| rust/rtw_ap_rest.rs \
 	| core/rtw_sta_mgt.c \
 	| core/rtw_sta_mgt_rest.c \
 	| core/rtw_sta_mgt_stctl.c \
+	| core/rtw_ap_rest.c \
 	| tests/host/sta_mgt/*)
 		add_target rust-check-symbols-rtw-sta-mgt
 		add_target rust-check-symbols-rtw-sta-mgt-aid
 		add_target rust-check-symbols-rtw-sta-mgt-stctl
+		;;
+	rust/rtw_ap_rest.rs \
+	| core/rtw_ap_rest.c \
+	| tests/host/ap/*)
+		add_target rust-check-symbols-rtw-ap-rest
 		;;
 	rust/rtw_recv.rs \
 	| core/rtw_recv_rest.c \
@@ -205,6 +212,7 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-sta-mgt
 	rust-check-symbols-rtw-sta-mgt-aid
 	rust-check-symbols-rtw-sta-mgt-stctl
+	rust-check-symbols-rtw-ap-rest
 	rust-check-symbols-rtw-recv
 	rust-check-symbols-rtw-recv-pn
 	rust-check-symbols-rtw-xmit
