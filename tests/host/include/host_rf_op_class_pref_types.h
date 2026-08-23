@@ -52,6 +52,14 @@
 #define RTW_PRINT(...) do { } while (0)
 #define rtw_warn_on(cond) ((void)(cond))
 
+#if defined(HOST_RF_OP_CLASS_PREF_TEST) && !defined(HOST_RF_OP_CLASS_DUMP_TEST)
+static inline bool dbg_global_op_class_validate(u8 gid)
+{
+	(void)gid;
+	return true;
+}
+#endif
+
 typedef struct _RT_CHANNEL_INFO {
 	u8 ChannelNum;
 	u8 flags;
