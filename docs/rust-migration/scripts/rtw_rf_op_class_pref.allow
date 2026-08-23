@@ -1,0 +1,2 @@
+# L1 allowlist for W3-56 op_class_pref object.
+drop dbg_global_op_class_validate
