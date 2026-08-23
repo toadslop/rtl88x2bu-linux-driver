@@ -503,15 +503,16 @@ fn chset_flags(rfctl: RfCtlPtr, idx: c_int) -> u8 {
 }
 
 fn opc_pref_alloc(class_id: u8) -> *mut OpClassPrefT {
+    let n = unsafe { global_op_class_num as usize };
     let mut idx = 0usize;
-    while idx < unsafe { global_op_class.len() } {
+    while idx < n {
         let ent = unsafe { &global_op_class[idx] };
         if ent.class_id == class_id {
             break;
         }
         idx += 1;
     }
-    if idx >= unsafe { global_op_class.len() } {
+    if idx >= n {
         return core::ptr::null_mut();
     }
     let ent = unsafe { &global_op_class[idx] };
