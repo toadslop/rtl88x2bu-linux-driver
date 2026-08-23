@@ -109,7 +109,13 @@ mod kernel {
     }
 }
 
-fn dump_spt_entries(sel: *mut c_void, rfctl: *mut c_void, show_snon_ocp: bool, show_no_ir: bool, detail: bool) {
+fn dump_spt_entries(
+    sel: *mut c_void,
+    rfctl: *mut c_void,
+    show_snon_ocp: bool,
+    show_no_ir: bool,
+    detail: bool,
+) {
     let n = unsafe { global_op_class_num as usize };
     for i in 0..n {
         #[cfg(host_rf_op_class_dump_test)]
@@ -227,7 +233,11 @@ fn print_sel(sel: *mut c_void, line: *const c_char) {
         }
         let remain = host_sel_out.buf.len().saturating_sub(host_sel_out.len);
         let n = core::cmp::min(len, remain.saturating_sub(1));
-        core::ptr::copy_nonoverlapping(line as *const u8, host_sel_out.buf.as_mut_ptr().add(host_sel_out.len), n);
+        core::ptr::copy_nonoverlapping(
+            line as *const u8,
+            host_sel_out.buf.as_mut_ptr().add(host_sel_out.len),
+            n,
+        );
         host_sel_out.len += n;
     }
     #[cfg(not(host_rf_op_class_dump_test))]
@@ -360,7 +370,12 @@ fn dump_opc_pref_single(
                 b" %u\0".as_ptr() as *const c_char
             };
             let n = unsafe {
-                snprintf(buf.as_mut_ptr().add(pos), buf.len() - pos, fmt, ch.ch as c_int)
+                snprintf(
+                    buf.as_mut_ptr().add(pos),
+                    buf.len() - pos,
+                    fmt,
+                    ch.ch as c_int,
+                )
             };
             if n > 0 {
                 pos += n as usize;
