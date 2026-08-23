@@ -22,17 +22,22 @@ OPC_PREF_SRC := $(CORE)/rtw_rf_op_class_pref.c
 OPC_PREF_SHIM := host_rf_op_class_pref_shim.c
 OPC_PREF_CFLAGS := $(CFLAGS) -DHOST_RF_OP_CLASS_PREF_TEST
 
+OPC_DUMP_SRC := $(CORE)/rtw_rf_op_class_dump.c
+OPC_DUMP_SHIM := host_rf_op_class_dump_shim.c
+OPC_DUMP_CFLAGS := $(CFLAGS) -DHOST_RF_OP_CLASS_DUMP_TEST
+
 .PHONY: all test test-c test-rust clean
 
 all: test
 
 test: test-c test-rust
 
-test-c: test_rf test_regd_exc test_txpwr_lmt test_op_class_pref
+test-c: test_rf test_regd_exc test_txpwr_lmt test_op_class_pref test_op_class_dump
 	./test_rf rf_vectors.json
 	./test_regd_exc regd_exc_vectors.json
 	./test_txpwr_lmt txpwr_lmt_vectors.json
 	./test_op_class_pref op_class_pref_vectors.json
+	./test_op_class_dump op_class_dump_vectors.json
 
 test_rf: test_rf.c $(RF_SRC) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_rf.c $(RF_SRC) $(HOST_JSON)
@@ -45,6 +50,9 @@ test_txpwr_lmt: test_txpwr_lmt.c $(RF_SRC) $(REGD_EXC_SHIM) $(TXPWR_LMT_SHIM) $(
 
 test_op_class_pref: test_op_class_pref.c $(RF_SRC) $(OPC_PREF_SRC) $(OPC_PREF_SHIM) $(HOST_JSON)
 	$(CC) $(OPC_PREF_CFLAGS) -o $@ test_op_class_pref.c $(OPC_PREF_SHIM) $(RF_SRC) $(OPC_PREF_SRC) $(HOST_JSON)
+
+test_op_class_dump: test_op_class_dump.c $(RF_SRC) $(OPC_DUMP_SRC) $(OPC_DUMP_SHIM) $(HOST_JSON)
+	$(CC) $(OPC_DUMP_CFLAGS) -o $@ test_op_class_dump.c $(OPC_DUMP_SHIM) $(RF_SRC) $(OPC_DUMP_SRC) $(HOST_JSON)
 
 RUST_RF_OP_CLASS_PREF := $(ROOT)/rust/rtw_rf_op_class_pref.rs
 
@@ -77,4 +85,4 @@ test_txpwr_lmt_rust: test_txpwr_lmt.c librust_rf_rest.a $(REGD_EXC_SHIM) $(TXPWR
 	$(CC) $(TXPWR_LMT_CFLAGS) -DRUST_RF_TXPWR_LMT_ORACLE -o $@ test_txpwr_lmt.c $(REGD_EXC_SHIM) $(TXPWR_LMT_SHIM) $(HOST_JSON) librust_rf_rest.a
 
 clean:
-	rm -f test_rf test_regd_exc test_txpwr_lmt test_op_class_pref test_rf_rust test_regd_exc_rust test_txpwr_lmt_rust test_op_class_pref_rust librust_rf_rest.a librust_rf_op_class_pref.a
+	rm -f test_rf test_regd_exc test_txpwr_lmt test_op_class_pref test_op_class_dump test_rf_rust test_regd_exc_rust test_txpwr_lmt_rust test_op_class_pref_rust librust_rf_rest.a librust_rf_op_class_pref.a
