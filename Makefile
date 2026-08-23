@@ -2575,9 +2575,12 @@ rustflags-y += --cfg rust_txpwr_lmt
 endif
 ccflags-y += -DCONFIG_RUST_MLME_EXT_REST
 ccflags-y += -DCONFIG_RUST_STA_MGT_STCTL
+ccflags-y += -DCONFIG_RUST_AP_REST
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_PREF
 rustflags-y += --cfg rust_mlme_ext_rest
 rustflags-y += --cfg rust_sta_mgt_stctl
+rustflags-y += --cfg rust_ap_rest
+rustflags-y += --cfg fw_handle_txbcn
 rustflags-y += --cfg rust_rf_op_class_pref
 rustflags-y += --cfg dfs_master
 rustflags-y += --cfg ieee80211_band_5ghz
@@ -2613,6 +2616,7 @@ $(MODULE_NAME)-y += rust/rtw_vht.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt_aid.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt_stctl.o
+$(MODULE_NAME)-y += rust/rtw_ap_rest.o
 $(MODULE_NAME)-y += rust/rtw_rf_op_class_pref.o
 $(MODULE_NAME)-y += rust/rtw_recv.o
 $(MODULE_NAME)-y += rust/rtw_xmit.o
@@ -3103,6 +3107,23 @@ rust-objects-rtw-sta-mgt-stctl-rust-ref:
 rust-check-symbols-rtw-sta-mgt-stctl: rust-objects-rtw-sta-mgt-stctl-c rust-objects-rtw-sta-mgt-stctl-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/sta_mgt/sta_mgt_stctl_c_ref.o NEW=tests/host/sta_mgt/sta_mgt_stctl_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_sta_mgt_stctl.allow
+
+# W3-55 PR3: ap_rest-only L1 (host C oracle vs host Rust oracle).
+rust-objects-rtw-ap-rest-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_AP_REST_TEST -DCONFIG_FW_HANDLE_TXBCN -DCONFIG_LIMITED_AP_NUM=4 \
+		-o tests/host/ap/ap_rest_c_ref.o core/rtw_ap_rest.c
+
+rust-objects-rtw-ap-rest-rust-ref:
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_ap_rest_test --cfg fw_handle_txbcn \
+		--emit=obj=tests/host/ap/ap_rest_rust_ref.o \
+		--crate-type lib rust/rtw_ap_rest.rs
+
+rust-check-symbols-rtw-ap-rest: rust-objects-rtw-ap-rest-c rust-objects-rtw-ap-rest-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_rest_c_ref.o NEW=tests/host/ap/ap_rest_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_rest.allow
 
 # W3-56 PR3: op_class_pref-only L1 (host C oracle vs host Rust oracle).
 rust-objects-rtw-rf-op-class-pref-c:

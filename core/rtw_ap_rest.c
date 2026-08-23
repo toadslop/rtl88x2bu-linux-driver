@@ -91,3 +91,22 @@ u8 rtw_ap_release_vapid(struct dvobj_priv *dvobj, u8 vap_id)
 #endif /* CONFIG_FW_HANDLE_TXBCN */
 
 #endif /* !CONFIG_RUST || HOST_AP_REST_TEST || !CONFIG_RUST_AP_REST */
+
+#if defined(CONFIG_RUST) && !defined(HOST_AP_REST_TEST)
+
+u8 rtw_rust_ap_limited_ap_num(void)
+{
+	return CONFIG_LIMITED_AP_NUM;
+}
+
+void rtw_rust_ap_vapid_fail_log(u8 vap_id)
+{
+	RTW_ERR("%s - vapid(%d) failed\n", __func__, vap_id);
+}
+
+void rtw_rust_ap_warn_on(int condition)
+{
+	rtw_warn_on(condition);
+}
+
+#endif /* CONFIG_RUST && !HOST_AP_REST_TEST */
