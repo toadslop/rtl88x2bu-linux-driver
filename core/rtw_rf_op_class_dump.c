@@ -229,3 +229,34 @@ void dump_cur_spt_op_class_ch(void *sel, struct rf_ctl_t *rfctl, bool detail)
 }
 
 #endif /* !CONFIG_RUST || HOST_RF_OP_CLASS_DUMP_TEST || !CONFIG_RUST_RF_OP_CLASS_DUMP */
+
+#if defined(CONFIG_RUST) && !defined(HOST_RF_OP_CLASS_DUMP_TEST) && defined(CONFIG_RUST_RF_OP_CLASS_DUMP)
+
+void rtw_rust_opc_dump_print_sel(void *sel, const char *line)
+{
+	RTW_PRINT_SEL(sel, "%s", line);
+}
+
+struct op_class_pref_t *rtw_rust_opc_dump_spt_entry(struct rf_ctl_t *rfctl, u8 idx)
+{
+	if (!rfctl || !rfctl->spt_op_class_ch)
+		return NULL;
+	return rfctl->spt_op_class_ch[idx];
+}
+
+u8 rtw_rust_opc_dump_cap_num(struct rf_ctl_t *rfctl)
+{
+	return rfctl ? rfctl->cap_spt_op_class_num : 0;
+}
+
+u8 rtw_rust_opc_dump_reg_num(struct rf_ctl_t *rfctl)
+{
+	return rfctl ? rfctl->reg_spt_op_class_num : 0;
+}
+
+u8 rtw_rust_opc_dump_cur_num(struct rf_ctl_t *rfctl)
+{
+	return rfctl ? rfctl->cur_spt_op_class_num : 0;
+}
+
+#endif /* CONFIG_RUST && !HOST && CONFIG_RUST_RF_OP_CLASS_DUMP */
