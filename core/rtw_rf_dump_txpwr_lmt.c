@@ -292,3 +292,122 @@ release_lock:
 
 #endif /* !CONFIG_RUST || HOST_RF_DUMP_TXPWR_LMT_TEST || !CONFIG_RUST_RF_DUMP_TXPWR_LMT */
 #endif /* CONFIG_TXPWR_LIMIT */
+
+#if defined(CONFIG_RUST) && !defined(HOST_RF_DUMP_TXPWR_LMT_TEST) && defined(CONFIG_RUST_RF_DUMP_TXPWR_LMT)
+
+#include <drv_types.h>
+#include <hal_data.h>
+
+void rtw_rust_dump_txpwr_lmt_print_sel(void *sel, const char *line)
+{
+	RTW_PRINT_SEL(sel, "%s", line);
+}
+
+void rtw_rust_dump_txpwr_lmt_mutex_enter(struct rf_ctl_t *rfctl, _irqL *irqL)
+{
+	_enter_critical_mutex(&rfctl->txpwr_lmt_mutex, irqL);
+}
+
+void rtw_rust_dump_txpwr_lmt_mutex_exit(struct rf_ctl_t *rfctl, _irqL *irqL)
+{
+	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, irqL);
+}
+
+u8 rtw_rust_dump_txpwr_lmt_txpwr_regd_num(struct rf_ctl_t *rfctl)
+{
+	return rfctl ? rfctl->txpwr_regd_num : 0;
+}
+
+const char *rtw_rust_dump_txpwr_lmt_regd_name(struct rf_ctl_t *rfctl)
+{
+	return rfctl ? rfctl->regd_name : NULL;
+}
+
+u8 rtw_rust_dump_txpwr_lmt_2g_cck_ofdm_state(struct rf_ctl_t *rfctl)
+{
+	return rfctl ? rfctl->txpwr_lmt_2g_cck_ofdm_state : 0;
+}
+
+#if CONFIG_IEEE80211_BAND_5GHZ
+u8 rtw_rust_dump_txpwr_lmt_5g_cck_ofdm_state(struct rf_ctl_t *rfctl)
+{
+	return rfctl ? rfctl->txpwr_lmt_5g_cck_ofdm_state : 0;
+}
+
+u8 rtw_rust_dump_txpwr_lmt_5g_20_40_ref(struct rf_ctl_t *rfctl)
+{
+	return rfctl ? rfctl->txpwr_lmt_5g_20_40_ref : 0;
+}
+#endif
+
+_list *rtw_rust_dump_txpwr_lmt_list_head(struct rf_ctl_t *rfctl)
+{
+	return rfctl ? &rfctl->txpwr_lmt_list : NULL;
+}
+
+struct txpwr_lmt_ent *rtw_rust_dump_txpwr_lmt_ent_from_list(_list *cur)
+{
+	return LIST_CONTAINOR(cur, struct txpwr_lmt_ent, list);
+}
+
+_list *rtw_rust_dump_txpwr_lmt_list_next(_list *cur)
+{
+	return get_next(cur);
+}
+
+bool rtw_rust_dump_txpwr_lmt_list_end(_list *head, _list *cur)
+{
+	return rtw_end_of_queue_search(head, cur) == _TRUE;
+}
+
+const char *rtw_rust_dump_txpwr_lmt_ent_regd_name(struct txpwr_lmt_ent *ent)
+{
+	return ent ? ent->regd_name : NULL;
+}
+
+bool rtw_rust_dump_txpwr_lmt_is_jaguar(_adapter *adapter)
+{
+	return IS_HARDWARE_TYPE_JAGUAR_ALL(adapter) ? true : false;
+}
+
+u8 rtw_rust_dump_txpwr_lmt_max_tx_cnt(_adapter *adapter)
+{
+	return GET_HAL_DATA(adapter)->max_tx_cnt;
+}
+
+u8 rtw_rust_dump_txpwr_lmt_txgi_max(_adapter *adapter)
+{
+	return GET_HAL_SPEC(adapter)->txgi_max;
+}
+
+u8 rtw_rust_dump_txpwr_lmt_txgi_pdbm(_adapter *adapter)
+{
+	return GET_HAL_SPEC(adapter)->txgi_pdbm;
+}
+
+u8 rtw_rust_dump_txpwr_lmt_rfpath_num_2g(_adapter *adapter)
+{
+	return GET_HAL_SPEC(adapter)->rfpath_num_2g;
+}
+
+u8 rtw_rust_dump_txpwr_lmt_rfpath_num_5g(_adapter *adapter)
+{
+	return GET_HAL_SPEC(adapter)->rfpath_num_5g;
+}
+
+bool rtw_rust_dump_txpwr_lmt_hal_is_band_support(_adapter *adapter, u8 band)
+{
+	return hal_is_band_support(adapter, band);
+}
+
+void *rtw_rust_dump_txpwr_lmt_malloc(u32 sz)
+{
+	return rtw_malloc(sz);
+}
+
+void rtw_rust_dump_txpwr_lmt_mfree(void *p, u32 sz)
+{
+	rtw_mfree(p, sz);
+}
+
+#endif /* CONFIG_RUST && !HOST_RF_DUMP_TXPWR_LMT_TEST && CONFIG_RUST_RF_DUMP_TXPWR_LMT */

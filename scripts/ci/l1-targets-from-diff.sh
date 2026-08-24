@@ -89,12 +89,16 @@ for path in "${changed[@]}"; do
 	rust/rtw_rf_rest.rs \
 	| rust/rtw_rf_op_class_pref.rs \
 	| rust/rtw_rf_op_class_dump.rs \
+	| rust/rtw_rf_dump_txpwr_lmt.rs \
 	| core/rtw_rf_rest.c \
 	| core/rtw_rf_op_class_pref.c \
 	| core/rtw_rf_op_class_dump.c \
+	| core/rtw_rf_dump_txpwr_lmt.c \
 	| tests/host/rf/*)
 		add_target rust-check-symbols-rtw-rf-rest
 		add_target rust-check-symbols-rtw-rf-op-class-pref
+		add_target rust-check-symbols-rtw-rf-op-class-dump
+		add_target rust-check-symbols-rtw-rf-dump-txpwr-lmt
 		;;
 	rust/rtw_vht.rs \
 	| core/rtw_vht.c \
@@ -209,6 +213,9 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-security-rest-misc
 	rust-check-symbols-rtw-wlan-util
 	rust-check-symbols-rtw-rf-rest
+	rust-check-symbols-rtw-rf-op-class-pref
+	rust-check-symbols-rtw-rf-op-class-dump
+	rust-check-symbols-rtw-rf-dump-txpwr-lmt
 	rust-check-symbols-rtw-vht
 	rust-check-symbols-rtw-vht-restructure
 	rust-check-symbols-rtw-sta-mgt

@@ -2580,11 +2580,13 @@ ccflags-y += -DCONFIG_RUST_STA_MGT_STCTL
 ccflags-y += -DCONFIG_RUST_AP_REST
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_PREF
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_DUMP
+ccflags-y += -DCONFIG_RUST_RF_DUMP_TXPWR_LMT
 rustflags-y += --cfg rust_mlme_ext_rest
 rustflags-y += --cfg rust_sta_mgt_stctl
 rustflags-y += --cfg rust_ap_rest
 rustflags-y += --cfg rust_rf_op_class_pref
 rustflags-y += --cfg rust_rf_op_class_dump
+rustflags-y += --cfg rust_rf_dump_txpwr_lmt
 rustflags-y += --cfg config_rtw_debug
 rustflags-y += --cfg dfs_master
 rustflags-y += --cfg ieee80211_band_5ghz
@@ -2640,6 +2642,7 @@ $(MODULE_NAME)-y += rust/rtw_sta_mgt_stctl.o
 $(MODULE_NAME)-y += rust/rtw_ap_rest.o
 $(MODULE_NAME)-y += rust/rtw_rf_op_class_pref.o
 $(MODULE_NAME)-y += rust/rtw_rf_op_class_dump.o
+$(MODULE_NAME)-y += rust/rtw_rf_dump_txpwr_lmt.o
 $(MODULE_NAME)-y += rust/rtw_recv.o
 $(MODULE_NAME)-y += rust/rtw_xmit.o
 $(MODULE_NAME)-y += rust/rtw_iol_rest.o
@@ -3179,6 +3182,25 @@ rust-objects-rtw-rf-op-class-dump-rust-ref:
 rust-check-symbols-rtw-rf-op-class-dump: rust-objects-rtw-rf-op-class-dump-c rust-objects-rtw-rf-op-class-dump-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/rf/op_class_dump_c_ref.o NEW=tests/host/rf/op_class_dump_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_rf_op_class_dump.allow
+
+# W3-58 PR3: dump_txpwr_lmt-only L1 (host C oracle vs host Rust oracle).
+rust-objects-rtw-rf-dump-txpwr-lmt-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DCONFIG_TXPWR_LIMIT -DHOST_RF_DUMP_TXPWR_LMT_TEST \
+		-Wno-format-truncation -Wno-unused-but-set-variable \
+		-o tests/host/rf/dump_txpwr_lmt_c_ref.o core/rtw_rf_dump_txpwr_lmt.c
+
+rust-objects-rtw-rf-dump-txpwr-lmt-rust-ref:
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_rf_dump_txpwr_lmt_test \
+		--cfg txpwr_limit --cfg ieee80211_band_5ghz \
+		--emit=obj=tests/host/rf/dump_txpwr_lmt_rust_ref.o \
+		--crate-type lib rust/rtw_rf_dump_txpwr_lmt.rs
+
+rust-check-symbols-rtw-rf-dump-txpwr-lmt: rust-objects-rtw-rf-dump-txpwr-lmt-c rust-objects-rtw-rf-dump-txpwr-lmt-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/rf/dump_txpwr_lmt_c_ref.o NEW=tests/host/rf/dump_txpwr_lmt_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_rf_dump_txpwr_lmt.allow
 
 # W3-39: host C oracle recv_rest vs rust/rtw_recv.o.
 rust-objects-rtw-recv:
