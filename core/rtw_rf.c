@@ -202,6 +202,8 @@ int rtw_ch_to_bb_gain_sel(int ch)
 }
 #endif /* !CONFIG_RUST || HOST_RF_TEST */
 
+s8 rtw_rf_get_kfree_tx_gain_offset(_adapter *padapter, u8 path, u8 ch);
+
 void rtw_rf_set_tx_gain_offset(_adapter *adapter, u8 path, s8 offset)
 {
 #if !defined(CONFIG_RTL8814A) && !defined(CONFIG_RTL8822B) && !defined(CONFIG_RTL8821C) && !defined(CONFIG_RTL8822C) \
