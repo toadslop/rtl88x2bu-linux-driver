@@ -28,11 +28,16 @@ static inline void host_sel_reset(void)
 #undef RTW_PRINT_SEL
 #define RTW_PRINT_SEL(sel, fmt, ...) \
 	do { \
-		int _n = snprintf(host_sel_out.buf + host_sel_out.len, \
-				  sizeof(host_sel_out.buf) - host_sel_out.len, \
+		size_t _rem = sizeof(host_sel_out.buf) - host_sel_out.len; \
+		int _n = snprintf(host_sel_out.buf + host_sel_out.len, _rem, \
 				  fmt, ##__VA_ARGS__); \
-		if (_n > 0) \
-			host_sel_out.len += (size_t)_n; \
+		if (_n > 0) { \
+			if ((size_t)_n >= _rem) \
+				host_sel_out.len = sizeof(host_sel_out.buf) - 1; \
+			else \
+				host_sel_out.len += (size_t)_n; \
+			host_sel_out.buf[host_sel_out.len] = '\0'; \
+		} \
 	} while (0)
 
 bool dbg_global_op_class_validate(u8 gid);
