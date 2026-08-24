@@ -88,8 +88,10 @@ for path in "${changed[@]}"; do
 		;;
 	rust/rtw_rf_rest.rs \
 	| rust/rtw_rf_op_class_pref.rs \
+	| rust/rtw_rf_op_class_dump.rs \
 	| core/rtw_rf_rest.c \
 	| core/rtw_rf_op_class_pref.c \
+	| core/rtw_rf_op_class_dump.c \
 	| tests/host/rf/*)
 		add_target rust-check-symbols-rtw-rf-rest
 		add_target rust-check-symbols-rtw-rf-op-class-pref

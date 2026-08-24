@@ -1,0 +1,6 @@
+# L1 allowlist for W3-57 op_class_dump object.
+drop rtw_rust_opc_dump_print_sel
+drop rtw_rust_opc_dump_spt_entry
+drop rtw_rust_opc_dump_cap_num
+drop rtw_rust_opc_dump_reg_num
+drop rtw_rust_opc_dump_cur_num
