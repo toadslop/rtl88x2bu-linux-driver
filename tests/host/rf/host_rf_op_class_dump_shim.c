@@ -21,16 +21,15 @@ void rtw_mfree(void *p, u32 sz)
 
 void host_rf_op_class_dump_reset(struct rf_ctl_t *rfctl)
 {
+	struct op_class_pref_t **spt = rfctl->spt_op_class_ch;
 	int i;
 
-	if (rfctl->spt_op_class_ch) {
+	if (spt) {
 		for (i = 0; i < global_op_class_num; i++) {
-			if (rfctl->spt_op_class_ch[i])
-				rtw_mfree(rfctl->spt_op_class_ch[i],
-					  sizeof(struct op_class_pref_t));
+			if (spt[i])
+				rtw_mfree(spt[i], sizeof(struct op_class_pref_t));
 		}
-		rtw_mfree(rfctl->spt_op_class_ch,
-			  sizeof(struct op_class_pref_t *) * global_op_class_num);
+		rtw_mfree(spt, sizeof(struct op_class_pref_t *) * global_op_class_num);
 	}
 	memset(rfctl, 0, sizeof(*rfctl));
 }

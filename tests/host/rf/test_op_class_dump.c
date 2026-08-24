@@ -96,7 +96,7 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 
 static int run_vector(struct vector *v)
 {
-	struct rf_ctl_t rfctl;
+	struct rf_ctl_t rfctl = {0};
 
 	host_rf_op_class_dump_reset(&rfctl);
 	host_sel_reset();
