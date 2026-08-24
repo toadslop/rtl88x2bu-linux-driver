@@ -2448,6 +2448,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_rf.o \
 		core/rtw_rf_op_class_pref.o \
 		core/rtw_rf_op_class_dump.o \
+		core/rtw_rf_dump_txpwr_lmt.o \
 		core/rtw_rf_rest.o \
 		core/rtw_chplan_rest.o \
 		core/monitor/rtw_radiotap.o \
