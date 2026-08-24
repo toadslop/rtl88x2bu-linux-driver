@@ -288,6 +288,26 @@ struct	cmd_obj	*_rtw_dequeue_cmd(_queue *queue)
 	return obj;
 }
 
+u32 rtw_init_cmd_priv(struct cmd_priv *pcmdpriv)
+{
+	return _rtw_init_cmd_priv(pcmdpriv);
+}
+
+u32 rtw_init_evt_priv(struct evt_priv *pevtpriv)
+{
+	return _rtw_init_evt_priv(pevtpriv);
+}
+
+void rtw_free_evt_priv(struct evt_priv *pevtpriv)
+{
+	_rtw_free_evt_priv(pevtpriv);
+}
+
+void rtw_free_cmd_priv(struct cmd_priv *pcmdpriv)
+{
+	_rtw_free_cmd_priv(pcmdpriv);
+}
+
 int rtw_cmd_filter(struct cmd_priv *pcmdpriv, struct cmd_obj *cmd_obj);
 int rtw_cmd_filter(struct cmd_priv *pcmdpriv, struct cmd_obj *cmd_obj)
 {
