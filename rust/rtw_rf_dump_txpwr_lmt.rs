@@ -163,7 +163,8 @@ mod kernel {
         pub fn rtw_rust_dump_txpwr_lmt_txgi_pdbm(adapter: *mut Adapter) -> u8;
         pub fn rtw_rust_dump_txpwr_lmt_rfpath_num_2g(adapter: *mut Adapter) -> u8;
         pub fn rtw_rust_dump_txpwr_lmt_rfpath_num_5g(adapter: *mut Adapter) -> u8;
-        pub fn rtw_rust_dump_txpwr_lmt_hal_is_band_support(adapter: *mut Adapter, band: u8) -> bool;
+        pub fn rtw_rust_dump_txpwr_lmt_hal_is_band_support(adapter: *mut Adapter, band: u8)
+            -> bool;
         pub fn rtw_rust_dump_txpwr_lmt_malloc(sz: u32) -> *mut c_void;
         pub fn rtw_rust_dump_txpwr_lmt_mfree(p: *mut c_void, sz: u32);
     }
@@ -225,15 +226,15 @@ extern "C" {
 unsafe fn band_str(band: u8) -> *const c_char {
     unsafe {
         let idx = if (band as usize) < 2 {
-        band as usize
+            band as usize
         } else {
-        2
+            2
         };
         let s = _band_str[idx];
         if s.is_null() {
-        b"?\0".as_ptr() as *const c_char
+            b"?\0".as_ptr() as *const c_char
         } else {
-        s
+            s
         }
     }
 }
@@ -241,14 +242,14 @@ unsafe fn band_str(band: u8) -> *const c_char {
 unsafe fn ch_width_str(bw: u8) -> *const c_char {
     unsafe {
         if (bw as usize) < 7 {
-        let s = _ch_width_str[bw as usize];
-        if s.is_null() {
-        b"CHANNEL_WIDTH_MAX\0".as_ptr() as *const c_char
+            let s = _ch_width_str[bw as usize];
+            if s.is_null() {
+                b"CHANNEL_WIDTH_MAX\0".as_ptr() as *const c_char
+            } else {
+                s
+            }
         } else {
-        s
-        }
-        } else {
-        b"CHANNEL_WIDTH_MAX\0".as_ptr() as *const c_char
+            b"CHANNEL_WIDTH_MAX\0".as_ptr() as *const c_char
         }
     }
 }
@@ -256,9 +257,9 @@ unsafe fn ch_width_str(bw: u8) -> *const c_char {
 unsafe fn txpwr_lmt_rs_str(rs: u8) -> *const c_char {
     unsafe {
         let idx = if rs >= TXPWR_LMT_RS_NUM {
-        TXPWR_LMT_RS_NUM as usize
+            TXPWR_LMT_RS_NUM as usize
         } else {
-        rs as usize
+            rs as usize
         };
         _txpwr_lmt_rs_str[idx]
     }
@@ -267,26 +268,24 @@ unsafe fn txpwr_lmt_rs_str(rs: u8) -> *const c_char {
 unsafe fn regd_str_by_idx(regd: u8) -> *const c_char {
     unsafe {
         let idx = if regd > TXPWR_LMT_WW {
-        TXPWR_LMT_WW as usize
+            TXPWR_LMT_WW as usize
         } else {
-        regd as usize
+            regd as usize
         };
         _regd_str[idx]
     }
 }
 
 unsafe fn regd_str_ww() -> *const c_char {
-    unsafe {
-        regd_str_by_idx(TXPWR_LMT_WW)
-    }
+    unsafe { regd_str_by_idx(TXPWR_LMT_WW) }
 }
 
 unsafe fn rf_path_char(path: u8) -> u8 {
     unsafe {
         if path >= RF_PATH_MAX {
-        b'X'
+            b'X'
         } else {
-        b'A' + path
+            b'A' + path
         }
     }
 }
@@ -320,9 +319,7 @@ fn print_line(sel: *mut c_void, buf: &[i8]) {
 }
 
 unsafe fn ent_from_list(cur: *mut List) -> *mut TxpwrLmtEnt {
-    unsafe {
-        (cur as *mut u8).sub(offset_of!(TxpwrLmtEnt, list)) as *mut TxpwrLmtEnt
-    }
+    unsafe { (cur as *mut u8).sub(offset_of!(TxpwrLmtEnt, list)) as *mut TxpwrLmtEnt }
 }
 
 unsafe fn ent_regd_name_host(ent: *mut TxpwrLmtEnt) -> *const c_char {
@@ -340,11 +337,11 @@ unsafe fn ent_regd_name(ent: *mut TxpwrLmtEnt) -> *const c_char {
     unsafe {
         #[cfg(host_rf_dump_txpwr_lmt_test)]
         {
-        ent_regd_name_host(ent)
+            ent_regd_name_host(ent)
         }
         #[cfg(not(host_rf_dump_txpwr_lmt_test))]
         {
-        kernel::rtw_rust_dump_txpwr_lmt_ent_regd_name(ent)
+            kernel::rtw_rust_dump_txpwr_lmt_ent_regd_name(ent)
         }
     }
 }
@@ -361,25 +358,25 @@ unsafe fn hal_view(adapter: *mut Adapter) -> HalView {
     unsafe {
         #[cfg(host_rf_dump_txpwr_lmt_test)]
         {
-        let hal = &(*adapter).hal_data;
-        let spec = &*host_rf_hal_spec_ptr();
-        HalView {
-        max_tx_cnt: hal.max_tx_cnt,
-        txgi_max: spec.txgi_max,
-        txgi_pdbm: spec.txgi_pdbm,
-        rfpath_num_2g: spec.rfpath_num_2g,
-        rfpath_num_5g: spec.rfpath_num_5g,
-        }
+            let hal = &(*adapter).hal_data;
+            let spec = &*host_rf_hal_spec_ptr();
+            HalView {
+                max_tx_cnt: hal.max_tx_cnt,
+                txgi_max: spec.txgi_max,
+                txgi_pdbm: spec.txgi_pdbm,
+                rfpath_num_2g: spec.rfpath_num_2g,
+                rfpath_num_5g: spec.rfpath_num_5g,
+            }
         }
         #[cfg(not(host_rf_dump_txpwr_lmt_test))]
         {
-        HalView {
-        max_tx_cnt: kernel::rtw_rust_dump_txpwr_lmt_max_tx_cnt(adapter),
-        txgi_max: kernel::rtw_rust_dump_txpwr_lmt_txgi_max(adapter),
-        txgi_pdbm: kernel::rtw_rust_dump_txpwr_lmt_txgi_pdbm(adapter),
-        rfpath_num_2g: kernel::rtw_rust_dump_txpwr_lmt_rfpath_num_2g(adapter),
-        rfpath_num_5g: kernel::rtw_rust_dump_txpwr_lmt_rfpath_num_5g(adapter),
-        }
+            HalView {
+                max_tx_cnt: kernel::rtw_rust_dump_txpwr_lmt_max_tx_cnt(adapter),
+                txgi_max: kernel::rtw_rust_dump_txpwr_lmt_txgi_max(adapter),
+                txgi_pdbm: kernel::rtw_rust_dump_txpwr_lmt_txgi_pdbm(adapter),
+                rfpath_num_2g: kernel::rtw_rust_dump_txpwr_lmt_rfpath_num_2g(adapter),
+                rfpath_num_5g: kernel::rtw_rust_dump_txpwr_lmt_rfpath_num_5g(adapter),
+            }
         }
     }
 }
@@ -388,11 +385,11 @@ unsafe fn adapter_band_supported(adapter: *mut Adapter, band: u8) -> bool {
     unsafe {
         #[cfg(host_rf_dump_txpwr_lmt_test)]
         {
-        hal_is_band_support(adapter, band)
+            hal_is_band_support(adapter, band)
         }
         #[cfg(not(host_rf_dump_txpwr_lmt_test))]
         {
-        kernel::rtw_rust_dump_txpwr_lmt_hal_is_band_support(adapter, band)
+            kernel::rtw_rust_dump_txpwr_lmt_hal_is_band_support(adapter, band)
         }
     }
 }
@@ -401,11 +398,11 @@ unsafe fn is_jaguar(adapter: *mut Adapter) -> bool {
     unsafe {
         #[cfg(host_rf_dump_txpwr_lmt_test)]
         {
-        (*adapter).jaguar != 0
+            (*adapter).jaguar != 0
         }
         #[cfg(not(host_rf_dump_txpwr_lmt_test))]
         {
-        kernel::rtw_rust_dump_txpwr_lmt_is_jaguar(adapter)
+            kernel::rtw_rust_dump_txpwr_lmt_is_jaguar(adapter)
         }
     }
 }
@@ -432,11 +429,11 @@ unsafe fn txpwr_regd_num(rfctl: *mut RfCtlT) -> u8 {
     unsafe {
         #[cfg(host_rf_dump_txpwr_lmt_test)]
         {
-        (*rfctl).txpwr_regd_num
+            (*rfctl).txpwr_regd_num
         }
         #[cfg(not(host_rf_dump_txpwr_lmt_test))]
         {
-        kernel::rtw_rust_dump_txpwr_lmt_txpwr_regd_num(rfctl)
+            kernel::rtw_rust_dump_txpwr_lmt_txpwr_regd_num(rfctl)
         }
     }
 }
@@ -445,11 +442,11 @@ unsafe fn regd_name_ptr(rfctl: *mut RfCtlT) -> *const c_char {
     unsafe {
         #[cfg(host_rf_dump_txpwr_lmt_test)]
         {
-        (*rfctl).regd_name
+            (*rfctl).regd_name
         }
         #[cfg(not(host_rf_dump_txpwr_lmt_test))]
         {
-        kernel::rtw_rust_dump_txpwr_lmt_regd_name(rfctl)
+            kernel::rtw_rust_dump_txpwr_lmt_regd_name(rfctl)
         }
     }
 }
@@ -458,11 +455,11 @@ unsafe fn cck_ofdm_state_2g(rfctl: *mut RfCtlT) -> u8 {
     unsafe {
         #[cfg(host_rf_dump_txpwr_lmt_test)]
         {
-        (*rfctl).txpwr_lmt_2g_cck_ofdm_state
+            (*rfctl).txpwr_lmt_2g_cck_ofdm_state
         }
         #[cfg(not(host_rf_dump_txpwr_lmt_test))]
         {
-        kernel::rtw_rust_dump_txpwr_lmt_2g_cck_ofdm_state(rfctl)
+            kernel::rtw_rust_dump_txpwr_lmt_2g_cck_ofdm_state(rfctl)
         }
     }
 }
@@ -472,11 +469,11 @@ unsafe fn cck_ofdm_state_5g(rfctl: *mut RfCtlT) -> u8 {
     unsafe {
         #[cfg(host_rf_dump_txpwr_lmt_test)]
         {
-        (*rfctl).txpwr_lmt_5g_cck_ofdm_state
+            (*rfctl).txpwr_lmt_5g_cck_ofdm_state
         }
         #[cfg(not(host_rf_dump_txpwr_lmt_test))]
         {
-        kernel::rtw_rust_dump_txpwr_lmt_5g_cck_ofdm_state(rfctl)
+            kernel::rtw_rust_dump_txpwr_lmt_5g_cck_ofdm_state(rfctl)
         }
     }
 }
@@ -486,11 +483,11 @@ unsafe fn txpwr_lmt_5g_ref(rfctl: *mut RfCtlT) -> u8 {
     unsafe {
         #[cfg(host_rf_dump_txpwr_lmt_test)]
         {
-        (*rfctl).txpwr_lmt_5g_20_40_ref
+            (*rfctl).txpwr_lmt_5g_20_40_ref
         }
         #[cfg(not(host_rf_dump_txpwr_lmt_test))]
         {
-        kernel::rtw_rust_dump_txpwr_lmt_5g_20_40_ref(rfctl)
+            kernel::rtw_rust_dump_txpwr_lmt_5g_20_40_ref(rfctl)
         }
     }
 }
@@ -499,11 +496,11 @@ unsafe fn list_head(rfctl: *mut RfCtlT) -> *mut List {
     unsafe {
         #[cfg(host_rf_dump_txpwr_lmt_test)]
         {
-        &mut (*rfctl).txpwr_lmt_list
+            &mut (*rfctl).txpwr_lmt_list
         }
         #[cfg(not(host_rf_dump_txpwr_lmt_test))]
         {
-        kernel::rtw_rust_dump_txpwr_lmt_list_head(rfctl)
+            kernel::rtw_rust_dump_txpwr_lmt_list_head(rfctl)
         }
     }
 }
@@ -512,11 +509,11 @@ unsafe fn list_next(cur: *mut List) -> *mut List {
     unsafe {
         #[cfg(host_rf_dump_txpwr_lmt_test)]
         {
-        (*cur).next
+            (*cur).next
         }
         #[cfg(not(host_rf_dump_txpwr_lmt_test))]
         {
-        kernel::rtw_rust_dump_txpwr_lmt_list_next(cur)
+            kernel::rtw_rust_dump_txpwr_lmt_list_next(cur)
         }
     }
 }
@@ -525,11 +522,11 @@ unsafe fn list_end(head: *mut List, cur: *mut List) -> bool {
     unsafe {
         #[cfg(host_rf_dump_txpwr_lmt_test)]
         {
-        head == cur
+            head == cur
         }
         #[cfg(not(host_rf_dump_txpwr_lmt_test))]
         {
-        kernel::rtw_rust_dump_txpwr_lmt_list_end(head, cur)
+            kernel::rtw_rust_dump_txpwr_lmt_list_end(head, cur)
         }
     }
 }
@@ -538,11 +535,11 @@ unsafe fn ent_from_list_node(cur: *mut List) -> *mut TxpwrLmtEnt {
     unsafe {
         #[cfg(host_rf_dump_txpwr_lmt_test)]
         {
-        ent_from_list(cur)
+            ent_from_list(cur)
         }
         #[cfg(not(host_rf_dump_txpwr_lmt_test))]
         {
-        kernel::rtw_rust_dump_txpwr_lmt_ent_from_list(cur)
+            kernel::rtw_rust_dump_txpwr_lmt_ent_from_list(cur)
         }
     }
 }
@@ -551,11 +548,11 @@ unsafe fn lmt_alloc(sz: u32) -> *mut c_void {
     unsafe {
         #[cfg(host_rf_dump_txpwr_lmt_test)]
         {
-        rtw_malloc(sz)
+            rtw_malloc(sz)
         }
         #[cfg(not(host_rf_dump_txpwr_lmt_test))]
         {
-        kernel::rtw_rust_dump_txpwr_lmt_malloc(sz)
+            kernel::rtw_rust_dump_txpwr_lmt_malloc(sz)
         }
     }
 }
@@ -564,11 +561,11 @@ unsafe fn lmt_free(p: *mut c_void, sz: u32) {
     unsafe {
         #[cfg(host_rf_dump_txpwr_lmt_test)]
         {
-        rtw_mfree(p, sz);
+            rtw_mfree(p, sz);
         }
         #[cfg(not(host_rf_dump_txpwr_lmt_test))]
         {
-        kernel::rtw_rust_dump_txpwr_lmt_mfree(p, sz);
+            kernel::rtw_rust_dump_txpwr_lmt_mfree(p, sz);
         }
     }
 }
@@ -580,42 +577,67 @@ unsafe fn print_regd_header(
     rfpath_num: u8,
 ) {
     unsafe {
-    let mut fmt = [0i8; 16];
-    let mut tmp_str = [0i8; TMP_STR_LEN];
-    let mut line = [0i8; 512];
+        let mut fmt = [0i8; 16];
+        let mut tmp_str = [0i8; TMP_STR_LEN];
+        let mut line = [0i8; 512];
 
-    snprintf(
-        line.as_mut_ptr(),
-        line.len(),
-        b"%3s \0".as_ptr() as *const c_char,
-        b"ch\0".as_ptr() as *const c_char,
-    );
-    print_line(sel, &line);
+        snprintf(
+            line.as_mut_ptr(),
+            line.len(),
+            b"%3s \0".as_ptr() as *const c_char,
+            b"ch\0".as_ptr() as *const c_char,
+        );
+        print_line(sel, &line);
 
-    let mut cur = list_next(head);
-    while !list_end(head, cur) {
-        let ent = ent_from_list_node(cur);
-        let name = ent_regd_name(ent);
-        let name_len = strlen(name);
-        let pad = if name_len >= 6 { 1 } else { 6 - name_len };
+        let mut cur = list_next(head);
+        while !list_end(head, cur) {
+            let ent = ent_from_list_node(cur);
+            let name = ent_regd_name(ent);
+            let name_len = strlen(name);
+            let pad = if name_len >= 6 { 1 } else { 6 - name_len };
+            snprintf(
+                fmt.as_mut_ptr(),
+                fmt.len(),
+                b"%%%zus%%s \0".as_ptr() as *const c_char,
+                pad,
+            );
+            let star = if strcmp(name, rf_regd) == 0 {
+                b"*\0".as_ptr() as *const c_char
+            } else {
+                b"\0".as_ptr() as *const c_char
+            };
+            snprintf(
+                tmp_str.as_mut_ptr(),
+                tmp_str.len(),
+                fmt.as_ptr(),
+                star,
+                name,
+            );
+            snprintf(
+                line.as_mut_ptr(),
+                line.len(),
+                b"%s\0".as_ptr() as *const c_char,
+                tmp_str.as_ptr(),
+            );
+            print_line(sel, &line);
+            cur = list_next(cur);
+        }
+
+        let ww = regd_str_ww();
+        let ww_len = strlen(ww);
+        let pad = if ww_len >= 6 { 1 } else { 6 - ww_len };
         snprintf(
             fmt.as_mut_ptr(),
             fmt.len(),
             b"%%%zus%%s \0".as_ptr() as *const c_char,
             pad,
         );
-        let star = if strcmp(name, rf_regd) == 0 {
+        let star = if strcmp(rf_regd, ww) == 0 {
             b"*\0".as_ptr() as *const c_char
         } else {
             b"\0".as_ptr() as *const c_char
         };
-        snprintf(
-            tmp_str.as_mut_ptr(),
-            tmp_str.len(),
-            fmt.as_ptr(),
-            star,
-            name,
-        );
+        snprintf(tmp_str.as_mut_ptr(), tmp_str.len(), fmt.as_ptr(), star, ww);
         snprintf(
             line.as_mut_ptr(),
             line.len(),
@@ -623,50 +645,37 @@ unsafe fn print_regd_header(
             tmp_str.as_ptr(),
         );
         print_line(sel, &line);
-        cur = list_next(cur);
-    }
 
-    let ww = regd_str_ww();
-    let ww_len = strlen(ww);
-    let pad = if ww_len >= 6 { 1 } else { 6 - ww_len };
-    snprintf(
-        fmt.as_mut_ptr(),
-        fmt.len(),
-        b"%%%zus%%s \0".as_ptr() as *const c_char,
-        pad,
-    );
-    let star = if strcmp(rf_regd, ww) == 0 {
-        b"*\0".as_ptr() as *const c_char
-    } else {
-        b"\0".as_ptr() as *const c_char
-    };
-    snprintf(
-        tmp_str.as_mut_ptr(),
-        tmp_str.len(),
-        fmt.as_ptr(),
-        star,
-        ww,
-    );
-    snprintf(
-        line.as_mut_ptr(),
-        line.len(),
-        b"%s\0".as_ptr() as *const c_char,
-        tmp_str.as_ptr(),
-    );
-    print_line(sel, &line);
+        for path in 0..RF_PATH_MAX {
+            if path >= rfpath_num {
+                break;
+            }
+            snprintf(
+                line.as_mut_ptr(),
+                line.len(),
+                b"|\0".as_ptr() as *const c_char,
+            );
+            print_line(sel, &line);
 
-    for path in 0..RF_PATH_MAX {
-        if path >= rfpath_num {
-            break;
-        }
-        snprintf(line.as_mut_ptr(), line.len(), b"|\0".as_ptr() as *const c_char);
-        print_line(sel, &line);
-
-        let mut cur = list_next(head);
-        while !list_end(head, cur) {
-            let ent = ent_from_list_node(cur);
-            let name = ent_regd_name(ent);
-            let ch = if strcmp(name, rf_regd) == 0 {
+            let mut cur = list_next(head);
+            while !list_end(head, cur) {
+                let ent = ent_from_list_node(cur);
+                let name = ent_regd_name(ent);
+                let ch = if strcmp(name, rf_regd) == 0 {
+                    rf_path_char(path) as c_int
+                } else {
+                    b' ' as c_int
+                };
+                snprintf(
+                    line.as_mut_ptr(),
+                    line.len(),
+                    b"%3c \0".as_ptr() as *const c_char,
+                    ch,
+                );
+                print_line(sel, &line);
+                cur = list_next(cur);
+            }
+            let ch = if strcmp(rf_regd, ww) == 0 {
                 rf_path_char(path) as c_int
             } else {
                 b' ' as c_int
@@ -678,23 +687,13 @@ unsafe fn print_regd_header(
                 ch,
             );
             print_line(sel, &line);
-            cur = list_next(cur);
         }
-        let ch = if strcmp(rf_regd, ww) == 0 {
-            rf_path_char(path) as c_int
-        } else {
-            b' ' as c_int
-        };
         snprintf(
             line.as_mut_ptr(),
             line.len(),
-            b"%3c \0".as_ptr() as *const c_char,
-            ch,
+            b"\n\0".as_ptr() as *const c_char,
         );
         print_line(sel, &line);
-    }
-    snprintf(line.as_mut_ptr(), line.len(), b"\n\0".as_ptr() as *const c_char);
-    print_line(sel, &line);
     }
 }
 
@@ -708,7 +707,11 @@ pub extern "C" fn dump_txpwr_lmt(sel: *mut c_void, adapter: *mut Adapter) {
 
         mutex_enter(rfctl, &mut irqL);
         _dump_regd_exc_list(sel, rfctl);
-        snprintf(line.as_mut_ptr(), line.len(), b"\n\0".as_ptr() as *const c_char);
+        snprintf(
+            line.as_mut_ptr(),
+            line.len(),
+            b"\n\0".as_ptr() as *const c_char,
+        );
         print_line(sel, &line);
 
         let regd_num = txpwr_regd_num(rfctl);
@@ -749,7 +752,11 @@ pub extern "C" fn dump_txpwr_lmt(sel: *mut c_void, adapter: *mut Adapter) {
             print_line(sel, &line);
         }
 
-        snprintf(line.as_mut_ptr(), line.len(), b"\n\0".as_ptr() as *const c_char);
+        snprintf(
+            line.as_mut_ptr(),
+            line.len(),
+            b"\n\0".as_ptr() as *const c_char,
+        );
         print_line(sel, &line);
 
         let rf_regd = regd_name_ptr(rfctl);
@@ -834,8 +841,7 @@ pub extern "C" fn dump_txpwr_lmt(sel: *mut c_void, adapter: *mut Adapter) {
                         }
 
                         #[cfg(any(host_rf_dump_txpwr_lmt_test, ieee80211_band_5ghz))]
-                        if band == BAND_ON_5G
-                            && (bw == CHANNEL_WIDTH_20 || bw == CHANNEL_WIDTH_40)
+                        if band == BAND_ON_5G && (bw == CHANNEL_WIDTH_20 || bw == CHANNEL_WIDTH_40)
                         {
                             let ref_mode = txpwr_lmt_5g_ref(rfctl);
                             if ref_mode == TXPWR_LMT_REF_HT_FROM_VHT && tlrs == TXPWR_LMT_RS_HT {
@@ -920,9 +926,8 @@ pub extern "C" fn dump_txpwr_lmt(sel: *mut c_void, adapter: *mut Adapter) {
                             }
 
                             let ww = regd_str_ww();
-                            let lmt = phy_get_txpwr_lmt(
-                                adapter, ww, band, bw, tlrs, ntx_idx, ch, 0,
-                            );
+                            let lmt =
+                                phy_get_txpwr_lmt(adapter, ww, band, bw, tlrs, ntx_idx, ch, 0);
                             let mut tmp_str = [0i8; TMP_STR_LEN];
                             txpwr_idx_get_dbm_str(
                                 lmt,
@@ -946,7 +951,11 @@ pub extern "C" fn dump_txpwr_lmt(sel: *mut c_void, adapter: *mut Adapter) {
                                 }
 
                                 let base = phy_get_target_txpwr(adapter, band, path, rs);
-                                snprintf(line.as_mut_ptr(), line.len(), b"|\0".as_ptr() as *const c_char);
+                                snprintf(
+                                    line.as_mut_ptr(),
+                                    line.len(),
+                                    b"|\0".as_ptr() as *const c_char,
+                                );
                                 print_line(sel, &line);
 
                                 let mut cur = list_next(head);
@@ -958,8 +967,9 @@ pub extern "C" fn dump_txpwr_lmt(sel: *mut c_void, adapter: *mut Adapter) {
                                         adapter, name, band, bw, path, rs, tlrs, ntx_idx, ch, 0,
                                     );
                                     if lmt_offset as u8 == hal.txgi_max {
-                                        *lmt_idx.add((i as usize) * (RF_PATH_MAX as usize)
-                                            + path as usize) = hal.txgi_max as i8;
+                                        *lmt_idx.add(
+                                            (i as usize) * (RF_PATH_MAX as usize) + path as usize,
+                                        ) = hal.txgi_max as i8;
                                         snprintf(
                                             line.as_mut_ptr(),
                                             line.len(),
@@ -967,9 +977,9 @@ pub extern "C" fn dump_txpwr_lmt(sel: *mut c_void, adapter: *mut Adapter) {
                                             b"NA\0".as_ptr() as *const c_char,
                                         );
                                     } else {
-                                        *lmt_idx.add((i as usize) * (RF_PATH_MAX as usize)
-                                            + path as usize) =
-                                            lmt_offset + base as i8;
+                                        *lmt_idx.add(
+                                            (i as usize) * (RF_PATH_MAX as usize) + path as usize,
+                                        ) = lmt_offset + base as i8;
                                         snprintf(
                                             line.as_mut_ptr(),
                                             line.len(),
@@ -1038,10 +1048,18 @@ pub extern "C" fn dump_txpwr_lmt(sel: *mut c_void, adapter: *mut Adapter) {
                                     print_line(sel, &line);
                                 }
                             }
-                            snprintf(line.as_mut_ptr(), line.len(), b"\n\0".as_ptr() as *const c_char);
+                            snprintf(
+                                line.as_mut_ptr(),
+                                line.len(),
+                                b"\n\0".as_ptr() as *const c_char,
+                            );
                             print_line(sel, &line);
                         }
-                        snprintf(line.as_mut_ptr(), line.len(), b"\n\0".as_ptr() as *const c_char);
+                        snprintf(
+                            line.as_mut_ptr(),
+                            line.len(),
+                            b"\n\0".as_ptr() as *const c_char,
+                        );
                         print_line(sel, &line);
                     }
                 }
