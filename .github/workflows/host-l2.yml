@@ -195,3 +195,7 @@ jobs:
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/mlme_ext test
 
+      - name: Host cmd_priv parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/cmd test
+
