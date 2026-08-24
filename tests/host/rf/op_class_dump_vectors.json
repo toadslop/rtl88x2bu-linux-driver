@@ -1,0 +1,77 @@
+{
+  "oracle": "core/rtw_rf_op_class_dump.c op-class dump formatters",
+  "vectors": [
+    {
+      "name": "validate_gid0",
+      "fn": "dbg_global_op_class_validate",
+      "gid": 0,
+      "expect_valid": 1
+    },
+    {
+      "name": "validate_gid18",
+      "fn": "dbg_global_op_class_validate",
+      "gid": 18,
+      "expect_valid": 1
+    },
+    {
+      "name": "dump_global_header",
+      "fn": "dump_global_op_class",
+      "expect_contains": "class band bw      ch_list"
+    },
+    {
+      "name": "dump_global_class81",
+      "fn": "dump_global_op_class",
+      "expect_contains": "   81 2.4G    20M  1 2 3"
+    },
+    {
+      "name": "dump_cap_single",
+      "fn": "dump_cap_spt_op_class_ch",
+      "class_id": 81,
+      "op_ch_num": 3,
+      "ir_ch_num": 13,
+      "cap_num": 1,
+      "detail": 0,
+      "expect_contains": "   81 2.4G    20M  1 2 3"
+    },
+    {
+      "name": "dump_cap_count",
+      "fn": "dump_cap_spt_op_class_ch",
+      "class_id": 81,
+      "op_ch_num": 3,
+      "ir_ch_num": 13,
+      "cap_num": 1,
+      "detail": 0,
+      "expect_contains": "op_class number:1"
+    },
+    {
+      "name": "dump_reg_filters_static_non_op",
+      "fn": "dump_reg_spt_op_class_ch",
+      "class_id": 81,
+      "op_ch_num": 2,
+      "ir_ch_num": 13,
+      "reg_num": 1,
+      "detail": 0,
+      "expect_contains": "   81 2.4G    20M  1 2"
+    },
+    {
+      "name": "dump_cur_filters_no_ir",
+      "fn": "dump_cur_spt_op_class_ch",
+      "class_id": 81,
+      "op_ch_num": 3,
+      "ir_ch_num": 2,
+      "cur_num": 1,
+      "detail": 0,
+      "expect_contains": "   81 2.4G    20M  1 2"
+    },
+    {
+      "name": "dump_cap_detail_txpwr",
+      "fn": "dump_cap_spt_op_class_ch",
+      "class_id": 81,
+      "op_ch_num": 2,
+      "ir_ch_num": 2,
+      "cap_num": 1,
+      "detail": 1,
+      "expect_contains": " 2000"
+    }
+  ]
+}
