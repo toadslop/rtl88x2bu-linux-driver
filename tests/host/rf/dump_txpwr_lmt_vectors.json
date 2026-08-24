@@ -1,0 +1,82 @@
+{
+  "oracle": "core/rtw_rf_dump_txpwr_lmt.c dump_txpwr_lmt",
+  "vectors": [
+    {
+      "name": "empty_txpwr_list",
+      "fn": "dump_txpwr_lmt",
+      "expect_contains": ""
+    },
+    {
+      "name": "state_header_only",
+      "fn": "dump_txpwr_lmt",
+      "regd_name": "FCC",
+      "cck_ofdm_state": 255,
+      "add_regd_name": "FCC",
+      "add_band": 0,
+      "add_bw": 0,
+      "add_tlrs": 0,
+      "add_ntx_idx": 0,
+      "add_ch_idx": 0,
+      "add_lmt": 30,
+      "expect_contains": "txpwr_lmt_2g_cck_ofdm_state:0xff"
+    },
+    {
+      "name": "single_fcc_2g_cck_header",
+      "fn": "dump_txpwr_lmt",
+      "regd_name": "FCC",
+      "cck_ofdm_state": 255,
+      "add_regd_name": "FCC",
+      "add_band": 0,
+      "add_bw": 0,
+      "add_tlrs": 0,
+      "add_ntx_idx": 0,
+      "add_ch_idx": 0,
+      "add_lmt": 30,
+      "expect_contains": "[2.4G][20MHz][CCK][1T]"
+    },
+    {
+      "name": "single_fcc_ch1_dbm",
+      "fn": "dump_txpwr_lmt",
+      "regd_name": "FCC",
+      "cck_ofdm_state": 255,
+      "target_txpwr": 20,
+      "add_regd_name": "FCC",
+      "add_band": 0,
+      "add_bw": 0,
+      "add_tlrs": 0,
+      "add_ntx_idx": 0,
+      "add_ch_idx": 0,
+      "add_lmt": 30,
+      "expect_contains": "  1 "
+    },
+    {
+      "name": "active_regd_marker",
+      "fn": "dump_txpwr_lmt",
+      "regd_name": "FCC",
+      "cck_ofdm_state": 255,
+      "add_regd_name": "FCC",
+      "add_band": 0,
+      "add_bw": 0,
+      "add_tlrs": 0,
+      "add_ntx_idx": 0,
+      "add_ch_idx": 0,
+      "add_lmt": 30,
+      "expect_contains": "*FCC"
+    },
+    {
+      "name": "path_offset_column",
+      "fn": "dump_txpwr_lmt",
+      "regd_name": "FCC",
+      "cck_ofdm_state": 255,
+      "target_txpwr": 20,
+      "add_regd_name": "FCC",
+      "add_band": 0,
+      "add_bw": 0,
+      "add_tlrs": 0,
+      "add_ntx_idx": 0,
+      "add_ch_idx": 0,
+      "add_lmt": 30,
+      "expect_contains": "| 10 "
+    }
+  ]
+}

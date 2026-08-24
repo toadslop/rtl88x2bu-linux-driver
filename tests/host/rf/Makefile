@@ -26,18 +26,24 @@ OPC_DUMP_SRC := $(CORE)/rtw_rf_op_class_dump.c
 OPC_DUMP_SHIM := host_rf_op_class_dump_shim.c
 OPC_DUMP_CFLAGS := $(CFLAGS) -DHOST_RF_OP_CLASS_DUMP_TEST
 
+DUMP_TXPWR_LMT_SRC := $(CORE)/rtw_rf_dump_txpwr_lmt.c
+DUMP_TXPWR_LMT_SHIM := host_rf_dump_txpwr_lmt_shim.c
+DUMP_TXPWR_LMT_CFLAGS := $(CFLAGS) -DCONFIG_TXPWR_LIMIT -DHOST_RF_TEST \
+	-DHOST_RF_DUMP_TXPWR_LMT_TEST -Wno-format-truncation -Wno-unused-but-set-variable
+
 .PHONY: all test test-c test-rust clean
 
 all: test
 
 test: test-c test-rust
 
-test-c: test_rf test_regd_exc test_txpwr_lmt test_op_class_pref test_op_class_dump
+test-c: test_rf test_regd_exc test_txpwr_lmt test_op_class_pref test_op_class_dump test_dump_txpwr_lmt
 	./test_rf rf_vectors.json
 	./test_regd_exc regd_exc_vectors.json
 	./test_txpwr_lmt txpwr_lmt_vectors.json
 	./test_op_class_pref op_class_pref_vectors.json
 	./test_op_class_dump op_class_dump_vectors.json
+	./test_dump_txpwr_lmt dump_txpwr_lmt_vectors.json
 
 test_rf: test_rf.c $(RF_SRC) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_rf.c $(RF_SRC) $(HOST_JSON)
@@ -53,6 +59,9 @@ test_op_class_pref: test_op_class_pref.c $(RF_SRC) $(OPC_PREF_SRC) $(OPC_PREF_SH
 
 test_op_class_dump: test_op_class_dump.c $(RF_SRC) $(OPC_DUMP_SRC) $(OPC_DUMP_SHIM) $(HOST_JSON)
 	$(CC) $(OPC_DUMP_CFLAGS) -o $@ test_op_class_dump.c $(OPC_DUMP_SHIM) $(RF_SRC) $(OPC_DUMP_SRC) $(HOST_JSON)
+
+test_dump_txpwr_lmt: test_dump_txpwr_lmt.c $(RF_SRC) $(DUMP_TXPWR_LMT_SRC) $(DUMP_TXPWR_LMT_SHIM) $(HOST_JSON)
+	$(CC) $(DUMP_TXPWR_LMT_CFLAGS) -o $@ test_dump_txpwr_lmt.c $(DUMP_TXPWR_LMT_SHIM) $(RF_SRC) $(DUMP_TXPWR_LMT_SRC) $(HOST_JSON)
 
 RUST_RF_OP_CLASS_PREF := $(ROOT)/rust/rtw_rf_op_class_pref.rs
 
