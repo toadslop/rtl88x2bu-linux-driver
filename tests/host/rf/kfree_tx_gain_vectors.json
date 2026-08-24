@@ -1,0 +1,9 @@
+{
+  "oracle": "core/rtw_rf_kfree_tx_gain.c rtw_rf_get_kfree_tx_gain_offset",
+  "vectors": [
+    {"name": "get_flag_off", "path": 0, "ch": 6, "expect": 0},
+    {"name": "get_flag_on_2g", "path": 0, "ch": 6, "kfree_flag": 1, "bb_gain_sel": 0, "bb_gain_val": 3, "expect": 3},
+    {"name": "get_flag_on_5g", "path": 1, "ch": 36, "kfree_flag": 1, "bb_gain_sel": 1, "bb_gain_val": -2, "expect": -2},
+    {"name": "get_invalid_channel", "path": 0, "ch": 200, "kfree_flag": 1, "expect": 0}
+  ]
+}
