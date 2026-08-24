@@ -2429,6 +2429,7 @@ include $(src)/rtl8723f.mk
 endif
 
 rtk_core :=	core/rtw_cmd.o \
+		core/rtw_cmd_priv.o \
 		core/rtw_debug.o \
 		core/rtw_io.o \
 		core/rtw_io_rest.o \

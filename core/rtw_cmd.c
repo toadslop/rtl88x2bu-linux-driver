@@ -21,54 +21,6 @@
 	#define DBG_CMD_EXECUTE 0
 #endif
 
-/*
-Caller and the rtw_cmd_thread can protect cmd_q by spin_lock.
-No irqsave is necessary.
-*/
-
-sint	_rtw_init_cmd_priv(struct	cmd_priv *pcmdpriv)
-{
-	sint res = _SUCCESS;
-
-
-	_rtw_init_sema(&(pcmdpriv->cmd_queue_sema), 0);
-	/* _rtw_init_sema(&(pcmdpriv->cmd_done_sema), 0); */
-	_rtw_init_sema(&(pcmdpriv->start_cmdthread_sema), 0);
-
-	_rtw_init_queue(&(pcmdpriv->cmd_queue));
-
-	/* allocate DMA-able/Non-Page memory for cmd_buf and rsp_buf */
-
-	pcmdpriv->cmd_seq = 1;
-
-	pcmdpriv->cmd_allocated_buf = rtw_zmalloc(MAX_CMDSZ + CMDBUFF_ALIGN_SZ);
-
-	if (pcmdpriv->cmd_allocated_buf == NULL) {
-		res = _FAIL;
-		goto exit;
-	}
-
-	pcmdpriv->cmd_buf = pcmdpriv->cmd_allocated_buf  +  CMDBUFF_ALIGN_SZ - ((SIZE_PTR)(pcmdpriv->cmd_allocated_buf) & (CMDBUFF_ALIGN_SZ - 1));
-
-	pcmdpriv->rsp_allocated_buf = rtw_zmalloc(MAX_RSPSZ + 4);
-
-	if (pcmdpriv->rsp_allocated_buf == NULL) {
-		res = _FAIL;
-		goto exit;
-	}
-
-	pcmdpriv->rsp_buf = pcmdpriv->rsp_allocated_buf  +  4 - ((SIZE_PTR)(pcmdpriv->rsp_allocated_buf) & 3);
-
-	pcmdpriv->cmd_issued_cnt = pcmdpriv->cmd_done_cnt = pcmdpriv->rsp_cnt = 0;
-
-	_rtw_mutex_init(&pcmdpriv->sctx_mutex);
-exit:
-
-
-	return res;
-
-}
-
 #ifdef CONFIG_C2H_WK
 static void c2h_wk_callback(_workitem *work)
 {
@@ -130,7 +82,6 @@ sint _rtw_init_evt_priv(struct evt_priv *pevtpriv)
 {
 	sint res = _SUCCESS;
 
-
 #ifdef CONFIG_H2CLBK
 	_rtw_init_sema(&(pevtpriv->lbkevt_done), 0);
 	pevtpriv->lbkevt_limit = 0;
@@ -138,12 +89,10 @@ sint _rtw_init_evt_priv(struct evt_priv *pevtpriv)
 	pevtpriv->cmdevt_parm = NULL;
 #endif
 
-	/* allocate DMA-able/Non-Page memory for cmd_buf and rsp_buf */
 	ATOMIC_SET(&pevtpriv->event_seq, 0);
 	pevtpriv->evt_done_cnt = 0;
 
 #ifdef CONFIG_EVENT_THREAD_MODE
-
 	_rtw_init_sema(&(pevtpriv->evt_notify), 0);
 
 	pevtpriv->evt_allocated_buf = rtw_zmalloc(MAX_EVTSZ + 4);
@@ -151,8 +100,8 @@ sint _rtw_init_evt_priv(struct evt_priv *pevtpriv)
 		res = _FAIL;
 		goto exit;
 	}
-	pevtpriv->evt_buf = pevtpriv->evt_allocated_buf  +  4 - ((unsigned int)(pevtpriv->evt_allocated_buf) & 3);
-
+	pevtpriv->evt_buf = pevtpriv->evt_allocated_buf + 4 -
+			    ((SIZE_PTR)(pevtpriv->evt_allocated_buf) & 3);
 
 #if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
 	pevtpriv->allocated_c2h_mem = rtw_zmalloc(C2H_MEM_SZ + 4);
@@ -162,15 +111,14 @@ sint _rtw_init_evt_priv(struct evt_priv *pevtpriv)
 		goto exit;
 	}
 
-	pevtpriv->c2h_mem = pevtpriv->allocated_c2h_mem +  4\
-			    - ((u32)(pevtpriv->allocated_c2h_mem) & 3);
-#endif /* end of CONFIG_SDIO_HCI */
+	pevtpriv->c2h_mem = pevtpriv->allocated_c2h_mem + 4 -
+			      ((u32)(pevtpriv->allocated_c2h_mem) & 3);
+#endif
 
 	_rtw_init_queue(&(pevtpriv->evt_queue));
 
 exit:
-
-#endif /* end of CONFIG_EVENT_THREAD_MODE */
+#endif /* CONFIG_EVENT_THREAD_MODE */
 
 #ifdef CONFIG_C2H_WK
 	_init_workitem(&pevtpriv->c2h_wk, c2h_wk_callback, NULL);
@@ -178,14 +126,11 @@ exit:
 	pevtpriv->c2h_queue = rtw_cbuf_alloc(C2H_QUEUE_MAX_LEN + 1);
 #endif
 
-
 	return res;
 }
 
-void _rtw_free_evt_priv(struct	evt_priv *pevtpriv)
+void _rtw_free_evt_priv(struct evt_priv *pevtpriv)
 {
-
-
 #ifdef CONFIG_EVENT_THREAD_MODE
 	_rtw_free_sema(&(pevtpriv->evt_notify));
 
@@ -200,34 +145,13 @@ void _rtw_free_evt_priv(struct	evt_priv *pevtpriv)
 
 	while (!rtw_cbuf_empty(pevtpriv->c2h_queue)) {
 		void *c2h;
+
 		c2h = rtw_cbuf_pop(pevtpriv->c2h_queue);
 		if (c2h != NULL && c2h != (void *)pevtpriv)
 			rtw_mfree(c2h, 16);
 	}
 	rtw_cbuf_free(pevtpriv->c2h_queue);
 #endif
-
-
-
-}
-
-void _rtw_free_cmd_priv(struct	cmd_priv *pcmdpriv)
-{
-
-	if (pcmdpriv) {
-		_rtw_spinlock_free(&(pcmdpriv->cmd_queue.lock));
-		_rtw_free_sema(&(pcmdpriv->cmd_queue_sema));
-		/* _rtw_free_sema(&(pcmdpriv->cmd_done_sema)); */
-		_rtw_free_sema(&(pcmdpriv->start_cmdthread_sema));
-
-		if (pcmdpriv->cmd_allocated_buf)
-			rtw_mfree(pcmdpriv->cmd_allocated_buf, MAX_CMDSZ + CMDBUFF_ALIGN_SZ);
-
-		if (pcmdpriv->rsp_allocated_buf)
-			rtw_mfree(pcmdpriv->rsp_allocated_buf, MAX_RSPSZ + 4);
-
-		_rtw_mutex_free(&pcmdpriv->sctx_mutex);
-	}
 }
 
 /*
@@ -362,30 +286,6 @@ struct	cmd_obj	*_rtw_dequeue_cmd(_queue *queue)
 
 
 	return obj;
-}
-
-u32	rtw_init_cmd_priv(struct cmd_priv *pcmdpriv)
-{
-	u32	res;
-	res = _rtw_init_cmd_priv(pcmdpriv);
-	return res;
-}
-
-u32	rtw_init_evt_priv(struct	evt_priv *pevtpriv)
-{
-	int	res;
-	res = _rtw_init_evt_priv(pevtpriv);
-	return res;
-}
-
-void rtw_free_evt_priv(struct	evt_priv *pevtpriv)
-{
-	_rtw_free_evt_priv(pevtpriv);
-}
-
-void rtw_free_cmd_priv(struct	cmd_priv *pcmdpriv)
-{
-	_rtw_free_cmd_priv(pcmdpriv);
 }
 
 int rtw_cmd_filter(struct cmd_priv *pcmdpriv, struct cmd_obj *cmd_obj);
