@@ -142,6 +142,7 @@ mod kernel {
     use super::*;
 
     extern "C" {
+        pub fn rtw_rust_dump_txpwr_lmt_rfctl(adapter: *mut Adapter) -> *mut RfCtlT;
         pub fn rtw_rust_dump_txpwr_lmt_print_sel(sel: *mut c_void, line: *const c_char);
         pub fn rtw_rust_dump_txpwr_lmt_mutex_enter(rfctl: *mut RfCtlT, irqL: *mut u32);
         pub fn rtw_rust_dump_txpwr_lmt_mutex_exit(rfctl: *mut RfCtlT, irqL: *mut u32);
@@ -390,6 +391,19 @@ unsafe fn adapter_band_supported(adapter: *mut Adapter, band: u8) -> bool {
         #[cfg(not(host_rf_dump_txpwr_lmt_test))]
         {
             kernel::rtw_rust_dump_txpwr_lmt_hal_is_band_support(adapter, band)
+        }
+    }
+}
+
+unsafe fn adapter_rfctl(adapter: *mut Adapter) -> *mut RfCtlT {
+    unsafe {
+        #[cfg(host_rf_dump_txpwr_lmt_test)]
+        {
+            &mut (*adapter).rf_ctl
+        }
+        #[cfg(not(host_rf_dump_txpwr_lmt_test))]
+        {
+            kernel::rtw_rust_dump_txpwr_lmt_rfctl(adapter)
         }
     }
 }
@@ -700,7 +714,10 @@ unsafe fn print_regd_header(
 #[no_mangle]
 pub extern "C" fn dump_txpwr_lmt(sel: *mut c_void, adapter: *mut Adapter) {
     unsafe {
-        let rfctl = &mut (*adapter).rf_ctl;
+        let rfctl = adapter_rfctl(adapter);
+        if rfctl.is_null() {
+            return;
+        }
         let hal = hal_view(adapter);
         let mut irqL: u32 = 0;
         let mut line = [0i8; 512];

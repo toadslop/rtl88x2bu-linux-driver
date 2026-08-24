@@ -298,6 +298,11 @@ release_lock:
 #include <drv_types.h>
 #include <hal_data.h>
 
+struct rf_ctl_t *rtw_rust_dump_txpwr_lmt_rfctl(_adapter *adapter)
+{
+	return adapter_to_rfctl(adapter);
+}
+
 void rtw_rust_dump_txpwr_lmt_print_sel(void *sel, const char *line)
 {
 	RTW_PRINT_SEL(sel, "%s", line);
