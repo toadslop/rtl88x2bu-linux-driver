@@ -65,6 +65,7 @@ u8 center_ch_5g_20m_40m[CENTER_CH_5G_20M_NUM + CENTER_CH_5G_40M_NUM] = {
 /* Channel layout, frequency, lookup tables, and op-class DB live in core/rtw_rf_rest.c (W3-19..W3-22). */
 /* Op-class debug dump helpers live in core/rtw_rf_op_class_dump.c (W3-57). */
 /* dump_txpwr_lmt lives in core/rtw_rf_dump_txpwr_lmt.c (W3-58). */
+/* kfree TX gain get helper lives in core/rtw_rf_kfree_tx_gain.c (W3-59). */
 
 const u8 _rf_type_to_rf_tx_cnt[RF_TYPE_MAX] = {
 	[RF_1T1R] = 1,
@@ -201,33 +202,7 @@ int rtw_ch_to_bb_gain_sel(int ch)
 }
 #endif /* !CONFIG_RUST || HOST_RF_TEST */
 
-s8 rtw_rf_get_kfree_tx_gain_offset(_adapter *padapter, u8 path, u8 ch)
-{
-	s8 kfree_offset = 0;
-
-#ifdef CONFIG_RF_POWER_TRIM
-	struct kfree_data_t *kfree_data = GET_KFREE_DATA(padapter);
-	s8 bb_gain_sel = rtw_ch_to_bb_gain_sel(ch);
-
-	if (bb_gain_sel < BB_GAIN_2G || bb_gain_sel >= BB_GAIN_NUM) {
-		rtw_warn_on(1);
-		goto exit;
-	}
-
-	if (kfree_data->flag & KFREE_FLAG_ON) {
-		kfree_offset = kfree_data->bb_gain[bb_gain_sel][path];
-		if (IS_HARDWARE_TYPE_8723D(padapter))
-			RTW_INFO("%s path:%s, ch:%u, bb_gain_sel:%d, kfree_offset:%d\n"
-				, __func__, (path == 0)?"S1":"S0", 
-				ch, bb_gain_sel, kfree_offset);
-		else
-			RTW_INFO("%s path:%u, ch:%u, bb_gain_sel:%d, kfree_offset:%d\n"
-				, __func__, path, ch, bb_gain_sel, kfree_offset);
-	}
-exit:
-#endif /* CONFIG_RF_POWER_TRIM */
-	return kfree_offset;
-}
+s8 rtw_rf_get_kfree_tx_gain_offset(_adapter *padapter, u8 path, u8 ch);
 
 void rtw_rf_set_tx_gain_offset(_adapter *adapter, u8 path, s8 offset)
 {
