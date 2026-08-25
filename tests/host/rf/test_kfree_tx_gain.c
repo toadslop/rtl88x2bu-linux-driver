@@ -13,7 +13,7 @@
 
 struct vector {
 	char name[MAX_NAME];
-	u8 path, ch, kfree_flag, bb_gain_sel;
+	u8 path, ch, kfree_flag;
 	s8 bb_gain_val;
 	int expect;
 };
@@ -32,8 +32,6 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 		v->ch = (u8)tmp;
 	if (!host_json_parse_int_in(obj, len, "kfree_flag", &tmp))
 		v->kfree_flag = (u8)tmp;
-	if (!host_json_parse_int_in(obj, len, "bb_gain_sel", &tmp))
-		v->bb_gain_sel = (u8)tmp;
 	if (!host_json_parse_int_in(obj, len, "bb_gain_val", &tmp))
 		v->bb_gain_val = (s8)tmp;
 	host_json_parse_int_in(obj, len, "expect", &v->expect);
@@ -47,10 +45,13 @@ static int run_vector(struct vector *v)
 
 	memset(&adapter, 0, sizeof(adapter));
 	kfree_data = GET_KFREE_DATA(&adapter);
-	if (v->kfree_flag)
+	if (v->kfree_flag) {
+		int bb_gain_sel = rtw_ch_to_bb_gain_sel(v->ch);
+
 		kfree_data->flag = KFREE_FLAG_ON;
-	if (v->bb_gain_sel < BB_GAIN_NUM && v->path < RF_PATH_MAX)
-		kfree_data->bb_gain[v->bb_gain_sel][v->path] = v->bb_gain_val;
+		if (bb_gain_sel >= 0 && bb_gain_sel < BB_GAIN_NUM && v->path < RF_PATH_MAX)
+			kfree_data->bb_gain[bb_gain_sel][v->path] = v->bb_gain_val;
+	}
 
 	if (rtw_rf_get_kfree_tx_gain_offset(&adapter, v->path, v->ch) != (s8)v->expect) {
 		fprintf(stderr, "FAIL %s\n", v->name);
