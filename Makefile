@@ -2583,12 +2583,14 @@ ccflags-y += -DCONFIG_RUST_AP_REST
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_PREF
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_DUMP
 ccflags-y += -DCONFIG_RUST_RF_DUMP_TXPWR_LMT
+ccflags-y += -DCONFIG_RUST_RF_KFREE_TX_GAIN
 rustflags-y += --cfg rust_mlme_ext_rest
 rustflags-y += --cfg rust_sta_mgt_stctl
 rustflags-y += --cfg rust_ap_rest
 rustflags-y += --cfg rust_rf_op_class_pref
 rustflags-y += --cfg rust_rf_op_class_dump
 rustflags-y += --cfg rust_rf_dump_txpwr_lmt
+rustflags-y += --cfg rust_rf_kfree_tx_gain
 rustflags-y += --cfg config_rtw_debug
 rustflags-y += --cfg dfs_master
 rustflags-y += --cfg ieee80211_band_5ghz
@@ -2596,6 +2598,9 @@ rustflags-y += --cfg ieee80211_band_5ghz
 rustflags-y += --cfg dfs
 ifneq ($(filter -DCONFIG_REGD_SRC_FROM_OS,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg regd_src_from_os
+endif
+ifneq ($(filter -DCONFIG_RF_POWER_TRIM,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
+rustflags-y += --cfg rf_power_trim
 endif
 ifneq ($(filter -DCONFIG_PLATFORM_INTEL_BYT,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg CONFIG_PLATFORM_INTEL_BYT
@@ -2645,6 +2650,7 @@ $(MODULE_NAME)-y += rust/rtw_ap_rest.o
 $(MODULE_NAME)-y += rust/rtw_rf_op_class_pref.o
 $(MODULE_NAME)-y += rust/rtw_rf_op_class_dump.o
 $(MODULE_NAME)-y += rust/rtw_rf_dump_txpwr_lmt.o
+$(MODULE_NAME)-y += rust/rtw_rf_kfree_tx_gain.o
 $(MODULE_NAME)-y += rust/rtw_recv.o
 $(MODULE_NAME)-y += rust/rtw_xmit.o
 $(MODULE_NAME)-y += rust/rtw_iol_rest.o
@@ -3203,6 +3209,23 @@ rust-objects-rtw-rf-dump-txpwr-lmt-rust-ref:
 rust-check-symbols-rtw-rf-dump-txpwr-lmt: rust-objects-rtw-rf-dump-txpwr-lmt-c rust-objects-rtw-rf-dump-txpwr-lmt-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/rf/dump_txpwr_lmt_c_ref.o NEW=tests/host/rf/dump_txpwr_lmt_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_rf_dump_txpwr_lmt.allow
+
+# W3-59 PR3: kfree TX gain L1 (host C oracle vs host Rust oracle for get helper).
+rust-objects-rtw-rf-kfree-tx-gain-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_RF_KFREE_TX_GAIN_TEST -Wno-unused-but-set-variable \
+		-o tests/host/rf/kfree_tx_gain_c_ref.o core/rtw_rf_kfree_tx_gain.c
+
+rust-objects-rtw-rf-kfree-tx-gain-rust-ref:
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_rf_kfree_tx_gain_test --cfg rf_power_trim \
+		--emit=obj=tests/host/rf/kfree_tx_gain_rust_ref.o \
+		--crate-type lib rust/rtw_rf_kfree_tx_gain.rs
+
+rust-check-symbols-rtw-rf-kfree-tx-gain: rust-objects-rtw-rf-kfree-tx-gain-c rust-objects-rtw-rf-kfree-tx-gain-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/rf/kfree_tx_gain_c_ref.o NEW=tests/host/rf/kfree_tx_gain_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_rf_kfree_tx_gain.allow
 
 # W3-39: host C oracle recv_rest vs rust/rtw_recv.o.
 rust-objects-rtw-recv:

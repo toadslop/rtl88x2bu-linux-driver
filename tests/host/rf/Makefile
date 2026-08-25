@@ -70,6 +70,15 @@ test_dump_txpwr_lmt: test_dump_txpwr_lmt.c $(RF_SRC) $(DUMP_TXPWR_LMT_SRC) $(DUM
 test_kfree_tx_gain: test_kfree_tx_gain.c $(RF_SRC) $(KFREE_TX_GAIN_SRC) $(HOST_JSON)
 	$(CC) $(KFREE_TX_GAIN_CFLAGS) -o $@ test_kfree_tx_gain.c $(RF_SRC) $(KFREE_TX_GAIN_SRC) $(HOST_JSON)
 
+RUST_RF_KFREE_TX_GAIN := $(ROOT)/rust/rtw_rf_kfree_tx_gain.rs
+
+librust_rf_kfree_tx_gain.a: $(RUST_RF_KFREE_TX_GAIN)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_rf_kfree_tx_gain_test --cfg rf_power_trim \
+		--crate-type staticlib $(RUST_RF_KFREE_TX_GAIN) -o $@
+
+test_kfree_tx_gain_rust: test_kfree_tx_gain.c librust_rf_kfree_tx_gain.a $(RF_SRC) $(HOST_JSON)
+	$(CC) $(KFREE_TX_GAIN_CFLAGS) -DRUST_RF_KFREE_TX_GAIN_ORACLE -o $@ test_kfree_tx_gain.c $(RF_SRC) $(HOST_JSON) librust_rf_kfree_tx_gain.a
+
 RUST_RF_DUMP_TXPWR_LMT := $(ROOT)/rust/rtw_rf_dump_txpwr_lmt.rs
 
 librust_rf_dump_txpwr_lmt.a: $(RUST_RF_DUMP_TXPWR_LMT)
@@ -102,13 +111,14 @@ librust_rf_rest.a: $(ROOT)/rust/rtw_rf_rest.rs
 		--crate-type staticlib $(ROOT)/rust/rtw_rf_rest.rs -o $@
 
 # PR2: enable Rust txpwr_lmt oracle (stacked on PR1 C harness).
-test-rust: test_rf_rust test_regd_exc_rust test_txpwr_lmt_rust test_op_class_pref_rust test_op_class_dump_rust test_dump_txpwr_lmt_rust
+test-rust: test_rf_rust test_regd_exc_rust test_txpwr_lmt_rust test_op_class_pref_rust test_op_class_dump_rust test_dump_txpwr_lmt_rust test_kfree_tx_gain_rust
 	./test_rf_rust rf_vectors.json
 	./test_regd_exc_rust regd_exc_vectors.json
 	./test_txpwr_lmt_rust txpwr_lmt_vectors.json
 	./test_op_class_pref_rust op_class_pref_vectors.json
 	./test_op_class_dump_rust op_class_dump_vectors.json
 	./test_dump_txpwr_lmt_rust dump_txpwr_lmt_vectors.json
+	./test_kfree_tx_gain_rust kfree_tx_gain_vectors.json
 
 test_rf_rust: test_rf.c librust_rf_rest.a $(REGD_EXC_SHIM) $(TXPWR_LMT_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_RF_REST_ORACLE -o $@ test_rf.c $(REGD_EXC_SHIM) $(TXPWR_LMT_SHIM) $(HOST_JSON) librust_rf_rest.a
@@ -120,4 +130,4 @@ test_txpwr_lmt_rust: test_txpwr_lmt.c librust_rf_rest.a $(REGD_EXC_SHIM) $(TXPWR
 	$(CC) $(TXPWR_LMT_CFLAGS) -DRUST_RF_TXPWR_LMT_ORACLE -o $@ test_txpwr_lmt.c $(REGD_EXC_SHIM) $(TXPWR_LMT_SHIM) $(HOST_JSON) librust_rf_rest.a
 
 clean:
-	rm -f test_rf test_regd_exc test_txpwr_lmt test_op_class_pref test_op_class_dump test_dump_txpwr_lmt test_kfree_tx_gain test_rf_rust test_regd_exc_rust test_txpwr_lmt_rust test_op_class_pref_rust test_op_class_dump_rust test_dump_txpwr_lmt_rust librust_rf_rest.a librust_rf_op_class_pref.a librust_rf_op_class_dump.a librust_rf_dump_txpwr_lmt.a
+	rm -f test_rf test_regd_exc test_txpwr_lmt test_op_class_pref test_op_class_dump test_dump_txpwr_lmt test_kfree_tx_gain test_rf_rust test_regd_exc_rust test_txpwr_lmt_rust test_op_class_pref_rust test_op_class_dump_rust test_dump_txpwr_lmt_rust test_kfree_tx_gain_rust librust_rf_rest.a librust_rf_op_class_pref.a librust_rf_op_class_dump.a librust_rf_dump_txpwr_lmt.a librust_rf_kfree_tx_gain.a

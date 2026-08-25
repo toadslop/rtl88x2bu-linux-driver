@@ -90,15 +90,18 @@ for path in "${changed[@]}"; do
 	| rust/rtw_rf_op_class_pref.rs \
 	| rust/rtw_rf_op_class_dump.rs \
 	| rust/rtw_rf_dump_txpwr_lmt.rs \
+	| rust/rtw_rf_kfree_tx_gain.rs \
 	| core/rtw_rf_rest.c \
 	| core/rtw_rf_op_class_pref.c \
 	| core/rtw_rf_op_class_dump.c \
 	| core/rtw_rf_dump_txpwr_lmt.c \
+	| core/rtw_rf_kfree_tx_gain.c \
 	| tests/host/rf/*)
 		add_target rust-check-symbols-rtw-rf-rest
 		add_target rust-check-symbols-rtw-rf-op-class-pref
 		add_target rust-check-symbols-rtw-rf-op-class-dump
 		add_target rust-check-symbols-rtw-rf-dump-txpwr-lmt
+		add_target rust-check-symbols-rtw-rf-kfree-tx-gain
 		;;
 	rust/rtw_vht.rs \
 	| core/rtw_vht.c \
