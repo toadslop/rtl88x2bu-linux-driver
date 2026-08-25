@@ -1,0 +1,3 @@
+# L1 allowlist for W3-59 kfree TX gain object (get helper host oracle).
+drop rtw_rust_kfree_get_kfree_data
+drop rtw_rust_kfree_warn_on

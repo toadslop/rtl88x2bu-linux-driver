@@ -49,8 +49,13 @@ exit:
 #endif /* CONFIG_RF_POWER_TRIM */
 	return kfree_offset;
 }
+#endif /* !CONFIG_RUST || HOST_RF_KFREE_TX_GAIN_TEST || !CONFIG_RUST_RF_KFREE_TX_GAIN */
 
 #ifndef HOST_RF_KFREE_TX_GAIN_TEST
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_RF_KFREE_TX_GAIN)
+s8 rtw_rf_get_kfree_tx_gain_offset(_adapter *padapter, u8 path, u8 ch);
+#endif
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RF_KFREE_TX_GAIN_SET)
 void rtw_rf_set_tx_gain_offset(_adapter *adapter, u8 path, s8 offset)
 {
 #if !defined(CONFIG_RTL8814A) && !defined(CONFIG_RTL8822B) && !defined(CONFIG_RTL8821C) && !defined(CONFIG_RTL8822C) \
@@ -161,5 +166,25 @@ void rtw_rf_apply_tx_gain_offset(_adapter *adapter, u8 ch)
 		rtw_rf_set_tx_gain_offset(adapter, i, total_offset);
 	}
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RF_KFREE_TX_GAIN_SET */
 #endif /* !HOST_RF_KFREE_TX_GAIN_TEST */
-#endif /* !CONFIG_RUST || HOST_RF_KFREE_TX_GAIN_TEST || !CONFIG_RUST_RF_KFREE_TX_GAIN */
+
+#if defined(CONFIG_RUST) && !defined(HOST_RF_KFREE_TX_GAIN_TEST) && defined(CONFIG_RUST_RF_KFREE_TX_GAIN)
+
+#include <drv_types.h>
+#include <hal_data.h>
+
+#ifdef CONFIG_RF_POWER_TRIM
+struct kfree_data_t *rtw_rust_kfree_get_kfree_data(_adapter *adapter)
+{
+	return GET_KFREE_DATA(adapter);
+}
+#endif /* CONFIG_RF_POWER_TRIM */
+
+void rtw_rust_kfree_warn_on(bool cond)
+{
+	if (cond)
+		rtw_warn_on(1);
+}
+
+#endif /* CONFIG_RUST && !HOST_RF_KFREE_TX_GAIN_TEST && CONFIG_RUST_RF_KFREE_TX_GAIN */
