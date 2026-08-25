@@ -77,7 +77,7 @@ librust_rf_kfree_tx_gain.a: $(RUST_RF_KFREE_TX_GAIN)
 		--crate-type staticlib $(RUST_RF_KFREE_TX_GAIN) -o $@
 
 test_kfree_tx_gain_rust: test_kfree_tx_gain.c librust_rf_kfree_tx_gain.a $(RF_SRC) $(HOST_JSON)
-	$(CC) $(KFREE_TX_GAIN_CFLAGS) -DRUST_RF_KFREE_TX_GAIN_ORACLE -o $@ test_kfree_tx_gain.c $(RF_SRC) $(HOST_JSON) librust_rf_kfree_tx_gain.a
+	$(CC) $(KFREE_TX_GAIN_CFLAGS) -o $@ test_kfree_tx_gain.c $(RF_SRC) $(HOST_JSON) librust_rf_kfree_tx_gain.a
 
 RUST_RF_DUMP_TXPWR_LMT := $(ROOT)/rust/rtw_rf_dump_txpwr_lmt.rs
 
