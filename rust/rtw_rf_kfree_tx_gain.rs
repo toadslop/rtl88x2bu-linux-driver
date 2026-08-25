@@ -65,11 +65,7 @@ mod kernel {
 }
 
 #[no_mangle]
-pub extern "C" fn rtw_rf_get_kfree_tx_gain_offset(
-    padapter: *mut Adapter,
-    path: u8,
-    ch: u8,
-) -> i8 {
+pub extern "C" fn rtw_rf_get_kfree_tx_gain_offset(padapter: *mut Adapter, path: u8, ch: u8) -> i8 {
     #[cfg(any(host_rf_kfree_tx_gain_test, rf_power_trim))]
     {
         if padapter.is_null() {
