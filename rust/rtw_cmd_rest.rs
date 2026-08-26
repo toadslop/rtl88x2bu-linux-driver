@@ -12,19 +12,25 @@
     unused_unsafe
 )]
 
-#[cfg(host_cmd_priv_test)]
-use std::os::raw::{c_int, c_void};
 #[cfg(not(host_cmd_priv_test))]
 use core::ffi::{c_int, c_void};
+#[cfg(host_cmd_priv_test)]
+use std::os::raw::{c_int, c_void};
 
 type Sint = c_int;
 const _SUCCESS: Sint = 1;
 const _FAIL: Sint = 0;
 
 #[repr(C)]
-struct List { next: *mut List, prev: *mut List }
+struct List {
+    next: *mut List,
+    prev: *mut List,
+}
 #[repr(C)]
-struct Queue { queue: List, lock: c_int }
+struct Queue {
+    queue: List,
+    lock: c_int,
+}
 
 #[repr(C)]
 pub struct CmdPriv {
@@ -69,9 +75,13 @@ extern "C" {
 fn zmalloc(sz: u32) -> *mut u8 {
     unsafe {
         #[cfg(host_cmd_priv_test)]
-        { return rtw_zmalloc(sz); }
+        {
+            return rtw_zmalloc(sz);
+        }
         #[cfg(not(host_cmd_priv_test))]
-        { return _rtw_zmalloc(sz); }
+        {
+            return _rtw_zmalloc(sz);
+        }
     }
 }
 
@@ -80,9 +90,13 @@ fn mfree(p: *mut u8, sz: u32) {
     if !p.is_null() {
         unsafe {
             #[cfg(host_cmd_priv_test)]
-            { rtw_mfree(p, sz); }
+            {
+                rtw_mfree(p, sz);
+            }
             #[cfg(not(host_cmd_priv_test))]
-            { _rtw_mfree(p, sz); }
+            {
+                _rtw_mfree(p, sz);
+            }
         }
     }
 }
@@ -150,7 +164,9 @@ pub extern "C" fn _rtw_free_cmd_priv(p: *mut CmdPriv) {
     unsafe {
         let c = &mut *p;
         #[cfg(not(host_cmd_priv_test))]
-        { _rtw_spinlock_free(&mut c.cmd_queue.lock); }
+        {
+            _rtw_spinlock_free(&mut c.cmd_queue.lock);
+        }
         _rtw_free_sema(&mut c.cmd_queue_sema);
         _rtw_free_sema(&mut c.start_cmdthread_sema);
         mfree(c.cmd_allocated_buf, 1536 + 512);
