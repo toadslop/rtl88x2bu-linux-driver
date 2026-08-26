@@ -150,6 +150,11 @@ for path in "${changed[@]}"; do
 	| tests/host/iol/*)
 		add_target rust-check-symbols-rtw-iol-rest
 		;;
+	rust/rtw_cmd_rest.rs \
+	| core/rtw_cmd_priv.c \
+	| tests/host/cmd/*)
+		add_target rust-check-symbols-rtw-cmd-rest
+		;;
 	rust/aes_*.rs \
 	| rust/sha256*.rs \
 	| rust/gcmp.rs \
@@ -230,6 +235,7 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-xmit
 	rust-check-symbols-rtw-xmit-qos
 	rust-check-symbols-rtw-xmit-sctx
+	rust-check-symbols-rtw-cmd-rest
 )
 
 emit() {

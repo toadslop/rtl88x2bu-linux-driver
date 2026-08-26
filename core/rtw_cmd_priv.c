@@ -81,6 +81,10 @@ void _rtw_free_cmd_priv(struct cmd_priv *pcmdpriv)
 	}
 }
 
+#endif /* !CONFIG_RUST || HOST_CMD_PRIV_TEST || !CONFIG_RUST_CMD_PRIV */
+
+#if !defined(CONFIG_RUST) || defined(HOST_CMD_PRIV_TEST) || !defined(CONFIG_RUST_CMD_PRIV_EVT)
+
 sint _rtw_init_evt_priv(struct evt_priv *pevtpriv)
 {
 	sint res = _SUCCESS;
@@ -157,4 +161,4 @@ void _rtw_free_evt_priv(struct evt_priv *pevtpriv)
 #endif
 }
 
-#endif /* !CONFIG_RUST || HOST_CMD_PRIV_TEST || !CONFIG_RUST_CMD_PRIV */
+#endif /* !CONFIG_RUST || HOST_CMD_PRIV_TEST || !CONFIG_RUST_CMD_PRIV_EVT */

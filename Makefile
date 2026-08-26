@@ -2585,6 +2585,7 @@ ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_DUMP
 ccflags-y += -DCONFIG_RUST_RF_DUMP_TXPWR_LMT
 ccflags-y += -DCONFIG_RUST_RF_KFREE_TX_GAIN
 ccflags-y += -DCONFIG_RUST_RF_KFREE_TX_GAIN_SET
+ccflags-y += -DCONFIG_RUST_CMD_PRIV
 rustflags-y += --cfg rust_mlme_ext_rest
 rustflags-y += --cfg rust_sta_mgt_stctl
 rustflags-y += --cfg rust_ap_rest
@@ -2592,6 +2593,7 @@ rustflags-y += --cfg rust_rf_op_class_pref
 rustflags-y += --cfg rust_rf_op_class_dump
 rustflags-y += --cfg rust_rf_dump_txpwr_lmt
 rustflags-y += --cfg rust_rf_kfree_tx_gain
+rustflags-y += --cfg rust_cmd_priv
 rustflags-y += --cfg config_rtw_debug
 rustflags-y += --cfg dfs_master
 rustflags-y += --cfg ieee80211_band_5ghz
@@ -2657,6 +2659,7 @@ $(MODULE_NAME)-y += rust/rtw_xmit.o
 $(MODULE_NAME)-y += rust/rtw_iol_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_rest.o
+$(MODULE_NAME)-y += rust/rtw_cmd_rest.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
@@ -3227,6 +3230,23 @@ rust-objects-rtw-rf-kfree-tx-gain-rust-ref:
 rust-check-symbols-rtw-rf-kfree-tx-gain: rust-objects-rtw-rf-kfree-tx-gain-c rust-objects-rtw-rf-kfree-tx-gain-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/rf/kfree_tx_gain_c_ref.o NEW=tests/host/rf/kfree_tx_gain_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_rf_kfree_tx_gain.allow
+
+# W3-60 PR4: cmd/evt priv init/teardown L1 (host C oracle vs host Rust oracle).
+rust-objects-rtw-cmd-rest-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_CMD_PRIV_TEST -o tests/host/cmd/cmd_priv_c_ref.o core/rtw_cmd_priv.c
+
+rust-objects-rtw-cmd-rest-rust-ref:
+	rustc -C opt-level=2 -C overflow-checks=on \
+		--cfg host_cmd_priv_test \
+		--emit=obj=tests/host/cmd/cmd_priv_rust_ref.o \
+		--crate-type lib rust/rtw_cmd_rest.rs
+
+rust-check-symbols-rtw-cmd-rest: rust-objects-rtw-cmd-rest-c rust-objects-rtw-cmd-rest-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/cmd/cmd_priv_c_ref.o NEW=tests/host/cmd/cmd_priv_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_cmd_rest.allow ALLOW_VACUOUS=1
 
 # W3-39: host C oracle recv_rest vs rust/rtw_recv.o.
 rust-objects-rtw-recv:
