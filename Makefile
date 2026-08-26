@@ -2584,6 +2584,7 @@ ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_PREF
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_DUMP
 ccflags-y += -DCONFIG_RUST_RF_DUMP_TXPWR_LMT
 ccflags-y += -DCONFIG_RUST_RF_KFREE_TX_GAIN
+ccflags-y += -DCONFIG_RUST_RF_KFREE_TX_GAIN_SET
 rustflags-y += --cfg rust_mlme_ext_rest
 rustflags-y += --cfg rust_sta_mgt_stctl
 rustflags-y += --cfg rust_ap_rest

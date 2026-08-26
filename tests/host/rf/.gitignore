@@ -1,2 +1,3 @@
 test_kfree_tx_gain
+test_kfree_tx_gain_rust
 librust_rf_kfree_tx_gain.a
