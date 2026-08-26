@@ -162,3 +162,90 @@ void _rtw_free_evt_priv(struct evt_priv *pevtpriv)
 }
 
 #endif /* !CONFIG_RUST || HOST_CMD_PRIV_TEST || !CONFIG_RUST_CMD_PRIV_EVT */
+
+#if defined(CONFIG_RUST) && !defined(HOST_CMD_PRIV_TEST)
+
+#include <linux/build_bug.h>
+
+/* Kernel struct cmd_priv layout anchors — re-run L1 after include changes. */
+static void __rtw_cmd_priv_layout_check(void)
+{
+	BUILD_BUG_ON(offsetof(struct cmd_priv, start_cmdthread_sema) != 0x18);
+	BUILD_BUG_ON(offsetof(struct cmd_priv, cmd_queue) != 0x30);
+	BUILD_BUG_ON(offsetof(struct cmd_priv, cmd_seq) != 0x48);
+	BUILD_BUG_ON(offsetof(struct cmd_priv, cmd_buf) != 0x50);
+	BUILD_BUG_ON(offsetof(struct cmd_priv, cmd_allocated_buf) != 0x58);
+	BUILD_BUG_ON(offsetof(struct cmd_priv, sctx_mutex) != 0x88);
+}
+
+_sema *rtw_rust_cmd_priv_cmd_queue_sema(struct cmd_priv *p)
+{
+	return &p->cmd_queue_sema;
+}
+
+_sema *rtw_rust_cmd_priv_start_cmdthread_sema(struct cmd_priv *p)
+{
+	return &p->start_cmdthread_sema;
+}
+
+_queue *rtw_rust_cmd_priv_cmd_queue(struct cmd_priv *p)
+{
+	return &p->cmd_queue;
+}
+
+u8 *rtw_rust_cmd_priv_cmd_seq(struct cmd_priv *p)
+{
+	return &p->cmd_seq;
+}
+
+u8 **rtw_rust_cmd_priv_cmd_buf(struct cmd_priv *p)
+{
+	return &p->cmd_buf;
+}
+
+u8 **rtw_rust_cmd_priv_cmd_allocated_buf(struct cmd_priv *p)
+{
+	return &p->cmd_allocated_buf;
+}
+
+u8 **rtw_rust_cmd_priv_rsp_buf(struct cmd_priv *p)
+{
+	return &p->rsp_buf;
+}
+
+u8 **rtw_rust_cmd_priv_rsp_allocated_buf(struct cmd_priv *p)
+{
+	return &p->rsp_allocated_buf;
+}
+
+u32 *rtw_rust_cmd_priv_cmd_issued_cnt(struct cmd_priv *p)
+{
+	return &p->cmd_issued_cnt;
+}
+
+u32 *rtw_rust_cmd_priv_cmd_done_cnt(struct cmd_priv *p)
+{
+	return &p->cmd_done_cnt;
+}
+
+u32 *rtw_rust_cmd_priv_rsp_cnt(struct cmd_priv *p)
+{
+	return &p->rsp_cnt;
+}
+
+_mutex *rtw_rust_cmd_priv_sctx_mutex(struct cmd_priv *p)
+{
+	return &p->sctx_mutex;
+}
+
+void rtw_rust_cmd_priv_init_queue(struct cmd_priv *p)
+{
+	_rtw_init_queue(&p->cmd_queue);
+}
+
+void rtw_rust_cmd_priv_spinlock_free(struct cmd_priv *p)
+{
+	_rtw_spinlock_free(&p->cmd_queue.lock);
+}
+
+#endif /* CONFIG_RUST && !HOST_CMD_PRIV_TEST */
