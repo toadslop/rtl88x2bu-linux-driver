@@ -2586,6 +2586,7 @@ ccflags-y += -DCONFIG_RUST_RF_DUMP_TXPWR_LMT
 ccflags-y += -DCONFIG_RUST_RF_KFREE_TX_GAIN
 ccflags-y += -DCONFIG_RUST_RF_KFREE_TX_GAIN_SET
 ccflags-y += -DCONFIG_RUST_CMD_PRIV
+ccflags-y += -DCONFIG_RUST_CMD_PRIV_EVT
 rustflags-y += --cfg rust_mlme_ext_rest
 rustflags-y += --cfg rust_sta_mgt_stctl
 rustflags-y += --cfg rust_ap_rest
@@ -3240,7 +3241,7 @@ rust-objects-rtw-cmd-rest-c:
 
 rust-objects-rtw-cmd-rest-rust-ref:
 	rustc -C opt-level=2 -C overflow-checks=on \
-		--cfg host_cmd_priv_test \
+		--cfg host_cmd_priv_test --cfg event_thread_mode --cfg c2h_wk \
 		--emit=obj=tests/host/cmd/cmd_priv_rust_ref.o \
 		--crate-type lib rust/rtw_cmd_rest.rs
 

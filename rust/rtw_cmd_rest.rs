@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! W3-60 cmd priv init/teardown — Rust port of `core/rtw_cmd_priv.c` (cmd slice).
+//! W3-60 cmd/evt priv init and teardown — Rust port of `core/rtw_cmd_priv.c`.
 
 #![allow(
     dead_code,
@@ -37,7 +37,37 @@ struct Queue {
 }
 
 #[repr(C)]
-struct CmdPriv {
+struct WorkItem {
+    s: c_int,
+}
+#[repr(C)]
+struct RtwCbuf {
+    size: u32,
+    write: u32,
+    read: u32,
+    bufs: *mut *mut c_void,
+}
+
+#[repr(C)]
+pub struct EvtPriv {
+    #[cfg(any(host_cmd_priv_test, event_thread_mode))]
+    evt_notify: c_int,
+    #[cfg(any(host_cmd_priv_test, event_thread_mode))]
+    evt_queue: Queue,
+    #[cfg(any(host_cmd_priv_test, c2h_wk))]
+    c2h_wk: WorkItem,
+    #[cfg(any(host_cmd_priv_test, c2h_wk))]
+    c2h_wk_alive: bool,
+    #[cfg(any(host_cmd_priv_test, c2h_wk))]
+    c2h_queue: *mut RtwCbuf,
+    event_seq: c_int,
+    evt_buf: *mut u8,
+    evt_allocated_buf: *mut u8,
+    evt_done_cnt: u32,
+}
+
+#[repr(C)]
+pub struct CmdPriv {
     cmd_queue_sema: c_int,
     start_cmdthread_sema: c_int,
     cmd_queue: Queue,
@@ -84,6 +114,14 @@ extern "C" {
     fn _rtw_free_sema(sema: *mut c_int);
     fn _rtw_mutex_init(mutex: *mut c_int);
     fn _rtw_mutex_free(mutex: *mut c_int);
+    fn _init_workitem(wk: *mut WorkItem, func: *mut c_void, cntx: *mut c_void);
+    fn _cancel_workitem_sync(wk: *mut WorkItem);
+    fn rtw_msleep_os(ms: c_int);
+    fn c2h_wk_callback(wk: *mut WorkItem);
+    fn rtw_cbuf_alloc(size: u32) -> *mut RtwCbuf;
+    fn rtw_cbuf_free(cbuf: *mut RtwCbuf);
+    fn rtw_cbuf_empty(cbuf: *mut RtwCbuf) -> bool;
+    fn rtw_cbuf_pop(cbuf: *mut RtwCbuf) -> *mut c_void;
     #[cfg(host_cmd_priv_test)]
     fn rtw_zmalloc(sz: u32) -> *mut u8;
     #[cfg(host_cmd_priv_test)]
@@ -130,6 +168,23 @@ fn init_queue_host(q: *mut Queue) {
         (*q).queue.next = &mut (*q).queue;
         (*q).queue.prev = &mut (*q).queue;
         (*q).lock = 0;
+    }
+}
+
+#[inline]
+fn init_queue(q: *mut Queue) {
+    unsafe {
+        #[cfg(host_cmd_priv_test)]
+        {
+            (*q).queue.next = &mut (*q).queue;
+            (*q).queue.prev = &mut (*q).queue;
+            (*q).lock = 0;
+        }
+        #[cfg(not(host_cmd_priv_test))]
+        {
+            _rtw_init_listhead(&mut (*q).queue);
+            _rtw_spinlock_init(&mut (*q).lock);
+        }
     }
 }
 
@@ -225,5 +280,70 @@ pub extern "C" fn _rtw_free_cmd_priv(p: *mut c_void) {
             mfree(*rtw_rust_cmd_priv_rsp_allocated_buf(p), MAX_RSPSZ + 4);
             _rtw_mutex_free(rtw_rust_cmd_priv_sctx_mutex(p).cast());
         }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn _rtw_init_evt_priv(p: *mut EvtPriv) -> Sint {
+    if p.is_null() {
+        return _FAIL;
+    }
+    unsafe {
+        let e = &mut *p;
+        e.event_seq = 0;
+        e.evt_done_cnt = 0;
+        #[cfg(any(host_cmd_priv_test, event_thread_mode))]
+        {
+            _rtw_init_sema(&mut e.evt_notify, 0);
+            e.evt_allocated_buf = zmalloc(1024 + 4);
+            if e.evt_allocated_buf.is_null() {
+                return _FAIL;
+            }
+            e.evt_buf = aligned_buf(e.evt_allocated_buf, 4);
+            init_queue(&mut e.evt_queue);
+        }
+        #[cfg(any(host_cmd_priv_test, c2h_wk))]
+        {
+            _init_workitem(
+                &mut e.c2h_wk,
+                c2h_wk_callback as *mut c_void,
+                core::ptr::null_mut(),
+            );
+            e.c2h_wk_alive = false;
+            e.c2h_queue = rtw_cbuf_alloc(11);
+        }
+    }
+    _SUCCESS
+}
+
+#[no_mangle]
+pub extern "C" fn _rtw_free_evt_priv(p: *mut EvtPriv) {
+    if p.is_null() {
+        return;
+    }
+    unsafe {
+        let e = &mut *p;
+        #[cfg(any(host_cmd_priv_test, event_thread_mode))]
+        {
+            _rtw_free_sema(&mut e.evt_notify);
+            mfree(e.evt_allocated_buf, 1024 + 4);
+        }
+        #[cfg(any(host_cmd_priv_test, c2h_wk))]
+        {
+            _cancel_workitem_sync(&mut e.c2h_wk);
+            while e.c2h_wk_alive {
+                rtw_msleep_os(10);
+            }
+            if !e.c2h_queue.is_null() {
+                while !rtw_cbuf_empty(e.c2h_queue) {
+                    let c2h = rtw_cbuf_pop(e.c2h_queue);
+                    if !c2h.is_null() && c2h != p as *mut c_void {
+                        mfree(c2h as *mut u8, 16);
+                    }
+                }
+                rtw_cbuf_free(e.c2h_queue);
+            }
+        }
+        let _ = e;
     }
 }
