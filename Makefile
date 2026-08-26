@@ -2587,6 +2587,12 @@ ccflags-y += -DCONFIG_RUST_RF_KFREE_TX_GAIN
 ccflags-y += -DCONFIG_RUST_RF_KFREE_TX_GAIN_SET
 ccflags-y += -DCONFIG_RUST_CMD_PRIV
 ccflags-y += -DCONFIG_RUST_CMD_PRIV_EVT
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_EVENT_THREAD_MODE' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg event_thread_mode
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_FW_C2H_REG' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg c2h_wk
+endif
 rustflags-y += --cfg rust_mlme_ext_rest
 rustflags-y += --cfg rust_sta_mgt_stctl
 rustflags-y += --cfg rust_ap_rest

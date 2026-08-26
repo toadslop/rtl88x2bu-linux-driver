@@ -5,7 +5,7 @@
 #include "host_cmd_priv_types.h"
 #include "host_vector_json.h"
 
-enum fn_id { FN_CMD, FN_EVT, FN_CMD_FAIL };
+enum fn_id { FN_CMD, FN_EVT, FN_CMD_FAIL, FN_EVT_FAIL };
 
 struct vector { char name[64]; enum fn_id fn; int expect; int malloc_fail; };
 
@@ -20,6 +20,8 @@ static int parse_fn(const char *o, size_t l, enum fn_id *id)
 		*id = FN_EVT;
 	else if (!strcmp(s, "cmd_init_malloc_fail"))
 		*id = FN_CMD_FAIL;
+	else if (!strcmp(s, "evt_init_malloc_fail"))
+		*id = FN_EVT_FAIL;
 	else
 		return -1;
 	return 0;
@@ -61,6 +63,11 @@ static int run_vec(struct vector *v)
 		     !aligned(cp.rsp_buf, 4)))
 			goto fail;
 		_rtw_free_cmd_priv(&cp);
+	} else if (v->fn == FN_EVT_FAIL) {
+		got = _rtw_init_evt_priv(&ep);
+		if (got != v->expect || !ep.c2h_queue)
+			goto fail;
+		_rtw_free_evt_priv(&ep);
 	} else {
 		got = _rtw_init_evt_priv(&ep);
 		if (got != v->expect || (got == 1 && (!ep.evt_buf || !ep.c2h_queue || ep.evt_done_cnt)))

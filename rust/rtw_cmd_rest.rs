@@ -288,6 +288,8 @@ pub extern "C" fn _rtw_init_evt_priv(p: *mut EvtPriv) -> Sint {
     if p.is_null() {
         return _FAIL;
     }
+    #[allow(unused_mut)]
+    let mut res = _SUCCESS;
     unsafe {
         let e = &mut *p;
         e.event_seq = 0;
@@ -297,10 +299,11 @@ pub extern "C" fn _rtw_init_evt_priv(p: *mut EvtPriv) -> Sint {
             _rtw_init_sema(&mut e.evt_notify, 0);
             e.evt_allocated_buf = zmalloc(1024 + 4);
             if e.evt_allocated_buf.is_null() {
-                return _FAIL;
+                res = _FAIL;
+            } else {
+                e.evt_buf = aligned_buf(e.evt_allocated_buf, 4);
+                init_queue(&mut e.evt_queue);
             }
-            e.evt_buf = aligned_buf(e.evt_allocated_buf, 4);
-            init_queue(&mut e.evt_queue);
         }
         #[cfg(any(host_cmd_priv_test, c2h_wk))]
         {
@@ -313,7 +316,7 @@ pub extern "C" fn _rtw_init_evt_priv(p: *mut EvtPriv) -> Sint {
             e.c2h_queue = rtw_cbuf_alloc(11);
         }
     }
-    _SUCCESS
+    res
 }
 
 #[no_mangle]
