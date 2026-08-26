@@ -1,0 +1,3 @@
+# L1 allowlist for W3-60 cmd priv slice (PR4a — evt stays in C until PR4b).
+drop _rtw_init_evt_priv
+drop _rtw_free_evt_priv

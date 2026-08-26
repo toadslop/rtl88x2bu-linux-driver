@@ -1,1 +1,3 @@
 test_cmd_priv
+librust_cmd_rest.a
+test_cmd_priv_rust
