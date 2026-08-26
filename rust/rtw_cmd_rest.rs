@@ -359,7 +359,7 @@ pub extern "C" fn _rtw_free_evt_priv(p: *mut EvtPriv) {
 
 #[cfg(any(host_cmd_queue_test, rust_cmd_queue))]
 mod cmd_queue {
-    use super::{_FAIL, _SUCCESS, List, Queue, MAX_CMDSZ, c_int, c_void, Sint};
+    use super::{c_int, c_void, List, Queue, Sint, MAX_CMDSZ, _FAIL, _SUCCESS};
     #[cfg(not(host_cmd_queue_test))]
     use super::{CmdPriv, EvtPriv};
 
@@ -558,11 +558,7 @@ mod cmd_queue {
     }
 
     #[no_mangle]
-    pub extern "C" fn _rtw_enqueue_cmd(
-        queue: *mut Queue,
-        obj: *mut CmdObj,
-        to_head: bool,
-    ) -> Sint {
+    pub extern "C" fn _rtw_enqueue_cmd(queue: *mut Queue, obj: *mut CmdObj, to_head: bool) -> Sint {
         if queue.is_null() || obj.is_null() {
             return _SUCCESS;
         }
@@ -687,9 +683,13 @@ mod cmd_queue {
                 let q = kernel::rtw_rust_cmd_priv_cmd_queue(priv_p);
                 let res = _rtw_enqueue_cmd(q, cmd_obj, false);
                 if res == _SUCCESS {
+<<<<<<< HEAD
                     kernel::_rtw_up_sema(
                         kernel::rtw_rust_cmd_priv_cmd_queue_sema(priv_p) as *mut c_int,
                     );
+=======
+                    kernel::_rtw_up_sema(kernel::rtw_rust_cmd_priv_cmd_queue_sema(p) as *mut c_int);
+>>>>>>> b9f25c0 (style(W3-61 PR5): rustfmt rtw_cmd_rest.rs)
                 }
                 return res as u32;
             }
@@ -788,9 +788,7 @@ mod cmd_queue {
             {
                 let p = pevtpriv as *mut c_void;
                 *kernel::rtw_rust_evt_priv_evt_done_cnt(p) += 1;
-                kernel::_rtw_up_sema(
-                    kernel::rtw_rust_evt_priv_evt_notify(p) as *mut c_int,
-                );
+                kernel::_rtw_up_sema(kernel::rtw_rust_evt_priv_evt_notify(p) as *mut c_int);
             }
         }
     }
