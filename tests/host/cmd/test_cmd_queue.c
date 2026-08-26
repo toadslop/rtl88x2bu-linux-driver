@@ -65,7 +65,10 @@ static int run(struct vector *v)
 		_rtw_enqueue_cmd(&cp->cmd_queue, b, v->arg);
 		g = _rtw_dequeue_cmd(&cp->cmd_queue);
 		if (!g || g->cmdcode != (v->arg ? 20 : 1)) goto fail;
-		rtw_free_cmd_obj(a); rtw_free_cmd_obj(b);
+		rtw_free_cmd_obj(g);
+		g = _rtw_dequeue_cmd(&cp->cmd_queue);
+		if (!g) goto fail;
+		rtw_free_cmd_obj(g);
 	} else if (v->fn == 'l') {
 		host_cmd_queue_set_hw_init(v->arg & 1);
 		host_cmd_queue_set_cmdthd_running(v->arg & 2 ? _TRUE : _FALSE);

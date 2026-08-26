@@ -284,3 +284,70 @@ void rtw_evt_notify_isr(struct evt_priv *pevtpriv)
 #endif /* CONFIG_EVENT_THREAD_MODE */
 
 #endif /* !CONFIG_RUST || HOST_CMD_QUEUE_TEST || !CONFIG_RUST_CMD_QUEUE */
+
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_CMD_QUEUE) && !defined(HOST_CMD_QUEUE_TEST)
+#include <hal_data.h>
+
+u8 rtw_rust_hw_init_completed(void *adapter)
+{
+	return rtw_is_hw_init_completed((_adapter *)adapter);
+}
+
+void rtw_rust_queue_enter_critical(_lock *plock, _irqL *pirqL)
+{
+	_enter_critical(plock, pirqL);
+}
+
+void rtw_rust_queue_exit_critical(_lock *plock, _irqL *pirqL)
+{
+	_exit_critical(plock, pirqL);
+}
+
+void rtw_rust_queue_enter_critical_bh(_lock *plock, _irqL *pirqL)
+{
+	_enter_critical_bh(plock, pirqL);
+}
+
+void rtw_rust_queue_exit_critical_bh(_lock *plock, _irqL *pirqL)
+{
+	_exit_critical_bh(plock, pirqL);
+}
+
+void *rtw_rust_cmd_priv_padapter(struct cmd_priv *p)
+{
+	return p->padapter;
+}
+
+struct cmd_priv *rtw_rust_cmd_priv_for_enqueue(struct cmd_priv *pcmdpriv)
+{
+#ifdef CONFIG_CONCURRENT_MODE
+	PADAPTER padapter = pcmdpriv->padapter;
+
+	if (!is_primary_adapter(padapter))
+		return &(GET_PRIMARY_ADAPTER(padapter)->cmdpriv);
+#endif
+	return pcmdpriv;
+}
+
+int rtw_rust_cmd_priv_cmdthd_running(struct cmd_priv *p)
+{
+	return ATOMIC_READ(&p->cmdthd_running);
+}
+
+#ifdef CONFIG_EVENT_THREAD_MODE
+_queue *rtw_rust_evt_priv_evt_queue(struct evt_priv *p)
+{
+	return &p->evt_queue;
+}
+
+_sema *rtw_rust_evt_priv_evt_notify(struct evt_priv *p)
+{
+	return &p->evt_notify;
+}
+
+u32 *rtw_rust_evt_priv_evt_done_cnt(struct evt_priv *p)
+{
+	return &p->evt_done_cnt;
+}
+#endif /* CONFIG_EVENT_THREAD_MODE */
+#endif

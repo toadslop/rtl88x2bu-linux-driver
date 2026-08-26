@@ -2588,6 +2588,7 @@ ccflags-y += -DCONFIG_RUST_RF_KFREE_TX_GAIN
 ccflags-y += -DCONFIG_RUST_RF_KFREE_TX_GAIN_SET
 ccflags-y += -DCONFIG_RUST_CMD_PRIV
 ccflags-y += -DCONFIG_RUST_CMD_PRIV_EVT
+ccflags-y += -DCONFIG_RUST_CMD_QUEUE
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_EVENT_THREAD_MODE' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg event_thread_mode
 endif
@@ -2602,6 +2603,7 @@ rustflags-y += --cfg rust_rf_op_class_dump
 rustflags-y += --cfg rust_rf_dump_txpwr_lmt
 rustflags-y += --cfg rust_rf_kfree_tx_gain
 rustflags-y += --cfg rust_cmd_priv
+rustflags-y += --cfg rust_cmd_queue
 rustflags-y += --cfg config_rtw_debug
 rustflags-y += --cfg dfs_master
 rustflags-y += --cfg ieee80211_band_5ghz
@@ -3255,6 +3257,23 @@ rust-objects-rtw-cmd-rest-rust-ref:
 rust-check-symbols-rtw-cmd-rest: rust-objects-rtw-cmd-rest-c rust-objects-rtw-cmd-rest-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/cmd/cmd_priv_c_ref.o NEW=tests/host/cmd/cmd_priv_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_cmd_rest.allow ALLOW_VACUOUS=1
+
+rust-objects-rtw-cmd-queue-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_CMD_QUEUE_TEST -DCONFIG_EVENT_THREAD_MODE \
+		-o tests/host/cmd/cmd_queue_c_ref.o core/rtw_cmd_queue.c
+
+rust-objects-rtw-cmd-queue-rust-ref:
+	rustc -C opt-level=2 -C overflow-checks=on \
+		--cfg host_cmd_queue_test --cfg event_thread_mode --cfg rust_cmd_queue \
+		--emit=obj=tests/host/cmd/cmd_queue_rust_ref.o \
+		--crate-type lib rust/rtw_cmd_rest.rs
+
+rust-check-symbols-rtw-cmd-queue: rust-objects-rtw-cmd-queue-c rust-objects-rtw-cmd-queue-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/cmd/cmd_queue_c_ref.o NEW=tests/host/cmd/cmd_queue_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_cmd_queue.allow ALLOW_VACUOUS=1
 
 # W3-39: host C oracle recv_rest vs rust/rtw_recv.o.
 rust-objects-rtw-recv:

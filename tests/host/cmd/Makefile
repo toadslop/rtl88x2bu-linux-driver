@@ -16,7 +16,7 @@ CFLAGS_CMD_QUEUE := $(CFLAGS) -DHOST_CMD_QUEUE_TEST
 
 all: test
 
-test: test-c test-rust test-cmd-queue
+test: test-c test-rust test-cmd-queue test-rust-cmd-queue
 
 test-c: test_cmd_priv
 	./test_cmd_priv cmd_priv_vectors.json
@@ -27,8 +27,20 @@ test_cmd_priv: test_cmd_priv.c host_cmd_priv_shim.c $(CORE)/rtw_cmd_priv.c $(HOS
 test-cmd-queue: test_cmd_queue
 	./test_cmd_queue cmd_queue_vectors.json
 
+test-rust-cmd-queue: test_cmd_queue_rust
+	./test_cmd_queue_rust cmd_queue_vectors.json
+
 test_cmd_queue: test_cmd_queue.c $(CMD_QUEUE_SRC) $(HOST_JSON)
 	$(CC) $(CFLAGS_CMD_QUEUE) -o $@ test_cmd_queue.c $(CMD_QUEUE_SRC) $(HOST_JSON)
+
+test_cmd_queue_rust: test_cmd_queue.c librust_cmd_queue.a $(HOST_JSON)
+	$(CC) $(CFLAGS_CMD_QUEUE) -o $@ test_cmd_queue.c $(HOST_JSON) librust_cmd_queue.a
+
+librust_cmd_queue.a: $(RUST_CMD_REST)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on \
+		--cfg host_cmd_queue_test --cfg event_thread_mode \
+		--cfg rust_cmd_queue \
+		--crate-type staticlib $(RUST_CMD_REST) -o $@
 
 librust_cmd_rest.a: $(RUST_CMD_REST)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on \
@@ -42,4 +54,5 @@ test_cmd_priv_rust: test_cmd_priv.c host_cmd_priv_shim.c librust_cmd_rest.a $(HO
 	$(CC) $(CFLAGS) -o $@ test_cmd_priv.c host_cmd_priv_shim.c $(HOST_JSON) librust_cmd_rest.a
 
 clean:
-	rm -f test_cmd_priv test_cmd_priv_rust test_cmd_queue librust_cmd_rest.a
+	rm -f test_cmd_priv test_cmd_priv_rust test_cmd_queue test_cmd_queue_rust \
+		librust_cmd_rest.a librust_cmd_queue.a

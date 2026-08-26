@@ -152,8 +152,10 @@ for path in "${changed[@]}"; do
 		;;
 	rust/rtw_cmd_rest.rs \
 	| core/rtw_cmd_priv.c \
+	| core/rtw_cmd_queue.c \
 	| tests/host/cmd/*)
 		add_target rust-check-symbols-rtw-cmd-rest
+		add_target rust-check-symbols-rtw-cmd-queue
 		;;
 	rust/aes_*.rs \
 	| rust/sha256*.rs \
