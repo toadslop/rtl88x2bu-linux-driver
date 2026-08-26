@@ -1,0 +1,8 @@
+{
+  "vectors": [
+    { "name": "init_cmd_priv_success", "fn": "_rtw_init_cmd_priv", "expect": 1 },
+    { "name": "init_evt_priv_success", "fn": "_rtw_init_evt_priv", "expect": 1 },
+    { "name": "cmd_init_cmd_buf_malloc_fail", "fn": "cmd_init_malloc_fail", "expect": 0, "malloc_fail_after": 0 },
+    { "name": "cmd_init_rsp_buf_malloc_fail", "fn": "cmd_init_malloc_fail", "expect": 0, "malloc_fail_after": 1 }
+  ]
+}
