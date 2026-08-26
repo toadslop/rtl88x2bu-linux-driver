@@ -78,66 +78,6 @@ void c2h_wk_callback(_workitem *work)
 }
 #endif /* CONFIG_C2H_WK */
 
-#ifdef DBG_CMD_QUEUE
-extern u8 dump_cmd_id;
-#endif
-
-struct cmd_obj *_rtw_dequeue_cmd(_queue *queue)
-{
-	_irqL irqL;
-	struct cmd_obj *obj;
-
-	_enter_critical(&queue->lock, &irqL);
-
-#ifdef DBG_CMD_QUEUE
-	if (queue->queue.prev->next != &queue->queue) {
-		RTW_INFO("[%d] head %p, tail %p, tail->prev->next %p[tail], tail->next %p[head]\n", __LINE__,
-			&queue->queue, queue->queue.prev, queue->queue.prev->prev->next, queue->queue.prev->next);
-	}
-#endif /* DBG_CMD_QUEUE */
-
-	if (rtw_is_list_empty(&(queue->queue)))
-		obj = NULL;
-	else {
-		obj = LIST_CONTAINOR(get_next(&(queue->queue)), struct cmd_obj, list);
-
-#ifdef DBG_CMD_QUEUE
-		if (queue->queue.prev->next != &queue->queue) {
-			RTW_INFO("==========%s============\n", __FUNCTION__);
-			RTW_INFO("head:%p,obj_addr:%p\n", &queue->queue, obj);
-			RTW_INFO("padapter: %p\n", obj->padapter);
-			RTW_INFO("cmdcode: 0x%02x\n", obj->cmdcode);
-			RTW_INFO("res: %d\n", obj->res);
-			RTW_INFO("parmbuf: %p\n", obj->parmbuf);
-			RTW_INFO("cmdsz: %d\n", obj->cmdsz);
-			RTW_INFO("rsp: %p\n", obj->rsp);
-			RTW_INFO("rspsz: %d\n", obj->rspsz);
-			RTW_INFO("sctx: %p\n", obj->sctx);
-			RTW_INFO("list->next: %p\n", obj->list.next);
-			RTW_INFO("list->prev: %p\n", obj->list.prev);
-		}
-
-		if (dump_cmd_id) {
-			RTW_INFO("%s===> cmdcode:0x%02x\n", __FUNCTION__, obj->cmdcode);
-			if (obj->cmdcode == CMD_SET_DRV_EXTRA) {
-				if (obj->parmbuf) {
-					struct drvextra_cmd_parm *pdrvextra_cmd_parm = (struct drvextra_cmd_parm *)(obj->parmbuf);
-
-					printk("pdrvextra_cmd_parm->ec_id:0x%02x\n", pdrvextra_cmd_parm->ec_id);
-				}
-			}
-
-		}
-#endif /* DBG_CMD_QUEUE */
-
-		rtw_list_delete(&obj->list);
-	}
-
-	_exit_critical(&queue->lock, &irqL);
-
-	return obj;
-}
-
 u32 rtw_init_cmd_priv(struct cmd_priv *pcmdpriv)
 {
 	return _rtw_init_cmd_priv(pcmdpriv);
@@ -158,55 +98,7 @@ void rtw_free_cmd_priv(struct cmd_priv *pcmdpriv)
 	_rtw_free_cmd_priv(pcmdpriv);
 }
 
-#ifndef DBG_CMD_EXECUTE
-	#define DBG_CMD_EXECUTE 0
-#endif
-
 int rtw_cmd_filter(struct cmd_priv *pcmdpriv, struct cmd_obj *cmd_obj);
-int rtw_cmd_filter(struct cmd_priv *pcmdpriv, struct cmd_obj *cmd_obj)
-{
-#ifndef CONFIG_MAC_LOOPBACK_DRIVER
-	u8 bAllow = _FALSE; /* set to _TRUE to allow enqueuing cmd when hw_init_completed is _FALSE */
-#else
-	u8 bAllow = _TRUE; /* hw_init_completed is _FALSE in the case of MAC loopback*/
-#endif
-
-#ifdef SUPPORT_HW_RFOFF_DETECTED
-	/* To decide allow or not */
-	if ((adapter_to_pwrctl(pcmdpriv->padapter)->bHWPwrPindetect)
-	    && (!pcmdpriv->padapter->registrypriv.usbss_enable)
-	   ) {
-		if (cmd_obj->cmdcode == CMD_SET_DRV_EXTRA) {
-			struct drvextra_cmd_parm	*pdrvextra_cmd_parm = (struct drvextra_cmd_parm *)cmd_obj->parmbuf;
-			if (pdrvextra_cmd_parm->ec_id == POWER_SAVING_CTRL_WK_CID) {
-				/* RTW_INFO("==>enqueue POWER_SAVING_CTRL_WK_CID\n"); */
-				bAllow = _TRUE;
-			}
-		}
-	}
-#endif
-
-	if (cmd_obj->cmdcode == CMD_SET_CHANPLAN)
-		bAllow = _TRUE;
-
-	if (cmd_obj->no_io)
-		bAllow = _TRUE;
-
-	if ((!rtw_is_hw_init_completed(pcmdpriv->padapter) && (bAllow == _FALSE))
-	    || ATOMIC_READ(&(pcmdpriv->cmdthd_running)) == _FALSE	/* com_thread not running */
-	   ) {
-		if (DBG_CMD_EXECUTE)
-			RTW_INFO(ADPT_FMT" drop "CMD_FMT" hw_init_completed:%u, cmdthd_running:%u\n", ADPT_ARG(cmd_obj->padapter)
-				, CMD_ARG(cmd_obj), rtw_get_hw_init_completed(cmd_obj->padapter), ATOMIC_READ(&pcmdpriv->cmdthd_running));
-		if (0)
-			rtw_warn_on(1);
-
-		return _FAIL;
-	}
-	return _SUCCESS;
-}
-
-
 
 u32 rtw_enqueue_cmd(struct cmd_priv *pcmdpriv, struct cmd_obj *cmd_obj)
 {
