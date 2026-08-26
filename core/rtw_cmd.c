@@ -78,87 +78,15 @@ void c2h_wk_callback(_workitem *work)
 }
 #endif /* CONFIG_C2H_WK */
 
-/*
-Calling Context:
-
-rtw_enqueue_cmd can only be called between kernel thread,
-since only spin_lock is used.
-
-ISR/Call-Back functions can't call this sub-function.
-
-*/
 #ifdef DBG_CMD_QUEUE
 extern u8 dump_cmd_id;
 #endif
 
-sint _rtw_enqueue_cmd(_queue *queue, struct cmd_obj *obj, bool to_head)
-{
-	_irqL irqL;
-
-
-	if (obj == NULL)
-		goto exit;
-
-	/* _enter_critical_bh(&queue->lock, &irqL); */
-	_enter_critical(&queue->lock, &irqL);
-
-	if (to_head)
-		rtw_list_insert_head(&obj->list, &queue->queue);
-	else
-		rtw_list_insert_tail(&obj->list, &queue->queue);
-
-#ifdef DBG_CMD_QUEUE
-	if (dump_cmd_id) {
-		RTW_INFO("%s===> cmdcode:0x%02x\n", __FUNCTION__, obj->cmdcode);
-		if (obj->cmdcode == CMD_SET_MLME_EVT) {
-			if (obj->parmbuf) {
-				struct rtw_evt_header *evt_hdr = (struct rtw_evt_header *)(obj->parmbuf);
-				RTW_INFO("evt_hdr->id:%d\n", evt_hdr->id);
-			}
-		}
-		if (obj->cmdcode == CMD_SET_DRV_EXTRA) {
-			if (obj->parmbuf) {
-				struct drvextra_cmd_parm *pdrvextra_cmd_parm = (struct drvextra_cmd_parm *)(obj->parmbuf);
-				RTW_INFO("pdrvextra_cmd_parm->ec_id:0x%02x\n", pdrvextra_cmd_parm->ec_id);
-			}
-		}
-	}
-
-	if (queue->queue.prev->next != &queue->queue) {
-		RTW_INFO("[%d] head %p, tail %p, tail->prev->next %p[tail], tail->next %p[head]\n", __LINE__,
-			&queue->queue, queue->queue.prev, queue->queue.prev->prev->next, queue->queue.prev->next);
-
-		RTW_INFO("==========%s============\n", __FUNCTION__);
-		RTW_INFO("head:%p,obj_addr:%p\n", &queue->queue, obj);
-		RTW_INFO("padapter: %p\n", obj->padapter);
-		RTW_INFO("cmdcode: 0x%02x\n", obj->cmdcode);
-		RTW_INFO("res: %d\n", obj->res);
-		RTW_INFO("parmbuf: %p\n", obj->parmbuf);
-		RTW_INFO("cmdsz: %d\n", obj->cmdsz);
-		RTW_INFO("rsp: %p\n", obj->rsp);
-		RTW_INFO("rspsz: %d\n", obj->rspsz);
-		RTW_INFO("sctx: %p\n", obj->sctx);
-		RTW_INFO("list->next: %p\n", obj->list.next);
-		RTW_INFO("list->prev: %p\n", obj->list.prev);
-	}
-#endif /* DBG_CMD_QUEUE */
-
-	/* _exit_critical_bh(&queue->lock, &irqL);	 */
-	_exit_critical(&queue->lock, &irqL);
-
-exit:
-
-
-	return _SUCCESS;
-}
-
-struct	cmd_obj	*_rtw_dequeue_cmd(_queue *queue)
+struct cmd_obj *_rtw_dequeue_cmd(_queue *queue)
 {
 	_irqL irqL;
 	struct cmd_obj *obj;
 
-
-	/* _enter_critical_bh(&(queue->lock), &irqL); */
 	_enter_critical(&queue->lock, &irqL);
 
 #ifdef DBG_CMD_QUEUE
@@ -167,7 +95,6 @@ struct	cmd_obj	*_rtw_dequeue_cmd(_queue *queue)
 			&queue->queue, queue->queue.prev, queue->queue.prev->prev->next, queue->queue.prev->next);
 	}
 #endif /* DBG_CMD_QUEUE */
-
 
 	if (rtw_is_list_empty(&(queue->queue)))
 		obj = NULL;
@@ -195,6 +122,7 @@ struct	cmd_obj	*_rtw_dequeue_cmd(_queue *queue)
 			if (obj->cmdcode == CMD_SET_DRV_EXTRA) {
 				if (obj->parmbuf) {
 					struct drvextra_cmd_parm *pdrvextra_cmd_parm = (struct drvextra_cmd_parm *)(obj->parmbuf);
+
 					printk("pdrvextra_cmd_parm->ec_id:0x%02x\n", pdrvextra_cmd_parm->ec_id);
 				}
 			}
@@ -205,9 +133,7 @@ struct	cmd_obj	*_rtw_dequeue_cmd(_queue *queue)
 		rtw_list_delete(&obj->list);
 	}
 
-	/* _exit_critical_bh(&(queue->lock), &irqL); */
 	_exit_critical(&queue->lock, &irqL);
-
 
 	return obj;
 }
@@ -231,6 +157,10 @@ void rtw_free_cmd_priv(struct cmd_priv *pcmdpriv)
 {
 	_rtw_free_cmd_priv(pcmdpriv);
 }
+
+#ifndef DBG_CMD_EXECUTE
+	#define DBG_CMD_EXECUTE 0
+#endif
 
 int rtw_cmd_filter(struct cmd_priv *pcmdpriv, struct cmd_obj *cmd_obj);
 int rtw_cmd_filter(struct cmd_priv *pcmdpriv, struct cmd_obj *cmd_obj)
@@ -333,12 +263,6 @@ struct	cmd_obj	*rtw_dequeue_cmd(struct cmd_priv *pcmdpriv)
 	return cmd_obj;
 }
 
-void rtw_cmd_clr_isr(struct	cmd_priv *pcmdpriv)
-{
-	pcmdpriv->cmd_done_cnt++;
-	/* _rtw_up_sema(&(pcmdpriv->cmd_done_sema)); */
-}
-
 void rtw_free_cmd_obj(struct cmd_obj *pcmd)
 {
 	if (pcmd->parmbuf != NULL) {
@@ -356,6 +280,11 @@ void rtw_free_cmd_obj(struct cmd_obj *pcmd)
 	rtw_mfree((unsigned char *)pcmd, sizeof(struct cmd_obj));
 }
 
+void rtw_cmd_clr_isr(struct	cmd_priv *pcmdpriv)
+{
+	pcmdpriv->cmd_done_cnt++;
+	/* _rtw_up_sema(&(pcmdpriv->cmd_done_sema)); */
+}
 
 void rtw_stop_cmd_thread(_adapter *adapter)
 {
@@ -582,6 +511,27 @@ post_process:
 
 
 #ifdef CONFIG_EVENT_THREAD_MODE
+struct evt_obj *rtw_dequeue_evt(_queue *queue)
+{
+	_irqL irqL;
+	struct	evt_obj	*pevtobj;
+
+
+	_enter_critical_bh(&queue->lock, &irqL);
+
+	if (rtw_is_list_empty(&(queue->queue)))
+		pevtobj = NULL;
+	else {
+		pevtobj = LIST_CONTAINOR(get_next(&(queue->queue)), struct evt_obj, list);
+		rtw_list_delete(&pevtobj->list);
+	}
+
+	_exit_critical_bh(&queue->lock, &irqL);
+
+
+	return pevtobj;
+}
+
 u32 rtw_enqueue_evt(struct evt_priv *pevtpriv, struct evt_obj *obj)
 {
 	_irqL irqL;
@@ -602,33 +552,10 @@ u32 rtw_enqueue_evt(struct evt_priv *pevtpriv, struct evt_obj *obj)
 
 	_exit_critical_bh(&queue->lock, &irqL);
 
-	/* rtw_evt_notify_isr(pevtpriv); */
-
 exit:
 
 
 	return res;
-}
-
-struct evt_obj *rtw_dequeue_evt(_queue *queue)
-{
-	_irqL irqL;
-	struct	evt_obj	*pevtobj;
-
-
-	_enter_critical_bh(&queue->lock, &irqL);
-
-	if (rtw_is_list_empty(&(queue->queue)))
-		pevtobj = NULL;
-	else {
-		pevtobj = LIST_CONTAINOR(get_next(&(queue->queue)), struct evt_obj, list);
-		rtw_list_delete(&pevtobj->list);
-	}
-
-	_exit_critical_bh(&queue->lock, &irqL);
-
-
-	return pevtobj;
 }
 
 void rtw_free_evt_obj(struct evt_obj *pevtobj)
