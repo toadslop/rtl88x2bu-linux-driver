@@ -686,7 +686,7 @@ mod cmd_queue {
                 let res = _rtw_enqueue_cmd(q, cmd_obj, false);
                 if res == _SUCCESS {
                     kernel::_rtw_up_sema(
-                        kernel::rtw_rust_cmd_priv_cmd_queue_sema(priv_p) as *mut c_int,
+                        kernel::rtw_rust_cmd_priv_cmd_queue_sema(priv_p) as *mut c_int
                     );
                 }
                 return res as u32;
