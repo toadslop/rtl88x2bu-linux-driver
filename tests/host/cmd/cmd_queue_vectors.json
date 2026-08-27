@@ -3,6 +3,8 @@
     { "name": "fifo", "fn": "f", "arg": 0, "expect": 1 },
     { "name": "head", "fn": "f", "arg": 1, "expect": 1 },
     { "name": "filter_drop", "fn": "l", "arg": 0, "expect": 0 },
+    { "name": "filter_drop_no_cmdthd", "fn": "l", "arg": 1, "expect": 0 },
+    { "name": "filter_drop_no_hwinit", "fn": "l", "arg": 2, "expect": 0 },
     { "name": "filter_chanplan", "fn": "l", "arg": 6, "expect": 1 },
     { "name": "filter_no_io", "fn": "l", "arg": 10, "expect": 1 },
     { "name": "enqueue_ok", "fn": "e", "arg": 1, "expect": 1 },

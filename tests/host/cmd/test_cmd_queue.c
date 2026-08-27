@@ -66,10 +66,10 @@ static int run(struct vector *v)
 		g = _rtw_dequeue_cmd(&cp->cmd_queue);
 		if (!g || g->cmdcode != (v->arg ? 20 : 1)) goto fail;
 		rtw_free_cmd_obj(g);
-		g = _rtw_dequeue_cmd(&cp->cmd_queue);
-		if (!g) goto fail;
-		rtw_free_cmd_obj(g);
+		while ((g = _rtw_dequeue_cmd(&cp->cmd_queue)) != NULL)
+			rtw_free_cmd_obj(g);
 	} else if (v->fn == 'l') {
+		/* arg bits: 0=hw_init, 1=cmdthd_running, 2=CMD_SET_CHANPLAN, 3=no_io */
 		host_cmd_queue_set_hw_init(v->arg & 1);
 		host_cmd_queue_set_cmdthd_running(v->arg & 2 ? _TRUE : _FALSE);
 		a = mk(v->arg & 4 ? CMD_SET_CHANPLAN : 1, v->arg & 8 ? 1 : 0);
@@ -88,6 +88,7 @@ static int run(struct vector *v)
 		if (!v->arg) {
 			struct evt_obj *eo = rtw_zmalloc(sizeof(*eo));
 			if (!eo || (int)rtw_enqueue_evt(&ep, eo) != v->expect || qlen(&ep.evt_queue) != 1) goto fail;
+			rtw_list_delete(&eo->list);
 			rtw_free_evt_obj(eo);
 		} else if (v->arg == 1) {
 			rtw_evt_notify_isr(&ep);
