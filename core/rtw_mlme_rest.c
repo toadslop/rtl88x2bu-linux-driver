@@ -118,7 +118,7 @@ int is_same_network(WLAN_BSSID_EX *src, WLAN_BSSID_EX *dst, u8 feature)
 #endif /* HOST_MLME_TEST */
 
 #ifdef CONFIG_RTW_MULTI_AP
-#if !defined(CONFIG_RUST) || defined(HOST_MLME_UNASSOC_TEST)
+#if !defined(CONFIG_RUST) || defined(HOST_MLME_UNASSOC_TEST) || !defined(CONFIG_RUST_MLME_UNASSOC)
 
 static void del_unassoc_sta(struct mlme_priv *mlmepriv,
 			    struct unassoc_sta_info *unassoc_sta)
@@ -229,7 +229,7 @@ u8 rtw_search_unassoc_sta(_adapter *adapter, u8 *addr,
 	return searched;
 }
 
-#endif /* !CONFIG_RUST || HOST_MLME_UNASSOC_TEST */
+#endif /* !CONFIG_RUST || HOST_MLME_UNASSOC_TEST || !CONFIG_RUST_MLME_UNASSOC */
 #endif /* CONFIG_RTW_MULTI_AP */
 
 #if defined(CONFIG_RUST) && !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST)
