@@ -1,0 +1,27 @@
+{
+  "vectors": [
+    { "name": "search_hit", "fn": "search_hit" },
+    { "name": "search_miss", "fn": "search_miss" },
+    {
+      "name": "del_one",
+      "fn": "del_one",
+      "mac": "aabbccddeeff",
+      "interested": 0,
+      "rssi": -55,
+      "expect": 0,
+      "expect_q": 0,
+      "expect_free": 4
+    },
+    {
+      "name": "del_interested",
+      "fn": "del_one",
+      "mac": "001122334455",
+      "interested": 1,
+      "rssi": -30,
+      "expect": 0,
+      "expect_q": 0,
+      "expect_free": 4
+    },
+    { "name": "del_queue", "fn": "del_queue" }
+  ]
+}
