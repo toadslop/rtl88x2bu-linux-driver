@@ -164,4 +164,101 @@ int rtw_cmd_filter(struct cmd_priv *pcmdpriv, struct cmd_obj *cmd_obj)
 	return _SUCCESS;
 }
 
+u32 rtw_enqueue_cmd(struct cmd_priv *pcmdpriv, struct cmd_obj *cmd_obj)
+{
+	int res = _FAIL;
+	PADAPTER padapter = pcmdpriv->padapter;
+
+	if (cmd_obj == NULL)
+		goto exit;
+
+	cmd_obj->padapter = padapter;
+
+#ifdef CONFIG_CONCURRENT_MODE
+	if (!is_primary_adapter(padapter))
+		pcmdpriv = &(GET_PRIMARY_ADAPTER(padapter)->cmdpriv);
+#endif
+
+	res = rtw_cmd_filter(pcmdpriv, cmd_obj);
+	if ((_FAIL == res) || (cmd_obj->cmdsz > MAX_CMDSZ)) {
+		if (cmd_obj->cmdsz > MAX_CMDSZ) {
+			RTW_INFO("%s failed due to obj->cmdsz(%d) > MAX_CMDSZ(%d)\n", __func__, cmd_obj->cmdsz, MAX_CMDSZ);
+			rtw_warn_on(1);
+		}
+
+		if (cmd_obj->cmdcode == CMD_SET_DRV_EXTRA) {
+			struct drvextra_cmd_parm *extra_parm = (struct drvextra_cmd_parm *)cmd_obj->parmbuf;
+
+			if (extra_parm->pbuf && extra_parm->size > 0)
+				rtw_mfree(extra_parm->pbuf, extra_parm->size);
+		}
+		rtw_free_cmd_obj(cmd_obj);
+		goto exit;
+	}
+
+	res = _rtw_enqueue_cmd(&pcmdpriv->cmd_queue, cmd_obj, 0);
+
+	if (res == _SUCCESS)
+		_rtw_up_sema(&pcmdpriv->cmd_queue_sema);
+
+exit:
+	return res;
+}
+
+struct cmd_obj *rtw_dequeue_cmd(struct cmd_priv *pcmdpriv)
+{
+	return _rtw_dequeue_cmd(&pcmdpriv->cmd_queue);
+}
+
+void rtw_free_cmd_obj(struct cmd_obj *pcmd)
+{
+	if (pcmd->parmbuf != NULL)
+		rtw_mfree((unsigned char *)pcmd->parmbuf, pcmd->cmdsz);
+	if (pcmd->rsp != NULL) {
+		if (pcmd->rspsz != 0)
+			rtw_mfree((unsigned char *)pcmd->rsp, pcmd->rspsz);
+	}
+
+	rtw_mfree((unsigned char *)pcmd, sizeof(struct cmd_obj));
+}
+
+#ifdef CONFIG_EVENT_THREAD_MODE
+u32 rtw_enqueue_evt(struct evt_priv *pevtpriv, struct evt_obj *obj)
+{
+	_irqL irqL;
+	int res;
+	_queue *queue = &pevtpriv->evt_queue;
+
+	res = _SUCCESS;
+
+	if (obj == NULL) {
+		res = _FAIL;
+		goto evt_exit;
+	}
+
+	_enter_critical_bh(&queue->lock, &irqL);
+
+	rtw_list_insert_tail(&obj->list, &queue->queue);
+
+	_exit_critical_bh(&queue->lock, &irqL);
+
+evt_exit:
+	return res;
+}
+
+void rtw_free_evt_obj(struct evt_obj *pevtobj)
+{
+	if (pevtobj->parmbuf)
+		rtw_mfree((unsigned char *)pevtobj->parmbuf, pevtobj->evtsz);
+
+	rtw_mfree((unsigned char *)pevtobj, sizeof(struct evt_obj));
+}
+
+void rtw_evt_notify_isr(struct evt_priv *pevtpriv)
+{
+	pevtpriv->evt_done_cnt++;
+	_rtw_up_sema(&(pevtpriv->evt_notify));
+}
+#endif /* CONFIG_EVENT_THREAD_MODE */
+
 #endif /* !CONFIG_RUST || HOST_CMD_QUEUE_TEST || !CONFIG_RUST_CMD_QUEUE */
