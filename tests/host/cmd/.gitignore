@@ -2,3 +2,5 @@ test_cmd_priv
 librust_cmd_rest.a
 test_cmd_priv_rust
 test_cmd_queue
+test_cmd_queue_rust
+librust_cmd_queue.a

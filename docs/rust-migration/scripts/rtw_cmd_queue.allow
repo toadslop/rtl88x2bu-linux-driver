@@ -1,0 +1,10 @@
+# L1 allowlist for W3-61 cmd/evt queue enqueue/filter (host oracle object).
+drop _rtw_enqueue_cmd
+drop _rtw_dequeue_cmd
+drop rtw_cmd_filter
+drop rtw_enqueue_cmd
+drop rtw_dequeue_cmd
+drop rtw_free_cmd_obj
+drop rtw_enqueue_evt
+drop rtw_free_evt_obj
+drop rtw_evt_notify_isr
