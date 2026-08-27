@@ -414,7 +414,7 @@ int rtw_restruct_wmm_ie(_adapter *adapter, u8 *in_ie, u8 *out_ie, uint in_len, u
 
 }
 
-#endif /* !CONFIG_RUST || HOST_MLME_WMM_RSN_TEST || !CONFIG_RUST_MLME_WMM_RSN */
+#endif /* HOST_MLME_WMM_RSN guard */
 
 #if defined(CONFIG_RUST) && !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && !defined(HOST_MLME_WMM_RSN_TEST)
 u8 *rtw_mlme_rest_bss_ies(WLAN_BSSID_EX *bss) { return bss->IEs; }
