@@ -4523,6 +4523,7 @@ bool rtw_is_wmmps_mode(_adapter *padapter)
 #endif /* CONFIG_WMMPS_STA */
 
 /* rtw_restruct_wmm_ie → rtw_mlme_rest.c (W3-63 PR1). */
+/* rtw_cached_pmkid, rtw_rsn_sync_pmkid → rtw_mlme_rest.c (W3-63 PR2). */
 
 /*
  * Ported from 8185: IsInPreAuthKeyList(). (Renamed from SecIsInPreAuthKeyList(), 2006-10-13.)
@@ -4561,76 +4562,6 @@ static int SecIsInPMKIDList(_adapter *Adapter, u8 *bssid)
 
 }
 
-int rtw_cached_pmkid(_adapter *Adapter, u8 *bssid)
-{
-	return SecIsInPMKIDList(Adapter, bssid);
-}
-
-int rtw_rsn_sync_pmkid(_adapter *adapter, u8 *ie, uint ie_len, int i_ent)
-{
-	struct security_priv *sec = &adapter->securitypriv;
-	struct rsne_info info;
-	u8 gm_cs[4];
-	int i;
-
-	rtw_rsne_info_parse(ie, ie_len, &info);
-
-	if (info.err) {
-		RTW_WARN(FUNC_ADPT_FMT" rtw_rsne_info_parse error\n"
-			, FUNC_ADPT_ARG(adapter));
-		return 0;
-	}
-
-	if (i_ent < 0 && info.pmkid_cnt == 0)
-		goto exit;
-
-	if (info.pmkid_list == NULL)
-		goto exit;
-
-	if (i_ent >= 0 && info.pmkid_cnt == 1 && _rtw_memcmp(info.pmkid_list, sec->PMKIDList[i_ent].PMKID, 16)) {
-		RTW_INFO(FUNC_ADPT_FMT" has carried the same PMKID:"KEY_FMT"\n"
-			, FUNC_ADPT_ARG(adapter), KEY_ARG(&sec->PMKIDList[i_ent].PMKID));
-		goto exit;
-	}
-
-	/* bakcup group mgmt cs */
-	if (info.gmcs)
-		_rtw_memcpy(gm_cs, info.gmcs, 4);
-
-	if (info.pmkid_cnt) {
-		RTW_INFO(FUNC_ADPT_FMT" remove original PMKID, count:%u\n"
-			 , FUNC_ADPT_ARG(adapter), info.pmkid_cnt);
-		for (i = 0; i < info.pmkid_cnt; i++)
-			RTW_INFO("    "KEY_FMT"\n", KEY_ARG(info.pmkid_list + i * 16));
-	}
-
-	if (i_ent >= 0) {
-		RTW_INFO(FUNC_ADPT_FMT" append PMKID:"KEY_FMT"\n"
-			, FUNC_ADPT_ARG(adapter), KEY_ARG(sec->PMKIDList[i_ent].PMKID));
-
-		info.pmkid_cnt = 1; /* update new pmkid_cnt */
-		_rtw_memcpy(info.pmkid_list, sec->PMKIDList[i_ent].PMKID, 16);
-	} else
-		info.pmkid_cnt = 0; /* update new pmkid_cnt */
-
-	RTW_PUT_LE16(info.pmkid_list - 2, info.pmkid_cnt);
-	if (info.gmcs)
-		_rtw_memcpy(info.pmkid_list + 16 * info.pmkid_cnt, gm_cs, 4);
-
-	ie_len = 1 + 1 + 2 + 4
-		+ 2 + 4 * info.pcs_cnt
-		+ 2 + 4 * info.akm_cnt
-		+ 2
-		+ 2 + 16 * info.pmkid_cnt
-		+ (info.gmcs ? 4 : 0)
-		;
-	
-	ie[1] = (u8)(ie_len - 2);
-
-exit:
-	return ie_len;
-}
-
 sint rtw_restruct_sec_ie(_adapter *adapter, u8 *out_ie)
 {
 	u8 authmode = 0x0;
@@ -4651,16 +4582,7 @@ sint rtw_restruct_sec_ie(_adapter *adapter, u8 *out_ie)
 		ielength = psecuritypriv->wps_ie_len;
 
 	} else if ((authmode == _WPA_IE_ID_) || (authmode == _WPA2_IE_ID_)) {
-		/* copy RSN or SSN		 */
 		_rtw_memcpy(out_ie, psecuritypriv->supplicant_ie, psecuritypriv->supplicant_ie[1] + 2);
-		/* debug for CONFIG_IEEE80211W
-		{
-			int jj;
-			printk("supplicant_ie_length=%d &&&&&&&&&&&&&&&&&&&\n", psecuritypriv->supplicant_ie[1]+2);
-			for(jj=0; jj < psecuritypriv->supplicant_ie[1]+2; jj++)
-				printk(" %02x ", psecuritypriv->supplicant_ie[jj]);
-			printk("\n");
-		}*/
 		ielength = psecuritypriv->supplicant_ie[1] + 2;
 		rtw_report_sec_ie(adapter, authmode, psecuritypriv->supplicant_ie);
 	}
