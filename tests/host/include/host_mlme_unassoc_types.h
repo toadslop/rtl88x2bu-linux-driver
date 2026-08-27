@@ -3,11 +3,19 @@
 #define HOST_MLME_UNASSOC_TYPES_H
 
 #include <stddef.h>
+#include <stdbool.h>
 #include "host_types.h"
 
 #define _TRUE 1
 #define _FALSE 0
 #define ETH_ALEN 6
+#define UNASOC_STA_SRC_NUM 2
+#define UNASOC_STA_DEL_CHK_SKIP 0
+#define UNASOC_STA_DEL_CHK_ALIVE 1
+#define UNASOC_STA_DEL_CHK_DELETED 2
+#define UNASOC_STA_MODE_INTERESTED 1
+#define UNASOC_STA_MODE_ALL 2
+#define UNASSOC_STA_LIFETIME_MS 60000
 
 typedef unsigned long systime, _irqL;
 typedef int _lock;
@@ -19,6 +27,7 @@ struct unassoc_sta_info {
 	_list list; u8 addr[ETH_ALEN]; u8 interested; s8 recv_signal_power; systime time;
 };
 struct mlme_priv {
+	u8 unassoc_sta_mode_of_stype[UNASOC_STA_SRC_NUM];
 	_queue unassoc_sta_queue, free_unassoc_sta_queue;
 	u8 *free_unassoc_sta_buf; u32 interested_unassoc_sta_cnt, max_unassoc_sta_cnt;
 };
@@ -43,6 +52,12 @@ static inline void rtw_list_delete(_list *e)
 {
 	e->next->prev = e->prev; e->prev->next = e->next; e->next = e->prev = e;
 }
+
+static inline int _rtw_queue_empty(_queue *q) { return q->queue.next == &q->queue; }
+
+systime rtw_get_current_time(void);
+systime rtw_ms_to_systime(int ms);
+bool rtw_time_before(systime a, systime b);
 
 int _rtw_memcmp(const void *a, const void *b, size_t n);
 void rtw_run_in_thread_cmd(_adapter *a, void *f, _adapter *c);

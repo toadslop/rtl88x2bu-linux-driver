@@ -1213,7 +1213,10 @@ void dump_unassoc_sta(void *sel, _adapter *adapter)
 	rtw_vmfree(unassoc_sta_arr, mlmepriv->max_unassoc_sta_cnt * sizeof(struct unassoc_sta_info *));
 }
 
-static void del_unassoc_sta(struct mlme_priv *mlmepriv, struct unassoc_sta_info *unassoc_sta)
+/* Unassoc STA queue: del/search/rx_add in core/rtw_mlme_rest.c (W3-62). */
+
+static void del_unassoc_sta_local(struct mlme_priv *mlmepriv,
+				  struct unassoc_sta_info *unassoc_sta)
 {
 	_irqL irqL;
 	_queue *free_queue = &(mlmepriv->free_unassoc_sta_queue);
@@ -1231,7 +1234,8 @@ static void del_unassoc_sta(struct mlme_priv *mlmepriv, struct unassoc_sta_info 
 	_exit_critical_bh(&free_queue->lock, &irqL);
 }
 
-static u8 del_unassoc_sta_chk(struct mlme_priv *mlmepriv, struct unassoc_sta_info *unassoc_sta)
+static u8 del_unassoc_sta_chk_local(struct mlme_priv *mlmepriv,
+				    struct unassoc_sta_info *unassoc_sta)
 {
 	systime cur, lifetime;
 
@@ -1246,18 +1250,17 @@ static u8 del_unassoc_sta_chk(struct mlme_priv *mlmepriv, struct unassoc_sta_inf
 	if (rtw_time_before(cur, lifetime))
 		return UNASOC_STA_DEL_CHK_ALIVE;
 
-	del_unassoc_sta(mlmepriv, unassoc_sta);
+	del_unassoc_sta_local(mlmepriv, unassoc_sta);
 
 	return UNASOC_STA_DEL_CHK_DELETED;
 }
 
-static struct unassoc_sta_info *alloc_unassoc_sta(struct mlme_priv *mlmepriv)
+static struct unassoc_sta_info *alloc_unassoc_sta_local(struct mlme_priv *mlmepriv)
 {
-	_irqL	irqL;
-	struct	unassoc_sta_info *unassoc_sta;
+	_irqL irqL;
+	struct unassoc_sta_info *unassoc_sta;
 	_queue *free_queue = &mlmepriv->free_unassoc_sta_queue;
 	_list *list = NULL;
-
 
 	_enter_critical_bh(&free_queue->lock, &irqL);
 
@@ -1279,68 +1282,6 @@ exit:
 	_exit_critical_bh(&free_queue->lock, &irqL);
 
 	return unassoc_sta;
-
-}
-
-/* rtw_del_unassoc_sta_queue, rtw_del_unassoc_sta, rtw_search_unassoc_sta → rtw_mlme_rest.c (W3-62). */
-
-void rtw_rx_add_unassoc_sta(_adapter *adapter, u8 stype, u8 *addr, s8 recv_signal_power)
-{
-	struct unassoc_sta_info *unassoc_sta;
-	struct unassoc_sta_info *oldest_unassoc_sta = NULL;
-	struct mlme_priv *mlmepriv;
-	_queue *queue;
-	_irqL irqL;
-	_list *head, *list;
-
-	adapter = GET_PRIMARY_ADAPTER(adapter);
-	mlmepriv = &(adapter->mlmepriv);
-	queue = &(mlmepriv->unassoc_sta_queue);
-
-	_enter_critical_bh(&queue->lock, &irqL);
-	head = get_list_head(queue);
-	list = get_next(head);
-
-	while ((rtw_end_of_queue_search(head, list)) == _FALSE) {
-		unassoc_sta = LIST_CONTAINOR(list , struct unassoc_sta_info, list);
-		list = get_next(list);
-
-		if (_rtw_memcmp(addr, unassoc_sta->addr, ETH_ALEN) == _TRUE) {
-			if (unassoc_sta->interested
-				|| mlmepriv->unassoc_sta_mode_of_stype[stype] >= UNASOC_STA_MODE_ALL
-			) {
-				unassoc_sta->recv_signal_power = recv_signal_power;
-				unassoc_sta->time = rtw_get_current_time();
-				goto unlock_unassoc_sta_queue;
-			}
-		}
-
-		if (del_unassoc_sta_chk(mlmepriv, unassoc_sta) == UNASOC_STA_DEL_CHK_ALIVE) {
-			if (oldest_unassoc_sta == NULL)
-				oldest_unassoc_sta = unassoc_sta;
-			else if (rtw_time_before(unassoc_sta->time, oldest_unassoc_sta->time))
-				oldest_unassoc_sta = unassoc_sta;
-		}
-	}
-
-	if (mlmepriv->unassoc_sta_mode_of_stype[stype] <= UNASOC_STA_MODE_INTERESTED)
-		goto unlock_unassoc_sta_queue;
-
-	unassoc_sta = alloc_unassoc_sta(mlmepriv);
-	if (unassoc_sta == NULL) {
-		if (oldest_unassoc_sta) {
-			del_unassoc_sta(mlmepriv, oldest_unassoc_sta);
-			unassoc_sta = alloc_unassoc_sta(mlmepriv);
-		} else
-			goto unlock_unassoc_sta_queue;
-	}
-	_rtw_memcpy(unassoc_sta->addr, addr, ETH_ALEN);
-	unassoc_sta->recv_signal_power = recv_signal_power;
-	unassoc_sta->time = rtw_get_current_time();
-	rtw_list_insert_tail(&(unassoc_sta->list), &(queue->queue));
-
-unlock_unassoc_sta_queue:
-	_exit_critical_bh(&queue->lock, &irqL);
 }
 
 void rtw_add_interested_unassoc_sta(_adapter *adapter, u8 *addr)
@@ -1376,20 +1317,20 @@ void rtw_add_interested_unassoc_sta(_adapter *adapter, u8 *addr)
 			goto unlock_unassoc_sta_queue;
 		}
 
-		if (del_unassoc_sta_chk(mlmepriv, unassoc_sta) == UNASOC_STA_DEL_CHK_ALIVE) {
+		if (del_unassoc_sta_chk_local(mlmepriv, unassoc_sta) == UNASOC_STA_DEL_CHK_ALIVE) {
 			if (oldest_unassoc_sta == NULL)
 				oldest_unassoc_sta = unassoc_sta;
 			else if (rtw_time_after(unassoc_sta->time, oldest_unassoc_sta->time))
 				oldest_unassoc_sta = unassoc_sta;
 		}
 	}
-	unassoc_sta = alloc_unassoc_sta(mlmepriv);
+	unassoc_sta = alloc_unassoc_sta_local(mlmepriv);
 	if (unassoc_sta == NULL) {
 		RTW_INFO(FUNC_ADPT_FMT": Allocate fail\n", FUNC_ADPT_ARG(adapter));
 		if (oldest_unassoc_sta) {
 			RTW_INFO(FUNC_ADPT_FMT": Delete oldest entry and try again.\n", FUNC_ADPT_ARG(adapter));
-			del_unassoc_sta(mlmepriv, oldest_unassoc_sta);
-			unassoc_sta = alloc_unassoc_sta(mlmepriv);
+			del_unassoc_sta_local(mlmepriv, oldest_unassoc_sta);
+			unassoc_sta = alloc_unassoc_sta_local(mlmepriv);
 		} else
 			goto unlock_unassoc_sta_queue;
 	}
