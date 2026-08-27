@@ -1,0 +1,14 @@
+{
+  "oracle": "core/rtw_mlme_rest.c",
+  "vectors": [
+    {
+      "name": "restruct_wmm_ie_basic",
+      "fn": "restruct_wmm_ie",
+      "in_ie_hex": "000000000000000064000100dd180050f202010187000300000000000000000000000000000000000000",
+      "in_len": 42,
+      "initial_out_len": 0,
+      "expect_len": 9,
+      "expect_out_hex": "dd070050f202000100"
+    }
+  ]
+}

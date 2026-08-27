@@ -16,6 +16,8 @@
 
 #if defined(HOST_MLME_UNASSOC_TEST)
 #include "host_mlme_unassoc_types.h"
+#elif defined(HOST_MLME_WMM_RSN_TEST)
+#include "host_mlme_wmm_rsn_types.h"
 #elif defined(HOST_MLME_TEST)
 #include "host_mlme_types.h"
 #else
@@ -346,7 +348,75 @@ u8 rtw_search_unassoc_sta(_adapter *adapter, u8 *addr,
 #endif /* !CONFIG_RUST || HOST_MLME_UNASSOC_TEST || !CONFIG_RUST_MLME_UNASSOC */
 #endif /* CONFIG_RTW_MULTI_AP */
 
-#if defined(CONFIG_RUST) && !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST)
+#if !defined(CONFIG_RUST) || defined(HOST_MLME_WMM_RSN_TEST) || !defined(CONFIG_RUST_MLME_WMM_RSN)
+
+/* adjust IEs for rtw_joinbss_cmd in WMM */
+int rtw_restruct_wmm_ie(_adapter *adapter, u8 *in_ie, u8 *out_ie, uint in_len, uint initial_out_len)
+{
+#ifdef CONFIG_WMMPS_STA
+	struct mlme_priv		*pmlmepriv = &adapter->mlmepriv;
+	struct qos_priv		*pqospriv = &pmlmepriv->qospriv;
+#endif /* CONFIG_WMMPS_STA */
+	unsigned	int ielength = 0;
+	unsigned int i, j;
+	u8 qos_info = 0;
+
+	i = 12; /* after the fixed IE */
+	while (i < in_len) {
+		ielength = initial_out_len;
+
+		if (in_ie[i] == 0xDD && in_ie[i + 2] == 0x00 && in_ie[i + 3] == 0x50  && in_ie[i + 4] == 0xF2 && in_ie[i + 5] == 0x02 && i + 5 < in_len) { /* WMM element ID and OUI */
+
+			for (j = i; j < i + 9; j++) {
+				out_ie[ielength] = in_ie[j];
+				ielength++;
+			}
+			out_ie[initial_out_len + 1] = 0x07;
+			out_ie[initial_out_len + 6] = 0x00;
+
+#ifdef CONFIG_WMMPS_STA
+			switch(pqospriv->uapsd_max_sp_len) {
+				case NO_LIMIT:
+					break;
+				case TWO_MSDU:
+					SET_FLAG(qos_info, BIT5);
+					break;
+				case FOUR_MSDU:
+					SET_FLAG(qos_info, BIT6);
+					break;
+				case SIX_MSDU:
+					SET_FLAG(qos_info, BIT5);
+					SET_FLAG(qos_info, BIT6);
+					break;
+				default:
+					break;
+			};
+
+			if((TEST_FLAG(pqospriv->uapsd_tid, WMM_TID7)) && (TEST_FLAG(pqospriv->uapsd_tid, WMM_TID6)))
+				SET_FLAG(qos_info, WMM_IE_UAPSD_VO);
+			if((TEST_FLAG(pqospriv->uapsd_tid, WMM_TID5)) && (TEST_FLAG(pqospriv->uapsd_tid, WMM_TID4)))
+				SET_FLAG(qos_info, WMM_IE_UAPSD_VI);
+			if((TEST_FLAG(pqospriv->uapsd_tid, WMM_TID2)) && (TEST_FLAG(pqospriv->uapsd_tid, WMM_TID1)))
+				SET_FLAG(qos_info, WMM_IE_UAPSD_BK);
+			if((TEST_FLAG(pqospriv->uapsd_tid, WMM_TID3)) && (TEST_FLAG(pqospriv->uapsd_tid, WMM_TID0)))
+				SET_FLAG(qos_info, WMM_IE_UAPSD_BE);
+#endif /* CONFIG_WMMPS_STA */
+
+			out_ie[initial_out_len + 8] = qos_info;
+
+			break;
+		}
+
+		i += (in_ie[i + 1] + 2); /* to the next IE element */
+	}
+
+	return ielength;
+
+}
+
+#endif /* !CONFIG_RUST || HOST_MLME_WMM_RSN_TEST || !CONFIG_RUST_MLME_WMM_RSN */
+
+#if defined(CONFIG_RUST) && !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && !defined(HOST_MLME_WMM_RSN_TEST)
 u8 *rtw_mlme_rest_bss_ies(WLAN_BSSID_EX *bss) { return bss->IEs; }
 u32 *rtw_mlme_rest_bss_ssid_length(WLAN_BSSID_EX *bss) { return &bss->Ssid.SsidLength; }
 u8 *rtw_mlme_rest_bss_ssid(WLAN_BSSID_EX *bss) { return bss->Ssid.Ssid; }
