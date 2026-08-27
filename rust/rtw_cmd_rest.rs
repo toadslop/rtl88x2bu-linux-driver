@@ -468,6 +468,8 @@ mod cmd_queue {
 
     #[cfg(not(host_cmd_queue_test))]
     use core::ffi::c_ulong;
+    #[cfg(host_cmd_queue_test)]
+    use std::os::raw::c_ulong;
 
     #[inline]
     fn list_empty(h: &List) -> bool {
@@ -683,13 +685,9 @@ mod cmd_queue {
                 let q = kernel::rtw_rust_cmd_priv_cmd_queue(priv_p);
                 let res = _rtw_enqueue_cmd(q, cmd_obj, false);
                 if res == _SUCCESS {
-<<<<<<< HEAD
                     kernel::_rtw_up_sema(
                         kernel::rtw_rust_cmd_priv_cmd_queue_sema(priv_p) as *mut c_int,
                     );
-=======
-                    kernel::_rtw_up_sema(kernel::rtw_rust_cmd_priv_cmd_queue_sema(p) as *mut c_int);
->>>>>>> b9f25c0 (style(W3-61 PR5): rustfmt rtw_cmd_rest.rs)
                 }
                 return res as u32;
             }
