@@ -1282,62 +1282,7 @@ exit:
 
 }
 
-void rtw_del_unassoc_sta_queue(_adapter *adapter)
-{
-	struct unassoc_sta_info *unassoc_sta;
-	struct mlme_priv *mlmepriv;
-	_queue *queue;
-	_irqL irqL;
-	_list *head, *list;
-
-	adapter = GET_PRIMARY_ADAPTER(adapter);
-	mlmepriv = &(adapter->mlmepriv);
-	queue = &(mlmepriv->unassoc_sta_queue);
-
-	_enter_critical_bh(&queue->lock, &irqL);
-	head = get_list_head(queue);
-	list = get_next(head);
-
-	while ((rtw_end_of_queue_search(head, list)) == _FALSE) {
-		unassoc_sta = LIST_CONTAINOR(list , struct unassoc_sta_info, list);
-		list = get_next(list);
-
-		del_unassoc_sta(mlmepriv, unassoc_sta);
-	}
-
-	_exit_critical_bh(&queue->lock, &irqL);
-
-}
-
-void rtw_del_unassoc_sta(_adapter *adapter, u8 *addr)
-{
-	struct unassoc_sta_info *unassoc_sta;
-	struct mlme_priv *mlmepriv;
-	_queue *queue;
-	_irqL irqL;
-	_list *head, *list;
-
-	adapter = GET_PRIMARY_ADAPTER(adapter);
-	mlmepriv = &(adapter->mlmepriv);
-	queue = &(mlmepriv->unassoc_sta_queue);
-
-	_enter_critical_bh(&queue->lock, &irqL);
-	head = get_list_head(queue);
-	list = get_next(head);
-
-	while ((rtw_end_of_queue_search(head, list)) == _FALSE) {
-		unassoc_sta = LIST_CONTAINOR(list , struct unassoc_sta_info, list);
-		list = get_next(list);
-
-		if (_rtw_memcmp(addr, unassoc_sta->addr, ETH_ALEN) == _TRUE) {
-			del_unassoc_sta(mlmepriv, unassoc_sta);
-			goto unlock_unassoc_sta_queue;
-		}
-	}
-
-unlock_unassoc_sta_queue:
-	_exit_critical_bh(&queue->lock, &irqL);
-}
+/* rtw_del_unassoc_sta_queue, rtw_del_unassoc_sta, rtw_search_unassoc_sta → rtw_mlme_rest.c (W3-62). */
 
 void rtw_rx_add_unassoc_sta(_adapter *adapter, u8 stype, u8 *addr, s8 recv_signal_power)
 {
@@ -1531,38 +1476,6 @@ void rtw_undo_all_interested_unassoc_sta(_adapter *adapter)
 	}
 unlock_unassoc_sta_queue:
 	_exit_critical_bh(&queue->lock, &irqL);
-}
-
-u8 rtw_search_unassoc_sta(_adapter *adapter, u8 *addr, struct unassoc_sta_info *ret_sta)
-{
-	struct unassoc_sta_info *unassoc_sta = NULL;
-	struct mlme_priv *mlmepriv;
-	_queue *queue;
-	_irqL irqL;
-	_list *head, *list;
-	u8 searched = 0;
-
-	adapter = GET_PRIMARY_ADAPTER(adapter);
-	mlmepriv = &(adapter->mlmepriv);
-	queue = &(mlmepriv->unassoc_sta_queue);
-
-	_enter_critical_bh(&queue->lock, &irqL);
-	head = get_list_head(queue);
-	list = get_next(head);
-
-	while ((rtw_end_of_queue_search(head, list)) == _FALSE) {
-		unassoc_sta = LIST_CONTAINOR(list , struct unassoc_sta_info, list);
-		list = get_next(list);
-
-		if (_rtw_memcmp(addr, unassoc_sta->addr, ETH_ALEN) == _TRUE) {
-			memcpy(ret_sta, unassoc_sta, sizeof(struct unassoc_sta_info));
-			searched = 1;
-			break;
-		}
-	}
-	_exit_critical_bh(&queue->lock, &irqL);
-
-	return searched;
 }
 #endif /* CONFIG_RTW_MULTI_AP */
 
