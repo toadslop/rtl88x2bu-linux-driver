@@ -348,7 +348,9 @@ u8 rtw_search_unassoc_sta(_adapter *adapter, u8 *addr,
 #endif /* !CONFIG_RUST || HOST_MLME_UNASSOC_TEST || !CONFIG_RUST_MLME_UNASSOC */
 #endif /* CONFIG_RTW_MULTI_AP */
 
-#if !defined(CONFIG_RUST) || defined(HOST_MLME_WMM_RSN_TEST) || !defined(CONFIG_RUST_MLME_WMM_RSN)
+#if defined(HOST_MLME_WMM_RSN_TEST) || \
+     (!defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
+      (!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_WMM_RSN)))
 
 /* adjust IEs for rtw_joinbss_cmd in WMM */
 int rtw_restruct_wmm_ie(_adapter *adapter, u8 *in_ie, u8 *out_ie, uint in_len, uint initial_out_len)
@@ -414,7 +416,7 @@ int rtw_restruct_wmm_ie(_adapter *adapter, u8 *in_ie, u8 *out_ie, uint in_len, u
 
 }
 
-#endif /* HOST_MLME_WMM_RSN guard */
+#endif /* HOST_MLME_WMM_RSN_TEST || (!HOST_MLME_TEST && !HOST_MLME_UNASSOC_TEST && (!CONFIG_RUST || !CONFIG_RUST_MLME_WMM_RSN)) */
 
 #if defined(CONFIG_RUST) && !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && !defined(HOST_MLME_WMM_RSN_TEST)
 u8 *rtw_mlme_rest_bss_ies(WLAN_BSSID_EX *bss) { return bss->IEs; }
