@@ -10,16 +10,16 @@ RUST_MLME_REST := $(ROOT)/rust/rtw_mlme_rest.rs
 
 CC     := gcc
 RUSTC  := rustc
-CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+CFLAGS_COMMON := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
           -I$(HOST_INC) -I$(CORE) \
-          -include $(HOST_INC)/host_autoconf.h \
-          -DHOST_MLME_TEST -DCONFIG_P2P
+          -include $(HOST_INC)/host_autoconf.h
+CFLAGS := $(CFLAGS_COMMON) -DHOST_MLME_TEST -DCONFIG_P2P
 
-.PHONY: all test test-c test-rust clean
+.PHONY: all test test-c test-rust test-mlme-unassoc clean
 
 all: test
 
-test: test-c test-rust
+test: test-c test-rust test-mlme-unassoc
 
 test-c: test_mlme
 	./test_mlme mlme_vectors.json
@@ -37,5 +37,13 @@ test-rust: test_mlme_rust
 test_mlme_rust: test_mlme.c librust_mlme_rest.a $(MLME_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_MLME_ORACLE -o $@ test_mlme.c $(MLME_SHIM) $(HOST_JSON) librust_mlme_rest.a
 
+CFLAGS_UNASSOC := $(CFLAGS_COMMON) -DCONFIG_RTW_MULTI_AP -DHOST_MLME_UNASSOC_TEST
+
+test-mlme-unassoc: test_mlme_unassoc
+	./test_mlme_unassoc mlme_unassoc_vectors.json
+
+test_mlme_unassoc: test_mlme_unassoc.c $(MLME_REST_SRC) $(HOST_JSON)
+	$(CC) $(CFLAGS_UNASSOC) -o $@ test_mlme_unassoc.c $(MLME_REST_SRC) $(HOST_JSON)
+
 clean:
-	rm -f test_mlme test_mlme_rust librust_mlme_rest.a
+	rm -f test_mlme test_mlme_rust test_mlme_unassoc librust_mlme_rest.a
