@@ -122,7 +122,7 @@ int is_same_network(WLAN_BSSID_EX *src, WLAN_BSSID_EX *dst, u8 feature)
 #ifdef CONFIG_RTW_MULTI_AP
 #if !defined(CONFIG_RUST) || defined(HOST_MLME_UNASSOC_TEST) || !defined(CONFIG_RUST_MLME_UNASSOC)
 
-void del_unassoc_sta(struct mlme_priv *mlmepriv,
+static void del_unassoc_sta(struct mlme_priv *mlmepriv,
 			    struct unassoc_sta_info *unassoc_sta)
 {
 	_irqL irqL;
@@ -142,7 +142,7 @@ void del_unassoc_sta(struct mlme_priv *mlmepriv,
 	_exit_critical_bh(&free_queue->lock, &irqL);
 }
 
-u8 del_unassoc_sta_chk(struct mlme_priv *mlmepriv,
+static u8 del_unassoc_sta_chk(struct mlme_priv *mlmepriv,
 			      struct unassoc_sta_info *unassoc_sta)
 {
 	systime cur, lifetime;
@@ -163,7 +163,7 @@ u8 del_unassoc_sta_chk(struct mlme_priv *mlmepriv,
 	return UNASOC_STA_DEL_CHK_DELETED;
 }
 
-struct unassoc_sta_info *alloc_unassoc_sta(struct mlme_priv *mlmepriv)
+static struct unassoc_sta_info *alloc_unassoc_sta(struct mlme_priv *mlmepriv)
 {
 	_irqL irqL;
 	struct unassoc_sta_info *unassoc_sta;
@@ -343,6 +343,75 @@ u8 rtw_search_unassoc_sta(_adapter *adapter, u8 *addr,
 	_exit_critical_bh(&queue->lock, &irqL);
 
 	return searched;
+}
+
+void rtw_add_interested_unassoc_sta(_adapter *adapter, u8 *addr)
+{
+	struct unassoc_sta_info *unassoc_sta;
+	struct unassoc_sta_info *oldest_unassoc_sta = NULL;
+	struct mlme_priv *mlmepriv;
+	_queue *queue;
+	_irqL irqL;
+	_list *head, *list;
+
+	adapter = GET_PRIMARY_ADAPTER(adapter);
+	mlmepriv = &(adapter->mlmepriv);
+	queue = &(mlmepriv->unassoc_sta_queue);
+
+	_enter_critical_bh(&queue->lock, &irqL);
+	head = get_list_head(queue);
+	list = get_next(head);
+
+	while ((rtw_end_of_queue_search(head, list)) == _FALSE) {
+		unassoc_sta = LIST_CONTAINOR(list, struct unassoc_sta_info, list);
+		list = get_next(list);
+
+		if (_rtw_memcmp(addr, unassoc_sta->addr, ETH_ALEN) == _TRUE) {
+			if (!unassoc_sta->interested) {
+				unassoc_sta->interested = 1;
+				mlmepriv->interested_unassoc_sta_cnt++;
+				if (mlmepriv->interested_unassoc_sta_cnt == 1) {
+					rtw_run_in_thread_cmd(mlme_to_adapter(mlmepriv),
+							      ((void *)(rtw_hal_rcr_set_chk_bssid_act_non)),
+							      mlme_to_adapter(mlmepriv));
+				}
+			}
+			goto unlock_unassoc_sta_queue;
+		}
+
+		if (del_unassoc_sta_chk(mlmepriv, unassoc_sta)
+		    == UNASOC_STA_DEL_CHK_ALIVE) {
+			if (oldest_unassoc_sta == NULL)
+				oldest_unassoc_sta = unassoc_sta;
+			else if (rtw_time_after(unassoc_sta->time,
+						oldest_unassoc_sta->time))
+				oldest_unassoc_sta = unassoc_sta;
+		}
+	}
+	unassoc_sta = alloc_unassoc_sta(mlmepriv);
+	if (unassoc_sta == NULL) {
+		if (oldest_unassoc_sta) {
+			del_unassoc_sta(mlmepriv, oldest_unassoc_sta);
+			unassoc_sta = alloc_unassoc_sta(mlmepriv);
+		} else {
+			goto unlock_unassoc_sta_queue;
+		}
+	}
+	_rtw_memcpy(unassoc_sta->addr, addr, ETH_ALEN);
+	unassoc_sta->interested = 1;
+	unassoc_sta->recv_signal_power = 0;
+	unassoc_sta->time = rtw_get_current_time() -
+			    rtw_ms_to_systime(UNASSOC_STA_LIFETIME_MS);
+	rtw_list_insert_tail(&(unassoc_sta->list), &(queue->queue));
+	mlmepriv->interested_unassoc_sta_cnt++;
+	if (mlmepriv->interested_unassoc_sta_cnt == 1) {
+		rtw_run_in_thread_cmd(mlme_to_adapter(mlmepriv),
+				      ((void *)(rtw_hal_rcr_set_chk_bssid_act_non)),
+				      mlme_to_adapter(mlmepriv));
+	}
+
+unlock_unassoc_sta_queue:
+	_exit_critical_bh(&queue->lock, &irqL);
 }
 
 void rtw_undo_interested_unassoc_sta(_adapter *adapter, u8 *addr)
