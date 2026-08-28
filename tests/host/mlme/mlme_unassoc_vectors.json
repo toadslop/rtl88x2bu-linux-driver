@@ -9,8 +9,7 @@
       "interested": 0,
       "rssi": -55,
       "expect": 0,
-      "expect_q": 0,
-      "expect_free": 4
+      "expect_q": 0
     },
     {
       "name": "del_interested",
@@ -19,10 +18,26 @@
       "interested": 1,
       "rssi": -30,
       "expect": 0,
-      "expect_q": 0,
-      "expect_free": 4
+      "expect_q": 0
     },
     { "name": "del_queue", "fn": "del_queue" },
-    { "name": "undo_interested", "fn": "undo_interested" }
+    { "name": "add_interested_new", "fn": "add_interested_new" },
+    { "name": "add_interested_existing", "fn": "add_interested_existing" },
+    { "name": "undo_interested", "fn": "undo_interested" },
+    {
+      "name": "rx_add_new",
+      "fn": "rx_add",
+      "mac": "112233445566",
+      "stype": 0,
+      "rssi": -42,
+      "expect_q": 1
+    },
+    {
+      "name": "rx_add_update",
+      "fn": "rx_add_update",
+      "mac": "778899aabbcc",
+      "stype": 0,
+      "rssi": -60
+    }
   ]
 }
