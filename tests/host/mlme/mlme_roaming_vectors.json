@@ -1,0 +1,29 @@
+{
+  "vectors": [
+    {
+      "name": "select_best_same_ess",
+      "fn": "select",
+      "cur_ssid": "TestNet", "cur_rssi": -70, "cur_ch": 6, "cur_mac": "001122334455",
+      "need_to_roam": 1, "rssi_diff_th": 5, "scanr_exp_ms": 10000, "desired": 1,
+      "net0_ssid": "TestNet", "net0_rssi": -65, "net0_ch": 6, "net0_mac": "001122334456", "net0_age_ms": 1000,
+      "net1_ssid": "TestNet", "net1_rssi": -55, "net1_ch": 11, "net1_mac": "001122334457", "net1_age_ms": 1000,
+      "expect": 1, "expect_mac": "001122334457"
+    },
+    {
+      "name": "select_fail_need_to_roam_off",
+      "fn": "select",
+      "cur_ssid": "TestNet", "cur_rssi": -70, "cur_ch": 6, "cur_mac": "001122334455",
+      "need_to_roam": 0, "rssi_diff_th": 5, "scanr_exp_ms": 10000, "desired": 1,
+      "net0_ssid": "TestNet", "net0_rssi": -50, "net0_ch": 11, "net0_mac": "001122334457", "net0_age_ms": 1000,
+      "expect": 0
+    },
+    {
+      "name": "check_accepts_stronger",
+      "fn": "check",
+      "cur_ssid": "Home", "cur_rssi": -70, "cur_ch": 6, "cur_mac": "001122334455",
+      "need_to_roam": 1, "rssi_diff_th": 5, "scanr_exp_ms": 10000, "desired": 1,
+      "comp_ssid": "Home", "comp_rssi": -55, "comp_ch": 11, "comp_mac": "001122334457", "comp_age_ms": 1000,
+      "expect": 1
+    }
+  ]
+}
