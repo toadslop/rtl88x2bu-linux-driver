@@ -122,7 +122,7 @@ int is_same_network(WLAN_BSSID_EX *src, WLAN_BSSID_EX *dst, u8 feature)
 #ifdef CONFIG_RTW_MULTI_AP
 #if !defined(CONFIG_RUST) || defined(HOST_MLME_UNASSOC_TEST) || !defined(CONFIG_RUST_MLME_UNASSOC)
 
-static void del_unassoc_sta(struct mlme_priv *mlmepriv,
+void del_unassoc_sta(struct mlme_priv *mlmepriv,
 			    struct unassoc_sta_info *unassoc_sta)
 {
 	_irqL irqL;
@@ -142,7 +142,7 @@ static void del_unassoc_sta(struct mlme_priv *mlmepriv,
 	_exit_critical_bh(&free_queue->lock, &irqL);
 }
 
-static u8 del_unassoc_sta_chk(struct mlme_priv *mlmepriv,
+u8 del_unassoc_sta_chk(struct mlme_priv *mlmepriv,
 			      struct unassoc_sta_info *unassoc_sta)
 {
 	systime cur, lifetime;
@@ -163,7 +163,7 @@ static u8 del_unassoc_sta_chk(struct mlme_priv *mlmepriv,
 	return UNASOC_STA_DEL_CHK_DELETED;
 }
 
-static struct unassoc_sta_info *alloc_unassoc_sta(struct mlme_priv *mlmepriv)
+struct unassoc_sta_info *alloc_unassoc_sta(struct mlme_priv *mlmepriv)
 {
 	_irqL irqL;
 	struct unassoc_sta_info *unassoc_sta;

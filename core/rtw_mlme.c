@@ -1213,76 +1213,11 @@ void dump_unassoc_sta(void *sel, _adapter *adapter)
 	rtw_vmfree(unassoc_sta_arr, mlmepriv->max_unassoc_sta_cnt * sizeof(struct unassoc_sta_info *));
 }
 
-/* Unassoc STA queue: del/search/rx_add in core/rtw_mlme_rest.c (W3-62). */
+/* Unassoc STA queue: del/search/rx_add/undo in core/rtw_mlme_rest.c (W3-62). */
 
-static void del_unassoc_sta_local(struct mlme_priv *mlmepriv,
-				  struct unassoc_sta_info *unassoc_sta)
-{
-	_irqL irqL;
-	_queue *free_queue = &(mlmepriv->free_unassoc_sta_queue);
-
-	if (unassoc_sta->interested)
-		mlmepriv->interested_unassoc_sta_cnt--;
-	if (mlmepriv->interested_unassoc_sta_cnt == 0) {
-		rtw_run_in_thread_cmd(mlme_to_adapter(mlmepriv)
-			, ((void *)(rtw_hal_rcr_set_chk_bssid_act_non)), mlme_to_adapter(mlmepriv));
-	}
-
-	_enter_critical_bh(&free_queue->lock, &irqL);
-	rtw_list_delete(&(unassoc_sta->list));
-	rtw_list_insert_tail(&(unassoc_sta->list), &(free_queue->queue));
-	_exit_critical_bh(&free_queue->lock, &irqL);
-}
-
-static u8 del_unassoc_sta_chk_local(struct mlme_priv *mlmepriv,
-				    struct unassoc_sta_info *unassoc_sta)
-{
-	systime cur, lifetime;
-
-	if (unassoc_sta == NULL)
-		return UNASOC_STA_DEL_CHK_SKIP;
-
-	if (unassoc_sta->interested)
-		return UNASOC_STA_DEL_CHK_SKIP;
-
-	cur = rtw_get_current_time();
-	lifetime = unassoc_sta->time + rtw_ms_to_systime(UNASSOC_STA_LIFETIME_MS);
-	if (rtw_time_before(cur, lifetime))
-		return UNASOC_STA_DEL_CHK_ALIVE;
-
-	del_unassoc_sta_local(mlmepriv, unassoc_sta);
-
-	return UNASOC_STA_DEL_CHK_DELETED;
-}
-
-static struct unassoc_sta_info *alloc_unassoc_sta_local(struct mlme_priv *mlmepriv)
-{
-	_irqL irqL;
-	struct unassoc_sta_info *unassoc_sta;
-	_queue *free_queue = &mlmepriv->free_unassoc_sta_queue;
-	_list *list = NULL;
-
-	_enter_critical_bh(&free_queue->lock, &irqL);
-
-	if (_rtw_queue_empty(free_queue) == _TRUE) {
-		unassoc_sta = NULL;
-		goto exit;
-	}
-	list = get_next(&(free_queue->queue));
-
-	unassoc_sta = LIST_CONTAINOR(list, struct unassoc_sta_info, list);
-
-	rtw_list_delete(&unassoc_sta->list);
-
-	_rtw_memset(unassoc_sta->addr, 0, ETH_ALEN);
-	unassoc_sta->recv_signal_power = 0;
-	unassoc_sta->time = 0;
-	unassoc_sta->interested = 0;
-exit:
-	_exit_critical_bh(&free_queue->lock, &irqL);
-
-	return unassoc_sta;
-}
+void del_unassoc_sta(struct mlme_priv *mlmepriv, struct unassoc_sta_info *unassoc_sta);
+u8 del_unassoc_sta_chk(struct mlme_priv *mlmepriv, struct unassoc_sta_info *unassoc_sta);
+struct unassoc_sta_info *alloc_unassoc_sta(struct mlme_priv *mlmepriv);
 
 void rtw_add_interested_unassoc_sta(_adapter *adapter, u8 *addr)
 {
@@ -1317,20 +1252,20 @@ void rtw_add_interested_unassoc_sta(_adapter *adapter, u8 *addr)
 			goto unlock_unassoc_sta_queue;
 		}
 
-		if (del_unassoc_sta_chk_local(mlmepriv, unassoc_sta) == UNASOC_STA_DEL_CHK_ALIVE) {
+		if (del_unassoc_sta_chk(mlmepriv, unassoc_sta) == UNASOC_STA_DEL_CHK_ALIVE) {
 			if (oldest_unassoc_sta == NULL)
 				oldest_unassoc_sta = unassoc_sta;
 			else if (rtw_time_after(unassoc_sta->time, oldest_unassoc_sta->time))
 				oldest_unassoc_sta = unassoc_sta;
 		}
 	}
-	unassoc_sta = alloc_unassoc_sta_local(mlmepriv);
+	unassoc_sta = alloc_unassoc_sta(mlmepriv);
 	if (unassoc_sta == NULL) {
 		RTW_INFO(FUNC_ADPT_FMT": Allocate fail\n", FUNC_ADPT_ARG(adapter));
 		if (oldest_unassoc_sta) {
 			RTW_INFO(FUNC_ADPT_FMT": Delete oldest entry and try again.\n", FUNC_ADPT_ARG(adapter));
-			del_unassoc_sta_local(mlmepriv, oldest_unassoc_sta);
-			unassoc_sta = alloc_unassoc_sta_local(mlmepriv);
+			del_unassoc_sta(mlmepriv, oldest_unassoc_sta);
+			unassoc_sta = alloc_unassoc_sta(mlmepriv);
 		} else
 			goto unlock_unassoc_sta_queue;
 	}
