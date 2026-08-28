@@ -20,6 +20,7 @@ int _rtw_memcmp(const void *a, const void *b, size_t n) { return memcmp(a, b, n)
 void rtw_del_unassoc_sta_queue(_adapter *a);
 void rtw_del_unassoc_sta(_adapter *a, u8 *addr);
 u8 rtw_search_unassoc_sta(_adapter *a, u8 *addr, struct unassoc_sta_info *out);
+void rtw_undo_interested_unassoc_sta(_adapter *a, u8 *addr);
 
 static inline void _rtw_init_listhead(_list *l) { l->next = l->prev = l; }
 
@@ -124,6 +125,13 @@ static int run(struct vector *v)
 		seed(a1, 0, -10, 100); seed(a2, 1, -20, 200);
 		rtw_del_unassoc_sta_queue(&g_adapter);
 		if (qlen()) goto fail;
+	} else if (!strcmp(v->fn, "undo_interested")) {
+		u8 mac[ETH_ALEN] = {0xee, 0xff, 0, 0, 0, 3};
+
+		seed(mac, 1, -30, 2000);
+		rtw_undo_interested_unassoc_sta(&g_adapter, mac);
+		if (g_adapter.mlmepriv.interested_unassoc_sta_cnt != 0) goto fail;
+		if (!rtw_search_unassoc_sta(&g_adapter, mac, &found) || found.interested) goto fail;
 	} else goto fail;
 	printf("PASS %s\n", v->name);
 	return 0;
