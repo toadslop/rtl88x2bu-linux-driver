@@ -15,11 +15,11 @@ CFLAGS_COMMON := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
           -include $(HOST_INC)/host_autoconf.h
 CFLAGS := $(CFLAGS_COMMON) -DHOST_MLME_TEST -DCONFIG_P2P
 
-.PHONY: all test test-c test-rust test-mlme-unassoc clean
+.PHONY: all test test-c test-rust test-mlme-unassoc test-mlme-wmm-rsn clean
 
 all: test
 
-test: test-c test-rust test-mlme-unassoc
+test: test-c test-rust test-mlme-unassoc test-mlme-wmm-rsn
 
 test-c: test_mlme
 	./test_mlme mlme_vectors.json
@@ -45,5 +45,13 @@ test-mlme-unassoc: test_mlme_unassoc
 test_mlme_unassoc: test_mlme_unassoc.c $(MLME_REST_SRC) $(HOST_JSON)
 	$(CC) $(CFLAGS_UNASSOC) -o $@ test_mlme_unassoc.c $(MLME_REST_SRC) $(HOST_JSON)
 
+CFLAGS_WMM_RSN := $(CFLAGS_COMMON) -DHOST_MLME_WMM_RSN_TEST
+
+test-mlme-wmm-rsn: test_mlme_wmm_rsn
+	./test_mlme_wmm_rsn mlme_wmm_rsn_vectors.json
+
+test_mlme_wmm_rsn: test_mlme_wmm_rsn.c $(MLME_REST_SRC) $(HOST_JSON)
+	$(CC) $(CFLAGS_WMM_RSN) -o $@ test_mlme_wmm_rsn.c $(MLME_REST_SRC) $(HOST_JSON)
+
 clean:
-	rm -f test_mlme test_mlme_rust test_mlme_unassoc librust_mlme_rest.a
+	rm -f test_mlme test_mlme_rust test_mlme_unassoc test_mlme_wmm_rsn librust_mlme_rest.a
