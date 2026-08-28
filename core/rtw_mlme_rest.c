@@ -416,6 +416,71 @@ int rtw_restruct_wmm_ie(_adapter *adapter, u8 *in_ie, u8 *out_ie, uint in_len, u
 
 }
 
+#if !defined(HOST_MLME_WMM_RSN_TEST)
+
+static int SecIsInPMKIDList(_adapter *Adapter, u8 *bssid)
+{
+	struct security_priv *psecuritypriv = &Adapter->securitypriv;
+	int i = 0;
+
+	do {
+		if ((psecuritypriv->PMKIDList[i].bUsed) &&
+		    (_rtw_memcmp(psecuritypriv->PMKIDList[i].Bssid, bssid, ETH_ALEN) == _TRUE))
+			break;
+		else
+			i++;
+	} while (i < NUM_PMKID_CACHE);
+
+	return (i == NUM_PMKID_CACHE) ? -1 : i;
+}
+
+int rtw_cached_pmkid(_adapter *Adapter, u8 *bssid)
+{
+	return SecIsInPMKIDList(Adapter, bssid);
+}
+
+int rtw_rsn_sync_pmkid(_adapter *adapter, u8 *ie, uint ie_len, int i_ent)
+{
+	struct security_priv *sec = &adapter->securitypriv;
+	struct rsne_info info;
+	u8 gm_cs[4] = {0};
+	int i;
+
+	rtw_rsne_info_parse(ie, ie_len, &info);
+	if (info.err) {
+		RTW_WARN(FUNC_ADPT_FMT" rtw_rsne_info_parse error\n", FUNC_ADPT_ARG(adapter));
+		return 0;
+	}
+	if (i_ent < 0 && info.pmkid_cnt == 0)
+		goto exit;
+	if (info.pmkid_list == NULL)
+		goto exit;
+	if (i_ent >= 0 && info.pmkid_cnt == 1 &&
+	    _rtw_memcmp(info.pmkid_list, sec->PMKIDList[i_ent].PMKID, 16))
+		goto exit;
+	if (info.gmcs)
+		_rtw_memcpy(gm_cs, info.gmcs, 4);
+	if (info.pmkid_cnt) {
+		for (i = 0; i < info.pmkid_cnt; i++)
+			RTW_INFO("    "KEY_FMT"\n", KEY_ARG(info.pmkid_list + i * 16));
+	}
+	if (i_ent >= 0) {
+		info.pmkid_cnt = 1;
+		_rtw_memcpy(info.pmkid_list, sec->PMKIDList[i_ent].PMKID, 16);
+	} else
+		info.pmkid_cnt = 0;
+	RTW_PUT_LE16(info.pmkid_list - 2, info.pmkid_cnt);
+	if (info.gmcs)
+		_rtw_memcpy(info.pmkid_list + 16 * info.pmkid_cnt, gm_cs, 4);
+	ie_len = 1 + 1 + 2 + 4 + 2 + 4 * info.pcs_cnt + 2 + 4 * info.akm_cnt + 2
+		+ 2 + 16 * info.pmkid_cnt + (info.gmcs ? 4 : 0);
+	ie[1] = (u8)(ie_len - 2);
+exit:
+	return ie_len;
+}
+
+#endif /* !HOST_MLME_WMM_RSN_TEST */
+
 #endif /* HOST_MLME_WMM_RSN_TEST || (!HOST_MLME_TEST && !HOST_MLME_UNASSOC_TEST && (!CONFIG_RUST || !CONFIG_RUST_MLME_WMM_RSN)) */
 
 #if defined(CONFIG_RUST) && !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && !defined(HOST_MLME_WMM_RSN_TEST)
