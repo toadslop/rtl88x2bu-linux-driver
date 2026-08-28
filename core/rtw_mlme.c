@@ -1349,42 +1349,6 @@ unlock_unassoc_sta_queue:
 	_exit_critical_bh(&queue->lock, &irqL);
 }
 
-void rtw_undo_interested_unassoc_sta(_adapter *adapter, u8 *addr)
-{
-	struct unassoc_sta_info *unassoc_sta;
-	struct mlme_priv *mlmepriv;
-	_queue *queue;
-	_irqL irqL;
-	_list *head, *list;
-
-	adapter = GET_PRIMARY_ADAPTER(adapter);
-	mlmepriv = &(adapter->mlmepriv);
-	queue = &(mlmepriv->unassoc_sta_queue);
-
-	_enter_critical_bh(&queue->lock, &irqL);
-	head = get_list_head(queue);
-	list = get_next(head);
-
-	while ((rtw_end_of_queue_search(head, list)) == _FALSE) {
-		unassoc_sta = LIST_CONTAINOR(list , struct unassoc_sta_info, list);
-		list = get_next(list);
-
-		if (_rtw_memcmp(addr, unassoc_sta->addr, ETH_ALEN) == _TRUE) {
-			if (unassoc_sta->interested) {
-				unassoc_sta->interested = 0;
-				mlmepriv->interested_unassoc_sta_cnt--;
-				if (mlmepriv->interested_unassoc_sta_cnt == 0) {
-					rtw_run_in_thread_cmd(mlme_to_adapter(mlmepriv)
-						, ((void *)(rtw_hal_rcr_set_chk_bssid_act_non)), mlme_to_adapter(mlmepriv));
-				}
-			}
-			goto unlock_unassoc_sta_queue;
-		}
-	}
-unlock_unassoc_sta_queue:
-	_exit_critical_bh(&queue->lock, &irqL);
-}
-
 void rtw_undo_all_interested_unassoc_sta(_adapter *adapter)
 {
 	struct unassoc_sta_info *unassoc_sta;

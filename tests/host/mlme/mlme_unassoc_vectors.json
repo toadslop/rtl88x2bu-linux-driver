@@ -22,6 +22,7 @@
       "expect_q": 0,
       "expect_free": 4
     },
-    { "name": "del_queue", "fn": "del_queue" }
+    { "name": "del_queue", "fn": "del_queue" },
+    { "name": "undo_interested", "fn": "undo_interested" }
   ]
 }
