@@ -9,6 +9,35 @@
       "initial_out_len": 0,
       "expect_len": 9,
       "expect_out_hex": "dd070050f202000100"
+    },
+    {
+      "name": "restruct_wmm_ie_no_match",
+      "fn": "restruct_wmm_ie",
+      "in_ie_hex": "000000000000000064000100dd050050f204010100",
+      "in_len": 21,
+      "initial_out_len": 0,
+      "expect_len": 0,
+      "expect_out_hex": ""
+    },
+    {
+      "name": "restruct_wmm_ie_prefixed_out",
+      "fn": "restruct_wmm_ie",
+      "in_ie_hex": "000000000000000064000100dd180050f202010187000300000000000000000000000000000000000000",
+      "in_len": 42,
+      "initial_out_len": 4,
+      "expect_len": 13,
+      "expect_out_hex": "00000000dd070050f202000100"
+    },
+    {
+      "name": "restruct_wmm_ie_uapsd_vo_two_msdu",
+      "fn": "restruct_wmm_ie",
+      "in_ie_hex": "000000000000000064000100dd180050f202010187000300000000000000000000000000000000000000",
+      "in_len": 42,
+      "initial_out_len": 0,
+      "uapsd_max_sp_len": 1,
+      "uapsd_tid": 192,
+      "expect_len": 9,
+      "expect_out_hex": "dd070050f202000121"
     }
   ]
 }
