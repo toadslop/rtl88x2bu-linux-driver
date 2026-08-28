@@ -19,7 +19,10 @@ CFLAGS := $(CFLAGS_COMMON) -DHOST_MLME_TEST -DCONFIG_P2P
 
 all: test
 
-test: test-c test-rust test-mlme-unassoc test-mlme-wmm-rsn test-mlme-roaming
+test: test-c test-rust test-mlme-unassoc test-mlme-wmm-rsn
+ifneq ($(wildcard test_mlme_roaming.c),)
+test: test-mlme-roaming
+endif
 
 test-c: test_mlme
 	./test_mlme mlme_vectors.json
