@@ -18,6 +18,8 @@
 #include "host_mlme_unassoc_types.h"
 #elif defined(HOST_MLME_WMM_RSN_TEST)
 #include "host_mlme_wmm_rsn_types.h"
+#elif defined(HOST_MLME_ROAMING_TEST)
+#include "host_mlme_roaming_types.h"
 #elif defined(HOST_MLME_TEST)
 #include "host_mlme_types.h"
 #else
@@ -384,6 +386,109 @@ unlock_unassoc_sta_queue:
 
 #endif /* !CONFIG_RUST || HOST_MLME_UNASSOC_TEST || !CONFIG_RUST_MLME_UNASSOC */
 #endif /* CONFIG_RTW_MULTI_AP */
+
+#ifdef CONFIG_LAYER2_ROAMING
+#if !defined(CONFIG_RUST) || defined(HOST_MLME_ROAMING_TEST) || !defined(CONFIG_RUST_MLME_ROAMING)
+
+extern int rtw_is_desired_network(_adapter *adapter, struct wlan_network *pnetwork);
+
+/*
+ * Select a new roaming candidate from the original @param candidate and @param competitor
+ * @return _TRUE: candidate is updated
+ * @return _FALSE: candidate is not updated
+ */
+int rtw_check_roaming_candidate(struct mlme_priv *mlme
+	, struct wlan_network **candidate, struct wlan_network *competitor)
+{
+	int updated = _FALSE;
+	_adapter *adapter = container_of(mlme, _adapter, mlmepriv);
+	struct rf_ctl_t *rfctl = adapter_to_rfctl(adapter);
+	RT_CHANNEL_INFO *chset = rfctl->channel_set;
+	u8 ch = competitor->network.Configuration.DSConfig;
+
+	if (rtw_chset_search_ch(chset, ch) < 0)
+		goto exit;
+	if (IS_DFS_SLAVE_WITH_RD(rfctl)
+		&& !rtw_rfctl_dfs_domain_unknown(rfctl)
+		&& rtw_chset_is_ch_non_ocp(chset, ch))
+		goto exit;
+
+#if defined(CONFIG_RTW_REPEATER_SON) &&  (!defined(CONFIG_RTW_REPEATER_SON_ROOT))
+	if (rtw_rson_isupdate_roamcan(mlme, candidate, competitor))
+		goto  update;
+	goto exit;
+#endif
+
+	if (is_same_ess(&competitor->network, &mlme->cur_network.network) == _FALSE)
+		goto exit;
+
+	if (rtw_is_desired_network(adapter, competitor) == _FALSE)
+		goto exit;
+
+#ifdef CONFIG_RTW_ROAM_QUICKSCAN
+	if (competitor->network.PhyInfo.SignalStrength > CONFIG_RTW_ROAM_QUICKSCAN_TH)
+		adapter->mlmeextpriv.quickscan_next = _TRUE;
+#endif
+
+#ifdef CONFIG_LAYER2_ROAMING
+	if (mlme->need_to_roam == _FALSE)
+		goto exit;
+#endif
+
+	RTW_INFO("roam candidate:%s %s("MAC_FMT", ch%3u) rssi:%d dBm, age:%5d\n",
+		 (competitor == mlme->cur_network_scanned) ? "*" : " " ,
+		 competitor->network.Ssid.Ssid,
+		 MAC_ARG(competitor->network.MacAddress),
+		 competitor->network.Configuration.DSConfig,
+		 (int)competitor->network.Rssi,
+		 rtw_get_passing_time_ms(competitor->last_scanned)
+		);
+
+	/* got specific addr to roam */
+	if (!is_zero_mac_addr(mlme->roam_tgt_addr)) {
+		if (_rtw_memcmp(mlme->roam_tgt_addr, competitor->network.MacAddress, ETH_ALEN) == _TRUE)
+			goto update;
+		else
+			goto exit;
+	}
+
+#ifdef CONFIG_RTW_80211R
+	if (rtw_ft_chk_flags(adapter, RTW_FT_PEER_EN)) {
+		if (rtw_ft_chk_roaming_candidate(adapter, competitor) == _FALSE)
+		goto exit;
+	}
+
+#ifdef CONFIG_RTW_WNM
+	if (rtw_wnm_btm_diff_bss(adapter) &&
+		rtw_wnm_btm_roam_candidate(adapter, competitor)) {
+		goto update;
+	}
+#endif
+#endif
+
+#if 1
+	if (rtw_get_passing_time_ms(competitor->last_scanned) >= mlme->roam_scanr_exp_ms)
+		goto exit;
+
+	if (competitor->network.Rssi - mlme->cur_network_scanned->network.Rssi < mlme->roam_rssi_diff_th)
+		goto exit;
+
+	if (*candidate != NULL && (*candidate)->network.Rssi >= competitor->network.Rssi)
+		goto exit;
+#else
+	goto exit;
+#endif
+
+update:
+	*candidate = competitor;
+	updated = _TRUE;
+
+exit:
+	return updated;
+}
+
+#endif /* !CONFIG_RUST || HOST_MLME_ROAMING_TEST || !CONFIG_RUST_MLME_ROAMING */
+#endif /* CONFIG_LAYER2_ROAMING */
 
 #if defined(HOST_MLME_WMM_RSN_TEST) || \
      (!defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
