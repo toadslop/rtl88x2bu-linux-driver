@@ -45,7 +45,7 @@ test-mlme-unassoc: test_mlme_unassoc
 test_mlme_unassoc: test_mlme_unassoc.c $(MLME_REST_SRC) $(HOST_JSON)
 	$(CC) $(CFLAGS_UNASSOC) -o $@ test_mlme_unassoc.c $(MLME_REST_SRC) $(HOST_JSON)
 
-CFLAGS_WMM_RSN := $(CFLAGS_COMMON) -DHOST_MLME_WMM_RSN_TEST
+CFLAGS_WMM_RSN := $(CFLAGS_COMMON) -DHOST_MLME_WMM_RSN_TEST -DCONFIG_WMMPS_STA
 
 test-mlme-wmm-rsn: test_mlme_wmm_rsn
 	./test_mlme_wmm_rsn mlme_wmm_rsn_vectors.json
