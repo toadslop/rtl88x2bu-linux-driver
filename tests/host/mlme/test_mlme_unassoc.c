@@ -9,6 +9,8 @@ static systime host_now;
 struct _adapter g_adapter;
 
 systime rtw_get_current_time(void) { return host_now; }
+systime rtw_ms_to_systime(int ms) { return (systime)ms; }
+bool rtw_time_before(systime a, systime b) { return a < b; }
 void rtw_run_in_thread_cmd(_adapter *a, void *f, _adapter *c) { (void)a; (void)f; (void)c; }
 void rtw_hal_rcr_set_chk_bssid_act_non(_adapter *a) { (void)a; }
 void *rtw_zvmalloc(u32 sz) { return calloc(1, sz); }
@@ -20,7 +22,6 @@ void rtw_del_unassoc_sta(_adapter *a, u8 *addr);
 u8 rtw_search_unassoc_sta(_adapter *a, u8 *addr, struct unassoc_sta_info *out);
 
 static inline void _rtw_init_listhead(_list *l) { l->next = l->prev = l; }
-static inline int _rtw_queue_empty(_queue *q) { return q->queue.next == &q->queue; }
 
 static struct unassoc_sta_info *pop_free(struct mlme_priv *m)
 {
