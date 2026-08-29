@@ -1134,6 +1134,9 @@ void rtw_roaming(_adapter *adapter, struct wlan_network *tgt_network);
 void rtw_set_to_roam(_adapter *adapter, u8 to_roam);
 u8 rtw_dec_to_roam(_adapter *adapter);
 u8 rtw_to_roam(_adapter *adapter);
+int rtw_check_roaming_candidate(struct mlme_priv *pmlmepriv,
+				struct wlan_network **candidate,
+				struct wlan_network *competitor);
 int rtw_select_roaming_candidate(struct mlme_priv *pmlmepriv);
 #else
 #define rtw_roam_flags(adapter) 0
