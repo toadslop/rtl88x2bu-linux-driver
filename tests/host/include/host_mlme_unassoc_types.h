@@ -39,6 +39,10 @@ typedef struct _adapter _adapter;
 	((struct _adapter *)((char *)(m) - offsetof(struct _adapter, mlmepriv)))
 #define LIST_CONTAINOR(p, t, m) ((t *)((char *)(p) - offsetof(t, m)))
 
+#define FUNC_ADPT_FMT "%p"
+#define FUNC_ADPT_ARG(adapter) (void *)(adapter)
+#define RTW_INFO(...) do { } while (0)
+
 static inline void _enter_critical_bh(_lock *l, _irqL *i) { (void)l; (void)i; }
 static inline void _exit_critical_bh(_lock *l, _irqL *i) { (void)l; (void)i; }
 static inline _list *get_list_head(_queue *q) { return &q->queue; }
