@@ -792,6 +792,52 @@ exit:
 	return ie_len;
 }
 
+sint rtw_restruct_sec_ie(_adapter *adapter, u8 *out_ie)
+{
+	u8 authmode = 0x0;
+	uint ielength = 0;
+	int iEntry;
+	struct mlme_priv *pmlmepriv = &adapter->mlmepriv;
+	struct security_priv *psecuritypriv = &adapter->securitypriv;
+	uint ndisauthmode = psecuritypriv->ndisauthtype;
+
+	if ((ndisauthmode == Ndis802_11AuthModeWPA) ||
+	    (ndisauthmode == Ndis802_11AuthModeWPAPSK))
+		authmode = _WPA_IE_ID_;
+	if ((ndisauthmode == Ndis802_11AuthModeWPA2) ||
+	    (ndisauthmode == Ndis802_11AuthModeWPA2PSK))
+		authmode = _WPA2_IE_ID_;
+
+	if (check_fwstate(pmlmepriv, WIFI_UNDER_WPS)) {
+		_rtw_memcpy(out_ie, psecuritypriv->wps_ie,
+			    psecuritypriv->wps_ie_len);
+		ielength = psecuritypriv->wps_ie_len;
+	} else if ((authmode == _WPA_IE_ID_) || (authmode == _WPA2_IE_ID_)) {
+		_rtw_memcpy(out_ie, psecuritypriv->supplicant_ie,
+			    psecuritypriv->supplicant_ie[1] + 2);
+		ielength = psecuritypriv->supplicant_ie[1] + 2;
+		rtw_report_sec_ie(adapter, authmode,
+				  psecuritypriv->supplicant_ie);
+	}
+
+	if (authmode == WLAN_EID_RSN) {
+		iEntry = SecIsInPMKIDList(adapter, pmlmepriv->assoc_bssid);
+		ielength = rtw_rsn_sync_pmkid(adapter, out_ie, ielength, iEntry);
+	}
+
+	if ((psecuritypriv->auth_type == MLME_AUTHTYPE_SAE) &&
+	    (psecuritypriv->rsnx_ie_len >= 3)) {
+		u8 *_pos = out_ie + (psecuritypriv->supplicant_ie[1] + 2);
+
+		_rtw_memcpy(_pos, psecuritypriv->rsnx_ie,
+			    psecuritypriv->rsnx_ie_len);
+		ielength += psecuritypriv->rsnx_ie_len;
+		RTW_INFO_DUMP("update IE for RSNX :", out_ie, ielength);
+	}
+
+	return ielength;
+}
+
 #endif /* !HOST_MLME_WMM_RSN_TEST */
 
 #endif /* HOST_MLME_WMM_RSN_TEST || (!HOST_MLME_TEST && !HOST_MLME_UNASSOC_TEST && (!CONFIG_RUST || !CONFIG_RUST_MLME_WMM_RSN)) */
