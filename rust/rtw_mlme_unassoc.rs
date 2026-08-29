@@ -146,7 +146,9 @@ pub fn del_unassoc_sta_chk(mlmepriv: *mut MlmePriv, sta: *mut UnassocStaInfo) ->
             return UNASOC_STA_DEL_CHK_SKIP;
         }
         let cur = rtw_get_current_time();
-        let lifetime = (*sta).time.wrapping_add(rtw_ms_to_systime(UNASSOC_STA_LIFETIME_MS));
+        let lifetime = (*sta)
+            .time
+            .wrapping_add(rtw_ms_to_systime(UNASSOC_STA_LIFETIME_MS));
         if rtw_time_before(cur, lifetime) {
             return UNASOC_STA_DEL_CHK_ALIVE;
         }
