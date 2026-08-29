@@ -21,7 +21,9 @@ int _rtw_memcmp(const void *a, const void *b, size_t n) { return memcmp(a, b, n)
 void rtw_del_unassoc_sta_queue(_adapter *a);
 void rtw_del_unassoc_sta(_adapter *a, u8 *addr);
 u8 rtw_search_unassoc_sta(_adapter *a, u8 *addr, struct unassoc_sta_info *out);
+void rtw_add_interested_unassoc_sta(_adapter *a, u8 *addr);
 void rtw_undo_interested_unassoc_sta(_adapter *a, u8 *addr);
+void rtw_rx_add_unassoc_sta(_adapter *a, u8 stype, u8 *addr, s8 rssi);
 
 static inline void _rtw_init_listhead(_list *l) { l->next = l->prev = l; }
 
@@ -48,6 +50,8 @@ static void reset_adapter(u32 max)
 	host_now = 5000;
 	memset(m, 0, sizeof(*m));
 	m->max_unassoc_sta_cnt = max;
+	m->unassoc_sta_mode_of_stype[0] = UNASOC_STA_MODE_ALL;
+	m->unassoc_sta_mode_of_stype[1] = UNASOC_STA_MODE_ALL;
 	_rtw_init_listhead(&m->unassoc_sta_queue.queue);
 	_rtw_init_listhead(&m->free_unassoc_sta_queue.queue);
 	m->free_unassoc_sta_buf = rtw_zvmalloc(max * sizeof(struct unassoc_sta_info));
@@ -80,7 +84,7 @@ static void seed(const u8 *mac, u8 interested, s8 rssi, systime t)
 	rtw_list_insert_tail(&s->list, &m->unassoc_sta_queue.queue);
 }
 
-struct vector { char name[40], fn[16], mac[13]; int interested, rssi, expect, expect_q; };
+struct vector { char name[40], fn[32], mac[13]; int stype, interested, rssi, expect, expect_q; };
 
 static int parse_vec(const char *o, size_t l, void *vv)
 {
@@ -91,6 +95,7 @@ static int parse_vec(const char *o, size_t l, void *vv)
 	    host_json_parse_string_in(o, l, "fn", v->fn, sizeof(v->fn)))
 		return -1;
 	host_json_parse_string_in(o, l, "mac", v->mac, sizeof(v->mac));
+	host_json_parse_int_in(o, l, "stype", &v->stype);
 	host_json_parse_int_in(o, l, "interested", &v->interested);
 	host_json_parse_int_in(o, l, "rssi", &v->rssi);
 	host_json_parse_int_in(o, l, "expect", &v->expect);
@@ -126,6 +131,19 @@ static int run(struct vector *v)
 		seed(a1, 0, -10, 100); seed(a2, 1, -20, 200);
 		rtw_del_unassoc_sta_queue(&g_adapter);
 		if (qlen()) goto fail;
+	} else if (!strcmp(v->fn, "add_interested_new")) {
+		u8 mac[ETH_ALEN] = {0xaa, 0xbb, 0, 0, 0, 1};
+
+		rtw_add_interested_unassoc_sta(&g_adapter, mac);
+		if (qlen() != 1 || g_adapter.mlmepriv.interested_unassoc_sta_cnt != 1) goto fail;
+		if (!rtw_search_unassoc_sta(&g_adapter, mac, &found) || !found.interested) goto fail;
+	} else if (!strcmp(v->fn, "add_interested_existing")) {
+		u8 mac[ETH_ALEN] = {0xcc, 0xdd, 0, 0, 0, 2};
+
+		seed(mac, 0, -50, 1000);
+		rtw_add_interested_unassoc_sta(&g_adapter, mac);
+		if (qlen() != 1 || g_adapter.mlmepriv.interested_unassoc_sta_cnt != 1) goto fail;
+		if (!rtw_search_unassoc_sta(&g_adapter, mac, &found) || !found.interested) goto fail;
 	} else if (!strcmp(v->fn, "undo_interested")) {
 		u8 mac[ETH_ALEN] = {0xee, 0xff, 0, 0, 0, 3};
 
@@ -133,6 +151,26 @@ static int run(struct vector *v)
 		rtw_undo_interested_unassoc_sta(&g_adapter, mac);
 		if (g_adapter.mlmepriv.interested_unassoc_sta_cnt != 0) goto fail;
 		if (!rtw_search_unassoc_sta(&g_adapter, mac, &found) || found.interested) goto fail;
+	} else if (!strcmp(v->fn, "rx_add")) {
+		size_t n = 0;
+		u8 stype = (u8)v->stype;
+
+		if (host_hex_decode(v->mac, addr, ETH_ALEN, &n) || n != ETH_ALEN) goto fail;
+		g_adapter.mlmepriv.unassoc_sta_mode_of_stype[stype] = UNASOC_STA_MODE_ALL;
+		rtw_rx_add_unassoc_sta(&g_adapter, stype, addr, (s8)v->rssi);
+		if (qlen() != v->expect_q) goto fail;
+		if (v->expect_q && !rtw_search_unassoc_sta(&g_adapter, addr, &found)) goto fail;
+		if (v->expect_q && found.recv_signal_power != (s8)v->rssi) goto fail;
+	} else if (!strcmp(v->fn, "rx_add_update")) {
+		size_t n = 0;
+		u8 stype = (u8)v->stype;
+
+		if (host_hex_decode(v->mac, addr, ETH_ALEN, &n) || n != ETH_ALEN) goto fail;
+		seed(addr, 0, -10, 1000);
+		g_adapter.mlmepriv.unassoc_sta_mode_of_stype[stype] = UNASOC_STA_MODE_ALL;
+		rtw_rx_add_unassoc_sta(&g_adapter, stype, addr, (s8)v->rssi);
+		if (qlen() != 1 || !rtw_search_unassoc_sta(&g_adapter, addr, &found)) goto fail;
+		if (found.recv_signal_power != (s8)v->rssi) goto fail;
 	} else goto fail;
 	printf("PASS %s\n", v->name);
 	return 0;
@@ -143,10 +181,10 @@ fail:
 
 int main(int argc, char **argv)
 {
-	struct vector v[8]; size_t n = 0; int bad = 0;
+	struct vector v[12]; size_t n = 0; int bad = 0;
 	const char *path = argc > 1 ? argv[1] : "mlme_unassoc_vectors.json";
 
-	if (host_load_vectors(path, v, sizeof(v[0]), 8, parse_vec, &n)) return 2;
+	if (host_load_vectors(path, v, sizeof(v[0]), 12, parse_vec, &n)) return 2;
 	for (size_t i = 0; i < n; i++) bad += run(&v[i]);
 	if (!bad) printf("PASS %zu vectors (oracle: core/rtw_mlme_rest.c) (%s)\n", n, path);
 	return bad ? 1 : 0;
