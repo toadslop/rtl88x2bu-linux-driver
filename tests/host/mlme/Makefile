@@ -3,9 +3,16 @@
 ROOT     := ../../..
 CORE     := $(ROOT)/core
 HOST_INC := ../include
+WLAN_UTIL := ../wlan_util
 MLME_REST_SRC := $(CORE)/rtw_mlme_rest.c
 MLME_SHIM := host_mlme_shim.c
+WMM_RSN_IE_ORACLE := ../ie/ie_cipher_c_oracle.c ../ie/ie_wpa_rsn_parse_c_oracle.c \
+                     ../ie/ie_c_oracle.c $(WLAN_UTIL)/wlan_util_c_oracle.c \
+                     ../ie/ie_mac_str_host_shim.c
 HOST_JSON := ../crypto/host_vector_json.c
+IE_REST_SRC := $(CORE)/rtw_ieee80211_rest.c
+IE_ORACLE := ../ie/ie_cipher_c_oracle.c ../ie/ie_wpa_rsn_parse_c_oracle.c \
+             ../ie/ie_c_oracle.c $(WLAN_UTIL)/wlan_util_c_oracle.c
 RUST_MLME_REST := $(ROOT)/rust/rtw_mlme_rest.rs
 RUST_MLME_UNASSOC := $(ROOT)/rust/rtw_mlme_unassoc.rs
 
@@ -65,13 +72,16 @@ test_mlme_unassoc_rust: test_mlme_unassoc.c librust_mlme_unassoc.a $(HOST_JSON)
 test_mlme_unassoc_rust_full: test_mlme_unassoc.c librust_mlme_unassoc.a $(HOST_JSON)
 	$(CC) $(CFLAGS_UNASSOC) -DRUST_MLME_UNASSOC_ORACLE -o test_mlme_unassoc_rust_full test_mlme_unassoc.c $(HOST_JSON) librust_mlme_unassoc.a
 
-CFLAGS_WMM_RSN := $(CFLAGS_COMMON) -DHOST_MLME_WMM_RSN_TEST -DCONFIG_WMMPS_STA
+CFLAGS_WMM_RSN := $(CFLAGS_COMMON) -DHOST_MLME_WMM_RSN_TEST -DCONFIG_WMMPS_STA \
+                  -DHOST_IEEE80211_REST_TEST -I$(WLAN_UTIL) -I$(ROOT)/include
 
 test-mlme-wmm-rsn: test_mlme_wmm_rsn
 	./test_mlme_wmm_rsn mlme_wmm_rsn_vectors.json
 
-test_mlme_wmm_rsn: test_mlme_wmm_rsn.c $(MLME_REST_SRC) $(HOST_JSON)
-	$(CC) $(CFLAGS_WMM_RSN) -o $@ test_mlme_wmm_rsn.c $(MLME_REST_SRC) $(HOST_JSON)
+test_mlme_wmm_rsn: test_mlme_wmm_rsn.c $(MLME_REST_SRC) $(IE_REST_SRC) $(WMM_RSN_IE_ORACLE) \
+		$(HOST_JSON)
+	$(CC) $(CFLAGS_WMM_RSN) -o $@ test_mlme_wmm_rsn.c $(MLME_REST_SRC) $(IE_REST_SRC) \
+		$(WMM_RSN_IE_ORACLE) $(HOST_JSON)
 
 CFLAGS_ROAMING := $(CFLAGS_COMMON) -DCONFIG_LAYER2_ROAMING -DHOST_MLME_ROAMING_TEST
 
