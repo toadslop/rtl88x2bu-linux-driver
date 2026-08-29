@@ -392,7 +392,10 @@ void rtw_add_interested_unassoc_sta(_adapter *adapter, u8 *addr)
 	}
 	unassoc_sta = alloc_unassoc_sta(mlmepriv);
 	if (unassoc_sta == NULL) {
+		RTW_INFO(FUNC_ADPT_FMT": Allocate fail\n", FUNC_ADPT_ARG(adapter));
 		if (oldest_unassoc_sta) {
+			RTW_INFO(FUNC_ADPT_FMT": Delete oldest entry and try again.\n",
+				 FUNC_ADPT_ARG(adapter));
 			del_unassoc_sta(mlmepriv, oldest_unassoc_sta);
 			unassoc_sta = alloc_unassoc_sta(mlmepriv);
 		} else {
