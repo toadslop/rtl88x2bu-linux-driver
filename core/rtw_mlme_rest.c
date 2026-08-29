@@ -556,6 +556,93 @@ exit:
 	return updated;
 }
 
+int rtw_select_roaming_candidate(struct mlme_priv *mlme)
+{
+	_irqL	irqL;
+	int ret = _FAIL;
+	_list	*phead;
+	_adapter *adapter;
+	_queue	*queue	= &(mlme->scanned_queue);
+	struct	wlan_network	*pnetwork = NULL;
+	struct	wlan_network	*candidate = NULL;
+
+	if (mlme->cur_network_scanned == NULL) {
+		rtw_warn_on(1);
+		goto exit;
+	}
+
+	_enter_critical_bh(&(mlme->scanned_queue.lock), &irqL);
+	phead = get_list_head(queue);
+	adapter = (_adapter *)mlme->nic_hdl;
+
+	mlme->pscanned = get_next(phead);
+
+	while (!rtw_end_of_queue_search(phead, mlme->pscanned)) {
+
+		pnetwork = LIST_CONTAINOR(mlme->pscanned, struct wlan_network, list);
+		if (pnetwork == NULL) {
+			ret = _FAIL;
+			goto exit;
+		}
+
+		mlme->pscanned = get_next(mlme->pscanned);
+
+		if (0)
+			RTW_INFO("%s("MAC_FMT", ch%u) rssi:%d\n"
+				 , pnetwork->network.Ssid.Ssid
+				 , MAC_ARG(pnetwork->network.MacAddress)
+				 , pnetwork->network.Configuration.DSConfig
+				 , (int)pnetwork->network.Rssi);
+
+		rtw_check_roaming_candidate(mlme, &candidate, pnetwork);
+
+	}
+
+	if (candidate == NULL) {
+	/*	if parent note lost the path to root and there is no other cadidate, report disconnection	*/
+#if defined(CONFIG_RTW_REPEATER_SON) &&  (!defined(CONFIG_RTW_REPEATER_SON_ROOT))
+		struct rtw_rson_struct  rson_curr;
+		u8 rson_score;
+
+		rtw_get_rson_struct(&(mlme->cur_network_scanned->network), &rson_curr);
+		rson_score = rtw_cal_rson_score(&rson_curr, mlme->cur_network_scanned->network.Rssi);
+		if (check_fwstate(mlme, WIFI_ASOC_STATE)
+			&& ((rson_score == RTW_RSON_SCORE_NOTCNNT)
+			|| (rson_score == RTW_RSON_SCORE_NOTSUP)))
+			receive_disconnect(adapter, mlme->cur_network_scanned->network.MacAddress
+								, WLAN_REASON_EXPIRATION_CHK, _FALSE);
+#endif
+		RTW_INFO("%s: return _FAIL(candidate == NULL)\n", __FUNCTION__);
+		ret = _FAIL;
+		goto exit;
+	} else {
+#if defined(CONFIG_RTW_REPEATER_SON) &&  (!defined(CONFIG_RTW_REPEATER_SON_ROOT))
+		struct rtw_rson_struct  rson_curr;
+		u8 rson_score;
+
+		rtw_get_rson_struct(&(candidate->network), &rson_curr);
+		rson_score = rtw_cal_rson_score(&rson_curr, candidate->network.Rssi);
+		RTW_INFO("%s: candidate: %s("MAC_FMT", ch:%u) rson_score:%d\n", __FUNCTION__,
+			candidate->network.Ssid.Ssid, MAC_ARG(candidate->network.MacAddress),
+			 candidate->network.Configuration.DSConfig, rson_score);
+#else
+		RTW_INFO("%s: candidate: %s("MAC_FMT", ch:%u)\n", __FUNCTION__,
+			candidate->network.Ssid.Ssid, MAC_ARG(candidate->network.MacAddress),
+			 candidate->network.Configuration.DSConfig);
+#endif
+		mlme->roam_network = candidate;
+
+		if (_rtw_memcmp(candidate->network.MacAddress, mlme->roam_tgt_addr, ETH_ALEN) == _TRUE)
+			_rtw_memset(mlme->roam_tgt_addr, 0, ETH_ALEN);
+	}
+
+	ret = _SUCCESS;
+exit:
+	_exit_critical_bh(&(mlme->scanned_queue.lock), &irqL);
+
+	return ret;
+}
+
 #endif /* !CONFIG_RUST || HOST_MLME_ROAMING_TEST || !CONFIG_RUST_MLME_ROAMING */
 #endif /* CONFIG_LAYER2_ROAMING */
 
