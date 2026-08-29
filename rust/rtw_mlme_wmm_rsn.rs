@@ -295,7 +295,15 @@ pub extern "C" fn rtw_rsn_sync_pmkid(
                 4,
             );
         }
-        ie_len = 1 + 1 + 2 + 4 + 2 + 4 * info.pcs_cnt as u32 + 2 + 4 * info.akm_cnt as u32 + 2
+        ie_len = 1
+            + 1
+            + 2
+            + 4
+            + 2
+            + 4 * info.pcs_cnt as u32
+            + 2
+            + 4 * info.akm_cnt as u32
+            + 2
             + 2
             + 16 * info.pmkid_cnt as u32
             + if !info.gmcs.is_null() { 4 } else { 0 };
