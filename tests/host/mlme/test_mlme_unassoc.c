@@ -21,9 +21,11 @@ int _rtw_memcmp(const void *a, const void *b, size_t n) { return memcmp(a, b, n)
 void rtw_del_unassoc_sta_queue(_adapter *a);
 void rtw_del_unassoc_sta(_adapter *a, u8 *addr);
 u8 rtw_search_unassoc_sta(_adapter *a, u8 *addr, struct unassoc_sta_info *out);
+#ifndef RUST_MLME_UNASSOC_DEL_ONLY
 void rtw_add_interested_unassoc_sta(_adapter *a, u8 *addr);
 void rtw_undo_interested_unassoc_sta(_adapter *a, u8 *addr);
 void rtw_rx_add_unassoc_sta(_adapter *a, u8 stype, u8 *addr, s8 rssi);
+#endif
 
 static inline void _rtw_init_listhead(_list *l) { l->next = l->prev = l; }
 
@@ -131,6 +133,7 @@ static int run(struct vector *v)
 		seed(a1, 0, -10, 100); seed(a2, 1, -20, 200);
 		rtw_del_unassoc_sta_queue(&g_adapter);
 		if (qlen()) goto fail;
+#ifndef RUST_MLME_UNASSOC_DEL_ONLY
 	} else if (!strcmp(v->fn, "add_interested_new")) {
 		u8 mac[ETH_ALEN] = {0xaa, 0xbb, 0, 0, 0, 1};
 
@@ -171,6 +174,7 @@ static int run(struct vector *v)
 		rtw_rx_add_unassoc_sta(&g_adapter, stype, addr, (s8)v->rssi);
 		if (qlen() != 1 || !rtw_search_unassoc_sta(&g_adapter, addr, &found)) goto fail;
 		if (found.recv_signal_power != (s8)v->rssi) goto fail;
+#endif
 	} else goto fail;
 	printf("PASS %s\n", v->name);
 	return 0;
@@ -186,6 +190,10 @@ int main(int argc, char **argv)
 
 	if (host_load_vectors(path, v, sizeof(v[0]), 12, parse_vec, &n)) return 2;
 	for (size_t i = 0; i < n; i++) bad += run(&v[i]);
+#ifndef RUST_MLME_UNASSOC_ORACLE
 	if (!bad) printf("PASS %zu vectors (oracle: core/rtw_mlme_rest.c) (%s)\n", n, path);
+#else
+	if (!bad) printf("PASS %zu vectors (oracle: rust/rtw_mlme_unassoc.rs) (%s)\n", n, path);
+#endif
 	return bad ? 1 : 0;
 }

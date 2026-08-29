@@ -7,6 +7,7 @@ MLME_REST_SRC := $(CORE)/rtw_mlme_rest.c
 MLME_SHIM := host_mlme_shim.c
 HOST_JSON := ../crypto/host_vector_json.c
 RUST_MLME_REST := $(ROOT)/rust/rtw_mlme_rest.rs
+RUST_MLME_UNASSOC := $(ROOT)/rust/rtw_mlme_unassoc.rs
 
 CC     := gcc
 RUSTC  := rustc
@@ -15,11 +16,11 @@ CFLAGS_COMMON := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
           -include $(HOST_INC)/host_autoconf.h
 CFLAGS := $(CFLAGS_COMMON) -DHOST_MLME_TEST -DCONFIG_P2P
 
-.PHONY: all test test-c test-rust test-mlme-unassoc test-mlme-wmm-rsn test-mlme-roaming clean
+.PHONY: all test test-c test-rust test-mlme-unassoc test-mlme-unassoc-rust test-mlme-wmm-rsn test-mlme-roaming clean
 
 all: test
 
-test: test-c test-rust test-mlme-unassoc test-mlme-wmm-rsn
+test: test-c test-rust test-mlme-unassoc test-mlme-unassoc-rust test-mlme-wmm-rsn
 ifneq ($(wildcard test_mlme_roaming.c),)
 test: test-mlme-roaming
 endif
@@ -48,6 +49,16 @@ test-mlme-unassoc: test_mlme_unassoc
 test_mlme_unassoc: test_mlme_unassoc.c $(MLME_REST_SRC) $(HOST_JSON)
 	$(CC) $(CFLAGS_UNASSOC) -o $@ test_mlme_unassoc.c $(MLME_REST_SRC) $(HOST_JSON)
 
+librust_mlme_unassoc.a: $(RUST_MLME_UNASSOC)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_mlme_unassoc_test \
+		--crate-type staticlib $(RUST_MLME_UNASSOC) -o $@
+
+test-mlme-unassoc-rust: test_mlme_unassoc_rust
+	./test_mlme_unassoc_rust mlme_unassoc_del_vectors.json
+
+test_mlme_unassoc_rust: test_mlme_unassoc.c librust_mlme_unassoc.a $(HOST_JSON)
+	$(CC) $(CFLAGS_UNASSOC) -DRUST_MLME_UNASSOC_ORACLE -DRUST_MLME_UNASSOC_DEL_ONLY -o $@ test_mlme_unassoc.c $(HOST_JSON) librust_mlme_unassoc.a
+
 CFLAGS_WMM_RSN := $(CFLAGS_COMMON) -DHOST_MLME_WMM_RSN_TEST -DCONFIG_WMMPS_STA
 
 test-mlme-wmm-rsn: test_mlme_wmm_rsn
@@ -65,4 +76,4 @@ test_mlme_roaming: test_mlme_roaming.c $(MLME_REST_SRC) $(HOST_JSON)
 	$(CC) $(CFLAGS_ROAMING) -o $@ test_mlme_roaming.c $(MLME_REST_SRC) $(HOST_JSON)
 
 clean:
-	rm -f test_mlme test_mlme_rust test_mlme_unassoc test_mlme_wmm_rsn test_mlme_roaming librust_mlme_rest.a
+	rm -f test_mlme test_mlme_rust test_mlme_unassoc test_mlme_unassoc_rust test_mlme_wmm_rsn test_mlme_roaming librust_mlme_rest.a librust_mlme_unassoc.a
