@@ -2578,6 +2578,14 @@ rustflags-y += --cfg txpwr_limit
 ccflags-y += -DCONFIG_RUST_TXPWR_LMT
 rustflags-y += --cfg rust_txpwr_lmt
 endif
+ifneq ($(_autoconf_has_multi_ap),)
+ccflags-y += -DCONFIG_RUST_MLME_UNASSOC
+rustflags-y += --cfg rust_mlme_unassoc --cfg config_rtw_multi_ap
+endif
+ifneq ($(filter -DCONFIG_RTW_MULTI_AP,$(USER_EXTRA_CFLAGS)),)
+ccflags-y += -DCONFIG_RUST_MLME_UNASSOC
+rustflags-y += --cfg rust_mlme_unassoc --cfg config_rtw_multi_ap
+endif
 ccflags-y += -DCONFIG_RUST_MLME_EXT_REST
 ccflags-y += -DCONFIG_RUST_STA_MGT_STCTL
 ccflags-y += -DCONFIG_RUST_AP_REST
