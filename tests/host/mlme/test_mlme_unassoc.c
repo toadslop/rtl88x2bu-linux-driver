@@ -11,6 +11,7 @@ struct _adapter g_adapter;
 systime rtw_get_current_time(void) { return host_now; }
 systime rtw_ms_to_systime(int ms) { return (systime)ms; }
 bool rtw_time_before(systime a, systime b) { return a < b; }
+bool rtw_time_after(systime a, systime b) { return a > b; }
 void rtw_run_in_thread_cmd(_adapter *a, void *f, _adapter *c) { (void)a; (void)f; (void)c; }
 void rtw_hal_rcr_set_chk_bssid_act_non(_adapter *a) { (void)a; }
 void *rtw_zvmalloc(u32 sz) { return calloc(1, sz); }

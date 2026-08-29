@@ -58,6 +58,7 @@ static inline int _rtw_queue_empty(_queue *q) { return q->queue.next == &q->queu
 systime rtw_get_current_time(void);
 systime rtw_ms_to_systime(int ms);
 bool rtw_time_before(systime a, systime b);
+bool rtw_time_after(systime a, systime b);
 
 int _rtw_memcmp(const void *a, const void *b, size_t n);
 void rtw_run_in_thread_cmd(_adapter *a, void *f, _adapter *c);
