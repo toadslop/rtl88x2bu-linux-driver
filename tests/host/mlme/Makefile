@@ -15,11 +15,14 @@ CFLAGS_COMMON := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
           -include $(HOST_INC)/host_autoconf.h
 CFLAGS := $(CFLAGS_COMMON) -DHOST_MLME_TEST -DCONFIG_P2P
 
-.PHONY: all test test-c test-rust test-mlme-unassoc test-mlme-wmm-rsn clean
+.PHONY: all test test-c test-rust test-mlme-unassoc test-mlme-wmm-rsn test-mlme-roaming clean
 
 all: test
 
 test: test-c test-rust test-mlme-unassoc test-mlme-wmm-rsn
+ifneq ($(wildcard test_mlme_roaming.c),)
+test: test-mlme-roaming
+endif
 
 test-c: test_mlme
 	./test_mlme mlme_vectors.json
@@ -53,5 +56,13 @@ test-mlme-wmm-rsn: test_mlme_wmm_rsn
 test_mlme_wmm_rsn: test_mlme_wmm_rsn.c $(MLME_REST_SRC) $(HOST_JSON)
 	$(CC) $(CFLAGS_WMM_RSN) -o $@ test_mlme_wmm_rsn.c $(MLME_REST_SRC) $(HOST_JSON)
 
+CFLAGS_ROAMING := $(CFLAGS_COMMON) -DCONFIG_LAYER2_ROAMING -DHOST_MLME_ROAMING_TEST
+
+test-mlme-roaming: test_mlme_roaming
+	./test_mlme_roaming mlme_roaming_vectors.json
+
+test_mlme_roaming: test_mlme_roaming.c $(MLME_REST_SRC) $(HOST_JSON)
+	$(CC) $(CFLAGS_ROAMING) -o $@ test_mlme_roaming.c $(MLME_REST_SRC) $(HOST_JSON)
+
 clean:
-	rm -f test_mlme test_mlme_rust test_mlme_unassoc test_mlme_wmm_rsn librust_mlme_rest.a
+	rm -f test_mlme test_mlme_rust test_mlme_unassoc test_mlme_wmm_rsn test_mlme_roaming librust_mlme_rest.a

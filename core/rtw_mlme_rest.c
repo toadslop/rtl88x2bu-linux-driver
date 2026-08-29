@@ -121,6 +121,16 @@ int is_same_network(WLAN_BSSID_EX *src, WLAN_BSSID_EX *dst, u8 feature)
 
 #endif /* HOST_MLME_TEST */
 
+#if defined(HOST_MLME_ROAMING_TEST)
+
+int is_same_ess(WLAN_BSSID_EX *a, WLAN_BSSID_EX *b)
+{
+	return (a->Ssid.SsidLength == b->Ssid.SsidLength)
+	       &&  _rtw_memcmp(a->Ssid.Ssid, b->Ssid.Ssid, a->Ssid.SsidLength) == _TRUE;
+}
+
+#endif /* HOST_MLME_ROAMING_TEST */
+
 #ifdef CONFIG_RTW_MULTI_AP
 #if !defined(CONFIG_RUST) || defined(HOST_MLME_UNASSOC_TEST) || !defined(CONFIG_RUST_MLME_UNASSOC)
 
@@ -564,7 +574,7 @@ int rtw_select_roaming_candidate(struct mlme_priv *mlme)
 	_irqL	irqL;
 	int ret = _FAIL;
 	_list	*phead;
-	_adapter *adapter;
+	_adapter *adapter __attribute__((unused));
 	_queue	*queue	= &(mlme->scanned_queue);
 	struct	wlan_network	*pnetwork = NULL;
 	struct	wlan_network	*candidate = NULL;
@@ -577,6 +587,7 @@ int rtw_select_roaming_candidate(struct mlme_priv *mlme)
 	_enter_critical_bh(&(mlme->scanned_queue.lock), &irqL);
 	phead = get_list_head(queue);
 	adapter = (_adapter *)mlme->nic_hdl;
+	(void)adapter;
 
 	mlme->pscanned = get_next(phead);
 
@@ -651,6 +662,7 @@ exit:
 
 #if defined(HOST_MLME_WMM_RSN_TEST) || \
      (!defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
+      !defined(HOST_MLME_ROAMING_TEST) && \
       (!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_WMM_RSN)))
 
 /* adjust IEs for rtw_joinbss_cmd in WMM */
