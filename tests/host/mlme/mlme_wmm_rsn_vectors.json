@@ -38,6 +38,41 @@
       "uapsd_tid": 192,
       "expect_len": 9,
       "expect_out_hex": "dd070050f202000121"
+    },
+    {
+      "name": "cached_pmkid_hit",
+      "fn": "cached_pmkid",
+      "bssid_hex": "020304050607",
+      "pmkid_used": 1,
+      "pmkid_hex": "00112233445566778899aabbccddeeff",
+      "expect_int": 0
+    },
+    {
+      "name": "cached_pmkid_miss",
+      "fn": "cached_pmkid",
+      "bssid_hex": "020304050607",
+      "expect_int": -1
+    },
+    {
+      "name": "rsn_sync_pmkid_add",
+      "fn": "rsn_sync_pmkid",
+      "in_ie_hex": "30160100000fac020100000fac040100000fac0200000000",
+      "in_len": 24,
+      "bssid_hex": "112233445566",
+      "pmkid_used": 1,
+      "pmkid_hex": "0102030405060708090a0b0c0d0e0f10",
+      "expect_int": 0,
+      "expect_len": 40,
+      "expect_out_hex": "30260100000fac020100000fac040100000fac02000001000102030405060708090a0b0c0d0e0f10"
+    },
+    {
+      "name": "rsn_sync_pmkid_remove",
+      "fn": "rsn_sync_pmkid",
+      "in_ie_hex": "30260100000fac020100000fac040100000fac02000001000102030405060708090a0b0c0d0e0f10",
+      "in_len": 40,
+      "expect_int": -1,
+      "expect_len": 24,
+      "expect_out_hex": "30160100000fac020100000fac040100000fac0200000000"
     }
   ]
 }

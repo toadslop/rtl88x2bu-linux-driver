@@ -729,8 +729,6 @@ int rtw_restruct_wmm_ie(_adapter *adapter, u8 *in_ie, u8 *out_ie, uint in_len, u
 
 }
 
-#if !defined(HOST_MLME_WMM_RSN_TEST)
-
 static int SecIsInPMKIDList(_adapter *Adapter, u8 *bssid)
 {
 	struct security_priv *psecuritypriv = &Adapter->securitypriv;
@@ -791,6 +789,8 @@ int rtw_rsn_sync_pmkid(_adapter *adapter, u8 *ie, uint ie_len, int i_ent)
 exit:
 	return ie_len;
 }
+
+#if !defined(HOST_MLME_WMM_RSN_TEST)
 
 sint rtw_restruct_sec_ie(_adapter *adapter, u8 *out_ie)
 {
