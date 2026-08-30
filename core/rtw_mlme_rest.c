@@ -856,7 +856,8 @@ sint rtw_restruct_sec_ie(_adapter *adapter, u8 *out_ie)
 
 #endif /* HOST_MLME_WMM_RSN_TEST || (kernel && !HOST_MLME_TEST && !HOST_MLME_UNASSOC && !HOST_MLME_ROAMING) */
 
-#if defined(CONFIG_RUST) && !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && !defined(HOST_MLME_WMM_RSN_TEST)
+#if defined(CONFIG_RUST) && !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
+    !defined(HOST_MLME_WMM_RSN_TEST) && !defined(HOST_MLME_ROAMING_TEST)
 u8 *rtw_mlme_rest_bss_ies(WLAN_BSSID_EX *bss) { return bss->IEs; }
 u32 *rtw_mlme_rest_bss_ssid_length(WLAN_BSSID_EX *bss) { return &bss->Ssid.SsidLength; }
 u8 *rtw_mlme_rest_bss_ssid(WLAN_BSSID_EX *bss) { return bss->Ssid.Ssid; }
@@ -888,5 +889,99 @@ struct mlme_priv *rtw_rust_mlme_unassoc_adapter_mlme(_adapter *adapter)
 _adapter *rtw_rust_mlme_unassoc_primary(_adapter *adapter)
 {
 	return GET_PRIMARY_ADAPTER(adapter);
+}
+#endif
+
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_ROAMING) && \
+    defined(CONFIG_LAYER2_ROAMING) && !defined(HOST_MLME_ROAMING_TEST)
+
+_adapter *rtw_rust_mlme_roaming_adapter(struct mlme_priv *mlme)
+{
+	return container_of(mlme, _adapter, mlmepriv);
+}
+
+RT_CHANNEL_INFO *rtw_rust_mlme_roaming_chset(_adapter *adapter)
+{
+	return adapter_to_rfctl(adapter)->channel_set;
+}
+
+struct wlan_network *rtw_rust_mlme_roaming_cur_scanned(struct mlme_priv *mlme)
+{
+	return mlme->cur_network_scanned;
+}
+
+WLAN_BSSID_EX *rtw_rust_mlme_roaming_cur_network(struct mlme_priv *mlme)
+{
+	return &mlme->cur_network.network;
+}
+
+int rtw_rust_mlme_roaming_need_to_roam(struct mlme_priv *mlme)
+{
+	return mlme->need_to_roam ? _TRUE : _FALSE;
+}
+
+u8 *rtw_rust_mlme_roaming_roam_tgt_addr(struct mlme_priv *mlme)
+{
+	return mlme->roam_tgt_addr;
+}
+
+u32 rtw_rust_mlme_roaming_scanr_exp_ms(struct mlme_priv *mlme)
+{
+	return mlme->roam_scanr_exp_ms;
+}
+
+s32 rtw_rust_mlme_roaming_rssi_diff_th(struct mlme_priv *mlme)
+{
+	return (s32)mlme->roam_rssi_diff_th;
+}
+
+_list *rtw_rust_mlme_roaming_scanned_head(struct mlme_priv *mlme)
+{
+	return get_list_head(&mlme->scanned_queue);
+}
+
+struct wlan_network **rtw_rust_mlme_roaming_roam_network_ptr(struct mlme_priv *mlme)
+{
+	return &mlme->roam_network;
+}
+
+_list **rtw_rust_mlme_roaming_pscanned_ptr(struct mlme_priv *mlme)
+{
+	return &mlme->pscanned;
+}
+
+void rtw_rust_mlme_roaming_enter_scanned(struct mlme_priv *mlme, _irqL *irq)
+{
+	_enter_critical_bh(&mlme->scanned_queue.lock, irq);
+}
+
+void rtw_rust_mlme_roaming_exit_scanned(struct mlme_priv *mlme, _irqL *irq)
+{
+	_exit_critical_bh(&mlme->scanned_queue.lock, irq);
+}
+
+u32 rtw_rust_mlme_roaming_net_dsconfig(struct wlan_network *net)
+{
+	return net->network.Configuration.DSConfig;
+}
+
+NDIS_802_11_RSSI rtw_rust_mlme_roaming_net_rssi(struct wlan_network *net)
+{
+	return net->network.Rssi;
+}
+
+u8 *rtw_rust_mlme_roaming_net_mac(struct wlan_network *net)
+{
+	return net->network.MacAddress;
+}
+
+WLAN_BSSID_EX *rtw_rust_mlme_roaming_net_bss(struct wlan_network *net)
+{
+	return &net->network;
+}
+
+systime rtw_rust_mlme_roaming_net_last_scanned(struct wlan_network *net)
+{
+	return net->last_scanned;
 }
 #endif
