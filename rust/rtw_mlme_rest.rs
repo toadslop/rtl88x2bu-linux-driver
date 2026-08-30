@@ -263,3 +263,7 @@ mod wmm_rsn;
 #[cfg(rust_mlme_unassoc)]
 #[path = "rtw_mlme_unassoc.rs"]
 mod unassoc;
+
+#[cfg(rust_mlme_roaming)]
+#[path = "rtw_mlme_roaming_kernel.rs"]
+mod roaming;
