@@ -255,3 +255,7 @@ fn network_privacy(p: *mut c_void) -> *mut U32 {
         rtw_mlme_rest_network_privacy(p)
     }
 }
+
+#[cfg(rust_mlme_unassoc)]
+#[path = "rtw_mlme_unassoc.rs"]
+mod unassoc;

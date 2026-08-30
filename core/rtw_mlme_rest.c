@@ -804,3 +804,16 @@ u8 *rtw_mlme_rest_bss_mac(WLAN_BSSID_EX *bss) { return bss->MacAddress; }
 u32 *rtw_mlme_rest_network_privacy(struct wlan_network *pnetwork) { return &pnetwork->network.Privacy; }
 u32 *rtw_mlme_rest_adapter_privacy(_adapter *adapter) { return &adapter->securitypriv.dot11PrivacyAlgrthm; }
 #endif /* CONFIG_RUST && !HOST_MLME_TEST */
+
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_UNASSOC) && \
+    defined(CONFIG_RTW_MULTI_AP) && !defined(HOST_MLME_UNASSOC_TEST)
+struct mlme_priv *rtw_rust_mlme_unassoc_adapter_mlme(_adapter *adapter)
+{
+	return &adapter->mlmepriv;
+}
+
+_adapter *rtw_rust_mlme_unassoc_primary(_adapter *adapter)
+{
+	return GET_PRIMARY_ADAPTER(adapter);
+}
+#endif
