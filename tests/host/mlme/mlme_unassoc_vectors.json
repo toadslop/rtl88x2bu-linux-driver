@@ -38,6 +38,14 @@
       "mac": "778899aabbcc",
       "stype": 0,
       "rssi": -60
+    },
+    {
+      "name": "rx_add_expire_cleanup",
+      "fn": "rx_add_expire_cleanup",
+      "mac": "aabbccddeeff",
+      "stype": 0,
+      "rssi": -55,
+      "expect_q": 0
     }
   ]
 }

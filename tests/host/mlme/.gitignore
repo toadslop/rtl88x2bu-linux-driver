@@ -1,4 +1,5 @@
 test_mlme_unassoc
 test_mlme_unassoc_rust
 test_mlme_wmm_rsn
+test_mlme_unassoc_rust_full
 librust_mlme_unassoc.a
