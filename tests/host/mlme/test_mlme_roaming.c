@@ -168,7 +168,12 @@ int main(int argc, char **argv)
 		return 1;
 	for (size_t i = 0; i < n; i++)
 		bad += run(&v[i]) ? (fprintf(stderr, "FAIL %s\n", v[i].name), 1) : (printf("PASS %s\n", v[i].name), 0);
+#ifndef RUST_MLME_ROAMING_ORACLE
 	if (!bad)
 		printf("PASS %zu vectors (oracle: core/rtw_mlme_rest.c) (%s)\n", n, path);
+#else
+	if (!bad)
+		printf("PASS %zu vectors (oracle: rust/rtw_mlme_roaming.rs) (%s)\n", n, path);
+#endif
 	return bad ? 1 : 0;
 }
