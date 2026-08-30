@@ -16,6 +16,7 @@ RUST_MLME_REST := $(ROOT)/rust/rtw_mlme_rest.rs
 RUST_MLME_UNASSOC := $(ROOT)/rust/rtw_mlme_unassoc.rs
 RUST_MLME_WMM_RSN := $(ROOT)/rust/rtw_mlme_wmm_rsn.rs
 RUST_MLME_ROAMING := $(ROOT)/rust/rtw_mlme_roaming.rs
+RUST_MLME_NETWORK_UPDATE := $(ROOT)/rust/rtw_mlme_network_update.rs
 
 CC     := gcc
 RUSTC  := rustc
@@ -24,11 +25,11 @@ CFLAGS_COMMON := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
           -include $(HOST_INC)/host_autoconf.h
 CFLAGS := $(CFLAGS_COMMON) -DHOST_MLME_TEST -DCONFIG_P2P
 
-.PHONY: all test test-c test-rust test-mlme-unassoc test-mlme-unassoc-rust test-mlme-unassoc-rust-full test-mlme-wmm-rsn test-mlme-wmm-rsn-rust test-mlme-roaming test-mlme-roaming-rust test-mlme-network-update clean
+.PHONY: all test test-c test-rust test-mlme-unassoc test-mlme-unassoc-rust test-mlme-unassoc-rust-full test-mlme-wmm-rsn test-mlme-wmm-rsn-rust test-mlme-roaming test-mlme-roaming-rust test-mlme-network-update test-mlme-network-update-rust clean
 
 all: test
 
-test: test-c test-rust test-mlme-unassoc test-mlme-unassoc-rust test-mlme-unassoc-rust-full test-mlme-wmm-rsn test-mlme-wmm-rsn-rust test-mlme-network-update
+test: test-c test-rust test-mlme-unassoc test-mlme-unassoc-rust test-mlme-unassoc-rust-full test-mlme-wmm-rsn test-mlme-wmm-rsn-rust test-mlme-network-update test-mlme-network-update-rust
 ifneq ($(wildcard test_mlme_roaming.c),)
 test: test-mlme-roaming test-mlme-roaming-rust
 endif
@@ -122,5 +123,15 @@ test-mlme-network-update: test_mlme_network_update
 test_mlme_network_update: test_mlme_network_update.c
 	$(CC) $(CFLAGS_NETWORK_UPDATE) -o $@ $<
 
+librust_mlme_network_update.a: $(RUST_MLME_NETWORK_UPDATE)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_mlme_network_update_test \
+		--crate-type staticlib $(RUST_MLME_NETWORK_UPDATE) -o $@
+
+test-mlme-network-update-rust: test_mlme_network_update_rust
+	./test_mlme_network_update_rust
+
+test_mlme_network_update_rust: test_mlme_network_update.c librust_mlme_network_update.a
+	$(CC) $(CFLAGS_NETWORK_UPDATE) -DRUST_MLME_NETWORK_UPDATE_ORACLE -o $@ test_mlme_network_update.c librust_mlme_network_update.a
+
 clean:
-	rm -f test_mlme test_mlme_rust test_mlme_unassoc test_mlme_unassoc_rust test_mlme_unassoc_rust_full test_mlme_wmm_rsn test_mlme_wmm_rsn_rust test_mlme_roaming test_mlme_roaming_rust test_mlme_network_update librust_mlme_rest.a librust_mlme_unassoc.a librust_mlme_wmm_rsn.a librust_mlme_roaming.a
+	rm -f test_mlme test_mlme_rust test_mlme_unassoc test_mlme_unassoc_rust test_mlme_unassoc_rust_full test_mlme_wmm_rsn test_mlme_wmm_rsn_rust test_mlme_roaming test_mlme_roaming_rust test_mlme_network_update test_mlme_network_update_rust librust_mlme_rest.a librust_mlme_unassoc.a librust_mlme_wmm_rsn.a librust_mlme_roaming.a librust_mlme_network_update.a

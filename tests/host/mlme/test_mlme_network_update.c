@@ -62,6 +62,7 @@ static inline sint check_fwstate(struct mlme_priv *m, sint st)
 }
 
 static int host_protection_calls;
+
 int _rtw_memcmp(const void *a, const void *b, size_t n)
 {
 	return memcmp(a, b, n) == 0 ? _TRUE : _FALSE;
@@ -84,6 +85,8 @@ void rtw_update_protection(_adapter *a, u8 *ie, uint len)
 	(void)a; (void)ie; (void)len;
 	host_protection_calls++;
 }
+
+#ifndef RUST_MLME_NETWORK_UPDATE_ORACLE
 
 int is_same_network(WLAN_BSSID_EX *src, WLAN_BSSID_EX *dst, u8 feature)
 {
@@ -149,6 +152,14 @@ void update_current_network(_adapter *a, WLAN_BSSID_EX *pn)
 				      m->cur_network.network.IELength);
 	}
 }
+
+#else
+
+int is_same_network(WLAN_BSSID_EX *src, WLAN_BSSID_EX *dst, u8 feature);
+void update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src, _adapter *a, bool update_ie);
+void update_current_network(_adapter *a, WLAN_BSSID_EX *pn);
+
+#endif /* RUST_MLME_NETWORK_UPDATE_ORACLE */
 
 struct case_vec {
 	const char *name;
@@ -231,7 +242,13 @@ int main(void)
 		bad += run_case(&cases[i]) ?
 			(fprintf(stderr, "FAIL %s\n", cases[i].name), 1) :
 			(printf("PASS %s\n", cases[i].name), 0);
-	if (!bad)
+	if (!bad) {
+#ifdef RUST_MLME_NETWORK_UPDATE_ORACLE
+		printf("PASS %zu vectors (oracle: rust/rtw_mlme_network_update.rs)\n",
+		       sizeof(cases) / sizeof(cases[0]));
+#else
 		printf("PASS %zu vectors (W3-65 host oracle)\n", sizeof(cases) / sizeof(cases[0]));
+#endif
+	}
 	return bad ? 1 : 0;
 }
