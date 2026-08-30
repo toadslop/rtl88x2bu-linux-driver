@@ -174,6 +174,16 @@ static int run(struct vector *v)
 		rtw_rx_add_unassoc_sta(&g_adapter, stype, addr, (s8)v->rssi);
 		if (qlen() != 1 || !rtw_search_unassoc_sta(&g_adapter, addr, &found)) goto fail;
 		if (found.recv_signal_power != (s8)v->rssi) goto fail;
+	} else if (!strcmp(v->fn, "rx_add_expire_cleanup")) {
+		size_t n = 0;
+		u8 stype = (u8)v->stype;
+
+		host_now = 100000;
+		if (host_hex_decode(v->mac, addr, ETH_ALEN, &n) || n != ETH_ALEN) goto fail;
+		seed(addr, 0, -10, 100);
+		g_adapter.mlmepriv.unassoc_sta_mode_of_stype[stype] = UNASOC_STA_MODE_INTERESTED;
+		rtw_rx_add_unassoc_sta(&g_adapter, stype, addr, (s8)v->rssi);
+		if (qlen() != v->expect_q) goto fail;
 #endif
 	} else goto fail;
 	printf("PASS %s\n", v->name);
@@ -185,10 +195,10 @@ fail:
 
 int main(int argc, char **argv)
 {
-	struct vector v[12]; size_t n = 0; int bad = 0;
+	struct vector v[16]; size_t n = 0; int bad = 0;
 	const char *path = argc > 1 ? argv[1] : "mlme_unassoc_vectors.json";
 
-	if (host_load_vectors(path, v, sizeof(v[0]), 12, parse_vec, &n)) return 2;
+	if (host_load_vectors(path, v, sizeof(v[0]), 16, parse_vec, &n)) return 2;
 	for (size_t i = 0; i < n; i++) bad += run(&v[i]);
 #ifndef RUST_MLME_UNASSOC_ORACLE
 	if (!bad) printf("PASS %zu vectors (oracle: core/rtw_mlme_rest.c) (%s)\n", n, path);

@@ -27,8 +27,9 @@ pub extern "C" fn rtw_rx_add_unassoc_sta(
                 {
                     (*sta).recv_signal_power = recv_signal_power;
                     (*sta).time = rtw_get_current_time();
+                    return;
                 }
-                return;
+                // C falls through to del_unassoc_sta_chk when the update guard is false.
             }
             if del_unassoc_sta_chk(mp, sta) == UNASOC_STA_DEL_CHK_ALIVE {
                 if oldest.is_null() {
