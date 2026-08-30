@@ -11,8 +11,6 @@ WMM_RSN_IE_ORACLE := ../ie/ie_cipher_c_oracle.c ../ie/ie_wpa_rsn_parse_c_oracle.
                      ../ie/ie_mac_str_host_shim.c
 HOST_JSON := ../crypto/host_vector_json.c
 IE_REST_SRC := $(CORE)/rtw_ieee80211_rest.c
-IE_ORACLE := ../ie/ie_cipher_c_oracle.c ../ie/ie_wpa_rsn_parse_c_oracle.c \
-             ../ie/ie_c_oracle.c $(WLAN_UTIL)/wlan_util_c_oracle.c
 RUST_MLME_REST := $(ROOT)/rust/rtw_mlme_rest.rs
 RUST_MLME_UNASSOC := $(ROOT)/rust/rtw_mlme_unassoc.rs
 
