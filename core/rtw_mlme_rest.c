@@ -131,7 +131,9 @@ int is_same_ess(WLAN_BSSID_EX *a, WLAN_BSSID_EX *b)
 
 #endif /* HOST_MLME_ROAMING_TEST */
 
-#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_NETWORK_UPDATE)
+#if (!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_NETWORK_UPDATE)) && \
+    !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
+    !defined(HOST_MLME_WMM_RSN_TEST) && !defined(HOST_MLME_ROAMING_TEST)
 
 void update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src,
 		    _adapter *padapter, bool update_ie)
