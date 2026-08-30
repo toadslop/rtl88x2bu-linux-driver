@@ -194,9 +194,7 @@ pub extern "C" fn rtw_check_roaming_candidate(
         if (*competitor).network.rssi - (*cur).network.rssi < (*mlme).roam_rssi_diff_th as c_long {
             return _FALSE;
         }
-        if !(*candidate).is_null()
-            && (*(*candidate)).network.rssi >= (*competitor).network.rssi
-        {
+        if !(*candidate).is_null() && (*(*candidate)).network.rssi >= (*competitor).network.rssi {
             return _FALSE;
         }
         *candidate = competitor;
