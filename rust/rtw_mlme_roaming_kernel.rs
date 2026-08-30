@@ -122,13 +122,19 @@ pub extern "C" fn rtw_check_roaming_candidate(
         let roam_tgt = kernel::rtw_rust_mlme_roaming_roam_tgt_addr(mlme);
         if !is_zero_mac_ptr(roam_tgt) {
             let comp_mac = kernel::rtw_rust_mlme_roaming_net_mac(competitor);
-            if _rtw_memcmp(roam_tgt as *const c_void, comp_mac as *const c_void, ETH_ALEN) == _TRUE {
+            if _rtw_memcmp(
+                roam_tgt as *const c_void,
+                comp_mac as *const c_void,
+                ETH_ALEN,
+            ) == _TRUE
+            {
                 *candidate = competitor;
                 return _TRUE;
             }
             return _FALSE;
         }
-        if (_rtw_get_passing_time_ms(kernel::rtw_rust_mlme_roaming_net_last_scanned(competitor)) as U32)
+        if (_rtw_get_passing_time_ms(kernel::rtw_rust_mlme_roaming_net_last_scanned(competitor))
+            as U32)
             >= kernel::rtw_rust_mlme_roaming_scanr_exp_ms(mlme)
         {
             return _FALSE;
@@ -185,7 +191,11 @@ pub extern "C" fn rtw_select_roaming_candidate(mlme: *mut c_void) -> c_int {
         let roam_tgt = kernel::rtw_rust_mlme_roaming_roam_tgt_addr(mlme);
         let cand_mac = kernel::rtw_rust_mlme_roaming_net_mac(candidate);
         if !is_zero_mac_ptr(roam_tgt)
-            && _rtw_memcmp(roam_tgt as *const c_void, cand_mac as *const c_void, ETH_ALEN) == _TRUE
+            && _rtw_memcmp(
+                roam_tgt as *const c_void,
+                cand_mac as *const c_void,
+                ETH_ALEN,
+            ) == _TRUE
         {
             core::ptr::write_bytes(roam_tgt, 0, ETH_ALEN);
         }
