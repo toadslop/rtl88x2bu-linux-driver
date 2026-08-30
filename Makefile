@@ -2588,10 +2588,6 @@ rustflags-y += --cfg rust_mlme_unassoc --cfg config_rtw_multi_ap
 endif
 ccflags-y += -DCONFIG_RUST_MLME_WMM_RSN
 rustflags-y += --cfg rust_mlme_wmm_rsn --cfg config_wmmps_sta
-ifeq ($(CONFIG_LAYER2_ROAMING), y)
-ccflags-y += -DCONFIG_RUST_MLME_ROAMING
-rustflags-y += --cfg rust_mlme_roaming --cfg config_layer2_roaming
-endif
 ccflags-y += -DCONFIG_RUST_MLME_EXT_REST
 ccflags-y += -DCONFIG_RUST_STA_MGT_STCTL
 ccflags-y += -DCONFIG_RUST_AP_REST
