@@ -901,6 +901,18 @@ RT_CHANNEL_INFO *rtw_rust_mlme_roaming_chset(_adapter *adapter)
 	return adapter_to_rfctl(adapter)->channel_set;
 }
 
+int rtw_rust_mlme_roaming_reject_non_ocp_dfs(_adapter *adapter,
+	RT_CHANNEL_INFO *chset, u8 ch)
+{
+	struct rf_ctl_t *rfctl = adapter_to_rfctl(adapter);
+
+	if (IS_DFS_SLAVE_WITH_RD(rfctl)
+		&& !rtw_rfctl_dfs_domain_unknown(rfctl)
+		&& rtw_chset_is_ch_non_ocp(chset, ch))
+		return _TRUE;
+	return _FALSE;
+}
+
 struct wlan_network *rtw_rust_mlme_roaming_cur_scanned(struct mlme_priv *mlme)
 {
 	return mlme->cur_network_scanned;
