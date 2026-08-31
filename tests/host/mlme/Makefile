@@ -15,6 +15,7 @@ IE_ORACLE := ../ie/ie_cipher_c_oracle.c ../ie/ie_wpa_rsn_parse_c_oracle.c \
              ../ie/ie_c_oracle.c $(WLAN_UTIL)/wlan_util_c_oracle.c
 RUST_MLME_REST := $(ROOT)/rust/rtw_mlme_rest.rs
 RUST_MLME_UNASSOC := $(ROOT)/rust/rtw_mlme_unassoc.rs
+RUST_MLME_WMM_RSN := $(ROOT)/rust/rtw_mlme_wmm_rsn.rs
 
 CC     := gcc
 RUSTC  := rustc
@@ -23,11 +24,11 @@ CFLAGS_COMMON := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
           -include $(HOST_INC)/host_autoconf.h
 CFLAGS := $(CFLAGS_COMMON) -DHOST_MLME_TEST -DCONFIG_P2P
 
-.PHONY: all test test-c test-rust test-mlme-unassoc test-mlme-unassoc-rust test-mlme-unassoc-rust-full test-mlme-wmm-rsn test-mlme-roaming clean
+.PHONY: all test test-c test-rust test-mlme-unassoc test-mlme-unassoc-rust test-mlme-unassoc-rust-full test-mlme-wmm-rsn test-mlme-wmm-rsn-rust test-mlme-roaming clean
 
 all: test
 
-test: test-c test-rust test-mlme-unassoc test-mlme-unassoc-rust test-mlme-unassoc-rust-full test-mlme-wmm-rsn
+test: test-c test-rust test-mlme-unassoc test-mlme-unassoc-rust test-mlme-unassoc-rust-full test-mlme-wmm-rsn test-mlme-wmm-rsn-rust
 ifneq ($(wildcard test_mlme_roaming.c),)
 test: test-mlme-roaming
 endif
@@ -83,6 +84,18 @@ test_mlme_wmm_rsn: test_mlme_wmm_rsn.c $(MLME_REST_SRC) $(IE_REST_SRC) $(WMM_RSN
 	$(CC) $(CFLAGS_WMM_RSN) -o $@ test_mlme_wmm_rsn.c $(MLME_REST_SRC) $(IE_REST_SRC) \
 		$(WMM_RSN_IE_ORACLE) $(HOST_JSON)
 
+librust_mlme_wmm_rsn.a: $(RUST_MLME_WMM_RSN)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_mlme_wmm_rsn_test \
+		--cfg config_wmmps_sta --crate-type staticlib $(RUST_MLME_WMM_RSN) -o $@
+
+test-mlme-wmm-rsn-rust: test_mlme_wmm_rsn_rust
+	./test_mlme_wmm_rsn_rust mlme_wmm_rsn_vectors.json
+
+test_mlme_wmm_rsn_rust: test_mlme_wmm_rsn.c $(MLME_REST_SRC) $(IE_REST_SRC) $(WMM_RSN_IE_ORACLE) \
+		librust_mlme_wmm_rsn.a $(HOST_JSON)
+	$(CC) $(CFLAGS_WMM_RSN) -DRUST_MLME_WMM_RSN_ORACLE -o $@ test_mlme_wmm_rsn.c \
+		$(MLME_REST_SRC) $(IE_REST_SRC) $(WMM_RSN_IE_ORACLE) $(HOST_JSON) librust_mlme_wmm_rsn.a
+
 CFLAGS_ROAMING := $(CFLAGS_COMMON) -DCONFIG_LAYER2_ROAMING -DHOST_MLME_ROAMING_TEST
 
 test-mlme-roaming: test_mlme_roaming
@@ -92,4 +105,4 @@ test_mlme_roaming: test_mlme_roaming.c $(MLME_REST_SRC) $(HOST_JSON)
 	$(CC) $(CFLAGS_ROAMING) -o $@ test_mlme_roaming.c $(MLME_REST_SRC) $(HOST_JSON)
 
 clean:
-	rm -f test_mlme test_mlme_rust test_mlme_unassoc test_mlme_unassoc_rust test_mlme_unassoc_rust_full test_mlme_wmm_rsn test_mlme_roaming librust_mlme_rest.a librust_mlme_unassoc.a
+	rm -f test_mlme test_mlme_rust test_mlme_unassoc test_mlme_unassoc_rust test_mlme_unassoc_rust_full test_mlme_wmm_rsn test_mlme_wmm_rsn_rust test_mlme_roaming librust_mlme_rest.a librust_mlme_unassoc.a librust_mlme_wmm_rsn.a

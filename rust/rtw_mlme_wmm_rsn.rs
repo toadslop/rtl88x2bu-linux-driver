@@ -52,7 +52,7 @@ type Adapter = c_void;
 
 #[cfg(all(not(host_mlme_wmm_rsn_test), rust_mlme_wmm_rsn))]
 extern "C" {
-    fn rtw_mlme_wmm_rsn_qos(a: *mut Adapter) -> *mut c_void;
+    fn rtw_mlme_wmm_rsn_qos(a: *mut Adapter) -> *mut U8;
 }
 
 #[no_mangle]
@@ -95,16 +95,16 @@ pub extern "C" fn rtw_restruct_wmm_ie(
                     }
                     _ => {}
                 }
-                if tid & 0xC0 != 0 && tid & 0x30 != 0 {
+                if (tid & 0x80 != 0) && (tid & 0x40 != 0) {
                     qos_info |= 1;
                 }
-                if tid & 0x30 != 0 && tid & 0x0C != 0 {
+                if (tid & 0x20 != 0) && (tid & 0x10 != 0) {
                     qos_info |= 2;
                 }
-                if tid & 0x06 != 0 && tid & 0x03 != 0 {
+                if (tid & 0x04 != 0) && (tid & 0x02 != 0) {
                     qos_info |= 4;
                 }
-                if tid & 0x0C != 0 && tid & 0x03 != 0 {
+                if (tid & 0x08 != 0) && (tid & 0x01 != 0) {
                     qos_info |= 8;
                 }
                 *out_ie.add(initial_out_len as usize + 8) = qos_info;
@@ -125,7 +125,7 @@ fn qos_fields(adapter: *mut Adapter) -> (U8, U16) {
         }
         #[cfg(all(not(host_mlme_wmm_rsn_test), rust_mlme_wmm_rsn))]
         {
-            let q = rtw_mlme_wmm_rsn_qos(adapter) as *const U8;
+            let q = rtw_mlme_wmm_rsn_qos(adapter);
             (*q, *(q.add(2) as *const U16))
         }
     }

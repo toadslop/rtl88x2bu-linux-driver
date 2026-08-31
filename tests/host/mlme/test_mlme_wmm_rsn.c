@@ -110,6 +110,12 @@ int main(int argc, char **argv)
 fail:
 		return fprintf(stderr, "%s: FAIL\n", v->name), 1;
 	}
-	printf("PASS %zu vectors (oracle: core/rtw_mlme_rest.c) (%s)\n", n, argv[1]);
+	printf("PASS %zu vectors (oracle: %s) (%s)\n", n,
+#ifdef RUST_MLME_WMM_RSN_ORACLE
+	       "rust/rtw_mlme_wmm_rsn.rs",
+#else
+	       "core/rtw_mlme_rest.c",
+#endif
+	       argv[1]);
 	return 0;
 }

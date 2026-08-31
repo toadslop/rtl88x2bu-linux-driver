@@ -660,7 +660,7 @@ exit:
 #endif /* !CONFIG_RUST || HOST_MLME_ROAMING_TEST || !CONFIG_RUST_MLME_ROAMING */
 #endif /* CONFIG_LAYER2_ROAMING */
 
-#if defined(HOST_MLME_WMM_RSN_TEST) || \
+#if (defined(HOST_MLME_WMM_RSN_TEST) && !defined(RUST_MLME_WMM_RSN_ORACLE)) || \
      (!defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
       !defined(HOST_MLME_ROAMING_TEST) && \
       (!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_WMM_RSN)))
@@ -859,7 +859,10 @@ u32 *rtw_mlme_rest_adapter_privacy(_adapter *adapter) { return &adapter->securit
 
 #if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_WMM_RSN) && \
     !defined(HOST_MLME_WMM_RSN_TEST)
-struct qos_priv *rtw_mlme_wmm_rsn_qos(_adapter *a) { return &a->mlmepriv.qospriv; }
+u8 *rtw_mlme_wmm_rsn_qos(_adapter *a)
+{
+	return &a->mlmepriv.qospriv.uapsd_max_sp_len;
+}
 #endif
 
 #if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_UNASSOC) && \
