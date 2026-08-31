@@ -256,6 +256,10 @@ fn network_privacy(p: *mut c_void) -> *mut U32 {
     }
 }
 
+#[cfg(rust_mlme_wmm_rsn)]
+#[path = "rtw_mlme_wmm_rsn.rs"]
+mod wmm_rsn;
+
 #[cfg(rust_mlme_unassoc)]
 #[path = "rtw_mlme_unassoc.rs"]
 mod unassoc;

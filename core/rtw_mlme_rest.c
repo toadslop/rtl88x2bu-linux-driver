@@ -660,7 +660,7 @@ exit:
 #endif /* !CONFIG_RUST || HOST_MLME_ROAMING_TEST || !CONFIG_RUST_MLME_ROAMING */
 #endif /* CONFIG_LAYER2_ROAMING */
 
-#if defined(HOST_MLME_WMM_RSN_TEST) || \
+#if (defined(HOST_MLME_WMM_RSN_TEST) && !defined(RUST_MLME_WMM_RSN_ORACLE)) || \
      (!defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
       !defined(HOST_MLME_ROAMING_TEST) && \
       (!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_WMM_RSN)))
@@ -728,6 +728,12 @@ int rtw_restruct_wmm_ie(_adapter *adapter, u8 *in_ie, u8 *out_ie, uint in_len, u
 	return ielength;
 
 }
+
+#endif /* HOST_MLME_WMM_RSN_TEST || (kernel && (!CONFIG_RUST || !CONFIG_RUST_MLME_WMM_RSN)) */
+
+#if defined(HOST_MLME_WMM_RSN_TEST) || \
+     (!defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
+      !defined(HOST_MLME_ROAMING_TEST))
 
 static int SecIsInPMKIDList(_adapter *Adapter, u8 *bssid)
 {
@@ -840,7 +846,7 @@ sint rtw_restruct_sec_ie(_adapter *adapter, u8 *out_ie)
 
 #endif /* !HOST_MLME_WMM_RSN_TEST */
 
-#endif /* HOST_MLME_WMM_RSN_TEST || (!HOST_MLME_TEST && !HOST_MLME_UNASSOC_TEST && (!CONFIG_RUST || !CONFIG_RUST_MLME_WMM_RSN)) */
+#endif /* HOST_MLME_WMM_RSN_TEST || (kernel && !HOST_MLME_TEST && !HOST_MLME_UNASSOC && !HOST_MLME_ROAMING) */
 
 #if defined(CONFIG_RUST) && !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && !defined(HOST_MLME_WMM_RSN_TEST)
 u8 *rtw_mlme_rest_bss_ies(WLAN_BSSID_EX *bss) { return bss->IEs; }
@@ -850,6 +856,14 @@ u8 *rtw_mlme_rest_bss_mac(WLAN_BSSID_EX *bss) { return bss->MacAddress; }
 u32 *rtw_mlme_rest_network_privacy(struct wlan_network *pnetwork) { return &pnetwork->network.Privacy; }
 u32 *rtw_mlme_rest_adapter_privacy(_adapter *adapter) { return &adapter->securitypriv.dot11PrivacyAlgrthm; }
 #endif /* CONFIG_RUST && !HOST_MLME_TEST */
+
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_WMM_RSN) && \
+    !defined(HOST_MLME_WMM_RSN_TEST)
+u8 *rtw_mlme_wmm_rsn_qos(_adapter *a)
+{
+	return &a->mlmepriv.qospriv.uapsd_max_sp_len;
+}
+#endif
 
 #if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_UNASSOC) && \
     defined(CONFIG_RTW_MULTI_AP) && !defined(HOST_MLME_UNASSOC_TEST)

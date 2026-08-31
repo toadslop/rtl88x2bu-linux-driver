@@ -2586,6 +2586,8 @@ ifneq ($(filter -DCONFIG_RTW_MULTI_AP,$(USER_EXTRA_CFLAGS)),)
 ccflags-y += -DCONFIG_RUST_MLME_UNASSOC
 rustflags-y += --cfg rust_mlme_unassoc --cfg config_rtw_multi_ap
 endif
+ccflags-y += -DCONFIG_RUST_MLME_WMM_RSN
+rustflags-y += --cfg rust_mlme_wmm_rsn --cfg config_wmmps_sta
 ccflags-y += -DCONFIG_RUST_MLME_EXT_REST
 ccflags-y += -DCONFIG_RUST_STA_MGT_STCTL
 ccflags-y += -DCONFIG_RUST_AP_REST
