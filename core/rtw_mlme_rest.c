@@ -913,6 +913,29 @@ int rtw_rust_mlme_roaming_reject_non_ocp_dfs(_adapter *adapter,
 	return _FALSE;
 }
 
+int rtw_rust_mlme_roaming_ft_reject(_adapter *adapter,
+	struct wlan_network *competitor)
+{
+#ifdef CONFIG_RTW_80211R
+	if (rtw_ft_chk_flags(adapter, RTW_FT_PEER_EN)) {
+		if (rtw_ft_chk_roaming_candidate(adapter, competitor) == _FALSE)
+			return _TRUE;
+	}
+#endif
+	return _FALSE;
+}
+
+int rtw_rust_mlme_roaming_btm_accept(_adapter *adapter,
+	struct wlan_network *competitor)
+{
+#if defined(CONFIG_RTW_80211R) && defined(CONFIG_RTW_WNM)
+	if (rtw_wnm_btm_diff_bss(adapter) &&
+		rtw_wnm_btm_roam_candidate(adapter, competitor))
+		return _TRUE;
+#endif
+	return _FALSE;
+}
+
 struct wlan_network *rtw_rust_mlme_roaming_cur_scanned(struct mlme_priv *mlme)
 {
 	return mlme->cur_network_scanned;
