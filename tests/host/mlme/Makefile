@@ -9,6 +9,7 @@ MLME_SHIM := host_mlme_shim.c
 WMM_RSN_IE_ORACLE := ../ie/ie_cipher_c_oracle.c ../ie/ie_wpa_rsn_parse_c_oracle.c \
                      ../ie/ie_c_oracle.c $(WLAN_UTIL)/wlan_util_c_oracle.c \
                      ../ie/ie_mac_str_host_shim.c
+WMM_RSN_MEM_SHIM := host_mlme_wmm_rsn_mem_shim.c
 HOST_JSON := ../crypto/host_vector_json.c
 IE_REST_SRC := $(CORE)/rtw_ieee80211_rest.c
 RUST_MLME_REST := $(ROOT)/rust/rtw_mlme_rest.rs
@@ -89,10 +90,10 @@ librust_mlme_wmm_rsn.a: $(RUST_MLME_WMM_RSN)
 test-mlme-wmm-rsn-rust: test_mlme_wmm_rsn_rust
 	./test_mlme_wmm_rsn_rust mlme_wmm_rsn_vectors.json
 
-test_mlme_wmm_rsn_rust: test_mlme_wmm_rsn.c $(MLME_REST_SRC) $(IE_REST_SRC) $(WMM_RSN_IE_ORACLE) \
-		librust_mlme_wmm_rsn.a $(HOST_JSON)
+test_mlme_wmm_rsn_rust: test_mlme_wmm_rsn.c librust_mlme_wmm_rsn.a $(IE_REST_SRC) \
+		$(WMM_RSN_IE_ORACLE) $(WMM_RSN_MEM_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS_WMM_RSN) -DRUST_MLME_WMM_RSN_ORACLE -o $@ test_mlme_wmm_rsn.c \
-		$(MLME_REST_SRC) $(IE_REST_SRC) $(WMM_RSN_IE_ORACLE) $(HOST_JSON) librust_mlme_wmm_rsn.a
+		$(IE_REST_SRC) $(WMM_RSN_IE_ORACLE) $(WMM_RSN_MEM_SHIM) $(HOST_JSON) librust_mlme_wmm_rsn.a
 
 CFLAGS_ROAMING := $(CFLAGS_COMMON) -DCONFIG_LAYER2_ROAMING -DHOST_MLME_ROAMING_TEST
 
