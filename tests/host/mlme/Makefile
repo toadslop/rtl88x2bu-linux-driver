@@ -15,6 +15,7 @@ IE_REST_SRC := $(CORE)/rtw_ieee80211_rest.c
 RUST_MLME_REST := $(ROOT)/rust/rtw_mlme_rest.rs
 RUST_MLME_UNASSOC := $(ROOT)/rust/rtw_mlme_unassoc.rs
 RUST_MLME_WMM_RSN := $(ROOT)/rust/rtw_mlme_wmm_rsn.rs
+RUST_MLME_ROAMING := $(ROOT)/rust/rtw_mlme_roaming.rs
 
 CC     := gcc
 RUSTC  := rustc
@@ -23,13 +24,13 @@ CFLAGS_COMMON := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
           -include $(HOST_INC)/host_autoconf.h
 CFLAGS := $(CFLAGS_COMMON) -DHOST_MLME_TEST -DCONFIG_P2P
 
-.PHONY: all test test-c test-rust test-mlme-unassoc test-mlme-unassoc-rust test-mlme-unassoc-rust-full test-mlme-wmm-rsn test-mlme-wmm-rsn-rust test-mlme-roaming clean
+.PHONY: all test test-c test-rust test-mlme-unassoc test-mlme-unassoc-rust test-mlme-unassoc-rust-full test-mlme-wmm-rsn test-mlme-wmm-rsn-rust test-mlme-roaming test-mlme-roaming-rust clean
 
 all: test
 
 test: test-c test-rust test-mlme-unassoc test-mlme-unassoc-rust test-mlme-unassoc-rust-full test-mlme-wmm-rsn test-mlme-wmm-rsn-rust
 ifneq ($(wildcard test_mlme_roaming.c),)
-test: test-mlme-roaming
+test: test-mlme-roaming test-mlme-roaming-rust
 endif
 
 test-c: test_mlme
@@ -103,5 +104,15 @@ test-mlme-roaming: test_mlme_roaming
 test_mlme_roaming: test_mlme_roaming.c $(MLME_REST_SRC) $(HOST_JSON)
 	$(CC) $(CFLAGS_ROAMING) -o $@ test_mlme_roaming.c $(MLME_REST_SRC) $(HOST_JSON)
 
+librust_mlme_roaming.a: $(RUST_MLME_ROAMING)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_mlme_roaming_test \
+		--crate-type staticlib $(RUST_MLME_ROAMING) -o $@
+
+test-mlme-roaming-rust: test_mlme_roaming_rust
+	./test_mlme_roaming_rust mlme_roaming_vectors.json
+
+test_mlme_roaming_rust: test_mlme_roaming.c librust_mlme_roaming.a $(HOST_JSON)
+	$(CC) $(CFLAGS_ROAMING) -DRUST_MLME_ROAMING_ORACLE -o $@ test_mlme_roaming.c $(HOST_JSON) librust_mlme_roaming.a
+
 clean:
-	rm -f test_mlme test_mlme_rust test_mlme_unassoc test_mlme_unassoc_rust test_mlme_unassoc_rust_full test_mlme_wmm_rsn test_mlme_wmm_rsn_rust test_mlme_roaming librust_mlme_rest.a librust_mlme_unassoc.a librust_mlme_wmm_rsn.a
+	rm -f test_mlme test_mlme_rust test_mlme_unassoc test_mlme_unassoc_rust test_mlme_unassoc_rust_full test_mlme_wmm_rsn test_mlme_wmm_rsn_rust test_mlme_roaming test_mlme_roaming_rust librust_mlme_rest.a librust_mlme_unassoc.a librust_mlme_wmm_rsn.a librust_mlme_roaming.a
