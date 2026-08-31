@@ -8,7 +8,7 @@ struct vector {
 	char name[128], fn[64], expect_hex[512];
 	u8 in[256], out[256], bssid[ETH_ALEN], pmkid[16];
 	size_t in_len, out_off, expect_len;
-	int expect_int, uapsd_max_sp_len, uapsd_tid, pmkid_used;
+	int expect_int, i_ent, uapsd_max_sp_len, uapsd_tid, pmkid_used;
 };
 
 int rtw_restruct_wmm_ie(_adapter *a, u8 *in, u8 *out, unsigned in_len, unsigned out_off);
@@ -32,6 +32,7 @@ static int parse_vector_object(const char *obj, size_t len, void *v)
 	host_json_parse_int_in(obj, len, "expect_len", &t);
 	vec->expect_len = t;
 	host_json_parse_int_in(obj, len, "expect_int", &vec->expect_int);
+	host_json_parse_int_in(obj, len, "i_ent", &vec->i_ent);
 	if (!host_json_parse_string_in(obj, len, "in_ie_hex", hex, sizeof(hex))) {
 		if (host_hex_decode(hex, vec->in, sizeof(vec->in), &n))
 			return -1;
@@ -99,7 +100,7 @@ int main(int argc, char **argv)
 				goto fail;
 		} else if (!strcmp(v->fn, "rsn_sync_pmkid")) {
 			memcpy(ad.scratch, v->in, v->in_len);
-			got_u = rtw_rsn_sync_pmkid(&ad, ad.scratch, (unsigned)v->in_len, v->expect_int);
+			got_u = rtw_rsn_sync_pmkid(&ad, ad.scratch, (unsigned)v->in_len, v->i_ent);
 			if (check_out(ad.scratch, got_u, v->expect_hex, v->expect_len))
 				goto fail;
 		} else {
