@@ -800,7 +800,7 @@ exit:
 
 #endif /* !CONFIG_RUST || HOST_MLME_WMM_RSN_TEST || !CONFIG_RUST_MLME_WMM_RSN */
 
-#if !defined(HOST_MLME_WMM_RSN_TEST)
+#if !defined(CONFIG_RUST) || defined(HOST_MLME_WMM_RSN_TEST) || !defined(CONFIG_RUST_MLME_WMM_RSN)
 
 sint rtw_restruct_sec_ie(_adapter *adapter, u8 *out_ie)
 {
@@ -852,7 +852,7 @@ sint rtw_restruct_sec_ie(_adapter *adapter, u8 *out_ie)
 	return ielength;
 }
 
-#endif /* !HOST_MLME_WMM_RSN_TEST */
+#endif /* !CONFIG_RUST || HOST_MLME_WMM_RSN_TEST || !CONFIG_RUST_MLME_WMM_RSN */
 
 #endif /* HOST_MLME_WMM_RSN_TEST || (kernel && !HOST_MLME_TEST && !HOST_MLME_UNASSOC && !HOST_MLME_ROAMING) */
 
