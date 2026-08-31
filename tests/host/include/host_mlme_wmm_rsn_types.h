@@ -45,6 +45,20 @@
 
 enum UAPSD_MAX_SP { NO_LIMIT, TWO_MSDU, FOUR_MSDU, SIX_MSDU };
 
+#define _WPA_IE_ID_ 0xdd
+#define _WPA2_IE_ID_ 0x30
+#define WLAN_EID_RSN 48
+#define WIFI_UNDER_WPS 0x00000100
+#define MLME_AUTHTYPE_SAE 4
+
+#define Ndis802_11AuthModeWPA 3
+#define Ndis802_11AuthModeWPAPSK 4
+#define Ndis802_11AuthModeWPANone 6
+#define Ndis802_11AuthModeWPA2 (Ndis802_11AuthModeWPANone + 1)
+#define Ndis802_11AuthModeWPA2PSK (Ndis802_11AuthModeWPANone + 2)
+
+#define RTW_INFO_DUMP(msg, buf, len) do { (void)(msg); (void)(buf); (void)(len); } while (0)
+
 typedef struct _RT_PMKID_LIST {
 	u8 bUsed;
 	u8 Bssid[ETH_ALEN];
@@ -52,8 +66,30 @@ typedef struct _RT_PMKID_LIST {
 } RT_PMKID_LIST;
 
 struct qos_priv { u8 uapsd_max_sp_len; u16 uapsd_tid; };
-struct security_priv { RT_PMKID_LIST PMKIDList[NUM_PMKID_CACHE]; };
-struct mlme_priv { struct qos_priv qospriv; };
+struct security_priv {
+	RT_PMKID_LIST PMKIDList[NUM_PMKID_CACHE];
+	u32 ndisauthtype;
+	u8 wps_ie[256];
+	int wps_ie_len;
+	u8 supplicant_ie[256];
+	u8 auth_type;
+	u8 rsnx_ie[32];
+	int rsnx_ie_len;
+};
+struct mlme_priv {
+	struct qos_priv qospriv;
+	u32 fw_state;
+	u8 assoc_bssid[ETH_ALEN];
+};
+
+static inline int check_fwstate(struct mlme_priv *pmlmepriv, int state)
+{
+	if (state == 0 && pmlmepriv->fw_state == 0)
+		return _TRUE;
+	if (pmlmepriv->fw_state & (u32)state)
+		return _TRUE;
+	return _FALSE;
+}
 
 struct _adapter {
 	struct mlme_priv mlmepriv;
@@ -63,5 +99,12 @@ struct _adapter {
 
 typedef struct _adapter _adapter;
 typedef unsigned int uint;
+
+static inline void rtw_report_sec_ie(_adapter *adapter, u8 authmode, u8 *sec_ie)
+{
+	(void)adapter;
+	(void)authmode;
+	(void)sec_ie;
+}
 
 #endif /* HOST_MLME_WMM_RSN_TYPES_H */

@@ -7,13 +7,16 @@
 struct vector {
 	char name[128], fn[64], expect_hex[512];
 	u8 in[256], out[256], bssid[ETH_ALEN], pmkid[16];
+	u8 wps_ie[256], supplicant_ie[256], rsnx_ie[32];
 	size_t in_len, out_off, expect_len;
 	int expect_int, i_ent, uapsd_max_sp_len, uapsd_tid, pmkid_used;
+	int ndisauthtype, fw_state, wps_ie_len, auth_type, rsnx_ie_len;
 };
 
 int rtw_restruct_wmm_ie(_adapter *a, u8 *in, u8 *out, unsigned in_len, unsigned out_off);
 int rtw_cached_pmkid(_adapter *a, u8 *bssid);
 int rtw_rsn_sync_pmkid(_adapter *a, u8 *ie, unsigned ie_len, int i_ent);
+int rtw_restruct_sec_ie(_adapter *a, u8 *out);
 
 static int parse_vector_object(const char *obj, size_t len, void *v)
 {
@@ -29,6 +32,11 @@ static int parse_vector_object(const char *obj, size_t len, void *v)
 	host_json_parse_int_in(obj, len, "uapsd_max_sp_len", &vec->uapsd_max_sp_len);
 	host_json_parse_int_in(obj, len, "uapsd_tid", &vec->uapsd_tid);
 	host_json_parse_int_in(obj, len, "pmkid_used", &vec->pmkid_used);
+	host_json_parse_int_in(obj, len, "ndisauthtype", &vec->ndisauthtype);
+	host_json_parse_int_in(obj, len, "fw_state", &vec->fw_state);
+	host_json_parse_int_in(obj, len, "wps_ie_len", &vec->wps_ie_len);
+	host_json_parse_int_in(obj, len, "auth_type", &vec->auth_type);
+	host_json_parse_int_in(obj, len, "rsnx_ie_len", &vec->rsnx_ie_len);
 	host_json_parse_int_in(obj, len, "expect_len", &t);
 	vec->expect_len = t;
 	host_json_parse_int_in(obj, len, "expect_int", &vec->expect_int);
@@ -45,6 +53,18 @@ static int parse_vector_object(const char *obj, size_t len, void *v)
 	}
 	host_json_parse_string_in(obj, len, "pmkid_hex", hex, sizeof(hex));
 	host_hex_decode(hex, vec->pmkid, sizeof(vec->pmkid), &n);
+	if (!host_json_parse_string_in(obj, len, "wps_ie_hex", hex, sizeof(hex))) {
+		host_hex_decode(hex, vec->wps_ie, sizeof(vec->wps_ie), &n);
+		if (!vec->wps_ie_len && n)
+			vec->wps_ie_len = (int)n;
+	}
+	if (!host_json_parse_string_in(obj, len, "supplicant_ie_hex", hex, sizeof(hex)))
+		host_hex_decode(hex, vec->supplicant_ie, sizeof(vec->supplicant_ie), &n);
+	if (!host_json_parse_string_in(obj, len, "rsnx_ie_hex", hex, sizeof(hex))) {
+		host_hex_decode(hex, vec->rsnx_ie, sizeof(vec->rsnx_ie), &n);
+		if (!vec->rsnx_ie_len && n)
+			vec->rsnx_ie_len = (int)n;
+	}
 	host_json_parse_int_in(obj, len, "initial_out_len", &t);
 	vec->out_off = t;
 	host_json_parse_string_in(obj, len, "expect_out_hex", vec->expect_hex,
@@ -57,6 +77,20 @@ static void reset_adapter(_adapter *ad, const struct vector *vec)
 	memset(ad, 0, sizeof(*ad));
 	ad->mlmepriv.qospriv.uapsd_max_sp_len = (u8)vec->uapsd_max_sp_len;
 	ad->mlmepriv.qospriv.uapsd_tid = (u16)vec->uapsd_tid;
+	ad->mlmepriv.fw_state = (u32)vec->fw_state;
+	if (vec->bssid[0] || vec->bssid[1])
+		memcpy(ad->mlmepriv.assoc_bssid, vec->bssid, ETH_ALEN);
+	ad->securitypriv.ndisauthtype = (u32)vec->ndisauthtype;
+	ad->securitypriv.wps_ie_len = vec->wps_ie_len;
+	ad->securitypriv.auth_type = (u8)vec->auth_type;
+	ad->securitypriv.rsnx_ie_len = vec->rsnx_ie_len;
+	if (vec->wps_ie_len > 0)
+		memcpy(ad->securitypriv.wps_ie, vec->wps_ie, (size_t)vec->wps_ie_len);
+	if (vec->supplicant_ie[0] || vec->supplicant_ie[1])
+		memcpy(ad->securitypriv.supplicant_ie, vec->supplicant_ie,
+		       sizeof(ad->securitypriv.supplicant_ie));
+	if (vec->rsnx_ie_len > 0)
+		memcpy(ad->securitypriv.rsnx_ie, vec->rsnx_ie, (size_t)vec->rsnx_ie_len);
 	if (vec->pmkid_used) {
 		ad->securitypriv.PMKIDList[0].bUsed = 1;
 		memcpy(ad->securitypriv.PMKIDList[0].Bssid, vec->bssid, ETH_ALEN);
@@ -103,6 +137,15 @@ int main(int argc, char **argv)
 			got_u = rtw_rsn_sync_pmkid(&ad, ad.scratch, (unsigned)v->in_len, v->i_ent);
 			if (check_out(ad.scratch, got_u, v->expect_hex, v->expect_len))
 				goto fail;
+		} else if (!strcmp(v->fn, "restruct_sec_ie")) {
+#ifdef RUST_MLME_WMM_RSN_ORACLE
+			fprintf(stderr, "%s: SKIP (restruct_sec_ie Rust oracle in PR8)\n", v->name);
+			continue;
+#else
+			got_u = rtw_restruct_sec_ie(&ad, v->out);
+			if (check_out(v->out, got_u, v->expect_hex, v->expect_len))
+				goto fail;
+#endif
 		} else {
 			goto fail;
 		}

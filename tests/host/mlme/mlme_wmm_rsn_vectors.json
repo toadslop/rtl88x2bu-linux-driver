@@ -73,6 +73,45 @@
       "i_ent": -1,
       "expect_len": 24,
       "expect_out_hex": "30160100000fac020100000fac040100000fac0200000000"
+    },
+    {
+      "name": "restruct_sec_ie_wps",
+      "fn": "restruct_sec_ie",
+      "fw_state": 256,
+      "wps_ie_hex": "dd0450f2040101",
+      "wps_ie_len": 7,
+      "expect_len": 7,
+      "expect_out_hex": "dd0450f2040101"
+    },
+    {
+      "name": "restruct_sec_ie_wpa2_basic",
+      "fn": "restruct_sec_ie",
+      "ndisauthtype": 8,
+      "supplicant_ie_hex": "30160100000fac020100000fac040100000fac0200000000",
+      "expect_len": 24,
+      "expect_out_hex": "30160100000fac020100000fac040100000fac0200000000"
+    },
+    {
+      "name": "restruct_sec_ie_wpa2_pmkid",
+      "fn": "restruct_sec_ie",
+      "ndisauthtype": 8,
+      "supplicant_ie_hex": "30160100000fac020100000fac040100000fac0200000000",
+      "bssid_hex": "112233445566",
+      "pmkid_used": 1,
+      "pmkid_hex": "0102030405060708090a0b0c0d0e0f10",
+      "expect_len": 40,
+      "expect_out_hex": "30260100000fac020100000fac040100000fac02000001000102030405060708090a0b0c0d0e0f10"
+    },
+    {
+      "name": "restruct_sec_ie_sae_rsnx",
+      "fn": "restruct_sec_ie",
+      "ndisauthtype": 8,
+      "auth_type": 4,
+      "supplicant_ie_hex": "30160100000fac020100000fac040100000fac0200000000",
+      "rsnx_ie_hex": "f4030102",
+      "rsnx_ie_len": 4,
+      "expect_len": 28,
+      "expect_out_hex": "30160100000fac020100000fac040100000fac0200000000f4030102"
     }
   ]
 }
