@@ -24,6 +24,38 @@
       "need_to_roam": 1, "rssi_diff_th": 5, "scanr_exp_ms": 10000, "desired": 1,
       "comp_ssid": "Home", "comp_rssi": -55, "comp_ch": 11, "comp_mac": "001122334457", "comp_age_ms": 1000,
       "expect": 1
+    },
+    {
+      "name": "check_rejects_rssi_diff",
+      "fn": "check",
+      "cur_ssid": "Home", "cur_rssi": -70, "cur_ch": 6, "cur_mac": "001122334455",
+      "need_to_roam": 1, "rssi_diff_th": 5, "scanr_exp_ms": 10000, "desired": 1,
+      "comp_ssid": "Home", "comp_rssi": -68, "comp_ch": 11, "comp_mac": "001122334457", "comp_age_ms": 1000,
+      "expect": 0
+    },
+    {
+      "name": "check_rejects_stale_scan",
+      "fn": "check",
+      "cur_ssid": "Home", "cur_rssi": -70, "cur_ch": 6, "cur_mac": "001122334455",
+      "need_to_roam": 1, "rssi_diff_th": 5, "scanr_exp_ms": 10000, "desired": 1,
+      "comp_ssid": "Home", "comp_rssi": -55, "comp_ch": 11, "comp_mac": "001122334457", "comp_age_ms": 10000,
+      "expect": 0
+    },
+    {
+      "name": "check_rejects_different_ess",
+      "fn": "check",
+      "cur_ssid": "Home", "cur_rssi": -70, "cur_ch": 6, "cur_mac": "001122334455",
+      "need_to_roam": 1, "rssi_diff_th": 5, "scanr_exp_ms": 10000, "desired": 1,
+      "comp_ssid": "Other", "comp_rssi": -55, "comp_ch": 11, "comp_mac": "001122334457", "comp_age_ms": 1000,
+      "expect": 0
+    },
+    {
+      "name": "check_rejects_not_desired",
+      "fn": "check",
+      "cur_ssid": "Home", "cur_rssi": -70, "cur_ch": 6, "cur_mac": "001122334455",
+      "need_to_roam": 1, "rssi_diff_th": 5, "scanr_exp_ms": 10000, "desired": 0,
+      "comp_ssid": "Home", "comp_rssi": -55, "comp_ch": 11, "comp_mac": "001122334457", "comp_age_ms": 1000,
+      "expect": 0
     }
   ]
 }
