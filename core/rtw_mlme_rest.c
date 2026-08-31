@@ -867,9 +867,10 @@ u32 *rtw_mlme_rest_adapter_privacy(_adapter *adapter) { return &adapter->securit
 
 #if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_WMM_RSN) && \
     !defined(HOST_MLME_WMM_RSN_TEST)
-u8 *rtw_mlme_wmm_rsn_qos(_adapter *a)
+void rtw_mlme_wmm_rsn_qos_fields(_adapter *a, u8 *max_sp, u16 *tid)
 {
-	return &a->mlmepriv.qospriv.uapsd_max_sp_len;
+	*max_sp = a->mlmepriv.qospriv.uapsd_max_sp_len;
+	*tid = a->mlmepriv.qospriv.uapsd_tid;
 }
 RT_PMKID_LIST *rtw_mlme_wmm_rsn_pmkid(_adapter *a, int i)
 {

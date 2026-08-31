@@ -89,7 +89,7 @@ type Adapter = c_void;
 
 #[cfg(all(not(host_mlme_wmm_rsn_test), rust_mlme_wmm_rsn))]
 extern "C" {
-    fn rtw_mlme_wmm_rsn_qos(a: *mut Adapter) -> *mut U8;
+    fn rtw_mlme_wmm_rsn_qos_fields(a: *mut Adapter, max_sp: *mut U8, tid: *mut U16);
     fn rtw_mlme_wmm_rsn_pmkid(a: *mut Adapter, i: c_int) -> *mut c_void;
 }
 
@@ -181,8 +181,10 @@ fn qos_fields(adapter: *mut Adapter) -> (U8, U16) {
         }
         #[cfg(all(not(host_mlme_wmm_rsn_test), rust_mlme_wmm_rsn))]
         {
-            let q = rtw_mlme_wmm_rsn_qos(adapter);
-            (*q, *(q.add(2) as *const U16))
+            let mut max_sp = 0u8;
+            let mut tid = 0u16;
+            rtw_mlme_wmm_rsn_qos_fields(adapter, &mut max_sp, &mut tid);
+            (max_sp, tid)
         }
     }
 }
