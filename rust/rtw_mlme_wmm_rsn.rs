@@ -66,11 +66,20 @@ mod host {
     #[repr(C)]
     pub struct SecurityPriv {
         pub pmkid_list: [RtkPmkidList; NUM_PMKID_CACHE],
+        pub ndisauthtype: U32,
+        pub wps_ie: [U8; 256],
+        pub wps_ie_len: c_int,
+        pub supplicant_ie: [U8; 256],
+        pub auth_type: U8,
+        pub rsnx_ie: [U8; 32],
+        pub rsnx_ie_len: c_int,
     }
 
     #[repr(C)]
     pub struct MlmePriv {
         pub qospriv: QosPriv,
+        pub fw_state: U32,
+        pub assoc_bssid: [U8; ETH_ALEN],
     }
 
     #[repr(C)]

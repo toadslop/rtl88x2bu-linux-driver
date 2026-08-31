@@ -138,9 +138,14 @@ int main(int argc, char **argv)
 			if (check_out(ad.scratch, got_u, v->expect_hex, v->expect_len))
 				goto fail;
 		} else if (!strcmp(v->fn, "restruct_sec_ie")) {
+#ifdef RUST_MLME_WMM_RSN_ORACLE
+			fprintf(stderr, "%s: SKIP (restruct_sec_ie Rust oracle in PR8)\n", v->name);
+			continue;
+#else
 			got_u = rtw_restruct_sec_ie(&ad, v->out);
 			if (check_out(v->out, got_u, v->expect_hex, v->expect_len))
 				goto fail;
+#endif
 		} else {
 			goto fail;
 		}
