@@ -753,6 +753,9 @@ BOOLEAN IsLegal5GChannel(PADAPTER Adapter, u8 channel);
 void site_survey(_adapter *padapter, u8 survey_channel, RT_SCAN_TYPE ScanType);
 u8 collect_bss_info(_adapter *padapter, union recv_frame *precv_frame, WLAN_BSSID_EX *bssid);
 void update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src, _adapter *padapter, bool update_ie);
+#ifdef CONFIG_80211D
+void process_80211d(_adapter *padapter, WLAN_BSSID_EX *bssid);
+#endif
 
 u8 *get_my_bssid(WLAN_BSSID_EX *pnetwork);
 u16 get_beacon_interval(WLAN_BSSID_EX *bss);
