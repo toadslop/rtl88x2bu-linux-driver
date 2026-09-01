@@ -63,6 +63,19 @@ mod kernel {
     extern "C" {
         pub fn rtw_rust_mlme_roaming_adapter(mlme: *mut c_void) -> *mut c_void;
         pub fn rtw_rust_mlme_roaming_chset(adapter: *mut c_void) -> *mut RtChannelInfo;
+        pub fn rtw_rust_mlme_roaming_reject_non_ocp_dfs(
+            adapter: *mut c_void,
+            chset: *mut RtChannelInfo,
+            ch: U8,
+        ) -> c_int;
+        pub fn rtw_rust_mlme_roaming_ft_reject(
+            adapter: *mut c_void,
+            competitor: *mut WlanNetwork,
+        ) -> c_int;
+        pub fn rtw_rust_mlme_roaming_btm_accept(
+            adapter: *mut c_void,
+            competitor: *mut WlanNetwork,
+        ) -> c_int;
         pub fn rtw_rust_mlme_roaming_cur_scanned(mlme: *mut c_void) -> *mut WlanNetwork;
         pub fn rtw_rust_mlme_roaming_cur_network(mlme: *mut c_void) -> *mut c_void;
         pub fn rtw_rust_mlme_roaming_need_to_roam(mlme: *mut c_void) -> c_int;
@@ -108,6 +121,9 @@ pub extern "C" fn rtw_check_roaming_candidate(
         if kernel::rtw_chset_search_ch(chset, ch) < 0 {
             return _FALSE;
         }
+        if kernel::rtw_rust_mlme_roaming_reject_non_ocp_dfs(adapter, chset, ch as U8) != 0 {
+            return _FALSE;
+        }
         let comp_bss = kernel::rtw_rust_mlme_roaming_net_bss(competitor);
         let cur_bss = kernel::rtw_rust_mlme_roaming_cur_network(mlme);
         if is_same_ess(comp_bss, cur_bss) == _FALSE {
@@ -132,6 +148,13 @@ pub extern "C" fn rtw_check_roaming_candidate(
                 return _TRUE;
             }
             return _FALSE;
+        }
+        if kernel::rtw_rust_mlme_roaming_ft_reject(adapter, competitor) != 0 {
+            return _FALSE;
+        }
+        if kernel::rtw_rust_mlme_roaming_btm_accept(adapter, competitor) != 0 {
+            *candidate = competitor;
+            return _TRUE;
         }
         if (_rtw_get_passing_time_ms(kernel::rtw_rust_mlme_roaming_net_last_scanned(competitor))
             as U32)
