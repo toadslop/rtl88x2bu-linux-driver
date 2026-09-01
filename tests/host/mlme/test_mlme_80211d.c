@@ -67,15 +67,20 @@ static int run_case(const struct case_vec *v)
 int main(void)
 {
 	static const u8 us2g[] = {0x07, 0x09, 0x55, 0x53, 0x20, 0x01, 0x0b, 0x1e};
+	static const u8 us24g[] = {0x07, 0x0c, 0x55, 0x53, 0x20, 0x01, 0x0b, 0x1e, 0x24, 0x04, 0x1e};
 	static const u8 short_ie[] = {0x07, 0x03, 0x55, 0x53, 0x20};
 	static const u8 sta246[] = {1, 6, 11};
+	static const u8 sta246_5g[] = {1, 6, 11, 36, 44};
 	static const u8 exp11[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
+	static const u8 exp11_5g[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 36, 40, 44, 48};
 	static const struct case_vec cases[] = {
 		{"disabled", 0, 0, WIRELESS_11G, us2g, sizeof(us2g), NULL, 0, NULL, -1, 0},
 		{"already_done", 1, 1, WIRELESS_11G, us2g, sizeof(us2g), sta246, 3, sta246, 3, 1},
 		{"no_country_ie", 1, 0, WIRELESS_11G, NULL, 0, sta246, 3, sta246, 3, 0},
 		{"short_country_ie", 1, 0, WIRELESS_11G, short_ie, sizeof(short_ie), sta246, 3, sta246, 3, 0},
 		{"merge_2g_11g", 1, 0, WIRELESS_11G, us2g, sizeof(us2g), sta246, 3, exp11, 11, 1},
+		{"merge_dualband_11ag", 1, 0, WIRELESS_11G | WIRELESS_11A, us24g,
+		 sizeof(us24g), sta246_5g, 5, exp11_5g, 15, 1},
 	};
 	int bad = 0;
 
