@@ -218,10 +218,12 @@ int main(void)
 	static const struct case_vec cases[] = {
 		{"avg_signal", 0, 10, 20, -60, 30, 40, -50, 0, 0, 0, 0, 0, 14, 24, -58, 0, NULL, NULL},
 		{"wrong_channel", 0, 10, 20, -60, 30, 101, -50, 0, 0, 0, 0, 0, 10, 20, -60, 0, NULL, NULL},
+		{"assoc_wrong_channel", 0, 10, 20, -60, 30, 101, -50, 88, 77, 1, 1, 0, 88, 77, -60, 0, NULL, NULL},
 		{"assoc_same", 0, 10, 20, -60, 30, 40, -50, 88, 77, 1, 1, 0, 88, 77, -58, 0, NULL, NULL},
 		{"update_ie", 0, 10, 40, -60, 50, 40, -50, 0, 0, 0, 0, 1, 18, 40, -58, 0, "new-ssid", "new-ssid"},
 		{"update_current", 1, 10, 20, -60, 30, 40, -50, 55, 66, 1, 1, 0, 55, 66, -58, 1, NULL, NULL},
 		{"skip_not_assoc", 1, 10, 20, -60, 30, 40, -50, 0, 0, 0, 0, 0, 10, 20, -60, 0, NULL, NULL},
+		{"skip_diff_network", 1, 10, 20, -60, 30, 40, -50, 55, 66, 1, 0, 0, 10, 20, -60, 0, "other", NULL},
 	};
 	int bad = 0;
 
