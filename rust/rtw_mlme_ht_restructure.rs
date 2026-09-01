@@ -293,9 +293,16 @@ fn restructure_ht_ie_impl(
                     oper_bw = CHANNEL_WIDTH_40;
                 }
             } else {
-                let ht_op =
-                    rtw_rust_ht_get_ie(in_ie, WLAN_EID_HT_OPERATION as c_int, &mut ielen, in_len as c_int);
-                if !ht_op.is_null() && ielen == HT_OP_IE_LEN && le_bits(ht_op.add(2).add(1), 2, 1) != 0 {
+                let ht_op = rtw_rust_ht_get_ie(
+                    in_ie,
+                    WLAN_EID_HT_OPERATION as c_int,
+                    &mut ielen,
+                    in_len as c_int,
+                );
+                if !ht_op.is_null()
+                    && ielen == HT_OP_IE_LEN
+                    && le_bits(ht_op.add(2).add(1), 2, 1) != 0
+                {
                     oper_bw = CHANNEL_WIDTH_40;
                     oper_offset = match le_bits(ht_op.add(2).add(1), 0, 2) {
                         SCA => HAL_PRIME_CHNL_OFFSET_LOWER,
@@ -304,8 +311,12 @@ fn restructure_ht_ie_impl(
                     };
                 }
                 if oper_bw == CHANNEL_WIDTH_40 {
-                    let ht_cap =
-                        rtw_rust_ht_get_ie(in_ie, WLAN_EID_HT_CAP as c_int, &mut ielen, in_len as c_int);
+                    let ht_cap = rtw_rust_ht_get_ie(
+                        in_ie,
+                        WLAN_EID_HT_CAP as c_int,
+                        &mut ielen,
+                        in_len as c_int,
+                    );
                     if !ht_cap.is_null() && ielen == HT_CAP_IE_LEN {
                         oper_bw = if le_bits(ht_cap.add(2), 1, 1) != 0 {
                             CHANNEL_WIDTH_40
@@ -321,23 +332,25 @@ fn restructure_ht_ie_impl(
 
             if oper_bw == CHANNEL_WIDTH_40
                 && oper_offset != HAL_PRIME_CHNL_OFFSET_DONT_CARE
-                && (rtw_rust_ht_chset_is_chbw_valid(chset, channel, oper_bw, oper_offset, 1, 1) == 0
+                && (rtw_rust_ht_chset_is_chbw_valid(chset, channel, oper_bw, oper_offset, 1, 1)
+                    == 0
                     || (rtw_rust_ht_is_dfs_slave_with_rd(rfctl) != 0
                         && rtw_rust_ht_rfctl_dfs_domain_unknown(rfctl) == 0
-                        && rtw_rust_ht_chset_is_chbw_non_ocp(chset, channel, oper_bw, oper_offset) != 0))
+                        && rtw_rust_ht_chset_is_chbw_non_ocp(chset, channel, oper_bw, oper_offset)
+                            != 0))
             {
                 oper_bw = CHANNEL_WIDTH_20;
                 oper_offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
                 rtw_rust_ht_warn_on(
-                    (rtw_rust_ht_chset_is_chbw_valid(chset, channel, oper_bw, oper_offset, 1, 1) == 0)
-                        as c_int,
+                    (rtw_rust_ht_chset_is_chbw_valid(chset, channel, oper_bw, oper_offset, 1, 1)
+                        == 0) as c_int,
                 );
                 if rtw_rust_ht_is_dfs_slave_with_rd(rfctl) != 0
                     && rtw_rust_ht_rfctl_dfs_domain_unknown(rfctl) == 0
                 {
                     rtw_rust_ht_warn_on(
-                        (rtw_rust_ht_chset_is_chbw_non_ocp(chset, channel, oper_bw, oper_offset) != 0)
-                            as c_int,
+                        (rtw_rust_ht_chset_is_chbw_non_ocp(chset, channel, oper_bw, oper_offset)
+                            != 0) as c_int,
                     );
                 }
             }
@@ -432,7 +445,8 @@ fn restructure_ht_ie_impl(
                 HW_VAR_BEST_AMPDU_DENSITY,
                 &mut best_ampdu_density as *mut U8 as *mut c_void,
             );
-            ht_capie.ampdu_params_info |= IEEE80211_HT_CAP_AMPDU_DENSITY & (best_ampdu_density << 2);
+            ht_capie.ampdu_params_info |=
+                IEEE80211_HT_CAP_AMPDU_DENSITY & (best_ampdu_density << 2);
         }
 
         rtw_rust_ht_set_ie(
@@ -446,7 +460,12 @@ fn restructure_ht_ie_impl(
         *ht_option = _TRUE as U8;
 
         if !in_ie.is_null() {
-            let ht_add = rtw_rust_ht_get_ie(in_ie, _HT_ADD_INFO_IE_ as c_int, &mut ielen, in_len as c_int);
+            let ht_add = rtw_rust_ht_get_ie(
+                in_ie,
+                _HT_ADD_INFO_IE_ as c_int,
+                &mut ielen,
+                in_len as c_int,
+            );
             if !ht_add.is_null() && ielen == 22 {
                 rtw_rust_ht_set_ie(
                     out_ie.add(*pout_len as usize),
