@@ -26,6 +26,17 @@ const _TRUE: c_int = 1;
 const ETH_ALEN: usize = 6;
 const NUM_PMKID_CACHE: usize = 16;
 
+const _WPA_IE_ID_: U8 = 0xdd;
+const _WPA2_IE_ID_: U8 = 0x30;
+const WLAN_EID_RSN: U8 = 48;
+const WIFI_UNDER_WPS: U32 = 0x00000100;
+const MLME_AUTHTYPE_SAE: U8 = 4;
+const Ndis802_11AuthModeWPA: U32 = 3;
+const Ndis802_11AuthModeWPAPSK: U32 = 4;
+const Ndis802_11AuthModeWPANone: U32 = 6;
+const Ndis802_11AuthModeWPA2: U32 = Ndis802_11AuthModeWPANone + 1;
+const Ndis802_11AuthModeWPA2PSK: U32 = Ndis802_11AuthModeWPANone + 2;
+
 #[repr(C)]
 struct RsneInfo {
     gcs: *mut U8,
@@ -100,6 +111,16 @@ type Adapter = c_void;
 extern "C" {
     fn rtw_mlme_wmm_rsn_qos_fields(a: *mut Adapter, max_sp: *mut U8, tid: *mut U16);
     fn rtw_mlme_wmm_rsn_pmkid(a: *mut Adapter, i: c_int) -> *mut c_void;
+    fn rtw_mlme_wmm_rsn_ndisauthtype(a: *mut Adapter) -> U32;
+    fn rtw_mlme_wmm_rsn_fw_state(a: *mut Adapter) -> U32;
+    fn rtw_mlme_wmm_rsn_assoc_bssid(a: *mut Adapter) -> *mut U8;
+    fn rtw_mlme_wmm_rsn_wps_ie(a: *mut Adapter) -> *mut U8;
+    fn rtw_mlme_wmm_rsn_wps_ie_len(a: *mut Adapter) -> c_int;
+    fn rtw_mlme_wmm_rsn_supplicant_ie(a: *mut Adapter) -> *mut U8;
+    fn rtw_mlme_wmm_rsn_auth_type(a: *mut Adapter) -> U8;
+    fn rtw_mlme_wmm_rsn_rsnx_ie(a: *mut Adapter) -> *mut U8;
+    fn rtw_mlme_wmm_rsn_rsnx_ie_len(a: *mut Adapter) -> c_int;
+    fn rtw_mlme_wmm_rsn_report_sec_ie(a: *mut Adapter, authmode: U8, sec_ie: *mut U8);
 }
 
 #[inline]
@@ -321,4 +342,73 @@ pub extern "C" fn rtw_rsn_sync_pmkid(
         *ie.add(1) = (ie_len - 2) as U8;
     }
     ie_len
+}
+
+macro_rules! adapter_sec {
+    ($a:expr, host: $h:expr, kern: $k:expr) => {
+        unsafe {
+            #[cfg(host_mlme_wmm_rsn_test)]
+            {
+                $h
+            }
+            #[cfg(all(not(host_mlme_wmm_rsn_test), rust_mlme_wmm_rsn))]
+            {
+                $k
+            }
+        }
+    };
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_restruct_sec_ie(adapter: *mut Adapter, out_ie: *mut U8) -> U32 {
+    if adapter.is_null() || out_ie.is_null() {
+        return 0;
+    }
+    let ndisauthmode = adapter_sec!(adapter, host: (*adapter).securitypriv.ndisauthtype, kern: rtw_mlme_wmm_rsn_ndisauthtype(adapter));
+    let mut authmode = 0u8;
+    if ndisauthmode == Ndis802_11AuthModeWPA || ndisauthmode == Ndis802_11AuthModeWPAPSK {
+        authmode = _WPA_IE_ID_;
+    }
+    if ndisauthmode == Ndis802_11AuthModeWPA2 || ndisauthmode == Ndis802_11AuthModeWPA2PSK {
+        authmode = _WPA2_IE_ID_;
+    }
+
+    let mut ielength = 0u32;
+    let under_wps = {
+        let fw = adapter_sec!(adapter, host: (*adapter).mlmepriv.fw_state, kern: rtw_mlme_wmm_rsn_fw_state(adapter));
+        fw & WIFI_UNDER_WPS != 0
+    };
+    if under_wps {
+        let len = adapter_sec!(adapter, host: (*adapter).securitypriv.wps_ie_len, kern: rtw_mlme_wmm_rsn_wps_ie_len(adapter));
+        let wps = adapter_sec!(adapter, host: (*adapter).securitypriv.wps_ie.as_mut_ptr(), kern: rtw_mlme_wmm_rsn_wps_ie(adapter));
+        memcpy_bytes(out_ie, wps, len as usize);
+        ielength = len as u32;
+    } else if authmode == _WPA_IE_ID_ || authmode == _WPA2_IE_ID_ {
+        let sup = adapter_sec!(adapter, host: (*adapter).securitypriv.supplicant_ie.as_mut_ptr(), kern: rtw_mlme_wmm_rsn_supplicant_ie(adapter));
+        let len = unsafe { *sup.add(1) as u32 + 2 };
+        memcpy_bytes(out_ie, sup, len as usize);
+        ielength = len;
+        #[cfg(all(not(host_mlme_wmm_rsn_test), rust_mlme_wmm_rsn))]
+        unsafe {
+            rtw_mlme_wmm_rsn_report_sec_ie(adapter, authmode, sup);
+        }
+    }
+
+    if authmode == WLAN_EID_RSN {
+        let bssid = adapter_sec!(adapter, host: (*adapter).mlmepriv.assoc_bssid.as_mut_ptr(), kern: rtw_mlme_wmm_rsn_assoc_bssid(adapter));
+        let i_entry = rtw_cached_pmkid(adapter, bssid);
+        ielength = rtw_rsn_sync_pmkid(adapter, out_ie, ielength, i_entry);
+    }
+
+    let auth = adapter_sec!(adapter, host: (*adapter).securitypriv.auth_type, kern: rtw_mlme_wmm_rsn_auth_type(adapter));
+    let rsnx_len = adapter_sec!(adapter, host: (*adapter).securitypriv.rsnx_ie_len, kern: rtw_mlme_wmm_rsn_rsnx_ie_len(adapter));
+    if auth == MLME_AUTHTYPE_SAE && rsnx_len >= 3 {
+        let sup = adapter_sec!(adapter, host: (*adapter).securitypriv.supplicant_ie.as_mut_ptr(), kern: rtw_mlme_wmm_rsn_supplicant_ie(adapter));
+        let off = unsafe { *sup.add(1) as u32 + 2 };
+        let rsnx = adapter_sec!(adapter, host: (*adapter).securitypriv.rsnx_ie.as_mut_ptr(), kern: rtw_mlme_wmm_rsn_rsnx_ie(adapter));
+        memcpy_bytes(out_ie.wrapping_add(off as usize), rsnx, rsnx_len as usize);
+        ielength += rsnx_len as u32;
+    }
+
+    ielength
 }

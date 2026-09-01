@@ -800,6 +800,11 @@ exit:
 
 #endif /* !CONFIG_RUST || HOST_MLME_WMM_RSN_TEST || !CONFIG_RUST_MLME_WMM_RSN */
 
+#if (defined(HOST_MLME_WMM_RSN_TEST) && !defined(RUST_MLME_WMM_RSN_ORACLE)) || \
+     (!defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
+      !defined(HOST_MLME_ROAMING_TEST) && \
+      (!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_WMM_RSN)))
+
 sint rtw_restruct_sec_ie(_adapter *adapter, u8 *out_ie)
 {
 	u8 authmode = 0x0;
@@ -850,6 +855,8 @@ sint rtw_restruct_sec_ie(_adapter *adapter, u8 *out_ie)
 	return ielength;
 }
 
+#endif /* HOST_MLME_WMM_RSN_TEST w/ C oracle || kernel w/o Rust WMM/RSN */
+
 #endif /* HOST_MLME_WMM_RSN_TEST || (kernel && !HOST_MLME_TEST && !HOST_MLME_UNASSOC && !HOST_MLME_ROAMING) */
 
 #if defined(CONFIG_RUST) && !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
@@ -872,6 +879,56 @@ void rtw_mlme_wmm_rsn_qos_fields(_adapter *a, u8 *max_sp, u16 *tid)
 RT_PMKID_LIST *rtw_mlme_wmm_rsn_pmkid(_adapter *a, int i)
 {
 	return &a->securitypriv.PMKIDList[i];
+}
+
+u32 rtw_mlme_wmm_rsn_ndisauthtype(_adapter *a)
+{
+	return a->securitypriv.ndisauthtype;
+}
+
+u32 rtw_mlme_wmm_rsn_fw_state(_adapter *a)
+{
+	return a->mlmepriv.fw_state;
+}
+
+u8 *rtw_mlme_wmm_rsn_assoc_bssid(_adapter *a)
+{
+	return a->mlmepriv.assoc_bssid;
+}
+
+u8 *rtw_mlme_wmm_rsn_wps_ie(_adapter *a)
+{
+	return a->securitypriv.wps_ie;
+}
+
+int rtw_mlme_wmm_rsn_wps_ie_len(_adapter *a)
+{
+	return a->securitypriv.wps_ie_len;
+}
+
+u8 *rtw_mlme_wmm_rsn_supplicant_ie(_adapter *a)
+{
+	return a->securitypriv.supplicant_ie;
+}
+
+u8 rtw_mlme_wmm_rsn_auth_type(_adapter *a)
+{
+	return a->securitypriv.auth_type;
+}
+
+u8 *rtw_mlme_wmm_rsn_rsnx_ie(_adapter *a)
+{
+	return a->securitypriv.rsnx_ie;
+}
+
+int rtw_mlme_wmm_rsn_rsnx_ie_len(_adapter *a)
+{
+	return a->securitypriv.rsnx_ie_len;
+}
+
+void rtw_mlme_wmm_rsn_report_sec_ie(_adapter *a, u8 authmode, u8 *sec_ie)
+{
+	rtw_report_sec_ie(a, authmode, sec_ie);
 }
 #endif
 
