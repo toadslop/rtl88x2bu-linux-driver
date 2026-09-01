@@ -173,7 +173,7 @@ pub extern "C" fn update_network(
         };
         if update_ie {
             (*dst).reserved = (*src).reserved;
-            core::ptr::copy_nonoverlapping(src as *const u8, dst as *mut u8, bss_sz(dst));
+            core::ptr::copy_nonoverlapping(src as *const u8, dst as *mut u8, bss_sz(src));
         }
         (*dst).phy_info.signal_strength = ss;
         (*dst).phy_info.signal_quality = sq;

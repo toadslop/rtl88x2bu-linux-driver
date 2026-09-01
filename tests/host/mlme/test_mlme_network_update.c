@@ -167,19 +167,26 @@ struct case_vec {
 	int adapter_ss, adapter_sq, assoc, same, update_ie;
 	int expect_ss, expect_sq, expect_rssi, expect_prot;
 	const char *src_ssid, *expect_ssid;
+	int dst_ie_len, src_ie_len;
+	int src_ie_marker_off, src_ie_marker_val;
+	int expect_ie_marker_off, expect_ie_marker_val;
 };
 
-static void fill_bss(WLAN_BSSID_EX *b, int ss, int sq, int rssi, const char *ssid)
+static void fill_bss(WLAN_BSSID_EX *b, int ss, int sq, int rssi, const char *ssid,
+		     int ie_len, int marker_off, int marker_val)
 {
-	u8 ie[12] = {0};
+	u8 ie[24] = {0};
+	int len = ie_len > 0 ? ie_len : 12;
 
 	memset(b, 0, sizeof(*b));
-	b->IELength = 12;
+	b->IELength = (u32)len;
 	b->PhyInfo.SignalStrength = (u8)ss;
 	b->PhyInfo.SignalQuality = (u8)sq;
 	b->Rssi = rssi;
 	ie[10] = WLAN_CAPABILITY_BSS;
-	memcpy(b->IEs, ie, sizeof(ie));
+	if (marker_off >= 0 && marker_off < len)
+		ie[marker_off] = (u8)marker_val;
+	memcpy(b->IEs, ie, (size_t)len);
 	memset(b->MacAddress, 0xaa, ETH_ALEN);
 	if (ssid && ssid[0]) {
 		b->Ssid.SsidLength = (u32)strlen(ssid);
@@ -194,10 +201,13 @@ static int run_case(const struct case_vec *v)
 
 	memset(&a, 0, sizeof(a));
 	host_protection_calls = 0;
-	fill_bss(&dst, v->dst_ss, v->dst_sq, v->dst_rssi, "dst-ap");
+	fill_bss(&dst, v->dst_ss, v->dst_sq, v->dst_rssi, "dst-ap",
+		 v->dst_ie_len, -1, 0);
 	fill_bss(&src, v->src_ss, v->src_sq, v->src_rssi,
-		 v->src_ssid ? v->src_ssid : (v->same ? "dst-ap" : "other"));
-	fill_bss(&a.mlmepriv.cur_network.network, v->dst_ss, v->dst_sq, v->dst_rssi, "dst-ap");
+		 v->src_ssid ? v->src_ssid : (v->same ? "dst-ap" : "other"),
+		 v->src_ie_len, v->src_ie_marker_off, v->src_ie_marker_val);
+	fill_bss(&a.mlmepriv.cur_network.network, v->dst_ss, v->dst_sq, v->dst_rssi, "dst-ap",
+		 v->dst_ie_len, -1, 0);
 	if (v->assoc)
 		a.mlmepriv.fw_state = WIFI_ASOC_STATE;
 	a.recvpriv.signal_strength = (u8)v->adapter_ss;
@@ -214,6 +224,9 @@ static int run_case(const struct case_vec *v)
 		if (v->expect_ssid &&
 		    strncmp((char *)dst.Ssid.Ssid, v->expect_ssid, dst.Ssid.SsidLength))
 			return -1;
+		if (v->expect_ie_marker_off >= 0 &&
+		    dst.IEs[v->expect_ie_marker_off] != (u8)v->expect_ie_marker_val)
+			return -1;
 		return 0;
 	}
 	if ((int)a.mlmepriv.cur_network.network.PhyInfo.SignalStrength != v->expect_ss ||
@@ -227,14 +240,15 @@ static int run_case(const struct case_vec *v)
 int main(void)
 {
 	static const struct case_vec cases[] = {
-		{"avg_signal", 0, 10, 20, -60, 30, 40, -50, 0, 0, 0, 0, 0, 14, 24, -58, 0, NULL, NULL},
-		{"wrong_channel", 0, 10, 20, -60, 30, 101, -50, 0, 0, 0, 0, 0, 10, 20, -60, 0, NULL, NULL},
-		{"assoc_wrong_channel", 0, 10, 20, -60, 30, 101, -50, 88, 77, 1, 1, 0, 88, 77, -60, 0, NULL, NULL},
-		{"assoc_same", 0, 10, 20, -60, 30, 40, -50, 88, 77, 1, 1, 0, 88, 77, -58, 0, NULL, NULL},
-		{"update_ie", 0, 10, 40, -60, 50, 40, -50, 0, 0, 0, 0, 1, 18, 40, -58, 0, "new-ssid", "new-ssid"},
-		{"update_current", 1, 10, 20, -60, 30, 40, -50, 55, 66, 1, 1, 0, 55, 66, -58, 1, NULL, NULL},
-		{"skip_not_assoc", 1, 10, 20, -60, 30, 40, -50, 0, 0, 0, 0, 0, 10, 20, -60, 0, NULL, NULL},
-		{"skip_diff_network", 1, 10, 20, -60, 30, 40, -50, 55, 66, 1, 0, 0, 10, 20, -60, 0, "other", NULL},
+		{"avg_signal", 0, 10, 20, -60, 30, 40, -50, 0, 0, 0, 0, 0, 14, 24, -58, 0, NULL, NULL, 0, 0, -1, 0, -1, 0},
+		{"wrong_channel", 0, 10, 20, -60, 30, 101, -50, 0, 0, 0, 0, 0, 10, 20, -60, 0, NULL, NULL, 0, 0, -1, 0, -1, 0},
+		{"assoc_wrong_channel", 0, 10, 20, -60, 30, 101, -50, 88, 77, 1, 1, 0, 88, 77, -60, 0, NULL, NULL, 0, 0, -1, 0, -1, 0},
+		{"assoc_same", 0, 10, 20, -60, 30, 40, -50, 88, 77, 1, 1, 0, 88, 77, -58, 0, NULL, NULL, 0, 0, -1, 0, -1, 0},
+		{"update_ie", 0, 10, 40, -60, 50, 40, -50, 0, 0, 0, 0, 1, 18, 40, -58, 0, "new-ssid", "new-ssid", 0, 0, -1, 0, -1, 0},
+		{"update_current", 1, 10, 20, -60, 30, 40, -50, 55, 66, 1, 1, 0, 55, 66, -58, 1, NULL, NULL, 0, 0, -1, 0, -1, 0},
+		{"skip_not_assoc", 1, 10, 20, -60, 30, 40, -50, 0, 0, 0, 0, 0, 10, 20, -60, 0, NULL, NULL, 0, 0, -1, 0, -1, 0},
+		{"skip_diff_network", 1, 10, 20, -60, 30, 40, -50, 55, 66, 1, 0, 0, 10, 20, -60, 0, "other", NULL, 0, 0, -1, 0, -1, 0},
+		{"ie_len_growth", 0, 10, 40, -60, 50, 40, -50, 0, 0, 0, 0, 1, 18, 40, -58, 0, NULL, NULL, 12, 24, 20, 0x42, 20, 0x42},
 	};
 	int bad = 0;
 
