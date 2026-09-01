@@ -131,6 +131,72 @@ int is_same_ess(WLAN_BSSID_EX *a, WLAN_BSSID_EX *b)
 
 #endif /* HOST_MLME_ROAMING_TEST */
 
+#if (!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_NETWORK_UPDATE)) && \
+    !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
+    !defined(HOST_MLME_WMM_RSN_TEST) && !defined(HOST_MLME_ROAMING_TEST)
+
+void update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src,
+		    _adapter *padapter, bool update_ie)
+{
+	long rssi_ori = dst->Rssi;
+	u8 sq_smp = src->PhyInfo.SignalQuality;
+	u8 ss_final, sq_final;
+	long rssi_final;
+
+	if (check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE) &&
+	    is_same_network(&(padapter->mlmepriv.cur_network.network), src, 0)) {
+		ss_final = padapter->recvpriv.signal_strength;
+		sq_final = padapter->recvpriv.signal_qual;
+		if (sq_smp != 101)
+			rssi_final = (src->Rssi + dst->Rssi * 4) / 5;
+		else
+			rssi_final = rssi_ori;
+	} else if (sq_smp != 101) {
+		ss_final = ((u32)(src->PhyInfo.SignalStrength) +
+			    (u32)(dst->PhyInfo.SignalStrength) * 4) / 5;
+		sq_final = ((u32)(src->PhyInfo.SignalQuality) +
+			    (u32)(dst->PhyInfo.SignalQuality) * 4) / 5;
+		rssi_final = (src->Rssi + dst->Rssi * 4) / 5;
+	} else {
+		ss_final = dst->PhyInfo.SignalStrength;
+		sq_final = dst->PhyInfo.SignalQuality;
+		rssi_final = dst->Rssi;
+	}
+
+	if (update_ie) {
+		dst->Reserved[0] = src->Reserved[0];
+		dst->Reserved[1] = src->Reserved[1];
+		_rtw_memcpy((u8 *)dst, (u8 *)src, get_WLAN_BSSID_EX_sz(src));
+	}
+#ifdef CONFIG_LAYER2_ROAMING
+	dst->tsf = src->tsf;
+#endif
+	dst->PhyInfo.SignalStrength = ss_final;
+	dst->PhyInfo.SignalQuality = sq_final;
+	dst->Rssi = rssi_final;
+}
+
+void update_current_network(_adapter *adapter, WLAN_BSSID_EX *pnetwork)
+{
+	struct mlme_priv *pmlmepriv = &(adapter->mlmepriv);
+
+	rtw_bug_check(&(pmlmepriv->cur_network.network),
+		      &(pmlmepriv->cur_network.network),
+		      &(pmlmepriv->cur_network.network),
+		      &(pmlmepriv->cur_network.network));
+
+	if ((check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE) &&
+	    (is_same_network(&(pmlmepriv->cur_network.network), pnetwork, 0))) {
+		update_network(&(pmlmepriv->cur_network.network), pnetwork, adapter, _TRUE);
+		rtw_update_protection(adapter,
+				      (pmlmepriv->cur_network.network.IEs) +
+				      sizeof(NDIS_802_11_FIXED_IEs),
+				      pmlmepriv->cur_network.network.IELength);
+	}
+}
+
+#endif /* !CONFIG_RUST || !CONFIG_RUST_MLME_NETWORK_UPDATE */
+
 #ifdef CONFIG_RTW_MULTI_AP
 #if !defined(CONFIG_RUST) || defined(HOST_MLME_UNASSOC_TEST) || !defined(CONFIG_RUST_MLME_UNASSOC)
 
