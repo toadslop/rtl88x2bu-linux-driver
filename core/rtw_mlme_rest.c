@@ -20,6 +20,8 @@
 #include "host_mlme_wmm_rsn_types.h"
 #elif defined(HOST_MLME_ROAMING_TEST)
 #include "host_mlme_roaming_types.h"
+#elif defined(HOST_MLME_80211D_TEST)
+#include "host_mlme_80211d_types.h"
 #elif defined(HOST_MLME_TEST)
 #include "host_mlme_types.h"
 #else
@@ -131,9 +133,198 @@ int is_same_ess(WLAN_BSSID_EX *a, WLAN_BSSID_EX *b)
 
 #endif /* HOST_MLME_ROAMING_TEST */
 
+#ifdef CONFIG_80211D
+#if defined(HOST_MLME_80211D_TEST) || \
+    ((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_80211D)) && \
+     !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
+     !defined(HOST_MLME_WMM_RSN_TEST) && !defined(HOST_MLME_ROAMING_TEST))
+
+void process_80211d(PADAPTER padapter, WLAN_BSSID_EX *bssid)
+{
+	struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
+	struct registry_priv *pregistrypriv;
+	struct mlme_ext_priv *pmlmeext;
+	RT_CHANNEL_INFO *chplan_new;
+	u8 channel;
+	u8 i;
+
+	pregistrypriv = &padapter->registrypriv;
+	pmlmeext = &padapter->mlmeextpriv;
+
+	if (pregistrypriv->enable80211d
+	    && (!pmlmeext->update_channel_plan_by_ap_done)) {
+		u8 *ie, *p;
+		sint len;
+		RT_CHANNEL_PLAN chplan_ap;
+		RT_CHANNEL_INFO *chplan_sta = NULL;
+		u8 country[4];
+		u8 fcn;
+		u8 noc;
+		u8 j, k;
+
+		ie = rtw_get_ie(bssid->IEs + _FIXED_IE_LENGTH_, _COUNTRY_IE_, &len,
+				bssid->IELength - _FIXED_IE_LENGTH_);
+		if (!ie)
+			return;
+		if (len < 6)
+			return;
+
+		ie += 2;
+		p = ie;
+		ie += len;
+
+		_rtw_memset(country, 0, 4);
+		_rtw_memcpy(country, p, 3);
+		p += 3;
+		RTW_INFO("%s: 802.11d country=%s\n", __func__, country);
+
+		i = 0;
+		while ((ie - p) >= 3) {
+			fcn = *(p++);
+			noc = *(p++);
+			p++;
+
+			for (j = 0; j < noc; j++) {
+				if (fcn <= 14)
+					channel = fcn + j;
+				else
+					channel = fcn + j * 4;
+
+				chplan_ap.Channel[i++] = channel;
+			}
+		}
+		chplan_ap.Len = i;
+
+		chplan_sta = rtw_malloc(sizeof(RT_CHANNEL_INFO) * MAX_CHANNEL_NUM);
+		if (!chplan_sta)
+			goto done_update_chplan_from_ap;
+
+		_rtw_memcpy(chplan_sta, rfctl->channel_set,
+			    sizeof(RT_CHANNEL_INFO) * MAX_CHANNEL_NUM);
+		_rtw_memset(rfctl->channel_set, 0, sizeof(rfctl->channel_set));
+		chplan_new = rfctl->channel_set;
+
+		i = j = k = 0;
+		if (pregistrypriv->wireless_mode & WIRELESS_11G) {
+			do {
+				if ((i == MAX_CHANNEL_NUM)
+				    || (chplan_sta[i].ChannelNum == 0)
+				    || (chplan_sta[i].ChannelNum > 14))
+					break;
+
+				if ((j == chplan_ap.Len) || (chplan_ap.Channel[j] > 14))
+					break;
+
+				if (chplan_sta[i].ChannelNum == chplan_ap.Channel[j]) {
+					chplan_new[k].ChannelNum = chplan_ap.Channel[j];
+					i++;
+					j++;
+					k++;
+				} else if (chplan_sta[i].ChannelNum < chplan_ap.Channel[j]) {
+					chplan_new[k].ChannelNum = chplan_sta[i].ChannelNum;
+					chplan_new[k].flags |= RTW_CHF_NO_IR;
+					i++;
+					k++;
+				} else if (chplan_sta[i].ChannelNum > chplan_ap.Channel[j]) {
+					chplan_new[k].ChannelNum = chplan_ap.Channel[j];
+					j++;
+					k++;
+				}
+			} while (1);
+
+			while ((i < MAX_CHANNEL_NUM)
+			       && (chplan_sta[i].ChannelNum != 0)
+			       && (chplan_sta[i].ChannelNum <= 14)) {
+				chplan_new[k].ChannelNum = chplan_sta[i].ChannelNum;
+				chplan_new[k].flags |= RTW_CHF_NO_IR;
+				i++;
+				k++;
+			}
+
+			while ((j < chplan_ap.Len) && (chplan_ap.Channel[j] <= 14)) {
+				chplan_new[k].ChannelNum = chplan_ap.Channel[j];
+				j++;
+				k++;
+			}
+		} else {
+			while ((i < MAX_CHANNEL_NUM)
+			       && (chplan_sta[i].ChannelNum != 0)
+			       && (chplan_sta[i].ChannelNum <= 14)) {
+				chplan_new[k].ChannelNum = chplan_sta[i].ChannelNum;
+				if (chplan_sta[i].flags & RTW_CHF_NO_IR)
+					chplan_new[k].flags |= RTW_CHF_NO_IR;
+				i++;
+				k++;
+			}
+
+			while ((j < chplan_ap.Len) && (chplan_ap.Channel[j] <= 14))
+				j++;
+		}
+
+		if (pregistrypriv->wireless_mode & WIRELESS_11A) {
+			do {
+				if ((i >= MAX_CHANNEL_NUM)
+				    || (chplan_sta[i].ChannelNum == 0))
+					break;
+
+				if ((j == chplan_ap.Len) || (chplan_ap.Channel[j] == 0))
+					break;
+
+				if (chplan_sta[i].ChannelNum == chplan_ap.Channel[j]) {
+					chplan_new[k].ChannelNum = chplan_ap.Channel[j];
+					i++;
+					j++;
+					k++;
+				} else if (chplan_sta[i].ChannelNum < chplan_ap.Channel[j]) {
+					chplan_new[k].ChannelNum = chplan_sta[i].ChannelNum;
+					chplan_new[k].flags |= RTW_CHF_NO_IR;
+					i++;
+					k++;
+				} else if (chplan_sta[i].ChannelNum > chplan_ap.Channel[j]) {
+					chplan_new[k].ChannelNum = chplan_ap.Channel[j];
+					j++;
+					k++;
+				}
+			} while (1);
+
+			while ((i < MAX_CHANNEL_NUM) && (chplan_sta[i].ChannelNum != 0)) {
+				chplan_new[k].ChannelNum = chplan_sta[i].ChannelNum;
+				chplan_new[k].flags |= RTW_CHF_NO_IR;
+				i++;
+				k++;
+			}
+
+			while ((j < chplan_ap.Len) && (chplan_ap.Channel[j] != 0)) {
+				chplan_new[k].ChannelNum = chplan_ap.Channel[j];
+				j++;
+				k++;
+			}
+		} else {
+			while ((i < MAX_CHANNEL_NUM) && (chplan_sta[i].ChannelNum != 0)) {
+				chplan_new[k].ChannelNum = chplan_sta[i].ChannelNum;
+				if (chplan_sta[i].flags & RTW_CHF_NO_IR)
+					chplan_new[k].flags |= RTW_CHF_NO_IR;
+				i++;
+				k++;
+			}
+		}
+
+		pmlmeext->update_channel_plan_by_ap_done = 1;
+		rtw_nlrtw_reg_change_event(padapter);
+
+done_update_chplan_from_ap:
+		if (chplan_sta)
+			rtw_mfree(chplan_sta, sizeof(RT_CHANNEL_INFO) * MAX_CHANNEL_NUM);
+	}
+}
+
+#endif /* HOST_MLME_80211D_TEST || kernel C path */
+#endif /* CONFIG_80211D */
+
 #if (!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_NETWORK_UPDATE)) && \
     !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
-    !defined(HOST_MLME_WMM_RSN_TEST) && !defined(HOST_MLME_ROAMING_TEST)
+    !defined(HOST_MLME_WMM_RSN_TEST) && !defined(HOST_MLME_ROAMING_TEST) && \
+    !defined(HOST_MLME_80211D_TEST)
 
 void update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src,
 		    _adapter *padapter, bool update_ie)
@@ -728,7 +919,7 @@ exit:
 
 #if (defined(HOST_MLME_WMM_RSN_TEST) && !defined(RUST_MLME_WMM_RSN_ORACLE)) || \
      (!defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
-      !defined(HOST_MLME_ROAMING_TEST) && \
+      !defined(HOST_MLME_ROAMING_TEST) && !defined(HOST_MLME_80211D_TEST) && \
       (!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_WMM_RSN)))
 
 /* adjust IEs for rtw_joinbss_cmd in WMM */
@@ -799,7 +990,7 @@ int rtw_restruct_wmm_ie(_adapter *adapter, u8 *in_ie, u8 *out_ie, uint in_len, u
 
 #if defined(HOST_MLME_WMM_RSN_TEST) || \
      (!defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
-      !defined(HOST_MLME_ROAMING_TEST))
+      !defined(HOST_MLME_ROAMING_TEST) && !defined(HOST_MLME_80211D_TEST))
 
 #if !defined(CONFIG_RUST) || defined(HOST_MLME_WMM_RSN_TEST) || !defined(CONFIG_RUST_MLME_WMM_RSN)
 
@@ -868,7 +1059,7 @@ exit:
 
 #if (defined(HOST_MLME_WMM_RSN_TEST) && !defined(RUST_MLME_WMM_RSN_ORACLE)) || \
      (!defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
-      !defined(HOST_MLME_ROAMING_TEST) && \
+      !defined(HOST_MLME_ROAMING_TEST) && !defined(HOST_MLME_80211D_TEST) && \
       (!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_WMM_RSN)))
 
 sint rtw_restruct_sec_ie(_adapter *adapter, u8 *out_ie)
@@ -926,7 +1117,8 @@ sint rtw_restruct_sec_ie(_adapter *adapter, u8 *out_ie)
 #endif /* HOST_MLME_WMM_RSN_TEST || (kernel && !HOST_MLME_TEST && !HOST_MLME_UNASSOC && !HOST_MLME_ROAMING) */
 
 #if defined(CONFIG_RUST) && !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
-    !defined(HOST_MLME_WMM_RSN_TEST) && !defined(HOST_MLME_ROAMING_TEST)
+    !defined(HOST_MLME_WMM_RSN_TEST) && !defined(HOST_MLME_ROAMING_TEST) && \
+    !defined(HOST_MLME_80211D_TEST)
 u8 *rtw_mlme_rest_bss_ies(WLAN_BSSID_EX *bss) { return bss->IEs; }
 u32 *rtw_mlme_rest_bss_ssid_length(WLAN_BSSID_EX *bss) { return &bss->Ssid.SsidLength; }
 u8 *rtw_mlme_rest_bss_ssid(WLAN_BSSID_EX *bss) { return bss->Ssid.Ssid; }

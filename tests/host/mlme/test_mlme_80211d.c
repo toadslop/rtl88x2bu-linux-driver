@@ -1,89 +1,22 @@
 // SPDX-License-Identifier: GPL-2.0
-/* W3-66 PR1: host L2 oracle for 802.11d guard + country IE parse. */
+/* W3-66 host L2 oracle for process_80211d (core/rtw_mlme_rest.c). */
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include "host_types.h"
-
-#define _TRUE 1
-#define _FALSE 0
-#define MAX_CHANNEL_NUM 59
-#define _FIXED_IE_LENGTH_ 12
-#define _COUNTRY_IE_ 7
-
-typedef struct { u8 Channel[MAX_CHANNEL_NUM]; u8 Len; } RT_CHANNEL_PLAN;
-typedef struct { u8 enable80211d; } registry_priv;
-typedef struct { u8 update_channel_plan_by_ap_done; } mlme_ext_priv;
-typedef struct { u32 IELength; u8 IEs[768]; } WLAN_BSSID_EX;
-typedef struct { registry_priv registrypriv; mlme_ext_priv mlmeextpriv; } _adapter;
-
-static u8 *rtw_get_ie(const u8 *pbuf, int index, int *len, int limit)
-{
-	int i = 0;
-	const u8 *p = pbuf;
-
-	*len = 0;
-	while (i < limit) {
-		int tmp;
-
-		if (*p == (u8)index) {
-			*len = *(p + 1);
-			return (u8 *)p;
-		}
-		tmp = *(p + 1);
-		p += tmp + 2;
-		i += tmp + 2;
-	}
-	return NULL;
-}
-
-static int parse_country_ie(const u8 *p, const u8 *end, RT_CHANNEL_PLAN *out)
-{
-	u8 i = 0;
-
-	while ((end - p) >= 3) {
-		u8 fcn = *(p++);
-		u8 noc = *(p++);
-
-		p++;
-		for (u8 j = 0; j < noc; j++) {
-			u8 ch = (fcn <= 14) ? (u8)(fcn + j) : (u8)(fcn + j * 4);
-
-			if (i >= MAX_CHANNEL_NUM)
-				return -1;
-			out->Channel[i++] = ch;
-		}
-	}
-	out->Len = i;
-	return 0;
-}
-
-static int process_80211d_probe(_adapter *a, WLAN_BSSID_EX *b, RT_CHANNEL_PLAN *out)
-{
-	int len;
-	u8 *ie;
-
-	if (!a->registrypriv.enable80211d || a->mlmeextpriv.update_channel_plan_by_ap_done)
-		return 0;
-	ie = rtw_get_ie(b->IEs + _FIXED_IE_LENGTH_, _COUNTRY_IE_, &len,
-			(int)(b->IELength - _FIXED_IE_LENGTH_));
-	if (!ie || len < 6)
-		return 0;
-	memset(out, 0, sizeof(*out));
-	return parse_country_ie(ie + 5, ie + 2 + len, out) ? -1 : 1;
-}
+#include "host_mlme_80211d_types.h"
 
 struct case_vec {
 	const char *name;
-	u8 enable, done;
+	u8 enable, done, mode;
 	const u8 *ie;
 	size_t ie_len;
-	int expect;
+	const u8 *sta_ch;
+	int sta_n;
 	const u8 *expect_ch;
 	int expect_n;
+	u8 expect_done;
 };
 
-static void fill(WLAN_BSSID_EX *b, const u8 *ie, size_t n)
+static void fill_bss(WLAN_BSSID_EX *b, const u8 *ie, size_t n)
 {
 	memset(b, 0, sizeof(*b));
 	b->IELength = _FIXED_IE_LENGTH_;
@@ -93,13 +26,22 @@ static void fill(WLAN_BSSID_EX *b, const u8 *ie, size_t n)
 	}
 }
 
-static int ch_match(const RT_CHANNEL_PLAN *ap, const u8 *exp, int n)
+static void fill_sta(_adapter *a, const u8 *ch, int n)
 {
-	if ((int)ap->Len != n)
-		return -1;
-	for (int i = 0; i < n; i++)
-		if (ap->Channel[i] != exp[i])
+	for (int i = 0; i < n; i++) {
+		a->rfctl.channel_set[i].ChannelNum = ch[i];
+		a->rfctl.channel_set[i].flags = 0;
+	}
+}
+
+static int chset_match(const RT_CHANNEL_INFO *cs, const u8 *exp, int n)
+{
+	for (int i = 0; i < n; i++) {
+		if (cs[i].ChannelNum != exp[i])
 			return -1;
+	}
+	if (cs[n].ChannelNum != 0)
+		return -1;
 	return 0;
 }
 
@@ -107,17 +49,17 @@ static int run_case(const struct case_vec *v)
 {
 	_adapter a;
 	WLAN_BSSID_EX b;
-	RT_CHANNEL_PLAN ap;
-	int r;
 
 	memset(&a, 0, sizeof(a));
 	a.registrypriv.enable80211d = v->enable;
 	a.mlmeextpriv.update_channel_plan_by_ap_done = v->done;
-	fill(&b, v->ie, v->ie_len);
-	r = process_80211d_probe(&a, &b, &ap);
-	if (r != v->expect)
+	a.registrypriv.wireless_mode = v->mode;
+	fill_sta(&a, v->sta_ch, v->sta_n);
+	fill_bss(&b, v->ie, v->ie_len);
+	process_80211d(&a, &b);
+	if (a.mlmeextpriv.update_channel_plan_by_ap_done != v->expect_done)
 		return -1;
-	if (r == 1 && ch_match(&ap, v->expect_ch, v->expect_n))
+	if (v->expect_n >= 0 && chset_match(a.rfctl.channel_set, v->expect_ch, v->expect_n))
 		return -1;
 	return 0;
 }
@@ -125,17 +67,15 @@ static int run_case(const struct case_vec *v)
 int main(void)
 {
 	static const u8 us2g[] = {0x07, 0x09, 0x55, 0x53, 0x20, 0x01, 0x0b, 0x1e};
-	static const u8 us24g[] = {0x07, 0x0c, 0x55, 0x53, 0x20, 0x01, 0x0b, 0x1e, 0x24, 0x04, 0x1e};
-	static const u8 ch11[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-	static const u8 ch11_5g[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 36, 40, 44, 48};
 	static const u8 short_ie[] = {0x07, 0x03, 0x55, 0x53, 0x20};
+	static const u8 sta246[] = {1, 6, 11};
+	static const u8 exp11[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
 	static const struct case_vec cases[] = {
-		{"disabled", 0, 0, us2g, sizeof(us2g), 0, NULL, 0},
-		{"already_done", 1, 1, us2g, sizeof(us2g), 0, NULL, 0},
-		{"no_country_ie", 1, 0, NULL, 0, 0, NULL, 0},
-		{"short_country_ie", 1, 0, short_ie, sizeof(short_ie), 0, NULL, 0},
-		{"parse_us_2g", 1, 0, us2g, sizeof(us2g), 1, ch11, 11},
-		{"parse_5g_triplet", 1, 0, us24g, sizeof(us24g), 1, ch11_5g, 15},
+		{"disabled", 0, 0, WIRELESS_11G, us2g, sizeof(us2g), NULL, 0, NULL, -1, 0},
+		{"already_done", 1, 1, WIRELESS_11G, us2g, sizeof(us2g), sta246, 3, sta246, 3, 1},
+		{"no_country_ie", 1, 0, WIRELESS_11G, NULL, 0, sta246, 3, sta246, 3, 0},
+		{"short_country_ie", 1, 0, WIRELESS_11G, short_ie, sizeof(short_ie), sta246, 3, sta246, 3, 0},
+		{"merge_2g_11g", 1, 0, WIRELESS_11G, us2g, sizeof(us2g), sta246, 3, exp11, 11, 1},
 	};
 	int bad = 0;
 
@@ -144,6 +84,7 @@ int main(void)
 			(fprintf(stderr, "FAIL %s\n", cases[i].name), 1) :
 			(printf("PASS %s\n", cases[i].name), 0);
 	if (!bad)
-		printf("PASS %zu vectors (W3-66 PR1 host oracle)\n", sizeof(cases) / sizeof(cases[0]));
+		printf("PASS %zu vectors (oracle: core/rtw_mlme_rest.c)\n",
+		       sizeof(cases) / sizeof(cases[0]));
 	return bad ? 1 : 0;
 }

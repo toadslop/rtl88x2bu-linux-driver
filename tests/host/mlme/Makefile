@@ -133,13 +133,14 @@ test-mlme-network-update-rust: test_mlme_network_update_rust
 test_mlme_network_update_rust: test_mlme_network_update.c librust_mlme_network_update.a
 	$(CC) $(CFLAGS_NETWORK_UPDATE) -DRUST_MLME_NETWORK_UPDATE_ORACLE -o $@ test_mlme_network_update.c librust_mlme_network_update.a
 
-CFLAGS_80211D := $(CFLAGS_COMMON)
+CFLAGS_80211D := $(CFLAGS_COMMON) -DCONFIG_80211D -DHOST_MLME_80211D_TEST
+MLME_80211D_SHIM := host_mlme_80211d_shim.c
 
 test-mlme-80211d: test_mlme_80211d
 	./test_mlme_80211d
 
-test_mlme_80211d: test_mlme_80211d.c
-	$(CC) $(CFLAGS_80211D) -o $@ $<
+test_mlme_80211d: test_mlme_80211d.c $(MLME_REST_SRC) $(MLME_80211D_SHIM)
+	$(CC) $(CFLAGS_80211D) -o $@ test_mlme_80211d.c $(MLME_REST_SRC) $(MLME_80211D_SHIM)
 
 clean:
 	rm -f test_mlme test_mlme_rust test_mlme_unassoc test_mlme_unassoc_rust test_mlme_unassoc_rust_full test_mlme_wmm_rsn test_mlme_wmm_rsn_rust test_mlme_roaming test_mlme_roaming_rust test_mlme_network_update test_mlme_network_update_rust test_mlme_80211d librust_mlme_rest.a librust_mlme_unassoc.a librust_mlme_wmm_rsn.a librust_mlme_roaming.a librust_mlme_network_update.a
