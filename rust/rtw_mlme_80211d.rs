@@ -131,7 +131,7 @@ fn parse_ap(p: *const U8, end: *const U8, ap: &mut ChPlan) {
 
 fn push_no_ir(dst: &mut ChInfo, src: &ChInfo) {
     dst.num = src.num;
-    dst.flags = src.flags | NO_IR;
+    dst.flags |= NO_IR;
 }
 
 #[rustfmt::skip]
