@@ -22,6 +22,8 @@
 #include "host_mlme_roaming_types.h"
 #elif defined(HOST_MLME_80211D_TEST)
 #include "host_mlme_80211d_types.h"
+#elif defined(HOST_MLME_HT_RESTRUCTURE_TEST)
+#include "host_mlme_ht_restructure_types.h"
 #elif defined(HOST_MLME_TEST)
 #include "host_mlme_types.h"
 #else
@@ -137,7 +139,8 @@ int is_same_ess(WLAN_BSSID_EX *a, WLAN_BSSID_EX *b)
 #if defined(HOST_MLME_80211D_TEST) || \
     ((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_80211D)) && \
      !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
-     !defined(HOST_MLME_WMM_RSN_TEST) && !defined(HOST_MLME_ROAMING_TEST))
+     !defined(HOST_MLME_WMM_RSN_TEST) && !defined(HOST_MLME_ROAMING_TEST) && \
+     !defined(HOST_MLME_HT_RESTRUCTURE_TEST))
 
 void process_80211d(PADAPTER padapter, WLAN_BSSID_EX *bssid)
 {
@@ -354,10 +357,255 @@ done_update_chplan_from_ap:
 #endif /* HOST_MLME_80211D_TEST || kernel C path */
 #endif /* CONFIG_80211D */
 
+#if defined(CONFIG_80211N_HT)
+#if defined(HOST_MLME_HT_RESTRUCTURE_TEST) || \
+    ((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_HT_RESTRUCTURE)) && \
+     !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
+     !defined(HOST_MLME_WMM_RSN_TEST) && !defined(HOST_MLME_ROAMING_TEST) && \
+     !defined(HOST_MLME_80211D_TEST))
+
+/* the fucntion is >= passive_level */
+unsigned int rtw_restructure_ht_ie(_adapter *padapter, u8 *in_ie, u8 *out_ie, uint in_len, uint *pout_len, u8 channel)
+{
+	u32 ielen, out_len;
+	u32 rx_packet_offset, max_recvbuf_sz;
+	HT_CAP_AMPDU_FACTOR max_rx_ampdu_factor;
+	HT_CAP_AMPDU_DENSITY best_ampdu_density;
+	unsigned char *p, *pframe;
+	struct rtw_ieee80211_ht_cap ht_capie;
+	u8	cbw40_enable = 0, rf_num = 0, rx_stbc_nss = 0, rx_nss = 0;
+	struct registry_priv *pregistrypriv = &padapter->registrypriv;
+	struct mlme_priv	*pmlmepriv = &padapter->mlmepriv;
+	struct ht_priv		*phtpriv = &pmlmepriv->htpriv;
+	struct mlme_ext_priv	*pmlmeext = &padapter->mlmeextpriv;
+#ifdef CONFIG_80211AC_VHT
+	struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
+	struct vht_priv	*pvhtpriv = &pmlmepriv->vhtpriv;
+#endif /* CONFIG_80211AC_VHT */
+
+	phtpriv->ht_option = _FALSE;
+
+	out_len = *pout_len;
+
+	_rtw_memset(&ht_capie, 0, sizeof(struct rtw_ieee80211_ht_cap));
+
+	ht_capie.cap_info = IEEE80211_HT_CAP_DSSSCCK40;
+
+	if (phtpriv->sgi_20m)
+		ht_capie.cap_info |= IEEE80211_HT_CAP_SGI_20;
+
+	/* check if 40MHz is allowed according to hal cap and registry */
+	if (hal_chk_bw_cap(padapter, BW_CAP_40M)) {
+		if (channel > 14) {
+			if (REGSTY_IS_BW_5G_SUPPORT(pregistrypriv, CHANNEL_WIDTH_40))
+				cbw40_enable = 1;
+		} else {
+			if (REGSTY_IS_BW_2G_SUPPORT(pregistrypriv, CHANNEL_WIDTH_40))
+				cbw40_enable = 1;
+		}
+	}
+
+	if (cbw40_enable) {
+		struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
+		RT_CHANNEL_INFO *chset = rfctl->channel_set;
+		u8 oper_bw = CHANNEL_WIDTH_20, oper_offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+
+		if (in_ie == NULL) {
+			/* TDLS: TODO 20/40 issue */
+			if (check_fwstate(pmlmepriv, WIFI_STATION_STATE)) {
+				oper_bw = padapter->mlmeextpriv.cur_bwmode;
+				if (oper_bw > CHANNEL_WIDTH_40)
+					oper_bw = CHANNEL_WIDTH_40;
+			} else
+				/* TDLS: TODO 40? */
+				oper_bw = CHANNEL_WIDTH_40;
+		} else {
+			p = rtw_get_ie(in_ie, WLAN_EID_HT_OPERATION, &ielen, in_len);
+			if (p && ielen == HT_OP_IE_LEN) {
+				if (GET_HT_OP_ELE_STA_CHL_WIDTH(p + 2)) {
+					switch (GET_HT_OP_ELE_2ND_CHL_OFFSET(p + 2)) {
+					case SCA:
+						oper_bw = CHANNEL_WIDTH_40;
+						oper_offset = HAL_PRIME_CHNL_OFFSET_LOWER;
+						break;
+					case SCB:
+						oper_bw = CHANNEL_WIDTH_40;
+						oper_offset = HAL_PRIME_CHNL_OFFSET_UPPER;
+						break;
+					}
+				}
+			}
+			// IOT issue : AP TP-Link WDR6500
+			if(oper_bw == CHANNEL_WIDTH_40){ 
+				p = rtw_get_ie(in_ie, WLAN_EID_HT_CAP, &ielen, in_len);
+				if (p && ielen == HT_CAP_IE_LEN) {
+					oper_bw = GET_HT_CAP_ELE_CHL_WIDTH(p + 2)  ? CHANNEL_WIDTH_40 : CHANNEL_WIDTH_20;
+					if(oper_bw == CHANNEL_WIDTH_20)
+						oper_offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+				}
+			}
+		}
+
+		/* adjust bw to fit in channel plan setting */
+		if (oper_bw == CHANNEL_WIDTH_40
+			&& oper_offset != HAL_PRIME_CHNL_OFFSET_DONT_CARE /* check this because TDLS has no info to set offset */
+			&& (!rtw_chset_is_chbw_valid(chset, channel, oper_bw, oper_offset, 1, 1)
+				|| (IS_DFS_SLAVE_WITH_RD(rfctl)
+					&& !rtw_rfctl_dfs_domain_unknown(rfctl)
+					&& rtw_chset_is_chbw_non_ocp(chset, channel, oper_bw, oper_offset))
+				)
+		) {
+			oper_bw = CHANNEL_WIDTH_20;
+			oper_offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+			rtw_warn_on(!rtw_chset_is_chbw_valid(chset, channel, oper_bw, oper_offset, 1, 1));
+			if (IS_DFS_SLAVE_WITH_RD(rfctl) && !rtw_rfctl_dfs_domain_unknown(rfctl))
+				rtw_warn_on(rtw_chset_is_chbw_non_ocp(chset, channel, oper_bw, oper_offset));
+		}
+
+		if (oper_bw == CHANNEL_WIDTH_40) {
+			ht_capie.cap_info |= IEEE80211_HT_CAP_SUP_WIDTH;
+			if (phtpriv->sgi_40m)
+				ht_capie.cap_info |= IEEE80211_HT_CAP_SGI_40;
+		}
+
+		cbw40_enable = oper_bw == CHANNEL_WIDTH_40 ? 1 : 0;
+	}
+
+	/* todo: disable SM power save mode */
+	ht_capie.cap_info |= IEEE80211_HT_CAP_SM_PS;
+
+	/* RX LDPC */
+	if (TEST_FLAG(phtpriv->ldpc_cap, LDPC_HT_ENABLE_RX)) {
+		ht_capie.cap_info |= IEEE80211_HT_CAP_LDPC_CODING;
+		RTW_INFO("[HT] Declare supporting RX LDPC\n");
+	}
+
+	/* TX STBC */
+	if (TEST_FLAG(phtpriv->stbc_cap, STBC_HT_ENABLE_TX)) {
+		ht_capie.cap_info |= IEEE80211_HT_CAP_TX_STBC;
+		RTW_INFO("[HT] Declare supporting TX STBC\n");
+	}
+
+	/* RX STBC */
+	if (TEST_FLAG(phtpriv->stbc_cap, STBC_HT_ENABLE_RX)) {
+		if ((pregistrypriv->rx_stbc == 0x3) ||							/* enable for 2.4/5 GHz */
+		    ((channel <= 14) && (pregistrypriv->rx_stbc == 0x1)) ||		/* enable for 2.4GHz */
+		    ((channel > 14) && (pregistrypriv->rx_stbc == 0x2)) ||		/* enable for 5GHz */
+		    (pregistrypriv->wifi_spec == 1)) {
+			/* HAL_DEF_RX_STBC means STBC RX spatial stream, todo: VHT 4 streams */
+			rtw_hal_get_def_var(padapter, HAL_DEF_RX_STBC, (u8 *)(&rx_stbc_nss));
+			SET_HT_CAP_ELE_RX_STBC(&ht_capie, rx_stbc_nss);
+			RTW_INFO("[HT] Declare supporting RX STBC = %d\n", rx_stbc_nss);
+		}
+	}
+
+	/* fill default supported_mcs_set */
+	_rtw_memcpy(ht_capie.supp_mcs_set, pmlmeext->default_supported_mcs_set, 16);
+
+	/* update default supported_mcs_set */
+	rx_nss = GET_HAL_RX_NSS(padapter);
+
+	switch (rx_nss) {
+	case 1:
+		set_mcs_rate_by_mask(ht_capie.supp_mcs_set, MCS_RATE_1R);
+		break;
+	case 2:
+		#ifdef CONFIG_DISABLE_MCS13TO15
+		if (cbw40_enable && pregistrypriv->wifi_spec != 1)
+			set_mcs_rate_by_mask(ht_capie.supp_mcs_set, MCS_RATE_2R_13TO15_OFF);
+		else
+		#endif
+			set_mcs_rate_by_mask(ht_capie.supp_mcs_set, MCS_RATE_2R);
+		break;
+	case 3:
+		set_mcs_rate_by_mask(ht_capie.supp_mcs_set, MCS_RATE_3R);
+		break;
+	case 4:
+		set_mcs_rate_by_mask(ht_capie.supp_mcs_set, MCS_RATE_4R);
+		break;
+	default:
+		RTW_WARN("rf_type:%d or rx_nss:%u is not expected\n", GET_HAL_RFPATH(padapter), rx_nss);
+	}
+
+	{
+		rtw_hal_get_def_var(padapter, HAL_DEF_RX_PACKET_OFFSET, &rx_packet_offset);
+		rtw_hal_get_def_var(padapter, HAL_DEF_MAX_RECVBUF_SZ, &max_recvbuf_sz);
+		if (max_recvbuf_sz - rx_packet_offset >= (8191 - 256)) {
+			RTW_INFO("%s IEEE80211_HT_CAP_MAX_AMSDU is set\n", __FUNCTION__);
+			ht_capie.cap_info = ht_capie.cap_info | IEEE80211_HT_CAP_MAX_AMSDU;
+		}
+	}
+
+	if (padapter->driver_rx_ampdu_factor != 0xFF)
+		max_rx_ampdu_factor = (HT_CAP_AMPDU_FACTOR)padapter->driver_rx_ampdu_factor;
+	else
+		rtw_hal_get_def_var(padapter, HW_VAR_MAX_RX_AMPDU_FACTOR, &max_rx_ampdu_factor);
+
+	ht_capie.ampdu_params_info = (max_rx_ampdu_factor & 0x03);
+
+	if (padapter->driver_rx_ampdu_spacing != 0xFF)
+		ht_capie.ampdu_params_info |= ((padapter->driver_rx_ampdu_spacing & 0x07) << 2);
+	else {
+		if (padapter->securitypriv.dot11PrivacyAlgrthm == _AES_) {
+			rtw_hal_get_def_var(padapter, HW_VAR_BEST_AMPDU_DENSITY, &best_ampdu_density);
+
+			ht_capie.ampdu_params_info |= (IEEE80211_HT_CAP_AMPDU_DENSITY & (best_ampdu_density << 2));
+
+		} else
+			ht_capie.ampdu_params_info |= (IEEE80211_HT_CAP_AMPDU_DENSITY & 0x00);
+	}
+#ifdef CONFIG_BEAMFORMING
+	ht_capie.tx_BF_cap_info = 0;
+
+	/* HT Beamformer*/
+	if (TEST_FLAG(phtpriv->beamform_cap, BEAMFORMING_HT_BEAMFORMER_ENABLE)) {
+		SET_HT_CAP_TXBF_TRANSMIT_NDP_CAP(&ht_capie, 1);
+		SET_HT_CAP_TXBF_EXPLICIT_COMP_STEERING_CAP(&ht_capie, 1);
+		SET_HT_CAP_TXBF_COMP_STEERING_NUM_ANTENNAS(&ht_capie, 1);
+		rtw_hal_get_def_var(padapter, HAL_DEF_BEAMFORMER_CAP, (u8 *)&rf_num);
+		SET_HT_CAP_TXBF_CHNL_ESTIMATION_NUM_ANTENNAS(&ht_capie, rf_num);
+	}
+
+	/* HT Beamformee */
+	if (TEST_FLAG(phtpriv->beamform_cap, BEAMFORMING_HT_BEAMFORMEE_ENABLE)) {
+		SET_HT_CAP_TXBF_RECEIVE_NDP_CAP(&ht_capie, 1);
+		SET_HT_CAP_TXBF_EXPLICIT_COMP_FEEDBACK_CAP(&ht_capie, 2);
+
+		rtw_hal_get_def_var(padapter, HAL_DEF_BEAMFORMEE_CAP, (u8 *)&rf_num);
+#if defined(CONFIG_80211AC_VHT) && !defined(HOST_MLME_HT_RESTRUCTURE_TEST)
+		if ((pmlmeinfo->assoc_AP_vendor == HT_IOT_PEER_BROADCOM) &&
+			!pvhtpriv->ap_bf_cap.is_mu_bfer &&
+			pvhtpriv->ap_bf_cap.su_sound_dim == 2)
+			rf_num = (rf_num >= 2 ? 2 : rf_num);
+#endif
+		SET_HT_CAP_TXBF_COMP_STEERING_NUM_ANTENNAS(&ht_capie, rf_num);
+	}
+#endif/*CONFIG_BEAMFORMING*/
+
+	pframe = rtw_set_ie(out_ie + out_len, _HT_CAPABILITY_IE_,
+		sizeof(struct rtw_ieee80211_ht_cap), (unsigned char *)&ht_capie, pout_len);
+
+	phtpriv->ht_option = _TRUE;
+
+	if (in_ie != NULL) {
+		p = rtw_get_ie(in_ie, _HT_ADD_INFO_IE_, &ielen, in_len);
+		if (p && (ielen == sizeof(struct ieee80211_ht_addt_info))) {
+			out_len = *pout_len;
+			pframe = rtw_set_ie(out_ie + out_len, _HT_ADD_INFO_IE_, ielen, p + 2 , pout_len);
+		}
+	}
+
+	return phtpriv->ht_option;
+
+}
+
+#endif /* HOST_MLME_HT_RESTRUCTURE_TEST || kernel C path */
+#endif /* CONFIG_80211N_HT */
+
 #if (!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_NETWORK_UPDATE)) && \
     !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
     !defined(HOST_MLME_WMM_RSN_TEST) && !defined(HOST_MLME_ROAMING_TEST) && \
-    !defined(HOST_MLME_80211D_TEST)
+    !defined(HOST_MLME_80211D_TEST) && !defined(HOST_MLME_HT_RESTRUCTURE_TEST)
 
 void update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src,
 		    _adapter *padapter, bool update_ie)
@@ -953,6 +1201,7 @@ exit:
 #if (defined(HOST_MLME_WMM_RSN_TEST) && !defined(RUST_MLME_WMM_RSN_ORACLE)) || \
      (!defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
       !defined(HOST_MLME_ROAMING_TEST) && !defined(HOST_MLME_80211D_TEST) && \
+      !defined(HOST_MLME_HT_RESTRUCTURE_TEST) && \
       (!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_WMM_RSN)))
 
 /* adjust IEs for rtw_joinbss_cmd in WMM */
@@ -1023,7 +1272,8 @@ int rtw_restruct_wmm_ie(_adapter *adapter, u8 *in_ie, u8 *out_ie, uint in_len, u
 
 #if defined(HOST_MLME_WMM_RSN_TEST) || \
      (!defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
-      !defined(HOST_MLME_ROAMING_TEST) && !defined(HOST_MLME_80211D_TEST))
+      !defined(HOST_MLME_ROAMING_TEST) && !defined(HOST_MLME_80211D_TEST) && \
+      !defined(HOST_MLME_HT_RESTRUCTURE_TEST))
 
 #if !defined(CONFIG_RUST) || defined(HOST_MLME_WMM_RSN_TEST) || !defined(CONFIG_RUST_MLME_WMM_RSN)
 
@@ -1093,6 +1343,7 @@ exit:
 #if (defined(HOST_MLME_WMM_RSN_TEST) && !defined(RUST_MLME_WMM_RSN_ORACLE)) || \
      (!defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
       !defined(HOST_MLME_ROAMING_TEST) && !defined(HOST_MLME_80211D_TEST) && \
+      !defined(HOST_MLME_HT_RESTRUCTURE_TEST) && \
       (!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_WMM_RSN)))
 
 sint rtw_restruct_sec_ie(_adapter *adapter, u8 *out_ie)
@@ -1151,7 +1402,7 @@ sint rtw_restruct_sec_ie(_adapter *adapter, u8 *out_ie)
 
 #if defined(CONFIG_RUST) && !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
     !defined(HOST_MLME_WMM_RSN_TEST) && !defined(HOST_MLME_ROAMING_TEST) && \
-    !defined(HOST_MLME_80211D_TEST)
+    !defined(HOST_MLME_80211D_TEST) && !defined(HOST_MLME_HT_RESTRUCTURE_TEST)
 u8 *rtw_mlme_rest_bss_ies(WLAN_BSSID_EX *bss) { return bss->IEs; }
 u32 *rtw_mlme_rest_bss_ssid_length(WLAN_BSSID_EX *bss) { return &bss->Ssid.SsidLength; }
 u8 *rtw_mlme_rest_bss_ssid(WLAN_BSSID_EX *bss) { return bss->Ssid.Ssid; }
@@ -1364,3 +1615,174 @@ systime rtw_rust_mlme_roaming_net_last_scanned(struct wlan_network *net)
 	return net->last_scanned;
 }
 #endif
+
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_HT_RESTRUCTURE) && \
+    defined(CONFIG_80211N_HT) && !defined(HOST_MLME_HT_RESTRUCTURE_TEST)
+
+#include <hal_data.h>
+
+RT_CHANNEL_INFO *rtw_rust_ht_channel_set(_adapter *padapter)
+{
+	return adapter_to_rfctl(padapter)->channel_set;
+}
+
+u8 *rtw_rust_ht_rfctl(_adapter *padapter)
+{
+	return (u8 *)adapter_to_rfctl(padapter);
+}
+
+u8 rtw_rust_ht_is_dfs_slave_with_rd(u8 *rfctl)
+{
+	return IS_DFS_SLAVE_WITH_RD((struct rf_ctl_t *)rfctl);
+}
+
+u8 rtw_rust_ht_rfctl_dfs_domain_unknown(u8 *rfctl)
+{
+	return rtw_rfctl_dfs_domain_unknown((struct rf_ctl_t *)rfctl);
+}
+
+u8 rtw_rust_ht_regsty_bw_2g(_adapter *padapter)
+{
+	return REGSTY_BW_2G(&padapter->registrypriv);
+}
+
+u8 rtw_rust_ht_regsty_bw_5g(_adapter *padapter)
+{
+	return REGSTY_BW_5G(&padapter->registrypriv);
+}
+
+u8 *rtw_rust_ht_ht_option(_adapter *padapter)
+{
+	return &padapter->mlmepriv.htpriv.ht_option;
+}
+
+u8 *rtw_rust_ht_get_ie(const u8 *pbuf, sint index, u32 *len, sint limit)
+{
+	return rtw_get_ie(pbuf, index, len, limit);
+}
+
+u8 rtw_rust_ht_chset_is_chbw_valid(RT_CHANNEL_INFO *ch_set, u8 ch, u8 bw,
+				   u8 offset, u8 a, u8 b)
+{
+	return rtw_chset_is_chbw_valid(ch_set, ch, bw, offset, a, b) ? 1 : 0;
+}
+
+u8 rtw_rust_ht_chset_is_chbw_non_ocp(RT_CHANNEL_INFO *ch_set, u8 ch, u8 bw,
+				     u8 offset)
+{
+	return rtw_chset_is_chbw_non_ocp(ch_set, ch, bw, offset) ? 1 : 0;
+}
+
+void rtw_rust_ht_warn_on(int condition)
+{
+	rtw_warn_on(condition);
+}
+
+u8 rtw_rust_ht_hal_chk_bw_cap(_adapter *padapter, u8 cap)
+{
+	return hal_chk_bw_cap(padapter, cap) ? 1 : 0;
+}
+
+void rtw_rust_ht_hal_get_def_var(_adapter *padapter, u8 def_var, void *val)
+{
+	rtw_hal_get_def_var(padapter, def_var, val);
+}
+
+void rtw_rust_ht_set_mcs_rate_by_mask(u8 *mcs_set, u32 mask)
+{
+	set_mcs_rate_by_mask(mcs_set, mask);
+}
+
+u32 rtw_rust_ht_fw_state(_adapter *padapter)
+{
+	return padapter->mlmepriv.fw_state;
+}
+
+u8 rtw_rust_ht_cur_bwmode(_adapter *padapter)
+{
+	return padapter->mlmeextpriv.cur_bwmode;
+}
+
+u8 *rtw_rust_ht_default_mcs(_adapter *padapter)
+{
+	return padapter->mlmeextpriv.default_supported_mcs_set;
+}
+
+u8 rtw_rust_ht_sgi_20m(_adapter *padapter)
+{
+	return padapter->mlmepriv.htpriv.sgi_20m;
+}
+
+u8 rtw_rust_ht_sgi_40m(_adapter *padapter)
+{
+	return padapter->mlmepriv.htpriv.sgi_40m;
+}
+
+u8 rtw_rust_ht_ldpc_cap(_adapter *padapter)
+{
+	return padapter->mlmepriv.htpriv.ldpc_cap;
+}
+
+u8 rtw_rust_ht_stbc_cap(_adapter *padapter)
+{
+	return padapter->mlmepriv.htpriv.stbc_cap;
+}
+
+u8 rtw_rust_ht_beamform_cap(_adapter *padapter)
+{
+	return padapter->mlmepriv.htpriv.beamform_cap;
+}
+
+#ifdef CONFIG_80211AC_VHT
+u8 rtw_rust_ht_assoc_ap_vendor(_adapter *padapter)
+{
+	return padapter->mlmeextpriv.mlmext_info.assoc_AP_vendor;
+}
+
+u8 rtw_rust_ht_vht_ap_mu_bfer(_adapter *padapter)
+{
+	return padapter->mlmepriv.vhtpriv.ap_bf_cap.is_mu_bfer;
+}
+
+u8 rtw_rust_ht_vht_ap_su_sound_dim(_adapter *padapter)
+{
+	return padapter->mlmepriv.vhtpriv.ap_bf_cap.su_sound_dim;
+}
+#endif /* CONFIG_80211AC_VHT */
+
+u8 rtw_rust_ht_rx_stbc(_adapter *padapter)
+{
+	return padapter->registrypriv.rx_stbc;
+}
+
+u8 rtw_rust_ht_wifi_spec(_adapter *padapter)
+{
+	return padapter->registrypriv.wifi_spec;
+}
+
+u8 rtw_rust_ht_rx_nss(_adapter *padapter)
+{
+	return GET_HAL_RX_NSS(padapter);
+}
+
+u8 rtw_rust_ht_driver_rx_ampdu_factor(_adapter *padapter)
+{
+	return padapter->driver_rx_ampdu_factor;
+}
+
+u8 rtw_rust_ht_driver_rx_ampdu_spacing(_adapter *padapter)
+{
+	return padapter->driver_rx_ampdu_spacing;
+}
+
+u32 rtw_rust_ht_dot11_privacy(_adapter *padapter)
+{
+	return padapter->securitypriv.dot11PrivacyAlgrthm;
+}
+
+u8 *rtw_rust_ht_set_ie(u8 *pbuf, sint index, u32 len, u8 *source, u32 *frlen)
+{
+	return rtw_set_ie(pbuf, index, len, source, frlen);
+}
+
+#endif /* CONFIG_RUST && CONFIG_RUST_MLME_HT_RESTRUCTURE */

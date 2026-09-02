@@ -1,0 +1,2 @@
+# L1 allowlist for W3-67: host restructure oracle compares C vs Rust.
+drop rtw_rust_ht_probe

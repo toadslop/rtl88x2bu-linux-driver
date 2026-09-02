@@ -1,0 +1,96 @@
+{
+  "oracle": "core/rtw_mlme_rest.c:rtw_restructure_ht_ie",
+  "vectors": [
+    {
+      "name": "ht20_2g_no_ht40",
+      "in_ie_hex": "3d1606000000000000000000000000000000000000000000",
+      "channel": 6,
+      "regsty_bw_2g": 1,
+      "hal_bw_cap_40": 1,
+      "expect_ht_option": 1,
+      "expect_cap_info_mask": 65535,
+      "expect_cap_info_value": 6156
+    },
+    {
+      "name": "ht40_sca_ch36",
+      "in_ie_hex": "3d1624050000000000000000000000000000000000000000",
+      "channel": 36,
+      "regsty_bw_5g": 1,
+      "hal_bw_cap_40": 1,
+      "sgi_40m": 1,
+      "expect_ht_option": 1,
+      "expect_cap_info_mask": 65535,
+      "expect_cap_info_value": 6222
+    },
+    {
+      "name": "chplan_downgrade_40_to_20",
+      "in_ie_hex": "3d1624050000000000000000000000000000000000000000",
+      "channel": 36,
+      "regsty_bw_5g": 1,
+      "hal_bw_cap_40": 1,
+      "chset_allow_40": 0,
+      "expect_ht_option": 1,
+      "expect_cap_info_mask": 65535,
+      "expect_cap_info_value": 6156
+    },
+    {
+      "name": "tdls_null_in_station_40",
+      "use_null_in": 1,
+      "channel": 36,
+      "regsty_bw_5g": 1,
+      "hal_bw_cap_40": 1,
+      "fw_state": 8,
+      "cur_bwmode": 1,
+      "expect_ht_option": 1,
+      "expect_cap_info_mask": 65535,
+      "expect_cap_info_value": 6158
+    },
+    {
+      "name": "iot_peer_ht_cap_20_downgrade",
+      "in_ie_hex": "3d16240500000000000000000000000000000000000000002d1a00000000000000000000000000000000000000000000",
+      "channel": 36,
+      "regsty_bw_5g": 1,
+      "hal_bw_cap_40": 1,
+      "expect_ht_option": 1,
+      "expect_cap_info_mask": 65535,
+      "expect_cap_info_value": 6156
+    },
+    {
+      "name": "ht_info_ie_copied",
+      "in_ie_hex": "3d1606000000000000000000000000000000000000000000",
+      "channel": 6,
+      "regsty_bw_2g": 1,
+      "hal_bw_cap_40": 1,
+      "expect_ht_option": 1,
+      "expect_cap_info_mask": 65535,
+      "expect_cap_info_value": 6156,
+      "expect_ht_info": 1
+    },
+    {
+      "name": "ht_beamformer_txbf",
+      "in_ie_hex": "3d1606000000000000000000000000000000000000000000",
+      "channel": 6,
+      "regsty_bw_2g": 1,
+      "hal_bw_cap_40": 1,
+      "beamform_cap": 1,
+      "beamformer_cap": 2,
+      "expect_ht_option": 1,
+      "expect_cap_info_mask": 65535,
+      "expect_cap_info_value": 6156,
+      "expect_tx_bf_cap_info": 276825104
+    },
+    {
+      "name": "ht_beamformee_txbf",
+      "in_ie_hex": "3d1606000000000000000000000000000000000000000000",
+      "channel": 6,
+      "regsty_bw_2g": 1,
+      "hal_bw_cap_40": 1,
+      "beamform_cap": 2,
+      "beamformee_cap": 2,
+      "expect_ht_option": 1,
+      "expect_cap_info_mask": 65535,
+      "expect_cap_info_value": 6156,
+      "expect_tx_bf_cap_info": 16842760
+    }
+  ]
+}

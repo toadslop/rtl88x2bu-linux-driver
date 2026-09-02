@@ -11,3 +11,6 @@ test_mlme_network_update
 test_mlme_network_update_rust
 librust_mlme_network_update.a
 test_mlme_80211d
+test_mlme_ht_restructure
+test_mlme_ht_restructure_rust
+librust_mlme_ht_restructure.a
