@@ -190,6 +190,8 @@ void process_80211d(PADAPTER padapter, WLAN_BSSID_EX *bssid)
 				else
 					channel = fcn + j * 4;
 
+				if (i >= MAX_CHANNEL_NUM)
+					break;
 				chplan_ap.Channel[i++] = channel;
 			}
 		}
