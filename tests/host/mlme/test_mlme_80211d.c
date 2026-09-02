@@ -12,6 +12,7 @@ struct case_vec {
 	const u8 *sta_ch;
 	int sta_n;
 	const u8 *expect_ch;
+	const u8 *expect_flags;
 	int expect_n;
 	u8 expect_done;
 };
@@ -34,10 +35,14 @@ static void fill_sta(_adapter *a, const u8 *ch, int n)
 	}
 }
 
-static int chset_match(const RT_CHANNEL_INFO *cs, const u8 *exp, int n)
+static int chset_match(const RT_CHANNEL_INFO *cs, const u8 *exp,
+		       const u8 *exp_flags, int n)
 {
 	for (int i = 0; i < n; i++) {
 		if (cs[i].ChannelNum != exp[i])
+			return -1;
+		u8 want = exp_flags ? exp_flags[i] : 0;
+		if ((cs[i].flags & RTW_CHF_NO_IR) != (want & RTW_CHF_NO_IR))
 			return -1;
 	}
 	if (cs[n].ChannelNum != 0)
@@ -59,31 +64,60 @@ static int run_case(const struct case_vec *v)
 	process_80211d(&a, &b);
 	if (a.mlmeextpriv.update_channel_plan_by_ap_done != v->expect_done)
 		return -1;
-	if (v->expect_n >= 0 && chset_match(a.rfctl.channel_set, v->expect_ch, v->expect_n))
+	if (v->expect_n >= 0 &&
+	    chset_match(a.rfctl.channel_set, v->expect_ch, v->expect_flags,
+			v->expect_n))
 		return -1;
 	return 0;
+}
+
+static void fill_exp5g_trunc(u8 *ch)
+{
+	/* 5G channels wrap at u8 256→0; merge yields 55 entries for fcn=36 noc=60. */
+	for (int i = 0; i < 55; i++)
+		ch[i] = (u8)(36 + i * 4);
 }
 
 int main(void)
 {
 	static const u8 us2g[] = {0x07, 0x09, 0x55, 0x53, 0x20, 0x01, 0x0b, 0x1e};
-	static const u8 us24g[] = {0x07, 0x0c, 0x55, 0x53, 0x20, 0x01, 0x0b, 0x1e, 0x24, 0x04, 0x1e};
+	static const u8 us24g[] = {0x07, 0x0c, 0x55, 0x53, 0x20, 0x01, 0x0b, 0x1e,
+				 0x24, 0x04, 0x1e};
+	static const u8 us5g_trunc[] = {0x07, 0x06, 0x55, 0x53, 0x20, 0x24, 0x3c,
+					0x1e};
 	static const u8 short_ie[] = {0x07, 0x03, 0x55, 0x53, 0x20};
 	static const u8 sta246[] = {1, 6, 11};
+	static const u8 sta24614[] = {1, 6, 11, 14};
 	static const u8 sta246_5g[] = {1, 6, 11, 36, 44};
+	static const u8 sta36[] = {36};
 	static const u8 exp11[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
-	static const u8 exp11_5g[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 36, 40, 44, 48};
+	static const u8 exp11_14[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 14};
+	static const u8 exp11_14_flags[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+					    RTW_CHF_NO_IR};
+	static const u8 exp11_5g[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 36, 40,
+				      44, 48};
+	static u8 exp5g_trunc[MAX_CHANNEL_NUM];
 	static const struct case_vec cases[] = {
-		{"disabled", 0, 0, WIRELESS_11G, us2g, sizeof(us2g), NULL, 0, NULL, -1, 0},
-		{"already_done", 1, 1, WIRELESS_11G, us2g, sizeof(us2g), sta246, 3, sta246, 3, 1},
-		{"no_country_ie", 1, 0, WIRELESS_11G, NULL, 0, sta246, 3, sta246, 3, 0},
-		{"short_country_ie", 1, 0, WIRELESS_11G, short_ie, sizeof(short_ie), sta246, 3, sta246, 3, 0},
-		{"merge_2g_11g", 1, 0, WIRELESS_11G, us2g, sizeof(us2g), sta246, 3, exp11, 11, 1},
-		{"merge_dualband_11ag", 1, 0, WIRELESS_11G | WIRELESS_11A, us24g,
-		 sizeof(us24g), sta246_5g, 5, exp11_5g, 15, 1},
+		{"disabled", 0, 0, WIRELESS_11G, us2g, sizeof(us2g), NULL, 0,
+		 NULL, NULL, -1, 0},
+		{"already_done", 1, 1, WIRELESS_11G, us2g, sizeof(us2g), sta246,
+		 3, sta246, NULL, 3, 1},
+		{"no_country_ie", 1, 0, WIRELESS_11G, NULL, 0, sta246, 3,
+		 sta246, NULL, 3, 0},
+		{"short_country_ie", 1, 0, WIRELESS_11G, short_ie,
+		 sizeof(short_ie), sta246, 3, sta246, NULL, 3, 0},
+		{"merge_2g_11g", 1, 0, WIRELESS_11G, us2g, sizeof(us2g), sta246,
+		 3, exp11, NULL, 11, 1},
+		{"merge_2g_no_ir", 1, 0, WIRELESS_11G, us2g, sizeof(us2g),
+		 sta24614, 4, exp11_14, exp11_14_flags, 12, 1},
+		{"merge_dualband_11ag", 1, 0, WIRELESS_11G | WIRELESS_11A,
+		 us24g, sizeof(us24g), sta246_5g, 5, exp11_5g, NULL, 15, 1},
+		{"parse_trunc_5g", 1, 0, WIRELESS_11A, us5g_trunc,
+		 sizeof(us5g_trunc), sta36, 1, exp5g_trunc, NULL, 55, 1},
 	};
 	int bad = 0;
 
+	fill_exp5g_trunc(exp5g_trunc);
 	for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++)
 		bad += run_case(&cases[i]) ?
 			(fprintf(stderr, "FAIL %s\n", cases[i].name), 1) :
