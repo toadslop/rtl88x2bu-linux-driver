@@ -197,12 +197,32 @@ void process_80211d(PADAPTER padapter, WLAN_BSSID_EX *bssid)
 		}
 		chplan_ap.Len = i;
 
+#if defined(CONFIG_RTW_DEBUG) && CONFIG_RTW_DEBUG
+		i = 0;
+		RTW_INFO("%s: AP[%s] channel plan {", __func__, bssid->Ssid.Ssid);
+		while ((i < chplan_ap.Len) && (chplan_ap.Channel[i] != 0)) {
+			_RTW_INFO("%02d,", chplan_ap.Channel[i]);
+			i++;
+		}
+		_RTW_INFO("}\n");
+#endif
+
 		chplan_sta = rtw_malloc(sizeof(RT_CHANNEL_INFO) * MAX_CHANNEL_NUM);
 		if (!chplan_sta)
 			goto done_update_chplan_from_ap;
 
 		_rtw_memcpy(chplan_sta, rfctl->channel_set,
 			    sizeof(RT_CHANNEL_INFO) * MAX_CHANNEL_NUM);
+#if defined(CONFIG_RTW_DEBUG) && CONFIG_RTW_DEBUG
+		i = 0;
+		RTW_INFO("%s: STA channel plan {", __func__);
+		while ((i < MAX_CHANNEL_NUM) && (chplan_sta[i].ChannelNum != 0)) {
+			_RTW_INFO("%02d(%c),", chplan_sta[i].ChannelNum,
+				  chplan_sta[i].flags & RTW_CHF_NO_IR ? 'p' : 'a');
+			i++;
+		}
+		_RTW_INFO("}\n");
+#endif
 		_rtw_memset(rfctl->channel_set, 0, sizeof(rfctl->channel_set));
 		chplan_new = rfctl->channel_set;
 
@@ -313,6 +333,17 @@ void process_80211d(PADAPTER padapter, WLAN_BSSID_EX *bssid)
 
 		pmlmeext->update_channel_plan_by_ap_done = 1;
 		rtw_nlrtw_reg_change_event(padapter);
+
+#if defined(CONFIG_RTW_DEBUG) && CONFIG_RTW_DEBUG
+		k = 0;
+		RTW_INFO("%s: new STA channel plan {", __func__);
+		while ((k < MAX_CHANNEL_NUM) && (chplan_new[k].ChannelNum != 0)) {
+			_RTW_INFO("%02d(%c),", chplan_new[k].ChannelNum,
+				  chplan_new[k].flags & RTW_CHF_NO_IR ? 'p' : 'c');
+			k++;
+		}
+		_RTW_INFO("}\n");
+#endif
 
 done_update_chplan_from_ap:
 		if (chplan_sta)
