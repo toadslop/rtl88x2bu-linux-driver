@@ -70,6 +70,9 @@ enum channel_width {
 #define STBC_HT_ENABLE_TX BIT1
 #define STBC_HT_ENABLE_RX BIT0
 
+#define BEAMFORMING_HT_BEAMFORMER_ENABLE BIT0
+#define BEAMFORMING_HT_BEAMFORMEE_ENABLE BIT1
+
 #define MCS_RATE_1R 0x000000ff
 #define MCS_RATE_2R 0x0000ffff
 #define MCS_RATE_2R_13TO15_OFF 0x00001fff
@@ -102,6 +105,18 @@ enum channel_width {
 #define GET_HT_OP_ELE_2ND_CHL_OFFSET(p) LE_BITS_TO_1BYTE((p) + 1, 0, 2)
 #define GET_HT_CAP_ELE_CHL_WIDTH(p) LE_BITS_TO_1BYTE(p, 1, 1)
 #define SET_HT_CAP_ELE_RX_STBC(p, v) SET_BITS_TO_LE_1BYTE(((u8 *)(p)) + 1, 0, 2, (v))
+#define SET_HT_CAP_TXBF_RECEIVE_NDP_CAP(p, v) \
+	SET_BITS_TO_LE_4BYTE(((u8 *)(p)) + 21, 3, 1, (v))
+#define SET_HT_CAP_TXBF_TRANSMIT_NDP_CAP(p, v) \
+	SET_BITS_TO_LE_4BYTE(((u8 *)(p)) + 21, 4, 1, (v))
+#define SET_HT_CAP_TXBF_EXPLICIT_COMP_STEERING_CAP(p, v) \
+	SET_BITS_TO_LE_4BYTE(((u8 *)(p)) + 21, 10, 1, (v))
+#define SET_HT_CAP_TXBF_EXPLICIT_COMP_FEEDBACK_CAP(p, v) \
+	SET_BITS_TO_LE_4BYTE(((u8 *)(p)) + 21, 15, 2, (v))
+#define SET_HT_CAP_TXBF_COMP_STEERING_NUM_ANTENNAS(p, v) \
+	SET_BITS_TO_LE_4BYTE(((u8 *)(p)) + 21, 23, 2, (v))
+#define SET_HT_CAP_TXBF_CHNL_ESTIMATION_NUM_ANTENNAS(p, v) \
+	SET_BITS_TO_LE_4BYTE(((u8 *)(p)) + 21, 27, 2, (v))
 
 typedef enum {
 	HAL_DEF_RX_PACKET_OFFSET = 1,
@@ -109,6 +124,8 @@ typedef enum {
 	HAL_DEF_RX_STBC = 3,
 	HW_VAR_MAX_RX_AMPDU_FACTOR = 4,
 	HW_VAR_BEST_AMPDU_DENSITY = 5,
+	HAL_DEF_BEAMFORMER_CAP = 6,
+	HAL_DEF_BEAMFORMEE_CAP = 7,
 } hal_def_var_e;
 
 typedef u8 HT_CAP_AMPDU_FACTOR;
@@ -142,6 +159,7 @@ struct ht_priv {
 	u8 sgi_40m;
 	u8 ldpc_cap;
 	u8 stbc_cap;
+	u8 beamform_cap;
 };
 
 struct registry_priv {
@@ -186,6 +204,8 @@ struct host_ht_fixture {
 	u8 dfs_domain_unknown;
 	u8 rx_nss;
 	u8 rx_stbc_nss;
+	u8 beamformer_cap;
+	u8 beamformee_cap;
 	u32 rx_packet_offset;
 	u32 max_recvbuf_sz;
 	u8 max_rx_ampdu_factor;

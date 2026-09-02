@@ -29,9 +29,14 @@ struct vector {
 	u8 sgi_20m;
 	u8 sgi_40m;
 	u8 rx_nss;
+	u8 beamform_cap;
+	u8 beamformer_cap;
+	u8 beamformee_cap;
 	u8 expect_ht_option;
 	u16 expect_cap_info_mask;
 	u16 expect_cap_info_value;
+	u32 expect_tx_bf_cap_info;
+	u8 expect_tx_bf_cap_info_set;
 	u8 expect_ht_info;
 };
 
@@ -96,12 +101,22 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 		v->sgi_40m = (u8)tmp;
 	if (!host_json_parse_int_in(obj, len, "rx_nss", &tmp))
 		v->rx_nss = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "beamform_cap", &tmp))
+		v->beamform_cap = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "beamformer_cap", &tmp))
+		v->beamformer_cap = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "beamformee_cap", &tmp))
+		v->beamformee_cap = (u8)tmp;
 	if (!host_json_parse_int_in(obj, len, "expect_ht_option", &tmp))
 		v->expect_ht_option = (u8)tmp;
 	if (!host_json_parse_int_in(obj, len, "expect_cap_info_mask", &tmp))
 		v->expect_cap_info_mask = (u16)tmp;
 	if (!host_json_parse_int_in(obj, len, "expect_cap_info_value", &tmp))
 		v->expect_cap_info_value = (u16)tmp;
+	if (!host_json_parse_int_in(obj, len, "expect_tx_bf_cap_info", &tmp)) {
+		v->expect_tx_bf_cap_info = (u32)tmp;
+		v->expect_tx_bf_cap_info_set = 1;
+	}
 	if (!host_json_parse_int_in(obj, len, "expect_ht_info", &tmp))
 		v->expect_ht_info = (u8)tmp;
 	return 0;
@@ -130,6 +145,9 @@ static int run_vector(const struct vector *v)
 	adapter.mlmeextpriv.cur_bwmode = v->cur_bwmode;
 	adapter.mlmepriv.htpriv.sgi_20m = v->sgi_20m;
 	adapter.mlmepriv.htpriv.sgi_40m = v->sgi_40m;
+	adapter.mlmepriv.htpriv.beamform_cap = v->beamform_cap;
+	adapter.host_fixture.beamformer_cap = v->beamformer_cap ? v->beamformer_cap : 2;
+	adapter.host_fixture.beamformee_cap = v->beamformee_cap ? v->beamformee_cap : 2;
 	adapter.rf_ctl.dfs_slave_with_rd = v->dfs_slave_with_rd;
 	memset(adapter.mlmeextpriv.default_supported_mcs_set, 0xff, 16);
 	host_mlme_ht_restructure_adapter = &adapter;
@@ -158,6 +176,17 @@ static int run_vector(const struct vector *v)
 		fprintf(stderr, "%s: cap_info mismatch got=0x%04x expect=0x%04x\n",
 			v->name, cap_info, v->expect_cap_info_value);
 		return -1;
+	}
+	if (v->expect_tx_bf_cap_info_set) {
+		u32 tx_bf;
+
+		memcpy(&tx_bf, ht_cap + 2 + 21, sizeof(tx_bf));
+		if (tx_bf != v->expect_tx_bf_cap_info) {
+			fprintf(stderr,
+				"%s: tx_BF_cap_info mismatch got=0x%08x expect=0x%08x\n",
+				v->name, tx_bf, v->expect_tx_bf_cap_info);
+			return -1;
+		}
 	}
 	if (v->expect_ht_info) {
 		uint info_len = 0;

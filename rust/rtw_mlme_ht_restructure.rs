@@ -54,6 +54,7 @@ const STBC_HT_ENABLE_TX: U8 = 0x02;
 const STBC_HT_ENABLE_RX: U8 = 0x01;
 const MCS_RATE_1R: U32 = 0x0000_00ff;
 const MCS_RATE_2R: U32 = 0x0000_ffff;
+const MCS_RATE_2R_13TO15_OFF: U32 = 0x0000_1fff;
 const MCS_RATE_3R: U32 = 0x00ff_ffff;
 const MCS_RATE_4R: U32 = 0xffff_ffff;
 const _AES_: U32 = 4;
@@ -62,6 +63,24 @@ const HAL_DEF_MAX_RECVBUF_SZ: U8 = 2;
 const HAL_DEF_RX_STBC: U8 = 3;
 const HW_VAR_MAX_RX_AMPDU_FACTOR: U8 = 4;
 const HW_VAR_BEST_AMPDU_DENSITY: U8 = 5;
+
+#[cfg(host_mlme_ht_restructure_test)]
+const HAL_DEF_BEAMFORMER_CAP: U8 = 6;
+#[cfg(not(host_mlme_ht_restructure_test))]
+const HAL_DEF_BEAMFORMER_CAP: U8 = 20;
+
+#[cfg(host_mlme_ht_restructure_test)]
+const HAL_DEF_BEAMFORMEE_CAP: U8 = 7;
+#[cfg(not(host_mlme_ht_restructure_test))]
+const HAL_DEF_BEAMFORMEE_CAP: U8 = 21;
+
+#[cfg(any(config_beamforming, not(host_mlme_ht_restructure_test)))]
+const BEAMFORMING_HT_BEAMFORMER_ENABLE: U8 = 0x01;
+#[cfg(any(config_beamforming, not(host_mlme_ht_restructure_test)))]
+const BEAMFORMING_HT_BEAMFORMEE_ENABLE: U8 = 0x02;
+
+#[cfg(all(not(host_mlme_ht_restructure_test), rust_mlme_ht_restructure))]
+const HT_IOT_PEER_BROADCOM: U8 = 3;
 
 #[repr(C, packed)]
 struct RtwIeee80211HtCap {
@@ -82,6 +101,11 @@ fn set_bits_u8(p: *mut U8, o: U32, l: U32, v: U8) {
         let mask = (((1u32 << l) - 1) << o) as U8;
         *p = (*p & !mask) | ((v & ((1u32 << l) - 1) as U8) << o);
     }
+}
+
+fn set_txbf_bits(tx_bf: &mut U32, offset: U32, len: U32, val: U8) {
+    let mask = ((1u32 << len) - 1) << offset;
+    *tx_bf = (*tx_bf & !mask) | ((val as U32 & ((1u32 << len) - 1)) << offset);
 }
 
 fn test_flag(flag: U8, test: U8) -> bool {
@@ -151,6 +175,7 @@ extern "C" {
     fn rtw_rust_ht_sgi_40m(padapter: *mut U8) -> U8;
     fn rtw_rust_ht_ldpc_cap(padapter: *mut U8) -> U8;
     fn rtw_rust_ht_stbc_cap(padapter: *mut U8) -> U8;
+    fn rtw_rust_ht_beamform_cap(padapter: *mut U8) -> U8;
     fn rtw_rust_ht_rx_stbc(padapter: *mut U8) -> U8;
     fn rtw_rust_ht_wifi_spec(padapter: *mut U8) -> U8;
     fn rtw_rust_ht_rx_nss(padapter: *mut U8) -> U8;
@@ -164,6 +189,13 @@ extern "C" {
         source: *mut U8,
         frlen: *mut U32,
     ) -> *mut U8;
+}
+
+#[cfg(all(not(host_mlme_ht_restructure_test), rust_mlme_ht_restructure))]
+extern "C" {
+    fn rtw_rust_ht_assoc_ap_vendor(padapter: *mut U8) -> U8;
+    fn rtw_rust_ht_vht_ap_mu_bfer(padapter: *mut U8) -> U8;
+    fn rtw_rust_ht_vht_ap_su_sound_dim(padapter: *mut U8) -> U8;
 }
 
 mod access {
@@ -215,6 +247,10 @@ mod access {
 
     pub(super) fn stbc_cap(p: *mut U8) -> U8 {
         unsafe { rtw_rust_ht_stbc_cap(p) }
+    }
+
+    pub(super) fn beamform_cap(p: *mut U8) -> U8 {
+        unsafe { rtw_rust_ht_beamform_cap(p) }
     }
 
     pub(super) fn rx_stbc(p: *mut U8) -> U8 {
@@ -362,7 +398,6 @@ fn restructure_ht_ie_impl(
                 }
             }
             cbw40_enable = if oper_bw == CHANNEL_WIDTH_40 { 1 } else { 0 };
-            let _ = cbw40_enable;
         }
 
         ht_capie.cap_info |= IEEE80211_HT_CAP_SM_PS;
@@ -402,7 +437,21 @@ fn restructure_ht_ie_impl(
 
         match access::rx_nss(padapter) {
             1 => access::set_mcs(ht_capie.supp_mcs_set.as_mut_ptr(), MCS_RATE_1R),
-            2 => access::set_mcs(ht_capie.supp_mcs_set.as_mut_ptr(), MCS_RATE_2R),
+            2 => {
+                #[cfg(config_disable_mcs13to15)]
+                {
+                    if cbw40_enable != 0 && access::wifi_spec(padapter) != 1 {
+                        access::set_mcs(ht_capie.supp_mcs_set.as_mut_ptr(), MCS_RATE_2R_13TO15_OFF);
+                    } else {
+                        access::set_mcs(ht_capie.supp_mcs_set.as_mut_ptr(), MCS_RATE_2R);
+                    }
+                }
+                #[cfg(not(config_disable_mcs13to15))]
+                {
+                    let _ = cbw40_enable;
+                    access::set_mcs(ht_capie.supp_mcs_set.as_mut_ptr(), MCS_RATE_2R);
+                }
+            }
             3 => access::set_mcs(ht_capie.supp_mcs_set.as_mut_ptr(), MCS_RATE_3R),
             4 => access::set_mcs(ht_capie.supp_mcs_set.as_mut_ptr(), MCS_RATE_4R),
             _ => {}
@@ -447,6 +496,52 @@ fn restructure_ht_ie_impl(
             );
             ht_capie.ampdu_params_info |=
                 IEEE80211_HT_CAP_AMPDU_DENSITY & (best_ampdu_density << 2);
+        }
+
+        #[cfg(any(config_beamforming, not(host_mlme_ht_restructure_test)))]
+        {
+            let mut rf_num: U8 = 0;
+            let mut tx_bf: U32 = 0;
+
+            if test_flag(
+                access::beamform_cap(padapter),
+                BEAMFORMING_HT_BEAMFORMER_ENABLE,
+            ) {
+                set_txbf_bits(&mut tx_bf, 4, 1, 1);
+                set_txbf_bits(&mut tx_bf, 10, 1, 1);
+                set_txbf_bits(&mut tx_bf, 23, 2, 1);
+                access::hal_get_def_var(
+                    padapter,
+                    HAL_DEF_BEAMFORMER_CAP,
+                    &mut rf_num as *mut U8 as *mut c_void,
+                );
+                set_txbf_bits(&mut tx_bf, 27, 2, rf_num);
+            }
+
+            if test_flag(
+                access::beamform_cap(padapter),
+                BEAMFORMING_HT_BEAMFORMEE_ENABLE,
+            ) {
+                set_txbf_bits(&mut tx_bf, 3, 1, 1);
+                set_txbf_bits(&mut tx_bf, 15, 2, 2);
+                access::hal_get_def_var(
+                    padapter,
+                    HAL_DEF_BEAMFORMEE_CAP,
+                    &mut rf_num as *mut U8 as *mut c_void,
+                );
+                #[cfg(all(not(host_mlme_ht_restructure_test), rust_mlme_ht_restructure))]
+                {
+                    if rtw_rust_ht_assoc_ap_vendor(padapter) == HT_IOT_PEER_BROADCOM
+                        && rtw_rust_ht_vht_ap_mu_bfer(padapter) == 0
+                        && rtw_rust_ht_vht_ap_su_sound_dim(padapter) == 2
+                    {
+                        rf_num = if rf_num >= 2 { 2 } else { rf_num };
+                    }
+                }
+                set_txbf_bits(&mut tx_bf, 23, 2, rf_num);
+            }
+
+            core::ptr::write_unaligned(core::ptr::addr_of_mut!(ht_capie.tx_bf_cap_info), tx_bf);
         }
 
         rtw_rust_ht_set_ie(

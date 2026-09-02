@@ -572,7 +572,7 @@ unsigned int rtw_restructure_ht_ie(_adapter *padapter, u8 *in_ie, u8 *out_ie, ui
 		SET_HT_CAP_TXBF_EXPLICIT_COMP_FEEDBACK_CAP(&ht_capie, 2);
 
 		rtw_hal_get_def_var(padapter, HAL_DEF_BEAMFORMEE_CAP, (u8 *)&rf_num);
-#ifdef CONFIG_80211AC_VHT
+#if defined(CONFIG_80211AC_VHT) && !defined(HOST_MLME_HT_RESTRUCTURE_TEST)
 		if ((pmlmeinfo->assoc_AP_vendor == HT_IOT_PEER_BROADCOM) &&
 			!pvhtpriv->ap_bf_cap.is_mu_bfer &&
 			pvhtpriv->ap_bf_cap.su_sound_dim == 2)
@@ -1727,6 +1727,28 @@ u8 rtw_rust_ht_stbc_cap(_adapter *padapter)
 {
 	return padapter->mlmepriv.htpriv.stbc_cap;
 }
+
+u8 rtw_rust_ht_beamform_cap(_adapter *padapter)
+{
+	return padapter->mlmepriv.htpriv.beamform_cap;
+}
+
+#ifdef CONFIG_80211AC_VHT
+u8 rtw_rust_ht_assoc_ap_vendor(_adapter *padapter)
+{
+	return padapter->mlmeextpriv.mlmext_info.assoc_AP_vendor;
+}
+
+u8 rtw_rust_ht_vht_ap_mu_bfer(_adapter *padapter)
+{
+	return padapter->mlmepriv.vhtpriv.ap_bf_cap.is_mu_bfer;
+}
+
+u8 rtw_rust_ht_vht_ap_su_sound_dim(_adapter *padapter)
+{
+	return padapter->mlmepriv.vhtpriv.ap_bf_cap.su_sound_dim;
+}
+#endif /* CONFIG_80211AC_VHT */
 
 u8 rtw_rust_ht_rx_stbc(_adapter *padapter)
 {

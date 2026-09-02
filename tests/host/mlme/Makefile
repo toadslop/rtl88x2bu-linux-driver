@@ -143,7 +143,7 @@ test-mlme-80211d: test_mlme_80211d
 test_mlme_80211d: test_mlme_80211d.c $(MLME_REST_SRC) $(MLME_80211D_SHIM)
 	$(CC) $(CFLAGS_80211D) -o $@ test_mlme_80211d.c $(MLME_REST_SRC) $(MLME_80211D_SHIM)
 
-CFLAGS_HT_RESTRUCTURE := $(CFLAGS_COMMON) -DHOST_MLME_HT_RESTRUCTURE_TEST -UCONFIG_80211AC_VHT -Wno-unused-variable -Wno-unused-but-set-variable
+CFLAGS_HT_RESTRUCTURE := $(CFLAGS_COMMON) -DHOST_MLME_HT_RESTRUCTURE_TEST -DCONFIG_BEAMFORMING -UCONFIG_80211AC_VHT -Wno-unused-variable -Wno-unused-but-set-variable
 MLME_HT_RESTRUCTURE_SHIM := host_mlme_ht_restructure_shim.c
 
 test-mlme-ht-restructure: test_mlme_ht_restructure
@@ -153,7 +153,7 @@ test_mlme_ht_restructure: test_mlme_ht_restructure.c $(MLME_REST_SRC) $(MLME_HT_
 	$(CC) $(CFLAGS_HT_RESTRUCTURE) -o $@ test_mlme_ht_restructure.c $(MLME_REST_SRC) $(MLME_HT_RESTRUCTURE_SHIM) $(HOST_JSON)
 
 librust_mlme_ht_restructure.a: $(RUST_MLME_HT_RESTRUCTURE)
-	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_mlme_ht_restructure_test \
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_mlme_ht_restructure_test --cfg config_beamforming \
 		--crate-type staticlib $(RUST_MLME_HT_RESTRUCTURE) -o $@
 
 test-mlme-ht-restructure-rust: test_mlme_ht_restructure_rust

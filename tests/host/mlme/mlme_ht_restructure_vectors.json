@@ -65,6 +65,32 @@
       "expect_cap_info_mask": 65535,
       "expect_cap_info_value": 6156,
       "expect_ht_info": 1
+    },
+    {
+      "name": "ht_beamformer_txbf",
+      "in_ie_hex": "3d1606000000000000000000000000000000000000000000",
+      "channel": 6,
+      "regsty_bw_2g": 1,
+      "hal_bw_cap_40": 1,
+      "beamform_cap": 1,
+      "beamformer_cap": 2,
+      "expect_ht_option": 1,
+      "expect_cap_info_mask": 65535,
+      "expect_cap_info_value": 6156,
+      "expect_tx_bf_cap_info": 276825104
+    },
+    {
+      "name": "ht_beamformee_txbf",
+      "in_ie_hex": "3d1606000000000000000000000000000000000000000000",
+      "channel": 6,
+      "regsty_bw_2g": 1,
+      "hal_bw_cap_40": 1,
+      "beamform_cap": 2,
+      "beamformee_cap": 2,
+      "expect_ht_option": 1,
+      "expect_cap_info_mask": 65535,
+      "expect_cap_info_value": 6156,
+      "expect_tx_bf_cap_info": 16842760
     }
   ]
 }

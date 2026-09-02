@@ -21,6 +21,12 @@ void rtw_hal_get_def_var(_adapter *padapter, hal_def_var_e def_var, void *val)
 	case HAL_DEF_RX_STBC:
 		*(u8 *)val = padapter->host_fixture.rx_stbc_nss;
 		break;
+	case HAL_DEF_BEAMFORMER_CAP:
+		*(u8 *)val = padapter->host_fixture.beamformer_cap;
+		break;
+	case HAL_DEF_BEAMFORMEE_CAP:
+		*(u8 *)val = padapter->host_fixture.beamformee_cap;
+		break;
 	case HW_VAR_MAX_RX_AMPDU_FACTOR:
 		*(u8 *)val = padapter->host_fixture.max_rx_ampdu_factor;
 		break;
@@ -215,6 +221,11 @@ u8 rtw_rust_ht_ldpc_cap(_adapter *padapter)
 u8 rtw_rust_ht_stbc_cap(_adapter *padapter)
 {
 	return padapter->mlmepriv.htpriv.stbc_cap;
+}
+
+u8 rtw_rust_ht_beamform_cap(_adapter *padapter)
+{
+	return padapter->mlmepriv.htpriv.beamform_cap;
 }
 
 u8 rtw_rust_ht_rx_stbc(_adapter *padapter)
