@@ -32,6 +32,9 @@ struct vector {
 	u8 beamform_cap;
 	u8 beamformer_cap;
 	u8 beamformee_cap;
+	u8 assoc_ap_vendor;
+	u8 vht_ap_mu_bfer;
+	u8 vht_ap_su_sound_dim;
 	u8 expect_ht_option;
 	u16 expect_cap_info_mask;
 	u16 expect_cap_info_value;
@@ -107,6 +110,12 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 		v->beamformer_cap = (u8)tmp;
 	if (!host_json_parse_int_in(obj, len, "beamformee_cap", &tmp))
 		v->beamformee_cap = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "assoc_ap_vendor", &tmp))
+		v->assoc_ap_vendor = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "vht_ap_mu_bfer", &tmp))
+		v->vht_ap_mu_bfer = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "vht_ap_su_sound_dim", &tmp))
+		v->vht_ap_su_sound_dim = (u8)tmp;
 	if (!host_json_parse_int_in(obj, len, "expect_ht_option", &tmp))
 		v->expect_ht_option = (u8)tmp;
 	if (!host_json_parse_int_in(obj, len, "expect_cap_info_mask", &tmp))
@@ -148,6 +157,10 @@ static int run_vector(const struct vector *v)
 	adapter.mlmepriv.htpriv.beamform_cap = v->beamform_cap;
 	adapter.host_fixture.beamformer_cap = v->beamformer_cap ? v->beamformer_cap : 2;
 	adapter.host_fixture.beamformee_cap = v->beamformee_cap ? v->beamformee_cap : 2;
+	adapter.mlmeextpriv.mlmext_info.assoc_AP_vendor = v->assoc_ap_vendor;
+	adapter.mlmepriv.vhtpriv.ap_bf_cap.is_mu_bfer = v->vht_ap_mu_bfer;
+	adapter.mlmepriv.vhtpriv.ap_bf_cap.su_sound_dim = v->vht_ap_su_sound_dim ?
+		v->vht_ap_su_sound_dim : 2;
 	adapter.rf_ctl.dfs_slave_with_rd = v->dfs_slave_with_rd;
 	memset(adapter.mlmeextpriv.default_supported_mcs_set, 0xff, 16);
 	host_mlme_ht_restructure_adapter = &adapter;

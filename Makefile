@@ -2612,6 +2612,7 @@ rustflags-y += --cfg c2h_wk
 endif
 rustflags-y += --cfg rust_mlme_ext_rest
 rustflags-y += --cfg rust_mlme_ht_restructure
+rustflags-y += --cfg config_beamforming --cfg config_80211ac_vht
 rustflags-y += --cfg rust_sta_mgt_stctl
 rustflags-y += --cfg rust_ap_rest
 rustflags-y += --cfg rust_rf_op_class_pref

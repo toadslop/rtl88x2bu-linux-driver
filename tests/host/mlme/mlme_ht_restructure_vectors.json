@@ -91,6 +91,22 @@
       "expect_cap_info_mask": 65535,
       "expect_cap_info_value": 6156,
       "expect_tx_bf_cap_info": 16842760
+    },
+    {
+      "name": "ht_beamformee_broadcom_iot_clamp",
+      "in_ie_hex": "3d1606000000000000000000000000000000000000000000",
+      "channel": 6,
+      "regsty_bw_2g": 1,
+      "hal_bw_cap_40": 1,
+      "beamform_cap": 2,
+      "beamformee_cap": 3,
+      "assoc_ap_vendor": 3,
+      "vht_ap_mu_bfer": 0,
+      "vht_ap_su_sound_dim": 2,
+      "expect_ht_option": 1,
+      "expect_cap_info_mask": 65535,
+      "expect_cap_info_value": 6156,
+      "expect_tx_bf_cap_info": 16842760
     }
   ]
 }

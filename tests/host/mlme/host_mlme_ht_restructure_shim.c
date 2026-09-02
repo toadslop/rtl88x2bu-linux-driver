@@ -243,6 +243,33 @@ u8 rtw_rust_ht_rx_nss(_adapter *padapter)
 	return padapter->host_fixture.rx_nss;
 }
 
+#ifdef CONFIG_80211AC_VHT
+u8 rtw_rust_ht_assoc_ap_vendor(_adapter *padapter)
+{
+	return padapter->mlmeextpriv.mlmext_info.assoc_AP_vendor;
+}
+
+u8 rtw_rust_ht_vht_ap_mu_bfer(_adapter *padapter)
+{
+	return padapter->mlmepriv.vhtpriv.ap_bf_cap.is_mu_bfer;
+}
+
+u8 rtw_rust_ht_vht_ap_su_sound_dim(_adapter *padapter)
+{
+	return padapter->mlmepriv.vhtpriv.ap_bf_cap.su_sound_dim;
+}
+#endif /* CONFIG_80211AC_VHT */
+
+void rtw_rust_ht_warn_unexpected_rx_nss(u8 rf_type, u8 rx_nss)
+{
+	RTW_WARN("rf_type:%d or rx_nss:%u is not expected\n", rf_type, rx_nss);
+}
+
+u8 rtw_rust_ht_rf_path(_adapter *padapter)
+{
+	return GET_HAL_RFPATH(padapter);
+}
+
 u8 rtw_rust_ht_driver_rx_ampdu_factor(_adapter *padapter)
 {
 	return padapter->driver_rx_ampdu_factor;

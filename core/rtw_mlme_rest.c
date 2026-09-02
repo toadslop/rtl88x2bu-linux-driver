@@ -572,7 +572,7 @@ unsigned int rtw_restructure_ht_ie(_adapter *padapter, u8 *in_ie, u8 *out_ie, ui
 		SET_HT_CAP_TXBF_EXPLICIT_COMP_FEEDBACK_CAP(&ht_capie, 2);
 
 		rtw_hal_get_def_var(padapter, HAL_DEF_BEAMFORMEE_CAP, (u8 *)&rf_num);
-#if defined(CONFIG_80211AC_VHT) && !defined(HOST_MLME_HT_RESTRUCTURE_TEST)
+#if defined(CONFIG_80211AC_VHT)
 		if ((pmlmeinfo->assoc_AP_vendor == HT_IOT_PEER_BROADCOM) &&
 			!pvhtpriv->ap_bf_cap.is_mu_bfer &&
 			pvhtpriv->ap_bf_cap.su_sound_dim == 2)
@@ -1676,6 +1676,16 @@ u8 rtw_rust_ht_chset_is_chbw_non_ocp(RT_CHANNEL_INFO *ch_set, u8 ch, u8 bw,
 void rtw_rust_ht_warn_on(int condition)
 {
 	rtw_warn_on(condition);
+}
+
+void rtw_rust_ht_warn_unexpected_rx_nss(u8 rf_type, u8 rx_nss)
+{
+	RTW_WARN("rf_type:%d or rx_nss:%u is not expected\n", rf_type, rx_nss);
+}
+
+u8 rtw_rust_ht_rf_path(_adapter *padapter)
+{
+	return GET_HAL_RFPATH(padapter);
 }
 
 u8 rtw_rust_ht_hal_chk_bw_cap(_adapter *padapter, u8 cap)
