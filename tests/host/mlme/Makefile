@@ -19,6 +19,7 @@ RUST_MLME_ROAMING := $(ROOT)/rust/rtw_mlme_roaming.rs
 RUST_MLME_NETWORK_UPDATE := $(ROOT)/rust/rtw_mlme_network_update.rs
 RUST_MLME_80211D := $(ROOT)/rust/rtw_mlme_80211d.rs
 RUST_MLME_HT_RESTRUCTURE := $(ROOT)/rust/rtw_mlme_ht_restructure.rs
+RUST_MLME_80211D := $(ROOT)/rust/rtw_mlme_80211d.rs
 
 CC     := gcc
 RUSTC  := rustc

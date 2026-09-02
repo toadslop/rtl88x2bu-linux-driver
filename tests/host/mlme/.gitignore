@@ -14,3 +14,4 @@ test_mlme_80211d
 test_mlme_ht_restructure
 test_mlme_ht_restructure_rust
 librust_mlme_ht_restructure.a
+tests/host/mlme/test_mlme_80211d_rust

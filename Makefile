@@ -2594,6 +2594,8 @@ ccflags-y += -DCONFIG_RUST_MLME_WMM_RSN
 rustflags-y += --cfg rust_mlme_wmm_rsn --cfg config_wmmps_sta
 ccflags-y += -DCONFIG_RUST_MLME_EXT_REST
 ccflags-y += -DCONFIG_RUST_MLME_HT_RESTRUCTURE
+ccflags-y += -DCONFIG_80211D
+ccflags-y += -DCONFIG_RUST_MLME_80211D
 ccflags-y += -DCONFIG_RUST_STA_MGT_STCTL
 ccflags-y += -DCONFIG_RUST_AP_REST
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_PREF
@@ -2612,6 +2614,7 @@ rustflags-y += --cfg c2h_wk
 endif
 rustflags-y += --cfg rust_mlme_ext_rest
 rustflags-y += --cfg rust_mlme_ht_restructure
+rustflags-y += --cfg rust_mlme_80211d --cfg config_80211d
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BEAMFORMING' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg config_beamforming
 endif
@@ -2691,6 +2694,7 @@ $(MODULE_NAME)-y += rust/rtw_xmit.o
 $(MODULE_NAME)-y += rust/rtw_iol_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
+$(MODULE_NAME)-y += rust/rtw_mlme_80211d.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_rest.o
 $(MODULE_NAME)-y += rust/rtw_cmd_rest.o
 endif
