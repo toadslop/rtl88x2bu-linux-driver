@@ -107,6 +107,17 @@
       "expect_cap_info_mask": 65535,
       "expect_cap_info_value": 6156,
       "expect_tx_bf_cap_info": 16842760
+    },
+    {
+      "name": "ht_unexpected_rx_nss_warn",
+      "in_ie_hex": "3d1606000000000000000000000000000000000000000000",
+      "channel": 6,
+      "regsty_bw_2g": 1,
+      "hal_bw_cap_40": 1,
+      "rx_nss": 0,
+      "expect_ht_option": 1,
+      "expect_cap_info_mask": 65535,
+      "expect_cap_info_value": 6156
     }
   ]
 }
