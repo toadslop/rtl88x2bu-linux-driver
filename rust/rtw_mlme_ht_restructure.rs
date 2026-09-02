@@ -58,11 +58,30 @@ const MCS_RATE_2R_13TO15_OFF: U32 = 0x0000_1fff;
 const MCS_RATE_3R: U32 = 0x00ff_ffff;
 const MCS_RATE_4R: U32 = 0xffff_ffff;
 const _AES_: U32 = 4;
+#[cfg(host_mlme_ht_restructure_test)]
 const HAL_DEF_RX_PACKET_OFFSET: U8 = 1;
+#[cfg(not(host_mlme_ht_restructure_test))]
+const HAL_DEF_RX_PACKET_OFFSET: U8 = 4;
+
+#[cfg(host_mlme_ht_restructure_test)]
 const HAL_DEF_MAX_RECVBUF_SZ: U8 = 2;
+#[cfg(not(host_mlme_ht_restructure_test))]
+const HAL_DEF_MAX_RECVBUF_SZ: U8 = 3;
+
+#[cfg(host_mlme_ht_restructure_test)]
 const HAL_DEF_RX_STBC: U8 = 3;
+#[cfg(not(host_mlme_ht_restructure_test))]
+const HAL_DEF_RX_STBC: U8 = 15;
+
+#[cfg(host_mlme_ht_restructure_test)]
 const HW_VAR_MAX_RX_AMPDU_FACTOR: U8 = 4;
+#[cfg(not(host_mlme_ht_restructure_test))]
+const HW_VAR_MAX_RX_AMPDU_FACTOR: U8 = 22;
+
+#[cfg(host_mlme_ht_restructure_test)]
 const HW_VAR_BEST_AMPDU_DENSITY: U8 = 5;
+#[cfg(not(host_mlme_ht_restructure_test))]
+const HW_VAR_BEST_AMPDU_DENSITY: U8 = 33;
 
 #[cfg(host_mlme_ht_restructure_test)]
 const HAL_DEF_BEAMFORMER_CAP: U8 = 6;
@@ -74,12 +93,12 @@ const HAL_DEF_BEAMFORMEE_CAP: U8 = 7;
 #[cfg(not(host_mlme_ht_restructure_test))]
 const HAL_DEF_BEAMFORMEE_CAP: U8 = 21;
 
-#[cfg(any(config_beamforming, not(host_mlme_ht_restructure_test)))]
+#[cfg(config_beamforming)]
 const BEAMFORMING_HT_BEAMFORMER_ENABLE: U8 = 0x01;
-#[cfg(any(config_beamforming, not(host_mlme_ht_restructure_test)))]
+#[cfg(config_beamforming)]
 const BEAMFORMING_HT_BEAMFORMEE_ENABLE: U8 = 0x02;
 
-#[cfg(all(not(host_mlme_ht_restructure_test), rust_mlme_ht_restructure))]
+#[cfg(config_80211ac_vht)]
 const HT_IOT_PEER_BROADCOM: U8 = 3;
 
 #[repr(C, packed)]
@@ -165,6 +184,8 @@ extern "C" {
     ) -> U8;
     fn rtw_rust_ht_chset_is_chbw_non_ocp(ch_set: *mut U8, ch: U8, bw: U8, offset: U8) -> U8;
     fn rtw_rust_ht_warn_on(condition: c_int);
+    fn rtw_rust_ht_warn_unexpected_rx_nss(rf_type: U8, rx_nss: U8);
+    fn rtw_rust_ht_rf_path(padapter: *mut U8) -> U8;
     fn rtw_rust_ht_hal_chk_bw_cap(padapter: *mut U8, cap: U8) -> U8;
     fn rtw_rust_ht_hal_get_def_var(padapter: *mut U8, def_var: U8, val: *mut c_void);
     fn rtw_rust_ht_set_mcs_rate_by_mask(mcs_set: *mut U8, mask: U32);
@@ -191,7 +212,7 @@ extern "C" {
     ) -> *mut U8;
 }
 
-#[cfg(all(not(host_mlme_ht_restructure_test), rust_mlme_ht_restructure))]
+#[cfg(config_80211ac_vht)]
 extern "C" {
     fn rtw_rust_ht_assoc_ap_vendor(padapter: *mut U8) -> U8;
     fn rtw_rust_ht_vht_ap_mu_bfer(padapter: *mut U8) -> U8;
@@ -454,7 +475,12 @@ fn restructure_ht_ie_impl(
             }
             3 => access::set_mcs(ht_capie.supp_mcs_set.as_mut_ptr(), MCS_RATE_3R),
             4 => access::set_mcs(ht_capie.supp_mcs_set.as_mut_ptr(), MCS_RATE_4R),
-            _ => {}
+            _ => {
+                rtw_rust_ht_warn_unexpected_rx_nss(
+                    rtw_rust_ht_rf_path(padapter),
+                    access::rx_nss(padapter),
+                );
+            }
         }
 
         let mut rx_packet_offset: U32 = 0;
@@ -498,7 +524,7 @@ fn restructure_ht_ie_impl(
                 IEEE80211_HT_CAP_AMPDU_DENSITY & (best_ampdu_density << 2);
         }
 
-        #[cfg(any(config_beamforming, not(host_mlme_ht_restructure_test)))]
+        #[cfg(config_beamforming)]
         {
             let mut rf_num: U8 = 0;
             let mut tx_bf: U32 = 0;
@@ -529,7 +555,7 @@ fn restructure_ht_ie_impl(
                     HAL_DEF_BEAMFORMEE_CAP,
                     &mut rf_num as *mut U8 as *mut c_void,
                 );
-                #[cfg(all(not(host_mlme_ht_restructure_test), rust_mlme_ht_restructure))]
+                #[cfg(config_80211ac_vht)]
                 {
                     if rtw_rust_ht_assoc_ap_vendor(padapter) == HT_IOT_PEER_BROADCOM
                         && rtw_rust_ht_vht_ap_mu_bfer(padapter) == 0

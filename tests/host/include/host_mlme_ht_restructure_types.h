@@ -73,6 +73,8 @@ enum channel_width {
 #define BEAMFORMING_HT_BEAMFORMER_ENABLE BIT0
 #define BEAMFORMING_HT_BEAMFORMEE_ENABLE BIT1
 
+#define HT_IOT_PEER_BROADCOM 3
+
 #define MCS_RATE_1R 0x000000ff
 #define MCS_RATE_2R 0x0000ffff
 #define MCS_RATE_2R_13TO15_OFF 0x00001fff
@@ -168,12 +170,17 @@ struct registry_priv {
 	u8 wifi_spec;
 };
 
+struct vht_ap_bf_cap {
+	u8 is_mu_bfer;
+	u8 su_sound_dim;
+};
+
 struct vht_priv {
-	u8 _pad;
+	struct vht_ap_bf_cap ap_bf_cap;
 };
 
 struct mlme_ext_info {
-	u8 _pad;
+	u8 assoc_AP_vendor;
 };
 
 struct mlme_priv {
