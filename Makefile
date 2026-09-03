@@ -2704,6 +2704,7 @@ $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
 $(MODULE_NAME)-y += rust/rtw_mlme_80211d.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_mgnt_attrib.o
+$(MODULE_NAME)-y += rust/rtw_mlme_ext_peer_alive.o
 $(MODULE_NAME)-y += rust/rtw_cmd_rest.o
 endif
 
