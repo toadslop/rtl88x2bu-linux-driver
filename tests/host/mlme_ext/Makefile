@@ -14,7 +14,8 @@ MGNT_SHIM := host_mlme_ext_mgnt_attrib_shim.c
 MGNT_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-variable -Wno-format-truncation -O2 \
           -I$(HOST_INC) -I$(CORE) -I$(ROOT)/include \
           -include $(HOST_INC)/host_autoconf.h \
-          -DHOST_MLME_EXT_MGNT_ATTRIB_TEST -DCONFIG_RTW_MGMT_QUEUE -DCONFIG_BEAMFORMING
+          -DHOST_MLME_EXT_MGNT_ATTRIB_TEST -DCONFIG_RTW_MGMT_QUEUE -DCONFIG_BEAMFORMING \
+          -DCONFIG_P2P -DCONFIG_P2P_PS -DCONFIG_P2P_PS_NOA_USE_MACID_SLEEP -DCONFIG_CONCURRENT_MODE
 
 CC     := gcc
 RUSTC  := rustc
@@ -59,6 +60,7 @@ librust_mlme_ext_mgnt_attrib.a: $(RUST_MLME_EXT_MGNT_ATTRIB)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on \
 		--cfg host_mlme_ext_mgnt_attrib_test --cfg config_rtw_mgmt_queue \
 		--cfg config_beamforming --cfg config_80211ac_vht \
+		--cfg config_p2p_ps_noa_use_macid_sleep --cfg config_concurrent_mode \
 		--crate-type staticlib $(RUST_MLME_EXT_MGNT_ATTRIB) -o $@
 
 test-mgnt-attrib-rust: test_mgnt_attrib_rust

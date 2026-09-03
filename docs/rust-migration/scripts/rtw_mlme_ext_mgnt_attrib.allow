@@ -5,3 +5,4 @@ drop rtw_rust_mgnt_hw_ssn_seq_no
 drop rtw_rust_mgnt_hal_rf_type
 drop rtw_rust_mgnt_mlme_is_adhoc
 drop rtw_rust_mgnt_stapriv
+drop rtw_rust_mgnt_p2p_noa_override

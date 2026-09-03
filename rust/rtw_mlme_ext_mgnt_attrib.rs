@@ -27,7 +27,11 @@ const _FALSE: c_int = 0;
 
 const RTW_DEFAULT_MGMT_MACID: U8 = 1;
 const QSLT_MGNT: U8 = 0x12;
+const QSLT_VO: U8 = 0x7;
 const _NO_PRIVACY_: U8 = 0;
+
+const P2P_ROLE_CLIENT: U32 = 2;
+const P2P_PS_NONE: U32 = 0;
 
 const WIRELESS_11B: U8 = 1 << 0;
 const WIRELESS_11G: U8 = 1 << 1;
@@ -79,9 +83,20 @@ mod layout {
     }
 
     #[repr(C)]
+    pub struct WlanBssidEx {
+        pub mac_address: [U8; 6],
+    }
+
+    #[repr(C)]
+    pub struct MlmeExtInfo {
+        pub network: WlanBssidEx,
+    }
+
+    #[repr(C)]
     pub struct MlmeExtPriv {
         pub mgnt_seq: U16,
         pub tx_rate: U8,
+        pub mlmext_info: MlmeExtInfo,
     }
 
     #[repr(C)]
@@ -97,6 +112,14 @@ mod layout {
     #[repr(C)]
     pub struct HostFixture {
         pub mlme_state: U32,
+        pub buddy_asoc: U8,
+    }
+
+    #[repr(C)]
+    pub struct WifiDirectInfo {
+        pub role: U32,
+        pub p2p_ps_mode: U32,
+        pub p2p_ps_state: U32,
     }
 
     #[repr(C)]
@@ -106,6 +129,7 @@ mod layout {
         pub stapriv: StaPriv,
         pub hal_data: HalDataType,
         pub host_fixture: HostFixture,
+        pub wdinfo: WifiDirectInfo,
     }
 
     #[repr(C)]
@@ -276,6 +300,8 @@ extern "C" {
     fn rtw_rust_mgnt_hal_rf_type(padapter: *mut Adapter) -> U8;
     fn rtw_rust_mgnt_mlme_is_adhoc(padapter: *mut Adapter) -> U8;
     fn rtw_rust_mgnt_stapriv(padapter: *mut Adapter) -> *mut StaPriv;
+    #[cfg(config_p2p_ps_noa_use_macid_sleep)]
+    fn rtw_rust_mgnt_p2p_noa_override(padapter: *mut Adapter, mac_id: *mut U8, qsel: *mut U8) -> U8;
 }
 
 #[inline]
@@ -310,6 +336,47 @@ fn get_addr1_ptr(pbuf: *const U8) -> *const U8 {
 #[inline]
 fn get_addr2_ptr(pbuf: *const U8) -> *const U8 {
     unsafe { pbuf.add(10) }
+}
+
+#[cfg(any(config_p2p_ps_noa_use_macid_sleep, host_mlme_ext_mgnt_attrib_test))]
+fn apply_p2p_noa_mac_id_qsel(padapter: *mut Adapter, attrib: &mut PktAttrib) {
+    #[cfg(host_mlme_ext_mgnt_attrib_test)]
+    {
+        let adapter = unsafe { &*(padapter as *const layout::Adapter) };
+        #[cfg(config_concurrent_mode)]
+        if adapter.host_fixture.buddy_asoc == 0 {
+            return;
+        }
+        if adapter.wdinfo.role != P2P_ROLE_CLIENT {
+            return;
+        }
+        if adapter.wdinfo.p2p_ps_mode <= P2P_PS_NONE {
+            return;
+        }
+        let stapriv =
+            unsafe { &mut (*padapter.cast::<layout::Adapter>()).stapriv as *mut StaPriv };
+        let sta = unsafe {
+            rtw_get_stainfo(
+                stapriv,
+                adapter.mlmeextpriv.mlmext_info.network.mac_address.as_ptr(),
+            )
+        };
+        if sta.is_null() {
+            return;
+        }
+        let sta_ref = unsafe { &*sta };
+        attrib.mac_id = sta_ref.cmn_mac_id;
+        attrib.qsel = QSLT_VO;
+    }
+    #[cfg(all(config_p2p_ps_noa_use_macid_sleep, rust_mlme_ext_mgnt_attrib, not(host_mlme_ext_mgnt_attrib_test)))]
+    {
+        let mut mac_id = attrib.mac_id;
+        let mut qsel = attrib.qsel;
+        if unsafe { rtw_rust_mgnt_p2p_noa_override(padapter, &mut mac_id, &mut qsel) } != 0 {
+            attrib.mac_id = mac_id;
+            attrib.qsel = qsel;
+        }
+    }
 }
 
 #[no_mangle]
@@ -445,6 +512,8 @@ pub extern "C" fn update_mgntframe_attrib(padapter: *mut Adapter, pattrib: *mut 
     attrib.priority = 7;
     attrib.mac_id = RTW_DEFAULT_MGMT_MACID;
     attrib.qsel = QSLT_MGNT;
+    #[cfg(any(config_p2p_ps_noa_use_macid_sleep, host_mlme_ext_mgnt_attrib_test))]
+    apply_p2p_noa_mac_id_qsel(padapter, attrib);
     attrib.pktlen = 0;
 
     let wireless_mode = if is_cck_rate(tx_rate) {

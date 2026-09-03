@@ -7,7 +7,7 @@
 #include "host_mlme_ext_mgnt_attrib_types.h"
 #include "host_vector_json.h"
 
-#define MAX_VECTORS 16
+#define MAX_VECTORS 20
 #define MAX_NAME 128
 #define MAX_FRAME 128
 
@@ -55,6 +55,10 @@ struct vector {
 	u8 hw_ssn_seq_no;
 	u8 rf_type;
 	u32 mlme_state;
+	u8 p2p_role;
+	u8 p2p_ps_mode;
+	u8 buddy_asoc;
+	u8 sta_mac_id;
 	u8 frame_hex[MAX_FRAME];
 	size_t frame_len;
 	u32 pktlen;
@@ -167,6 +171,14 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 		v->rf_type = (u8)tmp;
 	if (!host_json_parse_int_in(obj, len, "mlme_state", &tmp))
 		v->mlme_state = (u32)tmp;
+	if (!host_json_parse_int_in(obj, len, "p2p_role", &tmp))
+		v->p2p_role = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "p2p_ps_mode", &tmp))
+		v->p2p_ps_mode = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "buddy_asoc", &tmp))
+		v->buddy_asoc = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "sta_mac_id", &tmp))
+		v->sta_mac_id = (u8)tmp;
 	if (!host_json_parse_int_in(obj, len, "pktlen", &tmp))
 		v->pktlen = (u32)tmp;
 	if (!host_json_parse_string_in(obj, len, "frame_hex", hex, sizeof(hex))) {
@@ -187,6 +199,14 @@ static void setup_adapter(struct vector *v)
 	adapter.xmitpriv.hw_ssn_seq_no = v->hw_ssn_seq_no;
 	adapter.hal_data.rf_type = v->rf_type;
 	adapter.host_fixture.mlme_state = v->mlme_state;
+	adapter.host_fixture.buddy_asoc = v->buddy_asoc;
+#ifdef CONFIG_P2P
+	adapter.wdinfo.role = (enum P2P_ROLE)v->p2p_role;
+#ifdef CONFIG_P2P_PS
+	adapter.wdinfo.p2p_ps_mode = (enum P2P_PS_MODE)v->p2p_ps_mode;
+#endif
+#endif
+	fixture_sta.cmn.mac_id = v->sta_mac_id ? v->sta_mac_id : 1;
 	adapter.stapriv.fixture_sta = &fixture_sta;
 	fixture_sta.cmn.bf_info.g_id = 7;
 	fixture_sta.cmn.bf_info.p_aid = 42;
