@@ -1,0 +1,13 @@
+# L1 allowlist for W3-66: C process_80211d was not linked before CONFIG_80211D.
+drop rtw_rust_80211d_enable
+drop rtw_rust_80211d_wireless_mode
+drop rtw_rust_80211d_update_done
+drop rtw_rust_80211d_set_update_done
+drop rtw_rust_80211d_channel_set
+drop rtw_rust_80211d_malloc
+drop rtw_rust_80211d_mfree
+drop rtw_rust_80211d_reg_change
+drop rtw_rust_80211d_bss_ies
+drop rtw_rust_80211d_bss_ie_len
+drop rtw_rust_80211d_bss_ssid
+drop rtw_rust_80211d_get_ie

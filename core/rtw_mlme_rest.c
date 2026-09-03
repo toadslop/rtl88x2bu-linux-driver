@@ -1796,3 +1796,68 @@ u8 *rtw_rust_ht_set_ie(u8 *pbuf, sint index, u32 len, u8 *source, u32 *frlen)
 }
 
 #endif /* CONFIG_RUST && CONFIG_RUST_MLME_HT_RESTRUCTURE */
+
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_80211D) && \
+    defined(CONFIG_80211D) && !defined(HOST_MLME_80211D_TEST)
+
+u8 *rtw_rust_80211d_get_ie(const u8 *pbuf, sint index, sint *len, sint limit)
+{
+	return rtw_get_ie(pbuf, index, len, limit);
+}
+
+u8 rtw_rust_80211d_enable(_adapter *padapter)
+{
+	return padapter->registrypriv.enable80211d;
+}
+
+u8 rtw_rust_80211d_wireless_mode(_adapter *padapter)
+{
+	return padapter->registrypriv.wireless_mode;
+}
+
+u8 rtw_rust_80211d_update_done(_adapter *padapter)
+{
+	return padapter->mlmeextpriv.update_channel_plan_by_ap_done;
+}
+
+void rtw_rust_80211d_set_update_done(_adapter *padapter, u8 v)
+{
+	padapter->mlmeextpriv.update_channel_plan_by_ap_done = v;
+}
+
+RT_CHANNEL_INFO *rtw_rust_80211d_channel_set(_adapter *padapter)
+{
+	return adapter_to_rfctl(padapter)->channel_set;
+}
+
+void *rtw_rust_80211d_malloc(size_t n)
+{
+	return rtw_malloc(n);
+}
+
+void rtw_rust_80211d_mfree(void *p, size_t n)
+{
+	rtw_mfree(p, n);
+}
+
+void rtw_rust_80211d_reg_change(_adapter *padapter)
+{
+	rtw_nlrtw_reg_change_event(padapter);
+}
+
+u8 *rtw_rust_80211d_bss_ies(WLAN_BSSID_EX *bssid)
+{
+	return bssid->IEs;
+}
+
+u32 rtw_rust_80211d_bss_ie_len(WLAN_BSSID_EX *bssid)
+{
+	return bssid->IELength;
+}
+
+u8 *rtw_rust_80211d_bss_ssid(WLAN_BSSID_EX *bssid)
+{
+	return bssid->Ssid.Ssid;
+}
+
+#endif /* CONFIG_RUST && CONFIG_RUST_MLME_80211D */
