@@ -22,6 +22,38 @@
 #define RTW_DEFAULT_MGMT_MACID 1
 #define QSLT_MGNT 0x12
 #define QSLT_VO 0x7
+#define WIFI_ASOC_STATE 0x00000001
+
+#ifdef CONFIG_P2P
+enum P2P_ROLE {
+	P2P_ROLE_DISABLE = 0,
+	P2P_ROLE_DEVICE = 1,
+	P2P_ROLE_CLIENT = 2,
+	P2P_ROLE_GO = 3,
+};
+
+enum P2P_PS_MODE {
+	P2P_PS_NONE = 0,
+	P2P_PS_CTWINDOW = 1,
+	P2P_PS_NOA = 2,
+	P2P_PS_MIX = 3,
+};
+
+enum P2P_PS_STATE {
+	P2P_PS_DISABLE = 0,
+	P2P_PS_ENABLE = 1,
+};
+
+struct wifidirect_info {
+	enum P2P_ROLE role;
+#ifdef CONFIG_P2P_PS
+	enum P2P_PS_MODE p2p_ps_mode;
+	enum P2P_PS_STATE p2p_ps_state;
+#endif
+};
+
+#define MLME_IS_GC(adapter) ((adapter)->wdinfo.role == P2P_ROLE_CLIENT)
+#endif /* CONFIG_P2P */
 #define _NO_PRIVACY_ 0
 
 #define WIRELESS_11B BIT0
@@ -120,9 +152,18 @@ struct sta_priv {
 	struct sta_info *fixture_sta;
 };
 
+typedef struct {
+	u8 MacAddress[ETH_ALEN];
+} WLAN_BSSID_EX;
+
+struct mlme_ext_info {
+	WLAN_BSSID_EX network;
+};
+
 struct mlme_ext_priv {
 	u16 mgnt_seq;
 	u8 tx_rate;
+	struct mlme_ext_info mlmext_info;
 };
 
 struct xmit_priv {
@@ -135,6 +176,7 @@ typedef struct {
 
 struct host_mgnt_attrib_fixture {
 	u32 mlme_state;
+	u8 buddy_asoc;
 };
 
 struct _adapter {
@@ -143,6 +185,9 @@ struct _adapter {
 	struct sta_priv stapriv;
 	HAL_DATA_TYPE hal_data;
 	struct host_mgnt_attrib_fixture host_fixture;
+#ifdef CONFIG_P2P
+	struct wifidirect_info wdinfo;
+#endif
 };
 
 typedef struct _adapter _adapter;
@@ -217,5 +262,9 @@ void update_mgntframe_attrib(_adapter *padapter, struct pkt_attrib *pattrib);
 void update_mgntframe_attrib_addr(_adapter *padapter, struct xmit_frame *pmgntframe);
 
 extern _adapter *host_mgnt_attrib_adapter;
+
+#ifdef CONFIG_CONCURRENT_MODE
+u8 rtw_mi_buddy_check_fwstate(_adapter *padapter, int state);
+#endif
 
 #endif /* HOST_MLME_EXT_MGNT_ATTRIB_TYPES_H */

@@ -58,3 +58,11 @@ void update_attrib_txbf_info(_adapter *padapter, struct pkt_attrib *pattrib,
 		pattrib->txbf_p_aid = psta->cmn.bf_info.p_aid;
 	}
 }
+
+#ifdef CONFIG_CONCURRENT_MODE
+u8 rtw_mi_buddy_check_fwstate(_adapter *padapter, int state)
+{
+	(void)state;
+	return padapter->host_fixture.buddy_asoc;
+}
+#endif

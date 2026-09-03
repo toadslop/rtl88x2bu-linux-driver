@@ -2593,6 +2593,7 @@ endif
 ccflags-y += -DCONFIG_RUST_MLME_WMM_RSN
 rustflags-y += --cfg rust_mlme_wmm_rsn --cfg config_wmmps_sta
 ccflags-y += -DCONFIG_RUST_MLME_EXT_REST
+ccflags-y += -DCONFIG_RUST_MLME_EXT_MGNT_ATTRIB
 ccflags-y += -DCONFIG_RUST_MLME_HT_RESTRUCTURE
 ccflags-y += -DCONFIG_80211D
 ccflags-y += -DCONFIG_RUST_MLME_80211D
@@ -2613,6 +2614,12 @@ ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_FW_C2H_REG' $(src)/include/auto
 rustflags-y += --cfg c2h_wk
 endif
 rustflags-y += --cfg rust_mlme_ext_rest
+rustflags-y += --cfg rust_mlme_ext_mgnt_attrib
+rustflags-y += --cfg config_rtw_mgmt_queue
+rustflags-y += --cfg config_p2p_ps_noa_use_macid_sleep
+ifneq ($(filter -DCONFIG_CONCURRENT_MODE,$(ccflags-y)),)
+rustflags-y += --cfg config_concurrent_mode
+endif
 rustflags-y += --cfg rust_mlme_ht_restructure
 rustflags-y += --cfg rust_mlme_80211d --cfg config_80211d
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BEAMFORMING' $(src)/include/autoconf.h 2>/dev/null && echo y),)
@@ -2696,6 +2703,7 @@ $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
 $(MODULE_NAME)-y += rust/rtw_mlme_80211d.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_rest.o
+$(MODULE_NAME)-y += rust/rtw_mlme_ext_mgnt_attrib.o
 $(MODULE_NAME)-y += rust/rtw_cmd_rest.o
 endif
 

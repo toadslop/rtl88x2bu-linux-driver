@@ -443,3 +443,73 @@ void update_mgntframe_attrib_addr(_adapter *padapter, struct xmit_frame *pmgntfr
 }
 
 #endif /* HOST_MLME_EXT_MGNT_ATTRIB_TEST || ((!CONFIG_RUST || !CONFIG_RUST_MLME_EXT_MGNT_ATTRIB) && !HOST_MLME_EXT_TEST) */
+
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_EXT_MGNT_ATTRIB)
+#include <drv_types.h>
+#include <hal_data.h>
+
+u8 rtw_rust_mgnt_tx_rate(_adapter *padapter)
+{
+	return padapter->mlmeextpriv.tx_rate;
+}
+
+u16 rtw_rust_mgnt_mgnt_seq(_adapter *padapter)
+{
+	return padapter->mlmeextpriv.mgnt_seq;
+}
+
+u8 rtw_rust_mgnt_hw_ssn_seq_no(_adapter *padapter)
+{
+	return padapter->xmitpriv.hw_ssn_seq_no;
+}
+
+u8 rtw_rust_mgnt_hal_rf_type(_adapter *padapter)
+{
+	return GET_HAL_DATA(padapter)->rf_type;
+}
+
+u8 rtw_rust_mgnt_mlme_is_adhoc(_adapter *padapter)
+{
+	return MLME_IS_ADHOC(padapter) ? 1 : 0;
+}
+
+struct sta_priv *rtw_rust_mgnt_stapriv(_adapter *padapter)
+{
+	return &padapter->stapriv;
+}
+
+#ifdef CONFIG_P2P_PS_NOA_USE_MACID_SLEEP
+u8 rtw_rust_mgnt_p2p_noa_override(_adapter *padapter, u8 *mac_id, u8 *qsel)
+{
+	struct mlme_ext_priv *pmlmeext = &(padapter->mlmeextpriv);
+	struct mlme_ext_info *pmlmeinfo = &(pmlmeext->mlmext_info);
+	WLAN_BSSID_EX *cur_network = &(pmlmeinfo->network);
+	struct sta_priv *pstapriv = &padapter->stapriv;
+	struct sta_info *psta;
+#ifdef CONFIG_P2P_PS
+	struct wifidirect_info *pwdinfo = &(padapter->wdinfo);
+#endif /* CONFIG_P2P_PS */
+
+#ifdef CONFIG_CONCURRENT_MODE
+	if (!rtw_mi_buddy_check_fwstate(padapter, WIFI_ASOC_STATE))
+		return 0;
+#endif /* CONFIG_CONCURRENT_MODE */
+	if (!MLME_IS_GC(padapter))
+		return 0;
+#ifdef CONFIG_P2P_PS
+	if (pwdinfo->p2p_ps_mode <= P2P_PS_NONE)
+		return 0;
+#else
+	return 0;
+#endif /* CONFIG_P2P_PS */
+
+	psta = rtw_get_stainfo(pstapriv, cur_network->MacAddress);
+	if (!psta)
+		return 0;
+
+	*mac_id = psta->cmn.mac_id;
+	*qsel = QSLT_VO;
+	return 1;
+}
+#endif /* CONFIG_P2P_PS_NOA_USE_MACID_SLEEP */
+#endif
