@@ -541,6 +541,92 @@ u8 chk_tdls_peer_sta_is_alive(_adapter *padapter, struct sta_info *psta)
 
 #endif /* HOST_MLME_EXT_PEER_ALIVE_TEST || ((!CONFIG_RUST || !CONFIG_RUST_MLME_EXT_PEER_ALIVE) && !HOST_MLME_EXT_TEST) */
 
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_EXT_PEER_ALIVE)
+#include <drv_types.h>
+
+u8 rtw_rust_peer_assoc_ap_vendor(_adapter *padapter)
+{
+	return padapter->mlmeextpriv.mlmext_info.assoc_AP_vendor;
+}
+
+u8 *rtw_rust_peer_sta_mac(struct sta_info *psta)
+{
+	return psta->cmn.mac_addr;
+}
+
+u8 rtw_rust_peer_reorder_enable(struct sta_info *psta, int tid)
+{
+	return psta->recvreorder_ctrl[tid].enable;
+}
+
+void rtw_rust_peer_reorder_disable(struct sta_info *psta, int tid)
+{
+	psta->recvreorder_ctrl[tid].enable = _FALSE;
+}
+
+void rtw_rust_peer_reorder_invalidate_ampdu(struct sta_info *psta, int tid)
+{
+	psta->recvreorder_ctrl[tid].ampdu_size = RX_AMPDU_SIZE_INVALID;
+}
+
+u64 rtw_rust_peer_rx_qos(struct sta_info *psta, int tid)
+{
+	return sta_rx_data_qos_pkts(psta, tid);
+}
+
+u64 rtw_rust_peer_last_rx_qos(struct sta_info *psta, int tid)
+{
+	return sta_last_rx_data_qos_pkts(psta, tid);
+}
+
+u64 rtw_rust_peer_rx_data(struct sta_info *psta)
+{
+	return sta_rx_data_pkts(psta);
+}
+
+u64 rtw_rust_peer_last_rx_data(struct sta_info *psta)
+{
+	return sta_last_rx_data_pkts(psta);
+}
+
+u64 rtw_rust_peer_rx_beacon(struct sta_info *psta)
+{
+	return sta_rx_beacon_pkts(psta);
+}
+
+u64 rtw_rust_peer_last_rx_beacon(struct sta_info *psta)
+{
+	return sta_last_rx_beacon_pkts(psta);
+}
+
+u64 rtw_rust_peer_rx_probersp(struct sta_info *psta)
+{
+	return sta_rx_probersp_pkts(psta);
+}
+
+u64 rtw_rust_peer_last_rx_probersp(struct sta_info *psta)
+{
+	return sta_last_rx_probersp_pkts(psta);
+}
+
+void rtw_rust_peer_sta_update_last_rx(struct sta_info *psta)
+{
+	sta_update_last_rx_pkts(psta);
+}
+
+#ifdef CONFIG_TDLS
+u64 rtw_rust_peer_rx_tdls_disc(struct sta_info *psta)
+{
+	return psta->sta_stats.rx_tdls_disc_rsp_pkts;
+}
+
+u64 rtw_rust_peer_last_rx_tdls_disc(struct sta_info *psta)
+{
+	return psta->sta_stats.last_rx_tdls_disc_rsp_pkts;
+}
+#endif /* CONFIG_TDLS */
+#endif /* CONFIG_RUST && CONFIG_RUST_MLME_EXT_PEER_ALIVE */
+
 #if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_EXT_MGNT_ATTRIB)
 #include <drv_types.h>
 #include <hal_data.h>
