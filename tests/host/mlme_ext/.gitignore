@@ -2,3 +2,4 @@ test_chset
 test_chset_rust
 librust_mlme_ext_rest.a
 test_peer_alive
+test_scan_sparse

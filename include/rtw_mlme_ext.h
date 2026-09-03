@@ -693,6 +693,10 @@ void sitesurvey_set_offch_state(_adapter *adapter, u8 scan_state);
 #define mlmeext_assign_scan_backop_flags_mesh(mlmeext, flags) do {} while (0)
 #endif /* defined(CONFIG_SCAN_BACKOP) && defined(CONFIG_RTW_MESH) */
 
+u8 rtw_scan_sparse(_adapter *adapter, struct rtw_ieee80211_channel *ch, u8 ch_num);
+#ifdef CONFIG_SCAN_BACKOP
+u8 rtw_scan_backop_decision(_adapter *adapter);
+#endif
 u32 rtw_scan_timeout_decision(_adapter *padapter);
 
 void init_mlme_default_rate_set(_adapter *padapter);
