@@ -15,7 +15,8 @@ PEER_ALIVE_SHIM := host_mlme_ext_peer_alive_shim.c
 MGNT_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-variable -Wno-format-truncation -O2 \
           -I$(HOST_INC) -I$(CORE) -I$(ROOT)/include \
           -include $(HOST_INC)/host_autoconf.h \
-          -DHOST_MLME_EXT_MGNT_ATTRIB_TEST -DCONFIG_RTW_MGMT_QUEUE -DCONFIG_BEAMFORMING
+          -DHOST_MLME_EXT_MGNT_ATTRIB_TEST -DCONFIG_RTW_MGMT_QUEUE -DCONFIG_BEAMFORMING \
+          -DCONFIG_P2P -DCONFIG_P2P_PS -DCONFIG_P2P_PS_NOA_USE_MACID_SLEEP -DCONFIG_CONCURRENT_MODE
 
 PEER_ALIVE_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-variable -Wno-format-truncation -O2 \
           -I$(HOST_INC) -I$(CORE) -I$(ROOT)/include \
