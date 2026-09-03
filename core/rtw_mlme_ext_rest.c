@@ -20,6 +20,8 @@
 extern int rtw_warn_on(int cond);
 #elif defined(HOST_MLME_EXT_PEER_ALIVE_TEST)
 #include "host_mlme_ext_peer_alive_types.h"
+#elif defined(HOST_MLME_EXT_SCAN_TEST)
+#include "host_mlme_ext_scan_types.h"
 #elif defined(HOST_MLME_EXT_TEST)
 #include "host_mlme_ext_types.h"
 #undef rtw_warn_on
@@ -32,7 +34,8 @@ extern int rtw_warn_on(int cond);
 #if (!defined(CONFIG_RUST) || defined(HOST_MLME_EXT_TEST) || \
       !defined(CONFIG_RUST_MLME_EXT_REST)) && \
      !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
-     !defined(HOST_MLME_EXT_PEER_ALIVE_TEST)
+     !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && \
+     !defined(HOST_MLME_EXT_SCAN_TEST)
 
 #ifdef CONFIG_DFS_MASTER
 bool rtw_chset_is_chbw_non_ocp(RT_CHANNEL_INFO *ch_set, u8 ch, u8 bw, u8 offset)
@@ -256,7 +259,8 @@ void rtw_chset_sync_chbw(RT_CHANNEL_INFO *ch_set, u8 *req_ch, u8 *req_bw,
 
 #if defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) || \
 	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_MGNT_ATTRIB)) && \
-	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_PEER_ALIVE_TEST)))
+	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && \
+	  !defined(HOST_MLME_EXT_SCAN_TEST)))
 
 void update_monitor_frame_attrib(_adapter *padapter, struct pkt_attrib *pattrib)
 {
@@ -449,7 +453,8 @@ void update_mgntframe_attrib_addr(_adapter *padapter, struct xmit_frame *pmgntfr
 
 #if defined(HOST_MLME_EXT_PEER_ALIVE_TEST) || \
 	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_PEER_ALIVE)) && \
-	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST)))
+	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
+	  !defined(HOST_MLME_EXT_SCAN_TEST)))
 
 /********************************************************************
 
@@ -750,3 +755,85 @@ u8 rtw_rust_mgnt_p2p_noa_override(_adapter *padapter, u8 *mac_id, u8 *qsel)
 }
 #endif /* CONFIG_P2P_PS_NOA_USE_MACID_SLEEP */
 #endif
+
+#if defined(HOST_MLME_EXT_SCAN_TEST) || \
+	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_SCAN)) && \
+	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
+	  !defined(HOST_MLME_EXT_PEER_ALIVE_TEST)))
+
+#ifndef RTW_SCAN_SPARSE_BG_INTERVAL_MS
+#define RTW_SCAN_SPARSE_BG_INTERVAL_MS 12000
+#endif
+
+#ifndef RTW_SCAN_SPARSE_CH_NUM_MIRACAST
+#define RTW_SCAN_SPARSE_CH_NUM_MIRACAST 1
+#endif
+#ifndef RTW_SCAN_SPARSE_CH_NUM_BG
+#define RTW_SCAN_SPARSE_CH_NUM_BG 4
+#endif
+
+u8 rtw_scan_sparse(_adapter *adapter, struct rtw_ieee80211_channel *ch, u8 ch_num)
+{
+#define SCAN_SPARSE_CH_NUM_INVALID 255
+
+	static u8 token = 255;
+	u32 interval;
+	bool busy_traffic = _FALSE;
+	bool miracast_enabled = _FALSE;
+	bool bg_scan = _FALSE;
+	u8 max_allow_ch = SCAN_SPARSE_CH_NUM_INVALID;
+	u8 scan_division_num;
+	u8 ret_num = ch_num;
+	struct mlme_ext_priv *mlmeext = &adapter->mlmeextpriv;
+
+	if (mlmeext->last_scan_time == 0)
+		mlmeext->last_scan_time = rtw_get_current_time();
+
+	interval = rtw_get_passing_time_ms(mlmeext->last_scan_time);
+
+	if (rtw_mi_busy_traffic_check(adapter))
+		busy_traffic = _TRUE;
+
+	if (rtw_mi_check_miracast_enabled(adapter))
+		miracast_enabled = _TRUE;
+
+	if (interval > RTW_SCAN_SPARSE_BG_INTERVAL_MS)
+		bg_scan = _TRUE;
+
+#if RTW_SCAN_SPARSE_MIRACAST
+	if (miracast_enabled == _TRUE && busy_traffic == _TRUE)
+		max_allow_ch = rtw_min(max_allow_ch, RTW_SCAN_SPARSE_CH_NUM_MIRACAST);
+#endif
+
+#if RTW_SCAN_SPARSE_BG
+	if (bg_scan == _TRUE)
+		max_allow_ch = rtw_min(max_allow_ch, RTW_SCAN_SPARSE_CH_NUM_BG);
+#endif
+
+	if (max_allow_ch != SCAN_SPARSE_CH_NUM_INVALID) {
+		int i;
+		int k = 0;
+
+		scan_division_num = (ch_num / max_allow_ch) +
+				    ((ch_num % max_allow_ch) ? 1 : 0);
+		token = (token + 1) % scan_division_num;
+
+		for (i = 0; i < ch_num; i++) {
+			if (ch[i].hw_value && (i % scan_division_num) == token) {
+				if (i != k)
+					_rtw_memcpy(&ch[k], &ch[i],
+						    sizeof(struct rtw_ieee80211_channel));
+				k++;
+			}
+		}
+
+		_rtw_memset(&ch[k], 0, sizeof(struct rtw_ieee80211_channel));
+
+		ret_num = k;
+		mlmeext->last_scan_time = rtw_get_current_time();
+	}
+
+	return ret_num;
+}
+
+#endif /* HOST_MLME_EXT_SCAN_TEST || ((!CONFIG_RUST || !CONFIG_RUST_MLME_EXT_SCAN) && ...) */
