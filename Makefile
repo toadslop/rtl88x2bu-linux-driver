@@ -2612,7 +2612,12 @@ rustflags-y += --cfg c2h_wk
 endif
 rustflags-y += --cfg rust_mlme_ext_rest
 rustflags-y += --cfg rust_mlme_ht_restructure
-rustflags-y += --cfg config_beamforming --cfg config_80211ac_vht
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BEAMFORMING' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_beamforming
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_80211AC_VHT' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_80211ac_vht
+endif
 rustflags-y += --cfg rust_sta_mgt_stctl
 rustflags-y += --cfg rust_ap_rest
 rustflags-y += --cfg rust_rf_op_class_pref
