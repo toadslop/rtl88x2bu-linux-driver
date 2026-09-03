@@ -260,20 +260,12 @@ extern "C" {
 
 #[cfg(host_mlme_ext_mgnt_attrib_test)]
 extern "C" {
-    fn update_attrib_txbf_info(
-        padapter: *mut Adapter,
-        pattrib: *mut PktAttrib,
-        psta: *mut StaInfo,
-    );
+    fn update_attrib_txbf_info(padapter: *mut Adapter, pattrib: *mut PktAttrib, psta: *mut StaInfo);
 }
 
 #[cfg(all(config_beamforming, not(host_mlme_ext_mgnt_attrib_test)))]
 extern "C" {
-    fn rtw_bf_update_attrib(
-        padapter: *mut Adapter,
-        pattrib: *mut PktAttrib,
-        psta: *mut StaInfo,
-    );
+    fn rtw_bf_update_attrib(padapter: *mut Adapter, pattrib: *mut PktAttrib, psta: *mut StaInfo);
 }
 
 #[cfg(rust_mlme_ext_mgnt_attrib)]
@@ -331,10 +323,7 @@ pub extern "C" fn update_monitor_frame_attrib(padapter: *mut Adapter, pattrib: *
     let (tx_rate, mgnt_seq, hw_ssn_sel, rf_type) = {
         let adapter = unsafe { &mut *(padapter as *mut layout::Adapter) };
         unsafe {
-            let _ = rtw_get_stainfo(
-                &mut adapter.stapriv as *mut _,
-                attrib.ra.as_ptr(),
-            );
+            let _ = rtw_get_stainfo(&mut adapter.stapriv as *mut _, attrib.ra.as_ptr());
         }
         (
             adapter.mlmeextpriv.tx_rate,
