@@ -932,6 +932,12 @@ void update_mgntframe_subtype(_adapter *padapter, struct xmit_frame *pmgntframe)
 #endif
 void update_mgntframe_attrib(_adapter *padapter, struct pkt_attrib *pattrib);
 void update_mgntframe_attrib_addr(_adapter *padapter, struct xmit_frame *pmgntframe);
+void rtw_delba_check(_adapter *padapter, struct sta_info *psta, u8 from_timer);
+u8 chk_ap_is_alive(_adapter *padapter, struct sta_info *psta);
+u8 chk_adhoc_peer_is_alive(struct sta_info *psta);
+#ifdef CONFIG_TDLS
+u8 chk_tdls_peer_sta_is_alive(_adapter *padapter, struct sta_info *psta);
+#endif
 void dump_mgntframe(_adapter *padapter, struct xmit_frame *pmgntframe);
 s32 dump_mgntframe_and_wait(_adapter *padapter, struct xmit_frame *pmgntframe, int timeout_ms);
 s32 dump_mgntframe_and_wait_ack(_adapter *padapter, struct xmit_frame *pmgntframe);
