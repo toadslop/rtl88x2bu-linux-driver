@@ -14,15 +14,22 @@
  *****************************************************************************/
 #define _RTW_MLME_EXT_REST_C_
 
-#ifdef HOST_MLME_EXT_TEST
+#if defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST)
+#include "host_mlme_ext_mgnt_attrib_types.h"
+#undef rtw_warn_on
+extern int rtw_warn_on(int cond);
+#elif defined(HOST_MLME_EXT_TEST)
 #include "host_mlme_ext_types.h"
 #undef rtw_warn_on
 extern int rtw_warn_on(int cond);
 #else
 #include <drv_types.h>
+#include <hal_data.h>
 #endif
 
-#if !defined(CONFIG_RUST) || defined(HOST_MLME_EXT_TEST) || !defined(CONFIG_RUST_MLME_EXT_REST)
+#if (!defined(CONFIG_RUST) || defined(HOST_MLME_EXT_TEST) || \
+      !defined(CONFIG_RUST_MLME_EXT_REST)) && \
+     !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST)
 
 #ifdef CONFIG_DFS_MASTER
 bool rtw_chset_is_chbw_non_ocp(RT_CHANNEL_INFO *ch_set, u8 ch, u8 bw, u8 offset)
@@ -242,4 +249,197 @@ void rtw_chset_sync_chbw(RT_CHANNEL_INFO *ch_set, u8 *req_ch, u8 *req_bw,
 	*g_offset = u_offset;
 }
 
-#endif /* !CONFIG_RUST || HOST_MLME_EXT_TEST || !CONFIG_RUST_MLME_EXT_REST */
+#endif /* (!CONFIG_RUST || HOST_MLME_EXT_TEST || !CONFIG_RUST_MLME_EXT_REST) && !HOST_MLME_EXT_MGNT_ATTRIB_TEST */
+
+#if defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) || \
+	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_MGNT_ATTRIB)) && \
+	  !defined(HOST_MLME_EXT_TEST)))
+
+void update_monitor_frame_attrib(_adapter *padapter, struct pkt_attrib *pattrib)
+{
+	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
+	u8	wireless_mode;
+	struct mlme_ext_priv	*pmlmeext = &(padapter->mlmeextpriv);
+	struct xmit_priv		*pxmitpriv = &padapter->xmitpriv;
+	struct sta_info		*psta = NULL;
+	struct sta_priv		*pstapriv = &padapter->stapriv;
+
+	psta = rtw_get_stainfo(pstapriv, pattrib->ra);
+	(void)psta;
+
+	pattrib->hdrlen = 24;
+	pattrib->nr_frags = 1;
+	pattrib->priority = 7;
+	pattrib->mac_id = RTW_DEFAULT_MGMT_MACID;
+	pattrib->qsel = QSLT_MGNT;
+
+	pattrib->pktlen = 0;
+
+	if (pmlmeext->tx_rate == IEEE80211_CCK_RATE_1MB)
+		wireless_mode = WIRELESS_11B;
+	else
+		wireless_mode = WIRELESS_11G;
+
+	pattrib->raid = rtw_get_mgntframe_raid(padapter, wireless_mode);
+#ifdef CONFIG_80211AC_VHT
+	if (pHalData->rf_type == RF_1T1R)
+		pattrib->raid = RATEID_IDX_VHT_1SS;
+	else if (pHalData->rf_type == RF_2T2R || pHalData->rf_type == RF_2T4R)
+		pattrib->raid = RATEID_IDX_VHT_2SS;
+	else if (pHalData->rf_type == RF_3T3R)
+		pattrib->raid = RATEID_IDX_VHT_3SS;
+	else
+		pattrib->raid = RATEID_IDX_BGN_40M_1SS;
+#endif
+
+#ifdef CONFIG_80211AC_VHT
+	pattrib->rate = MGN_VHT1SS_MCS9;
+#else
+	pattrib->rate = MGN_MCS7;
+#endif
+
+	pattrib->encrypt = _NO_PRIVACY_;
+	pattrib->bswenc = _FALSE;
+
+	pattrib->qos_en = _FALSE;
+	pattrib->ht_en = 1;
+	pattrib->bwmode = CHANNEL_WIDTH_20;
+	pattrib->ch_offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+	pattrib->sgi = _FALSE;
+
+	pattrib->seqnum = pmlmeext->mgnt_seq;
+
+	pattrib->retry_ctrl = _TRUE;
+
+	pattrib->mbssid = 0;
+	pattrib->hw_ssn_sel = pxmitpriv->hw_ssn_seq_no;
+
+}
+
+#ifdef CONFIG_RTW_MGMT_QUEUE
+void update_mgntframe_subtype(_adapter *padapter, struct xmit_frame *pmgntframe)
+{
+	struct pkt_attrib *pattrib = &pmgntframe->attrib;
+	u8 *pframe;
+	u8 subtype, category ,action;
+
+	pframe = (u8 *)(pmgntframe->buf_addr) + TXDESC_OFFSET;
+	subtype = get_frame_sub_type(pframe); /* bit(7)~bit(2) */
+	pattrib->subtype = subtype;
+
+	rtw_action_frame_parse(pframe, pattrib->pktlen, &category, &action);
+
+	if ((subtype == WIFI_ACTION && !(action == ACT_PUBLIC_FTM_REQ || action == ACT_PUBLIC_FTM)) ||
+		subtype == WIFI_DISASSOC || subtype == WIFI_DEAUTH ||
+		(subtype == WIFI_PROBERSP && MLME_IS_ADHOC(padapter)))
+		pattrib->ps_dontq = 0;
+	else
+		pattrib->ps_dontq = 1;
+}
+#endif
+
+void update_mgntframe_attrib(_adapter *padapter, struct pkt_attrib *pattrib)
+{
+	u8	wireless_mode;
+	struct mlme_ext_priv	*pmlmeext = &(padapter->mlmeextpriv);
+	struct xmit_priv		*pxmitpriv = &padapter->xmitpriv;
+	struct sta_priv *pstapriv = &padapter->stapriv;
+	struct sta_info *psta;
+
+#ifdef CONFIG_P2P_PS_NOA_USE_MACID_SLEEP
+	struct wifidirect_info *pwdinfo = &(padapter->wdinfo);
+#endif /* CONFIG_P2P_PS_NOA_USE_MACID_SLEEP */
+
+	/* _rtw_memset((u8 *)(pattrib), 0, sizeof(struct pkt_attrib)); */
+
+	pattrib->hdrlen = 24;
+	pattrib->nr_frags = 1;
+	pattrib->priority = 7;
+	pattrib->mac_id = RTW_DEFAULT_MGMT_MACID;
+	pattrib->qsel = QSLT_MGNT;
+
+#ifdef CONFIG_MCC_MODE
+	update_mcc_mgntframe_attrib(padapter, pattrib);
+#endif
+
+
+#ifdef CONFIG_P2P_PS_NOA_USE_MACID_SLEEP
+#ifdef CONFIG_CONCURRENT_MODE
+	if (rtw_mi_buddy_check_fwstate(padapter, WIFI_ASOC_STATE))
+#endif /* CONFIG_CONCURRENT_MODE */
+		if (MLME_IS_GC(padapter)) {
+			if (pwdinfo->p2p_ps_mode > P2P_PS_NONE) {
+				struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+				struct mlme_ext_info *pmlmeinfo = &(pmlmeext->mlmext_info);
+				WLAN_BSSID_EX *cur_network = &(pmlmeinfo->network);
+
+				psta = rtw_get_stainfo(pstapriv, cur_network->MacAddress);
+				if (psta) {
+					/* use macid sleep during NoA, mgmt frame use ac queue & ap macid */
+					pattrib->mac_id = psta->cmn.mac_id;
+					pattrib->qsel = QSLT_VO;
+				} else {
+					if (pwdinfo->p2p_ps_state != P2P_PS_DISABLE)
+						RTW_ERR("%s , psta was NULL\n", __func__);
+				}
+			}
+		}
+#endif /* CONFIG_P2P_PS_NOA_USE_MACID_SLEEP */
+
+	pattrib->pktlen = 0;
+
+	if (IS_CCK_RATE(pmlmeext->tx_rate))
+		wireless_mode = WIRELESS_11B;
+	else
+		wireless_mode = WIRELESS_11G;
+	pattrib->raid =  rtw_get_mgntframe_raid(padapter, wireless_mode);
+	pattrib->rate = pmlmeext->tx_rate;
+
+	pattrib->encrypt = _NO_PRIVACY_;
+	pattrib->bswenc = _FALSE;
+
+	pattrib->qos_en = _FALSE;
+	pattrib->ht_en = _FALSE;
+	pattrib->bwmode = CHANNEL_WIDTH_20;
+	pattrib->ch_offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+	pattrib->sgi = _FALSE;
+
+	pattrib->seqnum = pmlmeext->mgnt_seq;
+
+	pattrib->retry_ctrl = _TRUE;
+
+	pattrib->mbssid = 0;
+	pattrib->hw_ssn_sel = pxmitpriv->hw_ssn_seq_no;
+#ifdef CONFIG_RTW_MGMT_QUEUE
+	pattrib->ps_dontq = 1;
+#endif
+}
+
+void update_mgntframe_attrib_addr(_adapter *padapter, struct xmit_frame *pmgntframe)
+{
+	u8 *pframe;
+	struct pkt_attrib *pattrib = &pmgntframe->attrib;
+#if defined(CONFIG_BEAMFORMING) || defined(CONFIG_ANTENNA_DIVERSITY) || defined(CONFIG_RTW_MGMT_QUEUE)
+	struct sta_info *sta = NULL;
+#endif
+
+	pframe = (u8 *)(pmgntframe->buf_addr) + TXDESC_OFFSET;
+
+	_rtw_memcpy(pattrib->ra, GetAddr1Ptr(pframe), ETH_ALEN);
+	_rtw_memcpy(pattrib->ta, get_addr2_ptr(pframe), ETH_ALEN);
+
+#if defined(CONFIG_BEAMFORMING) || defined(CONFIG_ANTENNA_DIVERSITY) || defined(CONFIG_RTW_MGMT_QUEUE)
+	sta = pattrib->psta;
+	if (!sta) {
+		sta = rtw_get_stainfo(&padapter->stapriv, pattrib->ra);
+		pattrib->psta = sta;
+	}
+
+	#ifdef CONFIG_BEAMFORMING
+	if (sta)
+		update_attrib_txbf_info(padapter, pattrib, sta);
+	#endif
+#endif /* defined(CONFIG_BEAMFORMING) || defined(CONFIG_ANTENNA_DIVERSITY) || defined(CONFIG_RTW_MGMT_QUEUE) */
+}
+
+#endif /* HOST_MLME_EXT_MGNT_ATTRIB_TEST || ((!CONFIG_RUST || !CONFIG_RUST_MLME_EXT_MGNT_ATTRIB) && !HOST_MLME_EXT_TEST) */
