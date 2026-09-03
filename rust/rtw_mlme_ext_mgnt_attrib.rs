@@ -301,7 +301,8 @@ extern "C" {
     fn rtw_rust_mgnt_mlme_is_adhoc(padapter: *mut Adapter) -> U8;
     fn rtw_rust_mgnt_stapriv(padapter: *mut Adapter) -> *mut StaPriv;
     #[cfg(config_p2p_ps_noa_use_macid_sleep)]
-    fn rtw_rust_mgnt_p2p_noa_override(padapter: *mut Adapter, mac_id: *mut U8, qsel: *mut U8) -> U8;
+    fn rtw_rust_mgnt_p2p_noa_override(padapter: *mut Adapter, mac_id: *mut U8, qsel: *mut U8)
+        -> U8;
 }
 
 #[inline]
@@ -353,8 +354,7 @@ fn apply_p2p_noa_mac_id_qsel(padapter: *mut Adapter, attrib: &mut PktAttrib) {
         if adapter.wdinfo.p2p_ps_mode <= P2P_PS_NONE {
             return;
         }
-        let stapriv =
-            unsafe { &mut (*padapter.cast::<layout::Adapter>()).stapriv as *mut StaPriv };
+        let stapriv = unsafe { &mut (*padapter.cast::<layout::Adapter>()).stapriv as *mut StaPriv };
         let sta = unsafe {
             rtw_get_stainfo(
                 stapriv,
@@ -368,7 +368,11 @@ fn apply_p2p_noa_mac_id_qsel(padapter: *mut Adapter, attrib: &mut PktAttrib) {
         attrib.mac_id = sta_ref.cmn_mac_id;
         attrib.qsel = QSLT_VO;
     }
-    #[cfg(all(config_p2p_ps_noa_use_macid_sleep, rust_mlme_ext_mgnt_attrib, not(host_mlme_ext_mgnt_attrib_test)))]
+    #[cfg(all(
+        config_p2p_ps_noa_use_macid_sleep,
+        rust_mlme_ext_mgnt_attrib,
+        not(host_mlme_ext_mgnt_attrib_test)
+    ))]
     {
         let mut mac_id = attrib.mac_id;
         let mut qsel = attrib.qsel;
