@@ -27,10 +27,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-format-truncation -O2
 
 all: test
 
-test: test-c test-rust test-mgnt-attrib
-ifneq ($(wildcard $(RUST_MLME_EXT_MGNT_ATTRIB)),)
-test: test-mgnt-attrib-rust
-endif
+test: test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust
 
 test-c: test_chset
 	./test_chset chset_vectors.json

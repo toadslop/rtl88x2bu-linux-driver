@@ -1,0 +1,7 @@
+# L1 allowlist for W3-68: Rust FFI helpers remain in core/rtw_mlme_ext_rest.c.
+drop rtw_rust_mgnt_tx_rate
+drop rtw_rust_mgnt_mgnt_seq
+drop rtw_rust_mgnt_hw_ssn_seq_no
+drop rtw_rust_mgnt_hal_rf_type
+drop rtw_rust_mgnt_mlme_is_adhoc
+drop rtw_rust_mgnt_stapriv

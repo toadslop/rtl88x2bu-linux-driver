@@ -443,3 +443,38 @@ void update_mgntframe_attrib_addr(_adapter *padapter, struct xmit_frame *pmgntfr
 }
 
 #endif /* HOST_MLME_EXT_MGNT_ATTRIB_TEST || ((!CONFIG_RUST || !CONFIG_RUST_MLME_EXT_MGNT_ATTRIB) && !HOST_MLME_EXT_TEST) */
+
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_EXT_MGNT_ATTRIB)
+#include <drv_types.h>
+#include <hal_data.h>
+
+u8 rtw_rust_mgnt_tx_rate(_adapter *padapter)
+{
+	return padapter->mlmeextpriv.tx_rate;
+}
+
+u16 rtw_rust_mgnt_mgnt_seq(_adapter *padapter)
+{
+	return padapter->mlmeextpriv.mgnt_seq;
+}
+
+u8 rtw_rust_mgnt_hw_ssn_seq_no(_adapter *padapter)
+{
+	return padapter->xmitpriv.hw_ssn_seq_no;
+}
+
+u8 rtw_rust_mgnt_hal_rf_type(_adapter *padapter)
+{
+	return GET_HAL_DATA(padapter)->rf_type;
+}
+
+u8 rtw_rust_mgnt_mlme_is_adhoc(_adapter *padapter)
+{
+	return MLME_IS_ADHOC(padapter) ? 1 : 0;
+}
+
+struct sta_priv *rtw_rust_mgnt_stapriv(_adapter *padapter)
+{
+	return &padapter->stapriv;
+}
+#endif
