@@ -10,6 +10,7 @@ struct case_vec {
 	const u8 *ie;
 	size_t ie_len;
 	const u8 *sta_ch;
+	const u8 *sta_flags;
 	int sta_n;
 	const u8 *expect_ch;
 	const u8 *expect_flags;
@@ -27,11 +28,11 @@ static void fill_bss(WLAN_BSSID_EX *b, const u8 *ie, size_t n)
 	}
 }
 
-static void fill_sta(_adapter *a, const u8 *ch, int n)
+static void fill_sta(_adapter *a, const u8 *ch, const u8 *flags, int n)
 {
 	for (int i = 0; i < n; i++) {
 		a->rfctl.channel_set[i].ChannelNum = ch[i];
-		a->rfctl.channel_set[i].flags = 0;
+		a->rfctl.channel_set[i].flags = flags ? flags[i] : 0;
 	}
 }
 
@@ -41,9 +42,12 @@ static int chset_match(const RT_CHANNEL_INFO *cs, const u8 *exp,
 	for (int i = 0; i < n; i++) {
 		if (cs[i].ChannelNum != exp[i])
 			return -1;
-		u8 want = exp_flags ? exp_flags[i] : 0;
-		if ((cs[i].flags & RTW_CHF_NO_IR) != (want & RTW_CHF_NO_IR))
+		if (exp_flags) {
+			if (cs[i].flags != exp_flags[i])
+				return -1;
+		} else if (cs[i].flags & RTW_CHF_NO_IR) {
 			return -1;
+		}
 	}
 	if (cs[n].ChannelNum != 0)
 		return -1;
@@ -59,7 +63,7 @@ static int run_case(const struct case_vec *v)
 	a.registrypriv.enable80211d = v->enable;
 	a.mlmeextpriv.update_channel_plan_by_ap_done = v->done;
 	a.registrypriv.wireless_mode = v->mode;
-	fill_sta(&a, v->sta_ch, v->sta_n);
+	fill_sta(&a, v->sta_ch, v->sta_flags, v->sta_n);
 	fill_bss(&b, v->ie, v->ie_len);
 	process_80211d(&a, &b);
 	if (a.mlmeextpriv.update_channel_plan_by_ap_done != v->expect_done)
@@ -88,6 +92,7 @@ int main(void)
 	static const u8 short_ie[] = {0x07, 0x03, 0x55, 0x53, 0x20};
 	static const u8 sta246[] = {1, 6, 11};
 	static const u8 sta24614[] = {1, 6, 11, 14};
+	static const u8 sta24614_dfs_flags[] = {0, 0, 0, RTW_CHF_DFS};
 	static const u8 sta246_5g[] = {1, 6, 11, 36, 44};
 	static const u8 sta36[] = {36};
 	static const u8 exp11[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
@@ -98,22 +103,24 @@ int main(void)
 				      44, 48};
 	static u8 exp5g_trunc[MAX_CHANNEL_NUM];
 	static const struct case_vec cases[] = {
-		{"disabled", 0, 0, WIRELESS_11G, us2g, sizeof(us2g), NULL, 0,
+		{"disabled", 0, 0, WIRELESS_11G, us2g, sizeof(us2g), NULL, NULL, 0,
 		 NULL, NULL, -1, 0},
 		{"already_done", 1, 1, WIRELESS_11G, us2g, sizeof(us2g), sta246,
-		 3, sta246, NULL, 3, 1},
-		{"no_country_ie", 1, 0, WIRELESS_11G, NULL, 0, sta246, 3,
+		 NULL, 3, sta246, NULL, 3, 1},
+		{"no_country_ie", 1, 0, WIRELESS_11G, NULL, 0, sta246, NULL, 3,
 		 sta246, NULL, 3, 0},
 		{"short_country_ie", 1, 0, WIRELESS_11G, short_ie,
-		 sizeof(short_ie), sta246, 3, sta246, NULL, 3, 0},
+		 sizeof(short_ie), sta246, NULL, 3, sta246, NULL, 3, 0},
 		{"merge_2g_11g", 1, 0, WIRELESS_11G, us2g, sizeof(us2g), sta246,
-		 3, exp11, NULL, 11, 1},
+		 NULL, 3, exp11, NULL, 11, 1},
 		{"merge_2g_no_ir", 1, 0, WIRELESS_11G, us2g, sizeof(us2g),
-		 sta24614, 4, exp11_14, exp11_14_flags, 12, 1},
+		 sta24614, NULL, 4, exp11_14, exp11_14_flags, 12, 1},
+		{"merge_2g_no_ir_dfs", 1, 0, WIRELESS_11G, us2g, sizeof(us2g),
+		 sta24614, sta24614_dfs_flags, 4, exp11_14, exp11_14_flags, 12, 1},
 		{"merge_dualband_11ag", 1, 0, WIRELESS_11G | WIRELESS_11A,
-		 us24g, sizeof(us24g), sta246_5g, 5, exp11_5g, NULL, 15, 1},
+		 us24g, sizeof(us24g), sta246_5g, NULL, 5, exp11_5g, NULL, 15, 1},
 		{"parse_trunc_5g", 1, 0, WIRELESS_11A, us5g_trunc,
-		 sizeof(us5g_trunc), sta36, 1, exp5g_trunc, NULL, 55, 1},
+		 sizeof(us5g_trunc), sta36, NULL, 1, exp5g_trunc, NULL, 55, 1},
 	};
 	int bad = 0;
 
@@ -123,7 +130,12 @@ int main(void)
 			(fprintf(stderr, "FAIL %s\n", cases[i].name), 1) :
 			(printf("PASS %s\n", cases[i].name), 0);
 	if (!bad)
+#ifdef RUST_MLME_80211D_ORACLE
+		printf("PASS %zu vectors (oracle: rust/rtw_mlme_80211d.rs)\n",
+		       sizeof(cases) / sizeof(cases[0]));
+#else
 		printf("PASS %zu vectors (oracle: core/rtw_mlme_rest.c)\n",
 		       sizeof(cases) / sizeof(cases[0]));
+#endif
 	return bad ? 1 : 0;
 }

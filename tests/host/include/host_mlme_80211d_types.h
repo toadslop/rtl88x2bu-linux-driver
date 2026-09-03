@@ -16,6 +16,7 @@
 #define BIT1 0x02
 #define BIT2 0x04
 #define RTW_CHF_NO_IR BIT0
+#define RTW_CHF_DFS BIT1
 #define WIRELESS_11G BIT1
 #define WIRELESS_11A BIT2
 #define RTW_INFO(...) do { } while (0)
