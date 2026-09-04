@@ -12,6 +12,7 @@ test_mlme_network_update_rust
 librust_mlme_network_update.a
 test_mlme_80211d
 test_mlme_80211d_rust
+test_mlme_80211d_kernel_layout
 librust_mlme_80211d.a
 test_mlme_ht_restructure
 test_mlme_ht_restructure_rust

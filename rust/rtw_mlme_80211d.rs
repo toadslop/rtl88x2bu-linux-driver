@@ -12,7 +12,7 @@
 #[cfg(all(not(host_mlme_80211d_test), rust_mlme_80211d))]
 use core::ffi::{c_int, c_void};
 #[cfg(host_mlme_80211d_test)]
-use std::os::raw::{c_int, c_void};
+use std::os::raw::c_int;
 
 type U8 = u8;
 const MAX_CH: usize = 59;
@@ -24,6 +24,7 @@ const MODE_A: U8 = 0x04;
 
 #[rustfmt::skip]
 #[repr(C)]
+#[derive(Clone, Copy)]
 struct ChInfo { num: U8, flags: U8 }
 #[rustfmt::skip]
 #[repr(C)]
@@ -75,8 +76,6 @@ type Pbs = *mut c_void;
 #[cfg(host_mlme_80211d_test)]
 extern "C" {
     fn rtw_get_ie(p: *const U8, id: c_int, len: *mut c_int, lim: c_int) -> *mut U8;
-    fn malloc(n: usize) -> *mut c_void;
-    fn free(p: *mut c_void);
 }
 #[cfg(not(host_mlme_80211d_test))]
 extern "C" {
@@ -87,9 +86,10 @@ extern "C" {
     fn rtw_rust_80211d_wireless_mode(a: Pad) -> U8;
     fn rtw_rust_80211d_update_done(a: Pad) -> U8;
     fn rtw_rust_80211d_set_update_done(a: Pad, v: U8);
-    fn rtw_rust_80211d_channel_set(a: Pad) -> *mut ChInfo;
-    fn rtw_rust_80211d_malloc(n: usize) -> *mut c_void;
-    fn rtw_rust_80211d_mfree(p: *mut c_void, n: usize);
+    fn rtw_rust_80211d_ch_num(a: Pad, i: U8) -> U8;
+    fn rtw_rust_80211d_ch_flags(a: Pad, i: U8) -> U8;
+    fn rtw_rust_80211d_zero_chset(a: Pad);
+    fn rtw_rust_80211d_set_ch(a: Pad, i: U8, num: U8, flags: U8);
     fn rtw_rust_80211d_reg_change(a: Pad);
     fn rtw_rust_80211d_bss_ies(b: Pbs) -> *mut U8;
     fn rtw_rust_80211d_bss_ie_len(b: Pbs) -> u32;
@@ -138,6 +138,7 @@ fn push_no_ir(dst: &mut ChInfo, src: &ChInfo) {
 fn merge_2g(sta: &[ChInfo], ap: &ChPlan, new: &mut [ChInfo], g: bool, i: &mut usize, j: &mut usize, k: &mut usize) {
     if g {
         loop {
+            if *k >= MAX_CH { break; }
             if *i >= MAX_CH || sta[*i].num == 0 || sta[*i].num > 14 { break; }
             if *j >= ap.len as usize || ap.ch[*j] > 14 { break; }
             if sta[*i].num == ap.ch[*j] {
@@ -146,12 +147,12 @@ fn merge_2g(sta: &[ChInfo], ap: &ChPlan, new: &mut [ChInfo], g: bool, i: &mut us
                 push_no_ir(&mut new[*k], &sta[*i]); *i += 1; *k += 1;
             } else { new[*k].num = ap.ch[*j]; *j += 1; *k += 1; }
         }
-        while *i < MAX_CH && sta[*i].num != 0 && sta[*i].num <= 14 {
+        while *k < MAX_CH && *i < MAX_CH && sta[*i].num != 0 && sta[*i].num <= 14 {
             push_no_ir(&mut new[*k], &sta[*i]); *i += 1; *k += 1;
         }
-        while *j < ap.len as usize && ap.ch[*j] <= 14 { new[*k].num = ap.ch[*j]; *j += 1; *k += 1; }
+        while *k < MAX_CH && *j < ap.len as usize && ap.ch[*j] <= 14 { new[*k].num = ap.ch[*j]; *j += 1; *k += 1; }
     } else {
-        while *i < MAX_CH && sta[*i].num != 0 && sta[*i].num <= 14 {
+        while *k < MAX_CH && *i < MAX_CH && sta[*i].num != 0 && sta[*i].num <= 14 {
             new[*k].num = sta[*i].num;
             if sta[*i].flags & NO_IR != 0 { new[*k].flags |= NO_IR; }
             *i += 1; *k += 1;
@@ -164,6 +165,7 @@ fn merge_2g(sta: &[ChInfo], ap: &ChPlan, new: &mut [ChInfo], g: bool, i: &mut us
 fn merge_5g(sta: &[ChInfo], ap: &ChPlan, new: &mut [ChInfo], a: bool, i: &mut usize, j: &mut usize, k: &mut usize) {
     if a {
         loop {
+            if *k >= MAX_CH { break; }
             if *i >= MAX_CH || sta[*i].num == 0 { break; }
             if *j >= ap.len as usize || ap.ch[*j] == 0 { break; }
             if sta[*i].num == ap.ch[*j] {
@@ -172,10 +174,10 @@ fn merge_5g(sta: &[ChInfo], ap: &ChPlan, new: &mut [ChInfo], a: bool, i: &mut us
                 push_no_ir(&mut new[*k], &sta[*i]); *i += 1; *k += 1;
             } else { new[*k].num = ap.ch[*j]; *j += 1; *k += 1; }
         }
-        while *i < MAX_CH && sta[*i].num != 0 { push_no_ir(&mut new[*k], &sta[*i]); *i += 1; *k += 1; }
-        while *j < ap.len as usize && ap.ch[*j] != 0 { new[*k].num = ap.ch[*j]; *j += 1; *k += 1; }
+        while *k < MAX_CH && *i < MAX_CH && sta[*i].num != 0 { push_no_ir(&mut new[*k], &sta[*i]); *i += 1; *k += 1; }
+        while *k < MAX_CH && *j < ap.len as usize && ap.ch[*j] != 0 { new[*k].num = ap.ch[*j]; *j += 1; *k += 1; }
     } else {
-        while *i < MAX_CH && sta[*i].num != 0 {
+        while *k < MAX_CH && *i < MAX_CH && sta[*i].num != 0 {
             new[*k].num = sta[*i].num;
             if sta[*i].flags & NO_IR != 0 { new[*k].flags |= NO_IR; }
             *i += 1; *k += 1;
@@ -215,35 +217,40 @@ pub extern "C" fn process_80211d(padapter: Pad, bssid: Pbs) {
     if ie.is_null() || len < 6 { return; }
     let mut ap = ChPlan { ch: [0; MAX_CH], len: 0 };
     unsafe { parse_ap(ie.add(5), ie.add(2 + len as usize), &mut ap) }
-    let sz = core::mem::size_of::<ChInfo>() * MAX_CH;
-    let sta = unsafe {
-        #[cfg(host_mlme_80211d_test)]
-        { malloc(sz) }
-        #[cfg(not(host_mlme_80211d_test))]
-        { rtw_rust_80211d_malloc(sz) }
-    };
-    if sta.is_null() { return; }
-    let out = unsafe {
-        #[cfg(host_mlme_80211d_test)]
-        { (&mut (*padapter).rfctl.channel_set) as *mut ChInfo }
-        #[cfg(not(host_mlme_80211d_test))]
-        { rtw_rust_80211d_channel_set(padapter) }
-    };
-    mem_cpy(sta as *mut u8, out as *const u8, sz);
-    mem_set(out as *mut u8, 0, sz);
-    let sta_s = unsafe { core::slice::from_raw_parts(sta as *const ChInfo, MAX_CH) };
-    let new_s = unsafe { core::slice::from_raw_parts_mut(out, MAX_CH) };
-    let (mut i, mut j, mut k) = (0usize, 0usize, 0usize);
-    merge_2g(sta_s, &ap, new_s, mode & MODE_G != 0, &mut i, &mut j, &mut k);
-    merge_5g(sta_s, &ap, new_s, mode & MODE_A != 0, &mut i, &mut j, &mut k);
+    /* Packed {num,flags} working copy. Kernel RT_CHANNEL_INFO is 32 bytes
+     * (FIND_BEST_CHANNEL + DFS_MASTER + cfg80211 os_chan); never memcpy it. */
+    let mut sta_buf = [ChInfo { num: 0, flags: 0 }; MAX_CH];
+    let mut new_buf = [ChInfo { num: 0, flags: 0 }; MAX_CH];
     unsafe {
         #[cfg(host_mlme_80211d_test)]
-        { (*padapter).mlmeextpriv.update_channel_plan_by_ap_done = 1; free(sta); }
+        {
+            sta_buf.copy_from_slice(&(*padapter).rfctl.channel_set);
+        }
         #[cfg(not(host_mlme_80211d_test))]
         {
+            for n in 0..MAX_CH {
+                sta_buf[n].num = rtw_rust_80211d_ch_num(padapter, n as U8);
+                sta_buf[n].flags = rtw_rust_80211d_ch_flags(padapter, n as U8);
+            }
+        }
+    }
+    let (mut i, mut j, mut k) = (0usize, 0usize, 0usize);
+    merge_2g(&sta_buf, &ap, &mut new_buf, mode & MODE_G != 0, &mut i, &mut j, &mut k);
+    merge_5g(&sta_buf, &ap, &mut new_buf, mode & MODE_A != 0, &mut i, &mut j, &mut k);
+    unsafe {
+        #[cfg(host_mlme_80211d_test)]
+        {
+            (*padapter).rfctl.channel_set = new_buf;
+            (*padapter).mlmeextpriv.update_channel_plan_by_ap_done = 1;
+        }
+        #[cfg(not(host_mlme_80211d_test))]
+        {
+            rtw_rust_80211d_zero_chset(padapter);
+            for n in 0..MAX_CH {
+                rtw_rust_80211d_set_ch(padapter, n as U8, new_buf[n].num, new_buf[n].flags);
+            }
             rtw_rust_80211d_set_update_done(padapter, 1);
             rtw_rust_80211d_reg_change(padapter);
-            rtw_rust_80211d_mfree(sta, sz);
         }
     }
 }
