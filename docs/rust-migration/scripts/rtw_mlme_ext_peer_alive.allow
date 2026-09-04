@@ -1,0 +1,24 @@
+# L1 allowlist for W3-69: Rust FFI helpers remain in core/rtw_mlme_ext_rest.c.
+drop rtw_rust_mgnt_tx_rate
+drop rtw_rust_mgnt_mgnt_seq
+drop rtw_rust_mgnt_hw_ssn_seq_no
+drop rtw_rust_mgnt_hal_rf_type
+drop rtw_rust_mgnt_mlme_is_adhoc
+drop rtw_rust_mgnt_stapriv
+drop rtw_rust_mgnt_p2p_noa_override
+drop rtw_rust_peer_assoc_ap_vendor
+drop rtw_rust_peer_sta_mac
+drop rtw_rust_peer_reorder_enable
+drop rtw_rust_peer_reorder_disable
+drop rtw_rust_peer_reorder_invalidate_ampdu
+drop rtw_rust_peer_rx_qos
+drop rtw_rust_peer_last_rx_qos
+drop rtw_rust_peer_rx_data
+drop rtw_rust_peer_last_rx_data
+drop rtw_rust_peer_rx_beacon
+drop rtw_rust_peer_last_rx_beacon
+drop rtw_rust_peer_rx_probersp
+drop rtw_rust_peer_last_rx_probersp
+drop rtw_rust_peer_sta_update_last_rx
+drop rtw_rust_peer_rx_tdls_disc
+drop rtw_rust_peer_last_rx_tdls_disc
