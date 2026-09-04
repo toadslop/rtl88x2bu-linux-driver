@@ -451,6 +451,12 @@ void update_mgntframe_attrib_addr(_adapter *padapter, struct xmit_frame *pmgntfr
 	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_PEER_ALIVE)) && \
 	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST)))
 
+/********************************************************************
+
+When station does not receive any packet in MAX_CONTINUAL_NORXPACKET_COUNT*2 seconds,
+recipient station will teardown the block ack by issuing DELBA frame.
+
+*********************************************************************/
 void rtw_delba_check(_adapter *padapter, struct sta_info *psta, u8 from_timer)
 {
 	int i = 0;
@@ -458,6 +464,14 @@ void rtw_delba_check(_adapter *padapter, struct sta_info *psta, u8 from_timer)
 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
 	struct mlme_ext_info *pmlmeinfo = &(pmlmeext->mlmext_info);
 
+	/*
+		IOT issue,occur Broadcom ap(Buffalo WZR-D1800H,Netgear R6300).
+		AP is originator.AP does not transmit unicast packets when STA response its BAR.
+		This case probably occur ap issue BAR after AP builds BA.
+
+		Follow 802.11 spec, STA shall maintain an inactivity timer for every negotiated Block Ack setup.
+		The inactivity timer is not reset when MPDUs corresponding to other TIDs are received.
+	*/
 	if (pmlmeinfo->assoc_AP_vendor == HT_IOT_PEER_BROADCOM) {
 		for (i = 0; i < TID_NUM; i++) {
 			if ((psta->recvreorder_ctrl[i].enable) &&
@@ -466,6 +480,7 @@ void rtw_delba_check(_adapter *padapter, struct sta_info *psta, u8 from_timer)
 				if (_TRUE ==
 				    rtw_inc_and_chk_continual_no_rx_packet(psta,
 									   i)) {
+					/* send a DELBA frame to the peer STA with the Reason Code field set to TIMEOUT */
 					if (!from_timer)
 						ret = issue_del_ba_ex(
 							padapter,
@@ -486,6 +501,7 @@ void rtw_delba_check(_adapter *padapter, struct sta_info *psta, u8 from_timer)
 									 i);
 				}
 			} else {
+				/* The inactivity timer is reset when MPDUs to the TID is received. */
 				rtw_reset_continual_no_rx_packet(psta, i);
 			}
 		}
