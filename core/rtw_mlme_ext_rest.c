@@ -18,6 +18,8 @@
 #include "host_mlme_ext_mgnt_attrib_types.h"
 #undef rtw_warn_on
 extern int rtw_warn_on(int cond);
+#elif defined(HOST_MLME_EXT_PEER_ALIVE_TEST)
+#include "host_mlme_ext_peer_alive_types.h"
 #elif defined(HOST_MLME_EXT_TEST)
 #include "host_mlme_ext_types.h"
 #undef rtw_warn_on
@@ -29,7 +31,8 @@ extern int rtw_warn_on(int cond);
 
 #if (!defined(CONFIG_RUST) || defined(HOST_MLME_EXT_TEST) || \
       !defined(CONFIG_RUST_MLME_EXT_REST)) && \
-     !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST)
+     !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
+     !defined(HOST_MLME_EXT_PEER_ALIVE_TEST)
 
 #ifdef CONFIG_DFS_MASTER
 bool rtw_chset_is_chbw_non_ocp(RT_CHANNEL_INFO *ch_set, u8 ch, u8 bw, u8 offset)
@@ -253,7 +256,7 @@ void rtw_chset_sync_chbw(RT_CHANNEL_INFO *ch_set, u8 *req_ch, u8 *req_bw,
 
 #if defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) || \
 	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_MGNT_ATTRIB)) && \
-	  !defined(HOST_MLME_EXT_TEST)))
+	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_PEER_ALIVE_TEST)))
 
 void update_monitor_frame_attrib(_adapter *padapter, struct pkt_attrib *pattrib)
 {
@@ -443,6 +446,138 @@ void update_mgntframe_attrib_addr(_adapter *padapter, struct xmit_frame *pmgntfr
 }
 
 #endif /* HOST_MLME_EXT_MGNT_ATTRIB_TEST || ((!CONFIG_RUST || !CONFIG_RUST_MLME_EXT_MGNT_ATTRIB) && !HOST_MLME_EXT_TEST) */
+
+#if defined(HOST_MLME_EXT_PEER_ALIVE_TEST) || \
+	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_PEER_ALIVE)) && \
+	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST)))
+
+void rtw_delba_check(_adapter *padapter, struct sta_info *psta, u8 from_timer)
+{
+	int i = 0;
+	int ret = _SUCCESS;
+	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+	struct mlme_ext_info *pmlmeinfo = &(pmlmeext->mlmext_info);
+
+	if (pmlmeinfo->assoc_AP_vendor == HT_IOT_PEER_BROADCOM) {
+		for (i = 0; i < TID_NUM; i++) {
+			if ((psta->recvreorder_ctrl[i].enable) &&
+			    (sta_rx_data_qos_pkts(psta, i) ==
+			     sta_last_rx_data_qos_pkts(psta, i))) {
+				if (_TRUE ==
+				    rtw_inc_and_chk_continual_no_rx_packet(psta,
+									   i)) {
+					if (!from_timer)
+						ret = issue_del_ba_ex(
+							padapter,
+							psta->cmn.mac_addr, i,
+							39, 0, 3, 1);
+					else
+						issue_del_ba(
+							padapter,
+							psta->cmn.mac_addr, i,
+							39, 0);
+					psta->recvreorder_ctrl[i].enable =
+						_FALSE;
+					if (ret != _FAIL)
+						psta->recvreorder_ctrl[i]
+							.ampdu_size =
+							RX_AMPDU_SIZE_INVALID;
+					rtw_reset_continual_no_rx_packet(psta,
+									 i);
+				}
+			} else {
+				rtw_reset_continual_no_rx_packet(psta, i);
+			}
+		}
+	}
+}
+
+u8 chk_ap_is_alive(_adapter *padapter, struct sta_info *psta)
+{
+	u8 ret = _FALSE;
+#ifdef DBG_EXPIRATION_CHK
+	struct mlme_ext_priv	*pmlmeext = &padapter->mlmeextpriv;
+	struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
+
+	RTW_INFO(FUNC_ADPT_FMT" rx:"STA_PKTS_FMT", beacon:%llu, probersp_to_self:%llu"
+		/*", probersp_bm:%llu, probersp_uo:%llu, probereq:%llu, BI:%u"*/
+		 ", retry:%u\n"
+		 , FUNC_ADPT_ARG(padapter)
+		 , STA_RX_PKTS_DIFF_ARG(psta)
+		, psta->sta_stats.rx_beacon_pkts - psta->sta_stats.last_rx_beacon_pkts
+		, psta->sta_stats.rx_probersp_pkts - psta->sta_stats.last_rx_probersp_pkts
+		/*, psta->sta_stats.rx_probersp_bm_pkts - psta->sta_stats.last_rx_probersp_bm_pkts
+		, psta->sta_stats.rx_probersp_uo_pkts - psta->sta_stats.last_rx_probersp_uo_pkts
+		, psta->sta_stats.rx_probereq_pkts - psta->sta_stats.last_rx_probereq_pkts
+		 , pmlmeinfo->bcn_interval*/
+		 , pmlmeext->retry
+		);
+
+	RTW_INFO(FUNC_ADPT_FMT" tx_pkts:%llu, link_count:%u\n", FUNC_ADPT_ARG(padapter)
+		 , sta_tx_pkts(psta)
+		 , pmlmeinfo->link_count
+		);
+#endif
+
+	if ((sta_rx_data_pkts(psta) == sta_last_rx_data_pkts(psta)) &&
+	    sta_rx_beacon_pkts(psta) == sta_last_rx_beacon_pkts(psta) &&
+	    sta_rx_probersp_pkts(psta) == sta_last_rx_probersp_pkts(psta))
+		ret = _FALSE;
+	else
+		ret = _TRUE;
+
+	sta_update_last_rx_pkts(psta);
+
+	return ret;
+}
+
+u8 chk_adhoc_peer_is_alive(struct sta_info *psta)
+{
+	u8 ret = _TRUE;
+
+#ifdef DBG_EXPIRATION_CHK
+	RTW_INFO("sta:"MAC_FMT", rssi:%d, rx:"STA_PKTS_FMT", beacon:%llu, probersp_to_self:%llu"
+		/*", probersp_bm:%llu, probersp_uo:%llu, probereq:%llu, BI:%u"*/
+		 ", expire_to:%u\n"
+		 , MAC_ARG(psta->cmn.mac_addr)
+		 , psta->cmn.rssi_stat.rssi
+		 , STA_RX_PKTS_DIFF_ARG(psta)
+		, psta->sta_stats.rx_beacon_pkts - psta->sta_stats.last_rx_beacon_pkts
+		, psta->sta_stats.rx_probersp_pkts - psta->sta_stats.last_rx_probersp_pkts
+		/*, psta->sta_stats.rx_probersp_bm_pkts - psta->sta_stats.last_rx_probersp_bm_pkts
+		, psta->sta_stats.rx_probersp_uo_pkts - psta->sta_stats.last_rx_probersp_uo_pkts
+		, psta->sta_stats.rx_probereq_pkts - psta->sta_stats.last_rx_probereq_pkts
+		 , pmlmeinfo->bcn_interval*/
+		 , psta->expire_to
+		);
+#endif
+
+	if (sta_rx_data_pkts(psta) == sta_last_rx_data_pkts(psta) &&
+	    sta_rx_beacon_pkts(psta) == sta_last_rx_beacon_pkts(psta) &&
+	    sta_rx_probersp_pkts(psta) == sta_last_rx_probersp_pkts(psta))
+		ret = _FALSE;
+
+	sta_update_last_rx_pkts(psta);
+
+	return ret;
+}
+
+#ifdef CONFIG_TDLS
+u8 chk_tdls_peer_sta_is_alive(_adapter *padapter, struct sta_info *psta)
+{
+	(void)padapter;
+
+	if ((psta->sta_stats.rx_data_pkts ==
+	     psta->sta_stats.last_rx_data_pkts) &&
+	    (psta->sta_stats.rx_tdls_disc_rsp_pkts ==
+	     psta->sta_stats.last_rx_tdls_disc_rsp_pkts))
+		return _FALSE;
+
+	return _TRUE;
+}
+#endif /* CONFIG_TDLS */
+
+#endif /* HOST_MLME_EXT_PEER_ALIVE_TEST || ((!CONFIG_RUST || !CONFIG_RUST_MLME_EXT_PEER_ALIVE) && !HOST_MLME_EXT_TEST) */
 
 #if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_EXT_MGNT_ATTRIB)
 #include <drv_types.h>
