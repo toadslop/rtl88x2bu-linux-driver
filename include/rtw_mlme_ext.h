@@ -698,6 +698,7 @@ u8 rtw_scan_sparse(_adapter *adapter, struct rtw_ieee80211_channel *ch, u8 ch_nu
 u8 rtw_scan_backop_decision(_adapter *adapter);
 #endif
 u32 rtw_scan_timeout_decision(_adapter *padapter);
+u8 sitesurvey_pick_ch_behavior(_adapter *padapter, u8 *ch, RT_SCAN_TYPE *type);
 
 void init_mlme_default_rate_set(_adapter *padapter);
 int init_mlme_ext_priv(_adapter *padapter);
