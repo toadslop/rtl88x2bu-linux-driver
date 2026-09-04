@@ -28,11 +28,11 @@ CFLAGS_COMMON := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
           -include $(HOST_INC)/host_autoconf.h
 CFLAGS := $(CFLAGS_COMMON) -DHOST_MLME_TEST -DCONFIG_P2P
 
-.PHONY: all test test-c test-rust test-mlme-unassoc test-mlme-unassoc-rust test-mlme-unassoc-rust-full test-mlme-wmm-rsn test-mlme-wmm-rsn-rust test-mlme-roaming test-mlme-roaming-rust test-mlme-network-update test-mlme-network-update-rust test-mlme-80211d test-mlme-80211d-rust test-mlme-ht-restructure test-mlme-ht-restructure-rust clean
+.PHONY: all test test-c test-rust test-mlme-unassoc test-mlme-unassoc-rust test-mlme-unassoc-rust-full test-mlme-wmm-rsn test-mlme-wmm-rsn-rust test-mlme-roaming test-mlme-roaming-rust test-mlme-network-update test-mlme-network-update-rust test-mlme-80211d test-mlme-80211d-rust test-mlme-80211d-kernel-layout test-mlme-ht-restructure test-mlme-ht-restructure-rust clean
 
 all: test
 
-test: test-c test-rust test-mlme-unassoc test-mlme-unassoc-rust test-mlme-unassoc-rust-full test-mlme-wmm-rsn test-mlme-wmm-rsn-rust test-mlme-network-update test-mlme-network-update-rust test-mlme-80211d test-mlme-80211d-rust test-mlme-ht-restructure test-mlme-ht-restructure-rust
+test: test-c test-rust test-mlme-unassoc test-mlme-unassoc-rust test-mlme-unassoc-rust-full test-mlme-wmm-rsn test-mlme-wmm-rsn-rust test-mlme-network-update test-mlme-network-update-rust test-mlme-80211d test-mlme-80211d-rust test-mlme-80211d-kernel-layout test-mlme-ht-restructure test-mlme-ht-restructure-rust
 ifneq ($(wildcard test_mlme_roaming.c),)
 test: test-mlme-roaming test-mlme-roaming-rust
 endif
@@ -156,6 +156,17 @@ test_mlme_80211d_rust: test_mlme_80211d.c librust_mlme_80211d.a $(MLME_80211D_SH
 	$(CC) $(CFLAGS_80211D) -DRUST_MLME_80211D_ORACLE -o $@ test_mlme_80211d.c \
 		$(MLME_80211D_SHIM) librust_mlme_80211d.a
 
+# Kernel path uses --cfg rust_mlme_80211d and a 32-byte RT_CHANNEL_INFO fixture.
+librust_mlme_80211d_kernel.a: $(RUST_MLME_80211D)
+	$(RUSTC) --edition 2021 -C opt-level=2 -C overflow-checks=on --cfg rust_mlme_80211d \
+		--crate-type staticlib $(RUST_MLME_80211D) -o $@
+
+test-mlme-80211d-kernel-layout: test_mlme_80211d_kernel_layout
+	./test_mlme_80211d_kernel_layout
+
+test_mlme_80211d_kernel_layout: test_mlme_80211d_kernel_layout.c librust_mlme_80211d_kernel.a
+	$(CC) $(CFLAGS_COMMON) -o $@ test_mlme_80211d_kernel_layout.c librust_mlme_80211d_kernel.a -lpthread -ldl
+
 CFLAGS_HT_RESTRUCTURE := $(CFLAGS_COMMON) -DHOST_MLME_HT_RESTRUCTURE_TEST -DCONFIG_BEAMFORMING -Wno-unused-variable -Wno-unused-but-set-variable
 MLME_HT_RESTRUCTURE_SHIM := host_mlme_ht_restructure_shim.c
 
@@ -176,4 +187,4 @@ test_mlme_ht_restructure_rust: test_mlme_ht_restructure.c librust_mlme_ht_restru
 	$(CC) $(CFLAGS_HT_RESTRUCTURE) -DRUST_MLME_HT_RESTRUCTURE_ORACLE -o $@ test_mlme_ht_restructure.c $(MLME_HT_RESTRUCTURE_SHIM) $(HOST_JSON) librust_mlme_ht_restructure.a
 
 clean:
-	rm -f test_mlme test_mlme_rust test_mlme_unassoc test_mlme_unassoc_rust test_mlme_unassoc_rust_full test_mlme_wmm_rsn test_mlme_wmm_rsn_rust test_mlme_roaming test_mlme_roaming_rust test_mlme_network_update test_mlme_network_update_rust test_mlme_80211d test_mlme_80211d_rust test_mlme_ht_restructure test_mlme_ht_restructure_rust librust_mlme_rest.a librust_mlme_unassoc.a librust_mlme_wmm_rsn.a librust_mlme_roaming.a librust_mlme_network_update.a librust_mlme_80211d.a librust_mlme_ht_restructure.a
+	rm -f test_mlme test_mlme_rust test_mlme_unassoc test_mlme_unassoc_rust test_mlme_unassoc_rust_full test_mlme_wmm_rsn test_mlme_wmm_rsn_rust test_mlme_roaming test_mlme_roaming_rust test_mlme_network_update test_mlme_network_update_rust test_mlme_80211d test_mlme_80211d_rust test_mlme_80211d_kernel_layout test_mlme_ht_restructure test_mlme_ht_restructure_rust librust_mlme_rest.a librust_mlme_unassoc.a librust_mlme_wmm_rsn.a librust_mlme_roaming.a librust_mlme_network_update.a librust_mlme_80211d.a librust_mlme_80211d_kernel.a librust_mlme_ht_restructure.a

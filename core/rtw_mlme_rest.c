@@ -1830,6 +1830,38 @@ RT_CHANNEL_INFO *rtw_rust_80211d_channel_set(_adapter *padapter)
 	return adapter_to_rfctl(padapter)->channel_set;
 }
 
+u8 rtw_rust_80211d_ch_num(_adapter *padapter, u8 i)
+{
+	if (i >= MAX_CHANNEL_NUM)
+		return 0;
+	return adapter_to_rfctl(padapter)->channel_set[i].ChannelNum;
+}
+
+u8 rtw_rust_80211d_ch_flags(_adapter *padapter, u8 i)
+{
+	if (i >= MAX_CHANNEL_NUM)
+		return 0;
+	return adapter_to_rfctl(padapter)->channel_set[i].flags;
+}
+
+void rtw_rust_80211d_zero_chset(_adapter *padapter)
+{
+	struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
+
+	_rtw_memset(rfctl->channel_set, 0, sizeof(rfctl->channel_set));
+}
+
+void rtw_rust_80211d_set_ch(_adapter *padapter, u8 i, u8 num, u8 flags)
+{
+	RT_CHANNEL_INFO *ch;
+
+	if (i >= MAX_CHANNEL_NUM)
+		return;
+	ch = &adapter_to_rfctl(padapter)->channel_set[i];
+	ch->ChannelNum = num;
+	ch->flags = flags;
+}
+
 void *rtw_rust_80211d_malloc(size_t n)
 {
 	return rtw_malloc(n);

@@ -4,6 +4,10 @@ drop rtw_rust_80211d_wireless_mode
 drop rtw_rust_80211d_update_done
 drop rtw_rust_80211d_set_update_done
 drop rtw_rust_80211d_channel_set
+drop rtw_rust_80211d_ch_num
+drop rtw_rust_80211d_ch_flags
+drop rtw_rust_80211d_zero_chset
+drop rtw_rust_80211d_set_ch
 drop rtw_rust_80211d_malloc
 drop rtw_rust_80211d_mfree
 drop rtw_rust_80211d_reg_change
