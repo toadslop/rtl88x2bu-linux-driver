@@ -10,12 +10,18 @@ RUST_MLME_EXT_MGNT_ATTRIB := $(ROOT)/rust/rtw_mlme_ext_mgnt_attrib.rs
 HOST_JSON := ../crypto/host_vector_json.c
 SHIM := host_mlme_ext_shim.c
 MGNT_SHIM := host_mlme_ext_mgnt_attrib_shim.c
+PEER_ALIVE_SHIM := host_mlme_ext_peer_alive_shim.c
 
 MGNT_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-variable -Wno-format-truncation -O2 \
           -I$(HOST_INC) -I$(CORE) -I$(ROOT)/include \
           -include $(HOST_INC)/host_autoconf.h \
           -DHOST_MLME_EXT_MGNT_ATTRIB_TEST -DCONFIG_RTW_MGMT_QUEUE -DCONFIG_BEAMFORMING \
           -DCONFIG_P2P -DCONFIG_P2P_PS -DCONFIG_P2P_PS_NOA_USE_MACID_SLEEP -DCONFIG_CONCURRENT_MODE
+
+PEER_ALIVE_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-variable -Wno-format-truncation -O2 \
+          -I$(HOST_INC) -I$(CORE) -I$(ROOT)/include \
+          -include $(HOST_INC)/host_autoconf.h \
+          -DHOST_MLME_EXT_PEER_ALIVE_TEST -DCONFIG_TDLS
 
 CC     := gcc
 RUSTC  := rustc
@@ -24,11 +30,12 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-format-truncation -O2
           -include $(HOST_INC)/host_autoconf.h \
           -DHOST_MLME_EXT_TEST -DHOST_RF_TEST -DCONFIG_DFS_MASTER
 
-.PHONY: all test test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust clean
+.PHONY: all test test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust \
+	test-peer-alive clean
 
 all: test
 
-test: test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust
+test: test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust test-peer-alive
 
 test-c: test_chset
 	./test_chset chset_vectors.json
@@ -70,6 +77,14 @@ test_mgnt_attrib_rust: test_mgnt_attrib.c librust_mlme_ext_mgnt_attrib.a $(MGNT_
 	$(CC) $(MGNT_CFLAGS) -DRUST_MLME_EXT_MGNT_ATTRIB_ORACLE -o $@ test_mgnt_attrib.c \
 		$(MGNT_SHIM) $(HOST_JSON) librust_mlme_ext_mgnt_attrib.a
 
+test-peer-alive: test_peer_alive
+	./test_peer_alive
+
+test_peer_alive: test_peer_alive.c $(MLME_EXT_REST_SRC) $(PEER_ALIVE_SHIM)
+	$(CC) $(PEER_ALIVE_CFLAGS) -o $@ test_peer_alive.c $(MLME_EXT_REST_SRC) \
+		$(PEER_ALIVE_SHIM)
+
 clean:
 	rm -f test_chset test_chset_rust librust_mlme_ext_rest.a \
-		test_mgnt_attrib test_mgnt_attrib_rust librust_mlme_ext_mgnt_attrib.a
+		test_mgnt_attrib test_mgnt_attrib_rust librust_mlme_ext_mgnt_attrib.a \
+		test_peer_alive test_peer_alive_rust librust_mlme_ext_peer_alive.a
