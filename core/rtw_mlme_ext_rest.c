@@ -495,8 +495,29 @@ void rtw_delba_check(_adapter *padapter, struct sta_info *psta, u8 from_timer)
 u8 chk_ap_is_alive(_adapter *padapter, struct sta_info *psta)
 {
 	u8 ret = _FALSE;
+#ifdef DBG_EXPIRATION_CHK
+	struct mlme_ext_priv	*pmlmeext = &padapter->mlmeextpriv;
+	struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
 
-	(void)padapter;
+	RTW_INFO(FUNC_ADPT_FMT" rx:"STA_PKTS_FMT", beacon:%llu, probersp_to_self:%llu"
+		/*", probersp_bm:%llu, probersp_uo:%llu, probereq:%llu, BI:%u"*/
+		 ", retry:%u\n"
+		 , FUNC_ADPT_ARG(padapter)
+		 , STA_RX_PKTS_DIFF_ARG(psta)
+		, psta->sta_stats.rx_beacon_pkts - psta->sta_stats.last_rx_beacon_pkts
+		, psta->sta_stats.rx_probersp_pkts - psta->sta_stats.last_rx_probersp_pkts
+		/*, psta->sta_stats.rx_probersp_bm_pkts - psta->sta_stats.last_rx_probersp_bm_pkts
+		, psta->sta_stats.rx_probersp_uo_pkts - psta->sta_stats.last_rx_probersp_uo_pkts
+		, psta->sta_stats.rx_probereq_pkts - psta->sta_stats.last_rx_probereq_pkts
+		 , pmlmeinfo->bcn_interval*/
+		 , pmlmeext->retry
+		);
+
+	RTW_INFO(FUNC_ADPT_FMT" tx_pkts:%llu, link_count:%u\n", FUNC_ADPT_ARG(padapter)
+		 , sta_tx_pkts(psta)
+		 , pmlmeinfo->link_count
+		);
+#endif
 
 	if ((sta_rx_data_pkts(psta) == sta_last_rx_data_pkts(psta)) &&
 	    sta_rx_beacon_pkts(psta) == sta_last_rx_beacon_pkts(psta) &&
@@ -513,6 +534,23 @@ u8 chk_ap_is_alive(_adapter *padapter, struct sta_info *psta)
 u8 chk_adhoc_peer_is_alive(struct sta_info *psta)
 {
 	u8 ret = _TRUE;
+
+#ifdef DBG_EXPIRATION_CHK
+	RTW_INFO("sta:"MAC_FMT", rssi:%d, rx:"STA_PKTS_FMT", beacon:%llu, probersp_to_self:%llu"
+		/*", probersp_bm:%llu, probersp_uo:%llu, probereq:%llu, BI:%u"*/
+		 ", expire_to:%u\n"
+		 , MAC_ARG(psta->cmn.mac_addr)
+		 , psta->cmn.rssi_stat.rssi
+		 , STA_RX_PKTS_DIFF_ARG(psta)
+		, psta->sta_stats.rx_beacon_pkts - psta->sta_stats.last_rx_beacon_pkts
+		, psta->sta_stats.rx_probersp_pkts - psta->sta_stats.last_rx_probersp_pkts
+		/*, psta->sta_stats.rx_probersp_bm_pkts - psta->sta_stats.last_rx_probersp_bm_pkts
+		, psta->sta_stats.rx_probersp_uo_pkts - psta->sta_stats.last_rx_probersp_uo_pkts
+		, psta->sta_stats.rx_probereq_pkts - psta->sta_stats.last_rx_probereq_pkts
+		 , pmlmeinfo->bcn_interval*/
+		 , psta->expire_to
+		);
+#endif
 
 	if (sta_rx_data_pkts(psta) == sta_last_rx_data_pkts(psta) &&
 	    sta_rx_beacon_pkts(psta) == sta_last_rx_beacon_pkts(psta) &&

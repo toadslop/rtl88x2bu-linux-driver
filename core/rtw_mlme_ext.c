@@ -12170,6 +12170,7 @@ void _linked_info_dump(_adapter *padapter)
 
 #ifdef CONFIG_TDLS
 void linked_status_chk_tdls(_adapter *padapter)
+{
 	struct candidate_pool {
 		struct sta_info *psta;
 		u8 addr[ETH_ALEN];
