@@ -10,6 +10,9 @@ static struct mi_state host_mi;
 u8 host_p2p_social;
 u8 host_p2p_needed;
 
+u8 host_p2p_social_get(void) { return host_p2p_social; }
+u8 host_p2p_needed_get(void) { return host_p2p_needed; }
+
 void host_scan_set_current_time(systime t) { host_now = t; }
 systime host_scan_current_time(void) { return host_now; }
 void host_scan_set_passing_time_ms(u32 ms) { host_pass_ms = ms; }
