@@ -7,7 +7,7 @@ static _adapter adapter;
 static struct sta_info sta;
 
 static int run_ap(const char *name, u64 rx, u64 last, u64 bcn, u64 bcn_last,
-		  u8 expect)
+		  u64 probersp, u64 probersp_last, u8 expect)
 {
 	u8 ret;
 	memset(&adapter, 0, sizeof(adapter));
@@ -16,6 +16,8 @@ static int run_ap(const char *name, u64 rx, u64 last, u64 bcn, u64 bcn_last,
 	sta.sta_stats.last_rx_data_pkts = last;
 	sta.sta_stats.rx_beacon_pkts = bcn;
 	sta.sta_stats.last_rx_beacon_pkts = bcn_last;
+	sta.sta_stats.rx_probersp_pkts = probersp;
+	sta.sta_stats.last_rx_probersp_pkts = probersp_last;
 	ret = chk_ap_is_alive(&adapter, &sta);
 	if (ret != expect) {
 		fprintf(stderr, "%s: ret %u expect %u\n", name, ret, expect);
@@ -50,9 +52,10 @@ static int run_delba(const char *name, u8 vendor, u8 tid, u8 en, int count,
 
 int main(void)
 {
-	if (run_ap("ap_data_changed", 10, 5, 3, 3, _TRUE) ||
-	    run_ap("ap_stale", 5, 5, 3, 3, _FALSE) ||
-	    run_ap("ap_beacon_changed", 5, 5, 4, 3, _TRUE))
+	if (run_ap("ap_data_changed", 10, 5, 3, 3, 0, 0, _TRUE) ||
+	    run_ap("ap_stale", 5, 5, 3, 3, 0, 0, _FALSE) ||
+	    run_ap("ap_beacon_changed", 5, 5, 4, 3, 0, 0, _TRUE) ||
+	    run_ap("ap_probersp_changed", 5, 5, 3, 3, 4, 3, _TRUE))
 		return 1;
 	memset(&sta, 0, sizeof(sta));
 	sta.sta_stats.rx_data_pkts = 2;
