@@ -2595,6 +2595,7 @@ rustflags-y += --cfg rust_mlme_wmm_rsn --cfg config_wmmps_sta
 ccflags-y += -DCONFIG_RUST_MLME_EXT_REST
 ccflags-y += -DCONFIG_RUST_MLME_EXT_MGNT_ATTRIB
 ccflags-y += -DCONFIG_RUST_MLME_EXT_PEER_ALIVE
+ccflags-y += -DCONFIG_RUST_MLME_EXT_SCAN
 ccflags-y += -DCONFIG_RUST_MLME_HT_RESTRUCTURE
 ccflags-y += -DCONFIG_80211D
 ccflags-y += -DCONFIG_RUST_MLME_80211D
@@ -2617,6 +2618,7 @@ endif
 rustflags-y += --cfg rust_mlme_ext_rest
 rustflags-y += --cfg rust_mlme_ext_mgnt_attrib
 rustflags-y += --cfg rust_mlme_ext_peer_alive
+rustflags-y += --cfg rust_mlme_ext_scan --cfg config_scan_backop
 rustflags-y += --cfg config_rtw_mgmt_queue
 rustflags-y += --cfg config_p2p_ps_noa_use_macid_sleep
 ifneq ($(filter -DCONFIG_CONCURRENT_MODE,$(ccflags-y)),)
@@ -2707,6 +2709,7 @@ $(MODULE_NAME)-y += rust/rtw_mlme_80211d.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_mgnt_attrib.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_peer_alive.o
+$(MODULE_NAME)-y += rust/rtw_mlme_ext_scan.o
 $(MODULE_NAME)-y += rust/rtw_cmd_rest.o
 endif
 
@@ -3225,6 +3228,21 @@ rust-check-symbols-rtw-mlme-ext-peer-alive: rust-objects-rtw-mlme-ext-peer-alive
 	$(MAKE) rust-check-symbols OLD=tests/host/mlme_ext/peer_alive_c_ref.o NEW=rust/rtw_mlme_ext_peer_alive.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_mlme_ext_peer_alive.allow
 
+# W3-70 PR4: scan sparse/backop/timeout L1 (host C oracle vs kbuild Rust object).
+rust-objects-rtw-mlme-ext-scan:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-mlme-ext-scan"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_mlme_ext_scan.o
+rust-objects-rtw-mlme-ext-scan-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_MLME_EXT_SCAN_TEST -DCONFIG_SCAN_BACKOP \
+		-o tests/host/mlme_ext/scan_c_ref.o core/rtw_mlme_ext_rest.c
+
+rust-check-symbols-rtw-mlme-ext-scan: rust-objects-rtw-mlme-ext-scan-c rust-objects-rtw-mlme-ext-scan
+	$(MAKE) rust-check-symbols OLD=tests/host/mlme_ext/scan_c_ref.o NEW=rust/rtw_mlme_ext_scan.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_mlme_ext_scan.allow
+
 # W3-56 PR3: op_class_pref-only L1 (host C oracle vs host Rust oracle).
 rust-objects-rtw-rf-op-class-pref-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
@@ -3497,18 +3515,3 @@ clean:
 	rm -fr *.mod.c *.mod *.o .*.cmd *.ko *~
 	rm -fr .tmp_versions
 endif
-
-# W3-70 PR4: scan sparse/backop/timeout L1 (host C oracle vs kbuild Rust object).
-rust-objects-rtw-mlme-ext-scan:
-	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-mlme-ext-scan"; exit 1; }
-	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_mlme_ext_scan.o
-rust-objects-rtw-mlme-ext-scan-c:
-	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
-		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
-		-include $(shell pwd)/tests/host/include/host_autoconf.h \
-		-DHOST_MLME_EXT_SCAN_TEST -DCONFIG_SCAN_BACKOP \
-		-o tests/host/mlme_ext/scan_c_ref.o core/rtw_mlme_ext_rest.c
-
-rust-check-symbols-rtw-mlme-ext-scan: rust-objects-rtw-mlme-ext-scan-c rust-objects-rtw-mlme-ext-scan
-	$(MAKE) rust-check-symbols OLD=tests/host/mlme_ext/scan_c_ref.o NEW=rust/rtw_mlme_ext_scan.o \
-		ALLOWLIST=docs/rust-migration/scripts/rtw_mlme_ext_scan.allow
