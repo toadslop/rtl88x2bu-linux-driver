@@ -89,6 +89,9 @@ struct wifidirect_info {
 	((((adapter)->host_fixture.mlme_state) & (state)) != 0)
 #define MLME_IS_ADHOC(adapter) CHK_MLME_STATE((adapter), WIFI_ADHOC_STATE)
 
+/* Host-only: TXDESC_SIZE 40 makes TXDESC_OFFSET 48. Kernel USB 8822B is
+ * TXDESC_SIZE 48 + PACKET_OFFSET_SZ 8 = 56. Do not copy 48 into the
+ * rust_mlme_ext_mgnt_attrib kernel path. */
 #define TXDESC_SIZE 40
 #define PACKET_OFFSET_SZ 8
 #define TXDESC_OFFSET (TXDESC_SIZE + PACKET_OFFSET_SZ)
