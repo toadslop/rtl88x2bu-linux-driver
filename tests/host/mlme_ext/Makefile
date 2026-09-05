@@ -11,6 +11,12 @@ HOST_JSON := ../crypto/host_vector_json.c
 SHIM := host_mlme_ext_shim.c
 MGNT_SHIM := host_mlme_ext_mgnt_attrib_shim.c
 PEER_ALIVE_SHIM := host_mlme_ext_peer_alive_shim.c
+SCAN_SHIM := host_mlme_ext_scan_shim.c
+
+SCAN_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-variable -O2 \
+          -I$(HOST_INC) -I$(CORE) -I$(ROOT)/include \
+          -include $(HOST_INC)/host_autoconf.h \
+          -DHOST_MLME_EXT_SCAN_TEST -DCONFIG_SCAN_BACKOP
 
 MGNT_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-variable -Wno-format-truncation -O2 \
           -I$(HOST_INC) -I$(CORE) -I$(ROOT)/include \
@@ -31,11 +37,11 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-format-truncation -O2
           -DHOST_MLME_EXT_TEST -DHOST_RF_TEST -DCONFIG_DFS_MASTER
 
 .PHONY: all test test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust \
-	test-peer-alive clean
+	test-peer-alive test-scan-decision clean
 
 all: test
 
-test: test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust test-peer-alive
+test: test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust test-peer-alive test-scan-decision
 
 test-c: test_chset
 	./test_chset chset_vectors.json
@@ -84,7 +90,14 @@ test_peer_alive: test_peer_alive.c $(MLME_EXT_REST_SRC) $(PEER_ALIVE_SHIM)
 	$(CC) $(PEER_ALIVE_CFLAGS) -o $@ test_peer_alive.c $(MLME_EXT_REST_SRC) \
 		$(PEER_ALIVE_SHIM)
 
+test-scan-decision: test_scan_decision
+	./test_scan_decision
+
+test_scan_decision: test_scan_decision.c $(MLME_EXT_REST_SRC) $(SCAN_SHIM)
+	$(CC) $(SCAN_CFLAGS) -o $@ test_scan_decision.c $(MLME_EXT_REST_SRC) $(SCAN_SHIM)
+
 clean:
 	rm -f test_chset test_chset_rust librust_mlme_ext_rest.a \
 		test_mgnt_attrib test_mgnt_attrib_rust librust_mlme_ext_mgnt_attrib.a \
-		test_peer_alive test_peer_alive_rust librust_mlme_ext_peer_alive.a
+		test_peer_alive test_peer_alive_rust librust_mlme_ext_peer_alive.a \
+		test_scan_decision
