@@ -37,11 +37,12 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-format-truncation -O2
           -DHOST_MLME_EXT_TEST -DHOST_RF_TEST -DCONFIG_DFS_MASTER
 
 .PHONY: all test test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust \
-	test-peer-alive test-scan-decision clean
+	test-mgnt-attrib-kernel-layout test-peer-alive test-scan-decision clean
 
 all: test
 
-test: test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust test-peer-alive test-scan-decision
+test: test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust \
+	test-mgnt-attrib-kernel-layout test-peer-alive test-scan-decision
 
 test-c: test_chset
 	./test_chset chset_vectors.json
@@ -83,6 +84,21 @@ test_mgnt_attrib_rust: test_mgnt_attrib.c librust_mlme_ext_mgnt_attrib.a $(MGNT_
 	$(CC) $(MGNT_CFLAGS) -DRUST_MLME_EXT_MGNT_ATTRIB_ORACLE -o $@ test_mgnt_attrib.c \
 		$(MGNT_SHIM) $(HOST_JSON) librust_mlme_ext_mgnt_attrib.a
 
+# Kernel path uses --cfg rust_mlme_ext_mgnt_attrib and USB 8822B TXDESC_OFFSET 56.
+librust_mlme_ext_mgnt_attrib_kernel.a: $(RUST_MLME_EXT_MGNT_ATTRIB)
+	$(RUSTC) --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg rust_mlme_ext_mgnt_attrib --cfg config_rtw_mgmt_queue \
+		--cfg config_beamforming \
+		--crate-type staticlib $(RUST_MLME_EXT_MGNT_ATTRIB) -o $@
+
+test-mgnt-attrib-kernel-layout: test_mgnt_attrib_kernel_layout
+	./test_mgnt_attrib_kernel_layout
+
+test_mgnt_attrib_kernel_layout: test_mgnt_attrib_kernel_layout.c \
+		librust_mlme_ext_mgnt_attrib_kernel.a
+	$(CC) -Wall -Wextra -Werror -O2 -o $@ test_mgnt_attrib_kernel_layout.c \
+		librust_mlme_ext_mgnt_attrib_kernel.a -lpthread -ldl
+
 test-peer-alive: test_peer_alive
 	./test_peer_alive
 
@@ -99,5 +115,6 @@ test_scan_decision: test_scan_decision.c $(MLME_EXT_REST_SRC) $(SCAN_SHIM)
 clean:
 	rm -f test_chset test_chset_rust librust_mlme_ext_rest.a \
 		test_mgnt_attrib test_mgnt_attrib_rust librust_mlme_ext_mgnt_attrib.a \
+		test_mgnt_attrib_kernel_layout librust_mlme_ext_mgnt_attrib_kernel.a \
 		test_peer_alive test_peer_alive_rust librust_mlme_ext_peer_alive.a \
 		test_scan_decision
