@@ -919,7 +919,7 @@ u32 rtw_scan_timeout_decision(_adapter *padapter)
 
 #endif /* scan sparse/backop/timeout block uses CONFIG_RUST_MLME_EXT_SCAN when added */
 
-#if defined(HOST_MLME_EXT_SCAN_TEST) || \
+#if (defined(HOST_MLME_EXT_SCAN_TEST) && !defined(CONFIG_RUST_MLME_EXT_PICK_CH)) || \
 	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_PICK_CH)) && \
 	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
 	  !defined(HOST_MLME_EXT_PEER_ALIVE_TEST)))
@@ -1105,4 +1105,4 @@ u8 sitesurvey_pick_ch_behavior(_adapter *padapter, u8 *ch, RT_SCAN_TYPE *type)
 	return next_state;
 }
 
-#endif /* HOST_MLME_EXT_SCAN_TEST || ((!CONFIG_RUST || !CONFIG_RUST_MLME_EXT_PICK_CH) && ...) */
+#endif /* (HOST_MLME_EXT_SCAN_TEST && !CONFIG_RUST_MLME_EXT_PICK_CH) || ((!CONFIG_RUST || !CONFIG_RUST_MLME_EXT_PICK_CH) && ...) */
