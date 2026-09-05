@@ -62,7 +62,23 @@ const ACT_PUBLIC_FTM_REQ: U8 = 14;
 const ACT_PUBLIC_FTM: U8 = 15;
 
 const WIFI_ADHOC_STATE: U32 = 0x0000_0004;
-const TXDESC_OFFSET: usize = 48;
+/* Host L2 uses TXDESC_SIZE 40 + PACKET_OFFSET_SZ 8. Kernel USB 8822B is
+ * TXDESC_SIZE 48 + PACKET_OFFSET_SZ 8 = 56 (see rtw_xmit.h / rtl8822bu_hal.h).
+ * Never hardcode 48 on the kernel path — that reads the 802.11 header 8 bytes
+ * early (packet-offset pad / TX desc tail) and corrupts attrib.ra/ta. */
+#[cfg(host_mlme_ext_mgnt_attrib_test)]
+const HOST_TXDESC_OFFSET: usize = 48;
+
+fn txdesc_offset() -> usize {
+    #[cfg(host_mlme_ext_mgnt_attrib_test)]
+    {
+        HOST_TXDESC_OFFSET
+    }
+    #[cfg(rust_mlme_ext_mgnt_attrib)]
+    {
+        unsafe { rtw_rust_mgnt_txdesc_offset() as usize }
+    }
+}
 
 #[repr(C)]
 pub struct StaInfo {
@@ -300,6 +316,7 @@ extern "C" {
     fn rtw_rust_mgnt_hal_rf_type(padapter: *mut Adapter) -> U8;
     fn rtw_rust_mgnt_mlme_is_adhoc(padapter: *mut Adapter) -> U8;
     fn rtw_rust_mgnt_stapriv(padapter: *mut Adapter) -> *mut StaPriv;
+    fn rtw_rust_mgnt_txdesc_offset() -> U32;
     #[cfg(config_p2p_ps_noa_use_macid_sleep)]
     fn rtw_rust_mgnt_p2p_noa_override(padapter: *mut Adapter, mac_id: *mut U8, qsel: *mut U8)
         -> U8;
@@ -464,7 +481,7 @@ pub extern "C" fn update_mgntframe_subtype(padapter: *mut Adapter, pmgntframe: *
     }
     let mgntframe = unsafe { &mut *pmgntframe };
     let pattrib = &mut mgntframe.attrib;
-    let pframe = unsafe { mgntframe.buf_addr.add(TXDESC_OFFSET) };
+    let pframe = unsafe { mgntframe.buf_addr.add(txdesc_offset()) };
     let subtype = get_frame_sub_type(pframe);
     pattrib.subtype = subtype;
 
@@ -551,7 +568,7 @@ pub extern "C" fn update_mgntframe_attrib_addr(padapter: *mut Adapter, pmgntfram
     }
     let mgntframe = unsafe { &mut *pmgntframe };
     let pattrib = &mut mgntframe.attrib;
-    let pframe = unsafe { mgntframe.buf_addr.add(TXDESC_OFFSET) };
+    let pframe = unsafe { mgntframe.buf_addr.add(txdesc_offset()) };
 
     unsafe {
         core::ptr::copy_nonoverlapping(get_addr1_ptr(pframe), pattrib.ra.as_mut_ptr(), 6);
