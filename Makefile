@@ -3497,3 +3497,18 @@ clean:
 	rm -fr *.mod.c *.mod *.o .*.cmd *.ko *~
 	rm -fr .tmp_versions
 endif
+
+# W3-70 PR4: scan sparse/backop/timeout L1 (host C oracle vs kbuild Rust object).
+rust-objects-rtw-mlme-ext-scan:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-mlme-ext-scan"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_mlme_ext_scan.o
+rust-objects-rtw-mlme-ext-scan-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_MLME_EXT_SCAN_TEST -DCONFIG_SCAN_BACKOP \
+		-o tests/host/mlme_ext/scan_c_ref.o core/rtw_mlme_ext_rest.c
+
+rust-check-symbols-rtw-mlme-ext-scan: rust-objects-rtw-mlme-ext-scan-c rust-objects-rtw-mlme-ext-scan
+	$(MAKE) rust-check-symbols OLD=tests/host/mlme_ext/scan_c_ref.o NEW=rust/rtw_mlme_ext_scan.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_mlme_ext_scan.allow

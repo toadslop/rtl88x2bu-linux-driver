@@ -686,6 +686,67 @@ u64 rtw_rust_peer_last_rx_tdls_disc(struct sta_info *psta)
 #endif /* CONFIG_TDLS */
 #endif /* CONFIG_RUST && CONFIG_RUST_MLME_EXT_PEER_ALIVE */
 
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_EXT_SCAN)
+#include <drv_types.h>
+
+systime rtw_rust_scan_last_scan_time(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.last_scan_time;
+}
+
+void rtw_rust_scan_set_last_scan_time(_adapter *adapter, systime t)
+{
+	adapter->mlmeextpriv.last_scan_time = t;
+}
+
+u32 rtw_rust_scan_wireless_mode(_adapter *adapter)
+{
+	return adapter->registrypriv.wireless_mode;
+}
+
+u16 rtw_rust_scan_ch_ms(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.scan_ch_ms;
+}
+
+u16 rtw_rust_scan_duration(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.duration;
+}
+
+u8 rtw_rust_scan_cnt_max(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.scan_cnt_max;
+}
+
+u16 rtw_rust_scan_backop_ms(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.backop_ms;
+}
+
+void rtw_rust_scan_set_timeout_ms(_adapter *adapter, u32 ms)
+{
+	adapter->mlmeextpriv.sitesurvey_res.scan_timeout_ms = ms;
+}
+
+u8 rtw_rust_scan_backop_flags_sta(_adapter *adapter)
+{
+	return mlmeext_scan_backop_flags_sta(&adapter->mlmeextpriv);
+}
+
+u8 rtw_rust_scan_backop_flags_ap(_adapter *adapter)
+{
+	return mlmeext_scan_backop_flags_ap(&adapter->mlmeextpriv);
+}
+
+#ifdef CONFIG_RTW_MESH
+u8 rtw_rust_scan_backop_flags_mesh(_adapter *adapter)
+{
+	return mlmeext_scan_backop_flags_mesh(&adapter->mlmeextpriv);
+}
+#endif /* CONFIG_RTW_MESH */
+#endif /* CONFIG_RUST && CONFIG_RUST_MLME_EXT_SCAN */
+
 #if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_EXT_MGNT_ATTRIB)
 #include <drv_types.h>
 #include <hal_data.h>
