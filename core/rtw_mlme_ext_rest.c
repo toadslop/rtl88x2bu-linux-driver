@@ -836,4 +836,78 @@ u8 rtw_scan_sparse(_adapter *adapter, struct rtw_ieee80211_channel *ch, u8 ch_nu
 	return ret_num;
 }
 
+#ifdef CONFIG_SCAN_BACKOP
+u8 rtw_scan_backop_decision(_adapter *adapter)
+{
+	struct mlme_ext_priv *mlmeext = &adapter->mlmeextpriv;
+	struct mi_state mstate;
+	u8 backop_flags = 0;
+
+	rtw_mi_status(adapter, &mstate);
+
+	if ((MSTATE_STA_LD_NUM(&mstate) &&
+	     mlmeext_chk_scan_backop_flags_sta(mlmeext, SS_BACKOP_EN)) ||
+	    (MSTATE_STA_NUM(&mstate) &&
+	     mlmeext_chk_scan_backop_flags_sta(mlmeext, SS_BACKOP_EN_NL)))
+		backop_flags |= mlmeext_scan_backop_flags_sta(mlmeext);
+
+#ifdef CONFIG_AP_MODE
+	if ((MSTATE_AP_LD_NUM(&mstate) &&
+	     mlmeext_chk_scan_backop_flags_ap(mlmeext, SS_BACKOP_EN)) ||
+	    (MSTATE_AP_NUM(&mstate) &&
+	     mlmeext_chk_scan_backop_flags_ap(mlmeext, SS_BACKOP_EN_NL)))
+		backop_flags |= mlmeext_scan_backop_flags_ap(mlmeext);
+#endif
+
+#ifdef CONFIG_RTW_MESH
+	if ((MSTATE_MESH_LD_NUM(&mstate) &&
+	     mlmeext_chk_scan_backop_flags_mesh(mlmeext, SS_BACKOP_EN)) ||
+	    (MSTATE_MESH_NUM(&mstate) &&
+	     mlmeext_chk_scan_backop_flags_mesh(mlmeext, SS_BACKOP_EN_NL)))
+		backop_flags |= mlmeext_scan_backop_flags_mesh(mlmeext);
+#endif
+
+	return backop_flags;
+}
+#endif /* CONFIG_SCAN_BACKOP */
+
+#define SCANNING_TIMEOUT_EX 2000
+u32 rtw_scan_timeout_decision(_adapter *padapter)
+{
+	u32 back_op_times = 0;
+	u8 max_chan_num;
+	u16 scan_ms;
+	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+	struct ss_res *ss = &pmlmeext->sitesurvey_res;
+
+	if (is_supported_5g(padapter->registrypriv.wireless_mode) &&
+	    IsSupported24G(padapter->registrypriv.wireless_mode))
+		max_chan_num = MAX_CHANNEL_NUM;
+	else
+		max_chan_num = MAX_CHANNEL_NUM_2G;
+
+#ifdef CONFIG_SCAN_BACKOP
+	if (rtw_scan_backop_decision(padapter))
+		back_op_times =
+			(max_chan_num / ss->scan_cnt_max) * ss->backop_ms;
+#endif
+
+	if (ss->duration)
+		scan_ms = ss->duration;
+	else
+#if defined(CONFIG_RTW_ACS) && defined(CONFIG_RTW_ACS_DBG)
+	if (IS_ACS_ENABLE(padapter) && rtw_is_acs_st_valid(padapter))
+		scan_ms = rtw_acs_get_adv_st(padapter);
+	else
+#endif /* CONFIG_RTW_ACS */
+		scan_ms = ss->scan_ch_ms;
+
+	ss->scan_timeout_ms =
+		(scan_ms * max_chan_num) + back_op_times + SCANNING_TIMEOUT_EX;
+#ifdef DBG_SITESURVEY
+	RTW_INFO("%s , scan_timeout_ms = %d (ms)\n", __func__, ss->scan_timeout_ms);
+#endif /* DBG_SITESURVEY */
+	return ss->scan_timeout_ms;
+}
+
 #endif /* HOST_MLME_EXT_SCAN_TEST || ((!CONFIG_RUST || !CONFIG_RUST_MLME_EXT_SCAN) && ...) */
