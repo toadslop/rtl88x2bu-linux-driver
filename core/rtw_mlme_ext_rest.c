@@ -910,4 +910,185 @@ u32 rtw_scan_timeout_decision(_adapter *padapter)
 	return ss->scan_timeout_ms;
 }
 
+static bool scan_abort_hdl(_adapter *adapter)
+{
+	struct mlme_ext_priv *pmlmeext = &adapter->mlmeextpriv;
+	struct ss_res *ss = &pmlmeext->sitesurvey_res;
+#ifdef CONFIG_P2P
+	struct wifidirect_info *pwdinfo = &adapter->wdinfo;
+#endif
+	bool ret = _FALSE;
+
+	if (pmlmeext->scan_abort == _TRUE) {
+#ifdef CONFIG_P2P
+		if (!rtw_p2p_chk_state(&adapter->wdinfo, P2P_STATE_NONE)) {
+			rtw_p2p_findphase_ex_set(pwdinfo, P2P_FINDPHASE_EX_MAX);
+			ss->channel_idx = 3;
+			RTW_INFO("%s idx:%d, cnt:%u\n", __func__
+				 , ss->channel_idx
+				 , pwdinfo->find_phase_state_exchange_cnt
+				);
+		} else
+#endif
+		{
+			ss->channel_idx = ss->ch_num;
+			RTW_INFO("%s idx:%d\n", __func__
+				 , ss->channel_idx
+				);
+		}
+		ret = _TRUE;
+	}
+
+	return ret;
+}
+
+u8 sitesurvey_pick_ch_behavior(_adapter *padapter, u8 *ch, RT_SCAN_TYPE *type)
+{
+	u8 next_state;
+	u8 scan_ch = 0;
+	RT_SCAN_TYPE scan_type = SCAN_PASSIVE;
+	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+	struct ss_res *ss = &pmlmeext->sitesurvey_res;
+	struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
+	int ch_set_idx;
+#ifdef CONFIG_P2P
+	struct wifidirect_info *pwdinfo = &padapter->wdinfo;
+#endif
+#ifdef CONFIG_SCAN_BACKOP
+	u8 backop_flags = 0;
+#endif
+
+	scan_abort_hdl(padapter);
+
+#ifdef CONFIG_P2P
+	if (pwdinfo->rx_invitereq_info.scan_op_ch_only || pwdinfo->p2p_info.scan_op_ch_only) {
+		if (pwdinfo->rx_invitereq_info.scan_op_ch_only)
+			scan_ch = pwdinfo->rx_invitereq_info.operation_ch[ss->channel_idx];
+		else
+			scan_ch = pwdinfo->p2p_info.operation_ch[ss->channel_idx];
+		scan_type = SCAN_ACTIVE;
+	} else if (rtw_p2p_findphase_ex_is_social(pwdinfo)) {
+		scan_ch = pwdinfo->social_chan[ss->channel_idx];
+		ch_set_idx = rtw_chset_search_ch(rfctl->channel_set, scan_ch);
+		if (ch_set_idx >= 0)
+			scan_type = rfctl->channel_set[ch_set_idx].flags & RTW_CHF_NO_IR ? SCAN_PASSIVE : SCAN_ACTIVE;
+		else
+			scan_type = SCAN_ACTIVE;
+	} else
+#endif /* CONFIG_P2P */
+	{
+		struct rtw_ieee80211_channel *ch;
+
+#ifdef CONFIG_SCAN_BACKOP
+		backop_flags = rtw_scan_backop_decision(padapter);
+#endif
+
+#ifdef CONFIG_SCAN_BACKOP
+		if (!(backop_flags && ss->scan_cnt >= ss->scan_cnt_max))
+#endif
+		{
+#ifdef CONFIG_RTW_WIFI_HAL
+			if (adapter_to_dvobj(padapter)->nodfs) {
+				while (ss->channel_idx < ss->ch_num && rtw_chset_is_dfs_ch(rfctl->channel_set, ss->ch[ss->channel_idx].hw_value))
+					ss->channel_idx++;
+			} else
+#endif
+			if (ss->channel_idx != 0 && ss->force_ssid_scan == 0
+				&& pmlmeext->sitesurvey_res.ssid_num
+				&& (ss->ch[ss->channel_idx - 1].flags & RTW_IEEE80211_CHAN_PASSIVE_SCAN)
+			) {
+				ch_set_idx = rtw_chset_search_ch(rfctl->channel_set, ss->ch[ss->channel_idx - 1].hw_value);
+				if (ch_set_idx != -1 && rfctl->channel_set[ch_set_idx].hidden_bss_cnt
+					&& (!IS_DFS_SLAVE_WITH_RD(rfctl)
+						|| rtw_rfctl_dfs_domain_unknown(rfctl)
+						|| !CH_IS_NON_OCP(&rfctl->channel_set[ch_set_idx]))
+				) {
+					ss->channel_idx--;
+					ss->force_ssid_scan = 1;
+				}
+			} else
+				ss->force_ssid_scan = 0;
+		}
+
+		if (ss->channel_idx < ss->ch_num) {
+			ch = &ss->ch[ss->channel_idx];
+			scan_ch = ch->hw_value;
+
+#if defined(CONFIG_RTW_ACS) && defined(CONFIG_RTW_ACS_DBG)
+			if (IS_ACS_ENABLE(padapter) && rtw_is_acs_passiv_scan(padapter))
+				scan_type = SCAN_PASSIVE;
+			else
+#endif /* CONFIG_RTW_ACS */
+				scan_type = (ch->flags & RTW_IEEE80211_CHAN_PASSIVE_SCAN) ? SCAN_PASSIVE : SCAN_ACTIVE;
+		}
+	}
+
+	if (scan_ch != 0) {
+		next_state = SCAN_PROCESS;
+
+#ifdef CONFIG_SCAN_BACKOP
+		if (backop_flags) {
+			if (ss->scan_cnt < ss->scan_cnt_max)
+				ss->scan_cnt++;
+			else {
+				mlmeext_assign_scan_backop_flags(pmlmeext, backop_flags);
+				next_state = SCAN_BACKING_OP;
+			}
+		}
+#endif
+
+	} else if (rtw_p2p_findphase_ex_is_needed(pwdinfo)) {
+		/* go p2p listen */
+		next_state = SCAN_TO_P2P_LISTEN;
+
+#ifdef CONFIG_ANTENNA_DIVERSITY
+	} else if (rtw_hal_antdiv_before_linked(padapter)) {
+		/* go sw antdiv before link */
+		next_state = SCAN_SW_ANTDIV_BL;
+#endif
+	} else {
+		next_state = SCAN_COMPLETE;
+
+#if defined(DBG_SCAN_SW_ANTDIV_BL)
+		{
+			struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
+			int i;
+			bool is_linked = _FALSE;
+
+			for (i = 0; i < dvobj->iface_nums; i++) {
+				if (rtw_linked_check(dvobj->padapters[i]))
+					is_linked = _TRUE;
+			}
+
+			if (!is_linked) {
+				static bool fake_sw_antdiv_bl_state = 0;
+
+				if (fake_sw_antdiv_bl_state == 0) {
+					next_state = SCAN_SW_ANTDIV_BL;
+					fake_sw_antdiv_bl_state = 1;
+				} else
+					fake_sw_antdiv_bl_state = 0;
+			}
+		}
+#endif /* defined(DBG_SCAN_SW_ANTDIV_BL) */
+	}
+
+#ifdef CONFIG_SCAN_BACKOP
+	if (next_state != SCAN_PROCESS)
+		ss->scan_cnt = 0;
+#endif
+
+#ifdef DBG_FIXED_CHAN
+	if (pmlmeext->fixed_chan != 0xff && next_state == SCAN_PROCESS)
+		scan_ch = pmlmeext->fixed_chan;
+#endif
+
+	if (ch)
+		*ch = scan_ch;
+	if (type)
+		*type = scan_type;
+
+	return next_state;
+}
+
 #endif /* HOST_MLME_EXT_SCAN_TEST || ((!CONFIG_RUST || !CONFIG_RUST_MLME_EXT_SCAN) && ...) */
