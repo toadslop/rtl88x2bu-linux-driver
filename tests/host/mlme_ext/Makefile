@@ -7,6 +7,7 @@ MLME_EXT_REST_SRC := $(CORE)/rtw_mlme_ext_rest.c
 RF_REST_SRC := $(CORE)/rtw_rf_rest.c
 RUST_MLME_EXT_REST := $(ROOT)/rust/rtw_mlme_ext_rest.rs
 RUST_MLME_EXT_MGNT_ATTRIB := $(ROOT)/rust/rtw_mlme_ext_mgnt_attrib.rs
+RUST_MLME_EXT_SCAN := $(ROOT)/rust/rtw_mlme_ext_scan.rs
 HOST_JSON := ../crypto/host_vector_json.c
 SHIM := host_mlme_ext_shim.c
 MGNT_SHIM := host_mlme_ext_mgnt_attrib_shim.c
@@ -37,11 +38,11 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-format-truncation -O2
           -DHOST_MLME_EXT_TEST -DHOST_RF_TEST -DCONFIG_DFS_MASTER
 
 .PHONY: all test test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust \
-	test-peer-alive test-scan-decision clean
+	test-peer-alive test-scan-decision test-scan-decision-rust clean
 
 all: test
 
-test: test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust test-peer-alive test-scan-decision
+test: test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust test-peer-alive test-scan-decision test-scan-decision-rust
 
 test-c: test_chset
 	./test_chset chset_vectors.json
@@ -96,8 +97,19 @@ test-scan-decision: test_scan_decision
 test_scan_decision: test_scan_decision.c $(MLME_EXT_REST_SRC) $(SCAN_SHIM)
 	$(CC) $(SCAN_CFLAGS) -o $@ test_scan_decision.c $(MLME_EXT_REST_SRC) $(SCAN_SHIM)
 
+librust_mlme_ext_scan.a: $(RUST_MLME_EXT_SCAN)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on \
+		--cfg host_mlme_ext_scan_test --cfg config_scan_backop \
+		--crate-type staticlib $(RUST_MLME_EXT_SCAN) -o $@
+
+test-scan-decision-rust: test_scan_decision_rust
+	./test_scan_decision_rust
+
+test_scan_decision_rust: test_scan_decision.c librust_mlme_ext_scan.a $(SCAN_SHIM)
+	$(CC) $(SCAN_CFLAGS) -o $@ test_scan_decision.c $(SCAN_SHIM) librust_mlme_ext_scan.a
+
 clean:
 	rm -f test_chset test_chset_rust librust_mlme_ext_rest.a \
 		test_mgnt_attrib test_mgnt_attrib_rust librust_mlme_ext_mgnt_attrib.a \
 		test_peer_alive test_peer_alive_rust librust_mlme_ext_peer_alive.a \
-		test_scan_decision
+		test_scan_decision test_scan_decision_rust librust_mlme_ext_scan.a
