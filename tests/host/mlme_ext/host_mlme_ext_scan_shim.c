@@ -45,3 +45,53 @@ u8 rtw_rfctl_dfs_domain_unknown(struct rf_ctl_t *rfctl)
 	(void)rfctl;
 	return host_dfs_unknown;
 }
+
+systime rtw_rust_scan_last_scan_time(_adapter *a)
+{
+	return a->mlmeextpriv.last_scan_time;
+}
+
+void rtw_rust_scan_set_last_scan_time(_adapter *a, systime t)
+{
+	a->mlmeextpriv.last_scan_time = t;
+}
+
+u32 rtw_rust_scan_wireless_mode(_adapter *a)
+{
+	return a->registrypriv.wireless_mode;
+}
+
+u16 rtw_rust_scan_ch_ms(_adapter *a)
+{
+	return a->mlmeextpriv.sitesurvey_res.scan_ch_ms;
+}
+
+u16 rtw_rust_scan_duration(_adapter *a)
+{
+	return a->mlmeextpriv.sitesurvey_res.duration;
+}
+
+u8 rtw_rust_scan_cnt_max(_adapter *a)
+{
+	return a->mlmeextpriv.sitesurvey_res.scan_cnt_max;
+}
+
+u16 rtw_rust_scan_backop_ms(_adapter *a)
+{
+	return a->mlmeextpriv.sitesurvey_res.backop_ms;
+}
+
+void rtw_rust_scan_set_timeout_ms(_adapter *a, u32 ms)
+{
+	a->mlmeextpriv.sitesurvey_res.scan_timeout_ms = ms;
+}
+
+u8 rtw_rust_scan_backop_flags_sta(_adapter *a)
+{
+	return a->mlmeextpriv.sitesurvey_res.backop_flags_sta;
+}
+
+u8 rtw_rust_scan_backop_flags_ap(_adapter *a)
+{
+	return a->mlmeextpriv.sitesurvey_res.backop_flags_ap;
+}

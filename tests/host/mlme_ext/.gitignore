@@ -8,6 +8,8 @@ test_mgnt_attrib_kernel_layout
 librust_mlme_ext_mgnt_attrib_kernel.a
 test_peer_alive
 test_scan_decision
+test_scan_decision_rust
+librust_mlme_ext_scan.a
 test_pick_ch
 test_pick_ch_rust
 librust_mlme_ext_pick_ch.a
