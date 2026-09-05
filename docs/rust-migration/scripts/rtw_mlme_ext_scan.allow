@@ -1,0 +1,12 @@
+# L1 allowlist for W3-70 PR4: Rust FFI helpers remain in core/rtw_mlme_ext_rest.c.
+drop rtw_rust_scan_last_scan_time
+drop rtw_rust_scan_set_last_scan_time
+drop rtw_rust_scan_wireless_mode
+drop rtw_rust_scan_ch_ms
+drop rtw_rust_scan_duration
+drop rtw_rust_scan_cnt_max
+drop rtw_rust_scan_backop_ms
+drop rtw_rust_scan_set_timeout_ms
+drop rtw_rust_scan_backop_flags_sta
+drop rtw_rust_scan_backop_flags_ap
+drop rtw_rust_scan_backop_flags_mesh
