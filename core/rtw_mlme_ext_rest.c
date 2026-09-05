@@ -720,6 +720,13 @@ struct sta_priv *rtw_rust_mgnt_stapriv(_adapter *padapter)
 	return &padapter->stapriv;
 }
 
+u32 rtw_rust_mgnt_txdesc_offset(void)
+{
+	/* USB 8822B: TXDESC_SIZE (48) + PACKET_OFFSET_SZ (8) = 56.
+	 * Host L2 uses TXDESC_SIZE 40 so TXDESC_OFFSET is 48 there. */
+	return TXDESC_OFFSET;
+}
+
 #ifdef CONFIG_P2P_PS_NOA_USE_MACID_SLEEP
 u8 rtw_rust_mgnt_p2p_noa_override(_adapter *padapter, u8 *mac_id, u8 *qsel)
 {
