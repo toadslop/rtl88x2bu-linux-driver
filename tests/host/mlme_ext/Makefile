@@ -39,20 +39,12 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-format-truncation -O2
           -DHOST_MLME_EXT_TEST -DHOST_RF_TEST -DCONFIG_DFS_MASTER
 
 .PHONY: all test test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust \
-<<<<<<< HEAD
-	test-peer-alive test-scan-decision test-pick-ch clean
-
-all: test
-
-test: test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust test-peer-alive test-scan-decision test-pick-ch
-=======
-	test-mgnt-attrib-kernel-layout test-peer-alive test-scan-decision clean
+	test-mgnt-attrib-kernel-layout test-peer-alive test-scan-decision test-pick-ch clean
 
 all: test
 
 test: test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust \
-	test-mgnt-attrib-kernel-layout test-peer-alive test-scan-decision
->>>>>>> 844560a (fix(mlme): use kernel USB TXDESC_OFFSET for W3-68 mgnt attrib)
+	test-mgnt-attrib-kernel-layout test-peer-alive test-scan-decision test-pick-ch
 
 test-c: test_chset
 	./test_chset chset_vectors.json
