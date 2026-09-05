@@ -895,10 +895,18 @@ u32 rtw_scan_timeout_decision(_adapter *padapter)
 	if (ss->duration)
 		scan_ms = ss->duration;
 	else
+#if defined(CONFIG_RTW_ACS) && defined(CONFIG_RTW_ACS_DBG)
+	if (IS_ACS_ENABLE(padapter) && rtw_is_acs_st_valid(padapter))
+		scan_ms = rtw_acs_get_adv_st(padapter);
+	else
+#endif /* CONFIG_RTW_ACS */
 		scan_ms = ss->scan_ch_ms;
 
 	ss->scan_timeout_ms =
 		(scan_ms * max_chan_num) + back_op_times + SCANNING_TIMEOUT_EX;
+#ifdef DBG_SITESURVEY
+	RTW_INFO("%s , scan_timeout_ms = %d (ms)\n", __func__, ss->scan_timeout_ms);
+#endif /* DBG_SITESURVEY */
 	return ss->scan_timeout_ms;
 }
 
