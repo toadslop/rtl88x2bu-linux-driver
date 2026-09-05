@@ -3,3 +3,6 @@ test_chset_rust
 librust_mlme_ext_rest.a
 test_peer_alive
 test_scan_decision
+test_scan_decision_rust
+librust_mlme_ext_scan.a
+test_scan_c
