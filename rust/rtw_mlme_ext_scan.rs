@@ -28,6 +28,9 @@ const SS_BACKOP_EN_NL: U8 = 2;
 const SUPPORTED_24G: U32 = (1 << 0) | (1 << 1) | (1 << 3);
 const SUPPORTED_5G: U32 = (1 << 2) | (1 << 4) | (1 << 6);
 const SCAN_SPARSE_CH_NUM_INVALID: U8 = 255;
+const RTW_SCAN_SPARSE_CH_NUM_MIRACAST: U8 = 1;
+const RTW_SCAN_SPARSE_CH_NUM_BG: U8 = 4;
+const RTW_SCAN_SPARSE_BG_INTERVAL_MS: U32 = 12000;
 const SCANNING_TIMEOUT_EX: U32 = 2000;
 const MAX_CHANNEL_NUM: U8 = 59;
 const MAX_CHANNEL_NUM_2G: U8 = 14;
@@ -120,14 +123,16 @@ pub extern "C" fn rtw_scan_sparse(a: Adapter, ch: *mut RtwIeee80211Channel, n: U
         }
     }
     let mut cap = SCAN_SPARSE_CH_NUM_INVALID;
+    #[cfg(config_scan_sparse_miracast)]
     if unsafe { rtw_mi_check_miracast_enabled(a) && rtw_mi_busy_traffic_check(a) } {
-        cap = 1;
+        cap = RTW_SCAN_SPARSE_CH_NUM_MIRACAST;
     }
-    if pass_ms(last) > 12000 {
+    #[cfg(config_scan_sparse_bg)]
+    if pass_ms(last) > RTW_SCAN_SPARSE_BG_INTERVAL_MS {
         cap = if cap == SCAN_SPARSE_CH_NUM_INVALID {
-            4
+            RTW_SCAN_SPARSE_CH_NUM_BG
         } else {
-            core::cmp::min(cap, 4)
+            core::cmp::min(cap, RTW_SCAN_SPARSE_CH_NUM_BG)
         };
     }
     if cap == SCAN_SPARSE_CH_NUM_INVALID {
@@ -178,11 +183,14 @@ pub extern "C" fn rtw_scan_backop_decision(a: Adapter) -> U8 {
     }
     let mut out = 0u8;
     let fs = unsafe { rtw_rust_scan_backop_flags_sta(a) };
-    if (m.ld_sta_num != 0 && fs & SS_BACKOP_EN != 0) || (m.sta_num != 0 && fs & SS_BACKOP_EN_NL != 0) {
+    if (m.ld_sta_num != 0 && fs & SS_BACKOP_EN != 0)
+        || (m.sta_num != 0 && fs & SS_BACKOP_EN_NL != 0)
+    {
         out |= fs;
     }
     let fa = unsafe { rtw_rust_scan_backop_flags_ap(a) };
-    if (m.ld_ap_num != 0 && fa & SS_BACKOP_EN != 0) || (m.ap_num != 0 && fa & SS_BACKOP_EN_NL != 0) {
+    if (m.ld_ap_num != 0 && fa & SS_BACKOP_EN != 0) || (m.ap_num != 0 && fa & SS_BACKOP_EN_NL != 0)
+    {
         out |= fa;
     }
     out

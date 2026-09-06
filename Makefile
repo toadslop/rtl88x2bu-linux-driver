@@ -2618,7 +2618,7 @@ endif
 rustflags-y += --cfg rust_mlme_ext_rest
 rustflags-y += --cfg rust_mlme_ext_mgnt_attrib
 rustflags-y += --cfg rust_mlme_ext_peer_alive
-rustflags-y += --cfg rust_mlme_ext_scan --cfg config_scan_backop
+rustflags-y += --cfg rust_mlme_ext_scan --cfg config_scan_backop --cfg config_scan_sparse_miracast
 rustflags-y += --cfg config_rtw_mgmt_queue
 rustflags-y += --cfg config_p2p_ps_noa_use_macid_sleep
 ifneq ($(filter -DCONFIG_CONCURRENT_MODE,$(ccflags-y)),)
