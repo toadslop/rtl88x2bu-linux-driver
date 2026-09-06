@@ -114,8 +114,7 @@ fn pick_ch_impl(a: Adapter, ch_out: &mut U8, type_out: &mut c_int) -> U8 {
     let mut backop_flags: U8 = 0;
 
     let p2p_op = unsafe {
-        rtw_rust_pick_ch_rx_scan_op_ch_only(a) != 0
-            || rtw_rust_pick_ch_p2p_scan_op_ch_only(a) != 0
+        rtw_rust_pick_ch_rx_scan_op_ch_only(a) != 0 || rtw_rust_pick_ch_p2p_scan_op_ch_only(a) != 0
     };
     let p2p_social_path = unsafe { rtw_rust_pick_ch_p2p_social(a) != 0 };
 
@@ -157,16 +156,20 @@ fn pick_ch_impl(a: Adapter, ch_out: &mut U8, type_out: &mut c_int) -> U8 {
                     & RTW_IEEE80211_CHAN_PASSIVE_SCAN)
                     != 0
             {
-                let prev =
-                    unsafe { rtw_rust_pick_ch_ch_hw_value(a, channel_idx - 1) as U32 };
+                let prev = unsafe { rtw_rust_pick_ch_ch_hw_value(a, channel_idx - 1) as U32 };
                 let ch_set = unsafe { rtw_rust_pick_ch_channel_set(a) };
                 let ch_set_idx = unsafe { rtw_chset_search_ch(ch_set, prev) };
                 if ch_set_idx != -1
                     && unsafe { rtw_rust_pick_ch_hidden_bss_cnt(a, ch_set_idx) } != 0
                     && (unsafe { rtw_rust_pick_ch_dfs_slave_with_rd(a) } == 0
+<<<<<<< HEAD
                         || unsafe {
                             rtw_rfctl_dfs_domain_unknown(rtw_rust_pick_ch_rfctl(a))
                         } != 0
+=======
+                        || unsafe { rtw_rfctl_dfs_domain_unknown(rtw_rust_pick_ch_channel_set(a)) }
+                            != 0
+>>>>>>> a2802a5 (style(mlme_ext): rustfmt rtw_mlme_ext_pick_ch.rs)
                         || !ch_is_non_ocp(a, ch_set_idx))
                 {
                     unsafe {
@@ -184,8 +187,7 @@ fn pick_ch_impl(a: Adapter, ch_out: &mut U8, type_out: &mut c_int) -> U8 {
         let channel_idx = unsafe { rtw_rust_pick_ch_channel_idx(a) };
         let ch_num = unsafe { rtw_rust_pick_ch_ch_num(a) };
         if channel_idx < ch_num as c_int {
-            scan_ch =
-                unsafe { rtw_rust_pick_ch_ch_hw_value(a, channel_idx) as U8 };
+            scan_ch = unsafe { rtw_rust_pick_ch_ch_hw_value(a, channel_idx) as U8 };
             scan_type = if (unsafe { rtw_rust_pick_ch_ch_flags(a, channel_idx) }
                 & RTW_IEEE80211_CHAN_PASSIVE_SCAN)
                 != 0
