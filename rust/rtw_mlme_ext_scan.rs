@@ -68,6 +68,12 @@ extern "C" {
     fn rtw_rust_scan_set_timeout_ms(a: Adapter, ms: U32);
     fn rtw_rust_scan_backop_flags_sta(a: Adapter) -> U8;
     fn rtw_rust_scan_backop_flags_ap(a: Adapter) -> U8;
+    fn rtw_rust_scan_acs_adv_ms(a: Adapter) -> U16;
+}
+
+#[cfg(config_rtw_mesh)]
+extern "C" {
+    fn rtw_rust_scan_backop_flags_mesh(a: Adapter) -> U8;
 }
 
 #[cfg(host_mlme_ext_scan_test)]
@@ -193,6 +199,15 @@ pub extern "C" fn rtw_scan_backop_decision(a: Adapter) -> U8 {
     {
         out |= fa;
     }
+    #[cfg(config_rtw_mesh)]
+    {
+        let fm = unsafe { rtw_rust_scan_backop_flags_mesh(a) };
+        if (m.ld_mesh_num != 0 && fm & SS_BACKOP_EN != 0)
+            || (m.mesh_num != 0 && fm & SS_BACKOP_EN_NL != 0)
+        {
+            out |= fm;
+        }
+    }
     out
 }
 
@@ -216,7 +231,23 @@ pub extern "C" fn rtw_scan_timeout_decision(a: Adapter) -> U32 {
     } else {
         0
     };
-    let scan_ms = if dur != 0 { dur } else { ch_ms };
+    let scan_ms = if dur != 0 {
+        dur
+    } else {
+        #[cfg(all(config_rtw_acs, config_rtw_acs_dbg))]
+        {
+            let acs_ms = unsafe { rtw_rust_scan_acs_adv_ms(a) };
+            if acs_ms != 0 {
+                acs_ms
+            } else {
+                ch_ms
+            }
+        }
+        #[cfg(not(all(config_rtw_acs, config_rtw_acs_dbg)))]
+        {
+            ch_ms
+        }
+    };
     let t = scan_ms as U32 * max_ch as U32 + back + SCANNING_TIMEOUT_EX;
     unsafe {
         rtw_rust_scan_set_timeout_ms(a, t);

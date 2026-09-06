@@ -2619,6 +2619,15 @@ rustflags-y += --cfg rust_mlme_ext_rest
 rustflags-y += --cfg rust_mlme_ext_mgnt_attrib
 rustflags-y += --cfg rust_mlme_ext_peer_alive
 rustflags-y += --cfg rust_mlme_ext_scan --cfg config_scan_backop --cfg config_scan_sparse_miracast
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTW_MESH' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_rtw_mesh
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTW_ACS' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_rtw_acs
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTW_ACS_DBG' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_rtw_acs_dbg
+endif
 rustflags-y += --cfg config_rtw_mgmt_queue
 rustflags-y += --cfg config_p2p_ps_noa_use_macid_sleep
 ifneq ($(filter -DCONFIG_CONCURRENT_MODE,$(ccflags-y)),)
