@@ -10,6 +10,8 @@ test_peer_alive
 test_scan_decision
 test_scan_decision_rust
 librust_mlme_ext_scan.a
+test_scan_kernel_layout
+librust_mlme_ext_scan_kernel.a
 test_pick_ch
 test_pick_ch_rust
 librust_mlme_ext_pick_ch.a

@@ -739,6 +739,34 @@ u8 rtw_rust_scan_backop_flags_ap(_adapter *adapter)
 	return mlmeext_scan_backop_flags_ap(&adapter->mlmeextpriv);
 }
 
+/*
+ * Kernel `struct mi_state` is not the 6-byte host stub: `lg_sta_num` sits
+ * between `ld_sta_num` and the AP fields, and `rtw_mi_status` memsets
+ * `sizeof(struct mi_state)` (~16+ bytes). Hand the counts out so Rust never
+ * overlays the stub.
+ */
+void rtw_rust_scan_mi_counts(_adapter *adapter,
+			     u8 *sta_num, u8 *ld_sta_num,
+			     u8 *ap_num, u8 *ld_ap_num,
+			     u8 *mesh_num, u8 *ld_mesh_num)
+{
+	struct mi_state mstate;
+
+	rtw_mi_status(adapter, &mstate);
+	if (sta_num)
+		*sta_num = MSTATE_STA_NUM(&mstate);
+	if (ld_sta_num)
+		*ld_sta_num = MSTATE_STA_LD_NUM(&mstate);
+	if (ap_num)
+		*ap_num = MSTATE_AP_NUM(&mstate);
+	if (ld_ap_num)
+		*ld_ap_num = MSTATE_AP_LD_NUM(&mstate);
+	if (mesh_num)
+		*mesh_num = MSTATE_MESH_NUM(&mstate);
+	if (ld_mesh_num)
+		*ld_mesh_num = MSTATE_MESH_LD_NUM(&mstate);
+}
+
 #ifdef CONFIG_RTW_MESH
 u8 rtw_rust_scan_backop_flags_mesh(_adapter *adapter)
 {
