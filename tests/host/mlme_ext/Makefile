@@ -42,13 +42,15 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-format-truncation -O2
 
 .PHONY: all test test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust \
 	test-mgnt-attrib-kernel-layout test-peer-alive test-scan-decision \
-	test-scan-decision-rust test-pick-ch test-pick-ch-rust clean
+	test-scan-decision-rust test-scan-kernel-layout test-pick-ch \
+	test-pick-ch-rust clean
 
 all: test
 
 test: test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust \
 	test-mgnt-attrib-kernel-layout test-peer-alive test-scan-decision \
-	test-scan-decision-rust test-pick-ch test-pick-ch-rust
+	test-scan-decision-rust test-scan-kernel-layout test-pick-ch \
+	test-pick-ch-rust
 
 test-c: test_chset
 	./test_chset chset_vectors.json
@@ -130,6 +132,19 @@ test-scan-decision-rust: test_scan_decision_rust
 test_scan_decision_rust: test_scan_decision.c librust_mlme_ext_scan.a $(SCAN_SHIM)
 	$(CC) $(SCAN_CFLAGS) -o $@ test_scan_decision.c $(SCAN_SHIM) librust_mlme_ext_scan.a
 
+# Kernel path: --cfg rust_mlme_ext_scan (no host overlay of packed mi_state).
+librust_mlme_ext_scan_kernel.a: $(RUST_MLME_EXT_SCAN)
+	$(RUSTC) --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg rust_mlme_ext_scan --cfg config_scan_backop \
+		--crate-type staticlib $(RUST_MLME_EXT_SCAN) -o $@
+
+test-scan-kernel-layout: test_scan_kernel_layout
+	./test_scan_kernel_layout
+
+test_scan_kernel_layout: test_scan_kernel_layout.c librust_mlme_ext_scan_kernel.a
+	$(CC) -Wall -Wextra -Werror -O2 -o $@ test_scan_kernel_layout.c \
+		librust_mlme_ext_scan_kernel.a -lpthread -ldl
+
 test-pick-ch: test_pick_ch
 	./test_pick_ch
 
@@ -154,4 +169,5 @@ clean:
 		test_mgnt_attrib_kernel_layout librust_mlme_ext_mgnt_attrib_kernel.a \
 		test_peer_alive test_peer_alive_rust librust_mlme_ext_peer_alive.a \
 		test_scan_decision test_scan_decision_rust librust_mlme_ext_scan.a \
+		test_scan_kernel_layout librust_mlme_ext_scan_kernel.a \
 		test_pick_ch test_pick_ch_rust librust_mlme_ext_pick_ch.a

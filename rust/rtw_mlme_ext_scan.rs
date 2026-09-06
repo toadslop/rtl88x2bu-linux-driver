@@ -44,6 +44,11 @@ pub struct RtwIeee80211Channel {
     pub flags: U32,
 }
 
+/// Host L2 `mi_state` is a 6-byte packed stub. Kernel `struct mi_state`
+/// inserts `lg_sta_num` (and optional TDLS/AP/mesh/cfg80211/P2P fields)
+/// and `rtw_mi_status` memsets the full sizeof — overlaying the stub on
+/// the kernel path is a stack smash plus wrong AP/mesh counts.
+#[cfg(host_mlme_ext_scan_test)]
 #[repr(C)]
 struct MiState {
     sta_num: U8,
@@ -57,7 +62,6 @@ struct MiState {
 extern "C" {
     fn rtw_mi_busy_traffic_check(a: Adapter) -> bool;
     fn rtw_mi_check_miracast_enabled(a: Adapter) -> bool;
-    fn rtw_mi_status(a: Adapter, m: *mut MiState);
     fn rtw_rust_scan_last_scan_time(a: Adapter) -> Systime;
     fn rtw_rust_scan_set_last_scan_time(a: Adapter, t: Systime);
     fn rtw_rust_scan_wireless_mode(a: Adapter) -> U32;
@@ -69,6 +73,25 @@ extern "C" {
     fn rtw_rust_scan_backop_flags_sta(a: Adapter) -> U8;
     fn rtw_rust_scan_backop_flags_ap(a: Adapter) -> U8;
     fn rtw_rust_scan_acs_adv_ms(a: Adapter) -> U16;
+}
+
+#[cfg(host_mlme_ext_scan_test)]
+extern "C" {
+    fn rtw_mi_status(a: Adapter, m: *mut MiState);
+}
+
+/* Kernel path: C owns `struct mi_state` stride via `sizeof` / `MSTATE_*`. */
+#[cfg(rust_mlme_ext_scan)]
+extern "C" {
+    fn rtw_rust_scan_mi_counts(
+        a: Adapter,
+        sta_num: *mut U8,
+        ld_sta_num: *mut U8,
+        ap_num: *mut U8,
+        ld_ap_num: *mut U8,
+        mesh_num: *mut U8,
+        ld_mesh_num: *mut U8,
+    );
 }
 
 #[cfg(config_rtw_mesh)]
@@ -171,42 +194,86 @@ pub extern "C" fn rtw_scan_sparse(a: Adapter, ch: *mut RtwIeee80211Channel, n: U
     k as U8
 }
 
+fn mi_counts(a: Adapter) -> (U8, U8, U8, U8, U8, U8) {
+    #[cfg(host_mlme_ext_scan_test)]
+    {
+        let mut m = MiState {
+            sta_num: 0,
+            ld_sta_num: 0,
+            ap_num: 0,
+            ld_ap_num: 0,
+            mesh_num: 0,
+            ld_mesh_num: 0,
+        };
+        unsafe {
+            rtw_mi_status(a, &mut m);
+        }
+        (
+            m.sta_num,
+            m.ld_sta_num,
+            m.ap_num,
+            m.ld_ap_num,
+            m.mesh_num,
+            m.ld_mesh_num,
+        )
+    }
+    #[cfg(rust_mlme_ext_scan)]
+    {
+        let mut sta_num = 0u8;
+        let mut ld_sta_num = 0u8;
+        let mut ap_num = 0u8;
+        let mut ld_ap_num = 0u8;
+        let mut mesh_num = 0u8;
+        let mut ld_mesh_num = 0u8;
+        unsafe {
+            rtw_rust_scan_mi_counts(
+                a,
+                &mut sta_num,
+                &mut ld_sta_num,
+                &mut ap_num,
+                &mut ld_ap_num,
+                &mut mesh_num,
+                &mut ld_mesh_num,
+            );
+        }
+        (
+            sta_num,
+            ld_sta_num,
+            ap_num,
+            ld_ap_num,
+            mesh_num,
+            ld_mesh_num,
+        )
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn rtw_scan_backop_decision(a: Adapter) -> U8 {
     if a.is_null() {
         return 0;
     }
-    let mut m = MiState {
-        sta_num: 0,
-        ld_sta_num: 0,
-        ap_num: 0,
-        ld_ap_num: 0,
-        mesh_num: 0,
-        ld_mesh_num: 0,
-    };
-    unsafe {
-        rtw_mi_status(a, &mut m);
-    }
+    let (sta_num, ld_sta_num, ap_num, ld_ap_num, mesh_num, ld_mesh_num) = mi_counts(a);
     let mut out = 0u8;
     let fs = unsafe { rtw_rust_scan_backop_flags_sta(a) };
-    if (m.ld_sta_num != 0 && fs & SS_BACKOP_EN != 0)
-        || (m.sta_num != 0 && fs & SS_BACKOP_EN_NL != 0)
-    {
+    if (ld_sta_num != 0 && fs & SS_BACKOP_EN != 0) || (sta_num != 0 && fs & SS_BACKOP_EN_NL != 0) {
         out |= fs;
     }
     let fa = unsafe { rtw_rust_scan_backop_flags_ap(a) };
-    if (m.ld_ap_num != 0 && fa & SS_BACKOP_EN != 0) || (m.ap_num != 0 && fa & SS_BACKOP_EN_NL != 0)
-    {
+    if (ld_ap_num != 0 && fa & SS_BACKOP_EN != 0) || (ap_num != 0 && fa & SS_BACKOP_EN_NL != 0) {
         out |= fa;
     }
     #[cfg(config_rtw_mesh)]
     {
         let fm = unsafe { rtw_rust_scan_backop_flags_mesh(a) };
-        if (m.ld_mesh_num != 0 && fm & SS_BACKOP_EN != 0)
-            || (m.mesh_num != 0 && fm & SS_BACKOP_EN_NL != 0)
+        if (ld_mesh_num != 0 && fm & SS_BACKOP_EN != 0)
+            || (mesh_num != 0 && fm & SS_BACKOP_EN_NL != 0)
         {
             out |= fm;
         }
+    }
+    #[cfg(not(config_rtw_mesh))]
+    {
+        let _ = (mesh_num, ld_mesh_num);
     }
     out
 }
