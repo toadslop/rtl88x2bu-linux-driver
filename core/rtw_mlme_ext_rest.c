@@ -784,6 +784,210 @@ u16 rtw_rust_scan_acs_adv_ms(_adapter *adapter)
 }
 #endif /* CONFIG_RUST && CONFIG_RUST_MLME_EXT_SCAN */
 
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_EXT_PICK_CH)
+#include <drv_types.h>
+
+u8 rtw_rust_pick_ch_scan_abort(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.scan_abort;
+}
+
+void rtw_rust_pick_ch_set_channel_idx(_adapter *adapter, int idx)
+{
+	adapter->mlmeextpriv.sitesurvey_res.channel_idx = idx;
+}
+
+int rtw_rust_pick_ch_channel_idx(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.channel_idx;
+}
+
+u8 rtw_rust_pick_ch_force_ssid_scan(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.force_ssid_scan;
+}
+
+void rtw_rust_pick_ch_set_force_ssid_scan(_adapter *adapter, u8 v)
+{
+	adapter->mlmeextpriv.sitesurvey_res.force_ssid_scan = v;
+}
+
+u8 rtw_rust_pick_ch_ssid_num(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.ssid_num;
+}
+
+u8 rtw_rust_pick_ch_ch_num(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.ch_num;
+}
+
+u16 rtw_rust_pick_ch_ch_hw_value(_adapter *adapter, int idx)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.ch[idx].hw_value;
+}
+
+u32 rtw_rust_pick_ch_ch_flags(_adapter *adapter, int idx)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.ch[idx].flags;
+}
+
+u8 rtw_rust_pick_ch_scan_cnt(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.scan_cnt;
+}
+
+void rtw_rust_pick_ch_set_scan_cnt(_adapter *adapter, u8 v)
+{
+	adapter->mlmeextpriv.sitesurvey_res.scan_cnt = v;
+}
+
+u8 rtw_rust_pick_ch_scan_cnt_max(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.scan_cnt_max;
+}
+
+void rtw_rust_pick_ch_set_backop_flags(_adapter *adapter, u8 v)
+{
+	adapter->mlmeextpriv.sitesurvey_res.backop_flags = v;
+}
+
+RT_CHANNEL_INFO *rtw_rust_pick_ch_channel_set(_adapter *adapter)
+{
+	return adapter_to_rfctl(adapter)->channel_set;
+}
+
+u8 rtw_rust_pick_ch_chset_flags(_adapter *adapter, int idx)
+{
+	return adapter_to_rfctl(adapter)->channel_set[idx].flags;
+}
+
+u8 rtw_rust_pick_ch_hidden_bss_cnt(_adapter *adapter, int idx)
+{
+	return adapter_to_rfctl(adapter)->channel_set[idx].hidden_bss_cnt;
+}
+
+systime rtw_rust_pick_ch_non_ocp_end_time(_adapter *adapter, int idx)
+{
+	return adapter_to_rfctl(adapter)->channel_set[idx].non_ocp_end_time;
+}
+
+u8 rtw_rust_pick_ch_dfs_slave_with_rd(_adapter *adapter)
+{
+	return IS_DFS_SLAVE_WITH_RD(adapter_to_rfctl(adapter));
+}
+
+struct rf_ctl_t *rtw_rust_pick_ch_rfctl(_adapter *adapter)
+{
+	return adapter_to_rfctl(adapter);
+}
+
+#ifdef CONFIG_P2P
+u8 rtw_rust_pick_ch_p2p_state_not_none(_adapter *adapter)
+{
+	return !rtw_p2p_chk_state(&adapter->wdinfo, P2P_STATE_NONE);
+}
+
+void rtw_rust_pick_ch_p2p_findphase_ex_max(_adapter *adapter)
+{
+	rtw_p2p_findphase_ex_set(&adapter->wdinfo, P2P_FINDPHASE_EX_MAX);
+}
+#endif /* CONFIG_P2P */
+
+#ifdef CONFIG_P2P
+u8 rtw_rust_pick_ch_rx_scan_op_ch_only(_adapter *adapter)
+{
+	return adapter->wdinfo.rx_invitereq_info.scan_op_ch_only;
+}
+
+u8 rtw_rust_pick_ch_p2p_scan_op_ch_only(_adapter *adapter)
+{
+	return adapter->wdinfo.p2p_info.scan_op_ch_only;
+}
+
+u8 rtw_rust_pick_ch_rx_op_ch(_adapter *adapter, int idx)
+{
+	return adapter->wdinfo.rx_invitereq_info.operation_ch[idx];
+}
+
+u8 rtw_rust_pick_ch_p2p_op_ch(_adapter *adapter, int idx)
+{
+	return adapter->wdinfo.p2p_info.operation_ch[idx];
+}
+
+u8 rtw_rust_pick_ch_social_chan(_adapter *adapter, int idx)
+{
+	return adapter->wdinfo.social_chan[idx];
+}
+
+u8 rtw_rust_pick_ch_p2p_social(_adapter *adapter)
+{
+	return rtw_p2p_findphase_ex_is_social(&adapter->wdinfo);
+}
+
+u8 rtw_rust_pick_ch_p2p_needed(_adapter *adapter)
+{
+	return rtw_p2p_findphase_ex_is_needed(&adapter->wdinfo);
+}
+#else
+u8 rtw_rust_pick_ch_p2p_state_not_none(_adapter *adapter)
+{
+	(void)adapter;
+	return 0;
+}
+
+void rtw_rust_pick_ch_p2p_findphase_ex_max(_adapter *adapter)
+{
+	(void)adapter;
+}
+
+u8 rtw_rust_pick_ch_rx_scan_op_ch_only(_adapter *adapter)
+{
+	(void)adapter;
+	return 0;
+}
+
+u8 rtw_rust_pick_ch_p2p_scan_op_ch_only(_adapter *adapter)
+{
+	(void)adapter;
+	return 0;
+}
+
+u8 rtw_rust_pick_ch_rx_op_ch(_adapter *adapter, int idx)
+{
+	(void)adapter;
+	(void)idx;
+	return 0;
+}
+
+u8 rtw_rust_pick_ch_p2p_op_ch(_adapter *adapter, int idx)
+{
+	(void)adapter;
+	(void)idx;
+	return 0;
+}
+
+u8 rtw_rust_pick_ch_social_chan(_adapter *adapter, int idx)
+{
+	(void)adapter;
+	(void)idx;
+	return 0;
+}
+
+u8 rtw_rust_pick_ch_p2p_social(_adapter *adapter)
+{
+	(void)adapter;
+	return 0;
+}
+
+u8 rtw_rust_pick_ch_p2p_needed(_adapter *adapter)
+{
+	(void)adapter;
+	return 0;
+}
+#endif /* CONFIG_P2P */
+#endif /* CONFIG_RUST && CONFIG_RUST_MLME_EXT_PICK_CH */
+
 #if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_EXT_MGNT_ATTRIB)
 #include <drv_types.h>
 #include <hal_data.h>
