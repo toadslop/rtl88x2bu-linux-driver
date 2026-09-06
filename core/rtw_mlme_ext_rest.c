@@ -745,6 +745,15 @@ u8 rtw_rust_scan_backop_flags_mesh(_adapter *adapter)
 	return mlmeext_scan_backop_flags_mesh(&adapter->mlmeextpriv);
 }
 #endif /* CONFIG_RTW_MESH */
+
+u16 rtw_rust_scan_acs_adv_ms(_adapter *adapter)
+{
+#if defined(CONFIG_RTW_ACS) && defined(CONFIG_RTW_ACS_DBG)
+	if (IS_ACS_ENABLE(adapter) && rtw_is_acs_st_valid(adapter))
+		return rtw_acs_get_adv_st(adapter);
+#endif
+	return 0;
+}
 #endif /* CONFIG_RUST && CONFIG_RUST_MLME_EXT_SCAN */
 
 #if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_EXT_MGNT_ATTRIB)
