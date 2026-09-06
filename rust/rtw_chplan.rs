@@ -117,6 +117,36 @@ extern "C" {
     fn rtw_rust_warn_on(condition: c_int);
 }
 
+#[cfg(not(host_chplan_test))]
+extern "C" {
+    fn rtw_rust_chset_ch_num(chset: *mut RtChannelInfo, index: u8) -> u8;
+    fn rtw_rust_chset_ch_flags(chset: *mut RtChannelInfo, index: u8) -> u8;
+}
+
+/// Kernel `RT_CHANNEL_INFO` is not the 2-byte `RtChannelInfo` above: its size
+/// depends on `CONFIG_FIND_BEST_CHANNEL`, `CONFIG_DFS_MASTER` and
+/// `CONFIG_IOCTL_CFG80211` (32 bytes for this driver's config). Read entries
+/// through the C accessors so the stride always comes from `sizeof()` in C.
+#[cfg(not(host_chplan_test))]
+fn chset_ch_num(chset: *mut RtChannelInfo, index: usize) -> u8 {
+    unsafe { rtw_rust_chset_ch_num(chset, index as u8) }
+}
+
+#[cfg(not(host_chplan_test))]
+fn chset_ch_flags(chset: *mut RtChannelInfo, index: usize) -> u8 {
+    unsafe { rtw_rust_chset_ch_flags(chset, index as u8) }
+}
+
+#[cfg(host_chplan_test)]
+fn chset_ch_num(chset: *mut RtChannelInfo, index: usize) -> u8 {
+    unsafe { (*chset.add(index)).channel_num }
+}
+
+#[cfg(host_chplan_test)]
+fn chset_ch_flags(chset: *mut RtChannelInfo, index: usize) -> u8 {
+    unsafe { (*chset.add(index)).flags }
+}
+
 fn alpha_to_upper(c: u8) -> u8 {
     if (b'a'..=b'z').contains(&c) {
         c - b'a' + b'A'
@@ -267,16 +297,16 @@ pub extern "C" fn rtw_chset_is_dfs_range(chset: *mut RtChannelInfo, hi: u32, lo:
     }
     let hi_ch = unsafe { rtw_freq2ch(hi as c_int) } as u8;
     let lo_ch = unsafe { rtw_freq2ch(lo as c_int) } as u8;
-    let chset = unsafe { core::slice::from_raw_parts(chset, MAX_CHANNEL_NUM) };
 
-    for ent in chset.iter() {
-        if ent.channel_num == 0 {
+    for i in 0..MAX_CHANNEL_NUM {
+        let ch_num = chset_ch_num(chset, i);
+        if ch_num == 0 {
             break;
         }
-        if ent.flags & RTW_CHF_DFS == 0 {
+        if chset_ch_flags(chset, i) & RTW_CHF_DFS == 0 {
             continue;
         }
-        if hi_ch > ent.channel_num && lo_ch < ent.channel_num {
+        if hi_ch > ch_num && lo_ch < ch_num {
             return true;
         }
     }
@@ -289,13 +319,13 @@ pub extern "C" fn rtw_chset_is_dfs_ch(chset: *mut RtChannelInfo, ch: u8) -> bool
     if chset.is_null() {
         return false;
     }
-    let chset = unsafe { core::slice::from_raw_parts(chset, MAX_CHANNEL_NUM) };
-    for ent in chset.iter() {
-        if ent.channel_num == 0 {
+    for i in 0..MAX_CHANNEL_NUM {
+        let ch_num = chset_ch_num(chset, i);
+        if ch_num == 0 {
             break;
         }
-        if ent.channel_num == ch {
-            return ent.flags & RTW_CHF_DFS != 0;
+        if ch_num == ch {
+            return chset_ch_flags(chset, i) & RTW_CHF_DFS != 0;
         }
     }
     false

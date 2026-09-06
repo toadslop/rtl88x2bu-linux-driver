@@ -2370,6 +2370,25 @@ void rtw_rust_chset_write(struct _RT_CHANNEL_INFO *chset, u8 index, u8 ch, u8 fl
 	chset[index].flags = flags;
 }
 
+/*
+ * Indexed chset readers for the Rust helpers. sizeof(RT_CHANNEL_INFO) varies with
+ * CONFIG_FIND_BEST_CHANNEL / CONFIG_DFS_MASTER / CONFIG_IOCTL_CFG80211, so Rust
+ * must never stride the array itself.
+ */
+u8 rtw_rust_chset_ch_num(struct _RT_CHANNEL_INFO *chset, u8 index)
+{
+	if (index >= MAX_CHANNEL_NUM)
+		return 0;
+	return chset[index].ChannelNum;
+}
+
+u8 rtw_rust_chset_ch_flags(struct _RT_CHANNEL_INFO *chset, u8 index)
+{
+	if (index >= MAX_CHANNEL_NUM)
+		return 0;
+	return chset[index].flags;
+}
+
 #ifndef HOST_CHPLAN_DATA_ONLY
 void rtw_rust_chset_set_non_ocp(struct _RT_CHANNEL_INFO *chset, u8 count)
 {
