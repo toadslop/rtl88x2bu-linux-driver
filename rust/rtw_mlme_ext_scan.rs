@@ -236,7 +236,14 @@ fn mi_counts(a: Adapter) -> (U8, U8, U8, U8, U8, U8) {
                 &mut ld_mesh_num,
             );
         }
-        (sta_num, ld_sta_num, ap_num, ld_ap_num, mesh_num, ld_mesh_num)
+        (
+            sta_num,
+            ld_sta_num,
+            ap_num,
+            ld_ap_num,
+            mesh_num,
+            ld_mesh_num,
+        )
     }
 }
 
