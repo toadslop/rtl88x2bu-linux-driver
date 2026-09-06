@@ -120,7 +120,7 @@ test_scan_decision: test_scan_decision.c $(MLME_EXT_REST_SRC) $(SCAN_SHIM)
 
 librust_mlme_ext_scan.a: $(RUST_MLME_EXT_SCAN)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on \
-		--cfg host_mlme_ext_scan_test --cfg config_scan_backop \
+		--cfg host_mlme_ext_scan_test \
 		--cfg config_scan_sparse_bg --cfg config_scan_sparse_miracast \
 		--crate-type staticlib $(RUST_MLME_EXT_SCAN) -o $@
 
