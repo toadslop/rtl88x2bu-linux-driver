@@ -125,7 +125,7 @@ test_pick_ch: test_pick_ch.c $(MLME_EXT_REST_SRC) $(SCAN_SHIM)
 
 librust_mlme_ext_pick_ch.a: $(RUST_MLME_EXT_PICK_CH)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on \
-		--cfg host_mlme_ext_pick_ch_test --cfg config_scan_backop --cfg config_p2p \
+		--cfg host_mlme_ext_pick_ch_test \
 		--crate-type staticlib $(RUST_MLME_EXT_PICK_CH) -o $@
 
 test-pick-ch-rust: test_pick_ch_rust
