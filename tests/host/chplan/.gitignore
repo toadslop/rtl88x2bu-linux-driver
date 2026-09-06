@@ -1,0 +1,7 @@
+test_chplan
+test_chplan_rust
+test_chplan_kernel_layout
+test_rest_beacon_hint
+test_rest_beacon_hint_rust
+chplan_data.o
+*.a
