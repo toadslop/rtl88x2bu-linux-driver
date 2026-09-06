@@ -3245,7 +3245,7 @@ rust-objects-rtw-mlme-ext-scan-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
 		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
 		-include $(shell pwd)/tests/host/include/host_autoconf.h \
-		-DHOST_MLME_EXT_SCAN_TEST -DCONFIG_SCAN_BACKOP \
+		-DHOST_MLME_EXT_SCAN_TEST -DCONFIG_SCAN_BACKOP -DCONFIG_RUST -DCONFIG_RUST_MLME_EXT_PICK_CH \
 		-o tests/host/mlme_ext/scan_c_ref.o core/rtw_mlme_ext_rest.c
 
 rust-check-symbols-rtw-mlme-ext-scan: rust-objects-rtw-mlme-ext-scan-c rust-objects-rtw-mlme-ext-scan
