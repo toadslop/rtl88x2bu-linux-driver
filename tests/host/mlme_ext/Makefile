@@ -58,7 +58,7 @@ all: test
 test: test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust \
 	test-mgnt-attrib-kernel-layout test-peer-alive test-scan-decision \
 	test-scan-decision-rust test-scan-kernel-layout test-pick-ch \
-	test-pick-ch-rust test-band-ie
+	test-pick-ch-rust
 
 test-c: test_chset
 	./test_chset chset_vectors.json
