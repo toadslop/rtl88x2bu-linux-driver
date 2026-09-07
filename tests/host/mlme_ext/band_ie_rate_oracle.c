@@ -30,3 +30,18 @@ void rtw_set_supported_rate(u8 *SupportedRates, unsigned int mode)
 		break;
 	}
 }
+
+void UpdateBrateTbl(_adapter *adapter, u8 *mBratesOS)
+{
+	u8 i, rate;
+
+	(void)adapter;
+	for (i = 0; i < NDIS_802_11_LENGTH_RATES_EX; i++) {
+		rate = mBratesOS[i] & 0x7f;
+		if (rate == IEEE80211_CCK_RATE_1MB || rate == IEEE80211_CCK_RATE_2MB ||
+		    rate == IEEE80211_CCK_RATE_5MB || rate == IEEE80211_CCK_RATE_11MB ||
+		    rate == IEEE80211_OFDM_RATE_6MB || rate == IEEE80211_OFDM_RATE_12MB ||
+		    rate == IEEE80211_OFDM_RATE_24MB)
+			mBratesOS[i] |= IEEE80211_BASIC_RATE_MASK;
+	}
+}
