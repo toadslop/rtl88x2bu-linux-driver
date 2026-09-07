@@ -14,10 +14,14 @@
  *****************************************************************************/
 #define _RTW_AP_STA_IE_VHT_MULTIAP_C_
 
+#ifdef HOST_AP_STA_IE_TEST
+#include "host_ap_sta_ie_vht_multiap_types.h"
+#else
 #include <drv_types.h>
 #include <hal_data.h>
+#endif
 
-#if !defined(CONFIG_RUST_AP_STA_IE)
+#if !defined(CONFIG_RUST_AP_STA_IE) || defined(HOST_AP_STA_IE_TEST)
 
 void rtw_ap_parse_sta_vht_ie(_adapter *adapter, struct sta_info *sta, struct rtw_ieee802_11_elems *elems)
 {
