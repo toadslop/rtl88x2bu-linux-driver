@@ -162,14 +162,8 @@ fn pick_ch_impl(a: Adapter, ch_out: &mut U8, type_out: &mut c_int) -> U8 {
                 if ch_set_idx != -1
                     && unsafe { rtw_rust_pick_ch_hidden_bss_cnt(a, ch_set_idx) } != 0
                     && (unsafe { rtw_rust_pick_ch_dfs_slave_with_rd(a) } == 0
-<<<<<<< HEAD
-                        || unsafe {
-                            rtw_rfctl_dfs_domain_unknown(rtw_rust_pick_ch_rfctl(a))
-                        } != 0
-=======
-                        || unsafe { rtw_rfctl_dfs_domain_unknown(rtw_rust_pick_ch_channel_set(a)) }
+                        || unsafe { rtw_rfctl_dfs_domain_unknown(rtw_rust_pick_ch_rfctl(a)) }
                             != 0
->>>>>>> a2802a5 (style(mlme_ext): rustfmt rtw_mlme_ext_pick_ch.rs)
                         || !ch_is_non_ocp(a, ch_set_idx))
                 {
                     unsafe {
