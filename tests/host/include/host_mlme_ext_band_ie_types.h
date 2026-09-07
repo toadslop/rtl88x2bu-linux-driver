@@ -72,8 +72,9 @@ void change_band_update_ie(_adapter *padapter, WLAN_BSSID_EX *pnetwork, u8 ch);
 void rtw_add_bcn_ie(_adapter *padapter, WLAN_BSSID_EX *pnetwork, u8 index,
 		    u8 *data, u8 len);
 void rtw_remove_bcn_ie(_adapter *padapter, WLAN_BSSID_EX *pnetwork, u8 index);
-void UpdateBrateTbl(_adapter *adapter, u8 *mBratesOS);
 void rtw_set_supported_rate(u8 *SupportedRates, unsigned int mode);
+void UpdateBrateTbl(_adapter *adapter, u8 *mBratesOS);
+
 void rtw_vht_ies_attach(_adapter *padapter, WLAN_BSSID_EX *pnetwork);
 void rtw_vht_ies_detach(_adapter *padapter, WLAN_BSSID_EX *pnetwork);
 
