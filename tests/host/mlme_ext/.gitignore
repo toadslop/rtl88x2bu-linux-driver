@@ -15,5 +15,4 @@ librust_mlme_ext_scan_kernel.a
 test_pick_ch
 test_pick_ch_rust
 librust_mlme_ext_pick_ch.a
-gen_band_ie
 test_band_ie

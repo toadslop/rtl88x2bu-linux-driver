@@ -46,6 +46,12 @@ static int go(const char *tag, u8 ch, u32 wm, u8 ht, const char *in,
 			return -1;
 		}
 	}
+	for (; i < NDIS_802_11_LENGTH_RATES_EX; i++) {
+		if (n.SupportedRates[i] != 0) {
+			fprintf(stderr, "%s rates tail non-zero at %zu\n", tag, i);
+			return -1;
+		}
+	}
 	if (n.Length != len) {
 		fprintf(stderr, "%s len %u != %u\n", tag, n.Length, len);
 		return -1;
