@@ -14,6 +14,9 @@ SHIM := host_mlme_ext_shim.c
 MGNT_SHIM := host_mlme_ext_mgnt_attrib_shim.c
 PEER_ALIVE_SHIM := host_mlme_ext_peer_alive_shim.c
 SCAN_SHIM := host_mlme_ext_scan_shim.c
+BAND_IE_SHIM := host_mlme_ext_band_ie_shim.c
+BAND_IE_RATE_ORACLE := band_ie_rate_oracle.c
+WLAN_UTIL_ORACLE := ../wlan_util/wlan_util_c_oracle.c
 
 SCAN_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-variable -O2 \
           -I$(HOST_INC) -I$(CORE) -I$(ROOT)/include \
@@ -21,6 +24,11 @@ SCAN_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-variable 
           -DHOST_MLME_EXT_SCAN_TEST -DCONFIG_SCAN_BACKOP -DCONFIG_P2P
 
 PICK_CH_CFLAGS := $(SCAN_CFLAGS) -DHOST_MLME_EXT_TEST -DCONFIG_P2P -DCONFIG_DFS_MASTER
+
+BAND_IE_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-variable -O2 \
+          -I$(HOST_INC) -I$(CORE) -I$(ROOT)/include -I../wlan_util \
+          -include $(HOST_INC)/host_autoconf.h \
+          -DHOST_MLME_EXT_BAND_IE_TEST
 
 MGNT_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-variable -Wno-format-truncation -O2 \
           -I$(HOST_INC) -I$(CORE) -I$(ROOT)/include \
@@ -43,14 +51,14 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-format-truncation -O2
 .PHONY: all test test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust \
 	test-mgnt-attrib-kernel-layout test-peer-alive test-scan-decision \
 	test-scan-decision-rust test-scan-kernel-layout test-pick-ch \
-	test-pick-ch-rust clean
+	test-pick-ch-rust test-band-ie clean
 
 all: test
 
 test: test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust \
 	test-mgnt-attrib-kernel-layout test-peer-alive test-scan-decision \
 	test-scan-decision-rust test-scan-kernel-layout test-pick-ch \
-	test-pick-ch-rust
+	test-pick-ch-rust test-band-ie
 
 test-c: test_chset
 	./test_chset chset_vectors.json
@@ -163,6 +171,14 @@ test_pick_ch_rust: test_pick_ch.c librust_mlme_ext_pick_ch.a $(MLME_EXT_REST_SRC
 	$(CC) $(PICK_CH_CFLAGS) -DCONFIG_RUST_MLME_EXT_PICK_CH -DRUST_MLME_EXT_PICK_CH_ORACLE -o $@ test_pick_ch.c \
 		$(MLME_EXT_REST_SRC) $(SCAN_SHIM) librust_mlme_ext_pick_ch.a
 
+test-band-ie: test_band_ie
+	./test_band_ie
+
+test_band_ie: test_band_ie.c $(MLME_EXT_REST_SRC) $(BAND_IE_SHIM) $(BAND_IE_RATE_ORACLE) \
+		$(WLAN_UTIL_ORACLE)
+	$(CC) $(BAND_IE_CFLAGS) -o $@ test_band_ie.c $(MLME_EXT_REST_SRC) $(BAND_IE_SHIM) \
+		$(BAND_IE_RATE_ORACLE) $(WLAN_UTIL_ORACLE)
+
 clean:
 	rm -f test_chset test_chset_rust librust_mlme_ext_rest.a \
 		test_mgnt_attrib test_mgnt_attrib_rust librust_mlme_ext_mgnt_attrib.a \
@@ -170,4 +186,5 @@ clean:
 		test_peer_alive test_peer_alive_rust librust_mlme_ext_peer_alive.a \
 		test_scan_decision test_scan_decision_rust librust_mlme_ext_scan.a \
 		test_scan_kernel_layout librust_mlme_ext_scan_kernel.a \
-		test_pick_ch test_pick_ch_rust librust_mlme_ext_pick_ch.a
+		test_pick_ch test_pick_ch_rust librust_mlme_ext_pick_ch.a \
+		test_band_ie
