@@ -47,8 +47,12 @@ struct Elems {
 
 extern "C" {
     fn _rtw_memcpy(d: *mut c_void, s: *const c_void, n: usize) -> *mut c_void;
-    fn rtw_ies_get_supported_rate(ies: *mut U8, ies_len: u32, rate_set: *mut U8, rate_num: *mut U8)
-        -> c_int;
+    fn rtw_ies_get_supported_rate(
+        ies: *mut U8,
+        ies_len: u32,
+        rate_set: *mut U8,
+        rate_num: *mut U8,
+    ) -> c_int;
     fn UpdateBrateTblForSoftAP(bssrateset: *mut U8, bssratelen: u32);
     fn rtw_get_ie_ex(
         in_ie: *const U8,
@@ -96,7 +100,11 @@ fn le16(p: *const U8) -> U16 {
 
 #[cfg(rust_ap_sta_ie)]
 #[no_mangle]
-pub extern "C" fn rtw_ap_parse_sta_capability(adapter: *mut Adapter, sta: *mut StaInfo, cap: *mut U8) {
+pub extern "C" fn rtw_ap_parse_sta_capability(
+    adapter: *mut Adapter,
+    sta: *mut StaInfo,
+    cap: *mut U8,
+) {
     let _ = adapter;
     if sta.is_null() || cap.is_null() {
         return;
@@ -127,8 +135,12 @@ pub extern "C" fn rtw_ap_parse_sta_supported_rates(
         return _STATS_FAILURE_;
     }
     unsafe {
-        if rtw_ies_get_supported_rate(tlv_ies, tlv_ies_len as u32, rate_set.as_mut_ptr(), &mut rate_num)
-            == _FAIL
+        if rtw_ies_get_supported_rate(
+            tlv_ies,
+            tlv_ies_len as u32,
+            rate_set.as_mut_ptr(),
+            &mut rate_num,
+        ) == _FAIL
             || rate_num == 0
         {
             status = _STATS_FAILURE_;
