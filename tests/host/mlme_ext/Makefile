@@ -171,7 +171,6 @@ test_pick_ch_rust: test_pick_ch.c librust_mlme_ext_pick_ch.a $(MLME_EXT_REST_SRC
 	$(CC) $(PICK_CH_CFLAGS) -DCONFIG_RUST_MLME_EXT_PICK_CH -DRUST_MLME_EXT_PICK_CH_ORACLE -o $@ test_pick_ch.c \
 		$(MLME_EXT_REST_SRC) $(SCAN_SHIM) librust_mlme_ext_pick_ch.a
 
-# test-band-ie wired into aggregate `test` once PR3 harness lands (W3-72).
 test-band-ie: test_band_ie
 	./test_band_ie
 
