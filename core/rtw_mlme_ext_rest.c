@@ -22,6 +22,8 @@ extern int rtw_warn_on(int cond);
 #include "host_mlme_ext_peer_alive_types.h"
 #elif defined(HOST_MLME_EXT_SCAN_TEST)
 #include "host_mlme_ext_scan_types.h"
+#elif defined(HOST_MLME_EXT_BAND_IE_TEST)
+#include "host_mlme_ext_band_ie_types.h"
 #elif defined(HOST_MLME_EXT_TEST)
 #include "host_mlme_ext_types.h"
 #undef rtw_warn_on
@@ -35,7 +37,8 @@ extern int rtw_warn_on(int cond);
       !defined(CONFIG_RUST_MLME_EXT_REST)) && \
      !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
      !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && \
-     !defined(HOST_MLME_EXT_SCAN_TEST)
+     !defined(HOST_MLME_EXT_SCAN_TEST) && \
+     !defined(HOST_MLME_EXT_BAND_IE_TEST)
 
 #ifdef CONFIG_DFS_MASTER
 bool rtw_chset_is_chbw_non_ocp(RT_CHANNEL_INFO *ch_set, u8 ch, u8 bw, u8 offset)
@@ -260,7 +263,7 @@ void rtw_chset_sync_chbw(RT_CHANNEL_INFO *ch_set, u8 *req_ch, u8 *req_bw,
 #if defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) || \
 	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_MGNT_ATTRIB)) && \
 	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && \
-	  !defined(HOST_MLME_EXT_SCAN_TEST)))
+	  !defined(HOST_MLME_EXT_SCAN_TEST) && !defined(HOST_MLME_EXT_BAND_IE_TEST)))
 
 void update_monitor_frame_attrib(_adapter *padapter, struct pkt_attrib *pattrib)
 {
@@ -454,7 +457,7 @@ void update_mgntframe_attrib_addr(_adapter *padapter, struct xmit_frame *pmgntfr
 #if defined(HOST_MLME_EXT_PEER_ALIVE_TEST) || \
 	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_PEER_ALIVE)) && \
 	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
-	  !defined(HOST_MLME_EXT_SCAN_TEST)))
+	  !defined(HOST_MLME_EXT_SCAN_TEST) && !defined(HOST_MLME_EXT_BAND_IE_TEST)))
 
 /********************************************************************
 
@@ -1068,7 +1071,7 @@ u8 rtw_rust_mgnt_p2p_noa_override(_adapter *padapter, u8 *mac_id, u8 *qsel)
 #if defined(HOST_MLME_EXT_SCAN_TEST) || \
 	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_SCAN)) && \
 	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
-	  !defined(HOST_MLME_EXT_PEER_ALIVE_TEST)))
+	  !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && !defined(HOST_MLME_EXT_BAND_IE_TEST)))
 
 #ifndef RTW_SCAN_SPARSE_BG_INTERVAL_MS
 #define RTW_SCAN_SPARSE_BG_INTERVAL_MS 12000
@@ -1224,7 +1227,7 @@ u32 rtw_scan_timeout_decision(_adapter *padapter)
 #if (defined(HOST_MLME_EXT_SCAN_TEST) && !defined(CONFIG_RUST_MLME_EXT_PICK_CH)) || \
 	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_PICK_CH)) && \
 	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
-	  !defined(HOST_MLME_EXT_PEER_ALIVE_TEST)))
+	  !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && !defined(HOST_MLME_EXT_BAND_IE_TEST)))
 
 static bool scan_abort_hdl(_adapter *adapter)
 {
@@ -1408,3 +1411,79 @@ u8 sitesurvey_pick_ch_behavior(_adapter *padapter, u8 *ch, RT_SCAN_TYPE *type)
 }
 
 #endif /* (HOST_MLME_EXT_SCAN_TEST && !CONFIG_RUST_MLME_EXT_PICK_CH) || ((!CONFIG_RUST || !CONFIG_RUST_MLME_EXT_PICK_CH) && ...) */
+
+#if defined(HOST_MLME_EXT_BAND_IE_TEST) || \
+	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_BAND_IE)) && \
+	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
+	  !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && !defined(HOST_MLME_EXT_SCAN_TEST)))
+
+#ifdef CONFIG_AP_MODE
+/*
+ * according to channel
+ * add/remove WLAN_BSSID_EX.IEs's ERP ie
+ * set WLAN_BSSID_EX.SupportedRates
+ * update WLAN_BSSID_EX.IEs's Supported Rate and Extended Supported Rate ie
+ */
+void change_band_update_ie(_adapter *padapter, WLAN_BSSID_EX *pnetwork, u8 ch)
+{
+	u8 network_type, rate_len, total_rate_len, remainder_rate_len;
+	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
+	struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
+	u8 erpinfo = 0x4;
+
+	if (ch >= 36) {
+		network_type = WIRELESS_11A;
+		total_rate_len = IEEE80211_NUM_OFDM_RATESLEN;
+		rtw_remove_bcn_ie(padapter, pnetwork, _ERPINFO_IE_);
+#ifdef CONFIG_80211AC_VHT
+		if ((pmlmepriv->htpriv.ht_option == _TRUE)
+		    && REGSTY_IS_11AC_ENABLE(&padapter->registrypriv)
+		    && is_supported_vht(padapter->registrypriv.wireless_mode)
+		    && (!rfctl->country_ent || COUNTRY_CHPLAN_EN_11AC(rfctl->country_ent))
+		) {
+			if (REGSTY_IS_11AC_AUTO(&padapter->registrypriv)
+			    || pmlmepriv->ori_vht_en)
+				rtw_vht_ies_attach(padapter, pnetwork);
+		}
+#endif
+	} else {
+		network_type = 0;
+		total_rate_len = 0;
+		if (padapter->registrypriv.wireless_mode & WIRELESS_11B) {
+			network_type |= WIRELESS_11B;
+			total_rate_len += IEEE80211_CCK_RATE_LEN;
+		}
+		if (padapter->registrypriv.wireless_mode & WIRELESS_11G) {
+			network_type |= WIRELESS_11G;
+			total_rate_len += IEEE80211_NUM_OFDM_RATESLEN;
+		}
+		rtw_add_bcn_ie(padapter, pnetwork, _ERPINFO_IE_, &erpinfo, 1);
+#ifdef CONFIG_80211AC_VHT
+		rtw_vht_ies_detach(padapter, pnetwork);
+#endif
+	}
+
+	rtw_set_supported_rate(pnetwork->SupportedRates, network_type);
+
+	UpdateBrateTbl(padapter, pnetwork->SupportedRates);
+
+	if (total_rate_len > 8) {
+		rate_len = 8;
+		remainder_rate_len = total_rate_len - 8;
+	} else {
+		rate_len = total_rate_len;
+		remainder_rate_len = 0;
+	}
+
+	rtw_add_bcn_ie(padapter, pnetwork, _SUPPORTEDRATES_IE_, pnetwork->SupportedRates, rate_len);
+
+	if (remainder_rate_len)
+		rtw_add_bcn_ie(padapter, pnetwork, _EXT_SUPPORTEDRATES_IE_, (pnetwork->SupportedRates + 8), remainder_rate_len);
+	else
+		rtw_remove_bcn_ie(padapter, pnetwork, _EXT_SUPPORTEDRATES_IE_);
+
+	pnetwork->Length = get_WLAN_BSSID_EX_sz(pnetwork);
+}
+#endif /* CONFIG_AP_MODE */
+
+#endif /* HOST_MLME_EXT_BAND_IE_TEST || ((!CONFIG_RUST || !CONFIG_RUST_MLME_EXT_BAND_IE) && ...) */
