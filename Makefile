@@ -2596,6 +2596,7 @@ ccflags-y += -DCONFIG_RUST_MLME_EXT_REST
 ccflags-y += -DCONFIG_RUST_MLME_EXT_MGNT_ATTRIB
 ccflags-y += -DCONFIG_RUST_MLME_EXT_PEER_ALIVE
 ccflags-y += -DCONFIG_RUST_MLME_EXT_SCAN
+ccflags-y += -DCONFIG_RUST_MLME_EXT_PICK_CH
 ccflags-y += -DCONFIG_RUST_MLME_HT_RESTRUCTURE
 ccflags-y += -DCONFIG_80211D
 ccflags-y += -DCONFIG_RUST_MLME_80211D
@@ -2619,6 +2620,7 @@ rustflags-y += --cfg rust_mlme_ext_rest
 rustflags-y += --cfg rust_mlme_ext_mgnt_attrib
 rustflags-y += --cfg rust_mlme_ext_peer_alive
 rustflags-y += --cfg rust_mlme_ext_scan --cfg config_scan_sparse_miracast
+rustflags-y += --cfg rust_mlme_ext_pick_ch
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTW_MESH' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg config_rtw_mesh
 endif
@@ -2719,6 +2721,7 @@ $(MODULE_NAME)-y += rust/rtw_mlme_ext_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_mgnt_attrib.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_peer_alive.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_scan.o
+$(MODULE_NAME)-y += rust/rtw_mlme_ext_pick_ch.o
 $(MODULE_NAME)-y += rust/rtw_cmd_rest.o
 endif
 
@@ -3251,6 +3254,21 @@ rust-objects-rtw-mlme-ext-scan-c:
 rust-check-symbols-rtw-mlme-ext-scan: rust-objects-rtw-mlme-ext-scan-c rust-objects-rtw-mlme-ext-scan
 	$(MAKE) rust-check-symbols OLD=tests/host/mlme_ext/scan_c_ref.o NEW=rust/rtw_mlme_ext_scan.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_mlme_ext_scan.allow
+
+# W3-71 PR3: pick_ch L1 (host C oracle vs kbuild Rust object).
+rust-objects-rtw-mlme-ext-pick-ch:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-mlme-ext-pick-ch"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_mlme_ext_pick_ch.o
+rust-objects-rtw-mlme-ext-pick-ch-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_MLME_EXT_SCAN_TEST -DCONFIG_SCAN_BACKOP -DCONFIG_P2P \
+		-o tests/host/mlme_ext/pick_ch_c_ref.o core/rtw_mlme_ext_rest.c
+
+rust-check-symbols-rtw-mlme-ext-pick-ch: rust-objects-rtw-mlme-ext-pick-ch-c rust-objects-rtw-mlme-ext-pick-ch
+	$(MAKE) rust-check-symbols OLD=tests/host/mlme_ext/pick_ch_c_ref.o NEW=rust/rtw_mlme_ext_pick_ch.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_mlme_ext_pick_ch.allow
 
 # W3-56 PR3: op_class_pref-only L1 (host C oracle vs host Rust oracle).
 rust-objects-rtw-rf-op-class-pref-c:

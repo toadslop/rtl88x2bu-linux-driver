@@ -95,3 +95,190 @@ u8 rtw_rust_scan_backop_flags_ap(_adapter *a)
 {
 	return a->mlmeextpriv.sitesurvey_res.backop_flags_ap;
 }
+
+u8 rtw_rust_pick_ch_scan_abort(_adapter *a)
+{
+	return a->mlmeextpriv.scan_abort;
+}
+
+void rtw_rust_pick_ch_set_channel_idx(_adapter *a, int idx)
+{
+	a->mlmeextpriv.sitesurvey_res.channel_idx = idx;
+}
+
+int rtw_rust_pick_ch_channel_idx(_adapter *a)
+{
+	return a->mlmeextpriv.sitesurvey_res.channel_idx;
+}
+
+u8 rtw_rust_pick_ch_force_ssid_scan(_adapter *a)
+{
+	return a->mlmeextpriv.sitesurvey_res.force_ssid_scan;
+}
+
+void rtw_rust_pick_ch_set_force_ssid_scan(_adapter *a, u8 v)
+{
+	a->mlmeextpriv.sitesurvey_res.force_ssid_scan = v;
+}
+
+u8 rtw_rust_pick_ch_ssid_num(_adapter *a)
+{
+	return a->mlmeextpriv.sitesurvey_res.ssid_num;
+}
+
+u8 rtw_rust_pick_ch_ch_num(_adapter *a)
+{
+	return a->mlmeextpriv.sitesurvey_res.ch_num;
+}
+
+u16 rtw_rust_pick_ch_ch_hw_value(_adapter *a, int idx)
+{
+	return a->mlmeextpriv.sitesurvey_res.ch[idx].hw_value;
+}
+
+u32 rtw_rust_pick_ch_ch_flags(_adapter *a, int idx)
+{
+	return a->mlmeextpriv.sitesurvey_res.ch[idx].flags;
+}
+
+u8 rtw_rust_pick_ch_scan_cnt(_adapter *a)
+{
+	return a->mlmeextpriv.sitesurvey_res.scan_cnt;
+}
+
+void rtw_rust_pick_ch_set_scan_cnt(_adapter *a, u8 v)
+{
+	a->mlmeextpriv.sitesurvey_res.scan_cnt = v;
+}
+
+u8 rtw_rust_pick_ch_scan_cnt_max(_adapter *a)
+{
+	return a->mlmeextpriv.sitesurvey_res.scan_cnt_max;
+}
+
+void rtw_rust_pick_ch_set_backop_flags(_adapter *a, u8 v)
+{
+	a->mlmeextpriv.sitesurvey_res.backop_flags = v;
+}
+
+struct RT_CHANNEL_INFO *rtw_rust_pick_ch_channel_set(_adapter *a)
+{
+	return a->rfctl.channel_set;
+}
+
+u8 rtw_rust_pick_ch_chset_flags(_adapter *a, int idx)
+{
+	return a->rfctl.channel_set[idx].flags;
+}
+
+u8 rtw_rust_pick_ch_hidden_bss_cnt(_adapter *a, int idx)
+{
+	return a->rfctl.channel_set[idx].hidden_bss_cnt;
+}
+
+systime rtw_rust_pick_ch_non_ocp_end_time(_adapter *a, int idx)
+{
+	return a->rfctl.channel_set[idx].non_ocp_end_time;
+}
+
+u8 rtw_rust_pick_ch_dfs_slave_with_rd(_adapter *a)
+{
+	return a->rfctl.dfs_slave_with_rd;
+}
+
+struct rf_ctl_t *rtw_rust_pick_ch_rfctl(_adapter *a)
+{
+	return adapter_to_rfctl(a);
+}
+
+u8 rtw_rust_pick_ch_p2p_state_not_none(_adapter *a)
+{
+#ifdef CONFIG_P2P
+	return !rtw_p2p_chk_state(&a->wdinfo, P2P_STATE_NONE);
+#else
+	(void)a;
+	return 0;
+#endif
+}
+
+void rtw_rust_pick_ch_p2p_findphase_ex_max(_adapter *a)
+{
+#ifdef CONFIG_P2P
+	rtw_p2p_findphase_ex_set(&a->wdinfo, P2P_FINDPHASE_EX_MAX);
+#else
+	(void)a;
+#endif
+}
+
+u8 rtw_rust_pick_ch_rx_scan_op_ch_only(_adapter *a)
+{
+#ifdef CONFIG_P2P
+	return a->wdinfo.rx_invitereq_info.scan_op_ch_only;
+#else
+	(void)a;
+	return 0;
+#endif
+}
+
+u8 rtw_rust_pick_ch_p2p_scan_op_ch_only(_adapter *a)
+{
+#ifdef CONFIG_P2P
+	return a->wdinfo.p2p_info.scan_op_ch_only;
+#else
+	(void)a;
+	return 0;
+#endif
+}
+
+u8 rtw_rust_pick_ch_rx_op_ch(_adapter *a, int idx)
+{
+#ifdef CONFIG_P2P
+	return a->wdinfo.rx_invitereq_info.operation_ch[idx];
+#else
+	(void)a;
+	(void)idx;
+	return 0;
+#endif
+}
+
+u8 rtw_rust_pick_ch_p2p_op_ch(_adapter *a, int idx)
+{
+#ifdef CONFIG_P2P
+	return a->wdinfo.p2p_info.operation_ch[idx];
+#else
+	(void)a;
+	(void)idx;
+	return 0;
+#endif
+}
+
+u8 rtw_rust_pick_ch_social_chan(_adapter *a, int idx)
+{
+#ifdef CONFIG_P2P
+	return a->wdinfo.social_chan[idx];
+#else
+	(void)a;
+	(void)idx;
+	return 0;
+#endif
+}
+
+u8 rtw_rust_pick_ch_p2p_social(_adapter *a)
+{
+#ifdef CONFIG_P2P
+	return rtw_p2p_findphase_ex_is_social(&a->wdinfo);
+#else
+	(void)a;
+	return 0;
+#endif
+}
+
+u8 rtw_rust_pick_ch_p2p_needed(_adapter *a)
+{
+#ifdef CONFIG_P2P
+	return rtw_p2p_findphase_ex_is_needed(&a->wdinfo);
+#else
+	(void)a;
+	return 0;
+#endif
+}
