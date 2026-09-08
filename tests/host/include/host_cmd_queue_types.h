@@ -23,15 +23,17 @@ typedef struct _list _list;
 struct __queue { _list queue; _lock lock; };
 typedef struct __queue _queue;
 
+/* Field order must track include/rtw_cmd.h: no_io sits after sctx. */
 struct cmd_obj {
 	void *padapter;
 	u16 cmdcode;
-	u8 res, no_io;
+	u8 res;
 	u8 *parmbuf;
 	u32 cmdsz;
 	u8 *rsp;
 	u32 rspsz;
 	void *sctx;
+	u8 no_io;
 	_list list;
 };
 

@@ -4,3 +4,5 @@ test_cmd_priv_rust
 test_cmd_queue
 test_cmd_queue_rust
 librust_cmd_queue.a
+test_cmd_queue_kernel_layout
+librust_cmd_queue_kernel.a

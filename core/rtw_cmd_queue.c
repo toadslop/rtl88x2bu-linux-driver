@@ -318,6 +318,32 @@ void *rtw_rust_cmd_priv_padapter(struct cmd_priv *p)
 	return p->padapter;
 }
 
+/*
+ * struct cmd_obj accessors. The Rust port must not mirror this struct: its
+ * field order and size depend on the kernel headers (no_io sits after sctx,
+ * not after res), and core/rtw_cmd.c reads pcmd->no_io and pcmd->list with
+ * the real layout. Keeping the offsets in C makes the Rust side config-proof.
+ */
+u8 rtw_rust_cmd_obj_no_io(void *pcmd)
+{
+	return ((struct cmd_obj *)pcmd)->no_io;
+}
+
+_list *rtw_rust_cmd_obj_list(void *pcmd)
+{
+	return &((struct cmd_obj *)pcmd)->list;
+}
+
+void *rtw_rust_cmd_obj_from_list(_list *plist)
+{
+	return (void *)LIST_CONTAINOR(plist, struct cmd_obj, list);
+}
+
+u32 rtw_rust_cmd_obj_size(void)
+{
+	return (u32)sizeof(struct cmd_obj);
+}
+
 struct cmd_priv *rtw_rust_cmd_priv_for_enqueue(struct cmd_priv *pcmdpriv)
 {
 #ifdef CONFIG_CONCURRENT_MODE

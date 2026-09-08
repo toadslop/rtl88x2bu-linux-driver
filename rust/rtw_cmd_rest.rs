@@ -390,12 +390,12 @@ mod cmd_queue {
         pub padapter: *mut c_void,
         pub cmdcode: u16,
         pub res: u8,
-        pub no_io: u8,
         pub parmbuf: *mut u8,
         pub cmdsz: u32,
         pub rsp: *mut u8,
         pub rspsz: u32,
         pub sctx: *mut c_void,
+        pub no_io: u8,
         pub list: List,
     }
 
@@ -457,6 +457,10 @@ mod cmd_queue {
             pub fn rtw_rust_cmd_priv_for_enqueue(p: *mut c_void) -> *mut c_void;
             pub fn rtw_rust_cmd_priv_padapter(p: *mut c_void) -> *mut c_void;
             pub fn rtw_rust_cmd_priv_cmdthd_running(p: *mut c_void) -> c_int;
+            pub fn rtw_rust_cmd_obj_no_io(pcmd: *mut c_void) -> u8;
+            pub fn rtw_rust_cmd_obj_list(pcmd: *mut c_void) -> *mut List;
+            pub fn rtw_rust_cmd_obj_from_list(plist: *mut List) -> *mut c_void;
+            pub fn rtw_rust_cmd_obj_size() -> u32;
             #[cfg(event_thread_mode)]
             pub fn rtw_rust_evt_priv_evt_queue(p: *mut c_void) -> *mut Queue;
             #[cfg(event_thread_mode)]
@@ -544,6 +548,58 @@ mod cmd_queue {
         let _ = (lock, irql);
     }
 
+    /* cmd_obj field access. On the kernel path the offsets come from C
+     * (core/rtw_cmd_queue.c) because struct cmd_obj puts no_io after sctx
+     * and its size depends on the kernel headers; the host L2 fixture uses
+     * the mirror directly. */
+    #[inline]
+    unsafe fn cmd_no_io(obj: *mut CmdObj) -> u8 {
+        #[cfg(host_cmd_queue_test)]
+        {
+            (*obj).no_io
+        }
+        #[cfg(not(host_cmd_queue_test))]
+        {
+            kernel::rtw_rust_cmd_obj_no_io(obj as *mut c_void)
+        }
+    }
+
+    #[inline]
+    unsafe fn cmd_list(obj: *mut CmdObj) -> *mut List {
+        #[cfg(host_cmd_queue_test)]
+        {
+            &mut (*obj).list as *mut List
+        }
+        #[cfg(not(host_cmd_queue_test))]
+        {
+            kernel::rtw_rust_cmd_obj_list(obj as *mut c_void)
+        }
+    }
+
+    #[inline]
+    unsafe fn cmd_from_list(ln: *mut List) -> *mut CmdObj {
+        #[cfg(host_cmd_queue_test)]
+        {
+            (ln as *mut u8).offset(-(core::mem::offset_of!(CmdObj, list) as isize)) as *mut CmdObj
+        }
+        #[cfg(not(host_cmd_queue_test))]
+        {
+            kernel::rtw_rust_cmd_obj_from_list(ln) as *mut CmdObj
+        }
+    }
+
+    #[inline]
+    fn cmd_obj_size() -> u32 {
+        #[cfg(host_cmd_queue_test)]
+        {
+            core::mem::size_of::<CmdObj>() as u32
+        }
+        #[cfg(not(host_cmd_queue_test))]
+        unsafe {
+            kernel::rtw_rust_cmd_obj_size()
+        }
+    }
+
     #[inline]
     fn hw_init_completed(adapter: *mut c_void) -> bool {
         if adapter.is_null() {
@@ -568,10 +624,11 @@ mod cmd_queue {
             let q = &mut *queue;
             let mut irqL = 0usize as c_ulong;
             enter_critical(&mut q.lock, &mut irqL);
+            let ln = cmd_list(obj);
             if to_head {
-                list_insert_head(&mut (*obj).list, &mut q.queue);
+                list_insert_head(&mut *ln, &mut q.queue);
             } else {
-                list_insert_tail(&mut (*obj).list, &mut q.queue);
+                list_insert_tail(&mut *ln, &mut q.queue);
             }
             exit_critical(&mut q.lock, &mut irqL);
         }
@@ -591,8 +648,7 @@ mod cmd_queue {
                 core::ptr::null_mut()
             } else {
                 let ln = q.queue.next;
-                let obj = (ln as *mut u8).offset(-(core::mem::offset_of!(CmdObj, list) as isize))
-                    as *mut CmdObj;
+                let obj = cmd_from_list(ln);
                 list_delete(&mut *ln);
                 obj
             };
@@ -612,7 +668,7 @@ mod cmd_queue {
             if cmd.cmdcode == CMD_SET_CHANPLAN {
                 allow = 1;
             }
-            if cmd.no_io != 0 {
+            if cmd_no_io(cmd_obj) != 0 {
                 allow = 1;
             }
             #[cfg(host_cmd_queue_test)]
@@ -724,7 +780,7 @@ mod cmd_queue {
             if !p.rsp.is_null() && p.rspsz != 0 {
                 qfree(p.rsp, p.rspsz);
             }
-            qfree(pcmd as *mut u8, core::mem::size_of::<CmdObj>() as u32);
+            qfree(pcmd as *mut u8, cmd_obj_size());
         }
     }
 
