@@ -555,11 +555,11 @@ mod cmd_queue {
     #[inline]
     unsafe fn cmd_no_io(obj: *mut CmdObj) -> u8 {
         #[cfg(host_cmd_queue_test)]
-        {
+        unsafe {
             (*obj).no_io
         }
         #[cfg(not(host_cmd_queue_test))]
-        {
+        unsafe {
             kernel::rtw_rust_cmd_obj_no_io(obj as *mut c_void)
         }
     }
@@ -567,11 +567,11 @@ mod cmd_queue {
     #[inline]
     unsafe fn cmd_list(obj: *mut CmdObj) -> *mut List {
         #[cfg(host_cmd_queue_test)]
-        {
+        unsafe {
             &mut (*obj).list as *mut List
         }
         #[cfg(not(host_cmd_queue_test))]
-        {
+        unsafe {
             kernel::rtw_rust_cmd_obj_list(obj as *mut c_void)
         }
     }
@@ -579,11 +579,11 @@ mod cmd_queue {
     #[inline]
     unsafe fn cmd_from_list(ln: *mut List) -> *mut CmdObj {
         #[cfg(host_cmd_queue_test)]
-        {
+        unsafe {
             (ln as *mut u8).offset(-(core::mem::offset_of!(CmdObj, list) as isize)) as *mut CmdObj
         }
         #[cfg(not(host_cmd_queue_test))]
-        {
+        unsafe {
             kernel::rtw_rust_cmd_obj_from_list(ln) as *mut CmdObj
         }
     }
