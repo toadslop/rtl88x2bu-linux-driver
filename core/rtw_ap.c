@@ -5106,42 +5106,6 @@ void tx_beacon_timer_handlder(void *ctx)
 }
 #endif
 
-u16 rtw_ap_parse_sta_supported_rates(_adapter *adapter, struct sta_info *sta, u8 *tlv_ies, u16 tlv_ies_len)
-{
-	u8 rate_set[12];
-	u8 rate_num;
-	int i;
-	u16 status = _STATS_SUCCESSFUL_;
-
-	rtw_ies_get_supported_rate(tlv_ies, tlv_ies_len, rate_set, &rate_num);
-	if (rate_num == 0) {
-		RTW_INFO(FUNC_ADPT_FMT" sta "MAC_FMT" with no supported rate\n"
-			, FUNC_ADPT_ARG(adapter), MAC_ARG(sta->cmn.mac_addr));
-		status = _STATS_FAILURE_;
-		goto exit;
-	}
-
-	_rtw_memcpy(sta->bssrateset, rate_set, rate_num);
-	sta->bssratelen = rate_num;
-
-	if (MLME_IS_AP(adapter)) {
-		/* this function force only CCK rates to be bassic rate... */
-		UpdateBrateTblForSoftAP(sta->bssrateset, sta->bssratelen);
-	}
-
-	/* if (hapd->iface->current_mode->mode == HOSTAPD_MODE_IEEE80211G) */ /* ? */
-	sta->flags |= WLAN_STA_NONERP;
-	for (i = 0; i < sta->bssratelen; i++) {
-		if ((sta->bssrateset[i] & 0x7f) > 22) {
-			sta->flags &= ~WLAN_STA_NONERP;
-			break;
-		}
-	}
-
-exit:
-	return status;
-}
-
 u16 rtw_ap_parse_sta_security_ie(_adapter *adapter, struct sta_info *sta, struct rtw_ieee802_11_elems *elems)
 {
 	struct security_priv *sec = &adapter->securitypriv;
