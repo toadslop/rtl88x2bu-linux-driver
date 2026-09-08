@@ -90,11 +90,7 @@ pub extern "C" fn change_band_update_ie(padapter: Adapter, pnetwork: WlanBssidEx
             let wm = unsafe { rtw_rust_band_ie_wireless_mode(padapter) };
             let vht_en = unsafe { rtw_rust_band_ie_vht_enable(padapter) };
             let country_ok = unsafe { rtw_rust_band_ie_country_en_11ac(padapter) } != 0;
-            if ht
-                && regsty_is_11ac_enable(vht_en)
-                && is_supported_vht(wm)
-                && country_ok
-            {
+            if ht && regsty_is_11ac_enable(vht_en) && is_supported_vht(wm) && country_ok {
                 let auto_or_ori = regsty_is_11ac_auto(vht_en)
                     || unsafe { rtw_rust_band_ie_ori_vht_en(padapter) } != 0;
                 if auto_or_ori {
@@ -145,13 +141,7 @@ pub extern "C" fn change_band_update_ie(padapter: Adapter, pnetwork: WlanBssidEx
     }
 
     unsafe {
-        rtw_add_bcn_ie(
-            padapter,
-            pnetwork,
-            _SUPPORTEDRATES_IE_,
-            rates,
-            rate_len,
-        );
+        rtw_add_bcn_ie(padapter, pnetwork, _SUPPORTEDRATES_IE_, rates, rate_len);
         if remainder_rate_len != 0 {
             rtw_add_bcn_ie(
                 padapter,
