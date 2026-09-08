@@ -5106,15 +5106,6 @@ void tx_beacon_timer_handlder(void *ctx)
 }
 #endif
 
-void rtw_ap_parse_sta_capability(_adapter *adapter, struct sta_info *sta, u8 *cap)
-{
-	sta->capability = RTW_GET_LE16(cap);
-	if (sta->capability & WLAN_CAPABILITY_SHORT_PREAMBLE)
-		sta->flags |= WLAN_STA_SHORT_PREAMBLE;
-	else
-		sta->flags &= ~WLAN_STA_SHORT_PREAMBLE;
-}
-
 u16 rtw_ap_parse_sta_supported_rates(_adapter *adapter, struct sta_info *sta, u8 *tlv_ies, u16 tlv_ies_len)
 {
 	u8 rate_set[12];

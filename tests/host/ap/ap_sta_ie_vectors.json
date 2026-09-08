@@ -1,0 +1,16 @@
+{
+  "vectors": [
+    {
+      "name": "cap_short_preamble",
+      "cap": "2000",
+      "expect_capability": 32,
+      "expect_flags": 128
+    },
+    {
+      "name": "cap_no_short_preamble",
+      "cap": "0100",
+      "expect_capability": 1,
+      "expect_flags": 0
+    }
+  ]
+}
