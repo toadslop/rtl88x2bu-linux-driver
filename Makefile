@@ -2601,6 +2601,7 @@ ccflags-y += -DCONFIG_RUST_MLME_EXT_MGNT_ATTRIB
 ccflags-y += -DCONFIG_RUST_MLME_EXT_PEER_ALIVE
 ccflags-y += -DCONFIG_RUST_MLME_EXT_SCAN
 ccflags-y += -DCONFIG_RUST_MLME_EXT_PICK_CH
+ccflags-y += -DCONFIG_RUST_MLME_EXT_BAND_IE
 ccflags-y += -DCONFIG_RUST_MLME_HT_RESTRUCTURE
 ccflags-y += -DCONFIG_80211D
 ccflags-y += -DCONFIG_RUST_MLME_80211D
@@ -2625,6 +2626,7 @@ rustflags-y += --cfg rust_mlme_ext_mgnt_attrib
 rustflags-y += --cfg rust_mlme_ext_peer_alive
 rustflags-y += --cfg rust_mlme_ext_scan --cfg config_scan_sparse_miracast
 rustflags-y += --cfg rust_mlme_ext_pick_ch
+rustflags-y += --cfg rust_mlme_ext_band_ie
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTW_MESH' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg config_rtw_mesh
 endif
@@ -2726,6 +2728,7 @@ $(MODULE_NAME)-y += rust/rtw_mlme_ext_mgnt_attrib.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_peer_alive.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_scan.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_pick_ch.o
+$(MODULE_NAME)-y += rust/rtw_mlme_ext_band_ie.o
 $(MODULE_NAME)-y += rust/rtw_cmd_rest.o
 endif
 
@@ -3273,6 +3276,22 @@ rust-objects-rtw-mlme-ext-pick-ch-c:
 rust-check-symbols-rtw-mlme-ext-pick-ch: rust-objects-rtw-mlme-ext-pick-ch-c rust-objects-rtw-mlme-ext-pick-ch
 	$(MAKE) rust-check-symbols OLD=tests/host/mlme_ext/pick_ch_c_ref.o NEW=rust/rtw_mlme_ext_pick_ch.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_mlme_ext_pick_ch.allow
+
+# W3-72 PR5: band_ie L1 (host C oracle vs kbuild Rust object).
+rust-objects-rtw-mlme-ext-band-ie:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-mlme-ext-band-ie"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_mlme_ext_band_ie.o
+rust-objects-rtw-mlme-ext-band-ie-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/tests/host/wlan_util \
+		-I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_MLME_EXT_BAND_IE_TEST \
+		-o tests/host/mlme_ext/band_ie_c_ref.o core/rtw_mlme_ext_rest.c
+
+rust-check-symbols-rtw-mlme-ext-band-ie: rust-objects-rtw-mlme-ext-band-ie-c rust-objects-rtw-mlme-ext-band-ie
+	$(MAKE) rust-check-symbols OLD=tests/host/mlme_ext/band_ie_c_ref.o NEW=rust/rtw_mlme_ext_band_ie.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_mlme_ext_band_ie.allow
 
 # W3-56 PR3: op_class_pref-only L1 (host C oracle vs host Rust oracle).
 rust-objects-rtw-rf-op-class-pref-c:

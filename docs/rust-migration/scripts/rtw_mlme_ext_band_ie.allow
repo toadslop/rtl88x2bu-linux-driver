@@ -1,0 +1,8 @@
+# L1 allowlist for W3-72 PR5: Rust FFI helpers remain in core/rtw_mlme_ext_rest.c.
+drop rtw_rust_band_ie_ht_option
+drop rtw_rust_band_ie_wireless_mode
+drop rtw_rust_band_ie_vht_enable
+drop rtw_rust_band_ie_ori_vht_en
+drop rtw_rust_band_ie_country_en_11ac
+drop rtw_rust_band_ie_supported_rates
+drop rtw_rust_band_ie_set_length

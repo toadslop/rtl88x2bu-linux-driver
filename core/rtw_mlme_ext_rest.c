@@ -991,6 +991,49 @@ u8 rtw_rust_pick_ch_p2p_needed(_adapter *adapter)
 #endif /* CONFIG_P2P */
 #endif /* CONFIG_RUST && CONFIG_RUST_MLME_EXT_PICK_CH */
 
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_EXT_BAND_IE)
+#include <drv_types.h>
+
+#ifdef CONFIG_AP_MODE
+u8 rtw_rust_band_ie_ht_option(_adapter *a)
+{
+	return a->mlmepriv.htpriv.ht_option;
+}
+
+u32 rtw_rust_band_ie_wireless_mode(_adapter *a)
+{
+	return a->registrypriv.wireless_mode;
+}
+
+u8 rtw_rust_band_ie_vht_enable(_adapter *a)
+{
+	return a->registrypriv.vht_enable;
+}
+
+u8 rtw_rust_band_ie_ori_vht_en(_adapter *a)
+{
+	return a->mlmepriv.ori_vht_en;
+}
+
+u8 rtw_rust_band_ie_country_en_11ac(_adapter *a)
+{
+	struct rf_ctl_t *rfctl = adapter_to_rfctl(a);
+
+	return (!rfctl->country_ent || COUNTRY_CHPLAN_EN_11AC(rfctl->country_ent)) ? 1 : 0;
+}
+
+u8 *rtw_rust_band_ie_supported_rates(WLAN_BSSID_EX *n)
+{
+	return n->SupportedRates;
+}
+
+void rtw_rust_band_ie_set_length(WLAN_BSSID_EX *n)
+{
+	n->Length = get_WLAN_BSSID_EX_sz(n);
+}
+#endif /* CONFIG_AP_MODE */
+#endif /* CONFIG_RUST && CONFIG_RUST_MLME_EXT_BAND_IE */
+
 #if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_EXT_MGNT_ATTRIB)
 #include <drv_types.h>
 #include <hal_data.h>
