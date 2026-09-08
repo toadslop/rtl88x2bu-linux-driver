@@ -77,7 +77,7 @@ void rtw_ap_parse_sta_wmm_ie(_adapter *adapter, struct sta_info *sta, u8 *tlv_ie
 		if (sta->qos_info & BIT(3))
 			sta->uapsd_be = BIT(0) | BIT(1);
 		else
-			sta->uapsd_bk = 0;
+			sta->uapsd_be = 0;
 	}
 
 exit:
