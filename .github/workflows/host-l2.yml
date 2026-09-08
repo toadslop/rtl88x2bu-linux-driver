@@ -49,6 +49,8 @@ on:
       - 'core/rtw_sta_mgt.c'
       - 'core/rtw_sta_mgt_rest.c'
       - 'core/rtw_sta_mgt_stctl.c'
+      - 'core/rtw_ap_rest.c'
+      - 'core/rtw_ap_sta_ie.c'
       - 'core/rtw_security.c'
       - 'core/rtw_security_rest.c'
       - 'core/rtw_wlan_util.c'
@@ -108,6 +110,8 @@ jobs:
               - 'core/rtw_sta_mgt.c'
               - 'core/rtw_sta_mgt_rest.c'
               - 'core/rtw_sta_mgt_stctl.c'
+              - 'core/rtw_ap_rest.c'
+              - 'core/rtw_ap_sta_ie.c'
               - 'core/rtw_security.c'
               - 'core/rtw_security_rest.c'
               - 'core/rtw_wlan_util.c'
@@ -198,4 +202,8 @@ jobs:
       - name: Host cmd_priv parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/cmd test
+
+      - name: Host ap_rest / ap_sta_ie parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/ap test
 
