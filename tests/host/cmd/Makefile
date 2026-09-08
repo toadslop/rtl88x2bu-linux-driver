@@ -12,11 +12,12 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
           -DHOST_CMD_PRIV_TEST
 CFLAGS_CMD_QUEUE := $(CFLAGS) -DHOST_CMD_QUEUE_TEST
 
-.PHONY: all test test-c test-rust test-cmd-queue clean
+.PHONY: all test test-c test-rust test-cmd-queue test-cmd-queue-kernel-layout clean
 
 all: test
 
-test: test-c test-rust test-cmd-queue test-rust-cmd-queue
+test: test-c test-rust test-cmd-queue test-rust-cmd-queue \
+	test-cmd-queue-kernel-layout
 
 test-c: test_cmd_priv
 	./test_cmd_priv cmd_priv_vectors.json
@@ -42,6 +43,18 @@ librust_cmd_queue.a: $(RUST_CMD_REST)
 		--cfg rust_cmd_queue \
 		--crate-type staticlib $(RUST_CMD_REST) -o $@
 
+test-cmd-queue-kernel-layout: test_cmd_queue_kernel_layout
+	./test_cmd_queue_kernel_layout
+
+test_cmd_queue_kernel_layout: test_cmd_queue_kernel_layout.c librust_cmd_queue_kernel.a
+	$(CC) -Wall -Wextra -Werror -O2 -o $@ test_cmd_queue_kernel_layout.c \
+		librust_cmd_queue_kernel.a -lpthread -ldl
+
+librust_cmd_queue_kernel.a: $(RUST_CMD_REST)
+	$(RUSTC) --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg rust_cmd_queue \
+		--crate-type staticlib $(RUST_CMD_REST) -o $@
+
 librust_cmd_rest.a: $(RUST_CMD_REST)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on \
 		--cfg host_cmd_priv_test --cfg event_thread_mode --cfg c2h_wk \
@@ -55,4 +68,5 @@ test_cmd_priv_rust: test_cmd_priv.c host_cmd_priv_shim.c librust_cmd_rest.a $(HO
 
 clean:
 	rm -f test_cmd_priv test_cmd_priv_rust test_cmd_queue test_cmd_queue_rust \
-		librust_cmd_rest.a librust_cmd_queue.a
+		test_cmd_queue_kernel_layout \
+		librust_cmd_rest.a librust_cmd_queue.a librust_cmd_queue_kernel.a
