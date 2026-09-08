@@ -1025,7 +1025,7 @@ extern "C" {
         ra: *const U8,
         grpkey_installed: U8,
     ) -> U8;
-        fn rtw_gcmp_decrypt_key_index_mismatch_dbg(packet_index: U8, install_index: U8);
+    fn rtw_gcmp_decrypt_key_index_mismatch_dbg(packet_index: U8, install_index: U8);
 }
 
 fn rnd4(ptr: usize) -> usize {
