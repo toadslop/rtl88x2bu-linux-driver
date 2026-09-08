@@ -1025,7 +1025,7 @@ extern "C" {
         ra: *const U8,
         grpkey_installed: U8,
     ) -> U8;
-    fn rtw_gcmp_decrypt_key_index_mismatch_dbg(packet_index: U8, install_index: U8);
+        fn rtw_gcmp_decrypt_key_index_mismatch_dbg(packet_index: U8, install_index: U8);
 }
 
 fn rnd4(ptr: usize) -> usize {
@@ -1087,6 +1087,13 @@ mod kernel_layout {
         static rtw_rust_tkip_off_securitypriv_binstallGrpkey: usize;
         static rtw_rust_tkip_off_adapter_stapriv: usize;
         static rtw_rust_tkip_off_sta_info_dot118021x_UncstKey: usize;
+        fn rtw_rust_pkt_attrib_encrypt(pattrib: *const u8) -> U8;
+        fn rtw_rust_pkt_attrib_nr_frags(pattrib: *const u8) -> U8;
+        fn rtw_rust_pkt_attrib_hdrlen(pattrib: *const u8) -> u16;
+        fn rtw_rust_pkt_attrib_last_txcmdsz(pattrib: *const u8) -> U32;
+        fn rtw_rust_pkt_attrib_iv_len(pattrib: *const u8) -> U8;
+        fn rtw_rust_pkt_attrib_icv_len(pattrib: *const u8) -> U8;
+        fn rtw_rust_pkt_attrib_ra(pattrib: *const u8, out: *mut U8);
     }
 
     #[repr(C)]
@@ -1122,17 +1129,6 @@ mod kernel_layout {
         pub key_index: U8,
     }
 
-    #[repr(C)]
-    pub struct PktAttrib {
-        pub encrypt: U8,
-        pub nr_frags: U8,
-        pub hdrlen: u16,
-        pub last_txcmdsz: U32,
-        pub iv_len: U8,
-        pub icv_len: U8,
-        pub ra: [U8; 6],
-    }
-
     pub unsafe fn adapter_securitypriv(padapter: *mut AesAdapter) -> *mut u8 {
         unsafe {
             (padapter as *mut u8).add(rtw_rust_wep_off_adapter_securitypriv)
@@ -1149,8 +1145,40 @@ mod kernel_layout {
         }
     }
 
-    pub unsafe fn xmit_frame_attrib(pxmitframe: *mut u8) -> *mut PktAttrib {
-        unsafe { (pxmitframe.add(rtw_rust_wep_off_xmit_frame_attrib)) as *mut PktAttrib }
+    pub unsafe fn xmit_frame_attrib(pxmitframe: *mut u8) -> *mut u8 {
+        unsafe { pxmitframe.add(rtw_rust_wep_off_xmit_frame_attrib) }
+    }
+
+    pub unsafe fn pkt_attrib_encrypt(pattrib: *mut u8) -> U8 {
+        unsafe { rtw_rust_pkt_attrib_encrypt(pattrib) }
+    }
+
+    pub unsafe fn pkt_attrib_nr_frags(pattrib: *mut u8) -> U8 {
+        unsafe { rtw_rust_pkt_attrib_nr_frags(pattrib) }
+    }
+
+    pub unsafe fn pkt_attrib_hdrlen(pattrib: *mut u8) -> u16 {
+        unsafe { rtw_rust_pkt_attrib_hdrlen(pattrib) }
+    }
+
+    pub unsafe fn pkt_attrib_last_txcmdsz(pattrib: *mut u8) -> U32 {
+        unsafe { rtw_rust_pkt_attrib_last_txcmdsz(pattrib) }
+    }
+
+    pub unsafe fn pkt_attrib_iv_len(pattrib: *mut u8) -> U8 {
+        unsafe { rtw_rust_pkt_attrib_iv_len(pattrib) }
+    }
+
+    pub unsafe fn pkt_attrib_icv_len(pattrib: *mut u8) -> U8 {
+        unsafe { rtw_rust_pkt_attrib_icv_len(pattrib) }
+    }
+
+    pub unsafe fn pkt_attrib_ra(pattrib: *mut u8) -> [U8; 6] {
+        unsafe {
+            let mut ra = [0u8; 6];
+            rtw_rust_pkt_attrib_ra(pattrib, ra.as_mut_ptr());
+            ra
+        }
     }
 
     pub unsafe fn xmit_frame_buf_addr(pxmitframe: *mut u8) -> *mut U8 {
@@ -1180,11 +1208,8 @@ mod kernel_layout {
         }
     }
 
-    pub unsafe fn pkt_attrib_unicast_key_skey(pattrib: *mut PktAttrib) -> *mut U8 {
-        unsafe {
-            (pattrib as *mut u8)
-                .add(rtw_rust_tkip_off_pkt_attrib_dot118021x_UncstKey) as *mut U8
-        }
+    pub unsafe fn pkt_attrib_unicast_key_skey(pattrib: *mut u8) -> *mut U8 {
+        unsafe { pattrib.add(rtw_rust_tkip_off_pkt_attrib_dot118021x_UncstKey) as *mut U8 }
     }
 
     pub unsafe fn aes_sw_enc_cnt_inc(psecuritypriv: *mut u8, ra: &[U8; 6]) {
@@ -1314,7 +1339,7 @@ pub extern "C" fn rtw_aes_encrypt(padapter: *mut AesAdapter, pxmitframe: *mut U8
         }
         let hw = hw_hdr_offset(kernel_layout::xmit_frame_pkt_offset(px));
         let pattrib = kernel_layout::xmit_frame_attrib(px);
-        let encrypt = (*pattrib).encrypt;
+        let encrypt = kernel_layout::pkt_attrib_encrypt(pattrib);
         if encrypt != _AES_ && encrypt != _CCMP_256_ {
             return AES_RTW_SUCCESS;
         }
@@ -1322,7 +1347,7 @@ pub extern "C" fn rtw_aes_encrypt(padapter: *mut AesAdapter, pxmitframe: *mut U8
         let psecuritypriv = kernel_layout::adapter_securitypriv(padapter);
         let pxmitpriv = kernel_layout::adapter_xmitpriv(padapter);
         let frag_len = kernel_layout::xmitpriv_frag_len(pxmitpriv);
-        let ra = (*pattrib).ra;
+        let ra = kernel_layout::pkt_attrib_ra(pattrib);
 
         let prwskey = if is_mcast_ra(&ra) {
             let kid = kernel_layout::securitypriv_grp_keyid(psecuritypriv) as usize;
@@ -1337,11 +1362,11 @@ pub extern "C" fn rtw_aes_encrypt(padapter: *mut AesAdapter, pxmitframe: *mut U8
             prwskey,
             prwskeylen,
             frag_len,
-            (*pattrib).nr_frags,
-            (*pattrib).hdrlen,
-            (*pattrib).last_txcmdsz,
-            (*pattrib).iv_len,
-            (*pattrib).icv_len,
+            kernel_layout::pkt_attrib_nr_frags(pattrib),
+            kernel_layout::pkt_attrib_hdrlen(pattrib),
+            kernel_layout::pkt_attrib_last_txcmdsz(pattrib),
+            kernel_layout::pkt_attrib_iv_len(pattrib),
+            kernel_layout::pkt_attrib_icv_len(pattrib),
             buf_addr,
             hw,
         );
@@ -1540,7 +1565,7 @@ pub extern "C" fn rtw_gcmp_encrypt(padapter: *mut AesAdapter, pxmitframe: *mut U
         }
         let hw = hw_hdr_offset(kernel_layout::xmit_frame_pkt_offset(px));
         let pattrib = kernel_layout::xmit_frame_attrib(px);
-        let encrypt = (*pattrib).encrypt;
+        let encrypt = kernel_layout::pkt_attrib_encrypt(pattrib);
         if encrypt != _GCMP_ && encrypt != _GCMP_256_ {
             return GCMP_RTW_SUCCESS;
         }
@@ -1548,7 +1573,7 @@ pub extern "C" fn rtw_gcmp_encrypt(padapter: *mut AesAdapter, pxmitframe: *mut U
         let psecuritypriv = kernel_layout::adapter_securitypriv(padapter);
         let pxmitpriv = kernel_layout::adapter_xmitpriv(padapter);
         let frag_len = kernel_layout::xmitpriv_frag_len(pxmitpriv);
-        let ra = (*pattrib).ra;
+        let ra = kernel_layout::pkt_attrib_ra(pattrib);
 
         let prwskey = if is_mcast_ra(&ra) {
             let kid = kernel_layout::securitypriv_grp_keyid(psecuritypriv) as usize;
@@ -1563,11 +1588,11 @@ pub extern "C" fn rtw_gcmp_encrypt(padapter: *mut AesAdapter, pxmitframe: *mut U
             prwskey,
             prwskeylen,
             frag_len,
-            (*pattrib).nr_frags,
-            (*pattrib).hdrlen,
-            (*pattrib).last_txcmdsz,
-            (*pattrib).iv_len,
-            (*pattrib).icv_len,
+            kernel_layout::pkt_attrib_nr_frags(pattrib),
+            kernel_layout::pkt_attrib_hdrlen(pattrib),
+            kernel_layout::pkt_attrib_last_txcmdsz(pattrib),
+            kernel_layout::pkt_attrib_iv_len(pattrib),
+            kernel_layout::pkt_attrib_icv_len(pattrib),
             buf_addr,
             hw,
         );

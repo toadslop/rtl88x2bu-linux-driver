@@ -211,6 +211,46 @@ const size_t rtw_rust_wep_restore_off_securitypriv_dot11PrivacyKeyIndex =
 	offsetof(struct security_priv, dot11PrivacyKeyIndex);
 const size_t rtw_rust_wep_restore_off_securitypriv_key_mask =
 	offsetof(struct security_priv, key_mask);
+
+/*
+ * pkt_attrib field accessors. The kernel struct starts with type/subtype
+ * (include/rtw_xmit.h); a Rust overlay that began at `encrypt` read
+ * WIFI_DATA_TYPE (8) as the cipher and skipped CCMP/GCMP software TX.
+ */
+u8 rtw_rust_pkt_attrib_encrypt(const struct pkt_attrib *a)
+{
+	return a->encrypt;
+}
+
+u8 rtw_rust_pkt_attrib_nr_frags(const struct pkt_attrib *a)
+{
+	return a->nr_frags;
+}
+
+u16 rtw_rust_pkt_attrib_hdrlen(const struct pkt_attrib *a)
+{
+	return a->hdrlen;
+}
+
+u32 rtw_rust_pkt_attrib_last_txcmdsz(const struct pkt_attrib *a)
+{
+	return a->last_txcmdsz;
+}
+
+u8 rtw_rust_pkt_attrib_iv_len(const struct pkt_attrib *a)
+{
+	return a->iv_len;
+}
+
+u8 rtw_rust_pkt_attrib_icv_len(const struct pkt_attrib *a)
+{
+	return a->icv_len;
+}
+
+void rtw_rust_pkt_attrib_ra(const struct pkt_attrib *a, u8 *out)
+{
+	_rtw_memcpy(out, a->ra, ETH_ALEN);
+}
 #endif
 
 /* 3		=====TKIP related===== (W3-07a: MIC helpers in rust/rtw_security.rs) */
