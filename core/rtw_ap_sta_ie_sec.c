@@ -14,8 +14,12 @@
  *****************************************************************************/
 #define _RTW_AP_STA_IE_SEC_C_
 
+#ifdef HOST_AP_STA_IE_SEC_TEST
+#include "host_ap_sta_ie_sec_types.h"
+#else
 #include <drv_types.h>
 #include <hal_data.h>
+#endif
 
 u16 rtw_ap_sta_sec_parse_cipher_ies(_adapter *adapter, struct sta_info *sta,
 				    struct security_priv *sec,
@@ -230,3 +234,42 @@ u16 rtw_ap_sta_sec_apply_policy_wps(_adapter *adapter, struct sta_info *sta,
 exit:
 	return status;
 }
+
+#if !defined(CONFIG_RUST_AP_STA_IE_SEC) || defined(HOST_AP_STA_IE_SEC_TEST)
+
+u16 rtw_ap_parse_sta_security_ie(_adapter *adapter, struct sta_info *sta,
+				 struct rtw_ieee802_11_elems *elems)
+{
+	struct security_priv *sec = &adapter->securitypriv;
+	u8 *wpa_ie;
+	int wpa_ie_len;
+	int group_cipher = 0, pairwise_cipher = 0, gmcs = 0;
+	u32 akm = 0;
+	u8 mfp_opt = MFP_NO;
+	u8 spp_opt = 0;
+	u16 status = _STATS_SUCCESSFUL_;
+
+	sta->dot8021xalg = 0;
+	sta->wpa_psk = 0;
+	sta->wpa_group_cipher = 0;
+	sta->wpa2_group_cipher = 0;
+	sta->wpa_pairwise_cipher = 0;
+	sta->wpa2_pairwise_cipher = 0;
+	_rtw_memset(sta->wpa_ie, 0, sizeof(sta->wpa_ie));
+
+	status = rtw_ap_sta_sec_parse_cipher_ies(adapter, sta, sec, elems,
+					       &wpa_ie, &wpa_ie_len,
+					       &group_cipher, &pairwise_cipher,
+					       &gmcs, &akm, &mfp_opt, &spp_opt);
+	if (status != _STATS_SUCCESSFUL_)
+		goto exit;
+
+	status = rtw_ap_sta_sec_apply_policy_wps(adapter, sta, sec, elems,
+						 wpa_ie, wpa_ie_len, gmcs,
+						 mfp_opt, spp_opt);
+
+exit:
+	return status;
+}
+
+#endif /* !CONFIG_RUST_AP_STA_IE_SEC || HOST_AP_STA_IE_SEC_TEST */
