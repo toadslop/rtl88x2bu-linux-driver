@@ -116,3 +116,40 @@ void rtw_vht_ies_detach(_adapter *a, WLAN_BSSID_EX *n)
 	rtw_remove_bcn_ie(a, n, EID_VHTOperation);
 	a->mlmepriv.vhtpriv.vht_option = _FALSE;
 }
+
+u8 rtw_rust_band_ie_ht_option(_adapter *a)
+{
+	return a->mlmepriv.htpriv.ht_option;
+}
+
+u32 rtw_rust_band_ie_wireless_mode(_adapter *a)
+{
+	return a->registrypriv.wireless_mode;
+}
+
+u8 rtw_rust_band_ie_vht_enable(_adapter *a)
+{
+	return a->registrypriv.vht_enable;
+}
+
+u8 rtw_rust_band_ie_ori_vht_en(_adapter *a)
+{
+	return a->mlmepriv.ori_vht_en;
+}
+
+u8 rtw_rust_band_ie_country_en_11ac(_adapter *a)
+{
+	country_ent_t *ent = a->rfctl.country_ent;
+
+	return (!ent || ent->en_11ac) ? 1 : 0;
+}
+
+u8 *rtw_rust_band_ie_supported_rates(WLAN_BSSID_EX *n)
+{
+	return n->SupportedRates;
+}
+
+void rtw_rust_band_ie_set_length(WLAN_BSSID_EX *n)
+{
+	n->Length = get_WLAN_BSSID_EX_sz(n);
+}

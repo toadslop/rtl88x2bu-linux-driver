@@ -16,6 +16,7 @@ PEER_ALIVE_SHIM := host_mlme_ext_peer_alive_shim.c
 SCAN_SHIM := host_mlme_ext_scan_shim.c
 BAND_IE_SHIM := host_mlme_ext_band_ie_shim.c
 BAND_IE_RATE_ORACLE := band_ie_rate_oracle.c
+RUST_MLME_EXT_BAND_IE := $(ROOT)/rust/rtw_mlme_ext_band_ie.rs
 WLAN_UTIL_ORACLE := ../wlan_util/wlan_util_c_oracle.c
 
 SCAN_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-variable -O2 \
@@ -51,14 +52,14 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-format-truncation -O2
 .PHONY: all test test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust \
 	test-mgnt-attrib-kernel-layout test-peer-alive test-scan-decision \
 	test-scan-decision-rust test-scan-kernel-layout test-pick-ch \
-	test-pick-ch-rust test-band-ie clean
+	test-pick-ch-rust test-band-ie test-band-ie-rust clean
 
 all: test
 
 test: test-c test-rust test-mgnt-attrib test-mgnt-attrib-rust \
 	test-mgnt-attrib-kernel-layout test-peer-alive test-scan-decision \
 	test-scan-decision-rust test-scan-kernel-layout test-pick-ch \
-	test-pick-ch-rust test-band-ie
+	test-pick-ch-rust test-band-ie test-band-ie-rust
 
 test-c: test_chset
 	./test_chset chset_vectors.json
@@ -174,6 +175,20 @@ test_pick_ch_rust: test_pick_ch.c librust_mlme_ext_pick_ch.a $(MLME_EXT_REST_SRC
 test-band-ie: test_band_ie
 	./test_band_ie
 
+librust_mlme_ext_band_ie.a: $(RUST_MLME_EXT_BAND_IE)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on \
+		--cfg host_mlme_ext_band_ie_test --cfg config_80211ac_vht \
+		--crate-type staticlib $(RUST_MLME_EXT_BAND_IE) -o $@
+
+test-band-ie-rust: test_band_ie_rust
+	./test_band_ie_rust
+
+test_band_ie_rust: test_band_ie.c librust_mlme_ext_band_ie.a $(BAND_IE_SHIM) \
+		$(BAND_IE_RATE_ORACLE) $(WLAN_UTIL_ORACLE)
+	$(CC) $(BAND_IE_CFLAGS) -DRUST_MLME_EXT_BAND_IE_ORACLE -o $@ test_band_ie.c \
+		$(BAND_IE_SHIM) $(BAND_IE_RATE_ORACLE) $(WLAN_UTIL_ORACLE) \
+		librust_mlme_ext_band_ie.a
+
 test_band_ie: test_band_ie.c $(MLME_EXT_REST_SRC) $(BAND_IE_SHIM) $(BAND_IE_RATE_ORACLE) \
 		$(WLAN_UTIL_ORACLE)
 	$(CC) $(BAND_IE_CFLAGS) -o $@ test_band_ie.c $(MLME_EXT_REST_SRC) $(BAND_IE_SHIM) \
@@ -187,4 +202,4 @@ clean:
 		test_scan_decision test_scan_decision_rust librust_mlme_ext_scan.a \
 		test_scan_kernel_layout librust_mlme_ext_scan_kernel.a \
 		test_pick_ch test_pick_ch_rust librust_mlme_ext_pick_ch.a \
-		test_band_ie
+		test_band_ie test_band_ie_rust librust_mlme_ext_band_ie.a
