@@ -80,10 +80,25 @@ void rtw_rust_ap_sta_apply_wmm(struct sta_info *sta, u8 qos_info)
 	sta->max_sp_len = (qos_info >> 5) & 0x3;
 	sta->has_legacy_ac = ((qos_info & 0xf) != 0xf) ? _TRUE : _FALSE;
 	if (qos_info & 0xf) {
-		sta->uapsd_vo = (qos_info & BIT(0)) ? (BIT(0) | BIT(1)) : 0;
-		sta->uapsd_vi = (qos_info & BIT(1)) ? (BIT(0) | BIT(1)) : 0;
-		sta->uapsd_bk = (qos_info & BIT(2)) ? (BIT(0) | BIT(1)) : 0;
-		sta->uapsd_be = (qos_info & BIT(3)) ? (BIT(0) | BIT(1)) : 0;
+		if (qos_info & BIT(0))
+			sta->uapsd_vo = BIT(0) | BIT(1);
+		else
+			sta->uapsd_vo = 0;
+
+		if (qos_info & BIT(1))
+			sta->uapsd_vi = BIT(0) | BIT(1);
+		else
+			sta->uapsd_vi = 0;
+
+		if (qos_info & BIT(2))
+			sta->uapsd_bk = BIT(0) | BIT(1);
+		else
+			sta->uapsd_bk = 0;
+
+		if (qos_info & BIT(3))
+			sta->uapsd_be = BIT(0) | BIT(1);
+		else
+			sta->uapsd_be = 0;
 	}
 }
 
@@ -127,23 +142,23 @@ void rtw_rust_ap_sta_clear_ht(struct sta_info *sta)
 	sta->flags &= ~WLAN_STA_HT;
 }
 
-void rtw_rust_ap_sta_apply_ht_cap(struct sta_info *sta, const u8 *ht_cap, u16 cap_len)
+void rtw_rust_ap_sta_apply_ht_from_elems(struct sta_info *sta,
+					 struct rtw_ieee802_11_elems *elems)
 {
 #ifdef CONFIG_80211N_HT
 	_rtw_memset(&sta->htpriv.ht_cap, 0, sizeof(sta->htpriv.ht_cap));
-	if (ht_cap && cap_len >= sizeof(struct rtw_ieee80211_ht_cap)) {
+	if (elems && elems->ht_capabilities &&
+	    elems->ht_capabilities_len >= sizeof(struct rtw_ieee80211_ht_cap)) {
 		sta->flags |= WLAN_STA_HT | WLAN_STA_WME;
-		_rtw_memcpy(&sta->htpriv.ht_cap, ht_cap, sizeof(sta->htpriv.ht_cap));
-	}
-#endif
-}
+		_rtw_memcpy(&sta->htpriv.ht_cap, elems->ht_capabilities,
+			    sizeof(sta->htpriv.ht_cap));
 
-void rtw_rust_ap_sta_apply_ht_op(struct sta_info *sta, const u8 *ht_op)
-{
-#ifdef CONFIG_80211N_HT
-	if (ht_op) {
-		_rtw_memcpy(sta->htpriv.ht_op, ht_op, HT_OP_IE_LEN);
-		sta->htpriv.op_present = 1;
+		if (elems->ht_operation &&
+		    elems->ht_operation_len == HT_OP_IE_LEN) {
+			_rtw_memcpy(sta->htpriv.ht_op, elems->ht_operation,
+				    HT_OP_IE_LEN);
+			sta->htpriv.op_present = 1;
+		}
 	}
 #endif
 }
@@ -153,20 +168,28 @@ void rtw_rust_ap_sta_clear_vht(struct sta_info *sta)
 	sta->flags &= ~WLAN_STA_VHT;
 }
 
-void rtw_rust_ap_sta_apply_vht(struct sta_info *sta, const u8 *vht_cap,
-			       const u8 *vht_op, const u8 *vht_notify)
+void rtw_rust_ap_sta_apply_vht_from_elems(struct sta_info *sta,
+					  struct rtw_ieee802_11_elems *elems)
 {
 #ifdef CONFIG_80211AC_VHT
 	_rtw_memset(&sta->vhtpriv, 0, sizeof(sta->vhtpriv));
-	if (vht_cap) {
+	if (elems && elems->vht_capabilities &&
+	    elems->vht_capabilities_len == VHT_CAP_IE_LEN) {
 		sta->flags |= WLAN_STA_VHT;
-		_rtw_memcpy(sta->vhtpriv.vht_cap, vht_cap, VHT_CAP_IE_LEN);
-		if (vht_op) {
-			_rtw_memcpy(sta->vhtpriv.vht_op, vht_op, VHT_OP_IE_LEN);
+		_rtw_memcpy(sta->vhtpriv.vht_cap, elems->vht_capabilities,
+			    VHT_CAP_IE_LEN);
+
+		if (elems->vht_operation &&
+		    elems->vht_operation_len == VHT_OP_IE_LEN) {
+			_rtw_memcpy(sta->vhtpriv.vht_op, elems->vht_operation,
+				    VHT_OP_IE_LEN);
 			sta->vhtpriv.op_present = 1;
 		}
-		if (vht_notify) {
-			_rtw_memcpy(&sta->vhtpriv.vht_op_mode_notify, vht_notify, 1);
+
+		if (elems->vht_op_mode_notify &&
+		    elems->vht_op_mode_notify_len == 1) {
+			_rtw_memcpy(&sta->vhtpriv.vht_op_mode_notify,
+				    elems->vht_op_mode_notify, 1);
 			sta->vhtpriv.notify_present = 1;
 		}
 	}

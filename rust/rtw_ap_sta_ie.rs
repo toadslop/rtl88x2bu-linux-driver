@@ -31,20 +31,6 @@ const WLAN_STA_NONERP: i32 = 1 << 31;
 const WLAN_EID_VENDOR_SPECIFIC: U8 = 221;
 const WMM_OUI: [U8; 6] = [0x00, 0x50, 0xf2, 0x02, 0x00, 0x01];
 
-#[repr(C)]
-struct Elems {
-    ht_capabilities: *mut U8,
-    ht_capabilities_len: U8,
-    ht_operation: *mut U8,
-    ht_operation_len: U8,
-    vht_capabilities: *mut U8,
-    vht_capabilities_len: U8,
-    vht_operation: *mut U8,
-    vht_operation_len: U8,
-    vht_op_mode_notify: *mut U8,
-    vht_op_mode_notify_len: U8,
-}
-
 extern "C" {
     fn _rtw_memcpy(d: *mut c_void, s: *const c_void, n: usize) -> *mut c_void;
     fn rtw_ies_get_supported_rate(
@@ -79,15 +65,9 @@ extern "C" {
     fn rtw_rust_ap_sta_clear_wmm(sta: *mut StaInfo);
     fn rtw_rust_ap_sta_apply_wmm(sta: *mut StaInfo, qos_info: U8);
     fn rtw_rust_ap_sta_clear_ht(sta: *mut StaInfo);
-    fn rtw_rust_ap_sta_apply_ht_cap(sta: *mut StaInfo, ht_cap: *const U8, cap_len: U16);
-    fn rtw_rust_ap_sta_apply_ht_op(sta: *mut StaInfo, ht_op: *const U8);
+    fn rtw_rust_ap_sta_apply_ht_from_elems(sta: *mut StaInfo, elems: *mut Ieee80211Elems);
     fn rtw_rust_ap_sta_clear_vht(sta: *mut StaInfo);
-    fn rtw_rust_ap_sta_apply_vht(
-        sta: *mut StaInfo,
-        vht_cap: *const U8,
-        vht_op: *const U8,
-        vht_notify: *const U8,
-    );
+    fn rtw_rust_ap_sta_apply_vht_from_elems(sta: *mut StaInfo, elems: *mut Ieee80211Elems);
     fn rtw_rust_ap_adapter_multi_ap(adapter: *mut Adapter) -> U8;
     fn rtw_rust_ap_sta_clear_multi_ap(sta: *mut StaInfo);
     fn rtw_rust_ap_sta_apply_multi_ap(sta: *mut StaInfo, multi_ap: U8, role: U8);
@@ -199,16 +179,12 @@ pub extern "C" fn rtw_ap_parse_sta_ht_ie(
     if adapter.is_null() || sta.is_null() || elems.is_null() {
         return;
     }
-    let e = unsafe { &*(elems as *const Elems) };
     unsafe {
         rtw_rust_ap_sta_clear_ht(sta);
         if rtw_rust_ap_mlme_ht_option(adapter) == 0 {
             return;
         }
-        rtw_rust_ap_sta_apply_ht_cap(sta, e.ht_capabilities, e.ht_capabilities_len as U16);
-        if !e.ht_operation.is_null() && e.ht_operation_len as usize == 22 {
-            rtw_rust_ap_sta_apply_ht_op(sta, e.ht_operation);
-        }
+        rtw_rust_ap_sta_apply_ht_from_elems(sta, elems);
     }
 }
 
@@ -222,25 +198,12 @@ pub extern "C" fn rtw_ap_parse_sta_vht_ie(
     if adapter.is_null() || sta.is_null() || elems.is_null() {
         return;
     }
-    let e = unsafe { &*(elems as *const Elems) };
     unsafe {
         rtw_rust_ap_sta_clear_vht(sta);
         if rtw_rust_ap_mlme_vht_option(adapter) == 0 {
             return;
         }
-        let notify = if e.vht_op_mode_notify_len == 1 {
-            e.vht_op_mode_notify
-        } else {
-            core::ptr::null()
-        };
-        let vht_op = if !e.vht_operation.is_null() && e.vht_operation_len as usize == 5 {
-            e.vht_operation
-        } else {
-            core::ptr::null()
-        };
-        if !e.vht_capabilities.is_null() && e.vht_capabilities_len as usize == 12 {
-            rtw_rust_ap_sta_apply_vht(sta, e.vht_capabilities, vht_op, notify);
-        }
+        rtw_rust_ap_sta_apply_vht_from_elems(sta, elems);
     }
 }
 
