@@ -118,6 +118,7 @@ u16 rtw_ap_sta_sec_apply_policy_wps(_adapter *adapter, struct sta_info *sta,
 	u16 status = _STATS_SUCCESSFUL_;
 
 	if (sec->dot11PrivacyAlgrthm != _NO_PRIVACY_) {
+		/*check if amsdu is allowed */
 		if (rtw_check_amsdu_disable(adapter->registrypriv.amsdu_mode, spp_opt) == _TRUE)
 			sta->flags |= WLAN_STA_AMSDU_DISABLE;
 	}
@@ -131,6 +132,7 @@ u16 rtw_ap_sta_sec_apply_policy_wps(_adapter *adapter, struct sta_info *sta,
 
 #ifdef CONFIG_RTW_MESH
 	if (MLME_IS_MESH(adapter)) {
+		/* MFP is mandatory for secure mesh */
 		if (adapter->mesh_info.mesh_auth_id)
 			sta->flags |= WLAN_STA_MFP;
 	} else
@@ -153,6 +155,7 @@ u16 rtw_ap_sta_sec_apply_policy_wps(_adapter *adapter, struct sta_info *sta,
 		(sec->auth_type == MLME_AUTHTYPE_SAE) &&
 		(CHECK_BIT(WLAN_AKM_TYPE_SAE, sta->akm_suite_type)) &&
 		(WLAN_AUTH_OPEN == sta->authalg)) {
+		/* WPA3-SAE, PMK caching */
 		if (rtw_cached_pmkid(adapter, sta->cmn.mac_addr) == -1) {
 			RTW_INFO("SAE: No PMKSA cache entry found\n");
 			status = WLAN_STATUS_INVALID_PMKID;
@@ -166,6 +169,7 @@ u16 rtw_ap_sta_sec_apply_policy_wps(_adapter *adapter, struct sta_info *sta,
 		goto exit;
 
 	sta->flags &= ~(WLAN_STA_WPS | WLAN_STA_MAYBE_WPS);
+	/* if (hapd->conf->wps_state && wpa_ie == NULL) { */ /* todo: to check ap if supporting WPS */
 	if (wpa_ie == NULL) {
 		if (elems->wps_ie) {
 			RTW_INFO("STA included WPS IE in "
@@ -179,6 +183,8 @@ u16 rtw_ap_sta_sec_apply_policy_wps(_adapter *adapter, struct sta_info *sta,
 			sta->flags |= WLAN_STA_MAYBE_WPS;
 		}
 
+		/* AP support WPA/RSN, and sta is going to do WPS, but AP is not ready */
+		/* that the selected registrar of AP is _FLASE */
 		if ((sec->wpa_psk > 0)
 			&& (sta->flags & (WLAN_STA_WPS | WLAN_STA_MAYBE_WPS))
 		) {
