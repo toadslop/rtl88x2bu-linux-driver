@@ -1,0 +1,127 @@
+{
+  "oracle": "core/rtw_ieee80211.c",
+  "vectors": [
+    {
+      "name": "ssid_ds_ok",
+      "ies": "000474657374030106",
+      "show_errors": 0,
+      "expect_result": 0,
+      "expect_ssid_len": 4,
+      "expect_ssid_byte": 116,
+      "expect_ds_len": 1,
+      "expect_ds_byte": 6,
+      "expect_rsn_len": -1,
+      "expect_wpa_len": -1,
+      "expect_wps_len": -1,
+      "expect_wme_len": -1
+    },
+    {
+      "name": "rsn_ok",
+      "ies": "30140100000fac040100000fac040100000fac020000",
+      "show_errors": 0,
+      "expect_result": 0,
+      "expect_ssid_len": -1,
+      "expect_ds_len": -1,
+      "expect_rsn_len": 20,
+      "expect_wpa_len": -1,
+      "expect_wps_len": -1,
+      "expect_wme_len": -1
+    },
+    {
+      "name": "unknown_elem",
+      "ies": "630100",
+      "show_errors": 0,
+      "expect_result": 1,
+      "expect_ssid_len": -1,
+      "expect_ds_len": -1,
+      "expect_rsn_len": -1,
+      "expect_wpa_len": -1,
+      "expect_wps_len": -1,
+      "expect_wme_len": -1
+    },
+    {
+      "name": "malformed_elen",
+      "ies": "0005aa",
+      "show_errors": 0,
+      "expect_result": -1,
+      "expect_ssid_len": -1,
+      "expect_ds_len": -1,
+      "expect_rsn_len": -1,
+      "expect_wpa_len": -1,
+      "expect_wps_len": -1,
+      "expect_wme_len": -1
+    },
+    {
+      "name": "trailing_byte",
+      "ies": "000474657374aa",
+      "show_errors": 0,
+      "expect_result": -1,
+      "expect_ssid_len": -1,
+      "expect_ds_len": -1,
+      "expect_rsn_len": -1,
+      "expect_wpa_len": -1,
+      "expect_wps_len": -1,
+      "expect_wme_len": -1
+    },
+    {
+      "name": "vendor_wpa",
+      "ies": "dd160050f20101000050f2020100000fac040100000fac040000",
+      "show_errors": 0,
+      "expect_result": 0,
+      "expect_ssid_len": -1,
+      "expect_ds_len": -1,
+      "expect_rsn_len": -1,
+      "expect_wpa_len": 22,
+      "expect_wps_len": -1,
+      "expect_wme_len": -1
+    },
+    {
+      "name": "vendor_wps",
+      "ies": "dd040050f204",
+      "show_errors": 0,
+      "expect_result": 0,
+      "expect_ssid_len": -1,
+      "expect_ds_len": -1,
+      "expect_rsn_len": -1,
+      "expect_wpa_len": -1,
+      "expect_wps_len": 4,
+      "expect_wme_len": -1
+    },
+    {
+      "name": "vendor_wme_info",
+      "ies": "dd060050f2020001",
+      "show_errors": 0,
+      "expect_result": 0,
+      "expect_ssid_len": -1,
+      "expect_ds_len": -1,
+      "expect_rsn_len": -1,
+      "expect_wpa_len": -1,
+      "expect_wps_len": -1,
+      "expect_wme_len": 6
+    },
+    {
+      "name": "vendor_short",
+      "ies": "dd020050",
+      "show_errors": 0,
+      "expect_result": 1,
+      "expect_ssid_len": -1,
+      "expect_ds_len": -1,
+      "expect_rsn_len": -1,
+      "expect_wpa_len": -1,
+      "expect_wps_len": -1,
+      "expect_wme_len": -1
+    },
+    {
+      "name": "empty_ok",
+      "ies": "",
+      "show_errors": 0,
+      "expect_result": 0,
+      "expect_ssid_len": -1,
+      "expect_ds_len": -1,
+      "expect_rsn_len": -1,
+      "expect_wpa_len": -1,
+      "expect_wps_len": -1,
+      "expect_wme_len": -1
+    }
+  ]
+}

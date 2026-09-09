@@ -14,3 +14,5 @@ test_ie_rest_wfd_multiap
 test_ie_rest_wfd_multiap_rust
 test_ie_rest_wpa_rsn_parse
 test_ie_rest_wpa_rsn_parse_rust
+test_ie_rest_parse_elems
+test_ie_rest_parse_elems_rust
