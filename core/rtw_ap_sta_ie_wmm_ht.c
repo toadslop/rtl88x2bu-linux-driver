@@ -14,10 +14,14 @@
  *****************************************************************************/
 #define _RTW_AP_STA_IE_WMM_HT_C_
 
+#ifdef HOST_AP_STA_IE_TEST
+#include "host_ap_sta_ie_wmm_ht_types.h"
+#else
 #include <drv_types.h>
 #include <hal_data.h>
+#endif
 
-#if !defined(CONFIG_RUST_AP_STA_IE)
+#if !defined(CONFIG_RUST_AP_STA_IE) || defined(HOST_AP_STA_IE_TEST)
 
 void rtw_ap_parse_sta_wmm_ie(_adapter *adapter, struct sta_info *sta, u8 *tlv_ies, u16 tlv_ies_len)
 {
