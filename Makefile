@@ -2468,6 +2468,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_ap_sta_ie_rates.o \
 		core/rtw_ap_sta_ie_wmm_ht.o \
 		core/rtw_ap_sta_ie_vht_multiap.o \
+		core/rtw_ap_sta_ie_rust_acc.o \
 		core/wds/rtw_wds.o \
 		core/mesh/rtw_mesh.o \
 		core/mesh/rtw_mesh_pathtbl.o \
@@ -2606,6 +2607,7 @@ ccflags-y += -DCONFIG_RUST_MLME_HT_RESTRUCTURE
 ccflags-y += -DCONFIG_80211D
 ccflags-y += -DCONFIG_RUST_MLME_80211D
 ccflags-y += -DCONFIG_RUST_STA_MGT_STCTL
+ccflags-y += -DCONFIG_RUST_AP_STA_IE
 ccflags-y += -DCONFIG_RUST_AP_REST
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_PREF
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_DUMP
@@ -2650,6 +2652,7 @@ ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_80211AC_VHT' $(src)/include/aut
 rustflags-y += --cfg config_80211ac_vht
 endif
 rustflags-y += --cfg rust_sta_mgt_stctl
+rustflags-y += --cfg rust_ap_sta_ie
 rustflags-y += --cfg rust_ap_rest
 rustflags-y += --cfg rust_rf_op_class_pref
 rustflags-y += --cfg rust_rf_op_class_dump
@@ -2712,6 +2715,7 @@ $(MODULE_NAME)-y += rust/rtw_vht.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt_aid.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt_stctl.o
+$(MODULE_NAME)-y += rust/rtw_ap_sta_ie.o
 $(MODULE_NAME)-y += rust/rtw_ap_rest.o
 $(MODULE_NAME)-y += rust/rtw_rf_op_class_pref.o
 $(MODULE_NAME)-y += rust/rtw_rf_op_class_dump.o
@@ -3231,6 +3235,40 @@ rust-objects-rtw-ap-rest-rust-ref:
 rust-check-symbols-rtw-ap-rest: rust-objects-rtw-ap-rest-c rust-objects-rtw-ap-rest-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_rest_c_ref.o NEW=tests/host/ap/ap_rest_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_rest.allow
+
+# W3-73 PR8: AP STA IE parse L1 (merged C oracle vs kbuild Rust object).
+rust-objects-rtw-ap-sta-ie-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_AP_STA_IE_TEST \
+		-o tests/host/ap/ap_sta_ie_cap_c_ref.o core/rtw_ap_sta_ie.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_AP_STA_IE_TEST \
+		-o tests/host/ap/ap_sta_ie_rates_c_ref.o core/rtw_ap_sta_ie_rates.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_AP_STA_IE_TEST \
+		-o tests/host/ap/ap_sta_ie_wmm_ht_c_ref.o core/rtw_ap_sta_ie_wmm_ht.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_AP_STA_IE_TEST -DCONFIG_RTW_MULTI_AP \
+		-o tests/host/ap/ap_sta_ie_vht_multiap_c_ref.o core/rtw_ap_sta_ie_vht_multiap.c
+	ld -r -o tests/host/ap/ap_sta_ie_c_ref.o tests/host/ap/ap_sta_ie_cap_c_ref.o \
+		tests/host/ap/ap_sta_ie_rates_c_ref.o tests/host/ap/ap_sta_ie_wmm_ht_c_ref.o \
+		tests/host/ap/ap_sta_ie_vht_multiap_c_ref.o
+
+rust-objects-rtw-ap-sta-ie:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-ap-sta-ie"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_ap_sta_ie.o
+
+rust-check-symbols-rtw-ap-sta-ie: rust-objects-rtw-ap-sta-ie-c rust-objects-rtw-ap-sta-ie
+	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_sta_ie_c_ref.o NEW=rust/rtw_ap_sta_ie.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_sta_ie.allow
 
 # W3-69 PR4: peer-alive-only L1 (host C oracle vs kbuild Rust object).
 rust-objects-rtw-mlme-ext-peer-alive:
