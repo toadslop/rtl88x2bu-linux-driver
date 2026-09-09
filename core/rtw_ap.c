@@ -5125,73 +5125,12 @@ u16 rtw_ap_parse_sta_security_ie(_adapter *adapter, struct sta_info *sta, struct
 	sta->wpa2_pairwise_cipher = 0;
 	_rtw_memset(sta->wpa_ie, 0, sizeof(sta->wpa_ie));
 
-	if ((sec->wpa_psk & BIT(1)) && elems->rsn_ie) {
-		wpa_ie = elems->rsn_ie;
-		wpa_ie_len = elems->rsn_ie_len;
-
-		if (rtw_parse_wpa2_ie(wpa_ie - 2, wpa_ie_len + 2, &group_cipher, &pairwise_cipher, &gmcs, &akm, &mfp_opt, &spp_opt) == _SUCCESS) {
-			sta->dot8021xalg = 1;/* psk, todo:802.1x */
-			sta->wpa_psk |= BIT(1);
-
-			sta->wpa2_group_cipher = group_cipher & sec->wpa2_group_cipher;
-			sta->wpa2_pairwise_cipher = pairwise_cipher & sec->wpa2_pairwise_cipher;
-
-			sta->akm_suite_type = akm;
-			if (MLME_IS_AP(adapter) && (CHECK_BIT(WLAN_AKM_TYPE_SAE, akm)) && (MFP_NO == mfp_opt)) {
-				status = WLAN_STATUS_ROBUST_MGMT_FRAME_POLICY_VIOLATION;
-				goto exit;
-			}
-
-			if (MLME_IS_AP(adapter) && (!CHECK_BIT(sec->akmp, akm))) {
-				status = WLAN_STATUS_AKMP_NOT_VALID;
-				goto exit;
-			}
-
-			if (!sta->wpa2_group_cipher) {
-				status = WLAN_STATUS_GROUP_CIPHER_NOT_VALID;
-				goto exit;
-			}
-
-			if (!sta->wpa2_pairwise_cipher) {
-				status = WLAN_STATUS_PAIRWISE_CIPHER_NOT_VALID;
-				goto exit;
-			}
-
-		} else {
-			status = WLAN_STATUS_INVALID_IE;
-			goto exit;
-		}
-
-	}
-	else if ((sec->wpa_psk & BIT(0)) && elems->wpa_ie) {
-		wpa_ie = elems->wpa_ie;
-		wpa_ie_len = elems->wpa_ie_len;
-
-		if (rtw_parse_wpa_ie(wpa_ie - 2, wpa_ie_len + 2, &group_cipher, &pairwise_cipher, NULL) == _SUCCESS) {
-			sta->dot8021xalg = 1;/* psk, todo:802.1x */
-			sta->wpa_psk |= BIT(0);
-
-			sta->wpa_group_cipher = group_cipher & sec->wpa_group_cipher;
-			sta->wpa_pairwise_cipher = pairwise_cipher & sec->wpa_pairwise_cipher;
-
-			if (!sta->wpa_group_cipher) {
-				status = WLAN_STATUS_GROUP_CIPHER_NOT_VALID;
-				goto exit;
-			}
-
-			if (!sta->wpa_pairwise_cipher) {
-				status = WLAN_STATUS_PAIRWISE_CIPHER_NOT_VALID;
-				goto exit;
-			}
-		} else {
-			status = WLAN_STATUS_INVALID_IE;
-			goto exit;
-		}
-
-	} else {
-		wpa_ie = NULL;
-		wpa_ie_len = 0;
-	}
+	status = rtw_ap_sta_sec_parse_cipher_ies(adapter, sta, sec, elems,
+					       &wpa_ie, &wpa_ie_len,
+					       &group_cipher, &pairwise_cipher,
+					       &gmcs, &akm, &mfp_opt, &spp_opt);
+	if (status != _STATS_SUCCESSFUL_)
+		goto exit;
 	if (sec->dot11PrivacyAlgrthm != _NO_PRIVACY_) {
 		/*check if amsdu is allowed */
 		if (rtw_check_amsdu_disable(adapter->registrypriv.amsdu_mode, spp_opt) == _TRUE)
