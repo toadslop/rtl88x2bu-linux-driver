@@ -5106,41 +5106,6 @@ void tx_beacon_timer_handlder(void *ctx)
 }
 #endif
 
-u16 rtw_ap_parse_sta_security_ie(_adapter *adapter, struct sta_info *sta, struct rtw_ieee802_11_elems *elems)
-{
-	struct security_priv *sec = &adapter->securitypriv;
-	u8 *wpa_ie;
-	int wpa_ie_len;
-	int group_cipher = 0, pairwise_cipher = 0, gmcs = 0;
-	u32 akm = 0;
-	u8 mfp_opt = MFP_NO;
-	u8 spp_opt = 0;
-	u16 status = _STATS_SUCCESSFUL_;
-
-	sta->dot8021xalg = 0;
-	sta->wpa_psk = 0;
-	sta->wpa_group_cipher = 0;
-	sta->wpa2_group_cipher = 0;
-	sta->wpa_pairwise_cipher = 0;
-	sta->wpa2_pairwise_cipher = 0;
-	_rtw_memset(sta->wpa_ie, 0, sizeof(sta->wpa_ie));
-
-	status = rtw_ap_sta_sec_parse_cipher_ies(adapter, sta, sec, elems,
-					       &wpa_ie, &wpa_ie_len,
-					       &group_cipher, &pairwise_cipher,
-					       &gmcs, &akm, &mfp_opt, &spp_opt);
-	if (status != _STATS_SUCCESSFUL_)
-		goto exit;
-
-	status = rtw_ap_sta_sec_apply_policy_wps(adapter, sta, sec, elems,
-						 wpa_ie, wpa_ie_len, gmcs,
-						 mfp_opt, spp_opt);
-
-exit:
-	return status;
-}
-
-
 #if CONFIG_RTW_AP_DATA_BMC_TO_UC
 static bool rtw_ap_data_bmc_to_uc(_adapter *adapter
 	, const u8 *da, const u8 *sa, const u8 *ori_ta
