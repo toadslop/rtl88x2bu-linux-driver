@@ -15,13 +15,16 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable
 
 AP_STA_IE_SRC := $(CORE)/rtw_ap_sta_ie.c
 AP_STA_IE_RATES_SRC := $(CORE)/rtw_ap_sta_ie_rates.c
+AP_STA_IE_WMM_HT_SRC := $(CORE)/rtw_ap_sta_ie_wmm_ht.c
 IE_ORACLE := ../ie/ie_c_oracle.c
 STA_IE_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
           -I$(HOST_INC) -I$(CORE) -I$(ROOT)/include \
           -include $(HOST_INC)/host_autoconf.h \
           -DHOST_AP_STA_IE_TEST
 STA_IE_RATES_CFLAGS := $(STA_IE_CFLAGS)
+STA_IE_WMM_HT_CFLAGS := $(STA_IE_CFLAGS)
 STA_IE_RATES_DEPS := ap_sta_ie_rates_oracle.c $(IE_ORACLE)
+STA_IE_WMM_HT_DEPS := $(IE_ORACLE)
 
 .PHONY: all test test-c test-rust test-sta-ie clean
 
@@ -45,9 +48,10 @@ test-rust: test_ap_rest_rust
 test_ap_rest_rust: test_ap_rest.c librust_ap_rest.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_AP_REST_ORACLE -o $@ test_ap_rest.c $(HOST_JSON) librust_ap_rest.a
 
-test-sta-ie: test_ap_sta_ie test_ap_sta_ie_rates
+test-sta-ie: test_ap_sta_ie test_ap_sta_ie_rates test_ap_sta_ie_wmm_ht
 	./test_ap_sta_ie ap_sta_ie_vectors.json
 	./test_ap_sta_ie_rates
+	./test_ap_sta_ie_wmm_ht
 
 test_ap_sta_ie: test_ap_sta_ie.c $(AP_STA_IE_SRC) $(HOST_JSON)
 	$(CC) $(STA_IE_CFLAGS) -o $@ test_ap_sta_ie.c $(AP_STA_IE_SRC) $(HOST_JSON)
@@ -56,6 +60,10 @@ test_ap_sta_ie_rates: test_ap_sta_ie_rates.c $(AP_STA_IE_RATES_SRC) $(STA_IE_RAT
 	$(CC) $(STA_IE_RATES_CFLAGS) -o $@ test_ap_sta_ie_rates.c $(AP_STA_IE_RATES_SRC) \
 		$(STA_IE_RATES_DEPS)
 
+test_ap_sta_ie_wmm_ht: test_ap_sta_ie_wmm_ht.c $(AP_STA_IE_WMM_HT_SRC) $(STA_IE_WMM_HT_DEPS)
+	$(CC) $(STA_IE_WMM_HT_CFLAGS) -o $@ test_ap_sta_ie_wmm_ht.c $(AP_STA_IE_WMM_HT_SRC) \
+		$(STA_IE_WMM_HT_DEPS)
+
 clean:
 	rm -f test_ap_rest test_ap_rest_rust test_ap_sta_ie test_ap_sta_ie_rates \
-		librust_ap_rest.a
+		test_ap_sta_ie_wmm_ht librust_ap_rest.a
