@@ -80,7 +80,7 @@ IE_REST_RUST_SHIM := ie_mac_str_host_shim.c ie_p2p_c_oracle.c ie_wfd_multiap_c_o
 	test-rest-ht-mcs-amsdu test-rest-ht-mcs-amsdu-rust \
 	test-rest-p2p-ie test-rest-p2p-ie-rust \
 	test-rest-wfd-multiap test-rest-wfd-multiap-rust \
-	test-rest-parse-elems clean
+	test-rest-parse-elems test-rest-parse-elems-rust clean
 
 all: test
 
@@ -92,7 +92,7 @@ test: test-c test-rust test-rest test-rest-rust test-rest-cipher \
 	test-rest-ht-mcs-amsdu test-rest-ht-mcs-amsdu-rust \
 	test-rest-p2p-ie test-rest-p2p-ie-rust \
 	test-rest-wfd-multiap test-rest-wfd-multiap-rust \
-	test-rest-parse-elems
+	test-rest-parse-elems test-rest-parse-elems-rust
 
 test-c: test_ie
 	./test_ie ie_vectors.json
