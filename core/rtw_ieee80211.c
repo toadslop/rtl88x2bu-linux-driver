@@ -1267,6 +1267,7 @@ u8 *rtw_get_owe_ie(const u8 *in_ie, uint in_len, u8 *owe_ie, uint *owe_ielen)
 	return (u8 *)oweie_ptr;
 }
 
+#ifndef CONFIG_RUST
 static int rtw_ieee802_11_parse_vendor_specific(u8 *pos, uint elen,
 		struct rtw_ieee802_11_elems *elems,
 		int show_errors)
@@ -1539,6 +1540,7 @@ ParseRes rtw_ieee802_11_parse_elems(u8 *start, uint len,
 	return unknown ? ParseUnknown : ParseOK;
 
 }
+#endif /* !CONFIG_RUST */
 
 #if !defined(CONFIG_RUST) || defined(HOST_IEEE80211_REST_TEST)
 static u8 key_char2num(u8 ch);

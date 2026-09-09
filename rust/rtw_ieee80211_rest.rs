@@ -5,7 +5,7 @@
 //! string/MAC address helpers (W3-30), and chbw grouping/sync (W3-31), and
 //! frame header / HT MCS helpers (W3-32), and rate-section / ch-offset mapping (W3-41),
 //! and HT MCS bitmap / AMSDU mode helpers (W3-42), and P2P IE merge/delete (W3-43),
-//! and WFD/multi-AP IE helpers (W3-44).
+//! and WFD/multi-AP IE helpers (W3-44), and element parse (W3-76).
 
 #![allow(
     dead_code,
@@ -2339,7 +2339,171 @@ pub extern "C" fn rtw_get_multi_ap_ie_ext(ies: *const U8, ies_len: c_int) -> U8 
     }
 }
 
+type ParseRes = c_int;
+const PARSE_OK: ParseRes = 0;
+const PARSE_UNKNOWN: ParseRes = 1;
+const PARSE_FAILED: ParseRes = -1;
+const WLAN_EID_SSID: U8 = 0;
+const WLAN_EID_SUPP_RATES: U8 = 1;
+const WLAN_EID_FH_PARAMS: U8 = 2;
+const WLAN_EID_DS_PARAMS: U8 = 3;
+const WLAN_EID_CF_PARAMS: U8 = 4;
+const WLAN_EID_TIM: U8 = 5;
+const WLAN_EID_IBSS_PARAMS: U8 = 6;
+const WLAN_EID_CHALLENGE: U8 = 16;
+const WLAN_EID_ERP_INFO: U8 = 42;
+const WLAN_EID_HT_CAP: U8 = 45;
+const WLAN_EID_EXT_SUPP_RATES: U8 = 50;
+const WLAN_EID_PWR_CAPABILITY: U8 = 33;
+const WLAN_EID_SUPPORTED_CHANNELS: U8 = 36;
+const WLAN_EID_MOBILITY_DOMAIN: U8 = 54;
+const WLAN_EID_FAST_BSS_TRANSITION: U8 = 55;
+const WLAN_EID_TIMEOUT_INTERVAL: U8 = 56;
+const WLAN_EID_HT_OPERATION: U8 = 61;
+const WLAN_EID_VHT_CAPABILITY: U8 = 191;
+const WLAN_EID_VHT_OPERATION: U8 = 192;
+const WLAN_EID_VHT_OP_MODE_NOTIFY: U8 = 199;
+const EID_RRM_EN_CAP_IE: U8 = 70;
+const OUI_MICROSOFT: u32 = 0x0050f2;
+const OUI_BROADCOM: u32 = 0x00904c;
+const WME_OUI_TYPE: U8 = 2;
+const WME_OUI_SUBTYPE_INFORMATION_ELEMENT: U8 = 0;
+const WME_OUI_SUBTYPE_PARAMETER_ELEMENT: U8 = 1;
+const WME_OUI_SUBTYPE_TSPEC_ELEMENT: U8 = 2;
+const VENDOR_HT_CAPAB_OUI_TYPE: U8 = 0x33;
+
+macro_rules! ie_set {
+    ($e:expr, $pos:expr, $elen:expr, $ptr:ident, $len:ident) => {{
+        $e.$ptr = $pos;
+        $e.$len = $elen;
+    }};
+}
+
+#[repr(C)]
+pub struct rtw_ieee802_11_elems {
+    pub ssid: *mut U8, pub ssid_len: U8,
+    pub supp_rates: *mut U8, pub supp_rates_len: U8,
+    pub fh_params: *mut U8, pub fh_params_len: U8,
+    pub ds_params: *mut U8, pub ds_params_len: U8,
+    pub cf_params: *mut U8, pub cf_params_len: U8,
+    pub tim: *mut U8, pub tim_len: U8,
+    pub ibss_params: *mut U8, pub ibss_params_len: U8,
+    pub challenge: *mut U8, pub challenge_len: U8,
+    pub erp_info: *mut U8, pub erp_info_len: U8,
+    pub ext_supp_rates: *mut U8, pub ext_supp_rates_len: U8,
+    pub wpa_ie: *mut U8, pub wpa_ie_len: U8,
+    pub rsn_ie: *mut U8, pub rsn_ie_len: U8,
+    pub wme: *mut U8, pub wme_len: U8,
+    pub wme_tspec: *mut U8, pub wme_tspec_len: U8,
+    pub wps_ie: *mut U8, pub wps_ie_len: U8,
+    pub power_cap: *mut U8, pub power_cap_len: U8,
+    pub supp_channels: *mut U8, pub supp_channels_len: U8,
+    pub mdie: *mut U8, pub mdie_len: U8,
+    pub ftie: *mut U8, pub ftie_len: U8,
+    pub timeout_int: *mut U8, pub timeout_int_len: U8,
+    pub ht_capabilities: *mut U8, pub ht_capabilities_len: U8,
+    pub ht_operation: *mut U8, pub ht_operation_len: U8,
+    pub vendor_ht_cap: *mut U8, pub vendor_ht_cap_len: U8,
+    pub vht_capabilities: *mut U8, pub vht_capabilities_len: U8,
+    pub vht_operation: *mut U8, pub vht_operation_len: U8,
+    pub vht_op_mode_notify: *mut U8, pub vht_op_mode_notify_len: U8,
+    pub rm_en_cap: *mut U8, pub rm_en_cap_len: U8,
+}
+
+unsafe fn parse_vendor_specific(pos: *mut U8, elen: u8, elems: *mut rtw_ieee802_11_elems) -> c_int {
+    unsafe {
+        if elen < 4 {
+            return -1;
+        }
+        let oui =
+            (u32::from(*pos) << 16) | (u32::from(*pos.add(1)) << 8) | u32::from(*pos.add(2));
+        let e = &mut *elems;
+        if oui == OUI_MICROSOFT {
+            match *pos.add(3) {
+                1 => ie_set!(e, pos, elen, wpa_ie, wpa_ie_len),
+                WME_OUI_TYPE if elen >= 5 => match *pos.add(4) {
+                    WME_OUI_SUBTYPE_INFORMATION_ELEMENT | WME_OUI_SUBTYPE_PARAMETER_ELEMENT => {
+                        ie_set!(e, pos, elen, wme, wme_len)
+                    }
+                    WME_OUI_SUBTYPE_TSPEC_ELEMENT => {
+                        ie_set!(e, pos, elen, wme_tspec, wme_tspec_len)
+                    }
+                    _ => return -1,
+                },
+                4 => ie_set!(e, pos, elen, wps_ie, wps_ie_len),
+                _ => return -1,
+            }
+            return 0;
+        }
+        if oui == OUI_BROADCOM && *pos.add(3) == VENDOR_HT_CAPAB_OUI_TYPE {
+            ie_set!(e, pos, elen, vendor_ht_cap, vendor_ht_cap_len);
+            return 0;
+        }
+        -1
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_ieee802_11_parse_elems(
+    start: *mut U8, len: c_uint, elems: *mut rtw_ieee802_11_elems, show_errors: c_int,
+) -> ParseRes {
+    if elems.is_null() {
+        return PARSE_FAILED;
+    }
+    unsafe {
+        memset(elems as *mut u8, 0, core::mem::size_of::<rtw_ieee802_11_elems>());
+        let mut left = len;
+        let mut pos = start;
+        let mut unknown = 0;
+        while left >= 2 {
+            let id = *pos;
+            pos = pos.add(1);
+            let elen = *pos;
+            pos = pos.add(1);
+            left -= 2;
+            if elen as c_uint > left {
+                let _ = show_errors;
+                return PARSE_FAILED;
+            }
+            let e = &mut *elems;
+            match id {
+                WLAN_EID_SSID => ie_set!(e, pos, elen, ssid, ssid_len),
+                WLAN_EID_SUPP_RATES => ie_set!(e, pos, elen, supp_rates, supp_rates_len),
+                WLAN_EID_FH_PARAMS => ie_set!(e, pos, elen, fh_params, fh_params_len),
+                WLAN_EID_DS_PARAMS => ie_set!(e, pos, elen, ds_params, ds_params_len),
+                WLAN_EID_CF_PARAMS => ie_set!(e, pos, elen, cf_params, cf_params_len),
+                WLAN_EID_TIM => ie_set!(e, pos, elen, tim, tim_len),
+                WLAN_EID_IBSS_PARAMS => ie_set!(e, pos, elen, ibss_params, ibss_params_len),
+                WLAN_EID_CHALLENGE => ie_set!(e, pos, elen, challenge, challenge_len),
+                WLAN_EID_ERP_INFO => ie_set!(e, pos, elen, erp_info, erp_info_len),
+                WLAN_EID_EXT_SUPP_RATES => ie_set!(e, pos, elen, ext_supp_rates, ext_supp_rates_len),
+                WLAN_EID_VENDOR_SPECIFIC => {
+                    if parse_vendor_specific(pos, elen, elems) != 0 {
+                        unknown += 1;
+                    }
+                }
+                WLAN_EID_RSN => ie_set!(e, pos, elen, rsn_ie, rsn_ie_len),
+                WLAN_EID_PWR_CAPABILITY => ie_set!(e, pos, elen, power_cap, power_cap_len),
+                WLAN_EID_SUPPORTED_CHANNELS => ie_set!(e, pos, elen, supp_channels, supp_channels_len),
+                WLAN_EID_MOBILITY_DOMAIN => ie_set!(e, pos, elen, mdie, mdie_len),
+                WLAN_EID_FAST_BSS_TRANSITION => ie_set!(e, pos, elen, ftie, ftie_len),
+                WLAN_EID_TIMEOUT_INTERVAL => ie_set!(e, pos, elen, timeout_int, timeout_int_len),
+                WLAN_EID_HT_CAP => ie_set!(e, pos, elen, ht_capabilities, ht_capabilities_len),
+                WLAN_EID_HT_OPERATION => ie_set!(e, pos, elen, ht_operation, ht_operation_len),
+                WLAN_EID_VHT_CAPABILITY => ie_set!(e, pos, elen, vht_capabilities, vht_capabilities_len),
+                WLAN_EID_VHT_OPERATION => ie_set!(e, pos, elen, vht_operation, vht_operation_len),
+                WLAN_EID_VHT_OP_MODE_NOTIFY => ie_set!(e, pos, elen, vht_op_mode_notify, vht_op_mode_notify_len),
+                EID_RRM_EN_CAP_IE => ie_set!(e, pos, elen, rm_en_cap, rm_en_cap_len),
+                _ => unknown += 1,
+            }
+            left -= elen as c_uint;
+            pos = pos.add(elen as usize);
+        }
+        if left != 0 { PARSE_FAILED } else if unknown != 0 { PARSE_UNKNOWN } else { PARSE_OK }
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn rtw_rust_ieee80211_rest_probe() -> c_int {
-    0x1e26
+    0x1e76
 }
