@@ -1,0 +1,64 @@
+{
+  "vectors": [
+    {
+      "name": "add_new_erp_ie",
+      "fn": "rtw_add_bcn_ie",
+      "ies_in": "0000000000000000000000000000010182030105",
+      "ie_len": 20,
+      "index": 42,
+      "data": "00",
+      "data_len": 1,
+      "expect_ies": "00000000000000000000000000000101820301052a0100",
+      "expect_ie_len": 23
+    },
+    {
+      "name": "replace_existing_erp",
+      "fn": "rtw_add_bcn_ie",
+      "ies_in": "00000000000000000000000000000101820301052a0100",
+      "ie_len": 23,
+      "index": 42,
+      "data": "02",
+      "data_len": 1,
+      "expect_ies": "00000000000000000000000000000101820301052a0102",
+      "expect_ie_len": 23
+    },
+    {
+      "name": "remove_erp_ie",
+      "fn": "rtw_remove_bcn_ie",
+      "ies_in": "00000000000000000000000000000101820301052a0100",
+      "ie_len": 23,
+      "index": 42,
+      "expect_ies": "0000000000000000000000000000010182030105",
+      "expect_ie_len": 20
+    },
+    {
+      "name": "remove_missing_ie_noop",
+      "fn": "rtw_remove_bcn_ie",
+      "ies_in": "0000000000000000000000000000010182030105",
+      "ie_len": 20,
+      "index": 42,
+      "expect_ies": "0000000000000000000000000000010182030105",
+      "expect_ie_len": 20
+    },
+    {
+      "name": "update_tim_existing",
+      "fn": "update_BCNTIM",
+      "ies_in": "0000000000000000000000000000010182030105050400010000",
+      "ie_len": 26,
+      "tim_bmp": "01",
+      "tim_bmp_len": 1,
+      "expect_ies": "0000000000000000000000000000010182030105050400010101",
+      "expect_ie_len": 26
+    },
+    {
+      "name": "update_tim_insert",
+      "fn": "update_BCNTIM",
+      "ies_in": "0000000000000000000000000000010182030105",
+      "ie_len": 20,
+      "tim_bmp": "01",
+      "tim_bmp_len": 1,
+      "expect_ies": "0000000000000000000000000000010182030105050400010101",
+      "expect_ie_len": 26
+    }
+  ]
+}
