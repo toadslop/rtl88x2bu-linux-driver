@@ -92,6 +92,11 @@ u16 rtw_ap_sta_sec_parse_cipher_ies(_adapter *adapter, struct sta_info *sta,
 				    u8 **wpa_ie, int *wpa_ie_len,
 				    int *group_cipher, int *pairwise_cipher,
 				    int *gmcs, u32 *akm, u8 *mfp_opt, u8 *spp_opt);
+u16 rtw_ap_sta_sec_apply_policy_wps(_adapter *adapter, struct sta_info *sta,
+				    struct security_priv *sec,
+				    struct rtw_ieee802_11_elems *elems,
+				    u8 *wpa_ie, int wpa_ie_len, int gmcs,
+				    u8 mfp_opt, u8 spp_opt);
 u16 rtw_ap_parse_sta_security_ie(_adapter *adapter, struct sta_info *sta, struct rtw_ieee802_11_elems *elems);
 void rtw_ap_parse_sta_wmm_ie(_adapter *adapter, struct sta_info *sta, u8 *tlv_ies, u16 tlv_ies_len);
 void rtw_ap_parse_sta_ht_ie(_adapter *adapter, struct sta_info *sta, struct rtw_ieee802_11_elems *elems);
