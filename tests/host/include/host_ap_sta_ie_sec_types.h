@@ -33,8 +33,8 @@
 
 #define WLAN_STA_WPS (1U << 12)
 #define WLAN_STA_MAYBE_WPS (1U << 13)
-#define WLAN_STA_MFP (1U << 14)
-#define WLAN_STA_AMSDU_DISABLE (1U << 15)
+#define WLAN_STA_MFP BIT(10)
+#define WLAN_STA_AMSDU_DISABLE BIT(17)
 
 #define WLAN_AKM_TYPE_SAE BIT(7)
 
