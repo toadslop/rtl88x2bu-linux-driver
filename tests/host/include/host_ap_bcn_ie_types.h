@@ -15,6 +15,7 @@
 #define _SSID_IE_ 0
 #define _SUPPORTEDRATES_IE_ 1
 #define _TIM_IE_ 5
+#define _ERPINFO_IE_ 42
 
 #define BIT(n) (1U << (n))
 #define BIT0 BIT(0)
