@@ -1,0 +1,39 @@
+{
+  "vectors": [
+    {
+      "name": "rsn_tkip_ccmp_success",
+      "sec_wpa_psk": 2,
+      "sec_wpa2_group_cipher": 24,
+      "sec_wpa2_pairwise_cipher": 16,
+      "sec_akmp": 2,
+      "rsn_ie": "30140100000fac020100000fac040100000fac020000",
+      "expect_status": 0,
+      "expect_wpa_psk": 2,
+      "expect_wpa2_group_cipher": 8,
+      "expect_wpa2_pairwise_cipher": 16
+    },
+    {
+      "name": "rsn_group_cipher_mismatch",
+      "sec_wpa_psk": 2,
+      "sec_wpa2_group_cipher": 16,
+      "sec_wpa2_pairwise_cipher": 16,
+      "sec_akmp": 2,
+      "rsn_ie": "30140100000fac020100000fac040100000fac020000",
+      "expect_status": 41
+    },
+    {
+      "name": "no_ie_maybe_wps",
+      "sec_wpa_psk": 2,
+      "expect_status": 0,
+      "expect_flags": 8192
+    },
+    {
+      "name": "invalid_rsn_ie",
+      "sec_wpa_psk": 2,
+      "sec_wpa2_group_cipher": 24,
+      "sec_wpa2_pairwise_cipher": 16,
+      "rsn_ie": "30020200",
+      "expect_status": 40
+    }
+  ]
+}
