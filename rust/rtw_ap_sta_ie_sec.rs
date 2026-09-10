@@ -104,15 +104,7 @@ pub extern "C" fn rtw_ap_parse_sta_security_ie(
             return status;
         }
         rtw_ap_sta_sec_apply_policy_wps(
-            adapter,
-            sta,
-            sec,
-            elems,
-            wpa_ie,
-            wpa_ie_len,
-            gmcs,
-            mfp_opt,
-            spp_opt,
+            adapter, sta, sec, elems, wpa_ie, wpa_ie_len, gmcs, mfp_opt, spp_opt,
         )
     }
 }
