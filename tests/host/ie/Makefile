@@ -3,7 +3,7 @@
 # WPA/RSN IE parse (W3-28), and WAPI/WPS/sec-IE getters (W3-29), and
 # string/MAC address helpers (W3-30), and chbw grouping/sync (W3-31), and
 # frame header / HT MCS helpers (W3-32), and P2P IE merge/delete (W3-43), and
-# WFD/multi-AP IE helpers (W3-44).
+# WFD/multi-AP IE helpers (W3-44), and element parse (W3-76).
 
 ROOT     := ../../..
 CORE     := $(ROOT)/core
@@ -29,6 +29,7 @@ HT_MCS_AMSDU_CFLAGS := $(REST_CFLAGS) -DHOST_IEEE80211_REST_HT_MCS_AMSDU_TEST
 P2P_IE_CFLAGS := $(REST_CFLAGS) -DCONFIG_P2P -DHOST_IEEE80211_REST_P2P_IE_TEST
 WFD_MULTIAP_CFLAGS := $(REST_CFLAGS) -DCONFIG_WFD -DCONFIG_RTW_MULTI_AP \
 	-DHOST_IEEE80211_REST_WFD_MULTIAP_TEST
+PARSE_ELEMS_CFLAGS := $(REST_CFLAGS) -DHOST_IEEE80211_REST_PARSE_ELEMS_TEST
 RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
 
 IE_SRCS := ie_c_oracle.c ../crypto/host_vector_json.c
@@ -66,6 +67,8 @@ IE_REST_P2P_IE_SRCS := $(IE_REST_SRC) ie_cipher_c_oracle.c ie_wpa_rsn_parse_c_or
 IE_REST_WFD_MULTIAP_SRCS := $(IE_REST_SRC) ie_cipher_c_oracle.c ie_wpa_rsn_parse_c_oracle.c \
                 ie_c_oracle.c ie_wfd_multiap_c_oracle.c $(WLAN_UTIL)/wlan_util_c_oracle.c \
                 ../crypto/host_vector_json.c ie_mac_str_host_shim.c
+
+IE_REST_PARSE_ELEMS_SRCS := ie_parse_elems_c_oracle.c ../crypto/host_vector_json.c
 
 IE_REST_RUST_SHIM := ie_mac_str_host_shim.c ie_p2p_c_oracle.c ie_wfd_multiap_c_oracle.c
 
@@ -306,6 +309,22 @@ test_ie_rest_wfd_multiap_rust: test_ie_rest_wfd_multiap.c librust_ie_rest.a \
 		ie_c_oracle.c ../wlan_util/wlan_util_c_oracle.c \
 		../crypto/host_vector_json.c $(IE_REST_RUST_SHIM) librust_ie_rest.a
 
+test-rest-parse-elems: test_ie_rest_parse_elems
+	./test_ie_rest_parse_elems ie_rest_parse_elems_vectors.json
+
+test_ie_rest_parse_elems: test_ie_rest_parse_elems.c $(IE_REST_PARSE_ELEMS_SRCS)
+	$(CC) $(PARSE_ELEMS_CFLAGS) -o $@ test_ie_rest_parse_elems.c \
+		$(IE_REST_PARSE_ELEMS_SRCS)
+
+test-rest-parse-elems-rust: test_ie_rest_parse_elems_rust
+	./test_ie_rest_parse_elems_rust ie_rest_parse_elems_vectors.json
+
+test_ie_rest_parse_elems_rust: test_ie_rest_parse_elems.c librust_ie_rest.a \
+		../crypto/host_vector_json.c $(IE_REST_RUST_SHIM)
+	$(CC) $(PARSE_ELEMS_CFLAGS) -DRUST_IEEE80211_REST_ORACLE -o $@ \
+		test_ie_rest_parse_elems.c ../crypto/host_vector_json.c \
+		$(IE_REST_RUST_SHIM) librust_ie_rest.a
+
 clean:
 	rm -f test_ie test_ie_rust test_ie_rest test_ie_rest_rust test_ie_rest_cipher \
 		test_ie_rest_cipher_rust test_ie_rest_wpa_rsn_parse \
@@ -317,4 +336,5 @@ clean:
 		test_ie_rest_rate_section_rust test_ie_rest_ht_mcs_amsdu \
 		test_ie_rest_ht_mcs_amsdu_rust test_ie_rest_p2p_ie \
 		test_ie_rest_p2p_ie_rust test_ie_rest_wfd_multiap \
-		test_ie_rest_wfd_multiap_rust librust_ie.a librust_ie_rest.a
+		test_ie_rest_wfd_multiap_rust test_ie_rest_parse_elems \
+		test_ie_rest_parse_elems_rust librust_ie.a librust_ie_rest.a
