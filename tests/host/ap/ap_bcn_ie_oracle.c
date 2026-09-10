@@ -45,6 +45,7 @@ u8 *rtw_get_ie(const u8 *pbuf, sint index, sint *len, sint limit)
 	return NULL;
 }
 
+/* Oracle copy of rtw_set_tim_ie from core/rtw_ap_rest.c — keep in sync to prevent drift. */
 u8 rtw_set_tim_ie(u8 dtim_cnt, u8 dtim_period, const u8 *tim_bmp, u8 tim_bmp_len,
 		  u8 *tim_ie)
 {
