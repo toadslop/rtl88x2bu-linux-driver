@@ -31,7 +31,7 @@ u8 rtw_set_tim_ie(u8 dtim_cnt, u8 dtim_period
 u8 rtw_ap_allocate_vapid(struct dvobj_priv *dvobj);
 u8 rtw_ap_release_vapid(struct dvobj_priv *dvobj, u8 vap_id);
 #endif
-/* void update_BCNTIM(_adapter *padapter); */
+void update_BCNTIM(_adapter *padapter);
 void rtw_add_bcn_ie(_adapter *padapter, WLAN_BSSID_EX *pnetwork, u8 index, u8 *data, u8 len);
 void rtw_remove_bcn_ie(_adapter *padapter, WLAN_BSSID_EX *pnetwork, u8 index);
 void _update_beacon(_adapter *padapter, u8 ie_id, u8 *oui, u8 tx, u8 flags, const char *tag);
