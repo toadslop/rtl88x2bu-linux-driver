@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0
-/* C oracle: element parse from core/rtw_ieee80211.c (W3-76). */
+/* C oracle: element parse from core/rtw_ieee80211.c (W3-76).
+ *
+ * Default host build only: omits kernel #ifdef CONFIG_RTW_MESH (PREQ/PREP/PERR/RANN
+ * mesh IEs) and CONFIG_RTW_TOKEN_BASED_XMIT (Realtek TBTX vendor IE) branches.
+ */
 #include "host_parse_elems_types.h"
 
 #define RTW_INFO(...) do { } while (0)
