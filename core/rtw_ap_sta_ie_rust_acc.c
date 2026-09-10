@@ -226,3 +226,23 @@ void rtw_rust_ap_sta_apply_multi_ap(struct sta_info *sta, u8 multi_ap, u8 role)
 }
 
 #endif /* CONFIG_RUST_AP_STA_IE && !HOST_AP_STA_IE_TEST */
+
+#if defined(CONFIG_RUST_AP_STA_IE_SEC) && !defined(HOST_AP_STA_IE_SEC_TEST)
+
+void rtw_rust_ap_sta_sec_reset(struct sta_info *sta)
+{
+	sta->dot8021xalg = 0;
+	sta->wpa_psk = 0;
+	sta->wpa_group_cipher = 0;
+	sta->wpa2_group_cipher = 0;
+	sta->wpa_pairwise_cipher = 0;
+	sta->wpa2_pairwise_cipher = 0;
+	_rtw_memset(sta->wpa_ie, 0, sizeof(sta->wpa_ie));
+}
+
+struct security_priv *rtw_rust_ap_sec_priv(_adapter *adapter)
+{
+	return &adapter->securitypriv;
+}
+
+#endif /* CONFIG_RUST_AP_STA_IE_SEC && !HOST_AP_STA_IE_SEC_TEST */

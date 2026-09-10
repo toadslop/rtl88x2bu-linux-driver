@@ -2610,6 +2610,7 @@ ccflags-y += -DCONFIG_80211D
 ccflags-y += -DCONFIG_RUST_MLME_80211D
 ccflags-y += -DCONFIG_RUST_STA_MGT_STCTL
 ccflags-y += -DCONFIG_RUST_AP_STA_IE
+ccflags-y += -DCONFIG_RUST_AP_STA_IE_SEC
 ccflags-y += -DCONFIG_RUST_AP_REST
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_PREF
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_DUMP
@@ -2655,6 +2656,7 @@ rustflags-y += --cfg config_80211ac_vht
 endif
 rustflags-y += --cfg rust_sta_mgt_stctl
 rustflags-y += --cfg rust_ap_sta_ie
+rustflags-y += --cfg rust_ap_sta_ie_sec
 rustflags-y += --cfg rust_ap_rest
 rustflags-y += --cfg rust_rf_op_class_pref
 rustflags-y += --cfg rust_rf_op_class_dump
@@ -2718,6 +2720,7 @@ $(MODULE_NAME)-y += rust/rtw_sta_mgt.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt_aid.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt_stctl.o
 $(MODULE_NAME)-y += rust/rtw_ap_sta_ie.o
+$(MODULE_NAME)-y += rust/rtw_ap_sta_ie_sec.o
 $(MODULE_NAME)-y += rust/rtw_ap_rest.o
 $(MODULE_NAME)-y += rust/rtw_rf_op_class_pref.o
 $(MODULE_NAME)-y += rust/rtw_rf_op_class_dump.o
@@ -3271,6 +3274,22 @@ rust-objects-rtw-ap-sta-ie:
 rust-check-symbols-rtw-ap-sta-ie: rust-objects-rtw-ap-sta-ie-c rust-objects-rtw-ap-sta-ie
 	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_sta_ie_c_ref.o NEW=rust/rtw_ap_sta_ie.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_sta_ie.allow
+
+# W3-74 PR6: STA security IE parse main fn L1 (C ref vs kbuild Rust object).
+rust-objects-rtw-ap-sta-ie-sec-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_AP_STA_IE_SEC_TEST \
+		-o tests/host/ap/ap_sta_ie_sec_c_ref.o core/rtw_ap_sta_ie_sec.c
+
+rust-objects-rtw-ap-sta-ie-sec:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-ap-sta-ie-sec"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_ap_sta_ie_sec.o
+
+rust-check-symbols-rtw-ap-sta-ie-sec: rust-objects-rtw-ap-sta-ie-sec-c rust-objects-rtw-ap-sta-ie-sec
+	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_sta_ie_sec_c_ref.o NEW=rust/rtw_ap_sta_ie_sec.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_sta_ie_sec.allow
 
 # W3-69 PR4: peer-alive-only L1 (host C oracle vs kbuild Rust object).
 rust-objects-rtw-mlme-ext-peer-alive:

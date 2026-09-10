@@ -1,0 +1,3 @@
+# L1 allowlist for W3-74 PR6: cipher/policy helpers remain in core/rtw_ap_sta_ie_sec.c.
+drop rtw_ap_sta_sec_parse_cipher_ies
+drop rtw_ap_sta_sec_apply_policy_wps
