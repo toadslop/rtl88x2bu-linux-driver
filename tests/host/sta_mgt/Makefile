@@ -10,7 +10,7 @@ HOST_SHIM := host_sta_mgt_shim.c
 STCTL_SHIM := host_sta_mgt_stctl_shim.c
 
 CC     := gcc
-CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -Wno-sign-compare -O2 \
           -I$(HOST_INC) -I$(CORE) -I$(ROOT)/include \
           -include $(HOST_INC)/host_autoconf.h \
           -DHOST_STA_MGT_TEST -DCONFIG_RTW_MACADDR_ACL -DCONFIG_RTW_PRE_LINK_STA

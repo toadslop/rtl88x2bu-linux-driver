@@ -28,6 +28,7 @@
 #define HOST_STA_MGT_MAX_STA 32
 #define HOST_STA_MGT_NUM_STA 4
 #define SESSION_TRACKER_REG_ID_NUM 1
+#define CONFIG_RTW_MGMT_QUEUE 1
 
 typedef unsigned long _irqL;
 typedef int _lock;
@@ -104,9 +105,33 @@ struct cmn_sta_info {
 	u8 mac_addr[ETH_ALEN];
 };
 
+struct sta_xmit_priv {
+	_lock lock;
+};
+
+struct sta_recv_priv {
+	_lock lock;
+};
+
 struct sta_info {
+	/* Keep cmn/state first for W3-38 aid Rust oracle layout parity. */
 	struct cmn_sta_info cmn;
 	uint state;
+	_lock lock;
+	_list list;
+	_list hash_list;
+	struct _adapter *padapter;
+	_queue sleep_q;
+#ifdef CONFIG_RTW_MGMT_QUEUE
+	_queue mgmt_sleep_q;
+#endif
+	struct sta_xmit_priv sta_xmitpriv;
+	struct sta_recv_priv sta_recvpriv;
+#ifdef CONFIG_AP_MODE
+	_list asoc_list;
+	_list auth_list;
+	u8 bpairwise_key_installed;
+#endif
 	struct st_ctl_t st_ctl;
 };
 
@@ -120,6 +145,8 @@ struct sta_priv {
 	u16 max_num_sta;
 	struct pre_link_sta_ctl_t pre_link_sta_ctl;
 	u8 *pstainfo_buf;
+	_lock sta_hash_lock;
+	_list sta_hash[NUM_STA];
 };
 
 struct _adapter {
@@ -219,6 +246,28 @@ static inline u16 ntohs(u16 val)
 	return (u16)(((val & 0xff) << 8) | ((val >> 8) & 0xff));
 }
 
+static inline int IS_MCAST(const u8 *da)
+{
+	return (da[0] & 0x01) != 0;
+}
+
+static inline u32 wifi_mac_hash(const u8 *mac)
+{
+	u32 x;
+
+	x = mac[0];
+	x = (x << 2) ^ mac[1];
+	x = (x << 2) ^ mac[2];
+	x = (x << 2) ^ mac[3];
+	x = (x << 2) ^ mac[4];
+	x = (x << 2) ^ mac[5];
+
+	x ^= x >> 8;
+	x = x & (NUM_STA - 1);
+
+	return x;
+}
+
 int rtw_check_invalid_mac_address(const u8 *mac, u8 check_local_bit);
 struct sta_info *rtw_get_stainfo(struct sta_priv *stapriv, const u8 *hwaddr);
 void rtw_free_stainfo(_adapter *padapter, struct sta_info *psta);
@@ -237,6 +286,14 @@ int host_sta_mgt_stctl_tracker_count(struct st_ctl_t *st_ctl);
 void host_sta_mgt_stctl_tracker_add(struct st_ctl_t *st_ctl);
 void host_sta_mgt_stctl_clear(struct st_ctl_t *st_ctl);
 int host_sta_mgt_offset_setup(_adapter *adapter, u8 sta_index, struct sta_info **out_sta);
+void host_sta_mgt_lookup_reset(_adapter *adapter);
+int host_sta_mgt_lookup_buf_setup(_adapter *adapter);
+void host_sta_mgt_lookup_hash_insert(_adapter *adapter, u8 sta_index,
+				     const u8 *mac);
+void _rtw_init_sta_xmit_priv(struct sta_xmit_priv *psta_xmitpriv);
+void _rtw_init_sta_recv_priv(struct sta_recv_priv *psta_recvpriv);
+void _rtw_init_stainfo(struct sta_info *psta);
+struct sta_info *rtw_get_stainfo_by_offset(struct sta_priv *stapriv, int offset);
 
 void rtw_st_ctl_init(struct st_ctl_t *st_ctl);
 void rtw_st_ctl_deinit(struct st_ctl_t *st_ctl);

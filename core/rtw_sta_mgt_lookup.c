@@ -20,6 +20,7 @@
 #include <drv_types.h>
 #endif
 
+#if !defined(HOST_STA_MGT_TEST) || defined(HOST_STA_MGT_LOOKUP_STCTL_TEST)
 void rtw_st_ctl_rx(struct sta_info *sta, u8 *ehdr_pos)
 {
 	_adapter *adapter = sta->padapter;
@@ -59,6 +60,7 @@ void rtw_st_ctl_rx(struct sta_info *sta, u8 *ehdr_pos)
 		}
 	}
 }
+#endif /* !HOST_STA_MGT_TEST || HOST_STA_MGT_LOOKUP_STCTL_TEST */
 
 void _rtw_init_stainfo(struct sta_info *psta)
 {
