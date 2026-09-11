@@ -1,5 +1,7 @@
 test_ap_rest
 test_ap_bmc_rate
+test_ap_bmc_rate_rust
+librust_ap_bmc_rate.a
 test_ap_sta_ie
 test_ap_sta_ie_rates
 test_ap_sta_ie_wmm_ht
