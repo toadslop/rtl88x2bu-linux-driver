@@ -15,6 +15,7 @@ struct vector {
 	enum lookup_fn fn;
 	u8 mac[ETH_ALEN], insert_mac[ETH_ALEN], sta_index;
 	int expect_found, expect_offset, expect_st_ctl_cleared;
+	int expect_hash_list_init;
 };
 
 static int parse_fn(const char *obj, size_t len, enum lookup_fn *out)
@@ -54,6 +55,7 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	host_json_parse_int_in(obj, len, "expect_found", &v->expect_found);
 	host_json_parse_int_in(obj, len, "expect_offset", &v->expect_offset);
 	host_json_parse_int_in(obj, len, "expect_st_ctl_cleared", &v->expect_st_ctl_cleared);
+	host_json_parse_int_in(obj, len, "expect_hash_list_init", &v->expect_hash_list_init);
 	return parse_mac_opt(obj, len, "mac", v->mac) ||
 	       parse_mac_opt(obj, len, "insert_mac", v->insert_mac);
 }
@@ -79,11 +81,12 @@ static int run_vector(const struct vector *v)
 		sta->padapter = &a;
 		memset(sta, 0xff, sizeof(*sta));
 		_rtw_init_stainfo(sta);
-		if (v->expect_st_ctl_cleared && sta->hash_list.next != &sta->hash_list)
+		if (v->expect_hash_list_init && sta->hash_list.next != &sta->hash_list)
 			return -1;
-		for (i = 0; i < SESSION_TRACKER_REG_ID_NUM; i++)
-			if (sta->st_ctl.reg[i].s_proto || sta->st_ctl.reg[i].rule)
-				return -1;
+		if (v->expect_st_ctl_cleared)
+			for (i = 0; i < SESSION_TRACKER_REG_ID_NUM; i++)
+				if (sta->st_ctl.reg[i].s_proto || sta->st_ctl.reg[i].rule)
+					return -1;
 		return 0;
 	case FN_GET:
 		if (mac_set(v->insert_mac))
