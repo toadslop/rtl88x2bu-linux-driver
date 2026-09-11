@@ -2364,8 +2364,18 @@ const WLAN_EID_VHT_CAPABILITY: U8 = 191;
 const WLAN_EID_VHT_OPERATION: U8 = 192;
 const WLAN_EID_VHT_OP_MODE_NOTIFY: U8 = 199;
 const EID_RRM_EN_CAP_IE: U8 = 70;
+#[cfg(config_rtw_mesh)]
+const WLAN_EID_RANN: U8 = 126;
+#[cfg(config_rtw_mesh)]
+const WLAN_EID_PREQ: U8 = 130;
+#[cfg(config_rtw_mesh)]
+const WLAN_EID_PREP: U8 = 131;
+#[cfg(config_rtw_mesh)]
+const WLAN_EID_PERR: U8 = 132;
 const OUI_MICROSOFT: u32 = 0x0050f2;
 const OUI_BROADCOM: u32 = 0x00904c;
+#[cfg(config_rtw_token_based_xmit)]
+const OUI_REALTEK: u32 = 0x00e04c;
 const WME_OUI_TYPE: U8 = 2;
 const WME_OUI_SUBTYPE_INFORMATION_ELEMENT: U8 = 0;
 const WME_OUI_SUBTYPE_PARAMETER_ELEMENT: U8 = 1;
@@ -2435,6 +2445,26 @@ pub struct rtw_ieee802_11_elems {
     pub vht_op_mode_notify_len: U8,
     pub rm_en_cap: *mut U8,
     pub rm_en_cap_len: U8,
+    #[cfg(config_rtw_mesh)]
+    pub preq: *mut U8,
+    #[cfg(config_rtw_mesh)]
+    pub preq_len: U8,
+    #[cfg(config_rtw_mesh)]
+    pub prep: *mut U8,
+    #[cfg(config_rtw_mesh)]
+    pub prep_len: U8,
+    #[cfg(config_rtw_mesh)]
+    pub perr: *mut U8,
+    #[cfg(config_rtw_mesh)]
+    pub perr_len: U8,
+    #[cfg(config_rtw_mesh)]
+    pub rann: *mut U8,
+    #[cfg(config_rtw_mesh)]
+    pub rann_len: U8,
+    #[cfg(config_rtw_token_based_xmit)]
+    pub tbtx_cap: *mut U8,
+    #[cfg(config_rtw_token_based_xmit)]
+    pub tbtx_cap_len: U8,
 }
 
 unsafe fn parse_vendor_specific(pos: *mut U8, elen: u8, elems: *mut rtw_ieee802_11_elems) -> c_int {
@@ -2463,6 +2493,13 @@ unsafe fn parse_vendor_specific(pos: *mut U8, elen: u8, elems: *mut rtw_ieee802_
         }
         if oui == OUI_BROADCOM && *pos.add(3) == VENDOR_HT_CAPAB_OUI_TYPE {
             ie_set!(e, pos, elen, vendor_ht_cap, vendor_ht_cap_len);
+            return 0;
+        }
+        #[cfg(config_rtw_token_based_xmit)]
+        if oui == OUI_REALTEK {
+            if elen == 8 {
+                ie_set!(e, pos, elen, tbtx_cap, tbtx_cap_len);
+            }
             return 0;
         }
         -1
@@ -2535,6 +2572,14 @@ pub extern "C" fn rtw_ieee802_11_parse_elems(
                     ie_set!(e, pos, elen, vht_op_mode_notify, vht_op_mode_notify_len)
                 }
                 EID_RRM_EN_CAP_IE => ie_set!(e, pos, elen, rm_en_cap, rm_en_cap_len),
+                #[cfg(config_rtw_mesh)]
+                WLAN_EID_PREQ => ie_set!(e, pos, elen, preq, preq_len),
+                #[cfg(config_rtw_mesh)]
+                WLAN_EID_PREP => ie_set!(e, pos, elen, prep, prep_len),
+                #[cfg(config_rtw_mesh)]
+                WLAN_EID_PERR => ie_set!(e, pos, elen, perr, perr_len),
+                #[cfg(config_rtw_mesh)]
+                WLAN_EID_RANN => ie_set!(e, pos, elen, rann, rann_len),
                 _ => unknown += 1,
             }
             left -= elen as c_uint;

@@ -2635,6 +2635,9 @@ rustflags-y += --cfg rust_mlme_ext_band_ie
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTW_MESH' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg config_rtw_mesh
 endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTW_TOKEN_BASED_XMIT' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_rtw_token_based_xmit
+endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTW_ACS' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg config_rtw_acs
 endif
