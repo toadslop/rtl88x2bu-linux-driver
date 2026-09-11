@@ -77,6 +77,10 @@ struct sta_info *rtw_alloc_stainfo(struct sta_priv *pstapriv, const u8 *hwaddr)
 			preorder_ctrl->tid = i;
 			preorder_ctrl->enable = _FALSE;
 			preorder_ctrl->indicate_seq = 0xffff;
+			#ifdef DBG_RX_SEQ
+			RTW_INFO("DBG_RX_SEQ "FUNC_ADPT_FMT" tid:%u SN_CLEAR indicate_seq:%d\n"
+				, FUNC_ADPT_ARG(pstapriv->padapter), i, preorder_ctrl->indicate_seq);
+			#endif
 			preorder_ctrl->wend_b = 0xffff;
 			preorder_ctrl->wsize_b = 64;
 			preorder_ctrl->ampdu_size = RX_AMPDU_SIZE_INVALID;
