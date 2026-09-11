@@ -1,0 +1,10 @@
+{
+  "vectors": [
+    { "name": "54m_24g_24m", "fn": "rtw_ap_find_bmc_rate", "band": 0, "tx_rate": 11, "expect_rate": 8 },
+    { "name": "18m_24g_12m", "fn": "rtw_ap_find_bmc_rate", "band": 0, "tx_rate": 7, "expect_rate": 6 },
+    { "name": "6m_24g_6m", "fn": "rtw_ap_find_bmc_rate", "band": 0, "tx_rate": 4, "expect_rate": 4 },
+    { "name": "1m_24g_1m", "fn": "rtw_ap_find_bmc_rate", "band": 0, "tx_rate": 0, "expect_rate": 0 },
+    { "name": "1m_5g_clamp_6m", "fn": "rtw_ap_find_bmc_rate", "band": 1, "tx_rate": 0, "expect_rate": 4 },
+    { "name": "unknown_default_6m", "fn": "rtw_ap_find_bmc_rate", "band": 0, "tx_rate": 255, "expect_rate": 4 }
+  ]
+}

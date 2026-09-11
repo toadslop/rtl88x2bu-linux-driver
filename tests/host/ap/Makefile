@@ -40,11 +40,13 @@ STA_IE_SEC_DEPS := ap_sta_ie_sec_oracle.c $(IE_ORACLE) ../ie/ie_cipher_c_oracle.
 STA_IE_WMM_HT_DEPS := $(IE_ORACLE)
 STA_IE_VHT_MULTIAP_DEPS := ap_sta_ie_vht_multiap_oracle.c $(IE_ORACLE)
 
-.PHONY: all test test-c test-rust test-sta-ie clean
+BMC_RATE_CFLAGS := $(CFLAGS) -DCONFIG_BMC_TX_RATE_SELECT
+
+.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate clean
 
 all: test
 
-test: test-c test-rust test-sta-ie test-bcn-ie
+test: test-c test-rust test-sta-ie test-bcn-ie test-bmc-rate
 
 test-c: test_ap_rest
 	./test_ap_rest ap_rest_vectors.json
@@ -72,6 +74,12 @@ test-sta-ie: test_ap_sta_ie test_ap_sta_ie_rates test_ap_sta_ie_wmm_ht test_ap_s
 test-bcn-ie: test_ap_bcn_ie
 	./test_ap_bcn_ie ap_bcn_ie_vectors.json
 
+test-bmc-rate: test_ap_bmc_rate
+	./test_ap_bmc_rate ap_bmc_rate_vectors.json
+
+test_ap_bmc_rate: test_ap_bmc_rate.c ap_bmc_rate_oracle.c $(HOST_JSON)
+	$(CC) $(BMC_RATE_CFLAGS) -o $@ test_ap_bmc_rate.c ap_bmc_rate_oracle.c $(HOST_JSON)
+
 test_ap_sta_ie: test_ap_sta_ie.c $(AP_STA_IE_SRC) $(HOST_JSON)
 	$(CC) $(STA_IE_CFLAGS) -o $@ test_ap_sta_ie.c $(AP_STA_IE_SRC) $(HOST_JSON)
 
@@ -98,4 +106,4 @@ test_ap_bcn_ie: test_ap_bcn_ie.c $(AP_BCN_IE_SRC) $(HOST_JSON) $(BCN_IE_DEPS)
 clean:
 	rm -f test_ap_rest test_ap_rest_rust test_ap_sta_ie test_ap_sta_ie_rates \
 		test_ap_sta_ie_wmm_ht test_ap_sta_ie_vht_multiap test_ap_sta_ie_sec \
-		test_ap_bcn_ie librust_ap_rest.a
+		test_ap_bcn_ie test_ap_bmc_rate librust_ap_rest.a
