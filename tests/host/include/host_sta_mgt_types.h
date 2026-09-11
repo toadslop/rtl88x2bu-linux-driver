@@ -145,8 +145,10 @@ struct sta_priv {
 	u16 max_num_sta;
 	struct pre_link_sta_ctl_t pre_link_sta_ctl;
 	u8 *pstainfo_buf;
+	_queue free_sta_queue;
 	_lock sta_hash_lock;
 	_list sta_hash[NUM_STA];
+	int asoc_sta_count;
 };
 
 struct _adapter {
@@ -241,6 +243,11 @@ static inline int _rtw_memcmp(const void *dst, const void *src, u32 sz)
 	return memcmp(dst, src, sz) ? _FALSE : _TRUE;
 }
 
+static inline int _rtw_queue_empty(_queue *queue)
+{
+	return queue->queue.next == &queue->queue;
+}
+
 static inline u16 ntohs(u16 val)
 {
 	return (u16)(((val & 0xff) << 8) | ((val >> 8) & 0xff));
@@ -294,6 +301,11 @@ void _rtw_init_sta_xmit_priv(struct sta_xmit_priv *psta_xmitpriv);
 void _rtw_init_sta_recv_priv(struct sta_recv_priv *psta_recvpriv);
 void _rtw_init_stainfo(struct sta_info *psta);
 struct sta_info *rtw_get_stainfo_by_offset(struct sta_priv *stapriv, int offset);
+struct sta_info *rtw_alloc_stainfo(struct sta_priv *stapriv, const u8 *hwaddr);
+void host_sta_mgt_alloc_reset(_adapter *adapter);
+int host_sta_mgt_alloc_setup(_adapter *adapter);
+int host_sta_mgt_alloc_drain(_adapter *adapter, u8 count);
+int host_sta_mgt_alloc_free_count(_adapter *adapter);
 
 void rtw_st_ctl_init(struct st_ctl_t *st_ctl);
 void rtw_st_ctl_deinit(struct st_ctl_t *st_ctl);

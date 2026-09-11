@@ -6,10 +6,12 @@ HOST_INC := ../include
 STA_REST_SRC := $(CORE)/rtw_sta_mgt_rest.c
 STCTL_SRC := $(CORE)/rtw_sta_mgt_stctl.c
 LOOKUP_SRC := $(CORE)/rtw_sta_mgt_lookup.c
+ALLOC_SRC := $(CORE)/rtw_sta_mgt_alloc.c
 HOST_JSON := ../crypto/host_vector_json.c
 HOST_SHIM := host_sta_mgt_shim.c
 STCTL_SHIM := host_sta_mgt_stctl_shim.c
 LOOKUP_SHIM := host_sta_mgt_lookup_shim.c
+ALLOC_SHIM := host_sta_mgt_alloc_shim.c
 
 CC     := gcc
 CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -Wno-sign-compare -O2 \
@@ -28,11 +30,12 @@ sta_mgt-compile: $(STA_REST_SRC) $(HOST_SHIM)
 
 test: test-c test-rust
 
-test-c: test_sta_mgt test_sta_mgt_aid test_sta_mgt_stctl test_sta_mgt_lookup
+test-c: test_sta_mgt test_sta_mgt_aid test_sta_mgt_stctl test_sta_mgt_lookup test_sta_mgt_alloc
 	./test_sta_mgt sta_mgt_vectors.json
 	./test_sta_mgt_aid sta_mgt_aid_vectors.json
 	./test_sta_mgt_stctl sta_mgt_stctl_vectors.json
 	./test_sta_mgt_lookup sta_mgt_lookup_vectors.json
+	./test_sta_mgt_alloc sta_mgt_alloc_vectors.json
 
 test_sta_mgt: test_sta_mgt.c $(STA_REST_SRC) $(HOST_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_sta_mgt.c $(HOST_SHIM) $(STA_REST_SRC) $(HOST_JSON)
@@ -45,6 +48,9 @@ test_sta_mgt_stctl: test_sta_mgt_stctl.c $(STCTL_SRC) $(STA_REST_SRC) $(HOST_SHI
 
 test_sta_mgt_lookup: test_sta_mgt_lookup.c $(LOOKUP_SRC) $(STCTL_SRC) $(LOOKUP_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_sta_mgt_lookup.c $(LOOKUP_SHIM) $(STCTL_SRC) $(LOOKUP_SRC) $(HOST_JSON)
+
+test_sta_mgt_alloc: test_sta_mgt_alloc.c $(ALLOC_SRC) $(LOOKUP_SRC) $(STCTL_SRC) $(LOOKUP_SHIM) $(ALLOC_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_sta_mgt_alloc.c $(ALLOC_SHIM) $(LOOKUP_SHIM) $(STCTL_SRC) $(LOOKUP_SRC) $(ALLOC_SRC) $(HOST_JSON)
 
 RUST_STA_MGT := $(ROOT)/rust/rtw_sta_mgt.rs
 
@@ -78,6 +84,6 @@ test_sta_mgt_stctl_rust: test_sta_mgt_stctl.c librust_sta_mgt_stctl.a $(HOST_SHI
 	$(CC) $(CFLAGS) -DRUST_STA_MGT_STCTL_ORACLE -o $@ test_sta_mgt_stctl.c $(HOST_SHIM) $(STCTL_SHIM) $(HOST_JSON) librust_sta_mgt_stctl.a
 
 clean:
-	rm -f test_sta_mgt test_sta_mgt_aid test_sta_mgt_stctl test_sta_mgt_lookup \
+	rm -f test_sta_mgt test_sta_mgt_aid test_sta_mgt_stctl test_sta_mgt_lookup test_sta_mgt_alloc \
 		test_sta_mgt_rust test_sta_mgt_aid_rust test_sta_mgt_stctl_rust \
 		librust_sta_mgt.a librust_sta_mgt_aid.a librust_sta_mgt_stctl.a sta_mgt_rest_host.o sta_mgt_shim_host.o
