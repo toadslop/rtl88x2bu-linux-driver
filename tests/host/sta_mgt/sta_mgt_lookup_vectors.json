@@ -5,6 +5,7 @@
       "name": "init_stainfo_clears_st_ctl",
       "fn": "_rtw_init_stainfo",
       "sta_index": 0,
+      "expect_hash_list_init": 1,
       "expect_st_ctl_cleared": 1
     },
     {
