@@ -231,10 +231,7 @@ fn ap_find_bmc_rate_inner(band: u8, tx_rate: u8) -> u8 {
 
 #[cfg(any(host_ap_bmc_rate_test, bmc_tx_rate_select))]
 #[no_mangle]
-pub extern "C" fn rtw_ap_find_bmc_rate(
-    adapter: *mut core::ffi::c_void,
-    tx_rate: u8,
-) -> u8 {
+pub extern "C" fn rtw_ap_find_bmc_rate(adapter: *mut core::ffi::c_void, tx_rate: u8) -> u8 {
     if adapter.is_null() {
         return ODM_RATE6M;
     }
