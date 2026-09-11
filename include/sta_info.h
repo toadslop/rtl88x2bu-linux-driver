@@ -746,6 +746,8 @@ __inline static u32 wifi_mac_hash(const u8 *mac)
 }
 
 
+void _rtw_init_stainfo(struct sta_info *psta);
+
 extern u32	_rtw_init_sta_priv(struct sta_priv *pstapriv);
 extern u32	_rtw_free_sta_priv(struct sta_priv *pstapriv);
 
