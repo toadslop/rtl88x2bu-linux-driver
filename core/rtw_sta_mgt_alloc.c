@@ -34,6 +34,16 @@ static void rtw_init_recv_timer(struct recv_reorder_ctrl *preorder_ctrl)
 
 #if !defined(CONFIG_RUST) || defined(HOST_STA_MGT_TEST) || !defined(CONFIG_RUST_STA_MGT_ALLOC)
 
+static void rtw_init_recv_timer(struct recv_reorder_ctrl *preorder_ctrl)
+{
+	_adapter *padapter = preorder_ctrl->padapter;
+
+#if defined(CONFIG_80211N_HT) && defined(CONFIG_RECV_REORDERING_CTRL)
+	rtw_init_timer(&(preorder_ctrl->reordering_ctrl_timer), padapter,
+		       rtw_reordering_ctrl_timeout_handler, preorder_ctrl);
+#endif
+}
+
 struct sta_info *rtw_alloc_stainfo(struct sta_priv *pstapriv, const u8 *hwaddr)
 {
 	_irqL irqL2;
