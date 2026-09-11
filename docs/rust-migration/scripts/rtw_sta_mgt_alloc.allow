@@ -1,0 +1,7 @@
+# L1 allowlist for W3-78 alloc object: drop Rust FFI helpers from symbol check.
+drop rtw_rust_alloc_lock
+drop rtw_rust_alloc_unlock
+drop rtw_rust_alloc_pop_free
+drop rtw_rust_alloc_hash_attach
+drop rtw_rust_alloc_post_init
+drop rtw_rust_alloc_mi_update

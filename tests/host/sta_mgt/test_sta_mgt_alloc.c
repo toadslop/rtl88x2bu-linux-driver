@@ -62,7 +62,7 @@ static int run_vector(const struct vector *v)
 		return -1;
 
 	for (i = 0; i < v->repeat; i++) {
-		sta = rtw_alloc_stainfo(&a.stapriv, v->mac);
+		sta = rtw_alloc_stainfo(&a.stapriv, v->mac); /* oracle: C or Rust */
 		if (v->expect_null_on_last && i + 1 == v->repeat) {
 			if (sta)
 				return -1;
