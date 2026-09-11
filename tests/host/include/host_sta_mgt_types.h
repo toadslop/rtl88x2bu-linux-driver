@@ -114,11 +114,13 @@ struct sta_recv_priv {
 };
 
 struct sta_info {
+	/* Keep cmn/state first for W3-38 aid Rust oracle layout parity. */
+	struct cmn_sta_info cmn;
+	uint state;
 	_lock lock;
 	_list list;
 	_list hash_list;
 	struct _adapter *padapter;
-	struct cmn_sta_info cmn;
 	_queue sleep_q;
 #ifdef CONFIG_RTW_MGMT_QUEUE
 	_queue mgmt_sleep_q;
@@ -130,7 +132,6 @@ struct sta_info {
 	_list auth_list;
 	u8 bpairwise_key_installed;
 #endif
-	uint state;
 	struct st_ctl_t st_ctl;
 };
 
