@@ -17,6 +17,7 @@ use std::os::raw::{c_int, c_uint};
 #[cfg(not(host_sta_mgt_test))]
 use core::ffi::c_ulong;
 
+const _SUCCESS: u32 = 1;
 const ETH_ALEN: usize = 6;
 
 #[cfg(host_sta_mgt_test)]

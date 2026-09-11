@@ -2612,6 +2612,7 @@ ccflags-y += -DCONFIG_RUST_MLME_HT_RESTRUCTURE
 ccflags-y += -DCONFIG_80211D
 ccflags-y += -DCONFIG_RUST_MLME_80211D
 ccflags-y += -DCONFIG_RUST_STA_MGT_STCTL
+ccflags-y += -DCONFIG_RUST_STA_MGT_ALLOC
 ccflags-y += -DCONFIG_RUST_AP_STA_IE
 ccflags-y += -DCONFIG_RUST_AP_STA_IE_SEC
 ccflags-y += -DCONFIG_RUST_AP_REST
@@ -2661,6 +2662,7 @@ ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_80211AC_VHT' $(src)/include/aut
 rustflags-y += --cfg config_80211ac_vht
 endif
 rustflags-y += --cfg rust_sta_mgt_stctl
+rustflags-y += --cfg rust_sta_mgt_alloc
 rustflags-y += --cfg rust_ap_sta_ie
 rustflags-y += --cfg rust_ap_sta_ie_sec
 rustflags-y += --cfg rust_ap_rest
@@ -2725,6 +2727,7 @@ $(MODULE_NAME)-y += rust/rtw_vht.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt_aid.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt_stctl.o
+$(MODULE_NAME)-y += rust/rtw_sta_mgt_alloc.o
 $(MODULE_NAME)-y += rust/rtw_ap_sta_ie.o
 $(MODULE_NAME)-y += rust/rtw_ap_sta_ie_sec.o
 $(MODULE_NAME)-y += rust/rtw_ap_rest.o
