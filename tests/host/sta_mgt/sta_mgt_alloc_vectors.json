@@ -1,0 +1,28 @@
+{
+  "oracle": "core/rtw_sta_mgt_alloc.c",
+  "vectors": [
+    {
+      "name": "alloc_empty_queue",
+      "fn": "rtw_alloc_stainfo",
+      "drain_free": 4,
+      "mac": "020304050607",
+      "expect_null": 1
+    },
+    {
+      "name": "alloc_success",
+      "fn": "rtw_alloc_stainfo",
+      "mac": "020304050607",
+      "expect_null": 0,
+      "expect_asoc_count": 1,
+      "expect_free_count": 3,
+      "expect_lookup": 1
+    },
+    {
+      "name": "alloc_exhaust_pool",
+      "fn": "rtw_alloc_stainfo",
+      "repeat": 5,
+      "mac": "010203040506",
+      "expect_null_on_last": 1
+    }
+  ]
+}
