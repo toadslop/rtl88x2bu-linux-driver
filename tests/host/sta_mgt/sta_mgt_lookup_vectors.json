@@ -1,0 +1,41 @@
+{
+  "oracle": "core/rtw_sta_mgt_lookup.c",
+  "vectors": [
+    {
+      "name": "init_stainfo_clears_st_ctl",
+      "fn": "_rtw_init_stainfo",
+      "sta_index": 0,
+      "expect_st_ctl_cleared": 1
+    },
+    {
+      "name": "get_stainfo_null_hwaddr",
+      "fn": "rtw_get_stainfo",
+      "expect_found": 0
+    },
+    {
+      "name": "get_stainfo_hit",
+      "fn": "rtw_get_stainfo",
+      "mac": "020304050607",
+      "sta_index": 1,
+      "expect_found": 1
+    },
+    {
+      "name": "get_stainfo_miss",
+      "fn": "rtw_get_stainfo",
+      "mac": "020304050607",
+      "expect_found": 0
+    },
+    {
+      "name": "get_stainfo_by_offset_zero",
+      "fn": "rtw_get_stainfo_by_offset",
+      "sta_index": 0,
+      "expect_offset": 0
+    },
+    {
+      "name": "get_stainfo_by_offset_two",
+      "fn": "rtw_get_stainfo_by_offset",
+      "sta_index": 2,
+      "expect_offset": 2
+    }
+  ]
+}
