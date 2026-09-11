@@ -16,7 +16,16 @@
       "name": "get_stainfo_hit",
       "fn": "rtw_get_stainfo",
       "mac": "020304050607",
+      "insert_mac": "020304050607",
       "sta_index": 1,
+      "expect_found": 1
+    },
+    {
+      "name": "get_stainfo_mcast_maps_to_bcast",
+      "fn": "rtw_get_stainfo",
+      "mac": "010000000000",
+      "insert_mac": "ffffffffffff",
+      "sta_index": 3,
       "expect_found": 1
     },
     {

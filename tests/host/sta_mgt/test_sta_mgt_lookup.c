@@ -88,8 +88,6 @@ static int run_vector(const struct vector *v)
 	case FN_GET:
 		if (mac_set(v->insert_mac))
 			host_sta_mgt_lookup_hash_insert(&a, v->sta_index, v->insert_mac);
-		else if (v->expect_found && mac_set(v->mac))
-			host_sta_mgt_lookup_hash_insert(&a, v->sta_index, v->mac);
 		got = rtw_get_stainfo(&a.stapriv, mac_set(v->mac) ? v->mac : NULL);
 		found = got ? 1 : 0;
 		return found == v->expect_found ? 0 : -1;
