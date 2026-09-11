@@ -353,43 +353,6 @@ exit:
 	return;
 }
 
-u32 rtw_init_bcmc_stainfo(_adapter *padapter)
-{
-
-	struct sta_info	*psta;
-	struct tx_servq	*ptxservq;
-	u32 res = _SUCCESS;
-	NDIS_802_11_MAC_ADDRESS	bcast_addr = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-
-	struct	sta_priv *pstapriv = &padapter->stapriv;
-
-
-	psta = rtw_alloc_stainfo(pstapriv, bcast_addr);
-
-	if (psta == NULL) {
-		res = _FAIL;
-		goto exit;
-	}
-#ifdef CONFIG_BEAMFORMING
-	psta->cmn.bf_info.g_id = 63;
-	psta->cmn.bf_info.p_aid = 0;
-#endif
-
-	ptxservq = &(psta->sta_xmitpriv.be_q);
-
-	/*
-		_enter_critical(&pstapending->lock, &irqL0);
-
-		if (rtw_is_list_empty(&ptxservq->tx_pending))
-			rtw_list_insert_tail(&ptxservq->tx_pending, get_list_head(pstapending));
-
-		_exit_critical(&pstapending->lock, &irqL0);
-	*/
-
-exit:
-	return _SUCCESS;
-
-}
 
 
 struct sta_info *rtw_get_bcmc_stainfo(_adapter *padapter)
