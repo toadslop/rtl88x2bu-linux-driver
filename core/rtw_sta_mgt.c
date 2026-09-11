@@ -16,46 +16,6 @@
 
 #include <drv_types.h>
 
-void rtw_st_ctl_rx(struct sta_info *sta, u8 *ehdr_pos)
-{
-	_adapter *adapter = sta->padapter;
-	struct ethhdr *etherhdr = (struct ethhdr *)ehdr_pos;
-
-	if (ntohs(etherhdr->h_proto) == ETH_P_IP) {
-		u8 *ip = ehdr_pos + ETH_HLEN;
-
-		if (GET_IPV4_PROTOCOL(ip) == 0x06  /* TCP */
-			&& rtw_st_ctl_chk_reg_s_proto(&sta->st_ctl, 0x06) == _TRUE
-		) {
-			u8 *tcp = ip + GET_IPV4_IHL(ip) * 4;
-
-			if (rtw_st_ctl_chk_reg_rule(&sta->st_ctl, adapter, IPV4_DST(ip), TCP_DST(tcp), IPV4_SRC(ip), TCP_SRC(tcp)) == _TRUE) {
-				if (GET_TCP_SYN(tcp) && GET_TCP_ACK(tcp)) {
-					session_tracker_add_cmd(adapter, sta
-						, IPV4_DST(ip), TCP_DST(tcp)
-						, IPV4_SRC(ip), TCP_SRC(tcp));
-					if (DBG_SESSION_TRACKER)
-						RTW_INFO(FUNC_ADPT_FMT" local:"IP_FMT":"PORT_FMT", remote:"IP_FMT":"PORT_FMT" SYN-ACK\n"
-							, FUNC_ADPT_ARG(adapter)
-							, IP_ARG(IPV4_DST(ip)), PORT_ARG(TCP_DST(tcp))
-							, IP_ARG(IPV4_SRC(ip)), PORT_ARG(TCP_SRC(tcp)));
-				}
-				if (GET_TCP_FIN(tcp)) {
-					session_tracker_del_cmd(adapter, sta
-						, IPV4_DST(ip), TCP_DST(tcp)
-						, IPV4_SRC(ip), TCP_SRC(tcp));
-					if (DBG_SESSION_TRACKER)
-						RTW_INFO(FUNC_ADPT_FMT" local:"IP_FMT":"PORT_FMT", remote:"IP_FMT":"PORT_FMT" FIN\n"
-							, FUNC_ADPT_ARG(adapter)
-							, IP_ARG(IPV4_DST(ip)), PORT_ARG(TCP_DST(tcp))
-							, IP_ARG(IPV4_SRC(ip)), PORT_ARG(TCP_SRC(tcp)));
-				}
-			}
-
-		}
-	}
-}
-
 #define SESSION_TRACKER_FMT IP_FMT":"PORT_FMT" "IP_FMT":"PORT_FMT" %u %d"
 #define SESSION_TRACKER_ARG(st) IP_ARG(&(st)->local_naddr), PORT_ARG(&(st)->local_port), IP_ARG(&(st)->remote_naddr), PORT_ARG(&(st)->remote_port), (st)->status, rtw_get_passing_time_ms((st)->set_time)
 
