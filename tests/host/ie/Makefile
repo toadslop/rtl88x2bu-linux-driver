@@ -80,7 +80,7 @@ IE_REST_RUST_SHIM := ie_mac_str_host_shim.c ie_p2p_c_oracle.c ie_wfd_multiap_c_o
 	test-rest-ht-mcs-amsdu test-rest-ht-mcs-amsdu-rust \
 	test-rest-p2p-ie test-rest-p2p-ie-rust \
 	test-rest-wfd-multiap test-rest-wfd-multiap-rust \
-	test-rest-parse-elems clean
+	test-rest-parse-elems test-rest-parse-elems-rust clean
 
 all: test
 
@@ -92,7 +92,7 @@ test: test-c test-rust test-rest test-rest-rust test-rest-cipher \
 	test-rest-ht-mcs-amsdu test-rest-ht-mcs-amsdu-rust \
 	test-rest-p2p-ie test-rest-p2p-ie-rust \
 	test-rest-wfd-multiap test-rest-wfd-multiap-rust \
-	test-rest-parse-elems
+	test-rest-parse-elems test-rest-parse-elems-rust
 
 test-c: test_ie
 	./test_ie ie_vectors.json
@@ -322,10 +322,11 @@ test-rest-parse-elems-rust: test_ie_rest_parse_elems_rust
 	./test_ie_rest_parse_elems_rust ie_rest_parse_elems_vectors.json
 
 test_ie_rest_parse_elems_rust: test_ie_rest_parse_elems.c librust_ie_rest.a \
-		../crypto/host_vector_json.c $(IE_REST_RUST_SHIM)
+		ie_c_oracle.c ../wlan_util/wlan_util_c_oracle.c ../crypto/host_vector_json.c \
+		$(IE_REST_RUST_SHIM)
 	$(CC) $(PARSE_ELEMS_CFLAGS) -DRUST_IEEE80211_REST_ORACLE -o $@ \
-		test_ie_rest_parse_elems.c ../crypto/host_vector_json.c \
-		$(IE_REST_RUST_SHIM) librust_ie_rest.a
+		test_ie_rest_parse_elems.c ie_c_oracle.c ../wlan_util/wlan_util_c_oracle.c \
+		../crypto/host_vector_json.c $(IE_REST_RUST_SHIM) librust_ie_rest.a
 
 clean:
 	rm -f test_ie test_ie_rust test_ie_rest test_ie_rest_rust test_ie_rest_cipher \
