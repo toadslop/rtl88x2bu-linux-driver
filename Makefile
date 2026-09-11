@@ -2463,6 +2463,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_sta_mgt_rest.o \
 		core/rtw_sta_mgt_stctl.o \
 		core/rtw_sta_mgt_lookup.o \
+		core/rtw_sta_mgt_alloc.o \
 		core/rtw_ap.o \
 		core/rtw_ap_rest.o \
 		core/rtw_ap_sta_ie.o \
