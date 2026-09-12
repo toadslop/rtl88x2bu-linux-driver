@@ -90,7 +90,7 @@ librust_ap_bmc_rate.a: $(RUST_AP_REST)
 		--crate-type staticlib $(RUST_AP_REST) -o $@
 
 test_ap_bmc_rate_rust: test_ap_bmc_rate.c librust_ap_bmc_rate.a $(HOST_JSON)
-	$(CC) $(BMC_RATE_CFLAGS) -o $@ test_ap_bmc_rate.c $(HOST_JSON) librust_ap_bmc_rate.a
+	$(CC) $(BMC_RATE_CFLAGS) -DRUST_AP_BMC_RATE_ORACLE -o $@ test_ap_bmc_rate.c $(HOST_JSON) librust_ap_bmc_rate.a
 
 test_ap_sta_ie: test_ap_sta_ie.c $(AP_STA_IE_SRC) $(HOST_JSON)
 	$(CC) $(STA_IE_CFLAGS) -o $@ test_ap_sta_ie.c $(AP_STA_IE_SRC) $(HOST_JSON)
