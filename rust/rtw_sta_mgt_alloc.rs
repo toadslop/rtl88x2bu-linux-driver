@@ -82,13 +82,33 @@ mod host_layout {
     }
 
     #[repr(C)]
+    pub struct TxServq {
+        pub sta_pending: Queue,
+        pub tx_pending: List,
+        pub qcnt: c_int,
+    }
+
+    #[repr(C)]
     pub struct StaXmitPriv {
         pub lock: c_int,
+        pub be_q: TxServq,
+        pub bk_q: TxServq,
+        pub vi_q: TxServq,
+        pub vo_q: TxServq,
+        #[cfg(host_sta_mgt_test)]
+        pub mgmt_q: TxServq,
+    }
+
+    #[repr(C)]
+    pub struct RecvReorderCtrl {
+        pub reordering_ctrl_timer: c_int,
+        pub pending_recvframe_queue: Queue,
     }
 
     #[repr(C)]
     pub struct StaRecvPriv {
         pub lock: c_int,
+        pub defrag_q: Queue,
     }
 
     #[repr(C)]
@@ -119,6 +139,7 @@ mod host_layout {
         pub auth_list: List,
         pub bpairwise_key_installed: u8,
         pub st_ctl: StCtl,
+        pub recvreorder_ctrl: [RecvReorderCtrl; 16],
     }
 
     #[repr(C)]
@@ -131,16 +152,44 @@ mod host_layout {
         pub rr_aid: u8,
         pub max_num_sta: u16,
         pub pre_link_sta_ctl: PreLinkStaCtl,
+        pub pallocated_stainfo_buf: *mut u8,
         pub pstainfo_buf: *mut u8,
         pub free_sta_queue: Queue,
+        pub sleep_q: Queue,
+        pub wakeup_q: Queue,
         pub sta_hash_lock: c_int,
         pub sta_hash: [List; NUM_STA],
         pub asoc_sta_count: c_int,
+        pub adhoc_expire_to: u8,
+        pub aid_bmp_len: u16,
+        pub sta_dz_bitmap: *mut u8,
+        pub tim_bitmap: *mut u8,
+        pub asoc_list: List,
+        pub auth_list: List,
+        pub asoc_list_lock: c_int,
+        pub auth_list_lock: c_int,
+        pub asoc_list_cnt: c_int,
+        pub auth_list_cnt: c_int,
+        pub auth_to: u8,
+        pub assoc_to: u8,
+        pub expire_to: u16,
+    }
+
+    #[repr(C)]
+    pub struct MacidCtl {
+        pub num: u8,
+    }
+
+    #[repr(C)]
+    pub struct MlmePriv {
+        pub dummy: c_int,
     }
 
     #[repr(C)]
     pub struct Adapter {
         pub stapriv: StaPriv,
+        pub macid_ctl: MacidCtl,
+        pub mlmepriv: MlmePriv,
     }
 }
 
