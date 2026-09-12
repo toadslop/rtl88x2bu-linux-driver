@@ -19,7 +19,7 @@ type Adapter = c_void;
 const _TRUE: U8 = 1;
 const _FALSE: U8 = 0;
 const NUM_STA: usize = 32;
-const STA_INFO_UPDATE_ALL: i32 = 0;
+const STA_INFO_UPDATE_ALL: i32 = 0x3f;
 
 extern "C" {
     fn rtw_ap_expire_timeout_preflight(padapter: *mut Adapter) -> U8;
@@ -42,9 +42,6 @@ extern "C" {
 }
 
 fn expire_timeout_chk_impl(padapter: *mut Adapter) {
-    if padapter.is_null() {
-        return;
-    }
     unsafe {
         if rtw_ap_expire_timeout_preflight(padapter) == _FALSE {
             return;
