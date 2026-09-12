@@ -51,8 +51,10 @@ EXPIRE_AUTH_CFLAGS := $(BCN_UPDATE_CFLAGS) -DHOST_AP_EXPIRE_AUTH_TEST -I$(CORE)
 EXPIRE_AUTH_DEPS := host_expire_auth_shim.c
 AP_EXPIRE_ASOC_SRC := $(CORE)/rtw_ap_expire_asoc.c $(CORE)/rtw_ap_sta_alive.c
 EXPIRE_ASOC_CFLAGS := $(BCN_UPDATE_CFLAGS) -DHOST_AP_EXPIRE_ASOC_TEST -I$(CORE)
-AKA_CHK_CFLAGS := $(BCN_UPDATE_CFLAGS) -DCONFIG_ACTIVE_KEEP_ALIVE_CHECK -I$(CORE)
-AKA_CHK_DEPS := ap_aka_chk_oracle.c host_aka_chk_shim.c
+AKA_CHK_CFLAGS := $(BCN_UPDATE_CFLAGS) -DCONFIG_ACTIVE_KEEP_ALIVE_CHECK \
+	-DHOST_AP_AKA_CHK_TEST -I$(CORE)
+AP_AKA_CHK_SRC := $(CORE)/rtw_ap_aka_chk.c
+AKA_CHK_DEPS := host_aka_chk_shim.c
 
 .PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk clean
 
@@ -112,8 +114,9 @@ test-expire-asoc: test_ap_expire_asoc
 test-aka-chk: test_ap_aka_chk
 	./test_ap_aka_chk ap_aka_chk_vectors.json
 
-test_ap_aka_chk: test_ap_aka_chk.c $(HOST_JSON) $(AKA_CHK_DEPS)
-	$(CC) $(AKA_CHK_CFLAGS) -o $@ test_ap_aka_chk.c $(HOST_JSON) $(AKA_CHK_DEPS)
+test_ap_aka_chk: test_ap_aka_chk.c $(HOST_JSON) $(AP_AKA_CHK_SRC) $(AKA_CHK_DEPS)
+	$(CC) $(AKA_CHK_CFLAGS) -o $@ test_ap_aka_chk.c $(HOST_JSON) \
+		$(AP_AKA_CHK_SRC) $(AKA_CHK_DEPS)
 
 test-rust-expire-asoc: test_ap_expire_asoc_rust
 	./test_ap_expire_asoc_rust ap_expire_asoc_vectors.json
