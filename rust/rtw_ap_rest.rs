@@ -188,42 +188,7 @@ const ODM_RATE1M: u8 = 0x00;
 #[cfg(any(host_ap_bmc_rate_test, bmc_tx_rate_select))]
 const ODM_RATE6M: u8 = 0x04;
 #[cfg(any(host_ap_bmc_rate_test, bmc_tx_rate_select))]
-const ODM_RATEVHTSS4MCS9: u8 = 0x53;
-#[cfg(any(host_ap_bmc_rate_test, bmc_tx_rate_select))]
 const BAND_ON_5G: u8 = 1;
-
-#[cfg(host_ap_bmc_rate_test)]
-#[repr(C)]
-pub struct ListHead {
-    pub next: *mut ListHead,
-    pub prev: *mut ListHead,
-}
-
-#[cfg(host_ap_bmc_rate_test)]
-#[repr(C)]
-pub struct RaStaInfo {
-    pub curr_tx_rate: u8,
-}
-
-#[cfg(host_ap_bmc_rate_test)]
-#[repr(C)]
-pub struct CmnStaInfo {
-    pub ra_info: RaStaInfo,
-}
-
-#[cfg(host_ap_bmc_rate_test)]
-#[repr(C)]
-pub struct StaInfo {
-    pub cmn: CmnStaInfo,
-    pub asoc_list: ListHead,
-}
-
-#[cfg(host_ap_bmc_rate_test)]
-#[repr(C)]
-pub struct StaPriv {
-    pub asoc_list: ListHead,
-    pub asoc_list_lock: i32,
-}
 
 #[cfg(host_ap_bmc_rate_test)]
 #[repr(C)]
@@ -235,25 +200,6 @@ pub struct HalData {
 #[repr(C)]
 pub struct Adapter {
     pub hal_data: HalData,
-    pub stapriv: StaPriv,
-}
-
-#[cfg(host_ap_bmc_rate_test)]
-unsafe fn host_find_mini_tx_rate(adapter: *const Adapter) -> u8 {
-    let pstapriv = &(*adapter).stapriv;
-    let mut miini_tx_rate = ODM_RATEVHTSS4MCS9;
-    let mut plist = pstapriv.asoc_list.next;
-    let phead = &pstapriv.asoc_list as *const ListHead;
-    while plist != phead {
-        let psta = (plist as *mut u8).offset(-(core::mem::offset_of!(StaInfo, asoc_list) as isize))
-            as *const StaInfo;
-        let sta_tx_rate = (*psta).cmn.ra_info.curr_tx_rate & 0x7f;
-        if sta_tx_rate < miini_tx_rate {
-            miini_tx_rate = sta_tx_rate;
-        }
-        plist = (*plist).next;
-    }
-    miini_tx_rate
 }
 
 #[cfg(all(not(host_ap_bmc_rate_test), bmc_tx_rate_select))]
@@ -262,7 +208,6 @@ mod bmc_kernel {
 
     extern "C" {
         pub fn rtw_rust_ap_current_band_type(adapter: *mut c_void) -> u8;
-        pub fn rtw_rust_ap_find_mini_tx_rate(adapter: *mut c_void) -> u8;
     }
 }
 
@@ -298,21 +243,5 @@ pub extern "C" fn rtw_ap_find_bmc_rate(adapter: *mut core::ffi::c_void, tx_rate:
     #[cfg(all(not(host_ap_bmc_rate_test), bmc_tx_rate_select))]
     unsafe {
         ap_find_bmc_rate_inner(bmc_kernel::rtw_rust_ap_current_band_type(adapter), tx_rate)
-    }
-}
-
-#[cfg(any(host_ap_bmc_rate_test, bmc_tx_rate_select))]
-#[no_mangle]
-pub extern "C" fn rtw_ap_find_mini_tx_rate(adapter: *mut core::ffi::c_void) -> u8 {
-    if adapter.is_null() {
-        return ODM_RATEVHTSS4MCS9;
-    }
-    #[cfg(host_ap_bmc_rate_test)]
-    unsafe {
-        return host_find_mini_tx_rate(adapter as *const Adapter);
-    }
-    #[cfg(all(not(host_ap_bmc_rate_test), bmc_tx_rate_select))]
-    unsafe {
-        bmc_kernel::rtw_rust_ap_find_mini_tx_rate(adapter)
     }
 }
