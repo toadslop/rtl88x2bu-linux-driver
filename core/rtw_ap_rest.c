@@ -121,30 +121,6 @@ u8 rtw_ap_find_bmc_rate(_adapter *adapter, u8 tx_rate)
 		tx_ini_rate = ODM_RATE6M;
 	return tx_ini_rate;
 }
-
-u8 rtw_ap_find_mini_tx_rate(_adapter *adapter)
-{
-	_irqL irqL;
-	_list	*phead, *plist;
-	u8 miini_tx_rate = ODM_RATEVHTSS4MCS9, sta_tx_rate;
-	struct sta_info *psta = NULL;
-	struct sta_priv *pstapriv = &adapter->stapriv;
-
-	_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
-	phead = &pstapriv->asoc_list;
-	plist = get_next(phead);
-	while ((rtw_end_of_queue_search(phead, plist)) == _FALSE) {
-		psta = LIST_CONTAINOR(plist, struct sta_info, asoc_list);
-		plist = get_next(plist);
-
-		sta_tx_rate = psta->cmn.ra_info.curr_tx_rate & 0x7F;
-		if (sta_tx_rate < miini_tx_rate)
-			miini_tx_rate = sta_tx_rate;
-	}
-	_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
-
-	return miini_tx_rate;
-}
 #endif /* CONFIG_BMC_TX_RATE_SELECT */
 
 #endif /* !CONFIG_RUST || HOST_AP_REST_TEST || !CONFIG_RUST_AP_REST */
@@ -182,30 +158,6 @@ void rtw_rust_ap_warn_on(int condition)
 BAND_TYPE rtw_rust_ap_current_band_type(_adapter *adapter)
 {
 	return GET_HAL_DATA(adapter)->current_band_type;
-}
-
-u8 rtw_rust_ap_find_mini_tx_rate(_adapter *adapter)
-{
-	_irqL irqL;
-	_list	*phead, *plist;
-	u8 miini_tx_rate = ODM_RATEVHTSS4MCS9, sta_tx_rate;
-	struct sta_info *psta = NULL;
-	struct sta_priv *pstapriv = &adapter->stapriv;
-
-	_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
-	phead = &pstapriv->asoc_list;
-	plist = get_next(phead);
-	while ((rtw_end_of_queue_search(phead, plist)) == _FALSE) {
-		psta = LIST_CONTAINOR(plist, struct sta_info, asoc_list);
-		plist = get_next(plist);
-
-		sta_tx_rate = psta->cmn.ra_info.curr_tx_rate & 0x7F;
-		if (sta_tx_rate < miini_tx_rate)
-			miini_tx_rate = sta_tx_rate;
-	}
-	_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
-
-	return miini_tx_rate;
 }
 #endif /* CONFIG_BMC_TX_RATE_SELECT */
 
