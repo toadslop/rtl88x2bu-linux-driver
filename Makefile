@@ -2707,6 +2707,10 @@ rustflags-y += --cfg dfs
 ifneq ($(filter -DCONFIG_REGD_SRC_FROM_OS,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg regd_src_from_os
 endif
+# Pair C -DRTW_CONFIG_RFREG18_WA with Rust expire_timeout orchestrator (W3-82 PR20).
+ifneq ($(filter -DRTW_CONFIG_RFREG18_WA,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
+rustflags-y += --cfg rtw_config_rfreg18_wa
+endif
 ifneq ($(filter -DCONFIG_RF_POWER_TRIM,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg rf_power_trim
 endif

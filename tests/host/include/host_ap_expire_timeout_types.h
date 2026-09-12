@@ -7,7 +7,8 @@
 #define _TRUE 1
 #define _FALSE 0
 #define NUM_STA 32
-#define STA_INFO_UPDATE_ALL 0
+/* Matches include/sta_info.h (BW|RATE|PROTECTION|CAP|HT|VHT). */
+#define STA_INFO_UPDATE_ALL 0x3f
 
 typedef struct {
 	int dummy;
