@@ -40,7 +40,7 @@ STA_IE_SEC_DEPS := ap_sta_ie_sec_oracle.c $(IE_ORACLE) ../ie/ie_cipher_c_oracle.
 STA_IE_WMM_HT_DEPS := $(IE_ORACLE)
 STA_IE_VHT_MULTIAP_DEPS := ap_sta_ie_vht_multiap_oracle.c $(IE_ORACLE)
 
-BMC_RATE_CFLAGS := $(CFLAGS) -DCONFIG_BMC_TX_RATE_SELECT
+BMC_RATE_CFLAGS := $(CFLAGS)
 
 .PHONY: all test test-c test-rust test-sta-ie test-bmc-rate clean
 
