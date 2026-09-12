@@ -45,36 +45,6 @@ void free_mlme_ap_info(_adapter *padapter)
 u8 chk_sta_is_alive(struct sta_info *psta);
 void rtw_ap_expire_auth_list(_adapter *padapter);
 void rtw_ap_expire_asoc_sta_tick(_adapter *padapter, struct sta_info *psta);
-u8 rtw_ap_expire_timeout_preflight(_adapter *padapter);
-void rtw_ap_expire_asoc_list_scan(_adapter *padapter, char *chk_alive_list, u8 *chk_alive_num);
-u8 rtw_ap_expire_chk_alive_process(_adapter *padapter, char *chk_alive_list, u8 chk_alive_num);
-#ifdef CONFIG_ACTIVE_KEEP_ALIVE_CHECK
-int issue_aka_chk_frame(_adapter *adapter, struct sta_info *psta);
-#endif
-
-#ifdef RTW_CONFIG_RFREG18_WA
-void rtw_check_restore_rf18(_adapter *padapter);
-#endif
-
-void	expire_timeout_chk(_adapter *padapter)
-{
-	u8 updated = _FALSE;
-	u8 chk_alive_num = 0;
-	char chk_alive_list[NUM_STA];
-
-	if (!rtw_ap_expire_timeout_preflight(padapter))
-		return;
-
-	rtw_ap_expire_asoc_list_scan(padapter, chk_alive_list, &chk_alive_num);
-
-	if (chk_alive_num)
-		updated |= rtw_ap_expire_chk_alive_process(padapter, chk_alive_list, chk_alive_num);
-
-#ifdef RTW_CONFIG_RFREG18_WA
-	rtw_check_restore_rf18(padapter);
-#endif
-	associated_clients_update(padapter, updated, STA_INFO_UPDATE_ALL);
-}
 
 void rtw_ap_update_sta_ra_info(_adapter *padapter, struct sta_info *psta)
 {

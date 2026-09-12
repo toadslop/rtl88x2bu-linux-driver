@@ -2486,6 +2486,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_ap_expire_asoc_rust_acc.o \
 		core/rtw_ap_expire_asoc_list.o \
 		core/rtw_ap_expire_chk_alive.o \
+		core/rtw_ap_expire_timeout.o \
 		core/rtw_ap_sta_ie_rust_acc.o \
 		core/wds/rtw_wds.o \
 		core/mesh/rtw_mesh.o \
