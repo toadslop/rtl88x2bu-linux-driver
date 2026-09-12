@@ -44,6 +44,7 @@ void free_mlme_ap_info(_adapter *padapter)
 
 u8 chk_sta_is_alive(struct sta_info *psta);
 void rtw_ap_expire_auth_list(_adapter *padapter);
+void rtw_ap_expire_asoc_sta_tick(_adapter *padapter, struct sta_info *psta);
 
 /**
  * issue_aka_chk_frame - issue active keep alive check frame
@@ -194,14 +195,7 @@ void	expire_timeout_chk(_adapter *padapter)
 		if (psta->isrc)
 			continue;
 #endif
-		if (chk_sta_is_alive(psta) || !psta->expire_to) {
-			psta->expire_to = pstapriv->expire_to;
-			psta->keep_alive_trycnt = 0;
-			#if !defined(CONFIG_ACTIVE_KEEP_ALIVE_CHECK) && defined(CONFIG_80211N_HT)
-			psta->under_exist_checking = 0;
-			#endif
-		} else
-			psta->expire_to--;
+		rtw_ap_expire_asoc_sta_tick(padapter, psta);
 
 #if !defined(CONFIG_ACTIVE_KEEP_ALIVE_CHECK) && defined(CONFIG_80211N_HT)
 		if ((psta->flags & WLAN_STA_HT) && (psta->htpriv.agg_enable_bitmap || psta->under_exist_checking)) {

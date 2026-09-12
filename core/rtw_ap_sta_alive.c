@@ -14,7 +14,9 @@
  *****************************************************************************/
 #define _RTW_AP_STA_ALIVE_C_
 
-#ifdef HOST_AP_STA_ALIVE_TEST
+#if defined(HOST_AP_EXPIRE_ASOC_TEST)
+#include "host_ap_expire_asoc_types.h"
+#elif defined(HOST_AP_STA_ALIVE_TEST)
 #include "host_ap_sta_alive_types.h"
 #else
 #include <drv_types.h>
