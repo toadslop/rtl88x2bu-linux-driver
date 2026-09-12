@@ -94,5 +94,6 @@ test_sta_mgt_alloc_rust: test_sta_mgt_alloc.c librust_sta_mgt_alloc.a $(ALLOC_SH
 
 clean:
 	rm -f test_sta_mgt test_sta_mgt_aid test_sta_mgt_stctl test_sta_mgt_lookup test_sta_mgt_alloc \
-		test_sta_mgt_rust test_sta_mgt_aid_rust test_sta_mgt_stctl_rust \
-		librust_sta_mgt.a librust_sta_mgt_aid.a librust_sta_mgt_stctl.a sta_mgt_rest_host.o sta_mgt_shim_host.o
+		test_sta_mgt_rust test_sta_mgt_aid_rust test_sta_mgt_stctl_rust test_sta_mgt_alloc_rust \
+		librust_sta_mgt.a librust_sta_mgt_aid.a librust_sta_mgt_stctl.a librust_sta_mgt_alloc.a \
+		sta_mgt_rest_host.o sta_mgt_shim_host.o
