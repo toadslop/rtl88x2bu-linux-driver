@@ -68,18 +68,17 @@ fn update_last_rx_host(sta: &mut StaInfoHost) {
 #[cfg(not(host_ap_sta_alive_test))]
 fn chk_sta_is_alive_kernel(psta: *mut StaInfo) -> U8 {
     unsafe {
-        let last_sum = rtw_rust_ap_sta_alive_last_rx_data(psta)
-            + rtw_rust_ap_sta_alive_last_rx_ctrl(psta);
-        let rx_sum =
-            rtw_rust_ap_sta_alive_rx_data(psta) + rtw_rust_ap_sta_alive_rx_ctrl(psta);
+        let last_sum =
+            rtw_rust_ap_sta_alive_last_rx_data(psta) + rtw_rust_ap_sta_alive_last_rx_ctrl(psta);
+        let rx_sum = rtw_rust_ap_sta_alive_rx_data(psta) + rtw_rust_ap_sta_alive_rx_ctrl(psta);
         let mut ret = if last_sum == rx_sum { _FALSE } else { _TRUE };
 
         #[cfg(config_rtw_mesh)]
         {
             let adapter = rtw_rust_ap_sta_alive_adapter(psta);
             if !adapter.is_null() && rtw_rust_ap_mlme_is_mesh(adapter) != 0 {
-                let hwmp_alive = rtw_rust_ap_sta_alive_rx_hwmp(psta)
-                    != rtw_rust_ap_sta_alive_last_rx_hwmp(psta);
+                let hwmp_alive =
+                    rtw_rust_ap_sta_alive_rx_hwmp(psta) != rtw_rust_ap_sta_alive_last_rx_hwmp(psta);
                 let bcn_alive = rtw_rust_ap_sta_alive_rx_beacon(psta)
                     != rtw_rust_ap_sta_alive_last_rx_beacon(psta);
                 rtw_rust_ap_sta_alive_set_alive(psta, ret | hwmp_alive | bcn_alive);
