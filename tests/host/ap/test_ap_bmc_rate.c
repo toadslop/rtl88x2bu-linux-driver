@@ -23,12 +23,15 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	if (host_json_parse_string_in(obj, len, "name", v->name, sizeof(v->name)) ||
 	    host_json_parse_string_in(obj, len, "fn", v->fn, sizeof(v->fn)))
 		return -1;
-	if (!host_json_parse_int_in(obj, len, "band", &tmp))
-		v->band = (u8)tmp;
-	if (!host_json_parse_int_in(obj, len, "tx_rate", &tmp))
-		v->tx_rate = (u8)tmp;
-	if (!host_json_parse_int_in(obj, len, "expect_rate", &tmp))
-		v->expect_rate = (u8)tmp;
+	if (host_json_parse_int_in(obj, len, "band", &tmp))
+		return -1;
+	v->band = (u8)tmp;
+	if (host_json_parse_int_in(obj, len, "tx_rate", &tmp))
+		return -1;
+	v->tx_rate = (u8)tmp;
+	if (host_json_parse_int_in(obj, len, "expect_rate", &tmp))
+		return -1;
+	v->expect_rate = (u8)tmp;
 	return 0;
 }
 
