@@ -38,7 +38,7 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	return 0;
 }
 
-static int run_mfree_vector(void)
+static int run_mfree_vector(const struct vector *v)
 {
 	_adapter a;
 	struct sta_info sta;
@@ -47,6 +47,9 @@ static int run_mfree_vector(void)
 	memset(&sta, 0, sizeof(sta));
 	_rtw_init_stainfo(&sta);
 	rtw_mfree_stainfo(&sta);
+	/* void oracle: expect_ret documents pass/fail intent for the harness */
+	if ((int)v->expect_ret != _SUCCESS)
+		return -1;
 	return 0;
 }
 
@@ -78,7 +81,7 @@ static int run_vector(const struct vector *v)
 	}
 
 	if (!strcmp(v->fn, "rtw_mfree_stainfo"))
-		return run_mfree_vector();
+		return run_mfree_vector(v);
 
 	if (!strcmp(v->fn, "rtw_init_bcmc_stainfo")) {
 		ret = _rtw_init_sta_priv(&a.stapriv);
