@@ -1,0 +1,16 @@
+{
+  "vectors": [
+    {
+      "name": "auth_decrement_no_flush",
+      "expire0": 2,
+      "expect0": 1,
+      "expect_flush": 0
+    },
+    {
+      "name": "auth_expire_flush",
+      "expire0": 1,
+      "expect0": 0,
+      "expect_flush": 1
+    }
+  ]
+}
