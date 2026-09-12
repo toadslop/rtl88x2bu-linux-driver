@@ -7,8 +7,9 @@
 
 #define _TRUE 1
 #define _FALSE 0
-#define _SUCCESS 0
-#define _FAIL (-1)
+/* Mirror include/osdep_service.h so L2 checks the values kernel callers test. */
+#define _SUCCESS 1
+#define _FAIL 0
 #define TID_NUM 16
 #define HT_IOT_PEER_BROADCOM 3
 #define RX_AMPDU_SIZE_INVALID 0xFF
@@ -69,6 +70,8 @@ typedef struct _adapter _adapter;
 
 struct host_delba_record { u8 called, tid; };
 extern struct host_delba_record host_last_delba, host_last_delba_ex;
+/* Return value the issue_del_ba_ex shim hands back to rtw_delba_check. */
+extern int host_delba_ex_ret;
 
 void rtw_delba_check(_adapter *padapter, struct sta_info *psta, u8 from_timer);
 u8 chk_ap_is_alive(_adapter *padapter, struct sta_info *psta);

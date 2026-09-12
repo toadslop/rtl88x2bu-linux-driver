@@ -249,8 +249,9 @@ union host_pn48 {
 		(dot11txpn)._byte_.TSC5 = (iv)[7];                               \
 	} while (0)
 
-#define HOST_SUCCESS 0
-#define HOST_FAIL 1
+/* Mirror include/osdep_service.h so the C oracle returns what kernel callers test. */
+#define HOST_SUCCESS 1
+#define HOST_FAIL 0
 
 extern void host_tkip_phase1(uint16_t *p1k, const uint8_t *tk, const uint8_t *ta,
 			     uint32_t iv32);

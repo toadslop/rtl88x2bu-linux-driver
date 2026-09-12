@@ -12,8 +12,9 @@
 
 #define _TRUE 1
 #define _FALSE 0
-#define _SUCCESS 0
-#define _FAIL (-1)
+/* Mirror include/osdep_service.h so L2 checks the values kernel callers test. */
+#define _SUCCESS 1
+#define _FAIL 0
 #define TID_NUM 16
 #define MAX_CONTINUAL_NORXPACKET_COUNT 4
 #define ETH_ALEN 6

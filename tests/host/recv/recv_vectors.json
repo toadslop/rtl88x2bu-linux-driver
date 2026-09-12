@@ -140,7 +140,7 @@
       "dst": "010203040506",
       "src": "0a0b0c0d0e0f",
       "frame": "000000000000000000000000000000000000000000000000deadbeefcafe0000",
-      "expect_ret": 0,
+      "expect_ret": 1,
       "expect_len": 22,
       "expect_eth": "0102030405060a0b0c0d0e0f0008"
     },
@@ -155,7 +155,7 @@
       "dst": "010203040506",
       "src": "0a0b0c0d0e0f",
       "frame": "000000000000000000000000000000000000000000000000aaaa030000000800deadbeef",
-      "expect_ret": 0,
+      "expect_ret": 1,
       "expect_len": 18,
       "expect_eth": "0102030405060a0b0c0d0e0f0800"
     },
@@ -170,7 +170,7 @@
       "dst": "010203040506",
       "src": "0a0b0c0d0e0f",
       "frame": "0000000000000000000000000000000000",
-      "expect_ret": -1,
+      "expect_ret": 0,
       "expect_len": 0,
       "expect_eth": ""
     },
@@ -183,7 +183,7 @@
       "frag_num": 0,
       "ra": "020000000000",
       "initial_seq": 0,
-      "expect_ret": -1
+      "expect_ret": 0
     },
     {
       "name": "decache_qos_ucast_new",
@@ -195,7 +195,7 @@
       "ra": "020000000000",
       "initial_seq": 65535,
       "expect_seq": 16,
-      "expect_ret": 0
+      "expect_ret": 1
     },
     {
       "name": "decache_qos_ucast_dup",
@@ -206,7 +206,7 @@
       "frag_num": 0,
       "ra": "020000000000",
       "initial_seq": 16,
-      "expect_ret": -1,
+      "expect_ret": 0,
       "expect_dup_cnt": 1
     },
     {
@@ -219,7 +219,7 @@
       "ra": "010000000000",
       "initial_seq": 65535,
       "expect_seq": 49,
-      "expect_ret": 0
+      "expect_ret": 1
     },
     {
       "name": "decache_nonqos_ucast",
@@ -231,7 +231,7 @@
       "ra": "020000000000",
       "initial_seq": 65535,
       "expect_seq": 112,
-      "expect_ret": 0
+      "expect_ret": 1
     },
     {
       "name": "decache_nonqos_mcast_dup",
@@ -242,7 +242,7 @@
       "frag_num": 0,
       "ra": "010000000000",
       "initial_seq": 32,
-      "expect_ret": -1,
+      "expect_ret": 0,
       "expect_dup_cnt": 1
     },
     {
@@ -251,7 +251,7 @@
       "priority": 16,
       "hdrlen": 24,
       "encrypt": 4,
-      "expect_ret": -1
+      "expect_ret": 0
     },
     {
       "name": "ucast_pn_non_aes",
@@ -259,7 +259,7 @@
       "priority": 0,
       "hdrlen": 24,
       "encrypt": 0,
-      "expect_ret": 0
+      "expect_ret": 1
     },
     {
       "name": "ucast_pn_valid",
@@ -270,7 +270,7 @@
       "ccmp_iv": "0500000000000000",
       "initial_iv": "0000000000000000",
       "expect_iv": "0500000000000000",
-      "expect_ret": 0
+      "expect_ret": 1
     },
     {
       "name": "ucast_pn_replay_still_ok",
@@ -281,7 +281,7 @@
       "ccmp_iv": "0500000000000000",
       "initial_iv": "0a00000000000000",
       "expect_iv": "0a00000000000000",
-      "expect_ret": 0
+      "expect_ret": 1
     },
     {
       "name": "bcast_pn_non_aes",
@@ -290,7 +290,7 @@
       "hdrlen": 24,
       "encrypt": 0,
       "adapter_fw_state": 8,
-      "expect_ret": 0
+      "expect_ret": 1
     },
     {
       "name": "bcast_pn_ap_mode",
@@ -300,7 +300,7 @@
       "encrypt": 4,
       "adapter_fw_state": 16,
       "ccmp_iv": "0500000000000000",
-      "expect_ret": 0
+      "expect_ret": 1
     },
     {
       "name": "bcast_pn_sta_valid",
@@ -312,7 +312,7 @@
       "ccmp_iv": "0a00000000000000",
       "initial_iv_seq": "0000000000000000",
       "expect_iv_seq": "0a00000000000000",
-      "expect_ret": 0
+      "expect_ret": 1
     },
     {
       "name": "bcast_pn_sta_replay",
@@ -323,7 +323,7 @@
       "adapter_fw_state": 8,
       "ccmp_iv": "0500000000000000",
       "initial_iv_seq": "0a00000000000000",
-      "expect_ret": -1
+      "expect_ret": 0
     }
   ]
 }
