@@ -2487,6 +2487,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_ap_expire_asoc_list.o \
 		core/rtw_ap_expire_chk_alive.o \
 		core/rtw_ap_expire_timeout.o \
+		core/rtw_ap_expire_timeout_rust_acc.o \
 		core/rtw_ap_sta_ie_rust_acc.o \
 		core/wds/rtw_wds.o \
 		core/mesh/rtw_mesh.o \
@@ -2634,6 +2635,7 @@ ccflags-y += -DCONFIG_RUST_AP_EXPIRE_ASOC
 ccflags-y += -DCONFIG_RUST_AP_EXPIRE_AUTH
 ccflags-y += -DCONFIG_RUST_AP_AKA_CHK
 ccflags-y += -DCONFIG_RUST_AP_RF18_RESTORE
+ccflags-y += -DCONFIG_RUST_AP_EXPIRE_TIMEOUT
 ccflags-y += -DCONFIG_RUST_AP_REST
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_PREF
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_DUMP
@@ -2689,6 +2691,7 @@ rustflags-y += --cfg rust_ap_expire_asoc
 rustflags-y += --cfg rust_ap_expire_auth
 rustflags-y += --cfg rust_ap_aka_chk
 rustflags-y += --cfg rust_ap_rf18_restore
+rustflags-y += --cfg rust_ap_expire_timeout
 rustflags-y += --cfg rust_ap_rest
 rustflags-y += --cfg rust_rf_op_class_pref
 rustflags-y += --cfg rust_rf_op_class_dump
@@ -2703,6 +2706,10 @@ rustflags-y += --cfg ieee80211_band_5ghz
 rustflags-y += --cfg dfs
 ifneq ($(filter -DCONFIG_REGD_SRC_FROM_OS,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg regd_src_from_os
+endif
+# Pair C -DRTW_CONFIG_RFREG18_WA with Rust expire_timeout orchestrator (W3-82 PR20).
+ifneq ($(filter -DRTW_CONFIG_RFREG18_WA,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
+rustflags-y += --cfg rtw_config_rfreg18_wa
 endif
 ifneq ($(filter -DCONFIG_RF_POWER_TRIM,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg rf_power_trim
@@ -2763,6 +2770,7 @@ $(MODULE_NAME)-y += rust/rtw_ap_expire_asoc.o
 $(MODULE_NAME)-y += rust/rtw_ap_expire_auth.o
 $(MODULE_NAME)-y += rust/rtw_ap_aka_chk.o
 $(MODULE_NAME)-y += rust/rtw_ap_rf18_restore.o
+$(MODULE_NAME)-y += rust/rtw_ap_expire_timeout.o
 $(MODULE_NAME)-y += rust/rtw_rf_op_class_pref.o
 $(MODULE_NAME)-y += rust/rtw_rf_op_class_dump.o
 $(MODULE_NAME)-y += rust/rtw_rf_dump_txpwr_lmt.o
@@ -3366,6 +3374,23 @@ rust-objects-rtw-ap-rf18-restore-rust-ref:
 rust-check-symbols-rtw-ap-rf18-restore: rust-objects-rtw-ap-rf18-restore-c rust-objects-rtw-ap-rf18-restore-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_rf18_restore_c_ref.o NEW=tests/host/ap/ap_rf18_restore_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_rf18_restore.allow
+
+# W3-82 PR20: expire_timeout_chk orchestrator L1 (host C vs host Rust ref).
+rust-objects-rtw-ap-expire-timeout-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_AP_EXPIRE_TIMEOUT_TEST \
+		-o tests/host/ap/ap_expire_timeout_c_ref.o core/rtw_ap_expire_timeout.c
+
+rust-objects-rtw-ap-expire-timeout-rust-ref:
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on --cfg host_ap_expire_timeout_test \
+		--emit=obj=tests/host/ap/ap_expire_timeout_rust_ref.o \
+		--crate-type lib rust/rtw_ap_expire_timeout.rs
+
+rust-check-symbols-rtw-ap-expire-timeout: rust-objects-rtw-ap-expire-timeout-c rust-objects-rtw-ap-expire-timeout-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_expire_timeout_c_ref.o NEW=tests/host/ap/ap_expire_timeout_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_expire_timeout.allow
 
 # W3-73 PR8: AP STA IE parse L1 (merged C oracle vs kbuild Rust object).
 rust-objects-rtw-ap-sta-ie-c:
