@@ -8,3 +8,4 @@ test_ap_sta_ie_wmm_ht
 test_ap_sta_ie_vht_multiap
 test_ap_sta_ie_sec
 test_ap_bcn_update
+test_ap_sta_alive
