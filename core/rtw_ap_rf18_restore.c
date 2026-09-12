@@ -17,6 +17,8 @@
 
 #ifdef RTW_CONFIG_RFREG18_WA
 
+#if !defined(CONFIG_RUST_AP_RF18_RESTORE) || defined(HOST_AP_RF18_RESTORE_TEST)
+
 void rtw_check_restore_rf18(_adapter *padapter)
 {
 #ifdef HOST_AP_RF18_RESTORE_TEST
@@ -58,5 +60,7 @@ void rtw_check_restore_rf18(_adapter *padapter)
 		set_channel_bwmode(padapter, union_ch, union_offset, union_bw);
 	}
 }
+
+#endif /* !CONFIG_RUST_AP_RF18_RESTORE || HOST_AP_RF18_RESTORE_TEST */
 
 #endif /* RTW_CONFIG_RFREG18_WA */
