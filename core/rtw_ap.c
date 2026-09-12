@@ -43,6 +43,7 @@ void free_mlme_ap_info(_adapter *padapter)
 }
 
 u8 chk_sta_is_alive(struct sta_info *psta);
+void rtw_ap_expire_auth_list(_adapter *padapter);
 
 /**
  * issue_aka_chk_frame - issue active keep alive check frame
@@ -134,9 +135,6 @@ void	expire_timeout_chk(_adapter *padapter)
 	char chk_alive_list[NUM_STA];
 	int i;
 	int stainfo_offset;
-	u8 flush_num = 0;
-	char flush_list[NUM_STA]={0};
-
 #ifdef CONFIG_RTW_MESH
 	if (MLME_IS_MESH(padapter)
 		&& check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE)
@@ -166,51 +164,7 @@ void	expire_timeout_chk(_adapter *padapter)
 		return;
 #endif
 
-	_enter_critical_bh(&pstapriv->auth_list_lock, &irqL);
-
-	phead = &pstapriv->auth_list;
-	plist = get_next(phead);
-
-	/* check auth_queue */
-#ifdef DBG_EXPIRATION_CHK
-	if (rtw_end_of_queue_search(phead, plist) == _FALSE) {
-		RTW_INFO(FUNC_ADPT_FMT" auth_list, cnt:%u\n"
-			, FUNC_ADPT_ARG(padapter), pstapriv->auth_list_cnt);
-	}
-#endif
-	while ((rtw_end_of_queue_search(phead, plist)) == _FALSE) {
-		psta = LIST_CONTAINOR(plist, struct sta_info, auth_list);
-
-		plist = get_next(plist);
-
-
-#ifdef CONFIG_ATMEL_RC_PATCH
-		if (_rtw_memcmp((void *)(pstapriv->atmel_rc_pattern), (void *)(psta->cmn.mac_addr), ETH_ALEN) == _TRUE)
-			continue;
-		if (psta->flag_atmel_rc)
-			continue;
-#endif
-		if (psta->expire_to > 0) {
-			psta->expire_to--;
-			if (psta->expire_to == 0) {
-				stainfo_offset = rtw_stainfo_offset(pstapriv, psta);
-				if (stainfo_offset_valid(stainfo_offset))
-					flush_list[flush_num++] = stainfo_offset;
-				else
-					rtw_warn_on(1);
-			}
-		}
-
-	}
-
-	_exit_critical_bh(&pstapriv->auth_list_lock, &irqL);
-	for (i = 0; i < flush_num; i++) {
-		psta = rtw_get_stainfo_by_offset(pstapriv, flush_list[i]);
-		RTW_INFO(FUNC_ADPT_FMT" auth expire "MAC_FMT"\n"
-			, FUNC_ADPT_ARG(padapter), MAC_ARG(psta->cmn.mac_addr));
-		rtw_free_stainfo(padapter, psta);
-		psta = NULL;
-	}
+	rtw_ap_expire_auth_list(padapter);
 
 	_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
 
