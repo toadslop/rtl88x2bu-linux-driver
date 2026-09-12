@@ -46,12 +46,14 @@ BMC_RATE_CFLAGS := $(CFLAGS) -DCONFIG_BMC_TX_RATE_SELECT
 
 AP_STA_ALIVE_SRC := $(CORE)/rtw_ap_sta_alive.c
 STA_ALIVE_CFLAGS := $(BCN_UPDATE_CFLAGS) -DHOST_AP_STA_ALIVE_TEST -I$(CORE)
+EXPIRE_AUTH_CFLAGS := $(BCN_UPDATE_CFLAGS)
+EXPIRE_AUTH_DEPS := ap_expire_auth_oracle.c
 
-.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bcn-update test-sta-alive test-rust-sta-alive clean
+.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth clean
 
 all: test
 
-test: test-c test-rust test-sta-ie test-bcn-ie test-bcn-update test-sta-alive test-rust-sta-alive test-bmc-rate
+test: test-c test-rust test-sta-ie test-bcn-ie test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-bmc-rate
 
 test-c: test_ap_rest
 	./test_ap_rest ap_rest_vectors.json
@@ -84,6 +86,13 @@ test-bcn-update: test_ap_bcn_update
 
 test-sta-alive: test_ap_sta_alive
 	./test_ap_sta_alive ap_sta_alive_vectors.json
+
+test-expire-auth: test_ap_expire_auth
+	./test_ap_expire_auth ap_expire_auth_vectors.json
+
+test_ap_expire_auth: test_ap_expire_auth.c $(HOST_JSON) $(EXPIRE_AUTH_DEPS)
+	$(CC) $(EXPIRE_AUTH_CFLAGS) -o $@ test_ap_expire_auth.c $(HOST_JSON) \
+		$(EXPIRE_AUTH_DEPS)
 
 test-rust-sta-alive: test_ap_sta_alive_rust
 	./test_ap_sta_alive_rust ap_sta_alive_vectors.json
@@ -149,5 +158,6 @@ clean:
 	rm -f test_ap_rest test_ap_rest_rust test_ap_sta_ie test_ap_sta_ie_rates \
 		test_ap_sta_ie_wmm_ht test_ap_sta_ie_vht_multiap test_ap_sta_ie_sec \
 		test_ap_bcn_ie test_ap_bcn_update test_ap_sta_alive test_ap_sta_alive_rust \
+		test_ap_expire_auth \
 		test_ap_bmc_rate test_ap_bmc_rate_rust \
 		librust_ap_rest.a librust_ap_bmc_rate.a librust_ap_sta_alive.a
