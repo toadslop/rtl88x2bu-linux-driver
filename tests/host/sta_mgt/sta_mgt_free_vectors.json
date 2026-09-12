@@ -1,0 +1,27 @@
+{
+  "oracle": "core/rtw_sta_mgt_free.c",
+  "vectors": [
+    {
+      "name": "init_sta_priv_ok",
+      "fn": "_rtw_init_sta_priv",
+      "expect_ret": 1,
+      "expect_free_count": 4
+    },
+    {
+      "name": "init_then_free_sta_priv",
+      "fn": "init_free_sta_priv",
+      "expect_ret": 1
+    },
+    {
+      "name": "mfree_stainfo_locks",
+      "fn": "rtw_mfree_stainfo",
+      "expect_ret": 1
+    },
+    {
+      "name": "init_bcmc_stainfo",
+      "fn": "rtw_init_bcmc_stainfo",
+      "expect_ret": 1,
+      "expect_asoc_count": 1
+    }
+  ]
+}
