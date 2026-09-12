@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Host oracle for rtw_ap_find_bmc_rate — keep in sync with core/rtw_ap.c. */
+/* Host oracle for rtw_ap_find_bmc_rate — keep in sync with core/rtw_ap_rest.c. */
 #include "host_ap_bmc_rate_types.h"
 
 u8 rtw_ap_find_bmc_rate(struct _adapter *adapter, u8 tx_rate)

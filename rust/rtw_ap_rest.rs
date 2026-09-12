@@ -182,3 +182,66 @@ pub extern "C" fn rtw_ap_release_vapid(dvobj: *mut DvobjPriv, vap_id: u8) -> u8 
 fn vap_id_out_of_range(limited: usize) -> u8 {
     limited as u8
 }
+
+#[cfg(any(host_ap_bmc_rate_test, bmc_tx_rate_select))]
+const ODM_RATE1M: u8 = 0x00;
+#[cfg(any(host_ap_bmc_rate_test, bmc_tx_rate_select))]
+const ODM_RATE6M: u8 = 0x04;
+#[cfg(any(host_ap_bmc_rate_test, bmc_tx_rate_select))]
+const BAND_ON_5G: u8 = 1;
+
+#[cfg(host_ap_bmc_rate_test)]
+#[repr(C)]
+pub struct HalData {
+    pub current_band_type: u8,
+}
+
+#[cfg(host_ap_bmc_rate_test)]
+#[repr(C)]
+pub struct Adapter {
+    pub hal_data: HalData,
+}
+
+#[cfg(all(not(host_ap_bmc_rate_test), bmc_tx_rate_select))]
+mod bmc_kernel {
+    use core::ffi::c_void;
+
+    extern "C" {
+        pub fn rtw_rust_ap_current_band_type(adapter: *mut c_void) -> u8;
+    }
+}
+
+#[cfg(any(host_ap_bmc_rate_test, bmc_tx_rate_select))]
+fn ap_find_bmc_rate_inner(band: u8, tx_rate: u8) -> u8 {
+    let tx_ini_rate = match tx_rate {
+        0x49 | 0x48 | 0x47 | 0x46 | 0x45 | 0x44 | 0x43 | 0x3f | 0x3e | 0x3d | 0x3c | 0x3b
+        | 0x3a | 0x39 | 0x35 | 0x34 | 0x33 | 0x32 | 0x31 | 0x30 | 0x2f | 0x1b | 0x1a | 0x19
+        | 0x18 | 0x17 | 0x13 | 0x12 | 0x11 | 0x10 | 0x0f | 0x0b | 0x0a | 0x09 | 0x08 => 0x08,
+        0x42 | 0x41 | 0x38 | 0x37 | 0x2e | 0x2d | 0x16 | 0x15 | 0x0e | 0x0d | 0x07 | 0x06 => 0x06,
+        0x40 | 0x36 | 0x2c | 0x14 | 0x0c | 0x05 | 0x04 => 0x04,
+        0x03 | 0x02 | 0x01 | 0x00 => ODM_RATE1M,
+        _ => ODM_RATE6M,
+    };
+    if band == BAND_ON_5G && tx_ini_rate < ODM_RATE6M {
+        ODM_RATE6M
+    } else {
+        tx_ini_rate
+    }
+}
+
+#[cfg(any(host_ap_bmc_rate_test, bmc_tx_rate_select))]
+#[no_mangle]
+pub extern "C" fn rtw_ap_find_bmc_rate(adapter: *mut core::ffi::c_void, tx_rate: u8) -> u8 {
+    if adapter.is_null() {
+        return ODM_RATE6M;
+    }
+    #[cfg(host_ap_bmc_rate_test)]
+    unsafe {
+        let adapter = &*(adapter as *const Adapter);
+        return ap_find_bmc_rate_inner(adapter.hal_data.current_band_type, tx_rate);
+    }
+    #[cfg(all(not(host_ap_bmc_rate_test), bmc_tx_rate_select))]
+    unsafe {
+        ap_find_bmc_rate_inner(bmc_kernel::rtw_rust_ap_current_band_type(adapter), tx_rate)
+    }
+}

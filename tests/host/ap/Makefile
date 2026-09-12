@@ -74,11 +74,23 @@ test-sta-ie: test_ap_sta_ie test_ap_sta_ie_rates test_ap_sta_ie_wmm_ht test_ap_s
 test-bcn-ie: test_ap_bcn_ie
 	./test_ap_bcn_ie ap_bcn_ie_vectors.json
 
-test-bmc-rate: test_ap_bmc_rate
+test-bmc-rate: test-c-bmc test-rust-bmc
+
+test-c-bmc: test_ap_bmc_rate
 	./test_ap_bmc_rate ap_bmc_rate_vectors.json
+
+test-rust-bmc: test_ap_bmc_rate_rust
+	./test_ap_bmc_rate_rust ap_bmc_rate_vectors.json
 
 test_ap_bmc_rate: test_ap_bmc_rate.c ap_bmc_rate_oracle.c $(HOST_JSON)
 	$(CC) $(BMC_RATE_CFLAGS) -o $@ test_ap_bmc_rate.c ap_bmc_rate_oracle.c $(HOST_JSON)
+
+librust_ap_bmc_rate.a: $(RUST_AP_REST)
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_ap_bmc_rate_test \
+		--crate-type staticlib $(RUST_AP_REST) -o $@
+
+test_ap_bmc_rate_rust: test_ap_bmc_rate.c librust_ap_bmc_rate.a $(HOST_JSON)
+	$(CC) $(BMC_RATE_CFLAGS) -DRUST_AP_BMC_RATE_ORACLE -o $@ test_ap_bmc_rate.c $(HOST_JSON) librust_ap_bmc_rate.a
 
 test_ap_sta_ie: test_ap_sta_ie.c $(AP_STA_IE_SRC) $(HOST_JSON)
 	$(CC) $(STA_IE_CFLAGS) -o $@ test_ap_sta_ie.c $(AP_STA_IE_SRC) $(HOST_JSON)
@@ -106,4 +118,5 @@ test_ap_bcn_ie: test_ap_bcn_ie.c $(AP_BCN_IE_SRC) $(HOST_JSON) $(BCN_IE_DEPS)
 clean:
 	rm -f test_ap_rest test_ap_rest_rust test_ap_sta_ie test_ap_sta_ie_rates \
 		test_ap_sta_ie_wmm_ht test_ap_sta_ie_vht_multiap test_ap_sta_ie_sec \
-		test_ap_bcn_ie test_ap_bmc_rate librust_ap_rest.a
+		test_ap_bcn_ie test_ap_bmc_rate test_ap_bmc_rate_rust \
+		librust_ap_rest.a librust_ap_bmc_rate.a
