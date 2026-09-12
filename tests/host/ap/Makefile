@@ -60,11 +60,11 @@ RF18_RESTORE_CFLAGS := $(BCN_UPDATE_CFLAGS) -DRTW_CONFIG_RFREG18_WA \
 AP_RF18_RESTORE_SRC := $(CORE)/rtw_ap_rf18_restore.c
 RF18_RESTORE_DEPS := host_rf18_restore_shim.c
 
-.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore clean
+.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore test-rust-rf18-restore clean
 
 all: test
 
-test: test-c test-rust test-sta-ie test-bcn-ie test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore test-bmc-rate
+test: test-c test-rust test-sta-ie test-bcn-ie test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore test-rust-rf18-restore test-bmc-rate
 
 test-c: test_ap_rest
 	./test_ap_rest ap_rest_vectors.json
@@ -120,6 +120,17 @@ test-aka-chk: test_ap_aka_chk
 
 test-rf18-restore: test_ap_rf18_restore
 	./test_ap_rf18_restore ap_rf18_restore_vectors.json
+
+test-rust-rf18-restore: test_ap_rf18_restore_rust
+	./test_ap_rf18_restore_rust ap_rf18_restore_vectors.json
+
+librust_ap_rf18_restore.a: ../../../rust/rtw_ap_rf18_restore.rs
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on --cfg host_ap_rf18_restore_test \
+		--crate-type staticlib ../../../rust/rtw_ap_rf18_restore.rs -o $@
+
+test_ap_rf18_restore_rust: test_ap_rf18_restore.c librust_ap_rf18_restore.a $(HOST_JSON) host_rf18_restore_shim.c
+	$(CC) $(RF18_RESTORE_CFLAGS) -DRUST_AP_RF18_RESTORE_ORACLE -o $@ test_ap_rf18_restore.c \
+		$(HOST_JSON) host_rf18_restore_shim.c librust_ap_rf18_restore.a
 
 test_ap_rf18_restore: test_ap_rf18_restore.c $(HOST_JSON) $(AP_RF18_RESTORE_SRC) $(RF18_RESTORE_DEPS)
 	$(CC) $(RF18_RESTORE_CFLAGS) -o $@ test_ap_rf18_restore.c $(HOST_JSON) \
@@ -224,7 +235,8 @@ clean:
 		test_ap_sta_ie_wmm_ht test_ap_sta_ie_vht_multiap test_ap_sta_ie_sec \
 		test_ap_bcn_ie test_ap_bcn_update test_ap_sta_alive test_ap_sta_alive_rust \
 		test_ap_expire_auth test_ap_expire_auth_rust test_ap_expire_asoc test_ap_expire_asoc_rust \
-		test_ap_aka_chk test_ap_aka_chk_rust test_ap_rf18_restore \
+		test_ap_aka_chk test_ap_aka_chk_rust test_ap_rf18_restore test_ap_rf18_restore_rust \
 		test_ap_bmc_rate test_ap_bmc_rate_rust \
 		librust_ap_rest.a librust_ap_bmc_rate.a librust_ap_sta_alive.a \
-		librust_ap_expire_asoc.a librust_ap_expire_auth.a librust_ap_aka_chk.a
+		librust_ap_expire_asoc.a librust_ap_expire_auth.a librust_ap_aka_chk.a \
+		librust_ap_rf18_restore.a
