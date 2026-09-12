@@ -124,9 +124,13 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-sta-mgt-stctl
 		;;
 	rust/rtw_ap_rest.rs \
+	| rust/rtw_ap_sta_alive.rs \
 	| core/rtw_ap_rest.c \
+	| core/rtw_ap_sta_alive.c \
+	| core/rtw_ap_sta_alive_rust_acc.c \
 	| tests/host/ap/*)
 		add_target rust-check-symbols-rtw-ap-rest
+		add_target rust-check-symbols-rtw-ap-sta-alive
 		;;
 	rust/rtw_recv.rs \
 	| core/rtw_recv_rest.c \
