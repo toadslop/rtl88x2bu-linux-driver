@@ -14,7 +14,11 @@
  *****************************************************************************/
 #define _RTW_STA_MGT_FREE_C_
 
+#ifdef HOST_STA_MGT_TEST
+#include "host_sta_mgt_types.h"
+#else
 #include <drv_types.h>
+#endif
 
 void	_rtw_free_sta_xmit_priv_lock(struct sta_xmit_priv *psta_xmitpriv);
 void	_rtw_free_sta_xmit_priv_lock(struct sta_xmit_priv *psta_xmitpriv)
@@ -45,7 +49,9 @@ void rtw_mfree_stainfo(struct sta_info *psta);
 void rtw_mfree_stainfo(struct sta_info *psta)
 {
 
+#ifndef HOST_STA_MGT_TEST
 	if (&(psta->lock) != NULL)
+#endif
 		_rtw_spinlock_free(&psta->lock);
 
 	_rtw_free_sta_xmit_priv_lock(&psta->sta_xmitpriv);
@@ -208,7 +214,8 @@ exit:
 				sizeof(struct sta_info) * NUM_STA + MEM_ALIGNMENT_OFFSET);
 		#ifdef CONFIG_AP_MODE
 		if (pstapriv->sta_aid)
-			rtw_mfree(pstapriv->sta_aid, pstapriv->max_aid * sizeof(struct sta_info *));
+			rtw_mfree((u8 *)pstapriv->sta_aid,
+				  pstapriv->max_aid * sizeof(struct sta_info *));
 		if (pstapriv->sta_dz_bitmap)
 			rtw_mfree(pstapriv->sta_dz_bitmap, pstapriv->aid_bmp_len);
 		#endif
@@ -263,7 +270,8 @@ u32	_rtw_free_sta_priv(struct	sta_priv *pstapriv)
 				sizeof(struct sta_info) * NUM_STA + MEM_ALIGNMENT_OFFSET);
 		#ifdef CONFIG_AP_MODE
 		if (pstapriv->sta_aid)
-			rtw_mfree(pstapriv->sta_aid, pstapriv->max_aid * sizeof(struct sta_info *));
+			rtw_mfree((u8 *)pstapriv->sta_aid,
+				  pstapriv->max_aid * sizeof(struct sta_info *));
 		if (pstapriv->sta_dz_bitmap)
 			rtw_mfree(pstapriv->sta_dz_bitmap, pstapriv->aid_bmp_len);
 		if (pstapriv->tim_bitmap)
@@ -278,9 +286,13 @@ u32 rtw_init_bcmc_stainfo(_adapter *padapter)
 {
 
 	struct sta_info	*psta;
+#ifdef HOST_STA_MGT_TEST
+	u8 bcast_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+#else
 	struct tx_servq	*ptxservq;
 	u32 res = _SUCCESS;
 	NDIS_802_11_MAC_ADDRESS	bcast_addr = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+#endif
 
 	struct	sta_priv *pstapriv = &padapter->stapriv;
 
@@ -288,9 +300,12 @@ u32 rtw_init_bcmc_stainfo(_adapter *padapter)
 	psta = rtw_alloc_stainfo(pstapriv, bcast_addr);
 
 	if (psta == NULL) {
+#ifndef HOST_STA_MGT_TEST
 		res = _FAIL;
+#endif
 		goto exit;
 	}
+#ifndef HOST_STA_MGT_TEST
 #ifdef CONFIG_BEAMFORMING
 	psta->cmn.bf_info.g_id = 63;
 	psta->cmn.bf_info.p_aid = 0;
@@ -306,6 +321,7 @@ u32 rtw_init_bcmc_stainfo(_adapter *padapter)
 
 		_exit_critical(&pstapending->lock, &irqL0);
 	*/
+#endif /* !HOST_STA_MGT_TEST */
 
 exit:
 	return _SUCCESS;
