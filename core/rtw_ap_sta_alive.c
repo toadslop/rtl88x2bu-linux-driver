@@ -21,6 +21,8 @@
 #include <hal_data.h>
 #endif
 
+#if !defined(CONFIG_RUST_AP_STA_ALIVE) || defined(HOST_AP_STA_ALIVE_TEST)
+
 u8 chk_sta_is_alive(struct sta_info *psta)
 {
 	u8 ret = _FALSE;
@@ -62,3 +64,5 @@ u8 chk_sta_is_alive(struct sta_info *psta)
 
 	return ret;
 }
+
+#endif /* !CONFIG_RUST_AP_STA_ALIVE || HOST_AP_STA_ALIVE_TEST */

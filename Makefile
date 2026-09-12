@@ -2474,6 +2474,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_ap_sta_ie_sec.o \
 		core/rtw_ap_bcn_ie.o \
 		core/rtw_ap_sta_alive.o \
+		core/rtw_ap_sta_alive_rust_acc.o \
 		core/rtw_ap_sta_ie_rust_acc.o \
 		core/wds/rtw_wds.o \
 		core/mesh/rtw_mesh.o \
@@ -2616,6 +2617,7 @@ ccflags-y += -DCONFIG_RUST_STA_MGT_STCTL
 ccflags-y += -DCONFIG_RUST_STA_MGT_ALLOC
 ccflags-y += -DCONFIG_RUST_AP_STA_IE
 ccflags-y += -DCONFIG_RUST_AP_STA_IE_SEC
+ccflags-y += -DCONFIG_RUST_AP_STA_ALIVE
 ccflags-y += -DCONFIG_RUST_AP_REST
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_PREF
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_DUMP
@@ -2666,6 +2668,7 @@ rustflags-y += --cfg rust_sta_mgt_stctl
 rustflags-y += --cfg rust_sta_mgt_alloc
 rustflags-y += --cfg rust_ap_sta_ie
 rustflags-y += --cfg rust_ap_sta_ie_sec
+rustflags-y += --cfg rust_ap_sta_alive
 rustflags-y += --cfg rust_ap_rest
 rustflags-y += --cfg rust_rf_op_class_pref
 rustflags-y += --cfg rust_rf_op_class_dump
@@ -2735,6 +2738,7 @@ $(MODULE_NAME)-y += rust/rtw_sta_mgt_alloc.o
 $(MODULE_NAME)-y += rust/rtw_ap_sta_ie.o
 $(MODULE_NAME)-y += rust/rtw_ap_sta_ie_sec.o
 $(MODULE_NAME)-y += rust/rtw_ap_rest.o
+$(MODULE_NAME)-y += rust/rtw_ap_sta_alive.o
 $(MODULE_NAME)-y += rust/rtw_rf_op_class_pref.o
 $(MODULE_NAME)-y += rust/rtw_rf_op_class_dump.o
 $(MODULE_NAME)-y += rust/rtw_rf_dump_txpwr_lmt.o
@@ -3253,6 +3257,23 @@ rust-objects-rtw-ap-rest-rust-ref:
 rust-check-symbols-rtw-ap-rest: rust-objects-rtw-ap-rest-c rust-objects-rtw-ap-rest-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_rest_c_ref.o NEW=tests/host/ap/ap_rest_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_rest.allow
+
+# W3-82 PR3: chk_sta_is_alive L1 (host C vs host Rust oracle).
+rust-objects-rtw-ap-sta-alive-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_AP_STA_ALIVE_TEST \
+		-o tests/host/ap/ap_sta_alive_c_ref.o core/rtw_ap_sta_alive.c
+
+rust-objects-rtw-ap-sta-alive-rust-ref:
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on --cfg host_ap_sta_alive_test \
+		--emit=obj=tests/host/ap/ap_sta_alive_rust_ref.o \
+		--crate-type lib rust/rtw_ap_sta_alive.rs
+
+rust-check-symbols-rtw-ap-sta-alive: rust-objects-rtw-ap-sta-alive-c rust-objects-rtw-ap-sta-alive-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_sta_alive_c_ref.o NEW=tests/host/ap/ap_sta_alive_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_sta_alive.allow
 
 # W3-73 PR8: AP STA IE parse L1 (merged C oracle vs kbuild Rust object).
 rust-objects-rtw-ap-sta-ie-c:
