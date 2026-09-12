@@ -2,6 +2,7 @@ test_sta_mgt_stctl
 test_sta_mgt_lookup
 test_sta_mgt_alloc
 test_sta_mgt_alloc_rust
+test_sta_mgt_free
 librust_sta_mgt_alloc.a
 test_sta_mgt_stctl_rust
 librust_sta_mgt_stctl.a
