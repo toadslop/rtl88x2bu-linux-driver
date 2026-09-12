@@ -1,0 +1,52 @@
+{
+  "vectors": [
+    {
+      "name": "no_rf_zero_skip",
+      "reg0": 1,
+      "reg1": 1,
+      "union_ok": 0,
+      "union_ch": 0,
+      "union_bw": 0,
+      "union_offset": 0,
+      "mlme_ch": 6,
+      "mlme_offset": 0,
+      "mlme_bw": 2,
+      "expect_set": 0,
+      "expect_ch": 0,
+      "expect_offset": 0,
+      "expect_bw": 0
+    },
+    {
+      "name": "rf0_zero_use_mlme",
+      "reg0": 0,
+      "reg1": 256,
+      "union_ok": 0,
+      "union_ch": 0,
+      "union_bw": 0,
+      "union_offset": 0,
+      "mlme_ch": 36,
+      "mlme_offset": 1,
+      "mlme_bw": 4,
+      "expect_set": 1,
+      "expect_ch": 36,
+      "expect_offset": 1,
+      "expect_bw": 4
+    },
+    {
+      "name": "rf1_zero_use_union",
+      "reg0": 255,
+      "reg1": 0,
+      "union_ok": 1,
+      "union_ch": 11,
+      "union_bw": 2,
+      "union_offset": 0,
+      "mlme_ch": 6,
+      "mlme_offset": 0,
+      "mlme_bw": 2,
+      "expect_set": 1,
+      "expect_ch": 11,
+      "expect_offset": 0,
+      "expect_bw": 2
+    }
+  ]
+}
