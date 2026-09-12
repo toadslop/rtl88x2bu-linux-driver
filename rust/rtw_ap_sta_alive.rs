@@ -71,10 +71,11 @@ fn chk_sta_is_alive_kernel(psta: *mut StaInfo) -> U8 {
         let last_sum =
             rtw_rust_ap_sta_alive_last_rx_data(psta) + rtw_rust_ap_sta_alive_last_rx_ctrl(psta);
         let rx_sum = rtw_rust_ap_sta_alive_rx_data(psta) + rtw_rust_ap_sta_alive_rx_ctrl(psta);
-        let mut ret = if last_sum == rx_sum { _FALSE } else { _TRUE };
+        let base = if last_sum == rx_sum { _FALSE } else { _TRUE };
 
         #[cfg(config_rtw_mesh)]
-        {
+        let ret = {
+            let mut ret = base;
             let adapter = rtw_rust_ap_sta_alive_adapter(psta);
             if !adapter.is_null() && rtw_rust_ap_mlme_is_mesh(adapter) != 0 {
                 let hwmp_alive =
@@ -84,7 +85,11 @@ fn chk_sta_is_alive_kernel(psta: *mut StaInfo) -> U8 {
                 rtw_rust_ap_sta_alive_set_alive(psta, ret | hwmp_alive | bcn_alive);
                 ret |= hwmp_alive;
             }
-        }
+            ret
+        };
+
+        #[cfg(not(config_rtw_mesh))]
+        let ret = base;
 
         rtw_rust_ap_sta_alive_update_last_rx(psta);
         ret
