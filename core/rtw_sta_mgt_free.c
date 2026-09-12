@@ -216,3 +216,60 @@ exit:
 
 	return ret;
 }
+
+u32	_rtw_free_sta_priv(struct	sta_priv *pstapriv)
+{
+	_irqL	irqL;
+	_list	*phead, *plist;
+	struct sta_info *psta = NULL;
+	struct recv_reorder_ctrl *preorder_ctrl;
+	int	index;
+
+	if (pstapriv) {
+
+		/*	delete all reordering_ctrl_timer		*/
+		_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+		for (index = 0; index < NUM_STA; index++) {
+			phead = &(pstapriv->sta_hash[index]);
+			plist = get_next(phead);
+
+			while ((rtw_end_of_queue_search(phead, plist)) == _FALSE) {
+				int i;
+				psta = LIST_CONTAINOR(plist, struct sta_info , hash_list);
+				plist = get_next(plist);
+
+				for (i = 0; i < 16 ; i++) {
+					preorder_ctrl = &psta->recvreorder_ctrl[i];
+					_cancel_timer_ex(&preorder_ctrl->reordering_ctrl_timer);
+				}
+			}
+		}
+		_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+		/*===============================*/
+
+		rtw_mfree_sta_priv_lock(pstapriv);
+
+#if CONFIG_RTW_MACADDR_ACL
+		for (index = 0; index < RTW_ACL_PERIOD_NUM; index++)
+			rtw_macaddr_acl_deinit(pstapriv->padapter, index);
+#endif
+
+#if CONFIG_RTW_PRE_LINK_STA
+		rtw_pre_link_sta_ctl_deinit(pstapriv);
+#endif
+
+		if (pstapriv->pallocated_stainfo_buf)
+			rtw_vmfree(pstapriv->pallocated_stainfo_buf,
+				sizeof(struct sta_info) * NUM_STA + MEM_ALIGNMENT_OFFSET);
+		#ifdef CONFIG_AP_MODE
+		if (pstapriv->sta_aid)
+			rtw_mfree(pstapriv->sta_aid, pstapriv->max_aid * sizeof(struct sta_info *));
+		if (pstapriv->sta_dz_bitmap)
+			rtw_mfree(pstapriv->sta_dz_bitmap, pstapriv->aid_bmp_len);
+		if (pstapriv->tim_bitmap)
+			rtw_mfree(pstapriv->tim_bitmap, pstapriv->aid_bmp_len);
+		#endif
+	}
+
+	return _SUCCESS;
+}
