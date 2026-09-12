@@ -129,6 +129,7 @@ for path in "${changed[@]}"; do
 	| rust/rtw_ap_expire_auth.rs \
 	| rust/rtw_ap_aka_chk.rs \
 	| rust/rtw_ap_rf18_restore.rs \
+	| rust/rtw_ap_expire_timeout.rs \
 	| core/rtw_ap_rest.c \
 	| core/rtw_ap_sta_alive.c \
 	| core/rtw_ap_sta_alive_rust_acc.c \
@@ -140,6 +141,8 @@ for path in "${changed[@]}"; do
 	| core/rtw_ap_aka_chk_rust_acc.c \
 	| core/rtw_ap_rf18_restore.c \
 	| core/rtw_ap_rf18_restore_rust_acc.c \
+	| core/rtw_ap_expire_timeout.c \
+	| core/rtw_ap_expire_timeout_rust_acc.c \
 	| tests/host/ap/*)
 		add_target rust-check-symbols-rtw-ap-rest
 		add_target rust-check-symbols-rtw-ap-sta-alive
@@ -147,6 +150,7 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-ap-expire-auth
 		add_target rust-check-symbols-rtw-ap-aka-chk
 		add_target rust-check-symbols-rtw-ap-rf18-restore
+		add_target rust-check-symbols-rtw-ap-expire-timeout
 		;;
 	rust/rtw_recv.rs \
 	| core/rtw_recv_rest.c \
