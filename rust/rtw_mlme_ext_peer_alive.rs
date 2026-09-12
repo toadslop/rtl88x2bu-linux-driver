@@ -21,8 +21,10 @@ type StaInfo = c_void;
 
 const _TRUE: c_int = 1;
 const _FALSE: c_int = 0;
-const _SUCCESS: c_int = 0;
-const _FAIL: c_int = -1;
+// Must match `include/osdep_service.h`: `issue_del_ba_ex` is a C function that
+// returns the kernel macros, so these are ABI.
+const _SUCCESS: c_int = 1;
+const _FAIL: c_int = 0;
 const TID_NUM: usize = 16;
 const HT_IOT_PEER_BROADCOM: U8 = 3;
 
