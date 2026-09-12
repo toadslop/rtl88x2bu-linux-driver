@@ -45,6 +45,7 @@ void free_mlme_ap_info(_adapter *padapter)
 u8 chk_sta_is_alive(struct sta_info *psta);
 void rtw_ap_expire_auth_list(_adapter *padapter);
 void rtw_ap_expire_asoc_sta_tick(_adapter *padapter, struct sta_info *psta);
+u8 rtw_ap_expire_timeout_preflight(_adapter *padapter);
 #ifdef CONFIG_ACTIVE_KEEP_ALIVE_CHECK
 int issue_aka_chk_frame(_adapter *adapter, struct sta_info *psta);
 #endif
@@ -64,36 +65,8 @@ void	expire_timeout_chk(_adapter *padapter)
 	char chk_alive_list[NUM_STA];
 	int i;
 	int stainfo_offset;
-#ifdef CONFIG_RTW_MESH
-	if (MLME_IS_MESH(padapter)
-		&& check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE)
-	) {
-		struct rtw_mesh_cfg *mcfg = &padapter->mesh_cfg;
-
-		rtw_mesh_path_expire(padapter);
-
-		/* TBD: up layer timeout mechanism */
-		/* if (!mcfg->plink_timeout)
-			return; */
-#ifndef CONFIG_ACTIVE_KEEP_ALIVE_CHECK
+	if (!rtw_ap_expire_timeout_preflight(padapter))
 		return;
-#endif
-	}
-#endif
-
-#ifdef CONFIG_RTW_WDS
-	rtw_wds_path_expire(padapter);
-#endif
-
-#ifdef CONFIG_MCC_MODE
-	/*	then driver may check fail due to not recv client's frame under sitesurvey,
-	 *	don't expire timeout chk under MCC under sitesurvey */
-
-	if (rtw_hal_mcc_link_status_chk(padapter, __func__) == _FALSE)
-		return;
-#endif
-
-	rtw_ap_expire_auth_list(padapter);
 
 	_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
 
