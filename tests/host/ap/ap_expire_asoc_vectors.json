@@ -1,0 +1,28 @@
+{
+  "vectors": [
+    {
+      "name": "asoc_alive_refresh",
+      "sta_alive": 1,
+      "sta_expire_to": 1,
+      "ap_expire_to": 5,
+      "expect_expire_to": 5,
+      "expect_keepalive_trycnt": 0
+    },
+    {
+      "name": "asoc_stale_decrement",
+      "sta_alive": 0,
+      "sta_expire_to": 3,
+      "ap_expire_to": 5,
+      "expect_expire_to": 2,
+      "expect_keepalive_trycnt": 7
+    },
+    {
+      "name": "asoc_zero_expire_refresh",
+      "sta_alive": 0,
+      "sta_expire_to": 0,
+      "ap_expire_to": 5,
+      "expect_expire_to": 5,
+      "expect_keepalive_trycnt": 0
+    }
+  ]
+}
