@@ -2712,6 +2712,9 @@ endif
 ifeq ($(CONFIG_FW_HANDLE_TXBCN), y)
 rustflags-y += --cfg fw_handle_txbcn
 endif
+ifneq ($(filter -DCONFIG_BMC_TX_RATE_SELECT,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+rustflags-y += --cfg bmc_tx_rate_select
+endif
 $(MODULE_NAME)-y += rust/rtw_chplan.o
 $(MODULE_NAME)-y += rust/rtw_chplan_rest.o
 $(MODULE_NAME)-y += rust/rtw_io_rest.o

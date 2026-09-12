@@ -586,6 +586,8 @@ void rtw_ap_update_sta_ra_info(_adapter *padapter, struct sta_info *psta)
 }
 
 #ifdef CONFIG_BMC_TX_RATE_SELECT
+u8 rtw_ap_find_bmc_rate(_adapter *adapter, u8 tx_rate);
+
 u8 rtw_ap_find_mini_tx_rate(_adapter *adapter)
 {
 	_irqL irqL;
@@ -608,90 +610,6 @@ u8 rtw_ap_find_mini_tx_rate(_adapter *adapter)
 	_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
 
 	return miini_tx_rate;
-}
-
-u8 rtw_ap_find_bmc_rate(_adapter *adapter, u8 tx_rate)
-{
-	PHAL_DATA_TYPE	hal_data = GET_HAL_DATA(adapter);
-	u8 tx_ini_rate = ODM_RATE6M;
-
-	switch (tx_rate) {
-	case ODM_RATEVHTSS3MCS9:
-	case ODM_RATEVHTSS3MCS8:
-	case ODM_RATEVHTSS3MCS7:
-	case ODM_RATEVHTSS3MCS6:
-	case ODM_RATEVHTSS3MCS5:
-	case ODM_RATEVHTSS3MCS4:
-	case ODM_RATEVHTSS3MCS3:
-	case ODM_RATEVHTSS2MCS9:
-	case ODM_RATEVHTSS2MCS8:
-	case ODM_RATEVHTSS2MCS7:
-	case ODM_RATEVHTSS2MCS6:
-	case ODM_RATEVHTSS2MCS5:
-	case ODM_RATEVHTSS2MCS4:
-	case ODM_RATEVHTSS2MCS3:
-	case ODM_RATEVHTSS1MCS9:
-	case ODM_RATEVHTSS1MCS8:
-	case ODM_RATEVHTSS1MCS7:
-	case ODM_RATEVHTSS1MCS6:
-	case ODM_RATEVHTSS1MCS5:
-	case ODM_RATEVHTSS1MCS4:
-	case ODM_RATEVHTSS1MCS3:
-	case ODM_RATEMCS15:
-	case ODM_RATEMCS14:
-	case ODM_RATEMCS13:
-	case ODM_RATEMCS12:
-	case ODM_RATEMCS11:
-	case ODM_RATEMCS7:
-	case ODM_RATEMCS6:
-	case ODM_RATEMCS5:
-	case ODM_RATEMCS4:
-	case ODM_RATEMCS3:
-	case ODM_RATE54M:
-	case ODM_RATE48M:
-	case ODM_RATE36M:
-	case ODM_RATE24M:
-		tx_ini_rate = ODM_RATE24M;
-		break;
-	case ODM_RATEVHTSS3MCS2:
-	case ODM_RATEVHTSS3MCS1:
-	case ODM_RATEVHTSS2MCS2:
-	case ODM_RATEVHTSS2MCS1:
-	case ODM_RATEVHTSS1MCS2:
-	case ODM_RATEVHTSS1MCS1:
-	case ODM_RATEMCS10:
-	case ODM_RATEMCS9:
-	case ODM_RATEMCS2:
-	case ODM_RATEMCS1:
-	case ODM_RATE18M:
-	case ODM_RATE12M:
-		tx_ini_rate = ODM_RATE12M;
-		break;
-	case ODM_RATEVHTSS3MCS0:
-	case ODM_RATEVHTSS2MCS0:
-	case ODM_RATEVHTSS1MCS0:
-	case ODM_RATEMCS8:
-	case ODM_RATEMCS0:
-	case ODM_RATE9M:
-	case ODM_RATE6M:
-		tx_ini_rate = ODM_RATE6M;
-		break;
-	case ODM_RATE11M:
-	case ODM_RATE5_5M:
-	case ODM_RATE2M:
-	case ODM_RATE1M:
-		tx_ini_rate = ODM_RATE1M;
-		break;
-	default:
-		tx_ini_rate = ODM_RATE6M;
-		break;
-	}
-
-	if (hal_data->current_band_type == BAND_ON_5G)
-		if (tx_ini_rate < ODM_RATE6M)
-			tx_ini_rate = ODM_RATE6M;
-
-	return tx_ini_rate;
 }
 
 void rtw_update_bmc_sta_tx_rate(_adapter *adapter)
