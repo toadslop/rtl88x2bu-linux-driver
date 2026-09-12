@@ -17,6 +17,8 @@
 
 #ifdef CONFIG_ACTIVE_KEEP_ALIVE_CHECK
 
+#if !defined(CONFIG_RUST_AP_AKA_CHK) || defined(HOST_AP_AKA_CHK_TEST)
+
 /**
  * issue_aka_chk_frame - issue active keep alive check frame
  *	aka = active keep alive
@@ -64,5 +66,7 @@ int issue_aka_chk_frame(_adapter *adapter, struct sta_info *psta)
 #endif /* !HOST_AP_AKA_CHK_TEST */
 	return ret;
 }
+
+#endif /* !CONFIG_RUST_AP_AKA_CHK || HOST_AP_AKA_CHK_TEST */
 
 #endif /* CONFIG_ACTIVE_KEEP_ALIVE_CHECK */

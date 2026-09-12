@@ -2478,6 +2478,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_ap_expire_auth.o \
 		core/rtw_ap_expire_auth_rust_acc.o \
 		core/rtw_ap_aka_chk.o \
+		core/rtw_ap_aka_chk_rust_acc.o \
 		core/rtw_ap_expire_asoc.o \
 		core/rtw_ap_expire_asoc_rust_acc.o \
 		core/rtw_ap_sta_ie_rust_acc.o \
@@ -2625,6 +2626,7 @@ ccflags-y += -DCONFIG_RUST_AP_STA_IE_SEC
 ccflags-y += -DCONFIG_RUST_AP_STA_ALIVE
 ccflags-y += -DCONFIG_RUST_AP_EXPIRE_ASOC
 ccflags-y += -DCONFIG_RUST_AP_EXPIRE_AUTH
+ccflags-y += -DCONFIG_RUST_AP_AKA_CHK
 ccflags-y += -DCONFIG_RUST_AP_REST
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_PREF
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_DUMP
@@ -2678,6 +2680,7 @@ rustflags-y += --cfg rust_ap_sta_ie_sec
 rustflags-y += --cfg rust_ap_sta_alive
 rustflags-y += --cfg rust_ap_expire_asoc
 rustflags-y += --cfg rust_ap_expire_auth
+rustflags-y += --cfg rust_ap_aka_chk
 rustflags-y += --cfg rust_ap_rest
 rustflags-y += --cfg rust_rf_op_class_pref
 rustflags-y += --cfg rust_rf_op_class_dump
@@ -2750,6 +2753,7 @@ $(MODULE_NAME)-y += rust/rtw_ap_rest.o
 $(MODULE_NAME)-y += rust/rtw_ap_sta_alive.o
 $(MODULE_NAME)-y += rust/rtw_ap_expire_asoc.o
 $(MODULE_NAME)-y += rust/rtw_ap_expire_auth.o
+$(MODULE_NAME)-y += rust/rtw_ap_aka_chk.o
 $(MODULE_NAME)-y += rust/rtw_rf_op_class_pref.o
 $(MODULE_NAME)-y += rust/rtw_rf_op_class_dump.o
 $(MODULE_NAME)-y += rust/rtw_rf_dump_txpwr_lmt.o
@@ -3319,6 +3323,23 @@ rust-objects-rtw-ap-expire-auth-rust-ref:
 rust-check-symbols-rtw-ap-expire-auth: rust-objects-rtw-ap-expire-auth-c rust-objects-rtw-ap-expire-auth-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_expire_auth_c_ref.o NEW=tests/host/ap/ap_expire_auth_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_expire_auth.allow
+
+# W3-82 PR12: issue_aka_chk_frame L1 (host C vs host Rust oracle).
+rust-objects-rtw-ap-aka-chk-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DCONFIG_ACTIVE_KEEP_ALIVE_CHECK -DHOST_AP_AKA_CHK_TEST \
+		-o tests/host/ap/ap_aka_chk_c_ref.o core/rtw_ap_aka_chk.c
+
+rust-objects-rtw-ap-aka-chk-rust-ref:
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on --cfg host_ap_aka_chk_test \
+		--emit=obj=tests/host/ap/ap_aka_chk_rust_ref.o \
+		--crate-type lib rust/rtw_ap_aka_chk.rs
+
+rust-check-symbols-rtw-ap-aka-chk: rust-objects-rtw-ap-aka-chk-c rust-objects-rtw-ap-aka-chk-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_aka_chk_c_ref.o NEW=tests/host/ap/ap_aka_chk_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_aka_chk.allow
 
 # W3-73 PR8: AP STA IE parse L1 (merged C oracle vs kbuild Rust object).
 rust-objects-rtw-ap-sta-ie-c:
