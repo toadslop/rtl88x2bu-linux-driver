@@ -51,11 +51,7 @@ fn expire_timeout_chk_impl(padapter: *mut Adapter) {
         }
         let mut chk_alive_num: U8 = 0;
         let mut chk_alive_list = [0i8; NUM_STA];
-        rtw_ap_expire_asoc_list_scan(
-            padapter,
-            chk_alive_list.as_mut_ptr(),
-            &mut chk_alive_num,
-        );
+        rtw_ap_expire_asoc_list_scan(padapter, chk_alive_list.as_mut_ptr(), &mut chk_alive_num);
         let mut updated = _FALSE;
         if chk_alive_num != 0 {
             updated |= rtw_ap_expire_chk_alive_process(
