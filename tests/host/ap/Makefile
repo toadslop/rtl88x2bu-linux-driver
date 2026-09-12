@@ -52,11 +52,11 @@ EXPIRE_AUTH_DEPS := host_expire_auth_shim.c
 AP_EXPIRE_ASOC_SRC := $(CORE)/rtw_ap_expire_asoc.c $(CORE)/rtw_ap_sta_alive.c
 EXPIRE_ASOC_CFLAGS := $(BCN_UPDATE_CFLAGS) -DHOST_AP_EXPIRE_ASOC_TEST -I$(CORE)
 
-.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-expire-asoc clean
+.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-expire-asoc test-rust-expire-asoc clean
 
 all: test
 
-test: test-c test-rust test-sta-ie test-bcn-ie test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-expire-asoc test-bmc-rate
+test: test-c test-rust test-sta-ie test-bcn-ie test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-expire-asoc test-rust-expire-asoc test-bmc-rate
 
 test-c: test_ap_rest
 	./test_ap_rest ap_rest_vectors.json
@@ -95,6 +95,17 @@ test-expire-auth: test_ap_expire_auth
 
 test-expire-asoc: test_ap_expire_asoc
 	./test_ap_expire_asoc ap_expire_asoc_vectors.json
+
+test-rust-expire-asoc: test_ap_expire_asoc_rust
+	./test_ap_expire_asoc_rust ap_expire_asoc_vectors.json
+
+librust_ap_expire_asoc.a: ../../../rust/rtw_ap_expire_asoc.rs
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on --cfg host_ap_expire_asoc_test \
+		--crate-type staticlib ../../../rust/rtw_ap_expire_asoc.rs -o $@
+
+test_ap_expire_asoc_rust: test_ap_expire_asoc.c librust_ap_expire_asoc.a $(HOST_JSON) $(CORE)/rtw_ap_sta_alive.c
+	$(CC) $(EXPIRE_ASOC_CFLAGS) -DRUST_AP_EXPIRE_ASOC_ORACLE -o $@ test_ap_expire_asoc.c \
+		$(HOST_JSON) $(CORE)/rtw_ap_sta_alive.c librust_ap_expire_asoc.a
 
 test_ap_expire_asoc: test_ap_expire_asoc.c $(HOST_JSON) $(AP_EXPIRE_ASOC_SRC)
 	$(CC) $(EXPIRE_ASOC_CFLAGS) -o $@ test_ap_expire_asoc.c $(HOST_JSON) \
@@ -168,6 +179,7 @@ clean:
 	rm -f test_ap_rest test_ap_rest_rust test_ap_sta_ie test_ap_sta_ie_rates \
 		test_ap_sta_ie_wmm_ht test_ap_sta_ie_vht_multiap test_ap_sta_ie_sec \
 		test_ap_bcn_ie test_ap_bcn_update test_ap_sta_alive test_ap_sta_alive_rust \
-		test_ap_expire_auth test_ap_expire_asoc \
+		test_ap_expire_auth test_ap_expire_asoc test_ap_expire_asoc_rust \
 		test_ap_bmc_rate test_ap_bmc_rate_rust \
-		librust_ap_rest.a librust_ap_bmc_rate.a librust_ap_sta_alive.a
+		librust_ap_rest.a librust_ap_bmc_rate.a librust_ap_sta_alive.a \
+		librust_ap_expire_asoc.a

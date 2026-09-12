@@ -17,6 +17,8 @@
 
 u8 chk_sta_is_alive(struct sta_info *psta);
 
+#if !defined(CONFIG_RUST_AP_EXPIRE_ASOC) || defined(HOST_AP_EXPIRE_ASOC_TEST)
+
 void rtw_ap_expire_asoc_sta_tick(_adapter *padapter, struct sta_info *psta)
 {
 	struct sta_priv *pstapriv = &padapter->stapriv;
@@ -33,3 +35,5 @@ void rtw_ap_expire_asoc_sta_tick(_adapter *padapter, struct sta_info *psta)
 		psta->expire_to--;
 	}
 }
+
+#endif /* !CONFIG_RUST_AP_EXPIRE_ASOC || HOST_AP_EXPIRE_ASOC_TEST */
