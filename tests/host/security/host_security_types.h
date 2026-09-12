@@ -7,6 +7,10 @@
 
 #include "host_types.h"
 
+/* Mirror include/osdep_service.h so L2 checks the values kernel callers test. */
+#define _SUCCESS 1
+#define _FAIL 0
+
 #define CONFIG_IEEE80211W 1
 
 enum security_type {

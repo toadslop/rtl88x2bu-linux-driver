@@ -27,27 +27,45 @@ static int run_ap(const char *name, u64 rx, u64 last, u64 bcn, u64 bcn_last,
 	return 0;
 }
 
-static int run_delba(const char *name, u8 vendor, u8 tid, u8 en, int count,
-		     u64 qos, u64 qos_last, u8 timer, u8 xdelba, u8 xdelba_ex,
-		     u8 en_after)
+static int run_delba_ret(const char *name, u8 vendor, u8 tid, u8 en, int count,
+			 u64 qos, u64 qos_last, u8 timer, u8 xdelba, u8 xdelba_ex,
+			 u8 en_after, int ex_ret, u8 expect_ampdu)
 {
 	memset(&adapter, 0, sizeof(adapter));
 	memset(&sta, 0, sizeof(sta));
 	memset(&host_last_delba, 0, sizeof(host_last_delba));
 	memset(&host_last_delba_ex, 0, sizeof(host_last_delba_ex));
+	host_delba_ex_ret = ex_ret;
 	adapter.mlmeextpriv.mlmext_info.assoc_AP_vendor = vendor;
 	sta.recvreorder_ctrl[tid].enable = en;
 	sta.continual_no_rx_packet[tid] = count;
 	sta.sta_stats.rx_data_qos_pkts[tid] = qos;
 	sta.sta_stats.last_rx_data_qos_pkts[tid] = qos_last;
 	rtw_delba_check(&adapter, &sta, timer);
+	host_delba_ex_ret = _SUCCESS;
 	if (host_last_delba.called != xdelba || host_last_delba_ex.called != xdelba_ex ||
 	    sta.recvreorder_ctrl[tid].enable != en_after) {
 		fprintf(stderr, "%s: delba mismatch\n", name);
 		return -1;
 	}
+	if (sta.recvreorder_ctrl[tid].ampdu_size != expect_ampdu) {
+		fprintf(stderr, "%s: ampdu_size %u expect %u\n", name,
+			sta.recvreorder_ctrl[tid].ampdu_size, expect_ampdu);
+		return -1;
+	}
 	printf("PASS: %s\n", name);
 	return 0;
+}
+
+static int run_delba(const char *name, u8 vendor, u8 tid, u8 en, int count,
+		     u64 qos, u64 qos_last, u8 timer, u8 xdelba, u8 xdelba_ex,
+		     u8 en_after)
+{
+	/* An armed TID that issues DELBA invalidates ampdu_size; otherwise it stays 0. */
+	u8 expect_ampdu = (xdelba || xdelba_ex) ? RX_AMPDU_SIZE_INVALID : 0;
+
+	return run_delba_ret(name, vendor, tid, en, count, qos, qos_last, timer,
+			     xdelba, xdelba_ex, en_after, _SUCCESS, expect_ampdu);
 }
 
 int main(void)
@@ -79,6 +97,10 @@ int main(void)
 	    run_delba("delba_bcm_ex", HT_IOT_PEER_BROADCOM, 2, 1, 3, 7, 7, 0, 0, 1, 0) ||
 	    run_delba("delba_bcm_timer", HT_IOT_PEER_BROADCOM, 1, 1, 3, 2, 2, 1, 1, 0, 0) ||
 	    run_delba("delba_qos_reset", HT_IOT_PEER_BROADCOM, 0, 1, 3, 5, 4, 0, 0, 0, 1))
+		return 1;
+	/* issue_del_ba_ex returning _FAIL must leave ampdu_size untouched. */
+	if (run_delba_ret("delba_bcm_ex_failed", HT_IOT_PEER_BROADCOM, 2, 1, 3, 7, 7,
+			  0, 0, 1, 0, _FAIL, 0))
 		return 1;
 	printf("All peer-alive vectors passed.\n");
 	return 0;

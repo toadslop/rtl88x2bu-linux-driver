@@ -252,7 +252,7 @@ static int run_encrypt_vector(struct vector *v)
 	memcpy(xmit.attrib.ra, v->ra, HOST_ETH_ALEN);
 	memcpy(xmit.attrib.dot118021x_UncstKey.skey, v->unicast_key, 16);
 
-	if (rtw_tkip_encrypt(&adapter, (u8 *)&xmit) != 0) {
+	if (rtw_tkip_encrypt(&adapter, (u8 *)&xmit) != _SUCCESS) {
 		fprintf(stderr, "%s: encrypt returned fail\n", v->name);
 		return -1;
 	}
@@ -335,13 +335,13 @@ static int run_decrypt_vector(struct vector *v)
 
 	res = rtw_tkip_decrypt(&adapter, (u8 *)&recv);
 	if (v->expect_fail) {
-		if (res == 0) {
+		if (res != _FAIL) {
 			fprintf(stderr, "%s: expected decrypt fail\n", v->name);
 			return -1;
 		}
 		return 0;
 	}
-	if (res != 0) {
+	if (res != _SUCCESS) {
 		fprintf(stderr, "%s: decrypt returned fail\n", v->name);
 		return -1;
 	}

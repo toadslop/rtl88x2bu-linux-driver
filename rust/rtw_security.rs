@@ -264,8 +264,10 @@ const _WEP40_: U8 = 0x01;
 const _WEP104_: U8 = 0x05;
 const _TKIP_: U8 = 0x02;
 
-const _SUCCESS: U32 = 0;
-const _FAIL: U32 = 1;
+// Must match `include/osdep_service.h`: `core/rtw_recv.c` tests the
+// `rtw_tkip_decrypt` result against the kernel macros, so these are ABI.
+const _SUCCESS: U32 = 1;
+const _FAIL: U32 = 0;
 const _FALSE: U8 = 0;
 
 #[cfg(host_security_test)]

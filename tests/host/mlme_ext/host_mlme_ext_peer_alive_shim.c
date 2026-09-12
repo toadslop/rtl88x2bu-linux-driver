@@ -2,6 +2,7 @@
 #include "host_mlme_ext_peer_alive_types.h"
 
 struct host_delba_record host_last_delba, host_last_delba_ex;
+int host_delba_ex_ret = _SUCCESS;
 
 int rtw_inc_and_chk_continual_no_rx_packet(struct sta_info *sta, int tid_index)
 {
@@ -31,5 +32,5 @@ int issue_del_ba_ex(_adapter *a, unsigned char *ra, u8 tid, u16 reason,
 	memset(&host_last_delba_ex, 0, sizeof(host_last_delba_ex));
 	host_last_delba_ex.called = 1;
 	host_last_delba_ex.tid = tid;
-	return _SUCCESS;
+	return host_delba_ex_ret;
 }

@@ -22,7 +22,10 @@ use std::os::raw::{c_int, c_uint, c_void};
 
 const _TRUE: c_int = 1;
 const _FALSE: c_int = 0;
-const _FAIL: c_int = -1;
+// Must match `include/osdep_service.h`: C callers in `core/rtw_recv.c` test these
+// returns against the kernel macros, so the values are ABI, not an internal choice.
+const _SUCCESS: c_int = 1;
+const _FAIL: c_int = 0;
 const MAX_CONTINUAL_NORXPACKET_COUNT: c_int = 4;
 // Matches `sizeof(struct rtw_ieee80211_hdr_3addr)` in `include/rtw_ieee80211.h`.
 const HDR_3ADDR_SZ: usize = 24;
@@ -45,12 +48,6 @@ const RTW_RX_LLC_REMOVE: u8 = 1;
 const ETH_P_AARP: u16 = 0x80f3;
 #[cfg(host_recv_test)]
 const ETH_P_IPX: u16 = 0x8137;
-
-#[cfg(host_recv_test)]
-const _SUCCESS: c_int = 0;
-
-#[cfg(not(host_recv_test))]
-const _SUCCESS: c_int = 0;
 
 #[cfg(host_recv_test)]
 const WIFI_AP_STATE: c_int = 0x00000010;
@@ -481,7 +478,7 @@ unsafe fn host_wlanhdr_to_ethhdr(rframe: *mut RecvFrame, llc_hdl: u8) -> c_int {
 unsafe fn wlanhdr_to_ethhdr_kernel(rframe: *mut c_void, llc_hdl: u8) -> c_int {
     let attrib = unsafe { kernel::frame_attrib(rframe) };
     if attrib.is_null() {
-        return -1;
+        return _FAIL;
     }
     let a = unsafe { &mut *(attrib as *mut RxPktAttribKernel) };
     if a.encrypt != 0 {
@@ -494,7 +491,7 @@ unsafe fn wlanhdr_to_ethhdr_kernel(rframe: *mut c_void, llc_hdl: u8) -> c_int {
     let pull = rmv_len - 14 + if llc_hdl != 0 { 2 } else { 0 };
     let ptr = unsafe { kernel::frame_pull(rframe, pull) };
     if ptr.is_null() {
-        return -1;
+        return _FAIL;
     }
     unsafe {
         core::ptr::copy_nonoverlapping(a.dst.as_ptr(), ptr, 6);
@@ -507,7 +504,7 @@ unsafe fn wlanhdr_to_ethhdr_kernel(rframe: *mut c_void, llc_hdl: u8) -> c_int {
         }
     }
     unsafe { kernel::rframe_set_os_pkt(rframe) };
-    0
+    _SUCCESS
 }
 
 /// Kernel `struct rx_pkt_attrib` through `bssid` — matches `include/rtw_recv.h`
