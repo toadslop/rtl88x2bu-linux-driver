@@ -9,8 +9,6 @@
 #define RTW_ERP_INFO_NON_ERP_PRESENT (1U << 0)
 #define RTW_ERP_INFO_USE_PROTECTION (1U << 1)
 #define RTW_ERP_INFO_BARKER_PREAMBLE_MODE (1U << 2)
-#define RTW_INFO(...) do { } while (0)
-
 typedef int sint;
 typedef struct _NDIS_802_11_VARIABLE_IEs {
 	u8 ElementID;
