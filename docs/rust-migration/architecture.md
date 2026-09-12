@@ -76,6 +76,25 @@ There is no legacy suite. For each chunk we port:
 - **Stateful but isolatable logic:** table-driven cases for state transitions; mock only at OS boundary.
 - **Kernel-tied code:** document observed contracts in tests where host execution is impossible; cover with L1 symbols + L3 load; add KUnit later if needed.
 
+### Status codes are ABI
+
+`_SUCCESS` / `_FAIL` are **not** an internal choice. C call sites that survive a
+port compare the returned value against the kernel macros in
+[`include/osdep_service.h`](../../include/osdep_service.h) (`_SUCCESS == 1`,
+`_FAIL == 0`), so a Rust port that redefines them inverts the caller's decision.
+In the RX path that silently turns "accept" into "drop" and vice versa.
+
+- Any `const _SUCCESS` / `const _FAIL` under `rust/` must use the kernel values,
+  for **both** kernel and `host_*_test` builds.
+- A host harness that genuinely needs a different encoding must use a distinct
+  name (see `HOST_GCMP_SUCCESS` in `rust/rtw_security_rest.rs`) so it cannot leak
+  into the kernel build.
+- Host oracle headers under `tests/host/include/` mirror the kernel macros, so
+  L2 differential vectors freeze the values the kernel actually tests.
+
+Enforced by [`scripts/ci/check-status-constants.sh`](../../scripts/ci/check-status-constants.sh)
+(run from `rust-lint.yml` on every PR).
+
 ### Test ownership
 
 - Tests live next to the Rust module (`#[cfg(test)]` / host `tests/`) and name the C oracle they freeze (`// oracle: core/crypto/aes-ctr.c`).
