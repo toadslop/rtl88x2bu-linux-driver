@@ -55,12 +55,14 @@ AKA_CHK_CFLAGS := $(BCN_UPDATE_CFLAGS) -DCONFIG_ACTIVE_KEEP_ALIVE_CHECK \
 	-DHOST_AP_AKA_CHK_TEST -I$(CORE)
 AP_AKA_CHK_SRC := $(CORE)/rtw_ap_aka_chk.c
 AKA_CHK_DEPS := host_aka_chk_shim.c
+RF18_RESTORE_CFLAGS := $(BCN_UPDATE_CFLAGS) -DRTW_CONFIG_RFREG18_WA -I$(CORE)
+RF18_RESTORE_DEPS := ap_rf18_restore_oracle.c host_rf18_restore_shim.c
 
-.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk clean
+.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore clean
 
 all: test
 
-test: test-c test-rust test-sta-ie test-bcn-ie test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-bmc-rate
+test: test-c test-rust test-sta-ie test-bcn-ie test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore test-bmc-rate
 
 test-c: test_ap_rest
 	./test_ap_rest ap_rest_vectors.json
@@ -113,6 +115,13 @@ test-expire-asoc: test_ap_expire_asoc
 
 test-aka-chk: test_ap_aka_chk
 	./test_ap_aka_chk ap_aka_chk_vectors.json
+
+test-rf18-restore: test_ap_rf18_restore
+	./test_ap_rf18_restore ap_rf18_restore_vectors.json
+
+test_ap_rf18_restore: test_ap_rf18_restore.c $(HOST_JSON) $(RF18_RESTORE_DEPS)
+	$(CC) $(RF18_RESTORE_CFLAGS) -o $@ test_ap_rf18_restore.c $(HOST_JSON) \
+		$(RF18_RESTORE_DEPS)
 
 test-rust-aka-chk: test_ap_aka_chk_rust
 	./test_ap_aka_chk_rust ap_aka_chk_vectors.json
@@ -213,7 +222,7 @@ clean:
 		test_ap_sta_ie_wmm_ht test_ap_sta_ie_vht_multiap test_ap_sta_ie_sec \
 		test_ap_bcn_ie test_ap_bcn_update test_ap_sta_alive test_ap_sta_alive_rust \
 		test_ap_expire_auth test_ap_expire_auth_rust test_ap_expire_asoc test_ap_expire_asoc_rust \
-		test_ap_aka_chk test_ap_aka_chk_rust \
+		test_ap_aka_chk test_ap_aka_chk_rust test_ap_rf18_restore \
 		test_ap_bmc_rate test_ap_bmc_rate_rust \
 		librust_ap_rest.a librust_ap_bmc_rate.a librust_ap_sta_alive.a \
 		librust_ap_expire_asoc.a librust_ap_expire_auth.a librust_ap_aka_chk.a
