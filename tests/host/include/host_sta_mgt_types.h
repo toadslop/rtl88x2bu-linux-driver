@@ -6,12 +6,25 @@
 #define HOST_STA_MGT_TYPES_H
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 #include "host_types.h"
 
+#ifndef container_of
+#define container_of(ptr, type, member) \
+	((type *)((char *)(ptr) - offsetof(type, member)))
+#endif
+
+typedef size_t SIZE_PTR;
+#define MEM_ALIGNMENT_OFFSET (sizeof(SIZE_PTR))
+#define MEM_ALIGNMENT_PADDING (MEM_ALIGNMENT_OFFSET - 1)
+#define AID_BMP_LEN(aid) (((aid) + 7) / 8)
+
 #define _TRUE 1
 #define _FALSE 0
+#define _SUCCESS 1
+#define _FAIL 0
 #define ETH_ALEN 6
 
 #define CONFIG_RTW_MACADDR_ACL 1
@@ -105,12 +118,31 @@ struct cmn_sta_info {
 	u8 mac_addr[ETH_ALEN];
 };
 
+struct tx_servq {
+	_queue sta_pending;
+	_list tx_pending;
+	int qcnt;
+};
+
 struct sta_xmit_priv {
 	_lock lock;
+	struct tx_servq be_q;
+	struct tx_servq bk_q;
+	struct tx_servq vi_q;
+	struct tx_servq vo_q;
+#ifdef CONFIG_RTW_MGMT_QUEUE
+	struct tx_servq mgmt_q;
+#endif
+};
+
+struct recv_reorder_ctrl {
+	int reordering_ctrl_timer;
+	_queue pending_recvframe_queue;
 };
 
 struct sta_recv_priv {
 	_lock lock;
+	_queue defrag_q;
 };
 
 struct sta_info {
@@ -133,6 +165,7 @@ struct sta_info {
 	u8 bpairwise_key_installed;
 #endif
 	struct st_ctl_t st_ctl;
+	struct recv_reorder_ctrl recvreorder_ctrl[16];
 };
 
 struct sta_priv {
@@ -144,15 +177,43 @@ struct sta_priv {
 	u8 rr_aid;
 	u16 max_num_sta;
 	struct pre_link_sta_ctl_t pre_link_sta_ctl;
+	u8 *pallocated_stainfo_buf;
 	u8 *pstainfo_buf;
 	_queue free_sta_queue;
+	_queue sleep_q;
+	_queue wakeup_q;
 	_lock sta_hash_lock;
 	_list sta_hash[NUM_STA];
 	int asoc_sta_count;
+	u8 adhoc_expire_to;
+	u16 aid_bmp_len;
+	u8 *sta_dz_bitmap;
+	u8 *tim_bitmap;
+#ifdef CONFIG_AP_MODE
+	_list asoc_list;
+	_list auth_list;
+	_lock asoc_list_lock;
+	_lock auth_list_lock;
+	int asoc_list_cnt;
+	int auth_list_cnt;
+	u8 auth_to;
+	u8 assoc_to;
+	u16 expire_to;
+#endif
+};
+
+struct macid_ctl_t {
+	u8 num;
+};
+
+struct mlme_priv {
+	int dummy;
 };
 
 struct _adapter {
 	struct sta_priv stapriv;
+	struct macid_ctl_t macid_ctl;
+	struct mlme_priv mlmepriv;
 };
 
 typedef struct _adapter _adapter;
@@ -196,7 +257,15 @@ static inline void rtw_list_delete(_list *entry)
 }
 
 void *rtw_zmalloc(u32 sz);
+void *rtw_zvmalloc(u32 sz);
+void rtw_vmfree(u8 *p, u32 sz);
 void rtw_mfree(u8 *pbuf, u32 sz);
+void rtw_macaddr_acl_init(_adapter *adapter, int index);
+void rtw_macaddr_acl_deinit(_adapter *adapter, int index);
+void rtw_pre_link_sta_ctl_init(struct sta_priv *stapriv);
+void rtw_pre_link_sta_ctl_deinit(struct sta_priv *stapriv);
+void rtw_set_rx_chk_limit(_adapter *adapter, int limit);
+void _cancel_timer_ex(void *timer);
 
 static inline void _enter_critical_bh(_lock *plock, _irqL *pirqL)
 {
@@ -306,6 +375,10 @@ void host_sta_mgt_alloc_reset(_adapter *adapter);
 int host_sta_mgt_alloc_setup(_adapter *adapter);
 int host_sta_mgt_alloc_drain(_adapter *adapter, u8 count);
 int host_sta_mgt_alloc_free_count(_adapter *adapter);
+
+void host_sta_mgt_free_reset(_adapter *adapter);
+int host_sta_mgt_free_setup(_adapter *adapter);
+struct macid_ctl_t *adapter_to_macidctl(_adapter *adapter);
 
 void rtw_st_ctl_init(struct st_ctl_t *st_ctl);
 void rtw_st_ctl_deinit(struct st_ctl_t *st_ctl);

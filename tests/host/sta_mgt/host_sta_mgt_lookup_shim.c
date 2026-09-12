@@ -26,14 +26,29 @@ bool test_st_match_rule(_adapter *adapter, u8 *local_naddr, u8 *local_port,
 	return _FALSE;
 }
 
+static void host_init_tx_servq(struct tx_servq *q)
+{
+	_rtw_init_listhead(&q->tx_pending);
+	_rtw_spinlock_init(&q->sta_pending.lock);
+	q->qcnt = 0;
+}
+
 void _rtw_init_sta_xmit_priv(struct sta_xmit_priv *psta_xmitpriv)
 {
 	_rtw_spinlock_init(&psta_xmitpriv->lock);
+	host_init_tx_servq(&psta_xmitpriv->be_q);
+	host_init_tx_servq(&psta_xmitpriv->bk_q);
+	host_init_tx_servq(&psta_xmitpriv->vi_q);
+	host_init_tx_servq(&psta_xmitpriv->vo_q);
+#ifdef CONFIG_RTW_MGMT_QUEUE
+	host_init_tx_servq(&psta_xmitpriv->mgmt_q);
+#endif
 }
 
 void _rtw_init_sta_recv_priv(struct sta_recv_priv *psta_recvpriv)
 {
 	_rtw_spinlock_init(&psta_recvpriv->lock);
+	_rtw_init_queue(&psta_recvpriv->defrag_q);
 }
 
 void host_sta_mgt_lookup_reset(_adapter *adapter)
