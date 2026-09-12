@@ -18,6 +18,8 @@ test_ap_expire_auth_rust
 test_ap_expire_asoc
 test_ap_expire_asoc_rust
 test_ap_aka_chk
+test_ap_aka_chk_rust
+librust_ap_aka_chk.a
 librust_ap_sta_alive.a
 librust_ap_expire_asoc.a
 librust_ap_expire_auth.a
