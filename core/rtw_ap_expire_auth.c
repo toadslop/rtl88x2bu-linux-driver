@@ -15,6 +15,8 @@
 #include <drv_types.h>
 #endif
 
+#if !defined(CONFIG_RUST_AP_EXPIRE_AUTH) || defined(HOST_AP_EXPIRE_AUTH_TEST)
+
 void rtw_ap_expire_auth_list(_adapter *padapter)
 {
 	_irqL irqL;
@@ -75,3 +77,5 @@ void rtw_ap_expire_auth_list(_adapter *padapter)
 		psta = NULL;
 	}
 }
+
+#endif /* !CONFIG_RUST_AP_EXPIRE_AUTH || HOST_AP_EXPIRE_AUTH_TEST */
