@@ -6,6 +6,9 @@
     { "name": "1m_24g_1m", "fn": "rtw_ap_find_bmc_rate", "band": 0, "tx_rate": 0, "expect_rate": 0 },
     { "name": "1m_5g_clamp_6m", "fn": "rtw_ap_find_bmc_rate", "band": 1, "tx_rate": 0, "expect_rate": 4 },
     { "name": "unknown_default_6m", "fn": "rtw_ap_find_bmc_rate", "band": 0, "tx_rate": 255, "expect_rate": 4 },
-    { "name": "vht_49_24g_24m", "fn": "rtw_ap_find_bmc_rate", "band": 0, "tx_rate": 73, "expect_rate": 8 }
+    { "name": "vht_49_24g_24m", "fn": "rtw_ap_find_bmc_rate", "band": 0, "tx_rate": 73, "expect_rate": 8 },
+    { "name": "mini_empty_asoc", "fn": "rtw_ap_find_mini_tx_rate", "expect_rate": 83 },
+    { "name": "mini_one_sta", "fn": "rtw_ap_find_mini_tx_rate", "sta_rate_1": 8, "expect_rate": 8 },
+    { "name": "mini_two_stas", "fn": "rtw_ap_find_mini_tx_rate", "sta_rate_1": 8, "sta_rate_2": 4, "expect_rate": 4 }
   ]
 }
