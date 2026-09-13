@@ -350,9 +350,9 @@ pub extern "C" fn rtw_ap_find_mini_tx_rate(adapter: *mut core::ffi::c_void) -> u
     unsafe {
         let adapter = &mut *(adapter as *mut Adapter);
         let stapriv = &mut adapter.stapriv;
-        let phead = core::ptr::addr_of_mut!(stapriv.asoc_list).cast();
-        let plist = (*phead.cast::<List>()).next.cast();
-        return ap_find_mini_tx_rate_inner(ODM_RATEVHTSS4MCS9, plist, phead);
+        let phead: *mut List = core::ptr::addr_of_mut!(stapriv.asoc_list);
+        let plist = (*phead).next;
+        return ap_find_mini_tx_rate_inner(ODM_RATEVHTSS4MCS9, plist.cast(), phead.cast());
     }
     #[cfg(all(not(host_ap_bmc_rate_test), bmc_tx_rate_select))]
     unsafe {
