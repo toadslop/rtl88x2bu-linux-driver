@@ -47,11 +47,11 @@ BMC_RATE_CFLAGS := $(CFLAGS) -DCONFIG_BMC_TX_RATE_SELECT
 AP_STA_ALIVE_SRC := $(CORE)/rtw_ap_sta_alive.c
 STA_ALIVE_CFLAGS := $(BCN_UPDATE_CFLAGS) -DHOST_AP_STA_ALIVE_TEST -I$(CORE)
 
-.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bcn-update test-sta-alive clean
+.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bcn-update test-sta-alive test-rust-sta-alive clean
 
 all: test
 
-test: test-c test-rust test-sta-ie test-bcn-ie test-bcn-update test-sta-alive test-bmc-rate
+test: test-c test-rust test-sta-ie test-bcn-ie test-bcn-update test-sta-alive test-rust-sta-alive test-bmc-rate
 
 test-c: test_ap_rest
 	./test_ap_rest ap_rest_vectors.json
@@ -84,6 +84,17 @@ test-bcn-update: test_ap_bcn_update
 
 test-sta-alive: test_ap_sta_alive
 	./test_ap_sta_alive ap_sta_alive_vectors.json
+
+test-rust-sta-alive: test_ap_sta_alive_rust
+	./test_ap_sta_alive_rust ap_sta_alive_vectors.json
+
+librust_ap_sta_alive.a: ../../../rust/rtw_ap_sta_alive.rs
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on --cfg host_ap_sta_alive_test \
+		--crate-type staticlib ../../../rust/rtw_ap_sta_alive.rs -o $@
+
+test_ap_sta_alive_rust: test_ap_sta_alive.c librust_ap_sta_alive.a $(HOST_JSON)
+	$(CC) $(STA_ALIVE_CFLAGS) -DRUST_AP_STA_ALIVE_ORACLE -o $@ test_ap_sta_alive.c \
+		$(HOST_JSON) librust_ap_sta_alive.a
 
 test_ap_sta_alive: test_ap_sta_alive.c $(HOST_JSON) $(AP_STA_ALIVE_SRC)
 	$(CC) $(STA_ALIVE_CFLAGS) -o $@ test_ap_sta_alive.c $(HOST_JSON) \
@@ -137,5 +148,6 @@ test_ap_bcn_ie: test_ap_bcn_ie.c $(AP_BCN_IE_SRC) $(HOST_JSON) $(BCN_IE_DEPS)
 clean:
 	rm -f test_ap_rest test_ap_rest_rust test_ap_sta_ie test_ap_sta_ie_rates \
 		test_ap_sta_ie_wmm_ht test_ap_sta_ie_vht_multiap test_ap_sta_ie_sec \
-		test_ap_bcn_ie test_ap_bcn_update test_ap_sta_alive test_ap_bmc_rate test_ap_bmc_rate_rust \
-		librust_ap_rest.a librust_ap_bmc_rate.a
+		test_ap_bcn_ie test_ap_bcn_update test_ap_sta_alive test_ap_sta_alive_rust \
+		test_ap_bmc_rate test_ap_bmc_rate_rust \
+		librust_ap_rest.a librust_ap_bmc_rate.a librust_ap_sta_alive.a
