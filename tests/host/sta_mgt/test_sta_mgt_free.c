@@ -116,6 +116,10 @@ int main(int argc, char **argv)
 		return 2;
 
 	for (i = 0; i < nvectors; i++) {
+#ifdef RUST_STA_MGT_FREE_MFREE_ONLY
+		if (strcmp(vectors[i].fn, "rtw_mfree_stainfo"))
+			continue;
+#endif
 		if (run_vector(&vectors[i])) {
 			fprintf(stderr, "FAIL: %s\n", vectors[i].name);
 			return 1;
