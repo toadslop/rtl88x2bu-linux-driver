@@ -44,8 +44,8 @@ STA_IE_VHT_MULTIAP_DEPS := ap_sta_ie_vht_multiap_oracle.c $(IE_ORACLE)
 
 BMC_RATE_CFLAGS := $(CFLAGS) -DCONFIG_BMC_TX_RATE_SELECT
 
-STA_ALIVE_CFLAGS := $(BCN_UPDATE_CFLAGS)
-STA_ALIVE_DEPS := ap_sta_alive_oracle.c
+AP_STA_ALIVE_SRC := $(CORE)/rtw_ap_sta_alive.c
+STA_ALIVE_CFLAGS := $(BCN_UPDATE_CFLAGS) -DHOST_AP_STA_ALIVE_TEST -I$(CORE)
 
 .PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bcn-update test-sta-alive clean
 
@@ -85,9 +85,9 @@ test-bcn-update: test_ap_bcn_update
 test-sta-alive: test_ap_sta_alive
 	./test_ap_sta_alive ap_sta_alive_vectors.json
 
-test_ap_sta_alive: test_ap_sta_alive.c $(HOST_JSON) $(STA_ALIVE_DEPS)
+test_ap_sta_alive: test_ap_sta_alive.c $(HOST_JSON) $(AP_STA_ALIVE_SRC)
 	$(CC) $(STA_ALIVE_CFLAGS) -o $@ test_ap_sta_alive.c $(HOST_JSON) \
-		$(STA_ALIVE_DEPS)
+		$(AP_STA_ALIVE_SRC)
 
 test_ap_bcn_update: test_ap_bcn_update.c $(HOST_JSON) $(BCN_UPDATE_DEPS)
 	$(CC) $(BCN_UPDATE_CFLAGS) -o $@ test_ap_bcn_update.c $(HOST_JSON) \
