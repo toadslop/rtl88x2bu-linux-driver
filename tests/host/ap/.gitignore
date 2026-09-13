@@ -13,4 +13,5 @@ test_ap_bcn_ie
 librust_ap_rest.a
 test_ap_sta_alive
 test_ap_sta_alive_rust
+test_ap_expire_auth
 librust_ap_sta_alive.a
