@@ -20,6 +20,9 @@
 #include <drv_types.h>
 #endif
 
+#if defined(RUST_STA_MGT_FREE_ORACLE)
+void rtw_mfree_stainfo(struct sta_info *psta);
+#else
 void	_rtw_free_sta_xmit_priv_lock(struct sta_xmit_priv *psta_xmitpriv);
 void	_rtw_free_sta_xmit_priv_lock(struct sta_xmit_priv *psta_xmitpriv)
 {
@@ -58,6 +61,7 @@ void rtw_mfree_stainfo(struct sta_info *psta)
 	_rtw_free_sta_recv_priv_lock(&psta->sta_recvpriv);
 
 }
+#endif /* RUST_STA_MGT_FREE_ORACLE */
 
 
 /* this function is used to free the memory of lock || sema for all stainfos */
