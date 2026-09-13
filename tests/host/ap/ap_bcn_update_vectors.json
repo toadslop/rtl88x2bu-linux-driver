@@ -31,6 +31,38 @@
       "num_sta_no_short_preamble": 0,
       "ies_hex": "000102030405060708090a0b2a0104",
       "expect_erp_byte": 0
+    },
+    {
+      "name": "ht_op_mode_le16",
+      "fn": "update_bcn_htinfo_ie",
+      "ht_option": 1,
+      "HT_info_enable": 1,
+      "ht_op_mode": 43981,
+      "sw_to_20mhz": 1,
+      "cur_bwmode": 0,
+      "ies_hex": "000102030405060708090a0b3d160600000000000000000000000000000000000000000000000000000000",
+      "expect_ht_op_mode": 43981
+    },
+    {
+      "name": "ht_skip_when_ht_option_off",
+      "fn": "update_bcn_htinfo_ie",
+      "ht_option": 0,
+      "HT_info_enable": 1,
+      "ht_op_mode": 4660,
+      "ies_hex": "000102030405060708090a0b3d160600000000000000000000000000000000000000000000000000000000",
+      "expect_ht_op_mode": 65535
+    },
+    {
+      "name": "ht_force_20mhz_on_intolerant",
+      "fn": "update_bcn_htinfo_ie",
+      "ht_option": 1,
+      "HT_info_enable": 1,
+      "sw_to_20mhz": 0,
+      "cur_channel": 6,
+      "num_sta_40mhz_intolerant": 1,
+      "ht_op_mode": 0,
+      "ies_hex": "000102030405060708090a0b3d16060404000000000000000000000000000000000000000000000000000000",
+      "expect_ht_op_mode": 0
     }
   ]
 }
