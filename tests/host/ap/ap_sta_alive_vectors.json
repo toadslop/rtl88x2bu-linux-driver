@@ -1,0 +1,40 @@
+{
+  "vectors": [
+    {
+      "name": "data_pkts_changed",
+      "fn": "chk_sta_is_alive",
+      "rx_data_pkts": 10,
+      "last_rx_data_pkts": 5,
+      "rx_ctrl_pkts": 0,
+      "last_rx_ctrl_pkts": 0,
+      "expect_alive": 1
+    },
+    {
+      "name": "ctrl_pkts_changed",
+      "fn": "chk_sta_is_alive",
+      "rx_data_pkts": 3,
+      "last_rx_data_pkts": 3,
+      "rx_ctrl_pkts": 7,
+      "last_rx_ctrl_pkts": 2,
+      "expect_alive": 1
+    },
+    {
+      "name": "stale_no_traffic",
+      "fn": "chk_sta_is_alive",
+      "rx_data_pkts": 4,
+      "last_rx_data_pkts": 4,
+      "rx_ctrl_pkts": 1,
+      "last_rx_ctrl_pkts": 1,
+      "expect_alive": 0
+    },
+    {
+      "name": "combined_counters_changed",
+      "fn": "chk_sta_is_alive",
+      "rx_data_pkts": 8,
+      "last_rx_data_pkts": 7,
+      "rx_ctrl_pkts": 2,
+      "last_rx_ctrl_pkts": 2,
+      "expect_alive": 1
+    }
+  ]
+}
