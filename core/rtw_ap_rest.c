@@ -121,6 +121,30 @@ u8 rtw_ap_find_bmc_rate(_adapter *adapter, u8 tx_rate)
 		tx_ini_rate = ODM_RATE6M;
 	return tx_ini_rate;
 }
+
+u8 rtw_ap_find_mini_tx_rate(_adapter *adapter)
+{
+	_irqL irqL;
+	_list	*phead, *plist;
+	u8 miini_tx_rate = ODM_RATEVHTSS4MCS9, sta_tx_rate;
+	struct sta_info *psta = NULL;
+	struct sta_priv *pstapriv = &adapter->stapriv;
+
+	_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+	phead = &pstapriv->asoc_list;
+	plist = get_next(phead);
+	while ((rtw_end_of_queue_search(phead, plist)) == _FALSE) {
+		psta = LIST_CONTAINOR(plist, struct sta_info, asoc_list);
+		plist = get_next(plist);
+
+		sta_tx_rate = psta->cmn.ra_info.curr_tx_rate & 0x7F;
+		if (sta_tx_rate < miini_tx_rate)
+			miini_tx_rate = sta_tx_rate;
+	}
+	_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+
+	return miini_tx_rate;
+}
 #endif /* CONFIG_BMC_TX_RATE_SELECT */
 
 #endif /* !CONFIG_RUST || HOST_AP_REST_TEST || !CONFIG_RUST_AP_REST */
@@ -158,6 +182,45 @@ void rtw_rust_ap_warn_on(int condition)
 BAND_TYPE rtw_rust_ap_current_band_type(_adapter *adapter)
 {
 	return GET_HAL_DATA(adapter)->current_band_type;
+}
+
+void rtw_rust_bmc_asoc_enter(_adapter *adapter, unsigned long *irql)
+{
+	struct sta_priv *pstapriv = &adapter->stapriv;
+
+	_enter_critical_bh(&pstapriv->asoc_list_lock, irql);
+}
+
+void rtw_rust_bmc_asoc_exit(_adapter *adapter, unsigned long *irql)
+{
+	struct sta_priv *pstapriv = &adapter->stapriv;
+
+	_exit_critical_bh(&pstapriv->asoc_list_lock, irql);
+}
+
+_list *rtw_rust_bmc_asoc_head(_adapter *adapter)
+{
+	return &adapter->stapriv.asoc_list;
+}
+
+_list *rtw_rust_bmc_asoc_next(_list *plist)
+{
+	return get_next(plist);
+}
+
+u8 rtw_rust_bmc_asoc_at_end(_list *head, _list *elem)
+{
+	return rtw_end_of_queue_search(head, elem);
+}
+
+struct sta_info *rtw_rust_bmc_sta_from_asoc(_list *plist)
+{
+	return LIST_CONTAINOR(plist, struct sta_info, asoc_list);
+}
+
+u8 rtw_rust_bmc_sta_curr_tx_rate(struct sta_info *psta)
+{
+	return psta->cmn.ra_info.curr_tx_rate;
 }
 #endif /* CONFIG_BMC_TX_RATE_SELECT */
 
