@@ -2476,6 +2476,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_ap_sta_alive.o \
 		core/rtw_ap_sta_alive_rust_acc.o \
 		core/rtw_ap_expire_auth.o \
+		core/rtw_ap_expire_auth_rust_acc.o \
 		core/rtw_ap_expire_asoc.o \
 		core/rtw_ap_expire_asoc_rust_acc.o \
 		core/rtw_ap_sta_ie_rust_acc.o \
@@ -2622,6 +2623,7 @@ ccflags-y += -DCONFIG_RUST_AP_STA_IE
 ccflags-y += -DCONFIG_RUST_AP_STA_IE_SEC
 ccflags-y += -DCONFIG_RUST_AP_STA_ALIVE
 ccflags-y += -DCONFIG_RUST_AP_EXPIRE_ASOC
+ccflags-y += -DCONFIG_RUST_AP_EXPIRE_AUTH
 ccflags-y += -DCONFIG_RUST_AP_REST
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_PREF
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_DUMP
@@ -2680,6 +2682,10 @@ ifeq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_ACTIVE_KEEP_ALIVE_CHECK' $(src)/
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_80211N_HT' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg expire_asoc_clear_under_exist_checking
 endif
+endif
+rustflags-y += --cfg rust_ap_expire_auth
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_ATMEL_RC_PATCH' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_atmel_rc_patch
 endif
 rustflags-y += --cfg rust_ap_rest
 rustflags-y += --cfg rust_rf_op_class_pref
@@ -2752,6 +2758,7 @@ $(MODULE_NAME)-y += rust/rtw_ap_sta_ie_sec.o
 $(MODULE_NAME)-y += rust/rtw_ap_rest.o
 $(MODULE_NAME)-y += rust/rtw_ap_sta_alive.o
 $(MODULE_NAME)-y += rust/rtw_ap_expire_asoc.o
+$(MODULE_NAME)-y += rust/rtw_ap_expire_auth.o
 $(MODULE_NAME)-y += rust/rtw_rf_op_class_pref.o
 $(MODULE_NAME)-y += rust/rtw_rf_op_class_dump.o
 $(MODULE_NAME)-y += rust/rtw_rf_dump_txpwr_lmt.o
@@ -3304,6 +3311,23 @@ rust-objects-rtw-ap-expire-asoc-rust-ref:
 rust-check-symbols-rtw-ap-expire-asoc: rust-objects-rtw-ap-expire-asoc-c rust-objects-rtw-ap-expire-asoc-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_expire_asoc_c_ref.o NEW=tests/host/ap/ap_expire_asoc_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_expire_asoc.allow
+
+# W3-82 PR9: expire auth list L1 (host C vs host Rust oracle).
+rust-objects-rtw-ap-expire-auth-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_AP_EXPIRE_AUTH_TEST \
+		-o tests/host/ap/ap_expire_auth_c_ref.o core/rtw_ap_expire_auth.c
+
+rust-objects-rtw-ap-expire-auth-rust-ref:
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on --cfg host_ap_expire_auth_test \
+		--emit=obj=tests/host/ap/ap_expire_auth_rust_ref.o \
+		--crate-type lib rust/rtw_ap_expire_auth.rs
+
+rust-check-symbols-rtw-ap-expire-auth: rust-objects-rtw-ap-expire-auth-c rust-objects-rtw-ap-expire-auth-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_expire_auth_c_ref.o NEW=tests/host/ap/ap_expire_auth_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_expire_auth.allow
 
 # W3-73 PR8: AP STA IE parse L1 (merged C oracle vs kbuild Rust object).
 rust-objects-rtw-ap-sta-ie-c:
