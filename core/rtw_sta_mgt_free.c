@@ -179,6 +179,105 @@ void rtw_free_stainfo_flush_recv(_adapter *padapter, struct sta_info *psta)
 	}
 	exit_critical_bh(&pdefrag_q->lock);
 }
+
+/* using pstapriv->sta_hash_lock to protect */
+u32 rtw_free_stainfo(_adapter *padapter, struct sta_info *psta)
+{
+	_irqL irqL0;
+	_queue *pfree_sta_queue;
+	struct sta_priv *pstapriv = &padapter->stapriv;
+	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+	struct mlme_ext_info *pmlmeinfo = &(pmlmeext->mlmext_info);
+	u8 is_pre_link_sta = _FALSE;
+
+	if (psta == NULL)
+		goto exit;
+
+#ifdef CONFIG_RTW_80211K
+	rm_post_event(padapter, RM_ID_FOR_ALL(psta->cmn.aid), RM_EV_cancel);
+#endif
+
+	is_pre_link_sta = rtw_is_pre_link_sta(pstapriv, psta->cmn.mac_addr);
+
+	if (is_pre_link_sta == _FALSE) {
+		_enter_critical_bh(&(pstapriv->sta_hash_lock), &irqL0);
+		rtw_list_delete(&psta->hash_list);
+		pstapriv->asoc_sta_count--;
+		_exit_critical_bh(&(pstapriv->sta_hash_lock), &irqL0);
+		rtw_mi_update_iface_status(&(padapter->mlmepriv), 0);
+	} else {
+		_enter_critical_bh(&psta->lock, &irqL0);
+		psta->state = WIFI_FW_PRE_LINK;
+		_exit_critical_bh(&psta->lock, &irqL0);
+	}
+
+	_enter_critical_bh(&psta->lock, &irqL0);
+	psta->state &= ~WIFI_ASOC_STATE;
+	_exit_critical_bh(&psta->lock, &irqL0);
+
+	pfree_sta_queue = &pstapriv->free_sta_queue;
+
+	rtw_free_stainfo_flush_xmit(padapter, psta);
+	rtw_free_stainfo_flush_recv(padapter, psta);
+
+	if (!((psta->state & WIFI_AP_STATE) || MacAddr_isBcst(psta->cmn.mac_addr)) &&
+	    is_pre_link_sta == _FALSE)
+		rtw_hal_set_odm_var(padapter, HAL_ODM_STA_INFO, psta, _FALSE);
+
+	if (is_pre_link_sta == _FALSE)
+		rtw_release_macid(pstapriv->padapter, psta);
+
+#ifdef CONFIG_AP_MODE
+	_enter_critical_bh(&pstapriv->auth_list_lock, &irqL0);
+	if (!rtw_is_list_empty(&psta->auth_list)) {
+		rtw_list_delete(&psta->auth_list);
+		pstapriv->auth_list_cnt--;
+	}
+	_exit_critical_bh(&pstapriv->auth_list_lock, &irqL0);
+
+	psta->expire_to = 0;
+#ifdef CONFIG_ATMEL_RC_PATCH
+	psta->flag_atmel_rc = 0;
+#endif
+	psta->sleepq_ac_len = 0;
+	psta->qos_info = 0;
+	psta->max_sp_len = 0;
+	psta->uapsd_bk = 0;
+	psta->uapsd_be = 0;
+	psta->uapsd_vi = 0;
+	psta->uapsd_vo = 0;
+	psta->has_legacy_ac = 0;
+
+#ifdef CONFIG_NATIVEAP_MLME
+	if (pmlmeinfo->state == _HW_STATE_AP_) {
+		rtw_tim_map_clear(padapter, pstapriv->sta_dz_bitmap, psta->cmn.aid);
+		rtw_tim_map_clear(padapter, pstapriv->tim_bitmap, psta->cmn.aid);
+
+		if ((psta->cmn.aid > 0) &&
+		    (pstapriv->sta_aid[psta->cmn.aid - 1] == psta)) {
+			pstapriv->sta_aid[psta->cmn.aid - 1] = NULL;
+			psta->cmn.aid = 0;
+		}
+	}
+#endif
+
+#if !defined(CONFIG_ACTIVE_KEEP_ALIVE_CHECK) && defined(CONFIG_80211N_HT)
+	psta->under_exist_checking = 0;
+#endif
+#endif /* CONFIG_AP_MODE */
+
+	rtw_st_ctl_deinit(&psta->st_ctl);
+
+	if (is_pre_link_sta == _FALSE) {
+		_rtw_spinlock_free(&psta->lock);
+		_enter_critical_bh(&(pstapriv->sta_hash_lock), &irqL0);
+		rtw_list_insert_tail(&psta->list, get_list_head(pfree_sta_queue));
+		_exit_critical_bh(&(pstapriv->sta_hash_lock), &irqL0);
+	}
+
+exit:
+	return _SUCCESS;
+}
 #endif /* !HOST_STA_MGT_TEST */
 
 /* this function is used to free the memory of lock || sema for all stainfos */
