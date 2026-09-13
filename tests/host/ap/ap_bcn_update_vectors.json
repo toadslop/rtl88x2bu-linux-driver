@@ -13,8 +13,24 @@
       "fn": "update_bcn_erpinfo_ie",
       "erp_enable": 1,
       "num_sta_no_short_preamble": 1,
-      "ies_hex": "000102030405060708090a0b2a0104",
+      "ies_hex": "000102030405060708090a0b2a0100",
       "expect_erp_byte": 4
+    },
+    {
+      "name": "erp_non_erp_clear_when_count_not_one",
+      "fn": "update_bcn_erpinfo_ie",
+      "erp_enable": 1,
+      "num_sta_non_erp": 2,
+      "ies_hex": "000102030405060708090a0b2a0103",
+      "expect_erp_byte": 0
+    },
+    {
+      "name": "erp_barker_clear_when_no_legacy_stas",
+      "fn": "update_bcn_erpinfo_ie",
+      "erp_enable": 1,
+      "num_sta_no_short_preamble": 0,
+      "ies_hex": "000102030405060708090a0b2a0104",
+      "expect_erp_byte": 0
     }
   ]
 }

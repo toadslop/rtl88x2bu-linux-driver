@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
+/* Oracle copy of update_bcn_erpinfo_ie from core/rtw_ap.c — keep in sync to prevent drift. */
 #include "host_ap_bcn_update_types.h"
 #include <string.h>
 

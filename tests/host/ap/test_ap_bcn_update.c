@@ -73,11 +73,11 @@ static int run_vector(const struct vector *v)
 
 int main(int argc, char **argv)
 {
-	struct vector v[8];
+	struct vector v[16];
 	size_t n = 0, i, fail = 0;
 
 	if (argc != 2 ||
-	    host_load_vectors(argv[1], v, sizeof(v[0]), 8, parse_vector_object, &n))
+	    host_load_vectors(argv[1], v, sizeof(v[0]), 16, parse_vector_object, &n))
 		return 2;
 	for (i = 0; i < n; i++)
 		if (run_vector(&v[i]))
