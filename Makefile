@@ -2674,6 +2674,13 @@ rustflags-y += --cfg rust_ap_sta_ie
 rustflags-y += --cfg rust_ap_sta_ie_sec
 rustflags-y += --cfg rust_ap_sta_alive
 rustflags-y += --cfg rust_ap_expire_asoc
+# Match core/rtw_ap_expire_asoc.c: clear under_exist_checking when
+# !CONFIG_ACTIVE_KEEP_ALIVE_CHECK && CONFIG_80211N_HT
+ifeq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_ACTIVE_KEEP_ALIVE_CHECK' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_80211N_HT' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg expire_asoc_clear_under_exist_checking
+endif
+endif
 rustflags-y += --cfg rust_ap_rest
 rustflags-y += --cfg rust_rf_op_class_pref
 rustflags-y += --cfg rust_rf_op_class_dump
