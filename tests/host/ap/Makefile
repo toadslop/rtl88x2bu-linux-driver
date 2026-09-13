@@ -19,6 +19,8 @@ AP_STA_IE_WMM_HT_SRC := $(CORE)/rtw_ap_sta_ie_wmm_ht.c
 AP_STA_IE_VHT_MULTIAP_SRC := $(CORE)/rtw_ap_sta_ie_vht_multiap.c
 AP_STA_IE_SEC_SRC := $(CORE)/rtw_ap_sta_ie_sec.c
 AP_BCN_IE_SRC := $(CORE)/rtw_ap_bcn_ie.c
+BCN_UPDATE_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 -I$(HOST_INC) -I$(ROOT)/include -include $(HOST_INC)/host_autoconf.h
+BCN_UPDATE_DEPS := ap_bcn_update_oracle.c
 IE_REST_SRC := $(CORE)/rtw_ieee80211_rest.c
 WLAN_UTIL := ../wlan_util
 IE_ORACLE := ../ie/ie_c_oracle.c
@@ -42,11 +44,11 @@ STA_IE_VHT_MULTIAP_DEPS := ap_sta_ie_vht_multiap_oracle.c $(IE_ORACLE)
 
 BMC_RATE_CFLAGS := $(CFLAGS) -DCONFIG_BMC_TX_RATE_SELECT
 
-.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate clean
+.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bcn-update clean
 
 all: test
 
-test: test-c test-rust test-sta-ie test-bcn-ie test-bmc-rate
+test: test-c test-rust test-sta-ie test-bcn-ie test-bcn-update test-bmc-rate
 
 test-c: test_ap_rest
 	./test_ap_rest ap_rest_vectors.json
@@ -73,6 +75,13 @@ test-sta-ie: test_ap_sta_ie test_ap_sta_ie_rates test_ap_sta_ie_wmm_ht test_ap_s
 
 test-bcn-ie: test_ap_bcn_ie
 	./test_ap_bcn_ie ap_bcn_ie_vectors.json
+
+test-bcn-update: test_ap_bcn_update
+	./test_ap_bcn_update ap_bcn_update_vectors.json
+
+test_ap_bcn_update: test_ap_bcn_update.c $(HOST_JSON) $(BCN_UPDATE_DEPS)
+	$(CC) $(BCN_UPDATE_CFLAGS) -o $@ test_ap_bcn_update.c $(HOST_JSON) \
+		$(BCN_UPDATE_DEPS)
 
 test-bmc-rate: test-c-bmc test-rust-bmc
 
@@ -118,5 +127,5 @@ test_ap_bcn_ie: test_ap_bcn_ie.c $(AP_BCN_IE_SRC) $(HOST_JSON) $(BCN_IE_DEPS)
 clean:
 	rm -f test_ap_rest test_ap_rest_rust test_ap_sta_ie test_ap_sta_ie_rates \
 		test_ap_sta_ie_wmm_ht test_ap_sta_ie_vht_multiap test_ap_sta_ie_sec \
-		test_ap_bcn_ie test_ap_bmc_rate test_ap_bmc_rate_rust \
+		test_ap_bcn_ie test_ap_bcn_update test_ap_bmc_rate test_ap_bmc_rate_rust \
 		librust_ap_rest.a librust_ap_bmc_rate.a
