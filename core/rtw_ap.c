@@ -2533,40 +2533,6 @@ static void update_bcn_ext_capab_ie(_adapter *padapter)
 
 }
 
-static void update_bcn_erpinfo_ie(_adapter *padapter)
-{
-	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
-	struct mlme_ext_priv	*pmlmeext = &(padapter->mlmeextpriv);
-	struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
-	WLAN_BSSID_EX *pnetwork = &(pmlmeinfo->network);
-	unsigned char *p, *ie = pnetwork->IEs;
-	u32 len = 0;
-
-	RTW_INFO("%s, ERP_enable=%d\n", __FUNCTION__, pmlmeinfo->ERP_enable);
-
-	if (!pmlmeinfo->ERP_enable)
-		return;
-
-	/* parsing ERP_IE */
-	p = rtw_get_ie(ie + _BEACON_IE_OFFSET_, _ERPINFO_IE_, &len, (pnetwork->IELength - _BEACON_IE_OFFSET_));
-	if (p && len > 0) {
-		PNDIS_802_11_VARIABLE_IEs pIE = (PNDIS_802_11_VARIABLE_IEs)p;
-
-		if (pmlmepriv->num_sta_non_erp == 1)
-			pIE->data[0] |= RTW_ERP_INFO_NON_ERP_PRESENT | RTW_ERP_INFO_USE_PROTECTION;
-		else
-			pIE->data[0] &= ~(RTW_ERP_INFO_NON_ERP_PRESENT | RTW_ERP_INFO_USE_PROTECTION);
-
-		if (pmlmepriv->num_sta_no_short_preamble > 0)
-			pIE->data[0] |= RTW_ERP_INFO_BARKER_PREAMBLE_MODE;
-		else
-			pIE->data[0] &= ~(RTW_ERP_INFO_BARKER_PREAMBLE_MODE);
-
-		ERP_IE_handler(padapter, pIE);
-	}
-
-}
-
 static void update_bcn_htcap_ie(_adapter *padapter)
 {
 	RTW_INFO("%s\n", __FUNCTION__);
