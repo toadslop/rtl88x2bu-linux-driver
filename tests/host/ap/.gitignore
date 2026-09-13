@@ -15,4 +15,6 @@ test_ap_sta_alive
 test_ap_sta_alive_rust
 test_ap_expire_auth
 test_ap_expire_asoc
+test_ap_expire_asoc_rust
 librust_ap_sta_alive.a
+librust_ap_expire_asoc.a
