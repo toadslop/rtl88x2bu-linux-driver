@@ -5,8 +5,11 @@
 #include "host_types.h"
 
 #define _BEACON_IE_OFFSET_ 12
+#define _FIXED_IE_LENGTH_ _BEACON_IE_OFFSET_
 #define _ERPINFO_IE_ 42
 #define _HT_ADD_INFO_IE_ 61
+#define WLAN_EID_VENDOR_SPECIFIC 221
+#define MAX_IE_SZ 257
 #define _TRUE 1
 #define _FALSE 0
 #define CHANNEL_WIDTH_40 2
@@ -50,6 +53,7 @@ struct mlme_ext_priv {
 struct mlme_priv {
 	int num_sta_non_erp;
 	int num_sta_no_short_preamble;
+	u8 *wps_beacon_ie;
 	struct ht_priv htpriv;
 	u16 ht_op_mode;
 	int num_sta_40mhz_intolerant;
@@ -74,6 +78,11 @@ u8 *rtw_get_ie(const u8 *pbuf, sint index, sint *len, sint limit);
 void ERP_IE_handler(_adapter *padapter, PNDIS_802_11_VARIABLE_IEs pIE);
 void update_bcn_erpinfo_ie(_adapter *padapter);
 void update_bcn_htinfo_ie(_adapter *padapter);
+void update_bcn_wps_ie(_adapter *padapter);
+
+void *rtw_malloc(size_t sz);
+void rtw_mfree(void *p, size_t sz);
+u8 *rtw_get_wps_ie(const u8 *in_ie, u32 in_len, u8 *wps_ie, u32 *wps_ielen);
 
 /* Match include/rtw_ht.h: bit fields live in infos[0] (byte after primary_channel). */
 #define SET_HT_OP_ELE_2ND_CHL_OFFSET(_p, _v) \

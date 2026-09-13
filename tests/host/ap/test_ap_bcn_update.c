@@ -8,6 +8,7 @@
 extern u8 host_bcn_update_last_erp_byte;
 extern u16 host_bcn_update_last_ht_op_mode;
 extern u8 host_bcn_update_last_ht_info_byte;
+extern u32 host_bcn_update_last_ielen;
 
 struct vector {
 	char name[64];
@@ -23,6 +24,10 @@ struct vector {
 	int expect_ht_info_byte;
 	int has_expect_ht;
 	int has_expect_ht_info;
+	int expect_ielen;
+	int has_expect_ielen;
+	u8 wps_beacon_ie[64];
+	size_t wps_beacon_ie_len;
 	u8 ies[256];
 	size_t ies_len;
 };
@@ -47,6 +52,7 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 {
 	struct vector *v = vec_void;
 	char hex[HOST_VECTOR_MAX_HEX_BUF];
+	char wps_hex[HOST_VECTOR_MAX_HEX_BUF];
 	int tmp;
 
 	memset(v, 0, sizeof(*v));
@@ -95,10 +101,19 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 		v->expect_ht_info_byte = tmp;
 		v->has_expect_ht_info = 1;
 	}
+	if (!host_json_parse_int_in(obj, len, "expect_ielen", &tmp)) {
+		v->expect_ielen = tmp;
+		v->has_expect_ielen = 1;
+	}
+	if (!host_json_parse_string_in(obj, len, "wps_beacon_ie_hex", wps_hex,
+				       sizeof(wps_hex)) &&
+	    parse_hex(wps_hex, v->wps_beacon_ie, sizeof(v->wps_beacon_ie),
+		      &v->wps_beacon_ie_len))
+		return -1;
 	return parse_hex(hex, v->ies, sizeof(v->ies), &v->ies_len);
 }
 
-static void setup_adapter(const struct vector *v, _adapter *ad)
+static void setup_adapter(struct vector *v, _adapter *ad)
 {
 	WLAN_BSSID_EX *net = &ad->mlmeextpriv.mlmext_info.network;
 
@@ -118,11 +133,13 @@ static void setup_adapter(const struct vector *v, _adapter *ad)
 	ad->mlmeextpriv.cur_channel = v->cur_channel ? v->cur_channel : 6;
 	ad->mlmeextpriv.cur_bwmode = v->cur_bwmode;
 	ad->mlmeextpriv.cur_ch_offset = v->cur_ch_offset;
+	ad->mlmepriv.wps_beacon_ie =
+		v->wps_beacon_ie_len ? v->wps_beacon_ie : NULL;
 	memcpy(net->IEs, v->ies, v->ies_len);
 	net->IELength = (u32)v->ies_len;
 }
 
-static int run_vector(const struct vector *v)
+static int run_vector(struct vector *v)
 {
 	_adapter ad;
 
@@ -149,6 +166,18 @@ static int run_vector(const struct vector *v)
 		    (int)host_bcn_update_last_ht_info_byte != v->expect_ht_info_byte) {
 			fprintf(stderr, "FAIL %s ht_info got 0x%x want 0x%x\n", v->name,
 				host_bcn_update_last_ht_info_byte, v->expect_ht_info_byte);
+			return -1;
+		}
+		return 0;
+	}
+	if (!strcmp(v->fn, "update_bcn_wps_ie")) {
+		host_bcn_update_last_ielen = 0;
+		update_bcn_wps_ie(&ad);
+		if (v->has_expect_ielen &&
+		    (int)host_bcn_update_last_ielen != v->expect_ielen) {
+			fprintf(stderr, "FAIL %s wps ielen got %u want %d\n",
+				v->name, host_bcn_update_last_ielen,
+				v->expect_ielen);
 			return -1;
 		}
 		return 0;
