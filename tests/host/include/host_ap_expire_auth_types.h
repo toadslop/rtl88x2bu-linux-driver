@@ -8,7 +8,6 @@
 #define _TRUE 1
 #define _FALSE 0
 #define HOST_EXPIRE_AUTH_MAX_STA 2
-#define HOST_EXPIRE_AUTH_ADAPTER_SZ 128
 
 typedef unsigned long _irqL;
 typedef int _lock;

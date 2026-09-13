@@ -8,6 +8,8 @@
 struct vector {
 	char name[64];
 	u8 expire0, expect0, expect_flush;
+	u8 expire1, expect1;
+	u8 has_second_sta;
 };
 
 static int parse_vector_object(const char *obj, size_t len, void *vec_void)
@@ -27,6 +29,13 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	if (host_json_parse_int_in(obj, len, "expect_flush", &tmp))
 		return -1;
 	v->expect_flush = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "expire1", &tmp)) {
+		v->expire1 = (u8)tmp;
+		v->has_second_sta = 1;
+		if (host_json_parse_int_in(obj, len, "expect1", &tmp))
+			return -1;
+		v->expect1 = (u8)tmp;
+	}
 	return 0;
 }
 
@@ -36,9 +45,16 @@ static int run_vector(const struct vector *v)
 
 	host_expire_auth_adapter_init(&adapter);
 	host_expire_auth_add_sta(&adapter, v->expire0);
+	if (v->has_second_sta)
+		host_expire_auth_add_sta(&adapter, v->expire1);
 	rtw_ap_expire_auth_list(&adapter);
 	if (adapter.stapriv.sta_pool[0].expire_to != v->expect0 ||
 	    host_expire_auth_flush_count() != v->expect_flush) {
+		fprintf(stderr, "FAIL %s (sta0/flush)\n", v->name);
+		return -1;
+	}
+	if (v->has_second_sta &&
+	    adapter.stapriv.sta_pool[1].expire_to != v->expect1) {
 		fprintf(stderr, "FAIL %s\n", v->name);
 		return -1;
 	}
