@@ -7,7 +7,8 @@
 
 struct vector {
 	char name[64];
-	u8 sta_alive, sta_expire_to, ap_expire_to;
+	u64 rx_data_pkts, last_rx_data_pkts;
+	u8 sta_expire_to, ap_expire_to;
 	u8 expect_expire_to, expect_keepalive_trycnt;
 };
 
@@ -19,9 +20,12 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	memset(v, 0, sizeof(*v));
 	if (host_json_parse_string_in(obj, len, "name", v->name, sizeof(v->name)))
 		return -1;
-	if (host_json_parse_int_in(obj, len, "sta_alive", &tmp))
+	if (host_json_parse_int_in(obj, len, "rx_data_pkts", &tmp))
 		return -1;
-	v->sta_alive = (u8)tmp;
+	v->rx_data_pkts = (u64)tmp;
+	if (host_json_parse_int_in(obj, len, "last_rx_data_pkts", &tmp))
+		return -1;
+	v->last_rx_data_pkts = (u64)tmp;
 	if (host_json_parse_int_in(obj, len, "sta_expire_to", &tmp))
 		return -1;
 	v->sta_expire_to = (u8)tmp;
@@ -47,7 +51,9 @@ static int run_vector(const struct vector *v)
 	adapter.stapriv.expire_to = v->ap_expire_to;
 	sta.expire_to = v->sta_expire_to;
 	sta.keep_alive_trycnt = 7;
-	expire_timeout_asoc_step(&adapter, &sta, v->sta_alive);
+	sta.sta_stats.rx_data_pkts = v->rx_data_pkts;
+	sta.sta_stats.last_rx_data_pkts = v->last_rx_data_pkts;
+	rtw_ap_expire_asoc_sta_tick(&adapter, &sta);
 	if (sta.expire_to != v->expect_expire_to ||
 	    sta.keep_alive_trycnt != v->expect_keepalive_trycnt) {
 		fprintf(stderr, "FAIL %s\n", v->name);
