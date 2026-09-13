@@ -39,6 +39,12 @@ void rtw_ap_expire_auth_list(_adapter *padapter)
 	phead = &pstapriv->auth_list;
 	plist = get_next(phead);
 
+#ifdef DBG_EXPIRATION_CHK
+	if (rtw_end_of_queue_search(phead, plist) == _FALSE) {
+		RTW_INFO(FUNC_ADPT_FMT" auth_list, cnt:%u\n"
+			, FUNC_ADPT_ARG(padapter), pstapriv->auth_list_cnt);
+	}
+#endif
 	while ((rtw_end_of_queue_search(phead, plist)) == _FALSE) {
 		psta = LIST_CONTAINOR(plist, struct sta_info, auth_list);
 
