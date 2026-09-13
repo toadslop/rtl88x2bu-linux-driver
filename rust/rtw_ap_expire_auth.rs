@@ -22,7 +22,6 @@ type StaInfo = c_void;
 type StaPriv = c_void;
 type IrqL = c_void;
 type List = c_void;
-
 const _TRUE: U8 = 1;
 const _FALSE: U8 = 0;
 const NUM_STA: usize = 32;
@@ -73,8 +72,8 @@ extern "C" {
     fn rtw_stainfo_offset(pstapriv: *mut StaPriv, psta: *mut StaInfo) -> i32;
     fn rtw_get_stainfo_by_offset(pstapriv: *mut StaPriv, offset: i32) -> *mut StaInfo;
     fn rtw_free_stainfo(padapter: *mut Adapter, psta: *mut StaInfo);
-    fn rtw_rust_expire_auth_lock(pstapriv: *mut StaPriv, irq: *mut IrqL);
-    fn rtw_rust_expire_auth_unlock(pstapriv: *mut StaPriv, irq: *mut IrqL);
+    fn rtw_rust_expire_auth_lock(pstapriv: *mut StaPriv, irq: *mut c_ulong);
+    fn rtw_rust_expire_auth_unlock(pstapriv: *mut StaPriv, irq: *mut c_ulong);
     fn rtw_rust_expire_auth_auth_head(pstapriv: *mut StaPriv) -> *mut List;
     fn rtw_rust_expire_auth_list_next(list: *mut List) -> *mut List;
     fn rtw_rust_expire_auth_queue_end(head: *mut List, elem: *mut List) -> U8;
