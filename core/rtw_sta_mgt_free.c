@@ -127,6 +127,58 @@ void rtw_free_stainfo_flush_xmit(_adapter *padapter, struct sta_info *psta)
 
 	_exit_critical_bh(&pxmitpriv->lock, &irqL0);
 }
+
+void rtw_free_stainfo_flush_recv(_adapter *padapter, struct sta_info *psta)
+{
+	int i;
+	_list *phead, *plist;
+	_queue *pdefrag_q;
+	_queue *pfree_recv_queue = &padapter->recvpriv.free_recv_queue;
+	union recv_frame *prframe;
+	struct recv_reorder_ctrl *preorder_ctrl;
+
+#ifdef CONFIG_IEEE80211W
+	_cancel_timer_ex(&psta->dot11w_expire_timer);
+#endif
+	_cancel_timer_ex(&psta->addba_retry_timer);
+
+#ifdef CONFIG_TDLS
+	psta->tdls_sta_state = TDLS_STATE_NONE;
+#endif
+
+	for (i = 0; i < 16; i++) {
+		_irqL irqL;
+		_queue *ppending_recvframe_queue;
+
+		preorder_ctrl = &psta->recvreorder_ctrl[i];
+		rtw_clear_bit(RTW_RECV_ACK_OR_TIMEOUT, &preorder_ctrl->rec_abba_rsp_ack);
+		_cancel_timer_ex(&preorder_ctrl->reordering_ctrl_timer);
+
+		ppending_recvframe_queue = &preorder_ctrl->pending_recvframe_queue;
+		_enter_critical_bh(&ppending_recvframe_queue->lock, &irqL);
+		phead = get_list_head(ppending_recvframe_queue);
+		plist = get_next(phead);
+		while (!rtw_is_list_empty(phead)) {
+			prframe = LIST_CONTAINOR(plist, union recv_frame, u);
+			plist = get_next(plist);
+			rtw_list_delete(&(prframe->u.hdr.list));
+			rtw_free_recvframe(prframe, pfree_recv_queue);
+		}
+		_exit_critical_bh(&ppending_recvframe_queue->lock, &irqL);
+	}
+
+	pdefrag_q = &psta->sta_recvpriv.defrag_q;
+	enter_critical_bh(&pdefrag_q->lock);
+	phead = get_list_head(pdefrag_q);
+	plist = get_next(phead);
+	while (!rtw_is_list_empty(phead)) {
+		prframe = LIST_CONTAINOR(plist, union recv_frame, u);
+		plist = get_next(plist);
+		rtw_list_delete(&(prframe->u.hdr.list));
+		rtw_free_recvframe(prframe, pfree_recv_queue);
+	}
+	exit_critical_bh(&pdefrag_q->lock);
+}
 #endif /* !HOST_STA_MGT_TEST */
 
 /* this function is used to free the memory of lock || sema for all stainfos */
