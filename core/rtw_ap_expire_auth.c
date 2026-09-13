@@ -6,6 +6,9 @@
  * under the terms of version 2 of the GNU General Public License as
  * published by the Free Software Foundation.
  *
+ * Auth-list expiration tick extracted from expire_timeout_chk(); keep lock
+ * scope and flush ordering aligned with that caller.
+ *
  *****************************************************************************/
 #define _RTW_AP_EXPIRE_AUTH_C_
 
