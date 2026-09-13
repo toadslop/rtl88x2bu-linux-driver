@@ -38,7 +38,6 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	int tmp;
 
 	memset(v, 0, sizeof(*v));
-	v->expect_erp_byte = -1;
 	if (host_json_parse_string_in(obj, len, "name", v->name, sizeof(v->name)) ||
 	    host_json_parse_string_in(obj, len, "ies_hex", hex, sizeof(hex)))
 		return -1;
@@ -46,7 +45,8 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 		v->erp_enable = (u8)tmp;
 	host_json_parse_int_in(obj, len, "num_sta_non_erp", &v->num_sta_non_erp);
 	host_json_parse_int_in(obj, len, "num_sta_no_short_preamble", &v->num_sta_no_short_preamble);
-	host_json_parse_int_in(obj, len, "expect_erp_byte", &v->expect_erp_byte);
+	if (host_json_parse_int_in(obj, len, "expect_erp_byte", &v->expect_erp_byte))
+		return -1;
 	return parse_hex(hex, v->ies, sizeof(v->ies), &v->ies_len);
 }
 
@@ -63,8 +63,7 @@ static int run_vector(const struct vector *v)
 	net->IELength = (u32)v->ies_len;
 	host_bcn_update_last_erp_byte = 0;
 	update_bcn_erpinfo_ie(&ad);
-	if (v->expect_erp_byte >= 0 &&
-	    (int)host_bcn_update_last_erp_byte != v->expect_erp_byte) {
+	if ((int)host_bcn_update_last_erp_byte != v->expect_erp_byte) {
 		fprintf(stderr, "FAIL %s\n", v->name);
 		return -1;
 	}
