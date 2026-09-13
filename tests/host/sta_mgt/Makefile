@@ -64,15 +64,17 @@ librust_sta_mgt.a: $(RUST_STA_MGT)
 	rustc -C opt-level=2 -C overflow-checks=on --cfg host_sta_mgt_test \
 		--crate-type staticlib $(RUST_STA_MGT) -o $@
 
-test-rust: test_sta_mgt_rust test_sta_mgt_aid_rust test_sta_mgt_stctl_rust test_sta_mgt_alloc_rust
+test-rust: test_sta_mgt_rust test_sta_mgt_aid_rust test_sta_mgt_stctl_rust test_sta_mgt_alloc_rust test_sta_mgt_free_mfree_rust
 	./test_sta_mgt_rust sta_mgt_vectors.json
 	./test_sta_mgt_aid_rust sta_mgt_aid_vectors.json
 	./test_sta_mgt_stctl_rust sta_mgt_stctl_vectors.json
 	./test_sta_mgt_alloc_rust sta_mgt_alloc_vectors.json
+	./test_sta_mgt_free_mfree_rust sta_mgt_free_vectors.json
 
 RUST_STA_MGT_STCTL := $(ROOT)/rust/rtw_sta_mgt_stctl.rs
 RUST_STA_MGT_AID := $(ROOT)/rust/rtw_sta_mgt_aid.rs
 RUST_STA_MGT_ALLOC := $(ROOT)/rust/rtw_sta_mgt_alloc.rs
+RUST_STA_MGT_FREE := $(ROOT)/rust/rtw_sta_mgt_free.rs
 
 librust_sta_mgt_stctl.a: $(RUST_STA_MGT_STCTL)
 	rustc -C opt-level=2 -C overflow-checks=on --cfg host_sta_mgt_test \
@@ -98,8 +100,15 @@ librust_sta_mgt_alloc.a: $(RUST_STA_MGT_ALLOC)
 test_sta_mgt_alloc_rust: test_sta_mgt_alloc.c librust_sta_mgt_alloc.a $(ALLOC_SHIM) $(LOOKUP_SHIM) $(STCTL_SRC) $(LOOKUP_SRC) $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_STA_MGT_ALLOC_ORACLE -o $@ test_sta_mgt_alloc.c $(ALLOC_SHIM) $(LOOKUP_SHIM) $(STCTL_SRC) $(LOOKUP_SRC) $(HOST_JSON) librust_sta_mgt_alloc.a
 
+librust_sta_mgt_free.a: $(RUST_STA_MGT_FREE)
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_sta_mgt_test \
+		--crate-type staticlib $(RUST_STA_MGT_FREE) -o $@
+
+test_sta_mgt_free_mfree_rust: test_sta_mgt_free.c librust_sta_mgt_free.a $(FREE_SRC) $(FREE_SHIM) $(ALLOC_SHIM) $(LOOKUP_SHIM) $(STCTL_SRC) $(LOOKUP_SRC) $(ALLOC_SRC) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_STA_MGT_FREE_ORACLE -DRUST_STA_MGT_FREE_MFREE_ONLY -o $@ test_sta_mgt_free.c $(FREE_SHIM) $(ALLOC_SHIM) $(LOOKUP_SHIM) $(STCTL_SRC) $(LOOKUP_SRC) $(ALLOC_SRC) $(FREE_SRC) $(HOST_JSON) librust_sta_mgt_free.a
+
 clean:
 	rm -f test_sta_mgt test_sta_mgt_aid test_sta_mgt_stctl test_sta_mgt_lookup test_sta_mgt_alloc test_sta_mgt_free \
-		test_sta_mgt_rust test_sta_mgt_aid_rust test_sta_mgt_stctl_rust test_sta_mgt_alloc_rust \
-		librust_sta_mgt.a librust_sta_mgt_aid.a librust_sta_mgt_stctl.a librust_sta_mgt_alloc.a \
+		test_sta_mgt_rust test_sta_mgt_aid_rust test_sta_mgt_stctl_rust test_sta_mgt_alloc_rust test_sta_mgt_free_mfree_rust \
+		librust_sta_mgt.a librust_sta_mgt_aid.a librust_sta_mgt_stctl.a librust_sta_mgt_alloc.a librust_sta_mgt_free.a \
 		sta_mgt_rest_host.o sta_mgt_shim_host.o
