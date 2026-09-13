@@ -63,6 +63,71 @@ void rtw_mfree_stainfo(struct sta_info *psta)
 }
 #endif /* RUST_STA_MGT_FREE_ORACLE */
 
+#ifndef HOST_STA_MGT_TEST
+void rtw_free_stainfo_flush_xmit(_adapter *padapter, struct sta_info *psta)
+{
+	_irqL irqL0;
+	struct sta_xmit_priv *pstaxmitpriv;
+	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+	struct hw_xmit *phwxmit;
+	int pending_qcnt[4];
+
+	pstaxmitpriv = &psta->sta_xmitpriv;
+
+	rtw_free_xmitframe_queue(pxmitpriv, &psta->tx_queue);
+	_rtw_deinit_queue(&psta->tx_queue);
+
+	_enter_critical_bh(&pxmitpriv->lock, &irqL0);
+
+	rtw_free_xmitframe_queue(pxmitpriv, &psta->sleep_q);
+	psta->sleepq_len = 0;
+
+#ifdef CONFIG_RTW_MGMT_QUEUE
+	rtw_free_mgmt_xmitframe_queue(pxmitpriv, &psta->mgmt_sleep_q);
+	psta->mgmt_sleepq_len = 0;
+#endif
+
+	rtw_free_xmitframe_queue(pxmitpriv, &pstaxmitpriv->vo_q.sta_pending);
+	rtw_list_delete(&(pstaxmitpriv->vo_q.tx_pending));
+	phwxmit = pxmitpriv->hwxmits;
+	phwxmit->accnt -= pstaxmitpriv->vo_q.qcnt;
+	pending_qcnt[0] = pstaxmitpriv->vo_q.qcnt;
+	pstaxmitpriv->vo_q.qcnt = 0;
+
+	rtw_free_xmitframe_queue(pxmitpriv, &pstaxmitpriv->vi_q.sta_pending);
+	rtw_list_delete(&(pstaxmitpriv->vi_q.tx_pending));
+	phwxmit = pxmitpriv->hwxmits + 1;
+	phwxmit->accnt -= pstaxmitpriv->vi_q.qcnt;
+	pending_qcnt[1] = pstaxmitpriv->vi_q.qcnt;
+	pstaxmitpriv->vi_q.qcnt = 0;
+
+	rtw_free_xmitframe_queue(pxmitpriv, &pstaxmitpriv->be_q.sta_pending);
+	rtw_list_delete(&(pstaxmitpriv->be_q.tx_pending));
+	phwxmit = pxmitpriv->hwxmits + 2;
+	phwxmit->accnt -= pstaxmitpriv->be_q.qcnt;
+	pending_qcnt[2] = pstaxmitpriv->be_q.qcnt;
+	pstaxmitpriv->be_q.qcnt = 0;
+
+	rtw_free_xmitframe_queue(pxmitpriv, &pstaxmitpriv->bk_q.sta_pending);
+	rtw_list_delete(&(pstaxmitpriv->bk_q.tx_pending));
+	phwxmit = pxmitpriv->hwxmits + 3;
+	phwxmit->accnt -= pstaxmitpriv->bk_q.qcnt;
+	pending_qcnt[3] = pstaxmitpriv->bk_q.qcnt;
+	pstaxmitpriv->bk_q.qcnt = 0;
+
+#ifdef CONFIG_RTW_MGMT_QUEUE
+	rtw_free_xmitframe_queue(pxmitpriv, &pstaxmitpriv->mgmt_q.sta_pending);
+	rtw_list_delete(&(pstaxmitpriv->mgmt_q.tx_pending));
+	phwxmit = pxmitpriv->hwxmits + 4;
+	phwxmit->accnt -= pstaxmitpriv->mgmt_q.qcnt;
+	pstaxmitpriv->mgmt_q.qcnt = 0;
+#endif
+
+	rtw_os_wake_queue_at_free_stainfo(padapter, pending_qcnt);
+
+	_exit_critical_bh(&pxmitpriv->lock, &irqL0);
+}
+#endif /* !HOST_STA_MGT_TEST */
 
 /* this function is used to free the memory of lock || sema for all stainfos */
 void rtw_mfree_all_stainfo(struct sta_priv *pstapriv);

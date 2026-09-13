@@ -756,6 +756,7 @@ int rtw_stainfo_offset(struct sta_priv *stapriv, struct sta_info *sta);
 struct sta_info *rtw_get_stainfo_by_offset(struct sta_priv *stapriv, int offset);
 
 extern struct sta_info *rtw_alloc_stainfo(struct	sta_priv *pstapriv, const u8 *hwaddr);
+extern void	rtw_free_stainfo_flush_xmit(_adapter *padapter, struct sta_info *psta);
 extern u32	rtw_free_stainfo(_adapter *padapter , struct sta_info *psta);
 extern void rtw_free_all_stainfo(_adapter *padapter);
 extern struct sta_info *rtw_get_stainfo(struct sta_priv *pstapriv, const u8 *hwaddr);

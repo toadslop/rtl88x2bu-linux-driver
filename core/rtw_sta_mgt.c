@@ -55,13 +55,9 @@ u32	rtw_free_stainfo(_adapter *padapter , struct sta_info *psta)
 	_irqL irqL0;
 	_queue *pfree_sta_queue, *pdefrag_q = NULL;
 	struct recv_reorder_ctrl *preorder_ctrl;
-	struct	sta_xmit_priv	*pstaxmitpriv;
-	struct	xmit_priv	*pxmitpriv = &padapter->xmitpriv;
 	struct	sta_priv *pstapriv = &padapter->stapriv;
-	struct hw_xmit *phwxmit;
 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
 	struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
-	int pending_qcnt[4];
 	u8 is_pre_link_sta = _FALSE;
 	_list	*phead, *plist;
 	_queue *pfree_recv_queue = &padapter->recvpriv.free_recv_queue;
@@ -94,79 +90,7 @@ u32	rtw_free_stainfo(_adapter *padapter , struct sta_info *psta)
 
 	pfree_sta_queue = &pstapriv->free_sta_queue;
 
-
-	pstaxmitpriv = &psta->sta_xmitpriv;
-
-	/* rtw_list_delete(&psta->sleep_list); */
-
-	/* rtw_list_delete(&psta->wakeup_list); */
-
-	rtw_free_xmitframe_queue(pxmitpriv, &psta->tx_queue);
-	_rtw_deinit_queue(&psta->tx_queue);
-
-	_enter_critical_bh(&pxmitpriv->lock, &irqL0);
-
-	rtw_free_xmitframe_queue(pxmitpriv, &psta->sleep_q);
-	psta->sleepq_len = 0;
-
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	rtw_free_mgmt_xmitframe_queue(pxmitpriv, &psta->mgmt_sleep_q);
-	psta->mgmt_sleepq_len = 0;
-#endif
-
-	/* vo */
-	/* _enter_critical_bh(&(pxmitpriv->vo_pending.lock), &irqL0); */
-	rtw_free_xmitframe_queue(pxmitpriv, &pstaxmitpriv->vo_q.sta_pending);
-	rtw_list_delete(&(pstaxmitpriv->vo_q.tx_pending));
-	phwxmit = pxmitpriv->hwxmits;
-	phwxmit->accnt -= pstaxmitpriv->vo_q.qcnt;
-	pending_qcnt[0] = pstaxmitpriv->vo_q.qcnt;
-	pstaxmitpriv->vo_q.qcnt = 0;
-	/* _exit_critical_bh(&(pxmitpriv->vo_pending.lock), &irqL0); */
-
-	/* vi */
-	/* _enter_critical_bh(&(pxmitpriv->vi_pending.lock), &irqL0); */
-	rtw_free_xmitframe_queue(pxmitpriv, &pstaxmitpriv->vi_q.sta_pending);
-	rtw_list_delete(&(pstaxmitpriv->vi_q.tx_pending));
-	phwxmit = pxmitpriv->hwxmits + 1;
-	phwxmit->accnt -= pstaxmitpriv->vi_q.qcnt;
-	pending_qcnt[1] = pstaxmitpriv->vi_q.qcnt;
-	pstaxmitpriv->vi_q.qcnt = 0;
-	/* _exit_critical_bh(&(pxmitpriv->vi_pending.lock), &irqL0); */
-
-	/* be */
-	/* _enter_critical_bh(&(pxmitpriv->be_pending.lock), &irqL0); */
-	rtw_free_xmitframe_queue(pxmitpriv, &pstaxmitpriv->be_q.sta_pending);
-	rtw_list_delete(&(pstaxmitpriv->be_q.tx_pending));
-	phwxmit = pxmitpriv->hwxmits + 2;
-	phwxmit->accnt -= pstaxmitpriv->be_q.qcnt;
-	pending_qcnt[2] = pstaxmitpriv->be_q.qcnt;
-	pstaxmitpriv->be_q.qcnt = 0;
-	/* _exit_critical_bh(&(pxmitpriv->be_pending.lock), &irqL0); */
-
-	/* bk */
-	/* _enter_critical_bh(&(pxmitpriv->bk_pending.lock), &irqL0); */
-	rtw_free_xmitframe_queue(pxmitpriv, &pstaxmitpriv->bk_q.sta_pending);
-	rtw_list_delete(&(pstaxmitpriv->bk_q.tx_pending));
-	phwxmit = pxmitpriv->hwxmits + 3;
-	phwxmit->accnt -= pstaxmitpriv->bk_q.qcnt;
-	pending_qcnt[3] = pstaxmitpriv->bk_q.qcnt;
-	pstaxmitpriv->bk_q.qcnt = 0;
-	/* _exit_critical_bh(&(pxmitpriv->bk_pending.lock), &irqL0); */
-
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	/* mgmt */
-	rtw_free_xmitframe_queue(pxmitpriv, &pstaxmitpriv->mgmt_q.sta_pending);
-	rtw_list_delete(&(pstaxmitpriv->mgmt_q.tx_pending));
-	phwxmit = pxmitpriv->hwxmits + 4;
-	phwxmit->accnt -= pstaxmitpriv->mgmt_q.qcnt;
-	pstaxmitpriv->mgmt_q.qcnt = 0;
-#endif
-
-	rtw_os_wake_queue_at_free_stainfo(padapter, pending_qcnt);
-
-	_exit_critical_bh(&pxmitpriv->lock, &irqL0);
-
+	rtw_free_stainfo_flush_xmit(padapter, psta);
 
 	/* re-init sta_info; 20061114 */ /* will be init in alloc_stainfo */
 	/* _rtw_init_sta_xmit_priv(&psta->sta_xmitpriv); */
