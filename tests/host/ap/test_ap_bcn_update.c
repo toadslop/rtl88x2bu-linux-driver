@@ -45,7 +45,7 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 		v->erp_enable = (u8)tmp;
 	host_json_parse_int_in(obj, len, "num_sta_non_erp", &v->num_sta_non_erp);
 	host_json_parse_int_in(obj, len, "num_sta_no_short_preamble", &v->num_sta_no_short_preamble);
-	if (!host_json_parse_int_in(obj, len, "expect_erp_byte", &v->expect_erp_byte))
+	if (host_json_parse_int_in(obj, len, "expect_erp_byte", &v->expect_erp_byte))
 		return -1;
 	return parse_hex(hex, v->ies, sizeof(v->ies), &v->ies_len);
 }
