@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Host oracle for BMC rate helpers — keep in sync with core/rtw_ap_rest.c. */
+/*
+ * Host oracle for BMC rate helpers:
+ * - rtw_ap_find_bmc_rate: keep in sync with core/rtw_ap_rest.c
+ * - rtw_ap_find_mini_tx_rate: keep in sync with core/rtw_ap.c until extract
+ */
 #include "host_ap_bmc_rate_types.h"
 
 #define ODM_RATEVHTSS4MCS9 0x53
