@@ -51,17 +51,12 @@ void dump_st_ctl(void *sel, struct st_ctl_t *st_ctl)
 /* using pstapriv->sta_hash_lock to protect */
 u32	rtw_free_stainfo(_adapter *padapter , struct sta_info *psta)
 {
-	int i;
 	_irqL irqL0;
-	_queue *pfree_sta_queue, *pdefrag_q = NULL;
-	struct recv_reorder_ctrl *preorder_ctrl;
+	_queue *pfree_sta_queue;
 	struct	sta_priv *pstapriv = &padapter->stapriv;
 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
 	struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
 	u8 is_pre_link_sta = _FALSE;
-	_list	*phead, *plist;
-	_queue *pfree_recv_queue = &padapter->recvpriv.free_recv_queue;
-	union recv_frame *prframe;
 
 	if (psta == NULL)
 		goto exit;
@@ -91,64 +86,7 @@ u32	rtw_free_stainfo(_adapter *padapter , struct sta_info *psta)
 	pfree_sta_queue = &pstapriv->free_sta_queue;
 
 	rtw_free_stainfo_flush_xmit(padapter, psta);
-
-	/* re-init sta_info; 20061114 */ /* will be init in alloc_stainfo */
-	/* _rtw_init_sta_xmit_priv(&psta->sta_xmitpriv); */
-	/* _rtw_init_sta_recv_priv(&psta->sta_recvpriv); */
-#ifdef CONFIG_IEEE80211W
-	_cancel_timer_ex(&psta->dot11w_expire_timer);
-#endif /* CONFIG_IEEE80211W */
-	_cancel_timer_ex(&psta->addba_retry_timer);
-
-#ifdef CONFIG_TDLS
-	psta->tdls_sta_state = TDLS_STATE_NONE;
-#endif /* CONFIG_TDLS */
-
-	/* for A-MPDU Rx reordering buffer control, cancel reordering_ctrl_timer */
-	for (i = 0; i < 16 ; i++) {
-		_irqL irqL;
-		_queue *ppending_recvframe_queue;
-
-		preorder_ctrl = &psta->recvreorder_ctrl[i];
-		rtw_clear_bit(RTW_RECV_ACK_OR_TIMEOUT, &preorder_ctrl->rec_abba_rsp_ack);
-
-		_cancel_timer_ex(&preorder_ctrl->reordering_ctrl_timer);
-
-
-		ppending_recvframe_queue = &preorder_ctrl->pending_recvframe_queue;
-
-		_enter_critical_bh(&ppending_recvframe_queue->lock, &irqL);
-
-		phead =	get_list_head(ppending_recvframe_queue);
-		plist = get_next(phead);
-
-		while (!rtw_is_list_empty(phead)) {
-			prframe = LIST_CONTAINOR(plist, union recv_frame, u);
-
-			plist = get_next(plist);
-
-			rtw_list_delete(&(prframe->u.hdr.list));
-
-			rtw_free_recvframe(prframe, pfree_recv_queue);
-		}
-
-		_exit_critical_bh(&ppending_recvframe_queue->lock, &irqL);
-
-	}
-
-	/* CVE-2020-24586, clear defrag queue */
-	pdefrag_q = &psta->sta_recvpriv.defrag_q;
-	enter_critical_bh(&pdefrag_q->lock);
-	phead = get_list_head(pdefrag_q);
-	plist = get_next(phead);
-	while (!rtw_is_list_empty(phead)) {
-		prframe = LIST_CONTAINOR(plist, union recv_frame, u);
-		plist = get_next(plist);
-		rtw_list_delete(&(prframe->u.hdr.list));
-		rtw_free_recvframe(prframe, pfree_recv_queue);
-	}
-	exit_critical_bh(&pdefrag_q->lock);
-
+	rtw_free_stainfo_flush_recv(padapter, psta);
 
 	if (!((psta->state & WIFI_AP_STATE) || MacAddr_isBcst(psta->cmn.mac_addr)) && is_pre_link_sta == _FALSE)
 		rtw_hal_set_odm_var(padapter, HAL_ODM_STA_INFO, psta, _FALSE);
