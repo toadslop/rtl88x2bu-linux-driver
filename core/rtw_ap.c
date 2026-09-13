@@ -43,52 +43,6 @@ void free_mlme_ap_info(_adapter *padapter)
 }
 
 u8 chk_sta_is_alive(struct sta_info *psta);
-u8 chk_sta_is_alive(struct sta_info *psta)
-{
-	u8 ret = _FALSE;
-#ifdef DBG_EXPIRATION_CHK
-	RTW_INFO("sta:"MAC_FMT", rssi:%d, rx:"STA_PKTS_FMT", expire_to:%u, %s%ssq_len:%u\n"
-		 , MAC_ARG(psta->cmn.mac_addr)
-		 , psta->cmn.rssi_stat.rssi
-		 /* , STA_RX_PKTS_ARG(psta) */
-		 , STA_RX_PKTS_DIFF_ARG(psta)
-		 , psta->expire_to
-		 , psta->state & WIFI_SLEEP_STATE ? "PS, " : ""
-		 , psta->state & WIFI_STA_ALIVE_CHK_STATE ? "SAC, " : ""
-		 , psta->sleepq_len
-		);
-#endif
-
-	/* if(sta_last_rx_pkts(psta) == sta_rx_pkts(psta)) */
-	if ((psta->sta_stats.last_rx_data_pkts + psta->sta_stats.last_rx_ctrl_pkts) == (psta->sta_stats.rx_data_pkts + psta->sta_stats.rx_ctrl_pkts)) {
-#if 0
-		if (psta->state & WIFI_SLEEP_STATE)
-			ret = _TRUE;
-#endif
-	} else
-		ret = _TRUE;
-
-#ifdef CONFIG_RTW_MESH
-	if (MLME_IS_MESH(psta->padapter)) {
-		u8 bcn_alive, hwmp_alive;
-
-		hwmp_alive = (psta->sta_stats.rx_hwmp_pkts !=
-			      psta->sta_stats.last_rx_hwmp_pkts);
-		bcn_alive = (psta->sta_stats.rx_beacon_pkts != 
-			     psta->sta_stats.last_rx_beacon_pkts);
-		/* The reference for nexthop_lookup */
-		psta->alive = ret || hwmp_alive || bcn_alive;
-		/* The reference for expire_timeout_chk */
-		/* Exclude bcn_alive to avoid a misjudge condition
-		   that a peer unexpectedly leave and restart quickly*/
-		ret = ret || hwmp_alive;
-	}
-#endif
-
-	sta_update_last_rx_pkts(psta);
-
-	return ret;
-}
 
 /**
  * issue_aka_chk_frame - issue active keep alive check frame
