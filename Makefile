@@ -2475,6 +2475,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_ap_bcn_ie.o \
 		core/rtw_ap_sta_alive.o \
 		core/rtw_ap_sta_alive_rust_acc.o \
+		core/rtw_ap_expire_auth.o \
 		core/rtw_ap_sta_ie_rust_acc.o \
 		core/wds/rtw_wds.o \
 		core/mesh/rtw_mesh.o \

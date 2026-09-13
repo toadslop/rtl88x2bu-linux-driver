@@ -32,12 +32,12 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 
 static int run_vector(const struct vector *v)
 {
-	u8 ad[HOST_EXPIRE_AUTH_ADAPTER_SZ];
+	_adapter adapter;
 
-	host_expire_auth_adapter_init(ad);
-	host_expire_auth_add_sta(ad, v->expire0);
-	host_expire_auth_step(ad);
-	if (host_expire_auth_sta_expire_to(ad, 0) != v->expect0 ||
+	host_expire_auth_adapter_init(&adapter);
+	host_expire_auth_add_sta(&adapter, v->expire0);
+	rtw_ap_expire_auth_list(&adapter);
+	if (adapter.stapriv.sta_pool[0].expire_to != v->expect0 ||
 	    host_expire_auth_flush_count() != v->expect_flush) {
 		fprintf(stderr, "FAIL %s\n", v->name);
 		return -1;
