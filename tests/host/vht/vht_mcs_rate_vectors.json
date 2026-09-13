@@ -62,6 +62,36 @@
       "expect": 624
     },
     {
+      "name": "highest_rate_no_supported_stream",
+      "fn": "rtw_get_vht_highest_rate",
+      "mcs_map_hex": "ffff",
+      "expect": 0
+    },
+    {
+      "name": "data_rate_below_vht1ss_mcs0_80mhz_long",
+      "fn": "rtw_vht_mcs_to_data_rate",
+      "bw": 2,
+      "short_gi": 0,
+      "vht_mcs_rate": 0,
+      "expect": 702
+    },
+    {
+      "name": "data_rate_below_vht1ss_mcs0_80mhz_sgi",
+      "fn": "rtw_vht_mcs_to_data_rate",
+      "bw": 2,
+      "short_gi": 1,
+      "vht_mcs_rate": 0,
+      "expect": 780
+    },
+    {
+      "name": "data_rate_below_vht1ss_mcs0_20mhz_long",
+      "fn": "rtw_vht_mcs_to_data_rate",
+      "bw": 0,
+      "short_gi": 0,
+      "vht_mcs_rate": 0,
+      "expect": 156
+    },
+    {
       "name": "bitmap_nss1_mcs9",
       "fn": "rtw_vht_mcs_map_to_bitmap",
       "mcs_map_hex": "aa00",

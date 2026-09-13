@@ -150,7 +150,11 @@ mod mcs_rate {
         if vht_mcs_rate > MGN_VHT4SS_MCS9 {
             vht_mcs_rate = MGN_VHT4SS_MCS9;
         }
-        let idx = ((vht_mcs_rate - MGN_VHT1SS_MCS0) & 0x3f) as usize;
+        // rtw_get_vht_highest_rate() returns 0 when the peer advertises no
+        // supported stream (an all-0xff VHT MCS map), so vht_mcs_rate can be
+        // below MGN_VHT1SS_MCS0. C promotes to int here and the & 0x3f keeps
+        // only the low six bits, which matches a u8 wrapping subtraction.
+        let idx = ((vht_mcs_rate.wrapping_sub(MGN_VHT1SS_MCS0)) & 0x3f) as usize;
         VHT_MCS_DATA_RATE[bw as usize][short_gi as usize][idx]
     }
 
