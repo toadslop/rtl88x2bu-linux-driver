@@ -1,0 +1,28 @@
+{
+  "vectors": [
+    {
+      "name": "20mhz_no_hal_80",
+      "reg_bw_mode": 32,
+      "hal_bw_cap": 16,
+      "mcs_map": "ffaa",
+      "channel": 36,
+      "expect_width": 0,
+      "expect_center1": 0,
+      "expect_center2": 0,
+      "expect_mcs0": 255,
+      "expect_mcs1": 170
+    },
+    {
+      "name": "80mhz_cap_and_reg",
+      "reg_bw_mode": 32,
+      "hal_bw_cap": 48,
+      "mcs_map": "0303",
+      "channel": 36,
+      "expect_width": 1,
+      "expect_center1": 42,
+      "expect_center2": 0,
+      "expect_mcs0": 3,
+      "expect_mcs1": 3
+    }
+  ]
+}
