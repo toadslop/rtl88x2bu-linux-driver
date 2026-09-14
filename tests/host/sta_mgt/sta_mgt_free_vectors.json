@@ -22,6 +22,18 @@
       "fn": "rtw_init_bcmc_stainfo",
       "expect_ret": 1,
       "expect_asoc_count": 1
+    },
+    {
+      "name": "free_stainfo_null",
+      "fn": "rtw_free_stainfo_null",
+      "expect_ret": 1
+    },
+    {
+      "name": "free_stainfo_asoc",
+      "fn": "rtw_free_stainfo",
+      "mac": "020000000001",
+      "expect_ret": 1,
+      "expect_asoc_count": 0
     }
   ]
 }

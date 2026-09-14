@@ -14,7 +14,20 @@ struct vector {
 	int expect_ret;
 	int expect_free_count;
 	int expect_asoc_count;
+	u8 mac[ETH_ALEN];
 };
+
+static int parse_mac_opt(const char *obj, size_t len, const char *key, u8 *out)
+{
+	char hex[HOST_VECTOR_MAX_HEX_BUF];
+	size_t decoded = 0;
+
+	if (host_json_parse_string_in(obj, len, key, hex, sizeof(hex)))
+		return 0;
+	if (host_hex_decode(hex, out, ETH_ALEN, &decoded) || decoded != ETH_ALEN)
+		return -1;
+	return 0;
+}
 
 extern u32 _rtw_init_sta_priv(struct sta_priv *pstapriv);
 extern u32 _rtw_free_sta_priv(struct sta_priv *pstapriv);
@@ -35,8 +48,12 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	host_json_parse_int_in(obj, len, "expect_ret", &v->expect_ret);
 	host_json_parse_int_in(obj, len, "expect_free_count", &v->expect_free_count);
 	host_json_parse_int_in(obj, len, "expect_asoc_count", &v->expect_asoc_count);
+	if (parse_mac_opt(obj, len, "mac", v->mac))
+		return -1;
 	return 0;
 }
+
+extern u32 rtw_free_stainfo(_adapter *padapter, struct sta_info *psta);
 
 static int run_mfree_vector(const struct vector *v)
 {
@@ -82,6 +99,35 @@ static int run_vector(const struct vector *v)
 
 	if (!strcmp(v->fn, "rtw_mfree_stainfo"))
 		return run_mfree_vector(v);
+
+	if (!strcmp(v->fn, "rtw_free_stainfo_null")) {
+		ret = rtw_free_stainfo(&a, NULL);
+		return (int)ret == v->expect_ret ? 0 : -1;
+	}
+
+	if (!strcmp(v->fn, "rtw_free_stainfo")) {
+		struct sta_info psta;
+		u32 hash_idx;
+
+		memset(&psta, 0, sizeof(psta));
+		_rtw_init_stainfo(&psta);
+		_rtw_memcpy(psta.cmn.mac_addr, v->mac, ETH_ALEN);
+		psta.state = WIFI_ASOC_STATE;
+		psta.padapter = &a;
+		_rtw_spinlock_init(&psta.lock);
+		rtw_st_ctl_init(&psta.st_ctl);
+		hash_idx = wifi_mac_hash(v->mac);
+		rtw_list_insert_tail(&psta.hash_list, &a.stapriv.sta_hash[hash_idx]);
+		a.stapriv.asoc_sta_count = 1;
+
+		ret = rtw_free_stainfo(&a, &psta);
+		if ((int)ret != v->expect_ret)
+			return -1;
+		if (v->expect_asoc_count >= 0 &&
+		    a.stapriv.asoc_sta_count != v->expect_asoc_count)
+			return -1;
+		return 0;
+	}
 
 	if (!strcmp(v->fn, "rtw_init_bcmc_stainfo")) {
 		ret = _rtw_init_sta_priv(&a.stapriv);
