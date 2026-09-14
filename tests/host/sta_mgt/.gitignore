@@ -7,4 +7,6 @@ librust_sta_mgt_alloc.a
 test_sta_mgt_stctl_rust
 librust_sta_mgt_stctl.a
 test_sta_mgt_free_mfree_rust
-librust_sta_mgt_free.a
+test_sta_mgt_free_init_rust
+librust_sta_mgt_free_mfree.a
+librust_sta_mgt_free_init.a
