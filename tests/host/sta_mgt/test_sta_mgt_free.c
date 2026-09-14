@@ -124,6 +124,10 @@ int main(int argc, char **argv)
 		if (strcmp(vectors[i].fn, "_rtw_init_sta_priv"))
 			continue;
 #endif
+#ifdef RUST_STA_MGT_FREE_DEINIT_ORACLE
+		if (strcmp(vectors[i].fn, "init_free_sta_priv"))
+			continue;
+#endif
 		if (run_vector(&vectors[i])) {
 			fprintf(stderr, "FAIL: %s\n", vectors[i].name);
 			return 1;
