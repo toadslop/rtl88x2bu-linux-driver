@@ -146,7 +146,7 @@ void rtw_init_bmc_sta_tx_rate(struct _adapter *padapter, struct sta_info *psta)
 	else {
 #ifdef CONFIG_BMC_TX_LOW_RATE
 		if (IsEnableHWOFDM(pmlmeext->cur_wireless_mode) &&
-		    (psta->cmn.ra_info.ramask & 0xFF0))
+		    (psta->cmn.ra_info.ramask && 0xFF0))
 			rate_idx = get_lowest_rate_idx_ex(psta->cmn.ra_info.ramask, 4);
 		else
 			rate_idx = get_lowest_rate_idx(psta->cmn.ra_info.ramask);
