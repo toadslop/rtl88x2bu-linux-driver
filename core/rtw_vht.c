@@ -700,43 +700,6 @@ void rtw_process_vht_op_mode_notify(_adapter *padapter, u8 *pframe, void *sta)
 		rtw_dm_ra_mask_wk_cmd(padapter, (u8 *)psta);
 }
 
-u32	rtw_build_vht_operation_ie(_adapter *padapter, u8 *pbuf, u8 channel)
-{
-	struct registry_priv	*pregistrypriv = &padapter->registrypriv;
-	struct mlme_priv		*pmlmepriv = &padapter->mlmepriv;
-	struct vht_priv		*pvhtpriv = &pmlmepriv->vhtpriv;
-	/* struct mlme_ext_priv	*pmlmeext = &padapter->mlmeextpriv; */
-	u8	ChnlWidth, center_freq, bw_mode;
-	u32	len = 0;
-	u8	operation[5];
-
-	_rtw_memset(operation, 0, 5);
-
-	bw_mode = REGSTY_BW_5G(pregistrypriv); /* TODO: control op bw with other info */
-
-	if (hal_chk_bw_cap(padapter, BW_CAP_80M | BW_CAP_160M)
-	    && REGSTY_BW_5G(pregistrypriv) >= CHANNEL_WIDTH_80
-	   ) {
-		center_freq = rtw_get_center_ch(channel, bw_mode, HAL_PRIME_CHNL_OFFSET_LOWER);
-		ChnlWidth = 1;
-	} else {
-		center_freq = 0;
-		ChnlWidth = 0;
-	}
-
-
-	SET_VHT_OPERATION_ELE_CHL_WIDTH(operation, ChnlWidth);
-	/* center frequency */
-	SET_VHT_OPERATION_ELE_CHL_CENTER_FREQ1(operation, center_freq);/* Todo: need to set correct center channel */
-	SET_VHT_OPERATION_ELE_CHL_CENTER_FREQ2(operation, 0);
-
-	_rtw_memcpy(operation + 3, pvhtpriv->vht_mcs_map, 2);
-
-	rtw_set_ie(pbuf, EID_VHTOperation, 5, operation, &len);
-
-	return len;
-}
-
 u32	rtw_build_vht_op_mode_notify_ie(_adapter *padapter, u8 *pbuf, u8 bw)
 {
 	/* struct registry_priv *pregistrypriv = &padapter->registrypriv; */
