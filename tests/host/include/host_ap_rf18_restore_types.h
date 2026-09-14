@@ -31,7 +31,6 @@ void host_rf18_set_reg(u32 path, u32 val);
 void host_rf18_set_union_ok(u8 ok, u8 ch, u8 bw, u8 offset);
 u8 host_rf18_set_channel_called(void);
 void host_rf18_last_set_channel(u8 *ch, u8 *offset, u8 *bw);
-u8 host_rf18_hal_current_channel(void);
 
 void rtw_check_restore_rf18(_adapter *padapter);
 
