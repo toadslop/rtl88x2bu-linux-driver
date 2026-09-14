@@ -103,6 +103,8 @@ void update_bmc_sta(_adapter *padapter)
 
 		psta->ieee8021x_blocked = 0;
 
+		/* psta->dot118021XPrivacy = _NO_PRIVACY_; */ /* !!! remove it, because it has been set before this. */
+
 		_rtw_memset((void *)&psta->sta_stats, 0, sizeof(struct stainfo_stats));
 
 		supportRateNum = rtw_get_rateset_len((u8 *)&pcur_network->SupportedRates);
