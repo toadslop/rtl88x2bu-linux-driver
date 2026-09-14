@@ -38,6 +38,8 @@ typedef size_t SIZE_PTR;
 #define RTW_ACL_MODE_DENY_UNLESS_LISTED 2
 #define RTW_PRE_LINK_STA_NUM 8
 #define WIFI_FW_PRE_LINK 0x00000800
+#define WIFI_ASOC_STATE 0x00000001
+#define WIFI_AP_STATE 0x00000010
 #define HOST_STA_MGT_MAX_STA 32
 #define HOST_STA_MGT_NUM_STA 4
 #define SESSION_TRACKER_REG_ID_NUM 1
@@ -319,6 +321,11 @@ static inline int _rtw_queue_empty(_queue *queue)
 	return queue->queue.next == &queue->queue;
 }
 
+static inline int rtw_is_list_empty(_list *h)
+{
+	return h->next == h;
+}
+
 static inline u16 ntohs(u16 val)
 {
 	return (u16)(((val & 0xff) << 8) | ((val >> 8) & 0xff));
@@ -327,6 +334,13 @@ static inline u16 ntohs(u16 val)
 static inline int IS_MCAST(const u8 *da)
 {
 	return (da[0] & 0x01) != 0;
+}
+
+static inline int MacAddr_isBcst(const u8 *addr)
+{
+	u8 bc[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+
+	return _rtw_memcmp(addr, bc, ETH_ALEN);
 }
 
 static inline u32 wifi_mac_hash(const u8 *mac)
@@ -348,7 +362,6 @@ static inline u32 wifi_mac_hash(const u8 *mac)
 
 int rtw_check_invalid_mac_address(const u8 *mac, u8 check_local_bit);
 struct sta_info *rtw_get_stainfo(struct sta_priv *stapriv, const u8 *hwaddr);
-void rtw_free_stainfo(_adapter *padapter, struct sta_info *psta);
 
 void host_sta_mgt_acl_reset(_adapter *adapter);
 void host_sta_mgt_acl_set_mode(_adapter *adapter, u8 period, int mode);
@@ -381,6 +394,15 @@ int host_sta_mgt_alloc_free_count(_adapter *adapter);
 void host_sta_mgt_free_reset(_adapter *adapter);
 int host_sta_mgt_free_setup(_adapter *adapter);
 struct macid_ctl_t *adapter_to_macidctl(_adapter *adapter);
+
+void rtw_mi_update_iface_status(struct mlme_priv *pmlmepriv, u8 flags);
+void rtw_hal_set_odm_var(_adapter *padapter, int var, struct sta_info *psta,
+			 u8 val);
+void rtw_release_macid(_adapter *padapter, struct sta_info *psta);
+void rtw_tim_map_clear(_adapter *padapter, u8 *map, u16 aid);
+void rtw_free_stainfo_flush_xmit(_adapter *padapter, struct sta_info *psta);
+void rtw_free_stainfo_flush_recv(_adapter *padapter, struct sta_info *psta);
+u32 rtw_free_stainfo(_adapter *padapter, struct sta_info *psta);
 
 void rtw_st_ctl_init(struct st_ctl_t *st_ctl);
 void rtw_st_ctl_deinit(struct st_ctl_t *st_ctl);

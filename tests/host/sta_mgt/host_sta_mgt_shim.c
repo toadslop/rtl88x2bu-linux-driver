@@ -53,13 +53,13 @@ struct sta_info *rtw_get_stainfo(struct sta_priv *stapriv, const u8 *hwaddr)
 	return slot ? &slot->sta : NULL;
 }
 
-void rtw_free_stainfo(_adapter *padapter, struct sta_info *psta)
+u32 rtw_free_stainfo(_adapter *padapter, struct sta_info *psta)
 {
 	int i;
 	struct sta_priv *stapriv;
 
 	if (!psta)
-		return;
+		return _SUCCESS;
 	if (padapter && psta->cmn.aid > 0) {
 		stapriv = &padapter->stapriv;
 		if (stapriv->sta_aid &&
@@ -69,9 +69,10 @@ void rtw_free_stainfo(_adapter *padapter, struct sta_info *psta)
 	for (i = 0; i < HOST_STA_MGT_MAX_STA; i++) {
 		if (&host_sta_pool[i].sta == psta) {
 			memset(&host_sta_pool[i], 0, sizeof(host_sta_pool[i]));
-			return;
+			return _SUCCESS;
 		}
 	}
+	return _SUCCESS;
 }
 
 void host_sta_mgt_acl_reset(_adapter *adapter)
