@@ -11,14 +11,14 @@
     unreachable_pub
 )]
 
-use core::ffi::c_void;
+use core::ffi::{c_int, c_void};
 
 type U8 = u8;
 type Adapter = c_void;
 type StaInfo = c_void;
 
-const _SUCCESS: i32 = 0;
-const _FAIL: i32 = -1;
+const _SUCCESS: c_int = 1;
+const _FAIL: c_int = 0;
 
 #[cfg(host_ap_aka_chk_test)]
 const WIFI_SLEEP_STATE: u32 = 0x00000004;
