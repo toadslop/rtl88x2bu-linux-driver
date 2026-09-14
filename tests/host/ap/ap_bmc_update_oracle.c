@@ -35,6 +35,19 @@ static u8 get_lowest_rate_idx(u64 mask)
 	return get_lowest_rate_idx_ex(mask, 0);
 }
 
+#ifndef CONFIG_BMC_TX_LOW_RATE
+static u8 get_highest_rate_idx(u64 mask)
+{
+	int i;
+
+	for (i = 63; i >= 0; i--) {
+		if ((mask >> i) & 0x01)
+			return (u8)i;
+	}
+	return 0;
+}
+#endif
+
 /* Legacy DESC rates 0x00–0x0b — same mapping as hal/hal_com.c */
 static const u8 _hw_rate_to_m_rate[12] = {
 	MGN_1M, MGN_2M, MGN_5_5M, MGN_11M, MGN_6M, MGN_9M, MGN_12M, MGN_18M,
@@ -151,7 +164,7 @@ void rtw_init_bmc_sta_tx_rate(struct _adapter *padapter, struct sta_info *psta)
 		else
 			rate_idx = get_lowest_rate_idx(psta->cmn.ra_info.ramask);
 #else
-		rate_idx = get_lowest_rate_idx(psta->cmn.ra_info.ramask);
+		rate_idx = get_highest_rate_idx(psta->cmn.ra_info.ramask);
 #endif
 		psta->init_rate = (rate_idx < 12) ? brate[rate_idx] : MGN_1M;
 	}
