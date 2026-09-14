@@ -9,6 +9,8 @@ librust_sta_mgt_stctl.a
 test_sta_mgt_free_mfree_rust
 test_sta_mgt_free_init_rust
 test_sta_mgt_free_deinit_rust
+test_sta_mgt_free_bcmc_rust
 librust_sta_mgt_free_mfree.a
 librust_sta_mgt_free_init.a
 librust_sta_mgt_free_deinit.a
+librust_sta_mgt_free_bcmc.a
