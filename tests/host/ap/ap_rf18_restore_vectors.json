@@ -19,7 +19,7 @@
     {
       "name": "rf0_zero_use_mlme",
       "reg0": 0,
-      "reg1": 256,
+      "reg1": 1,
       "union_ok": 0,
       "union_ch": 0,
       "union_bw": 0,

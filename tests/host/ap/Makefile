@@ -55,8 +55,10 @@ AKA_CHK_CFLAGS := $(BCN_UPDATE_CFLAGS) -DCONFIG_ACTIVE_KEEP_ALIVE_CHECK \
 	-DHOST_AP_AKA_CHK_TEST -I$(CORE)
 AP_AKA_CHK_SRC := $(CORE)/rtw_ap_aka_chk.c
 AKA_CHK_DEPS := host_aka_chk_shim.c
-RF18_RESTORE_CFLAGS := $(BCN_UPDATE_CFLAGS) -DRTW_CONFIG_RFREG18_WA -I$(CORE)
-RF18_RESTORE_DEPS := ap_rf18_restore_oracle.c host_rf18_restore_shim.c
+RF18_RESTORE_CFLAGS := $(BCN_UPDATE_CFLAGS) -DRTW_CONFIG_RFREG18_WA \
+	-DHOST_AP_RF18_RESTORE_TEST -I$(CORE)
+AP_RF18_RESTORE_SRC := $(CORE)/rtw_ap_rf18_restore.c
+RF18_RESTORE_DEPS := host_rf18_restore_shim.c
 
 .PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore clean
 
@@ -119,9 +121,9 @@ test-aka-chk: test_ap_aka_chk
 test-rf18-restore: test_ap_rf18_restore
 	./test_ap_rf18_restore ap_rf18_restore_vectors.json
 
-test_ap_rf18_restore: test_ap_rf18_restore.c $(HOST_JSON) $(RF18_RESTORE_DEPS)
+test_ap_rf18_restore: test_ap_rf18_restore.c $(HOST_JSON) $(AP_RF18_RESTORE_SRC) $(RF18_RESTORE_DEPS)
 	$(CC) $(RF18_RESTORE_CFLAGS) -o $@ test_ap_rf18_restore.c $(HOST_JSON) \
-		$(RF18_RESTORE_DEPS)
+		$(AP_RF18_RESTORE_SRC) $(RF18_RESTORE_DEPS)
 
 test-rust-aka-chk: test_ap_aka_chk_rust
 	./test_ap_aka_chk_rust ap_aka_chk_vectors.json
