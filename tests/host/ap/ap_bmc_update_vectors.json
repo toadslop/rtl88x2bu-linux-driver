@@ -1,0 +1,9 @@
+{
+  "vectors": [
+    {"name": "init_fixed_bmc_rate", "fn": "rtw_init_bmc_sta_tx_rate", "ap_mode": 1, "bmc_tx_rate": 96, "expect_init_rate": 96},
+    {"name": "init_ramask_lowest_6m", "fn": "rtw_init_bmc_sta_tx_rate", "ap_mode": 1, "ramask": 16, "expect_init_rate": 12},
+    {"name": "init_not_ap_noop", "fn": "rtw_init_bmc_sta_tx_rate", "seed_init_rate": 99, "expect_init_rate": 99},
+    {"name": "update_fixed_bmc_rate", "fn": "rtw_update_bmc_sta_tx_rate", "bmc_tx_rate": 96, "asoc_sta_count": 5, "expect_init_rate": 96},
+    {"name": "update_asoc_le2_keep", "fn": "rtw_update_bmc_sta_tx_rate", "asoc_sta_count": 2, "seed_init_rate": 99, "expect_init_rate": 99}
+  ]
+}
