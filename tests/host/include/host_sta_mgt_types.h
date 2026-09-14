@@ -267,6 +267,7 @@ void rtw_pre_link_sta_ctl_deinit(struct sta_priv *stapriv);
 void rtw_set_rx_chk_limit(_adapter *adapter, int limit);
 void _cancel_timer_ex(void *timer);
 
+#ifndef HOST_STA_MGT_LOCK_SHIM_EXPORT
 static inline void _enter_critical_bh(_lock *plock, _irqL *pirqL)
 {
 	(void)plock;
@@ -278,6 +279,7 @@ static inline void _exit_critical_bh(_lock *plock, _irqL *pirqL)
 	(void)plock;
 	(void)pirqL;
 }
+#endif
 
 static inline struct _list *get_next(_list *list)
 {

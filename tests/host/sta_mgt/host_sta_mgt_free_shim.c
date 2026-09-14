@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define HOST_STA_MGT_LOCK_SHIM_EXPORT 1
 #include "host_sta_mgt_types.h"
 
 void *rtw_zvmalloc(u32 sz)
@@ -72,4 +73,17 @@ int host_sta_mgt_free_setup(_adapter *adapter)
 {
 	host_sta_mgt_free_reset(adapter);
 	return 0;
+}
+
+/* Exported for Rust L2 oracles (header provides static inline for C TUs). */
+void _enter_critical_bh(_lock *plock, _irqL *pirqL)
+{
+	(void)plock;
+	(void)pirqL;
+}
+
+void _exit_critical_bh(_lock *plock, _irqL *pirqL)
+{
+	(void)plock;
+	(void)pirqL;
 }
