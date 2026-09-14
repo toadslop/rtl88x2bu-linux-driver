@@ -4,8 +4,8 @@
 
 #include "host_types.h"
 
-#define _SUCCESS 0
-#define _FAIL (-1)
+#define _SUCCESS 1
+#define _FAIL 0
 #define _FALSE 0
 #define _TRUE 1
 

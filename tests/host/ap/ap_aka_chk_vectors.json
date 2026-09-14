@@ -4,8 +4,8 @@
       "name": "ap_awake_nulldata",
       "ap_mode": 1,
       "sta_sleep": 0,
-      "nulldata_ret": 0,
-      "expect_ret": 0,
+      "nulldata_ret": 1,
+      "expect_ret": 1,
       "expect_ps": 3,
       "expect_nulldata": 1
     },
@@ -13,8 +13,8 @@
       "name": "ap_sleep_nulldata",
       "ap_mode": 1,
       "sta_sleep": 1,
-      "nulldata_ret": 0,
-      "expect_ret": 0,
+      "nulldata_ret": 1,
+      "expect_ret": 1,
       "expect_ps": 1,
       "expect_nulldata": 1
     },
@@ -22,8 +22,8 @@
       "name": "not_ap_skips",
       "ap_mode": 0,
       "sta_sleep": 0,
-      "nulldata_ret": 0,
-      "expect_ret": -1,
+      "nulldata_ret": 1,
+      "expect_ret": 0,
       "expect_ps": -1,
       "expect_nulldata": 0
     },
@@ -31,8 +31,8 @@
       "name": "nulldata_fail",
       "ap_mode": 1,
       "sta_sleep": 0,
-      "nulldata_ret": -1,
-      "expect_ret": -1,
+      "nulldata_ret": 0,
+      "expect_ret": 0,
       "expect_ps": 3,
       "expect_nulldata": 1
     }
