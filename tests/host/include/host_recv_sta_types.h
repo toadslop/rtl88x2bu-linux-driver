@@ -66,9 +66,8 @@ static inline u16 le16_to_cpu(u16 x)
 #define FUNC_ADPT_FMT "%p"
 #define FUNC_ADPT_ARG(adapter) (adapter)
 
-typedef unsigned int uint;
-typedef int sint;
 typedef u32 systime;
+typedef int sint;
 
 struct stainfo_stats {
 	systime last_rx_time;
@@ -155,9 +154,9 @@ static inline u8 *get_bssid(struct mlme_priv *pmlmepriv)
 	return pmlmepriv->cur_network.network.MacAddress;
 }
 
-static inline sint get_recvframe_len(union recv_frame *precvframe)
+static inline int get_recvframe_len(union recv_frame *precvframe)
 {
-	return (sint)precvframe->u.hdr.len;
+	return (int)precvframe->u.hdr.len;
 }
 
 static inline u8 *get_recvframe_data(union recv_frame *precvframe)

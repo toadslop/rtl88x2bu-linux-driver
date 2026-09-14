@@ -1,0 +1,42 @@
+{
+  "vectors": [
+    {
+      "name": "count_stats_unicast",
+      "fn": "count_rx_stats",
+      "frame_len": 128,
+      "data_rate": 4,
+      "priority": 2,
+      "ra": "020000000000",
+      "dst": "020000000001",
+      "expect_rx_bytes": 128,
+      "expect_sta_pkts": 1,
+      "expect_sta_bytes": 128,
+      "expect_rate_cnt": 1,
+      "expect_qos_pkts": 1
+    },
+    {
+      "name": "validate_to_ds2_ok",
+      "fn": "validate_hdr",
+      "to_fr_ds": 2,
+      "fw_state": 1,
+      "frame_len": 24,
+      "addr1": "020000000001",
+      "addr2": "020000000002",
+      "addr3": "020000000003",
+      "sta_mac": "020000000002",
+      "expect_ret": 1
+    },
+    {
+      "name": "validate_from_ds0_ok",
+      "fn": "validate_hdr",
+      "to_fr_ds": 0,
+      "fw_state": 1,
+      "frame_len": 24,
+      "addr1": "020000000001",
+      "addr2": "020000000003",
+      "addr3": "020000000003",
+      "sta_mac": "020000000003",
+      "expect_ret": 1
+    }
+  ]
+}
