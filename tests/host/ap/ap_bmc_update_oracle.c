@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 /* Host oracle — sync with core/rtw_ap_bmc_update.c */
-#include "host_ap_bmc_rate_types.h"
+#include "host_ap_bmc_update_types.h"
 
 #define MGN_UNKNOWN 0x00
 #define MGN_1M 0x02
@@ -41,6 +41,48 @@ static u8 hw_rate_to_m_rate(u8 hw_rate)
 struct sta_info *rtw_get_bcmc_stainfo(struct _adapter *padapter)
 {
 	return padapter->stapriv.host_bcmc_sta;
+}
+
+u8 rtw_ap_find_bmc_rate(struct _adapter *adapter, u8 tx_rate)
+{
+	u8 tx_ini_rate = 0x04;
+	u8 band = GET_HAL_DATA(adapter)->current_band_type;
+
+	switch (tx_rate) {
+	case 0x08:
+		tx_ini_rate = 0x08;
+		break;
+	case 0x04:
+		tx_ini_rate = 0x04;
+		break;
+	default:
+		break;
+	}
+	if (band == BAND_ON_5G && tx_ini_rate < 0x04)
+		tx_ini_rate = 0x04;
+	return tx_ini_rate;
+}
+
+u8 rtw_ap_find_mini_tx_rate(struct _adapter *adapter)
+{
+	_irqL irqL;
+	struct _list *phead, *plist;
+	u8 mini = 0x53, sta_tx_rate;
+	struct sta_info *psta;
+	struct sta_priv *pstapriv = &adapter->stapriv;
+
+	_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+	phead = &pstapriv->asoc_list;
+	plist = get_next(phead);
+	while (rtw_end_of_queue_search(phead, plist) == _FALSE) {
+		psta = LIST_CONTAINOR(plist, struct sta_info, asoc_list);
+		plist = get_next(plist);
+		sta_tx_rate = psta->cmn.ra_info.curr_tx_rate & 0x7F;
+		if (sta_tx_rate < mini)
+			mini = sta_tx_rate;
+	}
+	_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+	return mini;
 }
 
 #ifdef CONFIG_BMC_TX_RATE_SELECT

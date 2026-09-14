@@ -220,8 +220,8 @@ test_ap_bmc_rate_rust: test_ap_bmc_rate.c librust_ap_bmc_rate.a $(HOST_JSON)
 test-bmc-update: test_ap_bmc_update
 	./test_ap_bmc_update ap_bmc_update_vectors.json
 
-test_ap_bmc_update: test_ap_bmc_update.c ap_bmc_update_oracle.c ap_bmc_rate_oracle.c $(HOST_JSON)
-	$(CC) $(BMC_UPDATE_CFLAGS) -o $@ test_ap_bmc_update.c ap_bmc_update_oracle.c ap_bmc_rate_oracle.c $(HOST_JSON)
+test_ap_bmc_update: test_ap_bmc_update.c ap_bmc_update_oracle.c $(HOST_JSON)
+	$(CC) $(BMC_UPDATE_CFLAGS) -o $@ test_ap_bmc_update.c ap_bmc_update_oracle.c $(HOST_JSON)
 
 test_ap_sta_ie: test_ap_sta_ie.c $(AP_STA_IE_SRC) $(HOST_JSON)
 	$(CC) $(STA_IE_CFLAGS) -o $@ test_ap_sta_ie.c $(AP_STA_IE_SRC) $(HOST_JSON)

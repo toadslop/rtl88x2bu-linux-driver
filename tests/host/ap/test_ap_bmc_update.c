@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 #include <stdio.h>
 #include <string.h>
-#include "host_ap_bmc_rate_types.h"
-
-#define MGN_UNKNOWN 0x00
+#include "host_ap_bmc_update_types.h"
 #include "host_vector_json.h"
 
 #define MAX_VECTORS 8
