@@ -25,6 +25,7 @@ void rtw_ap_expire_asoc_list_scan(_adapter *padapter, char *chk_alive_list, u8 *
 	phead = &pstapriv->asoc_list;
 	plist = get_next(phead);
 
+	/* check asoc_queue */
 #ifdef DBG_EXPIRATION_CHK
 	if (rtw_end_of_queue_search(phead, plist) == _FALSE) {
 		RTW_INFO(FUNC_ADPT_FMT" asoc_list, cnt:%u\n"
@@ -51,6 +52,9 @@ void rtw_ap_expire_asoc_list_scan(_adapter *padapter, char *chk_alive_list, u8 *
 
 #if !defined(CONFIG_ACTIVE_KEEP_ALIVE_CHECK) && defined(CONFIG_80211N_HT)
 		if ((psta->flags & WLAN_STA_HT) && (psta->htpriv.agg_enable_bitmap || psta->under_exist_checking)) {
+			/* check sta by delba(addba) for 11n STA */
+			/* ToDo: use CCX report to check for all STAs */
+			/* RTW_INFO("asoc check by DELBA/ADDBA! (pstapriv->expire_to=%d s)(psta->expire_to=%d s), [%02x, %d]\n", pstapriv->expire_to*2, psta->expire_to*2, psta->htpriv.agg_enable_bitmap, psta->under_exist_checking); */
 			if (psta->expire_to <= (pstapriv->expire_to - 50)) {
 				RTW_INFO("asoc expire by DELBA/ADDBA! (%d s)\n", (pstapriv->expire_to - psta->expire_to) * 2);
 				psta->under_exist_checking = 0;
@@ -58,12 +62,13 @@ void rtw_ap_expire_asoc_list_scan(_adapter *padapter, char *chk_alive_list, u8 *
 			} else if (psta->expire_to <= (pstapriv->expire_to - 3) && (psta->under_exist_checking == 0)) {
 				RTW_INFO("asoc check by DELBA/ADDBA! (%d s)\n", (pstapriv->expire_to - psta->expire_to) * 2);
 				psta->under_exist_checking = 1;
-				send_delba(padapter, 1, psta->cmn.mac_addr);
-				psta->htpriv.agg_enable_bitmap = 0x0;
-				psta->htpriv.candidate_tid_bitmap = 0x0;
+				/* tear down TX AMPDU */
+				send_delba(padapter, 1, psta->cmn.mac_addr);/*  */ /* originator */
+				psta->htpriv.agg_enable_bitmap = 0x0;/* reset */
+				psta->htpriv.candidate_tid_bitmap = 0x0;/* reset */
 			}
 		}
-#endif
+#endif /* !defined(CONFIG_ACTIVE_KEEP_ALIVE_CHECK) && defined(CONFIG_80211N_HT) */
 
 		if (psta->expire_to <= 0) {
 			struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
@@ -87,9 +92,10 @@ void rtw_ap_expire_asoc_list_scan(_adapter *padapter, char *chk_alive_list, u8 *
 			} else if ((psta->keep_alive_trycnt > KEEP_ALIVE_TRYCNT) && !(psta->state & WIFI_STA_ALIVE_CHK_STATE))
 				psta->keep_alive_trycnt = 0;
 			if ((psta->htpriv.ht_option == _TRUE) && (psta->htpriv.ampdu_enable == _TRUE)) {
-				uint priority = 1;
+				uint priority = 1; /* test using BK */
 				u8 issued = 0;
 
+				/* issued = (psta->htpriv.agg_enable_bitmap>>priority)&0x1; */
 				issued |= (psta->htpriv.candidate_tid_bitmap >> priority) & 0x1;
 
 				if (0 == issued) {
@@ -97,11 +103,13 @@ void rtw_ap_expire_asoc_list_scan(_adapter *padapter, char *chk_alive_list, u8 *
 						psta->htpriv.candidate_tid_bitmap |= BIT((u8)priority);
 
 						if (psta->state & WIFI_SLEEP_STATE)
-							psta->expire_to = 2;
+							psta->expire_to = 2; /* 2x2=4 sec */
 						else
-							psta->expire_to = 1;
+							psta->expire_to = 1; /* 2 sec */
 
 						psta->state |= WIFI_STA_ALIVE_CHK_STATE;
+
+						/* add_ba_hdl(padapter, (u8*)paddbareq_parm); */
 
 						RTW_INFO("issue addba_req to check if sta alive, keep_alive_trycnt=%d\n", psta->keep_alive_trycnt);
 
@@ -121,13 +129,17 @@ void rtw_ap_expire_asoc_list_scan(_adapter *padapter, char *chk_alive_list, u8 *
 				RTW_INFO("change to another methods to check alive if staion is at ps mode\n");
 			}
 
-#endif
-#endif
+#endif /* CONFIG_80211N_HT */
+#endif /* CONFIG_ACTIVE_KEEP_ALIVE_CHECK	 */
 			if (psta->state & WIFI_SLEEP_STATE) {
 				if (!(psta->state & WIFI_STA_ALIVE_CHK_STATE)) {
+					/* to check if alive by another methods if staion is at ps mode.					 */
 					psta->expire_to = pstapriv->expire_to;
 					psta->state |= WIFI_STA_ALIVE_CHK_STATE;
 
+					/* RTW_INFO("alive chk, sta:" MAC_FMT " is at ps mode!\n", MAC_ARG(psta->cmn.mac_addr)); */
+
+					/* to update bcn with tim_bitmap for this station */
 					rtw_tim_map_set(padapter, pstapriv->tim_bitmap, psta->cmn.aid);
 					update_beacon(padapter, _TIM_IE_, NULL, _TRUE, 0);
 
@@ -145,6 +157,7 @@ void rtw_ap_expire_asoc_list_scan(_adapter *padapter, char *chk_alive_list, u8 *
 				continue;
 			}
 		} else {
+			/* TODO: Aging mechanism to digest frames in sleep_q to avoid running out of xmitframe */
 			if (psta->sleepq_len > (NR_XMITFRAME / pstapriv->asoc_list_cnt)
 			    && padapter->xmitpriv.free_xmitframe_cnt < ((NR_XMITFRAME / pstapriv->asoc_list_cnt) / 2)
 			   ) {
