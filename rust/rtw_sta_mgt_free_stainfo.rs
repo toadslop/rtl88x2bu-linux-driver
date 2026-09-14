@@ -103,15 +103,9 @@ pub extern "C" fn rtw_free_stainfo(padapter: *mut u8, psta: *mut u8) -> u32 {
         );
         rtw_mi_update_iface_status(padapter.add(ADAPTER_MLMEPRIV_OFF), 0);
 
-        _enter_critical_bh(
-            field_mut(psta, STA_LOCK_OFF),
-            core::ptr::addr_of_mut!(irq),
-        );
+        _enter_critical_bh(field_mut(psta, STA_LOCK_OFF), core::ptr::addr_of_mut!(irq));
         *field_mut::<c_uint>(psta, STA_STATE_OFF) &= !WIFI_ASOC_STATE;
-        _exit_critical_bh(
-            field_mut(psta, STA_LOCK_OFF),
-            core::ptr::addr_of_mut!(irq),
-        );
+        _exit_critical_bh(field_mut(psta, STA_LOCK_OFF), core::ptr::addr_of_mut!(irq));
 
         rtw_free_stainfo_flush_xmit(padapter, psta);
         rtw_free_stainfo_flush_recv(padapter, psta);
