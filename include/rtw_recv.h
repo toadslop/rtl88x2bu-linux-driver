@@ -870,5 +870,6 @@ sint recv_ucast_pn_decache(union recv_frame *precv_frame);
 sint recv_bcast_pn_decache(union recv_frame *precv_frame);
 s32 pre_recv_entry(union recv_frame *precvframe, u8 *pphy_status);
 void count_rx_stats(_adapter *padapter, union recv_frame *prframe, struct sta_info *sta);
+int rtw_sta_rx_data_validate_hdr(_adapter *adapter, union recv_frame *rframe, struct sta_info **sta);
 
 #endif
