@@ -27,3 +27,4 @@ librust_ap_rf18_restore.a
 librust_ap_sta_alive.a
 librust_ap_expire_asoc.a
 librust_ap_expire_auth.a
+test_ap_bmc_update

@@ -43,6 +43,7 @@ STA_IE_WMM_HT_DEPS := $(IE_ORACLE)
 STA_IE_VHT_MULTIAP_DEPS := ap_sta_ie_vht_multiap_oracle.c $(IE_ORACLE)
 
 BMC_RATE_CFLAGS := $(CFLAGS) -DCONFIG_BMC_TX_RATE_SELECT
+BMC_UPDATE_CFLAGS := $(BCN_UPDATE_CFLAGS) -DCONFIG_BMC_TX_RATE_SELECT -DCONFIG_BMC_TX_LOW_RATE
 
 AP_STA_ALIVE_SRC := $(CORE)/rtw_ap_sta_alive.c
 STA_ALIVE_CFLAGS := $(BCN_UPDATE_CFLAGS) -DHOST_AP_STA_ALIVE_TEST -I$(CORE)
@@ -63,11 +64,11 @@ AP_STA_RA_SRC := $(CORE)/rtw_ap_sta_ra.c
 STA_RA_CFLAGS := $(BCN_UPDATE_CFLAGS) -DHOST_AP_STA_RA_TEST -I$(CORE)
 STA_RA_DEPS :=
 
-.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore test-rust-rf18-restore test-sta-ra clean
+.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bmc-update test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore test-rust-rf18-restore test-sta-ra clean
 
 all: test
 
-test: test-c test-rust test-sta-ie test-bcn-ie test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore test-rust-rf18-restore test-sta-ra test-bmc-rate
+test: test-c test-rust test-sta-ie test-bcn-ie test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore test-rust-rf18-restore test-sta-ra test-bmc-rate test-bmc-update
 
 test-c: test_ap_rest
 	./test_ap_rest ap_rest_vectors.json
@@ -216,6 +217,12 @@ librust_ap_bmc_rate.a: $(RUST_AP_REST)
 test_ap_bmc_rate_rust: test_ap_bmc_rate.c librust_ap_bmc_rate.a $(HOST_JSON)
 	$(CC) $(BMC_RATE_CFLAGS) -DRUST_AP_BMC_RATE_ORACLE -o $@ test_ap_bmc_rate.c $(HOST_JSON) librust_ap_bmc_rate.a
 
+test-bmc-update: test_ap_bmc_update
+	./test_ap_bmc_update ap_bmc_update_vectors.json
+
+test_ap_bmc_update: test_ap_bmc_update.c ap_bmc_update_oracle.c $(HOST_JSON)
+	$(CC) $(BMC_UPDATE_CFLAGS) -o $@ test_ap_bmc_update.c ap_bmc_update_oracle.c $(HOST_JSON)
+
 test_ap_sta_ie: test_ap_sta_ie.c $(AP_STA_IE_SRC) $(HOST_JSON)
 	$(CC) $(STA_IE_CFLAGS) -o $@ test_ap_sta_ie.c $(AP_STA_IE_SRC) $(HOST_JSON)
 
@@ -245,7 +252,7 @@ clean:
 		test_ap_bcn_ie test_ap_bcn_update test_ap_sta_alive test_ap_sta_alive_rust \
 		test_ap_expire_auth test_ap_expire_auth_rust test_ap_expire_asoc test_ap_expire_asoc_rust \
 		test_ap_aka_chk test_ap_aka_chk_rust test_ap_rf18_restore test_ap_rf18_restore_rust \
-		test_ap_sta_ra test_ap_bmc_rate test_ap_bmc_rate_rust \
+		test_ap_sta_ra test_ap_bmc_rate test_ap_bmc_rate_rust test_ap_bmc_update \
 		librust_ap_rest.a librust_ap_bmc_rate.a librust_ap_sta_alive.a \
 		librust_ap_expire_asoc.a librust_ap_expire_auth.a librust_ap_aka_chk.a \
 		librust_ap_rf18_restore.a
