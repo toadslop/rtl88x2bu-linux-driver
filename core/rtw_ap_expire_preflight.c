@@ -25,8 +25,13 @@ u8 rtw_ap_expire_timeout_preflight(_adapter *padapter)
 	if (MLME_IS_MESH(padapter)
 	    && check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE)
 	) {
+		struct rtw_mesh_cfg *mcfg = &padapter->mesh_cfg;
+
 		rtw_mesh_path_expire(padapter);
 
+		/* TBD: up layer timeout mechanism */
+		/* if (!mcfg->plink_timeout)
+			return; */
 #ifndef CONFIG_ACTIVE_KEEP_ALIVE_CHECK
 		return _FALSE;
 #endif
@@ -38,6 +43,9 @@ u8 rtw_ap_expire_timeout_preflight(_adapter *padapter)
 #endif
 
 #ifdef CONFIG_MCC_MODE
+	/* then driver may check fail due to not recv client's frame under sitesurvey,
+	 * don't expire timeout chk under MCC under sitesurvey */
+
 	if (rtw_hal_mcc_link_status_chk(padapter, __func__) == _FALSE)
 		return _FALSE;
 #endif
