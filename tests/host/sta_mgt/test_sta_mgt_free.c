@@ -115,25 +115,32 @@ int main(int argc, char **argv)
 			      parse_vector_object, &nvectors))
 		return 2;
 
+	size_t executed = 0;
+
 	for (i = 0; i < nvectors; i++) {
 #ifdef RUST_STA_MGT_FREE_MFREE_ONLY
 		if (strcmp(vectors[i].fn, "rtw_mfree_stainfo"))
 			continue;
 #endif
-#ifdef RUST_STA_MGT_FREE_INIT_ORACLE
-		if (strcmp(vectors[i].fn, "_rtw_init_sta_priv"))
-			continue;
-#endif
-#ifdef RUST_STA_MGT_FREE_DEINIT_ORACLE
+#if defined(RUST_STA_MGT_FREE_DEINIT_ORACLE)
 		if (strcmp(vectors[i].fn, "init_free_sta_priv"))
+			continue;
+#elif defined(RUST_STA_MGT_FREE_INIT_ORACLE)
+		if (strcmp(vectors[i].fn, "_rtw_init_sta_priv"))
 			continue;
 #endif
 		if (run_vector(&vectors[i])) {
 			fprintf(stderr, "FAIL: %s\n", vectors[i].name);
 			return 1;
 		}
+		executed++;
 	}
 
-	printf("OK: %zu vectors\n", nvectors);
+	if (executed == 0) {
+		fprintf(stderr, "FAIL: no vectors executed (loaded %zu)\n", nvectors);
+		return 1;
+	}
+
+	printf("OK: %zu vectors (%zu executed)\n", nvectors, executed);
 	return 0;
 }

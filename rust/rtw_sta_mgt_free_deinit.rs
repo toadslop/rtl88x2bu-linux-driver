@@ -11,7 +11,7 @@
     unreachable_pub
 )]
 
-use std::os::raw::c_int;
+use std::os::raw::{c_int, c_ulong};
 
 const _SUCCESS: u32 = 1;
 const _FALSE: u32 = 0;
@@ -40,6 +40,8 @@ struct List {
 }
 
 extern "C" {
+    fn _enter_critical_bh(plock: *mut c_int, pirql: *mut c_ulong);
+    fn _exit_critical_bh(plock: *mut c_int, pirql: *mut c_ulong);
     fn _cancel_timer_ex(timer: *mut u8);
     fn rtw_mfree_sta_priv_lock(stapriv: *mut u8);
     fn rtw_macaddr_acl_deinit(adapter: *mut u8, index: c_int);
@@ -63,6 +65,9 @@ pub extern "C" fn _rtw_free_sta_priv(stapriv: *mut u8) -> u32 {
             return _SUCCESS;
         }
         let sp = stapriv;
+        let mut irql: c_ulong = 0;
+        let hash_lock = field_mut::<c_int>(sp, SP_HASH_LOCK);
+        _enter_critical_bh(hash_lock, &mut irql);
         for index in 0..NUM_STA {
             let phead = field_mut::<List>(sp, SP_STA_HASH + index * core::mem::size_of::<List>());
             let mut plist = (*phead).next;
@@ -75,6 +80,7 @@ pub extern "C" fn _rtw_free_sta_priv(stapriv: *mut u8) -> u32 {
                 }
             }
         }
+        _exit_critical_bh(hash_lock, &mut irql);
 
         rtw_mfree_sta_priv_lock(sp);
 
