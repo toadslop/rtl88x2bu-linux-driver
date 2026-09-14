@@ -15,9 +15,6 @@
 use std::os::raw::c_int;
 
 #[cfg(host_sta_mgt_test)]
-const ETH_ALEN: usize = 6;
-
-#[cfg(host_sta_mgt_test)]
 mod host_layout {
     use super::*;
 
@@ -59,7 +56,7 @@ mod host_layout {
     #[repr(C)]
     pub struct CmnStaInfo {
         pub aid: u16,
-        pub mac_addr: [u8; ETH_ALEN],
+        pub mac_addr: [u8; 6],
     }
 
     #[repr(C)]
@@ -79,6 +76,13 @@ mod host_layout {
 
 #[cfg(host_sta_mgt_test)]
 use host_layout::{StaInfo, StaRecvPriv, StaXmitPriv};
+
+#[cfg(host_sta_mgt_test)]
+const STA_INFO_LOCK_OFF: usize = 12;
+#[cfg(host_sta_mgt_test)]
+const STA_INFO_XMIT_OFF: usize = 104;
+#[cfg(host_sta_mgt_test)]
+const STA_INFO_RECV_OFF: usize = 352;
 
 #[cfg(host_sta_mgt_test)]
 unsafe fn spinlock_free(lock: *mut c_int) {
@@ -108,8 +112,9 @@ pub extern "C" fn rtw_mfree_stainfo(psta: *mut StaInfo) {
         if psta.is_null() {
             return;
         }
-        spinlock_free(core::ptr::addr_of_mut!((*psta).lock));
-        free_sta_xmit_priv_lock(core::ptr::addr_of_mut!((*psta).sta_xmitpriv));
-        free_sta_recv_priv_lock(core::ptr::addr_of_mut!((*psta).sta_recvpriv));
+        let base = psta.cast::<u8>();
+        spinlock_free(base.add(STA_INFO_LOCK_OFF).cast());
+        free_sta_xmit_priv_lock(base.add(STA_INFO_XMIT_OFF).cast());
+        free_sta_recv_priv_lock(base.add(STA_INFO_RECV_OFF).cast());
     }
 }
