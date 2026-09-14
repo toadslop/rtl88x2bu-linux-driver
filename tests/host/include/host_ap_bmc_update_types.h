@@ -18,7 +18,12 @@ typedef int _lock;
 #define MGN_1M 0x02
 #define MGN_6M 0x0C
 #define MGN_48M 0x60
-#define WIFI_AP_STATE 0x08
+#define MGN_12M 0x18
+#define MGN_24M 0x30
+#define WIFI_AP_STATE 0x00000010U
+#define WIRELESS_11G 2U
+#define IsEnableHWOFDM(NetType) \
+	(((NetType) & (WIRELESS_11G | 0x00000020U)) ? _TRUE : _FALSE)
 
 struct _list {
 	struct _list *next;
@@ -51,6 +56,10 @@ struct mlme_priv {
 	u32 state;
 };
 
+struct mlme_ext_priv {
+	u32 cur_wireless_mode;
+};
+
 typedef struct {
 	u8 current_band_type;
 } HAL_DATA_TYPE;
@@ -59,6 +68,7 @@ struct _adapter {
 	HAL_DATA_TYPE hal_data;
 	struct sta_priv stapriv;
 	struct mlme_priv mlmepriv;
+	struct mlme_ext_priv mlmeextpriv;
 	u8 bmc_tx_rate;
 };
 

@@ -4,13 +4,14 @@
 #include "host_ap_bmc_update_types.h"
 #include "host_vector_json.h"
 
-#define MAX_VECTORS 8
+#define MAX_VECTORS 12
 #define MAX_NAME 48
 
 struct vector {
 	char name[MAX_NAME];
 	char fn[36];
 	int ap_mode, bmc_tx_rate, asoc_sta_count, seed_init_rate, expect_init_rate;
+	int wireless_mode;
 	u64 ramask;
 	u8 n_stas, sta_rates[HOST_BMC_MAX_STA];
 };
@@ -51,6 +52,8 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 		v->seed_init_rate = tmp;
 	if (!host_json_parse_int_in(obj, len, "expect_init_rate", &tmp))
 		v->expect_init_rate = tmp;
+	if (!host_json_parse_int_in(obj, len, "wireless_mode", &tmp))
+		v->wireless_mode = tmp;
 	return parse_sta_rates(obj, len, v);
 }
 
@@ -64,6 +67,7 @@ static int run_vector(const struct vector *v)
 	memset(&bcmc, 0, sizeof(bcmc));
 	if (v->ap_mode)
 		adapter.mlmepriv.state = WIFI_AP_STATE;
+	adapter.mlmeextpriv.cur_wireless_mode = (u32)v->wireless_mode;
 	adapter.bmc_tx_rate = (u8)v->bmc_tx_rate;
 	adapter.stapriv.asoc_sta_count = v->asoc_sta_count;
 	adapter.stapriv.host_bcmc_sta = &bcmc;
