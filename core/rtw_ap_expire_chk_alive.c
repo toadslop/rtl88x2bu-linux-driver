@@ -37,6 +37,7 @@ u8 rtw_ap_expire_chk_alive_process(_adapter *padapter, char *chk_alive_list, u8 
 	if (pmlmeext->active_keep_alive_check) {
 #ifdef CONFIG_MCC_MODE
 		if (MCC_EN(padapter)) {
+			/* driver doesn't switch channel under MCC */
 			if (rtw_hal_check_mcc_status(padapter, MCC_STATUS_DOING_MCC))
 				switch_channel_by_drv = _FALSE;
 		}
@@ -45,6 +46,7 @@ u8 rtw_ap_expire_chk_alive_process(_adapter *padapter, char *chk_alive_list, u8 
 		    || pmlmeext->cur_channel != union_ch)
 			switch_channel_by_drv = _FALSE;
 
+		/* switch to correct channel of current network  before issue keep-alive frames */
 		if (switch_channel_by_drv == _TRUE && rtw_get_oper_ch(padapter) != pmlmeext->cur_channel) {
 			backup_ch = rtw_get_oper_ch(padapter);
 			backup_bw = rtw_get_oper_bw(padapter);
@@ -54,6 +56,7 @@ u8 rtw_ap_expire_chk_alive_process(_adapter *padapter, char *chk_alive_list, u8 
 	}
 #endif
 
+	/* check loop */
 	for (i = 0; i < chk_alive_num; i++) {
 #ifdef CONFIG_ACTIVE_KEEP_ALIVE_CHECK
 		int ret = _FAIL;
@@ -73,6 +76,7 @@ u8 rtw_ap_expire_chk_alive_process(_adapter *padapter, char *chk_alive_list, u8 
 
 #ifdef CONFIG_ACTIVE_KEEP_ALIVE_CHECK
 		if (pmlmeext->active_keep_alive_check) {
+			/* issue active keep alive frame to check */
 			ret = issue_aka_chk_frame(padapter, psta);
 
 			psta->keep_alive_trycnt++;
@@ -106,6 +110,7 @@ u8 rtw_ap_expire_chk_alive_process(_adapter *padapter, char *chk_alive_list, u8 
 		_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
 	}
 
+	/* delete loop */
 	for (i = 0; i < chk_alive_num; i++) {
 		u8 sta_addr[ETH_ALEN];
 
@@ -126,6 +131,7 @@ u8 rtw_ap_expire_chk_alive_process(_adapter *padapter, char *chk_alive_list, u8 
 
 #ifdef CONFIG_ACTIVE_KEEP_ALIVE_CHECK
 	if (pmlmeext->active_keep_alive_check) {
+		/* back to the original operation channel */
 		if (switch_channel_by_drv == _TRUE && backup_ch > 0)
 			set_channel_bwmode(padapter, backup_ch, backup_offset, backup_bw);
 	}
