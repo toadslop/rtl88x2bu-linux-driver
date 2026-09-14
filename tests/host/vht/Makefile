@@ -40,7 +40,7 @@ BUILD_CFLAGS := $(BASE_CFLAGS) -DHOST_VHT_BUILD_TEST
 all: test
 
 test: test-c test-rust test-mcs-rate test-mcs-rate-rust test-vht20 test-vht20-rust \
-	test-restructure test-restructure-rust
+	test-restructure test-restructure-rust test-build-operation
 
 test-c: test_vht
 	./test_vht vht_vectors.json

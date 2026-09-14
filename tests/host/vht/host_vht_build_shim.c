@@ -20,7 +20,7 @@ u8 *rtw_set_ie(u8 *pbuf, int index, uint len, const u8 *source, uint *frlen)
 bool hal_chk_bw_cap(_adapter *adapter, u8 cap)
 {
 	(void)adapter;
-	return (host_vht_build_hal_bw_cap & cap) == cap;
+	return (host_vht_build_hal_bw_cap & cap) != 0;
 }
 
 u8 rtw_get_center_ch(u8 ch, u8 bw, u8 offset)

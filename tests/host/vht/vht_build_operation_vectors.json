@@ -3,7 +3,7 @@
     {
       "name": "20mhz_no_hal_80",
       "reg_bw_mode": 32,
-      "hal_bw_cap": 16,
+      "hal_bw_cap": 0,
       "mcs_map": "ffaa",
       "channel": 36,
       "expect_width": 0,
