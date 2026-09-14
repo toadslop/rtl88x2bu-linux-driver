@@ -1,7 +1,15 @@
 // SPDX-License-Identifier: GPL-2.0
 //! W3-79 `_rtw_init_sta_priv` host L2 oracle (see `core/rtw_sta_mgt_free.c`).
 
-#![allow(dead_code, improper_ctypes, missing_docs, non_camel_case_types, non_snake_case, non_upper_case_globals, unreachable_pub)]
+#![allow(
+    dead_code,
+    improper_ctypes,
+    missing_docs,
+    non_camel_case_types,
+    non_snake_case,
+    non_upper_case_globals,
+    unreachable_pub
+)]
 
 use std::os::raw::c_int;
 
@@ -86,12 +94,18 @@ unsafe fn init_fail(stapriv: *mut u8, max_aid: u16) {
     let sp = stapriv;
     let palloc = *field_mut::<*mut u8>(sp, SP_PALLOC);
     if !palloc.is_null() {
-        rtw_vmfree(palloc, (STA_INFO_SIZE * NUM_STA + MEM_ALIGNMENT_OFFSET) as u32);
+        rtw_vmfree(
+            palloc,
+            (STA_INFO_SIZE * NUM_STA + MEM_ALIGNMENT_OFFSET) as u32,
+        );
         *field_mut::<*mut u8>(sp, SP_PALLOC) = core::ptr::null_mut();
     }
     let sta_aid = *field_mut::<*mut u8>(sp, SP_STA_AID);
     if !sta_aid.is_null() {
-        rtw_mfree(sta_aid, max_aid as u32 * core::mem::size_of::<*mut u8>() as u32);
+        rtw_mfree(
+            sta_aid,
+            max_aid as u32 * core::mem::size_of::<*mut u8>() as u32,
+        );
         *field_mut::<*mut u8>(sp, SP_STA_AID) = core::ptr::null_mut();
     }
     let dz = *field_mut::<*mut u8>(sp, SP_DZ_BMP);
@@ -130,7 +144,10 @@ pub extern "C" fn _rtw_init_sta_priv(stapriv: *mut u8) -> u32 {
         let mut psta = pbuf;
         for i in 0..NUM_STA {
             _rtw_init_stainfo(psta);
-            init_listhead(field_mut(sp, SP_STA_HASH + i * core::mem::size_of::<List>()));
+            init_listhead(field_mut(
+                sp,
+                SP_STA_HASH + i * core::mem::size_of::<List>(),
+            ));
             let fq = field_mut::<Queue>(sp, SP_FREE_Q);
             list_insert_tail(field_mut(psta, 16), core::ptr::addr_of_mut!((*fq).queue));
             psta = psta.add(STA_INFO_SIZE);
