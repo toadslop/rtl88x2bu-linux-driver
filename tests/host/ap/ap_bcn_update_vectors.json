@@ -62,7 +62,8 @@
       "num_sta_40mhz_intolerant": 1,
       "ht_op_mode": 0,
       "ies_hex": "000102030405060708090a0b3d16060404000000000000000000000000000000000000000000000000000000",
-      "expect_ht_op_mode": 0
+      "expect_ht_op_mode": 0,
+      "expect_ht_info_byte": 0
     }
   ]
 }

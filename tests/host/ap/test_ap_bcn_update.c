@@ -7,6 +7,7 @@
 
 extern u8 host_bcn_update_last_erp_byte;
 extern u16 host_bcn_update_last_ht_op_mode;
+extern u8 host_bcn_update_last_ht_info_byte;
 
 struct vector {
 	char name[64];
@@ -19,7 +20,9 @@ struct vector {
 	int ht_op_mode;
 	int expect_erp_byte;
 	int expect_ht_op_mode;
+	int expect_ht_info_byte;
 	int has_expect_ht;
+	int has_expect_ht_info;
 	u8 ies[256];
 	size_t ies_len;
 };
@@ -77,10 +80,20 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 			      &v->num_sta_40mhz_intolerant);
 	host_json_parse_int_in(obj, len, "olbc", &v->olbc);
 	host_json_parse_int_in(obj, len, "ht_op_mode", &v->ht_op_mode);
-	host_json_parse_int_in(obj, len, "expect_erp_byte", &v->expect_erp_byte);
+	if (!strcmp(v->fn, "update_bcn_erpinfo_ie") &&
+	    host_json_parse_int_in(obj, len, "expect_erp_byte", &v->expect_erp_byte))
+		return -1;
+	if (!strcmp(v->fn, "update_bcn_htinfo_ie"))
+		host_json_parse_int_in(obj, len, "expect_erp_byte", &v->expect_erp_byte);
+	else if (strcmp(v->fn, "update_bcn_erpinfo_ie"))
+		host_json_parse_int_in(obj, len, "expect_erp_byte", &v->expect_erp_byte);
 	if (!host_json_parse_int_in(obj, len, "expect_ht_op_mode", &tmp)) {
 		v->expect_ht_op_mode = tmp;
 		v->has_expect_ht = 1;
+	}
+	if (!host_json_parse_int_in(obj, len, "expect_ht_info_byte", &tmp)) {
+		v->expect_ht_info_byte = tmp;
+		v->has_expect_ht_info = 1;
 	}
 	return parse_hex(hex, v->ies, sizeof(v->ies), &v->ies_len);
 }
@@ -130,6 +143,12 @@ static int run_vector(const struct vector *v)
 		    (int)host_bcn_update_last_ht_op_mode != v->expect_ht_op_mode) {
 			fprintf(stderr, "FAIL %s ht got 0x%x want 0x%x\n", v->name,
 				host_bcn_update_last_ht_op_mode, v->expect_ht_op_mode);
+			return -1;
+		}
+		if (v->has_expect_ht_info &&
+		    (int)host_bcn_update_last_ht_info_byte != v->expect_ht_info_byte) {
+			fprintf(stderr, "FAIL %s ht_info got 0x%x want 0x%x\n", v->name,
+				host_bcn_update_last_ht_info_byte, v->expect_ht_info_byte);
 			return -1;
 		}
 		return 0;

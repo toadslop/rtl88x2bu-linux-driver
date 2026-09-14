@@ -75,10 +75,11 @@ void ERP_IE_handler(_adapter *padapter, PNDIS_802_11_VARIABLE_IEs pIE);
 void update_bcn_erpinfo_ie(_adapter *padapter);
 void update_bcn_htinfo_ie(_adapter *padapter);
 
+/* Match include/rtw_ht.h: bit fields live in infos[0] (byte after primary_channel). */
 #define SET_HT_OP_ELE_2ND_CHL_OFFSET(_p, _v) \
-	((_p)->infos[1] = ((_p)->infos[1] & ~0x3) | ((_v) & 0x3))
+	((_p)->infos[0] = ((_p)->infos[0] & ~0x3) | ((_v) & 0x3))
 #define SET_HT_OP_ELE_STA_CHL_WIDTH(_p, _v) \
-	((_p)->infos[1] = ((_p)->infos[1] & ~0x4) | (((_v) & 1) << 2))
+	((_p)->infos[0] = ((_p)->infos[0] & ~0x4) | (((_v) & 1) << 2))
 
 static inline u16 cpu_to_le16(u16 x)
 {

@@ -68,6 +68,7 @@ void update_bcn_erpinfo_ie(_adapter *padapter)
 }
 
 u16 host_bcn_update_last_ht_op_mode;
+u8 host_bcn_update_last_ht_info_byte;
 
 void update_bcn_htinfo_ie(_adapter *padapter)
 {
@@ -116,6 +117,7 @@ void update_bcn_htinfo_ie(_adapter *padapter)
 
 		*(u16 *)(pht_info->infos + 1) =
 			cpu_to_le16(pmlmepriv->ht_op_mode);
+		host_bcn_update_last_ht_info_byte = pht_info->infos[0];
 		host_bcn_update_last_ht_op_mode =
 			(u16)pht_info->infos[1] |
 			((u16)pht_info->infos[2] << 8);
