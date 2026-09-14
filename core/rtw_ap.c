@@ -46,52 +46,6 @@ u8 chk_sta_is_alive(struct sta_info *psta);
 void rtw_ap_expire_auth_list(_adapter *padapter);
 void rtw_ap_expire_asoc_sta_tick(_adapter *padapter, struct sta_info *psta);
 
-void rtw_ap_update_sta_ra_info(_adapter *padapter, struct sta_info *psta)
-{
-	unsigned char sta_band = 0;
-	u64 tx_ra_bitmap = 0;
-	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
-	WLAN_BSSID_EX *pcur_network = (WLAN_BSSID_EX *)&pmlmepriv->cur_network.network;
-
-	if (!psta)
-		return;
-
-	if (!(psta->state & WIFI_ASOC_STATE))
-		return;
-
-	rtw_hal_update_sta_ra_info(padapter, psta);
-	tx_ra_bitmap = psta->cmn.ra_info.ramask;
-
-	if (pcur_network->Configuration.DSConfig > 14) {
-
-		if (tx_ra_bitmap & 0xffff000)
-			sta_band |= WIRELESS_11_5N;
-
-		if (tx_ra_bitmap & 0xff0)
-			sta_band |= WIRELESS_11A;
-
-		/* 5G band */
-#ifdef CONFIG_80211AC_VHT
-		if (psta->vhtpriv.vht_option)
-			sta_band = WIRELESS_11_5AC;
-#endif
-	} else {
-		if (tx_ra_bitmap & 0xffff000)
-			sta_band |= WIRELESS_11_24N;
-
-		if (tx_ra_bitmap & 0xff0)
-			sta_band |= WIRELESS_11G;
-
-		if (tx_ra_bitmap & 0x0f)
-			sta_band |= WIRELESS_11B;
-	}
-
-	psta->wireless_mode = sta_band;
-	rtw_hal_update_sta_wset(padapter, psta);
-	RTW_INFO("%s=> mac_id:%d , tx_ra_bitmap:0x%016llx, networkType:0x%02x\n",
-			__FUNCTION__, psta->cmn.mac_id, tx_ra_bitmap, psta->wireless_mode);
-}
-
 #ifdef CONFIG_BMC_TX_RATE_SELECT
 u8 rtw_ap_find_bmc_rate(_adapter *adapter, u8 tx_rate);
 u8 rtw_ap_find_mini_tx_rate(_adapter *adapter);
