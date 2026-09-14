@@ -177,6 +177,10 @@ int main(int argc, char **argv)
 #elif defined(RUST_STA_MGT_FREE_INIT_ORACLE)
 		if (strcmp(vectors[i].fn, "_rtw_init_sta_priv"))
 			continue;
+#elif defined(RUST_STA_MGT_FREE_STAINFO_ORACLE)
+		if (strcmp(vectors[i].fn, "rtw_free_stainfo") &&
+		    strcmp(vectors[i].fn, "rtw_free_stainfo_null"))
+			continue;
 #endif
 		if (run_vector(&vectors[i])) {
 			fprintf(stderr, "FAIL: %s\n", vectors[i].name);

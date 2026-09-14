@@ -136,6 +136,7 @@ void _exit_critical_bh(_lock *plock, _irqL *pirqL)
 	(void)pirqL;
 }
 
+#ifndef RUST_STA_MGT_FREE_STAINFO_ORACLE
 u32 rtw_free_stainfo(_adapter *padapter, struct sta_info *psta)
 {
 	_irqL irqL0;
@@ -170,3 +171,4 @@ u32 rtw_free_stainfo(_adapter *padapter, struct sta_info *psta)
 
 	return _SUCCESS;
 }
+#endif /* !RUST_STA_MGT_FREE_STAINFO_ORACLE */
