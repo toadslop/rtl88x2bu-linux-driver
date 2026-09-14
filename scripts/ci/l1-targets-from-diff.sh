@@ -127,6 +127,7 @@ for path in "${changed[@]}"; do
 	| rust/rtw_ap_sta_alive.rs \
 	| rust/rtw_ap_expire_asoc.rs \
 	| rust/rtw_ap_expire_auth.rs \
+	| rust/rtw_ap_aka_chk.rs \
 	| core/rtw_ap_rest.c \
 	| core/rtw_ap_sta_alive.c \
 	| core/rtw_ap_sta_alive_rust_acc.c \
@@ -134,11 +135,14 @@ for path in "${changed[@]}"; do
 	| core/rtw_ap_expire_asoc_rust_acc.c \
 	| core/rtw_ap_expire_auth.c \
 	| core/rtw_ap_expire_auth_rust_acc.c \
+	| core/rtw_ap_aka_chk.c \
+	| core/rtw_ap_aka_chk_rust_acc.c \
 	| tests/host/ap/*)
 		add_target rust-check-symbols-rtw-ap-rest
 		add_target rust-check-symbols-rtw-ap-sta-alive
 		add_target rust-check-symbols-rtw-ap-expire-asoc
 		add_target rust-check-symbols-rtw-ap-expire-auth
+		add_target rust-check-symbols-rtw-ap-aka-chk
 		;;
 	rust/rtw_recv.rs \
 	| core/rtw_recv_rest.c \
