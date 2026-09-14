@@ -1,5 +1,6 @@
 # Host L2 differential tests for core/rtw_xmit_rest.c (W3-40),
-# core/rtw_xmit_qos_rest.c (W3-48), and core/rtw_xmit_sctx_rest.c (W3-48 PR4).
+# core/rtw_xmit_qos_rest.c (W3-48), core/rtw_xmit_sctx_rest.c (W3-48 PR4),
+# and core/rtw_xmit_update_attrib_rest.c (W3-86).
 
 ROOT     := ../../..
 CORE     := $(ROOT)/core
@@ -7,6 +8,7 @@ HOST_INC := ../include
 XMIT_REST_SRC := $(CORE)/rtw_xmit_rest.c
 XMIT_QOS_REST_SRC := $(CORE)/rtw_xmit_qos_rest.c
 XMIT_SCTX_REST_SRC := $(CORE)/rtw_xmit_sctx_rest.c
+UPDATE_ATTRIB_ORACLE := xmit_update_attrib_vcs_oracle.c
 HOST_JSON := ../crypto/host_vector_json.c
 SHIM     := host_xmit_shim.c
 RUST_XMIT := $(ROOT)/rust/rtw_xmit.rs
@@ -20,10 +22,11 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable
 
 QOS_CFLAGS := $(CFLAGS) -DHOST_XMIT_QOS_TEST
 SCTX_CFLAGS := $(CFLAGS) -DHOST_XMIT_SCTX_TEST
+UPDATE_ATTRIB_CFLAGS := $(CFLAGS) -DHOST_XMIT_UPDATE_ATTRIB_TEST
 
-.PHONY: all test test-c test-rust test-qos test-sctx clean
+.PHONY: all test test-c test-rust test-qos test-sctx test-update-attrib clean
 
-all: test test-qos test-sctx
+all: test test-qos test-sctx test-update-attrib
 
 test: test-c test-rust
 
@@ -82,8 +85,14 @@ test-sctx-rust: test_xmit_sctx_rust
 test_xmit_sctx_rust: test_xmit_sctx.c librust_xmit_sctx.a $(HOST_JSON)
 	$(CC) $(SCTX_CFLAGS) -o $@ test_xmit_sctx.c $(HOST_JSON) librust_xmit_sctx.a
 
+test-update-attrib: test_xmit_update_attrib
+	./test_xmit_update_attrib
+
+test_xmit_update_attrib: test_xmit_update_attrib.c $(UPDATE_ATTRIB_ORACLE) $(UPDATE_ATTRIB_SHIM)
+	$(CC) $(UPDATE_ATTRIB_CFLAGS) -o $@ test_xmit_update_attrib.c $(UPDATE_ATTRIB_ORACLE) $(UPDATE_ATTRIB_SHIM)
+
 clean:
-	rm -f test_xmit test_xmit_rust test_xmit_qos test_xmit_qos_rust \
-		test_xmit_sctx test_xmit_sctx_rust \
+		rm -f test_xmit test_xmit_rust test_xmit_qos test_xmit_qos_rust \
+		test_xmit_sctx test_xmit_sctx_rust test_xmit_update_attrib \
 		librust_xmit.a librust_xmit_qos.a librust_xmit_sctx.a \
 		xmit_rest_c_ref.o xmit_qos_c_ref.o xmit_sctx_c_ref.o
