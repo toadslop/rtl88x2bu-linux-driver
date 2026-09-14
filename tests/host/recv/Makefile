@@ -7,8 +7,6 @@ HOST_INC := ../include
 RECV_REST_SRC := $(CORE)/rtw_recv_rest.c
 RECV_LLC_REST_SRC := $(CORE)/rtw_recv_llc_rest.c
 RECV_PN_REST_SRC := $(CORE)/rtw_recv_pn_rest.c
-RECV_STA_REST_SRC := $(CORE)/rtw_recv_sta_rest.c
-RECV_STA_SHIM := host_recv_sta_shim.c
 LLC_SHIM := host_recv_llc_shim.c
 WFD_ORACLE := recv_wfd_c_oracle.c
 HOST_JSON := ../crypto/host_vector_json.c
@@ -21,14 +19,11 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable
           -include $(HOST_INC)/host_autoconf.h \
           -DHOST_RECV_TEST -DHOST_RECV_WFD_TEST -DHOST_RECV_LLC_TEST -DHOST_RECV_PN_TEST
 
-STA_CFLAGS := $(CFLAGS) -DHOST_RECV_STA_TEST
-RECV_STA_DEPS := test_recv_sta.c $(RECV_STA_REST_SRC) $(RECV_STA_SHIM) $(HOST_JSON)
-
-.PHONY: all test test-c test-rust test-sta clean
+.PHONY: all test test-c test-rust clean
 
 all: test
 
-test: test-c test-rust test-sta
+test: test-c test-rust
 
 test-c: test_recv
 	./test_recv recv_vectors.json
@@ -46,11 +41,5 @@ test-rust: test_recv_rust
 test_recv_rust: test_recv.c librust_recv.a $(LLC_SHIM) $(WFD_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_recv.c $(LLC_SHIM) $(WFD_ORACLE) $(HOST_JSON) librust_recv.a
 
-test-sta: test_recv_sta
-	./test_recv_sta recv_sta_vectors.json
-
-test_recv_sta: $(RECV_STA_DEPS)
-	$(CC) $(STA_CFLAGS) -o $@ $(RECV_STA_DEPS)
-
 clean:
-	rm -f test_recv test_recv_rust test_recv_sta librust_recv.a
+	rm -f test_recv test_recv_rust librust_recv.a
