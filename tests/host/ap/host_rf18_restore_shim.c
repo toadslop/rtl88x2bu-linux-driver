@@ -40,11 +40,6 @@ void host_rf18_last_set_channel(u8 *ch, u8 *offset, u8 *bw)
 	*bw = host_last_bw;
 }
 
-u8 host_rf18_hal_current_channel(void)
-{
-	return 0;
-}
-
 u32 rtw_hal_read_rfreg(_adapter *padapter, u32 path, u32 addr, u32 mask)
 {
 	(void)padapter;
