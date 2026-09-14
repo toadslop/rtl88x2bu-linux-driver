@@ -22,6 +22,7 @@ test_ap_aka_chk_rust
 librust_ap_aka_chk.a
 test_ap_rf18_restore
 test_ap_rf18_restore_rust
+test_ap_sta_ra
 librust_ap_rf18_restore.a
 librust_ap_sta_alive.a
 librust_ap_expire_asoc.a

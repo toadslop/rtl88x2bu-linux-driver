@@ -1,0 +1,54 @@
+{
+  "vectors": [
+    {
+      "name": "24g_11b_only",
+      "ds_config": 6,
+      "state": 1,
+      "hal_ramask": 15,
+      "vht_option": 0,
+      "expect_mode": 1,
+      "expect_hal_ra": 1,
+      "expect_hal_wset": 1
+    },
+    {
+      "name": "24g_11g_n_combo",
+      "ds_config": 11,
+      "state": 1,
+      "hal_ramask": 1052656,
+      "vht_option": 0,
+      "expect_mode": 10,
+      "expect_hal_ra": 1,
+      "expect_hal_wset": 1
+    },
+    {
+      "name": "5g_11a_n",
+      "ds_config": 36,
+      "state": 1,
+      "hal_ramask": 1054960,
+      "vht_option": 0,
+      "expect_mode": 20,
+      "expect_hal_ra": 1,
+      "expect_hal_wset": 1
+    },
+    {
+      "name": "5g_vht_ac",
+      "ds_config": 36,
+      "state": 1,
+      "hal_ramask": 1054960,
+      "vht_option": 1,
+      "expect_mode": 68,
+      "expect_hal_ra": 1,
+      "expect_hal_wset": 1
+    },
+    {
+      "name": "not_asoc_early_return",
+      "ds_config": 6,
+      "state": 0,
+      "hal_ramask": 15,
+      "vht_option": 0,
+      "expect_mode": 0,
+      "expect_hal_ra": 0,
+      "expect_hal_wset": 0
+    }
+  ]
+}
