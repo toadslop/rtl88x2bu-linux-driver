@@ -150,8 +150,13 @@ int rtw_sta_rx_data_validate_hdr(_adapter *adapter, union recv_frame *rframe, st
 		goto exit;
 	}
 
-	if (!rattrib->amsdu && _rtw_memcmp(myhwaddr, rattrib->src, ETH_ALEN))
+	if (!rattrib->amsdu && _rtw_memcmp(myhwaddr, rattrib->src, ETH_ALEN)) {
+		#ifdef DBG_RX_DROP_FRAME
+		RTW_INFO("DBG_RX_DROP_FRAME "FUNC_ADPT_FMT" SA="MAC_FMT", myhwaddr="MAC_FMT"\n"
+			, FUNC_ADPT_ARG(adapter), MAC_ARG(rattrib->src), MAC_ARG(myhwaddr));
+		#endif
 		goto exit;
+	}
 
 	*sta = rtw_get_stainfo(stapriv, rattrib->ta);
 	if (*sta == NULL) {
@@ -161,6 +166,10 @@ int rtw_sta_rx_data_validate_hdr(_adapter *adapter, union recv_frame *rframe, st
 				, FUNC_ADPT_ARG(adapter), MAC_ARG(rattrib->ta));
 			issue_deauth(adapter, rattrib->ta, WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA);
 		}
+		#endif
+		#ifdef DBG_RX_DROP_FRAME
+		RTW_INFO("DBG_RX_DROP_FRAME "FUNC_ADPT_FMT" can't get psta under STATION_MODE ; drop pkt\n"
+			, FUNC_ADPT_ARG(adapter));
 		#endif
 		goto exit;
 	}
