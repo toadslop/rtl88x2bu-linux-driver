@@ -71,6 +71,10 @@ u32 _rtw_init_sta_priv(struct sta_priv *pstapriv);
 u32 _rtw_free_sta_priv(struct sta_priv *pstapriv);
 #endif
 
+#if defined(RUST_STA_MGT_FREE_ORACLE) && defined(RUST_STA_MGT_FREE_BCMc_ORACLE)
+u32 rtw_init_bcmc_stainfo(_adapter *padapter);
+#endif
+
 #ifndef HOST_STA_MGT_TEST
 void rtw_free_stainfo_flush_xmit(_adapter *padapter, struct sta_info *psta)
 {
@@ -514,6 +518,7 @@ u32	_rtw_free_sta_priv(struct	sta_priv *pstapriv)
 }
 #endif /* !RUST_STA_MGT_FREE_ORACLE || !RUST_STA_MGT_FREE_DEINIT_ORACLE */
 
+#if !defined(RUST_STA_MGT_FREE_ORACLE) || !defined(RUST_STA_MGT_FREE_BCMc_ORACLE)
 u32 rtw_init_bcmc_stainfo(_adapter *padapter)
 {
 
@@ -559,3 +564,4 @@ exit:
 	return _SUCCESS;
 
 }
+#endif /* !RUST_STA_MGT_FREE_ORACLE || !RUST_STA_MGT_FREE_BCMc_ORACLE */
