@@ -1,4 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
+/* Host L2 differential test for issue_aka_chk_frame (W3-82).
+ * Provenance: core/rtw_ap_aka_chk.c (extracted from rtw_ap.c AP path ~54–65).
+ * CONFIG_RTW_MESH PREQ/path lookup is out of scope for this harness. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
