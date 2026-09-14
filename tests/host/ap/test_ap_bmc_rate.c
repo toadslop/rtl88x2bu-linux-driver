@@ -5,14 +5,6 @@
 #include "host_ap_bmc_rate_types.h"
 #include "host_vector_json.h"
 
-#ifdef RUST_AP_BMC_RATE_ORACLE
-u8 rtw_ap_find_mini_tx_rate(struct _adapter *adapter)
-{
-	(void)adapter;
-	return 0;
-}
-#endif
-
 #define MAX_VECTORS 16
 #define MAX_NAME 64
 
@@ -102,7 +94,7 @@ static int run_vector(const struct vector *v)
 int main(int argc, char **argv)
 {
 	struct vector vectors[MAX_VECTORS];
-	size_t n = 0, i, fail = 0, executed = 0, skipped = 0;
+	size_t n = 0, i, fail = 0, executed = 0;
 
 	if (argc != 2)
 		return 2;
@@ -110,12 +102,6 @@ int main(int argc, char **argv)
 			      parse_vector_object, &n))
 		return 2;
 	for (i = 0; i < n; i++) {
-#ifdef RUST_AP_BMC_RATE_ORACLE
-		if (!strcmp(vectors[i].fn, "rtw_ap_find_mini_tx_rate")) {
-			skipped++;
-			continue;
-		}
-#endif
 		executed++;
 		if (run_vector(&vectors[i]))
 			fail++;
@@ -124,15 +110,6 @@ int main(int argc, char **argv)
 		printf("%zu vectors, %zu failures\n", executed, fail);
 		return 1;
 	}
-#ifdef RUST_AP_BMC_RATE_ORACLE
-	if (skipped)
-		printf("%zu vectors, 0 failures (%zu mini skipped; oracle: rust/rtw_ap_rest.rs)\n",
-		       executed, skipped);
-	else
-		printf("%zu vectors, 0 failures\n", executed);
-#else
-	(void)skipped;
 	printf("%zu vectors, 0 failures\n", executed);
-#endif
 	return 0;
 }

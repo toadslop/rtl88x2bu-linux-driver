@@ -165,7 +165,7 @@ test_ap_bmc_rate: test_ap_bmc_rate.c ap_bmc_rate_oracle.c $(HOST_JSON)
 	$(CC) $(BMC_RATE_CFLAGS) -o $@ test_ap_bmc_rate.c ap_bmc_rate_oracle.c $(HOST_JSON)
 
 librust_ap_bmc_rate.a: $(RUST_AP_REST)
-	rustc -C opt-level=2 -C overflow-checks=on --cfg host_ap_bmc_rate_test \
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on --cfg host_ap_bmc_rate_test \
 		--crate-type staticlib $(RUST_AP_REST) -o $@
 
 test_ap_bmc_rate_rust: test_ap_bmc_rate.c librust_ap_bmc_rate.a $(HOST_JSON)

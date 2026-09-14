@@ -190,6 +190,42 @@ const ODM_RATE6M: u8 = 0x04;
 #[cfg(any(host_ap_bmc_rate_test, bmc_tx_rate_select))]
 const BAND_ON_5G: u8 = 1;
 
+#[cfg(any(host_ap_bmc_rate_test, bmc_tx_rate_select))]
+const ODM_RATEVHTSS4MCS9: u8 = 0x53;
+
+#[cfg(host_ap_bmc_rate_test)]
+#[repr(C)]
+pub struct List {
+    pub next: *mut List,
+    pub prev: *mut List,
+}
+
+#[cfg(host_ap_bmc_rate_test)]
+#[repr(C)]
+pub struct RaStaInfo {
+    pub curr_tx_rate: u8,
+}
+
+#[cfg(host_ap_bmc_rate_test)]
+#[repr(C)]
+pub struct CmnStaInfo {
+    pub ra_info: RaStaInfo,
+}
+
+#[cfg(host_ap_bmc_rate_test)]
+#[repr(C)]
+pub struct StaInfo {
+    pub cmn: CmnStaInfo,
+    pub asoc_list: List,
+}
+
+#[cfg(host_ap_bmc_rate_test)]
+#[repr(C)]
+pub struct StaPriv {
+    pub asoc_list: List,
+    pub asoc_list_lock: i32,
+}
+
 #[cfg(host_ap_bmc_rate_test)]
 #[repr(C)]
 pub struct HalData {
@@ -200,14 +236,25 @@ pub struct HalData {
 #[repr(C)]
 pub struct Adapter {
     pub hal_data: HalData,
+    pub stapriv: StaPriv,
 }
 
 #[cfg(all(not(host_ap_bmc_rate_test), bmc_tx_rate_select))]
+use core::ffi::c_ulong;
+
+#[cfg(all(not(host_ap_bmc_rate_test), bmc_tx_rate_select))]
 mod bmc_kernel {
-    use core::ffi::c_void;
+    use core::ffi::{c_ulong, c_void};
 
     extern "C" {
         pub fn rtw_rust_ap_current_band_type(adapter: *mut c_void) -> u8;
+        pub fn rtw_rust_bmc_asoc_enter(adapter: *mut c_void, irql: *mut c_ulong);
+        pub fn rtw_rust_bmc_asoc_exit(adapter: *mut c_void, irql: *mut c_ulong);
+        pub fn rtw_rust_bmc_asoc_head(adapter: *mut c_void) -> *mut c_void;
+        pub fn rtw_rust_bmc_asoc_next(plist: *mut c_void) -> *mut c_void;
+        pub fn rtw_rust_bmc_asoc_at_end(head: *mut c_void, elem: *mut c_void) -> u8;
+        pub fn rtw_rust_bmc_sta_from_asoc(plist: *mut c_void) -> *mut c_void;
+        pub fn rtw_rust_bmc_sta_curr_tx_rate(psta: *mut c_void) -> u8;
     }
 }
 
@@ -243,5 +290,78 @@ pub extern "C" fn rtw_ap_find_bmc_rate(adapter: *mut core::ffi::c_void, tx_rate:
     #[cfg(all(not(host_ap_bmc_rate_test), bmc_tx_rate_select))]
     unsafe {
         ap_find_bmc_rate_inner(bmc_kernel::rtw_rust_ap_current_band_type(adapter), tx_rate)
+    }
+}
+
+#[cfg(any(host_ap_bmc_rate_test, bmc_tx_rate_select))]
+fn ap_find_mini_tx_rate_inner(
+    mut mini: u8,
+    mut plist: *mut core::ffi::c_void,
+    phead: *mut core::ffi::c_void,
+) -> u8 {
+    while !phead.is_null() && !plist.is_null() {
+        #[cfg(host_ap_bmc_rate_test)]
+        let at_end = plist == phead;
+        #[cfg(all(not(host_ap_bmc_rate_test), bmc_tx_rate_select))]
+        let at_end = unsafe { bmc_kernel::rtw_rust_bmc_asoc_at_end(phead, plist) != 0 };
+        if at_end {
+            break;
+        }
+        let sta_tx_rate = {
+            #[cfg(host_ap_bmc_rate_test)]
+            {
+                let psta = unsafe { &*container_of_asoc(plist.cast()) };
+                psta.cmn.ra_info.curr_tx_rate & 0x7f
+            }
+            #[cfg(all(not(host_ap_bmc_rate_test), bmc_tx_rate_select))]
+            unsafe {
+                let psta = bmc_kernel::rtw_rust_bmc_sta_from_asoc(plist);
+                bmc_kernel::rtw_rust_bmc_sta_curr_tx_rate(psta) & 0x7f
+            }
+        };
+        if sta_tx_rate < mini {
+            mini = sta_tx_rate;
+        }
+        #[cfg(host_ap_bmc_rate_test)]
+        {
+            plist = unsafe { (*plist.cast::<List>()).next.cast() };
+        }
+        #[cfg(all(not(host_ap_bmc_rate_test), bmc_tx_rate_select))]
+        {
+            plist = unsafe { bmc_kernel::rtw_rust_bmc_asoc_next(plist) };
+        }
+    }
+    mini
+}
+
+#[cfg(host_ap_bmc_rate_test)]
+unsafe fn container_of_asoc(plist: *mut List) -> *mut StaInfo {
+    let off = core::mem::offset_of!(StaInfo, asoc_list);
+    (plist as *mut u8).sub(off) as *mut StaInfo
+}
+
+#[cfg(any(host_ap_bmc_rate_test, bmc_tx_rate_select))]
+#[no_mangle]
+pub extern "C" fn rtw_ap_find_mini_tx_rate(adapter: *mut core::ffi::c_void) -> u8 {
+    if adapter.is_null() {
+        return ODM_RATEVHTSS4MCS9;
+    }
+    #[cfg(host_ap_bmc_rate_test)]
+    unsafe {
+        let adapter = &mut *(adapter as *mut Adapter);
+        let stapriv = &mut adapter.stapriv;
+        let phead: *mut List = core::ptr::addr_of_mut!(stapriv.asoc_list);
+        let plist = (*phead).next;
+        return ap_find_mini_tx_rate_inner(ODM_RATEVHTSS4MCS9, plist.cast(), phead.cast());
+    }
+    #[cfg(all(not(host_ap_bmc_rate_test), bmc_tx_rate_select))]
+    unsafe {
+        let mut irql: c_ulong = 0;
+        bmc_kernel::rtw_rust_bmc_asoc_enter(adapter, core::ptr::addr_of_mut!(irql));
+        let phead = bmc_kernel::rtw_rust_bmc_asoc_head(adapter);
+        let plist = bmc_kernel::rtw_rust_bmc_asoc_next(phead);
+        let mini = ap_find_mini_tx_rate_inner(ODM_RATEVHTSS4MCS9, plist, phead);
+        bmc_kernel::rtw_rust_bmc_asoc_exit(adapter, core::ptr::addr_of_mut!(irql));
+        mini
     }
 }
