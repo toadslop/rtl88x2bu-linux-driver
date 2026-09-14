@@ -13,6 +13,8 @@
 
 const _SUCCESS: u32 = 1;
 const ETH_ALEN: usize = 6;
+/// Host L2 `_adapter` places `stapriv` first (`tests/host/include/host_sta_mgt_types.h`).
+const ADAPTER_STAPRIV_OFF: usize = 0;
 
 #[repr(C)]
 struct StaInfo {
@@ -30,7 +32,8 @@ pub extern "C" fn rtw_init_bcmc_stainfo(padapter: *mut u8) -> u32 {
             return _SUCCESS;
         }
         let bcast: [u8; ETH_ALEN] = [0xff; ETH_ALEN];
-        let _psta = rtw_alloc_stainfo(padapter, bcast.as_ptr());
+        let stapriv = padapter.add(ADAPTER_STAPRIV_OFF);
+        let _psta = rtw_alloc_stainfo(stapriv, bcast.as_ptr());
         _SUCCESS
     }
 }

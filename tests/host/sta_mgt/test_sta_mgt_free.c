@@ -125,12 +125,11 @@ int main(int argc, char **argv)
 #if defined(RUST_STA_MGT_FREE_DEINIT_ORACLE)
 		if (strcmp(vectors[i].fn, "init_free_sta_priv"))
 			continue;
+#elif defined(RUST_STA_MGT_FREE_BCMc_ORACLE)
+		if (strcmp(vectors[i].fn, "rtw_init_bcmc_stainfo"))
+			continue;
 #elif defined(RUST_STA_MGT_FREE_INIT_ORACLE)
 		if (strcmp(vectors[i].fn, "_rtw_init_sta_priv"))
-			continue;
-#endif
-#ifdef RUST_STA_MGT_FREE_BCMc_ORACLE
-		if (strcmp(vectors[i].fn, "rtw_init_bcmc_stainfo"))
 			continue;
 #endif
 		if (run_vector(&vectors[i])) {
