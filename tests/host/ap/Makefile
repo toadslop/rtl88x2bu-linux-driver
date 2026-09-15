@@ -6,6 +6,7 @@ HOST_INC := ../include
 AP_REST_SRC := $(CORE)/rtw_ap_rest.c
 HOST_JSON := ../crypto/host_vector_json.c
 RUST_AP_REST := $(ROOT)/rust/rtw_ap_rest.rs
+RUST_AP_BMC_UPDATE := $(ROOT)/rust/rtw_ap_bmc_update.rs
 
 CC     := gcc
 CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
@@ -217,11 +218,25 @@ librust_ap_bmc_rate.a: $(RUST_AP_REST)
 test_ap_bmc_rate_rust: test_ap_bmc_rate.c librust_ap_bmc_rate.a $(HOST_JSON)
 	$(CC) $(BMC_RATE_CFLAGS) -DRUST_AP_BMC_RATE_ORACLE -o $@ test_ap_bmc_rate.c $(HOST_JSON) librust_ap_bmc_rate.a
 
-test-bmc-update: test_ap_bmc_update
+test-bmc-update: test-c-bmc-update test-rust-bmc-update
+
+test-c-bmc-update: test_ap_bmc_update
 	./test_ap_bmc_update ap_bmc_update_vectors.json
+
+test-rust-bmc-update: test_ap_bmc_update_rust
+	./test_ap_bmc_update_rust ap_bmc_update_vectors.json
 
 test_ap_bmc_update: test_ap_bmc_update.c ap_bmc_update_oracle.c $(HOST_JSON)
 	$(CC) $(BMC_UPDATE_CFLAGS) -o $@ test_ap_bmc_update.c ap_bmc_update_oracle.c $(HOST_JSON)
+
+librust_ap_bmc_update.a: $(RUST_AP_BMC_UPDATE)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_ap_bmc_update_test --cfg bmc_tx_low_rate \
+		--crate-type staticlib $(RUST_AP_BMC_UPDATE) -o $@
+
+test_ap_bmc_update_rust: test_ap_bmc_update.c librust_ap_bmc_update.a librust_ap_bmc_rate.a $(HOST_JSON)
+	$(CC) $(BMC_UPDATE_CFLAGS) -DRUST_AP_BMC_UPDATE_ORACLE -o $@ test_ap_bmc_update.c $(HOST_JSON) \
+		librust_ap_bmc_update.a librust_ap_bmc_rate.a
 
 test_ap_sta_ie: test_ap_sta_ie.c $(AP_STA_IE_SRC) $(HOST_JSON)
 	$(CC) $(STA_IE_CFLAGS) -o $@ test_ap_sta_ie.c $(AP_STA_IE_SRC) $(HOST_JSON)
@@ -253,6 +268,7 @@ clean:
 		test_ap_expire_auth test_ap_expire_auth_rust test_ap_expire_asoc test_ap_expire_asoc_rust \
 		test_ap_aka_chk test_ap_aka_chk_rust test_ap_rf18_restore test_ap_rf18_restore_rust \
 		test_ap_sta_ra test_ap_bmc_rate test_ap_bmc_rate_rust test_ap_bmc_update \
+		test_ap_bmc_update_rust librust_ap_bmc_update.a \
 		librust_ap_rest.a librust_ap_bmc_rate.a librust_ap_sta_alive.a \
 		librust_ap_expire_asoc.a librust_ap_expire_auth.a librust_ap_aka_chk.a \
 		librust_ap_rf18_restore.a
