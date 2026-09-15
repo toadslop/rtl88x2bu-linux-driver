@@ -2,3 +2,4 @@
 drop rtw_rust_mfree_stainfo_locks
 drop rtw_rust_init_sta_priv_body
 drop rtw_rust_free_stainfo_body
+drop rtw_rust_free_sta_priv_body
