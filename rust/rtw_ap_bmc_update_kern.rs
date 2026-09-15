@@ -101,11 +101,13 @@ pub extern "C" fn rtw_update_bmc_sta_tx_rate(adapter: Adapter) {
         if rtw_rust_bmc_update_asoc_sta_count(adapter) <= 2 {
             return;
         }
-        let mut tx_rate = rtw_ap_find_mini_tx_rate(adapter);
         #[cfg(bmc_tx_low_rate)]
-        {
-            tx_rate = rtw_ap_find_bmc_rate(adapter, tx_rate);
-        }
+        let tx_rate = {
+            let mini = rtw_ap_find_mini_tx_rate(adapter);
+            rtw_ap_find_bmc_rate(adapter, mini)
+        };
+        #[cfg(not(bmc_tx_low_rate))]
+        let tx_rate = rtw_ap_find_mini_tx_rate(adapter);
         rtw_rust_bmc_update_set_init_rate(psta, hw_rate_to_m_rate(tx_rate));
     }
 }
