@@ -48,10 +48,46 @@ pub struct CmnStaInfo {
 }
 
 #[repr(C)]
+pub struct StaInfoStats {
+    pub pad: [u8; 8],
+}
+
+#[repr(C)]
+pub struct HtPriv {
+    pub ht_option: u8,
+}
+
+#[repr(C)]
 pub struct StaInfo {
     pub cmn: CmnStaInfo,
+    pub aid: u16,
+    pub qos_option: u8,
+    pub htpriv: HtPriv,
+    pub ieee8021x_blocked: u8,
+    pub sta_stats: StaInfoStats,
+    pub lock: i32,
+    pub state: u8,
+    pub wireless_mode: u8,
+    pub bssrateset: [u8; 12],
+    pub bssratelen: u8,
     pub init_rate: u8,
     pub asoc_list: List,
+}
+
+#[repr(C)]
+pub struct WlanConfig {
+    pub ds_config: u8,
+}
+
+#[repr(C)]
+pub struct WlanBssidEx {
+    pub supported_rates: [u8; 12],
+    pub configuration: WlanConfig,
+}
+
+#[repr(C)]
+pub struct CurNetwork {
+    pub network: WlanBssidEx,
 }
 
 #[repr(C)]
@@ -65,6 +101,7 @@ pub struct StaPriv {
 #[repr(C)]
 pub struct MlmePriv {
     pub state: u32,
+    pub cur_network: CurNetwork,
 }
 
 #[repr(C)]
