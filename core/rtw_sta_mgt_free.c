@@ -359,8 +359,10 @@ void rtw_mfree_sta_priv_lock(struct	sta_priv *pstapriv)
 
 }
 
-#if !defined(RUST_STA_MGT_FREE_ORACLE) || !defined(RUST_STA_MGT_FREE_INIT_ORACLE)
-u32	_rtw_init_sta_priv(struct	sta_priv *pstapriv)
+#if !defined(RUST_STA_MGT_FREE_ORACLE) || !defined(RUST_STA_MGT_FREE_INIT_ORACLE) || \
+	(defined(CONFIG_RUST) && !defined(HOST_STA_MGT_TEST) && defined(CONFIG_RUST_STA_MGT_FREE_INIT))
+
+static u32 rtw_init_sta_priv_impl(struct sta_priv *pstapriv)
 {
 	_adapter *adapter = container_of(pstapriv, _adapter, stapriv);
 	struct macid_ctl_t *macid_ctl = adapter_to_macidctl(adapter);
@@ -479,7 +481,23 @@ exit:
 
 	return ret;
 }
-#endif /* !RUST_STA_MGT_FREE_ORACLE || !RUST_STA_MGT_FREE_INIT_ORACLE */
+
+#endif /* impl visibility */
+
+#if (!defined(RUST_STA_MGT_FREE_ORACLE) || !defined(RUST_STA_MGT_FREE_INIT_ORACLE)) && \
+	(!defined(CONFIG_RUST) || defined(HOST_STA_MGT_TEST) || !defined(CONFIG_RUST_STA_MGT_FREE_INIT))
+u32	_rtw_init_sta_priv(struct	sta_priv *pstapriv)
+{
+	return rtw_init_sta_priv_impl(pstapriv);
+}
+#endif
+
+#if defined(CONFIG_RUST) && !defined(HOST_STA_MGT_TEST) && defined(CONFIG_RUST_STA_MGT_FREE_INIT)
+u32 rtw_rust_init_sta_priv_body(struct sta_priv *pstapriv)
+{
+	return rtw_init_sta_priv_impl(pstapriv);
+}
+#endif
 
 #if !defined(RUST_STA_MGT_FREE_ORACLE) || !defined(RUST_STA_MGT_FREE_DEINIT_ORACLE)
 u32	_rtw_free_sta_priv(struct	sta_priv *pstapriv)
