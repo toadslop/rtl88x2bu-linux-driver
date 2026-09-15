@@ -1,4 +1,5 @@
-# L1 allowlist for W3-79 mfree kernel object: drop Rust FFI helpers from symbol check.
+# L1 allowlist for W3-79 sta_mgt free/deinit kernel swaps (mfree, init_sta_priv,
+# free_stainfo, free_sta_priv): drop Rust FFI body shims from symbol check.
 drop rtw_rust_mfree_stainfo_locks
 drop rtw_rust_init_sta_priv_body
 drop rtw_rust_free_stainfo_body
