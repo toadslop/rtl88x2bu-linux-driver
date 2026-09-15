@@ -19,6 +19,7 @@
 #define HT_IOT_PEER_ATHEROS 5
 #define _AES_ 0x04
 
+/* Host harness models 88x2BU (non-8812): AMPDU path always uses non-8812 RTS rule. */
 #define IS_HARDWARE_TYPE_8812(a) 0
 
 struct registry_priv {
