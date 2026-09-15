@@ -77,6 +77,18 @@ mod host_layout {
 #[cfg(host_sta_mgt_test)]
 use host_layout::{StaInfo, StaRecvPriv, StaXmitPriv};
 
+#[cfg(not(host_sta_mgt_test))]
+pub type StaInfo = core::ffi::c_void;
+
+#[cfg(not(host_sta_mgt_test))]
+mod kernel {
+    use super::StaInfo;
+
+    extern "C" {
+        pub fn rtw_rust_mfree_stainfo_locks(psta: *mut StaInfo);
+    }
+}
+
 #[cfg(host_sta_mgt_test)]
 const STA_INFO_LOCK_OFF: usize = 12;
 #[cfg(host_sta_mgt_test)]
@@ -107,14 +119,20 @@ unsafe fn free_sta_recv_priv_lock(recv: *mut StaRecvPriv) {
 
 #[no_mangle]
 pub extern "C" fn rtw_mfree_stainfo(psta: *mut StaInfo) {
+    if psta.is_null() {
+        return;
+    }
+
     #[cfg(host_sta_mgt_test)]
     unsafe {
-        if psta.is_null() {
-            return;
-        }
         let base = psta.cast::<u8>();
         spinlock_free(base.add(STA_INFO_LOCK_OFF).cast());
         free_sta_xmit_priv_lock(base.add(STA_INFO_XMIT_OFF).cast());
         free_sta_recv_priv_lock(base.add(STA_INFO_RECV_OFF).cast());
+    }
+
+    #[cfg(not(host_sta_mgt_test))]
+    unsafe {
+        kernel::rtw_rust_mfree_stainfo_locks(psta);
     }
 }
