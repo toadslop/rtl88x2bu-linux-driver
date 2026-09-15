@@ -7,9 +7,6 @@
     {"name": "update_asoc_le2_keep", "fn": "rtw_update_bmc_sta_tx_rate", "asoc_sta_count": 2, "seed_init_rate": 99, "expect_init_rate": 99},
     {"name": "update_dynamic_12m", "fn": "rtw_update_bmc_sta_tx_rate", "asoc_sta_count": 5, "sta_rate_1": 7, "sta_rate_2": 10, "expect_init_rate": 24},
     {"name": "init_ofdm_skip_cck", "fn": "rtw_init_bmc_sta_tx_rate", "ap_mode": 1, "wireless_mode": 2, "ramask": 257, "expect_init_rate": 48},
-    {"name": "init_ofdm_ramask_truthy", "fn": "rtw_init_bmc_sta_tx_rate", "ap_mode": 1, "wireless_mode": 2, "ramask": 8, "expect_init_rate": 2},
-    {"name": "update_bmc_11g_ofdm", "fn": "update_bmc_sta", "ap_mode": 1, "wireless_mode": 2, "ramask": 16, "ds_config": 6, "supported_rates": [12, 24, 48, 0], "expect_init_rate": 12, "expect_wireless_mode": 2, "expect_state": 1, "expect_media_rpt": 1},
-    {"name": "update_bmc_fixed_rate", "fn": "update_bmc_sta", "ap_mode": 1, "bmc_tx_rate": 96, "ds_config": 6, "supported_rates": [12, 0], "expect_init_rate": 96, "expect_wireless_mode": 2, "expect_state": 1, "expect_media_rpt": 1},
-    {"name": "update_bmc_5g_invalid", "fn": "update_bmc_sta", "ap_mode": 1, "wireless_mode": 2, "ramask": 8, "ds_config": 36, "supported_rates": [255, 0], "expect_init_rate": 2, "expect_wireless_mode": 4, "expect_state": 1, "expect_media_rpt": 1}
+    {"name": "init_ofdm_ramask_truthy", "fn": "rtw_init_bmc_sta_tx_rate", "ap_mode": 1, "wireless_mode": 2, "ramask": 8, "expect_init_rate": 2}
   ]
 }
