@@ -45,6 +45,24 @@ extern "C" {
     fn rtw_rust_bmc_update_sta_ramask(psta: StaInfo) -> u64;
     fn rtw_rust_bmc_update_is_enable_hw_ofdm(adapter: Adapter) -> U8;
     fn rtw_rust_bmc_update_err_missing_bmc_sta(adapter: Adapter);
+    fn rtw_get_rateset_len(rateset: *mut U8) -> u32;
+    fn rtw_check_network_type(rate: *mut U8, ratelen: i32, channel: i32) -> i32;
+    fn update_sta_basic_rate(psta: StaInfo, wireless_mode: U8);
+    fn rtw_hal_update_sta_ra_info(padapter: Adapter, psta: StaInfo);
+    fn rtw_sta_media_status_rpt(padapter: Adapter, psta: StaInfo, connected: u8);
+    fn rtw_rust_bmc_update_cur_supported_rates(adapter: Adapter) -> *mut U8;
+    fn rtw_rust_bmc_update_cur_ds_config(adapter: Adapter) -> i32;
+    fn rtw_rust_bmc_update_sta_prepare(adapter: Adapter, psta: StaInfo);
+    fn rtw_rust_bmc_update_sta_set_asoc(psta: StaInfo);
+    fn rtw_rust_bmc_update_sta_set_wireless_mode(psta: StaInfo, mode: U8);
+}
+
+const WIRELESS_11B: i32 = 1;
+const WIRELESS_11A: i32 = 4;
+const WIRELESS_INVALID: i32 = 0;
+
+fn is_supported_tx_cck_kern(net_type: U8) -> bool {
+    (net_type as i32 & WIRELESS_11B) != 0
 }
 
 fn hw_rate_to_m_rate(hw_rate: U8) -> U8 {
@@ -153,5 +171,38 @@ pub extern "C" fn rtw_init_bmc_sta_tx_rate(padapter: Adapter, psta: StaInfo) {
             MGN_1M
         };
         rtw_rust_bmc_update_set_init_rate(psta, init);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn update_bmc_sta(padapter: Adapter) {
+    if padapter.is_null() {
+        return;
+    }
+    unsafe {
+        let psta = rtw_get_bcmc_stainfo(padapter);
+        if psta.is_null() {
+            return;
+        }
+        rtw_rust_bmc_update_sta_prepare(padapter, psta);
+        let rates = rtw_rust_bmc_update_cur_supported_rates(padapter);
+        let ds_config = rtw_rust_bmc_update_cur_ds_config(padapter);
+        let support_rate_num = rtw_get_rateset_len(rates) as i32;
+        let mut network_type = rtw_check_network_type(rates, support_rate_num, ds_config) as U8;
+        if is_supported_tx_cck_kern(network_type) {
+            network_type = WIRELESS_11B as U8;
+        } else if network_type as i32 == WIRELESS_INVALID {
+            network_type = if ds_config > 14 {
+                WIRELESS_11A
+            } else {
+                WIRELESS_11B
+            } as U8;
+        }
+        update_sta_basic_rate(psta, network_type);
+        rtw_rust_bmc_update_sta_set_wireless_mode(psta, network_type);
+        rtw_hal_update_sta_ra_info(padapter, psta);
+        rtw_rust_bmc_update_sta_set_asoc(psta);
+        rtw_sta_media_status_rpt(padapter, psta, 1);
+        rtw_init_bmc_sta_tx_rate(padapter, psta);
     }
 }
