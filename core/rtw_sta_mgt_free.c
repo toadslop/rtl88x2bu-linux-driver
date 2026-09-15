@@ -32,6 +32,10 @@ u32 rtw_free_stainfo(_adapter *padapter, struct sta_info *psta);
 u32 _rtw_free_sta_priv(struct sta_priv *pstapriv);
 #endif
 
+#if defined(CONFIG_RUST) && !defined(HOST_STA_MGT_TEST) && defined(CONFIG_RUST_STA_MGT_FREE_BCMc)
+u32 rtw_init_bcmc_stainfo(_adapter *padapter);
+#endif
+
 #if defined(RUST_STA_MGT_FREE_ORACLE)
 void rtw_mfree_stainfo(struct sta_info *psta);
 #else
@@ -606,8 +610,10 @@ u32 rtw_rust_free_sta_priv_body(struct sta_priv *pstapriv)
 }
 #endif
 
-#if !defined(RUST_STA_MGT_FREE_ORACLE) || !defined(RUST_STA_MGT_FREE_BCMc_ORACLE)
-u32 rtw_init_bcmc_stainfo(_adapter *padapter)
+#if !defined(RUST_STA_MGT_FREE_ORACLE) || !defined(RUST_STA_MGT_FREE_BCMc_ORACLE) || \
+	(defined(CONFIG_RUST) && !defined(HOST_STA_MGT_TEST) && defined(CONFIG_RUST_STA_MGT_FREE_BCMc))
+
+static u32 rtw_init_bcmc_stainfo_impl(_adapter *padapter)
 {
 
 	struct sta_info	*psta;
@@ -649,7 +655,27 @@ u32 rtw_init_bcmc_stainfo(_adapter *padapter)
 #endif /* !HOST_STA_MGT_TEST */
 
 exit:
+#ifndef HOST_STA_MGT_TEST
+	return res;
+#else
 	return _SUCCESS;
+#endif
 
 }
-#endif /* !RUST_STA_MGT_FREE_ORACLE || !RUST_STA_MGT_FREE_BCMc_ORACLE */
+
+#endif /* impl visibility */
+
+#if (!defined(RUST_STA_MGT_FREE_ORACLE) || !defined(RUST_STA_MGT_FREE_BCMc_ORACLE)) && \
+	(!defined(CONFIG_RUST) || defined(HOST_STA_MGT_TEST) || !defined(CONFIG_RUST_STA_MGT_FREE_BCMc))
+u32 rtw_init_bcmc_stainfo(_adapter *padapter)
+{
+	return rtw_init_bcmc_stainfo_impl(padapter);
+}
+#endif
+
+#if defined(CONFIG_RUST) && !defined(HOST_STA_MGT_TEST) && defined(CONFIG_RUST_STA_MGT_FREE_BCMc)
+u32 rtw_rust_init_bcmc_stainfo_body(_adapter *padapter)
+{
+	return rtw_init_bcmc_stainfo_impl(padapter);
+}
+#endif
