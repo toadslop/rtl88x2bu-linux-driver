@@ -226,16 +226,21 @@ test-c-bmc-update: test_ap_bmc_update
 test-rust-bmc-update: test_ap_bmc_update_rust
 	./test_ap_bmc_update_rust ap_bmc_update_vectors.json
 
-test_ap_bmc_update: test_ap_bmc_update.c ap_bmc_update_oracle.c $(HOST_JSON)
-	$(CC) $(BMC_UPDATE_CFLAGS) -o $@ test_ap_bmc_update.c ap_bmc_update_oracle.c $(HOST_JSON)
+BMC_STA_UPDATE_SRC := ap_bmc_sta_helpers.c host_ap_bmc_sta_shim.c
+
+test_ap_bmc_update: test_ap_bmc_update.c ap_bmc_update_oracle.c $(BMC_STA_UPDATE_SRC) $(HOST_JSON)
+	$(CC) $(BMC_UPDATE_CFLAGS) -o $@ test_ap_bmc_update.c ap_bmc_update_oracle.c \
+		$(BMC_STA_UPDATE_SRC) $(HOST_JSON)
 
 librust_ap_bmc_update.a: $(RUST_AP_BMC_UPDATE)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
 		--cfg host_ap_bmc_update_test --cfg bmc_tx_low_rate \
 		--crate-type staticlib $(RUST_AP_BMC_UPDATE) -o $@
 
-test_ap_bmc_update_rust: test_ap_bmc_update.c librust_ap_bmc_update.a librust_ap_bmc_rate.a $(HOST_JSON)
-	$(CC) $(BMC_UPDATE_CFLAGS) -DRUST_AP_BMC_UPDATE_ORACLE -o $@ test_ap_bmc_update.c $(HOST_JSON) \
+test_ap_bmc_update_rust: test_ap_bmc_update.c librust_ap_bmc_update.a librust_ap_bmc_rate.a \
+		$(BMC_STA_UPDATE_SRC) $(HOST_JSON)
+	$(CC) $(BMC_UPDATE_CFLAGS) -DRUST_AP_BMC_UPDATE_ORACLE -o $@ test_ap_bmc_update.c \
+		$(BMC_STA_UPDATE_SRC) $(HOST_JSON) \
 		librust_ap_bmc_update.a librust_ap_bmc_rate.a
 
 test_ap_sta_ie: test_ap_sta_ie.c $(AP_STA_IE_SRC) $(HOST_JSON)
