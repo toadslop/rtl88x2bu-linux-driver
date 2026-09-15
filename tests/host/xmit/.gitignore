@@ -10,3 +10,4 @@ librust_xmit_sctx.a
 xmit_rest_c_ref.o
 xmit_qos_c_ref.o
 xmit_sctx_c_ref.o
+test_xmit_update_attrib
