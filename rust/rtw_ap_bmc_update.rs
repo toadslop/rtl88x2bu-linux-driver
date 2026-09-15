@@ -27,6 +27,7 @@ const MGN_36M: u8 = 0x48;
 const MGN_48M: u8 = 0x60;
 const MGN_54M: u8 = 0x6c;
 const WIFI_AP_STATE: u32 = 0x0000_0010;
+const WIFI_MESH_STATE: u32 = 0x0000_0200;
 const WIRELESS_11G: u32 = 2;
 
 #[repr(C)]
@@ -93,6 +94,10 @@ fn mlme_is_ap(padapter: *mut Adapter) -> bool {
     unsafe { ((*padapter).mlmepriv.state & WIFI_AP_STATE) != 0 }
 }
 
+fn mlme_is_mesh(padapter: *mut Adapter) -> bool {
+    unsafe { ((*padapter).mlmepriv.state & WIFI_MESH_STATE) != 0 }
+}
+
 fn get_lowest_rate_idx_ex(mask: u64, start_bit: u32) -> u8 {
     for i in start_bit..64 {
         if (mask >> i) & 1 != 0 {
@@ -104,6 +109,16 @@ fn get_lowest_rate_idx_ex(mask: u64, start_bit: u32) -> u8 {
 
 fn get_lowest_rate_idx(mask: u64) -> u8 {
     get_lowest_rate_idx_ex(mask, 0)
+}
+
+#[cfg(not(bmc_tx_low_rate))]
+fn get_highest_rate_idx(mask: u64) -> u8 {
+    for i in (0..64).rev() {
+        if (mask >> i) & 1 != 0 {
+            return i as u8;
+        }
+    }
+    0
 }
 
 const HW_TO_MGN: [u8; 12] = [
@@ -123,11 +138,8 @@ fn is_enable_hw_ofdm(net_type: u32) -> bool {
     (net_type & (WIRELESS_11G | 0x0000_0020)) != 0
 }
 
-unsafe fn container_of_asoc(plist: *mut List) -> *mut StaInfo {
-    let off = core::mem::offset_of!(StaInfo, asoc_list);
-    (plist as *mut u8).sub(off) as *mut StaInfo
-}
-
+/// Host-L2 walk of `asoc_list` (no lock — single-threaded oracle). Kernel C takes
+/// `asoc_list_lock`; a future `CONFIG_RUST_AP_BMC_UPDATE` swap should use the kernel helper.
 unsafe fn ap_find_mini_tx_rate_update_host(adapter: *mut Adapter) -> u8 {
     const ODM_RATEVHTSS4MCS9: u8 = 0x53;
     let stapriv = &mut (*adapter).stapriv;
@@ -135,7 +147,8 @@ unsafe fn ap_find_mini_tx_rate_update_host(adapter: *mut Adapter) -> u8 {
     let mut plist = (*phead).next;
     let mut mini = ODM_RATEVHTSS4MCS9;
     while plist != phead {
-        let psta = container_of_asoc(plist);
+        let off = core::mem::offset_of!(StaInfo, asoc_list);
+        let psta = (plist as *mut u8).sub(off) as *mut StaInfo;
         let sta_tx_rate = (*psta).cmn.ra_info.curr_tx_rate & 0x7f;
         if sta_tx_rate < mini {
             mini = sta_tx_rate;
@@ -163,8 +176,13 @@ pub extern "C" fn rtw_update_bmc_sta_tx_rate(adapter: *mut c_void) {
         if (*adapter).stapriv.asoc_sta_count <= 2 {
             return;
         }
-        let tx_rate =
-            rtw_ap_find_bmc_rate(adapter.cast(), ap_find_mini_tx_rate_update_host(adapter));
+        // Not calling `rtw_ap_find_mini_tx_rate` from `librust_ap_bmc_rate.a`: that crate's
+        // host `_adapter` layout is smaller than `host_ap_bmc_update_types.h` (see review #786).
+        let mut tx_rate = ap_find_mini_tx_rate_update_host(adapter);
+        #[cfg(bmc_tx_low_rate)]
+        {
+            tx_rate = rtw_ap_find_bmc_rate(adapter.cast(), tx_rate);
+        }
         (*psta).init_rate = hw_rate_to_m_rate(tx_rate);
     }
 }
@@ -176,7 +194,7 @@ pub extern "C" fn rtw_init_bmc_sta_tx_rate(padapter: *mut c_void, psta: *mut c_v
     }
     let padapter = padapter as *mut Adapter;
     let psta = psta as *mut StaInfo;
-    if !mlme_is_ap(padapter) {
+    if !mlme_is_ap(padapter) && !mlme_is_mesh(padapter) {
         return;
     }
     const BRATE: [u8; 12] = [
@@ -190,10 +208,21 @@ pub extern "C" fn rtw_init_bmc_sta_tx_rate(padapter: *mut c_void, psta: *mut c_v
         }
         let ramask = (*psta).cmn.ra_info.ramask;
         let wm = (*padapter).mlmeextpriv.cur_wireless_mode;
-        let rate_idx = if is_enable_hw_ofdm(wm) && ramask != 0 {
-            get_lowest_rate_idx_ex(ramask, 4)
-        } else {
-            get_lowest_rate_idx(ramask)
+        // C uses `(ramask && 0xFF0)` (logical &&), equivalent to `ramask != 0` for u64 masks.
+        let rate_idx = {
+            #[cfg(bmc_tx_low_rate)]
+            {
+                if is_enable_hw_ofdm(wm) && ramask != 0 {
+                    get_lowest_rate_idx_ex(ramask, 4)
+                } else {
+                    get_lowest_rate_idx(ramask)
+                }
+            }
+            #[cfg(not(bmc_tx_low_rate))]
+            {
+                let _ = wm;
+                get_highest_rate_idx(ramask)
+            }
         };
         (*psta).init_rate = if (rate_idx as usize) < 12 {
             BRATE[rate_idx as usize]
