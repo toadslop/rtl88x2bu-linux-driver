@@ -24,6 +24,10 @@
 void rtw_mfree_stainfo(struct sta_info *psta);
 #endif
 
+#if defined(CONFIG_RUST) && !defined(HOST_STA_MGT_TEST) && defined(CONFIG_RUST_STA_MGT_FREE_STAINFO)
+u32 rtw_free_stainfo(_adapter *padapter, struct sta_info *psta);
+#endif
+
 #if defined(RUST_STA_MGT_FREE_ORACLE)
 void rtw_mfree_stainfo(struct sta_info *psta);
 #else
@@ -216,7 +220,10 @@ void rtw_free_stainfo_flush_recv(_adapter *padapter, struct sta_info *psta)
 }
 
 /* using pstapriv->sta_hash_lock to protect */
-u32 rtw_free_stainfo(_adapter *padapter, struct sta_info *psta)
+#if !defined(RUST_STA_MGT_FREE_ORACLE) || !defined(RUST_STA_MGT_FREE_STAINFO_ORACLE) || \
+	(defined(CONFIG_RUST) && !defined(HOST_STA_MGT_TEST) && defined(CONFIG_RUST_STA_MGT_FREE_STAINFO))
+
+static u32 rtw_free_stainfo_impl(_adapter *padapter, struct sta_info *psta)
 {
 	_irqL irqL0;
 	_queue *pfree_sta_queue;
@@ -313,6 +320,24 @@ u32 rtw_free_stainfo(_adapter *padapter, struct sta_info *psta)
 exit:
 	return _SUCCESS;
 }
+
+#endif /* impl visibility */
+
+#if (!defined(RUST_STA_MGT_FREE_ORACLE) || !defined(RUST_STA_MGT_FREE_STAINFO_ORACLE)) && \
+	(!defined(CONFIG_RUST) || defined(HOST_STA_MGT_TEST) || !defined(CONFIG_RUST_STA_MGT_FREE_STAINFO))
+u32 rtw_free_stainfo(_adapter *padapter, struct sta_info *psta)
+{
+	return rtw_free_stainfo_impl(padapter, psta);
+}
+#endif
+
+#if defined(CONFIG_RUST) && !defined(HOST_STA_MGT_TEST) && defined(CONFIG_RUST_STA_MGT_FREE_STAINFO)
+u32 rtw_rust_free_stainfo_body(_adapter *padapter, struct sta_info *psta)
+{
+	return rtw_free_stainfo_impl(padapter, psta);
+}
+#endif
+
 #endif /* !HOST_STA_MGT_TEST */
 
 /* this function is used to free the memory of lock || sema for all stainfos */
