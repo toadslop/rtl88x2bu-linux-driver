@@ -30,7 +30,6 @@ const MGN_24M: U8 = 0x30;
 const MGN_36M: U8 = 0x48;
 const MGN_48M: U8 = 0x60;
 const MGN_54M: U8 = 0x6c;
-const WIRELESS_11G: u32 = 2;
 
 extern "C" {
     fn rtw_get_bcmc_stainfo(adapter: Adapter) -> StaInfo;
@@ -44,6 +43,8 @@ extern "C" {
     fn rtw_rust_bmc_update_mlme_is_mesh(adapter: Adapter) -> U8;
     fn rtw_rust_bmc_update_wireless_mode(adapter: Adapter) -> u32;
     fn rtw_rust_bmc_update_sta_ramask(psta: StaInfo) -> u64;
+    fn rtw_rust_bmc_update_is_enable_hw_ofdm(adapter: Adapter) -> U8;
+    fn rtw_rust_bmc_update_err_missing_bmc_sta(adapter: Adapter);
 }
 
 fn hw_rate_to_m_rate(hw_rate: U8) -> U8 {
@@ -81,10 +82,6 @@ fn get_highest_rate_idx(mask: u64) -> U8 {
     0
 }
 
-fn is_enable_hw_ofdm(net_type: u32) -> bool {
-    (net_type & (WIRELESS_11G | 0x0000_0020)) != 0
-}
-
 #[cfg(bmc_tx_rate_select)]
 #[no_mangle]
 pub extern "C" fn rtw_update_bmc_sta_tx_rate(adapter: Adapter) {
@@ -94,6 +91,7 @@ pub extern "C" fn rtw_update_bmc_sta_tx_rate(adapter: Adapter) {
     unsafe {
         let psta = rtw_get_bcmc_stainfo(adapter);
         if psta.is_null() {
+            rtw_rust_bmc_update_err_missing_bmc_sta(adapter);
             return;
         }
         if rtw_rust_bmc_update_bmc_tx_rate(adapter) != MGN_UNKNOWN {
@@ -133,11 +131,10 @@ pub extern "C" fn rtw_init_bmc_sta_tx_rate(padapter: Adapter, psta: StaInfo) {
             return;
         }
         let ramask = rtw_rust_bmc_update_sta_ramask(psta);
-        let wm = rtw_rust_bmc_update_wireless_mode(padapter);
         let rate_idx = {
             #[cfg(bmc_tx_low_rate)]
             {
-                if is_enable_hw_ofdm(wm) && ramask != 0 {
+                if rtw_rust_bmc_update_is_enable_hw_ofdm(padapter) != 0 && ramask != 0 {
                     get_lowest_rate_idx_ex(ramask, 4)
                 } else {
                     get_lowest_rate_idx(ramask)
@@ -145,7 +142,6 @@ pub extern "C" fn rtw_init_bmc_sta_tx_rate(padapter: Adapter, psta: StaInfo) {
             }
             #[cfg(not(bmc_tx_low_rate))]
             {
-                let _ = wm;
                 get_highest_rate_idx(ramask)
             }
         };

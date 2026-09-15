@@ -135,7 +135,10 @@ fn hw_rate_to_m_rate(hw_rate: u8) -> u8 {
 }
 
 fn is_enable_hw_ofdm(net_type: u32) -> bool {
-    (net_type & (WIRELESS_11G | 0x0000_0020)) != 0
+    const WIRELESS_11G: u32 = 2;
+    const WIRELESS_11_24N: u32 = 1 << 3;
+    const WIRELESS_MODE_5G: u32 = (1 << 2) | (1 << 4) | (1 << 6);
+    (net_type & (WIRELESS_11G | WIRELESS_11_24N | WIRELESS_MODE_5G)) != 0
 }
 
 /// Host-L2 walk of `asoc_list` (no lock — single-threaded oracle). Kernel uses

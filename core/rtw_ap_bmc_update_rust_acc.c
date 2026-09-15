@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /* Kernel accessors for rust/rtw_ap_bmc_update.rs (W3-80 PR10). */
 #include <drv_types.h>
+#include <ieee80211.h>
 
 #if defined(CONFIG_RUST_AP_BMC_UPDATE) && !defined(HOST_AP_BMC_UPDATE_TEST)
 
@@ -42,6 +43,16 @@ u32 rtw_rust_bmc_update_wireless_mode(_adapter *adapter)
 u64 rtw_rust_bmc_update_sta_ramask(struct sta_info *psta)
 {
 	return psta->cmn.ra_info.ramask;
+}
+
+u8 rtw_rust_bmc_update_is_enable_hw_ofdm(_adapter *adapter)
+{
+	return IsEnableHWOFDM(adapter->mlmeextpriv.cur_wireless_mode) ? 1 : 0;
+}
+
+void rtw_rust_bmc_update_err_missing_bmc_sta(_adapter *adapter)
+{
+	RTW_ERR(ADPT_FMT "could not get bmc_sta !!\n", ADPT_ARG(adapter));
 }
 
 #endif /* CONFIG_RUST_AP_BMC_UPDATE && !HOST_AP_BMC_UPDATE_TEST */
