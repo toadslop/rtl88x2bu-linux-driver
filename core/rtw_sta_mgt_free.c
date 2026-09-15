@@ -655,7 +655,11 @@ static u32 rtw_init_bcmc_stainfo_impl(_adapter *padapter)
 #endif /* !HOST_STA_MGT_TEST */
 
 exit:
+#ifndef HOST_STA_MGT_TEST
+	return res;
+#else
 	return _SUCCESS;
+#endif
 
 }
 
