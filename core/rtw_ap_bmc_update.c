@@ -13,6 +13,8 @@
 #include <drv_types.h>
 #include <hal_data.h>
 
+#if !defined(CONFIG_RUST_AP_BMC_UPDATE)
+
 #ifdef CONFIG_BMC_TX_RATE_SELECT
 u8 rtw_ap_find_bmc_rate(_adapter *adapter, u8 tx_rate);
 u8 rtw_ap_find_mini_tx_rate(_adapter *adapter);
@@ -79,6 +81,12 @@ void rtw_init_bmc_sta_tx_rate(_adapter *padapter, struct sta_info *psta)
 
 	RTW_INFO(ADPT_FMT" BMC Init Tx rate - %s\n", ADPT_ARG(padapter), MGN_RATE_STR(psta->init_rate));
 }
+
+#endif /* !CONFIG_RUST_AP_BMC_UPDATE */
+
+#if defined(CONFIG_RUST_AP_BMC_UPDATE)
+void rtw_init_bmc_sta_tx_rate(_adapter *padapter, struct sta_info *psta);
+#endif
 
 void update_bmc_sta(_adapter *padapter)
 {
