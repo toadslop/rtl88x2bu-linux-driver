@@ -86,7 +86,8 @@ void rtw_init_bmc_sta_tx_rate(_adapter *padapter, struct sta_info *psta)
 
 #if defined(CONFIG_RUST_AP_BMC_UPDATE)
 void rtw_init_bmc_sta_tx_rate(_adapter *padapter, struct sta_info *psta);
-#endif
+void update_bmc_sta(_adapter *padapter);
+#else
 
 void update_bmc_sta(_adapter *padapter)
 {
@@ -140,3 +141,5 @@ void update_bmc_sta(_adapter *padapter)
 	} else
 		RTW_INFO("add_RATid_bmc_sta error!\n");
 }
+
+#endif /* !CONFIG_RUST_AP_BMC_UPDATE */
