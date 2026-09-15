@@ -107,8 +107,8 @@ fn get_lowest_rate_idx(mask: u64) -> u8 {
 }
 
 const HW_TO_MGN: [u8; 12] = [
-    MGN_1M, MGN_2M, MGN_5_5M, MGN_11M, MGN_6M, MGN_9M, MGN_12M, MGN_18M, MGN_24M, MGN_36M,
-    MGN_48M, MGN_54M,
+    MGN_1M, MGN_2M, MGN_5_5M, MGN_11M, MGN_6M, MGN_9M, MGN_12M, MGN_18M, MGN_24M, MGN_36M, MGN_48M,
+    MGN_54M,
 ];
 
 fn hw_rate_to_m_rate(hw_rate: u8) -> u8 {
@@ -163,10 +163,8 @@ pub extern "C" fn rtw_update_bmc_sta_tx_rate(adapter: *mut c_void) {
         if (*adapter).stapriv.asoc_sta_count <= 2 {
             return;
         }
-        let tx_rate = rtw_ap_find_bmc_rate(
-            adapter.cast(),
-            ap_find_mini_tx_rate_update_host(adapter),
-        );
+        let tx_rate =
+            rtw_ap_find_bmc_rate(adapter.cast(), ap_find_mini_tx_rate_update_host(adapter));
         (*psta).init_rate = hw_rate_to_m_rate(tx_rate);
     }
 }
