@@ -21,9 +21,17 @@ typedef int _lock;
 #define MGN_12M 0x18
 #define MGN_24M 0x30
 #define WIFI_AP_STATE 0x00000010U
-#define WIRELESS_11G 2U
+#define WIRELESS_11G (1U << 1)
+#define WIRELESS_11A (1U << 2)
+#define WIRELESS_11_24N (1U << 3)
+#define WIRELESS_11_5N (1U << 4)
+#define WIRELESS_11AC (1U << 6)
+#define WIRELESS_MODE_5G (WIRELESS_11A | WIRELESS_11_5N | WIRELESS_11AC)
+#define SUPPORTED_5G_NETTYPE_MSK WIRELESS_MODE_5G
 #define IsEnableHWOFDM(NetType) \
-	(((NetType) & (WIRELESS_11G | 0x00000020U)) ? _TRUE : _FALSE)
+	(((NetType) & (WIRELESS_11G | WIRELESS_11_24N | SUPPORTED_5G_NETTYPE_MSK)) ? \
+	 _TRUE : \
+	 _FALSE)
 
 struct _list {
 	struct _list *next;

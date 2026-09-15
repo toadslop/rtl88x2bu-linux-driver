@@ -135,11 +135,14 @@ fn hw_rate_to_m_rate(hw_rate: u8) -> u8 {
 }
 
 fn is_enable_hw_ofdm(net_type: u32) -> bool {
-    (net_type & (WIRELESS_11G | 0x0000_0020)) != 0
+    const WIRELESS_11G: u32 = 2;
+    const WIRELESS_11_24N: u32 = 1 << 3;
+    const WIRELESS_MODE_5G: u32 = (1 << 2) | (1 << 4) | (1 << 6);
+    (net_type & (WIRELESS_11G | WIRELESS_11_24N | WIRELESS_MODE_5G)) != 0
 }
 
-/// Host-L2 walk of `asoc_list` (no lock — single-threaded oracle). Kernel C takes
-/// `asoc_list_lock`; a future `CONFIG_RUST_AP_BMC_UPDATE` swap should use the kernel helper.
+/// Host-L2 walk of `asoc_list` (no lock — single-threaded oracle). Kernel uses
+/// `rtw_ap_find_mini_tx_rate` via `rust/rtw_ap_bmc_update_kern.rs`.
 unsafe fn ap_find_mini_tx_rate_update_host(adapter: *mut Adapter) -> u8 {
     const ODM_RATEVHTSS4MCS9: u8 = 0x53;
     let stapriv = &mut (*adapter).stapriv;
@@ -176,8 +179,6 @@ pub extern "C" fn rtw_update_bmc_sta_tx_rate(adapter: *mut c_void) {
         if (*adapter).stapriv.asoc_sta_count <= 2 {
             return;
         }
-        // Not calling `rtw_ap_find_mini_tx_rate` from `librust_ap_bmc_rate.a`: that crate's
-        // host `_adapter` layout is smaller than `host_ap_bmc_update_types.h` (see review #786).
         let mut tx_rate = ap_find_mini_tx_rate_update_host(adapter);
         #[cfg(bmc_tx_low_rate)]
         {
@@ -208,7 +209,6 @@ pub extern "C" fn rtw_init_bmc_sta_tx_rate(padapter: *mut c_void, psta: *mut c_v
         }
         let ramask = (*psta).cmn.ra_info.ramask;
         let wm = (*padapter).mlmeextpriv.cur_wireless_mode;
-        // C uses `(ramask && 0xFF0)` (logical &&), equivalent to `ramask != 0` for u64 masks.
         let rate_idx = {
             #[cfg(bmc_tx_low_rate)]
             {
