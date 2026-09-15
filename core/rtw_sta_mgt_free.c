@@ -20,6 +20,10 @@
 #include <drv_types.h>
 #endif
 
+#if defined(CONFIG_RUST) && !defined(HOST_STA_MGT_TEST) && defined(CONFIG_RUST_STA_MGT_FREE)
+void rtw_mfree_stainfo(struct sta_info *psta);
+#endif
+
 #if defined(RUST_STA_MGT_FREE_ORACLE)
 void rtw_mfree_stainfo(struct sta_info *psta);
 #else
@@ -48,6 +52,7 @@ static void	_rtw_free_sta_recv_priv_lock(struct sta_recv_priv *psta_recvpriv)
 
 }
 
+#if !defined(CONFIG_RUST) || defined(HOST_STA_MGT_TEST) || !defined(CONFIG_RUST_STA_MGT_FREE)
 void rtw_mfree_stainfo(struct sta_info *psta);
 void rtw_mfree_stainfo(struct sta_info *psta)
 {
@@ -61,7 +66,25 @@ void rtw_mfree_stainfo(struct sta_info *psta)
 	_rtw_free_sta_recv_priv_lock(&psta->sta_recvpriv);
 
 }
+#endif /* !CONFIG_RUST || HOST_STA_MGT_TEST || !CONFIG_RUST_STA_MGT_FREE */
+
 #endif /* RUST_STA_MGT_FREE_ORACLE */
+
+#if defined(CONFIG_RUST) && !defined(HOST_STA_MGT_TEST)
+
+void rtw_rust_mfree_stainfo_locks(struct sta_info *psta)
+{
+	if (psta == NULL)
+		return;
+
+	if (&(psta->lock) != NULL)
+		_rtw_spinlock_free(&psta->lock);
+
+	_rtw_free_sta_xmit_priv_lock(&psta->sta_xmitpriv);
+	_rtw_free_sta_recv_priv_lock(&psta->sta_recvpriv);
+}
+
+#endif /* CONFIG_RUST && !HOST_STA_MGT_TEST */
 
 #if defined(RUST_STA_MGT_FREE_ORACLE) && defined(RUST_STA_MGT_FREE_INIT_ORACLE)
 u32 _rtw_init_sta_priv(struct sta_priv *pstapriv);

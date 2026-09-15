@@ -1,0 +1,2 @@
+# L1 allowlist for W3-79 mfree kernel object: drop Rust FFI helpers from symbol check.
+drop rtw_rust_mfree_stainfo_locks
