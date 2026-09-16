@@ -2644,6 +2644,7 @@ ccflags-y += -DCONFIG_RUST_STA_MGT_FREE_BCMc
 ccflags-y += -DCONFIG_RUST_AP_STA_IE
 ccflags-y += -DCONFIG_RUST_AP_STA_IE_SEC
 ccflags-y += -DCONFIG_RUST_AP_STA_ALIVE
+ccflags-y += -DCONFIG_RUST_AP_STA_RA
 ccflags-y += -DCONFIG_RUST_AP_EXPIRE_ASOC
 ccflags-y += -DCONFIG_RUST_AP_EXPIRE_AUTH
 ccflags-y += -DCONFIG_RUST_AP_AKA_CHK
@@ -2801,6 +2802,7 @@ $(MODULE_NAME)-y += rust/rtw_ap_sta_ie_sec.o
 $(MODULE_NAME)-y += rust/rtw_ap_rest.o
 $(MODULE_NAME)-y += rust/rtw_ap_bmc_update_kern.o
 $(MODULE_NAME)-y += rust/rtw_ap_sta_alive.o
+$(MODULE_NAME)-y += rust/rtw_ap_sta_ra.o
 $(MODULE_NAME)-y += rust/rtw_ap_expire_asoc.o
 $(MODULE_NAME)-y += rust/rtw_ap_expire_auth.o
 $(MODULE_NAME)-y += rust/rtw_ap_aka_chk.o
@@ -3341,6 +3343,23 @@ rust-objects-rtw-ap-sta-alive-rust-ref:
 rust-check-symbols-rtw-ap-sta-alive: rust-objects-rtw-ap-sta-alive-c rust-objects-rtw-ap-sta-alive-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_sta_alive_c_ref.o NEW=tests/host/ap/ap_sta_alive_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_sta_alive.allow
+
+# W3-83 PR3: rtw_ap_update_sta_ra_info L1 (host C vs host Rust oracle).
+rust-objects-rtw-ap-sta-ra-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_AP_STA_RA_TEST \
+		-o tests/host/ap/ap_sta_ra_c_ref.o core/rtw_ap_sta_ra.c
+
+rust-objects-rtw-ap-sta-ra-rust-ref:
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on --cfg host_ap_sta_ra_test \
+		--emit=obj=tests/host/ap/ap_sta_ra_rust_ref.o \
+		--crate-type lib rust/rtw_ap_sta_ra.rs
+
+rust-check-symbols-rtw-ap-sta-ra: rust-objects-rtw-ap-sta-ra-c rust-objects-rtw-ap-sta-ra-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_sta_ra_c_ref.o NEW=tests/host/ap/ap_sta_ra_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_sta_ra.allow
 
 # W3-82 PR8: expire asoc tick L1 (host C vs host Rust oracle).
 rust-objects-rtw-ap-expire-asoc-c:
