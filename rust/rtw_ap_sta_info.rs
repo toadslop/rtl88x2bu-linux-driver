@@ -166,7 +166,12 @@ fn update_sta_info_apmode_ht_bf_cap_kernel(padapter: *mut Adapter, psta: *mut St
     unsafe {
         let ap_bf = rtw_rust_ap_sta_info_ap_bf_cap(padapter);
         let sta_ht = rtw_rust_ap_sta_info_sta_ht_cap(psta);
-        let sta_tx_bf = u32::from_le_bytes([*sta_ht.add(21), *sta_ht.add(22), *sta_ht.add(23), *sta_ht.add(24)]);
+        let sta_tx_bf = u32::from_le_bytes([
+            *sta_ht.add(21),
+            *sta_ht.add(22),
+            *sta_ht.add(23),
+            *sta_ht.add(24),
+        ]);
         let mut sta_bf = 0u8;
         let mut ht_bf = 0u8;
         update_sta_info_apmode_ht_bf_cap_impl(ap_bf, sta_tx_bf, &mut sta_bf, &mut ht_bf);
