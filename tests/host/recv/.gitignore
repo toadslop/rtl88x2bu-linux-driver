@@ -1,3 +1,5 @@
 test_recv_sta
 test_recv_sta_rust
 librust_recv_sta_count.a
+librust_recv_sta*.a
+test_recv_sta*r
