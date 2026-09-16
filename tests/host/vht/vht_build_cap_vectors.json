@@ -1,0 +1,20 @@
+{
+  "vectors": [
+    {
+      "name": "mpdu_11454_80mhz",
+      "reg_bw_mode": 32,
+      "hal_bw_cap": 16,
+      "hal_max_bw": 2,
+      "rx_packet_offset": 0,
+      "max_recvbuf_sz": 12000,
+      "ldpc_cap": 0,
+      "stbc_cap": 0,
+      "sgi_80m": 0,
+      "rx_stbc_nss": 0,
+      "mcs_map": "ffaa",
+      "vht_highest_rate": 167,
+      "ampdu_factor": 5,
+      "expect_cap_hex": "0200c002ffaa2501ffaa2501"
+    }
+  ]
+}
