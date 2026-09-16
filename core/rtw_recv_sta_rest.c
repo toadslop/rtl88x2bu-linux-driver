@@ -15,7 +15,8 @@
 #include <drv_types.h>
 #endif
 
-#if !defined(CONFIG_RUST_RECV_STA) || defined(HOST_RECV_STA_TEST)
+#if (!defined(CONFIG_RUST_RECV_STA) || defined(HOST_RECV_STA_TEST)) \
+	&& !defined(HOST_RECV_STA_RUST_COUNT)
 
 void count_rx_stats(_adapter *padapter, union recv_frame *prframe, struct sta_info *sta)
 {
@@ -77,6 +78,11 @@ void count_rx_stats(_adapter *padapter, union recv_frame *prframe, struct sta_in
 #endif /* CONFIG_CHECK_LEAVE_LPS */
 
 }
+
+#endif /* count_rx_stats C oracle guard */
+
+#if (!defined(CONFIG_RUST_RECV_STA) || defined(HOST_RECV_STA_TEST)) \
+	&& !defined(HOST_RECV_STA_RUST_VALIDATE)
 
 int rtw_sta_rx_data_validate_hdr(_adapter *adapter, union recv_frame *rframe, struct sta_info **sta)
 {
@@ -202,4 +208,4 @@ exit:
 	return ret;
 }
 
-#endif /* !CONFIG_RUST_RECV_STA || HOST_RECV_STA_TEST */
+#endif /* validate_hdr C oracle guard */

@@ -13,6 +13,7 @@ LLC_SHIM := host_recv_llc_shim.c
 WFD_ORACLE := recv_wfd_c_oracle.c
 HOST_JSON := ../crypto/host_vector_json.c
 RUST_RECV := $(ROOT)/rust/rtw_recv.rs
+RUST_RECV_STA_COUNT := $(ROOT)/rust/rtw_recv_sta_count.rs
 
 CC     := gcc
 RUSTC  := rustc
@@ -23,12 +24,13 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable
 
 STA_CFLAGS := $(CFLAGS) -DHOST_RECV_STA_TEST
 RECV_STA_DEPS := test_recv_sta.c $(RECV_STA_REST_SRC) $(RECV_STA_SHIM) $(HOST_JSON)
+STA_COUNT_RUST_CFLAGS := $(STA_CFLAGS) -DHOST_RECV_STA_RUST_COUNT
 
-.PHONY: all test test-c test-rust test-sta clean
+.PHONY: all test test-c test-rust test-sta test-sta-count-rust clean
 
 all: test
 
-test: test-c test-rust test-sta
+test: test-c test-rust test-sta test-sta-count-rust
 
 test-c: test_recv
 	./test_recv recv_vectors.json
@@ -52,5 +54,17 @@ test-sta: test_recv_sta
 test_recv_sta: $(RECV_STA_DEPS)
 	$(CC) $(STA_CFLAGS) -o $@ $(RECV_STA_DEPS)
 
+librust_recv_sta_count.a: $(RUST_RECV_STA_COUNT)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on \
+		--crate-type staticlib $(RUST_RECV_STA_COUNT) -o $@
+
+test-sta-count-rust: test_recv_sta_count_rust
+	./test_recv_sta_count_rust recv_sta_count_vectors.json
+
+test_recv_sta_count_rust: test_recv_sta.c librust_recv_sta_count.a $(RECV_STA_SHIM) $(HOST_JSON)
+	$(CC) $(STA_COUNT_RUST_CFLAGS) -o $@ test_recv_sta.c $(RECV_STA_SHIM) $(HOST_JSON) librust_recv_sta_count.a \
+		$(RECV_STA_REST_SRC)
+
 clean:
-	rm -f test_recv test_recv_rust test_recv_sta test_recv_sta_rust librust_recv.a
+	rm -f test_recv test_recv_rust test_recv_sta test_recv_sta_count_rust \
+		librust_recv.a librust_recv_sta_count.a

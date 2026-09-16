@@ -153,12 +153,15 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-ap-expire-timeout
 		;;
 	rust/rtw_recv.rs \
+	| rust/rtw_recv_sta_count.rs \
 	| core/rtw_recv_rest.c \
 	| core/rtw_recv_llc_rest.c \
 	| core/rtw_recv_pn_rest.c \
+	| core/rtw_recv_sta_rest.c \
 	| tests/host/recv/*)
 		add_target rust-check-symbols-rtw-recv
 		add_target rust-check-symbols-rtw-recv-pn
+		add_target rust-check-symbols-rtw-recv-sta-count
 		;;
 	rust/rtw_xmit.rs \
 	| core/rtw_xmit_rest.c \
