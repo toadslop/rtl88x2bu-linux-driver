@@ -76,7 +76,8 @@ fn update_attrib_vcs_info_inner(
         }
     } else {
         let mode = 'ht: {
-            if assoc_ap_vendor == HT_IOT_PEER_ATHEROS && ampdu_en == _TRUE && dot11_privacy == _AES_ {
+            if assoc_ap_vendor == HT_IOT_PEER_ATHEROS && ampdu_en == _TRUE && dot11_privacy == _AES_
+            {
                 break 'ht CTS_TO_SELF;
             }
             if rtsen != 0 || cts2self != 0 {
