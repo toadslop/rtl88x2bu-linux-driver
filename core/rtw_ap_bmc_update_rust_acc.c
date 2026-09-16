@@ -55,4 +55,46 @@ void rtw_rust_bmc_update_err_missing_bmc_sta(_adapter *adapter)
 	RTW_ERR(ADPT_FMT "could not get bmc_sta !!\n", ADPT_ARG(adapter));
 }
 
+u8 *rtw_rust_bmc_update_cur_supported_rates(_adapter *adapter)
+{
+	WLAN_BSSID_EX *net = &adapter->mlmepriv.cur_network.network;
+
+	return (u8 *)&net->SupportedRates;
+}
+
+int rtw_rust_bmc_update_cur_ds_config(_adapter *adapter)
+{
+	return adapter->mlmepriv.cur_network.network.Configuration.DSConfig;
+}
+
+void rtw_rust_bmc_update_sta_prepare(_adapter *adapter, struct sta_info *psta)
+{
+	psta->cmn.aid = 0;
+#ifdef CONFIG_RTW_MESH
+	if (MLME_IS_MESH(adapter))
+		psta->qos_option = 1;
+	else
+#endif
+		psta->qos_option = 0;
+#ifdef CONFIG_80211N_HT
+	psta->htpriv.ht_option = _FALSE;
+#endif
+	psta->ieee8021x_blocked = 0;
+	_rtw_memset((void *)&psta->sta_stats, 0, sizeof(struct stainfo_stats));
+}
+
+void rtw_rust_bmc_update_sta_set_asoc(struct sta_info *psta)
+{
+	_irqL irqL;
+
+	_enter_critical_bh(&psta->lock, &irqL);
+	psta->state = WIFI_ASOC_STATE;
+	_exit_critical_bh(&psta->lock, &irqL);
+}
+
+void rtw_rust_bmc_update_sta_set_wireless_mode(struct sta_info *psta, u8 mode)
+{
+	psta->wireless_mode = mode;
+}
+
 #endif /* CONFIG_RUST_AP_BMC_UPDATE && !HOST_AP_BMC_UPDATE_TEST */
