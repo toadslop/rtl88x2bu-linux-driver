@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /* Host oracle — sync with core/rtw_ap_bmc_update.c + rtw_ap_rest.c helpers */
 #include "host_ap_bmc_update_types.h"
+#include <string.h>
 
 #define MGN_UNKNOWN 0x00
 #define MGN_1M 0x02
@@ -168,4 +169,48 @@ void rtw_init_bmc_sta_tx_rate(struct _adapter *padapter, struct sta_info *psta)
 #endif
 		psta->init_rate = (rate_idx < 12) ? brate[rate_idx] : MGN_1M;
 	}
+}
+
+void update_bmc_sta(struct _adapter *padapter)
+{
+	_irqL irqL;
+	unsigned char network_type;
+	int supportRateNum;
+	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+	struct host_wlan_bssid_ex *pcur_network =
+		&pmlmepriv->cur_network.network;
+	struct sta_info *psta = rtw_get_bcmc_stainfo(padapter);
+
+	if (!psta)
+		return;
+
+	psta->aid = 0;
+	psta->qos_option = 0;
+	psta->htpriv.ht_option = _FALSE;
+	psta->ieee8021x_blocked = 0;
+	memset(&psta->sta_stats, 0, sizeof(psta->sta_stats));
+
+	supportRateNum = (int)rtw_get_rateset_len(pcur_network->SupportedRates);
+	network_type = (unsigned char)rtw_check_network_type(
+		pcur_network->SupportedRates, supportRateNum,
+		pcur_network->Configuration.DSConfig);
+	if (IsSupportedTxCCK(network_type))
+		network_type = WIRELESS_11B;
+	else if (network_type == WIRELESS_INVALID) {
+		if (pcur_network->Configuration.DSConfig > 14)
+			network_type = WIRELESS_11A;
+		else
+			network_type = WIRELESS_11B;
+	}
+	update_sta_basic_rate(psta, network_type);
+	psta->wireless_mode = network_type;
+
+	rtw_hal_update_sta_ra_info(padapter, psta);
+
+	_enter_critical_bh(&psta->lock, &irqL);
+	psta->state = WIFI_ASOC_STATE;
+	_exit_critical_bh(&psta->lock, &irqL);
+
+	rtw_sta_media_status_rpt(padapter, psta, 1);
+	rtw_init_bmc_sta_tx_rate(padapter, psta);
 }

@@ -5,6 +5,7 @@
 #include <stddef.h>
 
 typedef unsigned char u8;
+typedef unsigned short u16;
 typedef unsigned int u32;
 typedef unsigned long long u64;
 typedef unsigned long _irqL;
@@ -14,6 +15,11 @@ typedef int _lock;
 #define _FALSE 0
 #define BAND_ON_5G 1
 #define HOST_BMC_MAX_STA 4
+#define HOST_BMC_MAX_RATES 12
+#define WIFI_ASOC_STATE 0x00000001U
+#define WIRELESS_11B (1U << 0)
+#define WIRELESS_11BG (WIRELESS_11B | WIRELESS_11G)
+#define WIRELESS_INVALID 0
 #define MGN_UNKNOWN 0x00
 #define MGN_1M 0x02
 #define MGN_6M 0x0C
@@ -28,6 +34,8 @@ typedef int _lock;
 #define WIRELESS_11AC (1U << 6)
 #define WIRELESS_MODE_5G (WIRELESS_11A | WIRELESS_11_5N | WIRELESS_11AC)
 #define SUPPORTED_5G_NETTYPE_MSK WIRELESS_MODE_5G
+#define IsSupportedTxCCK(NetType) (((NetType) & WIRELESS_11B) ? _TRUE : _FALSE)
+
 #define IsEnableHWOFDM(NetType) \
 	(((NetType) & (WIRELESS_11G | WIRELESS_11_24N | SUPPORTED_5G_NETTYPE_MSK)) ? \
 	 _TRUE : \
@@ -47,8 +55,26 @@ struct host_cmn_sta_info {
 	struct host_ra_sta_info ra_info;
 };
 
+struct host_stainfo_stats {
+	u8 pad[8];
+};
+
+struct host_ht_priv {
+	u8 ht_option;
+};
+
 struct sta_info {
 	struct host_cmn_sta_info cmn;
+	u16 aid;
+	u8 qos_option;
+	struct host_ht_priv htpriv;
+	u8 ieee8021x_blocked;
+	struct host_stainfo_stats sta_stats;
+	_lock lock;
+	u8 state;
+	u8 wireless_mode;
+	u8 bssrateset[HOST_BMC_MAX_RATES];
+	u8 bssratelen;
 	u8 init_rate;
 	struct _list asoc_list;
 };
@@ -60,8 +86,18 @@ struct sta_priv {
 	struct sta_info *host_bcmc_sta;
 };
 
+struct host_wlan_bssid_ex {
+	u8 SupportedRates[HOST_BMC_MAX_RATES];
+	struct {
+		u8 DSConfig;
+	} Configuration;
+};
+
 struct mlme_priv {
 	u32 state;
+	struct {
+		struct host_wlan_bssid_ex network;
+	} cur_network;
 };
 
 struct mlme_ext_priv {
@@ -130,5 +166,16 @@ u8 rtw_ap_find_mini_tx_rate(struct _adapter *adapter);
 struct sta_info *rtw_get_bcmc_stainfo(struct _adapter *padapter);
 void rtw_init_bmc_sta_tx_rate(struct _adapter *padapter, struct sta_info *psta);
 void rtw_update_bmc_sta_tx_rate(struct _adapter *adapter);
+void update_bmc_sta(struct _adapter *padapter);
+
+u32 rtw_get_rateset_len(u8 *rateset);
+int rtw_check_network_type(u8 *rate, int ratelen, int channel);
+void update_sta_basic_rate(struct sta_info *psta, u8 wireless_mode);
+void rtw_hal_update_sta_ra_info(struct _adapter *padapter, struct sta_info *psta);
+void rtw_sta_media_status_rpt(struct _adapter *padapter, struct sta_info *psta,
+			      u8 connected);
+
+void host_ap_bmc_sta_reset_hooks(void);
+u8 host_ap_bmc_sta_media_rpt_count(void);
 
 #endif
