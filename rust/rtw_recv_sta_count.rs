@@ -145,14 +145,13 @@ pub extern "C" fn count_rx_stats(
 
     let dst = rframe.hdr.attrib.dst;
     if !mac_addr_is_bcst(&dst) && !is_mcast(&dst) {
-        adapter.mlmepriv.link_detect_info.num_rx_unicast_ok_in_period += 1;
+        adapter
+            .mlmepriv
+            .link_detect_info
+            .num_rx_unicast_ok_in_period += 1;
     }
 
-    let psta = if !sta.is_null() {
-        sta
-    } else {
-        rframe.hdr.psta
-    };
+    let psta = if !sta.is_null() { sta } else { rframe.hdr.psta };
     if psta.is_null() {
         return;
     }
