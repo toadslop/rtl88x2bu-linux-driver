@@ -3739,6 +3739,12 @@ rust-check-symbols-rtw-xmit-sctx: rust-objects-rtw-xmit-sctx-rest-c rust-objects
 	$(MAKE) rust-check-symbols OLD=tests/host/xmit/xmit_sctx_c_ref.o NEW=rust/rtw_xmit.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_xmit_sctx.allow ALLOW_VACUOUS=1
 
+rust-objects-rtw-xmit-update-attrib-rest-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_XMIT_UPDATE_ATTRIB_TEST -o tests/host/xmit/xmit_update_attrib_c_ref.o \
+		core/rtw_xmit_update_attrib_rest.c
 # W3-50: host C oracle iol_rest vs rust/rtw_iol_rest.o.
 rust-objects-rtw-iol-rest:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-iol-rest"; exit 1; }
