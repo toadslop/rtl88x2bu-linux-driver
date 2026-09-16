@@ -102,7 +102,7 @@ extern "C" {
 fn wireless_mode_from_ramask(ds_config: U32, tx_ra_bitmap: U64, vht_option: U8) -> U8 {
     let mut sta_band: U8 = 0;
     if ds_config > 14 {
-        if tx_ra_bitmap & 0x000f_fff0 != 0 {
+        if tx_ra_bitmap & 0x0fff_f000 != 0 {
             sta_band |= WIRELESS_11_5N;
         }
         if tx_ra_bitmap & 0x0000_0ff0 != 0 {
@@ -113,7 +113,7 @@ fn wireless_mode_from_ramask(ds_config: U32, tx_ra_bitmap: U64, vht_option: U8) 
             sta_band = WIRELESS_11_5AC;
         }
     } else {
-        if tx_ra_bitmap & 0x000f_fff0 != 0 {
+        if tx_ra_bitmap & 0x0fff_f000 != 0 {
             sta_band |= WIRELESS_11_24N;
         }
         if tx_ra_bitmap & 0x0000_0ff0 != 0 {
