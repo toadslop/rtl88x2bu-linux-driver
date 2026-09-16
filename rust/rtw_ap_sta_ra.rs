@@ -141,8 +141,7 @@ fn update_sta_ra_info_host(padapter: *mut AdapterHost, psta: *mut StaInfoHost) {
     }
     let ds_config = adapter.mlmepriv.cur_network.network.Configuration.DSConfig;
     let tx_ra_bitmap = sta.cmn.ra_info.ramask;
-    sta.wireless_mode =
-        wireless_mode_from_ramask(ds_config, tx_ra_bitmap, sta.vhtpriv.vht_option);
+    sta.wireless_mode = wireless_mode_from_ramask(ds_config, tx_ra_bitmap, sta.vhtpriv.vht_option);
     unsafe {
         rtw_hal_update_sta_wset(padapter as *mut Adapter, psta as *mut StaInfo);
     }
