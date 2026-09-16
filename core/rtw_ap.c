@@ -51,38 +51,6 @@ u8 rtw_ap_find_bmc_rate(_adapter *adapter, u8 tx_rate);
 u8 rtw_ap_find_mini_tx_rate(_adapter *adapter);
 #endif
 
-#if defined(CONFIG_80211N_HT) && defined(CONFIG_BEAMFORMING)
-void update_sta_info_apmode_ht_bf_cap(_adapter *padapter, struct sta_info *psta)
-{
-	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
-	struct ht_priv	*phtpriv_ap = &pmlmepriv->htpriv;
-	struct ht_priv	*phtpriv_sta = &psta->htpriv;
-
-	u8 cur_beamform_cap = 0;
-
-	/*Config Tx beamforming setting*/
-	if (TEST_FLAG(phtpriv_ap->beamform_cap, BEAMFORMING_HT_BEAMFORMEE_ENABLE) &&
-		GET_HT_CAP_TXBF_EXPLICIT_COMP_STEERING_CAP((u8 *)(&phtpriv_sta->ht_cap))) {
-		SET_FLAG(cur_beamform_cap, BEAMFORMING_HT_BEAMFORMER_ENABLE);
-		/*Shift to BEAMFORMING_HT_BEAMFORMEE_CHNL_EST_CAP*/
-		SET_FLAG(cur_beamform_cap, GET_HT_CAP_TXBF_CHNL_ESTIMATION_NUM_ANTENNAS((u8 *)(&phtpriv_sta->ht_cap)) << 6);
-	}
-
-	if (TEST_FLAG(phtpriv_ap->beamform_cap, BEAMFORMING_HT_BEAMFORMER_ENABLE) &&
-		GET_HT_CAP_TXBF_EXPLICIT_COMP_FEEDBACK_CAP((u8 *)(&phtpriv_sta->ht_cap))) {
-		SET_FLAG(cur_beamform_cap, BEAMFORMING_HT_BEAMFORMEE_ENABLE);
-		/*Shift to BEAMFORMING_HT_BEAMFORMER_STEER_NUM*/
-		SET_FLAG(cur_beamform_cap, GET_HT_CAP_TXBF_COMP_STEERING_NUM_ANTENNAS((u8 *)(&phtpriv_sta->ht_cap)) << 4);
-	}
-	if (cur_beamform_cap)
-		RTW_INFO("Client STA(%d) HT Beamforming Cap = 0x%02X\n", psta->cmn.aid, cur_beamform_cap);
-
-	phtpriv_sta->beamform_cap = cur_beamform_cap;
-	psta->cmn.bf_info.ht_beamform_cap = cur_beamform_cap;
-
-}
-#endif /*CONFIG_80211N_HT && CONFIG_BEAMFORMING*/
-
 /* notes:
  * AID: 1~MAX for sta and 0 for bc/mc in ap/adhoc mode  */
 void update_sta_info_apmode(_adapter *padapter, struct sta_info *psta)
@@ -434,51 +402,6 @@ static void rtw_set_hw_wmm_param(_adapter *padapter)
 	}
 
 }
-#ifdef CONFIG_80211N_HT
-static void update_hw_ht_param(_adapter *padapter)
-{
-	unsigned char		max_AMPDU_len;
-	unsigned char		min_MPDU_spacing;
-	struct mlme_ext_priv	*pmlmeext = &padapter->mlmeextpriv;
-	struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
-
-	RTW_INFO("%s\n", __FUNCTION__);
-
-
-	/* handle A-MPDU parameter field */
-	/*
-		AMPDU_para [1:0]:Max AMPDU Len => 0:8k , 1:16k, 2:32k, 3:64k
-		AMPDU_para [4:2]:Min MPDU Start Spacing
-	*/
-	max_AMPDU_len = pmlmeinfo->HT_caps.u.HT_cap_element.AMPDU_para & 0x03;
-
-	min_MPDU_spacing = (pmlmeinfo->HT_caps.u.HT_cap_element.AMPDU_para & 0x1c) >> 2;
-
-	rtw_hal_set_hwreg(padapter, HW_VAR_AMPDU_MIN_SPACE, (u8 *)(&min_MPDU_spacing));
-
-	rtw_hal_set_hwreg(padapter, HW_VAR_AMPDU_FACTOR, (u8 *)(&max_AMPDU_len));
-
-	/*  */
-	/* Config SM Power Save setting */
-	/*  */
-	pmlmeinfo->SM_PS = (pmlmeinfo->HT_caps.u.HT_cap_element.HT_caps_info & 0x0C) >> 2;
-	if (pmlmeinfo->SM_PS == WLAN_HT_CAP_SM_PS_STATIC) {
-#if 0
-		u8 i;
-		/* update the MCS rates */
-		for (i = 0; i < 16; i++)
-			pmlmeinfo->HT_caps.HT_cap_element.MCS_rate[i] &= MCS_rate_1R[i];
-#endif
-		RTW_INFO("%s(): WLAN_HT_CAP_SM_PS_STATIC\n", __FUNCTION__);
-	}
-
-	/*  */
-	/* Config current HT Protection mode. */
-	/*  */
-	/* pmlmeinfo->HT_protection = pmlmeinfo->HT_info.infos[1] & 0x3; */
-
-}
-#endif /* CONFIG_80211N_HT */
 static void rtw_ap_check_scan(_adapter *padapter)
 {
 	_irqL	irqL;

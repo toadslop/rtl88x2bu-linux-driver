@@ -44,6 +44,12 @@ void rtw_ap_update_sta_ra_info(_adapter *padapter, struct sta_info *psta);
 
 void expire_timeout_chk(_adapter *padapter);
 void update_sta_info_apmode(_adapter *padapter, struct sta_info *psta);
+#if defined(CONFIG_80211N_HT) && defined(CONFIG_BEAMFORMING)
+void update_sta_info_apmode_ht_bf_cap(_adapter *padapter, struct sta_info *psta);
+#endif
+#ifdef CONFIG_80211N_HT
+void update_hw_ht_param(_adapter *padapter);
+#endif
 void rtw_start_bss_hdl_after_chbw_decided(_adapter *adapter);
 void start_bss_network(_adapter *padapter, struct createbss_parm *parm);
 int rtw_check_beacon_data(_adapter *padapter, u8 *pbuf,  int len);
