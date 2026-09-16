@@ -723,6 +723,7 @@ u32	rtw_build_vht_op_mode_notify_ie(_adapter *padapter, u8 *pbuf, u8 bw)
 	return len;
 }
 
+#if 0 /* moved to core/rtw_vht_build.c (W3-84 PR3); removed in PR3b */
 u32	rtw_build_vht_cap_ie(_adapter *padapter, u8 *pbuf)
 {
 	u8	bw, rf_num, rx_stbc_nss = 0;
@@ -863,6 +864,7 @@ u32	rtw_build_vht_cap_ie(_adapter *padapter, u8 *pbuf)
 
 	return len;
 }
+#endif
 
 void VHTOnAssocRsp(_adapter *padapter)
 {
