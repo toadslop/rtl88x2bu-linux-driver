@@ -29,6 +29,12 @@ const MGN_54M: u8 = 0x6c;
 const WIFI_AP_STATE: u32 = 0x0000_0010;
 const WIFI_MESH_STATE: u32 = 0x0000_0200;
 const WIRELESS_11G: u32 = 2;
+const WIRELESS_11B: u32 = 1;
+const WIRELESS_11A: u32 = 4;
+const WIRELESS_INVALID: i32 = 0;
+const WIFI_ASOC_STATE: u32 = 0x0000_0001;
+const HOST_BMC_MAX_RATES: usize = 12;
+const _FALSE: u8 = 0;
 
 #[repr(C)]
 pub struct List {
@@ -68,7 +74,7 @@ pub struct StaInfo {
     pub lock: i32,
     pub state: u8,
     pub wireless_mode: u8,
-    pub bssrateset: [u8; 12],
+    pub bssrateset: [u8; HOST_BMC_MAX_RATES],
     pub bssratelen: u8,
     pub init_rate: u8,
     pub asoc_list: List,
@@ -81,7 +87,7 @@ pub struct WlanConfig {
 
 #[repr(C)]
 pub struct WlanBssidEx {
-    pub supported_rates: [u8; 12],
+    pub supported_rates: [u8; HOST_BMC_MAX_RATES],
     pub configuration: WlanConfig,
 }
 
@@ -125,6 +131,11 @@ pub struct Adapter {
 
 extern "C" {
     fn rtw_ap_find_bmc_rate(adapter: *mut c_void, tx_rate: u8) -> u8;
+    fn rtw_get_rateset_len(rateset: *mut u8) -> u32;
+    fn rtw_check_network_type(rate: *mut u8, ratelen: i32, channel: i32) -> i32;
+    fn update_sta_basic_rate(psta: *mut StaInfo, wireless_mode: u8);
+    fn rtw_hal_update_sta_ra_info(padapter: *mut c_void, psta: *mut StaInfo);
+    fn rtw_sta_media_status_rpt(padapter: *mut c_void, psta: *mut StaInfo, connected: u8);
 }
 
 fn mlme_is_ap(padapter: *mut Adapter) -> bool {
@@ -266,5 +277,52 @@ pub extern "C" fn rtw_init_bmc_sta_tx_rate(padapter: *mut c_void, psta: *mut c_v
         } else {
             MGN_1M
         };
+    }
+}
+
+fn is_supported_tx_cck(net_type: u8) -> bool {
+    (net_type as u32 & WIRELESS_11B) != 0
+}
+
+#[no_mangle]
+pub extern "C" fn update_bmc_sta(padapter: *mut c_void) {
+    if padapter.is_null() {
+        return;
+    }
+    let padapter = padapter as *mut Adapter;
+    unsafe {
+        let psta = (*padapter).stapriv.host_bcmc_sta;
+        if psta.is_null() {
+            return;
+        }
+        (*psta).aid = 0;
+        (*psta).qos_option = 0;
+        (*psta).htpriv.ht_option = _FALSE;
+        (*psta).ieee8021x_blocked = 0;
+        (*psta).sta_stats.pad = [0; 8];
+
+        let pcur = &mut (*padapter).mlmepriv.cur_network.network;
+        let support_rate_num = rtw_get_rateset_len(pcur.supported_rates.as_mut_ptr()) as i32;
+        let ds_config = pcur.configuration.ds_config;
+        let mut network_type = rtw_check_network_type(
+            pcur.supported_rates.as_mut_ptr(),
+            support_rate_num,
+            ds_config as i32,
+        ) as u8;
+        if is_supported_tx_cck(network_type) {
+            network_type = WIRELESS_11B as u8;
+        } else if network_type as i32 == WIRELESS_INVALID {
+            network_type = if ds_config > 14 {
+                WIRELESS_11A
+            } else {
+                WIRELESS_11B
+            } as u8;
+        }
+        update_sta_basic_rate(psta, network_type);
+        (*psta).wireless_mode = network_type;
+        rtw_hal_update_sta_ra_info(padapter.cast(), psta);
+        (*psta).state = WIFI_ASOC_STATE as u8;
+        rtw_sta_media_status_rpt(padapter.cast(), psta, 1);
+        rtw_init_bmc_sta_tx_rate(padapter.cast(), psta.cast());
     }
 }
