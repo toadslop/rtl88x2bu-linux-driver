@@ -35,12 +35,12 @@ BUILD_CFLAGS := $(BASE_CFLAGS) -DHOST_VHT_BUILD_TEST
 
 .PHONY: all test test-c test-rust test-mcs-rate test-mcs-rate-rust test-vht20 \
 	test-vht20-rust vht-restructure-compile test-restructure test-restructure-rust \
-	test-build-operation clean
+	test-build-operation test-build-cap clean
 
 all: test
 
 test: test-c test-rust test-mcs-rate test-mcs-rate-rust test-vht20 test-vht20-rust \
-	test-restructure test-restructure-rust test-build-operation
+	test-restructure test-restructure-rust test-build-operation test-build-cap
 
 test-c: test_vht
 	./test_vht vht_vectors.json
@@ -115,12 +115,20 @@ test_vht_restructure: test_vht_restructure.c $(VHT_REST_SRC) $(VHT_REST_SHIM) $(
 test-build-operation: test_vht_build_operation
 	./test_vht_build_operation vht_build_operation_vectors.json
 
-test_vht_build_operation: test_vht_build_operation.c $(VHT_BUILD_SRC) $(VHT_BUILD_SHIM) $(HOST_JSON)
-	$(CC) $(BUILD_CFLAGS) -o $@ test_vht_build_operation.c $(VHT_BUILD_SRC) $(VHT_BUILD_SHIM) $(HOST_JSON)
+test_vht_build_operation: test_vht_build_operation.c $(VHT_BUILD_SRC) $(VHT_BUILD_SHIM) $(VHT_MCS_RATE_ORACLE) $(HOST_JSON)
+	$(CC) $(BUILD_CFLAGS) -o $@ test_vht_build_operation.c $(VHT_BUILD_SRC) $(VHT_BUILD_SHIM) \
+		$(VHT_MCS_RATE_ORACLE) $(HOST_JSON)
+
+test-build-cap: test_vht_build_cap
+	./test_vht_build_cap vht_build_cap_vectors.json
+
+test_vht_build_cap: test_vht_build_cap.c $(VHT_BUILD_SRC) $(VHT_BUILD_SHIM) $(VHT_MCS_RATE_ORACLE) $(HOST_JSON)
+	$(CC) $(BUILD_CFLAGS) -o $@ test_vht_build_cap.c $(VHT_BUILD_SRC) $(VHT_BUILD_SHIM) \
+		$(VHT_MCS_RATE_ORACLE) $(HOST_JSON)
 
 clean:
 	rm -f test_vht test_vht_rust test_vht_mcs_rate test_vht_mcs_rate_rust test_vht_vht20 \
 		test_vht_vht20_rust test_vht_restructure test_vht_restructure_rust librust_vht.a \
 		librust_vht_mcs_rate.a librust_vht_vht20.a librust_vht_restructure.a \
 		vht_rest_host.o vht_rest_shim_host.o vht_mcs_rate_c_ref.o vht_mcs_rate_rust_ref.o \
-		test_vht_build_operation
+		test_vht_build_operation test_vht_build_cap

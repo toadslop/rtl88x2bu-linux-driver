@@ -18,9 +18,11 @@
 
 #ifdef CONFIG_80211AC_VHT
 
-#if !defined(CONFIG_RUST_VHT_BUILD) && !defined(HOST_VHT_BUILD_TEST)
+#if !defined(CONFIG_RUST_VHT_BUILD) || defined(HOST_VHT_BUILD_TEST)
 
+#ifndef HOST_VHT_BUILD_TEST
 extern const u16 VHT_MCS_DATA_RATE[3][2][40];
+#endif
 
 u32 rtw_build_vht_cap_ie(_adapter *padapter, u8 *pbuf)
 {
@@ -34,6 +36,11 @@ u32 rtw_build_vht_cap_ie(_adapter *padapter, u8 *pbuf)
 	struct vht_priv	*pvhtpriv = &pmlmepriv->vhtpriv;
 	struct mlme_ext_priv	*pmlmeext = &padapter->mlmeextpriv;
 	struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
+#ifdef HOST_VHT_BUILD_TEST
+	(void)pmlmeext;
+	(void)pmlmeinfo;
+	(void)rf_num;
+#endif
 
 	pcap = pvhtpriv->vht_cap;
 	_rtw_memset(pcap, 0, 32);
@@ -162,10 +169,6 @@ u32 rtw_build_vht_cap_ie(_adapter *padapter, u8 *pbuf)
 
 	return len;
 }
-
-#endif /* !CONFIG_RUST_VHT_BUILD && !HOST_VHT_BUILD_TEST */
-
-#if !defined(CONFIG_RUST_VHT_BUILD) || defined(HOST_VHT_BUILD_TEST)
 
 u32 rtw_build_vht_operation_ie(_adapter *padapter, u8 *pbuf, u8 channel)
 {
