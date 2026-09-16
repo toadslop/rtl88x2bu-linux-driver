@@ -11,3 +11,5 @@ xmit_rest_c_ref.o
 xmit_qos_c_ref.o
 xmit_sctx_c_ref.o
 test_xmit_update_attrib
+test_xmit_update_attrib_rust
+librust_xmit_update_attrib.a
