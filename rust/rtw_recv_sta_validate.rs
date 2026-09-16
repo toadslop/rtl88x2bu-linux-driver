@@ -78,11 +78,7 @@ extern "C" {
     fn rtw_get_current_time() -> U32;
     fn rtw_get_passing_time_ms(start: U32) -> S32;
     fn issue_deauth(adapter: *mut AdapterHost, mac: *mut U8, reason: U16);
-    fn count_rx_stats(
-        adapter: *mut AdapterHost,
-        rframe: *mut RecvFrameHost,
-        sta: *mut StaInfoHost,
-    );
+    fn count_rx_stats(adapter: *mut AdapterHost, rframe: *mut RecvFrameHost, sta: *mut StaInfoHost);
 }
 
 fn is_mcast(da: &[U8; ETH_ALEN]) -> bool {
