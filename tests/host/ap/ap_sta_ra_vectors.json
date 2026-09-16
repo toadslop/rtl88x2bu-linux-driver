@@ -11,6 +11,26 @@
       "expect_hal_wset": 1
     },
     {
+      "name": "24g_11g_only_bit4",
+      "ds_config": 11,
+      "state": 1,
+      "hal_ramask": 16,
+      "vht_option": 0,
+      "expect_mode": 2,
+      "expect_hal_ra": 1,
+      "expect_hal_wset": 1
+    },
+    {
+      "name": "24g_11g_only_ff0",
+      "ds_config": 11,
+      "state": 1,
+      "hal_ramask": 4080,
+      "vht_option": 0,
+      "expect_mode": 2,
+      "expect_hal_ra": 1,
+      "expect_hal_wset": 1
+    },
+    {
       "name": "24g_11g_n_combo",
       "ds_config": 11,
       "state": 1,
