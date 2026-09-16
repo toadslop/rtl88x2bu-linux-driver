@@ -64,12 +64,14 @@ RF18_RESTORE_DEPS := host_rf18_restore_shim.c
 AP_STA_RA_SRC := $(CORE)/rtw_ap_sta_ra.c
 STA_RA_CFLAGS := $(BCN_UPDATE_CFLAGS) -DHOST_AP_STA_RA_TEST -I$(CORE)
 STA_RA_DEPS :=
+AP_STA_INFO_SRC := $(CORE)/rtw_ap_sta_info.c
+STA_INFO_CFLAGS := $(BCN_UPDATE_CFLAGS) -DHOST_AP_STA_INFO_TEST -DCONFIG_BEAMFORMING -I$(CORE)
 
-.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bmc-update test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore test-rust-rf18-restore test-sta-ra test-rust-sta-ra clean
+.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bmc-update test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore test-rust-rf18-restore test-sta-ra test-rust-sta-ra test-sta-info clean
 
 all: test
 
-test: test-c test-rust test-sta-ie test-bcn-ie test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore test-rust-rf18-restore test-sta-ra test-rust-sta-ra test-bmc-rate test-bmc-update
+test: test-c test-rust test-sta-ie test-bcn-ie test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore test-rust-rf18-restore test-sta-ra test-rust-sta-ra test-sta-info test-bmc-rate test-bmc-update
 
 test-c: test_ap_rest
 	./test_ap_rest ap_rest_vectors.json
@@ -143,6 +145,12 @@ test_ap_rf18_restore: test_ap_rf18_restore.c $(HOST_JSON) $(AP_RF18_RESTORE_SRC)
 
 test-sta-ra: test_ap_sta_ra
 	./test_ap_sta_ra ap_sta_ra_vectors.json
+
+test-sta-info: test_ap_sta_info
+	./test_ap_sta_info ap_sta_info_vectors.json
+
+test_ap_sta_info: test_ap_sta_info.c $(HOST_JSON) $(AP_STA_INFO_SRC)
+	$(CC) $(STA_INFO_CFLAGS) -o $@ test_ap_sta_info.c $(HOST_JSON) $(AP_STA_INFO_SRC)
 
 test-rust-sta-ra: test_ap_sta_ra_rust
 	./test_ap_sta_ra_rust ap_sta_ra_vectors.json
@@ -283,7 +291,7 @@ clean:
 		test_ap_bcn_ie test_ap_bcn_update test_ap_sta_alive test_ap_sta_alive_rust \
 		test_ap_expire_auth test_ap_expire_auth_rust test_ap_expire_asoc test_ap_expire_asoc_rust \
 		test_ap_aka_chk test_ap_aka_chk_rust test_ap_rf18_restore test_ap_rf18_restore_rust \
-		test_ap_sta_ra test_ap_sta_ra_rust test_ap_bmc_rate test_ap_bmc_rate_rust test_ap_bmc_update \
+		test_ap_sta_ra test_ap_sta_ra_rust test_ap_sta_info test_ap_bmc_rate test_ap_bmc_rate_rust test_ap_bmc_update \
 		test_ap_bmc_update_rust librust_ap_bmc_update.a librust_ap_sta_ra.a \
 		librust_ap_rest.a librust_ap_bmc_rate.a librust_ap_sta_alive.a \
 		librust_ap_expire_asoc.a librust_ap_expire_auth.a librust_ap_aka_chk.a \

@@ -1,0 +1,25 @@
+{
+  "vectors": [
+    {
+      "name": "bf_no_ap_cap",
+      "ap_bf_cap": 0,
+      "sta_tx_bf": 1024,
+      "expect_sta_bf": 0,
+      "expect_ht_beamform": 0
+    },
+    {
+      "name": "bf_ap_beamformee_sta_steering",
+      "ap_bf_cap": 2,
+      "sta_tx_bf": 1024,
+      "expect_sta_bf": 1,
+      "expect_ht_beamform": 1
+    },
+    {
+      "name": "bf_ap_beamformer_sta_feedback",
+      "ap_bf_cap": 1,
+      "sta_tx_bf": 98304,
+      "expect_sta_bf": 2,
+      "expect_ht_beamform": 2
+    }
+  ]
+}
