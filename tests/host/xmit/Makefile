@@ -1,6 +1,6 @@
 # Host L2 differential tests for core/rtw_xmit_rest.c (W3-40),
 # core/rtw_xmit_qos_rest.c (W3-48), core/rtw_xmit_sctx_rest.c (W3-48 PR4),
-# W3-86 PR2: host harness links core/rtw_xmit_update_attrib_rest.c (kernel still in rtw_xmit.c until PR3).
+# W3-86: host harness links core/rtw_xmit_update_attrib_rest.c (kernel via rtw_xmit_update_attrib_rest.o).
 
 ROOT     := ../../..
 CORE     := $(ROOT)/core
