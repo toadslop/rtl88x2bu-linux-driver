@@ -1,0 +1,1 @@
+{"vectors":[{"name":"count_stats_unicast","fn":"count_rx_stats","frame_len":128,"data_rate":4,"priority":2,"ra":"020000000000","dst":"020000000001","expect_rx_bytes":128,"expect_sta_pkts":1,"expect_sta_bytes":128,"expect_rate_cnt":1,"expect_qos_pkts":1}]}
