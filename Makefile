@@ -2490,6 +2490,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_ap_rf18_restore_rust_acc.o \
 		core/rtw_ap_sta_ra.o \
 		core/rtw_ap_sta_ra_rust_acc.o \
+		core/rtw_ap_sta_info.o \
 		core/rtw_ap_expire_asoc.o \
 		core/rtw_ap_expire_asoc_rust_acc.o \
 		core/rtw_ap_expire_asoc_list.o \
