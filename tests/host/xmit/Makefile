@@ -1,6 +1,6 @@
 # Host L2 differential tests for core/rtw_xmit_rest.c (W3-40),
 # core/rtw_xmit_qos_rest.c (W3-48), core/rtw_xmit_sctx_rest.c (W3-48 PR4),
-# and planned W3-86 PR2+ extract core/rtw_xmit_update_attrib_rest.c.
+# W3-86 PR2: host harness links core/rtw_xmit_update_attrib_rest.c (kernel still in rtw_xmit.c until PR3).
 
 ROOT     := ../../..
 CORE     := $(ROOT)/core
@@ -8,9 +8,7 @@ HOST_INC := ../include
 XMIT_REST_SRC := $(CORE)/rtw_xmit_rest.c
 XMIT_QOS_REST_SRC := $(CORE)/rtw_xmit_qos_rest.c
 XMIT_SCTX_REST_SRC := $(CORE)/rtw_xmit_sctx_rest.c
-UPDATE_ATTRIB_ORACLE := xmit_update_attrib_vcs_oracle.c
-# Empty until W3-86 PR2+ links the production extract instead of the oracle.
-UPDATE_ATTRIB_SHIM :=
+UPDATE_ATTRIB_REST_SRC := $(CORE)/rtw_xmit_update_attrib_rest.c
 HOST_JSON := ../crypto/host_vector_json.c
 SHIM     := host_xmit_shim.c
 RUST_XMIT := $(ROOT)/rust/rtw_xmit.rs
@@ -90,8 +88,8 @@ test_xmit_sctx_rust: test_xmit_sctx.c librust_xmit_sctx.a $(HOST_JSON)
 test-update-attrib: test_xmit_update_attrib
 	./test_xmit_update_attrib
 
-test_xmit_update_attrib: test_xmit_update_attrib.c $(UPDATE_ATTRIB_ORACLE) $(UPDATE_ATTRIB_SHIM)
-	$(CC) $(UPDATE_ATTRIB_CFLAGS) -o $@ test_xmit_update_attrib.c $(UPDATE_ATTRIB_ORACLE) $(UPDATE_ATTRIB_SHIM)
+test_xmit_update_attrib: test_xmit_update_attrib.c $(UPDATE_ATTRIB_REST_SRC)
+	$(CC) $(UPDATE_ATTRIB_CFLAGS) -o $@ test_xmit_update_attrib.c $(UPDATE_ATTRIB_REST_SRC)
 
 clean:
 		rm -f test_xmit test_xmit_rust test_xmit_qos test_xmit_qos_rust \
