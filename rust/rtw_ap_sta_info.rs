@@ -20,6 +20,7 @@ type StaInfo = c_void;
 
 const BEAMFORMING_HT_BEAMFORMER_ENABLE: U8 = 1 << 0;
 const BEAMFORMING_HT_BEAMFORMEE_ENABLE: U8 = 1 << 1;
+const WLAN_HT_CAP_SM_PS_STATIC: U8 = 3;
 
 #[inline]
 fn test_flag(flag: U8, test: U8) -> bool {
@@ -97,9 +98,31 @@ pub struct MlmePriv {
 }
 
 #[cfg(host_ap_sta_info_test)]
+#[repr(C, packed)]
+pub struct HtCapsElement {
+    pub bytes: [U8; 26],
+}
+
+#[cfg(host_ap_sta_info_test)]
+#[repr(C)]
+pub struct MlmeExtInfo {
+    pub _pad: [U8; 191],
+    pub SM_PS: U8,
+    pub _mid: [U8; 53],
+    pub HT_caps: HtCapsElement,
+}
+
+#[cfg(host_ap_sta_info_test)]
+#[repr(C)]
+pub struct MlmeExtPriv {
+    pub mlmext_info: MlmeExtInfo,
+}
+
+#[cfg(host_ap_sta_info_test)]
 #[repr(C)]
 pub struct AdapterHost {
     pub mlmepriv: MlmePriv,
+    pub mlmeextpriv: MlmeExtPriv,
 }
 
 #[cfg(not(host_ap_sta_info_test))]
@@ -108,6 +131,11 @@ extern "C" {
     fn rtw_rust_ap_sta_info_sta_ht_cap(psta: *mut StaInfo) -> *const U8;
     fn rtw_rust_ap_sta_info_set_sta_bf_cap(psta: *mut StaInfo, cap: U8);
     fn rtw_rust_ap_sta_info_set_ht_beamform_cap(psta: *mut StaInfo, cap: U8);
+    fn rtw_rust_ap_sta_info_get_ampdu_para(padapter: *mut Adapter) -> U8;
+    fn rtw_rust_ap_sta_info_get_ht_caps_info(padapter: *mut Adapter) -> U16;
+    fn rtw_rust_ap_sta_info_set_sm_ps(padapter: *mut Adapter, sm_ps: U8);
+    fn rtw_rust_ap_sta_info_set_hw_ampdu_min_space(padapter: *mut Adapter, val: U8);
+    fn rtw_rust_ap_sta_info_set_hw_ampdu_factor(padapter: *mut Adapter, val: U8);
 }
 
 fn update_sta_info_apmode_ht_bf_cap_impl(
@@ -186,4 +214,60 @@ pub extern "C" fn update_sta_info_apmode_ht_bf_cap(padapter: *mut Adapter, psta:
     update_sta_info_apmode_ht_bf_cap_host(padapter as *mut AdapterHost, psta as *mut StaInfoHost);
     #[cfg(not(host_ap_sta_info_test))]
     update_sta_info_apmode_ht_bf_cap_kernel(padapter, psta);
+}
+
+fn update_hw_ht_param_impl(ampdu_para: U8, ht_caps_info: U16, out_sm_ps: &mut U8) -> (U8, U8) {
+    let max_ampdu_len = ampdu_para & 0x03;
+    let min_mpdu_spacing = (ampdu_para & 0x1c) >> 2;
+    *out_sm_ps = ((ht_caps_info & 0x000c) >> 2) as U8;
+    (min_mpdu_spacing, max_ampdu_len)
+}
+
+#[cfg(host_ap_sta_info_test)]
+extern "C" {
+    fn rtw_hal_set_hwreg(padapter: *mut AdapterHost, variable: u32, val: *mut U8);
+}
+
+#[cfg(host_ap_sta_info_test)]
+fn update_hw_ht_param_host(padapter: *mut AdapterHost) {
+    if padapter.is_null() {
+        return;
+    }
+    unsafe {
+        let ht = &(*padapter).mlmeextpriv.mlmext_info.HT_caps.bytes;
+        let ht_caps_info = u16::from_le_bytes([ht[0], ht[1]]);
+        let ampdu_para = ht[2];
+        let mut sm_ps = 0u8;
+        let (min_space, factor) = update_hw_ht_param_impl(ampdu_para, ht_caps_info, &mut sm_ps);
+        let mut min_b = min_space;
+        let mut fac_b = factor;
+        rtw_hal_set_hwreg(padapter, 0, &mut min_b);
+        rtw_hal_set_hwreg(padapter, 1, &mut fac_b);
+        (*padapter).mlmeextpriv.mlmext_info.SM_PS = sm_ps;
+        let _ = sm_ps == WLAN_HT_CAP_SM_PS_STATIC;
+    }
+}
+
+#[cfg(not(host_ap_sta_info_test))]
+fn update_hw_ht_param_kernel(padapter: *mut Adapter) {
+    if padapter.is_null() {
+        return;
+    }
+    unsafe {
+        let ampdu_para = rtw_rust_ap_sta_info_get_ampdu_para(padapter);
+        let ht_caps_info = rtw_rust_ap_sta_info_get_ht_caps_info(padapter);
+        let mut sm_ps = 0u8;
+        let (min_space, factor) = update_hw_ht_param_impl(ampdu_para, ht_caps_info, &mut sm_ps);
+        rtw_rust_ap_sta_info_set_hw_ampdu_min_space(padapter, min_space);
+        rtw_rust_ap_sta_info_set_hw_ampdu_factor(padapter, factor);
+        rtw_rust_ap_sta_info_set_sm_ps(padapter, sm_ps);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn update_hw_ht_param(padapter: *mut Adapter) {
+    #[cfg(host_ap_sta_info_test)]
+    update_hw_ht_param_host(padapter as *mut AdapterHost);
+    #[cfg(not(host_ap_sta_info_test))]
+    update_hw_ht_param_kernel(padapter);
 }
