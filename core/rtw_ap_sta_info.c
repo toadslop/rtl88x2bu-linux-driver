@@ -19,6 +19,7 @@
 #ifdef CONFIG_AP_MODE
 
 #if defined(CONFIG_80211N_HT) && defined(CONFIG_BEAMFORMING)
+#if !defined(CONFIG_RUST_AP_STA_INFO) || defined(HOST_AP_STA_INFO_TEST)
 void update_sta_info_apmode_ht_bf_cap(_adapter *padapter, struct sta_info *psta)
 {
 	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
@@ -47,6 +48,7 @@ void update_sta_info_apmode_ht_bf_cap(_adapter *padapter, struct sta_info *psta)
 	psta->cmn.bf_info.ht_beamform_cap = cur_beamform_cap;
 
 }
+#endif /* !CONFIG_RUST_AP_STA_INFO || HOST_AP_STA_INFO_TEST */
 #endif /* CONFIG_80211N_HT && CONFIG_BEAMFORMING */
 
 #ifdef CONFIG_80211N_HT
