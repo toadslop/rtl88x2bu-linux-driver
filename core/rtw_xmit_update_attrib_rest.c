@@ -124,3 +124,109 @@ void update_attrib_vcs_info(_adapter *padapter, struct xmit_frame *pxmitframe)
 	if (padapter->driver_vcs_en == 1)
 		pattrib->vcs_mode = padapter->driver_vcs_type;
 }
+
+#ifdef HOST_XMIT_UPDATE_ATTRIB_TEST
+
+u8 rtw_get_tx_bw_mode(_adapter *adapter, struct sta_info *sta)
+{
+	(void)adapter;
+	return sta->cmn.bw_mode;
+}
+
+u8 query_ra_short_GI(struct sta_info *psta, u8 bw)
+{
+	u8 sgi = _FALSE, sgi_20m = _FALSE, sgi_40m = _FALSE, sgi_80m = _FALSE;
+
+#ifdef CONFIG_80211N_HT
+#ifdef CONFIG_80211AC_VHT
+	if (psta->vhtpriv.vht_option)
+		sgi_80m = psta->vhtpriv.sgi_80m;
+#endif
+	sgi_20m = psta->htpriv.sgi_20m;
+	sgi_40m = psta->htpriv.sgi_40m;
+#endif
+
+	switch (bw) {
+	case CHANNEL_WIDTH_80:
+		sgi = sgi_80m;
+		break;
+	case CHANNEL_WIDTH_40:
+		sgi = sgi_40m;
+		break;
+	case CHANNEL_WIDTH_20:
+	default:
+		sgi = sgi_20m;
+		break;
+	}
+
+	return sgi;
+}
+
+void update_attrib_phy_info(_adapter *padapter, struct pkt_attrib *pattrib,
+			    struct sta_info *psta)
+{
+	struct mlme_ext_priv *mlmeext = &padapter->mlmeextpriv;
+	u8 bw;
+
+	pattrib->rtsen = psta->rtsen;
+	pattrib->cts2self = psta->cts2self;
+
+	pattrib->mdata = 0;
+	pattrib->eosp = 0;
+	pattrib->triggered = 0;
+	pattrib->ampdu_spacing = 0;
+
+	pattrib->raid = psta->cmn.ra_info.rate_id;
+
+	bw = rtw_get_tx_bw_mode(padapter, psta);
+	pattrib->bwmode = rtw_min(bw, mlmeext->cur_bwmode);
+	pattrib->sgi = query_ra_short_GI(psta, pattrib->bwmode);
+
+	pattrib->ldpc = psta->cmn.ldpc_en;
+	pattrib->stbc = psta->cmn.stbc_en;
+
+#ifdef CONFIG_80211N_HT
+	if (padapter->registrypriv.ht_enable &&
+	    is_supported_ht(padapter->registrypriv.wireless_mode)) {
+		pattrib->ht_en = psta->htpriv.ht_option;
+		pattrib->ch_offset = psta->htpriv.ch_offset;
+		pattrib->ampdu_en = _FALSE;
+
+		if (padapter->driver_ampdu_spacing != 0xFF)
+			pattrib->ampdu_spacing = padapter->driver_ampdu_spacing;
+		else
+			pattrib->ampdu_spacing = psta->htpriv.rx_ampdu_min_spacing;
+
+		if (pattrib->ht_en && psta->htpriv.ampdu_enable) {
+			if (psta->htpriv.agg_enable_bitmap & BIT(pattrib->priority)) {
+				pattrib->ampdu_en = _TRUE;
+				if (psta->htpriv.tx_amsdu_enable == _TRUE)
+					pattrib->amsdu_ampdu_en = _TRUE;
+				else
+					pattrib->amsdu_ampdu_en = _FALSE;
+			}
+		}
+	}
+#endif /* CONFIG_80211N_HT */
+
+#ifdef CONFIG_TDLS
+	if (pattrib->direct_link == _TRUE) {
+		psta = pattrib->ptdls_sta;
+
+		pattrib->raid = psta->cmn.ra_info.rate_id;
+#ifdef CONFIG_80211N_HT
+		if (padapter->registrypriv.ht_enable &&
+		    is_supported_ht(padapter->registrypriv.wireless_mode)) {
+			pattrib->bwmode = rtw_get_tx_bw_mode(padapter, psta);
+			pattrib->ht_en = psta->htpriv.ht_option;
+			pattrib->ch_offset = psta->htpriv.ch_offset;
+			pattrib->sgi = query_ra_short_GI(psta, pattrib->bwmode);
+		}
+#endif /* CONFIG_80211N_HT */
+	}
+#endif /* CONFIG_TDLS */
+
+	pattrib->retry_ctrl = _FALSE;
+}
+
+#endif /* HOST_XMIT_UPDATE_ATTRIB_TEST */
