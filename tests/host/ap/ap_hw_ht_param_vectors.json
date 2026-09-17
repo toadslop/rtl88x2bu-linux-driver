@@ -1,0 +1,28 @@
+{
+  "vectors": [
+    {
+      "name": "ampdu_zero_sm_ps_disabled",
+      "ampdu_para": 0,
+      "ht_caps_info": 0,
+      "expect_min_space": 0,
+      "expect_ampdu_factor": 0,
+      "expect_sm_ps": 0
+    },
+    {
+      "name": "ampdu_max_spacing_and_len",
+      "ampdu_para": 31,
+      "ht_caps_info": 0,
+      "expect_min_space": 7,
+      "expect_ampdu_factor": 3,
+      "expect_sm_ps": 0
+    },
+    {
+      "name": "sm_ps_static",
+      "ampdu_para": 4,
+      "ht_caps_info": 12,
+      "expect_min_space": 1,
+      "expect_ampdu_factor": 0,
+      "expect_sm_ps": 3
+    }
+  ]
+}

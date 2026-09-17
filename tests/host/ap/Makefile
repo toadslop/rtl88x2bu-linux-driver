@@ -67,11 +67,11 @@ STA_RA_DEPS :=
 AP_STA_INFO_SRC := $(CORE)/rtw_ap_sta_info.c
 STA_INFO_CFLAGS := $(BCN_UPDATE_CFLAGS) -DHOST_AP_STA_INFO_TEST -DCONFIG_BEAMFORMING -I$(CORE)
 
-.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bmc-update test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore test-rust-rf18-restore test-sta-ra test-rust-sta-ra test-sta-info test-rust-sta-info clean
+.PHONY: all test test-c test-rust test-sta-ie test-bmc-rate test-bmc-update test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore test-rust-rf18-restore test-sta-ra test-rust-sta-ra test-sta-info test-rust-sta-info test-hw-ht-param clean
 
 all: test
 
-test: test-c test-rust test-sta-ie test-bcn-ie test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore test-rust-rf18-restore test-sta-ra test-rust-sta-ra test-sta-info test-rust-sta-info test-bmc-rate test-bmc-update
+test: test-c test-rust test-sta-ie test-bcn-ie test-bcn-update test-sta-alive test-rust-sta-alive test-expire-auth test-rust-expire-auth test-expire-asoc test-rust-expire-asoc test-aka-chk test-rust-aka-chk test-rf18-restore test-rust-rf18-restore test-sta-ra test-rust-sta-ra test-sta-info test-rust-sta-info test-hw-ht-param test-bmc-rate test-bmc-update
 
 test-c: test_ap_rest
 	./test_ap_rest ap_rest_vectors.json
@@ -145,6 +145,12 @@ test_ap_rf18_restore: test_ap_rf18_restore.c $(HOST_JSON) $(AP_RF18_RESTORE_SRC)
 
 test-sta-ra: test_ap_sta_ra
 	./test_ap_sta_ra ap_sta_ra_vectors.json
+
+test-hw-ht-param: test_ap_hw_ht_param
+	./test_ap_hw_ht_param ap_hw_ht_param_vectors.json
+
+test_ap_hw_ht_param: test_ap_hw_ht_param.c $(HOST_JSON) $(AP_STA_INFO_SRC)
+	$(CC) $(STA_INFO_CFLAGS) -o $@ test_ap_hw_ht_param.c $(HOST_JSON) $(AP_STA_INFO_SRC)
 
 test-sta-info: test_ap_sta_info
 	./test_ap_sta_info ap_sta_info_vectors.json
