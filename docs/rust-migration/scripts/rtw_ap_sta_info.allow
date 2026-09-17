@@ -1,2 +1,1 @@
-# W3-83 PR6: host oracle for update_sta_info_apmode_ht_bf_cap only.
-drop update_hw_ht_param
+# W3-83: host oracle for update_sta_info_apmode_ht_bf_cap and update_hw_ht_param.

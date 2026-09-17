@@ -52,6 +52,7 @@ void update_sta_info_apmode_ht_bf_cap(_adapter *padapter, struct sta_info *psta)
 #endif /* CONFIG_80211N_HT && CONFIG_BEAMFORMING */
 
 #ifdef CONFIG_80211N_HT
+#if !defined(CONFIG_RUST_AP_STA_INFO) || defined(HOST_AP_STA_INFO_TEST)
 void update_hw_ht_param(_adapter *padapter)
 {
 	unsigned char		max_AMPDU_len;
@@ -78,6 +79,7 @@ void update_hw_ht_param(_adapter *padapter)
 #endif
 	}
 }
+#endif /* !CONFIG_RUST_AP_STA_INFO || HOST_AP_STA_INFO_TEST */
 #endif /* CONFIG_80211N_HT */
 
 #endif /* CONFIG_AP_MODE */
