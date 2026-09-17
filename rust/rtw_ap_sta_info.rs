@@ -20,7 +20,6 @@ type StaInfo = c_void;
 
 const BEAMFORMING_HT_BEAMFORMER_ENABLE: U8 = 1 << 0;
 const BEAMFORMING_HT_BEAMFORMEE_ENABLE: U8 = 1 << 1;
-const WLAN_HT_CAP_SM_PS_STATIC: U8 = 3;
 
 #[inline]
 fn test_flag(flag: U8, test: U8) -> bool {
@@ -244,7 +243,6 @@ fn update_hw_ht_param_host(padapter: *mut AdapterHost) {
         rtw_hal_set_hwreg(padapter, 0, &mut min_b);
         rtw_hal_set_hwreg(padapter, 1, &mut fac_b);
         (*padapter).mlmeextpriv.mlmext_info.SM_PS = sm_ps;
-        let _ = sm_ps == WLAN_HT_CAP_SM_PS_STATIC;
     }
 }
 
