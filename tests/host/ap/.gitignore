@@ -36,3 +36,4 @@ test_ap_bmc_update
 test_ap_bmc_update_rust
 librust_ap_bmc_update.a
 test_ap_hw_ht_param
+test_ap_hw_ht_param_rust
