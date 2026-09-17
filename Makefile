@@ -3727,6 +3727,20 @@ rust-check-symbols-rtw-recv-sta-count: rust-objects-rtw-recv-sta-count-c rust-ob
 	$(MAKE) rust-check-symbols OLD=tests/host/recv/recv_sta_count_c_ref.o NEW=tests/host/recv/recv_sta_count_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_recv_sta_count.allow ALLOW_VACUOUS=1
 
+rust-objects-rtw-recv-sta-validate-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_RECV_STA_TEST -DHOST_RECV_STA_RUST_COUNT \
+		-o tests/host/recv/recv_sta_validate_c_ref.o core/rtw_recv_sta_rest.c
+rust-objects-rtw-recv-sta-validate-rust-ref:
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--emit=obj=tests/host/recv/recv_sta_validate_rust_ref.o \
+		--crate-type lib rust/rtw_recv_sta_validate.rs
+rust-check-symbols-rtw-recv-sta-validate: rust-objects-rtw-recv-sta-validate-c rust-objects-rtw-recv-sta-validate-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/recv/recv_sta_validate_c_ref.o NEW=tests/host/recv/recv_sta_validate_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_recv_sta_count.allow ALLOW_VACUOUS=1
+
 # W3-40: host C oracle xmit_rest vs rust/rtw_xmit.o.
 rust-objects-rtw-xmit:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-xmit"; exit 1; }
