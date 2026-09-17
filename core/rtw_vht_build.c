@@ -205,4 +205,118 @@ u32 rtw_build_vht_operation_ie(_adapter *padapter, u8 *pbuf, u8 channel)
 
 #endif /* !CONFIG_RUST_VHT_BUILD || HOST_VHT_BUILD_TEST */
 
+#ifndef HOST_VHT_BUILD_TEST
+void rtw_vht_use_default_setting(_adapter *padapter)
+{
+	struct mlme_priv		*pmlmepriv = &padapter->mlmepriv;
+	struct vht_priv		*pvhtpriv = &pmlmepriv->vhtpriv;
+	struct registry_priv	*pregistrypriv = &padapter->registrypriv;
+	BOOLEAN		bHwLDPCSupport = _FALSE, bHwSTBCSupport = _FALSE;
+#ifdef CONFIG_BEAMFORMING
+	BOOLEAN		bHwSupportBeamformer = _FALSE, bHwSupportBeamformee = _FALSE;
+	u8	mu_bfer, mu_bfee;
+#endif /* CONFIG_BEAMFORMING */
+	u8 tx_nss, rx_nss;
+	struct mlme_ext_priv	*pmlmeext = &(padapter->mlmeextpriv);
+	struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
+	pvhtpriv->sgi_80m = TEST_FLAG(pregistrypriv->short_gi, BIT2) ? _TRUE : _FALSE;
+
+	/* LDPC support */
+	rtw_hal_get_def_var(padapter, HAL_DEF_RX_LDPC, (u8 *)&bHwLDPCSupport);
+	CLEAR_FLAGS(pvhtpriv->ldpc_cap);
+	if (bHwLDPCSupport) {
+		if (TEST_FLAG(pregistrypriv->ldpc_cap, BIT0))
+			SET_FLAG(pvhtpriv->ldpc_cap, LDPC_VHT_ENABLE_RX);
+	}
+	rtw_hal_get_def_var(padapter, HAL_DEF_TX_LDPC, (u8 *)&bHwLDPCSupport);
+	if (bHwLDPCSupport) {
+		if (TEST_FLAG(pregistrypriv->ldpc_cap, BIT1))
+			SET_FLAG(pvhtpriv->ldpc_cap, LDPC_VHT_ENABLE_TX);
+	}
+	if (pvhtpriv->ldpc_cap)
+		RTW_INFO("[VHT] Support LDPC = 0x%02X\n", pvhtpriv->ldpc_cap);
+
+	/* STBC */
+	rtw_hal_get_def_var(padapter, HAL_DEF_TX_STBC, (u8 *)&bHwSTBCSupport);
+	CLEAR_FLAGS(pvhtpriv->stbc_cap);
+	if (bHwSTBCSupport) {
+		if (TEST_FLAG(pregistrypriv->stbc_cap, BIT1))
+			SET_FLAG(pvhtpriv->stbc_cap, STBC_VHT_ENABLE_TX);
+	}
+	rtw_hal_get_def_var(padapter, HAL_DEF_RX_STBC, (u8 *)&bHwSTBCSupport);
+	if (bHwSTBCSupport) {
+		if (TEST_FLAG(pregistrypriv->stbc_cap, BIT0))
+			SET_FLAG(pvhtpriv->stbc_cap, STBC_VHT_ENABLE_RX);
+	}
+	if (pvhtpriv->stbc_cap)
+		RTW_INFO("[VHT] Support STBC = 0x%02X\n", pvhtpriv->stbc_cap);
+
+	/* Beamforming setting */
+	CLEAR_FLAGS(pvhtpriv->beamform_cap);
+#ifdef CONFIG_BEAMFORMING
+#ifdef RTW_BEAMFORMING_VERSION_2
+#ifdef CONFIG_CONCURRENT_MODE
+	/* only enable beamforming in STA client mode */
+	if (MLME_IS_STA(padapter) && !MLME_IS_GC(padapter))
+#else
+	if ((MLME_IS_AP(padapter) && !MLME_IS_GO(padapter)) ||
+	    (MLME_IS_STA(padapter) && !MLME_IS_GC(padapter)))
+#endif
+#endif
+	{
+		rtw_hal_get_def_var(padapter, HAL_DEF_EXPLICIT_BEAMFORMER,
+			(u8 *)&bHwSupportBeamformer);
+		rtw_hal_get_def_var(padapter, HAL_DEF_EXPLICIT_BEAMFORMEE,
+			(u8 *)&bHwSupportBeamformee);
+		mu_bfer = _FALSE;
+		mu_bfee = _FALSE;
+		rtw_hal_get_def_var(padapter, HAL_DEF_VHT_MU_BEAMFORMER, &mu_bfer);
+		rtw_hal_get_def_var(padapter, HAL_DEF_VHT_MU_BEAMFORMEE, &mu_bfee);
+		if (TEST_FLAG(pregistrypriv->beamform_cap, BIT0) && bHwSupportBeamformer) {
+#ifdef CONFIG_CONCURRENT_MODE
+			if ((pmlmeinfo->state & 0x03) == WIFI_FW_AP_STATE) {
+				SET_FLAG(pvhtpriv->beamform_cap, BEAMFORMING_VHT_BEAMFORMER_ENABLE);
+				RTW_INFO("[VHT] CONCURRENT AP Support Beamformer\n");
+				if (TEST_FLAG(pregistrypriv->beamform_cap, BIT(2))
+				    && (_TRUE == mu_bfer)) {
+					SET_FLAG(pvhtpriv->beamform_cap, BEAMFORMING_VHT_MU_MIMO_AP_ENABLE);
+					RTW_INFO("[VHT] Support MU-MIMO AP\n");
+				}
+			} else
+				RTW_INFO("[VHT] CONCURRENT not AP ;not allow  Support Beamformer\n");
+#else
+			SET_FLAG(pvhtpriv->beamform_cap, BEAMFORMING_VHT_BEAMFORMER_ENABLE);
+			RTW_INFO("[VHT] Support Beamformer\n");
+			if (TEST_FLAG(pregistrypriv->beamform_cap, BIT(2))
+			    && (_TRUE == mu_bfer)
+			    && ((pmlmeinfo->state & 0x03) == WIFI_FW_AP_STATE)) {
+				SET_FLAG(pvhtpriv->beamform_cap, BEAMFORMING_VHT_MU_MIMO_AP_ENABLE);
+				RTW_INFO("[VHT] Support MU-MIMO AP\n");
+			}
+#endif
+		}
+		if (TEST_FLAG(pregistrypriv->beamform_cap, BIT1) && bHwSupportBeamformee) {
+			SET_FLAG(pvhtpriv->beamform_cap, BEAMFORMING_VHT_BEAMFORMEE_ENABLE);
+			RTW_INFO("[VHT] Support Beamformee\n");
+			if (TEST_FLAG(pregistrypriv->beamform_cap, BIT(3))
+			    && (_TRUE == mu_bfee)
+			    && ((pmlmeinfo->state & 0x03) != WIFI_FW_AP_STATE)) {
+				SET_FLAG(pvhtpriv->beamform_cap, BEAMFORMING_VHT_MU_MIMO_STA_ENABLE);
+				RTW_INFO("[VHT] Support MU-MIMO STA\n");
+			}
+		}
+	}
+#endif /* CONFIG_BEAMFORMING */
+
+	pvhtpriv->ampdu_len = pregistrypriv->ampdu_factor;
+
+	tx_nss = GET_HAL_TX_NSS(padapter);
+	rx_nss = GET_HAL_RX_NSS(padapter);
+
+	/* for now, vhtpriv.vht_mcs_map comes from RX NSS */
+	rtw_vht_nss_to_mcsmap(rx_nss, pvhtpriv->vht_mcs_map, pregistrypriv->vht_rx_mcs_map);
+	pvhtpriv->vht_highest_rate = rtw_get_vht_highest_rate(pvhtpriv->vht_mcs_map);
+}
+#endif /* !HOST_VHT_BUILD_TEST */
+
 #endif /* CONFIG_80211AC_VHT */
