@@ -4,7 +4,7 @@
 
 #include "host_xmit_update_attrib_types.h"
 
-static void setup_adapter(_adapter *a, u8 cur_wm, u16 rts_thresh, u32 frag_len)
+static void setup_adapter_vcs(_adapter *a, u8 cur_wm, u16 rts_thresh, u32 frag_len)
 {
 	memset(a, 0, sizeof(*a));
 	a->mlmeextpriv.cur_wireless_mode = cur_wm;
@@ -13,13 +13,13 @@ static void setup_adapter(_adapter *a, u8 cur_wm, u16 rts_thresh, u32 frag_len)
 	a->xmitpriv.frag_len = frag_len;
 }
 
-static int run_case_ex(const char *name, u32 sz, u8 cur_wm, u8 ampdu, u8 rtsen,
-		       u8 vcs_sense, u8 expect)
+static int run_vcs_case_ex(const char *name, u32 sz, u8 cur_wm, u8 ampdu, u8 rtsen,
+			   u8 vcs_sense, u8 expect)
 {
 	_adapter adapter;
 	struct xmit_frame frame;
 
-	setup_adapter(&adapter, cur_wm, 2347, 500);
+	setup_adapter_vcs(&adapter, cur_wm, 2347, 500);
 	adapter.registrypriv.vrtl_carrier_sense = vcs_sense;
 	memset(&frame, 0, sizeof(frame));
 	frame.attrib.nr_frags = 1;
@@ -37,21 +37,77 @@ static int run_case_ex(const char *name, u32 sz, u8 cur_wm, u8 ampdu, u8 rtsen,
 	return 0;
 }
 
-static int run_case(const char *name, u32 sz, u8 cur_wm, u8 ampdu, u8 expect)
+static int run_vcs_case(const char *name, u32 sz, u8 cur_wm, u8 ampdu, u8 expect)
 {
-	return run_case_ex(name, sz, cur_wm, ampdu, 0, AUTO_VCS, expect);
+	return run_vcs_case_ex(name, sz, cur_wm, ampdu, 0, AUTO_VCS, expect);
 }
+
+#ifndef RUST_XMIT_UPDATE_ATTRIB_ORACLE
+
+static void setup_ht_phy(_adapter *a, struct sta_info *sta, u8 cur_bw, u8 sta_bw)
+{
+	memset(a, 0, sizeof(*a));
+	memset(sta, 0, sizeof(*sta));
+	a->registrypriv.ht_enable = 1;
+	a->registrypriv.wireless_mode = WIRELESS_11_24N;
+	a->mlmeextpriv.cur_bwmode = cur_bw;
+	sta->cmn.bw_mode = sta_bw;
+}
+
+static int run_phy_case(const char *name, _adapter *adapter, struct pkt_attrib *attrib,
+			struct sta_info *sta, u8 expect_bw, u8 expect_ampdu)
+{
+	update_attrib_phy_info(adapter, attrib, sta);
+	if (attrib->bwmode != expect_bw || attrib->ampdu_en != expect_ampdu ||
+	    attrib->rtsen != sta->rtsen || attrib->retry_ctrl != _FALSE) {
+		fprintf(stderr, "%s: bw=%u ampdu=%u\n", name, attrib->bwmode,
+			attrib->ampdu_en);
+		return -1;
+	}
+	printf("PASS %s\n", name);
+	return 0;
+}
+#endif
 
 int main(void)
 {
 	int fail = 0;
 
-	fail |= run_case("vcs_legacy_rts_thresh", 3000, 3, 0, RTS_CTS);
-	fail |= run_case("vcs_legacy_none", 100, 3, 0, NONE_VCS);
-	fail |= run_case("vcs_ht_ampdu_rts", 100, WIRELESS_11_24N, 1, RTS_CTS);
-	fail |= run_case_ex("vcs_legacy_rtsen", 100, 3, 0, 1, AUTO_VCS, RTS_CTS);
-	fail |= run_case_ex("vcs_validate_disable", 3000, 3, 0, 0, DISABLE_VCS,
-			    NONE_VCS);
+	fail |= run_vcs_case("vcs_legacy_rts_thresh", 3000, 3, 0, RTS_CTS);
+	fail |= run_vcs_case("vcs_legacy_none", 100, 3, 0, NONE_VCS);
+	fail |= run_vcs_case("vcs_ht_ampdu_rts", 100, WIRELESS_11_24N, 1, RTS_CTS);
+	fail |= run_vcs_case_ex("vcs_legacy_rtsen", 100, 3, 0, 1, AUTO_VCS, RTS_CTS);
+	fail |= run_vcs_case_ex("vcs_validate_disable", 3000, 3, 0, 0, DISABLE_VCS,
+				NONE_VCS);
+
+#ifndef RUST_XMIT_UPDATE_ATTRIB_ORACLE
+	{
+		_adapter adapter;
+		struct pkt_attrib attrib;
+		struct sta_info sta;
+
+		memset(&attrib, 0, sizeof(attrib));
+		setup_ht_phy(&adapter, &sta, CHANNEL_WIDTH_20, CHANNEL_WIDTH_40);
+		sta.rtsen = 1;
+		fail |= run_phy_case("phy_bw_min", &adapter, &attrib, &sta,
+				     CHANNEL_WIDTH_20, _FALSE);
+	}
+
+	{
+		_adapter adapter;
+		struct pkt_attrib attrib;
+		struct sta_info sta;
+
+		memset(&attrib, 0, sizeof(attrib));
+		setup_ht_phy(&adapter, &sta, CHANNEL_WIDTH_40, CHANNEL_WIDTH_40);
+		sta.htpriv.ht_option = 1;
+		sta.htpriv.ampdu_enable = 1;
+		sta.htpriv.agg_enable_bitmap = BIT(2);
+		attrib.priority = 2;
+		fail |= run_phy_case("phy_ht_ampdu_tid", &adapter, &attrib, &sta,
+				     CHANNEL_WIDTH_40, _TRUE);
+	}
+#endif /* !RUST_XMIT_UPDATE_ATTRIB_ORACLE */
 
 	return fail ? 1 : 0;
 }
