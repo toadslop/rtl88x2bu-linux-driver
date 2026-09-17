@@ -1203,10 +1203,12 @@ exit:
 #endif /* !CONFIG_RUST || HOST_MLME_ROAMING_TEST || !CONFIG_RUST_MLME_ROAMING */
 #endif /* CONFIG_LAYER2_ROAMING */
 
-#ifdef HOST_MLME_JOIN_SELECT_TEST
+#if !defined(CONFIG_RUST) || defined(HOST_MLME_JOIN_SELECT_TEST) || \
+    !defined(CONFIG_RUST_MLME_JOIN_SELECT)
 
 extern int rtw_is_desired_network(_adapter *adapter, struct wlan_network *pnetwork);
 
+#ifdef HOST_MLME_JOIN_SELECT_TEST
 u8 _rtw_sitesurvey_condition_check(const char *caller, _adapter *adapter, bool check_sc_interval)
 {
 	u8 ss_condition = SS_ALLOW;
@@ -1328,14 +1330,303 @@ exit:
 
 	return ret;
 }
+#else /* HOST_MLME_JOIN_SELECT_TEST */
+u8 _rtw_sitesurvey_condition_check(const char *caller, _adapter *adapter, bool check_sc_interval)
+{
+	u8 ss_condition = SS_ALLOW;
+	struct mlme_priv *pmlmepriv = &adapter->mlmepriv;
+	struct registry_priv *registry_par = &adapter->registrypriv;
 
+#ifdef CONFIG_MP_INCLUDED
+	if (rtw_mp_mode_check(adapter)) {
+		RTW_INFO("%s ("ADPT_FMT") MP mode block Scan request\n", caller, ADPT_ARG(adapter));
+		ss_condition = SS_DENY_MP_MODE;
+		goto _exit;
+	}
+#endif
+
+#ifdef DBG_LA_MODE
+	if (registry_par->la_mode_en == 1 && MLME_IS_ASOC(adapter)) {
+		RTW_INFO("%s ("ADPT_FMT") LA debug mode block Scan request\n", caller, ADPT_ARG(adapter));
+		ss_condition = SS_DENY_LA_MODE;
+		goto _exit;
+	}
+#endif
+
+#ifdef CONFIG_RTW_REPEATER_SON
+	if (adapter->rtw_rson_scanstage == RSON_SCAN_PROCESS) {
+		RTW_INFO("%s ("ADPT_FMT") blocking scan for under rson scanning process\n", caller, ADPT_ARG(adapter));
+		ss_condition = SS_DENY_RSON_SCANING;
+		goto _exit;
+	}
+#endif
+#ifdef CONFIG_IOCTL_CFG80211
+	if (adapter_wdev_data(adapter)->block_scan == _TRUE) {
+		RTW_INFO("%s ("ADPT_FMT") wdev_priv.block_scan is set\n", caller, ADPT_ARG(adapter));
+		ss_condition = SS_DENY_BLOCK_SCAN;
+		goto _exit;
+	}
+#endif
+
+	if (adapter_to_dvobj(adapter)->scan_deny == _TRUE) {
+		RTW_INFO("%s ("ADPT_FMT") tpt mode, scan deny!\n", caller, ADPT_ARG(adapter));
+		ss_condition = SS_DENY_BLOCK_SCAN;
+		goto _exit;
+	}
+
+	if (rtw_is_scan_deny(adapter)) {
+		RTW_INFO("%s ("ADPT_FMT") : scan deny\n", caller, ADPT_ARG(adapter));
+		ss_condition = SS_DENY_BY_DRV;
+		goto _exit;
+	}
+
+#ifdef CONFIG_ADAPTIVITY_DENY_SCAN
+	if (registry_par->adaptivity_en
+	    && rtw_phydm_get_edcca_flag(adapter)
+	    && rtw_is_2g_ch(GET_HAL_DATA(adapter)->current_channel)) {
+		RTW_WARN(FUNC_ADPT_FMT": Adaptivity block scan! (ch=%u)\n",
+			 FUNC_ADPT_ARG(adapter),
+			 GET_HAL_DATA(adapter)->current_channel);
+		ss_condition = SS_DENY_ADAPTIVITY;
+		goto _exit;
+	}
+#endif /* CONFIG_ADAPTIVITY_DENY_SCAN */
+
+	if (check_fwstate(pmlmepriv, WIFI_AP_STATE)) {
+		if (check_fwstate(pmlmepriv, WIFI_UNDER_WPS)) {
+			RTW_INFO("%s ("ADPT_FMT") : scan abort!! AP mode process WPS\n", caller, ADPT_ARG(adapter));
+			ss_condition = SS_DENY_SELF_AP_UNDER_WPS;
+			goto _exit;
+		} else if (check_fwstate(pmlmepriv, WIFI_UNDER_LINKING) == _TRUE) {
+			RTW_INFO("%s ("ADPT_FMT") : scan abort!!AP mode under linking (fwstate=0x%x)\n",
+				caller, ADPT_ARG(adapter), pmlmepriv->fw_state);
+			ss_condition = SS_DENY_SELF_AP_UNDER_LINKING;
+			goto _exit;
+		} else if (check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY) == _TRUE) {
+			RTW_INFO("%s ("ADPT_FMT") : scan abort!!AP mode under survey (fwstate=0x%x)\n",
+				caller, ADPT_ARG(adapter), pmlmepriv->fw_state);
+			ss_condition = SS_DENY_SELF_AP_UNDER_SURVEY;
+			goto _exit;
+		}
+	} else {
+		if (check_fwstate(pmlmepriv, WIFI_UNDER_LINKING) == _TRUE) {
+			RTW_INFO("%s ("ADPT_FMT") : scan abort!!STA mode under linking (fwstate=0x%x)\n",
+				caller, ADPT_ARG(adapter), pmlmepriv->fw_state);
+			ss_condition = SS_DENY_SELF_STA_UNDER_LINKING;
+			goto _exit;
+		} else if (check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY) == _TRUE) {
+			RTW_INFO("%s ("ADPT_FMT") : scan abort!!STA mode under survey (fwstate=0x%x)\n",
+				caller, ADPT_ARG(adapter), pmlmepriv->fw_state);
+			ss_condition = SS_DENY_SELF_STA_UNDER_SURVEY;
+			goto _exit;
+		}
+	}
+
+#ifdef CONFIG_CONCURRENT_MODE
+	if (rtw_mi_buddy_check_fwstate(adapter, WIFI_UNDER_LINKING | WIFI_UNDER_WPS)) {
+		RTW_INFO("%s ("ADPT_FMT") : scan abort!! buddy_intf under linking or wps\n", caller, ADPT_ARG(adapter));
+		ss_condition = SS_DENY_BUDDY_UNDER_LINK_WPS;
+		goto _exit;
+
+	} else if (rtw_mi_buddy_check_fwstate(adapter, WIFI_UNDER_SURVEY)) {
+		RTW_INFO("%s ("ADPT_FMT") : scan abort!! buddy_intf under survey\n", caller, ADPT_ARG(adapter));
+		ss_condition = SS_DENY_BUDDY_UNDER_SURVEY;
+		goto _exit;
+	}
+#endif /* CONFIG_CONCURRENT_MODE */
+
+#ifdef RTW_BUSY_DENY_SCAN
+	if (pmlmepriv->lastscantime
+	    && (rtw_get_passing_time_ms(pmlmepriv->lastscantime) >
+		registry_par->scan_interval_thr)
+	    && rtw_mi_busy_traffic_check(adapter)) {
+		RTW_WARN("%s ("ADPT_FMT") : scan abort!! BusyTraffic\n",
+			 caller, ADPT_ARG(adapter));
+		ss_condition = SS_DENY_BUSY_TRAFFIC;
+		goto _exit;
+	}
+#endif /* RTW_BUSY_DENY_SCAN */
+
+_exit:
+	return ss_condition;
+}
+
+static int rtw_check_join_candidate(struct mlme_priv *mlme
+	    , struct wlan_network **candidate, struct wlan_network *competitor)
+{
+	int updated = _FALSE;
+	_adapter *adapter = container_of(mlme, _adapter, mlmepriv);
+	struct rf_ctl_t *rfctl = adapter_to_rfctl(adapter);
+	RT_CHANNEL_INFO *chset = rfctl->channel_set;
+	u8 ch = competitor->network.Configuration.DSConfig;
+
+	if (rtw_chset_search_ch(chset, ch) < 0)
+		goto exit;
+	if (IS_DFS_SLAVE_WITH_RD(rfctl)
+		&& !rtw_rfctl_dfs_domain_unknown(rfctl)
+		&& rtw_chset_is_ch_non_ocp(chset, ch))
+		goto exit;
+
+#if defined(CONFIG_RTW_REPEATER_SON) &&  (!defined(CONFIG_RTW_REPEATER_SON_ROOT))
+	s16 rson_score;
+	struct rtw_rson_struct  rson_data;
+
+	if (rtw_rson_choose(candidate, competitor)) {
+		*candidate = competitor;
+		rtw_get_rson_struct(&((*candidate)->network), &rson_data);
+		rson_score = rtw_cal_rson_score(&rson_data, (*candidate)->network.Rssi);
+		RTW_INFO("[assoc_ssid:%s] new candidate: %s("MAC_FMT", ch%u) rson_score:%d\n",
+			 mlme->assoc_ssid.Ssid,
+			 (*candidate)->network.Ssid.Ssid,
+			 MAC_ARG((*candidate)->network.MacAddress),
+			 (*candidate)->network.Configuration.DSConfig,
+			 rson_score);
+		return _TRUE;
+	}
+	return _FALSE;
+#endif
+
+	if (mlme->assoc_by_bssid == _TRUE) {
+		if (_rtw_memcmp(competitor->network.MacAddress, mlme->assoc_bssid, ETH_ALEN) == _FALSE)
+			goto exit;
+	}
+
+	if (mlme->assoc_ssid.Ssid[0] && mlme->assoc_ssid.SsidLength) {
+		if (competitor->network.Ssid.SsidLength != mlme->assoc_ssid.SsidLength
+		    || _rtw_memcmp(competitor->network.Ssid.Ssid, mlme->assoc_ssid.Ssid, mlme->assoc_ssid.SsidLength) == _FALSE
+		   )
+			goto exit;
+	}
+
+	if (rtw_is_desired_network(adapter, competitor)  == _FALSE)
+		goto exit;
+
+#ifdef CONFIG_LAYER2_ROAMING
+	if (rtw_to_roam(adapter) > 0) {
+		if (rtw_get_passing_time_ms(competitor->last_scanned) >= mlme->roam_scanr_exp_ms
+		    || is_same_ess(&competitor->network, &mlme->cur_network.network) == _FALSE
+		   )
+			goto exit;
+	}
+#endif
+
+	if (*candidate == NULL || (*candidate)->network.Rssi < competitor->network.Rssi) {
+		*candidate = competitor;
+		updated = _TRUE;
+	}
+
+	if (updated) {
+		RTW_INFO("[by_bssid:%u][assoc_ssid:%s][to_roam:%u] "
+			 "new candidate: %s("MAC_FMT", ch%u) rssi:%d dBm\n",
+			 mlme->assoc_by_bssid,
+			 mlme->assoc_ssid.Ssid,
+			 rtw_to_roam(adapter),
+			 (*candidate)->network.Ssid.Ssid,
+			 MAC_ARG((*candidate)->network.MacAddress),
+			 (*candidate)->network.Configuration.DSConfig,
+			 (int)(*candidate)->network.Rssi
+			);
+	}
+
+exit:
+	return updated;
+}
+
+int rtw_select_and_join_from_scanned_queue(struct mlme_priv *pmlmepriv)
+{
+	_irqL	irqL;
+	int ret;
+	_list	*phead;
+	_adapter *adapter;
+	_queue	*queue	= &(pmlmepriv->scanned_queue);
+	struct	wlan_network	*pnetwork = NULL;
+	struct	wlan_network	*candidate = NULL;
+#ifdef CONFIG_ANTENNA_DIVERSITY
+	u8		bSupportAntDiv = _FALSE;
+#endif
+
+	adapter = (_adapter *)pmlmepriv->nic_hdl;
+
+	_enter_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+
+#ifdef CONFIG_LAYER2_ROAMING
+	if (pmlmepriv->roam_network) {
+		candidate = pmlmepriv->roam_network;
+		goto candidate_exist;
+	}
+#endif
+
+	phead = get_list_head(queue);
+	pmlmepriv->pscanned = get_next(phead);
+
+	while (!rtw_end_of_queue_search(phead, pmlmepriv->pscanned)) {
+
+		pnetwork = LIST_CONTAINOR(pmlmepriv->pscanned, struct wlan_network, list);
+		if (pnetwork == NULL) {
+			ret = _FAIL;
+			goto exit;
+		}
+
+		pmlmepriv->pscanned = get_next(pmlmepriv->pscanned);
+
+		rtw_check_join_candidate(pmlmepriv, &candidate, pnetwork);
+
+	}
+
+	if (candidate == NULL) {
+		RTW_INFO("%s: return _FAIL(candidate == NULL)\n", __FUNCTION__);
+#ifdef CONFIG_WOWLAN
+		_clr_fwstate_(pmlmepriv, WIFI_ASOC_STATE | WIFI_UNDER_LINKING);
+#endif
+		ret = _FAIL;
+		goto exit;
+	} else {
+		RTW_INFO("%s: candidate: %s("MAC_FMT", ch:%u)\n", __FUNCTION__,
+			candidate->network.Ssid.Ssid, MAC_ARG(candidate->network.MacAddress),
+			 candidate->network.Configuration.DSConfig);
+		goto candidate_exist;
+	}
+
+candidate_exist:
+
+	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE) {
+		RTW_INFO("%s: WIFI_ASOC_STATE while ask_for_joinbss!!!\n", __FUNCTION__);
+
+		{
+			rtw_disassoc_cmd(adapter, 0, 0);
+			rtw_indicate_disconnect(adapter, 0, _FALSE);
+			rtw_free_assoc_resources_cmd(adapter, _TRUE, 0);
+		}
+	}
+
+#ifdef CONFIG_ANTENNA_DIVERSITY
+	rtw_hal_get_def_var(adapter, HAL_DEF_IS_SUPPORT_ANT_DIV, &(bSupportAntDiv));
+	if (_TRUE == bSupportAntDiv) {
+		u8 CurrentAntenna;
+		rtw_hal_get_odm_var(adapter, HAL_ODM_ANTDIV_SELECT, &(CurrentAntenna), NULL);
+		RTW_INFO("#### Opt_Ant_(%s) , cur_Ant(%s)\n",
+			(MAIN_ANT == candidate->network.PhyInfo.Optimum_antenna) ? "MAIN_ANT" : "AUX_ANT",
+			 (MAIN_ANT == CurrentAntenna) ? "MAIN_ANT" : "AUX_ANT"
+			);
+	}
+#endif
+	set_fwstate(pmlmepriv, WIFI_UNDER_LINKING);
+	ret = rtw_joinbss_cmd(adapter, candidate);
+
+exit:
+	_exit_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+
+	return ret;
+}
 #endif /* HOST_MLME_JOIN_SELECT_TEST */
+
+#endif /* !CONFIG_RUST || HOST_MLME_JOIN_SELECT_TEST || !CONFIG_RUST_MLME_JOIN_SELECT */
 
 #if (defined(HOST_MLME_WMM_RSN_TEST) && !defined(RUST_MLME_WMM_RSN_ORACLE)) || \
      (!defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
       !defined(HOST_MLME_ROAMING_TEST) && !defined(HOST_MLME_JOIN_SELECT_TEST) && \
       !defined(HOST_MLME_80211D_TEST) && \
-      !defined(HOST_MLME_HT_RESTRUCTURE_TEST) && !defined(HOST_MLME_JOIN_SELECT_TEST) && \
+      !defined(HOST_MLME_HT_RESTRUCTURE_TEST) && \
       (!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_WMM_RSN)))
 
 /* adjust IEs for rtw_joinbss_cmd in WMM */
