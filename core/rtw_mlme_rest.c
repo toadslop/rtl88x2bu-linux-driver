@@ -24,6 +24,8 @@
 #include "host_mlme_80211d_types.h"
 #elif defined(HOST_MLME_HT_RESTRUCTURE_TEST)
 #include "host_mlme_ht_restructure_types.h"
+#elif defined(HOST_MLME_JOIN_SELECT_TEST)
+#include "host_mlme_join_select_types.h"
 #elif defined(HOST_MLME_TEST)
 #include "host_mlme_types.h"
 #else
@@ -140,6 +142,7 @@ int is_same_ess(WLAN_BSSID_EX *a, WLAN_BSSID_EX *b)
     ((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_80211D)) && \
      !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
      !defined(HOST_MLME_WMM_RSN_TEST) && !defined(HOST_MLME_ROAMING_TEST) && \
+     !defined(HOST_MLME_JOIN_SELECT_TEST) && \
      !defined(HOST_MLME_HT_RESTRUCTURE_TEST))
 
 void process_80211d(PADAPTER padapter, WLAN_BSSID_EX *bssid)
@@ -362,6 +365,7 @@ done_update_chplan_from_ap:
     ((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_HT_RESTRUCTURE)) && \
      !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
      !defined(HOST_MLME_WMM_RSN_TEST) && !defined(HOST_MLME_ROAMING_TEST) && \
+     !defined(HOST_MLME_JOIN_SELECT_TEST) && \
      !defined(HOST_MLME_80211D_TEST))
 
 /* the fucntion is >= passive_level */
@@ -605,6 +609,7 @@ unsigned int rtw_restructure_ht_ie(_adapter *padapter, u8 *in_ie, u8 *out_ie, ui
 #if (!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_NETWORK_UPDATE)) && \
     !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
     !defined(HOST_MLME_WMM_RSN_TEST) && !defined(HOST_MLME_ROAMING_TEST) && \
+    !defined(HOST_MLME_JOIN_SELECT_TEST) && \
     !defined(HOST_MLME_80211D_TEST) && !defined(HOST_MLME_HT_RESTRUCTURE_TEST)
 
 void update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src,
@@ -1198,10 +1203,139 @@ exit:
 #endif /* !CONFIG_RUST || HOST_MLME_ROAMING_TEST || !CONFIG_RUST_MLME_ROAMING */
 #endif /* CONFIG_LAYER2_ROAMING */
 
+#ifdef HOST_MLME_JOIN_SELECT_TEST
+
+extern int rtw_is_desired_network(_adapter *adapter, struct wlan_network *pnetwork);
+
+u8 _rtw_sitesurvey_condition_check(const char *caller, _adapter *adapter, bool check_sc_interval)
+{
+	u8 ss_condition = SS_ALLOW;
+	struct mlme_priv *pmlmepriv = &adapter->mlmepriv;
+
+	(void)caller;
+	(void)check_sc_interval;
+
+	if (adapter_to_dvobj(adapter)->scan_deny == _TRUE) {
+		ss_condition = SS_DENY_BLOCK_SCAN;
+		goto _exit;
+	}
+
+	if (rtw_is_scan_deny(adapter)) {
+		ss_condition = SS_DENY_BY_DRV;
+		goto _exit;
+	}
+
+	if (check_fwstate(pmlmepriv, WIFI_AP_STATE)) {
+		if (check_fwstate(pmlmepriv, WIFI_UNDER_WPS)) {
+			ss_condition = SS_DENY_SELF_AP_UNDER_WPS;
+			goto _exit;
+		} else if (check_fwstate(pmlmepriv, WIFI_UNDER_LINKING) == _TRUE) {
+			ss_condition = SS_DENY_SELF_AP_UNDER_LINKING;
+			goto _exit;
+		} else if (check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY) == _TRUE) {
+			ss_condition = SS_DENY_SELF_AP_UNDER_SURVEY;
+			goto _exit;
+		}
+	} else {
+		if (check_fwstate(pmlmepriv, WIFI_UNDER_LINKING) == _TRUE) {
+			ss_condition = SS_DENY_SELF_STA_UNDER_LINKING;
+			goto _exit;
+		} else if (check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY) == _TRUE) {
+			ss_condition = SS_DENY_SELF_STA_UNDER_SURVEY;
+			goto _exit;
+		}
+	}
+
+_exit:
+	return ss_condition;
+}
+
+int rtw_check_join_candidate(struct mlme_priv *mlme,
+			     struct wlan_network **candidate,
+			     struct wlan_network *competitor)
+{
+	int updated = _FALSE;
+	_adapter *adapter = container_of(mlme, _adapter, mlmepriv);
+	struct rf_ctl_t *rfctl = adapter_to_rfctl(adapter);
+	RT_CHANNEL_INFO *chset = rfctl->channel_set;
+	u8 ch = competitor->network.Configuration.DSConfig;
+
+	if (rtw_chset_search_ch(chset, ch) < 0)
+		goto exit;
+
+	if (mlme->assoc_by_bssid == _TRUE) {
+		if (_rtw_memcmp(competitor->network.MacAddress, mlme->assoc_bssid, ETH_ALEN) == _FALSE)
+			goto exit;
+	}
+
+	if (mlme->assoc_ssid.Ssid[0] && mlme->assoc_ssid.SsidLength) {
+		if (competitor->network.Ssid.SsidLength != mlme->assoc_ssid.SsidLength
+		    || _rtw_memcmp(competitor->network.Ssid.Ssid, mlme->assoc_ssid.Ssid,
+				   mlme->assoc_ssid.SsidLength) == _FALSE)
+			goto exit;
+	}
+
+	if (rtw_is_desired_network(adapter, competitor) == _FALSE)
+		goto exit;
+
+	if (*candidate == NULL || (*candidate)->network.Rssi < competitor->network.Rssi) {
+		*candidate = competitor;
+		updated = _TRUE;
+	}
+
+exit:
+	return updated;
+}
+
+int rtw_select_and_join_from_scanned_queue(struct mlme_priv *pmlmepriv)
+{
+	_irqL irqL;
+	int ret;
+	_list *phead;
+	_adapter *adapter;
+	_queue *queue = &(pmlmepriv->scanned_queue);
+	struct wlan_network *pnetwork = NULL;
+	struct wlan_network *candidate = NULL;
+
+	adapter = (_adapter *)pmlmepriv->nic_hdl;
+
+	_enter_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+
+	phead = get_list_head(queue);
+	pmlmepriv->pscanned = get_next(phead);
+
+	while (!rtw_end_of_queue_search(phead, pmlmepriv->pscanned)) {
+		pnetwork = LIST_CONTAINOR(pmlmepriv->pscanned, struct wlan_network, list);
+		if (pnetwork == NULL) {
+			ret = _FAIL;
+			goto exit;
+		}
+
+		pmlmepriv->pscanned = get_next(pmlmepriv->pscanned);
+		rtw_check_join_candidate(pmlmepriv, &candidate, pnetwork);
+	}
+
+	if (candidate == NULL) {
+		ret = _FAIL;
+		goto exit;
+	}
+
+	set_fwstate(pmlmepriv, WIFI_UNDER_LINKING);
+	ret = rtw_joinbss_cmd(adapter, candidate);
+
+exit:
+	_exit_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+
+	return ret;
+}
+
+#endif /* HOST_MLME_JOIN_SELECT_TEST */
+
 #if (defined(HOST_MLME_WMM_RSN_TEST) && !defined(RUST_MLME_WMM_RSN_ORACLE)) || \
      (!defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
-      !defined(HOST_MLME_ROAMING_TEST) && !defined(HOST_MLME_80211D_TEST) && \
-      !defined(HOST_MLME_HT_RESTRUCTURE_TEST) && \
+      !defined(HOST_MLME_ROAMING_TEST) && !defined(HOST_MLME_JOIN_SELECT_TEST) && \
+      !defined(HOST_MLME_80211D_TEST) && \
+      !defined(HOST_MLME_HT_RESTRUCTURE_TEST) && !defined(HOST_MLME_JOIN_SELECT_TEST) && \
       (!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_WMM_RSN)))
 
 /* adjust IEs for rtw_joinbss_cmd in WMM */
@@ -1272,7 +1406,8 @@ int rtw_restruct_wmm_ie(_adapter *adapter, u8 *in_ie, u8 *out_ie, uint in_len, u
 
 #if defined(HOST_MLME_WMM_RSN_TEST) || \
      (!defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
-      !defined(HOST_MLME_ROAMING_TEST) && !defined(HOST_MLME_80211D_TEST) && \
+      !defined(HOST_MLME_ROAMING_TEST) && !defined(HOST_MLME_JOIN_SELECT_TEST) && \
+      !defined(HOST_MLME_80211D_TEST) && \
       !defined(HOST_MLME_HT_RESTRUCTURE_TEST))
 
 #if !defined(CONFIG_RUST) || defined(HOST_MLME_WMM_RSN_TEST) || !defined(CONFIG_RUST_MLME_WMM_RSN)
@@ -1342,7 +1477,8 @@ exit:
 
 #if (defined(HOST_MLME_WMM_RSN_TEST) && !defined(RUST_MLME_WMM_RSN_ORACLE)) || \
      (!defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
-      !defined(HOST_MLME_ROAMING_TEST) && !defined(HOST_MLME_80211D_TEST) && \
+      !defined(HOST_MLME_ROAMING_TEST) && !defined(HOST_MLME_JOIN_SELECT_TEST) && \
+      !defined(HOST_MLME_80211D_TEST) && \
       !defined(HOST_MLME_HT_RESTRUCTURE_TEST) && \
       (!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_WMM_RSN)))
 
@@ -1402,6 +1538,7 @@ sint rtw_restruct_sec_ie(_adapter *adapter, u8 *out_ie)
 
 #if defined(CONFIG_RUST) && !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
     !defined(HOST_MLME_WMM_RSN_TEST) && !defined(HOST_MLME_ROAMING_TEST) && \
+    !defined(HOST_MLME_JOIN_SELECT_TEST) && \
     !defined(HOST_MLME_80211D_TEST) && !defined(HOST_MLME_HT_RESTRUCTURE_TEST)
 u8 *rtw_mlme_rest_bss_ies(WLAN_BSSID_EX *bss) { return bss->IEs; }
 u32 *rtw_mlme_rest_bss_ssid_length(WLAN_BSSID_EX *bss) { return &bss->Ssid.SsidLength; }
