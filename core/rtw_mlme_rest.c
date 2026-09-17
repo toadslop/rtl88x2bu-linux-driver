@@ -1203,8 +1203,11 @@ exit:
 #endif /* !CONFIG_RUST || HOST_MLME_ROAMING_TEST || !CONFIG_RUST_MLME_ROAMING */
 #endif /* CONFIG_LAYER2_ROAMING */
 
-#if !defined(CONFIG_RUST) || defined(HOST_MLME_JOIN_SELECT_TEST) || \
-    !defined(CONFIG_RUST_MLME_JOIN_SELECT)
+#if defined(HOST_MLME_JOIN_SELECT_TEST) || \
+    ((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_JOIN_SELECT)) && \
+     !defined(HOST_MLME_TEST) && !defined(HOST_MLME_UNASSOC_TEST) && \
+     !defined(HOST_MLME_WMM_RSN_TEST) && !defined(HOST_MLME_ROAMING_TEST) && \
+     !defined(HOST_MLME_80211D_TEST) && !defined(HOST_MLME_HT_RESTRUCTURE_TEST))
 
 extern int rtw_is_desired_network(_adapter *adapter, struct wlan_network *pnetwork);
 

@@ -224,9 +224,7 @@ pub extern "C" fn rtw_check_join_candidate(
         if rtw_is_desired_network(adapter, competitor) == _FALSE {
             return _FALSE;
         }
-        if (*candidate).is_null()
-            || (*(*candidate)).network.rssi < (*competitor).network.rssi
-        {
+        if (*candidate).is_null() || (*(*candidate)).network.rssi < (*competitor).network.rssi {
             *candidate = competitor;
             return _TRUE;
         }
