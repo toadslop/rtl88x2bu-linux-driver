@@ -2639,6 +2639,7 @@ ccflags-y += -DCONFIG_RUST_MLME_HT_RESTRUCTURE
 ccflags-y += -DCONFIG_80211D
 ccflags-y += -DCONFIG_RUST_MLME_80211D
 ccflags-y += -DCONFIG_RUST_STA_MGT_STCTL
+ccflags-y += -DCONFIG_RUST_STA_MGT_LOOKUP
 ccflags-y += -DCONFIG_RUST_STA_MGT_ALLOC
 ccflags-y += -DCONFIG_RUST_STA_MGT_FREE
 ccflags-y += -DCONFIG_RUST_STA_MGT_FREE_INIT
@@ -2703,6 +2704,7 @@ ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_80211AC_VHT' $(src)/include/aut
 rustflags-y += --cfg config_80211ac_vht
 endif
 rustflags-y += --cfg rust_sta_mgt_stctl
+rustflags-y += --cfg rust_sta_mgt_lookup
 rustflags-y += --cfg rust_sta_mgt_alloc
 rustflags-y += --cfg rust_sta_mgt_free
 rustflags-y += --cfg rust_ap_sta_ie
@@ -2796,6 +2798,7 @@ $(MODULE_NAME)-y += rust/rtw_vht.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt_aid.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt_stctl.o
+$(MODULE_NAME)-y += rust/rtw_sta_mgt_lookup.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt_alloc.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt_free.o
 $(MODULE_NAME)-y += rust/rtw_sta_mgt_free_init_kern.o
@@ -3315,6 +3318,22 @@ rust-objects-rtw-sta-mgt-stctl-rust-ref:
 rust-check-symbols-rtw-sta-mgt-stctl: rust-objects-rtw-sta-mgt-stctl-c rust-objects-rtw-sta-mgt-stctl-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/sta_mgt/sta_mgt_stctl_c_ref.o NEW=tests/host/sta_mgt/sta_mgt_stctl_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_sta_mgt_stctl.allow
+
+# W3-77 PR6: lookup-only L1 (host C oracle vs host Rust oracle).
+rust-objects-rtw-sta-mgt-lookup-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_STA_MGT_TEST -o tests/host/sta_mgt/sta_mgt_lookup_c_ref.o core/rtw_sta_mgt_lookup.c
+
+rust-objects-rtw-sta-mgt-lookup-rust-ref:
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_sta_mgt_test \
+		--emit=obj=tests/host/sta_mgt/sta_mgt_lookup_rust_ref.o \
+		--crate-type lib rust/rtw_sta_mgt_lookup.rs
+
+rust-check-symbols-rtw-sta-mgt-lookup: rust-objects-rtw-sta-mgt-lookup-c rust-objects-rtw-sta-mgt-lookup-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/sta_mgt/sta_mgt_lookup_c_ref.o NEW=tests/host/sta_mgt/sta_mgt_lookup_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_sta_mgt_lookup.allow
 
 # W3-55 PR3: ap_rest-only L1 (host C oracle vs host Rust oracle).
 rust-objects-rtw-ap-rest-c:

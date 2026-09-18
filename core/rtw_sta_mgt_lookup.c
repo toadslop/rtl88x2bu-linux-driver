@@ -62,6 +62,8 @@ void rtw_st_ctl_rx(struct sta_info *sta, u8 *ehdr_pos)
 }
 #endif /* !HOST_STA_MGT_TEST || HOST_STA_MGT_LOOKUP_STCTL_TEST */
 
+#if !defined(CONFIG_RUST) || defined(HOST_STA_MGT_TEST) || !defined(CONFIG_RUST_STA_MGT_LOOKUP)
+
 void _rtw_init_stainfo(struct sta_info *psta)
 {
 	_rtw_memset((u8 *)psta, 0, sizeof(struct sta_info));
@@ -149,3 +151,75 @@ struct sta_info *rtw_get_stainfo(struct sta_priv *pstapriv, const u8 *hwaddr)
 	return psta;
 
 }
+
+#endif /* !CONFIG_RUST || HOST_STA_MGT_TEST || !CONFIG_RUST_STA_MGT_LOOKUP */
+
+#if defined(CONFIG_RUST) && !defined(HOST_STA_MGT_TEST)
+
+void rtw_rust_lookup_init_stainfo_fields(struct sta_info *psta)
+{
+	_rtw_memset((u8 *)psta, 0, sizeof(struct sta_info));
+
+	_rtw_spinlock_init(&psta->lock);
+	_rtw_init_listhead(&psta->list);
+	_rtw_init_listhead(&psta->hash_list);
+
+	_rtw_init_queue(&psta->sleep_q);
+#ifdef CONFIG_RTW_MGMT_QUEUE
+	_rtw_init_queue(&psta->mgmt_sleep_q);
+#endif
+	_rtw_init_sta_xmit_priv(&psta->sta_xmitpriv);
+	_rtw_init_sta_recv_priv(&psta->sta_recvpriv);
+
+#ifdef CONFIG_AP_MODE
+	_rtw_init_listhead(&psta->asoc_list);
+	_rtw_init_listhead(&psta->auth_list);
+	psta->bpairwise_key_installed = _FALSE;
+
+#ifdef CONFIG_RTW_80211R
+	psta->ft_pairwise_key_installed = _FALSE;
+#endif
+#endif /* CONFIG_AP_MODE */
+
+	rtw_st_ctl_init(&psta->st_ctl);
+}
+
+void rtw_rust_lookup_enter_hash(struct sta_priv *pstapriv, _irqL *irqL)
+{
+	_enter_critical_bh(&pstapriv->sta_hash_lock, irqL);
+}
+
+void rtw_rust_lookup_exit_hash(struct sta_priv *pstapriv, _irqL *irqL)
+{
+	_exit_critical_bh(&pstapriv->sta_hash_lock, irqL);
+}
+
+struct sta_info *rtw_rust_lookup_find_sta_unlocked(struct sta_priv *pstapriv, const u8 *hwaddr)
+{
+	_list *plist, *phead;
+	struct sta_info *psta = NULL;
+	u32 index;
+	const u8 *addr;
+	u8 bc_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+
+	if (IS_MCAST(hwaddr))
+		addr = bc_addr;
+	else
+		addr = hwaddr;
+
+	index = wifi_mac_hash(addr);
+	phead = &(pstapriv->sta_hash[index]);
+	plist = get_next(phead);
+
+	while ((rtw_end_of_queue_search(phead, plist)) == _FALSE) {
+		psta = LIST_CONTAINOR(plist, struct sta_info, hash_list);
+
+		if ((_rtw_memcmp(psta->cmn.mac_addr, addr, ETH_ALEN)) == _TRUE)
+			break;
+		psta = NULL;
+		plist = get_next(plist);
+	}
+	return psta;
+}
+
+#endif /* CONFIG_RUST && !HOST_STA_MGT_TEST */
