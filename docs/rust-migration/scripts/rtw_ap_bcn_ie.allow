@@ -1,0 +1,3 @@
+# L1 allowlist for W3-75 beacon IE update object swap (PR5 add/remove; PR6 adds update_BCNTIM).
+rtw_add_bcn_ie
+rtw_remove_bcn_ie
