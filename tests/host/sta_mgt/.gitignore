@@ -6,6 +6,8 @@ test_sta_mgt_free
 librust_sta_mgt_alloc.a
 test_sta_mgt_stctl_rust
 librust_sta_mgt_stctl.a
+test_sta_mgt_lookup_rust
+librust_sta_mgt_lookup.a
 test_sta_mgt_free_mfree_rust
 test_sta_mgt_free_init_rust
 test_sta_mgt_free_deinit_rust
