@@ -42,8 +42,12 @@ const HW_VAR_MLME_DISCONNECT: c_int = 1;
 const HW_VAR_MLME_JOIN: c_int = 2;
 const HW_VAR_DO_IQK: c_int = 3;
 
-const WLAN_BSSID_IE_LENGTH_OFF: usize = 136;
+/// `FIELD_OFFSET(WLAN_BSSID_EX, IELength)` — host L2 (`NDIS_802_11_RSSI` is `long`).
+const WLAN_BSSID_PRE_IELENGTH: usize = 136;
+/// `FIELD_OFFSET(WLAN_BSSID_EX, IEs)`.
 const WLAN_BSSID_IES_OFF: usize = 140;
+/// `FIELD_OFFSET(WLAN_BSSID_EX, MacAddress)`.
+const WLAN_BSSID_MAC_OFF: usize = 4;
 
 #[repr(C)]
 struct MlmeExtInfo {
@@ -58,8 +62,15 @@ struct MlmeExtInfo {
     candidate_tid_bitmap: U8,
     bwmode_updated: U8,
     vht_enable: U8,
+    /// Tail padding so `network` matches C `struct mlme_ext_info` (offset 16).
+    _pad_after_vht: U8,
     network: [U8; MAX_IE_SZ + 256],
 }
+
+const _: () = assert!(core::mem::offset_of!(MlmeExtInfo, network) == 16);
+const _: () = assert!(WLAN_BSSID_PRE_IELENGTH == 136);
+const _: () = assert!(WLAN_BSSID_IES_OFF == 140);
+const _: () = assert!(WLAN_BSSID_MAC_OFF == 4);
 
 #[repr(C)]
 struct Timer {
@@ -153,9 +164,17 @@ pub extern "C" fn join_cmd_hdl(padapter: *mut Adapter, pbuf: *mut U8) -> U8 {
         let mut doiqk: U8 = _FALSE as U8;
         let mut join_type: U8 = 0;
 
+        let bssid_mac = pnetwork.add(WLAN_BSSID_MAC_OFF);
+
         if (pmlmeinfo.state & WIFI_FW_ASSOC_SUCCESS) != 0 {
             if (pmlmeinfo.state & WIFI_FW_STATION_STATE) != 0 {
-                issue_deauth_ex(padapter, pnetwork, WLAN_REASON_DEAUTH_LEAVING, 1, 100);
+                issue_deauth_ex(
+                    padapter,
+                    bssid_mac,
+                    WLAN_REASON_DEAUTH_LEAVING,
+                    1,
+                    100,
+                );
             }
             pmlmeinfo.state = WIFI_FW_NULL_STATE;
             flush_all_cam_entry(padapter);
@@ -178,9 +197,10 @@ pub extern "C" fn join_cmd_hdl(padapter: *mut Adapter, pbuf: *mut U8) -> U8 {
         _rtw_memcpy(
             pnetwork as *mut c_void,
             pbuf as *const c_void,
-            WLAN_BSSID_IE_LENGTH_OFF,
+            WLAN_BSSID_PRE_IELENGTH,
         );
-        let ie_length = *(pbuf.add(WLAN_BSSID_IE_LENGTH_OFF) as *const U32);
+        let ie_length = *(pbuf.add(WLAN_BSSID_PRE_IELENGTH) as *const U32);
+        *(pnetwork.add(WLAN_BSSID_PRE_IELENGTH) as *mut U32) = ie_length;
 
         if ie_length > MAX_IE_SZ as U32 {
             return H2C_PARAMETERS_ERROR;
@@ -241,7 +261,7 @@ pub extern "C" fn join_cmd_hdl(padapter: *mut Adapter, pbuf: *mut U8) -> U8 {
             return H2C_SUCCESS;
         }
 
-        rtw_hal_set_hwreg(padapter, HW_VAR_BSSID, pnetwork);
+        rtw_hal_set_hwreg(padapter, HW_VAR_BSSID, bssid_mac);
         if mlme_is_sta(padapter) {
             rtw_hal_rcr_set_chk_bssid(padapter, MLME_STA_CONNECTING);
         } else {
