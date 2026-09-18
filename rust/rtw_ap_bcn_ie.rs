@@ -161,7 +161,12 @@ pub extern "C" fn rtw_remove_bcn_ie(_adapter: AdapterPtr, pnetwork: NetPtr, inde
         let pie = net_ies(pnetwork);
         let ie_length = *net_ie_len(pnetwork);
         let mut ielen: Sint = 0;
-        let p = rtw_get_ie(pie.add(12), index as Sint, &mut ielen, ie_length as Sint - 12);
+        let p = rtw_get_ie(
+            pie.add(12),
+            index as Sint,
+            &mut ielen,
+            ie_length as Sint - 12,
+        );
         if p.is_null() || ielen <= 0 {
             return;
         }
