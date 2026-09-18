@@ -126,7 +126,8 @@ extern "C" {
     fn WMM_param_handler(a: *mut Adapter, pie: *mut U8) -> c_int;
     fn rtw_bss_get_chbw(bss: *mut U8, ch: *mut U8, bw: *mut U8, offset: *mut U8, ht: U8, vht: U8);
     fn rtw_adjust_chbw(a: *mut Adapter, ch: U8, bw: *mut U8, offset: *mut U8);
-    fn rtw_chk_start_clnt_join(a: *mut Adapter, ch: *mut U8, bw: *mut U8, offset: *mut U8) -> c_int;
+    fn rtw_chk_start_clnt_join(a: *mut Adapter, ch: *mut U8, bw: *mut U8, offset: *mut U8)
+        -> c_int;
     fn rtw_btcoex_connect_notify(a: *mut Adapter, join_type: U8);
     fn set_channel_bwmode(a: *mut Adapter, ch: U8, offset: U8, bw: U8);
     fn start_clnt_join(a: *mut Adapter);
@@ -203,8 +204,11 @@ pub extern "C" fn join_cmd_hdl(padapter: *mut Adapter, pbuf: *mut U8) -> U8 {
             let len = *pie.add(1);
             match eid {
                 _VENDOR_SPECIFIC_IE_ => {
-                    if _rtw_memcmp(pie.add(2) as *const c_void, WMM_OUI.as_ptr() as *const c_void, 4)
-                        != 0
+                    if _rtw_memcmp(
+                        pie.add(2) as *const c_void,
+                        WMM_OUI.as_ptr() as *const c_void,
+                        4,
+                    ) != 0
                     {
                         WMM_param_handler(padapter, pie as *mut U8);
                     }
