@@ -42,8 +42,6 @@ static int run_vcs_case(const char *name, u32 sz, u8 cur_wm, u8 ampdu, u8 expect
 	return run_vcs_case_ex(name, sz, cur_wm, ampdu, 0, AUTO_VCS, expect);
 }
 
-#ifndef RUST_XMIT_UPDATE_ATTRIB_ORACLE
-
 static void setup_ht_phy(_adapter *a, struct sta_info *sta, u8 cur_bw, u8 sta_bw)
 {
 	memset(a, 0, sizeof(*a));
@@ -67,7 +65,6 @@ static int run_phy_case(const char *name, _adapter *adapter, struct pkt_attrib *
 	printf("PASS %s\n", name);
 	return 0;
 }
-#endif
 
 int main(void)
 {
@@ -80,7 +77,6 @@ int main(void)
 	fail |= run_vcs_case_ex("vcs_validate_disable", 3000, 3, 0, 0, DISABLE_VCS,
 				NONE_VCS);
 
-#ifndef RUST_XMIT_UPDATE_ATTRIB_ORACLE
 	{
 		_adapter adapter;
 		struct pkt_attrib attrib;
@@ -107,7 +103,6 @@ int main(void)
 		fail |= run_phy_case("phy_ht_ampdu_tid", &adapter, &attrib, &sta,
 				     CHANNEL_WIDTH_40, _TRUE);
 	}
-#endif /* !RUST_XMIT_UPDATE_ATTRIB_ORACLE */
 
 	return fail ? 1 : 0;
 }
