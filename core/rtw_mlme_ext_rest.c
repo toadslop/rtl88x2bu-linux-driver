@@ -24,6 +24,8 @@ extern int rtw_warn_on(int cond);
 #include "host_mlme_ext_scan_types.h"
 #elif defined(HOST_MLME_EXT_BAND_IE_TEST)
 #include "host_mlme_ext_band_ie_types.h"
+#elif defined(HOST_MLME_EXT_JOIN_CMD_TEST)
+#include "host_mlme_ext_join_cmd_types.h"
 #elif defined(HOST_MLME_EXT_TEST)
 #include "host_mlme_ext_types.h"
 #undef rtw_warn_on
@@ -38,7 +40,8 @@ extern int rtw_warn_on(int cond);
      !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
      !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && \
      !defined(HOST_MLME_EXT_SCAN_TEST) && \
-     !defined(HOST_MLME_EXT_BAND_IE_TEST)
+     !defined(HOST_MLME_EXT_BAND_IE_TEST) && \
+     !defined(HOST_MLME_EXT_JOIN_CMD_TEST)
 
 #ifdef CONFIG_DFS_MASTER
 bool rtw_chset_is_chbw_non_ocp(RT_CHANNEL_INFO *ch_set, u8 ch, u8 bw, u8 offset)
@@ -263,7 +266,8 @@ void rtw_chset_sync_chbw(RT_CHANNEL_INFO *ch_set, u8 *req_ch, u8 *req_bw,
 #if defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) || \
 	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_MGNT_ATTRIB)) && \
 	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && \
-	  !defined(HOST_MLME_EXT_SCAN_TEST) && !defined(HOST_MLME_EXT_BAND_IE_TEST)))
+	  !defined(HOST_MLME_EXT_SCAN_TEST) && !defined(HOST_MLME_EXT_BAND_IE_TEST) && \
+	  !defined(HOST_MLME_EXT_JOIN_CMD_TEST)))
 
 void update_monitor_frame_attrib(_adapter *padapter, struct pkt_attrib *pattrib)
 {
@@ -457,7 +461,8 @@ void update_mgntframe_attrib_addr(_adapter *padapter, struct xmit_frame *pmgntfr
 #if defined(HOST_MLME_EXT_PEER_ALIVE_TEST) || \
 	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_PEER_ALIVE)) && \
 	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
-	  !defined(HOST_MLME_EXT_SCAN_TEST) && !defined(HOST_MLME_EXT_BAND_IE_TEST)))
+	  !defined(HOST_MLME_EXT_SCAN_TEST) && !defined(HOST_MLME_EXT_BAND_IE_TEST) && \
+	  !defined(HOST_MLME_EXT_JOIN_CMD_TEST)))
 
 /********************************************************************
 
@@ -1114,7 +1119,8 @@ u8 rtw_rust_mgnt_p2p_noa_override(_adapter *padapter, u8 *mac_id, u8 *qsel)
 #if defined(HOST_MLME_EXT_SCAN_TEST) || \
 	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_SCAN)) && \
 	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
-	  !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && !defined(HOST_MLME_EXT_BAND_IE_TEST)))
+	  !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && !defined(HOST_MLME_EXT_BAND_IE_TEST) && \
+	  !defined(HOST_MLME_EXT_JOIN_CMD_TEST)))
 
 #ifndef RTW_SCAN_SPARSE_BG_INTERVAL_MS
 #define RTW_SCAN_SPARSE_BG_INTERVAL_MS 12000
@@ -1270,7 +1276,8 @@ u32 rtw_scan_timeout_decision(_adapter *padapter)
 #if (defined(HOST_MLME_EXT_SCAN_TEST) && !defined(CONFIG_RUST_MLME_EXT_PICK_CH)) || \
 	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_PICK_CH)) && \
 	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
-	  !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && !defined(HOST_MLME_EXT_BAND_IE_TEST)))
+	  !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && !defined(HOST_MLME_EXT_BAND_IE_TEST) && \
+	  !defined(HOST_MLME_EXT_JOIN_CMD_TEST)))
 
 static bool scan_abort_hdl(_adapter *adapter)
 {
@@ -1458,7 +1465,8 @@ u8 sitesurvey_pick_ch_behavior(_adapter *padapter, u8 *ch, RT_SCAN_TYPE *type)
 #if defined(HOST_MLME_EXT_BAND_IE_TEST) || \
 	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_BAND_IE)) && \
 	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
-	  !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && !defined(HOST_MLME_EXT_SCAN_TEST)))
+	  !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && !defined(HOST_MLME_EXT_SCAN_TEST) && \
+	  !defined(HOST_MLME_EXT_JOIN_CMD_TEST)))
 
 #ifdef CONFIG_AP_MODE
 /*
@@ -1530,3 +1538,288 @@ void change_band_update_ie(_adapter *padapter, WLAN_BSSID_EX *pnetwork, u8 ch)
 #endif /* CONFIG_AP_MODE */
 
 #endif /* HOST_MLME_EXT_BAND_IE_TEST || ((!CONFIG_RUST || !CONFIG_RUST_MLME_EXT_BAND_IE) && ...) */
+
+#if defined(HOST_MLME_EXT_JOIN_CMD_TEST) || \
+	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_JOIN_CMD)) && \
+	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
+	  !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && !defined(HOST_MLME_EXT_SCAN_TEST) && \
+	  !defined(HOST_MLME_EXT_BAND_IE_TEST)))
+
+#ifdef HOST_MLME_EXT_JOIN_CMD_TEST
+u8 join_cmd_hdl(_adapter *padapter, u8 *pbuf)
+{
+	u8 join_type;
+	PNDIS_802_11_VARIABLE_IEs pIE;
+	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+	struct mlme_ext_info *pmlmeinfo = &(pmlmeext->mlmext_info);
+	WLAN_BSSID_EX *pnetwork = (WLAN_BSSID_EX *)(&(pmlmeinfo->network));
+	u32 i;
+	u8 u_ch, u_bw, u_offset;
+	u8 doiqk = _FALSE;
+
+	if (pmlmeinfo->state & WIFI_FW_ASSOC_SUCCESS) {
+		if (pmlmeinfo->state & WIFI_FW_STATION_STATE)
+			issue_deauth_ex(padapter, pnetwork->MacAddress,
+					WLAN_REASON_DEAUTH_LEAVING, 1, 100);
+		pmlmeinfo->state = WIFI_FW_NULL_STATE;
+		flush_all_cam_entry(padapter);
+		_cancel_timer_ex(&pmlmeext->link_timer);
+		Set_MSR(padapter, _HW_STATE_STATION_);
+		rtw_hal_set_hwreg(padapter, HW_VAR_MLME_DISCONNECT, 0);
+	}
+
+	rtw_joinbss_reset(padapter);
+
+	pmlmeinfo->ERP_enable = 0;
+	pmlmeinfo->WMM_enable = 0;
+	pmlmeinfo->HT_enable = 0;
+	pmlmeinfo->HT_caps_enable = 0;
+	pmlmeinfo->HT_info_enable = 0;
+	pmlmeinfo->agg_enable_bitmap = 0;
+	pmlmeinfo->candidate_tid_bitmap = 0;
+	pmlmeinfo->bwmode_updated = _FALSE;
+	pmlmeinfo->VHT_enable = 0;
+
+	_rtw_memcpy(pnetwork, pbuf, FIELD_OFFSET(WLAN_BSSID_EX, IELength));
+	pnetwork->IELength = ((WLAN_BSSID_EX *)pbuf)->IELength;
+
+	if (pnetwork->IELength > MAX_IE_SZ)
+		return H2C_PARAMETERS_ERROR;
+
+	if (pnetwork->IELength < 2) {
+		report_join_res(padapter, (-4), WLAN_STATUS_UNSPECIFIED_FAILURE);
+		return H2C_SUCCESS;
+	}
+	_rtw_memcpy(pnetwork->IEs, ((WLAN_BSSID_EX *)pbuf)->IEs, pnetwork->IELength);
+
+	pmlmeinfo->bcn_interval = get_beacon_interval(pnetwork);
+
+	for (i = _FIXED_IE_LENGTH_; i < pnetwork->IELength - 2;) {
+		pIE = (PNDIS_802_11_VARIABLE_IEs)(pnetwork->IEs + i);
+
+		switch (pIE->ElementID) {
+		case _VENDOR_SPECIFIC_IE_:
+			if (_rtw_memcmp(pIE->data, WMM_OUI, 4))
+				WMM_param_handler(padapter, pIE);
+			break;
+		case _HT_CAPABILITY_IE_:
+			pmlmeinfo->HT_caps_enable = 1;
+			break;
+		case _HT_EXTRA_INFO_IE_:
+			pmlmeinfo->HT_info_enable = 1;
+			break;
+		case EID_VHTCapability:
+			pmlmeinfo->VHT_enable = 1;
+			break;
+		default:
+			break;
+		}
+
+		i += (pIE->Length + 2);
+	}
+
+	rtw_bss_get_chbw(pnetwork, &pmlmeext->cur_channel, &pmlmeext->cur_bwmode,
+			 &pmlmeext->cur_ch_offset, 1, 1);
+	rtw_adjust_chbw(padapter, pmlmeext->cur_channel, &pmlmeext->cur_bwmode,
+			&pmlmeext->cur_ch_offset);
+
+	if (rtw_chk_start_clnt_join(padapter, &u_ch, &u_bw, &u_offset) == _FAIL) {
+		report_join_res(padapter, (-4), WLAN_STATUS_UNSPECIFIED_FAILURE);
+		return H2C_SUCCESS;
+	}
+
+	rtw_hal_set_hwreg(padapter, HW_VAR_BSSID, pmlmeinfo->network.MacAddress);
+	if (MLME_IS_STA(padapter))
+		rtw_hal_rcr_set_chk_bssid(padapter, MLME_STA_CONNECTING);
+	else
+		rtw_hal_rcr_set_chk_bssid(padapter, MLME_ADHOC_STARTED);
+
+	join_type = 0;
+	rtw_hal_set_hwreg(padapter, HW_VAR_MLME_JOIN, (u8 *)(&join_type));
+	rtw_btcoex_connect_notify(padapter, join_type);
+
+	doiqk = _TRUE;
+	rtw_hal_set_hwreg(padapter, HW_VAR_DO_IQK, &doiqk);
+	set_channel_bwmode(padapter, u_ch, u_offset, u_bw);
+	doiqk = _FALSE;
+	rtw_hal_set_hwreg(padapter, HW_VAR_DO_IQK, &doiqk);
+
+	_cancel_timer_ex(&pmlmeext->link_timer);
+	start_clnt_join(padapter);
+
+	return H2C_SUCCESS;
+}
+#else /* HOST_MLME_EXT_JOIN_CMD_TEST */
+u8 join_cmd_hdl(_adapter *padapter, u8 *pbuf)
+{
+	u8	join_type;
+	PNDIS_802_11_VARIABLE_IEs	pIE;
+	struct mlme_ext_priv	*pmlmeext = &padapter->mlmeextpriv;
+	struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
+	WLAN_BSSID_EX		*pnetwork = (WLAN_BSSID_EX *)(&(pmlmeinfo->network));
+#ifdef CONFIG_ANTENNA_DIVERSITY
+	struct joinbss_parm	*pparm = (struct joinbss_parm *)pbuf;
+#endif /* CONFIG_ANTENNA_DIVERSITY */
+#ifdef  CONFIG_LAYER2_ROAMING
+	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
+	struct wlan_network     *rnetwork = pmlmepriv->roam_network;
+	struct beacon_keys bcn_keys;
+	u32 roam_ielen;
+#endif
+	u32 i;
+	u8 u_ch, u_bw, u_offset;
+	u8 doiqk = _FALSE;
+
+	if (pmlmeinfo->state & WIFI_FW_ASSOC_SUCCESS) {
+		if (pmlmeinfo->state & WIFI_FW_STATION_STATE)
+			issue_deauth_ex(padapter, pnetwork->MacAddress, WLAN_REASON_DEAUTH_LEAVING, 1, 100);
+		pmlmeinfo->state = WIFI_FW_NULL_STATE;
+		flush_all_cam_entry(padapter);
+		_cancel_timer_ex(&pmlmeext->link_timer);
+		Set_MSR(padapter, _HW_STATE_STATION_);
+		rtw_hal_set_hwreg(padapter, HW_VAR_MLME_DISCONNECT, 0);
+		if (pmlmeinfo->state & WIFI_FW_STATION_STATE)
+			rtw_hal_rcr_set_chk_bssid(padapter, MLME_STA_DISCONNECTED);
+	}
+
+#ifdef CONFIG_ANTENNA_DIVERSITY
+	rtw_antenna_select_cmd(padapter, pparm->network.PhyInfo.Optimum_antenna, _FALSE);
+#endif
+
+#ifdef CONFIG_WAPI_SUPPORT
+	rtw_wapi_clear_all_cam_entry(padapter);
+#endif
+
+	rtw_joinbss_reset(padapter);
+
+	pmlmeinfo->ERP_enable = 0;
+	pmlmeinfo->WMM_enable = 0;
+	pmlmeinfo->HT_enable = 0;
+	pmlmeinfo->HT_caps_enable = 0;
+	pmlmeinfo->HT_info_enable = 0;
+	pmlmeinfo->agg_enable_bitmap = 0;
+	pmlmeinfo->candidate_tid_bitmap = 0;
+	pmlmeinfo->bwmode_updated = _FALSE;
+	pmlmeinfo->VHT_enable = 0;
+#ifdef ROKU_PRIVATE
+	pmlmeinfo->ht_vht_received = 0;
+	_rtw_memset(pmlmeinfo->SupportedRates_infra_ap, 0, NDIS_802_11_LENGTH_RATES_EX);
+#endif /* ROKU_PRIVATE */
+	_rtw_memcpy(pnetwork, pbuf, FIELD_OFFSET(WLAN_BSSID_EX, IELength));
+	pnetwork->IELength = ((WLAN_BSSID_EX *)pbuf)->IELength;
+
+	if (pnetwork->IELength > MAX_IE_SZ)
+		return H2C_PARAMETERS_ERROR;
+
+	if (pnetwork->IELength < 2) {
+		report_join_res(padapter, (-4), WLAN_STATUS_UNSPECIFIED_FAILURE);
+		return H2C_SUCCESS;
+	}
+	_rtw_memcpy(pnetwork->IEs, ((WLAN_BSSID_EX *)pbuf)->IEs, pnetwork->IELength);
+
+	pmlmeinfo->bcn_interval = get_beacon_interval(pnetwork);
+
+	for (i = _FIXED_IE_LENGTH_ ; i < pnetwork->IELength - 2 ;) {
+		pIE = (PNDIS_802_11_VARIABLE_IEs)(pnetwork->IEs + i);
+
+		switch (pIE->ElementID) {
+		case _VENDOR_SPECIFIC_IE_:
+			if (_rtw_memcmp(pIE->data, WMM_OUI, 4))
+				WMM_param_handler(padapter, pIE);
+			break;
+
+#ifdef CONFIG_80211N_HT
+		case _HT_CAPABILITY_IE_:
+			pmlmeinfo->HT_caps_enable = 1;
+			break;
+
+		case _HT_EXTRA_INFO_IE_:
+			pmlmeinfo->HT_info_enable = 1;
+			break;
+#endif /* CONFIG_80211N_HT */
+
+#ifdef CONFIG_80211AC_VHT
+		case EID_VHTCapability:
+			pmlmeinfo->VHT_enable = 1;
+			break;
+
+		case EID_VHTOperation:
+			break;
+#endif /* CONFIG_80211AC_VHT */
+		default:
+			break;
+		}
+
+		i += (pIE->Length + 2);
+	}
+
+	rtw_bss_get_chbw(pnetwork
+		, &pmlmeext->cur_channel, &pmlmeext->cur_bwmode, &pmlmeext->cur_ch_offset, 1, 1);
+
+	rtw_adjust_chbw(padapter, pmlmeext->cur_channel, &pmlmeext->cur_bwmode, &pmlmeext->cur_ch_offset);
+
+	if (rtw_chk_start_clnt_join(padapter, &u_ch, &u_bw, &u_offset) == _FAIL) {
+		report_join_res(padapter, (-4), WLAN_STATUS_UNSPECIFIED_FAILURE);
+		return H2C_SUCCESS;
+	}
+
+	rtw_hal_set_hwreg(padapter, HW_VAR_BSSID, pmlmeinfo->network.MacAddress);
+	if (MLME_IS_STA(padapter))
+		rtw_hal_rcr_set_chk_bssid(padapter, MLME_STA_CONNECTING);
+	else
+		rtw_hal_rcr_set_chk_bssid(padapter, MLME_ADHOC_STARTED);
+
+	join_type = 0;
+	rtw_hal_set_hwreg(padapter, HW_VAR_MLME_JOIN, (u8 *)(&join_type));
+
+	rtw_btcoex_connect_notify(padapter, join_type);
+
+	doiqk = _TRUE;
+	rtw_hal_set_hwreg(padapter , HW_VAR_DO_IQK , &doiqk);
+
+	set_channel_bwmode(padapter, u_ch, u_offset, u_bw);
+
+	doiqk = _FALSE;
+	rtw_hal_set_hwreg(padapter , HW_VAR_DO_IQK , &doiqk);
+
+	_cancel_timer_ex(&pmlmeext->link_timer);
+
+	start_clnt_join(padapter);
+
+#ifdef	CONFIG_LAYER2_ROAMING
+	rtw_msleep_os(2);
+	if (rnetwork && (pmlmeinfo->state & (WIFI_FW_AUTH_NULL | WIFI_FW_AUTH_STATE))) {
+		if (!rnetwork) {
+			RTW_INFO("%s: pmlmepriv->roam_network is NULL. roaming fail!!\n", __func__);
+			return H2C_SUCCESS;
+		}
+		roam_ielen = rnetwork->network.IELength;
+		update_network(&(pmlmepriv->cur_network.network), &(rnetwork->network), padapter, _TRUE);
+
+		if (rtw_get_bcn_keys_from_bss(&rnetwork->network, &bcn_keys) == _TRUE) {
+			_rtw_memcpy(&pmlmepriv->cur_beacon_keys, &bcn_keys, sizeof(bcn_keys));
+			if (is_hidden_ssid(bcn_keys.ssid, bcn_keys.ssid_len)) {
+				_rtw_memcpy(pmlmepriv->cur_beacon_keys.ssid, pmlmeinfo->network.Ssid.Ssid, IW_ESSID_MAX_SIZE);
+				pmlmepriv->cur_beacon_keys.ssid_len = pmlmeinfo->network.Ssid.SsidLength;
+			}
+		} else {
+			RTW_ERR("%s: get beacon keys failed\n", __func__);
+			_rtw_memset(&pmlmepriv->cur_beacon_keys, 0, sizeof(bcn_keys));
+		}
+		#ifdef CONFIG_BCN_CNT_CONFIRM_HDL
+		pmlmepriv->new_beacon_cnts = 0;
+		#endif
+
+		pmlmeinfo->assoc_AP_vendor = check_assoc_AP(rnetwork->network.IEs, rnetwork->network.IELength);
+
+		pmlmeext->TSFValue = rnetwork->network.tsf + rtw_get_passing_time_ms(rnetwork->last_scanned)*1000;
+		pmlmeext->bcn_cnt = 0;
+		pmlmeext->last_bcn_cnt = 0;
+		start_clnt_auth(padapter);
+	}
+#endif
+	return H2C_SUCCESS;
+}
+#endif /* HOST_MLME_EXT_JOIN_CMD_TEST */
+
+#endif /* HOST_MLME_EXT_JOIN_CMD_TEST || kernel join_cmd path */

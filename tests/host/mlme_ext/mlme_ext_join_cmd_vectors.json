@@ -1,0 +1,54 @@
+{
+  "vectors": [
+    {
+      "name": "ie_len_over_max",
+      "ielength": 769,
+      "expect_ret": 4
+    },
+    {
+      "name": "ie_len_too_short",
+      "ielength": 1,
+      "expect_ret": 0,
+      "expect_report": 1
+    },
+    {
+      "name": "chk_start_fail",
+      "ielength": 12,
+      "dsconfig": 6,
+      "chk_fail": 1,
+      "expect_ret": 0,
+      "expect_report": 1
+    },
+    {
+      "name": "happy_sta_join",
+      "ielength": 12,
+      "dsconfig": 6,
+      "sta_mode": 1,
+      "expect_ret": 0,
+      "expect_start_clnt": 1,
+      "expect_ht_caps": 0
+    },
+    {
+      "name": "wmm_ht_flags",
+      "ielength": 12,
+      "dsconfig": 36,
+      "sta_mode": 1,
+      "wmm_ie": 1,
+      "ht_cap_ie": 1,
+      "expect_ret": 0,
+      "expect_start_clnt": 1,
+      "expect_wmm": 1,
+      "expect_ht_caps": 1
+    },
+    {
+      "name": "reassoc_deauth",
+      "ielength": 12,
+      "dsconfig": 6,
+      "sta_mode": 1,
+      "assoc_success": 1,
+      "expect_ret": 0,
+      "expect_deauth": 1,
+      "expect_start_clnt": 1
+    }
+  ]
+}

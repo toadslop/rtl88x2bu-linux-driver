@@ -18,6 +18,7 @@ Port helpers from [`core/rtw_mlme_ext.c`](../../../core/rtw_mlme_ext.c) to [`rus
 
 - HAL-coupled cmd handler (~230 LOC); adapter fixtures required for L2.
 - L2: host harness under `tests/host/` with JSON differential vectors (pattern from prior W3 issues).
+- **Host oracle subset (PR1):** under `HOST_MLME_EXT_JOIN_CMD_TEST`, oracles omit L2 roaming, antenna diversity, and WAPI paths; L2 green on current vectors does not imply full kernel parity before a kernel Rust swap.
 
 ## Acceptance
 
