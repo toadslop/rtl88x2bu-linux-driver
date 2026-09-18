@@ -167,6 +167,7 @@ void rtw_hal_set_odm_var(_adapter *padapter, enum hal_odm_var variable, struct s
 
 void update_sta_vht_info_apmode(_adapter *padapter, void *psta);
 void update_sta_info_apmode(_adapter *padapter, struct sta_info *psta);
+void update_sta_info_apmode_ht_bf_cap(_adapter *padapter, struct sta_info *psta);
 
 void host_apmode_reset(void);
 u8 host_apmode_vcs_calls(void);
