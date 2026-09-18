@@ -19,6 +19,12 @@
       "expect_ssc": 3
     },
     {
+      "name": "ssc_deny_dvobj_scan_deny",
+      "fn": "ssc",
+      "dvobj_scan_deny": 1,
+      "expect_ssc": 2
+    },
+    {
       "name": "check_picks_stronger_rssi",
       "fn": "check",
       "assoc_ssid": "Home",

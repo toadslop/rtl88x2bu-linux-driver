@@ -114,6 +114,11 @@ struct RfCtl {
 }
 
 #[repr(C)]
+struct RegistryPriv {
+    scan_interval_thr: U32,
+}
+
+#[repr(C)]
 struct DvobjPriv {
     scan_deny: U8,
 }
@@ -122,6 +127,7 @@ struct DvobjPriv {
 struct Adapter {
     mlmepriv: MlmePriv,
     rfctl: RfCtl,
+    registrypriv: RegistryPriv,
     dvobj: DvobjPriv,
 }
 
