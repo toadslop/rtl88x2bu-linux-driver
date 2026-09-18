@@ -279,9 +279,7 @@ fn update_attrib_phy_info_inner(adapter: &Adapter, pattrib: &mut PktAttrib, psta
     pattrib.ldpc = psta.cmn.ldpc_en;
     pattrib.stbc = psta.cmn.stbc_en;
 
-    if adapter.registrypriv.ht_enable != 0
-        && is_supported_ht(adapter.registrypriv.wireless_mode)
-    {
+    if adapter.registrypriv.ht_enable != 0 && is_supported_ht(adapter.registrypriv.wireless_mode) {
         pattrib.ht_en = psta.htpriv.ht_option;
         pattrib.ch_offset = psta.htpriv.ch_offset;
         pattrib.ampdu_en = _FALSE;
