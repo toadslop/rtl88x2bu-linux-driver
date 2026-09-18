@@ -156,7 +156,7 @@ test-rust-hw-ht-param: test_ap_hw_ht_param_rust
 	./test_ap_hw_ht_param_rust ap_hw_ht_param_vectors.json
 
 test_ap_hw_ht_param_rust: test_ap_hw_ht_param.c librust_ap_sta_info.a $(HOST_JSON)
-	$(CC) $(STA_INFO_CFLAGS) -DRUST_AP_STA_INFO_HW_HT_ORACLE -o $@ test_ap_hw_ht_param.c \
+	$(CC) $(STA_INFO_CFLAGS) -o $@ test_ap_hw_ht_param.c \
 		$(HOST_JSON) librust_ap_sta_info.a
 
 test-sta-info: test_ap_sta_info
