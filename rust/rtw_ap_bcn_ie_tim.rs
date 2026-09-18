@@ -89,10 +89,7 @@ fn tim_bitmap(adapter: AdapterPtr) -> (*mut U8, U8) {
         #[cfg(host_ap_bcn_ie_test)]
         {
             let ad = &mut *(adapter as *mut Adapter);
-            (
-                ad.stapriv.tim_bitmap.as_mut_ptr(),
-                ad.stapriv.aid_bmp_len,
-            )
+            (ad.stapriv.tim_bitmap.as_mut_ptr(), ad.stapriv.aid_bmp_len)
         }
         #[cfg(not(host_ap_bcn_ie_test))]
         {
