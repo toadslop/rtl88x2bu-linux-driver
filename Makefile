@@ -2476,6 +2476,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_ap_sta_ie_vht_multiap.o \
 		core/rtw_ap_sta_ie_sec.o \
 		core/rtw_ap_bcn_ie.o \
+		core/rtw_ap_bcn_ie_rust_acc.o \
 		core/rtw_ap_bcn_update.o \
 		core/rtw_ap_bmc_update.o \
 		core/rtw_ap_bmc_update_rust_acc.o \
@@ -2656,6 +2657,7 @@ ccflags-y += -DCONFIG_RUST_AP_AKA_CHK
 ccflags-y += -DCONFIG_RUST_AP_RF18_RESTORE
 ccflags-y += -DCONFIG_RUST_AP_EXPIRE_TIMEOUT
 ccflags-y += -DCONFIG_RUST_AP_REST
+ccflags-y += -DCONFIG_RUST_AP_BCN_IE
 ccflags-y += -DCONFIG_RUST_AP_BMC_UPDATE
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_PREF
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_DUMP
@@ -2724,6 +2726,7 @@ rustflags-y += --cfg rust_ap_aka_chk
 rustflags-y += --cfg rust_ap_rf18_restore
 rustflags-y += --cfg rust_ap_expire_timeout
 rustflags-y += --cfg rust_ap_rest
+rustflags-y += --cfg rust_ap_bcn_ie
 rustflags-y += --cfg rust_ap_bmc_update
 ifneq ($(filter -DCONFIG_BMC_TX_LOW_RATE,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 rustflags-y += --cfg bmc_tx_low_rate
@@ -2805,6 +2808,7 @@ $(MODULE_NAME)-y += rust/rtw_sta_mgt_free_bcmc_kern.o
 $(MODULE_NAME)-y += rust/rtw_ap_sta_ie.o
 $(MODULE_NAME)-y += rust/rtw_ap_sta_ie_sec.o
 $(MODULE_NAME)-y += rust/rtw_ap_rest.o
+$(MODULE_NAME)-y += rust/rtw_ap_bcn_ie.o
 $(MODULE_NAME)-y += rust/rtw_ap_bmc_update_kern.o
 $(MODULE_NAME)-y += rust/rtw_ap_sta_alive.o
 $(MODULE_NAME)-y += rust/rtw_ap_sta_ra.o
