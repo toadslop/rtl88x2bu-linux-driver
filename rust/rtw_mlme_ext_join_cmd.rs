@@ -168,13 +168,7 @@ pub extern "C" fn join_cmd_hdl(padapter: *mut Adapter, pbuf: *mut U8) -> U8 {
 
         if (pmlmeinfo.state & WIFI_FW_ASSOC_SUCCESS) != 0 {
             if (pmlmeinfo.state & WIFI_FW_STATION_STATE) != 0 {
-                issue_deauth_ex(
-                    padapter,
-                    bssid_mac,
-                    WLAN_REASON_DEAUTH_LEAVING,
-                    1,
-                    100,
-                );
+                issue_deauth_ex(padapter, bssid_mac, WLAN_REASON_DEAUTH_LEAVING, 1, 100);
             }
             pmlmeinfo.state = WIFI_FW_NULL_STATE;
             flush_all_cam_entry(padapter);
