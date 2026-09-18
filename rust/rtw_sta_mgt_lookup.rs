@@ -115,8 +115,10 @@ use host_layout::{List, Queue, StaInfo, StaPriv};
 
 const _STA_INFO_SIZE: usize = core::mem::size_of::<StaInfo>();
 const _STA_INFO_SIZE_OK: () = assert!(_STA_INFO_SIZE == 976);
-const _STAPRIV_PBUF_OFF: () = assert!(core::mem::offset_of!(StaPriv, pstainfo_buf) == STA_PRIV_PSTAINFO_BUF);
-const _STAPRIV_HASH_OFF: () = assert!(core::mem::offset_of!(StaPriv, sta_hash) == STA_PRIV_STA_HASH);
+const _STAPRIV_PBUF_OFF: () =
+    assert!(core::mem::offset_of!(StaPriv, pstainfo_buf) == STA_PRIV_PSTAINFO_BUF);
+const _STAPRIV_HASH_OFF: () =
+    assert!(core::mem::offset_of!(StaPriv, sta_hash) == STA_PRIV_STA_HASH);
 
 extern "C" {
     fn _rtw_init_sta_xmit_priv(xmit: *mut host_layout::StaXmitPriv);
@@ -156,7 +158,11 @@ pub extern "C" fn _rtw_init_stainfo(psta: *mut StaInfo) {
     }
     unsafe {
         let psta = &mut *psta;
-        core::ptr::write_bytes(psta as *mut StaInfo as *mut u8, 0, core::mem::size_of::<StaInfo>());
+        core::ptr::write_bytes(
+            psta as *mut StaInfo as *mut u8,
+            0,
+            core::mem::size_of::<StaInfo>(),
+        );
         psta.lock = 0;
         init_listhead(core::ptr::addr_of_mut!(psta.list));
         init_listhead(core::ptr::addr_of_mut!(psta.hash_list));
@@ -195,11 +201,7 @@ pub extern "C" fn rtw_get_stainfo(pstapriv: *mut StaPriv, hwaddr: *const u8) -> 
     let bc_addr: [u8; ETH_ALEN] = [0xff; ETH_ALEN];
     unsafe {
         let mac = &*hwaddr.cast::<[u8; ETH_ALEN]>();
-        let addr = if (mac[0] & 0x01) != 0 {
-            &bc_addr
-        } else {
-            mac
-        };
+        let addr = if (mac[0] & 0x01) != 0 { &bc_addr } else { mac };
         let index = wifi_mac_hash(addr) as usize;
         let sp = &*pstapriv.cast::<StaPriv>();
         let head = core::ptr::addr_of!(sp.sta_hash[index]) as *mut List;
