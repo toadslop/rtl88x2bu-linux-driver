@@ -20,6 +20,7 @@ Port helpers from [`core/rtw_mlme.c`](../../../core/rtw_mlme.c) to [`rust/rtw_ml
 
 - FSM entry before join_cmd_hdl; W3-53..67 covered leaf mlme helpers.
 - L2: host harness under `tests/host/` with JSON differential vectors (pattern from prior W3 issues).
+- **Host oracle subset (PR1):** under `HOST_MLME_JOIN_SELECT_TEST`, the C/Rust oracles intentionally omit production-only paths (DFS non-OCP, L2 roam age/ESS filters, `roam_network` shortcut, `WIFI_ASOC_STATE` disassoc, WOWLAN/antenna hooks). L2 green on current vectors does not imply full kernel parity — extend vectors before the kernel Rust swap.
 
 ## Acceptance
 

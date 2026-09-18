@@ -1,0 +1,84 @@
+{
+  "vectors": [
+    {
+      "name": "ssc_allow_idle_sta",
+      "fn": "ssc",
+      "fw_state": 0,
+      "expect_ssc": 12
+    },
+    {
+      "name": "ssc_deny_sta_linking",
+      "fn": "ssc",
+      "fw_state": 128,
+      "expect_ssc": 8
+    },
+    {
+      "name": "ssc_deny_scan_deny_drv",
+      "fn": "ssc",
+      "scan_deny_drv": 1,
+      "expect_ssc": 3
+    },
+    {
+      "name": "ssc_deny_dvobj_scan_deny",
+      "fn": "ssc",
+      "dvobj_scan_deny": 1,
+      "expect_ssc": 2
+    },
+    {
+      "name": "check_picks_stronger_rssi",
+      "fn": "check",
+      "assoc_ssid": "Home",
+      "desired": 1,
+      "net0_ssid": "Home",
+      "net0_rssi": -55,
+      "net0_ch": 6,
+      "net0_mac": "001122334455",
+      "expect": 1
+    },
+    {
+      "name": "check_rejects_wrong_ssid",
+      "fn": "check",
+      "assoc_ssid": "Home",
+      "desired": 1,
+      "net0_ssid": "Other",
+      "net0_rssi": -55,
+      "net0_ch": 6,
+      "net0_mac": "001122334455",
+      "expect": 0
+    },
+    {
+      "name": "check_rejects_not_desired",
+      "fn": "check",
+      "assoc_ssid": "Home",
+      "desired": 0,
+      "net0_ssid": "Home",
+      "net0_rssi": -55,
+      "net0_ch": 6,
+      "net0_mac": "001122334455",
+      "expect": 0
+    },
+    {
+      "name": "select_best_of_two",
+      "fn": "select",
+      "assoc_ssid": "Cafe",
+      "desired": 1,
+      "net0_ssid": "Cafe",
+      "net0_rssi": -65,
+      "net0_ch": 6,
+      "net0_mac": "001122334455",
+      "net1_ssid": "Cafe",
+      "net1_rssi": -50,
+      "net1_ch": 11,
+      "net1_mac": "001122334456",
+      "expect": 1,
+      "expect_mac": "001122334456"
+    },
+    {
+      "name": "select_fail_empty_queue",
+      "fn": "select",
+      "assoc_ssid": "Cafe",
+      "desired": 1,
+      "expect": 0
+    }
+  ]
+}
