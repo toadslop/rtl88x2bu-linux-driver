@@ -9,8 +9,12 @@
  *****************************************************************************/
 #define _RTW_AP_STA_INFO_APMODE_C_
 
+#ifdef HOST_AP_STA_INFO_APMODE_TEST
+#include "host_ap_sta_info_apmode_types.h"
+#else
 #include <drv_types.h>
 #include <hal_data.h>
+#endif
 
 #ifdef CONFIG_AP_MODE
 
@@ -30,7 +34,9 @@ void update_sta_info_apmode(_adapter *padapter, struct sta_info *psta)
 	/* set intf_tag to if1 */
 	/* psta->intf_tag = 0; */
 
+#ifndef HOST_AP_STA_INFO_APMODE_TEST
 	RTW_INFO("%s\n", __FUNCTION__);
+#endif
 
 	/*alloc macid when call rtw_alloc_stainfo(),release macid when call rtw_free_stainfo()*/
 
@@ -89,14 +95,18 @@ void update_sta_info_apmode(_adapter *padapter, struct sta_info *psta)
 		if (TEST_FLAG(phtpriv_ap->ldpc_cap, LDPC_HT_ENABLE_TX) &&
 		    GET_HT_CAP_ELE_LDPC_CAP((u8 *)(&phtpriv_sta->ht_cap))) {
 			SET_FLAG(cur_ldpc_cap, (LDPC_HT_ENABLE_TX | LDPC_HT_CAP_TX));
+#ifndef HOST_AP_STA_INFO_APMODE_TEST
 			RTW_INFO("Enable HT Tx LDPC for STA(%d)\n", psta->cmn.aid);
+#endif
 		}
 
 		/* B7 B8 B9 Config STBC setting */
 		if (TEST_FLAG(phtpriv_ap->stbc_cap, STBC_HT_ENABLE_TX) &&
 		    GET_HT_CAP_ELE_RX_STBC((u8 *)(&phtpriv_sta->ht_cap))) {
 			SET_FLAG(cur_stbc_cap, (STBC_HT_ENABLE_TX | STBC_HT_CAP_TX));
+#ifndef HOST_AP_STA_INFO_APMODE_TEST
 			RTW_INFO("Enable HT Tx STBC for STA(%d)\n", psta->cmn.aid);
+#endif
 		}
 
 		#ifdef CONFIG_BEAMFORMING
