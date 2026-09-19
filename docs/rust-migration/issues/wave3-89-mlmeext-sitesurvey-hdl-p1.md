@@ -18,6 +18,7 @@ Port helpers from [`core/rtw_mlme_ext.c`](../../../core/rtw_mlme_ext.c) to [`rus
 
 - **`sitesurvey_cmd_hdl` (~417 LOC total)** split at FSM boundary: part 1 covers SCAN_DISABLE through SCAN_PROCESS states; part 2 (W3-90) covers backop/complete.
 - L2: host harness under `tests/host/` with JSON differential vectors (pattern from prior W3 issues).
+- **Host oracle subset (PR1):** omits P2P/ACS/MCC paths; C oracle in `sitesurvey_cmd_host_oracle.c` covers SCAN_DISABLE→SCAN_PROCESS.
 
 ## Acceptance
 
