@@ -20,8 +20,10 @@ AP_STA_IE_WMM_HT_SRC := $(CORE)/rtw_ap_sta_ie_wmm_ht.c
 AP_STA_IE_VHT_MULTIAP_SRC := $(CORE)/rtw_ap_sta_ie_vht_multiap.c
 AP_STA_IE_SEC_SRC := $(CORE)/rtw_ap_sta_ie_sec.c
 AP_BCN_IE_SRC := $(CORE)/rtw_ap_bcn_ie.c
-BCN_UPDATE_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 -I$(HOST_INC) -I$(ROOT)/include -include $(HOST_INC)/host_autoconf.h
-BCN_UPDATE_DEPS := ap_bcn_update_oracle.c
+AP_BCN_UPDATE_SRC := $(CORE)/rtw_ap_bcn_update.c
+BCN_UPDATE_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 -I$(HOST_INC) -I$(CORE) -I$(ROOT)/include \
+	-include $(HOST_INC)/host_autoconf.h -DHOST_AP_BCN_UPDATE_TEST
+BCN_UPDATE_DEPS := ap_bcn_update_oracle.c host_ap_bcn_update_shim.c
 IE_REST_SRC := $(CORE)/rtw_ieee80211_rest.c
 WLAN_UTIL := ../wlan_util
 IE_ORACLE := ../ie/ie_c_oracle.c
@@ -249,9 +251,9 @@ test_ap_sta_alive: test_ap_sta_alive.c $(HOST_JSON) $(AP_STA_ALIVE_SRC)
 	$(CC) $(STA_ALIVE_CFLAGS) -o $@ test_ap_sta_alive.c $(HOST_JSON) \
 		$(AP_STA_ALIVE_SRC)
 
-test_ap_bcn_update: test_ap_bcn_update.c $(HOST_JSON) $(BCN_UPDATE_DEPS)
+test_ap_bcn_update: test_ap_bcn_update.c $(HOST_JSON) $(AP_BCN_UPDATE_SRC) $(BCN_UPDATE_DEPS)
 	$(CC) $(BCN_UPDATE_CFLAGS) -o $@ test_ap_bcn_update.c $(HOST_JSON) \
-		$(BCN_UPDATE_DEPS)
+		$(AP_BCN_UPDATE_SRC) $(BCN_UPDATE_DEPS)
 
 test-bmc-rate: test-c-bmc test-rust-bmc
 
