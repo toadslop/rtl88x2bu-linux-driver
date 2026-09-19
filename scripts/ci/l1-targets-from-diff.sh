@@ -113,15 +113,18 @@ for path in "${changed[@]}"; do
 	rust/rtw_sta_mgt.rs \
 	| rust/rtw_sta_mgt_aid.rs \
 	| rust/rtw_sta_mgt_stctl.rs \
+	| rust/rtw_sta_mgt_lookup.rs \
 	| rust/rtw_ap_rest.rs \
 	| core/rtw_sta_mgt.c \
 	| core/rtw_sta_mgt_rest.c \
 	| core/rtw_sta_mgt_stctl.c \
+	| core/rtw_sta_mgt_lookup.c \
 	| core/rtw_ap_rest.c \
 	| tests/host/sta_mgt/*)
 		add_target rust-check-symbols-rtw-sta-mgt
 		add_target rust-check-symbols-rtw-sta-mgt-aid
 		add_target rust-check-symbols-rtw-sta-mgt-stctl
+		add_target rust-check-symbols-rtw-sta-mgt-lookup
 		;;
 	rust/rtw_ap_rest.rs \
 	| rust/rtw_ap_sta_alive.rs \
@@ -260,6 +263,7 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-sta-mgt
 	rust-check-symbols-rtw-sta-mgt-aid
 	rust-check-symbols-rtw-sta-mgt-stctl
+	rust-check-symbols-rtw-sta-mgt-lookup
 	rust-check-symbols-rtw-ap-rest
 	rust-check-symbols-rtw-recv
 	rust-check-symbols-rtw-recv-pn

@@ -8,6 +8,8 @@ test_sta_mgt_stctl_rust
 librust_sta_mgt_stctl.a
 test_sta_mgt_lookup_rust
 librust_sta_mgt_lookup.a
+sta_mgt_lookup_c_ref.o
+sta_mgt_lookup_rust_ref.o
 test_sta_mgt_free_mfree_rust
 test_sta_mgt_free_init_rust
 test_sta_mgt_free_deinit_rust
