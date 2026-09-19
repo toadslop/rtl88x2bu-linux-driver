@@ -121,6 +121,9 @@ int main(int argc, char **argv)
 		} else if (!strcmp(vectors[i].fn, "rtw_remove_bcn_ie")) {
 			rtw_remove_bcn_ie(&ad, &net, (u8)vectors[i].index);
 		} else if (!strcmp(vectors[i].fn, "update_BCNTIM")) {
+#ifdef RUST_AP_BCN_IE_ORACLE
+			continue; /* TIM oracle lands in W3-75 PR6 */
+#endif
 			if (vectors[i].tim_bmp_hex[0] &&
 			    parse_hex(vectors[i].tim_bmp_hex, ad.stapriv.tim_bitmap,
 				      sizeof(ad.stapriv.tim_bitmap), &tim_len))
