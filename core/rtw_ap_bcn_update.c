@@ -142,4 +142,75 @@ void update_bcn_htinfo_ie(_adapter *padapter)
 }
 #endif /* CONFIG_80211N_HT */
 
+void update_bcn_wps_ie(_adapter *padapter)
+{
+	u8 *pwps_ie = NULL, *pwps_ie_src, *premainder_ie, *pbackup_remainder_ie = NULL;
+#ifdef HOST_AP_BCN_UPDATE_TEST
+	u32 wps_ielen = 0, wps_offset, remainder_ielen;
+#else
+	uint wps_ielen = 0, wps_offset, remainder_ielen;
+#endif
+	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
+	struct mlme_ext_priv *pmlmeext = &(padapter->mlmeextpriv);
+	struct mlme_ext_info *pmlmeinfo = &(pmlmeext->mlmext_info);
+	WLAN_BSSID_EX *pnetwork = &(pmlmeinfo->network);
+	u8 *ie = pnetwork->IEs;
+	u32 ielen = pnetwork->IELength;
+
+#ifndef HOST_AP_BCN_UPDATE_TEST
+	RTW_INFO("%s\n", __FUNCTION__);
+#endif
+
+	pwps_ie = rtw_get_wps_ie(ie + _FIXED_IE_LENGTH_, ielen - _FIXED_IE_LENGTH_,
+				 NULL, &wps_ielen);
+	if (pwps_ie == NULL || wps_ielen == 0)
+		return;
+
+	pwps_ie_src = pmlmepriv->wps_beacon_ie;
+	if (pwps_ie_src == NULL)
+		return;
+
+	wps_offset = (u32)(pwps_ie - ie);
+	premainder_ie = pwps_ie + wps_ielen;
+	remainder_ielen = ielen - wps_offset - wps_ielen;
+
+	if (remainder_ielen > 0) {
+		pbackup_remainder_ie = rtw_malloc(remainder_ielen);
+		if (pbackup_remainder_ie)
+			_rtw_memcpy(pbackup_remainder_ie, premainder_ie, remainder_ielen);
+	}
+
+	wps_ielen = (u32)pwps_ie_src[1];
+	if ((wps_offset + wps_ielen + 2 + remainder_ielen) <= MAX_IE_SZ) {
+		_rtw_memcpy(pwps_ie, pwps_ie_src, wps_ielen + 2);
+		pwps_ie += (wps_ielen + 2);
+		if (pbackup_remainder_ie)
+			_rtw_memcpy(pwps_ie, pbackup_remainder_ie, remainder_ielen);
+		pnetwork->IELength = wps_offset + (wps_ielen + 2) + remainder_ielen;
+	}
+
+	if (pbackup_remainder_ie)
+		rtw_mfree(pbackup_remainder_ie, remainder_ielen);
+
+#ifdef HOST_AP_BCN_UPDATE_TEST
+	host_bcn_update_last_ielen = pnetwork->IELength;
+#else
+#if defined(CONFIG_INTERRUPT_BASED_TXBCN) || defined(CONFIG_PCI_HCI)
+	if ((pmlmeinfo->state & 0x03) == WIFI_FW_AP_STATE) {
+		u8 sr = 0;
+
+		rtw_get_wps_attr_content(pwps_ie_src, wps_ielen,
+					 WPS_ATTR_SELECTED_REGISTRAR, (u8 *)(&sr), NULL);
+		if (sr) {
+			set_fwstate(pmlmepriv, WIFI_UNDER_WPS);
+			RTW_INFO("%s, set WIFI_UNDER_WPS\n", __func__);
+		} else {
+			clr_fwstate(pmlmepriv, WIFI_UNDER_WPS);
+			RTW_INFO("%s, clr WIFI_UNDER_WPS\n", __func__);
+		}
+	}
+#endif
+#endif /* HOST_AP_BCN_UPDATE_TEST */
+}
+
 #endif /* !CONFIG_RUST_AP_BCN_UPDATE || HOST_AP_BCN_UPDATE_TEST */
