@@ -23,11 +23,6 @@ static inline int bcn_bmp_not_empty(const u8 *bmp, u8 bmp_len)
 void *rtw_malloc(size_t sz) { return malloc(sz); }
 void rtw_mfree(void *p, size_t sz) { (void)sz; free(p); }
 
-#ifdef RUST_AP_BCN_IE_ORACLE
-/* PR5 add/remove-only Rust oracle; TIM ported in PR6. */
-void update_BCNTIM(_adapter *padapter) { (void)padapter; }
-#endif
-
 u8 *rtw_get_ie(const u8 *pbuf, sint index, sint *len, sint limit)
 {
 	sint tmp, i;

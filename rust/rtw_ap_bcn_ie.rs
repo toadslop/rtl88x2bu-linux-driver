@@ -46,16 +46,75 @@ struct Ndis80211VariableIes {
 
 extern "C" {
     fn rtw_get_ie(pbuf: *const U8, index: Sint, len: *mut Sint, limit: Sint) -> *mut U8;
+}
+
+#[cfg(host_ap_bcn_ie_test)]
+extern "C" {
     fn rtw_malloc(sz: usize) -> *mut c_void;
     fn rtw_mfree(p: *mut c_void, sz: usize);
 }
 
-fn net_ies(net: NetPtr) -> *mut U8 {
-    unsafe { (&mut *(net as *mut WlanBssidEx)).ies.as_mut_ptr() }
+#[cfg(not(host_ap_bcn_ie_test))]
+extern "C" {
+    fn _rtw_malloc(sz: U32) -> *mut c_void;
+    fn _rtw_mfree(p: *mut c_void, sz: U32);
+    fn rtw_rust_ap_bcn_net_ie_len(net: NetPtr) -> *mut U32;
+    fn rtw_rust_ap_bcn_net_ies(net: NetPtr) -> *mut U8;
 }
 
-fn net_ie_len(net: NetPtr) -> *mut U32 {
-    unsafe { &mut (*(net as *mut WlanBssidEx)).ie_length }
+pub(crate) fn net_ies(net: NetPtr) -> *mut U8 {
+    unsafe {
+        #[cfg(host_ap_bcn_ie_test)]
+        {
+            (&mut *(net as *mut WlanBssidEx)).ies.as_mut_ptr()
+        }
+        #[cfg(not(host_ap_bcn_ie_test))]
+        {
+            rtw_rust_ap_bcn_net_ies(net)
+        }
+    }
+}
+
+pub(crate) fn net_ie_len(net: NetPtr) -> *mut U32 {
+    unsafe {
+        #[cfg(host_ap_bcn_ie_test)]
+        {
+            &mut (*(net as *mut WlanBssidEx)).ie_length
+        }
+        #[cfg(not(host_ap_bcn_ie_test))]
+        {
+            rtw_rust_ap_bcn_net_ie_len(net)
+        }
+    }
+}
+
+pub(crate) fn bcn_malloc(sz: usize) -> *mut U8 {
+    unsafe {
+        #[cfg(host_ap_bcn_ie_test)]
+        {
+            rtw_malloc(sz) as *mut U8
+        }
+        #[cfg(not(host_ap_bcn_ie_test))]
+        {
+            _rtw_malloc(sz as U32) as *mut U8
+        }
+    }
+}
+
+pub(crate) fn bcn_mfree(p: *mut U8, sz: usize) {
+    if p.is_null() {
+        return;
+    }
+    unsafe {
+        #[cfg(host_ap_bcn_ie_test)]
+        {
+            rtw_mfree(p as *mut c_void, sz);
+        }
+        #[cfg(not(host_ap_bcn_ie_test))]
+        {
+            _rtw_mfree(p as *mut c_void, sz as U32);
+        }
+    }
 }
 
 fn splice_tail(
@@ -69,7 +128,7 @@ fn splice_tail(
     unsafe {
         let mut pbackup: *mut U8 = core::ptr::null_mut();
         if remainder_ielen > 0 {
-            pbackup = rtw_malloc(remainder_ielen as usize) as *mut U8;
+            pbackup = bcn_malloc(remainder_ielen as usize);
             if !pbackup.is_null() {
                 core::ptr::copy_nonoverlapping(premainder_ie, pbackup, remainder_ielen as usize);
             }
@@ -82,7 +141,7 @@ fn splice_tail(
         };
         if !pbackup.is_null() {
             core::ptr::copy_nonoverlapping(pbackup, tail, remainder_ielen as usize);
-            rtw_mfree(pbackup as *mut c_void, remainder_ielen as usize);
+            bcn_mfree(pbackup, remainder_ielen as usize);
         }
         *net_ie_len(net) = tail.offset_from(pie) as Uint + remainder_ielen;
     }
@@ -181,3 +240,6 @@ pub extern "C" fn rtw_remove_bcn_ie(_adapter: AdapterPtr, pnetwork: NetPtr, inde
         );
     }
 }
+
+#[path = "rtw_ap_bcn_ie_tim.rs"]
+mod tim;
