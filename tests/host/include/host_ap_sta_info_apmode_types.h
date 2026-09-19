@@ -83,6 +83,7 @@ struct rtw_ieee80211_ht_cap {
 	u8 antenna_selection_info;
 } __attribute__((packed));
 
+/* Logical subset for apmode host oracle — not kernel struct layout. */
 struct ht_priv {
 	u8 ht_option;
 	u8 ampdu_enable;
