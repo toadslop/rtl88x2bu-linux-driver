@@ -4,19 +4,6 @@
 #include "host_p2p_ie_build.h"
 #include "host_vector_json.h"
 
-#ifdef HOST_P2P_RUST_IE_BUILD
-typedef struct {
-	struct wifidirect_info wdinfo;
-} host_p2p_adapter;
-
-void p2p_ps_wk_cmd(host_p2p_adapter *a, u8 c, u8 e)
-{
-	(void)a;
-	(void)c;
-	(void)e;
-}
-#endif
-
 typedef struct {
 	char name[48];
 	char fn[16];
@@ -46,7 +33,7 @@ static int parse_mac(const char *s, u8 *out)
 	return 0;
 }
 
-static int load_wd(vector_t *v, struct wifidirect_info *w)
+static void load_wd(vector_t *v, struct wifidirect_info *w)
 {
 	size_t dn = strnlen(v->dev_name, sizeof(v->dev_name));
 
@@ -60,9 +47,7 @@ static int load_wd(vector_t *v, struct wifidirect_info *w)
 		dn = WPS_MAX_DEVICE_NAME_LEN;
 	memcpy(w->device_name, v->dev_name, dn);
 	w->device_name_len = (u16)dn;
-	if (parse_mac(v->dev_addr, w->device_addr))
-		return -1;
-	return 0;
+	parse_mac(v->dev_addr, w->device_addr);
 }
 
 static u32 dispatch(vector_t *v, u8 *out)
@@ -71,8 +56,7 @@ static u32 dispatch(vector_t *v, u8 *out)
 	u8 ssid[32], go[ETH_ALEN];
 	u8 slen;
 
-	if (load_wd(v, &wd))
-		return (u32)-1;
+	load_wd(v, &wd);
 	if (!strcmp(v->fn, "beacon"))
 		return build_beacon_p2p_ie(&wd, out);
 	if (!strcmp(v->fn, "assoc_resp"))
