@@ -209,3 +209,7 @@ jobs:
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/ap test
 
+      - name: Host sreset lifecycle parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/sreset test
+
