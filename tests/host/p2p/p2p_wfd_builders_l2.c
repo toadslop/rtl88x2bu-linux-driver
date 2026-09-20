@@ -6,7 +6,7 @@
 
 typedef struct {
 	char name[48], fn[16], assoc_bssid[24], expect_hex[512];
-	int miracast, role, asoc, clients, wfd_type, rtsp_port;
+	int miracast, role, wfd_tdls, asoc, clients, wfd_type, rtsp_port;
 	u32 expect_len;
 } vector_t;
 
@@ -44,6 +44,7 @@ static u32 run_vec(vector_t *v, u8 *out)
 	}
 	wd.padapter = &a;
 	wd.role = (u8)v->role;
+	wd.wfd_tdls_enable = (u8)v->wfd_tdls;
 	wd.wfd_info = &a.wfd_info;
 	if (!strcmp(v->fn, "beacon"))
 		return build_beacon_wfd_ie(&wd, out);
@@ -66,6 +67,7 @@ static int parse_vec(const char *o, size_t l, void *vv)
 #define I(k, f) host_json_parse_int_in(o, l, k, &v->f)
 	I("miracast", miracast);
 	I("role", role);
+	I("wfd_tdls", wfd_tdls);
 	I("asoc", asoc);
 	I("clients", clients);
 	I("wfd_type", wfd_type);
