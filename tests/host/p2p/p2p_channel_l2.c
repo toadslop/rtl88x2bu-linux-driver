@@ -119,6 +119,7 @@ u8 rtw_p2p_ch_inclusion(PADAPTER adapter, u8 *peer_ch_list, u8 peer_ch_num,
 u8 rtw_p2p_nego_intent_compare(u8 req, u8 resp);
 #endif
 
+#ifndef HOST_P2P_RUST_IE
 static u8 *p2p_ie(const u8 *in, int len, uint *ielen)
 {
 	u8 oui[4] = {0x50, 0x6F, 0x9A, 0x09};
@@ -167,7 +168,6 @@ static u8 *p2p_attr_content(u8 *ie, uint ilen, u8 id, u8 *buf, uint *len)
 	return NULL;
 }
 
-#ifndef HOST_P2P_RUST_IE
 int process_p2p_cross_connect_ie(PADAPTER a, u8 *IEs, u32 len)
 {
 	u8 *ies, *pie, attr[32];
