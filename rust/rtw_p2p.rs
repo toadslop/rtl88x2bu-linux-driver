@@ -368,7 +368,10 @@ mod ie_build {
     }
 
     #[no_mangle]
-    pub extern "C" fn build_beacon_p2p_ie(pwdinfo: *mut WifidirectInfoIe, pbuf: *mut c_uchar) -> u32 {
+    pub extern "C" fn build_beacon_p2p_ie(
+        pwdinfo: *mut WifidirectInfoIe,
+        pbuf: *mut c_uchar,
+    ) -> u32 {
         if pwdinfo.is_null() || pbuf.is_null() {
             return 0;
         }
@@ -414,7 +417,10 @@ mod ie_build {
     }
 
     #[no_mangle]
-    pub extern "C" fn build_deauth_p2p_ie(_pwdinfo: *mut WifidirectInfoIe, _pbuf: *mut c_uchar) -> u32 {
+    pub extern "C" fn build_deauth_p2p_ie(
+        _pwdinfo: *mut WifidirectInfoIe,
+        _pbuf: *mut c_uchar,
+    ) -> u32 {
         0
     }
 }
@@ -422,7 +428,6 @@ mod ie_build {
 #[cfg(all(host_p2p_ie_build, host_p2p_ie_build_probe))]
 mod ie_build_probe {
     use std::os::raw::c_uchar;
-    use std::ptr;
 
     const VS_IE: u8 = 221;
     const P2P_ATTR_CAPABILITY: u8 = 0x02;
@@ -498,7 +503,10 @@ mod ie_build_probe {
     }
 
     #[no_mangle]
-    pub extern "C" fn build_probe_resp_p2p_ie(pwdinfo: *mut WifidirectInfoIe, pbuf: *mut c_uchar) -> u32 {
+    pub extern "C" fn build_probe_resp_p2p_ie(
+        pwdinfo: *mut WifidirectInfoIe,
+        pbuf: *mut c_uchar,
+    ) -> u32 {
         if pwdinfo.is_null() || pbuf.is_null() {
             return 0;
         }
@@ -519,7 +527,11 @@ mod ie_build_probe {
             }
             off += 1;
         } else if w.role == 1 {
-            p2p[off] = if w.persistent_supported != 0 { 2 | 8 } else { 8 };
+            p2p[off] = if w.persistent_supported != 0 {
+                2 | 8
+            } else {
+                8
+            };
             off += 1;
         }
         p2p[off] = P2P_ATTR_EX_LISTEN_TIMING;
@@ -559,7 +571,11 @@ mod ie_build_probe {
         off += 2;
         p2p[off] = 0x27;
         off += 1;
-        p2p[off] = if w.persistent_supported != 0 { 2 | 8 } else { 8 };
+        p2p[off] = if w.persistent_supported != 0 {
+            2 | 8
+        } else {
+            8
+        };
         off += 1;
         p2p[off] = P2P_ATTR_DEVICE_INFO;
         off += 1;
@@ -567,7 +583,11 @@ mod ie_build_probe {
         off += 2;
         p2p[off..off + 6].copy_from_slice(&w.device_addr);
         off += 6;
-        let cm = if w.ui_got_wps_info == 3 { 0x0080u16 } else { 0x0008u16 };
+        let cm = if w.ui_got_wps_info == 3 {
+            0x0080u16
+        } else {
+            0x0008u16
+        };
         put_be16(&mut p2p[off..], cm);
         off += 2;
         put_be16(&mut p2p[off..], 0x0008);
@@ -590,13 +610,10 @@ mod ie_build_probe {
             off += 1;
             put_le16(&mut p2p[off..], 6 + ussidlen as u16);
             off += 2;
-            p2p[off..off + 6].copy_from_slice(unsafe {
-                std::slice::from_raw_parts(pdev_raddr, 6)
-            });
+            p2p[off..off + 6].copy_from_slice(unsafe { std::slice::from_raw_parts(pdev_raddr, 6) });
             off += 6;
-            p2p[off..off + ussidlen as usize].copy_from_slice(unsafe {
-                std::slice::from_raw_parts(pssid, ussidlen as usize)
-            });
+            p2p[off..off + ussidlen as usize]
+                .copy_from_slice(unsafe { std::slice::from_raw_parts(pssid, ussidlen as usize) });
             off += ussidlen as usize;
         }
         let mut total = 0u32;
