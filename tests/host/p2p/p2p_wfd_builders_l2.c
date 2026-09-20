@@ -4,22 +4,9 @@
 #include "host_p2p_wfd_build.h"
 #include "host_vector_json.h"
 
-#ifdef HOST_P2P_RUST_WFD_BUILD
-void p2p_ps_wk_cmd(struct _adapter *a, u8 c, u8 e)
-{
-	(void)a;
-	(void)c;
-	(void)e;
-}
-#endif
-
-#define P2P_STATE_LISTEN 2
-#define P2P_STATE_UNSET (-1)
-
 typedef struct {
 	char name[48], fn[16], assoc_bssid[24], expect_hex[512];
-	int miracast, role, wfd_tdls, asoc, clients, wfd_type, rtsp_port;
-	int session_avail, p2p_state, tunneled;
+	int miracast, role, asoc, clients, wfd_type, rtsp_port;
 	u32 expect_len;
 } vector_t;
 
@@ -40,49 +27,29 @@ static int parse_mac(const char *s, u8 *out)
 	return 0;
 }
 
-static int init_adapter(vector_t *v, struct _adapter *a)
-{
-	memset(a, 0, sizeof(*a));
-	a->miracast_enabled = (u8)v->miracast;
-	a->stapriv.asoc_list_cnt = v->clients;
-	a->wfd_info.wfd_device_type = (u8)v->wfd_type;
-	a->wfd_info.rtsp_ctrlport = (u16)v->rtsp_port;
-	a->wdinfo.padapter = a;
-	a->wdinfo.wfd_info = &a->wfd_info;
-	a->wdinfo.role = (u8)v->role;
-	a->wdinfo.wfd_tdls_enable = (u8)v->wfd_tdls;
-	a->wdinfo.session_available = (u8)v->session_avail;
-	if (v->p2p_state == P2P_STATE_UNSET)
-		a->wdinfo.p2p_state = P2P_STATE_LISTEN;
-	else
-		a->wdinfo.p2p_state = (u8)v->p2p_state;
-	if (v->asoc) {
-		a->mlmepriv.fwstate = WIFI_ASOC_STATE;
-		if (*v->assoc_bssid && parse_mac(v->assoc_bssid, a->mlmepriv.assoc_bssid))
-			return -1;
-	}
-	return 0;
-}
-
 static u32 run_vec(vector_t *v, u8 *out)
 {
 	struct _adapter a;
+	struct wifidirect_info wd;
 
-	if (init_adapter(v, &a))
-		return (u32)-1;
+	memset(&a, 0, sizeof(a));
+	memset(&wd, 0, sizeof(wd));
+	a.miracast_enabled = (u8)v->miracast;
+	a.stapriv.asoc_list_cnt = v->clients;
+	a.wfd_info.wfd_device_type = (u8)v->wfd_type;
+	a.wfd_info.rtsp_ctrlport = (u16)v->rtsp_port;
+	if (v->asoc) {
+		a.mlmepriv.fwstate = WIFI_ASOC_STATE;
+		parse_mac(v->assoc_bssid, a.mlmepriv.assoc_bssid);
+	}
+	wd.padapter = &a;
+	wd.role = (u8)v->role;
+	wd.wfd_info = &a.wfd_info;
 	if (!strcmp(v->fn, "beacon"))
-		return build_beacon_wfd_ie(&a.wdinfo, out);
+		return build_beacon_wfd_ie(&wd, out);
 #ifdef HOST_P2P_WFD_PROBE
 	if (!strcmp(v->fn, "probe_req"))
-		return build_probe_req_wfd_ie(&a.wdinfo, out);
-#endif
-#ifdef HOST_P2P_WFD_PROBE_ASSOC
-	if (!strcmp(v->fn, "probe_resp"))
-		return build_probe_resp_wfd_ie(&a.wdinfo, out, (u8)v->tunneled);
-	if (!strcmp(v->fn, "assoc_req"))
-		return build_assoc_req_wfd_ie(&a.wdinfo, out);
-	if (!strcmp(v->fn, "assoc_resp"))
-		return build_assoc_resp_wfd_ie(&a.wdinfo, out);
+		return build_probe_req_wfd_ie(&wd, out);
 #endif
 	return (u32)-1;
 }
@@ -93,22 +60,16 @@ static int parse_vec(const char *o, size_t l, void *vv)
 	int tmp = 0;
 
 	memset(v, 0, sizeof(*v));
-	v->p2p_state = P2P_STATE_UNSET;
 	if (host_json_parse_string_in(o, l, "name", v->name, sizeof(v->name)) ||
 	    host_json_parse_string_in(o, l, "fn", v->fn, sizeof(v->fn)))
 		return -1;
 #define I(k, f) host_json_parse_int_in(o, l, k, &v->f)
 	I("miracast", miracast);
 	I("role", role);
-	I("wfd_tdls", wfd_tdls);
 	I("asoc", asoc);
 	I("clients", clients);
 	I("wfd_type", wfd_type);
 	I("rtsp_port", rtsp_port);
-	I("session_avail", session_avail);
-	if (!host_json_parse_int_in(o, l, "p2p_state", &tmp))
-		v->p2p_state = tmp;
-	I("tunneled", tunneled);
 #undef I
 	if (!host_json_parse_int_in(o, l, "expect_len", &tmp))
 		v->expect_len = (u32)tmp;
