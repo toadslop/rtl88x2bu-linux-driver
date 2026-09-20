@@ -16,6 +16,7 @@ void p2p_ps_wk_cmd(struct _adapter *a, u8 c, u8 e)
 typedef struct {
 	char name[48], fn[16], assoc_bssid[24], expect_hex[512];
 	int miracast, role, wfd_tdls, asoc, clients, wfd_type, rtsp_port;
+	int session_avail, p2p_state, tunneled;
 	u32 expect_len;
 } vector_t;
 
@@ -54,12 +55,22 @@ static u32 run_vec(vector_t *v, u8 *out)
 	wd.padapter = &a;
 	wd.role = (u8)v->role;
 	wd.wfd_tdls_enable = (u8)v->wfd_tdls;
+	wd.session_available = (u8)v->session_avail;
+	wd.p2p_state = (u8)(v->p2p_state ? v->p2p_state : 2);
 	wd.wfd_info = &a.wfd_info;
 	if (!strcmp(v->fn, "beacon"))
 		return build_beacon_wfd_ie(&wd, out);
 #ifdef HOST_P2P_WFD_PROBE
 	if (!strcmp(v->fn, "probe_req"))
 		return build_probe_req_wfd_ie(&wd, out);
+#endif
+#ifdef HOST_P2P_WFD_PROBE_ASSOC
+	if (!strcmp(v->fn, "probe_resp"))
+		return build_probe_resp_wfd_ie(&wd, out, (u8)v->tunneled);
+	if (!strcmp(v->fn, "assoc_req"))
+		return build_assoc_req_wfd_ie(&wd, out);
+	if (!strcmp(v->fn, "assoc_resp"))
+		return build_assoc_resp_wfd_ie(&wd, out);
 #endif
 	return (u32)-1;
 }
@@ -81,6 +92,9 @@ static int parse_vec(const char *o, size_t l, void *vv)
 	I("clients", clients);
 	I("wfd_type", wfd_type);
 	I("rtsp_port", rtsp_port);
+	I("session_avail", session_avail);
+	I("p2p_state", p2p_state);
+	I("tunneled", tunneled);
 #undef I
 	if (!host_json_parse_int_in(o, l, "expect_len", &tmp))
 		v->expect_len = (u32)tmp;
