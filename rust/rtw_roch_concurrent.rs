@@ -127,7 +127,12 @@ unsafe fn rtw_roch_wk_hdl(padapter: Padapter, cmd: c_int) -> c_int {
 }
 
 #[no_mangle]
-pub extern "C" fn rtw_roch_wk_cmd(padapter: Padapter, cmd: c_int, _parm: *mut c_void, _flags: u8) -> u8 {
+pub extern "C" fn rtw_roch_wk_cmd(
+    padapter: Padapter,
+    cmd: c_int,
+    _parm: *mut c_void,
+    _flags: u8,
+) -> u8 {
     unsafe {
         let tr = host_roch_concurrent_trace();
         (*tr).wk_cmd = 1;
@@ -145,7 +150,12 @@ pub extern "C" fn rtw_ap_roch_ch_switch_timer_process(ctx: *mut c_void) {
     }
     unsafe {
         (*adapter).wdev.switch_ch_to = 1;
-        rtw_roch_wk_cmd(adapter, ROCH_AP_ROCH_CH_SWITCH_PROCESS_WK, std::ptr::null_mut(), 0);
+        rtw_roch_wk_cmd(
+            adapter,
+            ROCH_AP_ROCH_CH_SWITCH_PROCESS_WK,
+            std::ptr::null_mut(),
+            0,
+        );
     }
 }
 
