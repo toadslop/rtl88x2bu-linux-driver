@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0
 //! W3-96 remain-on-channel handlers (host L2 Rust oracle).
-#![allow(dead_code, improper_ctypes, missing_docs, non_camel_case_types, non_snake_case, unreachable_pub)]
+#![allow(
+    dead_code,
+    improper_ctypes,
+    missing_docs,
+    non_camel_case_types,
+    non_snake_case,
+    unreachable_pub
+)]
 
 #[cfg(host_roch_test)]
 use std::os::raw::{c_int, c_void};
