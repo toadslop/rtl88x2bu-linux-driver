@@ -368,7 +368,10 @@ mod ie_build {
     }
 
     #[no_mangle]
-    pub extern "C" fn build_beacon_p2p_ie(pwdinfo: *mut WifidirectInfoIe, pbuf: *mut c_uchar) -> u32 {
+    pub extern "C" fn build_beacon_p2p_ie(
+        pwdinfo: *mut WifidirectInfoIe,
+        pbuf: *mut c_uchar,
+    ) -> u32 {
         if pwdinfo.is_null() || pbuf.is_null() {
             return 0;
         }
@@ -414,7 +417,10 @@ mod ie_build {
     }
 
     #[no_mangle]
-    pub extern "C" fn build_deauth_p2p_ie(_pwdinfo: *mut WifidirectInfoIe, _pbuf: *mut c_uchar) -> u32 {
+    pub extern "C" fn build_deauth_p2p_ie(
+        _pwdinfo: *mut WifidirectInfoIe,
+        _pbuf: *mut c_uchar,
+    ) -> u32 {
         0
     }
 }
