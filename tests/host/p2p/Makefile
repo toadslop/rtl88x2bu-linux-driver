@@ -6,7 +6,7 @@ RUSTC := rustc
 CC := gcc
 CFLAGS := -Wall -Wextra -Werror -O2 -I$(HOST_INC)
 
-.PHONY: all test test-c test-rust test-ie-build clean
+.PHONY: all test test-c test-rust test-ie-build test-ie-build-rust clean
 all test: test-c test-rust test-ie-build
 
 test-c: test_p2p_channel
