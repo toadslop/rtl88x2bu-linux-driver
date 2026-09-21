@@ -114,13 +114,14 @@ pub extern "C" fn host_nat25_timeout(_priv: *mut c_int) -> c_ulong {
 }
 
 #[no_mangle]
-pub extern "C" fn host_nat25_has_expired(_priv: *mut c_int, fdb: *mut Nat25NetworkDbEntry) -> c_int {
+pub extern "C" fn host_nat25_has_expired(
+    _priv: *mut c_int,
+    fdb: *mut Nat25NetworkDbEntry,
+) -> c_int {
     if fdb.is_null() {
         return 0;
     }
-    unsafe {
-        c_int::from((*fdb).ageing_timer <= host_nat25_timeout(_priv))
-    }
+    unsafe { c_int::from((*fdb).ageing_timer <= host_nat25_timeout(_priv)) }
 }
 
 #[no_mangle]
@@ -178,11 +179,7 @@ pub extern "C" fn host_convert_ipv6_mac_to_mc(skb: *mut HostSkBuff) {
         let iph = &*(skb.data.add(ETH_HLEN) as *const Ipv6Hdr);
         *skb.data = 0x33;
         *skb.data.add(1) = 0x33;
-        std::ptr::copy_nonoverlapping(
-            iph.daddr[3].to_ne_bytes().as_ptr(),
-            skb.data.add(2),
-            4,
-        );
+        std::ptr::copy_nonoverlapping(iph.daddr[3].to_ne_bytes().as_ptr(), skb.data.add(2), 4);
     }
 }
 
