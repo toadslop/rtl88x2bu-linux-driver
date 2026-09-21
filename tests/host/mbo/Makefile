@@ -1,4 +1,4 @@
-# Host L2 differential tests for core/rtw_mbo.c IE parse leaf (W3-107 PR1).
+# Host L2 differential tests for core/rtw_mbo.c IE parse/build leaf (W3-107).
 
 ROOT := ../../..
 HOST_INC := ../include
