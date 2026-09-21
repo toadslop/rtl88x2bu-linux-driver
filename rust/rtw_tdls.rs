@@ -16,9 +16,9 @@ use std::ffi::c_void;
 use core::ffi::c_void;
 
 const _FALSE: u8 = 0;
-const _SUCCESS: i32 = 0;
 const _TRUE: u8 = 1;
-const _FAIL: i32 = -1;
+const HOST_TDLS_INIT_OK: i32 = 0;
+const HOST_ASSOC_FAIL: i32 = -1;
 const WIFI_FW_STATION_STATE: u32 = 0x02;
 const WIFI_FW_ASSOC_SUCCESS: u32 = 0x00004000;
 const TDLS_STATE_NONE: u32 = 0;
@@ -175,13 +175,13 @@ pub extern "C" fn rtw_reset_tdls_info(padapter: Padapter) {
 #[no_mangle]
 pub extern "C" fn rtw_init_tdls_info(padapter: Padapter) -> i32 {
     let Some(a) = adapter(padapter) else {
-        return _FAIL;
+        return HOST_TDLS_INIT_OK - 1;
     };
     rtw_reset_tdls_info(padapter);
     a.tdlsinfo.driver_setup = _FALSE;
     a.tdlsinfo.cmd_lock = 0;
     a.tdlsinfo.hdl_lock = 0;
-    _SUCCESS
+    HOST_TDLS_INIT_OK
 }
 
 #[no_mangle]
@@ -209,13 +209,13 @@ pub extern "C" fn rtw_set_tdls_enable(padapter: Padapter, enable: u8) {
 #[no_mangle]
 pub extern "C" fn is_client_associated_to_ap(padapter: Padapter) -> i32 {
     let Some(a) = adapter(padapter) else {
-        return _FAIL;
+        return HOST_ASSOC_FAIL;
     };
     let st = a.mlmeextpriv.mlmext_info.state;
     if (st & WIFI_FW_ASSOC_SUCCESS != 0) && ((st & 0x03) == WIFI_FW_STATION_STATE) {
         _TRUE as i32
     } else {
-        _FAIL
+        HOST_ASSOC_FAIL
     }
 }
 
