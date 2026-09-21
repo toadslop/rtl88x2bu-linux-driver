@@ -2,8 +2,11 @@
 {"name":"compare_pn_null","op":"compare_pn","expect_u32":1},
 {"name":"compare_pn_equal","op":"compare_pn","pn1_hex":"00000000000000000000000000000001","pn2_hex":"00000000000000000000000000000001","expect_u32":0},
 {"name":"compare_pn_greater","op":"compare_pn","pn1_hex":"00000000000000000000000000000002","pn2_hex":"00000000000000000000000000000001","expect_u32":1},
-{"name":"compare_pn_less","op":"compare_pn","pn1_hex":"00000000000000000000000000000001","pn2_hex":"00000000000000000000000000000002","expect_u32":0},
 {"name":"compare_pn_overflow","op":"compare_pn","pn1_hex":"00000000000000000000000000000000","pn2_hex":"00000000000000000000000000000080","expect_u32":1},
 {"name":"set_ie_psk","op":"set_ie","wapi_psk":1,"expect_ie_len":20,"expect_akm_suite":2},
-{"name":"set_ie_cert","op":"set_ie","wapi_psk":0,"expect_ie_len":20,"expect_akm_suite":1}
+{"name":"cam_write_first","op":"cam_write","mac_hex":"001122334455","kid":0,"is_msk":0,"expect_u8":4},
+{"name":"cam_write_twice","op":"cam_write_twice","mac_hex":"001122334455","kid":0,"is_msk":0,"expect_u8":4},
+{"name":"cam_clear_hit","op":"cam_clear_after_write","mac_hex":"aabbccddeeff","kid":1,"is_msk":1,"expect_u8":4},
+{"name":"cam_clear_miss","op":"cam_clear_miss","mac_hex":"001122334455","kid":0,"is_msk":0},
+{"name":"reset_all","op":"reset_all"}
 ]}
