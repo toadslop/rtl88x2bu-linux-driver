@@ -7,12 +7,13 @@ CC := gcc
 CFLAGS := -Wall -Wextra -Werror -O2 -I$(HOST_INC) -DCONFIG_RTW_REPEATER_SON
 
 CORE_ORACLE := rson_core_c_oracle.c host_rson_util.c
+IE_ORACLE := rson_score_c_oracle.c rson_core_c_oracle.c rson_ie_c_oracle.c host_rson_util.c
 
-.PHONY: all test test-score test-core clean
+.PHONY: all test test-score test-core test-ie clean
 
 all: test
 
-test: test-score test-core
+test: test-score test-core test-ie
 
 test-score: test_rson_score
 	./test_rson_score rson_score_vectors.json
@@ -26,5 +27,11 @@ test_rson_score: test_rson_score.c rson_score_c_oracle.c $(HOST_JSON)
 test_rson_core: test_rson_core.c $(CORE_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_rson_core.c $(CORE_ORACLE) $(HOST_JSON)
 
+test-ie: test_rson_ie
+	./test_rson_ie rson_ie_vectors.json
+
+test_rson_ie: test_rson_ie.c $(IE_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_rson_ie.c $(IE_ORACLE) $(HOST_JSON)
+
 clean:
-	rm -f test_rson_score test_rson_core
+	rm -f test_rson_score test_rson_core test_rson_ie
