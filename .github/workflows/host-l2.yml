@@ -225,6 +225,10 @@ jobs:
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/rson test test-rust-run
 
+      - name: Host mbo IE leaf parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/mbo test
+
       - name: Host roch handlers parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/roch test
