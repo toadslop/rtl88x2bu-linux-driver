@@ -26,8 +26,6 @@ struct vector {
 	int preference;
 	int reason;
 	int ielength;
-	int expect_u8;
-	int query_ch;
 };
 
 static _adapter g_adapter;
@@ -56,8 +54,6 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 	host_json_parse_int_in(obj, len, "preference", &v->preference);
 	host_json_parse_int_in(obj, len, "reason", &v->reason);
 	host_json_parse_int_in(obj, len, "ielength", &v->ielength);
-	host_json_parse_int_in(obj, len, "expect_u8", &v->expect_u8);
-	host_json_parse_int_in(obj, len, "query_ch", &v->query_ch);
 	return 0;
 }
 
@@ -75,6 +71,7 @@ static int run_vec(struct vector *v)
 {
 	u8 ie[MAX_IE];
 	size_t ie_len = 0;
+	struct wlan_network net;
 	u32 plen = 0, attr_len = 0;
 	u8 *p;
 
@@ -116,6 +113,25 @@ static int run_vec(struct vector *v)
 
 		host_mbo_build_mbo_ie_hdr(&pframe, &attrib, (u8)v->payload_len);
 		if (hex_eq(frame, (size_t)(pframe - frame), v->expect_frame_hex))
+			return 1;
+	} else if (!strcmp(v->op, "disallowed")) {
+		memset(&net, 0, sizeof(net));
+		memcpy(net.network.IEs, ie, ie_len);
+		net.network.IELength =
+			v->ielength ? (u32)v->ielength : (u32)ie_len;
+		if (host_mbo_disallowed_network(&net) != (u8)v->expect_found)
+			return 1;
+	} else if (!strcmp(v->op, "npref_exist")) {
+		struct npref_ch pch = { 0 };
+		u8 chs[8];
+		size_t ch_len = 0;
+
+		if (host_hex_decode(v->ch_hex, chs, sizeof(chs), &ch_len))
+			return 1;
+		pch.nm_of_ch = ch_len;
+		memcpy(pch.chs, chs, ch_len);
+		if (host_mbo_non_pref_chan_exist(&pch, (u8)v->limit) !=
+		    (u8)v->expect_found)
 			return 1;
 	} else {
 		return 1;
