@@ -198,12 +198,16 @@ pub extern "C" fn rtw_rson_varify_ie(p: *mut u8) -> u8 {
 
 #[no_mangle]
 pub extern "C" fn host_rson_set_block_bssid_count(n: u8) {
-    unsafe { BLOCK_IDX = n; }
+    unsafe {
+        BLOCK_IDX = n;
+    }
 }
 
 #[no_mangle]
 pub extern "C" fn host_rson_set_root_bssid_count(n: u8) {
-    unsafe { ROOT_IDX = n; }
+    unsafe {
+        ROOT_IDX = n;
+    }
 }
 
 #[no_mangle]
@@ -260,18 +264,12 @@ pub extern "C" fn rtw_get_rson_struct(bssid: *mut WlanBssidEx, out: *mut RtwRson
             if p.is_null() || len == 0 {
                 break;
             }
-            if std::slice::from_raw_parts(p.add(2), 3) == RTW_RSON_OUI
-                && rtw_rson_varify_ie(p) != 0
+            if std::slice::from_raw_parts(p.add(2), 3) == RTW_RSON_OUI && rtw_rson_varify_ie(p) != 0
             {
                 let mut q = p.add(2 + 3);
                 r.ver = *q;
                 q = q.add(1);
-                r.id = u32::from_le_bytes([
-                    *q.add(0),
-                    *q.add(1),
-                    *q.add(2),
-                    *q.add(3),
-                ]);
+                r.id = u32::from_le_bytes([*q.add(0), *q.add(1), *q.add(2), *q.add(3)]);
                 q = q.add(4);
                 r.hopcnt = *q;
                 q = q.add(1);
