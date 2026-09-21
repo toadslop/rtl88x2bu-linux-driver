@@ -1,0 +1,31 @@
+{
+  "vectors": [
+    {
+      "name": "ipv6_addr_hash",
+      "op": "gen_ipv6",
+      "ip_hex": "20010db8000000000000000000000001",
+      "expect_hex": "0220010db8000000000000000000000001",
+      "expect_int": 5
+    },
+    {
+      "name": "timeout_now",
+      "op": "timeout",
+      "jiffies": 50000,
+      "expect_int": 0
+    },
+    {
+      "name": "expired_old",
+      "op": "has_expired",
+      "jiffies": 50000,
+      "ageing": 10000,
+      "expect_int": 1
+    },
+    {
+      "name": "not_expired_fresh",
+      "op": "has_expired",
+      "jiffies": 50000,
+      "ageing": 45000,
+      "expect_int": 0
+    }
+  ]
+}
