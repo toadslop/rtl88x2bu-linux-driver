@@ -1,0 +1,44 @@
+{
+  "vectors": [
+    {
+      "name": "score_not_ready",
+      "op": "cal_score",
+      "hopcnt": 255,
+      "connectible": 1,
+      "rssi": -40,
+      "expect_int": 1
+    },
+    {
+      "name": "score_deny_connect",
+      "op": "cal_score",
+      "hopcnt": 2,
+      "connectible": 0,
+      "rssi": -40,
+      "expect_int": 1
+    },
+    {
+      "name": "score_hop2_rssi_m40",
+      "op": "cal_score",
+      "hopcnt": 2,
+      "connectible": 1,
+      "rssi": -40,
+      "expect_int": 231
+    },
+    {
+      "name": "match_hit",
+      "op": "match_bssid",
+      "mac_hex": "020406080a0c",
+      "bssid_list_hex": "020406080a0c001122334455",
+      "bssid_count": 2,
+      "expect_int": 1
+    },
+    {
+      "name": "match_miss",
+      "op": "match_bssid",
+      "mac_hex": "aabbccddeeff",
+      "bssid_list_hex": "020406080a0c",
+      "bssid_count": 1,
+      "expect_int": 0
+    }
+  ]
+}
