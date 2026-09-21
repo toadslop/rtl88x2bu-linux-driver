@@ -1,1 +1,3 @@
 test_wapi_pn_cam
+test_wapi_pn_cam_rust
+librust_wapi.a

@@ -231,7 +231,7 @@ jobs:
 
       - name: Host wapi PN/IE/CAM leaf parity (L2)
         if: steps.filter.outputs.l2 == 'true'
-        run: make -C tests/host/wapi test
+        run: make -C tests/host/wapi test test-rust
 
       - name: Host roch handlers parity (L2)
         if: steps.filter.outputs.l2 == 'true'
