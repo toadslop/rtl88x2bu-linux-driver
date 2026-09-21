@@ -6,12 +6,13 @@
 
 struct vector {
 	char name[64];
-	char op[16];
+	char op[24];
 	char mac_hex[16];
 	char net_hex[48];
 	char skb_mac_hex[16];
 	char expect_mac_hex[16];
 	host_jiffies_t jiffies;
+	unsigned long ageing;
 	int expect_int;
 };
 
@@ -20,6 +21,7 @@ host_nat25_db_adapter g_adapter;
 void host_nat25_db_network_insert(host_nat25_db_adapter *priv, u8 *mac, u8 *net);
 int host_nat25_db_network_lookup_and_replace(host_nat25_db_adapter *priv,
 					     struct host_sk_buff *skb, u8 *net);
+int host_nat25_network_hash(u8 *na);
 
 static int parse_vec(const char *obj, size_t len, void *vv)
 {
@@ -36,6 +38,7 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 	host_json_parse_string_in(obj, len, "expect_mac_hex", v->expect_mac_hex,
 				  sizeof(v->expect_mac_hex));
 	host_json_parse_int_in(obj, len, "jiffies", (int *)&v->jiffies);
+	host_json_parse_int_in(obj, len, "ageing", (int *)&v->ageing);
 	host_json_parse_int_in(obj, len, "expect_int", &v->expect_int);
 	return 0;
 }
@@ -55,14 +58,52 @@ static int run_one(struct vector *v)
 	int got;
 
 	host_br_ext_jiffies_val = v->jiffies;
-	if (!strcmp(v->op, "reset"))
+	if (!strcmp(v->op, "reset")) {
+		host_nat25_db_cleanup(&g_adapter);
 		memset(&g_adapter, 0, sizeof(g_adapter));
-	else if (!strcmp(v->op, "insert")) {
+	} else if (!strcmp(v->op, "insert")) {
 		size_t n = 0;
 
 		if (host_hex_decode(v->mac_hex, mac, ETH_ALEN, &n) || dec_net(v->net_hex, net))
 			goto fail;
 		host_nat25_db_network_insert(&g_adapter, mac, net);
+	} else if (!strcmp(v->op, "expire"))
+		host_nat25_db_expire(&g_adapter);
+	else if (!strcmp(v->op, "cleanup"))
+		host_nat25_db_cleanup(&g_adapter);
+	else if (!strcmp(v->op, "count")) {
+		if (host_nat25_db_count(&g_adapter) != v->expect_int)
+			goto fail;
+	} else if (!strcmp(v->op, "set_ageing")) {
+		struct host_nat25_db_entry *db;
+
+		if (dec_net(v->net_hex, net))
+			goto fail;
+		db = g_adapter.nethash[host_nat25_network_hash(net)];
+		while (db) {
+			if (!memcmp(db->networkAddr, net, MAX_NETWORK_ADDR_LEN)) {
+				db->ageing_timer = v->ageing;
+				break;
+			}
+			db = db->next_hash;
+		}
+		if (!db)
+			goto fail;
+	} else if (!strcmp(v->op, "set_use_count")) {
+		struct host_nat25_db_entry *db;
+
+		if (dec_net(v->net_hex, net))
+			goto fail;
+		db = g_adapter.nethash[host_nat25_network_hash(net)];
+		while (db) {
+			if (!memcmp(db->networkAddr, net, MAX_NETWORK_ADDR_LEN)) {
+				db->use_count = v->expect_int;
+				break;
+			}
+			db = db->next_hash;
+		}
+		if (!db)
+			goto fail;
 	} else if (!strcmp(v->op, "lookup")) {
 		if (dec_net(v->net_hex, net))
 			goto fail;
@@ -95,13 +136,13 @@ fail:
 
 int main(int argc, char **argv)
 {
-	struct vector vecs[12];
+	struct vector vecs[24];
 	size_t count = 0;
 	int bad = 0;
 
 	if (argc != 2)
 		return 2;
-	if (host_load_vectors(argv[1], vecs, sizeof(vecs[0]), 12, parse_vec, &count))
+	if (host_load_vectors(argv[1], vecs, sizeof(vecs[0]), 24, parse_vec, &count))
 		return 2;
 	for (size_t i = 0; i < count; i++)
 		bad += run_one(&vecs[i]);
