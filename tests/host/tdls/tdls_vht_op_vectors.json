@@ -1,0 +1,56 @@
+{
+  "vectors": [
+    {
+      "name": "vht_operation_80mhz",
+      "data_hex": "010000000000000000000000",
+      "cur_bwmode": 2,
+      "expect_bw": 2
+    },
+    {
+      "name": "vht_operation_no_80mhz_field",
+      "data_hex": "000000000000000000000000",
+      "cur_bwmode": 2,
+      "expect_bw": 2
+    },
+    {
+      "name": "vht_operation_clamp_to_cur_bw",
+      "data_hex": "010000000000000000000000",
+      "cur_bwmode": 0,
+      "expect_bw": 0
+    },
+    {
+      "name": "vht_op_mode_80mhz",
+      "op_mode": 2,
+      "sta_map_hex": "fffe",
+      "vht_option": 1,
+      "cur_bwmode": 2,
+      "expect_bw": 2
+    },
+    {
+      "name": "vht_op_mode_vht_option_off",
+      "op_mode": 2,
+      "sta_map_hex": "fffe",
+      "vht_option": 0,
+      "cur_bwmode": 2,
+      "expect_bw": 0
+    },
+    {
+      "name": "vht_op_mode_clamp_bw",
+      "op_mode": 2,
+      "sta_map_hex": "fffe",
+      "vht_option": 1,
+      "cur_bwmode": 0,
+      "expect_bw": 0
+    },
+    {
+      "name": "vht_op_mode_mcs_remap",
+      "op_mode": 18,
+      "sta_map_hex": "fffe",
+      "vht_option": 1,
+      "cur_bwmode": 2,
+      "expect_bw": 2,
+      "check_mcs_map": 1,
+      "expect_mcs_map_hex": "ffff"
+    }
+  ]
+}
