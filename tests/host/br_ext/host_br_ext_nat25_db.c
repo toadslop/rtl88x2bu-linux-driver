@@ -74,3 +74,73 @@ int host_nat25_db_network_lookup_and_replace(host_nat25_db_adapter *priv,
 	}
 	return 0;
 }
+
+static void network_hash_unlink(struct host_nat25_db_entry *ent)
+{
+	*(ent->pprev_hash) = ent->next_hash;
+	if (ent->next_hash)
+		ent->next_hash->pprev_hash = ent->pprev_hash;
+	ent->next_hash = NULL;
+	ent->pprev_hash = NULL;
+}
+
+void host_nat25_db_cleanup(host_nat25_db_adapter *priv)
+{
+	int i;
+
+	for (i = 0; i < NAT25_HASH_SIZE; i++) {
+		struct host_nat25_db_entry *f = priv->nethash[i];
+
+		while (f) {
+			struct host_nat25_db_entry *g = f->next_hash;
+
+			if (priv->scdb_entry == f) {
+				memset(priv->scdb_mac, 0, ETH_ALEN);
+				memset(priv->scdb_ip, 0, 4);
+				priv->scdb_entry = NULL;
+			}
+			network_hash_unlink(f);
+			free(f);
+			f = g;
+		}
+	}
+}
+
+void host_nat25_db_expire(host_nat25_db_adapter *priv)
+{
+	int i;
+
+	for (i = 0; i < NAT25_HASH_SIZE; i++) {
+		struct host_nat25_db_entry *f = priv->nethash[i];
+
+		while (f) {
+			struct host_nat25_db_entry *g = f->next_hash;
+
+			if (db_has_expired(priv, f) && --f->use_count == 0) {
+				if (priv->scdb_entry == f) {
+					memset(priv->scdb_mac, 0, ETH_ALEN);
+					memset(priv->scdb_ip, 0, 4);
+					priv->scdb_entry = NULL;
+				}
+				network_hash_unlink(f);
+				free(f);
+			}
+			f = g;
+		}
+	}
+}
+
+int host_nat25_db_count(host_nat25_db_adapter *priv)
+{
+	int i, n = 0;
+
+	for (i = 0; i < NAT25_HASH_SIZE; i++) {
+		struct host_nat25_db_entry *db = priv->nethash[i];
+
+		while (db) {
+			n++;
+			db = db->next_hash;
+		}
+	}
+	return n;
+}
