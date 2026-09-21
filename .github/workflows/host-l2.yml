@@ -217,6 +217,10 @@ jobs:
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/tdls test
 
+      - name: Host br_ext NAT25 leaf parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/br_ext test
+
       - name: Host roch handlers parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/roch test
