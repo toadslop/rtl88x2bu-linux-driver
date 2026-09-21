@@ -21,6 +21,7 @@
 #define CONFIG_RTW_REPEATER_SON_ID 0x02040608
 #define _BEACON_IE_OFFSET_ 12
 #define _VENDOR_SPECIFIC_IE_ 221
+#define cpu_to_le32(x) ((u32)(x))
 #define le32_to_cpup(p) (*(const u32 *)(p))
 
 typedef long NDIS_802_11_RSSI;
@@ -64,8 +65,20 @@ int is_match_bssid(u8 *mac, u8 bssid_array[][6], int num);
 void init_rtw_rson_data(struct dvobj_priv *dvobj);
 int str2hexbuf(char *str, u8 *hexbuf, int len);
 u8 rtw_rson_varify_ie(u8 *p);
-int rtw_get_rson_struct(WLAN_BSSID_EX *bssid, struct rtw_rson_struct *rson_data);
+struct wlan_network {
+	WLAN_BSSID_EX network;
+};
 
+typedef struct _adapter {
+	struct dvobj_priv dvobj;
+} _adapter;
+
+int rtw_get_rson_struct(WLAN_BSSID_EX *bssid, struct rtw_rson_struct *rson_data);
+int rtw_rson_choose(struct wlan_network **candidate, struct wlan_network *competitor);
+u32 rtw_rson_append_ie(_adapter *padapter, unsigned char *pframe, u32 *len);
+
+void host_rson_set_block_bssid_count(u8 n);
+void host_rson_set_block_bssid(u8 idx, const u8 mac[ETH_ALEN]);
 void host_rson_set_root_bssid_count(u8 n);
 void host_rson_set_root_bssid(u8 idx, const u8 mac[ETH_ALEN]);
 
