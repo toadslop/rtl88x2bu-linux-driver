@@ -21,6 +21,13 @@ struct vector {
 	int expect_term_len;
 	char expect_tsf_hex[32];
 	int expect_duration;
+	int expect_valid;
+	int passing_ms;
+	int validity_time;
+	int disassoc_time;
+	int flag;
+	int frame_len;
+	int expect_sz;
 };
 
 static int parse_vec(const char *obj, size_t len, void *vv)
@@ -43,6 +50,13 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 	host_json_parse_string_in(obj, len, "expect_tsf_hex", v->expect_tsf_hex,
 				  sizeof(v->expect_tsf_hex));
 	host_json_parse_int_in(obj, len, "expect_duration", &v->expect_duration);
+	host_json_parse_int_in(obj, len, "expect_valid", &v->expect_valid);
+	host_json_parse_int_in(obj, len, "passing_ms", &v->passing_ms);
+	host_json_parse_int_in(obj, len, "validity_time", &v->validity_time);
+	host_json_parse_int_in(obj, len, "disassoc_time", &v->disassoc_time);
+	host_json_parse_int_in(obj, len, "flag", &v->flag);
+	host_json_parse_int_in(obj, len, "frame_len", &v->frame_len);
+	host_json_parse_int_in(obj, len, "expect_sz", &v->expect_sz);
 	return 0;
 }
 
@@ -84,6 +98,22 @@ static int run_vec(struct vector *v)
 			    memcmp(&hdr.term_duration.tsf, tsf, 8))
 				return 1;
 		}
+	} else if (!strcmp(v->op, "candidate_validity")) {
+		struct btm_rpt_cache cache = { .req_stime = 1 };
+
+		cache.validity_time = (u32)v->validity_time;
+		cache.disassoc_time = (u32)v->disassoc_time;
+		host_wnm_set_passing_ms((u32)v->passing_ms);
+		if (host_wnm_btm_candidate_validity(&cache, (u8)v->flag) !=
+		    (u8)v->expect_valid)
+			return 1;
+	} else if (!strcmp(v->op, "rsp_candidates_sz")) {
+		_adapter a;
+		u32 flen = v->frame_len ? (u32)v->frame_len : (u32)frame_len;
+		u32 sz = host_wnm_btm_rsp_candidates_sz_get(&a, frame, flen);
+
+		if (sz != (u32)v->expect_sz)
+			return 1;
 	} else {
 		return 1;
 	}
