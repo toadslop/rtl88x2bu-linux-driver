@@ -1,0 +1,7 @@
+test_rson_score
+test_rson_core
+test_rson_ie
+test_rson_score_rust
+test_rson_core_rust
+test_rson_ie_rust
+librust_rson.a
