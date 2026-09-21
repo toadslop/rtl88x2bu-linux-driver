@@ -54,6 +54,8 @@ void WapiFreeAllStaInfo(_adapter *padapter)
 	return;
 }
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_WAPI_PN_CAM)
+
 void WapiSetIE(_adapter *padapter)
 {
 	PRT_WAPI_T		pWapiInfo = &(padapter->wapiInfo);
@@ -254,6 +256,8 @@ WapiResetAllCamEntry(_adapter *padapter)
 
 	return;
 }
+
+#endif /* !CONFIG_RUST || !CONFIG_RUST_WAPI_PN_CAM */
 
 u8 WapiWriteOneCamEntry(
 	_adapter	*padapter,

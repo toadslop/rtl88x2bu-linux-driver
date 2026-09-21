@@ -40,6 +40,6 @@ void WapiSetIE(_adapter *padapter);
 u8 WapiGetEntryForCamWrite(_adapter *padapter, u8 *pMacAddr, u8 KID, u8 IsMsk);
 u8 WapiGetEntryForCamClear(_adapter *padapter, u8 *pPeerMac, u8 keyid, u8 IsMsk);
 void WapiResetAllCamEntry(_adapter *padapter);
-void host_wapi_adapter_init(_adapter *a);
+void host_wapi_adapter_init(_adapter *a); /* host L2 only (Rust oracle) */
 
 #endif /* HOST_WAPI_TYPES_H */

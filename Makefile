@@ -1102,6 +1102,8 @@ endif
 
 ifeq ($(CONFIG_WAPI_SUPPORT), y)
 ccflags-y += -DCONFIG_WAPI_SUPPORT
+ccflags-y += -DCONFIG_RUST_WAPI_PN_CAM
+rustflags-y += --cfg rust_wapi_pn_cam
 endif
 
 
@@ -2571,7 +2573,9 @@ endif
 $(MODULE_NAME)-y += $(rtk_core)
 
 $(MODULE_NAME)-$(CONFIG_WAPI_SUPPORT) += core/rtw_wapi.o	\
-					core/rtw_wapi_sms4.o
+					core/rtw_wapi_sms4.o \
+					core/rtw_wapi_pn_cam_rust_acc.o \
+					rust/rtw_wapi.o
 
 $(MODULE_NAME)-y += $(_OS_INTFS_FILES)
 $(MODULE_NAME)-y += $(_HAL_INTFS_FILES)
