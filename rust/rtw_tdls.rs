@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0
-#![allow(dead_code, improper_ctypes, missing_docs, non_camel_case_types, non_snake_case, non_upper_case_globals, unreachable_pub)]
+#![allow(
+    dead_code,
+    improper_ctypes,
+    missing_docs,
+    non_camel_case_types,
+    non_snake_case,
+    non_upper_case_globals,
+    unreachable_pub
+)]
 
 #[cfg(host_tdls_test)]
 use std::ffi::c_void;
@@ -198,7 +206,6 @@ pub extern "C" fn rtw_set_tdls_enable(padapter: Padapter, enable: u8) {
         a.registrypriv.en_tdls = enable;
     }
 }
-
 #[no_mangle]
 pub extern "C" fn is_client_associated_to_ap(padapter: Padapter) -> i32 {
     let Some(a) = adapter(padapter) else {
