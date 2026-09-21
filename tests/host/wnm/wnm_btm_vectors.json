@@ -1,6 +1,18 @@
 {
   "vectors": [
     {
+      "name": "offset_bss_term",
+      "op": "candidates_offset",
+      "frame_hex": "00000808050507040800123456789abcdef0123456789012345678901234567890ab",
+      "expect_offset": 19
+    },
+    {
+      "name": "offset_ess_url",
+      "op": "candidates_offset",
+      "frame_hex": "0000101005050703aaaa",
+      "expect_offset": 4
+    },
+    {
       "name": "offset_minimal",
       "op": "candidates_offset",
       "frame_hex": "00000404050507",
@@ -28,6 +40,38 @@
       "expect_term_len": 8,
       "expect_tsf_hex": "0123456789abcdef",
       "expect_duration": 22136
+    },
+    {
+      "name": "validity_ok",
+      "op": "candidate_validity",
+      "passing_ms": 100,
+      "validity_time": 500,
+      "disassoc_time": 500,
+      "flag": 3,
+      "expect_valid": 1
+    },
+    {
+      "name": "validity_expired",
+      "op": "candidate_validity",
+      "passing_ms": 600,
+      "validity_time": 500,
+      "disassoc_time": 900,
+      "flag": 1,
+      "expect_valid": 0
+    },
+    {
+      "name": "rsp_sz_accept",
+      "op": "rsp_candidates_sz",
+      "frame_hex": "000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "frame_len": 41,
+      "expect_sz": 20
+    },
+    {
+      "name": "rsp_sz_reject",
+      "op": "rsp_candidates_sz",
+      "frame_hex": "000003000000000000000000000000000000000000",
+      "frame_len": 20,
+      "expect_sz": 0
     }
   ]
 }
