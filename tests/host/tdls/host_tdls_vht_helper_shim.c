@@ -9,6 +9,12 @@ u8 host_tdls_hal_tx_nss(_adapter *a)
 	return g_hal_tx_nss;
 }
 
+u8 host_tdls_hal_bw_support(_adapter *a, u8 bw)
+{
+	(void)a;
+	return bw <= CHANNEL_WIDTH_80 ? _TRUE : _FALSE;
+}
+
 void rtw_vht_nss_to_mcsmap(u8 nss, u8 *target_mcs_map, u8 *cur_mcs_map)
 {
 	u8 i, j, cur_rate, target_rate;

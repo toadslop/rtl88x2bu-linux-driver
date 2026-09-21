@@ -2,5 +2,6 @@ test_tdls_lifecycle
 test_tdls_lifecycle_rust
 test_tdls_ht_cap
 test_tdls_vht_cap
+test_tdls_vht_op
 test_tdls_ht_vht
 librust_tdls.a
