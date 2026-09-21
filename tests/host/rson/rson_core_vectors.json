@@ -1,0 +1,33 @@
+{
+  "vectors": [
+    {
+      "name": "init_default",
+      "op": "init"
+    },
+    {
+      "name": "str2hex_ok",
+      "op": "str2hex",
+      "hex_str": "0x0102aa",
+      "expect_int": 1,
+      "expect_hex": "0102aa"
+    },
+    {
+      "name": "str2hex_bad_prefix",
+      "op": "str2hex",
+      "hex_str": "0102",
+      "expect_int": 0
+    },
+    {
+      "name": "verify_ie_ok",
+      "op": "verify_ie",
+      "hex_str": "dd0efafafa01",
+      "expect_int": 1
+    },
+    {
+      "name": "verify_ie_bad_ver",
+      "op": "verify_ie",
+      "hex_str": "dd0efafafa02",
+      "expect_int": 0
+    }
+  ]
+}
