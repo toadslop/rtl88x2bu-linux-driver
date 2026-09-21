@@ -1,0 +1,25 @@
+{
+  "vectors": [
+    {
+      "name": "ipv4_addr_hash",
+      "op": "gen_ipv4",
+      "ip_hex": "c0a80101",
+      "expect_hex": "01000000000000c0a801010000000000",
+      "expect_int": 8
+    },
+    {
+      "name": "pppoe_addr_hash",
+      "op": "gen_pppoe",
+      "sid": 4660,
+      "mac_hex": "010203040506",
+      "expect_hex": "053412010203040506000000000000",
+      "expect_int": 4
+    },
+    {
+      "name": "hash_ipv4_key",
+      "op": "hash_only",
+      "data_hex": "01000000000000c0a801010000000000",
+      "expect_int": 8
+    }
+  ]
+}
