@@ -9,6 +9,7 @@ const NAT25_PPPOE: u8 = 5;
 const NAT25_HASH_SIZE: usize = 16;
 const MAX_NETWORK_ADDR_LEN: usize = 17;
 const NAT25_AGEING_TIME: c_ulong = 300;
+const ETH_ALEN: usize = 6;
 const ETH_HLEN: usize = 14;
 const HZ: c_ulong = 100;
 const NDISC_ROUTER_SOLICITATION: u8 = 133;
@@ -207,5 +208,195 @@ pub extern "C" fn host_skb_pull_and_merge(skb: *mut HostSkBuff, src: *mut u8, le
         }
         skb.len -= len;
         0
+    }
+}
+
+#[repr(C)]
+pub struct HostNat25DbEntry {
+    pub next_hash: *mut HostNat25DbEntry,
+    pub pprev_hash: *mut *mut HostNat25DbEntry,
+    pub use_count: c_int,
+    pub mac_addr: [u8; ETH_ALEN],
+    pub _pad_before_ageing: [u8; 6],
+    pub ageing_timer: c_ulong,
+    pub network_addr: [u8; MAX_NETWORK_ADDR_LEN],
+}
+
+#[repr(C)]
+pub struct HostNat25DbAdapter {
+    pub nethash: [*mut HostNat25DbEntry; NAT25_HASH_SIZE],
+    pub scdb_entry: *mut HostNat25DbEntry,
+    pub scdb_mac: [u8; ETH_ALEN],
+    pub scdb_ip: [u8; 4],
+}
+
+#[cfg(host_br_ext_test)]
+fn db_has_expired(fdb: *mut HostNat25DbEntry) -> bool {
+    if fdb.is_null() {
+        return false;
+    }
+    unsafe { (*fdb).ageing_timer <= host_br_ext_jiffies_val - NAT25_AGEING_TIME * HZ }
+}
+
+#[cfg(host_br_ext_test)]
+unsafe fn hash_link(priv_: *mut HostNat25DbAdapter, ent: *mut HostNat25DbEntry, hash: c_int) {
+    let priv_ = &mut *priv_;
+    let h = hash as usize;
+    (*ent).next_hash = priv_.nethash[h];
+    if !(*ent).next_hash.is_null() {
+        (*(*ent).next_hash).pprev_hash = &mut (*ent).next_hash;
+    }
+    priv_.nethash[h] = ent;
+    (*ent).pprev_hash = &mut priv_.nethash[h];
+}
+
+#[cfg(host_br_ext_test)]
+unsafe fn hash_unlink(ent: *mut HostNat25DbEntry) {
+    *(*ent).pprev_hash = (*ent).next_hash;
+    if !(*ent).next_hash.is_null() {
+        (*(*ent).next_hash).pprev_hash = (*ent).pprev_hash;
+    }
+    (*ent).next_hash = std::ptr::null_mut();
+    (*ent).pprev_hash = std::ptr::null_mut();
+}
+
+#[no_mangle]
+pub extern "C" fn host_nat25_db_network_insert(
+    priv_: *mut HostNat25DbAdapter,
+    mac_addr: *mut u8,
+    network_addr: *mut u8,
+) {
+    if priv_.is_null() || mac_addr.is_null() || network_addr.is_null() {
+        return;
+    }
+    unsafe {
+        let hash = host_nat25_network_hash(network_addr);
+        let mut db = (*priv_).nethash[hash as usize];
+        while !db.is_null() {
+            if std::slice::from_raw_parts((*db).network_addr.as_ptr(), MAX_NETWORK_ADDR_LEN)
+                == std::slice::from_raw_parts(network_addr, MAX_NETWORK_ADDR_LEN)
+            {
+                std::ptr::copy_nonoverlapping(mac_addr, (*db).mac_addr.as_mut_ptr(), ETH_ALEN);
+                (*db).ageing_timer = host_br_ext_jiffies_val;
+                return;
+            }
+            db = (*db).next_hash;
+        }
+        let db = Box::into_raw(Box::new(HostNat25DbEntry {
+            next_hash: std::ptr::null_mut(),
+            pprev_hash: std::ptr::null_mut(),
+            use_count: 1,
+            mac_addr: [0; ETH_ALEN],
+            _pad_before_ageing: [0; 6],
+            ageing_timer: host_br_ext_jiffies_val,
+            network_addr: [0; MAX_NETWORK_ADDR_LEN],
+        }));
+        std::ptr::copy_nonoverlapping(
+            network_addr,
+            (*db).network_addr.as_mut_ptr(),
+            MAX_NETWORK_ADDR_LEN,
+        );
+        std::ptr::copy_nonoverlapping(mac_addr, (*db).mac_addr.as_mut_ptr(), ETH_ALEN);
+        hash_link(priv_, db, hash);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn host_nat25_db_network_lookup_and_replace(
+    priv_: *mut HostNat25DbAdapter,
+    skb: *mut HostSkBuff,
+    network_addr: *mut u8,
+) -> c_int {
+    if priv_.is_null() || skb.is_null() || network_addr.is_null() {
+        return 0;
+    }
+    unsafe {
+        let hash = host_nat25_network_hash(network_addr);
+        let mut db = (*priv_).nethash[hash as usize];
+        while !db.is_null() {
+            if std::slice::from_raw_parts((*db).network_addr.as_ptr(), MAX_NETWORK_ADDR_LEN)
+                == std::slice::from_raw_parts(network_addr, MAX_NETWORK_ADDR_LEN)
+            {
+                if !db_has_expired(db) {
+                    std::ptr::copy_nonoverlapping((*db).mac_addr.as_ptr(), (*skb).data, ETH_ALEN);
+                    (*db).use_count += 1;
+                }
+                return 1;
+            }
+            db = (*db).next_hash;
+        }
+    }
+    0
+}
+
+#[no_mangle]
+pub extern "C" fn host_nat25_db_cleanup(priv_: *mut HostNat25DbAdapter) {
+    if priv_.is_null() {
+        return;
+    }
+    unsafe {
+        let priv_ = &mut *priv_;
+        for i in 0..NAT25_HASH_SIZE {
+            let mut f = priv_.nethash[i];
+            while !f.is_null() {
+                let g = (*f).next_hash;
+                if priv_.scdb_entry == f {
+                    priv_.scdb_mac.fill(0);
+                    priv_.scdb_ip.fill(0);
+                    priv_.scdb_entry = std::ptr::null_mut();
+                }
+                hash_unlink(f);
+                let _ = Box::from_raw(f);
+                f = g;
+            }
+            priv_.nethash[i] = std::ptr::null_mut();
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn host_nat25_db_expire(priv_: *mut HostNat25DbAdapter) {
+    if priv_.is_null() {
+        return;
+    }
+    unsafe {
+        let priv_ = &mut *priv_;
+        for i in 0..NAT25_HASH_SIZE {
+            let mut f = priv_.nethash[i];
+            while !f.is_null() {
+                let g = (*f).next_hash;
+                if db_has_expired(f) {
+                    (*f).use_count -= 1;
+                    if (*f).use_count == 0 {
+                        if priv_.scdb_entry == f {
+                            priv_.scdb_mac.fill(0);
+                            priv_.scdb_ip.fill(0);
+                            priv_.scdb_entry = std::ptr::null_mut();
+                        }
+                        hash_unlink(f);
+                        let _ = Box::from_raw(f);
+                    }
+                }
+                f = g;
+            }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn host_nat25_db_count(priv_: *mut HostNat25DbAdapter) -> c_int {
+    if priv_.is_null() {
+        return 0;
+    }
+    unsafe {
+        let mut n = 0;
+        for i in 0..NAT25_HASH_SIZE {
+            let mut db = (*priv_).nethash[i];
+            while !db.is_null() {
+                n += 1;
+                db = (*db).next_hash;
+            }
+        }
+        n
     }
 }
