@@ -1,0 +1,1 @@
+{"vectors":[{"name":"vht_cap_valid","data_hex":"000000000000000000000000","vht_enable":1,"wireless_mode":32,"expect_vht":1,"expect_vht_option":1},{"name":"vht_cap_short","data_hex":"000000000000000000000000","data_len":8,"vht_enable":1,"wireless_mode":32,"expect_vht":0,"expect_vht_option":0}]}
