@@ -16,22 +16,9 @@ typedef uint32_t u32;
 #define MAX_NETWORK_ADDR_LEN 17
 #define NAT25_AGEING_TIME 300
 #define ETH_HLEN 14
-#define ETH_ALEN 6
 #define HZ 100
 
 #define NDISC_ROUTER_SOLICITATION 133
-#define NDISC_NEIGHBOUR_SOLICITATION 135
-
-typedef unsigned long host_jiffies_t;
-extern host_jiffies_t host_br_ext_jiffies_val;
-
-typedef struct {
-	int _pad;
-} _adapter;
-
-struct nat25_network_db_entry {
-	unsigned long ageing_timer;
-};
 
 struct host_sk_buff {
 	u8 *data;
@@ -58,14 +45,25 @@ struct ipv6hdr {
 	} daddr;
 };
 
-static inline int time_before_eq(unsigned long a, unsigned long b)
-{
-	return (long)(a) - (long)(b) <= 0;
-}
-
 static inline u8 *skb_tail_pointer(struct host_sk_buff *skb)
 {
 	return skb->data + skb->len;
+}
+
+typedef unsigned long host_jiffies_t;
+extern host_jiffies_t host_br_ext_jiffies_val;
+
+typedef struct {
+	int _pad;
+} _adapter;
+
+struct nat25_network_db_entry {
+	unsigned long ageing_timer;
+};
+
+static inline int time_before_eq(unsigned long a, unsigned long b)
+{
+	return (long)(a) - (long)(b) <= 0;
 }
 
 #endif

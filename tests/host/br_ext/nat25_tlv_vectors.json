@@ -1,0 +1,36 @@
+{
+  "vectors": [
+    {
+      "name": "scan_tlv_hit",
+      "op": "scan_tlv",
+      "data_hex": "0101aabbccddeeff",
+      "len": 8,
+      "tag": 1,
+      "len8b": 1,
+      "expect_int": 2
+    },
+    {
+      "name": "update_nd_rs",
+      "op": "update_nd",
+      "data_hex": "85000000000000000101aabbccddeeff",
+      "mac_hex": "112233445566",
+      "expect_int": 1,
+      "expect_hex": "85000000000000000101112233445566"
+    },
+    {
+      "name": "convert_ipv6_mc",
+      "op": "convert_mc",
+      "data_hex": "ffffffffffff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
+      "expect_hex": "333300000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001"
+    },
+    {
+      "name": "skb_pull_ok",
+      "op": "skb_pull",
+      "data_hex": "010203040506070809",
+      "src_off": 2,
+      "pull_len": 2,
+      "expect_int": 0,
+      "expect_hex": "01020506070809"
+    }
+  ]
+}
