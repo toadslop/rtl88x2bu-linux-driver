@@ -15,7 +15,6 @@ typedef uint32_t u32;
 #define NAT25_HASH_SIZE 16
 #define MAX_NETWORK_ADDR_LEN 17
 #define NAT25_AGEING_TIME 300
-#define ETH_ALEN 6
 #define ETH_HLEN 14
 #define HZ 100
 
@@ -54,21 +53,13 @@ static inline u8 *skb_tail_pointer(struct host_sk_buff *skb)
 typedef unsigned long host_jiffies_t;
 extern host_jiffies_t host_br_ext_jiffies_val;
 
-struct nat25_network_db_entry {
-	struct nat25_network_db_entry *next_hash;
-	struct nat25_network_db_entry **pprev_hash;
-	int use_count;
-	u8 macAddr[ETH_ALEN];
-	unsigned long ageing_timer;
-	u8 networkAddr[MAX_NETWORK_ADDR_LEN];
-};
-
 typedef struct {
-	struct nat25_network_db_entry *nethash[NAT25_HASH_SIZE];
-	struct nat25_network_db_entry *scdb_entry;
-	u8 scdb_mac[ETH_ALEN];
-	u8 scdb_ip[4];
+	int _pad;
 } _adapter;
+
+struct nat25_network_db_entry {
+	unsigned long ageing_timer;
+};
 
 static inline int time_before_eq(unsigned long a, unsigned long b)
 {

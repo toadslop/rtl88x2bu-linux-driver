@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 #include <stdio.h>
 #include <string.h>
-#include "host_br_ext_types.h"
+#include "host_br_ext_db_types.h"
 #include "host_vector_json.h"
 
 struct vector {
@@ -15,12 +15,11 @@ struct vector {
 	int expect_int;
 };
 
-_adapter g_adapter;
+host_nat25_db_adapter g_adapter;
 
-void host_nat25_db_network_insert(_adapter *priv, u8 *mac, u8 *net);
-int host_nat25_db_network_lookup_and_replace(_adapter *priv,
+void host_nat25_db_network_insert(host_nat25_db_adapter *priv, u8 *mac, u8 *net);
+int host_nat25_db_network_lookup_and_replace(host_nat25_db_adapter *priv,
 					     struct host_sk_buff *skb, u8 *net);
-int host_nat25_network_hash(u8 *na);
 
 static int parse_vec(const char *obj, size_t len, void *vv)
 {

@@ -2,12 +2,23 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "host_br_ext_types.h"
+#include "host_br_ext_db_types.h"
 
 int host_nat25_network_hash(u8 *na);
 int host_nat25_has_expired(_adapter *priv, struct nat25_network_db_entry *fdb);
-static void network_hash_link(_adapter *priv, struct nat25_network_db_entry *ent,
-			      int hash)
+
+static int db_has_expired(host_nat25_db_adapter *priv,
+			  struct host_nat25_db_entry *fdb)
+{
+	struct nat25_network_db_entry shim;
+
+	(void)priv;
+	shim.ageing_timer = fdb->ageing_timer;
+	return host_nat25_has_expired((_adapter *)priv, &shim);
+}
+
+static void network_hash_link(host_nat25_db_adapter *priv,
+			      struct host_nat25_db_entry *ent, int hash)
 {
 	ent->next_hash = priv->nethash[hash];
 	if (ent->next_hash)
@@ -16,10 +27,10 @@ static void network_hash_link(_adapter *priv, struct nat25_network_db_entry *ent
 	ent->pprev_hash = &priv->nethash[hash];
 }
 
-void host_nat25_db_network_insert(_adapter *priv, u8 *mac_addr,
+void host_nat25_db_network_insert(host_nat25_db_adapter *priv, u8 *mac_addr,
 				    u8 *network_addr)
 {
-	struct nat25_network_db_entry *db;
+	struct host_nat25_db_entry *db;
 	int hash;
 
 	hash = host_nat25_network_hash(network_addr);
@@ -44,16 +55,16 @@ void host_nat25_db_network_insert(_adapter *priv, u8 *mac_addr,
 	network_hash_link(priv, db, hash);
 }
 
-int host_nat25_db_network_lookup_and_replace(_adapter *priv,
+int host_nat25_db_network_lookup_and_replace(host_nat25_db_adapter *priv,
 					     struct host_sk_buff *skb,
 					     u8 *network_addr)
 {
-	struct nat25_network_db_entry *db;
+	struct host_nat25_db_entry *db;
 
 	db = priv->nethash[host_nat25_network_hash(network_addr)];
 	while (db) {
 		if (!memcmp(db->networkAddr, network_addr, MAX_NETWORK_ADDR_LEN)) {
-			if (!host_nat25_has_expired(priv, db)) {
+			if (!db_has_expired(priv, db)) {
 				memcpy(skb->data, db->macAddr, ETH_ALEN);
 				db->use_count++;
 			}
