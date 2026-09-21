@@ -1,3 +1,7 @@
 test_nat25_leaf
 test_nat25_rest
 test_nat25_tlv
+test_nat25_leaf_rust
+test_nat25_rest_rust
+test_nat25_tlv_rust
+librust_br_ext.a
