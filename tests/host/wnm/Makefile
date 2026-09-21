@@ -7,16 +7,17 @@ RUSTC := rustc
 CC := gcc
 CFLAGS := -Wall -Wextra -Werror -O2 -I$(HOST_INC) -I$(ROOT)/include
 
-.PHONY: all test test-c test-rust-rustc clean
+.PHONY: all test test-c test-rust clean
 
 all: test
 
-test: test-c
+test: test-c test-rust
 
 test-c: test_wnm_btm
 	./test_wnm_btm wnm_btm_vectors.json
 
-test-rust-rustc: librust_wnm.a
+test-rust: test_wnm_btm_rust
+	./test_wnm_btm_rust wnm_btm_vectors.json
 
 test_wnm_btm: test_wnm_btm.c $(ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_wnm_btm.c $(ORACLE) $(HOST_JSON)
@@ -24,6 +25,9 @@ test_wnm_btm: test_wnm_btm.c $(ORACLE) $(HOST_JSON)
 librust_wnm.a: $(RUST_WNM)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_wnm_test \
 		--crate-type staticlib $(RUST_WNM) -o $@
+
+test_wnm_btm_rust: test_wnm_btm.c librust_wnm.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_wnm_btm.c $(HOST_JSON) librust_wnm.a
 
 clean:
 	rm -f test_wnm_btm test_wnm_btm_rust librust_wnm.a
