@@ -1,0 +1,31 @@
+{
+  "vectors": [
+    {
+      "name": "choose_competitor_wins",
+      "op": "choose",
+      "cand_mac": "aaaaaaaaaaaa",
+      "cand_tlv": "dd0bfafafa0108060402050100",
+      "cand_rssi": -50,
+      "comp_mac": "bbbbbbbbbbbb",
+      "comp_tlv": "dd0bfafafa0108060402010100",
+      "comp_rssi": -30,
+      "expect_int": 1
+    },
+    {
+      "name": "choose_keep_candidate",
+      "op": "choose",
+      "cand_mac": "aaaaaaaaaaaa",
+      "cand_tlv": "dd0bfafafa0108060402010100",
+      "cand_rssi": -40,
+      "comp_mac": "bbbbbbbbbbbb",
+      "comp_tlv": "dd0bfafafa0108060402020100",
+      "comp_rssi": -45,
+      "expect_int": 0
+    },
+    {
+      "name": "append_ie_len",
+      "op": "append_ie",
+      "expect_int": 29
+    }
+  ]
+}
