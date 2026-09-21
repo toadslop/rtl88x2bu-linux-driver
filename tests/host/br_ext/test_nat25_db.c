@@ -56,8 +56,9 @@ static int run_one(struct vector *v)
 	int got;
 
 	host_br_ext_jiffies_val = v->jiffies;
-	memset(&g_adapter, 0, sizeof(g_adapter));
-	if (!strcmp(v->op, "insert")) {
+	if (!strcmp(v->op, "reset"))
+		memset(&g_adapter, 0, sizeof(g_adapter));
+	else if (!strcmp(v->op, "insert")) {
 		size_t n = 0;
 
 		if (host_hex_decode(v->mac_hex, mac, ETH_ALEN, &n) || dec_net(v->net_hex, net))

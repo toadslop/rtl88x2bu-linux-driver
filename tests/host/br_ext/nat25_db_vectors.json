@@ -1,6 +1,11 @@
 {
   "vectors": [
     {
+      "name": "reset",
+      "op": "reset",
+      "jiffies": 50000
+    },
+    {
       "name": "insert_then_lookup",
       "op": "insert",
       "jiffies": 50000,
