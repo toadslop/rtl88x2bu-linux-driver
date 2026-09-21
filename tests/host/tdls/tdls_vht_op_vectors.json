@@ -1,0 +1,1 @@
+{"vectors":[{"name":"vht_operation","data_hex":"010000000000000000000000","cur_bwmode":2,"expect_bw":2},{"name":"vht_op_mode","op_mode":2,"sta_map_hex":"fffe","vht_option":1,"cur_bwmode":2,"expect_bw":2}]}

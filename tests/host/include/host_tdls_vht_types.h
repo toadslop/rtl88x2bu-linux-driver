@@ -38,7 +38,9 @@ static inline u32 le_bits(const u8 *p, u32 off, u32 len)
 #define GET_VHT_CAPABILITY_ELE_SHORT_GI80M(p) LE1((p), 5, 1)
 #define GET_VHT_CAPABILITY_ELE_RX_STBC(p) LE1((p) + 1, 0, 3)
 #define GET_VHT_CAPABILITY_ELE_MAX_RXAMPDU_FACTOR(p) LE2((p) + 2, 7, 3)
-#define GET_VHT_CAPABILITY_ELE_RX_MCS(p) ((p) + 4)
+#define GET_VHT_OPERATION_ELE_CHL_WIDTH(p) LE1((p), 0, 8)
+#define GET_VHT_OPERATING_MODE_FIELD_CHNL_WIDTH(p) LE1((p), 0, 2)
+#define GET_VHT_OPERATING_MODE_FIELD_RX_NSS(p) LE1((p), 4, 3)
 #define _rtw_memset(p, c, n) memset((p), (c), (n))
 #define _rtw_memcpy(d, s, n) memcpy((d), (s), (n))
 
@@ -59,13 +61,20 @@ struct registry_priv {
 	u8 wireless_mode;
 };
 
+struct mlme_ext_priv {
+	u8 cur_bwmode;
+};
+
 struct mlme_priv {
 	struct vht_priv vhtpriv;
 };
 
+#define GET_VHT_CAPABILITY_ELE_RX_MCS(p) ((p) + 4)
+
 struct sta_info {
 	int flags;
 	struct vht_priv vhtpriv;
+	u8 bw_mode;
 	u8 ra_is_vht;
 };
 
@@ -76,12 +85,16 @@ struct rf_ctl_t {
 struct _adapter {
 	struct registry_priv registrypriv;
 	struct mlme_priv mlmepriv;
+	struct mlme_ext_priv mlmeextpriv;
 	struct rf_ctl_t rfctl;
 };
 
 typedef struct _adapter _adapter;
 
+#define REGSTY_BW_5G(r) 2
+#define REGSTY_IS_BW_5G_SUPPORT(r, bw) (REGSTY_BW_5G(r) >= (bw))
 #define REGSTY_IS_11AC_ENABLE(r) ((r)->vht_enable != 0)
+#define adapter_to_regsty(a) (&(a)->registrypriv)
 #define adapter_to_rfctl(a) (&(a)->rfctl)
 #define COUNTRY_CHPLAN_EN_11AC(e) 1
 
@@ -95,5 +108,9 @@ u8 host_tdls_hal_tx_nss(_adapter *a);
 u8 rtw_get_vht_highest_rate(u8 *map);
 void rtw_vht_nss_to_mcsmap(u8 nss, u8 *target, u8 *cur);
 void rtw_tdls_process_vht_cap(_adapter *a, struct sta_info *s, u8 *d, u8 len);
+u8 host_tdls_hal_bw_support(_adapter *a, u8 bw);
+u8 rtw_vht_mcsmap_to_nss(u8 *map);
+void rtw_tdls_process_vht_operation(_adapter *a, struct sta_info *s, u8 *d, u8 len);
+void rtw_tdls_process_vht_op_mode_notify(_adapter *a, struct sta_info *s, u8 *d, u8 len);
 
 #endif
