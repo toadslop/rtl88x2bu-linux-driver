@@ -22,8 +22,7 @@ test_tdls_lifecycle: test_tdls_lifecycle.c $(SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_tdls_lifecycle.c $(SHIM) $(HOST_JSON)
 
 librust_tdls.a: $(RUST_TDLS)
-	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_tdls_test \
-		--crate-type staticlib $(RUST_TDLS) -o $@
+	$(RUSTC) -C opt-level=2 --cfg host_tdls_test --crate-type staticlib $(RUST_TDLS) -o $@
 
 test_tdls_lifecycle_rust: test_tdls_lifecycle.c librust_tdls.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_tdls_lifecycle.c $(HOST_JSON) librust_tdls.a

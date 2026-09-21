@@ -1,13 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-#![allow(
-    dead_code,
-    improper_ctypes,
-    missing_docs,
-    non_camel_case_types,
-    non_snake_case,
-    non_upper_case_globals,
-    unreachable_pub
-)]
+#![allow(dead_code, improper_ctypes, missing_docs, non_camel_case_types, non_snake_case, non_upper_case_globals, unreachable_pub)]
 
 #[cfg(host_tdls_test)]
 use std::ffi::c_void;
@@ -16,10 +8,9 @@ use std::ffi::c_void;
 use core::ffi::c_void;
 
 const _FALSE: u8 = 0;
+const _SUCCESS: i32 = 0;
 const _TRUE: u8 = 1;
-// Kernel osdep_service.h: _FAIL=0 (host harness init uses HOST_TDLS_INIT_OK=0).
-const _FAIL: i32 = 0;
-const HOST_TDLS_INIT_OK: i32 = 0;
+const _FAIL: i32 = -1;
 const WIFI_FW_STATION_STATE: u32 = 0x02;
 const WIFI_FW_ASSOC_SUCCESS: u32 = 0x00004000;
 const TDLS_STATE_NONE: u32 = 0;
@@ -179,10 +170,10 @@ pub extern "C" fn rtw_init_tdls_info(padapter: Padapter) -> i32 {
         return _FAIL;
     };
     rtw_reset_tdls_info(padapter);
-    a.tdlsinfo.driver_setup = _TRUE;
+    a.tdlsinfo.driver_setup = _FALSE;
     a.tdlsinfo.cmd_lock = 0;
     a.tdlsinfo.hdl_lock = 0;
-    HOST_TDLS_INIT_OK
+    _SUCCESS
 }
 
 #[no_mangle]
@@ -207,6 +198,7 @@ pub extern "C" fn rtw_set_tdls_enable(padapter: Padapter, enable: u8) {
         a.registrypriv.en_tdls = enable;
     }
 }
+
 #[no_mangle]
 pub extern "C" fn is_client_associated_to_ap(padapter: Padapter) -> i32 {
     let Some(a) = adapter(padapter) else {
