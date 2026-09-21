@@ -219,7 +219,7 @@ jobs:
 
       - name: Host br_ext NAT25 leaf parity (L2)
         if: steps.filter.outputs.l2 == 'true'
-        run: make -C tests/host/br_ext test
+        run: make -C tests/host/br_ext all
 
       - name: Host roch handlers parity (L2)
         if: steps.filter.outputs.l2 == 'true'
