@@ -72,6 +72,25 @@
       "frame_hex": "000003000000000000000000000000000000000000",
       "frame_len": 20,
       "expect_sz": 0
+    },
+    {
+      "name": "nb_elem_btm_pref",
+      "op": "nb_elem_parsing",
+      "from_btm": 1,
+      "frame_hex": "341000112233445500000000010203030105",
+      "expect_num": 1,
+      "expect_pref_en": 1,
+      "expect_pref": 5
+    },
+    {
+      "name": "reset_btm_candidate",
+      "op": "reset_btm_candidate",
+      "seed_pref_en": 1,
+      "seed_roam_hex": "001122334455"
+    },
+    {
+      "name": "reset_btm_state",
+      "op": "reset_btm_state"
     }
   ]
 }
