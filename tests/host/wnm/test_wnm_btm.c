@@ -2,6 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "host_wnm_types.h"
+
+#ifndef RTW_MAX_NB_RPT_NUM
+#define RTW_MAX_NB_RPT_NUM 8
+#endif
 #include "host_vector_json.h"
 
 #define MAX_VECTORS 24
@@ -28,6 +32,12 @@ struct vector {
 	int flag;
 	int frame_len;
 	int expect_sz;
+	int from_btm;
+	int expect_num;
+	int expect_pref_en;
+	int expect_pref;
+	int seed_pref_en;
+	char seed_roam_hex[24];
 };
 
 static int parse_vec(const char *obj, size_t len, void *vv)
@@ -57,6 +67,13 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 	host_json_parse_int_in(obj, len, "flag", &v->flag);
 	host_json_parse_int_in(obj, len, "frame_len", &v->frame_len);
 	host_json_parse_int_in(obj, len, "expect_sz", &v->expect_sz);
+	host_json_parse_int_in(obj, len, "from_btm", &v->from_btm);
+	host_json_parse_int_in(obj, len, "expect_num", &v->expect_num);
+	host_json_parse_int_in(obj, len, "expect_pref_en", &v->expect_pref_en);
+	host_json_parse_int_in(obj, len, "expect_pref", &v->expect_pref);
+	host_json_parse_int_in(obj, len, "seed_pref_en", &v->seed_pref_en);
+	host_json_parse_string_in(obj, len, "seed_roam_hex", v->seed_roam_hex,
+				  sizeof(v->seed_roam_hex));
 	return 0;
 }
 
@@ -106,6 +123,46 @@ static int run_vec(struct vector *v)
 		host_wnm_set_passing_ms((u32)v->passing_ms);
 		if (host_wnm_btm_candidate_validity(&cache, (u8)v->flag) !=
 		    (u8)v->expect_valid)
+			return 1;
+	} else if (!strcmp(v->op, "nb_elem_parsing")) {
+		struct roam_nb_info nb = { .nb_rpt_is_same = _TRUE };
+		struct wnm_btm_cant cants[RTW_MAX_NB_RPT_NUM];
+		u32 num = 0;
+		u8 same = _TRUE;
+
+		if (host_wnm_nb_elem_parsing(frame, (u32)frame_len,
+					      (u8)v->from_btm, &num, &same, &nb,
+					      cants))
+			return 1;
+		if ((int)num != v->expect_num ||
+		    nb.preference_en != (u8)v->expect_pref_en)
+			return 1;
+		if (v->from_btm && v->expect_num > 0 &&
+		    cants[0].preference != (u8)v->expect_pref)
+			return 1;
+	} else if (!strcmp(v->op, "reset_btm_candidate")) {
+		struct roam_nb_info nb = { .preference_en = (u8)v->seed_pref_en };
+
+		if (v->seed_roam_hex[0]) {
+			u8 mac[6];
+			size_t ml = 0;
+
+			if (host_hex_decode(v->seed_roam_hex, mac, sizeof(mac), &ml) ||
+			    ml != 6)
+				return 1;
+			memcpy(nb.roam_target_addr, mac, 6);
+		}
+		host_wnm_reset_btm_candidate(&nb);
+		if (nb.preference_en || nb.roam_target_addr[0] || nb.roam_target_addr[5])
+			return 1;
+	} else if (!strcmp(v->op, "reset_btm_state")) {
+		_adapter a;
+
+		a.mlmepriv.nb_info.preference_en = _TRUE;
+		a.mlmepriv.nb_info.disassoc_waiting = 0;
+		host_wnm_reset_btm_state(&a);
+		if (a.mlmepriv.nb_info.preference_en ||
+		    a.mlmepriv.nb_info.disassoc_waiting != -1)
 			return 1;
 	} else if (!strcmp(v->op, "rsp_candidates_sz")) {
 		_adapter a;
