@@ -1,4 +1,4 @@
-# Host L2 differential tests for core/rtw_wapi.c PN/IE leaf (W3-109 PR1).
+# Host L2 differential tests for core/rtw_wapi.c PN/IE/CAM leaf (W3-109).
 
 ROOT := ../../..
 HOST_INC := ../include
