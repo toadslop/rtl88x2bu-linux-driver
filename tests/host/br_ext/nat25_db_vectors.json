@@ -1,0 +1,40 @@
+{
+  "vectors": [
+    {
+      "name": "reset",
+      "op": "reset",
+      "jiffies": 50000
+    },
+    {
+      "name": "insert_then_lookup",
+      "op": "insert",
+      "jiffies": 50000,
+      "mac_hex": "020304050607",
+      "net_hex": "01000000000000c0a80101000000000000"
+    },
+    {
+      "name": "lookup_hit",
+      "op": "lookup",
+      "jiffies": 50000,
+      "net_hex": "01000000000000c0a80101000000000000",
+      "skb_mac_hex": "ffffffffffff",
+      "expect_int": 1,
+      "expect_mac_hex": "020304050607"
+    },
+    {
+      "name": "update_insert",
+      "op": "insert",
+      "jiffies": 50000,
+      "mac_hex": "0a0b0c0d0e0f",
+      "net_hex": "01000000000000c0a80101000000000000"
+    },
+    {
+      "name": "lookup_updated",
+      "op": "lookup",
+      "jiffies": 50000,
+      "net_hex": "01000000000000c0a80101000000000000",
+      "expect_int": 1,
+      "expect_mac_hex": "0a0b0c0d0e0f"
+    }
+  ]
+}
