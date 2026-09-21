@@ -2,6 +2,8 @@
 #include <string.h>
 #include "host_wnm_types.h"
 
+#define ETH_ALEN 6
+
 #define wnm_btm_bss_term_inc(p) (*((u8 *)((p) + 3)) & BSS_TERMINATION_INCLUDED)
 #define wnm_btm_ess_disassoc_im(p) (*((u8 *)((p) + 3)) & ESS_DISASSOC_IMMINENT)
 #define wnm_btm_dialog_token(p) (*((u8 *)((p) + 2)))
@@ -49,4 +51,57 @@ u32 host_wnm_btm_candidates_offset_get(u8 *pframe)
 		offset = 1 + *(pframe + offset);
 
 	return offset;
+}
+
+static u32 host_passing_ms;
+
+#define wnm_btm_rsp_status(p) (*((u8 *)((p) + 3)))
+
+void host_wnm_set_passing_ms(u32 ms)
+{
+	host_passing_ms = ms;
+}
+
+s32 rtw_get_passing_time_ms(systime start)
+{
+	(void)start;
+	return (s32)host_passing_ms;
+}
+
+u8 host_wnm_btm_candidate_validity(struct btm_rpt_cache *pcache, u8 flag)
+{
+	u8 is_validity = _TRUE;
+	u32 req_validity_time = (u32)rtw_get_passing_time_ms(pcache->req_stime);
+
+	if ((flag & (1 << 0)) && (req_validity_time > pcache->validity_time))
+		is_validity = _FALSE;
+
+	if ((flag & (1 << 1)) && (req_validity_time > pcache->disassoc_time))
+		is_validity = _FALSE;
+
+	return is_validity;
+}
+
+u32 host_wnm_btm_rsp_candidates_sz_get(_adapter *padapter, u8 *pframe,
+				       u32 frame_len)
+{
+	u32 num = 0, sz = 0;
+	u8 status;
+
+	(void)padapter;
+
+	if (!pframe || frame_len <= 5)
+		goto exit;
+
+	status = wnm_btm_rsp_status(pframe);
+	if (((status != 0) && (status != 6)) || (frame_len < 23))
+		goto exit;
+
+	if (status == 0)
+		num = (frame_len - 5 - ETH_ALEN) / 18;
+	else
+		num = (frame_len - 5) / 18;
+	sz = sizeof(struct wnm_btm_cant) * num;
+exit:
+	return sz;
 }
