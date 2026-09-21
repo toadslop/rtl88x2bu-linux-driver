@@ -121,8 +121,16 @@ pub extern "C" fn host_wnm_btm_req_hdr_parsing(pframe: *mut u8, phdr: *mut BtmRe
             if *pos == WNM_BTM_TERM_DUR_SUBEID {
                 ph.term_duration.id = *pos;
                 ph.term_duration.len = *pos.add(1);
-                std::ptr::copy_nonoverlapping(pos.add(2) as *const u8, &mut ph.term_duration.tsf as *mut u64 as *mut u8, 8);
-                std::ptr::copy_nonoverlapping(pos.add(10) as *const u8, &mut ph.term_duration.duration as *mut u16 as *mut u8, 2);
+                std::ptr::copy_nonoverlapping(
+                    pos.add(2) as *const u8,
+                    &mut ph.term_duration.tsf as *mut u64 as *mut u8,
+                    8,
+                );
+                std::ptr::copy_nonoverlapping(
+                    pos.add(10) as *const u8,
+                    &mut ph.term_duration.duration as *mut u16 as *mut u8,
+                    2,
+                );
             }
         }
     }
