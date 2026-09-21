@@ -17,11 +17,18 @@ pub struct NprefCh {
     pub reason: u8,
 }
 #[repr(C)]
-pub struct NprefChRtp { pub ch_rpt: [NprefCh; 32], pub nm_of_rpt: usize }
+pub struct NprefChRtp {
+    pub ch_rpt: [NprefCh; 32],
+    pub nm_of_rpt: usize,
+}
 #[repr(C)]
-pub struct RfCtl { pub ch_rtp: NprefChRtp }
+pub struct RfCtl {
+    pub ch_rtp: NprefChRtp,
+}
 #[repr(C)]
-pub struct PktAttrib { pub pktlen: u32 }
+pub struct PktAttrib {
+    pub pktlen: u32,
+}
 #[repr(C)]
 pub struct WlanBssidEx {
     pub mac_address: [u8; 6],
@@ -29,12 +36,21 @@ pub struct WlanBssidEx {
     pub ies: [u8; 768],
 }
 #[repr(C)]
-pub struct WlanNetwork { pub network: WlanBssidEx }
+pub struct WlanNetwork {
+    pub network: WlanBssidEx,
+}
 #[repr(C)]
-pub struct Adapter { pub rf_ctl: RfCtl }
+pub struct Adapter {
+    pub rf_ctl: RfCtl,
+}
 
 #[no_mangle]
-pub extern "C" fn rtw_get_ie(pbuf: *const u8, index: c_int, len: *mut c_int, limit: c_int) -> *mut u8 {
+pub extern "C" fn rtw_get_ie(
+    pbuf: *const u8,
+    index: c_int,
+    len: *mut c_int,
+    limit: c_int,
+) -> *mut u8 {
     if limit < 1 || pbuf.is_null() || len.is_null() {
         return std::ptr::null_mut();
     }
@@ -59,7 +75,12 @@ pub extern "C" fn rtw_get_ie(pbuf: *const u8, index: c_int, len: *mut c_int, lim
 }
 
 #[no_mangle]
-pub extern "C" fn rtw_set_fixed_ie(pbuf: *mut u8, len: c_uint, source: *mut u8, frlen: *mut c_uint) -> *mut u8 {
+pub extern "C" fn rtw_set_fixed_ie(
+    pbuf: *mut u8,
+    len: c_uint,
+    source: *mut u8,
+    frlen: *mut c_uint,
+) -> *mut u8 {
     if pbuf.is_null() || source.is_null() || frlen.is_null() {
         return std::ptr::null_mut();
     }
@@ -96,7 +117,12 @@ pub extern "C" fn host_mbo_ie_get(pie: *mut u8, plen: *mut u32, limit: u32) -> *
 }
 
 #[no_mangle]
-pub extern "C" fn host_mbo_attrs_get(pie: *mut u8, limit: u32, attr_id: u8, attr_len: *mut u32) -> *mut u8 {
+pub extern "C" fn host_mbo_attrs_get(
+    pie: *mut u8,
+    limit: u32,
+    attr_id: u8,
+    attr_len: *mut u32,
+) -> *mut u8 {
     if pie.is_null() || attr_len.is_null() || limit <= 1 {
         return std::ptr::null_mut();
     }
@@ -140,7 +166,11 @@ pub extern "C" fn host_mbo_attr_sz_get(padapter: *mut Adapter, id: u8) -> u32 {
 }
 
 #[no_mangle]
-pub extern "C" fn host_mbo_build_mbo_ie_hdr(pframe: *mut *mut u8, pattrib: *mut PktAttrib, payload_len: u8) {
+pub extern "C" fn host_mbo_build_mbo_ie_hdr(
+    pframe: *mut *mut u8,
+    pattrib: *mut PktAttrib,
+    payload_len: u8,
+) {
     if pframe.is_null() || pattrib.is_null() {
         return;
     }
@@ -164,8 +194,17 @@ pub extern "C" fn host_mbo_disallowed_network(pnetwork: *mut WlanNetwork) -> u8 
     unsafe {
         let net = &mut *pnetwork;
         let mut alen = 0u32;
-        let p = host_mbo_attrs_get(net.network.ies.as_mut_ptr(), net.network.ie_length, 0x4, &mut alen);
-        if p.is_null() { _FALSE } else { _TRUE }
+        let p = host_mbo_attrs_get(
+            net.network.ies.as_mut_ptr(),
+            net.network.ie_length,
+            0x4,
+            &mut alen,
+        );
+        if p.is_null() {
+            _FALSE
+        } else {
+            _TRUE
+        }
     }
 }
 
