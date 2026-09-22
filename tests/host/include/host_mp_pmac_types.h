@@ -57,8 +57,5 @@ void CRC16_generator(bool *out, bool *in, u8 in_size);
 void CRC8_generator(bool *out, bool *in, u8 in_size);
 void CCK_generator(PRT_PMAC_TX_INFO pPMacTxInfo, PRT_PMAC_PKT_INFO pPMacPktInfo);
 void PMAC_Get_Pkt_Param(PRT_PMAC_TX_INFO pPMacTxInfo, PRT_PMAC_PKT_INFO pPMacPktInfo);
-void L_SIG_generator(u32 N_SYM, PRT_PMAC_TX_INFO pPMacTxInfo,
-		     PRT_PMAC_PKT_INFO pPMacPktInfo);
-void HT_SIG_generator(PRT_PMAC_TX_INFO pPMacTxInfo, PRT_PMAC_PKT_INFO pPMacPktInfo);
 
 #endif /* HOST_MP_PMAC_TYPES_H */
