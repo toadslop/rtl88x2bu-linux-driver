@@ -31,7 +31,7 @@ static int load_hex(const char *s, u8 *out, int max)
 
 		while (*s == ' ' || *s == ',')
 			s++;
-	 if (!s[0] || !s[1])
+		if (!s[0] || !s[1])
 			break;
 		hi = nib(s[0]);
 		lo = nib(s[1]);
