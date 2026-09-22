@@ -1,3 +1,4 @@
 test_rm_parse
+test_rm_parse_rust
 test_rm_parse_rust_part1
 librust_rm_parse.a
