@@ -23,6 +23,9 @@ struct vector {
 	u8 exp_crc0, exp_crc1;
 	u8 tx_rate, b_stbc;
 	u8 exp_mcs, exp_nss, exp_nsts, exp_rate_hex, exp_m_stbc;
+	u32 n_sym;
+	u8 b_sgi;
+	char exp_lsig_hex[16];
 };
 
 static int parse_bits(const char *s, bool *out, u8 cap, u8 *len_out)
@@ -87,7 +90,23 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 		v->exp_rate_hex = (u8)tmp;
 	if (!host_json_parse_int_in(obj, len, "exp_m_stbc", &tmp))
 		v->exp_m_stbc = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "n_sym", &tmp))
+		v->n_sym = (u32)tmp;
+	if (!host_json_parse_int_in(obj, len, "b_sgi", &tmp))
+		v->b_sgi = (u8)tmp;
+	host_json_parse_string_in(obj, len, "exp_lsig_hex", v->exp_lsig_hex,
+				  sizeof(v->exp_lsig_hex));
 	return 0;
+}
+
+static int hex_eq(const u8 *got, size_t n, const char *expect_hex)
+{
+	unsigned char exp[16];
+	size_t elen = 0;
+
+	if (host_hex_decode(expect_hex, exp, sizeof(exp), &elen) || elen != n)
+		return -1;
+	return memcmp(got, exp, n) ? -1 : 0;
 }
 
 static int run_vec(struct vector *v)
@@ -130,6 +149,20 @@ static int run_vec(struct vector *v)
 		if (pkt.MCS != v->exp_mcs || pkt.Nss != v->exp_nss ||
 		    pkt.Nsts != v->exp_nsts || tx.TX_RATE_HEX != v->exp_rate_hex ||
 		    tx.m_STBC != v->exp_m_stbc)
+			return 1;
+	} else if (!strcmp(v->op, "l_sig")) {
+		RT_PMAC_TX_INFO tx;
+		RT_PMAC_PKT_INFO pkt;
+
+		memset(&tx, 0, sizeof(tx));
+		memset(&pkt, 0, sizeof(pkt));
+		tx.TX_RATE = v->tx_rate;
+		tx.PacketLength = v->pkt_len;
+		tx.bSGI = v->b_sgi;
+		pkt.MCS = v->exp_mcs;
+		pkt.Nsts = v->exp_nsts;
+		L_SIG_generator(v->n_sym, &tx, &pkt);
+		if (hex_eq(tx.LSIG, 3, v->exp_lsig_hex))
 			return 1;
 	} else if (!strcmp(v->op, "cck")) {
 		RT_PMAC_TX_INFO tx;

@@ -79,6 +79,27 @@
       "exp_nsts": 2,
       "exp_rate_hex": 57,
       "exp_m_stbc": 1
+    },
+    {
+      "name": "l_sig_ofdm_6m_len100",
+      "op": "l_sig",
+      "tx_rate": 5,
+      "pkt_len": 100,
+      "exp_mcs": 0,
+      "exp_nsts": 1,
+      "n_sym": 0,
+      "exp_lsig_hex": "8b0c00"
+    },
+    {
+      "name": "l_sig_ht_nsym10",
+      "op": "l_sig",
+      "tx_rate": 20,
+      "pkt_len": 0,
+      "b_sgi": 0,
+      "exp_mcs": 0,
+      "exp_nsts": 1,
+      "n_sym": 10,
+      "exp_lsig_hex": "eb0402"
     }
   ]
 }
