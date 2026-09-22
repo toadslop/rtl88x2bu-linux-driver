@@ -118,5 +118,47 @@ int rm_parse_bcn_req_s_elem(struct rm_obj *prm, u8 *pbody, int req_len)
 	return _SUCCESS;
 }
 
+int rm_parse_meas_req(struct rm_obj *prm, u8 *pbody)
+{
+	int p;
+	int req_len;
+
+	req_len = (int)pbody[1];
+	p = 5;
+
+	prm->q.op_class = pbody[p++];
+	prm->q.ch_num = pbody[p++];
+	prm->q.rand_intvl = le16_to_cpu(*(u16 *)(&pbody[p]));
+	p += 2;
+	prm->q.meas_dur = le16_to_cpu(*(u16 *)(&pbody[p]));
+	p += 2;
+
+	if (prm->q.m_type == bcn_req) {
+		prm->q.m_mode = pbody[p++];
+		_rtw_memcpy(&(prm->q.bssid), &pbody[p], 6);
+		p += 6;
+		prm->q.opt.bcn.rep_detail = 2;
+	}
+
+	if (req_len - (p - 2) <= 0)
+		return _SUCCESS;
+
+	switch (prm->q.m_type) {
+	case bcn_req:
+		rm_parse_bcn_req_s_elem(prm, &pbody[p], req_len - (p - 2));
+		break;
+	case ch_load_req:
+		rm_parse_ch_load_s_elem(prm, &pbody[p], req_len - (p - 2));
+		break;
+	case noise_histo_req:
+		rm_parse_noise_histo_s_elem(prm, &pbody[p], req_len - (p - 2));
+		break;
+	default:
+		break;
+	}
+
+	return _SUCCESS;
+}
+
 #endif /* !CONFIG_RUST || HOST_RM_PARSE_TEST */
 #endif /* CONFIG_RTW_80211K */
