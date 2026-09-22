@@ -235,7 +235,7 @@ jobs:
 
       - name: Host eeprom bit-bang parity (L2)
         if: steps.filter.outputs.l2 == 'true'
-        run: make -C tests/host/eeprom_bitbang test
+        run: make -C tests/host/eeprom_bitbang test test-rust
 
       - name: Host tdls lifecycle parity (L2)
         if: steps.filter.outputs.l2 == 'true'
