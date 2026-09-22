@@ -55,6 +55,31 @@
       "ft_cap": 2,
       "is_reassoc": 0,
       "expect_pktlen": 5
+    },
+    {
+      "name": "chk_roam_mdie_match",
+      "op": "chk_roam",
+      "mdid": 4660,
+      "competitor_ies_hex": "0000000000000000000000003603341202",
+      "expect_u8": 1
+    },
+    {
+      "name": "chk_roam_no_mdie",
+      "op": "chk_roam",
+      "mdid": 4660,
+      "competitor_ies_hex": "0000000000000000000000000108820000",
+      "expect_u8": 0
+    },
+    {
+      "name": "auth_rsp_sets_event",
+      "op": "auth_rsp",
+      "to_roam": 1,
+      "ft_flags": 4,
+      "assoc_bssid_hex": "020304050607",
+      "auth_frame_hex": "0000000000000000000000000000000000000000000000000000000000000102",
+      "expect_u8": 1,
+      "expect_ies_len": 2,
+      "expect_reassoc": 1
     }
   ]
 }

@@ -19,6 +19,11 @@ struct vector {
 	int mdid;
 	int ft_cap;
 	int is_reassoc;
+	char competitor_ies_hex[256];
+	char auth_frame_hex[256];
+	char assoc_bssid_hex[24];
+	int expect_reassoc;
+	int expect_ies_len;
 };
 
 static int parse_vec(const char *obj, size_t len, void *vv)
@@ -39,6 +44,14 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 	host_json_parse_int_in(obj, len, "mdid", &v->mdid);
 	host_json_parse_int_in(obj, len, "ft_cap", &v->ft_cap);
 	host_json_parse_int_in(obj, len, "is_reassoc", &v->is_reassoc);
+	host_json_parse_string_in(obj, len, "competitor_ies_hex", v->competitor_ies_hex,
+				  sizeof(v->competitor_ies_hex));
+	host_json_parse_string_in(obj, len, "auth_frame_hex", v->auth_frame_hex,
+				  sizeof(v->auth_frame_hex));
+	host_json_parse_string_in(obj, len, "assoc_bssid_hex", v->assoc_bssid_hex,
+				  sizeof(v->assoc_bssid_hex));
+	host_json_parse_int_in(obj, len, "expect_reassoc", &v->expect_reassoc);
+	host_json_parse_int_in(obj, len, "expect_ies_len", &v->expect_ies_len);
 	return 0;
 }
 
@@ -108,6 +121,38 @@ static int run_vec(struct vector *v)
 			return 1;
 		host_ft_build_assoc_req_ies(&adapter, (u8)v->is_reassoc, &attrib, &pframe);
 		if ((int)attrib.pktlen != v->expect_pktlen)
+			return 1;
+	} else if (!strcmp(v->op, "chk_roam")) {
+		struct wlan_network competitor;
+		size_t clen = 0;
+
+		memset(&competitor, 0, sizeof(competitor));
+		if (setup_adapter(&adapter, v, &ies_len))
+			return 1;
+		if (host_hex_decode(v->competitor_ies_hex, competitor.network.IEs,
+				    MAX_IE_SZ, &clen))
+			return 1;
+		competitor.network.IELength = (u32)clen;
+		if (host_ft_chk_roaming_candidate(&adapter, &competitor) !=
+		    (u8)v->expect_u8)
+			return 1;
+	} else if (!strcmp(v->op, "auth_rsp")) {
+		u8 frame[MAX_FRAME];
+		size_t flen = 0;
+
+		host_ft_test_adapter_init(&adapter);
+		setup_adapter(&adapter, v, &ies_len);
+		if (v->assoc_bssid_hex[0] &&
+		    host_hex_decode(v->assoc_bssid_hex, adapter.mlmepriv.assoc_bssid,
+				    ETH_ALEN, &ies_len))
+			return 1;
+		if (host_hex_decode(v->auth_frame_hex, frame, sizeof(frame), &flen))
+			return 1;
+		if (host_ft_update_auth_rsp_ies(&adapter, frame, (u32)flen) !=
+		    (u8)v->expect_u8)
+			return 1;
+		if ((int)adapter.mlmepriv.ft_roam.ft_event.ies_len != v->expect_ies_len ||
+		    (int)host_ft_reassoc_called != v->expect_reassoc)
 			return 1;
 	} else {
 		return 1;
