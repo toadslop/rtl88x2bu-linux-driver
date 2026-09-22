@@ -225,3 +225,121 @@ pub extern "C" fn host_ft_update_ftie(
     }
 }
 
+#[no_mangle]
+pub extern "C" fn host_ft_build_auth_req_ies(
+    padapter: *mut Adapter,
+    pattrib: *mut PktAttrib,
+    pframe: *mut *mut U8,
+) {
+    if padapter.is_null() || pattrib.is_null() || pframe.is_null() {
+        return;
+    }
+    unsafe {
+        if (*pframe).is_null() {
+            return;
+        }
+    }
+    if !ft_roam(padapter) {
+        return;
+    }
+    let ftie_append = host_ft_update_rsnie(padapter, _TRUE, pattrib, pframe);
+    host_ft_update_mdie(padapter, pattrib, pframe);
+    if ftie_append == _SUCCESS {
+        host_ft_update_ftie(padapter, pattrib, pframe);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn host_ft_build_assoc_req_ies(
+    padapter: *mut Adapter,
+    is_reassoc: U8,
+    pattrib: *mut PktAttrib,
+    pframe: *mut *mut U8,
+) {
+    if padapter.is_null() || pattrib.is_null() || pframe.is_null() {
+        return;
+    }
+    if chk_flags(padapter, RTW_FT_PEER_EN) {
+        host_ft_update_mdie(padapter, pattrib, pframe);
+    }
+    if is_reassoc == 0 || !ft_roam(padapter) {
+        return;
+    }
+    if host_ft_update_rsnie(padapter, _FALSE, pattrib, pframe) == _SUCCESS {
+        host_ft_update_ftie(padapter, pattrib, pframe);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn host_ft_chk_roaming_candidate(
+    padapter: *mut Adapter,
+    competitor: *mut WlanNetwork,
+) -> U8 {
+    if padapter.is_null() || competitor.is_null() {
+        return _FALSE;
+    }
+    unsafe {
+        let pft = &mut (*padapter).mlmepriv.ft_roam;
+        let net = &mut (*competitor).network;
+        let mut mdie_len: S32 = 0;
+        let pmdie = rtw_get_ie(
+            net.IEs.as_ptr().add(12),
+            _MDIE_ as S32,
+            &mut mdie_len,
+            (net.IELength.saturating_sub(12)) as S32,
+        );
+        if pmdie.is_null() {
+            return _FALSE;
+        }
+        if _rtw_memcmp(
+            &pft.mdid as *const U16 as *const c_void,
+            pmdie.add(2) as *const c_void,
+            2,
+        ) == 0
+        {
+            return _FALSE;
+        }
+        let otd = chk_flags(padapter, RTW_FT_OTD_EN)
+            && ((chk_flags(padapter, RTW_FT_PEER_OTD_EN) && (*pmdie.add(4) & 0x01) == 0)
+                || (!chk_flags(padapter, RTW_FT_PEER_OTD_EN) && (*pmdie.add(4) & 0x01) != 0));
+        if otd {
+            return _FALSE;
+        }
+        if chk_flags(padapter, RTW_FT_TEST_RSSI_ROAM) {
+            let cur = &(*padapter).mlmepriv.cur_network.network.MacAddress;
+            if _rtw_memcmp(
+                cur.as_ptr() as *const c_void,
+                net.MacAddress.as_ptr() as *const c_void,
+                ETH_ALEN,
+            ) == 0
+            {
+                net.Rssi += 20;
+                (*padapter).mlmepriv.ft_roam.ft_flags &= !RTW_FT_TEST_RSSI_ROAM;
+            }
+        }
+        _TRUE
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn host_ft_update_auth_rsp_ies(padapter: *mut Adapter, pframe: *mut U8, len: U32) -> U8 {
+    if padapter.is_null() || !ft_roam(padapter) || pframe.is_null() || len == 0 {
+        return _FAIL;
+    }
+    unsafe {
+        let pmlmepriv = &mut (*padapter).mlmepriv;
+        let pft = &mut pmlmepriv.ft_roam;
+        rtw_buf_update(
+            &mut pmlmepriv.auth_rsp,
+            &mut pmlmepriv.auth_rsp_len,
+            pframe,
+            len,
+        );
+        pft.ft_event.ies = pmlmepriv.auth_rsp.add(30);
+        pft.ft_event.ies_len = (pmlmepriv.auth_rsp_len.saturating_sub(30)) as U16;
+        pft.ft_event.ric_ies = ptr::null_mut();
+        pft.ft_event.ric_ies_len = 0;
+        rtw_ft_report_reassoc_evt(padapter, pmlmepriv.assoc_bssid.as_mut_ptr());
+        _SUCCESS
+    }
+}

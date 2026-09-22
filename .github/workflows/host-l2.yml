@@ -235,7 +235,7 @@ jobs:
 
       - name: Host ft IE leaf parity (L2)
         if: steps.filter.outputs.l2 == 'true'
-        run: make -C tests/host/ft test
+        run: make -C tests/host/ft test test-rust
 
       - name: Host roch handlers parity (L2)
         if: steps.filter.outputs.l2 == 'true'
