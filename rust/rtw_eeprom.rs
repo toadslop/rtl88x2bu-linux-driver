@@ -28,10 +28,7 @@ mod host {
 
     static mut G_AD: host_eeprom_adapter = host_eeprom_adapter {
         surprise_removed: 0,
-<<<<<<< HEAD
-=======
         EepromAddressSize: 6,
->>>>>>> e7a9752 (rust: W3-117 port eeprom read/write API + L2 test-rust (#457))
     };
     static mut G_REG: u8 = 0;
     static mut G_WRITES: i32 = 0;
