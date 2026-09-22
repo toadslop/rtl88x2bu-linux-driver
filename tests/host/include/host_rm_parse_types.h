@@ -10,6 +10,7 @@
 #define _SUCCESS 1
 
 #define RTW_INFO(fmt, ...) ((void)0)
+#define RTW_ERR(fmt, ...) ((void)0)
 
 #ifndef MIN
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
@@ -36,6 +37,14 @@ enum meas_type_of_req {
 	ch_load_req,
 	noise_histo_req,
 	bcn_req,
+};
+
+enum bcn_rep_cound_id {
+	bcn_rep_cond_immediately,
+	bcn_req_cond_rcpi_greater,
+	bcn_req_cond_rcpi_less,
+	bcn_req_cond_rsni_greater,
+	bcn_req_cond_rsni_less,
 };
 
 enum bcn_req_opt_sub_id {
@@ -87,6 +96,10 @@ struct rm_meas_req {
 		struct meas_req_opt clm;
 		struct meas_req_opt nhm;
 	} opt;
+};
+
+struct wlan_network {
+	u8 _pad;
 };
 
 struct rm_obj {

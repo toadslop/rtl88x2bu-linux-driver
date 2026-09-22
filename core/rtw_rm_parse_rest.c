@@ -13,6 +13,8 @@
 #if !defined(CONFIG_RUST) || defined(HOST_RM_PARSE_TEST)
 
 int rm_en_cap_chk_and_set(struct rm_obj *prm, enum rm_cap_en en);
+u8 rm_get_bcn_rcpi(struct rm_obj *prm, struct wlan_network *pnetwork);
+u8 rm_get_bcn_rsni(struct rm_obj *prm, struct wlan_network *pnetwork);
 
 int rm_parse_ch_load_s_elem(struct rm_obj *prm, u8 *pbody, int req_len)
 {
@@ -158,6 +160,41 @@ int rm_parse_meas_req(struct rm_obj *prm, u8 *pbody)
 	}
 
 	return _SUCCESS;
+}
+
+u8 rm_bcn_req_cond_mach(struct rm_obj *prm, struct wlan_network *pnetwork)
+{
+	u8 val8;
+
+	switch (prm->q.opt.bcn.rep_cond.cond) {
+	case bcn_rep_cond_immediately:
+		return _SUCCESS;
+	case bcn_req_cond_rcpi_greater:
+		val8 = rm_get_bcn_rcpi(prm, pnetwork);
+		if (val8 > prm->q.opt.bcn.rep_cond.threshold)
+			return _SUCCESS;
+		break;
+	case bcn_req_cond_rcpi_less:
+		val8 = rm_get_bcn_rcpi(prm, pnetwork);
+		if (val8 < prm->q.opt.bcn.rep_cond.threshold)
+			return _SUCCESS;
+		break;
+	case bcn_req_cond_rsni_greater:
+		val8 = rm_get_bcn_rsni(prm, pnetwork);
+		if (val8 != 255 && val8 > prm->q.opt.bcn.rep_cond.threshold)
+			return _SUCCESS;
+		break;
+	case bcn_req_cond_rsni_less:
+		val8 = rm_get_bcn_rsni(prm, pnetwork);
+		if (val8 != 255 && val8 < prm->q.opt.bcn.rep_cond.threshold)
+			return _SUCCESS;
+		break;
+	default:
+		RTW_ERR("RM: bcn_req cond %u not support\n",
+			prm->q.opt.bcn.rep_cond.cond);
+		break;
+	}
+	return _FALSE;
 }
 
 #endif /* !CONFIG_RUST || HOST_RM_PARSE_TEST */
