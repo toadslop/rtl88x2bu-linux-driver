@@ -1,1 +1,3 @@
 /test_eeprom_bitbang
+/test_eeprom_bitbang_rust
+/librust_eeprom_bitbang.a
