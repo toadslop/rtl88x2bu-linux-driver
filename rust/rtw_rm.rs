@@ -11,25 +11,66 @@ const RM_CH_LOAD_CAP_EN: c_int = 8;
 const RM_NOISE_HISTO_CAP_EN: c_int = 9;
 const RM_BCN_MEAS_REP_COND_CAP_EN: c_int = 7;
 
-#[repr(C)] pub struct OptRepInfo { pub cond: u8, pub threshold: u8 }
-#[repr(C)] pub struct Ndis80211Ssid { pub SsidLength: u32, pub Ssid: [u8; 32] }
-#[repr(C)] pub struct RtOperatingClass { pub global_op_class: i32, pub Len: i32, pub Channel: [u8; 11] }
-#[repr(C)] pub struct BcnReqOpt {
-    pub opt_id: [u8; 16], pub opt_id_num: u8, pub rep_detail: u8, pub ssid: Ndis80211Ssid,
-    pub rep_cond: OptRepInfo, pub ap_ch_rpt_num: u8,
-    pub ap_ch_rpt: [*mut RtOperatingClass; 12], pub req_start: *mut u8, pub req_len: u8,
+#[repr(C)]
+pub struct OptRepInfo {
+    pub cond: u8,
+    pub threshold: u8,
 }
-#[repr(C)] pub struct MeasReqOpt { pub rep_cond: OptRepInfo }
+#[repr(C)]
+pub struct Ndis80211Ssid {
+    pub SsidLength: u32,
+    pub Ssid: [u8; 32],
+}
+#[repr(C)]
+pub struct RtOperatingClass {
+    pub global_op_class: i32,
+    pub Len: i32,
+    pub Channel: [u8; 11],
+}
+#[repr(C)]
+pub struct BcnReqOpt {
+    pub opt_id: [u8; 16],
+    pub opt_id_num: u8,
+    pub rep_detail: u8,
+    pub ssid: Ndis80211Ssid,
+    pub rep_cond: OptRepInfo,
+    pub ap_ch_rpt_num: u8,
+    pub ap_ch_rpt: [*mut RtOperatingClass; 12],
+    pub req_start: *mut u8,
+    pub req_len: u8,
+}
+#[repr(C)]
+pub struct MeasReqOpt {
+    pub rep_cond: OptRepInfo,
+}
 const RM_MEAS_OPT_BYTES: usize = 176;
-#[repr(C)] pub union RmMeasOpt { pub bytes: [u8; RM_MEAS_OPT_BYTES] }
-#[repr(C)] pub struct RmMeasReq {
-    pub m_type: u8, pub m_mode: u8, pub op_class: u8, pub ch_num: u8,
-    pub rand_intvl: u16, pub meas_dur: u16, pub bssid: [u8; 6], pub _pad_bssid: [u8; 2],
-    pub opt_s_elem_len: i32, pub _pad_opt: [u8; 4], pub opt: RmMeasOpt,
+#[repr(C)]
+pub union RmMeasOpt {
+    pub bytes: [u8; RM_MEAS_OPT_BYTES],
 }
-#[repr(C)] pub struct RmObj { pub q: RmMeasReq }
+#[repr(C)]
+pub struct RmMeasReq {
+    pub m_type: u8,
+    pub m_mode: u8,
+    pub op_class: u8,
+    pub ch_num: u8,
+    pub rand_intvl: u16,
+    pub meas_dur: u16,
+    pub bssid: [u8; 6],
+    pub _pad_bssid: [u8; 2],
+    pub opt_s_elem_len: i32,
+    pub _pad_opt: [u8; 4],
+    pub opt: RmMeasOpt,
+}
+#[repr(C)]
+pub struct RmObj {
+    pub q: RmMeasReq,
+}
 
-#[repr(C)] pub struct WlanNetwork { _pad: u8 }
+#[repr(C)]
+pub struct WlanNetwork {
+    _pad: u8,
+}
 
 unsafe extern "C" {
     fn rm_en_cap_chk_and_set(prm: *mut RmObj, en: c_int) -> c_int;
@@ -45,8 +86,14 @@ fn clm_opt(prm: &mut RmObj) -> &mut MeasReqOpt {
 }
 
 #[no_mangle]
-pub extern "C" fn rm_parse_ch_load_s_elem(prm: *mut RmObj, pbody: *mut u8, req_len: c_int) -> c_int {
-    if prm.is_null() || pbody.is_null() { return _SUCCESS; }
+pub extern "C" fn rm_parse_ch_load_s_elem(
+    prm: *mut RmObj,
+    pbody: *mut u8,
+    req_len: c_int,
+) -> c_int {
+    if prm.is_null() || pbody.is_null() {
+        return _SUCCESS;
+    }
     let prm = unsafe { &mut *prm };
     let body = unsafe { std::slice::from_raw_parts(pbody, req_len as usize) };
     let mut p = 0usize;
@@ -54,7 +101,9 @@ pub extern "C" fn rm_parse_ch_load_s_elem(prm: *mut RmObj, pbody: *mut u8, req_l
     prm.q.opt_s_elem_len = len;
     while len > 0 && p + 1 < body.len() {
         if body[p] == 1 {
-            unsafe { rm_en_cap_chk_and_set(prm, RM_CH_LOAD_CAP_EN); }
+            unsafe {
+                rm_en_cap_chk_and_set(prm, RM_CH_LOAD_CAP_EN);
+            }
             let c = clm_opt(prm);
             c.rep_cond.cond = body[p + 2];
             c.rep_cond.threshold = body[p + 3];
@@ -67,8 +116,14 @@ pub extern "C" fn rm_parse_ch_load_s_elem(prm: *mut RmObj, pbody: *mut u8, req_l
 }
 
 #[no_mangle]
-pub extern "C" fn rm_parse_noise_histo_s_elem(prm: *mut RmObj, pbody: *mut u8, req_len: c_int) -> c_int {
-    if prm.is_null() || pbody.is_null() { return _SUCCESS; }
+pub extern "C" fn rm_parse_noise_histo_s_elem(
+    prm: *mut RmObj,
+    pbody: *mut u8,
+    req_len: c_int,
+) -> c_int {
+    if prm.is_null() || pbody.is_null() {
+        return _SUCCESS;
+    }
     let prm = unsafe { &mut *prm };
     let body = unsafe { std::slice::from_raw_parts(pbody, req_len as usize) };
     let mut p = 0usize;
@@ -76,7 +131,9 @@ pub extern "C" fn rm_parse_noise_histo_s_elem(prm: *mut RmObj, pbody: *mut u8, r
     prm.q.opt_s_elem_len = len;
     while len > 0 && p + 1 < body.len() {
         if body[p] == 1 {
-            unsafe { rm_en_cap_chk_and_set(prm, RM_NOISE_HISTO_CAP_EN); }
+            unsafe {
+                rm_en_cap_chk_and_set(prm, RM_NOISE_HISTO_CAP_EN);
+            }
             let n = clm_opt(prm);
             n.rep_cond.cond = body[p + 2];
             n.rep_cond.threshold = body[p + 3];
@@ -89,8 +146,14 @@ pub extern "C" fn rm_parse_noise_histo_s_elem(prm: *mut RmObj, pbody: *mut u8, r
 }
 
 #[no_mangle]
-pub extern "C" fn rm_parse_bcn_req_s_elem(prm: *mut RmObj, pbody: *mut u8, req_len: c_int) -> c_int {
-    if prm.is_null() || pbody.is_null() { return _SUCCESS; }
+pub extern "C" fn rm_parse_bcn_req_s_elem(
+    prm: *mut RmObj,
+    pbody: *mut u8,
+    req_len: c_int,
+) -> c_int {
+    if prm.is_null() || pbody.is_null() {
+        return _SUCCESS;
+    }
     let prm = unsafe { &mut *prm };
     let body = unsafe { std::slice::from_raw_parts(pbody, req_len as usize) };
     let mut p = 0usize;
@@ -108,7 +171,9 @@ pub extern "C" fn rm_parse_bcn_req_s_elem(prm: *mut RmObj, pbody: *mut u8, req_l
                 b.opt_id_num += 1;
             }
             1 => {
-                unsafe { rm_en_cap_chk_and_set(prm, RM_BCN_MEAS_REP_COND_CAP_EN); }
+                unsafe {
+                    rm_en_cap_chk_and_set(prm, RM_BCN_MEAS_REP_COND_CAP_EN);
+                }
                 let b = bcn_opt(prm);
                 b.rep_cond.cond = body[p + 2];
                 b.rep_cond.threshold = body[p + 3];
@@ -175,19 +240,35 @@ pub extern "C" fn rm_bcn_req_cond_mach(prm: *mut RmObj, pnetwork: *mut WlanNetwo
         0 => _SUCCESS as u8,
         1 => {
             let v = unsafe { rm_get_bcn_rcpi(prm, pnetwork) };
-            if v > thr { _SUCCESS as u8 } else { 0 }
+            if v > thr {
+                _SUCCESS as u8
+            } else {
+                0
+            }
         }
         2 => {
             let v = unsafe { rm_get_bcn_rcpi(prm, pnetwork) };
-            if v < thr { _SUCCESS as u8 } else { 0 }
+            if v < thr {
+                _SUCCESS as u8
+            } else {
+                0
+            }
         }
         3 => {
             let v = unsafe { rm_get_bcn_rsni(prm, pnetwork) };
-            if v != 255 && v > thr { _SUCCESS as u8 } else { 0 }
+            if v != 255 && v > thr {
+                _SUCCESS as u8
+            } else {
+                0
+            }
         }
         4 => {
             let v = unsafe { rm_get_bcn_rsni(prm, pnetwork) };
-            if v != 255 && v < thr { _SUCCESS as u8 } else { 0 }
+            if v != 255 && v < thr {
+                _SUCCESS as u8
+            } else {
+                0
+            }
         }
         _ => 0,
     }
