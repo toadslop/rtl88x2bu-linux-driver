@@ -13,7 +13,22 @@
 #define CLOCK_UNIT 10
 #define RM_ST_IDLE 0
 
-enum RM_EV_ID { RM_EV_meas_timer_expire = 3, RM_EV_max };
+enum RM_EV_ID {
+	RM_EV_state_in,
+	RM_EV_busy_timer_expire,
+	RM_EV_delay_timer_expire,
+	RM_EV_meas_timer_expire,
+	RM_EV_retry_timer_expire,
+	RM_EV_repeat_delay_expire,
+	RM_EV_request_timer_expire,
+	RM_EV_wait_report,
+	RM_EV_start_meas,
+	RM_EV_survey_done,
+	RM_EV_recv_rep,
+	RM_EV_cancel,
+	RM_EV_state_out,
+	RM_EV_max,
+};
 
 typedef int ATOMIC_T, _lock;
 typedef unsigned long _irqL;
