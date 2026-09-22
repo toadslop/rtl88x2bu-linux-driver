@@ -1,30 +1,29 @@
 {
   "vectors": [
     { "name": "reset", "op": "reset" },
-    {
-      "name": "up_clk",
-      "op": "up_clk",
-      "init_x": 8,
-      "expect_u16": 12,
-      "expect_writes": 1,
-      "expect_reg": 12
-    },
+    { "name": "up_clk", "op": "up_clk", "init_x": 8, "expect_u16": 12, "expect_writes": 1, "expect_reg": 12 },
     { "name": "down_reset", "op": "reset" },
+    { "name": "down_clk", "op": "down_clk", "init_x": 12, "expect_u16": 8, "expect_writes": 1, "expect_reg": 8 },
+    { "name": "shift_out_reset", "op": "reset" },
+    { "name": "shift_out_one", "op": "shift_out", "data": 1, "count": 1, "expect_writes": 4 },
+    { "name": "surprise_reset", "op": "reset" },
+    { "name": "surprise_on", "op": "surprise", "init_reg": 5 },
+    { "name": "shift_out_removed", "op": "shift_out", "data": 255, "count": 8, "expect_reg": 5, "expect_writes": 0 },
+    { "name": "reset2", "op": "reset" },
     {
-      "name": "down_clk",
-      "op": "down_clk",
-      "init_x": 12,
-      "expect_u16": 8,
-      "expect_writes": 1,
-      "expect_reg": 8
+      "name": "shift_in_hex",
+      "op": "load_hex",
+      "hex": "02020303020203030202030302020303020203030202030302020303020203030202"
     },
+    { "name": "shift_in_16", "op": "shift_in", "expect_u16": 26214, "expect_writes": 32 },
     { "name": "standby_reset", "op": "reset" },
     { "name": "standby_set", "op": "set_reg", "init_reg": 15 },
-    {
-      "name": "standby",
-      "op": "standby",
-      "expect_reg": 11,
-      "expect_writes": 2
-    }
+    { "name": "standby", "op": "standby", "expect_reg": 11, "expect_writes": 2 },
+    { "name": "reset3", "op": "reset" },
+    { "name": "wait_hex", "op": "load_hex", "hex": "000001" },
+    { "name": "wait_done", "op": "wait_done", "expect_ret": 1, "expect_writes": 2 },
+    { "name": "clean_reset", "op": "reset" },
+    { "name": "clean_set", "op": "set_reg", "init_reg": 15 },
+    { "name": "clean", "op": "clean", "expect_reg": 1, "expect_writes": 3 }
   ]
 }
