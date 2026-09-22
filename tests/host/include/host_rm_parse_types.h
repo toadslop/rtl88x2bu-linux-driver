@@ -29,6 +29,15 @@ typedef struct _RT_OPERATING_CLASS {
 	u8 Channel[MAX_CH_NUM_IN_OP_CLASS];
 } RT_OPERATING_CLASS;
 
+enum meas_type_of_req {
+	basic_req,
+	cca_req,
+	rpi_histo_req,
+	ch_load_req,
+	noise_histo_req,
+	bcn_req,
+};
+
 enum bcn_req_opt_sub_id {
 	bcn_req_ssid = 0,
 	bcn_req_rep_info = 1,
@@ -65,6 +74,13 @@ struct meas_req_opt {
 };
 
 struct rm_meas_req {
+	u8 m_type;
+	u8 m_mode;
+	u8 op_class;
+	u8 ch_num;
+	u16 rand_intvl;
+	u16 meas_dur;
+	u8 bssid[6];
 	int opt_s_elem_len;
 	union {
 		struct bcn_req_opt bcn;
@@ -85,5 +101,10 @@ enum rm_cap_en {
 
 void *rtw_malloc(size_t sz);
 void rtw_mfree(void *p, size_t sz);
+
+static inline u16 le16_to_cpu(u16 val)
+{
+	return val;
+}
 
 #endif /* HOST_RM_PARSE_TYPES_H */
