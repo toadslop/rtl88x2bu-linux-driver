@@ -12,6 +12,35 @@
       "hex": "02020303020203030202030302020303020203030202030302020303030203030202"
     },
     { "name": "read16_word", "op": "read16", "reg": 0, "expect_u16": 13107, "expect_writes": 65 },
+    { "name": "read_sz_reset", "op": "reset" },
+    {
+      "name": "read_sz_hex",
+      "op": "load_hex",
+      "hex": "02020303020203030202030302020303020203030202030302020303030203030202020303020203030202030303020203030202030303020203030202030303020203030202"
+    },
+    {
+      "name": "read_sz_four",
+      "op": "read_sz",
+      "reg": 1,
+      "sz": 4,
+      "expect_hex": "33336367",
+      "expect_writes": 97
+    },
+    { "name": "eeprom_read_reset", "op": "reset" },
+    {
+      "name": "eeprom_read_hex",
+      "op": "load_hex",
+      "hex": "02020303020203030202030302020303020203030202030302020303030203030202"
+    },
+    {
+      "name": "eeprom_read_two",
+      "op": "read",
+      "addr_off": 0,
+      "sz": 2,
+      "expect_ret": 1,
+      "expect_hex": "3333",
+      "expect_writes": 65
+    },
     { "name": "write_reset", "op": "reset" },
     { "name": "write_wait_hex", "op": "load_hex", "hex": "000001" },
     { "name": "write16", "op": "write16", "reg": 2, "data": 4660, "expect_writes": 148 }
