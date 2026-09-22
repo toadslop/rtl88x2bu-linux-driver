@@ -19,10 +19,12 @@ mod host {
         pub surprise_removed: u8,
     }
 
-    static mut G_AD: host_eeprom_adapter = host_eeprom_adapter { surprise_removed: 0 };
+    static mut G_AD: host_eeprom_adapter = host_eeprom_adapter {
+        surprise_removed: 0,
+    };
     static mut G_REG: u8 = 0;
     static mut G_WRITES: i32 = 0;
-    static mut G_READ_SEQ: [u8; 64] = [0; 64];
+    static mut G_READ_SEQ: [u8; 128] = [0; 128];
     static mut G_READ_SEQ_LEN: i32 = 0;
     static mut G_READ_SEQ_I: i32 = 0;
 
@@ -81,8 +83,8 @@ mod host {
                 return;
             }
             let mut m = n as usize;
-            if m > 64 {
-                m = 64;
+            if m > 128 {
+                m = 128;
             }
             core::ptr::copy_nonoverlapping(vals, G_READ_SEQ.as_mut_ptr(), m);
             G_READ_SEQ_LEN = m as i32;

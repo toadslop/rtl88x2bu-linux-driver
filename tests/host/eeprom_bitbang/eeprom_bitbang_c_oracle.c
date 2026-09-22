@@ -5,7 +5,7 @@
 static struct host_eeprom_adapter g_ad;
 static u8 g_reg;
 static int g_writes;
-static u8 g_read_seq[64];
+static u8 g_read_seq[128];
 static int g_read_seq_len, g_read_seq_i;
 
 u8 rtw_read8(struct host_eeprom_adapter *p, u32 a)
