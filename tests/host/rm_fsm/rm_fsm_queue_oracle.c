@@ -3,7 +3,6 @@
 #include <string.h>
 #include "host_rm_fsm_types.h"
 
-void *rtw_malloc(u32 sz) { return malloc(sz); }
 void rtw_mfree(u8 *p, u32 sz) { (void)sz; free(p); }
 
 static void rm_state_initial(struct rm_obj *prm) { prm->state = RM_ST_IDLE; }
