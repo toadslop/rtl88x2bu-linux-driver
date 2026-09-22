@@ -5,6 +5,7 @@
 
 int rm_parse_ch_load_s_elem(struct rm_obj *prm, u8 *pbody, int req_len);
 int rm_parse_noise_histo_s_elem(struct rm_obj *prm, u8 *pbody, int req_len);
+int rm_parse_bcn_req_s_elem(struct rm_obj *prm, u8 *pbody, int req_len);
 
 static int test_ch_load(void)
 {
@@ -30,12 +31,26 @@ static int test_noise(void)
 	       prm.q.opt.nhm.rep_cond.threshold == 11 ? 0 : 1;
 }
 
+static int test_bcn(void)
+{
+	struct rm_obj prm;
+	u8 body[] = { 0x00, 0x04, 't', 'e', 's', 't', 0x01, 0x02,
+		      0x00, 0x01, 0x02, 0x01, 0x01 };
+
+	memset(&prm, 0, sizeof(prm));
+	if (rm_parse_bcn_req_s_elem(&prm, body, sizeof(body)) != _SUCCESS)
+		return 1;
+	if (prm.q.opt.bcn.opt_id_num != 2 || prm.q.opt.bcn.rep_detail != 1)
+		return 1;
+	return strncmp((char *)prm.q.opt.bcn.ssid.Ssid, "test", 4) ? 1 : 0;
+}
+
 int main(void)
 {
-	if (test_ch_load() || test_noise()) {
-		fprintf(stderr, "rm_parse PR1 vectors failed\n");
+	if (test_ch_load() || test_noise() || test_bcn()) {
+		fprintf(stderr, "rm_parse vectors failed\n");
 		return 1;
 	}
-	puts("rm_parse: 2 vectors OK");
+	puts("rm_parse: 3 vectors OK");
 	return 0;
 }

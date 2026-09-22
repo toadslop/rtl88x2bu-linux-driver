@@ -58,5 +58,65 @@ int rm_parse_noise_histo_s_elem(struct rm_obj *prm, u8 *pbody, int req_len)
 	return _SUCCESS;
 }
 
+int rm_parse_bcn_req_s_elem(struct rm_obj *prm, u8 *pbody, int req_len)
+{
+	int i, p = 0;
+	int len = req_len;
+	int ap_ch_rpt_idx = 0;
+	struct _RT_OPERATING_CLASS *op;
+	u8 *popt_id;
+
+	prm->q.opt_s_elem_len = len;
+	popt_id = prm->q.opt.bcn.opt_id;
+	while (len && prm->q.opt.bcn.opt_id_num < BCN_REQ_OPT_MAX_NUM) {
+		switch (pbody[p]) {
+		case bcn_req_ssid:
+			prm->q.opt.bcn.ssid.SsidLength = pbody[p + 1];
+			_rtw_memcpy(&(prm->q.opt.bcn.ssid.Ssid), &pbody[p + 2],
+				    MIN(pbody[p + 1],
+					sizeof(prm->q.opt.bcn.ssid.Ssid) - 1));
+			popt_id[prm->q.opt.bcn.opt_id_num++] = pbody[p];
+			break;
+		case bcn_req_rep_info:
+			rm_en_cap_chk_and_set(prm, RM_BCN_MEAS_REP_COND_CAP_EN);
+			_rtw_memcpy(&(prm->q.opt.bcn.rep_cond), &pbody[p + 2],
+				    sizeof(prm->q.opt.bcn.rep_cond));
+			break;
+		case bcn_req_rep_detail:
+			prm->q.opt.bcn.rep_detail = pbody[p + 2];
+			popt_id[prm->q.opt.bcn.opt_id_num++] = pbody[p];
+			break;
+		case bcn_req_req:
+			prm->q.opt.bcn.req_start = rtw_malloc(pbody[p + 1]);
+			if (prm->q.opt.bcn.req_start == NULL)
+				break;
+			for (i = 0; i < pbody[p + 1]; i++)
+				*((prm->q.opt.bcn.req_start) + i) = pbody[p + 2 + i];
+			prm->q.opt.bcn.req_len = pbody[p + 1];
+			popt_id[prm->q.opt.bcn.opt_id_num++] = pbody[p];
+			break;
+		case bcn_req_ap_ch_rep:
+			if (ap_ch_rpt_idx > BCN_REQ_OPT_AP_CH_RPT_MAX_NUM)
+				break;
+			popt_id[prm->q.opt.bcn.opt_id_num++] = pbody[p];
+			op = rtw_malloc(sizeof(*op));
+			if (!op)
+				break;
+			op->global_op_class = pbody[p + 2];
+			i = pbody[p + 1] - 1;
+			op->Len = i;
+			memcpy(op->Channel, &pbody[p + 3], MIN(i, MAX_CH_NUM_IN_OP_CLASS));
+			prm->q.opt.bcn.ap_ch_rpt[ap_ch_rpt_idx++] = op;
+			prm->q.opt.bcn.ap_ch_rpt_num = ap_ch_rpt_idx;
+			break;
+		default:
+			break;
+		}
+		len = len - (int)pbody[p + 1] - 2;
+		p = p + (int)pbody[p + 1] + 2;
+	}
+	return _SUCCESS;
+}
+
 #endif /* !CONFIG_RUST || HOST_RM_PARSE_TEST */
 #endif /* CONFIG_RTW_80211K */
