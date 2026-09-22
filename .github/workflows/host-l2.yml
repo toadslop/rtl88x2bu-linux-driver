@@ -237,6 +237,10 @@ jobs:
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/eeprom_bitbang test test-rust
 
+      - name: Host eeprom read/write API parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/eeprom_rw test
+
       - name: Host tdls lifecycle parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/tdls test
