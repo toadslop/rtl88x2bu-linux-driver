@@ -1,13 +1,18 @@
 // SPDX-License-Identifier: GPL-2.0
 //! RM FSM clock/list helpers — Rust port part 1 (W3-112 PR3).
 
-#![allow(non_camel_case_types, non_snake_case, improper_ctypes, non_upper_case_globals)]
+#![allow(
+    non_camel_case_types,
+    non_snake_case,
+    improper_ctypes,
+    non_upper_case_globals
+)]
 #![cfg(any(host_rm_fsm_test, rtw_80211k))]
 
-#[cfg(host_rm_fsm_test)]
-use std::ffi::c_int;
 #[cfg(not(host_rm_fsm_test))]
 use core::ffi::c_int;
+#[cfg(host_rm_fsm_test)]
+use std::ffi::c_int;
 
 const RM_TIMER_NUM: usize = 32;
 const CLOCK_UNIT: u32 = 10;
@@ -80,7 +85,13 @@ fn null_mut_rmobj() -> *mut RmObj {
 
 #[no_mangle]
 pub extern "C" fn is_list_linked(head: *const ListHead) -> c_int {
-    unsafe { if (*head).prev.is_null() { 0 } else { 1 } }
+    unsafe {
+        if (*head).prev.is_null() {
+            0
+        } else {
+            1
+        }
+    }
 }
 
 #[no_mangle]
