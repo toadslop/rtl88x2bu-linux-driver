@@ -23,6 +23,38 @@
       "updated_ies_hex": "3008020100000400",
       "expect_u8": 1,
       "expect_pktlen": 10
+    },
+    {
+      "name": "mdie_idle_mdid",
+      "op": "update_mdie",
+      "mdid": 4660,
+      "ft_cap": 2,
+      "expect_pktlen": 5
+    },
+    {
+      "name": "build_auth_no_roam",
+      "op": "build_auth",
+      "to_roam": 0,
+      "ft_flags": 4,
+      "updated_ies_hex": "300802010000040000003603010203370401020304",
+      "expect_pktlen": 0
+    },
+    {
+      "name": "build_auth_roam_bundle",
+      "op": "build_auth",
+      "to_roam": 1,
+      "ft_flags": 4,
+      "updated_ies_hex": "300802010000040000003603010203370401020304",
+      "expect_pktlen": 21
+    },
+    {
+      "name": "build_assoc_peer_mdie_only",
+      "op": "build_assoc",
+      "ft_flags": 4,
+      "mdid": 4660,
+      "ft_cap": 2,
+      "is_reassoc": 0,
+      "expect_pktlen": 5
     }
   ]
 }
