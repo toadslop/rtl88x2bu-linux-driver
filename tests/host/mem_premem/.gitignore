@@ -1,1 +1,3 @@
 test_mem_premem
+test_mem_premem_rust
+librust_mem_premem.a
