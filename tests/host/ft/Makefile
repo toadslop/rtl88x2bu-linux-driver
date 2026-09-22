@@ -4,6 +4,8 @@ HOST_JSON := ../crypto/host_vector_json.c
 SHIM := ft_ie_shim.c
 STUBS := ft_ie_stubs.c
 ORACLE := ft_ie_c_oracle.c
+RUST_FT := $(ROOT)/rust/rtw_ft.rs
+RUSTC := rustc
 CC := gcc
 CFLAGS := -Wall -Wextra -Werror -O2 -I$(HOST_INC) -I$(ROOT)/include \
 	-DCONFIG_RTW_BTM_ROAM
