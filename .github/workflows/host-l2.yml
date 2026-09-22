@@ -233,6 +233,10 @@ jobs:
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/wapi test test-rust
 
+      - name: Host ft IE leaf parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/ft test
+
       - name: Host roch handlers parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/roch test
