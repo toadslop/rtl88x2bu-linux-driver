@@ -19,7 +19,9 @@ mod host {
         pub surprise_removed: u8,
     }
 
-    static mut G_AD: host_eeprom_adapter = host_eeprom_adapter { surprise_removed: 0 };
+    static mut G_AD: host_eeprom_adapter = host_eeprom_adapter {
+        surprise_removed: 0,
+    };
     static mut G_REG: u8 = 0;
     static mut G_WRITES: i32 = 0;
     static mut G_READ_SEQ: [u8; 128] = [0; 128];
