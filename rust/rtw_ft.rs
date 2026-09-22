@@ -220,7 +220,13 @@ pub extern "C" fn host_ft_update_ftie(
         if pie.is_null() {
             return _FAIL;
         }
-        *pframe = rtw_set_ie(*pframe, _FTIE_ as S32, len as U32, pie.add(2), &mut (*pattrib).pktlen);
+        *pframe = rtw_set_ie(
+            *pframe,
+            _FTIE_ as S32,
+            len as U32,
+            pie.add(2),
+            &mut (*pattrib).pktlen,
+        );
         _SUCCESS
     }
 }
@@ -322,7 +328,11 @@ pub extern "C" fn host_ft_chk_roaming_candidate(
 }
 
 #[no_mangle]
-pub extern "C" fn host_ft_update_auth_rsp_ies(padapter: *mut Adapter, pframe: *mut U8, len: U32) -> U8 {
+pub extern "C" fn host_ft_update_auth_rsp_ies(
+    padapter: *mut Adapter,
+    pframe: *mut U8,
+    len: U32,
+) -> U8 {
     if padapter.is_null() || !ft_roam(padapter) || pframe.is_null() || len == 0 {
         return _FAIL;
     }
