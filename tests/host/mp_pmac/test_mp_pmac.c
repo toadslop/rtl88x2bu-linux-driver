@@ -24,8 +24,9 @@ struct vector {
 	u8 tx_rate, b_stbc;
 	u8 exp_mcs, exp_nss, exp_nsts, exp_rate_hex, exp_m_stbc;
 	u32 n_sym;
-	u8 b_sgi;
+	u8 b_sgi, bandwidth, b_ldpc, ndp_sound, ntx;
 	char exp_lsig_hex[16];
+	char exp_ht_sig_hex[24];
 };
 
 static int parse_bits(const char *s, bool *out, u8 cap, u8 *len_out)
@@ -94,8 +95,18 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 		v->n_sym = (u32)tmp;
 	if (!host_json_parse_int_in(obj, len, "b_sgi", &tmp))
 		v->b_sgi = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "bandwidth", &tmp))
+		v->bandwidth = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "b_ldpc", &tmp))
+		v->b_ldpc = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "ndp_sound", &tmp))
+		v->ndp_sound = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "ntx", &tmp))
+		v->ntx = (u8)tmp;
 	host_json_parse_string_in(obj, len, "exp_lsig_hex", v->exp_lsig_hex,
 				  sizeof(v->exp_lsig_hex));
+	host_json_parse_string_in(obj, len, "exp_ht_sig_hex", v->exp_ht_sig_hex,
+				  sizeof(v->exp_ht_sig_hex));
 	return 0;
 }
 
@@ -163,6 +174,24 @@ static int run_vec(struct vector *v)
 		pkt.Nsts = v->exp_nsts;
 		L_SIG_generator(v->n_sym, &tx, &pkt);
 		if (hex_eq(tx.LSIG, 3, v->exp_lsig_hex))
+			return 1;
+	} else if (!strcmp(v->op, "ht_sig")) {
+		RT_PMAC_TX_INFO tx;
+		RT_PMAC_PKT_INFO pkt;
+
+		memset(&tx, 0, sizeof(tx));
+		memset(&pkt, 0, sizeof(pkt));
+		tx.PacketLength = v->pkt_len;
+		tx.BandWidth = v->bandwidth;
+		tx.bSTBC = v->b_stbc;
+		tx.bLDPC = v->b_ldpc;
+		tx.bSGI = v->b_sgi;
+		tx.NDP_sound = v->ndp_sound;
+		tx.Ntx = v->ntx;
+		pkt.MCS = v->exp_mcs;
+		pkt.Nss = v->exp_nss;
+		HT_SIG_generator(&tx, &pkt);
+		if (hex_eq(tx.HT_SIG, 6, v->exp_ht_sig_hex))
 			return 1;
 	} else if (!strcmp(v->op, "cck")) {
 		RT_PMAC_TX_INFO tx;
