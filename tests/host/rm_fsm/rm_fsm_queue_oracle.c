@@ -1,30 +1,18 @@
 // SPDX-License-Identifier: GPL-2.0
-/* C oracle part 2 — queue/obj helpers (W3-112 PR2). */
 #include <stdlib.h>
 #include <string.h>
 #include "host_rm_fsm_types.h"
 
-void *rtw_malloc(u32 sz)
-{
-	return malloc(sz);
-}
+void *rtw_malloc(u32 sz) { return malloc(sz); }
+void rtw_mfree(u8 *p, u32 sz) { (void)sz; free(p); }
 
-void rtw_mfree(u8 *p, u32 sz)
-{
-	(void)sz;
-	free(p);
-}
-
-static void rm_state_initial(struct rm_obj *prm)
-{
-	prm->state = RM_ST_IDLE;
-}
+static void rm_state_initial(struct rm_obj *prm) { prm->state = RM_ST_IDLE; }
 
 int rm_enqueue_ev(_queue *queue, struct rm_event *obj, bool to_head)
 {
 	_irqL irqL;
 
-	if (obj == NULL)
+	if (!obj)
 		return _FAIL;
 	_enter_critical(&queue->lock, &irqL);
 	if (to_head)
@@ -67,7 +55,7 @@ int rm_enqueue_rmobj(_adapter *padapter, struct rm_obj *prm, bool to_head)
 	_irqL irqL;
 	_queue *queue = &padapter->rmpriv.rm_queue;
 
-	if (prm == NULL)
+	if (!prm)
 		return _FAIL;
 	_enter_critical(&queue->lock, &irqL);
 	if (to_head)
