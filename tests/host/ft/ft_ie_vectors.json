@@ -1,0 +1,9 @@
+{
+  "vectors": [
+    {
+      "name": "info_init_default_flags",
+      "op": "info_init",
+      "expect_flags": 17
+    }
+  ]
+}
