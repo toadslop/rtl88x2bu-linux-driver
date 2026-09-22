@@ -225,6 +225,10 @@ jobs:
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/sreset test
 
+      - name: Host mem premem parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/mem_premem test
+
       - name: Host tdls lifecycle parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/tdls test

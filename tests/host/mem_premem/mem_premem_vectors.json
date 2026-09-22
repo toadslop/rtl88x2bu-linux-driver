@@ -1,0 +1,23 @@
+{
+  "vectors": [
+    {
+      "name": "constants",
+      "op": "constants",
+      "expect_u16": 15360,
+      "expect_u8": 16,
+      "expect_qlen": -1
+    },
+    { "name": "reset", "op": "reset", "expect_qlen": 0 },
+    { "name": "get_buf_empty", "op": "get_buf", "index": 0, "expect_tag": -1, "expect_qlen": 0 },
+    { "name": "set_buf0", "op": "set_buf", "index": 0, "tag": 42, "expect_qlen": 0 },
+    { "name": "get_buf0", "op": "get_buf", "index": 0, "expect_tag": 42, "expect_qlen": 0 },
+    { "name": "alloc_empty", "op": "alloc", "in_size": 100, "expect_tag": -1, "expect_qlen": 0 },
+    { "name": "seed_two", "op": "seed", "seed_count": 2, "tag": 10, "expect_qlen": 2 },
+    { "name": "alloc_ok", "op": "alloc", "in_size": 100, "expect_tag": 10, "expect_qlen": 1 },
+    { "name": "alloc_oversize", "op": "alloc", "in_size": 20000, "expect_tag": -1, "expect_qlen": 1 },
+    { "name": "free_null", "op": "free", "tag": -1, "expect_ret": -1, "expect_qlen": 1 },
+    { "name": "free_ok", "op": "free", "tag": 99, "expect_ret": 0, "expect_qlen": 2 },
+    { "name": "fill_pool", "op": "seed", "seed_count": 14, "tag": 20, "expect_qlen": 16 },
+    { "name": "free_full", "op": "free", "tag": 1, "expect_ret": -1, "expect_qlen": 16 }
+  ]
+}
