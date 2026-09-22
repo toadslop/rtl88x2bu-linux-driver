@@ -35,3 +35,76 @@ u8 host_ft_update_rsnie(_adapter *padapter, u8 bwrite, struct pkt_attrib *pattri
 
 	return _SUCCESS;
 }
+
+u8 host_ft_update_mdie(_adapter *padapter, struct pkt_attrib *pattrib, u8 **pframe)
+{
+	struct ft_roam_info *pft_roam = &(padapter->mlmepriv.ft_roam);
+	u8 *pie, mdie[3];
+	s32 len = 3;
+
+	if (rtw_ft_roam(padapter)) {
+		if ((pie = rtw_get_ie(pft_roam->updated_ft_ies, _MDIE_, &len,
+				      pft_roam->updated_ft_ies_len))) {
+			pie = (pie + 2);
+		} else {
+			return _FAIL;
+		}
+	} else {
+		*((u16 *)&mdie[0]) = pft_roam->mdid;
+		mdie[2] = pft_roam->ft_cap;
+		pie = &mdie[0];
+	}
+
+	*pframe = rtw_set_ie(((u8 *)*pframe), _MDIE_, (uint)len, pie, &(pattrib->pktlen));
+	return _SUCCESS;
+}
+
+u8 host_ft_update_ftie(_adapter *padapter, struct pkt_attrib *pattrib, u8 **pframe)
+{
+	struct ft_roam_info *pft_roam = &(padapter->mlmepriv.ft_roam);
+	u8 *pie;
+	s32 len;
+
+	if ((pie = rtw_get_ie(pft_roam->updated_ft_ies, _FTIE_, &len,
+			      pft_roam->updated_ft_ies_len)) != NULL) {
+		*pframe = rtw_set_ie(*pframe, _FTIE_, (uint)len, (pie + 2),
+				     &(pattrib->pktlen));
+	} else {
+		return _FAIL;
+	}
+
+	return _SUCCESS;
+}
+
+void host_ft_build_auth_req_ies(_adapter *padapter, struct pkt_attrib *pattrib,
+				u8 **pframe)
+{
+	u8 ftie_append = _TRUE;
+
+	if (!pattrib || !(*pframe))
+		return;
+
+	if (!rtw_ft_roam(padapter))
+		return;
+
+	ftie_append = host_ft_update_rsnie(padapter, _TRUE, pattrib, pframe);
+	host_ft_update_mdie(padapter, pattrib, pframe);
+	if (ftie_append)
+		host_ft_update_ftie(padapter, pattrib, pframe);
+}
+
+void host_ft_build_assoc_req_ies(_adapter *padapter, u8 is_reassoc,
+				 struct pkt_attrib *pattrib, u8 **pframe)
+{
+	if (!pattrib || !(*pframe))
+		return;
+
+	if (rtw_ft_chk_flags(padapter, RTW_FT_PEER_EN))
+		host_ft_update_mdie(padapter, pattrib, pframe);
+
+	if ((!is_reassoc) || (!rtw_ft_roam(padapter)))
+		return;
+
+	if (host_ft_update_rsnie(padapter, _FALSE, pattrib, pframe))
+		host_ft_update_ftie(padapter, pattrib, pframe);
+}
