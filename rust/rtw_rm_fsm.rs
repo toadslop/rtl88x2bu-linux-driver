@@ -191,11 +191,7 @@ pub extern "C" fn rm_free_clock(pclock: *mut RmClock) {
 }
 
 #[no_mangle]
-pub extern "C" fn rm_enqueue_ev(
-    queue: *mut Queue,
-    obj: *mut RmEvent,
-    to_head: bool,
-) -> c_int {
+pub extern "C" fn rm_enqueue_ev(queue: *mut Queue, obj: *mut RmEvent, to_head: bool) -> c_int {
     if obj.is_null() {
         return _FAIL;
     }
@@ -220,10 +216,7 @@ pub extern "C" fn rm_free_rmobj(prm: *mut RmObj) {
         }
         if !(*prm).q.pssid.is_null() {
             let n = strlen((*prm).q.pssid) + 1;
-            dealloc(
-                (*prm).q.pssid,
-                Layout::from_size_align_unchecked(n, 1),
-            );
+            dealloc((*prm).q.pssid, Layout::from_size_align_unchecked(n, 1));
         }
         if !(*prm).q.opt.bcn.req_start.is_null() {
             dealloc(
@@ -234,7 +227,10 @@ pub extern "C" fn rm_free_rmobj(prm: *mut RmObj) {
         if !(*prm).pclock.is_null() {
             rm_free_clock((*prm).pclock);
         }
-        dealloc(prm as *mut u8, Layout::from_size_align_unchecked(size_of_rmobj(), 1));
+        dealloc(
+            prm as *mut u8,
+            Layout::from_size_align_unchecked(size_of_rmobj(), 1),
+        );
     }
 }
 
