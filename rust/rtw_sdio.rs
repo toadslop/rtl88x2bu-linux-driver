@@ -40,12 +40,10 @@ pub struct host_dvobj {
 #[cfg(host_sdio_cmd_test)]
 #[repr(C)]
 pub struct host_sdio_if_ops {
-    pub read: Option<
-        unsafe extern "C" fn(*mut host_dvobj, u32, *mut c_void, usize, c_int) -> c_int,
-    >,
-    pub write: Option<
-        unsafe extern "C" fn(*mut host_dvobj, u32, *mut c_void, usize, c_int) -> c_int,
-    >,
+    pub read:
+        Option<unsafe extern "C" fn(*mut host_dvobj, u32, *mut c_void, usize, c_int) -> c_int>,
+    pub write:
+        Option<unsafe extern "C" fn(*mut host_dvobj, u32, *mut c_void, usize, c_int) -> c_int>,
 }
 
 #[cfg(host_sdio_cmd_test)]
@@ -108,7 +106,14 @@ unsafe extern "C" fn mock_write(
 }
 
 #[cfg(host_sdio_cmd_test)]
-unsafe fn sdio_io(d: *mut host_dvobj, addr: u32, buf: *mut u8, len: usize, write: u8, cmd52: u8) -> u8 {
+unsafe fn sdio_io(
+    d: *mut host_dvobj,
+    addr: u32,
+    buf: *mut u8,
+    len: usize,
+    write: u8,
+    cmd52: u8,
+) -> u8 {
     let dv = &mut *d;
     let addr_drv = if cmd52 != 0 {
         addr | (1u32 << 17)
@@ -151,8 +156,8 @@ pub extern "C" fn host_sdio_cmd_reset() {
         G_AD.surprise_removed = 0;
         G_OPS.read = Some(mock_read);
         G_OPS.write = Some(mock_write);
-        G_DV.primary_adapter = &mut G_AD;
-        G_DV.intf_ops = &mut G_OPS;
+        G_DV.primary_adapter = std::ptr::addr_of_mut!(G_AD);
+        G_DV.intf_ops = std::ptr::addr_of_mut!(G_OPS);
         G_DV.continual_io_error = 0;
         G_DV.io_fail_remaining = 0;
         G_DV.read_fill = 0xA5;
@@ -184,30 +189,50 @@ pub extern "C" fn host_sdio_cmd_io_count() -> c_int {
 #[cfg(host_sdio_cmd_test)]
 #[no_mangle]
 pub extern "C" fn host_sdio_cmd_dvobj() -> *mut host_dvobj {
-    unsafe { &mut G_DV }
+    unsafe { std::ptr::addr_of_mut!(G_DV) }
 }
 
 #[cfg(host_sdio_cmd_test)]
 #[no_mangle]
-pub extern "C" fn rtw_sdio_read_cmd52(d: *mut host_dvobj, addr: u32, buf: *mut u8, len: usize) -> u8 {
+pub extern "C" fn rtw_sdio_read_cmd52(
+    d: *mut host_dvobj,
+    addr: u32,
+    buf: *mut u8,
+    len: usize,
+) -> u8 {
     unsafe { sdio_io(d, addr, buf, len, 0, 1) }
 }
 
 #[cfg(host_sdio_cmd_test)]
 #[no_mangle]
-pub extern "C" fn rtw_sdio_read_cmd53(d: *mut host_dvobj, addr: u32, buf: *mut u8, len: usize) -> u8 {
+pub extern "C" fn rtw_sdio_read_cmd53(
+    d: *mut host_dvobj,
+    addr: u32,
+    buf: *mut u8,
+    len: usize,
+) -> u8 {
     unsafe { sdio_io(d, addr, buf, len, 0, 0) }
 }
 
 #[cfg(host_sdio_cmd_test)]
 #[no_mangle]
-pub extern "C" fn rtw_sdio_write_cmd52(d: *mut host_dvobj, addr: u32, buf: *mut u8, len: usize) -> u8 {
+pub extern "C" fn rtw_sdio_write_cmd52(
+    d: *mut host_dvobj,
+    addr: u32,
+    buf: *mut u8,
+    len: usize,
+) -> u8 {
     unsafe { sdio_io(d, addr, buf, len, 1, 1) }
 }
 
 #[cfg(host_sdio_cmd_test)]
 #[no_mangle]
-pub extern "C" fn rtw_sdio_write_cmd53(d: *mut host_dvobj, addr: u32, buf: *mut u8, len: usize) -> u8 {
+pub extern "C" fn rtw_sdio_write_cmd53(
+    d: *mut host_dvobj,
+    addr: u32,
+    buf: *mut u8,
+    len: usize,
+) -> u8 {
     unsafe { sdio_io(d, addr, buf, len, 1, 0) }
 }
 
