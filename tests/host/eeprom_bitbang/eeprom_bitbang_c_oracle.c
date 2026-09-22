@@ -8,7 +8,7 @@ static int g_writes;
 static u8 g_read_seq[64];
 static int g_read_seq_len, g_read_seq_i;
 
-static u8 rtw_read8(struct host_eeprom_adapter *p, u32 a)
+u8 rtw_read8(struct host_eeprom_adapter *p, u32 a)
 {
 	(void)p;
 	(void)a;
@@ -17,7 +17,7 @@ static u8 rtw_read8(struct host_eeprom_adapter *p, u32 a)
 	return g_reg;
 }
 
-static void rtw_write8(struct host_eeprom_adapter *p, u32 a, u8 v)
+void rtw_write8(struct host_eeprom_adapter *p, u32 a, u8 v)
 {
 	(void)p;
 	(void)a;
@@ -25,8 +25,8 @@ static void rtw_write8(struct host_eeprom_adapter *p, u32 a, u8 v)
 	g_writes++;
 }
 
-static void rtw_udelay_os(u32 us) { (void)us; }
-static u8 rtw_is_surprise_removed(struct host_eeprom_adapter *p)
+void rtw_udelay_os(u32 us) { (void)us; }
+u8 rtw_is_surprise_removed(struct host_eeprom_adapter *p)
 {
 	return p->surprise_removed;
 }
@@ -34,8 +34,14 @@ static u8 rtw_is_surprise_removed(struct host_eeprom_adapter *p)
 void host_eeprom_reset(void)
 {
 	memset(&g_ad, 0, sizeof(g_ad));
+	g_ad.EepromAddressSize = 6;
 	g_reg = 0;
 	g_writes = g_read_seq_len = g_read_seq_i = 0;
+}
+
+void host_eeprom_set_addr_size(u8 bits)
+{
+	g_ad.EepromAddressSize = bits ? bits : 6;
 }
 
 void host_eeprom_set_surprise(u8 on) { g_ad.surprise_removed = on ? 1 : 0; }
