@@ -6,6 +6,7 @@
 int rm_parse_ch_load_s_elem(struct rm_obj *prm, u8 *pbody, int req_len);
 int rm_parse_noise_histo_s_elem(struct rm_obj *prm, u8 *pbody, int req_len);
 int rm_parse_bcn_req_s_elem(struct rm_obj *prm, u8 *pbody, int req_len);
+int rm_parse_meas_req(struct rm_obj *prm, u8 *pbody);
 
 static int test_ch_load(void)
 {
@@ -45,12 +46,45 @@ static int test_bcn(void)
 	return strncmp((char *)prm.q.opt.bcn.ssid.Ssid, "test", 4) ? 1 : 0;
 }
 
+static int test_meas_ch_load(void)
+{
+	struct rm_obj prm;
+	u8 body[] = { 0x38, 0x0d, 0x01, 0x00, 0x03, 0x01, 0x06,
+		      0x00, 0x00, 0x0a, 0x00, 0x01, 0x02, 0x00, 0x0c };
+
+	memset(&prm, 0, sizeof(prm));
+	prm.q.m_type = ch_load_req;
+	if (rm_parse_meas_req(&prm, body) != _SUCCESS)
+		return 1;
+	return prm.q.op_class == 1 && prm.q.ch_num == 6 && prm.q.meas_dur == 10 &&
+	       prm.q.opt.clm.rep_cond.threshold == 12
+		   ? 0
+		   : 1;
+}
+
+static int test_meas_bcn(void)
+{
+	struct rm_obj prm;
+	u8 body[] = { 0x38, 0x13, 0x42, 0x00, 0x05, 0x01, 0x06, 0x00, 0x00,
+		      0x0a, 0x00, 0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+		      0x02, 0x01, 0x01 };
+
+	memset(&prm, 0, sizeof(prm));
+	prm.q.m_type = bcn_req;
+	if (rm_parse_meas_req(&prm, body) != _SUCCESS)
+		return 1;
+	return prm.q.op_class == 1 && prm.q.ch_num == 6 && prm.q.opt.bcn.rep_detail == 1
+		   ? 0
+		   : 1;
+}
+
 int main(void)
 {
-	if (test_ch_load() || test_noise() || test_bcn()) {
+	if (test_ch_load() || test_noise() || test_bcn() || test_meas_ch_load() ||
+	    test_meas_bcn()) {
 		fprintf(stderr, "rm_parse vectors failed\n");
 		return 1;
 	}
-	puts("rm_parse: 3 vectors OK");
+	puts("rm_parse: 5 vectors OK");
 	return 0;
 }
