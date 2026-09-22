@@ -29,9 +29,12 @@ const RM_MEAS_OPT_BYTES: usize = 176;
 }
 #[repr(C)] pub struct RmObj { pub q: RmMeasReq }
 
+#[repr(C)] pub struct WlanNetwork { _pad: u8 }
+
 unsafe extern "C" {
     fn rm_en_cap_chk_and_set(prm: *mut RmObj, en: c_int) -> c_int;
-    fn rtw_malloc(sz: usize) -> *mut c_void;
+    fn rm_get_bcn_rcpi(prm: *mut RmObj, pnetwork: *mut WlanNetwork) -> u8;
+    fn rm_get_bcn_rsni(prm: *mut RmObj, pnetwork: *mut WlanNetwork) -> u8;
 }
 
 fn bcn_opt(prm: &mut RmObj) -> &mut BcnReqOpt {
@@ -123,4 +126,69 @@ pub extern "C" fn rm_parse_bcn_req_s_elem(prm: *mut RmObj, pbody: *mut u8, req_l
         p += step as usize;
     }
     _SUCCESS
+}
+
+#[no_mangle]
+pub extern "C" fn rm_parse_meas_req(prm: *mut RmObj, pbody: *mut u8) -> c_int {
+    if prm.is_null() || pbody.is_null() {
+        return _SUCCESS;
+    }
+    let prm = unsafe { &mut *prm };
+    let body = unsafe { std::slice::from_raw_parts(pbody, 64) };
+    let req_len = body[1] as i32;
+    let mut p = 5usize;
+    prm.q.op_class = body[p];
+    p += 1;
+    prm.q.ch_num = body[p];
+    p += 1;
+    prm.q.rand_intvl = u16::from_le_bytes([body[p], body[p + 1]]);
+    p += 2;
+    prm.q.meas_dur = u16::from_le_bytes([body[p], body[p + 1]]);
+    p += 2;
+    if prm.q.m_type == 5 {
+        prm.q.m_mode = body[p];
+        p += 1;
+        prm.q.bssid.copy_from_slice(&body[p..p + 6]);
+        p += 6;
+        bcn_opt(prm).rep_detail = 2;
+    }
+    if req_len - (p as i32 - 2) <= 0 {
+        return _SUCCESS;
+    }
+    let sub = req_len - (p as i32 - 2);
+    match prm.q.m_type {
+        5 => rm_parse_bcn_req_s_elem(prm, unsafe { pbody.add(p) }, sub),
+        3 => rm_parse_ch_load_s_elem(prm, unsafe { pbody.add(p) }, sub),
+        4 => rm_parse_noise_histo_s_elem(prm, unsafe { pbody.add(p) }, sub),
+        _ => _SUCCESS,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rm_bcn_req_cond_mach(prm: *mut RmObj, pnetwork: *mut WlanNetwork) -> u8 {
+    if prm.is_null() {
+        return 0;
+    }
+    let bcn = bcn_opt(unsafe { &mut *prm });
+    let (cond, thr) = (bcn.rep_cond.cond, bcn.rep_cond.threshold);
+    match cond {
+        0 => _SUCCESS as u8,
+        1 => {
+            let v = unsafe { rm_get_bcn_rcpi(prm, pnetwork) };
+            if v > thr { _SUCCESS as u8 } else { 0 }
+        }
+        2 => {
+            let v = unsafe { rm_get_bcn_rcpi(prm, pnetwork) };
+            if v < thr { _SUCCESS as u8 } else { 0 }
+        }
+        3 => {
+            let v = unsafe { rm_get_bcn_rsni(prm, pnetwork) };
+            if v != 255 && v > thr { _SUCCESS as u8 } else { 0 }
+        }
+        4 => {
+            let v = unsafe { rm_get_bcn_rsni(prm, pnetwork) };
+            if v != 255 && v < thr { _SUCCESS as u8 } else { 0 }
+        }
+        _ => 0,
+    }
 }
