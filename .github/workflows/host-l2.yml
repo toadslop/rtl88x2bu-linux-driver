@@ -173,6 +173,10 @@ jobs:
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/rm test
 
+      - name: Host mp_pmac parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/mp_pmac test
+
       - name: Host rm_parse parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/rm_parse test
