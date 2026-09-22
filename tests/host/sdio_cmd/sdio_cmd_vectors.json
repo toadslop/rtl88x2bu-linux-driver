@@ -1,0 +1,12 @@
+{
+  "vectors": [
+    { "name": "reset", "op": "reset" },
+    { "name": "read52", "op": "read52", "addr": 8193, "expect_ret": 1, "expect_addr": 139265, "expect_io": 1 },
+    { "name": "read53", "op": "read53", "addr": 8193, "expect_ret": 1, "expect_addr": 8193, "expect_io": 2 },
+    { "name": "write52", "op": "write52", "addr": 4096, "expect_ret": 1, "expect_addr": 135168, "expect_io": 3 },
+    { "name": "write53", "op": "write53", "addr": 4096, "expect_ret": 1, "expect_addr": 4096, "expect_io": 4 },
+    { "name": "f0", "op": "f0", "addr": 7, "len": 1, "expect_ret": 1, "expect_addr": 262151, "expect_io": 5 },
+    { "name": "surprise", "op": "surprise" },
+    { "name": "read52_fail", "op": "read52", "addr": 1, "expect_ret": 0, "expect_io": 0 }
+  ]
+}
