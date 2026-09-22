@@ -229,6 +229,10 @@ jobs:
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/mem_premem test test-rust
 
+      - name: Host sdio cmd52/53 parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/sdio_cmd test
+
       - name: Host tdls lifecycle parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/tdls test
