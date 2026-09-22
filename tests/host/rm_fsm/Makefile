@@ -7,7 +7,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 .PHONY: all test clean
 all test: test_rm_fsm
 	./test_rm_fsm rm_fsm_vectors.json
-test_rm_fsm: test_rm_fsm.c rm_fsm_c_oracle.c $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ test_rm_fsm.c rm_fsm_c_oracle.c $(HOST_JSON)
+test_rm_fsm: test_rm_fsm.c rm_fsm_c_oracle.c rm_fsm_queue_oracle.c $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_rm_fsm.c rm_fsm_c_oracle.c rm_fsm_queue_oracle.c $(HOST_JSON)
 clean:
 	rm -f test_rm_fsm
