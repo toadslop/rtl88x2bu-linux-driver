@@ -173,6 +173,10 @@ jobs:
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/rm test
 
+      - name: Host rm_parse parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/rm_parse test
+
       - name: Host vht_rest parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/vht test
