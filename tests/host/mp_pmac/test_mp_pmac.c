@@ -15,6 +15,12 @@ struct vector {
 	char out_bits[MAX_BITS + 1];
 	char out_hex[32];
 	u8 in_size;
+	u8 mcs, b_spreamble;
+	u32 pkt_len;
+	u16 exp_sfd;
+	u8 exp_sig, exp_svc;
+	u32 exp_length;
+	u8 exp_crc0, exp_crc1;
 };
 
 static int parse_bits(const char *s, bool *out, u8 cap, u8 *len_out)
@@ -47,6 +53,24 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 	host_json_parse_string_in(obj, len, "out_hex", v->out_hex, sizeof(v->out_hex));
 	if (!host_json_parse_int_in(obj, len, "in_size", &tmp))
 		v->in_size = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "mcs", &tmp))
+		v->mcs = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "b_spreamble", &tmp))
+		v->b_spreamble = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "pkt_len", &tmp))
+		v->pkt_len = (u32)tmp;
+	if (!host_json_parse_int_in(obj, len, "exp_sfd", &tmp))
+		v->exp_sfd = (u16)tmp;
+	if (!host_json_parse_int_in(obj, len, "exp_sig", &tmp))
+		v->exp_sig = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "exp_svc", &tmp))
+		v->exp_svc = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "exp_length", &tmp))
+		v->exp_length = (u32)tmp;
+	if (!host_json_parse_int_in(obj, len, "exp_crc0", &tmp))
+		v->exp_crc0 = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "exp_crc1", &tmp))
+		v->exp_crc1 = (u8)tmp;
 	return 0;
 }
 
@@ -78,6 +102,20 @@ static int run_vec(struct vector *v)
 		for (i = 0; i < 8; i++)
 			if (!!out[i] != !!exp[i])
 				return 1;
+	} else if (!strcmp(v->op, "cck")) {
+		RT_PMAC_TX_INFO tx;
+		RT_PMAC_PKT_INFO pkt;
+
+		memset(&tx, 0, sizeof(tx));
+		memset(&pkt, 0, sizeof(pkt));
+		tx.PacketLength = v->pkt_len;
+		tx.bSPreamble = v->b_spreamble;
+		pkt.MCS = v->mcs;
+		CCK_generator(&tx, &pkt);
+		if (tx.SFD != v->exp_sfd || tx.SignalField != v->exp_sig ||
+		    tx.LENGTH != v->exp_length || tx.ServiceField != v->exp_svc ||
+		    tx.CRC16[0] != v->exp_crc0 || tx.CRC16[1] != v->exp_crc1)
+			return 1;
 	} else if (!strcmp(v->op, "byte_to_bit")) {
 		u8 bytes[8];
 		unsigned char expect[8];
@@ -104,7 +142,7 @@ int main(int argc, char **argv)
 	struct vector vectors[MAX_VECTORS];
 	size_t nvec = 0;
 	int failed = 0;
-	const char *path = (argc > 1) ? argv[1] : "mp_pmac_bit_vectors.json";
+	const char *path = (argc > 1) ? argv[1] : "mp_pmac_vectors.json";
 
 	if (host_load_vectors(path, vectors, sizeof(vectors[0]), MAX_VECTORS,
 			      parse_vec, &nvec))

@@ -1,0 +1,51 @@
+{
+  "vectors": [
+    {
+      "name": "crc16_cck_mcs0_length0",
+      "op": "crc16",
+      "in_size": 32,
+      "in_bits": "01010000000000000000000000000000",
+      "out_bits": "0000111000000100"
+    },
+    {
+      "name": "crc8_ht_sig_reserved",
+      "op": "crc8",
+      "in_size": 34,
+      "in_bits": "0000000000000000000000000010000000",
+      "out_bits": "00111011"
+    },
+    {
+      "name": "byte_to_bit_rate0_nibble",
+      "op": "byte_to_bit",
+      "in_size": 3,
+      "in_bits": "110100000000000000000000",
+      "out_hex": "0b0000"
+    },
+    {
+      "name": "cck_mcs0_spreamble_100",
+      "op": "cck",
+      "mcs": 0,
+      "b_spreamble": 1,
+      "pkt_len": 100,
+      "exp_sfd": 1487,
+      "exp_sig": 10,
+      "exp_length": 800,
+      "exp_svc": 0,
+      "exp_crc0": 216,
+      "exp_crc1": 49
+    },
+    {
+      "name": "cck_mcs3_length_ext",
+      "op": "cck",
+      "mcs": 3,
+      "b_spreamble": 0,
+      "pkt_len": 153,
+      "exp_sfd": 62368,
+      "exp_sig": 110,
+      "exp_length": 112,
+      "exp_svc": 128,
+      "exp_crc0": 80,
+      "exp_crc1": 55
+    }
+  ]
+}
