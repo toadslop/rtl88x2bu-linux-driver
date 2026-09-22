@@ -4,7 +4,7 @@
 #![allow(non_camel_case_types, non_snake_case, improper_ctypes)]
 #![cfg(any(host_rm_parse_test, rtw_80211k))]
 
-use std::ffi::{c_int, c_void};
+use std::ffi::c_int;
 
 const _SUCCESS: c_int = 1;
 const RM_CH_LOAD_CAP_EN: c_int = 8;
