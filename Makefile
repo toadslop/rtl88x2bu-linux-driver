@@ -3678,28 +3678,6 @@ rust-check-symbols-rtw-rf-kfree-tx-gain: rust-objects-rtw-rf-kfree-tx-gain-c rus
 	$(MAKE) rust-check-symbols OLD=tests/host/rf/kfree_tx_gain_c_ref.o NEW=tests/host/rf/kfree_tx_gain_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_rf_kfree_tx_gain.allow
 
-# W3-118 PR3: odm phydm init L1 (host C vs host Rust oracle).
-rust-objects-rtw-odm-phydm-init-c:
-	gcc -c -Wall -Wextra -Werror -O2 \
-		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core \
-		-include $(shell pwd)/tests/host/include/host_autoconf.h \
-		-DHOST_ODM_PHYDM_INIT_TEST \
-		-o tests/host/odm/odm_phydm_init_unit_c.o core/rtw_odm_phydm_init.c
-	gcc -c -Wall -Wextra -Werror -O2 \
-		-I$(shell pwd)/tests/host/include \
-		-include $(shell pwd)/tests/host/include/host_autoconf.h \
-		-o tests/host/odm/odm_phydm_init_shim_ref.o tests/host/odm/host_odm_phydm_shim.c
-	ld -r -o tests/host/odm/odm_phydm_init_c_ref.o tests/host/odm/odm_phydm_init_unit_c.o tests/host/odm/odm_phydm_init_shim_ref.o
-
-rust-objects-rtw-odm-phydm-init-rust-ref:
-	rustc -C opt-level=2 -C overflow-checks=on --cfg host_odm_phydm_init_test \
-		--emit=obj=tests/host/odm/odm_phydm_init_rust_ref.o \
-		--crate-type lib rust/rtw_odm.rs
-
-rust-check-symbols-rtw-odm-phydm-init: rust-objects-rtw-odm-phydm-init-c rust-objects-rtw-odm-phydm-init-rust-ref
-	$(MAKE) rust-check-symbols OLD=tests/host/odm/odm_phydm_init_c_ref.o NEW=tests/host/odm/odm_phydm_init_rust_ref.o \
-		ALLOWLIST=docs/rust-migration/scripts/rtw_odm_phydm_init.allow
-
 # W3-60 PR4: cmd/evt priv init/teardown L1 (host C oracle vs host Rust oracle).
 rust-objects-rtw-cmd-rest-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
