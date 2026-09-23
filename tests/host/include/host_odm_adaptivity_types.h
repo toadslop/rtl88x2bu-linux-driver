@@ -51,6 +51,7 @@ static inline void host_sel_reset(void)
 
 #define RTW_PRINT_SEL(sel, fmt, ...) \
 	do { \
+		(void)(sel); \
 		size_t _rem = sizeof(host_sel_out.buf) - host_sel_out.len; \
 		int _n = snprintf(host_sel_out.buf + host_sel_out.len, _rem, \
 				  fmt, ##__VA_ARGS__); \
