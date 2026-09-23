@@ -1284,9 +1284,7 @@ mod traffic_lps_cmd {
                 {
                     b_busy_traffic = _TRUE;
                 }
-                if pwrpriv.bLeisurePs != 0
-                    && (pmlmepriv.fw_state & WIFI_STATION_STATE) != 0
-                {
+                if pwrpriv.bLeisurePs != 0 && (pmlmepriv.fw_state & WIFI_STATION_STATE) != 0 {
                     b_enter_ps = if pwrpriv.lps_chk_by_tp != 0 {
                         _lps_chk_by_tp(padapter, from_timer) as c_int
                     } else {
