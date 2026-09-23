@@ -12,7 +12,11 @@
     unused_unsafe
 )]
 
-#[cfg(all(not(host_cmd_priv_test), not(host_cmd_queue_test), not(host_cmd_thread_test)))]
+#[cfg(all(
+    not(host_cmd_priv_test),
+    not(host_cmd_queue_test),
+    not(host_cmd_thread_test)
+))]
 use core::ffi::{c_int, c_void};
 #[cfg(any(host_cmd_priv_test, host_cmd_queue_test, host_cmd_thread_test))]
 use std::os::raw::{c_int, c_void};
@@ -924,7 +928,9 @@ mod cmd_thread {
     #[no_mangle]
     pub extern "C" fn rtw_cmd_clr_isr(pcmdpriv: *mut CmdPriv) {
         if !pcmdpriv.is_null() {
-            unsafe { (*pcmdpriv).cmd_done_cnt += 1; }
+            unsafe {
+                (*pcmdpriv).cmd_done_cnt += 1;
+            }
         }
     }
 
@@ -966,7 +972,8 @@ mod cmd_thread {
                 if (*padapter).bDriverStopped != 0 || (*padapter).bSurpriseRemoved != 0 {
                     break;
                 }
-                if pcmdpriv.cmd_queue.queue.next == &mut pcmdpriv.cmd_queue.queue {
+                let qhead = &mut pcmdpriv.cmd_queue.queue as *mut List;
+                if unsafe { (*qhead).next == qhead } {
                     continue;
                 }
 
