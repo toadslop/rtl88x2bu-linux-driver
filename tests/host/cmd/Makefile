@@ -54,6 +54,7 @@ test-cmd-joinbss: test_joinbss_cmd
 
 test-cmd-traffic-lps: test_traffic_lps_cmd
 	./test_traffic_lps_cmd traffic_lps_vectors.json
+	./test_traffic_lps_cmd traffic_lps_watchdog_vectors.json
 
 test_traffic_lps_cmd: test_traffic_lps_cmd.c host_cmd_traffic_lps_shim.c \
 		$(CMD_TRAFFIC_LPS_ORACLE) $(HOST_JSON)
