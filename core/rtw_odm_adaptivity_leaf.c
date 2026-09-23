@@ -95,3 +95,75 @@ void rtw_odm_get_perpkt_rssi(void *sel, _adapter *adapter)
 }
 
 #endif
+
+#ifndef HOST_ODM_ADAPTIVITY_TEST
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_ODM_ADAPTIVITY_LEAF)
+
+#include <drv_types.h>
+#include <hal_data.h>
+#include <hal_com.h>
+
+void rtw_rust_odm_adaptivity_print_sel(void *sel, const char *line)
+{
+	RTW_PRINT_SEL(sel, "%s", line);
+}
+
+struct dm_struct *rtw_rust_odm_adaptivity_phydm(_adapter *adapter)
+{
+	return adapter_to_phydm(adapter);
+}
+
+u8 rtw_rust_odm_adaptivity_en(_adapter *adapter)
+{
+	return adapter->registrypriv.adaptivity_en;
+}
+
+u8 rtw_rust_odm_adaptivity_mode(_adapter *adapter)
+{
+	return adapter->registrypriv.adaptivity_mode;
+}
+
+s8 *rtw_rust_odm_adaptivity_th_l2h_ini(struct dm_struct *dm)
+{
+	return &dm->th_l2h_ini;
+}
+
+s8 *rtw_rust_odm_adaptivity_th_edcca_hl(struct dm_struct *dm)
+{
+	return &dm->th_edcca_hl_diff;
+}
+
+u8 rtw_rust_odm_adaptivity_rx_rate(struct dm_struct *dm)
+{
+	return dm->rx_rate;
+}
+
+u8 rtw_rust_odm_adaptivity_rssi_a(struct dm_struct *dm)
+{
+	return dm->rssi_a;
+}
+
+u8 rtw_rust_odm_adaptivity_rssi_b(struct dm_struct *dm)
+{
+	return dm->rssi_b;
+}
+
+const char *rtw_rust_odm_adaptivity_hdata_rate(u8 rate)
+{
+	return HDATA_RATE(rate);
+}
+
+void rtw_rust_odm_adaptivity_print_parm_line(void *sel, u8 th_l2h, s8 th_edcca_hl)
+{
+	RTW_PRINT_SEL(sel, "%10s %16s\n", "th_l2h_ini", "th_edcca_hl_diff");
+	RTW_PRINT_SEL(sel, "0x%-8x %-16d\n", th_l2h, th_edcca_hl);
+}
+
+void rtw_rust_odm_adaptivity_print_perpkt(void *sel, u8 rate, u8 rssi_a, u8 rssi_b)
+{
+	RTW_PRINT_SEL(sel, "rx_rate = %s, rssi_a = %d(%%), rssi_b = %d(%%)\n",
+		      HDATA_RATE(rate), rssi_a, rssi_b);
+}
+
+#endif
+#endif
