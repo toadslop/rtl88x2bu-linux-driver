@@ -62,7 +62,11 @@ extern "C" {
     fn rtw_hal_set_odm_var(padapter: *mut Adapter, variable: i32, psta: *mut StaInfo, val: U8);
     fn host_rust_apmode_dot11_auth(padapter: *mut Adapter) -> U32;
     fn host_rust_apmode_set_8021x_blocked(psta: *mut StaInfo, blocked: U32);
-    fn host_rust_apmode_read_ht_inputs(padapter: *mut Adapter, psta: *mut StaInfo, out: *mut HostApmodeHtIn);
+    fn host_rust_apmode_read_ht_inputs(
+        padapter: *mut Adapter,
+        psta: *mut StaInfo,
+        out: *mut HostApmodeHtIn,
+    );
     fn host_rust_apmode_sta_ht_option(psta: *mut StaInfo) -> U8;
     fn host_rust_apmode_apply_ht(
         psta: *mut StaInfo,
@@ -184,7 +188,9 @@ pub extern "C" fn update_sta_info_apmode(padapter: *mut Adapter, psta: *mut StaI
             }
             let (ampdu_en, min_sp, bw, sgi20, sgi40, qos, ch_off, ldpc, stbc) =
                 ht_assoc_update(&inputs);
-            host_rust_apmode_apply_ht(psta, ampdu_en, min_sp, bw, sgi20, sgi40, qos, ch_off, ldpc, stbc);
+            host_rust_apmode_apply_ht(
+                psta, ampdu_en, min_sp, bw, sgi20, sgi40, qos, ch_off, ldpc, stbc,
+            );
         } else {
             host_rust_apmode_clear_ht_no_option(psta);
         }
