@@ -18,11 +18,7 @@
     not(host_cmd_joinbss_test)
 ))]
 use core::ffi::{c_int, c_void};
-#[cfg(any(
-    host_cmd_priv_test,
-    host_cmd_queue_test,
-    host_cmd_joinbss_test
-))]
+#[cfg(any(host_cmd_priv_test, host_cmd_queue_test, host_cmd_joinbss_test))]
 use std::os::raw::{c_int, c_void};
 
 type Sint = c_int;
@@ -965,7 +961,10 @@ mod joinbss_cmd {
             ) != _TRUE
             {
                 if ndis_mode == Ndis802_11IBSS {
-                    set_fwstate(&mut padapter.mlmepriv as *mut MlmePriv, WIFI_ADHOC_STATE as Sint);
+                    set_fwstate(
+                        &mut padapter.mlmepriv as *mut MlmePriv,
+                        WIFI_ADHOC_STATE as Sint,
+                    );
                 } else if ndis_mode == Ndis802_11Infrastructure {
                     set_fwstate(
                         &mut padapter.mlmepriv as *mut MlmePriv,
@@ -974,18 +973,14 @@ mod joinbss_cmd {
                 }
             }
 
-            let psecnetwork =
-                host_joinbss_zmalloc(core::mem::size_of::<WlanBssidEx>() as u32) as *mut WlanBssidEx;
+            let psecnetwork = host_joinbss_zmalloc(core::mem::size_of::<WlanBssidEx>() as u32)
+                as *mut WlanBssidEx;
             if psecnetwork.is_null() {
                 free(pcmd as *mut c_void);
                 return _FAIL as u8;
             }
 
-            core::ptr::copy_nonoverlapping(
-                &pnetwork.network,
-                psecnetwork,
-                1,
-            );
+            core::ptr::copy_nonoverlapping(&pnetwork.network, psecnetwork, 1);
             padapter.securitypriv.authenticator_ie[0] = (*psecnetwork).ie_length as u8;
             (*psecnetwork).ie_length = 12;
             if padapter.mlmepriv.assoc_by_bssid == 0 {
