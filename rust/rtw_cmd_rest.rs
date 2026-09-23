@@ -1071,31 +1071,71 @@ mod traffic_lps_cmd {
     const _TRUE: c_int = 1;
     const _FALSE: c_int = 0;
     const WIFI_ASOC_STATE: u32 = 0x01;
-    const WIFI_STATION_STATE: u32 = 0x08; /* also used by mlme_is_sta */
+    const WIFI_STATION_STATE: u32 = 0x08;
     const WIFI_ADHOC_STATE: u32 = 0x20;
     const WIFI_ADHOC_MASTER_STATE: u32 = 0x10;
     const LPS_CTRL_CONNECT: u8 = 2;
     const LPS_CTRL_SPECIAL_PACKET: u8 = 4;
     const LPS_CTRL_LEAVE: u8 = 5;
+    const LPS_CTRL_TRAFFIC_BUSY: u8 = 6;
     const LPS_CTRL_ENTER: u8 = 9;
     const HW_VAR_H2C_FW_JOINBSSRPT: c_int = 0;
     const LPS_DELAY_MS: c_int = 2000;
 
     #[repr(C)]
+    struct RT_LINK_DETECT_T {
+        NumRxOkInPeriod: u32,
+        NumTxOkInPeriod: u32,
+        NumRxUnicastOkInPeriod: u32,
+        bBusyTraffic: u8,
+    }
+
+    #[repr(C)]
     struct MlmePriv {
         fw_state: u32,
+        LinkDetectInfo: RT_LINK_DETECT_T,
+        assoc_bssid: [u8; 6],
     }
 
     #[repr(C)]
     struct PwrctrlPriv {
         lps_level: i8,
         LpsIdleCount: u8,
+        bLeisurePs: u8,
+        lps_chk_by_tp: u8,
+        lps_bi_tp_th: c_int,
+        lps_tx_tp_th: c_int,
+        lps_rx_tp_th: c_int,
+        lps_chk_cnt: c_int,
+        lps_chk_cnt_th: c_int,
+    }
+
+    #[repr(C)]
+    struct sta_stats {
+        tx_bytes: u32,
+        rx_bytes: u32,
+        acc_tx_bytes: u32,
+        acc_rx_bytes: u32,
+        tx_tp_kbits: u32,
+        rx_tp_kbits: u32,
+    }
+
+    #[repr(C)]
+    struct sta_info {
+        padapter: *mut Adapter,
+        sta_stats: sta_stats,
+    }
+
+    #[repr(C)]
+    struct sta_priv {
+        sta: *mut sta_info,
     }
 
     #[repr(C)]
     pub struct Adapter {
         mlmepriv: MlmePriv,
         pwrctrlpriv: PwrctrlPriv,
+        stapriv: sta_priv,
     }
 
     extern "C" {
@@ -1104,6 +1144,12 @@ mod traffic_lps_cmd {
         fn LPS_Leave(a: *mut Adapter, reason: *const u8);
         fn rtw_hal_set_hwreg(a: *mut Adapter, id: c_int, val: *mut u8);
         fn rtw_set_lps_deny(a: *mut Adapter, ms: c_int);
+        fn get_bssid(pmlmepriv: *mut MlmePriv) -> *mut u8;
+        fn rtw_get_stainfo(pstapriv: *mut sta_priv, bssid: *mut u8) -> *mut sta_info;
+        fn rtw_get_bcn_cnt(adapter: *mut Adapter) -> u8;
+        fn rtw_lps_ctrl_wk_cmd(adapter: *mut Adapter, lps_ctrl_type: u8, flags: u8);
+        fn rtw_mi_get_assoc_if_num(padapter: *mut Adapter) -> c_int;
+        fn session_tracker_chk_cmd(padapter: *mut Adapter, parm: *mut core::ffi::c_void);
     }
 
     #[no_mangle]
@@ -1135,6 +1181,125 @@ mod traffic_lps_cmd {
                     let _ = buf;
                 }
             }
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn _lps_chk_by_tp(adapter: *mut Adapter, from_timer: u8) -> u8 {
+        if adapter.is_null() {
+            return _FALSE as u8;
+        }
+        unsafe {
+            let pmlmepriv = &mut (*adapter).mlmepriv;
+            let psta = rtw_get_stainfo(
+                &mut (*adapter).stapriv as *mut sta_priv,
+                get_bssid(pmlmepriv as *mut MlmePriv),
+            );
+            if psta.is_null() {
+                return _FALSE as u8;
+            }
+            let _ = rtw_get_bcn_cnt(adapter);
+            (*psta).sta_stats.acc_tx_bytes = (*psta).sta_stats.tx_bytes;
+            (*psta).sta_stats.acc_rx_bytes = (*psta).sta_stats.rx_bytes;
+            let pwrpriv = &mut (*adapter).pwrctrlpriv;
+            let tx_tp_mbits = (*psta).sta_stats.tx_tp_kbits >> 10;
+            let rx_tp_mbits = (*psta).sta_stats.rx_tp_kbits >> 10;
+            let bi_tp_mbits = tx_tp_mbits + rx_tp_mbits;
+            let enter_ps = if bi_tp_mbits >= pwrpriv.lps_bi_tp_th as u32
+                || tx_tp_mbits >= pwrpriv.lps_tx_tp_th as u32
+                || rx_tp_mbits >= pwrpriv.lps_rx_tp_th as u32
+            {
+                pwrpriv.lps_chk_cnt = pwrpriv.lps_chk_cnt_th;
+                _FALSE
+            } else if pwrpriv.lps_chk_cnt != 0 && {
+                pwrpriv.lps_chk_cnt -= 1;
+                pwrpriv.lps_chk_cnt != 0
+            } {
+                _FALSE
+            } else {
+                _TRUE
+            };
+            if enter_ps == _TRUE {
+                if from_timer == 0 {
+                    LPS_Enter(adapter, b"TRAFFIC_IDLE\0".as_ptr());
+                }
+            } else if from_timer == 0 {
+                LPS_Leave(adapter, b"TRAFFIC_BUSY\0".as_ptr());
+            } else {
+                rtw_lps_ctrl_wk_cmd(adapter, LPS_CTRL_TRAFFIC_BUSY, 0);
+            }
+            enter_ps as u8
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn _lps_chk_by_pkt_cnts(
+        padapter: *mut Adapter,
+        from_timer: u8,
+        b_busy_traffic: u8,
+    ) -> u8 {
+        let _ = b_busy_traffic;
+        if padapter.is_null() {
+            return _FALSE as u8;
+        }
+        unsafe {
+            let ld = &mut (*padapter).mlmepriv.LinkDetectInfo;
+            let b_enter_ps = if (ld.NumRxUnicastOkInPeriod + ld.NumTxOkInPeriod > 8)
+                || ld.NumRxUnicastOkInPeriod > 4
+            {
+                _FALSE
+            } else {
+                _TRUE
+            };
+            if b_enter_ps == _TRUE {
+                if from_timer == 0 {
+                    LPS_Enter(padapter, b"TRAFFIC_IDLE\0".as_ptr());
+                }
+            } else if from_timer == 0 {
+                LPS_Leave(padapter, b"TRAFFIC_BUSY\0".as_ptr());
+            } else {
+                rtw_lps_ctrl_wk_cmd(padapter, LPS_CTRL_TRAFFIC_BUSY, 0);
+            }
+            b_enter_ps as u8
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn traffic_status_watchdog(padapter: *mut Adapter, from_timer: u8) -> u8 {
+        if padapter.is_null() {
+            return _FALSE as u8;
+        }
+        unsafe {
+            let pmlmepriv = &mut (*padapter).mlmepriv;
+            let pwrpriv = &mut (*padapter).pwrctrlpriv;
+            let mut b_enter_ps = _FALSE;
+            let mut busy_threshold: u16 = 100;
+            let mut b_busy_traffic = _FALSE;
+            if check_fwstate(pmlmepriv as *mut MlmePriv, WIFI_ASOC_STATE as c_int) == _TRUE {
+                if pmlmepriv.LinkDetectInfo.bBusyTraffic != 0 {
+                    busy_threshold = 75;
+                }
+                if pmlmepriv.LinkDetectInfo.NumRxOkInPeriod > busy_threshold as u32
+                    || pmlmepriv.LinkDetectInfo.NumTxOkInPeriod > busy_threshold as u32
+                {
+                    b_busy_traffic = _TRUE;
+                }
+                if pwrpriv.bLeisurePs != 0 && (pmlmepriv.fw_state & WIFI_STATION_STATE) != 0 {
+                    b_enter_ps = if pwrpriv.lps_chk_by_tp != 0 {
+                        _lps_chk_by_tp(padapter, from_timer) as c_int
+                    } else {
+                        _lps_chk_by_pkt_cnts(padapter, from_timer, b_busy_traffic as u8) as c_int
+                    };
+                }
+            } else if from_timer == 0 && rtw_mi_get_assoc_if_num(padapter) == 0 {
+                LPS_Leave(padapter, b"NON_LINKED\0".as_ptr());
+            }
+            session_tracker_chk_cmd(padapter, core::ptr::null_mut());
+            pmlmepriv.LinkDetectInfo.NumRxOkInPeriod = 0;
+            pmlmepriv.LinkDetectInfo.NumTxOkInPeriod = 0;
+            pmlmepriv.LinkDetectInfo.NumRxUnicastOkInPeriod = 0;
+            pmlmepriv.LinkDetectInfo.bBusyTraffic = b_busy_traffic as u8;
+            b_enter_ps as u8
         }
     }
 }
