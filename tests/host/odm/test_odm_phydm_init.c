@@ -9,8 +9,10 @@ struct vector {
 	char name[48];
 	int op;
 	int ability;
+	int drop_bits;
 	int expect;
 	int expect_rf;
+	int rf_before;
 	int chip_type;
 	int expect_ic;
 };
@@ -24,8 +26,10 @@ static int parse_vector_object(const char *obj, size_t len, void *vv)
 		return -1;
 	host_json_parse_int_in(obj, len, "op", &v->op);
 	host_json_parse_int_in(obj, len, "ability", &v->ability);
+	host_json_parse_int_in(obj, len, "drop_bits", &v->drop_bits);
 	host_json_parse_int_in(obj, len, "expect", &v->expect);
 	host_json_parse_int_in(obj, len, "expect_rf", &v->expect_rf);
+	host_json_parse_int_in(obj, len, "rf_before", &v->rf_before);
 	host_json_parse_int_in(obj, len, "chip_type", &v->chip_type);
 	host_json_parse_int_in(obj, len, "expect_ic", &v->expect_ic);
 	return 0;
@@ -50,11 +54,28 @@ static int run_vector(struct vector *v)
 		got = rtw_phydm_ability_ops(&adapter, HAL_PHYDM_ABILITY_GET, 0);
 		if (got != (u32)v->expect)
 			goto fail;
+	} else if (v->op == 1) {
+		rtw_phydm_ability_ops(&adapter, HAL_PHYDM_FUNC_SET, (u32)v->ability);
+		rtw_phydm_ability_ops(&adapter, HAL_PHYDM_FUNC_CLR, (u32)v->drop_bits);
+		got = rtw_phydm_ability_ops(&adapter, HAL_PHYDM_ABILITY_GET, 0);
+		if (got != (u32)v->expect)
+			goto fail;
 	} else if (v->op == 2) {
 		rtw_phydm_ability_ops(&adapter, HAL_PHYDM_DIS_ALL_FUNC, 0);
 		got = rtw_phydm_ability_ops(&adapter, HAL_PHYDM_ABILITY_GET, 0);
 		if (got != (u32)v->expect ||
 		    host_odm_rf_ability(adapter_to_phydm(&adapter)) != (u32)v->expect_rf)
+			goto fail;
+	} else if (v->op == 3) {
+		struct dm_struct *dm = adapter_to_phydm(&adapter);
+
+		halrf_cmn_info_set(dm, HALRF_CMNINFO_ABILITY, (u64)v->rf_before);
+		rtw_phydm_ability_ops(&adapter, HAL_PHYDM_FUNC_SET, (u32)v->ability);
+		rtw_phydm_ability_ops(&adapter, HAL_PHYDM_ABILITY_BK, 0);
+		rtw_phydm_ability_ops(&adapter, HAL_PHYDM_ABILITY_RESTORE, 0);
+		got = rtw_phydm_ability_ops(&adapter, HAL_PHYDM_ABILITY_GET, 0);
+		if (got != (u32)v->expect ||
+		    host_odm_rf_ability(dm) != (u32)v->expect_rf)
 			goto fail;
 	} else {
 		goto fail;
@@ -65,14 +86,15 @@ fail:
 	fprintf(stderr, "FAIL %s\n", v->name);
 	return -1;
 }
+
 int main(int argc, char **argv)
 {
-	struct vector vectors[8];
+	struct vector vectors[12];
 	size_t nvec = 0;
 	int failed = 0;
 	const char *path = (argc > 1) ? argv[1] : "odm_phydm_init_vectors.json";
 
-	if (host_load_vectors(path, vectors, sizeof(vectors[0]), 8,
+	if (host_load_vectors(path, vectors, sizeof(vectors[0]), 12,
 			      parse_vector_object, &nvec))
 		return 2;
 	for (size_t i = 0; i < nvec; i++)
