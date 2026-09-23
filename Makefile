@@ -2524,6 +2524,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_beamforming.o \
 		core/rtw_odm.o \
 		core/rtw_odm_phydm_init.o \
+		core/rtw_odm_adaptivity_leaf.o \
 		core/rtw_rm.o \
 		core/rtw_rm_fsm.o \
 		core/rtw_ft.o \
