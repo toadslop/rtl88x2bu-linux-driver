@@ -241,7 +241,7 @@ jobs:
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/eeprom_rw test test-rust
 
-      - name: Host odm phydm init parity (L2)
+      - name: Host odm phydm init + adaptivity leaf parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/odm test
 
