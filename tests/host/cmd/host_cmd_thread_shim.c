@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stddef.h>
+#include <string.h>
 #include "host_cmd_thread_types.h"
 
 static int g_sema_credits, g_sema_up, g_stop_calls, g_loop_budget = 100, g_cmd_hdl_calls;
@@ -15,6 +16,11 @@ static u8 default_cmd_hdl(PADAPTER a, u8 *b)
 	(void)b;
 	g_cmd_hdl_calls++;
 	return H2C_SUCCESS;
+}
+
+void *host_cmd_thread_memcpy(void *dest, const void *src, size_t n)
+{
+	return memcpy(dest, src, n);
 }
 
 void host_cmd_thread_reset(void)
