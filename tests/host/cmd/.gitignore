@@ -9,6 +9,8 @@ test_cmd_thread
 test_drvextra_cmd
 test_joinbss_cmd
 test_traffic_lps_cmd
+test_traffic_lps_cmd_rust
+librust_traffic_lps_cmd.a
 test_joinbss_cmd_rust
 test_drvextra_cmd_rust
 librust_joinbss_cmd.a
