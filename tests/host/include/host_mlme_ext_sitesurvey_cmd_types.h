@@ -134,6 +134,7 @@ struct host_sitesurvey_cmd_trace {
 extern struct host_sitesurvey_cmd_trace host_sitesurvey_cmd_trace;
 
 void host_sitesurvey_cmd_reset_trace(void);
+void host_sitesurvey_res_reset(_adapter *a, struct sitesurvey_parm *parm);
 extern int host_ps_annc_result;
 RT_CHANNEL_INFO *adapter_to_chset(_adapter *a);
 int rtw_scan_ch_decision(_adapter *a, struct rtw_ieee80211_channel *out,
