@@ -2670,6 +2670,7 @@ ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_DUMP
 ccflags-y += -DCONFIG_RUST_RF_DUMP_TXPWR_LMT
 ccflags-y += -DCONFIG_RUST_RF_KFREE_TX_GAIN
 ccflags-y += -DCONFIG_RUST_RF_KFREE_TX_GAIN_SET
+ccflags-y += -DCONFIG_RUST_ODM_PHYDM_INIT
 ccflags-y += -DCONFIG_RUST_CMD_PRIV
 ccflags-y += -DCONFIG_RUST_CMD_PRIV_EVT
 ccflags-y += -DCONFIG_RUST_CMD_QUEUE
@@ -2830,6 +2831,7 @@ $(MODULE_NAME)-y += rust/rtw_rf_op_class_pref.o
 $(MODULE_NAME)-y += rust/rtw_rf_op_class_dump.o
 $(MODULE_NAME)-y += rust/rtw_rf_dump_txpwr_lmt.o
 $(MODULE_NAME)-y += rust/rtw_rf_kfree_tx_gain.o
+$(MODULE_NAME)-y += rust/rtw_odm.o
 $(MODULE_NAME)-y += rust/rtw_recv.o
 $(MODULE_NAME)-y += rust/rtw_xmit.o
 $(MODULE_NAME)-y += rust/rtw_iol_rest.o
@@ -3675,6 +3677,28 @@ rust-objects-rtw-rf-kfree-tx-gain-rust-ref:
 rust-check-symbols-rtw-rf-kfree-tx-gain: rust-objects-rtw-rf-kfree-tx-gain-c rust-objects-rtw-rf-kfree-tx-gain-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/rf/kfree_tx_gain_c_ref.o NEW=tests/host/rf/kfree_tx_gain_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_rf_kfree_tx_gain.allow
+
+# W3-118 PR3: odm phydm init L1 (host C vs host Rust oracle).
+rust-objects-rtw-odm-phydm-init-c:
+	gcc -c -Wall -Wextra -Werror -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_ODM_PHYDM_INIT_TEST \
+		-o tests/host/odm/odm_phydm_init_unit_c.o core/rtw_odm_phydm_init.c
+	gcc -c -Wall -Wextra -Werror -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-o tests/host/odm/odm_phydm_init_shim_ref.o tests/host/odm/host_odm_phydm_shim.c
+	ld -r -o tests/host/odm/odm_phydm_init_c_ref.o tests/host/odm/odm_phydm_init_unit_c.o tests/host/odm/odm_phydm_init_shim_ref.o
+
+rust-objects-rtw-odm-phydm-init-rust-ref:
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_odm_phydm_init_test \
+		--emit=obj=tests/host/odm/odm_phydm_init_rust_ref.o \
+		--crate-type lib rust/rtw_odm.rs
+
+rust-check-symbols-rtw-odm-phydm-init: rust-objects-rtw-odm-phydm-init-c rust-objects-rtw-odm-phydm-init-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/odm/odm_phydm_init_c_ref.o NEW=tests/host/odm/odm_phydm_init_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_odm_phydm_init.allow
 
 # W3-60 PR4: cmd/evt priv init/teardown L1 (host C oracle vs host Rust oracle).
 rust-objects-rtw-cmd-rest-c:
