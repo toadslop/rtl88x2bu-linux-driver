@@ -1,0 +1,53 @@
+{
+  "oracle": "core/rtw_odm_adaptivity_leaf.c",
+  "vectors": [
+    {
+      "name": "needed_disable",
+      "op": "needed",
+      "adaptivity_en": 0,
+      "expect_bool": 0
+    },
+    {
+      "name": "needed_enable",
+      "op": "needed",
+      "adaptivity_en": 1,
+      "expect_bool": 1
+    },
+    {
+      "name": "en_msg_disable",
+      "op": "en_msg",
+      "adaptivity_en": 0,
+      "expect_contains": "RTW_ADAPTIVITY_EN_DISABLE"
+    },
+    {
+      "name": "mode_carrier_sense",
+      "op": "mode_msg",
+      "adaptivity_mode": 1,
+      "expect_contains": "RTW_ADAPTIVITY_MODE_CARRIER_SENSE"
+    },
+    {
+      "name": "config_enable_normal",
+      "op": "config_msg",
+      "adaptivity_en": 1,
+      "adaptivity_mode": 0,
+      "expect_contains": "ADAPTIVITY_VERSION 9.7.07"
+    },
+    {
+      "name": "parm_set_msg",
+      "op": "parm_msg",
+      "adaptivity_en": 1,
+      "adaptivity_mode": 0,
+      "th_l2h_ini": -20,
+      "th_edcca_hl_diff": 7,
+      "expect_contains": "0xec"
+    },
+    {
+      "name": "perpkt_rssi",
+      "op": "perpkt_rssi",
+      "rx_rate": 12,
+      "rssi_a": 80,
+      "rssi_b": 75,
+      "expect_contains": "rx_rate = MCS0, rssi_a = 80(%)"
+    }
+  ]
+}
