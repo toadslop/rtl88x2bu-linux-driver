@@ -98,8 +98,12 @@ extern "C" {
     fn rtw_rx_ampdu_apply(a: *mut Adapter);
     fn sitesurvey_pick_ch_behavior(a: *mut Adapter, ch: *mut U8, scan_type: *mut ScanType) -> U8;
     fn set_channel_bwmode(a: *mut Adapter, ch: U8, offset: U8, bw: U8);
-    fn rtw_mi_get_ch_setting_union(a: *mut Adapter, ch: *mut U8, bw: *mut U8, offset: *mut U8)
-        -> c_int;
+    fn rtw_mi_get_ch_setting_union(
+        a: *mut Adapter,
+        ch: *mut U8,
+        bw: *mut U8,
+        offset: *mut U8,
+    ) -> c_int;
     fn survey_done_set_ch_bw(a: *mut Adapter);
     fn rtw_mi_os_xmit_schedule(a: *mut Adapter);
     fn rtw_get_current_time() -> U32;
@@ -202,8 +206,7 @@ pub extern "C" fn sitesurvey_cmd_hdl(padapter: *mut Adapter, pbuf: *mut U8) -> U
                     }
                 }
                 SCAN_BACK_OP => {
-                    let elapsed =
-                        rtw_get_passing_time_ms(ext.sitesurvey_res.backop_time);
+                    let elapsed = rtw_get_passing_time_ms(ext.sitesurvey_res.backop_time);
                     if elapsed >= ext.sitesurvey_res.backop_ms as U32 || ext.scan_abort != 0 {
                         ext.sitesurvey_res.state = SCAN_LEAVING_OP;
                         ext.sitesurvey_res.next_state = SCAN_LEAVING_OP;

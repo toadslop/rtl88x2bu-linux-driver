@@ -245,6 +245,8 @@ librust_mlme_ext_sitesurvey_cmd.a: $(RUST_MLME_EXT_SITESURVEY_CMD)
 		--crate-type staticlib $(RUST_MLME_EXT_SITESURVEY_CMD) -o $@
 
 SITESURVEY_CMD_RUST_VECTORS ?= mlme_ext_sitesurvey_cmd_vectors_rust.json
+# W3-90 PR3: full backop/complete vectors once Rust oracle covers SCAN_BACKING_OP..COMPLETE
+SITESURVEY_CMD_RUST_VECTORS := mlme_ext_sitesurvey_cmd_vectors.json
 
 test-sitesurvey-cmd-rust: test_sitesurvey_cmd_rust
 	./test_sitesurvey_cmd_rust $(SITESURVEY_CMD_RUST_VECTORS)
