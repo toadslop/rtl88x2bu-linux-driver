@@ -34,12 +34,10 @@ u32 rtw_phydm_ability_ops(_adapter *adapter, HAL_PHYDM_OPS ops, u32 ability)
 		podmpriv->support_ability &= ~(ability);
 		break;
 	case HAL_PHYDM_ABILITY_BK:
-		/* dm flag backup*/
 		podmpriv->bk_support_ability = podmpriv->support_ability;
 		pHalData->bk_rf_ability = halrf_cmn_info_get(podmpriv, HALRF_CMNINFO_ABILITY);
 		break;
 	case HAL_PHYDM_ABILITY_RESTORE:
-		/* restore dm flag */
 		podmpriv->support_ability = podmpriv->bk_support_ability;
 		halrf_cmn_info_set(podmpriv, HALRF_CMNINFO_ABILITY, pHalData->bk_rf_ability);
 		break;
@@ -53,7 +51,6 @@ u32 rtw_phydm_ability_ops(_adapter *adapter, HAL_PHYDM_OPS ops, u32 ability)
 	return result;
 }
 
-/* set ODM_CMNINFO_IC_TYPE based on chip_type */
 void rtw_odm_init_ic_type(_adapter *adapter)
 {
 	struct dm_struct *odm = adapter_to_phydm(adapter);
