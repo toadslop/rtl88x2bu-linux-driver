@@ -44,11 +44,7 @@ extern "C" {
     fn rtw_rust_odm_adaptivity_rx_rate(dm: *mut DmStruct) -> u8;
     fn rtw_rust_odm_adaptivity_rssi_a(dm: *mut DmStruct) -> u8;
     fn rtw_rust_odm_adaptivity_rssi_b(dm: *mut DmStruct) -> u8;
-    fn rtw_rust_odm_adaptivity_print_parm_line(
-        sel: *mut c_void,
-        th_l2h: u8,
-        th_edcca_hl: i8,
-    );
+    fn rtw_rust_odm_adaptivity_print_parm_line(sel: *mut c_void, th_l2h: u8, th_edcca_hl: i8);
     fn rtw_rust_odm_adaptivity_print_perpkt(sel: *mut c_void, rate: u8, rssi_a: u8, rssi_b: u8);
 }
 
