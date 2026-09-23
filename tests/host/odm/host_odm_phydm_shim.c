@@ -54,33 +54,3 @@ void rtw_warn_on(int cond)
 {
 	(void)cond;
 }
-
-u32 rtw_phydm_ability_ops(_adapter *adapter, HAL_PHYDM_OPS ops, u32 ability)
-{
-	HAL_DATA_TYPE *pHalData = GET_HAL_DATA(adapter);
-	struct dm_struct *podmpriv = &pHalData->odmpriv;
-	u32 result = 0;
-
-	switch (ops) {
-	case HAL_PHYDM_DIS_ALL_FUNC:
-		podmpriv->support_ability = DYNAMIC_FUNC_DISABLE;
-		halrf_cmn_info_set(podmpriv, HALRF_CMNINFO_ABILITY, DYNAMIC_FUNC_DISABLE);
-		break;
-	case HAL_PHYDM_FUNC_SET:
-		podmpriv->support_ability |= ability;
-		break;
-	case HAL_PHYDM_ABILITY_GET:
-		result = podmpriv->support_ability;
-		break;
-	}
-	return result;
-}
-
-void rtw_odm_init_ic_type(_adapter *adapter)
-{
-	struct dm_struct *odm = adapter_to_phydm(adapter);
-	u32 ic_type = chip_type_to_odm_ic_type(rtw_get_chip_type(adapter));
-
-	rtw_warn_on(!ic_type);
-	odm_cmn_info_init(odm, ODM_CMNINFO_IC_TYPE, ic_type);
-}
