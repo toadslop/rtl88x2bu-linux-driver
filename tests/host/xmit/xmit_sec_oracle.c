@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0
-/* W3-86 PR7: host L2 oracle for update_attrib_sec_info (isolated types). */
+/*
+ * W3-86 PR7: host L2 oracle for update_attrib_sec_info (isolated types).
+ *
+ * Subset of core/rtw_xmit.c: open/802.1X AES paths and blocked/EAPOL clear
+ * window only (no MP bypass, TKIP/WEP/GCMP/WAPI, key copy, bswenc, TDLS/WPS).
+ * Sec vectors compile only without RUST_XMIT_UPDATE_ATTRIB_ORACLE; Rust
+ * differential tests cover vcs/phy until sec is wired in a follow-up.
+ */
 #include <string.h>
 #include "host_xmit_update_attrib_sec_types.h"
 
@@ -10,8 +17,9 @@ struct security_priv_sec_test host_xmit_sec_cfg;
 #define dot11AuthAlgrthm_8021X 2
 #define _NO_PRIVACY_ 0
 #define _AES_ 0x04
-#define EAPOL_2_4 6
-#define EAPOL_4_4 8
+/* Match enum eap_type in include/ieee80211.h (EAPOL_PACKET=6, EAPOL_2_4=10). */
+#define EAPOL_2_4 10
+#define EAPOL_4_4 12
 #define _SUCCESS 0
 #define _FAIL (-1)
 

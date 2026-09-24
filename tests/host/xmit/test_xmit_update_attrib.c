@@ -158,7 +158,7 @@ int main(void)
 		host_xmit_sec_passing_ms = 50;
 		sta.resp_nonenc_eapol_key_starttime = 1;
 		attrib.ether_type = 0x888e;
-		if (update_attrib_sec_info_l2(&adapter, &attrib, &sta, 6) != 0 ||
+		if (update_attrib_sec_info_l2(&adapter, &attrib, &sta, 10) != 0 ||
 		    attrib.encrypt != 0) {
 			fprintf(stderr, "sec_eapol_2_4_clear failed\n");
 			fail = 1;
