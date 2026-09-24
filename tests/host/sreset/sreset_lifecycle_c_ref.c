@@ -1,20 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0
+/* L1 C reference for W3-95 sreset lifecycle symbols (matches rust/rtw_sreset.o exports). */
+
 #include "host_sreset_types.h"
 
 static u32 g_reg_txdma;
 
-void host_sreset_set_reg_read(u32 addr, u32 val)
-{
-	if (addr == REG_TXDMA_STATUS)
-		g_reg_txdma = val;
-}
-
-void host_sreset_clear_reg_reads(void)
-{
-	g_reg_txdma = 0;
-}
-
-u32 rtw_read32(PADAPTER padapter, u32 addr)
+static u32 ref_read32(PADAPTER padapter, u32 addr)
 {
 	(void)padapter;
 	return addr == REG_TXDMA_STATUS ? g_reg_txdma : 0;
@@ -47,7 +38,7 @@ u8 sreset_get_wifi_status(PADAPTER padapter)
 
 	if (p->silent_reset_inprogress == _TRUE)
 		return status;
-	val32 = rtw_read32(padapter, REG_TXDMA_STATUS);
+	val32 = ref_read32(padapter, REG_TXDMA_STATUS);
 	if (val32 == 0xeaeaeaea)
 		p->Wifi_Error_Status = WIFI_IF_NOT_EXIST;
 	else if (val32)
