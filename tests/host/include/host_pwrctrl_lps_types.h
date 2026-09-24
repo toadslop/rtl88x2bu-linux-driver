@@ -22,6 +22,7 @@ typedef s32 sint;
 struct mlme_priv { u32 fw_state; };
 struct xmit_priv { u16 free_xmitbuf_cnt, free_xmit_extbuf_cnt; };
 struct pwrctrl_priv { u8 bpower_saving; systime ips_deny_time; };
+struct _adapter;
 struct dvobj_priv { u8 iface_nums; struct _adapter *padapters[4]; };
 struct _adapter {
 	struct dvobj_priv *dvobj;
@@ -29,6 +30,8 @@ struct _adapter {
 	struct xmit_priv xmitpriv;
 	struct pwrctrl_priv pwrctrlpriv;
 };
+
+typedef struct _adapter _adapter;
 
 #define adapter_to_pwrctl(a) (&(a)->pwrctrlpriv)
 #define adapter_to_dvobj(a) ((a)->dvobj)
