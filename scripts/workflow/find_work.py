@@ -303,6 +303,8 @@ def base_branch_merged(base_ref: str, owner: str, cache: dict[str, bool]) -> boo
 
 
 def fetch_open_prs(owner: str) -> list[PullRequest]:
+    # High limit: `--limit 100` drops older open PRs when the queue exceeds 100,
+    # breaking implements_issue() (e.g. W3-96 #853–#857 missing from selection).
     rows = gh_json(
         [
             "pr",
@@ -310,7 +312,7 @@ def fetch_open_prs(owner: str) -> list[PullRequest]:
             "--state",
             "open",
             "--limit",
-            "100",
+            "200",
             "--json",
             "number,title,isDraft,baseRefName,headRefName,url",
         ]
