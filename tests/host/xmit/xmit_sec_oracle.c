@@ -44,6 +44,7 @@ static u8 host_get_encry_algo(struct security_priv *base,
 	}
 }
 
+/* Same layout as AES_IV in include/rtw_xmit.h (pn48 / little-endian TSC bytes). */
 #define AES_IV(pattrib_iv, dot11txpn, keyidx)                                  \
 	do {                                                                   \
 		(dot11txpn).val = (dot11txpn).val == 0xffffffffffffULL        \
@@ -52,7 +53,11 @@ static u8 host_get_encry_algo(struct security_priv *base,
 		(pattrib_iv)[0] = (u8)((dot11txpn).val);                       \
 		(pattrib_iv)[1] = (u8)((dot11txpn).val >> 8);                  \
 		(pattrib_iv)[2] = 0;                                           \
-		(pattrib_iv)[3] = (u8)(0x20 | (((keyidx)&0x3) << 6));          \
+		(pattrib_iv)[3] = (u8)(BIT(5) | (((keyidx)&0x3) << 6));        \
+		(pattrib_iv)[4] = (u8)((dot11txpn).val >> 16);                 \
+		(pattrib_iv)[5] = (u8)((dot11txpn).val >> 24);                 \
+		(pattrib_iv)[6] = (u8)((dot11txpn).val >> 32);                 \
+		(pattrib_iv)[7] = (u8)((dot11txpn).val >> 40);                 \
 	} while (0)
 
 static u32 rtw_get_passing_time_ms(u64 start)
