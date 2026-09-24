@@ -140,6 +140,30 @@ int main(void)
 		memset(&adapter, 0, sizeof(adapter));
 		memset(&attrib, 0, sizeof(attrib));
 		memset(&sta, 0, sizeof(sta));
+		host_xmit_sec_cfg.dot11AuthAlgrthm = 0;
+		adapter.securitypriv.dot11PrivacyAlgrthm = 0x04;
+		sta.dot11txpn.val = 0x00000000ffff0000ULL;
+		attrib.ether_type = 0x0800;
+		attrib.ra[0] = 0x01;
+		if (update_attrib_sec_info_l2(&adapter, &attrib, &sta, 0) != 0 ||
+		    attrib.encrypt != 0x04 || attrib.iv_len != 8 ||
+		    attrib.iv[0] != 1 || attrib.iv[4] != 0xff || attrib.iv[5] != 0xff ||
+		    attrib.iv[6] != 0 || attrib.iv[7] != 0) {
+			fprintf(stderr, "sec_open_aes_mc_high_pn failed\n");
+			fail = 1;
+		} else {
+			printf("PASS sec_open_aes_mc_high_pn\n");
+		}
+	}
+
+	{
+		_adapter adapter;
+		struct pkt_attrib_sec_ext attrib;
+		struct sta_info_sec_ext sta;
+
+		memset(&adapter, 0, sizeof(adapter));
+		memset(&attrib, 0, sizeof(attrib));
+		memset(&sta, 0, sizeof(sta));
 		host_xmit_sec_passing_ms = 50;
 		sta.resp_nonenc_eapol_key_starttime = 1;
 		attrib.ether_type = 0x888e;
