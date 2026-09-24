@@ -41,7 +41,14 @@ BOOLEAN phydm_radar_detect(struct dm_struct *dm)
 }
 u8 phydm_dfs_polling_time(struct dm_struct *dm) { return dm->dfs_polling_ms; }
 
+_adapter *host_odm_dm_adapter(struct dm_struct *dm) { return dm->adapter; }
+struct dm_struct *host_adapter_to_phydm(_adapter *a) { return adapter_to_phydm(a); }
+struct dm_struct *host_dvobj_to_phydm(struct dvobj_priv *d) { return dvobj_to_phydm(d); }
+struct rf_ctl_t *host_dvobj_to_rfctl(struct dvobj_priv *d) { return dvobj_to_rfctl(d); }
+
+#ifndef HOST_ODM_RADAR_RUST
 #include "../../../core/rtw_odm_radar_txpwr_leaf.c"
+#endif
 
 struct vector {
 	char name[48], op[24];
