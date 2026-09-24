@@ -79,4 +79,12 @@ void phydm_radar_detect_enable(struct dm_struct *dm);
 BOOLEAN phydm_radar_detect(struct dm_struct *dm);
 u8 phydm_dfs_polling_time(struct dm_struct *dm);
 
+s16 rtw_odm_get_tx_power_mbm(struct dm_struct *dm, u8 rfpath, u8 rate, u8 bw, u8 cch);
+void rtw_odm_radar_detect_reset(_adapter *adapter);
+void rtw_odm_radar_detect_disable(_adapter *adapter);
+void rtw_odm_radar_detect_enable(_adapter *adapter);
+BOOLEAN rtw_odm_radar_detect(_adapter *adapter);
+void rtw_odm_update_dfs_region(struct dvobj_priv *dvobj);
+u8 rtw_odm_radar_detect_polling_int_ms(struct dvobj_priv *dvobj);
+
 #endif
