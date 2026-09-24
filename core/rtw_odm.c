@@ -18,6 +18,7 @@
 
 /* phydm ability + IC init: core/rtw_odm_phydm_init.c (W3-118) */
 /* adaptivity msg/parm leaf: core/rtw_odm_adaptivity_leaf.c (W3-119) */
+/* radar detect + tx power leaf: core/rtw_odm_radar_txpwr_leaf.c (W3-120) */
 
 void rtw_odm_acquirespinlock(_adapter *adapter,	enum rt_spinlock_type type)
 {
@@ -44,53 +45,6 @@ void rtw_odm_releasespinlock(_adapter *adapter,	enum rt_spinlock_type type)
 		break;
 	}
 }
-
-s16 rtw_odm_get_tx_power_mbm(struct dm_struct *dm, u8 rfpath, u8 rate, u8 bw, u8 cch)
-{
-	return phy_get_txpwr_single_mbm(dm->adapter, rfpath, mgn_rate_to_rs(rate), rate, bw, cch, 0, 0, 0, NULL);
-}
-
-#ifdef CONFIG_DFS_MASTER
-inline void rtw_odm_radar_detect_reset(_adapter *adapter)
-{
-	phydm_radar_detect_reset(adapter_to_phydm(adapter));
-}
-
-inline void rtw_odm_radar_detect_disable(_adapter *adapter)
-{
-	phydm_radar_detect_disable(adapter_to_phydm(adapter));
-}
-
-/* called after ch, bw is set */
-inline void rtw_odm_radar_detect_enable(_adapter *adapter)
-{
-	phydm_radar_detect_enable(adapter_to_phydm(adapter));
-}
-
-inline BOOLEAN rtw_odm_radar_detect(_adapter *adapter)
-{
-	return phydm_radar_detect(adapter_to_phydm(adapter));
-}
-
-static enum phydm_dfs_region_domain _rtw_dfs_regd_to_phydm[] = {
-	[RTW_DFS_REGD_NONE]	= PHYDM_DFS_DOMAIN_UNKNOWN,
-	[RTW_DFS_REGD_FCC]	= PHYDM_DFS_DOMAIN_FCC,
-	[RTW_DFS_REGD_MKK]	= PHYDM_DFS_DOMAIN_MKK,
-	[RTW_DFS_REGD_ETSI]	= PHYDM_DFS_DOMAIN_ETSI,
-};
-
-#define rtw_dfs_regd_to_phydm(region) (((region) >= RTW_DFS_REGD_NUM) ? _rtw_dfs_regd_to_phydm[RTW_DFS_REGD_NONE] : _rtw_dfs_regd_to_phydm[(region)])
-
-void rtw_odm_update_dfs_region(struct dvobj_priv *dvobj)
-{
-	odm_cmn_info_init(dvobj_to_phydm(dvobj), ODM_CMNINFO_DFS_REGION_DOMAIN, rtw_dfs_regd_to_phydm(rtw_rfctl_get_dfs_domain(dvobj_to_rfctl(dvobj))));
-}
-
-inline u8 rtw_odm_radar_detect_polling_int_ms(struct dvobj_priv *dvobj)
-{
-	return phydm_dfs_polling_time(dvobj_to_phydm(dvobj));
-}
-#endif /* CONFIG_DFS_MASTER */
 
 void rtw_odm_parse_rx_phy_status_chinfo(union recv_frame *rframe, u8 *phys)
 {

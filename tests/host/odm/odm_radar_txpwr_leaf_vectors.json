@@ -1,0 +1,38 @@
+{
+  "oracle": "core/rtw_odm_radar_txpwr_leaf.c",
+  "vectors": [
+    {
+      "name": "txpwr_mcs0_36",
+      "op": "txpwr",
+      "rfpath": 0,
+      "rate": 12,
+      "bw": 1,
+      "cch": 36,
+      "expect_txpwr": 49
+    },
+    {
+      "name": "radar_reset_once",
+      "op": "radar_reset",
+      "expect_radar_reset": 1
+    },
+    {
+      "name": "radar_detect_hit",
+      "op": "radar_detect",
+      "mock_radar_detect": 1,
+      "expect_radar_detect_ret": 1,
+      "expect_radar_detect_calls": 1
+    },
+    {
+      "name": "update_dfs_fcc",
+      "op": "update_dfs",
+      "dfs_region": 1,
+      "expect_dfs_init": 1
+    },
+    {
+      "name": "polling_40ms",
+      "op": "polling",
+      "dfs_polling_ms": 40,
+      "expect_polling": 40
+    }
+  ]
+}
