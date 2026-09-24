@@ -92,8 +92,8 @@ test-update-attrib: test_xmit_update_attrib
 test-update-attrib-rust: test_xmit_update_attrib_rust
 	./test_xmit_update_attrib_rust
 
-test_xmit_update_attrib: test_xmit_update_attrib.c $(UPDATE_ATTRIB_REST_SRC)
-	$(CC) $(UPDATE_ATTRIB_CFLAGS) -o $@ test_xmit_update_attrib.c $(UPDATE_ATTRIB_REST_SRC)
+test_xmit_update_attrib: test_xmit_update_attrib.c xmit_sec_oracle.c $(UPDATE_ATTRIB_REST_SRC)
+	$(CC) $(UPDATE_ATTRIB_CFLAGS) -o $@ test_xmit_update_attrib.c xmit_sec_oracle.c $(UPDATE_ATTRIB_REST_SRC)
 
 librust_xmit_update_attrib.a: $(RUST_XMIT_UPDATE_ATTRIB)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on \
