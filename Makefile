@@ -3825,7 +3825,7 @@ rust-objects-rtw-sreset-c:
 		-I tests/host/include -I include \
 		-include tests/host/include/host_autoconf.h \
 		-DHOST_SRESET_TEST -o tests/host/sreset/sreset_lifecycle_c_ref.o \
-		tests/host/sreset/sreset_lifecycle_c_ref.c
+		tests/host/sreset/host_sreset_lifecycle_shim.c
 rust-check-symbols-rtw-sreset: rust-objects-rtw-sreset-c rust-objects-rtw-sreset
 	$(MAKE) rust-check-symbols OLD=tests/host/sreset/sreset_lifecycle_c_ref.o NEW=rust/rtw_sreset.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_sreset.allow ALLOW_VACUOUS=1
