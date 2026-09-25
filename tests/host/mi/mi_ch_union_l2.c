@@ -32,6 +32,15 @@ static inline s32 linked(struct mlme_priv *m, s32 st)
 	return (st == 0 && !m->fw_state) || (m->fw_state & st) ? _TRUE : _FALSE;
 }
 
+#ifdef HOST_MI_RUST
+extern void mi_rust_update_union(struct _adapter *a, u8 ch, u8 off, u8 bw);
+extern u8 mi_rust_stay_ch(struct _adapter *a);
+extern int mi_rust_union_ifbmp(struct dvobj_priv *d, u8 ifbmp, u8 *ch, u8 *bw,
+			       u8 *off);
+#define update_union mi_rust_update_union
+#define stay_ch mi_rust_stay_ch
+#define union_ifbmp mi_rust_union_ifbmp
+#else
 static void update_union(struct _adapter *a, u8 ch, u8 off, u8 bw)
 {
 	struct dvobj_priv *d = a->dvobj;
@@ -107,6 +116,7 @@ static int union_ifbmp(struct dvobj_priv *d, u8 ifbmp, u8 *ch, u8 *bw, u8 *off)
 	}
 	return n;
 }
+#endif
 
 static struct dvobj_priv g_dv;
 static struct _adapter g_if[4];
