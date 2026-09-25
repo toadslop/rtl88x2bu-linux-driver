@@ -275,7 +275,7 @@ jobs:
 
       - name: Host mi channel union leaf parity (L2)
         if: steps.filter.outputs.l2 == 'true'
-        run: make -C tests/host/mi test
+        run: make -C tests/host/mi test test-rust
 
       - name: Host p2p WFD IE builders parity (L2)
         if: steps.filter.outputs.l2 == 'true'
