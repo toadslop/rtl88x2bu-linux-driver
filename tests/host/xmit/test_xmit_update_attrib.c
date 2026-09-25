@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "host_xmit_update_attrib_types.h"
+#include "host_xmit_update_attrib_sec_types.h"
 
 static void setup_adapter_vcs(_adapter *a, u8 cur_wm, u16 rts_thresh, u32 frag_len)
 {
@@ -103,6 +104,116 @@ int main(void)
 		fail |= run_phy_case("phy_ht_ampdu_tid", &adapter, &attrib, &sta,
 				     CHANNEL_WIDTH_40, _TRUE);
 	}
+
+#ifndef RUST_XMIT_UPDATE_ATTRIB_ORACLE
+	{
+		_adapter adapter;
+		struct pkt_attrib_sec_ext attrib;
+		struct sta_info_sec_ext sta;
+
+		memset(&adapter, 0, sizeof(adapter));
+		memset(&attrib, 0, sizeof(attrib));
+		memset(&sta, 0, sizeof(sta));
+		host_xmit_sec_cfg.dot11AuthAlgrthm = 0;
+		adapter.securitypriv.dot11PrivacyAlgrthm = 0x04;
+		sta.mac_id = 3;
+		sta.dot11txpn.val = 0xffff;
+		attrib.ether_type = 0x0800;
+		attrib.ra[0] = 0x02;
+		if (update_attrib_sec_info_l2(&adapter, &attrib, &sta, 0) != 0 ||
+		    attrib.encrypt != 0x04 || attrib.iv_len != 8 ||
+		    attrib.mac_id != 3 || attrib.iv[0] != 0 || attrib.iv[1] != 0 ||
+		    attrib.iv[3] != (0x20 | 0) || attrib.iv[4] != 1 ||
+		    attrib.iv[5] != 0) {
+			fprintf(stderr, "sec_open_aes failed\n");
+			fail = 1;
+		} else {
+			printf("PASS sec_open_aes\n");
+		}
+	}
+
+	{
+		_adapter adapter;
+		struct pkt_attrib_sec_ext attrib;
+		struct sta_info_sec_ext sta;
+
+		memset(&adapter, 0, sizeof(adapter));
+		memset(&attrib, 0, sizeof(attrib));
+		memset(&sta, 0, sizeof(sta));
+		host_xmit_sec_cfg.dot11AuthAlgrthm = 0;
+		adapter.securitypriv.dot11PrivacyAlgrthm = 0x04;
+		sta.dot11txpn.val = 0x00000000ffff0000ULL;
+		attrib.ether_type = 0x0800;
+		attrib.ra[0] = 0x01;
+		if (update_attrib_sec_info_l2(&adapter, &attrib, &sta, 0) != 0 ||
+		    attrib.encrypt != 0x04 || attrib.iv_len != 8 ||
+		    attrib.iv[0] != 1 || attrib.iv[4] != 0xff || attrib.iv[5] != 0xff ||
+		    attrib.iv[6] != 0 || attrib.iv[7] != 0) {
+			fprintf(stderr, "sec_open_aes_mc_high_pn failed\n");
+			fail = 1;
+		} else {
+			printf("PASS sec_open_aes_mc_high_pn\n");
+		}
+	}
+
+	{
+		_adapter adapter;
+		struct pkt_attrib_sec_ext attrib;
+		struct sta_info_sec_ext sta;
+
+		memset(&adapter, 0, sizeof(adapter));
+		memset(&attrib, 0, sizeof(attrib));
+		memset(&sta, 0, sizeof(sta));
+		host_xmit_sec_passing_ms = 50;
+		sta.resp_nonenc_eapol_key_starttime = 1;
+		attrib.ether_type = 0x888e;
+		if (update_attrib_sec_info_l2(&adapter, &attrib, &sta, 12) != 0 ||
+		    attrib.encrypt != 0) {
+			fprintf(stderr, "sec_eapol_4_4_clear failed\n");
+			fail = 1;
+		} else {
+			printf("PASS sec_eapol_4_4_clear\n");
+		}
+	}
+
+	{
+		_adapter adapter;
+		struct pkt_attrib_sec_ext attrib;
+		struct sta_info_sec_ext sta;
+
+		memset(&adapter, 0, sizeof(adapter));
+		memset(&attrib, 0, sizeof(attrib));
+		memset(&sta, 0, sizeof(sta));
+		sta.ieee8021x_blocked = _TRUE;
+		attrib.ether_type = 0x0800;
+		if (update_attrib_sec_info_l2(&adapter, &attrib, &sta, 0) != -1) {
+			fprintf(stderr, "sec_blocked_data expect fail\n");
+			fail = 1;
+		} else {
+			printf("PASS sec_blocked_data\n");
+		}
+	}
+
+	{
+		_adapter adapter;
+		struct pkt_attrib_sec_ext attrib;
+		struct sta_info_sec_ext sta;
+
+		memset(&adapter, 0, sizeof(adapter));
+		memset(&attrib, 0, sizeof(attrib));
+		memset(&sta, 0, sizeof(sta));
+		host_xmit_sec_passing_ms = 50;
+		sta.resp_nonenc_eapol_key_starttime = 1;
+		attrib.ether_type = 0x888e;
+		if (update_attrib_sec_info_l2(&adapter, &attrib, &sta, 10) != 0 ||
+		    attrib.encrypt != 0) {
+			fprintf(stderr, "sec_eapol_2_4_clear failed\n");
+			fail = 1;
+		} else {
+			printf("PASS sec_eapol_2_4_clear\n");
+		}
+	}
+#endif /* !RUST_XMIT_UPDATE_ATTRIB_ORACLE */
 
 	return fail ? 1 : 0;
 }
