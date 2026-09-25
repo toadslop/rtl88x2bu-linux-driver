@@ -23,7 +23,7 @@ AP_BCN_IE_SRC := $(CORE)/rtw_ap_bcn_ie.c
 AP_BCN_UPDATE_SRC := $(CORE)/rtw_ap_bcn_update.c
 BCN_UPDATE_CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 -I$(HOST_INC) -I$(CORE) -I$(ROOT)/include \
 	-include $(HOST_INC)/host_autoconf.h -DHOST_AP_BCN_UPDATE_TEST
-BCN_UPDATE_DEPS := ap_bcn_update_oracle.c host_ap_bcn_update_shim.c
+BCN_UPDATE_DEPS := host_ap_bcn_update_shim.c
 IE_REST_SRC := $(CORE)/rtw_ieee80211_rest.c
 WLAN_UTIL := ../wlan_util
 IE_ORACLE := ../ie/ie_c_oracle.c
