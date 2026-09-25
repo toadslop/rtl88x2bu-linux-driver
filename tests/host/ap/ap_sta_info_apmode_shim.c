@@ -126,7 +126,7 @@ void host_rust_apmode_read_ht_inputs(_adapter *padapter, struct sta_info *psta,
 	out->sta_cap = psta->htpriv.ht_cap.cap_info;
 	out->sta_ampdu_para = psta->htpriv.ht_cap.ampdu_params_info;
 	out->op_present = psta->htpriv.op_present;
-	out->ht_op_sta_width = 0;
+	out->ht_op_sta_width = GET_HT_OP_ELE_STA_CHL_WIDTH(psta->htpriv.ht_op);
 	out->ht_40_intol = psta->ht_40mhz_intolerant;
 	out->cur_bwmode = padapter->mlmeextpriv.cur_bwmode;
 	out->cur_ch_offset = padapter->mlmeextpriv.cur_ch_offset;
