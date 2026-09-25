@@ -11,10 +11,10 @@
     unreachable_pub
 )]
 
-#[cfg(host_vht_build_test)]
-use std::os::raw::c_void;
 #[cfg(not(host_vht_build_test))]
 use core::ffi::c_void;
+#[cfg(host_vht_build_test)]
+use std::os::raw::c_void;
 
 const EID_VHTOperation: u8 = 192;
 const CHANNEL_WIDTH_80: u8 = 2;
@@ -111,21 +111,16 @@ mod host {
             let pvhtpriv = &padapter_ref.mlmepriv.vhtpriv;
             let mut operation = [0u8; 5];
             let bw_mode = regsty_bw_5g(&padapter_ref.registrypriv);
-            let (chnl_width, center_freq) =
-                if hal_chk_bw_cap(padapter, BW_CAP_80M | BW_CAP_160M)
-                    && regsty_bw_5g(&padapter_ref.registrypriv) >= CHANNEL_WIDTH_80
-                {
-                    (
-                        1u8,
-                        rtw_get_center_ch(
-                            channel,
-                            bw_mode,
-                            HAL_PRIME_CHNL_OFFSET_LOWER,
-                        ),
-                    )
-                } else {
-                    (0u8, 0u8)
-                };
+            let (chnl_width, center_freq) = if hal_chk_bw_cap(padapter, BW_CAP_80M | BW_CAP_160M)
+                && regsty_bw_5g(&padapter_ref.registrypriv) >= CHANNEL_WIDTH_80
+            {
+                (
+                    1u8,
+                    rtw_get_center_ch(channel, bw_mode, HAL_PRIME_CHNL_OFFSET_LOWER),
+                )
+            } else {
+                (0u8, 0u8)
+            };
 
             set_vht_operation_chl_width(&mut operation, chnl_width);
             set_vht_operation_center1(&mut operation, center_freq);
