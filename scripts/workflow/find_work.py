@@ -310,7 +310,7 @@ def fetch_open_prs(owner: str) -> list[PullRequest]:
             "--state",
             "open",
             "--limit",
-            "100",
+            "200",
             "--json",
             "number,title,isDraft,baseRefName,headRefName,url",
         ]
