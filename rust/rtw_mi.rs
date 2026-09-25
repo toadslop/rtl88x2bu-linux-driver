@@ -2,9 +2,6 @@
 //! W3-121 mi channel union helpers (host L2 Rust oracle).
 #![allow(dead_code, improper_ctypes, missing_docs, non_snake_case)]
 
-#[cfg(host_mi_ch_union_test)]
-use std::os::raw::c_void;
-
 const ASOC: i32 = 0x00000001;
 const LINK: i32 = 0x00000080;
 const OP_SW: i32 = 0x00800000;
@@ -70,8 +67,16 @@ pub unsafe extern "C" fn mi_rust_update_union(a: *mut Adapter, ch: u8, off: u8, 
 pub unsafe extern "C" fn mi_rust_stay_ch(a: *mut Adapter) -> u8 {
     let a = &*a;
     let d = &*a.dvobj;
-    let uc = if d.union_ch != 0 { d.union_ch } else { d.union_ch_bak };
-    let ub = if d.union_ch != 0 { d.union_bw } else { d.union_bw_bak };
+    let uc = if d.union_ch != 0 {
+        d.union_ch
+    } else {
+        d.union_ch_bak
+    };
+    let ub = if d.union_ch != 0 {
+        d.union_bw
+    } else {
+        d.union_bw_bak
+    };
     let uo = if d.union_ch != 0 {
         d.union_offset
     } else {
