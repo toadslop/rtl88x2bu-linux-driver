@@ -1,1 +1,3 @@
 test_mi_ch_union
+tests/host/mi/librust_mi.a
+test_mi_ch_union_rust
