@@ -41,7 +41,8 @@
       "backop_flags": 32,
       "expect_state": 6,
       "expect_set_channel": 6,
-      "expect_hw_survey_off": 1
+      "expect_hw_survey_off": 1,
+      "expect_backop_xmit": 1
     },
     {
       "name": "back_op_timeout_ps_annc_wait",

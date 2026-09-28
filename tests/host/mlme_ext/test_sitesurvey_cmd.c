@@ -18,7 +18,8 @@ struct vector {
 	int expect_state, expect_next_state, expect_channel_idx;
 	int expect_hw_survey, expect_igi, expect_msr, expect_site_survey, expect_pick_ch;
 	int expect_set_channel, expect_survey_done, expect_hw_survey_off;
-	int expect_phydm_restore, expect_macid_wakeup;
+	int expect_phydm_restore, expect_macid_wakeup, expect_backop_xmit;
+	u8 has_expect_state;
 };
 
 static void setup_adapter(struct vector *v)
@@ -74,7 +75,8 @@ static int parse_vec(const char *o, size_t l, void *vv)
 	host_json_parse_int_in(o, l, "ch2", &v->ch2);
 	host_json_parse_int_in(o, l, "scan_ch_ms", &v->scan_ch_ms);
 	host_json_parse_int_in(o, l, "ps_annc", &v->ps_annc);
-	host_json_parse_int_in(o, l, "expect_state", &v->expect_state);
+	if (!host_json_parse_int_in(o, l, "expect_state", &v->expect_state))
+		v->has_expect_state = 1;
 	host_json_parse_int_in(o, l, "expect_next_state", &v->expect_next_state);
 	host_json_parse_int_in(o, l, "expect_channel_idx", &v->expect_channel_idx);
 	host_json_parse_int_in(o, l, "expect_hw_survey", &v->expect_hw_survey);
@@ -93,6 +95,7 @@ static int parse_vec(const char *o, size_t l, void *vv)
 	host_json_parse_int_in(o, l, "expect_hw_survey_off", &v->expect_hw_survey_off);
 	host_json_parse_int_in(o, l, "expect_phydm_restore", &v->expect_phydm_restore);
 	host_json_parse_int_in(o, l, "expect_macid_wakeup", &v->expect_macid_wakeup);
+	host_json_parse_int_in(o, l, "expect_backop_xmit", &v->expect_backop_xmit);
 	return 0;
 }
 
@@ -102,7 +105,7 @@ static int run_vec(void *vv)
 	struct ss_res *ss = &g_adapter.mlmeextpriv.sitesurvey_res;
 
 	setup_adapter(v);
-	if (v->expect_state && ss->state != (u8)v->expect_state) {
+	if (v->has_expect_state && ss->state != (u8)v->expect_state) {
 		fprintf(stderr, "%s: state got %u expect %d\n", v->name, ss->state,
 			v->expect_state);
 		return 1;
@@ -155,6 +158,10 @@ static int run_vec(void *vv)
 	}
 	if (!!host_sitesurvey_cmd_trace.macid_wakeup != !!v->expect_macid_wakeup) {
 		fprintf(stderr, "%s: macid_wakeup mismatch\n", v->name);
+		return 1;
+	}
+	if (!!host_sitesurvey_cmd_trace.backop_xmit != !!v->expect_backop_xmit) {
+		fprintf(stderr, "%s: backop_xmit mismatch\n", v->name);
 		return 1;
 	}
 	printf("PASS %s\n", v->name);
