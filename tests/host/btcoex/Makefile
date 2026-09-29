@@ -1,19 +1,33 @@
 ROOT := ../../..
 HOST_INC := ../include
 HOST_JSON := ../crypto/host_vector_json.c
+RUST_BTCOEX := $(ROOT)/rust/rtw_btcoex.rs
+RUSTC := rustc
 CC := gcc
 CFLAGS := -Wall -Wextra -Werror -O2 -I$(HOST_INC)
+L2_SRC := btcoex_init_notify_l2.c
 
-.PHONY: all test test-c clean
+.PHONY: all test test-c test-rust clean
 all: test
 
-test: test-c
+test: test-c test-rust
 
 test-c: test_btcoex_init_notify
 	./test_btcoex_init_notify btcoex_init_notify_vectors.json
 
-test_btcoex_init_notify: btcoex_init_notify_l2.c $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ btcoex_init_notify_l2.c $(HOST_JSON)
+test-rust: test_btcoex_init_notify_rust
+	./test_btcoex_init_notify_rust btcoex_init_notify_vectors.json
+
+test_btcoex_init_notify: $(L2_SRC) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ $(L2_SRC) $(HOST_JSON)
+
+test_btcoex_init_notify_rust: $(L2_SRC) librust_btcoex_init_notify.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DHOST_BTCOEX_INIT_NOTIFY_RUST -o $@ $(L2_SRC) $(HOST_JSON) \
+		librust_btcoex_init_notify.a
+
+librust_btcoex_init_notify.a: $(RUST_BTCOEX)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_btcoex_init_notify_test \
+		--crate-type staticlib $(RUST_BTCOEX) -o $@
 
 clean:
 	rm -f test_btcoex_init_notify test_btcoex_init_notify_rust librust_btcoex_init_notify.a
