@@ -105,7 +105,11 @@ mod host {
         fn hal_chk_bw_cap(adapter: *mut Adapter, cap: u8) -> bool;
         fn hal_largest_bw(adapter: *mut Adapter, in_bw: u8) -> u8;
         fn rtw_get_center_ch(ch: u8, bw: u8, offset: u8) -> u8;
-        fn rtw_hal_get_def_var(adapter: *mut Adapter, variable: HalDefVariable, value: *mut core::ffi::c_void);
+        fn rtw_hal_get_def_var(
+            adapter: *mut Adapter,
+            variable: HalDefVariable,
+            value: *mut core::ffi::c_void,
+        );
         fn rtw_set_ie(
             pbuf: *mut u8,
             index: i32,
@@ -274,7 +278,12 @@ mod host {
                 set_bits_le_1byte(&mut pcap[0..1], 4, 1, 1);
             }
 
-            set_bits_le_1byte(&mut pcap[0..1], 5, 1, if pvhtpriv.sgi_80m != 0 { 1 } else { 0 });
+            set_bits_le_1byte(
+                &mut pcap[0..1],
+                5,
+                1,
+                if pvhtpriv.sgi_80m != 0 { 1 } else { 0 },
+            );
 
             if test_flag(pvhtpriv.stbc_cap, STBC_VHT_ENABLE_TX) {
                 set_bits_le_1byte(&mut pcap[0..1], 7, 1, 1);
@@ -312,13 +321,7 @@ mod host {
             set_bits_le_2byte(&mut pcap[10..12], 0, 13, highest);
 
             let mut len: u32 = 0;
-            rtw_set_ie(
-                pbuf,
-                EID_VHTCapability as i32,
-                12,
-                pcap.as_ptr(),
-                &mut len,
-            );
+            rtw_set_ie(pbuf, EID_VHTCapability as i32, 12, pcap.as_ptr(), &mut len);
             len
         }
     }
