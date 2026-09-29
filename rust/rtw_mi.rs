@@ -157,5 +157,174 @@ pub unsafe extern "C" fn mi_rust_union_ifbmp(
     n
 }
 
-#[cfg(not(host_mi_ch_union_test))]
+#[cfg(host_mi_netif_buddy_test)]
+#[repr(C)]
+pub struct MockNdev {
+    pub carrier_on: u8,
+    pub queue_stopped: u8,
+    pub queue_woken: u8,
+}
+#[cfg(host_mi_netif_buddy_test)]
+#[repr(C)]
+pub struct NetDevice {
+    pub mock: *mut MockNdev,
+}
+#[cfg(host_mi_netif_buddy_test)]
+#[repr(C)]
+pub struct NetifDvobj {
+    pub iface_nums: u8,
+    pub padapters: [*mut NetifAdapter; 4],
+}
+#[cfg(host_mi_netif_buddy_test)]
+#[repr(C)]
+pub struct NetifAdapter {
+    pub iface_id: u8,
+    pub adapter_up: u8,
+    pub pnetdev: *mut NetDevice,
+    pub dvobj: *mut NetifDvobj,
+}
+
+#[cfg(host_mi_netif_buddy_test)]
+type NetifOp = unsafe extern "C" fn(*mut NetifAdapter, *mut core::ffi::c_void) -> u8;
+
+#[cfg(host_mi_netif_buddy_test)]
+unsafe fn n_carrier_off(n: *mut NetDevice) {
+    if !n.is_null() {
+        let n = &*n;
+        if !n.mock.is_null() {
+            (*n.mock).carrier_on = 0;
+        }
+    }
+}
+#[cfg(host_mi_netif_buddy_test)]
+unsafe fn n_carrier_on(n: *mut NetDevice) {
+    if !n.is_null() {
+        let n = &*n;
+        if !n.mock.is_null() {
+            (*n.mock).carrier_on = 1;
+        }
+    }
+}
+#[cfg(host_mi_netif_buddy_test)]
+unsafe fn n_stop_queue(n: *mut NetDevice) {
+    if !n.is_null() {
+        let n = &*n;
+        if !n.mock.is_null() {
+            (*n.mock).queue_stopped = 1;
+        }
+    }
+}
+#[cfg(host_mi_netif_buddy_test)]
+unsafe fn n_start_queue(n: *mut NetDevice) {
+    if !n.is_null() {
+        let n = &*n;
+        if !n.mock.is_null() {
+            (*n.mock).queue_stopped = 0;
+            (*n.mock).queue_woken = 1;
+        }
+    }
+}
+#[cfg(host_mi_netif_buddy_test)]
+unsafe fn n_wake_queue(n: *mut NetDevice) {
+    if !n.is_null() {
+        let n = &*n;
+        if !n.mock.is_null() {
+            (*n.mock).queue_woken = 1;
+        }
+    }
+}
+
+#[cfg(host_mi_netif_buddy_test)]
+unsafe fn mi_process_netif(pad: *mut NetifAdapter, ex_self: i32, op: NetifOp) -> u8 {
+    let dv = &*(*pad).dvobj;
+    let mut ret = 0u8;
+    for i in 0..dv.iface_nums as usize {
+        let p = dv.padapters[i];
+        if p.is_null() {
+            continue;
+        }
+        let iface = &*p;
+        if iface.adapter_up == 0 {
+            continue;
+        }
+        if ex_self != 0 && std::ptr::eq(p, pad) {
+            continue;
+        }
+        if op(p, core::ptr::null_mut()) == 1 {
+            ret += 1;
+        }
+    }
+    ret
+}
+
+#[cfg(host_mi_netif_buddy_test)]
+unsafe extern "C" fn op_caroff(a: *mut NetifAdapter, _d: *mut core::ffi::c_void) -> u8 {
+    let a = &*a;
+    n_carrier_off(a.pnetdev);
+    n_stop_queue(a.pnetdev);
+    1
+}
+#[cfg(host_mi_netif_buddy_test)]
+unsafe extern "C" fn op_caron(a: *mut NetifAdapter, _d: *mut core::ffi::c_void) -> u8 {
+    let a = &*a;
+    n_carrier_on(a.pnetdev);
+    n_start_queue(a.pnetdev);
+    1
+}
+#[cfg(host_mi_netif_buddy_test)]
+unsafe extern "C" fn op_stop(a: *mut NetifAdapter, _d: *mut core::ffi::c_void) -> u8 {
+    let a = &*a;
+    n_stop_queue(a.pnetdev);
+    1
+}
+#[cfg(host_mi_netif_buddy_test)]
+unsafe extern "C" fn op_wake(a: *mut NetifAdapter, _d: *mut core::ffi::c_void) -> u8 {
+    let a = &*a;
+    if !a.pnetdev.is_null() {
+        n_wake_queue(a.pnetdev);
+    }
+    1
+}
+#[cfg(host_mi_netif_buddy_test)]
+unsafe extern "C" fn op_carr_on(a: *mut NetifAdapter, _d: *mut core::ffi::c_void) -> u8 {
+    let a = &*a;
+    if !a.pnetdev.is_null() {
+        n_carrier_on(a.pnetdev);
+    }
+    1
+}
+#[cfg(host_mi_netif_buddy_test)]
+unsafe extern "C" fn op_carr_off(a: *mut NetifAdapter, _d: *mut core::ffi::c_void) -> u8 {
+    let a = &*a;
+    if !a.pnetdev.is_null() {
+        n_carrier_off(a.pnetdev);
+    }
+    1
+}
+
+#[cfg(host_mi_netif_buddy_test)]
+#[no_mangle]
+pub unsafe extern "C" fn mi_rust_call_mi_netif(pad: *mut NetifAdapter, fn_id: i32) -> u8 {
+    static OPS: [(NetifOp, i32); 12] = [
+        (op_caroff, 0),
+        (op_caroff, 1),
+        (op_caron, 0),
+        (op_caron, 1),
+        (op_stop, 0),
+        (op_stop, 1),
+        (op_wake, 0),
+        (op_wake, 1),
+        (op_carr_on, 0),
+        (op_carr_on, 1),
+        (op_carr_off, 0),
+        (op_carr_off, 1),
+    ];
+    if fn_id < 0 || fn_id >= OPS.len() as i32 {
+        return 0xff;
+    }
+    let (op, buddy) = OPS[fn_id as usize];
+    mi_process_netif(pad, buddy, op)
+}
+
+#[cfg(not(any(host_mi_ch_union_test, host_mi_netif_buddy_test)))]
 pub fn mi_ch_union_stub() {}
