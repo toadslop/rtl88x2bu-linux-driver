@@ -295,11 +295,7 @@ pub extern "C" fn update_bcn_wps_ie(padapter: *mut c_void) {
 
         wps_ielen = *pwps_ie_src.add(1) as U32;
         if wps_offset + wps_ielen + 2 + remainder_ielen <= MAX_IE_SZ {
-            core::ptr::copy_nonoverlapping(
-                pwps_ie_src,
-                pwps_ie,
-                (wps_ielen + 2) as usize,
-            );
+            core::ptr::copy_nonoverlapping(pwps_ie_src, pwps_ie, (wps_ielen + 2) as usize);
             if !pbackup_remainder_ie.is_null() {
                 core::ptr::copy_nonoverlapping(
                     pbackup_remainder_ie,
@@ -311,7 +307,10 @@ pub extern "C" fn update_bcn_wps_ie(padapter: *mut c_void) {
         }
 
         if !pbackup_remainder_ie.is_null() {
-            rtw_mfree(pbackup_remainder_ie as *mut c_void, remainder_ielen as usize);
+            rtw_mfree(
+                pbackup_remainder_ie as *mut c_void,
+                remainder_ielen as usize,
+            );
         }
         host_bcn_update_last_ielen = pnetwork.ie_length;
     }
