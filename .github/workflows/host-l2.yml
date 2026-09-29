@@ -277,7 +277,7 @@ jobs:
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/mi test test-rust
 
-      - name: Host ioctl validate leaf parity (L2)
+      - name: Host ioctl_set leaf parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/ioctl_set test test-rust
 
