@@ -291,6 +291,10 @@ jobs:
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/mi test test-rust
 
+      - name: Host ioctl validate leaf parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/ioctl_set test test-rust
+
       - name: Host p2p WFD IE builders parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/p2p test-wfd-beacon test-wfd-probe test-wfd-probe-resp test-wfd-assoc test-wfd-rust
