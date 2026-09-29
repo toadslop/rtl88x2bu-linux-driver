@@ -61,6 +61,7 @@ extern "C" {
     fn update_sta_vht_info_apmode(padapter: *mut Adapter, psta: *mut StaInfo);
     fn rtw_hal_set_odm_var(padapter: *mut Adapter, variable: i32, psta: *mut StaInfo, val: U8);
     fn host_rust_apmode_dot11_auth(padapter: *mut Adapter) -> U32;
+    fn host_rust_apmode_is_mesh(padapter: *mut Adapter) -> U8;
     fn host_rust_apmode_set_8021x_blocked(psta: *mut StaInfo, blocked: U32);
     fn host_rust_apmode_read_ht_inputs(
         padapter: *mut Adapter,
@@ -160,7 +161,8 @@ pub extern "C" fn update_sta_info_apmode(padapter: *mut Adapter, psta: *mut StaI
     }
     unsafe {
         let dot11_auth = host_rust_apmode_dot11_auth(padapter);
-        let blocked = if dot11_auth == dot11AuthAlgrthm_8021X {
+        let is_mesh = host_rust_apmode_is_mesh(padapter) != 0;
+        let blocked = if !is_mesh && dot11_auth == dot11AuthAlgrthm_8021X {
             _TRUE as U32
         } else {
             _FALSE as U32
@@ -183,9 +185,6 @@ pub extern "C" fn update_sta_info_apmode(padapter: *mut Adapter, psta: *mut StaI
                 cur_ch_offset: 0,
             };
             host_rust_apmode_read_ht_inputs(padapter, psta, &mut inputs);
-            if inputs.op_present != 0 {
-                inputs.ht_op_sta_width = (inputs.sta_ht_cap[1] >> 2) & 1;
-            }
             let (ampdu_en, min_sp, bw, sgi20, sgi40, qos, ch_off, ldpc, stbc) =
                 ht_assoc_update(&inputs);
             host_rust_apmode_apply_ht(
@@ -204,7 +203,7 @@ pub extern "C" fn update_sta_info_apmode(padapter: *mut Adapter, psta: *mut StaI
         update_ldpc_stbc_cap(psta);
         host_rust_apmode_zero_stats(psta);
         rtw_hal_set_odm_var(padapter, 0, psta, _TRUE);
-        if dot11_auth == dot11AuthAlgrthm_8021X {
+        if !is_mesh && dot11_auth == dot11AuthAlgrthm_8021X {
             host_rust_apmode_or_state(psta, WIFI_UNDER_KEY_HANDSHAKE);
         }
         host_rust_apmode_or_state(psta, WIFI_ASOC_STATE);
