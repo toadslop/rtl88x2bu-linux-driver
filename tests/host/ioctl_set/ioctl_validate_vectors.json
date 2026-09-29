@@ -1,0 +1,56 @@
+{
+  "vectors": [
+    {
+      "name": "bssid_unicast_ok",
+      "fn": "validate_bssid",
+      "mac": "020304050607",
+      "expect": 1
+    },
+    {
+      "name": "bssid_zero",
+      "fn": "validate_bssid",
+      "mac": "000000000000",
+      "expect": 0
+    },
+    {
+      "name": "bssid_broadcast",
+      "fn": "validate_bssid",
+      "mac": "ffffffffffff",
+      "expect": 0
+    },
+    {
+      "name": "bssid_multicast",
+      "fn": "validate_bssid",
+      "mac": "010203040506",
+      "expect": 0
+    },
+    {
+      "name": "ssid_empty_ok",
+      "fn": "validate_ssid",
+      "ssid_len": 0,
+      "ssid_hex": "",
+      "expect": 1
+    },
+    {
+      "name": "ssid_len_32_ok",
+      "fn": "validate_ssid",
+      "ssid_len": 32,
+      "ssid_hex": "6161616161616161616161616161616161616161616161616161616161616161",
+      "expect": 1
+    },
+    {
+      "name": "ssid_len_33_fail",
+      "fn": "validate_ssid",
+      "ssid_len": 33,
+      "ssid_hex": "",
+      "expect": 0
+    },
+    {
+      "name": "ssid_printable_ok",
+      "fn": "validate_ssid",
+      "ssid_len": 4,
+      "ssid_hex": "54657374",
+      "expect": 1
+    }
+  ]
+}
