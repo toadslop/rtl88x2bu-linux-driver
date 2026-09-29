@@ -855,10 +855,10 @@ mod cmd_queue {
 #[cfg(any(host_cmd_thread_test, rust_cmd_thread))]
 mod cmd_thread {
     use super::{c_int, c_void, List, Queue, Sint, MAX_CMDSZ, _FAIL};
-    #[cfg(host_cmd_thread_test)]
-    use std::ptr;
     #[cfg(all(rust_cmd_thread, not(host_cmd_thread_test)))]
     use core::ptr;
+    #[cfg(host_cmd_thread_test)]
+    use std::ptr;
 
     const H2C_SUCCESS: u8 = 0;
     const H2C_PARAMETERS_ERROR: u8 = 4;
@@ -989,13 +989,9 @@ mod cmd_thread {
                     &mut pcmdpriv.cmd_queue.lock,
                     &mut irqL as *mut IrqL,
                 );
-                let queue_empty = host_cmd_thread_is_list_empty(
-                    &mut pcmdpriv.cmd_queue.queue as *mut List,
-                ) != 0;
-                host_cmd_thread_exit_critical(
-                    &mut pcmdpriv.cmd_queue.lock,
-                    &mut irqL as *mut IrqL,
-                );
+                let queue_empty =
+                    host_cmd_thread_is_list_empty(&mut pcmdpriv.cmd_queue.queue as *mut List) != 0;
+                host_cmd_thread_exit_critical(&mut pcmdpriv.cmd_queue.lock, &mut irqL as *mut IrqL);
                 if queue_empty {
                     continue;
                 }
