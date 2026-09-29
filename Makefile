@@ -2735,6 +2735,14 @@ rustflags-y += --cfg rust_ap_rest
 rustflags-y += --cfg rust_ap_bcn_ie
 rustflags-y += --cfg rust_ap_bmc_update
 rustflags-y += --cfg rust_ap_bcn_update
+ifneq ($(filter -DCONFIG_INTERRUPT_BASED_TXBCN,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+rustflags-y += --cfg config_interrupt_based_txbcn
+else ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_INTERRUPT_BASED_TXBCN(\s|$$|/\*)' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_interrupt_based_txbcn
+endif
+ifeq ($(CONFIG_PCI_HCI), y)
+rustflags-y += --cfg config_pci_hci
+endif
 ifneq ($(filter -DCONFIG_BMC_TX_LOW_RATE,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 rustflags-y += --cfg bmc_tx_low_rate
 endif
