@@ -1,0 +1,15 @@
+{
+  "vectors": [
+    {"name": "handler_no_coex", "fn": "handler", "coex": 0, "exp_handler": 0},
+    {"name": "handler_coex", "fn": "handler", "coex": 1, "exp_handler": 1},
+    {"name": "reject_ampdu", "fn": "reject_ampdu", "hal_reject": 1, "exp_reject": 1, "exp_handler": 0},
+    {"name": "ctrl_ampdu", "fn": "ctrl_ampdu", "hal_ctrl": 1, "exp_ctrl": 1},
+    {"name": "get_ampdu", "fn": "get_ampdu", "hal_size": 4095, "exp_size": 4095},
+    {"name": "set_manual_on", "fn": "set_manual", "arg": 1, "exp_manual": 1, "exp_manual_val": 1},
+    {"name": "set_manual_off", "fn": "set_manual", "arg": 0, "exp_manual": 1, "exp_manual_val": 0},
+    {"name": "set_policy", "fn": "set_policy", "arg": 3, "exp_policy": 1, "exp_policy_val": 3},
+    {"name": "is_disabled", "fn": "is_disabled", "hal_disabled": 1, "exp_disabled": 1},
+    {"name": "switch_on", "fn": "switch", "arg": 1, "exp_coexist": 1, "exp_coexist_val": 1},
+    {"name": "switch_off", "fn": "switch", "arg": 0, "exp_coexist": 1, "exp_coexist_val": 0}
+  ]
+}
