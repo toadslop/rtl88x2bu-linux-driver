@@ -1,3 +1,6 @@
 test_btcoex_init_notify
 test_btcoex_init_notify_rust
 librust_btcoex_init_notify.a
+test_btcoex_handler_policy
+test_btcoex_handler_policy_rust
+librust_btcoex_handler_policy.a
