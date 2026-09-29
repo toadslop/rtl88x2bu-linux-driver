@@ -14,10 +14,6 @@ typedef unsigned int uint;
 #define _TRUE 1
 #define _FALSE 0
 typedef u8 BOOLEAN;
-#define LDPC_VHT_ENABLE_TX BIT1
-#define LDPC_VHT_CAP_TX BIT(3)
-#define STBC_VHT_ENABLE_TX BIT1
-#define STBC_VHT_CAP_TX BIT(3)
 #define GET_VHT_CAPABILITY_ELE_RX_LDPC(p) LE_BITS_TO_1BYTE(p, 4, 1)
 #define GET_VHT_CAPABILITY_ELE_SHORT_GI80M(p) LE_BITS_TO_1BYTE(p, 5, 1)
 #define GET_VHT_CAPABILITY_ELE_RX_STBC(p) LE_BITS_TO_1BYTE((p) + 1, 0, 3)
@@ -39,8 +35,11 @@ typedef u8 BOOLEAN;
 #define BW_CAP_80_80M (1U << 6)
 #define HAL_PRIME_CHNL_OFFSET_LOWER 1
 #define LDPC_VHT_ENABLE_RX BIT0
+#define LDPC_VHT_ENABLE_TX BIT1
+#define LDPC_VHT_CAP_TX BIT(3)
 #define STBC_VHT_ENABLE_RX BIT0
 #define STBC_VHT_ENABLE_TX BIT1
+#define STBC_VHT_CAP_TX BIT(3)
 #define LE_BITS_TO_1BYTE(p, o, l) (((*((u8 *)(p)) >> (o)) & ((1U << (l)) - 1)))
 #define LE_BITS_TO_2BYTE(p, o, l) \
 	(((u16)(*((u8 *)(p)) | (*((u8 *)(p) + 1) << 8)) >> (o)) & ((1U << (l)) - 1))

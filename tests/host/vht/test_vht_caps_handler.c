@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Host L2 oracle for VHT_caps_handler (W3-84 PR8). */
+/* Host L2 oracle for VHT_caps_handler (W3-84 PR9). */
 
 #include <stdio.h>
 #include <string.h>
@@ -9,7 +9,7 @@
 
 struct vector {
 	char name[64];
-	u8 vht_option, ldpc_cap, stbc_cap, sgi_80m, rx_nss, ampdu_factor;
+	u8 vht_option, ldpc_cap, stbc_cap, sgi_80m, rx_nss;
 	u8 cap_hex[VHT_CAP_IE_LEN];
 	u8 expect_vht_enable, expect_ldpc, expect_stbc, expect_sgi, expect_ampdu;
 	u8 expect_mcs_map[2], expect_highest_rate;
