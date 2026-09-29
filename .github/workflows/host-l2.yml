@@ -297,7 +297,7 @@ jobs:
 
       - name: Host btcoex init/notify leaf parity (L2)
         if: steps.filter.outputs.l2 == 'true'
-        run: make -C tests/host/btcoex test-c
+        run: make -C tests/host/btcoex test
 
       - name: Host p2p WFD IE builders parity (L2)
         if: steps.filter.outputs.l2 == 'true'
