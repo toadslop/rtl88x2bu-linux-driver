@@ -215,93 +215,93 @@ pub extern "C" fn update_sta_info_apmode(padapter: *mut Adapter, psta: *mut StaI
 #[cfg(host_ap_sta_info_apmode_test)]
 unsafe fn run_apmode_host(padapter: *mut Adapter, psta: *mut StaInfo) {
     unsafe {
-    let dot11_auth = host_rust_apmode_dot11_auth(padapter);
-    let is_mesh = host_rust_apmode_is_mesh(padapter) != 0;
-    let blocked = if !is_mesh && dot11_auth == dot11AuthAlgrthm_8021X {
-        _TRUE as U32
-    } else {
-        _FALSE as U32
-    };
-    host_rust_apmode_set_8021x_blocked(psta, blocked);
-    VCS_update(padapter, psta);
-    apmode_ht_path_host(padapter, psta);
-    let mac = host_rust_apmode_sta_mac(psta);
-    send_delba(padapter, 0, mac);
-    send_delba(padapter, 1, mac);
-    host_rust_apmode_reset_agg(psta);
-    update_sta_vht_info_apmode(padapter, psta);
-    let tx_bw = rtw_get_tx_bw_mode(padapter, psta);
-    host_rust_apmode_set_ra_sgi(psta, query_ra_short_GI(psta, tx_bw));
-    update_ldpc_stbc_cap(psta);
-    host_rust_apmode_zero_stats(psta);
-    rtw_hal_set_odm_var(padapter, 0, psta, _TRUE);
-    if !is_mesh && dot11_auth == dot11AuthAlgrthm_8021X {
-        host_rust_apmode_or_state(psta, WIFI_UNDER_KEY_HANDSHAKE);
-    }
-    host_rust_apmode_or_state(psta, WIFI_ASOC_STATE);
+        let dot11_auth = host_rust_apmode_dot11_auth(padapter);
+        let is_mesh = host_rust_apmode_is_mesh(padapter) != 0;
+        let blocked = if !is_mesh && dot11_auth == dot11AuthAlgrthm_8021X {
+            _TRUE as U32
+        } else {
+            _FALSE as U32
+        };
+        host_rust_apmode_set_8021x_blocked(psta, blocked);
+        VCS_update(padapter, psta);
+        apmode_ht_path_host(padapter, psta);
+        let mac = host_rust_apmode_sta_mac(psta);
+        send_delba(padapter, 0, mac);
+        send_delba(padapter, 1, mac);
+        host_rust_apmode_reset_agg(psta);
+        update_sta_vht_info_apmode(padapter, psta);
+        let tx_bw = rtw_get_tx_bw_mode(padapter, psta);
+        host_rust_apmode_set_ra_sgi(psta, query_ra_short_GI(psta, tx_bw));
+        update_ldpc_stbc_cap(psta);
+        host_rust_apmode_zero_stats(psta);
+        rtw_hal_set_odm_var(padapter, 0, psta, _TRUE);
+        if !is_mesh && dot11_auth == dot11AuthAlgrthm_8021X {
+            host_rust_apmode_or_state(psta, WIFI_UNDER_KEY_HANDSHAKE);
+        }
+        host_rust_apmode_or_state(psta, WIFI_ASOC_STATE);
     }
 }
 
 #[cfg(host_ap_sta_info_apmode_test)]
 unsafe fn apmode_ht_path_host(padapter: *mut Adapter, psta: *mut StaInfo) {
     unsafe {
-    if host_rust_apmode_sta_ht_option(psta) != 0 {
-        let mut inputs = ApmodeHtIn::zeroed();
-        host_rust_apmode_read_ht_inputs(padapter, psta, &mut inputs);
-        let (ampdu_en, min_sp, bw, sgi20, sgi40, qos, ch_off, ldpc, stbc) =
-            ht_assoc_update(&inputs);
-        host_rust_apmode_apply_ht(
-            psta, ampdu_en, min_sp, bw, sgi20, sgi40, qos, ch_off, ldpc, stbc,
-        );
-    } else {
-        host_rust_apmode_clear_ht_no_option(psta);
-    }
+        if host_rust_apmode_sta_ht_option(psta) != 0 {
+            let mut inputs = ApmodeHtIn::zeroed();
+            host_rust_apmode_read_ht_inputs(padapter, psta, &mut inputs);
+            let (ampdu_en, min_sp, bw, sgi20, sgi40, qos, ch_off, ldpc, stbc) =
+                ht_assoc_update(&inputs);
+            host_rust_apmode_apply_ht(
+                psta, ampdu_en, min_sp, bw, sgi20, sgi40, qos, ch_off, ldpc, stbc,
+            );
+        } else {
+            host_rust_apmode_clear_ht_no_option(psta);
+        }
     }
 }
 
 #[cfg(not(host_ap_sta_info_apmode_test))]
 unsafe fn run_apmode_kernel(padapter: *mut Adapter, psta: *mut StaInfo) {
     unsafe {
-    let dot11_auth = rtw_rust_apmode_dot11_auth(padapter);
-    let is_mesh = rtw_rust_apmode_is_mesh(padapter);
-    let blocked = if is_mesh == 0 && dot11_auth == dot11AuthAlgrthm_8021X {
-        _TRUE as U32
-    } else {
-        _FALSE as U32
-    };
-    rtw_rust_apmode_set_8021x_blocked(psta, blocked);
-    VCS_update(padapter, psta);
-    apmode_ht_path_kernel(padapter, psta);
-    let mac = rtw_rust_apmode_sta_mac(psta);
-    send_delba(padapter, 0, mac);
-    send_delba(padapter, 1, mac);
-    rtw_rust_apmode_reset_agg(psta);
-    update_sta_vht_info_apmode(padapter, psta);
-    let tx_bw = rtw_get_tx_bw_mode(padapter, psta);
-    rtw_rust_apmode_set_ra_sgi(psta, query_ra_short_GI(psta, tx_bw));
-    update_ldpc_stbc_cap(psta);
-    rtw_rust_apmode_zero_stats(psta);
-    rtw_rust_apmode_set_odm_sta_info(padapter, psta);
-    rtw_rust_apmode_finish_assoc_state(padapter, psta, dot11_auth, is_mesh);
+        let dot11_auth = rtw_rust_apmode_dot11_auth(padapter);
+        let is_mesh = rtw_rust_apmode_is_mesh(padapter);
+        let blocked = if is_mesh == 0 && dot11_auth == dot11AuthAlgrthm_8021X {
+            _TRUE as U32
+        } else {
+            _FALSE as U32
+        };
+        rtw_rust_apmode_set_8021x_blocked(psta, blocked);
+        VCS_update(padapter, psta);
+        apmode_ht_path_kernel(padapter, psta);
+        let mac = rtw_rust_apmode_sta_mac(psta);
+        send_delba(padapter, 0, mac);
+        send_delba(padapter, 1, mac);
+        rtw_rust_apmode_reset_agg(psta);
+        update_sta_vht_info_apmode(padapter, psta);
+        let tx_bw = rtw_get_tx_bw_mode(padapter, psta);
+        rtw_rust_apmode_set_ra_sgi(psta, query_ra_short_GI(psta, tx_bw));
+        update_ldpc_stbc_cap(psta);
+        rtw_rust_apmode_zero_stats(psta);
+        rtw_rust_apmode_set_odm_sta_info(padapter, psta);
+        rtw_rust_apmode_finish_assoc_state(padapter, psta, dot11_auth, is_mesh);
     }
 }
 
 #[cfg(not(host_ap_sta_info_apmode_test))]
 unsafe fn apmode_ht_path_kernel(padapter: *mut Adapter, psta: *mut StaInfo) {
     unsafe {
-    if rtw_rust_apmode_sta_ht_option(psta) != 0 {
-        let mut inputs = ApmodeHtIn::zeroed();
-        rtw_rust_apmode_read_ht_inputs(padapter, psta, &mut inputs);
-        let (ampdu_en, min_sp, bw, sgi20, sgi40, qos, ch_off, ldpc, stbc) =
-            ht_assoc_update(&inputs);
-        rtw_rust_apmode_apply_ht(
-            psta, ampdu_en, min_sp, bw, sgi20, sgi40, qos, ch_off, ldpc, stbc,
-        );
-        #[cfg(config_beamforming)]
-        update_sta_info_apmode_ht_bf_cap(padapter, psta);
-    } else {
-        rtw_rust_apmode_clear_ht_no_option(psta);
-    }
+        if rtw_rust_apmode_sta_ht_option(psta) != 0 {
+            let mut inputs = ApmodeHtIn::zeroed();
+            rtw_rust_apmode_read_ht_inputs(padapter, psta, &mut inputs);
+            let (ampdu_en, min_sp, bw, sgi20, sgi40, qos, ch_off, ldpc, stbc) =
+                ht_assoc_update(&inputs);
+            rtw_rust_apmode_apply_ht(
+                psta, ampdu_en, min_sp, bw, sgi20, sgi40, qos, ch_off, ldpc, stbc,
+            );
+            #[cfg(config_beamforming)]
+            update_sta_info_apmode_ht_bf_cap(padapter, psta);
+        } else {
+            rtw_rust_apmode_clear_ht_no_option(psta);
+        }
     }
 }
 
