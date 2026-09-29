@@ -1185,7 +1185,10 @@ mod joinbss_cmd {
             ) != _TRUE
             {
                 if ndis_mode == Ndis802_11IBSS {
-                    set_fwstate(&mut padapter.mlmepriv as *mut MlmePriv, WIFI_ADHOC_STATE as Sint);
+                    set_fwstate(
+                        &mut padapter.mlmepriv as *mut MlmePriv,
+                        WIFI_ADHOC_STATE as Sint,
+                    );
                 } else if ndis_mode == Ndis802_11Infrastructure {
                     set_fwstate(
                         &mut padapter.mlmepriv as *mut MlmePriv,
@@ -1194,8 +1197,8 @@ mod joinbss_cmd {
                 }
             }
 
-            let psecnetwork =
-                host_joinbss_zmalloc(core::mem::size_of::<WlanBssidEx>() as u32) as *mut WlanBssidEx;
+            let psecnetwork = host_joinbss_zmalloc(core::mem::size_of::<WlanBssidEx>() as u32)
+                as *mut WlanBssidEx;
             if psecnetwork.is_null() {
                 free(pcmd as *mut c_void);
                 return _FAIL as u8;
