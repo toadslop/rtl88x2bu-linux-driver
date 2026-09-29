@@ -225,7 +225,12 @@ pub unsafe extern "C" fn o_report(adapter: BfHostPadpt, rf: *mut BfHostRecvFrame
     }
     if info.bEnableSUTxBFWorkAround != 0 && info.TargetSUBFee == bfee {
         let csi = &mut info.TargetCSIInfo;
-        if csi.Nc != nc || csi.Nr != nr || csi.ChnlWidth != ch_w || csi.Ng != ng || csi.CodeBook != code_book {
+        if csi.Nc != nc
+            || csi.Nr != nr
+            || csi.ChnlWidth != ch_w
+            || csi.Ng != ng
+            || csi.CodeBook != code_book
+        {
             csi.Nc = nc;
             csi.Nr = nr;
             csi.ChnlWidth = ch_w;
