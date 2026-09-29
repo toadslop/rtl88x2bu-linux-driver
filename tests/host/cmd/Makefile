@@ -14,7 +14,8 @@ CFLAGS_CMD_QUEUE := $(CFLAGS) -DHOST_CMD_QUEUE_TEST
 CFLAGS_CMD_THREAD := $(CFLAGS) -DHOST_CMD_THREAD_TEST -I$(HOST_INC)
 CFLAGS_CMD_DRVEXTRA := $(CFLAGS) -DHOST_CMD_DRVEXTRA_TEST -I$(HOST_INC)
 CFLAGS_CMD_JOINBSS := $(CFLAGS) -DHOST_CMD_JOINBSS_TEST -I$(HOST_INC)
-CFLAGS_CMD_TRAFFIC_LPS := $(CFLAGS) -DHOST_CMD_TRAFFIC_LPS_TEST -I$(HOST_INC)
+CFLAGS_CMD_TRAFFIC_LPS := $(CFLAGS) -DHOST_CMD_TRAFFIC_LPS_TEST \
+	-DCONFIG_CONCURRENT_MODE -I$(HOST_INC)
 
 CMD_THREAD_ORACLE := cmd_thread_host_oracle.c
 CMD_DRVEXTRA_ORACLE := drvextra_cmd_host_oracle.c
@@ -26,13 +27,8 @@ CMD_TRAFFIC_LPS_ORACLE := traffic_lps_watchdog_host_oracle.c
 all: test
 
 test: test-c test-rust test-cmd-queue test-cmd-thread test-cmd-drvextra test-cmd-joinbss \
-<<<<<<< HEAD
 	test-cmd-traffic-lps test-rust-cmd-thread test-rust-cmd-joinbss test-rust-cmd-drvextra \
 	test-rust-cmd-queue test-cmd-queue-kernel-layout
-=======
-	test-cmd-traffic-lps test-rust-cmd-joinbss \
-	test-rust-cmd-drvextra test-rust-cmd-queue test-cmd-queue-kernel-layout
->>>>>>> 783834c (test(cmd): W3-93 PR2 traffic/LPS watchdog C oracle (#430))
 
 test-c: test_cmd_priv
 	./test_cmd_priv cmd_priv_vectors.json
@@ -147,13 +143,8 @@ test_cmd_priv_rust: test_cmd_priv.c host_cmd_priv_shim.c librust_cmd_rest.a $(HO
 
 clean:
 	rm -f test_cmd_priv test_cmd_priv_rust test_cmd_queue test_cmd_queue_rust \
-<<<<<<< HEAD
 		test_cmd_thread test_drvextra_cmd test_cmd_thread_rust test_joinbss_cmd \
 		test_joinbss_cmd_rust test_drvextra_cmd_rust test_traffic_lps_cmd \
-=======
-		test_cmd_thread test_drvextra_cmd test_joinbss_cmd test_joinbss_cmd_rust \
-		test_drvextra_cmd_rust test_traffic_lps_cmd \
->>>>>>> 783834c (test(cmd): W3-93 PR2 traffic/LPS watchdog C oracle (#430))
 		test_cmd_queue_kernel_layout \
 		librust_cmd_rest.a librust_cmd_queue.a librust_cmd_queue_kernel.a \
 		librust_cmd_thread.a librust_joinbss_cmd.a librust_drvextra_cmd.a

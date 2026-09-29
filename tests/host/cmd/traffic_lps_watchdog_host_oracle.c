@@ -39,8 +39,14 @@ u8 _lps_chk_by_tp(_adapter *adapter, u8 from_timer)
 	} else {
 		if (!from_timer)
 			LPS_Leave(adapter, "TRAFFIC_BUSY");
-		else
-			rtw_lps_ctrl_wk_cmd(adapter, LPS_CTRL_TRAFFIC_BUSY, 0);
+		else {
+#ifdef CONFIG_CONCURRENT_MODE
+#ifndef CONFIG_FW_MULTI_PORT_SUPPORT
+			if (adapter->hw_port == HW_PORT0)
+#endif
+#endif
+				rtw_lps_ctrl_wk_cmd(adapter, LPS_CTRL_TRAFFIC_BUSY, 0);
+		}
 	}
 
 	return enter_ps;
@@ -65,8 +71,14 @@ u8 _lps_chk_by_pkt_cnts(_adapter *padapter, u8 from_timer, u8 bBusyTraffic)
 	} else {
 		if (!from_timer)
 			LPS_Leave(padapter, "TRAFFIC_BUSY");
-		else
-			rtw_lps_ctrl_wk_cmd(padapter, LPS_CTRL_TRAFFIC_BUSY, 0);
+		else {
+#ifdef CONFIG_CONCURRENT_MODE
+#ifndef CONFIG_FW_MULTI_PORT_SUPPORT
+			if (padapter->hw_port == HW_PORT0)
+#endif
+#endif
+				rtw_lps_ctrl_wk_cmd(padapter, LPS_CTRL_TRAFFIC_BUSY, 0);
+		}
 	}
 
 	return bEnterPS;
@@ -78,7 +90,8 @@ u8 traffic_status_watchdog(_adapter *padapter, u8 from_timer)
 	u16 BusyThresholdHigh = 100;
 	u16 BusyThresholdLow = 75;
 	u16 BusyThreshold = BusyThresholdHigh;
-	u8 bBusyTraffic = _FALSE;
+	u8 bBusyTraffic = _FALSE, bTxBusyTraffic = _FALSE, bRxBusyTraffic = _FALSE;
+	u8 bHigherBusyTraffic = _FALSE, bHigherBusyRxTraffic = _FALSE, bHigherBusyTxTraffic = _FALSE;
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
 
@@ -87,8 +100,26 @@ u8 traffic_status_watchdog(_adapter *padapter, u8 from_timer)
 			BusyThreshold = BusyThresholdLow;
 
 		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > BusyThreshold ||
-		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > BusyThreshold)
+		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > BusyThreshold) {
 			bBusyTraffic = _TRUE;
+
+			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
+			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
+				bRxBusyTraffic = _TRUE;
+			else
+				bTxBusyTraffic = _TRUE;
+		}
+
+		if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod > 4000 ||
+		    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod > 4000) {
+			bHigherBusyTraffic = _TRUE;
+
+			if (pmlmepriv->LinkDetectInfo.NumRxOkInPeriod >
+			    pmlmepriv->LinkDetectInfo.NumTxOkInPeriod)
+				bHigherBusyRxTraffic = _TRUE;
+			else
+				bHigherBusyTxTraffic = _TRUE;
+		}
 
 		if (pwrpriv->bLeisurePs && MLME_IS_STA(padapter)) {
 			if (pwrpriv->lps_chk_by_tp)
@@ -107,6 +138,11 @@ u8 traffic_status_watchdog(_adapter *padapter, u8 from_timer)
 	pmlmepriv->LinkDetectInfo.NumTxOkInPeriod = 0;
 	pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod = 0;
 	pmlmepriv->LinkDetectInfo.bBusyTraffic = bBusyTraffic;
+	pmlmepriv->LinkDetectInfo.bTxBusyTraffic = bTxBusyTraffic;
+	pmlmepriv->LinkDetectInfo.bRxBusyTraffic = bRxBusyTraffic;
+	pmlmepriv->LinkDetectInfo.bHigherBusyTraffic = bHigherBusyTraffic;
+	pmlmepriv->LinkDetectInfo.bHigherBusyRxTraffic = bHigherBusyRxTraffic;
+	pmlmepriv->LinkDetectInfo.bHigherBusyTxTraffic = bHigherBusyTxTraffic;
 
 	return bEnterPS;
 }

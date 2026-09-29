@@ -14,14 +14,10 @@
 #define LPS_CTRL_CONNECT 2
 #define LPS_CTRL_SPECIAL_PACKET 4
 #define LPS_CTRL_TRAFFIC_BUSY 6
+#define HW_PORT0 0
 #define HW_VAR_H2C_FW_JOINBSSRPT 0
-<<<<<<< HEAD
 #define LPS_DELAY_MS 1000
-=======
-#define LPS_DELAY_MS 2000
 #define ETH_ALEN 6
-
->>>>>>> 783834c (test(cmd): W3-93 PR2 traffic/LPS watchdog C oracle (#430))
 typedef int sint;
 
 struct RT_LINK_DETECT_T {
