@@ -205,6 +205,8 @@ u32 rtw_build_vht_operation_ie(_adapter *padapter, u8 *pbuf, u8 channel)
 
 #endif /* !CONFIG_RUST_VHT_BUILD || HOST_VHT_BUILD_TEST */
 
+#if !defined(HOST_VHT_BUILD_TEST) || defined(HOST_VHT_CAPS_HANDLER_TEST)
+
 void VHT_caps_handler(_adapter *padapter, PNDIS_802_11_VARIABLE_IEs pIE)
 {
 	struct mlme_priv		*pmlmepriv = &padapter->mlmepriv;
@@ -318,6 +320,8 @@ void VHT_caps_handler(_adapter *padapter, PNDIS_802_11_VARIABLE_IEs pIE)
 	rtw_vht_nss_to_mcsmap(rx_nss, pvhtpriv->vht_mcs_map, pcap_mcs);
 	pvhtpriv->vht_highest_rate = rtw_get_vht_highest_rate(pvhtpriv->vht_mcs_map);
 }
+
+#endif /* !HOST_VHT_BUILD_TEST || HOST_VHT_CAPS_HANDLER_TEST */
 
 #ifndef HOST_VHT_BUILD_TEST
 void rtw_vht_use_default_setting(_adapter *padapter)
