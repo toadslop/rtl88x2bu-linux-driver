@@ -364,8 +364,8 @@ const _NO_PRIVACY: U8 = 0;
 const EAPOL_2_4: i32 = 10;
 const EAPOL_4_4: i32 = 12;
 const EAPOL_ETHERTYPE: U16 = 0x888e;
-const _SUCCESS: i32 = 0;
-const _FAIL: i32 = -1;
+const SEC_L2_OK: i32 = 0;
+const SEC_L2_FAIL: i32 = -1;
 
 #[repr(C)]
 struct KeyT {
@@ -471,7 +471,7 @@ fn update_attrib_sec_info_l2_inner(
     psec: &SecurityPrivSecTest,
     passing_ms: U32,
 ) -> i32 {
-    let mut res = _SUCCESS;
+    let mut res = SEC_L2_OK;
     let bmcast = is_mcast(&pattrib.ra);
 
     pattrib.dot118021x_UncstKey.skey = [0; 16];
@@ -483,7 +483,7 @@ fn update_attrib_sec_info_l2_inner(
     {
         pattrib.encrypt = 0;
         if pattrib.ether_type != EAPOL_ETHERTYPE {
-            res = _FAIL;
+            res = SEC_L2_FAIL;
         }
     } else {
         pattrib.encrypt = host_get_encry_algo(&padapter.securitypriv, psec, psta, bmcast);
@@ -500,7 +500,7 @@ fn update_attrib_sec_info_l2_inner(
         };
     }
 
-    if res == _SUCCESS {
+    if res == SEC_L2_OK {
         match pattrib.encrypt {
             x if x == _AES_ => {
                 pattrib.iv_len = 8;
@@ -529,7 +529,7 @@ pub extern "C" fn update_attrib_sec_info_l2(
     eapol_type: i32,
 ) -> i32 {
     if padapter.is_null() || pattrib.is_null() || psta.is_null() {
-        return _FAIL;
+        return SEC_L2_FAIL;
     }
     unsafe {
         let a = &*(padapter as *const Adapter);
