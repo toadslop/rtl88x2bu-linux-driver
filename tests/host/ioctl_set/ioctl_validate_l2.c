@@ -37,15 +37,7 @@ static u8 rtw_validate_bssid(u8 *bssid)
 
 static u8 rtw_validate_ssid(NDIS_802_11_SSID *ssid)
 {
-	u8 ret = _TRUE;
-
-	if (ssid->SsidLength > 32) {
-		ret = _FALSE;
-		goto exit;
-	}
-
-exit:
-	return ret;
+	return ssid->SsidLength > 32 ? _FALSE : _TRUE;
 }
 
 enum ioctl_validate_fn {
