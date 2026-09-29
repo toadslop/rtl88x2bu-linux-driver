@@ -172,3 +172,67 @@ pub unsafe extern "C" fn o_bfer_by_addr(a: BfHostPadpt, ra: *mut U8) -> *mut BfH
 pub unsafe extern "C" fn o_bfee_by_addr(a: BfHostPadpt, ra: *mut U8) -> *mut BfHostBfee {
     bfee_by_addr(a, ra)
 }
+
+#[cfg(host_bf_entry_packet_test)]
+const BF_HOST_SUCCESS: U32 = 1;
+#[cfg(host_bf_entry_packet_test)]
+const BF_HOST_FAIL: U32 = 0;
+
+#[cfg(host_bf_entry_packet_test)]
+extern "C" {
+    fn bf_host_cmd(a: BfHostPadpt, ty: i32, p: *mut U8, sz: i32, enq: U8);
+}
+
+#[cfg(host_bf_entry_packet_test)]
+#[no_mangle]
+pub unsafe extern "C" fn o_ndpa(_a: BfHostPadpt, _f: *mut BfHostRecvFrame) {}
+
+#[cfg(host_bf_entry_packet_test)]
+#[no_mangle]
+pub unsafe extern "C" fn o_report(adapter: BfHostPadpt, rf: *mut BfHostRecvFrame) -> U32 {
+    if adapter.is_null() || rf.is_null() {
+        return BF_HOST_FAIL;
+    }
+    let info = &mut (*adapter).hal.beamforming_info;
+    let pframe = (*rf).hdr.data.as_mut_ptr();
+    let bfee = bfee_by_addr(adapter, pframe.add(10));
+    if bfee.is_null() {
+        return BF_HOST_FAIL;
+    }
+    let body = pframe.add(24);
+    let (cat, act) = (*body, *body.add(1));
+    let mut nc = 0u8;
+    let mut nr = 0u8;
+    let mut ch_w = 0u8;
+    let mut ng = 0u8;
+    let mut code_book = 0u8;
+    if cat == 21 && act == 0 {
+        let mimo = pframe.add(26);
+        nc = *mimo & 0x7;
+        nr = (*mimo & 0x38) >> 3;
+        ch_w = (*mimo & 0xC0) >> 6;
+        ng = *mimo.add(1) & 0x3;
+        code_book = (*mimo.add(1) & 0x4) >> 2;
+        info.TargetCSIInfo.bVHT = 1;
+    } else if cat == 0 && act == 6 {
+        let mimo = pframe.add(26);
+        nc = *mimo & 0x3;
+        nr = (*mimo & 0xC) >> 2;
+        ch_w = (*mimo & 0x10) >> 4;
+        ng = (*mimo & 0x60) >> 5;
+        code_book = (*mimo.add(1) & 0x6) >> 1;
+        info.TargetCSIInfo.bVHT = 0;
+    }
+    if info.bEnableSUTxBFWorkAround != 0 && info.TargetSUBFee == bfee {
+        let csi = &mut info.TargetCSIInfo;
+        if csi.Nc != nc || csi.Nr != nr || csi.ChnlWidth != ch_w || csi.Ng != ng || csi.CodeBook != code_book {
+            csi.Nc = nc;
+            csi.Nr = nr;
+            csi.ChnlWidth = ch_w;
+            csi.Ng = ng;
+            csi.CodeBook = code_book;
+            bf_host_cmd(adapter, 7, csi as *mut BfHostCsi as *mut U8, 6, 1);
+        }
+    }
+    BF_HOST_SUCCESS
+}
