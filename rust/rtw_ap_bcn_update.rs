@@ -107,16 +107,13 @@ fn cpu_to_le16(x: U16) -> U16 {
 
 fn set_ht_op_ele_2nd_chl_offset(p: *mut HtInfoElement, v: U8) {
     unsafe {
-        p.as_mut()
-            .unwrap()
-            .infos[0] = (p.as_ref().unwrap().infos[0] & !0x3) | (v & 0x3);
+        p.as_mut().unwrap().infos[0] = (p.as_ref().unwrap().infos[0] & !0x3) | (v & 0x3);
     }
 }
 
 fn set_ht_op_ele_sta_chl_width(p: *mut HtInfoElement, v: U8) {
     unsafe {
-        p.as_mut().unwrap().infos[0] =
-            (p.as_ref().unwrap().infos[0] & !0x4) | ((v & 1) << 2);
+        p.as_mut().unwrap().infos[0] = (p.as_ref().unwrap().infos[0] & !0x4) | ((v & 1) << 2);
     }
 }
 
