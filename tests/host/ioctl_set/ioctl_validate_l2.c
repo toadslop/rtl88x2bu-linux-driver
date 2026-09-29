@@ -24,6 +24,12 @@ typedef struct _NDIS_802_11_SSID {
 #define is_multicast_mac_addr(Addr) \
 	((((Addr)[0]) & 0x01) == 0x01 && ((Addr)[0]) != 0xff)
 
+#ifdef HOST_IOCTL_VALIDATE_RUST
+extern u8 rtw_validate_bssid_rust(u8 *bssid);
+extern u8 rtw_validate_ssid_rust(NDIS_802_11_SSID *ssid);
+#define rtw_validate_bssid rtw_validate_bssid_rust
+#define rtw_validate_ssid rtw_validate_ssid_rust
+#else
 static u8 rtw_validate_bssid(u8 *bssid)
 {
 	u8 ret = _TRUE;
@@ -39,6 +45,7 @@ static u8 rtw_validate_ssid(NDIS_802_11_SSID *ssid)
 {
 	return ssid->SsidLength > 32 ? _FALSE : _TRUE;
 }
+#endif
 
 enum ioctl_validate_fn {
 	FN_VALIDATE_BSSID = 0,
