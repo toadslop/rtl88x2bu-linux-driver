@@ -23,9 +23,25 @@ struct bf_host_bfer {
 	u8 mac_addr[BF_HOST_ETH_ALEN];
 };
 
+struct bf_host_csi {
+	u8 Nc, Nr, Ng, CodeBook, ChnlWidth, bVHT;
+};
+
 struct bf_host_info {
 	struct bf_host_bfee bfee[BF_HOST_MAX_BFEE];
 	struct bf_host_bfer bfer[BF_HOST_MAX_BFER];
+	u8 bEnableSUTxBFWorkAround;
+	struct bf_host_csi TargetCSIInfo;
+	struct bf_host_bfee *TargetSUBFee;
+};
+
+struct bf_host_rx {
+	u32 len;
+	u8 data[256];
+};
+
+struct bf_host_recv_frame {
+	struct bf_host_rx hdr;
 };
 
 struct bf_host_hal {
