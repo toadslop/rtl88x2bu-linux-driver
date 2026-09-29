@@ -158,7 +158,7 @@ pub unsafe extern "C" fn rtw_auth_mode_map_rust(
     s.ndisauthtype = authmode;
     s.dot11AuthAlgrthm = 0;
     if s.ndisauthtype > 3 {
-        s.dot11AuthAlgrthm = dot11AuthAlgrthm_8021X;
+        s.dot11AuthAlgrthm = DOT11_AUTH_ALGRTHM_8021X;
     }
     if !dot11_out.is_null() {
         *dot11_out = s.dot11AuthAlgrthm;
