@@ -12,7 +12,7 @@
 #define LPS_CTRL_CONNECT 2
 #define LPS_CTRL_SPECIAL_PACKET 4
 #define HW_VAR_H2C_FW_JOINBSSRPT 0
-#define LPS_DELAY_MS 2000
+#define LPS_DELAY_MS 1000
 typedef int sint;
 struct mlme_priv { u32 fw_state; };
 struct pwrctrl_priv { s8 lps_level; u8 LpsIdleCount; };

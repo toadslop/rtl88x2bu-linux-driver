@@ -48,6 +48,7 @@ void lps_ctrl_wk_hdl(_adapter *padapter, u8 t, u8 *buf)
 		LPS_Leave(padapter, "LEAVE");
 		break;
 	case LPS_CTRL_ENTER:
+		/* Reason strings are not part of the L2 contract until PR3 wires production/Rust oracle. */
 		LPS_Enter(padapter, "ENTER");
 		break;
 	default:

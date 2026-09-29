@@ -10,6 +10,8 @@ struct vector {
 	char name[64];
 	int lps_ctrl_type, adhoc;
 	int expect_lps_enter, expect_lps_leave, expect_hw_rpt, expect_deny;
+	int expect_lps_idle_count, expect_hw_joinbss_val;
+	int check_lps_idle_count, check_hw_joinbss_val;
 };
 
 static int parse_vec(const char *o, size_t l, void *vv)
@@ -25,6 +27,10 @@ static int parse_vec(const char *o, size_t l, void *vv)
 	host_json_parse_int_in(o, l, "expect_lps_leave", &v->expect_lps_leave);
 	host_json_parse_int_in(o, l, "expect_hw_rpt", &v->expect_hw_rpt);
 	host_json_parse_int_in(o, l, "expect_deny", &v->expect_deny);
+	v->check_lps_idle_count =
+		host_json_parse_int_in(o, l, "expect_lps_idle_count", &v->expect_lps_idle_count) == 0;
+	v->check_hw_joinbss_val =
+		host_json_parse_int_in(o, l, "expect_hw_joinbss_val", &v->expect_hw_joinbss_val) == 0;
 	return 0;
 }
 
@@ -36,10 +42,15 @@ static int run_vec(struct vector *v)
 	memset(&g_adapter, 0, sizeof(g_adapter));
 	if (v->adhoc)
 		g_adapter.mlmepriv.fw_state = WIFI_ADHOC_STATE;
+	if (v->lps_ctrl_type == LPS_CTRL_CONNECT)
+		g_adapter.pwrctrlpriv.LpsIdleCount = 7;
 	lps_ctrl_wk_hdl(&g_adapter, (u8)v->lps_ctrl_type, NULL);
 	tr = host_traffic_lps_get_trace();
 	if (tr->lps_enter == v->expect_lps_enter && tr->lps_leave == v->expect_lps_leave &&
-	    tr->hw_joinbss_rpt == v->expect_hw_rpt && tr->set_lps_deny == v->expect_deny) {
+	    tr->hw_joinbss_rpt == v->expect_hw_rpt && tr->set_lps_deny == v->expect_deny &&
+	    (!v->check_lps_idle_count ||
+	     g_adapter.pwrctrlpriv.LpsIdleCount == (u8)v->expect_lps_idle_count) &&
+	    (!v->check_hw_joinbss_val || tr->hw_joinbss_val == (u8)v->expect_hw_joinbss_val)) {
 		printf("PASS %s\n", v->name);
 		return 0;
 	}
