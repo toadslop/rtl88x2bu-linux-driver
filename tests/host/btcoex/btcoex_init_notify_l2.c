@@ -32,28 +32,34 @@ typedef struct {
 	u8 buddy, sreset;
 } mock_adpt;
 
-static struct {
-	unsigned init, pwr_on, ant, pwr_off, preload, hw_init, ips, lps, scan, media, dl_rsvd;
+struct host_btcoex_tr {
+	unsigned init, pwr_on, ant, hw_init, ips, lps, scan, media, dl_rsvd;
 	u8 last_type, last_wifi_only;
-} g_tr;
+};
+
+static struct host_btcoex_tr g_tr;
 
 static void tr_reset(void) { memset(&g_tr, 0, sizeof(g_tr)); }
 
+void host_btcoex_dl_rsvd_inc(void) { g_tr.dl_rsvd++; }
+
+#ifndef HOST_BTCOEX_INIT_NOTIFY_RUST
 static sint chk_fw(mock_mlme *m, sint st)
 {
 	return (!st && !m->fw_state) || (m->fw_state & (u32)st) ? _TRUE : _FALSE;
 }
 
 static u8 buddy_survey(mock_adpt *a) { return a->buddy ? _TRUE : _FALSE; }
+#endif
 
-static void hal_init(mock_adpt *a) { (void)a; g_tr.init++; }
-static void hal_pwr_on(mock_adpt *a) { (void)a; g_tr.pwr_on++; }
-static void hal_ant(mock_adpt *a) { (void)a; g_tr.ant++; }
-static void hal_hw_init(mock_adpt *a, u8 w) { (void)a; g_tr.hw_init++; g_tr.last_wifi_only = w; }
-static void hal_ips(mock_adpt *a, u8 t) { (void)a; g_tr.ips++; g_tr.last_type = t; }
-static void hal_lps(mock_adpt *a, u8 t) { (void)a; g_tr.lps++; g_tr.last_type = t; }
-static void hal_scan(mock_adpt *a, u8 t) { (void)a; g_tr.scan++; g_tr.last_type = t; }
-static void hal_media(mock_adpt *a, u8 t) { (void)a; g_tr.media++; g_tr.last_type = t; }
+void hal_init(mock_adpt *a) { (void)a; g_tr.init++; }
+void hal_pwr_on(mock_adpt *a) { (void)a; g_tr.pwr_on++; }
+void hal_ant(mock_adpt *a) { (void)a; g_tr.ant++; }
+void hal_hw_init(mock_adpt *a, u8 w) { (void)a; g_tr.hw_init++; g_tr.last_wifi_only = w; }
+void hal_ips(mock_adpt *a, u8 t) { (void)a; g_tr.ips++; g_tr.last_type = t; }
+void hal_lps(mock_adpt *a, u8 t) { (void)a; g_tr.lps++; g_tr.last_type = t; }
+void hal_scan(mock_adpt *a, u8 t) { (void)a; g_tr.scan++; g_tr.last_type = t; }
+void hal_media(mock_adpt *a, u8 t) { (void)a; g_tr.media++; g_tr.last_type = t; }
 
 #ifndef HOST_BTCOEX_INIT_NOTIFY_RUST
 static void o_init(mock_adpt *a) { hal_init(a); }
