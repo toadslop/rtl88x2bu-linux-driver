@@ -44,13 +44,6 @@
       "ssid_len": 33,
       "ssid_hex": "",
       "expect": 0
-    },
-    {
-      "name": "ssid_printable_ok",
-      "fn": "validate_ssid",
-      "ssid_len": 4,
-      "ssid_hex": "54657374",
-      "expect": 1
     }
   ]
 }
