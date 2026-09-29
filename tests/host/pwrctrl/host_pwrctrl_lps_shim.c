@@ -1,4 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0
+/*
+ * Host oracle for rtw_pwr_unassociated_idle — sync with core/rtw_pwrctrl.c.
+ * Omitted vs kernel: CONFIG_IOCTL_CFG80211 remain-on-channel / recent ROCH,
+ * CONFIG_P2P listen/idle, and MP_DRIVER registrypriv.mp_mode early exits.
+ */
 #include "host_pwrctrl_lps_types.h"
 
 static systime g_current_time;
