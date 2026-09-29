@@ -229,6 +229,7 @@ unsafe fn run_apmode_host(padapter: *mut Adapter, psta: *mut StaInfo) {
         send_delba(padapter, 0, mac);
         send_delba(padapter, 1, mac);
         host_rust_apmode_reset_agg(psta);
+        #[cfg(any(config_80211ac_vht, host_ap_sta_info_apmode_test))]
         update_sta_vht_info_apmode(padapter, psta);
         let tx_bw = rtw_get_tx_bw_mode(padapter, psta);
         host_rust_apmode_set_ra_sgi(psta, query_ra_short_GI(psta, tx_bw));
@@ -276,6 +277,7 @@ unsafe fn run_apmode_kernel(padapter: *mut Adapter, psta: *mut StaInfo) {
         send_delba(padapter, 0, mac);
         send_delba(padapter, 1, mac);
         rtw_rust_apmode_reset_agg(psta);
+        #[cfg(config_80211ac_vht)]
         update_sta_vht_info_apmode(padapter, psta);
         let tx_bw = rtw_get_tx_bw_mode(padapter, psta);
         rtw_rust_apmode_set_ra_sgi(psta, query_ra_short_GI(psta, tx_bw));
