@@ -855,14 +855,20 @@ mod cmd_queue {
 #[cfg(any(host_cmd_thread_test, rust_cmd_thread))]
 mod cmd_thread {
     use super::{c_int, c_void, List, Queue, Sint, MAX_CMDSZ, _FAIL};
+    #[cfg(host_cmd_thread_test)]
     use std::ptr;
+    #[cfg(all(rust_cmd_thread, not(host_cmd_thread_test)))]
+    use core::ptr;
 
     const H2C_SUCCESS: u8 = 0;
     const H2C_PARAMETERS_ERROR: u8 = 4;
     const H2C_DROPPED: u8 = 3;
     const RTW_SCTX_DONE_CMD_ERROR: c_int = 2;
+    /// Host `HOST_CMD_WLANCMDS_SIZE`; kernel table length must match `wlancmds` link.
     const RTW_CMDTABLE_SIZE: usize = 4;
     const _TRUE: c_int = 1;
+
+    type IrqL = usize;
 
     #[repr(C)]
     struct SubmitCtx {
@@ -917,6 +923,12 @@ mod cmd_thread {
         fn _rtw_up_sema(s: *mut c_int);
         fn _rtw_down_sema(s: *mut c_int) -> Sint;
         fn rtw_thread_stop(th: *mut c_void) -> c_int;
+        fn host_cmd_thread_enter_critical(l: *mut c_int, irql: *mut IrqL);
+        fn host_cmd_thread_exit_critical(l: *mut c_int, irql: *mut IrqL);
+        fn host_cmd_thread_is_list_empty(head: *mut List) -> c_int;
+        fn host_cmd_thread_sctx_mutex_enter(m: *mut c_int);
+        fn host_cmd_thread_sctx_mutex_exit(m: *mut c_int);
+        fn host_cmd_thread_wait_stop();
         fn rtw_dequeue_cmd(p: *mut CmdPriv) -> *mut CmdObj;
         fn rtw_cmd_filter(p: *mut CmdPriv, obj: *mut CmdObj) -> c_int;
         fn rtw_free_cmd_obj(obj: *mut CmdObj);
@@ -972,8 +984,19 @@ mod cmd_thread {
                 if (*padapter).bDriverStopped != 0 || (*padapter).bSurpriseRemoved != 0 {
                     break;
                 }
-                let qhead = &mut pcmdpriv.cmd_queue.queue as *mut List;
-                if unsafe { (*qhead).next == qhead } {
+                let mut irqL: IrqL = 0;
+                host_cmd_thread_enter_critical(
+                    &mut pcmdpriv.cmd_queue.lock,
+                    &mut irqL as *mut IrqL,
+                );
+                let queue_empty = host_cmd_thread_is_list_empty(
+                    &mut pcmdpriv.cmd_queue.queue as *mut List,
+                ) != 0;
+                host_cmd_thread_exit_critical(
+                    &mut pcmdpriv.cmd_queue.lock,
+                    &mut irqL as *mut IrqL,
+                );
+                if queue_empty {
                     continue;
                 }
 
@@ -992,12 +1015,15 @@ mod cmd_thread {
                     }
 
                     (*pcmdpriv).cmd_issued_cnt += 1;
-                    let (idx, cmdsz, cmd_hdl) = (
-                        (*pcmd).cmdcode as usize,
-                        (*pcmd).cmdsz,
-                        wlancmds[(*pcmd).cmdcode as usize].cmd_hdl,
-                    );
-                    if cmdsz > MAX_CMDSZ || idx >= RTW_CMDTABLE_SIZE || cmd_hdl.is_none() {
+                    let idx = (*pcmd).cmdcode as usize;
+                    let cmdsz = (*pcmd).cmdsz;
+                    if cmdsz > MAX_CMDSZ || idx >= RTW_CMDTABLE_SIZE {
+                        (*pcmd).res = H2C_PARAMETERS_ERROR;
+                        post_process(pcmd);
+                        continue 'next;
+                    }
+                    let cmd_hdl = wlancmds[idx].cmd_hdl;
+                    if cmd_hdl.is_none() {
                         (*pcmd).res = H2C_PARAMETERS_ERROR;
                         post_process(pcmd);
                         continue 'next;
@@ -1023,18 +1049,26 @@ mod cmd_thread {
                 }
                 rtw_free_cmd_obj(pcmd);
             }
+            host_cmd_thread_wait_stop();
         }
         0
     }
 
     unsafe fn post_process(pcmd: *mut CmdObj) {
+        let padapter = (*pcmd).padapter;
         let sctx_ptr = &mut (*pcmd).sctx as *mut *mut SubmitCtx;
+        if !padapter.is_null() {
+            host_cmd_thread_sctx_mutex_enter(&mut (*padapter).cmdpriv.sctx_mutex);
+        }
         if !(*pcmd).sctx.is_null() {
-            if (*pcmd).res != H2C_SUCCESS {
-                rtw_sctx_done_err(sctx_ptr, RTW_SCTX_DONE_CMD_ERROR);
-            } else {
+            if (*pcmd).res == H2C_SUCCESS {
                 rtw_sctx_done(sctx_ptr);
+            } else {
+                rtw_sctx_done_err(sctx_ptr, RTW_SCTX_DONE_CMD_ERROR);
             }
+        }
+        if !padapter.is_null() {
+            host_cmd_thread_sctx_mutex_exit(&mut (*padapter).cmdpriv.sctx_mutex);
         }
         rtw_free_cmd_obj(pcmd);
     }

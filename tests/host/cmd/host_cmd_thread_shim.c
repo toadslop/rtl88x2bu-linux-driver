@@ -47,6 +47,36 @@ int host_cmd_thread_loop_continue(void)
 sint _rtw_down_sema(_sema *s) { (void)s; return g_sema_credits-- > 0 ? _SUCCESS : _FAIL; }
 void _rtw_up_sema(_sema *s) { (void)s; g_sema_up++; }
 int rtw_thread_stop(void *th) { (void)th; g_stop_calls++; return 1; }
+
+void host_cmd_thread_enter_critical(_lock *l, _irqL *i)
+{
+	_enter_critical(l, i);
+}
+
+void host_cmd_thread_exit_critical(_lock *l, _irqL *i)
+{
+	_exit_critical(l, i);
+}
+
+int host_cmd_thread_is_list_empty(_list *h)
+{
+	return rtw_is_list_empty(h);
+}
+
+void host_cmd_thread_sctx_mutex_enter(_mutex *m)
+{
+	_enter_critical_mutex(m, NULL);
+}
+
+void host_cmd_thread_sctx_mutex_exit(_mutex *m)
+{
+	_exit_critical_mutex(m, NULL);
+}
+
+void host_cmd_thread_wait_stop(void)
+{
+	rtw_thread_wait_stop();
+}
 sint _rtw_enqueue_cmd(_queue *q, struct cmd_obj *obj, bool to_head)
 {
 	_irqL irqL;
