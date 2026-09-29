@@ -303,5 +303,5 @@ jobs:
 
       - name: Host beamforming entry/packet leaf parity (L2)
         if: steps.filter.outputs.l2 == 'true'
-        run: make -C tests/host/beamforming test
+        run: make -C tests/host/beamforming test test-rust
 
