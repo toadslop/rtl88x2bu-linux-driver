@@ -125,6 +125,7 @@ jobs:
               - 'core/rtw_wlan_util.c'
               - 'core/rtw_beamforming.c'
               - 'core/rtw_pwrctrl.c'
+              - 'core/rtw_beamforming.c'
               - 'rust/**'
               - 'tests/host/**'
               - 'Makefile'
@@ -308,4 +309,8 @@ jobs:
       - name: Host p2p WFD IE builders parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/p2p test-wfd-beacon test-wfd-probe test-wfd-probe-resp test-wfd-assoc test-wfd-rust
+
+      - name: Host beamforming entry/packet leaf parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/beamforming test
 
