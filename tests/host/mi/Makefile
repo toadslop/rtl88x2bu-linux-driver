@@ -6,10 +6,10 @@ RUSTC := rustc
 CC := gcc
 CFLAGS := -Wall -Wextra -Werror -O2 -I$(HOST_INC)
 
-.PHONY: all test test-c test-rust clean
+.PHONY: all test test-c test-rust test-netif test-netif-c clean
 all: test
 
-test: test-c test-rust
+test: test-c test-rust test-netif
 
 test-c: test_mi_ch_union
 	./test_mi_ch_union mi_ch_union_vectors.json
@@ -17,8 +17,16 @@ test-c: test_mi_ch_union
 test-rust: test_mi_ch_union_rust
 	./test_mi_ch_union_rust mi_ch_union_vectors.json
 
+test-netif: test-netif-c
+
+test-netif-c: test_mi_netif_buddy
+	./test_mi_netif_buddy mi_netif_buddy_vectors.json
+
 test_mi_ch_union: mi_ch_union_l2.c $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ mi_ch_union_l2.c $(HOST_JSON)
+
+test_mi_netif_buddy: mi_netif_buddy_l2.c $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ mi_netif_buddy_l2.c $(HOST_JSON)
 
 librust_mi.a: $(RUST_MI)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_mi_ch_union_test \
@@ -28,4 +36,4 @@ test_mi_ch_union_rust: mi_ch_union_l2.c librust_mi.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DHOST_MI_RUST -o $@ mi_ch_union_l2.c $(HOST_JSON) librust_mi.a
 
 clean:
-	rm -f test_mi_ch_union test_mi_ch_union_rust librust_mi.a
+	rm -f test_mi_ch_union test_mi_ch_union_rust test_mi_netif_buddy librust_mi.a
