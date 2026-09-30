@@ -15,7 +15,7 @@
 use std::os::raw::c_uint;
 
 #[cfg(not(host_sreset_test))]
-use core::ffi::{c_uint, c_void};
+use core::ffi::{c_ulong, c_uint, c_void};
 
 const _TRUE: u8 = 1;
 const _FALSE: u8 = 0;
@@ -30,7 +30,7 @@ const WIFI_IF_NOT_EXIST: u8 = 64;
 type Systime = u32;
 
 #[cfg(not(host_sreset_test))]
-type Systime = u32;
+type Systime = c_ulong;
 
 #[cfg(host_sreset_test)]
 #[repr(C)]
