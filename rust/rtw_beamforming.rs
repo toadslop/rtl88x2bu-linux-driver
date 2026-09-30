@@ -355,3 +355,68 @@ pub unsafe extern "C" fn o_bf_cmd_hdl(adapter: BfHostPadpt, ty: U8, pbuf: *mut U
         _ => {}
     }
 }
+
+#[cfg(all(host_bf_entry_packet_test, host_bf_gid_test))]
+#[repr(C)]
+pub struct BfHostGidXmitTr {
+    pub ok: U8,
+    pub ra: [U8; 6],
+    pub gid: [U8; 8],
+    pub position: [U8; 16],
+    pub frame: [U8; 64],
+    pub pktlen: U16,
+}
+
+#[cfg(all(host_bf_entry_packet_test, host_bf_gid_test))]
+extern "C" {
+    static mut bf_host_gid_xmit_tr: BfHostGidXmitTr;
+    fn bf_host_bfer_set_gid(a: BfHostPadpt, ta: *mut U8, gid: *mut U8, pos: *mut U8);
+}
+
+#[cfg(all(host_bf_entry_packet_test, host_bf_gid_test))]
+#[no_mangle]
+pub unsafe extern "C" fn o_bf_send_vht_gid_mgnt(
+    adapter: BfHostPadpt,
+    ra: *mut U8,
+    gid: *mut U8,
+    position: *mut U8,
+) -> U8 {
+    if adapter.is_null() || ra.is_null() || gid.is_null() || position.is_null() {
+        return 0;
+    }
+    let tr_ptr = core::ptr::addr_of_mut!(bf_host_gid_xmit_tr);
+    core::ptr::write_bytes(
+        tr_ptr as *mut u8,
+        0,
+        core::mem::size_of::<BfHostGidXmitTr>(),
+    );
+    let tr = &mut *tr_ptr;
+    let ra_s = std::slice::from_raw_parts(ra, 6);
+    tr.ra[..6].copy_from_slice(ra_s);
+    tr.gid[..8].copy_from_slice(std::slice::from_raw_parts(gid, 8));
+    tr.position[..16].copy_from_slice(std::slice::from_raw_parts(position, 16));
+    let mlmepriv = &(*adapter).mlmepriv;
+    tr.frame[4..10].copy_from_slice(ra_s);
+    tr.frame[10..16].copy_from_slice(&mlmepriv.mac_addr);
+    tr.frame[16..22].copy_from_slice(&mlmepriv.bssid);
+    tr.frame[24] = 21;
+    tr.frame[25] = 1;
+    tr.frame[26..34].copy_from_slice(&tr.gid);
+    tr.frame[34..50].copy_from_slice(&tr.position);
+    tr.pktlen = 54;
+    tr.ok = 1;
+    1
+}
+
+#[cfg(all(host_bf_entry_packet_test, host_bf_gid_test))]
+#[no_mangle]
+pub unsafe extern "C" fn o_bf_get_vht_gid_mgnt(adapter: BfHostPadpt, rf: *mut BfHostRecvFrame) {
+    if adapter.is_null() || rf.is_null() {
+        return;
+    }
+    let pframe = (*rf).hdr.data.as_mut_ptr();
+    let mut ta = [0u8; 6];
+    ta.copy_from_slice(std::slice::from_raw_parts(pframe.add(10), 6));
+    ta[0] &= 0xFE;
+    bf_host_bfer_set_gid(adapter, ta.as_mut_ptr(), pframe.add(26), pframe.add(34));
+}
