@@ -7,11 +7,19 @@ CFLAGS := -Wall -Wextra -Werror -O2 -I$(HOST_INC)
 ENTRY_SRC := bf_entry_packet_l2.c
 PACKET_SRC := bf_packet_leaf_l2.c
 INIT_CMD_SRC := bf_init_cmd_leaf_l2.c
+GID_SRC := bf_gid_leaf_l2.c
 
+<<<<<<< HEAD
 .PHONY: all test test-c test-rust test-packet test-init-cmd clean
 all: test
 
 test: test-c test-rust test-packet test-init-cmd
+=======
+.PHONY: all test test-c test-rust test-packet test-packet-rust test-init-cmd test-gid clean
+all: test test-rust test-packet-rust test-init-cmd test-gid
+
+test: test-c test-packet test-init-cmd test-gid
+>>>>>>> 439e5c43 (test(beamforming): W3-129 PR2 L2 C oracle VHT GID mgmt leaf (#469))
 
 test-rust: test_bf_entry_packet_rust
 	./test_bf_entry_packet_rust
@@ -37,6 +45,18 @@ test_bf_packet_leaf: $(PACKET_SRC)
 test_bf_init_cmd_leaf: $(INIT_CMD_SRC)
 	$(CC) $(CFLAGS) -o $@ $(INIT_CMD_SRC)
 
+<<<<<<< HEAD
+=======
+test-gid: test_bf_gid_leaf
+	./test_bf_gid_leaf
+
+test_bf_gid_leaf: $(GID_SRC)
+	$(CC) $(CFLAGS) -o $@ $(GID_SRC)
+
+test_bf_packet_leaf_rust: $(PACKET_SRC) librust_bf_entry_packet.a
+	$(CC) $(CFLAGS) -DHOST_BF_ENTRY_PACKET_RUST -o $@ $(PACKET_SRC) librust_bf_entry_packet.a
+
+>>>>>>> 439e5c43 (test(beamforming): W3-129 PR2 L2 C oracle VHT GID mgmt leaf (#469))
 librust_bf_entry_packet.a: $(RUST_BF)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_bf_entry_packet_test \
 		--crate-type staticlib $(RUST_BF) -o $@
