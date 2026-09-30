@@ -1287,7 +1287,6 @@ mod drvextra_cmd {
 #[cfg(any(host_cmd_traffic_lps_test, rust_traffic_lps_cmd))]
 mod traffic_lps_cmd {
     use super::c_int;
-    use core::mem::{offset_of, size_of};
 
     const _TRUE: c_int = 1;
     const _FALSE: c_int = 0;
@@ -1302,6 +1301,7 @@ mod traffic_lps_cmd {
     const LPS_CTRL_ENTER: u8 = 9;
     const HW_VAR_H2C_FW_JOINBSSRPT: c_int = 0;
     const LPS_DELAY_MS: c_int = 1000;
+    const HW_PORT0: u8 = 0;
     const ETH_ALEN: usize = 6;
 
     #[repr(C)]
@@ -1366,9 +1366,9 @@ mod traffic_lps_cmd {
         hw_port: u8,
     }
 
-    const _: () = assert!(size_of::<RT_LINK_DETECT_T>() == 20);
-    const _: () = assert!(size_of::<MlmePriv>() == 32);
-    const _: () = assert!(offset_of!(Adapter, pwrctrlpriv) == 32);
+    const _: () = assert!(core::mem::size_of::<RT_LINK_DETECT_T>() == 20);
+    const _: () = assert!(core::mem::size_of::<MlmePriv>() == 32);
+    const _: () = assert!(core::mem::offset_of!(Adapter, pwrctrlpriv) == 32);
 
     extern "C" {
         fn check_fwstate(m: *mut MlmePriv, s: c_int) -> c_int;
@@ -1457,7 +1457,7 @@ mod traffic_lps_cmd {
                 }
             } else if from_timer == 0 {
                 LPS_Leave(adapter, b"TRAFFIC_BUSY\0".as_ptr());
-            } else {
+            } else if (*adapter).hw_port == HW_PORT0 {
                 rtw_lps_ctrl_wk_cmd(adapter, LPS_CTRL_TRAFFIC_BUSY, 0);
             }
             enter_ps as u8
@@ -1489,7 +1489,7 @@ mod traffic_lps_cmd {
                 }
             } else if from_timer == 0 {
                 LPS_Leave(padapter, b"TRAFFIC_BUSY\0".as_ptr());
-            } else {
+            } else if (*padapter).hw_port == HW_PORT0 {
                 rtw_lps_ctrl_wk_cmd(padapter, LPS_CTRL_TRAFFIC_BUSY, 0);
             }
             b_enter_ps as u8
@@ -1507,6 +1507,11 @@ mod traffic_lps_cmd {
             let mut b_enter_ps = _FALSE;
             let mut busy_threshold: u16 = 100;
             let mut b_busy_traffic = _FALSE;
+            let mut b_tx_busy_traffic = _FALSE;
+            let mut b_rx_busy_traffic = _FALSE;
+            let mut b_higher_busy_traffic = _FALSE;
+            let mut b_higher_busy_rx_traffic = _FALSE;
+            let mut b_higher_busy_tx_traffic = _FALSE;
             if check_fwstate(pmlmepriv as *mut MlmePriv, WIFI_ASOC_STATE as c_int) == _TRUE {
                 if pmlmepriv.LinkDetectInfo.bBusyTraffic != 0 {
                     busy_threshold = 75;
@@ -1515,6 +1520,25 @@ mod traffic_lps_cmd {
                     || pmlmepriv.LinkDetectInfo.NumTxOkInPeriod > busy_threshold as u32
                 {
                     b_busy_traffic = _TRUE;
+                    if pmlmepriv.LinkDetectInfo.NumRxOkInPeriod
+                        > pmlmepriv.LinkDetectInfo.NumTxOkInPeriod
+                    {
+                        b_rx_busy_traffic = _TRUE;
+                    } else {
+                        b_tx_busy_traffic = _TRUE;
+                    }
+                }
+                if pmlmepriv.LinkDetectInfo.NumRxOkInPeriod > 4000
+                    || pmlmepriv.LinkDetectInfo.NumTxOkInPeriod > 4000
+                {
+                    b_higher_busy_traffic = _TRUE;
+                    if pmlmepriv.LinkDetectInfo.NumRxOkInPeriod
+                        > pmlmepriv.LinkDetectInfo.NumTxOkInPeriod
+                    {
+                        b_higher_busy_rx_traffic = _TRUE;
+                    } else {
+                        b_higher_busy_tx_traffic = _TRUE;
+                    }
                 }
                 if pwrpriv.bLeisurePs != 0 && (pmlmepriv.fw_state & WIFI_STATION_STATE) != 0 {
                     b_enter_ps = if pwrpriv.lps_chk_by_tp != 0 {
@@ -1531,6 +1555,11 @@ mod traffic_lps_cmd {
             pmlmepriv.LinkDetectInfo.NumTxOkInPeriod = 0;
             pmlmepriv.LinkDetectInfo.NumRxUnicastOkInPeriod = 0;
             pmlmepriv.LinkDetectInfo.bBusyTraffic = b_busy_traffic as u8;
+            pmlmepriv.LinkDetectInfo.bTxBusyTraffic = b_tx_busy_traffic as u8;
+            pmlmepriv.LinkDetectInfo.bRxBusyTraffic = b_rx_busy_traffic as u8;
+            pmlmepriv.LinkDetectInfo.bHigherBusyTraffic = b_higher_busy_traffic as u8;
+            pmlmepriv.LinkDetectInfo.bHigherBusyRxTraffic = b_higher_busy_rx_traffic as u8;
+            pmlmepriv.LinkDetectInfo.bHigherBusyTxTraffic = b_higher_busy_tx_traffic as u8;
             b_enter_ps as u8
         }
     }
