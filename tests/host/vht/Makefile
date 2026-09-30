@@ -44,7 +44,7 @@ all: test
 
 test: test-c test-rust test-mcs-rate test-mcs-rate-rust test-vht20 test-vht20-rust \
 	test-restructure test-restructure-rust test-build-operation test-build-operation-rust \
-	test-build-cap test-build-cap-rust test-caps-handler
+	test-build-cap test-build-cap-rust test-caps-handler test-caps-handler-rust
 
 test-c: test_vht
 	./test_vht vht_vectors.json
