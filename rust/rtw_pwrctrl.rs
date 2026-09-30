@@ -177,10 +177,7 @@ fn rtw_pwr_unassociated_idle_host(adapter: Padapter) -> u8 {
                 || check_fwstate(mlme, WIFI_UNDER_LINKING | WIFI_UNDER_WPS)
                 || mlme_is_ap(iface)
                 || mlme_is_mesh(iface)
-                || check_fwstate(
-                    mlme,
-                    WIFI_ADHOC_MASTER_STATE | WIFI_ADHOC_STATE,
-                )
+                || check_fwstate(mlme, WIFI_ADHOC_MASTER_STATE | WIFI_ADHOC_STATE)
             {
                 return _FALSE;
             }
