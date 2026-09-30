@@ -16,6 +16,7 @@ const _FALSE: u8 = 0;
 const H2C_SUCCESS: c_int = 0;
 const MI_LINKED: c_int = 1;
 const ROCH_AP_ROCH_CH_SWITCH_PROCESS_WK: c_int = 2;
+const RTW_CMDF_DIRECTLY: u8 = 1;
 const HAL_PRIME_CHNL_OFFSET_DONT_CARE: u8 = 0;
 const CHANNEL_WIDTH_20: u8 = 0;
 
@@ -131,13 +132,17 @@ pub extern "C" fn rtw_roch_wk_cmd(
     padapter: Padapter,
     cmd: c_int,
     _parm: *mut c_void,
-    _flags: u8,
+    flags: u8,
 ) -> u8 {
     unsafe {
         let tr = host_roch_concurrent_trace();
         (*tr).wk_cmd = 1;
         (*tr).wk_cmd_type = cmd;
-        rtw_roch_wk_hdl(padapter, cmd);
+        if flags & RTW_CMDF_DIRECTLY != 0
+            && rtw_roch_wk_hdl(padapter, cmd) != H2C_SUCCESS
+        {
+            return _FALSE;
+        }
     }
     _TRUE
 }
