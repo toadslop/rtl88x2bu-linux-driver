@@ -138,9 +138,7 @@ pub extern "C" fn rtw_roch_wk_cmd(
         let tr = host_roch_concurrent_trace();
         (*tr).wk_cmd = 1;
         (*tr).wk_cmd_type = cmd;
-        if flags & RTW_CMDF_DIRECTLY != 0
-            && rtw_roch_wk_hdl(padapter, cmd) != H2C_SUCCESS
-        {
+        if flags & RTW_CMDF_DIRECTLY != 0 && rtw_roch_wk_hdl(padapter, cmd) != H2C_SUCCESS {
             return _FALSE;
         }
     }
