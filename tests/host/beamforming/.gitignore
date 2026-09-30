@@ -5,3 +5,5 @@ test_bf_init_cmd_leaf_rust
 test_bf_gid_leaf
 test_bf_entry_packet_rust
 librust_bf_entry_packet.a
+librust_bf_init_cmd.a
+test_bf_packet_leaf_rust
