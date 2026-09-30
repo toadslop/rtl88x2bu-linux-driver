@@ -15,7 +15,7 @@
 use std::os::raw::c_uint;
 
 #[cfg(not(host_sreset_test))]
-use core::ffi::{c_ulong, c_uint, c_void};
+use core::ffi::{c_uint, c_ulong, c_void};
 
 const _TRUE: u8 = 1;
 const _FALSE: u8 = 0;
