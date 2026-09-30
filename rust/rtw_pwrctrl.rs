@@ -361,7 +361,7 @@ mod leave_all_ps {
 
     #[no_mangle]
     pub extern "C" fn host_pwrctrl_leave_all_ps_get_trace() -> *mut HostPwrctrlLeaveAllPsTrace {
-        unsafe { core::ptr::addr_of_mut!(G_TRACE) }
+        core::ptr::addr_of_mut!(G_TRACE)
     }
 
     #[no_mangle]
