@@ -1,4 +1,5 @@
 test_bf_entry_packet
 test_bf_packet_leaf
+test_bf_init_cmd_leaf
 test_bf_entry_packet_rust
 librust_bf_entry_packet.a
