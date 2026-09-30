@@ -34,12 +34,16 @@ extern "C" {
     fn update_bcn_htinfo_ie(padapter: Adapter);
     fn update_bcn_vendor_spec_ie(padapter: Adapter, oui: *mut U8);
     fn set_tx_beacon_cmd(padapter: Adapter, flags: U8) -> U8;
+    fn rtw_rust_bcn_dispatch_update_ext_capab_ie(padapter: Adapter);
 
     fn rtw_rust_bcn_dispatch_bstart_bss(adapter: Adapter) -> U8;
     fn rtw_rust_bcn_dispatch_bcn_lock(adapter: Adapter) -> *mut c_void;
     fn rtw_rust_bcn_dispatch_set_update_bcn(adapter: Adapter, v: U8);
     fn rtw_rust_bcn_dispatch_enter_critical(lock: *mut c_void, irqL: *mut IrqL);
     fn rtw_rust_bcn_dispatch_exit_critical(lock: *mut c_void, irqL: *mut IrqL);
+
+    #[cfg(config_rtw_mesh)]
+    fn rtw_rust_bcn_dispatch_mesh_config(padapter: Adapter) -> U8;
 }
 
 #[no_mangle]
@@ -79,9 +83,12 @@ pub extern "C" fn _update_beacon(
                 update_bcn_htinfo_ie(padapter);
                 true
             }
-            x if x == _EXT_CAP_IE_ => true,
+            x if x == _EXT_CAP_IE_ => {
+                rtw_rust_bcn_dispatch_update_ext_capab_ie(padapter);
+                true
+            }
             #[cfg(config_rtw_mesh)]
-            x if x == 113 => false,
+            x if x == 113 => rtw_rust_bcn_dispatch_mesh_config(padapter) != 0,
             x if x == _VENDOR_SPECIFIC_IE_ => {
                 update_bcn_vendor_spec_ie(padapter, oui);
                 true

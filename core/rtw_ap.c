@@ -1807,6 +1807,13 @@ static void update_bcn_ext_capab_ie(_adapter *padapter)
 
 }
 
+#if defined(CONFIG_RUST_AP_BCN_DISPATCH) && !defined(HOST_AP_BCN_DISPATCH_TEST)
+void rtw_rust_bcn_dispatch_update_ext_capab_ie(_adapter *padapter)
+{
+	update_bcn_ext_capab_ie(padapter);
+}
+#endif
+
 static void update_bcn_htcap_ie(_adapter *padapter)
 {
 	RTW_INFO("%s\n", __FUNCTION__);
