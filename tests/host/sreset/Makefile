@@ -7,7 +7,8 @@ RUST_SRESET := $(ROOT)/rust/rtw_sreset.rs
 RUSTC := rustc
 CC := gcc
 CFLAGS := -Wall -Wextra -Werror -O2 -I$(HOST_INC) -I$(ROOT)/include \
-          -include $(HOST_INC)/host_autoconf.h
+          -include $(HOST_INC)/host_autoconf.h \
+          -DCONFIG_CONCURRENT_MODE
 
 .PHONY: all test test-c test-rust test-c-adapter clean
 all: test

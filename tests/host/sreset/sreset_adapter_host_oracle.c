@@ -107,7 +107,7 @@ void sreset_start_adapter(PADAPTER padapter)
 	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE))
 		sreset_restore_network_status(padapter);
 	tasklet_hi_schedule(&pxmitpriv->xmit_tasklet);
-	if (padapter->dvobj.primary)
+	if (is_primary_adapter(padapter))
 		_set_timer(&adapter_to_dvobj(padapter)->dynamic_chk_timer, 2000);
 	rtw_netif_wake_queue(padapter->pnetdev);
 }

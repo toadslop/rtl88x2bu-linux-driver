@@ -22,13 +22,29 @@ struct mlme_priv { u32 fw_state; };
 struct xmit_tasklet { int dummy; };
 struct xmit_priv { struct xmit_tasklet xmit_tasklet; };
 struct timer_list { u32 ms; };
-struct dvobj_priv { struct timer_list dynamic_chk_timer; u8 primary; };
+struct dvobj_priv { struct timer_list dynamic_chk_timer; };
 struct net_device { int dummy; };
+
+#ifdef CONFIG_CONCURRENT_MODE
+enum host_adapter_type {
+	HOST_PRIMARY_ADAPTER,
+	HOST_VIRTUAL_ADAPTER,
+};
+#define PRIMARY_ADAPTER HOST_PRIMARY_ADAPTER
+#define VIRTUAL_ADAPTER HOST_VIRTUAL_ADAPTER
+#define is_primary_adapter(adapter) ((adapter)->adapter_type == PRIMARY_ADAPTER)
+#else
+#define is_primary_adapter(adapter) (1)
+#endif
+
 struct _adapter {
 	struct dvobj_priv dvobj;
 	struct mlme_priv mlmepriv;
 	struct xmit_priv xmitpriv;
 	struct net_device *pnetdev;
+#ifdef CONFIG_CONCURRENT_MODE
+	u8 adapter_type;
+#endif
 };
 typedef struct _adapter _adapter;
 typedef _adapter *PADAPTER;
