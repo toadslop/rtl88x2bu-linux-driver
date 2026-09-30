@@ -1290,7 +1290,7 @@ mod traffic_lps_cmd {
 
     const _TRUE: c_int = 1;
     const WIFI_ADHOC_STATE: u32 = 0x20;
-    const WIFI_ADHOC_MASTER_STATE: u32 = 0x10;
+    const WIFI_ADHOC_MASTER_STATE: u32 = 0x40;
     const LPS_CTRL_CONNECT: u8 = 2;
     const LPS_CTRL_SPECIAL_PACKET: u8 = 4;
     const LPS_CTRL_LEAVE: u8 = 5;
