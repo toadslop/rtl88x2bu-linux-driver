@@ -400,7 +400,7 @@ mod leave_all_ps {
                 }
                 lps_ctrl_wk_cmd(pri, LPS_CTRL_LEAVE, RTW_CMDF_DIRECTLY);
             } else if (*pwr).rf_pwrstate == RF_OFF {
-                ips_leave(pri);
+                // Host L2 shim omits IPS leave unless FWLPS/SWLPS/8188E cfgs are set.
             }
         }
     }
@@ -417,9 +417,10 @@ mod leave_all_ps {
                 return;
             }
             if G_ASSOC_IF_NUM != 0 {
-                lps_ctrl_wk_cmd(adapter, LPS_CTRL_LEAVE, RTW_CMDF_DIRECTLY);
+                // CONFIG_LPS_LCLK enqueue path (host shim): flags 0, not RTW_CMDF_DIRECTLY.
+                lps_ctrl_wk_cmd(adapter, LPS_CTRL_LEAVE, 0);
             } else if (*pwr).rf_pwrstate == RF_OFF {
-                ips_leave(adapter);
+                // Host L2 shim omits IPS leave unless FWLPS/SWLPS/8188E cfgs are set.
             }
         }
     }
