@@ -9,8 +9,8 @@ PACKET_SRC := bf_packet_leaf_l2.c
 INIT_CMD_SRC := bf_init_cmd_leaf_l2.c
 GID_SRC := bf_gid_leaf_l2.c
 
-.PHONY: all test test-c test-rust test-packet test-packet-rust test-init-cmd test-init-cmd-rust test-gid clean
-all: test test-rust test-packet-rust test-init-cmd test-init-cmd-rust test-gid
+.PHONY: all test test-c test-rust test-packet test-packet-rust test-init-cmd test-init-cmd-rust test-gid test-gid-rust clean
+all: test test-rust test-packet-rust test-init-cmd test-init-cmd-rust test-gid test-gid-rust
 
 test: test-c test-packet test-init-cmd test-gid
 
@@ -50,8 +50,14 @@ test_bf_init_cmd_leaf_rust: $(INIT_CMD_SRC) librust_bf_init_cmd.a
 test-gid: test_bf_gid_leaf
 	./test_bf_gid_leaf
 
+test-gid-rust: test_bf_gid_leaf_rust
+	./test_bf_gid_leaf_rust
+
 test_bf_gid_leaf: $(GID_SRC)
 	$(CC) $(CFLAGS) -o $@ $(GID_SRC)
+
+test_bf_gid_leaf_rust: $(GID_SRC) librust_bf_gid.a
+	$(CC) $(CFLAGS) -DHOST_BF_GID_RUST -o $@ $(GID_SRC) librust_bf_gid.a
 
 test_bf_packet_leaf_rust: $(PACKET_SRC) librust_bf_entry_packet.a
 	$(CC) $(CFLAGS) -DHOST_BF_ENTRY_PACKET_RUST -o $@ $(PACKET_SRC) librust_bf_entry_packet.a
@@ -63,6 +69,10 @@ librust_bf_entry_packet.a: $(RUST_BF)
 librust_bf_init_cmd.a: $(RUST_BF)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_bf_entry_packet_test \
 		--cfg host_bf_init_cmd_test --crate-type staticlib $(RUST_BF) -o $@
+
+librust_bf_gid.a: $(RUST_BF)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_bf_entry_packet_test \
+		--cfg host_bf_gid_test --crate-type staticlib $(RUST_BF) -o $@
 
 clean:
 	rm -f test_bf_entry_packet test_bf_entry_packet_rust test_bf_packet_leaf \

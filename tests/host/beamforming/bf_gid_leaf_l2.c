@@ -8,6 +8,15 @@
 struct bf_host_gid_xmit_tr bf_host_gid_xmit_tr;
 struct bf_host_gid_set_tr bf_host_gid_set_tr;
 
+void bf_host_cmd(bf_host_padpt a, int type, u8 *p, int sz, u8 enq)
+{
+	(void)a;
+	(void)type;
+	(void)p;
+	(void)sz;
+	(void)enq;
+}
+
 void bf_host_bfer_set_gid(bf_host_padpt a, u8 *ta, u8 *gid, u8 *pos)
 {
 	(void)a;
