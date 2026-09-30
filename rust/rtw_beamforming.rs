@@ -241,3 +241,84 @@ pub unsafe extern "C" fn o_report(adapter: BfHostPadpt, rf: *mut BfHostRecvFrame
     }
     BF_HOST_SUCCESS
 }
+
+#[cfg(all(host_bf_entry_packet_test, host_bf_init_cmd_test))]
+const BF_HOST_IDX_NONE: U8 = 0xFF;
+
+#[cfg(all(host_bf_entry_packet_test, host_bf_init_cmd_test))]
+unsafe fn sounding_init(s: &mut BfHostSoundingInfo) {
+    s.su_sounding_list = [BF_HOST_IDX_NONE; 2];
+    s.mu_sounding_list = [BF_HOST_IDX_NONE; 6];
+    s.state = 0;
+    s.su_bfee_curidx = BF_HOST_IDX_NONE;
+    s.candidate_mu_bfee_cnt = 0;
+    s.min_sounding_period = 0;
+    s.sound_remain_cnt_per_period = 0;
+}
+
+#[cfg(all(host_bf_entry_packet_test, host_bf_init_cmd_test))]
+extern "C" {
+    fn bf_host_beamforming_enter(a: BfHostPadpt, p: *mut U8);
+    fn bf_host_beamforming_leave(a: BfHostPadpt, p: *mut U8);
+    fn bf_host_beamforming_reset(a: BfHostPadpt);
+    fn bf_host_sounding_handler(a: BfHostPadpt);
+    fn bf_host_beamforming_sounding_down(a: BfHostPadpt, macid: U8);
+    fn bf_host_hal_set_gid(a: BfHostPadpt, p: *mut U8);
+    fn bf_host_hal_set_csi(a: BfHostPadpt, p: *mut U8);
+}
+
+#[cfg(all(host_bf_entry_packet_test, host_bf_init_cmd_test))]
+#[no_mangle]
+pub unsafe extern "C" fn o_bf_init(adapter: BfHostPadpt) {
+    if adapter.is_null() {
+        return;
+    }
+    let info = &mut (*adapter).hal.beamforming_info;
+    info.beamforming_cap = 0;
+    info.beamforming_state = 0;
+    info.sounding_sequence = 0;
+    info.beamformee_su_cnt = 0;
+    info.beamformer_su_cnt = 0;
+    info.beamformee_su_reg_maping = 0;
+    info.beamformer_su_reg_maping = 0;
+    info.beamformee_mu_cnt = 0;
+    info.beamformer_mu_cnt = 0;
+    info.beamformee_mu_reg_maping = 0;
+    info.first_mu_bfee_index = BF_HOST_IDX_NONE;
+    info.mu_bfer_curidx = BF_HOST_IDX_NONE;
+    info.cur_csi_rpt_rate = 0;
+    sounding_init(&mut info.sounding_info);
+    info.timer_inits = 2;
+    info.SetHalBFEnterOnDemandCnt = 0;
+    info.SetHalBFLeaveOnDemandCnt = 0;
+    info.SetHalSoundownOnDemandCnt = 0;
+    info.bEnableSUTxBFWorkAround = 1;
+    info.TargetSUBFee = std::ptr::null_mut();
+    info.sounding_running = 0;
+}
+
+#[cfg(all(host_bf_entry_packet_test, host_bf_init_cmd_test))]
+#[no_mangle]
+pub unsafe extern "C" fn o_bf_cmd_hdl(adapter: BfHostPadpt, ty: U8, pbuf: *mut U8) {
+    if adapter.is_null() {
+        return;
+    }
+    match ty {
+        0 => bf_host_beamforming_enter(adapter, pbuf),
+        1 => {
+            if pbuf.is_null() {
+                bf_host_beamforming_reset(adapter);
+            } else {
+                bf_host_beamforming_leave(adapter, pbuf);
+            }
+        }
+        2 => bf_host_sounding_handler(adapter),
+        3 => {
+            let macid = if pbuf.is_null() { 0 } else { *pbuf };
+            bf_host_beamforming_sounding_down(adapter, macid);
+        }
+        6 => bf_host_hal_set_gid(adapter, pbuf),
+        7 => bf_host_hal_set_csi(adapter, pbuf),
+        _ => {}
+    }
+}
