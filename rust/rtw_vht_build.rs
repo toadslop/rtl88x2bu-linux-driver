@@ -11,9 +11,9 @@
     unreachable_pub
 )]
 
-#[cfg(not(host_vht_build_test))]
+#[cfg(not(any(host_vht_build_test, host_vht_caps_handler_test)))]
 use core::ffi::c_void;
-#[cfg(host_vht_build_test)]
+#[cfg(any(host_vht_build_test, host_vht_caps_handler_test))]
 use std::os::raw::c_void;
 
 const EID_VHTCapability: u8 = 191;
@@ -26,9 +26,13 @@ const BW_CAP_160M: u8 = 1 << 5;
 const BW_CAP_80_80M: u8 = 1 << 6;
 const HAL_PRIME_CHNL_OFFSET_LOWER: u8 = 1;
 const LDPC_VHT_ENABLE_RX: u8 = 1;
+const LDPC_VHT_ENABLE_TX: u8 = 1 << 1;
 const STBC_VHT_ENABLE_RX: u8 = 1;
 const STBC_VHT_ENABLE_TX: u8 = 1 << 1;
+const STBC_VHT_CAP_TX: u8 = 1 << 3;
+const LDPC_VHT_CAP_TX: u8 = 1 << 3;
 const MGN_VHT1SS_MCS0: u8 = 0xA0;
+const MGN_VHT1SS_MCS7: u8 = 0xA7;
 
 #[repr(C)]
 pub struct RegistryPriv {
@@ -44,6 +48,9 @@ pub struct VhtPriv {
     pub stbc_cap: u8,
     pub sgi_80m: u8,
     pub vht_highest_rate: u8,
+    pub ampdu_len: u8,
+    pub beamform_cap: u16,
+    pub vht_option: u8,
 }
 
 #[repr(C)]
@@ -56,6 +63,7 @@ pub struct HostVhtBuildFixture {
     pub rx_packet_offset: u32,
     pub max_recvbuf_sz: u32,
     pub rx_stbc_nss: u8,
+    pub rx_nss: u8,
     pub hal_max_bw: u8,
     pub hal_bw_support: [u8; 5],
 }
@@ -63,6 +71,14 @@ pub struct HostVhtBuildFixture {
 #[repr(C)]
 pub struct MlmeExtInfo {
     pub assoc_AP_vendor: u8,
+    pub vht_enable: u8,
+}
+
+#[repr(C)]
+pub struct VariableIes {
+    pub element_id: u8,
+    pub length: u8,
+    pub data: [u8; 12],
 }
 
 #[repr(C)]
@@ -90,36 +106,40 @@ fn test_flag(v: u8, f: u8) -> bool {
     (v & f) != 0
 }
 
-#[cfg(host_vht_build_test)]
+#[cfg(any(host_vht_build_test, host_vht_caps_handler_test))]
 mod host {
     use super::*;
 
-    #[repr(i32)]
-    enum HalDefVariable {
-        MaxRecvbufSz = 3,
-        RxPacketOffset = 4,
-        RxStbc = 15,
-    }
+    #[cfg(host_vht_build_test)]
+    mod build {
+        use super::super::*;
 
-    extern "C" {
-        fn hal_chk_bw_cap(adapter: *mut Adapter, cap: u8) -> bool;
-        fn hal_largest_bw(adapter: *mut Adapter, in_bw: u8) -> u8;
-        fn rtw_get_center_ch(ch: u8, bw: u8, offset: u8) -> u8;
-        fn rtw_hal_get_def_var(
-            adapter: *mut Adapter,
-            variable: HalDefVariable,
-            value: *mut core::ffi::c_void,
-        );
-        fn rtw_set_ie(
-            pbuf: *mut u8,
-            index: i32,
-            len: u32,
-            source: *const u8,
-            frlen: *mut u32,
-        ) -> *mut u8;
-    }
+        #[repr(i32)]
+        enum HalDefVariable {
+            MaxRecvbufSz = 3,
+            RxPacketOffset = 4,
+            RxStbc = 15,
+        }
 
-    static VHT_MCS_DATA_RATE: [[&[u16; 40]; 2]; 3] = [
+        extern "C" {
+            fn hal_chk_bw_cap(adapter: *mut Adapter, cap: u8) -> bool;
+            fn hal_largest_bw(adapter: *mut Adapter, in_bw: u8) -> u8;
+            fn rtw_get_center_ch(ch: u8, bw: u8, offset: u8) -> u8;
+            fn rtw_hal_get_def_var(
+                adapter: *mut Adapter,
+                variable: HalDefVariable,
+                value: *mut std::os::raw::c_void,
+            );
+            fn rtw_set_ie(
+                pbuf: *mut u8,
+                index: i32,
+                len: u32,
+                source: *const u8,
+                frlen: *mut u32,
+            ) -> *mut u8;
+        }
+
+        static VHT_MCS_DATA_RATE: [[&[u16; 40]; 2]; 3] = [
         [
             &[
                 13, 26, 39, 52, 78, 104, 117, 130, 156, 156, 26, 52, 78, 104, 156, 208, 234, 260,
@@ -325,6 +345,101 @@ mod host {
             len
         }
     }
+    }
+
+    #[cfg(host_vht_build_test)]
+    pub use self::build::{build_vht_cap_ie, build_vht_operation_ie};
+
+    fn set_flag(v: &mut u8, f: u8) {
+        *v |= f;
+    }
+
+    fn le_bits_1byte(p: &[u8], offset: u32, length: u32) -> u8 {
+        (p[0] >> offset) & ((1u8 << length) - 1)
+    }
+
+    fn le_bits_2byte(p: &[u8], offset: u32, length: u32) -> u8 {
+        let combined = p[0] as u16 | ((p[1] as u16) << 8);
+        ((combined >> offset) & ((1u16 << length) - 1)) as u8
+    }
+
+    fn rtw_vht_nss_to_mcsmap(nss: u8, target_mcs_map: &mut [u8; 2], cur_mcs_map: &[u8; 2]) {
+        for i in 0..2 {
+            target_mcs_map[i] = 0;
+            for j in (0..8).step_by(2) {
+                let cur_rate = (cur_mcs_map[i] >> j) & 3;
+                let target_rate = if cur_rate == 3 {
+                    3
+                } else if nss <= (j / 2) as u8 + (i as u8) * 4 {
+                    3
+                } else {
+                    cur_rate
+                };
+                target_mcs_map[i] |= target_rate << j;
+            }
+        }
+    }
+
+    fn rtw_get_vht_highest_rate(pvht_mcs_map: &[u8; 2]) -> u8 {
+        let mut vht_mcs_rate = 0u8;
+        for i in 0..2 {
+            if pvht_mcs_map[i] == 0xff {
+                continue;
+            }
+            for j in (0..8).step_by(2) {
+                let bit_map = (pvht_mcs_map[i] >> j) & 3;
+                if bit_map != 3 {
+                    vht_mcs_rate =
+                        MGN_VHT1SS_MCS7 + 10 * (j / 2) as u8 + i as u8 * 40 + bit_map;
+                }
+            }
+        }
+        vht_mcs_rate
+    }
+
+    #[cfg(host_vht_caps_handler_test)]
+    pub fn vht_caps_handler(padapter: *mut Adapter, pie: *mut VariableIes) {
+        if pie.is_null() {
+            return;
+        }
+        let padapter = unsafe { &mut *padapter };
+        let pie = unsafe { &*pie };
+        let pvhtpriv = &mut padapter.mlmepriv.vhtpriv;
+        if pvhtpriv.vht_option == 0 {
+            return;
+        }
+        padapter.mlmeextpriv.mlmext_info.vht_enable = 1;
+
+        let mut cur_ldpc_cap = 0u8;
+        if test_flag(pvhtpriv.ldpc_cap, LDPC_VHT_ENABLE_TX)
+            && le_bits_1byte(&pie.data, 4, 1) != 0
+        {
+            set_flag(&mut cur_ldpc_cap, LDPC_VHT_ENABLE_TX | LDPC_VHT_CAP_TX);
+        }
+        pvhtpriv.ldpc_cap = cur_ldpc_cap;
+
+        pvhtpriv.sgi_80m = if le_bits_1byte(&pie.data, 5, 1) != 0 && pvhtpriv.sgi_80m != 0 {
+            1
+        } else {
+            0
+        };
+
+        let mut cur_stbc_cap = 0u8;
+        if test_flag(pvhtpriv.stbc_cap, STBC_VHT_ENABLE_TX)
+            && le_bits_1byte(&pie.data[1..], 0, 3) != 0
+        {
+            set_flag(&mut cur_stbc_cap, STBC_VHT_ENABLE_TX | STBC_VHT_CAP_TX);
+        }
+        pvhtpriv.stbc_cap = cur_stbc_cap;
+
+        pvhtpriv.ampdu_len = le_bits_2byte(&pie.data[2..], 7, 3);
+
+        let rx_nss = padapter.host_fixture.rx_nss;
+        let mut peer_rx_mcs = [0u8; 2];
+        peer_rx_mcs.copy_from_slice(&pie.data[4..6]);
+        rtw_vht_nss_to_mcsmap(rx_nss, &mut pvhtpriv.vht_mcs_map, &peer_rx_mcs);
+        pvhtpriv.vht_highest_rate = rtw_get_vht_highest_rate(&pvhtpriv.vht_mcs_map);
+    }
 }
 
 #[no_mangle]
@@ -355,4 +470,10 @@ pub extern "C" fn rtw_build_vht_operation_ie(
         let _ = (padapter, pbuf, channel);
         0
     }
+}
+
+#[cfg(host_vht_caps_handler_test)]
+#[no_mangle]
+pub extern "C" fn VHT_caps_handler(padapter: *mut c_void, pie: *mut VariableIes) {
+    host::vht_caps_handler(padapter as *mut Adapter, pie);
 }
