@@ -506,8 +506,7 @@ mod lps_enter_host {
     fn ps_rdy_check(a: &LpsEnterAdapter) -> bool {
         let p = &a.pwrctrlpriv;
         let m = &a.mlmepriv;
-        if p.bInSuspend == 1
-            || (p.lps_deny_time as i32).wrapping_sub(unsafe { G_TIME } as i32) > 0
+        if p.bInSuspend == 1 || (p.lps_deny_time as i32).wrapping_sub(unsafe { G_TIME } as i32) > 0
         {
             return false;
         }
