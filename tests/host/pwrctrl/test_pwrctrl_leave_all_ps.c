@@ -4,7 +4,7 @@
 #include "host_pwrctrl_leave_all_ps.h"
 #include "host_vector_json.h"
 
-#define MAX_VECTORS 12
+#define MAX_VECTORS 16
 #define MAX_NAME 64
 
 struct vector {
@@ -63,7 +63,12 @@ static int run_vec(struct vector *v)
 	    (v->expect_lps_ctrl && (tr->last_lps_ctrl_type != (u8)v->expect_lps_type ||
 	     tr->last_lps_ctrl_flags != (u8)v->expect_lps_flags)) ||
 	    tr->ips_leave != v->expect_ips_leave) {
-		fprintf(stderr, "FAIL %s\n", v->name);
+		fprintf(stderr,
+			"FAIL %s lps_ctrl=%d expect=%d type=%u expect=%d flags=%u expect=%d ips=%d expect=%d\n",
+			v->name, tr->lps_ctrl_wk_cmd, v->expect_lps_ctrl,
+			tr->last_lps_ctrl_type, v->expect_lps_type,
+			tr->last_lps_ctrl_flags, v->expect_lps_flags,
+			tr->ips_leave, v->expect_ips_leave);
 		return 1;
 	}
 	printf("PASS %s\n", v->name);

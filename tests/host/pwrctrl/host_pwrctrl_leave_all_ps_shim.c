@@ -4,6 +4,7 @@
 #include "host_pwrctrl_leave_all_ps.h"
 
 #define CONFIG_LPS 1
+#define CONFIG_LPS_LCLK 1
 
 static struct host_pwrctrl_leave_all_ps_trace g_trace;
 static int g_assoc_if_num;
@@ -22,12 +23,16 @@ static void rtw_lps_ctrl_wk_cmd(PADAPTER adapter, u8 t, u8 flags)
 	g_trace.last_lps_ctrl_flags = flags;
 }
 
+#if defined(CONFIG_FWLPS_IN_IPS) || defined(CONFIG_SWLPS_IN_IPS) || \
+	defined(CONFIG_RTL8188E) || \
+	(defined(CONFIG_PLATFORM_SPRD) && defined(CONFIG_RTL8188E))
 static u8 ips_leave(PADAPTER a)
 {
 	(void)a;
 	g_trace.ips_leave++;
 	return _TRUE;
 }
+#endif
 
 void LeaveAllPowerSaveModeDirect(PADAPTER Adapter)
 {
@@ -43,21 +48,31 @@ void LeaveAllPowerSaveModeDirect(PADAPTER Adapter)
 		rtw_lps_ctrl_wk_cmd(pri, LPS_CTRL_LEAVE, RTW_CMDF_DIRECTLY);
 #endif
 	} else if (pwr->rf_pwrstate == rf_off) {
+#if defined(CONFIG_FWLPS_IN_IPS) || defined(CONFIG_SWLPS_IN_IPS) || defined(CONFIG_RTL8188E)
 		ips_leave(pri);
+#endif
 	}
 }
 
 void LeaveAllPowerSaveMode(PADAPTER Adapter)
 {
 	struct pwrctrl_priv *pwr = adapter_to_pwrctl(Adapter);
+	u8 enqueue = 0;
 
 	if (!Adapter->bup || Adapter->bSurpriseRemoved)
 		return;
 	if (g_assoc_if_num) {
+#ifdef CONFIG_LPS_LCLK
+		enqueue = 1;
+#endif
 #ifdef CONFIG_LPS
-		rtw_lps_ctrl_wk_cmd(Adapter, LPS_CTRL_LEAVE, RTW_CMDF_DIRECTLY);
+		rtw_lps_ctrl_wk_cmd(Adapter, LPS_CTRL_LEAVE,
+				    enqueue ? 0 : RTW_CMDF_DIRECTLY);
 #endif
 	} else if (pwr->rf_pwrstate == rf_off) {
+#if defined(CONFIG_FWLPS_IN_IPS) || defined(CONFIG_SWLPS_IN_IPS) || \
+	(defined(CONFIG_PLATFORM_SPRD) && defined(CONFIG_RTL8188E))
 		ips_leave(Adapter);
+#endif
 	}
 }
