@@ -68,9 +68,9 @@ void LPS_Leave(_adapter *a, const char *msg)
 	struct pwrctrl_priv *p = &a->pwrctrlpriv;
 
 	(void)msg;
-	if (!p->bLeisurePs)
-		return;
-	if (p->pwr_mode != PS_MODE_ACTIVE)
-		set_ps_mode(a, PS_MODE_ACTIVE, 0, msg);
+	if (p->bLeisurePs) {
+		if (p->pwr_mode != PS_MODE_ACTIVE)
+			set_ps_mode(a, PS_MODE_ACTIVE, 0, msg);
+	}
 	p->bpower_saving = _FALSE;
 }
