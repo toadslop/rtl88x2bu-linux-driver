@@ -93,8 +93,10 @@ struct mlme_ext_info { u8 assoc_AP_vendor; u8 VHT_enable; };
 struct mlme_ext_priv { struct mlme_ext_info mlmext_info; };
 struct mlme_priv {
 	struct vht_priv vhtpriv;
+#ifdef HOST_VHT_IES_ATTACH_TEST
 	u8 ext_capab_ie_data[8];
 	u8 ext_capab_ie_len;
+#endif
 };
 struct host_vht_build_fixture {
 	u32 rx_packet_offset;
