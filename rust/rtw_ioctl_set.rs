@@ -1,6 +1,71 @@
 // SPDX-License-Identifier: GPL-2.0
-//! W3-124/W3-125 ioctl helpers (host L2 Rust oracles).
-#![allow(dead_code, improper_ctypes, missing_docs, non_snake_case)]
+//! W3-124/W3-125 ioctl helpers (host L2 Rust oracles + kernel leaf setters).
+#![allow(
+    dead_code,
+    improper_ctypes,
+    missing_docs,
+    non_snake_case,
+    unreachable_pub
+)]
+
+#[cfg(rust_ioctl_set_leaf)]
+use core::ffi::c_void;
+
+#[cfg(rust_ioctl_set_leaf)]
+mod kernel {
+    use super::c_void;
+
+    extern "C" {
+        fn rtw_rust_ioctl_scan_mode_ptr(adapter: *mut c_void) -> *mut i32;
+        fn rtw_rust_ioctl_setband_ptr(adapter: *mut c_void) -> *mut u32;
+    }
+
+    pub unsafe fn scan_mode_ptr(adapter: *mut c_void) -> *mut i32 {
+        unsafe { rtw_rust_ioctl_scan_mode_ptr(adapter) }
+    }
+
+    pub unsafe fn setband_ptr(adapter: *mut c_void) -> *mut u32 {
+        unsafe { rtw_rust_ioctl_setband_ptr(adapter) }
+    }
+}
+
+#[cfg(rust_ioctl_set_leaf)]
+const SCAN_PASSIVE_K: i32 = 0;
+#[cfg(rust_ioctl_set_leaf)]
+const SCAN_ACTIVE_K: i32 = 1;
+#[cfg(rust_ioctl_set_leaf)]
+const WIFI_FREQUENCY_BAND_2GHZ_K: u8 = 2;
+
+#[cfg(rust_ioctl_set_leaf)]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_set_scan_mode(adapter: *mut c_void, scan_mode: i32) -> i32 {
+    if scan_mode != SCAN_ACTIVE_K && scan_mode != SCAN_PASSIVE_K {
+        return _FAIL;
+    }
+    let ptr = unsafe { kernel::scan_mode_ptr(adapter) };
+    unsafe {
+        *ptr = scan_mode;
+    }
+    _SUCCESS
+}
+
+#[cfg(rust_ioctl_set_leaf)]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_set_band(adapter: *mut c_void, band: u8) -> i32 {
+    if band > WIFI_FREQUENCY_BAND_2GHZ_K {
+        return _FAIL;
+    }
+    let ptr = unsafe { kernel::setband_ptr(adapter) };
+    unsafe {
+        *ptr = band as u32;
+    }
+    _SUCCESS
+}
+
+#[cfg(rust_ioctl_set_leaf)]
+const _SUCCESS: i32 = 1;
+#[cfg(rust_ioctl_set_leaf)]
+const _FAIL: i32 = 0;
 
 const _TRUE: u8 = 1;
 const _FALSE: u8 = 0;
