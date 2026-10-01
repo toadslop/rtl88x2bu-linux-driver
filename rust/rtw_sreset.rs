@@ -557,13 +557,7 @@ mod security_host {
                 if !psta.is_null() {
                     rtw_setstakey_cmd(padapter, psta, UNICAST_KEY, 0);
                     let sp = &mut (*padapter).securitypriv;
-                    rtw_set_key(
-                        padapter,
-                        sp,
-                        sp.dot118021XGrpKeyid as i32,
-                        0,
-                        0,
-                    );
+                    rtw_set_key(padapter, sp, sp.dot118021XGrpKeyid as i32, 0, 0);
                 }
             }
         }
