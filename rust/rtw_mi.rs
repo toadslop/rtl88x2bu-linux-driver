@@ -472,9 +472,5 @@ mi_netif_kern_export!(rtw_mi_netif_carrier_off, false, op_kern_carrier_off);
 #[cfg(rust_mi_netif_leaf)]
 mi_netif_kern_export!(rtw_mi_buddy_netif_carrier_off, true, op_kern_carrier_off);
 
-#[cfg(not(any(
-    host_mi_ch_union_test,
-    host_mi_netif_buddy_test,
-    rust_mi_netif_leaf
-)))]
+#[cfg(not(any(host_mi_ch_union_test, host_mi_netif_buddy_test, rust_mi_netif_leaf)))]
 pub fn mi_ch_union_stub() {}
