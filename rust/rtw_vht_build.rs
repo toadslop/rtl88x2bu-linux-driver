@@ -17,7 +17,11 @@
     host_vht_ies_attach_test
 )))]
 use core::ffi::c_void;
-#[cfg(any(host_vht_build_test, host_vht_caps_handler_test, host_vht_ies_attach_test))]
+#[cfg(any(
+    host_vht_build_test,
+    host_vht_caps_handler_test,
+    host_vht_ies_attach_test
+))]
 use std::os::raw::c_void;
 
 const EID_EXTCapability: u8 = 127;
@@ -134,7 +138,11 @@ pub struct WlanBssidEx {
     pub ies: [u8; 256],
 }
 
-#[cfg(any(host_vht_build_test, host_vht_caps_handler_test, host_vht_ies_attach_test))]
+#[cfg(any(
+    host_vht_build_test,
+    host_vht_caps_handler_test,
+    host_vht_ies_attach_test
+))]
 mod host {
     use super::*;
 
