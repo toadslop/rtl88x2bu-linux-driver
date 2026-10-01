@@ -22,7 +22,8 @@ pub struct WifidirectInfo {
     pub ctwindow: u8,
     pub noa_num: u8,
     pub noa_count: [u8; 2],
-    pub p2p_ps_mode: u8,
+    _wdinfo_pad: u8,
+    pub p2p_ps_mode: u32,
     pub noa_duration: [u32; 2],
     pub noa_interval: [u32; 2],
     pub noa_start_time: [u32; 2],
@@ -40,9 +41,15 @@ pub struct RfCtl {
 }
 
 #[repr(C)]
+pub struct PwrctrlPriv {
+    pub bFwCurrentInPSMode: u8,
+}
+
+#[repr(C)]
 pub struct Adapter {
     pub wdinfo: WifidirectInfo,
     pub rfctl: RfCtl,
+    pub pwrctrlpriv: PwrctrlPriv,
 }
 
 type Padapter = *mut Adapter;
