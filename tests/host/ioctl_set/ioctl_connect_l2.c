@@ -1,0 +1,187 @@
+// SPDX-License-Identifier: GPL-2.0
+/* W3-124 follow-up (#979) PR3: L2 C oracle connect + disassociate. */
+#include <stdio.h>
+#include <string.h>
+#include "host_types.h"
+#include "host_vector_json.h"
+
+#define _SUCCESS 1
+#define _FAIL 0
+#define _TRUE 1
+#define _FALSE 0
+#define ETH_ALEN 6
+#define WIFI_ASOC_STATE 0x00000001
+#define WIFI_UNDER_LINKING 0x00000080
+#define WIFI_UNDER_SURVEY 0x00000800
+
+typedef int sint;
+typedef struct { u32 SsidLength; u8 Ssid[32]; } NDIS_802_11_SSID;
+struct mlme_priv {
+	u32 fw_state;
+	u8 to_join, assoc_by_bssid;
+	u16 assoc_ch;
+	u8 assoc_bssid[ETH_ALEN];
+	NDIS_802_11_SSID assoc_ssid;
+};
+struct _adapter {
+	u8 hw_init_done, tkip_fail, do_join_ret;
+	struct mlme_priv mlmepriv;
+};
+
+static u32 g_disassoc_calls, g_join_calls;
+
+static u8 v_bssid(u8 *b)
+{
+	if (!(b[0]|b[1]|b[2]|b[3]|b[4]|b[5]) || (b[0]&b[1]&b[2]&b[3]&b[4]&b[5])==0xff)
+		return _FALSE;
+	return ((b[0]&0x01) && b[0]!=0xff) ? _FALSE : _TRUE;
+}
+static u8 v_ssid(NDIS_802_11_SSID *s) { return s->SsidLength > 32 ? _FALSE : _TRUE; }
+static sint chk(struct mlme_priv *m, sint st)
+{
+	return (!st && !m->fw_state) || (m->fw_state & (u32)st) ? _TRUE : _FALSE;
+}
+
+static u8 rtw_set_802_11_disassociate(struct _adapter *p)
+{
+	if (chk(&p->mlmepriv, WIFI_ASOC_STATE))
+		g_disassoc_calls++;
+	return _TRUE;
+}
+
+static u8 rtw_set_802_11_connect(struct _adapter *p, u8 *bssid, NDIS_802_11_SSID *ssid, u16 ch)
+{
+	u8 ok = _TRUE, bv = _TRUE, sv = _TRUE;
+	struct mlme_priv *m = &p->mlmepriv;
+
+	if (!ssid || !v_ssid(ssid))
+		sv = _FALSE;
+	if (!bssid || !v_bssid(bssid))
+		bv = _FALSE;
+	if (!sv && !bv)
+		return _FAIL;
+	if (!p->hw_init_done)
+		return _FAIL;
+	if (chk(m, WIFI_UNDER_LINKING))
+		return _SUCCESS;
+	if (p->tkip_fail)
+		return _FAIL;
+	if (ssid && sv)
+		memcpy(&m->assoc_ssid, ssid, sizeof(*ssid));
+	else
+		memset(&m->assoc_ssid, 0, sizeof(m->assoc_ssid));
+	if (bssid && bv) {
+		memcpy(m->assoc_bssid, bssid, ETH_ALEN);
+		m->assoc_by_bssid = _TRUE;
+	} else
+		m->assoc_by_bssid = _FALSE;
+	m->assoc_ch = ch;
+	if (chk(m, WIFI_UNDER_SURVEY))
+		m->to_join = _TRUE;
+	else {
+		g_join_calls++;
+		ok = p->do_join_ret ? _SUCCESS : _FAIL;
+	}
+	return ok;
+}
+
+struct vector {
+	char name[48], fn[16], bssid[13];
+	int fw_state, hw_init, tkip_fail, do_join_ret, ch, ssid_len;
+	int expect_ret, expect_disassoc, expect_join, expect_to_join;
+};
+
+static int dec_mac(const char *h, u8 *m)
+{
+	for (int i = 0; i < ETH_ALEN; i++) {
+		int a = h[i*2], b = h[i*2+1], hi, lo;
+
+		if (a >= '0' && a <= '9') hi = a - '0';
+		else if (a >= 'a' && a <= 'f') hi = a - 'a' + 10;
+		else return -1;
+		if (b >= '0' && b <= '9') lo = b - '0';
+		else if (b >= 'a' && b <= 'f') lo = b - 'a' + 10;
+		else return -1;
+		m[i] = (u8)((hi << 4) | lo);
+	}
+	return 0;
+}
+
+static int parse_vector_object(const char *obj, size_t len, void *vv)
+{
+	struct vector *v = vv;
+	const char *k[] = {"fw_state","hw_init","tkip_fail","do_join_ret","ch","ssid_len",
+			   "expect_ret","expect_disassoc","expect_join","expect_to_join", NULL};
+	int *p[] = {&v->fw_state,&v->hw_init,&v->tkip_fail,&v->do_join_ret,&v->ch,&v->ssid_len,
+		    &v->expect_ret,&v->expect_disassoc,&v->expect_join,&v->expect_to_join};
+
+	memset(v, 0, sizeof(*v));
+	v->hw_init = -1;
+	v->do_join_ret = -1;
+	if (host_json_parse_string_in(obj, len, "name", v->name, sizeof(v->name)) ||
+	    host_json_parse_string_in(obj, len, "fn", v->fn, sizeof(v->fn)))
+		return -1;
+	host_json_parse_string_in(obj, len, "bssid", v->bssid, sizeof(v->bssid));
+	for (int i = 0; k[i]; i++)
+		host_json_parse_int_in(obj, len, k[i], p[i]);
+	if (v->do_join_ret < 0)
+		v->do_join_ret = 1;
+	if (v->hw_init < 0)
+		v->hw_init = 1;
+	return 0;
+}
+
+static int run_vector(struct vector *v)
+{
+	struct _adapter a;
+	u8 mac[ETH_ALEN], got;
+	NDIS_802_11_SSID ssid;
+
+	memset(&a, 0, sizeof(a));
+	g_disassoc_calls = g_join_calls = 0;
+	a.hw_init_done = (u8)v->hw_init;
+	a.tkip_fail = (u8)v->tkip_fail;
+	a.do_join_ret = (u8)v->do_join_ret;
+	a.mlmepriv.fw_state = (u32)v->fw_state;
+
+	if (!strcmp(v->fn, "disassociate")) {
+		got = rtw_set_802_11_disassociate(&a);
+		if (got != (u8)v->expect_ret || g_disassoc_calls != (u32)v->expect_disassoc)
+			goto fail;
+	} else if (!strcmp(v->fn, "connect")) {
+		u8 *pb = NULL;
+
+		memset(&ssid, 0, sizeof(ssid));
+		ssid.SsidLength = (u32)v->ssid_len;
+		if (v->bssid[0] && dec_mac(v->bssid, mac))
+			goto fail;
+		if (v->bssid[0])
+			pb = mac;
+		got = rtw_set_802_11_connect(&a, pb, v->ssid_len ? &ssid : NULL, (u16)v->ch);
+		if (got != (u8)v->expect_ret || g_join_calls != (u32)v->expect_join ||
+		    a.mlmepriv.to_join != (u8)v->expect_to_join)
+			goto fail;
+	} else
+		return 1;
+	printf("PASS %s\n", v->name);
+	return 0;
+fail:
+	fprintf(stderr, "FAIL %s\n", v->name);
+	return 1;
+}
+
+int main(int argc, char **argv)
+{
+	struct vector vecs[12];
+	size_t n = 0;
+	int bad = 0;
+	const char *path = argc > 1 ? argv[1] : "ioctl_connect_vectors.json";
+
+	if (host_load_vectors(path, vecs, sizeof(vecs[0]), 12, parse_vector_object, &n))
+		return 2;
+	for (size_t i = 0; i < n; i++)
+		bad += run_vector(&vecs[i]);
+	if (!bad)
+		printf("PASS %zu vectors (%s)\n", n, path);
+	return bad ? 1 : 0;
+}
