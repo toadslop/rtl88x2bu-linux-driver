@@ -488,8 +488,7 @@ pub mod vht {
             sta.bw_mode = adapter.mlmeextpriv.cur_bwmode;
         }
 
-        let current_rxss =
-            unsafe { rtw_vht_mcsmap_to_nss(sta.vhtpriv.vht_mcs_map.as_mut_ptr()) };
+        let current_rxss = unsafe { rtw_vht_mcsmap_to_nss(sta.vhtpriv.vht_mcs_map.as_mut_ptr()) };
         if target_rxss != current_rxss {
             let mut vht_mcs_map = [0u8; 2];
             vht_nss_to_mcsmap(target_rxss, &mut vht_mcs_map, &sta.vhtpriv.vht_mcs_map);
