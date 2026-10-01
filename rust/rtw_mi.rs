@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: GPL-2.0
 //! W3-121 mi channel union helpers (host L2 Rust oracle).
-#![allow(dead_code, improper_ctypes, missing_docs, non_snake_case)]
+#![allow(
+    dead_code,
+    improper_ctypes,
+    missing_docs,
+    non_snake_case,
+    unreachable_pub
+)]
 
 const ASOC: i32 = 0x00000001;
 const LINK: i32 = 0x00000080;
@@ -326,5 +332,149 @@ pub unsafe extern "C" fn mi_rust_call_mi_netif(pad: *mut NetifAdapter, fn_id: i3
     mi_process_netif(pad, buddy, op)
 }
 
-#[cfg(not(any(host_mi_ch_union_test, host_mi_netif_buddy_test)))]
+#[cfg(rust_mi_netif_leaf)]
+mod kernel {
+    use core::ffi::c_void;
+
+    pub type Padapter = *mut c_void;
+    pub type Pnetdev = *mut c_void;
+
+    extern "C" {
+        pub fn rtw_rust_mi_iface_nums(padapter: Padapter) -> i32;
+        pub fn rtw_rust_mi_iface_at(padapter: Padapter, idx: i32) -> Padapter;
+        pub fn rtw_rust_mi_is_adapter_up(iface: Padapter) -> u8;
+        pub fn rtw_rust_mi_pnetdev(iface: Padapter) -> Pnetdev;
+        pub fn rtw_rust_mi_netif_carrier_off(n: Pnetdev);
+        pub fn rtw_rust_mi_netif_carrier_on(n: Pnetdev);
+        pub fn rtw_rust_mi_netif_stop_queue(n: Pnetdev);
+        pub fn rtw_rust_mi_netif_start_queue(n: Pnetdev);
+        pub fn rtw_rust_mi_netif_wake_queue(n: Pnetdev);
+    }
+}
+
+#[cfg(rust_mi_netif_leaf)]
+type MiNetifKernOp = unsafe fn(kernel::Padapter) -> u8;
+
+#[cfg(rust_mi_netif_leaf)]
+const _TRUE_K: u8 = 1;
+
+#[cfg(rust_mi_netif_leaf)]
+unsafe fn mi_process_netif_kern(
+    padapter: kernel::Padapter,
+    exclude_self: bool,
+    op: MiNetifKernOp,
+) -> u8 {
+    let n = unsafe { kernel::rtw_rust_mi_iface_nums(padapter) };
+    let mut ret = 0u8;
+    for i in 0..n {
+        let iface = unsafe { kernel::rtw_rust_mi_iface_at(padapter, i) };
+        if iface.is_null() {
+            continue;
+        }
+        if unsafe { kernel::rtw_rust_mi_is_adapter_up(iface) } == 0 {
+            continue;
+        }
+        if exclude_self && core::ptr::eq(iface, padapter) {
+            continue;
+        }
+        if unsafe { op(iface) } == _TRUE_K {
+            ret += 1;
+        }
+    }
+    ret
+}
+
+#[cfg(rust_mi_netif_leaf)]
+unsafe fn op_kern_caroff_qstop(iface: kernel::Padapter) -> u8 {
+    let n = unsafe { kernel::rtw_rust_mi_pnetdev(iface) };
+    unsafe {
+        kernel::rtw_rust_mi_netif_carrier_off(n);
+        kernel::rtw_rust_mi_netif_stop_queue(n);
+    }
+    _TRUE_K
+}
+
+#[cfg(rust_mi_netif_leaf)]
+unsafe fn op_kern_caron_qstart(iface: kernel::Padapter) -> u8 {
+    let n = unsafe { kernel::rtw_rust_mi_pnetdev(iface) };
+    unsafe {
+        kernel::rtw_rust_mi_netif_carrier_on(n);
+        kernel::rtw_rust_mi_netif_start_queue(n);
+    }
+    _TRUE_K
+}
+
+#[cfg(rust_mi_netif_leaf)]
+unsafe fn op_kern_stop_queue(iface: kernel::Padapter) -> u8 {
+    unsafe { kernel::rtw_rust_mi_netif_stop_queue(kernel::rtw_rust_mi_pnetdev(iface)) };
+    _TRUE_K
+}
+
+#[cfg(rust_mi_netif_leaf)]
+unsafe fn op_kern_wake_queue(iface: kernel::Padapter) -> u8 {
+    let n = unsafe { kernel::rtw_rust_mi_pnetdev(iface) };
+    if !n.is_null() {
+        unsafe { kernel::rtw_rust_mi_netif_wake_queue(n) };
+    }
+    _TRUE_K
+}
+
+#[cfg(rust_mi_netif_leaf)]
+unsafe fn op_kern_carrier_on(iface: kernel::Padapter) -> u8 {
+    let n = unsafe { kernel::rtw_rust_mi_pnetdev(iface) };
+    if !n.is_null() {
+        unsafe { kernel::rtw_rust_mi_netif_carrier_on(n) };
+    }
+    _TRUE_K
+}
+
+#[cfg(rust_mi_netif_leaf)]
+unsafe fn op_kern_carrier_off(iface: kernel::Padapter) -> u8 {
+    let n = unsafe { kernel::rtw_rust_mi_pnetdev(iface) };
+    if !n.is_null() {
+        unsafe { kernel::rtw_rust_mi_netif_carrier_off(n) };
+    }
+    _TRUE_K
+}
+
+#[cfg(rust_mi_netif_leaf)]
+macro_rules! mi_netif_kern_export {
+    ($fn:ident, $buddy:expr, $op:ident) => {
+        #[no_mangle]
+        pub unsafe extern "C" fn $fn(p: kernel::Padapter) -> u8 {
+            unsafe { mi_process_netif_kern(p, $buddy, $op) }
+        }
+    };
+}
+
+#[cfg(rust_mi_netif_leaf)]
+mi_netif_kern_export!(rtw_mi_netif_caroff_qstop, false, op_kern_caroff_qstop);
+#[cfg(rust_mi_netif_leaf)]
+mi_netif_kern_export!(rtw_mi_buddy_netif_caroff_qstop, true, op_kern_caroff_qstop);
+#[cfg(rust_mi_netif_leaf)]
+mi_netif_kern_export!(rtw_mi_netif_caron_qstart, false, op_kern_caron_qstart);
+#[cfg(rust_mi_netif_leaf)]
+mi_netif_kern_export!(rtw_mi_buddy_netif_caron_qstart, true, op_kern_caron_qstart);
+#[cfg(rust_mi_netif_leaf)]
+mi_netif_kern_export!(rtw_mi_netif_stop_queue, false, op_kern_stop_queue);
+#[cfg(rust_mi_netif_leaf)]
+mi_netif_kern_export!(rtw_mi_buddy_netif_stop_queue, true, op_kern_stop_queue);
+#[cfg(rust_mi_netif_leaf)]
+mi_netif_kern_export!(rtw_mi_netif_wake_queue, false, op_kern_wake_queue);
+#[cfg(rust_mi_netif_leaf)]
+mi_netif_kern_export!(rtw_mi_buddy_netif_wake_queue, true, op_kern_wake_queue);
+#[cfg(rust_mi_netif_leaf)]
+mi_netif_kern_export!(rtw_mi_netif_carrier_on, false, op_kern_carrier_on);
+#[cfg(rust_mi_netif_leaf)]
+mi_netif_kern_export!(rtw_mi_buddy_netif_carrier_on, true, op_kern_carrier_on);
+#[cfg(rust_mi_netif_leaf)]
+mi_netif_kern_export!(rtw_mi_netif_carrier_off, false, op_kern_carrier_off);
+#[cfg(rust_mi_netif_leaf)]
+mi_netif_kern_export!(rtw_mi_buddy_netif_carrier_off, true, op_kern_carrier_off);
+
+#[cfg(not(any(
+    host_mi_ch_union_test,
+    host_mi_netif_buddy_test,
+    rust_mi_netif_leaf
+)))]
 pub fn mi_ch_union_stub() {}

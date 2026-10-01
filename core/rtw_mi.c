@@ -422,6 +422,54 @@ static u8 _rtw_mi_process_without_schk(_adapter *padapter, bool exclude_self,
 	return ret;
 }
 
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MI_NETIF_LEAF)
+int rtw_rust_mi_iface_nums(_adapter *padapter)
+{
+	return adapter_to_dvobj(padapter)->iface_nums;
+}
+
+_adapter *rtw_rust_mi_iface_at(_adapter *padapter, int idx)
+{
+	return adapter_to_dvobj(padapter)->padapters[idx];
+}
+
+u8 rtw_rust_mi_is_adapter_up(_adapter *iface)
+{
+	return rtw_is_adapter_up(iface) ? 1 : 0;
+}
+
+struct net_device *rtw_rust_mi_pnetdev(_adapter *iface)
+{
+	return iface->pnetdev;
+}
+
+void rtw_rust_mi_netif_carrier_off(struct net_device *pnetdev)
+{
+	rtw_netif_carrier_off(pnetdev);
+}
+
+void rtw_rust_mi_netif_carrier_on(struct net_device *pnetdev)
+{
+	rtw_netif_carrier_on(pnetdev);
+}
+
+void rtw_rust_mi_netif_stop_queue(struct net_device *pnetdev)
+{
+	rtw_netif_stop_queue(pnetdev);
+}
+
+void rtw_rust_mi_netif_start_queue(struct net_device *pnetdev)
+{
+	rtw_netif_start_queue(pnetdev);
+}
+
+void rtw_rust_mi_netif_wake_queue(struct net_device *pnetdev)
+{
+	rtw_netif_wake_queue(pnetdev);
+}
+#endif /* CONFIG_RUST && CONFIG_RUST_MI_NETIF_LEAF */
+
+#ifndef CONFIG_RUST_MI_NETIF_LEAF
 static u8 _rtw_mi_netif_caroff_qstop(_adapter *padapter, void *data)
 {
 	struct net_device *pnetdev = padapter->pnetdev;
@@ -522,6 +570,7 @@ u8 rtw_mi_buddy_netif_carrier_off(_adapter *padapter)
 {
 	return _rtw_mi_process(padapter, _TRUE, NULL, _rtw_mi_netif_carrier_off);
 }
+#endif /* !CONFIG_RUST_MI_NETIF_LEAF */
 
 static u8 _rtw_mi_scan_abort(_adapter *adapter, void *data)
 {
