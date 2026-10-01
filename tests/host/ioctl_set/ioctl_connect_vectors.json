@@ -1,0 +1,48 @@
+{
+  "vectors": [
+    {
+      "name": "disassoc_idle",
+      "fn": "disassociate",
+      "fw_state": 0,
+      "expect_ret": 1,
+      "expect_disassoc": 0
+    },
+    {
+      "name": "disassoc_linked",
+      "fn": "disassociate",
+      "fw_state": 1,
+      "expect_ret": 1,
+      "expect_disassoc": 1
+    },
+    {
+      "name": "connect_both_invalid",
+      "fn": "connect",
+      "ssid_len": 33,
+      "expect_ret": 0
+    },
+    {
+      "name": "connect_hw_not_ready",
+      "fn": "connect",
+      "hw_init": 0,
+      "bssid": "020304050607",
+      "expect_ret": 0
+    },
+    {
+      "name": "connect_under_survey_to_join",
+      "fn": "connect",
+      "fw_state": 2048,
+      "bssid": "020304050607",
+      "ch": 6,
+      "expect_ret": 1,
+      "expect_to_join": 1
+    },
+    {
+      "name": "connect_join_fail",
+      "fn": "connect",
+      "bssid": "020304050607",
+      "do_join_ret": 0,
+      "expect_ret": 0,
+      "expect_join": 1
+    }
+  ]
+}
