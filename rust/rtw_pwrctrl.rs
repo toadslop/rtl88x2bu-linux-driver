@@ -553,7 +553,7 @@ mod lps_enter_host {
 
     #[no_mangle]
     pub extern "C" fn host_pwrctrl_lps_enter_get_trace() -> *mut HostPwrctrlLpsEnterTrace {
-        unsafe { &mut G_TRACE as *mut _ }
+        core::ptr::addr_of_mut!(G_TRACE)
     }
 
     #[no_mangle]
@@ -601,10 +601,7 @@ mod lps_enter_host {
         unsafe {
             let a = &mut *a;
             let p = &mut a.pwrctrlpriv;
-            if p.bLeisurePs == 0 {
-                return;
-            }
-            if p.pwr_mode != PS_MODE_ACTIVE {
+            if p.bLeisurePs != 0 && p.pwr_mode != PS_MODE_ACTIVE {
                 p.pwr_mode = PS_MODE_ACTIVE;
                 record_ps_mode(PS_MODE_ACTIVE);
             }
