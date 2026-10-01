@@ -856,6 +856,18 @@ u16 rtw_get_cur_max_rate(_adapter *adapter)
 	return max_rate;
 }
 
+#if defined(CONFIG_RUST) && !defined(HOST_IOCTL_SCAN_CHANNEL_TEST)
+RT_SCAN_TYPE *rtw_rust_ioctl_scan_mode_ptr(_adapter *adapter)
+{
+	return &adapter->mlmepriv.scan_mode;
+}
+
+u32 *rtw_rust_ioctl_setband_ptr(_adapter *adapter)
+{
+	return &adapter->setband;
+}
+#endif /* CONFIG_RUST && !HOST_IOCTL_SCAN_CHANNEL_TEST */
+
 /*
 * rtw_set_scan_mode -
 * @adapter: pointer to _adapter structure
@@ -863,6 +875,7 @@ u16 rtw_get_cur_max_rate(_adapter *adapter)
 *
 * Return _SUCCESS or _FAIL
 */
+#if !defined(CONFIG_RUST) || defined(HOST_IOCTL_SCAN_CHANNEL_TEST)
 int rtw_set_scan_mode(_adapter *adapter, RT_SCAN_TYPE scan_mode)
 {
 	if (scan_mode != SCAN_ACTIVE && scan_mode != SCAN_PASSIVE)
@@ -872,6 +885,7 @@ int rtw_set_scan_mode(_adapter *adapter, RT_SCAN_TYPE scan_mode)
 
 	return _SUCCESS;
 }
+#endif /* !CONFIG_RUST || HOST_IOCTL_SCAN_CHANNEL_TEST */
 
 /*
 * rtw_set_channel_plan -
@@ -916,6 +930,7 @@ int rtw_set_country(_adapter *adapter, const char *country_code)
 *
 * Return _SUCCESS or _FAIL
 */
+#if !defined(CONFIG_RUST) || defined(HOST_IOCTL_SCAN_CHANNEL_TEST)
 int rtw_set_band(_adapter *adapter, u8 band)
 {
 	if (rtw_band_valid(band)) {
@@ -927,3 +942,4 @@ int rtw_set_band(_adapter *adapter, u8 band)
 	RTW_PRINT(FUNC_ADPT_FMT" band:%d fail\n", FUNC_ADPT_ARG(adapter), band);
 	return _FAIL;
 }
+#endif /* !CONFIG_RUST || HOST_IOCTL_SCAN_CHANNEL_TEST */

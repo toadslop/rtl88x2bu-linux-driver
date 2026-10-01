@@ -2849,6 +2849,9 @@ $(MODULE_NAME)-y += rust/rtw_mlme_ext_scan.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_pick_ch.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_band_ie.o
 $(MODULE_NAME)-y += rust/rtw_cmd_rest.o
+ccflags-y += -DCONFIG_RUST_IOCTL_SET_LEAF
+rustflags-y += --cfg rust_ioctl_set_leaf
+$(MODULE_NAME)-y += rust/rtw_ioctl_set.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
@@ -3092,6 +3095,22 @@ rust-objects-rtw-io-rest-c:
 rust-check-symbols-rtw-io-rest: rust-objects-rtw-io-rest-c rust-objects-rtw-io-rest
 	$(MAKE) rust-check-symbols OLD=tests/host/io/io_rest_c_ref.o NEW=rust/rtw_io_rest.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_io_rest.allow ALLOW_VACUOUS=1
+
+# W3-125 PR3: scan_mode + setband leaf setters — C ref vs rust/rtw_ioctl_set.o.
+rust-objects-rtw-ioctl-set:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-rtw-ioctl-set"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_ioctl_set.o
+
+rust-objects-rtw-ioctl-set-c:
+	gcc -c -Wall -Wextra -Werror -O2 \
+		-o tests/host/ioctl_set/ioctl_set_scan_band_c_ref.o \
+		tests/host/ioctl_set/ioctl_set_scan_band_c_ref.c
+
+rust-check-symbols-rtw-ioctl-set: rust-objects-rtw-ioctl-set-c rust-objects-rtw-ioctl-set
+	$(MAKE) rust-check-symbols OLD=tests/host/ioctl_set/ioctl_set_scan_band_c_ref.o NEW=rust/rtw_ioctl_set.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_ioctl_set.allow ALLOW_VACUOUS=1
 
 # W3-19: compare pre-port core/rtw_rf_rest.o against rust/rtw_rf_rest.o.
 rust-objects-rtw-rf-rest:
