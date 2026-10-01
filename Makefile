@@ -3712,6 +3712,20 @@ rust-check-symbols-rtw-cmd-queue: rust-objects-rtw-cmd-queue-c rust-objects-rtw-
 	$(MAKE) rust-check-symbols OLD=tests/host/cmd/cmd_queue_c_ref.o NEW=tests/host/cmd/cmd_queue_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_cmd_queue.allow ALLOW_VACUOUS=1
 
+# W3-118 PR4: odm phydm init L1 (host C oracle vs rust/rtw_odm.o).
+rust-objects-rtw-odm-phydm-init:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-odm-phydm-init"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_odm.o
+rust-objects-rtw-odm-phydm-init-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_ODM_PHYDM_INIT_TEST \
+		-o tests/host/odm/odm_phydm_init_c_ref.o core/rtw_odm_phydm_init.c
+rust-check-symbols-rtw-odm-phydm-init: rust-objects-rtw-odm-phydm-init-c rust-objects-rtw-odm-phydm-init
+	$(MAKE) rust-check-symbols OLD=tests/host/odm/odm_phydm_init_c_ref.o NEW=rust/rtw_odm.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_odm_phydm_init.allow ALLOW_VACUOUS=1
+
 # W3-39: host C oracle recv_rest vs rust/rtw_recv.o.
 rust-objects-rtw-recv:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-recv"; exit 1; }

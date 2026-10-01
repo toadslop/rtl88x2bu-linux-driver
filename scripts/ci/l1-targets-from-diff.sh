@@ -189,6 +189,11 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-cmd-rest
 		add_target rust-check-symbols-rtw-cmd-queue
 		;;
+	rust/rtw_odm.rs \
+	| core/rtw_odm_phydm_init.c \
+	| tests/host/odm/*)
+		add_target rust-check-symbols-rtw-odm-phydm-init
+		;;
 	rust/aes_*.rs \
 	| rust/sha256*.rs \
 	| rust/gcmp.rs \
@@ -271,6 +276,7 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-xmit-qos
 	rust-check-symbols-rtw-xmit-sctx
 	rust-check-symbols-rtw-cmd-rest
+	rust-check-symbols-rtw-odm-phydm-init
 )
 
 emit() {
