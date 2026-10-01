@@ -294,6 +294,9 @@ pub extern "C" fn process_p2p_ps_ie(a: Padapter, ies: *mut u8, len: c_uint) {
                 w.noa_num = num;
                 if w.opp_ps == 1 {
                     w.p2p_ps_mode = P2P_PS_CTWINDOW;
+                    if unsafe { (*a).pwrctrlpriv.bFwCurrentInPSMode } == _TRUE {
+                        unsafe { p2p_ps_wk_cmd(a, P2P_WK_ENABLE, 1) };
+                    }
                 } else if w.noa_num > 0 {
                     w.p2p_ps_mode = P2P_PS_NOA;
                     unsafe { p2p_ps_wk_cmd(a, P2P_WK_ENABLE, 1) };
