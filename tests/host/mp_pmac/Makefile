@@ -24,7 +24,7 @@ librust_rtw_mp.a: $(RUST_MP)
 		--crate-type staticlib $(RUST_MP) -o $@
 
 # PR6a: Rust bit/CRC/pkt_param; C oracles for CCK + SIG until PR6b.
-RUST_ORACLE_SRC := test_mp_pmac.c mp_pmac_stubs.c mp_pmac_param_oracle.c mp_pmac_cck_oracle.c mp_pmac_sig_oracle.c mp_pmac_ht_sig_oracle.c $(HOST_JSON)
+RUST_ORACLE_SRC := test_mp_pmac.c mp_pmac_stubs.c mp_pmac_cck_oracle.c mp_pmac_sig_oracle.c mp_pmac_ht_sig_oracle.c $(HOST_JSON)
 test_mp_pmac_rust: librust_rtw_mp.a $(RUST_ORACLE_SRC)
 	$(CC) $(CFLAGS) -o $@ $(RUST_ORACLE_SRC) librust_rtw_mp.a -lm
 
