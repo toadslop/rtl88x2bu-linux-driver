@@ -574,14 +574,12 @@ pub extern "C" fn sreset_restore_security_station(padapter: *mut security_host::
 mod security_kernel {
     use super::*;
 
-    const DOT11_AUTH_8021X: u32 = 2;
     const PRIV_TKIP: u32 = 0x02;
     const PRIV_AES: u32 = 0x04;
 
     extern "C" {
-        fn rtw_rust_sreset_auth_algo(padapter: Padapter) -> u32;
+        fn rtw_rust_sreset_sec_cfg_val8(padapter: Padapter) -> u8;
         fn rtw_rust_sreset_privacy_algrthm(padapter: Padapter) -> u32;
-        fn rtw_rust_sreset_grp_keyid(padapter: Padapter) -> u8;
         fn rtw_rust_sreset_hal_set_hwreg_sec_cfg(padapter: Padapter, val: u8);
         fn rtw_rust_sreset_get_stainfo(padapter: Padapter) -> u8;
         fn rtw_rust_sreset_setstakey_unicast(padapter: Padapter);
@@ -593,8 +591,7 @@ mod security_kernel {
             return;
         }
         unsafe {
-            let auth = rtw_rust_sreset_auth_algo(padapter);
-            let val8 = if auth == DOT11_AUTH_8021X { 0xcc } else { 0xcf };
+            let val8 = rtw_rust_sreset_sec_cfg_val8(padapter);
             rtw_rust_sreset_hal_set_hwreg_sec_cfg(padapter, val8);
             let priv_alg = rtw_rust_sreset_privacy_algrthm(padapter);
             if priv_alg == PRIV_TKIP || priv_alg == PRIV_AES {

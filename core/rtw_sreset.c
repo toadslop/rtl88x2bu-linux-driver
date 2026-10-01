@@ -446,6 +446,19 @@ u32 rtw_rust_sreset_auth_algo(_adapter *padapter)
 	return padapter->mlmeextpriv.mlmext_info.auth_algo;
 }
 
+u8 rtw_rust_sreset_sec_cfg_val8(_adapter *padapter)
+{
+	struct mlme_ext_info *pmlmeinfo = &padapter->mlmeextpriv.mlmext_info;
+
+	if (pmlmeinfo->auth_algo == dot11AuthAlgrthm_8021X)
+		return 0xcc;
+#ifdef CONFIG_WAPI_SUPPORT
+	if (padapter->wapiInfo.bWapiEnable && pmlmeinfo->auth_algo == dot11AuthAlgrthm_WAPI)
+		return 0x4c;
+#endif
+	return 0xcf;
+}
+
 u32 rtw_rust_sreset_privacy_algrthm(_adapter *padapter)
 {
 	return padapter->securitypriv.dot11PrivacyAlgrthm;
