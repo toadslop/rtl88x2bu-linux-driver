@@ -1,0 +1,1 @@
+# L1 allowlist for W3-123 PR3: C shims stay in core/rtw_mi.c (not in rust/rtw_mi.o).

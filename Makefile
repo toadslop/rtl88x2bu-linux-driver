@@ -3702,6 +3702,22 @@ rust-check-symbols-rtw-cmd-rest: rust-objects-rtw-cmd-rest-c rust-objects-rtw-cm
 	$(MAKE) rust-check-symbols OLD=tests/host/cmd/cmd_priv_c_ref.o NEW=tests/host/cmd/cmd_priv_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_cmd_rest.allow ALLOW_VACUOUS=1
 
+# W3-123 PR3: mi netif buddy leaf L1 (C ref vs rust/rtw_mi.o).
+rust-objects-rtw-mi-netif-leaf:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-rtw-mi-netif-leaf"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_mi.o
+
+rust-objects-rtw-mi-netif-leaf-c:
+	gcc -c -Wall -Wextra -Werror -O2 \
+		-o tests/host/mi/mi_netif_buddy_kern_c_ref.o \
+		tests/host/mi/mi_netif_buddy_kern_c_ref.c
+
+rust-check-symbols-rtw-mi-netif-leaf: rust-objects-rtw-mi-netif-leaf-c rust-objects-rtw-mi-netif-leaf
+	$(MAKE) rust-check-symbols OLD=tests/host/mi/mi_netif_buddy_kern_c_ref.o NEW=rust/rtw_mi.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_mi_netif_leaf.allow ALLOW_VACUOUS=1
+
 rust-objects-rtw-cmd-queue-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core \
