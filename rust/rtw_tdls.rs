@@ -269,3 +269,6 @@ mod ht_vht_host;
 
 #[cfg(host_tdls_ht_cap_test)]
 pub use ht_vht_host::ht_cap::*;
+
+#[cfg(host_tdls_vht_test)]
+pub use ht_vht_host::vht::*;
