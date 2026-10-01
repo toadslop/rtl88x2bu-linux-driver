@@ -18,11 +18,11 @@ const _BE: u32 = 12;
 const P2P_ATTR_MANAGEABILITY: u8 = 0x0a;
 const P2P_ATTR_NOA: u8 = 0x0c;
 const P2P_STATE_NONE: u8 = 0;
-const P2P_PS_NONE: u8 = 0;
-const P2P_PS_NOA: u8 = 1;
-const P2P_PS_CTWINDOW: u8 = 2;
-const P2P_PS_ENABLE: u8 = 1;
-const P2P_PS_DISABLE: u8 = 2;
+const P2P_PS_NONE: u32 = 0;
+const P2P_PS_CTWINDOW: u32 = 1;
+const P2P_PS_NOA: u32 = 2;
+const P2P_WK_DISABLE: u8 = 0;
+const P2P_WK_ENABLE: u8 = 1;
 const P2P_OUI: [u8; 4] = [0x50, 0x6F, 0x9A, 0x09];
 
 #[repr(C)]
@@ -296,9 +296,9 @@ pub extern "C" fn process_p2p_ps_ie(a: Padapter, ies: *mut u8, len: c_uint) {
                     w.p2p_ps_mode = P2P_PS_CTWINDOW;
                 } else if w.noa_num > 0 {
                     w.p2p_ps_mode = P2P_PS_NOA;
-                    unsafe { p2p_ps_wk_cmd(a, P2P_PS_ENABLE, 1) };
+                    unsafe { p2p_ps_wk_cmd(a, P2P_WK_ENABLE, 1) };
                 } else if w.p2p_ps_mode > P2P_PS_NONE {
-                    unsafe { p2p_ps_wk_cmd(a, P2P_PS_DISABLE, 1) };
+                    unsafe { p2p_ps_wk_cmd(a, P2P_WK_DISABLE, 1) };
                 }
             }
             break;
@@ -308,6 +308,6 @@ pub extern "C" fn process_p2p_ps_ie(a: Padapter, ies: *mut u8, len: c_uint) {
         pie = unsafe { p2p_ie(pie.add(pl as usize), rem as c_int, &mut pl) };
     }
     if fp && w.p2p_ps_mode > P2P_PS_NONE && !fps {
-        unsafe { p2p_ps_wk_cmd(a, P2P_PS_DISABLE, 1) };
+        unsafe { p2p_ps_wk_cmd(a, P2P_WK_DISABLE, 1) };
     }
 }

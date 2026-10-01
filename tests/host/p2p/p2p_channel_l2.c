@@ -60,7 +60,11 @@ typedef struct _adapter *PADAPTER;
 
 static int g_ps_wk_cmd;
 
+#if defined(HOST_P2P_RUST_IE)
+void p2p_ps_wk_cmd(PADAPTER a, enum P2P_PS_STATE c, u8 e)
+#else
 static void p2p_ps_wk_cmd(PADAPTER a, enum P2P_PS_STATE c, u8 e)
+#endif
 {
 	(void)a;
 	(void)c;
