@@ -2849,6 +2849,9 @@ $(MODULE_NAME)-y += rust/rtw_mlme_ext_scan.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_pick_ch.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_band_ie.o
 $(MODULE_NAME)-y += rust/rtw_cmd_rest.o
+ccflags-y += -DCONFIG_RUST_MI_NETIF_LEAF
+rustflags-y += --cfg rust_mi_netif_leaf
+$(MODULE_NAME)-y += rust/rtw_mi.o
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
