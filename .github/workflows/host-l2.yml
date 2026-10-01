@@ -243,7 +243,7 @@ jobs:
 
       - name: Host odm phydm init parity (L2)
         if: steps.filter.outputs.l2 == 'true'
-        run: make -C tests/host/odm test
+        run: make -C tests/host/odm test test-rust
 
       - name: Host tdls lifecycle parity (L2)
         if: steps.filter.outputs.l2 == 'true'
