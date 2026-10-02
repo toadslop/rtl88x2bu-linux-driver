@@ -18,11 +18,11 @@ const _BE: u32 = 12;
 const P2P_ATTR_MANAGEABILITY: u8 = 0x0a;
 const P2P_ATTR_NOA: u8 = 0x0c;
 const P2P_STATE_NONE: u8 = 0;
-const P2P_PS_NONE: u8 = 0;
-const P2P_PS_NOA: u8 = 1;
-const P2P_PS_CTWINDOW: u8 = 2;
-const P2P_PS_ENABLE: u8 = 1;
-const P2P_PS_DISABLE: u8 = 2;
+const P2P_PS_NONE: u32 = 0;
+const P2P_PS_CTWINDOW: u32 = 1;
+const P2P_PS_NOA: u32 = 2;
+const P2P_WK_DISABLE: u8 = 0;
+const P2P_WK_ENABLE: u8 = 1;
 const P2P_OUI: [u8; 4] = [0x50, 0x6F, 0x9A, 0x09];
 
 #[repr(C)]
@@ -33,7 +33,8 @@ pub struct WifidirectInfo {
     pub ctwindow: u8,
     pub noa_num: u8,
     pub noa_count: [u8; 2],
-    pub p2p_ps_mode: u8,
+    _wdinfo_pad: u8,
+    pub p2p_ps_mode: u32,
     pub noa_duration: [u32; 2],
     pub noa_interval: [u32; 2],
     pub noa_start_time: [u32; 2],
@@ -51,9 +52,15 @@ pub struct RfCtl {
 }
 
 #[repr(C)]
+pub struct PwrctrlPriv {
+    pub bFwCurrentInPSMode: u8,
+}
+
+#[repr(C)]
 pub struct Adapter {
     pub wdinfo: WifidirectInfo,
     pub rfctl: RfCtl,
+    pub pwrctrlpriv: PwrctrlPriv,
 }
 
 type Padapter = *mut Adapter;
@@ -287,11 +294,14 @@ pub extern "C" fn process_p2p_ps_ie(a: Padapter, ies: *mut u8, len: c_uint) {
                 w.noa_num = num;
                 if w.opp_ps == 1 {
                     w.p2p_ps_mode = P2P_PS_CTWINDOW;
+                    if unsafe { (*a).pwrctrlpriv.bFwCurrentInPSMode } == _TRUE {
+                        unsafe { p2p_ps_wk_cmd(a, P2P_WK_ENABLE, 1) };
+                    }
                 } else if w.noa_num > 0 {
                     w.p2p_ps_mode = P2P_PS_NOA;
-                    unsafe { p2p_ps_wk_cmd(a, P2P_PS_ENABLE, 1) };
+                    unsafe { p2p_ps_wk_cmd(a, P2P_WK_ENABLE, 1) };
                 } else if w.p2p_ps_mode > P2P_PS_NONE {
-                    unsafe { p2p_ps_wk_cmd(a, P2P_PS_DISABLE, 1) };
+                    unsafe { p2p_ps_wk_cmd(a, P2P_WK_DISABLE, 1) };
                 }
             }
             break;
@@ -301,7 +311,7 @@ pub extern "C" fn process_p2p_ps_ie(a: Padapter, ies: *mut u8, len: c_uint) {
         pie = unsafe { p2p_ie(pie.add(pl as usize), rem as c_int, &mut pl) };
     }
     if fp && w.p2p_ps_mode > P2P_PS_NONE && !fps {
-        unsafe { p2p_ps_wk_cmd(a, P2P_PS_DISABLE, 1) };
+        unsafe { p2p_ps_wk_cmd(a, P2P_WK_DISABLE, 1) };
     }
 }
 

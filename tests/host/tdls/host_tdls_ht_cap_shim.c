@@ -1,4 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0
+/*
+ * Host C oracle for rtw_tdls_process_ht_cap (W3-103 PR1).
+ * Scope: IE copy, HT enable, AMPDU merge, SGI-20, and 40 MHz width — matches
+ * the early path in core/rtw_tdls.c. SGI-40, LDPC/STBC, and beamforming
+ * follow in later PRs before the Rust swap.
+ */
 #include "host_tdls_ht_types.h"
 
 void rtw_tdls_process_ht_cap(_adapter *padapter, struct sta_info *ptdls_sta, u8 *data,
@@ -30,12 +36,12 @@ void rtw_tdls_process_ht_cap(_adapter *padapter, struct sta_info *ptdls_sta, u8 
 	if (padapter->registrypriv.ampu_enable == 1)
 		ptdls_sta->htpriv.ampdu_enable = _TRUE;
 
-	if ((pmlmeinfo->ap_ampdu_para & 0x3) > (data[2] & 0x3))
+	if ((pmlmeinfo->HT_caps.u.HT_cap_element.AMPDU_para & 0x3) > (data[2] & 0x3))
 		max_ampdu_len = (data[2] & 0x3);
 	else
-		max_ampdu_len = (pmlmeinfo->ap_ampdu_para & 0x3);
-	if ((pmlmeinfo->ap_ampdu_para & 0x1c) > (data[2] & 0x1c))
-		min_mpdu_spacing = (pmlmeinfo->ap_ampdu_para & 0x1c);
+		max_ampdu_len = (pmlmeinfo->HT_caps.u.HT_cap_element.AMPDU_para & 0x3);
+	if ((pmlmeinfo->HT_caps.u.HT_cap_element.AMPDU_para & 0x1c) > (data[2] & 0x1c))
+		min_mpdu_spacing = (pmlmeinfo->HT_caps.u.HT_cap_element.AMPDU_para & 0x1c);
 	else
 		min_mpdu_spacing = (data[2] & 0x1c);
 	ptdls_sta->htpriv.rx_ampdu_min_spacing = max_ampdu_len | min_mpdu_spacing;

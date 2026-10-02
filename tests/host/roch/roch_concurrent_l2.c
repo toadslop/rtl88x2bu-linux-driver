@@ -11,6 +11,7 @@
 #define H2C_SUCCESS 0
 #define MI_LINKED 1
 #define ROCH_AP_ROCH_CH_SWITCH_PROCESS_WK 2
+#define RTW_CMDF_DIRECTLY 1
 #define HAL_PRIME_CHNL_OFFSET_DONT_CARE 0
 #define CHANNEL_WIDTH_20 0
 
@@ -127,10 +128,12 @@ static s32 rtw_roch_wk_hdl(PADAPTER padapter, int cmd, u8 *buf)
 u8 rtw_roch_wk_cmd(PADAPTER padapter, int cmd, void *parm, u8 flags)
 {
 	(void)parm;
-	(void)flags;
 	g_tr.wk_cmd = 1;
 	g_tr.wk_cmd_type = cmd;
-	rtw_roch_wk_hdl(padapter, cmd, NULL);
+	if (flags & RTW_CMDF_DIRECTLY) {
+		if (rtw_roch_wk_hdl(padapter, cmd, NULL) != H2C_SUCCESS)
+			return _FALSE;
+	}
 	return _TRUE;
 }
 

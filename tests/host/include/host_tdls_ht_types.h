@@ -44,9 +44,22 @@ struct registry_priv {
 	u8 ampu_enable;
 };
 
+struct HT_caps_element {
+	union {
+		struct {
+			u16 HT_caps_info;
+			u8 AMPDU_para;
+			u8 MCS_rate[16];
+			u16 HT_ext_caps;
+			u32 Beamforming_caps;
+			u8 ASEL_caps;
+		} HT_cap_element;
+		u8 HT_cap[26];
+	} u;
+} __attribute__((packed));
+
 struct mlme_ext_info {
-	u32 state;
-	u8 ap_ampdu_para;
+	struct HT_caps_element HT_caps;
 };
 
 struct mlme_ext_priv {

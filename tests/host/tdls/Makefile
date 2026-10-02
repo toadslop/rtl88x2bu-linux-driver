@@ -7,7 +7,7 @@ RUST_TDLS := $(ROOT)/rust/rtw_tdls.rs
 RUSTC := rustc
 CC := gcc
 CFLAGS := -Wall -Wextra -Werror -O2 -I$(HOST_INC) \
-          -DCONFIG_TDLS -DCONFIG_TDLS_CH_SW
+          -DCONFIG_TDLS -DCONFIG_TDLS_CH_SW -DCONFIG_TDLS_DRIVER_SETUP
 HT_CAP_CFLAGS := $(CFLAGS) -DCONFIG_80211N_HT
 
 .PHONY: all test test-c test-rust test-ht-cap clean

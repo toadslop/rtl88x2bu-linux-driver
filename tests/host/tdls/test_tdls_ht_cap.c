@@ -59,7 +59,8 @@ int main(int argc, char **argv)
 		adapter.mlmepriv.htpriv.sgi_20m = (u8)v->ap_sgi_20;
 		adapter.mlmeextpriv.cur_bwmode = (u8)v->cur_bwmode;
 		adapter.mlmeextpriv.cur_ch_offset = (u8)v->cur_ch_offset;
-		adapter.mlmeextpriv.mlmext_info.ap_ampdu_para = (u8)v->ap_ampdu_para;
+		adapter.mlmeextpriv.mlmext_info.HT_caps.u.HT_cap_element.AMPDU_para =
+			(u8)v->ap_ampdu_para;
 		if (host_hex_decode(v->data_hex, data, sizeof(data), &data_len))
 			return 1;
 		rtw_tdls_process_ht_cap(&adapter, &sta, data, (u8)data_len);

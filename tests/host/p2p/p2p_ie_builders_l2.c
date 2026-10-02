@@ -46,7 +46,7 @@ static int parse_mac(const char *s, u8 *out)
 	return 0;
 }
 
-static void load_wd(vector_t *v, struct wifidirect_info *w)
+static int load_wd(vector_t *v, struct wifidirect_info *w)
 {
 	size_t dn = strnlen(v->dev_name, sizeof(v->dev_name));
 
@@ -60,7 +60,9 @@ static void load_wd(vector_t *v, struct wifidirect_info *w)
 		dn = WPS_MAX_DEVICE_NAME_LEN;
 	memcpy(w->device_name, v->dev_name, dn);
 	w->device_name_len = (u16)dn;
-	parse_mac(v->dev_addr, w->device_addr);
+	if (parse_mac(v->dev_addr, w->device_addr))
+		return -1;
+	return 0;
 }
 
 static u32 dispatch(vector_t *v, u8 *out)
@@ -69,7 +71,8 @@ static u32 dispatch(vector_t *v, u8 *out)
 	u8 ssid[32], go[ETH_ALEN];
 	u8 slen;
 
-	load_wd(v, &wd);
+	if (load_wd(v, &wd))
+		return (u32)-1;
 	if (!strcmp(v->fn, "beacon"))
 		return build_beacon_p2p_ie(&wd, out);
 	if (!strcmp(v->fn, "assoc_resp"))

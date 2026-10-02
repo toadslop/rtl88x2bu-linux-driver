@@ -19,7 +19,7 @@ const RTW_CMDF_DIRECTLY: u8 = 1;
 const ROCH_RO_CH_WK: c_int = 0;
 const ROCH_CANCEL_RO_CH_WK: c_int = 1;
 const WIFI_UNDER_LINKING: i32 = 0x80;
-const WIFI_ASOC_STATE: i32 = 2;
+const WIFI_ASOC_STATE: i32 = 0x1;
 
 #[cfg(host_roch_test)]
 #[repr(C)]
@@ -36,6 +36,7 @@ pub struct RochInfo {
 #[repr(C)]
 pub struct DvobjPriv {
     pub iface_nums: u8,
+    pub union_ch: u8,
     pub padapters: [*mut Adapter; 2],
 }
 #[cfg(host_roch_test)]
@@ -97,6 +98,16 @@ fn freq_to_ch(f: c_int) -> u8 {
     }
 }
 
+#[cfg(host_roch_test)]
+unsafe fn union_chan(a: Padapter) -> u8 {
+    let dv = (*a).dvobj;
+    if !dv.is_null() && (*dv).union_ch != 0 {
+        (*dv).union_ch
+    } else {
+        6
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn rtw_roch_stay_in_cur_chan(padapter: Padapter) -> u8 {
     if padapter.is_null() {
@@ -126,7 +137,7 @@ unsafe fn ro_ch(a: Padapter, p: *mut RochParm) -> c_int {
         return H2C_SUCCESS;
     }
     if rtw_roch_stay_in_cur_chan(a) == _TRUE {
-        remain = 6;
+        remain = union_chan(a);
     }
     if remain != (*a).oper_ch && chk(&(*a).mlmepriv, WIFI_ASOC_STATE) == _FALSE {
         (*tr).set_channel = 1;
@@ -179,10 +190,10 @@ pub extern "C" fn rtw_roch_wk_cmd(padapter: Padapter, cmd: c_int, p: *mut c_void
             if rtw_roch_wk_hdl(padapter, cmd, p as *mut u8) != H2C_SUCCESS {
                 return _FALSE;
             }
-        }
-        if !p.is_null() {
-            (*host_roch_trace()).mfree += 1;
-            free(p);
+            if !p.is_null() {
+                (*host_roch_trace()).mfree += 1;
+                free(p);
+            }
         }
     }
     _TRUE
