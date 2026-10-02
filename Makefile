@@ -3848,7 +3848,7 @@ rust-objects-rtw-cmd-thread-rust-ref:
 
 rust-check-symbols-rtw-cmd-thread: rust-objects-rtw-cmd-thread-c rust-objects-rtw-cmd-thread-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/cmd/cmd_thread_c_ref.o NEW=tests/host/cmd/cmd_thread_rust_ref.o \
-		ALLOWLIST=docs/rust-migration/scripts/rtw_cmd_thread.allow ALLOW_VACUOUS=1
+		ALLOWLIST=docs/rust-migration/scripts/rtw_cmd_thread.allow
 
 # W3-39: host C oracle recv_rest vs rust/rtw_recv.o.
 rust-objects-rtw-recv:
