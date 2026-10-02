@@ -150,7 +150,11 @@ pub extern "C" fn rtw_build_vht_cap_ie(adapter: Adapter, pbuf: *mut U8) -> U32 {
 
         set_bits_le_2byte(&mut pcap[2..4], 7, 3, {
             let f = rtw_rust_vht_build_regsty_ampdu_factor(adapter);
-            if f != 0xFE { f as u16 } else { 7 }
+            if f != 0xFE {
+                f as u16
+            } else {
+                7
+            }
         });
         set_bits_le_1byte(&mut pcap[3..4], 2, 2, 0);
 
@@ -160,11 +164,8 @@ pub extern "C" fn rtw_build_vht_cap_ie(adapter: Adapter, pbuf: *mut U8) -> U32 {
 
         let bw = hal_largest_bw(adapter, rtw_rust_vht_build_regsty_bw5g(adapter));
         let sgi_idx = if sgi != 0 { 1u8 } else { 0u8 };
-        let mut highest = vht_mcs_to_data_rate(
-            bw,
-            sgi_idx,
-            rtw_rust_vht_build_vht_highest_rate(adapter),
-        );
+        let mut highest =
+            vht_mcs_to_data_rate(bw, sgi_idx, rtw_rust_vht_build_vht_highest_rate(adapter));
         highest = (highest + 1) >> 1;
 
         set_bits_le_2byte(&mut pcap[6..8], 0, 13, highest);
