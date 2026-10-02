@@ -303,7 +303,8 @@ on all stack layers before babysitting.
 ### 4. Babysit until green (`babysit` + checks + reviews)
 
 Follow **"Babysit until green"** above. Run Cursor's built-in **`babysit`** skill
-on this PR (see **"Prerequisite: run `babysit`"**). It should:
+on **each layer** in the stack (or the single PR) before handoff — see
+**"Prerequisite: run `babysit`"**. For each layer it should:
 
 - **Wait** for any in-progress review to finish before responding.
 - Resolve open review comments and requested changes (per `babysit` / manual

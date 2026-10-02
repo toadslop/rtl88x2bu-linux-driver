@@ -52,7 +52,7 @@ Encodes:
 
 | Key | Contents |
 |-----|----------|
-| `prs` | `total`, `oldestOpenNumber`, `eligible`, `skipped`, `needs_prep`, `merge_ready`, `prepQueue`, `stackBlockedOldestFirst` |
+| `prs` | `total`, `oldestOpenNumber`, `eligible`, `skipped`, `needs_prep`, `merge_ready`, `prepQueue`, `stacks`, `standalone`, `stackBlockedOldestFirst` |
 | `issues` | `selected`, `readyCandidates`, `chainHeadBlocked`, `chainHeadInFlight`, `saturation`, `wholeWaveSaturated`, `pathCGap`, `overrideWarning` |
 | `pathDecision` | `path` (`A`/`B`/`C`/`stop`), `reason`, `action` |
 

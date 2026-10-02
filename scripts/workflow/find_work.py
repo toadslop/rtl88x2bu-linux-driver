@@ -281,13 +281,18 @@ class PullRequest:
                 return False
         return True
 
-    def classify_prep(self) -> str:
-        """Return needs_prep or merge_ready (eligible PRs only)."""
+    def classify_prep(self, *, stacked_upper: bool = False) -> str:
+        """Return needs_prep or merge_ready.
+
+        Bottom layers on ``master`` use ``stacked_upper=False``. Upper GitHub stack
+        layers keep their feature-branch base — pass ``stacked_upper=True`` so
+        ``baseRefName != master`` does not force ``needs_prep`` by itself.
+        """
         if not self.enrichment_ok:
             return "needs_prep"
         if self.is_draft:
             return "needs_prep"
-        if self.base_ref != DEFAULT_BRANCH:
+        if not stacked_upper and self.base_ref != DEFAULT_BRANCH:
             return "needs_prep"
         if self.mergeable is None or self.merge_state is None:
             return "needs_prep"
@@ -447,6 +452,44 @@ query($owner: String!, $name: String!, $pageSize: Int!, $after: String) {
     return prs
 
 
+def build_master_stack_chains(prs: list[PullRequest]) -> list[list[PullRequest]]:
+    """Chains whose bottom targets master, walking up via head→child open PRs."""
+    head_to_pr: dict[str, PullRequest] = {p.head_ref: p for p in prs}
+    seen: set[int] = set()
+    chains: list[list[PullRequest]] = []
+    bottoms = sorted(
+        [p for p in prs if p.base_ref == DEFAULT_BRANCH],
+        key=lambda p: p.number,
+    )
+    for bottom in bottoms:
+        if bottom.number in seen:
+            continue
+        chain = [bottom]
+        seen.add(bottom.number)
+        cur = bottom
+        while cur.head_ref in head_to_pr:
+            nxt = head_to_pr[cur.head_ref]
+            if nxt.number in seen:
+                break
+            chain.append(nxt)
+            seen.add(nxt.number)
+            cur = nxt
+        chains.append(chain)
+    return chains
+
+
+def pr_entry_dict(pr: PullRequest, prep: str) -> dict[str, Any]:
+    return {
+        "number": pr.number,
+        "title": pr.title,
+        "url": pr.url,
+        "baseRefName": pr.base_ref,
+        "headRefName": pr.head_ref,
+        "isDraft": pr.is_draft,
+        "prep": prep,
+    }
+
+
 def stack_blocked_oldest_first(
     prs: list[PullRequest],
     skipped: list[dict[str, Any]],
@@ -505,6 +548,42 @@ def classify_prs(prs: list[PullRequest], owner: str) -> dict[str, Any]:
         key=lambda p: p["number"],
     )
     skipped_sorted = sorted(skipped, key=lambda p: p["number"])
+    needs_prep_nums = {p["number"] for p in needs_prep}
+    stacks_out: list[dict[str, Any]] = []
+    for chain in build_master_stack_chains(prs):
+        layer_details: list[dict[str, Any]] = []
+        stack_prep = "merge_ready"
+        for idx, pr in enumerate(chain):
+            if idx > 0:
+                enrich_pr_from_view(pr)
+            prep = pr.classify_prep(stacked_upper=idx > 0)
+            layer_details.append(pr_entry_dict(pr, prep))
+            if prep == "needs_prep":
+                stack_prep = "needs_prep"
+                if pr.number not in needs_prep_nums:
+                    needs_prep.append(pr_entry_dict(pr, prep))
+                    needs_prep_nums.add(pr.number)
+        stacks_out.append(
+            {
+                "bottom": chain[0].number,
+                "layers": [p.number for p in chain],
+                "prep": stack_prep,
+                "layerDetails": layer_details,
+            }
+        )
+    needs_prep = sorted(needs_prep, key=lambda p: p["number"])
+    merge_ready = sorted(
+        [p for p in merge_ready if p["number"] not in needs_prep_nums],
+        key=lambda p: p["number"],
+    )
+    standalone = sorted(
+        [s for s in stacks_out if len(s["layers"]) == 1],
+        key=lambda s: s["bottom"],
+    )
+    stacks_multi = sorted(
+        [s for s in stacks_out if len(s["layers"]) > 1],
+        key=lambda s: s["bottom"],
+    )
     prep_queue = sorted(
         [dict(p, queue="needs_prep") for p in needs_prep]
         + [dict(p, queue="merge_ready") for p in merge_ready],
@@ -519,6 +598,8 @@ def classify_prs(prs: list[PullRequest], owner: str) -> dict[str, Any]:
         "needs_prep": needs_prep,
         "merge_ready": merge_ready,
         "prepQueue": prep_queue,
+        "stacks": stacks_multi,
+        "standalone": standalone,
         "stackBlockedOldestFirst": stack_blocked_oldest_first(prs, skipped_sorted, merge_ready),
     }
 
@@ -920,6 +1001,12 @@ def format_human(report: dict[str, Any]) -> str:
             lines.append(f"  needs_prep: #{p['number']} {p['title']}")
         for p in prs["merge_ready"]:
             lines.append(f"  merge_ready: #{p['number']} {p['title']}")
+        if prs.get("stacks"):
+            lines.append("")
+            lines.append("### GitHub stacks (bottom on master — prep whole chain)")
+            for st in prs["stacks"]:
+                layers = " → ".join(f"#{n}" for n in st["layers"])
+                lines.append(f"  [{st['prep']}] {layers}")
         if prs.get("prepQueue"):
             lines.append("")
             lines.append("### Prep queue (oldest eligible first — merge in this order)")

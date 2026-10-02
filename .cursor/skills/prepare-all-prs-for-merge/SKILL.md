@@ -26,7 +26,7 @@ blocking review feedback).
 This skill is a **thin orchestrator**. It does not duplicate the per-PR logic in
 [`prepare-pr-for-merge`](../prepare-pr-for-merge/SKILL.md). It discovers PRs,
 filters by merge-base eligibility, marks drafts ready for review, then invokes
-**`prepare-pr-for-merge`** once per eligible PR.
+**`prepare-pr-for-merge`** once per stack chain (bottom PR entry) or standalone PR.
 
 **You are the author** on each PR in the batch. You may edit code, rebase,
 force-push, and update PR metadata. You are **not** merging PRs unless the user
@@ -188,6 +188,6 @@ Also list **`blocked`** chains and why (bottom not on integrated trunk).
 | Skill | Role |
 |-------|------|
 | **`pick-up-work-item`** | Parent orchestrator — invokes this skill as Path A when eligible PRs `need_prep`; otherwise runs Path B/C for new work. |
-| **`prepare-pr-for-merge`** | Per-PR prepare workflow (invoked once per eligible PR). |
+| **`prepare-pr-for-merge`** | Per-stack prepare workflow (enter from bottom PR; babysit every layer). |
 | **`babysit`** (Cursor built-in) | Used inside each prepare-pr-for-merge run. |
 | **`pr-review-delivery`** | Reviewer-only — out of scope. |
