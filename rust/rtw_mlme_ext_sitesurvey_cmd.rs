@@ -314,12 +314,7 @@ extern "C" {
     fn rtw_rx_ampdu_apply(a: Adapter);
     fn sitesurvey_pick_ch_behavior(a: Adapter, ch: *mut U8, scan_type: *mut ScanType) -> U8;
     fn set_channel_bwmode(a: Adapter, ch: U8, offset: U8, bw: U8);
-    fn rtw_mi_get_ch_setting_union(
-        a: Adapter,
-        ch: *mut U8,
-        bw: *mut U8,
-        offset: *mut U8,
-    ) -> c_int;
+    fn rtw_mi_get_ch_setting_union(a: Adapter, ch: *mut U8, bw: *mut U8, offset: *mut U8) -> c_int;
     fn survey_done_set_ch_bw(a: Adapter);
     fn rtw_mi_os_xmit_schedule(a: Adapter);
     fn _rtw_get_current_time() -> Systime;
@@ -393,8 +388,7 @@ pub extern "C" fn sitesurvey_cmd_hdl(padapter: Adapter, pbuf: *mut U8) -> U8 {
                 SCAN_PROCESS => {
                     let mut scan_ch: U8 = 0;
                     let mut scan_type: ScanType = 0;
-                    let next =
-                        sitesurvey_pick_ch_behavior(padapter, &mut scan_ch, &mut scan_type);
+                    let next = sitesurvey_pick_ch_behavior(padapter, &mut scan_ch, &mut scan_type);
                     if next != SCAN_PROCESS {
                         rtw_rust_ss_set_state(padapter, next);
                         rtw_rust_ss_set_next_state(padapter, next);
@@ -438,8 +432,7 @@ pub extern "C" fn sitesurvey_cmd_hdl(padapter: Adapter, pbuf: *mut U8) -> U8 {
                     }
                 }
                 SCAN_BACK_OP => {
-                    let elapsed =
-                        _rtw_get_passing_time_ms(rtw_rust_ss_backop_time(padapter));
+                    let elapsed = _rtw_get_passing_time_ms(rtw_rust_ss_backop_time(padapter));
                     if elapsed >= rtw_rust_ss_backop_ms(padapter) as U32
                         || rtw_rust_ss_scan_abort(padapter) != 0
                     {
