@@ -9,6 +9,10 @@
 #define _TRUE 1
 #define _FALSE 0
 #define RTW_INFO(...) do { } while (0)
+#define RTW_PRINT(...) do { } while (0)
+#define FUNC_ADPT_FMT "%p"
+#define FUNC_ADPT_ARG(adapter) (adapter)
+#define _rtw_memcpy(d, s, n) memcpy((d), (s), (n))
 #define RTW_SCAN_SPARSE_MIRACAST 1
 #define RTW_SCAN_SPARSE_BG 1
 #define CONFIG_SCAN_BACKOP 1
@@ -28,9 +32,15 @@
 #define MAX_CHANNEL_NUM 59
 #define MAX_CHANNEL_NUM_2G 14
 #define RTW_CHANNEL_SCAN_AMOUNT 8
+#define RTW_IEEE80211_CHAN_DISABLED (1 << 0)
 #define RTW_IEEE80211_CHAN_PASSIVE_SCAN (1 << 1)
 #define RTW_CHF_NO_IR (1 << 0)
 #define RTW_CHF_DFS (1 << 1)
+#define WIFI_FREQUENCY_BAND_AUTO 0
+#define WIFI_FREQUENCY_BAND_5GHZ 1
+#define WIFI_FREQUENCY_BAND_2GHZ 2
+#define BAND_24G (1 << 0)
+#define BAND_5G (1 << 1)
 
 #define SCAN_PASSIVE 0
 #define SCAN_ACTIVE 1
@@ -55,6 +65,7 @@ struct RT_CHANNEL_INFO {
 };
 struct rf_ctl_t {
 	struct RT_CHANNEL_INFO channel_set[MAX_CHANNEL_NUM];
+	u8 max_chan_nums;
 	u8 dfs_slave_with_rd;
 };
 struct ss_res {
@@ -72,7 +83,7 @@ struct ss_res {
 	u16 backop_ms;
 #endif
 };
-struct registry_priv { u32 wireless_mode; };
+struct registry_priv { u32 wireless_mode; u8 wifi_spec; };
 struct wifidirect_info {
 	struct {
 		u8 scan_op_ch_only;
@@ -94,12 +105,16 @@ struct _adapter {
 	struct registry_priv registrypriv;
 	struct mlme_ext_priv mlmeextpriv;
 	struct rf_ctl_t rfctl;
+	int setband;
+	int bandskip;
 #ifdef CONFIG_P2P
 	struct wifidirect_info wdinfo;
 #endif
 };
 typedef struct _adapter _adapter;
 #define adapter_to_rfctl(a) (&(a)->rfctl)
+#define adapter_to_chset(a) ((a)->rfctl.channel_set)
+typedef struct RT_CHANNEL_INFO RT_CHANNEL_INFO;
 #define IS_DFS_SLAVE_WITH_RD(rfctl) ((rfctl)->dfs_slave_with_rd)
 #define CH_IS_NON_OCP(rt_ch_info) \
 	((rt_ch_info)->non_ocp_end_time > host_scan_current_time())
@@ -145,6 +160,11 @@ u8 rtw_rfctl_dfs_domain_unknown(struct rf_ctl_t *rfctl);
 u8 rtw_scan_sparse(_adapter *a, struct rtw_ieee80211_channel *ch, u8 n);
 u8 rtw_scan_backop_decision(_adapter *a);
 u32 rtw_scan_timeout_decision(_adapter *a);
+int rtw_scan_ch_decision(_adapter *a, struct rtw_ieee80211_channel *out, u32 out_num,
+			 struct rtw_ieee80211_channel *in, u32 in_num, bool no_sparse,
+			 int reason);
+bool rtw_mlme_band_check(_adapter *a, const u32 ch);
+bool rtw_mlme_ignore_chan(_adapter *a, const u32 ch);
 u8 sitesurvey_pick_ch_behavior(_adapter *a, u8 *ch, RT_SCAN_TYPE *type);
 
 #endif

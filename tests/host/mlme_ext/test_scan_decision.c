@@ -116,6 +116,28 @@ static int test_timeout(const char *name, u32 mode, u16 ms, u16 duration,
 	return 0;
 }
 
+static int test_ch_decision_filter(void)
+{
+	struct rtw_ieee80211_channel in[2], out[RTW_CHANNEL_SCAN_AMOUNT];
+	int n;
+
+	memset(&ad, 0, sizeof(ad));
+	ad.setband = WIFI_FREQUENCY_BAND_AUTO;
+	ad.rfctl.max_chan_nums = MAX_CHANNEL_NUM;
+	ad.rfctl.channel_set[0].ChannelNum = 1;
+	ad.rfctl.channel_set[1].ChannelNum = 6;
+	in[0].hw_value = 1;
+	in[0].flags = RTW_IEEE80211_CHAN_DISABLED;
+	in[1].hw_value = 6;
+	n = rtw_scan_ch_decision(&ad, out, RTW_CHANNEL_SCAN_AMOUNT, in, 2, _TRUE, 0);
+	if (n != 1 || out[0].hw_value != 6) {
+		fprintf(stderr, "ch_decision_filter: n=%d\n", n);
+		return -1;
+	}
+	printf("PASS: ch_decision_filter\n");
+	return 0;
+}
+
 int main(void)
 {
 	static const u16 passthrough[] = {1, 2, 3, 4, 5, 6};
@@ -134,7 +156,8 @@ int main(void)
 	    test_timeout("timeout_2g", 3, 100, 0, 2, 50, 0, 3400) ||
 	    test_timeout("timeout_dual", 107, 100, 0, 2, 50, 0, 7900) ||
 	    test_timeout("timeout_backop", 3, 100, 0, 2, 50, 1, 3750) ||
-	    test_timeout("timeout_duration", 3, 100, 200, 2, 50, 0, 4800))
+	    test_timeout("timeout_duration", 3, 100, 200, 2, 50, 0, 4800) ||
+	    test_ch_decision_filter())
 		return 1;
 	printf("All scan decision vectors passed.\n");
 	return 0;
