@@ -63,10 +63,18 @@ struct mlme_priv {
 	struct vht_priv vhtpriv;
 };
 
+struct ra_info {
+	u8 is_vht_enable;
+};
+
+struct sta_cmn {
+	struct ra_info ra_info;
+};
+
 struct sta_info {
 	int flags;
 	struct vht_priv vhtpriv;
-	u8 ra_is_vht;
+	struct sta_cmn cmn;
 };
 
 struct rf_ctl_t {

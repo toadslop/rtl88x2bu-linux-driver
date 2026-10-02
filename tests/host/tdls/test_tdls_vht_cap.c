@@ -7,7 +7,8 @@
 struct vector {
 	char name[64];
 	char data_hex[64];
-	int data_len, vht_enable, wireless_mode, expect_vht, expect_vht_option;
+	int data_len, vht_enable, wireless_mode, expect_vht, expect_vht_option,
+	    expect_is_vht_enable;
 };
 
 static int parse_vec(const char *obj, size_t len, void *vv)
@@ -25,6 +26,7 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 	PI(wireless_mode);
 	PI(expect_vht);
 	PI(expect_vht_option);
+	PI(expect_is_vht_enable);
 	return 0;
 }
 
@@ -53,8 +55,11 @@ int main(int argc, char **argv)
 			data_len = (size_t)v->data_len;
 		rtw_tdls_process_vht_cap(&adapter, &sta, data, (u8)data_len);
 		if (!!((sta.flags & WLAN_STA_VHT) != 0) != !!v->expect_vht ||
-		    !!sta.vhtpriv.vht_option != !!v->expect_vht_option)
+		    !!sta.vhtpriv.vht_option != !!v->expect_vht_option ||
+		    !!sta.cmn.ra_info.is_vht_enable != !!v->expect_is_vht_enable) {
+			fprintf(stderr, "FAIL %s\n", v->name);
 			fail++;
+		}
 	}
 	printf("%zu vectors, %zu failures\n", n, fail);
 	return fail ? 1 : 0;

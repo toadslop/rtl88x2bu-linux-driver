@@ -23,12 +23,15 @@ void rtw_tdls_process_vht_cap(_adapter *padapter, struct sta_info *ptdls_sta, u8
 		return;
 	}
 
-	if (REGSTY_IS_11AC_ENABLE(&padapter->registrypriv) &&
-	    is_supported_vht(padapter->registrypriv.wireless_mode) &&
-	    (!rfctl->country_ent || COUNTRY_CHPLAN_EN_11AC(rfctl->country_ent)))
-		ptdls_sta->vhtpriv.vht_option = _TRUE;
-	else
-		ptdls_sta->vhtpriv.vht_option = _FALSE;
+	if (ptdls_sta->flags & WLAN_STA_VHT) {
+		if (REGSTY_IS_11AC_ENABLE(&padapter->registrypriv) &&
+		    is_supported_vht(padapter->registrypriv.wireless_mode) &&
+		    (!rfctl->country_ent || COUNTRY_CHPLAN_EN_11AC(rfctl->country_ent))) {
+			ptdls_sta->vhtpriv.vht_option = _TRUE;
+			ptdls_sta->cmn.ra_info.is_vht_enable = _TRUE;
+		} else
+			ptdls_sta->vhtpriv.vht_option = _FALSE;
+	}
 
 	if (TEST_FLAG(pvhtpriv->ldpc_cap, LDPC_VHT_ENABLE_TX) &&
 	    GET_VHT_CAPABILITY_ELE_RX_LDPC(data))
@@ -46,6 +49,4 @@ void rtw_tdls_process_vht_cap(_adapter *padapter, struct sta_info *ptdls_sta, u8
 	rtw_vht_nss_to_mcsmap(tx_nss, ptdls_sta->vhtpriv.vht_mcs_map, pcap_mcs);
 	ptdls_sta->vhtpriv.vht_highest_rate =
 		rtw_get_vht_highest_rate(ptdls_sta->vhtpriv.vht_mcs_map);
-	if (ptdls_sta->vhtpriv.vht_option)
-		ptdls_sta->ra_is_vht = _TRUE;
 }
