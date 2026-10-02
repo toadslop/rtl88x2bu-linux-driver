@@ -996,6 +996,110 @@ u8 rtw_rust_pick_ch_p2p_needed(_adapter *adapter)
 #endif /* CONFIG_P2P */
 #endif /* CONFIG_RUST && CONFIG_RUST_MLME_EXT_PICK_CH */
 
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_EXT_SITESURVEY_CMD)
+#include <drv_types.h>
+
+u8 rtw_rust_ss_state(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.state;
+}
+
+void rtw_rust_ss_set_state(_adapter *adapter, u8 state)
+{
+	adapter->mlmeextpriv.sitesurvey_res.state = state;
+}
+
+u8 rtw_rust_ss_next_state(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.next_state;
+}
+
+void rtw_rust_ss_set_next_state(_adapter *adapter, u8 state)
+{
+	adapter->mlmeextpriv.sitesurvey_res.next_state = state;
+}
+
+void rtw_rust_ss_bump_channel_idx(_adapter *adapter)
+{
+	adapter->mlmeextpriv.sitesurvey_res.channel_idx++;
+}
+
+u8 rtw_rust_ss_rx_ampdu_accept(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.rx_ampdu_accept;
+}
+
+u8 rtw_rust_ss_rx_ampdu_size(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.rx_ampdu_size;
+}
+
+u16 rtw_rust_ss_scan_ch_ms(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.scan_ch_ms;
+}
+
+u8 rtw_rust_ss_backop_flags(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.backop_flags;
+}
+
+u16 rtw_rust_ss_backop_ms(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.backop_ms;
+}
+
+systime rtw_rust_ss_backop_time(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.sitesurvey_res.backop_time;
+}
+
+void rtw_rust_ss_set_backop_time(_adapter *adapter, systime t)
+{
+	adapter->mlmeextpriv.sitesurvey_res.backop_time = t;
+}
+
+u8 rtw_rust_ss_scan_abort(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.scan_abort;
+}
+
+u8 rtw_rust_ss_cur_channel(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.cur_channel;
+}
+
+u8 rtw_rust_ss_cur_bwmode(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.cur_bwmode;
+}
+
+u8 rtw_rust_ss_cur_ch_offset(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.cur_ch_offset;
+}
+
+void rtw_rust_ss_set_survey_timer(_adapter *adapter, u32 ms)
+{
+	set_survey_timer(&adapter->mlmeextpriv, ms);
+}
+
+void rtw_rust_sitesurvey_phydm_backup(_adapter *adapter)
+{
+	rtw_phydm_ability_backup(adapter);
+}
+
+void rtw_rust_sitesurvey_phydm_restore(_adapter *adapter)
+{
+	rtw_phydm_ability_restore(adapter);
+}
+
+void rtw_rust_sitesurvey_phydm_offchannel(_adapter *adapter)
+{
+	rtw_phydm_func_for_offchannel(adapter);
+}
+#endif /* CONFIG_RUST && CONFIG_RUST_MLME_EXT_SITESURVEY_CMD */
+
 #if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_EXT_BAND_IE)
 #include <drv_types.h>
 
