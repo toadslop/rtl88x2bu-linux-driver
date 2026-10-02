@@ -11,6 +11,7 @@ static void reset(void)
 {
 	struct mi_state z = {0};
 	memset(&ad, 0, sizeof(ad));
+	ad.dvobj.regsty = &ad.registrypriv;
 	host_scan_set_current_time(1000);
 	host_scan_set_passing_time_ms(0);
 	host_scan_set_busy_traffic(0);
@@ -123,6 +124,7 @@ static int test_ch_decision_filter(void)
 	int n;
 
 	memset(&ad, 0, sizeof(ad));
+	ad.dvobj.regsty = &ad.registrypriv;
 	ad.setband = WIFI_FREQUENCY_BAND_AUTO;
 	ad.rfctl.max_chan_nums = MAX_CHANNEL_NUM;
 	ad.rfctl.channel_set[0].ChannelNum = 1;

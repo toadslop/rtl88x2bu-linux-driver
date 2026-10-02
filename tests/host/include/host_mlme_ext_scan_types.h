@@ -84,6 +84,7 @@ struct ss_res {
 #endif
 };
 struct registry_priv { u32 wireless_mode; u8 wifi_spec; };
+struct dvobj_priv { struct registry_priv *regsty; };
 struct wifidirect_info {
 	struct {
 		u8 scan_op_ch_only;
@@ -103,6 +104,7 @@ struct mlme_ext_priv {
 };
 struct _adapter {
 	struct registry_priv registrypriv;
+	struct dvobj_priv dvobj;
 	struct mlme_ext_priv mlmeextpriv;
 	struct rf_ctl_t rfctl;
 	int setband;
@@ -112,6 +114,8 @@ struct _adapter {
 #endif
 };
 typedef struct _adapter _adapter;
+#define adapter_to_dvobj(a) (&(a)->dvobj)
+#define dvobj_to_regsty(d) ((d)->regsty)
 #define adapter_to_rfctl(a) (&(a)->rfctl)
 #define adapter_to_chset(a) ((a)->rfctl.channel_set)
 typedef struct RT_CHANNEL_INFO RT_CHANNEL_INFO;
