@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
+/*
+ * Host C oracle for rtw_tdls_process_vht_cap (W3-103 PR2).
+ * Built with -DCONFIG_BEAMFORMING to match include/autoconf.h.
+ */
 #include "host_tdls_vht_types.h"
 
 #define GET_HAL_TX_NSS(p) host_tdls_hal_tx_nss(p)
@@ -11,6 +15,7 @@ void rtw_tdls_process_vht_cap(_adapter *padapter, struct sta_info *ptdls_sta, u8
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
 	struct vht_priv *pvhtpriv = &padapter->mlmepriv.vhtpriv;
 	u8 cur_ldpc_cap = 0, cur_stbc_cap = 0, tx_nss;
+	u16 cur_beamform_cap = 0;
 	u8 *pcap_mcs;
 
 	_rtw_memset(&ptdls_sta->vhtpriv, 0, sizeof(ptdls_sta->vhtpriv));
@@ -43,6 +48,16 @@ void rtw_tdls_process_vht_cap(_adapter *padapter, struct sta_info *ptdls_sta, u8
 	    GET_VHT_CAPABILITY_ELE_RX_STBC(data))
 		SET_FLAG(cur_stbc_cap, (STBC_VHT_ENABLE_TX | STBC_VHT_CAP_TX));
 	ptdls_sta->vhtpriv.stbc_cap = cur_stbc_cap;
+#ifdef CONFIG_BEAMFORMING
+	if (TEST_FLAG(pvhtpriv->beamform_cap, BEAMFORMING_VHT_BEAMFORMER_ENABLE) &&
+	    GET_VHT_CAPABILITY_ELE_SU_BFEE(data))
+		SET_FLAG(cur_beamform_cap, BEAMFORMING_VHT_BEAMFORMEE_ENABLE);
+	if (TEST_FLAG(pvhtpriv->beamform_cap, BEAMFORMING_VHT_BEAMFORMEE_ENABLE) &&
+	    GET_VHT_CAPABILITY_ELE_SU_BFER(data))
+		SET_FLAG(cur_beamform_cap, BEAMFORMING_VHT_BEAMFORMER_ENABLE);
+	ptdls_sta->vhtpriv.beamform_cap = cur_beamform_cap;
+	ptdls_sta->cmn.bf_info.vht_beamform_cap = cur_beamform_cap;
+#endif
 	ptdls_sta->vhtpriv.ampdu_len = GET_VHT_CAPABILITY_ELE_MAX_RXAMPDU_FACTOR(data);
 	pcap_mcs = GET_VHT_CAPABILITY_ELE_RX_MCS(data);
 	tx_nss = GET_HAL_TX_NSS(padapter);

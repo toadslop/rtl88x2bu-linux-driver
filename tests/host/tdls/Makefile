@@ -11,7 +11,7 @@ CC := gcc
 CFLAGS := -Wall -Wextra -Werror -O2 -I$(HOST_INC) \
           -DCONFIG_TDLS -DCONFIG_TDLS_CH_SW -DCONFIG_TDLS_DRIVER_SETUP
 HT_CAP_CFLAGS := $(CFLAGS) -DCONFIG_80211N_HT
-VHT_CAP_CFLAGS := $(CFLAGS) -DCONFIG_80211AC_VHT
+VHT_CAP_CFLAGS := $(CFLAGS) -DCONFIG_80211AC_VHT -DCONFIG_BEAMFORMING
 
 .PHONY: all test test-c test-rust test-ht-cap test-vht-cap clean
 all: test

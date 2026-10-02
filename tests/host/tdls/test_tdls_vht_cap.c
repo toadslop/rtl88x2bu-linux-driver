@@ -7,8 +7,8 @@
 struct vector {
 	char name[64];
 	char data_hex[64];
-	int data_len, vht_enable, wireless_mode, expect_vht, expect_vht_option,
-	    expect_is_vht_enable;
+	int data_len, vht_enable, wireless_mode, ap_beamform_cap, expect_vht,
+	    expect_vht_option, expect_is_vht_enable, expect_beamform_cap;
 };
 
 static int parse_vec(const char *obj, size_t len, void *vv)
@@ -24,9 +24,11 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 	PI(data_len);
 	PI(vht_enable);
 	PI(wireless_mode);
+	PI(ap_beamform_cap);
 	PI(expect_vht);
 	PI(expect_vht_option);
 	PI(expect_is_vht_enable);
+	PI(expect_beamform_cap);
 	return 0;
 }
 
@@ -49,6 +51,7 @@ int main(int argc, char **argv)
 		memset(&sta, 0, sizeof(sta));
 		adapter.registrypriv.vht_enable = (u8)v->vht_enable;
 		adapter.registrypriv.wireless_mode = (u8)v->wireless_mode;
+		adapter.mlmepriv.vhtpriv.beamform_cap = (u16)v->ap_beamform_cap;
 		if (host_hex_decode(v->data_hex, data, sizeof(data), &data_len))
 			return 1;
 		if (v->data_len >= 0)
@@ -56,7 +59,9 @@ int main(int argc, char **argv)
 		rtw_tdls_process_vht_cap(&adapter, &sta, data, (u8)data_len);
 		if (!!((sta.flags & WLAN_STA_VHT) != 0) != !!v->expect_vht ||
 		    !!sta.vhtpriv.vht_option != !!v->expect_vht_option ||
-		    !!sta.cmn.ra_info.is_vht_enable != !!v->expect_is_vht_enable) {
+		    !!sta.cmn.ra_info.is_vht_enable != !!v->expect_is_vht_enable ||
+		    sta.vhtpriv.beamform_cap != (u16)v->expect_beamform_cap ||
+		    sta.cmn.bf_info.vht_beamform_cap != (u16)v->expect_beamform_cap) {
 			fprintf(stderr, "FAIL %s\n", v->name);
 			fail++;
 		}

@@ -38,7 +38,11 @@ static inline u32 le_bits(const u8 *p, u32 off, u32 len)
 #define GET_VHT_CAPABILITY_ELE_SHORT_GI80M(p) LE1((p), 5, 1)
 #define GET_VHT_CAPABILITY_ELE_RX_STBC(p) LE1((p) + 1, 0, 3)
 #define GET_VHT_CAPABILITY_ELE_MAX_RXAMPDU_FACTOR(p) LE2((p) + 2, 7, 3)
+#define GET_VHT_CAPABILITY_ELE_SU_BFER(p) LE1((p), 11, 1)
+#define GET_VHT_CAPABILITY_ELE_SU_BFEE(p) LE1((p), 12, 1)
 #define GET_VHT_CAPABILITY_ELE_RX_MCS(p) ((p) + 4)
+#define BEAMFORMING_VHT_BEAMFORMER_ENABLE BIT(0)
+#define BEAMFORMING_VHT_BEAMFORMEE_ENABLE BIT(1)
 #define _rtw_memset(p, c, n) memset((p), (c), (n))
 #define _rtw_memcpy(d, s, n) memcpy((d), (s), (n))
 
@@ -52,6 +56,7 @@ struct vht_priv {
 	u8 sgi_80m;
 	u8 ampdu_len;
 	u8 vht_highest_rate;
+	u16 beamform_cap;
 };
 
 struct registry_priv {
@@ -67,8 +72,13 @@ struct ra_info {
 	u8 is_vht_enable;
 };
 
+struct bf_info {
+	u16 vht_beamform_cap;
+};
+
 struct sta_cmn {
 	struct ra_info ra_info;
+	struct bf_info bf_info;
 };
 
 struct sta_info {
