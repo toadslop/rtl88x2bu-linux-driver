@@ -40,7 +40,9 @@ const SS_BACKOP_TX_RESUME: U8 = 1 << 5;
 
 const RX_AMPDU_ACCEPT_INVALID: U8 = 0xff;
 const RX_AMPDU_SIZE_INVALID: U8 = 0xff;
+#[cfg(host_mlme_ext_sitesurvey_cmd_test)]
 const HW_VAR_CHECK_TXBUF: c_int = 0;
+#[cfg(host_mlme_ext_sitesurvey_cmd_test)]
 const HW_VAR_MLME_SITESURVEY: c_int = 1;
 
 const HOST_SS_RES_SIZE: usize = 248;
@@ -336,6 +338,22 @@ extern "C" {
     fn rtw_rust_ss_cur_bwmode(a: Adapter) -> U8;
     fn rtw_rust_ss_cur_ch_offset(a: Adapter) -> U8;
     fn rtw_rust_ss_set_survey_timer(a: Adapter, ms: U32);
+    fn rtw_rust_hw_var_check_txbuf() -> c_int;
+    fn rtw_rust_hw_var_mlme_sitesurvey() -> c_int;
+    fn rtw_rust_sitesurvey_aux_state(a: Adapter) -> U8;
+    fn rtw_rust_sitesurvey_scan_complete(a: Adapter);
+}
+
+#[cfg(rust_mlme_ext_sitesurvey_cmd)]
+#[inline]
+unsafe fn kernel_hw_var_check_txbuf() -> c_int {
+    unsafe { rtw_rust_hw_var_check_txbuf() }
+}
+
+#[cfg(rust_mlme_ext_sitesurvey_cmd)]
+#[inline]
+unsafe fn kernel_hw_var_mlme_sitesurvey() -> c_int {
+    unsafe { rtw_rust_hw_var_mlme_sitesurvey() }
 }
 
 #[cfg(rust_mlme_ext_sitesurvey_cmd)]
@@ -364,7 +382,11 @@ pub extern "C" fn sitesurvey_cmd_hdl(padapter: Adapter, pbuf: *mut U8) -> U8 {
                     {
                         rtw_rx_ampdu_apply(padapter);
                     }
-                    rtw_hal_set_hwreg(padapter, HW_VAR_CHECK_TXBUF, core::ptr::null_mut());
+                    rtw_hal_set_hwreg(
+                        padapter,
+                        kernel_hw_var_check_txbuf(),
+                        core::ptr::null_mut(),
+                    );
                     rtw_hal_macid_sleep_all_used(padapter);
                     if rtw_ps_annc(padapter, true) != 0 {
                         rtw_rust_ss_set_state(padapter, SCAN_PS_ANNC_WAIT);
@@ -381,7 +403,11 @@ pub extern "C" fn sitesurvey_cmd_hdl(padapter: Adapter, pbuf: *mut U8) -> U8 {
                     rtw_rust_sitesurvey_phydm_offchannel(padapter);
                     sitesurvey_set_msr(padapter, true);
                     let mut on: U8 = 1;
-                    rtw_hal_set_hwreg(padapter, HW_VAR_MLME_SITESURVEY, &mut on);
+                    rtw_hal_set_hwreg(
+                        padapter,
+                        kernel_hw_var_mlme_sitesurvey(),
+                        &mut on,
+                    );
                     rtw_rust_ss_set_state(padapter, SCAN_PROCESS);
                     rtw_rust_ss_set_next_state(padapter, SCAN_PROCESS);
                 }
@@ -417,7 +443,11 @@ pub extern "C" fn sitesurvey_cmd_hdl(padapter: Adapter, pbuf: *mut U8) -> U8 {
                     set_channel_bwmode(padapter, back_ch, back_ch_offset, back_bw);
                     sitesurvey_set_msr(padapter, false);
                     let mut off: U8 = 0;
-                    rtw_hal_set_hwreg(padapter, HW_VAR_MLME_SITESURVEY, &mut off);
+                    rtw_hal_set_hwreg(
+                        padapter,
+                        kernel_hw_var_mlme_sitesurvey(),
+                        &mut off,
+                    );
                     let flags = rtw_rust_ss_backop_flags(padapter);
                     if (flags & SS_BACKOP_PS_ANNC) == SS_BACKOP_PS_ANNC {
                         sitesurvey_set_igi(padapter);
@@ -444,7 +474,11 @@ pub extern "C" fn sitesurvey_cmd_hdl(padapter: Adapter, pbuf: *mut U8) -> U8 {
                     }
                 }
                 SCAN_LEAVING_OP => {
-                    rtw_hal_set_hwreg(padapter, HW_VAR_CHECK_TXBUF, core::ptr::null_mut());
+                    rtw_hal_set_hwreg(
+                        padapter,
+                        kernel_hw_var_check_txbuf(),
+                        core::ptr::null_mut(),
+                    );
                     rtw_hal_macid_sleep_all_used(padapter);
                     let flags = rtw_rust_ss_backop_flags(padapter);
                     if (flags & SS_BACKOP_PS_ANNC) == SS_BACKOP_PS_ANNC
@@ -465,25 +499,24 @@ pub extern "C" fn sitesurvey_cmd_hdl(padapter: Adapter, pbuf: *mut U8) -> U8 {
                     }
                     sitesurvey_set_msr(padapter, true);
                     let mut on: U8 = 1;
-                    rtw_hal_set_hwreg(padapter, HW_VAR_MLME_SITESURVEY, &mut on);
+                    rtw_hal_set_hwreg(
+                        padapter,
+                        kernel_hw_var_mlme_sitesurvey(),
+                        &mut on,
+                    );
                     rtw_rust_ss_set_state(padapter, SCAN_PROCESS);
                     rtw_rust_ss_set_next_state(padapter, SCAN_PROCESS);
                 }
                 SCAN_COMPLETE => {
-                    survey_done_set_ch_bw(padapter);
-                    sitesurvey_set_msr(padapter, false);
-                    let mut off: U8 = 0;
-                    rtw_hal_set_hwreg(padapter, HW_VAR_MLME_SITESURVEY, &mut off);
-                    rtw_rust_sitesurvey_phydm_restore(padapter);
-                    sitesurvey_set_igi(padapter);
-                    rtw_hal_macid_wakeup_all_used(padapter);
-                    rtw_ps_annc(padapter, false);
-                    rtw_rx_ampdu_apply(padapter);
-                    rtw_rust_ss_set_state(padapter, SCAN_DISABLE);
-                    rtw_rust_ss_set_next_state(padapter, SCAN_DISABLE);
+                    rtw_rust_sitesurvey_scan_complete(padapter);
                     break;
                 }
-                _ => break,
+                _ => {
+                    if rtw_rust_sitesurvey_aux_state(padapter) != 0 {
+                        continue;
+                    }
+                    break;
+                }
             }
         }
         H2C_SUCCESS

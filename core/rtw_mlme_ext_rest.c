@@ -1006,7 +1006,7 @@ u8 rtw_rust_ss_state(_adapter *adapter)
 
 void rtw_rust_ss_set_state(_adapter *adapter, u8 state)
 {
-	adapter->mlmeextpriv.sitesurvey_res.state = state;
+	mlmeext_set_scan_state(&adapter->mlmeextpriv, state);
 }
 
 u8 rtw_rust_ss_next_state(_adapter *adapter)
@@ -1016,7 +1016,7 @@ u8 rtw_rust_ss_next_state(_adapter *adapter)
 
 void rtw_rust_ss_set_next_state(_adapter *adapter, u8 state)
 {
-	adapter->mlmeextpriv.sitesurvey_res.next_state = state;
+	mlmeext_set_scan_next_state(&adapter->mlmeextpriv, state);
 }
 
 void rtw_rust_ss_bump_channel_idx(_adapter *adapter)
@@ -1097,6 +1097,138 @@ void rtw_rust_sitesurvey_phydm_restore(_adapter *adapter)
 void rtw_rust_sitesurvey_phydm_offchannel(_adapter *adapter)
 {
 	rtw_phydm_func_for_offchannel(adapter);
+}
+
+int rtw_rust_hw_var_check_txbuf(void)
+{
+	return HW_VAR_CHECK_TXBUF;
+}
+
+int rtw_rust_hw_var_mlme_sitesurvey(void)
+{
+	return HW_VAR_MLME_SITESURVEY;
+}
+
+void survey_done_set_ch_bw(_adapter *padapter);
+void sitesurvey_set_igi(_adapter *adapter);
+void sitesurvey_set_msr(_adapter *adapter, bool enter);
+u8 rtw_ps_annc(_adapter *adapter, bool ps);
+
+/*
+ * States not yet ported in Rust (P2P listen transition, SW antdiv back-to-back).
+ * Returns 1 if the current state was handled (caller should continue FSM loop).
+ */
+u8 rtw_rust_sitesurvey_aux_state(_adapter *padapter)
+{
+	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+	struct ss_res *ss = &pmlmeext->sitesurvey_res;
+	u8 state = ss->state;
+
+#if defined(CONFIG_ANTENNA_DIVERSITY) || defined(DBG_SCAN_SW_ANTDIV_BL)
+	if (state == SCAN_SW_ANTDIV_BL) {
+		ss->bss_cnt = 0;
+		ss->channel_idx = 0;
+		ss->is_sw_antdiv_bl_scan = 1;
+		mlmeext_set_scan_next_state(pmlmeext, SCAN_PROCESS);
+		set_survey_timer(pmlmeext, ss->scan_ch_ms);
+		return 1;
+	}
+#endif
+
+#ifdef CONFIG_P2P
+	{
+		struct wifidirect_info *pwdinfo = &padapter->wdinfo;
+
+		if (state == SCAN_TO_P2P_LISTEN) {
+			set_channel_bwmode(padapter, pwdinfo->listen_channel,
+					   HAL_PRIME_CHNL_OFFSET_DONT_CARE, CHANNEL_WIDTH_20);
+			rtw_p2p_set_state(pwdinfo, P2P_STATE_FIND_PHASE_LISTEN);
+			rtw_phydm_ability_restore(padapter);
+			sitesurvey_set_igi(padapter);
+			mlmeext_set_scan_state(pmlmeext, SCAN_P2P_LISTEN);
+			_set_timer(&pwdinfo->find_phase_timer,
+				   (u32)((u32)pwdinfo->listen_dwell * 100));
+			return 1;
+		}
+		if (state == SCAN_P2P_LISTEN) {
+			mlmeext_set_scan_state(pmlmeext, SCAN_PROCESS);
+			ss->channel_idx = 0;
+			return 1;
+		}
+	}
+#endif
+
+	(void)padapter;
+	(void)pmlmeext;
+	(void)ss;
+	return 0;
+}
+
+void rtw_rust_sitesurvey_scan_complete(_adapter *padapter)
+{
+	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+	struct ss_res *ss = &pmlmeext->sitesurvey_res;
+	u8 val8;
+
+#if defined(CONFIG_RTW_CFGVENDOR_RANDOM_MAC_OUI) || defined(CONFIG_RTW_SCAN_RAND)
+	rtw_hal_set_hw_mac_addr(padapter, adapter_mac_addr(padapter));
+#endif
+#ifdef CONFIG_P2P
+	{
+		struct wifidirect_info *pwdinfo = &padapter->wdinfo;
+#ifdef CONFIG_CONCURRENT_MODE
+		struct roch_info *prochinfo = &padapter->rochinfo;
+#endif
+
+		if (rtw_p2p_chk_state(pwdinfo, P2P_STATE_SCAN) ||
+		    rtw_p2p_chk_state(pwdinfo, P2P_STATE_FIND_PHASE_SEARCH)) {
+#ifdef CONFIG_CONCURRENT_MODE
+			if (pwdinfo->driver_interface == DRIVER_WEXT) {
+				if (rtw_mi_check_status(padapter, MI_LINKED))
+					_set_timer(&prochinfo->ap_roch_ch_switch_timer, 500);
+			}
+#endif
+			rtw_p2p_set_state(pwdinfo, rtw_p2p_pre_state(pwdinfo));
+		}
+		rtw_p2p_findphase_ex_set(pwdinfo, P2P_FINDPHASE_EX_NONE);
+	}
+#endif
+
+	survey_done_set_ch_bw(padapter);
+	sitesurvey_set_msr(padapter, _FALSE);
+	val8 = 0;
+	rtw_hal_set_hwreg(padapter, HW_VAR_MLME_SITESURVEY, (u8 *)(&val8));
+	rtw_phydm_ability_restore(padapter);
+	sitesurvey_set_igi(padapter);
+#ifdef CONFIG_MCC_MODE
+	if (!rtw_hal_set_mcc_setting_scan_complete(padapter))
+#endif
+	{
+		rtw_hal_macid_wakeup_all_used(padapter);
+		rtw_ps_annc(padapter, 0);
+	}
+	rtw_rx_ampdu_apply(padapter);
+	mlmeext_set_scan_state(pmlmeext, SCAN_DISABLE);
+	report_surveydone_event(padapter, ss->acs);
+#ifdef CONFIG_RTW_ACS
+	if (IS_ACS_ENABLE(padapter))
+		rtw_acs_select_best_chan(padapter);
+#endif
+#if defined(CONFIG_BACKGROUND_NOISE_MONITOR) && defined(DBG_NOISE_MONITOR)
+	if (IS_NM_ENABLE(padapter))
+		rtw_noise_info_dump(RTW_DBGDUMP, padapter);
+#endif
+	issue_action_BSSCoexistPacket(padapter);
+	issue_action_BSSCoexistPacket(padapter);
+	issue_action_BSSCoexistPacket(padapter);
+#ifdef CONFIG_RTW_80211K
+	if (ss->token)
+		rm_post_event(padapter, ss->token, RM_EV_survey_done);
+#endif
+#ifdef CONFIG_RTW_ROAM_QUICKSCAN
+	if (padapter->mlmepriv.need_to_roam == _TRUE)
+		generate_quickss(padapter);
+#endif
 }
 #endif /* CONFIG_RUST && CONFIG_RUST_MLME_EXT_SITESURVEY_CMD */
 
