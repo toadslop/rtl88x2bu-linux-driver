@@ -7,7 +7,7 @@
 #define _TRUE 1
 #define _FALSE 0
 #define _SUCCESS 0
-#define _FAIL (-1)
+#define _FAIL 0
 
 #define BIT(x) (1U << (x))
 #define WIFI_FW_STATION_STATE 0x02
