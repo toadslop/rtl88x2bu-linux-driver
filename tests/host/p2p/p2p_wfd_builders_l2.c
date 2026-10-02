@@ -27,29 +27,35 @@ static int parse_mac(const char *s, u8 *out)
 	return 0;
 }
 
+static int init_adapter(vector_t *v, struct _adapter *a)
+{
+	memset(a, 0, sizeof(*a));
+	a->miracast_enabled = (u8)v->miracast;
+	a->stapriv.asoc_list_cnt = v->clients;
+	a->wfd_info.wfd_device_type = (u8)v->wfd_type;
+	a->wfd_info.rtsp_ctrlport = (u16)v->rtsp_port;
+	a->wdinfo.padapter = a;
+	a->wdinfo.wfd_info = &a->wfd_info;
+	a->wdinfo.role = (u8)v->role;
+	if (v->asoc) {
+		a->mlmepriv.fwstate = WIFI_ASOC_STATE;
+		if (*v->assoc_bssid && parse_mac(v->assoc_bssid, a->mlmepriv.assoc_bssid))
+			return -1;
+	}
+	return 0;
+}
+
 static u32 run_vec(vector_t *v, u8 *out)
 {
 	struct _adapter a;
-	struct wifidirect_info wd;
 
-	memset(&a, 0, sizeof(a));
-	memset(&wd, 0, sizeof(wd));
-	a.miracast_enabled = (u8)v->miracast;
-	a.stapriv.asoc_list_cnt = v->clients;
-	a.wfd_info.wfd_device_type = (u8)v->wfd_type;
-	a.wfd_info.rtsp_ctrlport = (u16)v->rtsp_port;
-	if (v->asoc) {
-		a.mlmepriv.fwstate = WIFI_ASOC_STATE;
-		parse_mac(v->assoc_bssid, a.mlmepriv.assoc_bssid);
-	}
-	wd.padapter = &a;
-	wd.role = (u8)v->role;
-	wd.wfd_info = &a.wfd_info;
+	if (init_adapter(v, &a))
+		return (u32)-1;
 	if (!strcmp(v->fn, "beacon"))
-		return build_beacon_wfd_ie(&wd, out);
+		return build_beacon_wfd_ie(&a.wdinfo, out);
 #ifdef HOST_P2P_WFD_PROBE
 	if (!strcmp(v->fn, "probe_req"))
-		return build_probe_req_wfd_ie(&wd, out);
+		return build_probe_req_wfd_ie(&a.wdinfo, out);
 #endif
 	return (u32)-1;
 }

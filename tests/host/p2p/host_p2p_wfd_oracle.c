@@ -24,37 +24,18 @@ u8 *rtw_set_ie(u8 *pbuf, int index, u32 len, const u8 *source, u32 *frlen)
 	return pbuf + len + 2;
 }
 
-static u32 wfd_wrap_ie(struct mlme_priv *m, u8 *wfdie, u32 wfdielen, u8 *pbuf)
-{
-	u32 len = 0;
-
-	wfdie[wfdielen++] = WFD_ATTR_ASSOC_BSSID;
-	RTW_PUT_BE16(wfdie + wfdielen, 0x0006);
-	wfdielen += 2;
-	if (check_fwstate(m, WIFI_ASOC_STATE) == _TRUE)
-		memcpy(wfdie + wfdielen, m->assoc_bssid, ETH_ALEN);
-	else
-		memset(wfdie + wfdielen, 0, ETH_ALEN);
-	wfdielen += ETH_ALEN;
-	wfdie[wfdielen++] = WFD_ATTR_COUPLED_SINK_INFO;
-	RTW_PUT_BE16(wfdie + wfdielen, 0x0007);
-	wfdielen += 2;
-	memset(wfdie + wfdielen, 0, 7);
-	wfdielen += 7;
-	rtw_set_ie(pbuf, _VENDOR_SPECIFIC_IE_, wfdielen, wfdie, &len);
-	return len;
-}
-
 u32 build_beacon_wfd_ie(struct wifidirect_info *pwdinfo, u8 *pbuf)
 {
 	u8 wfdie[MAX_WFD_IE_LEN] = {0};
-	u16 val16;
-	u32 wfdielen = 0;
-	struct _adapter *a = pwdinfo->padapter;
-	struct wifi_display_info *wfd = pwdinfo->wfd_info;
+	u16 val16 = 0;
+	u32 len = 0, wfdielen = 0;
+	struct _adapter *padapter = pwdinfo->padapter;
+	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+	struct wifi_display_info *pwfd_info = padapter->wdinfo.wfd_info;
 
-	if (!hal_chk_wl_func(a, WL_FUNC_MIRACAST))
+	if (!hal_chk_wl_func(padapter, WL_FUNC_MIRACAST))
 		return 0;
+
 	wfdie[wfdielen++] = 0x50;
 	wfdie[wfdielen++] = 0x6F;
 	wfdie[wfdielen++] = 0x9A;
@@ -62,19 +43,37 @@ u32 build_beacon_wfd_ie(struct wifidirect_info *pwdinfo, u8 *pbuf)
 	wfdie[wfdielen++] = WFD_ATTR_DEVICE_INFO;
 	RTW_PUT_BE16(wfdie + wfdielen, 0x0006);
 	wfdielen += 2;
+
 	if (P2P_ROLE_GO == pwdinfo->role) {
-		if (is_any_client_associated(a))
-			val16 = wfd->wfd_device_type | WFD_DEVINFO_WSD;
+		if (is_any_client_associated(padapter))
+			val16 = pwfd_info->wfd_device_type | WFD_DEVINFO_WSD;
 		else
-			val16 = wfd->wfd_device_type | WFD_DEVINFO_SESSION_AVAIL | WFD_DEVINFO_WSD;
+			val16 = pwfd_info->wfd_device_type | WFD_DEVINFO_SESSION_AVAIL | WFD_DEVINFO_WSD;
 	} else {
-		val16 = wfd->wfd_device_type | WFD_DEVINFO_SESSION_AVAIL | WFD_DEVINFO_WSD;
+		val16 = pwfd_info->wfd_device_type | WFD_DEVINFO_SESSION_AVAIL | WFD_DEVINFO_WSD;
 	}
 	RTW_PUT_BE16(wfdie + wfdielen, val16);
 	wfdielen += 2;
-	RTW_PUT_BE16(wfdie + wfdielen, wfd->rtsp_ctrlport);
+	RTW_PUT_BE16(wfdie + wfdielen, pwfd_info->rtsp_ctrlport);
 	wfdielen += 2;
 	RTW_PUT_BE16(wfdie + wfdielen, 300);
 	wfdielen += 2;
-	return wfd_wrap_ie(&a->mlmepriv, wfdie, wfdielen, pbuf);
+
+	wfdie[wfdielen++] = WFD_ATTR_ASSOC_BSSID;
+	RTW_PUT_BE16(wfdie + wfdielen, 0x0006);
+	wfdielen += 2;
+	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE)
+		memcpy(wfdie + wfdielen, pmlmepriv->assoc_bssid, ETH_ALEN);
+	else
+		memset(wfdie + wfdielen, 0, ETH_ALEN);
+	wfdielen += ETH_ALEN;
+
+	wfdie[wfdielen++] = WFD_ATTR_COUPLED_SINK_INFO;
+	RTW_PUT_BE16(wfdie + wfdielen, 0x0007);
+	wfdielen += 2;
+	memset(wfdie + wfdielen, 0, 7);
+	wfdielen += 7;
+
+	rtw_set_ie(pbuf, _VENDOR_SPECIFIC_IE_, wfdielen, wfdie, &len);
+	return len;
 }
