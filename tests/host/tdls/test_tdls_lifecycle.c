@@ -67,8 +67,11 @@ static int run_vec(struct vector *v)
 	else if (!strcmp(v->op, "reset")) {
 		rtw_reset_tdls_info(&g_adapter);
 		got = g_adapter.tdlsinfo.ch_switch_prohibited;
-	} else if (!strcmp(v->op, "init"))
+	} else if (!strcmp(v->op, "init")) {
 		got = rtw_init_tdls_info(&g_adapter);
+		if (got == _SUCCESS && g_adapter.tdlsinfo.driver_setup != _TRUE)
+			got = -1;
+	}
 	else if (!strcmp(v->op, "free")) {
 		memset(&g_tdls_free, 0xab, sizeof(g_tdls_free));
 		rtw_free_tdls_info(&g_tdls_free);
