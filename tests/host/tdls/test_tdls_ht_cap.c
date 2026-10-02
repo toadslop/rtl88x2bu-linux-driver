@@ -8,7 +8,8 @@ struct vector {
 	char name[64];
 	char data_hex[128];
 	int ht_enable, wireless_mode, ampdu_enable, ap_sgi_20, cur_bwmode, cur_ch_offset;
-	int expect_flags_ht, expect_ht_option, expect_ampdu, expect_sgi_20, expect_bw;
+	int expect_flags_ht, expect_wme, expect_ht_option, expect_qos, expect_ampdu;
+	int expect_sgi_20, expect_bw, expect_rx_ampdu_spacing, expect_ch_offset;
 	int ap_ampdu_para;
 };
 
@@ -29,20 +30,24 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 	PI(cur_bwmode);
 	PI(cur_ch_offset);
 	PI(expect_flags_ht);
+	PI(expect_wme);
 	PI(expect_ht_option);
+	PI(expect_qos);
 	PI(expect_ampdu);
 	PI(expect_sgi_20);
 	PI(expect_bw);
+	PI(expect_rx_ampdu_spacing);
+	PI(expect_ch_offset);
 	return 0;
 }
 
 int main(int argc, char **argv)
 {
-	struct vector vecs[8];
+	struct vector vecs[16];
 	size_t n = 0, i, fail = 0;
 
 	if (argc != 2 ||
-	    host_load_vectors(argv[1], vecs, sizeof(vecs[0]), 8, parse_vec, &n))
+	    host_load_vectors(argv[1], vecs, sizeof(vecs[0]), 16, parse_vec, &n))
 		return 2;
 	for (i = 0; i < n; i++) {
 		struct vector *v = &vecs[i];
@@ -65,10 +70,14 @@ int main(int argc, char **argv)
 			return 1;
 		rtw_tdls_process_ht_cap(&adapter, &sta, data, (u8)data_len);
 		if (!!((sta.flags & WLAN_STA_HT) != 0) != !!v->expect_flags_ht ||
+		    !!((sta.flags & WLAN_STA_WME) != 0) != !!v->expect_wme ||
 		    !!sta.htpriv.ht_option != !!v->expect_ht_option ||
+		    !!sta.qos_option != !!v->expect_qos ||
 		    !!sta.htpriv.ampdu_enable != !!v->expect_ampdu ||
 		    !!sta.htpriv.sgi_20m != !!v->expect_sgi_20 ||
-		    sta.bw_mode != (u8)v->expect_bw) {
+		    sta.bw_mode != (u8)v->expect_bw ||
+		    sta.htpriv.rx_ampdu_min_spacing != (u8)v->expect_rx_ampdu_spacing ||
+		    sta.htpriv.ch_offset != (u8)v->expect_ch_offset) {
 			fprintf(stderr, "FAIL %s\n", v->name);
 			fail++;
 		}
