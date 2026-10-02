@@ -17,9 +17,9 @@ use core::ffi::c_void;
 
 const _FALSE: u8 = 0;
 const _TRUE: u8 = 1;
-// Module osdep_service.h: _FAIL=0, _SUCCESS=1 (host header maps _SUCCESS to 0).
+// Kernel osdep_service.h: _FAIL=0 (host harness init uses HOST_TDLS_INIT_OK=0).
 const _FAIL: i32 = 0;
-const _SUCCESS: i32 = 0;
+const HOST_TDLS_INIT_OK: i32 = 0;
 const WIFI_FW_STATION_STATE: u32 = 0x02;
 const WIFI_FW_ASSOC_SUCCESS: u32 = 0x00004000;
 const TDLS_STATE_NONE: u32 = 0;
@@ -182,7 +182,7 @@ pub extern "C" fn rtw_init_tdls_info(padapter: Padapter) -> i32 {
     a.tdlsinfo.driver_setup = _TRUE;
     a.tdlsinfo.cmd_lock = 0;
     a.tdlsinfo.hdl_lock = 0;
-    _SUCCESS
+    HOST_TDLS_INIT_OK
 }
 
 #[no_mangle]
