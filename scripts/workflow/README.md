@@ -8,7 +8,7 @@ re-deriving GitHub queries and dependency rules in chat.
 Encodes:
 
 - **Path selection** ([`pick-up-work-item`](../../.cursor/skills/pick-up-work-item/SKILL.md))
-- **PR classification** ([`prepare-all-prs-for-merge`](../../.cursor/skills/prepare-all-prs-for-merge/SKILL.md) Phase 1)
+- **PR classification** ([`prepare-all-prs-for-merge`](../../.cursor/skills/prepare-all-prs-for-merge/SKILL.md) Phase 1 — group chains for `gh stack`)
 - **Ready issue selection** ([`select-ready-issue`](../../.cursor/skills/select-ready-issue/SKILL.md))
 
 ### Usage

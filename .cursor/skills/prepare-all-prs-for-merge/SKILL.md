@@ -3,11 +3,11 @@ name: prepare-all-prs-for-merge
 description: >-
   Path A of pick-up-work-item; also auto-applies on "prepare all PRs for merge",
   "prepare all PRs", "get all PRs ready to merge", or similar. Prepares every
-  eligible open pull request for merge into master. Finds draft PRs and marks
-  them ready for review, then runs prepare-pr-for-merge on each eligible open
-  PR. Only considers PRs whose base is master or whose base branch has already
-  been merged into master. Do NOT use for a single PR (use prepare-pr-for-merge)
-  or for reviewing PRs (pr-review-delivery).
+  eligible open pull request or GitHub PR stack for merge into master via gh
+  stack (link, sync/rebase, babysit all layers). Groups chained PRs into stacks
+  before prep. Agents stop when stacks are green — maintainer runs gh stack
+  merge. Do NOT use for a single PR (use prepare-pr-for-merge) or for reviewing
+  PRs (pr-review-delivery).
 metadata:
   parent-skill: pick-up-work-item
   path: A
@@ -38,17 +38,18 @@ Run these phases **in order**. Do not skip ahead.
 
 | Phase | Action |
 |-------|--------|
-| 1 | Discover open PRs and filter to eligible merge-base |
-| 2 | Mark eligible **draft** PRs ready for review (`gh pr ready`) |
-| 3 | Run [`prepare-pr-for-merge`](../prepare-pr-for-merge/SKILL.md) on each eligible open PR |
+| 0 | Ensure `gh extension install github/gh-stack` |
+| 1 | Discover open PRs, build **stack chains**, filter by bottom-layer gate |
+| 2 | Mark **draft** PRs ready for review on each stack (`gh pr ready`) |
+| 3 | Run [`prepare-pr-for-merge`](../prepare-pr-for-merge/SKILL.md) **once per stack** (or per standalone PR) |
 
 ```mermaid
 flowchart TD
-  A[Start: prepare all PRs] --> B[1. List open PRs]
-  B --> C[2. Filter: base is master or merged into master]
-  C --> D[3. gh pr ready on eligible drafts]
-  D --> E[4. For each eligible PR: prepare-pr-for-merge]
-  E --> F[5. Batch status report]
+  A[Start: prepare all PRs] --> B[1. List open PRs + build chains]
+  B --> C[2. Bottom-layer gate per chain]
+  C --> D[3. gh stack link + gh pr ready on drafts]
+  D --> E[4. For each stack: prepare-pr-for-merge]
+  E --> F[5. Batch status report — ready for gh stack merge]
 ```
 
 ## Phase 1 — Discover and filter PRs
@@ -70,79 +71,82 @@ For full path selection (Path A vs B/C), prefer `./scripts/workflow/find-work.sh
 gh pr list --state open --json number,title,isDraft,baseRefName,headRefName,url
 ```
 
+### Build stack chains (mandatory)
+
+`find-work.sh` marks only **bottom** layers as `eligible` and puts upper layers in
+`skipped` — that is expected. For GitHub stacks, prepare **whole chains**, not
+isolated `skipped` rows.
+
+From **all** open PRs (eligible + skipped), build chains:
+
+1. Map `headRefName` → PR for every open PR.
+2. A **bottom** is any PR whose `baseRefName` is `master` or passes the
+   **bottom-layer gate** in [`prepare-pr-for-merge`](../prepare-pr-for-merge/SKILL.md#3-bottom-layer-gate-mandatory).
+3. From each bottom, walk up while `head_to_pr[base]` exists; record ordered
+   `[#bottom, …, #top]`.
+
+Record:
+
+- **`stacks`** — chains with ≥2 PRs (or a single PR that `needs_prep`).
+- **`standalone`** — single PRs on `master` from `eligible`.
+- **`blocked`** — chains whose bottom fails the gate (report blocking parent).
+
+Do **not** prepare `blocked` stacks. Upper layers in a **ready** stack are
+prepared together with the bottom even if `find-work` listed them under `skipped`.
+
 ### Eligibility filter (mandatory)
 
-**Include** a PR only if its merge base passes the same **stack readiness gate**
-as [`prepare-pr-for-merge`](../prepare-pr-for-merge/SKILL.md#stack-readiness-gate-mandatory--run-first):
+Apply the bottom-layer gate to each chain's **bottom PR only** (same rules as
+prepare-pr-for-merge). Middle/top layers inherit eligibility from their stack.
 
-| `baseRefName` | Include? |
-|---------------|----------|
-| `master` | **Yes** |
-| Any other branch | **Yes** only if that branch is already integrated into `master` |
-| Any other branch (parent not on `master`) | **No** — skip and report |
-
-For each non-`master` base, apply the parent checks from prepare-pr-for-merge:
-
-1. **Primary:** `gh pr view "$base" --json state,mergedAt` — if `state` is
-   `MERGED` (or `mergedAt` is set), the PR is eligible.
-2. **Supplementary:** if no merged PR record exists:
-
-   ```bash
-   git fetch origin master "$base" --prune
-   git merge-base --is-ancestor "origin/$base" origin/master
-   ```
-
-   Exit 0 → eligible; exit 1 → **skip**.
-
-Record two lists:
-
-- **`eligible`** — PRs to prepare (number, title, base, head, url, isDraft).
-- **`skipped`** — PRs excluded because their stack parent is not on `master` yet
-  (include blocking parent PR/branch in the report).
-
-Do **not** retarget, rebase, or run prepare on skipped PRs.
+| Bottom `baseRefName` | Prepare whole chain? |
+|----------------------|----------------------|
+| `master` | **Yes** (include all linked upper PRs) |
+| Dependency branch integrated into `master` | **Yes** |
+| Open parent not on `master` | **No** — `blocked` |
 
 ### Processing order
 
-Process **`eligible`** PRs in a sensible stack order:
+Process **`stacks`** and **`standalone`** PRs:
 
-1. PRs with `baseRefName: master` first (fewest dependencies).
-2. Then PRs whose base branch is merged into `master` but still named as the
-   feature branch (these will be retargeted to `master` during prepare).
+1. Chains whose bottom has the lowest PR number first (oldest stacks).
+2. Within a chain, one `prepare-pr-for-merge` run from the bottom PR (full stack).
 
-Within each group, prefer **lower PR numbers first** (older / earlier stack
-layers). This reduces repeated rebases when multiple stacked PRs become eligible
-in one batch.
+Use `gh stack link <bottom#> … <top#> --open` before sync when the GitHub stack
+object does not exist yet.
 
-## Phase 2 — Draft → open (batch)
+## Phase 2 — Link stacks and draft → open (batch)
 
-For every PR in **`eligible`** where `isDraft` is `true`:
+For each **`stacks`** entry (bottom → top):
+
+```bash
+gh stack link <bottom-pr#> ... <top-pr#> --open
+```
+
+For every PR in that chain (and each **`standalone`**) where `isDraft` is `true`:
 
 ```bash
 gh pr ready <number>
 ```
 
-Confirm `isDraft` is `false` before moving to Phase 3. This mirrors the
-**Draft → open** step in prepare-pr-for-merge and ensures checks and reviews can
-run.
+Confirm `isDraft` is `false` on all layers before Phase 3.
 
-Do **not** mark drafts ready if they failed the eligibility filter in Phase 1.
+Do **not** mark drafts ready on **`blocked`** chains.
 
-## Phase 3 — Prepare each eligible PR
+## Phase 3 — Prepare each stack or standalone PR
 
-For **each** PR in **`eligible`** (in processing order), load and follow
-[`prepare-pr-for-merge`](../prepare-pr-for-merge/SKILL.md) **in full**:
+For **each** stack chain or standalone PR (in processing order), load and follow
+[`prepare-pr-for-merge`](../prepare-pr-for-merge/SKILL.md) **in full** — enter from
+the **bottom** PR number so the whole chain is synced:
 
-- Stack readiness gate (should already pass — re-check if state changed).
-- Draft → open (no-op if done in Phase 2).
-- Retarget stacked PRs to `master`, rebase, resolve conflicts.
-- **Babysit until green** — CI passing, no review in progress, blocking feedback
-  addressed via `babysit`.
+- Bottom-layer gate (re-check if state changed).
+- `gh stack checkout`, `gh stack sync` / `gh stack rebase` for multi-PR chains.
+- **Babysit until green** on **every layer** — CI, reviews, `babysit`.
 - Knit follow-up PR when applicable.
+- Report **ready for maintainer `gh stack merge`** when the stack is green.
 
-Treat each PR as a **separate sub-run**. Complete one PR's prepare workflow
-(including babysitting to green) before starting the next, unless the user
-explicitly asked for parallel work.
+Complete one stack's prepare workflow (including babysitting all layers) before
+starting the next, unless the user explicitly asked for parallel work.
 
 If prepare stops on a PR (unmerged parent discovered mid-run, ambiguous stack,
 user input needed), **record the blocker**, skip or pause that PR, and continue
@@ -162,23 +166,22 @@ through — report **`human action required`** and stop.
 
 Reply in chat with a summary table:
 
-| PR | Base → target | Draft opened? | Prepared? | CI | Reviews | Ready? | Notes |
-|----|---------------|---------------|-----------|-----|---------|--------|-------|
-| #N | … | yes / n/a | yes / partial / skipped | … | … | yes / no | … |
+| Stack / PR | Layers (#bottom…#top) | GitHub stack linked? | Prepared? | All CI green? | Ready for `gh stack merge`? | Notes |
+|------------|------------------------|----------------------|-----------|---------------|-----------------------------|-------|
 
-Also list **`skipped`** PRs and why (e.g. stacked on unmerged `#M`).
+Also list **`blocked`** chains and why (bottom not on integrated trunk).
 
-**Do not merge** any PR unless the user explicitly asks.
+**Do not run `gh stack merge`** — agents lack merge permission; maintainer lands when green.
 
 ## Boundaries
 
 | Do | Do not |
 |----|--------|
-| Filter to master-base or merged-parent-base only | Prepare PRs blocked by an open ancestor |
-| `gh pr ready` on eligible drafts before prepare | Mark ineligible drafts ready |
-| Run full `prepare-pr-for-merge` per eligible PR | Reimplement rebase/babysit logic in this file |
-| Babysit each PR until green before the next | Report batch "done" while checks fail |
-| Report skipped PRs with blocking parent | Merge PRs without explicit instruction |
+| Group chains; `gh stack link` before sync | Prepare upper layers while stack bottom is blocked |
+| `gh pr ready` on all layers in a stack | Mark drafts ready on blocked chains |
+| Run full `prepare-pr-for-merge` per stack / standalone PR | Reimplement `gh stack` logic in this file |
+| Babysit **every layer** until green | Report batch "done" while any layer fails checks |
+| Report blocked stacks with parent | Run `gh stack merge` without permission |
 
 ## Relationship to other skills
 

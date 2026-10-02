@@ -96,7 +96,9 @@ From [`test-plan.md`](../../../docs/rust-migration/test-plan.md) and
 
 Each PR in the stack:
 
-1. **Builds on the previous PR's branch** (not necessarily `master`) — stacked PRs
+1. **Builds on the previous PR's branch** (not necessarily `master`) — chained for
+   GitHub **stacked pull requests** (`gh stack link` / `gh stack submit` after
+   implementation)
 2. Has a **narrow title** — `[W3-04 PR1] …`, `[W3-04 PR2] …`
 3. Lists **gates** to run before opening (L0, L1, L2, L3 as applicable)
 4. Maps to a **branch name** — `cursor/<short-desc>-<suffix>` (match repo convention)
@@ -161,6 +163,14 @@ For each PR:
 - `blocked_by` issues satisfied (closed **or** accessible via open PR — record stack base)
 - Whether L2 harness must merge before port PR
 - Whether this stack blocks other issues
+
+### GitHub stack (after implementation)
+
+Note that [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) will
+**link** open PRs into a GitHub stack (`gh stack link`, bottom → top). Path A
+[`prepare-all-prs-for-merge`](../prepare-all-prs-for-merge/SKILL.md) then
+`gh stack sync`s the stack and babysits every layer until the maintainer can run
+`gh stack merge` (agents do not merge).
 
 ## Get user confirmation
 
