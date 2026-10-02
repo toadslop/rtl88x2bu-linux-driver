@@ -481,6 +481,14 @@ void rtw_rust_sreset_ap_info_restore(_adapter *padapter)
 	(void)padapter;
 #endif
 }
+u8 rtw_rust_sreset_error_reset_enabled(void)
+{
+#ifdef DBG_CONFIG_ERROR_RESET
+	return 1;
+#else
+	return 0;
+#endif
+}
 rt_rf_power_state *rtw_rust_sreset_change_rfpwrstate_ptr(_adapter *padapter)
 {
 	return &adapter_to_pwrctl(padapter)->change_rfpwrstate;

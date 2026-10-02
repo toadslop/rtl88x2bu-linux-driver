@@ -27,6 +27,7 @@ drop rtw_rust_sreset_mi_adapter_hdl
 drop rtw_rust_sreset_ips_enter
 drop rtw_rust_sreset_ips_leave
 drop rtw_rust_sreset_ap_info_restore
+drop rtw_rust_sreset_error_reset_enabled
 drop rtw_rust_sreset_change_rfpwrstate_ptr
 drop rtw_rust_sreset_dbg_sreset_cnt_ptr
 drop rtw_rust_sreset_self_dect_fw_ptr

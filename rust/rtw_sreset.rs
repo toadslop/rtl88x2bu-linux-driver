@@ -555,6 +555,7 @@ mod kernel_reset {
     use super::*;
 
     extern "C" {
+        fn rtw_rust_sreset_error_reset_enabled() -> u8;
         fn rtw_rust_sreset_set_ps_mode_active(padapter: Padapter);
         fn rtw_rust_sreset_enter_pwrlock(padapter: Padapter);
         fn rtw_rust_sreset_exit_pwrlock(padapter: Padapter);
@@ -562,7 +563,7 @@ mod kernel_reset {
         fn rtw_rust_sreset_ips_enter(padapter: Padapter);
         fn rtw_rust_sreset_ips_leave(padapter: Padapter);
         fn rtw_rust_sreset_ap_info_restore(padapter: Padapter);
-        fn rtw_rust_sreset_change_rfpwrstate_ptr(padapter: Padapter) -> *mut u8;
+        fn rtw_rust_sreset_change_rfpwrstate_ptr(padapter: Padapter) -> *mut i32;
         fn rtw_rust_sreset_dbg_sreset_cnt_ptr(padapter: Padapter) -> *mut u32;
         fn rtw_rust_sreset_self_dect_fw_ptr(padapter: Padapter) -> *mut u8;
         fn rtw_rust_sreset_rx_cnt_ptr(padapter: Padapter) -> *mut u8;
@@ -573,6 +574,9 @@ mod kernel_reset {
             return;
         }
         unsafe {
+            if rtw_rust_sreset_error_reset_enabled() == 0 {
+                return;
+            }
             let err = kernel::wifi_error_status(padapter);
             if !err.is_null() {
                 *err = WIFI_STATUS_SUCCESS;
@@ -585,7 +589,7 @@ mod kernel_reset {
             }
             let rf = rtw_rust_sreset_change_rfpwrstate_ptr(padapter);
             if !rf.is_null() {
-                *rf = RF_OFF as u8;
+                *rf = RF_OFF;
             }
             rtw_rust_sreset_mi_adapter_hdl(padapter, 0);
             rtw_rust_sreset_ips_enter(padapter);
