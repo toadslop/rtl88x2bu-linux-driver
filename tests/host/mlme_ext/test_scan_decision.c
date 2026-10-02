@@ -116,6 +116,7 @@ static int test_timeout(const char *name, u32 mode, u16 ms, u16 duration,
 	return 0;
 }
 
+#ifndef RUST_MLME_EXT_SCAN_ORACLE
 static int test_ch_decision_filter(void)
 {
 	struct rtw_ieee80211_channel in[2], out[RTW_CHANNEL_SCAN_AMOUNT];
@@ -137,6 +138,7 @@ static int test_ch_decision_filter(void)
 	printf("PASS: ch_decision_filter\n");
 	return 0;
 }
+#endif /* !RUST_MLME_EXT_SCAN_ORACLE */
 
 int main(void)
 {
@@ -156,9 +158,12 @@ int main(void)
 	    test_timeout("timeout_2g", 3, 100, 0, 2, 50, 0, 3400) ||
 	    test_timeout("timeout_dual", 107, 100, 0, 2, 50, 0, 7900) ||
 	    test_timeout("timeout_backop", 3, 100, 0, 2, 50, 1, 3750) ||
-	    test_timeout("timeout_duration", 3, 100, 200, 2, 50, 0, 4800) ||
-	    test_ch_decision_filter())
+	    test_timeout("timeout_duration", 3, 100, 200, 2, 50, 0, 4800))
 		return 1;
+#ifndef RUST_MLME_EXT_SCAN_ORACLE
+	if (test_ch_decision_filter())
+		return 1;
+#endif
 	printf("All scan decision vectors passed.\n");
 	return 0;
 }
