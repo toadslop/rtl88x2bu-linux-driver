@@ -1116,7 +1116,10 @@ u8 rtw_ps_annc(_adapter *adapter, bool ps);
 
 /*
  * States not yet ported in Rust (P2P listen transition, SW antdiv back-to-back).
- * Returns 1 if the current state was handled (caller should continue FSM loop).
+ * Return 0 if the current state is not an aux state.
+ * Return 1 if handled and the Rust FSM should continue in the same invocation
+ *       (C `goto operation_by_state` — SCAN_P2P_LISTEN only).
+ * Return 2 if handled and the Rust FSM should break (timer-driven next step).
  */
 u8 rtw_rust_sitesurvey_aux_state(_adapter *padapter)
 {
@@ -1131,7 +1134,7 @@ u8 rtw_rust_sitesurvey_aux_state(_adapter *padapter)
 		ss->is_sw_antdiv_bl_scan = 1;
 		mlmeext_set_scan_next_state(pmlmeext, SCAN_PROCESS);
 		set_survey_timer(pmlmeext, ss->scan_ch_ms);
-		return 1;
+		return 2;
 	}
 #endif
 
@@ -1148,7 +1151,7 @@ u8 rtw_rust_sitesurvey_aux_state(_adapter *padapter)
 			mlmeext_set_scan_state(pmlmeext, SCAN_P2P_LISTEN);
 			_set_timer(&pwdinfo->find_phase_timer,
 				   (u32)((u32)pwdinfo->listen_dwell * 100));
-			return 1;
+			return 2;
 		}
 		if (state == SCAN_P2P_LISTEN) {
 			mlmeext_set_scan_state(pmlmeext, SCAN_PROCESS);

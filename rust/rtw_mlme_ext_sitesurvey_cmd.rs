@@ -491,12 +491,11 @@ pub extern "C" fn sitesurvey_cmd_hdl(padapter: Adapter, pbuf: *mut U8) -> U8 {
                     rtw_rust_sitesurvey_scan_complete(padapter);
                     break;
                 }
-                _ => {
-                    if rtw_rust_sitesurvey_aux_state(padapter) != 0 {
-                        continue;
-                    }
-                    break;
-                }
+                _ => match rtw_rust_sitesurvey_aux_state(padapter) {
+                    1 => continue,
+                    2 => break,
+                    _ => break,
+                },
             }
         }
         H2C_SUCCESS
