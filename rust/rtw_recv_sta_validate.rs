@@ -11,10 +11,10 @@
     unreachable_pub
 )]
 
-#[cfg(host_recv_sta_test)]
-use std::ffi::c_void;
 #[cfg(not(host_recv_sta_test))]
 use core::ffi::c_void;
+#[cfg(host_recv_sta_test)]
+use std::ffi::c_void;
 
 type U8 = u8;
 type U16 = u16;
@@ -114,9 +114,7 @@ mod host {
         if a.is_null() || b.is_null() {
             return false;
         }
-        unsafe {
-            core::slice::from_raw_parts(a, n) == core::slice::from_raw_parts(b, n)
-        }
+        unsafe { core::slice::from_raw_parts(a, n) == core::slice::from_raw_parts(b, n) }
     }
 
     fn ethcpy(dst: &mut [U8; ETH_ALEN], src: *const U8) {
@@ -254,8 +252,7 @@ mod kernel {
             return false;
         }
         unsafe {
-            core::slice::from_raw_parts(a, ETH_ALEN)
-                == core::slice::from_raw_parts(b, ETH_ALEN)
+            core::slice::from_raw_parts(a, ETH_ALEN) == core::slice::from_raw_parts(b, ETH_ALEN)
         }
     }
 
@@ -287,12 +284,8 @@ mod kernel {
             if unsafe { rtw_rust_recv_sta_attrib_eth_eq(rframe, ETH_BSSID, ETH_SRC) } == 0 {
                 return _FAIL;
             }
-            let p = unsafe {
-                rtw_get_stainfo(
-                    rtw_rust_recv_sta_stapriv(adapter),
-                    whdr_off(whdr, 10),
-                )
-            };
+            let p =
+                unsafe { rtw_get_stainfo(rtw_rust_recv_sta_stapriv(adapter), whdr_off(whdr, 10)) };
             unsafe {
                 rtw_rust_recv_sta_out_sta(sta, p);
             }
@@ -341,12 +334,7 @@ mod kernel {
         }
 
         let ta = unsafe { rtw_rust_recv_sta_attrib_get_eth(rframe, ETH_TA) };
-        let p = unsafe {
-            rtw_get_stainfo(
-                rtw_rust_recv_sta_stapriv(adapter),
-                ta as *mut U8,
-            )
-        };
+        let p = unsafe { rtw_get_stainfo(rtw_rust_recv_sta_stapriv(adapter), ta as *mut U8) };
         unsafe {
             rtw_rust_recv_sta_out_sta(sta, p);
         }

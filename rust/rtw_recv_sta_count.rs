@@ -11,10 +11,10 @@
     unreachable_pub
 )]
 
-#[cfg(host_recv_sta_test)]
-use std::ffi::c_void;
 #[cfg(not(host_recv_sta_test))]
 use core::ffi::c_void;
+#[cfg(host_recv_sta_test)]
+use std::ffi::c_void;
 
 type U8 = u8;
 type U32 = u32;
@@ -298,11 +298,7 @@ mod kernel {
 }
 
 #[no_mangle]
-pub extern "C" fn count_rx_stats(
-    adapter: *mut c_void,
-    rframe: *mut c_void,
-    sta: *mut c_void,
-) {
+pub extern "C" fn count_rx_stats(adapter: *mut c_void, rframe: *mut c_void, sta: *mut c_void) {
     #[cfg(host_recv_sta_test)]
     host::count_rx_stats_impl(
         adapter as *mut host::AdapterHost,
