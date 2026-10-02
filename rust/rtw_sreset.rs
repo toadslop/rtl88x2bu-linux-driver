@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! W3-95 sreset lifecycle — Rust port of `core/rtw_sreset.c` helpers (host L2 scope).
+//! W3-95 sreset lifecycle — Rust port of `core/rtw_sreset.c` helpers.
 
 #![allow(
     dead_code,
@@ -15,7 +15,7 @@
 use std::os::raw::c_uint;
 
 #[cfg(not(host_sreset_test))]
-use core::ffi::c_uint;
+use core::ffi::{c_uint, c_ulong, c_void};
 
 const _TRUE: u8 = 1;
 const _FALSE: u8 = 0;
@@ -28,6 +28,9 @@ const WIFI_IF_NOT_EXIST: u8 = 64;
 
 #[cfg(host_sreset_test)]
 type Systime = u32;
+
+#[cfg(not(host_sreset_test))]
+type Systime = c_ulong;
 
 #[cfg(host_sreset_test)]
 #[repr(C)]
@@ -56,6 +59,137 @@ type Padapter = *mut Adapter;
 #[cfg(not(host_sreset_test))]
 type Padapter = *mut c_void;
 
+const WIFI_ASOC_STATE: u32 = 0x0000_0001;
+const WIFI_UNDER_SURVEY: u32 = 0x0000_0800;
+const WIFI_UNDER_LINKING: u32 = 0x0000_0080;
+
+#[cfg(all(host_sreset_test, host_sreset_adapter_test))]
+#[repr(C)]
+pub struct MlmePriv {
+    pub fw_state: u32,
+}
+
+#[cfg(all(host_sreset_test, host_sreset_adapter_test))]
+#[repr(C)]
+pub struct XmitTasklet {
+    pub dummy: i32,
+}
+
+#[cfg(all(host_sreset_test, host_sreset_adapter_test))]
+#[repr(C)]
+pub struct XmitPriv {
+    pub xmit_tasklet: XmitTasklet,
+}
+
+#[cfg(all(host_sreset_test, host_sreset_adapter_test))]
+#[repr(C)]
+pub struct TimerList {
+    pub ms: u32,
+}
+
+#[cfg(all(host_sreset_test, host_sreset_adapter_test))]
+#[repr(C)]
+pub struct DvobjPriv {
+    pub dynamic_chk_timer: TimerList,
+}
+
+#[cfg(all(host_sreset_test, host_sreset_adapter_test))]
+#[repr(C)]
+pub struct NetDevice {
+    pub dummy: i32,
+}
+
+#[cfg(all(host_sreset_test, host_sreset_adapter_test))]
+#[repr(C)]
+pub struct HostAdapter {
+    pub dvobj: DvobjPriv,
+    pub mlmepriv: MlmePriv,
+    pub xmitpriv: XmitPriv,
+    pub pnetdev: *mut NetDevice,
+    #[cfg(CONFIG_CONCURRENT_MODE)]
+    pub adapter_type: u8,
+}
+
+#[cfg(all(host_sreset_test, host_sreset_adapter_test))]
+type HostPadapter = *mut HostAdapter;
+
+#[cfg(all(host_sreset_test, host_sreset_adapter_test))]
+const HOST_PRIMARY_ADAPTER: u8 = 0;
+#[cfg(all(host_sreset_test, host_sreset_adapter_test))]
+const HOST_VIRTUAL_ADAPTER: u8 = 1;
+
+#[cfg(all(host_sreset_test, host_sreset_adapter_test))]
+fn host_is_primary_adapter(adapter: &HostAdapter) -> bool {
+    #[cfg(CONFIG_CONCURRENT_MODE)]
+    {
+        adapter.adapter_type == HOST_PRIMARY_ADAPTER
+    }
+    #[cfg(not(CONFIG_CONCURRENT_MODE))]
+    {
+        let _ = adapter;
+        true
+    }
+}
+
+#[cfg(all(host_sreset_test, host_sreset_adapter_test))]
+mod host_adapter {
+    use super::*;
+
+    extern "C" {
+        fn host_sreset_check_fwstate(m: *mut MlmePriv, s: i32) -> i32;
+        fn host_sreset_rtw_netif_stop_queue(dev: *mut NetDevice);
+        fn host_sreset_rtw_netif_wake_queue(dev: *mut NetDevice);
+        fn host_sreset_rtw_cancel_all_timer(padapter: HostPadapter);
+        fn host_sreset_tasklet_kill(t: *mut XmitTasklet);
+        fn host_sreset_tasklet_hi_schedule(t: *mut XmitTasklet);
+        fn host_sreset_rtw_scan_abort(padapter: HostPadapter);
+        fn host_sreset_rtw_set_to_roam(padapter: HostPadapter, to_roam: u8);
+        fn host_sreset_rtw_join_timeout_handler(padapter: HostPadapter);
+        fn host_sreset_restore_network_status(padapter: HostPadapter);
+        fn host_sreset_set_timer(t: *mut TimerList, ms: u32);
+    }
+
+    fn check_fwstate(m: &MlmePriv, mask: u32) -> bool {
+        unsafe { host_sreset_check_fwstate(m as *const _ as *mut MlmePriv, mask as i32) != 0 }
+    }
+
+    pub fn stop_adapter(padapter: HostPadapter) {
+        if padapter.is_null() {
+            return;
+        }
+        unsafe {
+            let pnetdev = (*padapter).pnetdev;
+            host_sreset_rtw_netif_stop_queue(pnetdev);
+            host_sreset_rtw_cancel_all_timer(padapter);
+            host_sreset_tasklet_kill(&mut (*padapter).xmitpriv.xmit_tasklet);
+            if check_fwstate(&(*padapter).mlmepriv, WIFI_UNDER_SURVEY) {
+                host_sreset_rtw_scan_abort(padapter);
+            }
+            if check_fwstate(&(*padapter).mlmepriv, WIFI_UNDER_LINKING) {
+                host_sreset_rtw_set_to_roam(padapter, 0);
+                host_sreset_rtw_join_timeout_handler(padapter);
+            }
+        }
+    }
+
+    pub fn start_adapter(padapter: HostPadapter) {
+        if padapter.is_null() {
+            return;
+        }
+        unsafe {
+            let pnetdev = (*padapter).pnetdev;
+            if check_fwstate(&(*padapter).mlmepriv, WIFI_ASOC_STATE) {
+                host_sreset_restore_network_status(padapter);
+            }
+            host_sreset_tasklet_hi_schedule(&mut (*padapter).xmitpriv.xmit_tasklet);
+            if host_is_primary_adapter(&*padapter) {
+                host_sreset_set_timer(&mut (*padapter).dvobj.dynamic_chk_timer, 2000);
+            }
+            host_sreset_rtw_netif_wake_queue(pnetdev);
+        }
+    }
+}
+
 #[cfg(host_sreset_test)]
 static mut G_REG_TXDMA: u32 = 0;
 
@@ -76,6 +210,94 @@ pub extern "C" fn host_sreset_clear_reg_reads() {
 #[cfg(host_sreset_test)]
 fn hal_data(adapter: Padapter) -> *mut HalData {
     unsafe { &mut (*adapter).HalData }
+}
+
+#[cfg(not(host_sreset_test))]
+mod kernel {
+    use super::*;
+
+    extern "C" {
+        fn rtw_rust_sreset_mutex_init(padapter: Padapter);
+        fn rtw_rust_sreset_silent_inprogress_ptr(padapter: Padapter) -> *mut u8;
+        fn rtw_rust_sreset_wifi_error_status_ptr(padapter: Padapter) -> *mut u8;
+        fn rtw_rust_sreset_last_tx_time_ptr(padapter: Padapter) -> *mut Systime;
+        fn rtw_rust_sreset_last_tx_complete_time_ptr(padapter: Padapter) -> *mut Systime;
+        fn rtw_rust_sreset_read32(padapter: Padapter, addr: u32) -> u32;
+        fn rtw_rust_sreset_check_fwstate(padapter: Padapter, state: u32) -> u8;
+        fn rtw_rust_sreset_netif_stop_queue(padapter: Padapter);
+        fn rtw_rust_sreset_netif_wake_queue(padapter: Padapter);
+        fn rtw_rust_sreset_cancel_all_timer(padapter: Padapter);
+        fn rtw_rust_sreset_tasklet_kill(padapter: Padapter);
+        fn rtw_rust_sreset_tasklet_hi_schedule(padapter: Padapter);
+        fn rtw_rust_sreset_scan_abort(padapter: Padapter);
+        fn rtw_rust_sreset_set_to_roam(padapter: Padapter, to_roam: u8);
+        fn rtw_rust_sreset_join_timeout_handler(padapter: Padapter);
+        fn rtw_rust_sreset_restore_network_status(padapter: Padapter);
+        fn rtw_rust_sreset_set_dynamic_chk_timer(padapter: Padapter, ms: u32);
+        fn rtw_rust_sreset_is_primary_adapter(padapter: Padapter) -> u8;
+    }
+
+    pub fn mutex_init(padapter: Padapter) {
+        unsafe { rtw_rust_sreset_mutex_init(padapter) };
+    }
+
+    pub fn silent_inprogress(padapter: Padapter) -> *mut u8 {
+        unsafe { rtw_rust_sreset_silent_inprogress_ptr(padapter) }
+    }
+
+    pub fn wifi_error_status(padapter: Padapter) -> *mut u8 {
+        unsafe { rtw_rust_sreset_wifi_error_status_ptr(padapter) }
+    }
+
+    pub fn last_tx_time(padapter: Padapter) -> *mut Systime {
+        unsafe { rtw_rust_sreset_last_tx_time_ptr(padapter) }
+    }
+
+    pub fn last_tx_complete_time(padapter: Padapter) -> *mut Systime {
+        unsafe { rtw_rust_sreset_last_tx_complete_time_ptr(padapter) }
+    }
+
+    pub fn read32(padapter: Padapter, addr: u32) -> u32 {
+        unsafe { rtw_rust_sreset_read32(padapter, addr) }
+    }
+
+    fn check_fwstate(padapter: Padapter, state: u32) -> bool {
+        unsafe { rtw_rust_sreset_check_fwstate(padapter, state) != 0 }
+    }
+
+    pub fn stop_adapter(padapter: Padapter) {
+        if padapter.is_null() {
+            return;
+        }
+        unsafe {
+            rtw_rust_sreset_netif_stop_queue(padapter);
+            rtw_rust_sreset_cancel_all_timer(padapter);
+            rtw_rust_sreset_tasklet_kill(padapter);
+            if check_fwstate(padapter, WIFI_UNDER_SURVEY) {
+                rtw_rust_sreset_scan_abort(padapter);
+            }
+            if check_fwstate(padapter, WIFI_UNDER_LINKING) {
+                rtw_rust_sreset_set_to_roam(padapter, 0);
+                rtw_rust_sreset_join_timeout_handler(padapter);
+            }
+        }
+    }
+
+    pub fn start_adapter(padapter: Padapter) {
+        if padapter.is_null() {
+            return;
+        }
+        unsafe {
+            if check_fwstate(padapter, WIFI_ASOC_STATE) {
+                rtw_rust_sreset_restore_network_status(padapter);
+            }
+            rtw_rust_sreset_tasklet_hi_schedule(padapter);
+            if rtw_rust_sreset_is_primary_adapter(padapter) != 0 {
+                rtw_rust_sreset_set_dynamic_chk_timer(padapter, 2000);
+            }
+            rtw_rust_sreset_netif_wake_queue(padapter);
+        }
+    }
 }
 
 #[cfg(host_sreset_test)]
@@ -100,6 +322,26 @@ pub extern "C" fn sreset_init_value(padapter: Padapter) {
         p.last_tx_time = 0;
         p.last_tx_complete_time = 0;
     }
+    #[cfg(not(host_sreset_test))]
+    unsafe {
+        kernel::mutex_init(padapter);
+        let inprog = kernel::silent_inprogress(padapter);
+        let err = kernel::wifi_error_status(padapter);
+        let tx = kernel::last_tx_time(padapter);
+        let txc = kernel::last_tx_complete_time(padapter);
+        if !inprog.is_null() {
+            *inprog = _FALSE;
+        }
+        if !err.is_null() {
+            *err = WIFI_STATUS_SUCCESS;
+        }
+        if !tx.is_null() {
+            *tx = 0;
+        }
+        if !txc.is_null() {
+            *txc = 0;
+        }
+    }
 }
 
 #[no_mangle]
@@ -113,6 +355,21 @@ pub extern "C" fn sreset_reset_value(padapter: Padapter) {
         p.wifi_error_status = WIFI_STATUS_SUCCESS;
         p.last_tx_time = 0;
         p.last_tx_complete_time = 0;
+    }
+    #[cfg(not(host_sreset_test))]
+    unsafe {
+        let err = kernel::wifi_error_status(padapter);
+        let tx = kernel::last_tx_time(padapter);
+        let txc = kernel::last_tx_complete_time(padapter);
+        if !err.is_null() {
+            *err = WIFI_STATUS_SUCCESS;
+        }
+        if !tx.is_null() {
+            *tx = 0;
+        }
+        if !txc.is_null() {
+            *txc = 0;
+        }
     }
 }
 
@@ -141,7 +398,28 @@ pub extern "C" fn sreset_get_wifi_status(padapter: Padapter) -> u8 {
         status
     }
     #[cfg(not(host_sreset_test))]
-    WIFI_STATUS_SUCCESS
+    unsafe {
+        let mut status = WIFI_STATUS_SUCCESS;
+        let inprog = kernel::silent_inprogress(padapter);
+        let err = kernel::wifi_error_status(padapter);
+        if inprog.is_null() || err.is_null() {
+            return WIFI_STATUS_SUCCESS;
+        }
+        if *inprog == _TRUE {
+            return status;
+        }
+        let val32 = kernel::read32(padapter, REG_TXDMA_STATUS);
+        if val32 == 0xeaeaeaea {
+            *err = WIFI_IF_NOT_EXIST;
+        } else if val32 != 0 {
+            *err = WIFI_MAC_TXDMA_ERROR;
+        }
+        if *err != WIFI_STATUS_SUCCESS {
+            status = *err & !(USB_READ_PORT_FAIL | USB_WRITE_PORT_FAIL);
+        }
+        *err = WIFI_STATUS_SUCCESS;
+        status
+    }
 }
 
 #[no_mangle]
@@ -152,5 +430,365 @@ pub extern "C" fn sreset_set_wifi_error_status(padapter: Padapter, status: c_uin
     #[cfg(host_sreset_test)]
     unsafe {
         (*hal_data(padapter)).srestpriv.wifi_error_status = status as u8;
+    }
+    #[cfg(not(host_sreset_test))]
+    unsafe {
+        let err = kernel::wifi_error_status(padapter);
+        if !err.is_null() {
+            *err = status as u8;
+        }
+    }
+}
+
+#[cfg(all(host_sreset_test, host_sreset_adapter_test))]
+#[no_mangle]
+pub extern "C" fn sreset_stop_adapter(padapter: HostPadapter) {
+    host_adapter::stop_adapter(padapter);
+}
+
+#[cfg(all(host_sreset_test, host_sreset_adapter_test))]
+#[no_mangle]
+pub extern "C" fn sreset_start_adapter(padapter: HostPadapter) {
+    host_adapter::start_adapter(padapter);
+}
+
+#[cfg(not(host_sreset_test))]
+#[no_mangle]
+pub extern "C" fn sreset_stop_adapter(padapter: Padapter) {
+    kernel::stop_adapter(padapter);
+}
+
+#[cfg(not(host_sreset_test))]
+#[no_mangle]
+pub extern "C" fn sreset_start_adapter(padapter: Padapter) {
+    kernel::start_adapter(padapter);
+}
+
+const RF_OFF: i32 = 2;
+#[cfg(all(host_sreset_test, host_sreset_reset_test))]
+mod host_reset {
+    use super::*;
+
+    #[repr(C)]
+    pub struct SresetPrivReset {
+        pub silent_reset_inprogress: u8,
+        pub wifi_error_status: u8,
+        pub self_dect_fw: u8,
+        pub rx_cnt: u8,
+    }
+
+    #[repr(C)]
+    pub struct HalDataReset {
+        pub srestpriv: SresetPrivReset,
+    }
+
+    #[repr(C)]
+    pub struct PwrctrlPrivReset {
+        pub lock: i32,
+        pub change_rfpwrstate: i32,
+    }
+
+    #[repr(C)]
+    pub struct DebugPrivReset {
+        pub dbg_sreset_cnt: u32,
+    }
+
+    #[repr(C)]
+    pub struct DvobjPrivReset {
+        pub drv_dbg: DebugPrivReset,
+    }
+
+    #[repr(C)]
+    pub struct HostResetAdapter {
+        pub dvobj: *mut DvobjPrivReset,
+        pub hal_data: *mut HalDataReset,
+        pub pwrctl_priv: PwrctrlPrivReset,
+    }
+
+    pub type HostResetPadapter = *mut HostResetAdapter;
+
+    extern "C" {
+        fn host_sreset_reset_set_ps_mode(padapter: HostResetPadapter);
+        fn host_sreset_reset_enter_pwrlock(padapter: HostResetPadapter);
+        fn host_sreset_reset_exit_pwrlock(padapter: HostResetPadapter);
+        fn host_sreset_reset_mi_adapter_hdl(padapter: HostResetPadapter, bstart: u8);
+        fn host_sreset_reset_ips_enter(padapter: HostResetPadapter);
+        fn host_sreset_reset_ips_leave(padapter: HostResetPadapter);
+        fn host_sreset_reset_ap_info_restore(padapter: HostResetPadapter);
+    }
+
+    pub fn reset(padapter: HostResetPadapter) {
+        if padapter.is_null() {
+            return;
+        }
+        unsafe {
+            let a = &mut *padapter;
+            if a.hal_data.is_null() || a.dvobj.is_null() {
+                return;
+            }
+            let psrtpriv = &mut (*a.hal_data).srestpriv;
+            let pwrpriv = &mut a.pwrctl_priv;
+            let pdbgpriv = &mut (*a.dvobj).drv_dbg;
+
+            psrtpriv.wifi_error_status = WIFI_STATUS_SUCCESS;
+            host_sreset_reset_set_ps_mode(padapter);
+            host_sreset_reset_enter_pwrlock(padapter);
+            psrtpriv.silent_reset_inprogress = _TRUE;
+            pwrpriv.change_rfpwrstate = RF_OFF;
+            host_sreset_reset_mi_adapter_hdl(padapter, 0);
+            host_sreset_reset_ips_enter(padapter);
+            host_sreset_reset_ips_leave(padapter);
+            host_sreset_reset_ap_info_restore(padapter);
+            host_sreset_reset_mi_adapter_hdl(padapter, 1);
+            psrtpriv.silent_reset_inprogress = _FALSE;
+            host_sreset_reset_exit_pwrlock(padapter);
+            pdbgpriv.dbg_sreset_cnt += 1;
+            psrtpriv.self_dect_fw = 0;
+            psrtpriv.rx_cnt = 0;
+        }
+    }
+}
+
+#[cfg(not(host_sreset_test))]
+mod kernel_reset {
+    use super::kernel;
+    use super::*;
+
+    extern "C" {
+        fn rtw_rust_sreset_error_reset_enabled() -> u8;
+        fn rtw_rust_sreset_set_ps_mode_active(padapter: Padapter);
+        fn rtw_rust_sreset_enter_pwrlock(padapter: Padapter);
+        fn rtw_rust_sreset_exit_pwrlock(padapter: Padapter);
+        fn rtw_rust_sreset_mi_adapter_hdl(padapter: Padapter, bstart: u8);
+        fn rtw_rust_sreset_ips_enter(padapter: Padapter);
+        fn rtw_rust_sreset_ips_leave(padapter: Padapter);
+        fn rtw_rust_sreset_ap_info_restore(padapter: Padapter);
+        fn rtw_rust_sreset_change_rfpwrstate_ptr(padapter: Padapter) -> *mut i32;
+        fn rtw_rust_sreset_dbg_sreset_cnt_ptr(padapter: Padapter) -> *mut u32;
+        fn rtw_rust_sreset_self_dect_fw_ptr(padapter: Padapter) -> *mut u8;
+        fn rtw_rust_sreset_rx_cnt_ptr(padapter: Padapter) -> *mut u8;
+    }
+
+    pub fn reset(padapter: Padapter) {
+        if padapter.is_null() {
+            return;
+        }
+        unsafe {
+            if rtw_rust_sreset_error_reset_enabled() == 0 {
+                return;
+            }
+            let err = kernel::wifi_error_status(padapter);
+            if !err.is_null() {
+                *err = WIFI_STATUS_SUCCESS;
+            }
+            rtw_rust_sreset_set_ps_mode_active(padapter);
+            rtw_rust_sreset_enter_pwrlock(padapter);
+            let inprog = kernel::silent_inprogress(padapter);
+            if !inprog.is_null() {
+                *inprog = _TRUE;
+            }
+            let rf = rtw_rust_sreset_change_rfpwrstate_ptr(padapter);
+            if !rf.is_null() {
+                *rf = RF_OFF;
+            }
+            rtw_rust_sreset_mi_adapter_hdl(padapter, 0);
+            rtw_rust_sreset_ips_enter(padapter);
+            rtw_rust_sreset_ips_leave(padapter);
+            rtw_rust_sreset_ap_info_restore(padapter);
+            rtw_rust_sreset_mi_adapter_hdl(padapter, 1);
+            if !inprog.is_null() {
+                *inprog = _FALSE;
+            }
+            rtw_rust_sreset_exit_pwrlock(padapter);
+            let cnt = rtw_rust_sreset_dbg_sreset_cnt_ptr(padapter);
+            if !cnt.is_null() {
+                *cnt += 1;
+            }
+            let fw = rtw_rust_sreset_self_dect_fw_ptr(padapter);
+            if !fw.is_null() {
+                *fw = 0;
+            }
+            let rx = rtw_rust_sreset_rx_cnt_ptr(padapter);
+            if !rx.is_null() {
+                *rx = 0;
+            }
+        }
+    }
+}
+
+#[cfg(all(host_sreset_test, host_sreset_reset_test))]
+#[no_mangle]
+pub extern "C" fn sreset_reset(padapter: host_reset::HostResetPadapter) {
+    host_reset::reset(padapter);
+}
+#[cfg(not(host_sreset_test))]
+#[no_mangle]
+pub extern "C" fn sreset_reset(padapter: Padapter) {
+    kernel_reset::reset(padapter);
+}
+
+#[cfg(host_sreset_security_test)]
+mod security_host {
+    const DOT11_AUTH_8021X: u32 = 2;
+    const PRIV_TKIP: u32 = 0x02;
+    const PRIV_AES: u32 = 0x04;
+    const HW_VAR_SEC_CFG: u32 = 0x100;
+    const UNICAST_KEY: i32 = 1;
+
+    #[repr(C)]
+    pub struct WlanNetwork {
+        pub MacAddress: [u8; 6],
+    }
+
+    #[repr(C)]
+    pub struct CurNetwork {
+        pub network: WlanNetwork,
+    }
+
+    #[repr(C)]
+    pub struct MlmePrivSec {
+        pub cur_network: CurNetwork,
+    }
+
+    #[repr(C)]
+    pub struct MlmeExtInfo {
+        pub auth_algo: u32,
+    }
+
+    #[repr(C)]
+    pub struct MlmeExtPriv {
+        pub mlmext_info: MlmeExtInfo,
+    }
+
+    #[repr(C)]
+    pub struct SecurityPriv {
+        pub dot11PrivacyAlgrthm: u32,
+        pub dot118021XGrpKeyid: u8,
+    }
+
+    #[repr(C)]
+    pub struct StaInfo {
+        pub dummy: u8,
+    }
+
+    #[repr(C)]
+    pub struct StaPriv {
+        pub stub_sta: StaInfo,
+    }
+
+    #[repr(C)]
+    pub struct SecurityAdapter {
+        pub mlmepriv: MlmePrivSec,
+        pub mlmeextpriv: MlmeExtPriv,
+        pub securitypriv: SecurityPriv,
+        pub stapriv: StaPriv,
+    }
+
+    type SecAdapter = *mut SecurityAdapter;
+
+    extern "C" {
+        fn get_bssid(m: *mut MlmePrivSec) -> *mut u8;
+        fn rtw_get_stainfo(p: *mut StaPriv, hwaddr: *mut u8) -> *mut StaInfo;
+        fn rtw_hal_set_hwreg(padapter: SecAdapter, variable: u32, val: *mut u8);
+        fn rtw_setstakey_cmd(padapter: SecAdapter, psta: *mut StaInfo, keytype: i32, enqueue: u8);
+        fn rtw_set_key(
+            padapter: SecAdapter,
+            psecuritypriv: *mut SecurityPriv,
+            keyid: i32,
+            set_tx: u8,
+            enqueue: u8,
+        ) -> i32;
+    }
+
+    pub fn restore_security_station(padapter: SecAdapter) {
+        if padapter.is_null() {
+            return;
+        }
+        unsafe {
+            let mlmepriv = &mut (*padapter).mlmepriv;
+            let pstapriv = &mut (*padapter).stapriv;
+            let pmlmeinfo = &mut (*padapter).mlmeextpriv.mlmext_info;
+            let mut val8 = if pmlmeinfo.auth_algo == DOT11_AUTH_8021X {
+                0xcc_u8
+            } else {
+                0xcf_u8
+            };
+            rtw_hal_set_hwreg(padapter, HW_VAR_SEC_CFG, &mut val8);
+            let priv_alg = (*padapter).securitypriv.dot11PrivacyAlgrthm;
+            if priv_alg == PRIV_TKIP || priv_alg == PRIV_AES {
+                let psta = rtw_get_stainfo(pstapriv, get_bssid(mlmepriv));
+                if !psta.is_null() {
+                    rtw_setstakey_cmd(padapter, psta, UNICAST_KEY, 0);
+                    let sp = &mut (*padapter).securitypriv;
+                    rtw_set_key(padapter, sp, sp.dot118021XGrpKeyid as i32, 0, 0);
+                }
+            }
+        }
+    }
+}
+
+#[cfg(host_sreset_security_test)]
+#[no_mangle]
+pub extern "C" fn sreset_restore_security_station(padapter: *mut security_host::SecurityAdapter) {
+    security_host::restore_security_station(padapter);
+}
+
+#[cfg(all(not(host_sreset_test), not(host_sreset_security_test)))]
+mod security_kernel {
+    use super::*;
+
+    const PRIV_TKIP: u32 = 0x02;
+    const PRIV_AES: u32 = 0x04;
+
+    extern "C" {
+        fn rtw_rust_sreset_sec_cfg_val8(padapter: Padapter) -> u8;
+        fn rtw_rust_sreset_privacy_algrthm(padapter: Padapter) -> u32;
+        fn rtw_rust_sreset_hal_set_hwreg_sec_cfg(padapter: Padapter, val: u8);
+        fn rtw_rust_sreset_get_stainfo(padapter: Padapter) -> u8;
+        fn rtw_rust_sreset_setstakey_unicast(padapter: Padapter);
+        fn rtw_rust_sreset_set_group_key(padapter: Padapter);
+    }
+
+    pub fn restore_security_station(padapter: Padapter) {
+        if padapter.is_null() {
+            return;
+        }
+        unsafe {
+            let val8 = rtw_rust_sreset_sec_cfg_val8(padapter);
+            rtw_rust_sreset_hal_set_hwreg_sec_cfg(padapter, val8);
+            let priv_alg = rtw_rust_sreset_privacy_algrthm(padapter);
+            if priv_alg == PRIV_TKIP || priv_alg == PRIV_AES {
+                if rtw_rust_sreset_get_stainfo(padapter) != 0 {
+                    rtw_rust_sreset_setstakey_unicast(padapter);
+                    rtw_rust_sreset_set_group_key(padapter);
+                }
+            }
+        }
+    }
+}
+
+#[cfg(all(not(host_sreset_test), not(host_sreset_security_test)))]
+#[no_mangle]
+pub extern "C" fn sreset_restore_security_station(padapter: Padapter) {
+    security_kernel::restore_security_station(padapter);
+}
+
+#[no_mangle]
+pub extern "C" fn sreset_inprogress(padapter: Padapter) -> u8 {
+    if padapter.is_null() {
+        return _FALSE;
+    }
+    #[cfg(host_sreset_test)]
+    unsafe {
+        (*hal_data(padapter)).srestpriv.silent_reset_inprogress
+    }
+    #[cfg(not(host_sreset_test))]
+    unsafe {
+        let inprog = kernel::silent_inprogress(padapter);
+        if inprog.is_null() {
+            _FALSE
+        } else {
+            *inprog
+        }
     }
 }
