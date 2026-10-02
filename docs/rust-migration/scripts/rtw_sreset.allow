@@ -32,3 +32,11 @@ drop rtw_rust_sreset_change_rfpwrstate_ptr
 drop rtw_rust_sreset_dbg_sreset_cnt_ptr
 drop rtw_rust_sreset_self_dect_fw_ptr
 drop rtw_rust_sreset_rx_cnt_ptr
+drop rtw_rust_sreset_auth_algo
+drop rtw_rust_sreset_sec_cfg_val8
+drop rtw_rust_sreset_privacy_algrthm
+drop rtw_rust_sreset_grp_keyid
+drop rtw_rust_sreset_hal_set_hwreg_sec_cfg
+drop rtw_rust_sreset_get_stainfo
+drop rtw_rust_sreset_setstakey_unicast
+drop rtw_rust_sreset_set_group_key
