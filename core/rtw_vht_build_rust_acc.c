@@ -49,4 +49,24 @@ u8 rtw_rust_vht_build_vht_highest_rate(_adapter *adapter)
 	return adapter->mlmepriv.vhtpriv.vht_highest_rate;
 }
 
+u16 rtw_rust_vht_build_beamform_cap(_adapter *adapter)
+{
+	return adapter->mlmepriv.vhtpriv.beamform_cap;
+}
+
+u8 rtw_rust_vht_build_ap_bf_is_mu_bfer(_adapter *adapter)
+{
+	return adapter->mlmepriv.vhtpriv.ap_bf_cap.is_mu_bfer;
+}
+
+u8 rtw_rust_vht_build_ap_bf_su_sound_dim(_adapter *adapter)
+{
+	return adapter->mlmepriv.vhtpriv.ap_bf_cap.su_sound_dim;
+}
+
+u8 rtw_rust_vht_build_assoc_ap_vendor(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.mlmext_info.assoc_AP_vendor;
+}
+
 #endif /* CONFIG_RUST_VHT_BUILD && !HOST_VHT_BUILD_TEST */

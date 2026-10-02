@@ -32,7 +32,21 @@ enum HalDefVariable {
     MaxRecvbufSz = 3,
     RxPacketOffset = 4,
     RxStbc = 15,
+    BeamformerCap = 20,
+    BeamformeeCap = 21,
 }
+
+#[cfg(config_beamforming)]
+const BEAMFORMING_VHT_BEAMFORMER_ENABLE: u16 = 1;
+#[cfg(config_beamforming)]
+const BEAMFORMING_VHT_BEAMFORMEE_ENABLE: u16 = 2;
+#[cfg(config_beamforming)]
+const BEAMFORMING_VHT_MU_MIMO_AP_ENABLE: u16 = 4;
+#[cfg(config_beamforming)]
+const BEAMFORMING_VHT_MU_MIMO_STA_ENABLE: u16 = 8;
+
+#[cfg(all(config_beamforming, config_80211ac_vht))]
+const HT_IOT_PEER_BROADCOM: U8 = 3;
 
 extern "C" {
     static VHT_MCS_DATA_RATE: [[[u16; 40]; 2]; 3];
@@ -55,9 +69,18 @@ extern "C" {
     fn rtw_rust_vht_build_stbc_cap(adapter: Adapter) -> U8;
     fn rtw_rust_vht_build_sgi_80m(adapter: Adapter) -> U8;
     fn rtw_rust_vht_build_vht_highest_rate(adapter: Adapter) -> U8;
+    fn rtw_rust_vht_build_beamform_cap(adapter: Adapter) -> u16;
+    fn rtw_rust_vht_build_ap_bf_is_mu_bfer(adapter: Adapter) -> U8;
+    fn rtw_rust_vht_build_ap_bf_su_sound_dim(adapter: Adapter) -> U8;
+    fn rtw_rust_vht_build_assoc_ap_vendor(adapter: Adapter) -> U8;
 }
 
 fn test_flag(v: U8, f: U8) -> bool {
+    (v & f) != 0
+}
+
+#[cfg(config_beamforming)]
+fn test_flag_u16(v: u16, f: u16) -> bool {
     (v & f) != 0
 }
 
@@ -143,6 +166,44 @@ pub extern "C" fn rtw_build_vht_cap_ie(adapter: Adapter, pbuf: *mut U8) -> U32 {
                 &mut rx_stbc_nss as *mut U8 as *mut c_void,
             );
             set_bits_le_1byte(&mut pcap[1..2], 0, 3, rx_stbc_nss);
+        }
+
+        #[cfg(config_beamforming)]
+        {
+            let beamform_cap = rtw_rust_vht_build_beamform_cap(adapter);
+            let mut rf_num: U8 = 0;
+            if test_flag_u16(beamform_cap, BEAMFORMING_VHT_BEAMFORMER_ENABLE) {
+                set_bits_le_1byte(&mut pcap[1..2], 3, 1, 1);
+                rtw_hal_get_def_var(
+                    adapter,
+                    HalDefVariable::BeamformerCap,
+                    &mut rf_num as *mut U8 as *mut c_void,
+                );
+                set_bits_le_1byte(&mut pcap[2..3], 0, 3, rf_num);
+                if test_flag_u16(beamform_cap, BEAMFORMING_VHT_MU_MIMO_AP_ENABLE) {
+                    set_bits_le_1byte(&mut pcap[2..3], 3, 1, 1);
+                }
+            }
+            if test_flag_u16(beamform_cap, BEAMFORMING_VHT_BEAMFORMEE_ENABLE) {
+                set_bits_le_1byte(&mut pcap[1..2], 4, 1, 1);
+                rtw_hal_get_def_var(
+                    adapter,
+                    HalDefVariable::BeamformeeCap,
+                    &mut rf_num as *mut U8 as *mut c_void,
+                );
+                #[cfg(config_80211ac_vht)]
+                if rtw_rust_vht_build_assoc_ap_vendor(adapter) == HT_IOT_PEER_BROADCOM
+                    && rtw_rust_vht_build_ap_bf_is_mu_bfer(adapter) == 0
+                    && rtw_rust_vht_build_ap_bf_su_sound_dim(adapter) == 2
+                    && rf_num >= 2
+                {
+                    rf_num = 2;
+                }
+                set_bits_le_1byte(&mut pcap[1..2], 5, 3, rf_num);
+                if test_flag_u16(beamform_cap, BEAMFORMING_VHT_MU_MIMO_STA_ENABLE) {
+                    set_bits_le_1byte(&mut pcap[2..3], 4, 1, 1);
+                }
+            }
         }
 
         set_bits_le_1byte(&mut pcap[2..3], 5, 1, 0);
