@@ -203,10 +203,7 @@ fn query_ra_short_gi_base(base: &PhyBaseIn, bw: U8) -> U8 {
 }
 
 #[no_mangle]
-pub extern "C" fn update_attrib_phy_info_base(
-    phy_in: *const PhyBaseIn,
-    phy_out: *mut PhyBaseOut,
-) {
+pub extern "C" fn update_attrib_phy_info_base(phy_in: *const PhyBaseIn, phy_out: *mut PhyBaseOut) {
     if phy_in.is_null() || phy_out.is_null() {
         return;
     }
