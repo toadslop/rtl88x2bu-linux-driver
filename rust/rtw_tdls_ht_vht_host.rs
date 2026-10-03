@@ -205,8 +205,34 @@ pub mod vht {
     }
 
     #[repr(C)]
+    pub struct CountryChplan {
+        pub en_11ac: u8,
+    }
+
+    #[repr(C)]
     pub struct RfCtl {
         pub country_ent: *mut c_void,
+    }
+
+    fn country_chplan_en_11ac(ent: *mut c_void) -> u8 {
+        if ent.is_null() {
+            return _TRUE;
+        }
+        unsafe { (*(ent as *const CountryChplan)).en_11ac }
+    }
+
+    fn vht_option_allowed(adapter: &Adapter) -> u8 {
+        let rfctl = &adapter.rfctl;
+        if adapter.registrypriv.vht_enable == 0
+            || is_supported_vht(adapter.registrypriv.wireless_mode) == _FALSE
+        {
+            return _FALSE;
+        }
+        if rfctl.country_ent.is_null() || country_chplan_en_11ac(rfctl.country_ent) != 0 {
+            _TRUE
+        } else {
+            _FALSE
+        }
     }
 
     #[repr(C)]
@@ -293,7 +319,7 @@ pub mod vht {
         }
         let adapter = unsafe { &mut *padapter };
         let sta = unsafe { &mut *ptdls_sta };
-        let pvhtpriv = &mut adapter.mlmepriv.vhtpriv;
+        let vht_option = vht_option_allowed(adapter);
 
         sta.vhtpriv = VhtPriv {
             vht_cap: [0; 12],
@@ -318,15 +344,10 @@ pub mod vht {
             return;
         }
 
-        if adapter.registrypriv.vht_enable != 0
-            && is_supported_vht(adapter.registrypriv.wireless_mode) == _TRUE
-        {
-            sta.vhtpriv.vht_option = _TRUE;
-        } else {
-            sta.vhtpriv.vht_option = _FALSE;
-        }
+        sta.vhtpriv.vht_option = vht_option;
 
         let data = sta.vhtpriv.vht_cap;
+        let pvhtpriv = &mut adapter.mlmepriv.vhtpriv;
         let mut cur_ldpc_cap = 0u8;
         if (pvhtpriv.ldpc_cap & LDPC_VHT_ENABLE_TX) != 0 && le1(&data, 4, 1) != 0 {
             cur_ldpc_cap |= LDPC_VHT_ENABLE_TX | LDPC_VHT_CAP_TX;
