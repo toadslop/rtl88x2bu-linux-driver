@@ -8,7 +8,7 @@ re-deriving GitHub queries and dependency rules in chat.
 Encodes:
 
 - **Path selection** ([`pick-up-work-item`](../../.cursor/skills/pick-up-work-item/SKILL.md))
-- **PR classification** ([`prepare-all-prs-for-merge`](../../.cursor/skills/prepare-all-prs-for-merge/SKILL.md) Phase 1)
+- **PR classification** ([`prepare-all-prs-for-merge`](../../.cursor/skills/prepare-all-prs-for-merge/SKILL.md) Phase 1 — group chains for `gh stack`)
 - **Ready issue selection** ([`select-ready-issue`](../../.cursor/skills/select-ready-issue/SKILL.md))
 
 ### Usage
@@ -52,7 +52,7 @@ Encodes:
 
 | Key | Contents |
 |-----|----------|
-| `prs` | `total`, `oldestOpenNumber`, `eligible`, `skipped`, `needs_prep`, `merge_ready`, `prepQueue`, `stackBlockedOldestFirst` |
+| `prs` | `total`, `oldestOpenNumber`, `eligible`, `skipped`, `needs_prep`, `merge_ready`, `prepQueue`, `stacks`, `standalone`, `stackBlockedOldestFirst` |
 | `issues` | `selected`, `readyCandidates`, `chainHeadBlocked`, `chainHeadInFlight`, `saturation`, `wholeWaveSaturated`, `pathCGap`, `overrideWarning` |
 | `pathDecision` | `path` (`A`/`B`/`C`/`stop`), `reason`, `action` |
 

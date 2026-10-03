@@ -150,6 +150,40 @@ PR body should include:
 - Stack diagram or "PR 2 of 3 — base: `cursor/...`"
 - **Measured Δ** — lines changed vs base (from step 3)
 
+Record each new PR number as you open layers (needed for step 6b).
+
+### 6b. Link PRs into a GitHub stack (`gh stack`)
+
+After the **first** PR opens you have a single layer; after the **final** PR opens
+(and whenever a new layer is added on top of an existing GitHub stack), link the
+full chain on GitHub:
+
+```bash
+gh extension install github/gh-stack   # idempotent
+# Bottom → top order (PR numbers from step 6):
+gh stack link <pr1#> <pr2#> ... <prN#> --base <pr1-base> --open
+```
+
+- `--base` is the bottom layer's trunk (`master` or dependency `headRefName`).
+- Omit `--base` when appending to an existing stack: `gh stack link <stack#> <new-pr#> --open`.
+- Then adopt local tracking: `gh stack checkout <bottom-pr#>` and `gh stack view`.
+
+Optional local tracking during implementation (instead of only linking at the end):
+
+```bash
+gh stack init <pr1-branch> --base <pr1-base>
+# after PR1 commits, before PR2 branch work:
+gh stack add <pr2-branch>
+# after all layers pushed:
+gh stack submit --auto --open
+```
+
+Prefer **`ManagePullRequest` + `gh stack link`** when cloud agents must set PR
+bodies via `create_pr`. Use `submit` when working entirely from the terminal.
+
+Do **not** retarget bases to `master` during implementation — see
+[`prepare-pr-for-merge`](../prepare-pr-for-merge/SKILL.md).
+
 ### 7. Update tracking
 
 - Add `In-flight: <branch>` to the issue via comment if not already noted
@@ -198,8 +232,9 @@ remaining PRs to a hypothetical future confirmation.
 - **Pause** only when the user **explicitly** asked for incremental delivery in
   this session (rare; not the default for Path B pick-up). Babysit still applies
   to the PR you opened before pausing.
-- After the **final** PR opens and babysit passes, summarize the full stack with
-  links and mark workflow end **`stack complete`**.
+- After the **final** PR opens, run **step 6b** (`gh stack link`), babysit passes,
+  then summarize with `gh stack view --short` and mark workflow end
+  **`stack complete`**.
 
 ### 10. When you cannot finish the stack (mandatory tracking)
 
@@ -236,8 +271,9 @@ the remainder is non-trivial (copy the per-PR detail from the plan).
 | Rule | Why |
 |------|-----|
 | Each PR targets its planned base branch | preserves reviewable increments |
-| Do not retarget bases until `prepare-pr-for-merge` | that skill owns landing on `master` |
-| Rebase only when necessary to fix conflicts | prefer adding a fix-up commit on the stack |
+| `gh stack link` after layers exist | leave PRs unlinked on GitHub (always link before handoff) |
+| Do not retarget bases to `master` until maintainer `gh stack merge` | `prepare-pr-for-merge` uses `gh stack sync` |
+| Use `gh stack rebase` / `gh stack sync` for stack-wide updates | manual per-branch rebase of the whole stack |
 | **Every PR ≤ 250 changed lines (target ~200)** | enforced in step 3 before commit — non-negotiable |
 
 ## When implementation fails
@@ -272,5 +308,8 @@ Use **`stack complete`** or **`stack partial — tracked`** — never an open-en
 
 **Follow-up issues filed:** none | #NNN (PR3 remainder — blocker: …)
 
-**Next:** next pick-up will Path A (`prepare-all-prs-for-merge`) when PRs are open
+**GitHub stack:** linked via `gh stack link` — include `gh stack view --short`
+
+**Next:** Path A (`prepare-all-prs-for-merge`) syncs the stack and babysits all
+layers until ready for maintainer **`gh stack merge`**
 ```
