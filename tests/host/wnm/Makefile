@@ -27,8 +27,8 @@ librust_wnm.a: $(RUST_WNM)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on \
 		--crate-type staticlib $(RUST_WNM) -o $@
 
-test_wnm_btm_rust: test_wnm_btm.c librust_wnm.a $(ORACLE_REST) $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ test_wnm_btm.c $(ORACLE_REST) $(HOST_JSON) librust_wnm.a
+test_wnm_btm_rust: test_wnm_btm.c librust_wnm.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_wnm_btm.c $(HOST_JSON) librust_wnm.a
 
 clean:
 	rm -f test_wnm_btm test_wnm_btm_rust librust_wnm.a
