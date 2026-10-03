@@ -23,6 +23,24 @@ void host_scan_set_p2p_social(u8 on) { host_p2p_social = on; }
 void host_scan_set_p2p_needed(u8 on) { host_p2p_needed = on; }
 void host_scan_set_dfs_domain_unknown(u8 on) { host_dfs_unknown = on; }
 
+bool rtw_mlme_band_check(_adapter *adapter, const u32 ch)
+{
+	if (adapter->setband == WIFI_FREQUENCY_BAND_AUTO ||
+	    (adapter->setband == WIFI_FREQUENCY_BAND_2GHZ && ch < 35) ||
+	    (adapter->setband == WIFI_FREQUENCY_BAND_5GHZ && ch > 35))
+		return _TRUE;
+	return _FALSE;
+}
+
+bool rtw_mlme_ignore_chan(_adapter *adapter, const u32 ch)
+{
+	if ((adapter->bandskip & BAND_24G) && ch < 35)
+		return _TRUE;
+	if ((adapter->bandskip & BAND_5G) && ch > 35)
+		return _TRUE;
+	return _FALSE;
+}
+
 systime rtw_get_current_time(void) { return host_now; }
 u32 rtw_get_passing_time_ms(systime s) { (void)s; return host_pass_ms; }
 bool rtw_mi_busy_traffic_check(_adapter *a) { (void)a; return host_busy; }

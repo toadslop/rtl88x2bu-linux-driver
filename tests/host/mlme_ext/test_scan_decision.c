@@ -11,6 +11,7 @@ static void reset(void)
 {
 	struct mi_state z = {0};
 	memset(&ad, 0, sizeof(ad));
+	ad.dvobj.regsty = &ad.registrypriv;
 	host_scan_set_current_time(1000);
 	host_scan_set_passing_time_ms(0);
 	host_scan_set_busy_traffic(0);
@@ -116,6 +117,31 @@ static int test_timeout(const char *name, u32 mode, u16 ms, u16 duration,
 	return 0;
 }
 
+#ifndef RUST_MLME_EXT_SCAN_ORACLE
+static int test_ch_decision_filter(void)
+{
+	struct rtw_ieee80211_channel in[2], out[RTW_CHANNEL_SCAN_AMOUNT];
+	int n;
+
+	memset(&ad, 0, sizeof(ad));
+	ad.dvobj.regsty = &ad.registrypriv;
+	ad.setband = WIFI_FREQUENCY_BAND_AUTO;
+	ad.rfctl.max_chan_nums = MAX_CHANNEL_NUM;
+	ad.rfctl.channel_set[0].ChannelNum = 1;
+	ad.rfctl.channel_set[1].ChannelNum = 6;
+	in[0].hw_value = 1;
+	in[0].flags = RTW_IEEE80211_CHAN_DISABLED;
+	in[1].hw_value = 6;
+	n = rtw_scan_ch_decision(&ad, out, RTW_CHANNEL_SCAN_AMOUNT, in, 2, _TRUE, 0);
+	if (n != 1 || out[0].hw_value != 6) {
+		fprintf(stderr, "ch_decision_filter: n=%d\n", n);
+		return -1;
+	}
+	printf("PASS: ch_decision_filter\n");
+	return 0;
+}
+#endif /* !RUST_MLME_EXT_SCAN_ORACLE */
+
 int main(void)
 {
 	static const u16 passthrough[] = {1, 2, 3, 4, 5, 6};
@@ -136,6 +162,10 @@ int main(void)
 	    test_timeout("timeout_backop", 3, 100, 0, 2, 50, 1, 3750) ||
 	    test_timeout("timeout_duration", 3, 100, 200, 2, 50, 0, 4800))
 		return 1;
+#ifndef RUST_MLME_EXT_SCAN_ORACLE
+	if (test_ch_decision_filter())
+		return 1;
+#endif
 	printf("All scan decision vectors passed.\n");
 	return 0;
 }

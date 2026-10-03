@@ -155,7 +155,7 @@ test-scan-decision-rust: test_scan_decision_rust
 	./test_scan_decision_rust
 
 test_scan_decision_rust: test_scan_decision.c librust_mlme_ext_scan.a $(SCAN_SHIM)
-	$(CC) $(SCAN_CFLAGS) -o $@ test_scan_decision.c $(SCAN_SHIM) librust_mlme_ext_scan.a
+	$(CC) $(SCAN_CFLAGS) -DRUST_MLME_EXT_SCAN_ORACLE -o $@ test_scan_decision.c $(SCAN_SHIM) librust_mlme_ext_scan.a
 
 # Kernel path: --cfg rust_mlme_ext_scan (no host overlay of packed mi_state).
 librust_mlme_ext_scan_kernel.a: $(RUST_MLME_EXT_SCAN)
