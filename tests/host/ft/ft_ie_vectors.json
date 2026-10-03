@@ -4,6 +4,25 @@
       "name": "info_init_default_flags",
       "op": "info_init",
       "expect_flags": 17
+    },
+    {
+      "name": "rsnie_peek_missing",
+      "op": "update_rsnie_peek",
+      "updated_ies_hex": "01088200000000000000",
+      "expect_u8": 0
+    },
+    {
+      "name": "rsnie_peek_present",
+      "op": "update_rsnie_peek",
+      "updated_ies_hex": "3008020100000400",
+      "expect_u8": 1
+    },
+    {
+      "name": "rsnie_write_appends",
+      "op": "update_rsnie_write",
+      "updated_ies_hex": "3008020100000400",
+      "expect_u8": 1,
+      "expect_pktlen": 10
     }
   ]
 }
