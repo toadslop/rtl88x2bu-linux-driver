@@ -19,6 +19,8 @@
 #define RTW_RSON_DENYCONNECT 0x0
 
 #define CONFIG_RTW_REPEATER_SON_ID 0x02040608
+/* Matches RSON_SCORE_DIFF_TH in core/rtw_rson.c */
+#define RSON_SCORE_DIFF_TH 8
 #define _BEACON_IE_OFFSET_ 12
 #define _VENDOR_SPECIFIC_IE_ 221
 #define cpu_to_le32(x) ((u32)(x))

@@ -11,8 +11,11 @@ struct vector {
 	char cand_tlv[256];
 	char comp_mac[20];
 	char comp_tlv[256];
+	char expect_hex[128];
 	int cand_rssi;
 	int comp_rssi;
+	int null_candidate;
+	int block_comp;
 	int expect_int;
 };
 
@@ -53,23 +56,52 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 	host_json_parse_string_in(obj, len, "cand_tlv", v->cand_tlv, sizeof(v->cand_tlv));
 	host_json_parse_string_in(obj, len, "comp_mac", v->comp_mac, sizeof(v->comp_mac));
 	host_json_parse_string_in(obj, len, "comp_tlv", v->comp_tlv, sizeof(v->comp_tlv));
+	host_json_parse_string_in(obj, len, "expect_hex", v->expect_hex,
+				  sizeof(v->expect_hex));
 	host_json_parse_int_in(obj, len, "cand_rssi", &v->cand_rssi);
 	host_json_parse_int_in(obj, len, "comp_rssi", &v->comp_rssi);
+	host_json_parse_int_in(obj, len, "null_candidate", &v->null_candidate);
+	host_json_parse_int_in(obj, len, "block_comp", &v->block_comp);
 	host_json_parse_int_in(obj, len, "expect_int", &v->expect_int);
 	return 0;
+}
+
+static int hex_eq(const u8 *buf, u32 len, const char *expect_hex)
+{
+	u8 expect[64];
+	size_t en = 0;
+
+	if (!expect_hex[0])
+		return 0;
+	if (host_hex_decode(expect_hex, expect, sizeof(expect), &en))
+		return 1;
+	return en != len || memcmp(buf, expect, en);
 }
 
 static int run_vec(struct vector *v)
 {
 	if (!strcmp(v->op, "choose")) {
+		u8 block_mac[ETH_ALEN];
+		size_t bn = 0;
+
 		memset(&g_cand, 0, sizeof(g_cand));
 		memset(&g_comp, 0, sizeof(g_comp));
 		host_rson_set_block_bssid_count(0);
-		if (fill_bss(&g_cand.network, v->cand_mac, v->cand_tlv, v->cand_rssi))
-			return 1;
+		if (v->block_comp && v->comp_mac[0]) {
+			if (host_hex_decode(v->comp_mac, block_mac, ETH_ALEN, &bn))
+				return 1;
+			host_rson_set_block_bssid(0, block_mac);
+			host_rson_set_block_bssid_count(1);
+		}
+		if (!v->null_candidate) {
+			if (fill_bss(&g_cand.network, v->cand_mac, v->cand_tlv, v->cand_rssi))
+				return 1;
+			g_cand_ptr = &g_cand;
+		} else {
+			g_cand_ptr = NULL;
+		}
 		if (fill_bss(&g_comp.network, v->comp_mac, v->comp_tlv, v->comp_rssi))
 			return 1;
-		g_cand_ptr = &g_cand;
 		return rtw_rson_choose(&g_cand_ptr, &g_comp) != v->expect_int;
 	}
 	if (!strcmp(v->op, "append_ie")) {
@@ -82,20 +114,22 @@ static int run_vec(struct vector *v)
 		g_adapter.dvobj.rson_data.hopcnt = 2;
 		g_adapter.dvobj.rson_data.connectible = RTW_RSON_ALLOWCONNECT;
 		rtw_rson_append_ie(&g_adapter, frame, &len);
-		return (int)len != v->expect_int;
+		if ((int)len != v->expect_int)
+			return 1;
+		return hex_eq(frame, len, v->expect_hex);
 	}
 	return 1;
 }
 
 int main(int argc, char **argv)
 {
-	struct vector vecs[8];
+	struct vector vecs[16];
 	size_t count = 0, i;
 	int fail = 0;
 
 	if (argc < 2)
 		return 2;
-	if (host_load_vectors(argv[1], vecs, sizeof(vecs[0]), 8, parse_vec, &count))
+	if (host_load_vectors(argv[1], vecs, sizeof(vecs[0]), 16, parse_vec, &count))
 		return 2;
 	for (i = 0; i < count; i++)
 		fail += run_vec(&vecs[i]);

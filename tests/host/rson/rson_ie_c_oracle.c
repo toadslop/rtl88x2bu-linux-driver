@@ -95,7 +95,7 @@ int rtw_rson_choose(struct wlan_network **candidate, struct wlan_network *compet
 		return _FALSE;
 
 	cand_score = rtw_cal_rson_score(&rson_cand, (*candidate)->network.Rssi);
-	if (comp_score - cand_score > 8)
+	if (comp_score - cand_score > RSON_SCORE_DIFF_TH)
 		return _TRUE;
 	return _FALSE;
 }
