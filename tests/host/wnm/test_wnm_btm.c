@@ -158,6 +158,13 @@ static int run_vec(struct vector *v)
 	} else if (!strcmp(v->op, "reset_btm_state")) {
 		_adapter a;
 
+		/*
+		 * Zero-init cache has validity_time 0; default host_passing_ms 0
+		 * leaves the cache "valid" so reset_btm_cache skips clearing
+		 * preference_en. Match validity_expired seeding so this op is
+		 * self-contained when run alone.
+		 */
+		host_wnm_set_passing_ms(v->passing_ms ? (u32)v->passing_ms : 600);
 		a.mlmepriv.nb_info.preference_en = _TRUE;
 		a.mlmepriv.nb_info.disassoc_waiting = 0;
 		host_wnm_reset_btm_state(&a);
