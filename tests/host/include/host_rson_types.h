@@ -33,6 +33,11 @@ struct dvobj_priv {
 	struct rtw_rson_struct rson_data;
 };
 
+static inline int _rtw_memcmp(const void *s1, const void *s2, size_t n)
+{
+	return memcmp(s1, s2, n) == 0 ? _TRUE : _FALSE;
+}
+
 u8 key_2char2num(u8 hch, u8 lch);
 
 u8 rtw_cal_rson_score(struct rtw_rson_struct *cand_rson_data, NDIS_802_11_RSSI rssi);

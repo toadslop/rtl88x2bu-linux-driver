@@ -36,7 +36,8 @@ static int run_vec(struct vector *v)
 		if (g_dvobj.rson_data.ver != RTW_RSON_VER ||
 		    g_dvobj.rson_data.id != CONFIG_RTW_REPEATER_SON_ID ||
 		    g_dvobj.rson_data.hopcnt != RTW_RSON_HC_NOTREADY ||
-		    g_dvobj.rson_data.connectible != RTW_RSON_DENYCONNECT)
+		    g_dvobj.rson_data.connectible != RTW_RSON_DENYCONNECT ||
+		    g_dvobj.rson_data.loading != 0)
 			return 1;
 		for (size_t i = 0; i < sizeof(g_dvobj.rson_data.res); i++) {
 			if (g_dvobj.rson_data.res[i] != 0xAA)
