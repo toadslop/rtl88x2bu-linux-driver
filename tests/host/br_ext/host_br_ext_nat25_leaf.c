@@ -25,6 +25,10 @@ static int network_hash(unsigned char *na)
 	else if (na[0] == NAT25_PPPOE)
 		x = na[0] ^ na[1] ^ na[2] ^ na[3] ^ na[4] ^ na[5] ^ na[6] ^
 		    na[7] ^ na[8];
+	else if (na[0] == NAT25_IPV6)
+		x = na[1] ^ na[2] ^ na[3] ^ na[4] ^ na[5] ^ na[6] ^ na[7] ^
+		    na[8] ^ na[9] ^ na[10] ^ na[11] ^ na[12] ^ na[13] ^ na[14] ^
+		    na[15] ^ na[16];
 	else {
 		int i;
 
