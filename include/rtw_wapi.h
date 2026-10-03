@@ -182,6 +182,12 @@ typedef struct _WLAN_HEADER_WAPI_EXTENSION {
 
 u32 WapiComparePN(u8 *PN1, u8 *PN2);
 
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_WAPI_PN_CAM)
+void WapiSetIE(_adapter *padapter);
+u8 WapiGetEntryForCamWrite(_adapter *padapter, u8 *pMacAddr, u8 KID, u8 IsMsk);
+u8 WapiGetEntryForCamClear(_adapter *padapter, u8 *pPeerMac, u8 keyid, u8 IsMsk);
+void WapiResetAllCamEntry(_adapter *padapter);
+#endif
 
 void rtw_wapi_init(_adapter *padapter);
 

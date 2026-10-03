@@ -2880,6 +2880,11 @@ $(MODULE_NAME)-y += rust/rtw_mlme_ext_pick_ch.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_sitesurvey_cmd.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_band_ie.o
 $(MODULE_NAME)-y += rust/rtw_cmd_rest.o
+ifeq ($(CONFIG_WAPI_SUPPORT), y)
+ccflags-y += -DCONFIG_RUST_WAPI_PN_CAM
+$(MODULE_NAME)-$(CONFIG_WAPI_SUPPORT) += core/rtw_wapi_pn_cam_rust_acc.o \
+					rust/rtw_wapi.o
+endif
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
