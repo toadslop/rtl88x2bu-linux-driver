@@ -13,9 +13,9 @@ CFLAGS := -Wall -Wextra -Werror -O2 -I$(HOST_INC) \
 HT_CAP_CFLAGS := $(CFLAGS) -DCONFIG_80211N_HT
 VHT_CAP_CFLAGS := $(CFLAGS) -DCONFIG_80211AC_VHT -DCONFIG_BEAMFORMING
 
-.PHONY: all test test-c test-rust test-ht-cap test-vht-cap test-vht-op clean
+.PHONY: all test test-c test-rust test-ht-cap test-ht-cap-rust test-vht-cap test-vht-op clean
 all: test
-test: test-c test-rust test-ht-cap test-vht-cap test-vht-op
+test: test-c test-rust test-ht-cap test-ht-cap-rust test-vht-cap test-vht-op
 
 test-c: test_tdls_lifecycle
 	./test_tdls_lifecycle tdls_lifecycle_vectors.json
@@ -25,6 +25,9 @@ test-rust: test_tdls_lifecycle_rust
 
 test-ht-cap: test_tdls_ht_cap
 	./test_tdls_ht_cap tdls_ht_cap_vectors.json
+
+test-ht-cap-rust: test_tdls_ht_cap_rust
+	./test_tdls_ht_cap_rust tdls_ht_cap_vectors.json
 
 test-vht-op: test_tdls_vht_op
 	./test_tdls_vht_op tdls_vht_op_vectors.json
@@ -47,8 +50,15 @@ test_tdls_lifecycle: test_tdls_lifecycle.c $(SHIM) $(HOST_JSON)
 librust_tdls.a: $(RUST_TDLS)
 	$(RUSTC) -C opt-level=2 --cfg host_tdls_test --crate-type staticlib $(RUST_TDLS) -o $@
 
+librust_tdls_ht.a: $(RUST_TDLS) $(ROOT)/rust/rtw_tdls_ht_vht_host.rs
+	$(RUSTC) -C opt-level=2 --cfg host_tdls_ht_cap_test --crate-type staticlib $(RUST_TDLS) -o $@
+
 test_tdls_lifecycle_rust: test_tdls_lifecycle.c librust_tdls.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_tdls_lifecycle.c $(HOST_JSON) librust_tdls.a
 
+test_tdls_ht_cap_rust: test_tdls_ht_cap.c librust_tdls_ht.a $(HOST_JSON)
+	$(CC) $(HT_CAP_CFLAGS) -o $@ test_tdls_ht_cap.c $(HOST_JSON) librust_tdls_ht.a -lm
+
 clean:
-	rm -f test_tdls_lifecycle test_tdls_lifecycle_rust test_tdls_ht_cap test_tdls_vht_cap test_tdls_vht_op librust_tdls.a
+	rm -f test_tdls_lifecycle test_tdls_lifecycle_rust test_tdls_ht_cap test_tdls_ht_cap_rust \
+		test_tdls_vht_cap test_tdls_vht_op librust_tdls.a librust_tdls_ht.a
