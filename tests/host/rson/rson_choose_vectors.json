@@ -1,0 +1,97 @@
+{
+  "vectors": [
+    {
+      "name": "choose_competitor_wins",
+      "op": "choose",
+      "cand_mac": "aaaaaaaaaaaa",
+      "cand_tlv": "dd0bfafafa0108060402050100",
+      "cand_rssi": -50,
+      "comp_mac": "bbbbbbbbbbbb",
+      "comp_tlv": "dd0bfafafa0108060402010100",
+      "comp_rssi": -30,
+      "expect_int": 1
+    },
+    {
+      "name": "choose_keep_candidate",
+      "op": "choose",
+      "cand_mac": "aaaaaaaaaaaa",
+      "cand_tlv": "dd0bfafafa0108060402010100",
+      "cand_rssi": -40,
+      "comp_mac": "bbbbbbbbbbbb",
+      "comp_tlv": "dd0bfafafa0108060402020100",
+      "comp_rssi": -45,
+      "expect_int": 0
+    },
+    {
+      "name": "choose_blocked_competitor",
+      "op": "choose",
+      "block_comp": 1,
+      "cand_mac": "aaaaaaaaaaaa",
+      "cand_tlv": "dd0bfafafa0108060402010100",
+      "cand_rssi": -40,
+      "comp_mac": "bbbbbbbbbbbb",
+      "comp_tlv": "dd0bfafafa0108060402010100",
+      "comp_rssi": -30,
+      "expect_int": 0
+    },
+    {
+      "name": "choose_null_candidate_accepts",
+      "op": "choose",
+      "null_candidate": 1,
+      "comp_mac": "bbbbbbbbbbbb",
+      "comp_tlv": "dd0bfafafa0108060402010100",
+      "comp_rssi": -40,
+      "expect_int": 1
+    },
+    {
+      "name": "choose_competitor_not_connected",
+      "op": "choose",
+      "cand_mac": "aaaaaaaaaaaa",
+      "cand_tlv": "dd0bfafafa0108060402010100",
+      "cand_rssi": -40,
+      "comp_mac": "bbbbbbbbbbbb",
+      "comp_tlv": "dd0bfafafa0108060402ff010100",
+      "comp_rssi": -40,
+      "expect_int": 0
+    },
+    {
+      "name": "choose_score_diff_at_threshold",
+      "op": "choose",
+      "cand_mac": "aaaaaaaaaaaa",
+      "cand_tlv": "dd0bfafafa0108060402020100",
+      "cand_rssi": -40,
+      "comp_mac": "bbbbbbbbbbbb",
+      "comp_tlv": "dd0bfafafa0108060402010100",
+      "comp_rssi": -60,
+      "expect_int": 0
+    },
+    {
+      "name": "choose_score_diff_above_threshold",
+      "op": "choose",
+      "cand_mac": "aaaaaaaaaaaa",
+      "cand_tlv": "dd0bfafafa0108060402020100",
+      "cand_rssi": -40,
+      "comp_mac": "bbbbbbbbbbbb",
+      "comp_tlv": "dd0bfafafa0108060402010100",
+      "comp_rssi": -50,
+      "expect_int": 1
+    },
+    {
+      "name": "choose_wrong_rson_id",
+      "op": "choose",
+      "cand_mac": "aaaaaaaaaaaa",
+      "cand_tlv": "dd0bfafafa0108060402010100",
+      "cand_rssi": -40,
+      "comp_mac": "bbbbbbbbbbbb",
+      "comp_tlv": "dd0bfafafa0101020304010100",
+      "comp_rssi": -30,
+      "expect_int": 0
+    },
+    {
+      "name": "append_ie_len",
+      "op": "append_ie",
+      "expect_int": 29,
+      "expect_hex": "dd1bfafafa0108060402020100aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ]
+}
