@@ -1,0 +1,33 @@
+{
+  "vectors": [
+    {
+      "name": "offset_minimal",
+      "op": "candidates_offset",
+      "frame_hex": "00000404050507",
+      "expect_offset": 7
+    },
+    {
+      "name": "hdr_minimal",
+      "op": "req_hdr_parsing",
+      "frame_hex": "00000404050507",
+      "expect_dialog": 4,
+      "expect_req_mode": 4,
+      "expect_disassoc": 1285,
+      "expect_validity": 7,
+      "expect_term_id": 0
+    },
+    {
+      "name": "hdr_with_term",
+      "op": "req_hdr_parsing",
+      "frame_hex": "0000080805050704080123456789abcdef7856",
+      "expect_dialog": 8,
+      "expect_req_mode": 8,
+      "expect_disassoc": 1285,
+      "expect_validity": 7,
+      "expect_term_id": 4,
+      "expect_term_len": 8,
+      "expect_tsf_hex": "0123456789abcdef",
+      "expect_duration": 22136
+    }
+  ]
+}
