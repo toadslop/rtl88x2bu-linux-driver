@@ -6,17 +6,25 @@ HOST_JSON := ../crypto/host_vector_json.c
 CC := gcc
 CFLAGS := -Wall -Wextra -Werror -O2 -I$(HOST_INC) -DCONFIG_RTW_REPEATER_SON
 
-.PHONY: all test test-score clean
+CORE_ORACLE := rson_core_c_oracle.c host_rson_util.c
+
+.PHONY: all test test-score test-core clean
 
 all: test
 
-test: test-score
+test: test-score test-core
 
 test-score: test_rson_score
 	./test_rson_score rson_score_vectors.json
 
+test-core: test_rson_core
+	./test_rson_core rson_core_vectors.json
+
 test_rson_score: test_rson_score.c rson_score_c_oracle.c $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_rson_score.c rson_score_c_oracle.c $(HOST_JSON)
 
+test_rson_core: test_rson_core.c $(CORE_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_rson_core.c $(CORE_ORACLE) $(HOST_JSON)
+
 clean:
-	rm -f test_rson_score
+	rm -f test_rson_score test_rson_core
