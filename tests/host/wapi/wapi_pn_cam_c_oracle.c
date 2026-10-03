@@ -21,6 +21,7 @@ void _rtw_memset(void *p, int v, size_t n)
 void host_wapi_adapter_init(_adapter *a)
 {
 	_rtw_memset(a, 0, sizeof(*a));
+	WapiResetAllCamEntry(a);
 }
 
 void WapiSetIE(_adapter *padapter)
@@ -86,4 +87,73 @@ u32 WapiComparePN(u8 *PN1, u8 *PN2)
 	}
 
 	return 0;
+}
+
+u8 WapiGetEntryForCamWrite(_adapter *padapter, u8 *pMacAddr, u8 KID, u8 IsMsk)
+{
+	RT_WAPI_T *pWapiInfo = &padapter->wapiInfo;
+	u8 i;
+	u8 ret = 0xff;
+
+	for (i = 0; i < WAPI_CAM_ENTRY_NUM; i++) {
+		if (pWapiInfo->wapiCamEntry[i].IsUsed &&
+		    (_rtw_memcmp(pMacAddr, pWapiInfo->wapiCamEntry[i].PeerMacAddr,
+				 ETH_ALEN) == _TRUE) &&
+		    pWapiInfo->wapiCamEntry[i].keyidx == KID &&
+		    pWapiInfo->wapiCamEntry[i].type == IsMsk) {
+			ret = pWapiInfo->wapiCamEntry[i].entry_idx;
+			break;
+		}
+	}
+
+	if (i == WAPI_CAM_ENTRY_NUM) {
+		for (i = 0; i < WAPI_CAM_ENTRY_NUM; i++) {
+			if (pWapiInfo->wapiCamEntry[i].IsUsed == 0) {
+				pWapiInfo->wapiCamEntry[i].IsUsed = 1;
+				pWapiInfo->wapiCamEntry[i].type = IsMsk;
+				pWapiInfo->wapiCamEntry[i].keyidx = KID;
+				_rtw_memcpy(pWapiInfo->wapiCamEntry[i].PeerMacAddr,
+					    pMacAddr, ETH_ALEN);
+				ret = pWapiInfo->wapiCamEntry[i].entry_idx;
+				break;
+			}
+		}
+	}
+
+	return ret;
+}
+
+u8 WapiGetEntryForCamClear(_adapter *padapter, u8 *pPeerMac, u8 keyid, u8 IsMsk)
+{
+	RT_WAPI_T *pWapiInfo = &padapter->wapiInfo;
+	u8 i;
+
+	for (i = 0; i < WAPI_CAM_ENTRY_NUM; i++) {
+		if (pWapiInfo->wapiCamEntry[i].IsUsed &&
+		    (_rtw_memcmp(pPeerMac, pWapiInfo->wapiCamEntry[i].PeerMacAddr,
+				 ETH_ALEN) == _TRUE) &&
+		    pWapiInfo->wapiCamEntry[i].keyidx == keyid &&
+		    pWapiInfo->wapiCamEntry[i].type == IsMsk) {
+			pWapiInfo->wapiCamEntry[i].IsUsed = 0;
+			pWapiInfo->wapiCamEntry[i].keyidx = 2;
+			_rtw_memset(pWapiInfo->wapiCamEntry[i].PeerMacAddr, 0, ETH_ALEN);
+
+			return pWapiInfo->wapiCamEntry[i].entry_idx;
+		}
+	}
+
+	return 0xff;
+}
+
+void WapiResetAllCamEntry(_adapter *padapter)
+{
+	RT_WAPI_T *pWapiInfo = &padapter->wapiInfo;
+	int i;
+
+	for (i = 0; i < WAPI_CAM_ENTRY_NUM; i++) {
+		_rtw_memset(pWapiInfo->wapiCamEntry[i].PeerMacAddr, 0, ETH_ALEN);
+		pWapiInfo->wapiCamEntry[i].IsUsed = 0;
+		pWapiInfo->wapiCamEntry[i].keyidx = 2;
+		pWapiInfo->wapiCamEntry[i].entry_idx = (u8)(4 + i * 2);
+	}
 }
