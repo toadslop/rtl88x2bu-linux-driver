@@ -131,7 +131,10 @@ pub extern "C" fn host_nat25_has_expired(
         return 0;
     }
     unsafe {
-        c_int::from(time_before_eq((*fdb).ageing_timer, host_nat25_timeout(_priv)))
+        c_int::from(time_before_eq(
+            (*fdb).ageing_timer,
+            host_nat25_timeout(_priv),
+        ))
     }
 }
 
