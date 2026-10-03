@@ -47,11 +47,7 @@ pub extern "C" fn host_wapi_adapter_init(a: *mut Adapter) {
         return;
     }
     unsafe {
-        core::ptr::write_bytes(
-            a as *mut u8,
-            0,
-            core::mem::size_of::<Adapter>(),
-        );
+        core::ptr::write_bytes(a as *mut u8, 0, core::mem::size_of::<Adapter>());
         WapiResetAllCamEntry(a);
     }
 }
