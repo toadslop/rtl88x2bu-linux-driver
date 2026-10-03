@@ -220,8 +220,13 @@ pub extern "C" fn host_ft_update_ftie(
         if pie.is_null() {
             return _FAIL;
         }
-        *pframe = rtw_set_ie(*pframe, _FTIE_ as S32, len as U32, pie.add(2), &mut (*pattrib).pktlen);
+        *pframe = rtw_set_ie(
+            *pframe,
+            _FTIE_ as S32,
+            len as U32,
+            pie.add(2),
+            &mut (*pattrib).pktlen,
+        );
         _SUCCESS
     }
 }
-
