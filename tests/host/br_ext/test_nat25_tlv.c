@@ -100,12 +100,12 @@ fail:
 
 int main(int argc, char **argv)
 {
-	struct vector vecs[8];
+	struct vector vecs[24];
 	size_t count = 0;
 	int bad = 0;
 	const char *path = argc > 1 ? argv[1] : "nat25_tlv_vectors.json";
 
-	if (host_load_vectors(path, vecs, sizeof(vecs[0]), 8, parse_vec, &count))
+	if (host_load_vectors(path, vecs, sizeof(vecs[0]), 24, parse_vec, &count))
 		return 1;
 	for (size_t i = 0; i < count; i++)
 		bad |= run_one(&vecs[i]);

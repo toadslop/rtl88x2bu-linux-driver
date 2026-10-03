@@ -23,11 +23,45 @@ int host_update_nd_link_layer_addr(u8 *data, int len, u8 *replace_mac)
 	struct icmp6hdr *icmphdr = (struct icmp6hdr *)data;
 	unsigned char *mac;
 
-	if (icmphdr->icmp6_type == NDISC_ROUTER_SOLICITATION && len >= 8) {
-		mac = scan_tlv(&data[8], len - 8, 1, 1);
-		if (mac) {
-			memcpy(mac, replace_mac, 6);
-			return 1;
+	if (icmphdr->icmp6_type == NDISC_ROUTER_SOLICITATION) {
+		if (len >= 8) {
+			mac = scan_tlv(&data[8], len - 8, 1, 1);
+			if (mac) {
+				memcpy(mac, replace_mac, 6);
+				return 1;
+			}
+		}
+	} else if (icmphdr->icmp6_type == NDISC_ROUTER_ADVERTISEMENT) {
+		if (len >= 16) {
+			mac = scan_tlv(&data[16], len - 16, 1, 1);
+			if (mac) {
+				memcpy(mac, replace_mac, 6);
+				return 1;
+			}
+		}
+	} else if (icmphdr->icmp6_type == NDISC_NEIGHBOUR_SOLICITATION) {
+		if (len >= 24) {
+			mac = scan_tlv(&data[24], len - 24, 1, 1);
+			if (mac) {
+				memcpy(mac, replace_mac, 6);
+				return 1;
+			}
+		}
+	} else if (icmphdr->icmp6_type == NDISC_NEIGHBOUR_ADVERTISEMENT) {
+		if (len >= 24) {
+			mac = scan_tlv(&data[24], len - 24, 2, 1);
+			if (mac) {
+				memcpy(mac, replace_mac, 6);
+				return 1;
+			}
+		}
+	} else if (icmphdr->icmp6_type == NDISC_REDIRECT) {
+		if (len >= 40) {
+			mac = scan_tlv(&data[40], len - 40, 2, 1);
+			if (mac) {
+				memcpy(mac, replace_mac, 6);
+				return 1;
+			}
 		}
 	}
 	return 0;
@@ -37,6 +71,7 @@ void host_convert_ipv6_mac_to_mc(struct host_sk_buff *skb)
 {
 	struct ipv6hdr *iph = (struct ipv6hdr *)(skb->data + ETH_HLEN);
 
+	/* Driver also sets skb->pkt_type under __LINUX_2_6__; host_sk_buff has no pkt_type. */
 	skb->data[0] = 0x33;
 	skb->data[1] = 0x33;
 	memcpy(&skb->data[2], &iph->daddr.s6_addr32[3], 4);

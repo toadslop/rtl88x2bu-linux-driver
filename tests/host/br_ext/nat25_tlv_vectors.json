@@ -10,12 +10,77 @@
       "expect_int": 2
     },
     {
+      "name": "scan_tlv_miss",
+      "op": "scan_tlv",
+      "data_hex": "0201aabbccddeeff",
+      "len": 8,
+      "tag": 1,
+      "len8b": 1,
+      "expect_int": -1
+    },
+    {
       "name": "update_nd_rs",
       "op": "update_nd",
       "data_hex": "85000000000000000101aabbccddeeff",
       "mac_hex": "112233445566",
       "expect_int": 1,
       "expect_hex": "85000000000000000101112233445566"
+    },
+    {
+      "name": "update_nd_ra",
+      "op": "update_nd",
+      "data_hex": "860000000000000000000000000000000101aabbccddeeff",
+      "mac_hex": "112233445566",
+      "expect_int": 1,
+      "expect_hex": "860000000000000000000000000000000101112233445566"
+    },
+    {
+      "name": "update_nd_ns",
+      "op": "update_nd",
+      "data_hex": "8700000000000000000000000000000000000000000000000101aabbccddeeff",
+      "mac_hex": "112233445566",
+      "expect_int": 1,
+      "expect_hex": "8700000000000000000000000000000000000000000000000101112233445566"
+    },
+    {
+      "name": "update_nd_na",
+      "op": "update_nd",
+      "data_hex": "8800000000000000000000000000000000000000000000000201aabbccddeeff",
+      "mac_hex": "112233445566",
+      "expect_int": 1,
+      "expect_hex": "8800000000000000000000000000000000000000000000000201112233445566"
+    },
+    {
+      "name": "update_nd_redirect",
+      "op": "update_nd",
+      "data_hex": "890000000000000000000000000000000000000000000000000000000000000000000000000000000201aabbccddeeff",
+      "mac_hex": "112233445566",
+      "expect_int": 1,
+      "expect_hex": "890000000000000000000000000000000000000000000000000000000000000000000000000000000201112233445566"
+    },
+    {
+      "name": "update_nd_short_rs",
+      "op": "update_nd",
+      "data_hex": "85000000",
+      "mac_hex": "112233445566",
+      "expect_int": 0,
+      "expect_hex": "85000000"
+    },
+    {
+      "name": "update_nd_no_tlv",
+      "op": "update_nd",
+      "data_hex": "8500000000000000",
+      "mac_hex": "112233445566",
+      "expect_int": 0,
+      "expect_hex": "8500000000000000"
+    },
+    {
+      "name": "update_nd_unknown_type",
+      "op": "update_nd",
+      "data_hex": "84000000000000000101aabbccddeeff",
+      "mac_hex": "112233445566",
+      "expect_int": 0,
+      "expect_hex": "84000000000000000101aabbccddeeff"
     },
     {
       "name": "convert_ipv6_mc",
@@ -31,6 +96,24 @@
       "pull_len": 2,
       "expect_int": 0,
       "expect_hex": "01020506070809"
+    },
+    {
+      "name": "skb_pull_past_tail",
+      "op": "skb_pull",
+      "data_hex": "010203040506",
+      "src_off": 2,
+      "pull_len": 5,
+      "expect_int": -1,
+      "expect_hex": "010203040506"
+    },
+    {
+      "name": "skb_pull_len_gt_skb",
+      "op": "skb_pull",
+      "data_hex": "010203",
+      "src_off": 0,
+      "pull_len": 4,
+      "expect_int": -1,
+      "expect_hex": "010203"
     }
   ]
 }
