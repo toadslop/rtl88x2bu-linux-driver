@@ -1512,6 +1512,94 @@ u32 rtw_scan_timeout_decision(_adapter *padapter)
 
 #endif /* scan sparse/backop/timeout block uses CONFIG_RUST_MLME_EXT_SCAN when added */
 
+#if defined(HOST_MLME_EXT_SCAN_TEST) || \
+	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_SCAN_CH)) && \
+	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
+	  !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && !defined(HOST_MLME_EXT_BAND_IE_TEST) && \
+	  !defined(HOST_MLME_EXT_JOIN_CMD_TEST)))
+
+int rtw_scan_ch_decision(_adapter *padapter, struct rtw_ieee80211_channel *out,
+			 u32 out_num, struct rtw_ieee80211_channel *in, u32 in_num,
+			 bool no_sparse, int reason)
+{
+	u32 i;
+	int j;
+	int set_idx;
+	u8 chan;
+	struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
+	struct registry_priv *regsty = dvobj_to_regsty(adapter_to_dvobj(padapter));
+#ifdef CONFIG_RTW_ROAM_QUICKSCAN
+	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+#endif
+
+	_rtw_memset(out, 0, sizeof(struct rtw_ieee80211_channel) * out_num);
+
+#ifdef CONFIG_RTW_ROAM_QUICKSCAN
+	if ((reason == RTW_AUTO_SCAN_REASON_ROAM) && (pmlmeext->quickscan_next)) {
+		pmlmeext->quickscan_next = _FALSE;
+		_rtw_memcpy(out, pmlmeext->roam_ch,
+			    sizeof(struct rtw_ieee80211_channel) * RTW_CHANNEL_SCAN_AMOUNT);
+		return pmlmeext->roam_ch_num;
+	}
+#endif
+
+	j = 0;
+	for (i = 0; i < in_num; i++) {
+		if (!in[i].hw_value || (in[i].flags & RTW_IEEE80211_CHAN_DISABLED))
+			continue;
+		if (rtw_mlme_band_check(padapter, in[i].hw_value) == _FALSE)
+			continue;
+
+		set_idx = rtw_chset_search_ch(rfctl->channel_set, in[i].hw_value);
+		if (set_idx >= 0) {
+			if ((u32)j >= out_num) {
+				RTW_PRINT(FUNC_ADPT_FMT" out_num:%u not enough\n",
+					  FUNC_ADPT_ARG(padapter), out_num);
+				break;
+			}
+
+			_rtw_memcpy(&out[j], &in[i], sizeof(struct rtw_ieee80211_channel));
+
+			if (rfctl->channel_set[set_idx].flags & (RTW_CHF_NO_IR | RTW_CHF_DFS))
+				out[j].flags |= RTW_IEEE80211_CHAN_PASSIVE_SCAN;
+
+			j++;
+		}
+		if ((u32)j >= out_num)
+			break;
+	}
+
+	if (j == 0) {
+		for (i = 0; i < rfctl->max_chan_nums; i++) {
+			chan = rfctl->channel_set[i].ChannelNum;
+			if (rtw_mlme_band_check(padapter, chan) == _TRUE) {
+				if (rtw_mlme_ignore_chan(padapter, chan) == _TRUE)
+					continue;
+
+				if ((u32)j >= out_num) {
+					RTW_PRINT(FUNC_ADPT_FMT" out_num:%u not enough\n",
+						  FUNC_ADPT_ARG(padapter), out_num);
+					break;
+				}
+
+				out[j].hw_value = chan;
+
+				if (rfctl->channel_set[i].flags & (RTW_CHF_NO_IR | RTW_CHF_DFS))
+					out[j].flags |= RTW_IEEE80211_CHAN_PASSIVE_SCAN;
+
+				j++;
+			}
+		}
+	}
+
+	if (!no_sparse && !regsty->wifi_spec && j > 6)
+		j = rtw_scan_sparse(padapter, out, (u8)j);
+
+	return j;
+}
+
+#endif /* rtw_scan_ch_decision (CONFIG_RUST_MLME_EXT_SCAN_CH when swapped) */
+
 #if (defined(HOST_MLME_EXT_SCAN_TEST) && !defined(CONFIG_RUST_MLME_EXT_PICK_CH)) || \
 	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_PICK_CH)) && \
 	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
