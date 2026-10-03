@@ -32,10 +32,19 @@ pub mod ht_cap {
         pub ampu_enable: u8,
     }
 
+    #[repr(C, packed)]
+    pub struct HtCapsElement {
+        pub ht_caps_info: u16,
+        pub ampdu_para: u8,
+        pub mcs_rate: [u8; 16],
+        pub ht_ext_caps: u16,
+        pub beamforming_caps: u32,
+        pub asel_caps: u8,
+    }
+
     #[repr(C)]
     pub struct MlmeExtInfo {
-        pub state: u32,
-        pub ap_ampdu_para: u8,
+        pub ht_caps: HtCapsElement,
     }
 
     #[repr(C)]
@@ -123,24 +132,25 @@ pub mod ht_cap {
         }
 
         let data = sta.htpriv.ht_cap;
-        let max_ampdu_len = if (pmlmeinfo.ap_ampdu_para & 0x3) > (data[2] & 0x3) {
+        let ap_ampdu = pmlmeinfo.ht_caps.ampdu_para;
+        let max_ampdu_len = if (ap_ampdu & 0x3) > (data[2] & 0x3) {
             data[2] & 0x3
         } else {
-            pmlmeinfo.ap_ampdu_para & 0x3
+            ap_ampdu & 0x3
         };
-        let min_mpdu_spacing = if (pmlmeinfo.ap_ampdu_para & 0x1c) > (data[2] & 0x1c) {
-            pmlmeinfo.ap_ampdu_para & 0x1c
+        let min_mpdu_spacing = if (ap_ampdu & 0x1c) > (data[2] & 0x1c) {
+            ap_ampdu & 0x1c
         } else {
             data[2] & 0x1c
         };
         sta.htpriv.rx_ampdu_min_spacing = max_ampdu_len | min_mpdu_spacing;
 
-        let cap_info = cpu_to_le16(ht_cap_info(&sta.htpriv.ht_cap));
-        if phtpriv.sgi_20m == _TRUE && (cap_info & IEEE80211_HT_CAP_SGI_20) != 0 {
+        let cap_info = ht_cap_info(&sta.htpriv.ht_cap);
+        if phtpriv.sgi_20m == _TRUE && (cap_info & cpu_to_le16(IEEE80211_HT_CAP_SGI_20)) != 0 {
             sta.htpriv.sgi_20m = _TRUE;
         }
 
-        if (cap_info & IEEE80211_HT_CAP_SUP_WIDTH) != 0 {
+        if (cap_info & cpu_to_le16(IEEE80211_HT_CAP_SUP_WIDTH)) != 0 {
             if adapter.mlmeextpriv.cur_bwmode >= CHANNEL_WIDTH_40 {
                 sta.bw_mode = CHANNEL_WIDTH_40;
             }
