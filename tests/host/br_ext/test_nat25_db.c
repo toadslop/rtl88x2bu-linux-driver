@@ -60,7 +60,8 @@ static int run_one(struct vector *v)
 	else if (!strcmp(v->op, "insert")) {
 		size_t n = 0;
 
-		if (host_hex_decode(v->mac_hex, mac, ETH_ALEN, &n) || dec_net(v->net_hex, net))
+		if (host_hex_decode(v->mac_hex, mac, ETH_ALEN, &n) || n != ETH_ALEN ||
+		    dec_net(v->net_hex, net))
 			goto fail;
 		host_nat25_db_network_insert(&g_adapter, mac, net);
 	} else if (!strcmp(v->op, "lookup")) {
@@ -69,7 +70,8 @@ static int run_one(struct vector *v)
 		if (v->skb_mac_hex[0]) {
 			size_t n = 0;
 
-			if (host_hex_decode(v->skb_mac_hex, skb_buf, ETH_ALEN, &n))
+			if (host_hex_decode(v->skb_mac_hex, skb_buf, ETH_ALEN, &n) ||
+			    n != ETH_ALEN)
 				goto fail;
 		}
 		got = host_nat25_db_network_lookup_and_replace(&g_adapter, &skb, net);
@@ -95,13 +97,13 @@ fail:
 
 int main(int argc, char **argv)
 {
-	struct vector vecs[12];
+	struct vector vecs[16];
 	size_t count = 0;
 	int bad = 0;
 
 	if (argc != 2)
 		return 2;
-	if (host_load_vectors(argv[1], vecs, sizeof(vecs[0]), 12, parse_vec, &count))
+	if (host_load_vectors(argv[1], vecs, sizeof(vecs[0]), 16, parse_vec, &count))
 		return 2;
 	for (size_t i = 0; i < count; i++)
 		bad += run_one(&vecs[i]);

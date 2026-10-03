@@ -64,8 +64,10 @@ int host_nat25_db_network_lookup_and_replace(host_nat25_db_adapter *priv,
 	db = priv->nethash[host_nat25_network_hash(network_addr)];
 	while (db) {
 		if (!memcmp(db->networkAddr, network_addr, MAX_NETWORK_ADDR_LEN)) {
+			/* Driver skips MAC replace when expired; see lookup_expired_hit in nat25_db_vectors.json */
 			if (!db_has_expired(priv, db)) {
 				memcpy(skb->data, db->macAddr, ETH_ALEN);
+				/* Kernel uses atomic_inc(&db->use_count); single-threaded oracle only */
 				db->use_count++;
 			}
 			return 1;
