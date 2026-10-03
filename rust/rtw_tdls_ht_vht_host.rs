@@ -311,6 +311,19 @@ pub mod vht {
 
     extern "C" {
         fn rtw_get_vht_highest_rate(pvht_mcs_map: *mut u8) -> u8;
+        fn rtw_vht_mcsmap_to_nss(pvht_mcs_map: *mut u8) -> u8;
+    }
+
+    fn regsty_is_bw_5g_support(_r: &RegistryPriv, bw: u8) -> bool {
+        2 >= bw
+    }
+
+    fn hal_is_bw_support(_a: &Adapter, bw: u8) -> u8 {
+        if bw <= CHANNEL_WIDTH_80 {
+            _TRUE
+        } else {
+            _FALSE
+        }
     }
 
     fn vht_nss_to_mcsmap(nss: u8, target_mcs_map: &mut [u8; 2], cur_mcs_map: &[u8; 2]) {
@@ -415,5 +428,71 @@ pub mod vht {
         sta.vhtpriv.vht_mcs_map = map;
         sta.vhtpriv.vht_highest_rate =
             unsafe { rtw_get_vht_highest_rate(sta.vhtpriv.vht_mcs_map.as_mut_ptr()) };
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_tdls_process_vht_operation(
+        padapter: *mut Adapter,
+        ptdls_sta: *mut StaInfo,
+        data: *mut u8,
+        _length: u8,
+    ) {
+        if padapter.is_null() || ptdls_sta.is_null() || data.is_null() {
+            return;
+        }
+        let adapter = unsafe { &mut *padapter };
+        let sta = unsafe { &mut *ptdls_sta };
+        let data = unsafe { core::slice::from_raw_parts(data, 8) };
+
+        if le1(data, 0, 8) >= 1 {
+            let operation_bw = CHANNEL_WIDTH_80;
+            if hal_is_bw_support(adapter, operation_bw) == _TRUE
+                && regsty_is_bw_5g_support(&adapter.registrypriv, operation_bw)
+                && operation_bw <= adapter.mlmeextpriv.cur_bwmode
+            {
+                sta.cmn.bw_mode = operation_bw;
+            } else {
+                sta.cmn.bw_mode = adapter.mlmeextpriv.cur_bwmode;
+            }
+        } else {
+            sta.cmn.bw_mode = adapter.mlmeextpriv.cur_bwmode;
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_tdls_process_vht_op_mode_notify(
+        padapter: *mut Adapter,
+        ptdls_sta: *mut StaInfo,
+        data: *mut u8,
+        _length: u8,
+    ) {
+        if padapter.is_null() || ptdls_sta.is_null() || data.is_null() {
+            return;
+        }
+        let adapter = unsafe { &mut *padapter };
+        let sta = unsafe { &mut *ptdls_sta };
+        if adapter.mlmepriv.vhtpriv.vht_option == _FALSE {
+            return;
+        }
+
+        let data = unsafe { core::slice::from_raw_parts(data, 1) };
+        let target_bw = le1(data, 0, 2);
+        let target_rxss = le1(data, 4, 3) + 1;
+
+        if hal_is_bw_support(adapter, target_bw) == _TRUE
+            && regsty_is_bw_5g_support(&adapter.registrypriv, target_bw)
+            && target_bw <= adapter.mlmeextpriv.cur_bwmode
+        {
+            sta.cmn.bw_mode = target_bw;
+        } else {
+            sta.cmn.bw_mode = adapter.mlmeextpriv.cur_bwmode;
+        }
+
+        let current_rxss = unsafe { rtw_vht_mcsmap_to_nss(sta.vhtpriv.vht_mcs_map.as_mut_ptr()) };
+        if target_rxss != current_rxss {
+            let mut vht_mcs_map = [0u8; 2];
+            vht_nss_to_mcsmap(target_rxss, &mut vht_mcs_map, &sta.vhtpriv.vht_mcs_map);
+            sta.vhtpriv.vht_mcs_map = vht_mcs_map;
+        }
     }
 }

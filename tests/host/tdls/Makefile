@@ -13,9 +13,10 @@ CFLAGS := -Wall -Wextra -Werror -O2 -I$(HOST_INC) \
 HT_CAP_CFLAGS := $(CFLAGS) -DCONFIG_80211N_HT
 VHT_CAP_CFLAGS := $(CFLAGS) -DCONFIG_80211AC_VHT -DCONFIG_BEAMFORMING
 
-.PHONY: all test test-c test-rust test-ht-cap test-ht-cap-rust test-vht-cap test-vht-cap-rust test-vht-op clean
+.PHONY: all test test-c test-rust test-ht-cap test-ht-cap-rust test-vht-cap test-vht-cap-rust \
+        test-vht-op test-vht-op-rust clean
 all: test
-test: test-c test-rust test-ht-cap test-ht-cap-rust test-vht-cap test-vht-cap-rust test-vht-op
+test: test-c test-rust test-ht-cap test-ht-cap-rust test-vht-cap test-vht-cap-rust test-vht-op test-vht-op-rust
 
 test-c: test_tdls_lifecycle
 	./test_tdls_lifecycle tdls_lifecycle_vectors.json
@@ -31,6 +32,9 @@ test-ht-cap-rust: test_tdls_ht_cap_rust
 
 test-vht-op: test_tdls_vht_op
 	./test_tdls_vht_op tdls_vht_op_vectors.json
+
+test-vht-op-rust: test_tdls_vht_op_rust
+	./test_tdls_vht_op_rust tdls_vht_op_vectors.json
 
 test_tdls_vht_op: test_tdls_vht_op.c $(VHT_SHIM) $(VHT_MCS_ORACLE) $(HOST_JSON)
 	$(CC) $(VHT_CAP_CFLAGS) -o $@ test_tdls_vht_op.c $(VHT_SHIM) $(VHT_MCS_ORACLE) $(HOST_JSON)
@@ -68,7 +72,10 @@ test_tdls_ht_cap_rust: test_tdls_ht_cap.c librust_tdls_ht.a $(HOST_JSON)
 test_tdls_vht_cap_rust: test_tdls_vht_cap.c librust_tdls_vht.a $(VHT_MCS_ORACLE) $(HOST_JSON)
 	$(CC) $(VHT_CAP_CFLAGS) -o $@ test_tdls_vht_cap.c $(VHT_MCS_ORACLE) $(HOST_JSON) librust_tdls_vht.a -lm
 
+test_tdls_vht_op_rust: test_tdls_vht_op.c librust_tdls_vht.a $(VHT_MCS_ORACLE) $(HOST_JSON)
+	$(CC) $(VHT_CAP_CFLAGS) -o $@ test_tdls_vht_op.c $(VHT_MCS_ORACLE) $(HOST_JSON) librust_tdls_vht.a -lm
+
 clean:
 	rm -f test_tdls_lifecycle test_tdls_lifecycle_rust test_tdls_ht_cap test_tdls_ht_cap_rust \
-		test_tdls_vht_cap test_tdls_vht_cap_rust test_tdls_vht_op librust_tdls.a librust_tdls_ht.a \
-		librust_tdls_vht.a
+		test_tdls_vht_cap test_tdls_vht_cap_rust test_tdls_vht_op test_tdls_vht_op_rust \
+		librust_tdls.a librust_tdls_ht.a librust_tdls_vht.a
