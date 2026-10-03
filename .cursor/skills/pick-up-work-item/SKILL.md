@@ -81,9 +81,10 @@ JSON output:
 
 Use `pathDecision.path` (`A` / `B` / `C` / `stop`) and the nested `prs` /
 `issues` objects. The script implements the eligibility filter, `needs_prep` vs
-`merge_ready` rules, `blocked_by` resolution (closed issues **or** open
-implementing PRs), parallel-lane prioritization, and Path C gap detection — see
-[`scripts/workflow/README.md`](../../../scripts/workflow/README.md).
+`merge_ready` rules (including **upper GitHub stack layers** promoted via
+`prs.stacks` / `prs.needs_prep`), `blocked_by` resolution (closed issues **or**
+open implementing PRs), parallel-lane prioritization, and Path C gap detection —
+see [`scripts/workflow/README.md`](../../../scripts/workflow/README.md).
 
 | `pathDecision.path` | Action |
 |---------------------|--------|

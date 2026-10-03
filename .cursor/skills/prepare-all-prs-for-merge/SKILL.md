@@ -79,11 +79,13 @@ isolated `skipped` rows.
 
 From **all** open PRs (eligible + skipped), build chains:
 
-1. Map `headRefName` → PR for every open PR.
+1. Map **`baseRefName` → child PR** for stacked layers (`baseRefName` ≠ `master`).
 2. A **bottom** is any PR whose `baseRefName` is `master` or passes the
-   **bottom-layer gate** in [`prepare-pr-for-merge`](../prepare-pr-for-merge/SKILL.md#3-bottom-layer-gate-mandatory).
-3. From each bottom, walk up while `head_to_pr[base]` exists; record ordered
-   `[#bottom, …, #top]`.
+   **bottom-layer gate** in [`prepare-pr-for-merge`](../prepare-pr-for-merge/SKILL.md#3-bottom-layer-gate-mandatory),
+   and whose `baseRefName` is not another open PR's `headRefName`.
+3. From each bottom, walk up while a child PR exists with
+   `baseRefName == current.headRefName`; record ordered `[#bottom, …, #top]`.
+   (Same logic as `build_master_stack_chains` in `scripts/workflow/find_work.py`.)
 
 Record:
 

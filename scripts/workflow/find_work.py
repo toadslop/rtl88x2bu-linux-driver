@@ -452,13 +452,42 @@ query($owner: String!, $name: String!, $pageSize: Int!, $after: String) {
     return prs
 
 
-def build_master_stack_chains(prs: list[PullRequest]) -> list[list[PullRequest]]:
-    """Chains whose bottom targets master, walking up via head→child open PRs."""
-    head_to_pr: dict[str, PullRequest] = {p.head_ref: p for p in prs}
+def is_stack_bottom(
+    pr: PullRequest,
+    prs: list[PullRequest],
+    owner: str,
+    merged_cache: dict[str, bool],
+) -> bool:
+    """True when the PR sits on integrated trunk, not on another open PR branch."""
+    on_trunk = pr.base_ref == DEFAULT_BRANCH or base_branch_merged(
+        pr.base_ref, owner, merged_cache
+    )
+    if not on_trunk:
+        return False
+    if pr.base_ref != DEFAULT_BRANCH:
+        open_heads = {p.head_ref for p in prs}
+        if pr.base_ref in open_heads:
+            return False
+    return True
+
+
+def build_master_stack_chains(
+    prs: list[PullRequest],
+    owner: str,
+    merged_cache: dict[str, bool],
+) -> list[list[PullRequest]]:
+    """Chains from trunk bottoms, walking up via child PRs (base == parent head)."""
+    child_by_parent_head: dict[str, PullRequest] = {}
+    for p in prs:
+        if p.base_ref == DEFAULT_BRANCH:
+            continue
+        existing = child_by_parent_head.get(p.base_ref)
+        if existing is None or p.number < existing.number:
+            child_by_parent_head[p.base_ref] = p
     seen: set[int] = set()
     chains: list[list[PullRequest]] = []
     bottoms = sorted(
-        [p for p in prs if p.base_ref == DEFAULT_BRANCH],
+        [p for p in prs if is_stack_bottom(p, prs, owner, merged_cache)],
         key=lambda p: p.number,
     )
     for bottom in bottoms:
@@ -467,8 +496,8 @@ def build_master_stack_chains(prs: list[PullRequest]) -> list[list[PullRequest]]
         chain = [bottom]
         seen.add(bottom.number)
         cur = bottom
-        while cur.head_ref in head_to_pr:
-            nxt = head_to_pr[cur.head_ref]
+        while cur.head_ref in child_by_parent_head:
+            nxt = child_by_parent_head[cur.head_ref]
             if nxt.number in seen:
                 break
             chain.append(nxt)
@@ -550,7 +579,7 @@ def classify_prs(prs: list[PullRequest], owner: str) -> dict[str, Any]:
     skipped_sorted = sorted(skipped, key=lambda p: p["number"])
     needs_prep_nums = {p["number"] for p in needs_prep}
     stacks_out: list[dict[str, Any]] = []
-    for chain in build_master_stack_chains(prs):
+    for chain in build_master_stack_chains(prs, owner, merged_cache):
         layer_details: list[dict[str, Any]] = []
         stack_prep = "merge_ready"
         for idx, pr in enumerate(chain):
