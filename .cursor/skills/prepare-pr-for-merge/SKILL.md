@@ -51,11 +51,18 @@ Official references:
 | Push + create/update PRs + stack on GitHub | `gh stack submit --auto --open` |
 | Fetch, rebase on trunk, push, sync stack metadata | `gh stack sync` |
 | Cascading rebase (conflicts) | `gh stack rebase` / `gh stack rebase --continue` |
+| Remove GitHub stack metadata (unlock base edits) | `gh stack unstack` / `gh stack unstack <stack-number>` |
 | Maintainer merge (agents **do not** run) | `gh stack merge` |
 
-**Do not** retarget stacked PR bases to `master` with `gh pr edit --base master`.
-GitHub stacks keep each layer targeting the branch below; landing is a single
-stack merge operation, not per-PR retargeting.
+**Do not** retarget stacked PR bases to `master` with `gh pr edit --base master`
+**while the PRs are still in a GitHub stack**. GitHub stacks keep each layer
+targeting the branch below; landing is normally a single stack merge operation,
+not per-PR retargeting.
+
+When the **bottom** layer should target `master` but still points at another
+branch (often a dependency PR branch whose commits are **already on `master`**),
+`gh pr edit --base master` fails or is ignored until you **unstack** first.
+See **Fix wrong stack base (unstack → retarget → relink)** below.
 
 ## Babysit until green (mandatory — not a one-shot)
 
@@ -214,8 +221,9 @@ enough — skip `link` unless composition changed.
 | Chain size | Prepare mode |
 |------------|----------------|
 | **1 PR**, `base` = `master` | **Single PR** — manual rebase onto `master` (below) |
-| **2+ PRs** in a chain | **GitHub stack** — `gh stack sync` / `gh stack rebase`; never retarget bases to `master` |
-| **1 PR**, `base` ≠ `master` | See **Bottom-layer gate** — usually blocked until parent lands |
+| **2+ PRs** in a chain, bottom on `master` | **GitHub stack** — `gh stack sync` / `gh stack rebase`; do not retarget layers while linked |
+| **2+ PRs**, bottom `base` ≠ `master` but parent on `master` | **Unstack → retarget bottom → relink** (see above), then sync |
+| **1 PR**, `base` ≠ `master` | See **Bottom-layer gate** — retarget or blocked until parent lands |
 
 ### 3. Bottom-layer gate (mandatory)
 
@@ -236,7 +244,14 @@ Only the **bottom** PR of a chain must sit on an integrated trunk:
    git merge-base --is-ancestor "origin/$base" origin/master
    ```
 
-5. **If neither passes** → **STOP.** Do not sync, rebase, or push. Example message:
+5. **Parent already on `master` (retarget bottom).** If step 3 or 4 passes — the
+   dependency branch is merged or `git merge-base --is-ancestor` succeeds — the
+   stack bottom is **mis-aimed**, not blocked. Do **not** stop with "land the
+   dependency first." Instead run **Fix wrong stack base (unstack → retarget →
+   relink)** so the bottom PR's `baseRefName` becomes `master`, then continue
+   prepare with `gh stack sync`.
+6. **If neither step 3 nor 4 passes** → **STOP.** Do not sync, rebase, or push.
+   Example message:
 
    > Stack bottom is not on `master` yet (stacked on `<base>` / PR #N). Land the
    > dependency first, then prepare the stack again.
@@ -252,6 +267,77 @@ If you were asked to prepare a **middle/top** PR alone, still run prepare on the
 
 If stack topology is unclear (forked chains, duplicate heads, or base was
 force-pushed), stop and ask before `gh stack rebase` / `gh stack modify`.
+
+### Fix wrong stack base (unstack → retarget → relink)
+
+Path A / `find-work` often flags a **standalone-looking** mistake: the stack
+**bottom** still has `baseRefName` ≠ `master`, but the merge base is already on
+`master` (dependency merged, or ancestry check passes). The fix is to point the
+bottom at `master` — **not** to treat upper layers as wrongly targeting feature
+branches (that chaining is normal for GitHub stacks).
+
+**Why unstack:** While PRs are linked in a GitHub stack, GitHub blocks changing a
+layer's base branch (`gh pr edit --base` errors or has no effect). You must
+remove the stack on GitHub first, retarget, then link again.
+
+**When to use:**
+
+| Situation | Action |
+|-----------|--------|
+| Bottom `base` ≠ `master`, parent **not** integrated | **Stop** — land dependency first (bottom-layer gate step 6). |
+| Bottom `base` ≠ `master`, parent **is** on `master` (merged or ancestry) | **Unstack → retarget bottom → relink → sync** (this section). |
+| Multi-PR chain, bottom already on `master` | **No retarget** — use `gh stack sync` only. |
+| Single PR, not in a GitHub stack, wrong base | `gh pr edit <#> --base master` + rebase (no unstack). |
+
+**Workflow** (whole chain — enter from **bottom** PR):
+
+1. **Confirm** the bottom should move to `master` (bottom-layer gate steps 3–4).
+2. **Record** stack PR numbers bottom → top and the **stack number** from
+   `gh stack view` (GitHub UI) or `gh stack view --json` when available.
+3. **Unstack on GitHub** (required before retargeting):
+
+   ```bash
+   gh stack checkout <bottom-pr-number>   # when local tracking exists
+   gh stack unstack                       # active stack
+   # or, from anywhere in the repo:
+   gh stack unstack <stack-number>
+   ```
+
+   Use `gh stack unstack --local` **only** to drop local tracking without
+   touching GitHub — that does **not** unlock base edits on GitHub.
+
+4. **Retarget the bottom** (now allowed because the stack is gone):
+
+   ```bash
+   gh pr edit <bottom-pr#> --base master
+   ```
+
+   Rebase the bottom branch onto `origin/master` if `mergeStateStatus` is
+   `BEHIND` or conflicts appear:
+
+   ```bash
+   git fetch origin master
+   git checkout <bottom-head-branch>
+   git rebase origin/master
+   git push --force-with-lease origin <bottom-head-branch>
+   ```
+
+   Upper PRs should still target the branch below; re-check with
+   `gh pr view` on each layer after the bottom moves.
+
+5. **Rebuild the GitHub stack** and sync:
+
+   ```bash
+   gh stack link <bottom-pr#> ... <top-pr#> --open
+   gh stack checkout <bottom-pr#>
+   gh stack sync
+   ```
+
+6. Continue **Prepare workflow** (draft → open, babysit, merge handoff).
+
+**Do not** unstack a stack that is queued for merge or has auto-merge enabled —
+`gh stack unstack` leaves those PRs stacked; resolve merge queue state first or
+ask the maintainer.
 
 ## Prepare workflow
 
@@ -359,7 +445,8 @@ Reply in chat with:
 |----|--------|
 | Mark draft PRs ready for review (`gh pr ready`) | Leave a draft PR in draft state while "preparing" |
 | Babysit until CI is green and reviews are complete on **every stack layer** | Stop after one fix pass while checks fail or a review is in progress |
-| `gh stack link` + `gh stack sync` / `gh stack rebase` for chains | `gh pr edit --base master` on stacked layers |
+| `gh stack link` + `gh stack sync` / `gh stack rebase` for chains | `gh pr edit --base master` **while PRs are still GitHub-stacked** (unstack first) |
+| `gh stack unstack` then retarget bottom to `master`, then `gh stack link` again | Unstack stacks queued for merge / auto-merge without maintainer OK |
 | `gh stack push` / sync force-with-lease when needed | Run `gh stack merge` (maintainer-only) |
 | Fix conflicts and review feedback | Run the stack gate after destructive git ops |
 | Stop when stack **bottom** is not on integrated trunk | Prepare only the top layer while bottom is blocked |

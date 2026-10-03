@@ -141,7 +141,11 @@ For **each** stack chain or standalone PR (in processing order), load and follow
 [`prepare-pr-for-merge`](../prepare-pr-for-merge/SKILL.md) **in full** — enter from
 the **bottom** PR number so the whole chain is synced:
 
-- Bottom-layer gate (re-check if state changed).
+- Bottom-layer gate (re-check if state changed). When the bottom targets a branch
+  whose commits are already on `master`, follow **Fix wrong stack base** in
+  [`prepare-pr-for-merge`](../prepare-pr-for-merge/SKILL.md#fix-wrong-stack-base-unstack--retarget--relink)
+  (`gh stack unstack` → `gh pr edit --base master` on the bottom → `gh stack link`
+  → `gh stack sync`) — do not stop as "blocked" and do not retarget while still stacked.
 - `gh stack checkout`, `gh stack sync` / `gh stack rebase` for multi-PR chains.
 - **Babysit until green** on **every layer** — CI, reviews, `babysit`.
 - Knit follow-up PR when applicable.
