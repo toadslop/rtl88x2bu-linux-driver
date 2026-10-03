@@ -90,7 +90,8 @@
     },
     {
       "name": "reset_btm_state",
-      "op": "reset_btm_state"
+      "op": "reset_btm_state",
+      "passing_ms": 600
     }
   ]
 }
