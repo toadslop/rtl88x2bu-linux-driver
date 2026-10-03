@@ -450,12 +450,12 @@ pub mod vht {
                 && regsty_is_bw_5g_support(&adapter.registrypriv, operation_bw)
                 && operation_bw <= adapter.mlmeextpriv.cur_bwmode
             {
-                sta.bw_mode = operation_bw;
+                sta.cmn.bw_mode = operation_bw;
             } else {
-                sta.bw_mode = adapter.mlmeextpriv.cur_bwmode;
+                sta.cmn.bw_mode = adapter.mlmeextpriv.cur_bwmode;
             }
         } else {
-            sta.bw_mode = adapter.mlmeextpriv.cur_bwmode;
+            sta.cmn.bw_mode = adapter.mlmeextpriv.cur_bwmode;
         }
     }
 
@@ -483,9 +483,9 @@ pub mod vht {
             && regsty_is_bw_5g_support(&adapter.registrypriv, target_bw)
             && target_bw <= adapter.mlmeextpriv.cur_bwmode
         {
-            sta.bw_mode = target_bw;
+            sta.cmn.bw_mode = target_bw;
         } else {
-            sta.bw_mode = adapter.mlmeextpriv.cur_bwmode;
+            sta.cmn.bw_mode = adapter.mlmeextpriv.cur_bwmode;
         }
 
         let current_rxss = unsafe { rtw_vht_mcsmap_to_nss(sta.vhtpriv.vht_mcs_map.as_mut_ptr()) };
