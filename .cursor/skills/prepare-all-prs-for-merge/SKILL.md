@@ -147,6 +147,9 @@ the **bottom** PR number so the whole chain is synced:
   (`gh stack unstack` → `gh pr edit --base master` on the bottom → `gh stack link`
   → `gh stack sync`) — do not stop as "blocked" and do not retarget while still stacked.
 - `gh stack checkout`, `gh stack sync` / `gh stack rebase` for multi-PR chains.
+  After **review or CI fixes** on any layer, **`gh stack rebase` the whole stack**
+  (see **After review fixes: rebase the whole stack** in `prepare-pr-for-merge`) —
+  do not push only the bottom branch.
 - **Babysit until green** on **every layer** — CI, reviews, `babysit`.
 - Knit follow-up PR when applicable.
 - Report **ready for maintainer `gh stack merge`** when the stack is green.

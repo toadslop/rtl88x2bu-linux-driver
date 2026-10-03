@@ -274,6 +274,7 @@ the remainder is non-trivial (copy the per-PR detail from the plan).
 | `gh stack link` after layers exist | leave PRs unlinked on GitHub (always link before handoff) |
 | Do not retarget bases to `master` while PRs stay GitHub-stacked | `prepare-pr-for-merge`: `gh stack unstack` first if bottom must move to `master` |
 | Use `gh stack rebase` / `gh stack sync` for stack-wide updates | manual per-branch rebase of the whole stack |
+| After Path A review fixes on the bottom layer, **`gh stack rebase` the full stack** (`prepare-pr-for-merge`) | Push only the bottom branch and leave upper PRs conflicting |
 | **Every PR ≤ 250 changed lines (target ~200)** | enforced in step 3 before commit — non-negotiable |
 
 ## When implementation fails
