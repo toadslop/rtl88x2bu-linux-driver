@@ -54,6 +54,45 @@ Official references:
 | Remove GitHub stack metadata (unlock base edits) | `gh stack unstack` / `gh stack unstack <stack-number>` |
 | Maintainer merge (agents **do not** run) | `gh stack merge` |
 
+### After review fixes: rebase the whole stack (mandatory)
+
+When a **GitHub stack** (2+ chained PRs) is blocked on merge — often because the
+**bottom** layer has **code review** feedback (`CHANGES_REQUESTED`, blocking
+threads, or fixes you just landed via `babysit`) — finishing the code changes is
+**not** enough. You must **rebase the entire stack** with GitHub's stack tooling
+before treating the stack as merge-ready again.
+
+**Why:** Review fixes on the bottom layer rewrite commits that upper layers still
+assume are stable. Pushing only the bottom branch leaves PR2+ **conflicting** or
+**behind** (`mergeable: CONFLICTING`, `mergeStateStatus: DIRTY`) even when the
+bottom looks green.
+
+**Rule:** After **any** author commit on **any** stack layer (especially bottom
+review follow-up), run a **full cascading rebase** — not a one-off push on the
+layer you edited:
+
+```bash
+git fetch origin master
+gh stack checkout <bottom-pr-number>
+gh stack rebase
+```
+
+- On conflicts: resolve on the **current** layer, `git add`, then
+  `gh stack rebase --continue` until every layer is rebased and pushed.
+- Re-run applicable verification gates (`AGENTS.md`) after conflict resolution.
+- Then continue the **babysit** loop (checks on every layer, upper-layer reviews).
+
+| Situation | Use |
+|-----------|-----|
+| First sync at prepare start, no local commits yet | `gh stack sync` (often sufficient) |
+| Trunk moved on GitHub, no new author commits | `gh stack sync`; if it aborts, `gh stack rebase` |
+| **Addressed review / CI fixes** (commits on bottom or any layer) | **`gh stack rebase`** (whole stack, mandatory) |
+
+**Do not** manually rebase each branch in isolation while PRs stay **linked in a
+GitHub stack** — use `gh stack rebase` so branch order, bases, and stack
+metadata stay consistent. Do not skip the full-stack rebase because only the
+bottom had review comments.
+
 **Do not** retarget stacked PR bases to `master` with `gh pr edit --base master`
 **while the PRs are still in a GitHub stack**. GitHub stacks keep each layer
 targeting the branch below; landing is normally a single stack merge operation,
@@ -86,7 +125,9 @@ is still in flight.
 
 **`babysit` is Cursor's built-in skill** for addressing PR review comments, CI
 failures, and other blockers. After rebase/conflict work, **load and follow
-`babysit`** to completion on this PR.
+`babysit`** to completion on this PR. When `babysit` lands commits on a **GitHub
+stack**, follow with a **full `gh stack rebase`** (see **After review fixes:
+rebase the whole stack** above) before the next checks/review pass.
 
 **How to run the built-in babysit step:**
 
@@ -398,10 +439,15 @@ on **each layer** in the stack (or the single PR) before handoff — see
   fallback rules in this file).
 - Fix CI failures tied to the branch; poll until `gh pr checks` is green.
 - Re-run verification gates after each fix pass.
-- Push to the **same head branch** (no new PR).
+- For a **GitHub stack** (2+ PRs): after commits that address review or CI on
+  **any** layer, run **`gh stack rebase`** on the **whole** stack (see **After
+  review fixes: rebase the whole stack** above) before polling checks on upper
+  layers. Do not only `git push` the bottom branch.
+- For a **single PR** on `master`, push to the **same head branch** (no new PR).
 
-**Loop** until: all required checks pass, no review is in progress, and there are
-no blocking review items (or the user accepts known flakes).
+**Loop** until: all required checks pass, no review is in progress, there are
+no blocking review items, and **every stack layer** is mergeable/synced (or the
+user accepts known flakes).
 
 ### 5. Open knit follow-up PR (when applicable)
 
@@ -429,7 +475,7 @@ Reply in chat with:
 |------|--------|
 | PR(s) / stack | numbers bottom → top; GitHub stack linked? |
 | Bottom base | should be `master` (or integrated dependency branch) |
-| `gh stack sync` / rebase | yes / conflicts resolved (note) |
+| `gh stack sync` / rebase | yes — include **full `gh stack rebase`** after review fixes / conflicts resolved (note) |
 | Conflicts | none / resolved (brief note) |
 | Draft → open | all layers / n/a |
 | CI / checks | all green per layer / pending / failing |
@@ -446,6 +492,7 @@ Reply in chat with:
 | Mark draft PRs ready for review (`gh pr ready`) | Leave a draft PR in draft state while "preparing" |
 | Babysit until CI is green and reviews are complete on **every stack layer** | Stop after one fix pass while checks fail or a review is in progress |
 | `gh stack link` + `gh stack sync` / `gh stack rebase` for chains | `gh pr edit --base master` **while PRs are still GitHub-stacked** (unstack first) |
+| **`gh stack rebase` the whole stack after review/CI fixes on any layer** | Push only the bottom (or edited) branch and leave upper layers conflicting |
 | `gh stack unstack` then retarget bottom to `master`, then `gh stack link` again | Unstack stacks queued for merge / auto-merge without maintainer OK |
 | `gh stack push` / sync force-with-lease when needed | Run `gh stack merge` (maintainer-only) |
 | Fix conflicts and review feedback | Run the stack gate after destructive git ops |
