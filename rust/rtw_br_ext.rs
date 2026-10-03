@@ -12,6 +12,15 @@ const NAT25_AGEING_TIME: c_ulong = 300;
 const ETH_HLEN: usize = 14;
 const HZ: c_ulong = 100;
 const NDISC_ROUTER_SOLICITATION: u8 = 133;
+const NDISC_ROUTER_ADVERTISEMENT: u8 = 134;
+const NDISC_NEIGHBOUR_SOLICITATION: u8 = 135;
+const NDISC_NEIGHBOUR_ADVERTISEMENT: u8 = 136;
+const NDISC_REDIRECT: u8 = 137;
+
+#[inline]
+fn time_before_eq(a: c_ulong, b: c_ulong) -> bool {
+    (a as i64) - (b as i64) <= 0
+}
 
 #[repr(C)]
 pub struct Nat25NetworkDbEntry {
@@ -121,7 +130,9 @@ pub extern "C" fn host_nat25_has_expired(
     if fdb.is_null() {
         return 0;
     }
-    unsafe { c_int::from((*fdb).ageing_timer <= host_nat25_timeout(_priv)) }
+    unsafe {
+        c_int::from(time_before_eq((*fdb).ageing_timer, host_nat25_timeout(_priv)))
+    }
 }
 
 #[no_mangle]
@@ -150,14 +161,23 @@ pub extern "C" fn host_update_nd_link_layer_addr(
     len: c_int,
     replace_mac: *mut u8,
 ) -> c_int {
-    if data.is_null() || replace_mac.is_null() || len < 8 {
+    if data.is_null() || replace_mac.is_null() {
         return 0;
     }
     unsafe {
-        if (*(data as *const Icmp6Hdr)).icmp6_type != NDISC_ROUTER_SOLICITATION {
+        let icmp_type = (*(data as *const Icmp6Hdr)).icmp6_type;
+        let (min_len, tlv_off, tag, len8b) = match icmp_type {
+            NDISC_ROUTER_SOLICITATION => (8, 8, 1, 1),
+            NDISC_ROUTER_ADVERTISEMENT => (16, 16, 1, 1),
+            NDISC_NEIGHBOUR_SOLICITATION => (24, 24, 1, 1),
+            NDISC_NEIGHBOUR_ADVERTISEMENT => (24, 24, 2, 1),
+            NDISC_REDIRECT => (40, 40, 2, 1),
+            _ => return 0,
+        };
+        if len < min_len {
             return 0;
         }
-        let mac = host_scan_tlv(data.add(8), len - 8, 1, 1);
+        let mac = host_scan_tlv(data.add(tlv_off), len - min_len, tag, len8b);
         if mac.is_null() {
             return 0;
         }
