@@ -6,6 +6,8 @@ use std::os::raw::{c_int, c_uint};
 const _TRUE: u8 = 1;
 const _FALSE: u8 = 0;
 const VENDOR_IE: u8 = 221;
+const RTW_MBO_MAX_CH_LIST_NUM: usize = 64;
+const RTW_MBO_MAX_CH_RPT_NUM: usize = 32;
 static WFA_OUI: [u8; 4] = [0x50, 0x6F, 0x9A, 0x16];
 
 #[repr(C)]
@@ -154,8 +156,10 @@ pub extern "C" fn host_mbo_attr_sz_get(padapter: *mut Adapter, id: u8) -> u32 {
         match id {
             0x2 => {
                 let mut len = 0u32;
-                for i in 0..prpt.nm_of_rpt {
-                    len += (prpt.ch_rpt[i].nm_of_ch as u32 + 3) + 2;
+                let n = prpt.nm_of_rpt.min(RTW_MBO_MAX_CH_RPT_NUM);
+                for i in 0..n {
+                    let attr_len = (prpt.ch_rpt[i].nm_of_ch as u32).wrapping_add(3);
+                    len = len.wrapping_add(attr_len.wrapping_add(2));
                 }
                 len
             }
@@ -177,7 +181,7 @@ pub extern "C" fn host_mbo_build_mbo_ie_hdr(
     unsafe {
         let mut frame = *pframe;
         let mut eid = VENDOR_IE;
-        let mut len = payload_len.saturating_add(4);
+        let mut len = payload_len.wrapping_add(4);
         frame = rtw_set_fixed_ie(frame, 1, &mut eid, &mut (*pattrib).pktlen);
         frame = rtw_set_fixed_ie(frame, 1, &mut len, &mut (*pattrib).pktlen);
         let mut oui = WFA_OUI;
@@ -227,7 +231,9 @@ pub extern "C" fn host_mbo_non_pref_chan_exist(pch: *mut NprefCh, ch: u8) -> u8 
 #[no_mangle]
 pub extern "C" fn host_mbo_adapter_clear(a: *mut Adapter) {
     if !a.is_null() {
-        unsafe { std::ptr::write_bytes(a, 0, 1) };
+        unsafe {
+            std::ptr::write_bytes(a as *mut u8, 0, std::mem::size_of::<Adapter>());
+        }
     }
 }
 
@@ -241,7 +247,7 @@ pub extern "C" fn host_mbo_seed_npref(
     preference: u8,
     reason: u8,
 ) {
-    if a.is_null() || chs.is_null() || rpt_idx as usize >= 32 {
+    if a.is_null() || chs.is_null() || rpt_idx as usize >= RTW_MBO_MAX_CH_RPT_NUM {
         return;
     }
     unsafe {
@@ -251,7 +257,8 @@ pub extern "C" fn host_mbo_seed_npref(
         pch.preference = preference;
         pch.reason = reason;
         pch.nm_of_ch = ch_count as usize;
-        for i in 0..ch_count as usize {
+        let copy_n = (ch_count as usize).min(RTW_MBO_MAX_CH_LIST_NUM);
+        for i in 0..copy_n {
             pch.chs[i] = *chs.add(i);
         }
         if prpt.nm_of_rpt <= rpt_idx as usize {
