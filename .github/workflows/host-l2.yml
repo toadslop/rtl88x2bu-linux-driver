@@ -238,7 +238,7 @@ jobs:
 
       - name: Host wnm BTM leaf parity (L2)
         if: steps.filter.outputs.l2 == 'true'
-        run: make -C tests/host/wnm test-c
+        run: make -C tests/host/wnm test-c test-rust
 
       - name: Host roch handlers parity (L2)
         if: steps.filter.outputs.l2 == 'true'
