@@ -2431,6 +2431,7 @@ endif
 rtk_core :=	core/rtw_cmd.o \
 		core/rtw_cmd_queue.o \
 		core/rtw_cmd_priv.o \
+		core/rtw_cmd_thread.o \
 		core/rtw_debug.o \
 		core/rtw_io.o \
 		core/rtw_io_rest.o \
@@ -2446,6 +2447,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_wlan_util.o \
 		core/rtw_vht.o \
 		core/rtw_vht_build.o \
+		core/rtw_vht_build_rust_acc.o \
 		core/rtw_vht_rest.o \
 		core/rtw_pwrctrl.o \
 		core/rtw_rf.o \
@@ -2478,6 +2480,8 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_ap_bcn_ie.o \
 		core/rtw_ap_bcn_ie_rust_acc.o \
 		core/rtw_ap_bcn_update.o \
+		core/rtw_ap_bcn_update_rust_acc.o \
+		core/rtw_ap_bcn_dispatch_rust_acc.o \
 		core/rtw_ap_bmc_update.o \
 		core/rtw_ap_bmc_update_rust_acc.o \
 		core/rtw_ap_sta_alive.o \
@@ -2494,6 +2498,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_ap_sta_info.o \
 		core/rtw_ap_sta_info_rust_acc.o \
 		core/rtw_ap_sta_info_apmode.o \
+		core/rtw_ap_sta_info_apmode_rust_acc.o \
 		core/rtw_ap_expire_asoc.o \
 		core/rtw_ap_expire_asoc_rust_acc.o \
 		core/rtw_ap_expire_asoc_list.o \
@@ -2510,6 +2515,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_xmit_qos_rest.o \
 		core/rtw_xmit_sctx_rest.o \
 		core/rtw_xmit_update_attrib_rest.o \
+		core/rtw_xmit_update_attrib_sec_rest.o \
 		core/rtw_p2p.o \
 		core/rtw_rson.o \
 		core/rtw_tdls.o \
@@ -2635,6 +2641,7 @@ ccflags-y += -DCONFIG_RUST_MLME_EXT_MGNT_ATTRIB
 ccflags-y += -DCONFIG_RUST_MLME_EXT_PEER_ALIVE
 ccflags-y += -DCONFIG_RUST_MLME_EXT_SCAN
 ccflags-y += -DCONFIG_RUST_MLME_EXT_PICK_CH
+ccflags-y += -DCONFIG_RUST_MLME_EXT_SITESURVEY_CMD
 ccflags-y += -DCONFIG_RUST_MLME_EXT_BAND_IE
 ccflags-y += -DCONFIG_RUST_MLME_HT_RESTRUCTURE
 ccflags-y += -DCONFIG_80211D
@@ -2652,6 +2659,7 @@ ccflags-y += -DCONFIG_RUST_AP_STA_IE_SEC
 ccflags-y += -DCONFIG_RUST_AP_STA_ALIVE
 ccflags-y += -DCONFIG_RUST_AP_STA_RA
 ccflags-y += -DCONFIG_RUST_AP_STA_INFO
+ccflags-y += -DCONFIG_RUST_AP_STA_INFO_APMODE
 ccflags-y += -DCONFIG_RUST_AP_EXPIRE_ASOC
 ccflags-y += -DCONFIG_RUST_AP_EXPIRE_AUTH
 ccflags-y += -DCONFIG_RUST_AP_AKA_CHK
@@ -2660,6 +2668,9 @@ ccflags-y += -DCONFIG_RUST_AP_EXPIRE_TIMEOUT
 ccflags-y += -DCONFIG_RUST_AP_REST
 ccflags-y += -DCONFIG_RUST_AP_BCN_IE
 ccflags-y += -DCONFIG_RUST_AP_BMC_UPDATE
+ccflags-y += -DCONFIG_RUST_VHT_BUILD
+ccflags-y += -DCONFIG_RUST_AP_BCN_UPDATE
+ccflags-y += -DCONFIG_RUST_AP_BCN_DISPATCH
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_PREF
 ccflags-y += -DCONFIG_RUST_RF_OP_CLASS_DUMP
 ccflags-y += -DCONFIG_RUST_RF_DUMP_TXPWR_LMT
@@ -2668,6 +2679,7 @@ ccflags-y += -DCONFIG_RUST_RF_KFREE_TX_GAIN_SET
 ccflags-y += -DCONFIG_RUST_CMD_PRIV
 ccflags-y += -DCONFIG_RUST_CMD_PRIV_EVT
 ccflags-y += -DCONFIG_RUST_CMD_QUEUE
+ccflags-y += -DCONFIG_RUST_RECV_STA
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_EVENT_THREAD_MODE' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg event_thread_mode
 endif
@@ -2679,6 +2691,7 @@ rustflags-y += --cfg rust_mlme_ext_mgnt_attrib
 rustflags-y += --cfg rust_mlme_ext_peer_alive
 rustflags-y += --cfg rust_mlme_ext_scan --cfg config_scan_sparse_miracast
 rustflags-y += --cfg rust_mlme_ext_pick_ch
+rustflags-y += --cfg rust_mlme_ext_sitesurvey_cmd
 rustflags-y += --cfg rust_mlme_ext_band_ie
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTW_MESH' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg config_rtw_mesh
@@ -2730,6 +2743,25 @@ rustflags-y += --cfg rust_ap_expire_timeout
 rustflags-y += --cfg rust_ap_rest
 rustflags-y += --cfg rust_ap_bcn_ie
 rustflags-y += --cfg rust_ap_bmc_update
+rustflags-y += --cfg rust_ap_bcn_update
+# W3-81 PR4: match C #if CONFIG_INTERRUPT_BASED_TXBCN || CONFIG_PCI_HCI (WPS fwstate).
+ifneq ($(filter -DCONFIG_INTERRUPT_BASED_TXBCN,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+rustflags-y += --cfg config_interrupt_based_txbcn
+else ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_INTERRUPT_BASED_TXBCN(\s|$$|/\*)' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_interrupt_based_txbcn
+endif
+ifeq ($(CONFIG_PCI_HCI), y)
+rustflags-y += --cfg config_pci_hci
+endif
+ifeq ($(CONFIG_USB_HCI), y)
+rustflags-y += --cfg config_usb_hci
+endif
+ifneq ($(filter -DCONFIG_PCI_HCI,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+rustflags-y += --cfg config_pci_hci
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_PCI_HCI(\s|$$|/\*)' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_pci_hci
+endif
 ifneq ($(filter -DCONFIG_BMC_TX_LOW_RATE,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 rustflags-y += --cfg bmc_tx_low_rate
 endif
@@ -2813,9 +2845,13 @@ $(MODULE_NAME)-y += rust/rtw_ap_sta_ie_sec.o
 $(MODULE_NAME)-y += rust/rtw_ap_rest.o
 $(MODULE_NAME)-y += rust/rtw_ap_bcn_ie.o
 $(MODULE_NAME)-y += rust/rtw_ap_bmc_update_kern.o
+$(MODULE_NAME)-y += rust/rtw_vht_build_kern.o
+$(MODULE_NAME)-y += rust/rtw_ap_bcn_update_kern.o
+$(MODULE_NAME)-y += rust/rtw_ap_bcn_dispatch.o
 $(MODULE_NAME)-y += rust/rtw_ap_sta_alive.o
 $(MODULE_NAME)-y += rust/rtw_ap_sta_ra.o
 $(MODULE_NAME)-y += rust/rtw_ap_sta_info.o
+$(MODULE_NAME)-y += rust/rtw_ap_sta_info_apmode.o
 $(MODULE_NAME)-y += rust/rtw_ap_expire_asoc.o
 $(MODULE_NAME)-y += rust/rtw_ap_expire_auth.o
 $(MODULE_NAME)-y += rust/rtw_ap_aka_chk.o
@@ -2826,8 +2862,13 @@ $(MODULE_NAME)-y += rust/rtw_rf_op_class_dump.o
 $(MODULE_NAME)-y += rust/rtw_rf_dump_txpwr_lmt.o
 $(MODULE_NAME)-y += rust/rtw_rf_kfree_tx_gain.o
 $(MODULE_NAME)-y += rust/rtw_recv.o
+$(MODULE_NAME)-y += rust/rtw_recv_sta_count.o
+$(MODULE_NAME)-y += rust/rtw_recv_sta_validate.o
 $(MODULE_NAME)-y += rust/rtw_xmit.o
+$(MODULE_NAME)-y += rust/rtw_xmit_update_attrib_kern.o
 $(MODULE_NAME)-y += rust/rtw_iol_rest.o
+$(MODULE_NAME)-y += rust/rtw_sreset.o
+$(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
 $(MODULE_NAME)-y += rust/rtw_mlme_80211d.o
@@ -2836,6 +2877,7 @@ $(MODULE_NAME)-y += rust/rtw_mlme_ext_mgnt_attrib.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_peer_alive.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_scan.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_pick_ch.o
+$(MODULE_NAME)-y += rust/rtw_mlme_ext_sitesurvey_cmd.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ext_band_ie.o
 $(MODULE_NAME)-y += rust/rtw_cmd_rest.o
 ifeq ($(CONFIG_WAPI_SUPPORT), y)
@@ -3284,6 +3326,21 @@ rust-check-symbols-rtw-vht-mcs-rate: rust-objects-rtw-vht-mcs-rate-c rust-object
 	$(MAKE) rust-check-symbols OLD=tests/host/vht/vht_mcs_rate_c_ref.o NEW=tests/host/vht/vht_mcs_rate_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_vht_mcs_rate.allow
 
+# W3-84 PR8: host C cap IE vs kernel Rust (cap only).
+rust-objects-rtw-vht-build-cap-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_VHT_BUILD_TEST \
+		-o tests/host/vht/vht_build_cap_c_ref.o core/rtw_vht_build.c
+
+rust-objects-rtw-vht-build-cap-kern:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-vht-build-cap-kern"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_vht_build_kern.o
+rust-check-symbols-rtw-vht-build-cap: rust-objects-rtw-vht-build-cap-c rust-objects-rtw-vht-build-cap-kern
+	$(MAKE) rust-check-symbols OLD=tests/host/vht/vht_build_cap_c_ref.o NEW=rust/rtw_vht_build_kern.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_vht_build.allow ALLOW_VACUOUS=1
+
 # W3-37: compare host C oracle (rtw_sta_mgt_rest.c) against host Rust oracle.
 rust-objects-rtw-sta-mgt-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
@@ -3396,6 +3453,38 @@ rust-check-symbols-rtw-ap-sta-ra: rust-objects-rtw-ap-sta-ra-c rust-objects-rtw-
 	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_sta_ra_c_ref.o NEW=tests/host/ap/ap_sta_ra_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_sta_ra.allow
 
+# W3-81 PR3: beacon HT/WPS/ERP kernel object L1 (host C ref vs kbuild Rust object).
+rust-objects-rtw-ap-bcn-update-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_AP_BCN_UPDATE_TEST \
+		-o tests/host/ap/ap_bcn_update_c_ref.o core/rtw_ap_bcn_update.c
+
+rust-objects-rtw-ap-bcn-update-kern:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-ap-bcn-update-kern"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_ap_bcn_update_kern.o
+
+rust-check-symbols-rtw-ap-bcn-update: rust-objects-rtw-ap-bcn-update-c rust-objects-rtw-ap-bcn-update-kern
+	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_bcn_update_c_ref.o NEW=rust/rtw_ap_bcn_update_kern.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_bcn_update.allow
+
+# W3-75 follow-up (#830): beacon IE add/remove L1 (host C ref vs kbuild Rust object).
+rust-objects-rtw-ap-bcn-ie-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-sign-compare -Wno-pointer-sign -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_AP_BCN_IE_TEST \
+		-o tests/host/ap/ap_bcn_ie_c_ref.o core/rtw_ap_bcn_ie.c
+
+rust-objects-rtw-ap-bcn-ie:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-ap-bcn-ie"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_ap_bcn_ie.o
+
+rust-check-symbols-rtw-ap-bcn-ie: rust-objects-rtw-ap-bcn-ie-c rust-objects-rtw-ap-bcn-ie
+	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_bcn_ie_c_ref.o NEW=rust/rtw_ap_bcn_ie.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_bcn_ie.allow
+
 rust-objects-rtw-ap-sta-info-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
@@ -3411,6 +3500,23 @@ rust-objects-rtw-ap-sta-info-rust-ref:
 rust-check-symbols-rtw-ap-sta-info: rust-objects-rtw-ap-sta-info-c rust-objects-rtw-ap-sta-info-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_sta_info_c_ref.o NEW=tests/host/ap/ap_sta_info_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_sta_info.allow
+
+# W3-83 PR15: update_sta_info_apmode L1 (host C vs host Rust oracle).
+rust-objects-rtw-ap-sta-info-apmode-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_AP_STA_INFO_APMODE_TEST \
+		-o tests/host/ap/ap_sta_info_apmode_c_ref.o core/rtw_ap_sta_info_apmode.c
+
+rust-objects-rtw-ap-sta-info-apmode-rust-ref:
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on --cfg host_ap_sta_info_apmode_test \
+		--emit=obj=tests/host/ap/ap_sta_info_apmode_rust_ref.o \
+		--crate-type lib rust/rtw_ap_sta_info_apmode.rs
+
+rust-check-symbols-rtw-ap-sta-info-apmode: rust-objects-rtw-ap-sta-info-apmode-c rust-objects-rtw-ap-sta-info-apmode-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/ap/ap_sta_info_apmode_c_ref.o NEW=tests/host/ap/ap_sta_info_apmode_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_ap_sta_info_apmode.allow
 
 # W3-82 PR8: expire asoc tick L1 (host C vs host Rust oracle).
 rust-objects-rtw-ap-expire-asoc-c:
@@ -3592,6 +3698,31 @@ rust-check-symbols-rtw-mlme-ext-pick-ch: rust-objects-rtw-mlme-ext-pick-ch-c rus
 	$(MAKE) rust-check-symbols OLD=tests/host/mlme_ext/pick_ch_c_ref.o NEW=rust/rtw_mlme_ext_pick_ch.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_mlme_ext_pick_ch.allow
 
+# W3-90 follow-up (#839): sitesurvey_cmd_hdl L1 (host C oracle vs kbuild Rust object).
+rust-objects-rtw-mlme-ext-sitesurvey-cmd:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-mlme-ext-sitesurvey-cmd"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_mlme_ext_sitesurvey_cmd.o
+rust-objects-rtw-mlme-ext-sitesurvey-cmd-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_MLME_EXT_SITESURVEY_CMD_TEST -DCONFIG_SCAN_BACKOP \
+		-o tests/host/mlme_ext/sitesurvey_cmd_c_ref_shim.o \
+		tests/host/mlme_ext/host_mlme_ext_sitesurvey_cmd_shim.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_MLME_EXT_SITESURVEY_CMD_TEST -DCONFIG_SCAN_BACKOP \
+		-o tests/host/mlme_ext/sitesurvey_cmd_c_ref_oracle.o \
+		tests/host/mlme_ext/sitesurvey_cmd_host_oracle.c
+	ld -r -o tests/host/mlme_ext/sitesurvey_cmd_c_ref.o \
+		tests/host/mlme_ext/sitesurvey_cmd_c_ref_oracle.o \
+		tests/host/mlme_ext/sitesurvey_cmd_c_ref_shim.o
+
+rust-check-symbols-rtw-mlme-ext-sitesurvey-cmd: rust-objects-rtw-mlme-ext-sitesurvey-cmd-c rust-objects-rtw-mlme-ext-sitesurvey-cmd
+	$(MAKE) rust-check-symbols OLD=tests/host/mlme_ext/sitesurvey_cmd_c_ref_oracle.o NEW=rust/rtw_mlme_ext_sitesurvey_cmd.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_mlme_ext_sitesurvey_cmd.allow
+
 # W3-72 PR5: band_ie L1 (host C oracle vs kbuild Rust object).
 rust-objects-rtw-mlme-ext-band-ie:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-mlme-ext-band-ie"; exit 1; }
@@ -3711,6 +3842,23 @@ rust-check-symbols-rtw-cmd-queue: rust-objects-rtw-cmd-queue-c rust-objects-rtw-
 	$(MAKE) rust-check-symbols OLD=tests/host/cmd/cmd_queue_c_ref.o NEW=tests/host/cmd/cmd_queue_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_cmd_queue.allow ALLOW_VACUOUS=1
 
+# W3-91 PR4: cmd thread loop L1 (host kernel-TU C oracle vs host Rust oracle).
+rust-objects-rtw-cmd-thread-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_CMD_THREAD_TEST -o tests/host/cmd/cmd_thread_c_ref.o core/rtw_cmd_thread.c
+
+rust-objects-rtw-cmd-thread-rust-ref:
+	rustc -C opt-level=2 -C overflow-checks=on \
+		--cfg host_cmd_thread_test --cfg rust_cmd_thread \
+		--emit=obj=tests/host/cmd/cmd_thread_rust_ref.o \
+		--crate-type lib rust/rtw_cmd_rest.rs
+
+rust-check-symbols-rtw-cmd-thread: rust-objects-rtw-cmd-thread-c rust-objects-rtw-cmd-thread-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/cmd/cmd_thread_c_ref.o NEW=tests/host/cmd/cmd_thread_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_cmd_thread.allow
+
 # W3-39: host C oracle recv_rest vs rust/rtw_recv.o.
 rust-objects-rtw-recv:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-recv"; exit 1; }
@@ -3749,7 +3897,7 @@ rust-objects-rtw-recv-sta-count-c:
 		-o tests/host/recv/recv_sta_count_c_ref.o core/rtw_recv_sta_rest.c
 
 rust-objects-rtw-recv-sta-count-rust-ref:
-	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on --cfg host_recv_sta_test \
 		--emit=obj=tests/host/recv/recv_sta_count_rust_ref.o \
 		--crate-type lib rust/rtw_recv_sta_count.rs
 
@@ -3764,11 +3912,26 @@ rust-objects-rtw-recv-sta-validate-c:
 		-DHOST_RECV_STA_TEST -DHOST_RECV_STA_RUST_COUNT \
 		-o tests/host/recv/recv_sta_validate_c_ref.o core/rtw_recv_sta_rest.c
 rust-objects-rtw-recv-sta-validate-rust-ref:
-	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on --cfg host_recv_sta_test \
 		--emit=obj=tests/host/recv/recv_sta_validate_rust_ref.o \
 		--crate-type lib rust/rtw_recv_sta_validate.rs
 rust-check-symbols-rtw-recv-sta-validate: rust-objects-rtw-recv-sta-validate-c rust-objects-rtw-recv-sta-validate-rust-ref
 	$(MAKE) rust-check-symbols OLD=tests/host/recv/recv_sta_validate_c_ref.o NEW=tests/host/recv/recv_sta_validate_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_recv_sta_count.allow ALLOW_VACUOUS=1
+
+# W3-85 PR3: kernel object L1 (host C ref vs kbuild Rust).
+rust-objects-rtw-recv-sta-count-kern:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-recv-sta-count-kern"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_recv_sta_count.o
+rust-check-symbols-rtw-recv-sta-count-kern: rust-objects-rtw-recv-sta-count-c rust-objects-rtw-recv-sta-count-kern
+	$(MAKE) rust-check-symbols OLD=tests/host/recv/recv_sta_count_c_ref.o NEW=rust/rtw_recv_sta_count.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_recv_sta_count.allow ALLOW_VACUOUS=1
+
+rust-objects-rtw-recv-sta-validate-kern:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-recv-sta-validate-kern"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_recv_sta_validate.o
+rust-check-symbols-rtw-recv-sta-validate-kern: rust-objects-rtw-recv-sta-validate-c rust-objects-rtw-recv-sta-validate-kern
+	$(MAKE) rust-check-symbols OLD=tests/host/recv/recv_sta_validate_c_ref.o NEW=rust/rtw_recv_sta_validate.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_recv_sta_count.allow ALLOW_VACUOUS=1
 
 # W3-40: host C oracle xmit_rest vs rust/rtw_xmit.o.
@@ -3808,6 +3971,12 @@ rust-objects-rtw-xmit-update-attrib-rest-c:
 		-include $(shell pwd)/tests/host/include/host_autoconf.h \
 		-DHOST_XMIT_UPDATE_ATTRIB_TEST -o tests/host/xmit/xmit_update_attrib_c_ref.o \
 		core/rtw_xmit_update_attrib_rest.c
+rust-objects-rtw-xmit-update-attrib:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-xmit-update-attrib"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_xmit_update_attrib_kern.o
+rust-check-symbols-rtw-xmit-update-attrib: rust-objects-rtw-xmit-update-attrib-rest-c rust-objects-rtw-xmit-update-attrib
+	$(MAKE) rust-check-symbols OLD=tests/host/xmit/xmit_update_attrib_c_ref.o NEW=rust/rtw_xmit_update_attrib_kern.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_xmit_update_attrib.allow ALLOW_VACUOUS=1
 # W3-50: host C oracle iol_rest vs rust/rtw_iol_rest.o.
 rust-objects-rtw-iol-rest:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-iol-rest"; exit 1; }
@@ -3820,6 +3989,34 @@ rust-objects-rtw-iol-rest-c:
 rust-check-symbols-rtw-iol-rest: rust-objects-rtw-iol-rest-c rust-objects-rtw-iol-rest
 	$(MAKE) rust-check-symbols OLD=tests/host/iol/iol_rest_c_ref.o NEW=rust/rtw_iol_rest.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_iol_rest.allow ALLOW_VACUOUS=1
+
+# W3-95 PR3: host C oracle (sreset lifecycle shim) vs rust/rtw_sreset.o.
+rust-objects-rtw-sreset:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-sreset"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_sreset.o
+rust-objects-rtw-sreset-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I tests/host/include -I include \
+		-include tests/host/include/host_autoconf.h \
+		-DHOST_SRESET_TEST -o tests/host/sreset/sreset_lifecycle_c_ref.o \
+		tests/host/sreset/host_sreset_lifecycle_shim.c
+rust-check-symbols-rtw-sreset: rust-objects-rtw-sreset-c rust-objects-rtw-sreset
+	$(MAKE) rust-check-symbols OLD=tests/host/sreset/sreset_lifecycle_c_ref.o NEW=rust/rtw_sreset.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_sreset.allow ALLOW_VACUOUS=1
+
+# W3-94 follow-up PR4: host C oracle (ps deny shim) vs rust/rtw_pwrctrl.o.
+rust-objects-rtw-pwrctrl:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-pwrctrl"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_pwrctrl.o
+rust-objects-rtw-pwrctrl-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I tests/host/include -I include \
+		-include tests/host/include/host_autoconf.h \
+		-o tests/host/pwrctrl/ps_deny_c_ref.o \
+		tests/host/pwrctrl/host_pwrctrl_ps_deny_shim.c
+rust-check-symbols-rtw-pwrctrl: rust-objects-rtw-pwrctrl-c rust-objects-rtw-pwrctrl
+	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/ps_deny_c_ref.o NEW=rust/rtw_pwrctrl.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl.allow ALLOW_VACUOUS=1
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production
