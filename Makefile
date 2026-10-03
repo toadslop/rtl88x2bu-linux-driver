@@ -3836,6 +3836,23 @@ rust-check-symbols-rtw-cmd-queue: rust-objects-rtw-cmd-queue-c rust-objects-rtw-
 	$(MAKE) rust-check-symbols OLD=tests/host/cmd/cmd_queue_c_ref.o NEW=tests/host/cmd/cmd_queue_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_cmd_queue.allow ALLOW_VACUOUS=1
 
+# W3-91 PR4: cmd thread loop L1 (host kernel-TU C oracle vs host Rust oracle).
+rust-objects-rtw-cmd-thread-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-DHOST_CMD_THREAD_TEST -o tests/host/cmd/cmd_thread_c_ref.o core/rtw_cmd_thread.c
+
+rust-objects-rtw-cmd-thread-rust-ref:
+	rustc -C opt-level=2 -C overflow-checks=on \
+		--cfg host_cmd_thread_test --cfg rust_cmd_thread \
+		--emit=obj=tests/host/cmd/cmd_thread_rust_ref.o \
+		--crate-type lib rust/rtw_cmd_rest.rs
+
+rust-check-symbols-rtw-cmd-thread: rust-objects-rtw-cmd-thread-c rust-objects-rtw-cmd-thread-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/cmd/cmd_thread_c_ref.o NEW=tests/host/cmd/cmd_thread_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_cmd_thread.allow
+
 # W3-39: host C oracle recv_rest vs rust/rtw_recv.o.
 rust-objects-rtw-recv:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-recv"; exit 1; }

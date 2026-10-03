@@ -191,9 +191,11 @@ for path in "${changed[@]}"; do
 	rust/rtw_cmd_rest.rs \
 	| core/rtw_cmd_priv.c \
 	| core/rtw_cmd_queue.c \
+	| core/rtw_cmd_thread.c \
 	| tests/host/cmd/*)
 		add_target rust-check-symbols-rtw-cmd-rest
 		add_target rust-check-symbols-rtw-cmd-queue
+		add_target rust-check-symbols-rtw-cmd-thread
 		;;
 	rust/aes_*.rs \
 	| rust/sha256*.rs \
@@ -277,6 +279,8 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-xmit-qos
 	rust-check-symbols-rtw-xmit-sctx
 	rust-check-symbols-rtw-cmd-rest
+	rust-check-symbols-rtw-cmd-queue
+	rust-check-symbols-rtw-cmd-thread
 )
 
 emit() {
