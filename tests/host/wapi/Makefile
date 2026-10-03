@@ -26,7 +26,7 @@ test_wapi_pn_cam: test_wapi_pn_cam.c $(ORACLE) $(HOST_JSON)
 
 librust_wapi.a: $(RUST_WAPI)
 	$(RUSTC) --edition 2021 -C opt-level=2 -C overflow-checks=on \
-		--crate-type staticlib $(RUST_WAPI) -o $@
+		--cfg host_wapi_pn_cam_test --crate-type staticlib $(RUST_WAPI) -o $@
 
 test_wapi_pn_cam_rust: test_wapi_pn_cam.c librust_wapi.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_wapi_pn_cam.c $(HOST_JSON) librust_wapi.a
