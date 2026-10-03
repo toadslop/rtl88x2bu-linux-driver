@@ -169,8 +169,9 @@ For each PR:
 Note that [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) will
 **link** open PRs into a GitHub stack (`gh stack link`, bottom → top). Path A
 [`prepare-all-prs-for-merge`](../prepare-all-prs-for-merge/SKILL.md) then
-`gh stack sync`s the stack and babysits every layer until the maintainer can run
-`gh stack merge` (agents do not merge).
+`gh stack sync`s the stack, babysits every layer (running **`gh stack rebase` on
+the whole stack** after review fixes on any layer — see `prepare-pr-for-merge`),
+until the maintainer can run `gh stack merge` (agents do not merge).
 
 ## Get user confirmation
 
