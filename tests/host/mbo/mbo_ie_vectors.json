@@ -35,6 +35,33 @@
       "expect_found": 1,
       "expect_attr_len": 1,
       "expect_attr_val": 5
+    },
+    {
+      "name": "attr_sz_cell_cap",
+      "op": "attr_sz",
+      "attr_id": 3,
+      "expect_u32": 3
+    },
+    {
+      "name": "attr_sz_trans_rej",
+      "op": "attr_sz",
+      "attr_id": 7,
+      "expect_u32": 3
+    },
+    {
+      "name": "attr_sz_npref_one_rpt",
+      "op": "attr_sz_npref",
+      "op_class": 81,
+      "ch_hex": "0124",
+      "preference": 0,
+      "reason": 2,
+      "expect_u32": 7
+    },
+    {
+      "name": "build_hdr_payload3",
+      "op": "build_hdr",
+      "payload_len": 3,
+      "expect_frame_hex": "dd07506f9a16"
     }
   ]
 }
