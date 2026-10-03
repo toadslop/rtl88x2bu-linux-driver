@@ -172,6 +172,8 @@ pub mod vht {
     const LDPC_VHT_CAP_TX: u8 = 1 << 1;
     const STBC_VHT_ENABLE_TX: u8 = 1 << 0;
     const STBC_VHT_CAP_TX: u8 = 1 << 1;
+    const BEAMFORMING_VHT_BEAMFORMER_ENABLE: u16 = 1 << 0;
+    const BEAMFORMING_VHT_BEAMFORMEE_ENABLE: u16 = 1 << 1;
 
     static mut G_HAL_TX_NSS: u8 = 2;
 
@@ -186,6 +188,8 @@ pub mod vht {
         pub sgi_80m: u8,
         pub ampdu_len: u8,
         pub vht_highest_rate: u8,
+        _pad_before_beamform: u8,
+        pub beamform_cap: u16,
     }
 
     #[repr(C)]
@@ -236,11 +240,27 @@ pub mod vht {
     }
 
     #[repr(C)]
+    pub struct RaInfo {
+        pub is_vht_enable: u8,
+    }
+
+    #[repr(C)]
+    pub struct BfInfo {
+        pub vht_beamform_cap: u16,
+    }
+
+    #[repr(C)]
+    pub struct StaCmn {
+        pub bw_mode: u8,
+        pub ra_info: RaInfo,
+        pub bf_info: BfInfo,
+    }
+
+    #[repr(C)]
     pub struct StaInfo {
         pub flags: i32,
         pub vhtpriv: VhtPriv,
-        pub bw_mode: u8,
-        pub ra_is_vht: u8,
+        pub cmn: StaCmn,
     }
 
     #[repr(C)]
@@ -248,6 +268,7 @@ pub mod vht {
         pub registrypriv: RegistryPriv,
         pub mlmepriv: MlmePriv,
         pub mlmeextpriv: MlmeExtPriv,
+        _pad_before_rfctl: [u8; 5],
         pub rfctl: RfCtl,
     }
 
@@ -331,6 +352,8 @@ pub mod vht {
             sgi_80m: 0,
             ampdu_len: 0,
             vht_highest_rate: 0,
+            _pad_before_beamform: 0,
+            beamform_cap: 0,
         };
 
         if !data.is_null() && length == 12 {
@@ -344,7 +367,12 @@ pub mod vht {
             return;
         }
 
-        sta.vhtpriv.vht_option = vht_option;
+        if (sta.flags & WLAN_STA_VHT) != 0 {
+            sta.vhtpriv.vht_option = vht_option;
+            if vht_option != 0 {
+                sta.cmn.ra_info.is_vht_enable = _TRUE;
+            }
+        }
 
         let data = sta.vhtpriv.vht_cap;
         let pvhtpriv = &mut adapter.mlmepriv.vhtpriv;
@@ -366,6 +394,20 @@ pub mod vht {
         }
         sta.vhtpriv.stbc_cap = cur_stbc_cap;
 
+        let mut cur_beamform_cap = 0u16;
+        if (pvhtpriv.beamform_cap & BEAMFORMING_VHT_BEAMFORMER_ENABLE) != 0
+            && le1(&data, 12, 1) != 0
+        {
+            cur_beamform_cap |= BEAMFORMING_VHT_BEAMFORMEE_ENABLE;
+        }
+        if (pvhtpriv.beamform_cap & BEAMFORMING_VHT_BEAMFORMEE_ENABLE) != 0
+            && le1(&data, 11, 1) != 0
+        {
+            cur_beamform_cap |= BEAMFORMING_VHT_BEAMFORMER_ENABLE;
+        }
+        sta.vhtpriv.beamform_cap = cur_beamform_cap;
+        sta.cmn.bf_info.vht_beamform_cap = cur_beamform_cap;
+
         sta.vhtpriv.ampdu_len = le2(&data[2..], 7, 3) as u8;
         let cur_mcs = [data[4], data[5]];
         let mut map = [0u8; 2];
@@ -373,8 +415,5 @@ pub mod vht {
         sta.vhtpriv.vht_mcs_map = map;
         sta.vhtpriv.vht_highest_rate =
             unsafe { rtw_get_vht_highest_rate(sta.vhtpriv.vht_mcs_map.as_mut_ptr()) };
-        if sta.vhtpriv.vht_option != 0 {
-            sta.ra_is_vht = _TRUE;
-        }
     }
 }
