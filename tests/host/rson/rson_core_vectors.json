@@ -12,6 +12,13 @@
       "expect_hex": "0102aa"
     },
     {
+      "name": "str2hex_upper",
+      "op": "str2hex",
+      "hex_str": "0x0A0B",
+      "expect_int": 1,
+      "expect_hex": "0a0b"
+    },
+    {
       "name": "str2hex_bad_prefix",
       "op": "str2hex",
       "hex_str": "0102",
