@@ -1,0 +1,20 @@
+{
+  "vectors": [
+    {
+      "name": "get_struct_vendor_ie",
+      "bssid_mac": "001122334455",
+      "tlv_ie_hex": "dd0bfafafa0108060402010100",
+      "expect_int": 1
+    },
+    {
+      "name": "get_struct_missing_ie",
+      "bssid_mac": "001122334455",
+      "expect_int": -74
+    },
+    {
+      "name": "get_struct_root_bssid",
+      "bssid_mac": "aabbccddeeff",
+      "expect_int": 1
+    }
+  ]
+}
