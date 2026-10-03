@@ -21,6 +21,7 @@ test-c: test_tdls_lifecycle
 	./test_tdls_lifecycle tdls_lifecycle_vectors.json
 
 test-rust: test_tdls_lifecycle_rust test-ht-cap-rust
+	./test_tdls_lifecycle_rust tdls_lifecycle_vectors.json
 
 test-ht-cap: test_tdls_ht_cap
 	./test_tdls_ht_cap tdls_ht_cap_vectors.json
