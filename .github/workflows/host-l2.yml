@@ -240,6 +240,10 @@ jobs:
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/wnm test-c test-rust
 
+      - name: Host wapi PN/IE leaf parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/wapi test-c
+
       - name: Host roch handlers parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/roch test
