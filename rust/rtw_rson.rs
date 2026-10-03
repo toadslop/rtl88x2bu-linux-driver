@@ -68,10 +68,14 @@ fn memcmp6(a: *const u8, b: &[u8; 6]) -> bool {
 #[no_mangle]
 pub extern "C" fn key_2char2num(hch: u8, lch: u8) -> u8 {
     fn nib(c: u8) -> u8 {
-        if c >= b'a' {
-            c - b'a' + 10
-        } else {
+        if c >= b'0' && c <= b'9' {
             c - b'0'
+        } else if c >= b'a' && c <= b'f' {
+            c - b'a' + 10
+        } else if c >= b'A' && c <= b'F' {
+            c - b'A' + 10
+        } else {
+            0xff
         }
     }
     (nib(hch) << 4) | nib(lch)
@@ -278,6 +282,7 @@ pub extern "C" fn rtw_get_rson_struct(bssid: *mut WlanBssidEx, out: *mut RtwRson
                 r.loading = *q;
                 return _TRUE;
             }
+            p = p.add((len + 2) as usize);
         }
     }
     -74
