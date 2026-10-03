@@ -272,7 +272,7 @@ the remainder is non-trivial (copy the per-PR detail from the plan).
 |------|-----|
 | Each PR targets its planned base branch | preserves reviewable increments |
 | `gh stack link` after layers exist | leave PRs unlinked on GitHub (always link before handoff) |
-| Do not retarget bases to `master` until maintainer `gh stack merge` | `prepare-pr-for-merge` uses `gh stack sync` |
+| Do not retarget bases to `master` while PRs stay GitHub-stacked | `prepare-pr-for-merge`: `gh stack unstack` first if bottom must move to `master` |
 | Use `gh stack rebase` / `gh stack sync` for stack-wide updates | manual per-branch rebase of the whole stack |
 | **Every PR ≤ 250 changed lines (target ~200)** | enforced in step 3 before commit — non-negotiable |
 

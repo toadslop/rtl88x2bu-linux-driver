@@ -129,7 +129,7 @@ gh pr view <number> --json isDraft,baseRefName,mergeable,mergeStateStatus,review
 | `isDraft` is `true` | `isDraft` is `false` |
 | `mergeable` is `CONFLICTING`, or `mergeStateStatus` is `BEHIND` / `DIRTY` / `BLOCKED` | `mergeable` is `MERGEABLE` and stack synced with `master` |
 | Any layer in a **GitHub stack chain** needs `gh stack sync`/rebase or has failing checks | All layers green; stack ready for maintainer `gh stack merge` |
-| `baseRefName` ≠ `master` on a **standalone** PR (not part of a multi-PR chain) | N/A — standalone must target `master` when merge-ready |
+| `baseRefName` ≠ `master` on the **stack bottom** (or a standalone PR), including when the parent branch is already on `master` | N/A — standalone must target `master` when merge-ready; GitHub-stacked bottoms need **`gh stack unstack`** before `gh pr edit --base master` (see `prepare-pr-for-merge`) |
 | Required checks failing or still pending | All required checks **success** |
 | `reviewDecision` is `CHANGES_REQUESTED`, or a review is **in progress** | No in-progress review; no blocking requested-changes feedback |
 | Open blocking review threads the author must address | Approved or awaiting maintainer merge only (optional nits do **not** block Path B/C) |
