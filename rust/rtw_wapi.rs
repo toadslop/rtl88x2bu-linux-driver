@@ -47,7 +47,11 @@ pub extern "C" fn host_wapi_adapter_init(a: *mut Adapter) {
         return;
     }
     unsafe {
-        core::ptr::write_bytes(a, 0, 1);
+        core::ptr::write_bytes(
+            a as *mut u8,
+            0,
+            core::mem::size_of::<Adapter>(),
+        );
         WapiResetAllCamEntry(a);
     }
 }
@@ -135,6 +139,7 @@ pub extern "C" fn WapiGetEntryForCamWrite(
     kid: U8,
     is_msk: U8,
 ) -> U8 {
+    // Host L2 hardening: C driver dereferences without NULL checks (UB on NULL).
     if padapter.is_null() || pMacAddr.is_null() {
         return 0xff;
     }
@@ -173,6 +178,7 @@ pub extern "C" fn WapiGetEntryForCamClear(
     keyid: U8,
     is_msk: U8,
 ) -> U8 {
+    // Host L2 hardening: C driver dereferences without NULL checks (UB on NULL).
     if padapter.is_null() || pPeerMac.is_null() {
         return 0xff;
     }
