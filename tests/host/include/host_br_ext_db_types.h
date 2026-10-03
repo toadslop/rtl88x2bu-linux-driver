@@ -22,4 +22,8 @@ typedef struct {
 	u8 scdb_ip[4];
 } host_nat25_db_adapter;
 
+void host_nat25_db_cleanup(host_nat25_db_adapter *priv);
+void host_nat25_db_expire(host_nat25_db_adapter *priv);
+int host_nat25_db_count(host_nat25_db_adapter *priv);
+
 #endif
