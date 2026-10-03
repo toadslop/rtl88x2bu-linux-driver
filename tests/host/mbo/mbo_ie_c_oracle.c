@@ -5,6 +5,7 @@
 static u8 wfa_mbo_oui[] = {0x50, 0x6F, 0x9A, 0x16};
 
 #define rtw_mbo_get_oui(p) ((u8 *)(p) + 2)
+#define rtw_mbo_get_disallow_res(p) ((u8 *)(p) + 3)
 #define rtw_mbo_set_1byte_ie(p, v, l) rtw_set_fixed_ie((p), 1, (v), (l))
 #define rtw_mbo_set_4byte_ie(p, v, l) rtw_set_fixed_ie((p), 4, (v), (l))
 
@@ -123,6 +124,34 @@ void host_mbo_build_mbo_ie_hdr(u8 **pframe, struct pkt_attrib *pattrib,
 	*pframe = rtw_mbo_set_1byte_ie(*pframe, &eid, &(pattrib->pktlen));
 	*pframe = rtw_mbo_set_1byte_ie(*pframe, &len, &(pattrib->pktlen));
 	*pframe = rtw_mbo_set_4byte_ie(*pframe, wfa_mbo_oui, &(pattrib->pktlen));
+}
+
+u8 host_mbo_disallowed_network(struct wlan_network *pnetwork)
+{
+	u8 *p;
+	u32 attr_len = 0;
+
+	if (!pnetwork)
+		return _FALSE;
+	p = host_mbo_attrs_get(pnetwork->network.IEs, pnetwork->network.IELength,
+			       RTW_MBO_ATTR_ASSOC_DISABLED_ID, &attr_len);
+	if (!p)
+		return _FALSE;
+	RTW_INFO("MBO : block " MAC_FMT " reason %d\n",
+		 MAC_ARG(pnetwork->network.MacAddress),
+		 *rtw_mbo_get_disallow_res(p));
+	return _TRUE;
+}
+
+u8 host_mbo_non_pref_chan_exist(struct npref_ch *pch, u8 ch)
+{
+	u32 i;
+
+	for (i = 0; i < pch->nm_of_ch; i++) {
+		if (pch->chs[i] == ch)
+			return _TRUE;
+	}
+	return _FALSE;
 }
 
 void host_mbo_adapter_clear(_adapter *a)
