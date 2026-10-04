@@ -21,6 +21,7 @@ on:
       - 'core/rtw_rf_kfree_tx_gain.c'
       - 'core/rtw_rf_rest.c'
       - 'core/rtw_rm_util_rest.c'
+      - 'core/rtw_rm_parse_rest.c'
       - 'core/rtw_chplan.c'
       - 'core/rtw_chplan_rest.c'
       - 'core/rtw_chplan.h'
@@ -30,6 +31,7 @@ on:
       - 'core/rtw_ieee80211_rest.c'
       - 'core/rtw_rm_util.c'
       - 'core/rtw_rm_util_rest.c'
+      - 'core/rtw_rm_parse_rest.c'
       - 'core/rtw_vht.c'
       - 'core/rtw_vht_build.c'
       - 'core/rtw_vht_rest.c'
@@ -85,6 +87,7 @@ jobs:
               - 'core/rtw_rf_kfree_tx_gain.c'
               - 'core/rtw_rf_rest.c'
               - 'core/rtw_rm_util_rest.c'
+              - 'core/rtw_rm_parse_rest.c'
               - 'core/rtw_chplan.c'
               - 'core/rtw_chplan_rest.c'
               - 'core/rtw_chplan.h'
@@ -175,6 +178,10 @@ jobs:
       - name: Host rm_rest parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/rm test
+
+      - name: Host rm_parse parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/rm_parse test
 
       - name: Host vht_rest parity (L2)
         if: steps.filter.outputs.l2 == 'true'
