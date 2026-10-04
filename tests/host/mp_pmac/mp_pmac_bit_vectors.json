@@ -1,0 +1,25 @@
+{
+  "vectors": [
+    {
+      "name": "crc16_cck_mcs0_length0",
+      "op": "crc16",
+      "in_size": 32,
+      "in_bits": "01010000000000000000000000000000",
+      "out_bits": "0000111000000100"
+    },
+    {
+      "name": "crc8_ht_sig_reserved",
+      "op": "crc8",
+      "in_size": 34,
+      "in_bits": "0000000000000000000000000010000000",
+      "out_bits": "00111011"
+    },
+    {
+      "name": "byte_to_bit_rate0_nibble",
+      "op": "byte_to_bit",
+      "in_size": 3,
+      "in_bits": "110100000000000000000000",
+      "out_hex": "0b0000"
+    }
+  ]
+}
