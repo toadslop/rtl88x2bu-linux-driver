@@ -21,6 +21,8 @@ RUSTC := rustc
 all: test
 
 test: test_odm_phydm_init test_odm_adaptivity_leaf test-radar
+	./test_odm_phydm_init odm_phydm_init_vectors.json
+	./test_odm_adaptivity_leaf odm_adaptivity_leaf_vectors.json
 
 test-radar: test_odm_radar_txpwr_leaf test_odm_radar_txpwr_rust
 	./test_odm_radar_txpwr_leaf odm_radar_txpwr_leaf_vectors.json
