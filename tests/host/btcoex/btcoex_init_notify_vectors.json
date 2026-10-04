@@ -19,8 +19,6 @@
     {"name": "media_ap", "fn": "media", "coex": 1, "fw": 16, "arg": 1, "exp_hal": 1, "exp_dl": 1, "exp_last": 1},
     {"name": "media_sta", "fn": "media", "coex": 1, "arg": 1, "exp_hal": 1, "exp_last": 1},
     {"name": "media_disconnect_buddy_asoc", "fn": "media", "coex": 1, "arg": 0, "buddy_asoc": 1, "exp_hal": 0},
-    {"name": "media_disconnect_ok", "fn": "media", "coex": 1, "arg": 0, "exp_hal": 1, "exp_last": 0},
-    {"name": "media_disconnect_buddy_asoc", "fn": "media", "coex": 1, "arg": 0, "buddy_asoc": 1, "exp_hal": 0},
     {"name": "media_disconnect_ok", "fn": "media", "coex": 1, "arg": 0, "exp_hal": 1, "exp_last": 0}
   ]
 }
