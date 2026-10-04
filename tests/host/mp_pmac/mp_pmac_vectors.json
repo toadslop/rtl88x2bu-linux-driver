@@ -100,6 +100,20 @@
       "exp_nsts": 1,
       "n_sym": 10,
       "exp_lsig_hex": "eb0402"
+    },
+    {
+      "name": "ht_sig_mcs7_40mhz_sgi",
+      "op": "ht_sig",
+      "pkt_len": 500,
+      "bandwidth": 1,
+      "b_stbc": 0,
+      "b_ldpc": 0,
+      "b_sgi": 1,
+      "ndp_sound": 0,
+      "ntx": 1,
+      "exp_mcs": 7,
+      "exp_nss": 1,
+      "exp_ht_sig_hex": "87f401872002"
     }
   ]
 }
