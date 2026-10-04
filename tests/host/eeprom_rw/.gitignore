@@ -1,1 +1,3 @@
 test_eeprom_rw
+test_eeprom_rw_rust
+librust_eeprom_rw.a
