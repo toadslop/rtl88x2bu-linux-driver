@@ -22,6 +22,7 @@ static struct net_device g_net[4];
 static struct dvobj_priv g_dv;
 static struct _adapter g_if[4];
 
+#ifndef HOST_MI_RUST
 static void n_carrier_off(struct net_device *n)
 {
 	if (n && n->mock)
@@ -50,6 +51,9 @@ static void n_wake_queue(struct net_device *n)
 		n->mock->queue_woken = 1;
 }
 
+#endif /* !HOST_MI_RUST - netif mock helpers for C oracle only */
+
+#ifndef HOST_MI_RUST
 typedef u8 (*mi_op)(struct _adapter *, void *);
 
 static u8 mi_process(struct _adapter *pad, int ex_self, mi_op op, void *data)
@@ -110,9 +114,17 @@ static u8 op_carr_off(struct _adapter *a, void *d)
 		n_carrier_off(a->pnetdev);
 	return _TRUE;
 }
+#endif /* !HOST_MI_RUST */
+
+#ifdef HOST_MI_RUST
+extern u8 mi_rust_call_mi_netif(struct _adapter *pad, int fn_id);
+#endif
 
 static u8 call_mi(struct _adapter *pad, int fn)
 {
+#ifdef HOST_MI_RUST
+	return mi_rust_call_mi_netif(pad, fn);
+#else
 	static const struct { mi_op op; int buddy; } tbl[] = {
 		{op_caroff, 0},  {op_caroff, 1},  {op_caron, 0},  {op_caron, 1},
 		{op_stop, 0},    {op_stop, 1},    {op_wake, 0},   {op_wake, 1},
@@ -122,6 +134,7 @@ static u8 call_mi(struct _adapter *pad, int fn)
 	if (fn < 0 || fn >= (int)(sizeof(tbl) / sizeof(tbl[0])))
 		return 0xff;
 	return mi_process(pad, tbl[fn].buddy, tbl[fn].op, NULL);
+#endif
 }
 
 struct vector {
