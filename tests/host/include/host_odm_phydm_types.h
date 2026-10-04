@@ -16,7 +16,23 @@ typedef enum {
 #define DYNAMIC_FUNC_DISABLE 0
 #define HALRF_CMNINFO_ABILITY 0
 #define ODM_CMNINFO_IC_TYPE 0
+/* Mirrors enum phydm_ic in hal/phydm/phydm_pre_define.h (subset used by chip_map). */
+#define ODM_RTL8188E (1u << 0)
+#define ODM_RTL8812 (1u << 1)
+#define ODM_RTL8821 (1u << 2)
+#define ODM_RTL8192E (1u << 3)
+#define ODM_RTL8723B (1u << 4)
+#define ODM_RTL8814A (1u << 5)
 #define ODM_RTL8822B (1u << 7)
+#define ODM_RTL8703B (1u << 8)
+#define ODM_RTL8188F (1u << 10)
+#define ODM_RTL8723D (1u << 11)
+#define ODM_RTL8821C (1u << 13)
+#define ODM_RTL8814B (1u << 14)
+#define ODM_RTL8710B (1u << 16)
+#define ODM_RTL8192F (1u << 17)
+#define ODM_RTL8822C (1u << 18)
+#define ODM_RTL8723F (1u << 24)
 
 struct dm_struct {
 	u64 support_ability;

@@ -1,8 +1,12 @@
 {
   "oracle": "core/rtw_odm.c rtw_phydm_ability_ops rtw_odm_init_ic_type",
   "vectors": [
-    {"name": "set_get", "op": 0, "ability": 128, "expect": 128},
-    {"name": "disable", "op": 2, "expect": 0, "expect_rf": 0},
-    {"name": "init_ic", "op": 100, "chip_type": 10, "expect_ic": 128}
+    {"name": "set_get", "op": 1, "ability": 128, "expect": 128},
+    {"name": "disable", "op": 0, "expect": 0, "expect_rf": 0},
+    {"name": "func_clr", "op": 2, "ability": 255, "expect": 128, "expect_ic": 127},
+    {"name": "ability_set", "op": 5, "ability": 1110, "expect": 1110},
+    {"name": "bk_restore", "op": 50},
+    {"name": "init_ic_8822b", "op": 100, "chip_type": 10, "expect_ic": 128},
+    {"name": "init_ic_8188f", "op": 100, "chip_type": 9, "expect_ic": 1024}
   ]
 }

@@ -4,7 +4,28 @@
 static u64 g_rf_ability;
 static u32 g_ic_type;
 
-static const u32 chip_map[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ODM_RTL8822B };
+/* Same table as _chip_type_to_odm_ic_type[] in hal/hal_intf.c */
+static const u32 chip_map[] = {
+	0,
+	ODM_RTL8188E,
+	ODM_RTL8192E,
+	ODM_RTL8812,
+	ODM_RTL8821,
+	ODM_RTL8723B,
+	ODM_RTL8814A,
+	ODM_RTL8703B,
+	ODM_RTL8188F,
+	ODM_RTL8188F,
+	ODM_RTL8822B,
+	ODM_RTL8723D,
+	ODM_RTL8821C,
+	ODM_RTL8710B,
+	ODM_RTL8192F,
+	ODM_RTL8822C,
+	ODM_RTL8814B,
+	ODM_RTL8723F,
+	0,
+};
 
 u32 chip_type_to_odm_ic_type(u8 chip_type)
 {
@@ -68,6 +89,20 @@ u32 rtw_phydm_ability_ops(_adapter *adapter, HAL_PHYDM_OPS ops, u32 ability)
 		break;
 	case HAL_PHYDM_FUNC_SET:
 		podmpriv->support_ability |= ability;
+		break;
+	case HAL_PHYDM_FUNC_CLR:
+		podmpriv->support_ability &= ~(ability);
+		break;
+	case HAL_PHYDM_ABILITY_BK:
+		podmpriv->bk_support_ability = podmpriv->support_ability;
+		pHalData->bk_rf_ability = halrf_cmn_info_get(podmpriv, HALRF_CMNINFO_ABILITY);
+		break;
+	case HAL_PHYDM_ABILITY_RESTORE:
+		podmpriv->support_ability = podmpriv->bk_support_ability;
+		halrf_cmn_info_set(podmpriv, HALRF_CMNINFO_ABILITY, pHalData->bk_rf_ability);
+		break;
+	case HAL_PHYDM_ABILITY_SET:
+		podmpriv->support_ability = ability;
 		break;
 	case HAL_PHYDM_ABILITY_GET:
 		result = podmpriv->support_ability;

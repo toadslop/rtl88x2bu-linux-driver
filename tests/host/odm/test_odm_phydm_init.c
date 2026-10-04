@@ -45,16 +45,38 @@ static int run_vector(struct vector *v)
 		got = host_odm_ic_type(adapter_to_phydm(&adapter));
 		if (got != (u32)v->expect_ic)
 			goto fail;
-	} else if (v->op == 0) {
+	} else if (v->op == (int)HAL_PHYDM_FUNC_SET) {
 		rtw_phydm_ability_ops(&adapter, HAL_PHYDM_FUNC_SET, (u32)v->ability);
 		got = rtw_phydm_ability_ops(&adapter, HAL_PHYDM_ABILITY_GET, 0);
 		if (got != (u32)v->expect)
 			goto fail;
-	} else if (v->op == 2) {
+	} else if (v->op == (int)HAL_PHYDM_DIS_ALL_FUNC) {
 		rtw_phydm_ability_ops(&adapter, HAL_PHYDM_DIS_ALL_FUNC, 0);
 		got = rtw_phydm_ability_ops(&adapter, HAL_PHYDM_ABILITY_GET, 0);
 		if (got != (u32)v->expect ||
 		    host_odm_rf_ability(adapter_to_phydm(&adapter)) != (u32)v->expect_rf)
+			goto fail;
+	} else if (v->op == (int)HAL_PHYDM_FUNC_CLR) {
+		rtw_phydm_ability_ops(&adapter, HAL_PHYDM_FUNC_SET, (u32)v->ability);
+		rtw_phydm_ability_ops(&adapter, HAL_PHYDM_FUNC_CLR, (u32)v->expect);
+		got = rtw_phydm_ability_ops(&adapter, HAL_PHYDM_ABILITY_GET, 0);
+		if (got != (u32)v->expect_ic)
+			goto fail;
+	} else if (v->op == (int)HAL_PHYDM_ABILITY_SET) {
+		rtw_phydm_ability_ops(&adapter, HAL_PHYDM_ABILITY_SET, (u32)v->ability);
+		got = rtw_phydm_ability_ops(&adapter, HAL_PHYDM_ABILITY_GET, 0);
+		if (got != (u32)v->expect)
+			goto fail;
+	} else if (v->op == 50) {
+		rtw_phydm_ability_ops(&adapter, HAL_PHYDM_FUNC_SET, 0xAA);
+		rtw_phydm_ability_ops(&adapter, HAL_PHYDM_ABILITY_BK, 0);
+		rtw_phydm_ability_ops(&adapter, HAL_PHYDM_ABILITY_SET, 0);
+		got = rtw_phydm_ability_ops(&adapter, HAL_PHYDM_ABILITY_GET, 0);
+		if (got != 0)
+			goto fail;
+		rtw_phydm_ability_ops(&adapter, HAL_PHYDM_ABILITY_RESTORE, 0);
+		got = rtw_phydm_ability_ops(&adapter, HAL_PHYDM_ABILITY_GET, 0);
+		if (got != 0xAA)
 			goto fail;
 	} else {
 		goto fail;
@@ -67,12 +89,12 @@ fail:
 }
 int main(int argc, char **argv)
 {
-	struct vector vectors[8];
+	struct vector vectors[16];
 	size_t nvec = 0;
 	int failed = 0;
 	const char *path = (argc > 1) ? argv[1] : "odm_phydm_init_vectors.json";
 
-	if (host_load_vectors(path, vectors, sizeof(vectors[0]), 8,
+	if (host_load_vectors(path, vectors, sizeof(vectors[0]), 16,
 			      parse_vector_object, &nvec))
 		return 2;
 	for (size_t i = 0; i < nvec; i++)
