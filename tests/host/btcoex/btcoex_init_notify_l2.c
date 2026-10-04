@@ -59,6 +59,8 @@ static u8 buddy_asoc_state(mock_adpt *a)
 
 static void hal_init(mock_adpt *a) { (void)a; g_tr.init++; }
 static void hal_pwr_on(mock_adpt *a) { (void)a; g_tr.pwr_on++; }
+static void hal_pwr_off(mock_adpt *a) { (void)a; g_tr.pwr_off++; }
+static void hal_preload(mock_adpt *a) { (void)a; g_tr.preload++; }
 static void hal_ant(mock_adpt *a) { (void)a; g_tr.ant++; }
 static void hal_hw_init(mock_adpt *a, u8 w) { (void)a; g_tr.hw_init++; g_tr.last_wifi_only = w; }
 static void hal_ips(mock_adpt *a, u8 t) { (void)a; g_tr.ips++; g_tr.last_type = t; }
@@ -69,6 +71,8 @@ static void hal_media(mock_adpt *a, u8 t) { (void)a; g_tr.media++; g_tr.last_typ
 #ifndef HOST_BTCOEX_INIT_NOTIFY_RUST
 static void o_init(mock_adpt *a) { hal_init(a); }
 static void o_pwr_on(mock_adpt *a) { hal_pwr_on(a); }
+static void o_pwr_off(mock_adpt *a) { hal_pwr_off(a); }
+static void o_preload(mock_adpt *a) { hal_preload(a); }
 static void o_ant(mock_adpt *a) { hal_ant(a); }
 static void o_hw_init(mock_adpt *a, u8 w) { hal_hw_init(a, w); }
 static void o_ips(mock_adpt *a, u8 t)
@@ -101,15 +105,6 @@ static void o_media(mock_adpt *a, u8 st)
 		g_tr.dl_rsvd++;
 	hal_media(a, st);
 }
-#else
-extern void o_init(mock_adpt *a);
-extern void o_pwr_on(mock_adpt *a);
-extern void o_ant(mock_adpt *a);
-extern void o_hw_init(mock_adpt *a, u8 w);
-extern void o_ips(mock_adpt *a, u8 t);
-extern void o_lps(mock_adpt *a, u8 t);
-extern void o_scan(mock_adpt *a, u8 t);
-extern void o_media(mock_adpt *a, u8 st);
 #endif
 
 struct vector {
@@ -158,6 +153,10 @@ static int run_vec(struct vector *v)
 		o_init(&a);
 	else if (!strcmp(v->fn, "pwr_on"))
 		o_pwr_on(&a);
+	else if (!strcmp(v->fn, "pwr_off"))
+		o_pwr_off(&a);
+	else if (!strcmp(v->fn, "preload"))
+		o_preload(&a);
 	else if (!strcmp(v->fn, "ips"))
 		o_ips(&a, (u8)v->arg);
 	else if (!strcmp(v->fn, "lps"))
@@ -179,6 +178,10 @@ static int run_vec(struct vector *v)
 		got = g_tr.init;
 	else if (!strcmp(v->fn, "pwr_on"))
 		got = g_tr.pwr_on;
+	else if (!strcmp(v->fn, "pwr_off"))
+		got = g_tr.pwr_off;
+	else if (!strcmp(v->fn, "preload"))
+		got = g_tr.preload;
 	else if (!strcmp(v->fn, "hw_init"))
 		got = g_tr.hw_init;
 	else if (!strcmp(v->fn, "ips"))
