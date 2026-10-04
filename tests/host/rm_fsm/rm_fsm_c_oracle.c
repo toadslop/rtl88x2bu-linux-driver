@@ -7,6 +7,8 @@
 void host_rm_fsm_adapter_init(_adapter *a)
 {
 	_rtw_memset(a, 0, sizeof(*a));
+	_rtw_init_queue(&a->rmpriv.ev_queue);
+	_rtw_init_queue(&a->rmpriv.rm_queue);
 }
 
 int is_list_linked(const struct _list *head)
