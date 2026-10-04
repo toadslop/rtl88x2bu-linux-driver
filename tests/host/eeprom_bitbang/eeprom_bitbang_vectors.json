@@ -1,0 +1,30 @@
+{
+  "vectors": [
+    { "name": "reset", "op": "reset" },
+    {
+      "name": "up_clk",
+      "op": "up_clk",
+      "init_x": 8,
+      "expect_u16": 12,
+      "expect_writes": 1,
+      "expect_reg": 12
+    },
+    { "name": "down_reset", "op": "reset" },
+    {
+      "name": "down_clk",
+      "op": "down_clk",
+      "init_x": 12,
+      "expect_u16": 8,
+      "expect_writes": 1,
+      "expect_reg": 8
+    },
+    { "name": "standby_reset", "op": "reset" },
+    { "name": "standby_set", "op": "set_reg", "init_reg": 15 },
+    {
+      "name": "standby",
+      "op": "standby",
+      "expect_reg": 11,
+      "expect_writes": 2
+    }
+  ]
+}
