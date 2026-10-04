@@ -35,7 +35,8 @@ pub struct MockAdpt {
     mlme: MockMlme,
     hal: MockHal,
     dv: MockDv,
-    buddy: U8,
+    buddy_survey: U8,
+    buddy_asoc: U8,
     sreset: U8,
 }
 
@@ -148,7 +149,7 @@ pub unsafe extern "C" fn o_scan(a: *mut MockAdpt, t: U8) {
     if ad.hal.eeprom_coexist == 0 {
         return;
     }
-    if t == 0 && (ad.buddy != 0 || ad.dv.mgmt_tx != 0 || ad.dv.roch != 0) {
+    if t == 0 && (ad.buddy_survey != 0 || ad.dv.mgmt_tx != 0 || ad.dv.roch != 0) {
         return;
     }
     hal_scan(a, t);
@@ -164,7 +165,7 @@ pub unsafe extern "C" fn o_media(a: *mut MockAdpt, st: U8) {
     if ad.hal.eeprom_coexist == 0 || ad.sreset != 0 {
         return;
     }
-    if st == RT_MEDIA_DISCONNECT && ad.buddy != 0 {
+    if st == RT_MEDIA_DISCONNECT && ad.buddy_asoc != 0 {
         return;
     }
     if st == RT_MEDIA_CONNECT && chk_fw(&ad.mlme, WIFI_AP_STATE as c_int) == _TRUE {
