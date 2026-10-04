@@ -106,9 +106,9 @@ typedef enum _MPT_RATE_INDEX {
 	 MPT_IS_VHT_2S_RATE(_rate))
 #define MPT_IS_3SS_RATE(_rate) \
 	((MPT_RATE_MCS16 <= (_rate) && (_rate) <= MPT_RATE_MCS23) || \
-	 MPT_IS_VHT_3SS_RATE(_rate))
+	 MPT_IS_VHT_3S_RATE(_rate))
 #define MPT_IS_4SS_RATE(_rate) \
 	((MPT_RATE_MCS24 <= (_rate) && (_rate) <= MPT_RATE_MCS31) || \
-	 MPT_IS_VHT_4SS_RATE(_rate))
+	 MPT_IS_VHT_4S_RATE(_rate))
 
 #endif /* HOST_MP_PMAC_RATE_H */

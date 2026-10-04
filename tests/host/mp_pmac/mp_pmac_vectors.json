@@ -46,6 +46,39 @@
       "exp_svc": 128,
       "exp_crc0": 80,
       "exp_crc1": 55
+    },
+    {
+      "name": "pkt_param_cck_1m",
+      "op": "pkt_param",
+      "tx_rate": 1,
+      "b_stbc": 0,
+      "exp_mcs": 0,
+      "exp_nss": 1,
+      "exp_nsts": 1,
+      "exp_rate_hex": 0,
+      "exp_m_stbc": 1
+    },
+    {
+      "name": "pkt_param_ht_mcs7_stbc",
+      "op": "pkt_param",
+      "tx_rate": 20,
+      "b_stbc": 1,
+      "exp_mcs": 7,
+      "exp_nss": 1,
+      "exp_nsts": 2,
+      "exp_rate_hex": 19,
+      "exp_m_stbc": 2
+    },
+    {
+      "name": "pkt_param_vht2ss_mcs3",
+      "op": "pkt_param",
+      "tx_rate": 113,
+      "b_stbc": 0,
+      "exp_mcs": 3,
+      "exp_nss": 2,
+      "exp_nsts": 2,
+      "exp_rate_hex": 57,
+      "exp_m_stbc": 1
     }
   ]
 }

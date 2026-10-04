@@ -21,6 +21,8 @@ struct vector {
 	u8 exp_sig, exp_svc;
 	u32 exp_length;
 	u8 exp_crc0, exp_crc1;
+	u8 tx_rate, b_stbc;
+	u8 exp_mcs, exp_nss, exp_nsts, exp_rate_hex, exp_m_stbc;
 };
 
 static int parse_bits(const char *s, bool *out, u8 cap, u8 *len_out)
@@ -71,6 +73,20 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 		v->exp_crc0 = (u8)tmp;
 	if (!host_json_parse_int_in(obj, len, "exp_crc1", &tmp))
 		v->exp_crc1 = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "tx_rate", &tmp))
+		v->tx_rate = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "b_stbc", &tmp))
+		v->b_stbc = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "exp_mcs", &tmp))
+		v->exp_mcs = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "exp_nss", &tmp))
+		v->exp_nss = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "exp_nsts", &tmp))
+		v->exp_nsts = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "exp_rate_hex", &tmp))
+		v->exp_rate_hex = (u8)tmp;
+	if (!host_json_parse_int_in(obj, len, "exp_m_stbc", &tmp))
+		v->exp_m_stbc = (u8)tmp;
 	return 0;
 }
 
@@ -102,6 +118,19 @@ static int run_vec(struct vector *v)
 		for (i = 0; i < 8; i++)
 			if (!!out[i] != !!exp[i])
 				return 1;
+	} else if (!strcmp(v->op, "pkt_param")) {
+		RT_PMAC_TX_INFO tx;
+		RT_PMAC_PKT_INFO pkt;
+
+		memset(&tx, 0, sizeof(tx));
+		memset(&pkt, 0, sizeof(pkt));
+		tx.TX_RATE = v->tx_rate;
+		tx.bSTBC = v->b_stbc;
+		PMAC_Get_Pkt_Param(&tx, &pkt);
+		if (pkt.MCS != v->exp_mcs || pkt.Nss != v->exp_nss ||
+		    pkt.Nsts != v->exp_nsts || tx.TX_RATE_HEX != v->exp_rate_hex ||
+		    tx.m_STBC != v->exp_m_stbc)
+			return 1;
 	} else if (!strcmp(v->op, "cck")) {
 		RT_PMAC_TX_INFO tx;
 		RT_PMAC_PKT_INFO pkt;
