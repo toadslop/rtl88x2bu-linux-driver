@@ -1,2 +1,5 @@
 test_odm_phydm_init
 test_odm_adaptivity_leaf
+test_odm_phydm_init_rust
+librust_odm.a
+odm_phydm_init_c_ref.o
