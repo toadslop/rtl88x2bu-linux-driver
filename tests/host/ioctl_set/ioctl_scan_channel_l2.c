@@ -67,7 +67,6 @@ static u8 O_WEP_PRIV(u32 key_index, u32 key_length, u32 *privacy_out)
 static u8 O_AUTH_MAP(mock_security_priv *sec, u32 authmode, u32 *dot11_out)
 {
 	sec->ndisauthtype = authmode;
-	sec->dot11AuthAlgrthm = 0;
 	if (sec->ndisauthtype > 3)
 		sec->dot11AuthAlgrthm = dot11AuthAlgrthm_8021X;
 	if (dot11_out)
@@ -80,7 +79,7 @@ struct vector {
 	char name[64];
 	char fn[32];
 	int scan_mode, band, expect_ret, expect_u32;
-	u32 key_index, key_length, authmode;
+	u32 key_index, key_length, authmode, sec_dot11;
 };
 
 static int parse_vector_object(const char *obj, size_t len, void *vv)
@@ -96,6 +95,7 @@ static int parse_vector_object(const char *obj, size_t len, void *vv)
 	host_json_parse_int_in(obj, len, "key_index", (int *)&v->key_index);
 	host_json_parse_int_in(obj, len, "key_length", (int *)&v->key_length);
 	host_json_parse_int_in(obj, len, "authmode", (int *)&v->authmode);
+	host_json_parse_int_in(obj, len, "sec_dot11", (int *)&v->sec_dot11);
 	host_json_parse_int_in(obj, len, "expect_ret", &v->expect_ret);
 	host_json_parse_int_in(obj, len, "expect_u32", &v->expect_u32);
 	return 0;
@@ -123,6 +123,8 @@ static int run_vector(struct vector *v)
 			goto fail;
 	} else if (!strcmp(v->fn, "auth_mode_map")) {
 		mock_security_priv sec = {0};
+
+		sec.dot11AuthAlgrthm = v->sec_dot11;
 		u32 dot11 = 0;
 
 		O_AUTH_MAP(&sec, v->authmode, &dot11);
