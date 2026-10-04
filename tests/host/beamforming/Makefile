@@ -10,7 +10,7 @@ PACKET_SRC := bf_packet_leaf_l2.c
 .PHONY: all test test-c test-rust test-packet clean
 all: test
 
-test: test-c test-packet
+test: test-c test-rust test-packet
 
 test-rust: test_bf_entry_packet_rust
 	./test_bf_entry_packet_rust

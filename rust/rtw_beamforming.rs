@@ -138,12 +138,15 @@ unsafe fn bfee_by_addr(a: BfHostPadpt, ra: *mut U8) -> *mut BfHostBfee {
 }
 
 #[cfg(host_bf_entry_packet_test)]
+const BF_HOST_MAX_BFER: usize = 3;
+
+#[cfg(host_bf_entry_packet_test)]
 unsafe fn cap_by_macid(a: BfHostPadpt, macid: U8) -> U32 {
     if a.is_null() {
         return 0;
     }
     let info = &(*a).hal.beamforming_info;
-    for bfee in &info.bfee {
+    for bfee in info.bfee.iter().take(BF_HOST_MAX_BFER) {
         if bfee.used == 0 {
             continue;
         }
