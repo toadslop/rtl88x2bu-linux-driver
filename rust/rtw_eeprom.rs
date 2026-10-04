@@ -131,6 +131,9 @@ mod host {
                 down_clk(p, &mut x);
                 mask >>= 1;
             }
+            if sr(p) {
+                return;
+            }
             x &= !_EEDI;
             wr(p, EE_9346CR, x as u8);
         }
@@ -189,9 +192,18 @@ mod host {
                 return;
             }
             let mut x = rd(p, EE_9346CR) as u16;
+            if sr(p) {
+                return;
+            }
             x &= !(_EECS | _EEDI);
             wr(p, EE_9346CR, x as u8);
+            if sr(p) {
+                return;
+            }
             up_clk(p, &mut x);
+            if sr(p) {
+                return;
+            }
             down_clk(p, &mut x);
         }
     }
