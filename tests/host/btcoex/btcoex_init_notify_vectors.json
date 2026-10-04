@@ -8,12 +8,14 @@
     {"name": "lps_coex", "fn": "lps", "coex": 1, "arg": 1, "exp_hal": 1, "exp_last": 1},
     {"name": "ant", "fn": "ant", "exp_hal": 1},
     {"name": "scan_active", "fn": "scan", "coex": 1, "arg": 1, "exp_hal": 1, "exp_last": 1},
-    {"name": "scan_end_buddy", "fn": "scan", "coex": 1, "arg": 0, "buddy": 1, "exp_hal": 0},
+    {"name": "scan_end_buddy", "fn": "scan", "coex": 1, "arg": 0, "buddy_survey": 1, "exp_hal": 0},
     {"name": "scan_end_mgmt", "fn": "scan", "coex": 1, "arg": 0, "mgmt": 1, "exp_hal": 0},
     {"name": "scan_end_ok", "fn": "scan", "coex": 1, "arg": 0, "exp_hal": 1},
     {"name": "media_no_coex", "fn": "media", "coex": 0, "arg": 1, "exp_hal": 0},
     {"name": "media_sreset", "fn": "media", "coex": 1, "sreset": 1, "arg": 1, "exp_hal": 0},
     {"name": "media_ap", "fn": "media", "coex": 1, "fw": 16, "arg": 1, "exp_hal": 1, "exp_dl": 1, "exp_last": 1},
-    {"name": "media_sta", "fn": "media", "coex": 1, "arg": 1, "exp_hal": 1, "exp_last": 1}
+    {"name": "media_sta", "fn": "media", "coex": 1, "arg": 1, "exp_hal": 1, "exp_last": 1},
+    {"name": "media_disconnect_buddy_asoc", "fn": "media", "coex": 1, "arg": 0, "buddy_asoc": 1, "exp_hal": 0},
+    {"name": "media_disconnect_ok", "fn": "media", "coex": 1, "arg": 0, "exp_hal": 1, "exp_last": 0}
   ]
 }
