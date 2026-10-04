@@ -10,6 +10,7 @@
 )]
 
 use std::ffi::c_void;
+use std::mem;
 use std::ptr;
 
 type U8 = u8;
