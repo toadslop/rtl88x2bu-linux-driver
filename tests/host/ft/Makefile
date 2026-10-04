@@ -4,12 +4,16 @@ HOST_JSON := ../crypto/host_vector_json.c
 SHIM := ft_ie_shim.c
 STUBS := ft_ie_stubs.c
 ORACLE := ft_ie_c_oracle.c
+<<<<<<< HEAD
 RUST_FT := $(ROOT)/rust/rtw_ft.rs
 RUSTC := rustc
+=======
+>>>>>>> origin/master
 CC := gcc
 CFLAGS := -Wall -Wextra -Werror -O2 -I$(HOST_INC) -I$(ROOT)/include \
 	-DCONFIG_RTW_BTM_ROAM
 
+<<<<<<< HEAD
 .PHONY: all test test-c test-rust clean
 
 all: test
@@ -35,3 +39,17 @@ test_ft_ie_rust: test_ft_ie.c librust_ft.a $(SHIM) $(STUBS) $(HOST_JSON)
 
 clean:
 	rm -f test_ft_ie test_ft_ie_rust librust_ft.a
+=======
+.PHONY: all test clean
+
+all: test
+
+test: test_ft_ie
+	./test_ft_ie ft_ie_vectors.json
+
+test_ft_ie: test_ft_ie.c $(SHIM) $(STUBS) $(ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_ft_ie.c $(SHIM) $(STUBS) $(ORACLE) $(HOST_JSON)
+
+clean:
+	rm -f test_ft_ie
+>>>>>>> origin/master
