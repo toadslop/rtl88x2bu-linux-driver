@@ -20,6 +20,12 @@ const _FAIL: u8 = 0;
 const _SUCCESS: u8 = 1;
 #[cfg(host_sdio_cmd_test)]
 const SD_IO_TRY_CNT: c_int = 8;
+#[cfg(host_sdio_cmd_test)]
+const MAX_CONTINUAL_IO_ERR: c_int = SD_IO_TRY_CNT;
+#[cfg(host_sdio_cmd_test)]
+const _TRUE: u8 = 1;
+#[cfg(host_sdio_cmd_test)]
+const _FALSE: u8 = 0;
 
 #[cfg(host_sdio_cmd_test)]
 #[repr(C)]
@@ -34,6 +40,7 @@ pub struct host_dvobj {
     pub intf_ops: *mut host_sdio_if_ops,
     pub continual_io_error: c_int,
     pub io_fail_remaining: c_int,
+    pub io_mock_err: c_int,
     pub read_fill: u8,
 }
 
@@ -61,12 +68,25 @@ static mut G_DV: host_dvobj = host_dvobj {
     intf_ops: std::ptr::null_mut(),
     continual_io_error: 0,
     io_fail_remaining: 0,
+    io_mock_err: 1,
     read_fill: 0xA5,
 };
 #[cfg(host_sdio_cmd_test)]
 static mut G_LAST_ADDR: u32 = 0;
 #[cfg(host_sdio_cmd_test)]
 static mut G_IO_COUNT: c_int = 0;
+
+#[cfg(host_sdio_cmd_test)]
+unsafe fn mock_io_err(d: &mut host_dvobj) -> c_int {
+    let err = if d.io_mock_err != 0 {
+        d.io_mock_err
+    } else {
+        1
+    };
+    G_IO_COUNT += 1;
+    d.io_fail_remaining -= 1;
+    err
+}
 
 #[cfg(host_sdio_cmd_test)]
 unsafe extern "C" fn mock_read(
@@ -78,8 +98,7 @@ unsafe extern "C" fn mock_read(
 ) -> c_int {
     let d = &mut *d;
     if d.io_fail_remaining > 0 {
-        d.io_fail_remaining -= 1;
-        return 1;
+        return mock_io_err(d);
     }
     G_LAST_ADDR = addr;
     G_IO_COUNT += 1;
@@ -97,12 +116,21 @@ unsafe extern "C" fn mock_write(
 ) -> c_int {
     let d = &mut *d;
     if d.io_fail_remaining > 0 {
-        d.io_fail_remaining -= 1;
-        return 1;
+        return mock_io_err(d);
     }
     G_LAST_ADDR = addr;
     G_IO_COUNT += 1;
     0
+}
+
+#[cfg(host_sdio_cmd_test)]
+unsafe fn host_inc_and_chk_continual_io_error(d: &mut host_dvobj) -> u8 {
+    d.continual_io_error += 1;
+    if d.continual_io_error > MAX_CONTINUAL_IO_ERR {
+        _TRUE
+    } else {
+        _FALSE
+    }
 }
 
 #[cfg(host_sdio_cmd_test)]
@@ -135,11 +163,12 @@ unsafe fn sdio_io(
         };
         if err == 0 {
             dv.continual_io_error = 0;
-            return _SUCCESS;
+            break;
         }
         retry += 1;
-        dv.continual_io_error += 1;
-        if dv.continual_io_error > SD_IO_TRY_CNT || i32::from(retry) > SD_IO_TRY_CNT {
+        let stop_retry = host_inc_and_chk_continual_io_error(dv);
+        if err == -1 || stop_retry == _TRUE || retry > SD_IO_TRY_CNT as u8 {
+            host_sdio_cmd_set_surprise(1);
             return _FAIL;
         }
         if (addr & 0x10000) != 0 || (addr & 0xE000) == 0 {
@@ -147,6 +176,7 @@ unsafe fn sdio_io(
         }
         return _FAIL;
     }
+    _SUCCESS
 }
 
 #[cfg(host_sdio_cmd_test)]
@@ -160,6 +190,7 @@ pub extern "C" fn host_sdio_cmd_reset() {
         G_DV.intf_ops = std::ptr::addr_of_mut!(G_OPS);
         G_DV.continual_io_error = 0;
         G_DV.io_fail_remaining = 0;
+        G_DV.io_mock_err = 1;
         G_DV.read_fill = 0xA5;
         G_LAST_ADDR = 0;
         G_IO_COUNT = 0;
@@ -172,6 +203,12 @@ pub extern "C" fn host_sdio_cmd_set_surprise(on: u8) {
     unsafe {
         G_AD.surprise_removed = if on != 0 { 1 } else { 0 };
     }
+}
+
+#[cfg(host_sdio_cmd_test)]
+#[no_mangle]
+pub extern "C" fn host_sdio_cmd_surprise() -> u8 {
+    unsafe { G_AD.surprise_removed }
 }
 
 #[cfg(host_sdio_cmd_test)]
@@ -189,7 +226,7 @@ pub extern "C" fn host_sdio_cmd_io_count() -> c_int {
 #[cfg(host_sdio_cmd_test)]
 #[no_mangle]
 pub extern "C" fn host_sdio_cmd_dvobj() -> *mut host_dvobj {
-    unsafe { std::ptr::addr_of_mut!(G_DV) }
+    std::ptr::addr_of_mut!(G_DV)
 }
 
 #[cfg(host_sdio_cmd_test)]
