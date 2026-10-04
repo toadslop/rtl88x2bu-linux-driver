@@ -1,21 +1,29 @@
 // SPDX-License-Identifier: GPL-2.0
+#define _RTW_ODM_ADAPTIVITY_LEAF_C_
+
+#ifdef HOST_ODM_ADAPTIVITY_TEST
 #include "host_odm_adaptivity_types.h"
+#else
+#include <rtw_odm.h>
+#include <hal_data.h>
+#include <hal_com.h>
+#endif
 
 #define RTW_ADAPTIVITY_EN_DISABLE 0
 #define RTW_ADAPTIVITY_EN_ENABLE 1
 #define RTW_ADAPTIVITY_MODE_NORMAL 0
 #define RTW_ADAPTIVITY_MODE_CARRIER_SENSE 1
 
+#if !defined(CONFIG_RUST) || defined(HOST_ODM_ADAPTIVITY_TEST) || !defined(CONFIG_RUST_ODM_ADAPTIVITY_LEAF)
+
 void rtw_odm_adaptivity_ver_msg(void *sel, _adapter *adapter)
 {
-	(void)sel;
 	(void)adapter;
 	RTW_PRINT_SEL(sel, "ADAPTIVITY_VERSION " ADAPTIVITY_VERSION "\n");
 }
 
 void rtw_odm_adaptivity_en_msg(void *sel, _adapter *adapter)
 {
-	(void)sel;
 	struct registry_priv *regsty = &adapter->registrypriv;
 
 	RTW_PRINT_SEL(sel, "RTW_ADAPTIVITY_EN_");
@@ -30,7 +38,6 @@ void rtw_odm_adaptivity_en_msg(void *sel, _adapter *adapter)
 
 void rtw_odm_adaptivity_mode_msg(void *sel, _adapter *adapter)
 {
-	(void)sel;
 	struct registry_priv *regsty = &adapter->registrypriv;
 
 	RTW_PRINT_SEL(sel, "RTW_ADAPTIVITY_MODE_");
@@ -81,9 +88,10 @@ void rtw_odm_adaptivity_parm_set(_adapter *adapter, s8 th_l2h_ini, s8 th_edcca_h
 
 void rtw_odm_get_perpkt_rssi(void *sel, _adapter *adapter)
 {
-	(void)sel;
 	struct dm_struct *odm = adapter_to_phydm(adapter);
 
 	RTW_PRINT_SEL(sel, "rx_rate = %s, rssi_a = %d(%%), rssi_b = %d(%%)\n",
 		      HDATA_RATE(odm->rx_rate), odm->rssi_a, odm->rssi_b);
 }
+
+#endif
