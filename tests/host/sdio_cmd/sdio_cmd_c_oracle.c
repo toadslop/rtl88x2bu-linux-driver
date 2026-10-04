@@ -8,13 +8,20 @@ static struct host_sdio_if_ops g_ops;
 static u32 g_last_addr;
 static int g_io_count;
 
+static int mock_io_err(struct host_dvobj *d)
+{
+	int err = d->io_mock_err ? d->io_mock_err : 1;
+
+	g_io_count++;
+	d->io_fail_remaining--;
+	return err;
+}
+
 static int mock_read(struct host_dvobj *d, unsigned int addr, void *buf, size_t len, int fixed)
 {
 	(void)fixed;
-	if (d->io_fail_remaining > 0) {
-		d->io_fail_remaining--;
-		return 1;
-	}
+	if (d->io_fail_remaining > 0)
+		return mock_io_err(d);
 	g_last_addr = addr;
 	g_io_count++;
 	memset(buf, d->read_fill, len);
@@ -26,13 +33,17 @@ static int mock_write(struct host_dvobj *d, unsigned int addr, void *buf, size_t
 	(void)buf;
 	(void)len;
 	(void)fixed;
-	if (d->io_fail_remaining > 0) {
-		d->io_fail_remaining--;
-		return 1;
-	}
+	if (d->io_fail_remaining > 0)
+		return mock_io_err(d);
 	g_last_addr = addr;
 	g_io_count++;
 	return 0;
+}
+
+static u8 host_inc_and_chk_continual_io_error(struct host_dvobj *d)
+{
+	d->continual_io_error++;
+	return d->continual_io_error > MAX_CONTINUAL_IO_ERR ? _TRUE : _FALSE;
 }
 
 static u8 sdio_io(struct host_dvobj *d, u32 addr, void *buf, size_t len, u8 write, u8 cmd52)
@@ -40,8 +51,9 @@ static u8 sdio_io(struct host_dvobj *d, u32 addr, void *buf, size_t len, u8 writ
 	u32 addr_drv = cmd52 ? RTW_SDIO_ADDR_CMD52_GEN(addr) : addr;
 	int err;
 	u8 retry = 0;
+	u8 stop_retry = _FALSE;
 
-	if (g_ad.surprise_removed)
+	if (d->primary_adapter && d->primary_adapter->surprise_removed)
 		return _FAIL;
 
 	do {
@@ -52,8 +64,11 @@ static u8 sdio_io(struct host_dvobj *d, u32 addr, void *buf, size_t len, u8 writ
 			break;
 		}
 		retry++;
-		if (++d->continual_io_error > SD_IO_TRY_CNT || retry > SD_IO_TRY_CNT)
+		stop_retry = host_inc_and_chk_continual_io_error(d);
+		if ((err == -1) || (stop_retry == _TRUE) || (retry > SD_IO_TRY_CNT)) {
+			host_sdio_cmd_set_surprise(1);
 			return _FAIL;
+		}
 		if ((addr & 0x10000) || !(addr & 0xE000))
 			continue;
 		return _FAIL;
@@ -85,10 +100,12 @@ void host_sdio_cmd_reset(void)
 	g_d.primary_adapter = &g_ad;
 	g_d.intf_ops = &g_ops;
 	g_d.read_fill = 0xA5;
+	g_d.io_mock_err = 1;
 	g_last_addr = g_io_count = 0;
 }
 
 void host_sdio_cmd_set_surprise(u8 on) { g_ad.surprise_removed = on ? 1 : 0; }
+u8 host_sdio_cmd_surprise(void) { return g_ad.surprise_removed; }
 u32 host_sdio_cmd_last_addr(void) { return g_last_addr; }
 int host_sdio_cmd_io_count(void) { return g_io_count; }
 struct host_dvobj *host_sdio_cmd_dvobj(void) { return &g_d; }

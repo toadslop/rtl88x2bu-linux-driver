@@ -7,6 +7,52 @@
     { "name": "write53", "op": "write53", "addr": 4096, "expect_ret": 1, "expect_addr": 4096, "expect_io": 4 },
     { "name": "f0", "op": "f0", "addr": 7, "len": 1, "expect_ret": 1, "expect_addr": 262151, "expect_io": 5 },
     { "name": "surprise", "op": "surprise" },
-    { "name": "read52_fail", "op": "read52", "addr": 1, "expect_ret": 0, "expect_io": 0 }
+    {
+      "name": "surprise_read_fail",
+      "op": "read52",
+      "addr": 8193,
+      "expect_ret": 0,
+      "expect_io": 0,
+      "expect_surprise": 1
+    },
+    { "name": "reset_fail_cases", "op": "reset" },
+    {
+      "name": "read52_immediate_fail",
+      "op": "read52",
+      "addr": 8193,
+      "io_fail_remaining": 1,
+      "expect_ret": 0,
+      "expect_io": 1,
+      "expect_surprise": 0
+    },
+    { "name": "reset_retry_fatal", "op": "reset" },
+    {
+      "name": "read52_retry_fatal",
+      "op": "read52",
+      "addr": 1,
+      "io_fail_remaining": 20,
+      "expect_ret": 0,
+      "expect_io": 9,
+      "expect_surprise": 1
+    },
+    {
+      "name": "read52_post_fatal",
+      "op": "read52",
+      "addr": 8193,
+      "expect_ret": 0,
+      "expect_io": 9,
+      "expect_surprise": 1
+    },
+    { "name": "reset_err_neg1", "op": "reset" },
+    {
+      "name": "read52_err_neg1",
+      "op": "read52",
+      "addr": 8193,
+      "io_fail_remaining": 1,
+      "io_mock_err": -1,
+      "expect_ret": 0,
+      "expect_io": 1,
+      "expect_surprise": 1
+    }
   ]
 }

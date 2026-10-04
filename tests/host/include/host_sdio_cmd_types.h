@@ -15,6 +15,7 @@ typedef uint32_t u32;
 #define RTW_SDIO_ADDR_CMD52_GEN(a) ((a) | (1u << 17))
 #define RTW_SDIO_ADDR_F0_GEN(a) ((a) | (1u << 18))
 #define SD_IO_TRY_CNT 8
+#define MAX_CONTINUAL_IO_ERR SD_IO_TRY_CNT
 
 struct host_adapter { u8 surprise_removed; };
 struct host_dvobj;
@@ -26,12 +27,13 @@ struct host_sdio_if_ops {
 struct host_dvobj {
 	struct host_adapter *primary_adapter;
 	struct host_sdio_if_ops *intf_ops;
-	int continual_io_error, io_fail_remaining;
+	int continual_io_error, io_fail_remaining, io_mock_err;
 	u8 read_fill;
 };
 
 void host_sdio_cmd_reset(void);
 void host_sdio_cmd_set_surprise(u8 on);
+u8 host_sdio_cmd_surprise(void);
 u32 host_sdio_cmd_last_addr(void);
 int host_sdio_cmd_io_count(void);
 struct host_dvobj *host_sdio_cmd_dvobj(void);
