@@ -1,1 +1,3 @@
 test_sdio_cmd
+test_sdio_cmd_rust
+librust_sdio_cmd.a
