@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
+#include <string.h>
+
 #include "host_odm_adaptivity_types.h"
 
 struct host_sel_capture host_sel_out;

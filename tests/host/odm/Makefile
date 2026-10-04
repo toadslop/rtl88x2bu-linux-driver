@@ -16,8 +16,9 @@ ADAPT_CFLAGS := -Wall -Wextra -Werror -O2 -I$(HOST_INC) \
 .PHONY: all test test-adaptivity clean
 all: test
 
-test: test_odm_phydm_init
+test: test_odm_phydm_init test_odm_adaptivity_leaf
 	./test_odm_phydm_init odm_phydm_init_vectors.json
+	./test_odm_adaptivity_leaf
 
 test-adaptivity: test_odm_adaptivity_leaf
 	./test_odm_adaptivity_leaf
