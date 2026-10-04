@@ -1,0 +1,19 @@
+{
+  "vectors": [
+    { "name": "reset", "op": "reset" },
+    { "name": "read_content", "op": "read_content" },
+    { "name": "surprise_reset", "op": "reset" },
+    { "name": "surprise_on", "op": "surprise" },
+    { "name": "read16_removed", "op": "read16", "reg": 0, "expect_u16": 0, "expect_writes": 0 },
+    { "name": "read16_reset", "op": "reset" },
+    {
+      "name": "read16_hex",
+      "op": "load_hex",
+      "hex": "02020303020203030202030302020303020203030202030302020303030203030202"
+    },
+    { "name": "read16_word", "op": "read16", "reg": 0, "expect_u16": 13107, "expect_writes": 65 },
+    { "name": "write_reset", "op": "reset" },
+    { "name": "write_wait_hex", "op": "load_hex", "hex": "000001" },
+    { "name": "write16", "op": "write16", "reg": 2, "data": 4660, "expect_writes": 148 }
+  ]
+}
