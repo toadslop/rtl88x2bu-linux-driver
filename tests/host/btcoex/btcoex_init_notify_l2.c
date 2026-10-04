@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
-/* W3-126 L2 C oracle: btcoex init + notify leaf (core/rtw_btcoex.c). */
+/* W3-126 L2 C oracle: btcoex init + notify leaf (core/rtw_btcoex.c).
+ * CONFIG_BT_COEXIST_SOCKET_TRX SendScanNotify path is out of scope here. */
 #include <stdio.h>
 #include <string.h>
 
@@ -29,7 +30,9 @@ typedef struct {
 	mock_mlme mlme;
 	mock_hal hal;
 	mock_dv dv;
-	u8 buddy, sreset;
+	u8 buddy_survey;
+	u8 buddy_asoc;
+	u8 sreset;
 } mock_adpt;
 
 static struct {
@@ -44,7 +47,15 @@ static sint chk_fw(mock_mlme *m, sint st)
 	return (!st && !m->fw_state) || (m->fw_state & (u32)st) ? _TRUE : _FALSE;
 }
 
-static u8 buddy_survey(mock_adpt *a) { return a->buddy ? _TRUE : _FALSE; }
+static u8 buddy_under_survey(mock_adpt *a)
+{
+	return a->buddy_survey ? _TRUE : _FALSE;
+}
+
+static u8 buddy_asoc_state(mock_adpt *a)
+{
+	return a->buddy_asoc ? _TRUE : _FALSE;
+}
 
 static void hal_init(mock_adpt *a) { (void)a; g_tr.init++; }
 static void hal_pwr_on(mock_adpt *a) { (void)a; g_tr.pwr_on++; }
@@ -76,7 +87,7 @@ static void o_scan(mock_adpt *a, u8 t)
 {
 	if (!a->hal.eeprom_coexist)
 		return;
-	if (!t && (buddy_survey(a) || a->dv.mgmt_tx || a->dv.roch))
+	if (!t && (buddy_under_survey(a) || a->dv.mgmt_tx || a->dv.roch))
 		return;
 	hal_scan(a, t);
 }
@@ -84,7 +95,7 @@ static void o_media(mock_adpt *a, u8 st)
 {
 	if (!a->hal.eeprom_coexist || a->sreset)
 		return;
-	if (st == RT_MEDIA_DISCONNECT && buddy_survey(a))
+	if (st == RT_MEDIA_DISCONNECT && buddy_asoc_state(a))
 		return;
 	if (st == RT_MEDIA_CONNECT && chk_fw(&a->mlme, WIFI_AP_STATE) == _TRUE)
 		g_tr.dl_rsvd++;
@@ -103,7 +114,7 @@ extern void o_media(mock_adpt *a, u8 st);
 
 struct vector {
 	char name[48], fn[24];
-	int coex, buddy, mgmt, roch, sreset, fw, arg, wifi_only;
+	int coex, buddy_survey, buddy_asoc, mgmt, roch, sreset, fw, arg, wifi_only;
 	int exp_hal, exp_dl, exp_last;
 };
 
@@ -116,7 +127,8 @@ static int parse_vec(const char *o, size_t l, void *vv)
 	    host_json_parse_string_in(o, l, "fn", v->fn, sizeof(v->fn)))
 		return -1;
 	host_json_parse_int_in(o, l, "coex", &v->coex);
-	host_json_parse_int_in(o, l, "buddy", &v->buddy);
+	host_json_parse_int_in(o, l, "buddy_survey", &v->buddy_survey);
+	host_json_parse_int_in(o, l, "buddy_asoc", &v->buddy_asoc);
 	host_json_parse_int_in(o, l, "mgmt", &v->mgmt);
 	host_json_parse_int_in(o, l, "roch", &v->roch);
 	host_json_parse_int_in(o, l, "sreset", &v->sreset);
@@ -135,7 +147,8 @@ static int run_vec(struct vector *v)
 
 	tr_reset();
 	a.hal.eeprom_coexist = (u8)v->coex;
-	a.buddy = (u8)v->buddy;
+	a.buddy_survey = (u8)v->buddy_survey;
+	a.buddy_asoc = (u8)v->buddy_asoc;
 	a.dv.mgmt_tx = (u8)v->mgmt;
 	a.dv.roch = (u8)v->roch;
 	a.sreset = (u8)v->sreset;
