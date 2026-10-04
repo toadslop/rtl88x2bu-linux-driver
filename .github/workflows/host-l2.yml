@@ -58,6 +58,7 @@ on:
       - 'core/rtw_security.c'
       - 'core/rtw_security_rest.c'
       - 'core/rtw_wlan_util.c'
+      - 'core/rtw_beamforming.c'
       - 'rust/**'
       - 'tests/host/**'
       - 'Makefile'
@@ -122,6 +123,7 @@ jobs:
               - 'core/rtw_security.c'
               - 'core/rtw_security_rest.c'
               - 'core/rtw_wlan_util.c'
+              - 'core/rtw_beamforming.c'
               - 'core/rtw_pwrctrl.c'
               - 'rust/**'
               - 'tests/host/**'
@@ -298,6 +300,10 @@ jobs:
       - name: Host btcoex init/notify leaf parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/btcoex test
+
+      - name: Host beamforming entry leaf parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/beamforming test
 
       - name: Host p2p WFD IE builders parity (L2)
         if: steps.filter.outputs.l2 == 'true'
