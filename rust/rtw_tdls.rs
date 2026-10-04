@@ -12,20 +12,27 @@
 #[cfg(host_tdls_test)]
 use std::ffi::c_void;
 
-#[cfg(not(host_tdls_test))]
-use core::ffi::c_void;
-
+#[cfg(host_tdls_test)]
 const _FALSE: u8 = 0;
+#[cfg(host_tdls_test)]
 const _TRUE: u8 = 1;
 // Kernel osdep_service.h: _FAIL=0 (host harness init uses HOST_TDLS_INIT_OK=0).
 const _FAIL: i32 = 0;
 const HOST_TDLS_INIT_OK: i32 = 0;
+#[cfg(any(host_tdls_ht_cap_test, host_tdls_vht_test))]
+const HOST_ASSOC_FAIL: i32 = -1;
 const WIFI_FW_STATION_STATE: u32 = 0x02;
+#[cfg(host_tdls_test)]
 const WIFI_FW_ASSOC_SUCCESS: u32 = 0x00004000;
+#[cfg(host_tdls_test)]
 const TDLS_STATE_NONE: u32 = 0;
+#[cfg(host_tdls_test)]
 const TDLS_CH_SWITCH_ON_STATE: u32 = 1 << 16;
+#[cfg(host_tdls_test)]
 const TDLS_PEER_AT_OFF_STATE: u32 = 1 << 17;
+#[cfg(host_tdls_test)]
 const TDLS_PEER_SLEEP_STATE: u32 = 1 << 21;
+#[cfg(host_tdls_test)]
 const HAL_PRIME_CHNL_OFFSET_DONT_CARE: u8 = 0;
 
 #[cfg(host_tdls_test)]
@@ -95,9 +102,6 @@ pub struct Adapter {
 #[cfg(host_tdls_test)]
 type Padapter = *mut Adapter;
 
-#[cfg(not(host_tdls_test))]
-type Padapter = *mut c_void;
-
 #[cfg(host_tdls_test)]
 fn adapter(p: Padapter) -> Option<&'static mut Adapter> {
     if p.is_null() {
@@ -117,6 +121,7 @@ fn tdls_set_link_established(a: &mut Adapter, en: u8) {
     rtw_mi_update_iface_status(&mut a.mlmepriv, 0);
 }
 
+#[cfg(host_tdls_test)]
 #[no_mangle]
 pub extern "C" fn check_ap_tdls_prohibited(pframe: *mut u8, pkt_len: u8) -> i32 {
     if pframe.is_null() || pkt_len < 5 {
@@ -125,6 +130,7 @@ pub extern "C" fn check_ap_tdls_prohibited(pframe: *mut u8, pkt_len: u8) -> i32 
     unsafe { i32::from(*pframe.add(4) & 0x40 != 0) }
 }
 
+#[cfg(host_tdls_test)]
 #[no_mangle]
 pub extern "C" fn check_ap_tdls_ch_switching_prohibited(pframe: *mut u8, pkt_len: u8) -> i32 {
     if pframe.is_null() || pkt_len < 5 {
@@ -133,6 +139,7 @@ pub extern "C" fn check_ap_tdls_ch_switching_prohibited(pframe: *mut u8, pkt_len
     unsafe { i32::from(*pframe.add(4) & 0x80 != 0) }
 }
 
+#[cfg(host_tdls_test)]
 #[no_mangle]
 pub extern "C" fn TDLS_check_ch_state(state: u32) -> u8 {
     if state & TDLS_CH_SWITCH_ON_STATE != 0 && state & TDLS_PEER_AT_OFF_STATE != 0 {
@@ -146,6 +153,7 @@ pub extern "C" fn TDLS_check_ch_state(state: u32) -> u8 {
     }
 }
 
+#[cfg(host_tdls_test)]
 #[no_mangle]
 pub extern "C" fn rtw_reset_tdls_info(padapter: Padapter) {
     let Some(a) = adapter(padapter) else {
@@ -173,6 +181,7 @@ pub extern "C" fn rtw_reset_tdls_info(padapter: Padapter) {
     a.tdlsinfo.tdls_sctx = core::ptr::null_mut();
 }
 
+#[cfg(host_tdls_test)]
 #[no_mangle]
 pub extern "C" fn rtw_init_tdls_info(padapter: Padapter) -> i32 {
     let Some(a) = adapter(padapter) else {
@@ -185,6 +194,7 @@ pub extern "C" fn rtw_init_tdls_info(padapter: Padapter) -> i32 {
     HOST_TDLS_INIT_OK
 }
 
+#[cfg(host_tdls_test)]
 #[no_mangle]
 pub extern "C" fn rtw_free_tdls_info(ptdlsinfo: *mut TdlsInfo) {
     if !ptdlsinfo.is_null() {
@@ -194,6 +204,7 @@ pub extern "C" fn rtw_free_tdls_info(ptdlsinfo: *mut TdlsInfo) {
     }
 }
 
+#[cfg(host_tdls_test)]
 #[no_mangle]
 pub extern "C" fn rtw_is_tdls_enabled(padapter: Padapter) -> u8 {
     adapter(padapter)
@@ -201,12 +212,14 @@ pub extern "C" fn rtw_is_tdls_enabled(padapter: Padapter) -> u8 {
         .unwrap_or(0)
 }
 
+#[cfg(host_tdls_test)]
 #[no_mangle]
 pub extern "C" fn rtw_set_tdls_enable(padapter: Padapter, enable: u8) {
     if let Some(a) = adapter(padapter) {
         a.registrypriv.en_tdls = enable;
     }
 }
+#[cfg(host_tdls_test)]
 #[no_mangle]
 pub extern "C" fn is_client_associated_to_ap(padapter: Padapter) -> i32 {
     let Some(a) = adapter(padapter) else {
@@ -220,6 +233,7 @@ pub extern "C" fn is_client_associated_to_ap(padapter: Padapter) -> i32 {
     }
 }
 
+#[cfg(host_tdls_test)]
 #[no_mangle]
 pub extern "C" fn rtw_tdls_is_setup_allowed(padapter: Padapter) -> u8 {
     let Some(a) = adapter(padapter) else {
@@ -234,6 +248,7 @@ pub extern "C" fn rtw_tdls_is_setup_allowed(padapter: Padapter) -> u8 {
     _TRUE
 }
 
+#[cfg(host_tdls_test)]
 #[no_mangle]
 pub extern "C" fn rtw_tdls_is_chsw_allowed(padapter: Padapter) -> u8 {
     let Some(a) = adapter(padapter) else {
@@ -247,3 +262,10 @@ pub extern "C" fn rtw_tdls_is_chsw_allowed(padapter: Padapter) -> u8 {
     }
     _TRUE
 }
+
+#[cfg(any(host_tdls_ht_cap_test, host_tdls_vht_test))]
+#[path = "rtw_tdls_ht_vht_host.rs"]
+mod ht_vht_host;
+
+#[cfg(host_tdls_ht_cap_test)]
+pub use ht_vht_host::ht_cap::*;
