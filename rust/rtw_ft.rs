@@ -122,6 +122,10 @@ fn clr_flags(a: *mut Adapter, f: U8) {
     }
 }
 
+fn authed_sta(_a: *mut Adapter) -> bool {
+    false
+}
+
 fn valid_otd_candidate(a: *mut Adapter, pmdie: *const U8) -> bool {
     if a.is_null() || pmdie.is_null() {
         return false;
@@ -366,6 +370,9 @@ pub extern "C" fn host_ft_update_auth_rsp_ies(
         return _FAIL;
     }
     unsafe {
+        if authed_sta(padapter) {
+            return _SUCCESS;
+        }
         let pmlmepriv = &mut (*padapter).mlmepriv;
         let pft_roam = &mut pmlmepriv.ft_roam;
         if pframe.is_null() || len == 0 {
