@@ -1,4 +1,6 @@
 test_mi_ch_union
 test_mi_netif_buddy
+test_mi_netif_buddy_rust
 tests/host/mi/librust_mi.a
+librust_mi_netif.a
 test_mi_ch_union_rust
