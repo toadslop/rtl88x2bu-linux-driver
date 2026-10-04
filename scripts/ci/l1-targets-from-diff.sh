@@ -283,6 +283,7 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-xmit
 	rust-check-symbols-rtw-xmit-qos
 	rust-check-symbols-rtw-xmit-sctx
+	rust-check-symbols-rtw-cmd-rest
 	rust-check-symbols-rtw-cmd-queue
 	rust-check-symbols-rtw-cmd-thread
 	rust-check-symbols-rtw-odm-phydm-init
