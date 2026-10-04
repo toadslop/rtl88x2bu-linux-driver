@@ -150,7 +150,7 @@ pub extern "C" fn host_ft_info_init(pft: *mut FtRoamInfo) {
         return;
     }
     unsafe {
-        ptr::write_bytes(pft, 0, 1);
+        ptr::write_bytes(pft as *mut u8, 0, mem::size_of::<FtRoamInfo>());
         (*pft).ft_flags = RTW_FT_EN;
         #[cfg(CONFIG_RTW_BTM_ROAM)]
         {
