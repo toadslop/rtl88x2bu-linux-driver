@@ -7,6 +7,10 @@ int rm_parse_ch_load_s_elem(struct rm_obj *prm, u8 *pbody, int req_len);
 int rm_parse_noise_histo_s_elem(struct rm_obj *prm, u8 *pbody, int req_len);
 int rm_parse_bcn_req_s_elem(struct rm_obj *prm, u8 *pbody, int req_len);
 int rm_parse_meas_req(struct rm_obj *prm, u8 *pbody);
+u8 rm_bcn_req_cond_mach(struct rm_obj *prm, struct wlan_network *pnetwork);
+
+extern u8 host_rm_test_rcpi;
+extern u8 host_rm_test_rsni;
 
 static int test_ch_load(void)
 {
@@ -78,13 +82,30 @@ static int test_meas_bcn(void)
 		   : 1;
 }
 
+static int test_bcn_cond(void)
+{
+	struct rm_obj prm;
+	struct wlan_network net;
+
+	memset(&prm, 0, sizeof(prm));
+	memset(&net, 0, sizeof(net));
+	prm.q.opt.bcn.rep_cond.cond = bcn_req_cond_rcpi_greater;
+	prm.q.opt.bcn.rep_cond.threshold = 40;
+	host_rm_test_rcpi = 50;
+	if (rm_bcn_req_cond_mach(&prm, &net) != _SUCCESS)
+		return 1;
+	prm.q.opt.bcn.rep_cond.threshold = 60;
+	host_rm_test_rcpi = 50;
+	return rm_bcn_req_cond_mach(&prm, &net) == _FALSE ? 0 : 1;
+}
+
 int main(void)
 {
 	if (test_ch_load() || test_noise() || test_bcn() || test_meas_ch_load() ||
-	    test_meas_bcn()) {
+	    test_meas_bcn() || test_bcn_cond()) {
 		fprintf(stderr, "rm_parse vectors failed\n");
 		return 1;
 	}
-	puts("rm_parse: 5 vectors OK");
+	puts("rm_parse: 6 vectors OK");
 	return 0;
 }
