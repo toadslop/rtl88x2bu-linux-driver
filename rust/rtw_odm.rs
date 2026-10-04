@@ -140,15 +140,14 @@ pub extern "C" fn rtw_odm_adaptivity_en_msg(sel: *mut c_void, adapter: *mut Adap
     }
     unsafe {
         let en = rtw_rust_odm_adaptivity_en(adapter);
-        adaptivity_print(sel, b"RTW_ADAPTIVITY_EN_");
-        let tail = if en == RTW_ADAPTIVITY_EN_DISABLE {
-            b"DISABLE\n" as &[u8]
+        let line: &[u8] = if en == RTW_ADAPTIVITY_EN_DISABLE {
+            b"RTW_ADAPTIVITY_EN_DISABLE\n"
         } else if en == RTW_ADAPTIVITY_EN_ENABLE {
-            b"ENABLE\n" as &[u8]
+            b"RTW_ADAPTIVITY_EN_ENABLE\n"
         } else {
-            b"INVALID\n" as &[u8]
+            b"RTW_ADAPTIVITY_EN_INVALID\n"
         };
-        adaptivity_print(sel, tail);
+        adaptivity_print(sel, line);
     }
 }
 
@@ -159,15 +158,14 @@ pub extern "C" fn rtw_odm_adaptivity_mode_msg(sel: *mut c_void, adapter: *mut Ad
     }
     unsafe {
         let mode = rtw_rust_odm_adaptivity_mode(adapter);
-        adaptivity_print(sel, b"RTW_ADAPTIVITY_MODE_");
-        let tail = if mode == RTW_ADAPTIVITY_MODE_NORMAL {
-            b"NORMAL\n" as &[u8]
+        let line: &[u8] = if mode == RTW_ADAPTIVITY_MODE_NORMAL {
+            b"RTW_ADAPTIVITY_MODE_NORMAL\n"
         } else if mode == RTW_ADAPTIVITY_MODE_CARRIER_SENSE {
-            b"CARRIER_SENSE\n" as &[u8]
+            b"RTW_ADAPTIVITY_MODE_CARRIER_SENSE\n"
         } else {
-            b"INVALID\n" as &[u8]
+            b"RTW_ADAPTIVITY_MODE_INVALID\n"
         };
-        adaptivity_print(sel, tail);
+        adaptivity_print(sel, line);
     }
 }
 
