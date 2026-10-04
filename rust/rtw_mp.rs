@@ -419,8 +419,7 @@ pub extern "C" fn L_SIG_generator(n_sym: u32, p_tx: *mut c_void, p_pkt: *mut c_v
         let n_ltf = if pkt.nsts() <= 2 { pkt.nsts() } else { 4 };
         let t_data = if tx.b_sgi() { 3.6 } else { 4.0 };
         let ofdm_symbol = if mpt_is_vht_rate(tx.tx_rate()) {
-            ((8.0 + 4.0 + (n_ltf as f64) * 4.0 + (n_sym as f64) * t_data + 4.0) / 4.0).ceil()
-                as u32
+            ((8.0 + 4.0 + (n_ltf as f64) * 4.0 + (n_sym as f64) * t_data + 4.0) / 4.0).ceil() as u32
         } else {
             ((8.0 + 4.0 + (n_ltf as f64) * 4.0 + (n_sym as f64) * t_data) / 4.0).ceil() as u32
         };
