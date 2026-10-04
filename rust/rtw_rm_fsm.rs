@@ -10,9 +10,9 @@
 #![cfg(any(host_rm_fsm_test, rtw_80211k))]
 
 #[cfg(not(host_rm_fsm_test))]
-use core::ffi::c_int;
+use core::ffi::{c_int, c_void};
 #[cfg(host_rm_fsm_test)]
-use std::ffi::c_int;
+use std::ffi::{c_int, c_void};
 
 const _SUCCESS: c_int = 1;
 const _FAIL: c_int = 0;
@@ -87,10 +87,62 @@ pub struct Adapter {
 }
 
 #[cfg(host_rm_fsm_test)]
-use std::alloc::{alloc, dealloc, Layout};
+extern "C" {
+    fn rtw_malloc(sz: usize) -> *mut c_void;
+    fn rtw_mfree(ptr: *mut c_void, sz: usize);
+}
+
+#[cfg(not(host_rm_fsm_test))]
+extern "C" {
+    fn _rtw_malloc(sz: u32) -> *mut c_void;
+    fn _rtw_mfree(ptr: *mut c_void, sz: u32);
+    fn _rtw_memset(s: *mut c_void, c: c_int, n: usize) -> *mut c_void;
+}
 
 extern "C" {
     fn strlen(s: *const u8) -> usize;
+}
+
+fn rm_malloc(sz: usize) -> *mut c_void {
+    unsafe {
+        #[cfg(host_rm_fsm_test)]
+        {
+            rtw_malloc(sz)
+        }
+        #[cfg(not(host_rm_fsm_test))]
+        {
+            _rtw_malloc(sz as u32)
+        }
+    }
+}
+
+fn rm_mfree(ptr: *mut c_void, sz: usize) {
+    if ptr.is_null() {
+        return;
+    }
+    unsafe {
+        #[cfg(host_rm_fsm_test)]
+        {
+            rtw_mfree(ptr, sz);
+        }
+        #[cfg(not(host_rm_fsm_test))]
+        {
+            _rtw_mfree(ptr, sz as u32);
+        }
+    }
+}
+
+fn rm_memset_zero(ptr: *mut c_void, len: usize) {
+    unsafe {
+        #[cfg(host_rm_fsm_test)]
+        {
+            core::ptr::write_bytes(ptr as *mut u8, 0, len);
+        }
+        #[cfg(not(host_rm_fsm_test))]
+        {
+            let _ = _rtw_memset(ptr, 0, len);
+        }
+    }
 }
 
 fn rm_state_initial(prm: *mut RmObj) {
@@ -134,6 +186,13 @@ fn null_mut_rmobj() -> *mut RmObj {
     return core::ptr::null_mut();
 }
 
+fn null_mut_rmclock() -> *mut RmClock {
+    #[cfg(host_rm_fsm_test)]
+    return std::ptr::null_mut();
+    #[cfg(not(host_rm_fsm_test))]
+    return core::ptr::null_mut();
+}
+
 #[no_mangle]
 pub extern "C" fn is_list_linked(head: *const ListHead) -> c_int {
     unsafe {
@@ -167,7 +226,7 @@ pub extern "C" fn rm_alloc_clock(padapter: *mut Adapter, prm: *mut RmObj) -> *mu
                 return clk;
             }
         }
-        &mut clocks[RM_TIMER_NUM - 1]
+        null_mut_rmclock()
     }
 }
 
@@ -216,33 +275,29 @@ pub extern "C" fn rm_free_rmobj(prm: *mut RmObj) {
         }
         if !(*prm).q.pssid.is_null() {
             let n = strlen((*prm).q.pssid) + 1;
-            dealloc((*prm).q.pssid, Layout::from_size_align_unchecked(n, 1));
+            rm_mfree((*prm).q.pssid as *mut c_void, n);
         }
         if !(*prm).q.opt.bcn.req_start.is_null() {
-            dealloc(
-                (*prm).q.opt.bcn.req_start,
-                Layout::from_size_align_unchecked((*prm).q.opt.bcn.req_len as usize, 1),
+            rm_mfree(
+                (*prm).q.opt.bcn.req_start as *mut c_void,
+                (*prm).q.opt.bcn.req_len as usize,
             );
         }
         if !(*prm).pclock.is_null() {
             rm_free_clock((*prm).pclock);
         }
-        dealloc(
-            prm as *mut u8,
-            Layout::from_size_align_unchecked(size_of_rmobj(), 1),
-        );
+        rm_mfree(prm as *mut c_void, size_of_rmobj());
     }
 }
 
 #[no_mangle]
 pub extern "C" fn rm_alloc_rmobj(padapter: *mut Adapter) -> *mut RmObj {
     unsafe {
-        let layout = Layout::from_size_align_unchecked(size_of_rmobj(), 1);
-        let prm = alloc(layout) as *mut RmObj;
+        let prm = rm_malloc(size_of_rmobj()) as *mut RmObj;
         if prm.is_null() {
             return null_mut_rmobj();
         }
-        core::ptr::write_bytes(prm, 0, 1);
+        rm_memset_zero(prm as *mut c_void, size_of_rmobj());
         (*prm).pclock = rm_alloc_clock(padapter, prm);
         if (*prm).pclock.is_null() {
             rm_free_rmobj(prm);

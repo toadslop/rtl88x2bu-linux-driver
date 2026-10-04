@@ -8,6 +8,12 @@ void *rtw_malloc(u32 sz)
 	return malloc(sz);
 }
 
+void rtw_mfree(u8 *p, u32 sz)
+{
+	(void)sz;
+	free(p);
+}
+
 void host_rm_fsm_adapter_init(_adapter *a)
 {
 	_rtw_memset(a, 0, sizeof(*a));
