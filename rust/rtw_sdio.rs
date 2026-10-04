@@ -78,11 +78,7 @@ static mut G_IO_COUNT: c_int = 0;
 
 #[cfg(host_sdio_cmd_test)]
 unsafe fn mock_io_err(d: &mut host_dvobj) -> c_int {
-    let err = if d.io_mock_err != 0 {
-        d.io_mock_err
-    } else {
-        1
-    };
+    let err = if d.io_mock_err != 0 { d.io_mock_err } else { 1 };
     G_IO_COUNT += 1;
     d.io_fail_remaining -= 1;
     err
