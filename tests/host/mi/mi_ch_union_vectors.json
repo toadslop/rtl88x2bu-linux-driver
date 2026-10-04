@@ -1,0 +1,11 @@
+{
+  "vectors": [
+    {"name": "update_set", "op": "update", "a": 36, "b": 2, "c": 1, "x": 36, "y": 2, "z": 1, "w": 9},
+    {"name": "update_bak", "op": "update", "a": 0, "d": 11, "e": 1, "x": 0, "y": 0, "z": 0, "w": 11},
+    {"name": "stay_ok", "op": "stay", "a": 6, "d": 6, "x": 1},
+    {"name": "stay_bad", "op": "stay", "a": 6, "d": 11, "x": 0},
+    {"name": "union_one", "op": "union", "g": 1, "a": 6, "x": 1, "y": 6, "z": 0, "w": 0},
+    {"name": "union_two", "op": "union", "g": 1, "h": 1, "a": 6, "x": 2, "y": 6, "z": 0, "w": 0},
+    {"name": "union_clash", "op": "union", "g": 1, "h": 1, "a": 6, "p": 11, "x": 0}
+  ]
+}
