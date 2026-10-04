@@ -67,7 +67,10 @@ pub struct RmObj {
     pub q: RmMeasReq,
 }
 
-#[repr(C)] pub struct WlanNetwork { _pad: u8 }
+#[repr(C)]
+pub struct WlanNetwork {
+    _pad: u8,
+}
 
 unsafe extern "C" {
     fn rm_en_cap_chk_and_set(prm: *mut RmObj, en: c_int) -> c_int;
@@ -196,8 +199,9 @@ pub extern "C" fn rm_parse_meas_req(prm: *mut RmObj, pbody: *mut u8) -> c_int {
         return _SUCCESS;
     }
     let prm = unsafe { &mut *prm };
-    let body = unsafe { std::slice::from_raw_parts(pbody, 64) };
-    let req_len = body[1] as i32;
+    let req_len = unsafe { *pbody.add(1) } as i32;
+    let ie_len = req_len as usize + 2;
+    let body = unsafe { std::slice::from_raw_parts(pbody, ie_len) };
     let mut p = 5usize;
     prm.q.op_class = body[p];
     p += 1;
@@ -237,19 +241,35 @@ pub extern "C" fn rm_bcn_req_cond_mach(prm: *mut RmObj, pnetwork: *mut WlanNetwo
         0 => _SUCCESS as u8,
         1 => {
             let v = unsafe { rm_get_bcn_rcpi(prm, pnetwork) };
-            if v > thr { _SUCCESS as u8 } else { 0 }
+            if v > thr {
+                _SUCCESS as u8
+            } else {
+                0
+            }
         }
         2 => {
             let v = unsafe { rm_get_bcn_rcpi(prm, pnetwork) };
-            if v < thr { _SUCCESS as u8 } else { 0 }
+            if v < thr {
+                _SUCCESS as u8
+            } else {
+                0
+            }
         }
         3 => {
             let v = unsafe { rm_get_bcn_rsni(prm, pnetwork) };
-            if v != 255 && v > thr { _SUCCESS as u8 } else { 0 }
+            if v != 255 && v > thr {
+                _SUCCESS as u8
+            } else {
+                0
+            }
         }
         4 => {
             let v = unsafe { rm_get_bcn_rsni(prm, pnetwork) };
-            if v != 255 && v < thr { _SUCCESS as u8 } else { 0 }
+            if v != 255 && v < thr {
+                _SUCCESS as u8
+            } else {
+                0
+            }
         }
         _ => 0,
     }
