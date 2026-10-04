@@ -9,10 +9,10 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 all: test
 test: test-c
 test-c: test_mp_pmac
-	./test_mp_pmac mp_pmac_bit_vectors.json
+	./test_mp_pmac mp_pmac_vectors.json
 
-test_mp_pmac: test_mp_pmac.c mp_pmac_stubs.c mp_pmac_bit_crc_oracle.c $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ test_mp_pmac.c mp_pmac_stubs.c mp_pmac_bit_crc_oracle.c $(HOST_JSON)
+test_mp_pmac: test_mp_pmac.c mp_pmac_stubs.c mp_pmac_bit_crc_oracle.c mp_pmac_cck_oracle.c $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_mp_pmac.c mp_pmac_stubs.c mp_pmac_bit_crc_oracle.c mp_pmac_cck_oracle.c $(HOST_JSON) -lm
 
 clean:
 	rm -f test_mp_pmac
