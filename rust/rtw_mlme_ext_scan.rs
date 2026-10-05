@@ -368,8 +368,7 @@ mod scan_ch {
         }
         #[cfg(not(config_rtw_roam_quickscan))]
         let _ = reason;
-        let out_slice =
-            unsafe { core::slice::from_raw_parts_mut(out, out_num as usize) };
+        let out_slice = unsafe { core::slice::from_raw_parts_mut(out, out_num as usize) };
         for ch in out_slice.iter_mut() {
             *ch = RtwIeee80211Channel {
                 hw_value: 0,
@@ -445,10 +444,7 @@ mod scan_ch {
             }
         }
 
-        if !no_sparse
-            && unsafe { rtw_rust_scan_regsty_wifi_spec(padapter) } == 0
-            && j > 6
-        {
+        if !no_sparse && unsafe { rtw_rust_scan_regsty_wifi_spec(padapter) } == 0 && j > 6 {
             j = super::rtw_scan_sparse(padapter, out, j as U8) as i32;
         }
         j
