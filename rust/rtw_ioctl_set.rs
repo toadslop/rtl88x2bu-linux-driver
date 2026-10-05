@@ -18,6 +18,16 @@ mod kernel {
     extern "C" {
         fn rtw_rust_ioctl_scan_mode_ptr(adapter: *mut c_void) -> *mut i32;
         fn rtw_rust_ioctl_setband_ptr(adapter: *mut c_void) -> *mut u32;
+        fn rtw_rust_ioctl_regsty_ptr(adapter: *mut c_void) -> *mut c_void;
+        fn rtw_rust_ioctl_regd_from_os(regsty: *mut c_void) -> i32;
+        fn rtw_rust_ioctl_set_country_kbuild_enabled() -> i32;
+        fn rtw_set_chplan_cmd(adapter: *mut c_void, flags: i32, chplan: u8, swconfig: u8) -> u8;
+        fn rtw_set_country_cmd(
+            adapter: *mut c_void,
+            flags: i32,
+            country_code: *const u8,
+            swconfig: u8,
+        ) -> u8;
     }
 
     pub unsafe fn scan_mode_ptr(adapter: *mut c_void) -> *mut i32 {
@@ -26,6 +36,31 @@ mod kernel {
 
     pub unsafe fn setband_ptr(adapter: *mut c_void) -> *mut u32 {
         unsafe { rtw_rust_ioctl_setband_ptr(adapter) }
+    }
+
+    pub unsafe fn regsty_ptr(adapter: *mut c_void) -> *mut c_void {
+        unsafe { rtw_rust_ioctl_regsty_ptr(adapter) }
+    }
+
+    pub unsafe fn regd_from_os(regsty: *mut c_void) -> bool {
+        unsafe { rtw_rust_ioctl_regd_from_os(regsty) != 0 }
+    }
+
+    pub unsafe fn set_country_kbuild_enabled() -> bool {
+        unsafe { rtw_rust_ioctl_set_country_kbuild_enabled() != 0 }
+    }
+
+    pub unsafe fn set_chplan_cmd(adapter: *mut c_void, flags: i32, chplan: u8, swconfig: u8) -> u8 {
+        unsafe { rtw_set_chplan_cmd(adapter, flags, chplan, swconfig) }
+    }
+
+    pub unsafe fn set_country_cmd(
+        adapter: *mut c_void,
+        flags: i32,
+        country_code: *const u8,
+        swconfig: u8,
+    ) -> u8 {
+        unsafe { rtw_set_country_cmd(adapter, flags, country_code, swconfig) }
     }
 }
 
@@ -63,9 +98,34 @@ pub unsafe extern "C" fn rtw_set_band(adapter: *mut c_void, band: u8) -> i32 {
 }
 
 #[cfg(rust_ioctl_set_leaf)]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_set_channel_plan(adapter: *mut c_void, channel_plan: u8) -> i32 {
+    let regsty = unsafe { kernel::regsty_ptr(adapter) };
+    if unsafe { kernel::regd_from_os(regsty) } {
+        return _SUCCESS;
+    }
+    unsafe { kernel::set_chplan_cmd(adapter, RTW_CMDF_WAIT_ACK, channel_plan, 1) as i32 }
+}
+
+#[cfg(rust_ioctl_set_leaf)]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_set_country(adapter: *mut c_void, country_code: *const u8) -> i32 {
+    if !unsafe { kernel::set_country_kbuild_enabled() } {
+        return _SUCCESS;
+    }
+    let regsty = unsafe { kernel::regsty_ptr(adapter) };
+    if unsafe { kernel::regd_from_os(regsty) } {
+        return _SUCCESS;
+    }
+    unsafe { kernel::set_country_cmd(adapter, RTW_CMDF_WAIT_ACK, country_code, 1) as i32 }
+}
+
+#[cfg(rust_ioctl_set_leaf)]
 const _SUCCESS: i32 = 1;
 #[cfg(rust_ioctl_set_leaf)]
 const _FAIL: i32 = 0;
+#[cfg(rust_ioctl_set_leaf)]
+const RTW_CMDF_WAIT_ACK: i32 = 2;
 
 const _TRUE: u8 = 1;
 const _FALSE: u8 = 0;

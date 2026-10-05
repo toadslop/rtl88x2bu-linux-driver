@@ -866,6 +866,25 @@ u32 *rtw_rust_ioctl_setband_ptr(_adapter *adapter)
 {
 	return &adapter->setband;
 }
+
+struct registry_priv *rtw_rust_ioctl_regsty_ptr(_adapter *adapter)
+{
+	return adapter_to_regsty(adapter);
+}
+
+int rtw_rust_ioctl_regd_from_os(struct registry_priv *regsty)
+{
+	return REGSTY_REGD_SRC_FROM_OS(regsty) ? 1 : 0;
+}
+
+int rtw_rust_ioctl_set_country_kbuild_enabled(void)
+{
+#ifdef CONFIG_RTW_IOCTL_SET_COUNTRY
+	return 1;
+#else
+	return 0;
+#endif
+}
 #endif /* CONFIG_RUST && !HOST_IOCTL_SCAN_CHANNEL_TEST */
 
 /*
@@ -894,6 +913,7 @@ int rtw_set_scan_mode(_adapter *adapter, RT_SCAN_TYPE scan_mode)
 *
 * Return _SUCCESS or _FAIL
 */
+#if !defined(CONFIG_RUST) || defined(HOST_IOCTL_REGD_TEST)
 int rtw_set_channel_plan(_adapter *adapter, u8 channel_plan)
 {
 	struct registry_priv *regsty = adapter_to_regsty(adapter);
@@ -903,6 +923,7 @@ int rtw_set_channel_plan(_adapter *adapter, u8 channel_plan)
 	RTW_WARN("%s(): not applied\n", __func__);
 	return _SUCCESS;
 }
+#endif /* !CONFIG_RUST || HOST_IOCTL_REGD_TEST */
 
 /*
 * rtw_set_country -
@@ -911,6 +932,7 @@ int rtw_set_channel_plan(_adapter *adapter, u8 channel_plan)
 *
 * Return _SUCCESS or _FAIL
 */
+#if !defined(CONFIG_RUST) || defined(HOST_IOCTL_REGD_TEST)
 int rtw_set_country(_adapter *adapter, const char *country_code)
 {
 #ifdef CONFIG_RTW_IOCTL_SET_COUNTRY
@@ -922,6 +944,7 @@ int rtw_set_country(_adapter *adapter, const char *country_code)
 	RTW_WARN("%s(): not applied\n", __func__);
 	return _SUCCESS;
 }
+#endif /* !CONFIG_RUST || HOST_IOCTL_REGD_TEST */
 
 /*
 * rtw_set_band -
