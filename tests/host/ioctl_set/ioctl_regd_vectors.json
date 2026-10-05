@@ -1,0 +1,74 @@
+{
+  "vectors": [
+    {
+      "name": "chplan_rtk_invokes_cmd",
+      "fn": "chplan",
+      "regd_src": 0,
+      "regd_from_os": 0,
+      "chplan": 5,
+      "cmd_ret": 1,
+      "expect_ret": 1,
+      "expect_cmd": 1
+    },
+    {
+      "name": "chplan_rtk_cmd_fail",
+      "fn": "chplan",
+      "regd_src": 0,
+      "regd_from_os": 0,
+      "chplan": 9,
+      "cmd_ret": 0,
+      "expect_ret": 0,
+      "expect_cmd": 1
+    },
+    {
+      "name": "chplan_os_skips_cmd",
+      "fn": "chplan",
+      "regd_src": 1,
+      "regd_from_os": 1,
+      "chplan": 3,
+      "cmd_ret": 1,
+      "expect_ret": 1,
+      "expect_cmd": 0
+    },
+    {
+      "name": "chplan_os_cfg_off_uses_cmd",
+      "fn": "chplan",
+      "regd_src": 1,
+      "regd_from_os": 0,
+      "chplan": 2,
+      "cmd_ret": 1,
+      "expect_ret": 1,
+      "expect_cmd": 1
+    },
+    {
+      "name": "country_rtk_invokes_cmd",
+      "fn": "country",
+      "regd_src": 0,
+      "regd_from_os": 0,
+      "country_enabled": 1,
+      "cmd_ret": 1,
+      "expect_ret": 1,
+      "expect_cmd": 1
+    },
+    {
+      "name": "country_os_skips_cmd",
+      "fn": "country",
+      "regd_src": 1,
+      "regd_from_os": 1,
+      "country_enabled": 1,
+      "cmd_ret": 0,
+      "expect_ret": 1,
+      "expect_cmd": 0
+    },
+    {
+      "name": "country_disabled_not_applied",
+      "fn": "country",
+      "regd_src": 0,
+      "regd_from_os": 0,
+      "country_enabled": 0,
+      "cmd_ret": 1,
+      "expect_ret": 1,
+      "expect_cmd": 0
+    }
+  ]
+}
