@@ -80,10 +80,25 @@ static void fill_mi(struct mi_state *m, const struct vector *v, int side)
 	}
 }
 
+#ifdef HOST_MI_STATUS_RUST
+/* Rust host L2 only implements rtw_mi_status_by_ifbmp (#1090); aux/merge/check are C-oracle. */
+static int rust_skips_vector(const struct vector *v)
+{
+	return v->op[0] != '\0';
+}
+#endif
+
 static int run_vector(struct vector *v)
 {
 	struct mi_state m, a, b;
 	struct _adapter *self = &g_if[v->self_id >= 0 ? v->self_id : 0];
+
+#ifdef HOST_MI_STATUS_RUST
+	if (rust_skips_vector(v)) {
+		printf("SKIP %s (no Rust port for op=%s)\n", v->name, v->op);
+		return 0;
+	}
+#endif
 
 	if (!strcmp(v->op, "merge")) {
 		fill_mi(&a, v, 0);

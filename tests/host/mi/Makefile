@@ -60,9 +60,11 @@ librust_mi_status.a: $(RUST_MI) $(ROOT)/rust/rtw_mi_status_host.rs
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_mi_status_test \
 		--crate-type staticlib $(RUST_MI) -o $@
 
-test_mi_status_rust: mi_status_l2.c librust_mi_status.a $(HOST_JSON)
-	$(CC) $(CFLAGS) -I$(CORE) -I$(ROOT)/include -o $@ mi_status_l2.c \
-		$(HOST_JSON) librust_mi_status.a
+# Link aux/check C objects only to satisfy symbols in unused op branches; Rust provides by_ifbmp.
+test_mi_status_rust: mi_status_l2.c librust_mi_status.a rtw_mi_status_aux_host.o \
+		rtw_mi_status_check_host.o $(HOST_JSON)
+	$(CC) $(CFLAGS) -DHOST_MI_STATUS_RUST -I$(CORE) -I$(ROOT)/include -o $@ mi_status_l2.c \
+		rtw_mi_status_aux_host.o rtw_mi_status_check_host.o $(HOST_JSON) librust_mi_status.a
 
 test_mi_ch_union: mi_ch_union_l2.c $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ mi_ch_union_l2.c $(HOST_JSON)
