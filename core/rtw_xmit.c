@@ -812,35 +812,7 @@ s32 update_attrib_sec_info(_adapter *padapter, struct pkt_attrib *pattrib,
 			   struct sta_info *psta, enum eap_type eapol_type);
 
 #ifdef CONFIG_WMMPS_STA
-/*
- * update_attrib_trigger_frame_info
- * For Station mode, if a specific TID of driver setting and an AP support uapsd function, the data 
- * frame with corresponding TID will be a trigger frame when driver is in wmm power saving mode.
- * 
- * Arguments:
- * @padapter: _adapter pointer.
- * @pattrib: pkt_attrib pointer.
- *
- * Auther: Arvin Liu
- * Date: 2017/06/05
- */
-static void update_attrib_trigger_frame_info(_adapter *padapter, struct pkt_attrib *pattrib) {
-	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
-	struct pwrctrl_priv 	*pwrpriv = adapter_to_pwrctl(padapter); 
-	struct qos_priv 	*pqospriv = &pmlmepriv->qospriv;
-	u8 trigger_frame_en = 0;
-
-	if (check_fwstate(pmlmepriv, WIFI_STATION_STATE) == _TRUE) {
-		if ((pwrpriv->pwr_mode == PS_MODE_MIN) || (pwrpriv->pwr_mode == PS_MODE_MAX)) {
-			if((pqospriv->uapsd_ap_supported) && ((pqospriv->uapsd_tid & BIT(pattrib->priority)) == _TRUE)) {
-				trigger_frame_en = 1;
-				RTW_INFO("[WMMPS]"FUNC_ADPT_FMT": This is a Trigger Frame\n", FUNC_ADPT_ARG(padapter));
-			}
-		}
-	}
-
-	pattrib->trigger_frame = trigger_frame_en;
-}
+void update_attrib_trigger_frame_info(_adapter *padapter, struct pkt_attrib *pattrib);
 #endif /* CONFIG_WMMPS_STA */
 
 
