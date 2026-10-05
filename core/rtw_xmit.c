@@ -805,6 +805,11 @@ u8 query_ra_short_GI(struct sta_info *psta, u8 bw)
 
 #endif /* !CONFIG_RUST */
 
+void rtw_xmit_update_attrib_set_qos(_pkt *pkt, struct pkt_attrib *pattrib);
+#ifdef CONFIG_LPS
+u8 rtw_xmit_update_attrib_lps_chk_packet_type(struct pkt_attrib *pattrib);
+#endif
+
 void update_attrib_vcs_info(_adapter *padapter, struct xmit_frame *pxmitframe);
 void update_attrib_phy_info(_adapter *padapter, struct pkt_attrib *pattrib,
 			    struct sta_info *psta);
@@ -817,48 +822,6 @@ void update_attrib_trigger_frame_info(_adapter *padapter, struct pkt_attrib *pat
 
 
 u8 tos_to_up(u8 tos);
-
-static void set_qos(_pkt *pkt, struct pkt_attrib *pattrib)
-{
-	s32 UserPriority = 0;
-
-	if (!pkt)
-		goto null_pkt;
-
-	/* get UserPriority from IP hdr */
-	if (pattrib->ether_type == 0x0800) {
-		struct pkt_file ppktfile;
-		struct ethhdr etherhdr;
-		struct iphdr ip_hdr;
-
-		_rtw_open_pktfile(pkt, &ppktfile);
-		_rtw_pktfile_read(&ppktfile, (unsigned char *)&etherhdr, ETH_HLEN);
-		_rtw_pktfile_read(&ppktfile, (u8 *)&ip_hdr, sizeof(ip_hdr));
-		/*		UserPriority = (ntohs(ip_hdr.tos) >> 5) & 0x3; */
-		UserPriority = tos_to_up(ip_hdr.tos);
-	}
-	/*
-		else if (pattrib->ether_type == 0x888e) {
-
-
-			UserPriority = 7;
-		}
-	*/
-
-	#ifdef CONFIG_ICMP_VOQ
-	if(pattrib->icmp_pkt==1)/*use VO queue to send icmp packet*/
-		UserPriority = 7;
-	#endif
-	#ifdef CONFIG_IP_R_MONITOR
-	if (pattrib->ether_type == ETH_P_ARP)
-		UserPriority = 7;
-	#endif/*CONFIG_IP_R_MONITOR*/
-
-null_pkt:
-	pattrib->priority = UserPriority;
-	pattrib->hdrlen = XATTRIB_GET_WDS(pattrib) ? WLAN_HDR_A4_QOS_LEN : WLAN_HDR_A3_QOS_LEN;
-	pattrib->subtype = WIFI_QOS_DATA_TYPE;
-}
 
 #ifdef CONFIG_TDLS
 u8 rtw_check_tdls_established(_adapter *padapter, struct pkt_attrib *pattrib)
@@ -963,32 +926,6 @@ inline u8 rtw_get_hwseq_no(_adapter *padapter)
 #endif /* CONFIG_CONCURRENT_MODE */
 	return hwseq_num;
 }
-#ifdef CONFIG_LPS
-#define LPS_PT_NORMAL	0
-#define LPS_PT_SP		1/* only DHCP packets is as SPECIAL_PACKET*/
-#define LPS_PT_ICMP		2
-
-/*If EAPOL , ARP , OR DHCP packet, driver must be in active mode.*/
-static u8 _rtw_lps_chk_packet_type(struct pkt_attrib *pattrib)
-{
-	u8 pkt_type = LPS_PT_NORMAL; /*normal data frame*/
-
-	#ifdef CONFIG_WAPI_SUPPORT
-	if ((pattrib->ether_type == 0x88B4) || (pattrib->ether_type == 0x0806) || (pattrib->ether_type == 0x888e) || (pattrib->dhcp_pkt == 1))
-		pkt_type = LPS_PT_SP;
-	#else /* !CONFIG_WAPI_SUPPORT */
-
-	#ifndef CONFIG_LPS_NOT_LEAVE_FOR_ICMP
-	if (pattrib->icmp_pkt == 1)
-		pkt_type = LPS_PT_ICMP;
-	else
-	#endif
-		if (pattrib->dhcp_pkt == 1)
-			pkt_type = LPS_PT_SP;
-	#endif
-	return pkt_type;
-}
-#endif
 static s32 update_attrib(_adapter *padapter, _pkt *pkt, struct pkt_attrib *pattrib)
 {
 	uint i;
@@ -1185,7 +1122,11 @@ get_sta_info:
 	}
 
 #ifdef CONFIG_LPS
-	pkt_type = _rtw_lps_chk_packet_type(pattrib);
+#define LPS_PT_NORMAL	0
+#define LPS_PT_SP		1
+#define LPS_PT_ICMP		2
+
+	pkt_type = rtw_xmit_update_attrib_lps_chk_packet_type(pattrib);
 
 	if (pkt_type == LPS_PT_SP) {/*packet is as SPECIAL_PACKET*/
 		DBG_COUNTER(padapter->tx_logs.core_tx_upd_attrib_active);
@@ -1217,7 +1158,7 @@ get_sta_info:
 		| WIFI_ADHOC_STATE | WIFI_ADHOC_MASTER_STATE)
 	) {
 		if (pattrib->qos_en) {
-			set_qos(pkt, pattrib);
+			rtw_xmit_update_attrib_set_qos(pkt, pattrib);
 			#ifdef CONFIG_RTW_MESH
 			if (MLME_IS_MESH(padapter))
 				rtw_mesh_tx_set_whdr_mctrl_len(pattrib->mesh_frame_mode, pattrib);
@@ -1227,12 +1168,12 @@ get_sta_info:
 #ifdef CONFIG_TDLS
 		if (pattrib->direct_link == _TRUE) {
 			if (pattrib->qos_en)
-				set_qos(pkt, pattrib);
+				rtw_xmit_update_attrib_set_qos(pkt, pattrib);
 		} else
 #endif
 		{
 			if (pqospriv->qos_option) {
-				set_qos(pkt, pattrib);
+				rtw_xmit_update_attrib_set_qos(pkt, pattrib);
 
 				if (pmlmepriv->acm_mask != 0)
 					pattrib->priority = qos_acm(pmlmepriv->acm_mask, pattrib->priority);
