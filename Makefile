@@ -3151,7 +3151,7 @@ rust-objects-rtw-ioctl-set:
 	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_ioctl_set.o
 
 rust-objects-rtw-ioctl-set-c:
-	gcc -c -Wall -Wextra -Werror -O2 \
+	gcc -c -Wall -Wextra -Werror -O2 -DCONFIG_RTW_IOCTL_SET_COUNTRY \
 		-o tests/host/ioctl_set/ioctl_set_scan_band_c_ref.o \
 		tests/host/ioctl_set/ioctl_set_scan_band_c_ref.c
 
