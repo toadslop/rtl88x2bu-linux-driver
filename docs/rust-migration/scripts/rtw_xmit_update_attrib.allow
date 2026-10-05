@@ -1,4 +1,5 @@
-# L1 allowlist for W3-86 PR11/PR12 (kernel swap): Rust owns vcs/phy; field shims stay in C.
+# L1 allowlist for W3-86 PR11/PR12/PR16 (kernel swap): Rust owns vcs/phy/sec decide; field shims stay in C.
+drop update_attrib_sec_info_decide_rust
 drop rtw_rust_xmit_attrib_vcs_gather
 drop rtw_rust_xmit_attrib_vcs_set_mode
 drop rtw_rust_xmit_attrib_phy_base_gather

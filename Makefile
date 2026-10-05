@@ -1102,6 +1102,7 @@ endif
 
 ifeq ($(CONFIG_WAPI_SUPPORT), y)
 ccflags-y += -DCONFIG_WAPI_SUPPORT
+rustflags-y += --cfg CONFIG_WAPI_SUPPORT
 endif
 
 

@@ -16,6 +16,62 @@
 
 #include <drv_types.h>
 
+#if defined(CONFIG_RUST)
+
+struct rtw_rust_xmit_sec_gather {
+	u8 ieee8021x_blocked;
+	u32 passing_ms;
+	int eapol_type;
+	u16 ether_type;
+	u8 wifi_mp_state;
+	u8 bmcast;
+	u8 dot11_auth_algrthm;
+	u8 dot11_privacy_algrthm;
+	u8 dot118021x_grp_privacy;
+	u8 sta_dot118021x_privacy;
+	u8 dot11_privacy_key_index;
+	u8 dot118021x_grp_keyid;
+	u8 direct_link;
+};
+
+struct rtw_rust_xmit_sec_decision {
+	s32 res;
+	u8 encrypt;
+	u8 key_idx;
+};
+
+void update_attrib_sec_info_decide_rust(const struct rtw_rust_xmit_sec_gather *in,
+					struct rtw_rust_xmit_sec_decision *out);
+
+static void rtw_rust_xmit_attrib_sec_gather(_adapter *padapter, struct pkt_attrib *pattrib,
+					    struct sta_info *psta, enum eap_type eapol_type,
+					    struct rtw_rust_xmit_sec_gather *out)
+{
+	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+	struct security_priv *psecuritypriv = &padapter->securitypriv;
+	sint bmcast = IS_MCAST(pattrib->ra);
+
+	out->ieee8021x_blocked = psta->ieee8021x_blocked;
+	out->passing_ms = rtw_get_passing_time_ms(psta->resp_nonenc_eapol_key_starttime);
+	out->eapol_type = (int)eapol_type;
+	out->ether_type = pattrib->ether_type;
+	out->wifi_mp_state = check_fwstate(pmlmepriv, WIFI_MP_STATE) ? 1 : 0;
+	out->bmcast = bmcast ? 1 : 0;
+	out->dot11_auth_algrthm = (u8)psecuritypriv->dot11AuthAlgrthm;
+	out->dot11_privacy_algrthm = (u8)psecuritypriv->dot11PrivacyAlgrthm;
+	out->dot118021x_grp_privacy = (u8)psecuritypriv->dot118021XGrpPrivacy;
+	out->sta_dot118021x_privacy = (u8)psta->dot118021XPrivacy;
+	out->dot11_privacy_key_index = (u8)psecuritypriv->dot11PrivacyKeyIndex;
+	out->dot118021x_grp_keyid = (u8)psecuritypriv->dot118021XGrpKeyid;
+#ifdef CONFIG_TDLS
+	out->direct_link = pattrib->direct_link;
+#else
+	out->direct_link = 0;
+#endif
+}
+
+#endif /* CONFIG_RUST */
+
 s32 update_attrib_sec_info(_adapter *padapter, struct pkt_attrib *pattrib,
 			   struct sta_info *psta, enum eap_type eapol_type)
 {
@@ -28,16 +84,21 @@ s32 update_attrib_sec_info(_adapter *padapter, struct pkt_attrib *pattrib,
 	_rtw_memset(pattrib->dot11tkiptxmickey.skey, 0, 16);
 	pattrib->mac_id = psta->cmn.mac_id;
 
-	/* Comment by Owen at 2020/05/19
-	 * Issue: RTK STA sends encrypted 4-way 4/4 when AP thinks the 4-way incomplete
-	 * In TCL pressure test, AP may resend 4-way 3/4 with new replay counter in 2 ms.
-	 * In this situation, STA sends unencrypted 4-way 4/4 with old replay counter after more
-	 * than 2 ms, followed by the encrypted 4-way 4/4 with new replay counter. Because the
-	 * AP only accepts unencrypted 4-way 4/4 with a new play counter, and the STA encrypts
-	 * each 4-way 4/4 at this time, the 4-way handshake cannot be completed.
-	 * So we modified that after STA receives unencrypted 4-way 1/4 and 4-way 3/4,
-	 * 4-way 2/4 and 4-way 4/4 sent by STA in the next 100 ms are not encrypted.
-	 */
+#if defined(CONFIG_RUST)
+	{
+		struct rtw_rust_xmit_sec_gather gather;
+		struct rtw_rust_xmit_sec_decision decision;
+
+		rtw_rust_xmit_attrib_sec_gather(padapter, pattrib, psta, eapol_type, &gather);
+		update_attrib_sec_info_decide_rust(&gather, &decision);
+		res = decision.res;
+		pattrib->encrypt = decision.encrypt;
+		pattrib->key_idx = decision.key_idx;
+		if (res != _SUCCESS)
+			goto exit;
+	}
+#else
+	/* Comment by Owen at 2020/05/19 — see git history for full 4-way EAPOL note. */
 	if (psta->ieee8021x_blocked == _TRUE ||
 	    ((eapol_type == EAPOL_2_4 || eapol_type == EAPOL_4_4) &&
 	     rtw_get_passing_time_ms(psta->resp_nonenc_eapol_key_starttime) <= 100)) {
@@ -80,7 +141,6 @@ s32 update_attrib_sec_info(_adapter *padapter, struct pkt_attrib *pattrib,
 			break;
 		}
 
-		/* For WPS 1.0 WEP, driver should not encrypt EAPOL Packet for WPS handshake. */
 		if (((pattrib->encrypt == _WEP40_) || (pattrib->encrypt == _WEP104_)) &&
 		    (pattrib->ether_type == 0x888e))
 			pattrib->encrypt = _NO_PRIVACY_;
@@ -92,6 +152,7 @@ s32 update_attrib_sec_info(_adapter *padapter, struct pkt_attrib *pattrib,
 			pattrib->encrypt = _AES_;
 	}
 #endif
+#endif /* !CONFIG_RUST */
 
 	switch (pattrib->encrypt) {
 	case _WEP40_:
