@@ -28,8 +28,20 @@ struct _adapter {
 	struct mlme_priv mlmepriv;
 };
 
+#ifdef HOST_IOCTL_CONNECT_RUST
+extern u8 rtw_set_802_11_disassociate_rust(struct _adapter *p);
+extern u8 rtw_set_802_11_connect_rust(struct _adapter *p, u8 *bssid,
+				      NDIS_802_11_SSID *ssid, u16 ch);
+extern void ioctl_connect_test_reset_counters(void);
+extern u32 ioctl_connect_test_disassoc_calls(void);
+extern u32 ioctl_connect_test_join_calls(void);
+#define rtw_set_802_11_disassociate rtw_set_802_11_disassociate_rust
+#define rtw_set_802_11_connect rtw_set_802_11_connect_rust
+#else
 static u32 g_disassoc_calls, g_join_calls;
+#endif
 
+#ifndef HOST_IOCTL_CONNECT_RUST
 /* Mirrors core/rtw_ioctl_set.c rtw_validate_* (see ioctl_validate_l2.c / PR2). */
 static u8 v_bssid(u8 *b)
 {
@@ -90,6 +102,7 @@ static u8 rtw_set_802_11_connect(struct _adapter *p, u8 *bssid, NDIS_802_11_SSID
 	}
 	return ok;
 }
+#endif /* !HOST_IOCTL_CONNECT_RUST */
 
 struct vector {
 	char name[48], fn[16], bssid[13], expect_bssid[13];
@@ -173,7 +186,11 @@ static int run_vector(struct vector *v)
 	NDIS_802_11_SSID ssid;
 
 	memset(&a, 0, sizeof(a));
+#ifdef HOST_IOCTL_CONNECT_RUST
+	ioctl_connect_test_reset_counters();
+#else
 	g_disassoc_calls = g_join_calls = 0;
+#endif
 	a.hw_init_done = (u8)v->hw_init;
 	a.tkip_fail = (u8)v->tkip_fail;
 	a.do_join_ret = (u8)v->do_join_ret;
@@ -181,7 +198,12 @@ static int run_vector(struct vector *v)
 
 	if (!strcmp(v->fn, "disassociate")) {
 		got = rtw_set_802_11_disassociate(&a);
-		if (got != (u8)v->expect_ret || g_disassoc_calls != (u32)v->expect_disassoc)
+		if (got != (u8)v->expect_ret ||
+#ifdef HOST_IOCTL_CONNECT_RUST
+		    ioctl_connect_test_disassoc_calls() != (u32)v->expect_disassoc)
+#else
+		    g_disassoc_calls != (u32)v->expect_disassoc)
+#endif
 			goto fail;
 	} else if (!strcmp(v->fn, "connect")) {
 		u8 *pb = NULL;
@@ -193,7 +215,12 @@ static int run_vector(struct vector *v)
 		if (v->bssid[0])
 			pb = mac;
 		got = rtw_set_802_11_connect(&a, pb, v->ssid_len ? &ssid : NULL, (u16)v->ch);
-		if (got != (u8)v->expect_ret || g_join_calls != (u32)v->expect_join ||
+		if (got != (u8)v->expect_ret ||
+#ifdef HOST_IOCTL_CONNECT_RUST
+		    ioctl_connect_test_join_calls() != (u32)v->expect_join ||
+#else
+		    g_join_calls != (u32)v->expect_join ||
+#endif
 		    a.mlmepriv.to_join != (u8)v->expect_to_join || !mlme_ok(&a, v))
 			goto fail;
 	} else
