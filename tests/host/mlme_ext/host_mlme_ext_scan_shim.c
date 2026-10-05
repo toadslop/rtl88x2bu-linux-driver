@@ -300,3 +300,34 @@ u8 rtw_rust_pick_ch_p2p_needed(_adapter *a)
 	return 0;
 #endif
 }
+
+/* Host L2 stubs for W3-70 ch_decision Rust oracle (PR6). */
+u8 rtw_rust_scan_regsty_wifi_spec(_adapter *a)
+{
+	return a->registrypriv.wifi_spec;
+}
+
+u8 rtw_rust_scan_max_chan_nums(_adapter *a)
+{
+	return a->rfctl.max_chan_nums;
+}
+
+u8 rtw_rust_scan_chset_channel_num(_adapter *a, int idx)
+{
+	return a->rfctl.channel_set[idx].ChannelNum;
+}
+
+u8 rtw_rust_scan_chset_flags(_adapter *a, int idx)
+{
+	return a->rfctl.channel_set[idx].flags;
+}
+
+void rtw_rust_scan_chset_clear_hidden_bss(_adapter *a, int idx)
+{
+	a->rfctl.channel_set[idx].hidden_bss_cnt = 0;
+}
+
+void *rtw_rust_scan_chset(_adapter *a)
+{
+	return a->rfctl.channel_set;
+}

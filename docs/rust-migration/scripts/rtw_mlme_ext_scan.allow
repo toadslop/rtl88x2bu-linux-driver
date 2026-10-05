@@ -10,3 +10,15 @@ drop rtw_rust_scan_set_timeout_ms
 drop rtw_rust_scan_backop_flags_sta
 drop rtw_rust_scan_backop_flags_ap
 drop rtw_rust_scan_backop_flags_mesh
+drop rtw_rust_scan_regsty_wifi_spec
+drop rtw_rust_scan_max_chan_nums
+drop rtw_rust_scan_chset_channel_num
+drop rtw_rust_scan_chset_flags
+drop rtw_rust_scan_chset_clear_hidden_bss
+drop rtw_rust_scan_chset
+drop sitesurvey_pick_ch_behavior
+drop sitesurvey_res_reset
+drop rtw_rust_scan_roam_quickscan_next
+drop rtw_rust_scan_roam_clear_quickscan_next
+drop rtw_rust_scan_roam_ch_num
+drop rtw_rust_scan_roam_copy_ch

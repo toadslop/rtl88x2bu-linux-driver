@@ -120,6 +120,16 @@ u16 rtw_rust_scan_acs_adv_ms(void *a) { (void)a; return 0; }
 unsigned long _rtw_get_current_time(void) { return 0; }
 u32 _rtw_get_passing_time_ms(unsigned long s) { (void)s; return 0; }
 
+/* rtw_scan_ch_decision is in the same Rust crate object; link stubs only. */
+int rtw_mlme_band_check(void *a, u32 ch) { (void)a; (void)ch; return 1; }
+int rtw_mlme_ignore_chan(void *a, u32 ch) { (void)a; (void)ch; return 0; }
+int rtw_chset_search_ch(void *ch_set, u32 ch) { (void)ch_set; (void)ch; return -1; }
+void *rtw_rust_scan_chset(void *a) { (void)a; return NULL; }
+u8 rtw_rust_scan_chset_flags(void *a, int idx) { (void)a; (void)idx; return 0; }
+u8 rtw_rust_scan_max_chan_nums(void *a) { (void)a; return 0; }
+u8 rtw_rust_scan_chset_channel_num(void *a, int idx) { (void)a; (void)idx; return 0; }
+u8 rtw_rust_scan_regsty_wifi_spec(void *a) { (void)a; return 0; }
+
 static int fail(const char *msg)
 {
 	fprintf(stderr, "FAIL: %s\n", msg);
