@@ -213,6 +213,14 @@ pub unsafe extern "C" fn o_bfee_by_addr(a: BfHostPadpt, ra: *mut U8) -> *mut BfH
 const BF_HOST_SUCCESS: U32 = 1;
 #[cfg(host_bf_entry_packet_test)]
 const BF_HOST_FAIL: U32 = 0;
+#[cfg(host_bf_entry_packet_test)]
+const BF_HOST_CAT_VHT: U8 = 21;
+#[cfg(host_bf_entry_packet_test)]
+const BF_HOST_CAT_HT: U8 = 7;
+#[cfg(host_bf_entry_packet_test)]
+const BF_HOST_ACT_VHT_BF: U8 = 0;
+#[cfg(host_bf_entry_packet_test)]
+const BF_HOST_ACT_HT_BF: U8 = 6;
 
 #[cfg(host_bf_entry_packet_test)]
 extern "C" {
@@ -242,7 +250,7 @@ pub unsafe extern "C" fn o_report(adapter: BfHostPadpt, rf: *mut BfHostRecvFrame
     let mut ch_w = 0u8;
     let mut ng = 0u8;
     let mut code_book = 0u8;
-    if cat == 21 && act == 0 {
+    if cat == BF_HOST_CAT_VHT && act == BF_HOST_ACT_VHT_BF {
         let mimo = pframe.add(26);
         nc = *mimo & 0x7;
         nr = (*mimo & 0x38) >> 3;
@@ -250,7 +258,7 @@ pub unsafe extern "C" fn o_report(adapter: BfHostPadpt, rf: *mut BfHostRecvFrame
         ng = *mimo.add(1) & 0x3;
         code_book = (*mimo.add(1) & 0x4) >> 2;
         info.TargetCSIInfo.bVHT = 1;
-    } else if cat == 0 && act == 6 {
+    } else if cat == BF_HOST_CAT_HT && act == BF_HOST_ACT_HT_BF {
         let mimo = pframe.add(26);
         nc = *mimo & 0x3;
         nr = (*mimo & 0xC) >> 2;
