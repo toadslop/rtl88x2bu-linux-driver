@@ -1,0 +1,10 @@
+# L1 allowlist for W3-125 PR3: Rust owns scan_mode + setband leaf setters;
+# kernel field-access shims stay in core/rtw_ioctl_set.c.
+drop rtw_rust_ioctl_scan_mode_ptr
+drop rtw_rust_ioctl_setband_ptr
+drop rtw_validate_bssid_rust
+drop rtw_validate_ssid_rust
+drop rtw_set_scan_mode_rust
+drop rtw_set_band_rust
+drop rtw_add_wep_privacy_rust
+drop rtw_auth_mode_map_rust
