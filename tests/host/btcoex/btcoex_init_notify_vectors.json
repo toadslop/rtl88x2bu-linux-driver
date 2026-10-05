@@ -1,0 +1,24 @@
+{
+  "vectors": [
+    {"name": "init", "fn": "init", "exp_hal": 1},
+    {"name": "pwr_on", "fn": "pwr_on", "exp_hal": 1},
+    {"name": "pwr_off", "fn": "pwr_off", "exp_hal": 1},
+    {"name": "preload", "fn": "preload", "exp_hal": 1},
+    {"name": "hw_init", "fn": "hw_init", "wifi_only": 1, "exp_hal": 1},
+    {"name": "ips_no_coex", "fn": "ips", "coex": 0, "arg": 2, "exp_hal": 0},
+    {"name": "ips_coex", "fn": "ips", "coex": 1, "arg": 2, "exp_hal": 1, "exp_last": 2},
+    {"name": "lps_coex", "fn": "lps", "coex": 1, "arg": 1, "exp_hal": 1, "exp_last": 1},
+    {"name": "ant", "fn": "ant", "exp_hal": 1},
+    {"name": "scan_active", "fn": "scan", "coex": 1, "arg": 1, "exp_hal": 1, "exp_last": 1},
+    {"name": "scan_end_buddy", "fn": "scan", "coex": 1, "arg": 0, "buddy_survey": 1, "exp_hal": 0},
+    {"name": "scan_end_mgmt", "fn": "scan", "coex": 1, "arg": 0, "mgmt": 1, "exp_hal": 0},
+    {"name": "scan_end_roch", "fn": "scan", "coex": 1, "arg": 0, "roch": 1, "exp_hal": 0},
+    {"name": "scan_end_ok", "fn": "scan", "coex": 1, "arg": 0, "exp_hal": 1},
+    {"name": "media_no_coex", "fn": "media", "coex": 0, "arg": 1, "exp_hal": 0},
+    {"name": "media_sreset", "fn": "media", "coex": 1, "sreset": 1, "arg": 1, "exp_hal": 0},
+    {"name": "media_ap", "fn": "media", "coex": 1, "fw": 16, "arg": 1, "exp_hal": 1, "exp_dl": 1, "exp_last": 1},
+    {"name": "media_sta", "fn": "media", "coex": 1, "arg": 1, "exp_hal": 1, "exp_last": 1},
+    {"name": "media_disconnect_buddy_asoc", "fn": "media", "coex": 1, "arg": 0, "buddy_asoc": 1, "exp_hal": 0},
+    {"name": "media_disconnect_ok", "fn": "media", "coex": 1, "arg": 0, "exp_hal": 1, "exp_last": 0}
+  ]
+}

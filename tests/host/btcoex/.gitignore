@@ -1,0 +1,3 @@
+test_btcoex_init_notify
+test_btcoex_init_notify_rust
+librust_btcoex_init_notify.a
