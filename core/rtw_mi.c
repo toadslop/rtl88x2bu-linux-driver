@@ -187,95 +187,6 @@ inline int rtw_mi_get_ch_setting_union_no_self(_adapter *adapter, u8 *ch, u8 *bw
 	return rtw_mi_get_ch_setting_union_by_ifbmp(adapter_to_dvobj(adapter), 0xFF & ~BIT(adapter->iface_id), ch, bw, offset);
 }
 
-inline void rtw_mi_status(_adapter *adapter, struct mi_state *mstate)
-{
-	return rtw_mi_status_by_ifbmp(adapter_to_dvobj(adapter), 0xFF, mstate);
-}
-
-inline void rtw_mi_status_no_self(_adapter *adapter, struct mi_state *mstate)
-{
-	return rtw_mi_status_by_ifbmp(adapter_to_dvobj(adapter), 0xFF & ~BIT(adapter->iface_id), mstate);
-}
-
-inline void rtw_mi_status_no_others(_adapter *adapter, struct mi_state *mstate)
-{
-	return rtw_mi_status_by_ifbmp(adapter_to_dvobj(adapter), BIT(adapter->iface_id), mstate);
-}
-
-inline void rtw_mi_status_merge(struct mi_state *d, struct mi_state *a)
-{
-	d->sta_num += a->sta_num;
-	d->ld_sta_num += a->ld_sta_num;
-	d->lg_sta_num += a->lg_sta_num;
-#ifdef CONFIG_TDLS
-	d->ld_tdls_num += a->ld_tdls_num;
-#endif
-#ifdef CONFIG_AP_MODE
-	d->ap_num += a->ap_num;
-	d->ld_ap_num += a->ld_ap_num;
-#endif
-	d->adhoc_num += a->adhoc_num;
-	d->ld_adhoc_num += a->ld_adhoc_num;
-#ifdef CONFIG_RTW_MESH
-	d->mesh_num += a->mesh_num;
-	d->ld_mesh_num += a->ld_mesh_num;
-#endif
-	d->scan_num += a->scan_num;
-	d->scan_enter_num += a->scan_enter_num;
-	d->uwps_num += a->uwps_num;
-#ifdef CONFIG_IOCTL_CFG80211
-	#ifdef CONFIG_P2P
-	d->roch_num += a->roch_num;
-	#endif
-	d->mgmt_tx_num += a->mgmt_tx_num;
-#endif
-}
-
-void dump_mi_status(void *sel, struct dvobj_priv *dvobj)
-{
-	RTW_PRINT_SEL(sel, "== dvobj-iface_state ==\n");
-	RTW_PRINT_SEL(sel, "sta_num:%d\n", DEV_STA_NUM(dvobj));
-	RTW_PRINT_SEL(sel, "linking_sta_num:%d\n", DEV_STA_LG_NUM(dvobj));
-	RTW_PRINT_SEL(sel, "linked_sta_num:%d\n", DEV_STA_LD_NUM(dvobj));
-#ifdef CONFIG_TDLS
-	RTW_PRINT_SEL(sel, "linked_tdls_num:%d\n", DEV_TDLS_LD_NUM(dvobj));
-#endif
-#ifdef CONFIG_AP_MODE
-	RTW_PRINT_SEL(sel, "ap_num:%d\n", DEV_AP_NUM(dvobj));
-	RTW_PRINT_SEL(sel, "starting_ap_num:%d\n", DEV_AP_STARTING_NUM(dvobj));
-	RTW_PRINT_SEL(sel, "linked_ap_num:%d\n", DEV_AP_LD_NUM(dvobj));
-#endif
-	RTW_PRINT_SEL(sel, "adhoc_num:%d\n", DEV_ADHOC_NUM(dvobj));
-	RTW_PRINT_SEL(sel, "linked_adhoc_num:%d\n", DEV_ADHOC_LD_NUM(dvobj));
-#ifdef CONFIG_RTW_MESH
-	RTW_PRINT_SEL(sel, "mesh_num:%d\n", DEV_MESH_NUM(dvobj));
-	RTW_PRINT_SEL(sel, "linked_mesh_num:%d\n", DEV_MESH_LD_NUM(dvobj));
-#endif
-#ifdef CONFIG_P2P
-	RTW_PRINT_SEL(sel, "p2p_device_num:%d\n", DEV_P2P_DV_NUM(dvobj));
-	RTW_PRINT_SEL(sel, "p2p_gc_num:%d\n", DEV_P2P_GC_NUM(dvobj));
-	RTW_PRINT_SEL(sel, "p2p_go_num:%d\n", DEV_P2P_GO_NUM(dvobj));
-#endif
-	RTW_PRINT_SEL(sel, "scan_num:%d\n", DEV_SCAN_NUM(dvobj));
-	RTW_PRINT_SEL(sel, "under_wps_num:%d\n", DEV_WPS_NUM(dvobj));
-#if defined(CONFIG_IOCTL_CFG80211)
-	#if defined(CONFIG_P2P)
-	RTW_PRINT_SEL(sel, "roch_num:%d\n", DEV_ROCH_NUM(dvobj));
-	#endif
-	RTW_PRINT_SEL(sel, "mgmt_tx_num:%d\n", DEV_MGMT_TX_NUM(dvobj));
-#endif
-	RTW_PRINT_SEL(sel, "union_ch:%d\n", DEV_U_CH(dvobj));
-	RTW_PRINT_SEL(sel, "union_bw:%d\n", DEV_U_BW(dvobj));
-	RTW_PRINT_SEL(sel, "union_offset:%d\n", DEV_U_OFFSET(dvobj));
-	RTW_PRINT_SEL(sel, "================\n\n");
-}
-
-void dump_dvobj_mi_status(void *sel, const char *fun_name, _adapter *adapter)
-{
-	RTW_INFO("\n[ %s ] call %s\n", fun_name, __func__);
-	dump_mi_status(sel, adapter_to_dvobj(adapter));
-}
-
 inline void rtw_mi_update_iface_status(struct mlme_priv *pmlmepriv, sint state)
 {
 	_adapter *adapter = container_of(pmlmepriv, _adapter, mlmepriv);
@@ -369,6 +280,51 @@ u8 rtw_mi_check_status(_adapter *adapter, u8 type)
 		break;
 	}
 	return ret;
+}
+
+void dump_mi_status(void *sel, struct dvobj_priv *dvobj)
+{
+	RTW_PRINT_SEL(sel, "== dvobj-iface_state ==\n");
+	RTW_PRINT_SEL(sel, "sta_num:%d\n", DEV_STA_NUM(dvobj));
+	RTW_PRINT_SEL(sel, "linking_sta_num:%d\n", DEV_STA_LG_NUM(dvobj));
+	RTW_PRINT_SEL(sel, "linked_sta_num:%d\n", DEV_STA_LD_NUM(dvobj));
+#ifdef CONFIG_TDLS
+	RTW_PRINT_SEL(sel, "linked_tdls_num:%d\n", DEV_TDLS_LD_NUM(dvobj));
+#endif
+#ifdef CONFIG_AP_MODE
+	RTW_PRINT_SEL(sel, "ap_num:%d\n", DEV_AP_NUM(dvobj));
+	RTW_PRINT_SEL(sel, "starting_ap_num:%d\n", DEV_AP_STARTING_NUM(dvobj));
+	RTW_PRINT_SEL(sel, "linked_ap_num:%d\n", DEV_AP_LD_NUM(dvobj));
+#endif
+	RTW_PRINT_SEL(sel, "adhoc_num:%d\n", DEV_ADHOC_NUM(dvobj));
+	RTW_PRINT_SEL(sel, "linked_adhoc_num:%d\n", DEV_ADHOC_LD_NUM(dvobj));
+#ifdef CONFIG_RTW_MESH
+	RTW_PRINT_SEL(sel, "mesh_num:%d\n", DEV_MESH_NUM(dvobj));
+	RTW_PRINT_SEL(sel, "linked_mesh_num:%d\n", DEV_MESH_LD_NUM(dvobj));
+#endif
+#ifdef CONFIG_P2P
+	RTW_PRINT_SEL(sel, "p2p_device_num:%d\n", DEV_P2P_DV_NUM(dvobj));
+	RTW_PRINT_SEL(sel, "p2p_gc_num:%d\n", DEV_P2P_GC_NUM(dvobj));
+	RTW_PRINT_SEL(sel, "p2p_go_num:%d\n", DEV_P2P_GO_NUM(dvobj));
+#endif
+	RTW_PRINT_SEL(sel, "scan_num:%d\n", DEV_SCAN_NUM(dvobj));
+	RTW_PRINT_SEL(sel, "under_wps_num:%d\n", DEV_WPS_NUM(dvobj));
+#if defined(CONFIG_IOCTL_CFG80211)
+	#if defined(CONFIG_P2P)
+	RTW_PRINT_SEL(sel, "roch_num:%d\n", DEV_ROCH_NUM(dvobj));
+	#endif
+	RTW_PRINT_SEL(sel, "mgmt_tx_num:%d\n", DEV_MGMT_TX_NUM(dvobj));
+#endif
+	RTW_PRINT_SEL(sel, "union_ch:%d\n", DEV_U_CH(dvobj));
+	RTW_PRINT_SEL(sel, "union_bw:%d\n", DEV_U_BW(dvobj));
+	RTW_PRINT_SEL(sel, "union_offset:%d\n", DEV_U_OFFSET(dvobj));
+	RTW_PRINT_SEL(sel, "================\n\n");
+}
+
+void dump_dvobj_mi_status(void *sel, const char *fun_name, _adapter *adapter)
+{
+	RTW_INFO("\n[ %s ] call %s\n", fun_name, __func__);
+	dump_mi_status(sel, adapter_to_dvobj(adapter));
 }
 
 /*
