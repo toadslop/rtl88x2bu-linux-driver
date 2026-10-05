@@ -2,5 +2,6 @@ test_ioctl_validate
 test_ioctl_validate_rust
 test_ioctl_scan_channel
 test_ioctl_scan_channel_rust
+test_ioctl_connect
 librust_ioctl_validate.a
 librust_ioctl_scan_channel.a

@@ -1,0 +1,94 @@
+{
+  "vectors": [
+    {
+      "name": "disassoc_idle",
+      "fn": "disassociate",
+      "fw_state": 0,
+      "expect_ret": 1,
+      "expect_disassoc": 0
+    },
+    {
+      "name": "disassoc_linked",
+      "fn": "disassociate",
+      "fw_state": 1,
+      "expect_ret": 1,
+      "expect_disassoc": 1
+    },
+    {
+      "name": "connect_both_invalid",
+      "fn": "connect",
+      "ssid_len": 33,
+      "expect_ret": 0
+    },
+    {
+      "name": "connect_hw_not_ready",
+      "fn": "connect",
+      "hw_init": 0,
+      "bssid": "020304050607",
+      "expect_ret": 0
+    },
+    {
+      "name": "connect_under_linking_noop",
+      "fn": "connect",
+      "fw_state": 128,
+      "bssid": "020304050607",
+      "ch": 6,
+      "expect_ret": 1,
+      "expect_join": 0,
+      "expect_to_join": 0
+    },
+    {
+      "name": "connect_survey_and_linking",
+      "fn": "connect",
+      "fw_state": 2176,
+      "bssid": "020304050607",
+      "ch": 6,
+      "expect_ret": 1,
+      "expect_join": 0,
+      "expect_to_join": 1,
+      "expect_assoc_ch": 6,
+      "expect_assoc_by_bssid": 1,
+      "expect_bssid": "020304050607"
+    },
+    {
+      "name": "connect_under_survey_to_join",
+      "fn": "connect",
+      "fw_state": 2048,
+      "bssid": "020304050607",
+      "ch": 6,
+      "expect_ret": 1,
+      "expect_to_join": 1,
+      "expect_assoc_ch": 6,
+      "expect_assoc_by_bssid": 1,
+      "expect_bssid": "020304050607"
+    },
+    {
+      "name": "connect_tkip_fail",
+      "fn": "connect",
+      "tkip_fail": 1,
+      "bssid": "020304050607",
+      "expect_ret": 0
+    },
+    {
+      "name": "connect_happy_join",
+      "fn": "connect",
+      "bssid": "020304050607",
+      "ch": 11,
+      "ssid_len": 4,
+      "expect_ret": 1,
+      "expect_join": 1,
+      "expect_assoc_ch": 11,
+      "expect_assoc_by_bssid": 1,
+      "expect_assoc_ssid_len": 4,
+      "expect_bssid": "020304050607"
+    },
+    {
+      "name": "connect_join_fail",
+      "fn": "connect",
+      "bssid": "020304050607",
+      "do_join_ret": 0,
+      "expect_ret": 0,
+      "expect_join": 1
+    }
+  ]
+}
