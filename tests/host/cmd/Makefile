@@ -58,7 +58,8 @@ test_cmd_thread_rust: test_cmd_thread.c host_cmd_thread_shim.c librust_cmd_threa
 	$(CC) $(CFLAGS_CMD_THREAD) -o $@ test_cmd_thread.c host_cmd_thread_shim.c $(HOST_JSON) librust_cmd_thread.a
 
 librust_cmd_thread.a: $(RUST_CMD_REST)
-	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_cmd_thread_test --cfg rust_cmd_thread \
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_cmd_thread_test \
+		--cfg rust_cmd_thread --cfg rust_cmd_thread_loop \
 		--crate-type staticlib $(RUST_CMD_REST) -o $@
 
 test-cmd-joinbss: test_joinbss_cmd

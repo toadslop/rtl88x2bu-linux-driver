@@ -2688,6 +2688,7 @@ ccflags-y += -DCONFIG_RUST_ODM_ADAPTIVITY_LEAF
 ccflags-y += -DCONFIG_RUST_CMD_PRIV
 ccflags-y += -DCONFIG_RUST_CMD_PRIV_EVT
 ccflags-y += -DCONFIG_RUST_CMD_QUEUE
+ccflags-y += -DCONFIG_RUST_CMD_THREAD
 ccflags-y += -DCONFIG_RUST_RECV_STA
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_EVENT_THREAD_MODE' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg event_thread_mode
@@ -2780,6 +2781,7 @@ rustflags-y += --cfg rust_rf_dump_txpwr_lmt
 rustflags-y += --cfg rust_rf_kfree_tx_gain
 rustflags-y += --cfg rust_cmd_priv
 rustflags-y += --cfg rust_cmd_queue
+rustflags-y += --cfg rust_cmd_thread
 rustflags-y += --cfg config_rtw_debug
 rustflags-y += --cfg dfs_master
 rustflags-y += --cfg ieee80211_band_5ghz
@@ -3898,7 +3900,7 @@ rust-objects-rtw-cmd-thread-c:
 
 rust-objects-rtw-cmd-thread-rust-ref:
 	rustc -C opt-level=2 -C overflow-checks=on \
-		--cfg host_cmd_thread_test --cfg rust_cmd_thread \
+		--cfg host_cmd_thread_test --cfg rust_cmd_thread --cfg rust_cmd_thread_loop \
 		--emit=obj=tests/host/cmd/cmd_thread_rust_ref.o \
 		--crate-type lib rust/rtw_cmd_rest.rs
 
