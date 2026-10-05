@@ -399,6 +399,60 @@ pub unsafe extern "C" fn rtw_set_802_11_connect_rust(
 }
 
 #[cfg(host_ioctl_connect_test)]
+fn host_is_bad_set_bssid(bssid: &[u8; 6]) -> bool {
+    let all_zero = bssid.iter().all(|&b| b == 0);
+    let all_ff = bssid.iter().all(|&b| b == 0xff);
+    all_zero || all_ff
+}
+
+#[cfg(host_ioctl_connect_test)]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_set_802_11_bssid_rust(p: *mut HostAdapter, bssid: *mut u8) -> u8 {
+    if p.is_null() || bssid.is_null() {
+        return _FAIL as u8;
+    }
+    let padapter = &mut *p;
+    let mlme = &mut padapter.mlmepriv;
+    let b = &*(bssid as *const [u8; 6]);
+
+    if host_is_bad_set_bssid(b) {
+        return _FAIL as u8;
+    }
+
+    if host_chk_fw(mlme, WIFI_UNDER_SURVEY_K as i32) {
+        // handle_tkip_countermeasure
+    } else if host_chk_fw(mlme, WIFI_UNDER_LINKING_K as i32) {
+        return _SUCCESS as u8;
+    }
+
+    if padapter.tkip_fail != 0 {
+        return _FAIL as u8;
+    }
+
+    mlme.assoc_ssid = HostNdis80211Ssid {
+        SsidLength: 0,
+        Ssid: [0; 32],
+    };
+    mlme.assoc_bssid.copy_from_slice(b);
+    mlme.assoc_ch = 0;
+    mlme.assoc_by_bssid = _TRUE;
+
+    if host_chk_fw(mlme, WIFI_UNDER_SURVEY_K as i32) {
+        mlme.to_join = _TRUE;
+        return _SUCCESS as u8;
+    }
+
+    unsafe {
+        HOST_IOCTL_CONNECT_JOIN_CALLS += 1;
+    }
+    if padapter.do_join_ret != 0 {
+        _SUCCESS as u8
+    } else {
+        _FAIL as u8
+    }
+}
+
+#[cfg(host_ioctl_connect_test)]
 const _SUCCESS: i32 = 1;
 #[cfg(host_ioctl_connect_test)]
 const _FAIL: i32 = 0;
