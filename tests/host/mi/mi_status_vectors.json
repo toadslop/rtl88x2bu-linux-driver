@@ -1,0 +1,12 @@
+{
+  "vectors": [
+    {"name": "sta_assoc_one", "f0": 9, "e_sta": 1, "e_ld": 1},
+    {"name": "sta_linking", "f0": 136, "e_sta": 1, "e_lg": 1},
+    {"name": "ap_assoc_ld", "f0": 17, "a0": 4, "e_ap": 1, "e_ld_ap": 1},
+    {"name": "ap_starting", "f0": 16, "e_start_ap": 1},
+    {"name": "survey_enter", "f0": 2048, "s0": 3, "e_scan": 1, "e_scan_ent": 1},
+    {"name": "wps_flag", "f0": 256, "e_wps": 1},
+    {"name": "cfg80211_mgmt_roch", "mg0": 1, "ro0": 1, "e_mgmt": 1, "e_roch": 1},
+    {"name": "bmp_skip_iface1", "bmp": 1, "f0": 9, "f1": 9, "e_sta": 1, "e_ld": 1}
+  ]
+}
