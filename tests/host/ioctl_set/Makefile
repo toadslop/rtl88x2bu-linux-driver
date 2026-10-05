@@ -11,10 +11,11 @@ all: test
 
 test: test-c test-rust
 
-test-c: test_ioctl_validate test_ioctl_scan_channel test_ioctl_connect
+test-c: test_ioctl_validate test_ioctl_scan_channel test_ioctl_connect test_ioctl_regd
 	./test_ioctl_validate ioctl_validate_vectors.json
 	./test_ioctl_scan_channel ioctl_scan_channel_vectors.json
 	./test_ioctl_connect ioctl_connect_vectors.json
+	./test_ioctl_regd ioctl_regd_vectors.json
 
 test-rust: test_ioctl_validate_rust test_ioctl_scan_channel_rust test_ioctl_connect_rust
 	./test_ioctl_validate_rust ioctl_validate_vectors.json
@@ -29,6 +30,9 @@ test_ioctl_scan_channel: ioctl_scan_channel_l2.c $(HOST_JSON)
 
 test_ioctl_connect: ioctl_connect_l2.c $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ ioctl_connect_l2.c $(HOST_JSON)
+
+test_ioctl_regd: ioctl_regd_l2.c $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ ioctl_regd_l2.c $(HOST_JSON)
 
 test_ioctl_validate_rust: ioctl_validate_l2.c librust_ioctl_validate.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DHOST_IOCTL_VALIDATE_RUST -o $@ ioctl_validate_l2.c $(HOST_JSON) librust_ioctl_validate.a
@@ -54,4 +58,5 @@ librust_ioctl_connect.a: $(RUST_IOCTL)
 clean:
 	rm -f test_ioctl_validate test_ioctl_validate_rust test_ioctl_scan_channel \
 		test_ioctl_scan_channel_rust test_ioctl_connect test_ioctl_connect_rust \
+		test_ioctl_regd \
 		librust_ioctl_validate.a librust_ioctl_scan_channel.a librust_ioctl_connect.a
