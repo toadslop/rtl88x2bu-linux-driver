@@ -118,6 +118,35 @@ static int test_timeout(const char *name, u32 mode, u16 ms, u16 duration,
 }
 
 #ifndef RUST_MLME_EXT_SCAN_ORACLE
+static int test_sitesurvey_res_reset(void)
+{
+	struct sitesurvey_parm parm;
+	struct rtw_ieee80211_channel in[1];
+
+	memset(&ad, 0, sizeof(ad));
+	memset(&parm, 0, sizeof(parm));
+	ad.dvobj.regsty = &ad.registrypriv;
+	ad.setband = WIFI_FREQUENCY_BAND_AUTO;
+	ad.rfctl.max_chan_nums = 2;
+	ad.rfctl.channel_set[0].ChannelNum = 6;
+	ad.rfctl.channel_set[1].ChannelNum = 11;
+	in[0].hw_value = 6;
+	parm.ch_num = 1;
+	parm.ch[0] = in[0];
+	parm.acs = _TRUE;
+	parm.token = 42;
+	sitesurvey_res_reset(&ad, &parm);
+	if (ad.mlmeextpriv.sitesurvey_res.ch_num != 1 ||
+	    ad.mlmeextpriv.sitesurvey_res.ch[0].hw_value != 6 ||
+	    ad.mlmeextpriv.sitesurvey_res.token != 42) {
+		fprintf(stderr, "sitesurvey_res_reset: unexpected ss state\n");
+		return -1;
+	}
+	printf("PASS: sitesurvey_res_reset\n");
+	return 0;
+}
+#endif
+
 static int test_ch_decision_filter(void)
 {
 	struct rtw_ieee80211_channel in[2], out[RTW_CHANNEL_SCAN_AMOUNT];
@@ -140,7 +169,6 @@ static int test_ch_decision_filter(void)
 	printf("PASS: ch_decision_filter\n");
 	return 0;
 }
-#endif /* !RUST_MLME_EXT_SCAN_ORACLE */
 
 int main(void)
 {
@@ -162,8 +190,10 @@ int main(void)
 	    test_timeout("timeout_backop", 3, 100, 0, 2, 50, 1, 3750) ||
 	    test_timeout("timeout_duration", 3, 100, 200, 2, 50, 0, 4800))
 		return 1;
-#ifndef RUST_MLME_EXT_SCAN_ORACLE
 	if (test_ch_decision_filter())
+		return 1;
+#ifndef RUST_MLME_EXT_SCAN_ORACLE
+	if (test_sitesurvey_res_reset())
 		return 1;
 #endif
 	printf("All scan decision vectors passed.\n");

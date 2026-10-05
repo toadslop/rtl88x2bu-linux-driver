@@ -147,7 +147,7 @@ test_scan_decision: test_scan_decision.c $(MLME_EXT_REST_SRC) $(SCAN_SHIM)
 
 librust_mlme_ext_scan.a: $(RUST_MLME_EXT_SCAN)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on \
-		--cfg host_mlme_ext_scan_test \
+		--cfg host_mlme_ext_scan_test --cfg rust_mlme_ext_scan_ch \
 		--cfg config_scan_sparse_bg --cfg config_scan_sparse_miracast \
 		--crate-type staticlib $(RUST_MLME_EXT_SCAN) -o $@
 
@@ -160,7 +160,7 @@ test_scan_decision_rust: test_scan_decision.c librust_mlme_ext_scan.a $(SCAN_SHI
 # Kernel path: --cfg rust_mlme_ext_scan (no host overlay of packed mi_state).
 librust_mlme_ext_scan_kernel.a: $(RUST_MLME_EXT_SCAN)
 	$(RUSTC) --edition 2021 -C opt-level=2 -C overflow-checks=on \
-		--cfg rust_mlme_ext_scan --cfg config_scan_backop \
+		--cfg rust_mlme_ext_scan --cfg rust_mlme_ext_scan_ch --cfg config_scan_backop \
 		--crate-type staticlib $(RUST_MLME_EXT_SCAN) -o $@
 
 test-scan-kernel-layout: test_scan_kernel_layout

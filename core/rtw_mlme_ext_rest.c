@@ -820,6 +820,11 @@ void rtw_rust_scan_chset_clear_hidden_bss(_adapter *adapter, int idx)
 	adapter_to_chset(adapter)[idx].hidden_bss_cnt = 0;
 }
 
+RT_CHANNEL_INFO *rtw_rust_scan_chset(_adapter *adapter)
+{
+	return adapter_to_rfctl(adapter)->channel_set;
+}
+
 #ifdef CONFIG_RTW_ROAM_QUICKSCAN
 u8 rtw_rust_scan_roam_quickscan_next(_adapter *adapter)
 {
@@ -1654,8 +1659,7 @@ int rtw_scan_ch_decision(_adapter *padapter, struct rtw_ieee80211_channel *out,
 #endif /* rtw_scan_ch_decision (CONFIG_RUST_MLME_EXT_SCAN_CH when swapped) */
 
 #if defined(HOST_MLME_EXT_SCAN_TEST) || \
-	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_SCAN_CH)) && \
-	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
+	((!defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
 	  !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && !defined(HOST_MLME_EXT_BAND_IE_TEST) && \
 	  !defined(HOST_MLME_EXT_JOIN_CMD_TEST) && !defined(HOST_MLME_EXT_SITESURVEY_CMD_TEST)))
 
@@ -1705,7 +1709,7 @@ void sitesurvey_res_reset(_adapter *adapter, struct sitesurvey_parm *parm)
 	ss->acs = parm->acs;
 }
 
-#endif /* sitesurvey_res_reset (CONFIG_RUST_MLME_EXT_SCAN_CH when swapped) */
+#endif /* sitesurvey_res_reset — C retained; calls Rust rtw_scan_ch_decision when swapped */
 
 #if (defined(HOST_MLME_EXT_SCAN_TEST) && !defined(CONFIG_RUST_MLME_EXT_PICK_CH)) || \
 	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_PICK_CH)) && \

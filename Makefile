@@ -2648,6 +2648,7 @@ ccflags-y += -DCONFIG_RUST_MLME_EXT_REST
 ccflags-y += -DCONFIG_RUST_MLME_EXT_MGNT_ATTRIB
 ccflags-y += -DCONFIG_RUST_MLME_EXT_PEER_ALIVE
 ccflags-y += -DCONFIG_RUST_MLME_EXT_SCAN
+ccflags-y += -DCONFIG_RUST_MLME_EXT_SCAN_CH
 ccflags-y += -DCONFIG_RUST_MLME_EXT_PICK_CH
 ccflags-y += -DCONFIG_RUST_MLME_EXT_SITESURVEY_CMD
 ccflags-y += -DCONFIG_RUST_MLME_EXT_BAND_IE
@@ -2700,7 +2701,7 @@ endif
 rustflags-y += --cfg rust_mlme_ext_rest
 rustflags-y += --cfg rust_mlme_ext_mgnt_attrib
 rustflags-y += --cfg rust_mlme_ext_peer_alive
-rustflags-y += --cfg rust_mlme_ext_scan --cfg config_scan_sparse_miracast
+rustflags-y += --cfg rust_mlme_ext_scan --cfg rust_mlme_ext_scan_ch --cfg config_scan_sparse_miracast
 rustflags-y += --cfg rust_mlme_ext_pick_ch
 rustflags-y += --cfg rust_mlme_ext_sitesurvey_cmd
 rustflags-y += --cfg rust_mlme_ext_band_ie
@@ -3710,7 +3711,7 @@ rust-objects-rtw-mlme-ext-scan-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
 		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
 		-include $(shell pwd)/tests/host/include/host_autoconf.h \
-		-DHOST_MLME_EXT_SCAN_TEST -DCONFIG_SCAN_BACKOP -DCONFIG_RUST -DCONFIG_RUST_MLME_EXT_PICK_CH \
+		-DHOST_MLME_EXT_SCAN_TEST -DCONFIG_SCAN_BACKOP -DCONFIG_P2P \
 		-o tests/host/mlme_ext/scan_c_ref.o core/rtw_mlme_ext_rest.c
 
 rust-check-symbols-rtw-mlme-ext-scan: rust-objects-rtw-mlme-ext-scan-c rust-objects-rtw-mlme-ext-scan
