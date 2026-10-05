@@ -24,6 +24,15 @@ static void setup_bfee(struct bf_host_adpt *a, u8 macid, enum bf_host_cap cap, c
 	BF_GET_INFO(a)->bfee[0].cap = cap;
 }
 
+static void setup_bfee_slot(struct bf_host_adpt *a, u8 slot, u8 macid,
+			    enum bf_host_cap cap, const char *mac)
+{
+	parse_mac(mac, BF_GET_INFO(a)->bfee[slot].mac_addr);
+	BF_GET_INFO(a)->bfee[slot].used = 1;
+	BF_GET_INFO(a)->bfee[slot].mac_id = macid;
+	BF_GET_INFO(a)->bfee[slot].cap = cap;
+}
+
 static int check_bfer(struct bf_host_adpt *a, const char *mac, int expect_null, const char *name)
 {
 	u8 m[BF_HOST_ETH_ALEN];
@@ -84,7 +93,15 @@ int main(void)
 	memset(&a, 0, sizeof(a));
 	setup_bfee(&a, 1, BF_HOST_BFEE_VHT_SU, "de:ad:be:ef:00:01");
 	bad += check_bfee(&a, "de:ad:be:ef:00:01", 0, "bfee_hit");
+	memset(&a, 0, sizeof(a));
+	setup_bfee_slot(&a, 3, 7, BF_HOST_BFEE_VHT_SU, "00:00:00:00:00:02");
+	if ((int)o_cap_by_macid(&a.mlmepriv, 7) != 0) {
+		fprintf(stderr, "FAIL cap_macid_bfee3_invisible\n");
+		bad++;
+	} else {
+		printf("PASS cap_macid_bfee3_invisible\n");
+	}
 	if (!bad)
-		printf("PASS 6 vectors (builtin)\n");
+		printf("PASS 7 vectors (builtin)\n");
 	return bad ? 1 : 0;
 }
