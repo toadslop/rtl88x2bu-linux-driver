@@ -7,6 +7,23 @@
     {"name": "survey_enter", "f0": 2048, "s0": 3, "e_scan": 1, "e_scan_ent": 1},
     {"name": "wps_flag", "f0": 256, "e_wps": 1},
     {"name": "cfg80211_mgmt_roch", "mg0": 1, "ro0": 1, "e_mgmt": 1, "e_roch": 1},
-    {"name": "bmp_skip_iface1", "bmp": 1, "f0": 9, "f1": 9, "e_sta": 1, "e_ld": 1}
+    {"name": "bmp_skip_iface1", "bmp": 1, "f0": 9, "f1": 9, "e_sta": 1, "e_ld": 1},
+    {"name": "merge_sta_ap", "op": "merge", "a_sta": 1, "a_ld": 1, "b_ap": 1, "b_ld_ap": 1,
+      "e_sta": 1, "e_ld": 1, "e_ap": 1, "e_ld_ap": 1},
+    {"name": "merge_scan_wps", "op": "merge", "a_scan": 2, "a_wps": 1, "b_scan": 1,
+      "b_scan_ent": 1, "e_scan": 3, "e_scan_ent": 1, "e_wps": 1},
+    {"name": "status_all_ifaces", "op": "status", "f0": 9, "f1": 17,
+      "e_sta": 1, "e_ap": 1, "e_ld": 1, "e_ld_ap": 0},
+    {"name": "no_self_excludes_iface0", "op": "no_self", "self_id": 0, "f0": 9, "f1": 8,
+      "e_sta": 1, "e_ld": 0},
+    {"name": "no_others_only_self_iface", "op": "no_others", "self_id": 1, "f0": 9, "f1": 9,
+      "e_sta": 1, "e_ld": 1},
+    {"name": "update_iface_state", "op": "update", "f0": 9, "e_sta": 1, "e_ld": 1},
+    {"name": "check_linked_sta_ld", "op": "check", "ld_sta": 1, "chk": 0, "expect": 1},
+    {"name": "check_ap_mode", "op": "check", "ap": 1, "chk": 3, "expect": 1},
+    {"name": "check_wps", "op": "check", "uwps": 1, "chk": 2, "expect": 1},
+    {"name": "check_sta_nolink", "op": "check", "sta": 2, "chk": 9, "expect": 1},
+    {"name": "check_mesh_assoc", "op": "check", "ld_mesh": 1, "chk": 8, "expect": 1},
+    {"name": "check_false_default", "op": "check", "chk": 99, "expect": 0}
   ]
 }
