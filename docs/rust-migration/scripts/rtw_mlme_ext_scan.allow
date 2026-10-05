@@ -17,6 +17,7 @@ drop rtw_rust_scan_chset_flags
 drop rtw_rust_scan_chset_clear_hidden_bss
 drop rtw_rust_scan_chset
 drop sitesurvey_pick_ch_behavior
+drop sitesurvey_res_reset
 drop rtw_rust_scan_roam_quickscan_next
 drop rtw_rust_scan_roam_clear_quickscan_next
 drop rtw_rust_scan_roam_ch_num
