@@ -6,6 +6,28 @@
 #include <stddef.h>
 #include "host_types.h"
 
+typedef int sint;
+
+#ifndef container_of
+#define container_of(ptr, type, member) \
+	((type *)((char *)(ptr) - offsetof(type, member)))
+#endif
+
+enum {
+	MI_LINKED,
+	MI_ASSOC,
+	MI_UNDER_WPS,
+	MI_AP_MODE,
+	MI_AP_ASSOC,
+	MI_ADHOC,
+	MI_ADHOC_ASSOC,
+	MI_MESH,
+	MI_MESH_ASSOC,
+	MI_STA_NOLINK,
+	MI_STA_LINKED,
+	MI_STA_LINKING,
+};
+
 #define _TRUE 1
 #define _FALSE 0
 #define BIT(x) (1U << (x))
@@ -139,5 +161,11 @@ static inline u8 rtw_cfg80211_get_is_roch(struct _adapter *a)
 }
 
 void rtw_mi_status_by_ifbmp(struct dvobj_priv *dvobj, u8 ifbmp, struct mi_state *mstate);
+void rtw_mi_status(_adapter *adapter, struct mi_state *mstate);
+void rtw_mi_status_no_self(_adapter *adapter, struct mi_state *mstate);
+void rtw_mi_status_no_others(_adapter *adapter, struct mi_state *mstate);
+void rtw_mi_status_merge(struct mi_state *d, struct mi_state *a);
+void rtw_mi_update_iface_status(struct mlme_priv *pmlmepriv, sint state);
+u8 rtw_mi_check_status(_adapter *adapter, u8 type);
 
 #endif /* HOST_MI_STATUS_TYPES_H */
