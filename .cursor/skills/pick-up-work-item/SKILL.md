@@ -265,7 +265,7 @@ report.
 | 1 | [`triage-open-issues`](../triage-open-issues/SKILL.md) | Close issues already done but still open |
 | 2 | [`select-ready-issue`](../select-ready-issue/SKILL.md) | Pick one open, unblocked, ready issue |
 | 3 | [`plan-stacked-prs`](../plan-stacked-prs/SKILL.md) | Split into stacked PRs with **≤250 changed lines each** (target ~200); plan only |
-| 4 | [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) | Implement **every** planned PR in the stack (or file follow-up issues for any remainder); **run size gate before each commit**; open PRs ready for review (not draft); babysit |
+| 4 | [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) | Implement **every** planned layer locally; **run size gate before each commit**; publish the **full** stack with **`gh stack submit --auto --open`** (not orphan per-PR creates); babysit all layers |
 
 ### Stack completion (Path B — mandatory)
 
@@ -286,17 +286,19 @@ or end with an implied "next: implement PR3" and no filed tracker. See
 New PRs from this path must land in **open** (ready-for-review) state — not
 draft:
 
-- `ManagePullRequest` `create_pr` with `draft: false` (default); **`body` must
-  include `@toadslop`** (see **PR descriptions** above).
-- `gh pr create` without `--draft`; include `@toadslop` in `--body`.
-- If a PR was opened as draft by mistake: `gh pr ready <number>`.
+- Publish with **`gh stack submit --auto --open`** (or `gh stack link … --open`);
+  **`body` must include `@toadslop`** on every layer (see **PR descriptions**
+  above) — use `ManagePullRequest` `update_pr` / `gh pr edit` after submit.
+- Single-PR plans may use `ManagePullRequest` `create_pr` with `draft: false`.
+- If a layer was created as draft by mistake: `gh pr ready <number>`.
 
-**Babysit each PR** until CI is green before opening the next stack PR (see
-[`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) step 7):
+**Babysit the published stack** after `gh stack submit` — all layers, bottom →
+top (see [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) step 8):
 
 1. Load Cursor's built-in **`babysit`** skill when available; otherwise apply its
-   intent manually (fix CI, address blocking review feedback, push, re-poll).
-2. Poll `gh pr checks` on the PR you just opened until required checks pass.
+   intent manually (fix CI, address blocking review feedback, `gh stack sync` /
+   `gh stack rebase` when needed, push, re-poll).
+2. Poll `gh pr checks` on each layer until required checks pass.
 3. Do **not** start Path A (`prepare-all-prs-for-merge`) in the same run — the
    PRs you just opened will be handled on the **next** pick-up when Path A
    triggers.

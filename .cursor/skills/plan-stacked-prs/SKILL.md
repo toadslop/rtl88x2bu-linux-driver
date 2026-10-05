@@ -97,8 +97,8 @@ From [`test-plan.md`](../../../docs/rust-migration/test-plan.md) and
 Each PR in the stack:
 
 1. **Builds on the previous PR's branch** (not necessarily `master`) — chained for
-   GitHub **stacked pull requests** (`gh stack link` / `gh stack submit` after
-   implementation)
+   GitHub **stacked pull requests** (`gh stack init`/`add` during implementation,
+   then **`gh stack submit --auto --open`** to publish the full stack at once)
 2. Has a **narrow title** — `[W3-04 PR1] …`, `[W3-04 PR2] …`
 3. Lists **gates** to run before opening (L0, L1, L2, L3 as applicable)
 4. Maps to a **branch name** — `cursor/<short-desc>-<suffix>` (match repo convention)
@@ -166,12 +166,19 @@ For each PR:
 
 ### GitHub stack (after implementation)
 
-Note that [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) will
-**link** open PRs into a GitHub stack (`gh stack link`, bottom → top). Path A
-[`prepare-all-prs-for-merge`](../prepare-all-prs-for-merge/SKILL.md) then
+Note that [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) builds
+all layers locally (`gh stack init` / `gh stack add`), then publishes the
+**entire** stack in one step with **`gh stack submit --auto --open`** (or
+`gh stack link` if PRs already exist unlinked). Do not plan on opening PRs
+one-by-one without Stack CLI linkage.
+
+Path A [`prepare-all-prs-for-merge`](../prepare-all-prs-for-merge/SKILL.md) then
 `gh stack sync`s the stack, babysits every layer (running **`gh stack rebase` on
 the whole stack** after review fixes on any layer — see `prepare-pr-for-merge`),
 until the maintainer can run `gh stack merge` (agents do not merge).
+
+Stack CLI reference:
+[Stacked PRs CLI commands](https://docs.github.com/en/pull-requests/reference/stacked-prs-cli-commands).
 
 ## Get user confirmation
 
