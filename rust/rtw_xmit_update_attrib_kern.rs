@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
-//! Kernel port of `update_attrib_vcs_info` (W3-86 PR11) and
-//! `update_attrib_phy_info` (W3-86 PR12).
+//! Kernel port of `update_attrib_vcs_info` (W3-86 PR11),
+//! `update_attrib_phy_info` (W3-86 PR12), and sec decision leaf (W3-86 PR16).
 
 #![allow(
     dead_code,
@@ -32,6 +32,20 @@ const HT_IOT_PEER_ATHEROS: U8 = 5;
 const _AES_: U8 = 0x04;
 const _TRUE: U8 = 1;
 const _FALSE: U8 = 0;
+const _SUCCESS: i32 = 1;
+const _FAIL: i32 = 0;
+const _NO_PRIVACY_: U8 = 0x00;
+const _WEP40_: U8 = 0x01;
+const _WEP104_: U8 = 0x02;
+const EAPOL_2_4: i32 = 11;
+const EAPOL_4_4: i32 = 13;
+const EAPOL_ETHERTYPE: U16 = 0x888e;
+const WAPI_ETHERTYPE: U16 = 0x88b4;
+const DOT11_AUTH_OPEN: U8 = 0;
+const DOT11_AUTH_SHARED: U8 = 1;
+const DOT11_AUTH_8021X: U8 = 2;
+const DOT11_AUTH_AUTO: U8 = 3;
+const DOT11_AUTH_WAPI: U8 = 4;
 
 #[inline]
 fn rtw_min_u8(a: U8, b: U8) -> U8 {
@@ -219,5 +233,104 @@ pub extern "C" fn update_attrib_phy_info_base(phy_in: *const PhyBaseIn, phy_out:
             ldpc: base.ldpc,
             stbc: base.stbc,
         };
+    }
+}
+
+#[repr(C)]
+pub struct SecGather {
+    ieee8021x_blocked: U8,
+    passing_ms: U32,
+    eapol_type: i32,
+    ether_type: U16,
+    wifi_mp_state: U8,
+    bmcast: U8,
+    dot11_auth_algrthm: U8,
+    dot11_privacy_algrthm: U8,
+    dot118021x_grp_privacy: U8,
+    sta_dot118021x_privacy: U8,
+    dot11_privacy_key_index: U8,
+    dot118021x_grp_keyid: U8,
+    direct_link: U8,
+}
+
+#[repr(C)]
+pub struct SecDecision {
+    res: i32,
+    encrypt: U8,
+    key_idx: U8,
+}
+
+fn get_encry_algo(g: &SecGather) -> U8 {
+    match g.dot11_auth_algrthm {
+        DOT11_AUTH_OPEN | DOT11_AUTH_SHARED | DOT11_AUTH_AUTO | DOT11_AUTH_WAPI => {
+            g.dot11_privacy_algrthm
+        }
+        DOT11_AUTH_8021X => {
+            if g.bmcast != 0 {
+                g.dot118021x_grp_privacy
+            } else {
+                g.sta_dot118021x_privacy
+            }
+        }
+        _ => 0,
+    }
+}
+
+fn update_attrib_sec_info_decide_inner(g: &SecGather) -> SecDecision {
+    let (res, mut encrypt, key_idx) = if g.ieee8021x_blocked != 0
+        || ((g.eapol_type == EAPOL_2_4 || g.eapol_type == EAPOL_4_4) && g.passing_ms <= 100)
+    {
+        let res = if g.ether_type != EAPOL_ETHERTYPE && g.wifi_mp_state == 0 {
+            _FAIL
+        } else {
+            _SUCCESS
+        };
+        (res, 0u8, 0u8)
+    } else {
+        let mut encrypt = get_encry_algo(g);
+        #[cfg(CONFIG_WAPI_SUPPORT)]
+        if g.ether_type == WAPI_ETHERTYPE {
+            encrypt = _NO_PRIVACY_;
+        }
+        let key_idx = match g.dot11_auth_algrthm {
+            DOT11_AUTH_OPEN | DOT11_AUTH_SHARED | DOT11_AUTH_AUTO => g.dot11_privacy_key_index,
+            DOT11_AUTH_8021X => {
+                if g.bmcast != 0 {
+                    g.dot118021x_grp_keyid
+                } else {
+                    0
+                }
+            }
+            _ => 0,
+        };
+        if (encrypt == _WEP40_ || encrypt == _WEP104_) && g.ether_type == EAPOL_ETHERTYPE {
+            encrypt = _NO_PRIVACY_;
+        }
+        (_SUCCESS, encrypt, key_idx)
+    };
+
+    if g.direct_link != 0 && encrypt > 0 {
+        encrypt = _AES_;
+    }
+
+    SecDecision {
+        res,
+        encrypt,
+        key_idx,
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn update_attrib_sec_info_decide_rust(
+    gather: *const SecGather,
+    out: *mut SecDecision,
+) {
+    if gather.is_null() || out.is_null() {
+        return;
+    }
+    let g = unsafe { &*gather };
+    let decision = update_attrib_sec_info_decide_inner(g);
+    unsafe {
+        *out = decision;
     }
 }
