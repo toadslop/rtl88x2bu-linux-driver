@@ -208,3 +208,155 @@ pub unsafe extern "C" fn o_bfer_by_addr(a: BfHostPadpt, ra: *mut U8) -> *mut BfH
 pub unsafe extern "C" fn o_bfee_by_addr(a: BfHostPadpt, ra: *mut U8) -> *mut BfHostBfee {
     bfee_by_addr(a, ra)
 }
+
+#[cfg(host_bf_entry_packet_test)]
+const BF_HOST_SUCCESS: U32 = 1;
+#[cfg(host_bf_entry_packet_test)]
+const BF_HOST_FAIL: U32 = 0;
+
+#[cfg(host_bf_entry_packet_test)]
+extern "C" {
+    fn bf_host_cmd(a: BfHostPadpt, ty: i32, p: *mut U8, sz: i32, enq: U8);
+}
+
+#[cfg(host_bf_entry_packet_test)]
+#[no_mangle]
+pub unsafe extern "C" fn o_ndpa(_a: BfHostPadpt, _f: *mut BfHostRecvFrame) {}
+
+#[cfg(host_bf_entry_packet_test)]
+#[no_mangle]
+pub unsafe extern "C" fn o_report(adapter: BfHostPadpt, rf: *mut BfHostRecvFrame) -> U32 {
+    if adapter.is_null() || rf.is_null() {
+        return BF_HOST_FAIL;
+    }
+    let info = &mut (*adapter).hal.beamforming_info;
+    let pframe = (*rf).hdr.data.as_mut_ptr();
+    let bfee = bfee_by_addr(adapter, pframe.add(10));
+    if bfee.is_null() {
+        return BF_HOST_FAIL;
+    }
+    let body = pframe.add(24);
+    let (cat, act) = (*body, *body.add(1));
+    let mut nc = 0u8;
+    let mut nr = 0u8;
+    let mut ch_w = 0u8;
+    let mut ng = 0u8;
+    let mut code_book = 0u8;
+    if cat == 21 && act == 0 {
+        let mimo = pframe.add(26);
+        nc = *mimo & 0x7;
+        nr = (*mimo & 0x38) >> 3;
+        ch_w = (*mimo & 0xC0) >> 6;
+        ng = *mimo.add(1) & 0x3;
+        code_book = (*mimo.add(1) & 0x4) >> 2;
+        info.TargetCSIInfo.bVHT = 1;
+    } else if cat == 0 && act == 6 {
+        let mimo = pframe.add(26);
+        nc = *mimo & 0x3;
+        nr = (*mimo & 0xC) >> 2;
+        ch_w = (*mimo & 0x10) >> 4;
+        ng = (*mimo & 0x60) >> 5;
+        code_book = (*mimo.add(1) & 0x6) >> 1;
+        info.TargetCSIInfo.bVHT = 0;
+    }
+    if info.bEnableSUTxBFWorkAround != 0 && info.TargetSUBFee == bfee {
+        let csi = &mut info.TargetCSIInfo;
+        if csi.Nc != nc
+            || csi.Nr != nr
+            || csi.ChnlWidth != ch_w
+            || csi.Ng != ng
+            || csi.CodeBook != code_book
+        {
+            csi.Nc = nc;
+            csi.Nr = nr;
+            csi.ChnlWidth = ch_w;
+            csi.Ng = ng;
+            csi.CodeBook = code_book;
+            bf_host_cmd(adapter, 7, csi as *mut BfHostCsi as *mut U8, 6, 1);
+        }
+    }
+    BF_HOST_SUCCESS
+}
+
+#[cfg(all(host_bf_entry_packet_test, host_bf_init_cmd_test))]
+const BF_HOST_IDX_NONE: U8 = 0xFF;
+#[cfg(all(host_bf_entry_packet_test, host_bf_init_cmd_test))]
+const BF_HOST_OFDM24: U8 = 8;
+
+#[cfg(all(host_bf_entry_packet_test, host_bf_init_cmd_test))]
+unsafe fn sounding_init(s: &mut BfHostSoundingInfo) {
+    s.su_sounding_list = [BF_HOST_IDX_NONE; 2];
+    s.mu_sounding_list = [BF_HOST_IDX_NONE; 6];
+    s.state = 0;
+    s.su_bfee_curidx = BF_HOST_IDX_NONE;
+    s.candidate_mu_bfee_cnt = 0;
+    s.min_sounding_period = 0;
+    s.sound_remain_cnt_per_period = 0;
+}
+
+#[cfg(all(host_bf_entry_packet_test, host_bf_init_cmd_test))]
+extern "C" {
+    fn bf_host_beamforming_enter(a: BfHostPadpt, p: *mut U8);
+    fn bf_host_beamforming_leave(a: BfHostPadpt, p: *mut U8);
+    fn bf_host_beamforming_reset(a: BfHostPadpt);
+    fn bf_host_sounding_handler(a: BfHostPadpt);
+    fn bf_host_beamforming_sounding_down(a: BfHostPadpt, macid: U8);
+    fn bf_host_hal_set_gid(a: BfHostPadpt, p: *mut U8);
+    fn bf_host_hal_set_csi(a: BfHostPadpt, p: *mut U8);
+}
+
+#[cfg(all(host_bf_entry_packet_test, host_bf_init_cmd_test))]
+#[no_mangle]
+pub unsafe extern "C" fn o_bf_init(adapter: BfHostPadpt) {
+    if adapter.is_null() {
+        return;
+    }
+    let info = &mut (*adapter).hal.beamforming_info;
+    info.beamforming_cap = 0;
+    info.beamforming_state = 0;
+    info.sounding_sequence = 0;
+    info.beamformee_su_cnt = 0;
+    info.beamformer_su_cnt = 0;
+    info.beamformee_su_reg_maping = 0;
+    info.beamformer_su_reg_maping = 0;
+    info.beamformee_mu_cnt = 0;
+    info.beamformer_mu_cnt = 0;
+    info.beamformee_mu_reg_maping = 0;
+    info.first_mu_bfee_index = BF_HOST_IDX_NONE;
+    info.mu_bfer_curidx = BF_HOST_IDX_NONE;
+    info.cur_csi_rpt_rate = BF_HOST_OFDM24;
+    sounding_init(&mut info.sounding_info);
+    info.timer_inits = 2;
+    info.SetHalBFEnterOnDemandCnt = 0;
+    info.SetHalBFLeaveOnDemandCnt = 0;
+    info.SetHalSoundownOnDemandCnt = 0;
+    info.bEnableSUTxBFWorkAround = 1;
+    info.TargetSUBFee = std::ptr::null_mut();
+    info.sounding_running = 0;
+}
+
+#[cfg(all(host_bf_entry_packet_test, host_bf_init_cmd_test))]
+#[no_mangle]
+pub unsafe extern "C" fn o_bf_cmd_hdl(adapter: BfHostPadpt, ty: U8, pbuf: *mut U8) {
+    if adapter.is_null() {
+        return;
+    }
+    match ty {
+        0 => bf_host_beamforming_enter(adapter, pbuf),
+        1 => {
+            if pbuf.is_null() {
+                bf_host_beamforming_reset(adapter);
+            } else {
+                bf_host_beamforming_leave(adapter, pbuf);
+            }
+        }
+        2 => bf_host_sounding_handler(adapter),
+        3 => {
+            let macid = if pbuf.is_null() { 0 } else { *pbuf };
+            bf_host_beamforming_sounding_down(adapter, macid);
+        }
+        6 => bf_host_hal_set_gid(adapter, pbuf),
+        7 => bf_host_hal_set_csi(adapter, pbuf),
+        _ => {}
+    }
+}
