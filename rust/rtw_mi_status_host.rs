@@ -96,7 +96,11 @@ pub unsafe extern "C" fn rtw_mi_status_by_ifbmp(
     }
     let dvobj = &*dvobj;
     let mstate = &mut *mstate;
-    core::ptr::write_bytes(mstate as *mut MiState as *mut u8, 0, core::mem::size_of::<MiState>());
+    core::ptr::write_bytes(
+        mstate as *mut MiState as *mut u8,
+        0,
+        core::mem::size_of::<MiState>(),
+    );
 
     for i in 0..dvobj.iface_nums as i32 {
         let iface_ptr = dvobj.padapters[i as usize];
