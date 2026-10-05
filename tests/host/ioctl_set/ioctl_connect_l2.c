@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* W3-124 follow-up (#979) PR3+PR4: L2 C oracle connect/disassociate + set_bssid. */
+/* W3-124 follow-up (#979) PR3–PR5: connect/disassociate + set_bssid/set_ssid. */
 #include <stdio.h>
 #include <string.h>
 #include "host_types.h"
@@ -33,12 +33,14 @@ extern u8 rtw_set_802_11_disassociate_rust(struct _adapter *p);
 extern u8 rtw_set_802_11_connect_rust(struct _adapter *p, u8 *bssid,
 				      NDIS_802_11_SSID *ssid, u16 ch);
 extern u8 rtw_set_802_11_bssid_rust(struct _adapter *p, u8 *bssid);
+extern u8 rtw_set_802_11_ssid_rust(struct _adapter *p, NDIS_802_11_SSID *ssid);
 extern void ioctl_connect_test_reset_counters(void);
 extern u32 ioctl_connect_test_disassoc_calls(void);
 extern u32 ioctl_connect_test_join_calls(void);
 #define rtw_set_802_11_disassociate rtw_set_802_11_disassociate_rust
 #define rtw_set_802_11_connect rtw_set_802_11_connect_rust
 #define rtw_set_802_11_bssid rtw_set_802_11_bssid_rust
+#define rtw_set_802_11_ssid rtw_set_802_11_ssid_rust
 #else
 static u32 g_disassoc_calls, g_join_calls;
 #endif
@@ -145,6 +147,38 @@ static u8 rtw_set_802_11_bssid(struct _adapter *p, u8 *bssid)
 	memcpy(m->assoc_bssid, bssid, ETH_ALEN);
 	m->assoc_ch = 0;
 	m->assoc_by_bssid = _TRUE;
+
+	if (chk_mlme(m, WIFI_UNDER_SURVEY))
+		m->to_join = _TRUE;
+	else {
+		g_join_calls++;
+		status = p->do_join_ret ? _SUCCESS : _FAIL;
+	}
+	return status;
+}
+
+static u8 rtw_set_802_11_ssid(struct _adapter *p, NDIS_802_11_SSID *ssid)
+{
+	u8 status = _SUCCESS;
+	struct mlme_priv *m = &p->mlmepriv;
+
+	if (!p->hw_init_done)
+		return _FAIL;
+
+	if (chk_mlme(m, WIFI_UNDER_SURVEY))
+		;
+	else if (chk_mlme(m, WIFI_UNDER_LINKING))
+		return _SUCCESS;
+
+	if (p->tkip_fail)
+		return _FAIL;
+
+	if (!ssid || v_ssid(ssid) == _FALSE)
+		return _FAIL;
+
+	memcpy(&m->assoc_ssid, ssid, sizeof(*ssid));
+	m->assoc_ch = 0;
+	m->assoc_by_bssid = _FALSE;
 
 	if (chk_mlme(m, WIFI_UNDER_SURVEY))
 		m->to_join = _TRUE;
@@ -279,6 +313,18 @@ static int run_vector(struct vector *v)
 		if (!v->bssid[0] || dec_mac(v->bssid, mac))
 			goto fail;
 		got = rtw_set_802_11_bssid(&a, mac);
+		if (got != (u8)v->expect_ret ||
+#ifdef HOST_IOCTL_CONNECT_RUST
+		    ioctl_connect_test_join_calls() != (u32)v->expect_join ||
+#else
+		    g_join_calls != (u32)v->expect_join ||
+#endif
+		    a.mlmepriv.to_join != (u8)v->expect_to_join || !mlme_ok(&a, v))
+			goto fail;
+	} else if (!strcmp(v->fn, "set_ssid")) {
+		memset(&ssid, 0, sizeof(ssid));
+		ssid.SsidLength = (u32)v->ssid_len;
+		got = rtw_set_802_11_ssid(&a, &ssid);
 		if (got != (u8)v->expect_ret ||
 #ifdef HOST_IOCTL_CONNECT_RUST
 		    ioctl_connect_test_join_calls() != (u32)v->expect_join ||

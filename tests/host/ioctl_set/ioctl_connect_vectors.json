@@ -146,6 +146,55 @@
       "bssid": "020304050607",
       "expect_ret": 0,
       "expect_join": 1
+    },
+    {
+      "name": "ssid_hw_not_ready",
+      "fn": "set_ssid",
+      "hw_init": 0,
+      "ssid_len": 4,
+      "expect_ret": 0
+    },
+    {
+      "name": "ssid_under_linking_noop",
+      "fn": "set_ssid",
+      "fw_state": 128,
+      "ssid_len": 4,
+      "expect_ret": 1,
+      "expect_join": 0
+    },
+    {
+      "name": "ssid_invalid_len",
+      "fn": "set_ssid",
+      "ssid_len": 33,
+      "expect_ret": 0
+    },
+    {
+      "name": "ssid_under_survey_to_join",
+      "fn": "set_ssid",
+      "fw_state": 2048,
+      "ssid_len": 5,
+      "expect_ret": 1,
+      "expect_to_join": 1,
+      "expect_join": 0,
+      "expect_assoc_by_bssid": 0,
+      "expect_assoc_ssid_len": 5
+    },
+    {
+      "name": "ssid_happy_join",
+      "fn": "set_ssid",
+      "ssid_len": 6,
+      "expect_ret": 1,
+      "expect_join": 1,
+      "expect_assoc_by_bssid": 0,
+      "expect_assoc_ssid_len": 6
+    },
+    {
+      "name": "ssid_join_fail",
+      "fn": "set_ssid",
+      "do_join_ret": 0,
+      "ssid_len": 3,
+      "expect_ret": 0,
+      "expect_join": 1
     }
   ]
 }
