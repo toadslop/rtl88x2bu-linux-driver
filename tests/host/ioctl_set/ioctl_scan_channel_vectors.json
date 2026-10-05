@@ -1,0 +1,13 @@
+{
+  "vectors": [
+    {"name": "scan_active_ok", "fn": "set_scan_mode", "scan_mode": 1, "expect_ret": 1, "expect_u32": 1},
+    {"name": "scan_invalid", "fn": "set_scan_mode", "scan_mode": 2, "expect_ret": 0, "expect_u32": 0},
+    {"name": "band_auto_ok", "fn": "set_band", "band": 0, "expect_ret": 1, "expect_u32": 0},
+    {"name": "band_invalid", "fn": "set_band", "band": 3, "expect_ret": 0, "expect_u32": 0},
+    {"name": "wep40_key0", "fn": "add_wep_privacy", "key_index": 0, "key_length": 5, "expect_ret": 1, "expect_u32": 1},
+    {"name": "wep_keyid_fail", "fn": "add_wep_privacy", "key_index": 4, "key_length": 5, "expect_ret": 0, "expect_u32": 0},
+    {"name": "auth_open", "fn": "auth_mode_map", "authmode": 0, "expect_u32": 0},
+    {"name": "auth_8021x", "fn": "auth_mode_map", "authmode": 4, "expect_u32": 2},
+    {"name": "auth_downgrade_sticky_dot11", "fn": "auth_mode_map", "authmode": 1, "sec_dot11": 2, "expect_u32": 2}
+  ]
+}
