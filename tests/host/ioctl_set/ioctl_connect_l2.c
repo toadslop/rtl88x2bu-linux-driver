@@ -30,6 +30,7 @@ struct _adapter {
 
 static u32 g_disassoc_calls, g_join_calls;
 
+/* Mirrors core/rtw_ioctl_set.c rtw_validate_* (see ioctl_validate_l2.c / PR2). */
 static u8 v_bssid(u8 *b)
 {
 	if (!(b[0]|b[1]|b[2]|b[3]|b[4]|b[5]) || (b[0]&b[1]&b[2]&b[3]&b[4]&b[5])==0xff)
@@ -51,7 +52,7 @@ static u8 rtw_set_802_11_disassociate(struct _adapter *p)
 
 static u8 rtw_set_802_11_connect(struct _adapter *p, u8 *bssid, NDIS_802_11_SSID *ssid, u16 ch)
 {
-	u8 ok = _TRUE, bv = _TRUE, sv = _TRUE;
+	u8 ok = _SUCCESS, bv = _TRUE, sv = _TRUE;
 	struct mlme_priv *m = &p->mlmepriv;
 
 	if (!ssid || !v_ssid(ssid))
@@ -62,8 +63,13 @@ static u8 rtw_set_802_11_connect(struct _adapter *p, u8 *bssid, NDIS_802_11_SSID
 		return _FAIL;
 	if (!p->hw_init_done)
 		return _FAIL;
-	if (chk(m, WIFI_UNDER_LINKING))
+
+	/* Order matches core/rtw_ioctl_set.c rtw_set_802_11_connect. */
+	if (chk(m, WIFI_UNDER_SURVEY))
+		; /* handle_tkip_countermeasure */
+	else if (chk(m, WIFI_UNDER_LINKING))
 		return _SUCCESS;
+
 	if (p->tkip_fail)
 		return _FAIL;
 	if (ssid && sv)
@@ -86,9 +92,10 @@ static u8 rtw_set_802_11_connect(struct _adapter *p, u8 *bssid, NDIS_802_11_SSID
 }
 
 struct vector {
-	char name[48], fn[16], bssid[13];
+	char name[48], fn[16], bssid[13], expect_bssid[13];
 	int fw_state, hw_init, tkip_fail, do_join_ret, ch, ssid_len;
 	int expect_ret, expect_disassoc, expect_join, expect_to_join;
+	int expect_assoc_ch, expect_assoc_by_bssid, expect_assoc_ssid_len;
 };
 
 static int dec_mac(const char *h, u8 *m)
@@ -111,17 +118,24 @@ static int parse_vector_object(const char *obj, size_t len, void *vv)
 {
 	struct vector *v = vv;
 	const char *k[] = {"fw_state","hw_init","tkip_fail","do_join_ret","ch","ssid_len",
-			   "expect_ret","expect_disassoc","expect_join","expect_to_join", NULL};
+			   "expect_ret","expect_disassoc","expect_join","expect_to_join",
+			   "expect_assoc_ch","expect_assoc_by_bssid","expect_assoc_ssid_len", NULL};
 	int *p[] = {&v->fw_state,&v->hw_init,&v->tkip_fail,&v->do_join_ret,&v->ch,&v->ssid_len,
-		    &v->expect_ret,&v->expect_disassoc,&v->expect_join,&v->expect_to_join};
+		    &v->expect_ret,&v->expect_disassoc,&v->expect_join,&v->expect_to_join,
+		    &v->expect_assoc_ch,&v->expect_assoc_by_bssid,&v->expect_assoc_ssid_len};
 
 	memset(v, 0, sizeof(*v));
 	v->hw_init = -1;
 	v->do_join_ret = -1;
+	v->expect_assoc_ch = -1;
+	v->expect_assoc_by_bssid = -1;
+	v->expect_assoc_ssid_len = -1;
 	if (host_json_parse_string_in(obj, len, "name", v->name, sizeof(v->name)) ||
 	    host_json_parse_string_in(obj, len, "fn", v->fn, sizeof(v->fn)))
 		return -1;
 	host_json_parse_string_in(obj, len, "bssid", v->bssid, sizeof(v->bssid));
+	host_json_parse_string_in(obj, len, "expect_bssid", v->expect_bssid,
+				  sizeof(v->expect_bssid));
 	for (int i = 0; k[i]; i++)
 		host_json_parse_int_in(obj, len, k[i], p[i]);
 	if (v->do_join_ret < 0)
@@ -129,6 +143,27 @@ static int parse_vector_object(const char *obj, size_t len, void *vv)
 	if (v->hw_init < 0)
 		v->hw_init = 1;
 	return 0;
+}
+
+static int mlme_ok(struct _adapter *a, struct vector *v)
+{
+	u8 exp[ETH_ALEN];
+
+	if (v->expect_assoc_ch >= 0 && a->mlmepriv.assoc_ch != (u16)v->expect_assoc_ch)
+		return 0;
+	if (v->expect_assoc_by_bssid >= 0 &&
+	    a->mlmepriv.assoc_by_bssid != (u8)v->expect_assoc_by_bssid)
+		return 0;
+	if (v->expect_assoc_ssid_len >= 0 &&
+	    a->mlmepriv.assoc_ssid.SsidLength != (u32)v->expect_assoc_ssid_len)
+		return 0;
+	if (v->expect_bssid[0]) {
+		if (dec_mac(v->expect_bssid, exp))
+			return 0;
+		if (memcmp(a->mlmepriv.assoc_bssid, exp, ETH_ALEN))
+			return 0;
+	}
+	return 1;
 }
 
 static int run_vector(struct vector *v)
@@ -159,7 +194,7 @@ static int run_vector(struct vector *v)
 			pb = mac;
 		got = rtw_set_802_11_connect(&a, pb, v->ssid_len ? &ssid : NULL, (u16)v->ch);
 		if (got != (u8)v->expect_ret || g_join_calls != (u32)v->expect_join ||
-		    a.mlmepriv.to_join != (u8)v->expect_to_join)
+		    a.mlmepriv.to_join != (u8)v->expect_to_join || !mlme_ok(&a, v))
 			goto fail;
 	} else
 		return 1;
@@ -172,12 +207,12 @@ fail:
 
 int main(int argc, char **argv)
 {
-	struct vector vecs[12];
+	struct vector vecs[16];
 	size_t n = 0;
 	int bad = 0;
 	const char *path = argc > 1 ? argv[1] : "ioctl_connect_vectors.json";
 
-	if (host_load_vectors(path, vecs, sizeof(vecs[0]), 12, parse_vector_object, &n))
+	if (host_load_vectors(path, vecs, sizeof(vecs[0]), 16, parse_vector_object, &n))
 		return 2;
 	for (size_t i = 0; i < n; i++)
 		bad += run_vector(&vecs[i]);
