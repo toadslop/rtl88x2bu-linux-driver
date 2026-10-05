@@ -353,14 +353,14 @@ the remainder is non-trivial (copy the per-PR detail from the plan).
 
 | Rule | Why |
 |------|-----|
-| Each PR targets its planned base branch | preserves reviewable increments |
-| **`gh stack submit` / `link`** so `gh stack view` shows the full plan | End session with unimplemented rows or unlinked PRs |
-| Deferred submit (recommended) when it keeps CI noise down | Treat incremental publish in-session as a partial stop |
-| `gh stack link` when PRs pre-exist unlinked | leave PRs unlinked on GitHub at handoff |
-| Do not retarget bases to `master` while PRs stay GitHub-stacked | `prepare-pr-for-merge`: `gh stack unstack` first if bottom must move to `master` |
-| Use `gh stack rebase` / `gh stack sync` for stack-wide updates | manual per-branch rebase of the whole stack |
-| After Path A review fixes on the bottom layer, **`gh stack rebase` the full stack** (`prepare-pr-for-merge`) | Push only the bottom branch and leave upper PRs conflicting |
-| **Every PR ≤ 250 changed lines (target ~200)** | enforced in step 3 before commit — non-negotiable |
+| Each PR targets its planned base branch | Preserves reviewable increments and stable stack bases |
+| **`gh stack submit` / `link`** so `gh stack view` shows the full plan | Maintainers and agents see the whole stack; avoids orphan PRs |
+| Deferred submit (recommended) when it keeps CI noise down | One publish pass after all layers are built locally still counts as **`stack complete`** — not a partial stop |
+| `gh stack link` when PRs pre-exist unlinked | GitHub stack metadata matches branch order before sync/rebase |
+| Do not retarget bases to `master` while PRs stay GitHub-stacked | Stack merge assumes chained bases; unstack first if the bottom must move |
+| Use `gh stack rebase` / `gh stack sync` for stack-wide updates | Keeps upper layers aligned when trunk or lower layers move |
+| After Path A review fixes on the bottom layer, **`gh stack rebase` the full stack** (`prepare-pr-for-merge`) | Review fixes on the bottom rewrite commits upper PRs still stack on |
+| **Every PR ≤ 250 changed lines (target ~200)** | Enforced in step 3 before commit — non-negotiable |
 
 ## When implementation fails
 

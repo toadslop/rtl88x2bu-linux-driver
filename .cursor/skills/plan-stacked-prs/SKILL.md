@@ -229,4 +229,4 @@ Follow-up issues for
 **remaining plan rows** are allowed only for **documented blockers** — not
 convenience, session length, or "done enough for now." See
 [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md#9-continue-the-stack-mandatory--no-partial-stops)
-and [#when-partial-stacks-are-allowed-mandatory](#when-partial-stacks-are-allowed-mandatory).
+and [When partial stacks are allowed](../implement-stacked-prs/SKILL.md#when-partial-stacks-are-allowed-mandatory).
