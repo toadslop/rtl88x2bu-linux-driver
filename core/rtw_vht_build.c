@@ -176,6 +176,8 @@ u32 rtw_build_vht_cap_ie(_adapter *padapter, u8 *pbuf)
 
 #endif /* !CONFIG_RUST_VHT_BUILD || HOST_VHT_BUILD_TEST */
 
+#if !defined(CONFIG_RUST_VHT_BUILD) || defined(HOST_VHT_BUILD_TEST)
+
 u32 rtw_build_vht_operation_ie(_adapter *padapter, u8 *pbuf, u8 channel)
 {
 	struct registry_priv *pregistrypriv = &padapter->registrypriv;
@@ -208,6 +210,8 @@ u32 rtw_build_vht_operation_ie(_adapter *padapter, u8 *pbuf, u8 channel)
 
 	return len;
 }
+
+#endif /* !CONFIG_RUST_VHT_BUILD || HOST_VHT_BUILD_TEST */
 
 #if !defined(HOST_VHT_BUILD_TEST) || defined(HOST_VHT_CAPS_HANDLER_TEST)
 

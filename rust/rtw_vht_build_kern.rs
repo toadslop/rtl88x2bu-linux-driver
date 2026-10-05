@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! W3-84 PR8: kernel `rtw_build_vht_cap_ie` (operation IE in PR8b).
+//! W3-84 PR8: kernel `rtw_build_vht_cap_ie` + `rtw_build_vht_operation_ie`.
 
 #![allow(
     dead_code,
@@ -18,10 +18,14 @@ type U8 = u8;
 type U32 = u32;
 
 const EID_VHTCapability: i32 = 191;
+const EID_VHTOperation: i32 = 192;
+const CHANNEL_WIDTH_80: U8 = 2;
 const CHANNEL_WIDTH_160: U8 = 3;
 const CHANNEL_WIDTH_80_80: U8 = 4;
+const BW_CAP_80M: U8 = 1 << 4;
 const BW_CAP_160M: U8 = 1 << 5;
 const BW_CAP_80_80M: U8 = 1 << 6;
+const HAL_PRIME_CHNL_OFFSET_LOWER: U8 = 1;
 const LDPC_VHT_ENABLE_RX: U8 = 1;
 const STBC_VHT_ENABLE_RX: U8 = 1;
 const STBC_VHT_ENABLE_TX: U8 = 1 << 1;
@@ -73,6 +77,7 @@ extern "C" {
     fn rtw_rust_vht_build_ap_bf_is_mu_bfer(adapter: Adapter) -> U8;
     fn rtw_rust_vht_build_ap_bf_su_sound_dim(adapter: Adapter) -> U8;
     fn rtw_rust_vht_build_assoc_ap_vendor(adapter: Adapter) -> U8;
+    fn rtw_get_center_ch(ch: U8, bw: U8, offset: U8) -> U8;
 }
 
 fn test_flag(v: U8, f: U8) -> bool {
@@ -234,6 +239,49 @@ pub extern "C" fn rtw_build_vht_cap_ie(adapter: Adapter, pbuf: *mut U8) -> U32 {
 
         let mut len: U32 = 0;
         rtw_set_ie(pbuf, EID_VHTCapability, 12, pcap.as_ptr(), &mut len);
+        len
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_build_vht_operation_ie(
+    adapter: Adapter,
+    pbuf: *mut U8,
+    channel: U8,
+) -> U32 {
+    if adapter.is_null() || pbuf.is_null() {
+        return 0;
+    }
+    unsafe {
+        let mut operation = [0u8; 5];
+        let bw_mode = rtw_rust_vht_build_regsty_bw5g(adapter);
+        let (chnl_width, center_freq) =
+            if hal_chk_bw_cap(adapter, BW_CAP_80M | BW_CAP_160M)
+                && rtw_rust_vht_build_regsty_bw5g(adapter) >= CHANNEL_WIDTH_80
+            {
+                (
+                    1u8,
+                    rtw_get_center_ch(channel, bw_mode, HAL_PRIME_CHNL_OFFSET_LOWER),
+                )
+            } else {
+                (0u8, 0u8)
+            };
+
+        operation[0] = chnl_width;
+        operation[1] = center_freq;
+        operation[2] = 0;
+        let mcs_map =
+            core::slice::from_raw_parts(rtw_rust_vht_build_vht_mcs_map(adapter), 2);
+        operation[3..5].copy_from_slice(mcs_map);
+
+        let mut len: U32 = 0;
+        rtw_set_ie(
+            pbuf,
+            EID_VHTOperation,
+            5,
+            operation.as_ptr(),
+            &mut len,
+        );
         len
     }
 }

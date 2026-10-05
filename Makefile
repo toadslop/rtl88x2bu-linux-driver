@@ -3355,7 +3355,7 @@ rust-check-symbols-rtw-vht-mcs-rate: rust-objects-rtw-vht-mcs-rate-c rust-object
 	$(MAKE) rust-check-symbols OLD=tests/host/vht/vht_mcs_rate_c_ref.o NEW=tests/host/vht/vht_mcs_rate_rust_ref.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_vht_mcs_rate.allow
 
-# W3-84 PR8: host C cap IE vs kernel Rust (cap only).
+# W3-84 PR8: host C cap/operation IE vs kernel Rust.
 rust-objects-rtw-vht-build-cap-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
 		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core -I$(shell pwd)/include \
