@@ -7,6 +7,15 @@
 
 struct bf_host_cmd_hdl_tr bf_host_cmd_hdl_tr;
 
+void bf_host_cmd(bf_host_padpt a, int type, u8 *p, int sz, u8 enq)
+{
+	(void)a;
+	(void)type;
+	(void)p;
+	(void)sz;
+	(void)enq;
+}
+
 void bf_host_beamforming_enter(bf_host_padpt a, u8 *p)
 {
 	(void)p;

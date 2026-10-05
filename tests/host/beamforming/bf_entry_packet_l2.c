@@ -5,6 +5,15 @@
 
 #include "host_beamforming_bf_oracle.h"
 
+void bf_host_cmd(bf_host_padpt a, int type, u8 *p, int sz, u8 enq)
+{
+	(void)a;
+	(void)type;
+	(void)p;
+	(void)sz;
+	(void)enq;
+}
+
 static void parse_mac(const char *s, u8 *m)
 {
 	sscanf(s, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", &m[0], &m[1], &m[2], &m[3], &m[4], &m[5]);

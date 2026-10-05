@@ -72,7 +72,30 @@ int main(void)
 	} else {
 		printf("PASS report_vht_csi_update\n");
 	}
+
+	memset(&bf_host_cmd_tr, 0, sizeof(bf_host_cmd_tr));
+	memset(&a, 0, sizeof(a));
+	memset(&rf, 0, sizeof(rf));
+	setup_bfee(&a, "00:11:22:33:44:66");
+	BF_GET_INFO(&a)->bEnableSUTxBFWorkAround = 1;
+	BF_GET_INFO(&a)->TargetSUBFee = &BF_GET_INFO(&a)->bfee[0];
+	rf.hdr.len = 80;
+	parse_mac("00:11:22:33:44:66", bf_host_addr2(rf.hdr.data));
+	rf.hdr.data[24] = BF_HOST_CAT_HT;
+	rf.hdr.data[25] = BF_HOST_ACT_HT_BF;
+	rf.hdr.data[26] = 0x05;
+	rf.hdr.data[27] = 0;
+	ret = o_report(&a, &rf);
+	if (ret != BF_HOST_SUCCESS || bf_host_cmd_tr.count != 1 ||
+	    BF_GET_INFO(&a)->TargetCSIInfo.Nc != 1 ||
+	    BF_GET_INFO(&a)->TargetCSIInfo.Nr != 1 ||
+	    BF_GET_INFO(&a)->TargetCSIInfo.bVHT != 0) {
+		fprintf(stderr, "FAIL report_ht_csi_update\n");
+		bad++;
+	} else {
+		printf("PASS report_ht_csi_update\n");
+	}
 	if (!bad)
-		printf("PASS 3 vectors (builtin)\n");
+		printf("PASS 4 vectors (builtin)\n");
 	return bad ? 1 : 0;
 }
