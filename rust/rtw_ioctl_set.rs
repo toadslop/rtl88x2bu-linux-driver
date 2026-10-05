@@ -375,7 +375,8 @@ pub unsafe extern "C" fn rtw_set_802_11_connect_rust(
     }
 
     if !bssid.is_null() && bv {
-        mlme.assoc_bssid.copy_from_slice(&*(bssid as *const [u8; 6]));
+        mlme.assoc_bssid
+            .copy_from_slice(&*(bssid as *const [u8; 6]));
         mlme.assoc_by_bssid = _TRUE;
     } else {
         mlme.assoc_by_bssid = _FALSE;
