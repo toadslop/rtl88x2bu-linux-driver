@@ -13210,57 +13210,6 @@ const char *scan_state_str(u8 state)
 	return _scan_state_str[state];
 }
 
-#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_EXT_SITESURVEY_CMD)
-void sitesurvey_res_reset(_adapter *adapter, struct sitesurvey_parm *parm)
-#else
-static void sitesurvey_res_reset(_adapter *adapter, struct sitesurvey_parm *parm)
-#endif
-{
-	struct ss_res *ss = &adapter->mlmeextpriv.sitesurvey_res;
-	RT_CHANNEL_INFO *chset = adapter_to_chset(adapter);
-	int i, reason = 0;
-
-	ss->bss_cnt = 0;
-	ss->activate_ch_cnt = 0;
-	ss->channel_idx = 0;
-	ss->force_ssid_scan = 0;
-	ss->igi_scan = 0;
-	ss->igi_before_scan = 0;
-#ifdef CONFIG_SCAN_BACKOP
-	ss->scan_cnt = 0;
-#endif
-#if defined(CONFIG_ANTENNA_DIVERSITY) || defined(DBG_SCAN_SW_ANTDIV_BL)
-	ss->is_sw_antdiv_bl_scan = 0;
-#endif
-	ss->ssid_num = 0;
-	for (i = 0; i < RTW_SSID_SCAN_AMOUNT; i++) {
-		if (parm->ssid[i].SsidLength) {
-			_rtw_memcpy(ss->ssid[i].Ssid, parm->ssid[i].Ssid, IW_ESSID_MAX_SIZE);
-			ss->ssid[i].SsidLength = parm->ssid[i].SsidLength;
-			ss->ssid_num++;
-		} else
-			ss->ssid[i].SsidLength = 0;
-	}
-	reason = parm->reason;
-	ss->ch_num = rtw_scan_ch_decision(adapter
-					, ss->ch, RTW_CHANNEL_SCAN_AMOUNT
-					, parm->ch, parm->ch_num
-					, parm->acs
-					, reason
-				);
-
-	for (i = 0; i < MAX_CHANNEL_NUM; i++)
-		chset[i].hidden_bss_cnt = 0;
-
-	ss->bw = parm->bw;
-	ss->igi = parm->igi;
-	ss->token = parm->token;
-	ss->duration = parm->duration;
-	ss->scan_mode = parm->scan_mode;
-	ss->token = parm->token;
-	ss->acs = parm->acs;
-}
-
 void site_survey(_adapter *padapter, u8 survey_channel, RT_SCAN_TYPE ScanType)
 {
 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;

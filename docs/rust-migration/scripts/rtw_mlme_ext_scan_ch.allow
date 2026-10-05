@@ -1,0 +1,10 @@
+# L1 allowlist for W3-70 follow-up PR5/PR6: ch_decision FFI in rest.c.
+drop rtw_rust_scan_regsty_wifi_spec
+drop rtw_rust_scan_max_chan_nums
+drop rtw_rust_scan_chset_channel_num
+drop rtw_rust_scan_chset_flags
+drop rtw_rust_scan_chset_clear_hidden_bss
+drop rtw_rust_scan_roam_quickscan_next
+drop rtw_rust_scan_roam_clear_quickscan_next
+drop rtw_rust_scan_roam_ch_num
+drop rtw_rust_scan_roam_copy_ch

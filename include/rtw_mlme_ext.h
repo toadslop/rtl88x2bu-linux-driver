@@ -701,6 +701,7 @@ u32 rtw_scan_timeout_decision(_adapter *padapter);
 int rtw_scan_ch_decision(_adapter *padapter, struct rtw_ieee80211_channel *out,
 	u32 out_num, struct rtw_ieee80211_channel *in, u32 in_num, bool no_sparse,
 	int reason);
+void sitesurvey_res_reset(_adapter *adapter, struct sitesurvey_parm *parm);
 u8 sitesurvey_pick_ch_behavior(_adapter *padapter, u8 *ch, RT_SCAN_TYPE *type);
 
 void init_mlme_default_rate_set(_adapter *padapter);
