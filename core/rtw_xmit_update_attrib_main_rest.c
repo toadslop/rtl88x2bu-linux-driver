@@ -79,6 +79,120 @@ u8 rtw_xmit_update_attrib_lps_chk_packet_type(struct pkt_attrib *pattrib)
 }
 #endif /* CONFIG_LPS */
 
+void update_attrib_vcs_info(_adapter *padapter, struct xmit_frame *pxmitframe);
+void update_attrib_phy_info(_adapter *padapter, struct pkt_attrib *pattrib,
+			    struct sta_info *psta);
+s32 update_attrib_sec_info(_adapter *padapter, struct pkt_attrib *pattrib,
+			   struct sta_info *psta, enum eap_type eapol_type);
+#ifdef CONFIG_WMMPS_STA
+void update_attrib_trigger_frame_info(_adapter *padapter, struct pkt_attrib *pattrib);
+#endif
+#ifdef CONFIG_BEAMFORMING
+void update_attrib_txbf_info(_adapter *padapter, struct pkt_attrib *pattrib,
+			     struct sta_info *psta);
+#endif
+
+s32 rtw_xmit_update_attrib_post_l4(_adapter *padapter, _pkt *pkt,
+				   struct pkt_attrib *pattrib, struct sta_info *psta,
+				   struct mlme_priv *pmlmepriv, struct qos_priv *pqospriv,
+				   struct xmit_priv *pxmitpriv, sint bmcast,
+				   enum eap_type eapol_type)
+{
+	sint res = _SUCCESS;
+#ifdef CONFIG_LPS
+	u8 pkt_type;
+#define LPS_PT_NORMAL	0
+#define LPS_PT_SP		1
+#define LPS_PT_ICMP		2
+#endif
+
+	if ((pattrib->ether_type == 0x888e) || (pattrib->dhcp_pkt == 1))
+		rtw_mi_set_scan_deny(padapter, 3000);
+
+	if (check_fwstate(pmlmepriv, WIFI_STATION_STATE) &&
+	    pattrib->ether_type == ETH_P_ARP &&
+	    !IS_MCAST(pattrib->dst)) {
+		rtw_mi_set_scan_deny(padapter, 1000);
+		rtw_mi_scan_abort(padapter, _FALSE);
+	}
+
+#ifdef CONFIG_LPS
+	pkt_type = rtw_xmit_update_attrib_lps_chk_packet_type(pattrib);
+
+	if (pkt_type == LPS_PT_SP) {
+		DBG_COUNTER(padapter->tx_logs.core_tx_upd_attrib_active);
+		rtw_lps_ctrl_wk_cmd(padapter, LPS_CTRL_SPECIAL_PACKET, 0);
+	} else if (pkt_type == LPS_PT_ICMP)
+		rtw_lps_ctrl_wk_cmd(padapter, LPS_CTRL_LEAVE, 0);
+#endif
+
+#ifdef CONFIG_BEAMFORMING
+	update_attrib_txbf_info(padapter, pattrib, psta);
+#endif
+
+	if (update_attrib_sec_info(padapter, pattrib, psta, eapol_type) == _FAIL) {
+		DBG_COUNTER(padapter->tx_logs.core_tx_upd_attrib_err_sec);
+		return _FAIL;
+	}
+
+	pattrib->pkt_hdrlen = ETH_HLEN;
+	pattrib->hdrlen = XATTRIB_GET_WDS(pattrib) ? WLAN_HDR_A4_LEN : WLAN_HDR_A3_LEN;
+	pattrib->subtype = WIFI_DATA_TYPE;
+	pattrib->qos_en = psta->qos_option;
+	pattrib->priority = 0;
+
+	if (check_fwstate(pmlmepriv, WIFI_AP_STATE | WIFI_MESH_STATE
+	    | WIFI_ADHOC_STATE | WIFI_ADHOC_MASTER_STATE)) {
+		if (pattrib->qos_en) {
+			rtw_xmit_update_attrib_set_qos(pkt, pattrib);
+			#ifdef CONFIG_RTW_MESH
+			if (MLME_IS_MESH(padapter))
+				rtw_mesh_tx_set_whdr_mctrl_len(pattrib->mesh_frame_mode, pattrib);
+			#endif
+		}
+	} else {
+#ifdef CONFIG_TDLS
+		if (pattrib->direct_link == _TRUE) {
+			if (pattrib->qos_en)
+				rtw_xmit_update_attrib_set_qos(pkt, pattrib);
+		} else
+#endif
+		{
+			if (pqospriv->qos_option) {
+				rtw_xmit_update_attrib_set_qos(pkt, pattrib);
+
+				if (pmlmepriv->acm_mask != 0)
+					pattrib->priority = qos_acm(pmlmepriv->acm_mask, pattrib->priority);
+			}
+		}
+	}
+
+	update_attrib_phy_info(padapter, pattrib, psta);
+
+	pattrib->psta = psta;
+
+#ifdef CONFIG_AUTO_AP_MODE
+	if (psta->isrc && psta->pid > 0)
+		pattrib->pctrl = _TRUE;
+	else
+#endif
+		pattrib->pctrl = 0;
+
+	pattrib->ack_policy = 0;
+
+	if (bmcast)
+		pattrib->rate = psta->init_rate;
+
+#ifdef CONFIG_WMMPS_STA
+	update_attrib_trigger_frame_info(padapter, pattrib);
+#endif
+
+	pattrib->hw_ssn_sel = pxmitpriv->hw_ssn_seq_no;
+	rtw_set_tx_chksum_offload(pkt, pattrib);
+
+	return res;
+}
+
 #ifdef CONFIG_WMMPS_STA
 /*
  * update_attrib_trigger_frame_info
