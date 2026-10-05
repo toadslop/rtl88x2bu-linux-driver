@@ -49,12 +49,43 @@ pub struct BfHostCsi {
 
 #[cfg(host_bf_entry_packet_test)]
 #[repr(C)]
+pub struct BfHostSoundingInfo {
+    pub su_sounding_list: [U8; 2],
+    pub mu_sounding_list: [U8; 6],
+    pub state: U8,
+    pub su_bfee_curidx: U8,
+    pub candidate_mu_bfee_cnt: U8,
+    pub min_sounding_period: U16,
+    pub sound_remain_cnt_per_period: U8,
+}
+
+#[cfg(host_bf_entry_packet_test)]
+#[repr(C)]
 pub struct BfHostInfo {
     pub bfee: [BfHostBfee; 8],
     pub bfer: [BfHostBfer; 3],
     pub bEnableSUTxBFWorkAround: U8,
     pub TargetCSIInfo: BfHostCsi,
     pub TargetSUBFee: *mut BfHostBfee,
+    pub beamforming_cap: U8,
+    pub beamforming_state: U8,
+    pub sounding_sequence: U8,
+    pub beamformee_su_cnt: U8,
+    pub beamformer_su_cnt: U8,
+    pub beamformee_su_reg_maping: U32,
+    pub beamformer_su_reg_maping: U32,
+    pub beamformee_mu_cnt: U8,
+    pub beamformer_mu_cnt: U8,
+    pub beamformee_mu_reg_maping: U32,
+    pub first_mu_bfee_index: U8,
+    pub mu_bfer_curidx: U8,
+    pub cur_csi_rpt_rate: U8,
+    pub sounding_info: BfHostSoundingInfo,
+    pub SetHalBFEnterOnDemandCnt: U8,
+    pub SetHalBFLeaveOnDemandCnt: U8,
+    pub SetHalSoundownOnDemandCnt: U8,
+    pub sounding_running: i8,
+    pub timer_inits: U8,
 }
 
 #[cfg(host_bf_entry_packet_test)]
@@ -67,6 +98,8 @@ pub struct BfHostHal {
 #[repr(C)]
 pub struct BfHostMlme {
     pub pad: U8,
+    pub mac_addr: [U8; 6],
+    pub bssid: [U8; 6],
 }
 
 #[cfg(host_bf_entry_packet_test)]
