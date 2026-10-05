@@ -41,6 +41,31 @@
 #define WIFI_FREQUENCY_BAND_2GHZ 2
 #define BAND_24G (1 << 0)
 #define BAND_5G (1 << 1)
+#define RTW_SSID_SCAN_AMOUNT 2
+#define IW_ESSID_MAX_SIZE 32
+
+typedef int sint;
+
+struct rtw_ieee80211_channel { u16 hw_value; u32 flags; };
+
+struct ndis_802_11_ssid {
+	u32 SsidLength;
+	u8 Ssid[IW_ESSID_MAX_SIZE];
+};
+
+struct sitesurvey_parm {
+	sint scan_mode;
+	u8 ssid_num;
+	u8 ch_num;
+	struct ndis_802_11_ssid ssid[RTW_SSID_SCAN_AMOUNT];
+	struct rtw_ieee80211_channel ch[RTW_CHANNEL_SCAN_AMOUNT];
+	u32 token;
+	u16 duration;
+	u8 igi;
+	u8 bw;
+	bool acs;
+	u8 reason;
+};
 
 #define SCAN_PASSIVE 0
 #define SCAN_ACTIVE 1
@@ -53,7 +78,6 @@
 typedef unsigned long systime;
 typedef int RT_SCAN_TYPE;
 
-struct rtw_ieee80211_channel { u16 hw_value; u32 flags; };
 struct RT_CHANNEL_INFO {
 	u8 ChannelNum;
 	u8 flags;
@@ -69,14 +93,24 @@ struct rf_ctl_t {
 	u8 dfs_slave_with_rd;
 };
 struct ss_res {
+	int bss_cnt;
+	u8 activate_ch_cnt;
 	u16 scan_ch_ms;
 	u32 scan_timeout_ms;
 	u16 duration;
 	int channel_idx;
 	u8 force_ssid_scan;
+	u8 igi_scan;
+	u8 igi_before_scan;
 	u8 ssid_num;
 	u8 ch_num;
+	struct ndis_802_11_ssid ssid[RTW_SSID_SCAN_AMOUNT];
 	struct rtw_ieee80211_channel ch[RTW_CHANNEL_SCAN_AMOUNT];
+	u32 token;
+	u8 igi;
+	u8 bw;
+	u8 scan_mode;
+	bool acs;
 #ifdef CONFIG_SCAN_BACKOP
 	u8 backop_flags_sta, backop_flags_ap, backop_flags_mesh;
 	u8 backop_flags, scan_cnt, scan_cnt_max;
@@ -167,6 +201,7 @@ u32 rtw_scan_timeout_decision(_adapter *a);
 int rtw_scan_ch_decision(_adapter *a, struct rtw_ieee80211_channel *out, u32 out_num,
 			 struct rtw_ieee80211_channel *in, u32 in_num, bool no_sparse,
 			 int reason);
+void sitesurvey_res_reset(_adapter *a, struct sitesurvey_parm *parm);
 bool rtw_mlme_band_check(_adapter *a, const u32 ch);
 bool rtw_mlme_ignore_chan(_adapter *a, const u32 ch);
 u8 sitesurvey_pick_ch_behavior(_adapter *a, u8 *ch, RT_SCAN_TYPE *type);

@@ -792,6 +792,59 @@ u16 rtw_rust_scan_acs_adv_ms(_adapter *adapter)
 }
 #endif /* CONFIG_RUST && CONFIG_RUST_MLME_EXT_SCAN */
 
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_EXT_SCAN_CH)
+#include <drv_types.h>
+
+u8 rtw_rust_scan_regsty_wifi_spec(_adapter *adapter)
+{
+	return dvobj_to_regsty(adapter_to_dvobj(adapter))->wifi_spec;
+}
+
+u8 rtw_rust_scan_max_chan_nums(_adapter *adapter)
+{
+	return adapter_to_rfctl(adapter)->max_chan_nums;
+}
+
+u8 rtw_rust_scan_chset_channel_num(_adapter *adapter, int idx)
+{
+	return adapter_to_rfctl(adapter)->channel_set[idx].ChannelNum;
+}
+
+u8 rtw_rust_scan_chset_flags(_adapter *adapter, int idx)
+{
+	return adapter_to_rfctl(adapter)->channel_set[idx].flags;
+}
+
+void rtw_rust_scan_chset_clear_hidden_bss(_adapter *adapter, int idx)
+{
+	adapter_to_chset(adapter)[idx].hidden_bss_cnt = 0;
+}
+
+#ifdef CONFIG_RTW_ROAM_QUICKSCAN
+u8 rtw_rust_scan_roam_quickscan_next(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.quickscan_next;
+}
+
+void rtw_rust_scan_roam_clear_quickscan_next(_adapter *adapter)
+{
+	adapter->mlmeextpriv.quickscan_next = _FALSE;
+}
+
+u8 rtw_rust_scan_roam_ch_num(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.roam_ch_num;
+}
+
+void rtw_rust_scan_roam_copy_ch(_adapter *adapter, struct rtw_ieee80211_channel *out,
+				u32 out_num)
+{
+	_rtw_memcpy(out, adapter->mlmeextpriv.roam_ch,
+		     sizeof(struct rtw_ieee80211_channel) * out_num);
+}
+#endif /* CONFIG_RTW_ROAM_QUICKSCAN */
+#endif /* CONFIG_RUST && CONFIG_RUST_MLME_EXT_SCAN_CH */
+
 #if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_EXT_PICK_CH)
 #include <drv_types.h>
 
@@ -1599,6 +1652,60 @@ int rtw_scan_ch_decision(_adapter *padapter, struct rtw_ieee80211_channel *out,
 }
 
 #endif /* rtw_scan_ch_decision (CONFIG_RUST_MLME_EXT_SCAN_CH when swapped) */
+
+#if defined(HOST_MLME_EXT_SCAN_TEST) || \
+	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_SCAN_CH)) && \
+	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
+	  !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && !defined(HOST_MLME_EXT_BAND_IE_TEST) && \
+	  !defined(HOST_MLME_EXT_JOIN_CMD_TEST) && !defined(HOST_MLME_EXT_SITESURVEY_CMD_TEST)))
+
+void sitesurvey_res_reset(_adapter *adapter, struct sitesurvey_parm *parm)
+{
+	struct ss_res *ss = &adapter->mlmeextpriv.sitesurvey_res;
+	RT_CHANNEL_INFO *chset = adapter_to_chset(adapter);
+	int i, reason = 0;
+
+	ss->bss_cnt = 0;
+	ss->activate_ch_cnt = 0;
+	ss->channel_idx = 0;
+	ss->force_ssid_scan = 0;
+	ss->igi_scan = 0;
+	ss->igi_before_scan = 0;
+#ifdef CONFIG_SCAN_BACKOP
+	ss->scan_cnt = 0;
+#endif
+#if defined(CONFIG_ANTENNA_DIVERSITY) || defined(DBG_SCAN_SW_ANTDIV_BL)
+	ss->is_sw_antdiv_bl_scan = 0;
+#endif
+	ss->ssid_num = 0;
+	for (i = 0; i < RTW_SSID_SCAN_AMOUNT; i++) {
+		if (parm->ssid[i].SsidLength) {
+			_rtw_memcpy(ss->ssid[i].Ssid, parm->ssid[i].Ssid, IW_ESSID_MAX_SIZE);
+			ss->ssid[i].SsidLength = parm->ssid[i].SsidLength;
+			ss->ssid_num++;
+		} else
+			ss->ssid[i].SsidLength = 0;
+	}
+	reason = parm->reason;
+	ss->ch_num = (u8)rtw_scan_ch_decision(adapter
+					, ss->ch, RTW_CHANNEL_SCAN_AMOUNT
+					, parm->ch, parm->ch_num
+					, parm->acs
+					, reason
+				);
+
+	for (i = 0; i < MAX_CHANNEL_NUM; i++)
+		chset[i].hidden_bss_cnt = 0;
+
+	ss->bw = parm->bw;
+	ss->igi = parm->igi;
+	ss->token = parm->token;
+	ss->duration = parm->duration;
+	ss->scan_mode = (u8)parm->scan_mode;
+	ss->acs = parm->acs;
+}
+
+#endif /* sitesurvey_res_reset (CONFIG_RUST_MLME_EXT_SCAN_CH when swapped) */
 
 #if (defined(HOST_MLME_EXT_SCAN_TEST) && !defined(CONFIG_RUST_MLME_EXT_PICK_CH)) || \
 	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_PICK_CH)) && \
