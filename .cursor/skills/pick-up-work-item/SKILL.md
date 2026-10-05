@@ -265,7 +265,7 @@ report.
 | 1 | [`triage-open-issues`](../triage-open-issues/SKILL.md) | Close issues already done but still open |
 | 2 | [`select-ready-issue`](../select-ready-issue/SKILL.md) | Pick one open, unblocked, ready issue |
 | 3 | [`plan-stacked-prs`](../plan-stacked-prs/SKILL.md) | Split into stacked PRs with **≤250 changed lines each** (target ~200); plan only |
-| 4 | [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) | Implement **every** planned layer locally; **run size gate before each commit**; publish the **full** stack with **`gh stack submit --auto --open`** (not orphan per-PR creates); babysit all layers |
+| 4 | [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) | Implement **every** planned row in **one session**; **run size gate before each commit**; link with **`gh stack`** (deferred `submit` recommended); babysit all layers — no PR1 + tracking issue |
 
 ### Stack completion (Path B — mandatory)
 
@@ -274,7 +274,7 @@ the agent **must** either:
 
 1. **`stack complete`** — every row in the approved plan table (max **7 PRs** per
    issue — see [`plan-stacked-prs`](../plan-stacked-prs/SKILL.md#stack-depth-cap-mandatory--read-before-approving-a-plan))
-   becomes an open, linked PR with green babysit, or
+   is implemented, published, and babysitted green in the **same** pick-up run, or
 2. **`stack partial — tracked`** — only when [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md#when-partial-stacks-are-allowed-mandatory)
    documents a **real blocker** (gate, missing infra, reopened dep, human-needed
    spec, exhausted CI). **Not** because PR1 landed and the agent prefers a tracking
@@ -364,7 +364,7 @@ implement one immediately. Wait for an explicit follow-up or a new pick-up run
 | Open new PRs ready for review (Path B) | Open implementation PRs as drafts |
 | Tag `@toadslop` in every PR description | Omit maintainer notification on new/updated PRs |
 | Babysit new PRs until CI is green (Path B) | Skip babysit after opening a stack |
-| Complete the full planned stack (≤7 PRs) in one publish (Path B) | Stop after PR1 and file a "continue stack" issue without §10 blocker |
+| Complete every planned row in one session (≤7 PRs) (Path B) | Stop after PR1 and file a "continue stack" issue without §10 blocker |
 | File follow-up issue(s) only for §10 blockers (Path B) | Use follow-up issues to defer PR2…PRn for convenience |
 | Split issues at plan time when 8+ PRs needed | Approve a 10-row plan for one pick-up run |
 | Draft new issues only when allowlist + gap checks pass (Path C) | Draft deep single-lane chains across unrelated C files |

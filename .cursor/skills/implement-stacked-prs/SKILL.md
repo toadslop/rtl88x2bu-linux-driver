@@ -1,12 +1,11 @@
 ---
 name: implement-stacked-prs
 description: >-
-  Path B step 4 of pick-up-work-item. Implements an approved stacked-PR plan
-  layer by layer (branch, code, ≤250-line diff gate, gates, commit, push) but
-  publishes the **full GitHub stack in one shot** via `gh stack` (`init`/`add`
-  locally, then `submit` or `link` — not orphan PRs opened one-by-one). Babysit
-  after the stack exists on GitHub. Auto-applies after plan-stacked-prs approval.
-  Do NOT use without an approved plan or for PRs unrelated to the selected issue.
+  Path B step 4 of pick-up-work-item. Implements every row of the approved plan
+  (≤7 PRs per issue) in **one agent session** — no PR1 plus a GitHub issue for
+  the rest unless a documented §10 blocker. Prefer `gh stack` for linkage; local
+  build-then-submit is recommended, not required. Auto-applies after plan-stacked-prs
+  approval. Do NOT use without an approved plan or for PRs unrelated to the selected issue.
 metadata:
   parent-skill: pick-up-work-item
   path: B
@@ -16,9 +15,18 @@ metadata:
 
 # Implement Stacked PRs
 
-Execute the approved plan from **`plan-stacked-prs`** — implement **bottom → top**
-on local branches first, then create/link **all** pull requests as one GitHub
-stack with the **Stack CLI** (`gh stack`).
+Execute the approved plan from **`plan-stacked-prs`** — implement **every row**
+bottom → top in **one pick-up session**. The failure mode to avoid is **not**
+"when to run `gh stack submit`" — it is **stopping after PR1** (or PR1…k) and
+filing a tracking issue for the remaining plan rows without a §10 blocker.
+
+Use the **Stack CLI** (`gh stack`) so layers appear as a **linked GitHub stack**.
+**Recommended:** build all layers on branches first (`gh stack init` / `add`),
+gate each layer, then **`gh stack submit --auto --open` once** before babysit.
+**Also valid in the same session:** publish layers incrementally (`submit` /
+`link` / `create_pr` as you go) as long as you **finish every plan row** and
+end with a single linked stack — do not defer unimplemented rows to a follow-up
+issue.
 
 **PR size is a blocking gate.** Target ~200 changed lines; **never open a PR
 above 250** (insertions + deletions vs stack base). See
@@ -37,17 +45,17 @@ gh extension install github/gh-stack   # idempotent; required before submit/link
 |-------|---------|
 | Local tracking while building | `gh stack init --base <pr1-trunk> <pr1-branch>` then `gh stack add <pr2-branch>` … |
 | Adopt existing branches in one step | `gh stack init --base <pr1-trunk> <branch1> <branch2> …` (bottom → top) |
-| **Publish full stack** (push + create/update PRs + stack metadata) | **`gh stack submit --auto --open`** |
+| **Publish** (push + create/update PRs + stack metadata) | **`gh stack submit --auto --open`** (once at end, or again after each new layer) |
 | PRs already exist but unlinked | `gh stack link <pr1#> … <prN#> --base <pr1-trunk> --open` or `gh stack link <branch1> … --base … --open` |
 | Verify | `gh stack view` / `gh stack view --short` |
 
 Docs: [Stacked PRs CLI commands](https://docs.github.com/en/pull-requests/reference/stacked-prs-cli-commands),
 [quickstart](https://docs.github.com/en/pull-requests/get-started/stacked-prs-quickstart).
 
-**Default (multi-PR plan):** do **not** call `create_pr` / `gh pr create` per
-layer during the loop. Finish every planned layer locally, run **`gh stack
-submit --auto --open` once**, then enrich PR bodies with `ManagePullRequest`
-`update_pr` (or `gh pr edit`) so each layer has `@toadslop`, gates, and measured Δ.
+**Linkage (multi-PR plan):** however you publish, the session must end with
+**all** plan layers on GitHub in **one** stack (`gh stack view`). Avoid orphan
+PRs that never get `link`ed. Enrich bodies with `ManagePullRequest` `update_pr`
+(or `gh pr edit`) so each layer has `@toadslop`, gates, and measured Δ.
 
 **Single-PR plan (one table row):** `gh stack submit` still works; or
 `ManagePullRequest` `create_pr` with `draft: false` — no `link` needed.
@@ -77,11 +85,11 @@ git fetch origin <dep-pr-branch>
 git checkout -b cursor/<name>-<suffix> origin/<dep-pr-branch>
 ```
 
-## Per-layer loop (local branches only — no GitHub PRs yet)
+## Per-layer loop (repeat until the plan table is done)
 
-Repeat for each row in the plan table (PR1 → PR2 → …). **Do not open GitHub PRs
-inside this loop** when the plan has 2+ rows — wait for **Publish the stack**
-below.
+Repeat for each row in the plan table (PR1 → PR2 → …) **in the same session**.
+Do **not** end the run after an early row and file a GitHub issue for the rest
+(see §9–10).
 
 ### 1. Branch + stack tracking
 
@@ -164,22 +172,30 @@ Reference the GitHub issue in the commit message (`#115`, `W3-04`). Use plan
 titles in commit subjects when helpful — `gh stack submit --auto` uses them for
 PR titles.
 
-When the **last** plan row passes gates, continue to **Publish the stack**.
+After each layer passes gates, either continue to the **next plan row** or, if
+this was the **last** row, ensure the **whole** stack is on GitHub (step 6).
 
-### 6. Publish the stack on GitHub (one shot — mandatory for 2+ PRs)
+### 6. Publish on GitHub (`gh stack` — required before session ends)
 
-After **every** plan row is implemented and gated locally:
+Before ending Path B, **every** plan row must exist as an open PR in a **linked**
+stack. How you get there:
+
+| Approach | When to use |
+|----------|-------------|
+| **Deferred publish (recommended)** | Implement and gate all rows on branches first; then one `gh stack submit --auto --open` |
+| **Incremental publish (same session)** | After a layer is ready, `gh stack submit --auto --open` (or `link` / `create_pr` for that layer), then implement the next row on top — repeat until the plan table is done |
 
 ```bash
 gh stack submit --auto --open
 gh stack view --short
 ```
 
-`submit` pushes all stack branches, creates or updates PRs with chained bases,
-and creates/updates the **GitHub stack** metadata. Use **`--open`** so new PRs
-are ready for review (not draft). Non-interactive agents must pass **`--auto`**.
+`submit` pushes stack branches, creates or updates PRs with chained bases, and
+creates/updates **GitHub stack** metadata. Use **`--open`** so PRs are ready for
+review (not draft). Non-interactive agents must pass **`--auto`** when using
+`submit`.
 
-If branches were already pushed and PRs were opened by mistake without a stack:
+If branches were already pushed and PRs exist but are not linked:
 
 ```bash
 gh stack link <branch-or-pr-bottom> ... <branch-or-pr-top> --base <pr1-trunk> --open
@@ -217,30 +233,31 @@ the run without `gh stack view` showing a single linked stack.
 - Add `In-flight: <branch>` to the issue via comment if not already noted
 - Do not close the issue until the **last** PR merges and acceptance is met
 
-### 8. Babysit the published stack
+### 8. Babysit
 
-**Default: publish first, then babysit.** After **`gh stack submit`** (or `link`)
-and PR bodies are updated, babysit **every layer** bottom → top (or use the
-`babysit` skill on the whole stack). Local L0/L1/L2 gates during the per-layer
-loop are the early signal; CI runs only after publish.
+Babysit **every layer** before ending Path B (bottom → top if the whole stack
+was published at once; or the layers you published incrementally, then finish
+implementing remaining rows, then babysit **all** layers).
 
 1. Load Cursor's built-in **`babysit`** skill when available; otherwise fix CI
    failures, push, and if needed **`gh stack rebase`** / **`gh stack sync`** (see
    [`prepare-pr-for-merge`](../prepare-pr-for-merge/SKILL.md)), then re-poll
    `gh pr checks` on each layer.
 2. Address blocking review feedback (same rules as `prepare-pr-for-merge`).
-3. Loop until required checks are green on **all** opened layers or you report a
-   blocker.
+3. Loop until required checks are green on **all** plan rows' PRs or you hit a
+   §10 blocker.
 
-**Incremental delivery (rare):** only if the user explicitly asked to land PRs
-one at a time in this session — then you may `gh stack submit` after the first
-layer, babysit, `gh stack add` + implement the next layer, and **`gh stack
-submit --auto --open` again** to grow the stack. Default Path B is still **full
-local stack → one submit**.
+**Deferred publish:** local L0/L1/L2 gates during the per-layer loop are the
+early signal; CI babysit runs after `submit`/`link`.
 
-Path B pick-up ends after the stack is published and babysit passes — full merge
-prep (`prepare-all-prs-for-merge`) runs on a **future** pick-up once these PRs
-are open.
+**Incremental publish:** you may babysit a layer after publishing it, then
+continue implementing the next row in the **same session** — that is not a
+partial stop. A partial stop is **ending the session** with unimplemented plan
+rows or a follow-up issue for them without §10.
+
+Path B pick-up ends after **all** plan rows are on GitHub, linked, and babysit
+passes — full merge prep (`prepare-all-prs-for-merge`) runs on a **future**
+pick-up.
 
 ### 9. Continue the stack (mandatory — no partial stops)
 
@@ -261,7 +278,8 @@ before ending the session:
 - Ending with "Next: implement PR3" or asking whether to continue.
 - Treating **time**, **token budget**, **slow CI**, or **stack size** (when the
   approved plan has ≤7 rows) as reasons to defer remaining rows.
-- Publishing a **partial** `gh stack submit` when more plan rows are ready locally.
+- **Ending the session** with unimplemented plan rows (even if PR1 is already on
+  GitHub).
 
 The approved plan table is a **contract**: if it has three rows, you owe three
 open PRs in one linked stack before the run ends — unless §10 applies.
@@ -274,21 +292,19 @@ use `stack partial — tracked` to dump already-planned rows into a follow-up is
 
 **Per-layer loop (default):**
 
-- After each layer passes local gates, **immediately** implement the next row on
-  a new branch (`gh stack add`) — same session, no pause for confirmation.
-- When all rows are done locally, run **`gh stack submit --auto --open`** once,
-  then step 6b and babysit (step 8).
-- Continue until the plan table is fully published or you hit a blocker that
-  requires filing tracking.
-- **Pause** only when the user **explicitly** asked for incremental delivery in
-  this session (rare; not the default for Path B pick-up).
-- After **`gh stack submit`** (step 6), bodies updated (6b), and babysit passes on
-  all layers, summarize with `gh stack view --short` and mark workflow end
-  **`stack complete`**.
+- After each layer passes gates, **immediately** implement the next row on a new
+  branch (`gh stack add`) — **same session**, no pause for confirmation.
+- Publish with step 6 (deferred or incremental); update bodies (6b); babysit (8)
+  until **all** rows are done.
+- Continue until the plan table is fully implemented and on GitHub, or §10
+  forces tracking.
+- **Pause** only when the user **explicitly** halted this session.
+- When every row is open in a linked stack and babysit passes, summarize with
+  `gh stack view --short` and mark **`stack complete`**.
 
 ### 10. When you cannot finish the stack (mandatory tracking)
 
-### When partial stacks are allowed (mandatory)
+#### When partial stacks are allowed (mandatory)
 
 `stack partial — tracked` is **rare**. It is **not** a way to split work across
 sessions when the plan was feasible.
@@ -338,7 +354,8 @@ the remainder is non-trivial (copy the per-PR detail from the plan).
 | Rule | Why |
 |------|-----|
 | Each PR targets its planned base branch | preserves reviewable increments |
-| **`gh stack submit --auto --open`** once all layers exist locally | Open PRs one-by-one without stack metadata |
+| **`gh stack submit` / `link`** so `gh stack view` shows the full plan | End session with unimplemented rows or unlinked PRs |
+| Deferred submit (recommended) when it keeps CI noise down | Treat incremental publish in-session as a partial stop |
 | `gh stack link` when PRs pre-exist unlinked | leave PRs unlinked on GitHub at handoff |
 | Do not retarget bases to `master` while PRs stay GitHub-stacked | `prepare-pr-for-merge`: `gh stack unstack` first if bottom must move to `master` |
 | Use `gh stack rebase` / `gh stack sync` for stack-wide updates | manual per-branch rebase of the whole stack |
