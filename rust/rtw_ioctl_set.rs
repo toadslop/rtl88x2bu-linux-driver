@@ -402,3 +402,70 @@ pub unsafe extern "C" fn rtw_set_802_11_connect_rust(
 const _SUCCESS: i32 = 1;
 #[cfg(host_ioctl_connect_test)]
 const _FAIL: i32 = 0;
+
+#[cfg(host_ioctl_regd_test)]
+const REGD_SRC_OS_K: u8 = 1;
+
+#[cfg(host_ioctl_regd_test)]
+#[repr(C)]
+pub struct MockRegsty {
+    pub regd_src: u8,
+}
+
+#[cfg(host_ioctl_regd_test)]
+fn regd_from_os(reg: &MockRegsty, cfg: i32) -> bool {
+    cfg != 0 && reg.regd_src == REGD_SRC_OS_K
+}
+
+#[cfg(host_ioctl_regd_test)]
+#[no_mangle]
+pub unsafe extern "C" fn ioctl_chplan_leaf_rust(
+    reg: *mut MockRegsty,
+    regd_cfg: i32,
+    _chplan: u8,
+    cmd_ret: i32,
+    cmd_invoked: *mut i32,
+) -> i32 {
+    if reg.is_null() {
+        return 0;
+    }
+    if !cmd_invoked.is_null() {
+        *cmd_invoked = 0;
+    }
+    let reg = &*reg;
+    if !regd_from_os(reg, regd_cfg) {
+        if !cmd_invoked.is_null() {
+            *cmd_invoked = 1;
+        }
+        return cmd_ret;
+    }
+    1
+}
+
+#[cfg(host_ioctl_regd_test)]
+#[no_mangle]
+pub unsafe extern "C" fn ioctl_country_leaf_rust(
+    reg: *mut MockRegsty,
+    regd_cfg: i32,
+    country_enabled: i32,
+    cmd_ret: i32,
+    cmd_invoked: *mut i32,
+) -> i32 {
+    if !cmd_invoked.is_null() {
+        *cmd_invoked = 0;
+    }
+    if country_enabled == 0 {
+        return 1;
+    }
+    if reg.is_null() {
+        return 0;
+    }
+    let reg = &*reg;
+    if !regd_from_os(reg, regd_cfg) {
+        if !cmd_invoked.is_null() {
+            *cmd_invoked = 1;
+        }
+        return cmd_ret;
+    }
+    1
+}
