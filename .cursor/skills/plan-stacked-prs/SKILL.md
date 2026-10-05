@@ -2,10 +2,10 @@
 name: plan-stacked-prs
 description: >-
   Path B step 3 of pick-up-work-item. Splits a selected migration issue into
-  stacked PRs of ~200 lines each (hard max 250 changed lines per PR) and
-  produces an implementation plan with per-PR LOC estimates. Uses Cursor Plan
-  mode when available. Auto-applies after select-ready-issue. Do NOT implement
-  code in this step — use implement-stacked-prs next.
+  stacked PRs of ~200 lines each (hard max 250 lines per PR, max 7 PRs per issue;
+  split into multiple GitHub issues before coding if 8+ PRs). Produces an
+  implementation plan with per-PR LOC estimates. Uses Cursor Plan mode when available.
+  Auto-applies after select-ready-issue. Do NOT implement code — use implement-stacked-prs next.
 metadata:
   parent-skill: pick-up-work-item
   path: B
@@ -97,8 +97,8 @@ From [`test-plan.md`](../../../docs/rust-migration/test-plan.md) and
 Each PR in the stack:
 
 1. **Builds on the previous PR's branch** (not necessarily `master`) — chained for
-   GitHub **stacked pull requests** (`gh stack link` / `gh stack submit` after
-   implementation)
+   GitHub **stacked pull requests** (`gh stack init`/`add` during implementation,
+   then **`gh stack submit --auto --open`** to publish the full stack at once)
 2. Has a **narrow title** — `[W3-04 PR1] …`, `[W3-04 PR2] …`
 3. Lists **gates** to run before opening (L0, L1, L2, L3 as applicable)
 4. Maps to a **branch name** — `cursor/<short-desc>-<suffix>` (match repo convention)
@@ -135,6 +135,35 @@ When all deps are closed, omit the dependency node — PR1 branches from `master
 Every row **must** show an estimated Δ. Reject your own plan if any row is blank
 or above 250.
 
+## Stack depth cap (mandatory — read before approving a plan)
+
+Path B must **implement every row** in the approved plan table in **one session**
+(see [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md)). Agents must
+**not** land PR1 and file a GitHub issue to "continue PR2…" without a real blocker.
+
+| Rule | Value |
+|------|-------|
+| **Max PRs per issue / per plan table** | **7** — implement and publish **all** rows in **one agent session** |
+| **If the slice needs 8+ PRs** | **Stop at planning** — split into **two (or more) GitHub issues** before any code (e.g. Part 1 = PR1–7, Part 2 = PR8+ with `blocked_by` on Part 1). Do not approve a 10-row table for a single pick-up run |
+| **Typical in this repo** | Multi-PR issues are usually **2–4 PRs** (~400–700 LOC total per issue spec) |
+
+**Why 7:** at 250 changed lines per PR, seven layers is already ~1.75k LOC of
+reviewable diff plus seven CI babysit passes — well beyond a normal `size/~200`
+slice. Needing **eight or more** PRs means the **issue scope is too large for one
+tracker ticket**; split the issue, not the implementation session after PR1.
+
+**Wrong vs right:**
+
+| Wrong | Right |
+|-------|-------|
+| Plan 10 PRs, implement 2, file issue "finish W3-40 stack" | Plan two issues up front; implement **all** rows of the Part 1 plan (≤7 PRs) |
+| "I'll do PR1 now and track the rest" | Implement **every** plan row in **one session**; link with `gh stack` |
+| One giant issue for an entire C file (15 functions) | Multiple parallel **issues** (~200 LOC each), each with its own ≤7-PR stack |
+
+When splitting for depth, add a local draft under `docs/rust-migration/issues/` and
+file via `file-issues.sh` (or ask the user before filing). Part 2 should
+`blocked_by` the Part 1 issue ID (or the Part 1 PR once open — document in Notes).
+
 ## Plan contents (required sections)
 
 ### Context
@@ -166,12 +195,20 @@ For each PR:
 
 ### GitHub stack (after implementation)
 
-Note that [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md) will
-**link** open PRs into a GitHub stack (`gh stack link`, bottom → top). Path A
-[`prepare-all-prs-for-merge`](../prepare-all-prs-for-merge/SKILL.md) then
+Note that [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md)
+implements **every** plan row in **one session** and ends with a linked GitHub
+stack (`gh stack submit` and/or `gh stack link`). **Recommended:** build layers
+with `gh stack init` / `add`, then one `submit` at the end. **Also valid:**
+publish layers incrementally in the same session. Do not plan on stopping after
+PR1 and filing a continuation issue.
+
+Path A [`prepare-all-prs-for-merge`](../prepare-all-prs-for-merge/SKILL.md) then
 `gh stack sync`s the stack, babysits every layer (running **`gh stack rebase` on
 the whole stack** after review fixes on any layer — see `prepare-pr-for-merge`),
 until the maintainer can run `gh stack merge` (agents do not merge).
+
+Stack CLI reference:
+[Stacked PRs CLI commands](https://docs.github.com/en/pull-requests/reference/stacked-prs-cli-commands).
 
 ## Get user confirmation
 
@@ -187,6 +224,9 @@ This skill ends at an approved plan. The next skill creates branches, writes
 code, runs gates, and opens PRs with correct stack bases.
 
 **Once implementation starts**, the agent must **complete every row** in the PR
-stack table or **file follow-up GitHub issue(s)** for any rows that could not be
-implemented — it must not stop mid-stack and ask whether to continue. See
-[`implement-stacked-prs`](../implement-stacked-prs/SKILL.md#9-continue-the-stack-mandatory--no-partial-stops).
+stack table (≤7 rows) in one agent session (publish + babysit on all rows).
+Follow-up issues for
+**remaining plan rows** are allowed only for **documented blockers** — not
+convenience, session length, or "done enough for now." See
+[`implement-stacked-prs`](../implement-stacked-prs/SKILL.md#9-continue-the-stack-mandatory--no-partial-stops)
+and [When partial stacks are allowed](../implement-stacked-prs/SKILL.md#when-partial-stacks-are-allowed-mandatory).
