@@ -50,6 +50,10 @@ void rtw_stop_cmd_thread(_adapter *adapter)
 	}
 }
 
+#endif /* !CONFIG_RUST || HOST_CMD_THREAD_TEST || !CONFIG_RUST_CMD_THREAD */
+
+#if !defined(CONFIG_RUST) || defined(HOST_CMD_THREAD_TEST) || !defined(CONFIG_RUST_CMD_THREAD_LOOP)
+
 #ifdef HOST_CMD_THREAD_TEST
 
 thread_return rtw_cmd_thread(thread_context context)
@@ -349,4 +353,23 @@ post_process:
 
 #endif /* HOST_CMD_THREAD_TEST */
 
-#endif /* !CONFIG_RUST || HOST_CMD_THREAD_TEST || !CONFIG_RUST_CMD_THREAD */
+#endif /* !CONFIG_RUST || HOST_CMD_THREAD_TEST || !CONFIG_RUST_CMD_THREAD_LOOP */
+
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_CMD_THREAD) && !defined(HOST_CMD_THREAD_TEST)
+
+void rtw_rust_cmd_clr_isr_done_bump(struct cmd_priv *pcmdpriv)
+{
+	if (pcmdpriv)
+		pcmdpriv->cmd_done_cnt++;
+}
+
+void rtw_rust_stop_cmd_thread_body(_adapter *adapter)
+{
+	if (adapter && adapter->cmdThread) {
+		_rtw_up_sema(&adapter->cmdpriv.cmd_queue_sema);
+		rtw_thread_stop(adapter->cmdThread);
+		adapter->cmdThread = NULL;
+	}
+}
+
+#endif /* CONFIG_RUST && CONFIG_RUST_CMD_THREAD && !HOST_CMD_THREAD_TEST */

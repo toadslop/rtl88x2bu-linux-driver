@@ -863,10 +863,87 @@ mod cmd_queue {
 }
 
 #[cfg(any(host_cmd_thread_test, rust_cmd_thread))]
+mod cmd_thread_leaf {
+    use super::c_void;
+    #[cfg(host_cmd_thread_test)]
+    use super::{c_int, Queue};
+
+    #[cfg(all(rust_cmd_thread, not(host_cmd_thread_test)))]
+    mod kernel_leaf {
+        use super::c_void;
+
+        extern "C" {
+            pub fn rtw_rust_cmd_clr_isr_done_bump(pcmdpriv: *mut c_void);
+            pub fn rtw_rust_stop_cmd_thread_body(adapter: *mut c_void);
+        }
+    }
+
+    #[cfg(host_cmd_thread_test)]
+    #[repr(C)]
+    struct CmdPriv {
+        cmd_queue_sema: c_int,
+        start_cmdthread_sema: c_int,
+        cmd_queue: Queue,
+        cmd_seq: u8,
+        cmd_buf: *mut u8,
+        cmd_issued_cnt: u32,
+        cmd_done_cnt: u32,
+    }
+
+    #[cfg(host_cmd_thread_test)]
+    #[repr(C)]
+    struct Adapter {
+        bDriverStopped: u8,
+        bSurpriseRemoved: u8,
+        cmdThread: *mut c_void,
+        cmdpriv: CmdPriv,
+    }
+
+    #[cfg(host_cmd_thread_test)]
+    extern "C" {
+        fn _rtw_up_sema(s: *mut c_int);
+        fn rtw_thread_stop(th: *mut c_void) -> c_int;
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_cmd_clr_isr(pcmdpriv: *mut c_void) {
+        if pcmdpriv.is_null() {
+            return;
+        }
+        #[cfg(host_cmd_thread_test)]
+        unsafe {
+            (*(pcmdpriv as *mut CmdPriv)).cmd_done_cnt += 1;
+        }
+        #[cfg(all(rust_cmd_thread, not(host_cmd_thread_test)))]
+        unsafe {
+            kernel_leaf::rtw_rust_cmd_clr_isr_done_bump(pcmdpriv);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_stop_cmd_thread(adapter: *mut c_void) {
+        if adapter.is_null() {
+            return;
+        }
+        #[cfg(host_cmd_thread_test)]
+        unsafe {
+            let a = adapter as *mut Adapter;
+            if !(*a).cmdThread.is_null() {
+                _rtw_up_sema(&mut (*a).cmdpriv.cmd_queue_sema);
+                rtw_thread_stop((*a).cmdThread);
+                (*a).cmdThread = core::ptr::null_mut();
+            }
+        }
+        #[cfg(all(rust_cmd_thread, not(host_cmd_thread_test)))]
+        unsafe {
+            kernel_leaf::rtw_rust_stop_cmd_thread_body(adapter);
+        }
+    }
+}
+
+#[cfg(any(host_cmd_thread_test, rust_cmd_thread_loop))]
 mod cmd_thread {
     use super::{c_int, c_void, List, Queue, Sint, MAX_CMDSZ, _FAIL};
-    #[cfg(all(rust_cmd_thread, not(host_cmd_thread_test)))]
-    use core::ptr;
     #[cfg(host_cmd_thread_test)]
     use std::ptr;
 
@@ -945,29 +1022,6 @@ mod cmd_thread {
         fn rtw_sctx_done(sctx: *mut *mut SubmitCtx);
         fn rtw_sctx_done_err(sctx: *mut *mut SubmitCtx, status: c_int);
         static mut wlancmds: [RtwCmd; RTW_CMDTABLE_SIZE];
-    }
-
-    #[no_mangle]
-    pub extern "C" fn rtw_cmd_clr_isr(pcmdpriv: *mut CmdPriv) {
-        if !pcmdpriv.is_null() {
-            unsafe {
-                (*pcmdpriv).cmd_done_cnt += 1;
-            }
-        }
-    }
-
-    #[no_mangle]
-    pub extern "C" fn rtw_stop_cmd_thread(adapter: *mut Adapter) {
-        if adapter.is_null() {
-            return;
-        }
-        unsafe {
-            if !(*adapter).cmdThread.is_null() {
-                _rtw_up_sema(&mut (*adapter).cmdpriv.cmd_queue_sema);
-                rtw_thread_stop((*adapter).cmdThread);
-                (*adapter).cmdThread = core::ptr::null_mut();
-            }
-        }
     }
 
     #[no_mangle]
