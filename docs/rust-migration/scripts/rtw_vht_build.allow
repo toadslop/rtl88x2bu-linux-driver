@@ -1,2 +1,1 @@
 drop VHT_MCS_DATA_RATE
-drop rtw_build_vht_operation_ie
