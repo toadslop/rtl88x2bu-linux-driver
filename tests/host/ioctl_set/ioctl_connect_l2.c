@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* W3-124 follow-up (#979) PR3: L2 C oracle connect + disassociate. */
+/* W3-124 follow-up (#979) PR3+PR4: L2 C oracle connect/disassociate + set_bssid. */
 #include <stdio.h>
 #include <string.h>
 #include "host_types.h"
@@ -32,11 +32,13 @@ struct _adapter {
 extern u8 rtw_set_802_11_disassociate_rust(struct _adapter *p);
 extern u8 rtw_set_802_11_connect_rust(struct _adapter *p, u8 *bssid,
 				      NDIS_802_11_SSID *ssid, u16 ch);
+extern u8 rtw_set_802_11_bssid_rust(struct _adapter *p, u8 *bssid);
 extern void ioctl_connect_test_reset_counters(void);
 extern u32 ioctl_connect_test_disassoc_calls(void);
 extern u32 ioctl_connect_test_join_calls(void);
 #define rtw_set_802_11_disassociate rtw_set_802_11_disassociate_rust
 #define rtw_set_802_11_connect rtw_set_802_11_connect_rust
+#define rtw_set_802_11_bssid rtw_set_802_11_bssid_rust
 #else
 static u32 g_disassoc_calls, g_join_calls;
 #endif
@@ -101,6 +103,56 @@ static u8 rtw_set_802_11_connect(struct _adapter *p, u8 *bssid, NDIS_802_11_SSID
 		ok = p->do_join_ret ? _SUCCESS : _FAIL;
 	}
 	return ok;
+}
+#endif /* !HOST_IOCTL_CONNECT_RUST */
+
+#ifndef HOST_IOCTL_CONNECT_RUST
+static sint chk_mlme(struct mlme_priv *m, sint st)
+{
+	return (!st && !m->fw_state) || (m->fw_state & (u32)st) ? _TRUE : _FALSE;
+}
+
+static u8 is_bad_set_bssid(u8 *bssid)
+{
+	int i, zero = 1, ff = 1;
+
+	for (i = 0; i < ETH_ALEN; i++) {
+		if (bssid[i])
+			zero = 0;
+		if (bssid[i] != 0xff)
+			ff = 0;
+	}
+	return zero || ff;
+}
+
+static u8 rtw_set_802_11_bssid(struct _adapter *p, u8 *bssid)
+{
+	u8 status = _SUCCESS;
+	struct mlme_priv *m = &p->mlmepriv;
+
+	if (is_bad_set_bssid(bssid))
+		return _FAIL;
+
+	if (chk_mlme(m, WIFI_UNDER_SURVEY))
+		;
+	else if (chk_mlme(m, WIFI_UNDER_LINKING))
+		return _SUCCESS;
+
+	if (p->tkip_fail)
+		return _FAIL;
+
+	memset(&m->assoc_ssid, 0, sizeof(m->assoc_ssid));
+	memcpy(m->assoc_bssid, bssid, ETH_ALEN);
+	m->assoc_ch = 0;
+	m->assoc_by_bssid = _TRUE;
+
+	if (chk_mlme(m, WIFI_UNDER_SURVEY))
+		m->to_join = _TRUE;
+	else {
+		g_join_calls++;
+		status = p->do_join_ret ? _SUCCESS : _FAIL;
+	}
+	return status;
 }
 #endif /* !HOST_IOCTL_CONNECT_RUST */
 
@@ -223,6 +275,18 @@ static int run_vector(struct vector *v)
 #endif
 		    a.mlmepriv.to_join != (u8)v->expect_to_join || !mlme_ok(&a, v))
 			goto fail;
+	} else if (!strcmp(v->fn, "set_bssid")) {
+		if (!v->bssid[0] || dec_mac(v->bssid, mac))
+			goto fail;
+		got = rtw_set_802_11_bssid(&a, mac);
+		if (got != (u8)v->expect_ret ||
+#ifdef HOST_IOCTL_CONNECT_RUST
+		    ioctl_connect_test_join_calls() != (u32)v->expect_join ||
+#else
+		    g_join_calls != (u32)v->expect_join ||
+#endif
+		    a.mlmepriv.to_join != (u8)v->expect_to_join || !mlme_ok(&a, v))
+			goto fail;
 	} else
 		return 1;
 	printf("PASS %s\n", v->name);
@@ -234,12 +298,12 @@ fail:
 
 int main(int argc, char **argv)
 {
-	struct vector vecs[16];
+	struct vector vecs[24];
 	size_t n = 0;
 	int bad = 0;
 	const char *path = argc > 1 ? argv[1] : "ioctl_connect_vectors.json";
 
-	if (host_load_vectors(path, vecs, sizeof(vecs[0]), 16, parse_vector_object, &n))
+	if (host_load_vectors(path, vecs, sizeof(vecs[0]), 24, parse_vector_object, &n))
 		return 2;
 	for (size_t i = 0; i < n; i++)
 		bad += run_vector(&vecs[i]);

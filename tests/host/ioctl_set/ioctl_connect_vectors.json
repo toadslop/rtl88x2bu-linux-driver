@@ -89,6 +89,63 @@
       "do_join_ret": 0,
       "expect_ret": 0,
       "expect_join": 1
+    },
+    {
+      "name": "bssid_zero_mac",
+      "fn": "set_bssid",
+      "bssid": "000000000000",
+      "expect_ret": 0
+    },
+    {
+      "name": "bssid_broadcast_mac",
+      "fn": "set_bssid",
+      "bssid": "ffffffffffff",
+      "expect_ret": 0
+    },
+    {
+      "name": "bssid_under_linking_noop",
+      "fn": "set_bssid",
+      "fw_state": 128,
+      "bssid": "020304050607",
+      "expect_ret": 1,
+      "expect_join": 0
+    },
+    {
+      "name": "bssid_under_survey_to_join",
+      "fn": "set_bssid",
+      "fw_state": 2048,
+      "bssid": "020304050607",
+      "expect_ret": 1,
+      "expect_to_join": 1,
+      "expect_join": 0,
+      "expect_assoc_by_bssid": 1,
+      "expect_assoc_ch": 0,
+      "expect_assoc_ssid_len": 0,
+      "expect_bssid": "020304050607"
+    },
+    {
+      "name": "bssid_tkip_fail",
+      "fn": "set_bssid",
+      "tkip_fail": 1,
+      "bssid": "020304050607",
+      "expect_ret": 0
+    },
+    {
+      "name": "bssid_happy_join",
+      "fn": "set_bssid",
+      "bssid": "020304050607",
+      "expect_ret": 1,
+      "expect_join": 1,
+      "expect_assoc_by_bssid": 1,
+      "expect_bssid": "020304050607"
+    },
+    {
+      "name": "bssid_join_fail",
+      "fn": "set_bssid",
+      "do_join_ret": 0,
+      "bssid": "020304050607",
+      "expect_ret": 0,
+      "expect_join": 1
     }
   ]
 }
