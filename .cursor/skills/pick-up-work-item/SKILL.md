@@ -272,10 +272,17 @@ report.
 Autonomous pick-up has **no operator** to answer "should I continue?". During step 4
 the agent **must** either:
 
-1. **Complete the full stack** — every row in the plan table becomes an open PR
-   with green babysit, or
-2. **File follow-up GitHub issue(s)** for every unimplemented plan row before
-   stopping, with parent issue comment + blocker documented
+1. **`stack complete`** — every row in the approved plan table (max **7 PRs** per
+   issue — see [`plan-stacked-prs`](../plan-stacked-prs/SKILL.md#stack-depth-cap-mandatory--read-before-approving-a-plan))
+   becomes an open, linked PR with green babysit, or
+2. **`stack partial — tracked`** — only when [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md#when-partial-stacks-are-allowed-mandatory)
+   documents a **real blocker** (gate, missing infra, reopened dep, human-needed
+   spec, exhausted CI). **Not** because PR1 landed and the agent prefers a tracking
+   issue for PR2…PRn.
+
+If the slice needs **8+ PRs**, split into **multiple GitHub issues at plan time**
+before implementation — do not implement PR1 and file "finish the stack" as a
+follow-up.
 
 **Never** stop after opening some PRs (e.g. 2 of 3) and ask whether to continue,
 or end with an implied "next: implement PR3" and no filed tracker. See
@@ -357,8 +364,9 @@ implement one immediately. Wait for an explicit follow-up or a new pick-up run
 | Open new PRs ready for review (Path B) | Open implementation PRs as drafts |
 | Tag `@toadslop` in every PR description | Omit maintainer notification on new/updated PRs |
 | Babysit new PRs until CI is green (Path B) | Skip babysit after opening a stack |
-| Complete the full planned stack (Path B) | Stop mid-stack and ask whether to continue |
-| File follow-up issue(s) when the stack cannot finish (Path B) | End with "next: implement PRn" and no tracker |
+| Complete the full planned stack (≤7 PRs) in one publish (Path B) | Stop after PR1 and file a "continue stack" issue without §10 blocker |
+| File follow-up issue(s) only for §10 blockers (Path B) | Use follow-up issues to defer PR2…PRn for convenience |
+| Split issues at plan time when 8+ PRs needed | Approve a 10-row plan for one pick-up run |
 | Draft new issues only when allowlist + gap checks pass (Path C) | Draft deep single-lane chains across unrelated C files |
 | Favor wide parallel issue graphs when drafting (Path C) | Chain every new ticket to the previous ID by default |
 | Stack new work on open dependency PR branches (Path B) | Wait for chain-head PRs to merge before implementing dependents |

@@ -250,14 +250,27 @@ before ending the session:
 
 | End state | When |
 |-----------|------|
-| **`stack complete`** | Every row in the plan table has an open PR; babysit passed on each |
-| **`stack partial — tracked`** | A genuine blocker prevents the next PR; remaining rows are filed as follow-up issues (see below) |
-| **Plan revised** | Scope grew past 250 lines or the split changed; return to `plan-stacked-prs`, update the table, then continue implementing or file tracking |
+| **`stack complete`** | Every row in the plan table (≤7 rows per [`plan-stacked-prs`](../plan-stacked-prs/SKILL.md#stack-depth-cap-mandatory--read-before-approving-a-plan)) has an open PR; babysit passed on each |
+| **`stack partial — tracked`** | Only when [§10 blockers](#10-when-you-cannot-finish-the-stack-mandatory-tracking) apply — **not** because the stack feels long |
+| **Plan revised** | Scope grew past 250 lines per layer or the split changed; return to `plan-stacked-prs`, update the table (≤7 rows), then **continue implementing all rows** |
 
-**Forbidden:** Opening PR1 and PR2 then asking "Should I implement PR3?", ending
-with "Next: implement PR3" as a suggestion, or otherwise stopping mid-stack
-without either finishing or filing tracking. Autonomous agents must not defer
-remaining PRs to a hypothetical future confirmation.
+**Forbidden (common agent failure modes):**
+
+- Implementing **PR1 only** (or PR1–2 of N) and filing a GitHub issue to track
+  PR2…PRn **without** a blocker from §10.
+- Ending with "Next: implement PR3" or asking whether to continue.
+- Treating **time**, **token budget**, **slow CI**, or **stack size** (when the
+  approved plan has ≤7 rows) as reasons to defer remaining rows.
+- Publishing a **partial** `gh stack submit` when more plan rows are ready locally.
+
+The approved plan table is a **contract**: if it has three rows, you owe three
+open PRs in one linked stack before the run ends — unless §10 applies.
+
+If you discover mid-implementation that the issue truly needs **8+ PRs**, **stop
+adding rows to this plan**: finish **all current plan rows** first (`stack
+complete`), then split **new** scope into a **separate GitHub issue** (Path C /
+`draft-migration-issues` or `file-issues.sh`) for a **future** pick-up — do not
+use `stack partial — tracked` to dump already-planned rows into a follow-up issue.
 
 **Per-layer loop (default):**
 
@@ -275,8 +288,25 @@ remaining PRs to a hypothetical future confirmation.
 
 ### 10. When you cannot finish the stack (mandatory tracking)
 
-If a blocker (gate failure you cannot fix, missing harness, dependency reopened,
-ambiguous spec, exhausted CI retries) prevents completing **all** remaining plan
+### When partial stacks are allowed (mandatory)
+
+`stack partial — tracked` is **rare**. It is **not** a way to split work across
+sessions when the plan was feasible.
+
+| Valid reason (§10) | Invalid — do **not** file follow-up issues for remaining plan rows |
+|--------------------|---------------------------------------------------------------------|
+| Gate failure you cannot fix after real debugging | "Only did PR1 to get review started" |
+| Missing harness / infra **outside** this issue's scope | Approved plan has 3–7 rows but agent stopped early |
+| Dependency issue reopened or stack base became inaccessible | Session time, cost, or fatigue |
+| Spec ambiguity that needs a **human** decision | Slow or flaky CI (exhaust retries first — see `babysit`) |
+| Exhausted CI retry policy on a **blocking** check | Stack "felt big" while still ≤7 PRs |
+| User **explicitly** halted implementation this session | Convenience tracking issue instead of implementing |
+
+If the slice needs **8+ PRs**, that should have been caught in
+[`plan-stacked-prs`](../plan-stacked-prs/SKILL.md#stack-depth-cap-mandatory--read-before-approving-a-plan)
+— split issues **before** coding, not via `stack partial` after PR1.
+
+When a **valid** blocker prevents completing **all** remaining **already-planned**
 rows:
 
 1. **Do not ask** whether to continue — file tracking and end with a clear report.
@@ -320,9 +350,10 @@ the remainder is non-trivial (copy the per-PR detail from the plan).
 | Situation | Action |
 |-----------|--------|
 | Diff **> 250** lines at size gate | Split scope or return to `plan-stacked-prs` — **never** open an oversized PR |
-| Scope bigger than planned | Revise plan (return to `plan-stacked-prs`), then continue the stack — do not cram |
-| Blocked by missing harness | Implement harness PR first, **or** file follow-up issue(s) + parent comment and end **`stack partial — tracked`** |
-| Gate fails and cannot be fixed | File follow-up issue(s) for remaining rows; end **`stack partial — tracked`** — do not ask to continue |
+| Scope bigger than planned | Revise plan (return to `plan-stacked-prs`); if 8+ PRs needed, **split issues** — then implement **all** rows of the revised plan (≤7) |
+| Blocked by missing harness | Implement harness PR first if in plan; else **§10 blocker** → follow-up issue(s) |
+| Gate fails and cannot be fixed | **§10 only** — follow-up for remaining rows; never stop after PR1 without blocker |
+| Plan has 2–7 rows, no §10 blocker | **Must** `stack complete` — filing a continuation issue is forbidden |
 | Dependency has no accessible code (open issue, no PR) | Return to `select-ready-issue` — true blocker; file follow-up only if mid-stack |
 
 ## Completion report
