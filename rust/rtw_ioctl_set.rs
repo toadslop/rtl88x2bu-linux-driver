@@ -451,14 +451,14 @@ pub unsafe extern "C" fn ioctl_country_leaf_rust(
     cmd_ret: i32,
     cmd_invoked: *mut i32,
 ) -> i32 {
-    if reg.is_null() {
-        return 0;
-    }
     if !cmd_invoked.is_null() {
         *cmd_invoked = 0;
     }
     if country_enabled == 0 {
         return 1;
+    }
+    if reg.is_null() {
+        return 0;
     }
     let reg = &*reg;
     if !regd_from_os(reg, regd_cfg) {
