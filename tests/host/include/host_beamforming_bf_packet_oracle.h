@@ -7,7 +7,7 @@
 #define BF_HOST_SUCCESS 1
 #define BF_HOST_FAIL 0
 #define BF_HOST_CAT_VHT 21
-#define BF_HOST_CAT_HT 0
+#define BF_HOST_CAT_HT 7
 #define BF_HOST_ACT_VHT_BF 0
 #define BF_HOST_ACT_HT_BF 6
 #define BF_HOST_CMD_SET_CSI 7
