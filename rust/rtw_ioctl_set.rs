@@ -13,19 +13,25 @@ use core::ffi::{c_ulong, c_void};
 
 #[cfg(any(rust_ioctl_set_leaf, host_ioctl_max_rate_test))]
 mod max_rate_legacy {
+    /// Must match `NumRates` in `include/rtw_rf.h` (kernel FFI layout).
+    pub const NUM_RATES: usize = 13;
+
     #[repr(C)]
     pub struct MaxRateLegacyIn {
         pub fw_state: u32,
         pub has_sta: u8,
         pub sta_mode: u8,
-        pub ap_rates: [u8; 12],
-        pub sta_rates: [u8; 12],
+        pub ap_rates: [u8; NUM_RATES],
+        pub sta_rates: [u8; NUM_RATES],
         pub sta_rate_len: u8,
     }
 
     const IEEE80211_BASIC_RATE_MASK: u8 = 0x80;
 
     pub fn calc(in_: &MaxRateLegacyIn) -> u16 {
+        if in_.has_sta == 0 {
+            return 0;
+        }
         let mut i = 0usize;
         let mut max_rate: u16 = 0;
         let sta_len = in_.sta_rate_len as usize;
@@ -133,8 +139,8 @@ mod kernel {
             fw_state: 0,
             has_sta: 0,
             sta_mode: 0,
-            ap_rates: [0; 12],
-            sta_rates: [0; 12],
+            ap_rates: [0; super::max_rate_legacy::NUM_RATES],
+            sta_rates: [0; super::max_rate_legacy::NUM_RATES],
             sta_rate_len: 0,
         };
         unsafe { rtw_rust_ioctl_max_rate_legacy_fill(adapter, &mut in_) };
@@ -786,12 +792,12 @@ fn host_mr_chk_fw(fw_state: u32, bit: u32) -> bool {
 fn host_mr_calc_legacy(
     has_sta: i32,
     sta_mode: i32,
-    ap_rates: &[u8; 12],
+    ap_rates: &[u8; max_rate_legacy::NUM_RATES],
     sta_rates: &[u8],
     sta_rate_len: i32,
 ) -> u16 {
     use max_rate_legacy::MaxRateLegacyIn;
-    let mut sta_arr = [0u8; 12];
+    let mut sta_arr = [0u8; max_rate_legacy::NUM_RATES];
     let n = sta_rate_len.max(0) as usize;
     for (i, b) in sta_rates.iter().take(n).enumerate() {
         sta_arr[i] = *b;
@@ -828,9 +834,9 @@ pub unsafe extern "C" fn rtw_get_cur_max_rate_legacy_rust(
     if has_sta == 0 {
         return 0;
     }
-    let ap_arr: [u8; 12] = {
-        let s = core::slice::from_raw_parts(ap_rates, 12);
-        let mut a = [0u8; 12];
+    let ap_arr: [u8; max_rate_legacy::NUM_RATES] = {
+        let s = core::slice::from_raw_parts(ap_rates, max_rate_legacy::NUM_RATES);
+        let mut a = [0u8; max_rate_legacy::NUM_RATES];
         a.copy_from_slice(s);
         a
     };
