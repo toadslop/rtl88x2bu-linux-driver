@@ -11,9 +11,50 @@
 #[cfg(rust_ioctl_set_leaf)]
 use core::ffi::{c_ulong, c_void};
 
+#[cfg(any(rust_ioctl_set_leaf, host_ioctl_max_rate_test))]
+mod max_rate_legacy {
+    #[repr(C)]
+    pub struct MaxRateLegacyIn {
+        pub fw_state: u32,
+        pub has_sta: u8,
+        pub sta_mode: u8,
+        pub ap_rates: [u8; 12],
+        pub sta_rates: [u8; 12],
+        pub sta_rate_len: u8,
+    }
+
+    const IEEE80211_BASIC_RATE_MASK: u8 = 0x80;
+
+    pub fn calc(in_: &MaxRateLegacyIn) -> u16 {
+        let mut i = 0usize;
+        let mut max_rate: u16 = 0;
+        let sta_len = in_.sta_rate_len as usize;
+        while i < in_.ap_rates.len() && in_.ap_rates[i] != 0 && in_.ap_rates[i] != 0xff {
+            let rate = (in_.ap_rates[i] & 0x7f) as u16;
+            if in_.sta_mode != 0 {
+                for j in 0..sta_len {
+                    let sr = in_.sta_rates[j] as u16;
+                    if (rate | IEEE80211_BASIC_RATE_MASK as u16)
+                        == (sr | IEEE80211_BASIC_RATE_MASK as u16)
+                    {
+                        if rate > max_rate {
+                            max_rate = rate;
+                        }
+                        break;
+                    }
+                }
+            } else if rate > max_rate {
+                max_rate = rate;
+            }
+            i += 1;
+        }
+        max_rate * 10 / 2
+    }
+}
+
 #[cfg(rust_ioctl_set_leaf)]
 mod kernel {
-    use super::{c_ulong, c_void};
+    use super::{c_ulong, c_void, max_rate_legacy::MaxRateLegacyIn};
 
     extern "C" {
         fn rtw_rust_ioctl_scan_mode_ptr(adapter: *mut c_void) -> *mut i32;
@@ -81,6 +122,23 @@ mod kernel {
 
     pub unsafe fn sitesurvey_cmd(adapter: *mut c_void, pparm: *mut c_void) -> u8 {
         unsafe { rtw_sitesurvey_cmd(adapter, pparm) }
+    }
+
+    extern "C" {
+        fn rtw_rust_ioctl_max_rate_legacy_fill(adapter: *mut c_void, out: *mut MaxRateLegacyIn);
+    }
+
+    pub unsafe fn max_rate_legacy_kernel(adapter: *mut c_void) -> u16 {
+        let mut in_ = MaxRateLegacyIn {
+            fw_state: 0,
+            has_sta: 0,
+            sta_mode: 0,
+            ap_rates: [0; 12],
+            sta_rates: [0; 12],
+            sta_rate_len: 0,
+        };
+        unsafe { rtw_rust_ioctl_max_rate_legacy_fill(adapter, &mut in_) };
+        super::max_rate_legacy::calc(&in_)
     }
 }
 
@@ -162,6 +220,12 @@ const _SUCCESS: i32 = 1;
 const _FAIL: i32 = 0;
 #[cfg(rust_ioctl_set_leaf)]
 const RTW_CMDF_WAIT_ACK: i32 = 2;
+
+#[cfg(rust_ioctl_set_leaf)]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_get_cur_max_rate_legacy_kernel(adapter: *mut c_void) -> u16 {
+    unsafe { kernel::max_rate_legacy_kernel(adapter) }
+}
 
 const _TRUE: u8 = 1;
 const _FALSE: u8 = 0;
@@ -709,8 +773,6 @@ pub unsafe extern "C" fn rtw_set_802_11_bssid_list_scan_rust(
 }
 
 #[cfg(host_ioctl_max_rate_test)]
-const IEEE80211_BASIC_RATE_MASK_K: u8 = 0x80;
-#[cfg(host_ioctl_max_rate_test)]
 const WIFI_ASOC_STATE_MR: u32 = 1 << 0;
 #[cfg(host_ioctl_max_rate_test)]
 const WIFI_ADHOC_MASTER_STATE_MR: u32 = 1 << 1;
@@ -718,6 +780,31 @@ const WIFI_ADHOC_MASTER_STATE_MR: u32 = 1 << 1;
 #[cfg(host_ioctl_max_rate_test)]
 fn host_mr_chk_fw(fw_state: u32, bit: u32) -> bool {
     (fw_state & bit) != 0
+}
+
+#[cfg(host_ioctl_max_rate_test)]
+fn host_mr_calc_legacy(
+    has_sta: i32,
+    sta_mode: i32,
+    ap_rates: &[u8; 12],
+    sta_rates: &[u8],
+    sta_rate_len: i32,
+) -> u16 {
+    use max_rate_legacy::MaxRateLegacyIn;
+    let mut sta_arr = [0u8; 12];
+    let n = sta_rate_len.max(0) as usize;
+    for (i, b) in sta_rates.iter().take(n).enumerate() {
+        sta_arr[i] = *b;
+    }
+    let in_ = MaxRateLegacyIn {
+        fw_state: 0,
+        has_sta: if has_sta != 0 { 1 } else { 0 },
+        sta_mode: if sta_mode != 0 { 1 } else { 0 },
+        ap_rates: *ap_rates,
+        sta_rates: sta_arr,
+        sta_rate_len: sta_rate_len.max(0) as u8,
+    };
+    max_rate_legacy::calc(&in_)
 }
 
 #[cfg(host_ioctl_max_rate_test)]
@@ -738,34 +825,16 @@ pub unsafe extern "C" fn rtw_get_cur_max_rate_legacy_rust(
     {
         return 0;
     }
-    if has_sta == 0 {
-        return 0;
-    }
-    let ap = core::slice::from_raw_parts(ap_rates, 12);
+    let ap_arr: [u8; 12] = {
+        let s = core::slice::from_raw_parts(ap_rates, 12);
+        let mut a = [0u8; 12];
+        a.copy_from_slice(s);
+        a
+    };
     let sta = if sta_rates.is_null() {
         &[] as &[u8]
     } else {
         core::slice::from_raw_parts(sta_rates, sta_rate_len.max(0) as usize)
     };
-    let mut i = 0usize;
-    let mut max_rate: u16 = 0;
-    while i < ap.len() && ap[i] != 0 && ap[i] != 0xff {
-        let rate = (ap[i] & 0x7f) as u16;
-        if sta_mode != 0 {
-            for &sr in sta {
-                if (rate | IEEE80211_BASIC_RATE_MASK_K as u16)
-                    == ((sr as u16) | IEEE80211_BASIC_RATE_MASK_K as u16)
-                {
-                    if rate > max_rate {
-                        max_rate = rate;
-                    }
-                    break;
-                }
-            }
-        } else if rate > max_rate {
-            max_rate = rate;
-        }
-        i += 1;
-    }
-    max_rate * 10 / 2
+    host_mr_calc_legacy(has_sta, sta_mode, &ap_arr, sta, sta_rate_len)
 }

@@ -780,6 +780,9 @@ exit:
 *
 * Return 0 or 100Kbps
 */
+#if defined(CONFIG_RUST) && !defined(HOST_IOCTL_MAX_RATE_TEST)
+u16 rtw_get_cur_max_rate_legacy_kernel(_adapter *adapter);
+#endif
 u16 rtw_get_cur_max_rate(_adapter *adapter)
 {
 	int j;
@@ -823,7 +826,10 @@ u16 rtw_get_cur_max_rate(_adapter *adapter)
 	else
 #endif /* CONFIG_80211N_HT */
 	{
-		/*station mode show :station && ap support rate; softap :show ap support rate*/	
+#if defined(CONFIG_RUST) && !defined(HOST_IOCTL_MAX_RATE_TEST)
+		max_rate = rtw_get_cur_max_rate_legacy_kernel(adapter);
+#else
+		/*station mode show :station && ap support rate; softap :show ap support rate*/
 		if (check_fwstate(pmlmepriv, WIFI_STATION_STATE) == _TRUE)
 			get_rate_set(adapter, sta_bssrate, &sta_bssrate_len);/*get sta rate and length*/
 
@@ -845,7 +851,7 @@ u16 rtw_get_cur_max_rate(_adapter *adapter)
 					}
 				}
 			} else {
-			
+
 				if (rate > max_rate)
 					max_rate = rate;
 
@@ -854,6 +860,7 @@ u16 rtw_get_cur_max_rate(_adapter *adapter)
 		}
 
 		max_rate = max_rate * 10 / 2;
+#endif /* CONFIG_RUST legacy kernel */
 	}
 	return max_rate;
 }
@@ -901,6 +908,36 @@ void rtw_rust_ioctl_enter_critical_bh(void *lock, _irqL *irqL)
 void rtw_rust_ioctl_exit_critical_bh(void *lock, _irqL *irqL)
 {
 	_exit_critical_bh((_lock *)lock, irqL);
+}
+
+struct rtw_rust_max_rate_legacy_in {
+	u32 fw_state;
+	u8 has_sta;
+	u8 sta_mode;
+	u8 ap_rates[NumRates];
+	u8 sta_rates[NumRates];
+	u8 sta_rate_len;
+};
+
+void rtw_rust_ioctl_max_rate_legacy_fill(_adapter *adapter,
+					 struct rtw_rust_max_rate_legacy_in *out)
+{
+	struct mlme_priv *pmlmepriv = &adapter->mlmepriv;
+	WLAN_BSSID_EX *pcur_bss = &pmlmepriv->cur_network.network;
+	u8 sta_bssrate[NumRates];
+	int sta_bssrate_len = 0;
+	int i;
+
+	_rtw_memset(out, 0, sizeof(*out));
+	out->has_sta = 1;
+	out->sta_mode = check_fwstate(pmlmepriv, WIFI_STATION_STATE) == _TRUE ? 1 : 0;
+	for (i = 0; i < NumRates; i++)
+		out->ap_rates[i] = pcur_bss->SupportedRates[i];
+	if (out->sta_mode)
+		get_rate_set(adapter, sta_bssrate, &sta_bssrate_len);
+	for (i = 0; i < NumRates; i++)
+		out->sta_rates[i] = (i < sta_bssrate_len) ? sta_bssrate[i] : 0;
+	out->sta_rate_len = (u8)sta_bssrate_len;
 }
 #endif /* CONFIG_RUST && !HOST_IOCTL_SCAN_CHANNEL_TEST */
 
