@@ -3,5 +3,16 @@ test_ioctl_validate_rust
 test_ioctl_scan_channel
 test_ioctl_scan_channel_rust
 test_ioctl_connect
+test_ioctl_connect_rust
+test_ioctl_regd
+test_ioctl_regd_rust
+test_ioctl_bssid_scan
+test_ioctl_bssid_scan_rust
+test_ioctl_max_rate
+test_ioctl_max_rate_rust
 librust_ioctl_validate.a
 librust_ioctl_scan_channel.a
+librust_ioctl_connect.a
+librust_ioctl_regd.a
+librust_ioctl_bssid_scan.a
+librust_ioctl_max_rate.a
