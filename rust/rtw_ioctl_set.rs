@@ -707,3 +707,65 @@ pub unsafe extern "C" fn rtw_set_802_11_bssid_list_scan_rust(
     a.mlmepriv.lock_depth -= 1;
     res
 }
+
+#[cfg(host_ioctl_max_rate_test)]
+const IEEE80211_BASIC_RATE_MASK_K: u8 = 0x80;
+#[cfg(host_ioctl_max_rate_test)]
+const WIFI_ASOC_STATE_MR: u32 = 1 << 0;
+#[cfg(host_ioctl_max_rate_test)]
+const WIFI_ADHOC_MASTER_STATE_MR: u32 = 1 << 1;
+
+#[cfg(host_ioctl_max_rate_test)]
+fn host_mr_chk_fw(fw_state: u32, bit: u32) -> bool {
+    (fw_state & bit) != 0
+}
+
+#[cfg(host_ioctl_max_rate_test)]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_get_cur_max_rate_legacy_rust(
+    fw_state: u32,
+    has_sta: i32,
+    sta_mode: i32,
+    ap_rates: *const u8,
+    sta_rates: *const u8,
+    sta_rate_len: i32,
+) -> u16 {
+    if ap_rates.is_null() {
+        return 0;
+    }
+    if !host_mr_chk_fw(fw_state, WIFI_ASOC_STATE_MR)
+        && !host_mr_chk_fw(fw_state, WIFI_ADHOC_MASTER_STATE_MR)
+    {
+        return 0;
+    }
+    if has_sta == 0 {
+        return 0;
+    }
+    let ap = core::slice::from_raw_parts(ap_rates, 12);
+    let sta = if sta_rates.is_null() {
+        &[] as &[u8]
+    } else {
+        core::slice::from_raw_parts(sta_rates, sta_rate_len.max(0) as usize)
+    };
+    let mut i = 0usize;
+    let mut max_rate: u16 = 0;
+    while i < ap.len() && ap[i] != 0 && ap[i] != 0xff {
+        let rate = (ap[i] & 0x7f) as u16;
+        if sta_mode != 0 {
+            for &sr in sta {
+                if (rate | IEEE80211_BASIC_RATE_MASK_K as u16)
+                    == ((sr as u16) | IEEE80211_BASIC_RATE_MASK_K as u16)
+                {
+                    if rate > max_rate {
+                        max_rate = rate;
+                    }
+                    break;
+                }
+            }
+        } else if rate > max_rate {
+            max_rate = rate;
+        }
+        i += 1;
+    }
+    max_rate * 10 / 2
+}
