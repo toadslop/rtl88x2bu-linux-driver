@@ -10,6 +10,7 @@ test_ioctl_bssid_scan
 test_ioctl_bssid_scan_rust
 test_ioctl_max_rate
 test_ioctl_max_rate_rust
+test_ioctl_do_join
 librust_ioctl_validate.a
 librust_ioctl_scan_channel.a
 librust_ioctl_connect.a
