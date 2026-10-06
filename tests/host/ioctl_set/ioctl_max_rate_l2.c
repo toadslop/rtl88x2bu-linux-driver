@@ -9,7 +9,7 @@
 #define _TRUE 1
 #define _FALSE 0
 #define IEEE80211_BASIC_RATE_MASK 0x80
-#define NumRates 12
+#define NumRates 13
 
 typedef unsigned char u8;
 typedef unsigned short u16;

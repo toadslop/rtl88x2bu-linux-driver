@@ -13,4 +13,5 @@ drop rtw_validate_ssid_rust
 drop rtw_set_scan_mode_rust
 drop rtw_set_band_rust
 drop rtw_add_wep_privacy_rust
-drop rtw_auth_mode_map_rust
+drop rtw_get_cur_max_rate_legacy_rust
+drop rtw_get_cur_max_rate_legacy_kernel
