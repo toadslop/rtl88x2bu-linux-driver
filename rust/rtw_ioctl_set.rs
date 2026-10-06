@@ -133,7 +133,6 @@ mod kernel {
 
     extern "C" {
         fn rtw_rust_ioctl_max_rate_legacy_fill(adapter: *mut c_void, out: *mut MaxRateLegacyIn);
-        fn rtw_rust_ioctl_disassociate_if_assoc(adapter: *mut c_void);
     }
 
     pub unsafe fn max_rate_legacy_kernel(adapter: *mut c_void) -> u16 {
