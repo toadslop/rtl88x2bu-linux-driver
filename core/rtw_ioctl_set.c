@@ -546,6 +546,7 @@ u8 rtw_set_802_11_infrastructure_mode(_adapter *padapter,
 }
 
 
+#if !defined(CONFIG_RUST)
 u8 rtw_set_802_11_disassociate(_adapter *padapter)
 {
 	_irqL irqL;
@@ -569,6 +570,7 @@ u8 rtw_set_802_11_disassociate(_adapter *padapter)
 
 	return _TRUE;
 }
+#endif /* !CONFIG_RUST */
 
 #if 1
 #if !defined(CONFIG_RUST) || defined(HOST_IOCTL_BSSID_SCAN_TEST)
@@ -938,6 +940,19 @@ void rtw_rust_ioctl_max_rate_legacy_fill(_adapter *adapter,
 	for (i = 0; i < NumRates; i++)
 		out->sta_rates[i] = (i < sta_bssrate_len) ? sta_bssrate[i] : 0;
 	out->sta_rate_len = (u8)sta_bssrate_len;
+}
+
+void rtw_rust_ioctl_disassociate_if_assoc(_adapter *padapter)
+{
+	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+
+	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE) {
+		rtw_disassoc_cmd(padapter, 0, 0);
+		rtw_indicate_disconnect(padapter, 0, _FALSE);
+		rtw_free_assoc_resources_cmd(padapter, _TRUE, 0);
+		if (_FAIL == rtw_pwr_wakeup(padapter))
+			RTW_INFO("%s(): rtw_pwr_wakeup fail !!!\n", __FUNCTION__);
+	}
 }
 #endif /* CONFIG_RUST && !HOST_IOCTL_SCAN_CHANNEL_TEST */
 

@@ -15,3 +15,5 @@ drop rtw_set_band_rust
 drop rtw_add_wep_privacy_rust
 drop rtw_get_cur_max_rate_legacy_rust
 drop rtw_get_cur_max_rate_legacy_kernel
+drop rtw_auth_mode_map_rust
+drop rtw_rust_ioctl_disassociate_if_assoc
