@@ -847,3 +847,125 @@ pub unsafe extern "C" fn rtw_get_cur_max_rate_legacy_rust(
     };
     host_mr_calc_legacy(has_sta, sta_mode, &ap_arr, sta, sta_rate_len)
 }
+
+#[cfg(host_ioctl_do_join_test)]
+const DO_JOIN_WIFI_ADHOC_STATE: u32 = 0x0000_0020;
+#[cfg(host_ioctl_do_join_test)]
+const DO_JOIN_WIFI_ADHOC_MASTER_STATE: u32 = 0x0000_0040;
+#[cfg(host_ioctl_do_join_test)]
+const DO_JOIN_WIFI_UNDER_LINKING: u32 = 0x0000_0080;
+#[cfg(host_ioctl_do_join_test)]
+const DO_JOIN_SS_DENY_BUSY_TRAFFIC: u8 = 12;
+#[cfg(host_ioctl_do_join_test)]
+const DO_JOIN_SS_ALLOW: u8 = 13;
+#[cfg(host_ioctl_do_join_test)]
+const DO_JOIN_MAX_JOIN_TIMEOUT: u32 = 6500;
+
+#[cfg(host_ioctl_do_join_test)]
+#[repr(C)]
+pub struct HostDoJoinSsid {
+    pub SsidLength: u32,
+    pub Ssid: [u8; 32],
+}
+
+#[cfg(host_ioctl_do_join_test)]
+#[repr(C)]
+pub struct HostDoJoinLinkDetect {
+    pub bBusyTraffic: u8,
+}
+
+#[cfg(host_ioctl_do_join_test)]
+#[repr(C)]
+pub struct HostDoJoinMlme {
+    pub fw_state: u32,
+    pub to_join: u8,
+    pub assoc_ch: u16,
+    pub assoc_ssid: HostDoJoinSsid,
+    pub join_res: i8,
+    pub scanned_lock_depth: i32,
+    pub queue_empty: u8,
+    pub LinkDetectInfo: HostDoJoinLinkDetect,
+    pub assoc_timer_ms: u32,
+}
+
+#[cfg(host_ioctl_do_join_test)]
+#[repr(C)]
+pub struct HostDoJoinAdapter {
+    pub mlmepriv: HostDoJoinMlme,
+    pub to_roam: i8,
+    pub ssc_chk: u8,
+    pub sitesurvey_ret: u8,
+    pub select_ret: i8,
+    pub create_ibss_ret: u8,
+    pub ss_calls: u32,
+    pub select_calls: u32,
+    pub create_ibss_calls: u32,
+}
+
+#[cfg(host_ioctl_do_join_test)]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_do_join_rust(p: *mut HostDoJoinAdapter) -> u8 {
+    if p.is_null() {
+        return _FALSE;
+    }
+    let a = &mut *p;
+    let m = &mut a.mlmepriv;
+
+    m.scanned_lock_depth += 1;
+    m.join_res = -2;
+    m.fw_state |= DO_JOIN_WIFI_UNDER_LINKING;
+    m.to_join = _TRUE;
+
+    if m.queue_empty != 0 {
+        m.scanned_lock_depth -= 1;
+        m.fw_state &= !DO_JOIN_WIFI_UNDER_LINKING;
+        if m.LinkDetectInfo.bBusyTraffic == 0 || a.to_roam > 0 {
+            if a.ssc_chk == DO_JOIN_SS_ALLOW || a.ssc_chk == DO_JOIN_SS_DENY_BUSY_TRAFFIC {
+                a.ss_calls += 1;
+                let ret = a.sitesurvey_ret;
+                if ret != _TRUE {
+                    m.to_join = _FALSE;
+                }
+                return ret;
+            }
+            m.to_join = _FALSE;
+            return _FALSE;
+        }
+        m.to_join = _FALSE;
+        return _FALSE;
+    }
+
+    m.scanned_lock_depth -= 1;
+    a.select_calls += 1;
+    if a.select_ret == 1 {
+        m.to_join = _FALSE;
+        m.assoc_timer_ms = DO_JOIN_MAX_JOIN_TIMEOUT;
+        return _TRUE;
+    }
+
+    if (m.fw_state & DO_JOIN_WIFI_ADHOC_STATE) != 0 {
+        m.fw_state = DO_JOIN_WIFI_ADHOC_MASTER_STATE;
+        a.create_ibss_calls += 1;
+        if a.create_ibss_ret != _TRUE {
+            return _FALSE;
+        }
+        m.to_join = _FALSE;
+        return _TRUE;
+    }
+
+    m.fw_state &= !DO_JOIN_WIFI_UNDER_LINKING;
+    if m.LinkDetectInfo.bBusyTraffic == 0 || a.to_roam > 0 {
+        if a.ssc_chk == DO_JOIN_SS_ALLOW || a.ssc_chk == DO_JOIN_SS_DENY_BUSY_TRAFFIC {
+            a.ss_calls += 1;
+            let ret = a.sitesurvey_ret;
+            if ret != _TRUE {
+                m.to_join = _FALSE;
+            }
+            return ret;
+        }
+        m.to_join = _FALSE;
+        return _FALSE;
+    }
+    m.to_join = _FALSE;
+    _FALSE
+}
