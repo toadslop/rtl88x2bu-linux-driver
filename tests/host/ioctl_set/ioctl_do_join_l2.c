@@ -8,6 +8,8 @@
 #define _SUCCESS 1
 #define _FAIL 0
 #define _TRUE 1
+#define WIFI_ADHOC_STATE 0x00000020
+#define WIFI_ADHOC_MASTER_STATE 0x00000040
 #define WIFI_UNDER_LINKING 0x00000080
 #define SS_DENY_BUSY_TRAFFIC 12
 #define SS_ALLOW 13
@@ -36,7 +38,8 @@ struct adapter {
 	s8 to_roam;
 	u8 ssc_chk, sitesurvey_ret;
 	s8 select_ret;
-	u32 ss_calls, select_calls;
+	u8 create_ibss_ret;
+	u32 ss_calls, select_calls, create_ibss_calls;
 };
 
 #ifdef HOST_IOCTL_DO_JOIN_RUST
@@ -94,6 +97,18 @@ static u8 DO_JOIN(struct adapter *a)
 		return _SUCCESS;
 	}
 
+	if (m->fw_state & WIFI_ADHOC_STATE) {
+		/* CONFIG_AP_MODE=y: IBSS master path (core/rtw_ioctl_set.c), not resurvey. */
+		m->fw_state = WIFI_ADHOC_MASTER_STATE;
+		a->create_ibss_calls++;
+		if (a->create_ibss_ret != _SUCCESS) {
+			ret = _FAIL;
+			return ret;
+		}
+		m->to_join = 0;
+		return _SUCCESS;
+	}
+
 	CLR_FW(m, WIFI_UNDER_LINKING);
 	if (!m->LinkDetectInfo.bBusyTraffic || a->to_roam > 0) {
 		if (a->ssc_chk == SS_ALLOW || a->ssc_chk == SS_DENY_BUSY_TRAFFIC) {
@@ -116,8 +131,10 @@ static u8 DO_JOIN(struct adapter *a)
 struct vector {
 	char name[64];
 	int queue_empty, busy_traffic, to_roam, ssc_chk, sitesurvey_ret, select_ret;
-	int assoc_ch, ssid_len, expect_ret, expect_to_join, expect_ss_calls;
-	int expect_select_calls, expect_join_res, expect_fw_linking, expect_timer_ms;
+	int adhoc_state, create_ibss_ret, assoc_ch, ssid_len, expect_ret, expect_to_join;
+	int expect_ss_calls, expect_select_calls, expect_create_ibss_calls;
+	int expect_join_res, expect_fw_linking, expect_fw_adhoc_master, expect_timer_ms;
+	int expect_lock_depth;
 };
 
 static int parse_vector_object(const char *obj, size_t len, void *vv)
@@ -140,6 +157,11 @@ static int parse_vector_object(const char *obj, size_t len, void *vv)
 	for (i = 0; i < sizeof(k) / sizeof(k[0]); i++)
 		if (host_json_parse_int_in(obj, len, k[i], p[i]))
 			return -1;
+	host_json_parse_int_in(obj, len, "adhoc_state", &v->adhoc_state);
+	host_json_parse_int_in(obj, len, "create_ibss_ret", &v->create_ibss_ret);
+	host_json_parse_int_in(obj, len, "expect_create_ibss_calls", &v->expect_create_ibss_calls);
+	host_json_parse_int_in(obj, len, "expect_fw_adhoc_master", &v->expect_fw_adhoc_master);
+	host_json_parse_int_in(obj, len, "expect_lock_depth", &v->expect_lock_depth);
 	host_json_parse_int_in(obj, len, "expect_timer_ms", &v->expect_timer_ms);
 	return 0;
 }
@@ -157,15 +179,22 @@ static int run_vector(const struct vector *v)
 	a.ssc_chk = (u8)v->ssc_chk;
 	a.sitesurvey_ret = (u8)v->sitesurvey_ret;
 	a.select_ret = (s8)v->select_ret;
+	a.create_ibss_ret = (u8)(v->create_ibss_ret ? v->create_ibss_ret : _SUCCESS);
+	if (v->adhoc_state)
+		a.mlmepriv.fw_state |= WIFI_ADHOC_STATE;
 
 	u8 got = DO_JOIN(&a);
 
 	if (got != (u8)v->expect_ret || a.mlmepriv.to_join != (u8)v->expect_to_join ||
 	    (int)a.ss_calls != v->expect_ss_calls ||
 	    (int)a.select_calls != v->expect_select_calls ||
+	    (int)a.create_ibss_calls != v->expect_create_ibss_calls ||
 	    a.mlmepriv.join_res != (s8)v->expect_join_res ||
 	    (((a.mlmepriv.fw_state & WIFI_UNDER_LINKING) != 0) !=
 	     (v->expect_fw_linking != 0)) ||
+	    (((a.mlmepriv.fw_state & WIFI_ADHOC_MASTER_STATE) != 0) !=
+	     (v->expect_fw_adhoc_master != 0)) ||
+	    a.mlmepriv.scanned_lock_depth != v->expect_lock_depth ||
 	    (v->expect_timer_ms >= 0 &&
 	     (int)a.mlmepriv.assoc_timer_ms != v->expect_timer_ms)) {
 		fprintf(stderr, "FAIL %s\n", v->name);
