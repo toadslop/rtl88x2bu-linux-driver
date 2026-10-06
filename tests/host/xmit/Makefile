@@ -31,7 +31,7 @@ UPDATE_ATTRIB_MAIN_CFLAGS := $(CFLAGS) -DHOST_XMIT_UPDATE_ATTRIB_MAIN_TEST -DCON
 .PHONY: all test test-c test-rust test-qos test-sctx test-update-attrib test-update-attrib-rust \
 	test-update-attrib-main test-sec-decide-kern clean
 
-all: test test-qos test-sctx test-update-attrib test-update-attrib-rust test-update-attrib-main
+all: test test-qos test-sctx test-update-attrib test-update-attrib-rust test-update-attrib-main test-sec-decide-kern
 
 test: test-c test-rust
 
