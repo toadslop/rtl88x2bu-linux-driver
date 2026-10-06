@@ -120,3 +120,10 @@ u8 rtw_set_802_11_bssid_list_scan(struct adapter *adapter, struct sitesurvey_par
 
 	return res;
 }
+
+u8 rtw_set_802_11_disassociate(struct adapter *adapter)
+{
+	adapter->mlmepriv.lock_depth++;
+	adapter->mlmepriv.lock_depth--;
+	return _SUCCESS;
+}

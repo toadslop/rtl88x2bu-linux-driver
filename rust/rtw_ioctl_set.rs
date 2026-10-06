@@ -79,6 +79,7 @@ mod kernel {
         fn rtw_rust_ioctl_enter_critical_bh(lock: *mut c_void, irqL: *mut c_ulong);
         fn rtw_rust_ioctl_exit_critical_bh(lock: *mut c_void, irqL: *mut c_ulong);
         fn rtw_sitesurvey_cmd(adapter: *mut c_void, pparm: *mut c_void) -> u8;
+        fn rtw_rust_ioctl_disassociate_if_assoc(adapter: *mut c_void);
     }
 
     pub unsafe fn scan_mode_ptr(adapter: *mut c_void) -> *mut i32 {
@@ -132,6 +133,7 @@ mod kernel {
 
     extern "C" {
         fn rtw_rust_ioctl_max_rate_legacy_fill(adapter: *mut c_void, out: *mut MaxRateLegacyIn);
+        fn rtw_rust_ioctl_disassociate_if_assoc(adapter: *mut c_void);
     }
 
     pub unsafe fn max_rate_legacy_kernel(adapter: *mut c_void) -> u16 {
@@ -145,6 +147,10 @@ mod kernel {
         };
         unsafe { rtw_rust_ioctl_max_rate_legacy_fill(adapter, &mut in_) };
         super::max_rate_legacy::calc(&in_)
+    }
+
+    pub unsafe fn disassociate_if_assoc(adapter: *mut c_void) {
+        unsafe { rtw_rust_ioctl_disassociate_if_assoc(adapter) }
     }
 }
 
@@ -202,6 +208,19 @@ pub unsafe extern "C" fn rtw_set_country(adapter: *mut c_void, country_code: *co
         return _SUCCESS;
     }
     unsafe { kernel::set_country_cmd(adapter, RTW_CMDF_WAIT_ACK, country_code, 1) as i32 }
+}
+
+#[cfg(rust_ioctl_set_leaf)]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_set_802_11_disassociate(adapter: *mut c_void) -> u8 {
+    let mut irqL: c_ulong = 0;
+    let lock = unsafe { kernel::mlme_lock_ptr(adapter) };
+    unsafe {
+        kernel::enter_critical_bh(lock, &mut irqL);
+        kernel::disassociate_if_assoc(adapter);
+        kernel::exit_critical_bh(lock, &mut irqL);
+    }
+    _TRUE
 }
 
 #[cfg(rust_ioctl_set_leaf)]
