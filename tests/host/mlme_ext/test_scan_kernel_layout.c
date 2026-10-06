@@ -129,6 +129,21 @@ u8 rtw_rust_scan_chset_flags(void *a, int idx) { (void)a; (void)idx; return 0; }
 u8 rtw_rust_scan_max_chan_nums(void *a) { (void)a; return 0; }
 u8 rtw_rust_scan_chset_channel_num(void *a, int idx) { (void)a; (void)idx; return 0; }
 u8 rtw_rust_scan_regsty_wifi_spec(void *a) { (void)a; return 0; }
+void rtw_rust_scan_chset_clear_hidden_bss(void *a, int idx) { (void)a; (void)idx; }
+
+/* sitesurvey_res_reset FFI (same crate; not exercised by this test). */
+void *rtw_rust_ss_res(void *a) { (void)a; return NULL; }
+void rtw_rust_ss_clear_scan_counters(void *ss) { (void)ss; }
+u8 rtw_rust_ss_copy_ssids_from_parm(void *ss, void *parm) { (void)ss; (void)parm; return 0; }
+void *rtw_rust_ss_ch(void *ss) { (void)ss; return NULL; }
+u8 *rtw_rust_ss_ch_num_ptr(void *ss) { (void)ss; return NULL; }
+void rtw_rust_ss_set_from_parm_tail(void *ss, void *parm) { (void)ss; (void)parm; }
+u8 rtw_rust_parm_ch_num(void *parm) { (void)parm; return 0; }
+void *rtw_rust_parm_ch(void *parm) { (void)parm; return NULL; }
+int rtw_rust_parm_acs(void *parm) { (void)parm; return 0; }
+int rtw_rust_parm_reason(void *parm) { (void)parm; return 0; }
+u32 rtw_rust_scan_ch_amount(void) { return 0; }
+void rtw_rust_scan_clear_all_hidden_bss(void *a) { (void)a; }
 
 static int fail(const char *msg)
 {
