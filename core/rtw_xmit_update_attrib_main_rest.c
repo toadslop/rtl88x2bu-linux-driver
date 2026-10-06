@@ -92,6 +92,101 @@ void update_attrib_txbf_info(_adapter *padapter, struct pkt_attrib *pattrib,
 			     struct sta_info *psta);
 #endif
 
+enum eap_type rtw_xmit_update_attrib_classify_l4(_adapter *padapter, struct pkt_attrib *pattrib,
+						 struct pkt_file *pktfile, struct sta_info *psta,
+						 struct ethhdr *etherhdr)
+{
+	enum eap_type eapol_type = NON_EAPOL;
+
+	pattrib->pktlen = pktfile->pkt_len;
+
+	/* TODO: 802.1Q VLAN header */
+	/* TODO: IPV6 */
+
+	if (ETH_P_IP == pattrib->ether_type) {
+		u8 ip[20];
+
+		_rtw_pktfile_read(pktfile, ip, 20);
+
+		if (GET_IPV4_IHL(ip) * 4 > 20)
+			_rtw_pktfile_read(pktfile, NULL, GET_IPV4_IHL(ip) - 20);
+
+		pattrib->icmp_pkt = 0;
+		pattrib->dhcp_pkt = 0;
+		pattrib->hipriority_pkt = 0;
+
+		if (GET_IPV4_PROTOCOL(ip) == 0x01) { /* ICMP */
+			pattrib->icmp_pkt = 1;
+			DBG_COUNTER(padapter->tx_logs.core_tx_upd_attrib_icmp);
+
+		} else if (GET_IPV4_PROTOCOL(ip) == 0x11) { /* UDP */
+			u8 udp[24];
+
+			_rtw_pktfile_read(pktfile, udp, 24);
+
+			if ((GET_UDP_SRC(udp) == 68 && GET_UDP_DST(udp) == 67)
+				|| (GET_UDP_SRC(udp) == 67 && GET_UDP_DST(udp) == 68)
+			) {
+				/* 67 : UDP BOOTP server, 68 : UDP BOOTP client */
+				if (pattrib->pktlen > 282) { /* MINIMUM_DHCP_PACKET_SIZE */
+					pattrib->dhcp_pkt = 1;
+					DBG_COUNTER(padapter->tx_logs.core_tx_upd_attrib_dhcp);
+					if (0)
+						RTW_INFO("send DHCP packet\n");
+				}
+			}
+
+			/* WaveAgent packet, increase priority so that the system can read data in time */
+			if (((GET_UDP_SIG1(udp) == 0xcc) || (GET_UDP_SIG1(udp) == 0xdd)) &&
+				(GET_UDP_SIG2(udp) == 0xe2)) {
+				pattrib->hipriority_pkt = 1;
+			}
+
+		} else if (GET_IPV4_PROTOCOL(ip) == 0x06 /* TCP */
+			&& rtw_st_ctl_chk_reg_s_proto(&psta->st_ctl, 0x06) == _TRUE
+		) {
+			u8 tcp[20];
+
+			_rtw_pktfile_read(pktfile, tcp, 20);
+
+			if (rtw_st_ctl_chk_reg_rule(&psta->st_ctl, padapter, IPV4_SRC(ip), TCP_SRC(tcp), IPV4_DST(ip), TCP_DST(tcp)) == _TRUE) {
+				if (GET_TCP_SYN(tcp) && GET_TCP_ACK(tcp)) {
+					session_tracker_add_cmd(padapter, psta
+						, IPV4_SRC(ip), TCP_SRC(tcp)
+						, IPV4_SRC(ip), TCP_DST(tcp));
+					if (DBG_SESSION_TRACKER)
+						RTW_INFO(FUNC_ADPT_FMT" local:"IP_FMT":"PORT_FMT", remote:"IP_FMT":"PORT_FMT" SYN-ACK\n"
+							, FUNC_ADPT_ARG(padapter)
+							, IP_ARG(IPV4_SRC(ip)), PORT_ARG(TCP_SRC(tcp))
+							, IP_ARG(IPV4_DST(ip)), PORT_ARG(TCP_DST(tcp)));
+				}
+				if (GET_TCP_FIN(tcp)) {
+					session_tracker_del_cmd(padapter, psta
+						, IPV4_SRC(ip), TCP_SRC(tcp)
+						, IPV4_SRC(ip), TCP_DST(tcp));
+					if (DBG_SESSION_TRACKER)
+						RTW_INFO(FUNC_ADPT_FMT" local:"IP_FMT":"PORT_FMT", remote:"IP_FMT":"PORT_FMT" FIN\n"
+							, FUNC_ADPT_ARG(padapter)
+							, IP_ARG(IPV4_SRC(ip)), PORT_ARG(TCP_SRC(tcp))
+							, IP_ARG(IPV4_DST(ip)), PORT_ARG(TCP_DST(tcp)));
+				}
+			}
+		}
+
+	} else if (0x888e == pattrib->ether_type)
+		eapol_type = parsing_eapol_packet(padapter, pktfile->cur_addr, psta, 1);
+#if defined (DBG_ARP_DUMP) || defined (DBG_IP_R_MONITOR)
+	else if (pattrib->ether_type == ETH_P_ARP) {
+		u8 arp[28] = {0};
+
+		_rtw_pktfile_read(pktfile, arp, 28);
+		dump_arp_pkt(RTW_DBGDUMP, etherhdr->h_dest, etherhdr->h_source, arp, 1);
+	}
+#endif
+
+	return eapol_type;
+}
+
 s32 rtw_xmit_update_attrib_post_l4(_adapter *padapter, _pkt *pkt,
 				   struct pkt_attrib *pattrib, struct sta_info *psta,
 				   struct mlme_priv *pmlmepriv, struct qos_priv *pqospriv,
