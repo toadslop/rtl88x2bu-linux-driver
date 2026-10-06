@@ -1,0 +1,44 @@
+{
+  "vectors": [
+    {
+      "name": "not_associated",
+      "fw_state": 0,
+      "has_sta": 1,
+      "sta_mode": 1,
+      "ap_rates": "130,4,11,22,255",
+      "sta_rates": "130,4,11",
+      "sta_rate_len": 3,
+      "expect_rate": 0
+    },
+    {
+      "name": "no_sta",
+      "fw_state": 1,
+      "has_sta": 0,
+      "sta_mode": 1,
+      "ap_rates": "130,4,11,22,255",
+      "sta_rates": "130,4",
+      "sta_rate_len": 2,
+      "expect_rate": 0
+    },
+    {
+      "name": "sta_intersect_11mbps",
+      "fw_state": 1,
+      "has_sta": 1,
+      "sta_mode": 1,
+      "ap_rates": "130,4,11,22,255",
+      "sta_rates": "130,4,11",
+      "sta_rate_len": 3,
+      "expect_rate": 55
+    },
+    {
+      "name": "softap_max_ap_rate",
+      "fw_state": 3,
+      "has_sta": 1,
+      "sta_mode": 0,
+      "ap_rates": "130,4,11,22,255",
+      "sta_rates": "",
+      "sta_rate_len": 0,
+      "expect_rate": 110
+    }
+  ]
+}
