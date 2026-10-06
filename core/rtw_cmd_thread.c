@@ -52,8 +52,6 @@ void rtw_stop_cmd_thread(_adapter *adapter)
 
 #endif /* !CONFIG_RUST || HOST_CMD_THREAD_TEST || !CONFIG_RUST_CMD_THREAD */
 
-#if !defined(CONFIG_RUST) || defined(HOST_CMD_THREAD_TEST) || !defined(CONFIG_RUST_CMD_THREAD_LOOP)
-
 #ifdef HOST_CMD_THREAD_TEST
 
 thread_return rtw_cmd_thread(thread_context context)
@@ -137,191 +135,192 @@ int rtw_cmd_filter(struct cmd_priv *pcmdpriv, struct cmd_obj *cmd_obj);
 
 #define RTW_WLANCMDS_NUM ((unsigned int)CMD_ID_MAX)
 
-thread_return rtw_cmd_thread(thread_context context)
+#define RTW_RUST_CMD_TH_BREAK 0
+#define RTW_RUST_CMD_TH_OUTER 1
+#define RTW_RUST_CMD_TH_INNER 2
+
+void rtw_rust_cmd_thread_start(PADAPTER padapter)
+{
+	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+
+	thread_enter("RTW_CMD_THREAD");
+	ATOMIC_SET(&(pcmdpriv->cmdthd_running), _TRUE);
+	_rtw_up_sema(&pcmdpriv->start_cmdthread_sema);
+}
+
+int rtw_rust_cmd_thread_wait_event(PADAPTER padapter)
+{
+	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+	_irqL irqL;
+
+	if (_rtw_down_sema(&pcmdpriv->cmd_queue_sema) == _FAIL) {
+		RTW_PRINT(FUNC_ADPT_FMT" _rtw_down_sema(&pcmdpriv->cmd_queue_sema) return _FAIL, break\n", FUNC_ADPT_ARG(padapter));
+		return RTW_RUST_CMD_TH_BREAK;
+	}
+
+	if (RTW_CANNOT_RUN(padapter)) {
+		RTW_DBG(FUNC_ADPT_FMT "- bDriverStopped(%s) bSurpriseRemoved(%s)\n",
+			FUNC_ADPT_ARG(padapter),
+			rtw_is_drv_stopped(padapter) ? "True" : "False",
+			rtw_is_surprise_removed(padapter) ? "True" : "False");
+		return RTW_RUST_CMD_TH_BREAK;
+	}
+
+	_enter_critical(&pcmdpriv->cmd_queue.lock, &irqL);
+	if (rtw_is_list_empty(&(pcmdpriv->cmd_queue.queue))) {
+		_exit_critical(&pcmdpriv->cmd_queue.lock, &irqL);
+		return RTW_RUST_CMD_TH_OUTER;
+	}
+	_exit_critical(&pcmdpriv->cmd_queue.lock, &irqL);
+
+	return RTW_RUST_CMD_TH_INNER;
+}
+
+int rtw_rust_cmd_thread_once(PADAPTER padapter)
 {
 	u8 ret;
 	struct cmd_obj *pcmd;
-	u8 *pcmdbuf, *prspbuf;
+	u8 *pcmdbuf;
 	systime cmd_start_time;
 	u32 cmd_process_time;
 	u8(*cmd_hdl)(_adapter *padapter, u8 *pbuf);
 	void (*pcmd_callback)(_adapter *dev, struct cmd_obj *pcmd);
-	PADAPTER padapter = (PADAPTER)context;
-	struct cmd_priv *pcmdpriv = &(padapter->cmdpriv);
+	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
 	struct drvextra_cmd_parm *extra_parm = NULL;
-	_irqL irqL;
 
-	thread_enter("RTW_CMD_THREAD");
+	if (RTW_CANNOT_RUN(padapter)) {
+		RTW_PRINT("%s: DriverStopped(%s) SurpriseRemoved(%s) break at line %d\n",
+			  __func__
+			, rtw_is_drv_stopped(padapter) ? "True" : "False"
+			, rtw_is_surprise_removed(padapter) ? "True" : "False"
+			  , __LINE__);
+		return RTW_RUST_CMD_TH_BREAK;
+	}
+
+	pcmd = rtw_dequeue_cmd(pcmdpriv);
+	if (!pcmd) {
+#ifdef CONFIG_LPS_LCLK
+		rtw_unregister_cmd_alive(padapter);
+#endif
+		return RTW_RUST_CMD_TH_OUTER;
+	}
 
 	pcmdbuf = pcmdpriv->cmd_buf;
-	prspbuf = pcmdpriv->rsp_buf;
-	ATOMIC_SET(&(pcmdpriv->cmdthd_running), _TRUE);
-	_rtw_up_sema(&pcmdpriv->start_cmdthread_sema);
+	cmd_start_time = rtw_get_current_time();
+	pcmdpriv->cmd_issued_cnt++;
 
+	if (pcmd->cmdsz > MAX_CMDSZ) {
+		RTW_ERR("%s cmdsz:%d > MAX_CMDSZ:%d\n", __func__, pcmd->cmdsz, MAX_CMDSZ);
+		pcmd->res = H2C_PARAMETERS_ERROR;
+		goto post_process;
+	}
 
-	while (1) {
-		if (_rtw_down_sema(&pcmdpriv->cmd_queue_sema) == _FAIL) {
-			RTW_PRINT(FUNC_ADPT_FMT" _rtw_down_sema(&pcmdpriv->cmd_queue_sema) return _FAIL, break\n", FUNC_ADPT_ARG(padapter));
-			break;
+	if (pcmd->cmdcode >= RTW_WLANCMDS_NUM) {
+		RTW_ERR("%s undefined cmdcode:%d\n", __func__, pcmd->cmdcode);
+		pcmd->res = H2C_PARAMETERS_ERROR;
+		goto post_process;
+	}
+
+	cmd_hdl = wlancmds[pcmd->cmdcode].cmd_hdl;
+	if (!cmd_hdl) {
+		RTW_ERR("%s no cmd_hdl for cmdcode:%d\n", __func__, pcmd->cmdcode);
+		pcmd->res = H2C_PARAMETERS_ERROR;
+		goto post_process;
+	}
+
+	if (_FAIL == rtw_cmd_filter(pcmdpriv, pcmd)) {
+		pcmd->res = H2C_DROPPED;
+		if (pcmd->cmdcode == CMD_SET_DRV_EXTRA) {
+			extra_parm = (struct drvextra_cmd_parm *)pcmd->parmbuf;
+			if (extra_parm && extra_parm->pbuf && extra_parm->size > 0)
+				rtw_mfree(extra_parm->pbuf, extra_parm->size);
 		}
-
-		if (RTW_CANNOT_RUN(padapter)) {
-			RTW_DBG(FUNC_ADPT_FMT "- bDriverStopped(%s) bSurpriseRemoved(%s)\n",
-				FUNC_ADPT_ARG(padapter),
-				rtw_is_drv_stopped(padapter) ? "True" : "False",
-				rtw_is_surprise_removed(padapter) ? "True" : "False");
-			break;
-		}
-
-		_enter_critical(&pcmdpriv->cmd_queue.lock, &irqL);
-		if (rtw_is_list_empty(&(pcmdpriv->cmd_queue.queue))) {
-			/* RTW_INFO("%s: cmd queue is empty!\n", __func__); */
-			_exit_critical(&pcmdpriv->cmd_queue.lock, &irqL);
-			continue;
-		}
-		_exit_critical(&pcmdpriv->cmd_queue.lock, &irqL);
-
-_next:
-		if (RTW_CANNOT_RUN(padapter)) {
-			RTW_PRINT("%s: DriverStopped(%s) SurpriseRemoved(%s) break at line %d\n",
-				  __func__
-				, rtw_is_drv_stopped(padapter) ? "True" : "False"
-				, rtw_is_surprise_removed(padapter) ? "True" : "False"
-				  , __LINE__);
-			break;
-		}
-
-		pcmd = rtw_dequeue_cmd(pcmdpriv);
-		if (!pcmd) {
-#ifdef CONFIG_LPS_LCLK
-			rtw_unregister_cmd_alive(padapter);
-#endif
-			continue;
-		}
-
-		cmd_start_time = rtw_get_current_time();
-		pcmdpriv->cmd_issued_cnt++;
-
-		if (pcmd->cmdsz > MAX_CMDSZ) {
-			RTW_ERR("%s cmdsz:%d > MAX_CMDSZ:%d\n", __func__, pcmd->cmdsz, MAX_CMDSZ);
-			pcmd->res = H2C_PARAMETERS_ERROR;
-			goto post_process;
-		}
-
-		if (pcmd->cmdcode >= RTW_WLANCMDS_NUM) {
-			RTW_ERR("%s undefined cmdcode:%d\n", __func__, pcmd->cmdcode);
-			pcmd->res = H2C_PARAMETERS_ERROR;
-			goto post_process;
-		}
-
-		cmd_hdl = wlancmds[pcmd->cmdcode].cmd_hdl;
-		if (!cmd_hdl) {
-			RTW_ERR("%s no cmd_hdl for cmdcode:%d\n", __func__, pcmd->cmdcode);
-			pcmd->res = H2C_PARAMETERS_ERROR;
-			goto post_process;
-		}
-
-		if (_FAIL == rtw_cmd_filter(pcmdpriv, pcmd)) {
-			pcmd->res = H2C_DROPPED;
-			if (pcmd->cmdcode == CMD_SET_DRV_EXTRA) {
-				extra_parm = (struct drvextra_cmd_parm *)pcmd->parmbuf;
-				if (extra_parm && extra_parm->pbuf && extra_parm->size > 0)
-					rtw_mfree(extra_parm->pbuf, extra_parm->size);
-			}
-			#if CONFIG_DFS
-			else if (pcmd->cmdcode == CMD_SET_CHANSWITCH)
-				adapter_to_rfctl(padapter)->csa_ch = 0;
-			#endif
-			goto post_process;
-		}
+		#if CONFIG_DFS
+		else if (pcmd->cmdcode == CMD_SET_CHANSWITCH)
+			adapter_to_rfctl(padapter)->csa_ch = 0;
+		#endif
+		goto post_process;
+	}
 
 #ifdef CONFIG_LPS_LCLK
-		if (pcmd->no_io)
-			rtw_unregister_cmd_alive(padapter);
-		else {
-			if (rtw_register_cmd_alive(padapter) != _SUCCESS) {
+	if (pcmd->no_io)
+		rtw_unregister_cmd_alive(padapter);
+	else {
+		if (rtw_register_cmd_alive(padapter) != _SUCCESS) {
+			if (DBG_CMD_EXECUTE)
+				RTW_PRINT("%s: wait to leave LPS_LCLK\n", __func__);
+
+			pcmd->res = H2C_ENQ_HEAD;
+			ret = _rtw_enqueue_cmd(&pcmdpriv->cmd_queue, pcmd, 1);
+			if (ret == _SUCCESS) {
 				if (DBG_CMD_EXECUTE)
-					RTW_PRINT("%s: wait to leave LPS_LCLK\n", __func__);
-
-				pcmd->res = H2C_ENQ_HEAD;
-				ret = _rtw_enqueue_cmd(&pcmdpriv->cmd_queue, pcmd, 1);
-				if (ret == _SUCCESS) {
-					if (DBG_CMD_EXECUTE)
-						RTW_INFO(ADPT_FMT" "CMD_FMT" ENQ_HEAD\n", ADPT_ARG(pcmd->padapter), CMD_ARG(pcmd));
-					continue;
-				}
-
-				RTW_INFO(ADPT_FMT" "CMD_FMT" ENQ_HEAD_FAIL\n", ADPT_ARG(pcmd->padapter), CMD_ARG(pcmd));
-				pcmd->res = H2C_ENQ_HEAD_FAIL;
-				rtw_warn_on(1);
+					RTW_INFO(ADPT_FMT" "CMD_FMT" ENQ_HEAD\n", ADPT_ARG(pcmd->padapter), CMD_ARG(pcmd));
+				return RTW_RUST_CMD_TH_OUTER;
 			}
+
+			RTW_INFO(ADPT_FMT" "CMD_FMT" ENQ_HEAD_FAIL\n", ADPT_ARG(pcmd->padapter), CMD_ARG(pcmd));
+			pcmd->res = H2C_ENQ_HEAD_FAIL;
+			rtw_warn_on(1);
 		}
+	}
 #endif /* CONFIG_LPS_LCLK */
 
-		if (DBG_CMD_EXECUTE)
-			RTW_INFO(ADPT_FMT" "CMD_FMT" %sexecute\n", ADPT_ARG(pcmd->padapter), CMD_ARG(pcmd)
-				, pcmd->res == H2C_ENQ_HEAD ? "ENQ_HEAD " : (pcmd->res == H2C_ENQ_HEAD_FAIL ? "ENQ_HEAD_FAIL " : ""));
+	if (DBG_CMD_EXECUTE)
+		RTW_INFO(ADPT_FMT" "CMD_FMT" %sexecute\n", ADPT_ARG(pcmd->padapter), CMD_ARG(pcmd)
+			, pcmd->res == H2C_ENQ_HEAD ? "ENQ_HEAD " : (pcmd->res == H2C_ENQ_HEAD_FAIL ? "ENQ_HEAD_FAIL " : ""));
 
-		_rtw_memcpy(pcmdbuf, pcmd->parmbuf, pcmd->cmdsz);
-		ret = cmd_hdl(pcmd->padapter, pcmdbuf);
-		pcmd->res = ret;
+	_rtw_memcpy(pcmdbuf, pcmd->parmbuf, pcmd->cmdsz);
+	ret = cmd_hdl(pcmd->padapter, pcmdbuf);
+	pcmd->res = ret;
 
-		pcmdpriv->cmd_seq++;
+	pcmdpriv->cmd_seq++;
 
 post_process:
 
-		_enter_critical_mutex(&(pcmd->padapter->cmdpriv.sctx_mutex), NULL);
-		if (pcmd->sctx) {
-			if (0)
-				RTW_PRINT(FUNC_ADPT_FMT" pcmd->sctx\n", FUNC_ADPT_ARG(pcmd->padapter));
-			if (pcmd->res == H2C_SUCCESS)
-				rtw_sctx_done(&pcmd->sctx);
-			else
-				rtw_sctx_done_err(&pcmd->sctx, RTW_SCTX_DONE_CMD_ERROR);
-		}
-		_exit_critical_mutex(&(pcmd->padapter->cmdpriv.sctx_mutex), NULL);
-
-		cmd_process_time = rtw_get_passing_time_ms(cmd_start_time);
-		if (cmd_process_time > 1000) {
-			RTW_INFO(ADPT_FMT" "CMD_FMT" process_time=%d\n", ADPT_ARG(pcmd->padapter), CMD_ARG(pcmd), cmd_process_time);
-			if (0)
-				rtw_warn_on(1);
-		}
-
-		/* call callback function for post-processed */
-		if (pcmd->cmdcode < RTW_WLANCMDS_NUM)
-			pcmd_callback = wlancmds[pcmd->cmdcode].callback;
+	_enter_critical_mutex(&(pcmd->padapter->cmdpriv.sctx_mutex), NULL);
+	if (pcmd->sctx) {
+		if (pcmd->res == H2C_SUCCESS)
+			rtw_sctx_done(&pcmd->sctx);
 		else
-			pcmd_callback = NULL;
-
-		if (pcmd_callback == NULL) {
-			rtw_free_cmd_obj(pcmd);
-		} else {
-			/* todo: !!! fill rsp_buf to pcmd->rsp if (pcmd->rsp!=NULL) */
-			pcmd_callback(pcmd->padapter, pcmd);/* need conider that free cmd_obj in rtw_cmd_callback */
-		}
-
-		flush_signals_thread();
-
-		goto _next;
-
+			rtw_sctx_done_err(&pcmd->sctx, RTW_SCTX_DONE_CMD_ERROR);
 	}
+	_exit_critical_mutex(&(pcmd->padapter->cmdpriv.sctx_mutex), NULL);
+
+	cmd_process_time = rtw_get_passing_time_ms(cmd_start_time);
+	if (cmd_process_time > 1000)
+		RTW_INFO(ADPT_FMT" "CMD_FMT" process_time=%d\n", ADPT_ARG(pcmd->padapter), CMD_ARG(pcmd), cmd_process_time);
+
+	if (pcmd->cmdcode < RTW_WLANCMDS_NUM)
+		pcmd_callback = wlancmds[pcmd->cmdcode].callback;
+	else
+		pcmd_callback = NULL;
+
+	if (pcmd_callback == NULL)
+		rtw_free_cmd_obj(pcmd);
+	else
+		pcmd_callback(pcmd->padapter, pcmd);
+
+	flush_signals_thread();
+
+	return RTW_RUST_CMD_TH_INNER;
+}
+
+void rtw_rust_cmd_thread_stop(PADAPTER padapter)
+{
+	struct cmd_obj *pcmd;
+	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+	struct drvextra_cmd_parm *extra_parm = NULL;
 
 #ifdef CONFIG_LPS_LCLK
 	rtw_unregister_cmd_alive(padapter);
 #endif
 
-	/* to avoid enqueue cmd after free all cmd_obj */
 	ATOMIC_SET(&(pcmdpriv->cmdthd_running), _FALSE);
 
-	/* free all cmd_obj resources */
 	do {
 		pcmd = rtw_dequeue_cmd(pcmdpriv);
 		if (pcmd == NULL)
 			break;
-
-		if (0)
-			RTW_INFO("%s: leaving... drop "CMD_FMT"\n", __func__, CMD_ARG(pcmd));
 
 		if (pcmd->cmdcode == CMD_SET_DRV_EXTRA) {
 			extra_parm = (struct drvextra_cmd_parm *)pcmd->parmbuf;
@@ -334,26 +333,48 @@ post_process:
 		#endif
 
 		_enter_critical_mutex(&(pcmd->padapter->cmdpriv.sctx_mutex), NULL);
-		if (pcmd->sctx) {
-			if (0)
-				RTW_PRINT(FUNC_ADPT_FMT" pcmd->sctx\n", FUNC_ADPT_ARG(pcmd->padapter));
+		if (pcmd->sctx)
 			rtw_sctx_done_err(&pcmd->sctx, RTW_SCTX_DONE_CMD_DROP);
-		}
 		_exit_critical_mutex(&(pcmd->padapter->cmdpriv.sctx_mutex), NULL);
 
 		rtw_free_cmd_obj(pcmd);
 	} while (1);
 
 	RTW_INFO(FUNC_ADPT_FMT " Exit\n", FUNC_ADPT_ARG(padapter));
-
 	rtw_thread_wait_stop();
+}
 
+#if !defined(CONFIG_RUST_CMD_THREAD_LOOP)
+
+thread_return rtw_cmd_thread(thread_context context)
+{
+	PADAPTER padapter = (PADAPTER)context;
+	int wait, step;
+
+	rtw_rust_cmd_thread_start(padapter);
+	while (1) {
+		wait = rtw_rust_cmd_thread_wait_event(padapter);
+		if (wait == RTW_RUST_CMD_TH_BREAK)
+			break;
+		if (wait == RTW_RUST_CMD_TH_OUTER)
+			continue;
+		while (1) {
+			step = rtw_rust_cmd_thread_once(padapter);
+			if (step == RTW_RUST_CMD_TH_BREAK) {
+				rtw_rust_cmd_thread_stop(padapter);
+				return 0;
+			}
+			if (step == RTW_RUST_CMD_TH_OUTER)
+				break;
+		}
+	}
+	rtw_rust_cmd_thread_stop(padapter);
 	return 0;
 }
 
-#endif /* HOST_CMD_THREAD_TEST */
+#endif /* !CONFIG_RUST_CMD_THREAD_LOOP */
 
-#endif /* !CONFIG_RUST || HOST_CMD_THREAD_TEST || !CONFIG_RUST_CMD_THREAD_LOOP */
+#endif /* !HOST_CMD_THREAD_TEST */
 
 #if defined(CONFIG_RUST) && defined(CONFIG_RUST_CMD_THREAD) && !defined(HOST_CMD_THREAD_TEST)
 

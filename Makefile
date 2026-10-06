@@ -2691,6 +2691,7 @@ ccflags-y += -DCONFIG_RUST_CMD_PRIV
 ccflags-y += -DCONFIG_RUST_CMD_PRIV_EVT
 ccflags-y += -DCONFIG_RUST_CMD_QUEUE
 ccflags-y += -DCONFIG_RUST_CMD_THREAD
+ccflags-y += -DCONFIG_RUST_CMD_THREAD_LOOP
 ccflags-y += -DCONFIG_RUST_RECV_STA
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_EVENT_THREAD_MODE' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg event_thread_mode
@@ -2880,6 +2881,7 @@ $(MODULE_NAME)-y += rust/rtw_recv_sta_count.o
 $(MODULE_NAME)-y += rust/rtw_recv_sta_validate.o
 $(MODULE_NAME)-y += rust/rtw_xmit.o
 $(MODULE_NAME)-y += rust/rtw_xmit_update_attrib_kern.o
+$(MODULE_NAME)-y += rust/rtw_cmd_thread_kern.o
 $(MODULE_NAME)-y += rust/rtw_iol_rest.o
 $(MODULE_NAME)-y += rust/rtw_sreset.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
