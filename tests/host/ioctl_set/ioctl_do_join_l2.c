@@ -152,6 +152,7 @@ static int parse_vector_object(const char *obj, size_t len, void *vv)
 
 	memset(v, 0, sizeof(*v));
 	v->expect_timer_ms = -1;
+	v->create_ibss_ret = -1;
 	if (host_json_parse_string_in(obj, len, "name", v->name, sizeof(v->name)))
 		return -1;
 	for (i = 0; i < sizeof(k) / sizeof(k[0]); i++)
@@ -179,7 +180,7 @@ static int run_vector(const struct vector *v)
 	a.ssc_chk = (u8)v->ssc_chk;
 	a.sitesurvey_ret = (u8)v->sitesurvey_ret;
 	a.select_ret = (s8)v->select_ret;
-	a.create_ibss_ret = (u8)(v->create_ibss_ret ? v->create_ibss_ret : _SUCCESS);
+	a.create_ibss_ret = (u8)(v->create_ibss_ret < 0 ? _SUCCESS : v->create_ibss_ret);
 	if (v->adhoc_state)
 		a.mlmepriv.fw_state |= WIFI_ADHOC_STATE;
 

@@ -45,6 +45,16 @@
       "expect_select_calls": 1, "expect_create_ibss_calls": 1,
       "expect_join_res": -2, "expect_fw_linking": 0, "expect_fw_adhoc_master": 1,
       "expect_lock_depth": 0
+    },
+    {
+      "name": "select_fail_adhoc_create_ibss_fail",
+      "queue_empty": 0, "busy_traffic": 0, "to_roam": 0, "ssc_chk": 13,
+      "sitesurvey_ret": 1, "select_ret": 0, "adhoc_state": 1, "create_ibss_ret": 0,
+      "assoc_ch": 0, "ssid_len": 4,
+      "expect_ret": 0, "expect_to_join": 1, "expect_ss_calls": 0,
+      "expect_select_calls": 1, "expect_create_ibss_calls": 1,
+      "expect_join_res": -2, "expect_fw_linking": 0, "expect_fw_adhoc_master": 1,
+      "expect_lock_depth": 0
     }
   ]
 }
