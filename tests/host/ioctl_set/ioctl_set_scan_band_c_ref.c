@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* L1 reference: C leaf setters for W3-125 PR3/PR6 (scan_mode, setband, regd). */
+/* L1 reference: C leaf setters for W3-125 PR3/PR6/PR8 (scan_mode, setband, regd, bssid scan). */
 #include <stddef.h>
 
 typedef int RT_SCAN_TYPE;
@@ -21,6 +21,11 @@ typedef unsigned char u8;
 
 struct mlme_priv {
 	RT_SCAN_TYPE scan_mode;
+	int lock_depth;
+};
+
+struct sitesurvey_parm {
+	u8 pad;
 };
 
 struct registry_priv {
@@ -96,4 +101,22 @@ int rtw_set_country(struct adapter *adapter, const char *country_code)
 		return rtw_set_country_cmd(adapter, RTW_CMDF_WAIT_ACK, country_code, 1);
 #endif
 	return _SUCCESS;
+}
+
+static u8 rtw_sitesurvey_cmd(struct adapter *adapter, struct sitesurvey_parm *pparm)
+{
+	(void)adapter;
+	(void)pparm;
+	return (u8)_SUCCESS;
+}
+
+u8 rtw_set_802_11_bssid_list_scan(struct adapter *adapter, struct sitesurvey_parm *pparm)
+{
+	u8 res;
+
+	adapter->mlmepriv.lock_depth++;
+	res = rtw_sitesurvey_cmd(adapter, pparm);
+	adapter->mlmepriv.lock_depth--;
+
+	return res;
 }

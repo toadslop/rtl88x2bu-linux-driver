@@ -5,6 +5,9 @@ drop rtw_rust_ioctl_setband_ptr
 drop rtw_rust_ioctl_regsty_ptr
 drop rtw_rust_ioctl_regd_from_os
 drop rtw_rust_ioctl_set_country_kbuild_enabled
+drop rtw_rust_ioctl_mlme_lock_ptr
+drop rtw_rust_ioctl_enter_critical_bh
+drop rtw_rust_ioctl_exit_critical_bh
 drop rtw_validate_bssid_rust
 drop rtw_validate_ssid_rust
 drop rtw_set_scan_mode_rust

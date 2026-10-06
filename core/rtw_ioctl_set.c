@@ -571,6 +571,7 @@ u8 rtw_set_802_11_disassociate(_adapter *padapter)
 }
 
 #if 1
+#if !defined(CONFIG_RUST) || defined(HOST_IOCTL_BSSID_SCAN_TEST)
 u8 rtw_set_802_11_bssid_list_scan(_adapter *padapter, struct sitesurvey_parm *pparm)
 {
 	_irqL	irqL;
@@ -583,6 +584,7 @@ u8 rtw_set_802_11_bssid_list_scan(_adapter *padapter, struct sitesurvey_parm *pp
 
 	return res;
 }
+#endif /* !CONFIG_RUST || HOST_IOCTL_BSSID_SCAN_TEST */
 
 #else
 u8 rtw_set_802_11_bssid_list_scan(_adapter *padapter, struct sitesurvey_parm *pparm)
@@ -884,6 +886,21 @@ int rtw_rust_ioctl_set_country_kbuild_enabled(void)
 #else
 	return 0;
 #endif
+}
+
+void *rtw_rust_ioctl_mlme_lock_ptr(_adapter *adapter)
+{
+	return (void *)&adapter->mlmepriv.lock;
+}
+
+void rtw_rust_ioctl_enter_critical_bh(void *lock, _irqL *irqL)
+{
+	_enter_critical_bh((_lock *)lock, irqL);
+}
+
+void rtw_rust_ioctl_exit_critical_bh(void *lock, _irqL *irqL)
+{
+	_exit_critical_bh((_lock *)lock, irqL);
 }
 #endif /* CONFIG_RUST && !HOST_IOCTL_SCAN_CHANNEL_TEST */
 
