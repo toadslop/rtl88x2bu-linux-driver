@@ -450,3 +450,60 @@ mod scan_ch {
         j
     }
 }
+
+#[cfg(all(
+    any(host_mlme_ext_scan_test, rust_mlme_ext_scan),
+    rust_mlme_ext_scan_ch
+))]
+mod sitesurvey_reset {
+    use super::*;
+
+    extern "C" {
+        fn rtw_rust_ss_res(adapter: Adapter) -> *mut c_void;
+        fn rtw_rust_ss_clear_scan_counters(ss: *mut c_void);
+        fn rtw_rust_ss_copy_ssids_from_parm(ss: *mut c_void, parm: *mut c_void) -> U8;
+        fn rtw_rust_ss_ch(ss: *mut c_void) -> *mut RtwIeee80211Channel;
+        fn rtw_rust_ss_ch_num_ptr(ss: *mut c_void) -> *mut U8;
+        fn rtw_rust_ss_set_from_parm_tail(ss: *mut c_void, parm: *mut c_void);
+        fn rtw_rust_parm_ch_num(parm: *mut c_void) -> U8;
+        fn rtw_rust_parm_ch(parm: *mut c_void) -> *mut RtwIeee80211Channel;
+        fn rtw_rust_parm_acs(parm: *mut c_void) -> bool;
+        fn rtw_rust_parm_reason(parm: *mut c_void) -> i32;
+        fn rtw_rust_scan_ch_amount() -> U32;
+        fn rtw_rust_scan_clear_all_hidden_bss(adapter: Adapter);
+        fn rtw_scan_ch_decision(
+            padapter: Adapter,
+            out: *mut RtwIeee80211Channel,
+            out_num: U32,
+            input: *mut RtwIeee80211Channel,
+            in_num: U32,
+            no_sparse: bool,
+            reason: i32,
+        ) -> i32;
+    }
+
+    #[no_mangle]
+    pub extern "C" fn sitesurvey_res_reset(adapter: Adapter, parm: *mut c_void) {
+        if adapter.is_null() || parm.is_null() {
+            return;
+        }
+        unsafe {
+            let ss = rtw_rust_ss_res(adapter);
+            rtw_rust_ss_clear_scan_counters(ss);
+            rtw_rust_ss_copy_ssids_from_parm(ss, parm);
+            let reason = rtw_rust_parm_reason(parm);
+            let ch_num = rtw_scan_ch_decision(
+                adapter,
+                rtw_rust_ss_ch(ss),
+                rtw_rust_scan_ch_amount(),
+                rtw_rust_parm_ch(parm),
+                rtw_rust_parm_ch_num(parm) as U32,
+                rtw_rust_parm_acs(parm),
+                reason,
+            );
+            *rtw_rust_ss_ch_num_ptr(ss) = ch_num as U8;
+            rtw_rust_scan_clear_all_hidden_bss(adapter);
+            rtw_rust_ss_set_from_parm_tail(ss, parm);
+        }
+    }
+}

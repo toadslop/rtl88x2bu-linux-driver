@@ -117,7 +117,6 @@ static int test_timeout(const char *name, u32 mode, u16 ms, u16 duration,
 	return 0;
 }
 
-#ifndef RUST_MLME_EXT_SCAN_ORACLE
 static int test_sitesurvey_res_reset(void)
 {
 	struct sitesurvey_parm parm;
@@ -145,7 +144,6 @@ static int test_sitesurvey_res_reset(void)
 	printf("PASS: sitesurvey_res_reset\n");
 	return 0;
 }
-#endif
 
 static int test_ch_decision_filter(void)
 {
@@ -192,10 +190,8 @@ int main(void)
 		return 1;
 	if (test_ch_decision_filter())
 		return 1;
-#ifndef RUST_MLME_EXT_SCAN_ORACLE
 	if (test_sitesurvey_res_reset())
 		return 1;
-#endif
 	printf("All scan decision vectors passed.\n");
 	return 0;
 }

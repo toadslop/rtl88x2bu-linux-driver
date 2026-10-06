@@ -1658,8 +1658,105 @@ int rtw_scan_ch_decision(_adapter *padapter, struct rtw_ieee80211_channel *out,
 
 #endif /* rtw_scan_ch_decision (CONFIG_RUST_MLME_EXT_SCAN_CH when swapped) */
 
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MLME_EXT_SCAN)
+
+struct ss_res *rtw_rust_ss_res(_adapter *adapter)
+{
+	return &adapter->mlmeextpriv.sitesurvey_res;
+}
+
+void rtw_rust_ss_clear_scan_counters(struct ss_res *ss)
+{
+	ss->bss_cnt = 0;
+	ss->activate_ch_cnt = 0;
+	ss->channel_idx = 0;
+	ss->force_ssid_scan = 0;
+	ss->igi_scan = 0;
+	ss->igi_before_scan = 0;
+#ifdef CONFIG_SCAN_BACKOP
+	ss->scan_cnt = 0;
+#endif
+#if defined(CONFIG_ANTENNA_DIVERSITY) || defined(DBG_SCAN_SW_ANTDIV_BL)
+	ss->is_sw_antdiv_bl_scan = 0;
+#endif
+	ss->ssid_num = 0;
+}
+
+u8 rtw_rust_ss_copy_ssids_from_parm(struct ss_res *ss, struct sitesurvey_parm *parm)
+{
+	int i;
+
+	ss->ssid_num = 0;
+	for (i = 0; i < RTW_SSID_SCAN_AMOUNT; i++) {
+		if (parm->ssid[i].SsidLength) {
+			_rtw_memcpy(ss->ssid[i].Ssid, parm->ssid[i].Ssid, IW_ESSID_MAX_SIZE);
+			ss->ssid[i].SsidLength = parm->ssid[i].SsidLength;
+			ss->ssid_num++;
+		} else
+			ss->ssid[i].SsidLength = 0;
+	}
+	return ss->ssid_num;
+}
+
+struct rtw_ieee80211_channel *rtw_rust_ss_ch(struct ss_res *ss)
+{
+	return ss->ch;
+}
+
+u8 *rtw_rust_ss_ch_num_ptr(struct ss_res *ss)
+{
+	return &ss->ch_num;
+}
+
+void rtw_rust_ss_set_from_parm_tail(struct ss_res *ss, struct sitesurvey_parm *parm)
+{
+	ss->bw = parm->bw;
+	ss->igi = parm->igi;
+	ss->token = parm->token;
+	ss->duration = parm->duration;
+	ss->scan_mode = (u8)parm->scan_mode;
+	ss->acs = parm->acs;
+}
+
+u8 rtw_rust_parm_ch_num(struct sitesurvey_parm *parm)
+{
+	return parm->ch_num;
+}
+
+struct rtw_ieee80211_channel *rtw_rust_parm_ch(struct sitesurvey_parm *parm)
+{
+	return parm->ch;
+}
+
+bool rtw_rust_parm_acs(struct sitesurvey_parm *parm)
+{
+	return parm->acs;
+}
+
+sint rtw_rust_parm_reason(struct sitesurvey_parm *parm)
+{
+	return parm->reason;
+}
+
+u32 rtw_rust_scan_ch_amount(void)
+{
+	return RTW_CHANNEL_SCAN_AMOUNT;
+}
+
+void rtw_rust_scan_clear_all_hidden_bss(_adapter *adapter)
+{
+	RT_CHANNEL_INFO *chset = adapter_to_chset(adapter);
+	int i;
+
+	for (i = 0; i < MAX_CHANNEL_NUM; i++)
+		chset[i].hidden_bss_cnt = 0;
+}
+
+#endif /* Rust sitesurvey_res_reset FFI */
+
 #if defined(HOST_MLME_EXT_SCAN_TEST) || \
-	((!defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
+	(((!defined(CONFIG_RUST) || !defined(CONFIG_RUST_MLME_EXT_SCAN)) && \
+	  !defined(HOST_MLME_EXT_TEST) && !defined(HOST_MLME_EXT_MGNT_ATTRIB_TEST) && \
 	  !defined(HOST_MLME_EXT_PEER_ALIVE_TEST) && !defined(HOST_MLME_EXT_BAND_IE_TEST) && \
 	  !defined(HOST_MLME_EXT_JOIN_CMD_TEST) && !defined(HOST_MLME_EXT_SITESURVEY_CMD_TEST)))
 
