@@ -92,6 +92,16 @@ void update_attrib_txbf_info(_adapter *padapter, struct pkt_attrib *pattrib,
 			     struct sta_info *psta);
 #endif
 
+#ifdef CONFIG_TDLS
+u8 rtw_check_tdls_established(_adapter *padapter, struct pkt_attrib *pattrib);
+#endif
+
+s32 rtw_xmit_update_attrib_post_l4(_adapter *padapter, _pkt *pkt,
+				   struct pkt_attrib *pattrib, struct sta_info *psta,
+				   struct mlme_priv *pmlmepriv, struct qos_priv *pqospriv,
+				   struct xmit_priv *pxmitpriv, sint bmcast,
+				   enum eap_type eapol_type);
+
 enum eap_type rtw_xmit_update_attrib_classify_l4(_adapter *padapter, struct pkt_attrib *pattrib,
 						 struct pkt_file *pktfile, struct sta_info *psta,
 						 struct ethhdr *etherhdr)
@@ -185,6 +195,114 @@ enum eap_type rtw_xmit_update_attrib_classify_l4(_adapter *padapter, struct pkt_
 #endif
 
 	return eapol_type;
+}
+
+s32 update_attrib(_adapter *padapter, _pkt *pkt, struct pkt_attrib *pattrib)
+{
+	uint i;
+	struct pkt_file pktfile;
+	struct sta_info *psta = NULL;
+	struct ethhdr etherhdr;
+
+	sint bmcast;
+	struct sta_priv		*pstapriv = &padapter->stapriv;
+	struct mlme_priv		*pmlmepriv = &padapter->mlmepriv;
+	struct qos_priv		*pqospriv = &pmlmepriv->qospriv;
+	struct xmit_priv		*pxmitpriv = &padapter->xmitpriv;
+	sint res = _SUCCESS;
+	enum eap_type eapol_type = NON_EAPOL;
+
+	DBG_COUNTER(padapter->tx_logs.core_tx_upd_attrib);
+
+	_rtw_open_pktfile(pkt, &pktfile);
+	i = _rtw_pktfile_read(&pktfile, (u8 *)&etherhdr, ETH_HLEN);
+
+	pattrib->ether_type = ntohs(etherhdr.h_proto);
+
+	if (MLME_STATE(padapter) & (WIFI_AP_STATE | WIFI_MESH_STATE)) /* address resolve is done for ap/mesh */
+		goto get_sta_info;
+
+	_rtw_memcpy(pattrib->dst, &etherhdr.h_dest, ETH_ALEN);
+	_rtw_memcpy(pattrib->src, &etherhdr.h_source, ETH_ALEN);
+	_rtw_memcpy(pattrib->ta, adapter_mac_addr(padapter), ETH_ALEN);
+
+	if ((check_fwstate(pmlmepriv, WIFI_ADHOC_STATE) == _TRUE) ||
+	    (check_fwstate(pmlmepriv, WIFI_ADHOC_MASTER_STATE) == _TRUE)) {
+		_rtw_memcpy(pattrib->ra, pattrib->dst, ETH_ALEN);
+		DBG_COUNTER(padapter->tx_logs.core_tx_upd_attrib_adhoc);
+	} else if (check_fwstate(pmlmepriv, WIFI_STATION_STATE)) {
+		#ifdef CONFIG_TDLS
+		if (rtw_check_tdls_established(padapter, pattrib) == _TRUE)
+			_rtw_memcpy(pattrib->ra, pattrib->dst, ETH_ALEN);	/* For TDLS direct link Tx, set ra to be same to dst */
+		else
+		#endif
+		{
+			_rtw_memcpy(pattrib->ra, get_bssid(pmlmepriv), ETH_ALEN);
+			#ifdef CONFIG_RTW_WDS
+			if (adapter_use_wds(padapter)
+				&& _rtw_memcmp(pattrib->src, pattrib->ta, ETH_ALEN) == _FALSE
+			) {
+				pattrib->wds = 1;
+				if (IS_MCAST(pattrib->dst))
+					rtw_tx_wds_gptr_update(padapter, pattrib->src);
+			}
+			#endif
+		}
+		DBG_COUNTER(padapter->tx_logs.core_tx_upd_attrib_sta);
+	} else
+		DBG_COUNTER(padapter->tx_logs.core_tx_upd_attrib_unknown);
+
+get_sta_info:
+	bmcast = IS_MCAST(pattrib->ra);
+	if (bmcast) {
+		psta = rtw_get_bcmc_stainfo(padapter);
+		if (psta == NULL) { /* if we cannot get psta => drop the pkt */
+			DBG_COUNTER(padapter->tx_logs.core_tx_upd_attrib_err_sta);
+			#ifdef DBG_TX_DROP_FRAME
+			RTW_INFO("DBG_TX_DROP_FRAME %s get sta_info fail, ra:" MAC_FMT"\n", __func__, MAC_ARG(pattrib->ra));
+			#endif
+			res = _FAIL;
+			goto exit;
+		}
+	} else {
+		psta = rtw_get_stainfo(pstapriv, pattrib->ra);
+		if (psta == NULL) { /* if we cannot get psta => drop the pkt */
+			DBG_COUNTER(padapter->tx_logs.core_tx_upd_attrib_err_ucast_sta);
+			#ifdef DBG_TX_DROP_FRAME
+			RTW_INFO("DBG_TX_DROP_FRAME %s get sta_info fail, ra:" MAC_FMT"\n", __func__, MAC_ARG(pattrib->ra));
+			#endif
+			res = _FAIL;
+			goto exit;
+		} else if (check_fwstate(pmlmepriv, WIFI_AP_STATE) == _TRUE && !(psta->state & WIFI_ASOC_STATE)) {
+			DBG_COUNTER(padapter->tx_logs.core_tx_upd_attrib_err_ucast_ap_link);
+			res = _FAIL;
+			goto exit;
+		}
+
+		#ifdef CONFIG_RTW_WDS
+		if (XATTRIB_GET_WDS(pattrib) && !(psta->flags & WLAN_STA_WDS))
+			pattrib->wds = 0;
+		#endif
+	}
+
+	if (!(psta->state & WIFI_ASOC_STATE)) {
+		DBG_COUNTER(padapter->tx_logs.core_tx_upd_attrib_err_link);
+		RTW_INFO("%s-"ADPT_FMT" psta("MAC_FMT")->state(0x%x) != WIFI_ASOC_STATE\n",
+			__func__, ADPT_ARG(padapter), MAC_ARG(psta->cmn.mac_addr), psta->state);
+		res = _FAIL;
+		goto exit;
+	}
+
+	eapol_type = rtw_xmit_update_attrib_classify_l4(padapter, pattrib, &pktfile, psta, &etherhdr);
+
+	res = rtw_xmit_update_attrib_post_l4(padapter, pkt, pattrib, psta, pmlmepriv,
+					     pqospriv, pxmitpriv, bmcast, eapol_type);
+	if (res == _FAIL)
+		goto exit;
+
+exit:
+
+	return res;
 }
 
 s32 rtw_xmit_update_attrib_post_l4(_adapter *padapter, _pkt *pkt,
