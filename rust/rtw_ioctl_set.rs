@@ -632,3 +632,42 @@ pub unsafe extern "C" fn ioctl_country_leaf_rust(
     }
     1
 }
+
+#[cfg(host_ioctl_bssid_scan_test)]
+#[repr(C)]
+pub struct HostSitesurveyParm {
+    pub marker: i32,
+}
+
+#[cfg(host_ioctl_bssid_scan_test)]
+#[repr(C)]
+pub struct HostBssidScanMlme {
+    pub lock_depth: i32,
+}
+
+#[cfg(host_ioctl_bssid_scan_test)]
+#[repr(C)]
+pub struct HostBssidScanAdapter {
+    pub mlmepriv: HostBssidScanMlme,
+    pub ss_cmd_ret: u8,
+    pub ss_cmd_calls: i32,
+    pub last_parm: *mut HostSitesurveyParm,
+}
+
+#[cfg(host_ioctl_bssid_scan_test)]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_set_802_11_bssid_list_scan_rust(
+    padapter: *mut HostBssidScanAdapter,
+    pparm: *mut HostSitesurveyParm,
+) -> u8 {
+    if padapter.is_null() {
+        return 0;
+    }
+    let a = &mut *padapter;
+    a.mlmepriv.lock_depth += 1;
+    a.ss_cmd_calls += 1;
+    a.last_parm = pparm;
+    let res = a.ss_cmd_ret;
+    a.mlmepriv.lock_depth -= 1;
+    res
+}
