@@ -14,9 +14,13 @@
  *****************************************************************************/
 #define _RTW_XMIT_UPDATE_ATTRIB_MAIN_REST_C_
 
+#ifdef HOST_XMIT_UPDATE_ATTRIB_MAIN_TEST
+#include "host_xmit_update_attrib_main_types.h"
+#else
 #include <drv_types.h>
 
 u8 tos_to_up(u8 tos);
+#endif
 
 void rtw_xmit_update_attrib_set_qos(_pkt *pkt, struct pkt_attrib *pattrib)
 {
@@ -78,6 +82,8 @@ u8 rtw_xmit_update_attrib_lps_chk_packet_type(struct pkt_attrib *pattrib)
 	return pkt_type;
 }
 #endif /* CONFIG_LPS */
+
+#ifndef HOST_XMIT_UPDATE_ATTRIB_MAIN_TEST
 
 void update_attrib_vcs_info(_adapter *padapter, struct xmit_frame *pxmitframe);
 void update_attrib_phy_info(_adapter *padapter, struct pkt_attrib *pattrib,
@@ -433,3 +439,5 @@ void update_attrib_trigger_frame_info(_adapter *padapter, struct pkt_attrib *pat
 	pattrib->trigger_frame = trigger_frame_en;
 }
 #endif /* CONFIG_WMMPS_STA */
+
+#endif /* !HOST_XMIT_UPDATE_ATTRIB_MAIN_TEST */
