@@ -825,6 +825,9 @@ pub unsafe extern "C" fn rtw_get_cur_max_rate_legacy_rust(
     {
         return 0;
     }
+    if has_sta == 0 {
+        return 0;
+    }
     let ap_arr: [u8; 12] = {
         let s = core::slice::from_raw_parts(ap_rates, 12);
         let mut a = [0u8; 12];
