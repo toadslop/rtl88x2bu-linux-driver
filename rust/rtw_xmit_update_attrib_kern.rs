@@ -35,8 +35,10 @@ const _FALSE: U8 = 0;
 const _SUCCESS: i32 = 1;
 const _FAIL: i32 = 0;
 const _NO_PRIVACY_: U8 = 0x00;
+// include/rtw_security.h enum security_type — _TKIP_ is 0x02, not WEP-104.
 const _WEP40_: U8 = 0x01;
-const _WEP104_: U8 = 0x02;
+const _TKIP_: U8 = 0x02;
+const _WEP104_: U8 = 0x05;
 const EAPOL_2_4: i32 = 10;
 const EAPOL_4_4: i32 = 12;
 const EAPOL_ETHERTYPE: U16 = 0x888e;
@@ -332,5 +334,88 @@ pub extern "C" fn update_attrib_sec_info_decide_rust(
     let decision = update_attrib_sec_info_decide_inner(g);
     unsafe {
         *out = decision;
+    }
+}
+
+#[cfg(test)]
+mod sec_decide_tests {
+    use super::*;
+
+    fn gather(auth: U8, privacy: U8, sta_privacy: U8, ether: U16) -> SecGather {
+        SecGather {
+            ieee8021x_blocked: 0,
+            passing_ms: 1000,
+            eapol_type: 0,
+            ether_type: ether,
+            wifi_mp_state: 0,
+            bmcast: 0,
+            dot11_auth_algrthm: auth,
+            dot11_privacy_algrthm: privacy,
+            dot118021x_grp_privacy: privacy,
+            sta_dot118021x_privacy: sta_privacy,
+            dot11_privacy_key_index: 0,
+            dot118021x_grp_keyid: 1,
+            direct_link: 0,
+        }
+    }
+
+    #[test]
+    fn tkip_eapol_stays_encrypted() {
+        assert_eq!(_TKIP_, 0x02);
+        assert_eq!(_WEP104_, 0x05);
+        let d = update_attrib_sec_info_decide_inner(&gather(
+            DOT11_AUTH_8021X,
+            _TKIP_,
+            _TKIP_,
+            EAPOL_ETHERTYPE,
+        ));
+        assert_eq!(d.res, _SUCCESS);
+        assert_eq!(d.encrypt, _TKIP_);
+    }
+
+    #[test]
+    fn wep104_eapol_is_clear() {
+        let d = update_attrib_sec_info_decide_inner(&gather(
+            DOT11_AUTH_OPEN,
+            _WEP104_,
+            _WEP104_,
+            EAPOL_ETHERTYPE,
+        ));
+        assert_eq!(d.res, _SUCCESS);
+        assert_eq!(d.encrypt, _NO_PRIVACY_);
+    }
+
+    #[test]
+    fn wep40_eapol_is_clear() {
+        let d = update_attrib_sec_info_decide_inner(&gather(
+            DOT11_AUTH_SHARED,
+            _WEP40_,
+            _WEP40_,
+            EAPOL_ETHERTYPE,
+        ));
+        assert_eq!(d.encrypt, _NO_PRIVACY_);
+    }
+
+    #[test]
+    fn aes_eapol_stays_encrypted() {
+        let d = update_attrib_sec_info_decide_inner(&gather(
+            DOT11_AUTH_8021X,
+            _AES_,
+            _AES_,
+            EAPOL_ETHERTYPE,
+        ));
+        assert_eq!(d.encrypt, _AES_);
+    }
+
+    #[test]
+    fn wep104_data_stays_encrypted() {
+        let d = update_attrib_sec_info_decide_inner(&gather(
+            DOT11_AUTH_OPEN,
+            _WEP104_,
+            _WEP104_,
+            0x0800,
+        ));
+        assert_eq!(d.encrypt, _WEP104_);
+        assert_eq!(d.key_idx, 0);
     }
 }
