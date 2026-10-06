@@ -9,11 +9,11 @@
 )]
 
 #[cfg(rust_ioctl_set_leaf)]
-use core::ffi::c_void;
+use core::ffi::{c_ulong, c_void};
 
 #[cfg(rust_ioctl_set_leaf)]
 mod kernel {
-    use super::c_void;
+    use super::{c_ulong, c_void};
 
     extern "C" {
         fn rtw_rust_ioctl_scan_mode_ptr(adapter: *mut c_void) -> *mut i32;
@@ -28,6 +28,10 @@ mod kernel {
             country_code: *const u8,
             swconfig: u8,
         ) -> u8;
+        fn rtw_rust_ioctl_mlme_lock_ptr(adapter: *mut c_void) -> *mut c_void;
+        fn rtw_rust_ioctl_enter_critical_bh(lock: *mut c_void, irqL: *mut c_ulong);
+        fn rtw_rust_ioctl_exit_critical_bh(lock: *mut c_void, irqL: *mut c_ulong);
+        fn rtw_sitesurvey_cmd(adapter: *mut c_void, pparm: *mut c_void) -> u8;
     }
 
     pub unsafe fn scan_mode_ptr(adapter: *mut c_void) -> *mut i32 {
@@ -61,6 +65,22 @@ mod kernel {
         swconfig: u8,
     ) -> u8 {
         unsafe { rtw_set_country_cmd(adapter, flags, country_code, swconfig) }
+    }
+
+    pub unsafe fn mlme_lock_ptr(adapter: *mut c_void) -> *mut c_void {
+        unsafe { rtw_rust_ioctl_mlme_lock_ptr(adapter) }
+    }
+
+    pub unsafe fn enter_critical_bh(lock: *mut c_void, irqL: *mut c_ulong) {
+        unsafe { rtw_rust_ioctl_enter_critical_bh(lock, irqL) }
+    }
+
+    pub unsafe fn exit_critical_bh(lock: *mut c_void, irqL: *mut c_ulong) {
+        unsafe { rtw_rust_ioctl_exit_critical_bh(lock, irqL) }
+    }
+
+    pub unsafe fn sitesurvey_cmd(adapter: *mut c_void, pparm: *mut c_void) -> u8 {
+        unsafe { rtw_sitesurvey_cmd(adapter, pparm) }
     }
 }
 
@@ -118,6 +138,22 @@ pub unsafe extern "C" fn rtw_set_country(adapter: *mut c_void, country_code: *co
         return _SUCCESS;
     }
     unsafe { kernel::set_country_cmd(adapter, RTW_CMDF_WAIT_ACK, country_code, 1) as i32 }
+}
+
+#[cfg(rust_ioctl_set_leaf)]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_set_802_11_bssid_list_scan(
+    adapter: *mut c_void,
+    pparm: *mut c_void,
+) -> u8 {
+    let mut irqL: c_ulong = 0;
+    let lock = unsafe { kernel::mlme_lock_ptr(adapter) };
+    unsafe {
+        kernel::enter_critical_bh(lock, &mut irqL);
+        let res = kernel::sitesurvey_cmd(adapter, pparm);
+        kernel::exit_critical_bh(lock, &mut irqL);
+        res
+    }
 }
 
 #[cfg(rust_ioctl_set_leaf)]

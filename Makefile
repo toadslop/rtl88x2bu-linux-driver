@@ -3151,7 +3151,7 @@ rust-check-symbols-rtw-io-rest: rust-objects-rtw-io-rest-c rust-objects-rtw-io-r
 	$(MAKE) rust-check-symbols OLD=tests/host/io/io_rest_c_ref.o NEW=rust/rtw_io_rest.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_io_rest.allow ALLOW_VACUOUS=1
 
-# W3-125 PR3: scan_mode + setband leaf setters — C ref vs rust/rtw_ioctl_set.o.
+# W3-125 PR3/PR8: scan_mode, setband, regd, bssid_list_scan leaf setters — C ref vs rust/rtw_ioctl_set.o.
 rust-objects-rtw-ioctl-set:
 	@test -n "$(KDIR)" || { \
 		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-rtw-ioctl-set"; \
