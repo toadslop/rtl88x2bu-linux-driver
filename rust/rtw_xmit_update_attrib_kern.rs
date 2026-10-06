@@ -409,7 +409,12 @@ mod sec_decide_tests {
 
     #[test]
     fn wep104_data_stays_encrypted() {
-        let d = update_attrib_sec_info_decide_inner(&gather(DOT11_AUTH_OPEN, _WEP104_, _WEP104_, 0x0800));
+        let d = update_attrib_sec_info_decide_inner(&gather(
+            DOT11_AUTH_OPEN,
+            _WEP104_,
+            _WEP104_,
+            0x0800,
+        ));
         assert_eq!(d.encrypt, _WEP104_);
         assert_eq!(d.key_idx, 0);
     }
