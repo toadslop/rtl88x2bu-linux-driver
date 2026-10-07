@@ -1435,9 +1435,23 @@ mod acs_sitesurvey {
         out.bw = CHANNEL_WIDTH_20;
         out.acs = 1;
         out.ch_num = 0;
-        host_add_band(uch, ch_sel_same, true, host_center_2g_num, host_center_2g, out);
+        host_add_band(
+            uch,
+            ch_sel_same,
+            true,
+            host_center_2g_num,
+            host_center_2g,
+            out,
+        );
         #[cfg(ieee80211_band_5ghz)]
-        host_add_band(uch, ch_sel_same, false, host_center_5g_num, host_center_5g, out);
+        host_add_band(
+            uch,
+            ch_sel_same,
+            false,
+            host_center_5g_num,
+            host_center_5g,
+            out,
+        );
     }
 
     #[cfg(all(rust_ioctl_set_leaf, config_rtw_acs))]
@@ -1517,9 +1531,23 @@ mod acs_sitesurvey {
         parm.bw = CHANNEL_WIDTH_20;
         parm.acs = 1;
         parm.ch_num = 0;
-        kernel_add_band(uch, ch_sel_same, true, center_chs_2g_num, center_chs_2g, parm);
+        kernel_add_band(
+            uch,
+            ch_sel_same,
+            true,
+            center_chs_2g_num,
+            center_chs_2g,
+            parm,
+        );
         #[cfg(ieee80211_band_5ghz)]
-        kernel_add_band(uch, ch_sel_same, false, center_chs_5g_num, center_chs_5g, parm);
+        kernel_add_band(
+            uch,
+            ch_sel_same,
+            false,
+            center_chs_5g_num,
+            center_chs_5g,
+            parm,
+        );
     }
 }
 
@@ -1587,11 +1615,7 @@ pub unsafe extern "C" fn rtw_set_acs_sitesurvey_rust(a: *mut HostAcsAdapter) -> 
         ch_flags: [0; 8],
         ch_cap: 8,
     };
-    acs_sitesurvey::host_fill(
-        ad.uch,
-        ad.ch_sel_within_same_band != 0,
-        &mut fill,
-    );
+    acs_sitesurvey::host_fill(ad.uch, ad.ch_sel_within_same_band != 0, &mut fill);
     ad.scan_calls += 1;
     ad.last_parm.scan_mode = fill.scan_mode;
     ad.last_parm.ch_num = fill.ch_num;
