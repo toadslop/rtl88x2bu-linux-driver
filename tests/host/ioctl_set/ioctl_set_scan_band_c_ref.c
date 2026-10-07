@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* L1 reference: C leaf setters for W3-125 PR3/PR6/PR8 (scan_mode, setband, regd, bssid scan). */
+/* L1 reference: C leaf setters for W3-125 PR3/PR6/PR8 + W3-124 PR9 (connect). */
 #include <stddef.h>
 
 typedef int RT_SCAN_TYPE;
@@ -123,6 +123,21 @@ u8 rtw_set_802_11_bssid_list_scan(struct adapter *adapter, struct sitesurvey_par
 
 u8 rtw_set_802_11_disassociate(struct adapter *adapter)
 {
+	adapter->mlmepriv.lock_depth++;
+	adapter->mlmepriv.lock_depth--;
+	return _SUCCESS;
+}
+
+typedef struct {
+	unsigned SsidLength;
+	unsigned char Ssid[32];
+} ndis80211_ssid;
+
+u8 rtw_set_802_11_connect(struct adapter *adapter, u8 *bssid, ndis80211_ssid *ssid, unsigned short ch)
+{
+	(void)bssid;
+	(void)ssid;
+	(void)ch;
 	adapter->mlmepriv.lock_depth++;
 	adapter->mlmepriv.lock_depth--;
 	return _SUCCESS;
