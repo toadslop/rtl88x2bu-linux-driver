@@ -326,14 +326,12 @@ pub unsafe extern "C" fn rtw_set_802_11_bssid(adapter: *mut c_void, bssid: *mut 
     unsafe { kernel::enter_critical_bh(lock, &mut irqL) };
     let fw_state = unsafe { *fw_ptr };
 
+    // C: WIFI_UNDER_SURVEY → goto handle_tkip_countermeasure (skip ASOC block).
     if kernel_chk_fw(fw_state, WIFI_UNDER_SURVEY_K) {
-        // handle_tkip_countermeasure
     } else if kernel_chk_fw(fw_state, WIFI_UNDER_LINKING_K) {
         unsafe { kernel::exit_critical_bh(lock, &mut irqL) };
         return _TRUE;
-    }
-
-    if kernel_chk_fw(
+    } else if kernel_chk_fw(
         fw_state,
         WIFI_ASOC_STATE_BSSID_K | WIFI_ADHOC_MASTER_STATE_BSSID_K,
     ) {
