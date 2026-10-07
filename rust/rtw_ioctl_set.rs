@@ -1472,6 +1472,9 @@ mod acs_sitesurvey {
     }
 
     #[cfg(all(rust_ioctl_set_leaf, config_rtw_acs))]
+    use core::ffi::c_int;
+
+    #[cfg(all(rust_ioctl_set_leaf, config_rtw_acs))]
     #[repr(C)]
     pub struct KernelSitesurveyParm {
         pub scan_mode: c_int,
@@ -1488,12 +1491,12 @@ mod acs_sitesurvey {
     }
 
     #[cfg(all(rust_ioctl_set_leaf, config_rtw_acs))]
-    pub unsafe fn kernel_add_band(
+    pub fn kernel_add_band(
         uch: u8,
         ch_sel_same: bool,
         band_is_2g: bool,
-        center_num: unsafe fn(u8) -> u8,
-        center_at: unsafe fn(u8, u8) -> u8,
+        center_num: unsafe extern "C" fn(u8) -> u8,
+        center_at: unsafe extern "C" fn(u8, u8) -> u8,
         parm: &mut KernelSitesurveyParm,
     ) {
         if ch_sel_same {

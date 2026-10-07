@@ -2713,10 +2713,31 @@ endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTW_TOKEN_BASED_XMIT' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg config_rtw_token_based_xmit
 endif
+# Match C #ifdef CONFIG_RTW_ACS (autoconf.h, drv_conf.h via 80211k/hostapd, or -D on ccflags).
+_rust_cfg_rtw_acs :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTW_ACS' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_rtw_acs := y
+endif
+ifneq ($(filter -DCONFIG_RTW_ACS,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_rtw_acs := y
+endif
+ifeq ($(CONFIG_RTW_80211K), y)
+_rust_cfg_rtw_acs := y
+endif
+ifeq ($(shell test $(CONFIG_RTW_ANDROID) -ge 10 2>/dev/null; echo $$?), 0)
+_rust_cfg_rtw_acs := y
+endif
+ifneq ($(_rust_cfg_rtw_acs),)
 rustflags-y += --cfg config_rtw_acs
 endif
+_rust_cfg_rtw_acs_dbg :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTW_ACS_DBG' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_rtw_acs_dbg := y
+endif
+ifneq ($(filter -DCONFIG_RTW_ACS_DBG,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_rtw_acs_dbg := y
+endif
+ifneq ($(_rust_cfg_rtw_acs_dbg),)
 rustflags-y += --cfg config_rtw_acs_dbg
 endif
 rustflags-y += --cfg config_rtw_mgmt_queue
