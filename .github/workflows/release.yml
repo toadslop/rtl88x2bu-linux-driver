@@ -21,27 +21,66 @@ on:
 permissions:
   contents: write
 
+env:
+  KERNEL_TAG: v6.12.9
+  L0_IMAGE: ghcr.io/${{ github.repository_owner }}/rtl88x2bu-l0:v6.12.9
+
 jobs:
-  release:
+  verify-l0:
+    name: Module L0 (release gate)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     steps:
       - uses: actions/checkout@v4
         with:
           ref: master
           fetch-depth: 1
 
-      - name: Package DKMS tarball
-        id: pkg
-        run: |
-          chmod +x scripts/ci/package-dkms-release.sh
-          ./scripts/ci/package-dkms-release.sh
-
-      - name: Upload tarball artifact
-        if: github.event_name == 'workflow_dispatch' && inputs.dry_run
-        uses: actions/upload-artifact@v4
+      - name: Log in to ghcr.io
+        uses: docker/login-action@v3
         with:
-          name: dkms-tarball
-          path: ${{ steps.pkg.outputs.tarball }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull published L0 image
+        id: pull
+        continue-on-error: true
+        run: docker pull "${L0_IMAGE}"
+
+      - name: Build L0 image (fallback when ghcr tag is missing)
+        if: steps.pull.outcome == 'failure'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: .github/docker/l0/Dockerfile
+          load: true
+          build-args: |
+            KERNEL_TAG=${{ env.KERNEL_TAG }}
+          tags: rtl88x2bu-l0:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Bindgen freshness + L0 build and probe verify
+        run: |
+          if [ "${{ steps.pull.outcome }}" = "success" ]; then
+            IMAGE="${L0_IMAGE}"
+          else
+            IMAGE="rtl88x2bu-l0:ci"
+          fi
+          docker run --rm -v "$PWD:/driver" -w /driver "${IMAGE}" \
+            bash -c 'KDIR=/opt/linux ./scripts/bindgen_rtw.sh --check && make clean && make KDIR=/opt/linux LLVM=1 -j"$(nproc)" && ./scripts/ci/verify-ko-probes.sh 88x2bu.ko'
+
+  release:
+    needs: verify-l0
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 1
 
       - name: Skip when this commit was already released
         id: skip
@@ -60,6 +99,19 @@ jobs:
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Package DKMS tarball
+        id: pkg
+        run: |
+          chmod +x scripts/ci/package-dkms-release.sh
+          ./scripts/ci/package-dkms-release.sh
+
+      - name: Upload tarball artifact
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run
+        uses: actions/upload-artifact@v4
+        with:
+          name: dkms-tarball
+          path: ${{ steps.pkg.outputs.tarball }}
 
       - name: Create GitHub prerelease
         if: >-
@@ -89,4 +141,4 @@ jobs:
           - **Packaging:** [docs/release.md](https://github.com/${{ github.repository }}/blob/master/docs/release.md)
           - **Hardware smoke:** [docs/smoke-test.md](https://github.com/${{ github.repository }}/blob/master/docs/smoke-test.md)
 
-          Cadence: weekly while the C→Rust migration is incomplete; Module L0 continues to gate merges via PR CI."
+          Cadence: weekly while the C→Rust migration is incomplete; this workflow runs Module L0 inline before packaging."

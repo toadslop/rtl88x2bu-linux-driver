@@ -19,6 +19,11 @@ Releases are **prereleases**. Skip creating a new release when the tip commit
 was already published (no-op weeks with no new merges). Manual dry runs and
 on-demand publishes remain available via `workflow_dispatch`.
 
+**L0 gate:** each scheduled or publish run executes the same Module L0 build +
+probe verify as [`.github/workflows/module-l0.yml`](../.github/workflows/module-l0.yml)
+before packaging. No tarball is produced unless that job succeeds for the checked-out
+`master` commit.
+
 **Later:** once the Rust driver is complete and work is mostly refactoring /
 performance, switch [`.github/workflows/release.yml`](../.github/workflows/release.yml)
 back to per-merge publishing (e.g. `workflow_run` after Module L0 succeeds on
