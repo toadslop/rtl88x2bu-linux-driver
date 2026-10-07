@@ -1,0 +1,98 @@
+# R1: DKMS source tarball GitHub Release after Module L0 passes on master.
+# See docs/release.md and docs/rust-migration/issues/release-01-github-releases.md
+
+name: DKMS release
+
+on:
+  workflow_run:
+    workflows: ["Module L0 build"]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Build tarball only (upload artifact, no GitHub Release)
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'master')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 2
+
+      - name: Skip when merge did not touch L0 paths
+        id: scope
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "l0=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          mapfile -t files < <(git diff --name-only HEAD^ HEAD)
+          l0=false
+          for f in "${files[@]}"; do
+            case "$f" in
+              core/*|hal/*|os_dep/*|include/*|platform/*|rust/*|Makefile|dkms.conf)
+                l0=true; break ;;
+              .github/workflows/module-l0.yml|scripts/ci/verify-ko-probes.sh|scripts/bindgen_rtw.sh)
+                l0=true; break ;;
+            esac
+          done
+          echo "l0=${l0}" >> "$GITHUB_OUTPUT"
+
+      - name: L0 scope not changed — skip release
+        if: steps.scope.outputs.l0 != 'true'
+        run: echo "No L0-scoped files in this commit; skipping DKMS release."
+
+      - name: Package DKMS tarball
+        if: steps.scope.outputs.l0 == 'true'
+        id: pkg
+        run: |
+          chmod +x scripts/ci/package-dkms-release.sh
+          ./scripts/ci/package-dkms-release.sh
+
+      - name: Upload tarball artifact
+        if: steps.scope.outputs.l0 == 'true' && github.event_name == 'workflow_dispatch' && inputs.dry_run
+        uses: actions/upload-artifact@v4
+        with:
+          name: dkms-tarball
+          path: ${{ steps.pkg.outputs.tarball }}
+
+      - name: Create GitHub prerelease
+        if: >-
+          steps.scope.outputs.l0 == 'true' &&
+          (github.event_name == 'workflow_run' ||
+           (github.event_name == 'workflow_dispatch' && !inputs.dry_run))
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.pkg.outputs.tag }}"
+          VER="${{ steps.pkg.outputs.version }}"
+          TARBALL="${{ steps.pkg.outputs.tarball }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists — skipping create."
+            exit 0
+          fi
+          gh release create "$TAG" "$TARBALL" \
+            --prerelease \
+            --title "DKMS ${VER}" \
+            --notes "**Reviewer:** @toadslop
+
+          Automated DKMS source release for commit \`${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}\`.
+
+          - **Artifact:** \`$(basename "$TARBALL")\`
+          - **Requires:** \`CONFIG_RUST=y\` kernel headers; see [dev-environment.md](https://github.com/${{ github.repository }}/blob/master/docs/rust-migration/dev-environment.md)
+          - **Packaging:** [docs/release.md](https://github.com/${{ github.repository }}/blob/master/docs/release.md)
+          - **Hardware smoke:** [docs/smoke-test.md](https://github.com/${{ github.repository }}/blob/master/docs/smoke-test.md)
+
+          CI gate: Module L0 build succeeded before this release job ran."

@@ -15,6 +15,7 @@ The tree still builds the same `88x2bu.ko` driver, but the primary purpose here 
 | Hardware STA smoke checklist | [`docs/smoke-test.md`](docs/smoke-test.md) |
 | Arch laptop USB test (safe vs built-in Wi-Fi) | [`docs/host-test.md`](docs/host-test.md) |
 | Host L2 crypto harness | [`tests/host/README.md`](tests/host/README.md) |
+| DKMS releases (no pre-built `.ko` matrix yet) | [GitHub Releases](https://github.com/toadslop/rtl88x2bu-linux-driver/releases) · [`docs/release.md`](docs/release.md) |
 | Work tracker (GitHub Issues + draft specs) | [Issues](https://github.com/toadslop/rtl88x2bu-linux-driver/issues) · [`docs/rust-migration/issues/`](docs/rust-migration/issues/README.md) |
 | Rust sources | [`rust/`](rust/) |
 
@@ -51,6 +52,14 @@ make KDIR=/path/to/rust-enabled-kernel LLVM=1 -j"$(nproc)"
 ```
 
 First-time setup (Arch pitfalls, Ubuntu packages, bindgen pin, pinning a kernel, L3 QEMU): [`docs/rust-migration/dev-environment.md`](docs/rust-migration/dev-environment.md).
+
+### Installing from GitHub Releases
+
+CI publishes **DKMS source tarballs** (not distro-specific pre-built `88x2bu.ko`
+files) after **Module L0** succeeds on `master`. See
+[`docs/release.md`](docs/release.md) for versioning, `CONFIG_RUST=y`, and when to
+set `LLVM=1` vs Arch GCC builds. For a git checkout on Arch, use
+[`scripts/install-dkms.sh`](scripts/install-dkms.sh) instead.
 
 Migrated crypto objects are linked from `rust/` only when the target kernel has `CONFIG_RUST=y`. There is no fallback to the old C objects for those units.
 
