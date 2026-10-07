@@ -39,3 +39,7 @@ drop rtw_rust_ioctl_assoc_ch_ptr
 drop rtw_rust_ioctl_assoc_by_bssid_ptr
 drop rtw_rust_ioctl_to_join_ptr
 drop rtw_rust_ioctl_cur_bssid_equals
+drop rtw_rust_ioctl_assoc_ssid_equals
+drop rtw_rust_ioctl_cur_wlan_network
+drop rtw_rust_ioctl_is_same_ibss
+drop rtw_rust_ioctl_lps_joinbss

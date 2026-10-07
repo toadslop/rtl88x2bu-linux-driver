@@ -276,6 +276,7 @@ exit:
 }
 #endif /* !CONFIG_RUST || HOST_IOCTL_CONNECT_TEST */
 
+#if !defined(CONFIG_RUST) || defined(HOST_IOCTL_CONNECT_TEST)
 u8 rtw_set_802_11_ssid(_adapter *padapter, NDIS_802_11_SSID *ssid)
 {
 	_irqL irqL;
@@ -373,6 +374,7 @@ exit:
 	return status;
 
 }
+#endif /* !CONFIG_RUST || HOST_IOCTL_CONNECT_TEST */
 
 #if !defined(CONFIG_RUST) || defined(HOST_IOCTL_CONNECT_TEST)
 u8 rtw_set_802_11_connect(_adapter *padapter,
@@ -1076,6 +1078,31 @@ int rtw_rust_ioctl_cur_bssid_equals(_adapter *adapter, u8 *bssid)
 {
 	return _rtw_memcmp(&adapter->mlmepriv.cur_network.network.MacAddress,
 			   bssid, ETH_ALEN) == _TRUE;
+}
+
+int rtw_rust_ioctl_assoc_ssid_equals(_adapter *adapter, NDIS_802_11_SSID *ssid)
+{
+	struct mlme_priv *m = &adapter->mlmepriv;
+
+	return m->assoc_ssid.SsidLength == ssid->SsidLength &&
+	       _rtw_memcmp(m->assoc_ssid.Ssid, ssid->Ssid, ssid->SsidLength) == _TRUE;
+}
+
+struct wlan_network *rtw_rust_ioctl_cur_wlan_network(_adapter *adapter)
+{
+	return &adapter->mlmepriv.cur_network;
+}
+
+int rtw_rust_ioctl_is_same_ibss(_adapter *adapter, struct wlan_network *pnetwork)
+{
+	return rtw_is_same_ibss(adapter, pnetwork) == _TRUE;
+}
+
+void rtw_rust_ioctl_lps_joinbss(_adapter *adapter)
+{
+#ifdef CONFIG_LPS
+	rtw_lps_ctrl_wk_cmd(adapter, LPS_CTRL_JOINBSS, 0);
+#endif
 }
 #endif /* CONFIG_RUST && !HOST_IOCTL_SCAN_CHANNEL_TEST */
 

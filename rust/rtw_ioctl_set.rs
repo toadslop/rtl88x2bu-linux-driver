@@ -103,6 +103,10 @@ mod kernel {
         fn rtw_validate_ssid(ssid: *mut c_void) -> u8;
         fn rtw_do_join(adapter: *mut c_void) -> u8;
         fn rtw_rust_ioctl_cur_bssid_equals(adapter: *mut c_void, bssid: *mut u8) -> c_int;
+        fn rtw_rust_ioctl_assoc_ssid_equals(adapter: *mut c_void, ssid: *mut c_void) -> c_int;
+        fn rtw_rust_ioctl_cur_wlan_network(adapter: *mut c_void) -> *mut c_void;
+        fn rtw_rust_ioctl_is_same_ibss(adapter: *mut c_void, pnetwork: *mut c_void) -> c_int;
+        fn rtw_rust_ioctl_lps_joinbss(adapter: *mut c_void);
     }
 
     pub unsafe fn scan_mode_ptr(adapter: *mut c_void) -> *mut i32 {
@@ -266,6 +270,22 @@ mod kernel {
     pub unsafe fn cur_bssid_equals(adapter: *mut c_void, bssid: *mut u8) -> bool {
         unsafe { rtw_rust_ioctl_cur_bssid_equals(adapter, bssid) != 0 }
     }
+
+    pub unsafe fn assoc_ssid_equals(adapter: *mut c_void, ssid: *mut c_void) -> bool {
+        unsafe { rtw_rust_ioctl_assoc_ssid_equals(adapter, ssid) != 0 }
+    }
+
+    pub unsafe fn cur_wlan_network(adapter: *mut c_void) -> *mut c_void {
+        unsafe { rtw_rust_ioctl_cur_wlan_network(adapter) }
+    }
+
+    pub unsafe fn is_same_ibss(adapter: *mut c_void, pnetwork: *mut c_void) -> bool {
+        unsafe { rtw_rust_ioctl_is_same_ibss(adapter, pnetwork) != 0 }
+    }
+
+    pub unsafe fn lps_joinbss(adapter: *mut c_void) {
+        unsafe { rtw_rust_ioctl_lps_joinbss(adapter) }
+    }
 }
 
 #[cfg(rust_ioctl_set_leaf)]
@@ -360,6 +380,83 @@ pub unsafe extern "C" fn rtw_set_802_11_bssid(adapter: *mut c_void, bssid: *mut 
     let by_bssid_ptr = unsafe { kernel::assoc_by_bssid_ptr(adapter) };
     if !by_bssid_ptr.is_null() {
         unsafe { *by_bssid_ptr = _TRUE };
+    }
+
+    let fw_state = unsafe { *fw_ptr };
+    if kernel_chk_fw(fw_state, WIFI_UNDER_SURVEY_K) {
+        let to_join_ptr = unsafe { kernel::to_join_ptr(adapter) };
+        if !to_join_ptr.is_null() {
+            unsafe { *to_join_ptr = _TRUE };
+        }
+    } else {
+        status = unsafe { kernel::do_join(adapter) };
+    }
+
+    unsafe { kernel::exit_critical_bh(lock, &mut irqL) };
+    status
+}
+
+#[cfg(rust_ioctl_set_leaf)]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_set_802_11_ssid(adapter: *mut c_void, ssid: *mut c_void) -> u8 {
+    if !unsafe { kernel::hw_init_completed(adapter) } {
+        return _FALSE;
+    }
+
+    let mut irqL: c_ulong = 0;
+    let lock = unsafe { kernel::mlme_lock_ptr(adapter) };
+    let fw_ptr = unsafe { kernel::fw_state_ptr(adapter) };
+    let mut status = _TRUE;
+
+    unsafe { kernel::enter_critical_bh(lock, &mut irqL) };
+    let fw_state = unsafe { *fw_ptr };
+
+    // C: WIFI_UNDER_SURVEY → goto handle_tkip_countermeasure (skip ASOC block).
+    if kernel_chk_fw(fw_state, WIFI_UNDER_SURVEY_K) {
+    } else if kernel_chk_fw(fw_state, WIFI_UNDER_LINKING_K) {
+        unsafe { kernel::exit_critical_bh(lock, &mut irqL) };
+        return _TRUE;
+    } else if kernel_chk_fw(
+        fw_state,
+        WIFI_ASOC_STATE_BSSID_K | WIFI_ADHOC_MASTER_STATE_BSSID_K,
+    ) {
+        if !ssid.is_null() && unsafe { kernel::assoc_ssid_equals(adapter, ssid) } {
+            if !kernel_chk_fw(fw_state, WIFI_STATION_STATE_BSSID_K) {
+                let pnet = unsafe { kernel::cur_wlan_network(adapter) };
+                if pnet.is_null() || !unsafe { kernel::is_same_ibss(adapter, pnet) } {
+                    unsafe { kernel_disassoc_for_new_target(adapter, fw_state) };
+                } else {
+                    unsafe { kernel::exit_critical_bh(lock, &mut irqL) };
+                    return _TRUE;
+                }
+            } else {
+                unsafe { kernel::lps_joinbss(adapter) };
+            }
+        } else {
+            unsafe { kernel_disassoc_for_new_target(adapter, fw_state) };
+        }
+    }
+
+    if !unsafe { kernel::handle_tkip_countermeasure(adapter) } {
+        status = _FALSE;
+        unsafe { kernel::exit_critical_bh(lock, &mut irqL) };
+        return status;
+    }
+
+    if ssid.is_null() || !unsafe { kernel::validate_ssid(ssid) } {
+        status = _FALSE;
+        unsafe { kernel::exit_critical_bh(lock, &mut irqL) };
+        return status;
+    }
+
+    unsafe { kernel::set_assoc_ssid_copy(adapter, ssid) };
+    let ch_ptr = unsafe { kernel::assoc_ch_ptr(adapter) };
+    if !ch_ptr.is_null() {
+        unsafe { *ch_ptr = 0 };
+    }
+    let by_bssid_ptr = unsafe { kernel::assoc_by_bssid_ptr(adapter) };
+    if !by_bssid_ptr.is_null() {
+        unsafe { *by_bssid_ptr = _FALSE };
     }
 
     let fw_state = unsafe { *fw_ptr };

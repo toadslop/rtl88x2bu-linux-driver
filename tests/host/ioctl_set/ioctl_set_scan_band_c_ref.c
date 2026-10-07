@@ -150,3 +150,16 @@ u8 rtw_set_802_11_bssid(struct adapter *adapter, u8 *bssid)
 	adapter->mlmepriv.lock_depth--;
 	return _SUCCESS;
 }
+
+typedef struct {
+	unsigned SsidLength;
+	unsigned char Ssid[32];
+} ndis80211_ssid_set;
+
+u8 rtw_set_802_11_ssid(struct adapter *adapter, ndis80211_ssid_set *ssid)
+{
+	(void)ssid;
+	adapter->mlmepriv.lock_depth++;
+	adapter->mlmepriv.lock_depth--;
+	return _SUCCESS;
+}
