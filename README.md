@@ -56,10 +56,10 @@ First-time setup (Arch pitfalls, Ubuntu packages, bindgen pin, pinning a kernel,
 ### Installing from GitHub Releases
 
 CI publishes **DKMS source tarballs** (not distro-specific pre-built `88x2bu.ko`
-files) after **Module L0** succeeds on `master`. See
-[`docs/release.md`](docs/release.md) for versioning, `CONFIG_RUST=y`, and when to
-set `LLVM=1` vs Arch GCC builds. For a git checkout on Arch, use
-[`scripts/install-dkms.sh`](scripts/install-dkms.sh) instead.
+files) on a **weekly schedule** from tip of `master` while the C→Rust migration
+is incomplete. See [`docs/release.md`](docs/release.md) for versioning,
+`CONFIG_RUST=y`, and when to set `LLVM=1` vs Arch GCC builds. For a git checkout
+on Arch, use [`scripts/install-dkms.sh`](scripts/install-dkms.sh) instead.
 
 Migrated crypto objects are linked from `rust/` only when the target kernel has `CONFIG_RUST=y`. There is no fallback to the old C objects for those units.
 
