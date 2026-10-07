@@ -1,0 +1,47 @@
+{
+  "vectors": [
+    {
+      "name": "union_fail",
+      "union_ok": 0,
+      "uch": 6,
+      "ch_sel_same_band": 0,
+      "scan_ret": 1,
+      "expect_ret": 0,
+      "expect_scan_calls": 0,
+      "expect_ch_num": 0
+    },
+    {
+      "name": "union_ok_all_bands",
+      "union_ok": 1,
+      "uch": 6,
+      "ch_sel_same_band": 0,
+      "scan_ret": 1,
+      "expect_ret": 1,
+      "expect_scan_calls": 1,
+      "expect_ch_num": 6,
+      "expect_acs": 1
+    },
+    {
+      "name": "same_band_2g_only",
+      "union_ok": 1,
+      "uch": 6,
+      "ch_sel_same_band": 1,
+      "scan_ret": 1,
+      "expect_ret": 1,
+      "expect_scan_calls": 1,
+      "expect_ch_num": 3,
+      "expect_first_ch": 1,
+      "expect_last_ch": 11
+    },
+    {
+      "name": "scan_cmd_fail",
+      "union_ok": 1,
+      "uch": 36,
+      "ch_sel_same_band": 0,
+      "scan_ret": 0,
+      "expect_ret": 0,
+      "expect_scan_calls": 1,
+      "expect_ch_num": 6
+    }
+  ]
+}
