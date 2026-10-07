@@ -8,7 +8,7 @@ blocked_by: [T6]
 
 ## Goal
 
-Ship installable artifacts for users who want pre-packaged driver builds without cloning the repo on every update. Evaluate what "release on each merge" means for a **kernel-specific** out-of-tree module with a **Rust-for-Linux** build requirement.
+Ship installable artifacts for users who want pre-packaged driver builds without cloning the repo on every update. During the incomplete Rust port, cadence is **weekly** scheduled DKMS prereleases from tip of `master` (not every merge); switch to per-merge once the driver is fully Rust.
 
 ## Context
 

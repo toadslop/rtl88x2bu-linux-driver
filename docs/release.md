@@ -7,16 +7,22 @@ driver and why we chose **DKMS source tarballs** over pre-built `.ko` files.
 
 | Approach | Pros | Cons |
 |----------|------|------|
-| **Source tarball + DKMS** on each meaningful `master` merge | Works on any matching kernel; standard for out-of-tree drivers | User must have `CONFIG_RUST=y` headers and the correct compiler/LLVM contract |
+| **Source tarball + DKMS** on each meaningful `master` merge | Works on any matching kernel; standard for out-of-tree drivers | User must have `CONFIG_RUST=y` headers and the correct compiler/LLVM contract; noisy while migration is incomplete |
+| **Source tarball + DKMS** on a fixed schedule | Same install path; low release volume during Wave 0+ | Snapshot may lag tip of `master` by up to one interval |
 | **Pre-built `.ko` per kernel version** | Easy `insmod` on one distro | Matrix explosion; vermagic lock-in; Rust-enabled kernels are still uncommon |
 | **Git tag per merge (`vYYYY.MM.DD+<shortsha>`)** | Traceable, immutable | Many releases; semver is unclear during migration |
-| **Git tag on wave milestones only** | Fewer, meaningful releases | Does not track every verified merge |
+| **Git tag on wave milestones only** | Fewer, meaningful releases | Does not track ongoing verified work |
 
-**Decision:** publish a **DKMS source release** after **Module L0** succeeds on
-`master` for commits that touch L0-scoped paths (same path set as
-[`.github/workflows/module-l0.yml`](../.github/workflows/module-l0.yml)). Releases
-are **prereleases** until maintainers confirm cadence (see open question on
-[#155](https://github.com/toadslop/rtl88x2bu-linux-driver/issues/155)).
+**Decision:** publish a **DKMS source release** on a **weekly schedule** (Mondays
+06:00 UTC) from the tip of `master`, while the driver is still mid-migration.
+Releases are **prereleases**. Skip creating a new release when the tip commit
+was already published (no-op weeks with no new merges). Manual dry runs and
+on-demand publishes remain available via `workflow_dispatch`.
+
+**Later:** once the Rust driver is complete and work is mostly refactoring /
+performance, switch [`.github/workflows/release.yml`](../.github/workflows/release.yml)
+back to per-merge publishing (e.g. `workflow_run` after Module L0 succeeds on
+`master` for L0-scoped commits).
 
 We do **not** ship universal pre-built `.ko` binaries until an R2 kernel matrix
 exists.
@@ -56,11 +62,11 @@ the Makefile still builds but Rust objects are omitted — see `install-dkms.sh`
 
 ## CI pipeline
 
-1. **Module L0 build** ([`module-l0.yml`](../.github/workflows/module-l0.yml)) runs on
-   `master` pushes (and PRs) for L0-scoped paths.
-2. **DKMS release** ([`release.yml`](../.github/workflows/release.yml)) runs on
-   `workflow_run` when L0 completes successfully on `master`, but only if the commit
-   changed L0-scoped files (docs-only merges skip both a real L0 build and release).
+1. **Module L0 build** ([`module-l0.yml`](../.github/workflows/module-l0.yml)) continues
+   to gate PRs and `master` pushes for L0-scoped paths (independent of releases).
+2. **DKMS release** ([`release.yml`](../.github/workflows/release.yml)) runs on a
+   **weekly cron** (and optional `workflow_dispatch`). It packages tip of `master`
+   and publishes a prerelease unless that commit SHA was already released.
 3. [`scripts/ci/package-dkms-release.sh`](../scripts/ci/package-dkms-release.sh)
    substitutes `@PKGVER@`, runs `git archive`, and produces
    `rtl88x2bu-<version>-dkms.tar.gz`.
@@ -69,7 +75,8 @@ the Makefile still builds but Rust objects are omitted — see `install-dkms.sh`
    [`smoke-test.md`](../smoke-test.md).
 
 Manual dry run (no GitHub Release): **Actions → DKMS release → Run workflow** with
-**dry_run** enabled; download the artifact from the workflow run.
+**dry_run** enabled; download the artifact from the workflow run. Set **dry_run**
+off for an on-demand publish outside the weekly slot.
 
 ## Installing from a release tarball
 
@@ -84,9 +91,11 @@ sudo dkms install -m rtl88x2bu -v … -k "$(uname -r)"
 For Arch one-shot install from a git checkout, prefer
 [`scripts/install-dkms.sh`](../scripts/install-dkms.sh).
 
-## Maintainer open question
+## Cadence (resolved)
 
-> Release on **each L0-qualified merge** (current automation) vs **tag-only**
-> releases — confirm before turning off `prerelease`.
+| Phase | Cadence |
+|-------|---------|
+| **Now** (incomplete Rust port) | Weekly scheduled prerelease from tip of `master` |
+| **After** full Rust driver | Per-merge (L0-qualified) releases; drop or keep schedule as a backup |
 
 Track follow-ups under epic **E12** ([#150](https://github.com/toadslop/rtl88x2bu-linux-driver/issues/150)).

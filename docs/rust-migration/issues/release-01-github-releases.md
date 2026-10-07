@@ -46,6 +46,9 @@ Design and implement automated **GitHub Releases** so each meaningful merge (or 
 - Signing / secure boot
 - PPA / COPR packaging
 
-## Open question for maintainers
+## Cadence (resolved after R1 landed)
 
-> "Release on each merge" vs "release on tag only" — confirm cadence before enabling non-prerelease auto-publish.
+> Weekly scheduled prereleases from tip of `master` while the Rust port is
+> incomplete; switch to per-merge (L0-qualified) once the driver is fully Rust
+> and work is mostly refactoring / performance. Confirm before turning off
+> `prerelease`.
