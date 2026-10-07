@@ -21,12 +21,15 @@ WORK="$(mktemp -d)"
 cleanup() { rm -rf "$WORK"; }
 trap cleanup EXIT
 
-git archive --format=tar "$GIT_SHA" | tar -x -C "$WORK"
-sed -i "s/@PKGVER@/${VER}/" "${WORK}/dkms.conf"
+STAGE_NAME="rtl88x2bu-${VER}"
+STAGE="${WORK}/${STAGE_NAME}"
+mkdir -p "$STAGE"
+git archive --format=tar "$GIT_SHA" | tar -x -C "$STAGE"
+sed -i "s/@PKGVER@/${VER}/" "${STAGE}/dkms.conf"
 
 TARBALL_NAME="rtl88x2bu-${VER}-dkms.tar.gz"
 TARBALL="${OUT_DIR}/${TARBALL_NAME}"
-tar -czf "$TARBALL" -C "$WORK" .
+tar -czf "$TARBALL" -C "$WORK" "$STAGE_NAME"
 
 echo "Packaged ${TARBALL} (version ${VER})"
 

@@ -32,8 +32,11 @@ Packaging sets `PACKAGE_VERSION` in `dkms.conf` at release time (the tree keeps
 
 Example: `5.13.1.migration.2026.10.07.a1b2c3d`
 
-This matches [`scripts/install-dkms.sh`](../scripts/install-dkms.sh) (local installs
-use the same prefix with git HEAD only).
+[`scripts/install-dkms.sh`](../scripts/install-dkms.sh) uses the same
+`5.13.1.migration.*` prefix but **without** the UTC date — only
+`5.13.1.migration.<short-sha>` from the current git checkout. Release tarballs add
+the date so published DKMS versions sort and remain unique across days; compare
+`PACKAGE_VERSION` in `dkms.conf`, not the filename alone.
 
 ## Build contract in `dkms.conf`
 
@@ -71,7 +74,7 @@ Manual dry run (no GitHub Release): **Actions → DKMS release → Run workflow*
 ## Installing from a release tarball
 
 ```bash
-tar -xzf rtl88x2bu-5.13.1.migration.*.tar.gz -C /usr/src/
+tar -xzf rtl88x2bu-*-dkms.tar.gz -C /usr/src/
 cd /usr/src/rtl88x2bu-5.13.1.migration.*
 # Adjust @MAKE_ENV@ / LLVM=1 per table above, then:
 sudo dkms add -m rtl88x2bu -v "$(grep PACKAGE_VERSION dkms.conf | cut -d= -f2 | tr -d '"')"
