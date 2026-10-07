@@ -778,6 +778,179 @@ pub struct HostBssidScanAdapter {
     pub last_parm: *mut HostSitesurveyParm,
 }
 
+#[cfg(host_ioctl_infra_mode_test)]
+const INFRA_NDIS_IBSS: u32 = 0;
+#[cfg(host_ioctl_infra_mode_test)]
+const INFRA_NDIS_INFRA: u32 = 1;
+#[cfg(host_ioctl_infra_mode_test)]
+const INFRA_NDIS_AP: u32 = 4;
+#[cfg(host_ioctl_infra_mode_test)]
+const INFRA_WIFI_ASOC: u32 = 0x0000_0001;
+#[cfg(host_ioctl_infra_mode_test)]
+const INFRA_WIFI_ADHOC_MASTER: u32 = 0x0000_0040;
+#[cfg(host_ioctl_infra_mode_test)]
+const INFRA_WIFI_ADHOC: u32 = 0x0000_0020;
+#[cfg(host_ioctl_infra_mode_test)]
+const INFRA_WIFI_STA: u32 = 0x0000_0008;
+#[cfg(host_ioctl_infra_mode_test)]
+const INFRA_WIFI_AP: u32 = 0x0000_0010;
+
+#[cfg(host_ioctl_infra_mode_test)]
+static mut HOST_INFRA_STOP_AP: u32 = 0;
+#[cfg(host_ioctl_infra_mode_test)]
+static mut HOST_INFRA_START_AP: u32 = 0;
+#[cfg(host_ioctl_infra_mode_test)]
+static mut HOST_INFRA_DISASSOC: u32 = 0;
+#[cfg(host_ioctl_infra_mode_test)]
+static mut HOST_INFRA_FREE_RES: u32 = 0;
+#[cfg(host_ioctl_infra_mode_test)]
+static mut HOST_INFRA_DISCONNECT: u32 = 0;
+#[cfg(host_ioctl_infra_mode_test)]
+static mut HOST_INFRA_INIT_BCMC: u32 = 0;
+
+#[cfg(host_ioctl_infra_mode_test)]
+#[no_mangle]
+pub extern "C" fn ioctl_infra_mode_test_reset_counters() {
+    unsafe {
+        HOST_INFRA_STOP_AP = 0;
+        HOST_INFRA_START_AP = 0;
+        HOST_INFRA_DISASSOC = 0;
+        HOST_INFRA_FREE_RES = 0;
+        HOST_INFRA_DISCONNECT = 0;
+        HOST_INFRA_INIT_BCMC = 0;
+    }
+}
+
+#[cfg(host_ioctl_infra_mode_test)]
+#[no_mangle]
+pub extern "C" fn ioctl_infra_mode_test_stop_ap_calls() -> u32 {
+    unsafe { HOST_INFRA_STOP_AP }
+}
+#[cfg(host_ioctl_infra_mode_test)]
+#[no_mangle]
+pub extern "C" fn ioctl_infra_mode_test_start_ap_calls() -> u32 {
+    unsafe { HOST_INFRA_START_AP }
+}
+#[cfg(host_ioctl_infra_mode_test)]
+#[no_mangle]
+pub extern "C" fn ioctl_infra_mode_test_disassoc_calls() -> u32 {
+    unsafe { HOST_INFRA_DISASSOC }
+}
+#[cfg(host_ioctl_infra_mode_test)]
+#[no_mangle]
+pub extern "C" fn ioctl_infra_mode_test_free_res_calls() -> u32 {
+    unsafe { HOST_INFRA_FREE_RES }
+}
+#[cfg(host_ioctl_infra_mode_test)]
+#[no_mangle]
+pub extern "C" fn ioctl_infra_mode_test_disconnect_calls() -> u32 {
+    unsafe { HOST_INFRA_DISCONNECT }
+}
+#[cfg(host_ioctl_infra_mode_test)]
+#[no_mangle]
+pub extern "C" fn ioctl_infra_mode_test_init_bcmc_calls() -> u32 {
+    unsafe { HOST_INFRA_INIT_BCMC }
+}
+
+#[cfg(host_ioctl_infra_mode_test)]
+#[repr(C)]
+pub struct HostInfraNetwork {
+    pub infrastructure_mode: u32,
+}
+
+#[cfg(host_ioctl_infra_mode_test)]
+#[repr(C)]
+pub struct HostInfraCurNetwork {
+    pub network: HostInfraNetwork,
+    pub join_res: i32,
+}
+
+#[cfg(host_ioctl_infra_mode_test)]
+#[repr(C)]
+pub struct HostInfraMlme {
+    pub fw_state: u32,
+    pub lock_depth: i32,
+    pub cur_network: HostInfraCurNetwork,
+}
+
+#[cfg(host_ioctl_infra_mode_test)]
+#[repr(C)]
+pub struct HostInfraAdapter {
+    pub mlmepriv: HostInfraMlme,
+}
+
+#[cfg(host_ioctl_infra_mode_test)]
+fn host_infra_chk(fw: u32, bit: u32) -> bool {
+    (fw & bit) != 0
+}
+
+#[cfg(host_ioctl_infra_mode_test)]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_set_802_11_infrastructure_mode_rust(
+    padapter: *mut HostInfraAdapter,
+    networktype: u32,
+    flags: u8,
+) -> u8 {
+    if padapter.is_null() {
+        return _FALSE;
+    }
+    let a = &mut *padapter;
+    let pold = a.mlmepriv.cur_network.network.infrastructure_mode;
+    if pold == networktype {
+        return _TRUE;
+    }
+    let mut ap2sta = false;
+    let mut ret = _TRUE;
+    if pold == INFRA_NDIS_AP {
+        a.mlmepriv.cur_network.join_res = -1;
+        ap2sta = true;
+        unsafe { HOST_INFRA_STOP_AP += 1 };
+    }
+
+    a.mlmepriv.lock_depth += 1;
+    let is_linked = host_infra_chk(a.mlmepriv.fw_state, INFRA_WIFI_ASOC);
+    let is_adhoc_master = host_infra_chk(a.mlmepriv.fw_state, INFRA_WIFI_ADHOC_MASTER);
+    if flags != 0 {
+        a.mlmepriv.lock_depth -= 1;
+    }
+
+    if is_linked || pold == INFRA_NDIS_IBSS {
+        unsafe { HOST_INFRA_DISASSOC += 1 };
+    }
+    if is_linked || is_adhoc_master {
+        unsafe { HOST_INFRA_FREE_RES += 1 };
+    }
+    if (pold == INFRA_NDIS_INFRA || pold == INFRA_NDIS_IBSS) && is_linked {
+        unsafe { HOST_INFRA_DISCONNECT += 1 };
+    }
+
+    if flags != 0 {
+        a.mlmepriv.lock_depth += 1;
+    }
+
+    a.mlmepriv.cur_network.network.infrastructure_mode = networktype;
+    a.mlmepriv.fw_state = 0;
+
+    match networktype {
+        INFRA_NDIS_IBSS => a.mlmepriv.fw_state |= INFRA_WIFI_ADHOC,
+        INFRA_NDIS_INFRA => {
+            a.mlmepriv.fw_state |= INFRA_WIFI_STA;
+            if ap2sta {
+                unsafe { HOST_INFRA_INIT_BCMC += 1 };
+            }
+        }
+        INFRA_NDIS_AP => {
+            a.mlmepriv.fw_state |= INFRA_WIFI_AP;
+            unsafe { HOST_INFRA_START_AP += 1 };
+        }
+        2 | 3 => {}
+        _ => ret = _FALSE,
+    }
+
+    a.mlmepriv.lock_depth -= 1;
+    ret
+}
+
 #[cfg(host_ioctl_bssid_scan_test)]
 #[no_mangle]
 pub unsafe extern "C" fn rtw_set_802_11_bssid_list_scan_rust(
