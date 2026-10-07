@@ -441,6 +441,7 @@ exit:
 	return status;
 }
 
+#if !defined(CONFIG_RUST) || defined(HOST_IOCTL_INFRA_MODE_TEST)
 u8 rtw_set_802_11_infrastructure_mode(_adapter *padapter,
 			      NDIS_802_11_NETWORK_INFRASTRUCTURE networktype, u8 flags)
 {
@@ -544,6 +545,7 @@ u8 rtw_set_802_11_infrastructure_mode(_adapter *padapter,
 
 	return ret;
 }
+#endif /* !CONFIG_RUST || HOST_IOCTL_INFRA_MODE_TEST */
 
 
 #if !defined(CONFIG_RUST)
@@ -953,6 +955,55 @@ void rtw_rust_ioctl_disassociate_if_assoc(_adapter *padapter)
 		if (_FAIL == rtw_pwr_wakeup(padapter))
 			RTW_INFO("%s(): rtw_pwr_wakeup fail !!!\n", __FUNCTION__);
 	}
+}
+
+u32 *rtw_rust_ioctl_infra_mode_ptr(_adapter *adapter)
+{
+	return (u32 *)&adapter->mlmepriv.cur_network.network.InfrastructureMode;
+}
+
+int *rtw_rust_ioctl_join_res_ptr(_adapter *adapter)
+{
+	return &adapter->mlmepriv.cur_network.join_res;
+}
+
+u32 *rtw_rust_ioctl_fw_state_ptr(_adapter *adapter)
+{
+	return &adapter->mlmepriv.fw_state;
+}
+
+void rtw_rust_ioctl_stop_ap_mode(_adapter *adapter)
+{
+#ifdef CONFIG_NATIVEAP_MLME
+	stop_ap_mode(adapter);
+#endif
+}
+
+void rtw_rust_ioctl_start_ap_mode(_adapter *adapter)
+{
+#ifdef CONFIG_NATIVEAP_MLME
+	start_ap_mode(adapter);
+#endif
+}
+
+void rtw_rust_ioctl_disassoc_cmd(_adapter *adapter, u8 flags)
+{
+	rtw_disassoc_cmd(adapter, 0, flags);
+}
+
+void rtw_rust_ioctl_free_assoc_resources_cmd(_adapter *adapter, u8 flags)
+{
+	rtw_free_assoc_resources_cmd(adapter, _TRUE, flags);
+}
+
+void rtw_rust_ioctl_indicate_disconnect(_adapter *adapter)
+{
+	rtw_indicate_disconnect(adapter, 0, _FALSE);
+}
+
+void rtw_rust_ioctl_init_bcmc_stainfo(_adapter *adapter)
+{
+	rtw_init_bcmc_stainfo(adapter);
 }
 #endif /* CONFIG_RUST && !HOST_IOCTL_SCAN_CHANNEL_TEST */
 

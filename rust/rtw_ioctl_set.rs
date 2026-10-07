@@ -80,6 +80,15 @@ mod kernel {
         fn rtw_rust_ioctl_exit_critical_bh(lock: *mut c_void, irqL: *mut c_ulong);
         fn rtw_sitesurvey_cmd(adapter: *mut c_void, pparm: *mut c_void) -> u8;
         fn rtw_rust_ioctl_disassociate_if_assoc(adapter: *mut c_void);
+        fn rtw_rust_ioctl_infra_mode_ptr(adapter: *mut c_void) -> *mut u32;
+        fn rtw_rust_ioctl_join_res_ptr(adapter: *mut c_void) -> *mut i32;
+        fn rtw_rust_ioctl_fw_state_ptr(adapter: *mut c_void) -> *mut u32;
+        fn rtw_rust_ioctl_stop_ap_mode(adapter: *mut c_void);
+        fn rtw_rust_ioctl_start_ap_mode(adapter: *mut c_void);
+        fn rtw_rust_ioctl_disassoc_cmd(adapter: *mut c_void, flags: u8);
+        fn rtw_rust_ioctl_free_assoc_resources_cmd(adapter: *mut c_void, flags: u8);
+        fn rtw_rust_ioctl_indicate_disconnect(adapter: *mut c_void);
+        fn rtw_rust_ioctl_init_bcmc_stainfo(adapter: *mut c_void);
     }
 
     pub unsafe fn scan_mode_ptr(adapter: *mut c_void) -> *mut i32 {
@@ -151,6 +160,42 @@ mod kernel {
     pub unsafe fn disassociate_if_assoc(adapter: *mut c_void) {
         unsafe { rtw_rust_ioctl_disassociate_if_assoc(adapter) }
     }
+
+    pub unsafe fn infra_mode_ptr(adapter: *mut c_void) -> *mut u32 {
+        unsafe { rtw_rust_ioctl_infra_mode_ptr(adapter) }
+    }
+
+    pub unsafe fn join_res_ptr(adapter: *mut c_void) -> *mut i32 {
+        unsafe { rtw_rust_ioctl_join_res_ptr(adapter) }
+    }
+
+    pub unsafe fn fw_state_ptr(adapter: *mut c_void) -> *mut u32 {
+        unsafe { rtw_rust_ioctl_fw_state_ptr(adapter) }
+    }
+
+    pub unsafe fn stop_ap_mode(adapter: *mut c_void) {
+        unsafe { rtw_rust_ioctl_stop_ap_mode(adapter) }
+    }
+
+    pub unsafe fn start_ap_mode(adapter: *mut c_void) {
+        unsafe { rtw_rust_ioctl_start_ap_mode(adapter) }
+    }
+
+    pub unsafe fn disassoc_cmd(adapter: *mut c_void, flags: u8) {
+        unsafe { rtw_rust_ioctl_disassoc_cmd(adapter, flags) }
+    }
+
+    pub unsafe fn free_assoc_resources_cmd(adapter: *mut c_void, flags: u8) {
+        unsafe { rtw_rust_ioctl_free_assoc_resources_cmd(adapter, flags) }
+    }
+
+    pub unsafe fn indicate_disconnect(adapter: *mut c_void) {
+        unsafe { rtw_rust_ioctl_indicate_disconnect(adapter) }
+    }
+
+    pub unsafe fn init_bcmc_stainfo(adapter: *mut c_void) {
+        unsafe { rtw_rust_ioctl_init_bcmc_stainfo(adapter) }
+    }
 }
 
 #[cfg(rust_ioctl_set_leaf)]
@@ -220,6 +265,127 @@ pub unsafe extern "C" fn rtw_set_802_11_disassociate(adapter: *mut c_void) -> u8
         kernel::exit_critical_bh(lock, &mut irqL);
     }
     _TRUE
+}
+
+#[cfg(rust_ioctl_set_leaf)]
+const NDIS802_11_IBSS_K: u32 = 0;
+#[cfg(rust_ioctl_set_leaf)]
+const NDIS802_11_INFRASTRUCTURE_K: u32 = 1;
+#[cfg(rust_ioctl_set_leaf)]
+const NDIS802_11_AP_MODE_K: u32 = 4;
+#[cfg(rust_ioctl_set_leaf)]
+const WIFI_ASOC_STATE_K: u32 = 0x0000_0001;
+#[cfg(rust_ioctl_set_leaf)]
+const WIFI_ADHOC_MASTER_STATE_K: u32 = 0x0000_0040;
+#[cfg(rust_ioctl_set_leaf)]
+const WIFI_NULL_STATE_K: u32 = 0;
+#[cfg(rust_ioctl_set_leaf)]
+const WIFI_ADHOC_STATE_K: u32 = 0x0000_0020;
+#[cfg(rust_ioctl_set_leaf)]
+const WIFI_STATION_STATE_K: u32 = 0x0000_0008;
+#[cfg(rust_ioctl_set_leaf)]
+const WIFI_AP_STATE_K: u32 = 0x0000_0010;
+#[cfg(config_rtw_mesh)]
+#[cfg(rust_ioctl_set_leaf)]
+const NDIS802_11_MESH_K: u32 = 6;
+
+#[cfg(rust_ioctl_set_leaf)]
+fn kernel_chk_fw(fw_state: u32, bit: u32) -> bool {
+    (fw_state & bit) != 0
+}
+
+#[cfg(rust_ioctl_set_leaf)]
+unsafe fn kernel_set_infra_mode(adapter: *mut c_void, networktype: u32, flags: u8) -> u8 {
+    let old_ptr = unsafe { kernel::infra_mode_ptr(adapter) };
+    if old_ptr.is_null() {
+        return _FALSE;
+    }
+    let pold_state = unsafe { *old_ptr };
+    if pold_state == networktype {
+        return _TRUE;
+    }
+    let mut ap2sta_mode = false;
+    let mut ret = _TRUE;
+    if pold_state == NDIS802_11_AP_MODE_K {
+        let join_res = unsafe { kernel::join_res_ptr(adapter) };
+        if !join_res.is_null() {
+            unsafe { *join_res = -1 };
+        }
+        ap2sta_mode = true;
+        unsafe { kernel::stop_ap_mode(adapter) };
+    }
+    #[cfg(config_rtw_mesh)]
+    if pold_state == NDIS802_11_MESH_K {
+        let join_res = unsafe { kernel::join_res_ptr(adapter) };
+        if !join_res.is_null() {
+            unsafe { *join_res = -1 };
+        }
+        ap2sta_mode = true;
+        unsafe { kernel::stop_ap_mode(adapter) };
+    }
+
+    let mut irqL: c_ulong = 0;
+    let lock = unsafe { kernel::mlme_lock_ptr(adapter) };
+    let fw_ptr = unsafe { kernel::fw_state_ptr(adapter) };
+    unsafe { kernel::enter_critical_bh(lock, &mut irqL) };
+    let fw_state = unsafe { *fw_ptr };
+    let is_linked = kernel_chk_fw(fw_state, WIFI_ASOC_STATE_K);
+    let is_adhoc_master = kernel_chk_fw(fw_state, WIFI_ADHOC_MASTER_STATE_K);
+
+    if flags != 0 {
+        unsafe { kernel::exit_critical_bh(lock, &mut irqL) };
+    }
+
+    if is_linked || pold_state == NDIS802_11_IBSS_K {
+        unsafe { kernel::disassoc_cmd(adapter, flags) };
+    }
+    if is_linked || is_adhoc_master {
+        unsafe { kernel::free_assoc_resources_cmd(adapter, flags) };
+    }
+    if (pold_state == NDIS802_11_INFRASTRUCTURE_K || pold_state == NDIS802_11_IBSS_K) && is_linked {
+        unsafe { kernel::indicate_disconnect(adapter) };
+    }
+
+    if flags != 0 {
+        unsafe { kernel::enter_critical_bh(lock, &mut irqL) };
+    }
+
+    unsafe { *old_ptr = networktype };
+    unsafe { *fw_ptr = WIFI_NULL_STATE_K };
+
+    match networktype {
+        NDIS802_11_IBSS_K => unsafe { *fw_ptr |= WIFI_ADHOC_STATE_K },
+        NDIS802_11_INFRASTRUCTURE_K => {
+            unsafe { *fw_ptr |= WIFI_STATION_STATE_K };
+            if ap2sta_mode {
+                unsafe { kernel::init_bcmc_stainfo(adapter) };
+            }
+        }
+        NDIS802_11_AP_MODE_K => {
+            unsafe { *fw_ptr |= WIFI_AP_STATE_K };
+            unsafe { kernel::start_ap_mode(adapter) };
+        }
+        2 | 3 => {}
+        #[cfg(config_rtw_mesh)]
+        NDIS802_11_MESH_K => {
+            unsafe { *fw_ptr |= 0x0000_0200 };
+            unsafe { kernel::start_ap_mode(adapter) };
+        }
+        _ => ret = _FALSE,
+    }
+
+    unsafe { kernel::exit_critical_bh(lock, &mut irqL) };
+    ret
+}
+
+#[cfg(rust_ioctl_set_leaf)]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_set_802_11_infrastructure_mode(
+    adapter: *mut c_void,
+    networktype: u32,
+    flags: u8,
+) -> u8 {
+    unsafe { kernel_set_infra_mode(adapter, networktype, flags) }
 }
 
 #[cfg(rust_ioctl_set_leaf)]
