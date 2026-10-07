@@ -1,0 +1,40 @@
+{
+  "vectors": [
+    {
+      "name": "same_mode_noop",
+      "old_mode": 1,
+      "new_mode": 1,
+      "flags": 0,
+      "fw_state": 8,
+      "join_res": 0,
+      "expect_ret": 1,
+      "expect_mode": 1,
+      "expect_fw_state": 8,
+      "expect_join_res": 0,
+      "expect_stop_ap": 0,
+      "expect_start_ap": 0,
+      "expect_disassoc": 0,
+      "expect_free_res": 0,
+      "expect_disconnect": 0,
+      "expect_init_bcmc": 0
+    },
+    {
+      "name": "ap_to_infra_linked",
+      "old_mode": 4,
+      "new_mode": 1,
+      "flags": 0,
+      "fw_state": 9,
+      "join_res": 0,
+      "expect_ret": 1,
+      "expect_mode": 1,
+      "expect_fw_state": 8,
+      "expect_join_res": -1,
+      "expect_stop_ap": 1,
+      "expect_start_ap": 0,
+      "expect_disassoc": 1,
+      "expect_free_res": 1,
+      "expect_disconnect": 0,
+      "expect_init_bcmc": 1
+    }
+  ]
+}
