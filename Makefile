@@ -2721,6 +2721,9 @@ endif
 ifneq ($(filter -DCONFIG_RTW_ACS,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 _rust_cfg_rtw_acs := y
 endif
+ifneq ($(filter -DCONFIG_RTW_HOSTAPD_ACS,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_rtw_acs := y
+endif
 ifeq ($(CONFIG_RTW_80211K), y)
 _rust_cfg_rtw_acs := y
 endif
