@@ -1347,3 +1347,286 @@ pub unsafe extern "C" fn rtw_do_join_rust(p: *mut HostDoJoinAdapter) -> u8 {
     m.to_join = _FALSE;
     _FALSE
 }
+
+#[cfg(any(host_ioctl_acs_test, all(rust_ioctl_set_leaf, config_rtw_acs)))]
+mod acs_sitesurvey {
+    pub const SCAN_PASSIVE: i32 = 0;
+    pub const CHANNEL_WIDTH_20: u8 = 0;
+    pub const CHAN_PASSIVE_SCAN: u32 = 2;
+
+    pub fn is_2g_ch(ch: u8) -> bool {
+        ch >= 1 && ch <= 14
+    }
+
+    #[cfg(ieee80211_band_5ghz)]
+    pub fn is_5g_ch(ch: u8) -> bool {
+        ch >= 36 && ch <= 177
+    }
+
+    #[cfg(host_ioctl_acs_test)]
+    const HOST_ACS_2G: [u8; 3] = [1, 6, 11];
+    #[cfg(all(host_ioctl_acs_test, ieee80211_band_5ghz))]
+    const HOST_ACS_5G: [u8; 3] = [36, 40, 44];
+
+    #[cfg(host_ioctl_acs_test)]
+    fn host_center_2g_num(_bw: u8) -> u8 {
+        HOST_ACS_2G.len() as u8
+    }
+
+    #[cfg(host_ioctl_acs_test)]
+    fn host_center_2g(_bw: u8, id: u8) -> u8 {
+        HOST_ACS_2G.get(id as usize).copied().unwrap_or(0)
+    }
+
+    #[cfg(all(host_ioctl_acs_test, ieee80211_band_5ghz))]
+    fn host_center_5g_num(_bw: u8) -> u8 {
+        HOST_ACS_5G.len() as u8
+    }
+
+    #[cfg(all(host_ioctl_acs_test, ieee80211_band_5ghz))]
+    fn host_center_5g(_bw: u8, id: u8) -> u8 {
+        HOST_ACS_5G.get(id as usize).copied().unwrap_or(0)
+    }
+
+    #[cfg(host_ioctl_acs_test)]
+    pub fn host_add_band(
+        union_ok_uch: u8,
+        ch_sel_same: bool,
+        band_is_2g: bool,
+        center_num: fn(u8) -> u8,
+        center_at: fn(u8, u8) -> u8,
+        parm: &mut HostAcsParmFill,
+    ) {
+        if ch_sel_same {
+            if is_2g_ch(union_ok_uch) && !band_is_2g {
+                return;
+            }
+            #[cfg(ieee80211_band_5ghz)]
+            if is_5g_ch(union_ok_uch) && band_is_2g {
+                return;
+            }
+        }
+        let ch_num = center_num(CHANNEL_WIDTH_20);
+        for i in 0..ch_num {
+            if parm.ch_num as usize >= parm.ch_cap {
+                break;
+            }
+            let idx = parm.ch_num as usize;
+            parm.ch_hw[idx] = center_at(CHANNEL_WIDTH_20, i);
+            parm.ch_flags[idx] = CHAN_PASSIVE_SCAN;
+            parm.ch_num += 1;
+        }
+    }
+
+    #[cfg(host_ioctl_acs_test)]
+    pub struct HostAcsParmFill {
+        pub scan_mode: i32,
+        pub ch_num: u8,
+        pub bw: u8,
+        pub acs: i32,
+        pub ch_hw: [u8; 8],
+        pub ch_flags: [u32; 8],
+        pub ch_cap: usize,
+    }
+
+    #[cfg(host_ioctl_acs_test)]
+    pub fn host_fill(uch: u8, ch_sel_same: bool, out: &mut HostAcsParmFill) {
+        out.scan_mode = SCAN_PASSIVE;
+        out.bw = CHANNEL_WIDTH_20;
+        out.acs = 1;
+        out.ch_num = 0;
+        host_add_band(
+            uch,
+            ch_sel_same,
+            true,
+            host_center_2g_num,
+            host_center_2g,
+            out,
+        );
+        #[cfg(ieee80211_band_5ghz)]
+        host_add_band(
+            uch,
+            ch_sel_same,
+            false,
+            host_center_5g_num,
+            host_center_5g,
+            out,
+        );
+    }
+
+    #[cfg(all(rust_ioctl_set_leaf, config_rtw_acs))]
+    const RTW_CHANNEL_SCAN_AMOUNT_K: usize = 51;
+
+    #[cfg(all(rust_ioctl_set_leaf, config_rtw_acs))]
+    #[repr(C)]
+    pub struct KernelIeeeChannel {
+        pub hw_value: u16,
+        pub flags: u32,
+    }
+
+    #[cfg(all(rust_ioctl_set_leaf, config_rtw_acs))]
+    #[repr(C)]
+    pub struct KernelNdisSsid {
+        pub ssid_length: u32,
+        pub ssid: [u8; 32],
+    }
+
+    #[cfg(all(rust_ioctl_set_leaf, config_rtw_acs))]
+    use core::ffi::c_int;
+
+    #[cfg(all(rust_ioctl_set_leaf, config_rtw_acs))]
+    #[repr(C)]
+    pub struct KernelSitesurveyParm {
+        pub scan_mode: c_int,
+        pub ssid_num: u8,
+        pub ch_num: u8,
+        pub ssid: [KernelNdisSsid; 9],
+        pub ch: [KernelIeeeChannel; RTW_CHANNEL_SCAN_AMOUNT_K],
+        pub token: u32,
+        pub duration: u16,
+        pub igi: u8,
+        pub bw: u8,
+        pub acs: u8,
+        pub reason: u8,
+    }
+
+    #[cfg(all(rust_ioctl_set_leaf, config_rtw_acs))]
+    pub fn kernel_add_band(
+        uch: u8,
+        ch_sel_same: bool,
+        band_is_2g: bool,
+        center_num: unsafe extern "C" fn(u8) -> u8,
+        center_at: unsafe extern "C" fn(u8, u8) -> u8,
+        parm: &mut KernelSitesurveyParm,
+    ) {
+        if ch_sel_same {
+            if is_2g_ch(uch) && !band_is_2g {
+                return;
+            }
+            #[cfg(ieee80211_band_5ghz)]
+            if is_5g_ch(uch) && band_is_2g {
+                return;
+            }
+        }
+        let ch_num = unsafe { center_num(CHANNEL_WIDTH_20) };
+        for i in 0..ch_num {
+            if parm.ch_num as usize >= RTW_CHANNEL_SCAN_AMOUNT_K {
+                break;
+            }
+            let idx = parm.ch_num as usize;
+            parm.ch[idx].hw_value = unsafe { center_at(CHANNEL_WIDTH_20, i) } as u16;
+            parm.ch[idx].flags = CHAN_PASSIVE_SCAN;
+            parm.ch_num += 1;
+        }
+    }
+
+    #[cfg(all(rust_ioctl_set_leaf, config_rtw_acs))]
+    pub unsafe fn kernel_fill(uch: u8, ch_sel_same: bool, parm: &mut KernelSitesurveyParm) {
+        extern "C" {
+            fn center_chs_2g_num(bw: u8) -> u8;
+            fn center_chs_2g(bw: u8, id: u8) -> u8;
+            #[cfg(ieee80211_band_5ghz)]
+            fn center_chs_5g_num(bw: u8) -> u8;
+            #[cfg(ieee80211_band_5ghz)]
+            fn center_chs_5g(bw: u8, id: u8) -> u8;
+        }
+        parm.scan_mode = SCAN_PASSIVE;
+        parm.bw = CHANNEL_WIDTH_20;
+        parm.acs = 1;
+        parm.ch_num = 0;
+        kernel_add_band(
+            uch,
+            ch_sel_same,
+            true,
+            center_chs_2g_num,
+            center_chs_2g,
+            parm,
+        );
+        #[cfg(ieee80211_band_5ghz)]
+        kernel_add_band(
+            uch,
+            ch_sel_same,
+            false,
+            center_chs_5g_num,
+            center_chs_5g,
+            parm,
+        );
+    }
+}
+
+#[cfg(all(rust_ioctl_set_leaf, config_rtw_acs))]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_set_acs_sitesurvey(adapter: *mut c_void) -> u8 {
+    extern "C" {
+        fn rtw_rust_ioctl_acs_ch_union(adapter: *mut c_void, uch: *mut u8) -> c_int;
+        fn rtw_rust_ioctl_acs_ch_sel_same_band(adapter: *mut c_void) -> u8;
+    }
+    let mut uch = 0u8;
+    if unsafe { rtw_rust_ioctl_acs_ch_union(adapter, &mut uch) } == 0 {
+        return _FALSE;
+    }
+    let ch_sel = unsafe { rtw_rust_ioctl_acs_ch_sel_same_band(adapter) } != 0;
+    let mut parm: acs_sitesurvey::KernelSitesurveyParm = unsafe { core::mem::zeroed() };
+    unsafe { acs_sitesurvey::kernel_fill(uch, ch_sel, &mut parm) };
+    unsafe { rtw_set_802_11_bssid_list_scan(adapter, &mut parm as *mut _ as *mut c_void) }
+}
+
+#[cfg(host_ioctl_acs_test)]
+#[repr(C)]
+pub struct HostAcsChannel {
+    pub hw_value: u8,
+    pub flags: u32,
+}
+
+#[cfg(host_ioctl_acs_test)]
+#[repr(C)]
+pub struct HostAcsSitesurveyParm {
+    pub scan_mode: i32,
+    pub ch_num: u8,
+    pub bw: u8,
+    pub acs: i32,
+    pub ch: [HostAcsChannel; 8],
+}
+
+#[cfg(host_ioctl_acs_test)]
+#[repr(C)]
+pub struct HostAcsAdapter {
+    pub union_ok: u8,
+    pub uch: u8,
+    pub ch_sel_within_same_band: u8,
+    pub scan_ret: u8,
+    pub scan_calls: i32,
+    pub last_parm: HostAcsSitesurveyParm,
+}
+
+#[cfg(host_ioctl_acs_test)]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_set_acs_sitesurvey_rust(a: *mut HostAcsAdapter) -> u8 {
+    if a.is_null() {
+        return 0;
+    }
+    let ad = &mut *a;
+    if ad.union_ok == 0 {
+        return 0;
+    }
+    let mut fill = acs_sitesurvey::HostAcsParmFill {
+        scan_mode: 0,
+        ch_num: 0,
+        bw: 0,
+        acs: 0,
+        ch_hw: [0; 8],
+        ch_flags: [0; 8],
+        ch_cap: 8,
+    };
+    acs_sitesurvey::host_fill(ad.uch, ad.ch_sel_within_same_band != 0, &mut fill);
+    ad.scan_calls += 1;
+    ad.last_parm.scan_mode = fill.scan_mode;
+    ad.last_parm.ch_num = fill.ch_num;
+    ad.last_parm.bw = fill.bw;
+    ad.last_parm.acs = fill.acs;
+    for i in 0..fill.ch_num as usize {
+        ad.last_parm.ch[i].hw_value = fill.ch_hw[i];
+        ad.last_parm.ch[i].flags = fill.ch_flags[i];
+    }
+    ad.scan_ret
+}

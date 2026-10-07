@@ -634,7 +634,7 @@ exit:
 }
 #endif
 
-#ifdef CONFIG_RTW_ACS
+#if (!defined(CONFIG_RUST) || defined(HOST_IOCTL_ACS_TEST)) && defined(CONFIG_RTW_ACS)
 u8 rtw_set_acs_sitesurvey(_adapter *adapter)
 {
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(adapter);
@@ -696,7 +696,7 @@ u8 rtw_set_acs_sitesurvey(_adapter *adapter)
 exit:
 	return ret;
 }
-#endif /* CONFIG_RTW_ACS */
+#endif /* CONFIG_RTW_ACS && (!CONFIG_RUST || HOST_IOCTL_ACS_TEST) */
 
 u8 rtw_set_802_11_authentication_mode(_adapter *padapter, NDIS_802_11_AUTHENTICATION_MODE authmode)
 {
@@ -1015,6 +1015,18 @@ void rtw_rust_ioctl_init_bcmc_stainfo(_adapter *adapter)
 {
 	rtw_init_bcmc_stainfo(adapter);
 }
+
+#ifdef CONFIG_RTW_ACS
+int rtw_rust_ioctl_acs_ch_union(_adapter *adapter, u8 *uch)
+{
+	return rtw_mi_get_ch_setting_union(adapter, uch, NULL, NULL) ? 1 : 0;
+}
+
+u8 rtw_rust_ioctl_acs_ch_sel_same_band(_adapter *adapter)
+{
+	return adapter_to_rfctl(adapter)->ch_sel_within_same_band;
+}
+#endif /* CONFIG_RTW_ACS */
 #endif /* CONFIG_RUST && !HOST_IOCTL_SCAN_CHANNEL_TEST */
 
 /*
