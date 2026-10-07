@@ -372,6 +372,7 @@ exit:
 
 }
 
+#if !defined(CONFIG_RUST) || defined(HOST_IOCTL_CONNECT_TEST)
 u8 rtw_set_802_11_connect(_adapter *padapter,
 			  u8 *bssid, NDIS_802_11_SSID *ssid, u16 ch)
 {
@@ -440,6 +441,7 @@ release_mlme_lock:
 exit:
 	return status;
 }
+#endif /* !CONFIG_RUST || HOST_IOCTL_CONNECT_TEST */
 
 #if !defined(CONFIG_RUST) || defined(HOST_IOCTL_INFRA_MODE_TEST)
 u8 rtw_set_802_11_infrastructure_mode(_adapter *padapter,
@@ -1027,6 +1029,46 @@ u8 rtw_rust_ioctl_acs_ch_sel_same_band(_adapter *adapter)
 	return adapter_to_rfctl(adapter)->ch_sel_within_same_band;
 }
 #endif /* CONFIG_RTW_ACS */
+
+int rtw_rust_ioctl_hw_init_completed(_adapter *adapter)
+{
+	return rtw_is_hw_init_completed(adapter) ? 1 : 0;
+}
+
+int rtw_rust_ioctl_handle_tkip_countermeasure(_adapter *adapter)
+{
+	return rtw_handle_tkip_countermeasure(adapter, __func__) == _FAIL ? 0 : 1;
+}
+
+void rtw_rust_ioctl_set_assoc_ssid_copy(_adapter *adapter, NDIS_802_11_SSID *ssid)
+{
+	_rtw_memcpy(&adapter->mlmepriv.assoc_ssid, ssid, sizeof(NDIS_802_11_SSID));
+}
+
+void rtw_rust_ioctl_clear_assoc_ssid(_adapter *adapter)
+{
+	_rtw_memset(&adapter->mlmepriv.assoc_ssid, 0, sizeof(NDIS_802_11_SSID));
+}
+
+void rtw_rust_ioctl_set_assoc_bssid(_adapter *adapter, u8 *bssid)
+{
+	_rtw_memcpy(&adapter->mlmepriv.assoc_bssid, bssid, ETH_ALEN);
+}
+
+u16 *rtw_rust_ioctl_assoc_ch_ptr(_adapter *adapter)
+{
+	return &adapter->mlmepriv.assoc_ch;
+}
+
+u8 *rtw_rust_ioctl_assoc_by_bssid_ptr(_adapter *adapter)
+{
+	return (u8 *)&adapter->mlmepriv.assoc_by_bssid;
+}
+
+u8 *rtw_rust_ioctl_to_join_ptr(_adapter *adapter)
+{
+	return &adapter->mlmepriv.to_join;
+}
 #endif /* CONFIG_RUST && !HOST_IOCTL_SCAN_CHANNEL_TEST */
 
 /*
