@@ -102,6 +102,7 @@ mod kernel {
         fn rtw_validate_bssid(bssid: *mut u8) -> u8;
         fn rtw_validate_ssid(ssid: *mut c_void) -> u8;
         fn rtw_do_join(adapter: *mut c_void) -> u8;
+        fn rtw_rust_ioctl_cur_bssid_equals(adapter: *mut c_void, bssid: *mut u8) -> c_int;
     }
 
     pub unsafe fn scan_mode_ptr(adapter: *mut c_void) -> *mut i32 {
@@ -261,6 +262,10 @@ mod kernel {
     pub unsafe fn do_join(adapter: *mut c_void) -> u8 {
         unsafe { rtw_do_join(adapter) }
     }
+
+    pub unsafe fn cur_bssid_equals(adapter: *mut c_void, bssid: *mut u8) -> bool {
+        unsafe { rtw_rust_ioctl_cur_bssid_equals(adapter, bssid) != 0 }
+    }
 }
 
 #[cfg(rust_ioctl_set_leaf)]
@@ -273,6 +278,105 @@ const WIFI_FREQUENCY_BAND_2GHZ_K: u8 = 2;
 const WIFI_UNDER_LINKING_K: u32 = 0x0000_0080;
 #[cfg(rust_ioctl_set_leaf)]
 const WIFI_UNDER_SURVEY_K: u32 = 0x0000_0800;
+#[cfg(rust_ioctl_set_leaf)]
+const WIFI_ASOC_STATE_BSSID_K: u32 = 0x0000_0001;
+#[cfg(rust_ioctl_set_leaf)]
+const WIFI_ADHOC_MASTER_STATE_BSSID_K: u32 = 0x0000_0040;
+#[cfg(rust_ioctl_set_leaf)]
+const WIFI_STATION_STATE_BSSID_K: u32 = 0x0000_0008;
+#[cfg(rust_ioctl_set_leaf)]
+const WIFI_ADHOC_STATE_BSSID_K: u32 = 0x0000_0020;
+
+#[cfg(rust_ioctl_set_leaf)]
+fn kernel_is_bad_set_bssid(bssid: &[u8; 6]) -> bool {
+    bssid.iter().all(|&b| b == 0) || bssid.iter().all(|&b| b == 0xff)
+}
+
+#[cfg(rust_ioctl_set_leaf)]
+unsafe fn kernel_disassoc_for_new_target(adapter: *mut c_void, fw_state: u32) {
+    unsafe { kernel::disassoc_cmd(adapter, 0) };
+    if kernel_chk_fw(fw_state, WIFI_ASOC_STATE_BSSID_K) {
+        unsafe { kernel::indicate_disconnect(adapter) };
+    }
+    unsafe { kernel::free_assoc_resources_cmd(adapter, 0) };
+    if kernel_chk_fw(fw_state, WIFI_ADHOC_MASTER_STATE_BSSID_K) {
+        unsafe {
+            kernel::clr_fwstate_mask(adapter, WIFI_ADHOC_MASTER_STATE_BSSID_K as c_int);
+            kernel::set_fwstate(adapter, WIFI_ADHOC_STATE_BSSID_K as c_int);
+        }
+    }
+}
+
+#[cfg(rust_ioctl_set_leaf)]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_set_802_11_bssid(adapter: *mut c_void, bssid: *mut u8) -> u8 {
+    if bssid.is_null() {
+        return _FALSE;
+    }
+    let b = unsafe { &*(bssid as *const [u8; 6]) };
+    if kernel_is_bad_set_bssid(b) {
+        return _FALSE;
+    }
+
+    let mut irqL: c_ulong = 0;
+    let lock = unsafe { kernel::mlme_lock_ptr(adapter) };
+    let fw_ptr = unsafe { kernel::fw_state_ptr(adapter) };
+    let mut status = _TRUE;
+
+    unsafe { kernel::enter_critical_bh(lock, &mut irqL) };
+    let fw_state = unsafe { *fw_ptr };
+
+    if kernel_chk_fw(fw_state, WIFI_UNDER_SURVEY_K) {
+        // handle_tkip_countermeasure
+    } else if kernel_chk_fw(fw_state, WIFI_UNDER_LINKING_K) {
+        unsafe { kernel::exit_critical_bh(lock, &mut irqL) };
+        return _TRUE;
+    }
+
+    if kernel_chk_fw(
+        fw_state,
+        WIFI_ASOC_STATE_BSSID_K | WIFI_ADHOC_MASTER_STATE_BSSID_K,
+    ) {
+        if unsafe { kernel::cur_bssid_equals(adapter, bssid) } {
+            if !kernel_chk_fw(fw_state, WIFI_STATION_STATE_BSSID_K) {
+                unsafe { kernel::exit_critical_bh(lock, &mut irqL) };
+                return _TRUE;
+            }
+        } else {
+            unsafe { kernel_disassoc_for_new_target(adapter, fw_state) };
+        }
+    }
+
+    if !unsafe { kernel::handle_tkip_countermeasure(adapter) } {
+        status = _FALSE;
+        unsafe { kernel::exit_critical_bh(lock, &mut irqL) };
+        return status;
+    }
+
+    unsafe { kernel::clear_assoc_ssid(adapter) };
+    unsafe { kernel::set_assoc_bssid(adapter, bssid) };
+    let ch_ptr = unsafe { kernel::assoc_ch_ptr(adapter) };
+    if !ch_ptr.is_null() {
+        unsafe { *ch_ptr = 0 };
+    }
+    let by_bssid_ptr = unsafe { kernel::assoc_by_bssid_ptr(adapter) };
+    if !by_bssid_ptr.is_null() {
+        unsafe { *by_bssid_ptr = _TRUE };
+    }
+
+    let fw_state = unsafe { *fw_ptr };
+    if kernel_chk_fw(fw_state, WIFI_UNDER_SURVEY_K) {
+        let to_join_ptr = unsafe { kernel::to_join_ptr(adapter) };
+        if !to_join_ptr.is_null() {
+            unsafe { *to_join_ptr = _TRUE };
+        }
+    } else {
+        status = unsafe { kernel::do_join(adapter) };
+    }
+
+    unsafe { kernel::exit_critical_bh(lock, &mut irqL) };
+    status
+}
 
 #[cfg(rust_ioctl_set_leaf)]
 #[no_mangle]

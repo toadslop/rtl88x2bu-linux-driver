@@ -142,3 +142,11 @@ u8 rtw_set_802_11_connect(struct adapter *adapter, u8 *bssid, ndis80211_ssid *ss
 	adapter->mlmepriv.lock_depth--;
 	return _SUCCESS;
 }
+
+u8 rtw_set_802_11_bssid(struct adapter *adapter, u8 *bssid)
+{
+	(void)bssid;
+	adapter->mlmepriv.lock_depth++;
+	adapter->mlmepriv.lock_depth--;
+	return _SUCCESS;
+}

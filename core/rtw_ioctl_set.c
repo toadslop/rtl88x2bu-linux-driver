@@ -203,6 +203,7 @@ exit:
 	return ret;
 }
 
+#if !defined(CONFIG_RUST) || defined(HOST_IOCTL_CONNECT_TEST)
 u8 rtw_set_802_11_bssid(_adapter *padapter, u8 *bssid)
 {
 	_irqL irqL;
@@ -273,6 +274,7 @@ exit:
 
 	return status;
 }
+#endif /* !CONFIG_RUST || HOST_IOCTL_CONNECT_TEST */
 
 u8 rtw_set_802_11_ssid(_adapter *padapter, NDIS_802_11_SSID *ssid)
 {
@@ -1068,6 +1070,12 @@ u8 *rtw_rust_ioctl_assoc_by_bssid_ptr(_adapter *adapter)
 u8 *rtw_rust_ioctl_to_join_ptr(_adapter *adapter)
 {
 	return &adapter->mlmepriv.to_join;
+}
+
+int rtw_rust_ioctl_cur_bssid_equals(_adapter *adapter, u8 *bssid)
+{
+	return _rtw_memcmp(&adapter->mlmepriv.cur_network.network.MacAddress,
+			   bssid, ETH_ALEN) == _TRUE;
 }
 #endif /* CONFIG_RUST && !HOST_IOCTL_SCAN_CHANNEL_TEST */
 
