@@ -972,6 +972,16 @@ u32 *rtw_rust_ioctl_fw_state_ptr(_adapter *adapter)
 	return &adapter->mlmepriv.fw_state;
 }
 
+void rtw_rust_ioctl_clr_fwstate_mask(_adapter *adapter, sint state)
+{
+	_clr_fwstate_(&adapter->mlmepriv, state);
+}
+
+void rtw_rust_ioctl_set_fwstate(_adapter *adapter, sint state)
+{
+	set_fwstate(&adapter->mlmepriv, state);
+}
+
 void rtw_rust_ioctl_stop_ap_mode(_adapter *adapter)
 {
 #ifdef CONFIG_NATIVEAP_MLME

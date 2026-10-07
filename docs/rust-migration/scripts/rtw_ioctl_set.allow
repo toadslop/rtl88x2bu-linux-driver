@@ -20,6 +20,8 @@ drop rtw_rust_ioctl_disassociate_if_assoc
 drop rtw_rust_ioctl_infra_mode_ptr
 drop rtw_rust_ioctl_join_res_ptr
 drop rtw_rust_ioctl_fw_state_ptr
+drop rtw_rust_ioctl_clr_fwstate_mask
+drop rtw_rust_ioctl_set_fwstate
 drop rtw_rust_ioctl_stop_ap_mode
 drop rtw_rust_ioctl_start_ap_mode
 drop rtw_rust_ioctl_disassoc_cmd

@@ -9,7 +9,7 @@
 )]
 
 #[cfg(rust_ioctl_set_leaf)]
-use core::ffi::{c_ulong, c_void};
+use core::ffi::{c_int, c_ulong, c_void};
 
 #[cfg(any(rust_ioctl_set_leaf, host_ioctl_max_rate_test))]
 mod max_rate_legacy {
@@ -60,7 +60,7 @@ mod max_rate_legacy {
 
 #[cfg(rust_ioctl_set_leaf)]
 mod kernel {
-    use super::{c_ulong, c_void, max_rate_legacy::MaxRateLegacyIn};
+    use super::{c_int, c_ulong, c_void, max_rate_legacy::MaxRateLegacyIn};
 
     extern "C" {
         fn rtw_rust_ioctl_scan_mode_ptr(adapter: *mut c_void) -> *mut i32;
@@ -83,6 +83,8 @@ mod kernel {
         fn rtw_rust_ioctl_infra_mode_ptr(adapter: *mut c_void) -> *mut u32;
         fn rtw_rust_ioctl_join_res_ptr(adapter: *mut c_void) -> *mut i32;
         fn rtw_rust_ioctl_fw_state_ptr(adapter: *mut c_void) -> *mut u32;
+        fn rtw_rust_ioctl_clr_fwstate_mask(adapter: *mut c_void, state: c_int);
+        fn rtw_rust_ioctl_set_fwstate(adapter: *mut c_void, state: c_int);
         fn rtw_rust_ioctl_stop_ap_mode(adapter: *mut c_void);
         fn rtw_rust_ioctl_start_ap_mode(adapter: *mut c_void);
         fn rtw_rust_ioctl_disassoc_cmd(adapter: *mut c_void, flags: u8);
@@ -171,6 +173,14 @@ mod kernel {
 
     pub unsafe fn fw_state_ptr(adapter: *mut c_void) -> *mut u32 {
         unsafe { rtw_rust_ioctl_fw_state_ptr(adapter) }
+    }
+
+    pub unsafe fn clr_fwstate_mask(adapter: *mut c_void, state: c_int) {
+        unsafe { rtw_rust_ioctl_clr_fwstate_mask(adapter, state) }
+    }
+
+    pub unsafe fn set_fwstate(adapter: *mut c_void, state: c_int) {
+        unsafe { rtw_rust_ioctl_set_fwstate(adapter, state) }
     }
 
     pub unsafe fn stop_ap_mode(adapter: *mut c_void) {
@@ -288,6 +298,15 @@ const WIFI_AP_STATE_K: u32 = 0x0000_0010;
 #[cfg(config_rtw_mesh)]
 #[cfg(rust_ioctl_set_leaf)]
 const NDIS802_11_MESH_K: u32 = 6;
+#[cfg(config_wifi_monitor)]
+#[cfg(rust_ioctl_set_leaf)]
+const NDIS802_11_MONITOR_K: u32 = 5;
+#[cfg(config_wifi_monitor)]
+#[cfg(rust_ioctl_set_leaf)]
+const WIFI_MONITOR_STATE_K: c_int = 0x8000_0000_u32 as c_int;
+#[cfg(config_rtw_mesh)]
+#[cfg(rust_ioctl_set_leaf)]
+const WIFI_MESH_STATE_K: c_int = 0x0000_0200;
 
 #[cfg(rust_ioctl_set_leaf)]
 fn kernel_chk_fw(fw_state: u32, bit: u32) -> bool {
@@ -351,26 +370,28 @@ unsafe fn kernel_set_infra_mode(adapter: *mut c_void, networktype: u32, flags: u
     }
 
     unsafe { *old_ptr = networktype };
-    unsafe { *fw_ptr = WIFI_NULL_STATE_K };
+    unsafe { kernel::clr_fwstate_mask(adapter, !0) };
 
     match networktype {
-        NDIS802_11_IBSS_K => unsafe { *fw_ptr |= WIFI_ADHOC_STATE_K },
+        NDIS802_11_IBSS_K => unsafe { kernel::set_fwstate(adapter, WIFI_ADHOC_STATE_K as c_int) },
         NDIS802_11_INFRASTRUCTURE_K => {
-            unsafe { *fw_ptr |= WIFI_STATION_STATE_K };
+            unsafe { kernel::set_fwstate(adapter, WIFI_STATION_STATE_K as c_int) };
             if ap2sta_mode {
                 unsafe { kernel::init_bcmc_stainfo(adapter) };
             }
         }
         NDIS802_11_AP_MODE_K => {
-            unsafe { *fw_ptr |= WIFI_AP_STATE_K };
+            unsafe { kernel::set_fwstate(adapter, WIFI_AP_STATE_K as c_int) };
             unsafe { kernel::start_ap_mode(adapter) };
         }
         2 | 3 => {}
         #[cfg(config_rtw_mesh)]
         NDIS802_11_MESH_K => {
-            unsafe { *fw_ptr |= 0x0000_0200 };
+            unsafe { kernel::set_fwstate(adapter, WIFI_MESH_STATE_K) };
             unsafe { kernel::start_ap_mode(adapter) };
         }
+        #[cfg(config_wifi_monitor)]
+        NDIS802_11_MONITOR_K => unsafe { kernel::set_fwstate(adapter, WIFI_MONITOR_STATE_K) },
         _ => ret = _FALSE,
     }
 

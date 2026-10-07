@@ -1281,6 +1281,7 @@ endif
 
 ifeq ($(CONFIG_WIFI_MONITOR), y)
 ccflags-y += -DCONFIG_WIFI_MONITOR
+rustflags-y += --cfg config_wifi_monitor
 endif
 
 ifeq ($(CONFIG_MCC_MODE), y)
