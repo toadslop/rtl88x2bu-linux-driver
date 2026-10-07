@@ -69,6 +69,7 @@ exit:
 	return ret;
 }
 
+#if !defined(CONFIG_RUST) || defined(HOST_IOCTL_DO_JOIN_TEST)
 u8 rtw_do_join(_adapter *padapter);
 u8 rtw_do_join(_adapter *padapter)
 {
@@ -202,6 +203,7 @@ exit:
 
 	return ret;
 }
+#endif /* !CONFIG_RUST || HOST_IOCTL_DO_JOIN_TEST */
 
 #if !defined(CONFIG_RUST) || defined(HOST_IOCTL_CONNECT_TEST)
 u8 rtw_set_802_11_bssid(_adapter *padapter, u8 *bssid)
@@ -1102,6 +1104,96 @@ void rtw_rust_ioctl_lps_joinbss(_adapter *adapter)
 {
 #ifdef CONFIG_LPS
 	rtw_lps_ctrl_wk_cmd(adapter, LPS_CTRL_JOINBSS, 0);
+#endif
+}
+
+void rtw_rust_ioctl_scanned_queue_enter(_adapter *adapter, _irqL *irqL)
+{
+	_enter_critical_bh(&(adapter->mlmepriv.scanned_queue.lock), irqL);
+}
+
+void rtw_rust_ioctl_scanned_queue_exit(_adapter *adapter, _irqL *irqL)
+{
+	_exit_critical_bh(&(adapter->mlmepriv.scanned_queue.lock), irqL);
+}
+
+int rtw_rust_ioctl_scanned_queue_empty(_adapter *adapter)
+{
+	return _rtw_queue_empty(&(adapter->mlmepriv.scanned_queue)) == _TRUE;
+}
+
+void rtw_rust_ioctl_do_join_prime_pscanned(_adapter *adapter)
+{
+	_queue *queue = &(adapter->mlmepriv.scanned_queue);
+	_list *phead = get_list_head(queue);
+	_list *plist = get_next(phead);
+
+	adapter->mlmepriv.cur_network.join_res = -2;
+	set_fwstate(&adapter->mlmepriv, WIFI_UNDER_LINKING);
+	adapter->mlmepriv.pscanned = plist;
+	adapter->mlmepriv.to_join = _TRUE;
+}
+
+u8 rtw_rust_ioctl_do_join_issue_sitesurvey(_adapter *adapter)
+{
+	struct sitesurvey_parm parm;
+
+	rtw_init_sitesurvey_parm(adapter, &parm);
+	_rtw_memcpy(&parm.ssid[0], &adapter->mlmepriv.assoc_ssid, sizeof(NDIS_802_11_SSID));
+	parm.ssid_num = 1;
+	if (adapter->mlmepriv.assoc_ch) {
+		parm.ch_num = 1;
+		parm.ch[0].hw_value = adapter->mlmepriv.assoc_ch;
+		parm.ch[0].flags = 0;
+	}
+	return rtw_sitesurvey_cmd(adapter, &parm);
+}
+
+int rtw_rust_ioctl_link_busy_traffic(_adapter *adapter)
+{
+	return adapter->mlmepriv.LinkDetectInfo.bBusyTraffic == _TRUE;
+}
+
+s8 rtw_rust_ioctl_to_roam(_adapter *adapter)
+{
+	return rtw_to_roam(adapter);
+}
+
+int rtw_rust_ioctl_ssc_allow_survey(_adapter *adapter)
+{
+	u8 ssc_chk = rtw_sitesurvey_condition_check(adapter, _FALSE);
+
+	return (ssc_chk == SS_ALLOW || ssc_chk == SS_DENY_BUSY_TRAFFIC);
+}
+
+sint rtw_rust_ioctl_select_and_join(_adapter *adapter)
+{
+	return rtw_select_and_join_from_scanned_queue(&adapter->mlmepriv);
+}
+
+void rtw_rust_ioctl_assoc_timer_start(_adapter *adapter)
+{
+	_set_timer(&adapter->mlmepriv.assoc_timer, MAX_JOIN_TIMEOUT);
+}
+
+u8 rtw_rust_ioctl_do_join_adhoc_master(_adapter *adapter)
+{
+#ifdef CONFIG_AP_MODE
+	struct mlme_priv *pmlmepriv = &adapter->mlmepriv;
+	WLAN_BSSID_EX *pdev_network = &adapter->registrypriv.dev_network;
+	u8 *pibss = adapter->registrypriv.dev_network.MacAddress;
+
+	init_fwstate(pmlmepriv, WIFI_ADHOC_MASTER_STATE);
+	_rtw_memset(&pdev_network->Ssid, 0, sizeof(NDIS_802_11_SSID));
+	_rtw_memcpy(&pdev_network->Ssid, &pmlmepriv->assoc_ssid, sizeof(NDIS_802_11_SSID));
+	rtw_update_registrypriv_dev_network(adapter);
+	rtw_generate_random_ibss(pibss);
+	if (rtw_create_ibss_cmd(adapter, 0) != _SUCCESS)
+		return _FALSE;
+	pmlmepriv->to_join = _FALSE;
+	return _TRUE;
+#else
+	return _FALSE;
 #endif
 }
 #endif /* CONFIG_RUST && !HOST_IOCTL_SCAN_CHANNEL_TEST */
