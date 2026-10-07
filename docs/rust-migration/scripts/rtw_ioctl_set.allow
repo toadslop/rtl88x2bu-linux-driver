@@ -28,3 +28,5 @@ drop rtw_rust_ioctl_disassoc_cmd
 drop rtw_rust_ioctl_free_assoc_resources_cmd
 drop rtw_rust_ioctl_indicate_disconnect
 drop rtw_rust_ioctl_init_bcmc_stainfo
+drop rtw_rust_ioctl_acs_ch_union
+drop rtw_rust_ioctl_acs_ch_sel_same_band
