@@ -102,6 +102,17 @@ mod kernel {
         fn rtw_validate_bssid(bssid: *mut u8) -> u8;
         fn rtw_validate_ssid(ssid: *mut c_void) -> u8;
         fn rtw_do_join(adapter: *mut c_void) -> u8;
+        fn rtw_rust_ioctl_scanned_queue_enter(adapter: *mut c_void, irqL: *mut c_ulong);
+        fn rtw_rust_ioctl_scanned_queue_exit(adapter: *mut c_void, irqL: *mut c_ulong);
+        fn rtw_rust_ioctl_scanned_queue_empty(adapter: *mut c_void) -> c_int;
+        fn rtw_rust_ioctl_do_join_prime_pscanned(adapter: *mut c_void);
+        fn rtw_rust_ioctl_do_join_issue_sitesurvey(adapter: *mut c_void) -> u8;
+        fn rtw_rust_ioctl_link_busy_traffic(adapter: *mut c_void) -> c_int;
+        fn rtw_rust_ioctl_to_roam(adapter: *mut c_void) -> i8;
+        fn rtw_rust_ioctl_ssc_allow_survey(adapter: *mut c_void) -> c_int;
+        fn rtw_rust_ioctl_select_and_join(adapter: *mut c_void) -> c_int;
+        fn rtw_rust_ioctl_assoc_timer_start(adapter: *mut c_void);
+        fn rtw_rust_ioctl_do_join_adhoc_master(adapter: *mut c_void) -> u8;
         fn rtw_rust_ioctl_cur_bssid_equals(adapter: *mut c_void, bssid: *mut u8) -> c_int;
         fn rtw_rust_ioctl_assoc_ssid_equals(adapter: *mut c_void, ssid: *mut c_void) -> c_int;
         fn rtw_rust_ioctl_cur_wlan_network(adapter: *mut c_void) -> *mut c_void;
@@ -265,6 +276,57 @@ mod kernel {
 
     pub unsafe fn do_join(adapter: *mut c_void) -> u8 {
         unsafe { rtw_do_join(adapter) }
+    }
+
+    pub unsafe fn scanned_queue_enter(adapter: *mut c_void, irqL: *mut c_ulong) {
+        unsafe { rtw_rust_ioctl_scanned_queue_enter(adapter, irqL) }
+    }
+
+    pub unsafe fn scanned_queue_exit(adapter: *mut c_void, irqL: *mut c_ulong) {
+        unsafe { rtw_rust_ioctl_scanned_queue_exit(adapter, irqL) }
+    }
+
+    pub unsafe fn scanned_queue_empty(adapter: *mut c_void) -> bool {
+        unsafe { rtw_rust_ioctl_scanned_queue_empty(adapter) != 0 }
+    }
+
+    pub unsafe fn do_join_prime_pscanned(adapter: *mut c_void) {
+        unsafe { rtw_rust_ioctl_do_join_prime_pscanned(adapter) }
+    }
+
+    pub unsafe fn do_join_issue_sitesurvey(adapter: *mut c_void) -> u8 {
+        unsafe { rtw_rust_ioctl_do_join_issue_sitesurvey(adapter) }
+    }
+
+    pub unsafe fn link_busy_traffic(adapter: *mut c_void) -> bool {
+        unsafe { rtw_rust_ioctl_link_busy_traffic(adapter) != 0 }
+    }
+
+    pub unsafe fn to_roam(adapter: *mut c_void) -> i8 {
+        unsafe { rtw_rust_ioctl_to_roam(adapter) }
+    }
+
+    pub unsafe fn ssc_allow_survey(adapter: *mut c_void) -> bool {
+        unsafe { rtw_rust_ioctl_ssc_allow_survey(adapter) != 0 }
+    }
+
+    pub unsafe fn select_and_join(adapter: *mut c_void) -> i32 {
+        unsafe { rtw_rust_ioctl_select_and_join(adapter) }
+    }
+
+    pub unsafe fn assoc_timer_start(adapter: *mut c_void) {
+        unsafe { rtw_rust_ioctl_assoc_timer_start(adapter) }
+    }
+
+    pub unsafe fn do_join_adhoc_master(adapter: *mut c_void) -> u8 {
+        unsafe { rtw_rust_ioctl_do_join_adhoc_master(adapter) }
+    }
+
+    pub unsafe fn set_to_join(adapter: *mut c_void, val: u8) {
+        let p = unsafe { to_join_ptr(adapter) };
+        if !p.is_null() {
+            unsafe { *p = val };
+        }
     }
 
     pub unsafe fn cur_bssid_equals(adapter: *mut c_void, bssid: *mut u8) -> bool {
@@ -471,6 +533,71 @@ pub unsafe extern "C" fn rtw_set_802_11_ssid(adapter: *mut c_void, ssid: *mut c_
 
     unsafe { kernel::exit_critical_bh(lock, &mut irqL) };
     status
+}
+
+#[cfg(rust_ioctl_set_leaf)]
+const DO_JOIN_SELECT_SUCCESS: i32 = 1;
+
+#[cfg(rust_ioctl_set_leaf)]
+unsafe fn kernel_do_join_try_survey(adapter: *mut c_void) -> u8 {
+    if !unsafe { kernel::ssc_allow_survey(adapter) } {
+        unsafe { kernel::set_to_join(adapter, _FALSE) };
+        return _FALSE;
+    }
+    let ret = unsafe { kernel::do_join_issue_sitesurvey(adapter) };
+    if ret != _TRUE {
+        unsafe { kernel::set_to_join(adapter, _FALSE) };
+    }
+    ret
+}
+
+#[cfg(rust_ioctl_set_leaf)]
+unsafe fn kernel_do_join_traffic_permits(adapter: *mut c_void) -> bool {
+    !unsafe { kernel::link_busy_traffic(adapter) } || unsafe { kernel::to_roam(adapter) } > 0
+}
+
+#[cfg(rust_ioctl_set_leaf)]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_do_join(adapter: *mut c_void) -> u8 {
+    let mut irqL: c_ulong = 0;
+
+    unsafe { kernel::scanned_queue_enter(adapter, &mut irqL) };
+    unsafe { kernel::do_join_prime_pscanned(adapter) };
+
+    if unsafe { kernel::scanned_queue_empty(adapter) } {
+        unsafe { kernel::scanned_queue_exit(adapter, &mut irqL) };
+        unsafe { kernel::clr_fwstate_mask(adapter, WIFI_UNDER_LINKING_K as c_int) };
+        if unsafe { kernel_do_join_traffic_permits(adapter) } {
+            return unsafe { kernel_do_join_try_survey(adapter) };
+        }
+        unsafe { kernel::set_to_join(adapter, _FALSE) };
+        return _FALSE;
+    }
+
+    unsafe { kernel::scanned_queue_exit(adapter, &mut irqL) };
+    let select_ret = unsafe { kernel::select_and_join(adapter) };
+    if select_ret == DO_JOIN_SELECT_SUCCESS {
+        unsafe { kernel::set_to_join(adapter, _FALSE) };
+        unsafe { kernel::assoc_timer_start(adapter) };
+        return _TRUE;
+    }
+
+    let fw_ptr = unsafe { kernel::fw_state_ptr(adapter) };
+    let fw_state = unsafe { *fw_ptr };
+    if kernel_chk_fw(fw_state, WIFI_ADHOC_STATE_BSSID_K) {
+        if unsafe { kernel::do_join_adhoc_master(adapter) } != _TRUE {
+            return _FALSE;
+        }
+        return _TRUE;
+    }
+
+    unsafe { kernel::clr_fwstate_mask(adapter, WIFI_UNDER_LINKING_K as c_int) };
+    if unsafe { kernel_do_join_traffic_permits(adapter) } {
+        unsafe { kernel_do_join_try_survey(adapter) }
+    } else {
+        unsafe { kernel::set_to_join(adapter, _FALSE) };
+        _FALSE
+    }
 }
 
 #[cfg(rust_ioctl_set_leaf)]

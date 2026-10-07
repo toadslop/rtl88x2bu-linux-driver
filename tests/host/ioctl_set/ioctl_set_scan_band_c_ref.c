@@ -163,3 +163,10 @@ u8 rtw_set_802_11_ssid(struct adapter *adapter, ndis80211_ssid_set *ssid)
 	adapter->mlmepriv.lock_depth--;
 	return _SUCCESS;
 }
+
+u8 rtw_do_join(struct adapter *adapter)
+{
+	adapter->mlmepriv.lock_depth++;
+	adapter->mlmepriv.lock_depth--;
+	return _SUCCESS;
+}
