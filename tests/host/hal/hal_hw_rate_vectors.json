@@ -1,0 +1,435 @@
+{
+  "oracle": "hal_hw_rate_c_oracle.c",
+  "vectors": [
+    {
+      "name": "hw_rate_00",
+      "hw_rate": 0,
+      "expect": 2
+    },
+    {
+      "name": "hw_rate_01",
+      "hw_rate": 1,
+      "expect": 4
+    },
+    {
+      "name": "hw_rate_02",
+      "hw_rate": 2,
+      "expect": 11
+    },
+    {
+      "name": "hw_rate_03",
+      "hw_rate": 3,
+      "expect": 22
+    },
+    {
+      "name": "hw_rate_04",
+      "hw_rate": 4,
+      "expect": 12
+    },
+    {
+      "name": "hw_rate_05",
+      "hw_rate": 5,
+      "expect": 18
+    },
+    {
+      "name": "hw_rate_06",
+      "hw_rate": 6,
+      "expect": 24
+    },
+    {
+      "name": "hw_rate_07",
+      "hw_rate": 7,
+      "expect": 36
+    },
+    {
+      "name": "hw_rate_08",
+      "hw_rate": 8,
+      "expect": 48
+    },
+    {
+      "name": "hw_rate_09",
+      "hw_rate": 9,
+      "expect": 72
+    },
+    {
+      "name": "hw_rate_0a",
+      "hw_rate": 10,
+      "expect": 96
+    },
+    {
+      "name": "hw_rate_0b",
+      "hw_rate": 11,
+      "expect": 108
+    },
+    {
+      "name": "hw_rate_0c",
+      "hw_rate": 12,
+      "expect": 128
+    },
+    {
+      "name": "hw_rate_0d",
+      "hw_rate": 13,
+      "expect": 129
+    },
+    {
+      "name": "hw_rate_0e",
+      "hw_rate": 14,
+      "expect": 130
+    },
+    {
+      "name": "hw_rate_0f",
+      "hw_rate": 15,
+      "expect": 131
+    },
+    {
+      "name": "hw_rate_10",
+      "hw_rate": 16,
+      "expect": 132
+    },
+    {
+      "name": "hw_rate_11",
+      "hw_rate": 17,
+      "expect": 133
+    },
+    {
+      "name": "hw_rate_12",
+      "hw_rate": 18,
+      "expect": 134
+    },
+    {
+      "name": "hw_rate_13",
+      "hw_rate": 19,
+      "expect": 135
+    },
+    {
+      "name": "hw_rate_14",
+      "hw_rate": 20,
+      "expect": 136
+    },
+    {
+      "name": "hw_rate_15",
+      "hw_rate": 21,
+      "expect": 137
+    },
+    {
+      "name": "hw_rate_16",
+      "hw_rate": 22,
+      "expect": 138
+    },
+    {
+      "name": "hw_rate_17",
+      "hw_rate": 23,
+      "expect": 139
+    },
+    {
+      "name": "hw_rate_18",
+      "hw_rate": 24,
+      "expect": 140
+    },
+    {
+      "name": "hw_rate_19",
+      "hw_rate": 25,
+      "expect": 141
+    },
+    {
+      "name": "hw_rate_1a",
+      "hw_rate": 26,
+      "expect": 142
+    },
+    {
+      "name": "hw_rate_1b",
+      "hw_rate": 27,
+      "expect": 143
+    },
+    {
+      "name": "hw_rate_1c",
+      "hw_rate": 28,
+      "expect": 144
+    },
+    {
+      "name": "hw_rate_1d",
+      "hw_rate": 29,
+      "expect": 145
+    },
+    {
+      "name": "hw_rate_1e",
+      "hw_rate": 30,
+      "expect": 146
+    },
+    {
+      "name": "hw_rate_1f",
+      "hw_rate": 31,
+      "expect": 147
+    },
+    {
+      "name": "hw_rate_20",
+      "hw_rate": 32,
+      "expect": 148
+    },
+    {
+      "name": "hw_rate_21",
+      "hw_rate": 33,
+      "expect": 149
+    },
+    {
+      "name": "hw_rate_22",
+      "hw_rate": 34,
+      "expect": 150
+    },
+    {
+      "name": "hw_rate_23",
+      "hw_rate": 35,
+      "expect": 151
+    },
+    {
+      "name": "hw_rate_24",
+      "hw_rate": 36,
+      "expect": 152
+    },
+    {
+      "name": "hw_rate_25",
+      "hw_rate": 37,
+      "expect": 153
+    },
+    {
+      "name": "hw_rate_26",
+      "hw_rate": 38,
+      "expect": 154
+    },
+    {
+      "name": "hw_rate_27",
+      "hw_rate": 39,
+      "expect": 155
+    },
+    {
+      "name": "hw_rate_28",
+      "hw_rate": 40,
+      "expect": 156
+    },
+    {
+      "name": "hw_rate_29",
+      "hw_rate": 41,
+      "expect": 157
+    },
+    {
+      "name": "hw_rate_2a",
+      "hw_rate": 42,
+      "expect": 158
+    },
+    {
+      "name": "hw_rate_2b",
+      "hw_rate": 43,
+      "expect": 159
+    },
+    {
+      "name": "hw_rate_2c",
+      "hw_rate": 44,
+      "expect": 160
+    },
+    {
+      "name": "hw_rate_2d",
+      "hw_rate": 45,
+      "expect": 161
+    },
+    {
+      "name": "hw_rate_2e",
+      "hw_rate": 46,
+      "expect": 162
+    },
+    {
+      "name": "hw_rate_2f",
+      "hw_rate": 47,
+      "expect": 163
+    },
+    {
+      "name": "hw_rate_30",
+      "hw_rate": 48,
+      "expect": 164
+    },
+    {
+      "name": "hw_rate_31",
+      "hw_rate": 49,
+      "expect": 165
+    },
+    {
+      "name": "hw_rate_32",
+      "hw_rate": 50,
+      "expect": 166
+    },
+    {
+      "name": "hw_rate_33",
+      "hw_rate": 51,
+      "expect": 167
+    },
+    {
+      "name": "hw_rate_34",
+      "hw_rate": 52,
+      "expect": 168
+    },
+    {
+      "name": "hw_rate_35",
+      "hw_rate": 53,
+      "expect": 169
+    },
+    {
+      "name": "hw_rate_36",
+      "hw_rate": 54,
+      "expect": 170
+    },
+    {
+      "name": "hw_rate_37",
+      "hw_rate": 55,
+      "expect": 171
+    },
+    {
+      "name": "hw_rate_38",
+      "hw_rate": 56,
+      "expect": 172
+    },
+    {
+      "name": "hw_rate_39",
+      "hw_rate": 57,
+      "expect": 173
+    },
+    {
+      "name": "hw_rate_3a",
+      "hw_rate": 58,
+      "expect": 174
+    },
+    {
+      "name": "hw_rate_3b",
+      "hw_rate": 59,
+      "expect": 175
+    },
+    {
+      "name": "hw_rate_3c",
+      "hw_rate": 60,
+      "expect": 176
+    },
+    {
+      "name": "hw_rate_3d",
+      "hw_rate": 61,
+      "expect": 177
+    },
+    {
+      "name": "hw_rate_3e",
+      "hw_rate": 62,
+      "expect": 178
+    },
+    {
+      "name": "hw_rate_3f",
+      "hw_rate": 63,
+      "expect": 179
+    },
+    {
+      "name": "hw_rate_40",
+      "hw_rate": 64,
+      "expect": 180
+    },
+    {
+      "name": "hw_rate_41",
+      "hw_rate": 65,
+      "expect": 181
+    },
+    {
+      "name": "hw_rate_42",
+      "hw_rate": 66,
+      "expect": 182
+    },
+    {
+      "name": "hw_rate_43",
+      "hw_rate": 67,
+      "expect": 183
+    },
+    {
+      "name": "hw_rate_44",
+      "hw_rate": 68,
+      "expect": 184
+    },
+    {
+      "name": "hw_rate_45",
+      "hw_rate": 69,
+      "expect": 185
+    },
+    {
+      "name": "hw_rate_46",
+      "hw_rate": 70,
+      "expect": 186
+    },
+    {
+      "name": "hw_rate_47",
+      "hw_rate": 71,
+      "expect": 187
+    },
+    {
+      "name": "hw_rate_48",
+      "hw_rate": 72,
+      "expect": 188
+    },
+    {
+      "name": "hw_rate_49",
+      "hw_rate": 73,
+      "expect": 189
+    },
+    {
+      "name": "hw_rate_4a",
+      "hw_rate": 74,
+      "expect": 190
+    },
+    {
+      "name": "hw_rate_4b",
+      "hw_rate": 75,
+      "expect": 191
+    },
+    {
+      "name": "hw_rate_4c",
+      "hw_rate": 76,
+      "expect": 192
+    },
+    {
+      "name": "hw_rate_4d",
+      "hw_rate": 77,
+      "expect": 193
+    },
+    {
+      "name": "hw_rate_4e",
+      "hw_rate": 78,
+      "expect": 194
+    },
+    {
+      "name": "hw_rate_4f",
+      "hw_rate": 79,
+      "expect": 195
+    },
+    {
+      "name": "hw_rate_50",
+      "hw_rate": 80,
+      "expect": 196
+    },
+    {
+      "name": "hw_rate_51",
+      "hw_rate": 81,
+      "expect": 197
+    },
+    {
+      "name": "hw_rate_52",
+      "hw_rate": 82,
+      "expect": 198
+    },
+    {
+      "name": "hw_rate_53",
+      "hw_rate": 83,
+      "expect": 199
+    },
+    {
+      "name": "invalid_ff",
+      "hw_rate": 255,
+      "expect": 2
+    },
+    {
+      "name": "invalid_at_num",
+      "hw_rate": 84,
+      "expect": 2
+    }
+  ]
+}

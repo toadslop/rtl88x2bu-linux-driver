@@ -208,6 +208,12 @@ for path in "${changed[@]}"; do
 	| tests/host/debug/*)
 		add_target rust-check-symbols-rtw-debug
 		;;
+	rust/hal_com.rs \
+	| hal/hal_com_rest.c \
+	| hal/hal_com.c \
+	| tests/host/hal/*)
+		add_target rust-check-symbols-hal-com
+		;;
 	rust/aes_*.rs \
 	| rust/sha256*.rs \
 	| rust/gcmp.rs \

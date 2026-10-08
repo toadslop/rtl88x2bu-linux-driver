@@ -277,7 +277,6 @@ endif
 
 
 _HAL_INTFS_FILES :=	hal/hal_intf.o \
-			hal/hal_com.o \
 			hal/hal_com_phycfg.o \
 			hal/hal_phy.o \
 			hal/hal_dm.o \
@@ -290,6 +289,11 @@ _HAL_INTFS_FILES :=	hal/hal_intf.o \
 			hal/led/hal_led.o \
 			hal/led/hal_$(HCI_NAME)_led.o
 
+ifeq ($(CONFIG_RUST),)
+_HAL_INTFS_FILES += hal/hal_com.o
+else
+_HAL_INTFS_FILES += hal/hal_com_rest.o
+endif
 
 ccflags-y += -I$(src)/platform
 _PLATFORM_FILES := platform/platform_ops.o
@@ -2872,6 +2876,7 @@ endif
 ifneq ($(filter -DCONFIG_BMC_TX_RATE_SELECT,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 rustflags-y += --cfg bmc_tx_rate_select
 endif
+$(MODULE_NAME)-y += rust/hal_com.o
 $(MODULE_NAME)-y += rust/rtw_chplan.o
 $(MODULE_NAME)-y += rust/rtw_chplan_rest.o
 $(MODULE_NAME)-y += rust/rtw_io_rest.o
@@ -4112,6 +4117,21 @@ rust-objects-rtw-sreset-c:
 rust-check-symbols-rtw-sreset: rust-objects-rtw-sreset-c rust-objects-rtw-sreset
 	$(MAKE) rust-check-symbols OLD=tests/host/sreset/sreset_lifecycle_c_ref.o NEW=rust/rtw_sreset.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_sreset.allow ALLOW_VACUOUS=1
+
+# W4-01: host C oracle (hw_rate_to_m_rate) vs rust/hal_com.o.
+rust-objects-hal-com:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-hal-com"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/hal_com.o
+
+rust-objects-hal-com-c:
+	@mkdir -p tests/host/hal
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/include \
+		-o tests/host/hal/hal_hw_rate_c_ref.o tests/host/hal/hal_hw_rate_c_oracle.c
+
+rust-check-symbols-hal-com: rust-objects-hal-com-c rust-objects-hal-com
+	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_hw_rate_c_ref.o NEW=rust/hal_com.o \
+		ALLOWLIST=docs/rust-migration/scripts/hal_com.allow ALLOW_VACUOUS=1
 
 # W3-130: host C oracle (debug version/log leaf) vs rust/rtw_debug.o.
 rust-objects-rtw-debug:
