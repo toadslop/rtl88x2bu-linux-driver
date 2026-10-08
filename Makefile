@@ -2830,7 +2830,7 @@ endif
 ifneq ($(_rust_cfg_rtw_debug),)
 rustflags-y += --cfg config_rtw_debug
 endif
-# W3-131 PR1: export dump_drv_cfg from rust/rtw_debug.rs (C bridge for banner).
+# W3-131: dump_drv_cfg part 1 in rust/rtw_debug.rs
 ifeq ($(CONFIG_PROC_DEBUG), y)
 rustflags-y += --cfg config_proc_debug
 endif

@@ -1,6 +1,9 @@
 # L1 allowlist for W3-130/W3-131: Rust owns dump_drv_version, dump_log_level, dump_drv_cfg.
-drop rtw_rust_debug_dump_drv_cfg_part1
 drop rtw_rust_debug_dump_drv_cfg_tail
+drop rtw_rust_debug_kernel_release
+drop rtw_rust_debug_drv_cfg_num_values
+drop rtw_rust_debug_dump_drv_cfg_pre_num_banners
+drop rtw_rust_debug_dump_drv_cfg_post_num_banners
 drop rtw_rust_debug_print_sel
 drop rtw_rust_debug_drv_name
 drop rtw_rust_debug_driver_version
