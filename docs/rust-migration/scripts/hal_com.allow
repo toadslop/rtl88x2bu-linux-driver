@@ -1,0 +1,2 @@
+# L1 allowlist for W4-01: dump_hw_rate_map_test only when CONFIG_RTW_DEBUG (Rust cfg).
+drop dump_hw_rate_map_test
