@@ -2812,7 +2812,20 @@ rustflags-y += --cfg rust_rf_kfree_tx_gain
 rustflags-y += --cfg rust_cmd_priv
 rustflags-y += --cfg rust_cmd_queue
 rustflags-y += --cfg rust_cmd_thread
+# Match C #ifdef CONFIG_RTW_DEBUG (Makefile CONFIG_RTW_DEBUG=y, autoconf.h, or -D on ccflags).
+_rust_cfg_rtw_debug :=
+ifeq ($(CONFIG_RTW_DEBUG), y)
+_rust_cfg_rtw_debug := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTW_DEBUG' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_rtw_debug := y
+endif
+ifneq ($(filter -DCONFIG_RTW_DEBUG,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_rtw_debug := y
+endif
+ifneq ($(_rust_cfg_rtw_debug),)
 rustflags-y += --cfg config_rtw_debug
+endif
 rustflags-y += --cfg dfs_master
 rustflags-y += --cfg ieee80211_band_5ghz
 # CONFIG_DFS defaults to 1 in include/drv_conf.h (#define), not a Makefile y var.

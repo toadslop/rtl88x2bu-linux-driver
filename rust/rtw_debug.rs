@@ -12,7 +12,9 @@
     unused_unsafe
 )]
 
-use core::ffi::{c_char, c_int, c_uint, c_void};
+use core::ffi::{c_char, c_int, c_void};
+#[cfg(config_rtw_debug)]
+use core::ffi::c_uint;
 
 const _DRV_MAX_: c_int = 6;
 
@@ -20,11 +22,11 @@ extern "C" {
     fn rtw_rust_debug_print_sel(sel: *mut c_void, line: *const c_char);
     fn rtw_rust_debug_drv_name() -> *const c_char;
     fn rtw_rust_debug_driver_version() -> *const c_char;
-    static mut rtw_drv_log_level: c_uint;
 }
 
 #[cfg(config_rtw_debug)]
 extern "C" {
+    static mut rtw_drv_log_level: c_uint;
     fn rtw_rust_debug_log_level_str(idx: c_int) -> *const c_char;
 }
 
