@@ -20,9 +20,12 @@ Port the pure SMS4 primitives from [`core/rtw_wapi_sms4.c`](../../../core/rtw_wa
 
 - Depends on **T17** host differential harness for L2 parity before Makefile swap.
 - `WAPI_LITTLE_ENDIAN` paths must match C byte order transforms exactly.
-- Frame encrypt/decrypt (`rtw_sms4_encrypt` / `decrypt`) stay in C for a follow-up slice.
+- Frame encrypt/decrypt (`rtw_sms4_encrypt` / `decrypt`) stay in C — extract them to
+  `core/rtw_wapi_sms4_rest.c` before replacing `core/rtw_wapi_sms4.o` with
+  `rust/rtw_wapi_sms4.o` (same `*_rest.c` pattern as `wave3-104`).
 
 ## Acceptance
 
-- L0 + L1 on swapped object
+- `rtw_wapi_sms4_rest.c` holds encrypt/decrypt and any symbols not in this slice
+- L0 + L1 on swapped object (`rust/rtw_wapi_sms4.o` + `rtw_wapi_sms4_rest.o`)
 - L2: `tests/host/wapi_sms4` oracle passes Rust vs C for all vectors

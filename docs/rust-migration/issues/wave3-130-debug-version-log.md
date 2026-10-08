@@ -18,9 +18,13 @@ Port debug print helpers from [`core/rtw_debug.c`](../../../core/rtw_debug.c) to
 
 ## Notes
 
-- **Scaffold owner:** introduces `rust/rtw_debug.rs` and Kbuild/Makefile wiring
-  (swap `core/rtw_debug.o` for the Rust object) following existing `rtw_*` patterns.
-  Later `W3-131`…`W3-134` slices depend on this module existing for L0.
+- **Scaffold owner:** introduces `rust/rtw_debug.rs` and Kbuild/Makefile wiring.
+  `core/rtw_debug.c` is ~8k lines as a single `core/rtw_debug.o` today — before the
+  CONFIG_RUST object swap, extract all unported symbols to `core/rtw_debug_rest.c`
+  (same `*_rest.c` pattern as `wave3-104` / `rtw_br_ext_rest.c`). Only then replace
+  `core/rtw_debug.o` with `rust/rtw_debug.o` for the symbols in this slice.
+  Later `W3-131`…`W3-138` / `W3-132`…`W3-134` add functions into the Rust object
+  while the remainder stays in `rtw_debug_rest.c` until fully ported.
 - `dump_log_level` is gated on `CONFIG_RTW_DEBUG`; preserve `#ifdef` behavior via
   Kbuild `cfg` or thin C stubs as in other debug ports.
 - Procfs/`seq_file` integration stays in C; Rust owns formatting logic callable from C.
@@ -29,5 +33,6 @@ Port debug print helpers from [`core/rtw_debug.c`](../../../core/rtw_debug.c) to
 
 ## Acceptance
 
+- `rtw_debug_rest.c` holds every `rtw_debug.c` symbol **not** moved to Rust in this slice
 - L0 build (`make KDIR=/opt/linux LLVM=1`) + L1 symbol check on swapped objects
 - `extern "C"` symbols and signatures unchanged for proc/debug callers

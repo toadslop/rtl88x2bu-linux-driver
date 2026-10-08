@@ -18,6 +18,8 @@ Port security CAM debug formatters from [`core/rtw_debug.c`](../../../core/rtw_d
 
 ## Notes
 
+- Gated on `CONFIG_RTW_DEBUG || CONFIG_PROC_DEBUG` in C (~L790–860) — match with Rust
+  `cfg` and run L0/L1 with proc debug enabled on the pinned kernel config.
 - Uses `struct sec_cam_ent` and adapter CAM tables — FFI borrows at entry; no HAL MMIO.
 - Align field formatting with existing security Rust modules for MAC/key display.
 
