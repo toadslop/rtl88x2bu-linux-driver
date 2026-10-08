@@ -29,6 +29,7 @@ Provide hardware-free verification (L0–L3) so each ~200 LOC translation PR can
 - T14 — bindgen drift check (`generated.rs` freshness)
 - T15 — path-scoped L3 on PRs for init/USB/scaffold changes
 - T16 — `rustfmt --check` on `rust/**` changes
+- T17 — host WAPI SMS4 differential harness (unblocks W3-135/W3-136)
 
 ## Exit criteria
 

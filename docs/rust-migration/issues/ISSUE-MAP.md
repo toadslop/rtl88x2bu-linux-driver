@@ -198,6 +198,20 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-127 | #467 | [W3-127] btcoex handler and AMPDU policy leaf |
 | W3-128 | #468 | [W3-128] beamforming entry lookup and packet leaf |
 | W3-129 | #469 | [W3-129] beamforming init and cmd_hdl leaf |
+| T17 | #1139 | [T17] Host WAPI SMS4 differential harness (L2) |
+| W3-130 | #1140 | [W3-130] Translate rtw_debug.c — driver version and log level dumps |
+| W3-131 | #1141 | [W3-131] Translate rtw_debug.c — dump_drv_cfg Kconfig banner |
+| W3-132 | #1142 | [W3-132] Translate rtw_debug.c — manufacturing/test hook globals |
+| W3-133 | #1143 | [W3-133] Translate rtw_debug.c — security CAM dump helpers |
+| W3-134 | #1144 | [W3-134] Translate rtw_debug.c — tx/rx debug dump leaf |
+| W3-135 | #1145 | [W3-135] Translate rtw_wapi_sms4.c — SMS4 block cipher core |
+| W3-136 | #1146 | [W3-136] Translate rtw_wapi_sms4.c — PN increment and SMS4 IV header |
+| W3-137 | #1147 | [W3-137] Translate rtw_btcoex_wifionly.c — wifionly notify stubs |
+| W4-01 | #1148 | [W4-01] Translate hal_com.c — hw_rate_to_m_rate + rate map dump |
+| W4-02 | #1149 | [W4-02] Translate hal_com.c — reserved page cache helpers |
+| W4-03 | #1150 | [W4-03] Translate hal_com.c — dump_chip_info formatter |
+| W4-04 | #1151 | [W4-04] Translate hal_com.c — rtw_hal_dump_macaddr |
+| W3-138 | #1153 | [W3-138] Translate rtw_debug.c — dump_drv_cfg HCI + xmit/recv banners |
 
 ## Superseded issues
 
