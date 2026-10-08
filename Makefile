@@ -2435,6 +2435,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_cmd_priv.o \
 		core/rtw_cmd_thread.o \
 		core/rtw_debug.o \
+		core/rtw_debug_rest.o \
 		core/rtw_io.o \
 		core/rtw_io_rest.o \
 		core/rtw_ioctl_query.o \
@@ -2694,6 +2695,7 @@ ccflags-y += -DCONFIG_RUST_CMD_QUEUE
 ccflags-y += -DCONFIG_RUST_CMD_THREAD
 ccflags-y += -DCONFIG_RUST_CMD_THREAD_LOOP
 ccflags-y += -DCONFIG_RUST_RECV_STA
+ccflags-y += -DCONFIG_RUST_RTW_DEBUG
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_EVENT_THREAD_MODE' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg event_thread_mode
 endif
@@ -2909,6 +2911,7 @@ $(MODULE_NAME)-y += rust/rtw_xmit_update_attrib_kern.o
 $(MODULE_NAME)-y += rust/rtw_cmd_thread_kern.o
 $(MODULE_NAME)-y += rust/rtw_iol_rest.o
 $(MODULE_NAME)-y += rust/rtw_sreset.o
+$(MODULE_NAME)-y += rust/rtw_debug.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
@@ -4096,6 +4099,26 @@ rust-objects-rtw-sreset-c:
 rust-check-symbols-rtw-sreset: rust-objects-rtw-sreset-c rust-objects-rtw-sreset
 	$(MAKE) rust-check-symbols OLD=tests/host/sreset/sreset_lifecycle_c_ref.o NEW=rust/rtw_sreset.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_sreset.allow ALLOW_VACUOUS=1
+
+# W3-130: host C oracle (debug version/log leaf) vs rust/rtw_debug.o.
+rust-objects-rtw-debug:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug.o
+rust-objects-rtw-debug-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/include \
+		-DHOST_RTW_DEBUG_VERSION_LOG_TEST \
+		-o tests/host/debug/debug_version_log_leaf.o core/rtw_debug.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_version_log_shim.o \
+		tests/host/debug/host_rtw_debug_version_log_shim.c
+	ld -r -o tests/host/debug/debug_version_log_c_ref.o \
+		tests/host/debug/debug_version_log_leaf.o tests/host/debug/debug_version_log_shim.o
+rust-check-symbols-rtw-debug: rust-objects-rtw-debug-c rust-objects-rtw-debug
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_version_log_c_ref.o NEW=rust/rtw_debug.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug.allow ALLOW_VACUOUS=1
 
 # W3-94 follow-up PR4: host C oracle (ps deny shim) vs rust/rtw_pwrctrl.o.
 rust-objects-rtw-pwrctrl:

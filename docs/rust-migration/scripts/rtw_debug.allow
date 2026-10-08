@@ -1,0 +1,7 @@
+# L1 allowlist for W3-130: Rust owns dump_drv_version + dump_log_level; C leaf keeps FFI shims.
+drop rtw_rust_debug_print_sel
+drop rtw_rust_debug_drv_name
+drop rtw_rust_debug_driver_version
+drop rtw_rust_debug_log_level_str
+drop rtw_log_level_str
+drop rtw_drv_log_level
