@@ -21,7 +21,7 @@ differential tests (same pattern as T2/T5).
 - Reuse `tests/host/crypto` layout and Makefile patterns; vectors may be derived from
   known SMS4 test keys/blocks (document provenance in the test file).
 - Does not require hardware or QEMU beyond existing CI host-l2 workflow path filters
-  (extend filters in the same PR or a tiny follow-up knit if needed).
+  (extend filters in the same PR or a tiny follow-up nit if needed).
 
 ## Acceptance
 

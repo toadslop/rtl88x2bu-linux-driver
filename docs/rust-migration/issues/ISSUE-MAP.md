@@ -211,6 +211,7 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-02 | #1149 | [W4-02] Translate hal_com.c — reserved page cache helpers |
 | W4-03 | #1150 | [W4-03] Translate hal_com.c — dump_chip_info formatter |
 | W4-04 | #1151 | [W4-04] Translate hal_com.c — rtw_hal_dump_macaddr |
+| W3-138 | #1153 | [W3-138] Translate rtw_debug.c — dump_drv_cfg HCI + xmit/recv banners |
 
 ## Superseded issues
 

@@ -18,6 +18,9 @@ Port debug print helpers from [`core/rtw_debug.c`](../../../core/rtw_debug.c) to
 
 ## Notes
 
+- **Scaffold owner:** introduces `rust/rtw_debug.rs` and Kbuild/Makefile wiring
+  (swap `core/rtw_debug.o` for the Rust object) following existing `rtw_*` patterns.
+  Later `W3-131`…`W3-134` slices depend on this module existing for L0.
 - `dump_log_level` is gated on `CONFIG_RTW_DEBUG`; preserve `#ifdef` behavior via
   Kbuild `cfg` or thin C stubs as in other debug ports.
 - Procfs/`seq_file` integration stays in C; Rust owns formatting logic callable from C.

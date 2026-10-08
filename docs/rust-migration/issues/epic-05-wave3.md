@@ -178,7 +178,8 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | ID | File | Focus |
 |----|------|--------|
 | W3-130 | `wave3-130-debug-version-log.md` | `rtw_debug.c` version + log level dumps |
-| W3-131 | `wave3-131-debug-drv-cfg-dump.md` | `rtw_debug.c` `dump_drv_cfg` banner |
+| W3-131 | `wave3-131-debug-drv-cfg-dump.md` | `rtw_debug.c` `dump_drv_cfg` banner (part 1) |
+| W3-138 | `wave3-138-debug-drv-cfg-hci-xmit.md` | `rtw_debug.c` `dump_drv_cfg` HCI + xmit/recv |
 | W3-132 | `wave3-132-debug-test-hooks.md` | `rtw_debug.c` MP/test hook globals |
 | W3-133 | `wave3-133-debug-sec-cam-dump.md` | `rtw_debug.c` security CAM dump helpers |
 | W3-134 | `wave3-134-debug-tx-rx-dumps.md` | `rtw_debug.c` tx/rx debug dump leaf |

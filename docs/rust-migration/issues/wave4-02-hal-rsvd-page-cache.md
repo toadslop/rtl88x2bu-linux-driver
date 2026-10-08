@@ -4,7 +4,7 @@ labels: [rust-migration, phase-1, wave-4, size/~200]
 type: child
 id: W4-02
 epic: E06
-blocked_by: []
+blocked_by: [W4-01]
 estimate_loc: 200
 ---
 
@@ -20,7 +20,8 @@ Port `struct rsvd_page_cache_t` helpers from [`hal/hal_com.c`](../../../hal/hal_
 
 ## Notes
 
-- Independent parallel lane vs W4-01 (same file but no API dependency).
+- Same `hal_com.rs` module as `W4-01` (scaffold must land first); function bodies are
+  API-independent once the module exists.
 - Memory lifecycle only — no USB/HAL register access in these functions.
 - L2: heap-backed cache fixtures on host with alloc hooks or mock `u8` buffers.
 

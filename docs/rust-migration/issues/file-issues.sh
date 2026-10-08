@@ -235,6 +235,7 @@ files=(
   wave3-129-bf-init-cmd-leaf.md
   wave3-130-debug-version-log.md
   wave3-131-debug-drv-cfg-dump.md
+  wave3-138-debug-drv-cfg-hci-xmit.md
   wave3-132-debug-test-hooks.md
   wave3-133-debug-sec-cam-dump.md
   wave3-134-debug-tx-rx-dumps.md

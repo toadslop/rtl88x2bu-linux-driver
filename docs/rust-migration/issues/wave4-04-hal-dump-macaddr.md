@@ -4,7 +4,7 @@ labels: [rust-migration, phase-1, wave-4, size/~200]
 type: child
 id: W4-04
 epic: E06
-blocked_by: []
+blocked_by: [W4-01]
 estimate_loc: 200
 ---
 
@@ -17,7 +17,7 @@ Port `rtw_hal_dump_macaddr` from [`hal/hal_com.c`](../../../hal/hal_com.c) to
 
 - Reads MAC addresses from adapter / hal data — FFI at boundary; reuse `MacAddr` domain
   type for formatting when safe.
-- Independent of W4-01…W4-03.
+- Requires `rust/hal_com.rs` from `W4-01`; no ordering vs `W4-02`/`W4-03` after scaffold.
 
 ## Acceptance
 
