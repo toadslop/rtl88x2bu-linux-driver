@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! W3-130 debug version + log level dumps — Rust port of `core/rtw_debug.c` leaf.
+//! W3-130/W3-131 debug dumps — Rust port of `core/rtw_debug.c` leaves.
 
 #![allow(
     dead_code,
@@ -169,4 +169,19 @@ fn format_u32(v: u32) -> ([u8; 10], usize) {
         buf[i] = digits[n - 1 - i];
     }
     (buf, n)
+}
+
+#[cfg(config_proc_debug)]
+extern "C" {
+    fn rtw_rust_debug_dump_drv_cfg_part1(sel: *mut c_void);
+    fn rtw_rust_debug_dump_drv_cfg_tail(sel: *mut c_void);
+}
+
+#[cfg(config_proc_debug)]
+#[no_mangle]
+pub extern "C" fn dump_drv_cfg(sel: *mut c_void) {
+    unsafe {
+        rtw_rust_debug_dump_drv_cfg_part1(sel);
+        rtw_rust_debug_dump_drv_cfg_tail(sel);
+    }
 }

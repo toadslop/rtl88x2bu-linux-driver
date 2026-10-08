@@ -40,9 +40,12 @@ const char *rtw_log_level_str[] = {
 #endif
 
 #ifdef CONFIG_PROC_DEBUG
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 void dump_drv_cfg(void *sel)
 {
 extern uint rtw_recvbuf_nr;
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG */
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24))
 	char *kernel_version = utsname()->release;
@@ -162,7 +165,14 @@ extern uint rtw_recvbuf_nr;
 
 #ifdef CONFIG_RTW_TPT_MODE
 	RTW_PRINT_SEL(sel, "CONFIG_RTW_TPT_MODE\n");
-#endif 
+#endif
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — part 1 */
+
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
+void rtw_rust_debug_dump_drv_cfg_tail(void *sel)
+{
+extern uint rtw_recvbuf_nr;
+#endif
 
 #ifdef CONFIG_USB_HCI
 #ifdef CONFIG_SUPPORT_USB_INT
