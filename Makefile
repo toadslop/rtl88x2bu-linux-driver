@@ -2830,6 +2830,10 @@ endif
 ifneq ($(_rust_cfg_rtw_debug),)
 rustflags-y += --cfg config_rtw_debug
 endif
+# W3-131 PR1: export dump_drv_cfg from rust/rtw_debug.rs (C bridge for banner).
+ifeq ($(CONFIG_PROC_DEBUG), y)
+rustflags-y += --cfg config_proc_debug
+endif
 rustflags-y += --cfg dfs_master
 rustflags-y += --cfg ieee80211_band_5ghz
 # CONFIG_DFS defaults to 1 in include/drv_conf.h (#define), not a Makefile y var.
