@@ -48,13 +48,25 @@ extern "C" {
     static mut rates_by_sections: [RateSectionEnt; RATE_SECTION_NUM as usize];
     fn rtw_rust_hal_com_print_line(sel: *mut c_void, line: *const c_char);
     fn rtw_rust_hal_com_hdata_rate(hw_rate: U8) -> *const c_char;
+    fn rtw_rust_hal_com_warn_invalid_hw_rate(hw_rate: U8);
 }
+
+#[cfg(not(host_hal_com_hw_rate_test))]
+fn warn_invalid_hw_rate(hw_rate: U8) {
+    unsafe {
+        rtw_rust_hal_com_warn_invalid_hw_rate(hw_rate);
+    }
+}
+
+#[cfg(host_hal_com_hw_rate_test)]
+fn warn_invalid_hw_rate(_hw_rate: U8) {}
 
 #[no_mangle]
 pub extern "C" fn hw_rate_to_m_rate(hw_rate: U8) -> U8 {
     if (hw_rate as usize) < DESC_RATE_NUM {
         HW_RATE_TO_M_RATE[hw_rate as usize]
     } else {
+        warn_invalid_hw_rate(hw_rate);
         MGN_1M
     }
 }
