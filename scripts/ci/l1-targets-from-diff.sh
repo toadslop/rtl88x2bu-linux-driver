@@ -202,6 +202,12 @@ for path in "${changed[@]}"; do
 	| tests/host/odm/*)
 		add_target rust-check-symbols-rtw-odm-phydm-init
 		;;
+	rust/rtw_debug.rs \
+	| core/rtw_debug.c \
+	| core/rtw_debug_rest.c \
+	| tests/host/debug/*)
+		add_target rust-check-symbols-rtw-debug
+		;;
 	rust/aes_*.rs \
 	| rust/sha256*.rs \
 	| rust/gcmp.rs \
