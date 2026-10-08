@@ -88,6 +88,11 @@ const char *rtw_rust_debug_kernel_release(void)
 {
 	return utsname()->release;
 }
+#else
+const char *rtw_rust_debug_kernel_release(void)
+{
+	return NULL;
+}
 #endif
 
 #ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
@@ -144,6 +149,7 @@ void rtw_rust_debug_dump_drv_cfg_pre_num_banners(void *sel)
 #else
 	RTW_PRINT_SEL(sel, "WEXT\n");
 #endif
+	RTW_PRINT_SEL(sel, "DBG:%d\n", DBG);
 #ifdef CONFIG_RTW_DEBUG
 	RTW_PRINT_SEL(sel, "CONFIG_RTW_DEBUG\n");
 #endif
@@ -185,7 +191,7 @@ void rtw_rust_debug_dump_drv_cfg_pre_num_banners(void *sel)
 #endif
 }
 
-void rtw_rust_debug_dump_drv_cfg_post_num_banners(void *sel)
+void rtw_rust_debug_dump_drv_cfg_odm_minimal_banners(void *sel)
 {
 #ifdef CONFIG_DISABLE_ODM
 	RTW_PRINT_SEL(sel, "CONFIG_DISABLE_ODM\n");
@@ -193,6 +199,10 @@ void rtw_rust_debug_dump_drv_cfg_post_num_banners(void *sel)
 #ifdef CONFIG_MINIMAL_MEMORY_USAGE
 	RTW_PRINT_SEL(sel, "CONFIG_MINIMAL_MEMORY_USAGE\n");
 #endif
+}
+
+void rtw_rust_debug_dump_drv_cfg_post_num_banners(void *sel)
+{
 #ifdef CONFIG_WOWLAN
 	RTW_PRINT_SEL(sel, "CONFIG_WOWLAN - ");
 #ifdef CONFIG_GPIO_WAKEUP
@@ -213,6 +223,8 @@ void rtw_rust_debug_dump_drv_cfg_post_num_banners(void *sel)
 #endif
 #ifdef RTW_BUSY_DENY_SCAN
 	RTW_PRINT_SEL(sel, "RTW_BUSY_DENY_SCAN\n");
+	RTW_PRINT_SEL(sel, "BUSY_TRAFFIC_SCAN_DENY_PERIOD = %u ms\n", \
+		      BUSY_TRAFFIC_SCAN_DENY_PERIOD);
 #endif
 #ifdef CONFIG_RTW_TPT_MODE
 	RTW_PRINT_SEL(sel, "CONFIG_RTW_TPT_MODE\n");

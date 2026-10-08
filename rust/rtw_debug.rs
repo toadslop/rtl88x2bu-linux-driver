@@ -189,6 +189,7 @@ mod drv_cfg_part1 {
             busy_deny_ms: *mut c_uint,
         );
         fn rtw_rust_debug_dump_drv_cfg_pre_num_banners(sel: *mut c_void);
+        fn rtw_rust_debug_dump_drv_cfg_odm_minimal_banners(sel: *mut c_void);
         fn rtw_rust_debug_dump_drv_cfg_post_num_banners(sel: *mut c_void);
         fn rtw_rust_debug_dump_drv_cfg_tail(sel: *mut c_void);
     }
@@ -247,7 +248,6 @@ mod drv_cfg_part1 {
         print_line(sel, &dv[..pos]);
         print_line(sel, b"------------------------------------------------");
 
-        let mut dbg = 0i32;
         let mut reg_cert = 0u32;
         let mut tx_by_rate = 0i32;
         let mut tx_by_rate_en = 0i32;
@@ -255,11 +255,10 @@ mod drv_cfg_part1 {
         let mut tx_limit_en = 0i32;
         let mut adapt_en = 0i32;
         let mut adapt_mode = 0i32;
-        let mut busy_deny = 0u32;
         unsafe {
             rtw_rust_debug_dump_drv_cfg_pre_num_banners(sel);
             rtw_rust_debug_drv_cfg_num_values(
-                &mut dbg,
+                core::ptr::null_mut(),
                 &mut reg_cert,
                 &mut tx_by_rate,
                 &mut tx_by_rate_en,
@@ -267,11 +266,10 @@ mod drv_cfg_part1 {
                 &mut tx_limit_en,
                 &mut adapt_en,
                 &mut adapt_mode,
-                &mut busy_deny,
+                core::ptr::null_mut(),
             );
         }
 
-        print_kv(sel, b"DBG:", dbg as u32);
         let mut cert_line = [0u8; 48];
         let cert_pfx = b"RTW_DEF_MODULE_REGULATORY_CERT=0x";
         cert_line[..cert_pfx.len()].copy_from_slice(cert_pfx);
@@ -290,6 +288,9 @@ mod drv_cfg_part1 {
         print_kv(sel, b"CONFIG_TXPWR_BY_RATE_EN=", tx_by_rate_en as u32);
         print_kv(sel, b"CONFIG_TXPWR_LIMIT=", tx_limit as u32);
         print_kv(sel, b"CONFIG_TXPWR_LIMIT_EN=", tx_limit_en as u32);
+        unsafe {
+            rtw_rust_debug_dump_drv_cfg_odm_minimal_banners(sel);
+        }
         print_kv(sel, b"CONFIG_RTW_ADAPTIVITY_EN = ", adapt_en as u32);
         if adapt_en != 0 {
             if adapt_mode != 0 {
@@ -300,19 +301,6 @@ mod drv_cfg_part1 {
         }
         unsafe {
             rtw_rust_debug_dump_drv_cfg_post_num_banners(sel);
-        }
-
-        let mut line = [0u8; 80];
-        let hdr = b"BUSY_TRAFFIC_SCAN_DENY_PERIOD = ";
-        line[..hdr.len()].copy_from_slice(hdr);
-        let mut pos = hdr.len();
-        append_u32(&mut line, &mut pos, busy_deny);
-        let sfx = b" ms";
-        line[pos..pos + sfx.len()].copy_from_slice(sfx);
-        pos += sfx.len();
-        print_line(sel, &line[..pos]);
-
-        unsafe {
             rtw_rust_debug_dump_drv_cfg_tail(sel);
         }
     }
