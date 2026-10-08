@@ -171,7 +171,6 @@ fn format_u32(v: u32) -> ([u8; 10], usize) {
     (buf, n)
 }
 
-
 #[cfg(config_proc_debug)]
 mod drv_cfg_part1 {
     use super::*;
@@ -279,7 +278,11 @@ mod drv_cfg_part1 {
         let mut cpos = cert_pfx.len();
         let byte = (reg_cert & 0xff) as u8;
         for nib in [byte >> 4, byte & 0xf] {
-            cert_line[cpos] = if nib < 10 { b'0' + nib } else { b'a' + (nib - 10) };
+            cert_line[cpos] = if nib < 10 {
+                b'0' + nib
+            } else {
+                b'a' + (nib - 10)
+            };
             cpos += 1;
         }
         print_line(sel, &cert_line[..cpos]);
