@@ -12,7 +12,7 @@
     unused_unsafe
 )]
 
-#[cfg(all(not(host_hal_com_hw_rate_test), config_rtw_debug))]
+#[cfg(not(host_hal_com_hw_rate_test))]
 use core::ffi::{c_char, c_void};
 
 type U8 = u8;
