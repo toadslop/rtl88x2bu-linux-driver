@@ -224,6 +224,7 @@ Canonical checklist for new pull requests: [`.github/PULL_REQUEST_TEMPLATE.md`](
 10. **T15** — Path-scoped L3 on pull requests touching init/USB/scaffold paths (issue #309).
 11. **T9** — PR template (`.github/PULL_REQUEST_TEMPLATE.md`), contributing docs ([`docs/contributing.md`](../contributing.md)), and branch-protection admin notes ([`dev-environment.md`](dev-environment.md#branch-protection)) (done).
 12. **T16** — GitHub Actions (`.github/workflows/rust-lint.yml`): `rustfmt --check` on `rust/**` PRs via `scripts/ci/rustfmt-check.sh` (issue #310). Skips `rust/bindings/generated.rs` (bindgen output).
+13. **T17** — Host WAPI SMS4 block-cipher harness (`tests/host/wapi_sms4/`): C oracle for `SMS4Crypt` / `SMS4KeyExt` / `xor_block` in `core/rtw_wapi_sms4.c` (GB/T 32907 inputs; expected outputs match the driver’s `WAPI_LITTLE_ENDIAN` layout). Run `make -C tests/host/wapi_sms4 all` locally; CI via `host-l2.yml`. Unblocks W3-135/W3-136 Rust ports with L2 differential parity.
 
 ## Out of scope (for now)
 

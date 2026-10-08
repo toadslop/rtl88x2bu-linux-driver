@@ -59,6 +59,7 @@ on:
       - 'core/rtw_security_rest.c'
       - 'core/rtw_wlan_util.c'
       - 'core/rtw_beamforming.c'
+      - 'core/rtw_wapi_sms4.c'
       - 'rust/**'
       - 'tests/host/**'
       - 'Makefile'
@@ -125,7 +126,7 @@ jobs:
               - 'core/rtw_wlan_util.c'
               - 'core/rtw_beamforming.c'
               - 'core/rtw_pwrctrl.c'
-              - 'core/rtw_beamforming.c'
+              - 'core/rtw_wapi_sms4.c'
               - 'rust/**'
               - 'tests/host/**'
               - 'Makefile'
@@ -281,6 +282,10 @@ jobs:
       - name: Host wapi PN/IE/CAM leaf parity (L2)
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/wapi test test-rust
+
+      - name: Host wapi SMS4 block cipher oracle (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/wapi_sms4 all
 
       - name: Host ft IE leaf parity (L2)
         if: steps.filter.outputs.l2 == 'true'
