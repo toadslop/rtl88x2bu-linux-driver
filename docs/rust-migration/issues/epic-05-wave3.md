@@ -173,9 +173,24 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-128 | `wave3-128-bf-entry-packet-leaf.md` | `rtw_beamforming.c` entry lookup + packet leaf |
 | W3-129 | `wave3-129-bf-init-cmd-leaf.md` | `rtw_beamforming.c` init + cmd_hdl leaf |
 
-Further ~200 LOC slices **not yet covered by W3-01…W3-129**; file new `wave3-*.md` issues as needed when tranche 7 closes:
+## Children (tranche 8 — filed)
 
-- `core/` files not yet sliced: remaining `rtw_beamforming.c` sounding state machine, `rtw_btcoex*.c` remainder, `rtw_debug.c`, `rtw_ioctl_query.c`, `rtw_wapi_sms4.c`, …
-- Remaining helpers in partially translated files after W3-129 lands (audit with migration progress / `grep`)
+| ID | File | Focus |
+|----|------|--------|
+| W3-130 | `wave3-130-debug-version-log.md` | `rtw_debug.c` version + log level dumps |
+| W3-131 | `wave3-131-debug-drv-cfg-dump.md` | `rtw_debug.c` `dump_drv_cfg` banner |
+| W3-132 | `wave3-132-debug-test-hooks.md` | `rtw_debug.c` MP/test hook globals |
+| W3-133 | `wave3-133-debug-sec-cam-dump.md` | `rtw_debug.c` security CAM dump helpers |
+| W3-134 | `wave3-134-debug-tx-rx-dumps.md` | `rtw_debug.c` tx/rx debug dump leaf |
+| W3-135 | `wave3-135-wapi-sms4-core.md` | `rtw_wapi_sms4.c` SMS4 cipher core |
+| W3-136 | `wave3-136-wapi-sms4-pn-iv.md` | `rtw_wapi_sms4.c` PN + IV header |
+| W3-137 | `wave3-137-btcoex-wifionly.md` | `rtw_btcoex_wifionly.c` wifionly stubs |
+
+Further ~200 LOC slices **not yet covered** after tranche 8; file new `wave3-*.md` issues as needed:
+
+- `rtw_beamforming.c` sounding state machine (HAL-coupled NDPA paths)
+- `rtw_debug.c` procfs walkers / register dumps
+- `rtw_ioctl_query.c` (placeholder TU — audit before filing)
+- `rtw_wapi_sms4.c` frame encrypt/decrypt paths (post W3-136)
 
 Wave 3 milestone (L4): WPA2 STA associate + encrypted ping when hardware available (same bar as Wave 2).

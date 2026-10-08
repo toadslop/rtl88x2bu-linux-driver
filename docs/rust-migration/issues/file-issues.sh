@@ -77,6 +77,7 @@ files=(
   test-14-ci-bindgen-check.md
   test-15-ci-l3-pr-scope.md
   test-16-ci-rustfmt.md
+  test-17-host-wapi-sms4-harness.md
   release-01-github-releases.md
   arch-00-land-doc.md
   arch-01-domain-types-seed.md
@@ -232,6 +233,18 @@ files=(
   wave3-127-btcoex-handler-policy.md
   wave3-128-bf-entry-packet-leaf.md
   wave3-129-bf-init-cmd-leaf.md
+  wave3-130-debug-version-log.md
+  wave3-131-debug-drv-cfg-dump.md
+  wave3-132-debug-test-hooks.md
+  wave3-133-debug-sec-cam-dump.md
+  wave3-134-debug-tx-rx-dumps.md
+  wave3-135-wapi-sms4-core.md
+  wave3-136-wapi-sms4-pn-iv.md
+  wave3-137-btcoex-wifionly.md
+  wave4-01-hal-hw-rate-map.md
+  wave4-02-hal-rsvd-page-cache.md
+  wave4-03-hal-dump-chip-info.md
+  wave4-04-hal-dump-macaddr.md
 )
 
 # draft_id -> github issue number
