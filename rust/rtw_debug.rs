@@ -12,9 +12,9 @@
     unused_unsafe
 )]
 
-use core::ffi::{c_char, c_int, c_void};
 #[cfg(config_rtw_debug)]
 use core::ffi::c_uint;
+use core::ffi::{c_char, c_int, c_void};
 
 const _DRV_MAX_: c_int = 6;
 
