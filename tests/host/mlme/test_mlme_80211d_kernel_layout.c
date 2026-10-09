@@ -14,7 +14,7 @@ typedef uint8_t u8;
 typedef uint32_t u32;
 typedef int32_t sint;
 
-#define MAX_CHANNEL_NUM 59
+#define MAX_CHANNEL_NUM 42
 #define _FIXED_IE_LENGTH_ 12
 #define _COUNTRY_IE_ 7
 #define WIRELESS_11G 0x02

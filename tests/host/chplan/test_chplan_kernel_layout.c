@@ -21,7 +21,7 @@ typedef uint8_t u8;
 typedef uint32_t u32;
 typedef int32_t s32;
 
-#define MAX_CHANNEL_NUM 59
+#define MAX_CHANNEL_NUM 42
 #define RTW_CHF_NO_IR (1 << 0)
 #define RTW_CHF_DFS (1 << 1)
 #define CHANNEL_WIDTH_20 0

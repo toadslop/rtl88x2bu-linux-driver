@@ -49,7 +49,8 @@ const OPC_BW160: i32 = 4;
 const OPC_BW80P80: i32 = 5;
 const OPC_BW_NUM: usize = 6;
 
-const MAX_CHANNEL_NUM: usize = 59;
+/// `MAX_CHANNEL_NUM_2G + MAX_CHANNEL_NUM_5G` (`include/rtw_rf.h`).
+const MAX_CHANNEL_NUM: usize = 14 + 28;
 const MAX_CHANNEL_NUM_OF_BAND: usize = 28;
 
 const RTW_CHF_NO_IR: u8 = 1 << 0;

@@ -2364,8 +2364,13 @@ void rtw_rust_chset_zero(struct _RT_CHANNEL_INFO *chset)
 	_rtw_memset(chset, 0, sizeof(RT_CHANNEL_INFO) * MAX_CHANNEL_NUM);
 }
 
+/* Mirrored as `14 + 28` by the Rust chset/excl_chs walkers. */
+_Static_assert(MAX_CHANNEL_NUM == 42, "update Rust MAX_CHANNEL_NUM mirrors");
+
 void rtw_rust_chset_write(struct _RT_CHANNEL_INFO *chset, u8 index, u8 ch, u8 flags)
 {
+	if (index >= MAX_CHANNEL_NUM)
+		return;
 	chset[index].ChannelNum = ch;
 	chset[index].flags = flags;
 }

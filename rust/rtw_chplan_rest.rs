@@ -19,7 +19,8 @@ use core::ffi::{c_int, c_void};
 
 const RTW_CHF_NO_IR: u8 = 1 << 0;
 const RTW_CHF_DFS: u8 = 1 << 1;
-const MAX_CHANNEL_NUM: usize = 59;
+/// `MAX_CHANNEL_NUM_2G + MAX_CHANNEL_NUM_5G` (`include/rtw_rf.h`).
+const MAX_CHANNEL_NUM: usize = 14 + 28;
 const RTW_CHD_2G_MAX: u8 = 7;
 #[cfg(ieee80211_band_5ghz)]
 const RTW_CHD_5G_MAX: u8 = 52;

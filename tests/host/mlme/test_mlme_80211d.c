@@ -49,7 +49,7 @@ static int chset_match(const RT_CHANNEL_INFO *cs, const u8 *exp,
 			return -1;
 		}
 	}
-	if (cs[n].ChannelNum != 0)
+	if (n < MAX_CHANNEL_NUM && cs[n].ChannelNum != 0)
 		return -1;
 	return 0;
 }
@@ -77,8 +77,8 @@ static int run_case(const struct case_vec *v)
 
 static void fill_exp5g_trunc(u8 *ch)
 {
-	/* 5G channels wrap at u8 256→0; merge yields 55 entries for fcn=36 noc=60. */
-	for (int i = 0; i < 55; i++)
+	/* fcn=36 noc=60 overflows the chset: merge stops at MAX_CHANNEL_NUM. */
+	for (int i = 0; i < MAX_CHANNEL_NUM; i++)
 		ch[i] = (u8)(36 + i * 4);
 }
 
@@ -120,7 +120,8 @@ int main(void)
 		{"merge_dualband_11ag", 1, 0, WIRELESS_11G | WIRELESS_11A,
 		 us24g, sizeof(us24g), sta246_5g, NULL, 5, exp11_5g, NULL, 15, 1},
 		{"parse_trunc_5g", 1, 0, WIRELESS_11A, us5g_trunc,
-		 sizeof(us5g_trunc), sta36, NULL, 1, exp5g_trunc, NULL, 55, 1},
+		 sizeof(us5g_trunc), sta36, NULL, 1, exp5g_trunc, NULL,
+		 MAX_CHANNEL_NUM, 1},
 	};
 	int bad = 0;
 

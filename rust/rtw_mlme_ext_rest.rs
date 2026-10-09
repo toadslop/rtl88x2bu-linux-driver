@@ -23,7 +23,8 @@ type Bool = bool;
 
 const _TRUE: c_int = 1;
 const _FALSE: c_int = 0;
-const MAX_CHANNEL_NUM: usize = 59;
+/// `MAX_CHANNEL_NUM_2G + MAX_CHANNEL_NUM_5G` (`include/rtw_rf.h`).
+const MAX_CHANNEL_NUM: usize = 14 + 28;
 
 const CHANNEL_WIDTH_20: U8 = 0;
 const CHANNEL_WIDTH_40: U8 = 1;

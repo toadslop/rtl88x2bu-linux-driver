@@ -31,7 +31,7 @@ enum channel_width { CHANNEL_WIDTH_20 = 0, CHANNEL_WIDTH_40 = 1, CHANNEL_WIDTH_8
 #define VHT_OP_IE_LEN 5
 #define SCA 1
 #define SCB 3
-#define MAX_CHANNEL_NUM 59
+#define MAX_CHANNEL_NUM 42
 #define LE_BITS_TO_1BYTE(p, o, l) (((*((u8 *)(p)) >> (o)) & ((1U << (l)) - 1)))
 #define SET_BITS_TO_LE_1BYTE(p, o, l, v) do { u8 *__x = (u8 *)(p); u8 __m = ((1U << (l)) - 1) << (o); *__x = (*__x & ~__m) | (((v) & ((1U << (l)) - 1)) << (o)); } while (0)
 #define GET_HT_OP_ELE_PRI_CHL(p) LE_BITS_TO_1BYTE(p, 0, 8)

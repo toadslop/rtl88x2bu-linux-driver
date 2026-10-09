@@ -84,7 +84,7 @@ enum channel_width {
 #define _AES_ 0x04
 #define SCA 1
 #define SCB 3
-#define MAX_CHANNEL_NUM 59
+#define MAX_CHANNEL_NUM 42
 #define IS_DFS_SLAVE_WITH_RD(rfctl) ((rfctl)->dfs_slave_with_rd)
 
 #define LE_BITS_TO_1BYTE(p, o, l) \

@@ -15,7 +15,8 @@ use core::ffi::{c_int, c_void};
 use std::os::raw::c_int;
 
 type U8 = u8;
-const MAX_CH: usize = 59;
+/// `MAX_CHANNEL_NUM_2G + MAX_CHANNEL_NUM_5G` (`include/rtw_rf.h`).
+const MAX_CH: usize = 14 + 28;
 const FIXED_IE: u32 = 12;
 const COUNTRY_IE: c_int = 7;
 const NO_IR: U8 = 0x01;

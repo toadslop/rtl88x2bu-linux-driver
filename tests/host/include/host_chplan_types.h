@@ -29,7 +29,7 @@ typedef unsigned int uint;
 #define BIT6 0x40
 #define BIT7 0x80
 
-#define MAX_CHANNEL_NUM 59
+#define MAX_CHANNEL_NUM 42
 
 #define TXPWR_LMT_NONE 0
 #define TXPWR_LMT_FCC 1

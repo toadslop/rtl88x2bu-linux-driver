@@ -184,7 +184,7 @@ int main(void)
 	    test_backop_ap("backop_ap_nl", 0, 1, 2, 2) ||
 	    test_backop_ap("backop_ap_none", 0, 0, 3, 0) ||
 	    test_timeout("timeout_2g", 3, 100, 0, 2, 50, 0, 3400) ||
-	    test_timeout("timeout_dual", 107, 100, 0, 2, 50, 0, 7900) ||
+	    test_timeout("timeout_dual", 107, 100, 0, 2, 50, 0, 6200) ||
 	    test_timeout("timeout_backop", 3, 100, 0, 2, 50, 1, 3750) ||
 	    test_timeout("timeout_duration", 3, 100, 200, 2, 50, 0, 4800))
 		return 1;
