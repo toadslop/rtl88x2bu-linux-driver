@@ -217,6 +217,54 @@ static int run_vector(struct vector *v)
 	}
 }
 
+#ifdef RUST_SECURITY_ORACLE
+/*
+ * Frames too short to carry the IV and 4-byte ICV must be left untouched.
+ * The C oracle is skipped: it RC4-processes (u32)negative bytes in place.
+ */
+static int run_runt_decrypt_checks(struct vector *vectors, size_t nvec)
+{
+	struct host_adapter adapter;
+	union host_recv_frame recv;
+	u8 buf[MAX_BUF], ref[MAX_BUF];
+	struct vector *v = NULL;
+	u32 len;
+	size_t i;
+	int failed = 0;
+
+	for (i = 0; i < nvec && !v; i++)
+		if (vectors[i].fn == FN_DECRYPT)
+			v = &vectors[i];
+	if (!v)
+		return 0;
+
+	setup_adapter(&adapter, v);
+	for (len = 0; len < (u32)v->hdrlen + v->iv_len + 4; len++) {
+		memset(buf, 0xa5, sizeof(buf));
+		memcpy(buf, v->header, v->header_len);
+		memcpy(buf + v->hdrlen, v->iv, v->iv_len);
+		memcpy(ref, buf, sizeof(buf));
+
+		memset(&recv, 0, sizeof(recv));
+		recv.u.hdr.rx_data = buf;
+		recv.u.hdr.len = len;
+		recv.u.hdr.attrib.encrypt = v->encrypt;
+		recv.u.hdr.attrib.hdrlen = v->hdrlen;
+		recv.u.hdr.attrib.iv_len = v->iv_len;
+		recv.u.hdr.attrib.key_index = v->key_index;
+
+		rtw_wep_decrypt(&adapter, (u8 *)&recv);
+		if (memcmp(buf, ref, sizeof(buf)) != 0) {
+			fprintf(stderr, "wep runt frame len=%u modified buffer\n", len);
+			failed++;
+		}
+	}
+	if (!failed)
+		printf("ok rtw_wep_decrypt ignores runt frames\n");
+	return failed;
+}
+#endif
+
 int main(int argc, char **argv)
 {
 	const char *path = "wep_frame_vectors.json";
@@ -240,6 +288,10 @@ int main(int argc, char **argv)
 		else
 			printf("ok %s\n", vectors[i].name);
 	}
+
+#ifdef RUST_SECURITY_ORACLE
+	failed += run_runt_decrypt_checks(vectors, nvec);
+#endif
 
 	if (failed) {
 		fprintf(stderr, "%d vector(s) failed\n", failed);

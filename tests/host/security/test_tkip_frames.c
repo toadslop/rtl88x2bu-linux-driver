@@ -367,6 +367,56 @@ static int run_vector(struct vector *v)
 	}
 }
 
+#ifdef RUST_SECURITY_ORACLE
+/*
+ * Frames too short to carry the IV and 4-byte ICV must fail without touching
+ * the buffer. The C oracle is skipped: it RC4-processes (u32)negative bytes.
+ */
+static int run_runt_decrypt_checks(struct vector *vectors, size_t nvec)
+{
+	struct host_adapter adapter;
+	union host_recv_frame recv;
+	u8 buf[MAX_BUF], ref[MAX_BUF];
+	struct vector *v = NULL;
+	u32 len;
+	size_t i;
+	int failed = 0;
+
+	for (i = 0; i < nvec && !v; i++)
+		if (vectors[i].fn == FN_DECRYPT && !vectors[i].expect_fail)
+			v = &vectors[i];
+	if (!v)
+		return 0;
+
+	setup_adapter_decrypt(&adapter, v);
+	for (len = 0; len < (u32)v->hdrlen + v->iv_len + 4; len++) {
+		memset(buf, 0xa5, sizeof(buf));
+		memcpy(buf, v->header, v->header_len);
+		memcpy(buf + v->hdrlen, v->iv, v->iv_len);
+		memcpy(ref, buf, sizeof(buf));
+
+		memset(&recv, 0, sizeof(recv));
+		recv.u.hdr.rx_data = buf;
+		recv.u.hdr.len = len;
+		recv.u.hdr.attrib.encrypt = v->encrypt;
+		recv.u.hdr.attrib.hdrlen = v->hdrlen;
+		recv.u.hdr.attrib.iv_len = v->iv_len;
+		recv.u.hdr.attrib.key_index = v->key_index;
+		memcpy(recv.u.hdr.attrib.ra, v->ra, HOST_ETH_ALEN);
+		memcpy(recv.u.hdr.attrib.ta, v->ta, HOST_ETH_ALEN);
+
+		if (rtw_tkip_decrypt(&adapter, (u8 *)&recv) != _FAIL ||
+		    memcmp(buf, ref, sizeof(buf)) != 0) {
+			fprintf(stderr, "tkip runt frame len=%u not rejected\n", len);
+			failed++;
+		}
+	}
+	if (!failed)
+		printf("ok rtw_tkip_decrypt rejects runt frames\n");
+	return failed;
+}
+#endif
+
 int main(int argc, char **argv)
 {
 	const char *path = "tkip_frame_vectors.json";
@@ -390,6 +440,10 @@ int main(int argc, char **argv)
 		else
 			printf("ok %s\n", vectors[i].name);
 	}
+
+#ifdef RUST_SECURITY_ORACLE
+	failed += run_runt_decrypt_checks(vectors, nvec);
+#endif
 
 	if (failed) {
 		fprintf(stderr, "%d vector(s) failed\n", failed);
