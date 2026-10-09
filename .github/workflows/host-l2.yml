@@ -128,7 +128,7 @@ jobs:
               - 'core/rtw_beamforming.c'
               - 'core/rtw_pwrctrl.c'
               - 'core/rtw_wapi_sms4.c'
-      - 'core/rtw_wapi_sms4_rest.c'
+              - 'core/rtw_wapi_sms4_rest.c'
               - 'rust/**'
               - 'tests/host/**'
               - 'Makefile'
