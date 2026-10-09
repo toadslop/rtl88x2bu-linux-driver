@@ -23,11 +23,11 @@ DATA_CFLAGS := $(CFLAGS) -DHOST_CHPLAN_DATA_ONLY
 CHPLAN_REST_ORACLE := chplan_rest_c_oracle.c
 RUST_CHPLAN_REST := $(ROOT)/rust/rtw_chplan_rest.rs
 
-.PHONY: all test test-c test-rust test-chplan-kernel-layout test-rest-beacon-hint test-rest-beacon-hint-rust clean
+.PHONY: all test test-c test-rust test-chplan-kernel-layout test-rest-beacon-hint test-rest-beacon-hint-rust test-chplan-rest-kernel-layout clean
 
 all: test
 
-test: test-c test-rust test-chplan-kernel-layout test-rest-beacon-hint test-rest-beacon-hint-rust
+test: test-c test-rust test-chplan-kernel-layout test-rest-beacon-hint test-rest-beacon-hint-rust test-chplan-rest-kernel-layout
 
 test-c: test_chplan
 	./test_chplan chplan_vectors.json
@@ -81,7 +81,22 @@ test_rest_beacon_hint_rust: test_rest_beacon_hint.c librust_chplan_rest.a $(HOST
 	$(CC) $(CFLAGS) -DRUST_CHPLAN_REST_ORACLE -o $@ test_rest_beacon_hint.c \
 		$(HOST_JSON) ../shim/host_chplan_rf.c librust_chplan_rest.a
 
+# Kernel path: no --cfg host_chplan_rest_test, so the beacon hint walks a real
+# 32-byte RT_CHANNEL_INFO fixture through the C accessors.
+librust_chplan_rest_kernel.a: $(RUST_CHPLAN_REST)
+	$(RUSTC) --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg dfs --cfg dfs_master --cfg ieee80211_band_5ghz \
+		--crate-type staticlib $(RUST_CHPLAN_REST) -o $@
+
+test-chplan-rest-kernel-layout: test_chplan_rest_kernel_layout
+	./test_chplan_rest_kernel_layout
+
+test_chplan_rest_kernel_layout: test_chplan_rest_kernel_layout.c librust_chplan_rest_kernel.a
+	$(CC) -Wall -Wextra -Werror -O2 -o $@ test_chplan_rest_kernel_layout.c \
+		librust_chplan_rest_kernel.a -lpthread -ldl
+
 clean:
 	rm -f test_chplan test_chplan_rust librust_chplan.a chplan_data.o \
 		test_chplan_kernel_layout librust_chplan_kernel.a \
-		test_rest_beacon_hint test_rest_beacon_hint_rust librust_chplan_rest.a
+		test_rest_beacon_hint test_rest_beacon_hint_rust librust_chplan_rest.a \
+		test_chplan_rest_kernel_layout librust_chplan_rest_kernel.a

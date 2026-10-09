@@ -2394,6 +2394,13 @@ u8 rtw_rust_chset_ch_flags(struct _RT_CHANNEL_INFO *chset, u8 index)
 	return chset[index].flags;
 }
 
+void rtw_rust_chset_clear_flags(struct _RT_CHANNEL_INFO *chset, u8 index, u8 mask)
+{
+	if (index >= MAX_CHANNEL_NUM)
+		return;
+	chset[index].flags &= ~mask;
+}
+
 #ifndef HOST_CHPLAN_DATA_ONLY
 void rtw_rust_chset_set_non_ocp(struct _RT_CHANNEL_INFO *chset, u8 count)
 {
