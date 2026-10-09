@@ -92,8 +92,317 @@ REST_C_TO_PARENT: dict[str, str] = {
 }
 
 
+SOURCE_SEARCH_DIRS = ("core", "hal", "os_dep", "core/crypto")
+
+
 def canonical_baseline_c(c_path: str) -> str:
-    return REST_C_TO_PARENT.get(c_path, c_path)
+    if c_path in REST_C_TO_PARENT:
+        return REST_C_TO_PARENT[c_path]
+    name = Path(c_path).name
+    if name.endswith("_rest.c"):
+        stem = name[:-len("_rest.c")]
+        for d in SOURCE_SEARCH_DIRS:
+            parent = f"{d}/{stem}.c"
+            if (REPO_ROOT / parent).is_file():
+                return parent
+    return c_path
+
+
+def baseline_c_for_rust_stem(stem: str) -> str | None:
+    if stem in RUST_TO_BASELINE_C:
+        return RUST_TO_BASELINE_C[stem]
+    if stem in PARTIAL_UNITS:
+        return PARTIAL_UNITS[stem][0]
+    for d in SOURCE_SEARCH_DIRS:
+        direct = f"{d}/{stem}.c"
+        if (REPO_ROOT / direct).is_file():
+            return direct
+    if stem.endswith("_rest"):
+        base_stem = stem[: -len("_rest")]
+        for d in SOURCE_SEARCH_DIRS:
+            parent = f"{d}/{base_stem}.c"
+            if (REPO_ROOT / parent).is_file():
+                return parent
+    parts = stem.split("_")
+    for i in range(len(parts) - 1, 0, -1):
+        candidate = "_".join(parts[:i])
+        for d in SOURCE_SEARCH_DIRS:
+            parent = f"{d}/{candidate}.c"
+            if (REPO_ROOT / parent).is_file():
+                return parent
+    return None
+
+
+def partial_unit_for_stem(stem: str) -> tuple[str, str] | None:
+    if stem in PARTIAL_UNITS:
+        return PARTIAL_UNITS[stem]
+    parent = baseline_c_for_rust_stem(stem)
+    if not parent:
+        return None
+    # Sibling `{parent}_rest.c` on disk implies a split partial port. Rust units
+    # that fully replace C but keep a `_rest.c` stub must be listed in PARTIAL_UNITS.
+    parent_stem = Path(parent).stem
+    for d in SOURCE_SEARCH_DIRS:
+        rest = f"{d}/{parent_stem}_rest.c"
+        if (REPO_ROOT / rest).is_file() and rest != parent:
+            return parent, rest
+    if stem.endswith("_rest"):
+        for d in SOURCE_SEARCH_DIRS:
+            rest = f"{d}/{stem}.c"
+            if (REPO_ROOT / rest).is_file():
+                return parent, rest
+    return None
+
+
+def rust_port_stems_from_makefile(makefile_text: str) -> set[str]:
+    stems: set[str] = set()
+    for line in makefile_text.splitlines():
+        if "$(MODULE_NAME)-y += rust/" not in line:
+            continue
+        part = line.split("+=", 1)[1].strip()
+        if not part.startswith("rust/") or not part.endswith(".o"):
+            continue
+        stems.add(Path(part).stem)
+    return stems
+
+
+def makefile_text_at(tree_ref: str) -> str | None:
+    data = git_file_bytes("Makefile", tree_ref)
+    if data is None:
+        return None
+    return data.decode("utf-8", errors="replace")
+
+
+def module_objects_for_ref(head_objs: list[str], tree_ref: str) -> list[str]:
+    """Approximate the module link set at ``tree_ref`` without an L0 rebuild.
+
+    C/HAL objects are taken from the HEAD L0 object list unchanged. Only
+    ``rust/*.o`` membership is adjusted from the Makefile ``rust/`` list at
+    ``tree_ref``. C TU add/drop at the base ref is **not** modeled — use a full
+    base L0 list via ``--compare-module-objects`` when C link deltas matter.
+    """
+    mf = makefile_text_at(tree_ref)
+    if mf is None:
+        return list(head_objs)
+    rust_stems = rust_port_stems_from_makefile(mf)
+    out: list[str] = []
+    seen: set[str] = set()
+
+    for obj in head_objs:
+        if obj.startswith("rust/"):
+            stem = Path(obj).stem
+            if stem in RUST_INFRA or stem in rust_stems:
+                if obj not in seen:
+                    out.append(obj)
+                    seen.add(obj)
+            continue
+        if obj not in seen:
+            out.append(obj)
+            seen.add(obj)
+
+    for stem in sorted(rust_stems):
+        if stem in RUST_INFRA:
+            continue
+        ro = f"rust/{stem}.o"
+        if ro not in seen:
+            out.append(ro)
+            seen.add(ro)
+
+    return out
+
+
+def git_rev_parse(ref: str) -> str:
+    return subprocess.check_output(
+        ["git", "rev-parse", ref],
+        cwd=REPO_ROOT,
+        stderr=subprocess.DEVNULL,
+        text=True,
+    ).strip()
+
+
+def git_merge_base(a: str, b: str) -> str:
+    return subprocess.check_output(
+        ["git", "merge-base", a, b],
+        cwd=REPO_ROOT,
+        stderr=subprocess.DEVNULL,
+        text=True,
+    ).strip()
+
+
+def git_diff_numstat(old_ref: str, new_ref: str, paths: list[str]) -> list[tuple[int, int, str]]:
+    try:
+        out = subprocess.check_output(
+            ["git", "diff", "--numstat", f"{old_ref}..{new_ref}", "--", *paths],
+            cwd=REPO_ROOT,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+    except subprocess.CalledProcessError:
+        return []
+    rows: list[tuple[int, int, str]] = []
+    for line in out.splitlines():
+        parts = line.split("\t", 2)
+        if len(parts) != 3:
+            continue
+        add_s, del_s, path = parts
+        if add_s == "-" or del_s == "-":
+            continue
+        rows.append((int(add_s), int(del_s), path))
+    return rows
+
+
+def compute_pr_scope_changes(base_ref: str, head_ref: str = "HEAD") -> dict:
+    """Git-native deltas for the PR (merge-base..head), independent of L0 rebuilds."""
+    try:
+        old_ref = git_merge_base(base_ref, head_ref)
+    except subprocess.CalledProcessError:
+        old_ref = git_rev_parse(base_ref)
+
+    paths = ["rust", "core", "hal", "os_dep", "Makefile"]
+    rows = git_diff_numstat(old_ref, head_ref, paths)
+
+    rust_add = rust_del = 0
+    c_add = c_del = 0
+    file_deltas: list[tuple[int, str]] = []
+
+    for add, delete, path in rows:
+        net = add - delete
+        file_deltas.append((net, path))
+        if path.startswith("rust/") and path.endswith(".rs"):
+            rust_add += add
+            rust_del += delete
+        elif path.endswith(".c") and (
+            path.startswith("core/")
+            or path.startswith("hal/")
+            or path.startswith("os_dep/")
+        ):
+            c_add += add
+            c_del += delete
+
+    mf_old = makefile_text_at(old_ref) or ""
+    mf_new = makefile_text_at(head_ref) or (REPO_ROOT / "Makefile").read_text()
+    stems_old = rust_port_stems_from_makefile(mf_old)
+    stems_new = rust_port_stems_from_makefile(mf_new)
+    added_stems = sorted(stems_new - stems_old - RUST_INFRA)
+    removed_stems = sorted(stems_old - stems_new - RUST_INFRA)
+
+    file_deltas.sort(key=lambda x: abs(x[0]), reverse=True)
+    top_files = [(p, d) for d, p in file_deltas[:10] if d != 0]
+
+    return {
+        "diff_old_ref": old_ref,
+        "diff_new_ref": head_ref,
+        "rust_lines_added": rust_add,
+        "rust_lines_removed": rust_del,
+        "c_lines_added": c_add,
+        "c_lines_removed": c_del,
+        "makefile_rust_stems_added": added_stems,
+        "makefile_rust_stems_removed": removed_stems,
+        "top_file_deltas": top_files,
+    }
+
+
+def link_set_pr_deltas(
+    head_objs: list[str],
+    base_objs: list[str],
+    *,
+    rust_only_base: bool,
+) -> dict[str, list[str]]:
+    """Diff HEAD vs base module object lists for PR reporting bullets."""
+
+    def _port_rust_obj(path: str) -> bool:
+        if not path.startswith("rust/"):
+            return False
+        return Path(path).stem not in RUST_INFRA
+
+    head_set = set(head_objs)
+    base_set = set(base_objs)
+    out: dict[str, list[str]] = {
+        "link_rust_added": sorted(
+            o for o in head_set - base_set if _port_rust_obj(o)
+        ),
+        "link_rust_removed": sorted(
+            o for o in base_set - head_set if _port_rust_obj(o)
+        ),
+    }
+    if not rust_only_base:
+        out["link_c_dropped"] = sorted(
+            o for o in base_set - head_set if not o.startswith("rust/")
+        )
+    return out
+
+
+def format_pr_changes_section(pr: dict, compare_label: str) -> str:
+    rust_net = pr["rust_lines_added"] - pr["rust_lines_removed"]
+    c_net = pr["c_lines_added"] - pr["c_lines_removed"]
+    lines = [
+        f"\n### Changes in this PR (vs `{compare_label}`)\n",
+        f"_Diff range: `{pr['diff_old_ref'][:12]}` → `{pr['diff_new_ref']}` "
+        "(merge-base of PR branch and base)._ \n\n"
+    ]
+    if pr.get("compare_base_link_rust_only"):
+        lines.append(
+            "_Link-set bullets below use a **Rust-only** base snapshot (HEAD C "
+            "objects + Makefile `rust/` at base). C TU membership at the base ref "
+            "is not rebuilt unless CI passes `--compare-module-objects`._\n\n"
+        )
+    lines.extend(
+        [
+        "| Area | Lines added | Lines removed | Net |\n",
+        "|------|-------------|---------------|-----|\n",
+        f"| `rust/*.rs` | {pr['rust_lines_added']:,} | {pr['rust_lines_removed']:,} | {rust_net:+,} |\n",
+        f"| Migration C (`core/`, `hal/`, `os_dep/`) | {pr['c_lines_added']:,} | "
+        f"{pr['c_lines_removed']:,} | {c_net:+,} |\n",
+        ]
+    )
+    if pr["makefile_rust_stems_added"]:
+        lines.append(
+            f"- **New Rust link units (Makefile):** "
+            f"{', '.join(f'`{s}`' for s in pr['makefile_rust_stems_added'])}\n"
+        )
+    if pr["makefile_rust_stems_removed"]:
+        lines.append(
+            f"- **Removed Rust link units (Makefile):** "
+            f"{', '.join(f'`{s}`' for s in pr['makefile_rust_stems_removed'])}\n"
+        )
+    if pr.get("link_rust_added"):
+        lines.append(
+            "- **New in `88x2bu` link (vs base snapshot):** "
+            + ", ".join(f"`{o}`" for o in pr["link_rust_added"])
+            + "\n"
+        )
+    if pr.get("link_rust_removed"):
+        lines.append(
+            "- **Removed from `88x2bu` link (vs base snapshot):** "
+            + ", ".join(f"`{o}`" for o in pr["link_rust_removed"][:12])
+            + (" …" if len(pr["link_rust_removed"]) > 12 else "")
+            + "\n"
+        )
+    if pr.get("link_c_dropped"):
+        lines.append(
+            "- **C objects dropped from link (vs base snapshot):** "
+            + ", ".join(f"`{o}`" for o in pr["link_c_dropped"][:12])
+            + (" …" if len(pr["link_c_dropped"]) > 12 else "")
+            + "\n"
+        )
+    if pr["top_file_deltas"]:
+        lines.append("\n**Largest file deltas (net lines):**\n\n")
+        for path, delta in pr["top_file_deltas"]:
+            lines.append(f"- `{path}`: {delta:+,}\n")
+    if (
+        rust_net == 0
+        and c_net == 0
+        and not pr["makefile_rust_stems_added"]
+        and not pr["makefile_rust_stems_removed"]
+        and not pr.get("link_rust_added")
+        and not pr.get("link_rust_removed")
+        and not pr.get("link_c_dropped")
+    ):
+        lines.append(
+            "\n_No migration-touched paths changed in this diff range "
+            "(docs/tests-only PR, or changes outside `rust/` / migration C)._ \n"
+        )
+    return "".join(lines)
 
 
 def load_baseline_meta() -> dict:
@@ -202,7 +511,7 @@ def classify_object(obj_path: str) -> tuple[str | None, str]:
         stem = Path(obj_path).stem
         if stem in RUST_INFRA:
             return None, "infra"
-        return RUST_TO_BASELINE_C.get(stem), "rust"
+        return baseline_c_for_rust_stem(stem), "rust"
     if obj_path.endswith(".o"):
         return obj_path[:-2] + ".c", "c"
     return None, "unknown"
@@ -281,7 +590,7 @@ def compute_module_metrics(
                 canonical, {"rust": [], "rest_c": None, "linked_c": []}
             )
             grp["linked_c"].append(c_path)  # type: ignore[index]
-            if c_path in REST_C_TO_PARENT:
+            if c_path in REST_C_TO_PARENT or Path(c_path).name.endswith("_rest.c"):
                 grp["rest_c"] = c_path
         else:
             continue
@@ -293,8 +602,9 @@ def compute_module_metrics(
         rest_candidates: set[str] = set()
         for obj in grp["rust"]:  # type: ignore[union-attr]
             stem = Path(obj).stem
-            if stem in PARTIAL_UNITS:
-                parent_c, rest_c = PARTIAL_UNITS[stem]
+            partial = partial_unit_for_stem(stem)
+            if partial:
+                parent_c, rest_c = partial
                 if parent_c == canonical and rest_c != parent_c:
                     rest_candidates.add(rest_c)
         if rest_candidates:
@@ -365,8 +675,8 @@ def linked_c_by_parent(objects_text: str | None) -> dict[str, list[str]]:
 def rust_objs_for_parent(parent_c: str, units: list[str]) -> list[str]:
     objs: list[str] = []
     for stem in units:
-        mapped = RUST_TO_BASELINE_C.get(stem)
-        partial = PARTIAL_UNITS.get(stem)
+        mapped = baseline_c_for_rust_stem(stem)
+        partial = partial_unit_for_stem(stem)
         if mapped == parent_c or (partial and partial[0] == parent_c):
             objs.append(f"rust/{stem}.o")
     return objs
@@ -374,8 +684,9 @@ def rust_objs_for_parent(parent_c: str, units: list[str]) -> list[str]:
 
 def rest_c_for_parent(parent_c: str, units: list[str]) -> str | None:
     for stem in units:
-        if stem in PARTIAL_UNITS:
-            p, rest = PARTIAL_UNITS[stem]
+        partial = partial_unit_for_stem(stem)
+        if partial:
+            p, rest = partial
             if p == parent_c and rest != parent_c:
                 return rest
     return None
@@ -399,8 +710,9 @@ def compute_migration_units_metrics(
         rust_path = f"rust/{stem}.rs"
         rust_loc += line_count_at(rust_path, tree_ref)
 
-        if stem in PARTIAL_UNITS:
-            parent_c, rest_c = PARTIAL_UNITS[stem]
+        partial = partial_unit_for_stem(stem)
+        if partial:
+            parent_c, rest_c = partial
             if parent_c not in parent_baseline:
                 full_baseline = baseline_loc_for_path(parent_c, baseline_ref)
                 parent_baseline[parent_c] = full_baseline
@@ -415,7 +727,7 @@ def compute_migration_units_metrics(
                     tree_ref,
                 )
         else:
-            baseline_c = RUST_TO_BASELINE_C.get(stem)
+            baseline_c = baseline_c_for_rust_stem(stem)
             if not baseline_c:
                 continue
             if baseline_c not in parent_baseline:
@@ -476,12 +788,24 @@ def format_markdown(data: dict, baseline_label: str, baseline_ref: str) -> str:
     m = data["module"]
     u = data["units"]
     delta = data.get("delta")
+    pr_changes = data.get("pr_changes")
+    pr_section = ""
+    if pr_changes:
+        compare_label = data.get("compare_ref", "base")
+        pr_section = format_pr_changes_section(pr_changes, compare_label)
     delta_section = ""
     if delta:
         delta_section = (
-            "\n### Change vs base branch\n\n"
-            "| Metric | Δ |\n|--------|---|\n"
+            "\n### Cumulative shift (HEAD vs base branch snapshot)\n\n"
+            "_Estimated from link-set snapshots at each ref (one L0 build at HEAD). "
+            "Use **Changes in this PR** above for per-PR diffs._\n\n"
         )
+        if data.get("compare_base_link_rust_only"):
+            delta_section += (
+                "_Base snapshot adjusts **Rust** link membership only; module "
+                "object % shifts do not reflect C TU add/drop at the base ref._\n\n"
+            )
+        delta_section += "| Metric | Δ |\n|--------|---|\n"
         if delta.get("module_loc_pct") is not None:
             delta_section += f"| Module LOC % | {delta['module_loc_pct']:+.1f} |\n"
             delta_section += (
@@ -545,6 +869,7 @@ def format_markdown(data: dict, baseline_label: str, baseline_ref: str) -> str:
         f"- Rust migration source: **{m['current_rust_loc']:,}** lines "
         "(port objects; infra excluded from object %)\n"
         f"- Migration-unit Rust: **{u['migration_units_rust_loc']:,}** lines\n"
+        f"{pr_section}"
         f"{delta_section}\n"
         "<!-- migration-progress-report -->"
     )
@@ -569,7 +894,7 @@ def main() -> int:
     parser.add_argument(
         "--compare-module-objects",
         type=Path,
-        help="Base-ref link object list (required when --compare-ref is set)",
+        help="Optional base-ref link object list; if omitted, infer from HEAD list + git Makefile",
     )
     parser.add_argument("--json", action="store_true", help="Print JSON instead of markdown")
     args = parser.parse_args()
@@ -587,12 +912,27 @@ def main() -> int:
     result: dict = {"baseline_ref": baseline_ref, "module": module, "units": units}
 
     if args.compare_ref:
-        if args.compare_module_objects is None:
-            parser.error("--compare-module-objects is required with --compare-ref")
-        base_objects_text = read_objects_file(args.compare_module_objects)
+        head_obj_list = load_module_objects(objects_text)
+        rust_only_base = args.compare_module_objects is None
+        if args.compare_module_objects is not None:
+            base_obj_list = load_module_objects(
+                read_objects_file(args.compare_module_objects)
+            )
+        else:
+            base_obj_list = module_objects_for_ref(head_obj_list, args.compare_ref)
+        base_objects_text = "\n".join(base_obj_list)
         base_snap = snapshot_with_objects(
             args.compare_ref, baseline_ref, base_objects_text
         )
+        result["pr_changes"] = compute_pr_scope_changes(args.compare_ref, "HEAD")
+        result["pr_changes"].update(
+            link_set_pr_deltas(
+                head_obj_list, base_obj_list, rust_only_base=rust_only_base
+            )
+        )
+        if rust_only_base:
+            result["compare_base_link_rust_only"] = True
+            result["pr_changes"]["compare_base_link_rust_only"] = True
         delta: dict[str, float | int | None] = {
             "module_loc_pct": None,
             "module_object_pct": None,
