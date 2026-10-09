@@ -2757,6 +2757,12 @@ rustflags-y += --cfg config_p2p_ps_noa_use_macid_sleep
 ifneq ($(filter -DCONFIG_CONCURRENT_MODE,$(ccflags-y)),)
 rustflags-y += --cfg config_concurrent_mode
 endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_MI_WITH_MBSSID_CAM' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_mi_with_mbssid_cam
+endif
+ifneq ($(filter -DCONFIG_MI_WITH_MBSSID_CAM,$(ccflags-y)),)
+rustflags-y += --cfg config_mi_with_mbssid_cam
+endif
 rustflags-y += --cfg rust_mlme_ht_restructure
 rustflags-y += --cfg rust_mlme_80211d --cfg config_80211d
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BEAMFORMING' $(src)/include/autoconf.h 2>/dev/null && echo y),)

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HAL common helpers — Rust port of `hal/hal_com.c` (W4-01 rate map, W4-02 rsvd page cache, W4-03 chip info).
+//! HAL common helpers — Rust port of `hal/hal_com.c` (W4-01 rate map, W4-02 rsvd page cache, W4-03 chip info, W4-04 macaddr dump).
 
 #![allow(
     dead_code,
@@ -770,5 +770,38 @@ mod chip_info {
         }
         let buf = unsafe { core::slice::from_raw_parts_mut(out, buflen) };
         format_chip_info(chip_version, buf)
+    }
+}
+
+#[cfg(all(
+    not(host_hal_com_hw_rate_test),
+    not(host_hal_com_rsvd_page_test),
+    not(host_hal_com_chip_info_test)
+))]
+extern "C" {
+    fn rtw_mi_hal_dump_macaddr(sel: *mut c_void, adapter: *mut c_void);
+    #[cfg(config_mi_with_mbssid_cam)]
+    fn rtw_mbid_cam_dump(
+        sel: *mut c_void,
+        fun_name: *const c_char,
+        adapter: *mut c_void,
+    ) -> i32;
+}
+
+#[cfg(all(
+    not(host_hal_com_hw_rate_test),
+    not(host_hal_com_rsvd_page_test),
+    not(host_hal_com_chip_info_test)
+))]
+#[no_mangle]
+pub extern "C" fn rtw_hal_dump_macaddr(sel: *mut c_void, adapter: *mut c_void) {
+    #[cfg(config_mi_with_mbssid_cam)]
+    unsafe {
+        static FN: &[u8] = b"rtw_hal_dump_macaddr\0";
+        rtw_mbid_cam_dump(sel, FN.as_ptr() as *const c_char, adapter);
+    }
+    #[cfg(not(config_mi_with_mbssid_cam))]
+    unsafe {
+        rtw_mi_hal_dump_macaddr(sel, adapter);
     }
 }
