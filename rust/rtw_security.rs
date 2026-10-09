@@ -889,6 +889,10 @@ unsafe fn wep_decrypt_inner(
         keylength as usize,
     );
     let length = frame_len as i32 - hdrlen as i32 - iv_len as i32;
+    // Runt frames: the payload must at least hold the 4-byte ICV.
+    if length < 4 {
+        return;
+    }
     let payload = pframe.add(iv_len as usize).add(hdrlen as usize);
 
     let mut mycontext = arc4context {
@@ -1209,6 +1213,10 @@ unsafe fn tkip_decrypt_inner(
         let iv = pframe.add(hdrlen as usize);
         let payload = pframe.add(iv_len as usize).add(hdrlen as usize);
         let length = frame_len as i32 - hdrlen as i32 - iv_len as i32;
+        // Runt frames: the payload must at least hold the 4-byte ICV.
+        if length < 4 {
+            return _FAIL;
+        }
 
         let (pnl, pnh) = get_tkip_pn(iv);
         let mut p1k = [0u16; 5];
