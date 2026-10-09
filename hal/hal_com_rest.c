@@ -115,6 +115,8 @@ void dump_chip_info(HAL_VERSION ChipVersion)
 	int n;
 
 	n = dump_chip_info_format(ChipVersion, buf, sizeof(buf));
+	if (n > 0 && n < (int)sizeof(buf))
+		buf[n] = '\0';
 	if (n > 0)
 		RTW_INFO("%s", buf);
 }

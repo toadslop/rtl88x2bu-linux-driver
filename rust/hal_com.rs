@@ -728,6 +728,9 @@ mod chip_info {
         {
             return -1;
         }
+        if pos < buf.len() {
+            buf[pos] = 0;
+        }
         pos as i32
     }
 
