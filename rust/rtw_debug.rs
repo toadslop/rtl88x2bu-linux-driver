@@ -305,3 +305,7 @@ mod drv_cfg_part1 {
         }
     }
 }
+
+#[cfg(config_rust_rtw_debug_test_hooks)]
+#[path = "rtw_debug_test_hooks.rs"]
+mod test_hooks;
