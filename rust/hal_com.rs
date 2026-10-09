@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HAL common helpers — Rust port of `hal/hal_com.c` rate-map slice (W4-01).
+//! HAL common helpers — Rust port of `hal/hal_com.c` (W4-01 rate map, W4-02 rsvd page cache).
 
 #![allow(
     dead_code,
@@ -12,7 +12,7 @@
     unused_unsafe
 )]
 
-#[cfg(not(host_hal_com_hw_rate_test))]
+#[cfg(all(not(host_hal_com_hw_rate_test), not(host_hal_com_rsvd_page_test)))]
 use core::ffi::{c_char, c_void};
 
 type U8 = u8;
@@ -41,7 +41,7 @@ struct RateSectionEnt {
     rates: *mut U8,
 }
 
-#[cfg(not(host_hal_com_hw_rate_test))]
+#[cfg(all(not(host_hal_com_hw_rate_test), not(host_hal_com_rsvd_page_test)))]
 extern "C" {
     fn MRateToHwRate(rate: U8) -> U8;
     fn MGN_RATE_STR(rate: U8) -> *const c_char;
@@ -51,16 +51,17 @@ extern "C" {
     fn rtw_rust_hal_com_warn_invalid_hw_rate(hw_rate: U8);
 }
 
-#[cfg(not(host_hal_com_hw_rate_test))]
+#[cfg(all(not(host_hal_com_hw_rate_test), not(host_hal_com_rsvd_page_test)))]
 fn warn_invalid_hw_rate(hw_rate: U8) {
     unsafe {
         rtw_rust_hal_com_warn_invalid_hw_rate(hw_rate);
     }
 }
 
-#[cfg(host_hal_com_hw_rate_test)]
+#[cfg(any(host_hal_com_hw_rate_test, host_hal_com_rsvd_page_test))]
 fn warn_invalid_hw_rate(_hw_rate: U8) {}
 
+#[cfg(not(host_hal_com_rsvd_page_test))]
 #[no_mangle]
 pub extern "C" fn hw_rate_to_m_rate(hw_rate: U8) -> U8 {
     if (hw_rate as usize) < DESC_RATE_NUM {
@@ -262,4 +263,246 @@ pub extern "C" fn dump_hw_rate_map_test(sel: *mut c_void) {
             i += 1;
         }
     }
+}
+
+#[cfg(any(host_hal_com_rsvd_page_test, not(host_hal_com_hw_rate_test)))]
+#[repr(C)]
+pub struct RsvdPageCache {
+    pub name: *mut i8,
+    pub loc: U8,
+    pub page_num: U8,
+    pub data: *mut U8,
+    pub size: u32,
+}
+
+#[cfg(any(host_hal_com_rsvd_page_test, not(host_hal_com_hw_rate_test)))]
+fn page_num(len: u32, page_size: u32) -> U8 {
+    let whole = len / page_size;
+    let rem = len & (page_size - 1);
+    (whole + if rem != 0 { 1 } else { 0 }) as U8
+}
+
+#[cfg(host_hal_com_rsvd_page_test)]
+extern "C" {
+    fn rtw_malloc(sz: u32) -> *mut u8;
+    fn rtw_zmalloc(sz: u32) -> *mut u8;
+    fn rtw_mfree(p: *mut U8, sz: u32);
+    fn _rtw_memcmp(a: *const u8, b: *const u8, sz: u32) -> i32;
+    fn rtw_warn_on(cond: i32);
+}
+
+#[cfg(all(not(host_hal_com_rsvd_page_test), not(host_hal_com_hw_rate_test)))]
+extern "C" {
+    fn _rtw_malloc(sz: u32) -> *mut core::ffi::c_void;
+    fn _rtw_zmalloc(sz: u32) -> *mut core::ffi::c_void;
+    fn _rtw_mfree(p: *mut core::ffi::c_void, sz: u32);
+    fn _rtw_memcmp(a: *const core::ffi::c_void, b: *const core::ffi::c_void, sz: u32) -> i32;
+    fn rtw_rust_hal_com_warn_on(condition: i32);
+}
+
+#[cfg(any(host_hal_com_rsvd_page_test, not(host_hal_com_hw_rate_test)))]
+const RSVD_TRUE: i32 = 1;
+
+#[cfg(any(host_hal_com_rsvd_page_test, not(host_hal_com_hw_rate_test)))]
+fn rsvd_warn_on(cond: bool) {
+    if !cond {
+        return;
+    }
+    #[cfg(host_hal_com_rsvd_page_test)]
+    unsafe {
+        rtw_warn_on(1);
+    }
+    #[cfg(not(host_hal_com_rsvd_page_test))]
+    unsafe {
+        rtw_rust_hal_com_warn_on(1);
+    }
+}
+
+#[cfg(any(host_hal_com_rsvd_page_test, not(host_hal_com_hw_rate_test)))]
+fn rsvd_heap_alloc(sz: u32, zero: bool) -> *mut U8 {
+    unsafe {
+        #[cfg(host_hal_com_rsvd_page_test)]
+        let p = if zero {
+            rtw_zmalloc(sz)
+        } else {
+            rtw_malloc(sz)
+        };
+        #[cfg(not(host_hal_com_rsvd_page_test))]
+        let p = if zero {
+            _rtw_zmalloc(sz)
+        } else {
+            _rtw_malloc(sz)
+        };
+        p as *mut U8
+    }
+}
+
+#[cfg(any(host_hal_com_rsvd_page_test, not(host_hal_com_hw_rate_test)))]
+fn rsvd_mfree(ptr: *mut U8, sz: u32) {
+    if ptr.is_null() {
+        return;
+    }
+    unsafe {
+        #[cfg(host_hal_com_rsvd_page_test)]
+        {
+            rtw_mfree(ptr, sz);
+        }
+        #[cfg(not(host_hal_com_rsvd_page_test))]
+        {
+            _rtw_mfree(ptr as *mut core::ffi::c_void, sz); // kernel shim
+        }
+    }
+}
+
+#[cfg(any(host_hal_com_rsvd_page_test, not(host_hal_com_hw_rate_test)))]
+fn rsvd_memcmp_eq(a: *const U8, b: *const U8, len: u32) -> bool {
+    if len == 0 {
+        return true;
+    }
+    if a.is_null() || b.is_null() {
+        return false;
+    }
+    unsafe {
+        #[cfg(host_hal_com_rsvd_page_test)]
+        let eq = _rtw_memcmp(a, b, len) == RSVD_TRUE;
+        #[cfg(not(host_hal_com_rsvd_page_test))]
+        let eq = _rtw_memcmp(
+            a as *const core::ffi::c_void,
+            b as *const core::ffi::c_void,
+            len,
+        ) == RSVD_TRUE;
+        eq
+    }
+}
+
+#[cfg(any(host_hal_com_rsvd_page_test, not(host_hal_com_hw_rate_test)))]
+#[no_mangle]
+pub extern "C" fn rsvd_page_cache_update_all(
+    cache: *mut RsvdPageCache,
+    loc: U8,
+    txdesc_len: U8,
+    page_size: u32,
+    info: *mut U8,
+    info_len: u32,
+) -> u8 {
+    let cache = unsafe { &mut *cache };
+    let mut modified = false;
+    let mut loc_mod = false;
+    let mut size_mod = false;
+    let mut page_num_mod = false;
+
+    let mut eff_loc = loc;
+    let page_n = if info_len != 0 {
+        page_num(txdesc_len as u32 + info_len, page_size)
+    } else {
+        0
+    };
+    if info_len == 0 {
+        eff_loc = 0;
+    }
+
+    if cache.loc != eff_loc {
+        loc_mod = true;
+    }
+    if cache.size != info_len {
+        size_mod = true;
+    }
+    if cache.page_num != page_n {
+        page_num_mod = true;
+    }
+
+    if !info.is_null() && info_len != 0 {
+        if !cache.data.is_null() {
+            if cache.size == info_len {
+                if !rsvd_memcmp_eq(cache.data, info, info_len) {
+                    modified = true;
+                }
+            } else {
+                rsvd_page_cache_free_data(cache);
+            }
+        }
+        if cache.data.is_null() {
+            let ptr = rsvd_heap_alloc(info_len, false);
+            if ptr.is_null() {
+                rsvd_warn_on(true);
+            } else {
+                cache.data = ptr;
+            }
+            modified = true;
+        }
+        if !cache.data.is_null() && modified {
+            unsafe {
+                core::ptr::copy_nonoverlapping(info, cache.data, info_len as usize);
+            }
+        }
+    } else if !cache.data.is_null() && size_mod {
+        rsvd_page_cache_free_data(cache);
+    }
+
+    cache.loc = eff_loc;
+    cache.page_num = page_n;
+    cache.size = info_len;
+
+    (modified || loc_mod || size_mod || page_num_mod) as u8
+}
+
+#[cfg(any(host_hal_com_rsvd_page_test, not(host_hal_com_hw_rate_test)))]
+#[no_mangle]
+pub extern "C" fn rsvd_page_cache_update_data(
+    cache: *mut RsvdPageCache,
+    info: *mut U8,
+    info_len: u32,
+) -> u8 {
+    let cache = unsafe { &mut *cache };
+    let mut modified = false;
+
+    if info.is_null() || info_len == 0 {
+        return 0;
+    }
+    if cache.loc == 0 || cache.page_num == 0 || cache.size == 0 {
+        rsvd_warn_on(true);
+        return 0;
+    }
+    if cache.size != info_len {
+        rsvd_warn_on(true);
+        return 0;
+    }
+    if cache.data.is_null() {
+        let ptr = rsvd_heap_alloc(cache.size, true);
+        if ptr.is_null() {
+            rsvd_warn_on(true);
+            return 0;
+        }
+        cache.data = ptr;
+        modified = true;
+    }
+    if !rsvd_memcmp_eq(cache.data, info, cache.size) {
+        unsafe {
+            core::ptr::copy_nonoverlapping(info, cache.data, cache.size as usize);
+        }
+        modified = true;
+    }
+    modified as u8
+}
+
+#[cfg(any(host_hal_com_rsvd_page_test, not(host_hal_com_hw_rate_test)))]
+#[no_mangle]
+pub extern "C" fn rsvd_page_cache_free_data(cache: *mut RsvdPageCache) {
+    let cache = unsafe { &mut *cache };
+    if !cache.data.is_null() {
+        unsafe {
+            rsvd_mfree(cache.data, cache.size);
+        }
+        cache.data = core::ptr::null_mut();
+    }
+}
+
+#[cfg(any(host_hal_com_rsvd_page_test, not(host_hal_com_hw_rate_test)))]
+#[no_mangle]
+pub extern "C" fn rsvd_page_cache_free(cache: *mut RsvdPageCache) {
+    let cache = unsafe { &mut *cache };
+    cache.loc = 0;
+    cache.page_num = 0;
+    rsvd_page_cache_free_data(cache);
+    cache.size = 0;
 }
