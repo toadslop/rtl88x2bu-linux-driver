@@ -86,6 +86,12 @@ for path in "${changed[@]}"; do
 	| tests/host/wlan_util/*)
 		add_target rust-check-symbols-rtw-wlan-util
 		;;
+	rust/rtw_wapi_sms4.rs \
+	| core/rtw_wapi_sms4.c \
+	| core/rtw_wapi_sms4_rest.c \
+	| tests/host/wapi_sms4/*)
+		add_target rust-check-symbols-rtw-wapi-sms4
+		;;
 	rust/rtw_rf_rest.rs \
 	| rust/rtw_rf_op_class_pref.rs \
 	| rust/rtw_rf_op_class_dump.rs \
@@ -279,6 +285,7 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-security
 	rust-check-symbols-rtw-security-rest-misc
 	rust-check-symbols-rtw-wlan-util
+	rust-check-symbols-rtw-wapi-sms4
 	rust-check-symbols-rtw-rf-rest
 	rust-check-symbols-rtw-rf-op-class-pref
 	rust-check-symbols-rtw-rf-op-class-dump
