@@ -1,0 +1,35 @@
+{
+  "oracle": "core/rtw_debug_rest.c dump_sec_cam_ent*",
+  "vectors": [
+    {
+      "name": "title_with_id",
+      "type": "title",
+      "has_id": 1,
+      "expect": "id ctrl   addr              key                              kid type     MK GK valid"
+    },
+    {
+      "name": "title_no_id",
+      "type": "title",
+      "has_id": 0,
+      "expect": "ctrl   addr              key                              kid type     MK GK valid"
+    },
+    {
+      "name": "ent_aes_gk_valid",
+      "type": "ent",
+      "id": 3,
+      "ctrl": 32849,
+      "mac": "aabbccddeeff",
+      "key": "000102030405060708090a0b0c0d0e0f",
+      "expect": " 3 0x8051 aa:bb:cc:dd:ee:ff 000102030405060708090a0b0c0d0e0f   1 AES       0  1     1"
+    },
+    {
+      "name": "ent_ccmp256_no_id_col",
+      "type": "ent",
+      "id": -1,
+      "ctrl": 33297,
+      "mac": "aabbccddeeff",
+      "key": "000102030405060708090a0b0c0d0e0f",
+      "expect": "0x8211 aa:bb:cc:dd:ee:ff 000102030405060708090a0b0c0d0e0f   1 CCMP_256  0  0     1"
+    }
+  ]
+}
