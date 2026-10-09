@@ -14,7 +14,7 @@
 
 typedef unsigned long systime;
 
-#define MAX_CHANNEL_NUM 59
+#define MAX_CHANNEL_NUM 42
 
 #define RTW_CHF_NO_IR (1 << 0)
 #define RTW_CHF_DFS (1 << 1)

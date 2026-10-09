@@ -29,7 +29,7 @@
 #define IsSupported24G(n) ((n) & SUPPORTED_24G_NETTYPE_MSK ? _TRUE : _FALSE)
 #define is_supported_5g(n) ((n) & SUPPORTED_5G_NETTYPE_MSK ? _TRUE : _FALSE)
 #define rtw_min(a, b) (((a) < (b)) ? (a) : (b))
-#define MAX_CHANNEL_NUM 59
+#define MAX_CHANNEL_NUM 42
 #define MAX_CHANNEL_NUM_2G 14
 #define RTW_CHANNEL_SCAN_AMOUNT 8
 #define RTW_IEEE80211_CHAN_DISABLED (1 << 0)

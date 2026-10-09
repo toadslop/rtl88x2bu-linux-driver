@@ -44,7 +44,7 @@
 #define RTW_CHF_NO_80MHZ (1 << 6)
 #define RTW_CHF_NO_160MHZ (1 << 7)
 
-#define MAX_CHANNEL_NUM 59
+#define MAX_CHANNEL_NUM 42
 #define MAX_CHANNEL_NUM_OF_BAND 28
 
 #define RTW_ERR(...) do { } while (0)

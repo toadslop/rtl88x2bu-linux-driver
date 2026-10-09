@@ -94,7 +94,8 @@ pub struct RtChannelInfo {
     pub flags: u8,
 }
 
-const MAX_CHANNEL_NUM: usize = 59;
+/// `MAX_CHANNEL_NUM_2G + MAX_CHANNEL_NUM_5G` (`include/rtw_rf.h`).
+const MAX_CHANNEL_NUM: usize = 14 + 28;
 
 #[cfg(not(host_rf_op_class_dump_test))]
 mod kernel {

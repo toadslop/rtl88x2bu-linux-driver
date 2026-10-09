@@ -9,7 +9,7 @@
 #define _TRUE 1
 #define _FALSE 0
 #define MAX_IE_SZ 768
-#define MAX_CHANNEL_NUM 59
+#define MAX_CHANNEL_NUM 42
 #define _FIXED_IE_LENGTH_ 12
 #define _COUNTRY_IE_ 7
 #define BIT0 0x01

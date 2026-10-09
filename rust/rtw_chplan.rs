@@ -23,7 +23,8 @@ const RTW_CHD_2G_NULL: u8 = 0;
 const RTW_CHD_5G_NULL: u8 = 0;
 const RTW_CHF_DFS: u8 = 1 << 1;
 const RTW_CHF_NO_IR: u8 = 1 << 0;
-const MAX_CHANNEL_NUM: usize = 59;
+/// `MAX_CHANNEL_NUM_2G + MAX_CHANNEL_NUM_5G` (`include/rtw_rf.h`).
+const MAX_CHANNEL_NUM: usize = 14 + 28;
 const _TRUE: i32 = 1;
 const _FALSE: i32 = 0;
 
