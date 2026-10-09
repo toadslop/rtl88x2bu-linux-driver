@@ -14,5 +14,6 @@
 #include "HalVerDef.h"
 
 int dump_chip_info_format(HAL_VERSION chip_version, char *buf, size_t buflen);
+void dump_chip_info(HAL_VERSION chip_version);
 
 #endif /* HOST_HAL_COM_CHIP_INFO_TYPES_H */
