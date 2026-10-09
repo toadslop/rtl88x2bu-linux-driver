@@ -672,7 +672,7 @@ unsafe fn host_recv_decache(rframe: *mut RecvFrame) -> c_int {
         &mut psta.sta_recvpriv.nonqos_rxseq
     };
     if seq_ctrl == *prxseq {
-        psta.sta_stats.duplicate_cnt += 1;
+        psta.sta_stats.duplicate_cnt = psta.sta_stats.duplicate_cnt.wrapping_add(1);
         return _FAIL;
     }
     *prxseq = seq_ctrl;
@@ -713,7 +713,7 @@ fn kernel_recv_decache(rframe: *mut c_void) -> c_int {
         if seq_ctrl == *prxseq {
             let dup = kernel::sta_duplicate_cnt(psta);
             if !dup.is_null() {
-                *dup += 1;
+                *dup = (*dup).wrapping_add(1);
             }
             return _FAIL;
         }

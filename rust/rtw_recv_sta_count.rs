@@ -148,15 +148,13 @@ mod host {
         let adapter = unsafe { &mut *adapter };
         let rframe = unsafe { &mut *rframe };
         let sz = rframe.hdr.len as i32;
-        adapter.recvpriv.rx_bytes += sz as u64;
-        adapter.mlmepriv.link_detect_info.num_rx_ok_in_period += 1;
+        adapter.recvpriv.rx_bytes = adapter.recvpriv.rx_bytes.wrapping_add(sz as u64);
+        let ldi = &mut adapter.mlmepriv.link_detect_info;
+        ldi.num_rx_ok_in_period = ldi.num_rx_ok_in_period.wrapping_add(1);
 
         let dst = rframe.hdr.attrib.dst;
         if !mac_addr_is_bcst(&dst) && !is_mcast(&dst) {
-            adapter
-                .mlmepriv
-                .link_detect_info
-                .num_rx_unicast_ok_in_period += 1;
+            ldi.num_rx_unicast_ok_in_period = ldi.num_rx_unicast_ok_in_period.wrapping_add(1);
         }
 
         let psta = if !sta.is_null() { sta } else { rframe.hdr.psta };
@@ -169,24 +167,24 @@ mod host {
         let is_ra_bmc = is_mcast(&ra);
 
         pstats.last_rx_time = unsafe { rtw_get_current_time() };
-        pstats.rx_data_pkts += 1;
-        pstats.rx_bytes += sz as u64;
+        pstats.rx_data_pkts = pstats.rx_data_pkts.wrapping_add(1);
+        pstats.rx_bytes = pstats.rx_bytes.wrapping_add(sz as u64);
         if is_broadcast_mac_addr(&ra) {
-            pstats.rx_data_bc_pkts += 1;
-            pstats.rx_bc_bytes += sz as u64;
+            pstats.rx_data_bc_pkts = pstats.rx_data_bc_pkts.wrapping_add(1);
+            pstats.rx_bc_bytes = pstats.rx_bc_bytes.wrapping_add(sz as u64);
         } else if is_ra_bmc {
-            pstats.rx_data_mc_pkts += 1;
-            pstats.rx_mc_bytes += sz as u64;
+            pstats.rx_data_mc_pkts = pstats.rx_data_mc_pkts.wrapping_add(1);
+            pstats.rx_mc_bytes = pstats.rx_mc_bytes.wrapping_add(sz as u64);
         }
 
         if !is_ra_bmc {
             let rate = rframe.hdr.attrib.data_rate as usize;
             if rate < pstats.rxratecnt.len() {
-                pstats.rxratecnt[rate] += 1;
+                pstats.rxratecnt[rate] = pstats.rxratecnt[rate].wrapping_add(1);
             }
             let pri = rframe.hdr.attrib.priority as usize;
             if pri < TID_NUM {
-                pstats.rx_data_qos_pkts[pri] += 1;
+                pstats.rx_data_qos_pkts[pri] = pstats.rx_data_qos_pkts[pri].wrapping_add(1);
             }
         }
     }
@@ -229,8 +227,10 @@ mod kernel {
         }
         let sz = unsafe { rtw_rust_recv_sta_frame_len(rframe) };
         unsafe {
-            *rtw_rust_recv_sta_recvpriv_rx_bytes(adapter) += sz as U64;
-            *rtw_rust_recv_sta_link_rx_ok(adapter) += 1;
+            let p = rtw_rust_recv_sta_recvpriv_rx_bytes(adapter);
+            *p = (*p).wrapping_add(sz as U64);
+            let p = rtw_rust_recv_sta_link_rx_ok(adapter);
+            *p = (*p).wrapping_add(1);
         }
 
         let dst_ptr = unsafe { rtw_rust_recv_sta_attrib_dst(rframe) };
@@ -239,7 +239,8 @@ mod kernel {
             let dst_arr: [U8; ETH_ALEN] = dst.try_into().unwrap_or([0; ETH_ALEN]);
             if !mac_addr_is_bcst(&dst_arr) && !is_mcast(&dst_arr) {
                 unsafe {
-                    *rtw_rust_recv_sta_link_rx_unicast_ok(adapter) += 1;
+                    let p = rtw_rust_recv_sta_link_rx_unicast_ok(adapter);
+                    *p = (*p).wrapping_add(1);
                 }
             }
         }
@@ -263,18 +264,24 @@ mod kernel {
 
         unsafe {
             *rtw_rust_recv_sta_stat_last_rx_time(psta) = rtw_rust_recv_sta_get_current_time();
-            *rtw_rust_recv_sta_stat_rx_data_pkts(psta) += 1;
-            *rtw_rust_recv_sta_stat_rx_bytes(psta) += sz as U64;
+            let p = rtw_rust_recv_sta_stat_rx_data_pkts(psta);
+            *p = (*p).wrapping_add(1);
+            let p = rtw_rust_recv_sta_stat_rx_bytes(psta);
+            *p = (*p).wrapping_add(sz as U64);
         }
         if is_broadcast_mac_addr(&ra_arr) {
             unsafe {
-                *rtw_rust_recv_sta_stat_rx_data_bc_pkts(psta) += 1;
-                *rtw_rust_recv_sta_stat_rx_bc_bytes(psta) += sz as U64;
+                let p = rtw_rust_recv_sta_stat_rx_data_bc_pkts(psta);
+                *p = (*p).wrapping_add(1);
+                let p = rtw_rust_recv_sta_stat_rx_bc_bytes(psta);
+                *p = (*p).wrapping_add(sz as U64);
             }
         } else if is_ra_bmc {
             unsafe {
-                *rtw_rust_recv_sta_stat_rx_data_mc_pkts(psta) += 1;
-                *rtw_rust_recv_sta_stat_rx_mc_bytes(psta) += sz as U64;
+                let p = rtw_rust_recv_sta_stat_rx_data_mc_pkts(psta);
+                *p = (*p).wrapping_add(1);
+                let p = rtw_rust_recv_sta_stat_rx_mc_bytes(psta);
+                *p = (*p).wrapping_add(sz as U64);
             }
         }
 
@@ -283,14 +290,14 @@ mod kernel {
             let cnt = unsafe { rtw_rust_recv_sta_stat_rxratecnt(psta, rate) };
             if !cnt.is_null() {
                 unsafe {
-                    *cnt += 1;
+                    *cnt = (*cnt).wrapping_add(1);
                 }
             }
             let pri = unsafe { rtw_rust_recv_sta_attrib_priority(rframe) };
             let qos = unsafe { rtw_rust_recv_sta_stat_rx_data_qos_pkts(psta, pri) };
             if !qos.is_null() {
                 unsafe {
-                    *qos += 1;
+                    *qos = (*qos).wrapping_add(1);
                 }
             }
         }

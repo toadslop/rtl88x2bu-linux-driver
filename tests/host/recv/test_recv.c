@@ -60,6 +60,7 @@ struct vector {
 	u16 initial_seq;
 	u16 expect_seq;
 	u32 expect_dup_cnt;
+	int dup_cnt_saturated;
 	u8 initial_iv[8];
 	u8 expect_iv[8];
 	u8 initial_iv_seq[8];
@@ -209,6 +210,8 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 		v->expect_seq = (u16)tmp;
 		host_json_parse_int_in(obj, obj_len, "expect_dup_cnt",
 				       (int *)&v->expect_dup_cnt);
+		host_json_parse_int_in(obj, obj_len, "dup_cnt_saturated",
+				       &v->dup_cnt_saturated);
 		host_json_parse_int_in(obj, obj_len, "hdrlen", &tmp);
 		v->hdrlen = (u8)tmp;
 		host_json_parse_int_in(obj, obj_len, "encrypt", &tmp);
@@ -269,6 +272,8 @@ static int run_pn_vector(struct vector *v, sint (*fn)(union recv_frame *))
 	memcpy(rframe.u.hdr.attrib.ra, v->ra, ETH_ALEN);
 	rframe.u.hdr.attrib.hdrlen = v->hdrlen;
 	rframe.u.hdr.attrib.encrypt = v->encrypt;
+	if (v->dup_cnt_saturated)
+		sta.sta_stats.duplicate_cnt = ~0U;
 
 	seq_slot = decache_seq_slot(&sta, v);
 	*seq_slot = v->initial_seq;

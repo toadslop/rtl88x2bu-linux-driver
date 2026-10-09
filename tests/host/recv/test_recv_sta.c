@@ -30,6 +30,7 @@ struct vector {
 	u64 expect_sta_bytes;
 	u32 expect_rate_cnt;
 	u64 expect_qos_pkts;
+	int preload_max;
 };
 
 static int parse_mac_hex(const char *hex, u8 *out)
@@ -92,6 +93,7 @@ static int parse_vector_object(const char *obj, size_t obj_len, void *vec_void)
 	PARSE_OPT_INT(v->expect_sta_bytes, "expect_sta_bytes");
 	PARSE_OPT_INT(v->expect_rate_cnt, "expect_rate_cnt");
 	PARSE_OPT_INT(v->expect_qos_pkts, "expect_qos_pkts");
+	PARSE_OPT_INT(v->preload_max, "preload_max");
 	PARSE_OPT_MAC(v->ra, "ra");
 	PARSE_OPT_MAC(v->addr1, "addr1");
 	PARSE_OPT_MAC(v->addr2, "addr2");
@@ -120,7 +122,22 @@ static int run_count_vector(const struct vector *v)
 	frame.u.hdr.attrib.priority = v->priority;
 
 	host_recv_sta_register_sta(v->ra, &sta);
+	if (v->preload_max) {
+		/* Saturated counters must wrap like C, not trap. */
+		adapter.recvpriv.rx_bytes = ~0ULL;
+		sta.sta_stats.rx_data_pkts = ~0ULL;
+		sta.sta_stats.rx_bytes = ~0ULL;
+		sta.sta_stats.rxratecnt[v->data_rate] = ~0U;
+		sta.sta_stats.rx_data_qos_pkts[v->priority] = ~0ULL;
+	}
 	count_rx_stats(&adapter, &frame, &sta);
+
+	if (v->preload_max)
+		return (adapter.recvpriv.rx_bytes == (u64)v->frame_len - 1 &&
+			sta.sta_stats.rx_data_pkts == 0 &&
+			sta.sta_stats.rx_bytes == (u64)v->frame_len - 1 &&
+			sta.sta_stats.rxratecnt[v->data_rate] == 0 &&
+			sta.sta_stats.rx_data_qos_pkts[v->priority] == 0) ? 0 : -1;
 
 	if ((u32)adapter.recvpriv.rx_bytes != v->expect_rx_bytes)
 		return -1;

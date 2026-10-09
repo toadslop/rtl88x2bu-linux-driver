@@ -15,6 +15,16 @@
       "expect_qos_pkts": 1
     },
     {
+      "name": "count_stats_counters_wrap",
+      "fn": "count_rx_stats",
+      "frame_len": 128,
+      "data_rate": 4,
+      "priority": 2,
+      "ra": "020000000000",
+      "dst": "020000000001",
+      "preload_max": 1
+    },
+    {
       "name": "validate_to_ds2_ok",
       "fn": "validate_hdr",
       "to_fr_ds": 2,
