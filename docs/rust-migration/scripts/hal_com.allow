@@ -1,2 +1,4 @@
 # L1 allowlist for W4-01: dump_hw_rate_map_test only when CONFIG_RTW_DEBUG (Rust cfg).
 drop dump_hw_rate_map_test
+# W4-03 PR1: C oracle links dump_chip_info_format before Rust port (stack PR #1172).
+drop dump_chip_info_format
