@@ -2704,6 +2704,9 @@ ccflags-y += -DCONFIG_RUST_CMD_THREAD_LOOP
 ccflags-y += -DCONFIG_RUST_RECV_STA
 ccflags-y += -DCONFIG_RUST_RTW_DEBUG
 rustflags-y += --cfg config_rust_rtw_debug_test_hooks
+ifeq ($(CONFIG_AP_MODE), y)
+rustflags-y += --cfg config_ap_mode
+endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_EVENT_THREAD_MODE' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg event_thread_mode
 endif
