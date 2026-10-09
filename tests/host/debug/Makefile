@@ -26,6 +26,7 @@ test_debug_test_hooks_c: $(L2) $(ORACLE)
 librust_debug_test_hooks.a: $(RUST_HOOKS)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on \
 		--crate-type staticlib --cfg host_rtw_debug_test_hooks_test \
+		--cfg config_ap_mode \
 		$(RUST_HOOKS) -o $@
 
 test_debug_test_hooks_rust: $(L2) librust_debug_test_hooks.a $(SHIM)
