@@ -52,6 +52,7 @@ void rtw_rust_chset_write(struct _RT_CHANNEL_INFO *chset, u8 index, u8 ch, u8 fl
 void rtw_rust_chset_set_non_ocp(struct _RT_CHANNEL_INFO *chset, u8 count);
 u8 rtw_rust_chset_ch_num(struct _RT_CHANNEL_INFO *chset, u8 index);
 u8 rtw_rust_chset_ch_flags(struct _RT_CHANNEL_INFO *chset, u8 index);
+void rtw_rust_chset_clear_flags(struct _RT_CHANNEL_INFO *chset, u8 index, u8 mask);
 void rtw_rust_warn_on(int condition);
 
 u8 rtw_chplan_get_default_regd(u8 id);

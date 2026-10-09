@@ -120,7 +120,13 @@ extern "C" {
     fn rtw_chdef_5g_attrib(chd: u8) -> u8;
 
     #[cfg(not(host_chplan_rest_test))]
-    fn rtw_rust_rfctl_channel_set(adapter: *mut c_void) -> *mut RtChannelInfo;
+    fn rtw_rust_rfctl_channel_set(adapter: *mut c_void) -> *mut c_void;
+    #[cfg(not(host_chplan_rest_test))]
+    fn rtw_rust_chset_ch_num(chset: *mut c_void, index: u8) -> u8;
+    #[cfg(not(host_chplan_rest_test))]
+    fn rtw_rust_chset_ch_flags(chset: *mut c_void, index: u8) -> u8;
+    #[cfg(not(host_chplan_rest_test))]
+    fn rtw_rust_chset_clear_flags(chset: *mut c_void, index: u8, mask: u8);
     #[cfg(not(host_chplan_rest_test))]
     fn rtw_rust_rfctl_country_ent(adapter: *mut c_void) -> *const CountryChplan;
     #[cfg(not(host_chplan_rest_test))]
@@ -135,23 +141,76 @@ fn is_alpha2_worldwide(alpha2: &[u8; 2]) -> bool {
     alpha2[0] == b'0' && alpha2[1] == b'0'
 }
 
-fn rtw_chset_search_ch(ch_set: &[RtChannelInfo], ch: u32) -> i32 {
+/// Indexed view of a channel set. Entries past the end read as channel 0.
+trait Chset {
+    fn ch_num(&self, idx: usize) -> u8;
+    fn ch_flags(&self, idx: usize) -> u8;
+    fn clear_flags(&mut self, idx: usize, mask: u8);
+}
+
+#[cfg(host_chplan_rest_test)]
+impl Chset for [RtChannelInfo] {
+    fn ch_num(&self, idx: usize) -> u8 {
+        self.get(idx).map_or(0, |e| e.channel_num)
+    }
+
+    fn ch_flags(&self, idx: usize) -> u8 {
+        self.get(idx).map_or(0, |e| e.flags)
+    }
+
+    fn clear_flags(&mut self, idx: usize, mask: u8) {
+        if let Some(e) = self.get_mut(idx) {
+            e.flags &= !mask;
+        }
+    }
+}
+
+/// Kernel `rf_ctl_t.channel_set`. `sizeof(RT_CHANNEL_INFO)` depends on the
+/// build config, so only the C accessors may index it.
+#[cfg(not(host_chplan_rest_test))]
+struct KernelChset(*mut c_void);
+
+#[cfg(not(host_chplan_rest_test))]
+impl Chset for KernelChset {
+    fn ch_num(&self, idx: usize) -> u8 {
+        if idx >= MAX_CHANNEL_NUM {
+            return 0;
+        }
+        unsafe { rtw_rust_chset_ch_num(self.0, idx as u8) }
+    }
+
+    fn ch_flags(&self, idx: usize) -> u8 {
+        if idx >= MAX_CHANNEL_NUM {
+            return 0;
+        }
+        unsafe { rtw_rust_chset_ch_flags(self.0, idx as u8) }
+    }
+
+    fn clear_flags(&mut self, idx: usize, mask: u8) {
+        if idx < MAX_CHANNEL_NUM {
+            unsafe { rtw_rust_chset_clear_flags(self.0, idx as u8, mask) };
+        }
+    }
+}
+
+fn rtw_chset_search_ch<C: Chset + ?Sized>(ch_set: &C, ch: u32) -> i32 {
     if ch == 0 {
         return -1;
     }
-    for (i, ent) in ch_set.iter().enumerate() {
-        if ent.channel_num == 0 {
+    for i in 0..MAX_CHANNEL_NUM {
+        let num = ch_set.ch_num(i);
+        if num == 0 {
             break;
         }
-        if ch == ent.channel_num as u32 {
+        if ch == num as u32 {
             return i as i32;
         }
     }
     -1
 }
 
-fn process_beacon_hint_inner(
-    chset: &mut [RtChannelInfo],
+fn process_beacon_hint_inner<C: Chset + ?Sized>(
+    chset: &mut C,
     country_alpha2: Option<&[u8; 2]>,
     ch: u8,
 ) -> u8 {
@@ -164,18 +223,19 @@ fn process_beacon_hint_inner(
         return 0;
     }
     let idx = chset_idx as usize;
-    if (chset[idx].flags & RTW_CHF_NO_IR) != 0
+    let flags = chset.ch_flags(idx);
+    if (flags & RTW_CHF_NO_IR) != 0
         && (RTW_CHPLAN_BEACON_HINT_NON_WORLD_WIDE
             || country_alpha2.is_none()
             || country_alpha2.is_some_and(|a| is_alpha2_worldwide(a)))
         && (RTW_CHPLAN_BEACON_HINT_ON_2G_CH_1_11 || ch > 11)
-        && (RTW_CHPLAN_BEACON_HINT_ON_DFS_CH || (chset[idx].flags & RTW_CHF_DFS) == 0)
+        && (RTW_CHPLAN_BEACON_HINT_ON_DFS_CH || (flags & RTW_CHF_DFS) == 0)
     {
         #[cfg(not(host_chplan_rest_test))]
         unsafe {
             rtw_rust_chplan_beacon_hint_info(ch);
         }
-        chset[idx].flags &= !RTW_CHF_NO_IR;
+        chset.clear_flags(idx, RTW_CHF_NO_IR);
         return 1;
     }
     0
@@ -193,13 +253,12 @@ pub extern "C" fn rtw_process_beacon_hint(adapter: *mut c_void, bss: *mut c_void
     }
     let country_ent = unsafe { rtw_rust_rfctl_country_ent(adapter) };
     let ch = unsafe { rtw_rust_bss_ds_config(bss) };
-    let chset_slice = unsafe { core::slice::from_raw_parts_mut(chset, MAX_CHANNEL_NUM) };
     let country_alpha2 = if country_ent.is_null() {
         None
     } else {
         Some(unsafe { &(*country_ent).alpha2 })
     };
-    process_beacon_hint_inner(chset_slice, country_alpha2, ch)
+    process_beacon_hint_inner(&mut KernelChset(chset), country_alpha2, ch)
 }
 
 #[cfg(host_chplan_rest_test)]
@@ -219,7 +278,7 @@ pub extern "C" fn host_rest_process_beacon_hint(
         Some(unsafe { &(*adapter.rf_ctl.country_ent).alpha2 })
     };
     process_beacon_hint_inner(
-        &mut adapter.rf_ctl.channel_set,
+        &mut adapter.rf_ctl.channel_set[..],
         country_alpha2,
         bss.configuration.ds_config as u8,
     )
