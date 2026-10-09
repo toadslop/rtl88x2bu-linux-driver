@@ -239,4 +239,29 @@ void rtw_rust_debug_dump_drv_cfg_post_num_banners(void *sel)
 
 #endif /* CONFIG_PROC_DEBUG */
 
+#if defined(CONFIG_RTW_DEBUG) || defined(CONFIG_PROC_DEBUG)
+u8 rtw_rust_debug_sec_cam_num(_adapter *adapter)
+{
+	return adapter_to_dvobj(adapter)->cam_ctl.num;
+}
+
+void rtw_rust_debug_sec_cam_read(_adapter *adapter, u8 idx, u16 *ctrl, u8 *mac, u8 *key)
+{
+	struct sec_cam_ent ent;
+
+	rtw_sec_read_cam_ent(adapter, idx, (u8 *)(&ent.ctrl), ent.mac, ent.key);
+	if (ctrl)
+		*ctrl = ent.ctrl;
+	if (mac)
+		_rtw_memcpy(mac, ent.mac, ETH_ALEN);
+	if (key)
+		_rtw_memcpy(key, ent.key, 16);
+}
+
+struct sec_cam_ent *rtw_rust_debug_sec_cam_cache_ent(_adapter *adapter, u8 idx)
+{
+	return &adapter_to_dvobj(adapter)->cam_cache[idx];
+}
+#endif
+
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */

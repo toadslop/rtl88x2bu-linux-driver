@@ -1,0 +1,6 @@
+# L1 allowlist for W3-133: Rust owns dump_sec_cam* formatters.
+drop rtw_rust_debug_print_sel
+drop rtw_rust_debug_sec_cam_num
+drop rtw_rust_debug_sec_cam_read
+drop rtw_rust_debug_sec_cam_cache_ent
+drop security_type_str

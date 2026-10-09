@@ -209,6 +209,7 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-odm-phydm-init
 		;;
 	rust/rtw_debug.rs \
+	rust/rtw_debug_sec_cam.rs \
 	| core/rtw_debug.c \
 	| core/rtw_debug_rest.c \
 	| tests/host/debug/*)
