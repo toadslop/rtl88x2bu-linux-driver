@@ -67,6 +67,25 @@ class LinkSetPrDeltaTests(unittest.TestCase):
         self.assertEqual(out["link_c_dropped"], ["core/old.o"])
 
 
+class FormatPrChangesSectionTests(unittest.TestCase):
+    def test_renders_link_rust_removed(self) -> None:
+        pr = {
+            "diff_old_ref": "abc123456789",
+            "diff_new_ref": "HEAD",
+            "rust_lines_added": 0,
+            "rust_lines_removed": 0,
+            "c_lines_added": 0,
+            "c_lines_removed": 0,
+            "makefile_rust_stems_added": [],
+            "makefile_rust_stems_removed": [],
+            "top_file_deltas": [],
+            "link_rust_removed": ["rust/hal_com.o"],
+        }
+        md = cmp.format_pr_changes_section(pr, "origin/master")
+        self.assertIn("Removed from `88x2bu` link", md)
+        self.assertIn("`rust/hal_com.o`", md)
+
+
 class ComputePrScopeChangesTests(unittest.TestCase):
     def test_merge_base_diff_aggregates_rust_and_makefile(self) -> None:
         rows = [

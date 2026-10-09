@@ -371,6 +371,13 @@ def format_pr_changes_section(pr: dict, compare_label: str) -> str:
             + ", ".join(f"`{o}`" for o in pr["link_rust_added"])
             + "\n"
         )
+    if pr.get("link_rust_removed"):
+        lines.append(
+            "- **Removed from `88x2bu` link (vs base snapshot):** "
+            + ", ".join(f"`{o}`" for o in pr["link_rust_removed"][:12])
+            + (" …" if len(pr["link_rust_removed"]) > 12 else "")
+            + "\n"
+        )
     if pr.get("link_c_dropped"):
         lines.append(
             "- **C objects dropped from link (vs base snapshot):** "
@@ -387,6 +394,9 @@ def format_pr_changes_section(pr: dict, compare_label: str) -> str:
         and c_net == 0
         and not pr["makefile_rust_stems_added"]
         and not pr["makefile_rust_stems_removed"]
+        and not pr.get("link_rust_added")
+        and not pr.get("link_rust_removed")
+        and not pr.get("link_c_dropped")
     ):
         lines.append(
             "\n_No migration-touched paths changed in this diff range "
