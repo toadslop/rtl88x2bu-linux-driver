@@ -139,6 +139,8 @@ def partial_unit_for_stem(stem: str) -> tuple[str, str] | None:
     parent = baseline_c_for_rust_stem(stem)
     if not parent:
         return None
+    # Sibling `{parent}_rest.c` on disk implies a split partial port. Rust units
+    # that fully replace C but keep a `_rest.c` stub must be listed in PARTIAL_UNITS.
     parent_stem = Path(parent).stem
     for d in SOURCE_SEARCH_DIRS:
         rest = f"{d}/{parent_stem}_rest.c"
@@ -171,17 +173,13 @@ def makefile_text_at(tree_ref: str) -> str | None:
     return data.decode("utf-8", errors="replace")
 
 
-def c_object_listed_in_makefile(c_path: str, makefile_text: str) -> bool:
-    obj = c_path.replace(".c", ".o")
-    return obj in makefile_text or c_path in makefile_text
-
-
 def module_objects_for_ref(head_objs: list[str], tree_ref: str) -> list[str]:
     """Approximate the module link set at ``tree_ref`` without an L0 rebuild.
 
-    C/HAL objects from the HEAD L0 build are kept (Makefiles use variables, so
-    substring checks drop most of the link set). Only ``rust/*.o`` membership is
-    adjusted from the Makefile ``rust/`` list at ``tree_ref``.
+    C/HAL objects are taken from the HEAD L0 object list unchanged. Only
+    ``rust/*.o`` membership is adjusted from the Makefile ``rust/`` list at
+    ``tree_ref``. C TU add/drop at the base ref is **not** modeled — use a full
+    base L0 list via ``--compare-module-objects`` when C link deltas matter.
     """
     mf = makefile_text_at(tree_ref)
     if mf is None:
@@ -304,6 +302,36 @@ def compute_pr_scope_changes(base_ref: str, head_ref: str = "HEAD") -> dict:
     }
 
 
+def link_set_pr_deltas(
+    head_objs: list[str],
+    base_objs: list[str],
+    *,
+    rust_only_base: bool,
+) -> dict[str, list[str]]:
+    """Diff HEAD vs base module object lists for PR reporting bullets."""
+
+    def _port_rust_obj(path: str) -> bool:
+        if not path.startswith("rust/"):
+            return False
+        return Path(path).stem not in RUST_INFRA
+
+    head_set = set(head_objs)
+    base_set = set(base_objs)
+    out: dict[str, list[str]] = {
+        "link_rust_added": sorted(
+            o for o in head_set - base_set if _port_rust_obj(o)
+        ),
+        "link_rust_removed": sorted(
+            o for o in base_set - head_set if _port_rust_obj(o)
+        ),
+    }
+    if not rust_only_base:
+        out["link_c_dropped"] = sorted(
+            o for o in base_set - head_set if not o.startswith("rust/")
+        )
+    return out
+
+
 def format_pr_changes_section(pr: dict, compare_label: str) -> str:
     rust_net = pr["rust_lines_added"] - pr["rust_lines_removed"]
     c_net = pr["c_lines_added"] - pr["c_lines_removed"]
@@ -311,12 +339,22 @@ def format_pr_changes_section(pr: dict, compare_label: str) -> str:
         f"\n### Changes in this PR (vs `{compare_label}`)\n",
         f"_Diff range: `{pr['diff_old_ref'][:12]}` → `{pr['diff_new_ref']}` "
         "(merge-base of PR branch and base)._ \n\n"
+    ]
+    if pr.get("compare_base_link_rust_only"):
+        lines.append(
+            "_Link-set bullets below use a **Rust-only** base snapshot (HEAD C "
+            "objects + Makefile `rust/` at base). C TU membership at the base ref "
+            "is not rebuilt unless CI passes `--compare-module-objects`._\n\n"
+        )
+    lines.extend(
+        [
         "| Area | Lines added | Lines removed | Net |\n",
         "|------|-------------|---------------|-----|\n",
         f"| `rust/*.rs` | {pr['rust_lines_added']:,} | {pr['rust_lines_removed']:,} | {rust_net:+,} |\n",
         f"| Migration C (`core/`, `hal/`, `os_dep/`) | {pr['c_lines_added']:,} | "
         f"{pr['c_lines_removed']:,} | {c_net:+,} |\n",
-    ]
+        ]
+    )
     if pr["makefile_rust_stems_added"]:
         lines.append(
             f"- **New Rust link units (Makefile):** "
@@ -751,8 +789,13 @@ def format_markdown(data: dict, baseline_label: str, baseline_ref: str) -> str:
             "\n### Cumulative shift (HEAD vs base branch snapshot)\n\n"
             "_Estimated from link-set snapshots at each ref (one L0 build at HEAD). "
             "Use **Changes in this PR** above for per-PR diffs._\n\n"
-            "| Metric | Δ |\n|--------|---|\n"
         )
+        if data.get("compare_base_link_rust_only"):
+            delta_section += (
+                "_Base snapshot adjusts **Rust** link membership only; module "
+                "object % shifts do not reflect C TU add/drop at the base ref._\n\n"
+            )
+        delta_section += "| Metric | Δ |\n|--------|---|\n"
         if delta.get("module_loc_pct") is not None:
             delta_section += f"| Module LOC % | {delta['module_loc_pct']:+.1f} |\n"
             delta_section += (
@@ -860,6 +903,7 @@ def main() -> int:
 
     if args.compare_ref:
         head_obj_list = load_module_objects(objects_text)
+        rust_only_base = args.compare_module_objects is None
         if args.compare_module_objects is not None:
             base_obj_list = load_module_objects(
                 read_objects_file(args.compare_module_objects)
@@ -871,22 +915,14 @@ def main() -> int:
             args.compare_ref, baseline_ref, base_objects_text
         )
         result["pr_changes"] = compute_pr_scope_changes(args.compare_ref, "HEAD")
-        head_set = set(head_obj_list)
-        base_set = set(base_obj_list)
-        def _port_rust_obj(path: str) -> bool:
-            if not path.startswith("rust/"):
-                return False
-            return Path(path).stem not in RUST_INFRA
-
-        result["pr_changes"]["link_rust_added"] = sorted(
-            o for o in head_set - base_set if _port_rust_obj(o)
+        result["pr_changes"].update(
+            link_set_pr_deltas(
+                head_obj_list, base_obj_list, rust_only_base=rust_only_base
+            )
         )
-        result["pr_changes"]["link_rust_removed"] = sorted(
-            o for o in base_set - head_set if _port_rust_obj(o)
-        )
-        result["pr_changes"]["link_c_dropped"] = sorted(
-            o for o in base_set - head_set if not o.startswith("rust/")
-        )
+        if rust_only_base:
+            result["compare_base_link_rust_only"] = True
+            result["pr_changes"]["compare_base_link_rust_only"] = True
         delta: dict[str, float | int | None] = {
             "module_loc_pct": None,
             "module_object_pct": None,

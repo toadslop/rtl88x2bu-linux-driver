@@ -52,5 +52,41 @@ class ModuleObjectsForRefTests(unittest.TestCase):
         self.assertIn("core/rtw_debug.o", out)
 
 
+class LinkSetPrDeltaTests(unittest.TestCase):
+    def test_rust_only_base_omits_c_dropped(self) -> None:
+        head = ["rust/hal_com.o", "core/a.o", "core/b.o"]
+        base = ["rust/aes_ctr.o", "core/a.o", "core/b.o"]
+        out = cmp.link_set_pr_deltas(head, base, rust_only_base=True)
+        self.assertIn("link_rust_added", out)
+        self.assertNotIn("link_c_dropped", out)
+
+    def test_exact_base_includes_c_dropped(self) -> None:
+        head = ["rust/hal_com.o", "core/a.o"]
+        base = ["rust/hal_com.o", "core/a.o", "core/old.o"]
+        out = cmp.link_set_pr_deltas(head, base, rust_only_base=False)
+        self.assertEqual(out["link_c_dropped"], ["core/old.o"])
+
+
+class ComputePrScopeChangesTests(unittest.TestCase):
+    def test_merge_base_diff_aggregates_rust_and_makefile(self) -> None:
+        rows = [
+            (10, 2, "rust/hal_com.rs"),
+            (0, 5, "hal/hal_com_rest.c"),
+            (1, 0, "Makefile"),
+        ]
+        mf_old = "$(MODULE_NAME)-y += rust/aes_ctr.o\n"
+        mf_new = "$(MODULE_NAME)-y += rust/aes_ctr.o\n$(MODULE_NAME)-y += rust/hal_com.o\n"
+        with (
+            mock.patch.object(cmp, "git_merge_base", return_value="abc123"),
+            mock.patch.object(cmp, "git_diff_numstat", return_value=rows),
+            mock.patch.object(cmp, "makefile_text_at", side_effect=[mf_old, mf_new]),
+        ):
+            pr = cmp.compute_pr_scope_changes("origin/master", "HEAD")
+        self.assertEqual(pr["rust_lines_added"], 10)
+        self.assertEqual(pr["rust_lines_removed"], 2)
+        self.assertEqual(pr["c_lines_removed"], 5)
+        self.assertEqual(pr["makefile_rust_stems_added"], ["hal_com"])
+
+
 if __name__ == "__main__":
     unittest.main()
