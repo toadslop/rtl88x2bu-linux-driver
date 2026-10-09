@@ -6,9 +6,47 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 
 #include "host_swcrypto_vector.h"
 #include "host_vector_json.h"
+#include "host_wifi_types.h"
+
+#ifdef RUST_SWCRYPTO_ORACLE
+int _rtw_ccmp_decrypt(_adapter *padapter, u8 *key, u32 key_len, unsigned int hdrlen,
+		      u8 *frame, unsigned int plen);
+int _rtw_gcmp_decrypt(_adapter *padapter, u8 *key, u32 key_len, unsigned int hdrlen,
+		      u8 *frame, unsigned int plen);
+
+/*
+ * A received frame shorter than its 802.11 header must be rejected, not
+ * underflow `plen - hdrlen` (which panics under overflow checks). The C
+ * oracle is skipped: it wraps into a ~4 GiB allocation request.
+ */
+static int run_runt_frame_checks(void)
+{
+	u8 key[32];
+	u8 frame[64];
+	unsigned int hdrlen = 26, plen;
+	int failed = 0;
+
+	memset(key, 0x11, sizeof(key));
+	memset(frame, 0, sizeof(frame));
+
+	for (plen = 0; plen < hdrlen; plen++) {
+		if (_rtw_ccmp_decrypt(NULL, key, 16, hdrlen, frame, plen) != 0 ||
+		    _rtw_ccmp_decrypt(NULL, key, 32, hdrlen, frame, plen) != 0 ||
+		    _rtw_gcmp_decrypt(NULL, key, 16, hdrlen, frame, plen) != 0 ||
+		    _rtw_gcmp_decrypt(NULL, key, 32, hdrlen, frame, plen) != 0) {
+			fprintf(stderr, "runt frame plen=%u not rejected\n", plen);
+			failed++;
+		}
+	}
+	if (!failed)
+		printf("ok ccmp/gcmp decrypt reject runt frames (plen < hdrlen)\n");
+	return failed;
+}
+#endif
 
 int main(int argc, char **argv)
 {
@@ -33,6 +71,10 @@ int main(int argc, char **argv)
 		else
 			printf("ok %s\n", vecs[i].name);
 	}
+
+#ifdef RUST_SWCRYPTO_ORACLE
+	failed += run_runt_frame_checks();
+#endif
 
 	if (failed) {
 		fprintf(stderr, "%d vector(s) failed\n", failed);
