@@ -107,23 +107,7 @@ void rtw_hal_read_sta_dk_key(_adapter *adapter, u8 key_id)
 	char	rtw_phy_para_file_path[PATH_LENGTH_MAX];
 #endif
 
-<<<<<<< HEAD
-int dump_chip_info_format(HAL_VERSION ChipVersion, char *buf, size_t buflen);
-
-void dump_chip_info(HAL_VERSION ChipVersion)
-{
-	char buf[128];
-	int n;
-
-	n = dump_chip_info_format(ChipVersion, buf, sizeof(buf));
-	if (n > 0 && n < (int)sizeof(buf))
-		buf[n] = '\0';
-	if (n > 0)
-		RTW_INFO("%s", buf);
-}
-=======
 /* dump_chip_info — ported to rust/hal_com.rs (W4-03) */
->>>>>>> 3226962e (rust(hal_com): drop C dump_chip_info wrapper (W4-03 PR4))
 
 u8 rtw_hal_get_port(_adapter *adapter)
 {

@@ -734,12 +734,20 @@ mod chip_info {
         pos as i32
     }
 
-    #[cfg(all(not(host_hal_com_chip_info_test), not(host_hal_com_hw_rate_test), not(host_hal_com_rsvd_page_test)))]
+    #[cfg(all(
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_hw_rate_test),
+        not(host_hal_com_rsvd_page_test)
+    ))]
     extern "C" {
         fn rtw_rust_hal_com_log_info(line: *const core::ffi::c_char);
     }
 
-    #[cfg(all(not(host_hal_com_chip_info_test), not(host_hal_com_hw_rate_test), not(host_hal_com_rsvd_page_test)))]
+    #[cfg(all(
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_hw_rate_test),
+        not(host_hal_com_rsvd_page_test)
+    ))]
     #[no_mangle]
     pub extern "C" fn dump_chip_info(chip_version: HalVersion) {
         let mut buf = [0u8; 128];
