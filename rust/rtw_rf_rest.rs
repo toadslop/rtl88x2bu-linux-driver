@@ -546,10 +546,11 @@ pub extern "C" fn rtw_get_center_ch(ch: u8, bw: u8, offset: u8) -> u8 {
             }
         }
     } else if bw == CHANNEL_WIDTH_40 {
+        // `ch` can come straight from a world-writable proc file; wrap like C.
         if offset == HAL_PRIME_CHNL_OFFSET_LOWER {
-            cch = ch + 2;
+            cch = ch.wrapping_add(2);
         } else if offset == HAL_PRIME_CHNL_OFFSET_UPPER {
-            cch = ch - 2;
+            cch = ch.wrapping_sub(2);
         }
     } else if bw == CHANNEL_WIDTH_20 || bw == CHANNEL_WIDTH_10 || bw == CHANNEL_WIDTH_5 {
         // same as ch
