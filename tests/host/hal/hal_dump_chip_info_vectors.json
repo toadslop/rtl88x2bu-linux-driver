@@ -1,0 +1,55 @@
+{
+  "oracle": "hal/hal_com_rest.c dump_chip_info",
+  "vectors": [
+    {
+      "name": "8822b_normal_tsmc_b_2t2r",
+      "ic_type": 13,
+      "chip_type": 1,
+      "cut_version": 1,
+      "vendor_type": 0,
+      "rf_type": 2,
+      "rom_ver": 0,
+      "expect": "Chip Version Info: CHIP_8822B_T2_2T2R_RomVer(0)"
+    },
+    {
+      "name": "8822b_test_umc_c_1t1r",
+      "ic_type": 13,
+      "chip_type": 0,
+      "cut_version": 2,
+      "vendor_type": 1,
+      "rf_type": 0,
+      "rom_ver": 3,
+      "expect": "Chip Version Info: CHIP_8822B_T_U3_1T1R_RomVer(3)"
+    },
+    {
+      "name": "unknown_ic_smic_i_3t4r",
+      "ic_type": 99,
+      "chip_type": 1,
+      "cut_version": 8,
+      "vendor_type": 2,
+      "rf_type": 6,
+      "rom_ver": 1,
+      "expect": "Chip Version Info: CHIP_UNKNOWN_S9_3T4R_RomVer(1)"
+    },
+    {
+      "name": "8812_unknown_cut_4t4r",
+      "ic_type": 6,
+      "chip_type": 1,
+      "cut_version": 7,
+      "vendor_type": 0,
+      "rf_type": 7,
+      "rom_ver": 2,
+      "expect": "Chip Version Info: CHIP_8812_TUNKNOWN_Cv(7)_4T4R_RomVer(2)"
+    },
+    {
+      "name": "8723b_unknown_rf",
+      "ic_type": 8,
+      "chip_type": 1,
+      "cut_version": 0,
+      "vendor_type": 0,
+      "rf_type": 4,
+      "rom_ver": 0,
+      "expect": "Chip Version Info: CHIP_8723B_T1_UNKNOWN_RFTYPE(4)_RomVer(0)"
+    }
+  ]
+}
