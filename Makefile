@@ -2964,6 +2964,7 @@ $(MODULE_NAME)-y += rust/rtw_cmd_thread_kern.o
 $(MODULE_NAME)-y += rust/rtw_iol_rest.o
 $(MODULE_NAME)-y += rust/rtw_sreset.o
 $(MODULE_NAME)-y += rust/rtw_debug.o
+$(MODULE_NAME)-y += rust/rtw_debug_sec_cam.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
@@ -4218,6 +4219,26 @@ rust-objects-rtw-debug-c:
 rust-check-symbols-rtw-debug: rust-objects-rtw-debug-c rust-objects-rtw-debug
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_version_log_c_ref.o NEW=rust/rtw_debug.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug.allow ALLOW_VACUOUS=1
+
+rust-objects-rtw-debug-sec-cam:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-sec-cam"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug_sec_cam.o
+rust-objects-rtw-debug-sec-cam-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_sec_cam_ent_c_ref_leaf.o \
+		tests/host/debug/debug_sec_cam_ent_c_oracle.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_sec_cam_ent_c_ref_shim.o \
+		tests/host/debug/host_rtw_debug_sec_cam_security_shim.c
+	ld -r -o tests/host/debug/debug_sec_cam_c_ref.o \
+		tests/host/debug/debug_sec_cam_ent_c_ref_leaf.o \
+		tests/host/debug/debug_sec_cam_ent_c_ref_shim.o
+rust-check-symbols-rtw-debug-sec-cam: rust-objects-rtw-debug-sec-cam-c rust-objects-rtw-debug-sec-cam
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_sec_cam_c_ref.o NEW=rust/rtw_debug_sec_cam.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_sec_cam.allow ALLOW_VACUOUS=1
 
 # W3-94 follow-up PR4: host C oracle (ps deny shim) vs rust/rtw_pwrctrl.o.
 rust-objects-rtw-pwrctrl:

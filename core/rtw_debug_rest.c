@@ -774,7 +774,8 @@ void dump_adapters_status(void *sel, struct dvobj_priv *dvobj)
 #endif	/*	CONFIG_RTW_DEBUG || CONFIG_PROC_DEBUG	*/
 }
 
-#if defined(CONFIG_RTW_DEBUG) || defined(CONFIG_PROC_DEBUG)
+#if (defined(CONFIG_RTW_DEBUG) || defined(CONFIG_PROC_DEBUG)) && \
+	(!defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG))
 #define SEC_CAM_ENT_ID_TITLE_FMT "%-2s"
 #define SEC_CAM_ENT_ID_TITLE_ARG "id"
 #define SEC_CAM_ENT_ID_VALUE_FMT "%2u"
@@ -812,8 +813,9 @@ void dump_sec_cam_ent_title(void *sel, u8 has_id)
 	} else
 		RTW_PRINT_SEL(sel, SEC_CAM_ENT_TITLE_FMT"\n", SEC_CAM_ENT_TITLE_ARG);
 }
-#endif
+#endif /* CONFIG_RTW_DEBUG || CONFIG_PROC_DEBUG — ent/title C */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 void dump_sec_cam(void *sel, _adapter *adapter)
 {
 #if defined(CONFIG_RTW_DEBUG) || defined(CONFIG_PROC_DEBUG)
@@ -846,6 +848,7 @@ void dump_sec_cam_cache(void *sel, _adapter *adapter)
 	}
 #endif
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG */
 
 #if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 static u8 fwdl_test_chksum_fail = 0;

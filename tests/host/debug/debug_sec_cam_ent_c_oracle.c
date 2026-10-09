@@ -77,6 +77,10 @@ int dump_sec_cam_ent_format(struct sec_cam_ent *ent, int id, char *buf, size_t b
 		free(out);
 		return -1;
 	}
+	if (len == 0 || out[len - 1] != '\n') {
+		free(out);
+		return -1;
+	}
 	out[len - 1] = '\0';
 	ret = snprintf(buf, buflen, "%s", out);
 	free(out);
