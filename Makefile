@@ -4151,9 +4151,14 @@ rust-objects-hal-com-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-I$(shell pwd)/tests/host/include -I$(shell pwd)/include \
 		-o tests/host/hal/hal_hw_rate_c_ref.o tests/host/hal/hal_hw_rate_c_oracle.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/include \
+		-o tests/host/hal/hal_rsvd_page_c_ref.o tests/host/hal/hal_rsvd_page_c_oracle.c
+	ld -r -o tests/host/hal/hal_com_c_ref.o \
+		tests/host/hal/hal_hw_rate_c_ref.o tests/host/hal/hal_rsvd_page_c_ref.o
 
 rust-check-symbols-hal-com: rust-objects-hal-com-c rust-objects-hal-com
-	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_hw_rate_c_ref.o NEW=rust/hal_com.o \
+	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_com_c_ref.o NEW=rust/hal_com.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_com.allow ALLOW_VACUOUS=1
 
 # W3-130: host C oracle (debug version/log leaf) vs rust/rtw_debug.o.
