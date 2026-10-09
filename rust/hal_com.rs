@@ -297,6 +297,7 @@ extern "C" {
     fn _rtw_zmalloc(sz: u32) -> *mut core::ffi::c_void;
     fn _rtw_mfree(p: *mut core::ffi::c_void, sz: u32);
     fn _rtw_memcmp(a: *const core::ffi::c_void, b: *const core::ffi::c_void, sz: u32) -> i32;
+    fn rtw_rust_hal_com_warn_on(condition: i32);
 }
 
 #[cfg(any(host_hal_com_rsvd_page_test, not(host_hal_com_hw_rate_test)))]
@@ -310,6 +311,10 @@ fn rsvd_warn_on(cond: bool) {
     #[cfg(host_hal_com_rsvd_page_test)]
     unsafe {
         rtw_warn_on(1);
+    }
+    #[cfg(not(host_hal_com_rsvd_page_test))]
+    unsafe {
+        rtw_rust_hal_com_warn_on(1);
     }
 }
 

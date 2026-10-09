@@ -16447,4 +16447,9 @@ void rtw_rust_hal_com_warn_invalid_hw_rate(u8 hw_rate)
 {
 	RTW_WARN("Invalid hw_rate 0x%x in %s\n", hw_rate, "hw_rate_to_m_rate");
 }
+
+void rtw_rust_hal_com_warn_on(int condition)
+{
+	rtw_warn_on(condition);
+}
 #endif
