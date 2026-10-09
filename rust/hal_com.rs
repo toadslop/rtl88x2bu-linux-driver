@@ -317,7 +317,11 @@ fn rsvd_warn_on(cond: bool) {
 fn rsvd_heap_alloc(sz: u32, zero: bool) -> *mut U8 {
     unsafe {
         #[cfg(host_hal_com_rsvd_page_test)]
-        let p = if zero { rtw_zmalloc(sz) } else { rtw_malloc(sz) };
+        let p = if zero {
+            rtw_zmalloc(sz)
+        } else {
+            rtw_malloc(sz)
+        };
         #[cfg(not(host_hal_com_rsvd_page_test))]
         let p = if zero {
             _rtw_zmalloc(sz)
