@@ -2757,10 +2757,28 @@ rustflags-y += --cfg config_p2p_ps_noa_use_macid_sleep
 ifneq ($(filter -DCONFIG_CONCURRENT_MODE,$(ccflags-y)),)
 rustflags-y += --cfg config_concurrent_mode
 endif
+# Match drv_conf.h: CONFIG_MI_WITH_MBSSID_CAM when IFACE_NUMBER > 2 and not GEN3.
+_config_iface_gt2 := $(filter -DCONFIG_IFACE_NUMBER=3 -DCONFIG_IFACE_NUMBER=4 -DCONFIG_IFACE_NUMBER=5 -DCONFIG_IFACE_NUMBER=6 -DCONFIG_IFACE_NUMBER=7 -DCONFIG_IFACE_NUMBER=8,$(ccflags-y) $(USER_EXTRA_CFLAGS))
+_rust_cfg_mi_with_mbssid_cam :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_MI_WITH_MBSSID_CAM' $(src)/include/autoconf.h 2>/dev/null && echo y),)
-rustflags-y += --cfg config_mi_with_mbssid_cam
+_rust_cfg_mi_with_mbssid_cam := y
 endif
-ifneq ($(filter -DCONFIG_MI_WITH_MBSSID_CAM,$(ccflags-y)),)
+ifneq ($(filter -DCONFIG_MI_WITH_MBSSID_CAM,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
+_rust_cfg_mi_with_mbssid_cam := y
+endif
+ifneq ($(_config_iface_gt2),)
+_rust_cfg_mi_with_mbssid_cam_from_iface := y
+ifeq ($(CONFIG_RTL8814B), y)
+_rust_cfg_mi_with_mbssid_cam_from_iface :=
+endif
+ifneq ($(filter -DCONFIG_HWMPCAP_GEN3 -DCONFIG_RTL8814B,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
+_rust_cfg_mi_with_mbssid_cam_from_iface :=
+endif
+ifneq ($(_rust_cfg_mi_with_mbssid_cam_from_iface),)
+_rust_cfg_mi_with_mbssid_cam := y
+endif
+endif
+ifneq ($(_rust_cfg_mi_with_mbssid_cam),)
 rustflags-y += --cfg config_mi_with_mbssid_cam
 endif
 rustflags-y += --cfg rust_mlme_ht_restructure
@@ -2871,7 +2889,6 @@ rustflags-y += --cfg rtw_80211k
 endif
 # Match C #ifdef CONFIG_FW_HANDLE_TXBCN + CONFIG_SUPPORT_MULTI_BCN (drv_conf.h:
 # IFACE_NUMBER > 2 under CONFIG_AP_MODE, plus CONFIG_HWMPCAP_GEN2 for 8822B).
-_config_iface_gt2 := $(filter -DCONFIG_IFACE_NUMBER=3 -DCONFIG_IFACE_NUMBER=4 -DCONFIG_IFACE_NUMBER=5 -DCONFIG_IFACE_NUMBER=6 -DCONFIG_IFACE_NUMBER=7 -DCONFIG_IFACE_NUMBER=8,$(ccflags-y) $(USER_EXTRA_CFLAGS))
 ifneq ($(_config_iface_gt2),)
 CONFIG_SUPPORT_MULTI_BCN := y
 endif
