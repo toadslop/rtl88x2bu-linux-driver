@@ -2925,6 +2925,10 @@ ssize_t proc_set_rx_cnt_dump(struct file *file, const char __user *buffer, size_
 #endif
 
 #if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
+static u8 proc_fwdl_test_chksum_fail;
+static u8 proc_fwdl_test_wintint_rdy_fail;
+static u8 proc_del_rx_ampdu_test_no_tx_fail;
+static u32 proc_wait_hiq_empty_ms;
 static u32 proc_sta_linking_test_wait_ms;
 static u8 proc_sta_linking_test_force_fail;
 #ifdef CONFIG_AP_MODE
@@ -2947,13 +2951,21 @@ ssize_t proc_set_fwdl_test_case(struct file *file, const char __user *buffer, si
 
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
 		u8 chksum = 0, wintint = 0;
+		int num = sscanf(tmp, "%hhu %hhu", &chksum, &wintint);
 
-		sscanf(tmp, "%hhu %hhu", &chksum, &wintint);
 #if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
-		rtw_rust_debug_set_fwdl_test_case(chksum, wintint);
+		if (num >= 1)
+			proc_fwdl_test_chksum_fail = chksum;
+		if (num >= 2)
+			proc_fwdl_test_wintint_rdy_fail = wintint;
+		if (num >= 1)
+			rtw_rust_debug_set_fwdl_test_case(proc_fwdl_test_chksum_fail,
+				proc_fwdl_test_wintint_rdy_fail);
 #else
-		fwdl_test_chksum_fail = chksum;
-		fwdl_test_wintint_rdy_fail = wintint;
+		if (num >= 1)
+			fwdl_test_chksum_fail = chksum;
+		if (num >= 2)
+			fwdl_test_wintint_rdy_fail = wintint;
 #endif
 	}
 
@@ -2974,12 +2986,17 @@ ssize_t proc_set_del_rx_ampdu_test_case(struct file *file, const char __user *bu
 
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
 		u8 no_tx_fail = 0;
+		int num = sscanf(tmp, "%hhu", &no_tx_fail);
 
-		sscanf(tmp, "%hhu", &no_tx_fail);
 #if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
-		rtw_rust_debug_set_del_rx_ampdu_test_no_tx_fail(no_tx_fail);
+		if (num >= 1) {
+			proc_del_rx_ampdu_test_no_tx_fail = no_tx_fail;
+			rtw_rust_debug_set_del_rx_ampdu_test_no_tx_fail(
+				proc_del_rx_ampdu_test_no_tx_fail);
+		}
 #else
-		del_rx_ampdu_test_no_tx_fail = no_tx_fail;
+		if (num >= 1)
+			del_rx_ampdu_test_no_tx_fail = no_tx_fail;
 #endif
 	}
 
@@ -3000,12 +3017,16 @@ ssize_t proc_set_wait_hiq_empty(struct file *file, const char __user *buffer, si
 
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
 		u32 wait_ms = 0;
+		int num = sscanf(tmp, "%u", &wait_ms);
 
-		sscanf(tmp, "%u", &wait_ms);
 #if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
-		rtw_rust_debug_set_wait_hiq_empty_ms(wait_ms);
+		if (num >= 1) {
+			proc_wait_hiq_empty_ms = wait_ms;
+			rtw_rust_debug_set_wait_hiq_empty_ms(proc_wait_hiq_empty_ms);
+		}
 #else
-		g_wait_hiq_empty_ms = wait_ms;
+		if (num >= 1)
+			g_wait_hiq_empty_ms = wait_ms;
 #endif
 	}
 
