@@ -57,7 +57,15 @@ fn push_byte(out: &mut [u8], pos: &mut usize, b: U8) {
 
 fn push_hex_byte(out: &mut [u8], pos: &mut usize, b: U8) {
     for nib in [b >> 4, b & 0xf] {
-        push_byte(out, pos, if nib < 10 { b'0' + nib } else { b'a' + (nib - 10) });
+        push_byte(
+            out,
+            pos,
+            if nib < 10 {
+                b'0' + nib
+            } else {
+                b'a' + (nib - 10)
+            },
+        );
     }
 }
 
@@ -66,7 +74,15 @@ fn push_u16_hex(out: &mut [u8], pos: &mut usize, v: U16) {
     push_byte(out, pos, b'x');
     for shift in [12i32, 8, 4, 0] {
         let nib = ((v >> shift) & 0xf) as U8;
-        push_byte(out, pos, if nib < 10 { b'0' + nib } else { b'a' + (nib - 10) });
+        push_byte(
+            out,
+            pos,
+            if nib < 10 {
+                b'0' + nib
+            } else {
+                b'a' + (nib - 10)
+            },
+        );
     }
 }
 
