@@ -33,6 +33,13 @@ extern "C" {
 #[cfg(not(host_rtw_debug_sec_cam_test))]
 extern "C" {
     fn rtw_rust_debug_print_sel(sel: *mut c_void, line: *const c_char);
+}
+
+#[cfg(all(
+    not(host_rtw_debug_sec_cam_test),
+    any(config_rtw_debug, config_proc_debug)
+))]
+extern "C" {
     fn rtw_rust_debug_sec_cam_num(adapter: *mut c_void) -> U8;
     fn rtw_rust_debug_sec_cam_read(
         adapter: *mut c_void,
@@ -202,7 +209,10 @@ pub extern "C" fn dump_sec_cam_ent(sel: *mut c_void, ent: *mut SecCamEnt, id: c_
     emit_line(sel, &with_nl[..n + 1]);
 }
 
-#[cfg(not(host_rtw_debug_sec_cam_test))]
+#[cfg(all(
+    not(host_rtw_debug_sec_cam_test),
+    any(config_rtw_debug, config_proc_debug)
+))]
 #[no_mangle]
 pub extern "C" fn dump_sec_cam(sel: *mut c_void, adapter: *mut c_void) {
     if adapter.is_null() {
@@ -230,7 +240,10 @@ pub extern "C" fn dump_sec_cam(sel: *mut c_void, adapter: *mut c_void) {
     }
 }
 
-#[cfg(not(host_rtw_debug_sec_cam_test))]
+#[cfg(all(
+    not(host_rtw_debug_sec_cam_test),
+    any(config_rtw_debug, config_proc_debug)
+))]
 #[no_mangle]
 pub extern "C" fn dump_sec_cam_cache(sel: *mut c_void, adapter: *mut c_void) {
     if adapter.is_null() {
@@ -248,6 +261,28 @@ pub extern "C" fn dump_sec_cam_cache(sel: *mut c_void, adapter: *mut c_void) {
             continue;
         }
         dump_sec_cam_ent(sel, ent_ptr as *mut SecCamEnt, i as c_int);
+    }
+}
+
+#[cfg(all(
+    not(host_rtw_debug_sec_cam_test),
+    not(any(config_rtw_debug, config_proc_debug))
+))]
+#[no_mangle]
+pub extern "C" fn dump_sec_cam(_sel: *mut c_void, adapter: *mut c_void) {
+    if adapter.is_null() {
+        return;
+    }
+}
+
+#[cfg(all(
+    not(host_rtw_debug_sec_cam_test),
+    not(any(config_rtw_debug, config_proc_debug))
+))]
+#[no_mangle]
+pub extern "C" fn dump_sec_cam_cache(_sel: *mut c_void, adapter: *mut c_void) {
+    if adapter.is_null() {
+        return;
     }
 }
 
