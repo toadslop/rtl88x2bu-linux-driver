@@ -210,6 +210,19 @@
       "expect_dup_cnt": 1
     },
     {
+      "name": "decache_dup_cnt_wraps",
+      "fn": "recv_decache",
+      "priority": 2,
+      "qos": 1,
+      "seq_num": 1,
+      "frag_num": 0,
+      "ra": "020000000000",
+      "initial_seq": 16,
+      "dup_cnt_saturated": 1,
+      "expect_ret": 0,
+      "expect_dup_cnt": 0
+    },
+    {
       "name": "decache_qos_mcast_new",
       "fn": "recv_decache",
       "priority": 4,
