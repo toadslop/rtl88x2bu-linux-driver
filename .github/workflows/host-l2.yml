@@ -325,3 +325,7 @@ jobs:
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/hal test test-rsvd test-rsvd-rust test-chip test-chip-rust
 
+      - name: Host rtw_debug sec_cam dump parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/debug test
+
