@@ -66,6 +66,34 @@
       "expect_ht_info_byte": 0
     },
     {
+      "name": "ht_restore_40mhz_sca",
+      "fn": "update_bcn_htinfo_ie",
+      "ht_option": 1,
+      "HT_info_enable": 1,
+      "sw_to_20mhz": 1,
+      "cur_channel": 6,
+      "cur_bwmode": 1,
+      "cur_ch_offset": 1,
+      "ht_op_mode": 0,
+      "ies_hex": "000102030405060708090a0b3d160600000000000000000000000000000000000000000000000000000000",
+      "expect_ht_op_mode": 0,
+      "expect_ht_info_byte": 5
+    },
+    {
+      "name": "ht_restore_40mhz_scb",
+      "fn": "update_bcn_htinfo_ie",
+      "ht_option": 1,
+      "HT_info_enable": 1,
+      "sw_to_20mhz": 1,
+      "cur_channel": 6,
+      "cur_bwmode": 1,
+      "cur_ch_offset": 2,
+      "ht_op_mode": 0,
+      "ies_hex": "000102030405060708090a0b3d160600000000000000000000000000000000000000000000000000000000",
+      "expect_ht_op_mode": 0,
+      "expect_ht_info_byte": 7
+    },
+    {
       "name": "wps_replace_shorter_ie",
       "fn": "update_bcn_wps_ie",
       "ies_hex": "000102030405060708090a0bdd060050f2041122ff00",

@@ -30,7 +30,7 @@ const _HT_ADD_INFO_IE_: Sint = 61;
 const MAX_IE_SZ: U32 = 768;
 const _TRUE: U8 = 1;
 const _FALSE: U8 = 0;
-const CHANNEL_WIDTH_40: U8 = 2;
+const CHANNEL_WIDTH_40: U8 = 1;
 const HAL_PRIME_CHNL_OFFSET_LOWER: U8 = 1;
 const HT_INFO_HT_PARAM_SECONDARY_CHNL_ABOVE: U8 = 1;
 const HT_INFO_HT_PARAM_SECONDARY_CHNL_BELOW: U8 = 3;
@@ -188,9 +188,9 @@ pub extern "C" fn update_bcn_htinfo_ie(padapter: Adapter) {
             }
         }
 
-        let le = rtw_rust_bcn_update_ht_op_mode(padapter).to_le();
-        *infos.add(1) = (le & 0xff) as U8;
-        *infos.add(2) = (le >> 8) as U8;
+        let le = rtw_rust_bcn_update_ht_op_mode(padapter).to_le_bytes();
+        *infos.add(1) = le[0];
+        *infos.add(2) = le[1];
     }
 }
 

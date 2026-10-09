@@ -24,7 +24,7 @@ const _HT_ADD_INFO_IE_: Sint = 61;
 const MAX_IE_SZ: U32 = 768;
 const _TRUE: U8 = 1;
 const _FALSE: U8 = 0;
-const CHANNEL_WIDTH_40: U8 = 2;
+const CHANNEL_WIDTH_40: U8 = 1;
 const HAL_PRIME_CHNL_OFFSET_LOWER: U8 = 1;
 const HT_INFO_HT_PARAM_SECONDARY_CHNL_ABOVE: U8 = 1;
 const HT_INFO_HT_PARAM_SECONDARY_CHNL_BELOW: U8 = 3;
@@ -248,9 +248,9 @@ pub extern "C" fn update_bcn_htinfo_ie(padapter: *mut c_void) {
             }
         }
 
-        let le = cpu_to_le16(pmlmepriv.ht_op_mode);
-        (*pht_info).infos[1] = (le & 0xff) as U8;
-        (*pht_info).infos[2] = (le >> 8) as U8;
+        let le = pmlmepriv.ht_op_mode.to_le_bytes();
+        (*pht_info).infos[1] = le[0];
+        (*pht_info).infos[2] = le[1];
         host_bcn_update_last_ht_info_byte = (*pht_info).infos[0];
         host_bcn_update_last_ht_op_mode =
             (*pht_info).infos[1] as U16 | ((*pht_info).infos[2] as U16) << 8;
