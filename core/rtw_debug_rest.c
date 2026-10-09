@@ -847,6 +847,7 @@ void dump_sec_cam_cache(void *sel, _adapter *adapter)
 #endif
 }
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 static u8 fwdl_test_chksum_fail = 0;
 static u8 fwdl_test_wintint_rdy_fail = 0;
 
@@ -921,7 +922,8 @@ u16 rtw_ap_linking_test_force_asoc_fail(void)
 {
 	return ap_linking_test_force_asoc_fail;
 }
-#endif
+#endif /* CONFIG_AP_MODE */
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG */
 
 #ifdef CONFIG_PROC_DEBUG
 int proc_get_defs_param(struct seq_file *m, void *v)
@@ -2922,6 +2924,15 @@ ssize_t proc_set_rx_cnt_dump(struct file *file, const char __user *buffer, size_
 }
 #endif
 
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
+static u32 proc_sta_linking_test_wait_ms;
+static u8 proc_sta_linking_test_force_fail;
+#ifdef CONFIG_AP_MODE
+static u16 proc_ap_linking_test_force_auth_fail;
+static u16 proc_ap_linking_test_force_asoc_fail;
+#endif
+#endif
+
 ssize_t proc_set_fwdl_test_case(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
 	char tmp[32];
@@ -2934,8 +2945,17 @@ ssize_t proc_set_fwdl_test_case(struct file *file, const char __user *buffer, si
 		return -EFAULT;
 	}
 
-	if (buffer && !copy_from_user(tmp, buffer, count))
-		sscanf(tmp, "%hhu %hhu", &fwdl_test_chksum_fail, &fwdl_test_wintint_rdy_fail);
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		u8 chksum = 0, wintint = 0;
+
+		sscanf(tmp, "%hhu %hhu", &chksum, &wintint);
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
+		rtw_rust_debug_set_fwdl_test_case(chksum, wintint);
+#else
+		fwdl_test_chksum_fail = chksum;
+		fwdl_test_wintint_rdy_fail = wintint;
+#endif
+	}
 
 	return count;
 }
@@ -2952,8 +2972,16 @@ ssize_t proc_set_del_rx_ampdu_test_case(struct file *file, const char __user *bu
 		return -EFAULT;
 	}
 
-	if (buffer && !copy_from_user(tmp, buffer, count))
-		sscanf(tmp, "%hhu", &del_rx_ampdu_test_no_tx_fail);
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		u8 no_tx_fail = 0;
+
+		sscanf(tmp, "%hhu", &no_tx_fail);
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
+		rtw_rust_debug_set_del_rx_ampdu_test_no_tx_fail(no_tx_fail);
+#else
+		del_rx_ampdu_test_no_tx_fail = no_tx_fail;
+#endif
+	}
 
 	return count;
 }
@@ -2970,8 +2998,16 @@ ssize_t proc_set_wait_hiq_empty(struct file *file, const char __user *buffer, si
 		return -EFAULT;
 	}
 
-	if (buffer && !copy_from_user(tmp, buffer, count))
-		sscanf(tmp, "%u", &g_wait_hiq_empty_ms);
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		u32 wait_ms = 0;
+
+		sscanf(tmp, "%u", &wait_ms);
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
+		rtw_rust_debug_set_wait_hiq_empty_ms(wait_ms);
+#else
+		g_wait_hiq_empty_ms = wait_ms;
+#endif
+	}
 
 	return count;
 }
@@ -2993,10 +3029,19 @@ ssize_t proc_set_sta_linking_test(struct file *file, const char __user *buffer, 
 		u8 force_fail = 0;
 		int num = sscanf(tmp, "%u %hhu", &wait_ms, &force_fail);
 
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
+		if (num >= 1)
+			proc_sta_linking_test_wait_ms = wait_ms;
+		if (num >= 2)
+			proc_sta_linking_test_force_fail = force_fail;
+		rtw_rust_debug_set_sta_linking_test(proc_sta_linking_test_wait_ms,
+			proc_sta_linking_test_force_fail);
+#else
 		if (num >= 1)
 			sta_linking_test_wait_ms = wait_ms;
 		if (num >= 2)
 			sta_linking_test_force_fail = force_fail;
+#endif
 	}
 
 	return count;
@@ -3020,10 +3065,19 @@ ssize_t proc_set_ap_linking_test(struct file *file, const char __user *buffer, s
 		u16 force_asoc_fail = 0;
 		int num = sscanf(tmp, "%hu %hu", &force_auth_fail, &force_asoc_fail);
 
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
+		if (num >= 1)
+			proc_ap_linking_test_force_auth_fail = force_auth_fail;
+		if (num >= 2)
+			proc_ap_linking_test_force_asoc_fail = force_asoc_fail;
+		rtw_rust_debug_set_ap_linking_test(proc_ap_linking_test_force_auth_fail,
+			proc_ap_linking_test_force_asoc_fail);
+#else
 		if (num >= 1)
 			ap_linking_test_force_auth_fail = force_auth_fail;
 		if (num >= 2)
 			ap_linking_test_force_asoc_fail = force_asoc_fail;
+#endif
 	}
 
 	return count;

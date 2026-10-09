@@ -2703,6 +2703,7 @@ ccflags-y += -DCONFIG_RUST_CMD_THREAD
 ccflags-y += -DCONFIG_RUST_CMD_THREAD_LOOP
 ccflags-y += -DCONFIG_RUST_RECV_STA
 ccflags-y += -DCONFIG_RUST_RTW_DEBUG
+rustflags-y += --cfg config_rust_rtw_debug_test_hooks
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_EVENT_THREAD_MODE' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg event_thread_mode
 endif
@@ -4203,8 +4204,14 @@ rust-objects-rtw-debug-c:
 		-I$(shell pwd)/tests/host/include \
 		-o tests/host/debug/debug_version_log_shim.o \
 		tests/host/debug/host_rtw_debug_version_log_shim.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_test_hooks_leaf.o \
+		tests/host/debug/rtw_debug_test_hooks_c_leaf.c
 	ld -r -o tests/host/debug/debug_version_log_c_ref.o \
-		tests/host/debug/debug_version_log_leaf.o tests/host/debug/debug_version_log_shim.o
+		tests/host/debug/debug_version_log_leaf.o \
+		tests/host/debug/debug_version_log_shim.o \
+		tests/host/debug/debug_test_hooks_leaf.o
 rust-check-symbols-rtw-debug: rust-objects-rtw-debug-c rust-objects-rtw-debug
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_version_log_c_ref.o NEW=rust/rtw_debug.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug.allow ALLOW_VACUOUS=1

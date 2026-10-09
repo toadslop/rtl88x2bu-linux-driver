@@ -69,6 +69,11 @@ void rtw_rust_debug_print_sel(void *sel, const char *line)
 	RTW_PRINT_SEL(sel, "%s", line);
 }
 
+void rtw_rust_debug_test_print(const char *msg)
+{
+	RTW_PRINT("%s", msg);
+}
+
 #ifdef CONFIG_RTW_DEBUG
 extern const char *rtw_log_level_str[];
 
