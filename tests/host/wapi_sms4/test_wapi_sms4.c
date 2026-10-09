@@ -105,6 +105,10 @@ int main(void)
 		fprintf(stderr, "%d vector(s) failed\n", failed);
 		return 1;
 	}
+#ifdef RUST_WAPI_SMS4_ORACLE
+	printf("all wapi_sms4 vectors passed (oracle: rust/rtw_wapi_sms4.rs)\n");
+#else
 	printf("all wapi_sms4 vectors passed (oracle: core/rtw_wapi_sms4.c)\n");
+#endif
 	return 0;
 }

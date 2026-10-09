@@ -1,1 +1,3 @@
 test_wapi_sms4
+test_wapi_sms4_rust
+librust_wapi_sms4.a

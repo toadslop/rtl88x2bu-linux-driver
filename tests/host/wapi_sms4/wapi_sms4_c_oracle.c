@@ -49,7 +49,7 @@ static const u32 CK[32] = {
 #define L1(_B) ((_B) ^ Rotl(_B, 2) ^ Rotl(_B, 10) ^ Rotl(_B, 18) ^ Rotl(_B, 24))
 #define L2(_B) ((_B) ^ Rotl(_B, 13) ^ Rotl(_B, 23))
 
-static void xor_block(void *dst, const void *src1, const void *src2)
+static void xor_block_inner(void *dst, const void *src1, const void *src2)
 {
 	((u32 *)dst)[0] = ((const u32 *)src1)[0] ^ ((const u32 *)src2)[0];
 	((u32 *)dst)[1] = ((const u32 *)src1)[1] ^ ((const u32 *)src2)[1];
@@ -57,12 +57,14 @@ static void xor_block(void *dst, const void *src1, const void *src2)
 	((u32 *)dst)[3] = ((const u32 *)src1)[3] ^ ((const u32 *)src2)[3];
 }
 
+#ifndef WAPI_SMS4_L1_REF
 void host_sms4_xor_block(void *dst, const void *src1, const void *src2)
 {
-	xor_block(dst, src1, src2);
+	xor_block_inner(dst, src1, src2);
 }
+#endif
 
-void host_sms4_crypt(const u8 *input, u8 *output, u32 *rk)
+static void sms4_crypt_impl(const u8 *input, u8 *output, u32 *rk)
 {
 	u32 r, mid, x0, x1, x2, x3, *p;
 
@@ -112,7 +114,7 @@ void host_sms4_crypt(const u8 *input, u8 *output, u32 *rk)
 	p[3] = x0;
 }
 
-void host_sms4_key_ext(const u8 *key, u32 *rk, u32 crypt_flag)
+static void sms4_key_ext_impl(const u8 *key, u32 *rk, u32 crypt_flag)
 {
 	u32 r, mid, x0, x1, x2, x3, *p;
 
@@ -154,4 +156,32 @@ void host_sms4_key_ext(const u8 *key, u32 *rk, u32 crypt_flag)
 		for (r = 0; r < 16; r++)
 			mid = rk[r], rk[r] = rk[31 - r], rk[31 - r] = mid;
 	}
+}
+
+#ifndef WAPI_SMS4_L1_REF
+void host_sms4_crypt(const u8 *input, u8 *output, u32 *rk)
+{
+	sms4_crypt_impl(input, output, rk);
+}
+
+void host_sms4_key_ext(const u8 *key, u32 *rk, u32 crypt_flag)
+{
+	sms4_key_ext_impl(key, rk, crypt_flag);
+}
+#endif
+
+/* Kernel / L1 ABI names. */
+void SMS4Crypt(u8 *input, u8 *output, u32 *rk)
+{
+	sms4_crypt_impl(input, output, rk);
+}
+
+void SMS4KeyExt(u8 *key, u32 *rk, u32 crypt_flag)
+{
+	sms4_key_ext_impl(key, rk, crypt_flag);
+}
+
+void xor_block(void *dst, void *src1, void *src2)
+{
+	xor_block_inner(dst, src1, src2);
 }

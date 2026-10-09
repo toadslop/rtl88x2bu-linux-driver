@@ -2591,7 +2591,10 @@ endif
 $(MODULE_NAME)-y += $(rtk_core)
 
 $(MODULE_NAME)-$(CONFIG_WAPI_SUPPORT) += core/rtw_wapi.o	\
-					core/rtw_wapi_sms4.o
+					core/rtw_wapi_sms4_rest.o
+ifeq ($(CONFIG_RUST),)
+$(MODULE_NAME)-$(CONFIG_WAPI_SUPPORT) += core/rtw_wapi_sms4.o
+endif
 
 $(MODULE_NAME)-y += $(_OS_INTFS_FILES)
 $(MODULE_NAME)-y += $(_HAL_INTFS_FILES)
@@ -2950,6 +2953,7 @@ ifeq ($(CONFIG_WAPI_SUPPORT), y)
 ccflags-y += -DCONFIG_RUST_WAPI_PN_CAM
 $(MODULE_NAME)-$(CONFIG_WAPI_SUPPORT) += core/rtw_wapi_pn_cam_rust_acc.o \
 					rust/rtw_wapi.o
+$(MODULE_NAME)-$(CONFIG_WAPI_SUPPORT) += rust/rtw_wapi_sms4.o
 endif
 ccflags-y += -DCONFIG_RUST_MI_NETIF_LEAF
 rustflags-y += --cfg rust_mi_netif_leaf
@@ -3344,6 +3348,21 @@ rust-objects-rtw-wlan-util-c:
 rust-check-symbols-rtw-wlan-util: rust-objects-rtw-wlan-util-c rust-objects-rtw-wlan-util
 	$(MAKE) rust-check-symbols OLD=tests/host/wlan_util/wlan_util_rate_c_ref.o NEW=rust/rtw_wlan_util.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_wlan_util_rate.allow
+
+# W3-135: SMS4 block core in rust/rtw_wapi_sms4.rs vs core/rtw_wapi_sms4.c.
+rust-objects-rtw-wapi-sms4:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-rtw-wapi-sms4"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_wapi_sms4.o
+
+rust-objects-rtw-wapi-sms4-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -DWAPI_SMS4_L1_REF \
+		-o tests/host/wapi_sms4/wapi_sms4_core_c_ref.o tests/host/wapi_sms4/wapi_sms4_c_oracle.c
+
+rust-check-symbols-rtw-wapi-sms4: rust-objects-rtw-wapi-sms4-c rust-objects-rtw-wapi-sms4
+	$(MAKE) rust-check-symbols OLD=tests/host/wapi_sms4/wapi_sms4_core_c_ref.o NEW=rust/rtw_wapi_sms4.o
 
 # W3-33/W3-34: compare host C oracle (rtw_rm_util_rest.c) against host Rust oracle.
 rust-objects-rtw-rm-util-c:
