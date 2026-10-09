@@ -781,11 +781,7 @@ mod chip_info {
 extern "C" {
     fn rtw_mi_hal_dump_macaddr(sel: *mut c_void, adapter: *mut c_void);
     #[cfg(config_mi_with_mbssid_cam)]
-    fn rtw_mbid_cam_dump(
-        sel: *mut c_void,
-        fun_name: *const c_char,
-        adapter: *mut c_void,
-    ) -> i32;
+    fn rtw_mbid_cam_dump(sel: *mut c_void, fun_name: *const c_char, adapter: *mut c_void) -> i32;
 }
 
 #[cfg(all(
