@@ -323,5 +323,5 @@ jobs:
 
       - name: Host hal_com parity (L2)
         if: steps.filter.outputs.l2 == 'true'
-        run: make -C tests/host/hal test test-rsvd test-rsvd-rust test-chip
+        run: make -C tests/host/hal test test-rsvd test-rsvd-rust test-chip test-chip-rust
 

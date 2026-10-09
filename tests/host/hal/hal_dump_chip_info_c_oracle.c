@@ -137,3 +137,12 @@ int dump_chip_info_format(HAL_VERSION ChipVersion, char *buf, size_t buflen)
 
 	return cnt;
 }
+
+void dump_chip_info(HAL_VERSION ChipVersion)
+{
+	char buf[128];
+
+	if (dump_chip_info_format(ChipVersion, buf, sizeof(buf)) > 0) {
+		/* Host L1 ref — no RTW_INFO in oracle builds. */
+	}
+}
