@@ -499,29 +499,31 @@ fn restructure_ht_ie_impl(
             ht_capie.cap_info |= IEEE80211_HT_CAP_MAX_AMSDU;
         }
 
-        let mut max_rx_ampdu_factor: U8 = 0;
+        // The HAL stores HT_CAP_AMPDU_FACTOR / HT_CAP_AMPDU_DENSITY (C enums)
+        // as 4 bytes, so the out-params must be U32.
+        let mut max_rx_ampdu_factor: U32 = 0;
         if access::driver_rx_ampdu_factor(padapter) != 0xff {
-            max_rx_ampdu_factor = access::driver_rx_ampdu_factor(padapter);
+            max_rx_ampdu_factor = U32::from(access::driver_rx_ampdu_factor(padapter));
         } else {
             access::hal_get_def_var(
                 padapter,
                 HW_VAR_MAX_RX_AMPDU_FACTOR,
-                &mut max_rx_ampdu_factor as *mut U8 as *mut c_void,
+                &mut max_rx_ampdu_factor as *mut U32 as *mut c_void,
             );
         }
-        ht_capie.ampdu_params_info = max_rx_ampdu_factor & IEEE80211_HT_CAP_AMPDU_FACTOR;
+        ht_capie.ampdu_params_info = max_rx_ampdu_factor as U8 & IEEE80211_HT_CAP_AMPDU_FACTOR;
 
         if access::driver_rx_ampdu_spacing(padapter) != 0xff {
             ht_capie.ampdu_params_info |= (access::driver_rx_ampdu_spacing(padapter) & 0x07) << 2;
         } else if access::dot11_privacy(padapter) == _AES_ {
-            let mut best_ampdu_density: U8 = 0;
+            let mut best_ampdu_density: U32 = 0;
             access::hal_get_def_var(
                 padapter,
                 HW_VAR_BEST_AMPDU_DENSITY,
-                &mut best_ampdu_density as *mut U8 as *mut c_void,
+                &mut best_ampdu_density as *mut U32 as *mut c_void,
             );
             ht_capie.ampdu_params_info |=
-                IEEE80211_HT_CAP_AMPDU_DENSITY & (best_ampdu_density << 2);
+                IEEE80211_HT_CAP_AMPDU_DENSITY & ((best_ampdu_density as U8) << 2);
         }
 
         #[cfg(config_beamforming)]

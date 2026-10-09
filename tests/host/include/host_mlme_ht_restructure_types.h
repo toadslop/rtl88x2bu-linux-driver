@@ -130,8 +130,9 @@ typedef enum {
 	HAL_DEF_BEAMFORMEE_CAP = 7,
 } hal_def_var_e;
 
-typedef u8 HT_CAP_AMPDU_FACTOR;
-typedef u8 HT_CAP_AMPDU_DENSITY;
+/* C enums in include/wifi.h: the HAL stores them as 4 bytes. */
+typedef u32 HT_CAP_AMPDU_FACTOR;
+typedef u32 HT_CAP_AMPDU_DENSITY;
 
 struct rtw_ieee80211_ht_cap {
 	u16 cap_info;
