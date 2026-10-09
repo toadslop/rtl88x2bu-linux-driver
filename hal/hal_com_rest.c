@@ -708,19 +708,7 @@ void rtw_hal_reqtxrpt(_adapter *padapter, u8 macid)
 		padapter->hal_func.reqtxrpt(padapter, macid);
 }
 
-void rtw_hal_dump_macaddr(void *sel, _adapter *adapter)
-{
-	int i;
-	_adapter *iface;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	u8 mac_addr[ETH_ALEN];
-
-#ifdef CONFIG_MI_WITH_MBSSID_CAM
-	rtw_mbid_cam_dump(sel, __func__, adapter);
-#else
-	rtw_mi_hal_dump_macaddr(sel, adapter);
-#endif
-}
+/* rtw_hal_dump_macaddr — ported to rust/hal_com.rs (W4-04) */
 
 #ifdef RTW_HALMAC
 void rtw_hal_hw_port_enable(_adapter *adapter)
