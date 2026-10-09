@@ -321,3 +321,7 @@ jobs:
         if: steps.filter.outputs.l2 == 'true'
         run: make -C tests/host/beamforming test test-rust
 
+      - name: Host hal_com parity (L2)
+        if: steps.filter.outputs.l2 == 'true'
+        run: make -C tests/host/hal test test-rsvd
+
