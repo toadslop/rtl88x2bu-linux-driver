@@ -207,10 +207,11 @@ pub extern "C" fn arcfour_encrypt(
     }
     unsafe {
         let ctx = &mut *parc4ctx;
-        let dest = core::slice::from_raw_parts_mut(dest, len as usize);
-        let src = core::slice::from_raw_parts(src, len as usize);
+        // Callers encrypt in place (`dest == src`), so no slices: a `&mut`
+        // and `&` over the same bytes would be UB.
         for i in 0..len as usize {
-            dest[i] = src[i] ^ arcfour_byte(ctx) as U8;
+            dest.add(i)
+                .write(src.add(i).read() ^ arcfour_byte(ctx) as U8);
         }
     }
 }
