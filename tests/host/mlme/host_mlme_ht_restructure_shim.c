@@ -28,10 +28,10 @@ void rtw_hal_get_def_var(_adapter *padapter, hal_def_var_e def_var, void *val)
 		*(u8 *)val = padapter->host_fixture.beamformee_cap;
 		break;
 	case HW_VAR_MAX_RX_AMPDU_FACTOR:
-		*(u8 *)val = padapter->host_fixture.max_rx_ampdu_factor;
+		*(HT_CAP_AMPDU_FACTOR *)val = padapter->host_fixture.max_rx_ampdu_factor;
 		break;
 	case HW_VAR_BEST_AMPDU_DENSITY:
-		*(u8 *)val = padapter->host_fixture.best_ampdu_density;
+		*(u32 *)val = padapter->host_fixture.best_ampdu_density;
 		break;
 	default:
 		break;
