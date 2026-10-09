@@ -12,7 +12,11 @@
     unused_unsafe
 )]
 
-#[cfg(all(not(host_hal_com_hw_rate_test), not(host_hal_com_rsvd_page_test), not(host_hal_com_chip_info_test)))]
+#[cfg(all(
+    not(host_hal_com_hw_rate_test),
+    not(host_hal_com_rsvd_page_test),
+    not(host_hal_com_chip_info_test)
+))]
 use core::ffi::{c_char, c_void};
 
 type U8 = u8;
@@ -41,7 +45,11 @@ struct RateSectionEnt {
     rates: *mut U8,
 }
 
-#[cfg(all(not(host_hal_com_hw_rate_test), not(host_hal_com_rsvd_page_test), not(host_hal_com_chip_info_test)))]
+#[cfg(all(
+    not(host_hal_com_hw_rate_test),
+    not(host_hal_com_rsvd_page_test),
+    not(host_hal_com_chip_info_test)
+))]
 extern "C" {
     fn MRateToHwRate(rate: U8) -> U8;
     fn MGN_RATE_STR(rate: U8) -> *const c_char;
@@ -51,14 +59,22 @@ extern "C" {
     fn rtw_rust_hal_com_warn_invalid_hw_rate(hw_rate: U8);
 }
 
-#[cfg(all(not(host_hal_com_hw_rate_test), not(host_hal_com_rsvd_page_test), not(host_hal_com_chip_info_test)))]
+#[cfg(all(
+    not(host_hal_com_hw_rate_test),
+    not(host_hal_com_rsvd_page_test),
+    not(host_hal_com_chip_info_test)
+))]
 fn warn_invalid_hw_rate(hw_rate: U8) {
     unsafe {
         rtw_rust_hal_com_warn_invalid_hw_rate(hw_rate);
     }
 }
 
-#[cfg(any(host_hal_com_hw_rate_test, host_hal_com_rsvd_page_test, host_hal_com_chip_info_test))]
+#[cfg(any(
+    host_hal_com_hw_rate_test,
+    host_hal_com_rsvd_page_test,
+    host_hal_com_chip_info_test
+))]
 fn warn_invalid_hw_rate(_hw_rate: U8) {}
 
 #[cfg(not(any(host_hal_com_rsvd_page_test, host_hal_com_chip_info_test)))]
@@ -265,7 +281,10 @@ pub extern "C" fn dump_hw_rate_map_test(sel: *mut c_void) {
     }
 }
 
-#[cfg(any(host_hal_com_rsvd_page_test, all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))))]
+#[cfg(any(
+    host_hal_com_rsvd_page_test,
+    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+))]
 #[repr(C)]
 pub struct RsvdPageCache {
     pub name: *mut i8,
@@ -275,7 +294,10 @@ pub struct RsvdPageCache {
     pub size: u32,
 }
 
-#[cfg(any(host_hal_com_rsvd_page_test, all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))))]
+#[cfg(any(
+    host_hal_com_rsvd_page_test,
+    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+))]
 fn page_num(len: u32, page_size: u32) -> U8 {
     let whole = len / page_size;
     let rem = len & (page_size - 1);
@@ -291,7 +313,11 @@ extern "C" {
     fn rtw_warn_on(cond: i32);
 }
 
-#[cfg(all(not(host_hal_com_rsvd_page_test), not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test)))]
+#[cfg(all(
+    not(host_hal_com_rsvd_page_test),
+    not(host_hal_com_hw_rate_test),
+    not(host_hal_com_chip_info_test)
+))]
 extern "C" {
     fn _rtw_malloc(sz: u32) -> *mut core::ffi::c_void;
     fn _rtw_zmalloc(sz: u32) -> *mut core::ffi::c_void;
@@ -300,10 +326,16 @@ extern "C" {
     fn rtw_rust_hal_com_warn_on(condition: i32);
 }
 
-#[cfg(any(host_hal_com_rsvd_page_test, all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))))]
+#[cfg(any(
+    host_hal_com_rsvd_page_test,
+    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+))]
 const RSVD_TRUE: i32 = 1;
 
-#[cfg(any(host_hal_com_rsvd_page_test, all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))))]
+#[cfg(any(
+    host_hal_com_rsvd_page_test,
+    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+))]
 fn rsvd_warn_on(cond: bool) {
     if !cond {
         return;
@@ -318,7 +350,10 @@ fn rsvd_warn_on(cond: bool) {
     }
 }
 
-#[cfg(any(host_hal_com_rsvd_page_test, all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))))]
+#[cfg(any(
+    host_hal_com_rsvd_page_test,
+    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+))]
 fn rsvd_heap_alloc(sz: u32, zero: bool) -> *mut U8 {
     unsafe {
         #[cfg(host_hal_com_rsvd_page_test)]
@@ -337,7 +372,10 @@ fn rsvd_heap_alloc(sz: u32, zero: bool) -> *mut U8 {
     }
 }
 
-#[cfg(any(host_hal_com_rsvd_page_test, all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))))]
+#[cfg(any(
+    host_hal_com_rsvd_page_test,
+    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+))]
 fn rsvd_mfree(ptr: *mut U8, sz: u32) {
     if ptr.is_null() {
         return;
@@ -354,7 +392,10 @@ fn rsvd_mfree(ptr: *mut U8, sz: u32) {
     }
 }
 
-#[cfg(any(host_hal_com_rsvd_page_test, all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))))]
+#[cfg(any(
+    host_hal_com_rsvd_page_test,
+    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+))]
 fn rsvd_memcmp_eq(a: *const U8, b: *const U8, len: u32) -> bool {
     if len == 0 {
         return true;
@@ -375,7 +416,10 @@ fn rsvd_memcmp_eq(a: *const U8, b: *const U8, len: u32) -> bool {
     }
 }
 
-#[cfg(any(host_hal_com_rsvd_page_test, all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))))]
+#[cfg(any(
+    host_hal_com_rsvd_page_test,
+    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+))]
 #[no_mangle]
 pub extern "C" fn rsvd_page_cache_update_all(
     cache: *mut RsvdPageCache,
@@ -446,7 +490,10 @@ pub extern "C" fn rsvd_page_cache_update_all(
     (modified || loc_mod || size_mod || page_num_mod) as u8
 }
 
-#[cfg(any(host_hal_com_rsvd_page_test, all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))))]
+#[cfg(any(
+    host_hal_com_rsvd_page_test,
+    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+))]
 #[no_mangle]
 pub extern "C" fn rsvd_page_cache_update_data(
     cache: *mut RsvdPageCache,
@@ -485,7 +532,10 @@ pub extern "C" fn rsvd_page_cache_update_data(
     modified as u8
 }
 
-#[cfg(any(host_hal_com_rsvd_page_test, all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))))]
+#[cfg(any(
+    host_hal_com_rsvd_page_test,
+    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+))]
 #[no_mangle]
 pub extern "C" fn rsvd_page_cache_free_data(cache: *mut RsvdPageCache) {
     let cache = unsafe { &mut *cache };
@@ -497,7 +547,10 @@ pub extern "C" fn rsvd_page_cache_free_data(cache: *mut RsvdPageCache) {
     }
 }
 
-#[cfg(any(host_hal_com_rsvd_page_test, all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))))]
+#[cfg(any(
+    host_hal_com_rsvd_page_test,
+    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+))]
 #[no_mangle]
 pub extern "C" fn rsvd_page_cache_free(cache: *mut RsvdPageCache) {
     let cache = unsafe { &mut *cache };
@@ -507,7 +560,10 @@ pub extern "C" fn rsvd_page_cache_free(cache: *mut RsvdPageCache) {
     cache.size = 0;
 }
 
-#[cfg(any(host_hal_com_chip_info_test, all(not(host_hal_com_hw_rate_test), not(host_hal_com_rsvd_page_test))))]
+#[cfg(any(
+    host_hal_com_chip_info_test,
+    all(not(host_hal_com_hw_rate_test), not(host_hal_com_rsvd_page_test))
+))]
 mod chip_info {
     use super::U8;
 
@@ -522,10 +578,22 @@ mod chip_info {
     }
 
     const IC_TAGS: &[(i32, &str)] = &[
-        (5, "CHIP_8188E_"), (12, "CHIP_8188F_"), (18, "CHIP_8188GTV_"), (6, "CHIP_8812_"),
-        (9, "CHIP_8192E_"), (7, "CHIP_8821_"), (8, "CHIP_8723B_"), (11, "CHIP_8703B_"),
-        (14, "CHIP_8723D_"), (10, "CHIP_8814A_"), (13, "CHIP_8822B_"), (15, "CHIP_8821C_"),
-        (16, "CHIP_8710B_"), (17, "CHIP_8192F_"), (19, "CHIP_8822C_"), (20, "CHIP_8814B_"),
+        (5, "CHIP_8188E_"),
+        (12, "CHIP_8188F_"),
+        (18, "CHIP_8188GTV_"),
+        (6, "CHIP_8812_"),
+        (9, "CHIP_8192E_"),
+        (7, "CHIP_8821_"),
+        (8, "CHIP_8723B_"),
+        (11, "CHIP_8703B_"),
+        (14, "CHIP_8723D_"),
+        (10, "CHIP_8814A_"),
+        (13, "CHIP_8822B_"),
+        (15, "CHIP_8821C_"),
+        (16, "CHIP_8710B_"),
+        (17, "CHIP_8192F_"),
+        (19, "CHIP_8822C_"),
+        (20, "CHIP_8814B_"),
         (21, "CHIP_8723F_"),
     ];
 
