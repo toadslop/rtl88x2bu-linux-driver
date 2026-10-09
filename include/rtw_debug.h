@@ -324,6 +324,16 @@ u16 rtw_ap_linking_test_force_auth_fail(void);
 u16 rtw_ap_linking_test_force_asoc_fail(void);
 #endif
 
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
+void rtw_rust_debug_set_fwdl_test_case(u8 chksum, u8 wintint);
+void rtw_rust_debug_set_del_rx_ampdu_test_no_tx_fail(u8 no_tx_fail);
+void rtw_rust_debug_set_wait_hiq_empty_ms(u32 wait_ms);
+void rtw_rust_debug_set_sta_linking_test(u32 wait_ms, u8 force_fail);
+#ifdef CONFIG_AP_MODE
+void rtw_rust_debug_set_ap_linking_test(u16 force_auth_fail, u16 force_asoc_fail);
+#endif
+#endif
+
 #ifdef CONFIG_PROC_DEBUG
 ssize_t proc_set_write_reg(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data);
 int proc_get_read_reg(struct seq_file *m, void *v);
