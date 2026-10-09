@@ -212,6 +212,10 @@ pub extern "C" fn _rtw_ccmp_decrypt(
     frame: *mut u8,
     plen: u32,
 ) -> i32 {
+    // `plen` is the over-the-air frame length and may be shorter than the header.
+    if plen < hdrlen {
+        return _FAIL;
+    }
     let hdr = frame as *const Ieee80211Hdr;
     let mut plain_len: usize = 0;
     let plain = if key_len == 16 {
@@ -304,6 +308,9 @@ pub extern "C" fn _rtw_gcmp_decrypt(
     frame: *mut u8,
     plen: u32,
 ) -> i32 {
+    if plen < hdrlen {
+        return _FAIL;
+    }
     let hdr = frame as *const Ieee80211Hdr;
     let mut plain_len: usize = 0;
     let plain = unsafe {
