@@ -33,7 +33,9 @@ static DEL_RX_NO_TX: AtomicU8 = AtomicU8::new(0);
 static WAIT_HIQ_MS: AtomicU32 = AtomicU32::new(0);
 static STA_LINK_WAIT_MS: AtomicU32 = AtomicU32::new(0);
 static STA_LINK_FORCE_FAIL: AtomicU8 = AtomicU8::new(0);
+#[cfg(config_ap_mode)]
 static AP_AUTH_FAIL: AtomicU16 = AtomicU16::new(0);
+#[cfg(config_ap_mode)]
 static AP_ASOC_FAIL: AtomicU16 = AtomicU16::new(0);
 
 static mut STA_LINK_START: Systime = 0;
@@ -52,8 +54,11 @@ extern "C" {
 }
 
 fn test_print(msg: &[u8]) {
+    let mut buf = [0u8; 80];
+    let n = msg.len().min(buf.len() - 1);
+    buf[..n].copy_from_slice(&msg[..n]);
     unsafe {
-        rtw_rust_debug_test_print(msg.as_ptr());
+        rtw_rust_debug_test_print(buf.as_ptr());
     }
 }
 
@@ -102,6 +107,7 @@ pub extern "C" fn rtw_rust_debug_set_sta_linking_test(wait_ms: U32, force_fail: 
     STA_LINK_FORCE_FAIL.store(force_fail, Ordering::Relaxed);
 }
 
+#[cfg(config_ap_mode)]
 #[no_mangle]
 pub extern "C" fn rtw_rust_debug_set_ap_linking_test(auth_fail: U16, asoc_fail: U16) {
     AP_AUTH_FAIL.store(auth_fail, Ordering::Relaxed);
@@ -169,11 +175,13 @@ pub extern "C" fn rtw_sta_linking_test_force_fail() -> bool {
     STA_LINK_FORCE_FAIL.load(Ordering::Relaxed) != 0
 }
 
+#[cfg(config_ap_mode)]
 #[no_mangle]
 pub extern "C" fn rtw_ap_linking_test_force_auth_fail() -> U16 {
     AP_AUTH_FAIL.load(Ordering::Relaxed)
 }
 
+#[cfg(config_ap_mode)]
 #[no_mangle]
 pub extern "C" fn rtw_ap_linking_test_force_asoc_fail() -> U16 {
     AP_ASOC_FAIL.load(Ordering::Relaxed)
