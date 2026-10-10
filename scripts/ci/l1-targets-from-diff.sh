@@ -210,11 +210,13 @@ for path in "${changed[@]}"; do
 		;;
 	rust/rtw_debug.rs \
 	| rust/rtw_debug_sec_cam.rs \
+	| rust/rtw_debug_tx_rx_dumps.rs \
 	| core/rtw_debug.c \
 	| core/rtw_debug_rest.c \
 	| tests/host/debug/*)
 		add_target rust-check-symbols-rtw-debug
 		add_target rust-check-symbols-rtw-debug-sec-cam
+		add_target rust-check-symbols-rtw-debug-tx-rx
 		;;
 	rust/hal_com.rs \
 	| hal/hal_com_rest.c \
@@ -308,6 +310,9 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-cmd-queue
 	rust-check-symbols-rtw-cmd-thread
 	rust-check-symbols-rtw-odm-phydm-init
+	rust-check-symbols-rtw-debug
+	rust-check-symbols-rtw-debug-sec-cam
+	rust-check-symbols-rtw-debug-tx-rx
 )
 
 emit() {
