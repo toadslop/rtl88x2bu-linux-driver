@@ -300,7 +300,12 @@ fn wapi_sms4_cryption(
     output_length: *mut u16,
     crypt_flag: U32,
 ) {
-    if key.is_null() || iv.is_null() || input.is_null() || output.is_null() || output_length.is_null() {
+    if key.is_null()
+        || iv.is_null()
+        || input.is_null()
+        || output.is_null()
+        || output_length.is_null()
+    {
         return;
     }
     let input_length = input_length;
@@ -328,7 +333,11 @@ fn wapi_sms4_cryption(
     let full_blocks = block_num - 1;
     let mut i = 0u32;
     while i < full_blocks {
-        SMS4Crypt(block_in.as_mut_ptr(), block_out.as_mut_ptr(), rk.as_mut_ptr());
+        SMS4Crypt(
+            block_in.as_mut_ptr(),
+            block_out.as_mut_ptr(),
+            rk.as_mut_ptr(),
+        );
         xor_block(
             unsafe { output.add((i * 16) as usize) as *mut c_void },
             unsafe { input.add((i * 16) as usize) as *const c_void },
@@ -342,7 +351,11 @@ fn wapi_sms4_cryption(
         *output_length = (i * 16) as u16;
     }
 
-    SMS4Crypt(block_in.as_mut_ptr(), block_out.as_mut_ptr(), rk.as_mut_ptr());
+    SMS4Crypt(
+        block_in.as_mut_ptr(),
+        block_out.as_mut_ptr(),
+        rk.as_mut_ptr(),
+    );
 
     for j in 0..remainder {
         let out_byte = unsafe { *input.add((i * 16 + j as u32) as usize) } ^ block_out[j as usize];
@@ -365,7 +378,15 @@ pub extern "C" fn WapiSMS4Cryption(
     output_length: *mut u16,
     crypt_flag: U32,
 ) {
-    wapi_sms4_cryption(key, iv, input, input_length, output, output_length, crypt_flag);
+    wapi_sms4_cryption(
+        key,
+        iv,
+        input,
+        input_length,
+        output,
+        output_length,
+        crypt_flag,
+    );
 }
 
 #[no_mangle]
