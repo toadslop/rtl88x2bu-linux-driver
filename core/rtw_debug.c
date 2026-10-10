@@ -264,4 +264,47 @@ struct sec_cam_ent *rtw_rust_debug_sec_cam_cache_ent(_adapter *adapter, u8 idx)
 }
 #endif
 
+void rtw_rust_debug_log_info(const char *line)
+{
+	RTW_INFO("%s", line);
+}
+
+u16 rtw_rust_debug_recv_sink_udpport(_adapter *adapter)
+{
+	return adapter->recvpriv.sink_udpport;
+}
+
+u16 rtw_rust_debug_recv_pre_rtp_rxseq(_adapter *adapter)
+{
+	return adapter->recvpriv.pre_rtp_rxseq;
+}
+
+u16 rtw_rust_debug_recv_cur_rtp_rxseq(_adapter *adapter)
+{
+	return adapter->recvpriv.cur_rtp_rxseq;
+}
+
+void rtw_rust_debug_recv_set_pre_rtp_rxseq(_adapter *adapter, u16 seq)
+{
+	adapter->recvpriv.pre_rtp_rxseq = seq;
+}
+
+void rtw_rust_debug_recv_set_cur_rtp_rxseq(_adapter *adapter, u16 seq)
+{
+	adapter->recvpriv.cur_rtp_rxseq = seq;
+}
+
+void rtw_rust_debug_sta_reorder_get(struct sta_info *sta, int tid, u8 *enable,
+				    u8 *ampdu_size, u16 *indicate_seq)
+{
+	struct recv_reorder_ctrl *rc = &sta->recvreorder_ctrl[tid];
+
+	if (enable)
+		*enable = rc->enable;
+	if (ampdu_size)
+		*ampdu_size = rc->ampdu_size;
+	if (indicate_seq)
+		*indicate_seq = rc->indicate_seq;
+}
+
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */
