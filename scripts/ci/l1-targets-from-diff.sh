@@ -92,6 +92,12 @@ for path in "${changed[@]}"; do
 	| tests/host/wapi_sms4/*)
 		add_target rust-check-symbols-rtw-wapi-sms4
 		;;
+	rust/rtw_btcoex_wifionly.rs \
+	| core/rtw_btcoex_wifionly.c \
+	| tests/host/btcoex/btcoex_wifionly_c_ref.c \
+	| tests/host/btcoex/*)
+		add_target rust-check-symbols-rtw-btcoex-wifionly
+		;;
 	rust/rtw_rf_rest.rs \
 	| rust/rtw_rf_op_class_pref.rs \
 	| rust/rtw_rf_op_class_dump.rs \

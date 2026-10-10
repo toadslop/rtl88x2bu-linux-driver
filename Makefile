@@ -2963,6 +2963,7 @@ $(MODULE_NAME)-y += rust/rtw_xmit_update_attrib_kern.o
 $(MODULE_NAME)-y += rust/rtw_cmd_thread_kern.o
 $(MODULE_NAME)-y += rust/rtw_iol_rest.o
 $(MODULE_NAME)-y += rust/rtw_sreset.o
+$(MODULE_NAME)-y += rust/rtw_btcoex_wifionly.o
 $(MODULE_NAME)-y += rust/rtw_debug.o
 $(MODULE_NAME)-y += rust/rtw_debug_sec_cam.o
 $(MODULE_NAME)-y += rust/rtw_debug_tx_rx_dumps.o
@@ -4161,6 +4162,17 @@ rust-objects-rtw-iol-rest-c:
 rust-check-symbols-rtw-iol-rest: rust-objects-rtw-iol-rest-c rust-objects-rtw-iol-rest
 	$(MAKE) rust-check-symbols OLD=tests/host/iol/iol_rest_c_ref.o NEW=rust/rtw_iol_rest.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_iol_rest.allow ALLOW_VACUOUS=1
+
+# W3-137: rtw_btcoex_wifionly stubs L1 (host C ref vs rust/rtw_btcoex_wifionly.o).
+rust-objects-rtw-btcoex-wifionly:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-btcoex-wifionly"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_btcoex_wifionly.o
+rust-objects-rtw-btcoex-wifionly-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/btcoex/btcoex_wifionly_c_ref.o tests/host/btcoex/btcoex_wifionly_c_ref.c
+rust-check-symbols-rtw-btcoex-wifionly: rust-objects-rtw-btcoex-wifionly-c rust-objects-rtw-btcoex-wifionly
+	$(MAKE) rust-check-symbols OLD=tests/host/btcoex/btcoex_wifionly_c_ref.o NEW=rust/rtw_btcoex_wifionly.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_btcoex_wifionly.allow ALLOW_VACUOUS=1
 
 # W3-95 PR3: host C oracle (sreset lifecycle shim) vs rust/rtw_sreset.o.
 rust-objects-rtw-sreset:
