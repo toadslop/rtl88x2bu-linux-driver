@@ -44,4 +44,11 @@ u8 host_wapi_sms4_fill_extension(struct host_wapi_extension *ext, u8 key_idx,
 	memcpy(ext->pn, pn, 16);
 	return overflow;
 }
+#else
+int SecSMS4HeaderFillIV(void *padapter, u8 *pxmitframe)
+{
+	(void)padapter;
+	(void)pxmitframe;
+	return 0;
+}
 #endif
