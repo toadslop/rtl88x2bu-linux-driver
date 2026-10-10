@@ -212,6 +212,9 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-03 | #1150 | [W4-03] Translate hal_com.c — dump_chip_info formatter |
 | W4-04 | #1151 | [W4-04] Translate hal_com.c — rtw_hal_dump_macaddr |
 | W3-138 | #1153 | [W3-138] Translate rtw_debug.c — dump_drv_cfg HCI + xmit/recv banners |
+| W3-139 | #1205 | [W3-139] Translate rtw_wapi_sms4.c — SMS4 OFB payload crypt |
+| W3-140 | #1206 | [W3-140] Translate rtw_wapi_sms4.c — SMS4 MIC calculation |
+| W3-141 | #1207 | [W3-141] Translate rtw_wapi_sms4.c — QoS PN cache and replay check |
 
 ## Superseded issues
 
