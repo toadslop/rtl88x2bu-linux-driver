@@ -368,6 +368,118 @@ fn wapi_sms4_cryption(
     }
 }
 
+/// W3-140: SMS4 MIC over `Input1` then `Input2` (provenance: `core/rtw_wapi_sms4_rest.c`).
+fn wapi_sms4_calculate_mic_inner(
+    key: *mut U8,
+    iv: *mut U8,
+    input1: *mut U8,
+    input1_length: u8,
+    input2: *mut U8,
+    input2_length: u16,
+    output: *mut U8,
+    output_length: *mut U8,
+) {
+    if key.is_null() || iv.is_null() || output.is_null() || output_length.is_null() {
+        return;
+    }
+
+    let mut remainder = u32::from(input1_length) & 0x0f;
+    let mut block_num = u32::from(input1_length >> 4);
+
+    let mut rk = [0u32; 32];
+    let mut block_in = [0u8; 16];
+    let mut block_out = [0u8; 16];
+    let mut temp_block = [0u8; 16];
+    let mut temp_iv = [0u8; 16];
+
+    let iv_slice = unsafe { core::slice::from_raw_parts(iv, 16) };
+    for k in 0..16 {
+        temp_iv[k] = iv_slice[15 - k];
+    }
+    block_in.copy_from_slice(&temp_iv);
+
+    SMS4KeyExt(key, rk.as_mut_ptr(), ENCRYPT);
+    SMS4Crypt(
+        block_in.as_mut_ptr(),
+        block_out.as_mut_ptr(),
+        rk.as_mut_ptr(),
+    );
+
+    let mut i = 0u32;
+    while i < block_num {
+        xor_block(
+            block_in.as_mut_ptr() as *mut c_void,
+            unsafe { input1.add((i * 16) as usize) as *const c_void },
+            block_out.as_ptr() as *const c_void,
+        );
+        SMS4Crypt(
+            block_in.as_mut_ptr(),
+            block_out.as_mut_ptr(),
+            rk.as_mut_ptr(),
+        );
+        i += 1;
+    }
+
+    if remainder != 0 {
+        temp_block.fill(0);
+        let tail = unsafe {
+            core::slice::from_raw_parts(input1.add((block_num * 16) as usize), remainder as usize)
+        };
+        temp_block[..remainder as usize].copy_from_slice(tail);
+        xor_block(
+            block_in.as_mut_ptr() as *mut c_void,
+            temp_block.as_ptr() as *const c_void,
+            block_out.as_ptr() as *const c_void,
+        );
+        SMS4Crypt(
+            block_in.as_mut_ptr(),
+            block_out.as_mut_ptr(),
+            rk.as_mut_ptr(),
+        );
+    }
+
+    remainder = u32::from(input2_length) & 0x0f;
+    block_num = u32::from(input2_length >> 4);
+
+    i = 0;
+    while i < block_num {
+        xor_block(
+            block_in.as_mut_ptr() as *mut c_void,
+            unsafe { input2.add((i * 16) as usize) as *const c_void },
+            block_out.as_ptr() as *const c_void,
+        );
+        SMS4Crypt(
+            block_in.as_mut_ptr(),
+            block_out.as_mut_ptr(),
+            rk.as_mut_ptr(),
+        );
+        i += 1;
+    }
+
+    if remainder != 0 {
+        temp_block.fill(0);
+        let tail = unsafe {
+            core::slice::from_raw_parts(input2.add((block_num * 16) as usize), remainder as usize)
+        };
+        temp_block[..remainder as usize].copy_from_slice(tail);
+        xor_block(
+            block_in.as_mut_ptr() as *mut c_void,
+            temp_block.as_ptr() as *const c_void,
+            block_out.as_ptr() as *const c_void,
+        );
+        SMS4Crypt(
+            block_in.as_mut_ptr(),
+            block_out.as_mut_ptr(),
+            rk.as_mut_ptr(),
+        );
+    }
+
+    unsafe {
+        core::ptr::copy_nonoverlapping(block_out.as_ptr(), output, 16);
+        *output_length = 16;
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn WapiSMS4Cryption(
     key: *mut U8,
@@ -413,6 +525,29 @@ pub extern "C" fn WapiSMS4Decryption(
     wapi_sms4_cryption(key, iv, input, input_length, output, output_length, ENCRYPT);
 }
 
+#[no_mangle]
+pub extern "C" fn WapiSMS4CalculateMic(
+    key: *mut U8,
+    iv: *mut U8,
+    input1: *mut U8,
+    input1_length: u8,
+    input2: *mut U8,
+    input2_length: u16,
+    output: *mut U8,
+    output_length: *mut U8,
+) {
+    wapi_sms4_calculate_mic_inner(
+        key,
+        iv,
+        input1,
+        input1_length,
+        input2,
+        input2_length,
+        output,
+        output_length,
+    );
+}
+
 #[cfg(host_wapi_sms4_test)]
 #[no_mangle]
 pub extern "C" fn host_wapi_sms4_encryption(
@@ -448,6 +583,30 @@ pub extern "C" fn host_wapi_sms4_decryption(
         iv as *mut U8,
         input as *mut U8,
         input_length,
+        output,
+        output_length,
+    );
+}
+
+#[cfg(host_wapi_sms4_test)]
+#[no_mangle]
+pub extern "C" fn host_wapi_sms4_calculate_mic(
+    key: *const U8,
+    iv: *const U8,
+    input1: *const U8,
+    input1_length: u8,
+    input2: *const U8,
+    input2_length: u16,
+    output: *mut U8,
+    output_length: *mut U8,
+) {
+    WapiSMS4CalculateMic(
+        key as *mut U8,
+        iv as *mut U8,
+        input1 as *mut U8,
+        input1_length,
+        input2 as *mut U8,
+        input2_length,
         output,
         output_length,
     );
