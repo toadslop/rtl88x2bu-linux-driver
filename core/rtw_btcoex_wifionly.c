@@ -16,6 +16,8 @@
 #include <hal_btcoex_wifionly.h>
 #include <hal_data.h>
 
+#if !defined(CONFIG_RUST)
+
 void rtw_btcoex_wifionly_switchband_notify(PADAPTER padapter)
 {
 	hal_btcoex_wifionly_switchband_notify(padapter);
@@ -45,3 +47,5 @@ void rtw_btcoex_wifionly_AntInfoSetting(PADAPTER padapter)
 {
 	hal_btcoex_wifionly_AntInfoSetting(padapter);
 }
+
+#endif /* !CONFIG_RUST */
