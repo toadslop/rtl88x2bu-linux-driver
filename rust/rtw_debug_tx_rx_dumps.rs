@@ -26,7 +26,7 @@ const CHANNEL_WIDTH_160: U8 = 3;
 const PROTO_CAP_11AC: U8 = 8;
 
 const RATE_BMP_CCK: U16 = 0x000f;
-const RATE_BMP_OFDM: U16 = 0x00f0;
+const RATE_BMP_OFDM: U16 = 0xfff0;
 const RATE_BMP_HT_1SS: U32 = 0x000000ff;
 const RATE_BMP_HT_2SS: U32 = 0x0000ff00;
 const RATE_BMP_HT_3SS: U32 = 0x00ff0000;
