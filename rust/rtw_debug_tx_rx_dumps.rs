@@ -136,6 +136,32 @@ fn push_u16_hex2(out: &mut [u8], pos: &mut usize, v: U16) {
     }
 }
 
+/// Match C `printf("%01x", …)` for the 4-bit CCK rate mask.
+fn push_u8_hex_min1(out: &mut [u8], pos: &mut usize, v: U8) {
+    let nib = v & 0xf;
+    push_byte(
+        out,
+        pos,
+        if nib < 10 {
+            b'0' + nib
+        } else {
+            b'a' + (nib - 10)
+        },
+    );
+}
+
+fn push_str_field_right(out: &mut [u8], pos: &mut usize, width: usize, s: &[u8]) {
+    let len = s.len();
+    if len >= width {
+        push_str(out, pos, &s[..width]);
+    } else {
+        for _ in 0..width - len {
+            push_byte(out, pos, b' ');
+        }
+        push_str(out, pos, s);
+    }
+}
+
 fn push_u16_dec(out: &mut [u8], pos: &mut usize, v: U16) {
     let mut tmp = [0u8; 5];
     let mut n = 0usize;
@@ -236,13 +262,12 @@ pub extern "C" fn dump_tx_rate_bmp(sel: *mut c_void, dvobj: *mut c_void) {
     if adapter.is_null() || rfctl.is_null() {
         return;
     }
-    let vht_cap =
-        unsafe { rtw_rust_debug_hal_chk_proto_cap(adapter, PROTO_CAP_11AC) != 0 };
+    let vht_cap = unsafe { rtw_rust_debug_hal_chk_proto_cap(adapter, PROTO_CAP_11AC) != 0 };
     let mut hdr = [0u8; 64];
     let mut pos = 0usize;
     push_str(&mut hdr, &mut pos, b"bw    ");
     if vht_cap {
-        push_str(&mut hdr, &mut pos, b" vht           ");
+        push_str(&mut hdr, &mut pos, b" vht            ");
     }
     push_str(&mut hdr, &mut pos, b" ht          ofdm cck");
     print_line(sel, &hdr[..pos]);
@@ -257,18 +282,27 @@ pub extern "C" fn dump_tx_rate_bmp(sel: *mut c_void, dvobj: *mut c_void) {
         let bw_label = c_str_bytes(unsafe { rtw_rust_debug_ch_width_str(bw) });
         let mut line = [0u8; 128];
         pos = 0usize;
-        push_str(&mut line, &mut pos, bw_label);
-        while pos < 6 {
-            push_byte(&mut line, &mut pos, b' ');
-        }
+        push_str_field_right(&mut line, &mut pos, 6, bw_label);
         if vht_cap {
             let bmp_vht = unsafe { rtw_rust_debug_rfctl_rate_bmp_vht(rfctl, bw) };
             push_byte(&mut line, &mut pos, b' ');
-            push_u16_hex3(&mut line, &mut pos, ((bmp_vht & RATE_BMP_VHT_4SS) >> 30) as U16);
+            push_u16_hex3(
+                &mut line,
+                &mut pos,
+                ((bmp_vht & RATE_BMP_VHT_4SS) >> 30) as U16,
+            );
             push_byte(&mut line, &mut pos, b' ');
-            push_u16_hex3(&mut line, &mut pos, ((bmp_vht & RATE_BMP_VHT_3SS) >> 20) as U16);
+            push_u16_hex3(
+                &mut line,
+                &mut pos,
+                ((bmp_vht & RATE_BMP_VHT_3SS) >> 20) as U16,
+            );
             push_byte(&mut line, &mut pos, b' ');
-            push_u16_hex3(&mut line, &mut pos, ((bmp_vht & RATE_BMP_VHT_2SS) >> 10) as U16);
+            push_u16_hex3(
+                &mut line,
+                &mut pos,
+                ((bmp_vht & RATE_BMP_VHT_2SS) >> 10) as U16,
+            );
             push_byte(&mut line, &mut pos, b' ');
             push_u16_hex3(&mut line, &mut pos, (bmp_vht & RATE_BMP_VHT_1SS) as U16);
         }
@@ -314,7 +348,7 @@ pub extern "C" fn dump_tx_rate_bmp(sel: *mut c_void, dvobj: *mut c_void) {
         push_str(&mut line, &mut pos, b"  ");
         push_u16_hex3(&mut line, &mut pos, ofdm);
         push_str(&mut line, &mut pos, b"   ");
-        push_u16_hex2(&mut line, &mut pos, cck);
+        push_u8_hex_min1(&mut line, &mut pos, cck as U8);
         print_line(sel, &line[..pos]);
         bw += 1;
     }
