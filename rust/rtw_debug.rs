@@ -172,6 +172,30 @@ fn format_u32(v: u32) -> ([u8; 10], usize) {
     (buf, n)
 }
 
+fn append_u32(line: &mut [u8], pos: &mut usize, val: u32) {
+    let (digits, len) = format_u32(val);
+    for i in 0..len {
+        if *pos >= line.len().saturating_sub(1) {
+            break;
+        }
+        line[*pos] = digits[i];
+        *pos += 1;
+    }
+}
+
+fn print_kv(sel: *mut c_void, key: &[u8], val: u32) {
+    let mut line = [0u8; 96];
+    let n = core::cmp::min(key.len(), line.len().saturating_sub(12));
+    line[..n].copy_from_slice(&key[..n]);
+    let mut pos = n;
+    append_u32(&mut line, &mut pos, val);
+    print_line(sel, &line[..pos]);
+}
+
+#[cfg(config_proc_debug)]
+#[path = "rtw_debug_drv_cfg_tail.rs"]
+mod drv_cfg_tail;
+
 #[cfg(config_proc_debug)]
 mod drv_cfg_part1 {
     use super::*;
@@ -192,27 +216,6 @@ mod drv_cfg_part1 {
         fn rtw_rust_debug_dump_drv_cfg_pre_num_banners(sel: *mut c_void);
         fn rtw_rust_debug_dump_drv_cfg_odm_minimal_banners(sel: *mut c_void);
         fn rtw_rust_debug_dump_drv_cfg_post_num_banners(sel: *mut c_void);
-        fn rtw_rust_debug_dump_drv_cfg_tail(sel: *mut c_void);
-    }
-
-    fn append_u32(line: &mut [u8], pos: &mut usize, val: u32) {
-        let (digits, len) = format_u32(val);
-        for i in 0..len {
-            if *pos >= line.len().saturating_sub(1) {
-                break;
-            }
-            line[*pos] = digits[i];
-            *pos += 1;
-        }
-    }
-
-    fn print_kv(sel: *mut c_void, key: &[u8], val: u32) {
-        let mut line = [0u8; 96];
-        let n = core::cmp::min(key.len(), line.len().saturating_sub(12));
-        line[..n].copy_from_slice(&key[..n]);
-        let mut pos = n;
-        append_u32(&mut line, &mut pos, val);
-        print_line(sel, &line[..pos]);
     }
 
     #[no_mangle]
@@ -302,8 +305,8 @@ mod drv_cfg_part1 {
         }
         unsafe {
             rtw_rust_debug_dump_drv_cfg_post_num_banners(sel);
-            rtw_rust_debug_dump_drv_cfg_tail(sel);
         }
+        drv_cfg_tail::rtw_rust_debug_dump_drv_cfg_tail(sel);
     }
 }
 
