@@ -215,3 +215,71 @@ pub extern "C" fn host_sms4_crypt(input: *const U8, output: *mut U8, rk: *mut U3
 pub extern "C" fn host_sms4_key_ext(key: *const U8, rk: *mut U32, crypt_flag: U32) {
     SMS4KeyExt(key as *mut U8, rk, crypt_flag);
 }
+
+/// W3-136: WAPI packet-number increment (provenance: `core/rtw_wapi_sms4_rest.c`).
+fn wapi_increase_pn_inner(pn: *mut U8, add_count: U8) -> U8 {
+    if pn.is_null() {
+        return 1;
+    }
+    let pn = unsafe { core::slice::from_raw_parts_mut(pn, 16) };
+    let mut carry = add_count;
+    for i in 0..16 {
+        let sum = u16::from(pn[i]) + u16::from(carry);
+        if sum <= 0xff {
+            pn[i] = sum as U8;
+            return 0;
+        }
+        pn[i] = sum as U8;
+        carry = 1;
+    }
+    1
+}
+
+#[no_mangle]
+pub extern "C" fn WapiIncreasePN(pn: *mut U8, add_count: U8) -> U8 {
+    wapi_increase_pn_inner(pn, add_count)
+}
+
+#[repr(C)]
+pub struct WapiExtensionHeader {
+    key_idx: U8,
+    reserved: U8,
+    pn: [U8; 16],
+}
+
+/// Fill `WLAN_HEADER_WAPI_EXTENSION` fields; mutates `pn` via `WapiIncreasePN`.
+#[no_mangle]
+pub extern "C" fn wapi_sms4_fill_extension(
+    ext: *mut WapiExtensionHeader,
+    key_idx: U8,
+    pn: *mut U8,
+    add_count: U8,
+) -> U8 {
+    if ext.is_null() || pn.is_null() {
+        return 1;
+    }
+    let ext = unsafe { &mut *ext };
+    ext.key_idx = key_idx;
+    ext.reserved = 0;
+    let overflow = wapi_increase_pn_inner(pn, add_count);
+    let pn_slice = unsafe { core::slice::from_raw_parts(pn, 16) };
+    ext.pn.copy_from_slice(pn_slice);
+    overflow
+}
+
+#[cfg(host_wapi_sms4_test)]
+#[no_mangle]
+pub extern "C" fn host_wapi_increase_pn(pn: *mut U8, add_count: U8) -> U8 {
+    WapiIncreasePN(pn, add_count)
+}
+
+#[cfg(host_wapi_sms4_test)]
+#[no_mangle]
+pub extern "C" fn host_wapi_sms4_fill_extension(
+    ext: *mut WapiExtensionHeader,
+    key_idx: U8,
+    pn: *mut U8,
+    add_count: U8,
+) -> U8 {
+    wapi_sms4_fill_extension(ext, key_idx, pn, add_count)
+}
