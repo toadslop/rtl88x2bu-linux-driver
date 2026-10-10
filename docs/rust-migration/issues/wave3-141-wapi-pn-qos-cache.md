@@ -21,9 +21,11 @@ into [`rust/rtw_wapi_sms4.rs`](../../../rust/rtw_wapi_sms4.rs):
 
 - **Dependency rationale:** shares PN layout with W3-136 `WapiIncreasePN` / IV helpers.
 - `PRT_WAPI_STA_INFO` field access — keep struct layout in bindgen/FFI; pure memcpy/compare logic in Rust.
-- L2: host stubs for `PRT_WAPI_STA_INFO` with fixed queue PN slots; replay accept/reject cases.
+- `WapiCheckPnInSwDecrypt`: the body that would return `true` is inside `#if 0` in C; live code always
+  returns `false`. Rust must preserve always-`false` until that block is intentionally enabled.
+- L2: host stubs for `PRT_WAPI_STA_INFO` with fixed queue PN slots; get/set round-trip per UP.
 
 ## Acceptance
 
 - L0 + L1
-- L2 tests for get/set round-trip per UP and `WapiCheckPnInSwDecrypt` true/false edges
+- L2 tests for get/set round-trip per UP; `WapiCheckPnInSwDecrypt` always-`false` (match live C)

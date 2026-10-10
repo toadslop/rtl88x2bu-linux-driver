@@ -4,7 +4,7 @@ labels: [rust-migration, phase-1, wave-3, size/~200]
 type: child
 id: W3-140
 epic: E05
-blocked_by: [W3-139]
+blocked_by: [W3-135]
 estimate_loc: 200
 ---
 
@@ -17,7 +17,8 @@ into [`rust/rtw_wapi_sms4.rs`](../../../rust/rtw_wapi_sms4.rs):
 
 ## Notes
 
-- **Dependency rationale:** MIC path calls into OFB/SMS4 primitives from W3-139.
+- **Dependency rationale:** MIC uses `SMS4KeyExt`, `SMS4Crypt`, and `xor_block` from W3-135 (separate
+  SMS4 chaining over `Input1`/`Input2`; not the OFB payload helpers in W3-139).
 - `SecCalculateMicSMS4` in C is currently wrapped in `#if 0`; out of scope unless enabling
   that block is required for L2 — focus on `WapiSMS4CalculateMic` first.
 - Two-buffer MIC input (`Input1` then `Input2`) with partial final blocks — match C padding.

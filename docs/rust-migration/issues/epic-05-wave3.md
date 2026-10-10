@@ -191,7 +191,7 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 
 | ID | File | Focus |
 |----|------|--------|
-| W3-139 | `wave3-139-wapi-sms4-ofb-crypt.md` | `rtw_wapi_sms4_rest.c` OFB crypt + xor_block |
+| W3-139 | `wave3-139-wapi-sms4-ofb-crypt.md` | `rtw_wapi_sms4_rest.c` OFB payload crypt (WapiSMS4*) |
 | W3-140 | `wave3-140-wapi-sms4-mic.md` | `WapiSMS4CalculateMic` |
 | W3-141 | `wave3-141-wapi-pn-qos-cache.md` | QoS PN cache + `WapiCheckPnInSwDecrypt` |
 
