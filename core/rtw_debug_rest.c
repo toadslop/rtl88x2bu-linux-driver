@@ -40,6 +40,8 @@ const char *rtw_log_level_str[] = {
 #endif
 
 #ifdef CONFIG_PROC_DEBUG
+void rtw_rust_debug_dump_drv_cfg_hci_banners(void *sel);
+
 #if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 void dump_drv_cfg(void *sel)
 {
@@ -166,62 +168,16 @@ extern uint rtw_recvbuf_nr;
 #ifdef CONFIG_RTW_TPT_MODE
 	RTW_PRINT_SEL(sel, "CONFIG_RTW_TPT_MODE\n");
 #endif
-#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — part 1 */
+	dump_drv_cfg_tail_legacy(sel);
+}
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — dump_drv_cfg */
 
-#if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
-void rtw_rust_debug_dump_drv_cfg_tail(void *sel)
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
+static void dump_drv_cfg_tail_legacy(void *sel)
 {
-extern uint rtw_recvbuf_nr;
-#endif
+	extern uint rtw_recvbuf_nr;
 
-#ifdef CONFIG_USB_HCI
-#ifdef CONFIG_SUPPORT_USB_INT
-	RTW_PRINT_SEL(sel, "CONFIG_SUPPORT_USB_INT\n");
-#endif
-#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
-	RTW_PRINT_SEL(sel, "CONFIG_USB_INTERRUPT_IN_PIPE\n");
-#endif
-#ifdef CONFIG_USB_TX_AGGREGATION
-	RTW_PRINT_SEL(sel, "CONFIG_USB_TX_AGGREGATION\n");
-#endif
-#ifdef CONFIG_USB_RX_AGGREGATION
-	RTW_PRINT_SEL(sel, "CONFIG_USB_RX_AGGREGATION\n");
-#endif
-#ifdef CONFIG_USE_USB_BUFFER_ALLOC_TX
-	RTW_PRINT_SEL(sel, "CONFIG_USE_USB_BUFFER_ALLOC_TX\n");
-#endif
-#ifdef CONFIG_USE_USB_BUFFER_ALLOC_RX
-	RTW_PRINT_SEL(sel, "CONFIG_USE_USB_BUFFER_ALLOC_RX\n");
-#endif
-#ifdef CONFIG_PREALLOC_RECV_SKB
-	RTW_PRINT_SEL(sel, "CONFIG_PREALLOC_RECV_SKB\n");
-#endif
-#ifdef CONFIG_FIX_NR_BULKIN_BUFFER
-	RTW_PRINT_SEL(sel, "CONFIG_FIX_NR_BULKIN_BUFFER\n");
-#endif
-#endif /*CONFIG_USB_HCI*/
-
-#ifdef CONFIG_SDIO_HCI
-#ifdef CONFIG_TX_AGGREGATION
-	RTW_PRINT_SEL(sel, "CONFIG_TX_AGGREGATION\n");
-#endif
-#ifdef CONFIG_RX_AGGREGATION
-	RTW_PRINT_SEL(sel, "CONFIG_RX_AGGREGATION\n");
-#endif
-#ifdef RTW_XMIT_THREAD_HIGH_PRIORITY
-	RTW_PRINT_SEL(sel, "RTW_XMIT_THREAD_HIGH_PRIORITY\n");
-#endif
-#ifdef RTW_XMIT_THREAD_HIGH_PRIORITY_AGG
-	RTW_PRINT_SEL(sel, "RTW_XMIT_THREAD_HIGH_PRIORITY_AGG\n");
-#endif
-
-#ifdef DBG_SDIO
-	RTW_PRINT_SEL(sel, "DBG_SDIO = %d\n", DBG_SDIO);
-#endif
-#endif /*CONFIG_SDIO_HCI*/
-
-#ifdef CONFIG_PCI_HCI
-#endif
+	rtw_rust_debug_dump_drv_cfg_hci_banners(sel);
 
 	RTW_PRINT_SEL(sel, "CONFIG_IFACE_NUMBER = %d\n", CONFIG_IFACE_NUMBER);
 #ifdef CONFIG_MI_WITH_MBSSID_CAM
@@ -254,9 +210,10 @@ extern uint rtw_recvbuf_nr;
 	RTW_PRINT_SEL(sel, "NR_RECVFRAME = %d\n", NR_RECVFRAME);
 	RTW_PRINT_SEL(sel, "NR_RECVBUFF = %d, rtw_recvbuf_nr = %d\n", NR_RECVBUFF, rtw_recvbuf_nr);
 	RTW_PRINT_SEL(sel, "MAX_RECVBUF_SZ = %d\n", MAX_RECVBUF_SZ);
-
 }
-#endif /*	CONFIG_PROC_DEBUG	*/
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG */
+
+#endif /* CONFIG_PROC_DEBUG */
 
 #ifdef CONFIG_SDIO_HCI
 void sd_f0_reg_dump(void *sel, _adapter *adapter)

@@ -18,6 +18,7 @@
 #include "host_rtw_debug_version_log_types.h"
 #else
 #include <drv_types.h>
+#include <hal_data.h>
 #include <rtw_version.h>
 #endif
 
@@ -140,6 +141,120 @@ int rtw_rust_debug_wakeup_gpio_idx(void)
 	return WAKEUP_GPIO_IDX;
 }
 #endif /* CONFIG_GPIO_WAKEUP */
+
+/* W3-138: HCI cfg banners for dump_drv_cfg tail (Rust calls this; legacy C path too). */
+void rtw_rust_debug_dump_drv_cfg_hci_banners(void *sel)
+{
+#ifdef CONFIG_USB_HCI
+#ifdef CONFIG_SUPPORT_USB_INT
+	RTW_PRINT_SEL(sel, "CONFIG_SUPPORT_USB_INT\n");
+#endif
+#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
+	RTW_PRINT_SEL(sel, "CONFIG_USB_INTERRUPT_IN_PIPE\n");
+#endif
+#ifdef CONFIG_USB_TX_AGGREGATION
+	RTW_PRINT_SEL(sel, "CONFIG_USB_TX_AGGREGATION\n");
+#endif
+#ifdef CONFIG_USB_RX_AGGREGATION
+	RTW_PRINT_SEL(sel, "CONFIG_USB_RX_AGGREGATION\n");
+#endif
+#ifdef CONFIG_USE_USB_BUFFER_ALLOC_TX
+	RTW_PRINT_SEL(sel, "CONFIG_USE_USB_BUFFER_ALLOC_TX\n");
+#endif
+#ifdef CONFIG_USE_USB_BUFFER_ALLOC_RX
+	RTW_PRINT_SEL(sel, "CONFIG_USE_USB_BUFFER_ALLOC_RX\n");
+#endif
+#ifdef CONFIG_PREALLOC_RECV_SKB
+	RTW_PRINT_SEL(sel, "CONFIG_PREALLOC_RECV_SKB\n");
+#endif
+#ifdef CONFIG_FIX_NR_BULKIN_BUFFER
+	RTW_PRINT_SEL(sel, "CONFIG_FIX_NR_BULKIN_BUFFER\n");
+#endif
+#endif /* CONFIG_USB_HCI */
+
+#ifdef CONFIG_SDIO_HCI
+#ifdef CONFIG_TX_AGGREGATION
+	RTW_PRINT_SEL(sel, "CONFIG_TX_AGGREGATION\n");
+#endif
+#ifdef CONFIG_RX_AGGREGATION
+	RTW_PRINT_SEL(sel, "CONFIG_RX_AGGREGATION\n");
+#endif
+#ifdef RTW_XMIT_THREAD_HIGH_PRIORITY
+	RTW_PRINT_SEL(sel, "RTW_XMIT_THREAD_HIGH_PRIORITY\n");
+#endif
+#ifdef RTW_XMIT_THREAD_HIGH_PRIORITY_AGG
+	RTW_PRINT_SEL(sel, "RTW_XMIT_THREAD_HIGH_PRIORITY_AGG\n");
+#endif
+#ifdef DBG_SDIO
+	RTW_PRINT_SEL(sel, "DBG_SDIO = %d\n", DBG_SDIO);
+#endif
+#endif /* CONFIG_SDIO_HCI */
+}
+
+#define RTW_RUST_DRV_CFG_TAIL_MI_MBSSID		BIT(0)
+#define RTW_RUST_DRV_CFG_TAIL_SWTIMER_TXBCN	BIT(1)
+#define RTW_RUST_DRV_CFG_TAIL_FW_HANDLE_TXBCN	BIT(2)
+#define RTW_RUST_DRV_CFG_TAIL_CLIENT_PORT	BIT(3)
+#define RTW_RUST_DRV_CFG_TAIL_PCI_TX_POLL	BIT(4)
+
+void rtw_rust_debug_drv_cfg_tail_values(unsigned int *flags, int *iface_number,
+	int *limited_ap_num, int *up_mapping_rule, int *nr_xmitframe,
+	int *nr_xmitbuff, int *max_xmitbuf_sz, int *nr_xmit_extbuff,
+	int *max_xmit_extbuf_sz, int *max_cmdbuf_sz, int *nr_recvframe,
+	int *nr_recvbuff, unsigned int *rtw_recvbuf_nr_out, int *max_recvbuf_sz)
+{
+	unsigned int f = 0;
+
+#ifdef CONFIG_MI_WITH_MBSSID_CAM
+	f |= RTW_RUST_DRV_CFG_TAIL_MI_MBSSID;
+#endif
+#ifdef CONFIG_SWTIMER_BASED_TXBCN
+	f |= RTW_RUST_DRV_CFG_TAIL_SWTIMER_TXBCN;
+#endif
+#ifdef CONFIG_FW_HANDLE_TXBCN
+	f |= RTW_RUST_DRV_CFG_TAIL_FW_HANDLE_TXBCN;
+#endif
+#ifdef CONFIG_CLIENT_PORT_CFG
+	f |= RTW_RUST_DRV_CFG_TAIL_CLIENT_PORT;
+#endif
+#ifdef CONFIG_PCI_TX_POLLING
+	f |= RTW_RUST_DRV_CFG_TAIL_PCI_TX_POLL;
+#endif
+
+	if (flags)
+		*flags = f;
+	if (iface_number)
+		*iface_number = CONFIG_IFACE_NUMBER;
+#ifdef CONFIG_FW_HANDLE_TXBCN
+	if (limited_ap_num)
+		*limited_ap_num = CONFIG_LIMITED_AP_NUM;
+#endif
+	if (up_mapping_rule)
+		*up_mapping_rule = CONFIG_RTW_UP_MAPPING_RULE;
+	if (nr_xmitframe)
+		*nr_xmitframe = NR_XMITFRAME;
+	if (nr_xmitbuff)
+		*nr_xmitbuff = NR_XMITBUFF;
+	if (max_xmitbuf_sz)
+		*max_xmitbuf_sz = MAX_XMITBUF_SZ;
+	if (nr_xmit_extbuff)
+		*nr_xmit_extbuff = NR_XMIT_EXTBUFF;
+	if (max_xmit_extbuf_sz)
+		*max_xmit_extbuf_sz = MAX_XMIT_EXTBUF_SZ;
+	if (max_cmdbuf_sz)
+		*max_cmdbuf_sz = MAX_CMDBUF_SZ;
+	if (nr_recvframe)
+		*nr_recvframe = NR_RECVFRAME;
+	if (nr_recvbuff)
+		*nr_recvbuff = NR_RECVBUFF;
+	if (max_recvbuf_sz)
+		*max_recvbuf_sz = MAX_RECVBUF_SZ;
+	if (rtw_recvbuf_nr_out) {
+		extern uint rtw_recvbuf_nr;
+
+		*rtw_recvbuf_nr_out = rtw_recvbuf_nr;
+	}
+}
 
 void rtw_rust_debug_dump_drv_cfg_pre_num_banners(void *sel)
 {
