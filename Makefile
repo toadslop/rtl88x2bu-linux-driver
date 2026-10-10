@@ -3396,9 +3396,24 @@ rust-objects-rtw-wapi-sms4-pn-iv-c:
 		-I$(shell pwd)/tests/host/include -DWAPI_PN_IV_L1_REF \
 		-o tests/host/wapi_sms4/wapi_sms4_pn_iv_c_ref.o tests/host/wapi_sms4/wapi_sms4_pn_iv_c_oracle.c
 
-rust-check-symbols-rtw-wapi-sms4: rust-objects-rtw-wapi-sms4-c rust-objects-rtw-wapi-sms4-pn-iv-c rust-objects-rtw-wapi-sms4
+rust-objects-rtw-wapi-sms4-ofb-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/tests/host/wapi_sms4 \
+		-DWAPI_SMS4_OFB_L1_REF \
+		-o tests/host/wapi_sms4/wapi_sms4_ofb_c_ref.ofb.o \
+		tests/host/wapi_sms4/wapi_sms4_ofb_c_oracle.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -DWAPI_SMS4_L1_REF \
+		-o tests/host/wapi_sms4/wapi_sms4_ofb_c_ref.core.o \
+		tests/host/wapi_sms4/wapi_sms4_c_oracle.c
+	ld -r -o tests/host/wapi_sms4/wapi_sms4_ofb_c_ref.o \
+		tests/host/wapi_sms4/wapi_sms4_ofb_c_ref.ofb.o \
+		tests/host/wapi_sms4/wapi_sms4_ofb_c_ref.core.o
+
+rust-check-symbols-rtw-wapi-sms4: rust-objects-rtw-wapi-sms4-c rust-objects-rtw-wapi-sms4-pn-iv-c rust-objects-rtw-wapi-sms4-ofb-c rust-objects-rtw-wapi-sms4
 	$(MAKE) rust-check-symbols OLD=tests/host/wapi_sms4/wapi_sms4_core_c_ref.o NEW=rust/rtw_wapi_sms4.o
 	$(MAKE) rust-check-symbols OLD=tests/host/wapi_sms4/wapi_sms4_pn_iv_c_ref.o NEW=rust/rtw_wapi_sms4.o ALLOW_VACUOUS=1
+	$(MAKE) rust-check-symbols OLD=tests/host/wapi_sms4/wapi_sms4_ofb_c_ref.o NEW=rust/rtw_wapi_sms4.o ALLOW_VACUOUS=1
 
 # W3-33/W3-34: compare host C oracle (rtw_rm_util_rest.c) against host Rust oracle.
 rust-objects-rtw-rm-util-c:

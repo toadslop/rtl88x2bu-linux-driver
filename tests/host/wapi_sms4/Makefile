@@ -21,7 +21,7 @@ test: test-c test-rust
 
 test-pn-iv: test-pn-iv-c test-pn-iv-rust
 
-test-ofb: test-ofb-c
+test-ofb: test-ofb-c test-ofb-rust
 
 test-c: test_wapi_sms4
 	./test_wapi_sms4
