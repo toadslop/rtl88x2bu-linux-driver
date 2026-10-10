@@ -6,7 +6,14 @@
 #include <string.h>
 
 #include "host_wapi_sms4_ofb_oracle.h"
+
+#ifndef WAPI_SMS4_OFB_L1_REF
 #include "host_wapi_sms4_oracle.h"
+#else
+void SMS4Crypt(u8 *input, u8 *output, u32 *rk);
+void SMS4KeyExt(u8 *key, u32 *rk, u32 crypt_flag);
+void xor_block(void *dst, void *src1, void *src2);
+#endif
 
 #define ENCRYPT 0
 
@@ -31,17 +38,30 @@ static void wapi_sms4_cryption(const u8 *key, const u8 *iv, const u8 *input,
 
 	memcpy(block_in, temp_iv, 16);
 
+#ifndef WAPI_SMS4_OFB_L1_REF
 	host_sms4_key_ext(key, rk, crypt_flag);
+#else
+	SMS4KeyExt((u8 *)key, rk, crypt_flag);
+#endif
 
 	for (i = 0; i < block_num - 1; i++) {
+#ifndef WAPI_SMS4_OFB_L1_REF
 		host_sms4_crypt(block_in, block_out, rk);
 		host_sms4_xor_block(&output[i * 16], &input[i * 16], block_out);
+#else
+		SMS4Crypt(block_in, block_out, rk);
+		xor_block(&output[i * 16], (void *)&input[i * 16], block_out);
+#endif
 		memcpy(block_in, block_out, 16);
 	}
 
 	*output_length = i * 16;
 
+#ifndef WAPI_SMS4_OFB_L1_REF
 	host_sms4_crypt(block_in, block_out, rk);
+#else
+	SMS4Crypt(block_in, block_out, rk);
+#endif
 
 	for (j = 0; j < remainder; j++)
 		output[i * 16 + j] = input[i * 16 + j] ^ block_out[j];
