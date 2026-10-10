@@ -12,10 +12,10 @@
 )]
 
 #[cfg(host_wapi_sms4_test)]
-use std::os::raw::{c_uchar, c_uint, c_void};
+use std::os::raw::{c_int, c_uchar, c_uint, c_void};
 
 #[cfg(not(host_wapi_sms4_test))]
-use core::ffi::{c_uchar, c_uint, c_void};
+use core::ffi::{c_int, c_uchar, c_uint, c_void};
 
 type U8 = c_uchar;
 type U32 = c_uint;
@@ -282,4 +282,10 @@ pub extern "C" fn host_wapi_sms4_fill_extension(
     add_count: U8,
 ) -> U8 {
     wapi_sms4_fill_extension(ext, key_idx, pn, add_count)
+}
+
+/// W3-136: SMS4 IV header hook (driver currently no-ops; matches `rtw_wapi_sms4_rest.c`).
+#[no_mangle]
+pub extern "C" fn SecSMS4HeaderFillIV(_padapter: *mut c_void, _pxmitframe: *mut U8) -> c_int {
+    0
 }
