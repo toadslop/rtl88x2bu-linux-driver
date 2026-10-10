@@ -6,6 +6,7 @@ ORACLE := wapi_sms4_c_oracle.c
 PN_IV_ORACLE := wapi_sms4_pn_iv_c_oracle.c
 OFB_ORACLE := wapi_sms4_ofb_c_oracle.c
 MIC_ORACLE := wapi_sms4_mic_c_oracle.c
+QOS_PN_ORACLE := wapi_sms4_qos_pn_c_oracle.c
 RUST_SMS4 := $(ROOT)/rust/rtw_wapi_sms4.rs
 
 CC := gcc
@@ -14,9 +15,10 @@ CFLAGS := -Wall -Wextra -Werror -O2 -I$(HOST_INC) -DWAPI_SMS4_FULL_VECTORS
 RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
 
 .PHONY: all test test-c test-rust test-pn-iv test-pn-iv-c test-pn-iv-rust \
-	test-ofb test-ofb-c test-ofb-rust test-mic test-mic-c test-mic-rust clean
+	test-ofb test-ofb-c test-ofb-rust test-mic test-mic-c test-mic-rust \
+	test-qos-pn test-qos-pn-c test-qos-pn-rust clean
 
-all: test test-pn-iv test-ofb test-mic
+all: test test-pn-iv test-ofb test-mic test-qos-pn
 
 test: test-c test-rust
 
@@ -24,7 +26,9 @@ test-pn-iv: test-pn-iv-c test-pn-iv-rust
 
 test-ofb: test-ofb-c test-ofb-rust
 
-test-mic: test-mic-c
+test-mic: test-mic-c test-mic-rust
+
+test-qos-pn: test-qos-pn-c test-qos-pn-rust
 
 test-c: test_wapi_sms4
 	./test_wapi_sms4
@@ -78,7 +82,20 @@ test_wapi_sms4_mic_rust: test_wapi_sms4_mic.c librust_wapi_sms4.a
 test-mic-rust: test_wapi_sms4_mic_rust
 	./test_wapi_sms4_mic_rust
 
+test_wapi_sms4_qos_pn: test_wapi_sms4_qos_pn.c $(QOS_PN_ORACLE)
+	$(CC) $(CFLAGS) -I. -o $@ test_wapi_sms4_qos_pn.c $(QOS_PN_ORACLE)
+
+test-qos-pn-c: test_wapi_sms4_qos_pn
+	./test_wapi_sms4_qos_pn
+
+test_wapi_sms4_qos_pn_rust: test_wapi_sms4_qos_pn.c librust_wapi_sms4.a
+	$(CC) $(CFLAGS) -I. -DRUST_WAPI_QOS_PN_ORACLE -o $@ test_wapi_sms4_qos_pn.c librust_wapi_sms4.a
+
+test-qos-pn-rust: test_wapi_sms4_qos_pn_rust
+	./test_wapi_sms4_qos_pn_rust
+
 clean:
 	rm -f test_wapi_sms4 test_wapi_sms4_rust test_wapi_sms4_pn_iv \
 		test_wapi_sms4_pn_iv_rust test_wapi_sms4_ofb test_wapi_sms4_ofb_rust \
-		test_wapi_sms4_mic test_wapi_sms4_mic_rust librust_wapi_sms4.a
+		test_wapi_sms4_mic test_wapi_sms4_mic_rust \
+		test_wapi_sms4_qos_pn test_wapi_sms4_qos_pn_rust librust_wapi_sms4.a
