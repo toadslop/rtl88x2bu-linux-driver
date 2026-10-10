@@ -4,4 +4,6 @@ test_wapi_sms4_pn_iv
 test_wapi_sms4_pn_iv_rust
 test_wapi_sms4_ofb
 test_wapi_sms4_ofb_rust
+test_wapi_sms4_mic
+test_wapi_sms4_mic_rust
 librust_wapi_sms4.a
