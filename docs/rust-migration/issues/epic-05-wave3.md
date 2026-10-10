@@ -187,7 +187,15 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-136 | `wave3-136-wapi-sms4-pn-iv.md` | `rtw_wapi_sms4.c` PN + IV header |
 | W3-137 | `wave3-137-btcoex-wifionly.md` | `rtw_btcoex_wifionly.c` wifionly stubs |
 
-Further ~200 LOC slices **not yet covered** after tranche 8; file new `wave3-*.md` issues as needed:
+## Children (tranche 9 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-139 | `wave3-139-wapi-sms4-ofb-crypt.md` | `rtw_wapi_sms4_rest.c` OFB payload crypt (WapiSMS4*) |
+| W3-140 | `wave3-140-wapi-sms4-mic.md` | `WapiSMS4CalculateMic` |
+| W3-141 | `wave3-141-wapi-pn-qos-cache.md` | QoS PN cache + `WapiCheckPnInSwDecrypt` |
+
+Further ~200 LOC slices **not yet covered** after tranche 9; file new `wave3-*.md` issues as needed:
 
 - `rtw_beamforming.c` sounding state machine (HAL-coupled NDPA paths)
 - `rtw_debug.c` procfs walkers / register dumps

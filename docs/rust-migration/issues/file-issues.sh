@@ -242,6 +242,9 @@ files=(
   wave3-135-wapi-sms4-core.md
   wave3-136-wapi-sms4-pn-iv.md
   wave3-137-btcoex-wifionly.md
+  wave3-139-wapi-sms4-ofb-crypt.md
+  wave3-140-wapi-sms4-mic.md
+  wave3-141-wapi-pn-qos-cache.md
   wave4-01-hal-hw-rate-map.md
   wave4-02-hal-rsvd-page-cache.md
   wave4-03-hal-dump-chip-info.md
