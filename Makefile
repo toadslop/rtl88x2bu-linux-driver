@@ -4241,6 +4241,20 @@ rust-check-symbols-rtw-debug-sec-cam: rust-objects-rtw-debug-sec-cam-c rust-obje
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_sec_cam_c_ref.o NEW=rust/rtw_debug_sec_cam.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_sec_cam.allow ALLOW_VACUOUS=1
 
+# W3-134: host C oracle (tx/rx debug dump leaves) vs rust/rtw_debug_tx_rx_dumps.o.
+rust-objects-rtw-debug-tx-rx:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-tx-rx"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug_tx_rx_dumps.o
+rust-objects-rtw-debug-tx-rx-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_tx_rx_dumps_c_ref.o \
+		tests/host/debug/host_rtw_debug_tx_rx_dumps_shim.c
+rust-check-symbols-rtw-debug-tx-rx: rust-objects-rtw-debug-tx-rx-c rust-objects-rtw-debug-tx-rx
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_tx_rx_dumps_c_ref.o NEW=rust/rtw_debug_tx_rx_dumps.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_tx_rx.allow ALLOW_VACUOUS=1
+
 # W3-94 follow-up PR4: host C oracle (ps deny shim) vs rust/rtw_pwrctrl.o.
 rust-objects-rtw-pwrctrl:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-pwrctrl"; exit 1; }

@@ -1,0 +1,16 @@
+# L1 allowlist for W3-134: Rust owns tx/rx debug dump leaves.
+drop rtw_rust_debug_log_info
+drop rtw_rust_debug_recv_sink_udpport
+drop rtw_rust_debug_recv_pre_rtp_rxseq
+drop rtw_rust_debug_recv_cur_rtp_rxseq
+drop rtw_rust_debug_recv_set_pre_rtp_rxseq
+drop rtw_rust_debug_recv_set_cur_rtp_rxseq
+drop rtw_rust_debug_sta_reorder_get
+drop rtw_rust_debug_dvobj_primary_adapter
+drop rtw_rust_debug_dvobj_rfctl
+drop rtw_rust_debug_hal_chk_proto_cap
+drop rtw_rust_debug_hal_is_bw_support
+drop rtw_rust_debug_ch_width_str
+drop rtw_rust_debug_rfctl_rate_bmp_ht
+drop rtw_rust_debug_rfctl_rate_bmp_vht
+drop rtw_rust_debug_rfctl_rate_bmp_cck_ofdm
