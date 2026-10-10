@@ -487,6 +487,7 @@ void rf_reg_dump(void *sel, _adapter *adapter)
 	}
 }
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 void rtw_sink_rtp_seq_dbg(_adapter *adapter, u8 *ehdr_pos)
 {
 	struct recv_priv *precvpriv = &(adapter->recvpriv);
@@ -502,7 +503,7 @@ void rtw_sink_rtp_seq_dbg(_adapter *adapter, u8 *ehdr_pos)
 				} else {
 					RTW_INFO("%s : RTP Seq num from %d to %d\n", __FUNCTION__, precvpriv->pre_rtp_rxseq, precvpriv->cur_rtp_rxseq);
 				}
-			}	
+			}
 		}
 	}
 }
@@ -521,6 +522,7 @@ void sta_rx_reorder_ctl_dump(void *sel, struct sta_info *sta)
 		}
 	}
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-134 PR1 leaves in rust/rtw_debug_tx_rx_dumps.rs */
 
 void dump_tx_rate_bmp(void *sel, struct dvobj_priv *dvobj)
 {

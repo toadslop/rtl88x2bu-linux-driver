@@ -2965,6 +2965,7 @@ $(MODULE_NAME)-y += rust/rtw_iol_rest.o
 $(MODULE_NAME)-y += rust/rtw_sreset.o
 $(MODULE_NAME)-y += rust/rtw_debug.o
 $(MODULE_NAME)-y += rust/rtw_debug_sec_cam.o
+$(MODULE_NAME)-y += rust/rtw_debug_tx_rx_dumps.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
