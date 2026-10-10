@@ -310,6 +310,9 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-cmd-queue
 	rust-check-symbols-rtw-cmd-thread
 	rust-check-symbols-rtw-odm-phydm-init
+	rust-check-symbols-rtw-debug
+	rust-check-symbols-rtw-debug-sec-cam
+	rust-check-symbols-rtw-debug-tx-rx
 )
 
 emit() {
