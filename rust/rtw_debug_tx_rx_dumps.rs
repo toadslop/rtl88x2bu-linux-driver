@@ -101,9 +101,7 @@ pub extern "C" fn rtw_sink_rtp_seq_dbg(adapter: *mut c_void, ehdr_pos: *mut U8) 
         return;
     }
     let pre = unsafe { rtw_rust_debug_recv_cur_rtp_rxseq(adapter) };
-    let cur = unsafe {
-        U16::from_be(core::ptr::read_unaligned(ehdr_pos.add(0x2c) as *const U16))
-    };
+    let cur = unsafe { U16::from_be(core::ptr::read_unaligned(ehdr_pos.add(0x2c) as *const U16)) };
     unsafe {
         rtw_rust_debug_recv_set_pre_rtp_rxseq(adapter, pre);
         rtw_rust_debug_recv_set_cur_rtp_rxseq(adapter, cur);
@@ -116,7 +114,11 @@ pub extern "C" fn rtw_sink_rtp_seq_dbg(adapter: *mut c_void, ehdr_pos: *mut U8) 
     }
     let mut line = [0u8; 96];
     let mut pos = 0usize;
-    push_str(&mut line, &mut pos, b"rtw_sink_rtp_seq_dbg : RTP Seq num from ");
+    push_str(
+        &mut line,
+        &mut pos,
+        b"rtw_sink_rtp_seq_dbg : RTP Seq num from ",
+    );
     push_u16_dec(&mut line, &mut pos, pre);
     push_str(&mut line, &mut pos, b" to ");
     push_u16_dec(&mut line, &mut pos, cur);
@@ -137,13 +139,7 @@ pub extern "C" fn sta_rx_reorder_ctl_dump(sel: *mut c_void, sta: *mut c_void) {
         let mut ampdu_size = 0u8;
         let mut indicate_seq = 0u16;
         unsafe {
-            rtw_rust_debug_sta_reorder_get(
-                sta,
-                i,
-                &mut enable,
-                &mut ampdu_size,
-                &mut indicate_seq,
-            );
+            rtw_rust_debug_sta_reorder_get(sta, i, &mut enable, &mut ampdu_size, &mut indicate_seq);
         }
         if ampdu_size == RX_AMPDU_SIZE_INVALID && indicate_seq == 0xffff {
             continue;
