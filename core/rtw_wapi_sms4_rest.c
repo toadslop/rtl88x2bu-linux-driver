@@ -155,109 +155,13 @@ void SecCalculateMicSMS4(
 
 /* WapiIncreasePN: rust/rtw_wapi_sms4.rs (W3-136) */
 
-void WapiGetLastRxUnicastPNForQoSData(
-	u8			UserPriority,
-	PRT_WAPI_STA_INFO    pWapiStaInfo,
-	u8 *PNOut
-)
-{
-	WAPI_TRACE(WAPI_RX, "===========> %s\n", __FUNCTION__);
-	switch (UserPriority) {
-	case 0:
-	case 3:
-		memcpy(PNOut, pWapiStaInfo->lastRxUnicastPNBEQueue, 16);
-		break;
-	case 1:
-	case 2:
-		memcpy(PNOut, pWapiStaInfo->lastRxUnicastPNBKQueue, 16);
-		break;
-	case 4:
-	case 5:
-		memcpy(PNOut, pWapiStaInfo->lastRxUnicastPNVIQueue, 16);
-		break;
-	case 6:
-	case 7:
-		memcpy(PNOut, pWapiStaInfo->lastRxUnicastPNVOQueue, 16);
-		break;
-	default:
-		WAPI_TRACE(WAPI_ERR, "%s: Unknown TID\n", __FUNCTION__);
-		break;
-	}
-	WAPI_TRACE(WAPI_RX, "<=========== %s\n", __FUNCTION__);
-}
+void WapiGetLastRxUnicastPNForQoSData(u8 UserPriority, PRT_WAPI_STA_INFO pWapiStaInfo,
+				      u8 *PNOut);
+void WapiSetLastRxUnicastPNForQoSData(u8 UserPriority, u8 *PNIn,
+				      PRT_WAPI_STA_INFO pWapiStaInfo);
+u8 WapiCheckPnInSwDecrypt(_adapter *padapter, struct sk_buff *pskb);
 
-
-void WapiSetLastRxUnicastPNForQoSData(
-	u8		UserPriority,
-	u8           *PNIn,
-	PRT_WAPI_STA_INFO    pWapiStaInfo
-)
-{
-	WAPI_TRACE(WAPI_RX, "===========> %s\n", __FUNCTION__);
-	switch (UserPriority) {
-	case 0:
-	case 3:
-		memcpy(pWapiStaInfo->lastRxUnicastPNBEQueue, PNIn, 16);
-		break;
-	case 1:
-	case 2:
-		memcpy(pWapiStaInfo->lastRxUnicastPNBKQueue, PNIn, 16);
-		break;
-	case 4:
-	case 5:
-		memcpy(pWapiStaInfo->lastRxUnicastPNVIQueue, PNIn, 16);
-		break;
-	case 6:
-	case 7:
-		memcpy(pWapiStaInfo->lastRxUnicastPNVOQueue, PNIn, 16);
-		break;
-	default:
-		WAPI_TRACE(WAPI_ERR, "%s: Unknown TID\n", __FUNCTION__);
-		break;
-	}
-	WAPI_TRACE(WAPI_RX, "<=========== %s\n", __FUNCTION__);
-}
-
-
-/****************************************************************************
- FALSE not RX-Reorder
- TRUE do RX Reorder
-add to support WAPI to N-mode
-*****************************************************************************/
-u8 WapiCheckPnInSwDecrypt(
-	_adapter *padapter,
-	struct sk_buff *pskb
-)
-{
-	u8				ret = false;
-
-#if 0
-	struct ieee80211_hdr_3addr_qos *header;
-	u16				fc;
-	u8				*pDaddr, *pTaddr, *pRaddr;
-
-	header = (struct ieee80211_hdr_3addr_qos *)pskb->data;
-	pTaddr = header->addr2;
-	pRaddr = header->addr1;
-	fc = le16_to_cpu(header->frame_ctl);
-
-	if (GetToDs(&fc))
-		pDaddr = header->addr3;
-	else
-		pDaddr = header->addr1;
-
-	if ((_rtw_memcmp(pRaddr, padapter->pnetdev->dev_addr, ETH_ALEN) == 0)
-	    &&	!(pDaddr)
-	    && (GetFrameType(&fc) == WIFI_QOS_DATA_TYPE))
-		/* && ieee->pHTInfo->bCurrentHTSupport && */
-		/* ieee->pHTInfo->bCurRxReorderEnable) */
-		ret = false;
-	else
-		ret = true;
-#endif
-	WAPI_TRACE(WAPI_RX, "%s: return %d\n", __FUNCTION__, ret);
-	return ret;
-}
+/* WapiGet/SetLastRxUnicastPNForQoSData + WapiCheckPnInSwDecrypt: rust/rtw_wapi_sms4.rs (W3-141) */
 
 /* SecSMS4HeaderFillIV: rust/rtw_wapi_sms4.rs (W3-136) */
 

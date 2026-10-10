@@ -452,3 +452,121 @@ pub extern "C" fn host_wapi_sms4_decryption(
         output_length,
     );
 }
+/// Layout matches `RT_WAPI_STA_INFO` in `include/rtw_wapi.h` (verified: BE queue @ 210).
+#[repr(C)]
+struct ListHead {
+    next: *mut ListHead,
+    prev: *mut ListHead,
+}
+
+#[repr(C)]
+struct RtWapiKey {
+    data_key: [U8; 16],
+    mic_key: [U8; 16],
+    key_id: U8,
+    b_set: U8,
+    b_tx_enable: U8,
+}
+
+#[repr(C)]
+struct RtWapiStaInfo {
+    list: ListHead,
+    peer_mac_addr: [U8; 6],
+    wapi_usk: RtWapiKey,
+    wapi_usk_update: RtWapiKey,
+    wapi_msk: RtWapiKey,
+    wapi_msk_update: RtWapiKey,
+    last_rx_unicast_pn: [U8; 16],
+    last_tx_unicast_pn: [U8; 16],
+    last_rx_multicast_pn: [U8; 16],
+    last_rx_unicast_pn_be_queue: [U8; 16],
+    last_rx_unicast_pn_bk_queue: [U8; 16],
+    last_rx_unicast_pn_vi_queue: [U8; 16],
+    last_rx_unicast_pn_vo_queue: [U8; 16],
+    b_setkey_ok: U8,
+    b_authenticate_in_progress: U8,
+    b_authenticator_in_updata: U8,
+}
+
+fn wapi_qos_pn_get(user_priority: U8, sta: *mut RtWapiStaInfo, pn_out: *mut U8) {
+    if sta.is_null() || pn_out.is_null() {
+        return;
+    }
+    let sta = unsafe { &mut *sta };
+    let dst = unsafe { core::slice::from_raw_parts_mut(pn_out, 16) };
+    let src = match user_priority {
+        0 | 3 => &sta.last_rx_unicast_pn_be_queue,
+        1 | 2 => &sta.last_rx_unicast_pn_bk_queue,
+        4 | 5 => &sta.last_rx_unicast_pn_vi_queue,
+        6 | 7 => &sta.last_rx_unicast_pn_vo_queue,
+        _ => return,
+    };
+    dst.copy_from_slice(src);
+}
+
+fn wapi_qos_pn_set(user_priority: U8, pn_in: *mut U8, sta: *mut RtWapiStaInfo) {
+    if sta.is_null() || pn_in.is_null() {
+        return;
+    }
+    let sta = unsafe { &mut *sta };
+    let src = unsafe { core::slice::from_raw_parts(pn_in, 16) };
+    let dst = match user_priority {
+        0 | 3 => &mut sta.last_rx_unicast_pn_be_queue,
+        1 | 2 => &mut sta.last_rx_unicast_pn_bk_queue,
+        4 | 5 => &mut sta.last_rx_unicast_pn_vi_queue,
+        6 | 7 => &mut sta.last_rx_unicast_pn_vo_queue,
+        _ => return,
+    };
+    dst.copy_from_slice(src);
+}
+
+/// W3-141: per-QoS RX unicast PN cache (provenance: `core/rtw_wapi_sms4_rest.c`).
+#[no_mangle]
+pub extern "C" fn WapiGetLastRxUnicastPNForQoSData(
+    user_priority: U8,
+    p_wapi_sta_info: *mut c_void,
+    pn_out: *mut U8,
+) {
+    wapi_qos_pn_get(user_priority, p_wapi_sta_info as *mut RtWapiStaInfo, pn_out);
+}
+
+#[no_mangle]
+pub extern "C" fn WapiSetLastRxUnicastPNForQoSData(
+    user_priority: U8,
+    pn_in: *mut U8,
+    p_wapi_sta_info: *mut c_void,
+) {
+    wapi_qos_pn_set(user_priority, pn_in, p_wapi_sta_info as *mut RtWapiStaInfo);
+}
+
+/// Live C always returns false (`#if 0` body); preserve until intentionally enabled.
+#[no_mangle]
+pub extern "C" fn WapiCheckPnInSwDecrypt(_padapter: *mut c_void, _pskb: *mut c_void) -> U8 {
+    0
+}
+
+#[cfg(host_wapi_sms4_test)]
+#[no_mangle]
+pub extern "C" fn host_wapi_get_last_rx_unicast_pn_for_qos_data(
+    user_priority: U8,
+    sta: *mut c_void,
+    pn_out: *mut U8,
+) {
+    WapiGetLastRxUnicastPNForQoSData(user_priority, sta, pn_out);
+}
+
+#[cfg(host_wapi_sms4_test)]
+#[no_mangle]
+pub extern "C" fn host_wapi_set_last_rx_unicast_pn_for_qos_data(
+    user_priority: U8,
+    pn_in: *mut U8,
+    sta: *mut c_void,
+) {
+    WapiSetLastRxUnicastPNForQoSData(user_priority, pn_in, sta);
+}
+
+#[cfg(host_wapi_sms4_test)]
+#[no_mangle]
+pub extern "C" fn host_wapi_check_pn_in_sw_decrypt(padapter: *mut c_void, pskb: *mut c_void) -> U8 {
+    WapiCheckPnInSwDecrypt(padapter, pskb)
+}
