@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! W3-134 tx/rx debug dump leaves (part 1) from `core/rtw_debug_rest.c`.
+//! W3-134 tx/rx debug dump leaves from `core/rtw_debug_rest.c`.
 
 #![allow(
     dead_code,
@@ -16,8 +16,25 @@ use core::ffi::{c_char, c_int, c_void};
 
 type U8 = u8;
 type U16 = u16;
+type U32 = u32;
+type U64 = u64;
 
 const RX_AMPDU_SIZE_INVALID: U8 = 0xff;
+const CHANNEL_WIDTH_20: U8 = 0;
+const CHANNEL_WIDTH_40: U8 = 1;
+const CHANNEL_WIDTH_160: U8 = 3;
+const PROTO_CAP_11AC: U8 = 8;
+
+const RATE_BMP_CCK: U16 = 0x000f;
+const RATE_BMP_OFDM: U16 = 0xfff0;
+const RATE_BMP_HT_1SS: U32 = 0x000000ff;
+const RATE_BMP_HT_2SS: U32 = 0x0000ff00;
+const RATE_BMP_HT_3SS: U32 = 0x00ff0000;
+const RATE_BMP_HT_4SS: U32 = 0xff000000;
+const RATE_BMP_VHT_1SS: U64 = 0x00000003ff;
+const RATE_BMP_VHT_2SS: U64 = 0x00000ffc00;
+const RATE_BMP_VHT_3SS: U64 = 0x003ff00000;
+const RATE_BMP_VHT_4SS: U64 = 0xffc0000000;
 
 extern "C" {
     fn rtw_rust_debug_print_sel(sel: *mut c_void, line: *const c_char);
@@ -34,6 +51,27 @@ extern "C" {
         ampdu_size: *mut U8,
         indicate_seq: *mut U16,
     );
+    fn rtw_rust_debug_dvobj_primary_adapter(dvobj: *mut c_void) -> *mut c_void;
+    fn rtw_rust_debug_dvobj_rfctl(dvobj: *mut c_void) -> *mut c_void;
+    fn rtw_rust_debug_hal_chk_proto_cap(adapter: *mut c_void, cap: U8) -> U8;
+    fn rtw_rust_debug_hal_is_bw_support(adapter: *mut c_void, bw: U8) -> U8;
+    fn rtw_rust_debug_ch_width_str(bw: U8) -> *const c_char;
+    fn rtw_rust_debug_rfctl_rate_bmp_ht(rfctl: *mut c_void, bw: U8) -> U32;
+    fn rtw_rust_debug_rfctl_rate_bmp_vht(rfctl: *mut c_void, bw: U8) -> U64;
+    fn rtw_rust_debug_rfctl_rate_bmp_cck_ofdm(rfctl: *mut c_void) -> U16;
+}
+
+fn c_str_bytes(ptr: *const c_char) -> &'static [u8] {
+    if ptr.is_null() {
+        return b"";
+    }
+    unsafe {
+        let mut len = 0usize;
+        while *ptr.add(len) != 0 {
+            len += 1;
+        }
+        core::slice::from_raw_parts(ptr as *const u8, len)
+    }
 }
 
 fn print_bytes(sel: *mut c_void, bytes: &[u8]) {
@@ -65,6 +103,62 @@ fn push_byte(out: &mut [u8], pos: &mut usize, b: U8) {
 fn push_str(out: &mut [u8], pos: &mut usize, s: &[u8]) {
     for &b in s {
         push_byte(out, pos, b);
+    }
+}
+
+fn push_u16_hex3(out: &mut [u8], pos: &mut usize, v: U16) {
+    for shift in [8i32, 4, 0] {
+        let nib = ((v >> shift) & 0xf) as U8;
+        push_byte(
+            out,
+            pos,
+            if nib < 10 {
+                b'0' + nib
+            } else {
+                b'a' + (nib - 10)
+            },
+        );
+    }
+}
+
+fn push_u16_hex2(out: &mut [u8], pos: &mut usize, v: U16) {
+    for shift in [4i32, 0] {
+        let nib = ((v >> shift) & 0xf) as U8;
+        push_byte(
+            out,
+            pos,
+            if nib < 10 {
+                b'0' + nib
+            } else {
+                b'a' + (nib - 10)
+            },
+        );
+    }
+}
+
+/// Match C `printf("%01x", …)` for the 4-bit CCK rate mask.
+fn push_u8_hex_min1(out: &mut [u8], pos: &mut usize, v: U8) {
+    let nib = v & 0xf;
+    push_byte(
+        out,
+        pos,
+        if nib < 10 {
+            b'0' + nib
+        } else {
+            b'a' + (nib - 10)
+        },
+    );
+}
+
+fn push_str_field_right(out: &mut [u8], pos: &mut usize, width: usize, s: &[u8]) {
+    let len = s.len();
+    if len >= width {
+        push_str(out, pos, &s[..width]);
+    } else {
+        for _ in 0..width - len {
+            push_byte(out, pos, b' ');
+        }
+        push_str(out, pos, s);
     }
 }
 
@@ -155,5 +249,107 @@ pub extern "C" fn sta_rx_reorder_ctl_dump(sel: *mut c_void, sta: *mut c_void) {
         push_str(&mut line, &mut pos, b", indicate_seq=");
         push_u16_dec(&mut line, &mut pos, indicate_seq);
         print_line(sel, &line[..pos]);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn dump_tx_rate_bmp(sel: *mut c_void, dvobj: *mut c_void) {
+    if dvobj.is_null() {
+        return;
+    }
+    let adapter = unsafe { rtw_rust_debug_dvobj_primary_adapter(dvobj) };
+    let rfctl = unsafe { rtw_rust_debug_dvobj_rfctl(dvobj) };
+    if adapter.is_null() || rfctl.is_null() {
+        return;
+    }
+    let vht_cap = unsafe { rtw_rust_debug_hal_chk_proto_cap(adapter, PROTO_CAP_11AC) != 0 };
+    let mut hdr = [0u8; 64];
+    let mut pos = 0usize;
+    push_str(&mut hdr, &mut pos, b"bw    ");
+    if vht_cap {
+        push_str(&mut hdr, &mut pos, b" vht            ");
+    }
+    push_str(&mut hdr, &mut pos, b" ht          ofdm cck");
+    print_line(sel, &hdr[..pos]);
+
+    let cck_ofdm = unsafe { rtw_rust_debug_rfctl_rate_bmp_cck_ofdm(rfctl) };
+    let mut bw = CHANNEL_WIDTH_20;
+    while bw <= CHANNEL_WIDTH_160 {
+        if unsafe { rtw_rust_debug_hal_is_bw_support(adapter, bw) == 0 } {
+            bw += 1;
+            continue;
+        }
+        let bw_label = c_str_bytes(unsafe { rtw_rust_debug_ch_width_str(bw) });
+        let mut line = [0u8; 128];
+        pos = 0usize;
+        push_str_field_right(&mut line, &mut pos, 6, bw_label);
+        if vht_cap {
+            let bmp_vht = unsafe { rtw_rust_debug_rfctl_rate_bmp_vht(rfctl, bw) };
+            push_byte(&mut line, &mut pos, b' ');
+            push_u16_hex3(
+                &mut line,
+                &mut pos,
+                ((bmp_vht & RATE_BMP_VHT_4SS) >> 30) as U16,
+            );
+            push_byte(&mut line, &mut pos, b' ');
+            push_u16_hex3(
+                &mut line,
+                &mut pos,
+                ((bmp_vht & RATE_BMP_VHT_3SS) >> 20) as U16,
+            );
+            push_byte(&mut line, &mut pos, b' ');
+            push_u16_hex3(
+                &mut line,
+                &mut pos,
+                ((bmp_vht & RATE_BMP_VHT_2SS) >> 10) as U16,
+            );
+            push_byte(&mut line, &mut pos, b' ');
+            push_u16_hex3(&mut line, &mut pos, (bmp_vht & RATE_BMP_VHT_1SS) as U16);
+        }
+        let bmp_ht = unsafe { rtw_rust_debug_rfctl_rate_bmp_ht(rfctl, bw) };
+        let ht4 = if bw <= CHANNEL_WIDTH_40 {
+            ((bmp_ht & RATE_BMP_HT_4SS) >> 24) as U16
+        } else {
+            0
+        };
+        let ht3 = if bw <= CHANNEL_WIDTH_40 {
+            ((bmp_ht & RATE_BMP_HT_3SS) >> 16) as U16
+        } else {
+            0
+        };
+        let ht2 = if bw <= CHANNEL_WIDTH_40 {
+            ((bmp_ht & RATE_BMP_HT_2SS) >> 8) as U16
+        } else {
+            0
+        };
+        let ht1 = if bw <= CHANNEL_WIDTH_40 {
+            (bmp_ht & RATE_BMP_HT_1SS) as U16
+        } else {
+            0
+        };
+        push_byte(&mut line, &mut pos, b' ');
+        push_u16_hex2(&mut line, &mut pos, ht4);
+        push_byte(&mut line, &mut pos, b' ');
+        push_u16_hex2(&mut line, &mut pos, ht3);
+        push_byte(&mut line, &mut pos, b' ');
+        push_u16_hex2(&mut line, &mut pos, ht2);
+        push_byte(&mut line, &mut pos, b' ');
+        push_u16_hex2(&mut line, &mut pos, ht1);
+        let ofdm = if bw <= CHANNEL_WIDTH_20 {
+            (cck_ofdm & RATE_BMP_OFDM) >> 4
+        } else {
+            0
+        };
+        let cck = if bw <= CHANNEL_WIDTH_20 {
+            cck_ofdm & RATE_BMP_CCK
+        } else {
+            0
+        };
+        push_str(&mut line, &mut pos, b"  ");
+        push_u16_hex3(&mut line, &mut pos, ofdm);
+        push_str(&mut line, &mut pos, b"   ");
+        push_u8_hex_min1(&mut line, &mut pos, cck as U8);
+        print_line(sel, &line[..pos]);
+        bw += 1;
     }
 }

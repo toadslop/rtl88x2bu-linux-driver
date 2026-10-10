@@ -522,7 +522,6 @@ void sta_rx_reorder_ctl_dump(void *sel, struct sta_info *sta)
 		}
 	}
 }
-#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-134 PR1 leaves in rust/rtw_debug_tx_rx_dumps.rs */
 
 void dump_tx_rate_bmp(void *sel, struct dvobj_priv *dvobj)
 {
@@ -563,6 +562,7 @@ void dump_tx_rate_bmp(void *sel, struct dvobj_priv *dvobj)
 		);
 	}
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-134 tx/rx dumps in rust/rtw_debug_tx_rx_dumps.rs */
 
 void dump_adapters_status(void *sel, struct dvobj_priv *dvobj)
 {

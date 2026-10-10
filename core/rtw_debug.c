@@ -307,4 +307,44 @@ void rtw_rust_debug_sta_reorder_get(struct sta_info *sta, int tid, u8 *enable,
 		*indicate_seq = rc->indicate_seq;
 }
 
+_adapter *rtw_rust_debug_dvobj_primary_adapter(struct dvobj_priv *dvobj)
+{
+	return dvobj_get_primary_adapter(dvobj);
+}
+
+struct rf_ctl_t *rtw_rust_debug_dvobj_rfctl(struct dvobj_priv *dvobj)
+{
+	return dvobj_to_rfctl(dvobj);
+}
+
+u8 rtw_rust_debug_hal_chk_proto_cap(_adapter *adapter, u8 cap)
+{
+	return hal_chk_proto_cap(adapter, cap) ? 1 : 0;
+}
+
+u8 rtw_rust_debug_hal_is_bw_support(_adapter *adapter, u8 bw)
+{
+	return hal_is_bw_support(adapter, bw) ? 1 : 0;
+}
+
+const char *rtw_rust_debug_ch_width_str(u8 bw)
+{
+	return ch_width_str(bw);
+}
+
+u32 rtw_rust_debug_rfctl_rate_bmp_ht(struct rf_ctl_t *rfctl, u8 bw)
+{
+	return rfctl->rate_bmp_ht_by_bw[bw];
+}
+
+u64 rtw_rust_debug_rfctl_rate_bmp_vht(struct rf_ctl_t *rfctl, u8 bw)
+{
+	return rfctl->rate_bmp_vht_by_bw[bw];
+}
+
+u16 rtw_rust_debug_rfctl_rate_bmp_cck_ofdm(struct rf_ctl_t *rfctl)
+{
+	return rfctl->rate_bmp_cck_ofdm;
+}
+
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */
