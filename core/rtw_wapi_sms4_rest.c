@@ -199,43 +199,7 @@ void SecCalculateMicSMS4(
 #endif
 }
 
-/* AddCount: 1 or 2.
- *  If overflow, return 1,
- *  else return 0.
- */
-u8 WapiIncreasePN(u8 *PN, u8 AddCount)
-{
-	u8  i;
-
-	if (NULL == PN)
-		return 1;
-	/* YJ,test,091102 */
-	/*
-	if(AddCount == 2){
-		RTW_INFO("############################%s(): PN[0]=0x%x\n", __FUNCTION__, PN[0]);
-		if(PN[0] == 0x48){
-			PN[0] += AddCount;
-			return 1;
-		}else{
-			PN[0] += AddCount;
-			return 0;
-		}
-	}
-	*/
-	/* YJ,test,091102,end */
-
-	for (i = 0; i < 16; i++) {
-		if (PN[i] + AddCount <= 0xff) {
-			PN[i] += AddCount;
-			return 0;
-		} else {
-			PN[i] += AddCount;
-			AddCount = 1;
-		}
-	}
-	return 1;
-}
-
+/* WapiIncreasePN: rust/rtw_wapi_sms4.rs (W3-136) */
 
 void WapiGetLastRxUnicastPNForQoSData(
 	u8			UserPriority,
