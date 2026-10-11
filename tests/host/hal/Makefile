@@ -8,6 +8,7 @@ RSVD_ORACLE := hal_rsvd_page_c_oracle.c
 RSVD_SHIM := hal_rsvd_page_shim.c
 CHIP_ORACLE := hal_dump_chip_info_c_oracle.c
 TRX_ORACLE := hal_dump_trx_mode_c_oracle.c
+FW_ORACLE := hal_dump_fw_info_c_oracle.c
 RUST_HAL := $(ROOT)/rust/hal_com.rs
 RUST_HAL_INTF := $(ROOT)/rust/hal_intf.rs
 
@@ -16,11 +17,11 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
           -I$(HOST_INC)
 
 .PHONY: all test test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust \
-	test-trx test-trx-rust clean
+	test-trx test-trx-rust test-fw test-fw-rust clean
 
 all: test
 
-test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust
+test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust test-fw
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -88,8 +89,26 @@ test_dump_trx_mode_rust: test_dump_trx_mode.c librust_hal_intf_trx.a $(HOST_JSON
 	$(CC) $(CFLAGS) -DRUST_HAL_INTF_TRX_ORACLE -o $@ test_dump_trx_mode.c \
 		$(HOST_JSON) librust_hal_intf_trx.a
 
+test-fw: test_dump_fw_info
+	./test_dump_fw_info hal_dump_fw_info_vectors.json
+
+test_dump_fw_info: test_dump_fw_info.c $(FW_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_dump_fw_info.c $(FW_ORACLE) $(HOST_JSON)
+
+librust_hal_com_fw.a: $(RUST_HAL)
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_com_fw_info_test \
+		--crate-type staticlib $(RUST_HAL) -o $@
+
+test-fw-rust: test_dump_fw_info_rust
+	./test_dump_fw_info_rust hal_dump_fw_info_vectors.json
+
+test_dump_fw_info_rust: test_dump_fw_info.c librust_hal_com_fw.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_COM_FW_ORACLE -o $@ test_dump_fw_info.c \
+		$(HOST_JSON) librust_hal_com_fw.a
+
 clean:
 	rm -f test_hw_rate_map test_hw_rate_map_rust librust_hal_com.a \
 		test_rsvd_page_cache test_rsvd_page_cache_rust librust_hal_com_rsvd.a \
 		test_dump_chip_info test_dump_chip_info_rust librust_hal_com_chip.a \
-		test_dump_trx_mode test_dump_trx_mode_rust librust_hal_intf_trx.a
+		test_dump_trx_mode test_dump_trx_mode_rust librust_hal_intf_trx.a \
+		test_dump_fw_info test_dump_fw_info_rust librust_hal_com_fw.a

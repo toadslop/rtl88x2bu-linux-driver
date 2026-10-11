@@ -1,0 +1,19 @@
+{
+  "oracle": "hal/hal_com_rest.c rtw_dump_fw_info",
+  "vectors": [
+    {
+      "name": "fw_ready",
+      "b_fw_ready": 1,
+      "firmware_version": 12,
+      "firmware_sub_version": 34,
+      "expect": "FW VER -12.34\n"
+    },
+    {
+      "name": "fw_not_ready",
+      "b_fw_ready": 0,
+      "firmware_version": 99,
+      "firmware_sub_version": 1,
+      "expect": "FW not ready\n"
+    }
+  ]
+}
