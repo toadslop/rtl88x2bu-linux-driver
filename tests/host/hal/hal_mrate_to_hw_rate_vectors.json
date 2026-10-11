@@ -1,0 +1,75 @@
+{
+  "oracle": "hal_mrate_to_hw_rate_c_oracle.c",
+  "vectors": [
+    {
+      "name": "mgn_1m",
+      "m_rate": 2,
+      "expect": 0
+    },
+    {
+      "name": "mgn_54m",
+      "m_rate": 108,
+      "expect": 11
+    },
+    {
+      "name": "mgn_mcs0",
+      "m_rate": 128,
+      "expect": 12
+    },
+    {
+      "name": "mgn_mcs31",
+      "m_rate": 159,
+      "expect": 43
+    },
+    {
+      "name": "mgn_vht1ss_mcs9",
+      "m_rate": 169,
+      "expect": 53
+    },
+    {
+      "name": "mgn_vht4ss_mcs9",
+      "m_rate": 199,
+      "expect": 83
+    },
+    {
+      "name": "mgn_unknown",
+      "m_rate": 200,
+      "expect": 0
+    },
+    {
+      "name": "mgn_mcs32",
+      "m_rate": 127,
+      "expect": 0
+    },
+    {
+      "name": "unmapped_zero",
+      "m_rate": 0,
+      "expect": 0
+    },
+    {
+      "name": "mgn_11m",
+      "m_rate": 22,
+      "expect": 3
+    },
+    {
+      "name": "mgn_6m",
+      "m_rate": 12,
+      "expect": 4
+    },
+    {
+      "name": "mgn_mcs15",
+      "m_rate": 143,
+      "expect": 27
+    },
+    {
+      "name": "mgn_vht2ss_mcs0",
+      "m_rate": 170,
+      "expect": 54
+    },
+    {
+      "name": "mgn_vht3ss_mcs5",
+      "m_rate": 185,
+      "expect": 69
+    }
+  ]
+}

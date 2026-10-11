@@ -15,8 +15,9 @@
 #[cfg(all(
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
-    not(host_hal_com_chip_info_test)
-))]
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_mrate_test),
+    ))]
 use core::ffi::{c_char, c_void};
 
 type U8 = u8;
@@ -39,19 +40,16 @@ static HW_RATE_TO_M_RATE: [U8; DESC_RATE_NUM] = [
 ];
 
 static MRATE_TO_HW_RATE: [U8; MGN_UNKNOWN as usize] = [
-    0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x04, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x03, 0x00, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b,
-    0x1c, 0x1d, 0x1e, 0x1f, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b,
-    0x2c, 0x2d, 0x2e, 0x2f, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b,
-    0x3c, 0x3d, 0x3e, 0x3f, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b,
-    0x4c, 0x4d, 0x4e, 0x4f, 0x50, 0x51, 0x52, 0x53,
+    0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00,
+    0x00, 0x00, 0x03, 0x00, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+    0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f, 0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b,
+    0x2c, 0x2d, 0x2e, 0x2f, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
+    0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f, 0x50, 0x51, 0x52, 0x53,
 ];
 
 #[repr(C)]
@@ -64,8 +62,9 @@ struct RateSectionEnt {
 #[cfg(all(
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
-    not(host_hal_com_chip_info_test)
-))]
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_mrate_test),
+    ))]
 extern "C" {
     fn MGN_RATE_STR(rate: U8) -> *const c_char;
     static mut rates_by_sections: [RateSectionEnt; RATE_SECTION_NUM as usize];
@@ -78,8 +77,9 @@ extern "C" {
 #[cfg(all(
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
-    not(host_hal_com_chip_info_test)
-))]
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_mrate_test),
+    ))]
 fn warn_invalid_hw_rate(hw_rate: U8) {
     unsafe {
         rtw_rust_hal_com_warn_invalid_hw_rate(hw_rate);
@@ -90,14 +90,16 @@ fn warn_invalid_hw_rate(hw_rate: U8) {
     host_hal_com_hw_rate_test,
     host_hal_com_rsvd_page_test,
     host_hal_com_chip_info_test,
+    host_hal_com_mrate_test
 ))]
 fn warn_invalid_hw_rate(_hw_rate: U8) {}
 
 #[cfg(all(
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
-    not(host_hal_com_chip_info_test)
-))]
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_mrate_test),
+    ))]
 fn warn_invalid_mrate(rate: U8) {
     unsafe {
         rtw_rust_hal_com_warn_invalid_mrate(rate);
@@ -108,14 +110,18 @@ fn warn_invalid_mrate(rate: U8) {
     host_hal_com_hw_rate_test,
     host_hal_com_rsvd_page_test,
     host_hal_com_chip_info_test,
+    host_hal_com_mrate_test
 ))]
 fn warn_invalid_mrate(_rate: U8) {}
 
-#[cfg(not(any(
-    host_hal_com_hw_rate_test,
-    host_hal_com_rsvd_page_test,
-    host_hal_com_chip_info_test,
-)))]
+#[cfg(any(
+    host_hal_com_mrate_test,
+    all(
+        not(host_hal_com_hw_rate_test),
+        not(host_hal_com_rsvd_page_test),
+        not(host_hal_com_chip_info_test),
+    ),
+))]
 #[no_mangle]
 pub extern "C" fn MRateToHwRate(rate: U8) -> U8 {
     let mut hw_rate = DESC_RATE1M;
@@ -128,7 +134,11 @@ pub extern "C" fn MRateToHwRate(rate: U8) -> U8 {
     hw_rate
 }
 
-#[cfg(not(any(host_hal_com_rsvd_page_test, host_hal_com_chip_info_test,)))]
+#[cfg(not(any(
+    host_hal_com_rsvd_page_test,
+    host_hal_com_chip_info_test,
+    host_hal_com_mrate_test,
+)))]
 #[no_mangle]
 pub extern "C" fn hw_rate_to_m_rate(hw_rate: U8) -> U8 {
     if (hw_rate as usize) < DESC_RATE_NUM {
@@ -334,7 +344,11 @@ pub extern "C" fn dump_hw_rate_map_test(sel: *mut c_void) {
 
 #[cfg(any(
     host_hal_com_rsvd_page_test,
-    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+    all(
+        not(host_hal_com_hw_rate_test),
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_mrate_test),
+    )
 ))]
 #[repr(C)]
 pub struct RsvdPageCache {
@@ -347,7 +361,11 @@ pub struct RsvdPageCache {
 
 #[cfg(any(
     host_hal_com_rsvd_page_test,
-    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+    all(
+        not(host_hal_com_hw_rate_test),
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_mrate_test),
+    )
 ))]
 fn page_num(len: u32, page_size: u32) -> U8 {
     let whole = len / page_size;
@@ -367,7 +385,8 @@ extern "C" {
 #[cfg(all(
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_hw_rate_test),
-    not(host_hal_com_chip_info_test)
+    not(host_hal_com_chip_info_test),
+    not(host_hal_com_mrate_test)
 ))]
 extern "C" {
     fn _rtw_malloc(sz: u32) -> *mut core::ffi::c_void;
@@ -379,13 +398,21 @@ extern "C" {
 
 #[cfg(any(
     host_hal_com_rsvd_page_test,
-    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+    all(
+        not(host_hal_com_hw_rate_test),
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_mrate_test),
+    )
 ))]
 const RSVD_TRUE: i32 = 1;
 
 #[cfg(any(
     host_hal_com_rsvd_page_test,
-    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+    all(
+        not(host_hal_com_hw_rate_test),
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_mrate_test),
+    )
 ))]
 fn rsvd_warn_on(cond: bool) {
     if !cond {
@@ -403,7 +430,11 @@ fn rsvd_warn_on(cond: bool) {
 
 #[cfg(any(
     host_hal_com_rsvd_page_test,
-    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+    all(
+        not(host_hal_com_hw_rate_test),
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_mrate_test),
+    )
 ))]
 fn rsvd_heap_alloc(sz: u32, zero: bool) -> *mut U8 {
     unsafe {
@@ -425,7 +456,11 @@ fn rsvd_heap_alloc(sz: u32, zero: bool) -> *mut U8 {
 
 #[cfg(any(
     host_hal_com_rsvd_page_test,
-    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+    all(
+        not(host_hal_com_hw_rate_test),
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_mrate_test),
+    )
 ))]
 fn rsvd_mfree(ptr: *mut U8, sz: u32) {
     if ptr.is_null() {
@@ -445,7 +480,11 @@ fn rsvd_mfree(ptr: *mut U8, sz: u32) {
 
 #[cfg(any(
     host_hal_com_rsvd_page_test,
-    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+    all(
+        not(host_hal_com_hw_rate_test),
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_mrate_test),
+    )
 ))]
 fn rsvd_memcmp_eq(a: *const U8, b: *const U8, len: u32) -> bool {
     if len == 0 {
@@ -469,7 +508,11 @@ fn rsvd_memcmp_eq(a: *const U8, b: *const U8, len: u32) -> bool {
 
 #[cfg(any(
     host_hal_com_rsvd_page_test,
-    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+    all(
+        not(host_hal_com_hw_rate_test),
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_mrate_test),
+    )
 ))]
 #[no_mangle]
 pub extern "C" fn rsvd_page_cache_update_all(
@@ -543,7 +586,11 @@ pub extern "C" fn rsvd_page_cache_update_all(
 
 #[cfg(any(
     host_hal_com_rsvd_page_test,
-    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+    all(
+        not(host_hal_com_hw_rate_test),
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_mrate_test),
+    )
 ))]
 #[no_mangle]
 pub extern "C" fn rsvd_page_cache_update_data(
@@ -585,7 +632,11 @@ pub extern "C" fn rsvd_page_cache_update_data(
 
 #[cfg(any(
     host_hal_com_rsvd_page_test,
-    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+    all(
+        not(host_hal_com_hw_rate_test),
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_mrate_test),
+    )
 ))]
 #[no_mangle]
 pub extern "C" fn rsvd_page_cache_free_data(cache: *mut RsvdPageCache) {
@@ -600,7 +651,11 @@ pub extern "C" fn rsvd_page_cache_free_data(cache: *mut RsvdPageCache) {
 
 #[cfg(any(
     host_hal_com_rsvd_page_test,
-    all(not(host_hal_com_hw_rate_test), not(host_hal_com_chip_info_test))
+    all(
+        not(host_hal_com_hw_rate_test),
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_mrate_test),
+    )
 ))]
 #[no_mangle]
 pub extern "C" fn rsvd_page_cache_free(cache: *mut RsvdPageCache) {
@@ -613,7 +668,11 @@ pub extern "C" fn rsvd_page_cache_free(cache: *mut RsvdPageCache) {
 
 #[cfg(any(
     host_hal_com_chip_info_test,
-    all(not(host_hal_com_hw_rate_test), not(host_hal_com_rsvd_page_test))
+    all(
+        not(host_hal_com_hw_rate_test),
+        not(host_hal_com_rsvd_page_test),
+        not(host_hal_com_mrate_test),
+    )
 ))]
 mod chip_info {
     use super::U8;
@@ -827,7 +886,8 @@ mod chip_info {
 #[cfg(all(
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
-    not(host_hal_com_chip_info_test)
+    not(host_hal_com_chip_info_test),
+    not(host_hal_com_mrate_test)
 ))]
 extern "C" {
     fn rtw_mi_hal_dump_macaddr(sel: *mut c_void, adapter: *mut c_void);
@@ -838,7 +898,8 @@ extern "C" {
 #[cfg(all(
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
-    not(host_hal_com_chip_info_test)
+    not(host_hal_com_chip_info_test),
+    not(host_hal_com_mrate_test)
 ))]
 #[no_mangle]
 pub extern "C" fn rtw_hal_dump_macaddr(sel: *mut c_void, adapter: *mut c_void) {
