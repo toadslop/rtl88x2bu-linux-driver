@@ -1,0 +1,35 @@
+{
+  "oracle": "hal/hal_intf.c dump_hal_trx_mode",
+  "vectors": [
+    {
+      "name": "2t2r_default_paths",
+      "trx_path_bmp": 34,
+      "rf_type": 2,
+      "NumTotalRFPath": 2,
+      "max_tx_cnt": 2,
+      "tx_nss": 2,
+      "rx_nss": 2,
+      "txpath_cap_num_nss": [1, 2, 0, 0],
+      "txpath": 3,
+      "rxpath": 3,
+      "txpath_nss": [1, 3, 0, 0],
+      "txpath_num_nss": [1, 2, 0, 0],
+      "expect": "trx_path_bmp:0x22(RF_2T2R), NumTotalRFPath:2, max_tx_cnt:2\ntx_nss:2, rx_nss:2\ntxpath_cap_num_1ss:1\ntxpath_cap_num_2ss:2\n\ntxpath=0x3, rxpath=0x3\ntxpath_1ss:0x1, num:1\ntxpath_2ss:0x3, num:2\n"
+    },
+    {
+      "name": "1t1r_single_nss",
+      "trx_path_bmp": 17,
+      "rf_type": 0,
+      "NumTotalRFPath": 1,
+      "max_tx_cnt": 1,
+      "tx_nss": 1,
+      "rx_nss": 1,
+      "txpath_cap_num_nss": [1, 0, 0, 0],
+      "txpath": 1,
+      "rxpath": 1,
+      "txpath_nss": [1, 0, 0, 0],
+      "txpath_num_nss": [1, 0, 0, 0],
+      "expect": "trx_path_bmp:0x11(RF_1T1R), NumTotalRFPath:1, max_tx_cnt:1\ntx_nss:1, rx_nss:1\ntxpath_cap_num_1ss:1\n\ntxpath=0x1, rxpath=0x1\ntxpath_1ss:0x1, num:1\n"
+    }
+  ]
+}
