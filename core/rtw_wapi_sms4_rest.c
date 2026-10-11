@@ -32,56 +32,9 @@ void WapiSMS4Decryption(u8 *Key, u8 *IV, u8 *Input, u16 InputLength,
 /* WapiSMS4Cryption / WapiSMS4Encryption / WapiSMS4Decryption: rust/rtw_wapi_sms4.rs (W3-139) */
 
 void WapiSMS4CalculateMic(u8 *Key, u8 *IV, u8 *Input1, u8 Input1Length,
-		  u8 *Input2, u16 Input2Length, u8 *Output, u8 *OutputLength)
-{
-	u32 blockNum, i, remainder, rk[32];
-	u8 BlockIn[16], BlockOut[16], TempBlock[16], tempIV[16], k;
+			  u8 *Input2, u16 Input2Length, u8 *Output, u8 *OutputLength);
 
-	*OutputLength = 0;
-	remainder = Input1Length & 0x0F;
-	blockNum = Input1Length >> 4;
-
-	for (k = 0; k < 16; k++)
-		tempIV[k] = IV[15 - k];
-
-	memcpy(BlockIn, tempIV, 16);
-
-	SMS4KeyExt((u8 *)Key, rk, ENCRYPT);
-
-	SMS4Crypt((u8 *)BlockIn, BlockOut, rk);
-
-	for (i = 0; i < blockNum; i++) {
-		xor_block(BlockIn, (Input1 + i * 16), BlockOut);
-		SMS4Crypt((u8 *)BlockIn, BlockOut, rk);
-	}
-
-	if (remainder != 0) {
-		memset(TempBlock, 0, 16);
-		memcpy(TempBlock, (Input1 + blockNum * 16), remainder);
-
-		xor_block(BlockIn, TempBlock, BlockOut);
-		SMS4Crypt((u8 *)BlockIn, BlockOut, rk);
-	}
-
-	remainder = Input2Length & 0x0F;
-	blockNum = Input2Length >> 4;
-
-	for (i = 0; i < blockNum; i++) {
-		xor_block(BlockIn, (Input2 + i * 16), BlockOut);
-		SMS4Crypt((u8 *)BlockIn, BlockOut, rk);
-	}
-
-	if (remainder != 0) {
-		memset(TempBlock, 0, 16);
-		memcpy(TempBlock, (Input2 + blockNum * 16), remainder);
-
-		xor_block(BlockIn, TempBlock, BlockOut);
-		SMS4Crypt((u8 *)BlockIn, BlockOut, rk);
-	}
-
-	memcpy(Output, BlockOut, 16);
-	*OutputLength = 16;
-}
+/* WapiSMS4CalculateMic: rust/rtw_wapi_sms4.rs (W3-140) */
 
 void SecCalculateMicSMS4(
 	u8		KeyIdx,
