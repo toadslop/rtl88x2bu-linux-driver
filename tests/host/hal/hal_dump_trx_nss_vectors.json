@@ -1,0 +1,25 @@
+{
+  "oracle": "hal/hal_intf_rest.c _dump_trx_nss",
+  "vectors": [
+    {
+      "name": "nss_match_halspec",
+      "hal_spec_tx_nss": 2,
+      "hal_spec_rx_nss": 2,
+      "reg_tx_nss": 0,
+      "reg_rx_nss": 0,
+      "hal_tx_nss": 2,
+      "hal_rx_nss": 2,
+      "expect": "[TRX_Nss] HALSPEC - tx_nss:2, rx_nss:2\n[TRX_Nss] Registry - tx_nss:0, rx_nss:0\n[TRX_Nss] HALDATA - tx_nss:2, rx_nss:2\n"
+    },
+    {
+      "name": "registry_clamped",
+      "hal_spec_tx_nss": 4,
+      "hal_spec_rx_nss": 4,
+      "reg_tx_nss": 2,
+      "reg_rx_nss": 3,
+      "hal_tx_nss": 2,
+      "hal_rx_nss": 3,
+      "expect": "[TRX_Nss] HALSPEC - tx_nss:4, rx_nss:4\n[TRX_Nss] Registry - tx_nss:2, rx_nss:3\n[TRX_Nss] HALDATA - tx_nss:2, rx_nss:3\n"
+    }
+  ]
+}

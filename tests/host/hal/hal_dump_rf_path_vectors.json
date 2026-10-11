@@ -1,0 +1,39 @@
+{
+  "oracle": "hal/hal_intf_rest.c _dump_rf_path",
+  "vectors": [
+    {
+      "name": "8822bu_default_paths",
+      "ver_id_rf_type": 5,
+      "rf_reg_trx_path_bmp": 51,
+      "rf_reg_path_avail_num": 2,
+      "hal_spec_max_tx_cnt": 2,
+      "eeprom_trx_path_bmp": 51,
+      "eeprom_max_tx_cnt": 2,
+      "reg_trx_path_bmp": 0,
+      "tx_path_lmt": 0,
+      "rx_path_lmt": 0,
+      "hal_trx_path_bmp": 51,
+      "hal_max_tx_cnt": 2,
+      "hal_rf_type": 5,
+      "NumTotalRFPath": 2,
+      "expect": "[RF_PATH] ver_id.RF_TYPE:RF_3T3R\n[RF_PATH] HALSPEC's rf_reg_trx_path_bmp:0x33, rf_reg_path_avail_num:2, max_tx_cnt:2\n[RF_PATH] PG's trx_path_bmp:0x33, max_tx_cnt:2\n[RF_PATH] Registry's trx_path_bmp:0x00, tx_path_lmt:0, rx_path_lmt:0\n[RF_PATH] HALDATA's trx_path_bmp:0x33, max_tx_cnt:2\n[RF_PATH] HALDATA's rf_type:RF_3T3R, NumTotalRFPath:2\n"
+    },
+    {
+      "name": "1t1r_minimal",
+      "ver_id_rf_type": 0,
+      "rf_reg_trx_path_bmp": 17,
+      "rf_reg_path_avail_num": 1,
+      "hal_spec_max_tx_cnt": 1,
+      "eeprom_trx_path_bmp": 0,
+      "eeprom_max_tx_cnt": 0,
+      "reg_trx_path_bmp": 17,
+      "tx_path_lmt": 1,
+      "rx_path_lmt": 1,
+      "hal_trx_path_bmp": 17,
+      "hal_max_tx_cnt": 1,
+      "hal_rf_type": 0,
+      "NumTotalRFPath": 1,
+      "expect": "[RF_PATH] ver_id.RF_TYPE:RF_1T1R\n[RF_PATH] HALSPEC's rf_reg_trx_path_bmp:0x11, rf_reg_path_avail_num:1, max_tx_cnt:1\n[RF_PATH] PG's trx_path_bmp:0x00, max_tx_cnt:0\n[RF_PATH] Registry's trx_path_bmp:0x11, tx_path_lmt:1, rx_path_lmt:1\n[RF_PATH] HALDATA's trx_path_bmp:0x11, max_tx_cnt:1\n[RF_PATH] HALDATA's rf_type:RF_1T1R, NumTotalRFPath:1\n"
+    }
+  ]
+}
