@@ -933,9 +933,10 @@ def analyze_issues(
         and lanes_with_children.issubset(saturated_lanes)
     )
 
-    # Path C only when one lane is saturated (≥15 behind same blocker) and other
-    # parallel lanes remain draftable. A blocked chain head with <15 filed children
-    # yields stop, not Path C (pick-up-work-item).
+    # Path C when: (1) one lane is saturated (≥15 behind same blocker) and other
+    # parallel lanes remain draftable; or (2) no open implementation children remain
+    # (tranche complete) — draft the next batch per epic deferred lists.
+    # A blocked chain head with <15 filed children yields stop, not Path C.
     path_c_gap = False
     path_c_reason: str | None = None
     if not selected and not whole_wave_saturated:
@@ -943,6 +944,13 @@ def analyze_issues(
         if saturation and other_lanes_draftable:
             path_c_gap = True
             path_c_reason = "single_lane_saturated"
+        elif (
+            not children
+            and chain_head_blocked is None
+            and chain_head_in_flight is None
+        ):
+            path_c_gap = True
+            path_c_reason = "no_open_children"
 
     return {
         "openChildren": len(children),

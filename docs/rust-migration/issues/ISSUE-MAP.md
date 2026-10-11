@@ -215,6 +215,10 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-139 | #1205 | [W3-139] Translate rtw_wapi_sms4.c — SMS4 OFB payload crypt |
 | W3-140 | #1206 | [W3-140] Translate rtw_wapi_sms4.c — SMS4 MIC calculation |
 | W3-141 | #1207 | [W3-141] Translate rtw_wapi_sms4.c — QoS PN cache and replay check |
+| W4-05 | #1218 | [W4-05] Translate hal_com.c — MRateToHwRate lookup table |
+| W4-06 | #1219 | [W4-06] Translate hal_com.c — rtw_dump_fw_info formatter |
+| W4-07 | #1220 | [W4-07] Translate hal_intf.c — TRX mode debug dumps |
+| W4-08 | #1221 | [W4-08] Translate hal_intf.c — RF path and TRX NSS dumps |
 
 ## Superseded issues
 

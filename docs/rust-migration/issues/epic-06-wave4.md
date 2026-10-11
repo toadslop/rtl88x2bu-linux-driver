@@ -19,4 +19,13 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-03 | `wave4-03-hal-dump-chip-info.md` | `hal_com.c` chip info debug dump |
 | W4-04 | `wave4-04-hal-dump-macaddr.md` | `hal_com.c` MAC address debug dump |
 
-Further slices: `hal_intf.c`, `hal_phy.c`, `hal_halmac.c`, USB HCI — file as `wave4-*.md` when tranche 1 is underway.
+## Children (tranche 2 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-05 | `wave4-05-hal-mrate-to-hw-rate.md` | `hal_com_rest.c` `MRateToHwRate` table |
+| W4-06 | `wave4-06-hal-dump-fw-info.md` | `hal_com_rest.c` `rtw_dump_fw_info` |
+| W4-07 | `wave4-07-hal-intf-dump-trx-mode.md` | `hal_intf.c` TRX mode debug dumps |
+| W4-08 | `wave4-08-hal-intf-dump-rf-nss.md` | `hal_intf.c` RF path + NSS dumps |
+
+Further slices: `hal_phy.c`, `hal_halmac.c`, USB HCI — file as `wave4-*.md` when tranche 2 is underway.

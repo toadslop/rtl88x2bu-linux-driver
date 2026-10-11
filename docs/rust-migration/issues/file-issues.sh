@@ -249,6 +249,10 @@ files=(
   wave4-02-hal-rsvd-page-cache.md
   wave4-03-hal-dump-chip-info.md
   wave4-04-hal-dump-macaddr.md
+  wave4-05-hal-mrate-to-hw-rate.md
+  wave4-06-hal-dump-fw-info.md
+  wave4-07-hal-intf-dump-trx-mode.md
+  wave4-08-hal-intf-dump-rf-nss.md
 )
 
 # draft_id -> github issue number

@@ -60,5 +60,18 @@ class ClassifyPrepTests(unittest.TestCase):
         self.assertEqual(pr.classify_prep(), "needs_prep")
 
 
+class DecidePathTests(unittest.TestCase):
+    def test_path_c_when_no_open_children(self) -> None:
+        decision = fw.decide_path(
+            {"needs_prep": []},
+            {
+                "pathCGap": True,
+                "pathCReason": "no_open_children",
+            },
+        )
+        self.assertEqual(decision["path"], "C")
+        self.assertEqual(decision["reason"], "no_open_children")
+
+
 if __name__ == "__main__":
     unittest.main()
