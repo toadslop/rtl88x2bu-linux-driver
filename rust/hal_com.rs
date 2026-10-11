@@ -111,11 +111,11 @@ fn warn_invalid_mrate(rate: U8) {
 ))]
 fn warn_invalid_mrate(_rate: U8) {}
 
-#[cfg(any(all(
-    not(host_hal_com_hw_rate_test),
-    not(host_hal_com_rsvd_page_test),
-    not(host_hal_com_chip_info_test),
-),))]
+#[cfg(not(any(
+    host_hal_com_hw_rate_test,
+    host_hal_com_rsvd_page_test,
+    host_hal_com_chip_info_test,
+)))]
 #[no_mangle]
 pub extern "C" fn MRateToHwRate(rate: U8) -> U8 {
     let mut hw_rate = DESC_RATE1M;
