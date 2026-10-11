@@ -57,22 +57,9 @@ struct RtwHalIntfTrxFields {
 #[cfg(host_hal_intf_trx_test)]
 fn rf_type_to_rfpath_str_local(rf_type: U8) -> &'static [u8] {
     static RF_TBL: [&[u8]; RF_TYPE_MAX] = [
-        b"RF_1T1R",
-        b"RF_1T2R",
-        b"RF_2T2R",
-        b"RF_2T3R",
-        b"RF_2T4R",
-        b"RF_3T3R",
-        b"RF_3T4R",
-        b"RF_4T4R",
-        b"RF_4T3R",
-        b"RF_4T2R",
-        b"RF_4T1R",
-        b"RF_3T2R",
-        b"RF_3T1R",
-        b"RF_2T1R",
-        b"RF_1T4R",
-        b"RF_1T3R",
+        b"RF_1T1R", b"RF_1T2R", b"RF_2T2R", b"RF_2T3R", b"RF_2T4R", b"RF_3T3R", b"RF_3T4R",
+        b"RF_4T4R", b"RF_4T3R", b"RF_4T2R", b"RF_4T1R", b"RF_3T2R", b"RF_3T1R", b"RF_2T1R",
+        b"RF_1T4R", b"RF_1T3R",
     ];
     if rf_type as usize >= RF_TYPE_MAX {
         return b"UNKNOWN";
