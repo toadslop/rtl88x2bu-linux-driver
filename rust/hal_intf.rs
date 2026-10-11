@@ -490,14 +490,8 @@ mod kernel {
     extern "C" {
         fn rtw_rust_hal_intf_print_sel(sel: *mut c_void, line: *const c_char);
         fn rtw_rust_hal_intf_trx_fields(adapter: *mut c_void, out: *mut RtwHalIntfTrxFields);
-        fn rtw_rust_hal_intf_rf_path_fields(
-            adapter: *mut c_void,
-            out: *mut RtwHalIntfRfPathFields,
-        );
-        fn rtw_rust_hal_intf_trx_nss_fields(
-            adapter: *mut c_void,
-            out: *mut RtwHalIntfTrxNssFields,
-        );
+        fn rtw_rust_hal_intf_rf_path_fields(adapter: *mut c_void, out: *mut RtwHalIntfRfPathFields);
+        fn rtw_rust_hal_intf_trx_nss_fields(adapter: *mut c_void, out: *mut RtwHalIntfTrxNssFields);
     }
 
     fn print_line(sel: *mut c_void, line: &[u8]) {
