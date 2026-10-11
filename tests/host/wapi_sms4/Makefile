@@ -28,7 +28,7 @@ test-ofb: test-ofb-c test-ofb-rust
 
 test-mic: test-mic-c
 
-test-qos-pn: test-qos-pn-c
+test-qos-pn: test-qos-pn-c test-qos-pn-rust
 
 test-c: test_wapi_sms4
 	./test_wapi_sms4
