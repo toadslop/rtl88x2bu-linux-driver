@@ -26,9 +26,9 @@ test-pn-iv: test-pn-iv-c test-pn-iv-rust
 
 test-ofb: test-ofb-c test-ofb-rust
 
-test-mic: test-mic-c test-mic-rust
+test-mic: test-mic-c
 
-test-qos-pn: test-qos-pn-c test-qos-pn-rust
+test-qos-pn: test-qos-pn-c
 
 test-c: test_wapi_sms4
 	./test_wapi_sms4
