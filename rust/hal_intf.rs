@@ -490,6 +490,14 @@ mod kernel {
     extern "C" {
         fn rtw_rust_hal_intf_print_sel(sel: *mut c_void, line: *const c_char);
         fn rtw_rust_hal_intf_trx_fields(adapter: *mut c_void, out: *mut RtwHalIntfTrxFields);
+        fn rtw_rust_hal_intf_rf_path_fields(
+            adapter: *mut c_void,
+            out: *mut RtwHalIntfRfPathFields,
+        );
+        fn rtw_rust_hal_intf_trx_nss_fields(
+            adapter: *mut c_void,
+            out: *mut RtwHalIntfTrxNssFields,
+        );
     }
 
     fn print_line(sel: *mut c_void, line: &[u8]) {
@@ -564,6 +572,55 @@ mod kernel {
         let fx = fixture_from_fields(&fields);
         let mut buf = [0u8; 512];
         let n = format_trx_mode(&fx, &mut buf);
+        if n > 0 {
+            dump_lines(sel, &buf[..n as usize], n as usize);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn _dump_rf_path(sel: *mut c_void, adapter: *mut c_void) {
+        let mut fields = RtwHalIntfRfPathFields {
+            ver_id_rf_type: 0,
+            rf_reg_trx_path_bmp: 0,
+            rf_reg_path_avail_num: 0,
+            hal_spec_max_tx_cnt: 0,
+            eeprom_trx_path_bmp: 0,
+            eeprom_max_tx_cnt: 0,
+            reg_trx_path_bmp: 0,
+            tx_path_lmt: 0,
+            rx_path_lmt: 0,
+            hal_trx_path_bmp: 0,
+            hal_max_tx_cnt: 0,
+            hal_rf_type: 0,
+            NumTotalRFPath: 0,
+        };
+        unsafe {
+            rtw_rust_hal_intf_rf_path_fields(adapter, &mut fields);
+        }
+        let fx = rf_path_fixture_from_fields(&fields);
+        let mut buf = [0u8; 512];
+        let n = format_rf_path(&fx, &mut buf);
+        if n > 0 {
+            dump_lines(sel, &buf[..n as usize], n as usize);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn _dump_trx_nss(sel: *mut c_void, adapter: *mut c_void) {
+        let mut fields = RtwHalIntfTrxNssFields {
+            hal_spec_tx_nss: 0,
+            hal_spec_rx_nss: 0,
+            reg_tx_nss: 0,
+            reg_rx_nss: 0,
+            hal_tx_nss: 0,
+            hal_rx_nss: 0,
+        };
+        unsafe {
+            rtw_rust_hal_intf_trx_nss_fields(adapter, &mut fields);
+        }
+        let fx = trx_nss_fixture_from_fields(&fields);
+        let mut buf = [0u8; 256];
+        let n = format_trx_nss(&fx, &mut buf);
         if n > 0 {
             dump_lines(sel, &buf[..n as usize], n as usize);
         }

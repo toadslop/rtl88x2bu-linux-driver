@@ -237,25 +237,9 @@ enum rf_type rtw_chip_rftype_to_hal_rftype(_adapter *adapter, u8 limit)
 
 /* dump_hal_runtime_trx_mode / dump_hal_trx_mode — ported to rust/hal_intf.rs (W4-07) */
 
-void _dump_rf_path(void *sel, _adapter *adapter)
-{
-	PHAL_DATA_TYPE hal_data = GET_HAL_DATA(adapter);
-	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
-	struct registry_priv *regsty = adapter_to_regsty(adapter);
-
-	RTW_PRINT_SEL(sel, "[RF_PATH] ver_id.RF_TYPE:%s\n"
-		, rf_type_to_rfpath_str(rtw_chip_rftype_to_hal_rftype(adapter, 0)));
-	RTW_PRINT_SEL(sel, "[RF_PATH] HALSPEC's rf_reg_trx_path_bmp:0x%02x, rf_reg_path_avail_num:%u, max_tx_cnt:%u\n"
-		, hal_spec->rf_reg_trx_path_bmp, hal_spec->rf_reg_path_avail_num, hal_spec->max_tx_cnt);
-	RTW_PRINT_SEL(sel, "[RF_PATH] PG's trx_path_bmp:0x%02x, max_tx_cnt:%u\n"
-		, hal_data->eeprom_trx_path_bmp, hal_data->eeprom_max_tx_cnt);
-	RTW_PRINT_SEL(sel, "[RF_PATH] Registry's trx_path_bmp:0x%02x, tx_path_lmt:%u, rx_path_lmt:%u\n"
-		, regsty->trx_path_bmp, regsty->tx_path_lmt, regsty->rx_path_lmt);
-	RTW_PRINT_SEL(sel, "[RF_PATH] HALDATA's trx_path_bmp:0x%02x, max_tx_cnt:%u\n"
-		, hal_data->trx_path_bmp, hal_data->max_tx_cnt);
-	RTW_PRINT_SEL(sel, "[RF_PATH] HALDATA's rf_type:%s, NumTotalRFPath:%d\n"
-		, rf_type_to_rfpath_str(hal_data->rf_type), hal_data->NumTotalRFPath);
-}
+/* _dump_rf_path / _dump_trx_nss — ported to rust/hal_intf.rs (W4-08) */
+void _dump_rf_path(void *sel, _adapter *adapter);
+void _dump_trx_nss(void *sel, _adapter *adapter);
 
 #ifdef CONFIG_RTL8814A
 extern enum rf_type rtl8814a_rfpath_decision(_adapter *adapter);
@@ -335,16 +319,6 @@ if (IS_HARDWARE_TYPE_8814A(adapter)) {
 	return _SUCCESS;
 }
 
-void _dump_trx_nss(void *sel, _adapter *adapter)
-{
-	struct registry_priv *regpriv = &adapter->registrypriv;
-	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
-
-	RTW_PRINT_SEL(sel, "[TRX_Nss] HALSPEC - tx_nss:%d, rx_nss:%d\n", hal_spec->tx_nss_num, hal_spec->rx_nss_num);
-	RTW_PRINT_SEL(sel, "[TRX_Nss] Registry - tx_nss:%d, rx_nss:%d\n", regpriv->tx_nss, regpriv->rx_nss);
-	RTW_PRINT_SEL(sel, "[TRX_Nss] HALDATA - tx_nss:%d, rx_nss:%d\n", GET_HAL_TX_NSS(adapter), GET_HAL_RX_NSS(adapter));
-
-}
 #define NSS_VALID(nss) (nss > 0)
 
 u8 rtw_hal_trxnss_init(_adapter *adapter)
@@ -2360,4 +2334,71 @@ void rtw_rust_hal_intf_trx_fields(_adapter *adapter, struct rtw_hal_intf_trx_fie
 	}
 	out->txpath = hal_data->txpath;
 	out->rxpath = hal_data->rxpath;
+}
+
+struct rtw_hal_intf_rf_path_fields {
+	u8 ver_id_rf_type;
+	u8 rf_reg_trx_path_bmp;
+	u8 rf_reg_path_avail_num;
+	u8 hal_spec_max_tx_cnt;
+	u8 eeprom_trx_path_bmp;
+	u8 eeprom_max_tx_cnt;
+	u8 reg_trx_path_bmp;
+	u8 tx_path_lmt;
+	u8 rx_path_lmt;
+	u8 hal_trx_path_bmp;
+	u8 hal_max_tx_cnt;
+	u8 hal_rf_type;
+	s8 NumTotalRFPath;
+};
+
+void rtw_rust_hal_intf_rf_path_fields(_adapter *adapter,
+				      struct rtw_hal_intf_rf_path_fields *out)
+{
+	PHAL_DATA_TYPE hal_data = GET_HAL_DATA(adapter);
+	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
+	struct registry_priv *regsty = adapter_to_regsty(adapter);
+
+	if (!adapter || !out)
+		return;
+
+	out->ver_id_rf_type = rtw_chip_rftype_to_hal_rftype(adapter, 0);
+	out->rf_reg_trx_path_bmp = hal_spec->rf_reg_trx_path_bmp;
+	out->rf_reg_path_avail_num = hal_spec->rf_reg_path_avail_num;
+	out->hal_spec_max_tx_cnt = hal_spec->max_tx_cnt;
+	out->eeprom_trx_path_bmp = hal_data->eeprom_trx_path_bmp;
+	out->eeprom_max_tx_cnt = hal_data->eeprom_max_tx_cnt;
+	out->reg_trx_path_bmp = regsty->trx_path_bmp;
+	out->tx_path_lmt = regsty->tx_path_lmt;
+	out->rx_path_lmt = regsty->rx_path_lmt;
+	out->hal_trx_path_bmp = hal_data->trx_path_bmp;
+	out->hal_max_tx_cnt = hal_data->max_tx_cnt;
+	out->hal_rf_type = hal_data->rf_type;
+	out->NumTotalRFPath = (s8)hal_data->NumTotalRFPath;
+}
+
+struct rtw_hal_intf_trx_nss_fields {
+	s8 hal_spec_tx_nss;
+	s8 hal_spec_rx_nss;
+	s8 reg_tx_nss;
+	s8 reg_rx_nss;
+	s8 hal_tx_nss;
+	s8 hal_rx_nss;
+};
+
+void rtw_rust_hal_intf_trx_nss_fields(_adapter *adapter,
+				      struct rtw_hal_intf_trx_nss_fields *out)
+{
+	struct registry_priv *regpriv = &adapter->registrypriv;
+	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
+
+	if (!adapter || !out)
+		return;
+
+	out->hal_spec_tx_nss = (s8)hal_spec->tx_nss_num;
+	out->hal_spec_rx_nss = (s8)hal_spec->rx_nss_num;
+	out->reg_tx_nss = (s8)regpriv->tx_nss;
+	out->reg_rx_nss = (s8)regpriv->rx_nss;
+	out->hal_tx_nss = (s8)GET_HAL_TX_NSS(adapter);
+	out->hal_rx_nss = (s8)GET_HAL_RX_NSS(adapter);
 }
