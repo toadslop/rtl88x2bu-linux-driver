@@ -230,6 +230,11 @@ for path in "${changed[@]}"; do
 	| tests/host/hal/*)
 		add_target rust-check-symbols-hal-com
 		;;
+	rust/hal_intf.rs \
+	| hal/hal_intf_rest.c \
+	| hal/hal_intf.c)
+		add_target rust-check-symbols-hal-intf
+		;;
 	rust/aes_*.rs \
 	| rust/sha256*.rs \
 	| rust/gcmp.rs \

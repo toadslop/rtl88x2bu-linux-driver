@@ -1,0 +1,2 @@
+# L1 allowlist for W4-07: host L2 format helper not linked in kernel rust/hal_intf.o.
+drop dump_hal_trx_mode_format
