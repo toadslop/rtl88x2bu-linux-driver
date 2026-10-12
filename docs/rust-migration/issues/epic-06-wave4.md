@@ -38,4 +38,4 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-12 | `wave4-12-hal-halmac-trx-share-dump.md` | `hal_halmac.c` TRX share mode dump |
 | W4-13 | `wave4-13-hal-set-brate-cfg.md` | `hal_com_rest.c` `HalSetBrateCfg` |
 
-Further slices: USB HCI, `hal_dm.c` / PHYDM debug — file as `wave4-*.md` when tranche 3 is underway.
+Further slices: USB HCI, `hal_dm.c` / PHYDM debug — file as `wave4-*.md` when tranche 4 is underway.
