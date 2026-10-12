@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* C oracle for W4-10 HALMAC network/beacon ctrl mappers (hal/hal_halmac.c). */
+/* C oracle for W4-10/W4-11 HALMAC mappers (hal/hal_halmac.c). */
 
 #include <stdint.h>
 #include <string.h>
@@ -78,4 +78,54 @@ void beacon_ctrl_drv2halmac(const struct rtw_halmac_bcn_ctrl *drv_ctrl,
 	ctrl->en_rxbcn_rpt = drv_ctrl->rxbcn_rpt ? 1 : 0;
 	ctrl->en_p2p_ctwin = drv_ctrl->p2p_ctwin ? 1 : 0;
 	ctrl->en_p2p_bcn_area = drv_ctrl->p2p_bcn_area ? 1 : 0;
+}
+
+enum halmac_drv_rsvd_pg_num {
+	HALMAC_RSVD_PG_NUM8,
+	HALMAC_RSVD_PG_NUM16,
+	HALMAC_RSVD_PG_NUM24,
+	HALMAC_RSVD_PG_NUM32,
+	HALMAC_RSVD_PG_NUM64,
+	HALMAC_RSVD_PG_NUM128,
+	HALMAC_RSVD_PG_NUM256,
+};
+
+unsigned rsvd_page_num_drv2halmac(uint16_t num)
+{
+	if (num <= 8)
+		return HALMAC_RSVD_PG_NUM8;
+	if (num <= 16)
+		return HALMAC_RSVD_PG_NUM16;
+	if (num <= 24)
+		return HALMAC_RSVD_PG_NUM24;
+	if (num <= 32)
+		return HALMAC_RSVD_PG_NUM32;
+	if (num <= 64)
+		return HALMAC_RSVD_PG_NUM64;
+	if (num <= 128)
+		return HALMAC_RSVD_PG_NUM128;
+
+	return HALMAC_RSVD_PG_NUM256;
+}
+
+unsigned rsvd_page_num_halmac2drv(unsigned rsvd_page_number)
+{
+	switch (rsvd_page_number) {
+	case HALMAC_RSVD_PG_NUM8:
+		return 8;
+	case HALMAC_RSVD_PG_NUM16:
+		return 16;
+	case HALMAC_RSVD_PG_NUM24:
+		return 24;
+	case HALMAC_RSVD_PG_NUM32:
+		return 32;
+	case HALMAC_RSVD_PG_NUM64:
+		return 64;
+	case HALMAC_RSVD_PG_NUM128:
+		return 128;
+	case HALMAC_RSVD_PG_NUM256:
+		return 256;
+	default:
+		return 0;
+	}
 }

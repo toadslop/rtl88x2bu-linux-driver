@@ -1,0 +1,12 @@
+{
+  "oracle": "hal/hal_halmac.c _rsvd_page_num_halmac2drv",
+  "vectors": [
+    { "name": "bucket_8", "pg": 0, "expect": 8 },
+    { "name": "bucket_16", "pg": 1, "expect": 16 },
+    { "name": "bucket_24", "pg": 2, "expect": 24 },
+    { "name": "bucket_32", "pg": 3, "expect": 32 },
+    { "name": "bucket_64", "pg": 4, "expect": 64 },
+    { "name": "bucket_128", "pg": 5, "expect": 128 },
+    { "name": "bucket_256", "pg": 6, "expect": 256 }
+  ]
+}
