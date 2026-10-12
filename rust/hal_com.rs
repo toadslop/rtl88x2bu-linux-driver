@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HAL common helpers — Rust port of `hal/hal_com.c` (W4-01 rate map, W4-02 rsvd page cache, W4-03 chip info, W4-04 macaddr dump, W4-05 MRateToHwRate).
+//! HAL common helpers — Rust port of `hal/hal_com.c` (W4-01 rate map, W4-02 rsvd page cache, W4-03 chip info, W4-04 macaddr dump, W4-05 MRateToHwRate, W4-06 fw info dump).
 
 #![allow(
     dead_code,
@@ -16,7 +16,7 @@
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
-    not(host_hal_com_mrate_test),
+    not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
 ))]
 use core::ffi::{c_char, c_void};
 
@@ -66,7 +66,7 @@ struct RateSectionEnt {
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
-    not(host_hal_com_mrate_test),
+    not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
 ))]
 extern "C" {
     fn MGN_RATE_STR(rate: U8) -> *const c_char;
@@ -81,7 +81,7 @@ extern "C" {
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
-    not(host_hal_com_mrate_test),
+    not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
 ))]
 fn warn_invalid_hw_rate(hw_rate: U8) {
     unsafe {
@@ -93,7 +93,7 @@ fn warn_invalid_hw_rate(hw_rate: U8) {
     host_hal_com_hw_rate_test,
     host_hal_com_rsvd_page_test,
     host_hal_com_chip_info_test,
-    host_hal_com_mrate_test
+    host_hal_com_mrate_test, host_hal_com_fw_info_test
 ))]
 fn warn_invalid_hw_rate(_hw_rate: U8) {}
 
@@ -101,7 +101,7 @@ fn warn_invalid_hw_rate(_hw_rate: U8) {}
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
-    not(host_hal_com_mrate_test),
+    not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
 ))]
 fn warn_invalid_mrate(rate: U8) {
     unsafe {
@@ -113,12 +113,12 @@ fn warn_invalid_mrate(rate: U8) {
     host_hal_com_hw_rate_test,
     host_hal_com_rsvd_page_test,
     host_hal_com_chip_info_test,
-    host_hal_com_mrate_test
+    host_hal_com_mrate_test, host_hal_com_fw_info_test
 ))]
 fn warn_invalid_mrate(_rate: U8) {}
 
 #[cfg(any(
-    host_hal_com_mrate_test,
+    host_hal_com_mrate_test, host_hal_com_fw_info_test,
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_rsvd_page_test),
@@ -140,7 +140,7 @@ pub extern "C" fn MRateToHwRate(rate: U8) -> U8 {
 #[cfg(not(any(
     host_hal_com_rsvd_page_test,
     host_hal_com_chip_info_test,
-    host_hal_com_mrate_test,
+    host_hal_com_mrate_test, host_hal_com_fw_info_test,
 )))]
 #[no_mangle]
 pub extern "C" fn hw_rate_to_m_rate(hw_rate: U8) -> U8 {
@@ -350,7 +350,7 @@ pub extern "C" fn dump_hw_rate_map_test(sel: *mut c_void) {
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test),
+        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
     )
 ))]
 #[repr(C)]
@@ -367,7 +367,7 @@ pub struct RsvdPageCache {
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test),
+        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
     )
 ))]
 fn page_num(len: u32, page_size: u32) -> U8 {
@@ -389,7 +389,7 @@ extern "C" {
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_chip_info_test),
-    not(host_hal_com_mrate_test)
+    not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test)
 ))]
 extern "C" {
     fn _rtw_malloc(sz: u32) -> *mut core::ffi::c_void;
@@ -404,7 +404,7 @@ extern "C" {
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test),
+        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
     )
 ))]
 const RSVD_TRUE: i32 = 1;
@@ -414,7 +414,7 @@ const RSVD_TRUE: i32 = 1;
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test),
+        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
     )
 ))]
 fn rsvd_warn_on(cond: bool) {
@@ -436,7 +436,7 @@ fn rsvd_warn_on(cond: bool) {
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test),
+        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
     )
 ))]
 fn rsvd_heap_alloc(sz: u32, zero: bool) -> *mut U8 {
@@ -462,7 +462,7 @@ fn rsvd_heap_alloc(sz: u32, zero: bool) -> *mut U8 {
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test),
+        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
     )
 ))]
 fn rsvd_mfree(ptr: *mut U8, sz: u32) {
@@ -486,7 +486,7 @@ fn rsvd_mfree(ptr: *mut U8, sz: u32) {
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test),
+        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
     )
 ))]
 fn rsvd_memcmp_eq(a: *const U8, b: *const U8, len: u32) -> bool {
@@ -514,7 +514,7 @@ fn rsvd_memcmp_eq(a: *const U8, b: *const U8, len: u32) -> bool {
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test),
+        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
     )
 ))]
 #[no_mangle]
@@ -592,7 +592,7 @@ pub extern "C" fn rsvd_page_cache_update_all(
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test),
+        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
     )
 ))]
 #[no_mangle]
@@ -638,7 +638,7 @@ pub extern "C" fn rsvd_page_cache_update_data(
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test),
+        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
     )
 ))]
 #[no_mangle]
@@ -657,7 +657,7 @@ pub extern "C" fn rsvd_page_cache_free_data(cache: *mut RsvdPageCache) {
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test),
+        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
     )
 ))]
 #[no_mangle]
@@ -674,7 +674,7 @@ pub extern "C" fn rsvd_page_cache_free(cache: *mut RsvdPageCache) {
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_rsvd_page_test),
-        not(host_hal_com_mrate_test),
+        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
     )
 ))]
 mod chip_info {
@@ -849,8 +849,10 @@ mod chip_info {
 
     #[cfg(all(
         not(host_hal_com_chip_info_test),
+        not(host_hal_com_fw_info_test),
         not(host_hal_com_hw_rate_test),
-        not(host_hal_com_rsvd_page_test)
+        not(host_hal_com_rsvd_page_test),
+        not(host_hal_com_mrate_test)
     ))]
     extern "C" {
         fn rtw_rust_hal_com_log_info(line: *const core::ffi::c_char);
@@ -858,8 +860,10 @@ mod chip_info {
 
     #[cfg(all(
         not(host_hal_com_chip_info_test),
+        not(host_hal_com_fw_info_test),
         not(host_hal_com_hw_rate_test),
-        not(host_hal_com_rsvd_page_test)
+        not(host_hal_com_rsvd_page_test),
+        not(host_hal_com_mrate_test)
     ))]
     #[no_mangle]
     pub extern "C" fn dump_chip_info(chip_version: HalVersion) {
@@ -886,11 +890,148 @@ mod chip_info {
     }
 }
 
+
+
+#[cfg(any(
+    host_hal_com_fw_info_test,
+    all(
+        not(host_hal_com_hw_rate_test),
+        not(host_hal_com_rsvd_page_test),
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_mrate_test),
+    )
+))]
+mod fw_info {
+    #[repr(C)]
+    pub struct HostHalComFwFixture {
+        pub b_fw_ready: u8,
+        pub firmware_version: u16,
+        pub firmware_sub_version: u16,
+    }
+
+    fn push_str(buf: &mut [u8], pos: &mut usize, s: &str) -> bool {
+        for &b in s.as_bytes() {
+            if *pos >= buf.len() {
+                return false;
+            }
+            buf[*pos] = b;
+            *pos += 1;
+        }
+        true
+    }
+
+    fn push_u16(buf: &mut [u8], pos: &mut usize, n: u16) -> bool {
+        let mut t = [0u8; 5];
+        let mut l = 0usize;
+        let mut v = n;
+        loop {
+            t[l] = b'0' + (v % 10) as u8;
+            l += 1;
+            v /= 10;
+            if v == 0 {
+                break;
+            }
+        }
+        while l > 0 {
+            l -= 1;
+            if *pos >= buf.len() {
+                return false;
+            }
+            buf[*pos] = t[l];
+            *pos += 1;
+        }
+        true
+    }
+
+    fn format_fw_info(fx: &HostHalComFwFixture, buf: &mut [u8]) -> i32 {
+        let mut pos = 0usize;
+        if fx.b_fw_ready != 0 {
+            if !push_str(buf, &mut pos, "FW VER -")
+                || !push_u16(buf, &mut pos, fx.firmware_version)
+                || !push_str(buf, &mut pos, ".")
+                || !push_u16(buf, &mut pos, fx.firmware_sub_version)
+                || !push_str(buf, &mut pos, "\n")
+            {
+                return -1;
+            }
+        } else if !push_str(buf, &mut pos, "FW not ready\n") {
+            return -1;
+        }
+        if pos < buf.len() {
+            buf[pos] = 0;
+        }
+        pos as i32
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_dump_fw_info_format(
+        fx: *const HostHalComFwFixture,
+        out: *mut u8,
+        buflen: usize,
+    ) -> i32 {
+        if fx.is_null() || out.is_null() || buflen == 0 {
+            return -1;
+        }
+        let fx = unsafe { &*fx };
+        let buf = unsafe { core::slice::from_raw_parts_mut(out, buflen) };
+        format_fw_info(fx, buf)
+    }
+
+    #[cfg(not(host_hal_com_fw_info_test))]
+    mod kernel {
+        use super::{format_fw_info, HostHalComFwFixture};
+        use core::ffi::{c_char, c_void};
+
+        extern "C" {
+            fn rtw_rust_hal_com_print_line(sel: *mut c_void, line: *const c_char);
+            fn rtw_rust_hal_com_fw_fields(
+                adapter: *mut c_void,
+                b_fw_ready: *mut u8,
+                fw_ver: *mut u16,
+                fw_sub: *mut u16,
+            );
+        }
+
+        fn print_line(sel: *mut c_void, line: &[u8]) {
+            let mut buf = [0i8; 64];
+            let n = core::cmp::min(line.len(), buf.len().saturating_sub(1));
+            for i in 0..n {
+                buf[i] = line[i] as i8;
+            }
+            unsafe {
+                rtw_rust_hal_com_print_line(sel, buf.as_ptr());
+            }
+        }
+
+        #[no_mangle]
+        pub extern "C" fn rtw_dump_fw_info(sel: *mut c_void, adapter: *mut c_void) {
+            if adapter.is_null() {
+                return;
+            }
+            let (mut b_fw_ready, mut fw_ver, mut fw_sub) = (0u8, 0u16, 0u16);
+            unsafe {
+                rtw_rust_hal_com_fw_fields(adapter, &mut b_fw_ready, &mut fw_ver, &mut fw_sub);
+            }
+            let fx = HostHalComFwFixture {
+                b_fw_ready,
+                firmware_version: fw_ver,
+                firmware_sub_version: fw_sub,
+            };
+            let mut buf = [0u8; 64];
+            let n = format_fw_info(&fx, &mut buf);
+            if n > 0 {
+                print_line(sel, &buf[..n as usize]);
+            }
+        }
+    }
+}
+
+
 #[cfg(all(
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
-    not(host_hal_com_mrate_test)
+    not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test)
 ))]
 extern "C" {
     fn rtw_mi_hal_dump_macaddr(sel: *mut c_void, adapter: *mut c_void);
@@ -902,7 +1043,7 @@ extern "C" {
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
-    not(host_hal_com_mrate_test)
+    not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test)
 ))]
 #[no_mangle]
 pub extern "C" fn rtw_hal_dump_macaddr(sel: *mut c_void, adapter: *mut c_void) {

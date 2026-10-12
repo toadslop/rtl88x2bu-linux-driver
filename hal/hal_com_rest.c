@@ -23,19 +23,7 @@
 #include "../hal/hal_halmac.h"
 #endif
 
-void rtw_dump_fw_info(void *sel, _adapter *adapter)
-{
-	HAL_DATA_TYPE	*hal_data = NULL;
-
-	if (!adapter)
-		return;
-
-	hal_data = GET_HAL_DATA(adapter);
-	if (hal_data->bFWReady)
-		RTW_PRINT_SEL(sel, "FW VER -%d.%d\n", hal_data->firmware_version, hal_data->firmware_sub_version);
-	else
-		RTW_PRINT_SEL(sel, "FW not ready\n");
-}
+/* rtw_dump_fw_info — ported to rust/hal_com.rs (W4-06) */
 
 /* rsvd_page_cache_* — ported to rust/hal_com.rs (W4-02) */
 
@@ -16231,6 +16219,18 @@ void rtw_hal_bcn_early_rpt_c2h_handler(_adapter *padapter)
 
 /* Rust HAL helpers (W4-01) — print + HDATA_RATE string for dump_hw_rate_map_test. */
 #ifndef HOST_HAL_COM_HW_RATE_TEST
+void rtw_rust_hal_com_fw_fields(_adapter *adapter, u8 *b_fw_ready, u16 *fw_ver, u16 *fw_sub)
+{
+	HAL_DATA_TYPE *hal_data;
+
+	if (!adapter || !b_fw_ready || !fw_ver || !fw_sub)
+		return;
+	hal_data = GET_HAL_DATA(adapter);
+	*b_fw_ready = hal_data->bFWReady;
+	*fw_ver = hal_data->firmware_version;
+	*fw_sub = hal_data->firmware_sub_version;
+}
+
 void rtw_rust_hal_com_print_line(void *sel, const char *line)
 {
 	RTW_PRINT_SEL(sel, "%s", line);

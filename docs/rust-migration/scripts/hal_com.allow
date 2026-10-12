@@ -2,3 +2,5 @@
 drop dump_hw_rate_map_test
 # W4-03 PR1: C oracle links dump_chip_info_format before Rust port (stack PR #1172).
 drop dump_chip_info_format
+# W4-06: host L2 format helper not linked in kernel rust/hal_com.o.
+drop rtw_dump_fw_info_format
