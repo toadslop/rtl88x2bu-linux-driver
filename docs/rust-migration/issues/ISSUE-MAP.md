@@ -219,6 +219,11 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-06 | #1219 | [W4-06] Translate hal_com.c — rtw_dump_fw_info formatter |
 | W4-07 | #1220 | [W4-07] Translate hal_intf.c — TRX mode debug dumps |
 | W4-08 | #1221 | [W4-08] Translate hal_intf.c — RF path and TRX NSS dumps |
+| W4-09 | #1235 | [W4-09] Translate hal_phy.c — PHY_CalculateBitShift |
+| W4-10 | #1236 | [W4-10] Translate hal_halmac.c — HALMAC network/beacon ctrl mappers |
+| W4-11 | #1237 | [W4-11] Translate hal_halmac.c — reserved page count mappers |
+| W4-12 | #1238 | [W4-12] Translate hal_halmac.c — TRX share mode dump |
+| W4-13 | #1239 | [W4-13] Translate hal_com_rest.c — HalSetBrateCfg |
 
 ## Superseded issues
 
