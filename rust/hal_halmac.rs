@@ -35,15 +35,55 @@ pub struct HalmacBcnCtrl {
     pub en_p2p_bcn_area: U8,
 }
 
+/// Matches `struct rtw_halmac_bcn_ctrl` in `hal/hal_halmac.h` (seven `u8 : 1` in one byte).
 #[repr(C)]
 pub struct RtwHalmacBcnCtrl {
-    pub rx_bssid_fit: U8,
-    pub txbcn_rpt: U8,
-    pub tsf_update: U8,
-    pub enable_bcn: U8,
-    pub rxbcn_rpt: U8,
-    pub p2p_ctwin: U8,
-    pub p2p_bcn_area: U8,
+    pub bits: U8,
+}
+
+impl RtwHalmacBcnCtrl {
+    fn rx_bssid_fit(&self) -> U8 {
+        self.bits & 1
+    }
+    fn set_rx_bssid_fit(&mut self, v: U8) {
+        self.bits = (self.bits & !1) | (v & 1);
+    }
+    fn txbcn_rpt(&self) -> U8 {
+        (self.bits >> 1) & 1
+    }
+    fn set_txbcn_rpt(&mut self, v: U8) {
+        self.bits = (self.bits & !2) | ((v & 1) << 1);
+    }
+    fn tsf_update(&self) -> U8 {
+        (self.bits >> 2) & 1
+    }
+    fn set_tsf_update(&mut self, v: U8) {
+        self.bits = (self.bits & !4) | ((v & 1) << 2);
+    }
+    fn enable_bcn(&self) -> U8 {
+        (self.bits >> 3) & 1
+    }
+    fn set_enable_bcn(&mut self, v: U8) {
+        self.bits = (self.bits & !8) | ((v & 1) << 3);
+    }
+    fn rxbcn_rpt(&self) -> U8 {
+        (self.bits >> 4) & 1
+    }
+    fn set_rxbcn_rpt(&mut self, v: U8) {
+        self.bits = (self.bits & !16) | ((v & 1) << 4);
+    }
+    fn p2p_ctwin(&self) -> U8 {
+        (self.bits >> 5) & 1
+    }
+    fn set_p2p_ctwin(&mut self, v: U8) {
+        self.bits = (self.bits & !32) | ((v & 1) << 5);
+    }
+    fn p2p_bcn_area(&self) -> U8 {
+        (self.bits >> 6) & 1
+    }
+    fn set_p2p_bcn_area(&mut self, v: U8) {
+        self.bits = (self.bits & !64) | ((v & 1) << 6);
+    }
 }
 
 fn network_type_halmac2drv_impl(network: u32) -> U8 {
@@ -57,23 +97,23 @@ fn network_type_halmac2drv_impl(network: u32) -> U8 {
 }
 
 fn beacon_ctrl_halmac2drv_impl(ctrl: &HalmacBcnCtrl, drv_ctrl: &mut RtwHalmacBcnCtrl) {
-    drv_ctrl.rx_bssid_fit = if ctrl.dis_rx_bssid_fit != 0 { 0 } else { 1 };
-    drv_ctrl.txbcn_rpt = if ctrl.en_txbcn_rpt != 0 { 1 } else { 0 };
-    drv_ctrl.tsf_update = if ctrl.dis_tsf_udt != 0 { 0 } else { 1 };
-    drv_ctrl.enable_bcn = if ctrl.en_bcn != 0 { 1 } else { 0 };
-    drv_ctrl.rxbcn_rpt = if ctrl.en_rxbcn_rpt != 0 { 1 } else { 0 };
-    drv_ctrl.p2p_ctwin = if ctrl.en_p2p_ctwin != 0 { 1 } else { 0 };
-    drv_ctrl.p2p_bcn_area = if ctrl.en_p2p_bcn_area != 0 { 1 } else { 0 };
+    drv_ctrl.set_rx_bssid_fit(if ctrl.dis_rx_bssid_fit != 0 { 0 } else { 1 });
+    drv_ctrl.set_txbcn_rpt(if ctrl.en_txbcn_rpt != 0 { 1 } else { 0 });
+    drv_ctrl.set_tsf_update(if ctrl.dis_tsf_udt != 0 { 0 } else { 1 });
+    drv_ctrl.set_enable_bcn(if ctrl.en_bcn != 0 { 1 } else { 0 });
+    drv_ctrl.set_rxbcn_rpt(if ctrl.en_rxbcn_rpt != 0 { 1 } else { 0 });
+    drv_ctrl.set_p2p_ctwin(if ctrl.en_p2p_ctwin != 0 { 1 } else { 0 });
+    drv_ctrl.set_p2p_bcn_area(if ctrl.en_p2p_bcn_area != 0 { 1 } else { 0 });
 }
 
 fn beacon_ctrl_drv2halmac_impl(drv_ctrl: &RtwHalmacBcnCtrl, ctrl: &mut HalmacBcnCtrl) {
-    ctrl.dis_rx_bssid_fit = if drv_ctrl.rx_bssid_fit != 0 { 0 } else { 1 };
-    ctrl.en_txbcn_rpt = if drv_ctrl.txbcn_rpt != 0 { 1 } else { 0 };
-    ctrl.dis_tsf_udt = if drv_ctrl.tsf_update != 0 { 0 } else { 1 };
-    ctrl.en_bcn = if drv_ctrl.enable_bcn != 0 { 1 } else { 0 };
-    ctrl.en_rxbcn_rpt = if drv_ctrl.rxbcn_rpt != 0 { 1 } else { 0 };
-    ctrl.en_p2p_ctwin = if drv_ctrl.p2p_ctwin != 0 { 1 } else { 0 };
-    ctrl.en_p2p_bcn_area = if drv_ctrl.p2p_bcn_area != 0 { 1 } else { 0 };
+    ctrl.dis_rx_bssid_fit = if drv_ctrl.rx_bssid_fit() != 0 { 0 } else { 1 };
+    ctrl.en_txbcn_rpt = if drv_ctrl.txbcn_rpt() != 0 { 1 } else { 0 };
+    ctrl.dis_tsf_udt = if drv_ctrl.tsf_update() != 0 { 0 } else { 1 };
+    ctrl.en_bcn = if drv_ctrl.enable_bcn() != 0 { 1 } else { 0 };
+    ctrl.en_rxbcn_rpt = if drv_ctrl.rxbcn_rpt() != 0 { 1 } else { 0 };
+    ctrl.en_p2p_ctwin = if drv_ctrl.p2p_ctwin() != 0 { 1 } else { 0 };
+    ctrl.en_p2p_bcn_area = if drv_ctrl.p2p_bcn_area() != 0 { 1 } else { 0 };
 }
 
 #[cfg(not(host_hal_halmac_enum_test))]
@@ -128,6 +168,12 @@ pub extern "C" fn beacon_ctrl_halmac2drv(
     unsafe {
         beacon_ctrl_halmac2drv_impl(&*ctrl, &mut *drv_ctrl);
     }
+}
+
+#[cfg(host_hal_halmac_enum_test)]
+#[no_mangle]
+pub extern "C" fn rtw_halmac_bcn_ctrl_rust_size() -> usize {
+    core::mem::size_of::<RtwHalmacBcnCtrl>()
 }
 
 #[cfg(host_hal_halmac_enum_test)]
