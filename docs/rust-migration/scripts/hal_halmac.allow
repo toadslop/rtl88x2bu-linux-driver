@@ -2,3 +2,5 @@
 drop network_type_halmac2drv
 drop beacon_ctrl_halmac2drv
 drop beacon_ctrl_drv2halmac
+drop rsvd_page_num_drv2halmac
+drop rsvd_page_num_halmac2drv

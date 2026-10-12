@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HALMAC ↔ driver enum/struct mappers from `hal/hal_halmac.c` (W4-10).
+//! HALMAC ↔ driver enum/struct mappers from `hal/hal_halmac.c` (W4-10, W4-11).
 
 #![allow(
     dead_code,
@@ -23,6 +23,16 @@ const HALMAC_NETWORK_ADHOC: u32 = 1;
 const HALMAC_NETWORK_INFRASTRUCTURE: u32 = 2;
 const HALMAC_NETWORK_AP: u32 = 3;
 const HALMAC_NETWORK_UNDEFINE: u32 = 0x7F;
+
+type U16 = u16;
+
+const HALMAC_RSVD_PG_NUM8: u32 = 0;
+const HALMAC_RSVD_PG_NUM16: u32 = 1;
+const HALMAC_RSVD_PG_NUM24: u32 = 2;
+const HALMAC_RSVD_PG_NUM32: u32 = 3;
+const HALMAC_RSVD_PG_NUM64: u32 = 4;
+const HALMAC_RSVD_PG_NUM128: u32 = 5;
+const HALMAC_RSVD_PG_NUM256: u32 = 6;
 
 #[repr(C)]
 pub struct HalmacBcnCtrl {
@@ -106,6 +116,41 @@ fn beacon_ctrl_halmac2drv_impl(ctrl: &HalmacBcnCtrl, drv_ctrl: &mut RtwHalmacBcn
     drv_ctrl.set_p2p_bcn_area(if ctrl.en_p2p_bcn_area != 0 { 1 } else { 0 });
 }
 
+fn rsvd_page_num_drv2halmac_impl(num: U16) -> u32 {
+    if num <= 8 {
+        return HALMAC_RSVD_PG_NUM8;
+    }
+    if num <= 16 {
+        return HALMAC_RSVD_PG_NUM16;
+    }
+    if num <= 24 {
+        return HALMAC_RSVD_PG_NUM24;
+    }
+    if num <= 32 {
+        return HALMAC_RSVD_PG_NUM32;
+    }
+    if num <= 64 {
+        return HALMAC_RSVD_PG_NUM64;
+    }
+    if num <= 128 {
+        return HALMAC_RSVD_PG_NUM128;
+    }
+    HALMAC_RSVD_PG_NUM256
+}
+
+fn rsvd_page_num_halmac2drv_impl(rsvd_page_number: u32) -> U16 {
+    match rsvd_page_number {
+        HALMAC_RSVD_PG_NUM8 => 8,
+        HALMAC_RSVD_PG_NUM16 => 16,
+        HALMAC_RSVD_PG_NUM24 => 24,
+        HALMAC_RSVD_PG_NUM32 => 32,
+        HALMAC_RSVD_PG_NUM64 => 64,
+        HALMAC_RSVD_PG_NUM128 => 128,
+        HALMAC_RSVD_PG_NUM256 => 256,
+        _ => 0,
+    }
+}
+
 fn beacon_ctrl_drv2halmac_impl(drv_ctrl: &RtwHalmacBcnCtrl, ctrl: &mut HalmacBcnCtrl) {
     ctrl.dis_rx_bssid_fit = if drv_ctrl.rx_bssid_fit() != 0 { 0 } else { 1 };
     ctrl.en_txbcn_rpt = if drv_ctrl.txbcn_rpt() != 0 { 1 } else { 0 };
@@ -134,6 +179,18 @@ pub extern "C" fn _beacon_ctrl_halmac2drv(
     unsafe {
         beacon_ctrl_halmac2drv_impl(&*ctrl, &mut *drv_ctrl);
     }
+}
+
+#[cfg(not(host_hal_halmac_enum_test))]
+#[no_mangle]
+pub extern "C" fn _rsvd_page_num_drv2halmac(num: U16) -> u32 {
+    rsvd_page_num_drv2halmac_impl(num)
+}
+
+#[cfg(not(host_hal_halmac_enum_test))]
+#[no_mangle]
+pub extern "C" fn _rsvd_page_num_halmac2drv(rsvd_page_number: u32) -> U16 {
+    rsvd_page_num_halmac2drv_impl(rsvd_page_number)
 }
 
 #[cfg(not(host_hal_halmac_enum_test))]
@@ -188,4 +245,16 @@ pub extern "C" fn beacon_ctrl_drv2halmac(
     unsafe {
         beacon_ctrl_drv2halmac_impl(&*drv_ctrl, &mut *ctrl);
     }
+}
+
+#[cfg(host_hal_halmac_enum_test)]
+#[no_mangle]
+pub extern "C" fn rsvd_page_num_drv2halmac(num: U16) -> u32 {
+    rsvd_page_num_drv2halmac_impl(num)
+}
+
+#[cfg(host_hal_halmac_enum_test)]
+#[no_mangle]
+pub extern "C" fn rsvd_page_num_halmac2drv(rsvd_page_number: u32) -> U16 {
+    rsvd_page_num_halmac2drv_impl(rsvd_page_number)
 }

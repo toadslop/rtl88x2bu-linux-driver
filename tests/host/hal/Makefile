@@ -22,7 +22,8 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 
 .PHONY: all test test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust \
 	test-trx test-trx-rust test-fw test-fw-rust test-mrate test-mrate-rust \
-	test-rf-nss test-rf-nss-rust test-halmac test-halmac-rust test-halmac-rsvd clean
+	test-rf-nss test-rf-nss-rust test-halmac test-halmac-rust test-halmac-rsvd \
+	test-halmac-rsvd-rust clean
 
 all: test
 
@@ -176,13 +177,19 @@ test_hal_halmac_bcn_abi_rust: test_hal_halmac_bcn_abi.c librust_hal_halmac.a
 		librust_hal_halmac.a
 
 test-halmac-rust: test_hal_halmac_network_rust test_hal_halmac_bcn_rust \
-	test_hal_halmac_bcn_abi_rust
+	test_hal_halmac_bcn_abi_rust test_hal_halmac_rsvd_rust
 	./test_hal_halmac_network_rust hal_halmac_network_vectors.json
 	./test_hal_halmac_bcn_rust hal_halmac_bcn_vectors.json
 	./test_hal_halmac_bcn_abi_rust
+	./test_hal_halmac_rsvd_rust hal_halmac_rsvd_drv2halmac_vectors.json \
+		hal_halmac_rsvd_halmac2drv_vectors.json
 
 test-halmac-rsvd: test_hal_halmac_rsvd
 	./test_hal_halmac_rsvd hal_halmac_rsvd_drv2halmac_vectors.json \
+		hal_halmac_rsvd_halmac2drv_vectors.json
+
+test-halmac-rsvd-rust: test_hal_halmac_rsvd_rust
+	./test_hal_halmac_rsvd_rust hal_halmac_rsvd_drv2halmac_vectors.json \
 		hal_halmac_rsvd_halmac2drv_vectors.json
 
 test_hal_halmac_network_rust: test_hal_halmac_network.c librust_hal_halmac.a $(HOST_JSON)
@@ -191,6 +198,10 @@ test_hal_halmac_network_rust: test_hal_halmac_network.c librust_hal_halmac.a $(H
 
 test_hal_halmac_bcn_rust: test_hal_halmac_bcn.c librust_hal_halmac.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_HAL_HALMAC_ORACLE -o $@ test_hal_halmac_bcn.c \
+		$(HOST_JSON) librust_hal_halmac.a
+
+test_hal_halmac_rsvd_rust: test_hal_halmac_rsvd.c librust_hal_halmac.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_HALMAC_ORACLE -o $@ test_hal_halmac_rsvd.c \
 		$(HOST_JSON) librust_hal_halmac.a
 
 clean:
@@ -204,4 +215,4 @@ clean:
 		test_hal_halmac_network test_hal_halmac_bcn test_hal_halmac_bcn_abi \
 		test_hal_halmac_rsvd \
 		test_hal_halmac_network_rust test_hal_halmac_bcn_rust \
-		test_hal_halmac_bcn_abi_rust librust_hal_halmac.a
+		test_hal_halmac_bcn_abi_rust test_hal_halmac_rsvd_rust librust_hal_halmac.a
