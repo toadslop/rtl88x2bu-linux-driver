@@ -1,0 +1,4 @@
+# L1 allowlist for W4-10: L1 ref links oracle helpers; kernel Rust exports _* mappers only.
+drop network_type_halmac2drv
+drop beacon_ctrl_halmac2drv
+drop beacon_ctrl_drv2halmac

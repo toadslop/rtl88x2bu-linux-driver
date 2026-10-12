@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "hal_halmac_drv_bcn_ctrl.h"
 #include "host_vector_json.h"
 
 #define MAX_VECTORS 32
@@ -19,16 +20,6 @@ struct halmac_bcn_ctrl {
 	uint8_t en_rxbcn_rpt;
 	uint8_t en_p2p_ctwin;
 	uint8_t en_p2p_bcn_area;
-};
-
-struct rtw_halmac_bcn_ctrl {
-	uint8_t rx_bssid_fit;
-	uint8_t txbcn_rpt;
-	uint8_t tsf_update;
-	uint8_t enable_bcn;
-	uint8_t rxbcn_rpt;
-	uint8_t p2p_ctwin;
-	uint8_t p2p_bcn_area;
 };
 
 struct vector {
@@ -74,23 +65,45 @@ static int parse_halmac_fields(const char *obj, size_t len,
 	return 0;
 }
 
+static int parse_drv_u8_bit(const char *obj, size_t len, const char *key,
+			    uint8_t *bit_out)
+{
+	uint8_t tmp;
+
+	if (parse_u8_field(obj, len, key, &tmp))
+		return -1;
+	*bit_out = tmp & 1;
+	return 0;
+}
+
 static int parse_drv_fields(const char *obj, size_t len,
 			    struct rtw_halmac_bcn_ctrl *d)
 {
-	if (parse_u8_field(obj, len, "d_rx_bssid_fit", &d->rx_bssid_fit))
+	uint8_t rx_bssid_fit, txbcn_rpt, tsf_update, enable_bcn;
+	uint8_t rxbcn_rpt, p2p_ctwin, p2p_bcn_area;
+
+	if (parse_drv_u8_bit(obj, len, "d_rx_bssid_fit", &rx_bssid_fit))
 		return -1;
-	if (parse_u8_field(obj, len, "d_txbcn_rpt", &d->txbcn_rpt))
+	if (parse_drv_u8_bit(obj, len, "d_txbcn_rpt", &txbcn_rpt))
 		return -1;
-	if (parse_u8_field(obj, len, "d_tsf_update", &d->tsf_update))
+	if (parse_drv_u8_bit(obj, len, "d_tsf_update", &tsf_update))
 		return -1;
-	if (parse_u8_field(obj, len, "d_enable_bcn", &d->enable_bcn))
+	if (parse_drv_u8_bit(obj, len, "d_enable_bcn", &enable_bcn))
 		return -1;
-	if (parse_u8_field(obj, len, "d_rxbcn_rpt", &d->rxbcn_rpt))
+	if (parse_drv_u8_bit(obj, len, "d_rxbcn_rpt", &rxbcn_rpt))
 		return -1;
-	if (parse_u8_field(obj, len, "d_p2p_ctwin", &d->p2p_ctwin))
+	if (parse_drv_u8_bit(obj, len, "d_p2p_ctwin", &p2p_ctwin))
 		return -1;
-	if (parse_u8_field(obj, len, "d_p2p_bcn_area", &d->p2p_bcn_area))
+	if (parse_drv_u8_bit(obj, len, "d_p2p_bcn_area", &p2p_bcn_area))
 		return -1;
+
+	d->rx_bssid_fit = rx_bssid_fit;
+	d->txbcn_rpt = txbcn_rpt;
+	d->tsf_update = tsf_update;
+	d->enable_bcn = enable_bcn;
+	d->rxbcn_rpt = rxbcn_rpt;
+	d->p2p_ctwin = p2p_ctwin;
+	d->p2p_bcn_area = p2p_bcn_area;
 	return 0;
 }
 

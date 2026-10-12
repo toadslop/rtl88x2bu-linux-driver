@@ -1390,6 +1390,13 @@ static enum halmac_network_type_select _network_type_drv2halmac(u8 type)
 	return network;
 }
 
+#ifdef RTW_HALMAC_RUST_MAPPERS
+u8 _network_type_halmac2drv(enum halmac_network_type_select network);
+void _beacon_ctrl_halmac2drv(struct halmac_bcn_ctrl *ctrl,
+			     struct rtw_halmac_bcn_ctrl *drv_ctrl);
+void _beacon_ctrl_drv2halmac(struct rtw_halmac_bcn_ctrl *drv_ctrl,
+			     struct halmac_bcn_ctrl *ctrl);
+#else
 static u8 _network_type_halmac2drv(enum halmac_network_type_select network)
 {
 	u8 type = _HW_STATE_NOLINK_;
@@ -1440,6 +1447,7 @@ static void _beacon_ctrl_drv2halmac(struct rtw_halmac_bcn_ctrl *drv_ctrl,
 	ctrl->en_p2p_ctwin = drv_ctrl->p2p_ctwin ? 1 : 0;
 	ctrl->en_p2p_bcn_area = drv_ctrl->p2p_bcn_area ? 1 : 0;
 }
+#endif /* RTW_HALMAC_RUST_MAPPERS */
 
 int rtw_halmac_get_hw_value(struct dvobj_priv *d, enum halmac_hw_id hw_id, void *pvalue)
 {

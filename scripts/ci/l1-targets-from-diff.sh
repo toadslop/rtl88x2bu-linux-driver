@@ -235,6 +235,13 @@ for path in "${changed[@]}"; do
 	| hal/hal_intf.c)
 		add_target rust-check-symbols-hal-intf
 		;;
+	rust/hal_halmac.rs \
+	| hal/hal_halmac_rest.c \
+	| hal/hal_halmac.c \
+	| tests/host/hal/hal_halmac_* \
+	| tests/host/hal/test_hal_halmac_*)
+		add_target rust-check-symbols-hal-halmac
+		;;
 	rust/aes_*.rs \
 	| rust/sha256*.rs \
 	| rust/gcmp.rs \

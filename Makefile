@@ -2917,6 +2917,7 @@ ifneq ($(filter -DCONFIG_BMC_TX_RATE_SELECT,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(
 rustflags-y += --cfg bmc_tx_rate_select
 endif
 $(MODULE_NAME)-y += rust/hal_com.o
+$(MODULE_NAME)-y += rust/hal_halmac.o
 $(MODULE_NAME)-y += rust/hal_intf.o
 $(MODULE_NAME)-y += rust/rtw_chplan.o
 $(MODULE_NAME)-y += rust/rtw_chplan_rest.o
@@ -4264,6 +4265,24 @@ rust-objects-hal-com-c:
 rust-check-symbols-hal-com: rust-objects-hal-com-c rust-objects-hal-com
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_com_c_ref.o NEW=rust/hal_com.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_com.allow ALLOW_VACUOUS=1
+
+# W4-10: HALMAC network/beacon ctrl mappers vs rust/hal_halmac.o.
+rust-objects-hal-halmac:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-hal-halmac"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/hal_halmac.o
+rust-objects-hal-halmac-c:
+	@mkdir -p tests/host/hal
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/hal/hal_halmac_enum_mappers_c_ref.o \
+		tests/host/hal/hal_halmac_enum_mappers_c_oracle.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_halmac_l1_ref.o tests/host/hal/hal_halmac_l1_ref.c
+	ld -r -o tests/host/hal/hal_halmac_c_ref.o \
+		tests/host/hal/hal_halmac_enum_mappers_c_ref.o tests/host/hal/hal_halmac_l1_ref.o
+rust-check-symbols-hal-halmac: rust-objects-hal-halmac-c rust-objects-hal-halmac
+	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_halmac_c_ref.o NEW=rust/hal_halmac.o \
+		ALLOWLIST=docs/rust-migration/scripts/hal_halmac.allow ALLOW_VACUOUS=1
 
 # W4-07: host C oracle (dump_hal_trx_mode) vs rust/hal_intf.o.
 rust-objects-hal-intf:

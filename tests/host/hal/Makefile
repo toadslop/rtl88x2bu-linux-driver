@@ -28,7 +28,7 @@ all: test
 
 test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust \
 	test-fw test-fw-rust test-mrate test-mrate-rust test-rf-nss test-rf-nss-rust \
-	test-halmac
+	test-halmac test-halmac-rust
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -147,9 +147,10 @@ test_dump_rf_nss_rust: test_dump_rf_nss.c librust_hal_intf_rf_nss.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_HAL_INTF_RF_NSS_ORACLE -o $@ test_dump_rf_nss.c \
 		$(HOST_JSON) librust_hal_intf_rf_nss.a
 
-test-halmac: test_hal_halmac_network test_hal_halmac_bcn
+test-halmac: test_hal_halmac_network test_hal_halmac_bcn test_hal_halmac_bcn_abi
 	./test_hal_halmac_network hal_halmac_network_vectors.json
 	./test_hal_halmac_bcn hal_halmac_bcn_vectors.json
+	./test_hal_halmac_bcn_abi
 
 test_hal_halmac_network: test_hal_halmac_network.c $(HALMAC_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_hal_halmac_network.c $(HALMAC_ORACLE) $(HOST_JSON)
@@ -161,9 +162,18 @@ librust_hal_halmac.a: $(RUST_HAL_HALMAC)
 	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_halmac_enum_test \
 		--crate-type staticlib $(RUST_HAL_HALMAC) -o $@
 
-test-halmac-rust: test_hal_halmac_network_rust test_hal_halmac_bcn_rust
+test_hal_halmac_bcn_abi: test_hal_halmac_bcn_abi.c
+	$(CC) $(CFLAGS) -o $@ test_hal_halmac_bcn_abi.c
+
+test_hal_halmac_bcn_abi_rust: test_hal_halmac_bcn_abi.c librust_hal_halmac.a
+	$(CC) $(CFLAGS) -DRUST_HAL_HALMAC_ORACLE -o $@ test_hal_halmac_bcn_abi.c \
+		librust_hal_halmac.a
+
+test-halmac-rust: test_hal_halmac_network_rust test_hal_halmac_bcn_rust \
+	test_hal_halmac_bcn_abi_rust
 	./test_hal_halmac_network_rust hal_halmac_network_vectors.json
 	./test_hal_halmac_bcn_rust hal_halmac_bcn_vectors.json
+	./test_hal_halmac_bcn_abi_rust
 
 test_hal_halmac_network_rust: test_hal_halmac_network.c librust_hal_halmac.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_HAL_HALMAC_ORACLE -o $@ test_hal_halmac_network.c \
@@ -181,5 +191,6 @@ clean:
 		test_dump_fw_info test_dump_fw_info_rust librust_hal_com_fw.a \
 		test_m_rate_to_hw_rate test_m_rate_to_hw_rate_rust librust_hal_com_mrate.a \
 		test_dump_rf_nss test_dump_rf_nss_rust librust_hal_intf_rf_nss.a \
-		test_hal_halmac_network test_hal_halmac_bcn \
-		test_hal_halmac_network_rust test_hal_halmac_bcn_rust librust_hal_halmac.a
+		test_hal_halmac_network test_hal_halmac_bcn test_hal_halmac_bcn_abi \
+		test_hal_halmac_network_rust test_hal_halmac_bcn_rust \
+		test_hal_halmac_bcn_abi_rust librust_hal_halmac.a

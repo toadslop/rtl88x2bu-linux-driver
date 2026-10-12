@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "hal_halmac_drv_bcn_ctrl.h"
+
 #define HW_STATE_NOLINK 0x00
 #define HW_STATE_ADHOC 0x01
 #define HW_STATE_STATION 0x02
@@ -25,16 +27,6 @@ struct halmac_bcn_ctrl {
 	uint8_t en_rxbcn_rpt;
 	uint8_t en_p2p_ctwin;
 	uint8_t en_p2p_bcn_area;
-};
-
-struct rtw_halmac_bcn_ctrl {
-	uint8_t rx_bssid_fit;
-	uint8_t txbcn_rpt;
-	uint8_t tsf_update;
-	uint8_t enable_bcn;
-	uint8_t rxbcn_rpt;
-	uint8_t p2p_ctwin;
-	uint8_t p2p_bcn_area;
 };
 
 uint8_t network_type_halmac2drv(uint32_t network)
