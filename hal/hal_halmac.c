@@ -2866,6 +2866,10 @@ void dump_trx_share_mode(void *sel, struct _ADAPTER *adapter)
 }
 #endif
 
+#ifdef RTW_HALMAC_RUST_MAPPERS
+enum halmac_drv_rsvd_pg_num _rsvd_page_num_drv2halmac(u16 num);
+u16 _rsvd_page_num_halmac2drv(enum halmac_drv_rsvd_pg_num rsvd_page_number);
+#else
 static enum halmac_drv_rsvd_pg_num _rsvd_page_num_drv2halmac(u16 num)
 {
 	if (num <= 8)
@@ -2926,6 +2930,7 @@ static u16 _rsvd_page_num_halmac2drv(enum halmac_drv_rsvd_pg_num rsvd_page_numbe
 
 	return num;
 }
+#endif /* RTW_HALMAC_RUST_MAPPERS */
 
 static enum halmac_trx_mode _choose_trx_mode(struct dvobj_priv *d)
 {

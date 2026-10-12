@@ -29,6 +29,19 @@ void beacon_ctrl_halmac2drv(const struct halmac_bcn_ctrl *ctrl,
 void beacon_ctrl_drv2halmac(const struct rtw_halmac_bcn_ctrl *drv_ctrl,
 			    struct halmac_bcn_ctrl *ctrl);
 
+enum halmac_drv_rsvd_pg_num {
+	HALMAC_RSVD_PG_NUM8,
+	HALMAC_RSVD_PG_NUM16,
+	HALMAC_RSVD_PG_NUM24,
+	HALMAC_RSVD_PG_NUM32,
+	HALMAC_RSVD_PG_NUM64,
+	HALMAC_RSVD_PG_NUM128,
+	HALMAC_RSVD_PG_NUM256,
+};
+
+unsigned rsvd_page_num_drv2halmac(uint16_t num);
+unsigned rsvd_page_num_halmac2drv(unsigned pg);
+
 uint8_t _network_type_halmac2drv(uint32_t network)
 {
 	return network_type_halmac2drv(network);
@@ -44,4 +57,14 @@ void _beacon_ctrl_drv2halmac(struct rtw_halmac_bcn_ctrl *drv_ctrl,
 			     struct halmac_bcn_ctrl *ctrl)
 {
 	beacon_ctrl_drv2halmac(drv_ctrl, ctrl);
+}
+
+enum halmac_drv_rsvd_pg_num _rsvd_page_num_drv2halmac(uint16_t num)
+{
+	return (enum halmac_drv_rsvd_pg_num)rsvd_page_num_drv2halmac(num);
+}
+
+uint16_t _rsvd_page_num_halmac2drv(enum halmac_drv_rsvd_pg_num pg)
+{
+	return (uint16_t)rsvd_page_num_halmac2drv((unsigned)pg);
 }

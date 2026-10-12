@@ -22,7 +22,8 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 
 .PHONY: all test test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust \
 	test-trx test-trx-rust test-fw test-fw-rust test-mrate test-mrate-rust \
-	test-rf-nss test-rf-nss-rust test-halmac test-halmac-rust test-halmac-rsvd clean
+	test-rf-nss test-rf-nss-rust test-halmac test-halmac-rust test-halmac-rsvd \
+	test-halmac-rsvd-rust clean
 
 all: test
 
