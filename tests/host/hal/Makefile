@@ -28,7 +28,7 @@ all: test
 
 test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust \
 	test-fw test-fw-rust test-mrate test-mrate-rust test-rf-nss test-rf-nss-rust \
-	test-halmac
+	test-halmac test-halmac-rust
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json

@@ -77,5 +77,9 @@ halmac-$(pci) += 	$(path_hm_d2)/halmac_pcie_$(ic).o
 halmac-$(sdio) +=	$(path_hm_d2)/halmac_sdio_$(ic).o
 halmac-$(usb) += 	$(path_hm_d2)/halmac_usb_$(ic).o
 
+ifeq ($(CONFIG_RUST),)
 _HAL_INTFS_FILES +=	hal/hal_halmac.o
+else
+_HAL_INTFS_FILES +=	hal/hal_halmac_rest.o
+endif
 _HAL_INTFS_FILES +=	$(halmac-y)
