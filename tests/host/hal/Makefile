@@ -11,8 +11,10 @@ TRX_ORACLE := hal_dump_trx_mode_c_oracle.c
 FW_ORACLE := hal_dump_fw_info_c_oracle.c
 MRATE_ORACLE := hal_mrate_to_hw_rate_c_oracle.c
 RF_NSS_ORACLE := hal_dump_rf_nss_c_oracle.c
+HALMAC_ORACLE := hal_halmac_enum_mappers_c_oracle.c
 RUST_HAL := $(ROOT)/rust/hal_com.rs
 RUST_HAL_INTF := $(ROOT)/rust/hal_intf.rs
+RUST_HAL_HALMAC := $(ROOT)/rust/hal_halmac.rs
 
 CC     := gcc
 CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
@@ -20,12 +22,13 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 
 .PHONY: all test test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust \
 	test-trx test-trx-rust test-fw test-fw-rust test-mrate test-mrate-rust \
-	test-rf-nss test-rf-nss-rust clean
+	test-rf-nss test-rf-nss-rust test-halmac test-halmac-rust clean
 
 all: test
 
 test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust \
-	test-fw test-fw-rust test-mrate test-mrate-rust test-rf-nss test-rf-nss-rust
+	test-fw test-fw-rust test-mrate test-mrate-rust test-rf-nss test-rf-nss-rust \
+	test-halmac
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -144,6 +147,32 @@ test_dump_rf_nss_rust: test_dump_rf_nss.c librust_hal_intf_rf_nss.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_HAL_INTF_RF_NSS_ORACLE -o $@ test_dump_rf_nss.c \
 		$(HOST_JSON) librust_hal_intf_rf_nss.a
 
+test-halmac: test_hal_halmac_network test_hal_halmac_bcn
+	./test_hal_halmac_network hal_halmac_network_vectors.json
+	./test_hal_halmac_bcn hal_halmac_bcn_vectors.json
+
+test_hal_halmac_network: test_hal_halmac_network.c $(HALMAC_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_hal_halmac_network.c $(HALMAC_ORACLE) $(HOST_JSON)
+
+test_hal_halmac_bcn: test_hal_halmac_bcn.c $(HALMAC_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_hal_halmac_bcn.c $(HALMAC_ORACLE) $(HOST_JSON)
+
+librust_hal_halmac.a: $(RUST_HAL_HALMAC)
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_halmac_enum_test \
+		--crate-type staticlib $(RUST_HAL_HALMAC) -o $@
+
+test-halmac-rust: test_hal_halmac_network_rust test_hal_halmac_bcn_rust
+	./test_hal_halmac_network_rust hal_halmac_network_vectors.json
+	./test_hal_halmac_bcn_rust hal_halmac_bcn_vectors.json
+
+test_hal_halmac_network_rust: test_hal_halmac_network.c librust_hal_halmac.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_HALMAC_ORACLE -o $@ test_hal_halmac_network.c \
+		$(HOST_JSON) librust_hal_halmac.a
+
+test_hal_halmac_bcn_rust: test_hal_halmac_bcn.c librust_hal_halmac.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_HALMAC_ORACLE -o $@ test_hal_halmac_bcn.c \
+		$(HOST_JSON) librust_hal_halmac.a
+
 clean:
 	rm -f test_hw_rate_map test_hw_rate_map_rust librust_hal_com.a \
 		test_rsvd_page_cache test_rsvd_page_cache_rust librust_hal_com_rsvd.a \
@@ -151,4 +180,6 @@ clean:
 		test_dump_trx_mode test_dump_trx_mode_rust librust_hal_intf_trx.a \
 		test_dump_fw_info test_dump_fw_info_rust librust_hal_com_fw.a \
 		test_m_rate_to_hw_rate test_m_rate_to_hw_rate_rust librust_hal_com_mrate.a \
-		test_dump_rf_nss test_dump_rf_nss_rust librust_hal_intf_rf_nss.a
+		test_dump_rf_nss test_dump_rf_nss_rust librust_hal_intf_rf_nss.a \
+		test_hal_halmac_network test_hal_halmac_bcn \
+		test_hal_halmac_network_rust test_hal_halmac_bcn_rust librust_hal_halmac.a

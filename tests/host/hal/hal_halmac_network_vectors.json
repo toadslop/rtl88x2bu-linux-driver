@@ -1,0 +1,11 @@
+{
+  "oracle": "hal/hal_halmac.c _network_type_halmac2drv",
+  "vectors": [
+    { "name": "no_link", "network": 0, "expect": 0 },
+    { "name": "adhoc", "network": 1, "expect": 1 },
+    { "name": "infra", "network": 2, "expect": 2 },
+    { "name": "ap", "network": 3, "expect": 3 },
+    { "name": "undef", "network": 127, "expect": 0 },
+    { "name": "unknown_high", "network": 255, "expect": 0 }
+  ]
+}
