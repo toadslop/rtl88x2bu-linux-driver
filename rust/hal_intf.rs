@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HAL interface helpers — Rust port of `hal/hal_intf.c` (W4-07 TRX mode dumps).
+//! HAL interface helpers — Rust port of `hal/hal_intf.c` (W4-07 TRX mode dumps, W4-08 RF/NSS dumps).
 
 #![allow(
     dead_code,
@@ -12,10 +12,10 @@
     unused_unsafe
 )]
 
-#[cfg(not(host_hal_intf_trx_test))]
+#[cfg(not(any(host_hal_intf_trx_test, host_hal_intf_rf_nss_test)))]
 use core::ffi::{c_char, c_void};
 
-#[cfg(host_hal_intf_trx_test)]
+#[cfg(any(host_hal_intf_trx_test, host_hal_intf_rf_nss_test))]
 use std::os::raw::c_char;
 
 type U8 = u8;
@@ -54,7 +54,7 @@ struct RtwHalIntfTrxFields {
     txpath_num_nss: [U8; 4],
 }
 
-#[cfg(host_hal_intf_trx_test)]
+#[cfg(any(host_hal_intf_trx_test, host_hal_intf_rf_nss_test))]
 fn rf_type_to_rfpath_str_local(rf_type: U8) -> &'static [u8] {
     static RF_TBL: [&[u8]; RF_TYPE_MAX] = [
         b"RF_1T1R", b"RF_1T2R", b"RF_2T2R", b"RF_2T3R", b"RF_2T4R", b"RF_3T3R", b"RF_3T4R",
@@ -67,7 +67,7 @@ fn rf_type_to_rfpath_str_local(rf_type: U8) -> &'static [u8] {
     RF_TBL[rf_type as usize]
 }
 
-#[cfg(not(host_hal_intf_trx_test))]
+#[cfg(not(any(host_hal_intf_trx_test, host_hal_intf_rf_nss_test)))]
 fn rf_type_to_rfpath_str_local(rf_type: U8) -> &'static [u8] {
     extern "C" {
         fn rtw_rust_hal_intf_rf_type_str(rf_type: U8) -> *const c_char;
@@ -159,6 +159,174 @@ fn push_decimal(mut n: u32, out: &mut [u8], pos: &mut usize) {
 
 fn push_u8_decimal(n: U8, out: &mut [u8], pos: &mut usize) {
     push_decimal(n as u32, out, pos);
+}
+
+fn push_i8_decimal(n: i8, out: &mut [u8], pos: &mut usize) {
+    if n < 0 {
+        push_byte(out, pos, b'-');
+        push_decimal((-(n as i32)) as u32, out, pos);
+    } else {
+        push_decimal(n as u32, out, pos);
+    }
+}
+
+#[repr(C)]
+pub struct HostHalIntfRfPathFixture {
+    pub ver_id_rf_type: U8,
+    pub rf_reg_trx_path_bmp: U8,
+    pub rf_reg_path_avail_num: U8,
+    pub hal_spec_max_tx_cnt: U8,
+    pub eeprom_trx_path_bmp: U8,
+    pub eeprom_max_tx_cnt: U8,
+    pub reg_trx_path_bmp: U8,
+    pub tx_path_lmt: U8,
+    pub rx_path_lmt: U8,
+    pub hal_trx_path_bmp: U8,
+    pub hal_max_tx_cnt: U8,
+    pub hal_rf_type: U8,
+    pub NumTotalRFPath: i8,
+}
+
+#[repr(C)]
+pub struct HostHalIntfTrxNssFixture {
+    pub hal_spec_tx_nss: i8,
+    pub hal_spec_rx_nss: i8,
+    pub reg_tx_nss: i8,
+    pub reg_rx_nss: i8,
+    pub hal_tx_nss: i8,
+    pub hal_rx_nss: i8,
+}
+
+#[repr(C)]
+struct RtwHalIntfRfPathFields {
+    ver_id_rf_type: U8,
+    rf_reg_trx_path_bmp: U8,
+    rf_reg_path_avail_num: U8,
+    hal_spec_max_tx_cnt: U8,
+    eeprom_trx_path_bmp: U8,
+    eeprom_max_tx_cnt: U8,
+    reg_trx_path_bmp: U8,
+    tx_path_lmt: U8,
+    rx_path_lmt: U8,
+    hal_trx_path_bmp: U8,
+    hal_max_tx_cnt: U8,
+    hal_rf_type: U8,
+    NumTotalRFPath: i8,
+}
+
+#[repr(C)]
+struct RtwHalIntfTrxNssFields {
+    hal_spec_tx_nss: i8,
+    hal_spec_rx_nss: i8,
+    reg_tx_nss: i8,
+    reg_rx_nss: i8,
+    hal_tx_nss: i8,
+    hal_rx_nss: i8,
+}
+
+fn format_rf_path(fx: &HostHalIntfRfPathFixture, out: &mut [u8]) -> i32 {
+    let mut pos = 0usize;
+    let ver_str = rf_type_to_rfpath_str_local(fx.ver_id_rf_type);
+    let hal_str = rf_type_to_rfpath_str_local(fx.hal_rf_type);
+
+    push_str(out, &mut pos, b"[RF_PATH] ver_id.RF_TYPE:");
+    push_str(out, &mut pos, ver_str);
+    push_byte(out, &mut pos, b'\n');
+
+    push_str(out, &mut pos, b"[RF_PATH] HALSPEC's rf_reg_trx_path_bmp:0x");
+    push_u8_hex2(out, &mut pos, fx.rf_reg_trx_path_bmp);
+    push_str(out, &mut pos, b", rf_reg_path_avail_num:");
+    push_u8_decimal(fx.rf_reg_path_avail_num, out, &mut pos);
+    push_str(out, &mut pos, b", max_tx_cnt:");
+    push_u8_decimal(fx.hal_spec_max_tx_cnt, out, &mut pos);
+    push_byte(out, &mut pos, b'\n');
+
+    push_str(out, &mut pos, b"[RF_PATH] PG's trx_path_bmp:0x");
+    push_u8_hex2(out, &mut pos, fx.eeprom_trx_path_bmp);
+    push_str(out, &mut pos, b", max_tx_cnt:");
+    push_u8_decimal(fx.eeprom_max_tx_cnt, out, &mut pos);
+    push_byte(out, &mut pos, b'\n');
+
+    push_str(out, &mut pos, b"[RF_PATH] Registry's trx_path_bmp:0x");
+    push_u8_hex2(out, &mut pos, fx.reg_trx_path_bmp);
+    push_str(out, &mut pos, b", tx_path_lmt:");
+    push_u8_decimal(fx.tx_path_lmt, out, &mut pos);
+    push_str(out, &mut pos, b", rx_path_lmt:");
+    push_u8_decimal(fx.rx_path_lmt, out, &mut pos);
+    push_byte(out, &mut pos, b'\n');
+
+    push_str(out, &mut pos, b"[RF_PATH] HALDATA's trx_path_bmp:0x");
+    push_u8_hex2(out, &mut pos, fx.hal_trx_path_bmp);
+    push_str(out, &mut pos, b", max_tx_cnt:");
+    push_u8_decimal(fx.hal_max_tx_cnt, out, &mut pos);
+    push_byte(out, &mut pos, b'\n');
+
+    push_str(out, &mut pos, b"[RF_PATH] HALDATA's rf_type:");
+    push_str(out, &mut pos, hal_str);
+    push_str(out, &mut pos, b", NumTotalRFPath:");
+    push_i8_decimal(fx.NumTotalRFPath, out, &mut pos);
+    push_byte(out, &mut pos, b'\n');
+
+    if pos >= out.len() {
+        return -1;
+    }
+    pos as i32
+}
+
+fn format_trx_nss(fx: &HostHalIntfTrxNssFixture, out: &mut [u8]) -> i32 {
+    let mut pos = 0usize;
+
+    push_str(out, &mut pos, b"[TRX_Nss] HALSPEC - tx_nss:");
+    push_i8_decimal(fx.hal_spec_tx_nss, out, &mut pos);
+    push_str(out, &mut pos, b", rx_nss:");
+    push_i8_decimal(fx.hal_spec_rx_nss, out, &mut pos);
+    push_byte(out, &mut pos, b'\n');
+
+    push_str(out, &mut pos, b"[TRX_Nss] Registry - tx_nss:");
+    push_i8_decimal(fx.reg_tx_nss, out, &mut pos);
+    push_str(out, &mut pos, b", rx_nss:");
+    push_i8_decimal(fx.reg_rx_nss, out, &mut pos);
+    push_byte(out, &mut pos, b'\n');
+
+    push_str(out, &mut pos, b"[TRX_Nss] HALDATA - tx_nss:");
+    push_i8_decimal(fx.hal_tx_nss, out, &mut pos);
+    push_str(out, &mut pos, b", rx_nss:");
+    push_i8_decimal(fx.hal_rx_nss, out, &mut pos);
+    push_byte(out, &mut pos, b'\n');
+
+    if pos >= out.len() {
+        return -1;
+    }
+    pos as i32
+}
+
+fn rf_path_fixture_from_fields(fields: &RtwHalIntfRfPathFields) -> HostHalIntfRfPathFixture {
+    HostHalIntfRfPathFixture {
+        ver_id_rf_type: fields.ver_id_rf_type,
+        rf_reg_trx_path_bmp: fields.rf_reg_trx_path_bmp,
+        rf_reg_path_avail_num: fields.rf_reg_path_avail_num,
+        hal_spec_max_tx_cnt: fields.hal_spec_max_tx_cnt,
+        eeprom_trx_path_bmp: fields.eeprom_trx_path_bmp,
+        eeprom_max_tx_cnt: fields.eeprom_max_tx_cnt,
+        reg_trx_path_bmp: fields.reg_trx_path_bmp,
+        tx_path_lmt: fields.tx_path_lmt,
+        rx_path_lmt: fields.rx_path_lmt,
+        hal_trx_path_bmp: fields.hal_trx_path_bmp,
+        hal_max_tx_cnt: fields.hal_max_tx_cnt,
+        hal_rf_type: fields.hal_rf_type,
+        NumTotalRFPath: fields.NumTotalRFPath,
+    }
+}
+
+fn trx_nss_fixture_from_fields(fields: &RtwHalIntfTrxNssFields) -> HostHalIntfTrxNssFixture {
+    HostHalIntfTrxNssFixture {
+        hal_spec_tx_nss: fields.hal_spec_tx_nss,
+        hal_spec_rx_nss: fields.hal_spec_rx_nss,
+        reg_tx_nss: fields.reg_tx_nss,
+        reg_rx_nss: fields.reg_rx_nss,
+        hal_tx_nss: fields.hal_tx_nss,
+        hal_rx_nss: fields.hal_rx_nss,
+    }
 }
 
 fn format_runtime_trx_mode(fx: &HostHalIntfTrxFixture, out: &mut [u8], pos: &mut usize) -> bool {
@@ -261,7 +429,61 @@ pub extern "C" fn dump_hal_trx_mode_format(
     n
 }
 
-#[cfg(not(host_hal_intf_trx_test))]
+#[no_mangle]
+pub extern "C" fn dump_rf_path_format(
+    fx: *const HostHalIntfRfPathFixture,
+    out: *mut u8,
+    buflen: usize,
+) -> i32 {
+    if fx.is_null() || out.is_null() || buflen == 0 {
+        return -1;
+    }
+    let fx = unsafe { &*fx };
+    let buf = unsafe {
+        #[cfg(any(host_hal_intf_trx_test, host_hal_intf_rf_nss_test))]
+        {
+            std::slice::from_raw_parts_mut(out, buflen)
+        }
+        #[cfg(not(any(host_hal_intf_trx_test, host_hal_intf_rf_nss_test)))]
+        {
+            core::slice::from_raw_parts_mut(out, buflen)
+        }
+    };
+    let n = format_rf_path(fx, buf);
+    if n > 0 && (n as usize) < buflen {
+        buf[n as usize] = 0;
+    }
+    n
+}
+
+#[no_mangle]
+pub extern "C" fn dump_trx_nss_format(
+    fx: *const HostHalIntfTrxNssFixture,
+    out: *mut u8,
+    buflen: usize,
+) -> i32 {
+    if fx.is_null() || out.is_null() || buflen == 0 {
+        return -1;
+    }
+    let fx = unsafe { &*fx };
+    let buf = unsafe {
+        #[cfg(any(host_hal_intf_trx_test, host_hal_intf_rf_nss_test))]
+        {
+            std::slice::from_raw_parts_mut(out, buflen)
+        }
+        #[cfg(not(any(host_hal_intf_trx_test, host_hal_intf_rf_nss_test)))]
+        {
+            core::slice::from_raw_parts_mut(out, buflen)
+        }
+    };
+    let n = format_trx_nss(fx, buf);
+    if n > 0 && (n as usize) < buflen {
+        buf[n as usize] = 0;
+    }
+    n
+}
+
+#[cfg(not(any(host_hal_intf_trx_test, host_hal_intf_rf_nss_test)))]
 mod kernel {
     use super::*;
 
