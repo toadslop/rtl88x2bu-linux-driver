@@ -35,7 +35,8 @@ grep 'W3-19' docs/rust-migration/issues/ISSUE-MAP.md
 **Ready frontier:** open children whose `blocked_by` dependencies are all
 **satisfied** — closed on GitHub **or** accessible via an open implementing PR
 (read each issue's `## Tracking` footer). Prefer selecting from **parallel
-lanes** (different C files) when multiple issues are ready. Use `gh issue list` /
+lanes** — disjoint streams (different C files **and** Rust modules, no overlapping
+mutable paths) when multiple issues are ready. Use `gh issue list` /
 `gh issue view` — not local markdown — to decide what is ready.
 
 **Epic planning:** `epic-*.md` files describe wave structure and deferred scope.
@@ -52,6 +53,11 @@ Goal / Notes / Acceptance sections. Use existing children as templates (e.g.
 This port spans many independent `core/` translation units. **Default to wide
 graphs:** most new issues should be immediately workable in parallel (`blocked_by:
 []` or infra-only deps like `T5` / `A2`).
+
+**Parallel ≠ merely concurrent.** Two issues are parallel only if agents can land
+PRs **without editing the same files** (same C TU, same `rust/*.rs`, same Makefile
+object line, or shared `ffi.rs` / harness edits ⇒ **one lane** — chain or merge
+slices). Otherwise every merge risks conflicts and blocks the team.
 
 Use `blocked_by` **only** for real technical coupling:
 

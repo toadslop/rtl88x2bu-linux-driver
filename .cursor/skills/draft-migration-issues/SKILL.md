@@ -4,7 +4,8 @@ description: >-
   Path C of pick-up-work-item (fallback when no PRs need prep, no ready issue,
   and at least one parallel lane is draftable). Drafts implementable ~200 LOC child issues with
   local specs — only allowlisted leaf/pure slices with a clear L0/L1/L2 path.
-  Favor wide parallel graphs over deep blocked_by chains. Do NOT file when a
+  Favor wide parallel graphs over deep blocked_by chains (disjoint file touch
+  sets — not merely concurrent). Do NOT file when a
   single lane is saturated (draft other lanes instead), every lane is saturated,
   or scope is HAL/Wave 4. Completes the pick-up
   workflow — do NOT select or implement a newly drafted issue in the same run.
@@ -44,6 +45,34 @@ GOOD (wide graph): rtw_rf.c lane ──┐
 Rust module** is **not** blocked by unrelated slices. Do **not** set
 `blocked_by: [W3-NN-1]` just because the previous ID was filed in the same batch.
 
+### Parallel means disjoint streams (mandatory)
+
+**Parallelizable** work is work that can proceed in **independent streams** without
+**impacting** other streams at merge time. It is **not** enough that two agents
+*could* start two issues at the same time — if both PRs must edit the **same
+mutable paths**, merges will collide and throughput drops.
+
+Treat two drafted issues as **not parallel** (same **lane** — chain with
+`blocked_by` or split scope) when their implementations would routinely touch
+**overlapping** files, including:
+
+| Overlap | Examples |
+|---------|----------|
+| **Same C translation unit** | Two slices in `rtw_rf.c` |
+| **Same Rust module file** | Two slices both editing `rust/rtw_rf.rs` |
+| **Same Makefile object swap** | Both PRs change `88x2bu-y` / `obj-$(CONFIG_…)` for one `.o` |
+| **Shared glue** | `rust/ffi.rs`, `rust/scaffold.rs`, or bindgen headers both slices extend |
+| **Same harness / fixture** | One `tests/host/…` file or oracle both issues modify |
+
+**Different C files** with **different** `rust/<module>.rs` targets (and no shared
+glue edits) are the usual parallel lanes. When a TU needs multiple slices, prefer
+**one stream per file**: part 1 → part 2 in that lane, not two "ready now"
+issues in the same C file or Rust module.
+
+Before filing a batch, **diff the planned touch set** (C file, Rust module,
+Makefile line, ffi) per issue. If two "parallel" issues share a path, merge them
+into one issue, chain them, or move one slice to another lane.
+
 ### When to use `blocked_by` (narrow — real deps only)
 
 Add a blocker **only** when the slice cannot compile or pass gates without the
@@ -77,14 +106,16 @@ and `rtw_rf.c` — creating an 80-deep chain when most slices could run in paral
 
 When filing **5–15** issues in one session:
 
-1. **Pick multiple independent lanes** — different C files or Rust modules (e.g.
-   one RF slice, one recv slice, one mlme slice, one `T*` harness).
+1. **Pick multiple independent lanes** — different C files **and** different Rust
+   modules with **no overlapping mutable paths** (e.g. one RF slice, one recv
+   slice, one mlme slice, one `T*` harness in a file other lanes do not touch).
 2. **Root each lane** at shared infra only — `blocked_by: []`, or `[T5]`, `[A2]`,
    etc. — **not** the previous issue ID in the batch.
 3. **Chain only inside a lane** when same-file technical deps exist (part 1 → part 2).
 4. **Cap chain depth per lane** — prefer ≤3 sequential issues per C file before
    parallel part-1 slices in the same file.
-5. **Report parallelism** — how many drafted issues are immediately ready vs chained.
+5. **Report parallelism** — how many drafted issues are immediately ready vs chained,
+   and confirm **pairwise disjoint** touch sets among ready issues.
 
 ### `blocked_by` audit (before filing)
 
@@ -213,7 +244,8 @@ Before writing specs, scan the active epic's deferred list and remaining `core/`
 translation units. **Prioritize parallel lanes**, not one long chain:
 
 1. List **C files / modules** with unfiled or under-covered scope.
-2. Pick **3–6 independent lanes** (different files) when possible.
+2. Pick **3–6 independent lanes** (different C + Rust files; no shared Makefile
+   swap or `ffi.rs` edits) when possible.
 3. Within each lane, split into ~200 LOC slices; **chain only** when same-file
    functions truly depend on each other.
 4. Draft **5–15** issues total across lanes (see **When NOT to draft** and the
