@@ -16,7 +16,8 @@
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
-    not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
+    not(host_hal_com_mrate_test),
+    not(host_hal_com_fw_info_test),
 ))]
 use core::ffi::{c_char, c_void};
 
@@ -66,7 +67,8 @@ struct RateSectionEnt {
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
-    not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
+    not(host_hal_com_mrate_test),
+    not(host_hal_com_fw_info_test),
 ))]
 extern "C" {
     fn MGN_RATE_STR(rate: U8) -> *const c_char;
@@ -81,7 +83,8 @@ extern "C" {
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
-    not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
+    not(host_hal_com_mrate_test),
+    not(host_hal_com_fw_info_test),
 ))]
 fn warn_invalid_hw_rate(hw_rate: U8) {
     unsafe {
@@ -93,7 +96,8 @@ fn warn_invalid_hw_rate(hw_rate: U8) {
     host_hal_com_hw_rate_test,
     host_hal_com_rsvd_page_test,
     host_hal_com_chip_info_test,
-    host_hal_com_mrate_test, host_hal_com_fw_info_test
+    host_hal_com_mrate_test,
+    host_hal_com_fw_info_test
 ))]
 fn warn_invalid_hw_rate(_hw_rate: U8) {}
 
@@ -101,7 +105,8 @@ fn warn_invalid_hw_rate(_hw_rate: U8) {}
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
-    not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
+    not(host_hal_com_mrate_test),
+    not(host_hal_com_fw_info_test),
 ))]
 fn warn_invalid_mrate(rate: U8) {
     unsafe {
@@ -113,12 +118,14 @@ fn warn_invalid_mrate(rate: U8) {
     host_hal_com_hw_rate_test,
     host_hal_com_rsvd_page_test,
     host_hal_com_chip_info_test,
-    host_hal_com_mrate_test, host_hal_com_fw_info_test
+    host_hal_com_mrate_test,
+    host_hal_com_fw_info_test
 ))]
 fn warn_invalid_mrate(_rate: U8) {}
 
 #[cfg(any(
-    host_hal_com_mrate_test, host_hal_com_fw_info_test,
+    host_hal_com_mrate_test,
+    host_hal_com_fw_info_test,
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_rsvd_page_test),
@@ -140,7 +147,8 @@ pub extern "C" fn MRateToHwRate(rate: U8) -> U8 {
 #[cfg(not(any(
     host_hal_com_rsvd_page_test,
     host_hal_com_chip_info_test,
-    host_hal_com_mrate_test, host_hal_com_fw_info_test,
+    host_hal_com_mrate_test,
+    host_hal_com_fw_info_test,
 )))]
 #[no_mangle]
 pub extern "C" fn hw_rate_to_m_rate(hw_rate: U8) -> U8 {
@@ -350,7 +358,8 @@ pub extern "C" fn dump_hw_rate_map_test(sel: *mut c_void) {
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
+        not(host_hal_com_mrate_test),
+        not(host_hal_com_fw_info_test),
     )
 ))]
 #[repr(C)]
@@ -367,7 +376,8 @@ pub struct RsvdPageCache {
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
+        not(host_hal_com_mrate_test),
+        not(host_hal_com_fw_info_test),
     )
 ))]
 fn page_num(len: u32, page_size: u32) -> U8 {
@@ -389,7 +399,8 @@ extern "C" {
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_chip_info_test),
-    not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test)
+    not(host_hal_com_mrate_test),
+    not(host_hal_com_fw_info_test)
 ))]
 extern "C" {
     fn _rtw_malloc(sz: u32) -> *mut core::ffi::c_void;
@@ -404,7 +415,8 @@ extern "C" {
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
+        not(host_hal_com_mrate_test),
+        not(host_hal_com_fw_info_test),
     )
 ))]
 const RSVD_TRUE: i32 = 1;
@@ -414,7 +426,8 @@ const RSVD_TRUE: i32 = 1;
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
+        not(host_hal_com_mrate_test),
+        not(host_hal_com_fw_info_test),
     )
 ))]
 fn rsvd_warn_on(cond: bool) {
@@ -436,7 +449,8 @@ fn rsvd_warn_on(cond: bool) {
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
+        not(host_hal_com_mrate_test),
+        not(host_hal_com_fw_info_test),
     )
 ))]
 fn rsvd_heap_alloc(sz: u32, zero: bool) -> *mut U8 {
@@ -462,7 +476,8 @@ fn rsvd_heap_alloc(sz: u32, zero: bool) -> *mut U8 {
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
+        not(host_hal_com_mrate_test),
+        not(host_hal_com_fw_info_test),
     )
 ))]
 fn rsvd_mfree(ptr: *mut U8, sz: u32) {
@@ -486,7 +501,8 @@ fn rsvd_mfree(ptr: *mut U8, sz: u32) {
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
+        not(host_hal_com_mrate_test),
+        not(host_hal_com_fw_info_test),
     )
 ))]
 fn rsvd_memcmp_eq(a: *const U8, b: *const U8, len: u32) -> bool {
@@ -514,7 +530,8 @@ fn rsvd_memcmp_eq(a: *const U8, b: *const U8, len: u32) -> bool {
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
+        not(host_hal_com_mrate_test),
+        not(host_hal_com_fw_info_test),
     )
 ))]
 #[no_mangle]
@@ -592,7 +609,8 @@ pub extern "C" fn rsvd_page_cache_update_all(
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
+        not(host_hal_com_mrate_test),
+        not(host_hal_com_fw_info_test),
     )
 ))]
 #[no_mangle]
@@ -638,7 +656,8 @@ pub extern "C" fn rsvd_page_cache_update_data(
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
+        not(host_hal_com_mrate_test),
+        not(host_hal_com_fw_info_test),
     )
 ))]
 #[no_mangle]
@@ -657,7 +676,8 @@ pub extern "C" fn rsvd_page_cache_free_data(cache: *mut RsvdPageCache) {
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_chip_info_test),
-        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
+        not(host_hal_com_mrate_test),
+        not(host_hal_com_fw_info_test),
     )
 ))]
 #[no_mangle]
@@ -674,7 +694,8 @@ pub extern "C" fn rsvd_page_cache_free(cache: *mut RsvdPageCache) {
     all(
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_rsvd_page_test),
-        not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test),
+        not(host_hal_com_mrate_test),
+        not(host_hal_com_fw_info_test),
     )
 ))]
 mod chip_info {
@@ -890,8 +911,6 @@ mod chip_info {
     }
 }
 
-
-
 #[cfg(any(
     host_hal_com_fw_info_test,
     all(
@@ -1026,12 +1045,12 @@ mod fw_info {
     }
 }
 
-
 #[cfg(all(
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
-    not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test)
+    not(host_hal_com_mrate_test),
+    not(host_hal_com_fw_info_test)
 ))]
 extern "C" {
     fn rtw_mi_hal_dump_macaddr(sel: *mut c_void, adapter: *mut c_void);
@@ -1043,7 +1062,8 @@ extern "C" {
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
-    not(host_hal_com_mrate_test), not(host_hal_com_fw_info_test)
+    not(host_hal_com_mrate_test),
+    not(host_hal_com_fw_info_test)
 ))]
 #[no_mangle]
 pub extern "C" fn rtw_hal_dump_macaddr(sel: *mut c_void, adapter: *mut c_void) {
