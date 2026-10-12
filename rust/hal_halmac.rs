@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HALMAC ↔ driver enum/struct mappers from `hal/hal_halmac.c` (W4-10, W4-11).
+//! HALMAC ↔ driver enum/struct mappers from `hal/hal_halmac.c` (W4-10, W4-11, W4-12).
 
 #![allow(
     dead_code,
@@ -257,4 +257,119 @@ pub extern "C" fn rsvd_page_num_drv2halmac(num: U16) -> u32 {
 #[no_mangle]
 pub extern "C" fn rsvd_page_num_halmac2drv(rsvd_page_number: u32) -> U16 {
     rsvd_page_num_halmac2drv_impl(rsvd_page_number)
+}
+
+const HALMAC_RX_FIFO_EXPANDING_MODE_DISABLE: u32 = 0;
+const HALMAC_RX_FIFO_EXPANDING_MODE_1_BLOCK: u32 = 1;
+const HALMAC_RX_FIFO_EXPANDING_MODE_2_BLOCK: u32 = 2;
+const HALMAC_RX_FIFO_EXPANDING_MODE_3_BLOCK: u32 = 3;
+
+fn trx_share_mode_drv2halmac_impl(trx_share_mode: U8) -> u32 {
+    match trx_share_mode {
+        0 => HALMAC_RX_FIFO_EXPANDING_MODE_DISABLE,
+        1 => HALMAC_RX_FIFO_EXPANDING_MODE_1_BLOCK,
+        2 => HALMAC_RX_FIFO_EXPANDING_MODE_2_BLOCK,
+        3 => HALMAC_RX_FIFO_EXPANDING_MODE_3_BLOCK,
+        _ => HALMAC_RX_FIFO_EXPANDING_MODE_DISABLE,
+    }
+}
+
+fn format_trx_share_dump(trx_share_mode: U8, out: &mut [u8]) -> i32 {
+    let mode = trx_share_mode_drv2halmac_impl(trx_share_mode);
+    let label: &[u8] = match mode {
+        HALMAC_RX_FIFO_EXPANDING_MODE_1_BLOCK => b"RX_FIFO_EXPANDING_MODE_1",
+        HALMAC_RX_FIFO_EXPANDING_MODE_2_BLOCK => b"RX_FIFO_EXPANDING_MODE_2",
+        HALMAC_RX_FIFO_EXPANDING_MODE_3_BLOCK => b"RX_FIFO_EXPANDING_MODE_3",
+        _ => b"DISABLE",
+    };
+    let prefix = b"TRx share mode : ";
+    let mut pos = 0usize;
+
+    if out.is_empty() {
+        return -1;
+    }
+    for &b in prefix {
+        if pos >= out.len() {
+            return -1;
+        }
+        out[pos] = b;
+        pos += 1;
+    }
+    for &b in label {
+        if pos >= out.len() {
+            return -1;
+        }
+        out[pos] = b;
+        pos += 1;
+    }
+    if pos >= out.len() {
+        return -1;
+    }
+    out[pos] = b'\n';
+    pos += 1;
+    pos as i32
+}
+
+#[cfg(host_hal_halmac_enum_test)]
+#[no_mangle]
+pub extern "C" fn trx_share_mode_drv2halmac(trx_share_mode: U8) -> u32 {
+    trx_share_mode_drv2halmac_impl(trx_share_mode)
+}
+
+#[cfg(host_hal_halmac_enum_test)]
+#[no_mangle]
+pub extern "C" fn dump_trx_share_mode_format(
+    trx_share_mode: U8,
+    out: *mut u8,
+    buflen: usize,
+) -> i32 {
+    if out.is_null() || buflen == 0 {
+        return -1;
+    }
+    let buf = unsafe { core::slice::from_raw_parts_mut(out, buflen) };
+    let n = format_trx_share_dump(trx_share_mode, buf);
+    if n > 0 && (n as usize) < buflen {
+        buf[n as usize] = 0;
+    }
+    n
+}
+
+#[cfg(all(not(host_hal_halmac_enum_test), CONFIG_SUPPORT_TRX_SHARED))]
+mod trx_share_kernel {
+    use super::*;
+    use core::ffi::{c_char, c_void};
+
+    extern "C" {
+        fn rtw_rust_hal_halmac_print_sel(sel: *mut c_void, line: *const c_char);
+        fn rtw_rust_hal_halmac_trx_share_mode(adapter: *mut c_void, out: *mut U8);
+    }
+
+    fn print_line(sel: *mut c_void, line: &[u8]) {
+        let mut buf = [0i8; 128];
+        let n = core::cmp::min(line.len(), buf.len().saturating_sub(1));
+        for i in 0..n {
+            buf[i] = line[i] as i8;
+        }
+        unsafe {
+            rtw_rust_hal_halmac_print_sel(sel, buf.as_ptr());
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn _trx_share_mode_drv2halmac(trx_share_mode: U8) -> u32 {
+        trx_share_mode_drv2halmac_impl(trx_share_mode)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn dump_trx_share_mode(sel: *mut c_void, adapter: *mut c_void) {
+        let mut trx_share_mode = 0u8;
+        unsafe {
+            rtw_rust_hal_halmac_trx_share_mode(adapter, &mut trx_share_mode);
+        }
+        let mut buf = [0u8; 128];
+        let n = format_trx_share_dump(trx_share_mode, &mut buf);
+        if n > 0 {
+            print_line(sel, &buf[..n as usize]);
+        }
+    }
 }

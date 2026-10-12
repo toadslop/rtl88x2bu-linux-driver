@@ -24,8 +24,14 @@ struct dump_vector {
 	char expect[MAX_EXPECT];
 };
 
+#ifdef RUST_HAL_HALMAC_ORACLE
 unsigned trx_share_mode_drv2halmac(uint8_t mode);
 int dump_trx_share_mode_format(uint8_t mode, char *buf, size_t buflen);
+#else
+/* C oracle linked from hal_halmac_trx_share_c_oracle.c */
+unsigned trx_share_mode_drv2halmac(uint8_t mode);
+int dump_trx_share_mode_format(uint8_t mode, char *buf, size_t buflen);
+#endif
 
 static int parse_mapper(const char *obj, size_t len, void *vec_void)
 {
