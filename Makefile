@@ -4273,8 +4273,12 @@ rust-objects-hal-intf-c:
 	@mkdir -p tests/host/hal
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_intf_trx_l1_ref.o tests/host/hal/hal_intf_trx_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_intf_rf_nss_l1_ref.o tests/host/hal/hal_intf_rf_nss_l1_ref.c
+	ld -r -o tests/host/hal/hal_intf_l1_ref.o \
+		tests/host/hal/hal_intf_trx_l1_ref.o tests/host/hal/hal_intf_rf_nss_l1_ref.o
 rust-check-symbols-hal-intf: rust-objects-hal-intf-c rust-objects-hal-intf
-	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_intf_trx_l1_ref.o NEW=rust/hal_intf.o \
+	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_intf_l1_ref.o NEW=rust/hal_intf.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_intf.allow ALLOW_VACUOUS=1
 
 # W3-130: host C oracle (debug version/log leaf) vs rust/rtw_debug.o.
