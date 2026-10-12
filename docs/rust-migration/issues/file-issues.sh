@@ -253,6 +253,11 @@ files=(
   wave4-06-hal-dump-fw-info.md
   wave4-07-hal-intf-dump-trx-mode.md
   wave4-08-hal-intf-dump-rf-nss.md
+  wave4-09-hal-phy-bit-shift.md
+  wave4-10-hal-halmac-enum-mappers.md
+  wave4-11-hal-halmac-rsvd-page-map.md
+  wave4-12-hal-halmac-trx-share-dump.md
+  wave4-13-hal-set-brate-cfg.md
 )
 
 # draft_id -> github issue number
