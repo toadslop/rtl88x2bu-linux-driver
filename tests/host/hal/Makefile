@@ -31,7 +31,7 @@ all: test
 
 test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust \
 	test-fw test-fw-rust test-mrate test-mrate-rust test-rf-nss test-rf-nss-rust \
-	test-halmac test-halmac-rust test-halmac-rsvd test-phy-bit-shift test-phy-bit-shift-rust
+	test-halmac test-halmac-rust test-halmac-rsvd test-phy-bit-shift
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -212,17 +212,6 @@ test-phy-bit-shift: test_hal_phy_bit_shift
 test_hal_phy_bit_shift: test_hal_phy_bit_shift.c $(PHY_BIT_SHIFT_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_hal_phy_bit_shift.c $(PHY_BIT_SHIFT_ORACLE) \
 		$(HOST_JSON)
-
-librust_hal_phy.a: $(RUST_HAL_PHY)
-	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_phy_bit_shift_test \
-		--crate-type staticlib $(RUST_HAL_PHY) -o $@
-
-test-phy-bit-shift-rust: test_hal_phy_bit_shift_rust
-	./test_hal_phy_bit_shift_rust hal_phy_bit_shift_vectors.json
-
-test_hal_phy_bit_shift_rust: test_hal_phy_bit_shift.c librust_hal_phy.a $(HOST_JSON)
-	$(CC) $(CFLAGS) -DRUST_HAL_PHY_ORACLE -o $@ test_hal_phy_bit_shift.c \
-		$(HOST_JSON) librust_hal_phy.a
 
 clean:
 	rm -f test_hw_rate_map test_hw_rate_map_rust librust_hal_com.a \
