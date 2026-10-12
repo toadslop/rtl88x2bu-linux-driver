@@ -1,0 +1,15 @@
+{
+  "oracle": "hal/hal_halmac.c _rsvd_page_num_drv2halmac",
+  "vectors": [
+    { "name": "zero_buckets_to_8", "num": 0, "expect": 0 },
+    { "name": "exact_8", "num": 8, "expect": 0 },
+    { "name": "between_8_16", "num": 12, "expect": 1 },
+    { "name": "exact_16", "num": 16, "expect": 1 },
+    { "name": "exact_24", "num": 24, "expect": 2 },
+    { "name": "exact_32", "num": 32, "expect": 3 },
+    { "name": "exact_64", "num": 64, "expect": 4 },
+    { "name": "exact_128", "num": 128, "expect": 5 },
+    { "name": "exact_256", "num": 256, "expect": 6 },
+    { "name": "over_max_300", "num": 300, "expect": 6 }
+  ]
+}
