@@ -13,6 +13,7 @@ MRATE_ORACLE := hal_mrate_to_hw_rate_c_oracle.c
 RF_NSS_ORACLE := hal_dump_rf_nss_c_oracle.c
 HALMAC_ORACLE := hal_halmac_enum_mappers_c_oracle.c
 PHY_BIT_SHIFT_ORACLE := hal_phy_bit_shift_c_oracle.c
+HALMAC_TRX_ORACLE := hal_halmac_trx_share_c_oracle.c
 RUST_HAL := $(ROOT)/rust/hal_com.rs
 RUST_HAL_PHY := $(ROOT)/rust/hal_phy.rs
 RUST_HAL_INTF := $(ROOT)/rust/hal_intf.rs
@@ -151,12 +152,14 @@ test_dump_rf_nss_rust: test_dump_rf_nss.c librust_hal_intf_rf_nss.a $(HOST_JSON)
 		$(HOST_JSON) librust_hal_intf_rf_nss.a
 
 test-halmac: test_hal_halmac_network test_hal_halmac_bcn test_hal_halmac_bcn_abi \
-	test_hal_halmac_rsvd
+	test_hal_halmac_rsvd test_hal_halmac_trx_share
 	./test_hal_halmac_network hal_halmac_network_vectors.json
 	./test_hal_halmac_bcn hal_halmac_bcn_vectors.json
 	./test_hal_halmac_bcn_abi
 	./test_hal_halmac_rsvd hal_halmac_rsvd_drv2halmac_vectors.json \
 		hal_halmac_rsvd_halmac2drv_vectors.json
+	./test_hal_halmac_trx_share hal_halmac_trx_share_drv2halmac_vectors.json \
+		hal_halmac_trx_share_dump_vectors.json
 
 test_hal_halmac_network: test_hal_halmac_network.c $(HALMAC_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_hal_halmac_network.c $(HALMAC_ORACLE) $(HOST_JSON)
@@ -166,6 +169,13 @@ test_hal_halmac_bcn: test_hal_halmac_bcn.c $(HALMAC_ORACLE) $(HOST_JSON)
 
 test_hal_halmac_rsvd: test_hal_halmac_rsvd.c $(HALMAC_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_hal_halmac_rsvd.c $(HALMAC_ORACLE) $(HOST_JSON)
+
+test_hal_halmac_trx_share: test_hal_halmac_trx_share.c $(HALMAC_TRX_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_hal_halmac_trx_share.c $(HALMAC_TRX_ORACLE) $(HOST_JSON)
+
+test-halmac-trx-share: test_hal_halmac_trx_share
+	./test_hal_halmac_trx_share hal_halmac_trx_share_drv2halmac_vectors.json \
+		hal_halmac_trx_share_dump_vectors.json
 
 librust_hal_halmac.a: $(RUST_HAL_HALMAC)
 	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_halmac_enum_test \
@@ -233,7 +243,7 @@ clean:
 		test_m_rate_to_hw_rate test_m_rate_to_hw_rate_rust librust_hal_com_mrate.a \
 		test_dump_rf_nss test_dump_rf_nss_rust librust_hal_intf_rf_nss.a \
 		test_hal_halmac_network test_hal_halmac_bcn test_hal_halmac_bcn_abi \
-		test_hal_halmac_rsvd \
+		test_hal_halmac_rsvd test_hal_halmac_trx_share \
 		test_hal_halmac_network_rust test_hal_halmac_bcn_rust \
 		test_hal_halmac_bcn_abi_rust test_hal_halmac_rsvd_rust librust_hal_halmac.a \
 		test_hal_phy_bit_shift test_hal_phy_bit_shift_rust librust_hal_phy.a

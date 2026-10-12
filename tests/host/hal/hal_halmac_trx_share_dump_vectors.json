@@ -1,0 +1,30 @@
+{
+  "oracle": "hal/hal_halmac.c dump_trx_share_mode",
+  "vectors": [
+    {
+      "name": "dump_disable",
+      "mode": 0,
+      "expect": "TRx share mode : DISABLE"
+    },
+    {
+      "name": "dump_mode_1",
+      "mode": 1,
+      "expect": "TRx share mode : RX_FIFO_EXPANDING_MODE_1"
+    },
+    {
+      "name": "dump_mode_2",
+      "mode": 2,
+      "expect": "TRx share mode : RX_FIFO_EXPANDING_MODE_2"
+    },
+    {
+      "name": "dump_mode_3",
+      "mode": 3,
+      "expect": "TRx share mode : RX_FIFO_EXPANDING_MODE_3"
+    },
+    {
+      "name": "dump_out_of_range",
+      "mode": 255,
+      "expect": "TRx share mode : DISABLE"
+    }
+  ]
+}
