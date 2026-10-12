@@ -189,9 +189,10 @@ An issue is **ready** when:
 
 When multiple issues are ready, pick the **first** match:
 
-1. **Parallel lanes** — prefer an issue in a C file / module with **no** other
-   open in-flight PR (spread work across `rtw_rf.c`, `rtw_recv.c`, `rtw_mlme.c`,
-   etc. instead of stacking only one lane)
+1. **Parallel lanes** — prefer an issue whose **touch set** (C file, `rust/*.rs`,
+   Makefile swap, ffi) does **not** overlap any other **open in-flight PR**
+   (spread work across `rtw_rf.c`, `rtw_recv.c`, `rtw_mlme.c`, etc. instead of
+   two agents editing the same paths)
 2. **Unblock others** — issues on the critical path for the current wave
 3. **Same wave, lowest ID** within the chosen lane — e.g. `W3-04` before `W3-07`
    when both are in the same file and ready

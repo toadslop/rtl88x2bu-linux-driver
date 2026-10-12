@@ -368,7 +368,8 @@ implement one immediately. Wait for an explicit follow-up or a new pick-up run
 | File follow-up issue(s) only for §10 blockers (Path B) | Use follow-up issues to defer PR2…PRn for convenience |
 | Split issues at plan time when 8+ PRs needed | Approve a 10-row plan for one pick-up run |
 | Draft new issues only when allowlist + gap checks pass (Path C) | Draft deep single-lane chains across unrelated C files |
-| Favor wide parallel issue graphs when drafting (Path C) | Chain every new ticket to the previous ID by default |
+| Favor wide parallel issue graphs when drafting (Path C) — disjoint file touch sets | Chain every new ticket to the previous ID by default |
+| Draft parallel lanes in different C **and** Rust modules (no shared paths) | Label issues "parallel" when they edit the same files |
 | Stack new work on open dependency PR branches (Path B) | Wait for chain-head PRs to merge before implementing dependents |
 | Stop when **every** parallel lane is saturated — implement/merge instead | File HAL/USB/PHYDM slices without Wave 4 infra |
 | Close issues with evidence they are done | Merge PRs without explicit user instruction |
