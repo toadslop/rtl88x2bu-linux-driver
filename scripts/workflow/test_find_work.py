@@ -60,6 +60,33 @@ class ClassifyPrepTests(unittest.TestCase):
         self.assertEqual(pr.classify_prep(), "needs_prep")
 
 
+class ImplementsIssueTests(unittest.TestCase):
+    def test_docs_filing_pr_does_not_implement_body_issue_refs(self) -> None:
+        pr = fw.PullRequest(
+            number=1267,
+            title="docs: Wave 4 tranche 4 issue specs (W4-14..W4-19)",
+            url="http://example",
+            is_draft=False,
+            base_ref=fw.DEFAULT_BRANCH,
+            head_ref="cursor/next-work-item-skill-968c",
+        )
+        pr.enrich({}, "Filing #1261 and #1265 for W4-14 / W4-18.")
+        self.assertFalse(pr.implements_issue(1261, "W4-14"))
+        self.assertFalse(pr.implements_issue(1265, "W4-18"))
+
+    def test_docs_filing_pr_matches_title_bracket_id(self) -> None:
+        pr = fw.PullRequest(
+            number=99,
+            title="docs: [W4-14] spec only",
+            url="http://example",
+            is_draft=False,
+            base_ref=fw.DEFAULT_BRANCH,
+            head_ref="cursor/spec",
+        )
+        pr.enrich({}, "")
+        self.assertTrue(pr.implements_issue(1261, "W4-14"))
+
+
 class DecidePathTests(unittest.TestCase):
     def test_path_c_when_no_open_children(self) -> None:
         decision = fw.decide_path(

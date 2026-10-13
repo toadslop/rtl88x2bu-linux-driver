@@ -249,7 +249,20 @@ class PullRequest:
                 if did:
                     self.draft_ids.add(did)
 
+    def is_issue_filing_pr(self) -> bool:
+        """Docs-only PRs that file many issues; body refs are not implementation."""
+        return self.title.lower().startswith("docs:")
+
     def implements_issue(self, issue_number: int, draft_id: str | None) -> bool:
+        if self.is_issue_filing_pr():
+            # Filing PRs list every new #N in the body — do not treat as in-flight work.
+            if draft_id and f"[{draft_id}]" in self.title:
+                return True
+            if draft_id:
+                token = normalize_branch_token(draft_id)
+                if token and token in normalize_branch_token(self.head_ref):
+                    return True
+            return False
         if issue_number in self.issue_numbers:
             return True
         if draft_id and draft_id in self.draft_ids:
