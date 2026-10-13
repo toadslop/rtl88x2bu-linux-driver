@@ -24,5 +24,7 @@ into [`rust/hal_com.rs`](../../../rust/hal_com.rs):
 
 ## Acceptance
 
-- L0 + L1 for exported `HDATA_RATE` / `rtw_rust_hal_com_hdata_rate` symbol(s)
+- L0 + L1 for `_HDATA_RATE` and `rtw_rust_hal_com_hdata_rate` (the linkable symbols;
+  `HDATA_RATE(rate)` in `include/hal_com.h` is a macro over `_HDATA_RATE`, not an L1 export)
+- `hal_com.h` keeps callers working: macro points at the Rust-exported table or a thin C shim
 - L2: enumerate `DESC_RATE*` indices including MCS/VHT edges and `"UNKNOWN"` fallback
