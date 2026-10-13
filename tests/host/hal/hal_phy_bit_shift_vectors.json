@@ -1,0 +1,35 @@
+{
+  "oracle": "hal_phy_bit_shift_c_oracle.c",
+  "vectors": [
+    {
+      "name": "mask_zero",
+      "bit_mask": 0,
+      "expect": 32
+    },
+    {
+      "name": "mask_bit0",
+      "bit_mask": 1,
+      "expect": 0
+    },
+    {
+      "name": "mask_bit5",
+      "bit_mask": 32,
+      "expect": 5
+    },
+    {
+      "name": "mask_bit31",
+      "bit_mask": 2147483648,
+      "expect": 31
+    },
+    {
+      "name": "mask_low_nibble",
+      "bit_mask": 15,
+      "expect": 0
+    },
+    {
+      "name": "mask_0x00ff0000",
+      "bit_mask": 16711680,
+      "expect": 16
+    }
+  ]
+}
