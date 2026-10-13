@@ -228,7 +228,7 @@ fn hal_set_brate_cfg_impl(m_brates_os: &[U8], p_brate_cfg: &mut u16) {
         not(host_hal_com_mrate_test),
         not(host_hal_com_fw_info_test),
         not(host_hal_com_legal_channel_test),
-    not(host_hal_com_mapping_out_pipe_test),
+        not(host_hal_com_mapping_out_pipe_test),
     ),
 ))]
 #[no_mangle]
@@ -354,11 +354,7 @@ pub extern "C" fn rtw_rust_hal_com_rt_out_pipe(adapter: *mut c_void, idx: u32) -
 
 #[cfg(host_hal_com_mapping_out_pipe_test)]
 #[no_mangle]
-pub extern "C" fn rtw_rust_hal_com_set_queue2pipe(
-    adapter: *mut c_void,
-    idx: u32,
-    pipe: U8,
-) {
+pub extern "C" fn rtw_rust_hal_com_set_queue2pipe(adapter: *mut c_void, idx: u32, pipe: U8) {
     if adapter.is_null() || idx >= HW_QUEUE_ENTRY as u32 {
         return;
     }
@@ -383,19 +379,6 @@ extern "C" {
     fn rtw_rust_hal_com_set_queue2pipe(adapter: *mut c_void, idx: u32, pipe: U8);
 }
 
-static ONE_OUT_MAP: [U8; HW_QUEUE_ENTRY] = [0, 0, 0, 0, 0, 0, 0, 0];
-static TWO_WMM_MAP: [U8; HW_QUEUE_ENTRY] = [1, 0, 1, 0, 0, 0, 0, 0];
-static TWO_TYP_MAP: [U8; HW_QUEUE_ENTRY] = [0, 0, 1, 1, 0, 0, 0, 0];
-static THREE_WMM_MAP: [U8; HW_QUEUE_ENTRY] = [0, 1, 2, 1, 0, 0, 0, 0];
-static THREE_TYP_MAP: [U8; HW_QUEUE_ENTRY] = [0, 1, 2, 2, 0, 0, 0, 0];
-
-fn map_queues(adapter: *mut c_void, idx: &[U8; HW_QUEUE_ENTRY]) {
-    for (q, &pipe_idx) in idx.iter().enumerate() {
-        let pipe = unsafe { rtw_rust_hal_com_rt_out_pipe(adapter, pipe_idx as u32) };
-        unsafe { rtw_rust_hal_com_set_queue2pipe(adapter, q as u32, pipe) };
-    }
-}
-
 #[cfg(any(
     host_hal_com_mapping_out_pipe_test,
     all(
@@ -408,26 +391,60 @@ fn map_queues(adapter: *mut c_void, idx: &[U8; HW_QUEUE_ENTRY]) {
         not(host_hal_com_legal_channel_test),
     ),
 ))]
-#[no_mangle]
-pub extern "C" fn Hal_MappingOutPipe(adapter: *mut c_void, num_out_pipe: U8) -> U8 {
-    if adapter.is_null() {
-        return MAP_FALSE;
+mod mapping_out_pipe {
+    use super::*;
+
+    #[cfg(host_hal_com_mapping_out_pipe_test)]
+    use std::os::raw::c_void;
+
+    static ONE_OUT_MAP: [U8; HW_QUEUE_ENTRY] = [0, 0, 0, 0, 0, 0, 0, 0];
+    static TWO_WMM_MAP: [U8; HW_QUEUE_ENTRY] = [1, 0, 1, 0, 0, 0, 0, 0];
+    static TWO_TYP_MAP: [U8; HW_QUEUE_ENTRY] = [0, 0, 1, 1, 0, 0, 0, 0];
+    static THREE_WMM_MAP: [U8; HW_QUEUE_ENTRY] = [0, 1, 2, 1, 0, 0, 0, 0];
+    static THREE_TYP_MAP: [U8; HW_QUEUE_ENTRY] = [0, 1, 2, 2, 0, 0, 0, 0];
+
+    fn map_queues(adapter: *mut c_void, idx: &[U8; HW_QUEUE_ENTRY]) {
+        for (q, &pipe_idx) in idx.iter().enumerate() {
+            let pipe = unsafe { rtw_rust_hal_com_rt_out_pipe(adapter, pipe_idx as u32) };
+            unsafe { rtw_rust_hal_com_set_queue2pipe(adapter, q as u32, pipe) };
+        }
     }
-    let b_wifi_cfg = unsafe { rtw_rust_regsty_wifi_spec(adapter) } != 0;
-    match num_out_pipe {
-        1 => {
-            map_queues(adapter, &ONE_OUT_MAP);
-            MAP_TRUE
+
+    #[no_mangle]
+    pub extern "C" fn Hal_MappingOutPipe(adapter: *mut c_void, num_out_pipe: U8) -> U8 {
+        if adapter.is_null() {
+            return MAP_FALSE;
         }
-        2 => {
-            map_queues(adapter, if b_wifi_cfg { &TWO_WMM_MAP } else { &TWO_TYP_MAP });
-            MAP_TRUE
+        let b_wifi_cfg = unsafe { rtw_rust_regsty_wifi_spec(adapter) } != 0;
+        match num_out_pipe {
+            1 => {
+                map_queues(adapter, &ONE_OUT_MAP);
+                MAP_TRUE
+            }
+            2 => {
+                map_queues(
+                    adapter,
+                    if b_wifi_cfg {
+                        &TWO_WMM_MAP
+                    } else {
+                        &TWO_TYP_MAP
+                    },
+                );
+                MAP_TRUE
+            }
+            3 | 4 | 5 | 6 => {
+                map_queues(
+                    adapter,
+                    if b_wifi_cfg {
+                        &THREE_WMM_MAP
+                    } else {
+                        &THREE_TYP_MAP
+                    },
+                );
+                MAP_TRUE
+            }
+            _ => MAP_FALSE,
         }
-        3 | 4 | 5 | 6 => {
-            map_queues(adapter, if b_wifi_cfg { &THREE_WMM_MAP } else { &THREE_TYP_MAP });
-            MAP_TRUE
-        }
-        _ => MAP_FALSE,
     }
 }
 
@@ -652,7 +669,7 @@ pub extern "C" fn dump_hw_rate_map_test(sel: *mut c_void) {
         not(host_hal_com_fw_info_test),
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
-    not(host_hal_com_mapping_out_pipe_test),
+        not(host_hal_com_mapping_out_pipe_test),
     )
 ))]
 #[repr(C)]
@@ -673,7 +690,7 @@ pub struct RsvdPageCache {
         not(host_hal_com_fw_info_test),
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
-    not(host_hal_com_mapping_out_pipe_test),
+        not(host_hal_com_mapping_out_pipe_test),
     )
 ))]
 fn page_num(len: u32, page_size: u32) -> U8 {
@@ -718,7 +735,7 @@ extern "C" {
         not(host_hal_com_fw_info_test),
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
-    not(host_hal_com_mapping_out_pipe_test),
+        not(host_hal_com_mapping_out_pipe_test),
     )
 ))]
 const RSVD_TRUE: i32 = 1;
@@ -732,7 +749,7 @@ const RSVD_TRUE: i32 = 1;
         not(host_hal_com_fw_info_test),
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
-    not(host_hal_com_mapping_out_pipe_test),
+        not(host_hal_com_mapping_out_pipe_test),
     )
 ))]
 fn rsvd_warn_on(cond: bool) {
@@ -758,7 +775,7 @@ fn rsvd_warn_on(cond: bool) {
         not(host_hal_com_fw_info_test),
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
-    not(host_hal_com_mapping_out_pipe_test),
+        not(host_hal_com_mapping_out_pipe_test),
     )
 ))]
 fn rsvd_heap_alloc(sz: u32, zero: bool) -> *mut U8 {
@@ -788,7 +805,7 @@ fn rsvd_heap_alloc(sz: u32, zero: bool) -> *mut U8 {
         not(host_hal_com_fw_info_test),
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
-    not(host_hal_com_mapping_out_pipe_test),
+        not(host_hal_com_mapping_out_pipe_test),
     )
 ))]
 fn rsvd_mfree(ptr: *mut U8, sz: u32) {
@@ -816,7 +833,7 @@ fn rsvd_mfree(ptr: *mut U8, sz: u32) {
         not(host_hal_com_fw_info_test),
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
-    not(host_hal_com_mapping_out_pipe_test),
+        not(host_hal_com_mapping_out_pipe_test),
     )
 ))]
 fn rsvd_memcmp_eq(a: *const U8, b: *const U8, len: u32) -> bool {
@@ -848,7 +865,7 @@ fn rsvd_memcmp_eq(a: *const U8, b: *const U8, len: u32) -> bool {
         not(host_hal_com_fw_info_test),
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
-    not(host_hal_com_mapping_out_pipe_test),
+        not(host_hal_com_mapping_out_pipe_test),
     )
 ))]
 #[no_mangle]
@@ -930,7 +947,7 @@ pub extern "C" fn rsvd_page_cache_update_all(
         not(host_hal_com_fw_info_test),
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
-    not(host_hal_com_mapping_out_pipe_test),
+        not(host_hal_com_mapping_out_pipe_test),
     )
 ))]
 #[no_mangle]
@@ -980,7 +997,7 @@ pub extern "C" fn rsvd_page_cache_update_data(
         not(host_hal_com_fw_info_test),
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
-    not(host_hal_com_mapping_out_pipe_test),
+        not(host_hal_com_mapping_out_pipe_test),
     )
 ))]
 #[no_mangle]
@@ -1003,7 +1020,7 @@ pub extern "C" fn rsvd_page_cache_free_data(cache: *mut RsvdPageCache) {
         not(host_hal_com_fw_info_test),
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
-    not(host_hal_com_mapping_out_pipe_test),
+        not(host_hal_com_mapping_out_pipe_test),
     )
 ))]
 #[no_mangle]
@@ -1024,7 +1041,7 @@ pub extern "C" fn rsvd_page_cache_free(cache: *mut RsvdPageCache) {
         not(host_hal_com_fw_info_test),
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
-    not(host_hal_com_mapping_out_pipe_test),
+        not(host_hal_com_mapping_out_pipe_test),
     )
 ))]
 mod chip_info {
@@ -1202,7 +1219,7 @@ mod chip_info {
         not(host_hal_com_fw_info_test),
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
-    not(host_hal_com_mapping_out_pipe_test),
+        not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_rsvd_page_test),
         not(host_hal_com_mrate_test)
@@ -1216,7 +1233,7 @@ mod chip_info {
         not(host_hal_com_fw_info_test),
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
-    not(host_hal_com_mapping_out_pipe_test),
+        not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_rsvd_page_test),
         not(host_hal_com_mrate_test)
@@ -1255,7 +1272,7 @@ mod chip_info {
         not(host_hal_com_mrate_test),
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
-    not(host_hal_com_mapping_out_pipe_test),
+        not(host_hal_com_mapping_out_pipe_test),
     )
 ))]
 mod fw_info {
