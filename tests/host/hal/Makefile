@@ -27,14 +27,14 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 .PHONY: all test test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust \
 	test-trx test-trx-rust test-fw test-fw-rust test-mrate test-mrate-rust \
 	test-rf-nss test-rf-nss-rust test-halmac test-halmac-rust test-halmac-rsvd \
-	test-halmac-rsvd-rust test-brate test-brate-rust test-phy-bit-shift test-phy-bit-shift-rust clean
+	test-halmac-rsvd-rust test-brate test-phy-bit-shift test-phy-bit-shift-rust clean
 
 all: test
 
 test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust \
 	test-fw test-fw-rust test-mrate test-mrate-rust test-rf-nss test-rf-nss-rust \
-	test-halmac test-halmac-rust test-halmac-rsvd test-brate test-brate-rust \
-	test-phy-bit-shift test-phy-bit-shift-rust
+	test-halmac test-halmac-rust test-halmac-rsvd test-brate test-phy-bit-shift \
+	test-phy-bit-shift-rust
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -234,17 +234,6 @@ test-brate: test_hal_set_brate_cfg
 test_hal_set_brate_cfg: test_hal_set_brate_cfg.c $(BRATE_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_hal_set_brate_cfg.c $(BRATE_ORACLE) $(HOST_JSON)
 
-librust_hal_com_brate.a: $(RUST_HAL)
-	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_com_brate_test \
-		--crate-type staticlib $(RUST_HAL) -o $@
-
-test-brate-rust: test_hal_set_brate_cfg_rust
-	./test_hal_set_brate_cfg_rust hal_set_brate_cfg_vectors.json
-
-test_hal_set_brate_cfg_rust: test_hal_set_brate_cfg.c librust_hal_com_brate.a $(HOST_JSON)
-	$(CC) $(CFLAGS) -DRUST_HAL_COM_BRATE_ORACLE -o $@ test_hal_set_brate_cfg.c \
-		$(HOST_JSON) librust_hal_com_brate.a
-
 test-phy-bit-shift: test_hal_phy_bit_shift
 	./test_hal_phy_bit_shift hal_phy_bit_shift_vectors.json
 
@@ -276,5 +265,5 @@ clean:
 		test_hal_halmac_network_rust test_hal_halmac_bcn_rust \
 		test_hal_halmac_bcn_abi_rust test_hal_halmac_rsvd_rust \
 		test_hal_halmac_trx_share_rust librust_hal_halmac.a \
-		test_hal_set_brate_cfg test_hal_set_brate_cfg_rust librust_hal_com_brate.a \
+		test_hal_set_brate_cfg \
 		test_hal_phy_bit_shift test_hal_phy_bit_shift_rust librust_hal_phy.a
