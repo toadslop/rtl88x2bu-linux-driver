@@ -224,6 +224,12 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-11 | #1237 | [W4-11] Translate hal_halmac.c — reserved page count mappers |
 | W4-12 | #1238 | [W4-12] Translate hal_halmac.c — TRX share mode dump |
 | W4-13 | #1239 | [W4-13] Translate hal_com_rest.c — HalSetBrateCfg |
+| W4-14 | #1261 | [W4-14] Translate hal_com_rest.c — HAL_IsLegalChannel |
+| W4-15 | #1262 | [W4-15] Translate hal_com_rest.c — USB out-pipe queue mapping |
+| W4-16 | #1263 | [W4-16] Translate hal_com_rest.c — rtw_get_mgntframe_raid |
+| W4-17 | #1264 | [W4-17] Translate hal_com_rest.c — HDATA_RATE descriptor strings |
+| W4-18 | #1265 | [W4-18] Translate hal_phy.c — RF shadow read/write/refresh |
+| W4-19 | #1266 | [W4-19] Translate hal_phy.c — RF shadow compare/recover flags |
 
 ## Superseded issues
 
