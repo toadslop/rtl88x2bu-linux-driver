@@ -28,14 +28,14 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-trx test-trx-rust test-fw test-fw-rust test-mrate test-mrate-rust \
 	test-rf-nss test-rf-nss-rust test-halmac test-halmac-rust test-halmac-rsvd \
 	test-halmac-rsvd-rust test-brate test-brate-rust test-legal-channel test-legal-channel-rust \
-	test-mapping-out-pipe test-phy-bit-shift test-phy-bit-shift-rust clean
+	test-mapping-out-pipe test-mapping-out-pipe-rust test-phy-bit-shift test-phy-bit-shift-rust clean
 
 all: test
 
 test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust \
 	test-fw test-fw-rust test-mrate test-mrate-rust test-rf-nss test-rf-nss-rust \
 	test-halmac test-halmac-rust test-halmac-rsvd test-brate test-brate-rust \
-	test-legal-channel test-legal-channel-rust test-mapping-out-pipe \
+	test-legal-channel test-legal-channel-rust test-mapping-out-pipe test-mapping-out-pipe-rust \
 	test-phy-bit-shift test-phy-bit-shift-rust
 
 test-c: test_hw_rate_map
@@ -257,6 +257,17 @@ test-mapping-out-pipe: test_hal_mapping_out_pipe
 test_hal_mapping_out_pipe: test_hal_mapping_out_pipe.c $(MAPPING_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_hal_mapping_out_pipe.c $(MAPPING_ORACLE) $(HOST_JSON)
 
+librust_hal_com_mapping.a: $(RUST_HAL)
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_com_mapping_out_pipe_test \
+		--crate-type staticlib $(RUST_HAL) -o $@
+
+test-mapping-out-pipe-rust: test_hal_mapping_out_pipe_rust
+	./test_hal_mapping_out_pipe_rust hal_mapping_out_pipe_vectors.json
+
+test_hal_mapping_out_pipe_rust: test_hal_mapping_out_pipe.c librust_hal_com_mapping.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_hal_mapping_out_pipe.c \
+		$(HOST_JSON) librust_hal_com_mapping.a
+
 test-brate: test_hal_set_brate_cfg
 	./test_hal_set_brate_cfg hal_set_brate_cfg_vectors.json
 
@@ -307,5 +318,5 @@ clean:
 		test_hal_halmac_trx_share_rust librust_hal_halmac.a \
 		test_hal_set_brate_cfg test_hal_set_brate_cfg_rust librust_hal_com_brate.a \
 		test_hal_is_legal_channel test_hal_is_legal_channel_rust librust_hal_com_legal.a \
-		test_hal_mapping_out_pipe \
+		test_hal_mapping_out_pipe test_hal_mapping_out_pipe_rust librust_hal_com_mapping.a \
 		test_hal_phy_bit_shift test_hal_phy_bit_shift_rust librust_hal_phy.a

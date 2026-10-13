@@ -4273,12 +4273,17 @@ rust-objects-hal-com-c:
 		-o tests/host/hal/hal_is_legal_channel_c_ref.o \
 		tests/host/hal/hal_is_legal_channel_c_oracle.c
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/include \
+		-o tests/host/hal/hal_mapping_out_pipe_c_ref.o \
+		tests/host/hal/hal_mapping_out_pipe_c_oracle.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_dump_fw_info_l1_ref.o \
 		tests/host/hal/hal_dump_fw_info_l1_ref.c
 	ld -r -o tests/host/hal/hal_com_c_ref.o \
 		tests/host/hal/hal_hw_rate_c_ref.o tests/host/hal/hal_rsvd_page_c_ref.o \
 		tests/host/hal/hal_dump_chip_info_c_ref.o tests/host/hal/hal_mrate_to_hw_rate_c_ref.o \
 		tests/host/hal/hal_set_brate_cfg_c_ref.o tests/host/hal/hal_is_legal_channel_c_ref.o \
+		tests/host/hal/hal_mapping_out_pipe_c_ref.o \
 		tests/host/hal/hal_dump_fw_info_l1_ref.o
 
 rust-check-symbols-hal-com: rust-objects-hal-com-c rust-objects-hal-com
