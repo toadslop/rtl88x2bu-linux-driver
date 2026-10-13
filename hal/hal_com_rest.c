@@ -237,32 +237,6 @@ done:
 	pHalData->bDisableSWChannelPlan = force_hw_chplan;
 }
 
-BOOLEAN
-HAL_IsLegalChannel(
-		PADAPTER	Adapter,
-		u32			Channel
-)
-{
-	BOOLEAN bLegalChannel = _TRUE;
-
-	if (Channel > 14) {
-		if (is_supported_5g(Adapter->registrypriv.wireless_mode) == _FALSE) {
-			bLegalChannel = _FALSE;
-			RTW_INFO("Channel > 14 but wireless_mode do not support 5G\n");
-		}
-	} else if ((Channel <= 14) && (Channel >= 1)) {
-		if (IsSupported24G(Adapter->registrypriv.wireless_mode) == _FALSE) {
-			bLegalChannel = _FALSE;
-			RTW_INFO("(Channel <= 14) && (Channel >=1) but wireless_mode do not support 2.4G\n");
-		}
-	} else {
-		bLegalChannel = _FALSE;
-		RTW_INFO("Channel is Invalid !!!\n");
-	}
-
-	return bLegalChannel;
-}
-
 const char * const _HDATA_RATE[DESC_RATE_NUM + 1] = {
 	[DESC_RATE1M] = "CCK_1M",
 	[DESC_RATE2M] = "CCK_2M",
