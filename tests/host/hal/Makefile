@@ -27,14 +27,15 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 .PHONY: all test test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust \
 	test-trx test-trx-rust test-fw test-fw-rust test-mrate test-mrate-rust \
 	test-rf-nss test-rf-nss-rust test-halmac test-halmac-rust test-halmac-rsvd \
-	test-halmac-rsvd-rust test-brate test-brate-rust test-phy-bit-shift test-phy-bit-shift-rust clean
+	test-halmac-rsvd-rust test-brate test-brate-rust test-legal-channel test-legal-channel-rust \
+	test-phy-bit-shift test-phy-bit-shift-rust clean
 
 all: test
 
 test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust \
 	test-fw test-fw-rust test-mrate test-mrate-rust test-rf-nss test-rf-nss-rust \
 	test-halmac test-halmac-rust test-halmac-rsvd test-brate test-brate-rust \
-	test-phy-bit-shift test-phy-bit-shift-rust
+	test-legal-channel test-legal-channel-rust test-phy-bit-shift test-phy-bit-shift-rust
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -228,6 +229,25 @@ test_hal_halmac_trx_share_rust: test_hal_halmac_trx_share.c librust_hal_halmac.a
 	$(CC) $(CFLAGS) -DRUST_HAL_HALMAC_ORACLE -o $@ test_hal_halmac_trx_share.c \
 		$(HOST_JSON) librust_hal_halmac.a
 
+LEGAL_CH_ORACLE := hal_is_legal_channel_c_oracle.c
+
+test-legal-channel: test_hal_is_legal_channel
+	./test_hal_is_legal_channel hal_is_legal_channel_vectors.json
+
+test_hal_is_legal_channel: test_hal_is_legal_channel.c $(LEGAL_CH_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_hal_is_legal_channel.c $(LEGAL_CH_ORACLE) $(HOST_JSON)
+
+librust_hal_com_legal.a: $(RUST_HAL)
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_com_legal_channel_test \
+		--crate-type staticlib $(RUST_HAL) -o $@
+
+test-legal-channel-rust: test_hal_is_legal_channel_rust
+	./test_hal_is_legal_channel_rust hal_is_legal_channel_vectors.json
+
+test_hal_is_legal_channel_rust: test_hal_is_legal_channel.c librust_hal_com_legal.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_COM_LEGAL_CHANNEL_ORACLE -o $@ test_hal_is_legal_channel.c \
+		$(HOST_JSON) librust_hal_com_legal.a
+
 test-brate: test_hal_set_brate_cfg
 	./test_hal_set_brate_cfg hal_set_brate_cfg_vectors.json
 
@@ -277,4 +297,5 @@ clean:
 		test_hal_halmac_bcn_abi_rust test_hal_halmac_rsvd_rust \
 		test_hal_halmac_trx_share_rust librust_hal_halmac.a \
 		test_hal_set_brate_cfg test_hal_set_brate_cfg_rust librust_hal_com_brate.a \
+		test_hal_is_legal_channel test_hal_is_legal_channel_rust librust_hal_com_legal.a \
 		test_hal_phy_bit_shift test_hal_phy_bit_shift_rust librust_hal_phy.a
