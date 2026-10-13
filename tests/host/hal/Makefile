@@ -28,14 +28,15 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-trx test-trx-rust test-fw test-fw-rust test-mrate test-mrate-rust \
 	test-rf-nss test-rf-nss-rust test-halmac test-halmac-rust test-halmac-rsvd \
 	test-halmac-rsvd-rust test-brate test-brate-rust test-legal-channel test-legal-channel-rust \
-	test-phy-bit-shift test-phy-bit-shift-rust clean
+	test-mapping-out-pipe test-phy-bit-shift test-phy-bit-shift-rust clean
 
 all: test
 
 test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust \
 	test-fw test-fw-rust test-mrate test-mrate-rust test-rf-nss test-rf-nss-rust \
 	test-halmac test-halmac-rust test-halmac-rsvd test-brate test-brate-rust \
-	test-legal-channel test-legal-channel-rust test-phy-bit-shift test-phy-bit-shift-rust
+	test-legal-channel test-legal-channel-rust test-mapping-out-pipe \
+	test-phy-bit-shift test-phy-bit-shift-rust
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -248,6 +249,14 @@ test_hal_is_legal_channel_rust: test_hal_is_legal_channel.c librust_hal_com_lega
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_LEGAL_CHANNEL_ORACLE -o $@ test_hal_is_legal_channel.c \
 		$(HOST_JSON) librust_hal_com_legal.a
 
+MAPPING_ORACLE := hal_mapping_out_pipe_c_oracle.c
+
+test-mapping-out-pipe: test_hal_mapping_out_pipe
+	./test_hal_mapping_out_pipe hal_mapping_out_pipe_vectors.json
+
+test_hal_mapping_out_pipe: test_hal_mapping_out_pipe.c $(MAPPING_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_hal_mapping_out_pipe.c $(MAPPING_ORACLE) $(HOST_JSON)
+
 test-brate: test_hal_set_brate_cfg
 	./test_hal_set_brate_cfg hal_set_brate_cfg_vectors.json
 
@@ -298,4 +307,5 @@ clean:
 		test_hal_halmac_trx_share_rust librust_hal_halmac.a \
 		test_hal_set_brate_cfg test_hal_set_brate_cfg_rust librust_hal_com_brate.a \
 		test_hal_is_legal_channel test_hal_is_legal_channel_rust librust_hal_com_legal.a \
+		test_hal_mapping_out_pipe \
 		test_hal_phy_bit_shift test_hal_phy_bit_shift_rust librust_hal_phy.a
