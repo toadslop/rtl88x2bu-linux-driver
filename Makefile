@@ -282,9 +282,15 @@ else
 _HAL_INTF_OBJ := hal/hal_intf_rest.o
 endif
 
+ifeq ($(CONFIG_RUST),)
+_HAL_PHY_OBJ := hal/hal_phy.o
+else
+_HAL_PHY_OBJ := hal/hal_phy_rest.o
+endif
+
 _HAL_INTFS_FILES :=	$(_HAL_INTF_OBJ) \
 			hal/hal_com_phycfg.o \
-			hal/hal_phy.o \
+			$(_HAL_PHY_OBJ) \
 			hal/hal_dm.o \
 			hal/hal_dm_acs.o \
 			hal/hal_btcoex_wifionly.o \
@@ -2919,6 +2925,7 @@ endif
 $(MODULE_NAME)-y += rust/hal_com.o
 $(MODULE_NAME)-y += rust/hal_halmac.o
 $(MODULE_NAME)-y += rust/hal_intf.o
+$(MODULE_NAME)-y += rust/hal_phy.o
 $(MODULE_NAME)-y += rust/rtw_chplan.o
 $(MODULE_NAME)-y += rust/rtw_chplan_rest.o
 $(MODULE_NAME)-y += rust/rtw_io_rest.o
@@ -4299,6 +4306,19 @@ rust-objects-hal-intf-c:
 rust-check-symbols-hal-intf: rust-objects-hal-intf-c rust-objects-hal-intf
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_intf_l1_ref.o NEW=rust/hal_intf.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_intf.allow ALLOW_VACUOUS=1
+
+# W4-09: host C oracle (PHY_CalculateBitShift) vs rust/hal_phy.o.
+rust-objects-hal-phy:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-hal-phy"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/hal_phy.o
+rust-objects-hal-phy-c:
+	@mkdir -p tests/host/hal
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_phy_bit_shift_l1_ref.o \
+		tests/host/hal/hal_phy_bit_shift_c_oracle.c
+rust-check-symbols-hal-phy: rust-objects-hal-phy-c rust-objects-hal-phy
+	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_phy_bit_shift_l1_ref.o NEW=rust/hal_phy.o \
+		ALLOWLIST=docs/rust-migration/scripts/hal_phy.allow ALLOW_VACUOUS=1
 
 # W3-130: host C oracle (debug version/log leaf) vs rust/rtw_debug.o.
 rust-objects-rtw-debug:

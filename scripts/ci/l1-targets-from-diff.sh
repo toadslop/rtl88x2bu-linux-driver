@@ -242,6 +242,12 @@ for path in "${changed[@]}"; do
 	| tests/host/hal/test_hal_halmac_*)
 		add_target rust-check-symbols-hal-halmac
 		;;
+	rust/hal_phy.rs \
+	| hal/hal_phy_rest.c \
+	| hal/hal_phy.c \
+	| tests/host/hal/hal_phy_bit_shift*)
+		add_target rust-check-symbols-hal-phy
+		;;
 	rust/aes_*.rs \
 	| rust/sha256*.rs \
 	| rust/gcmp.rs \
