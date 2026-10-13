@@ -38,4 +38,15 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-12 | `wave4-12-hal-halmac-trx-share-dump.md` | `hal_halmac.c` TRX share mode dump |
 | W4-13 | `wave4-13-hal-set-brate-cfg.md` | `hal_com_rest.c` `HalSetBrateCfg` |
 
-Further slices: USB HCI, `hal_dm.c` / PHYDM debug — file as `wave4-*.md` when tranche 4 is underway.
+## Children (tranche 4 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-14 | `wave4-14-hal-legal-channel.md` | `HAL_IsLegalChannel` |
+| W4-15 | `wave4-15-hal-out-pipe-mapping.md` | `Hal_MappingOutPipe` + queue→pipe tables |
+| W4-16 | `wave4-16-hal-mgntframe-raid.md` | `rtw_get_mgntframe_raid` |
+| W4-17 | `wave4-17-hal-hdata-rate-strings.md` | `_HDATA_RATE` / `HDATA_RATE` strings |
+| W4-18 | `wave4-18-hal-phy-rf-shadow-core.md` | RF shadow read/write/refresh |
+| W4-19 | `wave4-19-hal-phy-rf-shadow-flags.md` | RF shadow compare/recover flags |
+
+Further slices: USB HCI, `hal_dm.c` / PHYDM debug — file as `wave4-*.md` when tranche 5 is underway.

@@ -258,6 +258,12 @@ files=(
   wave4-11-hal-halmac-rsvd-page-map.md
   wave4-12-hal-halmac-trx-share-dump.md
   wave4-13-hal-set-brate-cfg.md
+  wave4-14-hal-legal-channel.md
+  wave4-15-hal-out-pipe-mapping.md
+  wave4-16-hal-mgntframe-raid.md
+  wave4-17-hal-hdata-rate-strings.md
+  wave4-18-hal-phy-rf-shadow-core.md
+  wave4-19-hal-phy-rf-shadow-flags.md
 )
 
 # draft_id -> github issue number
