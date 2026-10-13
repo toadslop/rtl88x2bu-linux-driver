@@ -1,0 +1,53 @@
+{
+  "oracle": "hal_set_brate_cfg_c_oracle.c",
+  "vectors": [
+    {
+      "name": "empty_rates",
+      "rates_hex": "00000000000000000000000000000000",
+      "init_mask": 0,
+      "expect_mask": 0
+    },
+    {
+      "name": "non_basic_ignored",
+      "rates_hex": "02040b160c1218243048606c00000000",
+      "init_mask": 0,
+      "expect_mask": 0
+    },
+    {
+      "name": "cck_basic_only",
+      "rates_hex": "82848b96000000000000000000000000",
+      "init_mask": 0,
+      "expect_mask": 15
+    },
+    {
+      "name": "ofdm_basic_mixed",
+      "rates_hex": "8c9298a4b01218306048000000000000",
+      "init_mask": 0,
+      "expect_mask": 496
+    },
+    {
+      "name": "11g_default_basic_set",
+      "rates_hex": "82848b960c1218243048606c00000000",
+      "init_mask": 0,
+      "expect_mask": 15
+    },
+    {
+      "name": "preserves_init_mask",
+      "rates_hex": "82000000000000000000000000000000",
+      "init_mask": 2032,
+      "expect_mask": 2033
+    },
+    {
+      "name": "unknown_basic_rate_byte",
+      "rates_hex": "ff000000000000000000000000000000",
+      "init_mask": 0,
+      "expect_mask": 0
+    },
+    {
+      "name": "duplicate_basic_1m",
+      "rates_hex": "82820000000000000000000000000000",
+      "init_mask": 0,
+      "expect_mask": 1
+    }
+  ]
+}
