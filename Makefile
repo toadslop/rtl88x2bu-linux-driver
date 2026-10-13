@@ -2922,6 +2922,9 @@ endif
 ifneq ($(filter -DCONFIG_BMC_TX_RATE_SELECT,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 rustflags-y += --cfg bmc_tx_rate_select
 endif
+ifneq ($(filter -DCONFIG_SUPPORT_TRX_SHARED,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+rustflags-y += --cfg CONFIG_SUPPORT_TRX_SHARED
+endif
 $(MODULE_NAME)-y += rust/hal_com.o
 $(MODULE_NAME)-y += rust/hal_halmac.o
 $(MODULE_NAME)-y += rust/hal_intf.o
@@ -4284,6 +4287,7 @@ rust-objects-hal-halmac-c:
 		-o tests/host/hal/hal_halmac_enum_mappers_c_ref.o \
 		tests/host/hal/hal_halmac_enum_mappers_c_oracle.c
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		$(if $(filter -DCONFIG_SUPPORT_TRX_SHARED,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),-DCONFIG_SUPPORT_TRX_SHARED,) \
 		-o tests/host/hal/hal_halmac_l1_ref.o tests/host/hal/hal_halmac_l1_ref.c
 	ld -r -o tests/host/hal/hal_halmac_c_ref.o \
 		tests/host/hal/hal_halmac_enum_mappers_c_ref.o tests/host/hal/hal_halmac_l1_ref.o

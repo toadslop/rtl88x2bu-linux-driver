@@ -4,3 +4,5 @@ drop beacon_ctrl_halmac2drv
 drop beacon_ctrl_drv2halmac
 drop rsvd_page_num_drv2halmac
 drop rsvd_page_num_halmac2drv
+drop trx_share_mode_drv2halmac
+drop dump_trx_share_mode_format

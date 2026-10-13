@@ -68,3 +68,21 @@ uint16_t _rsvd_page_num_halmac2drv(enum halmac_drv_rsvd_pg_num pg)
 {
 	return (uint16_t)rsvd_page_num_halmac2drv((unsigned)pg);
 }
+
+#ifdef CONFIG_SUPPORT_TRX_SHARED
+enum halmac_rx_fifo_expanding_mode {
+	HALMAC_RX_FIFO_EXPANDING_MODE_DISABLE = 0,
+	HALMAC_RX_FIFO_EXPANDING_MODE_1_BLOCK = 1,
+	HALMAC_RX_FIFO_EXPANDING_MODE_2_BLOCK = 2,
+	HALMAC_RX_FIFO_EXPANDING_MODE_3_BLOCK = 3,
+};
+
+unsigned trx_share_mode_drv2halmac(uint8_t mode);
+
+enum halmac_rx_fifo_expanding_mode _trx_share_mode_drv2halmac(uint8_t mode)
+{
+	return (enum halmac_rx_fifo_expanding_mode)trx_share_mode_drv2halmac(mode);
+}
+
+void dump_trx_share_mode(void *sel, void *adapter);
+#endif /* CONFIG_SUPPORT_TRX_SHARED */

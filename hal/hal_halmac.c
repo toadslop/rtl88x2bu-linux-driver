@@ -2829,6 +2829,10 @@ out:
 }
 
 #ifdef CONFIG_SUPPORT_TRX_SHARED
+#ifdef RTW_HALMAC_RUST_MAPPERS
+enum halmac_rx_fifo_expanding_mode _trx_share_mode_drv2halmac(u8 trx_share_mode);
+void dump_trx_share_mode(void *sel, struct _ADAPTER *adapter);
+#else
 static inline enum halmac_rx_fifo_expanding_mode _trx_share_mode_drv2halmac(u8 trx_share_mode)
 {
 	if (0 == trx_share_mode)
@@ -2841,13 +2845,6 @@ static inline enum halmac_rx_fifo_expanding_mode _trx_share_mode_drv2halmac(u8 t
 		return HALMAC_RX_FIFO_EXPANDING_MODE_3_BLOCK;
 	else
 		return HALMAC_RX_FIFO_EXPANDING_MODE_DISABLE;
-}
-
-static enum halmac_rx_fifo_expanding_mode _rtw_get_trx_share_mode(struct _ADAPTER *adapter)
-{
-	struct registry_priv *registry_par = &adapter->registrypriv;
-
-	return _trx_share_mode_drv2halmac(registry_par->trx_share_mode);
 }
 
 void dump_trx_share_mode(void *sel, struct _ADAPTER *adapter)
@@ -2864,7 +2861,15 @@ void dump_trx_share_mode(void *sel, struct _ADAPTER *adapter)
 	else
 		RTW_PRINT_SEL(sel, "TRx share mode : %s\n", "DISABLE");
 }
-#endif
+#endif /* RTW_HALMAC_RUST_MAPPERS */
+
+static enum halmac_rx_fifo_expanding_mode _rtw_get_trx_share_mode(struct _ADAPTER *adapter)
+{
+	struct registry_priv *registry_par = &adapter->registrypriv;
+
+	return _trx_share_mode_drv2halmac(registry_par->trx_share_mode);
+}
+#endif /* CONFIG_SUPPORT_TRX_SHARED */
 
 #ifdef RTW_HALMAC_RUST_MAPPERS
 enum halmac_drv_rsvd_pg_num _rsvd_page_num_drv2halmac(u16 num);
