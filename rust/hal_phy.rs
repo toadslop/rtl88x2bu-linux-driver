@@ -28,7 +28,7 @@ pub extern "C" fn PHY_CalculateBitShift(bit_mask: U32) -> U32 {
 
 #[cfg(any(config_rf_shadow_rw, host_hal_phy_rf_shadow_test))]
 mod rf_shadow {
-    use super::{U8, U32};
+    use super::{U32, U8};
 
     pub const RF6052_MAX_REG_88E: usize = 0xFF;
     pub const RF6052_MAX_REG_92C: usize = 0x7F;
@@ -98,11 +98,7 @@ mod rf_shadow {
     }
 
     #[no_mangle]
-    pub extern "C" fn PHY_RFShadowRead(
-        _adapter: Adapter,
-        e_rf_path: i32,
-        offset: U32,
-    ) -> U32 {
+    pub extern "C" fn PHY_RFShadowRead(_adapter: Adapter, e_rf_path: i32, offset: U32) -> U32 {
         let path = e_rf_path as usize;
         let off = offset as usize;
         if path >= RF6052_MAX_PATH || off >= RF6052_MAX_REG {
@@ -112,12 +108,7 @@ mod rf_shadow {
     }
 
     #[no_mangle]
-    pub extern "C" fn PHY_RFShadowWrite(
-        _adapter: Adapter,
-        e_rf_path: i32,
-        offset: U32,
-        data: U32,
-    ) {
+    pub extern "C" fn PHY_RFShadowWrite(_adapter: Adapter, e_rf_path: i32, offset: U32, data: U32) {
         let path = e_rf_path as usize;
         let off = offset as usize;
         if path >= RF6052_MAX_PATH || off >= RF6052_MAX_REG {
@@ -145,5 +136,4 @@ mod rf_shadow {
             }
         }
     }
-
 }
