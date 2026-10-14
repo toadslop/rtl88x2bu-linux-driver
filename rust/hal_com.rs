@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HAL common helpers — Rust port of `hal/hal_com.c` (W4-01 rate map, W4-02 rsvd page cache, W4-03 chip info, W4-04 macaddr dump, W4-05 MRateToHwRate, W4-06 fw info dump, W4-13 HalSetBrateCfg, W4-14 HAL_IsLegalChannel, W4-15 Hal_MappingOutPipe).
+//! HAL common helpers — Rust port of `hal/hal_com.c` (W4-01 rate map, W4-02 rsvd page cache, W4-03 chip info, W4-04 macaddr dump, W4-05 MRateToHwRate, W4-06 fw info dump, W4-13 HalSetBrateCfg, W4-14 HAL_IsLegalChannel, W4-15 Hal_MappingOutPipe, W4-16 rtw_get_mgntframe_raid).
 
 #![allow(
     dead_code,
@@ -21,6 +21,7 @@
     not(host_hal_com_brate_test),
     not(host_hal_com_legal_channel_test),
     not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
 ))]
 use core::ffi::{c_char, c_void};
 
@@ -75,6 +76,7 @@ struct RateSectionEnt {
     not(host_hal_com_brate_test),
     not(host_hal_com_legal_channel_test),
     not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
 ))]
 extern "C" {
     fn MGN_RATE_STR(rate: U8) -> *const c_char;
@@ -94,6 +96,7 @@ extern "C" {
     not(host_hal_com_brate_test),
     not(host_hal_com_legal_channel_test),
     not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
 ))]
 fn warn_invalid_hw_rate(hw_rate: U8) {
     unsafe {
@@ -109,7 +112,8 @@ fn warn_invalid_hw_rate(hw_rate: U8) {
     host_hal_com_fw_info_test,
     host_hal_com_brate_test,
     host_hal_com_legal_channel_test,
-    host_hal_com_mapping_out_pipe_test
+    host_hal_com_mapping_out_pipe_test,
+    host_hal_com_mgntframe_raid_test
 ))]
 fn warn_invalid_hw_rate(_hw_rate: U8) {}
 
@@ -122,6 +126,7 @@ fn warn_invalid_hw_rate(_hw_rate: U8) {}
     not(host_hal_com_brate_test),
     not(host_hal_com_legal_channel_test),
     not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
 ))]
 fn warn_invalid_mrate(rate: U8) {
     unsafe {
@@ -137,7 +142,8 @@ fn warn_invalid_mrate(rate: U8) {
     host_hal_com_fw_info_test,
     host_hal_com_brate_test,
     host_hal_com_legal_channel_test,
-    host_hal_com_mapping_out_pipe_test
+    host_hal_com_mapping_out_pipe_test,
+    host_hal_com_mgntframe_raid_test
 ))]
 fn warn_invalid_mrate(_rate: U8) {}
 
@@ -229,6 +235,7 @@ fn hal_set_brate_cfg_impl(m_brates_os: &[U8], p_brate_cfg: &mut u16) {
         not(host_hal_com_fw_info_test),
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
     ),
 ))]
 #[no_mangle]
@@ -268,6 +275,7 @@ pub extern "C" fn rtw_rust_regsty_wireless_mode(adapter: *mut u8) -> U8 {
 #[cfg(all(
     not(host_hal_com_legal_channel_test),
     not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
@@ -307,6 +315,7 @@ fn hal_is_legal_channel_impl(wireless_mode: U8, channel: u32) -> U8 {
         not(host_hal_com_fw_info_test),
         not(host_hal_com_brate_test),
         not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
     ),
 ))]
 #[no_mangle]
@@ -365,6 +374,7 @@ pub extern "C" fn rtw_rust_hal_com_set_queue2pipe(adapter: *mut c_void, idx: u32
 
 #[cfg(all(
     not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
@@ -389,6 +399,7 @@ extern "C" {
         not(host_hal_com_fw_info_test),
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
+        not(host_hal_com_mgntframe_raid_test),
     ),
 ))]
 mod mapping_out_pipe {
@@ -448,6 +459,80 @@ mod mapping_out_pipe {
     }
 }
 
+const HARDWARE_TYPE_RTL8192EE: U8 = 3;
+const WIRELESS_11B_BIT: U8 = 1;
+const RATEID_IDX_G_VAL: U8 = 7;
+const RATEID_IDX_B_VAL: U8 = 8;
+const RATR_INX_WIRELESS_G_VAL: U8 = 5;
+const RATR_INX_WIRELESS_B_VAL: U8 = 6;
+
+#[cfg(host_hal_com_mgntframe_raid_test)]
+#[repr(C)]
+struct HostMgntframeRaidAdapter {
+    hw_type: U8,
+}
+
+#[cfg(host_hal_com_mgntframe_raid_test)]
+#[no_mangle]
+pub extern "C" fn rtw_rust_hal_com_hw_type(adapter: *mut u8) -> U8 {
+    if adapter.is_null() {
+        return 0;
+    }
+    unsafe { (*adapter.cast::<HostMgntframeRaidAdapter>()).hw_type }
+}
+
+#[cfg(all(
+    not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_hw_rate_test),
+    not(host_hal_com_rsvd_page_test),
+    not(host_hal_com_chip_info_test),
+    not(host_hal_com_mrate_test),
+    not(host_hal_com_fw_info_test),
+    not(host_hal_com_brate_test),
+    not(host_hal_com_legal_channel_test),
+))]
+extern "C" {
+    fn rtw_rust_hal_com_hw_type(adapter: *mut u8) -> U8;
+}
+
+fn rtw_get_mgntframe_raid_impl(hw_type: U8, network_type: U8) -> U8 {
+    let new_gen = hw_type >= HARDWARE_TYPE_RTL8192EE;
+    if new_gen {
+        if network_type & WIRELESS_11B_BIT != 0 {
+            RATEID_IDX_B_VAL
+        } else {
+            RATEID_IDX_G_VAL
+        }
+    } else if network_type & WIRELESS_11B_BIT != 0 {
+        RATR_INX_WIRELESS_B_VAL
+    } else {
+        RATR_INX_WIRELESS_G_VAL
+    }
+}
+
+#[cfg(any(
+    host_hal_com_mgntframe_raid_test,
+    all(
+        not(host_hal_com_hw_rate_test),
+        not(host_hal_com_rsvd_page_test),
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_mrate_test),
+        not(host_hal_com_fw_info_test),
+        not(host_hal_com_brate_test),
+        not(host_hal_com_legal_channel_test),
+        not(host_hal_com_mapping_out_pipe_test),
+    ),
+))]
+#[no_mangle]
+pub extern "C" fn rtw_get_mgntframe_raid(adapter: *mut u8, network_type: U8) -> U8 {
+    if adapter.is_null() {
+        return 0;
+    }
+    let hw_type = unsafe { rtw_rust_hal_com_hw_type(adapter) };
+    rtw_get_mgntframe_raid_impl(hw_type, network_type)
+}
+
 #[cfg(not(any(
     host_hal_com_rsvd_page_test,
     host_hal_com_chip_info_test,
@@ -456,6 +541,7 @@ mod mapping_out_pipe {
     host_hal_com_brate_test,
     host_hal_com_legal_channel_test,
     host_hal_com_mapping_out_pipe_test,
+    host_hal_com_mgntframe_raid_test,
 )))]
 #[no_mangle]
 pub extern "C" fn hw_rate_to_m_rate(hw_rate: U8) -> U8 {
@@ -670,6 +756,7 @@ pub extern "C" fn dump_hw_rate_map_test(sel: *mut c_void) {
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
     )
 ))]
 #[repr(C)]
@@ -691,6 +778,7 @@ pub struct RsvdPageCache {
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
     )
 ))]
 fn page_num(len: u32, page_size: u32) -> U8 {
@@ -717,6 +805,7 @@ extern "C" {
     not(host_hal_com_brate_test),
     not(host_hal_com_legal_channel_test),
     not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
 ))]
 extern "C" {
     fn _rtw_malloc(sz: u32) -> *mut core::ffi::c_void;
@@ -736,6 +825,7 @@ extern "C" {
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
     )
 ))]
 const RSVD_TRUE: i32 = 1;
@@ -750,6 +840,7 @@ const RSVD_TRUE: i32 = 1;
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
     )
 ))]
 fn rsvd_warn_on(cond: bool) {
@@ -776,6 +867,7 @@ fn rsvd_warn_on(cond: bool) {
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
     )
 ))]
 fn rsvd_heap_alloc(sz: u32, zero: bool) -> *mut U8 {
@@ -806,6 +898,7 @@ fn rsvd_heap_alloc(sz: u32, zero: bool) -> *mut U8 {
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
     )
 ))]
 fn rsvd_mfree(ptr: *mut U8, sz: u32) {
@@ -834,6 +927,7 @@ fn rsvd_mfree(ptr: *mut U8, sz: u32) {
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
     )
 ))]
 fn rsvd_memcmp_eq(a: *const U8, b: *const U8, len: u32) -> bool {
@@ -866,6 +960,7 @@ fn rsvd_memcmp_eq(a: *const U8, b: *const U8, len: u32) -> bool {
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
     )
 ))]
 #[no_mangle]
@@ -948,6 +1043,7 @@ pub extern "C" fn rsvd_page_cache_update_all(
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
     )
 ))]
 #[no_mangle]
@@ -998,6 +1094,7 @@ pub extern "C" fn rsvd_page_cache_update_data(
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
     )
 ))]
 #[no_mangle]
@@ -1021,6 +1118,7 @@ pub extern "C" fn rsvd_page_cache_free_data(cache: *mut RsvdPageCache) {
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
     )
 ))]
 #[no_mangle]
@@ -1042,6 +1140,7 @@ pub extern "C" fn rsvd_page_cache_free(cache: *mut RsvdPageCache) {
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
     )
 ))]
 mod chip_info {
@@ -1220,6 +1319,7 @@ mod chip_info {
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_rsvd_page_test),
         not(host_hal_com_mrate_test)
@@ -1234,6 +1334,7 @@ mod chip_info {
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_rsvd_page_test),
         not(host_hal_com_mrate_test)
@@ -1273,6 +1374,7 @@ mod chip_info {
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
     )
 ))]
 mod fw_info {
@@ -1409,6 +1511,7 @@ mod fw_info {
     not(host_hal_com_brate_test),
     not(host_hal_com_legal_channel_test),
     not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
 ))]
 extern "C" {
     fn rtw_mi_hal_dump_macaddr(sel: *mut c_void, adapter: *mut c_void);
@@ -1425,6 +1528,7 @@ extern "C" {
     not(host_hal_com_brate_test),
     not(host_hal_com_legal_channel_test),
     not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
 ))]
 #[no_mangle]
 pub extern "C" fn rtw_hal_dump_macaddr(sel: *mut c_void, adapter: *mut c_void) {
