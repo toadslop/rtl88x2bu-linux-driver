@@ -30,7 +30,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-rf-nss test-rf-nss-rust test-halmac test-halmac-rust test-halmac-rsvd \
 	test-halmac-rsvd-rust test-brate test-brate-rust test-legal-channel test-legal-channel-rust \
 	test-mapping-out-pipe test-mapping-out-pipe-rust test-mgntframe-raid test-mgntframe-raid-rust \
-	test-phy-bit-shift test-phy-bit-shift-rust clean
+	test-hdata-rate test-phy-bit-shift test-phy-bit-shift-rust clean
 
 all: test
 
@@ -38,7 +38,8 @@ test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust
 	test-fw test-fw-rust test-mrate test-mrate-rust test-rf-nss test-rf-nss-rust \
 	test-halmac test-halmac-rust test-halmac-rsvd test-brate test-brate-rust \
 	test-legal-channel test-legal-channel-rust test-mapping-out-pipe test-mapping-out-pipe-rust \
-	test-mgntframe-raid test-mgntframe-raid-rust test-phy-bit-shift test-phy-bit-shift-rust
+	test-mgntframe-raid test-mgntframe-raid-rust test-hdata-rate test-phy-bit-shift \
+	test-phy-bit-shift-rust
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -289,6 +290,14 @@ test_hal_mgntframe_raid_rust: test_hal_mgntframe_raid.c librust_hal_com_mgntfram
 	$(CC) $(CFLAGS) -o $@ test_hal_mgntframe_raid.c \
 		$(HOST_JSON) librust_hal_com_mgntframe_raid.a
 
+HDATA_RATE_ORACLE := hal_hdata_rate_c_oracle.c
+
+test-hdata-rate: test_hal_hdata_rate
+	./test_hal_hdata_rate hal_hdata_rate_vectors.json
+
+test_hal_hdata_rate: test_hal_hdata_rate.c $(HDATA_RATE_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_hal_hdata_rate.c $(HDATA_RATE_ORACLE) $(HOST_JSON)
+
 test-brate: test_hal_set_brate_cfg
 	./test_hal_set_brate_cfg hal_set_brate_cfg_vectors.json
 
@@ -360,5 +369,6 @@ clean:
 		test_hal_is_legal_channel test_hal_is_legal_channel_rust librust_hal_com_legal.a \
 		test_hal_mapping_out_pipe test_hal_mapping_out_pipe_rust librust_hal_com_mapping.a \
 		test_hal_mgntframe_raid test_hal_mgntframe_raid_rust librust_hal_com_mgntframe_raid.a \
+		test_hal_hdata_rate \
 		test_hal_phy_bit_shift test_hal_phy_bit_shift_rust librust_hal_phy.a \
 		test_hal_phy_rf_shadow test_hal_phy_rf_shadow_rust librust_hal_phy_rf_shadow.a

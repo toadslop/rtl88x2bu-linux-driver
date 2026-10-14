@@ -1,0 +1,20 @@
+{
+  "oracle": "hal_hdata_rate_c_oracle.c",
+  "vectors": [
+    {
+      "name": "out_of_range_0x55",
+      "hw_rate": 85,
+      "expect": "UNKNOWN"
+    },
+    {
+      "name": "out_of_range_0x7f",
+      "hw_rate": 127,
+      "expect": "UNKNOWN"
+    },
+    {
+      "name": "out_of_range_0xff",
+      "hw_rate": 255,
+      "expect": "UNKNOWN"
+    }
+  ]
+}
