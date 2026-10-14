@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HAL common helpers — Rust port of `hal/hal_com.c` (W4-01 rate map, W4-02 rsvd page cache, W4-03 chip info, W4-04 macaddr dump, W4-05 MRateToHwRate, W4-06 fw info dump, W4-13 HalSetBrateCfg, W4-14 HAL_IsLegalChannel, W4-15 Hal_MappingOutPipe, W4-16 rtw_get_mgntframe_raid).
+//! HAL common helpers — Rust port of `hal/hal_com.c` (W4-01 rate map, W4-02 rsvd page cache, W4-03 chip info, W4-04 macaddr dump, W4-05 MRateToHwRate, W4-06 fw info dump, W4-13 HalSetBrateCfg, W4-14 HAL_IsLegalChannel, W4-15 Hal_MappingOutPipe, W4-16 rtw_get_mgntframe_raid, W4-17 _HDATA_RATE strings).
 
 #![allow(
     dead_code,
@@ -22,6 +22,7 @@
     not(host_hal_com_legal_channel_test),
     not(host_hal_com_mapping_out_pipe_test),
     not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
 ))]
 use core::ffi::{c_char, c_void};
 
@@ -77,12 +78,12 @@ struct RateSectionEnt {
     not(host_hal_com_legal_channel_test),
     not(host_hal_com_mapping_out_pipe_test),
     not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
 ))]
 extern "C" {
     fn MGN_RATE_STR(rate: U8) -> *const c_char;
     static mut rates_by_sections: [RateSectionEnt; RATE_SECTION_NUM as usize];
     fn rtw_rust_hal_com_print_line(sel: *mut c_void, line: *const c_char);
-    fn rtw_rust_hal_com_hdata_rate(hw_rate: U8) -> *const c_char;
     fn rtw_rust_hal_com_warn_invalid_hw_rate(hw_rate: U8);
     fn rtw_rust_hal_com_warn_invalid_mrate(rate: U8);
 }
@@ -97,6 +98,7 @@ extern "C" {
     not(host_hal_com_legal_channel_test),
     not(host_hal_com_mapping_out_pipe_test),
     not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
 ))]
 fn warn_invalid_hw_rate(hw_rate: U8) {
     unsafe {
@@ -113,7 +115,8 @@ fn warn_invalid_hw_rate(hw_rate: U8) {
     host_hal_com_brate_test,
     host_hal_com_legal_channel_test,
     host_hal_com_mapping_out_pipe_test,
-    host_hal_com_mgntframe_raid_test
+    host_hal_com_mgntframe_raid_test,
+    host_hal_com_hdata_rate_test,
 ))]
 fn warn_invalid_hw_rate(_hw_rate: U8) {}
 
@@ -127,6 +130,7 @@ fn warn_invalid_hw_rate(_hw_rate: U8) {}
     not(host_hal_com_legal_channel_test),
     not(host_hal_com_mapping_out_pipe_test),
     not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
 ))]
 fn warn_invalid_mrate(rate: U8) {
     unsafe {
@@ -143,7 +147,8 @@ fn warn_invalid_mrate(rate: U8) {
     host_hal_com_brate_test,
     host_hal_com_legal_channel_test,
     host_hal_com_mapping_out_pipe_test,
-    host_hal_com_mgntframe_raid_test
+    host_hal_com_mgntframe_raid_test,
+    host_hal_com_hdata_rate_test,
 ))]
 fn warn_invalid_mrate(_rate: U8) {}
 
@@ -236,6 +241,7 @@ fn hal_set_brate_cfg_impl(m_brates_os: &[U8], p_brate_cfg: &mut u16) {
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     ),
 ))]
 #[no_mangle]
@@ -276,6 +282,7 @@ pub extern "C" fn rtw_rust_regsty_wireless_mode(adapter: *mut u8) -> U8 {
     not(host_hal_com_legal_channel_test),
     not(host_hal_com_mapping_out_pipe_test),
     not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
@@ -316,6 +323,7 @@ fn hal_is_legal_channel_impl(wireless_mode: U8, channel: u32) -> U8 {
         not(host_hal_com_brate_test),
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     ),
 ))]
 #[no_mangle]
@@ -375,6 +383,7 @@ pub extern "C" fn rtw_rust_hal_com_set_queue2pipe(adapter: *mut c_void, idx: u32
 #[cfg(all(
     not(host_hal_com_mapping_out_pipe_test),
     not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
@@ -400,6 +409,7 @@ extern "C" {
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     ),
 ))]
 mod mapping_out_pipe {
@@ -486,6 +496,7 @@ pub extern "C" fn rtw_rust_hal_com_get_hw_type(adapter: *mut c_void) -> U8 {
 
 #[cfg(all(
     not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
@@ -525,6 +536,7 @@ fn rtw_get_mgntframe_raid_impl(hw_type: U8, network_type: U8) -> U8 {
         not(host_hal_com_brate_test),
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
+        not(host_hal_com_hdata_rate_test),
     ),
 ))]
 mod mgntframe_raid {
@@ -544,6 +556,24 @@ mod mgntframe_raid {
     }
 }
 
+#[cfg(any(
+    host_hal_com_hdata_rate_test,
+    all(
+        not(host_hal_com_hw_rate_test),
+        not(host_hal_com_rsvd_page_test),
+        not(host_hal_com_chip_info_test),
+        not(host_hal_com_mrate_test),
+        not(host_hal_com_fw_info_test),
+        not(host_hal_com_brate_test),
+        not(host_hal_com_legal_channel_test),
+        not(host_hal_com_mapping_out_pipe_test),
+        not(host_hal_com_mgntframe_raid_test),
+    ),
+))]
+mod hdata_rate_strings {
+    include!("hal_com_hdata_rate_table.rs");
+}
+
 #[cfg(not(any(
     host_hal_com_rsvd_page_test,
     host_hal_com_chip_info_test,
@@ -553,6 +583,7 @@ mod mgntframe_raid {
     host_hal_com_legal_channel_test,
     host_hal_com_mapping_out_pipe_test,
     host_hal_com_mgntframe_raid_test,
+    host_hal_com_hdata_rate_test,
 )))]
 #[no_mangle]
 pub extern "C" fn hw_rate_to_m_rate(hw_rate: U8) -> U8 {
@@ -620,7 +651,7 @@ fn format_m_to_hw_line(m_rate: U8, hw_rate: U8) -> (usize, [u8; 256]) {
     let mut line = [0u8; 256];
     let mut pos = 0usize;
     let m_str = c_str_bytes(unsafe { MGN_RATE_STR(m_rate) });
-    let h_str = c_str_bytes(unsafe { rtw_rust_hal_com_hdata_rate(hw_rate) });
+    let h_str = c_str_bytes(unsafe { hdata_rate_strings::rtw_rust_hal_com_hdata_rate(hw_rate) });
     for &b in b"m_rate:" {
         if pos < line.len() {
             line[pos] = b;
@@ -674,7 +705,7 @@ fn format_m_to_hw_line(m_rate: U8, hw_rate: U8) -> (usize, [u8; 256]) {
 fn format_hw_to_m_line(hw_rate: U8, m_rate: U8) -> (usize, [u8; 256]) {
     let mut line = [0u8; 256];
     let mut pos = 0usize;
-    let h_str = c_str_bytes(unsafe { rtw_rust_hal_com_hdata_rate(hw_rate) });
+    let h_str = c_str_bytes(unsafe { hdata_rate_strings::rtw_rust_hal_com_hdata_rate(hw_rate) });
     let m_str = c_str_bytes(unsafe { MGN_RATE_STR(m_rate) });
     for &b in b"hw_rate:" {
         if pos < line.len() {
@@ -768,6 +799,7 @@ pub extern "C" fn dump_hw_rate_map_test(sel: *mut c_void) {
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     )
 ))]
 #[repr(C)]
@@ -790,6 +822,7 @@ pub struct RsvdPageCache {
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     )
 ))]
 fn page_num(len: u32, page_size: u32) -> U8 {
@@ -817,6 +850,7 @@ extern "C" {
     not(host_hal_com_legal_channel_test),
     not(host_hal_com_mapping_out_pipe_test),
     not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
 ))]
 extern "C" {
     fn _rtw_malloc(sz: u32) -> *mut core::ffi::c_void;
@@ -837,6 +871,7 @@ extern "C" {
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     )
 ))]
 const RSVD_TRUE: i32 = 1;
@@ -852,6 +887,7 @@ const RSVD_TRUE: i32 = 1;
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     )
 ))]
 fn rsvd_warn_on(cond: bool) {
@@ -879,6 +915,7 @@ fn rsvd_warn_on(cond: bool) {
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     )
 ))]
 fn rsvd_heap_alloc(sz: u32, zero: bool) -> *mut U8 {
@@ -910,6 +947,7 @@ fn rsvd_heap_alloc(sz: u32, zero: bool) -> *mut U8 {
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     )
 ))]
 fn rsvd_mfree(ptr: *mut U8, sz: u32) {
@@ -939,6 +977,7 @@ fn rsvd_mfree(ptr: *mut U8, sz: u32) {
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     )
 ))]
 fn rsvd_memcmp_eq(a: *const U8, b: *const U8, len: u32) -> bool {
@@ -972,6 +1011,7 @@ fn rsvd_memcmp_eq(a: *const U8, b: *const U8, len: u32) -> bool {
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     )
 ))]
 #[no_mangle]
@@ -1055,6 +1095,7 @@ pub extern "C" fn rsvd_page_cache_update_all(
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     )
 ))]
 #[no_mangle]
@@ -1106,6 +1147,7 @@ pub extern "C" fn rsvd_page_cache_update_data(
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     )
 ))]
 #[no_mangle]
@@ -1130,6 +1172,7 @@ pub extern "C" fn rsvd_page_cache_free_data(cache: *mut RsvdPageCache) {
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     )
 ))]
 #[no_mangle]
@@ -1152,6 +1195,7 @@ pub extern "C" fn rsvd_page_cache_free(cache: *mut RsvdPageCache) {
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     )
 ))]
 mod chip_info {
@@ -1331,6 +1375,7 @@ mod chip_info {
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_rsvd_page_test),
         not(host_hal_com_mrate_test)
@@ -1346,6 +1391,7 @@ mod chip_info {
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_rsvd_page_test),
         not(host_hal_com_mrate_test)
@@ -1386,6 +1432,7 @@ mod chip_info {
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
     )
 ))]
 mod fw_info {
@@ -1523,6 +1570,7 @@ mod fw_info {
     not(host_hal_com_legal_channel_test),
     not(host_hal_com_mapping_out_pipe_test),
     not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
 ))]
 extern "C" {
     fn rtw_mi_hal_dump_macaddr(sel: *mut c_void, adapter: *mut c_void);
@@ -1540,6 +1588,7 @@ extern "C" {
     not(host_hal_com_legal_channel_test),
     not(host_hal_com_mapping_out_pipe_test),
     not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
 ))]
 #[no_mangle]
 pub extern "C" fn rtw_hal_dump_macaddr(sel: *mut c_void, adapter: *mut c_void) {
