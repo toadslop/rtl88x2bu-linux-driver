@@ -1,5 +1,5 @@
 // Generated for W4-17 — keep in sync with hal_hdata_rate_c_oracle.c
-use super::{U8, DESC_RATE_NUM};
+use super::{DESC_RATE_NUM, U8};
 use core::ffi::c_char;
 
 static HDATA_STR_00: [u8; 7] = [67, 67, 75, 95, 49, 77, 0];
@@ -96,7 +96,6 @@ const fn hdata_cstr_ptr(s: &[u8]) -> *const c_char {
 pub struct CStrPtr(pub *const c_char);
 unsafe impl Sync for CStrPtr {}
 
-#[link_section = ".data"]
 #[no_mangle]
 pub static _HDATA_RATE: [CStrPtr; 85] = [
     CStrPtr(hdata_cstr_ptr(&HDATA_STR_00)),

@@ -7,8 +7,7 @@ typedef uint8_t u8;
 
 #define DESC_RATE_NUM 0x54
 
-const char * const _HDATA_RATE[DESC_RATE_NUM + 1]
-	__attribute__((section(".rodata"), used)) = {
+const char * const _HDATA_RATE[DESC_RATE_NUM + 1] = {
 	"CCK_1M",
 	"CCK_2M",
 	"CCK5_5M",
