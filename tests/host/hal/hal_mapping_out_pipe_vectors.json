@@ -34,6 +34,14 @@
       "expect_queue2pipe": [1, 2, 3, 2, 1, 1, 1, 1]
     },
     {
+      "name": "three_out_typical",
+      "num_out_pipe": 3,
+      "wifi_spec": 0,
+      "rt_out_pipe": [1, 2, 3, 4],
+      "expect_result": 1,
+      "expect_queue2pipe": [1, 2, 3, 3, 1, 1, 1, 1]
+    },
+    {
       "name": "invalid_num_out_pipe",
       "num_out_pipe": 0,
       "wifi_spec": 0,
