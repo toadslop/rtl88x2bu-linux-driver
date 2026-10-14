@@ -1,0 +1,35 @@
+{
+  "oracle": "hal_mgntframe_raid_c_oracle.c",
+  "vectors": [
+    {
+      "name": "legacy_ic_11b",
+      "hw_type": 2,
+      "network_type": 1,
+      "expect_raid": 6
+    },
+    {
+      "name": "legacy_ic_11g",
+      "hw_type": 2,
+      "network_type": 2,
+      "expect_raid": 5
+    },
+    {
+      "name": "new_gen_ic_11b",
+      "hw_type": 3,
+      "network_type": 1,
+      "expect_raid": 8
+    },
+    {
+      "name": "new_gen_ic_11g",
+      "hw_type": 3,
+      "network_type": 2,
+      "expect_raid": 7
+    },
+    {
+      "name": "new_gen_ic_11bg_prefers_b",
+      "hw_type": 10,
+      "network_type": 3,
+      "expect_raid": 8
+    }
+  ]
+}
