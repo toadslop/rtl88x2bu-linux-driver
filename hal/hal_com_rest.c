@@ -327,111 +327,6 @@ const char * const _HDATA_RATE[DESC_RATE_NUM + 1] = {
 
 
 
-static void
-_OneOutPipeMapping(
-		PADAPTER	pAdapter
-)
-{
-	struct dvobj_priv	*pdvobjpriv = adapter_to_dvobj(pAdapter);
-
-	pdvobjpriv->Queue2Pipe[0] = pdvobjpriv->RtOutPipe[0];/* VO */
-	pdvobjpriv->Queue2Pipe[1] = pdvobjpriv->RtOutPipe[0];/* VI */
-	pdvobjpriv->Queue2Pipe[2] = pdvobjpriv->RtOutPipe[0];/* BE */
-	pdvobjpriv->Queue2Pipe[3] = pdvobjpriv->RtOutPipe[0];/* BK */
-
-	pdvobjpriv->Queue2Pipe[4] = pdvobjpriv->RtOutPipe[0];/* BCN */
-	pdvobjpriv->Queue2Pipe[5] = pdvobjpriv->RtOutPipe[0];/* MGT */
-	pdvobjpriv->Queue2Pipe[6] = pdvobjpriv->RtOutPipe[0];/* HIGH */
-	pdvobjpriv->Queue2Pipe[7] = pdvobjpriv->RtOutPipe[0];/* TXCMD */
-}
-
-static void
-_TwoOutPipeMapping(
-		PADAPTER	pAdapter,
-		BOOLEAN		bWIFICfg
-)
-{
-	struct dvobj_priv	*pdvobjpriv = adapter_to_dvobj(pAdapter);
-
-	if (bWIFICfg) { /* WMM */
-
-		/*	BK, 	BE, 	VI, 	VO, 	BCN,	CMD,MGT,HIGH,HCCA  */
-		/* {  0, 	1, 	0, 	1, 	0, 	0, 	0, 	0, 		0	}; */
-		/* 0:ep_0 num, 1:ep_1 num */
-
-		pdvobjpriv->Queue2Pipe[0] = pdvobjpriv->RtOutPipe[1];/* VO */
-		pdvobjpriv->Queue2Pipe[1] = pdvobjpriv->RtOutPipe[0];/* VI */
-		pdvobjpriv->Queue2Pipe[2] = pdvobjpriv->RtOutPipe[1];/* BE */
-		pdvobjpriv->Queue2Pipe[3] = pdvobjpriv->RtOutPipe[0];/* BK */
-
-		pdvobjpriv->Queue2Pipe[4] = pdvobjpriv->RtOutPipe[0];/* BCN */
-		pdvobjpriv->Queue2Pipe[5] = pdvobjpriv->RtOutPipe[0];/* MGT */
-		pdvobjpriv->Queue2Pipe[6] = pdvobjpriv->RtOutPipe[0];/* HIGH */
-		pdvobjpriv->Queue2Pipe[7] = pdvobjpriv->RtOutPipe[0];/* TXCMD */
-
-	} else { /* typical setting */
-
-
-		/* BK, 	BE, 	VI, 	VO, 	BCN,	CMD,MGT,HIGH,HCCA */
-		/* {  1, 	1, 	0, 	0, 	0, 	0, 	0, 	0, 		0	};			 */
-		/* 0:ep_0 num, 1:ep_1 num */
-
-		pdvobjpriv->Queue2Pipe[0] = pdvobjpriv->RtOutPipe[0];/* VO */
-		pdvobjpriv->Queue2Pipe[1] = pdvobjpriv->RtOutPipe[0];/* VI */
-		pdvobjpriv->Queue2Pipe[2] = pdvobjpriv->RtOutPipe[1];/* BE */
-		pdvobjpriv->Queue2Pipe[3] = pdvobjpriv->RtOutPipe[1];/* BK */
-
-		pdvobjpriv->Queue2Pipe[4] = pdvobjpriv->RtOutPipe[0];/* BCN */
-		pdvobjpriv->Queue2Pipe[5] = pdvobjpriv->RtOutPipe[0];/* MGT */
-		pdvobjpriv->Queue2Pipe[6] = pdvobjpriv->RtOutPipe[0];/* HIGH */
-		pdvobjpriv->Queue2Pipe[7] = pdvobjpriv->RtOutPipe[0];/* TXCMD	 */
-
-	}
-
-}
-
-static void _ThreeOutPipeMapping(
-		PADAPTER	pAdapter,
-		BOOLEAN		bWIFICfg
-)
-{
-	struct dvobj_priv	*pdvobjpriv = adapter_to_dvobj(pAdapter);
-
-	if (bWIFICfg) { /* for WMM */
-
-		/*	BK, 	BE, 	VI, 	VO, 	BCN,	CMD,MGT,HIGH,HCCA  */
-		/* {  1, 	2, 	1, 	0, 	0, 	0, 	0, 	0, 		0	}; */
-		/* 0:H, 1:N, 2:L */
-
-		pdvobjpriv->Queue2Pipe[0] = pdvobjpriv->RtOutPipe[0];/* VO */
-		pdvobjpriv->Queue2Pipe[1] = pdvobjpriv->RtOutPipe[1];/* VI */
-		pdvobjpriv->Queue2Pipe[2] = pdvobjpriv->RtOutPipe[2];/* BE */
-		pdvobjpriv->Queue2Pipe[3] = pdvobjpriv->RtOutPipe[1];/* BK */
-
-		pdvobjpriv->Queue2Pipe[4] = pdvobjpriv->RtOutPipe[0];/* BCN */
-		pdvobjpriv->Queue2Pipe[5] = pdvobjpriv->RtOutPipe[0];/* MGT */
-		pdvobjpriv->Queue2Pipe[6] = pdvobjpriv->RtOutPipe[0];/* HIGH */
-		pdvobjpriv->Queue2Pipe[7] = pdvobjpriv->RtOutPipe[0];/* TXCMD */
-
-	} else { /* typical setting */
-
-
-		/*	BK, 	BE, 	VI, 	VO, 	BCN,	CMD,MGT,HIGH,HCCA  */
-		/* {  2, 	2, 	1, 	0, 	0, 	0, 	0, 	0, 		0	};			 */
-		/* 0:H, 1:N, 2:L */
-
-		pdvobjpriv->Queue2Pipe[0] = pdvobjpriv->RtOutPipe[0];/* VO */
-		pdvobjpriv->Queue2Pipe[1] = pdvobjpriv->RtOutPipe[1];/* VI */
-		pdvobjpriv->Queue2Pipe[2] = pdvobjpriv->RtOutPipe[2];/* BE */
-		pdvobjpriv->Queue2Pipe[3] = pdvobjpriv->RtOutPipe[2];/* BK */
-
-		pdvobjpriv->Queue2Pipe[4] = pdvobjpriv->RtOutPipe[0];/* BCN */
-		pdvobjpriv->Queue2Pipe[5] = pdvobjpriv->RtOutPipe[0];/* MGT */
-		pdvobjpriv->Queue2Pipe[6] = pdvobjpriv->RtOutPipe[0];/* HIGH */
-		pdvobjpriv->Queue2Pipe[7] = pdvobjpriv->RtOutPipe[0];/* TXCMD	 */
-	}
-
-}
 #if 0
 static void _FourOutPipeMapping(
 		PADAPTER	pAdapter,
@@ -476,39 +371,6 @@ static void _FourOutPipeMapping(
 
 }
 #endif
-BOOLEAN
-Hal_MappingOutPipe(
-		PADAPTER	pAdapter,
-		u8		NumOutPipe
-)
-{
-	struct registry_priv *pregistrypriv = &pAdapter->registrypriv;
-
-	BOOLEAN	 bWIFICfg = (pregistrypriv->wifi_spec) ? _TRUE : _FALSE;
-
-	BOOLEAN result = _TRUE;
-
-	switch (NumOutPipe) {
-	case 2:
-		_TwoOutPipeMapping(pAdapter, bWIFICfg);
-		break;
-	case 3:
-	case 4:
-	case 5:
-	case 6:
-		_ThreeOutPipeMapping(pAdapter, bWIFICfg);
-		break;
-	case 1:
-		_OneOutPipeMapping(pAdapter);
-		break;
-	default:
-		result = _FALSE;
-		break;
-	}
-
-	return result;
-
-}
 
 void rtw_hal_reqtxrpt(_adapter *padapter, u8 macid)
 {
@@ -16179,5 +16041,26 @@ void rtw_rust_hal_com_warn_on(int condition)
 void rtw_rust_hal_com_log_info(const char *line)
 {
 	RTW_INFO("%s", line);
+}
+
+u8 rtw_rust_regsty_wifi_spec(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return adapter->registrypriv.wifi_spec;
+}
+
+u8 rtw_rust_hal_com_rt_out_pipe(_adapter *adapter, u32 idx)
+{
+	if (!adapter)
+		return 0;
+	return (u8)adapter_to_dvobj(adapter)->RtOutPipe[idx];
+}
+
+void rtw_rust_hal_com_set_queue2pipe(_adapter *adapter, u32 idx, u8 pipe)
+{
+	if (!adapter)
+		return;
+	adapter_to_dvobj(adapter)->Queue2Pipe[idx] = pipe;
 }
 #endif

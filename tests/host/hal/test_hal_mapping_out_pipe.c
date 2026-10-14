@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Host L2 oracle runner for Hal_MappingOutPipe (W4-15). */
-
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: GPL-2.0
-/* C oracle for W4-15 Hal_MappingOutPipe (from hal/hal_com_rest.c). */
-
 #include <stdint.h>
 
 #define _TRUE 1
