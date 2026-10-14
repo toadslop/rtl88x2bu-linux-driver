@@ -268,6 +268,25 @@ test_hal_mapping_out_pipe_rust: test_hal_mapping_out_pipe.c librust_hal_com_mapp
 	$(CC) $(CFLAGS) -o $@ test_hal_mapping_out_pipe.c \
 		$(HOST_JSON) librust_hal_com_mapping.a
 
+MGNT_RAID_ORACLE := hal_mgntframe_raid_c_oracle.c
+
+test-mgntframe-raid: test_hal_mgntframe_raid
+	./test_hal_mgntframe_raid hal_mgntframe_raid_vectors.json
+
+test_hal_mgntframe_raid: test_hal_mgntframe_raid.c $(MGNT_RAID_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_hal_mgntframe_raid.c $(MGNT_RAID_ORACLE) $(HOST_JSON)
+
+librust_hal_com_mgnt_raid.a: $(RUST_HAL)
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_com_mgntframe_raid_test \
+		--crate-type staticlib $(RUST_HAL) -o $@
+
+test-mgntframe-raid-rust: test_hal_mgntframe_raid_rust
+	./test_hal_mgntframe_raid_rust hal_mgntframe_raid_vectors.json
+
+test_hal_mgntframe_raid_rust: test_hal_mgntframe_raid.c librust_hal_com_mgnt_raid.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_hal_mgntframe_raid.c \
+		$(HOST_JSON) librust_hal_com_mgnt_raid.a
+
 test-brate: test_hal_set_brate_cfg
 	./test_hal_set_brate_cfg hal_set_brate_cfg_vectors.json
 
@@ -319,4 +338,5 @@ clean:
 		test_hal_set_brate_cfg test_hal_set_brate_cfg_rust librust_hal_com_brate.a \
 		test_hal_is_legal_channel test_hal_is_legal_channel_rust librust_hal_com_legal.a \
 		test_hal_mapping_out_pipe test_hal_mapping_out_pipe_rust librust_hal_com_mapping.a \
+		test_hal_mgntframe_raid test_hal_mgntframe_raid_rust librust_hal_com_mgnt_raid.a \
 		test_hal_phy_bit_shift test_hal_phy_bit_shift_rust librust_hal_phy.a

@@ -1,0 +1,53 @@
+{
+  "oracle": "hal_mgntframe_raid_c_oracle.c",
+  "vectors": [
+    {
+      "name": "legacy_11b",
+      "hw_type": 1,
+      "network_type": 1,
+      "expect": 6
+    },
+    {
+      "name": "legacy_11g",
+      "hw_type": 1,
+      "network_type": 2,
+      "expect": 5
+    },
+    {
+      "name": "legacy_11bg",
+      "hw_type": 1,
+      "network_type": 3,
+      "expect": 6
+    },
+    {
+      "name": "newgen_11b",
+      "hw_type": 3,
+      "network_type": 1,
+      "expect": 8
+    },
+    {
+      "name": "newgen_11g",
+      "hw_type": 3,
+      "network_type": 2,
+      "expect": 7
+    },
+    {
+      "name": "newgen_11bg",
+      "hw_type": 3,
+      "network_type": 3,
+      "expect": 8
+    },
+    {
+      "name": "newgen_threshold_8192ee",
+      "hw_type": 3,
+      "network_type": 2,
+      "expect": 7
+    },
+    {
+      "name": "legacy_pre_newgen",
+      "hw_type": 2,
+      "network_type": 2,
+      "expect": 5
+    }
+  ]
+}
