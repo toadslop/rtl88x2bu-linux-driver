@@ -1379,21 +1379,6 @@ void rtw_hal_update_sta_smps_cap(_adapter *adapter, struct sta_info *psta)
 			psta->cmn.mac_id, psta->cmn.sm_ps);
 }
 
-u8 rtw_get_mgntframe_raid(_adapter *adapter, unsigned char network_type)
-{
-
-	u8 raid;
-	if (IS_NEW_GENERATION_IC(adapter)) {
-
-		raid = (network_type & WIRELESS_11B)	? RATEID_IDX_B
-		       : RATEID_IDX_G;
-	} else {
-		raid = (network_type & WIRELESS_11B)	? RATR_INX_WIRELESS_B
-		       : RATR_INX_WIRELESS_G;
-	}
-	return raid;
-}
-
 void rtw_hal_update_sta_rate_mask(PADAPTER padapter, struct sta_info *psta)
 {
 	u8 i, tx_nss;
@@ -16062,5 +16047,12 @@ void rtw_rust_hal_com_set_queue2pipe(_adapter *adapter, u32 idx, u8 pipe)
 	if (!adapter)
 		return;
 	adapter_to_dvobj(adapter)->Queue2Pipe[idx] = pipe;
+}
+
+u8 rtw_rust_hal_com_hw_type(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return rtw_get_hw_type(adapter);
 }
 #endif
