@@ -1,0 +1,53 @@
+{
+  "oracle": "hal_mapping_out_pipe_c_oracle.c",
+  "vectors": [
+    {
+      "name": "one_out_pipe",
+      "num_out_pipe": 1,
+      "wifi_spec": 0,
+      "rt_out_pipe": [10, 20, 30, 40],
+      "expect_result": 1,
+      "expect_queue2pipe": [10, 10, 10, 10, 10, 10, 10, 10]
+    },
+    {
+      "name": "two_out_wmm",
+      "num_out_pipe": 2,
+      "wifi_spec": 1,
+      "rt_out_pipe": [11, 22, 33, 44],
+      "expect_result": 1,
+      "expect_queue2pipe": [22, 11, 22, 11, 11, 11, 11, 11]
+    },
+    {
+      "name": "two_out_typical",
+      "num_out_pipe": 2,
+      "wifi_spec": 0,
+      "rt_out_pipe": [11, 22, 0, 0],
+      "expect_result": 1,
+      "expect_queue2pipe": [11, 11, 22, 22, 11, 11, 11, 11]
+    },
+    {
+      "name": "three_out_wmm",
+      "num_out_pipe": 3,
+      "wifi_spec": 1,
+      "rt_out_pipe": [1, 2, 3, 4],
+      "expect_result": 1,
+      "expect_queue2pipe": [1, 2, 3, 2, 1, 1, 1, 1]
+    },
+    {
+      "name": "three_out_typical",
+      "num_out_pipe": 3,
+      "wifi_spec": 0,
+      "rt_out_pipe": [1, 2, 3, 4],
+      "expect_result": 1,
+      "expect_queue2pipe": [1, 2, 3, 3, 1, 1, 1, 1]
+    },
+    {
+      "name": "invalid_num_out_pipe",
+      "num_out_pipe": 0,
+      "wifi_spec": 0,
+      "rt_out_pipe": [1, 2, 3, 4],
+      "expect_result": 0,
+      "expect_queue2pipe": [0, 0, 0, 0, 0, 0, 0, 0]
+    }
+  ]
+}
