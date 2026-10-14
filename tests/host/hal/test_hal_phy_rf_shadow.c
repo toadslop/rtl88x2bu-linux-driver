@@ -29,11 +29,6 @@ uint32_t PHY_RFShadowRead(void *adapter, enum rf_path path, uint32_t offset);
 void PHY_RFShadowWrite(void *adapter, enum rf_path path, uint32_t offset,
 			 uint32_t data);
 void PHY_RFShadowRefresh(void *adapter);
-void host_rf_shadow_seed(enum rf_path path, uint32_t offset, uint32_t value,
-			 uint8_t driver_write);
-uint32_t host_rf_shadow_peek_value(enum rf_path path, uint32_t offset);
-uint8_t host_rf_shadow_peek_driver_write(enum rf_path path, uint32_t offset);
-
 static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 {
 	struct vector *v = vec_void;
@@ -61,10 +56,9 @@ static int run_refresh_self_test(void)
 {
 	struct host_rf_shadow_adapter adapter = {0};
 
-	host_rf_shadow_seed(RF_PATH_A, 5, 42, 1);
+	PHY_RFShadowWrite(NULL, RF_PATH_A, 5, 42);
 	PHY_RFShadowRefresh(&adapter);
-	if (host_rf_shadow_peek_value(RF_PATH_A, 5) != 0 ||
-	    host_rf_shadow_peek_driver_write(RF_PATH_A, 5) != 0) {
+	if (PHY_RFShadowRead(NULL, RF_PATH_A, 5) != 0) {
 		fprintf(stderr, "FAIL refresh_clears_seeded_entry\n");
 		return -1;
 	}
