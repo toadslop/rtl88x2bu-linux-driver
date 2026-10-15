@@ -1,0 +1,19 @@
+{
+  "oracle": "hal/hal_phy_rest.c PHY_RFShadowRead/Write/Refresh",
+  "vectors": [
+    {
+      "name": "write_masks_and_read",
+      "rf_path": 0,
+      "offset": 3,
+      "write_data": 1048575,
+      "expect_read": 1048575
+    },
+    {
+      "name": "write_masks_high_bits",
+      "rf_path": 1,
+      "offset": 10,
+      "write_data": 2097151,
+      "expect_read": 1048575
+    }
+  ]
+}

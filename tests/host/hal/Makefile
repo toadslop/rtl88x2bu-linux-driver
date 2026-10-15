@@ -13,6 +13,7 @@ MRATE_ORACLE := hal_mrate_to_hw_rate_c_oracle.c
 RF_NSS_ORACLE := hal_dump_rf_nss_c_oracle.c
 HALMAC_ORACLE := hal_halmac_enum_mappers_c_oracle.c
 PHY_BIT_SHIFT_ORACLE := hal_phy_bit_shift_c_oracle.c
+PHY_RF_SHADOW_ORACLE := hal_phy_rf_shadow_c_oracle.c
 HALMAC_TRX_ORACLE := hal_halmac_trx_share_c_oracle.c
 BRATE_ORACLE := hal_set_brate_cfg_c_oracle.c
 RUST_HAL := $(ROOT)/rust/hal_com.rs
@@ -305,6 +306,13 @@ test_hal_set_brate_cfg_rust: test_hal_set_brate_cfg.c librust_hal_com_brate.a $(
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_BRATE_ORACLE -o $@ test_hal_set_brate_cfg.c \
 		$(HOST_JSON) librust_hal_com_brate.a
 
+test-phy-rf-shadow: test_hal_phy_rf_shadow
+	./test_hal_phy_rf_shadow hal_phy_rf_shadow_vectors.json
+
+test_hal_phy_rf_shadow: test_hal_phy_rf_shadow.c $(PHY_RF_SHADOW_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_hal_phy_rf_shadow.c $(PHY_RF_SHADOW_ORACLE) \
+		$(HOST_JSON)
+
 test-phy-bit-shift: test_hal_phy_bit_shift
 	./test_hal_phy_bit_shift hal_phy_bit_shift_vectors.json
 
@@ -340,4 +348,5 @@ clean:
 		test_hal_is_legal_channel test_hal_is_legal_channel_rust librust_hal_com_legal.a \
 		test_hal_mapping_out_pipe test_hal_mapping_out_pipe_rust librust_hal_com_mapping.a \
 		test_hal_mgntframe_raid test_hal_mgntframe_raid_rust librust_hal_com_mgntframe_raid.a \
-		test_hal_phy_bit_shift test_hal_phy_bit_shift_rust librust_hal_phy.a
+		test_hal_phy_bit_shift test_hal_phy_bit_shift_rust librust_hal_phy.a \
+		test_hal_phy_rf_shadow
