@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HALMAC ↔ driver enum/struct mappers from `hal/hal_halmac.c` (W4-10, W4-11, W4-12).
+//! HALMAC ↔ driver enum/struct mappers from `hal/hal_halmac.c` (W4-10, W4-11, W4-12, W4-21).
 
 #![allow(
     dead_code,
@@ -17,6 +17,14 @@ const HW_STATE_NOLINK: U8 = 0x00;
 const HW_STATE_ADHOC: U8 = 0x01;
 const HW_STATE_STATION: U8 = 0x02;
 const HW_STATE_AP: U8 = 0x03;
+const HW_STATE_MONITOR: U8 = 0x04;
+
+const HALMAC_PORTID0: u32 = 0;
+const HALMAC_PORTID1: u32 = 1;
+const HALMAC_PORTID2: u32 = 2;
+const HALMAC_PORTID3: u32 = 3;
+const HALMAC_PORTID4: u32 = 4;
+const HALMAC_PORTID_NUM: u32 = 5;
 
 const HALMAC_NETWORK_NO_LINK: u32 = 0;
 const HALMAC_NETWORK_ADHOC: u32 = 1;
@@ -96,6 +104,27 @@ impl RtwHalmacBcnCtrl {
     }
 }
 
+fn hw_port_drv2halmac_impl(hwport: u32) -> u32 {
+    match hwport {
+        0 => HALMAC_PORTID0,
+        1 => HALMAC_PORTID1,
+        2 => HALMAC_PORTID2,
+        3 => HALMAC_PORTID3,
+        4 => HALMAC_PORTID4,
+        _ => HALMAC_PORTID_NUM,
+    }
+}
+
+fn network_type_drv2halmac_impl(hw_type: U8) -> u32 {
+    match hw_type {
+        HW_STATE_NOLINK | HW_STATE_MONITOR => HALMAC_NETWORK_NO_LINK,
+        HW_STATE_ADHOC => HALMAC_NETWORK_ADHOC,
+        HW_STATE_STATION => HALMAC_NETWORK_INFRASTRUCTURE,
+        HW_STATE_AP => HALMAC_NETWORK_AP,
+        _ => HALMAC_NETWORK_UNDEFINE,
+    }
+}
+
 fn network_type_halmac2drv_impl(network: u32) -> U8 {
     match network {
         HALMAC_NETWORK_NO_LINK | HALMAC_NETWORK_UNDEFINE => HW_STATE_NOLINK,
@@ -163,6 +192,18 @@ fn beacon_ctrl_drv2halmac_impl(drv_ctrl: &RtwHalmacBcnCtrl, ctrl: &mut HalmacBcn
 
 #[cfg(not(host_hal_halmac_enum_test))]
 #[no_mangle]
+pub extern "C" fn _hw_port_drv2halmac(hwport: u32) -> u32 {
+    hw_port_drv2halmac_impl(hwport)
+}
+
+#[cfg(not(host_hal_halmac_enum_test))]
+#[no_mangle]
+pub extern "C" fn _network_type_drv2halmac(hw_type: U8) -> u32 {
+    network_type_drv2halmac_impl(hw_type)
+}
+
+#[cfg(not(host_hal_halmac_enum_test))]
+#[no_mangle]
 pub extern "C" fn _network_type_halmac2drv(network: u32) -> U8 {
     network_type_halmac2drv_impl(network)
 }
@@ -205,6 +246,18 @@ pub extern "C" fn _beacon_ctrl_drv2halmac(
     unsafe {
         beacon_ctrl_drv2halmac_impl(&*drv_ctrl, &mut *ctrl);
     }
+}
+
+#[cfg(host_hal_halmac_enum_test)]
+#[no_mangle]
+pub extern "C" fn hw_port_drv2halmac(hwport: u32) -> u32 {
+    hw_port_drv2halmac_impl(hwport)
+}
+
+#[cfg(host_hal_halmac_enum_test)]
+#[no_mangle]
+pub extern "C" fn network_type_drv2halmac(hw_type: U8) -> u32 {
+    network_type_drv2halmac_impl(hw_type)
 }
 
 #[cfg(host_hal_halmac_enum_test)]
