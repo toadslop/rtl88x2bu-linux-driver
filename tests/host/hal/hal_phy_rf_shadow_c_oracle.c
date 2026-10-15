@@ -118,6 +118,8 @@ void PHY_RFShadowRecorverFlagSetAll(void *Adapter)
 	}
 }
 
+#ifndef HOST_HAL_PHY_RF_SHADOW_L1_REF
+
 u32 rtw_hal_read_rfreg(void *Adapter, enum rf_path eRFPath, u32 Offset,
 		       u32 mask);
 void rtw_hal_write_rfreg(void *Adapter, enum rf_path eRFPath, u32 Offset,
@@ -176,8 +178,6 @@ u32 rtw_rust_hal_phy_rf_max_reg(void *Adapter)
 	return GET_RF6052_REAL_MAX_REG((struct host_rf_shadow_adapter *)Adapter);
 }
 
-#ifndef HOST_HAL_PHY_RF_SHADOW_L1_REF
-
 u8 PHY_RFShadowTestPeekCompare(enum rf_path eRFPath, u32 Offset)
 {
 	return RF_Shadow[eRFPath][Offset].Compare;
@@ -193,4 +193,4 @@ u8 PHY_RFShadowTestPeekErrorOrNot(enum rf_path eRFPath, u32 Offset)
 	return RF_Shadow[eRFPath][Offset].ErrorOrNot;
 }
 
-#endif
+#endif /* HOST_HAL_PHY_RF_SHADOW_L1_REF */
