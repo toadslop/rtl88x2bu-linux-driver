@@ -200,3 +200,41 @@ unsigned rsvd_page_num_halmac2drv(unsigned rsvd_page_number)
 		return 0;
 	}
 }
+
+/* W4-22: RF type mappers (hal/hal_halmac.c). */
+#define RF_TYPE_MAX 16
+#define HALMAC_RF_MAX_TYPE 0xF
+
+static const uint8_t rf_drv_to_halmac[8] = { 4, 0, 2, 3, 1, 6, 7, 8 };
+
+unsigned rf_type_drv2halmac(unsigned rf_drv)
+{
+	if (rf_drv < 8)
+		return rf_drv_to_halmac[rf_drv];
+	return HALMAC_RF_MAX_TYPE;
+}
+
+unsigned rf_type_halmac2drv(unsigned rf_mac)
+{
+	switch (rf_mac) {
+	case 0:
+		return 1;
+	case 1:
+		return 4;
+	case 2:
+	case 5:
+		return 2;
+	case 3:
+		return 3;
+	case 4:
+		return 0;
+	case 6:
+		return 5;
+	case 7:
+		return 6;
+	case 8:
+		return 7;
+	default:
+		return RF_TYPE_MAX;
+	}
+}

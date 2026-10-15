@@ -1,0 +1,10 @@
+{
+  "oracle": "hal/hal_halmac.c _rf_type_drv2halmac",
+  "vectors": [
+    { "name": "rf_1t1r", "rf_drv": 0, "expect": 4 }, { "name": "rf_1t2r", "rf_drv": 1, "expect": 0 },
+    { "name": "rf_2t2r", "rf_drv": 2, "expect": 2 }, { "name": "rf_2t3r", "rf_drv": 3, "expect": 3 },
+    { "name": "rf_2t4r", "rf_drv": 4, "expect": 1 }, { "name": "rf_3t3r", "rf_drv": 5, "expect": 6 },
+    { "name": "rf_3t4r", "rf_drv": 6, "expect": 7 }, { "name": "rf_4t4r", "rf_drv": 7, "expect": 8 },
+    { "name": "invalid_rf_4t3r", "rf_drv": 8, "expect": 15 }, { "name": "invalid_oob", "rf_drv": 99, "expect": 15 }
+  ]
+}
