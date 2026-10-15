@@ -1,0 +1,57 @@
+{
+  "oracle": "hal/hal_phy_rest.c PHY_RFShadowCompare/Recorver*",
+  "vectors": [
+    {
+      "name": "compare_disabled_returns_false",
+      "op": "compare",
+      "rf_path": 0,
+      "offset": 10,
+      "shadow_value": 5,
+      "hw_value": 99,
+      "compare_flag": 0,
+      "expect_result": 0,
+      "expect_error": 0
+    },
+    {
+      "name": "compare_match_no_error",
+      "op": "compare",
+      "rf_path": 0,
+      "offset": 11,
+      "shadow_value": 70110,
+      "hw_value": 70110,
+      "compare_flag": 1,
+      "expect_result": 0,
+      "expect_error": 0
+    },
+    {
+      "name": "compare_mismatch_sets_error",
+      "op": "compare",
+      "rf_path": 1,
+      "offset": 26,
+      "shadow_value": 256,
+      "hw_value": 512,
+      "compare_flag": 1,
+      "expect_result": 1,
+      "expect_error": 1
+    },
+    {
+      "name": "recover_writes_shadow_when_flagged",
+      "op": "recover",
+      "rf_path": 0,
+      "offset": 12,
+      "shadow_value": 349525,
+      "recover_flag": 1,
+      "expect_hw_value": 349525
+    },
+    {
+      "name": "recover_skipped_without_error",
+      "op": "recover",
+      "rf_path": 0,
+      "offset": 13,
+      "shadow_value": 69905,
+      "recover_flag": 1,
+      "prime_compare_mismatch": 0,
+      "expect_hw_value": 0
+    }
+  ]
+}

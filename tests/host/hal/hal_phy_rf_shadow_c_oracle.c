@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
-/* C oracle for W4-18 PHY_RFShadowRead/Write/Refresh and W4-19 flag helpers. */
+/* C oracle for W4-18 PHY_RFShadowRead/Write/Refresh, W4-19 flag helpers,
+ * W4-20 compare/recover. */
 
 #include <stdint.h>
 
@@ -119,6 +120,64 @@ void PHY_RFShadowRecorverFlagSetAll(void *Adapter)
 
 #ifndef HOST_HAL_PHY_RF_SHADOW_L1_REF
 
+u32 rtw_hal_read_rfreg(void *Adapter, enum rf_path eRFPath, u32 Offset,
+		       u32 mask);
+void rtw_hal_write_rfreg(void *Adapter, enum rf_path eRFPath, u32 Offset,
+			 u32 mask, u32 data);
+
+u8 PHY_RFShadowCompare(void *Adapter, enum rf_path eRFPath, u32 Offset)
+{
+	u32 reg;
+
+	if (RF_Shadow[eRFPath][Offset].Compare == _TRUE) {
+		reg = rtw_hal_read_rfreg(Adapter, eRFPath, Offset, bRFRegOffsetMask);
+		if (RF_Shadow[eRFPath][Offset].Value != reg)
+			RF_Shadow[eRFPath][Offset].ErrorOrNot = _TRUE;
+		return RF_Shadow[eRFPath][Offset].ErrorOrNot;
+	}
+	return _FALSE;
+}
+
+void PHY_RFShadowRecorver(void *Adapter, enum rf_path eRFPath, u32 Offset)
+{
+	if (RF_Shadow[eRFPath][Offset].ErrorOrNot == _TRUE) {
+		if (RF_Shadow[eRFPath][Offset].Recorver == _TRUE) {
+			rtw_hal_write_rfreg(Adapter, eRFPath, Offset,
+					    bRFRegOffsetMask,
+					    RF_Shadow[eRFPath][Offset].Value);
+		}
+	}
+}
+
+void PHY_RFShadowCompareAll(void *Adapter)
+{
+	enum rf_path eRFPath = RF_PATH_A;
+	u32 Offset = 0;
+	u32 maxReg = GET_RF6052_REAL_MAX_REG((struct host_rf_shadow_adapter *)Adapter);
+
+	for (eRFPath = 0; eRFPath < RF6052_MAX_PATH; eRFPath++) {
+		for (Offset = 0; Offset < maxReg; Offset++)
+			PHY_RFShadowCompare(Adapter, eRFPath, Offset);
+	}
+}
+
+void PHY_RFShadowRecorverAll(void *Adapter)
+{
+	enum rf_path eRFPath = RF_PATH_A;
+	u32 Offset = 0;
+	u32 maxReg = GET_RF6052_REAL_MAX_REG((struct host_rf_shadow_adapter *)Adapter);
+
+	for (eRFPath = 0; eRFPath < RF6052_MAX_PATH; eRFPath++) {
+		for (Offset = 0; Offset < maxReg; Offset++)
+			PHY_RFShadowRecorver(Adapter, eRFPath, Offset);
+	}
+}
+
+u32 rtw_rust_hal_phy_rf_max_reg(void *Adapter)
+{
+	return GET_RF6052_REAL_MAX_REG((struct host_rf_shadow_adapter *)Adapter);
+}
+
 u8 PHY_RFShadowTestPeekCompare(enum rf_path eRFPath, u32 Offset)
 {
 	return RF_Shadow[eRFPath][Offset].Compare;
@@ -129,4 +188,9 @@ u8 PHY_RFShadowTestPeekRecorver(enum rf_path eRFPath, u32 Offset)
 	return RF_Shadow[eRFPath][Offset].Recorver;
 }
 
-#endif
+u8 PHY_RFShadowTestPeekErrorOrNot(enum rf_path eRFPath, u32 Offset)
+{
+	return RF_Shadow[eRFPath][Offset].ErrorOrNot;
+}
+
+#endif /* HOST_HAL_PHY_RF_SHADOW_L1_REF */
