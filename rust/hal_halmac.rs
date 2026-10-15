@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HALMAC ↔ driver enum/struct mappers from `hal/hal_halmac.c` (W4-10, W4-11, W4-12, W4-21, W4-22).
+//! HALMAC ↔ driver enum/struct mappers from `hal/hal_halmac.c` (W4-10, W4-11, W4-12, W4-21, W4-22, W4-23).
 
 #![allow(
     dead_code,
@@ -243,6 +243,39 @@ fn rf_type_halmac2drv_impl(rf_mac: u32) -> u32 {
     }
 }
 
+const HAL_FIFO_SEL_TX: u32 = 0;
+const HAL_FIFO_SEL_RX: u32 = 1;
+const HAL_FIFO_SEL_RSVD_PAGE: u32 = 2;
+const HAL_FIFO_SEL_REPORT: u32 = 3;
+const HAL_FIFO_SEL_LLT: u32 = 4;
+const HAL_FIFO_SEL_RXBUF_FW: u32 = 5;
+
+fn fifo_sel_drv2halmac_impl(fifo_sel: U8) -> u32 {
+    match fifo_sel {
+        0 => HAL_FIFO_SEL_TX,
+        1 => HAL_FIFO_SEL_RX,
+        2 => HAL_FIFO_SEL_RSVD_PAGE,
+        3 => HAL_FIFO_SEL_REPORT,
+        4 => HAL_FIFO_SEL_LLT,
+        5 => HAL_FIFO_SEL_RXBUF_FW,
+        _ => HAL_FIFO_SEL_RSVD_PAGE,
+    }
+}
+
+const RTW_USB_SPEED_2: u32 = 2;
+const RTW_USB_SPEED_3: u32 = 3;
+const HALMAC_USB_MODE_U2: u32 = 1;
+const HALMAC_USB_MODE_U3: u32 = 2;
+
+#[cfg(any(host_hal_halmac_enum_test, CONFIG_USB_HCI))]
+fn usb_mode_drv2halmac_impl(usb_mode: u32) -> u32 {
+    match usb_mode {
+        RTW_USB_SPEED_2 => HALMAC_USB_MODE_U2,
+        RTW_USB_SPEED_3 => HALMAC_USB_MODE_U3,
+        _ => HALMAC_USB_MODE_U2,
+    }
+}
+
 #[cfg(not(host_hal_halmac_enum_test))]
 #[no_mangle]
 pub extern "C" fn _hw_port_drv2halmac(hwport: u32) -> u32 {
@@ -311,6 +344,18 @@ pub extern "C" fn _rf_type_drv2halmac(rf_drv: u32) -> u32 {
 #[no_mangle]
 pub extern "C" fn _rf_type_halmac2drv(rf_mac: u32) -> u32 {
     rf_type_halmac2drv_impl(rf_mac)
+}
+
+#[cfg(not(host_hal_halmac_enum_test))]
+#[no_mangle]
+pub extern "C" fn _fifo_sel_drv2halmac(fifo_sel: U8) -> u32 {
+    fifo_sel_drv2halmac_impl(fifo_sel)
+}
+
+#[cfg(all(not(host_hal_halmac_enum_test), CONFIG_USB_HCI))]
+#[no_mangle]
+pub extern "C" fn _usb_mode_drv2halmac(usb_mode: u32) -> u32 {
+    usb_mode_drv2halmac_impl(usb_mode)
 }
 
 #[cfg(host_hal_halmac_enum_test)]
@@ -387,6 +432,18 @@ pub extern "C" fn rf_type_drv2halmac(rf_drv: u32) -> u32 {
 #[no_mangle]
 pub extern "C" fn rf_type_halmac2drv(rf_mac: u32) -> u32 {
     rf_type_halmac2drv_impl(rf_mac)
+}
+
+#[cfg(host_hal_halmac_enum_test)]
+#[no_mangle]
+pub extern "C" fn fifo_sel_drv2halmac(fifo_sel: U8) -> u32 {
+    fifo_sel_drv2halmac_impl(fifo_sel)
+}
+
+#[cfg(host_hal_halmac_enum_test)]
+#[no_mangle]
+pub extern "C" fn usb_mode_drv2halmac(usb_mode: u32) -> u32 {
+    usb_mode_drv2halmac_impl(usb_mode)
 }
 
 const HALMAC_RX_FIFO_EXPANDING_MODE_DISABLE: u32 = 0;
