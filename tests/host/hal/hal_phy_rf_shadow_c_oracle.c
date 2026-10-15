@@ -117,6 +117,8 @@ void PHY_RFShadowRecorverFlagSetAll(void *Adapter)
 	}
 }
 
+#ifndef HOST_HAL_PHY_RF_SHADOW_L1_REF
+
 u8 PHY_RFShadowTestPeekCompare(enum rf_path eRFPath, u32 Offset)
 {
 	return RF_Shadow[eRFPath][Offset].Compare;
@@ -126,3 +128,5 @@ u8 PHY_RFShadowTestPeekRecorver(enum rf_path eRFPath, u32 Offset)
 {
 	return RF_Shadow[eRFPath][Offset].Recorver;
 }
+
+#endif

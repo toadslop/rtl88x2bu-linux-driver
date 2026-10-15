@@ -4346,6 +4346,7 @@ rust-objects-hal-phy-c:
 		-o tests/host/hal/hal_phy_bit_shift_l1_ref.o \
 		tests/host/hal/hal_phy_bit_shift_c_oracle.c
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-DHOST_HAL_PHY_RF_SHADOW_L1_REF \
 		-o tests/host/hal/hal_phy_rf_shadow_l1_ref.o \
 		tests/host/hal/hal_phy_rf_shadow_c_oracle.c
 	ld -r -o tests/host/hal/hal_phy_l1_ref.o \
