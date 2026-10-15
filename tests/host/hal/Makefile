@@ -352,9 +352,10 @@ test_hal_set_brate_cfg_rust: test_hal_set_brate_cfg.c librust_hal_com_brate.a $(
 test-phy-rf-shadow: test_hal_phy_rf_shadow
 	./test_hal_phy_rf_shadow hal_phy_rf_shadow_vectors.json
 
-test_hal_phy_rf_shadow: test_hal_phy_rf_shadow.c $(PHY_RF_SHADOW_ORACLE) $(HOST_JSON)
+test_hal_phy_rf_shadow: test_hal_phy_rf_shadow.c $(PHY_RF_SHADOW_ORACLE) \
+		$(PHY_RF_SHADOW_HW_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_hal_phy_rf_shadow.c $(PHY_RF_SHADOW_ORACLE) \
-		$(HOST_JSON)
+		$(PHY_RF_SHADOW_HW_SHIM) $(HOST_JSON)
 
 librust_hal_phy_rf_shadow.a: $(RUST_HAL_PHY)
 	rustc -C opt-level=2 -C overflow-checks=on \
@@ -371,9 +372,10 @@ test_hal_phy_rf_shadow_rust: test_hal_phy_rf_shadow.c librust_hal_phy_rf_shadow.
 test-phy-rf-shadow-flags: test_hal_phy_rf_shadow_flags
 	./test_hal_phy_rf_shadow_flags hal_phy_rf_shadow_flags_vectors.json
 
-test_hal_phy_rf_shadow_flags: test_hal_phy_rf_shadow.c $(PHY_RF_SHADOW_ORACLE) $(HOST_JSON)
+test_hal_phy_rf_shadow_flags: test_hal_phy_rf_shadow.c $(PHY_RF_SHADOW_ORACLE) \
+		$(PHY_RF_SHADOW_HW_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -DHOST_HAL_PHY_RF_SHADOW_FLAGS_TEST -o $@ test_hal_phy_rf_shadow.c \
-		$(PHY_RF_SHADOW_ORACLE) $(HOST_JSON)
+		$(PHY_RF_SHADOW_ORACLE) $(PHY_RF_SHADOW_HW_SHIM) $(HOST_JSON)
 
 test-phy-rf-shadow-compare: test_hal_phy_rf_shadow_compare
 	./test_hal_phy_rf_shadow_compare hal_phy_rf_shadow_compare_vectors.json
