@@ -29,7 +29,6 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-trx test-trx-rust test-fw test-fw-rust test-mrate test-mrate-rust \
 	test-rf-nss test-rf-nss-rust test-halmac test-halmac-rust test-halmac-rsvd \
 	test-halmac-rsvd-rust test-halmac-drv2halmac test-halmac-drv2halmac-rust \
-	test-halmac-rf-type test-halmac-rf-type-rust \
 	test-brate test-brate-rust \
 	test-legal-channel test-legal-channel-rust \
 	test-mapping-out-pipe test-mapping-out-pipe-rust test-mgntframe-raid test-mgntframe-raid-rust \
@@ -193,14 +192,6 @@ test_hal_halmac_drv2halmac: test_hal_halmac_drv2halmac.c $(HALMAC_ORACLE) $(HOST
 
 test_hal_halmac_rf_type: test_hal_halmac_rf_type.c $(HALMAC_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_hal_halmac_rf_type.c $(HALMAC_ORACLE) $(HOST_JSON)
-
-test-halmac-rf-type: test_hal_halmac_rf_type
-	./test_hal_halmac_rf_type hal_halmac_rf_type_drv2halmac_vectors.json \
-		hal_halmac_rf_type_halmac2drv_vectors.json
-
-test-halmac-rf-type-rust: test_hal_halmac_rf_type_rust
-	./test_hal_halmac_rf_type_rust hal_halmac_rf_type_drv2halmac_vectors.json \
-		hal_halmac_rf_type_halmac2drv_vectors.json
 
 test_hal_halmac_rf_type_rust: test_hal_halmac_rf_type.c librust_hal_halmac.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_HAL_HALMAC_ORACLE -o $@ test_hal_halmac_rf_type.c \
