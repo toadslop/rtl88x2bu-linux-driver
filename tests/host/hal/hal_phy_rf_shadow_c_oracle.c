@@ -68,21 +68,3 @@ void PHY_RFShadowRefresh(void *Adapter)
 		}
 	}
 }
-
-/* Test helpers: seed shadow without going through Write (for refresh vectors). */
-void host_rf_shadow_seed(enum rf_path path, u32 offset, u32 value, u8 driver_write)
-{
-	RF_Shadow[path][offset].Value = value;
-	RF_Shadow[path][offset].Driver_Write = driver_write;
-	RF_Shadow[path][offset].Compare = _TRUE;
-}
-
-u32 host_rf_shadow_peek_value(enum rf_path path, u32 offset)
-{
-	return RF_Shadow[path][offset].Value;
-}
-
-u8 host_rf_shadow_peek_driver_write(enum rf_path path, u32 offset)
-{
-	return RF_Shadow[path][offset].Driver_Write;
-}

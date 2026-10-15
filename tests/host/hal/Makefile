@@ -313,6 +313,18 @@ test_hal_phy_rf_shadow: test_hal_phy_rf_shadow.c $(PHY_RF_SHADOW_ORACLE) $(HOST_
 	$(CC) $(CFLAGS) -o $@ test_hal_phy_rf_shadow.c $(PHY_RF_SHADOW_ORACLE) \
 		$(HOST_JSON)
 
+librust_hal_phy_rf_shadow.a: $(RUST_HAL_PHY)
+	rustc -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_phy_rf_shadow_test \
+		--crate-type staticlib $(RUST_HAL_PHY) -o $@
+
+test-phy-rf-shadow-rust: test_hal_phy_rf_shadow_rust
+	./test_hal_phy_rf_shadow_rust hal_phy_rf_shadow_vectors.json
+
+test_hal_phy_rf_shadow_rust: test_hal_phy_rf_shadow.c librust_hal_phy_rf_shadow.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_PHY_RF_SHADOW_ORACLE -o $@ test_hal_phy_rf_shadow.c \
+		$(HOST_JSON) librust_hal_phy_rf_shadow.a
+
 test-phy-bit-shift: test_hal_phy_bit_shift
 	./test_hal_phy_bit_shift hal_phy_bit_shift_vectors.json
 
@@ -349,4 +361,4 @@ clean:
 		test_hal_mapping_out_pipe test_hal_mapping_out_pipe_rust librust_hal_com_mapping.a \
 		test_hal_mgntframe_raid test_hal_mgntframe_raid_rust librust_hal_com_mgntframe_raid.a \
 		test_hal_phy_bit_shift test_hal_phy_bit_shift_rust librust_hal_phy.a \
-		test_hal_phy_rf_shadow
+		test_hal_phy_rf_shadow test_hal_phy_rf_shadow_rust librust_hal_phy_rf_shadow.a

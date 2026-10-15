@@ -2928,6 +2928,7 @@ endif
 $(MODULE_NAME)-y += rust/hal_com.o
 $(MODULE_NAME)-y += rust/hal_halmac.o
 $(MODULE_NAME)-y += rust/hal_intf.o
+rustflags-y += --cfg config_rf_shadow_rw
 $(MODULE_NAME)-y += rust/hal_phy.o
 $(MODULE_NAME)-y += rust/rtw_chplan.o
 $(MODULE_NAME)-y += rust/rtw_chplan_rest.o
@@ -4339,8 +4340,14 @@ rust-objects-hal-phy-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_phy_bit_shift_l1_ref.o \
 		tests/host/hal/hal_phy_bit_shift_c_oracle.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_phy_rf_shadow_l1_ref.o \
+		tests/host/hal/hal_phy_rf_shadow_c_oracle.c
+	ld -r -o tests/host/hal/hal_phy_l1_ref.o \
+		tests/host/hal/hal_phy_bit_shift_l1_ref.o \
+		tests/host/hal/hal_phy_rf_shadow_l1_ref.o
 rust-check-symbols-hal-phy: rust-objects-hal-phy-c rust-objects-hal-phy
-	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_phy_bit_shift_l1_ref.o NEW=rust/hal_phy.o \
+	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_phy_l1_ref.o NEW=rust/hal_phy.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_phy.allow ALLOW_VACUOUS=1
 
 # W3-130: host C oracle (debug version/log leaf) vs rust/rtw_debug.o.
