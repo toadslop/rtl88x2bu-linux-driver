@@ -28,7 +28,8 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 .PHONY: all test test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust \
 	test-trx test-trx-rust test-fw test-fw-rust test-mrate test-mrate-rust \
 	test-rf-nss test-rf-nss-rust test-halmac test-halmac-rust test-halmac-rsvd \
-	test-halmac-rsvd-rust test-halmac-drv2halmac test-brate test-brate-rust \
+	test-halmac-rsvd-rust test-halmac-drv2halmac test-halmac-drv2halmac-rust \
+	test-brate test-brate-rust \
 	test-legal-channel test-legal-channel-rust \
 	test-mapping-out-pipe test-mapping-out-pipe-rust test-mgntframe-raid test-mgntframe-raid-rust \
 	test-hdata-rate test-hdata-rate-rust test-phy-bit-shift test-phy-bit-shift-rust clean
@@ -190,6 +191,14 @@ test-halmac-drv2halmac: test_hal_halmac_drv2halmac
 	./test_hal_halmac_drv2halmac hal_halmac_hw_port_drv2halmac_vectors.json \
 		hal_halmac_network_drv2halmac_vectors.json
 
+test-halmac-drv2halmac-rust: test_hal_halmac_drv2halmac_rust
+	./test_hal_halmac_drv2halmac_rust hal_halmac_hw_port_drv2halmac_vectors.json \
+		hal_halmac_network_drv2halmac_vectors.json
+
+test_hal_halmac_drv2halmac_rust: test_hal_halmac_drv2halmac.c librust_hal_halmac.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_HALMAC_ORACLE -o $@ test_hal_halmac_drv2halmac.c \
+		$(HOST_JSON) librust_hal_halmac.a
+
 test-halmac-trx-share: test_hal_halmac_trx_share
 	./test_hal_halmac_trx_share hal_halmac_trx_share_drv2halmac_vectors.json \
 		hal_halmac_trx_share_dump_vectors.json
@@ -210,7 +219,8 @@ test_hal_halmac_bcn_abi_rust: test_hal_halmac_bcn_abi.c librust_hal_halmac.a
 		librust_hal_halmac.a
 
 test-halmac-rust: test_hal_halmac_network_rust test_hal_halmac_bcn_rust \
-	test_hal_halmac_bcn_abi_rust test_hal_halmac_rsvd_rust test_hal_halmac_trx_share_rust
+	test_hal_halmac_bcn_abi_rust test_hal_halmac_rsvd_rust test_hal_halmac_trx_share_rust \
+	test_hal_halmac_drv2halmac_rust
 	./test_hal_halmac_network_rust hal_halmac_network_vectors.json
 	./test_hal_halmac_bcn_rust hal_halmac_bcn_vectors.json
 	./test_hal_halmac_bcn_abi_rust
@@ -218,6 +228,8 @@ test-halmac-rust: test_hal_halmac_network_rust test_hal_halmac_bcn_rust \
 		hal_halmac_rsvd_halmac2drv_vectors.json
 	./test_hal_halmac_trx_share_rust hal_halmac_trx_share_drv2halmac_vectors.json \
 		hal_halmac_trx_share_dump_vectors.json
+	./test_hal_halmac_drv2halmac_rust hal_halmac_hw_port_drv2halmac_vectors.json \
+		hal_halmac_network_drv2halmac_vectors.json
 
 test-halmac-rsvd: test_hal_halmac_rsvd
 	./test_hal_halmac_rsvd hal_halmac_rsvd_drv2halmac_vectors.json \
@@ -399,7 +411,8 @@ clean:
 		test_hal_halmac_rsvd test_hal_halmac_trx_share test_hal_halmac_drv2halmac \
 		test_hal_halmac_network_rust test_hal_halmac_bcn_rust \
 		test_hal_halmac_bcn_abi_rust test_hal_halmac_rsvd_rust \
-		test_hal_halmac_trx_share_rust librust_hal_halmac.a \
+		test_hal_halmac_trx_share_rust test_hal_halmac_drv2halmac_rust \
+		librust_hal_halmac.a \
 		test_hal_set_brate_cfg test_hal_set_brate_cfg_rust librust_hal_com_brate.a \
 		test_hal_is_legal_channel test_hal_is_legal_channel_rust librust_hal_com_legal.a \
 		test_hal_mapping_out_pipe test_hal_mapping_out_pipe_rust librust_hal_com_mapping.a \

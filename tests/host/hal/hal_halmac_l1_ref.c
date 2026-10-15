@@ -41,6 +41,25 @@ enum halmac_drv_rsvd_pg_num {
 
 unsigned rsvd_page_num_drv2halmac(uint16_t num);
 unsigned rsvd_page_num_halmac2drv(unsigned pg);
+unsigned hw_port_drv2halmac(unsigned hwport);
+unsigned network_type_drv2halmac(uint8_t type);
+
+enum halmac_portid {
+	HALMAC_PORTID0 = 0,
+	HALMAC_PORTID1 = 1,
+	HALMAC_PORTID2 = 2,
+	HALMAC_PORTID3 = 3,
+	HALMAC_PORTID4 = 4,
+	HALMAC_PORTID_NUM = 5,
+};
+
+enum halmac_network_type_select {
+	HALMAC_NETWORK_NO_LINK = 0,
+	HALMAC_NETWORK_ADHOC = 1,
+	HALMAC_NETWORK_INFRASTRUCTURE = 2,
+	HALMAC_NETWORK_AP = 3,
+	HALMAC_NETWORK_UNDEFINE = 0x7F,
+};
 
 uint8_t _network_type_halmac2drv(uint32_t network)
 {
@@ -67,6 +86,16 @@ enum halmac_drv_rsvd_pg_num _rsvd_page_num_drv2halmac(uint16_t num)
 uint16_t _rsvd_page_num_halmac2drv(enum halmac_drv_rsvd_pg_num pg)
 {
 	return (uint16_t)rsvd_page_num_halmac2drv((unsigned)pg);
+}
+
+enum halmac_portid _hw_port_drv2halmac(unsigned hwport)
+{
+	return (enum halmac_portid)hw_port_drv2halmac(hwport);
+}
+
+enum halmac_network_type_select _network_type_drv2halmac(uint8_t type)
+{
+	return (enum halmac_network_type_select)network_type_drv2halmac(type);
 }
 
 #ifdef CONFIG_SUPPORT_TRX_SHARED

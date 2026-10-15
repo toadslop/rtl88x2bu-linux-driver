@@ -1335,6 +1335,10 @@ int rtw_halmac_deinit_adapter(struct dvobj_priv *d)
 	return err;
 }
 
+#ifdef RTW_HALMAC_RUST_MAPPERS
+enum halmac_portid _hw_port_drv2halmac(enum _hw_port hwport);
+enum halmac_network_type_select _network_type_drv2halmac(u8 type);
+#else
 static inline enum halmac_portid _hw_port_drv2halmac(enum _hw_port hwport)
 {
 	enum halmac_portid port = HALMAC_PORTID_NUM;
@@ -1389,6 +1393,7 @@ static enum halmac_network_type_select _network_type_drv2halmac(u8 type)
 
 	return network;
 }
+#endif /* RTW_HALMAC_RUST_MAPPERS */
 
 #ifdef RTW_HALMAC_RUST_MAPPERS
 u8 _network_type_halmac2drv(enum halmac_network_type_select network);
