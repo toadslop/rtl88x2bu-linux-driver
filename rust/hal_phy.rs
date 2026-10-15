@@ -281,13 +281,7 @@ mod rf_shadow {
             if e.Recorver != TRUE {
                 return;
             }
-            rtw_hal_write_rfreg(
-                adapter,
-                e_rf_path,
-                offset,
-                B_RF_REG_OFFSET_MASK,
-                e.Value,
-            );
+            rtw_hal_write_rfreg(adapter, e_rf_path, offset, B_RF_REG_OFFSET_MASK, e.Value);
         }
     }
 
