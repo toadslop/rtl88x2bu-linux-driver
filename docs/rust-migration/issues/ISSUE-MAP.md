@@ -230,6 +230,12 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-17 | #1264 | [W4-17] Translate hal_com_rest.c — HDATA_RATE descriptor strings |
 | W4-18 | #1265 | [W4-18] Translate hal_phy_rest.c — RF shadow read/write/refresh |
 | W4-19 | #1266 | [W4-19] Translate hal_phy_rest.c — RF shadow compare/recover flags |
+| W4-20 | #1288 | [W4-20] Translate hal_phy_rest.c — RF shadow compare/recover |
+| W4-21 | #1289 | [W4-21] Translate hal_halmac.c — HW port + network type drv→halmac |
+| W4-22 | #1290 | [W4-22] Translate hal_halmac.c — RF type drv↔halmac mappers |
+| W4-23 | #1291 | [W4-23] Translate hal_halmac.c — USB mode + FIFO sel mappers |
+| W4-24 | #1292 | [W4-24] Translate hal_halmac.c — FW mem, LED mode, phy param val mappers |
+| W4-25 | #1293 | [W4-25] Kbuild scaffold — rust/hal_usb.rs + hal_usb_rest.c split |
 
 ## Superseded issues
 
