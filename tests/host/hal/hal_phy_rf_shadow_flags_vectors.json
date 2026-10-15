@@ -1,0 +1,21 @@
+{
+  "oracle": "hal/hal_phy_rest.c PHY_RFShadow*FlagSet*",
+  "vectors": [
+    {
+      "name": "compare_flag_set_true",
+      "op": "compare_set",
+      "rf_path": 0,
+      "offset": 3,
+      "flag_type": 1,
+      "expect_compare": 1
+    },
+    {
+      "name": "recover_flag_set_false",
+      "op": "recover_set",
+      "rf_path": 1,
+      "offset": 20,
+      "flag_type": 0,
+      "expect_recover": 0
+    }
+  ]
+}

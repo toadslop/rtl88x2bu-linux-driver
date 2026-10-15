@@ -334,6 +334,20 @@ test_hal_phy_rf_shadow_rust: test_hal_phy_rf_shadow.c librust_hal_phy_rf_shadow.
 	$(CC) $(CFLAGS) -DRUST_HAL_PHY_RF_SHADOW_ORACLE -o $@ test_hal_phy_rf_shadow.c \
 		$(HOST_JSON) librust_hal_phy_rf_shadow.a
 
+test-phy-rf-shadow-flags: test_hal_phy_rf_shadow_flags
+	./test_hal_phy_rf_shadow_flags hal_phy_rf_shadow_flags_vectors.json
+
+test_hal_phy_rf_shadow_flags: test_hal_phy_rf_shadow.c $(PHY_RF_SHADOW_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DHOST_HAL_PHY_RF_SHADOW_FLAGS_TEST -o $@ test_hal_phy_rf_shadow.c \
+		$(PHY_RF_SHADOW_ORACLE) $(HOST_JSON)
+
+test-phy-rf-shadow-flags-rust: test_hal_phy_rf_shadow_flags_rust
+	./test_hal_phy_rf_shadow_flags_rust hal_phy_rf_shadow_flags_vectors.json
+
+test_hal_phy_rf_shadow_flags_rust: test_hal_phy_rf_shadow.c librust_hal_phy_rf_shadow.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DHOST_HAL_PHY_RF_SHADOW_FLAGS_TEST -DRUST_HAL_PHY_RF_SHADOW_ORACLE \
+		-o $@ test_hal_phy_rf_shadow.c $(HOST_JSON) librust_hal_phy_rf_shadow.a
+
 test-phy-bit-shift: test_hal_phy_bit_shift
 	./test_hal_phy_bit_shift hal_phy_bit_shift_vectors.json
 
@@ -371,4 +385,5 @@ clean:
 		test_hal_mgntframe_raid test_hal_mgntframe_raid_rust librust_hal_com_mgntframe_raid.a \
 		test_hal_hdata_rate \
 		test_hal_phy_bit_shift test_hal_phy_bit_shift_rust librust_hal_phy.a \
-		test_hal_phy_rf_shadow test_hal_phy_rf_shadow_rust librust_hal_phy_rf_shadow.a
+		test_hal_phy_rf_shadow test_hal_phy_rf_shadow_rust librust_hal_phy_rf_shadow.a \
+		test_hal_phy_rf_shadow_flags test_hal_phy_rf_shadow_flags_rust
