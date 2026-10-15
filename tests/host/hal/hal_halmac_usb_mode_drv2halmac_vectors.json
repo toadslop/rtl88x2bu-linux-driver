@@ -1,0 +1,10 @@
+{
+  "oracle": "hal/hal_halmac.c _usb_mode_drv2halmac",
+  "vectors": [
+    { "name": "unknown", "usb_mode": 0, "expect": 1 },
+    { "name": "usb_1_1", "usb_mode": 1, "expect": 1 },
+    { "name": "usb_2", "usb_mode": 2, "expect": 1 },
+    { "name": "usb_3", "usb_mode": 3, "expect": 2 },
+    { "name": "default_oob", "usb_mode": 99, "expect": 1 }
+  ]
+}

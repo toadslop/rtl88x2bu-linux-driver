@@ -238,3 +238,57 @@ unsigned rf_type_halmac2drv(unsigned rf_mac)
 		return RF_TYPE_MAX;
 	}
 }
+
+/* W4-23: FIFO sel + USB mode mappers (hal/hal_halmac.c). */
+enum hal_fifo_sel {
+	HAL_FIFO_SEL_TX,
+	HAL_FIFO_SEL_RX,
+	HAL_FIFO_SEL_RSVD_PAGE,
+	HAL_FIFO_SEL_REPORT,
+	HAL_FIFO_SEL_LLT,
+	HAL_FIFO_SEL_RXBUF_FW,
+};
+
+unsigned fifo_sel_drv2halmac(unsigned fifo_sel)
+{
+	switch (fifo_sel) {
+	case 0:
+		return HAL_FIFO_SEL_TX;
+	case 1:
+		return HAL_FIFO_SEL_RX;
+	case 2:
+		return HAL_FIFO_SEL_RSVD_PAGE;
+	case 3:
+		return HAL_FIFO_SEL_REPORT;
+	case 4:
+		return HAL_FIFO_SEL_LLT;
+	case 5:
+		return HAL_FIFO_SEL_RXBUF_FW;
+	default:
+		return HAL_FIFO_SEL_RSVD_PAGE;
+	}
+}
+
+#define RTW_USB_SPEED_2 2
+#define RTW_USB_SPEED_3 3
+#define HALMAC_USB_MODE_U2 1
+#define HALMAC_USB_MODE_U3 2
+
+unsigned usb_mode_drv2halmac(unsigned usb_mode)
+{
+	unsigned halmac_usb_mode = HALMAC_USB_MODE_U2;
+
+	switch (usb_mode) {
+	case RTW_USB_SPEED_2:
+		halmac_usb_mode = HALMAC_USB_MODE_U2;
+		break;
+	case RTW_USB_SPEED_3:
+		halmac_usb_mode = HALMAC_USB_MODE_U3;
+		break;
+	default:
+		halmac_usb_mode = HALMAC_USB_MODE_U2;
+		break;
+	}
+
+	return halmac_usb_mode;
+}
