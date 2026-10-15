@@ -264,6 +264,12 @@ files=(
   wave4-17-hal-hdata-rate-strings.md
   wave4-18-hal-phy-rf-shadow-core.md
   wave4-19-hal-phy-rf-shadow-flags.md
+  wave4-20-hal-phy-rf-shadow-compare.md
+  wave4-21-hal-halmac-drv-network-port.md
+  wave4-22-hal-halmac-rf-type.md
+  wave4-23-hal-halmac-usb-fifo-mappers.md
+  wave4-24-hal-halmac-fw-led-phy-param.md
+  wave4-25-hal-usb-scaffold.md
 )
 
 # draft_id -> github issue number

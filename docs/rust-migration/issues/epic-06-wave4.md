@@ -49,4 +49,15 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-18 | `wave4-18-hal-phy-rf-shadow-core.md` | RF shadow read/write/refresh |
 | W4-19 | `wave4-19-hal-phy-rf-shadow-flags.md` | RF shadow compare/recover flags |
 
-Further slices: USB HCI, `hal_dm.c` / PHYDM debug — file as `wave4-*.md` when tranche 5 is underway.
+## Children (tranche 5 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-20 | `wave4-20-hal-phy-rf-shadow-compare.md` | RF shadow compare/recover MMIO |
+| W4-21 | `wave4-21-hal-halmac-drv-network-port.md` | HW port + network drv→halmac |
+| W4-22 | `wave4-22-hal-halmac-rf-type.md` | RF type drv↔halmac |
+| W4-23 | `wave4-23-hal-halmac-usb-fifo-mappers.md` | USB mode + FIFO sel mappers |
+| W4-24 | `wave4-24-hal-halmac-fw-led-phy-param.md` | FW mem, LED, phy param val mappers |
+| W4-25 | `wave4-25-hal-usb-scaffold.md` | `rust/hal_usb.rs` Kbuild scaffold |
+
+Further slices: `hal_usb` I/O paths, `hal_dm.c` / PHYDM debug — file as `wave4-*.md` when tranche 6 is underway.
