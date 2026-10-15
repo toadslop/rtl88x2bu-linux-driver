@@ -135,6 +135,43 @@ enum rf_type _rf_type_halmac2drv(enum halmac_rf_type rf_mac)
 	return (enum rf_type)rf_type_halmac2drv((unsigned)rf_mac);
 }
 
+enum hal_fifo_sel {
+	HAL_FIFO_SEL_TX,
+	HAL_FIFO_SEL_RX,
+	HAL_FIFO_SEL_RSVD_PAGE,
+	HAL_FIFO_SEL_REPORT,
+	HAL_FIFO_SEL_LLT,
+	HAL_FIFO_SEL_RXBUF_FW,
+};
+
+unsigned fifo_sel_drv2halmac(unsigned fifo_sel);
+
+enum hal_fifo_sel _fifo_sel_drv2halmac(uint8_t fifo_sel)
+{
+	return (enum hal_fifo_sel)fifo_sel_drv2halmac((unsigned)fifo_sel);
+}
+
+#ifdef CONFIG_USB_HCI
+enum RTW_USB_SPEED {
+	RTW_USB_SPEED_UNKNOWN = 0,
+	RTW_USB_SPEED_1_1 = 1,
+	RTW_USB_SPEED_2 = 2,
+	RTW_USB_SPEED_3 = 3,
+};
+
+enum halmac_usb_mode {
+	HALMAC_USB_MODE_U2 = 1,
+	HALMAC_USB_MODE_U3 = 2,
+};
+
+unsigned usb_mode_drv2halmac(unsigned usb_mode);
+
+enum halmac_usb_mode _usb_mode_drv2halmac(enum RTW_USB_SPEED usb_mode)
+{
+	return (enum halmac_usb_mode)usb_mode_drv2halmac((unsigned)usb_mode);
+}
+#endif /* CONFIG_USB_HCI */
+
 #ifdef CONFIG_SUPPORT_TRX_SHARED
 enum halmac_rx_fifo_expanding_mode {
 	HALMAC_RX_FIFO_EXPANDING_MODE_DISABLE = 0,

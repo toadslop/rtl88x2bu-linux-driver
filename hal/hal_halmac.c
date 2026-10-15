@@ -4572,6 +4572,9 @@ int rtw_halmac_read_bt_physical_efuse_map(struct dvobj_priv *d, u8 *map, u32 siz
 	return 0;
 }
 
+#ifdef RTW_HALMAC_RUST_MAPPERS
+enum hal_fifo_sel _fifo_sel_drv2halmac(u8 fifo_sel);
+#else
 static enum hal_fifo_sel _fifo_sel_drv2halmac(u8 fifo_sel)
 {
 	switch (fifo_sel) {
@@ -4591,6 +4594,7 @@ static enum hal_fifo_sel _fifo_sel_drv2halmac(u8 fifo_sel)
 
 	return HAL_FIFO_SEL_RSVD_PAGE;
 }
+#endif /* RTW_HALMAC_RUST_MAPPERS */
 
 /*#define CONFIG_HALMAC_FIFO_DUMP*/
 int rtw_halmac_dump_fifo(struct dvobj_priv *d, u8 fifo_sel, u32 addr, u32 size, u8 *buffer)
@@ -5749,6 +5753,9 @@ int rtw_halmac_usb_get_txagg_desc_num(struct dvobj_priv *d, u8 *num)
 	return 0;
 }
 
+#ifdef RTW_HALMAC_RUST_MAPPERS
+enum halmac_usb_mode _usb_mode_drv2halmac(enum RTW_USB_SPEED usb_mode);
+#else
 static inline enum halmac_usb_mode _usb_mode_drv2halmac(enum RTW_USB_SPEED usb_mode)
 {
 	enum halmac_usb_mode halmac_usb_mode = HALMAC_USB_MODE_U2;
@@ -5767,6 +5774,7 @@ static inline enum halmac_usb_mode _usb_mode_drv2halmac(enum RTW_USB_SPEED usb_m
 
 	return halmac_usb_mode;
 }
+#endif /* RTW_HALMAC_RUST_MAPPERS */
 
 u8 rtw_halmac_switch_usb_mode(struct dvobj_priv *d, enum RTW_USB_SPEED usb_mode)
 {

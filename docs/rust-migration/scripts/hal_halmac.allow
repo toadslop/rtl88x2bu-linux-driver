@@ -10,3 +10,5 @@ drop hw_port_drv2halmac
 drop network_type_drv2halmac
 drop rf_type_drv2halmac
 drop rf_type_halmac2drv
+drop fifo_sel_drv2halmac
+drop usb_mode_drv2halmac
