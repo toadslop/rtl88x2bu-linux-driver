@@ -1,0 +1,12 @@
+{
+  "oracle": "hal/hal_halmac.c _hw_port_drv2halmac",
+  "vectors": [
+    { "name": "port0", "hwport": 0, "expect": 0 },
+    { "name": "port1", "hwport": 1, "expect": 1 },
+    { "name": "port2", "hwport": 2, "expect": 2 },
+    { "name": "port3", "hwport": 3, "expect": 3 },
+    { "name": "port4", "hwport": 4, "expect": 4 },
+    { "name": "max_hw_port", "hwport": 5, "expect": 5 },
+    { "name": "invalid", "hwport": 99, "expect": 5 }
+  ]
+}

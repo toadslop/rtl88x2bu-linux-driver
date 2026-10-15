@@ -1,0 +1,11 @@
+{
+  "oracle": "hal/hal_halmac.c _network_type_drv2halmac",
+  "vectors": [
+    { "name": "nolink", "type": 0, "expect": 0 },
+    { "name": "adhoc", "type": 1, "expect": 1 },
+    { "name": "station", "type": 2, "expect": 2 },
+    { "name": "ap", "type": 3, "expect": 3 },
+    { "name": "monitor", "type": 4, "expect": 0 },
+    { "name": "unknown", "type": 255, "expect": 127 }
+  ]
+}

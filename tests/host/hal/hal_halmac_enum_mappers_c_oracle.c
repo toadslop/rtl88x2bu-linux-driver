@@ -10,6 +10,25 @@
 #define HW_STATE_ADHOC 0x01
 #define HW_STATE_STATION 0x02
 #define HW_STATE_AP 0x03
+#define HW_STATE_MONITOR 0x04
+
+enum _hw_port {
+	HW_PORT0 = 0,
+	HW_PORT1,
+	HW_PORT2,
+	HW_PORT3,
+	HW_PORT4,
+	MAX_HW_PORT,
+};
+
+enum halmac_portid {
+	HALMAC_PORTID0 = 0,
+	HALMAC_PORTID1 = 1,
+	HALMAC_PORTID2 = 2,
+	HALMAC_PORTID3 = 3,
+	HALMAC_PORTID4 = 4,
+	HALMAC_PORTID_NUM = 5,
+};
 
 enum halmac_network_type_select {
 	HALMAC_NETWORK_NO_LINK = 0,
@@ -28,6 +47,58 @@ struct halmac_bcn_ctrl {
 	uint8_t en_p2p_ctwin;
 	uint8_t en_p2p_bcn_area;
 };
+
+unsigned hw_port_drv2halmac(unsigned hwport)
+{
+	enum halmac_portid port = HALMAC_PORTID_NUM;
+
+	switch (hwport) {
+	case HW_PORT0:
+		port = HALMAC_PORTID0;
+		break;
+	case HW_PORT1:
+		port = HALMAC_PORTID1;
+		break;
+	case HW_PORT2:
+		port = HALMAC_PORTID2;
+		break;
+	case HW_PORT3:
+		port = HALMAC_PORTID3;
+		break;
+	case HW_PORT4:
+		port = HALMAC_PORTID4;
+		break;
+	default:
+		break;
+	}
+
+	return (unsigned)port;
+}
+
+unsigned network_type_drv2halmac(uint8_t type)
+{
+	enum halmac_network_type_select network = HALMAC_NETWORK_UNDEFINE;
+
+	switch (type) {
+	case HW_STATE_NOLINK:
+	case HW_STATE_MONITOR:
+		network = HALMAC_NETWORK_NO_LINK;
+		break;
+	case HW_STATE_ADHOC:
+		network = HALMAC_NETWORK_ADHOC;
+		break;
+	case HW_STATE_STATION:
+		network = HALMAC_NETWORK_INFRASTRUCTURE;
+		break;
+	case HW_STATE_AP:
+		network = HALMAC_NETWORK_AP;
+		break;
+	default:
+		break;
+	}
+
+	return (unsigned)network;
+}
 
 uint8_t network_type_halmac2drv(uint32_t network)
 {
