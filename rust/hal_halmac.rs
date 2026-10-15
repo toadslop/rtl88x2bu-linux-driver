@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HALMAC ↔ driver enum/struct mappers from `hal/hal_halmac.c` (W4-10, W4-11, W4-12, W4-21).
+//! HALMAC ↔ driver enum/struct mappers from `hal/hal_halmac.c` (W4-10, W4-11, W4-12, W4-21, W4-22).
 
 #![allow(
     dead_code,
@@ -190,6 +190,59 @@ fn beacon_ctrl_drv2halmac_impl(drv_ctrl: &RtwHalmacBcnCtrl, ctrl: &mut HalmacBcn
     ctrl.en_p2p_bcn_area = if drv_ctrl.p2p_bcn_area() != 0 { 1 } else { 0 };
 }
 
+const RF_1T1R: u32 = 0;
+const RF_1T2R: u32 = 1;
+const RF_2T2R: u32 = 2;
+const RF_2T3R: u32 = 3;
+const RF_2T4R: u32 = 4;
+const RF_3T3R: u32 = 5;
+const RF_3T4R: u32 = 6;
+const RF_4T4R: u32 = 7;
+const RF_TYPE_MAX: u32 = 16;
+
+const HALMAC_RF_1T2R: u32 = 0;
+const HALMAC_RF_2T4R: u32 = 1;
+const HALMAC_RF_2T2R: u32 = 2;
+const HALMAC_RF_2T3R: u32 = 3;
+const HALMAC_RF_1T1R: u32 = 4;
+const HALMAC_RF_2T2R_GREEN: u32 = 5;
+const HALMAC_RF_3T3R: u32 = 6;
+const HALMAC_RF_3T4R: u32 = 7;
+const HALMAC_RF_4T4R: u32 = 8;
+const HALMAC_RF_MAX_TYPE: u32 = 0xF;
+
+static RF_DRV_TO_HALMAC: [u32; 8] = [
+    HALMAC_RF_1T1R,
+    HALMAC_RF_1T2R,
+    HALMAC_RF_2T2R,
+    HALMAC_RF_2T3R,
+    HALMAC_RF_2T4R,
+    HALMAC_RF_3T3R,
+    HALMAC_RF_3T4R,
+    HALMAC_RF_4T4R,
+];
+
+fn rf_type_drv2halmac_impl(rf_drv: u32) -> u32 {
+    if rf_drv < 8 {
+        return RF_DRV_TO_HALMAC[rf_drv as usize];
+    }
+    HALMAC_RF_MAX_TYPE
+}
+
+fn rf_type_halmac2drv_impl(rf_mac: u32) -> u32 {
+    match rf_mac {
+        HALMAC_RF_1T2R => RF_1T2R,
+        HALMAC_RF_2T4R => RF_2T4R,
+        HALMAC_RF_2T2R | HALMAC_RF_2T2R_GREEN => RF_2T2R,
+        HALMAC_RF_2T3R => RF_2T3R,
+        HALMAC_RF_1T1R => RF_1T1R,
+        HALMAC_RF_3T3R => RF_3T3R,
+        HALMAC_RF_3T4R => RF_3T4R,
+        HALMAC_RF_4T4R => RF_4T4R,
+        _ => RF_TYPE_MAX,
+    }
+}
+
 #[cfg(not(host_hal_halmac_enum_test))]
 #[no_mangle]
 pub extern "C" fn _hw_port_drv2halmac(hwport: u32) -> u32 {
@@ -246,6 +299,18 @@ pub extern "C" fn _beacon_ctrl_drv2halmac(
     unsafe {
         beacon_ctrl_drv2halmac_impl(&*drv_ctrl, &mut *ctrl);
     }
+}
+
+#[cfg(not(host_hal_halmac_enum_test))]
+#[no_mangle]
+pub extern "C" fn _rf_type_drv2halmac(rf_drv: u32) -> u32 {
+    rf_type_drv2halmac_impl(rf_drv)
+}
+
+#[cfg(not(host_hal_halmac_enum_test))]
+#[no_mangle]
+pub extern "C" fn _rf_type_halmac2drv(rf_mac: u32) -> u32 {
+    rf_type_halmac2drv_impl(rf_mac)
 }
 
 #[cfg(host_hal_halmac_enum_test)]
@@ -310,6 +375,18 @@ pub extern "C" fn rsvd_page_num_drv2halmac(num: U16) -> u32 {
 #[no_mangle]
 pub extern "C" fn rsvd_page_num_halmac2drv(rsvd_page_number: u32) -> U16 {
     rsvd_page_num_halmac2drv_impl(rsvd_page_number)
+}
+
+#[cfg(host_hal_halmac_enum_test)]
+#[no_mangle]
+pub extern "C" fn rf_type_drv2halmac(rf_drv: u32) -> u32 {
+    rf_type_drv2halmac_impl(rf_drv)
+}
+
+#[cfg(host_hal_halmac_enum_test)]
+#[no_mangle]
+pub extern "C" fn rf_type_halmac2drv(rf_mac: u32) -> u32 {
+    rf_type_halmac2drv_impl(rf_mac)
 }
 
 const HALMAC_RX_FIFO_EXPANDING_MODE_DISABLE: u32 = 0;
