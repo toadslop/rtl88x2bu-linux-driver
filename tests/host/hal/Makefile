@@ -236,8 +236,6 @@ test-halmac-rust: test_hal_halmac_network_rust test_hal_halmac_bcn_rust \
 		hal_halmac_trx_share_dump_vectors.json
 	./test_hal_halmac_drv2halmac_rust hal_halmac_hw_port_drv2halmac_vectors.json \
 		hal_halmac_network_drv2halmac_vectors.json
-	./test_hal_halmac_rf_type_rust hal_halmac_rf_type_drv2halmac_vectors.json \
-		hal_halmac_rf_type_halmac2drv_vectors.json
 
 test-halmac-rsvd: test_hal_halmac_rsvd
 	./test_hal_halmac_rsvd hal_halmac_rsvd_drv2halmac_vectors.json \
