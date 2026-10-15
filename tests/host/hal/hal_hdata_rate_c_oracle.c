@@ -7,7 +7,7 @@ typedef uint8_t u8;
 
 #define DESC_RATE_NUM 0x54
 
-static const char * const _HDATA_RATE[DESC_RATE_NUM + 1] = {
+const char * const _HDATA_RATE[DESC_RATE_NUM + 1] = {
 	"CCK_1M",
 	"CCK_2M",
 	"CCK5_5M",
