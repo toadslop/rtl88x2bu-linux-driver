@@ -415,9 +415,11 @@ clean:
 		test_dump_rf_nss test_dump_rf_nss_rust librust_hal_intf_rf_nss.a \
 		test_hal_halmac_network test_hal_halmac_bcn test_hal_halmac_bcn_abi \
 		test_hal_halmac_rsvd test_hal_halmac_trx_share test_hal_halmac_drv2halmac \
+		test_hal_halmac_rf_type \
 		test_hal_halmac_network_rust test_hal_halmac_bcn_rust \
 		test_hal_halmac_bcn_abi_rust test_hal_halmac_rsvd_rust \
 		test_hal_halmac_trx_share_rust test_hal_halmac_drv2halmac_rust \
+		test_hal_halmac_rf_type_rust \
 		librust_hal_halmac.a \
 		test_hal_set_brate_cfg test_hal_set_brate_cfg_rust librust_hal_com_brate.a \
 		test_hal_is_legal_channel test_hal_is_legal_channel_rust librust_hal_com_legal.a \

@@ -2960,6 +2960,10 @@ static enum halmac_trx_mode _choose_trx_mode(struct dvobj_priv *d)
 	return HALMAC_TRX_MODE_NORMAL;
 }
 
+#ifdef RTW_HALMAC_RUST_MAPPERS
+enum halmac_rf_type _rf_type_drv2halmac(enum rf_type rf_drv);
+enum rf_type _rf_type_halmac2drv(enum halmac_rf_type rf_mac);
+#else
 static inline enum halmac_rf_type _rf_type_drv2halmac(enum rf_type rf_drv)
 {
 	enum halmac_rf_type rf_mac;
@@ -3038,6 +3042,7 @@ static inline enum rf_type _rf_type_halmac2drv(enum halmac_rf_type rf_mac)
 
 	return rf_drv;
 }
+#endif /* RTW_HALMAC_RUST_MAPPERS */
 
 static enum odm_cut_version _cut_version_drv2phydm(
 				enum tag_HAL_Cut_Version_Definition cut_drv)

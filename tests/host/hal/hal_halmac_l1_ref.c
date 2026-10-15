@@ -98,6 +98,43 @@ enum halmac_network_type_select _network_type_drv2halmac(uint8_t type)
 	return (enum halmac_network_type_select)network_type_drv2halmac(type);
 }
 
+enum halmac_rf_type {
+	HALMAC_RF_1T2R = 0,
+	HALMAC_RF_2T4R = 1,
+	HALMAC_RF_2T2R = 2,
+	HALMAC_RF_2T3R = 3,
+	HALMAC_RF_1T1R = 4,
+	HALMAC_RF_2T2R_GREEN = 5,
+	HALMAC_RF_3T3R = 6,
+	HALMAC_RF_3T4R = 7,
+	HALMAC_RF_4T4R = 8,
+};
+
+enum rf_type {
+	RF_1T1R = 0,
+	RF_1T2R = 1,
+	RF_2T2R = 2,
+	RF_2T3R = 3,
+	RF_2T4R = 4,
+	RF_3T3R = 5,
+	RF_3T4R = 6,
+	RF_4T4R = 7,
+	RF_TYPE_MAX = 16,
+};
+
+unsigned rf_type_drv2halmac(unsigned rf_drv);
+unsigned rf_type_halmac2drv(unsigned rf_mac);
+
+enum halmac_rf_type _rf_type_drv2halmac(enum rf_type rf_drv)
+{
+	return (enum halmac_rf_type)rf_type_drv2halmac((unsigned)rf_drv);
+}
+
+enum rf_type _rf_type_halmac2drv(enum halmac_rf_type rf_mac)
+{
+	return (enum rf_type)rf_type_halmac2drv((unsigned)rf_mac);
+}
+
 #ifdef CONFIG_SUPPORT_TRX_SHARED
 enum halmac_rx_fifo_expanding_mode {
 	HALMAC_RX_FIFO_EXPANDING_MODE_DISABLE = 0,
