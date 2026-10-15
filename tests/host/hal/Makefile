@@ -193,6 +193,10 @@ test_hal_halmac_drv2halmac: test_hal_halmac_drv2halmac.c $(HALMAC_ORACLE) $(HOST
 test_hal_halmac_rf_type: test_hal_halmac_rf_type.c $(HALMAC_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_hal_halmac_rf_type.c $(HALMAC_ORACLE) $(HOST_JSON)
 
+test_hal_halmac_rf_type_rust: test_hal_halmac_rf_type.c librust_hal_halmac.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_HALMAC_ORACLE -o $@ test_hal_halmac_rf_type.c \
+		$(HOST_JSON) librust_hal_halmac.a
+
 test-halmac-drv2halmac: test_hal_halmac_drv2halmac
 	./test_hal_halmac_drv2halmac hal_halmac_hw_port_drv2halmac_vectors.json \
 		hal_halmac_network_drv2halmac_vectors.json
