@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 //! HAL PHY helpers — Rust port of `hal/hal_phy.c` / `hal/hal_phy_rest.c`
 //! (W4-09 PHY_CalculateBitShift, W4-18 RF shadow read/write/refresh,
-//! W4-19 RF shadow compare/recover flag helpers).
+//! W4-19 RF shadow compare/recover flag helpers, W4-20 compare/recover).
 
 #![allow(
     dead_code,
@@ -86,7 +86,13 @@ mod rf_shadow {
 
     #[cfg(not(host_hal_phy_rf_shadow_test))]
     extern "C" {
-        fn rtw_rust_hal_phy_rf_max_reg(adapter: Adapter) -> U32;
+        fn rtw_rust_hal_phy_query_rf_max_reg(adapter: Adapter) -> U32;
+    }
+
+    #[cfg(any(config_rf_shadow_rw, host_hal_phy_rf_shadow_compare_test))]
+    extern "C" {
+        fn rtw_hal_read_rfreg(adapter: Adapter, path: i32, offset: U32, mask: U32) -> U32;
+        fn rtw_hal_write_rfreg(adapter: Adapter, path: i32, offset: U32, mask: U32, data: U32);
     }
 
     #[cfg(not(host_hal_phy_rf_shadow_test))]
@@ -94,8 +100,13 @@ mod rf_shadow {
         if adapter.is_null() {
             return RF6052_MAX_REG_92C;
         }
-        let n = unsafe { rtw_rust_hal_phy_rf_max_reg(adapter) };
+        let n = unsafe { rtw_rust_hal_phy_query_rf_max_reg(adapter) };
         n as usize
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_rust_hal_phy_rf_max_reg(adapter: Adapter) -> U32 {
+        max_reg(adapter) as U32
     }
 
     #[no_mangle]
@@ -220,5 +231,89 @@ mod rf_shadow {
             return 0;
         }
         unsafe { rtw_rust_rf_shadow[path][off].Recorver }
+    }
+
+    #[cfg(host_hal_phy_rf_shadow_compare_test)]
+    #[no_mangle]
+    pub extern "C" fn PHY_RFShadowTestPeekErrorOrNot(e_rf_path: i32, offset: U32) -> U8 {
+        let path = e_rf_path as usize;
+        let off = offset as usize;
+        if path >= RF6052_MAX_PATH || off >= RF6052_MAX_REG {
+            return 0;
+        }
+        unsafe { rtw_rust_rf_shadow[path][off].ErrorOrNot }
+    }
+
+    #[cfg(any(config_rf_shadow_rw, host_hal_phy_rf_shadow_compare_test))]
+    #[no_mangle]
+    pub extern "C" fn PHY_RFShadowCompare(adapter: Adapter, e_rf_path: i32, offset: U32) -> U8 {
+        let path = e_rf_path as usize;
+        let off = offset as usize;
+        if path >= RF6052_MAX_PATH || off >= RF6052_MAX_REG {
+            return FALSE;
+        }
+        unsafe {
+            let e = &mut rtw_rust_rf_shadow[path][off];
+            if e.Compare != TRUE {
+                return FALSE;
+            }
+            let reg = rtw_hal_read_rfreg(adapter, e_rf_path, offset, B_RF_REG_OFFSET_MASK);
+            if e.Value != reg {
+                e.ErrorOrNot = TRUE;
+            }
+            e.ErrorOrNot
+        }
+    }
+
+    #[cfg(any(config_rf_shadow_rw, host_hal_phy_rf_shadow_compare_test))]
+    #[no_mangle]
+    pub extern "C" fn PHY_RFShadowRecorver(adapter: Adapter, e_rf_path: i32, offset: U32) {
+        let path = e_rf_path as usize;
+        let off = offset as usize;
+        if path >= RF6052_MAX_PATH || off >= RF6052_MAX_REG {
+            return;
+        }
+        unsafe {
+            let e = &mut rtw_rust_rf_shadow[path][off];
+            if e.ErrorOrNot != TRUE {
+                return;
+            }
+            if e.Recorver != TRUE {
+                return;
+            }
+            rtw_hal_write_rfreg(
+                adapter,
+                e_rf_path,
+                offset,
+                B_RF_REG_OFFSET_MASK,
+                e.Value,
+            );
+        }
+    }
+
+    #[cfg(any(config_rf_shadow_rw, host_hal_phy_rf_shadow_compare_test))]
+    fn compare_or_recover_all(adapter: Adapter, compare: bool) {
+        let max = max_reg(adapter);
+        for path in 0..RF6052_MAX_PATH {
+            for off in 0..max {
+                if compare {
+                    PHY_RFShadowCompare(adapter, path as i32, off as U32);
+                } else {
+                    PHY_RFShadowRecorver(adapter, path as i32, off as U32);
+                }
+            }
+        }
+    }
+
+    #[cfg(any(config_rf_shadow_rw, host_hal_phy_rf_shadow_compare_test))]
+    #[no_mangle]
+    pub extern "C" fn PHY_RFShadowCompareAll(adapter: Adapter) {
+        compare_or_recover_all(adapter, true);
+    }
+
+    #[cfg(any(config_rf_shadow_rw, host_hal_phy_rf_shadow_compare_test))]
+    #[no_mangle]
+    pub extern "C" fn PHY_RFShadowRecorverAll(adapter: Adapter) {
+        compare_or_recover_all(adapter, false);
     }
 }

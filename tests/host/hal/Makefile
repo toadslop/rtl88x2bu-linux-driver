@@ -368,6 +368,12 @@ librust_hal_phy_rf_shadow.a: $(RUST_HAL_PHY)
 		--cfg host_hal_phy_rf_shadow_test \
 		--crate-type staticlib $(RUST_HAL_PHY) -o $@
 
+librust_hal_phy_rf_shadow_compare.a: $(RUST_HAL_PHY)
+	rustc -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_phy_rf_shadow_test \
+		--cfg host_hal_phy_rf_shadow_compare_test \
+		--crate-type staticlib $(RUST_HAL_PHY) -o $@
+
 test-phy-rf-shadow-rust: test_hal_phy_rf_shadow_rust
 	./test_hal_phy_rf_shadow_rust hal_phy_rf_shadow_vectors.json
 
@@ -390,6 +396,15 @@ test_hal_phy_rf_shadow_compare: test_hal_phy_rf_shadow.c $(PHY_RF_SHADOW_ORACLE)
 		$(PHY_RF_SHADOW_HW_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -DHOST_HAL_PHY_RF_SHADOW_COMPARE_TEST -o $@ test_hal_phy_rf_shadow.c \
 		$(PHY_RF_SHADOW_ORACLE) $(PHY_RF_SHADOW_HW_SHIM) $(HOST_JSON)
+
+test-phy-rf-shadow-compare-rust: test_hal_phy_rf_shadow_compare_rust
+	./test_hal_phy_rf_shadow_compare_rust hal_phy_rf_shadow_compare_vectors.json
+
+test_hal_phy_rf_shadow_compare_rust: test_hal_phy_rf_shadow.c \
+		librust_hal_phy_rf_shadow_compare.a $(PHY_RF_SHADOW_HW_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_PHY_RF_SHADOW_ORACLE -DHOST_HAL_PHY_RF_SHADOW_COMPARE_TEST \
+		-o $@ test_hal_phy_rf_shadow.c $(PHY_RF_SHADOW_HW_SHIM) $(HOST_JSON) \
+		librust_hal_phy_rf_shadow_compare.a
 
 test-phy-rf-shadow-flags-rust: test_hal_phy_rf_shadow_flags_rust
 	./test_hal_phy_rf_shadow_flags_rust hal_phy_rf_shadow_flags_vectors.json
@@ -438,4 +453,5 @@ clean:
 		test_hal_phy_bit_shift test_hal_phy_bit_shift_rust librust_hal_phy.a \
 		test_hal_phy_rf_shadow test_hal_phy_rf_shadow_rust librust_hal_phy_rf_shadow.a \
 		test_hal_phy_rf_shadow_flags test_hal_phy_rf_shadow_flags_rust \
-		test_hal_phy_rf_shadow_compare
+		test_hal_phy_rf_shadow_compare test_hal_phy_rf_shadow_compare_rust \
+		librust_hal_phy_rf_shadow_compare.a
