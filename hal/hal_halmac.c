@@ -3881,6 +3881,9 @@ int rtw_halmac_txfifo_wait_empty(struct dvobj_priv *d, u32 timeout)
 	return 0;
 }
 
+#ifdef RTW_HALMAC_RUST_MAPPERS
+enum halmac_dlfw_mem _fw_mem_drv2halmac(enum fw_mem mem, u8 tx_stop);
+#else
 static enum halmac_dlfw_mem _fw_mem_drv2halmac(enum fw_mem mem, u8 tx_stop)
 {
 	enum halmac_dlfw_mem mem_halmac = HALMAC_DLFW_MEM_UNDEFINE;
@@ -3902,6 +3905,7 @@ static enum halmac_dlfw_mem _fw_mem_drv2halmac(enum fw_mem mem, u8 tx_stop)
 
 	return mem_halmac;
 }
+#endif /* RTW_HALMAC_RUST_MAPPERS */
 
 int rtw_halmac_dlfw_mem(struct dvobj_priv *d, u8 *fw, u32 fwsize, enum fw_mem mem)
 {
@@ -4923,6 +4927,9 @@ int rtw_halmac_dpk(struct dvobj_priv *d, u8 *buf, u32 bufsz)
 	return 0;
 }
 
+#ifdef RTW_HALMAC_RUST_MAPPERS
+u32 _phy_parameter_val_drv2halmac(u32 val, u8 msk_en, u32 msk);
+#else
 static inline u32 _phy_parameter_val_drv2halmac(u32 val, u8 msk_en, u32 msk)
 {
 	if (!msk_en)
@@ -4930,6 +4937,7 @@ static inline u32 _phy_parameter_val_drv2halmac(u32 val, u8 msk_en, u32 msk)
 
 	return (val << bitshift(msk));
 }
+#endif /* RTW_HALMAC_RUST_MAPPERS */
 
 static int _phy_parameter_drv2halmac(struct rtw_phy_parameter *para, struct halmac_phy_parameter_info *info)
 {
@@ -5081,6 +5089,9 @@ int rtw_halmac_cfg_phy_para(struct dvobj_priv *d, struct rtw_phy_parameter *para
 	return ret;
 }
 
+#ifdef RTW_HALMAC_RUST_MAPPERS
+enum halmac_wlled_mode _led_mode_drv2halmac(u8 drv_mode);
+#else
 static enum halmac_wlled_mode _led_mode_drv2halmac(u8 drv_mode)
 {
 	enum halmac_wlled_mode halmac_mode;
@@ -5104,6 +5115,7 @@ static enum halmac_wlled_mode _led_mode_drv2halmac(u8 drv_mode)
 
 	return halmac_mode;
 }
+#endif /* RTW_HALMAC_RUST_MAPPERS */
 
 /**
  * rtw_halmac_led_cfg() - Configure Hardware LED Mode

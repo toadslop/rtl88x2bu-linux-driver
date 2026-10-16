@@ -12,3 +12,6 @@ drop rf_type_drv2halmac
 drop rf_type_halmac2drv
 drop fifo_sel_drv2halmac
 drop usb_mode_drv2halmac
+drop fw_mem_drv2halmac
+drop led_mode_drv2halmac
+drop phy_parameter_val_drv2halmac

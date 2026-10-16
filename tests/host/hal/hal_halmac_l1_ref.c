@@ -172,6 +172,46 @@ enum halmac_usb_mode _usb_mode_drv2halmac(enum RTW_USB_SPEED usb_mode)
 }
 #endif /* CONFIG_USB_HCI */
 
+enum fw_mem {
+	FW_EMEM,
+	FW_IMEM,
+	FW_DMEM,
+};
+
+enum halmac_dlfw_mem {
+	HALMAC_DLFW_MEM_EMEM = 0x00,
+	HALMAC_DLFW_MEM_EMEM_RSVD_PG = 0x01,
+	HALMAC_DLFW_MEM_UNDEFINE = 0x7F,
+};
+
+unsigned fw_mem_drv2halmac(unsigned mem, unsigned tx_stop);
+
+enum halmac_dlfw_mem _fw_mem_drv2halmac(enum fw_mem mem, uint8_t tx_stop)
+{
+	return (enum halmac_dlfw_mem)fw_mem_drv2halmac((unsigned)mem, tx_stop);
+}
+
+enum halmac_wlled_mode {
+	HALMAC_WLLED_MODE_TRX = 0,
+	HALMAC_WLLED_MODE_TX = 1,
+	HALMAC_WLLED_MODE_RX = 2,
+	HALMAC_WLLED_MODE_SW_CTRL = 3,
+};
+
+unsigned led_mode_drv2halmac(unsigned drv_mode);
+
+enum halmac_wlled_mode _led_mode_drv2halmac(uint8_t drv_mode)
+{
+	return (enum halmac_wlled_mode)led_mode_drv2halmac(drv_mode);
+}
+
+unsigned phy_parameter_val_drv2halmac(unsigned val, unsigned msk_en, unsigned msk);
+
+uint32_t _phy_parameter_val_drv2halmac(uint32_t val, uint8_t msk_en, uint32_t msk)
+{
+	return phy_parameter_val_drv2halmac(val, msk_en, msk);
+}
+
 #ifdef CONFIG_SUPPORT_TRX_SHARED
 enum halmac_rx_fifo_expanding_mode {
 	HALMAC_RX_FIFO_EXPANDING_MODE_DISABLE = 0,
