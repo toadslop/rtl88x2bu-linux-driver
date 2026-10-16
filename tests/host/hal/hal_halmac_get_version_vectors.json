@@ -1,0 +1,41 @@
+{
+  "oracle": "hal/hal_halmac.c rtw_halmac_get_version",
+  "vectors": [
+    {
+      "name": "halmac_1_6_6",
+      "major_ver": 1,
+      "prototype_ver": 6,
+      "minor_ver": 6,
+      "halmac_status": 0,
+      "buf_len": 32,
+      "expect": "V1_06_06"
+    },
+    {
+      "name": "halmac_1_0_0",
+      "major_ver": 1,
+      "prototype_ver": 0,
+      "minor_ver": 0,
+      "halmac_status": 0,
+      "buf_len": 32,
+      "expect": "V1_00_00"
+    },
+    {
+      "name": "halmac_fail_buffer_unchanged",
+      "major_ver": 1,
+      "prototype_ver": 1,
+      "minor_ver": 1,
+      "halmac_status": 5,
+      "buf_len": 32,
+      "expect_unchanged": 1
+    },
+    {
+      "name": "tight_buf_len",
+      "major_ver": 9,
+      "prototype_ver": 8,
+      "minor_ver": 7,
+      "halmac_status": 0,
+      "buf_len": 9,
+      "expect": "V9_08_07"
+    }
+  ]
+}

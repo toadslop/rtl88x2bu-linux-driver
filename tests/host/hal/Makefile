@@ -165,10 +165,12 @@ test_dump_rf_nss_rust: test_dump_rf_nss.c librust_hal_intf_rf_nss.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_HAL_INTF_RF_NSS_ORACLE -o $@ test_dump_rf_nss.c \
 		$(HOST_JSON) librust_hal_intf_rf_nss.a
 
+HALMAC_VERSION_ORACLE := hal_halmac_version_c_oracle.c
+
 test-halmac: test_hal_halmac_network test_hal_halmac_bcn test_hal_halmac_bcn_abi \
 	test_hal_halmac_rsvd test_hal_halmac_trx_share test_hal_halmac_drv2halmac \
-	test_hal_halmac_rf_type test_hal_halmac_usb_fifo test_hal_halmac_fw_led_phy \
-	test_hal_halmac_phy_param_drv2halmac
+	test_hal_halmac_rf_type 	test_hal_halmac_usb_fifo test_hal_halmac_fw_led_phy \
+	test_hal_halmac_phy_param_drv2halmac test_hal_halmac_version
 	./test_hal_halmac_network hal_halmac_network_vectors.json
 	./test_hal_halmac_bcn hal_halmac_bcn_vectors.json
 	./test_hal_halmac_bcn_abi
@@ -186,6 +188,10 @@ test-halmac: test_hal_halmac_network test_hal_halmac_bcn test_hal_halmac_bcn_abi
 		hal_halmac_led_mode_drv2halmac_vectors.json \
 		hal_halmac_phy_param_val_drv2halmac_vectors.json
 	./test_hal_halmac_phy_param_drv2halmac hal_halmac_phy_param_drv2halmac_vectors.json
+	./test_hal_halmac_version hal_halmac_get_version_vectors.json
+
+test_hal_halmac_version: test_hal_halmac_version.c $(HALMAC_VERSION_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_hal_halmac_version.c $(HALMAC_VERSION_ORACLE) $(HOST_JSON)
 
 test_hal_halmac_network: test_hal_halmac_network.c $(HALMAC_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_hal_halmac_network.c $(HALMAC_ORACLE) $(HOST_JSON)
@@ -526,7 +532,7 @@ clean:
 		test_hal_halmac_network test_hal_halmac_bcn test_hal_halmac_bcn_abi \
 		test_hal_halmac_rsvd test_hal_halmac_trx_share test_hal_halmac_drv2halmac \
 		test_hal_halmac_rf_type test_hal_halmac_usb_fifo \
-		test_hal_halmac_phy_param_drv2halmac \
+		test_hal_halmac_phy_param_drv2halmac test_hal_halmac_version \
 		test_hal_halmac_network_rust test_hal_halmac_bcn_rust \
 		test_hal_halmac_bcn_abi_rust test_hal_halmac_rsvd_rust \
 		test_hal_halmac_trx_share_rust test_hal_halmac_drv2halmac_rust \
