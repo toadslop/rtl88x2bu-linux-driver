@@ -942,6 +942,7 @@ MODULE_SUB_NAME = 8710bu
 endif
 
 ccflags-y += -DCONFIG_RTL8710B
+rustflags-y += --cfg CONFIG_RTL8710B
 
 _HAL_INTFS_FILES += hal/HalPwrSeqCmd.o \
 					hal/$(RTL871X)/Hal8710BPwrSeq.o\

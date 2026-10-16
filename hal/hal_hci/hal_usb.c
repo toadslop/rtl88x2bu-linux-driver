@@ -321,6 +321,18 @@ int usb_async_write32(struct intf_hdl *pintfhdl, u32 addr, u32 val)
 }
 #endif /* CONFIG_USB_SUPPORT_ASYNC_VDN_REQ */
 
+#ifndef HAL_USB_VENDOR_WVALUE_IN_RUST
+u16 usb_vendor_wvalue_fixup(u16 wvalue)
+{
+/* WLANON PAGE0_REG needs to add an offset 0x8000 */
+#if defined(CONFIG_RTL8710B)
+	if (wvalue < 0x0100)
+		wvalue |= 0x8000;
+#endif
+	return wvalue;
+}
+#endif /* !HAL_USB_VENDOR_WVALUE_IN_RUST */
+
 u8 usb_read8(struct intf_hdl *pintfhdl, u32 addr)
 {
 	u8 request;
