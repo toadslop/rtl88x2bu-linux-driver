@@ -1,0 +1,57 @@
+{
+  "oracle": "hal_dm_board_type_c_oracle.c",
+  "vectors": [
+    {
+      "name": "default",
+      "external_lna_2g": 0,
+      "external_lna_5g": 0,
+      "external_pa_2g": 0,
+      "external_pa_5g": 0,
+      "eeprom_bt_coexist": 0,
+      "expect_board_type": 0,
+      "expect_ext_lna_2g": 0,
+      "expect_ext_lna_5g": 0,
+      "expect_ext_pa_2g": 0,
+      "expect_ext_pa_5g": 0
+    },
+    {
+      "name": "2g_lna_only",
+      "external_lna_2g": 1,
+      "external_lna_5g": 0,
+      "external_pa_2g": 0,
+      "external_pa_5g": 0,
+      "eeprom_bt_coexist": 0,
+      "expect_board_type": 16,
+      "expect_ext_lna_2g": 1,
+      "expect_ext_lna_5g": 0,
+      "expect_ext_pa_2g": 0,
+      "expect_ext_pa_5g": 0
+    },
+    {
+      "name": "5g_pa_lna_bt",
+      "external_lna_2g": 0,
+      "external_lna_5g": 2,
+      "external_pa_2g": 0,
+      "external_pa_5g": 1,
+      "eeprom_bt_coexist": 1,
+      "expect_board_type": 196,
+      "expect_ext_lna_2g": 0,
+      "expect_ext_lna_5g": 1,
+      "expect_ext_pa_2g": 0,
+      "expect_ext_pa_5g": 1
+    },
+    {
+      "name": "all_ext",
+      "external_lna_2g": 1,
+      "external_lna_5g": 1,
+      "external_pa_2g": 1,
+      "external_pa_5g": 1,
+      "eeprom_bt_coexist": 1,
+      "expect_board_type": 220,
+      "expect_ext_lna_2g": 1,
+      "expect_ext_lna_5g": 1,
+      "expect_ext_pa_2g": 1,
+      "expect_ext_pa_5g": 1
+    }
+  ]
+}

@@ -17,6 +17,7 @@ PHY_RF_SHADOW_ORACLE := hal_phy_rf_shadow_c_oracle.c
 PHY_RF_SHADOW_HW_SHIM := hal_phy_rf_shadow_hw_shim.c
 HALMAC_TRX_ORACLE := hal_halmac_trx_share_c_oracle.c
 BRATE_ORACLE := hal_set_brate_cfg_c_oracle.c
+DM_BOARD_ORACLE := hal_dm_board_type_c_oracle.c
 RUST_HAL := $(ROOT)/rust/hal_com.rs
 RUST_HAL_PHY := $(ROOT)/rust/hal_phy.rs
 RUST_HAL_INTF := $(ROOT)/rust/hal_intf.rs
@@ -33,7 +34,8 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-brate test-brate-rust \
 	test-legal-channel test-legal-channel-rust \
 	test-mapping-out-pipe test-mapping-out-pipe-rust test-mgntframe-raid test-mgntframe-raid-rust \
-	test-hdata-rate test-hdata-rate-rust test-phy-bit-shift test-phy-bit-shift-rust clean
+	test-hdata-rate test-hdata-rate-rust test-phy-bit-shift test-phy-bit-shift-rust \
+	test-dm-board-type clean
 
 all: test
 
@@ -42,7 +44,7 @@ test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust
 	test-halmac test-halmac-rust test-halmac-rsvd test-brate test-brate-rust \
 	test-legal-channel test-legal-channel-rust test-mapping-out-pipe test-mapping-out-pipe-rust \
 	test-mgntframe-raid test-mgntframe-raid-rust test-hdata-rate test-hdata-rate-rust \
-	test-phy-bit-shift test-phy-bit-shift-rust
+	test-phy-bit-shift test-phy-bit-shift-rust test-dm-board-type
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -462,6 +464,12 @@ test_hal_phy_bit_shift_rust: test_hal_phy_bit_shift.c librust_hal_phy.a $(HOST_J
 	$(CC) $(CFLAGS) -DRUST_HAL_PHY_ORACLE -o $@ test_hal_phy_bit_shift.c \
 		$(HOST_JSON) librust_hal_phy.a
 
+test-dm-board-type: test_hal_dm_board_type
+	./test_hal_dm_board_type hal_dm_board_type_vectors.json
+
+test_hal_dm_board_type: test_hal_dm_board_type.c $(DM_BOARD_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_hal_dm_board_type.c $(DM_BOARD_ORACLE) $(HOST_JSON)
+
 clean:
 	rm -f test_hw_rate_map test_hw_rate_map_rust librust_hal_com.a \
 		test_rsvd_page_cache test_rsvd_page_cache_rust librust_hal_com_rsvd.a \
@@ -487,4 +495,5 @@ clean:
 		test_hal_phy_rf_shadow test_hal_phy_rf_shadow_rust librust_hal_phy_rf_shadow.a \
 		test_hal_phy_rf_shadow_flags test_hal_phy_rf_shadow_flags_rust \
 		test_hal_phy_rf_shadow_compare test_hal_phy_rf_shadow_compare_rust \
-		librust_hal_phy_rf_shadow_compare.a
+		librust_hal_phy_rf_shadow_compare.a \
+		test_hal_dm_board_type
