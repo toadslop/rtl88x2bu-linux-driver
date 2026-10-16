@@ -473,7 +473,8 @@ test_hal_dm_board_type: test_hal_dm_board_type.c $(DM_BOARD_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_hal_dm_board_type.c $(DM_BOARD_ORACLE) $(HOST_JSON)
 
 librust_hal_dm.a: $(RUST_HAL_DM)
-	rustc -C opt-level=2 -C overflow-checks=on --crate-type staticlib $(RUST_HAL_DM) -o $@
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_dm_board_type_test --crate-type staticlib $(RUST_HAL_DM) -o $@
 
 test-dm-board-type-rust: test_hal_dm_board_type_rust
 	./test_hal_dm_board_type_rust hal_dm_board_type_vectors.json

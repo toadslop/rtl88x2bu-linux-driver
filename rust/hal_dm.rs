@@ -79,8 +79,15 @@ pub extern "C" fn rtw_rust_hal_dm_init_odm_board_type(
     }
 }
 
-#[cfg(any(host_hal_dm_dump_sta_info_test, not(host_hal_dm_board_type_test)))]
+#[cfg(any(
+    host_hal_dm_dump_sta_info_test,
+    not(any(host_hal_dm_board_type_test, host_hal_dm_dump_sta_info_test))
+))]
 mod dump_sta_info {
+    #[cfg(host_hal_dm_dump_sta_info_test)]
+    use std::os::raw::{c_char, c_void};
+
+    #[cfg(not(host_hal_dm_dump_sta_info_test))]
     use core::ffi::{c_char, c_void};
 
     type U8 = u8;
