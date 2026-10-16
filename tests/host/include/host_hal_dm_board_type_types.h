@@ -12,7 +12,6 @@ struct dm_struct {
 	int _unused;
 };
 
-/* Mirrors enum odm_board_type in hal/phydm/phydm_pre_define.h */
 #define ODM_BOARD_DEFAULT 0u
 #define ODM_BOARD_BT (1u << 2)
 #define ODM_BOARD_EXT_PA (1u << 3)
@@ -20,7 +19,6 @@ struct dm_struct {
 #define ODM_BOARD_EXT_PA_5G (1u << 6)
 #define ODM_BOARD_EXT_LNA_5G (1u << 7)
 
-/* Mirrors enum odm_cmninfo in hal/phydm/phydm.h (subset). */
 #define ODM_CMNINFO_BOARD_TYPE 12u
 #define ODM_CMNINFO_EXT_LNA 14u
 #define ODM_CMNINFO_5G_EXT_LNA 15u

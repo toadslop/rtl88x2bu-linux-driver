@@ -16,6 +16,12 @@
 #include <drv_types.h>
 #include <hal_data.h>
 
+#ifdef CONFIG_RUST
+void rtw_rust_hal_dm_init_odm_board_type(struct dm_struct *pDM_Odm,
+	u8 external_lna_2g, u8 external_lna_5g, u8 external_pa_2g,
+	u8 external_pa_5g, u8 eeprom_bt_coexist);
+#endif
+
 /* A mapping from HalData to ODM. */
 enum odm_board_type boardType(u8 InterfaceSel)
 {
@@ -389,6 +395,11 @@ void Init_ODM_ComInfo(_adapter *adapter)
 
 	{
 		/* 1 ======= BoardType: ODM_CMNINFO_BOARD_TYPE ======= */
+#ifdef CONFIG_RUST
+		rtw_rust_hal_dm_init_odm_board_type(pDM_Odm, pHalData->ExternalLNA_2G,
+			pHalData->external_lna_5g, pHalData->ExternalPA_2G,
+			pHalData->external_pa_5g, pHalData->EEPROMBluetoothCoexist);
+#else
 		u8 odm_board_type = ODM_BOARD_DEFAULT;
 
 		if (pHalData->ExternalLNA_2G != 0) {
@@ -411,6 +422,7 @@ void Init_ODM_ComInfo(_adapter *adapter)
 			odm_board_type |= ODM_BOARD_BT;
 
 		odm_cmn_info_init(pDM_Odm, ODM_CMNINFO_BOARD_TYPE, odm_board_type);
+#endif
 		/* 1 ============== End of BoardType ============== */
 	}
 

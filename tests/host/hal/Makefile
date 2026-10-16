@@ -19,6 +19,7 @@ HALMAC_TRX_ORACLE := hal_halmac_trx_share_c_oracle.c
 BRATE_ORACLE := hal_set_brate_cfg_c_oracle.c
 DM_BOARD_ORACLE := hal_dm_board_type_c_oracle.c
 RUST_HAL := $(ROOT)/rust/hal_com.rs
+RUST_HAL_DM := $(ROOT)/rust/hal_dm.rs
 RUST_HAL_PHY := $(ROOT)/rust/hal_phy.rs
 RUST_HAL_INTF := $(ROOT)/rust/hal_intf.rs
 RUST_HAL_HALMAC := $(ROOT)/rust/hal_halmac.rs
