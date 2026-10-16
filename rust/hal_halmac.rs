@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HALMAC ↔ driver enum/struct mappers from `hal/hal_halmac.c` (W4-10, W4-11, W4-12, W4-21, W4-22, W4-23).
+//! HALMAC ↔ driver enum/struct mappers from `hal/hal_halmac.c` (W4-10, W4-11, W4-12, W4-21, W4-22, W4-23, W4-24).
 
 #![allow(
     dead_code,
@@ -444,6 +444,94 @@ pub extern "C" fn fifo_sel_drv2halmac(fifo_sel: U8) -> u32 {
 #[no_mangle]
 pub extern "C" fn usb_mode_drv2halmac(usb_mode: u32) -> u32 {
     usb_mode_drv2halmac_impl(usb_mode)
+}
+
+const FW_EMEM: u32 = 0;
+const FW_IMEM: u32 = 1;
+const FW_DMEM: u32 = 2;
+
+const HALMAC_DLFW_MEM_EMEM: u32 = 0x00;
+const HALMAC_DLFW_MEM_EMEM_RSVD_PG: u32 = 0x01;
+const HALMAC_DLFW_MEM_UNDEFINE: u32 = 0x7F;
+
+const HALMAC_WLLED_MODE_TRX: u32 = 0;
+const HALMAC_WLLED_MODE_TX: u32 = 1;
+const HALMAC_WLLED_MODE_RX: u32 = 2;
+const HALMAC_WLLED_MODE_SW_CTRL: u32 = 3;
+
+fn bitshift(bitmask: u32) -> u32 {
+    for i in 0..=31 {
+        if (bitmask >> i) & 1 == 1 {
+            return i;
+        }
+    }
+    32
+}
+
+fn fw_mem_drv2halmac_impl(mem: u32, tx_stop: U8) -> u32 {
+    match mem {
+        FW_EMEM => {
+            if tx_stop == 0 {
+                HALMAC_DLFW_MEM_EMEM_RSVD_PG
+            } else {
+                HALMAC_DLFW_MEM_EMEM
+            }
+        }
+        FW_IMEM | FW_DMEM => HALMAC_DLFW_MEM_UNDEFINE,
+        _ => HALMAC_DLFW_MEM_UNDEFINE,
+    }
+}
+
+fn led_mode_drv2halmac_impl(drv_mode: U8) -> u32 {
+    match drv_mode {
+        1 => HALMAC_WLLED_MODE_TX,
+        2 => HALMAC_WLLED_MODE_RX,
+        3 => HALMAC_WLLED_MODE_SW_CTRL,
+        _ => HALMAC_WLLED_MODE_TRX,
+    }
+}
+
+fn phy_parameter_val_drv2halmac_impl(val: u32, msk_en: U8, msk: u32) -> u32 {
+    if msk_en == 0 {
+        return val;
+    }
+    val << bitshift(msk)
+}
+
+#[cfg(not(host_hal_halmac_enum_test))]
+#[no_mangle]
+pub extern "C" fn _fw_mem_drv2halmac(mem: u32, tx_stop: U8) -> u32 {
+    fw_mem_drv2halmac_impl(mem, tx_stop)
+}
+
+#[cfg(not(host_hal_halmac_enum_test))]
+#[no_mangle]
+pub extern "C" fn _led_mode_drv2halmac(drv_mode: U8) -> u32 {
+    led_mode_drv2halmac_impl(drv_mode)
+}
+
+#[cfg(not(host_hal_halmac_enum_test))]
+#[no_mangle]
+pub extern "C" fn _phy_parameter_val_drv2halmac(val: u32, msk_en: U8, msk: u32) -> u32 {
+    phy_parameter_val_drv2halmac_impl(val, msk_en, msk)
+}
+
+#[cfg(host_hal_halmac_enum_test)]
+#[no_mangle]
+pub extern "C" fn fw_mem_drv2halmac(mem: u32, tx_stop: U8) -> u32 {
+    fw_mem_drv2halmac_impl(mem, tx_stop)
+}
+
+#[cfg(host_hal_halmac_enum_test)]
+#[no_mangle]
+pub extern "C" fn led_mode_drv2halmac(drv_mode: U8) -> u32 {
+    led_mode_drv2halmac_impl(drv_mode)
+}
+
+#[cfg(host_hal_halmac_enum_test)]
+#[no_mangle]
+pub extern "C" fn phy_parameter_val_drv2halmac(val: u32, msk_en: U8, msk: u32) -> u32 {
+    phy_parameter_val_drv2halmac_impl(val, msk_en, msk)
 }
 
 const HALMAC_RX_FIFO_EXPANDING_MODE_DISABLE: u32 = 0;
