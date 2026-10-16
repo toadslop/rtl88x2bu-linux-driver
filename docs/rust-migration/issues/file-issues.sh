@@ -270,6 +270,13 @@ files=(
   wave4-23-hal-halmac-usb-fifo-mappers.md
   wave4-24-hal-halmac-fw-led-phy-param.md
   wave4-25-hal-usb-scaffold.md
+  wave4-26-hal-halmac-phy-parameter.md
+  wave4-27-hal-halmac-version-string.md
+  wave4-28-hal-usb-vendor-wvalue.md
+  wave4-29-hal-dm-scaffold.md
+  wave4-30-hal-dm-board-type.md
+  wave4-31-hal-dm-dump-sta-info.md
+  wave4-32-hal-dm-dump-sta-traffic.md
 )
 
 # draft_id -> github issue number
