@@ -1,0 +1,9 @@
+{
+  "oracle": "hal/hal_halmac.c _phy_parameter_val_drv2halmac",
+  "vectors": [
+    { "name": "no_mask", "val": 42, "msk_en": 0, "msk": 255, "expect": 42 },
+    { "name": "mask_bit0", "val": 3, "msk_en": 1, "msk": 1, "expect": 3 },
+    { "name": "mask_bit4", "val": 5, "msk_en": 1, "msk": 16, "expect": 80 },
+    { "name": "mask_bit31", "val": 1, "msk_en": 1, "msk": 2147483648, "expect": 2147483648 }
+  ]
+}

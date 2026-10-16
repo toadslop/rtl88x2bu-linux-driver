@@ -292,3 +292,86 @@ unsigned usb_mode_drv2halmac(unsigned usb_mode)
 
 	return halmac_usb_mode;
 }
+
+/* W4-24: FW mem, LED mode, phy param val mappers (hal/hal_halmac.c). */
+enum fw_mem {
+	FW_EMEM,
+	FW_IMEM,
+	FW_DMEM,
+};
+
+#define HALMAC_DLFW_MEM_EMEM 0x00
+#define HALMAC_DLFW_MEM_EMEM_RSVD_PG 0x01
+#define HALMAC_DLFW_MEM_UNDEFINE 0x7f
+
+#define _FALSE 0
+#define _TRUE 1
+
+static uint32_t bitshift(uint32_t bitmask)
+{
+	uint32_t i;
+
+	for (i = 0; i <= 31; i++)
+		if (((bitmask >> i) & 0x1) == 1)
+			break;
+
+	return i;
+}
+
+unsigned fw_mem_drv2halmac(unsigned mem, unsigned tx_stop)
+{
+	unsigned mem_halmac = HALMAC_DLFW_MEM_UNDEFINE;
+
+	switch (mem) {
+	case FW_EMEM:
+		if (tx_stop == _FALSE)
+			mem_halmac = HALMAC_DLFW_MEM_EMEM_RSVD_PG;
+		else
+			mem_halmac = HALMAC_DLFW_MEM_EMEM;
+		break;
+	case FW_IMEM:
+	case FW_DMEM:
+		mem_halmac = HALMAC_DLFW_MEM_UNDEFINE;
+		break;
+	}
+
+	return mem_halmac;
+}
+
+enum halmac_wlled_mode {
+	HALMAC_WLLED_MODE_TRX = 0,
+	HALMAC_WLLED_MODE_TX = 1,
+	HALMAC_WLLED_MODE_RX = 2,
+	HALMAC_WLLED_MODE_SW_CTRL = 3,
+};
+
+unsigned led_mode_drv2halmac(unsigned drv_mode)
+{
+	unsigned halmac_mode;
+
+	switch (drv_mode) {
+	case 1:
+		halmac_mode = HALMAC_WLLED_MODE_TX;
+		break;
+	case 2:
+		halmac_mode = HALMAC_WLLED_MODE_RX;
+		break;
+	case 3:
+		halmac_mode = HALMAC_WLLED_MODE_SW_CTRL;
+		break;
+	case 0:
+	default:
+		halmac_mode = HALMAC_WLLED_MODE_TRX;
+		break;
+	}
+
+	return halmac_mode;
+}
+
+unsigned phy_parameter_val_drv2halmac(unsigned val, unsigned msk_en, unsigned msk)
+{
+	if (!msk_en)
+		return val;
+
+	return val << bitshift(msk);
+}

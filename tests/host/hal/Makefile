@@ -163,7 +163,7 @@ test_dump_rf_nss_rust: test_dump_rf_nss.c librust_hal_intf_rf_nss.a $(HOST_JSON)
 
 test-halmac: test_hal_halmac_network test_hal_halmac_bcn test_hal_halmac_bcn_abi \
 	test_hal_halmac_rsvd test_hal_halmac_trx_share test_hal_halmac_drv2halmac \
-	test_hal_halmac_rf_type test_hal_halmac_usb_fifo
+	test_hal_halmac_rf_type test_hal_halmac_usb_fifo test_hal_halmac_fw_led_phy
 	./test_hal_halmac_network hal_halmac_network_vectors.json
 	./test_hal_halmac_bcn hal_halmac_bcn_vectors.json
 	./test_hal_halmac_bcn_abi
@@ -177,6 +177,9 @@ test-halmac: test_hal_halmac_network test_hal_halmac_bcn test_hal_halmac_bcn_abi
 		hal_halmac_rf_type_halmac2drv_vectors.json
 	./test_hal_halmac_usb_fifo hal_halmac_fifo_sel_drv2halmac_vectors.json \
 		hal_halmac_usb_mode_drv2halmac_vectors.json
+	./test_hal_halmac_fw_led_phy hal_halmac_fw_mem_drv2halmac_vectors.json \
+		hal_halmac_led_mode_drv2halmac_vectors.json \
+		hal_halmac_phy_param_val_drv2halmac_vectors.json
 
 test_hal_halmac_network: test_hal_halmac_network.c $(HALMAC_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_hal_halmac_network.c $(HALMAC_ORACLE) $(HOST_JSON)
@@ -198,6 +201,9 @@ test_hal_halmac_rf_type: test_hal_halmac_rf_type.c $(HALMAC_ORACLE) $(HOST_JSON)
 
 test_hal_halmac_usb_fifo: test_hal_halmac_usb_fifo.c $(HALMAC_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_hal_halmac_usb_fifo.c $(HALMAC_ORACLE) $(HOST_JSON)
+
+test_hal_halmac_fw_led_phy: test_hal_halmac_fw_led_phy.c $(HALMAC_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_hal_halmac_fw_led_phy.c $(HALMAC_ORACLE) $(HOST_JSON)
 
 test_hal_halmac_usb_fifo_rust: test_hal_halmac_usb_fifo.c librust_hal_halmac.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_HAL_HALMAC_ORACLE -o $@ test_hal_halmac_usb_fifo.c \

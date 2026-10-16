@@ -1,0 +1,9 @@
+{
+  "oracle": "hal/hal_halmac.c _fw_mem_drv2halmac",
+  "vectors": [
+    { "name": "emem_tx_not_stopped", "mem": 0, "tx_stop": 0, "expect": 1 },
+    { "name": "emem_tx_stopped", "mem": 0, "tx_stop": 1, "expect": 0 },
+    { "name": "imem", "mem": 1, "tx_stop": 0, "expect": 127 },
+    { "name": "dmem", "mem": 2, "tx_stop": 1, "expect": 127 }
+  ]
+}
