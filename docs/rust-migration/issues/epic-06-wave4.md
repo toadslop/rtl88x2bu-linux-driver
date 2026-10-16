@@ -68,7 +68,7 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-27 | `wave4-27-hal-halmac-version-string.md` | `rtw_halmac_get_version` formatter |
 | W4-28 | `wave4-28-hal-usb-vendor-wvalue.md` | USB vendor wvalue page0 fixup |
 | W4-29 | `wave4-29-hal-dm-scaffold.md` | `rust/hal_dm.rs` Kbuild scaffold |
-| W4-30 | `wave4-30-hal-dm-board-type.md` | `boardType` USB/PCI mapper |
+| W4-30 | `wave4-30-hal-dm-board-type.md` | `Init_ODM_ComInfo` board-type block |
 | W4-31 | `wave4-31-hal-dm-dump-sta-info.md` | `dump_sta_info` debug dump |
 | W4-32 | `wave4-32-hal-dm-dump-sta-traffic.md` | `dump_sta_traffic` debug dump |
 

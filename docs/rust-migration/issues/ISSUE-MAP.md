@@ -240,7 +240,7 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-27 | #1315 | [W4-27] Translate hal_halmac.c — rtw_halmac_get_version formatter |
 | W4-28 | #1316 | [W4-28] Translate hal_usb.c — vendor wvalue WLANON page0 fixup |
 | W4-29 | #1317 | [W4-29] Kbuild scaffold — rust/hal_dm.rs + hal_dm_rest.c split |
-| W4-30 | #1318 | [W4-30] Translate hal_dm.c — boardType interface mapper |
+| W4-30 | #1318 | [W4-30] Translate hal_dm.c — Init_ODM_ComInfo board-type block |
 | W4-31 | #1319 | [W4-31] Translate hal_dm.c — dump_sta_info debug formatter |
 | W4-32 | #1320 | [W4-32] Translate hal_dm.c — dump_sta_traffic debug formatter |
 

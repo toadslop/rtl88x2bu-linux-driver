@@ -14,7 +14,7 @@ Introduce [`rust/hal_dm.rs`](../../../rust/hal_dm.rs) and wire Kbuild so [`hal/h
 can shrink to [`hal/hal_dm_rest.c`](../../../hal/hal_dm_rest.c):
 
 - Add `rust/hal_dm.o` when `CONFIG_RUST` is enabled
-- Move a minimal `rtw_rust_hal_dm_kbuild_probe` no-op into Rust (W4-30 replaces with `boardType`)
+- Move a minimal `rtw_rust_hal_dm_kbuild_probe` no-op into Rust (W4-30 replaces with `Init_ODM_ComInfo` board-type helper)
 - Extract unported symbols into `hal_dm_rest.c` per the `hal_com` / `hal_usb` `*_rest.c` pattern
 
 ## Notes
