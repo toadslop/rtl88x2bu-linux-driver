@@ -636,11 +636,8 @@ fn phy_parameter_drv2halmac_impl(
                 2 => HALMAC_PARAMETER_CMD_MAC_W16,
                 _ => HALMAC_PARAMETER_CMD_MAC_W32,
             };
-            info.content.MAC_REG_W.value = phy_parameter_val_drv2halmac_impl(
-                mac.value,
-                mac.msk_en,
-                mac.msk,
-            );
+            info.content.MAC_REG_W.value =
+                phy_parameter_val_drv2halmac_impl(mac.value, mac.msk_en, mac.msk);
             info.content.MAC_REG_W.msk = mac.msk;
             info.content.MAC_REG_W.offset = mac.offset;
             info.content.MAC_REG_W.msk_en = mac.msk_en;
@@ -652,11 +649,8 @@ fn phy_parameter_drv2halmac_impl(
                 2 => HALMAC_PARAMETER_CMD_BB_W16,
                 _ => HALMAC_PARAMETER_CMD_BB_W32,
             };
-            info.content.BB_REG_W.value = phy_parameter_val_drv2halmac_impl(
-                bb.value,
-                bb.msk_en,
-                bb.msk,
-            );
+            info.content.BB_REG_W.value =
+                phy_parameter_val_drv2halmac_impl(bb.value, bb.msk_en, bb.msk);
             info.content.BB_REG_W.msk = bb.msk;
             info.content.BB_REG_W.offset = bb.offset;
             info.content.BB_REG_W.msk_en = bb.msk_en;
