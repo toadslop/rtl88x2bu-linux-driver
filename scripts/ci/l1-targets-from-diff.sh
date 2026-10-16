@@ -248,6 +248,12 @@ for path in "${changed[@]}"; do
 	| tests/host/hal/hal_phy_bit_shift*)
 		add_target rust-check-symbols-hal-phy
 		;;
+	rust/hal_usb.rs \
+	| hal/hal_hci/hal_usb_rest.c \
+	| hal/hal_hci/hal_usb.c \
+	| tests/host/hal/hal_usb_*)
+		add_target rust-check-symbols-hal-usb
+		;;
 	rust/aes_*.rs \
 	| rust/sha256*.rs \
 	| rust/gcmp.rs \

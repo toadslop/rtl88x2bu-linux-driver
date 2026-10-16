@@ -535,6 +535,7 @@ int usb_writeN(struct intf_hdl *pintfhdl, u32 addr, u32 length, u8 *pdata)
 	return ret;
 }
 
+#ifndef HAL_USB_SET_INTF_OPS_IN_RUST
 void usb_set_intf_ops(_adapter *padapter, struct _io_ops *pops)
 {
 	_rtw_memset((u8 *)pops, 0, sizeof(struct _io_ops));
@@ -566,3 +567,4 @@ void usb_set_intf_ops(_adapter *padapter, struct _io_ops *pops)
 #endif
 
 }
+#endif /* !HAL_USB_SET_INTF_OPS_IN_RUST */
