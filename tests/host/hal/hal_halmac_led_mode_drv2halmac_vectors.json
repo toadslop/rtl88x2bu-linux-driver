@@ -1,0 +1,10 @@
+{
+  "oracle": "hal/hal_halmac.c _led_mode_drv2halmac",
+  "vectors": [
+    { "name": "trx", "drv_mode": 0, "expect": 0 },
+    { "name": "tx", "drv_mode": 1, "expect": 1 },
+    { "name": "rx", "drv_mode": 2, "expect": 2 },
+    { "name": "sw_ctrl", "drv_mode": 3, "expect": 3 },
+    { "name": "default_oob", "drv_mode": 99, "expect": 0 }
+  ]
+}
