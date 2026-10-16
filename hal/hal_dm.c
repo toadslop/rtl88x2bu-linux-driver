@@ -20,6 +20,7 @@
 void rtw_rust_hal_dm_init_odm_board_type(struct dm_struct *pDM_Odm,
 	u8 external_lna_2g, u8 external_lna_5g, u8 external_pa_2g,
 	u8 external_pa_5g, u8 eeprom_bt_coexist);
+void dump_sta_info(void *sel, struct sta_info *psta);
 #endif
 
 /* A mapping from HalData to ODM. */
@@ -1387,6 +1388,7 @@ void dump_sta_traffic(void *sel, _adapter *adapter, struct sta_info *psta)
 	#endif
 }
 
+#ifndef CONFIG_RUST
 void dump_sta_info(void *sel, struct sta_info *psta)
 {
 	struct ra_sta_info *ra_info;
@@ -1423,6 +1425,7 @@ void dump_sta_info(void *sel, struct sta_info *psta)
 	RTW_PRINT_SEL(sel, "curr_retry_ratio : %d\n", ra_info->curr_retry_ratio);
 	RTW_PRINT_SEL(sel, "ra_mask : 0x%016llx\n\n", ra_info->ramask);
 }
+#endif /* CONFIG_RUST */
 
 void rtw_phydm_ra_registed(_adapter *adapter, struct sta_info *psta)
 {

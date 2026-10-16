@@ -1,0 +1,60 @@
+{
+  "oracle": "hal/hal_dm.c dump_sta_info",
+  "vectors": [
+    {
+      "name": "null_psta",
+      "null_sta": 1,
+      "expect": ""
+    },
+    {
+      "name": "basic_sta",
+      "mac": "001122334455",
+      "mac_id": 3,
+      "wireless_mode": 11,
+      "mimo_type": 2,
+      "sm_ps": 0,
+      "bw_mode": 0,
+      "ra_bw_mode": 1,
+      "rate_id": 5,
+      "rssi": -45,
+      "rssi_level": 3,
+      "is_support_sgi": 1,
+      "is_vht_enable": 2,
+      "disable_ra": 0,
+      "disable_pt": 1,
+      "is_noisy": 1,
+      "txrx_state": 2,
+      "stub_tx_rate": 12,
+      "stub_tx_sgi": 1,
+      "curr_tx_bw": 2,
+      "curr_retry_ratio": 10,
+      "ramask": "1234567890abcdef",
+      "expect": "============ STA [00:11:22:33:44:55]  ===================\nmac_id : 3\nwireless_mode : 0x0b\nmimo_type : 2\nstatic smps : Y\nbw_mode : 20MHz, ra_bw_mode : 40MHz\nrate_id : 5\nrssi : -45 (%), rssi_level : 3\nis_support_sgi : Y, is_vht_enable : Y\ndisable_ra : N, disable_pt : Y\nis_noisy : Y\ntxrx_state : 2\ncurr_tx_rate : MCS0 (S)\ncurr_tx_bw : 80MHz\ncurr_retry_ratio : 10\nra_mask : 0x1234567890abcdef\n\n"
+    },
+    {
+      "name": "rssi_i8_min",
+      "mac": "001122334455",
+      "mac_id": 3,
+      "wireless_mode": 11,
+      "mimo_type": 2,
+      "sm_ps": 0,
+      "bw_mode": 0,
+      "ra_bw_mode": 1,
+      "rate_id": 5,
+      "rssi": -128,
+      "rssi_level": 3,
+      "is_support_sgi": 1,
+      "is_vht_enable": 2,
+      "disable_ra": 0,
+      "disable_pt": 1,
+      "is_noisy": 1,
+      "txrx_state": 2,
+      "stub_tx_rate": 12,
+      "stub_tx_sgi": 1,
+      "curr_tx_bw": 2,
+      "curr_retry_ratio": 10,
+      "ramask": "1234567890abcdef",
+      "expect": "============ STA [00:11:22:33:44:55]  ===================\nmac_id : 3\nwireless_mode : 0x0b\nmimo_type : 2\nstatic smps : Y\nbw_mode : 20MHz, ra_bw_mode : 40MHz\nrate_id : 5\nrssi : -128 (%), rssi_level : 3\nis_support_sgi : Y, is_vht_enable : Y\ndisable_ra : N, disable_pt : Y\nis_noisy : Y\ntxrx_state : 2\ncurr_tx_rate : MCS0 (S)\ncurr_tx_bw : 80MHz\ncurr_retry_ratio : 10\nra_mask : 0x1234567890abcdef\n\n"
+    }
+  ]
+}
