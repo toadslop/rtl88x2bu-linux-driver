@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "hal_halmac_phy_parameter.h"
+
 struct halmac_bcn_ctrl {
 	uint8_t dis_rx_bssid_fit;
 	uint8_t en_txbcn_rpt;
@@ -210,6 +212,12 @@ unsigned phy_parameter_val_drv2halmac(unsigned val, unsigned msk_en, unsigned ms
 uint32_t _phy_parameter_val_drv2halmac(uint32_t val, uint8_t msk_en, uint32_t msk)
 {
 	return phy_parameter_val_drv2halmac(val, msk_en, msk);
+}
+
+int _phy_parameter_drv2halmac(struct rtw_phy_parameter *para,
+			      struct halmac_phy_parameter_info *info)
+{
+	return phy_parameter_drv2halmac(para, info);
 }
 
 #ifdef CONFIG_SUPPORT_TRX_SHARED

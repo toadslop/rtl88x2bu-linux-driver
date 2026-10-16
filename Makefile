@@ -4335,6 +4335,7 @@ rust-objects-hal-halmac-c:
 		-o tests/host/hal/hal_halmac_enum_mappers_c_ref.o \
 		tests/host/hal/hal_halmac_enum_mappers_c_oracle.c
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
 		$(if $(filter y,$(CONFIG_USB_HCI)),-DCONFIG_USB_HCI,) \
 		$(if $(filter -DCONFIG_SUPPORT_TRX_SHARED,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),-DCONFIG_SUPPORT_TRX_SHARED,) \
 		-o tests/host/hal/hal_halmac_l1_ref.o tests/host/hal/hal_halmac_l1_ref.c

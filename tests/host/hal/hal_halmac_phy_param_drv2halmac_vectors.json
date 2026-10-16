@@ -1,0 +1,118 @@
+{
+  "oracle": "hal/hal_halmac.c _phy_parameter_drv2halmac",
+  "vectors": [
+    {
+      "name": "mac_w8",
+      "cmd": 0,
+      "value": 10,
+      "msk": 255,
+      "offset": 256,
+      "msk_en": 0,
+      "size": 1,
+      "expect_cmd": 4,
+      "expect_value": 10,
+      "expect_ret": 0
+    },
+    {
+      "name": "mac_w16_masked",
+      "cmd": 0,
+      "value": 3,
+      "msk": 16,
+      "offset": 512,
+      "msk_en": 1,
+      "size": 2,
+      "expect_cmd": 5,
+      "expect_value": 48,
+      "expect_ret": 0
+    },
+    {
+      "name": "mac_w32_default_size",
+      "cmd": 0,
+      "value": 99,
+      "msk": 0,
+      "offset": 1024,
+      "msk_en": 0,
+      "size": 4,
+      "expect_cmd": 6,
+      "expect_value": 99,
+      "expect_ret": 0
+    },
+    {
+      "name": "bb_w8",
+      "cmd": 1,
+      "value": 7,
+      "msk": 1,
+      "offset": 128,
+      "msk_en": 1,
+      "size": 1,
+      "expect_cmd": 8,
+      "expect_value": 7,
+      "expect_ret": 0
+    },
+    {
+      "name": "bb_w16",
+      "cmd": 1,
+      "value": 2,
+      "msk": 0,
+      "offset": 200,
+      "msk_en": 0,
+      "size": 2,
+      "expect_cmd": 9,
+      "expect_value": 2,
+      "expect_ret": 0
+    },
+    {
+      "name": "bb_w32",
+      "cmd": 1,
+      "value": 1,
+      "msk": 0,
+      "offset": 300,
+      "msk_en": 0,
+      "size": 8,
+      "expect_cmd": 10,
+      "expect_value": 1,
+      "expect_ret": 0
+    },
+    {
+      "name": "rf_path_b",
+      "cmd": 2,
+      "value": 5,
+      "msk": 4,
+      "offset": 12,
+      "msk_en": 1,
+      "rf_path": 1,
+      "expect_cmd": 7,
+      "expect_value": 20,
+      "expect_ret": 0
+    },
+    {
+      "name": "delay_us",
+      "cmd": 3,
+      "delay_unit": 0,
+      "delay_value": 100,
+      "expect_cmd": 16,
+      "expect_delay": 100,
+      "expect_ret": 0
+    },
+    {
+      "name": "delay_ms",
+      "cmd": 3,
+      "delay_unit": 1,
+      "delay_value": 50,
+      "expect_cmd": 17,
+      "expect_delay": 50,
+      "expect_ret": 0
+    },
+    {
+      "name": "end_cmd",
+      "cmd": 255,
+      "expect_cmd": 255,
+      "expect_ret": 0
+    },
+    {
+      "name": "invalid_cmd",
+      "cmd": 99,
+      "expect_ret": -1
+    }
+  ]
+}
