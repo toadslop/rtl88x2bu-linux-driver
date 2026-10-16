@@ -4939,6 +4939,10 @@ static inline u32 _phy_parameter_val_drv2halmac(u32 val, u8 msk_en, u32 msk)
 }
 #endif /* RTW_HALMAC_RUST_MAPPERS */
 
+#ifdef RTW_HALMAC_RUST_MAPPERS
+int _phy_parameter_drv2halmac(struct rtw_phy_parameter *para,
+			      struct halmac_phy_parameter_info *info);
+#else
 static int _phy_parameter_drv2halmac(struct rtw_phy_parameter *para, struct halmac_phy_parameter_info *info)
 {
 	if (!para || !info)
@@ -5024,6 +5028,7 @@ static int _phy_parameter_drv2halmac(struct rtw_phy_parameter *para, struct halm
 
 	return 0;
 }
+#endif /* RTW_HALMAC_RUST_MAPPERS */
 
 /**
  * rtw_halmac_cfg_phy_para() - Register(Phy parameter) configuration

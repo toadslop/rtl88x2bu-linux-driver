@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "hal_halmac_drv_bcn_ctrl.h"
+#include "hal_halmac_phy_parameter.h"
 
 #define HW_STATE_NOLINK 0x00
 #define HW_STATE_ADHOC 0x01
@@ -374,4 +375,86 @@ unsigned phy_parameter_val_drv2halmac(unsigned val, unsigned msk_en, unsigned ms
 		return val;
 
 	return val << bitshift(msk);
+}
+
+int phy_parameter_drv2halmac(const struct rtw_phy_parameter *para,
+			     struct halmac_phy_parameter_info *info)
+{
+	if (!para || !info)
+		return -1;
+
+	memset(info, 0, sizeof(*info));
+
+	switch (para->cmd) {
+	case 0:
+		switch (para->data.mac.size) {
+		case 1:
+			info->cmd_id = HALMAC_PARAMETER_CMD_MAC_W8;
+			break;
+		case 2:
+			info->cmd_id = HALMAC_PARAMETER_CMD_MAC_W16;
+			break;
+		default:
+			info->cmd_id = HALMAC_PARAMETER_CMD_MAC_W32;
+			break;
+		}
+		info->content.MAC_REG_W.value =
+			phy_parameter_val_drv2halmac(para->data.mac.value,
+						     para->data.mac.msk_en,
+						     para->data.mac.msk);
+		info->content.MAC_REG_W.msk = para->data.mac.msk;
+		info->content.MAC_REG_W.offset = para->data.mac.offset;
+		info->content.MAC_REG_W.msk_en = para->data.mac.msk_en;
+		break;
+
+	case 1:
+		switch (para->data.bb.size) {
+		case 1:
+			info->cmd_id = HALMAC_PARAMETER_CMD_BB_W8;
+			break;
+		case 2:
+			info->cmd_id = HALMAC_PARAMETER_CMD_BB_W16;
+			break;
+		default:
+			info->cmd_id = HALMAC_PARAMETER_CMD_BB_W32;
+			break;
+		}
+		info->content.BB_REG_W.value =
+			phy_parameter_val_drv2halmac(para->data.bb.value,
+						     para->data.bb.msk_en,
+						     para->data.bb.msk);
+		info->content.BB_REG_W.msk = para->data.bb.msk;
+		info->content.BB_REG_W.offset = para->data.bb.offset;
+		info->content.BB_REG_W.msk_en = para->data.bb.msk_en;
+		break;
+
+	case 2:
+		info->cmd_id = HALMAC_PARAMETER_CMD_RF_W;
+		info->content.RF_REG_W.value =
+			phy_parameter_val_drv2halmac(para->data.rf.value,
+						     para->data.rf.msk_en,
+						     para->data.rf.msk);
+		info->content.RF_REG_W.msk = para->data.rf.msk;
+		info->content.RF_REG_W.offset = para->data.rf.offset;
+		info->content.RF_REG_W.msk_en = para->data.rf.msk_en;
+		info->content.RF_REG_W.rf_path = para->data.rf.path;
+		break;
+
+	case 3:
+		if (para->data.delay.unit == 0)
+			info->cmd_id = HALMAC_PARAMETER_CMD_DELAY_US;
+		else
+			info->cmd_id = HALMAC_PARAMETER_CMD_DELAY_MS;
+		info->content.DELAY_TIME.delay_time = para->data.delay.value;
+		break;
+
+	case 0xFF:
+		info->cmd_id = HALMAC_PARAMETER_CMD_END;
+		break;
+
+	default:
+		return -1;
+	}
+
+	return 0;
 }

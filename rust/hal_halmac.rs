@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HALMAC ↔ driver enum/struct mappers from `hal/hal_halmac.c` (W4-10, W4-11, W4-12, W4-21, W4-22, W4-23, W4-24).
+//! HALMAC ↔ driver enum/struct mappers from `hal/hal_halmac.c` (W4-10, W4-11, W4-12, W4-21, W4-22, W4-23, W4-24, W4-26).
 
 #![allow(
     dead_code,
@@ -498,6 +498,196 @@ fn phy_parameter_val_drv2halmac_impl(val: u32, msk_en: U8, msk: u32) -> u32 {
     val << bitshift(msk)
 }
 
+const HALMAC_PARAMETER_CMD_MAC_W8: u32 = 0x4;
+const HALMAC_PARAMETER_CMD_MAC_W16: u32 = 0x5;
+const HALMAC_PARAMETER_CMD_MAC_W32: u32 = 0x6;
+const HALMAC_PARAMETER_CMD_RF_W: u32 = 0x7;
+const HALMAC_PARAMETER_CMD_BB_W8: u32 = 0x8;
+const HALMAC_PARAMETER_CMD_BB_W16: u32 = 0x9;
+const HALMAC_PARAMETER_CMD_BB_W32: u32 = 0xA;
+const HALMAC_PARAMETER_CMD_DELAY_US: u32 = 0x10;
+const HALMAC_PARAMETER_CMD_DELAY_MS: u32 = 0x11;
+const HALMAC_PARAMETER_CMD_END: u32 = 0xFF;
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct RtwPhyParaMac {
+    pub value: u32,
+    pub msk: u32,
+    pub offset: u16,
+    pub msk_en: U8,
+    pub size: U8,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct RtwPhyParaBb {
+    pub value: u32,
+    pub msk: u32,
+    pub offset: u16,
+    pub msk_en: U8,
+    pub size: U8,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct RtwPhyParaRf {
+    pub value: u32,
+    pub msk: u32,
+    pub offset: U8,
+    pub msk_en: U8,
+    pub path: U8,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct RtwPhyParaDelay {
+    pub unit: U8,
+    pub value: u16,
+}
+
+#[repr(C)]
+pub union RtwPhyParaData {
+    pub mac: RtwPhyParaMac,
+    pub bb: RtwPhyParaBb,
+    pub rf: RtwPhyParaRf,
+    pub delay: RtwPhyParaDelay,
+}
+
+#[repr(C)]
+pub struct RtwPhyParameter {
+    pub cmd: U8,
+    pub data: RtwPhyParaData,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct HalmacMacRegW {
+    pub value: u32,
+    pub msk: u32,
+    pub offset: u16,
+    pub msk_en: U8,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct HalmacBbRegW {
+    pub value: u32,
+    pub msk: u32,
+    pub offset: u16,
+    pub msk_en: U8,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct HalmacRfRegW {
+    pub value: u32,
+    pub msk: u32,
+    pub offset: U8,
+    pub msk_en: U8,
+    pub rf_path: U8,
+}
+
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct HalmacDelayTime {
+    pub rsvd1: u32,
+    pub rsvd2: u32,
+    pub delay_time: u16,
+    pub rsvd3: U8,
+}
+
+#[repr(C)]
+pub union HalmacParameterContent {
+    pub MAC_REG_W: HalmacMacRegW,
+    pub BB_REG_W: HalmacBbRegW,
+    pub RF_REG_W: HalmacRfRegW,
+    pub DELAY_TIME: HalmacDelayTime,
+}
+
+#[repr(C)]
+pub struct HalmacPhyParameterInfo {
+    pub cmd_id: u32,
+    pub content: HalmacParameterContent,
+}
+
+fn phy_parameter_drv2halmac_impl(
+    para: *const RtwPhyParameter,
+    info: *mut HalmacPhyParameterInfo,
+) -> i32 {
+    if para.is_null() || info.is_null() {
+        return -1;
+    }
+    let para = unsafe { &*para };
+    let info = unsafe { &mut *info };
+    unsafe {
+        core::ptr::write_bytes(
+            info as *mut HalmacPhyParameterInfo as *mut u8,
+            0,
+            core::mem::size_of::<HalmacPhyParameterInfo>(),
+        );
+    }
+
+    match para.cmd {
+        0 => {
+            let mac = unsafe { para.data.mac };
+            info.cmd_id = match mac.size {
+                1 => HALMAC_PARAMETER_CMD_MAC_W8,
+                2 => HALMAC_PARAMETER_CMD_MAC_W16,
+                _ => HALMAC_PARAMETER_CMD_MAC_W32,
+            };
+            info.content.MAC_REG_W.value = phy_parameter_val_drv2halmac_impl(
+                mac.value,
+                mac.msk_en,
+                mac.msk,
+            );
+            info.content.MAC_REG_W.msk = mac.msk;
+            info.content.MAC_REG_W.offset = mac.offset;
+            info.content.MAC_REG_W.msk_en = mac.msk_en;
+        }
+        1 => {
+            let bb = unsafe { para.data.bb };
+            info.cmd_id = match bb.size {
+                1 => HALMAC_PARAMETER_CMD_BB_W8,
+                2 => HALMAC_PARAMETER_CMD_BB_W16,
+                _ => HALMAC_PARAMETER_CMD_BB_W32,
+            };
+            info.content.BB_REG_W.value = phy_parameter_val_drv2halmac_impl(
+                bb.value,
+                bb.msk_en,
+                bb.msk,
+            );
+            info.content.BB_REG_W.msk = bb.msk;
+            info.content.BB_REG_W.offset = bb.offset;
+            info.content.BB_REG_W.msk_en = bb.msk_en;
+        }
+        2 => {
+            let rf = unsafe { para.data.rf };
+            info.cmd_id = HALMAC_PARAMETER_CMD_RF_W;
+            info.content.RF_REG_W.value =
+                phy_parameter_val_drv2halmac_impl(rf.value, rf.msk_en, rf.msk);
+            info.content.RF_REG_W.msk = rf.msk;
+            info.content.RF_REG_W.offset = rf.offset;
+            info.content.RF_REG_W.msk_en = rf.msk_en;
+            info.content.RF_REG_W.rf_path = rf.path;
+        }
+        3 => {
+            let delay = unsafe { para.data.delay };
+            info.cmd_id = if delay.unit == 0 {
+                HALMAC_PARAMETER_CMD_DELAY_US
+            } else {
+                HALMAC_PARAMETER_CMD_DELAY_MS
+            };
+            info.content.DELAY_TIME.delay_time = delay.value;
+        }
+        0xFF => {
+            info.cmd_id = HALMAC_PARAMETER_CMD_END;
+        }
+        _ => return -1,
+    }
+    0
+}
+
 #[cfg(not(host_hal_halmac_enum_test))]
 #[no_mangle]
 pub extern "C" fn _fw_mem_drv2halmac(mem: u32, tx_stop: U8) -> u32 {
@@ -516,6 +706,15 @@ pub extern "C" fn _phy_parameter_val_drv2halmac(val: u32, msk_en: U8, msk: u32) 
     phy_parameter_val_drv2halmac_impl(val, msk_en, msk)
 }
 
+#[cfg(not(host_hal_halmac_enum_test))]
+#[no_mangle]
+pub extern "C" fn _phy_parameter_drv2halmac(
+    para: *mut RtwPhyParameter,
+    info: *mut HalmacPhyParameterInfo,
+) -> i32 {
+    phy_parameter_drv2halmac_impl(para, info)
+}
+
 #[cfg(host_hal_halmac_enum_test)]
 #[no_mangle]
 pub extern "C" fn fw_mem_drv2halmac(mem: u32, tx_stop: U8) -> u32 {
@@ -532,6 +731,15 @@ pub extern "C" fn led_mode_drv2halmac(drv_mode: U8) -> u32 {
 #[no_mangle]
 pub extern "C" fn phy_parameter_val_drv2halmac(val: u32, msk_en: U8, msk: u32) -> u32 {
     phy_parameter_val_drv2halmac_impl(val, msk_en, msk)
+}
+
+#[cfg(host_hal_halmac_enum_test)]
+#[no_mangle]
+pub extern "C" fn phy_parameter_drv2halmac(
+    para: *const RtwPhyParameter,
+    info: *mut HalmacPhyParameterInfo,
+) -> i32 {
+    phy_parameter_drv2halmac_impl(para, info)
 }
 
 const HALMAC_RX_FIFO_EXPANDING_MODE_DISABLE: u32 = 0;
