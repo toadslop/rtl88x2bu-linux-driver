@@ -942,6 +942,7 @@ MODULE_SUB_NAME = 8710bu
 endif
 
 ccflags-y += -DCONFIG_RTL8710B
+rustflags-y += --cfg CONFIG_RTL8710B
 
 _HAL_INTFS_FILES += hal/HalPwrSeqCmd.o \
 					hal/$(RTL871X)/Hal8710BPwrSeq.o\
@@ -4388,8 +4389,14 @@ rust-objects-hal-usb:
 rust-objects-hal-usb-c:
 	@mkdir -p tests/host/hal
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
-		-o tests/host/hal/hal_usb_l1_ref.o \
+		-o tests/host/hal/hal_usb_set_intf_ops_l1_ref.o \
 		tests/host/hal/hal_usb_set_intf_ops_c_oracle.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 -DCONFIG_RTL8710B \
+		-o tests/host/hal/hal_usb_vendor_wvalue_l1_ref.o \
+		tests/host/hal/hal_usb_vendor_wvalue_c_oracle.c
+	ld -r -o tests/host/hal/hal_usb_l1_ref.o \
+		tests/host/hal/hal_usb_set_intf_ops_l1_ref.o \
+		tests/host/hal/hal_usb_vendor_wvalue_l1_ref.o
 rust-check-symbols-hal-usb: rust-objects-hal-usb-c rust-objects-hal-usb
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_usb_l1_ref.o NEW=rust/hal_usb.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_usb.allow ALLOW_VACUOUS=1

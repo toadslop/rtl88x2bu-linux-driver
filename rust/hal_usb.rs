@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HAL USB HCI — `usb_set_intf_ops` from `hal/hal_hci/hal_usb.c` (W4-25).
+//! HAL USB HCI — `usb_set_intf_ops` and vendor wvalue fixup from `hal/hal_hci/hal_usb.c`
+//! (W4-25, W4-28).
 
 #![allow(
     dead_code,
@@ -12,10 +13,24 @@
     unused_unsafe
 )]
 
+#[cfg(not(host_hal_usb_wvalue_test))]
 use core::ffi::c_void;
 
+#[cfg(not(host_hal_usb_wvalue_test))]
 type Hdl = *mut c_void;
+type U16 = u16;
 
+/// WLANON PAGE0_REG wvalue offset for RTL8710B USB vendor requests.
+#[no_mangle]
+pub extern "C" fn usb_vendor_wvalue_fixup(wvalue: U16) -> U16 {
+    #[cfg(any(CONFIG_RTL8710B, host_hal_usb_wvalue_test))]
+    if wvalue < 0x0100 {
+        return wvalue | 0x8000;
+    }
+    wvalue
+}
+
+#[cfg(not(host_hal_usb_wvalue_test))]
 #[repr(C)]
 struct IoOps {
     _read8: Option<unsafe extern "C" fn(Hdl, u32) -> u8>,
@@ -39,6 +54,7 @@ struct IoOps {
     _write_port_cancel: Option<unsafe extern "C" fn(Hdl)>,
 }
 
+#[cfg(not(host_hal_usb_wvalue_test))]
 unsafe extern "C" {
     fn usb_read8(pintfhdl: Hdl, addr: u32) -> u8;
     fn usb_read16(pintfhdl: Hdl, addr: u32) -> u16;
@@ -55,6 +71,7 @@ unsafe extern "C" {
     fn usb_write_port_cancel(pintfhdl: Hdl);
 }
 
+#[cfg(not(host_hal_usb_wvalue_test))]
 #[no_mangle]
 pub extern "C" fn usb_set_intf_ops(_padapter: *mut c_void, pops: *mut c_void) {
     if pops.is_null() {

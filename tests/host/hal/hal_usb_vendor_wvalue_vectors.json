@@ -1,0 +1,29 @@
+{
+  "vectors": [
+    {
+      "name": "page0_zero",
+      "wvalue": 0,
+      "expect": 32768
+    },
+    {
+      "name": "page0_last",
+      "wvalue": 255,
+      "expect": 33023
+    },
+    {
+      "name": "at_page_boundary",
+      "wvalue": 256,
+      "expect": 256
+    },
+    {
+      "name": "mid_addr",
+      "wvalue": 4660,
+      "expect": 4660
+    },
+    {
+      "name": "already_offset",
+      "wvalue": 33023,
+      "expect": 33023
+    }
+  ]
+}
