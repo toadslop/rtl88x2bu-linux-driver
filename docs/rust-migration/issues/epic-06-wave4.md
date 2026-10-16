@@ -60,4 +60,16 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-24 | `wave4-24-hal-halmac-fw-led-phy-param.md` | FW mem, LED, phy param val mappers |
 | W4-25 | `wave4-25-hal-usb-scaffold.md` | `rust/hal_usb.rs` Kbuild scaffold |
 
-Further slices: `hal_usb` I/O paths, `hal_dm.c` / PHYDM debug — file as `wave4-*.md` when tranche 6 is underway.
+## Children (tranche 6 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-26 | `wave4-26-hal-halmac-phy-parameter.md` | `_phy_parameter_drv2halmac` struct mapper |
+| W4-27 | `wave4-27-hal-halmac-version-string.md` | `rtw_halmac_get_version` formatter |
+| W4-28 | `wave4-28-hal-usb-vendor-wvalue.md` | USB vendor wvalue page0 fixup |
+| W4-29 | `wave4-29-hal-dm-scaffold.md` | `rust/hal_dm.rs` Kbuild scaffold |
+| W4-30 | `wave4-30-hal-dm-board-type.md` | `Init_ODM_ComInfo` board-type block |
+| W4-31 | `wave4-31-hal-dm-dump-sta-info.md` | `dump_sta_info` debug dump |
+| W4-32 | `wave4-32-hal-dm-dump-sta-traffic.md` | `dump_sta_traffic` debug dump |
+
+Further slices: `hal_usb` bulk I/O paths, deeper PHYDM — file as `wave4-*.md` when tranche 7 is underway.

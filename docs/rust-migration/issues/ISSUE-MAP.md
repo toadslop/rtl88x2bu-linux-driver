@@ -236,6 +236,13 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-23 | #1291 | [W4-23] Translate hal_halmac.c — USB mode + FIFO sel mappers |
 | W4-24 | #1292 | [W4-24] Translate hal_halmac.c — FW mem, LED mode, phy param val mappers |
 | W4-25 | #1293 | [W4-25] Kbuild scaffold — rust/hal_usb.rs + hal_usb_rest.c split |
+| W4-26 | #1314 | [W4-26] Translate hal_halmac.c — phy parameter struct drv→halmac |
+| W4-27 | #1315 | [W4-27] Translate hal_halmac.c — rtw_halmac_get_version formatter |
+| W4-28 | #1316 | [W4-28] Translate hal_usb.c — vendor wvalue WLANON page0 fixup |
+| W4-29 | #1317 | [W4-29] Kbuild scaffold — rust/hal_dm.rs + hal_dm_rest.c split |
+| W4-30 | #1318 | [W4-30] Translate hal_dm.c — Init_ODM_ComInfo board-type block |
+| W4-31 | #1319 | [W4-31] Translate hal_dm.c — dump_sta_info debug formatter |
+| W4-32 | #1320 | [W4-32] Translate hal_dm.c — dump_sta_traffic debug formatter |
 
 ## Superseded issues
 
