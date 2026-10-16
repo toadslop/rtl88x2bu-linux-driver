@@ -288,6 +288,12 @@ else
 _HAL_PHY_OBJ := hal/hal_phy_rest.o
 endif
 
+ifeq ($(CONFIG_RUST),)
+_HAL_DM_OBJ := hal/hal_dm.o
+else
+_HAL_DM_OBJ := hal/hal_dm_rest.o
+endif
+
 ifeq ($(CONFIG_USB_HCI), y)
 ifeq ($(CONFIG_RUST),)
 _HAL_HCI_OBJ := hal/hal_hci/hal_usb.o
@@ -301,7 +307,7 @@ endif
 _HAL_INTFS_FILES :=	$(_HAL_INTF_OBJ) \
 			hal/hal_com_phycfg.o \
 			$(_HAL_PHY_OBJ) \
-			hal/hal_dm.o \
+			$(_HAL_DM_OBJ) \
 			hal/hal_dm_acs.o \
 			hal/hal_btcoex_wifionly.o \
 			hal/hal_btcoex.o \
@@ -2946,6 +2952,7 @@ $(MODULE_NAME)-y += rust/hal_phy.o
 ifeq ($(CONFIG_USB_HCI), y)
 $(MODULE_NAME)-y += rust/hal_usb.o
 endif
+$(MODULE_NAME)-y += rust/hal_dm.o
 $(MODULE_NAME)-y += rust/rtw_chplan.o
 $(MODULE_NAME)-y += rust/rtw_chplan_rest.o
 $(MODULE_NAME)-y += rust/rtw_io_rest.o
@@ -4385,6 +4392,19 @@ rust-objects-hal-usb-c:
 rust-check-symbols-hal-usb: rust-objects-hal-usb-c rust-objects-hal-usb
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_usb_l1_ref.o NEW=rust/hal_usb.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_usb.allow ALLOW_VACUOUS=1
+
+# W4-29: rtw_rust_hal_dm_kbuild_probe vs rust/hal_dm.o.
+rust-objects-hal-dm:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-hal-dm"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/hal_dm.o
+rust-objects-hal-dm-c:
+	@mkdir -p tests/host/hal
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_dm_l1_ref.o \
+		tests/host/hal/hal_dm_kbuild_probe_c_oracle.c
+rust-check-symbols-hal-dm: rust-objects-hal-dm-c rust-objects-hal-dm
+	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_dm_l1_ref.o NEW=rust/hal_dm.o \
+		ALLOWLIST=docs/rust-migration/scripts/hal_dm.allow ALLOW_VACUOUS=1
 
 # W3-130: host C oracle (debug version/log leaf) vs rust/rtw_debug.o.
 rust-objects-rtw-debug:

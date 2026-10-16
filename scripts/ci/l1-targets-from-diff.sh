@@ -254,6 +254,12 @@ for path in "${changed[@]}"; do
 	| tests/host/hal/hal_usb_*)
 		add_target rust-check-symbols-hal-usb
 		;;
+	rust/hal_dm.rs \
+	| hal/hal_dm_rest.c \
+	| hal/hal_dm.c \
+	| tests/host/hal/hal_dm_*)
+		add_target rust-check-symbols-hal-dm
+		;;
 	rust/aes_*.rs \
 	| rust/sha256*.rs \
 	| rust/gcmp.rs \
