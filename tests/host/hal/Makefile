@@ -19,7 +19,9 @@ HALMAC_TRX_ORACLE := hal_halmac_trx_share_c_oracle.c
 BRATE_ORACLE := hal_set_brate_cfg_c_oracle.c
 DM_BOARD_ORACLE := hal_dm_board_type_c_oracle.c
 DM_DUMP_STA_SHIM := hal_dm_dump_sta_info_shim.c
+USB_WVALUE_ORACLE := hal_usb_vendor_wvalue_c_oracle.c
 RUST_HAL := $(ROOT)/rust/hal_com.rs
+RUST_HAL_USB := $(ROOT)/rust/hal_usb.rs
 RUST_HAL_DM := $(ROOT)/rust/hal_dm.rs
 RUST_HAL_PHY := $(ROOT)/rust/hal_phy.rs
 RUST_HAL_INTF := $(ROOT)/rust/hal_intf.rs
@@ -37,7 +39,8 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-legal-channel test-legal-channel-rust \
 	test-mapping-out-pipe test-mapping-out-pipe-rust test-mgntframe-raid test-mgntframe-raid-rust \
 	test-hdata-rate test-hdata-rate-rust test-phy-bit-shift test-phy-bit-shift-rust \
-	test-dm-board-type test-dm-board-type-rust clean
+	test-dm-board-type test-dm-board-type-rust \
+	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust clean
 
 all: test
 
@@ -46,7 +49,8 @@ test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust
 	test-halmac test-halmac-rust test-halmac-rsvd test-brate test-brate-rust \
 	test-legal-channel test-legal-channel-rust test-mapping-out-pipe test-mapping-out-pipe-rust \
 	test-mgntframe-raid test-mgntframe-raid-rust test-hdata-rate test-hdata-rate-rust \
-	test-phy-bit-shift test-phy-bit-shift-rust test-dm-board-type test-dm-board-type-rust
+	test-phy-bit-shift test-phy-bit-shift-rust test-dm-board-type test-dm-board-type-rust \
+	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -515,6 +519,24 @@ test_hal_dm_dump_sta_info_rust: test_hal_dm_dump_sta_info.c librust_hal_dm_dump_
 	$(CC) $(CFLAGS) -DRUST_HAL_DM_DUMP_STA_ORACLE -o $@ test_hal_dm_dump_sta_info.c \
 		$(DM_DUMP_STA_SHIM) $(HDATA_RATE_ORACLE) $(HOST_JSON) librust_hal_dm_dump_sta.a
 
+test-usb-vendor-wvalue: test_hal_usb_vendor_wvalue
+	./test_hal_usb_vendor_wvalue hal_usb_vendor_wvalue_vectors.json
+
+test_hal_usb_vendor_wvalue: test_hal_usb_vendor_wvalue.c $(USB_WVALUE_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DCONFIG_RTL8710B -o $@ test_hal_usb_vendor_wvalue.c \
+		$(USB_WVALUE_ORACLE) $(HOST_JSON)
+
+librust_hal_usb_wvalue.a: $(RUST_HAL_USB)
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_usb_wvalue_test \
+		--crate-type staticlib $(RUST_HAL_USB) -o $@
+
+test-usb-vendor-wvalue-rust: test_hal_usb_vendor_wvalue_rust
+	./test_hal_usb_vendor_wvalue_rust hal_usb_vendor_wvalue_vectors.json
+
+test_hal_usb_vendor_wvalue_rust: test_hal_usb_vendor_wvalue.c librust_hal_usb_wvalue.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_USB_ORACLE -o $@ test_hal_usb_vendor_wvalue.c \
+		$(HOST_JSON) librust_hal_usb_wvalue.a
+
 clean:
 	rm -f test_hw_rate_map test_hw_rate_map_rust librust_hal_com.a \
 		test_rsvd_page_cache test_rsvd_page_cache_rust librust_hal_com_rsvd.a \
@@ -545,4 +567,5 @@ clean:
 		librust_hal_phy_rf_shadow_compare.a \
 		test_hal_dm_board_type test_hal_dm_board_type_rust librust_hal_dm.a \
 		test_hal_dm_dump_sta_info test_hal_dm_dump_sta_info_rust \
-		librust_hal_dm_dump_sta.a
+		librust_hal_dm_dump_sta.a \
+		test_hal_usb_vendor_wvalue test_hal_usb_vendor_wvalue_rust librust_hal_usb_wvalue.a
