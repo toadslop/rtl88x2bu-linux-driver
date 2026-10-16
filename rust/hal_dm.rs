@@ -165,7 +165,7 @@ mod dump_sta_info {
             if !push_byte(buf, pos, b'-') {
                 return false;
             }
-            return push_u8_dec(buf, pos, (-n) as U8);
+            return push_u8_dec(buf, pos, (-(n as i32)) as U8);
         }
         push_u8_dec(buf, pos, n as U8)
     }
