@@ -62,7 +62,11 @@ pub extern "C" fn usb_set_intf_ops(_padapter: *mut c_void, pops: *mut c_void) {
     }
     let pops = unsafe { &mut *(pops as *mut IoOps) };
     unsafe {
-        core::ptr::write_bytes(pops as *mut IoOps as *mut u8, 0, core::mem::size_of::<IoOps>());
+        core::ptr::write_bytes(
+            pops as *mut IoOps as *mut u8,
+            0,
+            core::mem::size_of::<IoOps>(),
+        );
     }
 
     pops._read8 = Some(usb_read8);
