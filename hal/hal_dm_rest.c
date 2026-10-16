@@ -16,4 +16,4 @@
 
 #include "hal_dm.c"
 
-/* rtw_rust_hal_dm_kbuild_probe — rust/hal_dm.rs (W4-29) */
+/* rtw_rust_hal_dm_init_odm_board_type — rust/hal_dm.rs (W4-30) */
