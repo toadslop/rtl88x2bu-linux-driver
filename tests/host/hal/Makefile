@@ -263,7 +263,7 @@ test-halmac-rust: test_hal_halmac_network_rust test_hal_halmac_bcn_rust \
 	test_hal_halmac_bcn_abi_rust test_hal_halmac_rsvd_rust test_hal_halmac_trx_share_rust \
 	test_hal_halmac_drv2halmac_rust test_hal_halmac_rf_type_rust \
 	test_hal_halmac_usb_fifo_rust test_hal_halmac_fw_led_phy_rust \
-	test_hal_halmac_phy_param_drv2halmac_rust
+	test_hal_halmac_phy_param_drv2halmac_rust test_hal_halmac_version_rust
 	./test_hal_halmac_network_rust hal_halmac_network_vectors.json
 	./test_hal_halmac_bcn_rust hal_halmac_bcn_vectors.json
 	./test_hal_halmac_bcn_abi_rust

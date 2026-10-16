@@ -237,3 +237,9 @@ enum halmac_rx_fifo_expanding_mode _trx_share_mode_drv2halmac(uint8_t mode)
 
 void dump_trx_share_mode(void *sel, void *adapter);
 #endif /* CONFIG_SUPPORT_TRX_SHARED */
+
+void rtw_halmac_get_version(char *str, uint32_t len)
+{
+	(void)str;
+	(void)len;
+}
