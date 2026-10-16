@@ -903,10 +903,12 @@ fn snprintf_halmac_version(major: U8, prototype: U8, minor: U8, buf: &mut [u8]) 
     }
 }
 
+#[cfg(any(not(host_hal_halmac_enum_test), host_hal_halmac_version_test))]
 extern "C" {
     fn halmac_get_version(version: *mut HalmacVer) -> u32;
 }
 
+#[cfg(any(not(host_hal_halmac_enum_test), host_hal_halmac_version_test))]
 #[no_mangle]
 pub extern "C" fn rtw_halmac_get_version(str: *mut u8, len: u32) {
     if str.is_null() || len == 0 {
