@@ -97,7 +97,9 @@ pub extern "C" fn rtw_rust_hal_phy_query_rf_max_reg(adapter: *mut core::ffi::c_v
 
 #[cfg(any(config_rf_shadow_rw, host_hal_phy_rf_shadow_test))]
 mod rf_shadow {
-    use super::{rtw_rust_hal_phy_query_rf_max_reg, U32, U8, RF6052_MAX_REG_88E_U32, RF6052_MAX_REG_92C_U32};
+    use super::{
+        rtw_rust_hal_phy_query_rf_max_reg, RF6052_MAX_REG_88E_U32, RF6052_MAX_REG_92C_U32, U32, U8,
+    };
 
     pub const RF6052_MAX_REG_88E: usize = RF6052_MAX_REG_88E_U32 as usize;
     pub const RF6052_MAX_REG_92C: usize = RF6052_MAX_REG_92C_U32 as usize;
