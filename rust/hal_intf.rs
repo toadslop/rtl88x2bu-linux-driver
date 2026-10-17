@@ -502,23 +502,22 @@ pub extern "C" fn dump_trx_nss_format(
 const MAX_CHIP_TYPE: usize = 18;
 
 const CHIP_TYPE_TO_ODM_IC_TYPE: [U32; MAX_CHIP_TYPE + 1] = [
-    0,
-    1, // ODM_RTL8188E
-    8, // ODM_RTL8192E
-    2, // ODM_RTL8812
-    4, // ODM_RTL8821
-    16, // ODM_RTL8723B
-    32, // ODM_RTL8814A
-    256, // ODM_RTL8703B
-    1024, // ODM_RTL8188F
-    1024, // ODM_RTL8188GTV → ODM_RTL8188F
-    128, // ODM_RTL8822B
-    2048, // ODM_RTL8723D
-    8192, // ODM_RTL8821C
-    65536, // ODM_RTL8710B
-    131072, // ODM_RTL8192F
-    262144, // ODM_RTL8822C
-    16384, // ODM_RTL8814B
+    0, 1,        // ODM_RTL8188E
+    8,        // ODM_RTL8192E
+    2,        // ODM_RTL8812
+    4,        // ODM_RTL8821
+    16,       // ODM_RTL8723B
+    32,       // ODM_RTL8814A
+    256,      // ODM_RTL8703B
+    1024,     // ODM_RTL8188F
+    1024,     // ODM_RTL8188GTV → ODM_RTL8188F
+    128,      // ODM_RTL8822B
+    2048,     // ODM_RTL8723D
+    8192,     // ODM_RTL8821C
+    65536,    // ODM_RTL8710B
+    131072,   // ODM_RTL8192F
+    262144,   // ODM_RTL8822C
+    16384,    // ODM_RTL8814B
     16777216, // ODM_RTL8723F
     0,
 ];
