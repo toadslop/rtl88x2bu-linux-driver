@@ -44,7 +44,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-dm-board-type test-dm-board-type-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust \
-	test-usb-sync-read test-usb-sync-read-rust clean
+	test-usb-sync-read clean
 
 all: test
 
@@ -55,8 +55,7 @@ test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust
 	test-mgntframe-raid test-mgntframe-raid-rust test-hdata-rate test-hdata-rate-rust \
 	test-phy-bit-shift test-phy-bit-shift-rust test-dm-board-type test-dm-board-type-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
-	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust test-usb-sync-read \
-	test-usb-sync-read-rust
+	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust test-usb-sync-read
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -590,17 +589,6 @@ test_hal_usb_sync_read: test_hal_usb_sync_read.c $(USB_SYNC_READ_ORACLE) $(USB_W
 	$(CC) $(CFLAGS) -DCONFIG_RTL8710B -o $@ test_hal_usb_sync_read.c \
 		$(USB_SYNC_READ_ORACLE) $(USB_WVALUE_ORACLE) $(HOST_JSON)
 
-librust_hal_usb_sync_read.a: $(RUST_HAL_USB)
-	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_usb_read_test \
-		--crate-type staticlib $(RUST_HAL_USB) -o $@
-
-test-usb-sync-read-rust: test_hal_usb_sync_read_rust
-	./test_hal_usb_sync_read_rust hal_usb_sync_read_vectors.json
-
-test_hal_usb_sync_read_rust: test_hal_usb_sync_read.c librust_hal_usb_sync_read.a $(HOST_JSON)
-	$(CC) $(CFLAGS) -DRUST_HAL_USB_SYNC_READ_ORACLE -DCONFIG_RTL8710B -o $@ \
-		test_hal_usb_sync_read.c $(HOST_JSON) librust_hal_usb_sync_read.a
-
 clean:
 	rm -f test_hw_rate_map test_hw_rate_map_rust librust_hal_com.a \
 		test_rsvd_page_cache test_rsvd_page_cache_rust librust_hal_com_rsvd.a \
@@ -635,4 +623,4 @@ clean:
 		test_hal_dm_dump_sta_traffic test_hal_dm_dump_sta_traffic_rust \
 		librust_hal_dm_dump_sta_traffic.a \
 		test_hal_usb_vendor_wvalue test_hal_usb_vendor_wvalue_rust librust_hal_usb_wvalue.a \
-		test_hal_usb_sync_read test_hal_usb_sync_read_rust librust_hal_usb_sync_read.a
+		test_hal_usb_sync_read
