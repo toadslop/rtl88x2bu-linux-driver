@@ -2955,49 +2955,7 @@ const char *const _tx_aclt_conf_str[] = {
 	"INVALID",
 };
 
-void dump_tx_aclt_force_val(void *sel, struct dvobj_priv *dvobj)
-{
-#define TX_ACLT_FORCE_MSG_LEN 64
-	struct hal_spec_t *hal_spec = GET_HAL_SPEC(dvobj_get_primary_adapter(dvobj));
-	struct tx_aclt_conf_t *conf = &dvobj->tx_aclt_force_val;
-	char buf[TX_ACLT_FORCE_MSG_LEN];
-	int cnt = 0;
-
-	RTW_PRINT_SEL(sel, "unit:%uus, maximum:%uus\n"
-		, hal_spec->tx_aclt_unit_factor * 32
-		, 0xFFFF * hal_spec->tx_aclt_unit_factor * 32);
-
-	RTW_PRINT_SEL(sel, "%-5s %-12s %-12s\n", "en", "vo_vi(us)", "be_bk(us)");
-	RTW_PRINT_SEL(sel, " 0x%02x %12u %12u\n"
-		, conf->en
-		, conf->vo_vi * hal_spec->tx_aclt_unit_factor * 32
-		, conf->be_bk * hal_spec->tx_aclt_unit_factor * 32
-	);
-
-	cnt += snprintf(buf + cnt, TX_ACLT_FORCE_MSG_LEN - cnt - 1, "%5s", conf->en == 0xFF ? "AUTO" : "FORCE");
-	if (cnt >= TX_ACLT_FORCE_MSG_LEN - 1)
-		goto exit;
-
-	if (conf->vo_vi)
-		cnt += snprintf(buf + cnt, TX_ACLT_FORCE_MSG_LEN - cnt - 1, " FORCE:0x%04x", conf->vo_vi);
-	else
-		cnt += snprintf(buf + cnt, TX_ACLT_FORCE_MSG_LEN - cnt - 1, "         AUTO");
-	if (cnt >= TX_ACLT_FORCE_MSG_LEN - 1)
-		goto exit;
-
-
-	if (conf->be_bk)
-		cnt += snprintf(buf + cnt, TX_ACLT_FORCE_MSG_LEN - cnt - 1, " FORCE:0x%04x", conf->be_bk);
-	else
-		cnt += snprintf(buf + cnt, TX_ACLT_FORCE_MSG_LEN - cnt - 1, "         AUTO");
-	if (cnt >= TX_ACLT_FORCE_MSG_LEN - 1)
-		goto exit;
-
-	RTW_PRINT_SEL(sel, "%s\n", buf);
-
-exit:
-	return;
-}
+/* dump_tx_aclt_force_val — ported to rust/hal_com.rs (W4-39) */
 
 void rtw_hal_set_tx_aclt_force_val(_adapter *adapter, struct tx_aclt_conf_t *input, u8 arg_num)
 {
@@ -15906,6 +15864,22 @@ void rtw_rust_hal_com_fw_fields(_adapter *adapter, u8 *b_fw_ready, u16 *fw_ver, 
 	*b_fw_ready = hal_data->bFWReady;
 	*fw_ver = hal_data->firmware_version;
 	*fw_sub = hal_data->firmware_sub_version;
+}
+
+void rtw_rust_hal_com_tx_aclt_force_fields(struct dvobj_priv *dvobj, u8 *unit_factor,
+	u8 *en, u32 *vo_vi, u32 *be_bk)
+{
+	struct hal_spec_t *hal_spec;
+	struct tx_aclt_conf_t *conf;
+
+	if (!dvobj || !unit_factor || !en || !vo_vi || !be_bk)
+		return;
+	hal_spec = GET_HAL_SPEC(dvobj_get_primary_adapter(dvobj));
+	conf = &dvobj->tx_aclt_force_val;
+	*unit_factor = hal_spec->tx_aclt_unit_factor;
+	*en = conf->en;
+	*vo_vi = conf->vo_vi;
+	*be_bk = conf->be_bk;
 }
 
 void rtw_rust_hal_com_print_line(void *sel, const char *line)
