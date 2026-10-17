@@ -1,1 +1,1 @@
-# L1 allowlist for rust/hal_usb.o (W4-25 usb_set_intf_ops, W4-28 usb_vendor_wvalue_fixup).
+# L1 allowlist for rust/hal_usb.o (W4-25 usb_set_intf_ops, W4-28 usb_vendor_wvalue_fixup, W4-33 usb_read8/16/32).
