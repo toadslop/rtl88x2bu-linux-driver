@@ -21,6 +21,7 @@ void rtw_rust_hal_dm_init_odm_board_type(struct dm_struct *pDM_Odm,
 	u8 external_lna_2g, u8 external_lna_5g, u8 external_pa_2g,
 	u8 external_pa_5g, u8 eeprom_bt_coexist);
 void dump_sta_info(void *sel, struct sta_info *psta);
+void dump_sta_traffic(void *sel, _adapter *adapter, struct sta_info *psta);
 #endif
 
 /* A mapping from HalData to ODM. */
@@ -1299,6 +1300,7 @@ void rtw_phydm_watchdog_in_lps_lclk(_adapter *adapter)
 }
 #endif /*CONFIG_LPS_LCLK_WD_TIMER*/
 
+#ifndef CONFIG_RUST
 void dump_sta_traffic(void *sel, _adapter *adapter, struct sta_info *psta)
 {
 	struct ra_sta_info *ra_info;
@@ -1387,6 +1389,7 @@ void dump_sta_traffic(void *sel, _adapter *adapter, struct sta_info *psta)
 		(psta->cmn.tx_moving_average_tp + psta->cmn.rx_moving_average_tp) << 3);
 	#endif
 }
+#endif /* CONFIG_RUST */
 
 #ifndef CONFIG_RUST
 void dump_sta_info(void *sel, struct sta_info *psta)

@@ -1,0 +1,44 @@
+{
+  "oracle": "hal/hal_dm.c dump_sta_traffic",
+  "vectors": [
+    {
+      "name": "null_psta",
+      "null_sta": 1,
+      "expect": ""
+    },
+    {
+      "name": "kbps_tp",
+      "mac": "aabbccddeeff",
+      "mac_id": 7,
+      "associated_to_ap": 0,
+      "stub_tx_rate": 12,
+      "stub_tx_sgi": 0,
+      "curr_rx_rate": 13,
+      "curr_rx_rate_bmc": 14,
+      "rssi": -55,
+      "tx_tp_kbits": 512,
+      "rx_tp_kbits": 256,
+      "smooth_tx_tp_kbits": 100,
+      "smooth_rx_tp_kbits": 200,
+      "expect": "\n====== mac_id : 7 [aa:bb:cc:dd:ee:ff] ======\ntx_rate : MCS0(L)  rx_rate : MCS1, rx_rate_bmc : MCS2, rssi : -55 %\nRTW: [TP] Tx : 512(Kbps) Rx : 256(Kbps) Total : 768(Kbps)\nRTW: [Smooth TP] Tx : 100(Kbps) Rx : 200(Kbps) Total : 300(Kbps)\n"
+    },
+    {
+      "name": "mbps_tp_with_bcn",
+      "mac": "001122334455",
+      "mac_id": 2,
+      "associated_to_ap": 1,
+      "bcn_cnt": 10,
+      "bcn_dtim": 3,
+      "stub_tx_rate": 12,
+      "stub_tx_sgi": 1,
+      "curr_rx_rate": 12,
+      "curr_rx_rate_bmc": 12,
+      "rssi": -40,
+      "tx_tp_kbits": 2048,
+      "rx_tp_kbits": 4096,
+      "smooth_tx_tp_kbits": 3072,
+      "smooth_rx_tp_kbits": 1024,
+      "expect": "\n====== mac_id : 2 [00:11:22:33:44:55] ======\nBCN counts : 5 (per-1 second), DTIM Period:3\ntx_rate : MCS0(S)  rx_rate : MCS0, rx_rate_bmc : MCS0, rssi : -40 %\nRTW: [TP] Tx : 2(Mbps) Rx : 4(Mbps) Total : 6(Mbps)\nRTW: [Smooth TP] Tx : 3(Mbps) Rx : 1(Mbps) Total : 4(Mbps)\n"
+    }
+  ]
+}
