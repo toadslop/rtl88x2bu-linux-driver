@@ -5,6 +5,12 @@ test_hal_dm_dump_sta_info_rust
 test_hal_usb_vendor_wvalue*
 test_hal_usb_sync_read*
 test_hal_usb_sync_write*
+<<<<<<< HEAD
 test_dump_tx_aclt_force_val
 test_dump_tx_aclt_force_val_rust
 test_hal_usb_async_write*
+=======
+test_hal_usb_async_write
+test_hal_usb_async_write_rust
+librust_hal_usb_async_write.a
+>>>>>>> 57fe3d8e (test(hal): add W4-37 async write L2 runner source)
