@@ -13,6 +13,7 @@ MRATE_ORACLE := hal_mrate_to_hw_rate_c_oracle.c
 RF_NSS_ORACLE := hal_dump_rf_nss_c_oracle.c
 HALMAC_ORACLE := hal_halmac_enum_mappers_c_oracle.c
 PHY_BIT_SHIFT_ORACLE := hal_phy_bit_shift_c_oracle.c
+PHY_RF_MAX_REG_ORACLE := hal_phy_rf_max_reg_c_oracle.c
 PHY_RF_SHADOW_ORACLE := hal_phy_rf_shadow_c_oracle.c
 PHY_RF_SHADOW_HW_SHIM := hal_phy_rf_shadow_hw_shim.c
 HALMAC_TRX_ORACLE := hal_halmac_trx_share_c_oracle.c
@@ -485,6 +486,13 @@ test_hal_phy_rf_shadow_flags_rust: test_hal_phy_rf_shadow.c librust_hal_phy_rf_s
 	$(CC) $(CFLAGS) -DHOST_HAL_PHY_RF_SHADOW_FLAGS_TEST -DRUST_HAL_PHY_RF_SHADOW_ORACLE \
 		-o $@ test_hal_phy_rf_shadow.c $(HOST_JSON) librust_hal_phy_rf_shadow.a
 
+test-phy-rf-max-reg: test_hal_phy_rf_max_reg
+	./test_hal_phy_rf_max_reg hal_phy_rf_max_reg_vectors.json
+
+test_hal_phy_rf_max_reg: test_hal_phy_rf_max_reg.c $(PHY_RF_MAX_REG_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_hal_phy_rf_max_reg.c \
+		$(PHY_RF_MAX_REG_ORACLE) $(HOST_JSON)
+
 test-phy-bit-shift: test_hal_phy_bit_shift
 	./test_hal_phy_bit_shift hal_phy_bit_shift_vectors.json
 
@@ -612,6 +620,7 @@ clean:
 		test_hal_mapping_out_pipe test_hal_mapping_out_pipe_rust librust_hal_com_mapping.a \
 		test_hal_mgntframe_raid test_hal_mgntframe_raid_rust librust_hal_com_mgntframe_raid.a \
 		test_hal_hdata_rate test_hal_hdata_rate_rust librust_hal_com_hdata_rate.a \
+		test_hal_phy_rf_max_reg \
 		test_hal_phy_bit_shift test_hal_phy_bit_shift_rust librust_hal_phy.a \
 		test_hal_phy_rf_shadow test_hal_phy_rf_shadow_rust librust_hal_phy_rf_shadow.a \
 		test_hal_phy_rf_shadow_flags test_hal_phy_rf_shadow_flags_rust \
