@@ -199,7 +199,7 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 
 | ID | File | Focus |
 |----|------|--------|
-| W3-142 | `wave3-142-wapi-sms4-frame-crypt.md` | `rtw_wapi_sms4.c` frame encrypt/decrypt |
+| W3-142 | `wave3-142-wapi-sms4-frame-crypt.md` | `rtw_wapi_sms4_rest.c` frame encrypt/decrypt |
 
 Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:
 
