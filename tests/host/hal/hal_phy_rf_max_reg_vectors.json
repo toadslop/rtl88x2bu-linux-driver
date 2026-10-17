@@ -1,0 +1,35 @@
+{
+  "oracle": "hal_phy_rf_max_reg_c_oracle.c",
+  "vectors": [
+    {
+      "name": "null_adapter_defaults_92c",
+      "adapter_null": 1,
+      "expect": 127
+    },
+    {
+      "name": "8188ee_max",
+      "hw_type": 0,
+      "expect": 255
+    },
+    {
+      "name": "8188eu_max",
+      "hw_type": 1,
+      "expect": 255
+    },
+    {
+      "name": "8188es_max",
+      "hw_type": 2,
+      "expect": 255
+    },
+    {
+      "name": "8192ee_92c_max",
+      "hw_type": 3,
+      "expect": 127
+    },
+    {
+      "name": "8822bu_92c_max",
+      "hw_type": 22,
+      "expect": 127
+    }
+  ]
+}
