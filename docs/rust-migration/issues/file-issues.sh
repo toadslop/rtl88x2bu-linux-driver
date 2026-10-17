@@ -277,6 +277,15 @@ files=(
   wave4-30-hal-dm-board-type.md
   wave4-31-hal-dm-dump-sta-info.md
   wave4-32-hal-dm-dump-sta-traffic.md
+  wave4-33-hal-usb-sync-read.md
+  wave4-34-hal-usb-sync-write.md
+  wave4-35-hal-phy-rf-max-reg.md
+  wave4-36-hal-intf-chip-odm-map.md
+  wave4-37-hal-usb-async-vendor-write.md
+  wave4-38-hal-dm-odm-endian-hooks.md
+  wave4-39-hal-com-tx-aclt-force-dump.md
+  wave4-40-hal-com-tx-aclt-confs-dump.md
+  wave3-142-wapi-sms4-frame-crypt.md
 )
 
 # draft_id -> github issue number

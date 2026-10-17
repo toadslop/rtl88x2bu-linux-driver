@@ -72,4 +72,17 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-31 | `wave4-31-hal-dm-dump-sta-info.md` | `dump_sta_info` debug dump |
 | W4-32 | `wave4-32-hal-dm-dump-sta-traffic.md` | `dump_sta_traffic` debug dump |
 
-Further slices: `hal_usb` bulk I/O paths, deeper PHYDM — file as `wave4-*.md` when tranche 7 is underway.
+## Children (tranche 7 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-33 | `wave4-33-hal-usb-sync-read.md` | `hal_usb.c` sync vendor read8/16/32 |
+| W4-34 | `wave4-34-hal-usb-sync-write.md` | `hal_usb.c` sync vendor write8/16/32/N |
+| W4-35 | `wave4-35-hal-phy-rf-max-reg.md` | `hal_phy_rest.c` RF6052 max reg query |
+| W4-36 | `wave4-36-hal-intf-chip-odm-map.md` | `hal_intf.c` chip_type → ODM IC lookup |
+| W4-37 | `wave4-37-hal-usb-async-vendor-write.md` | `hal_usb.c` async vendor writes |
+| W4-38 | `wave4-38-hal-dm-odm-endian-hooks.md` | `hal_dm.c` Init_ODM endian hook block |
+| W4-39 | `wave4-39-hal-com-tx-aclt-force-dump.md` | `hal_com.c` `dump_tx_aclt_force_val` |
+| W4-40 | `wave4-40-hal-com-tx-aclt-confs-dump.md` | `hal_com.c` `dump_tx_aclt_confs` |
+
+Further slices: `hal_usb` bulk port I/O, deeper PHYDM — file as `wave4-*.md` when tranche 8 is needed.
