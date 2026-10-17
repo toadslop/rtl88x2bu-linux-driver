@@ -243,6 +243,15 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-30 | #1318 | [W4-30] Translate hal_dm.c — Init_ODM_ComInfo board-type block |
 | W4-31 | #1319 | [W4-31] Translate hal_dm.c — dump_sta_info debug formatter |
 | W4-32 | #1320 | [W4-32] Translate hal_dm.c — dump_sta_traffic debug formatter |
+| W4-33 | #1333 | [W4-33] Translate hal_usb.c — sync vendor read8/16/32 |
+| W4-34 | #1334 | [W4-34] Translate hal_usb.c — sync vendor write8/16/32/N |
+| W4-35 | #1335 | [W4-35] Translate hal_phy_rest.c — RF6052 max reg query |
+| W4-36 | #1336 | [W4-36] Translate hal_intf.c — chip_type_to_odm_ic_type lookup |
+| W4-37 | #1337 | [W4-37] Translate hal_usb.c — async vendor write helpers |
+| W4-38 | #1338 | [W4-38] Translate hal_dm.c — Init_ODM big-endian hook block |
+| W4-39 | #1339 | [W4-39] Translate hal_com.c — dump_tx_aclt_force_val formatter |
+| W4-40 | #1340 | [W4-40] Translate hal_com.c — dump_tx_aclt_confs formatter |
+| W3-142 | #1341 | [W3-142] Translate rtw_wapi_sms4.c — frame encrypt/decrypt paths |
 
 ## Superseded issues
 

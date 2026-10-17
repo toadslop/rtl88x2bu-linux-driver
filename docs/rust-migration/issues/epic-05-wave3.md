@@ -195,11 +195,16 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-140 | `wave3-140-wapi-sms4-mic.md` | `WapiSMS4CalculateMic` |
 | W3-141 | `wave3-141-wapi-pn-qos-cache.md` | QoS PN cache + `WapiCheckPnInSwDecrypt` |
 
-Further ~200 LOC slices **not yet covered** after tranche 9; file new `wave3-*.md` issues as needed:
+## Children (tranche 10 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-142 | `wave3-142-wapi-sms4-frame-crypt.md` | `rtw_wapi_sms4.c` frame encrypt/decrypt |
+
+Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:
 
 - `rtw_beamforming.c` sounding state machine (HAL-coupled NDPA paths)
 - `rtw_debug.c` procfs walkers / register dumps
 - `rtw_ioctl_query.c` (placeholder TU — audit before filing)
-- `rtw_wapi_sms4.c` frame encrypt/decrypt paths (post W3-136)
 
 Wave 3 milestone (L4): WPA2 STA associate + encrypted ping when hardware available (same bar as Wave 2).
