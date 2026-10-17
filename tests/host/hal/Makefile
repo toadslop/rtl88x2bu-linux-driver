@@ -50,7 +50,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust \
 	test-usb-sync-read test-usb-sync-read-rust test-usb-sync-write \
-	test-usb-async-write test-chip-odm test-chip-odm-rust clean
+	test-usb-async-write test-usb-async-write-rust test-chip-odm test-chip-odm-rust clean
 
 all: test
 
@@ -63,7 +63,7 @@ test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust test-usb-sync-read \
 	test-usb-sync-read-rust test-usb-sync-write test-usb-async-write \
-	test-chip-odm test-chip-odm-rust
+	test-usb-async-write-rust test-chip-odm test-chip-odm-rust
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -674,6 +674,18 @@ test_hal_usb_async_write: test_hal_usb_async_write.c $(USB_ASYNC_WRITE_ORACLE) $
 	$(CC) $(CFLAGS) -DCONFIG_USB_SUPPORT_ASYNC_VDN_REQ -o $@ \
 		test_hal_usb_async_write.c $(USB_ASYNC_WRITE_ORACLE) $(HOST_JSON)
 
+librust_hal_usb_async_write.a: $(RUST_HAL_USB)
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_usb_async_write_test \
+		--crate-type staticlib $(RUST_HAL_USB) -o $@
+
+test-usb-async-write-rust: test_hal_usb_async_write_rust
+	./test_hal_usb_async_write_rust hal_usb_async_write_vectors.json
+
+test_hal_usb_async_write_rust: test_hal_usb_async_write.c librust_hal_usb_async_write.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_USB_ASYNC_WRITE_ORACLE \
+		-DCONFIG_USB_SUPPORT_ASYNC_VDN_REQ -o $@ test_hal_usb_async_write.c \
+		$(HOST_JSON) librust_hal_usb_async_write.a
+
 clean:
 	rm -f test_hw_rate_map test_hw_rate_map_rust librust_hal_com.a \
 		test_rsvd_page_cache test_rsvd_page_cache_rust librust_hal_com_rsvd.a \
@@ -711,4 +723,5 @@ clean:
 		librust_hal_dm_dump_sta_traffic.a \
 		test_hal_usb_vendor_wvalue test_hal_usb_vendor_wvalue_rust librust_hal_usb_wvalue.a \
 		test_hal_usb_sync_read test_hal_usb_sync_write test_hal_usb_async_write \
+		test_hal_usb_async_write_rust librust_hal_usb_async_write.a \
 		test_chip_odm_map test_chip_odm_map_rust librust_hal_intf_chip_odm.a

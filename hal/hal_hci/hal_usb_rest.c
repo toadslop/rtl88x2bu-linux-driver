@@ -4,6 +4,7 @@
 #define HAL_USB_VENDOR_WVALUE_IN_RUST 1
 #define HAL_USB_SYNC_READ_IN_RUST 1
 #define HAL_USB_SYNC_WRITE_IN_RUST 1
+#define HAL_USB_ASYNC_WRITE_IN_RUST 1
 
 #include "hal_usb.c"
 
