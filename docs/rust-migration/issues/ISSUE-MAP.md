@@ -251,7 +251,7 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-38 | #1338 | [W4-38] Translate hal_dm.c — Init_ODM big-endian hook block |
 | W4-39 | #1339 | [W4-39] Translate hal_com.c — dump_tx_aclt_force_val formatter |
 | W4-40 | #1340 | [W4-40] Translate hal_com.c — dump_tx_aclt_confs formatter |
-| W3-142 | #1341 | [W3-142] Translate rtw_wapi_sms4.c — frame encrypt/decrypt paths |
+| W3-142 | #1341 | [W3-142] Translate rtw_wapi_sms4_rest.c — frame encrypt/decrypt paths |
 
 ## Superseded issues
 

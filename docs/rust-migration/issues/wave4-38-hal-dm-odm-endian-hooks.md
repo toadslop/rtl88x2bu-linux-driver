@@ -10,16 +10,17 @@ estimate_loc: 180
 
 ## Goal
 
-Port the `convert_to_big_endian` helper and the four `odm_cmn_info_hook` calls that use it inside `Init_ODM_ComInfo` from [`hal/hal_dm.c`](../../../hal/hal_dm.c) into
+Port the four `ODM_CMNINFO_*` hook registrations for band, security mode, channel width, and `net_closed` inside `Init_ODM_ComInfo` from [`hal/hal_dm.c`](../../../hal/hal_dm.c) into
 [`rust/hal_dm.rs`](../../../rust/hal_dm.rs):
 
-- `ODM_CMNINFO_BAND`, `ODM_CMNINFO_SEC_MODE`, `ODM_CMNINFO_BW`, `ODM_CMNINFO_NET_CLOSED` hooks
-- Export `rtw_rust_hal_dm_init_odm_endian_hooks(...)` invoked from remaining C `Init_ODM_ComInfo`
+- **`CONFIG_LITTLE_ENDIAN`:** `odm_cmn_info_hook` with direct pointers — `&(pHalData->current_band_type)`, `&(adapter->securitypriv.dot11PrivacyAlgrthm)`, `&(pHalData->current_channel_bw)`, `&(adapter->net_closed)`
+- **`CONFIG_BIG_ENDIAN` (else branch):** static `convert_to_big_endian` scratch buffers and hooks on those buffers for the same four `ODM_CMNINFO_*` IDs (`BAND`, `SEC_MODE`, `BW`, `NET_CLOSED`)
+- Export `rtw_rust_hal_dm_init_odm_endian_hooks(...)` (or split LE/BE `#[no_mangle]` helpers) invoked from remaining C `Init_ODM_ComInfo` under the same `#ifdef CONFIG_LITTLE_ENDIAN` / `#else` structure as today
 
 ## Notes
 
 - Same-file follow-up to [W4-30](wave4-30-hal-dm-board-type.md); does not port full `Init_ODM_ComInfo`.
-- L2 compares pointer/endian layout against C oracle for synthetic field values.
+- L2: run oracles for **both** compile-time paths (LE direct pointers vs BE `convert_to_big_endian` layout) with synthetic HalData/security/band/net_closed values.
 
 ## Acceptance
 
