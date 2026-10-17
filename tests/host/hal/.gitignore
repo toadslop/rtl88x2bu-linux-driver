@@ -3,3 +3,4 @@ test_hal_phy_rf_shadow*
 test_hal_dm_dump_sta_info
 test_hal_dm_dump_sta_info_rust
 test_hal_usb_vendor_wvalue*
+test_hal_usb_sync_read*

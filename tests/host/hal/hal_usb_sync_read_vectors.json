@@ -1,0 +1,52 @@
+{
+  "vectors": [
+    {
+      "name": "read8_page0",
+      "addr": 80,
+      "width": 8,
+      "expect_wvalue": 32848,
+      "payload": 170,
+      "expect": 170
+    },
+    {
+      "name": "read8_high_page",
+      "addr": 512,
+      "width": 8,
+      "expect_wvalue": 512,
+      "payload": 55,
+      "expect": 55
+    },
+    {
+      "name": "read16_page0",
+      "addr": 100,
+      "width": 16,
+      "expect_wvalue": 32868,
+      "payload": 4660,
+      "expect": 4660
+    },
+    {
+      "name": "read16_mid",
+      "addr": 4660,
+      "width": 16,
+      "expect_wvalue": 4660,
+      "payload": 22136,
+      "expect": 22136
+    },
+    {
+      "name": "read32_page0",
+      "addr": 64,
+      "width": 32,
+      "expect_wvalue": 32832,
+      "payload": 305419896,
+      "expect": 305419896
+    },
+    {
+      "name": "read32_full_addr",
+      "addr": 43981,
+      "width": 32,
+      "expect_wvalue": 43981,
+      "payload": 3735928559,
+      "expect": 3735928559
+    }
+  ]
+}
