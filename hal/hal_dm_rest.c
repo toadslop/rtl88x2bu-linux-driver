@@ -101,4 +101,49 @@ void rtw_rust_hal_dm_sta_fields(struct sta_info *psta,
 	out->curr_retry_ratio = ra_info->curr_retry_ratio;
 	out->ramask = ra_info->ramask;
 }
+
+struct rtw_hal_dm_sta_traffic_fields {
+	u8 mac_addr[6];
+	u8 mac_id;
+	s8 rssi;
+	u8 curr_rx_rate;
+	u8 curr_rx_rate_bmc;
+	u32 tx_tp_kbits;
+	u32 rx_tp_kbits;
+	u32 smooth_tx_tp_kbits;
+	u32 smooth_rx_tp_kbits;
+};
+
+void rtw_rust_hal_dm_sta_traffic_fields(struct sta_info *psta,
+	struct rtw_hal_dm_sta_traffic_fields *out)
+{
+	if (!psta || !out)
+		return;
+
+	memset(out, 0, sizeof(*out));
+	memcpy(out->mac_addr, psta->cmn.mac_addr, ETH_ALEN);
+	out->mac_id = psta->cmn.mac_id;
+	out->rssi = psta->cmn.rssi_stat.rssi;
+	out->curr_rx_rate = psta->curr_rx_rate;
+	out->curr_rx_rate_bmc = psta->curr_rx_rate_bmc;
+	out->tx_tp_kbits = psta->sta_stats.tx_tp_kbits;
+	out->rx_tp_kbits = psta->sta_stats.rx_tp_kbits;
+	out->smooth_tx_tp_kbits = psta->sta_stats.smooth_tx_tp_kbits;
+	out->smooth_rx_tp_kbits = psta->sta_stats.smooth_rx_tp_kbits;
+}
+
+int rtw_rust_hal_dm_is_client_associated_to_ap(_adapter *padapter)
+{
+	return is_client_associated_to_ap(padapter);
+}
+
+u8 rtw_rust_hal_dm_get_bcn_cnt(_adapter *adapter)
+{
+	return rtw_get_bcn_cnt(adapter);
+}
+
+u8 rtw_rust_hal_dm_get_bcn_dtim_period(_adapter *adapter)
+{
+	return rtw_get_bcn_dtim_period(adapter);
+}
 #endif /* CONFIG_RUST */

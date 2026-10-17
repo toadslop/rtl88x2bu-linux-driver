@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HAL DM — board-type (`W4-30`) and `dump_sta_info` (`W4-31`) from `hal/hal_dm.c`.
+//! HAL DM — board-type (`W4-30`), `dump_sta_info` (`W4-31`), `dump_sta_traffic` (`W4-32`) from `hal/hal_dm.c`.
 
 #![allow(
     dead_code,
@@ -81,7 +81,12 @@ pub extern "C" fn rtw_rust_hal_dm_init_odm_board_type(
 
 #[cfg(any(
     host_hal_dm_dump_sta_info_test,
-    not(any(host_hal_dm_board_type_test, host_hal_dm_dump_sta_info_test))
+    host_hal_dm_dump_sta_traffic_test,
+    not(any(
+        host_hal_dm_board_type_test,
+        host_hal_dm_dump_sta_info_test,
+        host_hal_dm_dump_sta_traffic_test
+    ))
 ))]
 mod dump_sta_info {
     #[cfg(host_hal_dm_dump_sta_info_test)]
@@ -530,4 +535,16 @@ mod dump_sta_info {
             dump_lines(sel, &buf[..n as usize], n as usize);
         }
     }
+}
+
+#[cfg(any(
+    host_hal_dm_dump_sta_traffic_test,
+    not(any(
+        host_hal_dm_board_type_test,
+        host_hal_dm_dump_sta_info_test,
+        host_hal_dm_dump_sta_traffic_test
+    ))
+))]
+mod dump_sta_traffic {
+    include!("hal_dm_dump_sta_traffic.inc.rs");
 }

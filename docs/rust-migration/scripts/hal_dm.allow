@@ -1,2 +1,3 @@
-# L1 allowlist for rust/hal_dm.o (W4-30 board type, W4-31 dump_sta_info).
+# L1 allowlist for rust/hal_dm.o (W4-30 board type, W4-31 dump_sta_info, W4-32 dump_sta_traffic).
 drop dump_sta_info_format
+drop dump_sta_traffic_format
