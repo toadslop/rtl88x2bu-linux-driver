@@ -4375,9 +4375,14 @@ rust-objects-hal-phy-c:
 		-DHOST_HAL_PHY_RF_SHADOW_L1_REF \
 		-o tests/host/hal/hal_phy_rf_shadow_l1_ref.o \
 		tests/host/hal/hal_phy_rf_shadow_c_oracle.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I tests/host/include \
+		-o tests/host/hal/hal_phy_rf_max_reg_l1_ref.o \
+		tests/host/hal/hal_phy_rf_max_reg_c_oracle.c
 	ld -r -o tests/host/hal/hal_phy_l1_ref.o \
 		tests/host/hal/hal_phy_bit_shift_l1_ref.o \
-		tests/host/hal/hal_phy_rf_shadow_l1_ref.o
+		tests/host/hal/hal_phy_rf_shadow_l1_ref.o \
+		tests/host/hal/hal_phy_rf_max_reg_l1_ref.o
 rust-check-symbols-hal-phy: rust-objects-hal-phy-c rust-objects-hal-phy
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_phy_l1_ref.o NEW=rust/hal_phy.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_phy.allow ALLOW_VACUOUS=1

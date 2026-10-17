@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
 //! HAL PHY helpers — Rust port of `hal/hal_phy.c` / `hal/hal_phy_rest.c`
 //! (W4-09 PHY_CalculateBitShift, W4-18 RF shadow read/write/refresh,
-//! W4-19 RF shadow compare/recover flag helpers, W4-20 compare/recover).
+//! W4-19 RF shadow compare/recover flag helpers, W4-20 compare/recover,
+//! W4-35 RF6052 max reg query).
 
 #![allow(
     dead_code,
@@ -27,12 +28,79 @@ pub extern "C" fn PHY_CalculateBitShift(bit_mask: U32) -> U32 {
     32
 }
 
+const RF6052_MAX_REG_88E_U32: U32 = 0xFF;
+const RF6052_MAX_REG_92C_U32: U32 = 0x7F;
+
+const HARDWARE_TYPE_RTL8188EE: U8 = 0;
+const HARDWARE_TYPE_RTL8188EU: U8 = 1;
+const HARDWARE_TYPE_RTL8188ES: U8 = 2;
+
+fn is_hardware_type_8188e(hw_type: U8) -> bool {
+    hw_type == HARDWARE_TYPE_RTL8188EE
+        || hw_type == HARDWARE_TYPE_RTL8188EU
+        || hw_type == HARDWARE_TYPE_RTL8188ES
+}
+
+fn rf6052_real_max_reg_u32(is_8188e: bool) -> U32 {
+    if is_8188e {
+        RF6052_MAX_REG_88E_U32
+    } else {
+        RF6052_MAX_REG_92C_U32
+    }
+}
+
+#[cfg(host_hal_phy_rf_max_reg_test)]
+#[repr(C)]
+pub struct HostHalPhyRfMaxRegAdapter {
+    pub hw_type: U8,
+}
+
+#[cfg(all(
+    not(host_hal_phy_rf_max_reg_test),
+    not(host_hal_phy_rf_shadow_test),
+    not(host_hal_phy_bit_shift_test),
+))]
+extern "C" {
+    fn rtw_rust_hal_com_get_hw_type(adapter: *mut core::ffi::c_void) -> U8;
+}
+
+#[cfg(any(
+    host_hal_phy_rf_max_reg_test,
+    config_rf_shadow_rw,
+    host_hal_phy_rf_shadow_test,
+    host_hal_phy_rf_shadow_compare_test,
+))]
+#[no_mangle]
+pub extern "C" fn rtw_rust_hal_phy_query_rf_max_reg(adapter: *mut core::ffi::c_void) -> U32 {
+    if adapter.is_null() {
+        return RF6052_MAX_REG_92C_U32;
+    }
+
+    #[cfg(host_hal_phy_rf_max_reg_test)]
+    {
+        let a = unsafe { &*(adapter as *const HostHalPhyRfMaxRegAdapter) };
+        return rf6052_real_max_reg_u32(is_hardware_type_8188e(a.hw_type));
+    }
+
+    #[cfg(all(host_hal_phy_rf_shadow_test, not(host_hal_phy_rf_max_reg_test)))]
+    {
+        let a = unsafe { &*(adapter as *const rf_shadow::HostRfShadowAdapter) };
+        return rf6052_real_max_reg_u32(a.is_8188e != 0);
+    }
+
+    #[cfg(not(any(host_hal_phy_rf_max_reg_test, host_hal_phy_rf_shadow_test)))]
+    {
+        let hw = unsafe { rtw_rust_hal_com_get_hw_type(adapter) };
+        return rf6052_real_max_reg_u32(is_hardware_type_8188e(hw));
+    }
+}
+
 #[cfg(any(config_rf_shadow_rw, host_hal_phy_rf_shadow_test))]
 mod rf_shadow {
-    use super::{U32, U8};
+    use super::{rtw_rust_hal_phy_query_rf_max_reg, U32, U8, RF6052_MAX_REG_88E_U32, RF6052_MAX_REG_92C_U32};
 
-    pub const RF6052_MAX_REG_88E: usize = 0xFF;
-    pub const RF6052_MAX_REG_92C: usize = 0x7F;
+    pub const RF6052_MAX_REG_88E: usize = RF6052_MAX_REG_88E_U32 as usize;
+    pub const RF6052_MAX_REG_92C: usize = RF6052_MAX_REG_92C_U32 as usize;
     pub const RF6052_MAX_REG: usize = RF6052_MAX_REG_88E;
     pub const RF6052_MAX_PATH: usize = 2;
     const B_RF_REG_OFFSET_MASK: U32 = 0xfffff;
@@ -71,37 +139,18 @@ mod rf_shadow {
         pub is_8188e: U8,
     }
 
-    #[cfg(host_hal_phy_rf_shadow_test)]
     fn max_reg(adapter: Adapter) -> usize {
         if adapter.is_null() {
             return RF6052_MAX_REG_92C;
         }
-        let a = unsafe { &*(adapter as *const HostRfShadowAdapter) };
-        if a.is_8188e != 0 {
-            RF6052_MAX_REG_88E
-        } else {
-            RF6052_MAX_REG_92C
-        }
-    }
-
-    #[cfg(not(host_hal_phy_rf_shadow_test))]
-    extern "C" {
-        fn rtw_rust_hal_phy_query_rf_max_reg(adapter: Adapter) -> U32;
+        let n = unsafe { rtw_rust_hal_phy_query_rf_max_reg(adapter as *mut core::ffi::c_void) };
+        n as usize
     }
 
     #[cfg(any(config_rf_shadow_rw, host_hal_phy_rf_shadow_compare_test))]
     extern "C" {
         fn rtw_hal_read_rfreg(adapter: Adapter, path: i32, offset: U32, mask: U32) -> U32;
         fn rtw_hal_write_rfreg(adapter: Adapter, path: i32, offset: U32, mask: U32, data: U32);
-    }
-
-    #[cfg(not(host_hal_phy_rf_shadow_test))]
-    fn max_reg(adapter: Adapter) -> usize {
-        if adapter.is_null() {
-            return RF6052_MAX_REG_92C;
-        }
-        let n = unsafe { rtw_rust_hal_phy_query_rf_max_reg(adapter) };
-        n as usize
     }
 
     #[no_mangle]
