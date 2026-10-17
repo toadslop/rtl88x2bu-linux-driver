@@ -1,0 +1,21 @@
+{
+  "oracle": "hal/hal_com_rest.c dump_tx_aclt_force_val",
+  "vectors": [
+    {
+      "name": "auto_all_ac",
+      "tx_aclt_unit_factor": 2,
+      "en": 255,
+      "vo_vi": 0,
+      "be_bk": 0,
+      "expect": "unit:64us, maximum:4194240us\nen    vo_vi(us)    be_bk(us)   \n 0xff            0            0\n AUTO         AUTO         AUTO\n"
+    },
+    {
+      "name": "force_vo_vi",
+      "tx_aclt_unit_factor": 1,
+      "en": 10,
+      "vo_vi": 4660,
+      "be_bk": 0,
+      "expect": "unit:32us, maximum:2097120us\nen    vo_vi(us)    be_bk(us)   \n 0x0a       149120            0\nFORCE FORCE:0x1234         AUTO\n"
+    }
+  ]
+}
