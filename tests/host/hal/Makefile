@@ -256,6 +256,11 @@ librust_hal_halmac.a: $(RUST_HAL_HALMAC)
 	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_halmac_enum_test \
 		--crate-type staticlib $(RUST_HAL_HALMAC) -o $@
 
+librust_hal_halmac_with_version.a: $(RUST_HAL_HALMAC)
+	rustc -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_halmac_enum_test --cfg host_hal_halmac_version_test \
+		--crate-type staticlib $(RUST_HAL_HALMAC) -o $@
+
 test_hal_halmac_bcn_abi: test_hal_halmac_bcn_abi.c
 	$(CC) $(CFLAGS) -o $@ test_hal_halmac_bcn_abi.c
 
@@ -267,7 +272,7 @@ test-halmac-rust: test_hal_halmac_network_rust test_hal_halmac_bcn_rust \
 	test_hal_halmac_bcn_abi_rust test_hal_halmac_rsvd_rust test_hal_halmac_trx_share_rust \
 	test_hal_halmac_drv2halmac_rust test_hal_halmac_rf_type_rust \
 	test_hal_halmac_usb_fifo_rust test_hal_halmac_fw_led_phy_rust \
-	test_hal_halmac_phy_param_drv2halmac_rust
+	test_hal_halmac_phy_param_drv2halmac_rust test_hal_halmac_version_rust
 	./test_hal_halmac_network_rust hal_halmac_network_vectors.json
 	./test_hal_halmac_bcn_rust hal_halmac_bcn_vectors.json
 	./test_hal_halmac_bcn_abi_rust
@@ -285,10 +290,16 @@ test-halmac-rust: test_hal_halmac_network_rust test_hal_halmac_bcn_rust \
 		hal_halmac_led_mode_drv2halmac_vectors.json \
 		hal_halmac_phy_param_val_drv2halmac_vectors.json
 	./test_hal_halmac_phy_param_drv2halmac_rust hal_halmac_phy_param_drv2halmac_vectors.json
+	./test_hal_halmac_version_rust hal_halmac_get_version_vectors.json
 
 test_hal_halmac_phy_param_drv2halmac_rust: test_hal_halmac_phy_param_drv2halmac.c librust_hal_halmac.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_HAL_HALMAC_ORACLE -o $@ test_hal_halmac_phy_param_drv2halmac.c \
 		$(HOST_JSON) librust_hal_halmac.a
+
+test_hal_halmac_version_rust: test_hal_halmac_version.c $(HALMAC_VERSION_ORACLE) \
+	librust_hal_halmac_with_version.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_HALMAC_ORACLE -o $@ test_hal_halmac_version.c \
+		$(HALMAC_VERSION_ORACLE) $(HOST_JSON) librust_hal_halmac_with_version.a
 
 test_hal_halmac_fw_led_phy_rust: test_hal_halmac_fw_led_phy.c librust_hal_halmac.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_HAL_HALMAC_ORACLE -o $@ test_hal_halmac_fw_led_phy.c \
@@ -559,8 +570,8 @@ clean:
 		test_hal_halmac_bcn_abi_rust test_hal_halmac_rsvd_rust \
 		test_hal_halmac_trx_share_rust test_hal_halmac_drv2halmac_rust \
 		test_hal_halmac_rf_type_rust test_hal_halmac_usb_fifo_rust \
-		test_hal_halmac_phy_param_drv2halmac_rust \
-		librust_hal_halmac.a \
+		test_hal_halmac_phy_param_drv2halmac_rust test_hal_halmac_version_rust \
+		librust_hal_halmac.a librust_hal_halmac_with_version.a \
 		test_hal_set_brate_cfg test_hal_set_brate_cfg_rust librust_hal_com_brate.a \
 		test_hal_is_legal_channel test_hal_is_legal_channel_rust librust_hal_com_legal.a \
 		test_hal_mapping_out_pipe test_hal_mapping_out_pipe_rust librust_hal_com_mapping.a \

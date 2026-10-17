@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HALMAC ↔ driver enum/struct mappers from `hal/hal_halmac.c` (W4-10, W4-11, W4-12, W4-21, W4-22, W4-23, W4-24, W4-26).
+//! HALMAC ↔ driver enum/struct mappers from `hal/hal_halmac.c` (W4-10, W4-11, W4-12, W4-21, W4-22, W4-23, W4-24, W4-26, W4-27).
 
 #![allow(
     dead_code,
@@ -849,4 +849,79 @@ mod trx_share_kernel {
             print_line(sel, &buf[..n as usize]);
         }
     }
+}
+
+#[repr(C)]
+struct HalmacVer {
+    major_ver: U8,
+    prototype_ver: U8,
+    minor_ver: U8,
+}
+
+fn append_byte(buf: &mut [u8], pos: &mut usize, b: u8) {
+    if *pos < buf.len() {
+        buf[*pos] = b;
+        *pos += 1;
+    }
+}
+
+fn append_u8(buf: &mut [u8], pos: &mut usize, n: u8) {
+    let mut digits = [0u8; 3];
+    let mut len = 0usize;
+    let mut v = n;
+    loop {
+        digits[len] = b'0' + (v % 10);
+        len += 1;
+        v /= 10;
+        if v == 0 {
+            break;
+        }
+    }
+    while len > 0 {
+        len -= 1;
+        append_byte(buf, pos, digits[len]);
+    }
+}
+
+fn append_u8_2(buf: &mut [u8], pos: &mut usize, n: u8) {
+    if n < 10 {
+        append_byte(buf, pos, b'0');
+    }
+    append_u8(buf, pos, n);
+}
+
+fn snprintf_halmac_version(major: U8, prototype: U8, minor: U8, buf: &mut [u8]) {
+    let mut pos = 0usize;
+    append_byte(buf, &mut pos, b'V');
+    append_u8(buf, &mut pos, major);
+    append_byte(buf, &mut pos, b'_');
+    append_u8_2(buf, &mut pos, prototype);
+    append_byte(buf, &mut pos, b'_');
+    append_u8_2(buf, &mut pos, minor);
+    if !buf.is_empty() {
+        buf[core::cmp::min(pos, buf.len() - 1)] = 0;
+    }
+}
+
+#[cfg(any(not(host_hal_halmac_enum_test), host_hal_halmac_version_test))]
+extern "C" {
+    fn halmac_get_version(version: *mut HalmacVer) -> u32;
+}
+
+#[cfg(any(not(host_hal_halmac_enum_test), host_hal_halmac_version_test))]
+#[no_mangle]
+pub extern "C" fn rtw_halmac_get_version(str: *mut u8, len: u32) {
+    if str.is_null() || len == 0 {
+        return;
+    }
+    let mut ver = HalmacVer {
+        major_ver: 0,
+        prototype_ver: 0,
+        minor_ver: 0,
+    };
+    if unsafe { halmac_get_version(&mut ver) } != 0 {
+        return;
+    }
+    let buf = unsafe { core::slice::from_raw_parts_mut(str, len as usize) };
+    snprintf_halmac_version(ver.major_ver, ver.prototype_ver, ver.minor_ver, buf);
 }

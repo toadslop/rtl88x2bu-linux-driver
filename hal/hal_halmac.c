@@ -1199,6 +1199,9 @@ static enum halmac_sdio_spec_ver _sdio_ver_drv2halmac(struct dvobj_priv *d)
 }
 #endif /* CONFIG_SDIO_HCI */
 
+#ifdef RTW_HALMAC_RUST_MAPPERS
+void rtw_halmac_get_version(char *str, u32 len);
+#else
 void rtw_halmac_get_version(char *str, u32 len)
 {
 	enum halmac_ret_status status;
@@ -1212,6 +1215,7 @@ void rtw_halmac_get_version(char *str, u32 len)
 	rtw_sprintf(str, len, "V%d_%02d_%02d",
 		    ver.major_ver, ver.prototype_ver, ver.minor_ver);
 }
+#endif /* RTW_HALMAC_RUST_MAPPERS */
 
 int rtw_halmac_init_adapter(struct dvobj_priv *d, struct halmac_platform_api *pf_api)
 {
