@@ -37,7 +37,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
           -I$(HOST_INC)
 
 .PHONY: all test test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust \
-	test-trx test-trx-rust test-fw test-fw-rust test-tx-aclt-force test-mrate test-mrate-rust \
+	test-trx test-trx-rust test-fw test-fw-rust test-tx-aclt-force test-tx-aclt-force-rust test-mrate test-mrate-rust \
 	test-rf-nss test-rf-nss-rust test-halmac test-halmac-rust test-halmac-rsvd \
 	test-halmac-rsvd-rust test-halmac-drv2halmac test-halmac-drv2halmac-rust \
 	test-brate test-brate-rust \
@@ -52,7 +52,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 all: test
 
 test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust \
-	test-fw test-fw-rust test-tx-aclt-force test-mrate test-mrate-rust test-rf-nss test-rf-nss-rust \
+	test-fw test-fw-rust test-tx-aclt-force test-tx-aclt-force-rust test-mrate test-mrate-rust test-rf-nss test-rf-nss-rust \
 	test-halmac test-halmac-rust test-halmac-rsvd test-brate test-brate-rust \
 	test-legal-channel test-legal-channel-rust test-mapping-out-pipe test-mapping-out-pipe-rust \
 	test-mgntframe-raid test-mgntframe-raid-rust test-hdata-rate test-hdata-rate-rust \
@@ -149,6 +149,17 @@ test-tx-aclt-force: test_dump_tx_aclt_force_val
 
 test_dump_tx_aclt_force_val: test_dump_tx_aclt_force_val.c $(TX_ACLT_FORCE_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_dump_tx_aclt_force_val.c $(TX_ACLT_FORCE_ORACLE) $(HOST_JSON)
+
+librust_hal_com_tx_aclt_force.a: $(RUST_HAL)
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_com_tx_aclt_force_test \
+		--crate-type staticlib $(RUST_HAL) -o $@
+
+test-tx-aclt-force-rust: test_dump_tx_aclt_force_val_rust
+	./test_dump_tx_aclt_force_val_rust hal_dump_tx_aclt_force_val_vectors.json
+
+test_dump_tx_aclt_force_val_rust: test_dump_tx_aclt_force_val.c librust_hal_com_tx_aclt_force.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_COM_TX_ACLT_FORCE_ORACLE -o $@ test_dump_tx_aclt_force_val.c \
+		$(HOST_JSON) librust_hal_com_tx_aclt_force.a
 
 test-mrate: test_m_rate_to_hw_rate
 	./test_m_rate_to_hw_rate hal_mrate_to_hw_rate_vectors.json
@@ -641,7 +652,7 @@ clean:
 		test_dump_chip_info test_dump_chip_info_rust librust_hal_com_chip.a \
 		test_dump_trx_mode test_dump_trx_mode_rust librust_hal_intf_trx.a \
 		test_dump_fw_info test_dump_fw_info_rust librust_hal_com_fw.a \
-		test_dump_tx_aclt_force_val \
+		test_dump_tx_aclt_force_val test_dump_tx_aclt_force_val_rust librust_hal_com_tx_aclt_force.a \
 		test_m_rate_to_hw_rate test_m_rate_to_hw_rate_rust librust_hal_com_mrate.a \
 		test_dump_rf_nss test_dump_rf_nss_rust librust_hal_intf_rf_nss.a \
 		test_hal_halmac_network test_hal_halmac_bcn test_hal_halmac_bcn_abi \

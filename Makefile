@@ -2908,6 +2908,10 @@ endif
 ifneq ($(filter -DCONFIG_RF_POWER_TRIM,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg rf_power_trim
 endif
+# W4-39: tx_aclt_force Rust port matches hal_com_rest.c #if CONFIG_TX_AC_LIFETIME
+ifneq ($(filter -DCONFIG_TX_AC_LIFETIME=0,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+rustflags-y += --cfg config_tx_ac_lifetime
+endif
 ifneq ($(filter -DCONFIG_PLATFORM_INTEL_BYT,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg CONFIG_PLATFORM_INTEL_BYT
 endif
@@ -4312,6 +4316,9 @@ rust-objects-hal-com-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_dump_fw_info_l1_ref.o \
 		tests/host/hal/hal_dump_fw_info_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_dump_tx_aclt_force_val_l1_ref.o \
+		tests/host/hal/hal_dump_tx_aclt_force_val_l1_ref.c
 	ld -r -o tests/host/hal/hal_com_c_ref.o \
 		tests/host/hal/hal_hw_rate_c_ref.o tests/host/hal/hal_rsvd_page_c_ref.o \
 		tests/host/hal/hal_dump_chip_info_c_ref.o tests/host/hal/hal_mrate_to_hw_rate_c_ref.o \
@@ -4319,7 +4326,8 @@ rust-objects-hal-com-c:
 		tests/host/hal/hal_mapping_out_pipe_c_ref.o \
 		tests/host/hal/hal_mgntframe_raid_c_ref.o \
 		tests/host/hal/hal_hdata_rate_c_ref.o \
-		tests/host/hal/hal_dump_fw_info_l1_ref.o
+		tests/host/hal/hal_dump_fw_info_l1_ref.o \
+		tests/host/hal/hal_dump_tx_aclt_force_val_l1_ref.o
 
 rust-check-symbols-hal-com: rust-objects-hal-com-c rust-objects-hal-com
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_com_c_ref.o NEW=rust/hal_com.o \
