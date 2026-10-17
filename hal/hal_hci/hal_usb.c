@@ -333,6 +333,7 @@ u16 usb_vendor_wvalue_fixup(u16 wvalue)
 }
 #endif /* !HAL_USB_VENDOR_WVALUE_IN_RUST */
 
+#ifndef HAL_USB_SYNC_READ_IN_RUST
 u8 usb_read8(struct intf_hdl *pintfhdl, u32 addr)
 {
 	u8 request;
@@ -408,6 +409,7 @@ u32 usb_read32(struct intf_hdl *pintfhdl, u32 addr)
 
 	return data;
 }
+#endif /* !HAL_USB_SYNC_READ_IN_RUST */
 
 int usb_write8(struct intf_hdl *pintfhdl, u32 addr, u8 val)
 {
