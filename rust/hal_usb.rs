@@ -64,12 +64,7 @@ mod sync_read {
     pub extern "C" fn usb_read16(pintfhdl: Hdl, addr: u32) -> u16 {
         let mut data: u16 = 0;
         unsafe {
-            usb_sync_vendor_read(
-                pintfhdl,
-                addr,
-                2,
-                &mut data as *mut u16 as *mut u8,
-            );
+            usb_sync_vendor_read(pintfhdl, addr, 2, &mut data as *mut u16 as *mut u8);
         }
         data
     }
@@ -78,12 +73,7 @@ mod sync_read {
     pub extern "C" fn usb_read32(pintfhdl: Hdl, addr: u32) -> u32 {
         let mut data: u32 = 0;
         unsafe {
-            usb_sync_vendor_read(
-                pintfhdl,
-                addr,
-                4,
-                &mut data as *mut u32 as *mut u8,
-            );
+            usb_sync_vendor_read(pintfhdl, addr, 4, &mut data as *mut u32 as *mut u8);
         }
         data
     }
