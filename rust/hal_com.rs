@@ -248,7 +248,7 @@ fn hal_set_brate_cfg_impl(m_brates_os: &[U8], p_brate_cfg: &mut u16) {
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
     ),
 ))]
 #[no_mangle]
@@ -332,7 +332,7 @@ fn hal_is_legal_channel_impl(wireless_mode: U8, channel: u32) -> U8 {
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
     ),
 ))]
 #[no_mangle]
@@ -420,7 +420,7 @@ extern "C" {
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
     ),
 ))]
 mod mapping_out_pipe {
@@ -549,7 +549,7 @@ fn rtw_get_mgntframe_raid_impl(hw_type: U8, network_type: U8) -> U8 {
         not(host_hal_com_legal_channel_test),
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
     ),
 ))]
 mod mgntframe_raid {
@@ -816,7 +816,7 @@ pub extern "C" fn dump_hw_rate_map_test(sel: *mut c_void) {
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
     )
 ))]
 #[repr(C)]
@@ -840,7 +840,7 @@ pub struct RsvdPageCache {
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
     )
 ))]
 fn page_num(len: u32, page_size: u32) -> U8 {
@@ -891,7 +891,7 @@ extern "C" {
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
     )
 ))]
 const RSVD_TRUE: i32 = 1;
@@ -908,7 +908,7 @@ const RSVD_TRUE: i32 = 1;
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
     )
 ))]
 fn rsvd_warn_on(cond: bool) {
@@ -937,7 +937,7 @@ fn rsvd_warn_on(cond: bool) {
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
     )
 ))]
 fn rsvd_heap_alloc(sz: u32, zero: bool) -> *mut U8 {
@@ -970,7 +970,7 @@ fn rsvd_heap_alloc(sz: u32, zero: bool) -> *mut U8 {
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
     )
 ))]
 fn rsvd_mfree(ptr: *mut U8, sz: u32) {
@@ -1001,7 +1001,7 @@ fn rsvd_mfree(ptr: *mut U8, sz: u32) {
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
     )
 ))]
 fn rsvd_memcmp_eq(a: *const U8, b: *const U8, len: u32) -> bool {
@@ -1036,7 +1036,7 @@ fn rsvd_memcmp_eq(a: *const U8, b: *const U8, len: u32) -> bool {
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
     )
 ))]
 #[no_mangle]
@@ -1121,7 +1121,7 @@ pub extern "C" fn rsvd_page_cache_update_all(
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
     )
 ))]
 #[no_mangle]
@@ -1174,7 +1174,7 @@ pub extern "C" fn rsvd_page_cache_update_data(
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
     )
 ))]
 #[no_mangle]
@@ -1200,7 +1200,7 @@ pub extern "C" fn rsvd_page_cache_free_data(cache: *mut RsvdPageCache) {
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
     )
 ))]
 #[no_mangle]
@@ -1224,7 +1224,7 @@ pub extern "C" fn rsvd_page_cache_free(cache: *mut RsvdPageCache) {
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
     )
 ))]
 mod chip_info {
@@ -1405,7 +1405,7 @@ mod chip_info {
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_rsvd_page_test),
         not(host_hal_com_mrate_test)
@@ -1422,7 +1422,7 @@ mod chip_info {
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
         not(host_hal_com_hw_rate_test),
         not(host_hal_com_rsvd_page_test),
         not(host_hal_com_mrate_test)
@@ -1464,7 +1464,7 @@ mod chip_info {
         not(host_hal_com_mapping_out_pipe_test),
         not(host_hal_com_mgntframe_raid_test),
         not(host_hal_com_hdata_rate_test),
-    not(host_hal_com_tx_aclt_force_test),
+        not(host_hal_com_tx_aclt_force_test),
     )
 ))]
 mod fw_info {
@@ -1708,7 +1708,9 @@ mod tx_aclt_force {
             return pos;
         }
         if fx.vo_vi != 0 {
-            if !push_str(buf, &mut pos, " FORCE:0x") || !push_hex_u16(buf, &mut pos, fx.vo_vi as u16) {
+            if !push_str(buf, &mut pos, " FORCE:0x")
+                || !push_hex_u16(buf, &mut pos, fx.vo_vi as u16)
+            {
                 return pos;
             }
         } else if !push_str(buf, &mut pos, "         AUTO") {
@@ -1763,8 +1765,11 @@ mod tx_aclt_force {
         if sum_len >= TX_ACLT_FORCE_MSG_LEN - 1 {
             return -1;
         }
-        if !push_str(buf, &mut pos, core::str::from_utf8(&summary[..sum_len]).unwrap_or(""))
-            || !push_str(buf, &mut pos, "\n")
+        if !push_str(
+            buf,
+            &mut pos,
+            core::str::from_utf8(&summary[..sum_len]).unwrap_or(""),
+        ) || !push_str(buf, &mut pos, "\n")
         {
             return -1;
         }
