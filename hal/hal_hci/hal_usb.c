@@ -409,6 +409,7 @@ u32 usb_read32(struct intf_hdl *pintfhdl, u32 addr)
 	return data;
 }
 
+#ifndef HAL_USB_SYNC_WRITE_IN_RUST
 int usb_write8(struct intf_hdl *pintfhdl, u32 addr, u8 val)
 {
 	u8 request;
@@ -516,6 +517,7 @@ int usb_writeN(struct intf_hdl *pintfhdl, u32 addr, u32 length, u8 *pdata)
 
 	return ret;
 }
+#endif /* !HAL_USB_SYNC_WRITE_IN_RUST */
 
 #ifndef HAL_USB_SET_INTF_OPS_IN_RUST
 void usb_set_intf_ops(_adapter *padapter, struct _io_ops *pops)
