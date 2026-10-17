@@ -25,6 +25,7 @@ DM_DUMP_STA_TRAFFIC_SHIM := hal_dm_dump_sta_traffic_shim.c
 USB_WVALUE_ORACLE := hal_usb_vendor_wvalue_c_oracle.c
 USB_SYNC_READ_ORACLE := hal_usb_sync_read_c_oracle.c
 USB_SYNC_WRITE_ORACLE := hal_usb_sync_write_c_oracle.c
+CHIP_ODM_ORACLE := hal_intf_chip_odm_c_oracle.c
 RUST_HAL := $(ROOT)/rust/hal_com.rs
 RUST_HAL_USB := $(ROOT)/rust/hal_usb.rs
 RUST_HAL_DM := $(ROOT)/rust/hal_dm.rs
@@ -47,7 +48,8 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-dm-board-type test-dm-board-type-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust \
-	test-usb-sync-read test-usb-sync-read-rust test-usb-sync-write clean
+	test-usb-sync-read test-usb-sync-read-rust test-usb-sync-write \
+	test-chip-odm test-chip-odm-rust clean
 
 all: test
 
@@ -59,7 +61,7 @@ test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust
 	test-phy-bit-shift test-phy-bit-shift-rust test-dm-board-type test-dm-board-type-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust test-usb-sync-read \
-	test-usb-sync-read-rust test-usb-sync-write
+	test-usb-sync-read-rust test-usb-sync-write test-chip-odm
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -628,6 +630,23 @@ test_hal_usb_sync_read_rust: test_hal_usb_sync_read.c librust_hal_usb_sync_read.
 	$(CC) $(CFLAGS) -DRUST_HAL_USB_SYNC_READ_ORACLE -DCONFIG_RTL8710B -o $@ \
 		test_hal_usb_sync_read.c $(HOST_JSON) librust_hal_usb_sync_read.a
 
+test-chip-odm: test_chip_odm_map
+	./test_chip_odm_map hal_intf_chip_odm_vectors.json
+
+test_chip_odm_map: test_chip_odm_map.c $(CHIP_ODM_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_chip_odm_map.c $(CHIP_ODM_ORACLE) $(HOST_JSON)
+
+librust_hal_intf_chip_odm.a: $(RUST_HAL_INTF)
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_intf_chip_odm_test \
+		--crate-type staticlib $(RUST_HAL_INTF) -o $@
+
+test-chip-odm-rust: test_chip_odm_map_rust
+	./test_chip_odm_map_rust hal_intf_chip_odm_vectors.json
+
+test_chip_odm_map_rust: test_chip_odm_map.c librust_hal_intf_chip_odm.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_INTF_CHIP_ODM_ORACLE -o $@ test_chip_odm_map.c \
+		$(HOST_JSON) librust_hal_intf_chip_odm.a
+
 test-usb-sync-write: test_hal_usb_sync_write
 	./test_hal_usb_sync_write hal_usb_sync_write_vectors.json
 
@@ -671,4 +690,5 @@ clean:
 		test_hal_dm_dump_sta_traffic test_hal_dm_dump_sta_traffic_rust \
 		librust_hal_dm_dump_sta_traffic.a \
 		test_hal_usb_vendor_wvalue test_hal_usb_vendor_wvalue_rust librust_hal_usb_wvalue.a \
-		test_hal_usb_sync_read test_hal_usb_sync_write
+		test_hal_usb_sync_read test_hal_usb_sync_write \
+		test_chip_odm_map test_chip_odm_map_rust librust_hal_intf_chip_odm.a
