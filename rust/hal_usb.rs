@@ -65,37 +65,21 @@ unsafe fn usb_sync_vendor_write_scalar(
 #[no_mangle]
 pub extern "C" fn usb_write8(pintfhdl: Hdl, addr: u32, val: u8) -> i32 {
     let mut data = val;
-    unsafe {
-        usb_sync_vendor_write_scalar(pintfhdl, addr, 1, &mut data as *mut u8 as *mut c_void)
-    }
+    unsafe { usb_sync_vendor_write_scalar(pintfhdl, addr, 1, &mut data as *mut u8 as *mut c_void) }
 }
 
 #[cfg(not(host_hal_usb_wvalue_test))]
 #[no_mangle]
 pub extern "C" fn usb_write16(pintfhdl: Hdl, addr: u32, val: u16) -> i32 {
     let mut data = val;
-    unsafe {
-        usb_sync_vendor_write_scalar(
-            pintfhdl,
-            addr,
-            2,
-            &mut data as *mut u16 as *mut c_void,
-        )
-    }
+    unsafe { usb_sync_vendor_write_scalar(pintfhdl, addr, 2, &mut data as *mut u16 as *mut c_void) }
 }
 
 #[cfg(not(host_hal_usb_wvalue_test))]
 #[no_mangle]
 pub extern "C" fn usb_write32(pintfhdl: Hdl, addr: u32, val: u32) -> i32 {
     let mut data = val;
-    unsafe {
-        usb_sync_vendor_write_scalar(
-            pintfhdl,
-            addr,
-            4,
-            &mut data as *mut u32 as *mut c_void,
-        )
-    }
+    unsafe { usb_sync_vendor_write_scalar(pintfhdl, addr, 4, &mut data as *mut u32 as *mut c_void) }
 }
 
 #[cfg(not(host_hal_usb_wvalue_test))]
