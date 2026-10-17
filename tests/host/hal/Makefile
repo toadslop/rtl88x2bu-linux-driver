@@ -501,6 +501,17 @@ test_hal_phy_rf_max_reg: test_hal_phy_rf_max_reg.c $(PHY_RF_MAX_REG_ORACLE) $(HO
 	$(CC) $(CFLAGS) -o $@ test_hal_phy_rf_max_reg.c \
 		$(PHY_RF_MAX_REG_ORACLE) $(HOST_JSON)
 
+librust_hal_phy_rf_max_reg.a: $(RUST_HAL_PHY)
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_phy_rf_max_reg_test \
+		--crate-type staticlib $(RUST_HAL_PHY) -o $@
+
+test-phy-rf-max-reg-rust: test_hal_phy_rf_max_reg_rust
+	./test_hal_phy_rf_max_reg_rust hal_phy_rf_max_reg_vectors.json
+
+test_hal_phy_rf_max_reg_rust: test_hal_phy_rf_max_reg.c librust_hal_phy_rf_max_reg.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_PHY_RF_MAX_REG_ORACLE -o $@ test_hal_phy_rf_max_reg.c \
+		$(HOST_JSON) librust_hal_phy_rf_max_reg.a
+
 test-phy-bit-shift: test_hal_phy_bit_shift
 	./test_hal_phy_bit_shift hal_phy_bit_shift_vectors.json
 
@@ -640,7 +651,7 @@ clean:
 		test_hal_mapping_out_pipe test_hal_mapping_out_pipe_rust librust_hal_com_mapping.a \
 		test_hal_mgntframe_raid test_hal_mgntframe_raid_rust librust_hal_com_mgntframe_raid.a \
 		test_hal_hdata_rate test_hal_hdata_rate_rust librust_hal_com_hdata_rate.a \
-		test_hal_phy_rf_max_reg \
+		test_hal_phy_rf_max_reg test_hal_phy_rf_max_reg_rust librust_hal_phy_rf_max_reg.a \
 		test_hal_phy_bit_shift test_hal_phy_bit_shift_rust librust_hal_phy.a \
 		test_hal_phy_rf_shadow test_hal_phy_rf_shadow_rust librust_hal_phy_rf_shadow.a \
 		test_hal_phy_rf_shadow_flags test_hal_phy_rf_shadow_flags_rust \

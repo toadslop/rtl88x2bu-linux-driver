@@ -18,8 +18,4 @@
 
 /* PHY_CalculateBitShift — ported to rust/hal_phy.rs (W4-09) */
 /* PHY_RFShadow* — rust/hal_phy.rs (W4-18..W4-20) */
-
-u32 rtw_rust_hal_phy_query_rf_max_reg(PADAPTER adapter)
-{
-	return GET_RF6052_REAL_MAX_REG(adapter);
-}
+/* rtw_rust_hal_phy_query_rf_max_reg — rust/hal_phy.rs (W4-35) */
