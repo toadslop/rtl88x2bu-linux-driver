@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HAL interface helpers — Rust port of `hal/hal_intf.c` (W4-07 TRX mode dumps, W4-08 RF/NSS dumps).
+//! HAL interface helpers — Rust port of `hal/hal_intf.c` (W4-07 TRX mode dumps, W4-08 RF/NSS dumps, W4-36 chip ODM map).
 
 #![allow(
     dead_code,
@@ -12,10 +12,18 @@
     unused_unsafe
 )]
 
-#[cfg(not(any(host_hal_intf_trx_test, host_hal_intf_rf_nss_test)))]
+#[cfg(not(any(
+    host_hal_intf_trx_test,
+    host_hal_intf_rf_nss_test,
+    host_hal_intf_chip_odm_test
+)))]
 use core::ffi::{c_char, c_void};
 
-#[cfg(any(host_hal_intf_trx_test, host_hal_intf_rf_nss_test))]
+#[cfg(any(
+    host_hal_intf_trx_test,
+    host_hal_intf_rf_nss_test,
+    host_hal_intf_chip_odm_test
+))]
 use std::os::raw::c_char;
 
 type U8 = u8;
@@ -54,7 +62,11 @@ struct RtwHalIntfTrxFields {
     txpath_num_nss: [U8; 4],
 }
 
-#[cfg(any(host_hal_intf_trx_test, host_hal_intf_rf_nss_test))]
+#[cfg(any(
+    host_hal_intf_trx_test,
+    host_hal_intf_rf_nss_test,
+    host_hal_intf_chip_odm_test
+))]
 fn rf_type_to_rfpath_str_local(rf_type: U8) -> &'static [u8] {
     static RF_TBL: [&[u8]; RF_TYPE_MAX] = [
         b"RF_1T1R", b"RF_1T2R", b"RF_2T2R", b"RF_2T3R", b"RF_2T4R", b"RF_3T3R", b"RF_3T4R",
@@ -67,7 +79,11 @@ fn rf_type_to_rfpath_str_local(rf_type: U8) -> &'static [u8] {
     RF_TBL[rf_type as usize]
 }
 
-#[cfg(not(any(host_hal_intf_trx_test, host_hal_intf_rf_nss_test)))]
+#[cfg(not(any(
+    host_hal_intf_trx_test,
+    host_hal_intf_rf_nss_test,
+    host_hal_intf_chip_odm_test
+)))]
 fn rf_type_to_rfpath_str_local(rf_type: U8) -> &'static [u8] {
     extern "C" {
         fn rtw_rust_hal_intf_rf_type_str(rf_type: U8) -> *const c_char;
@@ -483,7 +499,58 @@ pub extern "C" fn dump_trx_nss_format(
     n
 }
 
-#[cfg(not(any(host_hal_intf_trx_test, host_hal_intf_rf_nss_test)))]
+const MAX_CHIP_TYPE: usize = 18;
+
+const CHIP_TYPE_TO_ODM_IC_TYPE: [U32; MAX_CHIP_TYPE + 1] = [
+    0,
+    1, // ODM_RTL8188E
+    8, // ODM_RTL8192E
+    2, // ODM_RTL8812
+    4, // ODM_RTL8821
+    16, // ODM_RTL8723B
+    32, // ODM_RTL8814A
+    256, // ODM_RTL8703B
+    1024, // ODM_RTL8188F
+    1024, // ODM_RTL8188GTV → ODM_RTL8188F
+    128, // ODM_RTL8822B
+    2048, // ODM_RTL8723D
+    8192, // ODM_RTL8821C
+    65536, // ODM_RTL8710B
+    131072, // ODM_RTL8192F
+    262144, // ODM_RTL8822C
+    16384, // ODM_RTL8814B
+    16777216, // ODM_RTL8723F
+    0,
+];
+
+fn chip_type_to_odm_ic_type_impl(chip_type: U8) -> U32 {
+    let idx = if chip_type as usize >= MAX_CHIP_TYPE {
+        MAX_CHIP_TYPE
+    } else {
+        chip_type as usize
+    };
+    CHIP_TYPE_TO_ODM_IC_TYPE[idx]
+}
+
+#[cfg(host_hal_intf_chip_odm_test)]
+#[no_mangle]
+pub extern "C" fn chip_type_to_odm_ic_type(chip_type: U8) -> U32 {
+    chip_type_to_odm_ic_type_impl(chip_type)
+}
+
+#[cfg(not(any(
+    host_hal_intf_trx_test,
+    host_hal_intf_rf_nss_test,
+    host_hal_intf_chip_odm_test
+)))]
+#[no_mangle]
+pub static _chip_type_to_odm_ic_type: [U32; MAX_CHIP_TYPE + 1] = CHIP_TYPE_TO_ODM_IC_TYPE;
+
+#[cfg(not(any(
+    host_hal_intf_trx_test,
+    host_hal_intf_rf_nss_test,
+    host_hal_intf_chip_odm_test
+)))]
 mod kernel {
     use super::*;
 

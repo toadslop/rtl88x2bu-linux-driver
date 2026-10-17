@@ -27,7 +27,7 @@
     },
     {
       "name": "max_chip_type_sentinel",
-      "chip_type": 19,
+      "chip_type": 18,
       "expect": 0
     },
     {
