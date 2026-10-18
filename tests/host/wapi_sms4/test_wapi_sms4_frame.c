@@ -20,7 +20,6 @@ static void setup_sta(struct host_wapi_adapter *adapter,
 	sta->usk.b_set = 1;
 	memcpy(sta->last_tx_unicast_pn, pn, 16);
 	adapter->wapi_info.sta_used_head = sta;
-	adapter->wapi_info.sta_used_tail = sta;
 }
 
 static int run_encrypt_changes_payload(void)

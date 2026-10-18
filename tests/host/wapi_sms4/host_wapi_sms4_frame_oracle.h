@@ -4,6 +4,7 @@
 
 typedef unsigned char u8;
 typedef unsigned short u16;
+typedef unsigned int u32;
 
 #define HOST_WAPI_ETH_ALEN 6
 #define HOST_WAPI_TXDESC_SIZE 48
