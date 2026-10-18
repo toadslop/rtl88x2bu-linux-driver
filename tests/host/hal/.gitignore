@@ -5,3 +5,5 @@ test_hal_dm_dump_sta_info_rust
 test_hal_usb_vendor_wvalue*
 test_hal_usb_sync_read*
 test_hal_usb_sync_write*
+test_dump_tx_aclt_force_val
+test_dump_tx_aclt_force_val_rust
