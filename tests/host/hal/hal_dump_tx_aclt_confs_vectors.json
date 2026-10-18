@@ -1,0 +1,21 @@
+{
+  "oracle": "hal/hal_com_rest.c dump_tx_aclt_confs",
+  "vectors": [
+    {
+      "name": "all_disabled",
+      "tx_aclt_unit_factor": 2,
+      "en_0": 0, "vo_vi_0": 0, "be_bk_0": 0,
+      "en_1": 0, "vo_vi_1": 0, "be_bk_1": 0,
+      "en_2": 0, "vo_vi_2": 0, "be_bk_2": 0,
+      "expect": "unit:64us, maximum:4194240us\nname    # en  vo_vi(us) be_bk(us) vo_vi(reg) be_bk(reg)\nDEFAULT 0 0x0         0         0        N/A        N/A\n AP_M2U 1 0x0         0         0        N/A        N/A\n   MESH 2 0x0         0         0        N/A        N/A\n"
+    },
+    {
+      "name": "mixed_rows",
+      "tx_aclt_unit_factor": 2,
+      "en_0": 10, "vo_vi_0": 10, "be_bk_0": 20,
+      "en_1": 0, "vo_vi_1": 0, "be_bk_1": 0,
+      "en_2": 5, "vo_vi_2": 0, "be_bk_2": 100,
+      "expect": "unit:64us, maximum:4194240us\nname    # en  vo_vi(us) be_bk(us) vo_vi(reg) be_bk(reg)\nDEFAULT 0 0xa       640      1280     0x000a     0x0014\n AP_M2U 1 0x0         0         0        N/A        N/A\n   MESH 2 0x5         0      6400        N/A     0x0064\n"
+    }
+  ]
+}
