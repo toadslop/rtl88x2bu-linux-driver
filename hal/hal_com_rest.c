@@ -2981,49 +2981,7 @@ void rtw_hal_set_tx_aclt_force_val(_adapter *adapter, struct tx_aclt_conf_t *inp
 	}
 }
 
-void dump_tx_aclt_confs(void *sel, struct dvobj_priv *dvobj)
-{
-#define TX_ACLT_CONF_MSG_LEN 32
-	struct hal_spec_t *hal_spec = GET_HAL_SPEC(dvobj_get_primary_adapter(dvobj));
-	struct tx_aclt_conf_t *conf;
-	char buf[TX_ACLT_CONF_MSG_LEN];
-	int cnt;
-	int i;
-
-	RTW_PRINT_SEL(sel, "unit:%uus, maximum:%uus\n"
-		, hal_spec->tx_aclt_unit_factor * 32
-		, 0xFFFF * hal_spec->tx_aclt_unit_factor * 32);
-
-	RTW_PRINT_SEL(sel, "%-7s %-1s %-3s %-9s %-9s %-10s %-10s\n"
-		, "name", "#", "en", "vo_vi(us)", "be_bk(us)", "vo_vi(reg)", "be_bk(reg)");
-
-	for (i = 0; i < TX_ACLT_CONF_NUM; i++) {
-		conf = &dvobj->tx_aclt_confs[i];
-		cnt = 0;
-
-		if (conf->vo_vi)
-			cnt += snprintf(buf + cnt, TX_ACLT_CONF_MSG_LEN - cnt - 1, "     0x%04x", conf->vo_vi);
-		else
-			cnt += snprintf(buf + cnt, TX_ACLT_CONF_MSG_LEN - cnt - 1, "        N/A");
-		if (cnt >= TX_ACLT_CONF_MSG_LEN - 1)
-			continue;
-		
-		if (conf->be_bk)
-			cnt += snprintf(buf + cnt, TX_ACLT_CONF_MSG_LEN - cnt - 1, "     0x%04x", conf->be_bk);
-		else
-			cnt += snprintf(buf + cnt, TX_ACLT_CONF_MSG_LEN - cnt - 1, "        N/A");
-		if (cnt >= TX_ACLT_CONF_MSG_LEN - 1)
-			continue;
-
-		RTW_PRINT_SEL(sel, "%7s %1u 0x%x %9u %9u%s\n"
-			, tx_aclt_conf_str(i), i
-			, conf->en
-			, conf->vo_vi * hal_spec->tx_aclt_unit_factor * 32
-			, conf->be_bk * hal_spec->tx_aclt_unit_factor * 32
-			, buf
-		);
-	}
-}
+/* dump_tx_aclt_confs — ported to rust/hal_com.rs (W4-40) */
 
 void rtw_hal_set_tx_aclt_conf(_adapter *adapter, u8 conf_idx, struct tx_aclt_conf_t *input, u8 arg_num)
 {
@@ -15881,6 +15839,20 @@ void rtw_rust_hal_com_tx_aclt_force_fields(struct dvobj_priv *dvobj, u8 *unit_fa
 	*en = conf->en;
 	*vo_vi = conf->vo_vi;
 	*be_bk = conf->be_bk;
+}
+
+void rtw_rust_hal_com_tx_aclt_confs_fields(struct dvobj_priv *dvobj, u8 *unit_factor,
+	struct tx_aclt_conf_t *confs, int conf_num)
+{
+	struct hal_spec_t *hal_spec;
+	int i;
+
+	if (!dvobj || !unit_factor || !confs || conf_num <= 0)
+		return;
+	hal_spec = GET_HAL_SPEC(dvobj_get_primary_adapter(dvobj));
+	*unit_factor = hal_spec->tx_aclt_unit_factor;
+	for (i = 0; i < conf_num && i < TX_ACLT_CONF_NUM; i++)
+		confs[i] = dvobj->tx_aclt_confs[i];
 }
 #endif /* CONFIG_TX_AC_LIFETIME */
 
