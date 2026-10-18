@@ -1,0 +1,39 @@
+{
+  "vectors": [
+    {
+      "name": "null_chip",
+      "chip_type": 0,
+      "expect": 0
+    },
+    {
+      "name": "rtl8188e",
+      "chip_type": 1,
+      "expect": 1
+    },
+    {
+      "name": "rtl8822b",
+      "chip_type": 10,
+      "expect": 128
+    },
+    {
+      "name": "rtl8822c",
+      "chip_type": 15,
+      "expect": 262144
+    },
+    {
+      "name": "rtl8723f",
+      "chip_type": 17,
+      "expect": 16777216
+    },
+    {
+      "name": "max_chip_type_sentinel",
+      "chip_type": 19,
+      "expect": 0
+    },
+    {
+      "name": "out_of_range",
+      "chip_type": 255,
+      "expect": 0
+    }
+  ]
+}
