@@ -56,6 +56,35 @@ void host_sec_sw_sms4_encryption(struct host_wapi_adapter *padapter,
 				pframe + data_offset, &output_length);
 }
 
+u8 host_sec_sw_sms4_decryption(struct host_wapi_adapter *padapter,
+			       union host_wapi_recv_frame *precv)
+{
+	struct host_wapi_info *info = &padapter->wapi_info;
+	struct host_wapi_skb *pskb = precv->hdr.rx_skb;
+	u8 iv_offset = HOST_WAPI_MAC_HDR;
+	u8 data_offset;
+	u8 *pRA, *pTA, *pDataKey, *pRecvPN, *pSecData;
+	u16 output_length, payload_len;
+	struct host_wapi_sta_info *sta;
+
+	data_offset = iv_offset + info->extra_prefix_len;
+	pRA = pskb->data + 4;
+	pTA = pskb->data + 10;
+	pRecvPN = pskb->data + iv_offset + 2;
+	pSecData = pskb->data + data_offset;
+	payload_len = (u16)(pskb->len - data_offset - info->extra_postfix_len);
+	sta = find_sta(info, pTA);
+	if (!sta || (pRA[0] & 1))
+		return 0;
+	pDataKey = sta->usk.data_key;
+	host_wapi_sms4_decryption(pDataKey, pRecvPN, pSecData, payload_len,
+				  pSecData, &output_length);
+	memmove(pskb->data + info->extra_prefix_len, pskb->data, iv_offset);
+	pskb->data += info->extra_prefix_len;
+	pskb->len -= info->extra_prefix_len;
+	return 1;
+}
+
 u32 host_rtw_sms4_encrypt(struct host_wapi_adapter *padapter,
 			  struct host_wapi_xmit_frame *pxmit)
 {
@@ -64,6 +93,16 @@ u32 host_rtw_sms4_encrypt(struct host_wapi_adapter *padapter,
 	if (!pxmit->buf_addr)
 		return _FAIL;
 	host_sec_sw_sms4_encryption(padapter, pxmit);
+	return _SUCCESS;
+}
+
+u32 host_rtw_sms4_decrypt(struct host_wapi_adapter *padapter,
+			  union host_wapi_recv_frame *precv)
+{
+	if (!padapter->wapi_support || !padapter->wapi_info.b_wapi_enable)
+		return _FAIL;
+	if (!host_sec_sw_sms4_decryption(padapter, precv))
+		return _FAIL;
 	return _SUCCESS;
 }
 
@@ -79,6 +118,19 @@ u32 rtw_sms4_encrypt(void *padapter, u8 *pxmitframe)
 {
 	return host_rtw_sms4_encrypt((struct host_wapi_adapter *)padapter,
 				     (struct host_wapi_xmit_frame *)pxmitframe);
+}
+
+u8 SecSWSMS4Decryption(void *padapter, u8 *precv_frame, void *precv_priv)
+{
+	(void)precv_priv;
+	return host_sec_sw_sms4_decryption((struct host_wapi_adapter *)padapter,
+					   (union host_wapi_recv_frame *)precv_frame);
+}
+
+u32 rtw_sms4_decrypt(void *padapter, u8 *precvframe)
+{
+	return host_rtw_sms4_decrypt((struct host_wapi_adapter *)padapter,
+				     (union host_wapi_recv_frame *)precvframe);
 }
 
 #endif
