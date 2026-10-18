@@ -48,7 +48,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-mapping-out-pipe test-mapping-out-pipe-rust test-mgntframe-raid test-mgntframe-raid-rust \
 	test-hdata-rate test-hdata-rate-rust test-phy-bit-shift test-phy-bit-shift-rust \
 	test-dm-board-type test-dm-board-type-rust \
-	test-dm-odm-endian-hooks \
+	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust \
 	test-usb-sync-read test-usb-sync-read-rust test-usb-sync-write \
@@ -62,7 +62,7 @@ test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust
 	test-legal-channel test-legal-channel-rust test-mapping-out-pipe test-mapping-out-pipe-rust \
 	test-mgntframe-raid test-mgntframe-raid-rust test-hdata-rate test-hdata-rate-rust \
 	test-phy-bit-shift test-phy-bit-shift-rust test-dm-board-type test-dm-board-type-rust \
-	test-dm-odm-endian-hooks \
+	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust test-usb-sync-read \
 	test-usb-sync-read-rust test-usb-sync-write test-usb-async-write \

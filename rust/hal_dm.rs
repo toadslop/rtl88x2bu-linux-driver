@@ -103,21 +103,24 @@ mod odm_endian_hooks {
         unsafe { (value as *mut u8).add(core::mem::size_of::<T>() - 1) }
     }
 
+    /// Kernel `BAND_TYPE` / `enum channel_width` (int-sized enums, not `u8`).
+    type OdmEnumWord = u32;
+
     #[no_mangle]
     pub extern "C" fn rtw_rust_hal_dm_init_odm_endian_hooks_le(
         pdm_odm: *mut DmStruct,
-        band: *mut u8,
+        band: *mut OdmEnumWord,
         sec_mode: *mut u32,
-        bw: *mut u8,
+        bw: *mut OdmEnumWord,
         net_closed: *mut i32,
     ) {
         if pdm_odm.is_null() {
             return;
         }
         unsafe {
-            odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BAND, band);
+            odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BAND, band as *mut u8);
             odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_SEC_MODE, sec_mode as *mut u8);
-            odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BW, bw);
+            odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BW, bw as *mut u8);
             odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_NET_CLOSED, net_closed as *mut u8);
         }
     }
@@ -125,9 +128,9 @@ mod odm_endian_hooks {
     #[no_mangle]
     pub extern "C" fn rtw_rust_hal_dm_init_odm_endian_hooks_be(
         pdm_odm: *mut DmStruct,
-        band: *mut u8,
+        band: *mut OdmEnumWord,
         sec_mode: *mut u32,
-        bw: *mut u8,
+        bw: *mut OdmEnumWord,
         net_closed: *mut i32,
     ) {
         if pdm_odm.is_null() {
