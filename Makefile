@@ -2910,6 +2910,7 @@ rustflags-y += --cfg rf_power_trim
 endif
 # W4-39: tx_aclt_force Rust port matches hal_com_rest.c #if CONFIG_TX_AC_LIFETIME
 ifneq ($(filter -DCONFIG_TX_AC_LIFETIME=0,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+else
 rustflags-y += --cfg config_tx_ac_lifetime
 endif
 ifneq ($(filter -DCONFIG_PLATFORM_INTEL_BYT,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
