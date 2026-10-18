@@ -262,6 +262,7 @@ void usb_c2h_hisr_hdl(_adapter *adapter, u8 *buf)
 #endif
 
 #ifdef CONFIG_USB_SUPPORT_ASYNC_VDN_REQ
+#ifndef HAL_USB_ASYNC_WRITE_IN_RUST
 int usb_write_async(struct usb_device *udev, u32 addr, void *pdata, u16 len)
 {
 	u8 request;
@@ -319,6 +320,7 @@ int usb_async_write32(struct intf_hdl *pintfhdl, u32 addr, u32 val)
 
 	return ret;
 }
+#endif /* !HAL_USB_ASYNC_WRITE_IN_RUST */
 #endif /* CONFIG_USB_SUPPORT_ASYNC_VDN_REQ */
 
 #ifndef HAL_USB_VENDOR_WVALUE_IN_RUST

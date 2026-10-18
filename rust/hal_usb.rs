@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HAL USB HCI — `usb_set_intf_ops`, vendor wvalue fixup, sync reads, and sync writes from
-//! `hal/hal_hci/hal_usb.c` (W4-25, W4-28, W4-33, W4-34).
+//! HAL USB HCI — `usb_set_intf_ops`, vendor wvalue fixup, sync reads/writes, and async writes from
+//! `hal/hal_hci/hal_usb.c` (W4-25, W4-28, W4-33, W4-34, W4-37).
 
 #![allow(
     dead_code,
@@ -81,7 +81,11 @@ mod sync_read {
     }
 }
 
-#[cfg(not(any(host_hal_usb_wvalue_test, host_hal_usb_read_test)))]
+#[cfg(not(any(
+    host_hal_usb_wvalue_test,
+    host_hal_usb_read_test,
+    host_hal_usb_async_write_test
+)))]
 mod kernel {
     use core::ffi::c_void;
 
@@ -209,6 +213,73 @@ mod kernel {
         }
     }
 
+    #[cfg(CONFIG_USB_SUPPORT_ASYNC_VDN_REQ)]
+    unsafe extern "C" {
+        fn _usbctrl_vendorreq_async_write(
+            udev: *mut c_void,
+            request: u8,
+            value: u16,
+            index: u16,
+            pdata: *mut c_void,
+            len: u16,
+            requesttype: u8,
+        ) -> i32;
+    }
+
+    #[cfg(CONFIG_USB_SUPPORT_ASYNC_VDN_REQ)]
+    unsafe extern "C" {
+        fn rtw_rust_hal_usb_pusbdev_from_intf(pintfhdl: Hdl) -> *mut c_void;
+    }
+
+    #[cfg(CONFIG_USB_SUPPORT_ASYNC_VDN_REQ)]
+    unsafe fn usb_write_async_inner(
+        udev: *mut c_void,
+        addr: u32,
+        pdata: *mut c_void,
+        len: u16,
+    ) -> i32 {
+        let request: u8 = 0x05;
+        let requesttype: u8 = 0x00;
+        let index: u16 = 0;
+        let wvalue = (addr & 0x0000ffff) as u16;
+        unsafe {
+            _usbctrl_vendorreq_async_write(udev, request, wvalue, index, pdata, len, requesttype)
+        }
+    }
+
+    #[cfg(CONFIG_USB_SUPPORT_ASYNC_VDN_REQ)]
+    #[no_mangle]
+    pub extern "C" fn usb_async_write8(pintfhdl: Hdl, addr: u32, val: u8) -> i32 {
+        let mut data = val;
+        let udev = unsafe { rtw_rust_hal_usb_pusbdev_from_intf(pintfhdl) };
+        if udev.is_null() {
+            return -1;
+        }
+        unsafe { usb_write_async_inner(udev, addr, &mut data as *mut u8 as *mut c_void, 1) }
+    }
+
+    #[cfg(CONFIG_USB_SUPPORT_ASYNC_VDN_REQ)]
+    #[no_mangle]
+    pub extern "C" fn usb_async_write16(pintfhdl: Hdl, addr: u32, val: u16) -> i32 {
+        let mut data = val;
+        let udev = unsafe { rtw_rust_hal_usb_pusbdev_from_intf(pintfhdl) };
+        if udev.is_null() {
+            return -1;
+        }
+        unsafe { usb_write_async_inner(udev, addr, &mut data as *mut u16 as *mut c_void, 2) }
+    }
+
+    #[cfg(CONFIG_USB_SUPPORT_ASYNC_VDN_REQ)]
+    #[no_mangle]
+    pub extern "C" fn usb_async_write32(pintfhdl: Hdl, addr: u32, val: u32) -> i32 {
+        let mut data = val;
+        let udev = unsafe { rtw_rust_hal_usb_pusbdev_from_intf(pintfhdl) };
+        if udev.is_null() {
+            return -1;
+        }
+        unsafe { usb_write_async_inner(udev, addr, &mut data as *mut u32 as *mut c_void, 4) }
+    }
+
     #[repr(C)]
     struct IoOps {
         _read8: Option<unsafe extern "C" fn(Hdl, u32) -> u8>,
@@ -255,9 +326,76 @@ mod kernel {
         pops._write16 = Some(usb_write16);
         pops._write32 = Some(usb_write32);
         pops._writeN = Some(usb_writeN);
+        #[cfg(CONFIG_USB_SUPPORT_ASYNC_VDN_REQ)]
+        {
+            pops._write8_async = Some(usb_async_write8);
+            pops._write16_async = Some(usb_async_write16);
+            pops._write32_async = Some(usb_async_write32);
+        }
         pops._write_mem = Some(usb_write_mem);
         pops._write_port = Some(usb_write_port);
         pops._read_port_cancel = Some(usb_read_port_cancel);
         pops._write_port_cancel = Some(usb_write_port_cancel);
+    }
+}
+
+#[cfg(host_hal_usb_async_write_test)]
+mod async_write_host {
+    pub type Hdl = *mut u8;
+
+    #[repr(C)]
+    struct IntfHdl {
+        pintf_dev: *mut u8,
+    }
+
+    #[repr(C)]
+    struct DvobjPriv {
+        pusbdev: *mut u8,
+    }
+
+    unsafe extern "C" {
+        fn _usbctrl_vendorreq_async_write(
+            udev: *mut u8,
+            request: u8,
+            value: u16,
+            index: u16,
+            pdata: *mut u8,
+            len: u16,
+            requesttype: u8,
+        ) -> i32;
+    }
+
+    unsafe fn usb_write_async_inner(udev: *mut u8, addr: u32, pdata: *mut u8, len: u16) -> i32 {
+        let request: u8 = 0x05;
+        let requesttype: u8 = 0x00;
+        let index: u16 = 0;
+        let wvalue = (addr & 0x0000ffff) as u16;
+        unsafe {
+            _usbctrl_vendorreq_async_write(udev, request, wvalue, index, pdata, len, requesttype)
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn usb_async_write8(pintfhdl: Hdl, addr: u32, val: u8) -> i32 {
+        let mut data = val;
+        let intf = unsafe { &*(pintfhdl as *const IntfHdl) };
+        let dvobj = unsafe { &*(intf.pintf_dev as *const DvobjPriv) };
+        unsafe { usb_write_async_inner(dvobj.pusbdev, addr, &mut data as *mut u8, 1) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn usb_async_write16(pintfhdl: Hdl, addr: u32, val: u16) -> i32 {
+        let mut data = val;
+        let intf = unsafe { &*(pintfhdl as *const IntfHdl) };
+        let dvobj = unsafe { &*(intf.pintf_dev as *const DvobjPriv) };
+        unsafe { usb_write_async_inner(dvobj.pusbdev, addr, &mut data as *mut u16 as *mut u8, 2) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn usb_async_write32(pintfhdl: Hdl, addr: u32, val: u32) -> i32 {
+        let mut data = val;
+        let intf = unsafe { &*(pintfhdl as *const IntfHdl) };
+        let dvobj = unsafe { &*(intf.pintf_dev as *const DvobjPriv) };
+        unsafe { usb_write_async_inner(dvobj.pusbdev, addr, &mut data as *mut u32 as *mut u8, 4) }
     }
 }

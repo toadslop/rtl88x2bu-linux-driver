@@ -2950,6 +2950,14 @@ endif
 ifeq ($(CONFIG_USB_HCI), y)
 rustflags-y += --cfg CONFIG_USB_HCI
 endif
+# Optional: enable via make CONFIG_USB_SUPPORT_ASYNC_VDN_REQ=y or uncomment in autoconf.h (W4-37).
+ifeq ($(CONFIG_USB_SUPPORT_ASYNC_VDN_REQ), y)
+EXTRA_CFLAGS += -DCONFIG_USB_SUPPORT_ASYNC_VDN_REQ
+rustflags-y += --cfg CONFIG_USB_SUPPORT_ASYNC_VDN_REQ
+else ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_USB_SUPPORT_ASYNC_VDN_REQ' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+EXTRA_CFLAGS += -DCONFIG_USB_SUPPORT_ASYNC_VDN_REQ
+rustflags-y += --cfg CONFIG_USB_SUPPORT_ASYNC_VDN_REQ
+endif
 $(MODULE_NAME)-y += rust/hal_com.o
 $(MODULE_NAME)-y += rust/hal_halmac.o
 $(MODULE_NAME)-y += rust/hal_intf.o
