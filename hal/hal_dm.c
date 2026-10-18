@@ -20,6 +20,10 @@
 void rtw_rust_hal_dm_init_odm_board_type(struct dm_struct *pDM_Odm,
 	u8 external_lna_2g, u8 external_lna_5g, u8 external_pa_2g,
 	u8 external_pa_5g, u8 eeprom_bt_coexist);
+void rtw_rust_hal_dm_init_odm_endian_hooks_le(struct dm_struct *pDM_Odm,
+	BAND_TYPE *band, u32 *sec_mode, enum channel_width *bw, int *net_closed);
+void rtw_rust_hal_dm_init_odm_endian_hooks_be(struct dm_struct *pDM_Odm,
+	BAND_TYPE *band, u32 *sec_mode, enum channel_width *bw, int *net_closed);
 void dump_sta_info(void *sel, struct sta_info *psta);
 void dump_sta_traffic(void *sel, _adapter *adapter, struct sta_info *psta);
 #endif
@@ -501,6 +505,21 @@ void Init_ODM_ComInfo(_adapter *adapter)
 	else
 #endif
 
+#ifdef CONFIG_RUST
+#ifdef CONFIG_LITTLE_ENDIAN
+	rtw_rust_hal_dm_init_odm_endian_hooks_le(pDM_Odm,
+		&(pHalData->current_band_type),
+		&(adapter->securitypriv.dot11PrivacyAlgrthm),
+		&(pHalData->current_channel_bw),
+		&(adapter->net_closed));
+#else /* CONFIG_BIG_ENDIAN */
+	rtw_rust_hal_dm_init_odm_endian_hooks_be(pDM_Odm,
+		&(pHalData->current_band_type),
+		&(adapter->securitypriv.dot11PrivacyAlgrthm),
+		&(pHalData->current_channel_bw),
+		&(adapter->net_closed));
+#endif
+#else /* !CONFIG_RUST */
 #ifdef CONFIG_LITTLE_ENDIAN
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_BAND, &(pHalData->current_band_type));
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_SEC_MODE, &(adapter->securitypriv.dot11PrivacyAlgrthm));
@@ -512,6 +531,7 @@ void Init_ODM_ComInfo(_adapter *adapter)
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_BW, convert_to_big_endian(&(pHalData->current_channel_bw), sizeof(enum channel_width)));
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_NET_CLOSED, convert_to_big_endian(&(adapter->net_closed), sizeof(int)));
 #endif
+#endif /* CONFIG_RUST */
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_CHNL, &(pHalData->current_channel));
 
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_SCAN, &(pHalData->bScanInProcess));
