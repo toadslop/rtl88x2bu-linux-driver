@@ -50,10 +50,27 @@ struct host_wapi_xmit_frame {
 	struct host_wapi_pkt_attrib attrib;
 };
 
+struct host_wapi_skb {
+	u8 *data;
+	unsigned int len;
+};
+
+struct host_wapi_recv_hdr {
+	struct host_wapi_skb *rx_skb;
+};
+
+union host_wapi_recv_frame {
+	struct host_wapi_recv_hdr hdr;
+};
+
 void host_wapi_sms4_frame_adapter_init(struct host_wapi_adapter *a);
 void host_sec_sw_sms4_encryption(struct host_wapi_adapter *padapter,
 				 struct host_wapi_xmit_frame *pxmit);
+u8 host_sec_sw_sms4_decryption(struct host_wapi_adapter *padapter,
+			       union host_wapi_recv_frame *precv);
 u32 host_rtw_sms4_encrypt(struct host_wapi_adapter *padapter,
 			  struct host_wapi_xmit_frame *pxmit);
+u32 host_rtw_sms4_decrypt(struct host_wapi_adapter *padapter,
+			  union host_wapi_recv_frame *precv);
 
 #endif
