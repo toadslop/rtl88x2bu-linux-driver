@@ -20,6 +20,7 @@ PHY_RF_SHADOW_HW_SHIM := hal_phy_rf_shadow_hw_shim.c
 HALMAC_TRX_ORACLE := hal_halmac_trx_share_c_oracle.c
 BRATE_ORACLE := hal_set_brate_cfg_c_oracle.c
 DM_BOARD_ORACLE := hal_dm_board_type_c_oracle.c
+DM_ODM_ENDIAN_ORACLE := hal_dm_odm_endian_hooks_c_oracle.c
 DM_DUMP_STA_SHIM := hal_dm_dump_sta_info_shim.c
 DM_DUMP_STA_TRAFFIC_SHIM := hal_dm_dump_sta_traffic_shim.c
 USB_WVALUE_ORACLE := hal_usb_vendor_wvalue_c_oracle.c
@@ -563,6 +564,23 @@ test_hal_dm_board_type_rust: test_hal_dm_board_type.c librust_hal_dm.a $(HOST_JS
 	$(CC) $(CFLAGS) -DRUST_HAL_DM_ORACLE -o $@ test_hal_dm_board_type.c \
 		$(HOST_JSON) librust_hal_dm.a
 
+test-dm-odm-endian-hooks: test_hal_dm_odm_endian_hooks
+	./test_hal_dm_odm_endian_hooks hal_dm_odm_endian_hooks_vectors.json
+
+test_hal_dm_odm_endian_hooks: test_hal_dm_odm_endian_hooks.c $(DM_ODM_ENDIAN_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_hal_dm_odm_endian_hooks.c $(DM_ODM_ENDIAN_ORACLE) $(HOST_JSON)
+
+librust_hal_dm_odm_endian.a: $(RUST_HAL_DM)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_dm_odm_endian_hooks_test --crate-type staticlib $(RUST_HAL_DM) -o $@
+
+test-dm-odm-endian-hooks-rust: test_hal_dm_odm_endian_hooks_rust
+	./test_hal_dm_odm_endian_hooks_rust hal_dm_odm_endian_hooks_vectors.json
+
+test_hal_dm_odm_endian_hooks_rust: test_hal_dm_odm_endian_hooks.c librust_hal_dm_odm_endian.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_DM_ODM_ENDIAN_ORACLE -o $@ test_hal_dm_odm_endian_hooks.c \
+		$(HOST_JSON) librust_hal_dm_odm_endian.a
+
 test-dm-dump-sta-info: test_hal_dm_dump_sta_info
 	./test_hal_dm_dump_sta_info hal_dm_dump_sta_info_vectors.json
 
@@ -717,6 +735,8 @@ clean:
 		test_hal_phy_rf_shadow_compare test_hal_phy_rf_shadow_compare_rust \
 		librust_hal_phy_rf_shadow_compare.a \
 		test_hal_dm_board_type test_hal_dm_board_type_rust librust_hal_dm.a \
+		test_hal_dm_odm_endian_hooks test_hal_dm_odm_endian_hooks_rust \
+		librust_hal_dm_odm_endian.a \
 		test_hal_dm_dump_sta_info test_hal_dm_dump_sta_info_rust \
 		librust_hal_dm_dump_sta.a \
 		test_hal_dm_dump_sta_traffic test_hal_dm_dump_sta_traffic_rust \

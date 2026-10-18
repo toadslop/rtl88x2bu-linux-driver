@@ -1,0 +1,21 @@
+{
+  "oracle": "hal_dm_odm_endian_hooks_c_oracle.c",
+  "vectors": [
+    {
+      "name": "le_mixed",
+      "big_endian": 0,
+      "band": 2,
+      "sec_mode": 4,
+      "bw": 1,
+      "net_closed": 1
+    },
+    {
+      "name": "be_mixed",
+      "big_endian": 1,
+      "band": 2,
+      "sec_mode": 4,
+      "bw": 1,
+      "net_closed": 1
+    }
+  ]
+}
