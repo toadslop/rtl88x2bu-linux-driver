@@ -8,6 +8,9 @@ test_hal_usb_sync_write*
 test_dump_tx_aclt_force_val
 test_dump_tx_aclt_force_val_rust
 test_dump_tx_aclt_confs
+test_dump_tx_aclt_confs_rust
+librust_hal_com_tx_aclt_confs.a
+test_dump_tx_aclt_confs
 test_hal_usb_async_write*
 test_hal_usb_async_write
 test_hal_usb_async_write_rust

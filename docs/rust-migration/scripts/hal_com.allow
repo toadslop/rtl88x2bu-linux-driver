@@ -8,3 +8,5 @@ drop dump_chip_info_format
 drop rtw_dump_fw_info_format
 # W4-39: host L2 format helper not linked in kernel rust/hal_com.o.
 drop dump_tx_aclt_force_val_format
+# W4-40: host L2 format helper not linked in kernel rust/hal_com.o.
+drop dump_tx_aclt_confs_format
