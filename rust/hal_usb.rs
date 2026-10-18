@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HAL USB HCI — `usb_set_intf_ops`, vendor wvalue fixup, and sync reads from `hal/hal_hci/hal_usb.c`
-//! (W4-25, W4-28, W4-33).
+//! HAL USB HCI — `usb_set_intf_ops`, vendor wvalue fixup, sync reads, and sync writes from
+//! `hal/hal_hci/hal_usb.c` (W4-25, W4-28, W4-33, W4-34).
 
 #![allow(
     dead_code,
@@ -14,6 +14,8 @@
 )]
 
 type U16 = u16;
+
+const VENDOR_CMD_MAX_DATA_LEN: usize = 254;
 
 /// WLANON PAGE0_REG wvalue offset for RTL8710B USB vendor requests.
 #[no_mangle]
@@ -95,12 +97,9 @@ mod kernel {
             len: u16,
             requesttype: u8,
         ) -> i32;
+        fn _rtw_memcpy(dst: *mut c_void, src: *const c_void, sz: usize) -> *mut c_void;
         fn usb_read_mem(pintfhdl: Hdl, addr: u32, cnt: u32, pmem: *mut u8);
         fn usb_read_port(pintfhdl: Hdl, addr: u32, cnt: u32, pmem: *mut u8) -> u32;
-        fn usb_write8(pintfhdl: Hdl, addr: u32, val: u8) -> i32;
-        fn usb_write16(pintfhdl: Hdl, addr: u32, val: u16) -> i32;
-        fn usb_write32(pintfhdl: Hdl, addr: u32, val: u32) -> i32;
-        fn usb_writeN(pintfhdl: Hdl, addr: u32, length: u32, pdata: *mut u8) -> i32;
         fn usb_write_mem(pintfhdl: Hdl, addr: u32, cnt: u32, pmem: *mut u8);
         fn usb_write_port(pintfhdl: Hdl, addr: u32, cnt: u32, pmem: *mut u8) -> u32;
         fn usb_read_port_cancel(pintfhdl: Hdl);
@@ -115,6 +114,19 @@ mod kernel {
         unsafe {
             usbctrl_vendorreq(pintfhdl, request, wvalue, index, data, len, requesttype);
         }
+    }
+
+    unsafe fn usb_sync_vendor_write_scalar(
+        pintfhdl: Hdl,
+        addr: u32,
+        len: u16,
+        data: *mut c_void,
+    ) -> i32 {
+        let request: u8 = 0x05;
+        let requesttype: u8 = 0x00;
+        let index: u16 = 0;
+        let wvalue = super::usb_vendor_wvalue_fixup((addr & 0x0000ffff) as u16);
+        unsafe { usbctrl_vendorreq(pintfhdl, request, wvalue, index, data, len, requesttype) }
     }
 
     #[no_mangle]
@@ -142,6 +154,59 @@ mod kernel {
             usb_sync_vendor_read(pintfhdl, addr, 4, &mut data as *mut u32 as *mut c_void);
         }
         data
+    }
+
+    #[no_mangle]
+    pub extern "C" fn usb_write8(pintfhdl: Hdl, addr: u32, val: u8) -> i32 {
+        let mut data = val;
+        unsafe {
+            usb_sync_vendor_write_scalar(pintfhdl, addr, 1, &mut data as *mut u8 as *mut c_void)
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn usb_write16(pintfhdl: Hdl, addr: u32, val: u16) -> i32 {
+        let mut data = val;
+        unsafe {
+            usb_sync_vendor_write_scalar(pintfhdl, addr, 2, &mut data as *mut u16 as *mut c_void)
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn usb_write32(pintfhdl: Hdl, addr: u32, val: u32) -> i32 {
+        let mut data = val;
+        unsafe {
+            usb_sync_vendor_write_scalar(pintfhdl, addr, 4, &mut data as *mut u32 as *mut c_void)
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn usb_writeN(pintfhdl: Hdl, addr: u32, length: u32, pdata: *mut u8) -> i32 {
+        let request: u8 = 0x05;
+        let requesttype: u8 = 0x00;
+        let index: u16 = 0;
+        let wvalue = (addr & 0x0000ffff) as u16;
+        let len = length as u16;
+        let mut buf = [0u8; super::VENDOR_CMD_MAX_DATA_LEN];
+        if len as usize > buf.len() || pdata.is_null() {
+            return -1;
+        }
+        unsafe {
+            _rtw_memcpy(
+                buf.as_mut_ptr() as *mut c_void,
+                pdata as *const c_void,
+                len as usize,
+            );
+            usbctrl_vendorreq(
+                pintfhdl,
+                request,
+                wvalue,
+                index,
+                buf.as_mut_ptr() as *mut c_void,
+                len,
+                requesttype,
+            )
+        }
     }
 
     #[repr(C)]
