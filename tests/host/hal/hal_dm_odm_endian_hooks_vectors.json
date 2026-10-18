@@ -16,6 +16,14 @@
       "sec_mode": 4,
       "bw": 1,
       "net_closed": 1
+    },
+    {
+      "name": "be_band_bw_last_byte",
+      "big_endian": 1,
+      "band": 1,
+      "sec_mode": 0,
+      "bw": 2,
+      "net_closed": 0
     }
   ]
 }

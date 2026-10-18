@@ -48,9 +48,9 @@ static int run_vector(struct vector *v)
 	struct host_hal_dm_odm_endian_fixture fx;
 
 	memset(&fx, 0, sizeof(fx));
-	fx.band = (u8)v->band;
+	fx.band = (BAND_TYPE)v->band;
 	fx.sec_mode = (u32)v->sec_mode;
-	fx.bw = (u8)v->bw;
+	fx.bw = (enum host_hal_odm_channel_width)v->bw;
 	fx.net_closed = (s32)v->net_closed;
 	host_hal_dm_odm_endian_reset();
 	if (v->big_endian)
@@ -59,10 +59,15 @@ static int run_vector(struct vector *v)
 	else
 		rtw_rust_hal_dm_init_odm_endian_hooks_le(&dm, &fx.band, &fx.sec_mode, &fx.bw,
 			&fx.net_closed);
-	return host_hal_dm_odm_endian_trace.band != expect_ptr(&fx.band, 1, v->big_endian) ||
-	       host_hal_dm_odm_endian_trace.sec_mode != expect_ptr(&fx.sec_mode, 4, v->big_endian) ||
-	       host_hal_dm_odm_endian_trace.bw != expect_ptr(&fx.bw, 1, v->big_endian) ||
-	       host_hal_dm_odm_endian_trace.net_closed != expect_ptr(&fx.net_closed, 4, v->big_endian);
+	return host_hal_dm_odm_endian_trace.band !=
+		       expect_ptr(&fx.band, sizeof(BAND_TYPE), v->big_endian) ||
+	       host_hal_dm_odm_endian_trace.sec_mode !=
+		       expect_ptr(&fx.sec_mode, sizeof(u32), v->big_endian) ||
+	       host_hal_dm_odm_endian_trace.bw !=
+		       expect_ptr(&fx.bw, sizeof(enum host_hal_odm_channel_width),
+				  v->big_endian) ||
+	       host_hal_dm_odm_endian_trace.net_closed !=
+		       expect_ptr(&fx.net_closed, sizeof(s32), v->big_endian);
 }
 
 static int parse_vector_object(const char *obj, size_t len, void *vv)
