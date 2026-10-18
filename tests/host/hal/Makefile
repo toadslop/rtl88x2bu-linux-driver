@@ -61,7 +61,7 @@ test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust
 	test-phy-bit-shift test-phy-bit-shift-rust test-dm-board-type test-dm-board-type-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust test-usb-sync-read \
-	test-usb-sync-read-rust test-usb-sync-write test-chip-odm
+	test-usb-sync-read-rust test-usb-sync-write test-chip-odm test-chip-odm-rust
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -73,7 +73,7 @@ librust_hal_com.a: $(RUST_HAL)
 	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_com_hw_rate_test \
 		--crate-type staticlib $(RUST_HAL) -o $@
 
-test-rust: test_hw_rate_map_rust
+test-rust: test_hw_rate_map_rust test-chip-odm-rust
 	./test_hw_rate_map_rust hal_hw_rate_vectors.json
 
 test_hw_rate_map_rust: test_hw_rate_map.c librust_hal_com.a $(HOST_JSON)

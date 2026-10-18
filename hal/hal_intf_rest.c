@@ -18,28 +18,6 @@
 #include <drv_types.h>
 #include <hal_data.h>
 
-const u32 _chip_type_to_odm_ic_type[] = {
-	0,
-	ODM_RTL8188E,
-	ODM_RTL8192E,
-	ODM_RTL8812,
-	ODM_RTL8821,
-	ODM_RTL8723B,
-	ODM_RTL8814A,
-	ODM_RTL8703B,
-	ODM_RTL8188F,
-	ODM_RTL8188F,
-	ODM_RTL8822B,
-	ODM_RTL8723D,
-	ODM_RTL8821C,
-	ODM_RTL8710B,
-	ODM_RTL8192F,
-	ODM_RTL8822C,
-	ODM_RTL8814B,
-	ODM_RTL8723F,
-	0,
-};
-
 void rtw_hal_chip_configure(_adapter *padapter)
 {
 	padapter->hal_func.intf_chip_configure(padapter);
