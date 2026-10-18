@@ -255,9 +255,7 @@ mod kernel {
         if udev.is_null() {
             return -1;
         }
-        unsafe {
-            usb_write_async_inner(udev, addr, &mut data as *mut u8 as *mut c_void, 1)
-        }
+        unsafe { usb_write_async_inner(udev, addr, &mut data as *mut u8 as *mut c_void, 1) }
     }
 
     #[cfg(CONFIG_USB_SUPPORT_ASYNC_VDN_REQ)]
@@ -268,9 +266,7 @@ mod kernel {
         if udev.is_null() {
             return -1;
         }
-        unsafe {
-            usb_write_async_inner(udev, addr, &mut data as *mut u16 as *mut c_void, 2)
-        }
+        unsafe { usb_write_async_inner(udev, addr, &mut data as *mut u16 as *mut c_void, 2) }
     }
 
     #[cfg(CONFIG_USB_SUPPORT_ASYNC_VDN_REQ)]
@@ -281,9 +277,7 @@ mod kernel {
         if udev.is_null() {
             return -1;
         }
-        unsafe {
-            usb_write_async_inner(udev, addr, &mut data as *mut u32 as *mut c_void, 4)
-        }
+        unsafe { usb_write_async_inner(udev, addr, &mut data as *mut u32 as *mut c_void, 4) }
     }
 
     #[repr(C)]
