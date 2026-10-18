@@ -124,7 +124,11 @@ pub extern "C" fn rtw_rust_hal_dm_init_odm_endian_hooks_be(
     }
     unsafe {
         odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BAND, convert_to_big_endian(band));
-        odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_SEC_MODE, convert_to_big_endian(sec_mode));
+        odm_cmn_info_hook(
+            pdm_odm,
+            ODM_CMNINFO_SEC_MODE,
+            convert_to_big_endian(sec_mode),
+        );
         odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BW, convert_to_big_endian(bw));
         odm_cmn_info_hook(
             pdm_odm,
