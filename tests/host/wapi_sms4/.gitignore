@@ -8,4 +8,6 @@ test_wapi_sms4_mic
 test_wapi_sms4_mic_rust
 test_wapi_sms4_qos_pn
 test_wapi_sms4_qos_pn_rust
+test_wapi_sms4_frame
+test_wapi_sms4_frame_rust
 librust_wapi_sms4.a
