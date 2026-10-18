@@ -19,7 +19,7 @@ RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
 	test-ofb test-ofb-c test-ofb-rust test-mic test-mic-c test-mic-rust \
 	test-qos-pn test-qos-pn-c test-qos-pn-rust test-frame test-frame-c clean
 
-all: test test-pn-iv test-ofb test-mic test-qos-pn test-frame-c
+all: test test-pn-iv test-ofb test-mic test-qos-pn test-frame
 
 test: test-c test-rust
 

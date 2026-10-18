@@ -730,3 +730,7 @@ pub extern "C" fn host_wapi_sms4_calculate_mic(
         output_length,
     );
 }
+
+#[cfg(host_wapi_sms4_test)]
+#[path = "wapi_sms4_frame_host.rs"]
+mod wapi_sms4_frame_host;
