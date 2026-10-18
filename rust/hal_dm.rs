@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HAL DM — board-type (`W4-30`), `dump_sta_info` (`W4-31`), `dump_sta_traffic` (`W4-32`) from `hal/hal_dm.c`.
+//! HAL DM — board-type (`W4-30`), ODM endian hooks (`W4-38`), `dump_sta_info` (`W4-31`), `dump_sta_traffic` (`W4-32`) from `hal/hal_dm.c`.
 
 #![allow(
     dead_code,
@@ -79,11 +79,67 @@ pub extern "C" fn rtw_rust_hal_dm_init_odm_board_type(
     }
 }
 
+const ODM_CMNINFO_BAND: u32 = 54;
+const ODM_CMNINFO_SEC_MODE: u32 = 56;
+const ODM_CMNINFO_BW: u32 = 57;
+const ODM_CMNINFO_NET_CLOSED: u32 = 71;
+
+unsafe extern "C" {
+    fn odm_cmn_info_hook(dm: *mut DmStruct, cmn_info: u32, ptr: *mut u8);
+}
+
+fn convert_to_big_endian<T>(value: *mut T) -> *mut u8 {
+    unsafe { (value as *mut u8).add(core::mem::size_of::<T>() - 1) }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_hal_dm_init_odm_endian_hooks_le(
+    pdm_odm: *mut DmStruct,
+    band: *mut u8,
+    sec_mode: *mut u32,
+    bw: *mut u8,
+    net_closed: *mut i32,
+) {
+    if pdm_odm.is_null() {
+        return;
+    }
+    unsafe {
+        odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BAND, band);
+        odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_SEC_MODE, sec_mode as *mut u8);
+        odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BW, bw);
+        odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_NET_CLOSED, net_closed as *mut u8);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_hal_dm_init_odm_endian_hooks_be(
+    pdm_odm: *mut DmStruct,
+    band: *mut u8,
+    sec_mode: *mut u32,
+    bw: *mut u8,
+    net_closed: *mut i32,
+) {
+    if pdm_odm.is_null() {
+        return;
+    }
+    unsafe {
+        odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BAND, convert_to_big_endian(band));
+        odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_SEC_MODE, convert_to_big_endian(sec_mode));
+        odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BW, convert_to_big_endian(bw));
+        odm_cmn_info_hook(
+            pdm_odm,
+            ODM_CMNINFO_NET_CLOSED,
+            convert_to_big_endian(net_closed),
+        );
+    }
+}
+
 #[cfg(any(
     host_hal_dm_dump_sta_info_test,
     host_hal_dm_dump_sta_traffic_test,
     not(any(
         host_hal_dm_board_type_test,
+        host_hal_dm_odm_endian_hooks_test,
         host_hal_dm_dump_sta_info_test,
         host_hal_dm_dump_sta_traffic_test
     ))
@@ -541,6 +597,7 @@ mod dump_sta_info {
     host_hal_dm_dump_sta_traffic_test,
     not(any(
         host_hal_dm_board_type_test,
+        host_hal_dm_odm_endian_hooks_test,
         host_hal_dm_dump_sta_info_test,
         host_hal_dm_dump_sta_traffic_test
     ))
