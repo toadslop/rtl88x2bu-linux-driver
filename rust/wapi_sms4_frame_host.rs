@@ -60,7 +60,7 @@ pub struct HostWapiXmitFrame {
 #[repr(C)]
 struct HostWapiSkb {
     data: *mut U8,
-    len: usize,
+    len: U32,
 }
 
 #[repr(C)]
@@ -146,7 +146,7 @@ pub extern "C" fn host_sec_sw_sms4_encryption(
         Some(s) => s,
         None => return,
     };
-    let crypt_len = xmit.attrib.pktlen - xmit.attrib.icv_len as u16;
+    let crypt_len = xmit.attrib.pktlen + xmit.attrib.icv_len as u16;
     let mut out_len: U16 = 0;
     unsafe {
         host_wapi_sms4_encryption(
@@ -190,7 +190,7 @@ pub extern "C" fn host_sec_sw_sms4_decryption(
     }
     let p_recv_pn = unsafe { skb.data.add(iv_offset + 2) };
     let p_sec = unsafe { skb.data.add(data_offset) };
-    let payload_len = skb.len - data_offset - info.extra_postfix_len as usize;
+    let payload_len = skb.len as usize - data_offset - info.extra_postfix_len as usize;
     let mut out_len: U16 = 0;
     unsafe {
         host_wapi_sms4_decryption(
@@ -207,7 +207,7 @@ pub extern "C" fn host_sec_sw_sms4_decryption(
             iv_offset,
         );
         skb.data = skb.data.add(info.extra_prefix_len as usize);
-        skb.len -= info.extra_prefix_len as usize;
+        skb.len -= info.extra_prefix_len as U32;
     }
     1
 }
