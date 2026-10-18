@@ -1,0 +1,32 @@
+{
+  "vectors": [
+    {
+      "name": "async_write8_basic",
+      "addr": 4660,
+      "width": 8,
+      "val": 171,
+      "expect_wvalue": 4660
+    },
+    {
+      "name": "async_write16_basic",
+      "addr": 22136,
+      "width": 16,
+      "val": 52445,
+      "expect_wvalue": 22136
+    },
+    {
+      "name": "async_write32_basic",
+      "addr": 39612,
+      "width": 32,
+      "val": 305419896,
+      "expect_wvalue": 39612
+    },
+    {
+      "name": "async_write8_high_addr",
+      "addr": 305419896,
+      "width": 8,
+      "val": 90,
+      "expect_wvalue": 22136
+    }
+  ]
+}

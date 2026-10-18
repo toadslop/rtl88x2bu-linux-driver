@@ -7,3 +7,7 @@ test_hal_usb_sync_read*
 test_hal_usb_sync_write*
 test_dump_tx_aclt_force_val
 test_dump_tx_aclt_force_val_rust
+test_hal_usb_async_write*
+test_hal_usb_async_write
+test_hal_usb_async_write_rust
+librust_hal_usb_async_write.a
