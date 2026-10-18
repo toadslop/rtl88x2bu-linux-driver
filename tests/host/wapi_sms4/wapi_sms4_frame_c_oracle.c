@@ -50,8 +50,8 @@ void host_sec_sw_sms4_encryption(struct host_wapi_adapter *padapter,
 	pIV = sta->last_tx_unicast_pn;
 	pDataKey = sta->usk.data_key;
 
-	/* Kernel SecCalculateMicSMS4 is #if 0 — payload-only SMS4 crypt for L2 round-trip. */
-	crypt_len = pattrib->pktlen - pattrib->icv_len;
+	/* Match SecSWSMS4Encryption → WapiSMS4Encryption length (MIC calc is #if 0 in harness). */
+	crypt_len = pattrib->pktlen + pattrib->icv_len;
 	host_wapi_sms4_encryption(pDataKey, pIV, pframe + data_offset, crypt_len,
 				pframe + data_offset, &output_length);
 }
