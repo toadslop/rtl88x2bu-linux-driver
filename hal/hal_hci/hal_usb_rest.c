@@ -10,7 +10,7 @@
 
 /* usb_set_intf_ops — rust/hal_usb.rs (W4-25) */
 
-#if CONFIG_USB_SUPPORT_ASYNC_VDN_REQ
+#ifdef CONFIG_USB_SUPPORT_ASYNC_VDN_REQ
 void *rtw_rust_hal_usb_pusbdev_from_intf(struct intf_hdl *pintfhdl)
 {
 	struct dvobj_priv *pdvobjpriv;
