@@ -227,15 +227,8 @@ mod kernel {
     }
 
     #[cfg(CONFIG_USB_SUPPORT_ASYNC_VDN_REQ)]
-    #[repr(C)]
-    struct IntfHdl {
-        pintf_dev: *mut c_void,
-    }
-
-    #[cfg(CONFIG_USB_SUPPORT_ASYNC_VDN_REQ)]
-    #[repr(C)]
-    struct DvobjPriv {
-        pusbdev: *mut c_void,
+    unsafe extern "C" {
+        fn rtw_rust_hal_usb_pusbdev_from_intf(pintfhdl: Hdl) -> *mut c_void;
     }
 
     #[cfg(CONFIG_USB_SUPPORT_ASYNC_VDN_REQ)]
@@ -258,10 +251,12 @@ mod kernel {
     #[no_mangle]
     pub extern "C" fn usb_async_write8(pintfhdl: Hdl, addr: u32, val: u8) -> i32 {
         let mut data = val;
-        let intf = unsafe { &*(pintfhdl as *const IntfHdl) };
-        let dvobj = unsafe { &*(intf.pintf_dev as *const DvobjPriv) };
+        let udev = unsafe { rtw_rust_hal_usb_pusbdev_from_intf(pintfhdl) };
+        if udev.is_null() {
+            return -1;
+        }
         unsafe {
-            usb_write_async_inner(dvobj.pusbdev, addr, &mut data as *mut u8 as *mut c_void, 1)
+            usb_write_async_inner(udev, addr, &mut data as *mut u8 as *mut c_void, 1)
         }
     }
 
@@ -269,10 +264,12 @@ mod kernel {
     #[no_mangle]
     pub extern "C" fn usb_async_write16(pintfhdl: Hdl, addr: u32, val: u16) -> i32 {
         let mut data = val;
-        let intf = unsafe { &*(pintfhdl as *const IntfHdl) };
-        let dvobj = unsafe { &*(intf.pintf_dev as *const DvobjPriv) };
+        let udev = unsafe { rtw_rust_hal_usb_pusbdev_from_intf(pintfhdl) };
+        if udev.is_null() {
+            return -1;
+        }
         unsafe {
-            usb_write_async_inner(dvobj.pusbdev, addr, &mut data as *mut u16 as *mut c_void, 2)
+            usb_write_async_inner(udev, addr, &mut data as *mut u16 as *mut c_void, 2)
         }
     }
 
@@ -280,10 +277,12 @@ mod kernel {
     #[no_mangle]
     pub extern "C" fn usb_async_write32(pintfhdl: Hdl, addr: u32, val: u32) -> i32 {
         let mut data = val;
-        let intf = unsafe { &*(pintfhdl as *const IntfHdl) };
-        let dvobj = unsafe { &*(intf.pintf_dev as *const DvobjPriv) };
+        let udev = unsafe { rtw_rust_hal_usb_pusbdev_from_intf(pintfhdl) };
+        if udev.is_null() {
+            return -1;
+        }
         unsafe {
-            usb_write_async_inner(dvobj.pusbdev, addr, &mut data as *mut u32 as *mut c_void, 4)
+            usb_write_async_inner(udev, addr, &mut data as *mut u32 as *mut c_void, 4)
         }
     }
 
