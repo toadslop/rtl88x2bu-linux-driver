@@ -14231,52 +14231,7 @@ inline u8 rtw_hal_busagg_qsel_check(_adapter *padapter, u8 pre_qsel, u8 next_qse
 #endif /* CONFIG_AP_MODE */
 }
 
-#ifdef CONFIG_WOWLAN
-/*
- * Description:
- * dump_TX_FIFO: This is only used to dump TX_FIFO for debug WoW mode offload
- * contant.
- *
- * Input:
- * adapter: adapter pointer.
- * page_num: The max. page number that user want to dump.
- * page_size: page size of each page. eg. 128 bytes, 256 bytes, 512byte.
- */
-void dump_TX_FIFO(_adapter *padapter, u8 page_num, u16 page_size)
-{
-
-	int i;
-	u8 val = 0;
-	u8 base = 0;
-	u32 addr = 0;
-	u32 count = (page_size / 8);
-
-	if (page_num <= 0) {
-		RTW_INFO("!!%s: incorrect input page_num paramter!\n", __func__);
-		return;
-	}
-
-	if (page_size < 128 || page_size > 512) {
-		RTW_INFO("!!%s: incorrect input page_size paramter!\n", __func__);
-		return;
-	}
-
-	RTW_INFO("+%s+\n", __func__);
-	val = rtw_read8(padapter, 0x106);
-	rtw_write8(padapter, 0x106, 0x69);
-	RTW_INFO("0x106: 0x%02x\n", val);
-	base = rtw_read8(padapter, 0x209);
-	RTW_INFO("0x209: 0x%02x\n", base);
-
-	addr = ((base)*page_size) / 8;
-	for (i = 0 ; i < page_num * count ; i += 2) {
-		rtw_write32(padapter, 0x140, addr + i);
-		printk(" %08x %08x ", rtw_read32(padapter, 0x144), rtw_read32(padapter, 0x148));
-		rtw_write32(padapter, 0x140, addr + i + 1);
-		printk(" %08x %08x\n", rtw_read32(padapter, 0x144), rtw_read32(padapter, 0x148));
-	}
-}
-#endif
+/* dump_TX_FIFO — ported to rust/hal_com.rs (W4-42) */
 
 #ifdef CONFIG_GPIO_API
 u8 rtw_hal_get_gpio(_adapter *adapter, u8 gpio_num)
@@ -15847,6 +15802,44 @@ void rtw_rust_hal_com_warn_on(int condition)
 void rtw_rust_hal_com_log_info(const char *line)
 {
 	RTW_INFO("%s", line);
+}
+
+u8 rtw_rust_hal_com_read8(_adapter *adapter, u32 addr)
+{
+	if (!adapter)
+		return 0;
+	return rtw_read8(adapter, addr);
+}
+
+void rtw_rust_hal_com_write8(_adapter *adapter, u32 addr, u8 val)
+{
+	if (!adapter)
+		return;
+	rtw_write8(adapter, addr, val);
+}
+
+u32 rtw_rust_hal_com_read32(_adapter *adapter, u32 addr)
+{
+	if (!adapter)
+		return 0;
+	return rtw_read32(adapter, addr);
+}
+
+void rtw_rust_hal_com_write32(_adapter *adapter, u32 addr, u32 val)
+{
+	if (!adapter)
+		return;
+	rtw_write32(adapter, addr, val);
+}
+
+void rtw_rust_hal_com_printk_reg_pair(u32 a, u32 b)
+{
+	printk(" %08x %08x ", a, b);
+}
+
+void rtw_rust_hal_com_printk_reg_pair_nl(u32 a, u32 b)
+{
+	printk(" %08x %08x\n", a, b);
 }
 
 u8 rtw_rust_regsty_wifi_spec(_adapter *adapter)

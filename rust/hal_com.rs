@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HAL common helpers — Rust port of `hal/hal_com.c` (W4-01 rate map, W4-02 rsvd page cache, W4-03 chip info, W4-04 macaddr dump, W4-05 MRateToHwRate, W4-06 fw info dump, W4-13 HalSetBrateCfg, W4-14 HAL_IsLegalChannel, W4-15 Hal_MappingOutPipe, W4-16 rtw_get_mgntframe_raid, W4-17 _HDATA_RATE strings, W4-39 dump_tx_aclt_force_val, W4-40 dump_tx_aclt_confs, W4-41 dump_hal_spec).
+//! HAL common helpers — Rust port of `hal/hal_com.c` (W4-01 rate map, W4-02 rsvd page cache, W4-03 chip info, W4-04 macaddr dump, W4-05 MRateToHwRate, W4-06 fw info dump, W4-13 HalSetBrateCfg, W4-14 HAL_IsLegalChannel, W4-15 Hal_MappingOutPipe, W4-16 rtw_get_mgntframe_raid, W4-17 _HDATA_RATE strings, W4-39 dump_tx_aclt_force_val, W4-40 dump_tx_aclt_confs, W4-41 dump_hal_spec, W4-42 dump_TX_FIFO).
 
 #![allow(
     dead_code,
@@ -1973,6 +1973,25 @@ mod hal_spec {
     include!("hal_com_hal_spec.rs");
     #[cfg(not(host_hal_com_hal_spec_test))]
     include!("hal_com_hal_spec_kernel.rs");
+}
+
+#[cfg(all(
+    not(host_hal_com_hw_rate_test),
+    not(host_hal_com_rsvd_page_test),
+    not(host_hal_com_chip_info_test),
+    not(host_hal_com_mrate_test),
+    not(host_hal_com_fw_info_test),
+    not(host_hal_com_brate_test),
+    not(host_hal_com_legal_channel_test),
+    not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
+    not(host_hal_com_tx_aclt_force_test),
+    not(host_hal_com_tx_aclt_confs_test),
+    not(host_hal_com_hal_spec_test),
+))]
+mod dump_tx_fifo {
+    include!("hal_com_dump_tx_fifo.rs");
 }
 
 #[cfg(all(
