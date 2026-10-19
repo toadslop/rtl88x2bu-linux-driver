@@ -218,6 +218,8 @@ for path in "${changed[@]}"; do
 	| rust/rtw_debug_sec_cam.rs \
 	| rust/rtw_debug_tx_rx_dumps.rs \
 	| rust/rtw_debug_reg_dump.rs \
+	| rust/rtw_debug_adapters_status.rs \
+	| core/rtw_debug_adapters_status_shim.c \
 	| core/rtw_debug.c \
 	| core/rtw_debug_rest.c \
 	| tests/host/debug/*)
@@ -225,6 +227,7 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-debug-sec-cam
 		add_target rust-check-symbols-rtw-debug-tx-rx
 		add_target rust-check-symbols-rtw-debug-reg-dump
+		add_target rust-check-symbols-rtw-debug-adapters-status
 		;;
 	rust/hal_com.rs \
 	| hal/hal_com_rest.c \
