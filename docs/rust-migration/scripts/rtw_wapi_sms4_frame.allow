@@ -1,0 +1,6 @@
+# W3-142 frame L1: host harness symbols in C ref only (kernel Rust exports SecSWSMS4* / rtw_sms4_*).
+drop host_sec_sw_sms4_decryption
+drop host_sec_sw_sms4_encryption
+drop host_rtw_sms4_encrypt
+drop host_rtw_sms4_decrypt
+drop host_wapi_sms4_frame_adapter_init

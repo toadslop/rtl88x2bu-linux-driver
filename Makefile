@@ -3038,6 +3038,7 @@ $(MODULE_NAME)-y += rust/rtw_cmd_rest.o
 ifeq ($(CONFIG_WAPI_SUPPORT), y)
 ccflags-y += -DCONFIG_RUST_WAPI_PN_CAM
 $(MODULE_NAME)-$(CONFIG_WAPI_SUPPORT) += core/rtw_wapi_pn_cam_rust_acc.o \
+					core/rtw_wapi_sms4_frame_rust_acc.o \
 					rust/rtw_wapi.o
 $(MODULE_NAME)-$(CONFIG_WAPI_SUPPORT) += rust/rtw_wapi_sms4.o
 endif
@@ -3486,12 +3487,21 @@ rust-objects-rtw-wapi-sms4-qos-pn-c:
 		-o tests/host/wapi_sms4/wapi_sms4_qos_pn_c_ref.o \
 		tests/host/wapi_sms4/wapi_sms4_qos_pn_c_oracle.c
 
-rust-check-symbols-rtw-wapi-sms4: rust-objects-rtw-wapi-sms4-c rust-objects-rtw-wapi-sms4-pn-iv-c rust-objects-rtw-wapi-sms4-ofb-c rust-objects-rtw-wapi-sms4-mic-c rust-objects-rtw-wapi-sms4-qos-pn-c rust-objects-rtw-wapi-sms4
+rust-objects-rtw-wapi-sms4-frame-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/wapi_sms4 -I$(shell pwd)/tests/host/include \
+		-DWAPI_SMS4_FRAME_L1_REF \
+		-o tests/host/wapi_sms4/wapi_sms4_frame_c_ref.o \
+		tests/host/wapi_sms4/wapi_sms4_frame_c_oracle.c
+
+rust-check-symbols-rtw-wapi-sms4: rust-objects-rtw-wapi-sms4-c rust-objects-rtw-wapi-sms4-pn-iv-c rust-objects-rtw-wapi-sms4-ofb-c rust-objects-rtw-wapi-sms4-mic-c rust-objects-rtw-wapi-sms4-qos-pn-c rust-objects-rtw-wapi-sms4-frame-c rust-objects-rtw-wapi-sms4
 	$(MAKE) rust-check-symbols OLD=tests/host/wapi_sms4/wapi_sms4_core_c_ref.o NEW=rust/rtw_wapi_sms4.o
 	$(MAKE) rust-check-symbols OLD=tests/host/wapi_sms4/wapi_sms4_pn_iv_c_ref.o NEW=rust/rtw_wapi_sms4.o ALLOW_VACUOUS=1
 	$(MAKE) rust-check-symbols OLD=tests/host/wapi_sms4/wapi_sms4_ofb_c_ref.o NEW=rust/rtw_wapi_sms4.o ALLOW_VACUOUS=1
 	$(MAKE) rust-check-symbols OLD=tests/host/wapi_sms4/wapi_sms4_mic_c_ref.o NEW=rust/rtw_wapi_sms4.o ALLOW_VACUOUS=1
 	$(MAKE) rust-check-symbols OLD=tests/host/wapi_sms4/wapi_sms4_qos_pn_c_ref.o NEW=rust/rtw_wapi_sms4.o ALLOW_VACUOUS=1
+	$(MAKE) rust-check-symbols OLD=tests/host/wapi_sms4/wapi_sms4_frame_c_ref.o NEW=rust/rtw_wapi_sms4.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_wapi_sms4_frame.allow ALLOW_VACUOUS=1
 
 # W3-33/W3-34: compare host C oracle (rtw_rm_util_rest.c) against host Rust oracle.
 rust-objects-rtw-rm-util-c:
