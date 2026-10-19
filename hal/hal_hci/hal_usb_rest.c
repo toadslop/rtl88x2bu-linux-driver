@@ -5,8 +5,31 @@
 #define HAL_USB_SYNC_READ_IN_RUST 1
 #define HAL_USB_SYNC_WRITE_IN_RUST 1
 #define HAL_USB_ASYNC_WRITE_IN_RUST 1
+#define HAL_USB_FREE_RECV_PRIV_IN_RUST 1
 
 #include "hal_usb.c"
+
+#include <linux/skbuff.h>
+
+u32 rtw_rust_hal_usb_skb_queue_len(struct sk_buff_head *list)
+{
+	return skb_queue_len(list);
+}
+
+struct sk_buff *rtw_rust_hal_usb_skb_dequeue(struct sk_buff_head *list)
+{
+	return skb_dequeue(list);
+}
+
+void rtw_rust_hal_usb_warn_rx_skb_queue_not_empty(void)
+{
+	RTW_WARN("rx_skb_queue not empty\n");
+}
+
+void rtw_rust_hal_usb_warn_free_recv_skb_queue_not_empty(u32 len)
+{
+	RTW_WARN("free_recv_skb_queue not empty, %u\n", len);
+}
 
 /* usb_set_intf_ops — rust/hal_usb.rs (W4-25) */
 

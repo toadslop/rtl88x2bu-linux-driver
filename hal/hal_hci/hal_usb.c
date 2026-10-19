@@ -149,6 +149,7 @@ exit:
 	return res;
 }
 
+#ifndef HAL_USB_FREE_RECV_PRIV_IN_RUST
 void usb_free_recv_priv(_adapter *padapter, u16 ini_in_buf_sz)
 {
 	int i;
@@ -224,6 +225,7 @@ void usb_free_recv_priv(_adapter *padapter, u16 ini_in_buf_sz)
 
 #endif /* PLATFORM_FREEBSD */
 }
+#endif /* !HAL_USB_FREE_RECV_PRIV_IN_RUST */
 
 #ifdef CONFIG_FW_C2H_REG
 void usb_c2h_hisr_hdl(_adapter *adapter, u8 *buf)
