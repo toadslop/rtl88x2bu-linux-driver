@@ -1,6 +1,5 @@
 // Kernel entry for dump_hal_spec (W4-41).
 
-use super::{format_hal_spec, HostHalComHalSpecFixture};
 use core::ffi::{c_char, c_void};
 
 extern "C" {
