@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 //! HAL USB HCI — `usb_set_intf_ops`, vendor wvalue fixup, sync reads/writes, and async writes from
-//! `hal/hal_hci/hal_usb.c` (W4-25, W4-28, W4-33, W4-34, W4-37, W4-43).
+//! `hal/hal_hci/hal_usb.c` (W4-25, W4-28, W4-33, W4-34, W4-37, W4-43, W4-44).
 
 #![allow(
     dead_code,
@@ -447,6 +447,109 @@ mod kernel {
                     _rtw_skb_queue_purge(free_recv_skb_queue);
                 }
             }
+        }
+    }
+
+    #[cfg(c2h_wk)]
+    const C2H_REG_LEN: usize = 16;
+    #[cfg(c2h_wk)]
+    const C2H_SUCCESS: i32 = 1;
+
+    #[cfg(c2h_wk)]
+    unsafe extern "C" {
+        static rtw_rust_hal_usb_off_adapter_evtpriv: usize;
+        static rtw_rust_hal_usb_off_evtpriv_c2h_queue: usize;
+        static rtw_rust_hal_usb_off_evtpriv_c2h_wk: usize;
+        fn rtw_hal_c2h_reg_hdr_parse(
+            adapter: Hdl,
+            buf: *mut u8,
+            id: *mut u8,
+            seq: *mut u8,
+            plen: *mut u8,
+            payload: *mut *mut u8,
+        ) -> u8;
+        fn rtw_hal_c2h_id_handle_directly(
+            adapter: Hdl,
+            id: u8,
+            seq: u8,
+            plen: u8,
+            payload: *mut u8,
+        ) -> i32;
+        fn rtw_hal_c2h_handler(
+            adapter: Hdl,
+            id: u8,
+            seq: u8,
+            plen: u8,
+            payload: *mut u8,
+        ) -> i32;
+        fn rtw_cbuf_push(cbuf: *mut c_void, buf: *mut c_void) -> u8;
+        fn rtw_malloc(sz: u32) -> *mut c_void;
+        fn _set_workitem(pwork: *mut c_void);
+        fn rtw_rust_hal_usb_err_c2h_cbuf_push_fail();
+    }
+
+    #[cfg(c2h_wk)]
+    unsafe fn evtpriv_base(adapter: Hdl) -> *mut u8 {
+        unsafe { (adapter as *mut u8).add(rtw_rust_hal_usb_off_adapter_evtpriv) }
+    }
+
+    #[cfg(c2h_wk)]
+    unsafe fn adapter_c2h_queue(adapter: Hdl) -> *mut c_void {
+        unsafe {
+            let pevtpriv = evtpriv_base(adapter);
+            *(pevtpriv.add(rtw_rust_hal_usb_off_evtpriv_c2h_queue) as *mut *mut c_void)
+        }
+    }
+
+    #[cfg(c2h_wk)]
+    unsafe fn c2h_push_fail() {
+        unsafe {
+            rtw_rust_hal_usb_err_c2h_cbuf_push_fail();
+        }
+    }
+
+    #[cfg(c2h_wk)]
+    #[no_mangle]
+    pub extern "C" fn usb_c2h_hisr_hdl(adapter: Hdl, buf: *mut u8) {
+        let mut id: u8 = 0;
+        let mut seq: u8 = 0;
+        let mut plen: u8 = 0;
+        let mut payload: *mut u8 = core::ptr::null_mut();
+        unsafe {
+            if rtw_hal_c2h_reg_hdr_parse(
+                adapter,
+                buf,
+                &mut id,
+                &mut seq,
+                &mut plen,
+                &mut payload,
+            ) != C2H_SUCCESS as u8
+            {
+                return;
+            }
+
+            let c2h_queue = adapter_c2h_queue(adapter);
+            if rtw_hal_c2h_id_handle_directly(adapter, id, seq, plen, payload) != 0 {
+                rtw_hal_c2h_handler(adapter, id, seq, plen, payload);
+                let pevtpriv = evtpriv_base(adapter);
+                if rtw_cbuf_push(c2h_queue, pevtpriv as *mut c_void) != C2H_SUCCESS as u8 {
+                    c2h_push_fail();
+                }
+            } else {
+                let c2h_evt = rtw_malloc(C2H_REG_LEN as u32);
+                if !c2h_evt.is_null() {
+                    _rtw_memcpy(c2h_evt, buf as *const c_void, C2H_REG_LEN);
+                    if rtw_cbuf_push(c2h_queue, c2h_evt) != C2H_SUCCESS as u8 {
+                        c2h_push_fail();
+                    }
+                } else if rtw_cbuf_push(c2h_queue, core::ptr::null_mut()) != C2H_SUCCESS as u8 {
+                    c2h_push_fail();
+                }
+            }
+
+            let pevtpriv = evtpriv_base(adapter);
+            let c2h_wk = pevtpriv.add(rtw_rust_hal_usb_off_evtpriv_c2h_wk) as *mut c_void;
+            _set_workitem(c2h_wk);
         }
     }
 }
