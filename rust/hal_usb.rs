@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 //! HAL USB HCI — `usb_set_intf_ops`, vendor wvalue fixup, sync reads/writes, and async writes from
-//! `hal/hal_hci/hal_usb.c` (W4-25, W4-28, W4-33, W4-34, W4-37).
+//! `hal/hal_hci/hal_usb.c` (W4-25, W4-28, W4-33, W4-34, W4-37, W4-43).
 
 #![allow(
     dead_code,
@@ -336,6 +336,118 @@ mod kernel {
         pops._write_port = Some(usb_write_port);
         pops._read_port_cancel = Some(usb_read_port_cancel);
         pops._write_port_cancel = Some(usb_write_port_cancel);
+    }
+
+    unsafe extern "C" {
+        static rtw_rust_hal_usb_off_adapter_registrypriv: usize;
+        static rtw_rust_hal_usb_off_registrypriv_recvbuf_nr: usize;
+        static rtw_rust_hal_usb_off_adapter_recvpriv: usize;
+        static rtw_rust_hal_usb_off_recvpriv_pallocated_recv_buf: usize;
+        static rtw_rust_hal_usb_off_recvpriv_precv_buf: usize;
+        static rtw_rust_hal_usb_off_recvpriv_free_recv_skb_queue: usize;
+        static rtw_rust_hal_usb_off_recvpriv_rx_skb_queue: usize;
+        static rtw_rust_hal_usb_size_recv_buf: usize;
+        fn rtw_os_recvbuf_resource_free(padapter: Hdl, precvbuf: Hdl);
+        fn _rtw_mfree(p: *mut c_void, sz: u32);
+        fn _rtw_skb_queue_purge(list: *mut c_void);
+        fn _rtw_skb_free(skb: *mut c_void);
+        fn rtw_free_skb_premem(skb: *mut c_void) -> i32;
+        fn rtw_rust_hal_usb_skb_queue_len(list: *mut c_void) -> u32;
+        fn rtw_rust_hal_usb_skb_dequeue(list: *mut c_void) -> *mut c_void;
+        fn rtw_rust_hal_usb_warn_rx_skb_queue_not_empty();
+        fn rtw_rust_hal_usb_warn_free_recv_skb_queue_not_empty(len: u32);
+    }
+
+    #[cfg(CONFIG_USB_INTERRUPT_IN_PIPE)]
+    unsafe extern "C" {
+        static rtw_rust_hal_usb_off_recvpriv_int_in_urb: usize;
+        static rtw_rust_hal_usb_off_recvpriv_int_in_buf: usize;
+        fn usb_free_urb(urb: *mut c_void);
+    }
+
+    unsafe fn adapter_recvbuf_nr(padapter: Hdl) -> u8 {
+        unsafe {
+            let reg = (padapter as *mut u8).add(rtw_rust_hal_usb_off_adapter_registrypriv);
+            *reg.add(rtw_rust_hal_usb_off_registrypriv_recvbuf_nr)
+        }
+    }
+
+    unsafe fn recvpriv_base(padapter: Hdl) -> *mut u8 {
+        unsafe { (padapter as *mut u8).add(rtw_rust_hal_usb_off_adapter_recvpriv) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn usb_free_recv_priv(padapter: Hdl, ini_in_buf_sz: u16) {
+        if padapter.is_null() {
+            return;
+        }
+        unsafe {
+            let recvbuf_nr = adapter_recvbuf_nr(padapter);
+            let precvpriv = recvpriv_base(padapter);
+            let mut precvbuf =
+                *(precvpriv.add(rtw_rust_hal_usb_off_recvpriv_precv_buf) as *mut *mut u8);
+            for _ in 0..recvbuf_nr {
+                rtw_os_recvbuf_resource_free(padapter, precvbuf as Hdl);
+                precvbuf = precvbuf.add(rtw_rust_hal_usb_size_recv_buf);
+            }
+
+            let pallocated =
+                *(precvpriv.add(rtw_rust_hal_usb_off_recvpriv_pallocated_recv_buf) as *mut *mut u8);
+            if !pallocated.is_null() {
+                let alloc_sz = recvbuf_nr as u32 * rtw_rust_hal_usb_size_recv_buf as u32 + 4;
+                _rtw_mfree(pallocated as *mut c_void, alloc_sz);
+            }
+
+            #[cfg(CONFIG_USB_INTERRUPT_IN_PIPE)]
+            {
+                let int_in_urb =
+                    *(precvpriv.add(rtw_rust_hal_usb_off_recvpriv_int_in_urb) as *mut *mut c_void);
+                if !int_in_urb.is_null() {
+                    usb_free_urb(int_in_urb);
+                }
+                let int_in_buf =
+                    *(precvpriv.add(rtw_rust_hal_usb_off_recvpriv_int_in_buf) as *mut *mut u8);
+                if !int_in_buf.is_null() {
+                    _rtw_mfree(int_in_buf as *mut c_void, ini_in_buf_sz as u32);
+                }
+            }
+            #[cfg(not(CONFIG_USB_INTERRUPT_IN_PIPE))]
+            let _ini_in_buf_sz = ini_in_buf_sz;
+
+            let rx_skb_queue =
+                precvpriv.add(rtw_rust_hal_usb_off_recvpriv_rx_skb_queue) as *mut c_void;
+            if rtw_rust_hal_usb_skb_queue_len(rx_skb_queue) != 0 {
+                rtw_rust_hal_usb_warn_rx_skb_queue_not_empty();
+            }
+            _rtw_skb_queue_purge(rx_skb_queue);
+
+            let free_recv_skb_queue =
+                precvpriv.add(rtw_rust_hal_usb_off_recvpriv_free_recv_skb_queue) as *mut c_void;
+            let qlen = rtw_rust_hal_usb_skb_queue_len(free_recv_skb_queue);
+            if qlen != 0 {
+                rtw_rust_hal_usb_warn_free_recv_skb_queue_not_empty(qlen);
+            }
+
+            #[cfg(not(CONFIG_USE_USB_BUFFER_ALLOC_RX))]
+            {
+                #[cfg(all(CONFIG_PREALLOC_RECV_SKB, CONFIG_PREALLOC_RX_SKB_BUFFER))]
+                {
+                    loop {
+                        let skb = rtw_rust_hal_usb_skb_dequeue(free_recv_skb_queue);
+                        if skb.is_null() {
+                            break;
+                        }
+                        if rtw_free_skb_premem(skb) != 0 {
+                            _rtw_skb_free(skb);
+                        }
+                    }
+                }
+                #[cfg(not(all(CONFIG_PREALLOC_RECV_SKB, CONFIG_PREALLOC_RX_SKB_BUFFER)))]
+                {
+                    _rtw_skb_queue_purge(free_recv_skb_queue);
+                }
+            }
+        }
     }
 }
 
