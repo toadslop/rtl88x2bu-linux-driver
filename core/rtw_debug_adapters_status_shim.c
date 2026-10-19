@@ -55,6 +55,18 @@ void rtw_rust_debug_adapters_dump_body(void *sel, struct dvobj_priv *dvobj)
 #define P2P_INFO_DASH
 #endif
 
+#ifdef DBG_TSF_UPDATE
+#define TSF_PAUSE_TIME_TITLE_FMT " %-5s"
+#define TSF_PAUSE_TIME_TITLE_ARG , "tsfup"
+#define TSF_PAUSE_TIME_VALUE_FMT " %5d"
+#define TSF_PAUSE_TIME_VALUE_ARG , ((iface->mlmeextpriv.tsf_update_required && iface->mlmeextpriv.tsf_update_pause_stime) ? (rtw_get_passing_time_ms(iface->mlmeextpriv.tsf_update_pause_stime) > 99999 ? 99999 : rtw_get_passing_time_ms(iface->mlmeextpriv.tsf_update_pause_stime)) : 0)
+#else
+#define TSF_PAUSE_TIME_TITLE_FMT ""
+#define TSF_PAUSE_TIME_TITLE_ARG
+#define TSF_PAUSE_TIME_VALUE_FMT ""
+#define TSF_PAUSE_TIME_VALUE_ARG
+#endif
+
 #if (defined(CONFIG_SUPPORT_MULTI_BCN) && defined(CONFIG_FW_HANDLE_TXBCN)) || defined(CONFIG_CLIENT_PORT_CFG)
 #define INFO_FMT	" %-4s"
 #define INFO_ARG	, "info"
@@ -69,9 +81,11 @@ void rtw_rust_debug_adapters_dump_body(void *sel, struct dvobj_priv *dvobj)
 
 	RTW_PRINT_SEL(sel, "%-2s %-15s %c %-3s %-3s %-3s %-17s %-4s %-7s %-5s"
 		P2P_INFO_TITLE_FMT
+		TSF_PAUSE_TIME_TITLE_FMT
 		" %s"INFO_FMT"\n"
 		, "id", "ifname", ' ', "bup", "nup", "ncd", "macaddr", "port", "ch", "class"
 		P2P_INFO_TITLE_ARG
+		TSF_PAUSE_TIME_TITLE_ARG
 		, "status"INFO_ARG);
 
 	RTW_PRINT_SEL(sel, "---------------------------------------------------------------"
@@ -123,6 +137,7 @@ void rtw_rust_debug_adapters_dump_body(void *sel, struct dvobj_priv *dvobj)
 
 			RTW_PRINT_SEL(sel, "%2d %-15s %c %3u %3u %3u "MAC_FMT" %4hhu %3u,%u,%u %5u"
 				P2P_INFO_VALUE_FMT
+				TSF_PAUSE_TIME_VALUE_FMT
 				" "MLME_STATE_FMT" " INFO_CNT_FMT"\n"
 				, i, iface->registered ? ADPT_ARG(iface) : NULL
 				, iface->registered ? 'R' : ' '
@@ -138,6 +153,7 @@ void rtw_rust_debug_adapters_dump_body(void *sel, struct dvobj_priv *dvobj)
 					, iface->mlmeextpriv.cur_bwmode
 					, iface->mlmeextpriv.cur_ch_offset)
 				P2P_INFO_VALUE_ARG
+				TSF_PAUSE_TIME_VALUE_ARG
 				, MLME_STATE_ARG(iface)
 				INFO_CNT_ARG
 			);
