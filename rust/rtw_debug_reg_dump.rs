@@ -97,10 +97,10 @@ fn dump_reg_window(sel: *mut c_void, adapter: *mut c_void, start: U32, end: U32,
         push_u32_hex8(&mut line, &mut pos, val);
         push_byte(&mut line, &mut pos, b' ');
         print_bytes_cont(sel, &line[..pos]);
-        *j += 1;
         if *j % 4 == 0 {
             print_bytes_cont(sel, b"\n");
         }
+        *j += 1;
         i += 4;
     }
 }
