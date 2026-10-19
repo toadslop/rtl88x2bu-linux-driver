@@ -247,6 +247,7 @@ void sdio_local_reg_dump(void *sel, _adapter *adapter)
 }
 #endif /* CONFIG_SDIO_HCI */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 void mac_reg_dump(void *sel, _adapter *adapter)
 {
 	int i, j = 1;
@@ -401,6 +402,7 @@ void bb_reg_dump(void *sel, _adapter *adapter)
 	}
 #endif /* CONFIG_RTL8723F */
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-143 mac/bb reg dumps in rust/rtw_debug_reg_dump.rs */
 
 void bb_reg_dump_ex(void *sel, _adapter *adapter)
 {

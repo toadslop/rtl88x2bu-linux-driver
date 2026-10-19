@@ -462,4 +462,9 @@ u16 rtw_rust_debug_rfctl_rate_bmp_cck_ofdm(struct rf_ctl_t *rfctl)
 	return rfctl->rate_bmp_cck_ofdm;
 }
 
+u32 rtw_rust_debug_read32(_adapter *adapter, u32 addr)
+{
+	return rtw_read32(adapter, addr);
+}
+
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */

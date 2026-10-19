@@ -1,4 +1,5 @@
 ccflags-y += -DCONFIG_RTL8822B
+rustflags-y += --cfg CONFIG_RTL8822B
 
 ifeq ($(CONFIG_MP_INCLUDED), y)
 ### 8822B Default Enable VHT MP HW TX MODE ###

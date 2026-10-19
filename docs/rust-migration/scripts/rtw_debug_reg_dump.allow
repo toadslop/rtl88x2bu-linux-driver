@@ -1,0 +1,2 @@
+# L1 allowlist for W3-143: Rust owns mac_reg_dump / bb_reg_dump.
+drop rtw_rust_debug_read32
