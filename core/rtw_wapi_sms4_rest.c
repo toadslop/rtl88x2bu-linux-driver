@@ -118,6 +118,9 @@ u8 WapiCheckPnInSwDecrypt(_adapter *padapter, struct sk_buff *pskb);
 
 /* SecSMS4HeaderFillIV: rust/rtw_wapi_sms4.rs (W3-136) */
 
+/* SecSWSMS4Encryption/Decryption + rtw_sms4_encrypt/decrypt: rust/wapi_sms4_frame.rs (W3-142) */
+
+#ifndef CONFIG_RUST
 /* WAPI SW Enc: must have done Coalesce! */
 void SecSWSMS4Encryption(
 	_adapter *padapter,
@@ -434,6 +437,7 @@ u32	rtw_sms4_decrypt(_adapter *padapter, u8 *precvframe)
 	WAPI_TRACE(WAPI_RX, "<=========%s\n", __FUNCTION__);
 	return res;
 }
+#endif /* !CONFIG_RUST */
 
 #else
 

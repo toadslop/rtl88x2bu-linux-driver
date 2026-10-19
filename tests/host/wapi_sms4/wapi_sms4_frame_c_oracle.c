@@ -133,4 +133,31 @@ u32 rtw_sms4_decrypt(void *padapter, u8 *precvframe)
 				     (union host_wapi_recv_frame *)precvframe);
 }
 
+#else
+
+void SecSWSMS4Encryption(void *padapter, u8 *pxmitframe)
+{
+	host_sec_sw_sms4_encryption((struct host_wapi_adapter *)padapter,
+				    (struct host_wapi_xmit_frame *)pxmitframe);
+}
+
+u32 rtw_sms4_encrypt(void *padapter, u8 *pxmitframe)
+{
+	return host_rtw_sms4_encrypt((struct host_wapi_adapter *)padapter,
+				     (struct host_wapi_xmit_frame *)pxmitframe);
+}
+
+u8 SecSWSMS4Decryption(void *padapter, u8 *precv_frame, void *precv_priv)
+{
+	(void)precv_priv;
+	return host_sec_sw_sms4_decryption((struct host_wapi_adapter *)padapter,
+					   (union host_wapi_recv_frame *)precv_frame);
+}
+
+u32 rtw_sms4_decrypt(void *padapter, u8 *precvframe)
+{
+	return host_rtw_sms4_decrypt((struct host_wapi_adapter *)padapter,
+				     (union host_wapi_recv_frame *)precvframe);
+}
+
 #endif
