@@ -15013,95 +15013,63 @@ int hal_spec_init(_adapter *adapter)
 	return ret;
 }
 
-static const char *const _band_cap_str[] = {
-	/* BIT0 */"2G",
-	/* BIT1 */"5G",
+/* dump_hal_spec — ported to rust/hal_com.rs (W4-41) */
+
+struct rtw_rust_hal_spec_dump {
+	u8 macid_num;
+	u8 macid_cap;
+	u8 sec_cap;
+	u8 sec_cam_ent_num;
+	u8 rfpath_num_2g;
+	u8 rfpath_num_5g;
+	u8 rf_reg_path_num;
+	u8 rf_reg_path_avail_num;
+	u8 rf_reg_trx_path_bmp;
+	u8 max_tx_cnt;
+	u8 tx_nss_num;
+	u8 rx_nss_num;
+	u8 band_cap;
+	u8 bw_cap;
+	u8 proto_cap;
+	u8 txgi_max;
+	u8 txgi_pdbm;
+	u8 wl_func;
+	u8 tx_aclt_unit_factor;
+	u8 rx_tsf_filter;
+	u8 pg_txpwr_saddr;
+	u8 pg_txgi_diff_factor;
 };
 
-static const char *const _bw_cap_str[] = {
-	/* BIT0 */"5M",
-	/* BIT1 */"10M",
-	/* BIT2 */"20M",
-	/* BIT3 */"40M",
-	/* BIT4 */"80M",
-	/* BIT5 */"160M",
-	/* BIT6 */"80_80M",
-};
-
-static const char *const _proto_cap_str[] = {
-	/* BIT0 */"b",
-	/* BIT1 */"g",
-	/* BIT2 */"n",
-	/* BIT3 */"ac",
-};
-
-static const char *const _wl_func_str[] = {
-	/* BIT0 */"P2P",
-	/* BIT1 */"MIRACAST",
-	/* BIT2 */"TDLS",
-	/* BIT3 */"FTM",
-};
-
-void dump_hal_spec(void *sel, _adapter *adapter)
+void rtw_rust_hal_com_copy_hal_spec(_adapter *adapter,
+	struct rtw_rust_hal_spec_dump *out)
 {
-	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
-	int i;
+	struct hal_spec_t *hal_spec;
 
-	RTW_PRINT_SEL(sel, "macid_num:%u\n", hal_spec->macid_num);
-	RTW_PRINT_SEL(sel, "macid_cap:%u\n", hal_spec->macid_cap);
-	RTW_PRINT_SEL(sel, "sec_cap:0x%02x\n", hal_spec->sec_cap);
-	RTW_PRINT_SEL(sel, "sec_cam_ent_num:%u\n", hal_spec->sec_cam_ent_num);
-
-	RTW_PRINT_SEL(sel, "rfpath_num_2g:%u\n", hal_spec->rfpath_num_2g);
-	RTW_PRINT_SEL(sel, "rfpath_num_5g:%u\n", hal_spec->rfpath_num_5g);
-	RTW_PRINT_SEL(sel, "rf_reg_path_num:%u\n", hal_spec->rf_reg_path_num);
-	RTW_PRINT_SEL(sel, "rf_reg_path_avail_num:%u\n", hal_spec->rf_reg_path_avail_num);
-	RTW_PRINT_SEL(sel, "rf_reg_trx_path_bmp:0x%02x\n", hal_spec->rf_reg_trx_path_bmp);
-	RTW_PRINT_SEL(sel, "max_tx_cnt:%u\n", hal_spec->max_tx_cnt);
-
-	RTW_PRINT_SEL(sel, "tx_nss_num:%u\n", hal_spec->tx_nss_num);
-	RTW_PRINT_SEL(sel, "rx_nss_num:%u\n", hal_spec->rx_nss_num);
-
-	RTW_PRINT_SEL(sel, "band_cap:");
-	for (i = 0; i < BAND_CAP_BIT_NUM; i++) {
-		if (((hal_spec->band_cap) >> i) & BIT0 && _band_cap_str[i])
-			_RTW_PRINT_SEL(sel, "%s ", _band_cap_str[i]);
-	}
-	_RTW_PRINT_SEL(sel, "\n");
-
-	RTW_PRINT_SEL(sel, "bw_cap:");
-	for (i = 0; i < BW_CAP_BIT_NUM; i++) {
-		if (((hal_spec->bw_cap) >> i) & BIT0 && _bw_cap_str[i])
-			_RTW_PRINT_SEL(sel, "%s ", _bw_cap_str[i]);
-	}
-	_RTW_PRINT_SEL(sel, "\n");
-
-	RTW_PRINT_SEL(sel, "proto_cap:");
-	for (i = 0; i < PROTO_CAP_BIT_NUM; i++) {
-		if (((hal_spec->proto_cap) >> i) & BIT0 && _proto_cap_str[i])
-			_RTW_PRINT_SEL(sel, "%s ", _proto_cap_str[i]);
-	}
-	_RTW_PRINT_SEL(sel, "\n");
-
-	RTW_PRINT_SEL(sel, "txgi_max:%u\n", hal_spec->txgi_max);
-	RTW_PRINT_SEL(sel, "txgi_pdbm:%u\n", hal_spec->txgi_pdbm);
-
-	RTW_PRINT_SEL(sel, "wl_func:");
-	for (i = 0; i < WL_FUNC_BIT_NUM; i++) {
-		if (((hal_spec->wl_func) >> i) & BIT0 && _wl_func_str[i])
-			_RTW_PRINT_SEL(sel, "%s ", _wl_func_str[i]);
-	}
-	_RTW_PRINT_SEL(sel, "\n");
-
-#if CONFIG_TX_AC_LIFETIME
-	RTW_PRINT_SEL(sel, "tx_aclt_unit_factor:%u (unit:%uus)\n"
-		, hal_spec->tx_aclt_unit_factor, hal_spec->tx_aclt_unit_factor * 32);
-#endif
-
-	RTW_PRINT_SEL(sel, "rx_tsf_filter:%u\n", hal_spec->rx_tsf_filter);
-
-	RTW_PRINT_SEL(sel, "pg_txpwr_saddr:0x%X\n", hal_spec->pg_txpwr_saddr);
-	RTW_PRINT_SEL(sel, "pg_txgi_diff_factor:%u\n", hal_spec->pg_txgi_diff_factor);
+	if (!adapter || !out)
+		return;
+	hal_spec = GET_HAL_SPEC(adapter);
+	out->macid_num = hal_spec->macid_num;
+	out->macid_cap = hal_spec->macid_cap;
+	out->sec_cap = hal_spec->sec_cap;
+	out->sec_cam_ent_num = hal_spec->sec_cam_ent_num;
+	out->rfpath_num_2g = hal_spec->rfpath_num_2g;
+	out->rfpath_num_5g = hal_spec->rfpath_num_5g;
+	out->rf_reg_path_num = hal_spec->rf_reg_path_num;
+	out->rf_reg_path_avail_num = hal_spec->rf_reg_path_avail_num;
+	out->rf_reg_trx_path_bmp = hal_spec->rf_reg_trx_path_bmp;
+	out->max_tx_cnt = hal_spec->max_tx_cnt;
+	out->tx_nss_num = hal_spec->tx_nss_num;
+	out->rx_nss_num = hal_spec->rx_nss_num;
+	out->band_cap = hal_spec->band_cap;
+	out->bw_cap = hal_spec->bw_cap;
+	out->proto_cap = hal_spec->proto_cap;
+	out->txgi_max = hal_spec->txgi_max;
+	out->txgi_pdbm = hal_spec->txgi_pdbm;
+	out->wl_func = hal_spec->wl_func;
+	out->tx_aclt_unit_factor = hal_spec->tx_aclt_unit_factor;
+	out->rx_tsf_filter = hal_spec->rx_tsf_filter;
+	out->pg_txpwr_saddr = hal_spec->pg_txpwr_saddr;
+	out->pg_txgi_diff_factor = hal_spec->pg_txgi_diff_factor;
 }
 
 inline bool hal_chk_band_cap(_adapter *adapter, u8 cap)
