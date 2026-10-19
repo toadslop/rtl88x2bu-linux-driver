@@ -391,15 +391,13 @@ mod kernel {
         unsafe {
             let recvbuf_nr = adapter_recvbuf_nr(padapter);
             let precvpriv = recvpriv_base(padapter);
-            let mut precvbuf =
-                *(precvpriv.add(layout::PRECV_BUF_OFF) as *mut *mut u8);
+            let mut precvbuf = *(precvpriv.add(layout::PRECV_BUF_OFF) as *mut *mut u8);
             for _ in 0..recvbuf_nr {
                 rtw_os_recvbuf_resource_free(padapter, precvbuf as Hdl);
                 precvbuf = precvbuf.add(layout::RECV_BUF_STRIDE);
             }
 
-            let pallocated =
-                *(precvpriv.add(layout::PALLOCATED_RECV_BUF_OFF) as *mut *mut u8);
+            let pallocated = *(precvpriv.add(layout::PALLOCATED_RECV_BUF_OFF) as *mut *mut u8);
             if !pallocated.is_null() {
                 let alloc_sz = recvbuf_nr as u32 * layout::RECV_BUF_STRIDE as u32 + 4;
                 _rtw_mfree(pallocated as *mut c_void, alloc_sz);
@@ -407,13 +405,11 @@ mod kernel {
 
             #[cfg(CONFIG_USB_INTERRUPT_IN_PIPE)]
             {
-                let int_in_urb =
-                    *(precvpriv.add(layout::INT_IN_URB_OFF) as *mut *mut c_void);
+                let int_in_urb = *(precvpriv.add(layout::INT_IN_URB_OFF) as *mut *mut c_void);
                 if !int_in_urb.is_null() {
                     usb_free_urb(int_in_urb);
                 }
-                let int_in_buf =
-                    *(precvpriv.add(layout::INT_IN_BUF_OFF) as *mut *mut u8);
+                let int_in_buf = *(precvpriv.add(layout::INT_IN_BUF_OFF) as *mut *mut u8);
                 if !int_in_buf.is_null() {
                     _rtw_mfree(int_in_buf as *mut c_void, ini_in_buf_sz as u32);
                 }
@@ -427,8 +423,7 @@ mod kernel {
             }
             _rtw_skb_queue_purge(rx_skb_queue);
 
-            let free_recv_skb_queue =
-                precvpriv.add(layout::FREE_RECV_SKB_QUEUE_OFF) as *mut c_void;
+            let free_recv_skb_queue = precvpriv.add(layout::FREE_RECV_SKB_QUEUE_OFF) as *mut c_void;
             let qlen = rtw_rust_hal_usb_skb_queue_len(free_recv_skb_queue);
             if qlen != 0 {
                 rtw_rust_hal_usb_warn_free_recv_skb_queue_not_empty(qlen);
