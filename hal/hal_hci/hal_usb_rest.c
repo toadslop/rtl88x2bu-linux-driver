@@ -11,6 +11,27 @@
 
 #include <linux/skbuff.h>
 
+/* Layout anchors for rust/hal_usb.rs usb_free_recv_priv (W4-43). */
+const size_t rtw_rust_hal_usb_off_adapter_registrypriv = offsetof(_adapter, registrypriv);
+const size_t rtw_rust_hal_usb_off_registrypriv_recvbuf_nr =
+	offsetof(struct registry_priv, recvbuf_nr);
+const size_t rtw_rust_hal_usb_off_adapter_recvpriv = offsetof(_adapter, recvpriv);
+const size_t rtw_rust_hal_usb_off_recvpriv_pallocated_recv_buf =
+	offsetof(struct recv_priv, pallocated_recv_buf);
+const size_t rtw_rust_hal_usb_off_recvpriv_precv_buf =
+	offsetof(struct recv_priv, precv_buf);
+#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
+const size_t rtw_rust_hal_usb_off_recvpriv_int_in_urb =
+	offsetof(struct recv_priv, int_in_urb);
+const size_t rtw_rust_hal_usb_off_recvpriv_int_in_buf =
+	offsetof(struct recv_priv, int_in_buf);
+#endif
+const size_t rtw_rust_hal_usb_off_recvpriv_free_recv_skb_queue =
+	offsetof(struct recv_priv, free_recv_skb_queue);
+const size_t rtw_rust_hal_usb_off_recvpriv_rx_skb_queue =
+	offsetof(struct recv_priv, rx_skb_queue);
+const size_t rtw_rust_hal_usb_size_recv_buf = sizeof(struct recv_buf);
+
 u32 rtw_rust_hal_usb_skb_queue_len(struct sk_buff_head *list)
 {
 	return skb_queue_len(list);
