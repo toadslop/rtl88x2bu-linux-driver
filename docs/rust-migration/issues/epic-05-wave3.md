@@ -205,7 +205,7 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 
 | ID | File | Focus |
 |----|------|--------|
-| W3-143 | `wave3-143-debug-recv-reorder-rtp.md` | RTP sink + reorder ctl dump |
+| W3-143 | `wave3-143-debug-mac-bb-reg-dump.md` | MAC/BB register dump leaf |
 | W3-144 | `wave3-144-debug-adapters-status.md` | `dump_adapters_status` |
 
 Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:

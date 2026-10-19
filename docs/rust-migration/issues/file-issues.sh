@@ -290,7 +290,7 @@ files=(
   wave4-42-hal-dump-tx-fifo.md
   wave4-43-hal-usb-free-recv-priv.md
   wave4-44-hal-usb-c2h-hisr.md
-  wave3-143-debug-recv-reorder-rtp.md
+  wave3-143-debug-mac-bb-reg-dump.md
   wave3-144-debug-adapters-status.md
 )
 
