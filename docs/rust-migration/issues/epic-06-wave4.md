@@ -85,4 +85,13 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-39 | `wave4-39-hal-com-tx-aclt-force-dump.md` | `hal_com.c` `dump_tx_aclt_force_val` |
 | W4-40 | `wave4-40-hal-com-tx-aclt-confs-dump.md` | `hal_com.c` `dump_tx_aclt_confs` |
 
-Further slices: `hal_usb` bulk port I/O, deeper PHYDM — file as `wave4-*.md` when tranche 8 is needed.
+## Children (tranche 8 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-41 | `wave4-41-hal-dump-hal-spec.md` | `hal_com.c` `dump_hal_spec` |
+| W4-42 | `wave4-42-hal-dump-tx-fifo.md` | `hal_com.c` `dump_TX_FIFO` |
+| W4-43 | `wave4-43-hal-usb-free-recv-priv.md` | `hal_usb.c` recv priv teardown |
+| W4-44 | `wave4-44-hal-usb-c2h-hisr.md` | `hal_usb.c` `usb_c2h_hisr_hdl` |
+
+Further slices: deeper PHYDM / bulk USB RX path — file as `wave4-*.md` when tranche 9 is needed.
