@@ -475,13 +475,7 @@ mod kernel {
             plen: u8,
             payload: *mut u8,
         ) -> i32;
-        fn rtw_hal_c2h_handler(
-            adapter: Hdl,
-            id: u8,
-            seq: u8,
-            plen: u8,
-            payload: *mut u8,
-        ) -> i32;
+        fn rtw_hal_c2h_handler(adapter: Hdl, id: u8, seq: u8, plen: u8, payload: *mut u8) -> i32;
         fn rtw_cbuf_push(cbuf: *mut c_void, buf: *mut c_void) -> u8;
         fn rtw_malloc(sz: u32) -> *mut c_void;
         fn _set_workitem(pwork: *mut c_void);
@@ -516,14 +510,8 @@ mod kernel {
         let mut plen: u8 = 0;
         let mut payload: *mut u8 = core::ptr::null_mut();
         unsafe {
-            if rtw_hal_c2h_reg_hdr_parse(
-                adapter,
-                buf,
-                &mut id,
-                &mut seq,
-                &mut plen,
-                &mut payload,
-            ) != C2H_SUCCESS as u8
+            if rtw_hal_c2h_reg_hdr_parse(adapter, buf, &mut id, &mut seq, &mut plen, &mut payload)
+                != C2H_SUCCESS as u8
             {
                 return;
             }
