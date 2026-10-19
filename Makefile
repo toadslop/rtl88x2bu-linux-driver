@@ -3023,6 +3023,7 @@ $(MODULE_NAME)-y += rust/rtw_btcoex_wifionly.o
 $(MODULE_NAME)-y += rust/rtw_debug.o
 $(MODULE_NAME)-y += rust/rtw_debug_sec_cam.o
 $(MODULE_NAME)-y += rust/rtw_debug_tx_rx_dumps.o
+$(MODULE_NAME)-y += rust/rtw_debug_reg_dump.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
@@ -4545,6 +4546,20 @@ rust-objects-rtw-debug-tx-rx-c:
 rust-check-symbols-rtw-debug-tx-rx: rust-objects-rtw-debug-tx-rx-c rust-objects-rtw-debug-tx-rx
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_tx_rx_dumps_c_ref.o NEW=rust/rtw_debug_tx_rx_dumps.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_tx_rx.allow ALLOW_VACUOUS=1
+
+rust-objects-rtw-debug-reg-dump:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-reg-dump"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug_reg_dump.o
+rust-objects-rtw-debug-reg-dump-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-DCONFIG_RTL8822B \
+		-o tests/host/debug/debug_reg_dump_c_ref.o \
+		tests/host/debug/debug_reg_dump_c_oracle.c
+rust-check-symbols-rtw-debug-reg-dump: rust-objects-rtw-debug-reg-dump-c rust-objects-rtw-debug-reg-dump
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_reg_dump_c_ref.o NEW=rust/rtw_debug_reg_dump.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_reg_dump.allow ALLOW_VACUOUS=1
 
 # W3-94 follow-up PR4: host C oracle (ps deny shim) vs rust/rtw_pwrctrl.o.
 rust-objects-rtw-pwrctrl:

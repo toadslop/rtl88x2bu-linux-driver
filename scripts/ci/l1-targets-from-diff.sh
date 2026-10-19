@@ -217,12 +217,14 @@ for path in "${changed[@]}"; do
 	rust/rtw_debug.rs \
 	| rust/rtw_debug_sec_cam.rs \
 	| rust/rtw_debug_tx_rx_dumps.rs \
+	| rust/rtw_debug_reg_dump.rs \
 	| core/rtw_debug.c \
 	| core/rtw_debug_rest.c \
 	| tests/host/debug/*)
 		add_target rust-check-symbols-rtw-debug
 		add_target rust-check-symbols-rtw-debug-sec-cam
 		add_target rust-check-symbols-rtw-debug-tx-rx
+		add_target rust-check-symbols-rtw-debug-reg-dump
 		;;
 	rust/hal_com.rs \
 	| hal/hal_com_rest.c \

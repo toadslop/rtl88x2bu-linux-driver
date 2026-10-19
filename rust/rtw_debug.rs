@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 //! W3-130/W3-131 debug dumps — Rust port of `core/rtw_debug.c` leaves.
 //! W3-134 tx/rx dump leaves live in `rtw_debug_tx_rx_dumps.rs`.
+//! W3-143 MAC/BB reg dump leaves live in `rtw_debug_reg_dump.rs`.
 
 #![allow(
     dead_code,

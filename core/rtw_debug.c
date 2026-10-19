@@ -70,6 +70,11 @@ void rtw_rust_debug_print_sel(void *sel, const char *line)
 	RTW_PRINT_SEL(sel, "%s", line);
 }
 
+void rtw_rust_debug_print_sel_cont(void *sel, const char *line)
+{
+	_RTW_PRINT_SEL(sel, "%s", line);
+}
+
 void rtw_rust_debug_test_print(const char *msg)
 {
 	RTW_PRINT("%s", msg);
@@ -460,6 +465,11 @@ u64 rtw_rust_debug_rfctl_rate_bmp_vht(struct rf_ctl_t *rfctl, u8 bw)
 u16 rtw_rust_debug_rfctl_rate_bmp_cck_ofdm(struct rf_ctl_t *rfctl)
 {
 	return rfctl->rate_bmp_cck_ofdm;
+}
+
+u32 rtw_rust_debug_read32(_adapter *adapter, u32 addr)
+{
+	return rtw_read32(adapter, addr);
 }
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */
