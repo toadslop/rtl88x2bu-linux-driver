@@ -391,8 +391,8 @@ mod kernel {
                 precvbuf = precvbuf.add(rtw_rust_hal_usb_size_recv_buf);
             }
 
-            let pallocated = *(precvpriv.add(rtw_rust_hal_usb_off_recvpriv_pallocated_recv_buf)
-                as *mut *mut u8);
+            let pallocated =
+                *(precvpriv.add(rtw_rust_hal_usb_off_recvpriv_pallocated_recv_buf) as *mut *mut u8);
             if !pallocated.is_null() {
                 let alloc_sz = recvbuf_nr as u32 * rtw_rust_hal_usb_size_recv_buf as u32 + 4;
                 _rtw_mfree(pallocated as *mut c_void, alloc_sz);
@@ -400,13 +400,13 @@ mod kernel {
 
             #[cfg(CONFIG_USB_INTERRUPT_IN_PIPE)]
             {
-                let int_in_urb = *(precvpriv.add(rtw_rust_hal_usb_off_recvpriv_int_in_urb)
-                    as *mut *mut c_void);
+                let int_in_urb =
+                    *(precvpriv.add(rtw_rust_hal_usb_off_recvpriv_int_in_urb) as *mut *mut c_void);
                 if !int_in_urb.is_null() {
                     usb_free_urb(int_in_urb);
                 }
-                let int_in_buf = *(precvpriv.add(rtw_rust_hal_usb_off_recvpriv_int_in_buf)
-                    as *mut *mut u8);
+                let int_in_buf =
+                    *(precvpriv.add(rtw_rust_hal_usb_off_recvpriv_int_in_buf) as *mut *mut u8);
                 if !int_in_buf.is_null() {
                     _rtw_mfree(int_in_buf as *mut c_void, ini_in_buf_sz as u32);
                 }
