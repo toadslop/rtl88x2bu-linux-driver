@@ -252,6 +252,12 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-39 | #1339 | [W4-39] Translate hal_com.c — dump_tx_aclt_force_val formatter |
 | W4-40 | #1340 | [W4-40] Translate hal_com.c — dump_tx_aclt_confs formatter |
 | W3-142 | #1341 | [W3-142] Translate rtw_wapi_sms4_rest.c — frame encrypt/decrypt paths |
+| W4-41 | #1373 | [W4-41] Translate hal_com.c — dump_hal_spec formatter |
+| W4-42 | #1374 | [W4-42] Translate hal_com.c — dump_TX_FIFO WoW debug |
+| W4-43 | #1375 | [W4-43] Translate hal_usb.c — usb_free_recv_priv teardown |
+| W4-44 | #1376 | [W4-44] Translate hal_usb.c — usb_c2h_hisr_hdl |
+| W3-143 | #1377 | [W3-143] Translate rtw_debug_rest.c — MAC/BB register dump leaf |
+| W3-144 | #1378 | [W3-144] Translate rtw_debug_rest.c — dump_adapters_status |
 
 ## Superseded issues
 

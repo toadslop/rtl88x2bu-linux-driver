@@ -201,6 +201,13 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 |----|------|--------|
 | W3-142 | `wave3-142-wapi-sms4-frame-crypt.md` | `rtw_wapi_sms4_rest.c` frame encrypt/decrypt |
 
+## Children (tranche 11 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-143 | `wave3-143-debug-mac-bb-reg-dump.md` | MAC/BB register dump leaf |
+| W3-144 | `wave3-144-debug-adapters-status.md` | `dump_adapters_status` |
+
 Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:
 
 - `rtw_beamforming.c` sounding state machine (HAL-coupled NDPA paths)

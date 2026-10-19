@@ -286,6 +286,12 @@ files=(
   wave4-39-hal-com-tx-aclt-force-dump.md
   wave4-40-hal-com-tx-aclt-confs-dump.md
   wave3-142-wapi-sms4-frame-crypt.md
+  wave4-41-hal-dump-hal-spec.md
+  wave4-42-hal-dump-tx-fifo.md
+  wave4-43-hal-usb-free-recv-priv.md
+  wave4-44-hal-usb-c2h-hisr.md
+  wave3-143-debug-mac-bb-reg-dump.md
+  wave3-144-debug-adapters-status.md
 )
 
 # draft_id -> github issue number
