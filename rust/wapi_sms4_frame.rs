@@ -5,7 +5,7 @@
 
 use core::ffi::c_void;
 
-use super::{U8, U32};
+use super::{U32, U8};
 
 const _SUCCESS: U32 = 1;
 const _FAIL: U32 = 0;
@@ -52,9 +52,8 @@ pub extern "C" fn rtw_sms4_encrypt(padapter: *mut c_void, pxmitframe: *mut U8) -
     {
         return _FAIL;
     }
-    let buf_addr = unsafe {
-        *((pxmitframe.add(rtw_rust_wep_off_xmit_frame_buf_addr)) as *const *mut U8)
-    };
+    let buf_addr =
+        unsafe { *((pxmitframe.add(rtw_rust_wep_off_xmit_frame_buf_addr)) as *const *mut U8) };
     if buf_addr.is_null() {
         return _FAIL;
     }
