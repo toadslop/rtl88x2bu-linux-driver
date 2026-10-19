@@ -18,6 +18,7 @@ type U32 = u32;
 
 extern "C" {
     fn rtw_rust_debug_print_sel(sel: *mut c_void, line: *const c_char);
+    fn rtw_rust_debug_print_sel_cont(sel: *mut c_void, line: *const c_char);
     fn rtw_rust_debug_read32(adapter: *mut c_void, addr: U32) -> U32;
 }
 
@@ -29,6 +30,17 @@ fn print_bytes(sel: *mut c_void, bytes: &[u8]) {
     }
     unsafe {
         rtw_rust_debug_print_sel(sel, buf.as_ptr());
+    }
+}
+
+fn print_bytes_cont(sel: *mut c_void, bytes: &[u8]) {
+    let mut buf = [0i8; 256];
+    let n = core::cmp::min(bytes.len(), buf.len().saturating_sub(1));
+    for i in 0..n {
+        buf[i] = bytes[i] as i8;
+    }
+    unsafe {
+        rtw_rust_debug_print_sel_cont(sel, buf.as_ptr());
     }
 }
 
@@ -73,19 +85,21 @@ fn dump_reg_window(sel: *mut c_void, adapter: *mut c_void, start: U32, end: U32,
     let mut line = [0u8; 64];
     let mut i = start;
     while i < end {
-        let mut pos = 0usize;
         if *j % 4 == 1 {
+            let mut pos = 0usize;
             push_str(&mut line, &mut pos, b"0x");
             push_u16_hex4(&mut line, &mut pos, i as u16);
+            print_bytes(sel, &line[..pos]);
         }
+        let mut pos = 0usize;
         push_str(&mut line, &mut pos, b" 0x");
         let val = unsafe { rtw_rust_debug_read32(adapter, i) };
         push_u32_hex8(&mut line, &mut pos, val);
         push_byte(&mut line, &mut pos, b' ');
-        print_bytes(sel, &line[..pos]);
+        print_bytes_cont(sel, &line[..pos]);
         *j += 1;
         if *j % 4 == 0 {
-            print_bytes(sel, b"\n");
+            print_bytes_cont(sel, b"\n");
         }
         i += 4;
     }
