@@ -11,6 +11,7 @@ TRX_ORACLE := hal_dump_trx_mode_c_oracle.c
 FW_ORACLE := hal_dump_fw_info_c_oracle.c
 TX_ACLT_FORCE_ORACLE := hal_dump_tx_aclt_force_val_c_oracle.c
 TX_ACLT_CONFS_ORACLE := hal_dump_tx_aclt_confs_c_oracle.c
+HAL_SPEC_ORACLE := hal_dump_hal_spec_c_oracle.c
 MRATE_ORACLE := hal_mrate_to_hw_rate_c_oracle.c
 RF_NSS_ORACLE := hal_dump_rf_nss_c_oracle.c
 HALMAC_ORACLE := hal_halmac_enum_mappers_c_oracle.c
@@ -42,7 +43,8 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 
 .PHONY: all test test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust \
 	test-trx test-trx-rust test-fw test-fw-rust test-tx-aclt-force test-tx-aclt-force-rust \
-	test-tx-aclt-confs test-tx-aclt-confs-rust test-mrate test-mrate-rust \
+	test-tx-aclt-confs test-tx-aclt-confs-rust test-hal-spec test-hal-spec-rust \
+	test-mrate test-mrate-rust \
 	test-rf-nss test-rf-nss-rust test-halmac test-halmac-rust test-halmac-rsvd \
 	test-halmac-rsvd-rust test-halmac-drv2halmac test-halmac-drv2halmac-rust \
 	test-brate test-brate-rust \
@@ -60,7 +62,8 @@ all: test
 
 test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust \
 	test-fw test-fw-rust test-tx-aclt-force test-tx-aclt-force-rust \
-	test-tx-aclt-confs test-tx-aclt-confs-rust test-mrate test-mrate-rust test-rf-nss test-rf-nss-rust \
+	test-tx-aclt-confs test-tx-aclt-confs-rust test-hal-spec test-hal-spec-rust \
+	test-mrate test-mrate-rust test-rf-nss test-rf-nss-rust \
 	test-halmac test-halmac-rust test-halmac-rsvd test-brate test-brate-rust \
 	test-legal-channel test-legal-channel-rust test-mapping-out-pipe test-mapping-out-pipe-rust \
 	test-mgntframe-raid test-mgntframe-raid-rust test-hdata-rate test-hdata-rate-rust \
@@ -187,6 +190,24 @@ test-tx-aclt-confs-rust: test_dump_tx_aclt_confs_rust
 test_dump_tx_aclt_confs_rust: test_dump_tx_aclt_confs.c librust_hal_com_tx_aclt_confs.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_TX_ACLT_CONFS_ORACLE -o $@ test_dump_tx_aclt_confs.c \
 		$(HOST_JSON) librust_hal_com_tx_aclt_confs.a
+
+test-hal-spec: test_dump_hal_spec
+	./test_dump_hal_spec hal_dump_hal_spec_vectors.json
+
+test_dump_hal_spec: test_dump_hal_spec.c $(HAL_SPEC_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_dump_hal_spec.c $(HAL_SPEC_ORACLE) $(HOST_JSON)
+
+librust_hal_com_hal_spec.a: $(RUST_HAL)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_hal_spec_test --cfg config_tx_ac_lifetime \
+		--crate-type staticlib $(RUST_HAL) -o $@
+
+test-hal-spec-rust: test_dump_hal_spec_rust
+	./test_dump_hal_spec_rust hal_dump_hal_spec_vectors.json
+
+test_dump_hal_spec_rust: test_dump_hal_spec.c librust_hal_com_hal_spec.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_COM_HAL_SPEC_ORACLE -o $@ test_dump_hal_spec.c \
+		$(HOST_JSON) librust_hal_com_hal_spec.a
 
 test-mrate: test_m_rate_to_hw_rate
 	./test_m_rate_to_hw_rate hal_mrate_to_hw_rate_vectors.json
@@ -734,6 +755,7 @@ clean:
 		test_dump_fw_info test_dump_fw_info_rust librust_hal_com_fw.a \
 		test_dump_tx_aclt_force_val test_dump_tx_aclt_force_val_rust librust_hal_com_tx_aclt_force.a \
 		test_dump_tx_aclt_confs test_dump_tx_aclt_confs_rust librust_hal_com_tx_aclt_confs.a \
+		test_dump_hal_spec test_dump_hal_spec_rust librust_hal_com_hal_spec.a \
 		test_m_rate_to_hw_rate test_m_rate_to_hw_rate_rust librust_hal_com_mrate.a \
 		test_dump_rf_nss test_dump_rf_nss_rust librust_hal_intf_rf_nss.a \
 		test_hal_halmac_network test_hal_halmac_bcn test_hal_halmac_bcn_abi \
