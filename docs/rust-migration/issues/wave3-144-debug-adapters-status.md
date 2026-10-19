@@ -4,7 +4,7 @@ labels: [rust-migration, phase-1, wave-3, size/~200]
 type: child
 id: W3-144
 epic: E05
-blocked_by: []
+blocked_by: [W3-143]
 estimate_loc: 220
 ---
 
@@ -12,7 +12,9 @@ estimate_loc: 220
 
 Port `dump_adapters_status` from [`core/rtw_debug_rest.c`](../../../core/rtw_debug_rest.c) to
 [`rust/rtw_debug_adapters_status.rs`](../../../rust/rtw_debug_adapters_status.rs) under
-`CONFIG_RTW_DEBUG` / `CONFIG_PROC_DEBUG`:
+`CONFIG_RTW_DEBUG` / `CONFIG_PROC_DEBUG` with C swap guards
+`#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)` (same TU / lane as
+[W3-143](wave3-143-debug-mac-bb-reg-dump.md)):
 
 - `dump_mi_status` via `extern "C"` to [`core/rtw_mi.c`](../../../core/rtw_mi.c) (`dump_mi_status` /
   `dump_dvobj_mi_status` are still C-only — [W3-122](wave3-122-mi-status-leaf.md) closed without
@@ -24,7 +26,8 @@ Port `dump_adapters_status` from [`core/rtw_debug_rest.c`](../../../core/rtw_deb
 ## Notes
 
 - Large formatter (~210 LOC in C); keep procfs entry points in C, Rust owns dump body.
-- Parallel lane vs [W3-143](wave3-143-debug-mac-bb-reg-dump.md) (different Rust module).
+- Same `rtw_debug_rest.c` lane as [W3-143](wave3-143-debug-mac-bb-reg-dump.md) — stack after W3-143
+  lands (do not parallelize guard edits in one file).
 - Split further only if the PR size gate forces it during implementation.
 
 ## Acceptance

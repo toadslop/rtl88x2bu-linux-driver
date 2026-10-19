@@ -16,7 +16,8 @@ Port `usb_free_recv_priv` from [`hal/hal_hci/hal_usb.c`](../../../hal/hal_hci/ha
 - Free `recv_buf` queue entries and OS recvbuf resources
 - `CONFIG_USB_INTERRUPT_IN_PIPE` urb/buffer cleanup
 - `CONFIG_PREALLOC_RECV_SKB` / `free_recv_skb_queue` drain
-- Platform `tasklet_kill` / FreeBSD mtx paths behind `cfg`
+- Linux `rx_skb_queue` / `free_recv_skb_queue` purge and prealloc-skb drain paths
+- FreeBSD skb dequeue and `CONFIG_RX_INDICATE_QUEUE` mbuf drain + `mtx_destroy`
 
 ## Notes
 
