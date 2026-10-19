@@ -4,10 +4,7 @@ use core::ffi::{c_char, c_void};
 
 extern "C" {
     fn rtw_rust_hal_com_print_line(sel: *mut c_void, line: *const c_char);
-    fn rtw_rust_hal_com_copy_hal_spec(
-        adapter: *mut c_void,
-        out: *mut HostHalComHalSpecFixture,
-    );
+    fn rtw_rust_hal_com_copy_hal_spec(adapter: *mut c_void, out: *mut HostHalComHalSpecFixture);
 }
 
 fn print_line(sel: *mut c_void, line: &[u8]) {

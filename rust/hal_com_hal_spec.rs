@@ -33,9 +33,7 @@ pub struct HostHalComHalSpecFixture {
 }
 
 static BAND_CAP_STR: [&str; BAND_CAP_BIT_NUM] = ["2G", "5G"];
-static BW_CAP_STR: [&str; BW_CAP_BIT_NUM] = [
-    "5M", "10M", "20M", "40M", "80M", "160M", "80_80M",
-];
+static BW_CAP_STR: [&str; BW_CAP_BIT_NUM] = ["5M", "10M", "20M", "40M", "80M", "160M", "80_80M"];
 static PROTO_CAP_STR: [&str; PROTO_CAP_BIT_NUM] = ["b", "g", "n", "ac"];
 static WL_FUNC_STR: [&str; WL_FUNC_BIT_NUM] = ["P2P", "MIRACAST", "TDLS", "FTM"];
 
@@ -116,21 +114,15 @@ fn push_hex32_digits(buf: &mut [u8], pos: &mut usize, n: u8) -> bool {
 }
 
 fn push_u8_line(buf: &mut [u8], pos: &mut usize, label: &str, val: u8) -> bool {
-    push_str(buf, pos, label)
-        && push_u8(buf, pos, val)
-        && push_str(buf, pos, "\n")
+    push_str(buf, pos, label) && push_u8(buf, pos, val) && push_str(buf, pos, "\n")
 }
 
 fn push_hex8_line(buf: &mut [u8], pos: &mut usize, label: &str, val: u8) -> bool {
-    push_str(buf, pos, label)
-        && push_hex8_digits(buf, pos, val)
-        && push_str(buf, pos, "\n")
+    push_str(buf, pos, label) && push_hex8_digits(buf, pos, val) && push_str(buf, pos, "\n")
 }
 
 fn push_hex32_line(buf: &mut [u8], pos: &mut usize, label: &str, val: u8) -> bool {
-    push_str(buf, pos, label)
-        && push_hex32_digits(buf, pos, val)
-        && push_str(buf, pos, "\n")
+    push_str(buf, pos, label) && push_hex32_digits(buf, pos, val) && push_str(buf, pos, "\n")
 }
 
 fn append_cap_line(buf: &mut [u8], pos: &mut usize, label: &str, cap: u8, table: &[&str]) -> bool {
@@ -157,8 +149,18 @@ pub fn format_hal_spec(fx: &HostHalComHalSpecFixture, buf: &mut [u8]) -> i32 {
         || !push_u8_line(buf, &mut pos, "rfpath_num_2g:", fx.rfpath_num_2g)
         || !push_u8_line(buf, &mut pos, "rfpath_num_5g:", fx.rfpath_num_5g)
         || !push_u8_line(buf, &mut pos, "rf_reg_path_num:", fx.rf_reg_path_num)
-        || !push_u8_line(buf, &mut pos, "rf_reg_path_avail_num:", fx.rf_reg_path_avail_num)
-        || !push_hex8_line(buf, &mut pos, "rf_reg_trx_path_bmp:0x", fx.rf_reg_trx_path_bmp)
+        || !push_u8_line(
+            buf,
+            &mut pos,
+            "rf_reg_path_avail_num:",
+            fx.rf_reg_path_avail_num,
+        )
+        || !push_hex8_line(
+            buf,
+            &mut pos,
+            "rf_reg_trx_path_bmp:0x",
+            fx.rf_reg_trx_path_bmp,
+        )
         || !push_u8_line(buf, &mut pos, "max_tx_cnt:", fx.max_tx_cnt)
         || !push_u8_line(buf, &mut pos, "tx_nss_num:", fx.tx_nss_num)
         || !push_u8_line(buf, &mut pos, "rx_nss_num:", fx.rx_nss_num)
@@ -187,7 +189,12 @@ pub fn format_hal_spec(fx: &HostHalComHalSpecFixture, buf: &mut [u8]) -> i32 {
 
     if !push_u8_line(buf, &mut pos, "rx_tsf_filter:", fx.rx_tsf_filter)
         || !push_hex32_line(buf, &mut pos, "pg_txpwr_saddr:0x", fx.pg_txpwr_saddr)
-        || !push_u8_line(buf, &mut pos, "pg_txgi_diff_factor:", fx.pg_txgi_diff_factor)
+        || !push_u8_line(
+            buf,
+            &mut pos,
+            "pg_txgi_diff_factor:",
+            fx.pg_txgi_diff_factor,
+        )
     {
         return -1;
     }
