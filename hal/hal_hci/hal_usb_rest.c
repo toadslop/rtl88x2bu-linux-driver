@@ -8,6 +8,7 @@
 #define HAL_USB_FREE_RECV_PRIV_IN_RUST 1
 #define HAL_USB_C2H_HISR_IN_RUST 1
 #define HAL_USB_INIT_RECV_PRIV_P1_IN_RUST 1
+#define HAL_USB_INIT_RECV_PRIV_IN_RUST 1
 
 #include "hal_usb.c"
 
@@ -140,6 +141,88 @@ void rtw_rust_hal_usb_log_recvbuf_alloc(_adapter *padapter)
 
 	RTW_INFO("NR_RECVBUFF: %d, recvbuf_nr: %d\n", NR_RECVBUFF, regsty->recvbuf_nr);
 	RTW_INFO("MAX_RECVBUF_SZ: %d\n", MAX_RECVBUF_SZ);
+}
+
+/* W4-46: second half of usb_init_recv_priv (rust/hal_usb.rs usb_init_recv_priv). */
+int rtw_rust_hal_usb_init_recv_priv_p2(_adapter *padapter)
+{
+	struct registry_priv *regsty = adapter_to_regsty(padapter);
+	struct recv_priv *precvpriv = &padapter->recvpriv;
+	int i, res = _SUCCESS;
+	struct recv_buf *precvbuf;
+
+	precvbuf = (struct recv_buf *)precvpriv->precv_buf;
+
+	for (i = 0; i < regsty->recvbuf_nr; i++) {
+		_rtw_init_listhead(&precvbuf->list);
+
+#ifdef PLATFORM_WINDOWS
+		_rtw_spinlock_init(&precvbuf->recvbuf_lock);
+#endif
+
+		precvbuf->alloc_sz = MAX_RECVBUF_SZ;
+
+		res = rtw_os_recvbuf_resource_alloc(padapter, precvbuf, precvbuf->alloc_sz);
+		if (res == _FAIL)
+			break;
+
+		precvbuf->ref_cnt = 0;
+		precvbuf->adapter = padapter;
+
+		precvbuf++;
+	}
+
+	precvpriv->free_recv_buf_queue_cnt = regsty->recvbuf_nr;
+
+#if defined(PLATFORM_LINUX) || defined(PLATFORM_FREEBSD)
+
+	skb_queue_head_init(&precvpriv->rx_skb_queue);
+
+#ifdef CONFIG_RX_INDICATE_QUEUE
+	memset(&precvpriv->rx_indicate_queue, 0, sizeof(struct ifqueue));
+	mtx_init(&precvpriv->rx_indicate_queue.ifq_mtx, "rx_indicate_queue", NULL, MTX_DEF);
+#endif /* CONFIG_RX_INDICATE_QUEUE */
+
+#ifdef CONFIG_PREALLOC_RECV_SKB
+	{
+		int j;
+		SIZE_PTR tmpaddr = 0;
+		SIZE_PTR alignment = 0;
+		struct sk_buff *pskb = NULL;
+
+		RTW_INFO("NR_PREALLOC_RECV_SKB: %d\n", NR_PREALLOC_RECV_SKB);
+#ifdef CONFIG_FIX_NR_BULKIN_BUFFER
+		RTW_INFO("Enable CONFIG_FIX_NR_BULKIN_BUFFER\n");
+#endif
+
+		for (j = 0; j < NR_PREALLOC_RECV_SKB; j++) {
+#ifdef CONFIG_PREALLOC_RX_SKB_BUFFER
+			pskb = rtw_alloc_skb_premem(MAX_RECVBUF_SZ);
+#else
+			pskb = rtw_skb_alloc(MAX_RECVBUF_SZ + RECVBUFF_ALIGN_SZ);
+#endif /* CONFIG_PREALLOC_RX_SKB_BUFFER */
+
+			if (pskb) {
+#ifdef PLATFORM_FREEBSD
+				pskb->dev = padapter->pifp;
+#else
+				pskb->dev = padapter->pnetdev;
+#endif /* PLATFORM_FREEBSD */
+
+#ifndef CONFIG_PREALLOC_RX_SKB_BUFFER
+				tmpaddr = (SIZE_PTR)pskb->data;
+				alignment = tmpaddr & (RECVBUFF_ALIGN_SZ - 1);
+				skb_reserve(pskb, (RECVBUFF_ALIGN_SZ - alignment));
+#endif
+				skb_queue_tail(&precvpriv->free_recv_skb_queue, pskb);
+			}
+		}
+	}
+#endif /* CONFIG_PREALLOC_RECV_SKB */
+
+#endif /* defined(PLATFORM_LINUX) || defined(PLATFORM_FREEBSD) */
+
+	return res;
 }
 
 /* usb_set_intf_ops — rust/hal_usb.rs (W4-25) */
