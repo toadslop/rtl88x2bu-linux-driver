@@ -1,0 +1,41 @@
+// SPDX-License-Identifier: GPL-2.0
+/* Stub linker symbols for W3-145 L1 (proc mlme/rf leaf getters). */
+
+#include <stddef.h>
+
+typedef struct seq_file seq_file;
+
+int proc_get_fwstate(seq_file *m, void *v)
+{
+	(void)m;
+	(void)v;
+	return 0;
+}
+
+int proc_get_mlmext_state(seq_file *m, void *v)
+{
+	(void)m;
+	(void)v;
+	return 0;
+}
+
+int proc_get_qos_option(seq_file *m, void *v)
+{
+	(void)m;
+	(void)v;
+	return 0;
+}
+
+int proc_get_ht_option(seq_file *m, void *v)
+{
+	(void)m;
+	(void)v;
+	return 0;
+}
+
+int proc_get_rf_info(seq_file *m, void *v)
+{
+	(void)m;
+	(void)v;
+	return 0;
+}
