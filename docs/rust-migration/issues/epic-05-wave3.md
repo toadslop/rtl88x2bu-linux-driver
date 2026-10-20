@@ -208,6 +208,14 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-143 | `wave3-143-debug-mac-bb-reg-dump.md` | MAC/BB register dump leaf |
 | W3-144 | `wave3-144-debug-adapters-status.md` | `dump_adapters_status` |
 
+## Children (tranche 12 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-145 | `wave3-145-debug-proc-mlme-leaf.md` | proc mlme/rf leaf getters |
+| W3-146 | `wave3-146-debug-proc-sec-info.md` | `proc_get_sec_info` |
+| W3-147 | `wave3-147-debug-proc-roam-leaf.md` | proc roam debug leaf |
+
 Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:
 
 - `rtw_beamforming.c` sounding state machine (HAL-coupled NDPA paths)

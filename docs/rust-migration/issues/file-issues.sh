@@ -290,8 +290,16 @@ files=(
   wave4-42-hal-dump-tx-fifo.md
   wave4-43-hal-usb-free-recv-priv.md
   wave4-44-hal-usb-c2h-hisr.md
+  wave4-45-hal-usb-init-recv-priv-p1.md
+  wave4-46-hal-usb-init-recv-priv-p2.md
+  wave4-47-hal-com-c2h-evt-read.md
+  wave4-48-hal-com-get-port-defaults.md
+  wave4-49-hal-com-hw-port-ctrl.md
   wave3-143-debug-mac-bb-reg-dump.md
   wave3-144-debug-adapters-status.md
+  wave3-145-debug-proc-mlme-leaf.md
+  wave3-146-debug-proc-sec-info.md
+  wave3-147-debug-proc-roam-leaf.md
 )
 
 # draft_id -> github issue number

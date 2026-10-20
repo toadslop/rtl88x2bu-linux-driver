@@ -94,4 +94,14 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-43 | `wave4-43-hal-usb-free-recv-priv.md` | `hal_usb.c` recv priv teardown |
 | W4-44 | `wave4-44-hal-usb-c2h-hisr.md` | `hal_usb.c` `usb_c2h_hisr_hdl` |
 
-Further slices: deeper PHYDM / bulk USB RX path — file as `wave4-*.md` when tranche 9 is needed.
+## Children (tranche 9 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-45 | `wave4-45-hal-usb-init-recv-priv-p1.md` | `usb_init_recv_priv` queues + interrupt pipe |
+| W4-46 | `wave4-46-hal-usb-init-recv-priv-p2.md` | `usb_init_recv_priv` recv_buf + prealloc SKB |
+| W4-47 | `wave4-47-hal-com-c2h-evt-read.md` | `c2h_evt_clear` / `c2h_evt_read_88xx` |
+| W4-48 | `wave4-48-hal-com-get-port-defaults.md` | `rtw_hal_get_port` + HalData defaults |
+| W4-49 | `wave4-49-hal-com-hw-port-ctrl.md` | RTW_HALMAC hw port enable/disable |
+
+Further slices: deeper PHYDM / bulk USB RX path — file as `wave4-*.md` when tranche 10 is needed.
