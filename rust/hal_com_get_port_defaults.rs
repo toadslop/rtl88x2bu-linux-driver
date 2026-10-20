@@ -9,8 +9,16 @@ extern "C" {
     fn rtw_rust_hal_com_get_hw_port(adapter: *mut c_void) -> U8;
     fn rtw_rust_hal_com_get_clt_port(adapter: *mut c_void) -> U8;
     fn rtw_rust_hal_com_dbg_hw_port_validate(adapter: *mut c_void, hw_port: U8);
-    fn rtw_rust_hal_com_read_reg_offloads(adapter: *mut c_void, iqk_fw_offload: *mut U8, ch_switch_offload: *mut U8);
-    fn rtw_rust_hal_com_write_hal_com_init_defaults(adapter: *mut c_void, iqk_fw_offload: U8, ch_switch_offload: U8);
+    fn rtw_rust_hal_com_read_reg_offloads(
+        adapter: *mut c_void,
+        iqk_fw_offload: *mut U8,
+        ch_switch_offload: *mut U8,
+    );
+    fn rtw_rust_hal_com_write_hal_com_init_defaults(
+        adapter: *mut c_void,
+        iqk_fw_offload: U8,
+        ch_switch_offload: U8,
+    );
 }
 
 #[no_mangle]
