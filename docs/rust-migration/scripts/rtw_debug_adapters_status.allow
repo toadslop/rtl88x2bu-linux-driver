@@ -1,0 +1,3 @@
+# L1 allowlist for W3-144: Rust owns dump_adapters_status.
+drop rtw_rust_debug_adapters_dump_body
+drop dump_mi_status

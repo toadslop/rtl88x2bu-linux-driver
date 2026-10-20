@@ -523,6 +523,7 @@ void dump_tx_rate_bmp(void *sel, struct dvobj_priv *dvobj)
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-134 tx/rx dumps in rust/rtw_debug_tx_rx_dumps.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 void dump_adapters_status(void *sel, struct dvobj_priv *dvobj)
 {
 #if defined(CONFIG_RTW_DEBUG) || defined(CONFIG_PROC_DEBUG)
@@ -734,6 +735,7 @@ void dump_adapters_status(void *sel, struct dvobj_priv *dvobj)
 #endif /* CONFIG_DFS_MASTER */
 #endif	/*	CONFIG_RTW_DEBUG || CONFIG_PROC_DEBUG	*/
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-144 dump_adapters_status in rust/rtw_debug_adapters_status.rs */
 
 #if (defined(CONFIG_RTW_DEBUG) || defined(CONFIG_PROC_DEBUG)) && \
 	(!defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG))
