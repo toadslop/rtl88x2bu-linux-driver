@@ -7,6 +7,7 @@
 #define HAL_USB_ASYNC_WRITE_IN_RUST 1
 #define HAL_USB_FREE_RECV_PRIV_IN_RUST 1
 #define HAL_USB_C2H_HISR_IN_RUST 1
+#define HAL_USB_INIT_RECV_PRIV_P1_IN_RUST 1
 
 #include "hal_usb.c"
 
@@ -62,6 +63,83 @@ void rtw_rust_hal_usb_warn_rx_skb_queue_not_empty(void)
 void rtw_rust_hal_usb_warn_free_recv_skb_queue_not_empty(u32 len)
 {
 	RTW_WARN("free_recv_skb_queue not empty, %u\n", len);
+}
+
+/* W4-45: helpers for rtw_rust_hal_usb_init_recv_priv_p1 in rust/hal_usb.rs */
+void rtw_rust_hal_usb_recv_tasklets_init(_adapter *padapter)
+{
+	struct recv_priv *precvpriv = &padapter->recvpriv;
+
+#ifdef PLATFORM_LINUX
+	tasklet_init(&precvpriv->recv_tasklet,
+		     usb_recv_tasklet,
+		     (unsigned long)padapter);
+#endif /* PLATFORM_LINUX */
+
+#ifdef PLATFORM_FREEBSD
+#ifdef CONFIG_RX_INDICATE_QUEUE
+	TASK_INIT(&precvpriv->rx_indicate_tasklet, 0, rtw_rx_indicate_tasklet, padapter);
+#endif /* CONFIG_RX_INDICATE_QUEUE */
+#endif /* PLATFORM_FREEBSD */
+}
+
+void rtw_rust_hal_usb_recv_queues_init(_adapter *padapter)
+{
+	struct recv_priv *precvpriv = &padapter->recvpriv;
+
+	_rtw_init_queue(&precvpriv->free_recv_buf_queue);
+	_rtw_init_queue(&precvpriv->recv_buf_pending_queue);
+#ifndef CONFIG_USE_USB_BUFFER_ALLOC_RX
+	skb_queue_head_init(&precvpriv->free_recv_skb_queue);
+#endif
+}
+
+int rtw_rust_hal_usb_int_in_pipe_init(_adapter *padapter, u16 ini_in_buf_sz)
+{
+	struct recv_priv *precvpriv = &padapter->recvpriv;
+
+#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
+#ifdef PLATFORM_LINUX
+	precvpriv->int_in_urb = usb_alloc_urb(0, GFP_KERNEL);
+	if (precvpriv->int_in_urb == NULL) {
+		RTW_INFO("alloc_urb for interrupt in endpoint fail !!!!\n");
+		return _FAIL;
+	}
+#endif /* PLATFORM_LINUX */
+	precvpriv->int_in_buf = rtw_zmalloc(ini_in_buf_sz);
+	if (precvpriv->int_in_buf == NULL) {
+		RTW_INFO("alloc_mem for interrupt in endpoint fail !!!!\n");
+		return _FAIL;
+	}
+#endif /* CONFIG_USB_INTERRUPT_IN_PIPE */
+
+	return _SUCCESS;
+}
+
+void rtw_rust_hal_usb_int_in_pipe_undo(_adapter *padapter, u16 ini_in_buf_sz)
+{
+	struct recv_priv *precvpriv = &padapter->recvpriv;
+
+#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
+#ifdef PLATFORM_LINUX
+	if (precvpriv->int_in_urb) {
+		usb_free_urb(precvpriv->int_in_urb);
+		precvpriv->int_in_urb = NULL;
+	}
+#endif /* PLATFORM_LINUX */
+	if (precvpriv->int_in_buf) {
+		rtw_mfree(precvpriv->int_in_buf, ini_in_buf_sz);
+		precvpriv->int_in_buf = NULL;
+	}
+#endif /* CONFIG_USB_INTERRUPT_IN_PIPE */
+}
+
+void rtw_rust_hal_usb_log_recvbuf_alloc(_adapter *padapter)
+{
+	struct registry_priv *regsty = adapter_to_regsty(padapter);
+
+	RTW_INFO("NR_RECVBUFF: %d, recvbuf_nr: %d\n", NR_RECVBUFF, regsty->recvbuf_nr);
+	RTW_INFO("MAX_RECVBUF_SZ: %d\n", MAX_RECVBUF_SZ);
 }
 
 /* usb_set_intf_ops — rust/hal_usb.rs (W4-25) */

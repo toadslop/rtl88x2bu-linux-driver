@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 //! HAL USB HCI — `usb_set_intf_ops`, vendor wvalue fixup, sync reads/writes, and async writes from
-//! `hal/hal_hci/hal_usb.c` (W4-25, W4-28, W4-33, W4-34, W4-37, W4-43, W4-44).
+//! `hal/hal_hci/hal_usb.c` (W4-25, W4-28, W4-33, W4-34, W4-37, W4-43, W4-44, W4-45).
 
 #![allow(
     dead_code,
@@ -356,6 +356,12 @@ mod kernel {
         fn rtw_rust_hal_usb_skb_dequeue(list: *mut c_void) -> *mut c_void;
         fn rtw_rust_hal_usb_warn_rx_skb_queue_not_empty();
         fn rtw_rust_hal_usb_warn_free_recv_skb_queue_not_empty(len: u32);
+        fn _rtw_zmalloc(sz: u32) -> *mut c_void;
+        fn rtw_rust_hal_usb_recv_tasklets_init(padapter: Hdl);
+        fn rtw_rust_hal_usb_recv_queues_init(padapter: Hdl);
+        fn rtw_rust_hal_usb_int_in_pipe_init(padapter: Hdl, ini_in_buf_sz: u16) -> i32;
+        fn rtw_rust_hal_usb_int_in_pipe_undo(padapter: Hdl, ini_in_buf_sz: u16);
+        fn rtw_rust_hal_usb_log_recvbuf_alloc(padapter: Hdl);
     }
 
     #[cfg(CONFIG_USB_INTERRUPT_IN_PIPE)]
@@ -374,6 +380,49 @@ mod kernel {
 
     unsafe fn recvpriv_base(padapter: Hdl) -> *mut u8 {
         unsafe { (padapter as *mut u8).add(rtw_rust_hal_usb_off_adapter_recvpriv) }
+    }
+
+    const C_SUCCESS: i32 = 1;
+    const C_FAIL: i32 = 0;
+
+    unsafe fn n_byte_align(value: usize, alignment: usize) -> usize {
+        if alignment <= 1 {
+            return value;
+        }
+        ((value + alignment - 1) / alignment) * alignment
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_rust_hal_usb_init_recv_priv_p1(padapter: Hdl, ini_in_buf_sz: u16) -> i32 {
+        if padapter.is_null() {
+            return C_FAIL;
+        }
+        unsafe {
+            rtw_rust_hal_usb_recv_tasklets_init(padapter);
+            if rtw_rust_hal_usb_int_in_pipe_init(padapter, ini_in_buf_sz) == C_FAIL {
+                rtw_rust_hal_usb_int_in_pipe_undo(padapter, ini_in_buf_sz);
+                return C_FAIL;
+            }
+            rtw_rust_hal_usb_recv_queues_init(padapter);
+
+            let recvbuf_nr = adapter_recvbuf_nr(padapter);
+            rtw_rust_hal_usb_log_recvbuf_alloc(padapter);
+
+            let alloc_sz =
+                recvbuf_nr as u32 * rtw_rust_hal_usb_size_recv_buf as u32 + 4;
+            let pallocated = _rtw_zmalloc(alloc_sz);
+            if pallocated.is_null() {
+                rtw_rust_hal_usb_int_in_pipe_undo(padapter, ini_in_buf_sz);
+                return C_FAIL;
+            }
+
+            let precvpriv = recvpriv_base(padapter);
+            let precv_buf = n_byte_align(pallocated as usize, 4) as *mut u8;
+            *(precvpriv.add(rtw_rust_hal_usb_off_recvpriv_pallocated_recv_buf) as *mut *mut u8) =
+                pallocated as *mut u8;
+            *(precvpriv.add(rtw_rust_hal_usb_off_recvpriv_precv_buf) as *mut *mut u8) = precv_buf;
+            C_SUCCESS
+        }
     }
 
     #[no_mangle]
