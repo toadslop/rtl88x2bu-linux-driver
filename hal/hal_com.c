@@ -326,38 +326,7 @@ void dump_chip_info(HAL_VERSION	ChipVersion)
 	RTW_INFO("%s", buf);
 }
 
-u8 rtw_hal_get_port(_adapter *adapter)
-{
-	u8 hw_port = get_hw_port(adapter);
-#ifdef CONFIG_CLIENT_PORT_CFG
-	u8 clt_port = get_clt_port(adapter);
-
-	if (clt_port)
-		hw_port = clt_port;
-
-#ifdef DBG_HW_PORT
-	if (MLME_IS_STA(adapter) && (adapter->client_id != MAX_CLIENT_PORT_NUM)) {
-		if(hw_port == CLT_PORT_INVALID) {
-			RTW_ERR(ADPT_FMT" @@@@@ Client port == 0 @@@@@\n", ADPT_ARG(adapter));
-			rtw_warn_on(1);
-		}
-	}
-	#ifdef CONFIG_AP_MODE
-	else if (MLME_IS_AP(adapter) || MLME_IS_MESH(adapter)) {
-		if (hw_port != HW_PORT0) {
-			RTW_ERR(ADPT_FMT" @@@@@ AP / MESH port != 0 @@@@@\n", ADPT_ARG(adapter));
-			rtw_warn_on(1);
-		}
-	}
-	#endif
-	if (0)
-		RTW_INFO(ADPT_FMT" - HP:%d,CP:%d\n", ADPT_ARG(adapter), get_hw_port(adapter), get_clt_port(adapter));
-#endif /*DBG_HW_PORT*/
-
-#endif/*CONFIG_CLIENT_PORT_CFG*/
-
-	return hw_port;
-}
+/* rtw_hal_get_port — ported to rust/hal_com.rs (W4-48) */
 
 #define	EEPROM_CHANNEL_PLAN_BY_HW_MASK	0x80
 
@@ -1144,21 +1113,7 @@ void rtw_mi_set_mac_addr(_adapter *adapter)
 		rtw_hal_dump_macaddr(RTW_DBGDUMP, adapter);
 }
 
-void rtw_init_hal_com_default_value(PADAPTER Adapter)
-{
-	PHAL_DATA_TYPE	pHalData = GET_HAL_DATA(Adapter);
-	struct registry_priv *regsty = adapter_to_regsty(Adapter);
-
-	pHalData->AntDetection = 1;
-	pHalData->antenna_test = _FALSE;
-	pHalData->RegIQKFWOffload = regsty->iqk_fw_offload;
-	pHalData->ch_switch_offload = regsty->ch_switch_offload;
-	pHalData->multi_ch_switch_mode = 0;
-#ifdef RTW_REDUCE_SCAN_SWITCH_CH_TIME
-	if (pHalData->ch_switch_offload == 0)
-		pHalData->ch_switch_offload = 1;
-#endif
-}
+/* rtw_init_hal_com_default_value — ported to rust/hal_com.rs (W4-48) */
 
 /* c2h_evt_clear / c2h_evt_read_88xx — ported to rust/hal_com.rs (W4-47) */
 
