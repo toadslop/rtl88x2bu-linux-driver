@@ -6,6 +6,7 @@
 #define HAL_USB_SYNC_WRITE_IN_RUST 1
 #define HAL_USB_ASYNC_WRITE_IN_RUST 1
 #define HAL_USB_FREE_RECV_PRIV_IN_RUST 1
+#define HAL_USB_C2H_HISR_IN_RUST 1
 
 #include "hal_usb.c"
 
@@ -31,6 +32,17 @@ const size_t rtw_rust_hal_usb_off_recvpriv_free_recv_skb_queue =
 const size_t rtw_rust_hal_usb_off_recvpriv_rx_skb_queue =
 	offsetof(struct recv_priv, rx_skb_queue);
 const size_t rtw_rust_hal_usb_size_recv_buf = sizeof(struct recv_buf);
+
+#ifdef CONFIG_FW_C2H_REG
+const size_t rtw_rust_hal_usb_off_adapter_evtpriv = offsetof(_adapter, evtpriv);
+const size_t rtw_rust_hal_usb_off_evtpriv_c2h_queue = offsetof(struct evt_priv, c2h_queue);
+const size_t rtw_rust_hal_usb_off_evtpriv_c2h_wk = offsetof(struct evt_priv, c2h_wk);
+
+void rtw_rust_hal_usb_err_c2h_cbuf_push_fail(void)
+{
+	RTW_ERR("usb_c2h_hisr_hdl rtw_cbuf_push fail\n");
+}
+#endif /* CONFIG_FW_C2H_REG */
 
 u32 rtw_rust_hal_usb_skb_queue_len(struct sk_buff_head *list)
 {

@@ -228,6 +228,7 @@ void usb_free_recv_priv(_adapter *padapter, u16 ini_in_buf_sz)
 #endif /* !HAL_USB_FREE_RECV_PRIV_IN_RUST */
 
 #ifdef CONFIG_FW_C2H_REG
+#ifndef HAL_USB_C2H_HISR_IN_RUST
 void usb_c2h_hisr_hdl(_adapter *adapter, u8 *buf)
 {
 	u8 *c2h_evt = buf;
@@ -261,6 +262,7 @@ void usb_c2h_hisr_hdl(_adapter *adapter, u8 *buf)
 	}
 	_set_workitem(&adapter->evtpriv.c2h_wk);
 }
+#endif /* !HAL_USB_C2H_HISR_IN_RUST */
 #endif
 
 #ifdef CONFIG_USB_SUPPORT_ASYNC_VDN_REQ
