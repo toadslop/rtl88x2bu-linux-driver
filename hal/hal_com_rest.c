@@ -260,52 +260,7 @@ void rtw_hal_reqtxrpt(_adapter *padapter, u8 macid)
 /* rtw_hal_dump_macaddr — ported to rust/hal_com.rs (W4-04) */
 
 #ifdef RTW_HALMAC
-void rtw_hal_hw_port_enable(_adapter *adapter)
-{
-#if 1
-	u8 port_enable = _TRUE;
-
-	rtw_hal_set_hwreg(adapter, HW_VAR_PORT_CFG, &port_enable);
-#else
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct rtw_halmac_bcn_ctrl bcn_ctrl;
-
-	_rtw_memset(&bcn_ctrl, 0, sizeof(struct rtw_halmac_bcn_ctrl));
-	bcn_ctrl.enable_bcn = 1;
-	bcn_ctrl.rx_bssid_fit = 1;
-	bcn_ctrl.rxbcn_rpt = 1;
-
-	/*rtw_halmac_get_bcn_ctrl(struct dvobj_priv *d, enum _hw_port hwport,
-				struct rtw_halmac_bcn_ctrl *bcn_ctrl)*/
-	if (rtw_halmac_set_bcn_ctrl(dvobj, get_hw_port(adapter), &bcn_ctrl) == -1) {
-		RTW_ERR(ADPT_FMT" - hw port(%d) enable fail!!\n", ADPT_ARG(adapter), get_hw_port(adapter));
-		rtw_warn_on(1);
-	}
-#endif
-}
-void rtw_hal_hw_port_disable(_adapter *adapter)
-{
-	u8 port_enable = _FALSE;
-
-	rtw_hal_set_hwreg(adapter, HW_VAR_PORT_CFG, &port_enable);
-}
-
-void rtw_restore_hw_port_cfg(_adapter *adapter)
-{
-#ifdef CONFIG_MI_WITH_MBSSID_CAM
-
-#else
-	int i;
-	_adapter *iface;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-
-	for (i = 0; i < dvobj->iface_nums; i++) {
-		iface = dvobj->padapters[i];
-		if (iface)
-			rtw_hal_hw_port_enable(iface);
-	}
-#endif
-}
+/* rtw_hal_hw_port_enable / rtw_hal_hw_port_disable / rtw_restore_hw_port_cfg — ported to rust/hal_com.rs (W4-49) */
 #endif
 
 void rtw_mi_set_mac_addr(_adapter *adapter)
@@ -15841,5 +15796,38 @@ void rtw_rust_hal_com_write_hal_com_init_defaults(_adapter *adapter,
 	if (pHalData->ch_switch_offload == 0)
 		pHalData->ch_switch_offload = 1;
 #endif
+}
+
+int rtw_rust_hal_com_hw_var_port_cfg(void)
+{
+	return HW_VAR_PORT_CFG;
+}
+
+void rtw_rust_hal_com_set_hwreg(_adapter *adapter, u32 variable, u8 *val)
+{
+	if (!adapter)
+		return;
+	rtw_hal_set_hwreg(adapter, variable, val);
+}
+
+struct dvobj_priv *rtw_rust_hal_com_adapter_to_dvobj(_adapter *adapter)
+{
+	if (!adapter)
+		return NULL;
+	return adapter_to_dvobj(adapter);
+}
+
+u8 rtw_rust_hal_com_dvobj_iface_nums(struct dvobj_priv *dvobj)
+{
+	if (!dvobj)
+		return 0;
+	return dvobj->iface_nums;
+}
+
+_adapter *rtw_rust_hal_com_dvobj_adapter_at(struct dvobj_priv *dvobj, int idx)
+{
+	if (!dvobj || idx < 0 || idx >= dvobj->iface_nums)
+		return NULL;
+	return dvobj->padapters[idx];
 }
 #endif

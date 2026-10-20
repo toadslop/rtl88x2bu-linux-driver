@@ -1046,52 +1046,7 @@ void rtw_hal_dump_macaddr(void *sel, _adapter *adapter)
 }
 
 #ifdef RTW_HALMAC
-void rtw_hal_hw_port_enable(_adapter *adapter)
-{
-#if 1
-	u8 port_enable = _TRUE;
-
-	rtw_hal_set_hwreg(adapter, HW_VAR_PORT_CFG, &port_enable);
-#else
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct rtw_halmac_bcn_ctrl bcn_ctrl;
-
-	_rtw_memset(&bcn_ctrl, 0, sizeof(struct rtw_halmac_bcn_ctrl));
-	bcn_ctrl.enable_bcn = 1;
-	bcn_ctrl.rx_bssid_fit = 1;
-	bcn_ctrl.rxbcn_rpt = 1;
-
-	/*rtw_halmac_get_bcn_ctrl(struct dvobj_priv *d, enum _hw_port hwport,
-				struct rtw_halmac_bcn_ctrl *bcn_ctrl)*/
-	if (rtw_halmac_set_bcn_ctrl(dvobj, get_hw_port(adapter), &bcn_ctrl) == -1) {
-		RTW_ERR(ADPT_FMT" - hw port(%d) enable fail!!\n", ADPT_ARG(adapter), get_hw_port(adapter));
-		rtw_warn_on(1);
-	}
-#endif
-}
-void rtw_hal_hw_port_disable(_adapter *adapter)
-{
-	u8 port_enable = _FALSE;
-
-	rtw_hal_set_hwreg(adapter, HW_VAR_PORT_CFG, &port_enable);
-}
-
-void rtw_restore_hw_port_cfg(_adapter *adapter)
-{
-#ifdef CONFIG_MI_WITH_MBSSID_CAM
-
-#else
-	int i;
-	_adapter *iface;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-
-	for (i = 0; i < dvobj->iface_nums; i++) {
-		iface = dvobj->padapters[i];
-		if (iface)
-			rtw_hal_hw_port_enable(iface);
-	}
-#endif
-}
+/* rtw_hal_hw_port_enable / rtw_hal_hw_port_disable / rtw_restore_hw_port_cfg — ported to rust/hal_com.rs (W4-49) */
 #endif
 
 void rtw_mi_set_mac_addr(_adapter *adapter)
