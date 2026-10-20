@@ -408,8 +408,7 @@ mod kernel {
             let recvbuf_nr = adapter_recvbuf_nr(padapter);
             rtw_rust_hal_usb_log_recvbuf_alloc(padapter);
 
-            let alloc_sz =
-                recvbuf_nr as u32 * rtw_rust_hal_usb_size_recv_buf as u32 + 4;
+            let alloc_sz = recvbuf_nr as u32 * rtw_rust_hal_usb_size_recv_buf as u32 + 4;
             let pallocated = _rtw_zmalloc(alloc_sz);
             if pallocated.is_null() {
                 rtw_rust_hal_usb_int_in_pipe_undo(padapter, ini_in_buf_sz);
