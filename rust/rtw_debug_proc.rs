@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! W3-145 proc seq_file mlme/rf leaf getters from `core/rtw_debug_rest.c`.
+//! W3-145/W3-146 proc seq_file leaf getters from `core/rtw_debug_rest.c`.
 
 #![allow(
     dead_code,
@@ -21,6 +21,7 @@ extern "C" {
     fn rtw_rust_debug_proc_emit_qos_option(sel: *mut c_void, adapter: *mut c_void);
     fn rtw_rust_debug_proc_emit_ht_option(sel: *mut c_void, adapter: *mut c_void);
     fn rtw_rust_debug_proc_emit_rf_info(sel: *mut c_void, adapter: *mut c_void);
+    fn rtw_rust_debug_proc_emit_sec_info(sel: *mut c_void, adapter: *mut c_void);
 }
 
 fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
@@ -49,3 +50,4 @@ export_proc!(proc_get_mlmext_state, rtw_rust_debug_proc_emit_mlmext_state);
 export_proc!(proc_get_qos_option, rtw_rust_debug_proc_emit_qos_option);
 export_proc!(proc_get_ht_option, rtw_rust_debug_proc_emit_ht_option);
 export_proc!(proc_get_rf_info, rtw_rust_debug_proc_emit_rf_info);
+export_proc!(proc_get_sec_info, rtw_rust_debug_proc_emit_sec_info);

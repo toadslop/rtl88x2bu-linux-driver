@@ -1187,6 +1187,7 @@ int proc_get_fwstate(struct seq_file *m, void *v)
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-145 in rust/rtw_debug_proc.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_sec_info(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -1223,6 +1224,7 @@ int proc_get_sec_info(struct seq_file *m, void *v)
 
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-146 in rust/rtw_debug_proc.rs */
 
 #if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_mlmext_state(struct seq_file *m, void *v)

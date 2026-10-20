@@ -39,3 +39,10 @@ int proc_get_rf_info(seq_file *m, void *v)
 	(void)v;
 	return 0;
 }
+
+int proc_get_sec_info(seq_file *m, void *v)
+{
+	(void)m;
+	(void)v;
+	return 0;
+}
