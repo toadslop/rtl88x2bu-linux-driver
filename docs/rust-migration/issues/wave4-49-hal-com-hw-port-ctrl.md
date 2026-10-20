@@ -4,7 +4,7 @@ labels: [rust-migration, phase-1, wave-4, size/~200]
 type: child
 id: W4-49
 epic: E06
-blocked_by: []
+blocked_by: [W4-48]
 estimate_loc: 100
 ---
 
@@ -19,7 +19,7 @@ Port `#ifdef RTW_HALMAC` hw port control from [`hal/hal_com_rest.c`](../../../ha
 ## Notes
 
 - Kconfig-gated in C; Rust export matches `#[cfg(rtw_halmac)]` or Makefile `cfg` used elsewhere in `hal_com.rs`.
-- Parallel hal_com lane.
+- Serial hal_com lane — stack after [W4-48](wave4-48-hal-com-get-port-defaults.md) lands.
 
 ## Acceptance
 

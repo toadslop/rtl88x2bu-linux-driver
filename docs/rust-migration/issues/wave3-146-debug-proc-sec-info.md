@@ -19,10 +19,12 @@ Port `proc_get_sec_info` from [`core/rtw_debug_rest.c`](../../../core/rtw_debug_
 
 ## Notes
 
-- Same-file follow-up to [W3-145](wave3-145-debug-proc-mlme-leaf.md) (shared `rtw_debug_proc` module).
+- Serial follow-up to [W3-145](wave3-145-debug-proc-mlme-leaf.md) on shared `rust/rtw_debug_proc.rs` and
+  the same `CONFIG_RUST_RTW_DEBUG` / `rtw_debug_rest.c` guard lane — do not parallelize with W3-147.
 - Reuse `rtw_debug` FFI helpers for `RTW_PRINT_SEL` where already present.
 
 ## Acceptance
 
-- L0 + L1 symbol parity
+- L0 with `CONFIG_PROC_DEBUG=y`
+- L1 symbol parity on `proc_get_sec_info` in the swapped object (not `EXPORT_SYMBOL`)
 - Output format byte-identical to C for a fixture `security_priv`

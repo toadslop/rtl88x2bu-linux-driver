@@ -18,7 +18,10 @@ Port `CONFIG_FW_C2H_REG` helpers from [`hal/hal_com_rest.c`](../../../hal/hal_co
 
 ## Notes
 
-- Independent hal_com lane (no overlap with hal_usb recv init).
+- First in serial **hal_com** tranche chain W4-47 → [W4-48](wave4-48-hal-com-get-port-defaults.md) →
+  [W4-49](wave4-49-hal-com-hw-port-ctrl.md) — only one open PR may touch `rust/hal_com.rs` / Kbuild at
+  a time (same pattern as W4-39 → W4-42 dump lane).
+- Disjoint from hal_usb recv init at the C TU level.
 - Reuse existing `rtw_read8` / `rtw_write8` FFI from bindgen; macro helpers `SET_C2H_*_88XX` mirrored in Rust.
 - Complements [W4-44](wave4-44-hal-usb-c2h-hisr.md) USB-side C2H dispatch.
 

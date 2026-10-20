@@ -4,7 +4,7 @@ labels: [rust-migration, phase-1, wave-4, size/~200]
 type: child
 id: W4-48
 epic: E06
-blocked_by: []
+blocked_by: [W4-47]
 estimate_loc: 140
 ---
 
@@ -18,7 +18,8 @@ Port leaf helpers from [`hal/hal_com_rest.c`](../../../hal/hal_com_rest.c) into
 
 ## Notes
 
-- Parallel hal_com lane (disjoint from [W4-47](wave4-47-hal-com-c2h-evt-read.md)).
+- Serial hal_com lane — stack after [W4-47](wave4-47-hal-com-c2h-evt-read.md) lands (`hal_com.rs` /
+  Makefile).
 - `rtw_hal_reqtxrpt` stays in C (single hal_func indirection).
 
 ## Acceptance
