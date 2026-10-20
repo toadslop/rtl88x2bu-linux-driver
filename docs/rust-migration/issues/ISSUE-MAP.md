@@ -258,6 +258,14 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-44 | #1376 | [W4-44] Translate hal_usb.c — usb_c2h_hisr_hdl |
 | W3-143 | #1377 | [W3-143] Translate rtw_debug_rest.c — MAC/BB register dump leaf |
 | W3-144 | #1378 | [W3-144] Translate rtw_debug_rest.c — dump_adapters_status |
+| W4-45 | #1388 | [W4-45] Translate hal_usb.c — usb_init_recv_priv (part 1/2) |
+| W4-46 | #1389 | [W4-46] Translate hal_usb.c — usb_init_recv_priv (part 2/2) |
+| W4-47 | #1390 | [W4-47] Translate hal_com_rest.c — C2H register event read/clear |
+| W4-48 | #1391 | [W4-48] Translate hal_com_rest.c — hw port query + HalData defaults |
+| W4-49 | #1392 | [W4-49] Translate hal_com_rest.c — RTW_HALMAC hw port enable/disable |
+| W3-145 | #1393 | [W3-145] Translate rtw_debug_rest.c — proc mlme/rf leaf getters |
+| W3-146 | #1394 | [W3-146] Translate rtw_debug_rest.c — proc_get_sec_info |
+| W3-147 | #1395 | [W3-147] Translate rtw_debug_rest.c — proc roam debug leaf |
 
 ## Superseded issues
 
