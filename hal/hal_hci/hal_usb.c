@@ -17,10 +17,11 @@
 #include <drv_types.h>
 #include <hal_data.h>
 
-#if defined(HAL_USB_INIT_RECV_PRIV_P1_IN_RUST)
+#if defined(HAL_USB_INIT_RECV_PRIV_P1_IN_RUST) && !defined(HAL_USB_INIT_RECV_PRIV_IN_RUST)
 int rtw_rust_hal_usb_init_recv_priv_p1(_adapter *padapter, u16 ini_in_buf_sz);
 #endif
 
+#ifndef HAL_USB_INIT_RECV_PRIV_IN_RUST
 int	usb_init_recv_priv(_adapter *padapter, u16 ini_in_buf_sz)
 {
 	struct registry_priv *regsty = adapter_to_regsty(padapter);
@@ -159,6 +160,7 @@ exit:
 
 	return res;
 }
+#endif /* !HAL_USB_INIT_RECV_PRIV_IN_RUST */
 
 #ifndef HAL_USB_FREE_RECV_PRIV_IN_RUST
 void usb_free_recv_priv(_adapter *padapter, u16 ini_in_buf_sz)

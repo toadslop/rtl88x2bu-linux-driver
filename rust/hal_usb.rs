@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 //! HAL USB HCI — `usb_set_intf_ops`, vendor wvalue fixup, sync reads/writes, and async writes from
-//! `hal/hal_hci/hal_usb.c` (W4-25, W4-28, W4-33, W4-34, W4-37, W4-43, W4-44, W4-45).
+//! `hal/hal_hci/hal_usb.c` (W4-25, W4-28, W4-33, W4-34, W4-37, W4-43, W4-44, W4-45, W4-46).
 
 #![allow(
     dead_code,
@@ -362,6 +362,7 @@ mod kernel {
         fn rtw_rust_hal_usb_int_in_pipe_init(padapter: Hdl, ini_in_buf_sz: u16) -> i32;
         fn rtw_rust_hal_usb_int_in_pipe_undo(padapter: Hdl, ini_in_buf_sz: u16);
         fn rtw_rust_hal_usb_log_recvbuf_alloc(padapter: Hdl);
+        fn rtw_rust_hal_usb_init_recv_priv_p2(padapter: Hdl) -> i32;
     }
 
     #[cfg(CONFIG_USB_INTERRUPT_IN_PIPE)]
@@ -392,8 +393,7 @@ mod kernel {
         ((value + alignment - 1) / alignment) * alignment
     }
 
-    #[no_mangle]
-    pub extern "C" fn rtw_rust_hal_usb_init_recv_priv_p1(padapter: Hdl, ini_in_buf_sz: u16) -> i32 {
+    fn rtw_rust_hal_usb_init_recv_priv_p1(padapter: Hdl, ini_in_buf_sz: u16) -> i32 {
         if padapter.is_null() {
             return C_FAIL;
         }
@@ -422,6 +422,18 @@ mod kernel {
             *(precvpriv.add(rtw_rust_hal_usb_off_recvpriv_precv_buf) as *mut *mut u8) = precv_buf;
             C_SUCCESS
         }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn usb_init_recv_priv(padapter: Hdl, ini_in_buf_sz: u16) -> i32 {
+        if padapter.is_null() {
+            return C_FAIL;
+        }
+        let res = rtw_rust_hal_usb_init_recv_priv_p1(padapter, ini_in_buf_sz);
+        if res == C_FAIL {
+            return C_FAIL;
+        }
+        unsafe { rtw_rust_hal_usb_init_recv_priv_p2(padapter) }
     }
 
     #[no_mangle]
