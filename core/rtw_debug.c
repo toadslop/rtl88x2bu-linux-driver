@@ -514,6 +514,43 @@ void rtw_rust_debug_proc_emit_rf_info(void *sel, _adapter *adapter)
 		      rtw_get_oper_ch(adapter), rtw_get_oper_bw(adapter),
 		      rtw_get_oper_choffset(adapter));
 }
+
+void rtw_rust_debug_proc_emit_sec_info(void *sel, _adapter *adapter)
+{
+	struct security_priv *sec = &adapter->securitypriv;
+
+	RTW_PRINT_SEL(sel, "auth_alg=0x%x, enc_alg=0x%x, auth_type=0x%x, enc_type=0x%x\n",
+		      sec->dot11AuthAlgrthm, sec->dot11PrivacyAlgrthm,
+		      sec->ndisauthtype, sec->ndisencryptstatus);
+	RTW_PRINT_SEL(sel, "hw_decrypted=%d\n", sec->hw_decrypted);
+
+#ifdef DBG_SW_SEC_CNT
+	RTW_PRINT_SEL(sel, "wep_sw_enc_cnt=%llu, %llu, %llu\n",
+		      sec->wep_sw_enc_cnt_bc, sec->wep_sw_enc_cnt_mc,
+		      sec->wep_sw_enc_cnt_uc);
+	RTW_PRINT_SEL(sel, "wep_sw_dec_cnt=%llu, %llu, %llu\n",
+		      sec->wep_sw_dec_cnt_bc, sec->wep_sw_dec_cnt_mc,
+		      sec->wep_sw_dec_cnt_uc);
+	RTW_PRINT_SEL(sel, "tkip_sw_enc_cnt=%llu, %llu, %llu\n",
+		      sec->tkip_sw_enc_cnt_bc, sec->tkip_sw_enc_cnt_mc,
+		      sec->tkip_sw_enc_cnt_uc);
+	RTW_PRINT_SEL(sel, "tkip_sw_dec_cnt=%llu, %llu, %llu\n",
+		      sec->tkip_sw_dec_cnt_bc, sec->tkip_sw_dec_cnt_mc,
+		      sec->tkip_sw_dec_cnt_uc);
+	RTW_PRINT_SEL(sel, "aes_sw_enc_cnt=%llu, %llu, %llu\n",
+		      sec->aes_sw_enc_cnt_bc, sec->aes_sw_enc_cnt_mc,
+		      sec->aes_sw_enc_cnt_uc);
+	RTW_PRINT_SEL(sel, "aes_sw_dec_cnt=%llu, %llu, %llu\n",
+		      sec->aes_sw_dec_cnt_bc, sec->aes_sw_dec_cnt_mc,
+		      sec->aes_sw_dec_cnt_uc);
+	RTW_PRINT_SEL(sel, "gcmp_sw_enc_cnt=%llu, %llu, %llu\n",
+		      sec->gcmp_sw_enc_cnt_bc, sec->gcmp_sw_enc_cnt_mc,
+		      sec->gcmp_sw_enc_cnt_uc);
+	RTW_PRINT_SEL(sel, "gcmp_sw_dec_cnt=%llu, %llu, %llu\n",
+		      sec->gcmp_sw_dec_cnt_bc, sec->gcmp_sw_dec_cnt_mc,
+		      sec->gcmp_sw_dec_cnt_uc);
+#endif /* DBG_SW_SEC_CNT */
+}
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */

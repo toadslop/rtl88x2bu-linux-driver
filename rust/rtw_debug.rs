@@ -3,7 +3,7 @@
 //! W3-134 tx/rx dump leaves live in `rtw_debug_tx_rx_dumps.rs`.
 //! W3-143 MAC/BB reg dump leaves live in `rtw_debug_reg_dump.rs`.
 //! W3-144 `dump_adapters_status` lives in `rtw_debug_adapters_status.rs`.
-//! W3-145 proc mlme/rf leaf getters live in `rtw_debug_proc.rs`.
+//! W3-145/W3-146 proc leaf getters live in `rtw_debug_proc.rs`.
 
 #![allow(
     dead_code,
