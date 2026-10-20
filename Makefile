@@ -4350,6 +4350,9 @@ rust-objects-hal-com-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_dump_tx_fifo_l1_ref.o \
 		tests/host/hal/hal_dump_tx_fifo_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_com_c2h_evt_l1_ref.o \
+		tests/host/hal/hal_com_c2h_evt_l1_ref.c
 	ld -r -o tests/host/hal/hal_com_c_ref.o \
 		tests/host/hal/hal_hw_rate_c_ref.o tests/host/hal/hal_rsvd_page_c_ref.o \
 		tests/host/hal/hal_dump_chip_info_c_ref.o tests/host/hal/hal_mrate_to_hw_rate_c_ref.o \
@@ -4361,7 +4364,8 @@ rust-objects-hal-com-c:
 		tests/host/hal/hal_dump_tx_aclt_force_val_l1_ref.o \
 		tests/host/hal/hal_dump_tx_aclt_confs_l1_ref.o \
 		tests/host/hal/hal_dump_hal_spec_l1_ref.o \
-		tests/host/hal/hal_dump_tx_fifo_l1_ref.o
+		tests/host/hal/hal_dump_tx_fifo_l1_ref.o \
+		tests/host/hal/hal_com_c2h_evt_l1_ref.o
 
 rust-check-symbols-hal-com: rust-objects-hal-com-c rust-objects-hal-com
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_com_c_ref.o NEW=rust/hal_com.o \
