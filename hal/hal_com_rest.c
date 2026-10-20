@@ -374,60 +374,7 @@ void rtw_init_hal_com_default_value(PADAPTER Adapter)
 #endif
 }
 
-#ifdef CONFIG_FW_C2H_REG
-void c2h_evt_clear(_adapter *adapter)
-{
-	rtw_write8(adapter, REG_C2HEVT_CLEAR, C2H_EVT_HOST_CLOSE);
-}
-
-s32 c2h_evt_read_88xx(_adapter *adapter, u8 *buf)
-{
-	s32 ret = _FAIL;
-	int i;
-	u8 trigger;
-
-	if (buf == NULL)
-		goto exit;
-
-	trigger = rtw_read8(adapter, REG_C2HEVT_CLEAR);
-
-	if (trigger == C2H_EVT_HOST_CLOSE) {
-		goto exit; /* Not ready */
-	} else if (trigger != C2H_EVT_FW_CLOSE) {
-		goto clear_evt; /* Not a valid value */
-	}
-
-	_rtw_memset(buf, 0, C2H_REG_LEN);
-
-	/* Read ID, LEN, SEQ */
-	SET_C2H_ID_88XX(buf, rtw_read8(adapter, REG_C2HEVT_MSG_NORMAL));
-	SET_C2H_SEQ_88XX(buf, rtw_read8(adapter, REG_C2HEVT_CMD_SEQ_88XX));
-	SET_C2H_PLEN_88XX(buf, rtw_read8(adapter, REG_C2HEVT_CMD_LEN_88XX));
-
-	if (0) {
-		RTW_INFO("%s id=0x%02x, seq=%u, plen=%u, trigger=0x%02x\n", __func__
-			, C2H_ID_88XX(buf), C2H_SEQ_88XX(buf), C2H_PLEN_88XX(buf), trigger);
-	}
-
-	/* Read the content */
-	for (i = 0; i < C2H_PLEN_88XX(buf); i++)
-		*(C2H_PAYLOAD_88XX(buf) + i) = rtw_read8(adapter, REG_C2HEVT_MSG_NORMAL + 2 + i);
-
-	RTW_DBG_DUMP("payload: ", C2H_PAYLOAD_88XX(buf), C2H_PLEN_88XX(buf));
-
-	ret = _SUCCESS;
-
-clear_evt:
-	/*
-	* Clear event to notify FW we have read the command.
-	* If this field isn't clear, the FW won't update the next command message.
-	*/
-	c2h_evt_clear(adapter);
-
-exit:
-	return ret;
-}
-#endif /* CONFIG_FW_C2H_REG */
+/* c2h_evt_clear / c2h_evt_read_88xx — ported to rust/hal_com.rs (W4-47) */
 
 #ifdef CONFIG_FW_C2H_PKT
 #ifndef DBG_C2H_PKT_PRE_HDL
