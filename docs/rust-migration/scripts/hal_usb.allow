@@ -1,3 +1,3 @@
 # L1 allowlist for rust/hal_usb.o (W4-25 usb_set_intf_ops, W4-28 usb_vendor_wvalue_fixup,
 # W4-33 usb_read8/16/32, W4-34 usb_write8/16/32/N, W4-37 usb_async_write8/16/32,
-# W4-43 usb_free_recv_priv, W4-44 usb_c2h_hisr_hdl).
+# W4-43 usb_free_recv_priv, W4-44 usb_c2h_hisr_hdl, W4-45 rtw_rust_hal_usb_init_recv_priv_p1).

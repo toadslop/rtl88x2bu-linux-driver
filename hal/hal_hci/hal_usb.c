@@ -17,6 +17,10 @@
 #include <drv_types.h>
 #include <hal_data.h>
 
+#if defined(HAL_USB_INIT_RECV_PRIV_P1_IN_RUST)
+int rtw_rust_hal_usb_init_recv_priv_p1(_adapter *padapter, u16 ini_in_buf_sz);
+#endif
+
 int	usb_init_recv_priv(_adapter *padapter, u16 ini_in_buf_sz)
 {
 	struct registry_priv *regsty = adapter_to_regsty(padapter);
@@ -24,6 +28,12 @@ int	usb_init_recv_priv(_adapter *padapter, u16 ini_in_buf_sz)
 	int	i, res = _SUCCESS;
 	struct recv_buf *precvbuf;
 
+#if defined(HAL_USB_INIT_RECV_PRIV_P1_IN_RUST)
+	res = rtw_rust_hal_usb_init_recv_priv_p1(padapter, ini_in_buf_sz);
+	if (res == _FAIL)
+		goto exit;
+	precvbuf = (struct recv_buf *)precvpriv->precv_buf;
+#else
 #ifdef PLATFORM_LINUX
 	tasklet_init(&precvpriv->recv_tasklet,
 		     usb_recv_tasklet,
@@ -72,6 +82,7 @@ int	usb_init_recv_priv(_adapter *padapter, u16 ini_in_buf_sz)
 	precvpriv->precv_buf = (u8 *)N_BYTE_ALIGMENT((SIZE_PTR)(precvpriv->pallocated_recv_buf), 4);
 
 	precvbuf = (struct recv_buf *)precvpriv->precv_buf;
+#endif /* HAL_USB_INIT_RECV_PRIV_P1_IN_RUST */
 
 	for (i = 0; i < regsty->recvbuf_nr ; i++) {
 		_rtw_init_listhead(&precvbuf->list);
