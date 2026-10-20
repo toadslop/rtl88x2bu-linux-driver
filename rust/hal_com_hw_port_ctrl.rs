@@ -22,11 +22,7 @@ fn hw_port_set_enable(adapter: *mut c_void, enable: U8) {
     }
     let mut val = enable;
     unsafe {
-        rtw_rust_hal_com_set_hwreg(
-            adapter,
-            rtw_rust_hal_com_hw_var_port_cfg(),
-            &mut val,
-        );
+        rtw_rust_hal_com_set_hwreg(adapter, rtw_rust_hal_com_hw_var_port_cfg(), &mut val);
     }
 }
 
