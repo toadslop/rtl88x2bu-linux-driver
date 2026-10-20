@@ -472,4 +472,48 @@ u32 rtw_rust_debug_read32(_adapter *adapter, u32 addr)
 	return rtw_read32(adapter, addr);
 }
 
+#ifdef CONFIG_PROC_DEBUG
+_adapter *rtw_rust_debug_proc_adapter(void *m)
+{
+	struct seq_file *seq = m;
+
+	return (_adapter *)rtw_netdev_priv((struct net_device *)seq->private);
+}
+
+void rtw_rust_debug_proc_emit_fwstate(void *sel, _adapter *adapter)
+{
+	RTW_PRINT_SEL(sel, "fwstate=0x%x\n", get_fwstate(&adapter->mlmepriv));
+}
+
+void rtw_rust_debug_proc_emit_mlmext_state(void *sel, _adapter *adapter)
+{
+	RTW_PRINT_SEL(sel, "pmlmeinfo->state=0x%x\n",
+		      adapter->mlmeextpriv.mlmext_info.state);
+}
+
+void rtw_rust_debug_proc_emit_qos_option(void *sel, _adapter *adapter)
+{
+	RTW_PRINT_SEL(sel, "qos_option=%d\n", adapter->mlmepriv.qospriv.qos_option);
+}
+
+void rtw_rust_debug_proc_emit_ht_option(void *sel, _adapter *adapter)
+{
+#ifdef CONFIG_80211N_HT
+	RTW_PRINT_SEL(sel, "ht_option=%d\n", adapter->mlmepriv.htpriv.ht_option);
+#endif
+}
+
+void rtw_rust_debug_proc_emit_rf_info(void *sel, _adapter *adapter)
+{
+	struct mlme_ext_priv *pmlmeext = &adapter->mlmeextpriv;
+
+	RTW_PRINT_SEL(sel, "cur_ch=%d, cur_bw=%d, cur_ch_offet=%d\n",
+		      pmlmeext->cur_channel, pmlmeext->cur_bwmode,
+		      pmlmeext->cur_ch_offset);
+	RTW_PRINT_SEL(sel, "oper_ch=%d, oper_bw=%d, oper_ch_offet=%d\n",
+		      rtw_get_oper_ch(adapter), rtw_get_oper_bw(adapter),
+		      rtw_get_oper_choffset(adapter));
+}
+#endif /* CONFIG_PROC_DEBUG */
+
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */

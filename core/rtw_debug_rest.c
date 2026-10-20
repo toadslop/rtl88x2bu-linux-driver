@@ -1174,6 +1174,7 @@ int proc_get_tx_stat(struct seq_file *m, void *v)
 	return 0;
 }
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_fwstate(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -1184,6 +1185,7 @@ int proc_get_fwstate(struct seq_file *m, void *v)
 
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-145 in rust/rtw_debug_proc.rs */
 
 int proc_get_sec_info(struct seq_file *m, void *v)
 {
@@ -1222,6 +1224,7 @@ int proc_get_sec_info(struct seq_file *m, void *v)
 	return 0;
 }
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_mlmext_state(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -1233,6 +1236,7 @@ int proc_get_mlmext_state(struct seq_file *m, void *v)
 
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-145 */
 
 #ifdef CONFIG_LAYER2_ROAMING
 int proc_get_roam_flags(struct seq_file *m, void *v)
@@ -1961,6 +1965,7 @@ exit:
 
 
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_qos_option(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -1999,6 +2004,7 @@ int proc_get_rf_info(struct seq_file *m, void *v)
 
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-145 */
 
 int proc_get_scan_param(struct seq_file *m, void *v)
 {

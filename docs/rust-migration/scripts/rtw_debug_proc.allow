@@ -1,0 +1,7 @@
+# L1 allowlist for W3-145: Rust owns proc mlme/rf leaf getters.
+drop rtw_rust_debug_proc_adapter
+drop rtw_rust_debug_proc_emit_fwstate
+drop rtw_rust_debug_proc_emit_mlmext_state
+drop rtw_rust_debug_proc_emit_qos_option
+drop rtw_rust_debug_proc_emit_ht_option
+drop rtw_rust_debug_proc_emit_rf_info
