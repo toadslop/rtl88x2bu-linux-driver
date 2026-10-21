@@ -1258,95 +1258,7 @@ static void rtw_hal_set_msr(_adapter *adapter, u8 net_type)
 #endif /* !RTW_HALMAC */
 }
 
-#ifndef SEC_CAM_ACCESS_TIMEOUT_MS
-	#define SEC_CAM_ACCESS_TIMEOUT_MS 200
-#endif
-
-#ifndef DBG_SEC_CAM_ACCESS
-	#define DBG_SEC_CAM_ACCESS 0
-#endif
-
-u32 rtw_sec_read_cam(_adapter *adapter, u8 addr)
-{
-	_mutex *mutex = &adapter_to_dvobj(adapter)->cam_ctl.sec_cam_access_mutex;
-	u32 rdata;
-	u32 cnt = 0;
-	systime start = 0, end = 0;
-	u8 timeout = 0;
-	u8 sr = 0;
-
-	_enter_critical_mutex(mutex, NULL);
-
-	rtw_write32(adapter, REG_CAMCMD, CAM_POLLINIG | addr);
-
-	start = rtw_get_current_time();
-	while (1) {
-		if (rtw_is_surprise_removed(adapter)) {
-			sr = 1;
-			break;
-		}
-
-		cnt++;
-		if (0 == (rtw_read32(adapter, REG_CAMCMD) & CAM_POLLINIG))
-			break;
-
-		if (rtw_get_passing_time_ms(start) > SEC_CAM_ACCESS_TIMEOUT_MS) {
-			timeout = 1;
-			break;
-		}
-	}
-	end = rtw_get_current_time();
-
-	rdata = rtw_read32(adapter, REG_CAMREAD);
-
-	_exit_critical_mutex(mutex, NULL);
-
-	if (DBG_SEC_CAM_ACCESS || timeout) {
-		RTW_INFO(FUNC_ADPT_FMT" addr:0x%02x, rdata:0x%08x, to:%u, polling:%u, %d ms\n"
-			, FUNC_ADPT_ARG(adapter), addr, rdata, timeout, cnt, rtw_get_time_interval_ms(start, end));
-	}
-
-	return rdata;
-}
-
-void rtw_sec_write_cam(_adapter *adapter, u8 addr, u32 wdata)
-{
-	_mutex *mutex = &adapter_to_dvobj(adapter)->cam_ctl.sec_cam_access_mutex;
-	u32 cnt = 0;
-	systime start = 0, end = 0;
-	u8 timeout = 0;
-	u8 sr = 0;
-
-	_enter_critical_mutex(mutex, NULL);
-
-	rtw_write32(adapter, REG_CAMWRITE, wdata);
-	rtw_write32(adapter, REG_CAMCMD, CAM_POLLINIG | CAM_WRITE | addr);
-
-	start = rtw_get_current_time();
-	while (1) {
-		if (rtw_is_surprise_removed(adapter)) {
-			sr = 1;
-			break;
-		}
-
-		cnt++;
-		if (0 == (rtw_read32(adapter, REG_CAMCMD) & CAM_POLLINIG))
-			break;
-
-		if (rtw_get_passing_time_ms(start) > SEC_CAM_ACCESS_TIMEOUT_MS) {
-			timeout = 1;
-			break;
-		}
-	}
-	end = rtw_get_current_time();
-
-	_exit_critical_mutex(mutex, NULL);
-
-	if (DBG_SEC_CAM_ACCESS || timeout) {
-		RTW_INFO(FUNC_ADPT_FMT" addr:0x%02x, wdata:0x%08x, to:%u, polling:%u, %d ms\n"
-			, FUNC_ADPT_ARG(adapter), addr, wdata, timeout, cnt, rtw_get_time_interval_ms(start, end));
-	}
-}
+/* rtw_sec_read_cam / rtw_sec_write_cam — ported to rust/hal_com.rs (W4-52) */
 
 void rtw_sec_read_cam_ent(_adapter *adapter, u8 id, u8 *ctrl, u8 *mac, u8 *key)
 {
@@ -15822,5 +15734,53 @@ u8 *rtw_rust_hal_com_adapter_mac_addr(_adapter *adapter)
 	if (!adapter)
 		return NULL;
 	return adapter_mac_addr(adapter);
+}
+
+#ifndef SEC_CAM_ACCESS_TIMEOUT_MS
+	#define SEC_CAM_ACCESS_TIMEOUT_MS 200
+#endif
+
+#ifndef DBG_SEC_CAM_ACCESS
+	#define DBG_SEC_CAM_ACCESS 0
+#endif
+
+_mutex *rtw_rust_hal_com_sec_cam_mutex(_adapter *adapter)
+{
+	return &adapter_to_dvobj(adapter)->cam_ctl.sec_cam_access_mutex;
+}
+
+void rtw_rust_hal_com_enter_critical_mutex(_mutex *mutex)
+{
+	_enter_critical_mutex(mutex, NULL);
+}
+
+void rtw_rust_hal_com_exit_critical_mutex(_mutex *mutex)
+{
+	_exit_critical_mutex(mutex, NULL);
+}
+
+u8 rtw_rust_hal_com_is_surprise_removed(_adapter *adapter)
+{
+	return rtw_is_surprise_removed(adapter) ? 1 : 0;
+}
+
+systime rtw_rust_hal_com_get_current_time(void)
+{
+	return rtw_get_current_time();
+}
+
+u32 rtw_rust_hal_com_get_passing_time_ms(systime start)
+{
+	return rtw_get_passing_time_ms(start);
+}
+
+void rtw_rust_hal_com_log_sec_cam(_adapter *adapter, u8 is_write, u8 addr, u32 data,
+	u8 timeout, u32 cnt, systime start, systime end)
+{
+	if (DBG_SEC_CAM_ACCESS || timeout) {
+		RTW_INFO(FUNC_ADPT_FMT" addr:0x%02x, %s:0x%08x, to:%u, polling:%u, %d ms\n"
+			, FUNC_ADPT_ARG(adapter), addr, is_write ? "wdata" : "rdata", data,
+			timeout, cnt, rtw_get_time_interval_ms(start, end));
+	}
 }
 #endif
