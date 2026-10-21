@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 //! HAL USB HCI — `usb_set_intf_ops`, vendor wvalue fixup, sync reads/writes, and async writes from
-//! `hal/hal_hci/hal_usb.c` (W4-25, W4-28, W4-33, W4-34, W4-37, W4-43, W4-44, W4-45, W4-46).
+//! `hal/hal_hci/hal_usb.c` (W4-25, W4-28, W4-33, W4-34, W4-37, W4-43, W4-44, W4-45, W4-46, W4-53).
 
 #![allow(
     dead_code,
@@ -108,6 +108,7 @@ mod kernel {
         fn usb_write_port(pintfhdl: Hdl, addr: u32, cnt: u32, pmem: *mut u8) -> u32;
         fn usb_read_port_cancel(pintfhdl: Hdl);
         fn usb_write_port_cancel(pintfhdl: Hdl);
+        fn usb_read_interrupt(pintfhdl: Hdl, addr: u32) -> u32;
     }
 
     unsafe fn usb_sync_vendor_read(pintfhdl: Hdl, addr: u32, len: u16, data: *mut c_void) {
@@ -336,6 +337,10 @@ mod kernel {
         pops._write_port = Some(usb_write_port);
         pops._read_port_cancel = Some(usb_read_port_cancel);
         pops._write_port_cancel = Some(usb_write_port_cancel);
+        #[cfg(CONFIG_USB_INTERRUPT_IN_PIPE)]
+        {
+            pops._read_interrupt = Some(usb_read_interrupt);
+        }
     }
 
     unsafe extern "C" {
