@@ -104,4 +104,13 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-48 | `wave4-48-hal-com-get-port-defaults.md` | `rtw_hal_get_port` + HalData defaults |
 | W4-49 | `wave4-49-hal-com-hw-port-ctrl.md` | RTW_HALMAC hw port enable/disable |
 
-Further slices: deeper PHYDM / bulk USB RX path — file as `wave4-*.md` when tranche 10 is needed.
+## Children (tranche 10 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-50 | `wave4-50-hal-com-c2h-iqk-offload.md` | C2H IQK + txpwr offload wait |
+| W4-51 | `wave4-51-hal-com-reqtxrpt-mi-mac.md` | reqtxrpt + MI MAC addr |
+| W4-52 | `wave4-52-hal-com-sec-cam-rw.md` | security CAM read/write |
+| W4-53 | `wave4-53-hal-usb-set-intf-ops.md` | `usb_set_intf_ops` vtable |
+
+Further slices: deeper PHYDM / bulk USB RX path — file as `wave4-*.md` when tranche 11 is needed.
