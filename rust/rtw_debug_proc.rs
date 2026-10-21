@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! W3-145..149 proc seq_file handlers from `core/rtw_debug_rest.c`.
+//! W3-145..150 proc seq_file handlers from `core/rtw_debug_rest.c`.
 
 #![allow(
     dead_code,
@@ -50,6 +50,8 @@ extern "C" {
     fn rtw_rust_debug_read8(adapter: *mut c_void, addr: U32) -> U8;
     fn rtw_rust_debug_read16(adapter: *mut c_void, addr: U32) -> U16;
     fn rtw_rust_debug_read32(adapter: *mut c_void, addr: U32) -> U32;
+    fn rtw_rust_debug_proc_emit_rx_stat(sel: *mut c_void, adapter: *mut c_void);
+    fn rtw_rust_debug_proc_emit_tx_stat(sel: *mut c_void, adapter: *mut c_void);
 }
 
 #[cfg(config_layer2_roaming)]
@@ -101,6 +103,8 @@ export_proc!(proc_get_ht_option, rtw_rust_debug_proc_emit_ht_option);
 export_proc!(proc_get_rf_info, rtw_rust_debug_proc_emit_rf_info);
 export_proc!(proc_get_sec_info, rtw_rust_debug_proc_emit_sec_info);
 export_proc!(proc_get_defs_param, rtw_rust_debug_proc_emit_defs_param);
+export_proc!(proc_get_rx_stat, rtw_rust_debug_proc_emit_rx_stat);
+export_proc!(proc_get_tx_stat, rtw_rust_debug_proc_emit_tx_stat);
 
 static mut PROC_GET_READ_ADDR: U32 = 0xeeeeeeee;
 static mut PROC_GET_READ_LEN: U32 = 0x4;
