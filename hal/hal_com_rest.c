@@ -370,49 +370,7 @@ exit:
 }
 #endif /* CONFIG_FW_C2H_PKT */
 
-void c2h_iqk_offload(_adapter *adapter, u8 *data, u8 len)
-{
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
-	struct submit_ctx *iqk_sctx = &hal_data->iqk_sctx;
-
-	RTW_INFO("IQK offload finish in %dms\n", rtw_get_passing_time_ms(iqk_sctx->submit_time));
-	if (0)
-		RTW_INFO_DUMP("C2H_IQK_FINISH: ", data, len);
-
-	rtw_sctx_done(&iqk_sctx);
-}
-
-int c2h_iqk_offload_wait(_adapter *adapter, u32 timeout_ms)
-{
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
-	struct submit_ctx *iqk_sctx = &hal_data->iqk_sctx;
-
-	iqk_sctx->submit_time = rtw_get_current_time();
-	iqk_sctx->timeout_ms = timeout_ms;
-	iqk_sctx->status = RTW_SCTX_SUBMITTED;
-
-	return rtw_sctx_wait(iqk_sctx, __func__);
-}
-
-#ifdef CONFIG_FW_OFFLOAD_SET_TXPWR_IDX
-void c2h_txpwr_idx_offload_done(_adapter *adapter, u8 *data, u8 len)
-{
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
-	struct submit_ctx *sctx = &hal_data->txpwr_idx_offload_sctx;
-
-	if (0)
-		RTW_INFO("txpwr_idx offload finish in %dms\n", rtw_get_passing_time_ms(sctx->submit_time));
-	rtw_sctx_done(&sctx);
-}
-
-int c2h_txpwr_idx_offload_wait(_adapter *adapter)
-{
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
-	struct submit_ctx *sctx = &hal_data->txpwr_idx_offload_sctx;
-
-	return rtw_sctx_wait(sctx, __func__);
-}
-#endif
+/* c2h_iqk_offload / c2h_iqk_offload_wait / c2h_txpwr_idx_offload_* — ported to rust/hal_com.rs (W4-50) */
 
 #define	GET_C2H_MAC_HIDDEN_RPT_UUID_X(_data)			LE_BITS_TO_1BYTE(((u8 *)(_data)) + 0, 0, 8)
 #define	GET_C2H_MAC_HIDDEN_RPT_UUID_Y(_data)			LE_BITS_TO_1BYTE(((u8 *)(_data)) + 1, 0, 8)
@@ -15829,5 +15787,45 @@ _adapter *rtw_rust_hal_com_dvobj_adapter_at(struct dvobj_priv *dvobj, int idx)
 	if (!dvobj || idx < 0 || idx >= dvobj->iface_nums)
 		return NULL;
 	return dvobj->padapters[idx];
+}
+
+struct submit_ctx *rtw_rust_hal_com_iqk_sctx(_adapter *adapter)
+{
+	if (!adapter)
+		return NULL;
+	return &GET_HAL_DATA(adapter)->iqk_sctx;
+}
+
+#ifdef CONFIG_FW_OFFLOAD_SET_TXPWR_IDX
+struct submit_ctx *rtw_rust_hal_com_txpwr_idx_offload_sctx(_adapter *adapter)
+{
+	if (!adapter)
+		return NULL;
+	return &GET_HAL_DATA(adapter)->txpwr_idx_offload_sctx;
+}
+#endif
+
+u32 rtw_rust_hal_com_sctx_passing_time_ms(struct submit_ctx *sctx)
+{
+	if (!sctx)
+		return 0;
+	return rtw_get_passing_time_ms(sctx->submit_time);
+}
+
+void rtw_rust_hal_com_log_iqk_offload_finish_ms(u32 ms)
+{
+	RTW_INFO("IQK offload finish in %ums\n", ms);
+}
+
+void rtw_rust_hal_com_iqk_sctx_begin_wait(_adapter *adapter, u32 timeout_ms)
+{
+	struct submit_ctx *iqk_sctx;
+
+	if (!adapter)
+		return;
+	iqk_sctx = &GET_HAL_DATA(adapter)->iqk_sctx;
+	iqk_sctx->submit_time = rtw_get_current_time();
+	iqk_sctx->timeout_ms = timeout_ms;
+	iqk_sctx->status = RTW_SCTX_SUBMITTED;
 }
 #endif
