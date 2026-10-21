@@ -1296,7 +1296,6 @@ int proc_get_roam_param(struct seq_file *m, void *v)
 
 	return 0;
 }
-#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-147 in rust/rtw_debug_proc.rs */
 
 ssize_t proc_set_roam_param(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
@@ -1363,6 +1362,7 @@ ssize_t proc_set_roam_tgt_addr(struct file *file, const char __user *buffer, siz
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-147/W3-148 in rust/rtw_debug_proc.rs */
 #endif /* CONFIG_LAYER2_ROAMING */
 
 #ifdef CONFIG_WAR_OFFLOAD

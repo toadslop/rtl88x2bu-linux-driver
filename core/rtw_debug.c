@@ -561,6 +561,73 @@ ssize_t rtw_rust_debug_proc_set_roam_flags(_adapter *adapter,
 
 	return count;
 }
+
+ssize_t rtw_rust_debug_proc_set_roam_param(_adapter *adapter,
+					   const char __user *buffer,
+					   size_t count)
+{
+	struct mlme_priv *mlme = &adapter->mlmepriv;
+	char tmp[32];
+	u8 rssi_diff_th;
+	u32 scanr_exp_ms;
+	u32 scan_int;
+	u8 rssi_threshold;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%hhu %u %u %hhu", &rssi_diff_th,
+				 &scanr_exp_ms, &scan_int, &rssi_threshold);
+
+		if (num >= 1)
+			mlme->roam_rssi_diff_th = rssi_diff_th;
+		if (num >= 2)
+			mlme->roam_scanr_exp_ms = scanr_exp_ms;
+		if (num >= 3)
+			mlme->roam_scan_int = scan_int;
+		if (num >= 4)
+			mlme->roam_rssi_threshold = rssi_threshold;
+	}
+
+	return count;
+}
+
+ssize_t rtw_rust_debug_proc_set_roam_tgt_addr(_adapter *adapter,
+					      const char __user *buffer,
+					      size_t count)
+{
+	char tmp[32];
+	u8 addr[ETH_ALEN];
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", addr,
+				 addr + 1, addr + 2, addr + 3, addr + 4,
+				 addr + 5);
+
+		if (num == 6)
+			_rtw_memcpy(adapter->mlmepriv.roam_tgt_addr, addr,
+				    ETH_ALEN);
+
+		RTW_INFO("set roam_tgt_addr to "MAC_FMT"\n",
+			 MAC_ARG(adapter->mlmepriv.roam_tgt_addr));
+	}
+
+	return count;
+}
 #endif /* CONFIG_LAYER2_ROAMING */
 
 void rtw_rust_debug_proc_emit_sec_info(void *sel, _adapter *adapter)

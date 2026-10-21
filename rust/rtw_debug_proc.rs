@@ -34,6 +34,16 @@ extern "C" {
         buffer: *const c_void,
         count: usize,
     ) -> c_long;
+    fn rtw_rust_debug_proc_set_roam_param(
+        adapter: *mut c_void,
+        buffer: *const c_void,
+        count: usize,
+    ) -> c_long;
+    fn rtw_rust_debug_proc_set_roam_tgt_addr(
+        adapter: *mut c_void,
+        buffer: *const c_void,
+        count: usize,
+    ) -> c_long;
 }
 
 fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
@@ -80,4 +90,30 @@ pub extern "C" fn proc_set_roam_flags(
 ) -> c_long {
     let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
     unsafe { rtw_rust_debug_proc_set_roam_flags(adapter, buffer, count) }
+}
+
+#[cfg(all(config_layer2_roaming, any(config_rtw_debug, config_proc_debug)))]
+#[no_mangle]
+pub extern "C" fn proc_set_roam_param(
+    _file: *mut c_void,
+    buffer: *const c_void,
+    count: usize,
+    _pos: *mut c_long,
+    data: *mut c_void,
+) -> c_long {
+    let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
+    unsafe { rtw_rust_debug_proc_set_roam_param(adapter, buffer, count) }
+}
+
+#[cfg(all(config_layer2_roaming, any(config_rtw_debug, config_proc_debug)))]
+#[no_mangle]
+pub extern "C" fn proc_set_roam_tgt_addr(
+    _file: *mut c_void,
+    buffer: *const c_void,
+    count: usize,
+    _pos: *mut c_long,
+    data: *mut c_void,
+) -> c_long {
+    let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
+    unsafe { rtw_rust_debug_proc_set_roam_tgt_addr(adapter, buffer, count) }
 }

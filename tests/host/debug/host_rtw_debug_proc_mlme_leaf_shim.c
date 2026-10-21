@@ -71,3 +71,25 @@ long proc_set_roam_flags(void *file, const void *buffer, unsigned long count,
 	(void)data;
 	return 0;
 }
+
+long proc_set_roam_param(void *file, const void *buffer, unsigned long count,
+			 long long *pos, void *data)
+{
+	(void)file;
+	(void)buffer;
+	(void)count;
+	(void)pos;
+	(void)data;
+	return 0;
+}
+
+long proc_set_roam_tgt_addr(void *file, const void *buffer,
+			    unsigned long count, long long *pos, void *data)
+{
+	(void)file;
+	(void)buffer;
+	(void)count;
+	(void)pos;
+	(void)data;
+	return 0;
+}
