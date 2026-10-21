@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! W3-145/W3-146/W3-147 proc seq_file leaf handlers from `core/rtw_debug_rest.c`.
+//! W3-145..149 proc seq_file handlers from `core/rtw_debug_rest.c`.
 
 #![allow(
     dead_code,
@@ -16,19 +16,25 @@ use core::ffi::{c_int, c_long, c_void};
 
 extern "C" {
     fn rtw_rust_debug_proc_adapter(m: *mut c_void) -> *mut c_void;
+    fn rtw_rust_debug_proc_adapter_from_data(data: *mut c_void) -> *mut c_void;
     fn rtw_rust_debug_proc_emit_fwstate(sel: *mut c_void, adapter: *mut c_void);
     fn rtw_rust_debug_proc_emit_mlmext_state(sel: *mut c_void, adapter: *mut c_void);
     fn rtw_rust_debug_proc_emit_qos_option(sel: *mut c_void, adapter: *mut c_void);
     fn rtw_rust_debug_proc_emit_ht_option(sel: *mut c_void, adapter: *mut c_void);
     fn rtw_rust_debug_proc_emit_rf_info(sel: *mut c_void, adapter: *mut c_void);
     fn rtw_rust_debug_proc_emit_sec_info(sel: *mut c_void, adapter: *mut c_void);
+    fn rtw_rust_debug_proc_emit_defs_param(sel: *mut c_void, adapter: *mut c_void);
+    fn rtw_rust_debug_proc_set_defs_param(
+        adapter: *mut c_void,
+        buffer: *const c_void,
+        count: usize,
+    ) -> c_long;
 }
 
 #[cfg(config_layer2_roaming)]
 extern "C" {
     fn rtw_rust_debug_proc_emit_roam_flags(sel: *mut c_void, adapter: *mut c_void);
     fn rtw_rust_debug_proc_emit_roam_param(sel: *mut c_void, adapter: *mut c_void);
-    fn rtw_rust_debug_proc_adapter_from_data(data: *mut c_void) -> *mut c_void;
     fn rtw_rust_debug_proc_set_roam_flags(
         adapter: *mut c_void,
         buffer: *const c_void,
@@ -73,6 +79,20 @@ export_proc!(proc_get_qos_option, rtw_rust_debug_proc_emit_qos_option);
 export_proc!(proc_get_ht_option, rtw_rust_debug_proc_emit_ht_option);
 export_proc!(proc_get_rf_info, rtw_rust_debug_proc_emit_rf_info);
 export_proc!(proc_get_sec_info, rtw_rust_debug_proc_emit_sec_info);
+export_proc!(proc_get_defs_param, rtw_rust_debug_proc_emit_defs_param);
+
+#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[no_mangle]
+pub extern "C" fn proc_set_defs_param(
+    _file: *mut c_void,
+    buffer: *const c_void,
+    count: usize,
+    _pos: *mut c_long,
+    data: *mut c_void,
+) -> c_long {
+    let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
+    unsafe { rtw_rust_debug_proc_set_defs_param(adapter, buffer, count) }
+}
 
 #[cfg(config_layer2_roaming)]
 export_proc!(proc_get_roam_flags, rtw_rust_debug_proc_emit_roam_flags);
