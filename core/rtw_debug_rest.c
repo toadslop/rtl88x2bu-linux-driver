@@ -1241,6 +1241,7 @@ int proc_get_mlmext_state(struct seq_file *m, void *v)
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-145 */
 
 #ifdef CONFIG_LAYER2_ROAMING
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_roam_flags(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -1295,6 +1296,7 @@ int proc_get_roam_param(struct seq_file *m, void *v)
 
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-147 in rust/rtw_debug_proc.rs */
 
 ssize_t proc_set_roam_param(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {

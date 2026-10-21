@@ -515,6 +515,54 @@ void rtw_rust_debug_proc_emit_rf_info(void *sel, _adapter *adapter)
 		      rtw_get_oper_choffset(adapter));
 }
 
+#ifdef CONFIG_LAYER2_ROAMING
+void rtw_rust_debug_proc_emit_roam_flags(void *sel, _adapter *adapter)
+{
+	RTW_PRINT_SEL(sel, "0x%02x\n", rtw_roam_flags(adapter));
+}
+
+void rtw_rust_debug_proc_emit_roam_param(void *sel, _adapter *adapter)
+{
+	struct mlme_priv *mlme = &adapter->mlmepriv;
+
+	RTW_PRINT_SEL(sel, "%12s %15s %26s %16s\n", "rssi_diff_th", "scanr_exp_ms",
+		      "scan_interval(unit:2 sec)", "rssi_threshold");
+	RTW_PRINT_SEL(sel, "%-15u %-13u %-27u %-11u\n",
+		      mlme->roam_rssi_diff_th, mlme->roam_scanr_exp_ms,
+		      mlme->roam_scan_int, mlme->roam_rssi_threshold);
+}
+
+_adapter *rtw_rust_debug_proc_adapter_from_data(void *data)
+{
+	return (_adapter *)rtw_netdev_priv((struct net_device *)data);
+}
+
+ssize_t rtw_rust_debug_proc_set_roam_flags(_adapter *adapter,
+					   const char __user *buffer,
+					   size_t count)
+{
+	char tmp[32];
+	u8 flags;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%hhx", &flags);
+
+		if (num == 1)
+			rtw_assign_roam_flags(adapter, flags);
+	}
+
+	return count;
+}
+#endif /* CONFIG_LAYER2_ROAMING */
+
 void rtw_rust_debug_proc_emit_sec_info(void *sel, _adapter *adapter)
 {
 	struct security_priv *sec = &adapter->securitypriv;
