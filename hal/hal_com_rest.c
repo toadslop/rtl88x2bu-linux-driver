@@ -251,36 +251,13 @@ static void _FourOutPipeMapping(
 }
 #endif
 
-void rtw_hal_reqtxrpt(_adapter *padapter, u8 macid)
-{
-	if (padapter->hal_func.reqtxrpt)
-		padapter->hal_func.reqtxrpt(padapter, macid);
-}
+/* rtw_hal_reqtxrpt / rtw_mi_set_mac_addr — ported to rust/hal_com.rs (W4-51) */
 
 /* rtw_hal_dump_macaddr — ported to rust/hal_com.rs (W4-04) */
 
 #ifdef RTW_HALMAC
 /* rtw_hal_hw_port_enable / rtw_hal_hw_port_disable / rtw_restore_hw_port_cfg — ported to rust/hal_com.rs (W4-49) */
 #endif
-
-void rtw_mi_set_mac_addr(_adapter *adapter)
-{
-#ifdef CONFIG_MI_WITH_MBSSID_CAM
-	rtw_mi_set_mbid_cam(adapter);
-#else
-	int i;
-	_adapter *iface;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-
-	for (i = 0; i < dvobj->iface_nums; i++) {
-		iface = dvobj->padapters[i];
-		if (iface)
-			rtw_hal_set_hwreg(iface, HW_VAR_MAC_ADDR, adapter_mac_addr(iface));
-	}
-#endif
-	if (0)
-		rtw_hal_dump_macaddr(RTW_DBGDUMP, adapter);
-}
 
 /* rtw_init_hal_com_default_value — ported to rust/hal_com.rs (W4-48) */
 
@@ -15827,5 +15804,23 @@ void rtw_rust_hal_com_iqk_sctx_begin_wait(_adapter *adapter, u32 timeout_ms)
 	iqk_sctx->submit_time = rtw_get_current_time();
 	iqk_sctx->timeout_ms = timeout_ms;
 	iqk_sctx->status = RTW_SCTX_SUBMITTED;
+}
+
+void rtw_rust_hal_com_call_reqtxrpt(_adapter *padapter, u8 macid)
+{
+	if (padapter && padapter->hal_func.reqtxrpt)
+		padapter->hal_func.reqtxrpt(padapter, macid);
+}
+
+int rtw_rust_hal_com_hw_var_mac_addr(void)
+{
+	return HW_VAR_MAC_ADDR;
+}
+
+u8 *rtw_rust_hal_com_adapter_mac_addr(_adapter *adapter)
+{
+	if (!adapter)
+		return NULL;
+	return adapter_mac_addr(adapter);
 }
 #endif
