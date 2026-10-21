@@ -216,6 +216,15 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-146 | `wave3-146-debug-proc-sec-info.md` | `proc_get_sec_info` |
 | W3-147 | `wave3-147-debug-proc-roam-leaf.md` | proc roam debug leaf |
 
+## Children (tranche 13 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-148 | `wave3-148-debug-proc-roam-setters.md` | proc roam param / tgt_addr setters |
+| W3-149 | `wave3-149-debug-proc-defs-reg.md` | proc defs + register read/write |
+| W3-150 | `wave3-150-debug-proc-rx-tx-stat.md` | proc rx/tx stainfo stats |
+| W3-151 | `wave3-151-debug-proc-scan-param.md` | proc scan param + abort |
+
 Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:
 
 - `rtw_beamforming.c` sounding state machine (HAL-coupled NDPA paths)

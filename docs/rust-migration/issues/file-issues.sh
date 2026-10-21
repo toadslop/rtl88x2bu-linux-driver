@@ -300,6 +300,14 @@ files=(
   wave3-145-debug-proc-mlme-leaf.md
   wave3-146-debug-proc-sec-info.md
   wave3-147-debug-proc-roam-leaf.md
+  wave3-148-debug-proc-roam-setters.md
+  wave3-149-debug-proc-defs-reg.md
+  wave3-150-debug-proc-rx-tx-stat.md
+  wave3-151-debug-proc-scan-param.md
+  wave4-50-hal-com-c2h-iqk-offload.md
+  wave4-51-hal-com-reqtxrpt-mi-mac.md
+  wave4-52-hal-com-sec-cam-rw.md
+  wave4-53-hal-usb-set-intf-ops.md
 )
 
 # draft_id -> github issue number

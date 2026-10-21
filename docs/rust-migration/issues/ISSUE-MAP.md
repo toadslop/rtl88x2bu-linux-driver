@@ -266,6 +266,14 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-145 | #1393 | [W3-145] Translate rtw_debug_rest.c — proc mlme/rf leaf getters |
 | W3-146 | #1394 | [W3-146] Translate rtw_debug_rest.c — proc_get_sec_info |
 | W3-147 | #1395 | [W3-147] Translate rtw_debug_rest.c — proc roam debug leaf |
+| W3-148 | #1406 | [W3-148] Translate rtw_debug_rest.c — proc roam setters |
+| W3-149 | #1407 | [W3-149] Translate rtw_debug_rest.c — proc defs + register peek/poke |
+| W3-150 | #1408 | [W3-150] Translate rtw_debug_rest.c — proc rx/tx stainfo stats |
+| W3-151 | #1409 | [W3-151] Translate rtw_debug_rest.c — proc scan param + abort |
+| W4-50 | #1410 | [W4-50] Translate hal_com_rest.c — C2H IQK / txpwr offload wait |
+| W4-51 | #1411 | [W4-51] Translate hal_com_rest.c — reqtxrpt + MI MAC addr push |
+| W4-52 | #1412 | [W4-52] Translate hal_com_rest.c — security CAM register read/write |
+| W4-53 | #1413 | [W4-53] Extend rust/hal_usb.rs usb_set_intf_ops — interrupt pipe + hook retarget |
 
 ## Superseded issues
 
