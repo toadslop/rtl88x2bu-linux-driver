@@ -140,3 +140,17 @@ long proc_set_read_reg(void *file, const void *buffer, unsigned long count,
 	(void)data;
 	return 0;
 }
+
+int proc_get_rx_stat(seq_file *m, void *v)
+{
+	(void)m;
+	(void)v;
+	return 0;
+}
+
+int proc_get_tx_stat(seq_file *m, void *v)
+{
+	(void)m;
+	(void)v;
+	return 0;
+}

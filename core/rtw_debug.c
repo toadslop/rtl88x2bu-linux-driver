@@ -689,6 +689,122 @@ void rtw_rust_debug_proc_emit_read_reg(void *sel, u32 addr, u32 len, u32 val)
 	}
 }
 
+void rtw_rust_debug_proc_emit_rx_stat(void *sel, _adapter *adapter)
+{
+	_irqL	 irqL;
+	_list	*plist, *phead;
+	struct sta_info *psta = NULL;
+	struct stainfo_stats	*pstats = NULL;
+	struct sta_priv		*pstapriv = &(adapter->stapriv);
+	u32 i, j;
+	u8 bc_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+	u8 null_addr[ETH_ALEN] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+	_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	for (i = 0; i < NUM_STA; i++) {
+		phead = &(pstapriv->sta_hash[i]);
+		plist = get_next(phead);
+		while ((rtw_end_of_queue_search(phead, plist)) == _FALSE) {
+			psta = LIST_CONTAINOR(plist, struct sta_info, hash_list);
+			plist = get_next(plist);
+			pstats = &psta->sta_stats;
+
+			if (pstats == NULL)
+				continue;
+			if ((_rtw_memcmp(psta->cmn.mac_addr, bc_addr, ETH_ALEN) !=  _TRUE)
+				&& (_rtw_memcmp(psta->cmn.mac_addr, null_addr, ETH_ALEN) != _TRUE)
+				&& (_rtw_memcmp(psta->cmn.mac_addr, adapter_mac_addr(adapter), ETH_ALEN) != _TRUE)) {
+				RTW_PRINT_SEL(sel, "MAC :\t\t"MAC_FMT "\n", MAC_ARG(psta->cmn.mac_addr));
+				RTW_PRINT_SEL(sel, "data_rx_cnt :\t%llu\n", sta_rx_data_uc_pkts(psta) - pstats->last_rx_data_uc_pkts);
+				pstats->last_rx_data_uc_pkts = sta_rx_data_uc_pkts(psta);
+				RTW_PRINT_SEL(sel, "duplicate_cnt :\t%u\n", pstats->duplicate_cnt);
+				pstats->duplicate_cnt = 0;
+				RTW_PRINT_SEL(sel, "rx_per_rate_cnt :\n");
+
+				for (j = 0; j < 0x60; j++) {
+					RTW_PRINT_SEL(sel, "%08u  ", pstats->rxratecnt[j]);
+					pstats->rxratecnt[j] = 0;
+					if ((j%8) == 7)
+						RTW_PRINT_SEL(sel, "\n");
+				}
+				RTW_PRINT_SEL(sel, "\n");
+			}
+		}
+	}
+	_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+}
+
+void rtw_rust_debug_proc_emit_tx_stat(void *sel, _adapter *adapter)
+{
+	_irqL	irqL;
+	_list	*plist, *phead;
+	struct sta_info *psta = NULL;
+	u8 sta_mac[NUM_STA][ETH_ALEN] = {{0}};
+	uint mac_id[NUM_STA];
+	struct stainfo_stats	*pstats = NULL;
+	struct sta_priv	*pstapriv = &(adapter->stapriv);
+	struct sta_priv	*pstapriv_primary = &(GET_PRIMARY_ADAPTER(adapter))->stapriv;
+	u32 i, macid_rec_idx = 0;
+	u8 bc_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+	u8 null_addr[ETH_ALEN] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+	struct submit_ctx gotc2h;
+
+	if (!adapter->hal_func.reqtxrpt) {
+		RTW_PRINT_SEL(sel, "Not support.\n");
+		return;
+	}
+
+	_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	for (i = 0; i < NUM_STA; i++) {
+		phead = &(pstapriv->sta_hash[i]);
+		plist = get_next(phead);
+		while ((rtw_end_of_queue_search(phead, plist)) == _FALSE) {
+			psta = LIST_CONTAINOR(plist, struct sta_info, hash_list);
+			plist = get_next(plist);
+			if ((_rtw_memcmp(psta->cmn.mac_addr, bc_addr, ETH_ALEN) !=  _TRUE)
+				&& (_rtw_memcmp(psta->cmn.mac_addr, null_addr, ETH_ALEN) != _TRUE)
+				&& (_rtw_memcmp(psta->cmn.mac_addr, adapter_mac_addr(adapter), ETH_ALEN) != _TRUE)) {
+				_rtw_memcpy(&sta_mac[macid_rec_idx][0], psta->cmn.mac_addr, ETH_ALEN);
+				mac_id[macid_rec_idx] = psta->cmn.mac_id;
+				macid_rec_idx++;
+			}
+		}
+	}
+	_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	for (i = 0; i < macid_rec_idx; i++) {
+		_rtw_memcpy(pstapriv_primary->c2h_sta_mac, &sta_mac[i][0], ETH_ALEN);
+		pstapriv_primary->c2h_adapter_id = adapter->iface_id;
+		rtw_sctx_init(&gotc2h, 60);
+		pstapriv_primary->gotc2h = &gotc2h;
+		rtw_hal_reqtxrpt(adapter, mac_id[i]);
+		if (rtw_sctx_wait(&gotc2h, __func__)) {
+			psta = rtw_get_stainfo(pstapriv, &sta_mac[i][0]);
+			if (psta) {
+				pstats = &psta->sta_stats;
+#if (!defined(ROKU_PRIVATE) && !defined(CONFIG_RTW_MULTI_AP))
+				RTW_PRINT_SEL(sel, "data_sent_cnt :\t%u\n", pstats->tx_ok_cnt + pstats->tx_fail_cnt);
+				RTW_PRINT_SEL(sel, "success_cnt :\t%u\n", pstats->tx_ok_cnt);
+				RTW_PRINT_SEL(sel, "failure_cnt :\t%u\n", pstats->tx_fail_cnt);
+				RTW_PRINT_SEL(sel, "retry_cnt :\t%u\n\n", pstats->tx_retry_cnt);
+#else
+				RTW_PRINT_SEL(sel, "MAC: " MAC_FMT " sent: %u fail: %u retry: %u\n",
+					      MAC_ARG(&sta_mac[i][0]), pstats->tx_ok_cnt, pstats->tx_fail_cnt, pstats->tx_retry_cnt);
+#endif /* ROKU_PRIVATE */
+			} else
+				RTW_PRINT_SEL(sel, "STA is gone\n");
+		} else {
+			pstapriv_primary->gotc2h = NULL;
+			_rtw_memset(pstapriv_primary->c2h_sta_mac, 0, ETH_ALEN);
+			pstapriv_primary->c2h_adapter_id = CONFIG_IFACE_NUMBER;
+			RTW_PRINT_SEL(sel, "Warming : Query timeout, operation abort!!\n");
+			break;
+		}
+		pstapriv_primary->gotc2h = NULL;
+		_rtw_memset(pstapriv_primary->c2h_sta_mac, 0, ETH_ALEN);
+		pstapriv_primary->c2h_adapter_id = CONFIG_IFACE_NUMBER;
+	}
+}
+
 #ifdef CONFIG_LAYER2_ROAMING
 void rtw_rust_debug_proc_emit_roam_flags(void *sel, _adapter *adapter)
 {

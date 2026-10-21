@@ -21,3 +21,5 @@ drop rtw_rust_debug_proc_emit_read_reg
 drop rtw_rust_debug_read8
 drop rtw_rust_debug_read16
 drop rtw_rust_debug_read32
+drop rtw_rust_debug_proc_emit_rx_stat
+drop rtw_rust_debug_proc_emit_tx_stat

@@ -1054,6 +1054,7 @@ ssize_t proc_set_read_reg(struct file *file, const char __user *buffer, size_t c
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-149 PR2 reg peek/poke in rust/rtw_debug_proc.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_rx_stat(struct seq_file *m, void *v)
 {
 	_irqL	 irqL;
@@ -1177,6 +1178,7 @@ int proc_get_tx_stat(struct seq_file *m, void *v)
 	}
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-150 in rust/rtw_debug_proc.rs */
 
 #if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_fwstate(struct seq_file *m, void *v)
