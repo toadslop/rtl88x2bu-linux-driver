@@ -49,7 +49,9 @@ fn poll_cam_cmd(adapter: *mut core::ffi::c_void) -> (u8, u32, Systime, Systime) 
             break;
         }
     }
-    (timeout, cnt, start, unsafe { rtw_rust_hal_com_get_current_time() })
+    (timeout, cnt, start, unsafe {
+        rtw_rust_hal_com_get_current_time()
+    })
 }
 
 #[no_mangle]
@@ -72,7 +74,11 @@ pub extern "C" fn rtw_sec_write_cam(adapter: *mut core::ffi::c_void, addr: u8, w
     unsafe { rtw_rust_hal_com_enter_critical_mutex(mutex) };
     unsafe {
         rtw_rust_hal_com_write32(adapter, REG_CAMWRITE, wdata);
-        rtw_rust_hal_com_write32(adapter, REG_CAMCMD, CAM_POLLINIG | CAM_WRITE | (addr as u32));
+        rtw_rust_hal_com_write32(
+            adapter,
+            REG_CAMCMD,
+            CAM_POLLINIG | CAM_WRITE | (addr as u32),
+        );
     };
     let (timeout, cnt, start, end) = poll_cam_cmd(adapter);
     unsafe { rtw_rust_hal_com_exit_critical_mutex(mutex) };
