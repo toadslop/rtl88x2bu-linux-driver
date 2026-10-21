@@ -43,6 +43,7 @@ extern "C" {
         count: usize,
         addr_out: *mut U32,
         len_out: *mut U32,
+        parsed_ok: *mut c_int,
     ) -> c_long;
     fn rtw_rust_debug_proc_emit_read_reg_uninit(sel: *mut c_void);
     fn rtw_rust_debug_proc_emit_read_reg(sel: *mut c_void, addr: U32, len: U32, val: U32);
@@ -169,8 +170,11 @@ pub extern "C" fn proc_set_read_reg(
 ) -> c_long {
     let mut addr = 0u32;
     let mut len = 0u32;
-    let ret = unsafe { rtw_rust_debug_proc_set_read_reg(buffer, count, &mut addr, &mut len) };
-    if ret >= 0 {
+    let mut parsed_ok: c_int = 0;
+    let ret = unsafe {
+        rtw_rust_debug_proc_set_read_reg(buffer, count, &mut addr, &mut len, &mut parsed_ok)
+    };
+    if ret >= 0 && parsed_ok != 0 {
         unsafe {
             PROC_GET_READ_ADDR = addr;
             PROC_GET_READ_LEN = len;

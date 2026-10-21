@@ -630,10 +630,14 @@ ssize_t rtw_rust_debug_proc_set_write_reg(_adapter *adapter,
 ssize_t rtw_rust_debug_proc_set_read_reg(const char __user *buffer,
 					 size_t count,
 					 u32 *addr_out,
-					 u32 *len_out)
+					 u32 *len_out,
+					 int *parsed_ok)
 {
 	char tmp[16];
 	u32 addr, len;
+
+	if (parsed_ok)
+		*parsed_ok = 0;
 
 	if (count < 2) {
 		RTW_INFO("argument size is less than 2\n");
@@ -655,6 +659,8 @@ ssize_t rtw_rust_debug_proc_set_read_reg(const char __user *buffer,
 
 		*addr_out = addr;
 		*len_out = len;
+		if (parsed_ok)
+			*parsed_ok = 1;
 	}
 
 	return count;
