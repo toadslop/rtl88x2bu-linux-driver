@@ -472,6 +472,31 @@ u32 rtw_rust_debug_read32(_adapter *adapter, u32 addr)
 	return rtw_read32(adapter, addr);
 }
 
+u8 rtw_rust_debug_read8(_adapter *adapter, u32 addr)
+{
+	return rtw_read8(adapter, addr);
+}
+
+u16 rtw_rust_debug_read16(_adapter *adapter, u32 addr)
+{
+	return rtw_read16(adapter, addr);
+}
+
+void rtw_rust_debug_write8(_adapter *adapter, u32 addr, u8 val)
+{
+	rtw_write8(adapter, addr, val);
+}
+
+void rtw_rust_debug_write16(_adapter *adapter, u32 addr, u16 val)
+{
+	rtw_write16(adapter, addr, val);
+}
+
+void rtw_rust_debug_write32(_adapter *adapter, u32 addr, u32 val)
+{
+	rtw_write32(adapter, addr, val);
+}
+
 #ifdef CONFIG_PROC_DEBUG
 _adapter *rtw_rust_debug_proc_adapter(void *m)
 {
@@ -556,6 +581,112 @@ ssize_t rtw_rust_debug_proc_set_defs_param(_adapter *adapter,
 	}
 
 	return count;
+}
+
+ssize_t rtw_rust_debug_proc_set_write_reg(_adapter *adapter,
+					  const char __user *buffer,
+					  size_t count)
+{
+	char tmp[32];
+	u32 addr, val, len;
+
+	if (count < 3) {
+		RTW_INFO("argument size is less than 3\n");
+		return -EFAULT;
+	}
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%x %x %x", &addr, &val, &len);
+
+		if (num != 3) {
+			RTW_INFO("invalid write_reg parameter!\n");
+			return count;
+		}
+
+		switch (len) {
+		case 1:
+			rtw_write8(adapter, addr, (u8)val);
+			break;
+		case 2:
+			rtw_write16(adapter, addr, (u16)val);
+			break;
+		case 4:
+			rtw_write32(adapter, addr, val);
+			break;
+		default:
+			RTW_INFO("error write length=%d", len);
+			break;
+		}
+	}
+
+	return count;
+}
+
+ssize_t rtw_rust_debug_proc_set_read_reg(const char __user *buffer,
+					 size_t count,
+					 u32 *addr_out,
+					 u32 *len_out,
+					 int *parsed_ok)
+{
+	char tmp[16];
+	u32 addr, len;
+
+	if (parsed_ok)
+		*parsed_ok = 0;
+
+	if (count < 2) {
+		RTW_INFO("argument size is less than 2\n");
+		return -EFAULT;
+	}
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%x %x", &addr, &len);
+
+		if (num != 2) {
+			RTW_INFO("invalid read_reg parameter!\n");
+			return count;
+		}
+
+		*addr_out = addr;
+		*len_out = len;
+		if (parsed_ok)
+			*parsed_ok = 1;
+	}
+
+	return count;
+}
+
+void rtw_rust_debug_proc_emit_read_reg_uninit(void *sel)
+{
+	RTW_PRINT_SEL(sel, "address not initialized\n");
+}
+
+void rtw_rust_debug_proc_emit_read_reg(void *sel, u32 addr, u32 len, u32 val)
+{
+	switch (len) {
+	case 1:
+		RTW_PRINT_SEL(sel, "rtw_read8(0x%x)=0x%x\n", addr, val);
+		break;
+	case 2:
+		RTW_PRINT_SEL(sel, "rtw_read16(0x%x)=0x%x\n", addr, val);
+		break;
+	case 4:
+		RTW_PRINT_SEL(sel, "rtw_read32(0x%x)=0x%x\n", addr, val);
+		break;
+	default:
+		RTW_PRINT_SEL(sel, "error read length=%d\n", len);
+		break;
+	}
 }
 
 #ifdef CONFIG_LAYER2_ROAMING
