@@ -14,3 +14,10 @@ drop rtw_rust_debug_proc_set_roam_param
 drop rtw_rust_debug_proc_set_roam_tgt_addr
 drop rtw_rust_debug_proc_emit_defs_param
 drop rtw_rust_debug_proc_set_defs_param
+drop rtw_rust_debug_proc_set_write_reg
+drop rtw_rust_debug_proc_set_read_reg
+drop rtw_rust_debug_proc_emit_read_reg_uninit
+drop rtw_rust_debug_proc_emit_read_reg
+drop rtw_rust_debug_read8
+drop rtw_rust_debug_read16
+drop rtw_rust_debug_read32

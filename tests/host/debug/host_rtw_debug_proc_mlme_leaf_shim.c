@@ -111,3 +111,32 @@ long proc_set_defs_param(void *file, const void *buffer, unsigned long count,
 	(void)data;
 	return 0;
 }
+
+long proc_set_write_reg(void *file, const void *buffer, unsigned long count,
+			long long *pos, void *data)
+{
+	(void)file;
+	(void)buffer;
+	(void)count;
+	(void)pos;
+	(void)data;
+	return 0;
+}
+
+int proc_get_read_reg(seq_file *m, void *v)
+{
+	(void)m;
+	(void)v;
+	return 0;
+}
+
+long proc_set_read_reg(void *file, const void *buffer, unsigned long count,
+		       long long *pos, void *data)
+{
+	(void)file;
+	(void)buffer;
+	(void)count;
+	(void)pos;
+	(void)data;
+	return 0;
+}

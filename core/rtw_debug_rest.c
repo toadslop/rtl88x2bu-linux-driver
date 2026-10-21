@@ -939,8 +939,9 @@ ssize_t proc_set_defs_param(struct file *file, const char __user *buffer, size_t
 	return count;
 
 }
-#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-149 PR1 defs in rust/rtw_debug_proc.rs */
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-149 PR1 in rust/rtw_debug_proc.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 ssize_t proc_set_write_reg(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
 	struct net_device *dev = data;
@@ -1051,6 +1052,7 @@ ssize_t proc_set_read_reg(struct file *file, const char __user *buffer, size_t c
 	return count;
 
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-149 PR2 reg peek/poke in rust/rtw_debug_proc.rs */
 
 int proc_get_rx_stat(struct seq_file *m, void *v)
 {
