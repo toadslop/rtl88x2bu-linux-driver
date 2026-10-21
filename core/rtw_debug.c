@@ -515,6 +515,49 @@ void rtw_rust_debug_proc_emit_rf_info(void *sel, _adapter *adapter)
 		      rtw_get_oper_choffset(adapter));
 }
 
+_adapter *rtw_rust_debug_proc_adapter_from_data(void *data)
+{
+	return (_adapter *)rtw_netdev_priv((struct net_device *)data);
+}
+
+void rtw_rust_debug_proc_emit_defs_param(void *sel, _adapter *adapter)
+{
+	struct mlme_priv *mlme = &adapter->mlmepriv;
+
+	RTW_PRINT_SEL(sel, "%s %15s\n", "lmt_sta", "lmt_time");
+	RTW_PRINT_SEL(sel, "%-15u %-15u\n", mlme->defs_lmt_sta,
+		      mlme->defs_lmt_time);
+}
+
+ssize_t rtw_rust_debug_proc_set_defs_param(_adapter *adapter,
+					   const char __user *buffer,
+					   size_t count)
+{
+	struct mlme_priv *mlme = &adapter->mlmepriv;
+	char tmp[32];
+	u32 defs_lmt_sta;
+	u32 defs_lmt_time;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%u %u", &defs_lmt_sta, &defs_lmt_time);
+
+		if (num >= 1)
+			mlme->defs_lmt_sta = defs_lmt_sta;
+		if (num >= 2)
+			mlme->defs_lmt_time = defs_lmt_time;
+	}
+
+	return count;
+}
+
 #ifdef CONFIG_LAYER2_ROAMING
 void rtw_rust_debug_proc_emit_roam_flags(void *sel, _adapter *adapter)
 {
@@ -530,11 +573,6 @@ void rtw_rust_debug_proc_emit_roam_param(void *sel, _adapter *adapter)
 	RTW_PRINT_SEL(sel, "%-15u %-13u %-27u %-11u\n",
 		      mlme->roam_rssi_diff_th, mlme->roam_scanr_exp_ms,
 		      mlme->roam_scan_int, mlme->roam_rssi_threshold);
-}
-
-_adapter *rtw_rust_debug_proc_adapter_from_data(void *data)
-{
-	return (_adapter *)rtw_netdev_priv((struct net_device *)data);
 }
 
 ssize_t rtw_rust_debug_proc_set_roam_flags(_adapter *adapter,

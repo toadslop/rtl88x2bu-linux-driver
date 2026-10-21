@@ -892,6 +892,7 @@ u16 rtw_ap_linking_test_force_asoc_fail(void)
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG */
 
 #ifdef CONFIG_PROC_DEBUG
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_defs_param(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -938,6 +939,7 @@ ssize_t proc_set_defs_param(struct file *file, const char __user *buffer, size_t
 	return count;
 
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-149 PR1 defs in rust/rtw_debug_proc.rs */
 
 ssize_t proc_set_write_reg(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
