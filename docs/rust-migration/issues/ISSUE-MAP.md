@@ -273,7 +273,7 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-50 | #1410 | [W4-50] Translate hal_com_rest.c — C2H IQK / txpwr offload wait |
 | W4-51 | #1411 | [W4-51] Translate hal_com_rest.c — reqtxrpt + MI MAC addr push |
 | W4-52 | #1412 | [W4-52] Translate hal_com_rest.c — security CAM register read/write |
-| W4-53 | #1413 | [W4-53] Translate hal_usb.c — usb_set_intf_ops vtable wiring |
+| W4-53 | #1413 | [W4-53] Extend rust/hal_usb.rs usb_set_intf_ops — interrupt pipe + hook retarget |
 
 ## Superseded issues
 
