@@ -10,3 +10,5 @@ drop rtw_rust_debug_proc_emit_roam_flags
 drop rtw_rust_debug_proc_emit_roam_param
 drop rtw_rust_debug_proc_adapter_from_data
 drop rtw_rust_debug_proc_set_roam_flags
+drop rtw_rust_debug_proc_set_roam_param
+drop rtw_rust_debug_proc_set_roam_tgt_addr
