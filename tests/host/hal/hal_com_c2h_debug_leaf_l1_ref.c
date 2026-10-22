@@ -26,3 +26,12 @@ int c2h_customer_str_rpt_hdl(struct _adapter *adapter, unsigned char *data,
 	(void)len;
 	return 0;
 }
+
+int c2h_customer_str_rpt_2_hdl(struct _adapter *adapter, unsigned char *data,
+			       unsigned char len)
+{
+	(void)adapter;
+	(void)data;
+	(void)len;
+	return 0;
+}
