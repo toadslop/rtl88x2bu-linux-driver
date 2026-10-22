@@ -603,54 +603,14 @@ mac_hidden_rpt_hdl:
 #endif /* CONFIG_RTW_MAC_HIDDEN_RPT */
 
 /* c2h_defeature_dbg_hdl — rust/hal_com.rs (W4-56 PR1) */
+/* customer-string C2H (partial) — rust/hal_com.rs (W4-56 PR2/PR3) */
 
 #ifndef DBG_CUSTOMER_STR_RPT_HANDLE
 #define DBG_CUSTOMER_STR_RPT_HANDLE 0
 #endif
 
 #ifdef CONFIG_RTW_CUSTOMER_STR
-s32 rtw_hal_h2c_customer_str_req(_adapter *adapter)
-{
-	u8 h2c_data[H2C_CUSTOMER_STR_REQ_LEN] = {0};
-
-	SET_H2CCMD_CUSTOMER_STR_REQ_EN(h2c_data, 1);
-	return rtw_hal_fill_h2c_cmd(adapter, H2C_CUSTOMER_STR_REQ, H2C_CUSTOMER_STR_REQ_LEN, h2c_data);
-}
-
-#define	C2H_CUSTOMER_STR_RPT_BYTE0(_data)		((u8 *)(_data))
 #define	C2H_CUSTOMER_STR_RPT_2_BYTE8(_data)		((u8 *)(_data))
-
-int c2h_customer_str_rpt_hdl(_adapter *adapter, u8 *data, u8 len)
-{
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	int ret = _FAIL;
-	int i;
-
-	if (len < CUSTOMER_STR_RPT_LEN) {
-		RTW_WARN("%s len(%u) < %d\n", __func__, len, CUSTOMER_STR_RPT_LEN);
-		goto exit;
-	}
-
-	if (DBG_CUSTOMER_STR_RPT_HANDLE)
-		RTW_PRINT_DUMP("customer_str_rpt: ", data, CUSTOMER_STR_RPT_LEN);
-
-	_enter_critical_mutex(&dvobj->customer_str_mutex, NULL);
-
-	if (dvobj->customer_str_sctx != NULL) {
-		if (dvobj->customer_str_sctx->status != RTW_SCTX_SUBMITTED)
-			RTW_WARN("%s invalid sctx.status:%d\n", __func__, dvobj->customer_str_sctx->status);
-		_rtw_memcpy(dvobj->customer_str,  C2H_CUSTOMER_STR_RPT_BYTE0(data), CUSTOMER_STR_RPT_LEN);
-		dvobj->customer_str_sctx->status = RTX_SCTX_CSTR_WAIT_RPT2;
-	} else
-		RTW_WARN("%s sctx not set\n", __func__);
-
-	_exit_critical_mutex(&dvobj->customer_str_mutex, NULL);
-
-	ret = _SUCCESS;
-
-exit:
-	return ret;
-}
 
 int c2h_customer_str_rpt_2_hdl(_adapter *adapter, u8 *data, u8 len)
 {
@@ -15624,6 +15584,53 @@ void rtw_rust_hal_com_warn_c2h_short_len(const char *func, u32 len, int expect)
 {
 	RTW_WARN("%s len(%u) < %d\n", func, len, expect);
 }
+
+void rtw_rust_hal_com_sctx_set_status(struct submit_ctx *sctx, int status)
+{
+	if (sctx)
+		sctx->status = status;
+}
+
+int rtw_rust_hal_com_sctx_status(struct submit_ctx *sctx)
+{
+	return sctx ? sctx->status : 0;
+}
+
+#ifdef CONFIG_RTW_CUSTOMER_STR
+_mutex *rtw_rust_hal_com_customer_str_mutex(struct dvobj_priv *dvobj)
+{
+	return &dvobj->customer_str_mutex;
+}
+
+struct submit_ctx *rtw_rust_hal_com_customer_str_sctx(struct dvobj_priv *dvobj)
+{
+	return dvobj->customer_str_sctx;
+}
+
+u8 *rtw_rust_hal_com_customer_str_buf(struct dvobj_priv *dvobj)
+{
+	return dvobj->customer_str;
+}
+
+void rtw_rust_hal_com_warn_customer_str_invalid_sctx_status(int status)
+{
+	RTW_WARN("c2h_customer_str_rpt_hdl invalid sctx.status:%d\n", status);
+}
+
+void rtw_rust_hal_com_warn_customer_str_sctx_not_set(void)
+{
+	RTW_WARN("c2h_customer_str_rpt_hdl sctx not set\n");
+}
+
+s32 rtw_rust_hal_com_h2c_customer_str_req(_adapter *adapter)
+{
+	u8 h2c_data[H2C_CUSTOMER_STR_REQ_LEN] = {0};
+
+	SET_H2CCMD_CUSTOMER_STR_REQ_EN(h2c_data, 1);
+	return rtw_hal_fill_h2c_cmd(adapter, H2C_CUSTOMER_STR_REQ,
+				    H2C_CUSTOMER_STR_REQ_LEN, h2c_data);
+}
+#endif /* CONFIG_RTW_CUSTOMER_STR */
 
 void rtw_rust_hal_com_enter_critical_mutex(_mutex *mutex)
 {
