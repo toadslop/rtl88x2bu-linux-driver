@@ -1,3 +1,6 @@
+# W3-152: pinned rust profile enables CONFIG_WOWLAN; CRC helpers stay in C until ported.
+drop rtw_cal_crc16
+drop rtw_calc_crc
 # L1 allowlist for W3-15: Rust owns rtw_calc_crc32, rtw_aes_siv_*,
 # rtw_sec_restore_wep_key; other security_rest symbols remain in C.
 drop rtw_aes_decipher_log_mic_mismatch
