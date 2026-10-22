@@ -1337,6 +1337,95 @@ ssize_t rtw_rust_debug_proc_set_war_offload_mdns_domain_name(
 
 	return count;
 }
+
+void rtw_rust_debug_proc_emit_war_offload_mdns_machine_name(void *sel,
+							    _adapter *adapter)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	struct pwrctrl_priv *pwrpriv = dvobj_to_pwrctl(dvobj);
+	int i = 0;
+
+	if (_TRUE == pwrpriv->wowlan_war_offload_mode) {
+		if ((WAR_MDNS_V4_RSP_EN & pwrpriv->wowlan_war_offload_ctrl) ||
+		    (WAR_MDNS_V6_RSP_EN & pwrpriv->wowlan_war_offload_ctrl) ||
+		    (WAR_MDNS_V4_WAKEUP_EN & pwrpriv->wowlan_war_offload_ctrl) ||
+		    (WAR_MDNS_V6_WAKEUP_EN & pwrpriv->wowlan_war_offload_ctrl)) {
+			for (i = 0; i < pwrpriv->wowlan_war_offload_mdns_mnane_num;
+			     i++) {
+				RTW_PRINT_SEL(sel, "[%d]", i);
+				rtw_wow_war_mdns_dump_buf(
+					sel, (u8 *)"Machine Name",
+					pwrpriv->wowlan_war_offload_mdns_mnane[i]
+						.name,
+					pwrpriv->wowlan_war_offload_mdns_mnane[i]
+						.name_len);
+			}
+			RTW_PRINT_SEL(sel, "\n");
+		} else {
+			RTW_PRINT_SEL(sel, "\nMSND RSP Not enabled\n\n");
+		}
+	} else {
+		RTW_PRINT_SEL(sel, "\nOffload Not enabled\n\n");
+	}
+}
+
+ssize_t rtw_rust_debug_proc_set_war_offload_mdns_machine_name(
+	_adapter *adapter, const char __user *buffer, size_t count)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	struct pwrctrl_priv *pwrpriv = dvobj_to_pwrctl(dvobj);
+	char tmp[MAX_MDNS_MACHINE_NAME_LEN * 3 - 1 + 1];
+
+	if (NULL == buffer) {
+		RTW_INFO(FUNC_ADPT_FMT ": input buffer is NULL!\n",
+			 FUNC_ADPT_ARG(adapter));
+		return -EFAULT;
+	}
+
+	if (count < 1) {
+		RTW_INFO(FUNC_ADPT_FMT ": input length is 0!\n",
+			 FUNC_ADPT_ARG(adapter));
+		return -EFAULT;
+	}
+
+	if (count > sizeof(tmp)) {
+		RTW_INFO(FUNC_ADPT_FMT
+			 ": input length, %lu, is large than MAX_MDNS_MACHINE_NAME_LEN(%d)\n",
+			 FUNC_ADPT_ARG(adapter), (count + 1) / 3,
+			 MAX_MDNS_MACHINE_NAME_LEN);
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		if (strncmp(tmp, "clean", 5) == 0) {
+			_rtw_memset(pwrpriv->wowlan_war_offload_mdns_mnane, 0,
+				    sizeof(pwrpriv->wowlan_war_offload_mdns_mnane));
+			pwrpriv->wowlan_war_offload_mdns_mnane_num = 0;
+		} else {
+			int idx = pwrpriv->wowlan_war_offload_mdns_mnane_num;
+
+			if (idx == MAX_MDNS_MACHINE_NAME_NUM) {
+				RTW_INFO(FUNC_ADPT_FMT
+					 ": the num of machine name is already %d(MAX_MDNS_MACHINE_NAME_NUM)!\n",
+					 FUNC_ADPT_ARG(adapter),
+					 MAX_MDNS_MACHINE_NAME_NUM);
+				return -EFAULT;
+			}
+			if (rtw_wow_war_mdns_parser_pattern(
+				    tmp,
+				    pwrpriv->wowlan_war_offload_mdns_mnane[idx]
+					    .name,
+				    (u32 *)&pwrpriv
+					    ->wowlan_war_offload_mdns_mnane[idx]
+					    .name_len,
+				    MAX_MDNS_MACHINE_NAME_LEN))
+				pwrpriv->wowlan_war_offload_mdns_mnane_num++;
+		}
+	}
+
+	return count;
+}
 #endif /* CONFIG_OFFLOAD_MDNS_V4 || CONFIG_OFFLOAD_MDNS_V6 */
 #endif /* CONFIG_WAR_OFFLOAD */
 #endif /* CONFIG_PROC_DEBUG */
