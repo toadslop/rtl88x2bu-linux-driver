@@ -2016,6 +2016,7 @@ int proc_get_rf_info(struct seq_file *m, void *v)
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-145 */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_scan_param(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -2154,6 +2155,7 @@ int proc_get_scan_abort(struct seq_file *m, void *v)
 
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-151 in rust/rtw_debug_proc.rs */
 
 #ifdef CONFIG_RTW_REPEATER_SON
 int proc_get_rson_data(struct seq_file *m, void *v)

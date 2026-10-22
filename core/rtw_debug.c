@@ -805,6 +805,137 @@ void rtw_rust_debug_proc_emit_tx_stat(void *sel, _adapter *adapter)
 	}
 }
 
+void rtw_rust_debug_proc_emit_scan_param(void *sel, _adapter *adapter)
+{
+	struct mlme_ext_priv *mlmeext = &adapter->mlmeextpriv;
+	struct ss_res *ss = &mlmeext->sitesurvey_res;
+
+#define SCAN_PARAM_TITLE_FMT "%10s"
+#define SCAN_PARAM_VALUE_FMT "%-10u"
+#define SCAN_PARAM_TITLE_ARG , "scan_ch_ms"
+#define SCAN_PARAM_VALUE_ARG , ss->scan_ch_ms
+#ifdef CONFIG_80211N_HT
+#define SCAN_PARAM_TITLE_FMT_HT " %15s %13s"
+#define SCAN_PARAM_VALUE_FMT_HT " %-15u %-13u"
+#define SCAN_PARAM_TITLE_ARG_HT , "rx_ampdu_accept", "rx_ampdu_size"
+#define SCAN_PARAM_VALUE_ARG_HT , ss->rx_ampdu_accept, ss->rx_ampdu_size
+#else
+#define SCAN_PARAM_TITLE_FMT_HT ""
+#define SCAN_PARAM_VALUE_FMT_HT ""
+#define SCAN_PARAM_TITLE_ARG_HT
+#define SCAN_PARAM_VALUE_ARG_HT
+#endif
+#ifdef CONFIG_SCAN_BACKOP
+#define SCAN_PARAM_TITLE_FMT_BACKOP " %9s %12s"
+#define SCAN_PARAM_VALUE_FMT_BACKOP " %-9u %-12u"
+#define SCAN_PARAM_TITLE_ARG_BACKOP , "backop_ms", "scan_cnt_max"
+#define SCAN_PARAM_VALUE_ARG_BACKOP , ss->backop_ms, ss->scan_cnt_max
+#else
+#define SCAN_PARAM_TITLE_FMT_BACKOP ""
+#define SCAN_PARAM_VALUE_FMT_BACKOP ""
+#define SCAN_PARAM_TITLE_ARG_BACKOP
+#define SCAN_PARAM_VALUE_ARG_BACKOP
+#endif
+
+	RTW_PRINT_SEL(sel,
+		      SCAN_PARAM_TITLE_FMT
+		      SCAN_PARAM_TITLE_FMT_HT
+		      SCAN_PARAM_TITLE_FMT_BACKOP
+		      "\n"
+		      SCAN_PARAM_TITLE_ARG
+		      SCAN_PARAM_TITLE_ARG_HT
+		      SCAN_PARAM_TITLE_ARG_BACKOP
+	);
+
+	RTW_PRINT_SEL(sel,
+		      SCAN_PARAM_VALUE_FMT
+		      SCAN_PARAM_VALUE_FMT_HT
+		      SCAN_PARAM_VALUE_FMT_BACKOP
+		      "\n"
+		      SCAN_PARAM_VALUE_ARG
+		      SCAN_PARAM_VALUE_ARG_HT
+		      SCAN_PARAM_VALUE_ARG_BACKOP
+	);
+}
+
+ssize_t rtw_rust_debug_proc_set_scan_param(_adapter *adapter,
+					   const char __user *buffer,
+					   size_t count)
+{
+	struct mlme_ext_priv *mlmeext = &adapter->mlmeextpriv;
+	struct ss_res *ss = &mlmeext->sitesurvey_res;
+
+	char tmp[32] = {0};
+
+	u16 scan_ch_ms;
+#define SCAN_PARAM_INPUT_FMT "%hu"
+#define SCAN_PARAM_INPUT_ARG , &scan_ch_ms
+#ifdef CONFIG_80211N_HT
+	u8 rx_ampdu_accept;
+	u8 rx_ampdu_size;
+#define SCAN_PARAM_INPUT_FMT_HT " %hhu %hhu"
+#define SCAN_PARAM_INPUT_ARG_HT , &rx_ampdu_accept, &rx_ampdu_size
+#else
+#define SCAN_PARAM_INPUT_FMT_HT ""
+#define SCAN_PARAM_INPUT_ARG_HT
+#endif
+#ifdef CONFIG_SCAN_BACKOP
+	u16 backop_ms;
+	u8 scan_cnt_max;
+#define SCAN_PARAM_INPUT_FMT_BACKOP " %hu %hhu"
+#define SCAN_PARAM_INPUT_ARG_BACKOP , &backop_ms, &scan_cnt_max
+#else
+#define SCAN_PARAM_INPUT_FMT_BACKOP ""
+#define SCAN_PARAM_INPUT_ARG_BACKOP
+#endif
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+
+		int num = sscanf(tmp,
+				 SCAN_PARAM_INPUT_FMT
+				 SCAN_PARAM_INPUT_FMT_HT
+				 SCAN_PARAM_INPUT_FMT_BACKOP
+				 SCAN_PARAM_INPUT_ARG
+				 SCAN_PARAM_INPUT_ARG_HT
+				 SCAN_PARAM_INPUT_ARG_BACKOP
+		);
+
+		if (num-- > 0)
+			ss->scan_ch_ms = scan_ch_ms;
+#ifdef CONFIG_80211N_HT
+		if (num-- > 0)
+			ss->rx_ampdu_accept = rx_ampdu_accept;
+		if (num-- > 0)
+			ss->rx_ampdu_size = rx_ampdu_size;
+#endif
+#ifdef CONFIG_SCAN_BACKOP
+		if (num-- > 0)
+			ss->backop_ms = backop_ms;
+		if (num-- > 0)
+			ss->scan_cnt_max = scan_cnt_max;
+#endif
+	}
+
+	return count;
+}
+
+void rtw_rust_debug_proc_emit_scan_abort(void *sel, _adapter *adapter)
+{
+	u32 pass_ms;
+
+	pass_ms = rtw_scan_abort_timeout(adapter, 10000);
+
+	RTW_PRINT_SEL(sel, "%u\n", pass_ms);
+}
+
 #ifdef CONFIG_LAYER2_ROAMING
 void rtw_rust_debug_proc_emit_roam_flags(void *sel, _adapter *adapter)
 {
