@@ -4397,6 +4397,9 @@ rust-objects-hal-com-c:
 		-o tests/host/hal/hal_com_c2h_iqk_offload_l1_ref.o \
 		tests/host/hal/hal_com_c2h_iqk_offload_l1_ref.c
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_com_c2h_debug_leaf_l1_ref.o \
+		tests/host/hal/hal_com_c2h_debug_leaf_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_com_reqtxrpt_mi_mac_l1_ref.o \
 		tests/host/hal/hal_com_reqtxrpt_mi_mac_l1_ref.c
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
@@ -4418,6 +4421,7 @@ rust-objects-hal-com-c:
 		tests/host/hal/hal_com_get_port_defaults_l1_ref.o \
 		tests/host/hal/hal_com_hw_port_ctrl_l1_ref.o \
 		tests/host/hal/hal_com_c2h_iqk_offload_l1_ref.o \
+		tests/host/hal/hal_com_c2h_debug_leaf_l1_ref.o \
 		tests/host/hal/hal_com_reqtxrpt_mi_mac_l1_ref.o \
 		tests/host/hal/hal_com_sec_cam_rw_l1_ref.o
 

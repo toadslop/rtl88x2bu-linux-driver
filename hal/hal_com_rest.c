@@ -602,25 +602,7 @@ mac_hidden_rpt_hdl:
 }
 #endif /* CONFIG_RTW_MAC_HIDDEN_RPT */
 
-int c2h_defeature_dbg_hdl(_adapter *adapter, u8 *data, u8 len)
-{
-	int ret = _FAIL;
-
-	int i;
-
-	if (len < DEFEATURE_DBG_LEN) {
-		RTW_WARN("%s len(%u) < %d\n", __func__, len, DEFEATURE_DBG_LEN);
-		goto exit;
-	}
-
-	for (i = 0; i < len; i++)
-		RTW_PRINT("%s: 0x%02X\n", __func__, *(data + i));
-
-	ret = _SUCCESS;
-	
-exit:
-	return ret;
-}
+/* c2h_defeature_dbg_hdl — rust/hal_com.rs (W4-56 PR1) */
 
 #ifndef DBG_CUSTOMER_STR_RPT_HANDLE
 #define DBG_CUSTOMER_STR_RPT_HANDLE 0
@@ -15628,6 +15610,19 @@ u8 *rtw_rust_hal_com_adapter_mac_addr(_adapter *adapter)
 _mutex *rtw_rust_hal_com_sec_cam_mutex(_adapter *adapter)
 {
 	return &adapter_to_dvobj(adapter)->cam_ctl.sec_cam_access_mutex;
+}
+
+void rtw_rust_hal_com_log_defeature_bytes(u8 *data, u8 len)
+{
+	int i;
+
+	for (i = 0; i < len; i++)
+		RTW_PRINT("%s: 0x%02X\n", "c2h_defeature_dbg_hdl", *(data + i));
+}
+
+void rtw_rust_hal_com_warn_c2h_short_len(const char *func, u32 len, int expect)
+{
+	RTW_WARN("%s len(%u) < %d\n", func, len, expect);
 }
 
 void rtw_rust_hal_com_enter_critical_mutex(_mutex *mutex)
