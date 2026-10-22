@@ -29,3 +29,13 @@ _Bool rtw_sec_read_cam_is_gk(struct _adapter *adapter, unsigned char id)
 	(void)id;
 	return 0;
 }
+
+void rtw_sec_read_cam_ent(struct _adapter *adapter, unsigned char id,
+			  unsigned char *ctrl, unsigned char *mac, unsigned char *key)
+{
+	(void)adapter;
+	(void)id;
+	(void)ctrl;
+	(void)mac;
+	(void)key;
+}
