@@ -88,10 +88,7 @@ extern "C" {
     any(config_rtw_debug, config_proc_debug),
 ))]
 #[no_mangle]
-pub extern "C" fn proc_get_war_offload_mdns_domain_name(
-    m: *mut c_void,
-    _v: *mut c_void,
-) -> c_int {
+pub extern "C" fn proc_get_war_offload_mdns_domain_name(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
     if !adapter.is_null() {
         unsafe { rtw_rust_debug_proc_emit_war_offload_mdns_domain_name(m, adapter) };
