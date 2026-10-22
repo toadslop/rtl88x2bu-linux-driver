@@ -1270,6 +1270,74 @@ ssize_t rtw_rust_debug_proc_set_war_offload_ipv6_addr(_adapter *adapter,
 
 	return count;
 }
+
+#if defined(CONFIG_OFFLOAD_MDNS_V4) || defined(CONFIG_OFFLOAD_MDNS_V6)
+void rtw_rust_debug_proc_emit_war_offload_mdns_domain_name(void *sel,
+							   _adapter *adapter)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	struct pwrctrl_priv *pwrpriv = dvobj_to_pwrctl(dvobj);
+
+	if (_TRUE == pwrpriv->wowlan_war_offload_mode) {
+		if ((WAR_MDNS_V4_RSP_EN & pwrpriv->wowlan_war_offload_ctrl) ||
+		    (WAR_MDNS_V6_RSP_EN & pwrpriv->wowlan_war_offload_ctrl) ||
+		    (WAR_MDNS_V4_WAKEUP_EN & pwrpriv->wowlan_war_offload_ctrl) ||
+		    (WAR_MDNS_V6_WAKEUP_EN & pwrpriv->wowlan_war_offload_ctrl)) {
+			RTW_PRINT_SEL(sel, "\nDomain Name:[%s](%d)\n\n",
+				      pwrpriv->wowlan_war_offload_mdns_domain_name,
+				      pwrpriv->wowlan_war_offload_mdns_domain_name_len);
+		} else {
+			RTW_PRINT_SEL(sel, "\nMSND RSP Not enabled\n\n");
+		}
+	} else {
+		RTW_PRINT_SEL(sel, "\nOffload Not enabled\n\n");
+	}
+}
+
+ssize_t rtw_rust_debug_proc_set_war_offload_mdns_domain_name(
+	_adapter *adapter, const char __user *buffer, size_t count)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	struct pwrctrl_priv *pwrpriv = dvobj_to_pwrctl(dvobj);
+	char tmp[MAX_MDNS_DOMAIN_NAME_LEN + 1];
+	char domain_name[MAX_MDNS_DOMAIN_NAME_LEN + 1];
+
+	if (NULL == buffer) {
+		RTW_INFO(FUNC_ADPT_FMT ": input buffer is NULL!\n",
+			 FUNC_ADPT_ARG(adapter));
+		return -EFAULT;
+	}
+
+	if (count < 1) {
+		RTW_INFO(FUNC_ADPT_FMT ": input length is 0!\n",
+			 FUNC_ADPT_ARG(adapter));
+		return -EFAULT;
+	}
+
+	if (count > sizeof(tmp)) {
+		RTW_INFO(FUNC_ADPT_FMT
+			 ": input length is large than MAX_MDNS_DOMAIN_NAME_LEN(%d)\n",
+			 FUNC_ADPT_ARG(adapter), MAX_MDNS_DOMAIN_NAME_LEN);
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%s", domain_name);
+
+		if (1 == num) {
+			pwrpriv->wowlan_war_offload_mdns_domain_name_len =
+				strlen(domain_name);
+			_rtw_memset(pwrpriv->wowlan_war_offload_mdns_domain_name,
+				    0x00, MAX_MDNS_DOMAIN_NAME_LEN);
+			_rtw_memcpy(pwrpriv->wowlan_war_offload_mdns_domain_name,
+				    domain_name, strlen(domain_name));
+		}
+	}
+
+	return count;
+}
+#endif /* CONFIG_OFFLOAD_MDNS_V4 || CONFIG_OFFLOAD_MDNS_V6 */
 #endif /* CONFIG_WAR_OFFLOAD */
 #endif /* CONFIG_PROC_DEBUG */
 
