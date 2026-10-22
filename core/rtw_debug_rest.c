@@ -1616,7 +1616,7 @@ ssize_t proc_set_war_offload_mdns_domain_name(struct file *file, const char __us
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-154 PR1 domain in rust/rtw_debug_proc.rs */
 
-
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_war_offload_mdns_machine_name(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -1692,6 +1692,7 @@ ssize_t proc_set_war_offload_mdns_machine_name(struct file *file, const char __u
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-154 PR2 machine in rust/rtw_debug_proc.rs */
 
 
 int proc_get_war_offload_mdns_service_info(struct seq_file *m, void *v)
