@@ -1553,6 +1553,7 @@ ssize_t proc_set_war_offload_ipv6_addr(struct file *file, const char __user *buf
 
 #if defined(CONFIG_OFFLOAD_MDNS_V4) || defined(CONFIG_OFFLOAD_MDNS_V6)
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_war_offload_mdns_domain_name(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -1613,6 +1614,7 @@ ssize_t proc_set_war_offload_mdns_domain_name(struct file *file, const char __us
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-154 PR1 domain in rust/rtw_debug_proc.rs */
 
 
 int proc_get_war_offload_mdns_machine_name(struct seq_file *m, void *v)
