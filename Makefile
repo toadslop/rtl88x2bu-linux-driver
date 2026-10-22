@@ -148,6 +148,11 @@ CONFIG_HIGH_ACTIVE_HST2DEV = n
 CONFIG_PNO_SUPPORT = n
 CONFIG_PNO_SET_DEBUG = n
 CONFIG_AP_WOWLAN = n
+# Part of WoWLAN. Off unless the build asks for them. Do not force these from
+# the Rust block: CONFIG_WOWLAN changes struct _ADAPTER layout.
+CONFIG_WAR_OFFLOAD = n
+CONFIG_OFFLOAD_MDNS_V4 = n
+CONFIG_OFFLOAD_MDNS_V6 = n
 ######### Notify SDIO Host Keep Power During Syspend ##########
 CONFIG_RTW_SDIO_PM_KEEP_POWER = y
 ###################### MP HW TX MODE FOR VHT #######################
@@ -1246,6 +1251,16 @@ endif
 ifeq ($(CONFIG_SDIO_HCI), y)
 ccflags-y += -DCONFIG_RTW_SDIO_PM_KEEP_POWER
 endif
+endif
+
+ifeq ($(CONFIG_WAR_OFFLOAD), y)
+ccflags-y += -DCONFIG_WAR_OFFLOAD
+endif
+ifeq ($(CONFIG_OFFLOAD_MDNS_V4), y)
+ccflags-y += -DCONFIG_OFFLOAD_MDNS_V4
+endif
+ifeq ($(CONFIG_OFFLOAD_MDNS_V6), y)
+ccflags-y += -DCONFIG_OFFLOAD_MDNS_V6
 endif
 
 ifeq ($(CONFIG_AP_WOWLAN), y)
@@ -2733,14 +2748,23 @@ ccflags-y += -DCONFIG_RUST_CMD_THREAD
 ccflags-y += -DCONFIG_RUST_CMD_THREAD_LOOP
 ccflags-y += -DCONFIG_RUST_RECV_STA
 ccflags-y += -DCONFIG_RUST_RTW_DEBUG
-# W3-152: pinned rust L0 profile enables war-offload proc helpers (see wave3-152).
-ccflags-y += -DCONFIG_WOWLAN -DRTW_WAKEUP_EVENT=$(CONFIG_WAKEUP_TYPE)
-ccflags-y += -DRTW_SUSPEND_TYPE=$(CONFIG_SUSPEND_TYPE)
-ccflags-y += -DCONFIG_WAR_OFFLOAD
-ccflags-y += -DCONFIG_OFFLOAD_MDNS_V4 -DCONFIG_OFFLOAD_MDNS_V6
+# W3-152/W3-153 proc helpers. Gate them on the make variables above.
+# Forcing -DCONFIG_WOWLAN here used to override CONFIG_WOWLAN=n, enable
+# suspend WoWLAN (rtw_wow_enable defaults to 1), and shift registrypriv
+# so rtw_registrypriv_amsdu_mode read the wrong byte.
+ifeq ($(CONFIG_WAR_OFFLOAD), y)
 rustflags-y += --cfg config_war_offload
+else ifeq ($(CONFIG_OFFLOAD_MDNS_V4), y)
+rustflags-y += --cfg config_war_offload
+else ifeq ($(CONFIG_OFFLOAD_MDNS_V6), y)
+rustflags-y += --cfg config_war_offload
+endif
+ifeq ($(CONFIG_OFFLOAD_MDNS_V4), y)
 rustflags-y += --cfg config_offload_mdns_v4
+endif
+ifeq ($(CONFIG_OFFLOAD_MDNS_V6), y)
 rustflags-y += --cfg config_offload_mdns_v6
+endif
 rustflags-y += --cfg config_rust_rtw_debug_test_hooks
 ifeq ($(CONFIG_AP_MODE), y)
 rustflags-y += --cfg config_ap_mode
