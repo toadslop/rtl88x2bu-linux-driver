@@ -1215,6 +1215,61 @@ ssize_t rtw_rust_debug_proc_set_war_offload_ipv4_addr(_adapter *adapter,
 
 	return count;
 }
+
+ssize_t rtw_rust_debug_proc_set_war_offload_ipv6_addr(_adapter *adapter,
+						      const char __user *buffer,
+						      size_t count)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	struct pwrctrl_priv *pwrpriv = dvobj_to_pwrctl(dvobj);
+	char tmp[255];
+	struct war_ipv6_fmt *pip_info = &pwrpriv->wowlan_war_offload_ipv6;
+
+	if (NULL == buffer) {
+		RTW_INFO(FUNC_ADPT_FMT ": input buffer is NULL!\n",
+			 FUNC_ADPT_ARG(adapter));
+		return -EFAULT;
+	}
+
+	if (count < 1) {
+		RTW_INFO(FUNC_ADPT_FMT ": input length is 0!\n",
+			 FUNC_ADPT_ARG(adapter));
+		return -EFAULT;
+	}
+
+	if (count > sizeof(tmp)) {
+		RTW_INFO(FUNC_ADPT_FMT ": input length is too large\n",
+			 FUNC_ADPT_ARG(adapter));
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num;
+		int i;
+		u32 index;
+		u16 val[8];
+		u16 big_endian_val[8];
+
+		num = sscanf(tmp, "%d %hx:%hx:%hx:%hx:%hx:%hx:%hx:%hx",
+			     &index, &val[0], &val[1], &val[2], &val[3],
+			     &val[4], &val[5], &val[6], &val[7]);
+		for (i = 0; i < 8; i++)
+			big_endian_val[i] = htons(val[i]);
+		_rtw_memcpy(pip_info->ipv6_addr[index - 1], big_endian_val,
+			     RTW_IPv6_ADDR_LEN);
+
+		if (num == 9) {
+			RTW_INFO(FUNC_ADPT_FMT "Setup IPv6 address\n",
+				 FUNC_ADPT_ARG(adapter));
+		} else {
+			RTW_INFO("Wrong input count (%d)\n", num);
+			return -EFAULT;
+		}
+	}
+
+	return count;
+}
 #endif /* CONFIG_WAR_OFFLOAD */
 #endif /* CONFIG_PROC_DEBUG */
 

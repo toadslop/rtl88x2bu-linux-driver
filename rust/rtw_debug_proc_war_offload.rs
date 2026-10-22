@@ -14,6 +14,11 @@ extern "C" {
         buffer: *const c_void,
         count: usize,
     ) -> c_long;
+    fn rtw_rust_debug_proc_set_war_offload_ipv6_addr(
+        adapter: *mut c_void,
+        buffer: *const c_void,
+        count: usize,
+    ) -> c_long;
 }
 
 #[cfg(all(config_war_offload, any(config_rtw_debug, config_proc_debug)))]
@@ -50,4 +55,17 @@ pub extern "C" fn proc_set_war_offload_ipv4_addr(
 ) -> c_long {
     let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
     unsafe { rtw_rust_debug_proc_set_war_offload_ipv4_addr(adapter, buffer, count) }
+}
+
+#[cfg(all(config_war_offload, any(config_rtw_debug, config_proc_debug)))]
+#[no_mangle]
+pub extern "C" fn proc_set_war_offload_ipv6_addr(
+    _file: *mut c_void,
+    buffer: *const c_void,
+    count: usize,
+    _pos: *mut c_long,
+    data: *mut c_void,
+) -> c_long {
+    let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
+    unsafe { rtw_rust_debug_proc_set_war_offload_ipv6_addr(adapter, buffer, count) }
 }
