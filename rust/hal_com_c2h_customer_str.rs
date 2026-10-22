@@ -105,9 +105,7 @@ pub extern "C" fn c2h_customer_str_rpt_2_hdl(adapter: *mut c_void, data: *mut U8
         if unsafe { rtw_rust_hal_com_sctx_status(sctx) } != RTX_SCTX_CSTR_WAIT_RPT2 {
             unsafe { rtw_rust_hal_com_warn_customer_str_rpt_not_ready() };
         }
-        let dst = unsafe {
-            rtw_rust_hal_com_customer_str_buf(dvobj).add(CUSTOMER_STR_RPT_LEN)
-        };
+        let dst = unsafe { rtw_rust_hal_com_customer_str_buf(dvobj).add(CUSTOMER_STR_RPT_LEN) };
         unsafe {
             _rtw_memcpy(
                 dst as *mut c_void,
