@@ -77,7 +77,12 @@ pub extern "C" fn rtw_sec_write_cam_ent(
             6 | 7 => 0,
             _ => unsafe {
                 let i = ((j - 2) << 2) as usize;
-                let (k0, k1, k2, k3) = (*key.add(i), *key.add(i + 1), *key.add(i + 2), *key.add(i + 3));
+                let (k0, k1, k2, k3) = (
+                    *key.add(i),
+                    *key.add(i + 1),
+                    *key.add(i + 2),
+                    *key.add(i + 3),
+                );
                 (k0 as u32) | ((k1 as u32) << 8) | ((k2 as u32) << 16) | ((k3 as u32) << 24)
             },
         };
