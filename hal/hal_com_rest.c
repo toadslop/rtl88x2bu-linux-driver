@@ -1260,53 +1260,7 @@ static void rtw_hal_set_msr(_adapter *adapter, u8 net_type)
 
 /* rtw_sec_read_cam / rtw_sec_write_cam — ported to rust/hal_com.rs (W4-52) */
 
-void rtw_sec_read_cam_ent(_adapter *adapter, u8 id, u8 *ctrl, u8 *mac, u8 *key)
-{
-	u8 i;
-	u32 rdata;
-	u8 begin = 0;
-	u8 end = 5; /* TODO: consider other key length accordingly */
-
-	if (!ctrl && !mac && !key) {
-		rtw_warn_on(1);
-		goto exit;
-	}
-
-	/* TODO: check id range */
-
-	if (!ctrl && !mac)
-		begin = 2; /* read from key */
-
-	if (!key && !mac)
-		end = 0; /* read to ctrl */
-	else if (!key)
-		end = 2; /* read to mac */
-
-	for (i = begin; i <= end; i++) {
-		rdata = rtw_sec_read_cam(adapter, (id << 3) | i);
-
-		switch (i) {
-		case 0:
-			if (ctrl)
-				_rtw_memcpy(ctrl, (u8 *)(&rdata), 2);
-			if (mac)
-				_rtw_memcpy(mac, ((u8 *)(&rdata)) + 2, 2);
-			break;
-		case 1:
-			if (mac)
-				_rtw_memcpy(mac + 2, (u8 *)(&rdata), 4);
-			break;
-		default:
-			if (key)
-				_rtw_memcpy(key + (i - 2) * 4, (u8 *)(&rdata), 4);
-			break;
-		}
-	}
-
-exit:
-	return;
-}
-
+/* rtw_sec_read_cam_ent — ported to rust/hal_com.rs (W4-55 PR1) */
 
 void rtw_sec_write_cam_ent(_adapter *adapter, u8 id, u16 ctrl, u8 *mac, u8 *key)
 {
