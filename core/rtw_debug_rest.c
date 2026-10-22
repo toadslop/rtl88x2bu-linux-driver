@@ -1499,6 +1499,7 @@ ssize_t proc_set_war_offload_ipv4_addr(struct file *file, const char __user *buf
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-152 in rust/rtw_debug_proc.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 ssize_t proc_set_war_offload_ipv6_addr(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
 	struct net_device *dev = data;
@@ -1548,6 +1549,7 @@ ssize_t proc_set_war_offload_ipv6_addr(struct file *file, const char __user *buf
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-153 in rust/rtw_debug_proc.rs */
 
 #if defined(CONFIG_OFFLOAD_MDNS_V4) || defined(CONFIG_OFFLOAD_MDNS_V6)
 

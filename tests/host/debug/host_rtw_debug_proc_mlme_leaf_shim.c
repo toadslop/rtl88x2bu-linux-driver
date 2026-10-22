@@ -208,3 +208,14 @@ long proc_set_war_offload_ipv4_addr(void *file, const void *buffer,
 	(void)data;
 	return 0;
 }
+
+long proc_set_war_offload_ipv6_addr(void *file, const void *buffer,
+				    unsigned long count, long long *pos, void *data)
+{
+	(void)file;
+	(void)buffer;
+	(void)count;
+	(void)pos;
+	(void)data;
+	return 0;
+}
