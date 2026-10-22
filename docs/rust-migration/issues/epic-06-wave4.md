@@ -113,4 +113,12 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-52 | `wave4-52-hal-com-sec-cam-rw.md` | security CAM read/write |
 | W4-53 | `wave4-53-hal-usb-set-intf-ops.md` | Extend Rust `usb_set_intf_ops` (post-W4-25; interrupt pipe) |
 
-Further slices: deeper PHYDM / bulk USB RX path — file as `wave4-*.md` when tranche 11 is needed.
+## Children (tranche 11 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-54 | `wave4-54-hal-com-sec-cam-clr.md` | security CAM clear + GK probe |
+| W4-55 | `wave4-55-hal-com-sec-cam-ent.md` | security CAM entry read/write |
+| W4-56 | `wave4-56-hal-com-c2h-debug-leaf.md` | C2H defeature + customer string rpt |
+
+Further slices: deeper PHYDM / bulk USB RX path — file as `wave4-*.md` when tranche 12 is needed.

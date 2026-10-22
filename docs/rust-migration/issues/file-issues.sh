@@ -304,10 +304,18 @@ files=(
   wave3-149-debug-proc-defs-reg.md
   wave3-150-debug-proc-rx-tx-stat.md
   wave3-151-debug-proc-scan-param.md
+  wave3-152-debug-proc-war-offload-p1.md
+  wave3-153-debug-proc-war-offload-ipv6.md
+  wave3-154-debug-proc-war-offload-mdns-p1.md
+  wave3-155-debug-proc-rson-data.md
+  wave3-156-debug-proc-survey-info.md
   wave4-50-hal-com-c2h-iqk-offload.md
   wave4-51-hal-com-reqtxrpt-mi-mac.md
   wave4-52-hal-com-sec-cam-rw.md
   wave4-53-hal-usb-set-intf-ops.md
+  wave4-54-hal-com-sec-cam-clr.md
+  wave4-55-hal-com-sec-cam-ent.md
+  wave4-56-hal-com-c2h-debug-leaf.md
 )
 
 # draft_id -> github issue number
