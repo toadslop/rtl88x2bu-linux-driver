@@ -252,3 +252,5 @@ pub extern "C" fn proc_set_roam_tgt_addr(
     let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
     unsafe { rtw_rust_debug_proc_set_roam_tgt_addr(adapter, buffer, count) }
 }
+
+include!("rtw_debug_proc_war_offload.rs");

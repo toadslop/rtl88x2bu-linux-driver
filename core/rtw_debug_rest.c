@@ -1372,6 +1372,7 @@ ssize_t proc_set_roam_tgt_addr(struct file *file, const char __user *buffer, siz
 #endif /* CONFIG_LAYER2_ROAMING */
 
 #ifdef CONFIG_WAR_OFFLOAD
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_war_offload_enable(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -1496,6 +1497,7 @@ ssize_t proc_set_war_offload_ipv4_addr(struct file *file, const char __user *buf
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-152 in rust/rtw_debug_proc.rs */
 
 ssize_t proc_set_war_offload_ipv6_addr(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {

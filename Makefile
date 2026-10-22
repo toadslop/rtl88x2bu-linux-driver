@@ -2733,6 +2733,14 @@ ccflags-y += -DCONFIG_RUST_CMD_THREAD
 ccflags-y += -DCONFIG_RUST_CMD_THREAD_LOOP
 ccflags-y += -DCONFIG_RUST_RECV_STA
 ccflags-y += -DCONFIG_RUST_RTW_DEBUG
+# W3-152: pinned rust L0 profile enables war-offload proc helpers (see wave3-152).
+ccflags-y += -DCONFIG_WOWLAN -DRTW_WAKEUP_EVENT=$(CONFIG_WAKEUP_TYPE)
+ccflags-y += -DRTW_SUSPEND_TYPE=$(CONFIG_SUSPEND_TYPE)
+ccflags-y += -DCONFIG_WAR_OFFLOAD
+ccflags-y += -DCONFIG_OFFLOAD_MDNS_V4 -DCONFIG_OFFLOAD_MDNS_V6
+rustflags-y += --cfg config_war_offload
+rustflags-y += --cfg config_offload_mdns_v4
+rustflags-y += --cfg config_offload_mdns_v6
 rustflags-y += --cfg config_rust_rtw_debug_test_hooks
 ifeq ($(CONFIG_AP_MODE), y)
 rustflags-y += --cfg config_ap_mode
