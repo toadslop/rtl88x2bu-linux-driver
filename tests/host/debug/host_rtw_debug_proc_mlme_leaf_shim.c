@@ -179,3 +179,32 @@ int proc_get_scan_abort(seq_file *m, void *v)
 	(void)v;
 	return 0;
 }
+
+int proc_get_war_offload_enable(seq_file *m, void *v)
+{
+	(void)m;
+	(void)v;
+	return 0;
+}
+
+long proc_set_war_offload_enable(void *file, const void *buffer,
+				 unsigned long count, long long *pos, void *data)
+{
+	(void)file;
+	(void)buffer;
+	(void)count;
+	(void)pos;
+	(void)data;
+	return 0;
+}
+
+long proc_set_war_offload_ipv4_addr(void *file, const void *buffer,
+				    unsigned long count, long long *pos, void *data)
+{
+	(void)file;
+	(void)buffer;
+	(void)count;
+	(void)pos;
+	(void)data;
+	return 0;
+}

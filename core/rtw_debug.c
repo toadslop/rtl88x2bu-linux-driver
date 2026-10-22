@@ -1082,6 +1082,140 @@ void rtw_rust_debug_proc_emit_sec_info(void *sel, _adapter *adapter)
 		      sec->gcmp_sw_dec_cnt_uc);
 #endif /* DBG_SW_SEC_CNT */
 }
+
+#ifdef CONFIG_WAR_OFFLOAD
+void rtw_rust_debug_proc_emit_war_offload_enable(void *sel, _adapter *adapter)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	struct pwrctrl_priv *pwrpriv = dvobj_to_pwrctl(dvobj);
+
+	if (_TRUE == pwrpriv->wowlan_war_offload_mode) {
+		RTW_PRINT_SEL(sel, "\n[ Offload Feature Enabled ]\n");
+
+		if (WAR_ARP_RSP_EN & pwrpriv->wowlan_war_offload_ctrl) {
+			RTW_PRINT_SEL(sel, "\n ARP Reponse offload enabled\n");
+		}
+#ifdef CONFIG_OFFLOAD_MDNS_V4
+		if (WAR_MDNS_V4_RSP_EN & pwrpriv->wowlan_war_offload_ctrl) {
+			RTW_PRINT_SEL(sel, "\n MDNS v4 Reponse offload enabled\n");
+		}
+		if (WAR_MDNS_V4_WAKEUP_EN & pwrpriv->wowlan_war_offload_ctrl) {
+			RTW_PRINT_SEL(sel, "\n MDNS v4 Wakeup offload enabled\n");
+		}
+#endif /* CONFIG_OFFLOAD_MDNS_v4 */
+#ifdef CONFIG_OFFLOAD_MDNS_V6
+		if (WAR_MDNS_V6_RSP_EN & pwrpriv->wowlan_war_offload_ctrl) {
+			RTW_PRINT_SEL(sel, "\n MDNS v6 Reponse offload enabled\n");
+		}
+		if (WAR_MDNS_V6_WAKEUP_EN & pwrpriv->wowlan_war_offload_ctrl) {
+			RTW_PRINT_SEL(sel, "\n MDNS v6 Wakeup offload enabled\n");
+		}
+#endif /* CONFIG_OFFLOAD_MDNS_V6 */
+
+		if (WAR_ARP_WAKEUP_EN & pwrpriv->wowlan_war_offload_ctrl) {
+			RTW_PRINT_SEL(sel, "\n ARP Request wakeup enabled\n");
+		}
+
+	} else {
+		RTW_PRINT_SEL(sel, "\n[ Offload Feature Disabled ]\n");
+	}
+}
+
+ssize_t rtw_rust_debug_proc_set_war_offload_enable(_adapter *adapter,
+						   const char __user *buffer,
+						   size_t count)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	struct pwrctrl_priv *pwrpriv = dvobj_to_pwrctl(dvobj);
+	char tmp[32];
+	u32 offload_cfg = 0;
+
+	if (NULL == buffer) {
+		RTW_INFO(FUNC_ADPT_FMT ": input buffer is NULL!\n",
+			 FUNC_ADPT_ARG(adapter));
+		return -EFAULT;
+	}
+
+	if (count < 1) {
+		RTW_INFO(FUNC_ADPT_FMT ": input length is 0!\n",
+			 FUNC_ADPT_ARG(adapter));
+		return -EFAULT;
+	}
+
+	if (count > sizeof(tmp)) {
+		RTW_INFO(FUNC_ADPT_FMT ": input length is too large\n",
+			 FUNC_ADPT_ARG(adapter));
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%x", &offload_cfg);
+
+		if (num == 1) {
+			RTW_INFO(FUNC_ADPT_FMT ": Set war offload cfg = %x\n",
+				 FUNC_ADPT_ARG(adapter), offload_cfg);
+			pwrpriv->wowlan_war_offload_ctrl = offload_cfg;
+			pwrpriv->wowlan_war_offload_mode = offload_cfg ? _TRUE : _FALSE;
+
+		}
+	}
+
+	return count;
+}
+
+ssize_t rtw_rust_debug_proc_set_war_offload_ipv4_addr(_adapter *adapter,
+						      const char __user *buffer,
+						      size_t count)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	struct pwrctrl_priv *pwrpriv = dvobj_to_pwrctl(dvobj);
+	char tmp[128];
+	u32 ip_addr = 0, ip_subnet = 0, ip_gateway = 0, index = 0;
+	struct war_ipv4_fmt *pip_info = &pwrpriv->wowlan_war_offload_ipv4;
+
+	if (NULL == buffer) {
+		RTW_INFO(FUNC_ADPT_FMT ": input buffer is NULL!\n",
+			 FUNC_ADPT_ARG(adapter));
+		return -EFAULT;
+	}
+
+	if (count < 1) {
+		RTW_INFO(FUNC_ADPT_FMT ": input length is 0!\n",
+			 FUNC_ADPT_ARG(adapter));
+		return -EFAULT;
+	}
+
+	if (count > sizeof(tmp)) {
+		RTW_INFO(FUNC_ADPT_FMT ": input length is too large\n",
+			 FUNC_ADPT_ARG(adapter));
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%d %x %x %x", &index, &ip_addr,
+				 &ip_subnet, &ip_gateway);
+
+		if (num == 4) {
+			pip_info->ip_addr[index - 1] = ip_addr;
+			pip_info->ip_subnet[index - 1] = ip_subnet;
+			pip_info->ip_gateway[index - 1] = ip_gateway;
+			RTW_INFO(FUNC_ADPT_FMT "Setup IPv4 address:\n",
+				 FUNC_ADPT_ARG(adapter));
+			RTW_INFO("Index(%d) IP=%d.%d.%d.%d\n", index,
+				 (ip_addr & 0xff), ((ip_addr & 0xff00) >> 8),
+				 ((ip_addr & 0xff0000) >> 16),
+				 ((ip_addr & 0xff000000) >> 24));
+		} else {
+			RTW_INFO("Wrong input buffer count (%d)\n", num);
+			return -EFAULT;
+		}
+	}
+
+	return count;
+}
+#endif /* CONFIG_WAR_OFFLOAD */
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */
