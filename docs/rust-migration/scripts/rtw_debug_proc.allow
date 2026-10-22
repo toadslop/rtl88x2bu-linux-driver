@@ -23,3 +23,6 @@ drop rtw_rust_debug_read16
 drop rtw_rust_debug_read32
 drop rtw_rust_debug_proc_emit_rx_stat
 drop rtw_rust_debug_proc_emit_tx_stat
+drop rtw_rust_debug_proc_emit_scan_param
+drop rtw_rust_debug_proc_set_scan_param
+drop rtw_rust_debug_proc_emit_scan_abort

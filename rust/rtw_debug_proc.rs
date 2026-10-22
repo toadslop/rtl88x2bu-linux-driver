@@ -52,6 +52,13 @@ extern "C" {
     fn rtw_rust_debug_read32(adapter: *mut c_void, addr: U32) -> U32;
     fn rtw_rust_debug_proc_emit_rx_stat(sel: *mut c_void, adapter: *mut c_void);
     fn rtw_rust_debug_proc_emit_tx_stat(sel: *mut c_void, adapter: *mut c_void);
+    fn rtw_rust_debug_proc_emit_scan_param(sel: *mut c_void, adapter: *mut c_void);
+    fn rtw_rust_debug_proc_set_scan_param(
+        adapter: *mut c_void,
+        buffer: *const c_void,
+        count: usize,
+    ) -> c_long;
+    fn rtw_rust_debug_proc_emit_scan_abort(sel: *mut c_void, adapter: *mut c_void);
 }
 
 #[cfg(config_layer2_roaming)]
@@ -105,6 +112,8 @@ export_proc!(proc_get_sec_info, rtw_rust_debug_proc_emit_sec_info);
 export_proc!(proc_get_defs_param, rtw_rust_debug_proc_emit_defs_param);
 export_proc!(proc_get_rx_stat, rtw_rust_debug_proc_emit_rx_stat);
 export_proc!(proc_get_tx_stat, rtw_rust_debug_proc_emit_tx_stat);
+export_proc!(proc_get_scan_param, rtw_rust_debug_proc_emit_scan_param);
+export_proc!(proc_get_scan_abort, rtw_rust_debug_proc_emit_scan_abort);
 
 static mut PROC_GET_READ_ADDR: U32 = 0xeeeeeeee;
 static mut PROC_GET_READ_LEN: U32 = 0x4;
@@ -135,6 +144,19 @@ pub extern "C" fn proc_get_read_reg(m: *mut c_void, _v: *mut c_void) -> c_int {
     };
     unsafe { rtw_rust_debug_proc_emit_read_reg(m, addr, len, val) };
     0
+}
+
+#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[no_mangle]
+pub extern "C" fn proc_set_scan_param(
+    _file: *mut c_void,
+    buffer: *const c_void,
+    count: usize,
+    _pos: *mut c_long,
+    data: *mut c_void,
+) -> c_long {
+    let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
+    unsafe { rtw_rust_debug_proc_set_scan_param(adapter, buffer, count) }
 }
 
 #[cfg(any(config_rtw_debug, config_proc_debug))]
