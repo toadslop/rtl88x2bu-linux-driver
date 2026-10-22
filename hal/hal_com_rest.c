@@ -605,45 +605,7 @@ mac_hidden_rpt_hdl:
 /* c2h_defeature_dbg_hdl — rust/hal_com.rs (W4-56 PR1) */
 /* customer-string C2H (partial) — rust/hal_com.rs (W4-56 PR2/PR3) */
 
-#ifndef DBG_CUSTOMER_STR_RPT_HANDLE
-#define DBG_CUSTOMER_STR_RPT_HANDLE 0
-#endif
-
 #ifdef CONFIG_RTW_CUSTOMER_STR
-#define	C2H_CUSTOMER_STR_RPT_2_BYTE8(_data)		((u8 *)(_data))
-
-int c2h_customer_str_rpt_2_hdl(_adapter *adapter, u8 *data, u8 len)
-{
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	int ret = _FAIL;
-	int i;
-
-	if (len < CUSTOMER_STR_RPT_2_LEN) {
-		RTW_WARN("%s len(%u) < %d\n", __func__, len, CUSTOMER_STR_RPT_2_LEN);
-		goto exit;
-	}
-
-	if (DBG_CUSTOMER_STR_RPT_HANDLE)
-		RTW_PRINT_DUMP("customer_str_rpt_2: ", data, CUSTOMER_STR_RPT_2_LEN);
-
-	_enter_critical_mutex(&dvobj->customer_str_mutex, NULL);
-
-	if (dvobj->customer_str_sctx != NULL) {
-		if (dvobj->customer_str_sctx->status != RTX_SCTX_CSTR_WAIT_RPT2)
-			RTW_WARN("%s rpt not ready\n", __func__);
-		_rtw_memcpy(dvobj->customer_str + CUSTOMER_STR_RPT_LEN,  C2H_CUSTOMER_STR_RPT_2_BYTE8(data), CUSTOMER_STR_RPT_2_LEN);
-		rtw_sctx_done(&dvobj->customer_str_sctx);
-	} else
-		RTW_WARN("%s sctx not set\n", __func__);
-
-	_exit_critical_mutex(&dvobj->customer_str_mutex, NULL);
-
-	ret = _SUCCESS;
-
-exit:
-	return ret;
-}
-
 /* read customer str */
 s32 rtw_hal_customer_str_read(_adapter *adapter, u8 *cs)
 {
@@ -15612,6 +15574,11 @@ u8 *rtw_rust_hal_com_customer_str_buf(struct dvobj_priv *dvobj)
 	return dvobj->customer_str;
 }
 
+void rtw_rust_hal_com_customer_str_sctx_done(struct dvobj_priv *dvobj)
+{
+	rtw_sctx_done(&dvobj->customer_str_sctx);
+}
+
 void rtw_rust_hal_com_warn_customer_str_invalid_sctx_status(int status)
 {
 	RTW_WARN("c2h_customer_str_rpt_hdl invalid sctx.status:%d\n", status);
@@ -15620,6 +15587,11 @@ void rtw_rust_hal_com_warn_customer_str_invalid_sctx_status(int status)
 void rtw_rust_hal_com_warn_customer_str_sctx_not_set(void)
 {
 	RTW_WARN("c2h_customer_str_rpt_hdl sctx not set\n");
+}
+
+void rtw_rust_hal_com_warn_customer_str_rpt_not_ready(void)
+{
+	RTW_WARN("c2h_customer_str_rpt_2_hdl rpt not ready\n");
 }
 
 s32 rtw_rust_hal_com_h2c_customer_str_req(_adapter *adapter)
