@@ -50,3 +50,4 @@ pub extern "C" fn rtw_mi_set_mac_addr(adapter: *mut c_void) {
 }
 
 include!("hal_com_sec_cam_rw.rs");
+include!("hal_com_sec_cam_clr.rs");
