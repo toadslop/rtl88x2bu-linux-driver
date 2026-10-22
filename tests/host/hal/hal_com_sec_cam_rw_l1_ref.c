@@ -16,3 +16,16 @@ void rtw_sec_write_cam(struct _adapter *adapter, unsigned char addr, unsigned in
 	(void)addr;
 	(void)wdata;
 }
+
+void rtw_sec_clr_cam_ent(struct _adapter *adapter, unsigned char id)
+{
+	(void)adapter;
+	(void)id;
+}
+
+_Bool rtw_sec_read_cam_is_gk(struct _adapter *adapter, unsigned char id)
+{
+	(void)adapter;
+	(void)id;
+	return 0;
+}

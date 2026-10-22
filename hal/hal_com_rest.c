@@ -1364,24 +1364,7 @@ void rtw_sec_write_cam_ent(_adapter *adapter, u8 id, u16 ctrl, u8 *mac, u8 *key)
 #endif
 }
 
-void rtw_sec_clr_cam_ent(_adapter *adapter, u8 id)
-{
-	u8 addr;
-
-	addr = (id << 3);
-	rtw_sec_write_cam(adapter, addr, 0);
-}
-
-bool rtw_sec_read_cam_is_gk(_adapter *adapter, u8 id)
-{
-	bool res;
-	u16 ctrl;
-
-	rtw_sec_read_cam_ent(adapter, id, (u8 *)&ctrl, NULL, NULL);
-
-	res = (ctrl & BIT6) ? _TRUE : _FALSE;
-	return res;
-}
+/* rtw_sec_clr_cam_ent / rtw_sec_read_cam_is_gk — ported to rust/hal_com.rs (W4-54) */
 #ifdef CONFIG_MBSSID_CAM
 void rtw_mbid_cam_init(struct dvobj_priv *dvobj)
 {
