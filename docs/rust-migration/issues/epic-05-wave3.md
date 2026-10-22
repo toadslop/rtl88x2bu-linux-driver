@@ -225,6 +225,16 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-150 | `wave3-150-debug-proc-rx-tx-stat.md` | proc rx/tx stainfo stats |
 | W3-151 | `wave3-151-debug-proc-scan-param.md` | proc scan param + abort |
 
+## Children (tranche 14 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-152 | `wave3-152-debug-proc-war-offload-p1.md` | proc war offload enable + IPv4 |
+| W3-153 | `wave3-153-debug-proc-war-offload-ipv6.md` | proc war offload IPv6 addr |
+| W3-154 | `wave3-154-debug-proc-war-offload-mdns-p1.md` | proc war offload MDNS domain/machine |
+| W3-155 | `wave3-155-debug-proc-rson-data.md` | proc rson_data get/set |
+| W3-156 | `wave3-156-debug-proc-survey-info.md` | proc survey_info get/set |
+
 Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:
 
 - `rtw_beamforming.c` sounding state machine (HAL-coupled NDPA paths)
