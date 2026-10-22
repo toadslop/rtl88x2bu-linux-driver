@@ -39,3 +39,13 @@ void rtw_sec_read_cam_ent(struct _adapter *adapter, unsigned char id,
 	(void)mac;
 	(void)key;
 }
+
+void rtw_sec_write_cam_ent(struct _adapter *adapter, unsigned char id, unsigned short ctrl,
+			   unsigned char *mac, unsigned char *key)
+{
+	(void)adapter;
+	(void)id;
+	(void)ctrl;
+	(void)mac;
+	(void)key;
+}

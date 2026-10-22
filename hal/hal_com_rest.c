@@ -1260,63 +1260,7 @@ static void rtw_hal_set_msr(_adapter *adapter, u8 net_type)
 
 /* rtw_sec_read_cam / rtw_sec_write_cam — ported to rust/hal_com.rs (W4-52) */
 
-/* rtw_sec_read_cam_ent — ported to rust/hal_com.rs (W4-55 PR1) */
-
-void rtw_sec_write_cam_ent(_adapter *adapter, u8 id, u16 ctrl, u8 *mac, u8 *key)
-{
-	unsigned int i;
-	int j;
-	u8 addr, addr1 = 0;
-	u32 wdata, wdata1 = 0;
-
-	/* TODO: consider other key length accordingly */
-#if 0
-	switch ((ctrl & 0x1c) >> 2) {
-	case _WEP40_:
-	case _TKIP_:
-	case _AES_:
-	case _WEP104_:
-
-	}
-#else
-	j = 7;
-#endif
-
-	for (; j >= 0; j--) {
-		switch (j) {
-		case 0:
-			wdata = (ctrl | (mac[0] << 16) | (mac[1] << 24));
-			break;
-		case 1:
-			wdata = (mac[2] | (mac[3] << 8) | (mac[4] << 16) | (mac[5] << 24));
-			break;
-		case 6:
-		case 7:
-			wdata = 0;
-			break;
-		default:
-			i = (j - 2) << 2;
-			wdata = (key[i] | (key[i + 1] << 8) | (key[i + 2] << 16) | (key[i + 3] << 24));
-			break;
-		}
-
-		addr = (id << 3) + j;
-
-#if defined(CONFIG_RTL8192F)
-		if(j == 1) {
-			wdata1 = wdata;
-			addr1 = addr;
-			continue;
-		}
-#endif
-
-		rtw_sec_write_cam(adapter, addr, wdata);
-	}
-
-#if defined(CONFIG_RTL8192F)
-	rtw_sec_write_cam(adapter, addr1, wdata1);
-#endif
-}
+/* rtw_sec_read_cam_ent / rtw_sec_write_cam_ent — ported to rust/hal_com.rs (W4-55) */
 
 /* rtw_sec_clr_cam_ent / rtw_sec_read_cam_is_gk — ported to rust/hal_com.rs (W4-54) */
 #ifdef CONFIG_MBSSID_CAM
