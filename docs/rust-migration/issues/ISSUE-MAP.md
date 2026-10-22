@@ -274,6 +274,14 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-51 | #1411 | [W4-51] Translate hal_com_rest.c — reqtxrpt + MI MAC addr push |
 | W4-52 | #1412 | [W4-52] Translate hal_com_rest.c — security CAM register read/write |
 | W4-53 | #1413 | [W4-53] Extend rust/hal_usb.rs usb_set_intf_ops — interrupt pipe + hook retarget |
+| W3-152 | #1425 | [W3-152] Translate rtw_debug_rest.c — proc war offload enable + IPv4 |
+| W3-153 | #1426 | [W3-153] Translate rtw_debug_rest.c — proc war offload IPv6 addr |
+| W3-154 | #1427 | [W3-154] Translate rtw_debug_rest.c — proc war offload MDNS domain/machine |
+| W3-155 | #1428 | [W3-155] Translate rtw_debug_rest.c — proc rson_data get/set |
+| W3-156 | #1429 | [W3-156] Translate rtw_debug_rest.c — proc survey_info get/set |
+| W4-54 | #1430 | [W4-54] Translate hal_com_rest.c — security CAM clear + GK probe |
+| W4-55 | #1431 | [W4-55] Translate hal_com_rest.c — security CAM entry read/write |
+| W4-56 | #1432 | [W4-56] Translate hal_com_rest.c — C2H defeature + customer string rpt |
 
 ## Superseded issues
 
