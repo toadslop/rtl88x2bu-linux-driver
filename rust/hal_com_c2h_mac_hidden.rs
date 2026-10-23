@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-// hal_read_mac_hidden_rpt (W4-57 PR1).
+// C2H mac-hidden report path (W4-57).
 use core::ffi::c_void;
 
 type U8 = u8;
@@ -18,7 +18,18 @@ const SUCCESS: S32 = 1;
 const FAIL: S32 = 0;
 
 extern "C" {
-    fn c2h_mac_hidden_rpt_hdl(adapter: *mut c_void, data: *mut U8, len: U8) -> S32;
+    fn rtw_rust_hal_com_warn_c2h_short_len(func: *const U8, len: U8, expect: i32);
+    fn rtw_rust_hal_com_mac_hidden_rpt1_apply(
+        adapter: *mut c_void,
+        data: *mut U8,
+        package_type: U8,
+        hci_type: U8,
+        wl_func: U8,
+        hw_stype: U8,
+        bw: U8,
+        ant_num: U8,
+        protocol: U8,
+    ) -> S32;
     fn c2h_mac_hidden_rpt_2_hdl(adapter: *mut c_void, data: *mut U8, len: U8) -> S32;
     fn rtw_rust_hal_com_read8(adapter: *mut c_void, addr: U32) -> U8;
     fn rtw_rust_hal_com_write8(adapter: *mut c_void, addr: U32, val: U8);
@@ -33,6 +44,46 @@ extern "C" {
     fn rtw_rust_hal_com_get_current_time() -> u64;
     fn rtw_rust_hal_com_get_passing_time_ms(start: u64) -> U32;
     fn rtw_rust_hal_com_log_mac_hidden_read(ok: U8, cnt: U32, ms: i32, fwdl: S32, id: U8);
+}
+
+static FN_C2H_MAC_HIDDEN: &[U8] = b"c2h_mac_hidden_rpt_hdl\0";
+#[inline]
+fn le_bits_to_1byte(ptr: *const U8, bit_offset: u32, bit_len: u32) -> U8 {
+    unsafe { (*ptr >> bit_offset) as U8 & ((1u32 << bit_len) - 1) as U8 }
+}
+
+#[no_mangle]
+pub extern "C" fn c2h_mac_hidden_rpt_hdl(adapter: *mut c_void, data: *mut U8, len: U8) -> S32 {
+    if (len as usize) < MAC_HIDDEN_RPT_LEN {
+        unsafe {
+            rtw_rust_hal_com_warn_c2h_short_len(
+                FN_C2H_MAC_HIDDEN.as_ptr(),
+                len,
+                MAC_HIDDEN_RPT_LEN as i32,
+            );
+        }
+        return FAIL;
+    }
+    let hci_type = le_bits_to_1byte(unsafe { data.add(4) }, 0, 4);
+    let package_type = le_bits_to_1byte(unsafe { data.add(4) }, 4, 3);
+    let wl_func = le_bits_to_1byte(unsafe { data.add(5) }, 0, 4);
+    let hw_stype = le_bits_to_1byte(unsafe { data.add(5) }, 4, 4);
+    let bw = le_bits_to_1byte(unsafe { data.add(6) }, 0, 3);
+    let ant_num = le_bits_to_1byte(unsafe { data.add(6) }, 5, 3);
+    let protocol = le_bits_to_1byte(unsafe { data.add(7) }, 2, 2);
+    unsafe {
+        rtw_rust_hal_com_mac_hidden_rpt1_apply(
+            adapter,
+            data,
+            package_type,
+            hci_type,
+            wl_func,
+            hw_stype,
+            bw,
+            ant_num,
+            protocol,
+        )
+    }
 }
 
 #[no_mangle]
@@ -87,12 +138,12 @@ pub extern "C" fn hal_read_mac_hidden_rpt(adapter: *mut c_void) -> S32 {
         }
     }
 
+    let _ = c2h_mac_hidden_rpt_hdl(
+        adapter,
+        mac_hidden_rpt.as_mut_ptr(),
+        MAC_HIDDEN_RPT_LEN as U8,
+    );
     unsafe {
-        c2h_mac_hidden_rpt_hdl(
-            adapter,
-            mac_hidden_rpt.as_mut_ptr(),
-            MAC_HIDDEN_RPT_LEN as U8,
-        );
         c2h_mac_hidden_rpt_2_hdl(
             adapter,
             mac_hidden_rpt.as_mut_ptr().add(MAC_HIDDEN_RPT_LEN),

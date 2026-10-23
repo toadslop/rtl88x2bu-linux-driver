@@ -368,134 +368,6 @@ exit:
 #endif
 
 #ifdef CONFIG_RTW_MAC_HIDDEN_RPT
-int c2h_mac_hidden_rpt_hdl(_adapter *adapter, u8 *data, u8 len)
-{
-	HAL_DATA_TYPE	*hal_data = GET_HAL_DATA(adapter);
-	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
-	enum rf_type rf_type;
-	u8 tx_path_num, rx_path_num;
-	int ret = _FAIL;
-
-	u8 uuid_x;
-	u8 uuid_y;
-	u8 uuid_z;
-	u16 uuid_crc;
-
-	u8 hci_type;
-	u8 package_type;
-	u8 tr_switch;
-	u8 wl_func;
-	u8 hw_stype;
-	u8 bw;
-	u8 ss_num = 4;
-	u8 ant_num;
-	u8 protocol;
-	u8 nic;
-
-	int i;
-
-	if (len < MAC_HIDDEN_RPT_LEN) {
-		RTW_WARN("%s len(%u) < %d\n", __func__, len, MAC_HIDDEN_RPT_LEN);
-		goto exit;
-	}
-
-	uuid_x = GET_C2H_MAC_HIDDEN_RPT_UUID_X(data);
-	uuid_y = GET_C2H_MAC_HIDDEN_RPT_UUID_Y(data);
-	uuid_z = GET_C2H_MAC_HIDDEN_RPT_UUID_Z(data);
-	uuid_crc = GET_C2H_MAC_HIDDEN_RPT_UUID_CRC(data);
-
-	hci_type = GET_C2H_MAC_HIDDEN_RPT_HCI_TYPE(data);
-	package_type = GET_C2H_MAC_HIDDEN_RPT_PACKAGE_TYPE(data);
-
-	tr_switch = GET_C2H_MAC_HIDDEN_RPT_TR_SWITCH(data);
-
-	wl_func = GET_C2H_MAC_HIDDEN_RPT_WL_FUNC(data);
-	hw_stype = GET_C2H_MAC_HIDDEN_RPT_HW_STYPE(data);
-
-	bw = GET_C2H_MAC_HIDDEN_RPT_BW(data);
-	ant_num = GET_C2H_MAC_HIDDEN_RPT_ANT_NUM(data);
-
-	protocol = GET_C2H_MAC_HIDDEN_RPT_80211_PROTOCOL(data);
-	nic = GET_C2H_MAC_HIDDEN_RPT_NIC_ROUTER(data);
-
-	if (DBG_C2H_MAC_HIDDEN_RPT_HANDLE) {
-		for (i = 0; i < len; i++)
-			RTW_PRINT("%s: 0x%02X\n", __func__, *(data + i));
-
-		RTW_PRINT("uuid x:0x%02x y:0x%02x z:0x%x crc:0x%x\n", uuid_x, uuid_y, uuid_z, uuid_crc);
-		RTW_PRINT("hci_type:0x%x\n", hci_type);
-		RTW_PRINT("package_type:0x%x\n", package_type);
-		RTW_PRINT("tr_switch:0x%x\n", tr_switch);
-		RTW_PRINT("wl_func:0x%x\n", wl_func);
-		RTW_PRINT("hw_stype:0x%x\n", hw_stype);
-		RTW_PRINT("bw:0x%x\n", bw);
-		RTW_PRINT("ant_num:0x%x\n", ant_num);
-		RTW_PRINT("protocol:0x%x\n", protocol);
-		RTW_PRINT("nic:0x%x\n", nic);
-	}
-
-#if defined(CONFIG_RTL8822C) || defined(CONFIG_RTL8814B)
-	if (IS_8822C_SERIES(hal_data->version_id) || IS_8814B_SERIES(hal_data->version_id)) {
-		#define GET_C2H_MAC_HIDDEN_RPT_SS_NUM(_data)	LE_BITS_TO_1BYTE(((u8 *)(_data)) + 6, 3, 2)
-		ss_num = GET_C2H_MAC_HIDDEN_RPT_SS_NUM(data);
-
-		if (DBG_C2H_MAC_HIDDEN_RPT_HANDLE)
-			RTW_PRINT("ss_num:0x%x\n", ss_num);
-
-		if (ss_num == 0x03)
-			ss_num = 4;
-	}
-#endif
-
-#if defined(CONFIG_RTL8822C)
-	if (IS_8822C_SERIES(hal_data->version_id)) {
-		if (ant_num == 1)
-			hal_spec->rf_reg_trx_path_bmp = 0x22; /* 1T1R pathB */
-		if (hw_stype == 0xE)
-			hal_spec->max_tx_cnt = rtw_min(hal_spec->max_tx_cnt, 1); /* limit 1TX only */
-	}
-#endif
-	hal_data->PackageType = package_type;
-	hal_spec->hci_type = hci_type;
-	hal_spec->wl_func &= mac_hidden_wl_func_to_hal_wl_func(wl_func);
-	hal_spec->bw_cap &= mac_hidden_max_bw_to_hal_bw_cap(bw);
-	hal_spec->proto_cap &= mac_hidden_proto_to_hal_proto_cap(protocol);
-
-	rf_type = rtw_chip_rftype_to_hal_rftype(adapter, 0);
-	if (!RF_TYPE_VALID(rf_type)) {
-		RTW_ERR("%s rtw_chip_rftype_to_hal_rftype failed\n", __func__);
-		goto exit;
-	}
-	hal_spec->rf_reg_path_avail_num = rtw_min(hal_spec->rf_reg_path_num, ant_num);
-	tx_path_num = rtw_min(rf_type_to_rf_tx_cnt(rf_type), hal_spec->rf_reg_path_avail_num);
-	rx_path_num = rtw_min(rf_type_to_rf_rx_cnt(rf_type), hal_spec->rf_reg_path_avail_num);
-	hal_spec->rf_reg_trx_path_bmp = rtw_restrict_trx_path_bmp_by_trx_num_lmt(
-		hal_spec->rf_reg_trx_path_bmp, tx_path_num, rx_path_num, &tx_path_num, &rx_path_num);
-	if (!hal_spec->rf_reg_trx_path_bmp) {
-		RTW_ERR("%s rtw_restrict_trx_path_bmp_by_trx_num_lmt(0x%x, %u, %u) failed\n"
-			, __func__, hal_spec->rf_reg_trx_path_bmp, tx_path_num, rx_path_num);
-		goto exit;
-	}
-	hal_spec->rf_reg_path_avail_num = rtw_max(tx_path_num, rx_path_num);
-
-	/*
-	* RF TX path num >= max_tx_cnt >= tx_nss_num
-	* ex: RF TX path num(4) >= max_tx_cnt(2) >= tx_nss_num(1)
-	* Select at most 2 out of 4 TX RF path to do 1SS 2TX
-	*/
-	hal_spec->max_tx_cnt = rtw_min(hal_spec->max_tx_cnt, tx_path_num);
-	hal_spec->tx_nss_num = rtw_min(hal_spec->tx_nss_num, hal_spec->max_tx_cnt);
-	hal_spec->tx_nss_num = rtw_min(hal_spec->tx_nss_num, ss_num);
-
-	hal_spec->rx_nss_num = rtw_min(hal_spec->rx_nss_num, rx_path_num);
-	hal_spec->rx_nss_num = rtw_min(hal_spec->rx_nss_num, ss_num);
-
-	ret = _SUCCESS;
-
-exit:
-	return ret;
-}
-
 int c2h_mac_hidden_rpt_2_hdl(_adapter *adapter, u8 *data, u8 len)
 {
 	HAL_DATA_TYPE	*hal_data = GET_HAL_DATA(adapter);
@@ -531,8 +403,6 @@ int c2h_mac_hidden_rpt_2_hdl(_adapter *adapter, u8 *data, u8 len)
 exit:
 	return ret;
 }
-
-/* hal_read_mac_hidden_rpt — rust/hal_com_c2h_mac_hidden.rs (W4-57 PR1) */
 #endif /* CONFIG_RTW_MAC_HIDDEN_RPT */
 
 /* c2h_defeature_dbg_hdl — rust/hal_com.rs (W4-56 PR1) */
@@ -15573,6 +15443,59 @@ void rtw_rust_hal_com_log_sec_cam(_adapter *adapter, u8 is_write, u8 addr, u32 d
 }
 
 #ifdef CONFIG_RTW_MAC_HIDDEN_RPT
+int rtw_rust_hal_com_mac_hidden_rpt1_apply(_adapter *adapter, u8 *data,
+	u8 package_type, u8 hci_type, u8 wl_func, u8 hw_stype, u8 bw,
+	u8 ant_num, u8 protocol)
+{
+	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
+	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
+	enum rf_type rf_type;
+	u8 tx_path_num, rx_path_num;
+	u8 ss_num = 4;
+	int ret = _FAIL;
+
+#if defined(CONFIG_RTL8822C) || defined(CONFIG_RTL8814B)
+	if (IS_8822C_SERIES(hal_data->version_id) || IS_8814B_SERIES(hal_data->version_id)) {
+		#define GET_C2H_MAC_HIDDEN_RPT_SS_NUM(_d)	LE_BITS_TO_1BYTE(((u8 *)(_d)) + 6, 3, 2)
+		ss_num = GET_C2H_MAC_HIDDEN_RPT_SS_NUM(data);
+		if (ss_num == 0x03)
+			ss_num = 4;
+	}
+#endif
+#if defined(CONFIG_RTL8822C)
+	if (IS_8822C_SERIES(hal_data->version_id)) {
+		if (ant_num == 1)
+			hal_spec->rf_reg_trx_path_bmp = 0x22;
+		if (hw_stype == 0xE)
+			hal_spec->max_tx_cnt = rtw_min(hal_spec->max_tx_cnt, 1);
+	}
+#endif
+	hal_data->PackageType = package_type;
+	hal_spec->hci_type = hci_type;
+	hal_spec->wl_func &= mac_hidden_wl_func_to_hal_wl_func(wl_func);
+	hal_spec->bw_cap &= mac_hidden_max_bw_to_hal_bw_cap(bw);
+	hal_spec->proto_cap &= mac_hidden_proto_to_hal_proto_cap(protocol);
+	rf_type = rtw_chip_rftype_to_hal_rftype(adapter, 0);
+	if (!RF_TYPE_VALID(rf_type)) {
+		RTW_ERR("%s rtw_chip_rftype_to_hal_rftype failed\n", __func__);
+		return ret;
+	}
+	hal_spec->rf_reg_path_avail_num = rtw_min(hal_spec->rf_reg_path_num, ant_num);
+	tx_path_num = rtw_min(rf_type_to_rf_tx_cnt(rf_type), hal_spec->rf_reg_path_avail_num);
+	rx_path_num = rtw_min(rf_type_to_rf_rx_cnt(rf_type), hal_spec->rf_reg_path_avail_num);
+	hal_spec->rf_reg_trx_path_bmp = rtw_restrict_trx_path_bmp_by_trx_num_lmt(
+		hal_spec->rf_reg_trx_path_bmp, tx_path_num, rx_path_num, &tx_path_num, &rx_path_num);
+	if (!hal_spec->rf_reg_trx_path_bmp) {
+		RTW_ERR("%s rtw_restrict_trx_path_bmp_by_trx_num_lmt(0x%x, %u, %u) failed\n"
+			, __func__, hal_spec->rf_reg_trx_path_bmp, tx_path_num, rx_path_num);
+		return ret;
+	}
+	hal_spec->rf_reg_path_avail_num = rtw_max(tx_path_num, rx_path_num);
+	hal_spec->max_tx_cnt = rtw_min(hal_spec->max_tx_cnt, tx_path_num);
+	hal_spec->tx_nss_num = rtw_min(rtw_min(hal_spec->tx_nss_num, hal_spec->max_tx_cnt), ss_num);
+	hal_spec->rx_nss_num = rtw_min(rtw_min(hal_spec->rx_nss_num, rx_path_num), ss_num);
+	return _SUCCESS;
+}
 void rtw_rust_hal_com_set_not_xmitframe_fw_dl(_adapter *adapter, u8 val)
 {
 	GET_HAL_DATA(adapter)->not_xmitframe_fw_dl = val;
