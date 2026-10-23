@@ -1581,6 +1581,183 @@ exit:
 		rtw_vmfree(tmp, sizeof(char) * (max_input_size));
 	return count;
 }
+
+void rtw_rust_debug_proc_emit_war_offload_mdns_txt_rsp(void *sel,
+						       _adapter *adapter)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	struct pwrctrl_priv *pwrpriv = dvobj_to_pwrctl(dvobj);
+	int i = 0;
+
+	if (_TRUE == pwrpriv->wowlan_war_offload_mode) {
+		if ((WAR_MDNS_V4_RSP_EN & pwrpriv->wowlan_war_offload_ctrl) ||
+		    (WAR_MDNS_V6_RSP_EN & pwrpriv->wowlan_war_offload_ctrl)) {
+			for (i = 0; i < pwrpriv->wowlan_war_offload_mdns_txt_rsp_num;
+			     i++) {
+				RTW_PRINT_SEL(sel, "[%d]", i);
+				if (pwrpriv->wowlan_war_offload_mdns_txt_rsp[i]
+					    .txt_len == 0) {
+					RTW_PRINT_SEL(sel, " (null)\n");
+					continue;
+				}
+				rtw_wow_war_mdns_dump_txt(
+					sel, (u8 *)"type txt rsp. (Str)",
+					pwrpriv->wowlan_war_offload_mdns_txt_rsp[i]
+						.txt,
+					pwrpriv->wowlan_war_offload_mdns_txt_rsp[i]
+						.txt_len);
+				rtw_wow_war_mdns_dump_buf(
+					sel, (u8 *)"type txt rsp. (Hex)",
+					pwrpriv->wowlan_war_offload_mdns_txt_rsp[i]
+						.txt,
+					pwrpriv->wowlan_war_offload_mdns_txt_rsp[i]
+						.txt_len);
+			}
+			RTW_PRINT_SEL(sel, "\n");
+		} else {
+			RTW_PRINT_SEL(sel, "\nMSND RSP Not enabled\n\n");
+		}
+	} else {
+		RTW_PRINT_SEL(sel, "\nOffload Not enabled\n\n");
+	}
+}
+
+ssize_t rtw_rust_debug_proc_set_war_offload_mdns_txt_rsp(
+	_adapter *adapter, const char __user *buffer, size_t count)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	struct pwrctrl_priv *pwrpriv = dvobj_to_pwrctl(dvobj);
+	u16 max_input_size = (1 + 6 + MAX_MDNS_TXT_SINGLE_LEN + 2);
+	char *tmp = NULL;
+	char op[7] = { 0 }, txt_str[MAX_MDNS_TXT_SINGLE_LEN + 1] = { 0 };
+	int idx;
+
+	if (NULL == buffer) {
+		RTW_INFO(FUNC_ADPT_FMT ": input buffer is NULL!\n",
+			 FUNC_ADPT_ARG(adapter));
+		return -EFAULT;
+	}
+
+	if (count < 1) {
+		RTW_INFO(FUNC_ADPT_FMT ": input length is 0!\n",
+			 FUNC_ADPT_ARG(adapter));
+		return -EFAULT;
+	}
+
+	tmp = rtw_zvmalloc(sizeof(char) * (max_input_size));
+	if (NULL == tmp) {
+		RTW_INFO(FUNC_ADPT_FMT ": tmp buffer allocate fail!!\n",
+			 FUNC_ADPT_ARG(adapter));
+		count = -EFAULT;
+		goto exit;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		if (strncmp(tmp, "clean", 5) == 0) {
+			if (pwrpriv->wowlan_war_offload_mdns_service_info_num == 0) {
+				_rtw_memset(pwrpriv->wowlan_war_offload_mdns_txt_rsp,
+					    0,
+					    sizeof(pwrpriv->wowlan_war_offload_mdns_txt_rsp));
+			} else {
+				RTW_INFO(FUNC_ADPT_FMT
+					 ": Txt rsp are refered! (Current service_info_num = %d)\n",
+					 FUNC_ADPT_ARG(adapter),
+					 pwrpriv->wowlan_war_offload_mdns_service_info_num);
+				count = -EFAULT;
+				goto exit;
+			}
+		} else {
+			int num = sscanf(tmp, "%d %6s %256c", &idx, op, txt_str);
+			u16 sscanf_parameter_length = 0, txt_len = 0;
+
+			txt_len = (strlen(txt_str) > MAX_MDNS_TXT_SINGLE_LEN) ?
+					  MAX_MDNS_TXT_SINGLE_LEN :
+					  (strlen(txt_str) - 1);
+			txt_str[txt_len] = '\0';
+			sscanf_parameter_length =
+				1 + strlen(op) + txt_len + num;
+
+			if (count != sscanf_parameter_length) {
+				RTW_INFO(FUNC_ADPT_FMT
+					 ": Length of total parameters does not match the input buffer. (%d != %lu)(num=%d)\n",
+					 FUNC_ADPT_ARG(adapter),
+					 sscanf_parameter_length, count, num);
+				RTW_INFO(FUNC_ADPT_FMT
+					 ": Please check the content and length of each parameter.\n",
+					 FUNC_ADPT_ARG(adapter));
+				RTW_INFO(FUNC_ADPT_FMT
+					 ": input buffer = (%s)(%lu)!\n\n",
+					 FUNC_ADPT_ARG(adapter), tmp, count);
+				RTW_INFO(FUNC_ADPT_FMT ": op. = %s (%lu)!\n",
+					 FUNC_ADPT_ARG(adapter), op, strlen(op));
+				RTW_INFO(FUNC_ADPT_FMT ": txt = %s (%lu)!\n",
+					 FUNC_ADPT_ARG(adapter), txt_str,
+					 strlen(txt_str));
+				count = -EFAULT;
+				goto exit;
+			} else {
+				u16 offset;
+
+				if (idx >= MAX_MDNS_TXT_NUM) {
+					RTW_INFO(FUNC_ADPT_FMT
+						 ": the index, %d, is over the range of txt rsp(0~%d)!\n",
+						 FUNC_ADPT_ARG(adapter), idx,
+						 MAX_MDNS_TXT_NUM - 1);
+					count = -EFAULT;
+					goto exit;
+				}
+
+				if (strncmp(op, "new", 3) == 0) {
+					_rtw_memset(
+						pwrpriv->wowlan_war_offload_mdns_txt_rsp[idx]
+							.txt,
+						0,
+						pwrpriv->wowlan_war_offload_mdns_txt_rsp[idx]
+							.txt_len);
+					pwrpriv->wowlan_war_offload_mdns_txt_rsp[idx]
+						.txt_len = 0;
+				} else if (strncmp(op, "append", 6) == 0) {
+					if ((pwrpriv->wowlan_war_offload_mdns_txt_rsp[idx]
+						     .txt_len +
+					     strlen(txt_str) + 1) > MAX_MDNS_TXT_LEN) {
+						RTW_INFO(FUNC_ADPT_FMT
+							 ": the txt rsp(%d) will be over the limitation(%d) if append input string(%lu)!\n",
+							 FUNC_ADPT_ARG(adapter),
+							 pwrpriv
+								 ->wowlan_war_offload_mdns_txt_rsp[idx]
+								 .txt_len,
+							 MAX_MDNS_TXT_LEN,
+							 strlen(txt_str) + 1);
+						count = -EFAULT;
+						goto exit;
+					}
+				} else {
+					RTW_INFO(FUNC_ADPT_FMT
+						 ": Invaild op str %s (new/append only)!\n",
+						 FUNC_ADPT_ARG(adapter), op);
+					count = -EFAULT;
+					goto exit;
+				}
+
+				offset = pwrpriv->wowlan_war_offload_mdns_txt_rsp[idx]
+						 .txt_len;
+				pwrpriv->wowlan_war_offload_mdns_txt_rsp[idx]
+					.txt[offset++] = strlen(txt_str);
+				_rtw_memcpy(pwrpriv->wowlan_war_offload_mdns_txt_rsp[idx]
+						   .txt +
+					   offset,
+					   txt_str, strlen(txt_str));
+				pwrpriv->wowlan_war_offload_mdns_txt_rsp[idx]
+					.txt_len += (strlen(txt_str) + 1);
+			}
+		}
+	}
+
+exit:
+	if (tmp)
+		rtw_vmfree(tmp, sizeof(char) * (max_input_size));
+	return count;
+}
 #endif /* CONFIG_OFFLOAD_MDNS_V4 || CONFIG_OFFLOAD_MDNS_V6 */
 #endif /* CONFIG_WAR_OFFLOAD */
 
