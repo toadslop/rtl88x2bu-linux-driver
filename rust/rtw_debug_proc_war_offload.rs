@@ -194,10 +194,7 @@ pub extern "C" fn proc_set_war_offload_mdns_service_info(
 
 #[cfg(any(config_offload_mdns_v4, config_offload_mdns_v6))]
 extern "C" {
-    fn rtw_rust_debug_proc_emit_war_offload_mdns_txt_rsp(
-        sel: *mut c_void,
-        adapter: *mut c_void,
-    );
+    fn rtw_rust_debug_proc_emit_war_offload_mdns_txt_rsp(sel: *mut c_void, adapter: *mut c_void);
     fn rtw_rust_debug_proc_set_war_offload_mdns_txt_rsp(
         adapter: *mut c_void,
         buffer: *const c_void,
