@@ -705,95 +705,6 @@ u8 rtw_hal_set_req_per_rpt_cmd(_adapter *adapter, u8 group_macid,
 	return ret;
 }
 
-#define	GET_C2H_PER_RATE_RPT_TYPE0_MACID0(_data)	LE_BITS_TO_1BYTE(((u8 *)(_data)), 0, 8)
-#define	GET_C2H_PER_RATE_RPT_TYPE0_PER0(_data)		LE_BITS_TO_1BYTE(((u8 *)(_data)) + 1, 0, 8)
-#define	GET_C2H_PER_RATE_RPT_TYPE0_RATE0(_data)		LE_BITS_TO_1BYTE(((u8 *)(_data)) + 2, 0, 8)
-#define	GET_C2H_PER_RATE_RPT_TYPE0_BW0(_data)		LE_BITS_TO_1BYTE(((u8 *)(_data)) + 3, 0, 2)
-#define	GET_C2H_PER_RATE_RPT_TYPE0_TOTAL_PKT0(_data)	LE_BITS_TO_2BYTE(((u8 *)(_data)) + 4, 0, 16)
-#define	GET_C2H_PER_RATE_RPT_TYPE0_MACID1(_data)	LE_BITS_TO_1BYTE(((u8 *)(_data)) + 6, 0, 8)
-#define	GET_C2H_PER_RATE_RPT_TYPE0_PER1(_data)		LE_BITS_TO_1BYTE(((u8 *)(_data)) + 7, 0, 8)
-#define	GET_C2H_PER_RATE_RPT_TYPE0_RATE1(_data)		LE_BITS_TO_1BYTE(((u8 *)(_data)) + 8, 0, 8)
-#define	GET_C2H_PER_RATE_RPT_TYPE0_BW1(_data)		LE_BITS_TO_1BYTE(((u8 *)(_data)) + 9, 0, 2)
-#define	GET_C2H_PER_RATE_RPT_TYPE0_TOTAL_PKT1(_data)	LE_BITS_TO_2BYTE(((u8 *)(_data)) + 10, 0, 16)
-
-#define	GET_C2H_PER_RATE_RPT_TYPE1_MACID0(_data)	LE_BITS_TO_1BYTE(((u8 *)(_data)), 0, 8)
-#define	GET_C2H_PER_RATE_RPT_TYPE1_PER0(_data)		LE_BITS_TO_1BYTE(((u8 *)(_data)) + 1, 0, 8)
-#define	GET_C2H_PER_RATE_RPT_TYPE1_RATE0(_data)		LE_BITS_TO_1BYTE(((u8 *)(_data)) + 2, 0, 8)
-#define	GET_C2H_PER_RATE_RPT_TYPE1_BW0(_data)		LE_BITS_TO_1BYTE(((u8 *)(_data)) + 3, 0, 2)
-#define	GET_C2H_PER_RATE_RPT_TYPE1_MACID1(_data)	LE_BITS_TO_1BYTE(((u8 *)(_data)) + 4, 0, 8)
-#define	GET_C2H_PER_RATE_RPT_TYPE1_PER1(_data)		LE_BITS_TO_1BYTE(((u8 *)(_data)) + 5, 0, 8)
-#define	GET_C2H_PER_RATE_RPT_TYPE1_RATE1(_data)		LE_BITS_TO_1BYTE(((u8 *)(_data)) + 6, 0, 8)
-#define	GET_C2H_PER_RATE_RPT_TYPE1_BW1(_data)		LE_BITS_TO_1BYTE(((u8 *)(_data)) + 7, 0, 2)
-#define	GET_C2H_PER_RATE_RPT_TYPE1_MACID2(_data)	LE_BITS_TO_1BYTE(((u8 *)(_data)) + 8, 0, 8)
-#define	GET_C2H_PER_RATE_RPT_TYPE1_PER2(_data)		LE_BITS_TO_1BYTE(((u8 *)(_data)) + 9, 0, 8)
-#define	GET_C2H_PER_RATE_RPT_TYPE1_RATE2(_data)		LE_BITS_TO_1BYTE(((u8 *)(_data)) + 10, 0, 8)
-#define	GET_C2H_PER_RATE_RPT_TYPE1_BW2(_data)		LE_BITS_TO_1BYTE(((u8 *)(_data)) + 11, 0, 2)
-
-static void per_rate_rpt_update(_adapter *adapter, u8 mac_id,
-				u8 per, u8 rate,
-				u8 bw, u8 total_pkt)
-{
-#ifdef CONFIG_RTW_MESH
-	rtw_ieee80211s_update_metric(adapter, mac_id,
-				     per, rate,
-				     bw, total_pkt);
-#endif
-}
-
-int c2h_per_rate_rpt_hdl(_adapter *adapter, u8 *data, u8 len)
-{
-	/* Now only consider type0, since it covers all params in type1
-	 * type0: mac_id, per, rate, bw, total_pkt
-	 * type1: mac_id, per, rate, bw
-	 */
-	u8 mac_id[2] = {0}, per[2] = {0}, rate[2] = {0}, bw[2] = {0};
-	u16 total_pkt[2] = {0};
-	int ret = _FAIL, i, macid_cnt = 0;
-
-	/* type0:
-	 * 1 macid includes   6 bytes info + 1 byte 0xff
-	 * 2 macid includes 2*6 bytes info
-	 */
-	if (!(len == 7 || len == 12)) {
-		RTW_WARN("%s len(%u) != 7 or 12\n", __FUNCTION__, len);
-		goto exit;
-	}
-
-	macid_cnt++;
-	mac_id[0] = GET_C2H_PER_RATE_RPT_TYPE0_MACID0(data);
-	per[0] = GET_C2H_PER_RATE_RPT_TYPE0_PER0(data);
-	rate[0] = GET_C2H_PER_RATE_RPT_TYPE0_RATE0(data);
-	bw[0] = GET_C2H_PER_RATE_RPT_TYPE0_BW0(data);
-	total_pkt[0] = GET_C2H_PER_RATE_RPT_TYPE0_TOTAL_PKT0(data);
-
-	mac_id[1] = GET_C2H_PER_RATE_RPT_TYPE0_MACID1(data);
-	/* 0xff means no report anymore */
-	if (mac_id[1] == 0xff)
-		goto update_per;
-	if (len != 12) {
-		RTW_WARN("%s incorrect format\n", __FUNCTION__);
-		goto exit;
-	}
-	macid_cnt++;
-	per[1] = GET_C2H_PER_RATE_RPT_TYPE0_PER1(data);
-	rate[1] = GET_C2H_PER_RATE_RPT_TYPE0_RATE1(data);
-	bw[1] = GET_C2H_PER_RATE_RPT_TYPE0_BW1(data);
-	total_pkt[1] = GET_C2H_PER_RATE_RPT_TYPE0_TOTAL_PKT1(data);
-
-update_per:
-	for (i = 0; i < macid_cnt; i++) {
-		RTW_DBG("[%s] type0 rpt[%d]: macid = %u, per = %u, "
-			"rate = %u, bw = %u, total_pkt = %u\n",
-			__FUNCTION__, i, mac_id[i], per[i],
-			rate[i], bw[i], total_pkt[i]);
-		per_rate_rpt_update(adapter, mac_id[i],
-				    per[i], rate[i],
-				    bw[i], total_pkt[i]);
-	}
-	ret = _SUCCESS;
-exit:
-	return ret;
-}
 #endif /* RTW_PER_CMD_SUPPORT_FW */
 
 #ifdef CONFIG_LPS_ACK
@@ -820,15 +731,15 @@ int c2h_lps_status_rpt(PADAPTER adapter, u8 *data, u8 len)
 	/* action=0: report force leave null data status */
 	/* action=1: report Rf on status when receiving a SetPwrMode H2C with PwrState = RFON */
 	switch (action) {
-		case 0: 
+		case 0:
 			/* status code 0: success, 1: no ack, 2: timeout, 3: cancel */
-		case 1: 
+		case 1:
 			/* status code 0: FW has already turn to RFON */
 			pwrpriv->lps_ack_status = status_code;
 
 			if (DBG_LPS_STATUS_RPT)
 				RTW_INFO("=== [C2H LPS Action(%d)] LPS Status Code:%d ===\n", action, status_code);
-			
+
 			break;
 		default:
 			RTW_INFO("UnKnown Action(%d) for C2H LPS RPT\n", action);
@@ -15478,6 +15389,28 @@ void rtw_rust_hal_com_log_defeature_bytes(u8 *data, u8 len)
 void rtw_rust_hal_com_warn_c2h_short_len(const char *func, u32 len, int expect)
 {
 	RTW_WARN("%s len(%u) < %d\n", func, len, expect);
+}
+
+void rtw_rust_hal_com_warn_per_rate_len(u8 len)
+{
+	RTW_WARN("c2h_per_rate_rpt_hdl len(%u) != 7 or 12\n", len);
+}
+
+void rtw_rust_hal_com_warn_per_rate_format(void)
+{
+	RTW_WARN("c2h_per_rate_rpt_hdl incorrect format\n");
+}
+
+void rtw_rust_hal_com_per_rate_type0_apply(_adapter *adapter, int idx, u8 mac_id,
+					   u8 per, u8 rate, u8 bw, u16 total_pkt)
+{
+	RTW_DBG("[c2h_per_rate_rpt_hdl] type0 rpt[%d]: macid = %u, per = %u, "
+		"rate = %u, bw = %u, total_pkt = %u\n",
+		idx, mac_id, per, rate, bw, total_pkt);
+#ifdef CONFIG_RTW_MESH
+	rtw_ieee80211s_update_metric(adapter, mac_id, per, rate, bw,
+				     (u8)total_pkt);
+#endif
 }
 
 void rtw_rust_hal_com_sctx_set_status(struct submit_ctx *sctx, int status)
