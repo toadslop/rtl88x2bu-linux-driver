@@ -42,8 +42,15 @@ int hal_read_mac_hidden_rpt(struct _adapter *adapter)
 	return 0;
 }
 
-int c2h_mac_hidden_rpt_hdl(struct _adapter *adapter, unsigned char *data,
-			   unsigned char len)
+int c2h_mac_hidden_rpt_hdl(struct _adapter *adapter, unsigned char *data, unsigned char len)
+{
+	(void)adapter;
+	(void)data;
+	(void)len;
+	return 0;
+}
+
+int c2h_mac_hidden_rpt_2_hdl(struct _adapter *adapter, unsigned char *data, unsigned char len)
 {
 	(void)adapter;
 	(void)data;

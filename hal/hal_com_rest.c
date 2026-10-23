@@ -368,41 +368,6 @@ exit:
 #endif
 
 #ifdef CONFIG_RTW_MAC_HIDDEN_RPT
-int c2h_mac_hidden_rpt_2_hdl(_adapter *adapter, u8 *data, u8 len)
-{
-	HAL_DATA_TYPE	*hal_data = GET_HAL_DATA(adapter);
-	int ret = _FAIL;
-
-	int i;
-
-	if (len < MAC_HIDDEN_RPT_2_LEN) {
-		RTW_WARN("%s len(%u) < %d\n", __func__, len, MAC_HIDDEN_RPT_2_LEN);
-		goto exit;
-	}
-
-	if (DBG_C2H_MAC_HIDDEN_RPT_HANDLE) {
-		for (i = 0; i < len; i++)
-			RTW_PRINT("%s: 0x%02X\n", __func__, *(data + i));
-	}
-
-	#if defined(CONFIG_RTL8188F) || defined(CONFIG_RTL8188GTV)
-	if (IS_8188F(hal_data->version_id) || IS_8188GTV(hal_data->version_id)) {
-		#define GET_C2H_MAC_HIDDEN_RPT_IRV(_data)	LE_BITS_TO_1BYTE(((u8 *)(_data)) + 0, 0, 4)
-		u8 irv = GET_C2H_MAC_HIDDEN_RPT_IRV(data);
-
-		if (DBG_C2H_MAC_HIDDEN_RPT_HANDLE)
-			RTW_PRINT("irv:0x%x\n", irv);
-
-		if(irv != 0xf)
-			hal_data->version_id.CUTVersion = irv;
-	}
-	#endif
-
-	ret = _SUCCESS;
-
-exit:
-	return ret;
-}
 #endif /* CONFIG_RTW_MAC_HIDDEN_RPT */
 
 /* c2h_defeature_dbg_hdl — rust/hal_com.rs (W4-56 PR1) */
@@ -15494,6 +15459,21 @@ int rtw_rust_hal_com_mac_hidden_rpt1_apply(_adapter *adapter, u8 *data,
 	hal_spec->max_tx_cnt = rtw_min(hal_spec->max_tx_cnt, tx_path_num);
 	hal_spec->tx_nss_num = rtw_min(rtw_min(hal_spec->tx_nss_num, hal_spec->max_tx_cnt), ss_num);
 	hal_spec->rx_nss_num = rtw_min(rtw_min(hal_spec->rx_nss_num, rx_path_num), ss_num);
+	return _SUCCESS;
+}
+int rtw_rust_hal_com_mac_hidden_rpt2_apply(_adapter *adapter, u8 *data)
+{
+	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
+
+#if defined(CONFIG_RTL8188F) || defined(CONFIG_RTL8188GTV)
+	if (IS_8188F(hal_data->version_id) || IS_8188GTV(hal_data->version_id)) {
+		#define GET_C2H_MAC_HIDDEN_RPT_IRV(_d)	LE_BITS_TO_1BYTE(((u8 *)(_d)) + 0, 0, 4)
+		u8 irv = GET_C2H_MAC_HIDDEN_RPT_IRV(data);
+
+		if (irv != 0xf)
+			hal_data->version_id.CUTVersion = irv;
+	}
+#endif
 	return _SUCCESS;
 }
 void rtw_rust_hal_com_set_not_xmitframe_fw_dl(_adapter *adapter, u8 val)
