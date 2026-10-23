@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-// C2H per-rate report handler (W4-58 PR1).
+// C2H per-rate + LPS status handlers (W4-58).
 
 use core::ffi::c_void;
 
@@ -7,8 +7,10 @@ type S32 = i32;
 
 const SUCCESS: S32 = 1;
 const FAIL: S32 = 0;
+const LPS_STATUS_RPT_LEN: usize = 2;
 
 extern "C" {
+    fn rtw_rust_hal_com_warn_c2h_short_len(func: *const u8, len: u8, expect: i32);
     fn rtw_rust_hal_com_warn_per_rate_len(len: u8);
     fn rtw_rust_hal_com_warn_per_rate_format();
     fn rtw_rust_hal_com_per_rate_type0_apply(
@@ -20,7 +22,12 @@ extern "C" {
         bw: u8,
         total_pkt: u16,
     );
+    fn rtw_rust_hal_com_lps_status_apply(adapter: *mut c_void, action: u8, status_code: i8);
+    fn rtw_rust_hal_com_lps_sctx_done(adapter: *mut c_void);
+    fn rtw_rust_hal_com_log_unknown_lps_action(action: u8);
 }
+
+static FN_C2H_LPS_STATUS: &[u8] = b"c2h_lps_status_rpt\0";
 
 #[inline]
 fn b(data: *const u8, off: usize) -> u8 {
@@ -78,5 +85,30 @@ pub extern "C" fn c2h_per_rate_rpt_hdl(adapter: *mut c_void, data: *mut u8, len:
             );
         }
     }
+    SUCCESS
+}
+
+#[no_mangle]
+pub extern "C" fn c2h_lps_status_rpt(adapter: *mut c_void, data: *mut u8, len: u8) -> S32 {
+    if (len as usize) < LPS_STATUS_RPT_LEN {
+        unsafe {
+            rtw_rust_hal_com_warn_c2h_short_len(
+                FN_C2H_LPS_STATUS.as_ptr(),
+                len,
+                LPS_STATUS_RPT_LEN as i32,
+            );
+        }
+        return FAIL;
+    }
+
+    let action = b(data, 0);
+    let status_code = b(data, 1) as i8;
+
+    match action {
+        0 | 1 => unsafe { rtw_rust_hal_com_lps_status_apply(adapter, action, status_code) },
+        _ => unsafe { rtw_rust_hal_com_log_unknown_lps_action(action) },
+    }
+
+    unsafe { rtw_rust_hal_com_lps_sctx_done(adapter) };
     SUCCESS
 }

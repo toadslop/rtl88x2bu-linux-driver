@@ -542,53 +542,6 @@ u8 rtw_hal_set_req_per_rpt_cmd(_adapter *adapter, u8 group_macid,
 
 #endif /* RTW_PER_CMD_SUPPORT_FW */
 
-#ifdef CONFIG_LPS_ACK
-#define	GET_C2H_LPS_STATUS_RPT_GET_ACTION(_data)	LE_BITS_TO_1BYTE(((u8 *)(_data)), 0, 8)
-#define	GET_C2H_LPS_STATUS_RPT_GET_STATUS_CODE(_data)		LE_BITS_TO_1BYTE(((u8 *)(_data)) + 1, 0, 8)
-#define DBG_LPS_STATUS_RPT 0
-
-int c2h_lps_status_rpt(PADAPTER adapter, u8 *data, u8 len)
-{
-	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
-	struct submit_ctx *lps_sctx = &pwrpriv->lps_ack_sctx;
-	u8 action = 0;
-	s8 status_code = 0;
-	int ret = _FAIL;
-
-	if (len < LPS_STATUS_RPT_LEN) {
-		RTW_WARN("%s len(%u) < %d\n", __func__, len, LPS_STATUS_RPT_LEN);
-		goto exit;
-	}
-
-	action = GET_C2H_LPS_STATUS_RPT_GET_ACTION(data);
-	status_code = GET_C2H_LPS_STATUS_RPT_GET_STATUS_CODE(data);
-
-	/* action=0: report force leave null data status */
-	/* action=1: report Rf on status when receiving a SetPwrMode H2C with PwrState = RFON */
-	switch (action) {
-		case 0:
-			/* status code 0: success, 1: no ack, 2: timeout, 3: cancel */
-		case 1:
-			/* status code 0: FW has already turn to RFON */
-			pwrpriv->lps_ack_status = status_code;
-
-			if (DBG_LPS_STATUS_RPT)
-				RTW_INFO("=== [C2H LPS Action(%d)] LPS Status Code:%d ===\n", action, status_code);
-
-			break;
-		default:
-			RTW_INFO("UnKnown Action(%d) for C2H LPS RPT\n", action);
-			break;
-	}
-
-	rtw_sctx_done(&lps_sctx);
-	ret = _SUCCESS;
-
-exit:
-	return ret;
-}
-#endif /* CONFIG_LPS_ACK */
-
 void rtw_hal_update_sta_wset(_adapter *adapter, struct sta_info *psta)
 {
 	u8 w_set = 0;
@@ -15246,6 +15199,33 @@ void rtw_rust_hal_com_per_rate_type0_apply(_adapter *adapter, int idx, u8 mac_id
 	rtw_ieee80211s_update_metric(adapter, mac_id, per, rate, bw,
 				     (u8)total_pkt);
 #endif
+}
+
+void rtw_rust_hal_com_lps_status_apply(_adapter *adapter, u8 action, s8 status_code)
+{
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
+
+	switch (action) {
+	case 0:
+	case 1:
+		pwrpriv->lps_ack_status = status_code;
+		break;
+	default:
+		break;
+	}
+}
+
+void rtw_rust_hal_com_lps_sctx_done(_adapter *adapter)
+{
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
+	struct submit_ctx *lps_sctx = &pwrpriv->lps_ack_sctx;
+
+	rtw_sctx_done(&lps_sctx);
+}
+
+void rtw_rust_hal_com_log_unknown_lps_action(u8 action)
+{
+	RTW_INFO("UnKnown Action(%d) for C2H LPS RPT\n", action);
 }
 
 void rtw_rust_hal_com_sctx_set_status(struct submit_ctx *sctx, int status)
