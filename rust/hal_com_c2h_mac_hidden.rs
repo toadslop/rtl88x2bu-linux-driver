@@ -30,7 +30,7 @@ extern "C" {
         ant_num: U8,
         protocol: U8,
     ) -> S32;
-    fn c2h_mac_hidden_rpt_2_hdl(adapter: *mut c_void, data: *mut U8, len: U8) -> S32;
+    fn rtw_rust_hal_com_mac_hidden_rpt2_apply(adapter: *mut c_void, data: *mut U8) -> S32;
     fn rtw_rust_hal_com_read8(adapter: *mut c_void, addr: U32) -> U8;
     fn rtw_rust_hal_com_write8(adapter: *mut c_void, addr: U32, val: U8);
     fn rtw_rust_hal_com_set_not_xmitframe_fw_dl(adapter: *mut c_void, val: U8);
@@ -47,6 +47,7 @@ extern "C" {
 }
 
 static FN_C2H_MAC_HIDDEN: &[U8] = b"c2h_mac_hidden_rpt_hdl\0";
+static FN_C2H_MAC_HIDDEN_2: &[U8] = b"c2h_mac_hidden_rpt_2_hdl\0";
 #[inline]
 fn le_bits_to_1byte(ptr: *const U8, bit_offset: u32, bit_len: u32) -> U8 {
     unsafe { (*ptr >> bit_offset) as U8 & ((1u32 << bit_len) - 1) as U8 }
@@ -84,6 +85,21 @@ pub extern "C" fn c2h_mac_hidden_rpt_hdl(adapter: *mut c_void, data: *mut U8, le
             protocol,
         )
     }
+}
+
+#[no_mangle]
+pub extern "C" fn c2h_mac_hidden_rpt_2_hdl(adapter: *mut c_void, data: *mut U8, len: U8) -> S32 {
+    if (len as usize) < MAC_HIDDEN_RPT_2_LEN {
+        unsafe {
+            rtw_rust_hal_com_warn_c2h_short_len(
+                FN_C2H_MAC_HIDDEN_2.as_ptr(),
+                len,
+                MAC_HIDDEN_RPT_2_LEN as i32,
+            );
+        }
+        return FAIL;
+    }
+    unsafe { rtw_rust_hal_com_mac_hidden_rpt2_apply(adapter, data) }
 }
 
 #[no_mangle]
@@ -143,13 +159,11 @@ pub extern "C" fn hal_read_mac_hidden_rpt(adapter: *mut c_void) -> S32 {
         mac_hidden_rpt.as_mut_ptr(),
         MAC_HIDDEN_RPT_LEN as U8,
     );
-    unsafe {
-        c2h_mac_hidden_rpt_2_hdl(
-            adapter,
-            mac_hidden_rpt.as_mut_ptr().add(MAC_HIDDEN_RPT_LEN),
-            MAC_HIDDEN_RPT_2_LEN as U8,
-        );
-    }
+    let _ = c2h_mac_hidden_rpt_2_hdl(
+        adapter,
+        unsafe { mac_hidden_rpt.as_mut_ptr().add(MAC_HIDDEN_RPT_LEN) },
+        MAC_HIDDEN_RPT_2_LEN as U8,
+    );
 
     if (hci_type == RTW_USB || hci_type == RTW_PCIE)
         && unsafe { rtw_rust_hal_com_is_hw_init_completed(adapter) } == 0
