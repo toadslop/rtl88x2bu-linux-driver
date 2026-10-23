@@ -2475,6 +2475,7 @@ int proc_get_infra_ap(struct seq_file *m, void *v)
 
 #endif /* ROKU_PRIVATE */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 static int wireless_mode_to_str(u32 mode, char *str)
 {
 	str[0]='\0';
@@ -2540,6 +2541,7 @@ int proc_get_ap_info(struct seq_file *m, void *v)
 
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-158 PR1 ap_info in rust/rtw_debug_proc_ap.rs */
 
 ssize_t proc_reset_trx_info(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
