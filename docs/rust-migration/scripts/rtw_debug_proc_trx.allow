@@ -1,0 +1,3 @@
+# L1 allowlist for W3-159: Rust owns proc trx_info handlers in rtw_debug_proc_trx.o.
+drop rtw_rust_debug_proc_emit_trx_info
+drop rtw_rust_debug_proc_reset_trx_info
