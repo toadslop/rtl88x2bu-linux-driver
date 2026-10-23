@@ -2886,6 +2886,7 @@ ssize_t proc_set_bw_ctl(struct file *file, const char __user *buffer, size_t cou
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-160 PR2 in rust/rtw_debug_proc_rate.rs */
 
 #ifdef DBG_RX_COUNTER_DUMP
 int proc_get_rx_cnt_dump(struct seq_file *m, void *v)
