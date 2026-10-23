@@ -1,0 +1,3 @@
+# L1 allowlist for W3-155: Rust owns proc rson_data handlers in rtw_debug_proc.o.
+drop rtw_rust_debug_proc_emit_rson_data
+drop rtw_rust_debug_proc_set_rson_data

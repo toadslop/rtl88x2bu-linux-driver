@@ -1428,6 +1428,49 @@ ssize_t rtw_rust_debug_proc_set_war_offload_mdns_machine_name(
 }
 #endif /* CONFIG_OFFLOAD_MDNS_V4 || CONFIG_OFFLOAD_MDNS_V6 */
 #endif /* CONFIG_WAR_OFFLOAD */
+
+#ifdef CONFIG_RTW_REPEATER_SON
+void rtw_rust_debug_proc_emit_rson_data(void *sel, _adapter *adapter)
+{
+	char rson_data_str[256];
+
+	rtw_rson_get_property_str(adapter, rson_data_str);
+	RTW_PRINT_SEL(sel, "%s\n", rson_data_str);
+}
+
+ssize_t rtw_rust_debug_proc_set_rson_data(_adapter *adapter,
+					  const char __user *buffer,
+					  size_t count)
+{
+	char tmp[64] = {0};
+	int num;
+	u8 field[10], value[64];
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		num = sscanf(tmp, "%s %s", field, value);
+		if (num != 2) {
+			RTW_INFO("Invalid format : echo <field> <value> > son_data\n");
+			return count;
+		}
+		RTW_INFO("field=%s  value=%s\n", field, value);
+		num = rtw_rson_set_property(adapter, field, value);
+		if (num != 1) {
+			RTW_INFO("Invalid field(%s) or value(%s)\n", field,
+				 value);
+			return count;
+		}
+	}
+	return count;
+}
+#endif /* CONFIG_RTW_REPEATER_SON */
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */
