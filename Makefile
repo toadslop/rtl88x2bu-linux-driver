@@ -4680,7 +4680,7 @@ rust-check-symbols-rtw-debug-proc-rson: rust-objects-rtw-debug-proc-rson-c rust-
 # W3-158: host C stub vs rust/rtw_debug_proc_ap.o (proc ap_info + infra_ap getters).
 rust-objects-rtw-debug-proc-ap:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-ap"; exit 1; }
-	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_ap.o
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) USER_EXTRA_CFLAGS=-DROKU_PRIVATE rust/rtw_debug_proc_ap.o
 rust-objects-rtw-debug-proc-ap-c:
 	@mkdir -p tests/host/debug
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
