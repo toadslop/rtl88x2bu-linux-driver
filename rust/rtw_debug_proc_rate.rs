@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-// proc rate_ctl + tx_power_offset (W3-160 PR1–PR2). Logic in core/rtw_debug.c.
+// proc rate_ctl / tx_power / bw_ctl / bmc_tx_rate (W3-160). Logic in core/rtw_debug.c.
 
 #![allow(
     dead_code,
@@ -14,12 +14,28 @@
 
 use core::ffi::{c_int, c_long, c_void};
 
+#[cfg(config_ap_mode)]
+extern "C" {
+    fn rtw_rust_debug_proc_emit_bmc_tx_rate(sel: *mut c_void, adapter: *mut c_void);
+    fn rtw_rust_debug_proc_set_bmc_tx_rate(
+        adapter: *mut c_void,
+        buffer: *const c_void,
+        count: usize,
+    ) -> c_long;
+}
+
 extern "C" {
     fn rtw_rust_debug_proc_adapter(m: *mut c_void) -> *mut c_void;
     fn rtw_rust_debug_proc_adapter_from_data(data: *mut c_void) -> *mut c_void;
     fn rtw_rust_debug_proc_emit_rate_ctl(sel: *mut c_void, adapter: *mut c_void);
     fn rtw_rust_debug_proc_emit_tx_power_offset(sel: *mut c_void, adapter: *mut c_void);
     fn rtw_rust_debug_proc_set_tx_power_offset(
+        adapter: *mut c_void,
+        buffer: *const c_void,
+        count: usize,
+    ) -> c_long;
+    fn rtw_rust_debug_proc_emit_bw_ctl(sel: *mut c_void, adapter: *mut c_void);
+    fn rtw_rust_debug_proc_set_bw_ctl(
         adapter: *mut c_void,
         buffer: *const c_void,
         count: usize,
@@ -43,6 +59,29 @@ pub extern "C" fn proc_get_rate_ctl(m: *mut c_void, _v: *mut c_void) -> c_int {
     0
 }
 
+#[cfg(all(config_ap_mode, any(config_rtw_debug, config_proc_debug)))]
+#[no_mangle]
+pub extern "C" fn proc_get_bmc_tx_rate(m: *mut c_void, _v: *mut c_void) -> c_int {
+    let adapter = adapter_from_seq(m);
+    if !adapter.is_null() {
+        unsafe { rtw_rust_debug_proc_emit_bmc_tx_rate(m, adapter) };
+    }
+    0
+}
+
+#[cfg(all(config_ap_mode, any(config_rtw_debug, config_proc_debug)))]
+#[no_mangle]
+pub extern "C" fn proc_set_bmc_tx_rate(
+    _file: *mut c_void,
+    buffer: *const c_void,
+    count: usize,
+    _pos: *mut c_long,
+    data: *mut c_void,
+) -> c_long {
+    let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
+    unsafe { rtw_rust_debug_proc_set_bmc_tx_rate(adapter, buffer, count) }
+}
+
 #[cfg(any(config_rtw_debug, config_proc_debug))]
 #[no_mangle]
 pub extern "C" fn proc_get_tx_power_offset(m: *mut c_void, _v: *mut c_void) -> c_int {
@@ -64,4 +103,27 @@ pub extern "C" fn proc_set_tx_power_offset(
 ) -> c_long {
     let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
     unsafe { rtw_rust_debug_proc_set_tx_power_offset(adapter, buffer, count) }
+}
+
+#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[no_mangle]
+pub extern "C" fn proc_get_bw_ctl(m: *mut c_void, _v: *mut c_void) -> c_int {
+    let adapter = adapter_from_seq(m);
+    if !adapter.is_null() {
+        unsafe { rtw_rust_debug_proc_emit_bw_ctl(m, adapter) };
+    }
+    0
+}
+
+#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[no_mangle]
+pub extern "C" fn proc_set_bw_ctl(
+    _file: *mut c_void,
+    buffer: *const c_void,
+    count: usize,
+    _pos: *mut c_long,
+    data: *mut c_void,
+) -> c_long {
+    let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
+    unsafe { rtw_rust_debug_proc_set_bw_ctl(adapter, buffer, count) }
 }

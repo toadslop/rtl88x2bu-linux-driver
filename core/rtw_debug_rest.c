@@ -2757,6 +2757,7 @@ ssize_t proc_set_rate_ctl(struct file *file, const char __user *buffer, size_t c
 	return count;
 }
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 #ifdef CONFIG_AP_MODE
 int proc_get_bmc_tx_rate(struct seq_file *m, void *v)
 {
@@ -2799,48 +2800,9 @@ ssize_t proc_set_bmc_tx_rate(struct file *file, const char __user *buffer, size_
 	return count;
 }
 #endif /*CONFIG_AP_MODE*/
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-160 PR3 bmc in rust/rtw_debug_proc_rate.rs */
 
 #if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
-int proc_get_tx_power_offset(struct seq_file *m, void *v)
-{
-	struct net_device *dev = m->private;
-	_adapter *adapter = (_adapter *)rtw_netdev_priv(dev);
-
-	RTW_PRINT_SEL(m, "Tx power offset - %u\n", adapter->power_offset);
-	return 0;
-}
-
-ssize_t proc_set_tx_power_offset(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
-{
-	struct net_device *dev = data;
-	_adapter *adapter = (_adapter *)rtw_netdev_priv(dev);
-	char tmp[32];
-	u8 power_offset = 0;
-
-	if (count < 1)
-		return -EFAULT;
-
-	if (count > sizeof(tmp)) {
-		rtw_warn_on(1);
-		return -EFAULT;
-	}
-
-	if (buffer && !copy_from_user(tmp, buffer, count)) {
-
-		int num = sscanf(tmp, "%hhu", &power_offset);
-
-		if (num >= 1) {
-			if (power_offset > 5)
-				power_offset = 0;
-
-			adapter->power_offset = power_offset;
-		}
-	}
-
-	return count;
-}
-#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-160 PR2 tx_power in rust/rtw_debug_proc_rate.rs */
-
 int proc_get_bw_ctl(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -2886,7 +2848,7 @@ ssize_t proc_set_bw_ctl(struct file *file, const char __user *buffer, size_t cou
 
 	return count;
 }
-#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-160 PR2 in rust/rtw_debug_proc_rate.rs */
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-160 PR3 bw_ctl in rust/rtw_debug_proc_rate.rs */
 
 #ifdef DBG_RX_COUNTER_DUMP
 int proc_get_rx_cnt_dump(struct seq_file *m, void *v)
