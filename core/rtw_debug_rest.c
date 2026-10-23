@@ -1839,6 +1839,7 @@ exit:
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-157 PR1 service in rust/rtw_debug_proc_war_offload.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_war_offload_mdns_txt_rsp(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -1977,6 +1978,7 @@ exit:
 	return count;
 
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-157 PR2 txt_rsp in rust/rtw_debug_proc_war_offload.rs */
 
 #endif /* CONFIG_OFFLOAD_MDNS_V4 || CONFIG_OFFLOAD_MDNS_V6 */
 #endif /* CONFIG_WAR_OFFLOAD */
