@@ -2142,6 +2142,113 @@ void rtw_rust_debug_proc_emit_infra_ap(void *sel, _adapter *padapter)
 }
 #endif /* ROKU_PRIVATE */
 
+ssize_t rtw_rust_debug_proc_reset_trx_info(_adapter *padapter,
+					   const char __user *buffer,
+					   size_t count)
+{
+	struct recv_priv *precvpriv = &padapter->recvpriv;
+	char cmd[32] = {0};
+	u8 cnt = 0;
+
+	if (count > sizeof(cmd)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(cmd, buffer, count)) {
+		int num = sscanf(cmd, "%hhx", &cnt);
+
+		if (num == 1 && cnt == 0) {
+			precvpriv->dbg_rx_ampdu_drop_count = 0;
+			precvpriv->dbg_rx_ampdu_forced_indicate_count = 0;
+			precvpriv->dbg_rx_ampdu_loss_count = 0;
+			precvpriv->dbg_rx_dup_mgt_frame_drop_count = 0;
+			precvpriv->dbg_rx_ampdu_window_shift_cnt = 0;
+			precvpriv->dbg_rx_conflic_mac_addr_cnt = 0;
+			precvpriv->dbg_rx_drop_count = 0;
+		}
+	}
+
+	return count;
+}
+
+void rtw_rust_debug_proc_emit_trx_info(void *sel, _adapter *padapter)
+{
+	int i;
+	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+	struct recv_priv *precvpriv = &padapter->recvpriv;
+	struct hw_xmit *phwxmit;
+	u16 vo_params[4], vi_params[4], be_params[4], bk_params[4];
+
+	padapter->hal_func.read_wmmedca_reg(padapter, vo_params, vi_params,
+					    be_params, bk_params);
+
+	RTW_PRINT_SEL(sel,
+		      "wmm_edca_vo, aifs = %u us, cw_min = %u, cw_max = %u, txop_limit = %u us\n",
+		      vo_params[0], vo_params[1], vo_params[2], vo_params[3]);
+	RTW_PRINT_SEL(sel,
+		      "wmm_edca_vi, aifs = %u us, cw_min = %u, cw_max = %u, txop_limit = %u us\n",
+		      vi_params[0], vi_params[1], vi_params[2], vi_params[3]);
+	RTW_PRINT_SEL(sel,
+		      "wmm_edca_be, aifs = %u us, cw_min = %u, cw_max = %u, txop_limit = %u us\n",
+		      be_params[0], be_params[1], be_params[2], be_params[3]);
+	RTW_PRINT_SEL(sel,
+		      "wmm_edca_bk, aifs = %u us, cw_min = %u, cw_max = %u, txop_limit = %u us\n",
+		      bk_params[0], bk_params[1], bk_params[2], bk_params[3]);
+
+	dump_os_queue(sel, padapter);
+
+	RTW_PRINT_SEL(sel, "free_xmitbuf_cnt=%d, free_xmitframe_cnt=%d\n",
+		      pxmitpriv->free_xmitbuf_cnt, pxmitpriv->free_xmitframe_cnt);
+	RTW_PRINT_SEL(sel, "free_ext_xmitbuf_cnt=%d, free_xframe_ext_cnt=%d\n",
+		      pxmitpriv->free_xmit_extbuf_cnt,
+		      pxmitpriv->free_xframe_ext_cnt);
+	RTW_PRINT_SEL(sel, "free_recvframe_cnt=%d\n",
+		      precvpriv->free_recvframe_cnt);
+
+	for (i = 0; i < pxmitpriv->hwxmit_entry; i++) {
+		phwxmit = pxmitpriv->hwxmits + i;
+#ifdef CONFIG_RTW_MGMT_QUEUE
+		if (i == pxmitpriv->hwxmit_entry - 1)
+			RTW_PRINT_SEL(sel, "%d, hw_mgmt_q.accnt=%d\n", i,
+				      phwxmit->accnt);
+		else
+#endif
+			RTW_PRINT_SEL(sel, "%d, hwq.accnt=%d\n", i,
+				      phwxmit->accnt);
+	}
+
+	rtw_hal_get_hwreg(padapter, HW_VAR_DUMP_MAC_TXFIFO, (u8 *)sel);
+
+#ifdef CONFIG_USB_HCI
+	RTW_PRINT_SEL(sel, "rx_urb_pending_cn=%d\n",
+		      ATOMIC_READ(&(precvpriv->rx_pending_cnt)));
+#endif
+
+	dump_rx_bh_tk(sel, &GET_PRIMARY_ADAPTER(padapter)->recvpriv);
+
+	RTW_PRINT_SEL(sel,
+		      "RX: Count of Packets dropped by Driver: %llu\n",
+		      (unsigned long long)precvpriv->dbg_rx_drop_count);
+	RTW_PRINT_SEL(sel,
+		      "Rx: Counts of Packets Whose Seq_Num Less Than Reorder Control Seq_Num: %llu\n",
+		      (unsigned long long)precvpriv->dbg_rx_ampdu_drop_count);
+	RTW_PRINT_SEL(sel, "Rx: Reorder Time-out Trigger Counts: %llu\n",
+		      (unsigned long long)
+			      precvpriv->dbg_rx_ampdu_forced_indicate_count);
+	RTW_PRINT_SEL(sel, "Rx: Packet Loss Counts: %llu\n",
+		      (unsigned long long)precvpriv->dbg_rx_ampdu_loss_count);
+	RTW_PRINT_SEL(sel,
+		      "Rx: Duplicate Management Frame Drop Count: %llu\n",
+		      (unsigned long long)
+			      precvpriv->dbg_rx_dup_mgt_frame_drop_count);
+	RTW_PRINT_SEL(sel, "Rx: AMPDU BA window shift Count: %llu\n",
+		      (unsigned long long)
+			      precvpriv->dbg_rx_ampdu_window_shift_cnt);
+	RTW_PRINT_SEL(sel, "Rx: Conflict MAC Address Frames Count: %llu\n",
+		      (unsigned long long)precvpriv->dbg_rx_conflic_mac_addr_cnt);
+}
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */

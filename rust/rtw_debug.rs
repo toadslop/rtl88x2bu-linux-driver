@@ -5,6 +5,7 @@
 //! W3-144 `dump_adapters_status` lives in `rtw_debug_adapters_status.rs`.
 //! W3-145/W3-146/W3-147 proc leaf handlers live in `rtw_debug_proc.rs`.
 //! W3-158 proc ap_info handlers live in `rtw_debug_proc_ap.rs`.
+//! W3-159 proc trx_info handlers live in `rtw_debug_proc_trx.rs`.
 
 #![allow(
     dead_code,
