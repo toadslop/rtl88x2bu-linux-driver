@@ -1426,6 +1426,161 @@ ssize_t rtw_rust_debug_proc_set_war_offload_mdns_machine_name(
 
 	return count;
 }
+
+void rtw_rust_debug_proc_emit_war_offload_mdns_service_info(void *sel,
+							    _adapter *adapter)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	struct pwrctrl_priv *pwrpriv = dvobj_to_pwrctl(dvobj);
+	struct war_mdns_service_info *psinfo =
+		pwrpriv->wowlan_war_offload_mdns_service;
+	int i = 0, j = 0;
+
+	if (_TRUE == pwrpriv->wowlan_war_offload_mode) {
+		if ((WAR_MDNS_V4_RSP_EN & pwrpriv->wowlan_war_offload_ctrl) ||
+		    (WAR_MDNS_V6_RSP_EN & pwrpriv->wowlan_war_offload_ctrl) ||
+		    (WAR_MDNS_V4_WAKEUP_EN & pwrpriv->wowlan_war_offload_ctrl) ||
+		    (WAR_MDNS_V6_WAKEUP_EN & pwrpriv->wowlan_war_offload_ctrl)) {
+			for (i = 0;
+			     i < pwrpriv->wowlan_war_offload_mdns_service_info_num;
+			     i++) {
+				RTW_PRINT_SEL(sel, "[%d] service info ===> \n",
+					      i + 1);
+				RTW_PRINT_SEL(sel,
+					      "\tservice-transport-domain : %s(%d)- %s(%d)- %s(%d)\n",
+					      psinfo[i].service,
+					      psinfo[i].service_len,
+					      psinfo[i].transport,
+					      psinfo[i].transport_len,
+					      psinfo[i].domain,
+					      psinfo[i].domain_len);
+				RTW_PRINT_SEL(sel,
+					      "\ttarget for srv rsp : %s(%d)\n",
+					      psinfo[i].target,
+					      psinfo[i].target_len);
+				RTW_PRINT_SEL(sel,
+					      "\tport : %x-%x, ttl : %d \n",
+					      psinfo[i].port[0], psinfo[i].port[1],
+					      psinfo[i].ttl);
+				j = psinfo[i].txt_rsp_idx;
+				RTW_PRINT_SEL(sel, "\ttype txt rsp. [%d] \n", j);
+				rtw_wow_war_mdns_dump_txt(
+					sel, (u8 *)"type txt rsp. (Str)",
+					pwrpriv->wowlan_war_offload_mdns_txt_rsp[j]
+						.txt,
+					pwrpriv->wowlan_war_offload_mdns_txt_rsp[j]
+						.txt_len);
+			}
+			RTW_PRINT_SEL(sel, "\n");
+		} else {
+			RTW_PRINT_SEL(sel, "\nMSND RSP Not enabled\n\n");
+		}
+	} else {
+		RTW_PRINT_SEL(sel, "\nOffload Not enabled\n\n");
+	}
+}
+
+ssize_t rtw_rust_debug_proc_set_war_offload_mdns_service_info(
+	_adapter *adapter, const char __user *buffer, size_t count)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	struct pwrctrl_priv *pwrpriv = dvobj_to_pwrctl(dvobj);
+	struct war_mdns_service_info *psinfo =
+		pwrpriv->wowlan_war_offload_mdns_service;
+	u8 port[2];
+	char *tmp = NULL;
+	char srv[MAX_MDNS_SERVICE_NAME_LEN + 1], trans[MAX_MDNS_TRANS_LEN + 1],
+		domain[MAX_MDNS_DOMAIN_LEN + 1];
+	char target[MAX_MDNS_TARGET_LEN + 1];
+	u32 ttl, port0 = 0, port1 = 0;
+	u16 max_input_size = (MAX_MDNS_SERVICE_NAME_LEN + MAX_MDNS_TRANS_LEN +
+			      MAX_MDNS_DOMAIN_LEN + MAX_MDNS_TARGET_LEN + 2);
+	int txt_idx;
+
+	if (NULL == buffer) {
+		RTW_INFO(FUNC_ADPT_FMT ": input buffer is NULL!\n",
+			 FUNC_ADPT_ARG(adapter));
+		return -EFAULT;
+	}
+
+	if (count < 1) {
+		RTW_INFO(FUNC_ADPT_FMT ": input length is 0!\n",
+			 FUNC_ADPT_ARG(adapter));
+		return -EFAULT;
+	}
+
+	if (count > (sizeof(char) * (max_input_size))) {
+		RTW_INFO(FUNC_ADPT_FMT ":  input length is too large\n",
+			 FUNC_ADPT_ARG(adapter));
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	tmp = rtw_zvmalloc(sizeof(char) * (max_input_size));
+	if (NULL == tmp) {
+		RTW_INFO(FUNC_ADPT_FMT ": tmp buffer allocate fail!!\n",
+			 FUNC_ADPT_ARG(adapter));
+		count = -EFAULT;
+		goto exit;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%15s %4s %5s %63s %x %x %u %d", srv,
+				 trans, domain, target, &port0, &port1, &ttl,
+				 &txt_idx);
+		int idx = pwrpriv->wowlan_war_offload_mdns_service_info_num;
+
+		if (strncmp(srv, "clean", 5) == 0) {
+			_rtw_memset(pwrpriv->wowlan_war_offload_mdns_service, 0,
+				    sizeof(pwrpriv->wowlan_war_offload_mdns_service));
+			pwrpriv->wowlan_war_offload_mdns_service_info_num = 0;
+		} else {
+			port[0] = (u8)port0;
+			port[1] = (u8)port1;
+
+			if (txt_idx >= MAX_MDNS_TXT_NUM) {
+				RTW_INFO(FUNC_ADPT_FMT
+					 ": input txt idx, %d, is out of range (0~%d)!\n",
+					 FUNC_ADPT_ARG(adapter), txt_idx,
+					 MAX_MDNS_TXT_NUM - 1);
+				count = -EFAULT;
+				goto exit;
+			}
+
+			if (pwrpriv->wowlan_war_offload_mdns_txt_rsp[txt_idx]
+				    .txt_len == 0) {
+				RTW_INFO(FUNC_ADPT_FMT
+					 ": wowlan_war_offload_mdns_txt_rsp[%d] is null! Please initiate it first.\n",
+					 FUNC_ADPT_ARG(adapter), txt_idx);
+				count = -EFAULT;
+				goto exit;
+			}
+
+			psinfo[idx].service_len = strlen(srv);
+			_rtw_memcpy(psinfo[idx].service, srv,
+				    psinfo[idx].service_len);
+			psinfo[idx].transport_len = strlen(trans);
+			_rtw_memcpy(psinfo[idx].transport, trans,
+				    psinfo[idx].transport_len);
+			psinfo[idx].domain_len = strlen(domain);
+			_rtw_memcpy(psinfo[idx].domain, domain,
+				    psinfo[idx].domain_len);
+			psinfo[idx].target_len = strlen(target);
+			_rtw_memcpy(psinfo[idx].target, target,
+				    psinfo[idx].target_len);
+			_rtw_memcpy(psinfo[idx].port, port, 2);
+			psinfo[idx].ttl = ttl;
+			psinfo[idx].txt_rsp_idx = txt_idx;
+			pwrpriv->wowlan_war_offload_mdns_service_info_num++;
+		}
+		(void)num;
+	}
+
+exit:
+	if (tmp)
+		rtw_vmfree(tmp, sizeof(char) * (max_input_size));
+	return count;
+}
 #endif /* CONFIG_OFFLOAD_MDNS_V4 || CONFIG_OFFLOAD_MDNS_V6 */
 #endif /* CONFIG_WAR_OFFLOAD */
 
