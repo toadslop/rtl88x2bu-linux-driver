@@ -1,2 +1,6 @@
-# L1 allowlist for W3-160 PR1: Rust owns proc_get_rate_ctl in rtw_debug_proc_rate.o.
+# L1 allowlist for W3-160: Rust owns rate_ctl + tx_power + bw_ctl in rtw_debug_proc_rate.o.
 drop rtw_rust_debug_proc_emit_rate_ctl
+drop rtw_rust_debug_proc_emit_tx_power_offset
+drop rtw_rust_debug_proc_set_tx_power_offset
+drop rtw_rust_debug_proc_emit_bw_ctl
+drop rtw_rust_debug_proc_set_bw_ctl
