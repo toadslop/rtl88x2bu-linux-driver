@@ -2212,6 +2212,7 @@ ssize_t proc_set_rson_data(struct file *file, const char __user *buffer, size_t 
 #endif /* CONFIG_RTW_REPEATER_SON */
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-155 in rust/rtw_debug_proc_rson.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_survey_info(struct seq_file *m, void *v)
 {
 	_irqL irqL;
@@ -2407,6 +2408,7 @@ cancel_ps_deny:
 exit:
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-156 in rust/rtw_debug_proc_survey.rs */
 #ifdef ROKU_PRIVATE
 int proc_get_infra_ap(struct seq_file *m, void *v)
 {

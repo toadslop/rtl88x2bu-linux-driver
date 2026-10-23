@@ -1471,6 +1471,169 @@ ssize_t rtw_rust_debug_proc_set_rson_data(_adapter *adapter,
 	return count;
 }
 #endif /* CONFIG_RTW_REPEATER_SON */
+
+void rtw_rust_debug_proc_emit_survey_info(void *sel, _adapter *padapter)
+{
+	_irqL irqL;
+	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
+	_queue *queue = &(pmlmepriv->scanned_queue);
+	struct wlan_network *pnetwork = NULL;
+	_list *plist, *phead;
+	s32 notify_signal;
+	s16 notify_noise = 0;
+	u16 index = 0, ie_cap = 0;
+	unsigned char *ie_wpa = NULL, *ie_wpa2 = NULL, *ie_wps = NULL;
+	unsigned char *ie_p2p = NULL;
+	char flag_str[64];
+	int ielen = 0;
+	u32 wpsielen = 0;
+#ifdef CONFIG_RTW_MESH
+	const char *ssid_title_str = "ssid/mesh_id";
+#else
+	const char *ssid_title_str = "ssid";
+#endif
+	u8 rsni = 255;
+
+	_enter_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+	phead = get_list_head(queue);
+	if (!phead)
+		goto survey_exit;
+	plist = get_next(phead);
+	if (!plist)
+		goto survey_exit;
+
+#ifdef CONFIG_RTW_REPEATER_SON
+	rtw_rson_show_survey_info(sel, plist, phead);
+#else
+
+	RTW_PRINT_SEL(sel, "%5s  %-17s  %3s  %-3s  %-4s  %-4s  %4s  %5s  %32s  %32s \n",
+		      "index", "bssid", "ch", "RSSI", "SdBm", "Noise", "rsni", "age",
+		      "flag", ssid_title_str);
+	while (1) {
+		if (rtw_end_of_queue_search(phead, plist) == _TRUE)
+			break;
+
+		pnetwork = LIST_CONTAINOR(plist, struct wlan_network, list);
+		if (!pnetwork)
+			break;
+
+		if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE &&
+		    is_same_network(&pmlmepriv->cur_network.network,
+				    &pnetwork->network, 0)) {
+			notify_signal = translate_percentage_to_dbm(
+				padapter->recvpriv.signal_strength);
+		} else {
+			notify_signal = translate_percentage_to_dbm(
+				pnetwork->network.PhyInfo.SignalStrength);
+		}
+
+#ifdef CONFIG_BACKGROUND_NOISE_MONITOR
+		if (IS_NM_ENABLE(padapter))
+			notify_noise = rtw_noise_query_by_chan_num(
+				padapter, pnetwork->network.Configuration.DSConfig);
+#endif
+#ifdef CONFIG_RTW_ACS
+		rsni = rtw_acs_get_rsni(padapter, (int)(pnetwork->network.Rssi),
+					pnetwork->network.Configuration.DSConfig);
+#endif
+
+		ie_wpa = rtw_get_wpa_ie(&pnetwork->network.IEs[12], &ielen,
+					pnetwork->network.IELength - 12);
+		ie_wpa2 = rtw_get_wpa2_ie(&pnetwork->network.IEs[12], &ielen,
+					  pnetwork->network.IELength - 12);
+		ie_cap = rtw_get_capability(&pnetwork->network);
+		ie_wps = rtw_get_wps_ie(&pnetwork->network.IEs[12],
+					pnetwork->network.IELength - 12, NULL,
+					&wpsielen);
+#ifdef CONFIG_P2P
+		ie_p2p = rtw_get_p2p_ie(&pnetwork->network.IEs[12],
+					pnetwork->network.IELength - 12, NULL,
+					&ielen);
+#endif
+		sprintf(flag_str, "%s%s%s%s%s%s%s",
+			(ie_wpa) ? "[WPA]" : "",
+			(ie_wpa2) ? "[WPA2]" : "",
+			(!ie_wpa && !ie_wpa && ie_cap & BIT(4)) ? "[WEP]" : "",
+			(ie_wps) ? "[WPS]" : "",
+			(pnetwork->network.InfrastructureMode == Ndis802_11IBSS) ?
+				"[IBSS]" :
+			(pnetwork->network.InfrastructureMode == Ndis802_11_mesh) ?
+				"[MESH]" : "",
+			(ie_cap & BIT(0)) ? "[ESS]" : "",
+			(ie_p2p) ? "[P2P]" : "");
+		RTW_PRINT_SEL(sel, "%5d  " MAC_FMT "  %3d  %4d  %4d  %4d  %4d   %5d  %32s  %32s\n",
+			      ++index,
+			      MAC_ARG(pnetwork->network.MacAddress),
+			      pnetwork->network.Configuration.DSConfig,
+			      (int)pnetwork->network.Rssi,
+			      notify_signal,
+			      notify_noise,
+			      rsni,
+			      rtw_get_passing_time_ms(pnetwork->last_scanned),
+			      flag_str,
+			      pnetwork->network.InfrastructureMode == Ndis802_11_mesh ?
+				      pnetwork->network.mesh_id.Ssid :
+				      pnetwork->network.Ssid.Ssid);
+		plist = get_next(plist);
+	}
+#endif
+survey_exit:
+	_exit_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+}
+
+ssize_t rtw_rust_debug_proc_set_survey_info(_adapter *padapter,
+					    const char __user *buffer,
+					    size_t count)
+{
+	u8 _status = _FALSE;
+	u8 ssc_chk;
+	char tmp[32] = {0};
+	char cmd[8] = {0};
+	bool acs = 0;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%s", cmd);
+
+		if (num < 1)
+			return count;
+
+		if (strcmp("acs", cmd) == 0)
+			acs = 1;
+	}
+
+	ssc_chk = rtw_sitesurvey_condition_check(padapter, _FALSE);
+	if (ssc_chk != SS_ALLOW)
+		goto survey_set_exit;
+
+	rtw_ps_deny(padapter, PS_DENY_SCAN);
+	if (_FAIL == rtw_pwr_wakeup(padapter))
+		goto survey_cancel_ps_deny;
+	if (!rtw_is_adapter_up(padapter)) {
+		RTW_INFO("scan abort!! adapter cannot use\n");
+		goto survey_cancel_ps_deny;
+	}
+
+	if (acs) {
+#ifdef CONFIG_RTW_ACS
+		_status = rtw_set_acs_sitesurvey(padapter);
+#endif
+	} else
+		_status = rtw_set_802_11_bssid_list_scan(padapter, NULL);
+
+survey_cancel_ps_deny:
+	rtw_ps_deny_cancel(padapter, PS_DENY_SCAN);
+survey_set_exit:
+	return count;
+}
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */
