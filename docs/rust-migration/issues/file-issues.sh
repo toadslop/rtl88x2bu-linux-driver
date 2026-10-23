@@ -316,6 +316,12 @@ files=(
   wave4-54-hal-com-sec-cam-clr.md
   wave4-55-hal-com-sec-cam-ent.md
   wave4-56-hal-com-c2h-debug-leaf.md
+  wave3-157-debug-proc-war-offload-mdns-p2.md
+  wave3-158-debug-proc-ap-info.md
+  wave3-159-debug-proc-trx-info.md
+  wave3-160-debug-proc-rate-leaf.md
+  wave4-57-hal-com-c2h-mac-hidden.md
+  wave4-58-hal-com-c2h-per-rate-lps.md
 )
 
 # draft_id -> github issue number
