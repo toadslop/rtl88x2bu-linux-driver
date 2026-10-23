@@ -121,4 +121,11 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-55 | `wave4-55-hal-com-sec-cam-ent.md` | security CAM entry read/write |
 | W4-56 | `wave4-56-hal-com-c2h-debug-leaf.md` | C2H defeature + customer string rpt |
 
-Further slices: deeper PHYDM / bulk USB RX path — file as `wave4-*.md` when tranche 12 is needed.
+## Children (tranche 12 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-57 | `wave4-57-hal-com-c2h-mac-hidden.md` | C2H mac hidden report |
+| W4-58 | `wave4-58-hal-com-c2h-per-rate-lps.md` | C2H per-rate + LPS status |
+
+Further slices: deeper PHYDM / bulk USB RX path — file as `wave4-*.md` when tranche 13 is needed.

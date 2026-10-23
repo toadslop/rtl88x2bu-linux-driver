@@ -235,6 +235,15 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-155 | `wave3-155-debug-proc-rson-data.md` | proc rson_data get/set |
 | W3-156 | `wave3-156-debug-proc-survey-info.md` | proc survey_info get/set |
 
+## Children (tranche 15 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-157 | `wave3-157-debug-proc-war-offload-mdns-p2.md` | proc war offload MDNS service/txt |
+| W3-158 | `wave3-158-debug-proc-ap-info.md` | proc ap_info + infra_ap |
+| W3-159 | `wave3-159-debug-proc-trx-info.md` | proc trx_info get/reset |
+| W3-160 | `wave3-160-debug-proc-rate-leaf.md` | proc rate_ctl leaf getters + BMC/txpwr/bw |
+
 Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:
 
 - `rtw_beamforming.c` sounding state machine (HAL-coupled NDPA paths)

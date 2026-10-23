@@ -282,6 +282,12 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-54 | #1430 | [W4-54] Translate hal_com_rest.c — security CAM clear + GK probe |
 | W4-55 | #1431 | [W4-55] Translate hal_com_rest.c — security CAM entry read/write |
 | W4-56 | #1432 | [W4-56] Translate hal_com_rest.c — C2H defeature + customer string rpt |
+| W3-157 | #1450 | [W3-157] Translate rtw_debug_rest.c — proc war offload MDNS service/txt |
+| W3-158 | #1451 | [W3-158] Translate rtw_debug_rest.c — proc ap_info + infra_ap |
+| W3-159 | #1452 | [W3-159] Translate rtw_debug_rest.c — proc trx_info get/reset |
+| W3-160 | #1453 | [W3-160] Translate rtw_debug_rest.c — proc rate_ctl leaf getters |
+| W4-57 | #1454 | [W4-57] Translate hal_com_rest.c — C2H mac hidden report |
+| W4-58 | #1455 | [W4-58] Translate hal_com_rest.c — C2H per-rate + LPS status |
 
 ## Superseded issues
 
