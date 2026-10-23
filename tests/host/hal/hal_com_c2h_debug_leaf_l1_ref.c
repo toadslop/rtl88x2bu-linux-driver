@@ -35,3 +35,9 @@ int c2h_customer_str_rpt_2_hdl(struct _adapter *adapter, unsigned char *data,
 	(void)len;
 	return 0;
 }
+
+int hal_read_mac_hidden_rpt(struct _adapter *adapter)
+{
+	(void)adapter;
+	return 0;
+}

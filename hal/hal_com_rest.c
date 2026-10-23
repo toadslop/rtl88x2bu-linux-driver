@@ -532,74 +532,7 @@ exit:
 	return ret;
 }
 
-int hal_read_mac_hidden_rpt(_adapter *adapter)
-{
-	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(adapter);
-	int ret = _FAIL;
-	int ret_fwdl;
-	u8 mac_hidden_rpt[MAC_HIDDEN_RPT_LEN + MAC_HIDDEN_RPT_2_LEN] = {0};
-	systime start = rtw_get_current_time();
-	u32 cnt = 0;
-	u32 timeout_ms = 800;
-	u32 min_cnt = 10;
-	u8 id = C2H_DEFEATURE_RSVD;
-	int i;
-
-#if defined(CONFIG_USB_HCI) || defined(CONFIG_PCI_HCI)
-	u8 hci_type = rtw_get_intf_type(adapter);
-
-	if ((hci_type == RTW_USB || hci_type == RTW_PCIE)
-		&& !rtw_is_hw_init_completed(adapter))
-		rtw_hal_power_on(adapter);
-#endif
-
-	/* inform FW mac hidden rpt from reg is needed */
-	rtw_write8(adapter, REG_C2HEVT_MSG_NORMAL, C2H_DEFEATURE_RSVD);
-
-	/* download FW */
-	pHalData->not_xmitframe_fw_dl = 1;
-	ret_fwdl = rtw_hal_fw_dl(adapter, _FALSE);
-	pHalData->not_xmitframe_fw_dl = 0;
-	if (ret_fwdl != _SUCCESS)
-		goto mac_hidden_rpt_hdl;
-
-	/* polling for data ready */
-	start = rtw_get_current_time();
-	do {
-		cnt++;
-		id = rtw_read8(adapter, REG_C2HEVT_MSG_NORMAL);
-		if (id == C2H_MAC_HIDDEN_RPT || RTW_CANNOT_IO(adapter))
-			break;
-		rtw_msleep_os(10);
-	} while (rtw_get_passing_time_ms(start) < timeout_ms || cnt < min_cnt);
-
-	if (id == C2H_MAC_HIDDEN_RPT) {
-		/* read data */
-		for (i = 0; i < MAC_HIDDEN_RPT_LEN + MAC_HIDDEN_RPT_2_LEN; i++)
-			mac_hidden_rpt[i] = rtw_read8(adapter, REG_C2HEVT_MSG_NORMAL + 2 + i);
-	}
-
-	/* inform FW mac hidden rpt has read */
-	rtw_write8(adapter, REG_C2HEVT_MSG_NORMAL, C2H_DBG);
-
-mac_hidden_rpt_hdl:
-	c2h_mac_hidden_rpt_hdl(adapter, mac_hidden_rpt, MAC_HIDDEN_RPT_LEN);
-	c2h_mac_hidden_rpt_2_hdl(adapter, mac_hidden_rpt + MAC_HIDDEN_RPT_LEN, MAC_HIDDEN_RPT_2_LEN);
-
-	if (ret_fwdl == _SUCCESS && id == C2H_MAC_HIDDEN_RPT)
-		ret = _SUCCESS;
-
-#if defined(CONFIG_USB_HCI) || defined(CONFIG_PCI_HCI)
-	if ((hci_type == RTW_USB || hci_type == RTW_PCIE)
-		&& !rtw_is_hw_init_completed(adapter))
-		rtw_hal_power_off(adapter);
-#endif
-
-	RTW_INFO("%s %s! (%u, %dms), fwdl:%d, id:0x%02x\n", __func__
-		, (ret == _SUCCESS) ? "OK" : "Fail", cnt, rtw_get_passing_time_ms(start), ret_fwdl, id);
-
-	return ret;
-}
+/* hal_read_mac_hidden_rpt — rust/hal_com_c2h_mac_hidden.rs (W4-57 PR1) */
 #endif /* CONFIG_RTW_MAC_HIDDEN_RPT */
 
 /* c2h_defeature_dbg_hdl — rust/hal_com.rs (W4-56 PR1) */
@@ -15638,4 +15571,44 @@ void rtw_rust_hal_com_log_sec_cam(_adapter *adapter, u8 is_write, u8 addr, u32 d
 			timeout, cnt, rtw_get_time_interval_ms(start, end));
 	}
 }
+
+#ifdef CONFIG_RTW_MAC_HIDDEN_RPT
+void rtw_rust_hal_com_set_not_xmitframe_fw_dl(_adapter *adapter, u8 val)
+{
+	GET_HAL_DATA(adapter)->not_xmitframe_fw_dl = val;
+}
+int rtw_rust_hal_com_rtw_hal_fw_dl(_adapter *adapter, u8 notify)
+{
+	return rtw_hal_fw_dl(adapter, notify ? _TRUE : _FALSE);
+}
+u8 rtw_rust_hal_com_get_intf_type(_adapter *adapter)
+{
+	return rtw_get_intf_type(adapter);
+}
+u8 rtw_rust_hal_com_is_hw_init_completed(_adapter *adapter)
+{
+	return rtw_is_hw_init_completed(adapter) ? 1 : 0;
+}
+void rtw_rust_hal_com_hal_power_on(_adapter *adapter)
+{
+	rtw_hal_power_on(adapter);
+}
+void rtw_rust_hal_com_hal_power_off(_adapter *adapter)
+{
+	rtw_hal_power_off(adapter);
+}
+u8 rtw_rust_hal_com_cannot_io(_adapter *adapter)
+{
+	return RTW_CANNOT_IO(adapter) ? 1 : 0;
+}
+void rtw_rust_hal_com_msleep_os(int ms)
+{
+	rtw_msleep_os(ms);
+}
+void rtw_rust_hal_com_log_mac_hidden_read(u8 ok, u32 cnt, int ms, int fwdl, u8 id)
+{
+	RTW_INFO("%s %s! (%u, %dms), fwdl:%d, id:0x%02x\n", "hal_read_mac_hidden_rpt",
+		ok ? "OK" : "Fail", cnt, ms, fwdl, id);
+}
+#endif /* CONFIG_RTW_MAC_HIDDEN_RPT */
 #endif

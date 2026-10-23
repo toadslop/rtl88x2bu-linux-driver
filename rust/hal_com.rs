@@ -2123,6 +2123,25 @@ mod c2h_customer_str {
     not(host_hal_com_tx_aclt_confs_test),
     not(host_hal_com_hal_spec_test),
 ))]
+mod c2h_mac_hidden {
+    include!("hal_com_c2h_mac_hidden.rs");
+}
+
+#[cfg(all(
+    not(host_hal_com_hw_rate_test),
+    not(host_hal_com_rsvd_page_test),
+    not(host_hal_com_chip_info_test),
+    not(host_hal_com_mrate_test),
+    not(host_hal_com_fw_info_test),
+    not(host_hal_com_brate_test),
+    not(host_hal_com_legal_channel_test),
+    not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
+    not(host_hal_com_tx_aclt_force_test),
+    not(host_hal_com_tx_aclt_confs_test),
+    not(host_hal_com_hal_spec_test),
+))]
 mod reqtxrpt_mi_mac {
     include!("hal_com_reqtxrpt_mi_mac.rs");
 }
