@@ -1966,6 +1966,98 @@ survey_set_exit:
 	return count;
 }
 
+static int rtw_rust_debug_wireless_mode_to_str(u32 mode, char *str)
+{
+	str[0] = '\0';
+	if (mode & WIRELESS_11A)
+		sprintf(str + strlen(str), "%s", "A/");
+	if (mode & WIRELESS_11B)
+		sprintf(str + strlen(str), "%s", "B/");
+	if (mode & WIRELESS_11G)
+		sprintf(str + strlen(str), "%s", "G/");
+	if (mode & (WIRELESS_11_24N | WIRELESS_11_5N))
+		sprintf(str + strlen(str), "%s", "N/");
+	if (mode & WIRELESS_11AC)
+		sprintf(str + strlen(str), "%s", "AC/");
+
+	if (strlen(str) > 1)
+		str[strlen(str) - 1] = '\0';
+
+	return strlen(str);
+}
+
+void rtw_rust_debug_proc_emit_ap_info(void *sel, _adapter *padapter)
+{
+	struct sta_info *psta;
+	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
+	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+	struct wlan_network *cur_network = &(pmlmepriv->cur_network);
+	struct mlme_ext_info *pmlmeinfo = &(pmlmeext->mlmext_info);
+	struct sta_priv *pstapriv = &padapter->stapriv;
+	char wl_mode[16];
+	char vendor[VENDOR_NAME_LEN] = {0};
+
+	get_assoc_AP_Vendor(vendor, pmlmeinfo->assoc_AP_vendor);
+	RTW_PRINT_SEL(sel, "AP Vendor %s\n", vendor);
+
+	psta = rtw_get_stainfo(pstapriv, cur_network->network.MacAddress);
+	if (psta) {
+		rtw_rust_debug_wireless_mode_to_str(psta->wireless_mode, wl_mode);
+		RTW_PRINT_SEL(sel, "SSID=%s\n", cur_network->network.Ssid.Ssid);
+		RTW_PRINT_SEL(sel, "sta's macaddr:" MAC_FMT "\n",
+			      MAC_ARG(psta->cmn.mac_addr));
+		RTW_PRINT_SEL(sel,
+			      "cur_channel=%d, cur_bwmode=%d(%s), cur_ch_offset=%d\n",
+			      pmlmeext->cur_channel, pmlmeext->cur_bwmode,
+			      ch_width_str(pmlmeext->cur_bwmode),
+			      pmlmeext->cur_ch_offset);
+		RTW_PRINT_SEL(sel,
+			      "wireless_mode=0x%x(%s), rtsen=%d, cts2slef=%d\n",
+			      psta->wireless_mode, wl_mode, psta->rtsen,
+			      psta->cts2self);
+		RTW_PRINT_SEL(sel, "state=0x%x, aid=%d, macid=%d, raid=%d\n",
+			      psta->state, psta->cmn.aid, psta->cmn.mac_id,
+			      psta->cmn.ra_info.rate_id);
+#ifdef CONFIG_80211N_HT
+		RTW_PRINT_SEL(sel, "qos_en=%d, ht_en=%d, init_rate=%d\n",
+			      psta->qos_option, psta->htpriv.ht_option,
+			      psta->init_rate);
+		RTW_PRINT_SEL(sel,
+			      "bwmode=%d, ch_offset=%d, sgi_20m=%d,sgi_40m=%d\n",
+			      psta->cmn.bw_mode, psta->htpriv.ch_offset,
+			      psta->htpriv.sgi_20m, psta->htpriv.sgi_40m);
+		RTW_PRINT_SEL(sel, "ampdu_enable = %d\n",
+			      psta->htpriv.ampdu_enable);
+		RTW_PRINT_SEL(sel,
+			      "agg_enable_bitmap=%x, candidate_tid_bitmap=%x\n",
+			      psta->htpriv.agg_enable_bitmap,
+			      psta->htpriv.candidate_tid_bitmap);
+		RTW_PRINT_SEL(sel,
+			      "ldpc_cap=0x%x, stbc_cap=0x%x, beamform_cap=0x%x\n",
+			      psta->htpriv.ldpc_cap, psta->htpriv.stbc_cap,
+			      psta->htpriv.beamform_cap);
+#endif /* CONFIG_80211N_HT */
+#ifdef CONFIG_80211AC_VHT
+		RTW_PRINT_SEL(sel, "vht_en=%d, vht_sgi_80m=%d\n",
+			      psta->vhtpriv.vht_option, psta->vhtpriv.sgi_80m);
+		RTW_PRINT_SEL(sel,
+			      "vht_ldpc_cap=0x%x, vht_stbc_cap=0x%x, vht_beamform_cap=0x%x\n",
+			      psta->vhtpriv.ldpc_cap, psta->vhtpriv.stbc_cap,
+			      psta->vhtpriv.beamform_cap);
+		RTW_PRINT_SEL(sel,
+			      "vht_mcs_map=0x%x, vht_highest_rate=0x%x, vht_ampdu_len=%d\n",
+			      *(u16 *)psta->vhtpriv.vht_mcs_map,
+			      psta->vhtpriv.vht_highest_rate,
+			      psta->vhtpriv.ampdu_len);
+#endif
+		sta_rx_reorder_ctl_dump(sel, psta);
+	} else
+		RTW_PRINT_SEL(sel,
+			      "can't get sta's macaddr, cur_network's macaddr:"
+			      MAC_FMT "\n",
+			      MAC_ARG(cur_network->network.MacAddress));
+}
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */

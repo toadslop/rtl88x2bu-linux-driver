@@ -1,0 +1,2 @@
+# L1 allowlist for W3-158: Rust owns proc ap_info handlers in rtw_debug_proc_ap.o.
+drop rtw_rust_debug_proc_emit_ap_info

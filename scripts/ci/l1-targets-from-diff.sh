@@ -220,6 +220,7 @@ for path in "${changed[@]}"; do
 	| rust/rtw_debug_reg_dump.rs \
 	| rust/rtw_debug_adapters_status.rs \
 	| rust/rtw_debug_proc.rs \
+	| rust/rtw_debug_proc_ap.rs \
 	| core/rtw_debug_adapters_status_shim.c \
 	| core/rtw_debug.c \
 	| core/rtw_debug_rest.c \
@@ -231,6 +232,7 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-debug-adapters-status
 		add_target rust-check-symbols-rtw-debug-proc
 		add_target rust-check-symbols-rtw-debug-proc-rson
+		add_target rust-check-symbols-rtw-debug-proc-ap
 		;;
 	rust/hal_com.rs \
 	| hal/hal_com_rest.c \
