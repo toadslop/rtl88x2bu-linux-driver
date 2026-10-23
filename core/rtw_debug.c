@@ -2058,6 +2058,90 @@ void rtw_rust_debug_proc_emit_ap_info(void *sel, _adapter *padapter)
 			      MAC_ARG(cur_network->network.MacAddress));
 }
 
+#ifdef ROKU_PRIVATE
+void rtw_rust_debug_proc_emit_infra_ap(void *sel, _adapter *padapter)
+{
+	struct sta_info *psta;
+	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
+	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+	struct ht_priv_infra_ap *phtpriv = &pmlmepriv->htpriv_infra_ap;
+#ifdef CONFIG_80211AC_VHT
+	struct vht_priv_infra_ap *pvhtpriv = &pmlmepriv->vhtpriv_infra_ap;
+#endif
+	struct mlme_ext_info *pmlmeinfo = &(pmlmeext->mlmext_info);
+	struct wlan_network *cur_network = &(pmlmepriv->cur_network);
+	struct sta_priv *pstapriv = &padapter->stapriv;
+
+	if (check_fwstate(pmlmepriv, WIFI_STATION_STATE)) {
+		psta = rtw_get_stainfo(pstapriv, cur_network->network.MacAddress);
+		if (psta) {
+			unsigned int i;
+
+			RTW_PRINT_SEL(sel, "SSID=%s\n",
+				      pmlmeinfo->network.Ssid.Ssid);
+			RTW_PRINT_SEL(sel, "sta's macaddr:" MAC_FMT "\n",
+				      MAC_ARG(psta->cmn.mac_addr));
+			RTW_PRINT_SEL(sel, "Supported rate=");
+			for (i = 0; i < NDIS_802_11_LENGTH_RATES_EX; i++) {
+				if (pmlmeinfo->SupportedRates_infra_ap[i] == 0)
+					break;
+				RTW_PRINT_SEL(sel, " 0x%x",
+					      pmlmeinfo->SupportedRates_infra_ap[i]);
+			}
+			RTW_PRINT_SEL(sel, "\n");
+#ifdef CONFIG_80211N_HT
+			if (pmlmeinfo->ht_vht_received & BIT(0)) {
+				RTW_PRINT_SEL(sel, "Supported MCS set=");
+				for (i = 0; i < 16; i++)
+					RTW_PRINT_SEL(sel, " 0x%02x",
+						      phtpriv->MCS_set_infra_ap[i]);
+				RTW_PRINT_SEL(sel, "\n");
+				RTW_PRINT_SEL(sel,
+					      "highest supported data rate=0x%x\n",
+					      phtpriv->rx_highest_data_rate_infra_ap);
+				RTW_PRINT_SEL(sel,
+					      "HT_supported_channel_width_set=0x%x\n",
+					      phtpriv->channel_width_infra_ap);
+				RTW_PRINT_SEL(sel, "sgi_20m=%d, sgi_40m=%d\n",
+					      phtpriv->sgi_20m_infra_ap,
+					      phtpriv->sgi_40m_infra_ap);
+				RTW_PRINT_SEL(sel,
+					      "ldpc_cap=0x%x, stbc_cap=0x%x\n",
+					      phtpriv->ldpc_cap_infra_ap,
+					      phtpriv->stbc_cap_infra_ap);
+				RTW_PRINT_SEL(sel, "HT_number_of_stream=%d\n",
+					      phtpriv->Rx_ss_infra_ap);
+			}
+#endif
+
+#ifdef CONFIG_80211AC_VHT
+			if (pmlmeinfo->ht_vht_received & BIT(1)) {
+				RTW_PRINT_SEL(sel,
+					      "VHT_supported_channel_width_set=0x%x\n",
+					      pvhtpriv->channel_width_infra_ap);
+				RTW_PRINT_SEL(sel,
+					      "vht_ldpc_cap=0x%x, vht_stbc_cap=0x%x, vht_beamform_cap=0x%x\n",
+					      pvhtpriv->ldpc_cap_infra_ap,
+					      pvhtpriv->stbc_cap_infra_ap,
+					      pvhtpriv->beamform_cap_infra_ap);
+				RTW_PRINT_SEL(sel,
+					      "Rx_vht_mcs_map=0x%x, Tx_vht_mcs_map=0x%x\n",
+					      *(u16 *)pvhtpriv->vht_mcs_map_infra_ap,
+					      *(u16 *)pvhtpriv->vht_mcs_map_tx_infra_ap);
+				RTW_PRINT_SEL(sel, "VHT_number_of_stream=%d\n",
+					      pvhtpriv->number_of_streams_infra_ap);
+			}
+#endif
+		} else
+			RTW_PRINT_SEL(sel,
+				      "can't get sta's macaddr, cur_network's macaddr:"
+				      MAC_FMT "\n",
+				      MAC_ARG(cur_network->network.MacAddress));
+	} else
+		RTW_PRINT_SEL(sel, "this only applies to STA mode\n");
+}
+#endif /* ROKU_PRIVATE */
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */

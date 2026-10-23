@@ -2412,6 +2412,7 @@ exit:
 	return count;
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-156 in rust/rtw_debug_proc_survey.rs */
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 #ifdef ROKU_PRIVATE
 int proc_get_infra_ap(struct seq_file *m, void *v)
 {
@@ -2474,6 +2475,7 @@ int proc_get_infra_ap(struct seq_file *m, void *v)
 }
 
 #endif /* ROKU_PRIVATE */
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-158 PR2 infra_ap in rust/rtw_debug_proc_ap.rs */
 
 #if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 static int wireless_mode_to_str(u32 mode, char *str)

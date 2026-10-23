@@ -17,6 +17,7 @@ use core::ffi::{c_int, c_void};
 extern "C" {
     fn rtw_rust_debug_proc_adapter(m: *mut c_void) -> *mut c_void;
     fn rtw_rust_debug_proc_emit_ap_info(sel: *mut c_void, adapter: *mut c_void);
+    fn rtw_rust_debug_proc_emit_infra_ap(sel: *mut c_void, adapter: *mut c_void);
 }
 
 fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
@@ -32,6 +33,16 @@ pub extern "C" fn proc_get_ap_info(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
     if !adapter.is_null() {
         unsafe { rtw_rust_debug_proc_emit_ap_info(m, adapter) };
+    }
+    0
+}
+
+#[cfg(all(roku_private, any(config_rtw_debug, config_proc_debug)))]
+#[no_mangle]
+pub extern "C" fn proc_get_infra_ap(m: *mut c_void, _v: *mut c_void) -> c_int {
+    let adapter = adapter_from_seq(m);
+    if !adapter.is_null() {
+        unsafe { rtw_rust_debug_proc_emit_infra_ap(m, adapter) };
     }
     0
 }
