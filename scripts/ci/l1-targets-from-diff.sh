@@ -230,6 +230,7 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-debug-reg-dump
 		add_target rust-check-symbols-rtw-debug-adapters-status
 		add_target rust-check-symbols-rtw-debug-proc
+		add_target rust-check-symbols-rtw-debug-proc-rson
 		;;
 	rust/hal_com.rs \
 	| hal/hal_com_rest.c \

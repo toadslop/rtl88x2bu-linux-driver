@@ -1347,6 +1347,7 @@ endif
 
 ifeq ($(CONFIG_RTW_REPEATER_SON), y)
 ccflags-y += -DCONFIG_RTW_REPEATER_SON
+rustflags-y += --cfg config_rtw_repeater_son
 endif
 
 ifeq ($(CONFIG_RTW_IPCAM_APPLICATION), y)
@@ -4660,6 +4661,20 @@ rust-objects-rtw-debug-proc-c:
 rust-check-symbols-rtw-debug-proc: rust-objects-rtw-debug-proc-c rust-objects-rtw-debug-proc
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_mlme_leaf_c_ref.o NEW=rust/rtw_debug_proc.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc.allow ALLOW_VACUOUS=1
+
+# W3-155: proc rson_data get/set (CONFIG_RTW_REPEATER_SON=y).
+rust-objects-rtw-debug-proc-rson:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-rson"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) CONFIG_RTW_REPEATER_SON=y rust/rtw_debug_proc.o
+rust-objects-rtw-debug-proc-rson-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_rson_c_ref.o \
+		tests/host/debug/host_rtw_debug_proc_rson_shim.c
+rust-check-symbols-rtw-debug-proc-rson: rust-objects-rtw-debug-proc-rson-c rust-objects-rtw-debug-proc-rson
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_rson_c_ref.o NEW=rust/rtw_debug_proc.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_rson.allow ALLOW_VACUOUS=1
 
 # W3-94 follow-up PR4: host C oracle (ps deny shim) vs rust/rtw_pwrctrl.o.
 rust-objects-rtw-pwrctrl:

@@ -254,3 +254,4 @@ pub extern "C" fn proc_set_roam_tgt_addr(
 }
 
 include!("rtw_debug_proc_war_offload.rs");
+include!("rtw_debug_proc_rson.rs");
