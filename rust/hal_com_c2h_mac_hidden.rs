@@ -154,7 +154,11 @@ pub extern "C" fn hal_read_mac_hidden_rpt(adapter: *mut c_void) -> S32 {
         }
     }
 
-    let _ = c2h_mac_hidden_rpt_hdl(adapter, mac_hidden_rpt.as_mut_ptr(), MAC_HIDDEN_RPT_LEN as U8);
+    let _ = c2h_mac_hidden_rpt_hdl(
+        adapter,
+        mac_hidden_rpt.as_mut_ptr(),
+        MAC_HIDDEN_RPT_LEN as U8,
+    );
     let _ = c2h_mac_hidden_rpt_2_hdl(
         adapter,
         unsafe { mac_hidden_rpt.as_mut_ptr().add(MAC_HIDDEN_RPT_LEN) },
