@@ -1,0 +1,42 @@
+{
+  "vectors": [
+    {
+      "name": "enter_rf_off_transition",
+      "action": "enter",
+      "change_rfpwrstate": 2,
+      "ips_mode_req": 1,
+      "expect_enter_cnts": 1,
+      "expect_rf_pwrstate": 2,
+      "expect_bpower_saving": 1,
+      "expect_ips_pwr_down": 1
+    },
+    {
+      "name": "enter_skip_when_not_rf_off",
+      "action": "enter",
+      "change_rfpwrstate": 0,
+      "ips_mode_req": 1,
+      "expect_enter_cnts": 1,
+      "expect_rf_pwrstate": 0,
+      "expect_bpower_saving": 0,
+      "expect_ips_pwr_down": 0
+    },
+    {
+      "name": "leave_rf_off_restores",
+      "action": "leave",
+      "rf_pwrstate": 2,
+      "change_rfpwrstate": 0,
+      "expect_leave_cnts": 1,
+      "expect_rf_pwrstate_after": 0,
+      "expect_ips_pwr_up": 1
+    },
+    {
+      "name": "leave_non_primary_noop",
+      "action": "leave",
+      "adapter_type": 1,
+      "rf_pwrstate": 2,
+      "expect_leave_cnts": 0,
+      "expect_rf_pwrstate_after": 2,
+      "expect_ips_pwr_up": 0
+    }
+  ]
+}

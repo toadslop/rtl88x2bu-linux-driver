@@ -98,6 +98,13 @@ for path in "${changed[@]}"; do
 	| tests/host/btcoex/*)
 		add_target rust-check-symbols-rtw-btcoex-wifionly
 		;;
+	rust/rtw_pwrctrl_ips.rs \
+	| core/rtw_pwrctrl.c \
+	| tests/host/pwrctrl/host_pwrctrl_ips_shim.c \
+	| tests/host/pwrctrl/test_pwrctrl_ips.c \
+	| tests/host/pwrctrl/ips_vectors.json)
+		add_target rust-check-symbols-rtw-pwrctrl-ips
+		;;
 	rust/rtw_rf_rest.rs \
 	| rust/rtw_rf_op_class_pref.rs \
 	| rust/rtw_rf_op_class_dump.rs \
