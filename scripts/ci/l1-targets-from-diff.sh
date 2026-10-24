@@ -223,6 +223,7 @@ for path in "${changed[@]}"; do
 	| rust/rtw_debug_proc_ap.rs \
 	| rust/rtw_debug_proc_trx.rs \
 	| rust/rtw_debug_proc_rate.rs \
+	| rust/rtw_debug_proc_dbg_logs.rs \
 	| core/rtw_debug_adapters_status_shim.c \
 	| core/rtw_debug.c \
 	| core/rtw_debug_rest.c \

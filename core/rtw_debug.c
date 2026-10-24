@@ -2382,6 +2382,101 @@ ssize_t rtw_rust_debug_proc_set_bw_ctl(_adapter *adapter,
 	return count;
 }
 
+#ifdef CONFIG_DBG_COUNTER
+void rtw_rust_debug_proc_emit_rx_logs(void *sel, _adapter *adapter)
+{
+	struct rx_logs *rx_logs = &adapter->rx_logs;
+
+	RTW_PRINT_SEL(sel,
+		      "intf_rx=%d\n"
+		      "intf_rx_err_recvframe=%d\n"
+		      "intf_rx_err_skb=%d\n"
+		      "intf_rx_report=%d\n"
+		      "core_rx=%d\n"
+		      "core_rx_pre=%d\n"
+		      "core_rx_pre_ver_err=%d\n"
+		      "core_rx_pre_mgmt=%d\n"
+		      "core_rx_pre_mgmt_err_80211w=%d\n"
+		      "core_rx_pre_mgmt_err=%d\n"
+		      "core_rx_pre_ctrl=%d\n"
+		      "core_rx_pre_ctrl_err=%d\n"
+		      "core_rx_pre_data=%d\n"
+		      "core_rx_pre_data_wapi_seq_err=%d\n"
+		      "core_rx_pre_data_wapi_key_err=%d\n"
+		      "core_rx_pre_data_handled=%d\n"
+		      "core_rx_pre_data_err=%d\n"
+		      "core_rx_pre_data_unknown=%d\n"
+		      "core_rx_pre_unknown=%d\n"
+		      "core_rx_enqueue=%d\n"
+		      "core_rx_dequeue=%d\n"
+		      "core_rx_post=%d\n"
+		      "core_rx_post_decrypt=%d\n"
+		      "core_rx_post_decrypt_wep=%d\n"
+		      "core_rx_post_decrypt_tkip=%d\n"
+		      "core_rx_post_decrypt_aes=%d\n"
+		      "core_rx_post_decrypt_wapi=%d\n"
+		      "core_rx_post_decrypt_hw=%d\n"
+		      "core_rx_post_decrypt_unknown=%d\n"
+		      "core_rx_post_decrypt_err=%d\n"
+		      "core_rx_post_defrag_err=%d\n"
+		      "core_rx_post_portctrl_err=%d\n"
+		      "core_rx_post_indicate=%d\n"
+		      "core_rx_post_indicate_in_oder=%d\n"
+		      "core_rx_post_indicate_reoder=%d\n"
+		      "core_rx_post_indicate_err=%d\n"
+		      "os_indicate=%d\n"
+		      "os_indicate_ap_mcast=%d\n"
+		      "os_indicate_ap_forward=%d\n"
+		      "os_indicate_ap_self=%d\n"
+		      "os_indicate_err=%d\n"
+		      "os_netif_ok=%d\n"
+		      "os_netif_err=%d\n",
+		      rx_logs->intf_rx,
+		      rx_logs->intf_rx_err_recvframe,
+		      rx_logs->intf_rx_err_skb,
+		      rx_logs->intf_rx_report,
+		      rx_logs->core_rx,
+		      rx_logs->core_rx_pre,
+		      rx_logs->core_rx_pre_ver_err,
+		      rx_logs->core_rx_pre_mgmt,
+		      rx_logs->core_rx_pre_mgmt_err_80211w,
+		      rx_logs->core_rx_pre_mgmt_err,
+		      rx_logs->core_rx_pre_ctrl,
+		      rx_logs->core_rx_pre_ctrl_err,
+		      rx_logs->core_rx_pre_data,
+		      rx_logs->core_rx_pre_data_wapi_seq_err,
+		      rx_logs->core_rx_pre_data_wapi_key_err,
+		      rx_logs->core_rx_pre_data_handled,
+		      rx_logs->core_rx_pre_data_err,
+		      rx_logs->core_rx_pre_data_unknown,
+		      rx_logs->core_rx_pre_unknown,
+		      rx_logs->core_rx_enqueue,
+		      rx_logs->core_rx_dequeue,
+		      rx_logs->core_rx_post,
+		      rx_logs->core_rx_post_decrypt,
+		      rx_logs->core_rx_post_decrypt_wep,
+		      rx_logs->core_rx_post_decrypt_tkip,
+		      rx_logs->core_rx_post_decrypt_aes,
+		      rx_logs->core_rx_post_decrypt_wapi,
+		      rx_logs->core_rx_post_decrypt_hw,
+		      rx_logs->core_rx_post_decrypt_unknown,
+		      rx_logs->core_rx_post_decrypt_err,
+		      rx_logs->core_rx_post_defrag_err,
+		      rx_logs->core_rx_post_portctrl_err,
+		      rx_logs->core_rx_post_indicate,
+		      rx_logs->core_rx_post_indicate_in_oder,
+		      rx_logs->core_rx_post_indicate_reoder,
+		      rx_logs->core_rx_post_indicate_err,
+		      rx_logs->os_indicate,
+		      rx_logs->os_indicate_ap_mcast,
+		      rx_logs->os_indicate_ap_forward,
+		      rx_logs->os_indicate_ap_self,
+		      rx_logs->os_indicate_err,
+		      rx_logs->os_netif_ok,
+		      rx_logs->os_netif_err);
+}
+#endif /* CONFIG_DBG_COUNTER */
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */
