@@ -4744,7 +4744,7 @@ rust-objects-rtw-pwrctrl-ips-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-I tests/host/include \
 		-o tests/host/pwrctrl/ips_c_ref.o \
-		tests/host/pwrctrl/host_pwrctrl_ips_enter_shim.c
+		tests/host/pwrctrl/host_pwrctrl_ips_shim.c
 rust-check-symbols-rtw-pwrctrl-ips: rust-objects-rtw-pwrctrl-ips-c rust-objects-rtw-pwrctrl-ips
 	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/ips_c_ref.o NEW=rust/rtw_pwrctrl_ips.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_ips.allow ALLOW_VACUOUS=1

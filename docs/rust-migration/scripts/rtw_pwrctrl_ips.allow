@@ -11,3 +11,9 @@ drop rtw_rust_ips_inc_enter_cnt
 drop rtw_rust_ips_pwr_down
 drop rtw_rust_ips_btcoex_notify
 drop rtw_rust_ips_pci_aspm_ps
+drop rtw_rust_ips_inc_leave_cnt
+drop rtw_rust_ips_pwr_up
+drop rtw_rust_ips_is_primary
+drop rtw_rust_ips_pci_aspm_perf
+drop rtw_rust_ips_odm_reset
+drop rtw_rust_ips_dbg_leave_fail

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! W3-167 PR1 — IPS enter helpers from `core/rtw_pwrctrl.c`.
+//! W3-167 — IPS enter/leave helpers from `core/rtw_pwrctrl.c`.
 
 #![allow(
     dead_code,
@@ -16,8 +16,11 @@ use core::ffi::c_void;
 
 const _TRUE: u8 = 1;
 const _FALSE: u8 = 0;
+const _SUCCESS: i32 = 1;
 const RF_OFF: u8 = 2;
+const RF_ON: u8 = 0;
 const IPS_LEVEL_2: u8 = 2;
+const IPS_NONE: u8 = 0;
 
 const F_RF_PWRSTATE: u32 = 0;
 const F_CHANGE_RFPWRSTATE: u32 = 1;
@@ -39,6 +42,12 @@ extern "C" {
     fn rtw_rust_ips_pwr_down(padapter: Padapter);
     fn rtw_rust_ips_btcoex_notify(padapter: Padapter, mode: u8);
     fn rtw_rust_ips_pci_aspm_ps(padapter: Padapter);
+    fn rtw_rust_ips_inc_leave_cnt(pwr: *mut c_void);
+    fn rtw_rust_ips_pwr_up(padapter: Padapter) -> i32;
+    fn rtw_rust_ips_is_primary(padapter: Padapter) -> u8;
+    fn rtw_rust_ips_pci_aspm_perf(padapter: Padapter);
+    fn rtw_rust_ips_odm_reset(padapter: Padapter);
+    fn rtw_rust_ips_dbg_leave_fail(padapter: Padapter);
 }
 
 fn ips_enter_core(padapter: Padapter) {
@@ -86,4 +95,62 @@ pub extern "C" fn ips_enter(padapter: Padapter) {
         rtw_rust_pwrctrl_exit_lock(padapter);
         rtw_rust_ips_pci_aspm_ps(padapter);
     }
+}
+
+fn ips_leave_core(padapter: Padapter) -> i32 {
+    let pwr = unsafe { rtw_rust_ips_pwrpriv(padapter) };
+    if pwr.is_null() {
+        return _SUCCESS;
+    }
+    unsafe {
+        if rtw_rust_ips_get_u8(pwr, F_RF_PWRSTATE) == RF_OFF
+            && rtw_rust_ips_get_u8(pwr, F_BIPS_PROCESSING) == 0
+        {
+            rtw_rust_ips_set_u8(pwr, F_BIPS_PROCESSING, _TRUE);
+            rtw_rust_ips_set_u8(pwr, F_CHANGE_RFPWRSTATE, RF_ON);
+            rtw_rust_ips_inc_leave_cnt(pwr);
+            let result = rtw_rust_ips_pwr_up(padapter);
+            if result == _SUCCESS {
+                rtw_rust_ips_set_u8(pwr, F_RF_PWRSTATE, RF_ON);
+            }
+            rtw_rust_ips_set_u8(pwr, F_BIPS_PROCESSING, _FALSE);
+            rtw_rust_ips_set_u8(pwr, F_BKEEPFWALIVE, _FALSE);
+            rtw_rust_ips_set_u8(pwr, F_BPOWER_SAVING, _FALSE);
+            result
+        } else {
+            _SUCCESS
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn _ips_leave(padapter: Padapter) -> i32 {
+    if padapter.is_null() {
+        return _SUCCESS;
+    }
+    ips_leave_core(padapter)
+}
+
+#[no_mangle]
+pub extern "C" fn ips_leave(padapter: Padapter) -> i32 {
+    if padapter.is_null() {
+        return _SUCCESS;
+    }
+    if unsafe { rtw_rust_ips_is_primary(padapter) } == 0 {
+        return _SUCCESS;
+    }
+    unsafe { rtw_rust_pwrctrl_enter_lock(padapter) };
+    let ret = ips_leave_core(padapter);
+    unsafe {
+        rtw_rust_ips_dbg_leave_fail(padapter);
+        rtw_rust_pwrctrl_exit_lock(padapter);
+        rtw_rust_ips_pci_aspm_perf(padapter);
+    }
+    if ret == _SUCCESS {
+        unsafe {
+            rtw_rust_ips_odm_reset(padapter);
+            rtw_rust_ips_btcoex_notify(padapter, IPS_NONE);
+        }
+    }
+    ret
 }

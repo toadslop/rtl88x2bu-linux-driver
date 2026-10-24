@@ -125,6 +125,7 @@ void ips_enter(_adapter *padapter)
 }
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_IPS_TEST — W3-167 PR1 enter in rust/rtw_pwrctrl_ips.rs */
 
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_IPS_TEST)
 int _ips_leave(_adapter *padapter)
 {
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
@@ -192,6 +193,7 @@ int ips_leave(_adapter *padapter)
 
 	return ret;
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_IPS_TEST — W3-167 PR2 leave in rust/rtw_pwrctrl_ips.rs */
 
 #if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_IPS_TEST)
 
@@ -233,9 +235,24 @@ void rtw_rust_ips_inc_enter_cnt(struct pwrctrl_priv *pwr)
 	pwr->ips_enter_cnts++;
 }
 
+void rtw_rust_ips_inc_leave_cnt(struct pwrctrl_priv *pwr)
+{
+	pwr->ips_leave_cnts++;
+}
+
 void rtw_rust_ips_pwr_down(_adapter *padapter)
 {
 	rtw_ips_pwr_down(padapter);
+}
+
+int rtw_rust_ips_pwr_up(_adapter *padapter)
+{
+	return rtw_ips_pwr_up(padapter);
+}
+
+u8 rtw_rust_ips_is_primary(_adapter *padapter)
+{
+	return is_primary_adapter(padapter) ? _TRUE : _FALSE;
 }
 
 void rtw_rust_ips_btcoex_notify(_adapter *padapter, u8 mode)
@@ -252,6 +269,33 @@ void rtw_rust_ips_pci_aspm_ps(_adapter *padapter)
 {
 #ifdef CONFIG_PCI_DYNAMIC_ASPM
 	rtw_pci_dynamic_aspm_set_mode(padapter, ASPM_MODE_PS);
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_ips_pci_aspm_perf(_adapter *padapter)
+{
+#ifdef CONFIG_PCI_DYNAMIC_ASPM
+	rtw_pci_dynamic_aspm_set_mode(padapter, ASPM_MODE_PERF);
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_ips_odm_reset(_adapter *padapter)
+{
+	odm_dm_reset(&GET_HAL_DATA(padapter)->odmpriv);
+}
+
+void rtw_rust_ips_dbg_leave_fail(_adapter *padapter)
+{
+#ifdef DBG_CHECK_FW_PS_STATE
+	struct dvobj_priv *psdpriv = padapter->dvobj;
+	struct debug_priv *pdbgpriv = &psdpriv->drv_dbg;
+
+	if (rtw_fw_ps_state(padapter) == _FAIL)
+		pdbgpriv->dbg_leave_ips_fail_cnt++;
 #else
 	(void)padapter;
 #endif
