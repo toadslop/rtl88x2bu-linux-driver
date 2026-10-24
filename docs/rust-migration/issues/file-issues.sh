@@ -322,6 +322,14 @@ files=(
   wave3-160-debug-proc-rate-leaf.md
   wave4-57-hal-com-c2h-mac-hidden.md
   wave4-58-hal-com-c2h-per-rate-lps.md
+  wave3-161-debug-proc-rate-setter.md
+  wave3-162-debug-proc-rx-cnt-dump.md
+  wave3-163-debug-proc-ps-dbg.md
+  wave3-164-debug-proc-dbg-logs.md
+  wave3-165-debug-proc-hw-status.md
+  wave3-166-debug-proc-rx-signal.md
+  wave3-167-pwrctrl-ips-enter-leave.md
+  wave3-168-debug-proc-test-setters.md
 )
 
 # draft_id -> github issue number

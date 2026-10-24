@@ -288,6 +288,14 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-160 | #1453 | [W3-160] Translate rtw_debug_rest.c — proc rate_ctl leaf getters |
 | W4-57 | #1454 | [W4-57] Translate hal_com_rest.c — C2H mac hidden report |
 | W4-58 | #1455 | [W4-58] Translate hal_com_rest.c — C2H per-rate + LPS status |
+| W3-161 | #1476 | [W3-161] Translate rtw_debug_rest.c — proc_set_rate_ctl |
+| W3-162 | #1477 | [W3-162] Translate rtw_debug_rest.c — proc rx counter dump mode |
+| W3-163 | #1478 | [W3-163] Translate rtw_debug_rest.c — proc ps debug counters |
+| W3-164 | #1479 | [W3-164] Translate rtw_debug_rest.c — proc dbg counter logs |
+| W3-165 | #1480 | [W3-165] Translate rtw_debug_rest.c — proc hw_status check |
+| W3-166 | #1481 | [W3-166] Translate rtw_debug_rest.c — proc rx_signal get/set |
+| W3-167 | #1482 | [W3-167] Translate rtw_pwrctrl.c — IPS enter/leave leaf |
+| W3-168 | #1483 | [W3-168] Translate rtw_debug_rest.c — proc manufacturing test setters |
 
 ## Superseded issues
 
