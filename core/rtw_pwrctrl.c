@@ -301,6 +301,24 @@ void rtw_rust_ips_dbg_leave_fail(_adapter *padapter)
 #endif
 }
 
+void rtw_rust_ips_llstats_on_enter(struct pwrctrl_priv *pwr)
+{
+#ifdef CONFIG_RTW_CFGVENDOR_LLSTATS
+	pwr->pwr_saving_start_time = rtw_get_current_time();
+#else
+	(void)pwr;
+#endif
+}
+
+void rtw_rust_ips_llstats_on_leave(struct pwrctrl_priv *pwr)
+{
+#ifdef CONFIG_RTW_CFGVENDOR_LLSTATS
+	pwr->pwr_saving_time += rtw_get_passing_time_ms(pwr->pwr_saving_start_time);
+#else
+	(void)pwr;
+#endif
+}
+
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_IPS_TEST */
 #endif /* CONFIG_IPS */
 

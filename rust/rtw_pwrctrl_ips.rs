@@ -48,6 +48,8 @@ extern "C" {
     fn rtw_rust_ips_pci_aspm_perf(padapter: Padapter);
     fn rtw_rust_ips_odm_reset(padapter: Padapter);
     fn rtw_rust_ips_dbg_leave_fail(padapter: Padapter);
+    fn rtw_rust_ips_llstats_on_enter(pwr: *mut c_void);
+    fn rtw_rust_ips_llstats_on_leave(pwr: *mut c_void);
 }
 
 fn ips_enter_core(padapter: Padapter) {
@@ -65,6 +67,7 @@ fn ips_enter_core(padapter: Padapter) {
             if rtw_rust_ips_get_u8(pwr, F_IPS_MODE) == IPS_LEVEL_2 {
                 rtw_rust_ips_set_u8(pwr, F_BKEEPFWALIVE, _TRUE);
             }
+            rtw_rust_ips_llstats_on_enter(pwr);
             rtw_rust_ips_pwr_down(padapter);
             rtw_rust_ips_set_u8(pwr, F_RF_PWRSTATE, RF_OFF);
         }
@@ -113,6 +116,7 @@ fn ips_leave_core(padapter: Padapter) -> i32 {
             if result == _SUCCESS {
                 rtw_rust_ips_set_u8(pwr, F_RF_PWRSTATE, RF_ON);
             }
+            rtw_rust_ips_llstats_on_leave(pwr);
             rtw_rust_ips_set_u8(pwr, F_BIPS_PROCESSING, _FALSE);
             rtw_rust_ips_set_u8(pwr, F_BKEEPFWALIVE, _FALSE);
             rtw_rust_ips_set_u8(pwr, F_BPOWER_SAVING, _FALSE);

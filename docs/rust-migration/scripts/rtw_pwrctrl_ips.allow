@@ -17,3 +17,5 @@ drop rtw_rust_ips_is_primary
 drop rtw_rust_ips_pci_aspm_perf
 drop rtw_rust_ips_odm_reset
 drop rtw_rust_ips_dbg_leave_fail
+drop rtw_rust_ips_llstats_on_enter
+drop rtw_rust_ips_llstats_on_leave
