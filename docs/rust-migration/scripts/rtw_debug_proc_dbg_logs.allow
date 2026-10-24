@@ -1,2 +1,4 @@
 # L1 allowlist for W3-164: Rust owns proc dbg counter log getters in rtw_debug_proc_dbg_logs.o.
 drop rtw_rust_debug_proc_emit_rx_logs
+drop rtw_rust_debug_proc_emit_tx_logs
+drop rtw_rust_debug_proc_emit_int_logs
