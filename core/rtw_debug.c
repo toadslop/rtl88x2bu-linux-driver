@@ -2382,6 +2382,44 @@ ssize_t rtw_rust_debug_proc_set_bw_ctl(_adapter *adapter,
 	return count;
 }
 
+#ifdef DBG_RX_COUNTER_DUMP
+void rtw_rust_debug_proc_emit_rx_cnt_dump(void *sel, _adapter *adapter)
+{
+	RTW_PRINT_SEL(sel, "BIT0- Dump RX counters of DRV\n");
+	RTW_PRINT_SEL(sel, "BIT1- Dump RX counters of MAC\n");
+	RTW_PRINT_SEL(sel, "BIT2- Dump RX counters of PHY\n");
+	RTW_PRINT_SEL(sel, "BIT3- Dump TRX data frame of DRV\n");
+	RTW_PRINT_SEL(sel, "dump_rx_cnt_mode = 0x%02x\n", adapter->dump_rx_cnt_mode);
+}
+
+ssize_t rtw_rust_debug_proc_set_rx_cnt_dump(_adapter *adapter,
+					    const char __user *buffer,
+					    size_t count)
+{
+	char tmp[32];
+	u8 dump_rx_cnt_mode;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%hhx", &dump_rx_cnt_mode);
+
+		if (num == 1) {
+			rtw_dump_phy_rxcnts_preprocess(adapter, dump_rx_cnt_mode);
+			adapter->dump_rx_cnt_mode = dump_rx_cnt_mode;
+		}
+	}
+
+	return count;
+}
+#endif /* DBG_RX_COUNTER_DUMP */
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */
