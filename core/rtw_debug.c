@@ -2249,6 +2249,24 @@ void rtw_rust_debug_proc_emit_trx_info(void *sel, _adapter *padapter)
 		      (unsigned long long)precvpriv->dbg_rx_conflic_mac_addr_cnt);
 }
 
+void rtw_rust_debug_proc_emit_rate_ctl(void *sel, _adapter *adapter)
+{
+	u8 data_rate = 0, sgi = 0, data_fb = 0;
+
+	if (adapter->fix_rate != 0xff) {
+		data_rate = adapter->fix_rate & 0x7F;
+		sgi = adapter->fix_rate >> 7;
+		data_fb = adapter->data_fb ? 1 : 0;
+		RTW_PRINT_SEL(sel, "FIXED %s%s%s\n",
+			      HDATA_RATE(data_rate),
+			      data_rate > DESC_RATE54M ? (sgi ? " SGI" : " LGI") : "",
+			      data_fb ? " FB" : "");
+		RTW_PRINT_SEL(sel, "0x%02x %u\n", adapter->fix_rate,
+			      adapter->data_fb);
+	} else
+		RTW_PRINT_SEL(sel, "RA\n");
+}
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */

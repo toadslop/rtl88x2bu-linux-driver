@@ -2636,6 +2636,7 @@ int proc_get_trx_info(struct seq_file *m, void *v)
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-159 in rust/rtw_debug_proc_trx.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_rate_ctl(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -2657,6 +2658,7 @@ int proc_get_rate_ctl(struct seq_file *m, void *v)
 
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-160 rate_ctl getter in rust/rtw_debug_proc_rate.rs */
 
 #ifdef 	CONFIG_PHDYM_FW_FIXRATE
 void phydm_fw_fix_rate(void *dm_void, u8 en, u8	macid, u8 bw, u8 rate);
@@ -2797,7 +2799,6 @@ ssize_t proc_set_bmc_tx_rate(struct file *file, const char __user *buffer, size_
 	return count;
 }
 #endif /*CONFIG_AP_MODE*/
-
 
 int proc_get_tx_power_offset(struct seq_file *m, void *v)
 {

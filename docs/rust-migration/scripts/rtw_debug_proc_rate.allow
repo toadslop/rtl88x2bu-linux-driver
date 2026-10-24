@@ -1,0 +1,2 @@
+# L1 allowlist for W3-160 PR1: Rust owns proc_get_rate_ctl in rtw_debug_proc_rate.o.
+drop rtw_rust_debug_proc_emit_rate_ctl
