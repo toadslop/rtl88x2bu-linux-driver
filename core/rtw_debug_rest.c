@@ -2660,17 +2660,19 @@ int proc_get_rate_ctl(struct seq_file *m, void *v)
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-160 rate_ctl getter in rust/rtw_debug_proc_rate.rs */
 
-#ifdef 	CONFIG_PHDYM_FW_FIXRATE
-void phydm_fw_fix_rate(void *dm_void, u8 en, u8	macid, u8 bw, u8 rate);
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
+#ifdef CONFIG_PHDYM_FW_FIXRATE
+void phydm_fw_fix_rate(void *dm_void, u8 en, u8 macid, u8 bw, u8 rate);
 #endif
-ssize_t proc_set_rate_ctl(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
+ssize_t proc_set_rate_ctl(struct file *file, const char __user *buffer,
+			  size_t count, loff_t *pos, void *data)
 {
 	struct net_device *dev = data;
 	_adapter *adapter = (_adapter *)rtw_netdev_priv(dev);
 	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
 	char tmp[32];
 	u8 fix_rate = 0xFF;
-#ifdef 	CONFIG_PHDYM_FW_FIXRATE
+#ifdef CONFIG_PHDYM_FW_FIXRATE
 	u8 bw = 0;
 #else
 	u8 data_fb = 0;
@@ -2685,13 +2687,13 @@ ssize_t proc_set_rate_ctl(struct file *file, const char __user *buffer, size_t c
 	}
 
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
-#ifdef 	CONFIG_PHDYM_FW_FIXRATE
+#ifdef CONFIG_PHDYM_FW_FIXRATE
 		struct dm_struct *dm = adapter_to_phydm(adapter);
 		u8 en = 1, macid = 255;
-		_irqL	irqL;
-		_list	*plist, *phead;
+		_irqL irqL;
+		_list *plist, *phead;
 		struct sta_info *psta = NULL;
-		struct sta_priv	*pstapriv = &(adapter->stapriv);
+		struct sta_priv *pstapriv = &(adapter->stapriv);
 		u8 bc_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 		u8 null_addr[ETH_ALEN] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 		uint mac_id[NUM_STA];
@@ -2705,14 +2707,14 @@ ssize_t proc_set_rate_ctl(struct file *file, const char __user *buffer, size_t c
 
 		if ((fix_rate == 0) || (fix_rate == 0xFF))
 			en = 0;
-			
+
 		if (macid != 255) {
-			RTW_INFO("Call phydm_fw_fix_rate()--en[%d] mac_id[%d] bw[%d] fix_rate[%d]\n", en, macid, bw, fix_rate);
+			RTW_INFO("Call phydm_fw_fix_rate()--en[%d] mac_id[%d] bw[%d] fix_rate[%d]\n",
+				 en, macid, bw, fix_rate);
 			phydm_fw_fix_rate(dm, en, macid, bw, fix_rate);
 			return count;
 		}
 
-		/*	no specific macid, apply to all macids except bc/mc macid */
 		_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
 		for (i = 0; i < NUM_STA; i++) {
 			phead = &(pstapriv->sta_hash[i]);
@@ -2720,18 +2722,23 @@ ssize_t proc_set_rate_ctl(struct file *file, const char __user *buffer, size_t c
 			while ((rtw_end_of_queue_search(phead, plist)) == _FALSE) {
 				psta = LIST_CONTAINOR(plist, struct sta_info, hash_list);
 				plist = get_next(plist);
-				if ((_rtw_memcmp(psta->cmn.mac_addr, bc_addr, ETH_ALEN) !=  _TRUE)
-					&& (_rtw_memcmp(psta->cmn.mac_addr, null_addr, ETH_ALEN) != _TRUE)
-					&& (_rtw_memcmp(psta->cmn.mac_addr, adapter_mac_addr(adapter), ETH_ALEN) != _TRUE)) {
-						mac_id[macid_rec_idx] = psta->cmn.mac_id;
-						macid_rec_idx++;
+				if ((_rtw_memcmp(psta->cmn.mac_addr, bc_addr, ETH_ALEN) !=
+				     _TRUE) &&
+				    (_rtw_memcmp(psta->cmn.mac_addr, null_addr,
+						 ETH_ALEN) != _TRUE) &&
+				    (_rtw_memcmp(psta->cmn.mac_addr,
+						 adapter_mac_addr(adapter),
+						 ETH_ALEN) != _TRUE)) {
+					mac_id[macid_rec_idx] = psta->cmn.mac_id;
+					macid_rec_idx++;
 				}
 			}
 		}
 		_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
 
 		for (i = 0; i < macid_rec_idx; i++) {
-			RTW_INFO("Call phydm_fw_fix_rate()--en[%d] mac_id[%d] bw[%d] fix_rate[%d]\n", en, mac_id[i], bw, fix_rate);
+			RTW_INFO("Call phydm_fw_fix_rate()--en[%d] mac_id[%d] bw[%d] fix_rate[%d]\n",
+				 en, mac_id[i], bw, fix_rate);
 			phydm_fw_fix_rate(dm, en, mac_id[i], bw, fix_rate);
 		}
 #else
@@ -2744,10 +2751,14 @@ ssize_t proc_set_rate_ctl(struct file *file, const char __user *buffer, size_t c
 			if (fix_rate == 0xFF)
 				hal_data->ForcedDataRate = 0;
 			else
-				hal_data->ForcedDataRate = hw_rate_to_m_rate(fix_rate & 0x7F);
+				hal_data->ForcedDataRate =
+					hw_rate_to_m_rate(fix_rate & 0x7F);
 
 			if (adapter->fix_bw != 0xFF && fix_rate_ori != fix_rate)
-				rtw_run_in_thread_cmd(adapter, ((void *)(rtw_update_tx_rate_bmp)), adapter_to_dvobj(adapter));
+				rtw_run_in_thread_cmd(
+					adapter,
+					((void *)(rtw_update_tx_rate_bmp)),
+					adapter_to_dvobj(adapter));
 		}
 		if (num >= 2)
 			adapter->data_fb = data_fb ? 1 : 0;
@@ -2756,6 +2767,7 @@ ssize_t proc_set_rate_ctl(struct file *file, const char __user *buffer, size_t c
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-161 proc_set_rate_ctl in rust/rtw_debug_proc_rate.rs */
 
 #if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 #ifdef CONFIG_AP_MODE

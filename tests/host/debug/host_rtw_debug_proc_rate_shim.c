@@ -30,6 +30,17 @@ int proc_get_rate_ctl(seq_file *m, void *v)
 	return 0;
 }
 
+long proc_set_rate_ctl(void *file, const void *buffer, unsigned long count,
+		       long *pos, void *data)
+{
+	(void)file;
+	(void)buffer;
+	(void)count;
+	(void)pos;
+	(void)data;
+	return 0;
+}
+
 int proc_get_tx_power_offset(seq_file *m, void *v)
 {
 	(void)m;
