@@ -1,0 +1,3 @@
+# L1 allowlist for W3-162: Rust owns proc dump_rx_cnt_mode handlers in rtw_debug_proc_rx_cnt.o.
+drop rtw_rust_debug_proc_emit_rx_cnt_dump
+drop rtw_rust_debug_proc_set_rx_cnt_dump
