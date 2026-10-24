@@ -244,6 +244,19 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-159 | `wave3-159-debug-proc-trx-info.md` | proc trx_info get/reset |
 | W3-160 | `wave3-160-debug-proc-rate-leaf.md` | proc rate_ctl leaf getters + BMC/txpwr/bw |
 
+## Children (tranche 16 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-161 | `wave3-161-debug-proc-rate-setter.md` | `proc_set_rate_ctl` (PHYDM fix-rate path) |
+| W3-162 | `wave3-162-debug-proc-rx-cnt-dump.md` | proc RX counter dump mode get/set |
+| W3-163 | `wave3-163-debug-proc-ps-dbg.md` | proc PS debug counter get/clear |
+| W3-164 | `wave3-164-debug-proc-dbg-logs.md` | proc rx/tx/int dbg counter logs |
+| W3-165 | `wave3-165-debug-proc-hw-status.md` | proc hw_status registry toggle |
+| W3-166 | `wave3-166-debug-proc-rx-signal.md` | proc rx_signal get/set |
+| W3-167 | `wave3-167-pwrctrl-ips-enter-leave.md` | `rtw_pwrctrl.c` IPS enter/leave |
+| W3-168 | `wave3-168-debug-proc-test-setters.md` | proc → Rust manufacturing test setters |
+
 Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:
 
 - `rtw_beamforming.c` sounding state machine (HAL-coupled NDPA paths)
