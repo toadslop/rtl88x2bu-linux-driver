@@ -2908,6 +2908,87 @@ ssize_t rtw_rust_debug_proc_set_hw_status(_adapter *adapter,
 	return count;
 }
 
+void rtw_rust_debug_proc_emit_rx_signal(void *sel, _adapter *padapter)
+{
+	RTW_PRINT_SEL(sel, "rssi:%d\n", padapter->recvpriv.rssi);
+#ifdef CONFIG_MP_INCLUDED
+	if (padapter->registrypriv.mp_mode == 1) {
+		struct dm_struct *odm = adapter_to_phydm(padapter);
+
+		if (padapter->mppriv.antenna_rx == ANTENNA_A)
+			RTW_PRINT_SEL(sel, "Antenna: A\n");
+		else if (padapter->mppriv.antenna_rx == ANTENNA_B)
+			RTW_PRINT_SEL(sel, "Antenna: B\n");
+		else if (padapter->mppriv.antenna_rx == ANTENNA_C)
+			RTW_PRINT_SEL(sel, "Antenna: C\n");
+		else if (padapter->mppriv.antenna_rx == ANTENNA_D)
+			RTW_PRINT_SEL(sel, "Antenna: D\n");
+		else if (padapter->mppriv.antenna_rx == ANTENNA_AB)
+			RTW_PRINT_SEL(sel, "Antenna: AB\n");
+		else if (padapter->mppriv.antenna_rx == ANTENNA_BC)
+			RTW_PRINT_SEL(sel, "Antenna: BC\n");
+		else if (padapter->mppriv.antenna_rx == ANTENNA_CD)
+			RTW_PRINT_SEL(sel, "Antenna: CD\n");
+		else
+			RTW_PRINT_SEL(sel, "Antenna: __\n");
+
+		RTW_PRINT_SEL(sel, "rx_rate = %s\n", HDATA_RATE(odm->rx_rate));
+		return;
+	} else
+#endif
+	{
+		RTW_PRINT_SEL(sel, "signal_strength:%u\n",
+			      padapter->recvpriv.signal_strength);
+		RTW_PRINT_SEL(sel, "signal_qual:%u\n",
+			      padapter->recvpriv.signal_qual);
+	}
+#ifdef DBG_RX_SIGNAL_DISPLAY_RAW_DATA
+	rtw_odm_get_perpkt_rssi(sel, padapter);
+	rtw_get_raw_rssi_info(sel, padapter);
+#endif
+}
+
+ssize_t rtw_rust_debug_proc_set_rx_signal(_adapter *padapter,
+					  const char __user *buffer,
+					  size_t count)
+{
+	char tmp[32];
+	u32 is_signal_dbg, signal_strength;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%u %u", &is_signal_dbg, &signal_strength);
+
+		if (num < 1)
+			return count;
+
+		is_signal_dbg = is_signal_dbg == 0 ? 0 : 1;
+
+		if (is_signal_dbg && num < 2)
+			return count;
+
+		signal_strength = signal_strength > 100 ? 100 : signal_strength;
+
+		padapter->recvpriv.is_signal_dbg = is_signal_dbg;
+		padapter->recvpriv.signal_strength_dbg = signal_strength;
+
+		if (is_signal_dbg)
+			RTW_INFO("set %s %u\n", "DBG_SIGNAL_STRENGTH",
+				 signal_strength);
+		else
+			RTW_INFO("set %s\n", "HW_SIGNAL_STRENGTH");
+	}
+
+	return count;
+}
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */

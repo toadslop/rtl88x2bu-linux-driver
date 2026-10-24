@@ -11,6 +11,7 @@
 //! W3-163 proc ps_dbg_info handlers live in `rtw_debug_proc_ps.rs`.
 //! W3-164 proc dbg counter log dumpers live in `rtw_debug_proc_dbg_logs.rs`.
 //! W3-165 proc hw_info handlers live in `rtw_debug_proc_hw.rs`.
+//! W3-166 proc rx_signal handlers live in `rtw_debug_proc_signal.rs`.
 
 #![allow(
     dead_code,
