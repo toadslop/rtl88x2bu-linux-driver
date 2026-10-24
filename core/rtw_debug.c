@@ -2382,6 +2382,94 @@ ssize_t rtw_rust_debug_proc_set_bw_ctl(_adapter *adapter,
 	return count;
 }
 
+void rtw_rust_debug_proc_emit_ps_dbg_info(void *sel, _adapter *padapter)
+{
+	struct dvobj_priv *dvobj = padapter->dvobj;
+	struct debug_priv *pdbgpriv = &dvobj->drv_dbg;
+
+	RTW_PRINT_SEL(sel, "dbg_sdio_alloc_irq_cnt=%d\n",
+		      pdbgpriv->dbg_sdio_alloc_irq_cnt);
+	RTW_PRINT_SEL(sel, "dbg_sdio_free_irq_cnt=%d\n",
+		      pdbgpriv->dbg_sdio_free_irq_cnt);
+	RTW_PRINT_SEL(sel, "dbg_sdio_alloc_irq_error_cnt=%d\n",
+		      pdbgpriv->dbg_sdio_alloc_irq_error_cnt);
+	RTW_PRINT_SEL(sel, "dbg_sdio_free_irq_error_cnt=%d\n",
+		      pdbgpriv->dbg_sdio_free_irq_error_cnt);
+	RTW_PRINT_SEL(sel, "dbg_sdio_init_error_cnt=%d\n",
+		      pdbgpriv->dbg_sdio_init_error_cnt);
+	RTW_PRINT_SEL(sel, "dbg_sdio_deinit_error_cnt=%d\n",
+		      pdbgpriv->dbg_sdio_deinit_error_cnt);
+	RTW_PRINT_SEL(sel, "dbg_suspend_error_cnt=%d\n",
+		      pdbgpriv->dbg_suspend_error_cnt);
+	RTW_PRINT_SEL(sel, "dbg_suspend_cnt=%d\n", pdbgpriv->dbg_suspend_cnt);
+	RTW_PRINT_SEL(sel, "dbg_resume_cnt=%d\n", pdbgpriv->dbg_resume_cnt);
+	RTW_PRINT_SEL(sel, "dbg_resume_error_cnt=%d\n",
+		      pdbgpriv->dbg_resume_error_cnt);
+	RTW_PRINT_SEL(sel, "dbg_deinit_fail_cnt=%d\n",
+		      pdbgpriv->dbg_deinit_fail_cnt);
+	RTW_PRINT_SEL(sel, "dbg_carddisable_cnt=%d\n",
+		      pdbgpriv->dbg_carddisable_cnt);
+	RTW_PRINT_SEL(sel, "dbg_ps_insuspend_cnt=%d\n",
+		      pdbgpriv->dbg_ps_insuspend_cnt);
+	RTW_PRINT_SEL(sel, "dbg_dev_unload_inIPS_cnt=%d\n",
+		      pdbgpriv->dbg_dev_unload_inIPS_cnt);
+	RTW_PRINT_SEL(sel, "dbg_scan_pwr_state_cnt=%d\n",
+		      pdbgpriv->dbg_scan_pwr_state_cnt);
+	RTW_PRINT_SEL(sel, "dbg_downloadfw_pwr_state_cnt=%d\n",
+		      pdbgpriv->dbg_downloadfw_pwr_state_cnt);
+	RTW_PRINT_SEL(sel, "dbg_carddisable_error_cnt=%d\n",
+		      pdbgpriv->dbg_carddisable_error_cnt);
+	RTW_PRINT_SEL(sel, "dbg_fw_read_ps_state_fail_cnt=%d\n",
+		      pdbgpriv->dbg_fw_read_ps_state_fail_cnt);
+	RTW_PRINT_SEL(sel, "dbg_leave_ips_fail_cnt=%d\n",
+		      pdbgpriv->dbg_leave_ips_fail_cnt);
+	RTW_PRINT_SEL(sel, "dbg_leave_lps_fail_cnt=%d\n",
+		      pdbgpriv->dbg_leave_lps_fail_cnt);
+	RTW_PRINT_SEL(sel, "dbg_h2c_leave32k_fail_cnt=%d\n",
+		      pdbgpriv->dbg_h2c_leave32k_fail_cnt);
+	RTW_PRINT_SEL(sel, "dbg_diswow_dload_fw_fail_cnt=%d\n",
+		      pdbgpriv->dbg_diswow_dload_fw_fail_cnt);
+	RTW_PRINT_SEL(sel, "dbg_enwow_dload_fw_fail_cnt=%d\n",
+		      pdbgpriv->dbg_enwow_dload_fw_fail_cnt);
+	RTW_PRINT_SEL(sel, "dbg_ips_drvopen_fail_cnt=%d\n",
+		      pdbgpriv->dbg_ips_drvopen_fail_cnt);
+	RTW_PRINT_SEL(sel, "dbg_poll_fail_cnt=%d\n", pdbgpriv->dbg_poll_fail_cnt);
+	RTW_PRINT_SEL(sel, "dbg_rpwm_toogle_cnt=%d\n",
+		      pdbgpriv->dbg_rpwm_toogle_cnt);
+	RTW_PRINT_SEL(sel, "dbg_rpwm_timeout_fail_cnt=%d\n",
+		      pdbgpriv->dbg_rpwm_timeout_fail_cnt);
+	RTW_PRINT_SEL(sel, "dbg_sreset_cnt=%d\n", pdbgpriv->dbg_sreset_cnt);
+	RTW_PRINT_SEL(sel, "dbg_fw_mem_dl_error_cnt=%d\n",
+		      pdbgpriv->dbg_fw_mem_dl_error_cnt);
+}
+
+ssize_t rtw_rust_debug_proc_set_ps_dbg_info(_adapter *adapter,
+					    const char __user *buffer,
+					    size_t count)
+{
+	struct dvobj_priv *dvobj = adapter->dvobj;
+	struct debug_priv *pdbgpriv = &dvobj->drv_dbg;
+	char tmp[32];
+	u8 ps_dbg_cmd_id;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%hhx", &ps_dbg_cmd_id);
+
+		if (num == 1 && ps_dbg_cmd_id == 1) /* Clean all */
+			_rtw_memset(pdbgpriv, 0, sizeof(struct debug_priv));
+	}
+
+	return count;
+}
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */
