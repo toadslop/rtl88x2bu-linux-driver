@@ -1,0 +1,3 @@
+# L1 allowlist for W3-165: Rust owns hw_info proc get/set in rtw_debug_proc_hw.o.
+drop rtw_rust_debug_proc_emit_hw_status
+drop rtw_rust_debug_proc_set_hw_status

@@ -2860,6 +2860,54 @@ void rtw_rust_debug_proc_emit_int_logs(void *sel, _adapter *adapter)
 }
 #endif /* CONFIG_DBG_COUNTER */
 
+void rtw_rust_debug_proc_emit_hw_status(void *sel, _adapter *padapter)
+{
+	struct dvobj_priv *dvobj = padapter->dvobj;
+	struct debug_priv *pdbgpriv = &dvobj->drv_dbg;
+	struct registry_priv *regsty = dvobj_to_regsty(dvobj);
+
+	if (regsty->check_hw_status == 0)
+		RTW_PRINT_SEL(sel, "RX FIFO full count: not check in watch dog\n");
+	else if (pdbgpriv->dbg_rx_fifo_last_overflow == 1
+	    && pdbgpriv->dbg_rx_fifo_curr_overflow == 1
+	    && pdbgpriv->dbg_rx_fifo_diff_overflow == 1
+	   )
+		RTW_PRINT_SEL(sel, "RX FIFO full count: no implementation\n");
+	else {
+		RTW_PRINT_SEL(sel, "RX FIFO full count: last_time=%llu, current_time=%llu, differential=%llu\n"
+			, pdbgpriv->dbg_rx_fifo_last_overflow, pdbgpriv->dbg_rx_fifo_curr_overflow, pdbgpriv->dbg_rx_fifo_diff_overflow);
+	}
+}
+
+ssize_t rtw_rust_debug_proc_set_hw_status(_adapter *adapter,
+					  const char __user *buffer,
+					  size_t count)
+{
+	struct dvobj_priv *dvobj = padapter->dvobj;
+	struct registry_priv *regsty = dvobj_to_regsty(dvobj);
+	char tmp[32];
+	u32 enable;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%d ", &enable);
+
+		if (num == 1 && regsty && enable <= 1) {
+			regsty->check_hw_status = enable;
+			RTW_INFO("check_hw_status=%d\n", regsty->check_hw_status);
+		}
+	}
+
+	return count;
+}
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */
