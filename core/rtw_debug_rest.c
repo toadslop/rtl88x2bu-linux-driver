@@ -2800,6 +2800,7 @@ ssize_t proc_set_bmc_tx_rate(struct file *file, const char __user *buffer, size_
 }
 #endif /*CONFIG_AP_MODE*/
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_tx_power_offset(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -2838,6 +2839,7 @@ ssize_t proc_set_tx_power_offset(struct file *file, const char __user *buffer, s
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-160 PR2 tx_power in rust/rtw_debug_proc_rate.rs */
 
 int proc_get_bw_ctl(struct seq_file *m, void *v)
 {

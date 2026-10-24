@@ -2267,6 +2267,40 @@ void rtw_rust_debug_proc_emit_rate_ctl(void *sel, _adapter *adapter)
 		RTW_PRINT_SEL(sel, "RA\n");
 }
 
+void rtw_rust_debug_proc_emit_tx_power_offset(void *sel, _adapter *adapter)
+{
+	RTW_PRINT_SEL(sel, "Tx power offset - %u\n", adapter->power_offset);
+}
+
+ssize_t rtw_rust_debug_proc_set_tx_power_offset(_adapter *adapter,
+						const char __user *buffer,
+						size_t count)
+{
+	char tmp[32];
+	u8 power_offset = 0;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%hhu", &power_offset);
+
+		if (num >= 1) {
+			if (power_offset > 5)
+				power_offset = 0;
+
+			adapter->power_offset = power_offset;
+		}
+	}
+
+	return count;
+}
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */
