@@ -3064,6 +3064,7 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_ap.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_trx.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_rate.o
+$(MODULE_NAME)-y += rust/rtw_debug_proc_ps.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
@@ -4720,6 +4721,20 @@ rust-objects-rtw-debug-proc-rate-c:
 rust-check-symbols-rtw-debug-proc-rate: rust-objects-rtw-debug-proc-rate-c rust-objects-rtw-debug-proc-rate
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_rate_c_ref.o NEW=rust/rtw_debug_proc_rate.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_rate.allow ALLOW_VACUOUS=1
+
+# W3-163: host C stub vs rust/rtw_debug_proc_ps.o (proc ps_dbg_info get/set).
+rust-objects-rtw-debug-proc-ps:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-ps"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_ps.o
+rust-objects-rtw-debug-proc-ps-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_ps_c_ref.o \
+		tests/host/debug/host_rtw_debug_proc_ps_shim.c
+rust-check-symbols-rtw-debug-proc-ps: rust-objects-rtw-debug-proc-ps-c rust-objects-rtw-debug-proc-ps
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_ps_c_ref.o NEW=rust/rtw_debug_proc_ps.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_ps.allow ALLOW_VACUOUS=1
 
 # W3-94 follow-up PR4: host C oracle (ps deny shim) vs rust/rtw_pwrctrl.o.
 rust-objects-rtw-pwrctrl:

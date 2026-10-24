@@ -1,0 +1,3 @@
+# L1 allowlist for W3-163: Rust owns proc ps_dbg_info handlers in rtw_debug_proc_ps.o.
+drop rtw_rust_debug_proc_emit_ps_dbg_info
+drop rtw_rust_debug_proc_set_ps_dbg_info

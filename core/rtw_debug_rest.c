@@ -3116,6 +3116,7 @@ ssize_t proc_set_ap_linking_test(struct file *file, const char __user *buffer, s
 }
 #endif /* CONFIG_AP_MODE */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_ps_dbg_info(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -3183,6 +3184,7 @@ ssize_t proc_set_ps_dbg_info(struct file *file, const char __user *buffer, size_
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-163 in rust/rtw_debug_proc_ps.rs */
 
 
 #ifdef CONFIG_DBG_COUNTER
