@@ -42,12 +42,26 @@ int hal_read_mac_hidden_rpt(struct _adapter *adapter)
 	return 0;
 }
 
-<<<<<<< HEAD
-int c2h_mac_hidden_rpt_hdl(struct _adapter *adapter, unsigned char *data, unsigned char len)
-=======
+int c2h_mac_hidden_rpt_hdl(struct _adapter *adapter, unsigned char *data,
+			   unsigned char len)
+{
+	(void)adapter;
+	(void)data;
+	(void)len;
+	return 0;
+}
+
+int c2h_mac_hidden_rpt_2_hdl(struct _adapter *adapter, unsigned char *data,
+			     unsigned char len)
+{
+	(void)adapter;
+	(void)data;
+	(void)len;
+	return 0;
+}
+
 int c2h_per_rate_rpt_hdl(struct _adapter *adapter, unsigned char *data,
 			 unsigned char len)
->>>>>>> 82470a33 (rust(hal): port c2h_lps_status_rpt (W4-58 PR2))
 {
 	(void)adapter;
 	(void)data;
@@ -55,19 +69,11 @@ int c2h_per_rate_rpt_hdl(struct _adapter *adapter, unsigned char *data,
 	return 0;
 }
 
-<<<<<<< HEAD
-int c2h_mac_hidden_rpt_2_hdl(struct _adapter *adapter, unsigned char *data, unsigned char len)
-=======
 int c2h_lps_status_rpt(struct _adapter *adapter, unsigned char *data,
 		       unsigned char len)
->>>>>>> 82470a33 (rust(hal): port c2h_lps_status_rpt (W4-58 PR2))
 {
 	(void)adapter;
 	(void)data;
 	(void)len;
 	return 0;
 }
-<<<<<<< HEAD
-
-=======
->>>>>>> 82470a33 (rust(hal): port c2h_lps_status_rpt (W4-58 PR2))
