@@ -2757,6 +2757,7 @@ ssize_t proc_set_rate_ctl(struct file *file, const char __user *buffer, size_t c
 	return count;
 }
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 #ifdef CONFIG_AP_MODE
 int proc_get_bmc_tx_rate(struct seq_file *m, void *v)
 {
@@ -2799,6 +2800,7 @@ ssize_t proc_set_bmc_tx_rate(struct file *file, const char __user *buffer, size_
 	return count;
 }
 #endif /*CONFIG_AP_MODE*/
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-160 PR3 bmc in rust/rtw_debug_proc_rate.rs */
 
 #if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_tx_power_offset(struct seq_file *m, void *v)
@@ -2841,6 +2843,7 @@ ssize_t proc_set_tx_power_offset(struct file *file, const char __user *buffer, s
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-160 PR2 tx_power in rust/rtw_debug_proc_rate.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_bw_ctl(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -2886,6 +2889,7 @@ ssize_t proc_set_bw_ctl(struct file *file, const char __user *buffer, size_t cou
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-160 PR3 bw_ctl in rust/rtw_debug_proc_rate.rs */
 
 #ifdef DBG_RX_COUNTER_DUMP
 int proc_get_rx_cnt_dump(struct seq_file *m, void *v)

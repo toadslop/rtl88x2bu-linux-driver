@@ -2267,6 +2267,44 @@ void rtw_rust_debug_proc_emit_rate_ctl(void *sel, _adapter *adapter)
 		RTW_PRINT_SEL(sel, "RA\n");
 }
 
+#ifdef CONFIG_AP_MODE
+void rtw_rust_debug_proc_emit_bmc_tx_rate(void *sel, _adapter *adapter)
+{
+	if (!MLME_IS_AP(adapter) && !MLME_IS_MESH(adapter)) {
+		RTW_PRINT_SEL(sel, "[ERROR] Not in SoftAP/Mesh mode !!\n");
+		return;
+	}
+
+	RTW_PRINT_SEL(sel, " BMC Tx rate - %s\n",
+		      MGN_RATE_STR(adapter->bmc_tx_rate));
+}
+
+ssize_t rtw_rust_debug_proc_set_bmc_tx_rate(_adapter *adapter,
+					    const char __user *buffer,
+					    size_t count)
+{
+	char tmp[32];
+	u8 bmc_tx_rate;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%hhx", &bmc_tx_rate);
+
+		if (num >= 1)
+			adapter->bmc_tx_rate = bmc_tx_rate;
+	}
+
+	return count;
+}
+#endif /* CONFIG_AP_MODE */
+
 void rtw_rust_debug_proc_emit_tx_power_offset(void *sel, _adapter *adapter)
 {
 	RTW_PRINT_SEL(sel, "Tx power offset - %u\n", adapter->power_offset);
@@ -2295,6 +2333,49 @@ ssize_t rtw_rust_debug_proc_set_tx_power_offset(_adapter *adapter,
 				power_offset = 0;
 
 			adapter->power_offset = power_offset;
+		}
+	}
+
+	return count;
+}
+
+void rtw_rust_debug_proc_emit_bw_ctl(void *sel, _adapter *adapter)
+{
+	u8 data_bw = 0;
+
+	if (adapter->fix_bw != 0xff) {
+		data_bw = adapter->fix_bw;
+		RTW_PRINT_SEL(sel, "FIXED %s\n", ch_width_str(data_bw));
+	} else
+		RTW_PRINT_SEL(sel, "Auto\n");
+}
+
+ssize_t rtw_rust_debug_proc_set_bw_ctl(_adapter *adapter,
+				       const char __user *buffer, size_t count)
+{
+	char tmp[32];
+	u8 fix_bw;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%hhu", &fix_bw);
+
+		if (num >= 1) {
+			u8 fix_bw_ori = adapter->fix_bw;
+
+			adapter->fix_bw = fix_bw;
+
+			if (adapter->fix_rate != 0xFF && fix_bw_ori != fix_bw)
+				rtw_run_in_thread_cmd(adapter,
+					((void *)(rtw_update_tx_rate_bmp)),
+					adapter_to_dvobj(adapter));
 		}
 	}
 
