@@ -75,6 +75,7 @@ exit_fw_ps_state:
 }
 #endif /*DBG_CHECK_FW_PS_STATE*/
 #ifdef CONFIG_IPS
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_IPS_TEST)
 void _ips_enter(_adapter *padapter)
 {
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
@@ -122,6 +123,7 @@ void ips_enter(_adapter *padapter)
 	rtw_pci_dynamic_aspm_set_mode(padapter, ASPM_MODE_PS);
 #endif
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_IPS_TEST — W3-167 PR1 enter in rust/rtw_pwrctrl_ips.rs */
 
 int _ips_leave(_adapter *padapter)
 {
@@ -190,6 +192,72 @@ int ips_leave(_adapter *padapter)
 
 	return ret;
 }
+
+#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_IPS_TEST)
+
+struct pwrctrl_priv *rtw_rust_ips_pwrpriv(_adapter *padapter)
+{
+	return adapter_to_pwrctl(padapter);
+}
+
+u8 rtw_rust_ips_get_u8(struct pwrctrl_priv *pwr, u32 field)
+{
+	switch (field) {
+	case 0: return pwr->rf_pwrstate;
+	case 1: return pwr->change_rfpwrstate;
+	case 2: return (u8)pwr->bips_processing;
+	case 3: return pwr->ips_mode;
+	case 4: return pwr->ips_mode_req;
+	case 5: return pwr->bpower_saving;
+	case 6: return pwr->bkeepfwalive;
+	default: return 0;
+	}
+}
+
+void rtw_rust_ips_set_u8(struct pwrctrl_priv *pwr, u32 field, u8 v)
+{
+	switch (field) {
+	case 0: pwr->rf_pwrstate = v; break;
+	case 1: pwr->change_rfpwrstate = v; break;
+	case 2: pwr->bips_processing = v; break;
+	case 3: pwr->ips_mode = v; break;
+	case 4: pwr->ips_mode_req = v; break;
+	case 5: pwr->bpower_saving = v; break;
+	case 6: pwr->bkeepfwalive = v; break;
+	default: break;
+	}
+}
+
+void rtw_rust_ips_inc_enter_cnt(struct pwrctrl_priv *pwr)
+{
+	pwr->ips_enter_cnts++;
+}
+
+void rtw_rust_ips_pwr_down(_adapter *padapter)
+{
+	rtw_ips_pwr_down(padapter);
+}
+
+void rtw_rust_ips_btcoex_notify(_adapter *padapter, u8 mode)
+{
+#ifdef CONFIG_BT_COEXIST
+	rtw_btcoex_IpsNotify(padapter, mode);
+#else
+	(void)padapter;
+	(void)mode;
+#endif
+}
+
+void rtw_rust_ips_pci_aspm_ps(_adapter *padapter)
+{
+#ifdef CONFIG_PCI_DYNAMIC_ASPM
+	rtw_pci_dynamic_aspm_set_mode(padapter, ASPM_MODE_PS);
+#else
+	(void)padapter;
+#endif
+}
+
+#endif /* CONFIG_RUST && !HOST_PWRCTRL_IPS_TEST */
 #endif /* CONFIG_IPS */
 
 #ifdef SUPPORT_HW_RFOFF_DETECTED

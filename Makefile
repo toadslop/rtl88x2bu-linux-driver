@@ -3065,6 +3065,7 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_ap.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_trx.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_rate.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
+$(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
 $(MODULE_NAME)-y += rust/rtw_mlme_80211d.o
@@ -4734,6 +4735,19 @@ rust-objects-rtw-pwrctrl-c:
 rust-check-symbols-rtw-pwrctrl: rust-objects-rtw-pwrctrl-c rust-objects-rtw-pwrctrl
 	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/ps_deny_c_ref.o NEW=rust/rtw_pwrctrl.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl.allow ALLOW_VACUOUS=1
+
+# W3-167: host C oracle vs rust/rtw_pwrctrl_ips.o (IPS enter/leave).
+rust-objects-rtw-pwrctrl-ips:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-pwrctrl-ips"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_pwrctrl_ips.o
+rust-objects-rtw-pwrctrl-ips-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I tests/host/include \
+		-o tests/host/pwrctrl/ips_c_ref.o \
+		tests/host/pwrctrl/host_pwrctrl_ips_enter_shim.c
+rust-check-symbols-rtw-pwrctrl-ips: rust-objects-rtw-pwrctrl-ips-c rust-objects-rtw-pwrctrl-ips
+	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/ips_c_ref.o NEW=rust/rtw_pwrctrl_ips.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_ips.allow ALLOW_VACUOUS=1
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production

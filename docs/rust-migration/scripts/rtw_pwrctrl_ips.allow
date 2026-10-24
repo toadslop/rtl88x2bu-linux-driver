@@ -1,0 +1,13 @@
+# L1 allowlist for W3-167: Rust IPS enter/leave; kernel FFI shims stay in C.
+drop _enter_pwrlock
+drop _exit_pwrlock
+drop host_pwrctrl_ips_get_trace
+drop host_pwrctrl_ips_reset_trace
+drop host_pwrctrl_ips_set_pwr_up_result
+drop rtw_rust_ips_pwrpriv
+drop rtw_rust_ips_get_u8
+drop rtw_rust_ips_set_u8
+drop rtw_rust_ips_inc_enter_cnt
+drop rtw_rust_ips_pwr_down
+drop rtw_rust_ips_btcoex_notify
+drop rtw_rust_ips_pci_aspm_ps
