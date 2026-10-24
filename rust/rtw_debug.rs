@@ -7,6 +7,7 @@
 //! W3-158 proc ap_info handlers live in `rtw_debug_proc_ap.rs`.
 //! W3-159 proc trx_info handlers live in `rtw_debug_proc_trx.rs`.
 //! W3-160 proc rate_ctl leaf handlers live in `rtw_debug_proc_rate.rs`.
+//! W3-164 proc dbg counter log dumpers live in `rtw_debug_proc_dbg_logs.rs`.
 
 #![allow(
     dead_code,

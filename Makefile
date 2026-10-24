@@ -2928,6 +2928,16 @@ endif
 ifeq ($(CONFIG_PROC_DEBUG), y)
 rustflags-y += --cfg config_proc_debug
 endif
+_rust_cfg_dbg_counter :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_DBG_COUNTER' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_dbg_counter := y
+endif
+ifneq ($(filter -DCONFIG_DBG_COUNTER,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_dbg_counter := y
+endif
+ifneq ($(_rust_cfg_dbg_counter),)
+rustflags-y += --cfg config_dbg_counter
+endif
 rustflags-y += --cfg dfs_master
 rustflags-y += --cfg ieee80211_band_5ghz
 # CONFIG_DFS defaults to 1 in include/drv_conf.h (#define), not a Makefile y var.
@@ -3064,6 +3074,7 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_ap.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_trx.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_rate.o
+$(MODULE_NAME)-y += rust/rtw_debug_proc_dbg_logs.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
@@ -4720,6 +4731,20 @@ rust-objects-rtw-debug-proc-rate-c:
 rust-check-symbols-rtw-debug-proc-rate: rust-objects-rtw-debug-proc-rate-c rust-objects-rtw-debug-proc-rate
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_rate_c_ref.o NEW=rust/rtw_debug_proc_rate.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_rate.allow ALLOW_VACUOUS=1
+
+# W3-164 PR1: host C stub vs rust/rtw_debug_proc_dbg_logs.o (proc rx_logs getter).
+rust-objects-rtw-debug-proc-dbg-logs:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-dbg-logs"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) USER_EXTRA_CFLAGS=-DCONFIG_DBG_COUNTER rust/rtw_debug_proc_dbg_logs.o
+rust-objects-rtw-debug-proc-dbg-logs-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_dbg_logs_c_ref.o \
+		tests/host/debug/host_rtw_debug_proc_dbg_logs_shim.c
+rust-check-symbols-rtw-debug-proc-dbg-logs: rust-objects-rtw-debug-proc-dbg-logs-c rust-objects-rtw-debug-proc-dbg-logs
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_dbg_logs_c_ref.o NEW=rust/rtw_debug_proc_dbg_logs.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_dbg_logs.allow ALLOW_VACUOUS=1
 
 # W3-94 follow-up PR4: host C oracle (ps deny shim) vs rust/rtw_pwrctrl.o.
 rust-objects-rtw-pwrctrl:
