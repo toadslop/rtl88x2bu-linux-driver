@@ -3599,6 +3599,7 @@ int proc_get_trx_info_debug(struct seq_file *m, void *v)
 	return 0;
 }
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_rx_signal(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -3640,7 +3641,6 @@ int proc_get_rx_signal(struct seq_file *m, void *v)
 #endif
 	return 0;
 }
-
 ssize_t proc_set_rx_signal(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
 	struct net_device *dev = data;
@@ -3683,6 +3683,7 @@ ssize_t proc_set_rx_signal(struct file *file, const char __user *buffer, size_t 
 	return count;
 
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-166 in rust/rtw_debug_proc_signal.rs */
 
 int proc_get_mac_rptbuf(struct seq_file *m, void *v)
 {
