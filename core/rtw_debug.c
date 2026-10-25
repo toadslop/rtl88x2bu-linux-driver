@@ -2883,7 +2883,7 @@ ssize_t rtw_rust_debug_proc_set_hw_status(_adapter *adapter,
 					  const char __user *buffer,
 					  size_t count)
 {
-	struct dvobj_priv *dvobj = padapter->dvobj;
+	struct dvobj_priv *dvobj = adapter->dvobj;
 	struct registry_priv *regsty = dvobj_to_regsty(dvobj);
 	char tmp[32];
 	u32 enable;
