@@ -27,47 +27,8 @@ extern "C" {
         tmp: *mut u8,
         tmp_size: usize,
     ) -> c_long;
+    fn rtw_rust_debug_proc_sscanf_hhu_pair(tmp: *const u8, first: *mut u8, second: *mut u8) -> i32;
     fn rtw_rust_debug_proc_apply_fwdl_test(chksum: u8, wintint: u8);
-}
-
-fn ws(b: u8) -> bool {
-    b == b' ' || b == b'\t' || b == b'\n' || b == b'\r'
-}
-
-fn token_at(line: &[u8], idx: usize) -> Option<&[u8]> {
-    let mut i = 0usize;
-    let mut slot = 0usize;
-    while i < line.len() {
-        while i < line.len() && ws(line[i]) {
-            i += 1;
-        }
-        if i >= line.len() {
-            return None;
-        }
-        let start = i;
-        while i < line.len() && !ws(line[i]) {
-            i += 1;
-        }
-        if slot == idx {
-            return Some(&line[start..i]);
-        }
-        slot += 1;
-    }
-    None
-}
-
-fn parse_u8(tok: &[u8]) -> Option<u8> {
-    let mut val = 0u32;
-    for &b in tok {
-        if !b.is_ascii_digit() {
-            return None;
-        }
-        val = val * 10 + (b - b'0') as u32;
-        if val > u8::MAX as u32 {
-            return None;
-        }
-    }
-    Some(val as u8)
 }
 
 #[cfg(any(config_rtw_debug, config_proc_debug))]
@@ -91,22 +52,22 @@ pub extern "C" fn proc_set_fwdl_test_case(
     if copied < 0 {
         return copied;
     }
-    let line = &tmp[..copied as usize];
-    let mut num = 0i32;
-    if let Some(tok) = token_at(line, 0) {
-        if let Some(v) = parse_u8(tok) {
-            unsafe {
-                PROC_FWDl_CHKSUM = v;
-            }
-            num = 1;
+    if copied == 0 {
+        return count as c_long;
+    }
+    let mut chksum = 0u8;
+    let mut wintint = 0u8;
+    let num = unsafe {
+        rtw_rust_debug_proc_sscanf_hhu_pair(tmp.as_ptr(), &mut chksum, &mut wintint)
+    };
+    if num >= 1 {
+        unsafe {
+            PROC_FWDl_CHKSUM = chksum;
         }
     }
-    if let Some(tok) = token_at(line, 1) {
-        if let Some(v) = parse_u8(tok) {
-            unsafe {
-                PROC_FWDl_WINT = v;
-            }
-            num = 2;
+    if num >= 2 {
+        unsafe {
+            PROC_FWDl_WINT = wintint;
         }
     }
     if num >= 1 {

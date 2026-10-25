@@ -2980,10 +2980,32 @@ ssize_t rtw_rust_debug_proc_copy_user_input(const char __user *buffer, size_t co
 	}
 
 	if (buffer && copy_from_user(tmp, buffer, count))
-		return -EFAULT;
+		return 0;
 
 	return count;
 }
+
+int rtw_rust_debug_proc_sscanf_hhu_pair(const char *tmp, u8 *first, u8 *second)
+{
+	return sscanf(tmp, "%hhu %hhu", first, second);
+}
+
+int rtw_rust_debug_proc_sscanf_hhu(const char *tmp, u8 *val)
+{
+	return sscanf(tmp, "%hhu", val);
+}
+
+int rtw_rust_debug_proc_sscanf_u32_hhu(const char *tmp, u32 *u, u8 *b)
+{
+	return sscanf(tmp, "%u %hhu", u, b);
+}
+
+#if defined(CONFIG_AP_MODE)
+int rtw_rust_debug_proc_sscanf_u16_pair(const char *tmp, u16 *first, u16 *second)
+{
+	return sscanf(tmp, "%hu %hu", first, second);
+}
+#endif
 #endif
 
 #if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
