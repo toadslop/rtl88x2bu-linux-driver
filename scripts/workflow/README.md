@@ -56,5 +56,9 @@ Encodes:
 | `issues` | `selected`, `readyCandidates`, `chainHeadBlocked`, `chainHeadInFlight`, `saturation`, `wholeWaveSaturated`, `pathCGap`, `overrideWarning` |
 | `pathDecision` | `path` (`A`/`B`/`C`/`stop`), `reason`, `action` |
 
+**Path C vs open PRs:** merge-ready stacks do not block Path C. Drafting triggers when
+no issue is ready to implement (`pathCReason`: `no_ready_issue`, `no_open_children`, or
+`single_lane_saturated`). Only **`needs_prep`** PRs force Path A ahead of B/C.
+
 Agents should **parse this JSON** and follow the chosen path skill — not re-list
 or re-classify PRs/issues manually unless the script fails.
