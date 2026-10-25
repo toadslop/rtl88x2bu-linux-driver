@@ -3089,6 +3089,7 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_ps.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_dbg_logs.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_hw.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_signal.o
+$(MODULE_NAME)-y += rust/rtw_debug_proc_test.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
@@ -4788,6 +4789,20 @@ rust-objects-rtw-debug-proc-dbg-logs-c:
 rust-check-symbols-rtw-debug-proc-dbg-logs: rust-objects-rtw-debug-proc-dbg-logs-c rust-objects-rtw-debug-proc-dbg-logs
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_dbg_logs_c_ref.o NEW=rust/rtw_debug_proc_dbg_logs.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_dbg_logs.allow ALLOW_VACUOUS=1
+
+# W3-168: host C stub vs rust/rtw_debug_proc_test.o (proc manufacturing test setters).
+rust-objects-rtw-debug-proc-test:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-test"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_test.o
+rust-objects-rtw-debug-proc-test-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_test_c_ref.o \
+		tests/host/debug/host_rtw_debug_proc_test_shim.c
+rust-check-symbols-rtw-debug-proc-test: rust-objects-rtw-debug-proc-test-c rust-objects-rtw-debug-proc-test
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_test_c_ref.o NEW=rust/rtw_debug_proc_test.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_test.allow ALLOW_VACUOUS=1
 
 # W3-165: host C stub vs rust/rtw_debug_proc_hw.o (proc hw_info get/set).
 rust-objects-rtw-debug-proc-hw:

@@ -235,6 +235,7 @@ for path in "${changed[@]}"; do
 	| rust/rtw_debug_proc_dbg_logs.rs \
 	| rust/rtw_debug_proc_hw.rs \
 	| rust/rtw_debug_proc_signal.rs \
+	| rust/rtw_debug_proc_test.rs \
 	| core/rtw_debug_adapters_status_shim.c \
 	| core/rtw_debug.c \
 	| core/rtw_debug_rest.c \
@@ -254,6 +255,7 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-debug-proc-dbg-logs
 		add_target rust-check-symbols-rtw-debug-proc-hw
 		add_target rust-check-symbols-rtw-debug-proc-signal
+		add_target rust-check-symbols-rtw-debug-proc-test
 		;;
 	rust/hal_com.rs \
 	| hal/hal_com_rest.c \
