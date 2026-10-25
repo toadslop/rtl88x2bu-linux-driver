@@ -86,9 +86,8 @@ pub extern "C" fn proc_set_fwdl_test_case(
         return count as c_long;
     }
     let mut tmp = [0u8; TMP_SIZE];
-    let copied = unsafe {
-        rtw_rust_debug_proc_copy_user_input(buffer, count, tmp.as_mut_ptr(), TMP_SIZE)
-    };
+    let copied =
+        unsafe { rtw_rust_debug_proc_copy_user_input(buffer, count, tmp.as_mut_ptr(), TMP_SIZE) };
     if copied < 0 {
         return copied;
     }
