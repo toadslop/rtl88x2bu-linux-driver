@@ -136,7 +136,7 @@ Stop and report instead of filing when **any** of these hold:
 | Condition | Action |
 |-----------|--------|
 | Chain head has **no accessible code** (open issue, no implementing PR) | True frontier — Path B cannot start here; Path C only if tranche gap |
-| Chain head has **its own** open PR and **no downstream** issue is ready | Prep/babysit existing PRs (Path A) — do not duplicate the chain head |
+| Chain head has **its own** open PR that **`needs_prep`** and **no downstream** issue is ready | Prep/babysit (Path A) — do not duplicate the chain head. When that PR is **merge-ready** and nothing is ready to implement, Path C may draft **other** parallel lanes / next tranche |
 | **≥15 open children** already filed behind the same **single-lane** chain head | That lane's backlog saturated — draft **other parallel lanes** instead, or implement/stack |
 | Next slices are **HAL / PHYDM / USB HCI** (`hal/`, `halmac/`, `phydm/`, `hci/`) | Defer to Wave 4 epic — not Path C in Wave 3 |
 | Slice needs **new L2 harness** but no `T*` issue exists to add it | Draft a **test-infra** child first (`T*`), not a translation child |

@@ -8,7 +8,7 @@ description: >-
   still needs prep; (B) otherwise triage issues, select ready work, plan ~200-line
   implement, open PRs ready for review, and babysit; (C) otherwise draft new
   issues per allowlist when no lane is saturated (or parallel lanes remain
-  draftable) and chain head is not in-flight, then stop. If Path A runs but no PR could be changed (e.g.
+  draftable), then stop. If Path A runs but no PR could be changed (e.g.
   landed on a PR branch already merge-ready), fall through to B/C without
   stopping. Do NOT use for reviewing PRs
   (pr-review-delivery) or for preparing a single named PR in isolation
@@ -91,7 +91,7 @@ see [`scripts/workflow/README.md`](../../../scripts/workflow/README.md).
 | `A` | Path A — `prs.needs_prep` |
 | `B` | Path B — `issues.selected` (+ stack base) |
 | `C` | Path C — `issues.pathCGap` |
-| `stop` | Report `chainHeadBlocked` or `chainHeadInFlight`; do not draft/implement |
+| `stop` | Report `chainHeadBlocked`, whole-wave saturation, or no work identified — do not draft/implement. `chainHeadInFlight` in JSON is informational only; merge-ready in-flight heads with no ready issue yield Path **C** via `pathCGap` |
 
 Optional: `./scripts/workflow/find-work.sh path --human` for a readable summary.
 User override: `--issue W3-40` when the user named a draft ID.
@@ -200,7 +200,7 @@ flowchart TD
   H --> Z
   F -->|None ready| I{Path C gap?}
   I -->|Blocked head, no parallel gap| Z3[Report frontier — stop]
-  I -->|True gap or single-lane saturated| J[Path C: draft per allowlist]
+  I -->|Gap incl. merge-ready in-flight| J[Path C: draft per allowlist]
   J --> Z
 ```
 
@@ -320,8 +320,9 @@ mandatory follow-up issues for unfinished stack rows).
 
 **When:** no **`needs_prep`** PRs (skipped or merge-ready open PRs may remain),
 selection finds **no** ready issue, **`draft-migration-issues` When NOT to draft**
-checks pass (not in-flight head, no **whole-wave** saturation blocking all lanes,
-scope is allowlisted).
+checks pass (no **whole-wave** saturation blocking all lanes, scope is
+allowlisted). A merge-ready PR for the chain-head issue does **not** block Path C —
+only **`needs_prep`** on that PR forces Path A first.
 
 | Step | Subskill | Outcome |
 |------|----------|---------|
@@ -330,7 +331,7 @@ scope is allowlisted).
 
 **Do not enter Path C** when:
 
-- The chain head issue is unblocked but has **its own** open implementation PR (prep or stack downstream instead)
+- The chain head issue is unblocked but its open implementation PR **`needs_prep`** (prep via Path A — do not file a duplicate chain-head ticket)
 - **Every** active parallel lane already has ≥15 open children (whole-wave saturation — implement/merge instead)
 - The only "gap" is Wave 4+ HAL/USB/PHYDM scope
 

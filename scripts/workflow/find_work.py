@@ -963,6 +963,8 @@ def analyze_issues(
             path_c_gap = True
             path_c_reason = "no_open_children"
         elif not candidates and chain_head_blocked is None:
+            # Includes merge-ready in-flight chain head (open child, no ready
+            # candidate) and exhausted tracker with no blocked head.
             path_c_gap = True
             path_c_reason = "no_ready_issue"
 
