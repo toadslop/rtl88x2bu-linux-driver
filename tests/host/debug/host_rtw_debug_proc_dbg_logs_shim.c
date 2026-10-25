@@ -11,3 +11,17 @@ int proc_get_rx_logs(seq_file *m, void *v)
 	(void)v;
 	return 0;
 }
+
+int proc_get_tx_logs(seq_file *m, void *v)
+{
+	(void)m;
+	(void)v;
+	return 0;
+}
+
+int proc_get_int_logs(seq_file *m, void *v)
+{
+	(void)m;
+	(void)v;
+	return 0;
+}

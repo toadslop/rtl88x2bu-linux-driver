@@ -3303,6 +3303,7 @@ int proc_get_rx_logs(struct seq_file *m, void *v)
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-164 PR1 rx_logs in rust/rtw_debug_proc_dbg_logs.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_tx_logs(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -3418,7 +3419,9 @@ int proc_get_tx_logs(struct seq_file *m, void *v)
 
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-164 PR2 tx/int_logs in rust/rtw_debug_proc_dbg_logs.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_int_logs(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -3463,6 +3466,7 @@ int proc_get_int_logs(struct seq_file *m, void *v)
 
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-164 PR2 tx/int_logs in rust/rtw_debug_proc_dbg_logs.rs */
 
 #endif /* CONFIG_DBG_COUNTER */
 

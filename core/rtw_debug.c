@@ -2708,6 +2708,156 @@ void rtw_rust_debug_proc_emit_rx_logs(void *sel, _adapter *adapter)
 		      rx_logs->os_netif_ok,
 		      rx_logs->os_netif_err);
 }
+
+void rtw_rust_debug_proc_emit_tx_logs(void *sel, _adapter *adapter)
+{
+	struct tx_logs *tx_logs = &adapter->tx_logs;
+
+	RTW_PRINT_SEL(sel,
+		      "os_tx=%d\n"
+		      "os_tx_err_up=%d\n"
+		      "os_tx_err_xmit=%d\n"
+		      "os_tx_m2u=%d\n"
+		      "os_tx_m2u_ignore_fw_linked=%d\n"
+		      "os_tx_m2u_ignore_self=%d\n"
+		      "os_tx_m2u_entry=%d\n"
+		      "os_tx_m2u_entry_err_xmit=%d\n"
+		      "os_tx_m2u_entry_err_skb=%d\n"
+		      "os_tx_m2u_stop=%d\n"
+		      "core_tx=%d\n"
+		      "core_tx_err_pxmitframe=%d\n"
+		      "core_tx_err_brtx=%d\n"
+		      "core_tx_upd_attrib=%d\n"
+		      "core_tx_upd_attrib_adhoc=%d\n"
+		      "core_tx_upd_attrib_sta=%d\n"
+		      "core_tx_upd_attrib_ap=%d\n"
+		      "core_tx_upd_attrib_unknown=%d\n"
+		      "core_tx_upd_attrib_dhcp=%d\n"
+		      "core_tx_upd_attrib_icmp=%d\n"
+		      "core_tx_upd_attrib_active=%d\n"
+		      "core_tx_upd_attrib_err_ucast_sta=%d\n"
+		      "core_tx_upd_attrib_err_ucast_ap_link=%d\n"
+		      "core_tx_upd_attrib_err_sta=%d\n"
+		      "core_tx_upd_attrib_err_link=%d\n"
+		      "core_tx_upd_attrib_err_sec=%d\n"
+		      "core_tx_ap_enqueue_warn_fwstate=%d\n"
+		      "core_tx_ap_enqueue_warn_sta=%d\n"
+		      "core_tx_ap_enqueue_warn_nosta=%d\n"
+		      "core_tx_ap_enqueue_warn_link=%d\n"
+		      "core_tx_ap_enqueue_warn_trigger=%d\n"
+		      "core_tx_ap_enqueue_mcast=%d\n"
+		      "core_tx_ap_enqueue_ucast=%d\n"
+		      "core_tx_ap_enqueue=%d\n"
+		      "intf_tx=%d\n"
+		      "intf_tx_pending_ac=%d\n"
+		      "intf_tx_pending_fw_under_survey=%d\n"
+		      "intf_tx_pending_fw_under_linking=%d\n"
+		      "intf_tx_pending_xmitbuf=%d\n"
+		      "intf_tx_enqueue=%d\n"
+		      "core_tx_enqueue=%d\n"
+		      "core_tx_enqueue_class=%d\n"
+		      "core_tx_enqueue_class_err_sta=%d\n"
+		      "core_tx_enqueue_class_err_nosta=%d\n"
+		      "core_tx_enqueue_class_err_fwlink=%d\n"
+		      "intf_tx_direct=%d\n"
+		      "intf_tx_direct_err_coalesce=%d\n"
+		      "intf_tx_dequeue=%d\n"
+		      "intf_tx_dequeue_err_coalesce=%d\n"
+		      "intf_tx_dump_xframe=%d\n"
+		      "intf_tx_dump_xframe_err_txdesc=%d\n"
+		      "intf_tx_dump_xframe_err_port=%d\n",
+		      tx_logs->os_tx,
+		      tx_logs->os_tx_err_up,
+		      tx_logs->os_tx_err_xmit,
+		      tx_logs->os_tx_m2u,
+		      tx_logs->os_tx_m2u_ignore_fw_linked,
+		      tx_logs->os_tx_m2u_ignore_self,
+		      tx_logs->os_tx_m2u_entry,
+		      tx_logs->os_tx_m2u_entry_err_xmit,
+		      tx_logs->os_tx_m2u_entry_err_skb,
+		      tx_logs->os_tx_m2u_stop,
+		      tx_logs->core_tx,
+		      tx_logs->core_tx_err_pxmitframe,
+		      tx_logs->core_tx_err_brtx,
+		      tx_logs->core_tx_upd_attrib,
+		      tx_logs->core_tx_upd_attrib_adhoc,
+		      tx_logs->core_tx_upd_attrib_sta,
+		      tx_logs->core_tx_upd_attrib_ap,
+		      tx_logs->core_tx_upd_attrib_unknown,
+		      tx_logs->core_tx_upd_attrib_dhcp,
+		      tx_logs->core_tx_upd_attrib_icmp,
+		      tx_logs->core_tx_upd_attrib_active,
+		      tx_logs->core_tx_upd_attrib_err_ucast_sta,
+		      tx_logs->core_tx_upd_attrib_err_ucast_ap_link,
+		      tx_logs->core_tx_upd_attrib_err_sta,
+		      tx_logs->core_tx_upd_attrib_err_link,
+		      tx_logs->core_tx_upd_attrib_err_sec,
+		      tx_logs->core_tx_ap_enqueue_warn_fwstate,
+		      tx_logs->core_tx_ap_enqueue_warn_sta,
+		      tx_logs->core_tx_ap_enqueue_warn_nosta,
+		      tx_logs->core_tx_ap_enqueue_warn_link,
+		      tx_logs->core_tx_ap_enqueue_warn_trigger,
+		      tx_logs->core_tx_ap_enqueue_mcast,
+		      tx_logs->core_tx_ap_enqueue_ucast,
+		      tx_logs->core_tx_ap_enqueue,
+		      tx_logs->intf_tx,
+		      tx_logs->intf_tx_pending_ac,
+		      tx_logs->intf_tx_pending_fw_under_survey,
+		      tx_logs->intf_tx_pending_fw_under_linking,
+		      tx_logs->intf_tx_pending_xmitbuf,
+		      tx_logs->intf_tx_enqueue,
+		      tx_logs->core_tx_enqueue,
+		      tx_logs->core_tx_enqueue_class,
+		      tx_logs->core_tx_enqueue_class_err_sta,
+		      tx_logs->core_tx_enqueue_class_err_nosta,
+		      tx_logs->core_tx_enqueue_class_err_fwlink,
+		      tx_logs->intf_tx_direct,
+		      tx_logs->intf_tx_direct_err_coalesce,
+		      tx_logs->intf_tx_dequeue,
+		      tx_logs->intf_tx_dequeue_err_coalesce,
+		      tx_logs->intf_tx_dump_xframe,
+		      tx_logs->intf_tx_dump_xframe_err_txdesc,
+		      tx_logs->intf_tx_dump_xframe_err_port);
+}
+
+void rtw_rust_debug_proc_emit_int_logs(void *sel, _adapter *adapter)
+{
+	RTW_PRINT_SEL(sel,
+		      "all=%d\n"
+		      "err=%d\n"
+		      "tbdok=%d\n"
+		      "tbder=%d\n"
+		      "bcnderr=%d\n"
+		      "bcndma=%d\n"
+		      "bcndma_e=%d\n"
+		      "rx=%d\n"
+		      "rx_rdu=%d\n"
+		      "rx_fovw=%d\n"
+		      "txfovw=%d\n"
+		      "mgntok=%d\n"
+		      "highdok=%d\n"
+		      "bkdok=%d\n"
+		      "bedok=%d\n"
+		      "vidok=%d\n"
+		      "vodok=%d\n",
+		      adapter->int_logs.all,
+		      adapter->int_logs.err,
+		      adapter->int_logs.tbdok,
+		      adapter->int_logs.tbder,
+		      adapter->int_logs.bcnderr,
+		      adapter->int_logs.bcndma,
+		      adapter->int_logs.bcndma_e,
+		      adapter->int_logs.rx,
+		      adapter->int_logs.rx_rdu,
+		      adapter->int_logs.rx_fovw,
+		      adapter->int_logs.txfovw,
+		      adapter->int_logs.mgntok,
+		      adapter->int_logs.highdok,
+		      adapter->int_logs.bkdok,
+		      adapter->int_logs.bedok,
+		      adapter->int_logs.vidok,
+		      adapter->int_logs.vodok);
+}
 #endif /* CONFIG_DBG_COUNTER */
 
 #endif /* CONFIG_PROC_DEBUG */
