@@ -2904,6 +2904,7 @@ ssize_t proc_set_bw_ctl(struct file *file, const char __user *buffer, size_t cou
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-160 PR3 bw_ctl in rust/rtw_debug_proc_rate.rs */
 
 #ifdef DBG_RX_COUNTER_DUMP
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_rx_cnt_dump(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -2945,6 +2946,7 @@ ssize_t proc_set_rx_cnt_dump(struct file *file, const char __user *buffer, size_
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-162 in rust/rtw_debug_proc_rx_cnt.rs */
 #endif
 
 #if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
