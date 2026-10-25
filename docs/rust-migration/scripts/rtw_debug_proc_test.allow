@@ -1,3 +1,7 @@
-# W3-168 PR1: fwdl proc setter in rtw_debug_proc_test.o.
+# W3-168: proc manufacturing test setters in rtw_debug_proc_test.o.
 drop rtw_rust_debug_proc_copy_user_input
 drop rtw_rust_debug_proc_apply_fwdl_test
+drop rtw_rust_debug_proc_apply_del_rx_ampdu_test
+drop rtw_rust_debug_proc_apply_wait_hiq_empty
+drop rtw_rust_debug_proc_apply_sta_linking_test
+drop rtw_rust_debug_proc_apply_ap_linking_test

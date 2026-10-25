@@ -2968,6 +2968,34 @@ void rtw_rust_debug_proc_apply_fwdl_test(u8 chksum, u8 wintint)
 	rtw_rust_debug_set_fwdl_test_case(chksum, wintint);
 }
 
+void rtw_rust_debug_proc_apply_del_rx_ampdu_test(u8 no_tx_fail)
+{
+	proc_del_rx_ampdu_test_no_tx_fail = no_tx_fail;
+	rtw_rust_debug_set_del_rx_ampdu_test_no_tx_fail(no_tx_fail);
+}
+
+void rtw_rust_debug_proc_apply_wait_hiq_empty(u32 wait_ms)
+{
+	proc_wait_hiq_empty_ms = wait_ms;
+	rtw_rust_debug_set_wait_hiq_empty_ms(wait_ms);
+}
+
+void rtw_rust_debug_proc_apply_sta_linking_test(u32 wait_ms, u8 force_fail)
+{
+	proc_sta_linking_test_wait_ms = wait_ms;
+	proc_sta_linking_test_force_fail = force_fail;
+	rtw_rust_debug_set_sta_linking_test(wait_ms, force_fail);
+}
+
+#ifdef CONFIG_AP_MODE
+void rtw_rust_debug_proc_apply_ap_linking_test(u16 auth, u16 asoc)
+{
+	proc_ap_linking_test_force_auth_fail = auth;
+	proc_ap_linking_test_force_asoc_fail = asoc;
+	rtw_rust_debug_set_ap_linking_test(auth, asoc);
+}
+#endif
+
 ssize_t rtw_rust_debug_proc_copy_user_input(const char __user *buffer, size_t count,
 					    char *tmp, size_t tmp_size)
 {
@@ -2993,6 +3021,11 @@ int rtw_rust_debug_proc_sscanf_hhu_pair(const char *tmp, u8 *first, u8 *second)
 int rtw_rust_debug_proc_sscanf_hhu(const char *tmp, u8 *val)
 {
 	return sscanf(tmp, "%hhu", val);
+}
+
+int rtw_rust_debug_proc_sscanf_u32(const char *tmp, u32 *val)
+{
+	return sscanf(tmp, "%u", val);
 }
 
 int rtw_rust_debug_proc_sscanf_u32_hhu(const char *tmp, u32 *u, u8 *b)
@@ -3033,8 +3066,6 @@ ssize_t proc_set_fwdl_test_case(struct file *file, const char __user *buffer, si
 
 	return count;
 }
-#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-168 PR1 fwdl in rust/rtw_debug_proc_test.rs */
-
 ssize_t proc_set_del_rx_ampdu_test_case(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
 	char tmp[32];
@@ -3051,16 +3082,8 @@ ssize_t proc_set_del_rx_ampdu_test_case(struct file *file, const char __user *bu
 		u8 no_tx_fail = 0;
 		int num = sscanf(tmp, "%hhu", &no_tx_fail);
 
-#if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
-		if (num >= 1) {
-			proc_del_rx_ampdu_test_no_tx_fail = no_tx_fail;
-			rtw_rust_debug_set_del_rx_ampdu_test_no_tx_fail(
-				proc_del_rx_ampdu_test_no_tx_fail);
-		}
-#else
 		if (num >= 1)
 			del_rx_ampdu_test_no_tx_fail = no_tx_fail;
-#endif
 	}
 
 	return count;
@@ -3082,15 +3105,8 @@ ssize_t proc_set_wait_hiq_empty(struct file *file, const char __user *buffer, si
 		u32 wait_ms = 0;
 		int num = sscanf(tmp, "%u", &wait_ms);
 
-#if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
-		if (num >= 1) {
-			proc_wait_hiq_empty_ms = wait_ms;
-			rtw_rust_debug_set_wait_hiq_empty_ms(proc_wait_hiq_empty_ms);
-		}
-#else
 		if (num >= 1)
 			g_wait_hiq_empty_ms = wait_ms;
-#endif
 	}
 
 	return count;
@@ -3113,19 +3129,10 @@ ssize_t proc_set_sta_linking_test(struct file *file, const char __user *buffer, 
 		u8 force_fail = 0;
 		int num = sscanf(tmp, "%u %hhu", &wait_ms, &force_fail);
 
-#if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
-		if (num >= 1)
-			proc_sta_linking_test_wait_ms = wait_ms;
-		if (num >= 2)
-			proc_sta_linking_test_force_fail = force_fail;
-		rtw_rust_debug_set_sta_linking_test(proc_sta_linking_test_wait_ms,
-			proc_sta_linking_test_force_fail);
-#else
 		if (num >= 1)
 			sta_linking_test_wait_ms = wait_ms;
 		if (num >= 2)
 			sta_linking_test_force_fail = force_fail;
-#endif
 	}
 
 	return count;
@@ -3149,24 +3156,16 @@ ssize_t proc_set_ap_linking_test(struct file *file, const char __user *buffer, s
 		u16 force_asoc_fail = 0;
 		int num = sscanf(tmp, "%hu %hu", &force_auth_fail, &force_asoc_fail);
 
-#if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
-		if (num >= 1)
-			proc_ap_linking_test_force_auth_fail = force_auth_fail;
-		if (num >= 2)
-			proc_ap_linking_test_force_asoc_fail = force_asoc_fail;
-		rtw_rust_debug_set_ap_linking_test(proc_ap_linking_test_force_auth_fail,
-			proc_ap_linking_test_force_asoc_fail);
-#else
 		if (num >= 1)
 			ap_linking_test_force_auth_fail = force_auth_fail;
 		if (num >= 2)
 			ap_linking_test_force_asoc_fail = force_asoc_fail;
-#endif
 	}
 
 	return count;
 }
 #endif /* CONFIG_AP_MODE */
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-168 PR2 in rust/rtw_debug_proc_test.rs */
 
 #if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_ps_dbg_info(struct seq_file *m, void *v)
