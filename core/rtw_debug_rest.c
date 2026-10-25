@@ -3470,6 +3470,7 @@ int proc_get_int_logs(struct seq_file *m, void *v)
 
 #endif /* CONFIG_DBG_COUNTER */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_hw_status(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -3522,6 +3523,7 @@ ssize_t proc_set_hw_status(struct file *file, const char __user *buffer, size_t 
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-165 in rust/rtw_debug_proc_hw.rs */
 
 #ifdef CONFIG_HUAWEI_PROC
 int proc_get_huawei_trx_info(struct seq_file *sel, void *v)
