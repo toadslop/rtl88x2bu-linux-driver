@@ -2960,8 +2960,33 @@ static u8 proc_sta_linking_test_force_fail;
 static u16 proc_ap_linking_test_force_auth_fail;
 static u16 proc_ap_linking_test_force_asoc_fail;
 #endif
+
+void rtw_rust_debug_proc_apply_fwdl_test(u8 chksum, u8 wintint)
+{
+	proc_fwdl_test_chksum_fail = chksum;
+	proc_fwdl_test_wintint_rdy_fail = wintint;
+	rtw_rust_debug_set_fwdl_test_case(chksum, wintint);
+}
+
+ssize_t rtw_rust_debug_proc_copy_user_input(const char __user *buffer, size_t count,
+					    char *tmp, size_t tmp_size)
+{
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > tmp_size) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && copy_from_user(tmp, buffer, count))
+		return -EFAULT;
+
+	return count;
+}
 #endif
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 ssize_t proc_set_fwdl_test_case(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
 	char tmp[32];
@@ -2978,24 +3003,15 @@ ssize_t proc_set_fwdl_test_case(struct file *file, const char __user *buffer, si
 		u8 chksum = 0, wintint = 0;
 		int num = sscanf(tmp, "%hhu %hhu", &chksum, &wintint);
 
-#if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
-		if (num >= 1)
-			proc_fwdl_test_chksum_fail = chksum;
-		if (num >= 2)
-			proc_fwdl_test_wintint_rdy_fail = wintint;
-		if (num >= 1)
-			rtw_rust_debug_set_fwdl_test_case(proc_fwdl_test_chksum_fail,
-				proc_fwdl_test_wintint_rdy_fail);
-#else
 		if (num >= 1)
 			fwdl_test_chksum_fail = chksum;
 		if (num >= 2)
 			fwdl_test_wintint_rdy_fail = wintint;
-#endif
 	}
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-168 PR1 fwdl in rust/rtw_debug_proc_test.rs */
 
 ssize_t proc_set_del_rx_ampdu_test_case(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {

@@ -1,0 +1,3 @@
+# W3-168 PR1: fwdl proc setter in rtw_debug_proc_test.o.
+drop rtw_rust_debug_proc_copy_user_input
+drop rtw_rust_debug_proc_apply_fwdl_test
