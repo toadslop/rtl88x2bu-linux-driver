@@ -947,9 +947,11 @@ def analyze_issues(
     )
 
     # Path C when: (1) one lane is saturated (≥15 behind same blocker) and other
-    # parallel lanes remain draftable; or (2) no open implementation children remain
-    # (tranche complete) — draft the next batch per epic deferred lists.
-    # A blocked chain head with <15 filed children yields stop, not Path C.
+    # parallel lanes remain draftable; (2) no open implementation children remain
+    # (tranche complete); or (3) open children exist but none are ready to implement
+    # (e.g. chain head merge-ready on GitHub — draft parallel/next tranche anyway).
+    # Open PRs alone do not block drafting; only needs_prep (Path A) blocks ahead of C.
+    # A blocked chain head with unsatisfied deps yields stop, not Path C.
     path_c_gap = False
     path_c_reason: str | None = None
     if not selected and not whole_wave_saturated:
@@ -957,13 +959,12 @@ def analyze_issues(
         if saturation and other_lanes_draftable:
             path_c_gap = True
             path_c_reason = "single_lane_saturated"
-        elif (
-            not children
-            and chain_head_blocked is None
-            and chain_head_in_flight is None
-        ):
+        elif not children and chain_head_blocked is None:
             path_c_gap = True
             path_c_reason = "no_open_children"
+        elif not candidates and chain_head_blocked is None:
+            path_c_gap = True
+            path_c_reason = "no_ready_issue"
 
     return {
         "openChildren": len(children),
@@ -1007,14 +1008,6 @@ def decide_path(
             "path": "stop",
             "reason": "whole-wave saturated — implement/merge instead of drafting",
             "action": "report saturation counts",
-        }
-    if issue_report.get("chainHeadInFlight"):
-        inf = issue_report["chainHeadInFlight"]
-        return {
-            "path": "stop",
-            "reason": "chain head in-flight only",
-            "action": "report frontier PR; prep if needs_prep on next run",
-            "chainHeadInFlight": inf,
         }
     if issue_report.get("pathCGap"):
         return {

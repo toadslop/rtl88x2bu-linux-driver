@@ -99,6 +99,51 @@ class DecidePathTests(unittest.TestCase):
         self.assertEqual(decision["path"], "C")
         self.assertEqual(decision["reason"], "no_open_children")
 
+    def test_path_c_not_blocked_by_chain_head_inflight(self) -> None:
+        """Merge-ready in-flight PRs must not prevent Path C drafting."""
+        decision = fw.decide_path(
+            {"needs_prep": []},
+            {
+                "pathCGap": True,
+                "pathCReason": "no_ready_issue",
+                "chainHeadInFlight": {
+                    "number": 1483,
+                    "draftId": "W3-168",
+                    "pr": {"number": 1494},
+                },
+            },
+        )
+        self.assertEqual(decision["path"], "C")
+        self.assertEqual(decision["reason"], "no_ready_issue")
+
+    def test_path_c_gap_when_only_inflight_open_child(self) -> None:
+        issue = fw.Issue(
+            number=1483,
+            title="[W3-168] test",
+            state="OPEN",
+            body="",
+            draft_id="W3-168",
+            blocked_by=[],
+            lane="rtw_debug_rest",
+            spec_path="wave3-168.md",
+        )
+        pr = fw.PullRequest(
+            number=1494,
+            title="[W3-168 PR1] test",
+            url="http://example/pr/1494",
+            is_draft=False,
+            base_ref=fw.DEFAULT_BRANCH,
+            head_ref="cursor/w3-168",
+        )
+        pr.enrichment_ok = True
+        pr.mergeable = "MERGEABLE"
+        pr.merge_state = "CLEAN"
+        report = fw.analyze_issues([issue], [pr], {}, None)
+        self.assertTrue(report["pathCGap"])
+        self.assertEqual(report["pathCReason"], "no_ready_issue")
+        self.assertIsNotNone(report["chainHeadInFlight"])
+        self.assertIsNone(report["selected"])
+
 
 if __name__ == "__main__":
     unittest.main()
