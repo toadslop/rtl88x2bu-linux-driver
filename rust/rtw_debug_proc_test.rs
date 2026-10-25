@@ -57,9 +57,8 @@ pub extern "C" fn proc_set_fwdl_test_case(
     }
     let mut chksum = 0u8;
     let mut wintint = 0u8;
-    let num = unsafe {
-        rtw_rust_debug_proc_sscanf_hhu_pair(tmp.as_ptr(), &mut chksum, &mut wintint)
-    };
+    let num =
+        unsafe { rtw_rust_debug_proc_sscanf_hhu_pair(tmp.as_ptr(), &mut chksum, &mut wintint) };
     if num >= 1 {
         unsafe {
             PROC_FWDl_CHKSUM = chksum;
