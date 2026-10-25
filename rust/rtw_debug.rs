@@ -8,6 +8,7 @@
 //! W3-159 proc trx_info handlers live in `rtw_debug_proc_trx.rs`.
 //! W3-160 proc rate_ctl leaf handlers live in `rtw_debug_proc_rate.rs`.
 //! W3-162 proc dump_rx_cnt_mode handlers live in `rtw_debug_proc_rx_cnt.rs`.
+//! W3-163 proc ps_dbg_info handlers live in `rtw_debug_proc_ps.rs`.
 
 #![allow(
     dead_code,
