@@ -1,2 +1,4 @@
-# L1 allowlist for W3-143: Rust owns mac_reg_dump / bb_reg_dump.
+# L1 allowlist for W3-143/W3-169: Rust owns register dump leaves.
 drop rtw_rust_debug_read32
+drop rtw_rust_debug_hal_rf_reg_path_num
+drop rtw_rust_debug_hal_read_rfreg

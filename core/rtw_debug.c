@@ -497,6 +497,16 @@ void rtw_rust_debug_write32(_adapter *adapter, u32 addr, u32 val)
 	rtw_write32(adapter, addr, val);
 }
 
+u8 rtw_rust_debug_hal_rf_reg_path_num(_adapter *adapter)
+{
+	return GET_HAL_SPEC(adapter)->rf_reg_path_num;
+}
+
+u32 rtw_rust_debug_hal_read_rfreg(_adapter *adapter, u32 path, u32 addr, u32 mask)
+{
+	return rtw_hal_read_rfreg(adapter, path, addr, mask);
+}
+
 #ifdef CONFIG_PROC_DEBUG
 _adapter *rtw_rust_debug_proc_adapter(void *m)
 {
