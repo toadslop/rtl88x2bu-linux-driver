@@ -21,12 +21,7 @@ extern "C" {
     fn rtw_rust_debug_print_sel_cont(sel: *mut c_void, line: *const c_char);
     fn rtw_rust_debug_read32(adapter: *mut c_void, addr: U32) -> U32;
     fn rtw_rust_debug_hal_rf_reg_path_num(adapter: *mut c_void) -> u8;
-    fn rtw_rust_debug_hal_read_rfreg(
-        adapter: *mut c_void,
-        path: U32,
-        addr: U32,
-        mask: U32,
-    ) -> U32;
+    fn rtw_rust_debug_hal_read_rfreg(adapter: *mut c_void, path: U32, addr: U32, mask: U32) -> U32;
 }
 
 fn print_bytes(sel: *mut c_void, bytes: &[u8]) {
@@ -228,12 +223,7 @@ pub extern "C" fn bb_reg_dump_ex(sel: *mut c_void, adapter: *mut c_void) {
         i += 4;
     }
 
-    #[cfg(any(
-        CONFIG_RTL8822B,
-        CONFIG_RTL8821C,
-        CONFIG_RTL8822C,
-        CONFIG_RTL8814B
-    ))]
+    #[cfg(any(CONFIG_RTL8822B, CONFIG_RTL8821C, CONFIG_RTL8822C, CONFIG_RTL8814B))]
     {
         i = 0x1800;
         while i < 0x2000 {
@@ -256,9 +246,7 @@ fn dump_rf_reg_window(sel: *mut c_void, adapter: *mut c_void, path: U32, j: &mut
         }
         let mut pos = 0usize;
         push_str(&mut line, &mut pos, b" 0x");
-        let val = unsafe {
-            rtw_rust_debug_hal_read_rfreg(adapter, path, i, 0xffff_ffff)
-        };
+        let val = unsafe { rtw_rust_debug_hal_read_rfreg(adapter, path, i, 0xffff_ffff) };
         push_u32_hex8(&mut line, &mut pos, val);
         push_byte(&mut line, &mut pos, b' ');
         print_bytes_cont(sel, &line[..pos]);
