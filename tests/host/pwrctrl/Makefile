@@ -8,6 +8,7 @@ LPS_SHIM := host_pwrctrl_lps_shim.c
 LEAVE_ALL_SHIM := host_pwrctrl_leave_all_ps_shim.c
 LPS_ENTER_SHIM := host_pwrctrl_lps_enter_shim.c
 IPS_SHIM := host_pwrctrl_ips_shim.c
+PS_PROC_SHIM := host_pwrctrl_ps_processor_shim.c
 
 CC     := gcc
 CFLAGS := -Wall -Wextra -Werror -O2 \
@@ -21,11 +22,11 @@ RUST_PWRCTRL_IPS_HOST := $(ROOT)/rust/rtw_pwrctrl_ips_host.rs
 RUSTC := rustc
 
 .PHONY: all test test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust \
-	test-leave-all test-leave-all-rust test-ips test-ips-rust clean
+	test-leave-all test-leave-all-rust test-ips test-ips-rust test-ps-processor clean
 
-all: test test-lps test-lps-enter test-leave-all test-leave-all-rust test-ips test-ips-rust
+all: test test-lps test-lps-enter test-leave-all test-leave-all-rust test-ips test-ips-rust test-ps-processor
 
-test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust test-leave-all test-leave-all-rust test-ips test-ips-rust
+test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust test-leave-all test-leave-all-rust test-ips test-ips-rust test-ps-processor
 
 test-c: test_pwrctrl_ps_deny
 	./test_pwrctrl_ps_deny ps_deny_vectors.json
@@ -56,6 +57,12 @@ test-ips: test_pwrctrl_ips
 
 test-ips-rust: test_pwrctrl_ips_rust
 	./test_pwrctrl_ips_rust ips_vectors.json
+
+test-ps-processor: test_pwrctrl_ps_processor
+	./test_pwrctrl_ps_processor ps_processor_vectors.json
+
+test_pwrctrl_ps_processor: test_pwrctrl_ps_processor.c $(PS_PROC_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_pwrctrl_ps_processor.c $(PS_PROC_SHIM) $(HOST_JSON)
 
 test_pwrctrl_lps_enter: test_pwrctrl_lps_enter.c $(LPS_ENTER_SHIM) $(HOST_JSON)
 	$(CC) $(LPS_ENTER_CFLAGS) -o $@ test_pwrctrl_lps_enter.c $(LPS_ENTER_SHIM) $(HOST_JSON)
@@ -99,5 +106,5 @@ clean:
 	rm -f test_pwrctrl_ps_deny test_pwrctrl_ps_deny_rust test_pwrctrl_lps \
 		test_pwrctrl_lps_rust test_pwrctrl_lps_enter test_pwrctrl_lps_enter_rust \
 		test_pwrctrl_leave_all_ps test_pwrctrl_leave_all_ps_rust \
-		test_pwrctrl_ips test_pwrctrl_ips_rust librust_pwrctrl_ips.a \
-		librust_pwrctrl.a
+		test_pwrctrl_ips test_pwrctrl_ips_rust test_pwrctrl_ps_processor \
+		librust_pwrctrl_ips.a librust_pwrctrl.a
