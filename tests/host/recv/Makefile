@@ -12,6 +12,8 @@ RECV_STA_SHIM := host_recv_sta_shim.c
 LLC_SHIM := host_recv_llc_shim.c
 WFD_ORACLE := recv_wfd_c_oracle.c
 HOST_JSON := ../crypto/host_vector_json.c
+RX_BH_ORACLE := debug_rx_bh_tk_c_oracle.c
+RX_BH_L2 := test_dump_rx_bh_tk.c
 RUST_RECV := $(ROOT)/rust/rtw_recv.rs
 RUST_RECV_STA_COUNT := $(ROOT)/rust/rtw_recv_sta_count.rs
 RUST_RECV_STA_VALIDATE := $(ROOT)/rust/rtw_recv_sta_validate.rs
@@ -28,11 +30,12 @@ RECV_STA_DEPS := test_recv_sta.c $(RECV_STA_REST_SRC) $(RECV_STA_SHIM) $(HOST_JS
 STA_COUNT_RUST_CFLAGS := $(STA_CFLAGS) -DHOST_RECV_STA_RUST_COUNT
 STA_RUST_CFLAGS := $(STA_CFLAGS) -DHOST_RECV_STA_RUST_COUNT -DHOST_RECV_STA_RUST_VALIDATE
 
-.PHONY: all test test-c test-rust test-sta test-sta-count-rust test-sta-rust clean
+.PHONY: all test test-c test-rust test-sta test-sta-count-rust test-sta-rust \
+	test-rx-bh-tk-c clean
 
 all: test
 
-test: test-c test-rust test-sta test-sta-count-rust test-sta-rust
+test: test-c test-rust test-sta test-sta-count-rust test-sta-rust test-rx-bh-tk-c
 
 test-c: test_recv
 	./test_recv recv_vectors.json
@@ -78,6 +81,13 @@ test_recv_sta_rust: test_recv_sta.c librust_recv_sta_count.a librust_recv_sta_va
 	$(CC) $(STA_RUST_CFLAGS) -o $@ test_recv_sta.c $(RECV_STA_SHIM) $(HOST_JSON) \
 		librust_recv_sta_count.a librust_recv_sta_validate.a
 
+test-rx-bh-tk-c: test_dump_rx_bh_tk
+	./test_dump_rx_bh_tk debug_rx_bh_tk_vectors.json
+
+test_dump_rx_bh_tk: $(RX_BH_L2) $(RX_BH_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ $(RX_BH_L2) $(RX_BH_ORACLE) $(HOST_JSON)
+
 clean:
 	rm -f test_recv test_recv_rust test_recv_sta test_recv_sta_count_rust test_recv_sta_rust \
+		test_dump_rx_bh_tk \
 		librust_recv.a librust_recv_sta_count.a librust_recv_sta_validate.a
