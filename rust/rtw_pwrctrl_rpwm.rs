@@ -56,7 +56,9 @@ mod host_hal {
     }
 
     pub fn set_time(t: u32) {
-        unsafe { G_TIME = t; }
+        unsafe {
+            G_TIME = t;
+        }
     }
 
     pub fn set_cpwm_behavior(cpwm_orig: u8, poll_reads_before_toggle: u32) {
@@ -81,7 +83,9 @@ mod host_hal {
     }
 
     fn msleep_os(ms: i32) {
-        unsafe { G_TIME += ms as u32; }
+        unsafe {
+            G_TIME += ms as u32;
+        }
     }
 
     pub fn hal_get_cpwm(_adapter: Padapter, out: *mut u8) {
@@ -99,29 +103,20 @@ mod host_hal {
 
     pub fn cannot_run(adapter: Padapter) -> bool {
         let a = adapter as *mut HostAdapter;
-        unsafe {
-            (*a).b_surprise_removed != 0 || (*a).b_driver_stopped != 0
-        }
+        unsafe { (*a).b_surprise_removed != 0 || (*a).b_driver_stopped != 0 }
     }
 
-    pub fn cpwm_polling_loop(
-        adapter: Padapter,
-        mut rpwm: u8,
-        mut cpwm_orig: u8,
-    ) -> i32 {
+    pub fn cpwm_polling_loop(adapter: Padapter, mut rpwm: u8, mut cpwm_orig: u8) -> i32 {
         let a = adapter as *mut HostAdapter;
         let pwr = unsafe { &mut (*a).pwrctrlpriv };
         let mut rst = _FAIL;
+        let mut cpwm_now = 0u8;
 
         pwr.rpwm_retry = 0;
         loop {
             let start_time = current_time();
             loop {
-                if passing_time_ms(start_time) >= LPS_CPWM_TIMEOUT_MS || cannot_run(adapter) {
-                    break;
-                }
                 msleep_os(1);
-                let mut cpwm_now = 0u8;
                 hal_get_cpwm(adapter, &mut cpwm_now);
                 if (cpwm_orig ^ cpwm_now) & 0x80 != 0 {
                     pwr.cpwm = PS_STATE_S4;
@@ -129,12 +124,13 @@ mod host_hal {
                     rst = _SUCCESS;
                     break;
                 }
+                if passing_time_ms(start_time) >= LPS_CPWM_TIMEOUT_MS || cannot_run(adapter) {
+                    break;
+                }
             }
             if rst == _SUCCESS {
                 break;
             }
-            let mut cpwm_now = 0u8;
-            hal_get_cpwm(adapter, &mut cpwm_now);
             cpwm_orig = cpwm_now;
             rpwm &= !PS_TOGGLE;
             rpwm |= pwr.tog;
@@ -166,7 +162,10 @@ pub extern "C" fn host_pwrctrl_rpwm_set_time(t: u32) {
 }
 
 #[no_mangle]
-pub extern "C" fn host_pwrctrl_rpwm_set_cpwm_behavior(cpwm_orig: u8, poll_reads_before_toggle: u32) {
+pub extern "C" fn host_pwrctrl_rpwm_set_cpwm_behavior(
+    cpwm_orig: u8,
+    poll_reads_before_toggle: u32,
+) {
     host_hal::set_cpwm_behavior(cpwm_orig, poll_reads_before_toggle);
 }
 
