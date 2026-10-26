@@ -337,6 +337,13 @@ files=(
   wave3-173-pwrctrl-ps-processor.md
   wave3-174-pwrctrl-leave-lps-tp-check.md
   wave3-175-pwrctrl-rpwm-cpwm.md
+  wave3-176-recv-rx-bh-tk-set.md
+  wave3-177-recv-ap-pwrbit-wmmps.md
+  wave3-178-recv-signal-headers.md
+  wave3-179-pwrctrl-register-alive.md
+  wave3-180-pwrctrl-unregister-alive.md
+  wave3-181-pwrctrl-exec-lps-rfon.md
+  wave3-182-pwrctrl-wow-lps-level.md
 )
 
 # draft_id -> github issue number
