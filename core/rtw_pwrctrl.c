@@ -896,6 +896,7 @@ void rtw_rust_lps_tp_lps_ctrl_wk_cmd(PADAPTER padapter, u8 lps_ctrl_type, u8 fla
 #define LPS_CPWM_TIMEOUT_MS	10 /*ms*/
 #define LPS_RPWM_RETRY_CNT		3
 
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_RPWM_TEST)
 u8 rtw_cpwm_polling(_adapter *adapter, u8 rpwm, u8 cpwm_orig)
 {
 	u8 rst = _FAIL;
@@ -960,7 +961,96 @@ u8 rtw_cpwm_polling(_adapter *adapter, u8 rpwm, u8 cpwm_orig)
 
 	return rst;
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_RPWM_TEST — W3-175 rtw_cpwm_polling in rust/rtw_pwrctrl_rpwm.rs */
+#endif /* CONFIG_LPS_LCLK */
+
+#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_RPWM_TEST)
+#ifdef CONFIG_LPS_LCLK
+
+void rtw_rust_rpwm_msleep_os(int ms)
+{
+	rtw_msleep_os(ms);
+}
+
+u32 rtw_rust_rpwm_get_current_time(void)
+{
+	return rtw_get_current_time();
+}
+
+u32 rtw_rust_rpwm_get_passing_time_ms(u32 start)
+{
+	return rtw_get_passing_time_ms(start);
+}
+
+void rtw_rust_rpwm_hal_get_cpwm(PADAPTER padapter, u8 *out)
+{
+	rtw_hal_get_hwreg(padapter, HW_VAR_CPWM, out);
+}
+
+void rtw_rust_rpwm_hal_set_rpwm(PADAPTER padapter, u8 rpwm)
+{
+	rtw_hal_set_hwreg(padapter, HW_VAR_SET_RPWM, &rpwm);
+}
+
+u8 rtw_rust_rpwm_cannot_run(PADAPTER padapter)
+{
+	return RTW_CANNOT_RUN(padapter) ? _TRUE : _FALSE;
+}
+
+u8 rtw_rust_rpwm_get_u8(PADAPTER padapter, u32 field)
+{
+	struct pwrctrl_priv *pwr = adapter_to_pwrctl(padapter);
+
+	switch (field) {
+	case 0:
+		return pwr->cpwm;
+	case 1:
+		return pwr->cpwm_tog;
+	case 2:
+		return pwr->tog;
+	default:
+		return 0;
+	}
+}
+
+void rtw_rust_rpwm_set_u8(PADAPTER padapter, u32 field, u8 v)
+{
+	struct pwrctrl_priv *pwr = adapter_to_pwrctl(padapter);
+
+	switch (field) {
+	case 0:
+		pwr->cpwm = v;
+		break;
+	case 1:
+		pwr->cpwm_tog = v;
+		break;
+	case 2:
+		pwr->tog = v;
+		break;
+	default:
+		break;
+	}
+}
+
+void rtw_rust_rpwm_reset_rpwm_retry(PADAPTER padapter)
+{
+	adapter_to_pwrctl(padapter)->rpwm_retry = 0;
+}
+
+u8 rtw_rust_rpwm_bump_rpwm_retry(PADAPTER padapter)
+{
+	struct pwrctrl_priv *pwr = adapter_to_pwrctl(padapter);
+
+	return pwr->rpwm_retry++;
+}
+
+#endif /* CONFIG_LPS_LCLK */
+#endif /* CONFIG_RUST && !HOST_PWRCTRL_RPWM_TEST */
+
+#if defined(CONFIG_RUST) && defined(CONFIG_LPS_LCLK) && !defined(HOST_PWRCTRL_RPWM_TEST)
+u8 rtw_cpwm_polling(_adapter *adapter, u8 rpwm, u8 cpwm_orig);
 #endif
+
 /*
  * Description:
  *	This function MUST be called under power lock protect

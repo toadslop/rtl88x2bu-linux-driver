@@ -3098,6 +3098,7 @@ $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ps.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ps.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_lps_tp.o
+$(MODULE_NAME)-y += rust/rtw_pwrctrl_rpwm.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
 $(MODULE_NAME)-y += rust/rtw_mlme_80211d.o
@@ -4936,6 +4937,18 @@ rust-objects-rtw-pwrctrl-lps-tp-c:
 rust-check-symbols-rtw-pwrctrl-lps-tp: rust-objects-rtw-pwrctrl-lps-tp-c rust-objects-rtw-pwrctrl-lps-tp
 	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/lps_tp_c_ref.o NEW=rust/rtw_pwrctrl_lps_tp.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_lps_tp.allow ALLOW_VACUOUS=1
+
+# W3-175: host C oracle vs rust/rtw_pwrctrl_rpwm.o (CPWM polling).
+rust-objects-rtw-pwrctrl-rpwm:
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_pwrctrl_rpwm.o
+rust-objects-rtw-pwrctrl-rpwm-c:
+	gcc -c -Wall -Wextra -Werror -O2 -DHOST_PWRCTRL_RPWM_TEST \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/pwrctrl/rpwm_c_ref.o \
+		tests/host/pwrctrl/host_pwrctrl_rpwm_shim.c
+rust-check-symbols-rtw-pwrctrl-rpwm: rust-objects-rtw-pwrctrl-rpwm-c rust-objects-rtw-pwrctrl-rpwm
+	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/rpwm_c_ref.o NEW=rust/rtw_pwrctrl_rpwm.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_rpwm.allow ALLOW_VACUOUS=1
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production
