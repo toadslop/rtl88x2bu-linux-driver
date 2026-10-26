@@ -1,0 +1,26 @@
+{
+  "vectors": [
+    {
+      "name": "active_buf",
+      "stage": 3,
+      "buf_dq_cnt": 42,
+      "lbuf": "1000",
+      "cbuf": "2000",
+      "dlen": 1500,
+      "pos": 64,
+      "cframe": "3000",
+      "expect": "[RXBHTK]s:3, buf_dqc:42, lbuf:0x1000, cbuf:0x2000, dlen:1500, pos:64, cframe:0x3000\n"
+    },
+    {
+      "name": "cleared",
+      "stage": 0,
+      "buf_dq_cnt": 0,
+      "lbuf": "0",
+      "cbuf": "0",
+      "dlen": 0,
+      "pos": 0,
+      "cframe": "0",
+      "expect": "[RXBHTK]s:0, buf_dqc:0, lbuf:(nil), cbuf:(nil), dlen:0, pos:0, cframe:(nil)\n"
+    }
+  ]
+}
