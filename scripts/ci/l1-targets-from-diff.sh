@@ -229,6 +229,7 @@ for path in "${changed[@]}"; do
 	| rust/rtw_debug_sec_cam.rs \
 	| rust/rtw_debug_tx_rx_dumps.rs \
 	| rust/rtw_debug_reg_dump.rs \
+	| rust/rtw_debug_regsty.rs \
 	| rust/rtw_debug_adapters_status.rs \
 	| rust/rtw_debug_proc.rs \
 	| rust/rtw_debug_proc_ap.rs \
@@ -248,6 +249,7 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-debug-sec-cam
 		add_target rust-check-symbols-rtw-debug-tx-rx
 		add_target rust-check-symbols-rtw-debug-reg-dump
+		add_target rust-check-symbols-rtw-debug-regsty
 		add_target rust-check-symbols-rtw-debug-adapters-status
 		add_target rust-check-symbols-rtw-debug-proc
 		add_target rust-check-symbols-rtw-debug-proc-rson

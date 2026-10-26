@@ -3888,6 +3888,7 @@ ssize_t proc_set_ampdu_enable(struct file *file, const char __user *buffer, size
 }
 
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 void dump_regsty_rx_ampdu_size_limit(void *sel, _adapter *adapter)
 {
 	struct registry_priv *regsty = adapter_to_regsty(adapter);
@@ -3902,6 +3903,7 @@ void dump_regsty_rx_ampdu_size_limit(void *sel, _adapter *adapter)
 			, regsty->rx_ampdu_sz_limit_by_nss_bw[i][2]
 			, regsty->rx_ampdu_sz_limit_by_nss_bw[i][3]);
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-170 in rust/rtw_debug_regsty.rs */
 
 int proc_get_rx_ampdu(struct seq_file *m, void *v)
 {
