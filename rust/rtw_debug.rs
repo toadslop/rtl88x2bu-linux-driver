@@ -2,6 +2,7 @@
 //! W3-130/W3-131 debug dumps — Rust port of `core/rtw_debug.c` leaves.
 //! W3-134 tx/rx dump leaves live in `rtw_debug_tx_rx_dumps.rs`.
 //! W3-143 MAC/BB reg dump leaves live in `rtw_debug_reg_dump.rs`.
+//! W3-170 regsty RX AMPDU limit dump lives in `rtw_debug_regsty.rs`.
 //! W3-144 `dump_adapters_status` lives in `rtw_debug_adapters_status.rs`.
 //! W3-145/W3-146/W3-147 proc leaf handlers live in `rtw_debug_proc.rs`.
 //! W3-158 proc ap_info handlers live in `rtw_debug_proc_ap.rs`.

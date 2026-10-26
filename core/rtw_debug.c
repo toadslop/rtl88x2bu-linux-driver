@@ -389,6 +389,11 @@ void rtw_rust_debug_log_info(const char *line)
 	RTW_INFO("%s", line);
 }
 
+u8 *rtw_rust_debug_regsty_rx_ampdu_sz_limit_by_nss_bw(_adapter *adapter)
+{
+	return adapter_to_regsty(adapter)->rx_ampdu_sz_limit_by_nss_bw[0];
+}
+
 u16 rtw_rust_debug_recv_sink_udpport(_adapter *adapter)
 {
 	return adapter->recvpriv.sink_udpport;

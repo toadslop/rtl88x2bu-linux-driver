@@ -3078,6 +3078,7 @@ $(MODULE_NAME)-y += rust/rtw_debug.o
 $(MODULE_NAME)-y += rust/rtw_debug_sec_cam.o
 $(MODULE_NAME)-y += rust/rtw_debug_tx_rx_dumps.o
 $(MODULE_NAME)-y += rust/rtw_debug_reg_dump.o
+$(MODULE_NAME)-y += rust/rtw_debug_regsty.o
 $(MODULE_NAME)-y += rust/rtw_debug_adapters_status.o
 $(MODULE_NAME)-y += core/rtw_debug_adapters_status_shim.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc.o
@@ -4664,6 +4665,20 @@ rust-objects-rtw-debug-reg-dump-c:
 rust-check-symbols-rtw-debug-reg-dump: rust-objects-rtw-debug-reg-dump-c rust-objects-rtw-debug-reg-dump
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_reg_dump_c_ref.o NEW=rust/rtw_debug_reg_dump.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_reg_dump.allow ALLOW_VACUOUS=1
+
+# W3-170: host C oracle vs rust/rtw_debug_regsty.o (regsty RX AMPDU limit dump).
+rust-objects-rtw-debug-regsty:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-regsty"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug_regsty.o
+rust-objects-rtw-debug-regsty-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_regsty_rx_ampdu_c_ref.o \
+		tests/host/debug/debug_regsty_rx_ampdu_c_oracle.c
+rust-check-symbols-rtw-debug-regsty: rust-objects-rtw-debug-regsty-c rust-objects-rtw-debug-regsty
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_regsty_rx_ampdu_c_ref.o NEW=rust/rtw_debug_regsty.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_regsty.allow ALLOW_VACUOUS=1
 
 # W3-144: host C stub vs rust/rtw_debug_adapters_status.o (dump_adapters_status).
 rust-objects-rtw-debug-adapters-status:
