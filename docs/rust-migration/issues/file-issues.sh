@@ -330,6 +330,13 @@ files=(
   wave3-166-debug-proc-rx-signal.md
   wave3-167-pwrctrl-ips-enter-leave.md
   wave3-168-debug-proc-test-setters.md
+  wave3-169-debug-rf-bb-reg-dump-ex.md
+  wave3-170-debug-regsty-rx-ampdu-limit.md
+  wave3-171-recv-rx-bh-tk-dump.md
+  wave3-172-pwrctrl-fw-ps-state.md
+  wave3-173-pwrctrl-ps-processor.md
+  wave3-174-pwrctrl-leave-lps-tp-check.md
+  wave3-175-pwrctrl-rpwm-cpwm.md
 )
 
 # draft_id -> github issue number

@@ -257,6 +257,18 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-167 | `wave3-167-pwrctrl-ips-enter-leave.md` | `rtw_pwrctrl.c` IPS enter/leave |
 | W3-168 | `wave3-168-debug-proc-test-setters.md` | proc → Rust manufacturing test setters |
 
+## Children (tranche 17 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-169 | `wave3-169-debug-rf-bb-reg-dump-ex.md` | `rf_reg_dump` + `bb_reg_dump_ex` |
+| W3-170 | `wave3-170-debug-regsty-rx-ampdu-limit.md` | `dump_regsty_rx_ampdu_size_limit` |
+| W3-171 | `wave3-171-recv-rx-bh-tk-dump.md` | `dump_rx_bh_tk` (DBG_RX_BH_TRACKING) |
+| W3-172 | `wave3-172-pwrctrl-fw-ps-state.md` | `rtw_fw_ps_state` (DBG) |
+| W3-173 | `wave3-173-pwrctrl-ps-processor.md` | `rtw_ps_processor` IPS loop |
+| W3-174 | `wave3-174-pwrctrl-leave-lps-tp-check.md` | `traffic_check_for_leave_lps_by_tp` |
+| W3-175 | `wave3-175-pwrctrl-rpwm-cpwm.md` | `rtw_set_rpwm` + `rtw_cpwm_polling` |
+
 Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:
 
 - `rtw_beamforming.c` sounding state machine (HAL-coupled NDPA paths)
