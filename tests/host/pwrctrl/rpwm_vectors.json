@@ -1,0 +1,1 @@
+{"vectors":[{"name":"cpwm_polling_toggle_ok","cpwm_orig":0,"poll_reads_before_toggle":0,"rpwm_in":130,"cpwm_orig_in":0,"expect_success":1,"expect_cpwm":24},{"name":"cpwm_polling_timeout","cpwm_orig":0,"poll_reads_before_toggle":999,"rpwm_in":130,"cpwm_orig_in":0,"expect_success":0}]}
