@@ -1,0 +1,14 @@
+{
+  "vectors": [
+    {
+      "name": "default_limits",
+      "limits_hex": "0708090a0708090a0708090a0708090a",
+      "expect": "    20M 40M 80M 160M\n1SS   7   8   9   10\n2SS   7   8   9   10\n3SS   7   8   9   10\n4SS   7   8   9   10\n"
+    },
+    {
+      "name": "mixed_width",
+      "limits_hex": "00010c7fff63052a030303030a141e28",
+      "expect": "    20M 40M 80M 160M\n1SS   0   1  12  127\n2SS 255  99   5   42\n3SS   3   3   3    3\n4SS  10  20  30   40\n"
+    }
+  ]
+}
