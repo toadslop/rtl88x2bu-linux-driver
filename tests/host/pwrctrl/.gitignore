@@ -10,4 +10,6 @@ librust_pwrctrl.a
 librust_pwrctrl_ips.a
 test_pwrctrl_ips
 test_pwrctrl_ips_rust
+test_pwrctrl_ps_processor
+test_pwrctrl_ps_processor_rust
 ps_deny_c_ref.o

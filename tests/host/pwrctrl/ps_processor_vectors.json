@@ -1,0 +1,66 @@
+{
+  "vectors": [
+    {
+      "name": "deny_skips_ips",
+      "ps_deny": 1,
+      "ips_mode_req": 1,
+      "rf_pwrstate": 0,
+      "pwr_state_check_cnts": 0,
+      "expect_ips_enter": 0,
+      "expect_ps_processing_after": 0
+    },
+    {
+      "name": "suspend_early_return",
+      "b_in_suspend": 1,
+      "ips_mode_req": 1,
+      "rf_pwrstate": 0,
+      "pwr_state_check_cnts": 0,
+      "expect_ips_enter": 0,
+      "expect_ps_processing_after": 0
+    },
+    {
+      "name": "ips_none_no_enter",
+      "ips_mode_req": 0,
+      "rf_pwrstate": 0,
+      "pwr_state_check_cnts": 0,
+      "unassoc_idle": 1,
+      "expect_ips_enter": 0,
+      "expect_change_rfpwrstate": 0
+    },
+    {
+      "name": "not_idle_skips_enter",
+      "ips_mode_req": 1,
+      "rf_pwrstate": 0,
+      "pwr_state_check_cnts": 0,
+      "unassoc_idle": 0,
+      "expect_ips_enter": 0
+    },
+    {
+      "name": "enter_on_rf_on_cnt_div4",
+      "ips_mode_req": 1,
+      "rf_pwrstate": 0,
+      "pwr_state_check_cnts": 0,
+      "unassoc_idle": 1,
+      "expect_ips_enter": 1,
+      "expect_change_rfpwrstate": 2,
+      "expect_ps_processing_after": 0
+    },
+    {
+      "name": "skip_when_cnt_not_div4",
+      "ips_mode_req": 1,
+      "rf_pwrstate": 0,
+      "pwr_state_check_cnts": 1,
+      "unassoc_idle": 1,
+      "expect_ips_enter": 0,
+      "expect_change_rfpwrstate": 0
+    },
+    {
+      "name": "skip_when_rf_already_off",
+      "ips_mode_req": 1,
+      "rf_pwrstate": 2,
+      "pwr_state_check_cnts": 0,
+      "unassoc_idle": 1,
+      "expect_ips_enter": 0
+    }
+  ]
+}
