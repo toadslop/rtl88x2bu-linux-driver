@@ -15,20 +15,26 @@ SEC_ORACLE := debug_sec_cam_ent_c_oracle.c
 SEC_SHIM   := host_rtw_debug_sec_cam_security_shim.c
 RUST_SEC   := $(ROOT)/rust/rtw_debug_sec_cam.rs
 
+# W3-170 regsty RX AMPDU limit dump (PR1: C oracle L2 only)
+REGSTY_ORACLE := debug_regsty_rx_ampdu_c_oracle.c
+REGSTY_L2     := test_dump_regsty_rx_ampdu.c
+
 CC     := gcc
 CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
           -I$(HOST_INC) -I$(ROOT)/include
 
 .PHONY: all test test-all test-c test-rust clean \
-	test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust
+	test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
+	test-regsty-rx-ampdu-c
 
 all: test
 
-test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust
+test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
+	test-regsty-rx-ampdu-c
 
 test-all: test
 
-test-c: test-hooks-c test-sec-cam-c
+test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c
 
 test-rust: test-hooks-rust test-sec-cam-rust
 
@@ -68,6 +74,13 @@ test_dump_sec_cam_ent_rust: test_dump_sec_cam_ent.c librust_rtw_debug_sec_cam.a 
 	$(CC) $(CFLAGS) -DRUST_RTW_DEBUG_SEC_CAM_ORACLE -o $@ \
 		test_dump_sec_cam_ent.c $(SEC_SHIM) $(HOST_JSON) librust_rtw_debug_sec_cam.a
 
+test-regsty-rx-ampdu-c: test_dump_regsty_rx_ampdu
+	./test_dump_regsty_rx_ampdu debug_regsty_rx_ampdu_vectors.json
+
+test_dump_regsty_rx_ampdu: $(REGSTY_L2) $(REGSTY_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ $(REGSTY_L2) $(REGSTY_ORACLE) $(HOST_JSON)
+
 clean:
 	rm -f test_debug_test_hooks_c test_debug_test_hooks_rust librust_debug_test_hooks.a \
-		test_dump_sec_cam_ent test_dump_sec_cam_ent_rust librust_rtw_debug_sec_cam.a
+		test_dump_sec_cam_ent test_dump_sec_cam_ent_rust librust_rtw_debug_sec_cam.a \
+		test_dump_regsty_rx_ampdu
