@@ -9,6 +9,7 @@ drop rtw_rust_rpwm_get_u8
 drop rtw_rust_rpwm_set_u8
 drop rtw_rust_rpwm_reset_rpwm_retry
 drop rtw_rust_rpwm_bump_rpwm_retry
+drop rtw_rust_rpwm_poll_complete
 drop host_pwrctrl_rpwm_reset_hal
 drop host_pwrctrl_rpwm_set_time
 drop host_pwrctrl_rpwm_set_cpwm_behavior

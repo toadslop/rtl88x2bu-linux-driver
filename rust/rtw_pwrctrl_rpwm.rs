@@ -169,6 +169,7 @@ extern "C" {
     fn rtw_rust_rpwm_set_u8(padapter: Padapter, field: u32, v: u8);
     fn rtw_rust_rpwm_reset_rpwm_retry(padapter: Padapter);
     fn rtw_rust_rpwm_bump_rpwm_retry(padapter: Padapter) -> u8;
+    fn rtw_rust_rpwm_poll_complete(padapter: Padapter, rst: u8, cpwm_orig: u8, cpwm_now: u8);
 }
 
 fn cpwm_polling_core(
@@ -185,17 +186,16 @@ fn cpwm_polling_core(
     adapter: Padapter,
     mut rpwm: u8,
     mut cpwm_orig: u8,
+    cpwm_last: *mut u8,
 ) -> i32 {
     let mut rst = _FAIL;
+    let mut cpwm_now = 0u8;
+
     reset_retry(adapter);
     loop {
         let start_time = now(adapter);
         loop {
-            if passing_ms(start_time) >= LPS_CPWM_TIMEOUT_MS || cannot_run(adapter) {
-                break;
-            }
             msleep(1);
-            let mut cpwm_now = 0u8;
             hal_get(adapter, &mut cpwm_now);
             if (cpwm_orig ^ cpwm_now) & 0x80 != 0 {
                 set_u8(adapter, 0, PS_STATE_S4);
@@ -203,12 +203,13 @@ fn cpwm_polling_core(
                 rst = _SUCCESS;
                 break;
             }
+            if passing_ms(start_time) >= LPS_CPWM_TIMEOUT_MS || cannot_run(adapter) {
+                break;
+            }
         }
         if rst == _SUCCESS {
             break;
         }
-        let mut cpwm_now = 0u8;
-        hal_get(adapter, &mut cpwm_now);
         cpwm_orig = cpwm_now;
         rpwm &= !PS_TOGGLE;
         rpwm |= get_u8(adapter, 2);
@@ -217,6 +218,11 @@ fn cpwm_polling_core(
         let retry = bump_retry(adapter);
         if retry >= LPS_RPWM_RETRY_CNT as u8 || cannot_run(adapter) {
             break;
+        }
+    }
+    if !cpwm_last.is_null() {
+        unsafe {
+            *cpwm_last = cpwm_now;
         }
     }
     rst
@@ -233,14 +239,15 @@ fn kernel_cannot_run(a: Padapter) -> bool {
 }
 
 #[no_mangle]
-pub extern "C" fn rtw_cpwm_polling(adapter: Padapter, rpwm: u8, cpwm_orig: u8) -> u8 {
+pub extern "C" fn rtw_cpwm_polling(adapter: Padapter, rpwm: u8, cpwm_orig_in: u8) -> u8 {
     #[cfg(host_pwrctrl_rpwm_test)]
     {
-        return host_hal::cpwm_polling_loop(adapter, rpwm, cpwm_orig) as u8;
+        return host_hal::cpwm_polling_loop(adapter, rpwm, cpwm_orig_in) as u8;
     }
     #[cfg(not(host_pwrctrl_rpwm_test))]
     {
-        return cpwm_polling_core(
+        let mut cpwm_now = 0u8;
+        let rst = cpwm_polling_core(
             kernel_cannot_run,
             kernel_msleep,
             |_a| unsafe { rtw_rust_rpwm_get_current_time() },
@@ -253,8 +260,13 @@ pub extern "C" fn rtw_cpwm_polling(adapter: Padapter, rpwm: u8, cpwm_orig: u8) -
             |a| unsafe { rtw_rust_rpwm_bump_rpwm_retry(a) },
             adapter,
             rpwm,
-            cpwm_orig,
+            cpwm_orig_in,
+            &mut cpwm_now,
         ) as u8;
+        unsafe {
+            rtw_rust_rpwm_poll_complete(adapter, rst, cpwm_orig_in, cpwm_now);
+        }
+        rst
     }
 }
 

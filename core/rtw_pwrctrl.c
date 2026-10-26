@@ -1049,6 +1049,38 @@ u8 rtw_rust_rpwm_bump_rpwm_retry(PADAPTER padapter)
 
 #if defined(CONFIG_RUST) && defined(CONFIG_LPS_LCLK) && !defined(HOST_PWRCTRL_RPWM_TEST)
 u8 rtw_cpwm_polling(_adapter *adapter, u8 rpwm, u8 cpwm_orig);
+
+void rtw_rust_rpwm_poll_complete(PADAPTER adapter, u8 rst, u8 cpwm_orig, u8 cpwm_now)
+{
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
+	#ifdef DBG_CHECK_FW_PS_STATE
+	struct debug_priv *pdbgpriv = &(adapter_to_dvobj(adapter)->drv_dbg);
+	#endif
+
+	if (rst == _SUCCESS) {
+		#ifdef DBG_CHECK_FW_PS_STATE
+		RTW_INFO("%s: polling cpwm OK! rpwm_retry=%d, cpwm_orig=%02x, cpwm_now=%02x , 0x100=0x%x\n"
+			, __func__, pwrpriv->rpwm_retry, cpwm_orig, cpwm_now, rtw_read8(adapter, REG_CR));
+		if (rtw_fw_ps_state(adapter) == _FAIL) {
+			RTW_INFO("leave 32k but fw state in 32k\n");
+			pdbgpriv->dbg_rpwm_toogle_cnt++;
+		}
+		#endif /* DBG_CHECK_FW_PS_STATE */
+	} else {
+		RTW_ERR("%s: polling cpwm timeout! rpwm_retry=%d, cpwm_orig=%02x, cpwm_now=%02x\n"
+				, __func__, pwrpriv->rpwm_retry, cpwm_orig, cpwm_now);
+		#ifdef DBG_CHECK_FW_PS_STATE
+		if (rtw_fw_ps_state(adapter) == _FAIL) {
+			RTW_INFO("rpwm timeout and fw ps state in 32k\n");
+			pdbgpriv->dbg_rpwm_timeout_fail_cnt++;
+		}
+		#endif /* DBG_CHECK_FW_PS_STATE */
+
+		#ifdef CONFIG_LPS_RPWM_TIMER
+		_set_timer(&pwrpriv->pwr_rpwm_timer, 1);
+		#endif /* CONFIG_LPS_RPWM_TIMER */
+	}
+}
 #endif
 
 /*
