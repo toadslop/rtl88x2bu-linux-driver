@@ -404,6 +404,7 @@ void bb_reg_dump(void *sel, _adapter *adapter)
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-143 mac/bb reg dumps in rust/rtw_debug_reg_dump.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 void bb_reg_dump_ex(void *sel, _adapter *adapter)
 {
 	int i;
@@ -445,6 +446,7 @@ void rf_reg_dump(void *sel, _adapter *adapter)
 		}
 	}
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-169 bb_reg_dump_ex/rf_reg_dump in rust/rtw_debug_reg_dump.rs */
 
 #if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 void rtw_sink_rtp_seq_dbg(_adapter *adapter, u8 *ehdr_pos)
