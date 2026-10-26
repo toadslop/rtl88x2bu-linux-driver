@@ -76,7 +76,11 @@ fn push_ptr(out: &mut [u8], pos: &mut usize, p: usize) {
     let mut x = p;
     while x > 0 {
         let nib = (x & 0xf) as u8;
-        tmp[n] = if nib < 10 { b'0' + nib } else { b'a' + (nib - 10) };
+        tmp[n] = if nib < 10 {
+            b'0' + nib
+        } else {
+            b'a' + (nib - 10)
+        };
         x >>= 4;
         n += 1;
     }
