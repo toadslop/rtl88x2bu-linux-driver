@@ -19,6 +19,7 @@
 #include <hal_com_h2c.h>
 
 #ifdef DBG_CHECK_FW_PS_STATE
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_FW_PS_TEST)
 int rtw_fw_ps_state(PADAPTER padapter)
 {
 	struct dvobj_priv *psdpriv = padapter->dvobj;
@@ -73,6 +74,7 @@ exit_fw_ps_state:
 	_exit_pwrlock(&pwrpriv->check_32k_lock);
 	return ret;
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_FW_PS_TEST — W3-172 in rust/rtw_pwrctrl_fw_ps.rs */
 #endif /*DBG_CHECK_FW_PS_STATE*/
 #ifdef CONFIG_IPS
 #if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_IPS_TEST)
@@ -321,6 +323,42 @@ void rtw_rust_ips_llstats_on_leave(struct pwrctrl_priv *pwr)
 
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_IPS_TEST */
 #endif /* CONFIG_IPS */
+
+#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_FW_PS_TEST)
+
+u8 rtw_rust_fw_ps_check_enabled(PADAPTER padapter)
+{
+	return padapter->registrypriv.check_fw_ps == 1 ? _TRUE : _FALSE;
+}
+
+void rtw_rust_fw_ps_enter_32k_lock(PADAPTER padapter)
+{
+	_enter_pwrlock(&adapter_to_pwrctl(padapter)->check_32k_lock);
+}
+
+void rtw_rust_fw_ps_exit_32k_lock(PADAPTER padapter)
+{
+	_exit_pwrlock(&adapter_to_pwrctl(padapter)->check_32k_lock);
+}
+
+u8 rtw_rust_fw_ps_cannot_run(PADAPTER padapter)
+{
+	return RTW_CANNOT_RUN(padapter) ? _TRUE : _FALSE;
+}
+
+void rtw_rust_fw_ps_hal_get_state(PADAPTER padapter, u16 *fw_ps_state)
+{
+	rtw_hal_get_hwreg(padapter, HW_VAR_FW_PS_STATE, (u8 *)fw_ps_state);
+}
+
+void rtw_rust_fw_ps_inc_poll_fail_cnt(PADAPTER padapter)
+{
+	struct dvobj_priv *psdpriv = padapter->dvobj;
+
+	psdpriv->drv_dbg.dbg_poll_fail_cnt++;
+}
+
+#endif /* CONFIG_RUST && !HOST_PWRCTRL_FW_PS_TEST */
 
 #ifdef SUPPORT_HW_RFOFF_DETECTED
 	int rtw_hw_suspend(_adapter *padapter);

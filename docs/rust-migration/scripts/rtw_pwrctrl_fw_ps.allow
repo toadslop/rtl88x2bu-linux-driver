@@ -1,0 +1,10 @@
+# W3-172: rtw_fw_ps_state — Rust FFI helpers (kernel-only).
+drop _enter_pwrlock
+drop _exit_pwrlock
+drop rtw_rust_fw_ps_check_enabled
+drop rtw_rust_fw_ps_enter_32k_lock
+drop rtw_rust_fw_ps_exit_32k_lock
+drop rtw_rust_fw_ps_cannot_run
+drop rtw_rust_fw_ps_hal_get_state
+drop rtw_rust_fw_ps_inc_poll_fail_cnt
+drop host_pwrctrl_fw_ps_set_hal_state
