@@ -2,3 +2,4 @@
 drop rtw_rust_debug_read32
 drop rtw_rust_debug_hal_rf_reg_path_num
 drop rtw_rust_debug_hal_read_rfreg
+drop rtw_hal_read_rfreg
