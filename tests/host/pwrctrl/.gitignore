@@ -13,4 +13,6 @@ test_pwrctrl_ips_rust
 test_pwrctrl_ps_processor
 test_pwrctrl_ps_processor_rust
 test_pwrctrl_lps_tp
+test_pwrctrl_lps_tp_rust
+librust_pwrctrl_lps_tp.a
 ps_deny_c_ref.o
