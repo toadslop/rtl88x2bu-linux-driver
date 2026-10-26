@@ -4514,6 +4514,7 @@ void rx_bh_tk_set_frame(struct recv_priv *recv, void *frame)
 	recv->rx_bh_cframe = frame;
 }
 
+#if !defined(CONFIG_RUST)
 void dump_rx_bh_tk(void *sel, struct recv_priv *recv)
 {
 	RTW_PRINT_SEL(sel, "[RXBHTK]s:%u, buf_dqc:%u, lbuf:%p, cbuf:%p, dlen:%u, pos:%u, cframe:%p\n"
@@ -4526,5 +4527,6 @@ void dump_rx_bh_tk(void *sel, struct recv_priv *recv)
 		, recv->rx_bh_cframe
 	);
 }
+#endif /* !CONFIG_RUST — W3-171 in rust/rtw_recv_bh_dbg.rs */
 #endif /* DBG_RX_BH_TRACKING */
 

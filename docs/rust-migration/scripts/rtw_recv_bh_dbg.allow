@@ -1,0 +1,9 @@
+# W3-171: dump_rx_bh_tk — Rust FFI helpers (kernel-only).
+drop rtw_rust_recv_bh_stage
+drop rtw_rust_recv_bh_buf_dq_cnt
+drop rtw_rust_recv_bh_lbuf
+drop rtw_rust_recv_bh_cbuf
+drop rtw_rust_recv_bh_cbuf_dlen
+drop rtw_rust_recv_bh_cbuf_pos
+drop rtw_rust_recv_bh_cframe
+drop rtw_rust_recv_bh_print_sel
