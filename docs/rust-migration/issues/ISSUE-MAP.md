@@ -303,6 +303,13 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-173 | #1502 | [W3-173] Translate rtw_pwrctrl.c — IPS ps_processor loop |
 | W3-174 | #1503 | [W3-174] Translate rtw_pwrctrl.c — leave LPS traffic check (TP) |
 | W3-175 | #1504 | [W3-175] Translate rtw_pwrctrl.c — RPWM/CPWM LPS clock |
+| W3-176 | #1527 | [W3-176] Translate rtw_recv.c — RX BH tracking setters |
+| W3-177 | #1528 | [W3-177] Translate rtw_recv.c — AP pwrbit and WMM PS data handlers |
+| W3-178 | #1529 | [W3-178] Translate rtw_recv.c — signal-stat profile and SNAP headers |
+| W3-179 | #1530 | [W3-179] Translate rtw_pwrctrl.c — register task/IO alive (part 1) |
+| W3-180 | #1531 | [W3-180] Translate rtw_pwrctrl.c — unregister task/IO alive (part 2) |
+| W3-181 | #1532 | [W3-181] Translate rtw_pwrctrl.c — exec LPS and RF-on control |
+| W3-182 | #1533 | [W3-182] Translate rtw_pwrctrl.c — WoWLAN LPS level swap |
 
 ## Superseded issues
 
