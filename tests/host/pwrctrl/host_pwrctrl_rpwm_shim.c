@@ -63,11 +63,6 @@ u8 host_pwrctrl_rpwm_get_cpwm(void *adapter)
 	return ((struct adapter *)adapter)->pwrctrlpriv.cpwm;
 }
 
-u8 host_pwrctrl_rpwm_get_cpwm_tog(void *adapter)
-{
-	return ((struct adapter *)adapter)->pwrctrlpriv.cpwm_tog;
-}
-
 static systime rtw_get_current_time(void)
 {
 	return g_time;

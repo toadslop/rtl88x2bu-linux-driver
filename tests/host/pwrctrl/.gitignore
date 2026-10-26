@@ -17,3 +17,5 @@ test_pwrctrl_lps_tp_rust
 librust_pwrctrl_lps_tp.a
 ps_deny_c_ref.o
 test_pwrctrl_rpwm
+test_pwrctrl_rpwm_rust
+librust_pwrctrl_rpwm.a
