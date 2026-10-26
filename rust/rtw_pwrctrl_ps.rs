@@ -260,7 +260,9 @@ pub extern "C" fn rtw_ps_processor(padapter: Padapter) {
 }
 
 #[cfg(not(host_pwrctrl_ps_processor_test))]
-unsafe fn goto_exit(padapter: Padapter) {
-    rtw_rust_ps_proc_set_pwr_timer(padapter);
-    rtw_rust_ps_proc_set_ps_processing(padapter, _FALSE);
+fn goto_exit(padapter: Padapter) {
+    unsafe {
+        rtw_rust_ps_proc_set_pwr_timer(padapter);
+        rtw_rust_ps_proc_set_ps_processing(padapter, _FALSE);
+    }
 }

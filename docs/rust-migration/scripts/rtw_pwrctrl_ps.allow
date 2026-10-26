@@ -1,0 +1,17 @@
+# W3-173: rtw_ps_processor — Rust FFI helpers (kernel-only).
+drop _enter_pwrlock
+drop _exit_pwrlock
+drop host_pwrctrl_ps_proc_reset_trace
+drop host_pwrctrl_ps_proc_set_unassoc_idle
+drop host_pwrctrl_ps_proc_get_trace
+drop rtw_ps_deny_get
+drop rtw_rust_ps_proc_enter_pwrlock
+drop rtw_rust_ps_proc_exit_pwrlock
+drop rtw_rust_ps_proc_get_b_in_suspend
+drop rtw_rust_ps_proc_set_ps_processing
+drop rtw_rust_ps_proc_get_ips_mode_req
+drop rtw_rust_ps_proc_get_rf_pwrstate
+drop rtw_rust_ps_proc_set_change_rfpwrstate
+drop rtw_rust_ps_proc_get_pwr_state_check_cnts
+drop rtw_rust_ps_proc_unassociated_idle
+drop rtw_rust_ps_proc_set_pwr_timer
