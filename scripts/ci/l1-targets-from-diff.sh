@@ -116,6 +116,13 @@ for path in "${changed[@]}"; do
 	| tests/host/pwrctrl/ps_processor_vectors.json)
 		add_target rust-check-symbols-rtw-pwrctrl-ps
 		;;
+	rust/rtw_pwrctrl_lps_tp.rs \
+	| core/rtw_pwrctrl.c \
+	| tests/host/pwrctrl/host_pwrctrl_lps_tp_shim.c \
+	| tests/host/pwrctrl/test_pwrctrl_lps_tp.c \
+	| tests/host/pwrctrl/lps_tp_vectors.json)
+		add_target rust-check-symbols-rtw-pwrctrl-lps-tp
+		;;
 	rust/rtw_rf_rest.rs \
 	| rust/rtw_rf_op_class_pref.rs \
 	| rust/rtw_rf_op_class_dump.rs \
