@@ -296,6 +296,13 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-166 | #1481 | [W3-166] Translate rtw_debug_rest.c — proc rx_signal get/set |
 | W3-167 | #1482 | [W3-167] Translate rtw_pwrctrl.c — IPS enter/leave leaf |
 | W3-168 | #1483 | [W3-168] Translate rtw_debug_rest.c — proc manufacturing test setters |
+| W3-169 | #1498 | [W3-169] Translate rtw_debug_rest.c — RF/BB reg dump (ex) |
+| W3-170 | #1499 | [W3-170] Translate rtw_debug_rest.c — regsty RX AMPDU size limit dump |
+| W3-171 | #1500 | [W3-171] Translate rtw_recv.c — RX BH tracking dump leaf |
+| W3-172 | #1501 | [W3-172] Translate rtw_pwrctrl.c — FW PS state poll (DBG) |
+| W3-173 | #1502 | [W3-173] Translate rtw_pwrctrl.c — IPS ps_processor loop |
+| W3-174 | #1503 | [W3-174] Translate rtw_pwrctrl.c — leave LPS traffic check (TP) |
+| W3-175 | #1504 | [W3-175] Translate rtw_pwrctrl.c — RPWM/CPWM LPS clock |
 
 ## Superseded issues
 
