@@ -269,6 +269,18 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-174 | `wave3-174-pwrctrl-leave-lps-tp-check.md` | `traffic_check_for_leave_lps_by_tp` |
 | W3-175 | `wave3-175-pwrctrl-rpwm-cpwm.md` | `rtw_set_rpwm` + `rtw_cpwm_polling` |
 
+## Children (tranche 18 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-176 | `wave3-176-recv-rx-bh-tk-set.md` | RX BH tracking setters (`rx_bh_tk_set_*`) |
+| W3-177 | `wave3-177-recv-ap-pwrbit-wmmps.md` | AP `process_pwrbit_data` / `process_wmmps_data` |
+| W3-178 | `wave3-178-recv-signal-headers.md` | Signal-stat profile + SNAP/bridge headers |
+| W3-179 | `wave3-179-pwrctrl-register-alive.md` | Register task/IO alive (part 1) |
+| W3-180 | `wave3-180-pwrctrl-unregister-alive.md` | Unregister task/IO alive (part 2) |
+| W3-181 | `wave3-181-pwrctrl-exec-lps-rfon.md` | `rtw_exec_lps` + `rtw_lps_rfon_ctrl` |
+| W3-182 | `wave3-182-pwrctrl-wow-lps-level.md` | `rtw_wow_lps_level_decide` |
+
 Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:
 
 - `rtw_beamforming.c` sounding state machine (HAL-coupled NDPA paths)
