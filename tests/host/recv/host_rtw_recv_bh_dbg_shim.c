@@ -12,3 +12,8 @@ void rtw_rust_recv_bh_print_sel(void *sel, const char *line)
 		return;
 	fputs(line, (FILE *)sel);
 }
+
+void rtw_warn_on(int cond)
+{
+	(void)cond;
+}

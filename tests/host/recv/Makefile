@@ -35,12 +35,12 @@ STA_COUNT_RUST_CFLAGS := $(STA_CFLAGS) -DHOST_RECV_STA_RUST_COUNT
 STA_RUST_CFLAGS := $(STA_CFLAGS) -DHOST_RECV_STA_RUST_COUNT -DHOST_RECV_STA_RUST_VALIDATE
 
 .PHONY: all test test-c test-rust test-sta test-sta-count-rust test-sta-rust \
-	test-rx-bh-tk-c test-rx-bh-tk-rust test-rx-bh-tk-setters-c clean
+	test-rx-bh-tk-c test-rx-bh-tk-rust test-rx-bh-tk-setters-c test-rx-bh-tk-setters-rust clean
 
 all: test
 
 test: test-c test-rust test-sta test-sta-count-rust test-sta-rust test-rx-bh-tk-c test-rx-bh-tk-rust \
-	test-rx-bh-tk-setters-c
+	test-rx-bh-tk-setters-c test-rx-bh-tk-setters-rust
 
 test-c: test_recv
 	./test_recv recv_vectors.json
@@ -110,7 +110,15 @@ test_dump_rx_bh_tk_rust: $(RX_BH_L2) librust_rtw_recv_bh_dbg.a $(RX_BH_SHIM) $(H
 	$(CC) $(CFLAGS) -o $@ \
 		$(RX_BH_L2) $(RX_BH_SHIM) $(HOST_JSON) librust_rtw_recv_bh_dbg.a
 
+test-rx-bh-tk-setters-rust: test_rx_bh_tk_setters_rust
+	./test_rx_bh_tk_setters_rust rx_bh_tk_setters_vectors.json
+
+test_rx_bh_tk_setters_rust: $(RX_BH_SETTERS_L2) librust_rtw_recv_bh_dbg.a $(RX_BH_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ \
+		$(RX_BH_SETTERS_L2) $(RX_BH_SHIM) $(HOST_JSON) librust_rtw_recv_bh_dbg.a
+
 clean:
 	rm -f test_recv test_recv_rust test_recv_sta test_recv_sta_count_rust test_recv_sta_rust \
-		test_dump_rx_bh_tk test_dump_rx_bh_tk_rust test_rx_bh_tk_setters librust_rtw_recv_bh_dbg.a \
+		test_dump_rx_bh_tk test_dump_rx_bh_tk_rust test_rx_bh_tk_setters test_rx_bh_tk_setters_rust \
+		librust_rtw_recv_bh_dbg.a \
 		librust_recv.a librust_recv_sta_count.a librust_recv_sta_validate.a

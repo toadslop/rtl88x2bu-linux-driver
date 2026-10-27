@@ -201,3 +201,70 @@ pub extern "C" fn dump_rx_bh_tk(sel: *mut c_void, recv: *mut c_void) {
     push_byte(&mut line, &mut p, b'\n');
     emit(sel, &line[..p]);
 }
+
+#[cfg(host_recv_bh_dbg_test)]
+fn recv_priv_mut(recv: *mut c_void) -> &'static mut RecvPriv {
+    unsafe { &mut *(recv as *mut RecvPriv) }
+}
+
+#[cfg(host_recv_bh_dbg_test)]
+#[no_mangle]
+pub extern "C" fn rx_bh_tk_set_stage(recv: *mut c_void, s: U32) {
+    if recv.is_null() {
+        return;
+    }
+    recv_priv_mut(recv).rx_bh_stage = s;
+}
+
+#[cfg(host_recv_bh_dbg_test)]
+#[no_mangle]
+pub extern "C" fn rx_bh_tk_set_buf(recv: *mut c_void, buf: *mut c_void, data: *mut c_void, dlen: U32) {
+    if recv.is_null() {
+        return;
+    }
+    let r = recv_priv_mut(recv);
+    if !r.rx_bh_cbuf.is_null() {
+        r.rx_bh_lbuf = r.rx_bh_cbuf;
+    }
+    r.rx_bh_cbuf = buf;
+    if !buf.is_null() {
+        r.rx_bh_cbuf_data = data;
+        r.rx_bh_cbuf_dlen = dlen;
+        r.rx_bh_buf_dq_cnt += 1;
+    } else {
+        r.rx_bh_cbuf_data = core::ptr::null_mut();
+        r.rx_bh_cbuf_dlen = 0;
+    }
+}
+
+#[cfg(host_recv_bh_dbg_test)]
+#[no_mangle]
+pub extern "C" fn rx_bh_tk_set_buf_pos(recv: *mut c_void, pos: *mut c_void) {
+    if recv.is_null() {
+        return;
+    }
+    let r = recv_priv_mut(recv);
+    if !r.rx_bh_cbuf.is_null() {
+        let base = r.rx_bh_cbuf_data as usize;
+        let p = pos as usize;
+        r.rx_bh_cbuf_pos = (p - base) as U32;
+    } else {
+        extern "C" {
+            fn rtw_warn_on(cond: i32);
+        }
+        unsafe {
+            rtw_warn_on(1);
+        }
+        r.rx_bh_cbuf_pos = 0;
+    }
+}
+
+#[cfg(host_recv_bh_dbg_test)]
+#[no_mangle]
+pub extern "C" fn rx_bh_tk_set_frame(recv: *mut c_void, frame: *mut c_void) {
+    if recv.is_null() {
+        return;
+    }
+    recv_priv_mut(recv).rx_bh_cframe = frame;
+}
+
