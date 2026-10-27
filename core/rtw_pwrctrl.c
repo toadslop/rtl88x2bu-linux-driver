@@ -2296,10 +2296,12 @@ static void pwr_rpwm_timeout_handler(void *FunctionContext)
 }
 #endif /* CONFIG_LPS_RPWM_TIMER */
 
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_ALIVE_TEST)
 __inline static void register_task_alive(struct pwrctrl_priv *pwrctrl, u32 tag)
 {
 	pwrctrl->alives |= tag;
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_ALIVE_TEST */
 
 __inline static void unregister_task_alive(struct pwrctrl_priv *pwrctrl, u32 tag)
 {
@@ -2307,6 +2309,7 @@ __inline static void unregister_task_alive(struct pwrctrl_priv *pwrctrl, u32 tag
 }
 
 
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_ALIVE_TEST)
 /*
  * Description:
  *	Check if the fw_pwrstate is okay for I/O.
@@ -2359,6 +2362,7 @@ s32 rtw_register_task_alive(PADAPTER padapter, u32 task)
 
 	return res;
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_ALIVE_TEST — W3-179 register_task_alive */
 
 /*
  * Description:
@@ -2421,6 +2425,7 @@ void rtw_unregister_task_alive(PADAPTER padapter, u32 task)
  *	 _SUCCESS	rtw_xmit_thread can write fifo/txcmd afterwards.
  *	 _FAIL		rtw_xmit_thread can not do anything.
  */
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_ALIVE_TEST)
 s32 rtw_register_tx_alive(PADAPTER padapter)
 {
 	s32 res;
@@ -2561,6 +2566,40 @@ s32 rtw_register_evt_alive(PADAPTER padapter)
 
 	return _SUCCESS;
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_ALIVE_TEST — W3-179 register I/O alive */
+
+#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_ALIVE_TEST)
+void rtw_rust_alive_enter_pwrlock(PADAPTER padapter)
+{
+	_enter_pwrlock(&adapter_to_pwrctl(padapter)->lock);
+}
+
+void rtw_rust_alive_exit_pwrlock(PADAPTER padapter)
+{
+	_exit_pwrlock(&adapter_to_pwrctl(padapter)->lock);
+}
+
+void rtw_rust_alive_or_alives(PADAPTER padapter, u32 tag)
+{
+	adapter_to_pwrctl(padapter)->alives |= tag;
+}
+
+u8 rtw_rust_alive_get_u8(PADAPTER padapter, u32 field)
+{
+	struct pwrctrl_priv *pwr = adapter_to_pwrctl(padapter);
+
+	switch (field) {
+	case 0:
+		return pwr->bFwCurrentInPSMode;
+	case 1:
+		return pwr->cpwm;
+	case 2:
+		return pwr->rpwm;
+	default:
+		return 0;
+	}
+}
+#endif /* CONFIG_RUST && !HOST_PWRCTRL_ALIVE_TEST */
 
 /*
  * Caller: ISR

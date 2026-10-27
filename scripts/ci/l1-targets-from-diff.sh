@@ -130,6 +130,13 @@ for path in "${changed[@]}"; do
 	| tests/host/pwrctrl/rpwm_vectors.json)
 		add_target rust-check-symbols-rtw-pwrctrl-rpwm
 		;;
+	rust/rtw_pwrctrl_alive.rs \
+	| core/rtw_pwrctrl.c \
+	| tests/host/pwrctrl/host_pwrctrl_alive_shim.c \
+	| tests/host/pwrctrl/test_pwrctrl_register_alive.c \
+	| tests/host/pwrctrl/register_alive_vectors.json)
+		add_target rust-check-symbols-rtw-pwrctrl-alive
+		;;
 	rust/rtw_rf_rest.rs \
 	| rust/rtw_rf_op_class_pref.rs \
 	| rust/rtw_rf_op_class_dump.rs \

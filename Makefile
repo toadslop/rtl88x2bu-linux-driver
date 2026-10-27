@@ -2822,6 +2822,9 @@ rustflags-y += --cfg config_rtw_acs_dbg
 endif
 rustflags-y += --cfg config_rtw_mgmt_queue
 rustflags-y += --cfg config_p2p_ps_noa_use_macid_sleep
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_DETECT_CPWM_BY_POLLING' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg detect_cpwm_by_polling
+endif
 ifneq ($(filter -DCONFIG_CONCURRENT_MODE,$(ccflags-y)),)
 rustflags-y += --cfg config_concurrent_mode
 endif
@@ -3099,6 +3102,7 @@ $(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ps.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ps.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_lps_tp.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_rpwm.o
+$(MODULE_NAME)-y += rust/rtw_pwrctrl_alive.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
 $(MODULE_NAME)-y += rust/rtw_mlme_80211d.o
@@ -4957,6 +4961,20 @@ rust-objects-rtw-pwrctrl-rpwm-c:
 rust-check-symbols-rtw-pwrctrl-rpwm: rust-objects-rtw-pwrctrl-rpwm-c rust-objects-rtw-pwrctrl-rpwm
 	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/rpwm_c_ref.o NEW=rust/rtw_pwrctrl_rpwm.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_rpwm.allow ALLOW_VACUOUS=1
+
+# W3-179: host C oracle vs rust/rtw_pwrctrl_alive.o (register task/IO alive).
+rust-objects-rtw-pwrctrl-alive:
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_pwrctrl_alive.o
+rust-objects-rtw-pwrctrl-alive-c:
+	@mkdir -p tests/host/pwrctrl
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-DCONFIG_DETECT_CPWM_BY_POLLING \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/pwrctrl/alive_c_ref.o \
+		tests/host/pwrctrl/host_pwrctrl_alive_shim.c
+rust-check-symbols-rtw-pwrctrl-alive: rust-objects-rtw-pwrctrl-alive-c rust-objects-rtw-pwrctrl-alive
+	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/alive_c_ref.o NEW=rust/rtw_pwrctrl_alive.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_alive.allow ALLOW_VACUOUS=1
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production
