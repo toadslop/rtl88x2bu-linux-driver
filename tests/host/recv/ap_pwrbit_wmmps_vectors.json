@@ -1,0 +1,110 @@
+{
+  "vectors": [
+    {
+      "name": "pwrbit_set_awake",
+      "fn": "pwrbit",
+      "fc": "0x1001",
+      "sta_state": 0,
+      "expect_stop": 1,
+      "expect_wakeup": 0
+    },
+    {
+      "name": "pwrbit_set_already_sleep",
+      "fn": "pwrbit",
+      "fc": "0x1001",
+      "sta_state": 4,
+      "expect_stop": 0,
+      "expect_wakeup": 0
+    },
+    {
+      "name": "pwrbit_clear_sleeping",
+      "fn": "pwrbit",
+      "fc": "0x0001",
+      "sta_state": 4,
+      "expect_stop": 0,
+      "expect_wakeup": 1
+    },
+    {
+      "name": "pwrbit_clear_awake",
+      "fn": "pwrbit",
+      "fc": "0x0001",
+      "sta_state": 0,
+      "expect_stop": 0,
+      "expect_wakeup": 0
+    },
+    {
+      "name": "wmmps_no_qos",
+      "fn": "wmmps",
+      "priority": 1,
+      "qos_option": 0,
+      "qos_info": 15,
+      "sta_state": 4,
+      "uapsd_bk": 2,
+      "sleepq_len": 1,
+      "expect_delivery": 0,
+      "expect_null": 0
+    },
+    {
+      "name": "wmmps_qos_info_zero",
+      "fn": "wmmps",
+      "priority": 1,
+      "qos_option": 1,
+      "qos_info": 0,
+      "sta_state": 4,
+      "uapsd_bk": 2,
+      "sleepq_len": 1,
+      "expect_delivery": 0,
+      "expect_null": 0
+    },
+    {
+      "name": "wmmps_awake",
+      "fn": "wmmps",
+      "priority": 1,
+      "qos_option": 1,
+      "qos_info": 15,
+      "sta_state": 0,
+      "uapsd_bk": 2,
+      "sleepq_len": 1,
+      "expect_delivery": 0,
+      "expect_null": 0
+    },
+    {
+      "name": "wmmps_trigger_delivery",
+      "fn": "wmmps",
+      "priority": 2,
+      "qos_option": 1,
+      "qos_info": 15,
+      "sta_state": 4,
+      "uapsd_bk": 2,
+      "sleepq_len": 3,
+      "expect_delivery": 1,
+      "expect_null": 0
+    },
+    {
+      "name": "wmmps_trigger_null",
+      "fn": "wmmps",
+      "priority": 6,
+      "qos_option": 1,
+      "qos_info": 15,
+      "sta_state": 4,
+      "uapsd_vo": 2,
+      "sleepq_len": 0,
+      "expect_delivery": 0,
+      "expect_null": 1,
+      "expect_null_tid": 6
+    },
+    {
+      "name": "wmmps_be_default_ac",
+      "fn": "wmmps",
+      "priority": 3,
+      "qos_option": 1,
+      "qos_info": 15,
+      "sta_state": 4,
+      "uapsd_be": 2,
+      "sleepq_len": 0,
+      "expect_delivery": 0,
+      "expect_null": 1,
+      "expect_null_tid": 3
+    }
+  ]
+}
