@@ -1,0 +1,14 @@
+# W3-177: process_pwrbit_data / process_wmmps_data — Rust FFI helpers (kernel-only).
+drop rtw_rust_recv_ap_ps_rx_data
+drop rtw_rust_recv_ap_ps_priority
+drop rtw_rust_recv_ap_ps_uapsd_bk
+drop rtw_rust_recv_ap_ps_uapsd_be
+drop rtw_rust_recv_ap_ps_uapsd_vi
+drop rtw_rust_recv_ap_ps_uapsd_vo
+drop rtw_rust_recv_ap_ps_sleepq_ac_len
+drop rtw_rust_recv_ap_ps_mac_addr
+drop rtw_rust_recv_ap_ps_wmmps_qos_ok
+drop stop_sta_xmit
+drop wakeup_sta_to_xmit
+drop xmit_delivery_enabled_frames
+drop issue_qos_nulldata

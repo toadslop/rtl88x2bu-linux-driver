@@ -2521,6 +2521,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_recv_sta_rest.o \
 		core/rtw_recv_sta_rust_acc.o \
 		core/rtw_recv_bh_dbg_shim.o \
+		core/rtw_recv_ap_ps_shim.o \
 		core/rtw_sta_mgt.o \
 		core/rtw_sta_mgt_rest.o \
 		core/rtw_sta_mgt_stctl.o \
@@ -3073,6 +3074,7 @@ $(MODULE_NAME)-y += rust/rtw_recv.o
 $(MODULE_NAME)-y += rust/rtw_recv_sta_count.o
 $(MODULE_NAME)-y += rust/rtw_recv_sta_validate.o
 $(MODULE_NAME)-y += rust/rtw_recv_bh_dbg.o
+$(MODULE_NAME)-y += rust/rtw_recv_ap_ps.o
 $(MODULE_NAME)-y += rust/rtw_xmit.o
 $(MODULE_NAME)-y += rust/rtw_xmit_update_attrib_kern.o
 $(MODULE_NAME)-y += rust/rtw_cmd_thread_kern.o
@@ -4311,6 +4313,28 @@ rust-objects-rtw-recv-bh-dbg-c:
 rust-check-symbols-rtw-recv-bh-dbg: rust-objects-rtw-recv-bh-dbg-c rust-objects-rtw-recv-bh-dbg
 	$(MAKE) rust-check-symbols OLD=tests/host/recv/debug_rx_bh_tk_c_ref.o NEW=rust/rtw_recv_bh_dbg.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_recv_bh_dbg.allow ALLOW_VACUOUS=1
+
+# W3-177: host C oracle vs rust/rtw_recv_ap_ps.o (CONFIG_AP_MODE).
+rust-objects-rtw-recv-ap-ps:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-recv-ap-ps"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_recv_ap_ps.o
+rust-objects-rtw-recv-ap-ps-c:
+	@mkdir -p tests/host/recv
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-include $(shell pwd)/tests/host/include/host_autoconf.h \
+		-o tests/host/recv/debug_recv_ap_ps_oracle.o \
+		tests/host/recv/debug_recv_ap_ps_c_oracle.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/recv/debug_recv_ap_ps_stubs.o \
+		tests/host/recv/debug_recv_ap_ps_c_ref_stubs.c
+	ld -r tests/host/recv/debug_recv_ap_ps_oracle.o \
+		tests/host/recv/debug_recv_ap_ps_stubs.o \
+		-o tests/host/recv/debug_recv_ap_ps_c_ref.o
+rust-check-symbols-rtw-recv-ap-ps: rust-objects-rtw-recv-ap-ps-c rust-objects-rtw-recv-ap-ps
+	$(MAKE) rust-check-symbols OLD=tests/host/recv/debug_recv_ap_ps_c_ref.o NEW=rust/rtw_recv_ap_ps.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_recv_ap_ps.allow ALLOW_VACUOUS=1
 
 # W3-40: host C oracle xmit_rest vs rust/rtw_xmit.o.
 rust-objects-rtw-xmit:

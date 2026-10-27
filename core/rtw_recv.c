@@ -793,6 +793,7 @@ union recv_frame *portctrl(_adapter *adapter, union recv_frame *precv_frame)
 
 }
 
+#if !defined(CONFIG_RUST)
 void process_pwrbit_data(_adapter *padapter, union recv_frame *precv_frame, struct sta_info *psta)
 {
 #ifdef CONFIG_AP_MODE
@@ -879,6 +880,7 @@ void process_wmmps_data(_adapter *padapter, union recv_frame *precv_frame, struc
 #endif
 
 }
+#endif /* !CONFIG_RUST — W3-177 in rust/rtw_recv_ap_ps.rs */
 
 #ifdef CONFIG_TDLS
 sint OnTDLS(_adapter *adapter, union recv_frame *precv_frame)
