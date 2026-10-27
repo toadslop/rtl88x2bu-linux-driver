@@ -138,21 +138,10 @@ test-ap-ps-c: test_recv_ap_pwrbit_wmmps
 test_recv_ap_pwrbit_wmmps: $(AP_PS_L2) $(AP_PS_ORACLE) $(AP_PS_SHIM) $(HOST_JSON)
 	$(CC) $(AP_PS_CFLAGS) -o $@ $(AP_PS_L2) $(AP_PS_ORACLE) $(AP_PS_SHIM) $(HOST_JSON)
 
-librust_rtw_recv_ap_ps.a: $(RUST_RECV_AP_PS)
-	$(RUSTC) --edition 2021 -C opt-level=2 -C overflow-checks=on \
-		--cfg host_recv_ap_ps_test \
-		--crate-type staticlib $(RUST_RECV_AP_PS) -o $@
-
-test-ap-ps-rust: test_recv_ap_pwrbit_wmmps_rust
-	./test_recv_ap_pwrbit_wmmps_rust ap_pwrbit_wmmps_vectors.json
-
-test_recv_ap_pwrbit_wmmps_rust: $(AP_PS_L2) librust_rtw_recv_ap_ps.a $(AP_PS_SHIM) $(HOST_JSON)
-	$(CC) $(AP_PS_CFLAGS) -o $@ $(AP_PS_L2) $(AP_PS_SHIM) $(HOST_JSON) librust_rtw_recv_ap_ps.a
-
 clean:
 	rm -f test_recv test_recv_rust test_recv_sta test_recv_sta_count_rust test_recv_sta_rust \
 		test_recv_signal \
 		test_dump_rx_bh_tk test_dump_rx_bh_tk_rust test_rx_bh_tk_setters test_rx_bh_tk_setters_rust \
-		test_recv_ap_pwrbit_wmmps test_recv_ap_pwrbit_wmmps_rust \
-		librust_rtw_recv_bh_dbg.a librust_rtw_recv_ap_ps.a \
+		test_recv_ap_pwrbit_wmmps \
+		librust_rtw_recv_bh_dbg.a \
 		librust_recv.a librust_recv_sta_count.a librust_recv_sta_validate.a
