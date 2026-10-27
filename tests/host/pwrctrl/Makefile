@@ -21,19 +21,17 @@ LPS_ENTER_CFLAGS := $(CFLAGS)
 RUST_PWRCTRL := $(ROOT)/rust/rtw_pwrctrl.rs
 RUST_PWRCTRL_IPS_HOST := $(ROOT)/rust/rtw_pwrctrl_ips_host.rs
 RUST_PWRCTRL_PS := $(ROOT)/rust/rtw_pwrctrl_ps.rs
-RUST_PWRCTRL_LPS_TP := $(ROOT)/rust/rtw_pwrctrl_lps_tp.rs
 RUSTC := rustc
 
 .PHONY: all test test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust \
 	test-leave-all test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust \
-	test-lps-tp test-lps-tp-rust clean
+	test-lps-tp clean
 
 all: test test-lps test-lps-enter test-leave-all test-leave-all-rust test-ips test-ips-rust \
-	test-ps-processor test-ps-processor-rust test-lps-tp test-lps-tp-rust
+	test-ps-processor test-ps-processor-rust test-lps-tp
 
 test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust test-leave-all \
-	test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust test-lps-tp \
-	test-lps-tp-rust
+	test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust test-lps-tp
 
 test-c: test_pwrctrl_ps_deny
 	./test_pwrctrl_ps_deny ps_deny_vectors.json
@@ -84,9 +82,6 @@ test_pwrctrl_ps_processor_rust: test_pwrctrl_ps_processor.c librust_pwrctrl_ps.a
 test-lps-tp: test_pwrctrl_lps_tp
 	./test_pwrctrl_lps_tp lps_tp_vectors.json
 
-test-lps-tp-rust: test_pwrctrl_lps_tp_rust
-	./test_pwrctrl_lps_tp_rust lps_tp_vectors.json
-
 test_pwrctrl_lps_tp: test_pwrctrl_lps_tp.c $(LPS_TP_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_pwrctrl_lps_tp.c $(LPS_TP_SHIM) $(HOST_JSON)
 
@@ -115,13 +110,6 @@ librust_pwrctrl_ips.a: $(RUST_PWRCTRL_IPS_HOST)
 test_pwrctrl_ips_rust: test_pwrctrl_ips.c librust_pwrctrl_ips.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_pwrctrl_ips.c $(HOST_JSON) librust_pwrctrl_ips.a
 
-librust_pwrctrl_lps_tp.a: $(RUST_PWRCTRL_LPS_TP)
-	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_pwrctrl_lps_tp_test \
-		--crate-type staticlib $(RUST_PWRCTRL_LPS_TP) -o $@
-
-test_pwrctrl_lps_tp_rust: test_pwrctrl_lps_tp.c librust_pwrctrl_lps_tp.a $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ test_pwrctrl_lps_tp.c $(HOST_JSON) librust_pwrctrl_lps_tp.a
-
 librust_pwrctrl.a: $(RUST_PWRCTRL)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_pwrctrl_test \
 		--crate-type staticlib $(RUST_PWRCTRL) -o $@
@@ -140,5 +128,5 @@ clean:
 		test_pwrctrl_lps_rust test_pwrctrl_lps_enter test_pwrctrl_lps_enter_rust \
 		test_pwrctrl_leave_all_ps test_pwrctrl_leave_all_ps_rust \
 		test_pwrctrl_ips test_pwrctrl_ips_rust test_pwrctrl_ps_processor \
-		test_pwrctrl_ps_processor_rust test_pwrctrl_lps_tp test_pwrctrl_lps_tp_rust \
-		librust_pwrctrl_ps.a librust_pwrctrl_ips.a librust_pwrctrl_lps_tp.a librust_pwrctrl.a
+		test_pwrctrl_ps_processor_rust test_pwrctrl_lps_tp \
+		librust_pwrctrl_ps.a librust_pwrctrl_ips.a librust_pwrctrl.a
