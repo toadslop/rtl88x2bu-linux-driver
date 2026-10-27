@@ -1,0 +1,65 @@
+{
+  "oracle": "tests/host/recv/host_recv_signal_oracle.c",
+  "vectors": [
+    {
+      "name": "rtw_bridge_tunnel_header",
+      "symbol": "host_rtw_bridge_tunnel_header",
+      "offset": 0,
+      "len": 6,
+      "expect_hex": "aaaa030000f8"
+    },
+    {
+      "name": "rtw_rfc1042_header",
+      "symbol": "host_rtw_rfc1042_header",
+      "offset": 0,
+      "len": 6,
+      "expect_hex": "aaaa03000000"
+    },
+    {
+      "name": "snap_eth_type_ipx",
+      "symbol": "host_snap_eth_type_ipx",
+      "offset": 0,
+      "len": 2,
+      "expect_hex": "8137"
+    },
+    {
+      "name": "snap_eth_type_appletalk_aarp",
+      "symbol": "host_snap_eth_type_appletalk_aarp",
+      "offset": 0,
+      "len": 2,
+      "expect_hex": "80f3"
+    },
+    {
+      "name": "snap_eth_type_tdls",
+      "symbol": "host_snap_eth_type_tdls",
+      "offset": 0,
+      "len": 2,
+      "expect_hex": "890d",
+      "requires_tdls": 1
+    },
+    {
+      "name": "signal_stat_calc_profile_row0",
+      "symbol": "host_signal_stat_calc_profile",
+      "offset": 0,
+      "len": 3,
+      "expect_hex": "040100",
+      "requires_signal_stat": 1
+    },
+    {
+      "name": "signal_stat_calc_profile_row1",
+      "symbol": "host_signal_stat_calc_profile",
+      "offset": 3,
+      "len": 3,
+      "expect_hex": "030700",
+      "requires_signal_stat": 1
+    },
+    {
+      "name": "signal_stat_calc_profile_row2",
+      "symbol": "host_signal_stat_calc_profile",
+      "offset": 6,
+      "len": 3,
+      "expect_hex": "000a00",
+      "requires_signal_stat": 1
+    }
+  ]
+}
