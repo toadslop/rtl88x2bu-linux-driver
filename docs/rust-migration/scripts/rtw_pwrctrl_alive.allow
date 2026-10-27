@@ -1,0 +1,10 @@
+# W3-179: register *alive — Rust FFI helpers (kernel-only).
+drop _enter_pwrlock
+drop _exit_pwrlock
+drop rtw_rust_alive_enter_pwrlock
+drop rtw_rust_alive_exit_pwrlock
+drop rtw_rust_alive_or_alives
+drop rtw_rust_alive_get_u8
+drop host_pwrctrl_alive_reset_trace
+drop host_pwrctrl_alive_get_trace
+drop host_pwrctrl_alive_set_rpwm_raises_cpwm
