@@ -4479,6 +4479,7 @@ exit:
 #endif /* CONFIG_RECV_THREAD_MODE */
 
 #if DBG_RX_BH_TRACKING
+#if !defined(CONFIG_RUST)
 void rx_bh_tk_set_stage(struct recv_priv *recv, u32 s)
 {
 	recv->rx_bh_stage = s;
@@ -4513,6 +4514,7 @@ void rx_bh_tk_set_frame(struct recv_priv *recv, void *frame)
 {
 	recv->rx_bh_cframe = frame;
 }
+#endif /* !CONFIG_RUST — W3-176 in rust/rtw_recv_bh_dbg.rs */
 
 #if !defined(CONFIG_RUST)
 void dump_rx_bh_tk(void *sel, struct recv_priv *recv)

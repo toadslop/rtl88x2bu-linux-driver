@@ -4285,7 +4285,7 @@ rust-check-symbols-rtw-recv-sta-validate-kern: rust-objects-rtw-recv-sta-validat
 	$(MAKE) rust-check-symbols OLD=tests/host/recv/recv_sta_validate_c_ref.o NEW=rust/rtw_recv_sta_validate.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_recv_sta_count.allow ALLOW_VACUOUS=1
 
-# W3-171: host C oracle vs rust/rtw_recv_bh_dbg.o (dump_rx_bh_tk, DBG_RX_BH_TRACKING).
+# W3-171/W3-176: host C oracle vs rust/rtw_recv_bh_dbg.o (DBG_RX_BH_TRACKING).
 rust-objects-rtw-recv-bh-dbg:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-recv-bh-dbg"; exit 1; }
 	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_recv_bh_dbg.o
@@ -4294,8 +4294,16 @@ rust-objects-rtw-recv-bh-dbg-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-I$(shell pwd)/tests/host/include \
 		-DDBG_RX_BH_TRACKING=1 \
-		-o tests/host/recv/debug_rx_bh_tk_c_ref.o \
+		-o tests/host/recv/debug_rx_bh_tk_dump_c_ref.o \
 		tests/host/recv/debug_rx_bh_tk_c_oracle.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-DDBG_RX_BH_TRACKING=1 \
+		-o tests/host/recv/debug_rx_bh_tk_setters_c_ref.o \
+		tests/host/recv/debug_rx_bh_tk_setters_c_oracle.c
+	ld -r tests/host/recv/debug_rx_bh_tk_dump_c_ref.o \
+		tests/host/recv/debug_rx_bh_tk_setters_c_ref.o \
+		-o tests/host/recv/debug_rx_bh_tk_c_ref.o
 rust-check-symbols-rtw-recv-bh-dbg: rust-objects-rtw-recv-bh-dbg-c rust-objects-rtw-recv-bh-dbg
 	$(MAKE) rust-check-symbols OLD=tests/host/recv/debug_rx_bh_tk_c_ref.o NEW=rust/rtw_recv_bh_dbg.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_recv_bh_dbg.allow ALLOW_VACUOUS=1

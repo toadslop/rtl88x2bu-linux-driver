@@ -122,6 +122,7 @@ mod kernel {
         pub fn rtw_rust_recv_bh_buf_dq_cnt(recv: *mut c_void) -> U32;
         pub fn rtw_rust_recv_bh_lbuf(recv: *mut c_void) -> *mut c_void;
         pub fn rtw_rust_recv_bh_cbuf(recv: *mut c_void) -> *mut c_void;
+        pub fn rtw_rust_recv_bh_cbuf_data(recv: *mut c_void) -> *mut c_void;
         pub fn rtw_rust_recv_bh_cbuf_dlen(recv: *mut c_void) -> U32;
         pub fn rtw_rust_recv_bh_cbuf_pos(recv: *mut c_void) -> U32;
         pub fn rtw_rust_recv_bh_cframe(recv: *mut c_void) -> *mut c_void;
@@ -271,4 +272,91 @@ pub extern "C" fn rx_bh_tk_set_frame(recv: *mut c_void, frame: *mut c_void) {
         return;
     }
     recv_priv_mut(recv).rx_bh_cframe = frame;
+}
+
+#[cfg(not(host_recv_bh_dbg_test))]
+mod kernel_set {
+    use super::*;
+
+    extern "C" {
+        pub fn rtw_rust_recv_bh_set_stage(recv: *mut c_void, s: U32);
+        pub fn rtw_rust_recv_bh_set_buf_dq_cnt(recv: *mut c_void, v: U32);
+        pub fn rtw_rust_recv_bh_set_lbuf(recv: *mut c_void, p: *mut c_void);
+        pub fn rtw_rust_recv_bh_set_cbuf(recv: *mut c_void, p: *mut c_void);
+        pub fn rtw_rust_recv_bh_set_cbuf_data(recv: *mut c_void, p: *mut c_void);
+        pub fn rtw_rust_recv_bh_set_cbuf_dlen(recv: *mut c_void, v: U32);
+        pub fn rtw_rust_recv_bh_set_cbuf_pos(recv: *mut c_void, v: U32);
+        pub fn rtw_rust_recv_bh_set_cframe(recv: *mut c_void, p: *mut c_void);
+        pub fn rtw_rust_warn_on(cond: i32);
+    }
+}
+
+#[cfg(not(host_recv_bh_dbg_test))]
+#[no_mangle]
+pub extern "C" fn rx_bh_tk_set_stage(recv: *mut c_void, s: U32) {
+    if recv.is_null() {
+        return;
+    }
+    unsafe {
+        kernel_set::rtw_rust_recv_bh_set_stage(recv, s);
+    }
+}
+
+#[cfg(not(host_recv_bh_dbg_test))]
+#[no_mangle]
+pub extern "C" fn rx_bh_tk_set_buf(
+    recv: *mut c_void,
+    buf: *mut c_void,
+    data: *mut c_void,
+    dlen: U32,
+) {
+    if recv.is_null() {
+        return;
+    }
+    unsafe {
+        if !kernel::rtw_rust_recv_bh_cbuf(recv).is_null() {
+            kernel_set::rtw_rust_recv_bh_set_lbuf(recv, kernel::rtw_rust_recv_bh_cbuf(recv));
+        }
+        kernel_set::rtw_rust_recv_bh_set_cbuf(recv, buf);
+        if !buf.is_null() {
+            kernel_set::rtw_rust_recv_bh_set_cbuf_data(recv, data);
+            kernel_set::rtw_rust_recv_bh_set_cbuf_dlen(recv, dlen);
+            kernel_set::rtw_rust_recv_bh_set_buf_dq_cnt(
+                recv,
+                kernel::rtw_rust_recv_bh_buf_dq_cnt(recv) + 1,
+            );
+        } else {
+            kernel_set::rtw_rust_recv_bh_set_cbuf_data(recv, core::ptr::null_mut());
+            kernel_set::rtw_rust_recv_bh_set_cbuf_dlen(recv, 0);
+        }
+    }
+}
+
+#[cfg(not(host_recv_bh_dbg_test))]
+#[no_mangle]
+pub extern "C" fn rx_bh_tk_set_buf_pos(recv: *mut c_void, pos: *mut c_void) {
+    if recv.is_null() {
+        return;
+    }
+    unsafe {
+        if !kernel::rtw_rust_recv_bh_cbuf(recv).is_null() {
+            let base = kernel::rtw_rust_recv_bh_cbuf_data(recv) as usize;
+            let p = pos as usize;
+            kernel_set::rtw_rust_recv_bh_set_cbuf_pos(recv, (p - base) as U32);
+        } else {
+            kernel_set::rtw_rust_warn_on(1);
+            kernel_set::rtw_rust_recv_bh_set_cbuf_pos(recv, 0);
+        }
+    }
+}
+
+#[cfg(not(host_recv_bh_dbg_test))]
+#[no_mangle]
+pub extern "C" fn rx_bh_tk_set_frame(recv: *mut c_void, frame: *mut c_void) {
+    if recv.is_null() {
+        return;
+    }
+    unsafe {
+        kernel_set::rtw_rust_recv_bh_set_cframe(recv, frame);
+    }
 }

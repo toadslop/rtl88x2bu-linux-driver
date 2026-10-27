@@ -41,6 +41,15 @@ void *rtw_rust_recv_bh_cbuf(struct recv_priv *recv)
 #endif
 }
 
+void *rtw_rust_recv_bh_cbuf_data(struct recv_priv *recv)
+{
+#if DBG_RX_BH_TRACKING
+	return recv->rx_bh_cbuf_data;
+#else
+	return NULL;
+#endif
+}
+
 u32 rtw_rust_recv_bh_cbuf_dlen(struct recv_priv *recv)
 {
 #if DBG_RX_BH_TRACKING
@@ -76,6 +85,86 @@ void rtw_rust_recv_bh_print_sel(void *sel, const char *line)
 #else
 	(void)sel;
 	(void)line;
+#endif
+}
+
+void rtw_rust_recv_bh_set_stage(struct recv_priv *recv, u32 s)
+{
+#if DBG_RX_BH_TRACKING
+	recv->rx_bh_stage = s;
+#else
+	(void)recv;
+	(void)s;
+#endif
+}
+
+void rtw_rust_recv_bh_set_buf_dq_cnt(struct recv_priv *recv, u32 v)
+{
+#if DBG_RX_BH_TRACKING
+	recv->rx_bh_buf_dq_cnt = v;
+#else
+	(void)recv;
+	(void)v;
+#endif
+}
+
+void rtw_rust_recv_bh_set_lbuf(struct recv_priv *recv, void *p)
+{
+#if DBG_RX_BH_TRACKING
+	recv->rx_bh_lbuf = p;
+#else
+	(void)recv;
+	(void)p;
+#endif
+}
+
+void rtw_rust_recv_bh_set_cbuf(struct recv_priv *recv, void *p)
+{
+#if DBG_RX_BH_TRACKING
+	recv->rx_bh_cbuf = p;
+#else
+	(void)recv;
+	(void)p;
+#endif
+}
+
+void rtw_rust_recv_bh_set_cbuf_data(struct recv_priv *recv, void *p)
+{
+#if DBG_RX_BH_TRACKING
+	recv->rx_bh_cbuf_data = p;
+#else
+	(void)recv;
+	(void)p;
+#endif
+}
+
+void rtw_rust_recv_bh_set_cbuf_dlen(struct recv_priv *recv, u32 v)
+{
+#if DBG_RX_BH_TRACKING
+	recv->rx_bh_cbuf_dlen = v;
+#else
+	(void)recv;
+	(void)v;
+#endif
+}
+
+void rtw_rust_recv_bh_set_cbuf_pos(struct recv_priv *recv, u32 v)
+{
+#if DBG_RX_BH_TRACKING
+	recv->rx_bh_cbuf_pos = v;
+#else
+	(void)recv;
+	(void)v;
+#endif
+}
+
+void rtw_rust_recv_bh_set_cframe(struct recv_priv *recv, void *p)
+{
+#if DBG_RX_BH_TRACKING
+	recv->rx_bh_cframe = p;
+#else
+	(void)recv;
+	(void)p;
 #endif
 }
 
