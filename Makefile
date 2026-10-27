@@ -2520,6 +2520,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_recv_pn_rest.o \
 		core/rtw_recv_sta_rest.o \
 		core/rtw_recv_sta_rust_acc.o \
+		core/rtw_recv_bh_dbg_shim.o \
 		core/rtw_sta_mgt.o \
 		core/rtw_sta_mgt_rest.o \
 		core/rtw_sta_mgt_stctl.o \
@@ -3068,6 +3069,7 @@ $(MODULE_NAME)-y += rust/rtw_odm.o
 $(MODULE_NAME)-y += rust/rtw_recv.o
 $(MODULE_NAME)-y += rust/rtw_recv_sta_count.o
 $(MODULE_NAME)-y += rust/rtw_recv_sta_validate.o
+$(MODULE_NAME)-y += rust/rtw_recv_bh_dbg.o
 $(MODULE_NAME)-y += rust/rtw_xmit.o
 $(MODULE_NAME)-y += rust/rtw_xmit_update_attrib_kern.o
 $(MODULE_NAME)-y += rust/rtw_cmd_thread_kern.o
@@ -4279,6 +4281,21 @@ rust-objects-rtw-recv-sta-validate-kern:
 rust-check-symbols-rtw-recv-sta-validate-kern: rust-objects-rtw-recv-sta-validate-c rust-objects-rtw-recv-sta-validate-kern
 	$(MAKE) rust-check-symbols OLD=tests/host/recv/recv_sta_validate_c_ref.o NEW=rust/rtw_recv_sta_validate.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_recv_sta_count.allow ALLOW_VACUOUS=1
+
+# W3-171: host C oracle vs rust/rtw_recv_bh_dbg.o (dump_rx_bh_tk, DBG_RX_BH_TRACKING).
+rust-objects-rtw-recv-bh-dbg:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-recv-bh-dbg"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_recv_bh_dbg.o
+rust-objects-rtw-recv-bh-dbg-c:
+	@mkdir -p tests/host/recv
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-DDBG_RX_BH_TRACKING=1 \
+		-o tests/host/recv/debug_rx_bh_tk_c_ref.o \
+		tests/host/recv/debug_rx_bh_tk_c_oracle.c
+rust-check-symbols-rtw-recv-bh-dbg: rust-objects-rtw-recv-bh-dbg-c rust-objects-rtw-recv-bh-dbg
+	$(MAKE) rust-check-symbols OLD=tests/host/recv/debug_rx_bh_tk_c_ref.o NEW=rust/rtw_recv_bh_dbg.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_recv_bh_dbg.allow ALLOW_VACUOUS=1
 
 # W3-40: host C oracle xmit_rest vs rust/rtw_xmit.o.
 rust-objects-rtw-xmit:
