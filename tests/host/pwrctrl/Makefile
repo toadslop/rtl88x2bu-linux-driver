@@ -11,11 +11,13 @@ IPS_SHIM := host_pwrctrl_ips_shim.c
 PS_PROC_SHIM := host_pwrctrl_ps_processor_shim.c
 LPS_TP_SHIM := host_pwrctrl_lps_tp_shim.c
 RPWM_SHIM := host_pwrctrl_rpwm_shim.c
+ALIVE_SHIM := host_pwrctrl_alive_shim.c
 
 CC     := gcc
 CFLAGS := -Wall -Wextra -Werror -O2 \
           -I$(HOST_INC) -I$(ROOT)/include \
           -include $(HOST_INC)/host_autoconf.h
+ALIVE_CFLAGS := $(CFLAGS) -DCONFIG_DETECT_CPWM_BY_POLLING
 LPS_CFLAGS := $(CFLAGS)
 LPS_ENTER_CFLAGS := $(CFLAGS)
 
@@ -28,14 +30,15 @@ RUSTC := rustc
 
 .PHONY: all test test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust \
 	test-leave-all test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust \
-	test-lps-tp test-lps-tp-rust test-rpwm test-rpwm-rust clean
+	test-lps-tp test-lps-tp-rust test-rpwm test-rpwm-rust test-register-alive clean
 
 all: test test-lps test-lps-enter test-leave-all test-leave-all-rust test-ips test-ips-rust \
-	test-ps-processor test-ps-processor-rust test-lps-tp test-lps-tp-rust test-rpwm test-rpwm-rust
+	test-ps-processor test-ps-processor-rust test-lps-tp test-lps-tp-rust test-rpwm test-rpwm-rust \
+	test-register-alive
 
 test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust test-leave-all \
 	test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust test-lps-tp \
-	test-lps-tp-rust test-rpwm test-rpwm-rust
+	test-lps-tp-rust test-rpwm test-rpwm-rust test-register-alive
 
 test-c: test_pwrctrl_ps_deny
 	./test_pwrctrl_ps_deny ps_deny_vectors.json
@@ -115,6 +118,12 @@ librust_pwrctrl_rpwm.a: $(RUST_PWRCTRL_RPWM)
 test_pwrctrl_rpwm_rust: test_pwrctrl_rpwm.c librust_pwrctrl_rpwm.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_pwrctrl_rpwm.c $(HOST_JSON) librust_pwrctrl_rpwm.a
 
+test-register-alive: test_pwrctrl_register_alive
+	./test_pwrctrl_register_alive register_alive_vectors.json
+
+test_pwrctrl_register_alive: test_pwrctrl_register_alive.c $(ALIVE_SHIM) $(HOST_JSON)
+	$(CC) $(ALIVE_CFLAGS) -o $@ test_pwrctrl_register_alive.c $(ALIVE_SHIM) $(HOST_JSON)
+
 test_pwrctrl_lps_enter: test_pwrctrl_lps_enter.c $(LPS_ENTER_SHIM) $(HOST_JSON)
 	$(CC) $(LPS_ENTER_CFLAGS) -o $@ test_pwrctrl_lps_enter.c $(LPS_ENTER_SHIM) $(HOST_JSON)
 
@@ -160,5 +169,6 @@ clean:
 		test_pwrctrl_ips test_pwrctrl_ips_rust test_pwrctrl_ps_processor \
 		test_pwrctrl_ps_processor_rust test_pwrctrl_lps_tp test_pwrctrl_lps_tp_rust \
 		test_pwrctrl_rpwm test_pwrctrl_rpwm_rust \
+		test_pwrctrl_register_alive \
 		librust_pwrctrl_ps.a librust_pwrctrl_ips.a librust_pwrctrl_lps_tp.a librust_pwrctrl_rpwm.a \
 		librust_pwrctrl.a
