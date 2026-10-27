@@ -19,14 +19,15 @@ LPS_ENTER_CFLAGS := $(CFLAGS)
 
 RUST_PWRCTRL := $(ROOT)/rust/rtw_pwrctrl.rs
 RUST_PWRCTRL_IPS_HOST := $(ROOT)/rust/rtw_pwrctrl_ips_host.rs
+RUST_PWRCTRL_PS := $(ROOT)/rust/rtw_pwrctrl_ps.rs
 RUSTC := rustc
 
 .PHONY: all test test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust \
-	test-leave-all test-leave-all-rust test-ips test-ips-rust test-ps-processor clean
+	test-leave-all test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust clean
 
-all: test test-lps test-lps-enter test-leave-all test-leave-all-rust test-ips test-ips-rust test-ps-processor
+all: test test-lps test-lps-enter test-leave-all test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust
 
-test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust test-leave-all test-leave-all-rust test-ips test-ips-rust test-ps-processor
+test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust test-leave-all test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust
 
 test-c: test_pwrctrl_ps_deny
 	./test_pwrctrl_ps_deny ps_deny_vectors.json
@@ -61,8 +62,18 @@ test-ips-rust: test_pwrctrl_ips_rust
 test-ps-processor: test_pwrctrl_ps_processor
 	./test_pwrctrl_ps_processor ps_processor_vectors.json
 
+test-ps-processor-rust: test_pwrctrl_ps_processor_rust
+	./test_pwrctrl_ps_processor_rust ps_processor_vectors.json
+
 test_pwrctrl_ps_processor: test_pwrctrl_ps_processor.c $(PS_PROC_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_pwrctrl_ps_processor.c $(PS_PROC_SHIM) $(HOST_JSON)
+
+librust_pwrctrl_ps.a: $(RUST_PWRCTRL_PS)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_pwrctrl_ps_processor_test \
+		--crate-type staticlib $(RUST_PWRCTRL_PS) -o $@
+
+test_pwrctrl_ps_processor_rust: test_pwrctrl_ps_processor.c librust_pwrctrl_ps.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_pwrctrl_ps_processor.c $(HOST_JSON) librust_pwrctrl_ps.a
 
 test_pwrctrl_lps_enter: test_pwrctrl_lps_enter.c $(LPS_ENTER_SHIM) $(HOST_JSON)
 	$(CC) $(LPS_ENTER_CFLAGS) -o $@ test_pwrctrl_lps_enter.c $(LPS_ENTER_SHIM) $(HOST_JSON)
@@ -107,4 +118,5 @@ clean:
 		test_pwrctrl_lps_rust test_pwrctrl_lps_enter test_pwrctrl_lps_enter_rust \
 		test_pwrctrl_leave_all_ps test_pwrctrl_leave_all_ps_rust \
 		test_pwrctrl_ips test_pwrctrl_ips_rust test_pwrctrl_ps_processor \
+		test_pwrctrl_ps_processor_rust librust_pwrctrl_ps.a \
 		librust_pwrctrl_ips.a librust_pwrctrl.a
