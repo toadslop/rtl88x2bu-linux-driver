@@ -185,9 +185,10 @@ fn cpwm_polling_core(
     bump_retry: fn(Padapter) -> u8,
     adapter: Padapter,
     mut rpwm: u8,
-    mut cpwm_orig: u8,
+    cpwm_orig: &mut u8,
     cpwm_last: *mut u8,
 ) -> i32 {
+    let mut cpwm_orig_local = *cpwm_orig;
     let mut rst = _FAIL;
     let mut cpwm_now = 0u8;
 
@@ -197,7 +198,7 @@ fn cpwm_polling_core(
         loop {
             msleep(1);
             hal_get(adapter, &mut cpwm_now);
-            if (cpwm_orig ^ cpwm_now) & 0x80 != 0 {
+            if (cpwm_orig_local ^ cpwm_now) & 0x80 != 0 {
                 set_u8(adapter, 0, PS_STATE_S4);
                 set_u8(adapter, 1, cpwm_now & PS_TOGGLE);
                 rst = _SUCCESS;
@@ -210,7 +211,7 @@ fn cpwm_polling_core(
         if rst == _SUCCESS {
             break;
         }
-        cpwm_orig = cpwm_now;
+        cpwm_orig_local = cpwm_now;
         rpwm &= !PS_TOGGLE;
         rpwm |= get_u8(adapter, 2);
         hal_set(adapter, rpwm);
@@ -220,6 +221,7 @@ fn cpwm_polling_core(
             break;
         }
     }
+    *cpwm_orig = cpwm_orig_local;
     if !cpwm_last.is_null() {
         unsafe {
             *cpwm_last = cpwm_now;
@@ -247,6 +249,7 @@ pub extern "C" fn rtw_cpwm_polling(adapter: Padapter, rpwm: u8, cpwm_orig_in: u8
     #[cfg(not(host_pwrctrl_rpwm_test))]
     {
         let mut cpwm_now = 0u8;
+        let mut cpwm_orig = cpwm_orig_in;
         let rst = cpwm_polling_core(
             kernel_cannot_run,
             kernel_msleep,
@@ -260,11 +263,11 @@ pub extern "C" fn rtw_cpwm_polling(adapter: Padapter, rpwm: u8, cpwm_orig_in: u8
             |a| unsafe { rtw_rust_rpwm_bump_rpwm_retry(a) },
             adapter,
             rpwm,
-            cpwm_orig_in,
+            &mut cpwm_orig,
             &mut cpwm_now,
         ) as u8;
         unsafe {
-            rtw_rust_rpwm_poll_complete(adapter, rst, cpwm_orig_in, cpwm_now);
+            rtw_rust_rpwm_poll_complete(adapter, rst, cpwm_orig, cpwm_now);
         }
         rst
     }
@@ -297,6 +300,7 @@ pub extern "C" fn host_pwrctrl_rpwm_get_cpwm(adapter: Padapter) -> u8 {
     host_hal::get_cpwm(adapter)
 }
 
+#[cfg(host_pwrctrl_rpwm_test)]
 #[no_mangle]
 pub extern "C" fn host_pwrctrl_rpwm_get_cpwm_tog(adapter: Padapter) -> u8 {
     host_hal::get_cpwm_tog(adapter)
