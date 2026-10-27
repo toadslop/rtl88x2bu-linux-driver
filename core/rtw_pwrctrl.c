@@ -438,6 +438,7 @@ exit:
  * ATTENTION:
  *	rtw_ps_processor() doesn't handle LPS.
  */
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_PS_PROCESSOR_TEST)
 void rtw_ps_processor(_adapter *padapter)
 {
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
@@ -516,6 +517,65 @@ exit:
 	pwrpriv->ps_processing = _FALSE;
 	return;
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_PS_PROCESSOR_TEST — W3-173 in rust/rtw_pwrctrl_ps.rs */
+
+#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_PS_PROCESSOR_TEST)
+
+void rtw_rust_ps_proc_enter_pwrlock(PADAPTER padapter)
+{
+	_enter_pwrlock(&adapter_to_pwrctl(padapter)->lock);
+}
+
+void rtw_rust_ps_proc_exit_pwrlock(PADAPTER padapter)
+{
+	_exit_pwrlock(&adapter_to_pwrctl(padapter)->lock);
+}
+
+u8 rtw_rust_ps_proc_get_b_in_suspend(PADAPTER padapter)
+{
+	return adapter_to_pwrctl(padapter)->bInSuspend;
+}
+
+void rtw_rust_ps_proc_set_ps_processing(PADAPTER padapter, u8 v)
+{
+	adapter_to_pwrctl(padapter)->ps_processing = v;
+}
+
+u8 rtw_rust_ps_proc_get_ips_mode_req(PADAPTER padapter)
+{
+	return adapter_to_pwrctl(padapter)->ips_mode_req;
+}
+
+u8 rtw_rust_ps_proc_get_rf_pwrstate(PADAPTER padapter)
+{
+	return adapter_to_pwrctl(padapter)->rf_pwrstate;
+}
+
+void rtw_rust_ps_proc_set_change_rfpwrstate(PADAPTER padapter, u8 v)
+{
+	adapter_to_pwrctl(padapter)->change_rfpwrstate = v;
+}
+
+u32 rtw_rust_ps_proc_get_pwr_state_check_cnts(PADAPTER padapter)
+{
+	return adapter_to_pwrctl(padapter)->pwr_state_check_cnts;
+}
+
+u8 rtw_rust_ps_proc_unassociated_idle(PADAPTER padapter)
+{
+	return rtw_pwr_unassociated_idle(padapter) ? _TRUE : _FALSE;
+}
+
+void rtw_rust_ps_proc_set_pwr_timer(PADAPTER padapter)
+{
+#ifndef CONFIG_IPS_CHECK_IN_WD
+	rtw_set_pwr_state_check_timer(adapter_to_pwrctl(padapter));
+#else
+	(void)padapter;
+#endif
+}
+
+#endif /* CONFIG_RUST && !HOST_PWRCTRL_PS_PROCESSOR_TEST */
 
 void pwr_state_check_handler(void *ctx)
 {
