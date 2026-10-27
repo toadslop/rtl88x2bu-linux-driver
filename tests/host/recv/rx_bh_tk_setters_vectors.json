@@ -1,0 +1,50 @@
+{
+  "vectors": [
+    {
+      "name": "stage_only",
+      "stage": 5,
+      "expect": "[RXBHTK]s:5, buf_dqc:0, lbuf:(nil), cbuf:(nil), dlen:0, pos:0, cframe:(nil)\n"
+    },
+    {
+      "name": "first_buf",
+      "stage": 2,
+      "buf": "2000",
+      "data": "2100",
+      "dlen": 100,
+      "expect": "[RXBHTK]s:2, buf_dqc:1, lbuf:(nil), cbuf:0x2000, dlen:100, pos:0, cframe:(nil)\n"
+    },
+    {
+      "name": "promote_lbuf",
+      "stage": 3,
+      "buf": "1000",
+      "data": "1100",
+      "dlen": 40,
+      "buf2": "2000",
+      "data2": "2200",
+      "dlen2": 80,
+      "expect": "[RXBHTK]s:3, buf_dqc:2, lbuf:0x1000, cbuf:0x2000, dlen:80, pos:0, cframe:(nil)\n"
+    },
+    {
+      "name": "pos_and_frame",
+      "buf": "3000",
+      "data": "3100",
+      "dlen": 200,
+      "pos": "3118",
+      "frame": "4000",
+      "expect": "[RXBHTK]s:0, buf_dqc:1, lbuf:(nil), cbuf:0x3000, dlen:200, pos:24, cframe:0x4000\n"
+    },
+    {
+      "name": "buf_clear",
+      "buf": "5000",
+      "data": "5100",
+      "dlen": 10,
+      "clear_buf": 1,
+      "expect": "[RXBHTK]s:0, buf_dqc:1, lbuf:0x5000, cbuf:(nil), dlen:0, pos:0, cframe:(nil)\n"
+    },
+    {
+      "name": "pos_no_buf",
+      "pos": "1000",
+      "expect": "[RXBHTK]s:0, buf_dqc:0, lbuf:(nil), cbuf:(nil), dlen:0, pos:0, cframe:(nil)\n"
+    }
+  ]
+}

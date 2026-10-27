@@ -23,4 +23,9 @@ struct recv_priv {
 
 void dump_rx_bh_tk(void *sel, struct recv_priv *recv);
 
+void rx_bh_tk_set_stage(struct recv_priv *recv, u32 s);
+void rx_bh_tk_set_buf(struct recv_priv *recv, void *buf, void *data, u32 dlen);
+void rx_bh_tk_set_buf_pos(struct recv_priv *recv, void *pos);
+void rx_bh_tk_set_frame(struct recv_priv *recv, void *frame);
+
 #endif /* HOST_RTW_RECV_BH_DBG_TYPES_H */
