@@ -16,11 +16,8 @@ type U8 = u8;
 const SIGNAL_STAT_CALC_PROFILE_MAX: usize = 3;
 
 #[no_mangle]
-pub static mut signal_stat_calc_profile: [[U8; 3]; SIGNAL_STAT_CALC_PROFILE_MAX] = [
-    [4, 1, 0],
-    [3, 7, 0],
-    [0, 10, 0],
-];
+pub static mut signal_stat_calc_profile: [[U8; 3]; SIGNAL_STAT_CALC_PROFILE_MAX] =
+    [[4, 1, 0], [3, 7, 0], [0, 10, 0]];
 
 #[no_mangle]
 pub static mut rtw_bridge_tunnel_header: [U8; 6] = [0xaa, 0xaa, 0x03, 0x00, 0x00, 0xf8];
