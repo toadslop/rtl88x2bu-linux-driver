@@ -162,6 +162,7 @@ fn leisure_may_leave_kernel(padapter: Padapter) -> bool {
 
 #[no_mangle]
 pub extern "C" fn traffic_check_for_leave_lps_by_tp(padapter: Padapter, tx: u8, sta: Psta) {
+    // Kernel C does not NULL-check; host L2 and kernel Rust treat invalid pointers as no-op.
     if padapter.is_null() || sta.is_null() {
         return;
     }
@@ -286,6 +287,7 @@ fn set_lps_chk_cnt(padapter: Padapter, v: i32) {
 fn issue_lps_ctrl(padapter: Padapter, lps_ctrl_type: u8) {
     #[cfg(host_pwrctrl_lps_tp_test)]
     {
+        let _ = padapter;
         host_trace::record_lps_ctrl(lps_ctrl_type);
     }
     #[cfg(not(host_pwrctrl_lps_tp_test))]
