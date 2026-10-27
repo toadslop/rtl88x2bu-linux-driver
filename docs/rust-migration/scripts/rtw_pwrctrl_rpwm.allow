@@ -14,3 +14,4 @@ drop host_pwrctrl_rpwm_reset_hal
 drop host_pwrctrl_rpwm_set_time
 drop host_pwrctrl_rpwm_set_cpwm_behavior
 drop host_pwrctrl_rpwm_get_cpwm
+drop host_pwrctrl_rpwm_get_cpwm_tog
