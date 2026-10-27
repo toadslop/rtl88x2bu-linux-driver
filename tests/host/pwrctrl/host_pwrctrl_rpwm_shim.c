@@ -10,8 +10,11 @@ typedef u32 systime;
 
 #define _SUCCESS 1
 #define _FAIL 0
-#define PS_TOGGLE (1 << 7)
-#define PS_STATE_S4 ((0x10) | (0x08))
+#define BIT(x) (1U << (x))
+#define PS_TOGGLE BIT(7)
+#define PS_ALL_ON BIT(2)
+#define PS_ST_ACTIVE BIT(3)
+#define PS_STATE_S4 ((PS_ST_ACTIVE) | (PS_ALL_ON))
 
 struct pwrctrl_priv {
 	u8 cpwm;
@@ -22,6 +25,7 @@ struct pwrctrl_priv {
 
 struct adapter {
 	struct pwrctrl_priv pwrctrlpriv;
+	/* Host stand-in for RTW_CANNOT_RUN (dvobj surprise-removed / drv-stopped). */
 	u8 bSurpriseRemoved;
 	u8 bDriverStopped;
 };

@@ -12,6 +12,7 @@ void host_pwrctrl_rpwm_reset_hal(void);
 void host_pwrctrl_rpwm_set_time(unsigned int t);
 void host_pwrctrl_rpwm_set_cpwm_behavior(u8, unsigned int);
 u8 host_pwrctrl_rpwm_get_cpwm(void *);
+u8 host_pwrctrl_rpwm_get_cpwm_tog(void *);
 u8 rtw_cpwm_polling(void *, u8, u8);
 
 struct vector {
@@ -24,6 +25,8 @@ struct vector {
 	int has_expect_success;
 	int expect_cpwm;
 	int has_expect_cpwm;
+	int expect_cpwm_tog;
+	int has_expect_cpwm_tog;
 };
 
 static char g_adapter[64];
@@ -44,6 +47,8 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 		v->has_expect_success = 1;
 	if (host_json_parse_int_in(obj, len, "expect_cpwm", &v->expect_cpwm) == 0)
 		v->has_expect_cpwm = 1;
+	if (host_json_parse_int_in(obj, len, "expect_cpwm_tog", &v->expect_cpwm_tog) == 0)
+		v->has_expect_cpwm_tog = 1;
 	return 0;
 }
 
@@ -69,6 +74,11 @@ static int run_vec(struct vector *v)
 	if (v->has_expect_cpwm &&
 	    host_pwrctrl_rpwm_get_cpwm(g_adapter) != (u8)v->expect_cpwm) {
 		fprintf(stderr, "%s: cpwm mismatch\n", v->name);
+		return -1;
+	}
+	if (v->has_expect_cpwm_tog &&
+	    host_pwrctrl_rpwm_get_cpwm_tog(g_adapter) != (u8)v->expect_cpwm_tog) {
+		fprintf(stderr, "%s: cpwm_tog mismatch\n", v->name);
 		return -1;
 	}
 	printf("PASS %s\n", v->name);
