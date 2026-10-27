@@ -1,0 +1,17 @@
+# W3-175: rtw_cpwm_polling — Rust FFI helpers (kernel-only).
+drop rtw_rust_rpwm_msleep_os
+drop rtw_rust_rpwm_get_current_time
+drop rtw_rust_rpwm_get_passing_time_ms
+drop rtw_rust_rpwm_hal_get_cpwm
+drop rtw_rust_rpwm_hal_set_rpwm
+drop rtw_rust_rpwm_cannot_run
+drop rtw_rust_rpwm_get_u8
+drop rtw_rust_rpwm_set_u8
+drop rtw_rust_rpwm_reset_rpwm_retry
+drop rtw_rust_rpwm_bump_rpwm_retry
+drop rtw_rust_rpwm_poll_complete
+drop host_pwrctrl_rpwm_reset_hal
+drop host_pwrctrl_rpwm_set_time
+drop host_pwrctrl_rpwm_set_cpwm_behavior
+drop host_pwrctrl_rpwm_get_cpwm
+drop host_pwrctrl_rpwm_get_cpwm_tog
