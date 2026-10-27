@@ -218,7 +218,12 @@ pub extern "C" fn rx_bh_tk_set_stage(recv: *mut c_void, s: U32) {
 
 #[cfg(host_recv_bh_dbg_test)]
 #[no_mangle]
-pub extern "C" fn rx_bh_tk_set_buf(recv: *mut c_void, buf: *mut c_void, data: *mut c_void, dlen: U32) {
+pub extern "C" fn rx_bh_tk_set_buf(
+    recv: *mut c_void,
+    buf: *mut c_void,
+    data: *mut c_void,
+    dlen: U32,
+) {
     if recv.is_null() {
         return;
     }
@@ -267,4 +272,3 @@ pub extern "C" fn rx_bh_tk_set_frame(recv: *mut c_void, frame: *mut c_void) {
     }
     recv_priv_mut(recv).rx_bh_cframe = frame;
 }
-
