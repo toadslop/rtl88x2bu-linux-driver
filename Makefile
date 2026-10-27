@@ -4284,7 +4284,7 @@ rust-check-symbols-rtw-recv-sta-validate-kern: rust-objects-rtw-recv-sta-validat
 	$(MAKE) rust-check-symbols OLD=tests/host/recv/recv_sta_validate_c_ref.o NEW=rust/rtw_recv_sta_validate.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_recv_sta_count.allow ALLOW_VACUOUS=1
 
-# W3-171: host C oracle vs rust/rtw_recv_bh_dbg.o (dump_rx_bh_tk, DBG_RX_BH_TRACKING).
+# W3-171/W3-176: host C oracle vs rust/rtw_recv_bh_dbg.o (DBG_RX_BH_TRACKING).
 rust-objects-rtw-recv-bh-dbg:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-recv-bh-dbg"; exit 1; }
 	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_recv_bh_dbg.o
