@@ -247,6 +247,7 @@ mod kern {
         precv_frame: *mut c_void,
         psta: *mut c_void,
     ) {
+        #[cfg(config_ap_mode)]
         do_pwrbit(padapter, precv_frame, psta);
     }
 
@@ -256,6 +257,7 @@ mod kern {
         precv_frame: *mut c_void,
         psta: *mut c_void,
     ) {
+        #[cfg(config_ap_mode)]
         do_wmmps(padapter, precv_frame, psta);
     }
 }
