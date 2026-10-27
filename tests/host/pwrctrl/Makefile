@@ -23,18 +23,19 @@ RUST_PWRCTRL := $(ROOT)/rust/rtw_pwrctrl.rs
 RUST_PWRCTRL_IPS_HOST := $(ROOT)/rust/rtw_pwrctrl_ips_host.rs
 RUST_PWRCTRL_PS := $(ROOT)/rust/rtw_pwrctrl_ps.rs
 RUST_PWRCTRL_LPS_TP := $(ROOT)/rust/rtw_pwrctrl_lps_tp.rs
+RUST_PWRCTRL_RPWM := $(ROOT)/rust/rtw_pwrctrl_rpwm.rs
 RUSTC := rustc
 
 .PHONY: all test test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust \
 	test-leave-all test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust \
-	test-lps-tp test-lps-tp-rust test-rpwm clean
+	test-lps-tp test-lps-tp-rust test-rpwm test-rpwm-rust clean
 
 all: test test-lps test-lps-enter test-leave-all test-leave-all-rust test-ips test-ips-rust \
-	test-ps-processor test-ps-processor-rust test-lps-tp test-lps-tp-rust test-rpwm
+	test-ps-processor test-ps-processor-rust test-lps-tp test-lps-tp-rust test-rpwm test-rpwm-rust
 
 test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust test-leave-all \
 	test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust test-lps-tp \
-	test-lps-tp-rust test-rpwm
+	test-lps-tp-rust test-rpwm test-rpwm-rust
 
 test-c: test_pwrctrl_ps_deny
 	./test_pwrctrl_ps_deny ps_deny_vectors.json
@@ -101,8 +102,18 @@ test_pwrctrl_lps_tp_rust: test_pwrctrl_lps_tp.c librust_pwrctrl_lps_tp.a $(HOST_
 test-rpwm: test_pwrctrl_rpwm
 	./test_pwrctrl_rpwm rpwm_vectors.json
 
+test-rpwm-rust: test_pwrctrl_rpwm_rust
+	./test_pwrctrl_rpwm_rust rpwm_vectors.json
+
 test_pwrctrl_rpwm: test_pwrctrl_rpwm.c $(RPWM_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_pwrctrl_rpwm.c $(RPWM_SHIM) $(HOST_JSON)
+
+librust_pwrctrl_rpwm.a: $(RUST_PWRCTRL_RPWM)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_pwrctrl_rpwm_test \
+		--crate-type staticlib $(RUST_PWRCTRL_RPWM) -o $@
+
+test_pwrctrl_rpwm_rust: test_pwrctrl_rpwm.c librust_pwrctrl_rpwm.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_pwrctrl_rpwm.c $(HOST_JSON) librust_pwrctrl_rpwm.a
 
 test_pwrctrl_lps_enter: test_pwrctrl_lps_enter.c $(LPS_ENTER_SHIM) $(HOST_JSON)
 	$(CC) $(LPS_ENTER_CFLAGS) -o $@ test_pwrctrl_lps_enter.c $(LPS_ENTER_SHIM) $(HOST_JSON)
@@ -148,5 +159,6 @@ clean:
 		test_pwrctrl_leave_all_ps test_pwrctrl_leave_all_ps_rust \
 		test_pwrctrl_ips test_pwrctrl_ips_rust test_pwrctrl_ps_processor \
 		test_pwrctrl_ps_processor_rust test_pwrctrl_lps_tp test_pwrctrl_lps_tp_rust \
-		test_pwrctrl_rpwm \
-		librust_pwrctrl_ps.a librust_pwrctrl_ips.a librust_pwrctrl_lps_tp.a librust_pwrctrl.a
+		test_pwrctrl_rpwm test_pwrctrl_rpwm_rust \
+		librust_pwrctrl_ps.a librust_pwrctrl_ips.a librust_pwrctrl_lps_tp.a librust_pwrctrl_rpwm.a \
+		librust_pwrctrl.a

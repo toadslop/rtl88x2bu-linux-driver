@@ -17,7 +17,7 @@ use std::ffi::c_void;
 const _SUCCESS: i32 = 1;
 const _FAIL: i32 = 0;
 const PS_TOGGLE: u8 = 1 << 7;
-const PS_STATE_S4: u8 = 0x10 | 0x08;
+const PS_STATE_S4: u8 = (1 << 3) | (1 << 2); /* PS_ST_ACTIVE | PS_ALL_ON */
 const LPS_CPWM_TIMEOUT_MS: u32 = 10;
 const LPS_RPWM_RETRY_CNT: u32 = 3;
 
@@ -74,6 +74,11 @@ mod host_hal {
         unsafe { (*a).pwrctrlpriv.cpwm }
     }
 
+    pub fn get_cpwm_tog(adapter: Padapter) -> u8 {
+        let a = adapter as *mut HostAdapter;
+        unsafe { (*a).pwrctrlpriv.cpwm_tog }
+    }
+
     fn current_time() -> u32 {
         unsafe { G_TIME }
     }
@@ -115,19 +120,18 @@ mod host_hal {
         pwr.rpwm_retry = 0;
         loop {
             let start_time = current_time();
-            loop {
+            while {
                 msleep_os(1);
                 hal_get_cpwm(adapter, &mut cpwm_now);
                 if (cpwm_orig ^ cpwm_now) & 0x80 != 0 {
                     pwr.cpwm = PS_STATE_S4;
                     pwr.cpwm_tog = cpwm_now & PS_TOGGLE;
                     rst = _SUCCESS;
-                    break;
+                    false
+                } else {
+                    passing_time_ms(start_time) < LPS_CPWM_TIMEOUT_MS && !cannot_run(adapter)
                 }
-                if passing_time_ms(start_time) >= LPS_CPWM_TIMEOUT_MS || cannot_run(adapter) {
-                    break;
-                }
-            }
+            } {}
             if rst == _SUCCESS {
                 break;
             }
@@ -172,4 +176,9 @@ pub extern "C" fn host_pwrctrl_rpwm_set_cpwm_behavior(
 #[no_mangle]
 pub extern "C" fn host_pwrctrl_rpwm_get_cpwm(adapter: Padapter) -> u8 {
     host_hal::get_cpwm(adapter)
+}
+
+#[no_mangle]
+pub extern "C" fn host_pwrctrl_rpwm_get_cpwm_tog(adapter: Padapter) -> u8 {
+    host_hal::get_cpwm_tog(adapter)
 }
