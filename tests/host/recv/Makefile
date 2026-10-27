@@ -98,7 +98,7 @@ test-rx-bh-tk-rust: test_dump_rx_bh_tk_rust
 	./test_dump_rx_bh_tk_rust debug_rx_bh_tk_vectors.json
 
 test_dump_rx_bh_tk_rust: $(RX_BH_L2) librust_rtw_recv_bh_dbg.a $(RX_BH_SHIM) $(HOST_JSON)
-	$(CC) $(CFLAGS) -DRUST_RTW_RECV_BH_DBG_ORACLE -o $@ \
+	$(CC) $(CFLAGS) -o $@ \
 		$(RX_BH_L2) $(RX_BH_SHIM) $(HOST_JSON) librust_rtw_recv_bh_dbg.a
 
 clean:

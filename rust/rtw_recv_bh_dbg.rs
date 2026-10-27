@@ -65,6 +65,8 @@ fn push_u32(out: &mut [u8], pos: &mut usize, v: U32) {
     }
 }
 
+/// Glibc `fprintf` / host L2 oracle style (`(nil)` / `0x` unpadded hex).
+#[cfg(host_recv_bh_dbg_test)]
 fn push_ptr(out: &mut [u8], pos: &mut usize, p: usize) {
     if p == 0 {
         push_str(out, pos, b"(nil)");
@@ -87,6 +89,27 @@ fn push_ptr(out: &mut [u8], pos: &mut usize, p: usize) {
     while n > 0 {
         n -= 1;
         push_byte(out, pos, tmp[n]);
+    }
+}
+
+/// Kernel `RTW_PRINT_SEL(..., %p, ...)` on 6.12 (`(null)` / zero-padded hex, no `0x`).
+#[cfg(not(host_recv_bh_dbg_test))]
+fn push_ptr(out: &mut [u8], pos: &mut usize, p: usize) {
+    if p == 0 {
+        push_str(out, pos, b"(null)");
+        return;
+    }
+    for shift in (0..16).rev() {
+        let nib = ((p >> (shift * 4)) & 0xf) as u8;
+        push_byte(
+            out,
+            pos,
+            if nib < 10 {
+                b'0' + nib
+            } else {
+                b'a' + (nib - 10)
+            },
+        );
     }
 }
 
