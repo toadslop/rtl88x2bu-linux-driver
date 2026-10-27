@@ -1,0 +1,7 @@
+# L1 allowlist for W3-178: Rust owns recv signal/SNAP static tables.
+drop signal_stat_calc_profile
+drop rtw_bridge_tunnel_header
+drop rtw_rfc1042_header
+drop SNAP_ETH_TYPE_IPX
+drop SNAP_ETH_TYPE_APPLETALK_AARP
+drop SNAP_ETH_TYPE_TDLS

@@ -16,36 +16,16 @@
 
 #include <drv_types.h>
 #include <hal_data.h>
+#include <rtw_recv_signal.h>
 
 #ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
 static void rtw_signal_stat_timer_hdl(void *ctx);
-
-enum {
-	SIGNAL_STAT_CALC_PROFILE_0 = 0,
-	SIGNAL_STAT_CALC_PROFILE_1,
-	SIGNAL_STAT_CALC_PROFILE_2,
-	SIGNAL_STAT_CALC_PROFILE_MAX
-};
-
-u8 signal_stat_calc_profile[SIGNAL_STAT_CALC_PROFILE_MAX][3] = {
-	{4, 1},	/* Profile 0 => pre_stat : curr_stat = 4 : 1 */
-	{3, 7},	/* Profile 1 => pre_stat : curr_stat = 3 : 7 */
-	{0, 10}	/* Profile 2 => pre_stat : curr_stat = 0 : 10 */
-};
 
 #ifndef RTW_SIGNAL_STATE_CALC_PROFILE
 	#define RTW_SIGNAL_STATE_CALC_PROFILE SIGNAL_STAT_CALC_PROFILE_1
 #endif
 
 #endif /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
-
-u8 rtw_bridge_tunnel_header[] = { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0xf8 };
-u8 rtw_rfc1042_header[] = { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00 };
-static u8 SNAP_ETH_TYPE_IPX[2] = {0x81, 0x37};
-static u8 SNAP_ETH_TYPE_APPLETALK_AARP[2] = {0x80, 0xf3};
-#ifdef CONFIG_TDLS
-static u8 SNAP_ETH_TYPE_TDLS[2] = {0x89, 0x0d};
-#endif
 
 void _rtw_init_sta_recv_priv(struct sta_recv_priv *psta_recvpriv)
 {

@@ -2517,6 +2517,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_recv.o \
 		core/rtw_recv_rest.o \
 		core/rtw_recv_llc_rest.o \
+		core/rtw_recv_signal_rest.o \
 		core/rtw_recv_pn_rest.o \
 		core/rtw_recv_sta_rest.o \
 		core/rtw_recv_sta_rust_acc.o \
@@ -2750,6 +2751,7 @@ ccflags-y += -DCONFIG_RUST_CMD_QUEUE
 ccflags-y += -DCONFIG_RUST_CMD_THREAD
 ccflags-y += -DCONFIG_RUST_CMD_THREAD_LOOP
 ccflags-y += -DCONFIG_RUST_RECV_STA
+ccflags-y += -DCONFIG_RUST_RECV_SIGNAL
 ccflags-y += -DCONFIG_RUST_RTW_DEBUG
 # W3-152/W3-153 proc helpers. Gate them on the make variables above.
 # Forcing -DCONFIG_WOWLAN here used to override CONFIG_WOWLAN=n, enable
@@ -3075,6 +3077,7 @@ $(MODULE_NAME)-y += rust/rtw_recv_sta_count.o
 $(MODULE_NAME)-y += rust/rtw_recv_sta_validate.o
 $(MODULE_NAME)-y += rust/rtw_recv_bh_dbg.o
 $(MODULE_NAME)-y += rust/rtw_recv_ap_ps.o
+$(MODULE_NAME)-y += rust/rtw_recv_signal.o
 $(MODULE_NAME)-y += rust/rtw_xmit.o
 $(MODULE_NAME)-y += rust/rtw_xmit_update_attrib_kern.o
 $(MODULE_NAME)-y += rust/rtw_cmd_thread_kern.o
@@ -4310,6 +4313,26 @@ rust-objects-rtw-recv-bh-dbg-c:
 	ld -r tests/host/recv/debug_rx_bh_tk_dump_c_ref.o \
 		tests/host/recv/debug_rx_bh_tk_setters_c_ref.o \
 		-o tests/host/recv/debug_rx_bh_tk_c_ref.o
+# W3-178: host C ref vs rust/rtw_recv_signal (tables).
+rust-objects-rtw-recv-signal-c:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-DHOST_RECV_SIGNAL_KERNEL_NAMES \
+		-o tests/host/recv/recv_signal_c_ref.o tests/host/recv/host_recv_signal_oracle.c
+rust-objects-rtw-recv-signal-rust-ref:
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on --cfg tdls \
+		--emit=obj=tests/host/recv/recv_signal_rust_ref.o \
+		--crate-type lib rust/rtw_recv_signal.rs
+rust-check-symbols-rtw-recv-signal: rust-objects-rtw-recv-signal-c rust-objects-rtw-recv-signal-rust-ref
+	$(MAKE) rust-check-symbols OLD=tests/host/recv/recv_signal_c_ref.o NEW=tests/host/recv/recv_signal_rust_ref.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_recv_signal.allow ALLOW_VACUOUS=1
+rust-objects-rtw-recv-signal-kern:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-recv-signal-kern"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_recv_signal.o
+rust-check-symbols-rtw-recv-signal-kern: rust-objects-rtw-recv-signal-c rust-objects-rtw-recv-signal-kern
+	$(MAKE) rust-check-symbols OLD=tests/host/recv/recv_signal_c_ref.o NEW=rust/rtw_recv_signal.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_recv_signal.allow ALLOW_VACUOUS=1
+
 rust-check-symbols-rtw-recv-bh-dbg: rust-objects-rtw-recv-bh-dbg-c rust-objects-rtw-recv-bh-dbg
 	$(MAKE) rust-check-symbols OLD=tests/host/recv/debug_rx_bh_tk_c_ref.o NEW=rust/rtw_recv_bh_dbg.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_recv_bh_dbg.allow ALLOW_VACUOUS=1

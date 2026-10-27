@@ -217,8 +217,11 @@ for path in "${changed[@]}"; do
 	| rust/rtw_recv_sta_validate.rs \
 	| rust/rtw_recv_bh_dbg.rs \
 	| rust/rtw_recv_ap_ps.rs \
+	| rust/rtw_recv_signal.rs \
 	| core/rtw_recv_bh_dbg_shim.c \
 	| core/rtw_recv_ap_ps_shim.c \
+	| core/rtw_recv_signal_rest.c \
+	| include/rtw_recv_signal.h \
 	| core/rtw_recv_rest.c \
 	| core/rtw_recv_llc_rest.c \
 	| core/rtw_recv_pn_rest.c \
@@ -230,6 +233,7 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-recv-sta-validate
 		add_target rust-check-symbols-rtw-recv-bh-dbg
 		add_target rust-check-symbols-rtw-recv-ap-ps
+		add_target rust-check-symbols-rtw-recv-signal
 		;;
 	rust/rtw_xmit.rs \
 	| core/rtw_xmit_rest.c \
