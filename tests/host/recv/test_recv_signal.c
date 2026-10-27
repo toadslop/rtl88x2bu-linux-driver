@@ -33,8 +33,39 @@ static int bytes_match(const unsigned char *got, const unsigned char *exp, size_
 	return 1;
 }
 
+#ifdef HOST_RECV_SIGNAL_RUST
+extern unsigned char rtw_bridge_tunnel_header[];
+extern unsigned char rtw_rfc1042_header[];
+extern unsigned char SNAP_ETH_TYPE_IPX[];
+extern unsigned char SNAP_ETH_TYPE_APPLETALK_AARP[];
+#ifdef CONFIG_TDLS
+extern unsigned char SNAP_ETH_TYPE_TDLS[];
+#endif
+#ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
+extern unsigned char signal_stat_calc_profile[];
+#endif
+#endif
+
 static unsigned char *resolve_table(const char *symbol, unsigned offset)
 {
+#ifdef HOST_RECV_SIGNAL_RUST
+	if (!strcmp(symbol, "host_rtw_bridge_tunnel_header"))
+		return rtw_bridge_tunnel_header + offset;
+	if (!strcmp(symbol, "host_rtw_rfc1042_header"))
+		return rtw_rfc1042_header + offset;
+	if (!strcmp(symbol, "host_snap_eth_type_ipx"))
+		return SNAP_ETH_TYPE_IPX + offset;
+	if (!strcmp(symbol, "host_snap_eth_type_appletalk_aarp"))
+		return SNAP_ETH_TYPE_APPLETALK_AARP + offset;
+#ifdef CONFIG_TDLS
+	if (!strcmp(symbol, "host_snap_eth_type_tdls"))
+		return SNAP_ETH_TYPE_TDLS + offset;
+#endif
+#ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
+	if (!strcmp(symbol, "host_signal_stat_calc_profile"))
+		return signal_stat_calc_profile + offset;
+#endif
+#endif
 	if (!strcmp(symbol, "host_rtw_bridge_tunnel_header"))
 		return host_rtw_bridge_tunnel_header + offset;
 	if (!strcmp(symbol, "host_rtw_rfc1042_header"))

@@ -26,6 +26,7 @@ RUST_RECV := $(ROOT)/rust/rtw_recv.rs
 RUST_RECV_STA_COUNT := $(ROOT)/rust/rtw_recv_sta_count.rs
 RUST_RECV_STA_VALIDATE := $(ROOT)/rust/rtw_recv_sta_validate.rs
 RUST_RECV_AP_PS := $(ROOT)/rust/rtw_recv_ap_ps.rs
+RUST_RECV_SIGNAL := $(ROOT)/rust/rtw_recv_signal.rs
 
 CC     := gcc
 RUSTC  := rustc
@@ -43,12 +44,12 @@ SIGNAL_CFLAGS := $(CFLAGS) -DCONFIG_NEW_SIGNAL_STAT_PROCESS -DCONFIG_TDLS
 
 .PHONY: all test test-c test-rust test-sta test-sta-count-rust test-sta-rust \
 	test-rx-bh-tk-c test-rx-bh-tk-rust 	test-rx-bh-tk-setters-c test-rx-bh-tk-setters-rust \
-	test-signal-c test-ap-ps-c test-ap-ps-rust clean
+	test-signal-c test-signal-rust test-ap-ps-c test-ap-ps-rust clean
 
 all: test
 
 test: test-c test-rust test-sta test-sta-count-rust test-sta-rust test-rx-bh-tk-c test-rx-bh-tk-rust \
-	test-rx-bh-tk-setters-c test-rx-bh-tk-setters-rust test-signal-c test-ap-ps-c test-ap-ps-rust
+	test-rx-bh-tk-setters-c test-rx-bh-tk-setters-rust test-signal-c test-signal-rust test-ap-ps-c test-ap-ps-rust
 
 test-c: test_recv
 	./test_recv recv_vectors.json
@@ -131,6 +132,16 @@ test-signal-c: test_recv_signal
 test_recv_signal: test_recv_signal.c $(SIGNAL_ORACLE) $(HOST_JSON)
 	$(CC) $(SIGNAL_CFLAGS) -o $@ test_recv_signal.c $(SIGNAL_ORACLE) $(HOST_JSON)
 
+librust_recv_signal.a: $(RUST_RECV_SIGNAL)
+	$(RUSTC) --edition 2021 -C opt-level=2 -C overflow-checks=on --cfg host_recv_signal_test --cfg tdls \
+		--crate-type staticlib $(RUST_RECV_SIGNAL) -o $@
+
+test-signal-rust: test_recv_signal_rust
+	./test_recv_signal_rust recv_signal_vectors.json
+
+test_recv_signal_rust: test_recv_signal.c librust_recv_signal.a $(HOST_JSON)
+	$(CC) $(SIGNAL_CFLAGS) -DHOST_RECV_SIGNAL_RUST -o $@ test_recv_signal.c $(HOST_JSON) librust_recv_signal.a
+
 AP_PS_CFLAGS := $(CFLAGS) -I$(HOST_INC)
 
 test-ap-ps-c: test_recv_ap_pwrbit_wmmps
@@ -152,7 +163,7 @@ test_recv_ap_pwrbit_wmmps_rust: $(AP_PS_L2) librust_rtw_recv_ap_ps.a $(AP_PS_SHI
 
 clean:
 	rm -f test_recv test_recv_rust test_recv_sta test_recv_sta_count_rust test_recv_sta_rust \
-		test_recv_signal \
+		test_recv_signal test_recv_signal_rust librust_recv_signal.a \
 		test_dump_rx_bh_tk test_dump_rx_bh_tk_rust test_rx_bh_tk_setters test_rx_bh_tk_setters_rust \
 		test_recv_ap_pwrbit_wmmps test_recv_ap_pwrbit_wmmps_rust \
 		librust_rtw_recv_bh_dbg.a librust_rtw_recv_ap_ps.a \
