@@ -13,7 +13,9 @@ LLC_SHIM := host_recv_llc_shim.c
 WFD_ORACLE := recv_wfd_c_oracle.c
 HOST_JSON := ../crypto/host_vector_json.c
 RX_BH_ORACLE := debug_rx_bh_tk_c_oracle.c
+RX_BH_SHIM := host_rtw_recv_bh_dbg_shim.c
 RX_BH_L2 := test_dump_rx_bh_tk.c
+RX_BH_RUST := $(ROOT)/rust/rtw_recv_bh_dbg.rs
 RUST_RECV := $(ROOT)/rust/rtw_recv.rs
 RUST_RECV_STA_COUNT := $(ROOT)/rust/rtw_recv_sta_count.rs
 RUST_RECV_STA_VALIDATE := $(ROOT)/rust/rtw_recv_sta_validate.rs
@@ -31,11 +33,11 @@ STA_COUNT_RUST_CFLAGS := $(STA_CFLAGS) -DHOST_RECV_STA_RUST_COUNT
 STA_RUST_CFLAGS := $(STA_CFLAGS) -DHOST_RECV_STA_RUST_COUNT -DHOST_RECV_STA_RUST_VALIDATE
 
 .PHONY: all test test-c test-rust test-sta test-sta-count-rust test-sta-rust \
-	test-rx-bh-tk-c clean
+	test-rx-bh-tk-c test-rx-bh-tk-rust clean
 
 all: test
 
-test: test-c test-rust test-sta test-sta-count-rust test-sta-rust test-rx-bh-tk-c
+test: test-c test-rust test-sta test-sta-count-rust test-sta-rust test-rx-bh-tk-c test-rx-bh-tk-rust
 
 test-c: test_recv
 	./test_recv recv_vectors.json
@@ -87,7 +89,19 @@ test-rx-bh-tk-c: test_dump_rx_bh_tk
 test_dump_rx_bh_tk: $(RX_BH_L2) $(RX_BH_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ $(RX_BH_L2) $(RX_BH_ORACLE) $(HOST_JSON)
 
+librust_rtw_recv_bh_dbg.a: $(RX_BH_RUST)
+	$(RUSTC) --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_recv_bh_dbg_test \
+		--crate-type staticlib $(RX_BH_RUST) -o $@
+
+test-rx-bh-tk-rust: test_dump_rx_bh_tk_rust
+	./test_dump_rx_bh_tk_rust debug_rx_bh_tk_vectors.json
+
+test_dump_rx_bh_tk_rust: $(RX_BH_L2) librust_rtw_recv_bh_dbg.a $(RX_BH_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ \
+		$(RX_BH_L2) $(RX_BH_SHIM) $(HOST_JSON) librust_rtw_recv_bh_dbg.a
+
 clean:
 	rm -f test_recv test_recv_rust test_recv_sta test_recv_sta_count_rust test_recv_sta_rust \
-		test_dump_rx_bh_tk \
+		test_dump_rx_bh_tk test_dump_rx_bh_tk_rust librust_rtw_recv_bh_dbg.a \
 		librust_recv.a librust_recv_sta_count.a librust_recv_sta_validate.a
