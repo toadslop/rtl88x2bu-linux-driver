@@ -1,0 +1,92 @@
+{
+  "vectors": [
+    {
+      "name": "task_idle_ps",
+      "fn": "task",
+      "alive_tag": 32,
+      "bFwCurrentInPSMode": 0,
+      "cpwm": 0,
+      "rpwm": 0,
+      "expect_success": 1,
+      "expect_alives": 32,
+      "expect_set_rpwm_calls": 0
+    },
+    {
+      "name": "task_ps_cpwm_ok",
+      "fn": "task",
+      "alive_tag": 32,
+      "bFwCurrentInPSMode": 1,
+      "cpwm": 2,
+      "rpwm": 0,
+      "expect_success": 1,
+      "expect_alives": 32,
+      "expect_set_rpwm_calls": 0
+    },
+    {
+      "name": "task_ps_raise_rpwm",
+      "fn": "task",
+      "alive_tag": 32,
+      "bFwCurrentInPSMode": 1,
+      "cpwm": 1,
+      "rpwm": 0,
+      "set_rpwm_raises_cpwm": 1,
+      "expect_success": 1,
+      "expect_alives": 32,
+      "expect_set_rpwm_calls": 1,
+      "expect_last_set_rpwm": 2
+    },
+    {
+      "name": "task_ps_fail_no_raise",
+      "fn": "task",
+      "alive_tag": 32,
+      "bFwCurrentInPSMode": 1,
+      "cpwm": 0,
+      "rpwm": 2,
+      "expect_success": 0,
+      "expect_alives": 32,
+      "expect_set_rpwm_calls": 0
+    },
+    {
+      "name": "tx_ps_raise",
+      "fn": "tx",
+      "bFwCurrentInPSMode": 1,
+      "cpwm": 0,
+      "rpwm": 0,
+      "set_rpwm_raises_cpwm": 1,
+      "expect_success": 1,
+      "expect_alives": 1,
+      "expect_set_rpwm_calls": 1
+    },
+    {
+      "name": "cmd_ps_raise",
+      "fn": "cmd",
+      "bFwCurrentInPSMode": 1,
+      "cpwm": 0,
+      "rpwm": 0,
+      "set_rpwm_raises_cpwm": 1,
+      "expect_success": 1,
+      "expect_alives": 4,
+      "expect_set_rpwm_calls": 1
+    },
+    {
+      "name": "rx_sets_bit",
+      "fn": "rx",
+      "bFwCurrentInPSMode": 1,
+      "cpwm": 0,
+      "rpwm": 0,
+      "expect_success": 1,
+      "expect_alives": 2,
+      "expect_set_rpwm_calls": 0
+    },
+    {
+      "name": "evt_sets_bit",
+      "fn": "evt",
+      "bFwCurrentInPSMode": 0,
+      "cpwm": 0,
+      "rpwm": 0,
+      "expect_success": 1,
+      "expect_alives": 8,
+      "expect_set_rpwm_calls": 0
+    }
+  ]
+}
