@@ -18,6 +18,7 @@ RX_BH_SHIM := host_rtw_recv_bh_dbg_shim.c
 RX_BH_L2 := test_dump_rx_bh_tk.c
 RX_BH_SETTERS_L2 := test_rx_bh_tk_setters.c
 RX_BH_RUST := $(ROOT)/rust/rtw_recv_bh_dbg.rs
+SIGNAL_ORACLE := host_recv_signal_oracle.c
 RUST_RECV := $(ROOT)/rust/rtw_recv.rs
 RUST_RECV_STA_COUNT := $(ROOT)/rust/rtw_recv_sta_count.rs
 RUST_RECV_STA_VALIDATE := $(ROOT)/rust/rtw_recv_sta_validate.rs
@@ -34,13 +35,16 @@ RECV_STA_DEPS := test_recv_sta.c $(RECV_STA_REST_SRC) $(RECV_STA_SHIM) $(HOST_JS
 STA_COUNT_RUST_CFLAGS := $(STA_CFLAGS) -DHOST_RECV_STA_RUST_COUNT
 STA_RUST_CFLAGS := $(STA_CFLAGS) -DHOST_RECV_STA_RUST_COUNT -DHOST_RECV_STA_RUST_VALIDATE
 
+SIGNAL_CFLAGS := $(CFLAGS) -DCONFIG_NEW_SIGNAL_STAT_PROCESS -DCONFIG_TDLS
+
 .PHONY: all test test-c test-rust test-sta test-sta-count-rust test-sta-rust \
-	test-rx-bh-tk-c test-rx-bh-tk-rust test-rx-bh-tk-setters-c test-rx-bh-tk-setters-rust clean
+	test-rx-bh-tk-c test-rx-bh-tk-rust 	test-rx-bh-tk-setters-c test-rx-bh-tk-setters-rust \
+	test-signal-c clean
 
 all: test
 
 test: test-c test-rust test-sta test-sta-count-rust test-sta-rust test-rx-bh-tk-c test-rx-bh-tk-rust \
-	test-rx-bh-tk-setters-c test-rx-bh-tk-setters-rust
+	test-rx-bh-tk-setters-c test-rx-bh-tk-setters-rust test-signal-c
 
 test-c: test_recv
 	./test_recv recv_vectors.json
@@ -117,8 +121,15 @@ test_rx_bh_tk_setters_rust: $(RX_BH_SETTERS_L2) librust_rtw_recv_bh_dbg.a $(RX_B
 	$(CC) $(CFLAGS) -o $@ \
 		$(RX_BH_SETTERS_L2) $(RX_BH_SHIM) $(HOST_JSON) librust_rtw_recv_bh_dbg.a
 
+test-signal-c: test_recv_signal
+	./test_recv_signal recv_signal_vectors.json
+
+test_recv_signal: test_recv_signal.c $(SIGNAL_ORACLE) $(HOST_JSON)
+	$(CC) $(SIGNAL_CFLAGS) -o $@ test_recv_signal.c $(SIGNAL_ORACLE) $(HOST_JSON)
+
 clean:
 	rm -f test_recv test_recv_rust test_recv_sta test_recv_sta_count_rust test_recv_sta_rust \
+		test_recv_signal \
 		test_dump_rx_bh_tk test_dump_rx_bh_tk_rust test_rx_bh_tk_setters test_rx_bh_tk_setters_rust \
 		librust_rtw_recv_bh_dbg.a \
 		librust_recv.a librust_recv_sta_count.a librust_recv_sta_validate.a
