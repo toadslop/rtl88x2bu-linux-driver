@@ -586,6 +586,7 @@ void pwr_state_check_handler(void *ctx)
 #ifdef CONFIG_LPS
 #ifdef CONFIG_CHECK_LEAVE_LPS
 #ifdef CONFIG_LPS_CHK_BY_TP
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_LPS_TP_TEST)
 void traffic_check_for_leave_lps_by_tp(PADAPTER padapter, u8 tx, struct sta_info *sta)
 {
 	struct stainfo_stats *pstats = &sta->sta_stats;
@@ -643,6 +644,7 @@ void traffic_check_for_leave_lps_by_tp(PADAPTER padapter, u8 tx, struct sta_info
 		rtw_lps_ctrl_wk_cmd(padapter, tx ? LPS_CTRL_TX_TRAFFIC_LEAVE : LPS_CTRL_RX_TRAFFIC_LEAVE, 0);
 	}
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_LPS_TP_TEST — W3-174 in rust/rtw_pwrctrl_lps_tp.rs */
 #endif /*CONFIG_LPS_CHK_BY_TP*/
 
 void	traffic_check_for_leave_lps(PADAPTER padapter, u8 tx, u32 tx_packets)
@@ -698,6 +700,197 @@ void	traffic_check_for_leave_lps(PADAPTER padapter, u8 tx, u32 tx_packets)
 	}
 }
 #endif /* CONFIG_CHECK_LEAVE_LPS */
+
+#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_LPS_TP_TEST)
+#if defined(CONFIG_LPS_CHK_BY_TP) && defined(CONFIG_CHECK_LEAVE_LPS)
+
+u64 rtw_rust_lps_tp_sta_tx_bytes(struct sta_info *sta)
+{
+	return sta->sta_stats.tx_bytes;
+}
+
+u64 rtw_rust_lps_tp_sta_acc_tx_bytes(struct sta_info *sta)
+{
+	return sta->sta_stats.acc_tx_bytes;
+}
+
+u64 rtw_rust_lps_tp_sta_rx_bytes(struct sta_info *sta)
+{
+	return sta->sta_stats.rx_bytes;
+}
+
+u64 rtw_rust_lps_tp_sta_acc_rx_bytes(struct sta_info *sta)
+{
+	return sta->sta_stats.acc_rx_bytes;
+}
+
+u32 rtw_rust_lps_tp_num_tx_ok(PADAPTER padapter)
+{
+	return padapter->mlmepriv.LinkDetectInfo.NumTxOkInPeriod;
+}
+
+u32 rtw_rust_lps_tp_num_rx_unicast_ok(PADAPTER padapter)
+{
+	return padapter->mlmepriv.LinkDetectInfo.NumRxUnicastOkInPeriod;
+}
+
+u16 rtw_rust_lps_tp_get_u16(PADAPTER padapter, u32 field)
+{
+	struct pwrctrl_priv *pwr = adapter_to_pwrctl(padapter);
+
+	switch (field) {
+	case 0:
+		return pwr->lps_tx_tp_th;
+	case 1:
+		return pwr->lps_rx_tp_th;
+	default:
+		return 0;
+	}
+}
+
+u8 rtw_rust_lps_tp_get_u8(PADAPTER padapter, u32 field)
+{
+	struct pwrctrl_priv *pwr = adapter_to_pwrctl(padapter);
+
+	switch (field) {
+	case 0:
+		return pwr->bLeisurePs;
+	case 1:
+		return pwr->pwr_mode;
+	default:
+		return 0;
+	}
+}
+
+u32 rtw_rust_lps_tp_get_u32(PADAPTER padapter, u32 field)
+{
+	struct pwrctrl_priv *pwr = adapter_to_pwrctl(padapter);
+
+	switch (field) {
+	case 0:
+		return pwr->lps_tx_pkts;
+	case 1:
+		return pwr->lps_rx_pkts;
+	default:
+		return 0;
+	}
+}
+
+int rtw_rust_lps_tp_get_i32(PADAPTER padapter, u32 field)
+{
+	struct pwrctrl_priv *pwr = adapter_to_pwrctl(padapter);
+
+	if (field == 0)
+		return pwr->lps_chk_cnt_th;
+	return 0;
+}
+
+void rtw_rust_lps_tp_set_lps_chk_cnt(PADAPTER padapter, int v)
+{
+	adapter_to_pwrctl(padapter)->lps_chk_cnt = v;
+}
+
+u8 rtw_rust_lps_tp_bt_control_lps(PADAPTER padapter)
+{
+#ifdef CONFIG_BT_COEXIST
+	return rtw_btcoex_IsBtControlLps(padapter);
+#else
+	return _FALSE;
+#endif
+}
+
+void rtw_rust_lps_tp_lps_ctrl_wk_cmd(PADAPTER padapter, u8 lps_ctrl_type, u8 flags)
+{
+	rtw_lps_ctrl_wk_cmd(padapter, lps_ctrl_type, flags);
+}
+
+#else /* !CONFIG_LPS_CHK_BY_TP || !CONFIG_CHECK_LEAVE_LPS */
+
+u64 rtw_rust_lps_tp_sta_tx_bytes(struct sta_info *sta)
+{
+	(void)sta;
+	return 0;
+}
+
+u64 rtw_rust_lps_tp_sta_acc_tx_bytes(struct sta_info *sta)
+{
+	(void)sta;
+	return 0;
+}
+
+u64 rtw_rust_lps_tp_sta_rx_bytes(struct sta_info *sta)
+{
+	(void)sta;
+	return 0;
+}
+
+u64 rtw_rust_lps_tp_sta_acc_rx_bytes(struct sta_info *sta)
+{
+	(void)sta;
+	return 0;
+}
+
+u32 rtw_rust_lps_tp_num_tx_ok(PADAPTER padapter)
+{
+	(void)padapter;
+	return 0;
+}
+
+u32 rtw_rust_lps_tp_num_rx_unicast_ok(PADAPTER padapter)
+{
+	(void)padapter;
+	return 0;
+}
+
+u16 rtw_rust_lps_tp_get_u16(PADAPTER padapter, u32 field)
+{
+	(void)padapter;
+	(void)field;
+	return 0;
+}
+
+u8 rtw_rust_lps_tp_get_u8(PADAPTER padapter, u32 field)
+{
+	(void)padapter;
+	(void)field;
+	return 0;
+}
+
+u32 rtw_rust_lps_tp_get_u32(PADAPTER padapter, u32 field)
+{
+	(void)padapter;
+	(void)field;
+	return 0;
+}
+
+int rtw_rust_lps_tp_get_i32(PADAPTER padapter, u32 field)
+{
+	(void)padapter;
+	(void)field;
+	return 0;
+}
+
+void rtw_rust_lps_tp_set_lps_chk_cnt(PADAPTER padapter, int v)
+{
+	(void)padapter;
+	(void)v;
+}
+
+u8 rtw_rust_lps_tp_bt_control_lps(PADAPTER padapter)
+{
+	(void)padapter;
+	return _FALSE;
+}
+
+void rtw_rust_lps_tp_lps_ctrl_wk_cmd(PADAPTER padapter, u8 lps_ctrl_type, u8 flags)
+{
+	(void)padapter;
+	(void)lps_ctrl_type;
+	(void)flags;
+}
+
+#endif /* CONFIG_LPS_CHK_BY_TP && CONFIG_CHECK_LEAVE_LPS */
+#endif /* CONFIG_RUST && !HOST_PWRCTRL_LPS_TP_TEST */
 
 #ifdef CONFIG_LPS_LCLK
 #define LPS_CPWM_TIMEOUT_MS	10 /*ms*/

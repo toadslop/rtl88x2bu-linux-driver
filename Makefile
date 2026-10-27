@@ -3097,6 +3097,7 @@ $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ps.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ps.o
+$(MODULE_NAME)-y += rust/rtw_pwrctrl_lps_tp.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
 $(MODULE_NAME)-y += rust/rtw_mlme_80211d.o
@@ -4920,6 +4921,21 @@ rust-objects-rtw-pwrctrl-ps-c:
 rust-check-symbols-rtw-pwrctrl-ps: rust-objects-rtw-pwrctrl-ps-c rust-objects-rtw-pwrctrl-ps
 	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/ps_processor_c_ref.o NEW=rust/rtw_pwrctrl_ps.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_ps.allow ALLOW_VACUOUS=1
+
+# W3-174: host C oracle vs rust/rtw_pwrctrl_lps_tp.o (LPS leave-by-TP check).
+rust-objects-rtw-pwrctrl-lps-tp:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-pwrctrl-lps-tp"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_pwrctrl_lps_tp.o
+rust-objects-rtw-pwrctrl-lps-tp-c:
+	@mkdir -p tests/host/pwrctrl
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-DHOST_PWRCTRL_LPS_TP_TEST \
+		-o tests/host/pwrctrl/lps_tp_c_ref.o \
+		tests/host/pwrctrl/host_pwrctrl_lps_tp_shim.c
+rust-check-symbols-rtw-pwrctrl-lps-tp: rust-objects-rtw-pwrctrl-lps-tp-c rust-objects-rtw-pwrctrl-lps-tp
+	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/lps_tp_c_ref.o NEW=rust/rtw_pwrctrl_lps_tp.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_lps_tp.allow ALLOW_VACUOUS=1
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production

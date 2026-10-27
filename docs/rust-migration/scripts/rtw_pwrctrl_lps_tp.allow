@@ -1,0 +1,17 @@
+# W3-174: traffic_check_for_leave_lps_by_tp — Rust FFI helpers (kernel-only).
+drop rtw_rust_lps_tp_sta_tx_bytes
+drop rtw_rust_lps_tp_sta_acc_tx_bytes
+drop rtw_rust_lps_tp_sta_rx_bytes
+drop rtw_rust_lps_tp_sta_acc_rx_bytes
+drop rtw_rust_lps_tp_num_tx_ok
+drop rtw_rust_lps_tp_num_rx_unicast_ok
+drop rtw_rust_lps_tp_get_u16
+drop rtw_rust_lps_tp_get_u8
+drop rtw_rust_lps_tp_get_u32
+drop rtw_rust_lps_tp_get_i32
+drop rtw_rust_lps_tp_set_lps_chk_cnt
+drop rtw_rust_lps_tp_bt_control_lps
+drop rtw_rust_lps_tp_lps_ctrl_wk_cmd
+drop host_pwrctrl_lps_tp_reset_trace
+drop host_pwrctrl_lps_tp_set_bt_control_lps
+drop host_pwrctrl_lps_tp_get_trace
