@@ -25,6 +25,7 @@ AP_PS_L2 := test_recv_ap_pwrbit_wmmps.c
 RUST_RECV := $(ROOT)/rust/rtw_recv.rs
 RUST_RECV_STA_COUNT := $(ROOT)/rust/rtw_recv_sta_count.rs
 RUST_RECV_STA_VALIDATE := $(ROOT)/rust/rtw_recv_sta_validate.rs
+RUST_RECV_AP_PS := $(ROOT)/rust/rtw_recv_ap_ps.rs
 
 CC     := gcc
 RUSTC  := rustc
@@ -42,12 +43,12 @@ SIGNAL_CFLAGS := $(CFLAGS) -DCONFIG_NEW_SIGNAL_STAT_PROCESS -DCONFIG_TDLS
 
 .PHONY: all test test-c test-rust test-sta test-sta-count-rust test-sta-rust \
 	test-rx-bh-tk-c test-rx-bh-tk-rust 	test-rx-bh-tk-setters-c test-rx-bh-tk-setters-rust \
-	test-signal-c test-ap-ps-c clean
+	test-signal-c test-ap-ps-c test-ap-ps-rust clean
 
 all: test
 
 test: test-c test-rust test-sta test-sta-count-rust test-sta-rust test-rx-bh-tk-c test-rx-bh-tk-rust \
-	test-rx-bh-tk-setters-c test-rx-bh-tk-setters-rust test-signal-c test-ap-ps-c
+	test-rx-bh-tk-setters-c test-rx-bh-tk-setters-rust test-signal-c test-ap-ps-c test-ap-ps-rust
 
 test-c: test_recv
 	./test_recv recv_vectors.json
