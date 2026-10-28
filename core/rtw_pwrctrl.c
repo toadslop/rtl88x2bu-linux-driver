@@ -1351,6 +1351,7 @@ void rtw_set_fw_in_ips_mode(PADAPTER padapter, u8 enable)
 }
 #endif /* CONFIG_PNO_SUPPORT */
 
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_LPS_EXEC_TEST)
 void rtw_exec_lps(_adapter *padapter, u8 ps_mode)
 {
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
@@ -1472,6 +1473,172 @@ void rtw_lps_rfon_ctrl(_adapter *padapter, u8 rfon_ctrl)
 							FUNC_ADPT_ARG(padapter));
 	}
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_LPS_EXEC_TEST — W3-181 in rust/rtw_pwrctrl_lps_exec.rs */
+
+#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_LPS_EXEC_TEST)
+
+u8 rtw_rust_lps_exec_mlme_is_asoc(PADAPTER padapter)
+{
+	return MLME_IS_ASOC(padapter) ? _TRUE : _FALSE;
+}
+
+u8 rtw_rust_lps_exec_get_b_fw_current_in_ps(PADAPTER padapter)
+{
+	return adapter_to_pwrctl(padapter)->bFwCurrentInPSMode;
+}
+
+u8 rtw_rust_lps_exec_get_pwr_mode(PADAPTER padapter)
+{
+	return adapter_to_pwrctl(padapter)->pwr_mode;
+}
+
+void rtw_rust_lps_exec_active_ps_mode(PADAPTER padapter, u8 ps_mode)
+{
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
+
+#ifdef CONFIG_LPS_ACK
+	_enter_critical_mutex(&pwrpriv->lps_ack_mutex, NULL);
+	rtw_sctx_init(&pwrpriv->lps_ack_sctx, 100);
+#endif /* CONFIG_LPS_ACK */
+
+	rtw_hal_set_hwreg(padapter, HW_VAR_H2C_FW_PWRMODE, (u8 *)(&ps_mode));
+	rtw_hal_set_hwreg(padapter, HW_VAR_LPS_STATE_CHK, (u8 *)(&ps_mode));
+
+#ifdef CONFIG_LPS_ACK
+	_exit_critical_mutex(&pwrpriv->lps_ack_mutex, NULL);
+#endif /* CONFIG_LPS_ACK */
+}
+
+void rtw_rust_lps_exec_set_fw_pwrmode(PADAPTER padapter, u8 ps_mode)
+{
+	rtw_hal_set_hwreg(padapter, HW_VAR_H2C_FW_PWRMODE, (u8 *)(&ps_mode));
+}
+
+void rtw_rust_lps_exec_rfon_not_in_lps_log(PADAPTER padapter)
+{
+	RTW_INFO(FUNC_ADPT_FMT": RFON can't work due to ps state is not in LPS !\n",
+		 FUNC_ADPT_ARG(padapter));
+}
+
+void rtw_rust_lps_exec_lps_no_wifi_log(PADAPTER padapter)
+{
+	RTW_INFO(FUNC_ADPT_FMT": It can't execute LPS without Wi-Fi connection!\n",
+		 FUNC_ADPT_ARG(padapter));
+}
+
+void rtw_rust_lps_exec_rfon_no_wifi_log(PADAPTER padapter)
+{
+	RTW_INFO(FUNC_ADPT_FMT": It can't execute RFON without Wi-Fi connection!\n",
+		 FUNC_ADPT_ARG(padapter));
+}
+
+void rtw_rust_lps_exec_rfon_lclk_rf_on(PADAPTER padapter)
+{
+#ifdef CONFIG_LPS_LCLK
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
+
+	if (pwrpriv->lps_level >= LPS_LCLK) {
+		s32 ready = _FAIL;
+		systime stime;
+		s32 utime;
+		u32 timeout;
+
+#ifdef LPS_RPWM_WAIT_MS
+		timeout = LPS_RPWM_WAIT_MS;
+#else
+		timeout = 30;
+#endif /* !LPS_RPWM_WAIT_MS */
+
+		stime = rtw_get_current_time();
+		do {
+			ready = rtw_register_task_alive(padapter, LPS_ALIVE);
+			if (ready == _SUCCESS)
+				break;
+
+			utime = rtw_get_passing_time_ms(stime);
+			if (utime > timeout)
+				break;
+
+			rtw_msleep_os(1);
+		} while (1);
+
+		if (ready == _FAIL)
+			RTW_INFO(FUNC_ADPT_FMT": It is not ready to leave 32K !!!\n",
+				 FUNC_ADPT_ARG(padapter));
+	}
+#else
+	(void)padapter;
+#endif /* CONFIG_LPS_LCLK */
+}
+
+void rtw_rust_lps_exec_rfon_lps_ack_block(PADAPTER padapter, u8 rfon_ctrl)
+{
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
+
+#ifdef CONFIG_LPS_ACK
+	_enter_critical_mutex(&pwrpriv->lps_ack_mutex, NULL);
+	rtw_sctx_init(&pwrpriv->lps_ack_sctx, 100);
+#endif /* CONFIG_LPS_ACK */
+
+	rtw_hal_set_hwreg(padapter, HW_VAR_H2C_FW_PWRMODE_RFON_CTRL, (u8 *)(&rfon_ctrl));
+	rtw_hal_set_hwreg(padapter, HW_VAR_LPS_RFON_CHK, (u8 *)(&rfon_ctrl));
+
+#ifdef CONFIG_LPS_ACK
+	_exit_critical_mutex(&pwrpriv->lps_ack_mutex, NULL);
+#endif /* CONFIG_LPS_ACK */
+}
+
+void rtw_rust_lps_exec_rfon_rf_off_assoc(PADAPTER padapter, u8 rfon_ctrl)
+{
+#ifdef CONFIG_LPS_PG
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
+
+	if (pwrpriv->lps_level == LPS_PG) {
+		if (rtw_hal_set_lps_pg_info_cmd(padapter) == _FAIL)
+			RTW_INFO(FUNC_ADPT_FMT": Send PG H2C command Fail! \n",
+				 FUNC_ADPT_ARG(padapter));
+	}
+#else
+	(void)padapter;
+#endif /* CONFIG_LPS_PG */
+
+	rtw_hal_set_hwreg(padapter, HW_VAR_H2C_FW_PWRMODE_RFON_CTRL, (u8 *)(&rfon_ctrl));
+}
+
+void rtw_rust_lps_exec_rfon_lclk_rf_off(PADAPTER padapter)
+{
+#ifdef CONFIG_LPS_LCLK
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
+
+	if (pwrpriv->lps_level >= LPS_LCLK) {
+		rtw_unregister_task_alive(padapter, LPS_ALIVE);
+
+		if (pwrpriv->alives == 0) {
+			u8 polling_cnt = 0;
+			u8 reg_val8 = 0;
+			u8 result = _FAIL;
+
+			do {
+				rtw_msleep_os(1);
+				reg_val8 = rtw_read8(padapter, REG_CR);
+				if (reg_val8 == 0xEA) {
+					result = _SUCCESS;
+					break;
+				}
+				polling_cnt++;
+			} while (polling_cnt < 100);
+
+			if (result == _FAIL)
+				RTW_INFO(FUNC_ADPT_FMT": It is not finished to enter 32K !!!\n",
+					 FUNC_ADPT_ARG(padapter));
+		}
+	}
+#else
+	(void)padapter;
+#endif /* CONFIG_LPS_LCLK */
+}
+
+#endif /* CONFIG_RUST && !HOST_PWRCTRL_LPS_EXEC_TEST */
 
 void rtw_set_ps_mode(PADAPTER padapter, u8 ps_mode, u8 smart_ps, u8 bcn_ant_mode, const char *msg)
 {

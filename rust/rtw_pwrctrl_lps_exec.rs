@@ -137,6 +137,8 @@ extern "C" {
     fn rtw_rust_lps_exec_rfon_rf_off_assoc(padapter: Padapter, rfon_ctrl: u8);
     fn rtw_rust_lps_exec_rfon_lclk_rf_off(padapter: Padapter);
     fn rtw_rust_lps_exec_rfon_not_in_lps_log(padapter: Padapter);
+    fn rtw_rust_lps_exec_lps_no_wifi_log(padapter: Padapter);
+    fn rtw_rust_lps_exec_rfon_no_wifi_log(padapter: Padapter);
 }
 
 #[no_mangle]
@@ -169,6 +171,10 @@ pub extern "C" fn rtw_exec_lps(padapter: Padapter, ps_mode: u8) {
         if mlme_is_asoc_kernel(padapter) {
             unsafe {
                 rtw_rust_lps_exec_set_fw_pwrmode(padapter, ps_mode);
+            }
+        } else {
+            unsafe {
+                rtw_rust_lps_exec_lps_no_wifi_log(padapter);
             }
         }
     }
@@ -213,6 +219,8 @@ pub extern "C" fn rtw_lps_rfon_ctrl(padapter: Padapter, rfon_ctrl: u8) {
         } else {
             if mlme_is_asoc_kernel(padapter) {
                 rtw_rust_lps_exec_rfon_rf_off_assoc(padapter, rfon_ctrl);
+            } else {
+                rtw_rust_lps_exec_rfon_no_wifi_log(padapter);
             }
             rtw_rust_lps_exec_rfon_lclk_rf_off(padapter);
         }

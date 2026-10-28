@@ -123,6 +123,13 @@ for path in "${changed[@]}"; do
 	| tests/host/pwrctrl/lps_tp_vectors.json)
 		add_target rust-check-symbols-rtw-pwrctrl-lps-tp
 		;;
+	rust/rtw_pwrctrl_lps_exec.rs \
+	| core/rtw_pwrctrl.c \
+	| tests/host/pwrctrl/host_pwrctrl_lps_exec_shim.c \
+	| tests/host/pwrctrl/test_pwrctrl_lps_exec.c \
+	| tests/host/pwrctrl/lps_exec_vectors.json)
+		add_target rust-check-symbols-rtw-pwrctrl-lps-exec
+		;;
 	rust/rtw_pwrctrl_rpwm.rs \
 	| core/rtw_pwrctrl.c \
 	| tests/host/pwrctrl/host_pwrctrl_rpwm_shim.c \
