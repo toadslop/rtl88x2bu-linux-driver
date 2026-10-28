@@ -1520,6 +1520,18 @@ void rtw_rust_lps_exec_rfon_not_in_lps_log(PADAPTER padapter)
 		 FUNC_ADPT_ARG(padapter));
 }
 
+void rtw_rust_lps_exec_lps_no_wifi_log(PADAPTER padapter)
+{
+	RTW_INFO(FUNC_ADPT_FMT": It can't execute LPS without Wi-Fi connection!\n",
+		 FUNC_ADPT_ARG(padapter));
+}
+
+void rtw_rust_lps_exec_rfon_no_wifi_log(PADAPTER padapter)
+{
+	RTW_INFO(FUNC_ADPT_FMT": It can't execute RFON without Wi-Fi connection!\n",
+		 FUNC_ADPT_ARG(padapter));
+}
+
 void rtw_rust_lps_exec_rfon_lclk_rf_on(PADAPTER padapter)
 {
 #ifdef CONFIG_LPS_LCLK
