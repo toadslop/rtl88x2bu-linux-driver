@@ -310,6 +310,17 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-180 | #1531 | [W3-180] Translate rtw_pwrctrl.c — unregister task/IO alive (part 2) |
 | W3-181 | #1532 | [W3-181] Translate rtw_pwrctrl.c — exec LPS and RF-on control |
 | W3-182 | #1533 | [W3-182] Translate rtw_pwrctrl.c — WoWLAN LPS level swap |
+| W3-183 | #1570 | [W3-183] Translate rtw_pwrctrl.c — PS ready gate |
+| W3-184 | #1571 | [W3-184] Translate rtw_pwrctrl.c — PM ioctl setters |
+| W3-185 | #1572 | [W3-185] Translate rtw_pwrctrl.c — FW LPS in IPS |
+| W3-186 | #1573 | [W3-186] Translate rtw_pwrctrl.c — set PS mode (part 1/2) |
+| W3-187 | #1574 | [W3-187] Translate rtw_pwrctrl.c — set PS mode (part 2/2) |
+| W3-188 | #1575 | [W3-188] Translate rtw_pwrctrl.c — CPWM int and leave check |
+| W3-189 | #1576 | [W3-189] Translate rtw_pwrctrl.c — init pwrctrl priv (part 1/2) |
+| W3-190 | #1577 | [W3-190] Translate rtw_pwrctrl.c — init/free pwrctrl (part 2/2) |
+| W3-191 | #1578 | [W3-191] Translate rtw_beamforming.c — cmd and traffic leaf |
+| W3-192 | #1579 | [W3-192] Translate rtw_beamforming.c — sounding enter (part 1/2) |
+| W3-193 | #1580 | [W3-193] Translate rtw_beamforming.c — sounding leave (part 2/2) |
 
 ## Superseded issues
 

@@ -344,6 +344,17 @@ files=(
   wave3-180-pwrctrl-unregister-alive.md
   wave3-181-pwrctrl-exec-lps-rfon.md
   wave3-182-pwrctrl-wow-lps-level.md
+  wave3-183-pwrctrl-ps-rdy-check.md
+  wave3-184-pwrctrl-pm-setters.md
+  wave3-185-pwrctrl-fw-in-ips.md
+  wave3-186-pwrctrl-set-ps-mode-p1.md
+  wave3-187-pwrctrl-set-ps-mode-p2.md
+  wave3-188-pwrctrl-cpwm-int.md
+  wave3-189-pwrctrl-init-p1.md
+  wave3-190-pwrctrl-init-free-p2.md
+  wave3-191-bf-cmd-traffic-leaf.md
+  wave3-192-bf-sounding-enter-p1.md
+  wave3-193-bf-sounding-leave-p2.md
 )
 
 # draft_id -> github issue number

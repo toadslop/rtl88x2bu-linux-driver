@@ -281,10 +281,26 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-181 | `wave3-181-pwrctrl-exec-lps-rfon.md` | `rtw_exec_lps` + `rtw_lps_rfon_ctrl` |
 | W3-182 | `wave3-182-pwrctrl-wow-lps-level.md` | `rtw_wow_lps_level_decide` |
 
+## Children (tranche 19 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-183 | `wave3-183-pwrctrl-ps-rdy-check.md` | `PS_RDY_CHECK` gate |
+| W3-184 | `wave3-184-pwrctrl-pm-setters.md` | `rtw_pm_set_*` ioctl setters |
+| W3-185 | `wave3-185-pwrctrl-fw-in-ips.md` | `rtw_set_fw_in_ips_mode` |
+| W3-186 | `wave3-186-pwrctrl-set-ps-mode-p1.md` | `rtw_set_ps_mode` part 1 |
+| W3-187 | `wave3-187-pwrctrl-set-ps-mode-p2.md` | `rtw_set_ps_mode` part 2 |
+| W3-188 | `wave3-188-pwrctrl-cpwm-int.md` | `LPS_Leave_check` + `cpwm_int_hdl` |
+| W3-189 | `wave3-189-pwrctrl-init-p1.md` | `rtw_init_pwrctrl_priv` part 1 |
+| W3-190 | `wave3-190-pwrctrl-init-free-p2.md` | init part 2 + `rtw_free_pwrctrl_priv` |
+| W3-191 | `wave3-191-bf-cmd-traffic-leaf.md` | `rtw_bf_cmd` / traffic / c2h leaf |
+| W3-192 | `wave3-192-bf-sounding-enter-p1.md` | sounding enter (part 1) |
+| W3-193 | `wave3-193-bf-sounding-leave-p2.md` | sounding leave (part 2) |
+
 Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:
 
-- `rtw_beamforming.c` sounding state machine (HAL-coupled NDPA paths)
-- `rtw_debug.c` procfs walkers / register dumps
-- `rtw_ioctl_query.c` (placeholder TU — audit before filing)
+- `rtw_pwrctrl.c` wakeup/resume (`_rtw_pwr_wakeup`, early suspend) after tranche 19
+- `rtw_debug.c` procfs walkers / register dumps (mostly Rust-wrapped — audit before filing)
+- `rtw_ioctl_query.c` (placeholder TU — no code; skip)
 
 Wave 3 milestone (L4): WPA2 STA associate + encrypted ping when hardware available (same bar as Wave 2).
