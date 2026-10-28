@@ -134,7 +134,9 @@ for path in "${changed[@]}"; do
 	| core/rtw_pwrctrl.c \
 	| tests/host/pwrctrl/host_pwrctrl_alive_shim.c \
 	| tests/host/pwrctrl/test_pwrctrl_register_alive.c \
-	| tests/host/pwrctrl/register_alive_vectors.json)
+	| tests/host/pwrctrl/register_alive_vectors.json \
+	| tests/host/pwrctrl/test_pwrctrl_unregister_alive.c \
+	| tests/host/pwrctrl/unregister_alive_vectors.json)
 		add_target rust-check-symbols-rtw-pwrctrl-alive
 		;;
 	rust/rtw_rf_rest.rs \
