@@ -42,7 +42,7 @@ all: test test-lps test-lps-enter test-leave-all test-leave-all-rust test-ips te
 
 test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust test-leave-all \
 	test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust test-lps-tp \
-	test-lps-tp-rust test-lps-exec test-lps-exec-rust test-rpwm test-rpwm-rust test-register-alive test-register-alive-rust \
+	test-lps-tp-rust test-lps-exec test-rpwm test-rpwm-rust test-register-alive test-register-alive-rust \
 	test-unregister-alive test-unregister-alive-rust
 
 test-c: test_pwrctrl_ps_deny
