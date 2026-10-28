@@ -193,8 +193,7 @@ fn ps_rdy_check_impl(adapter: Padapter) -> u8 {
             || unsafe { G_ROCH } == _TRUE
             || unsafe { G_SCAN_DENY } == _TRUE
             || a.tdlsinfo.link_established == _TRUE
-            || (!a.rfctl.is_null()
-                && unsafe { (*a.rfctl).radar_detect_enabled } == _TRUE)
+            || (!a.rfctl.is_null() && unsafe { (*a.rfctl).radar_detect_enabled } == _TRUE)
         {
             return _FALSE;
         }
@@ -235,15 +234,12 @@ fn ps_rdy_check_impl(adapter: Padapter) -> u8 {
         }
 
         if rtw_rust_ps_rdy_check_fwstate(adapter, WIFI_UNDER_SURVEY) == _TRUE
-            || rtw_rust_ps_rdy_check_fwstate(adapter, WIFI_UNDER_LINKING | WIFI_UNDER_WPS)
-                == _TRUE
+            || rtw_rust_ps_rdy_check_fwstate(adapter, WIFI_UNDER_LINKING | WIFI_UNDER_WPS) == _TRUE
             || rtw_rust_ps_rdy_mlme_is_ap(adapter) == _TRUE
             || rtw_rust_ps_rdy_mlme_is_mesh(adapter) == _TRUE
             || rtw_rust_ps_rdy_mlme_is_monitor(adapter) == _TRUE
-            || rtw_rust_ps_rdy_check_fwstate(
-                adapter,
-                WIFI_ADHOC_MASTER_STATE | WIFI_ADHOC_STATE,
-            ) == _TRUE
+            || rtw_rust_ps_rdy_check_fwstate(adapter, WIFI_ADHOC_MASTER_STATE | WIFI_ADHOC_STATE)
+                == _TRUE
             || rtw_rust_ps_rdy_cfg80211_get_is_roch(adapter) == _TRUE
             || rtw_rust_ps_rdy_is_scan_deny(adapter) == _TRUE
             || rtw_rust_ps_rdy_tdls_linked(adapter) == _TRUE
