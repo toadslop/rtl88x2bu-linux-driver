@@ -13,6 +13,7 @@ LPS_TP_SHIM := host_pwrctrl_lps_tp_shim.c
 LPS_EXEC_SHIM := host_pwrctrl_lps_exec_shim.c
 RPWM_SHIM := host_pwrctrl_rpwm_shim.c
 ALIVE_SHIM := host_pwrctrl_alive_shim.c
+WOW_LPS_SHIM := host_pwrctrl_wow_lps_shim.c
 
 CC     := gcc
 CFLAGS := -Wall -Wextra -Werror -O2 \
@@ -34,16 +35,17 @@ RUSTC := rustc
 .PHONY: all test test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust \
 	test-leave-all test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust \
 	test-lps-tp test-lps-tp-rust test-lps-exec test-lps-exec-rust test-rpwm test-rpwm-rust test-register-alive test-register-alive-rust \
-	test-unregister-alive test-unregister-alive-rust clean
+	test-unregister-alive test-unregister-alive-rust test-wow-lps clean
 
 all: test test-lps test-lps-enter test-leave-all test-leave-all-rust test-ips test-ips-rust \
-	test-ps-processor test-ps-processor-rust 	test-lps-tp test-lps-tp-rust test-rpwm test-rpwm-rust \
-	test-register-alive test-register-alive-rust test-unregister-alive test-unregister-alive-rust
+	test-ps-processor test-ps-processor-rust test-lps-tp test-lps-tp-rust test-rpwm test-rpwm-rust \
+	test-register-alive test-register-alive-rust test-unregister-alive test-unregister-alive-rust \
+	test-wow-lps
 
 test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust test-leave-all \
 	test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust test-lps-tp \
 	test-lps-tp-rust test-lps-exec test-rpwm test-rpwm-rust test-register-alive test-register-alive-rust \
-	test-unregister-alive test-unregister-alive-rust
+	test-unregister-alive test-unregister-alive-rust test-wow-lps
 
 test-c: test_pwrctrl_ps_deny
 	./test_pwrctrl_ps_deny ps_deny_vectors.json
@@ -179,6 +181,12 @@ test_pwrctrl_leave_all_ps: test_pwrctrl_leave_all_ps.c $(LEAVE_ALL_SHIM) $(HOST_
 test_pwrctrl_lps: test_pwrctrl_lps.c $(LPS_SHIM) $(HOST_JSON)
 	$(CC) $(LPS_CFLAGS) -o $@ test_pwrctrl_lps.c $(LPS_SHIM) $(HOST_JSON)
 
+test-wow-lps: test_pwrctrl_wow_lps_level
+	./test_pwrctrl_wow_lps_level wow_lps_level_vectors.json
+
+test_pwrctrl_wow_lps_level: test_pwrctrl_wow_lps_level.c $(WOW_LPS_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_pwrctrl_wow_lps_level.c $(WOW_LPS_SHIM) $(HOST_JSON)
+
 test_pwrctrl_ps_deny: test_pwrctrl_ps_deny.c $(SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_pwrctrl_ps_deny.c $(SHIM) $(HOST_JSON)
 
@@ -215,6 +223,7 @@ clean:
 		test_pwrctrl_rpwm test_pwrctrl_rpwm_rust \
 		test_pwrctrl_register_alive test_pwrctrl_register_alive_rust \
 		test_pwrctrl_unregister_alive test_pwrctrl_unregister_alive_rust \
+		test_pwrctrl_wow_lps_level \
 		librust_pwrctrl_ps.a librust_pwrctrl_ips.a librust_pwrctrl_lps_tp.a librust_pwrctrl_lps_exec.a \
 		librust_pwrctrl_rpwm.a \
 		librust_pwrctrl_alive.a librust_pwrctrl.a
