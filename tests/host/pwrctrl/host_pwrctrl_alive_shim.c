@@ -35,6 +35,42 @@ static void register_task_alive(struct pwrctrl_priv *pwrctrl, u32 tag)
 	pwrctrl->alives |= tag;
 }
 
+static void unregister_task_alive(struct pwrctrl_priv *pwrctrl, u32 tag)
+{
+	pwrctrl->alives &= ~tag;
+}
+
+static u8 unregister_pslv_task(PADAPTER padapter)
+{
+	(void)padapter;
+	return PS_STATE_S0;
+}
+
+static u8 unregister_pslv_io(PADAPTER padapter)
+{
+	(void)padapter;
+	return PS_STATE_S0;
+}
+
+static void unregister_ps_alive(PADAPTER padapter, u32 tag, u8 pslv)
+{
+	struct pwrctrl_priv *pwrctrl = adapter_to_pwrctl(padapter);
+
+	_enter_pwrlock(&pwrctrl->lock);
+
+	unregister_task_alive(pwrctrl, tag);
+
+	if ((pwrctrl->pwr_mode != PS_MODE_ACTIVE)
+	    && (pwrctrl->bFwCurrentInPSMode == _TRUE)) {
+		if (pwrctrl->cpwm > pslv) {
+			if ((pslv >= PS_STATE_S2) || (pwrctrl->alives == 0))
+				rtw_set_rpwm(padapter, pslv);
+		}
+	}
+
+	_exit_pwrlock(&pwrctrl->lock);
+}
+
 void host_pwrctrl_alive_reset_trace(void)
 {
 	memset(&g_trace, 0, sizeof(g_trace));
@@ -184,4 +220,39 @@ s32 rtw_register_evt_alive(PADAPTER padapter)
 	_exit_pwrlock(&pwrctrl->lock);
 
 	return _SUCCESS;
+}
+
+void rtw_unregister_task_alive(PADAPTER padapter, u32 task)
+{
+	unregister_ps_alive(padapter, task, unregister_pslv_task(padapter));
+}
+
+void rtw_unregister_tx_alive(PADAPTER padapter)
+{
+	unregister_ps_alive(padapter, XMIT_ALIVE, unregister_pslv_io(padapter));
+}
+
+void rtw_unregister_cmd_alive(PADAPTER padapter)
+{
+	unregister_ps_alive(padapter, CMD_ALIVE, unregister_pslv_io(padapter));
+}
+
+void rtw_unregister_rx_alive(PADAPTER padapter)
+{
+	struct pwrctrl_priv *pwrctrl = adapter_to_pwrctl(padapter);
+
+	_enter_pwrlock(&pwrctrl->lock);
+
+	unregister_task_alive(pwrctrl, RECV_ALIVE);
+
+	_exit_pwrlock(&pwrctrl->lock);
+}
+
+void rtw_unregister_evt_alive(PADAPTER padapter)
+{
+	struct pwrctrl_priv *pwrctrl = adapter_to_pwrctl(padapter);
+
+	unregister_task_alive(pwrctrl, EVT_ALIVE);
+
+	_exit_pwrlock(&pwrctrl->lock);
 }

@@ -13,8 +13,12 @@ typedef uint32_t u32;
 #define _SUCCESS 1
 #define _FAIL 0
 
+#define PS_DPS (1u << 0)
 #define PS_RF_OFF (1u << 1)
+#define PS_STATE_S0 PS_DPS
 #define PS_STATE_S2 PS_RF_OFF
+
+#define PS_MODE_ACTIVE 0
 
 #define XMIT_ALIVE (1u << 0)
 #define RECV_ALIVE (1u << 1)
@@ -30,6 +34,7 @@ struct pwrctrl_priv {
 	u8 bFwCurrentInPSMode;
 	u8 cpwm;
 	u8 rpwm;
+	u8 pwr_mode;
 };
 
 struct adapter {
@@ -49,6 +54,12 @@ s32 rtw_register_tx_alive(PADAPTER padapter);
 s32 rtw_register_cmd_alive(PADAPTER padapter);
 s32 rtw_register_rx_alive(PADAPTER padapter);
 s32 rtw_register_evt_alive(PADAPTER padapter);
+
+void rtw_unregister_task_alive(PADAPTER padapter, u32 task);
+void rtw_unregister_tx_alive(PADAPTER padapter);
+void rtw_unregister_cmd_alive(PADAPTER padapter);
+void rtw_unregister_rx_alive(PADAPTER padapter);
+void rtw_unregister_evt_alive(PADAPTER padapter);
 
 struct host_pwrctrl_alive_trace {
 	u32 set_rpwm_calls;

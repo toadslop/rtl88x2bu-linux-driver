@@ -1,0 +1,87 @@
+{
+  "vectors": [
+    {
+      "name": "task_idle_clear",
+      "fn": "un_task",
+      "alive_tag": 32,
+      "initial_alives": 32,
+      "pwr_mode": 0,
+      "bFwCurrentInPSMode": 0,
+      "cpwm": 0,
+      "rpwm": 0,
+      "expect_alives": 0,
+      "expect_set_rpwm_calls": 0
+    },
+    {
+      "name": "task_ps_downgrade_s0",
+      "fn": "un_task",
+      "alive_tag": 32,
+      "initial_alives": 32,
+      "pwr_mode": 1,
+      "bFwCurrentInPSMode": 1,
+      "cpwm": 4,
+      "rpwm": 4,
+      "expect_alives": 0,
+      "expect_set_rpwm_calls": 1,
+      "expect_last_set_rpwm": 1
+    },
+    {
+      "name": "task_ps_keep_other_alive",
+      "fn": "un_task",
+      "alive_tag": 32,
+      "initial_alives": 33,
+      "pwr_mode": 1,
+      "bFwCurrentInPSMode": 1,
+      "cpwm": 4,
+      "rpwm": 4,
+      "expect_alives": 1,
+      "expect_set_rpwm_calls": 0
+    },
+    {
+      "name": "tx_ps_downgrade",
+      "fn": "un_tx",
+      "initial_alives": 1,
+      "pwr_mode": 1,
+      "bFwCurrentInPSMode": 1,
+      "cpwm": 4,
+      "rpwm": 4,
+      "expect_alives": 0,
+      "expect_set_rpwm_calls": 1,
+      "expect_last_set_rpwm": 1
+    },
+    {
+      "name": "cmd_ps_downgrade",
+      "fn": "un_cmd",
+      "initial_alives": 4,
+      "pwr_mode": 1,
+      "bFwCurrentInPSMode": 1,
+      "cpwm": 4,
+      "rpwm": 4,
+      "expect_alives": 0,
+      "expect_set_rpwm_calls": 1,
+      "expect_last_set_rpwm": 1
+    },
+    {
+      "name": "rx_clear_bit",
+      "fn": "un_rx",
+      "initial_alives": 2,
+      "pwr_mode": 0,
+      "bFwCurrentInPSMode": 1,
+      "cpwm": 0,
+      "rpwm": 0,
+      "expect_alives": 0,
+      "expect_set_rpwm_calls": 0
+    },
+    {
+      "name": "evt_clear_bit",
+      "fn": "un_evt",
+      "initial_alives": 8,
+      "pwr_mode": 0,
+      "bFwCurrentInPSMode": 1,
+      "cpwm": 0,
+      "rpwm": 0,
+      "expect_alives": 0,
+      "expect_set_rpwm_calls": 0
+    }
+  ]
+}
