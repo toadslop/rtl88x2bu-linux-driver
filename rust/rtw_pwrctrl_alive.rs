@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! W3-179 — register task/IO alive helpers from `core/rtw_pwrctrl.c`.
+//! W3-179 / W3-180 — register/unregister task/IO alive helpers from `core/rtw_pwrctrl.c`.
 
 #![allow(
     dead_code,
@@ -21,6 +21,9 @@ use core::ffi::c_void;
 const _TRUE: u8 = 1;
 const _SUCCESS: i32 = 1;
 const _FAIL: i32 = 0;
+const PS_MODE_ACTIVE: u8 = 0;
+const PS_DPS: u8 = 1 << 0;
+const PS_STATE_S0: u8 = PS_DPS;
 const PS_STATE_S2: u8 = 1 << 1;
 const XMIT_ALIVE: u32 = 1 << 0;
 const RECV_ALIVE: u32 = 1 << 1;
@@ -37,6 +40,7 @@ struct PwrctrlPriv {
     bFwCurrentInPSMode: u8,
     cpwm: u8,
     rpwm: u8,
+    pwr_mode: u8,
 }
 
 #[cfg(host_pwrctrl_alive_test)]
@@ -97,6 +101,23 @@ mod host_hal {
         }
     }
 
+    pub fn clear_alives(a: Padapter, tag: u32) {
+        let p = pwr(a);
+        unsafe {
+            (*p).alives &= !tag;
+        }
+    }
+
+    pub fn get_alives(a: Padapter) -> u32 {
+        let p = pwr(a);
+        unsafe { (*p).alives }
+    }
+
+    pub fn get_pwr_mode(a: Padapter) -> u8 {
+        let p = pwr(a);
+        unsafe { (*p).pwr_mode }
+    }
+
     pub fn get_u8(a: Padapter, field: u32) -> u8 {
         let p = pwr(a);
         unsafe {
@@ -128,7 +149,12 @@ extern "C" {
     fn rtw_rust_alive_enter_pwrlock(padapter: Padapter);
     fn rtw_rust_alive_exit_pwrlock(padapter: Padapter);
     fn rtw_rust_alive_or_alives(padapter: Padapter, tag: u32);
+    fn rtw_rust_alive_clear_alives(padapter: Padapter, tag: u32);
+    fn rtw_rust_alive_get_alives(padapter: Padapter) -> u32;
+    fn rtw_rust_alive_get_pwr_mode(padapter: Padapter) -> u8;
     fn rtw_rust_alive_get_u8(padapter: Padapter, field: u32) -> u8;
+    fn rtw_rust_alive_unregister_pslv_task(padapter: Padapter) -> u8;
+    fn rtw_rust_alive_unregister_pslv_io(padapter: Padapter) -> u8;
     fn rtw_set_rpwm(padapter: Padapter, pslv: u8) -> u8;
 }
 
@@ -145,6 +171,31 @@ fn exit_lock(a: Padapter) {
 #[cfg(not(host_pwrctrl_alive_test))]
 fn or_alives(a: Padapter, tag: u32) {
     unsafe { rtw_rust_alive_or_alives(a, tag) };
+}
+
+#[cfg(not(host_pwrctrl_alive_test))]
+fn clear_alives(a: Padapter, tag: u32) {
+    unsafe { rtw_rust_alive_clear_alives(a, tag) };
+}
+
+#[cfg(not(host_pwrctrl_alive_test))]
+fn get_alives(a: Padapter) -> u32 {
+    unsafe { rtw_rust_alive_get_alives(a) }
+}
+
+#[cfg(not(host_pwrctrl_alive_test))]
+fn get_pwr_mode(a: Padapter) -> u8 {
+    unsafe { rtw_rust_alive_get_pwr_mode(a) }
+}
+
+#[cfg(not(host_pwrctrl_alive_test))]
+fn unregister_pslv_task(a: Padapter) -> u8 {
+    unsafe { rtw_rust_alive_unregister_pslv_task(a) }
+}
+
+#[cfg(not(host_pwrctrl_alive_test))]
+fn unregister_pslv_io(a: Padapter) -> u8 {
+    unsafe { rtw_rust_alive_unregister_pslv_io(a) }
 }
 
 #[cfg(not(host_pwrctrl_alive_test))]
@@ -170,6 +221,31 @@ fn exit_lock(a: Padapter) {
 #[cfg(host_pwrctrl_alive_test)]
 fn or_alives(a: Padapter, tag: u32) {
     host_hal::or_alives(a, tag);
+}
+
+#[cfg(host_pwrctrl_alive_test)]
+fn clear_alives(a: Padapter, tag: u32) {
+    host_hal::clear_alives(a, tag);
+}
+
+#[cfg(host_pwrctrl_alive_test)]
+fn get_alives(a: Padapter) -> u32 {
+    host_hal::get_alives(a)
+}
+
+#[cfg(host_pwrctrl_alive_test)]
+fn get_pwr_mode(a: Padapter) -> u8 {
+    host_hal::get_pwr_mode(a)
+}
+
+#[cfg(host_pwrctrl_alive_test)]
+fn unregister_pslv_task(_a: Padapter) -> u8 {
+    PS_STATE_S0
+}
+
+#[cfg(host_pwrctrl_alive_test)]
+fn unregister_pslv_io(_a: Padapter) -> u8 {
+    PS_STATE_S0
 }
 
 #[cfg(host_pwrctrl_alive_test)]
@@ -219,6 +295,23 @@ fn register_simple_alive(a: Padapter, tag: u32) -> i32 {
     _SUCCESS
 }
 
+fn unregister_ps_alive(a: Padapter, tag: u32, pslv: u8) {
+    enter_lock(a);
+    clear_alives(a, tag);
+
+    if get_pwr_mode(a) != PS_MODE_ACTIVE && get_u8(a, 0) == _TRUE {
+        let cpwm = get_u8(a, 1);
+        if cpwm > pslv {
+            let alives = get_alives(a);
+            if pslv >= PS_STATE_S2 || alives == 0 {
+                set_rpwm(a, pslv);
+            }
+        }
+    }
+
+    exit_lock(a);
+}
+
 #[no_mangle]
 pub extern "C" fn rtw_register_task_alive(padapter: Padapter, task: u32) -> i32 {
     register_ps_alive(padapter, task)
@@ -242,6 +335,34 @@ pub extern "C" fn rtw_register_rx_alive(padapter: Padapter) -> i32 {
 #[no_mangle]
 pub extern "C" fn rtw_register_evt_alive(padapter: Padapter) -> i32 {
     register_simple_alive(padapter, EVT_ALIVE)
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_unregister_task_alive(padapter: Padapter, task: u32) {
+    unregister_ps_alive(padapter, task, unregister_pslv_task(padapter));
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_unregister_tx_alive(padapter: Padapter) {
+    unregister_ps_alive(padapter, XMIT_ALIVE, unregister_pslv_io(padapter));
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_unregister_cmd_alive(padapter: Padapter) {
+    unregister_ps_alive(padapter, CMD_ALIVE, unregister_pslv_io(padapter));
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_unregister_rx_alive(padapter: Padapter) {
+    enter_lock(padapter);
+    clear_alives(padapter, RECV_ALIVE);
+    exit_lock(padapter);
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_unregister_evt_alive(padapter: Padapter) {
+    clear_alives(padapter, EVT_ALIVE);
+    exit_lock(padapter);
 }
 
 #[cfg(host_pwrctrl_alive_test)]
