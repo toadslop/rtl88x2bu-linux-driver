@@ -3106,6 +3106,7 @@ $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ps.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ps.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_lps_tp.o
+$(MODULE_NAME)-y += rust/rtw_pwrctrl_lps_exec.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_rpwm.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_alive.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
@@ -4996,6 +4997,20 @@ rust-objects-rtw-pwrctrl-lps-tp-c:
 rust-check-symbols-rtw-pwrctrl-lps-tp: rust-objects-rtw-pwrctrl-lps-tp-c rust-objects-rtw-pwrctrl-lps-tp
 	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/lps_tp_c_ref.o NEW=rust/rtw_pwrctrl_lps_tp.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_lps_tp.allow ALLOW_VACUOUS=1
+
+# W3-181: host C oracle vs rust/rtw_pwrctrl_lps_exec.o (LPS exec + RFON ctrl).
+rust-objects-rtw-pwrctrl-lps-exec:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-pwrctrl-lps-exec"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_pwrctrl_lps_exec.o
+rust-objects-rtw-pwrctrl-lps-exec-c:
+	@mkdir -p tests/host/pwrctrl
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/pwrctrl/lps_exec_c_ref.o \
+		tests/host/pwrctrl/host_pwrctrl_lps_exec_shim.c
+rust-check-symbols-rtw-pwrctrl-lps-exec: rust-objects-rtw-pwrctrl-lps-exec-c rust-objects-rtw-pwrctrl-lps-exec
+	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/lps_exec_c_ref.o NEW=rust/rtw_pwrctrl_lps_exec.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_lps_exec.allow ALLOW_VACUOUS=1
 
 # W3-175: host C oracle vs rust/rtw_pwrctrl_rpwm.o (CPWM polling).
 rust-objects-rtw-pwrctrl-rpwm:
