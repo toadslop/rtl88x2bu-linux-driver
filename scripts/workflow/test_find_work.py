@@ -61,6 +61,19 @@ class ClassifyPrepTests(unittest.TestCase):
 
 
 class ImplementsIssueTests(unittest.TestCase):
+    def test_docs_paren_filing_pr_does_not_implement_body_issue_refs(self) -> None:
+        pr = fw.PullRequest(
+            number=1581,
+            title="docs(rust-migration): Wave 3 tranche 19 — W3-183..W3-193",
+            url="http://example",
+            is_draft=False,
+            base_ref=fw.DEFAULT_BRANCH,
+            head_ref="cursor/wave3-tranche19-issue-drafts",
+        )
+        pr.enrich({}, "W3-183 #1570 and W3-184 #1571 filed.")
+        self.assertFalse(pr.implements_issue(1570, "W3-183"))
+        self.assertFalse(pr.implements_issue(1571, "W3-184"))
+
     def test_docs_filing_pr_does_not_implement_body_issue_refs(self) -> None:
         pr = fw.PullRequest(
             number=1267,
