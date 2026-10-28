@@ -16,6 +16,8 @@ continuing `rtw_init_pwrctrl_priv` in **source order** after [W3-189](wave3-189-
 - `#ifdef CONFIG_HAS_EARLYSUSPEND` / Android power registration
 - `#ifdef CONFIG_GPIO_WAKEUP` GPIO defaults and HAL pin setup
 - Remainder of `#ifdef CONFIG_WOWLAN` init (patterns, PNO, keep-alive, etc.)
+- Trailing init hooks after the WOWLAN block: `#ifdef CONFIG_LPS_POFF` (`HW_VAR_LPS_POFF_INIT`) and
+  `#ifdef CONFIG_LPS_ACK` (`lps_ack_mutex` / status defaults) through **end of** `rtw_init_pwrctrl_priv`
 - `rtw_free_pwrctrl_priv`
 - `rtw_resume_in_workqueue` when `CONFIG_RESUME_IN_WORKQUEUE`
 
