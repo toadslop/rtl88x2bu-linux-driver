@@ -3109,6 +3109,9 @@ $(MODULE_NAME)-y += rust/rtw_pwrctrl_lps_tp.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_lps_exec.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_rpwm.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_alive.o
+ifeq ($(CONFIG_WOWLAN), y)
+$(MODULE_NAME)-y += rust/rtw_pwrctrl_wow.o
+endif
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
 $(MODULE_NAME)-y += rust/rtw_mlme_80211d.o
@@ -5037,6 +5040,19 @@ rust-objects-rtw-pwrctrl-alive-c:
 rust-check-symbols-rtw-pwrctrl-alive: rust-objects-rtw-pwrctrl-alive-c rust-objects-rtw-pwrctrl-alive
 	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/alive_c_ref.o NEW=rust/rtw_pwrctrl_alive.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_alive.allow ALLOW_VACUOUS=1
+
+# W3-182: host C oracle vs rust/rtw_pwrctrl_wow.o (WoWLAN LPS level swap).
+rust-objects-rtw-pwrctrl-wow:
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) CONFIG_WOWLAN=y rust/rtw_pwrctrl_wow.o
+rust-objects-rtw-pwrctrl-wow-c:
+	@mkdir -p tests/host/pwrctrl
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/pwrctrl/wow_lps_c_ref.o \
+		tests/host/pwrctrl/host_pwrctrl_wow_lps_shim.c
+rust-check-symbols-rtw-pwrctrl-wow: rust-objects-rtw-pwrctrl-wow-c rust-objects-rtw-pwrctrl-wow
+	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/wow_lps_c_ref.o NEW=rust/rtw_pwrctrl_wow.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_wow.allow ALLOW_VACUOUS=1
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production

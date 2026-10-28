@@ -2054,6 +2054,7 @@ void LPS_Leave(PADAPTER padapter, const char *msg)
 }
 
 #ifdef CONFIG_WOWLAN
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_WOW_LPS_TEST)
 void rtw_wow_lps_level_decide(_adapter *adapter, u8 wow_en)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
@@ -2073,6 +2074,7 @@ void rtw_wow_lps_level_decide(_adapter *adapter, u8 wow_en)
 		#endif
 	}
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_WOW_LPS_TEST — W3-182 in rust/rtw_pwrctrl_wow.rs */
 #endif /* CONFIG_WOWLAN */
 #endif /* CONFIG_LPS */
 
@@ -3756,6 +3758,62 @@ u32 *rtw_rust_pwrctrl_ps_deny_ptr(PADAPTER padapter)
 {
 	return &adapter_to_pwrctl(padapter)->ps_deny;
 }
+
+#ifdef CONFIG_WOWLAN
+u8 rtw_rust_wow_lps_field_get(PADAPTER adapter, u32 id)
+{
+	struct pwrctrl_priv *p = dvobj_to_pwrctl(adapter_to_dvobj(adapter));
+
+	switch (id) {
+	case 0:
+		return p->lps_level;
+	case 1:
+		return p->lps_level_bk;
+	case 2:
+		return p->wowlan_lps_level;
+#ifdef CONFIG_LPS_1T1R
+	case 3:
+		return p->lps_1t1r;
+	case 4:
+		return p->lps_1t1r_bk;
+	case 5:
+		return p->wowlan_lps_1t1r;
+#endif
+	default:
+		return 0;
+	}
+}
+
+void rtw_rust_wow_lps_field_set(PADAPTER adapter, u32 id, u8 v)
+{
+	struct pwrctrl_priv *p = dvobj_to_pwrctl(adapter_to_dvobj(adapter));
+
+	switch (id) {
+	case 0:
+		p->lps_level = v;
+		break;
+	case 1:
+		p->lps_level_bk = v;
+		break;
+	case 2:
+		p->wowlan_lps_level = v;
+		break;
+#ifdef CONFIG_LPS_1T1R
+	case 3:
+		p->lps_1t1r = v;
+		break;
+	case 4:
+		p->lps_1t1r_bk = v;
+		break;
+	case 5:
+		p->wowlan_lps_1t1r = v;
+		break;
+#endif
+	default:
+		break;
+	}
+}
+#endif /* CONFIG_WOWLAN */
 
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_TEST */
 
