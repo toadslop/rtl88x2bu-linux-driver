@@ -3108,6 +3108,9 @@ $(MODULE_NAME)-y += rust/rtw_pwrctrl_ps.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_lps_tp.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_rpwm.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_alive.o
+ifeq ($(CONFIG_WOWLAN), y)
+$(MODULE_NAME)-y += rust/rtw_pwrctrl_wow.o
+endif
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
 $(MODULE_NAME)-y += rust/rtw_mlme_80211d.o
