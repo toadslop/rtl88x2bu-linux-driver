@@ -1,0 +1,27 @@
+---
+title: "[W3-190] Translate rtw_pwrctrl.c — init/free pwrctrl (part 2/2)"
+labels: [rust-migration, phase-1, wave-3, size/~200]
+type: child
+id: W3-190
+epic: E05
+blocked_by: [W3-189]
+estimate_loc: 220
+---
+
+## Goal
+
+Finish power-control lifecycle in [`rust/rtw_pwrctrl_init.rs`](../../../rust/rtw_pwrctrl_init.rs) and port teardown:
+
+- Remainder of `rtw_init_pwrctrl_priv` (WOWLAN, early suspend, resume workqueue hooks)
+- `rtw_free_pwrctrl_priv`
+- `rtw_resume_in_workqueue` when `CONFIG_RESUME_IN_WORKQUEUE`
+
+## Notes
+
+- Chains on [W3-189](wave3-189-pwrctrl-init-p1.md) same module/Makefile object.
+- Workitem cancel paths must mirror C ordering to avoid use-after-free in L3.
+
+## Acceptance
+
+- L0 + L1 on init + free symbols
+- L2 optional: init→free round-trip field hygiene on stub priv
