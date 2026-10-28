@@ -1,0 +1,86 @@
+{
+  "vectors": [
+    {
+      "name": "default_ready",
+      "expect": 1
+    },
+    {
+      "name": "in_suspend",
+      "b_in_suspend": 1,
+      "expect": 0
+    },
+    {
+      "name": "lps_deny_future",
+      "time": 100,
+      "lps_deny_time": 200,
+      "expect": 0
+    },
+    {
+      "name": "under_survey",
+      "fw_state": 2048,
+      "expect": 0
+    },
+    {
+      "name": "under_linking",
+      "fw_state": 128,
+      "expect": 0
+    },
+    {
+      "name": "ap_mode",
+      "fw_state": 16,
+      "expect": 0
+    },
+    {
+      "name": "mesh_mode",
+      "fw_state": 512,
+      "expect": 0
+    },
+    {
+      "name": "monitor_mode",
+      "fw_state": -2147483648,
+      "expect": 0
+    },
+    {
+      "name": "adhoc",
+      "fw_state": 32,
+      "expect": 0
+    },
+    {
+      "name": "scan_deny_active",
+      "set_scan_deny": 1,
+      "expect": 0
+    },
+    {
+      "name": "roch_active",
+      "roch": 1,
+      "expect": 0
+    },
+    {
+      "name": "tdls_link",
+      "tdls_linked": 1,
+      "expect": 0
+    },
+    {
+      "name": "radar_detect_active",
+      "set_radar_detect": 1,
+      "expect": 0
+    },
+    {
+      "name": "8021x_no_group_key",
+      "dot11_auth": 2,
+      "binstall_grpkey": 0,
+      "expect": 0
+    },
+    {
+      "name": "cfg80211_pwr_mgmt_off",
+      "pwr_mgmt": 0,
+      "expect": 0
+    },
+    {
+      "name": "wowlan_suspend_ok",
+      "b_in_suspend": 1,
+      "wowlan_mode": 1,
+      "expect": 1
+    }
+  ]
+}

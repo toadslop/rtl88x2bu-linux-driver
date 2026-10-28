@@ -18,6 +18,10 @@
 #include <hal_data.h>
 #include <hal_com_h2c.h>
 
+#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_PS_RDY_TEST)
+u8 PS_RDY_CHECK(_adapter *padapter);
+#endif
+
 #ifdef DBG_CHECK_FW_PS_STATE
 #if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_FW_PS_TEST)
 int rtw_fw_ps_state(PADAPTER padapter)
@@ -1182,6 +1186,7 @@ u8 rtw_set_rpwm(PADAPTER padapter, u8 pslv)
 	return rpwm;
 }
 
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_PS_RDY_TEST)
 u8 PS_RDY_CHECK(_adapter *padapter)
 {
 	struct pwrctrl_priv	*pwrpriv = adapter_to_pwrctl(padapter);
@@ -1234,6 +1239,116 @@ u8 PS_RDY_CHECK(_adapter *padapter)
 
 	return _TRUE;
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_PS_RDY_TEST — W3-183 in rust/rtw_pwrctrl_ps_rdy.rs */
+
+#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_PS_RDY_TEST)
+
+u32 rtw_rust_ps_rdy_get_current_time(void)
+{
+	return rtw_get_current_time();
+}
+
+u8 rtw_rust_ps_rdy_time_after(u32 a, u32 b)
+{
+	return rtw_time_after(a, b) ? _TRUE : _FALSE;
+}
+
+u8 rtw_rust_ps_rdy_check_fwstate(PADAPTER padapter, u32 state)
+{
+	return check_fwstate(&padapter->mlmepriv, state) ? _TRUE : _FALSE;
+}
+
+u8 rtw_rust_ps_rdy_mlme_is_ap(PADAPTER padapter)
+{
+	return MLME_IS_AP(padapter) ? _TRUE : _FALSE;
+}
+
+u8 rtw_rust_ps_rdy_mlme_is_mesh(PADAPTER padapter)
+{
+	return MLME_IS_MESH(padapter) ? _TRUE : _FALSE;
+}
+
+u8 rtw_rust_ps_rdy_mlme_is_monitor(PADAPTER padapter)
+{
+	return MLME_IS_MONITOR(padapter) ? _TRUE : _FALSE;
+}
+
+u8 rtw_rust_ps_rdy_get_b_in_suspend(PADAPTER padapter)
+{
+	return adapter_to_pwrctl(padapter)->bInSuspend;
+}
+
+u32 rtw_rust_ps_rdy_get_lps_deny_time(PADAPTER padapter)
+{
+	return adapter_to_pwrctl(padapter)->lps_deny_time;
+}
+
+u8 rtw_rust_ps_rdy_get_wowlan_mode(PADAPTER padapter)
+{
+	return adapter_to_pwrctl(padapter)->wowlan_mode;
+}
+
+u8 rtw_rust_ps_rdy_get_wowlan_ap_mode(PADAPTER padapter)
+{
+	return adapter_to_pwrctl(padapter)->wowlan_ap_mode;
+}
+
+u8 rtw_rust_ps_rdy_cfg80211_get_is_roch(PADAPTER padapter)
+{
+#if defined(CONFIG_IOCTL_CFG80211)
+	return rtw_cfg80211_get_is_roch(padapter);
+#else
+	(void)padapter;
+	return _FALSE;
+#endif
+}
+
+u8 rtw_rust_ps_rdy_is_scan_deny(PADAPTER padapter)
+{
+	return rtw_is_scan_deny(padapter) ? _TRUE : _FALSE;
+}
+
+u8 rtw_rust_ps_rdy_tdls_linked(PADAPTER padapter)
+{
+#ifdef CONFIG_TDLS
+	return padapter->tdlsinfo.link_established;
+#else
+	(void)padapter;
+	return _FALSE;
+#endif
+}
+
+u8 rtw_rust_ps_rdy_radar_detect(PADAPTER padapter)
+{
+#ifdef CONFIG_DFS_MASTER
+	return adapter_to_rfctl(padapter)->radar_detect_enabled;
+#else
+	(void)padapter;
+	return _FALSE;
+#endif
+}
+
+u32 rtw_rust_ps_rdy_get_dot11_auth(PADAPTER padapter)
+{
+	return padapter->securitypriv.dot11AuthAlgrthm;
+}
+
+u8 rtw_rust_ps_rdy_get_binstall_grpkey(PADAPTER padapter)
+{
+	return padapter->securitypriv.binstallGrpkey;
+}
+
+u8 rtw_rust_ps_rdy_cfg80211_pwr_mgmt(PADAPTER padapter)
+{
+#ifdef CONFIG_IOCTL_CFG80211
+	return rtw_cfg80211_pwr_mgmt(padapter) ? _TRUE : _FALSE;
+#else
+	(void)padapter;
+	return _TRUE;
+#endif
+}
+
+#endif /* CONFIG_RUST && !HOST_PWRCTRL_PS_RDY_TEST */
 
 #if defined(CONFIG_FWLPS_IN_IPS)
 void rtw_set_fw_in_ips_mode(PADAPTER padapter, u8 enable)

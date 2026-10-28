@@ -1,0 +1,22 @@
+# W3-183: PS_RDY_CHECK — Rust FFI helpers (kernel-only).
+drop rtw_rust_ps_rdy_get_current_time
+drop rtw_rust_ps_rdy_time_after
+drop rtw_rust_ps_rdy_check_fwstate
+drop rtw_rust_ps_rdy_mlme_is_ap
+drop rtw_rust_ps_rdy_mlme_is_mesh
+drop rtw_rust_ps_rdy_mlme_is_monitor
+drop rtw_rust_ps_rdy_get_b_in_suspend
+drop rtw_rust_ps_rdy_get_lps_deny_time
+drop rtw_rust_ps_rdy_get_wowlan_mode
+drop rtw_rust_ps_rdy_get_wowlan_ap_mode
+drop rtw_rust_ps_rdy_cfg80211_get_is_roch
+drop rtw_rust_ps_rdy_is_scan_deny
+drop rtw_rust_ps_rdy_tdls_linked
+drop rtw_rust_ps_rdy_radar_detect
+drop rtw_rust_ps_rdy_get_dot11_auth
+drop rtw_rust_ps_rdy_get_binstall_grpkey
+drop rtw_rust_ps_rdy_cfg80211_pwr_mgmt
+drop host_pwrctrl_ps_rdy_set_time
+drop host_pwrctrl_ps_rdy_set_scan_deny
+drop host_pwrctrl_ps_rdy_set_roch
+drop host_pwrctrl_ps_rdy_set_pwr_mgmt
