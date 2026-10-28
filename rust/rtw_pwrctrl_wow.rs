@@ -97,15 +97,31 @@ extern "C" {
 fn apply_wow_on(adapter: Padapter) {
     let cur_level = field_get(adapter, FIELD_LPS_LEVEL);
     field_set(adapter, FIELD_LPS_LEVEL_BK, cur_level);
-    field_set(adapter, FIELD_LPS_LEVEL, field_get(adapter, FIELD_WOWLAN_LPS_LEVEL));
+    field_set(
+        adapter,
+        FIELD_LPS_LEVEL,
+        field_get(adapter, FIELD_WOWLAN_LPS_LEVEL),
+    );
     let cur_1t1r = field_get(adapter, FIELD_LPS_1T1R);
     field_set(adapter, FIELD_LPS_1T1R_BK, cur_1t1r);
-    field_set(adapter, FIELD_LPS_1T1R, field_get(adapter, FIELD_WOWLAN_LPS_1T1R));
+    field_set(
+        adapter,
+        FIELD_LPS_1T1R,
+        field_get(adapter, FIELD_WOWLAN_LPS_1T1R),
+    );
 }
 
 fn apply_wow_off(adapter: Padapter) {
-    field_set(adapter, FIELD_LPS_LEVEL, field_get(adapter, FIELD_LPS_LEVEL_BK));
-    field_set(adapter, FIELD_LPS_1T1R, field_get(adapter, FIELD_LPS_1T1R_BK));
+    field_set(
+        adapter,
+        FIELD_LPS_LEVEL,
+        field_get(adapter, FIELD_LPS_LEVEL_BK),
+    );
+    field_set(
+        adapter,
+        FIELD_LPS_1T1R,
+        field_get(adapter, FIELD_LPS_1T1R_BK),
+    );
 }
 
 #[cfg(not(host_pwrctrl_wow_lps_test))]
