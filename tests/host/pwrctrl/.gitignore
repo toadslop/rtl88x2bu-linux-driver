@@ -15,6 +15,10 @@ test_pwrctrl_ps_processor_rust
 test_pwrctrl_lps_tp
 test_pwrctrl_lps_tp_rust
 librust_pwrctrl_lps_tp.a
+test_pwrctrl_lps_exec
+test_pwrctrl_lps_exec_rust
+librust_pwrctrl_lps_exec.a
+lps_exec_c_ref.o
 ps_deny_c_ref.o
 test_pwrctrl_rpwm
 test_pwrctrl_rpwm_rust
