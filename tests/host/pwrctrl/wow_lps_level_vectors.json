@@ -1,0 +1,49 @@
+{
+  "vectors": [
+    {
+      "name": "wow_on_swaps_level_and_1t1r",
+      "lps_level": 1,
+      "lps_level_bk": 0,
+      "wowlan_lps_level": 2,
+      "lps_1t1r": 0,
+      "lps_1t1r_bk": 0,
+      "wowlan_lps_1t1r": 1,
+      "wow_en": 1,
+      "expect_lps_level": 2,
+      "expect_lps_level_bk": 1,
+      "expect_lps_1t1r": 1,
+      "expect_lps_1t1r_bk": 0
+    },
+    {
+      "name": "wow_off_restores_from_backup",
+      "lps_level": 2,
+      "lps_level_bk": 1,
+      "wowlan_lps_level": 2,
+      "lps_1t1r": 1,
+      "lps_1t1r_bk": 0,
+      "wowlan_lps_1t1r": 1,
+      "wow_en": 0,
+      "expect_lps_level": 1,
+      "expect_lps_level_bk": 1,
+      "expect_lps_1t1r": 0,
+      "expect_lps_1t1r_bk": 0
+    },
+    {
+      "name": "wow_on_roundtrip",
+      "lps_level": 3,
+      "lps_level_bk": 0,
+      "wowlan_lps_level": 1,
+      "lps_1t1r": 1,
+      "lps_1t1r_bk": 0,
+      "wowlan_lps_1t1r": 0,
+      "wow_en": 1,
+      "expect_lps_level": 1,
+      "expect_lps_level_bk": 3,
+      "expect_lps_1t1r": 0,
+      "expect_lps_1t1r_bk": 1,
+      "roundtrip_off": 1,
+      "expect_after_off_lps_level": 3,
+      "expect_after_off_lps_1t1r": 1
+    }
+  ]
+}
