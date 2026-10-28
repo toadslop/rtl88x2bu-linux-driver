@@ -252,6 +252,8 @@ void rtw_unregister_evt_alive(PADAPTER padapter)
 {
 	struct pwrctrl_priv *pwrctrl = adapter_to_pwrctl(padapter);
 
+	_enter_pwrlock(&pwrctrl->lock);
+
 	unregister_task_alive(pwrctrl, EVT_ALIVE);
 
 	_exit_pwrlock(&pwrctrl->lock);
