@@ -22,5 +22,5 @@ Complete `rtw_set_ps_mode` in [`rust/rtw_pwrctrl_set_ps.rs`](../../../rust/rtw_p
 
 ## Acceptance
 
-- L0 + L1 full symbol on `rtw_set_ps_mode`
+- L0 + L1 full symbol swap on `rtw_set_ps_mode` (deferred from W3-89-style part 1)
 - L2: differential enter/leave LPS mode with stub HAL H2C capture

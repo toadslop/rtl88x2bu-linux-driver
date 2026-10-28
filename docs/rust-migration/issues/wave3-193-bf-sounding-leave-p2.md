@@ -21,5 +21,5 @@ Complete sounding state machine port in [`rust/rtw_beamforming_sound.rs`](../../
 
 ## Acceptance
 
-- L0 + L1 on leave + sounding completion symbols
+- L0 + L1 on leave + sounding completion symbols (allowlist static helpers moved off C, same pattern as W3-192 hooks)
 - L2: host differential enter→leave sequence on stub `beamforming_info`

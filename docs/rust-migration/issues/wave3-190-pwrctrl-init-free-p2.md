@@ -10,9 +10,12 @@ estimate_loc: 220
 
 ## Goal
 
-Finish power-control lifecycle in [`rust/rtw_pwrctrl_init.rs`](../../../rust/rtw_pwrctrl_init.rs) and port teardown:
+Finish power-control lifecycle in [`rust/rtw_pwrctrl_init.rs`](../../../rust/rtw_pwrctrl_init.rs) and port teardown,
+continuing `rtw_init_pwrctrl_priv` in **source order** after [W3-189](wave3-189-pwrctrl-init-p1.md):
 
-- Remainder of `rtw_init_pwrctrl_priv` (WOWLAN, early suspend, resume workqueue hooks)
+- `#ifdef CONFIG_HAS_EARLYSUSPEND` / Android power registration
+- `#ifdef CONFIG_GPIO_WAKEUP` GPIO defaults and HAL pin setup
+- Remainder of `#ifdef CONFIG_WOWLAN` init (patterns, PNO, keep-alive, etc.)
 - `rtw_free_pwrctrl_priv`
 - `rtw_resume_in_workqueue` when `CONFIG_RESUME_IN_WORKQUEUE`
 
