@@ -1,0 +1,57 @@
+{
+  "vectors": [
+    {
+      "name": "exec_lps_active",
+      "ps_mode": 0,
+      "expect_hwreg_count": 2,
+      "expect_hwreg0_var": 0,
+      "expect_hwreg0_val": 0,
+      "expect_hwreg1_var": 1,
+      "expect_hwreg1_val": 0
+    },
+    {
+      "name": "exec_lps_lps_assoc",
+      "ps_mode": 1,
+      "fw_state": 1,
+      "expect_hwreg_count": 1,
+      "expect_hwreg0_var": 0,
+      "expect_hwreg0_val": 1
+    },
+    {
+      "name": "exec_lps_lps_no_assoc",
+      "ps_mode": 1,
+      "expect_hwreg_count": 0
+    },
+    {
+      "name": "rfon_rf_on_in_lps",
+      "fn": "rfon",
+      "b_fw_current_in_ps": 1,
+      "pwr_mode": 1,
+      "rfon_ctrl": 0,
+      "expect_hwreg_count": 2,
+      "expect_hwreg0_var": 2,
+      "expect_hwreg0_val": 0,
+      "expect_hwreg1_var": 3,
+      "expect_hwreg1_val": 0
+    },
+    {
+      "name": "rfon_rf_off_assoc",
+      "fn": "rfon",
+      "b_fw_current_in_ps": 1,
+      "pwr_mode": 1,
+      "fw_state": 1,
+      "rfon_ctrl": 2,
+      "expect_hwreg_count": 1,
+      "expect_hwreg0_var": 2,
+      "expect_hwreg0_val": 2
+    },
+    {
+      "name": "rfon_not_in_ps",
+      "fn": "rfon",
+      "b_fw_current_in_ps": 0,
+      "pwr_mode": 1,
+      "rfon_ctrl": 0,
+      "expect_hwreg_count": 0
+    }
+  ]
+}
