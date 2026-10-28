@@ -1,0 +1,4 @@
+# W3-182: rtw_wow_lps_level_decide — Rust FFI field accessors (kernel-only).
+drop rtw_rust_wow_lps_field_get
+drop rtw_rust_wow_lps_field_set
+drop host_pwrctrl_wow_lps_read_state

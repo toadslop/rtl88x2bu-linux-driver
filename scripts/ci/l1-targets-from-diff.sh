@@ -139,6 +139,13 @@ for path in "${changed[@]}"; do
 	| tests/host/pwrctrl/unregister_alive_vectors.json)
 		add_target rust-check-symbols-rtw-pwrctrl-alive
 		;;
+	rust/rtw_pwrctrl_wow.rs \
+	| core/rtw_pwrctrl.c \
+	| tests/host/pwrctrl/host_pwrctrl_wow_lps_shim.c \
+	| tests/host/pwrctrl/test_pwrctrl_wow_lps_level.c \
+	| tests/host/pwrctrl/wow_lps_level_vectors.json)
+		add_target rust-check-symbols-rtw-pwrctrl-wow
+		;;
 	rust/rtw_rf_rest.rs \
 	| rust/rtw_rf_op_class_pref.rs \
 	| rust/rtw_rf_op_class_dump.rs \
