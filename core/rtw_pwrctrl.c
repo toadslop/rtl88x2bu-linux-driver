@@ -2374,6 +2374,7 @@ s32 rtw_register_task_alive(PADAPTER padapter, u32 task)
  * Return Value:
  *	none
  */
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_ALIVE_TEST)
 void rtw_unregister_task_alive(PADAPTER padapter, u32 task)
 {
 	struct pwrctrl_priv *pwrctrl;
@@ -2411,6 +2412,8 @@ void rtw_unregister_task_alive(PADAPTER padapter, u32 task)
 	_exit_pwrlock(&pwrctrl->lock);
 
 }
+
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_ALIVE_TEST — W3-180 unregister_task_alive */
 
 /*
  * Caller: rtw_xmit_thread
@@ -2599,6 +2602,63 @@ u8 rtw_rust_alive_get_u8(PADAPTER padapter, u32 field)
 		return 0;
 	}
 }
+
+void rtw_rust_alive_clear_alives(PADAPTER padapter, u32 tag)
+{
+	adapter_to_pwrctl(padapter)->alives &= ~tag;
+}
+
+u32 rtw_rust_alive_get_alives(PADAPTER padapter)
+{
+	return adapter_to_pwrctl(padapter)->alives;
+}
+
+u8 rtw_rust_alive_get_pwr_mode(PADAPTER padapter)
+{
+	return adapter_to_pwrctl(padapter)->pwr_mode;
+}
+
+static u8 rtw_rust_alive_btcoex_pslv(PADAPTER padapter, u8 pslv)
+{
+#ifdef CONFIG_BT_COEXIST
+	if ((rtw_btcoex_IsBtDisabled(padapter) == _FALSE)
+	    && (rtw_btcoex_IsBtControlLps(padapter) == _TRUE)) {
+		u8 val8;
+
+		val8 = rtw_btcoex_LpsVal(padapter);
+		if (val8 & BIT(4))
+			pslv = PS_STATE_S2;
+	}
+#endif /* CONFIG_BT_COEXIST */
+	return pslv;
+}
+
+u8 rtw_rust_alive_unregister_pslv_task(PADAPTER padapter)
+{
+	return rtw_rust_alive_btcoex_pslv(padapter, PS_STATE_S0);
+}
+
+u8 rtw_rust_alive_unregister_pslv_io(PADAPTER padapter)
+{
+	u8 pslv = PS_STATE_S0;
+	_adapter *iface;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
+	u8 i;
+
+	pslv = rtw_rust_alive_btcoex_pslv(padapter, pslv);
+#ifdef CONFIG_P2P_PS
+	for (i = 0; i < dvobj->iface_nums; i++) {
+		iface = dvobj->padapters[i];
+		if ((iface) && rtw_is_adapter_up(iface)) {
+			if (iface->wdinfo.p2p_ps_mode > P2P_PS_NONE) {
+				pslv = PS_STATE_S2;
+				break;
+			}
+		}
+	}
+#endif /* CONFIG_P2P_PS */
+	return pslv;
+}
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_ALIVE_TEST */
 
 /*
@@ -2608,6 +2668,7 @@ u8 rtw_rust_alive_get_u8(PADAPTER padapter, u32 field)
  * No more pkts for TX,
  * Then driver shall call this fun. to power down firmware again.
  */
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_ALIVE_TEST)
 void rtw_unregister_tx_alive(PADAPTER padapter)
 {
 	struct pwrctrl_priv *pwrctrl;
@@ -2744,12 +2805,15 @@ void rtw_unregister_evt_alive(PADAPTER padapter)
 
 	pwrctrl = adapter_to_pwrctl(padapter);
 
+	_enter_pwrlock(&pwrctrl->lock);
+
 	unregister_task_alive(pwrctrl, EVT_ALIVE);
 
 
 	_exit_pwrlock(&pwrctrl->lock);
 
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_ALIVE_TEST — W3-180 unregister I/O alive */
 #endif	/* CONFIG_LPS_LCLK */
 
 #ifdef CONFIG_RESUME_IN_WORKQUEUE

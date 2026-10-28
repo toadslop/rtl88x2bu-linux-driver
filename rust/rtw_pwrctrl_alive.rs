@@ -361,6 +361,7 @@ pub extern "C" fn rtw_unregister_rx_alive(padapter: Padapter) {
 
 #[no_mangle]
 pub extern "C" fn rtw_unregister_evt_alive(padapter: Padapter) {
+    enter_lock(padapter);
     clear_alives(padapter, EVT_ALIVE);
     exit_lock(padapter);
 }
