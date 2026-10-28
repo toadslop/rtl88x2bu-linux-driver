@@ -20,6 +20,7 @@ Port the WoWLAN LPS level backup/restore helper from [`core/rtw_pwrctrl.c`](../.
 - Entire function under `CONFIG_WOWLAN` / `CONFIG_LPS`; preserve `#ifdef CONFIG_LPS_1T1R` fields.
 - Pure `pwrctrl_priv` field twiddle — no HAL calls.
 - Parallel lane root for pwrctrl (disjoint module file).
+- Host L2 Rust differential uses `--cfg host_pwrctrl_wow_lps_test` on `rust/rtw_pwrctrl_wow.rs`.
 
 ## Acceptance
 
