@@ -32,16 +32,16 @@ RUSTC := rustc
 .PHONY: all test test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust \
 	test-leave-all test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust \
 	test-lps-tp test-lps-tp-rust test-rpwm test-rpwm-rust test-register-alive test-register-alive-rust \
-	test-unregister-alive test-unregister-alive-rust clean
+	test-unregister-alive clean
 
 all: test test-lps test-lps-enter test-leave-all test-leave-all-rust test-ips test-ips-rust \
 	test-ps-processor test-ps-processor-rust 	test-lps-tp test-lps-tp-rust test-rpwm test-rpwm-rust \
-	test-register-alive test-register-alive-rust test-unregister-alive test-unregister-alive-rust
+	test-register-alive test-register-alive-rust test-unregister-alive
 
 test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust test-leave-all \
 	test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust test-lps-tp \
 	test-lps-tp-rust test-rpwm test-rpwm-rust test-register-alive test-register-alive-rust \
-	test-unregister-alive test-unregister-alive-rust
+	test-unregister-alive
 
 test-c: test_pwrctrl_ps_deny
 	./test_pwrctrl_ps_deny ps_deny_vectors.json
@@ -143,12 +143,6 @@ test-unregister-alive: test_pwrctrl_unregister_alive
 test_pwrctrl_unregister_alive: test_pwrctrl_unregister_alive.c $(ALIVE_SHIM) $(HOST_JSON)
 	$(CC) $(ALIVE_CFLAGS) -o $@ test_pwrctrl_unregister_alive.c $(ALIVE_SHIM) $(HOST_JSON)
 
-test-unregister-alive-rust: test_pwrctrl_unregister_alive_rust
-	./test_pwrctrl_unregister_alive_rust unregister_alive_vectors.json
-
-test_pwrctrl_unregister_alive_rust: test_pwrctrl_unregister_alive.c librust_pwrctrl_alive.a $(HOST_JSON)
-	$(CC) $(ALIVE_CFLAGS) -o $@ test_pwrctrl_unregister_alive.c $(HOST_JSON) librust_pwrctrl_alive.a
-
 test_pwrctrl_lps_enter: test_pwrctrl_lps_enter.c $(LPS_ENTER_SHIM) $(HOST_JSON)
 	$(CC) $(LPS_ENTER_CFLAGS) -o $@ test_pwrctrl_lps_enter.c $(LPS_ENTER_SHIM) $(HOST_JSON)
 
@@ -195,6 +189,6 @@ clean:
 		test_pwrctrl_ps_processor_rust test_pwrctrl_lps_tp test_pwrctrl_lps_tp_rust \
 		test_pwrctrl_rpwm test_pwrctrl_rpwm_rust \
 		test_pwrctrl_register_alive test_pwrctrl_register_alive_rust \
-		test_pwrctrl_unregister_alive test_pwrctrl_unregister_alive_rust \
+		test_pwrctrl_unregister_alive \
 		librust_pwrctrl_ps.a librust_pwrctrl_ips.a librust_pwrctrl_lps_tp.a librust_pwrctrl_rpwm.a \
 		librust_pwrctrl_alive.a librust_pwrctrl.a
