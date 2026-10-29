@@ -13,7 +13,9 @@
       "expect_b_leisure_ps": 1,
       "expect_cpwm": 12,
       "expect_tog": 128,
-      "expect_wowlan_mode": 0
+      "expect_wowlan_mode": 0,
+      "expect_init_timer": 1,
+      "expect_create_wq": 1
     },
     {
       "name": "mp_mode_forces_active",
@@ -23,7 +25,9 @@
       "power_mgnt": 2,
       "smart_ps": 1,
       "expect_power_mgnt": 0,
-      "expect_b_leisure_ps": 0
+      "expect_b_leisure_ps": 0,
+      "expect_init_timer": 1,
+      "expect_create_wq": 1
     },
     {
       "name": "lps_lclk_hwreg",
@@ -33,7 +37,14 @@
       "power_mgnt": 1,
       "smart_ps": 0,
       "expect_set_rpwm_hwreg": 1,
-      "expect_init_workitem": 3
+      "expect_init_workitem": 3,
+      "expect_init_timer": 1,
+      "expect_create_wq": 1
+    },
+    {
+      "name": "concurrent_non_primary_skip",
+      "adapter_type": 1,
+      "expect_skipped": 1
     }
   ]
 }

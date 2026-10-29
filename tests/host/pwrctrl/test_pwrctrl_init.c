@@ -14,7 +14,7 @@ struct vector {
 	int mp_mode;
 	int power_mgnt;
 	int smart_ps;
-	int is_primary;
+	int adapter_type;
 	int has_expect_rf_pwrstate;
 	int expect_rf_pwrstate;
 	int has_expect_ips_mode;
@@ -33,6 +33,10 @@ struct vector {
 	int expect_set_rpwm_hwreg;
 	int has_expect_init_workitem;
 	int expect_init_workitem;
+	int has_expect_init_timer;
+	int expect_init_timer;
+	int has_expect_create_wq;
+	int expect_create_wq;
 	int has_expect_skipped;
 	int expect_skipped;
 };
@@ -44,7 +48,6 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 	struct vector *v = vv;
 
 	memset(v, 0, sizeof(*v));
-	v->is_primary = 1;
 	if (host_json_parse_string_in(obj, len, "name", v->name, sizeof(v->name)))
 		return -1;
 	host_json_parse_int_in(obj, len, "ips_mode", &v->ips_mode);
@@ -52,7 +55,7 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 	host_json_parse_int_in(obj, len, "mp_mode", &v->mp_mode);
 	host_json_parse_int_in(obj, len, "power_mgnt", &v->power_mgnt);
 	host_json_parse_int_in(obj, len, "smart_ps", &v->smart_ps);
-	host_json_parse_int_in(obj, len, "is_primary", &v->is_primary);
+	host_json_parse_int_in(obj, len, "adapter_type", &v->adapter_type);
 	if (host_json_parse_int_in(obj, len, "expect_rf_pwrstate",
 				   &v->expect_rf_pwrstate) == 0)
 		v->has_expect_rf_pwrstate = 1;
@@ -75,6 +78,12 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 	if (host_json_parse_int_in(obj, len, "expect_init_workitem",
 				   &v->expect_init_workitem) == 0)
 		v->has_expect_init_workitem = 1;
+	if (host_json_parse_int_in(obj, len, "expect_init_timer",
+				   &v->expect_init_timer) == 0)
+		v->has_expect_init_timer = 1;
+	if (host_json_parse_int_in(obj, len, "expect_create_wq",
+				   &v->expect_create_wq) == 0)
+		v->has_expect_create_wq = 1;
 	if (host_json_parse_int_in(obj, len, "expect_skipped", &v->expect_skipped) == 0)
 		v->has_expect_skipped = 1;
 	return 0;
@@ -88,7 +97,7 @@ static int run_vec(struct vector *v)
 	host_pwrctrl_init_reset_trace();
 	host_pwrctrl_init_set_current_time(100);
 	memset(&g_adapter, 0, sizeof(g_adapter));
-	g_adapter.is_primary = (u8)v->is_primary;
+	g_adapter.adapter_type = (u8)v->adapter_type;
 	g_adapter.registrypriv.ips_mode = (u8)v->ips_mode;
 	g_adapter.registrypriv.lps_level = (u8)v->lps_level;
 	g_adapter.registrypriv.mp_mode = (u8)v->mp_mode;
@@ -146,6 +155,18 @@ static int run_vec(struct vector *v)
 			tr->init_workitem_calls, v->expect_init_workitem);
 		return 1;
 	}
+	if (v->has_expect_init_timer &&
+	    (int)tr->init_timer_calls != v->expect_init_timer) {
+		fprintf(stderr, "FAIL %s init_timer got %u expect %d\n", v->name,
+			tr->init_timer_calls, v->expect_init_timer);
+		return 1;
+	}
+	if (v->has_expect_create_wq &&
+	    (int)tr->create_wq_calls != v->expect_create_wq) {
+		fprintf(stderr, "FAIL %s create_wq got %u expect %d\n", v->name,
+			tr->create_wq_calls, v->expect_create_wq);
+		return 1;
+	}
 	printf("PASS %s\n", v->name);
 	return 0;
 }
@@ -165,4 +186,3 @@ int main(int argc, char **argv)
 		printf("ALL PASS (%zu vectors)\n", n);
 	return bad ? 1 : 0;
 }
-// debug
