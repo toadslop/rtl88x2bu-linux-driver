@@ -217,15 +217,7 @@ pub extern "C" fn host_pwrctrl_init_set_current_time(t: u32) {
     }
 }
 
-#[cfg(not(host_pwrctrl_init_test))]
-mod kernel {
-    include!("rtw_pwrctrl_init_kernel.rs");
-}
-
 #[no_mangle]
 pub extern "C" fn rtw_init_pwrctrl_priv_part1(padapter: Padapter) {
-    #[cfg(host_pwrctrl_init_test)]
     init_part1_host(padapter);
-    #[cfg(not(host_pwrctrl_init_test))]
-    kernel::init_part1_kernel(padapter);
 }

@@ -3120,6 +3120,157 @@ void rtw_unregister_evt_alive(PADAPTER padapter)
 	static void resume_workitem_callback(struct work_struct *work);
 #endif /* CONFIG_RESUME_IN_WORKQUEUE */
 
+#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_INIT_TEST)
+
+void rtw_init_pwrctrl_priv_part1(PADAPTER padapter);
+
+u8 rtw_rust_init_is_primary(PADAPTER padapter)
+{
+#if defined(CONFIG_CONCURRENT_MODE)
+	return is_primary_adapter(padapter) ? _TRUE : _FALSE;
+#else
+	return _TRUE;
+#endif
+}
+
+u8 rtw_rust_init_reg_u8(PADAPTER padapter, u32 field)
+{
+	switch (field) {
+	case 0: return padapter->registrypriv.ips_mode;
+	case 1: return padapter->registrypriv.lps_level;
+	case 2: return padapter->registrypriv.mp_mode;
+	case 3: return padapter->registrypriv.power_mgnt;
+	case 4: return padapter->registrypriv.smart_ps;
+	default: return 0;
+	}
+}
+
+u32 rtw_rust_init_get_current_time(void)
+{
+	return rtw_get_current_time();
+}
+
+void rtw_rust_init_init_pwrlock(PADAPTER padapter, u32 which)
+{
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	if (which == 0)
+		_init_pwrlock(&p->lock);
+	else
+		_init_pwrlock(&p->check_32k_lock);
+}
+
+void rtw_rust_init_store_u8(PADAPTER padapter, u32 field, u8 val)
+{
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	switch (field) {
+	case 0: p->rf_pwrstate = val; break;
+	case 1: p->ips_mode = val; break;
+	case 2: p->ips_mode_req = val; break;
+	case 3: p->lps_level = val; break;
+	case 4: p->bInSuspend = val; break;
+	case 5: p->bkeepfwalive = val; break;
+	case 6: p->LpsIdleCount = val; break;
+	case 7: p->power_mgnt = val; break;
+	case 8: p->bLeisurePs = val; break;
+	case 9: p->bFwCurrentInPSMode = val; break;
+	case 10: p->rpwm = val; break;
+	case 11: p->cpwm = val; break;
+	case 12: p->pwr_mode = val; break;
+	case 13: p->smart_ps = val; break;
+	case 14: p->bcn_ant_mode = val; break;
+	case 15: p->dtim = val; break;
+	case 16: p->tog = val; break;
+	case 17: p->rpwm_retry = val; break;
+	case 18: p->wowlan_mode = val; break;
+	case 19: p->wowlan_ap_mode = val; break;
+	case 20: p->wowlan_p2p_mode = val; break;
+	case 21: p->wowlan_in_resume = val; break;
+	case 22: p->wowlan_last_wake_reason = val; break;
+	default: break;
+	}
+}
+
+void rtw_rust_init_store_u32(PADAPTER padapter, u32 field, u32 val)
+{
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	switch (field) {
+	case 0: p->ips_enter_cnts = val; break;
+	case 1: p->ips_leave_cnts = val; break;
+	case 2: p->lps_enter_cnts = val; break;
+	case 3: p->lps_leave_cnts = val; break;
+	case 4: p->bips_processing = val; break;
+	case 5: p->ips_deny_time = val; break;
+	case 6: p->pwr_state_check_interval = val; break;
+	case 7: p->pwr_state_check_cnts = val; break;
+	case 8: p->lps_deny_time = val; break;
+	default: break;
+	}
+}
+
+#ifdef CONFIG_LPS_LCLK
+void rtw_rust_init_hal_set_rpwm(PADAPTER padapter)
+{
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	rtw_hal_set_hwreg(padapter, HW_VAR_SET_RPWM, (u8 *)(&p->rpwm));
+}
+
+void rtw_rust_init_init_workitem(PADAPTER padapter, u32 which)
+{
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	if (which == 0)
+		_init_workitem(&p->cpwm_event, cpwm_event_callback, NULL);
+	else if (which == 1)
+		_init_workitem(&p->dma_event, dma_event_callback, NULL);
+#ifdef CONFIG_RESUME_IN_WORKQUEUE
+	else if (which == 2)
+		_init_workitem(&p->resume_work, resume_workitem_callback, NULL);
+#endif
+}
+#else
+void rtw_rust_init_hal_set_rpwm(PADAPTER padapter) { (void)padapter; }
+void rtw_rust_init_init_workitem(PADAPTER padapter, u32 which)
+{
+	(void)padapter;
+	(void)which;
+}
+#endif /* CONFIG_LPS_LCLK */
+
+void rtw_rust_init_init_timer(PADAPTER padapter)
+{
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	rtw_init_timer(&p->pwr_state_check_timer, padapter, pwr_state_check_handler, padapter);
+}
+
+#ifdef CONFIG_LPS_PG
+void rtw_rust_init_set_lpspg_name(PADAPTER padapter)
+{
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	p->lpspg_info.name = "LPSPG_INFO";
+}
+#else
+void rtw_rust_init_set_lpspg_name(PADAPTER padapter) { (void)padapter; }
+#endif
+
+#ifdef CONFIG_RESUME_IN_WORKQUEUE
+void rtw_rust_init_create_wq(PADAPTER padapter)
+{
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	p->rtw_workqueue = create_singlethread_workqueue("rtw_workqueue");
+}
+#else
+void rtw_rust_init_create_wq(PADAPTER padapter) { (void)padapter; }
+#endif
+
+#endif /* CONFIG_RUST && !HOST_PWRCTRL_INIT_TEST */
+
 void rtw_init_pwrctrl_priv(PADAPTER padapter)
 {
 #ifdef CONFIG_LPS_1T1R
@@ -3142,6 +3293,33 @@ void rtw_init_pwrctrl_priv(PADAPTER padapter)
 	if (!is_primary_adapter(padapter))
 		return;
 #endif
+
+#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_INIT_TEST)
+	rtw_init_pwrctrl_priv_part1(padapter);
+#ifdef CONFIG_LPS_CHK_BY_TP
+	pwrctrlpriv->lps_chk_by_tp = padapter->registrypriv.lps_chk_by_tp;
+	pwrctrlpriv->lps_tx_tp_th = LPS_TX_TP_TH;
+	pwrctrlpriv->lps_rx_tp_th = LPS_RX_TP_TH;
+	pwrctrlpriv->lps_bi_tp_th = LPS_BI_TP_TH;
+	pwrctrlpriv->lps_chk_cnt = pwrctrlpriv->lps_chk_cnt_th = LPS_TP_CHK_CNT;
+	pwrctrlpriv->lps_tx_pkts = LPS_CHK_PKTS_TX;
+	pwrctrlpriv->lps_rx_pkts = LPS_CHK_PKTS_RX;
+#endif
+#ifdef CONFIG_LPS_1T1R
+	pwrctrlpriv->lps_1t1r = padapter->registrypriv.lps_1t1r;
+#endif
+	RTW_INFO("%s: IPS_mode=%d, LPS_mode=%d, LPS_level=%d"LPS_1T1R_FMT"\n",
+		__func__, pwrctrlpriv->ips_mode, pwrctrlpriv->power_mgnt, pwrctrlpriv->lps_level
+		LPS_1T1R_ARG
+	);
+#ifdef CONFIG_LPS_LCLK
+#ifdef CONFIG_LPS_RPWM_TIMER
+	pwrctrlpriv->brpwmtimeout = _FALSE;
+	_init_workitem(&pwrctrlpriv->rpwmtimeoutwi, rpwmtimeout_workitem_callback, NULL);
+	rtw_init_timer(&pwrctrlpriv->pwr_rpwm_timer, padapter, pwr_rpwm_timeout_handler, padapter);
+#endif /* CONFIG_LPS_RPWM_TIMER */
+#endif /* CONFIG_LPS_LCLK */
+#else /* !CONFIG_RUST || HOST_PWRCTRL_INIT_TEST */
 
 	_init_pwrlock(&pwrctrlpriv->lock);
 	_init_pwrlock(&pwrctrlpriv->check_32k_lock);
@@ -3235,6 +3413,8 @@ void rtw_init_pwrctrl_priv(PADAPTER padapter)
 	_init_workitem(&pwrctrlpriv->resume_work, resume_workitem_callback, NULL);
 	pwrctrlpriv->rtw_workqueue = create_singlethread_workqueue("rtw_workqueue");
 #endif /* CONFIG_RESUME_IN_WORKQUEUE */
+
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_INIT_TEST — W3-189 part1 in rust/rtw_pwrctrl_init.rs */
 
 #if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_ANDROID_POWER)
 	pwrctrlpriv->early_suspend.suspend = NULL;

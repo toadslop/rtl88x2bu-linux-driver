@@ -154,6 +154,7 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-pwrctrl-wow
 		;;
 	rust/rtw_pwrctrl_ps_rdy.rs \
+	rust/rtw_pwrctrl_init.rs \
 	| core/rtw_pwrctrl.c \
 	| tests/host/pwrctrl/host_pwrctrl_ps_rdy_shim.c \
 	| tests/host/pwrctrl/test_pwrctrl_ps_rdy.c \

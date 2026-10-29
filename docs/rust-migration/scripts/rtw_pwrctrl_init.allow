@@ -1,0 +1,15 @@
+# W3-189: rtw_init_pwrctrl_priv part 1 — kernel FFI helpers (Rust-only).
+drop rtw_rust_init_is_primary
+drop rtw_rust_init_reg_u8
+drop rtw_rust_init_get_current_time
+drop rtw_rust_init_init_pwrlock
+drop rtw_rust_init_store_u8
+drop rtw_rust_init_store_u32
+drop rtw_rust_init_hal_set_rpwm
+drop rtw_rust_init_init_workitem
+drop rtw_rust_init_init_timer
+drop rtw_rust_init_create_wq
+drop rtw_rust_init_set_lpspg_name
+drop host_pwrctrl_init_reset_trace
+drop host_pwrctrl_init_get_trace
+drop host_pwrctrl_init_set_current_time
