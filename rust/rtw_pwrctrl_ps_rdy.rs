@@ -160,6 +160,7 @@ extern "C" {
     fn rtw_rust_ps_rdy_get_dot11_auth(adapter: Padapter) -> u32;
     fn rtw_rust_ps_rdy_get_binstall_grpkey(adapter: Padapter) -> u8;
     fn rtw_rust_ps_rdy_cfg80211_pwr_mgmt(adapter: Padapter) -> u8;
+    fn rtw_rust_ps_rdy_log_group_handshake_in_progress();
 }
 
 fn ps_rdy_check_impl(adapter: Padapter) -> u8 {
@@ -251,6 +252,7 @@ fn ps_rdy_check_impl(adapter: Padapter) -> u8 {
         if rtw_rust_ps_rdy_get_dot11_auth(adapter) == dot11AuthAlgrthm_8021X
             && rtw_rust_ps_rdy_get_binstall_grpkey(adapter) == _FALSE
         {
+            rtw_rust_ps_rdy_log_group_handshake_in_progress();
             return _FALSE;
         }
 
