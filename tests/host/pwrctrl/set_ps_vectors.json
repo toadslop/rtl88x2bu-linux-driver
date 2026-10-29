@@ -1,0 +1,37 @@
+{
+  "vectors": [
+    {
+      "name": "reject_invalid_ps_mode",
+      "ps_mode": 11,
+      "initial_pwr_mode": 1,
+      "expect_lps_leave_cnts": 0
+    },
+    {
+      "name": "active_already_active",
+      "ps_mode": 0,
+      "initial_pwr_mode": 0,
+      "expect_lps_leave_cnts": 0
+    },
+    {
+      "name": "lps_same_params",
+      "ps_mode": 1,
+      "initial_pwr_mode": 1,
+      "initial_smart_ps": 2,
+      "initial_bcn_ant_mode": 1,
+      "smart_ps": 2,
+      "bcn_ant_mode": 1,
+      "expect_lps_leave_cnts": 0
+    },
+    {
+      "name": "lps_pg_preamble_min",
+      "ps_mode": 1,
+      "initial_pwr_mode": 0,
+      "lps_level": 2,
+      "expect_rsvd_page": 1,
+      "expect_default_port": 1,
+      "expect_hwreg_count": 1,
+      "expect_hwreg0_var": 100,
+      "expect_hwreg0_val": 0
+    }
+  ]
+}
