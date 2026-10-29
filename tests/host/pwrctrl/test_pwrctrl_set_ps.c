@@ -8,6 +8,7 @@ struct vector {
 	char name[64];
 	int ps_mode, smart_ps, bcn_ant_mode;
 	int initial_pwr_mode, initial_smart_ps, initial_bcn_ant_mode;
+	int has_initial_smart_ps, has_initial_bcn_ant_mode;
 	int lps_level;
 	int expect_lps_leave_cnts, expect_rsvd_page, expect_default_port;
 	int expect_hwreg_count, expect_hwreg0_var, expect_hwreg0_val;
@@ -26,8 +27,15 @@ static int parse_vec(const char *o, size_t l, void *v)
 	host_json_parse_int_in(o, l, "smart_ps", &vv->smart_ps);
 	host_json_parse_int_in(o, l, "bcn_ant_mode", &vv->bcn_ant_mode);
 	host_json_parse_int_in(o, l, "initial_pwr_mode", &vv->initial_pwr_mode);
-	host_json_parse_int_in(o, l, "initial_smart_ps", &vv->initial_smart_ps);
-	host_json_parse_int_in(o, l, "initial_bcn_ant_mode", &vv->initial_bcn_ant_mode);
+	if (host_json_find_key_in(o, l, "initial_smart_ps")) {
+		host_json_parse_int_in(o, l, "initial_smart_ps", &vv->initial_smart_ps);
+		vv->has_initial_smart_ps = 1;
+	}
+	if (host_json_find_key_in(o, l, "initial_bcn_ant_mode")) {
+		host_json_parse_int_in(o, l, "initial_bcn_ant_mode",
+				       &vv->initial_bcn_ant_mode);
+		vv->has_initial_bcn_ant_mode = 1;
+	}
 	host_json_parse_int_in(o, l, "lps_level", &vv->lps_level);
 	host_json_parse_int_in(o, l, "expect_lps_leave_cnts", &vv->expect_lps_leave_cnts);
 	host_json_parse_int_in(o, l, "expect_rsvd_page", &vv->expect_rsvd_page);
@@ -46,9 +54,10 @@ static int run_vec(struct vector *v)
 	memset(&g_adapter, 0, sizeof(g_adapter));
 	host_pwrctrl_set_ps_reset_trace();
 	p->pwr_mode = (u8)v->initial_pwr_mode;
-	p->smart_ps = (u8)(v->initial_smart_ps ? v->initial_smart_ps : v->smart_ps);
-	p->bcn_ant_mode = (u8)(v->initial_bcn_ant_mode ? v->initial_bcn_ant_mode :
-						     v->bcn_ant_mode);
+	p->smart_ps = (u8)(v->has_initial_smart_ps ? v->initial_smart_ps : v->smart_ps);
+	p->bcn_ant_mode =
+		(u8)(v->has_initial_bcn_ant_mode ? v->initial_bcn_ant_mode :
+						  v->bcn_ant_mode);
 	p->lps_level = (u8)v->lps_level;
 	rtw_set_ps_mode(&g_adapter, (u8)v->ps_mode, (u8)v->smart_ps, (u8)v->bcn_ant_mode, "H");
 	t = host_pwrctrl_set_ps_get_trace();

@@ -36,6 +36,7 @@ RUST_PWRCTRL_WOW := $(ROOT)/rust/rtw_pwrctrl_wow.rs
 RUST_PWRCTRL_PS_RDY := $(ROOT)/rust/rtw_pwrctrl_ps_rdy.rs
 RUSTC := rustc
 PS_RDY_CFLAGS := $(CFLAGS) -DCONFIG_WOWLAN
+SET_PS_CFLAGS := $(CFLAGS) -DCONFIG_BT_COEXIST -DCONFIG_FW_MULTI_PORT_SUPPORT -DCONFIG_LPS -DCONFIG_LPS_LCLK
 
 .PHONY: all test test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust \
 	test-leave-all test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust \
@@ -250,7 +251,7 @@ test-set-ps: test_pwrctrl_set_ps
 	./test_pwrctrl_set_ps set_ps_vectors.json
 
 test_pwrctrl_set_ps: test_pwrctrl_set_ps.c $(SET_PS_SHIM) $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ test_pwrctrl_set_ps.c $(SET_PS_SHIM) $(HOST_JSON)
+	$(CC) $(SET_PS_CFLAGS) -o $@ test_pwrctrl_set_ps.c $(SET_PS_SHIM) $(HOST_JSON)
 
 clean:
 	rm -f test_pwrctrl_ps_deny test_pwrctrl_ps_deny_rust test_pwrctrl_lps \
