@@ -1243,12 +1243,18 @@ u8 PS_RDY_CHECK(_adapter *padapter)
 
 #if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_PS_RDY_TEST)
 
-u32 rtw_rust_ps_rdy_get_current_time(void)
+/*
+ * systime is unsigned long (jiffies). Do not narrow these to u32.
+ * jiffies starts at INITIAL_JIFFIES, so it crosses 2^32 about five
+ * minutes after boot. A truncated lps_deny_time then still looks
+ * future to time_after(), and PS_RDY_CHECK refuses leisure PS.
+ */
+systime rtw_rust_ps_rdy_get_current_time(void)
 {
 	return rtw_get_current_time();
 }
 
-u8 rtw_rust_ps_rdy_time_after(u32 a, u32 b)
+u8 rtw_rust_ps_rdy_time_after(systime a, systime b)
 {
 	return rtw_time_after(a, b) ? _TRUE : _FALSE;
 }
@@ -1278,10 +1284,15 @@ u8 rtw_rust_ps_rdy_get_b_in_suspend(PADAPTER padapter)
 	return adapter_to_pwrctl(padapter)->bInSuspend;
 }
 
-u32 rtw_rust_ps_rdy_get_lps_deny_time(PADAPTER padapter)
+systime rtw_rust_ps_rdy_get_lps_deny_time(PADAPTER padapter)
 {
 	return adapter_to_pwrctl(padapter)->lps_deny_time;
 }
+
+_Static_assert(sizeof(rtw_rust_ps_rdy_get_current_time()) == sizeof(systime),
+	       "PS_RDY current time must keep full systime width");
+_Static_assert(sizeof(rtw_rust_ps_rdy_get_lps_deny_time((PADAPTER)0)) == sizeof(systime),
+	       "PS_RDY deny time must keep full systime width");
 
 u8 rtw_rust_ps_rdy_get_wowlan_mode(PADAPTER padapter)
 {

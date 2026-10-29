@@ -16,7 +16,11 @@
 use std::ffi::c_void;
 
 #[cfg(not(host_pwrctrl_ps_rdy_test))]
-use core::ffi::c_void;
+use core::ffi::{c_ulong, c_void};
+
+/// Kernel `systime` (`unsigned long` jiffies). Must stay full width.
+#[cfg(not(host_pwrctrl_ps_rdy_test))]
+type Systime = c_ulong;
 
 const _TRUE: u8 = 1;
 const _FALSE: u8 = 0;
@@ -143,14 +147,14 @@ fn mlme_is_monitor(a: &HostAdapter) -> bool {
 
 #[cfg(not(host_pwrctrl_ps_rdy_test))]
 extern "C" {
-    fn rtw_rust_ps_rdy_get_current_time() -> u32;
-    fn rtw_rust_ps_rdy_time_after(a: u32, b: u32) -> u8;
+    fn rtw_rust_ps_rdy_get_current_time() -> Systime;
+    fn rtw_rust_ps_rdy_time_after(a: Systime, b: Systime) -> u8;
     fn rtw_rust_ps_rdy_check_fwstate(adapter: Padapter, state: u32) -> u8;
     fn rtw_rust_ps_rdy_mlme_is_ap(adapter: Padapter) -> u8;
     fn rtw_rust_ps_rdy_mlme_is_mesh(adapter: Padapter) -> u8;
     fn rtw_rust_ps_rdy_mlme_is_monitor(adapter: Padapter) -> u8;
     fn rtw_rust_ps_rdy_get_b_in_suspend(adapter: Padapter) -> u8;
-    fn rtw_rust_ps_rdy_get_lps_deny_time(adapter: Padapter) -> u32;
+    fn rtw_rust_ps_rdy_get_lps_deny_time(adapter: Padapter) -> Systime;
     fn rtw_rust_ps_rdy_get_wowlan_mode(adapter: Padapter) -> u8;
     fn rtw_rust_ps_rdy_get_wowlan_ap_mode(adapter: Padapter) -> u8;
     fn rtw_rust_ps_rdy_cfg80211_get_is_roch(adapter: Padapter) -> u8;
