@@ -4,13 +4,15 @@
       "name": "reject_invalid_ps_mode",
       "ps_mode": 11,
       "initial_pwr_mode": 1,
-      "expect_lps_leave_cnts": 0
+      "expect_lps_leave_cnts": 0,
+      "expect_exec_lps": 0
     },
     {
       "name": "active_already_active",
       "ps_mode": 0,
       "initial_pwr_mode": 0,
-      "expect_lps_leave_cnts": 0
+      "expect_lps_leave_cnts": 0,
+      "expect_exec_lps": 0
     },
     {
       "name": "lps_same_params",
@@ -22,7 +24,8 @@
       "bcn_ant_mode": 1,
       "expect_rsvd_page": 1,
       "expect_default_port": 1,
-      "expect_lps_leave_cnts": 0
+      "expect_lps_leave_cnts": 0,
+      "expect_exec_lps": 0
     },
     {
       "name": "multi_port_preamble_min",
@@ -31,7 +34,40 @@
       "lps_level": 2,
       "expect_rsvd_page": 1,
       "expect_default_port": 1,
+      "expect_hwreg_count": 0,
+      "expect_lps_leave_cnts": 0,
+      "expect_exec_lps": 0
+    },
+    {
+      "name": "active_leave_basic",
+      "ps_mode": 0,
+      "initial_pwr_mode": 1,
+      "expect_lps_leave_cnts": 1,
+      "expect_pwr_mode": 0,
+      "expect_rpwm": 12,
+      "expect_exec_lps": 1,
+      "expect_exec_lps_mode": 0,
+      "expect_b_fw_current_in_ps": 0
+    },
+    {
+      "name": "active_leave_lps_pg",
+      "ps_mode": 0,
+      "initial_pwr_mode": 1,
+      "lps_level": 2,
+      "expect_lps_leave_cnts": 1,
+      "expect_exec_lps": 1,
       "expect_hwreg_count": 0
+    },
+    {
+      "name": "active_leave_wowlan",
+      "ps_mode": 0,
+      "initial_pwr_mode": 1,
+      "wowlan_mode": 1,
+      "sys_clkr_in_32k": 1,
+      "expect_lps_leave_cnts": 1,
+      "expect_wow_fail": 0,
+      "expect_hwreg_count": 0,
+      "expect_exec_lps": 1
     }
   ]
 }
