@@ -60,10 +60,4 @@ void rtw_set_ps_mode(PADAPTER padapter, u8 ps_mode, u8 smart_ps, u8 bcn_ant_mode
 		rtw_hal_set_hwreg(padapter, HOST_HW_VAR_LPS_PG_HANDLE, &lps_pg_hdl_id);
 	}
 #endif
-#ifdef CONFIG_LPS_LCLK
-	_enter_pwrlock(&p->lock);
-	if (ps_mode == PS_MODE_ACTIVE)
-		p->lps_leave_cnts++;
-	_exit_pwrlock(&p->lock);
-#endif
 }
