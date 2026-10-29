@@ -1,0 +1,61 @@
+{
+  "vectors": [
+    {
+      "name": "cmd_sync_calls_cmd_hdl",
+      "cmd_type": 2,
+      "cmd_enqueue": 0,
+      "expect_sync_hdl": 1,
+      "expect_enqueue": 0
+    },
+    {
+      "name": "cmd_enqueue_records_parm",
+      "cmd_type": 1,
+      "cmd_size": 6,
+      "cmd_enqueue": 1,
+      "expect_sync_hdl": 0,
+      "expect_enqueue": 1,
+      "expect_ec_id": 17
+    },
+    {
+      "name": "update_attrib_from_sta",
+      "sta_g_id": 3,
+      "sta_p_aid": 42,
+      "expect_g_id": 3,
+      "expect_p_aid": 42
+    },
+    {
+      "name": "c2h_snd_txbf_end_period",
+      "c2h_id": 2,
+      "c2h_result": 1,
+      "expect_cancel": 1,
+      "expect_end_period": 1,
+      "expect_end_res": 1
+    },
+    {
+      "name": "traffic_apply_sounding",
+      "bfee_used": 1,
+      "bfee_su_cnt": 1,
+      "sta_tx_bytes": 1048576,
+      "time_start": 0,
+      "time_end": 1000,
+      "phydm_idx": 1,
+      "expect_apply": 1,
+      "expect_timer": 1,
+      "expect_sound_state": 1
+    },
+    {
+      "name": "traffic_clear_sounding",
+      "bfee_used": 1,
+      "bfee_su_cnt": 1,
+      "bfee_was_apply": 1,
+      "sta_tx_bytes": 4096,
+      "time_start": 1000,
+      "time_end": 2000,
+      "phydm_idx": 0,
+      "expect_apply": 0,
+      "expect_delete": 1,
+      "expect_timer": 1,
+      "expect_sound_state": 1
+    }
+  ]
+}
