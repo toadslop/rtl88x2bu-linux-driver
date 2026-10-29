@@ -251,7 +251,8 @@ class PullRequest:
 
     def is_issue_filing_pr(self) -> bool:
         """Docs-only PRs that file many issues; body refs are not implementation."""
-        return self.title.lower().startswith("docs:")
+        t = self.title.lower()
+        return t.startswith("docs:") or t.startswith("docs(")
 
     def implements_issue(self, issue_number: int, draft_id: str | None) -> bool:
         if self.is_issue_filing_pr():

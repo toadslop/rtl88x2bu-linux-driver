@@ -14,6 +14,7 @@ LPS_EXEC_SHIM := host_pwrctrl_lps_exec_shim.c
 RPWM_SHIM := host_pwrctrl_rpwm_shim.c
 ALIVE_SHIM := host_pwrctrl_alive_shim.c
 WOW_LPS_SHIM := host_pwrctrl_wow_lps_shim.c
+PS_RDY_SHIM := host_pwrctrl_ps_rdy_shim.c
 
 CC     := gcc
 CFLAGS := -Wall -Wextra -Werror -O2 \
@@ -31,22 +32,25 @@ RUST_PWRCTRL_LPS_EXEC := $(ROOT)/rust/rtw_pwrctrl_lps_exec.rs
 RUST_PWRCTRL_RPWM := $(ROOT)/rust/rtw_pwrctrl_rpwm.rs
 RUST_PWRCTRL_ALIVE := $(ROOT)/rust/rtw_pwrctrl_alive.rs
 RUST_PWRCTRL_WOW := $(ROOT)/rust/rtw_pwrctrl_wow.rs
+RUST_PWRCTRL_PS_RDY := $(ROOT)/rust/rtw_pwrctrl_ps_rdy.rs
 RUSTC := rustc
+PS_RDY_CFLAGS := $(CFLAGS) -DCONFIG_WOWLAN
 
 .PHONY: all test test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust \
 	test-leave-all test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust \
 	test-lps-tp test-lps-tp-rust test-lps-exec test-lps-exec-rust test-rpwm test-rpwm-rust test-register-alive test-register-alive-rust \
-	test-unregister-alive test-unregister-alive-rust test-wow-lps test-wow-lps-rust clean
+	test-unregister-alive test-unregister-alive-rust test-wow-lps test-wow-lps-rust \
+	test-ps-rdy test-ps-rdy-rust clean
 
 all: test test-lps test-lps-enter test-leave-all test-leave-all-rust test-ips test-ips-rust \
 	test-ps-processor test-ps-processor-rust test-lps-tp test-lps-tp-rust test-rpwm test-rpwm-rust \
 	test-register-alive test-register-alive-rust test-unregister-alive test-unregister-alive-rust \
-	test-wow-lps test-wow-lps-rust
+	test-wow-lps test-wow-lps-rust test-ps-rdy test-ps-rdy-rust
 
 test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust test-leave-all \
 	test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust test-lps-tp \
 	test-lps-tp-rust test-lps-exec test-rpwm test-rpwm-rust test-register-alive test-register-alive-rust \
-	test-unregister-alive test-unregister-alive-rust test-wow-lps test-wow-lps-rust
+	test-unregister-alive test-unregister-alive-rust test-wow-lps test-wow-lps-rust test-ps-rdy test-ps-rdy-rust
 
 test-c: test_pwrctrl_ps_deny
 	./test_pwrctrl_ps_deny ps_deny_vectors.json
@@ -224,6 +228,22 @@ test_pwrctrl_lps_rust: test_pwrctrl_lps.c librust_pwrctrl.a $(HOST_JSON)
 test_pwrctrl_lps_enter_rust: test_pwrctrl_lps_enter.c librust_pwrctrl.a $(HOST_JSON)
 	$(CC) $(LPS_ENTER_CFLAGS) -o $@ test_pwrctrl_lps_enter.c $(HOST_JSON) librust_pwrctrl.a
 
+test-ps-rdy: test_pwrctrl_ps_rdy
+	./test_pwrctrl_ps_rdy ps_rdy_vectors.json
+
+test-ps-rdy-rust: test_pwrctrl_ps_rdy_rust
+	./test_pwrctrl_ps_rdy_rust ps_rdy_vectors.json
+
+test_pwrctrl_ps_rdy: test_pwrctrl_ps_rdy.c $(PS_RDY_SHIM) $(HOST_JSON)
+	$(CC) $(PS_RDY_CFLAGS) -o $@ test_pwrctrl_ps_rdy.c $(PS_RDY_SHIM) $(HOST_JSON)
+
+librust_pwrctrl_ps_rdy.a: $(RUST_PWRCTRL_PS_RDY)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_pwrctrl_ps_rdy_test \
+		--crate-type staticlib $(RUST_PWRCTRL_PS_RDY) -o $@
+
+test_pwrctrl_ps_rdy_rust: test_pwrctrl_ps_rdy.c librust_pwrctrl_ps_rdy.a $(HOST_JSON)
+	$(CC) $(PS_RDY_CFLAGS) -o $@ test_pwrctrl_ps_rdy.c $(HOST_JSON) librust_pwrctrl_ps_rdy.a
+
 clean:
 	rm -f test_pwrctrl_ps_deny test_pwrctrl_ps_deny_rust test_pwrctrl_lps \
 		test_pwrctrl_lps_rust test_pwrctrl_lps_enter test_pwrctrl_lps_enter_rust \
@@ -237,4 +257,5 @@ clean:
 		test_pwrctrl_wow_lps_level test_pwrctrl_wow_lps_level_rust \
 		librust_pwrctrl_ps.a librust_pwrctrl_ips.a librust_pwrctrl_lps_tp.a librust_pwrctrl_lps_exec.a \
 		librust_pwrctrl_rpwm.a \
-		librust_pwrctrl_alive.a librust_pwrctrl_wow.a librust_pwrctrl.a
+		librust_pwrctrl_alive.a librust_pwrctrl_wow.a librust_pwrctrl_ps_rdy.a \
+		librust_pwrctrl.a test_pwrctrl_ps_rdy test_pwrctrl_ps_rdy_rust
