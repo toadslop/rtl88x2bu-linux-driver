@@ -16,6 +16,7 @@ ALIVE_SHIM := host_pwrctrl_alive_shim.c
 WOW_LPS_SHIM := host_pwrctrl_wow_lps_shim.c
 PS_RDY_SHIM := host_pwrctrl_ps_rdy_shim.c
 SET_PS_SHIM := host_pwrctrl_set_ps_shim.c
+INIT_SHIM := host_pwrctrl_init_shim.c
 
 CC     := gcc
 CFLAGS := -Wall -Wextra -Werror -O2 \
@@ -39,12 +40,13 @@ RUSTC := rustc
 PS_RDY_CFLAGS := $(CFLAGS) -DCONFIG_WOWLAN
 SET_PS_CFLAGS := $(CFLAGS) -DCONFIG_BT_COEXIST -DCONFIG_FW_MULTI_PORT_SUPPORT -DCONFIG_LPS -DCONFIG_LPS_LCLK
 SET_PS_PG_WOW_CFLAGS := $(SET_PS_CFLAGS) -DCONFIG_LPS_PG -DCONFIG_WOWLAN
+INIT_CFLAGS := $(CFLAGS) -DCONFIG_CONCURRENT_MODE -DCONFIG_LPS_LCLK -DCONFIG_LPS_PG -DCONFIG_RESUME_IN_WORKQUEUE
 
 .PHONY: all test test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust \
 	test-leave-all test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust \
 	test-lps-tp test-lps-tp-rust test-lps-exec test-lps-exec-rust test-rpwm test-rpwm-rust test-register-alive test-register-alive-rust \
 	test-unregister-alive test-unregister-alive-rust test-wow-lps test-wow-lps-rust \
-	test-ps-rdy test-ps-rdy-rust test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow clean
+	test-ps-rdy test-ps-rdy-rust test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init clean
 
 all: test test-lps test-lps-enter test-leave-all test-leave-all-rust test-ips test-ips-rust \
 	test-ps-processor test-ps-processor-rust test-lps-tp test-lps-tp-rust test-rpwm test-rpwm-rust \
@@ -55,7 +57,7 @@ test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust
 	test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust test-lps-tp \
 	test-lps-tp-rust test-lps-exec test-rpwm test-rpwm-rust test-register-alive test-register-alive-rust \
 	test-unregister-alive test-unregister-alive-rust test-wow-lps test-wow-lps-rust test-ps-rdy test-ps-rdy-rust \
-	test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow
+	test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init
 
 test-c: test_pwrctrl_ps_deny
 	./test_pwrctrl_ps_deny ps_deny_vectors.json
@@ -295,6 +297,12 @@ test_pwrctrl_set_ps_rust: test_pwrctrl_set_ps.c librust_pwrctrl_set_ps.a $(HOST_
 test_pwrctrl_set_ps_rust_pg_wow: test_pwrctrl_set_ps.c librust_pwrctrl_set_ps_pg_wow.a $(HOST_JSON)
 	$(CC) $(SET_PS_PG_WOW_CFLAGS) -o $@ test_pwrctrl_set_ps.c $(HOST_JSON) librust_pwrctrl_set_ps_pg_wow.a
 
+test-init: test_pwrctrl_init
+	./test_pwrctrl_init init_vectors.json
+
+test_pwrctrl_init: test_pwrctrl_init.c $(INIT_SHIM) $(HOST_JSON)
+	$(CC) $(INIT_CFLAGS) -o $@ test_pwrctrl_init.c $(INIT_SHIM) $(HOST_JSON)
+
 clean:
 	rm -f test_pwrctrl_ps_deny test_pwrctrl_ps_deny_rust test_pwrctrl_lps \
 		test_pwrctrl_lps_rust test_pwrctrl_lps_enter test_pwrctrl_lps_enter_rust \
@@ -311,5 +319,6 @@ clean:
 		librust_pwrctrl_alive.a librust_pwrctrl_wow.a librust_pwrctrl_ps_rdy.a \
 		test_pwrctrl_set_ps test_pwrctrl_set_ps_pg_wow test_pwrctrl_set_ps_rust \
 		test_pwrctrl_set_ps_rust_pg_wow librust_pwrctrl_set_ps.a librust_pwrctrl_set_ps_pg_wow.a \
+		test_pwrctrl_init \
 		librust_pwrctrl.a test_pwrctrl_ps_rdy test_pwrctrl_ps_rdy_rust \
 		test_pwrctrl_ps_rdy_systime_width librust_pwrctrl_ps_rdy_kern.a

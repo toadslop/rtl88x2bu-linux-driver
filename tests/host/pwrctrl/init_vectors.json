@@ -1,0 +1,39 @@
+{
+  "vectors": [
+    {
+      "name": "defaults_active_ps",
+      "ips_mode": 2,
+      "lps_level": 1,
+      "mp_mode": 0,
+      "power_mgnt": 2,
+      "smart_ps": 2,
+      "expect_rf_pwrstate": 0,
+      "expect_ips_mode": 2,
+      "expect_power_mgnt": 2,
+      "expect_b_leisure_ps": 1,
+      "expect_cpwm": 12,
+      "expect_tog": 128,
+      "expect_wowlan_mode": 0
+    },
+    {
+      "name": "mp_mode_forces_active",
+      "ips_mode": 2,
+      "lps_level": 1,
+      "mp_mode": 1,
+      "power_mgnt": 2,
+      "smart_ps": 1,
+      "expect_power_mgnt": 0,
+      "expect_b_leisure_ps": 0
+    },
+    {
+      "name": "lps_lclk_hwreg",
+      "ips_mode": 0,
+      "lps_level": 2,
+      "mp_mode": 0,
+      "power_mgnt": 1,
+      "smart_ps": 0,
+      "expect_set_rpwm_hwreg": 1,
+      "expect_init_workitem": 3
+    }
+  ]
+}
