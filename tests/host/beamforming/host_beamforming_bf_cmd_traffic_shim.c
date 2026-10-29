@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 /* Host shims for W3-191 cmd/traffic leaf L2 + L1 C reference. */
 
+#include "host_beamforming_bf_init_cmd_oracle.h"
 #include "host_beamforming_bf_cmd_traffic_oracle.h"
 
 struct bf_host_cmd_enqueue_tr bf_host_cmd_enqueue_tr;

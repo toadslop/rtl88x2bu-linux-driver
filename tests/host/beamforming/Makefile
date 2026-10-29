@@ -17,7 +17,8 @@ HOST_JSON := ../crypto/host_vector_json.c
 	test-cmd-traffic clean
 all: test
 
-test: test-c test-rust test-packet test-init-cmd test-init-cmd-rust test-gid test-cmd-traffic
+test: test-c test-rust test-packet test-init-cmd test-init-cmd-rust test-gid test-cmd-traffic \
+	test-cmd-traffic-rust
 
 test-rust: test_bf_entry_packet_rust
 	./test_bf_entry_packet_rust
@@ -40,6 +41,9 @@ test-gid: test_bf_gid_leaf
 test-cmd-traffic: test_bf_cmd_traffic
 	./test_bf_cmd_traffic $(CMD_TRAFFIC_JSON)
 
+test-cmd-traffic-rust: test_bf_cmd_traffic_rust
+	./test_bf_cmd_traffic_rust $(CMD_TRAFFIC_JSON)
+
 test_bf_entry_packet: $(ENTRY_SRC)
 	$(CC) $(CFLAGS) -o $@ $(ENTRY_SRC)
 
@@ -61,6 +65,14 @@ test_bf_gid_leaf: $(GID_SRC)
 test_bf_cmd_traffic: $(CMD_TRAFFIC_SRC) $(CMD_TRAFFIC_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ $(CMD_TRAFFIC_SRC) $(CMD_TRAFFIC_SHIM) $(HOST_JSON)
 
+librust_bf_cmd_traffic.a: $(ROOT)/rust/rtw_beamforming_cmd.rs
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_bf_cmd_traffic_test \
+		--crate-type staticlib $(ROOT)/rust/rtw_beamforming_cmd.rs -o $@
+
+test_bf_cmd_traffic_rust: $(CMD_TRAFFIC_SRC) $(CMD_TRAFFIC_SHIM) librust_bf_cmd_traffic.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DHOST_BF_CMD_TRAFFIC_RUST -o $@ $(CMD_TRAFFIC_SRC) $(CMD_TRAFFIC_SHIM) \
+		$(HOST_JSON) librust_bf_cmd_traffic.a
+
 librust_bf_entry_packet.a: $(RUST_BF)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_bf_entry_packet_test \
 		--crate-type staticlib $(RUST_BF) -o $@
@@ -72,5 +84,5 @@ librust_bf_init_cmd.a: $(RUST_BF)
 clean:
 	rm -f test_bf_entry_packet test_bf_entry_packet_rust test_bf_packet_leaf \
 		test_bf_init_cmd_leaf test_bf_init_cmd_leaf_rust test_bf_gid_leaf \
-		test_bf_cmd_traffic \
-		librust_bf_entry_packet.a librust_bf_init_cmd.a
+		test_bf_cmd_traffic test_bf_cmd_traffic_rust \
+		librust_bf_entry_packet.a librust_bf_init_cmd.a librust_bf_cmd_traffic.a

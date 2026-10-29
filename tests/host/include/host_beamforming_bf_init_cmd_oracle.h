@@ -73,6 +73,7 @@ static inline void o_bf_init(bf_host_padpt adapter)
 	info->sounding_running = 0;
 }
 
+#ifndef HOST_BF_CMD_TRAFFIC_RUST
 static inline void o_bf_cmd_hdl(bf_host_padpt adapter, u8 type, u8 *pbuf)
 {
 	switch (type) {
@@ -101,6 +102,9 @@ static inline void o_bf_cmd_hdl(bf_host_padpt adapter, u8 type, u8 *pbuf)
 		break;
 	}
 }
+#else
+void o_bf_cmd_hdl(bf_host_padpt adapter, u8 type, u8 *pbuf);
+#endif
 #else
 void o_bf_init(bf_host_padpt adapter);
 void o_bf_cmd_hdl(bf_host_padpt adapter, u8 type, u8 *pbuf);
