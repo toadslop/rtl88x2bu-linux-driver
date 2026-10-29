@@ -1365,7 +1365,7 @@ static struct beamformee_entry *_bfee_add_entry(PADAPTER adapter,
 
 #if defined(CONFIG_RUST) && !defined(HOST_BF_SOUND_ENTER_C_REF)
 static void _rust_get_sta_beamform_cap(PADAPTER adapter, struct sta_info *sta,
-				     u8 *sta_bf_cap, u8 *sounding_dim)
+				     u8 *sta_bf_cap, u8 *sounding_dim, u8 *comp_steering)
 {
 	struct beamforming_info *info = GET_BEAMFORM_INFO(adapter);
 	struct ht_priv *ht = &adapter->mlmepriv.htpriv;
@@ -1373,6 +1373,7 @@ static void _rust_get_sta_beamform_cap(PADAPTER adapter, struct sta_info *sta,
 
 	*sta_bf_cap = 0;
 	*sounding_dim = 0;
+	*comp_steering = 0;
 	if (is_supported_ht(sta->wireless_mode) == _FALSE)
 		return;
 	ht_bf_cap = ht->beamform_cap;
@@ -1380,6 +1381,7 @@ static void _rust_get_sta_beamform_cap(PADAPTER adapter, struct sta_info *sta,
 		info->beamforming_cap |= BEAMFORMER_CAP_HT_EXPLICIT;
 		*sta_bf_cap |= BEAMFORMEE_CAP_HT_EXPLICIT;
 		*sounding_dim = (ht_bf_cap & BEAMFORMING_HT_BEAMFORMEE_CHNL_EST_CAP) >> 6;
+		*comp_steering = (ht_bf_cap & BEAMFORMING_HT_BEAMFORMER_STEER_NUM) >> 4;
 	}
 }
 
@@ -1401,7 +1403,7 @@ u8 rtw_rust_beamforming_enter_impl(PADAPTER adapter, void *p)
 {
 	struct sta_info *sta_copy, *sta;
 	struct beamforming_info *info;
-	u8 sta_bf_cap, sounding_dim = 0;
+	u8 sta_bf_cap, sounding_dim = 0, comp_steering = 0;
 	struct beamformee_entry *bfee;
 	u8 wireless_mode;
 
@@ -1419,6 +1421,10 @@ u8 rtw_rust_beamforming_enter_impl(PADAPTER adapter, void *p)
 	if ((is_supported_ht(wireless_mode) == _FALSE)
 	    && (is_supported_vht(wireless_mode) == _FALSE))
 		return _FALSE;
+#ifdef CONFIG_80211AC_VHT
+	if (is_supported_vht(wireless_mode) == _TRUE)
+		return _FALSE;
+#endif
 
 	if (adapter->mlmepriv.htpriv.beamform_cap == 0
 #ifdef CONFIG_80211AC_VHT
@@ -1428,13 +1434,13 @@ u8 rtw_rust_beamforming_enter_impl(PADAPTER adapter, void *p)
 		return _FALSE;
 
 	info = GET_BEAMFORM_INFO(adapter);
-	_rust_get_sta_beamform_cap(adapter, sta, &sta_bf_cap, &sounding_dim);
+	_rust_get_sta_beamform_cap(adapter, sta, &sta_bf_cap, &sounding_dim, &comp_steering);
 	if (_rust_enter_ht_su_bfee_only(sta_bf_cap) == _FALSE)
 		return _FALSE;
 
 	sta_bf_cap |= BEAMFORMEE_CAP;
 
-	bfee = _bfee_add_entry(adapter, sta, sta_bf_cap, sounding_dim, 0);
+	bfee = _bfee_add_entry(adapter, sta, sta_bf_cap, sounding_dim, comp_steering);
 	if (!bfee)
 		return _FALSE;
 
