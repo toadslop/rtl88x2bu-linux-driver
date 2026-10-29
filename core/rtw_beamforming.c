@@ -1433,6 +1433,10 @@ u8 rtw_rust_beamforming_enter_impl(PADAPTER adapter, void *p)
 	   )
 		return _FALSE;
 
+	if (TEST_FLAG(adapter->mlmepriv.htpriv.beamform_cap, BEAMFORMING_HT_BEAMFORMEE_ENABLE)
+	    && TEST_FLAG(adapter->mlmepriv.htpriv.beamform_cap, BEAMFORMING_HT_BEAMFORMER_ENABLE))
+		return _FALSE;
+
 	info = GET_BEAMFORM_INFO(adapter);
 	_rust_get_sta_beamform_cap(adapter, sta, &sta_bf_cap, &sounding_dim, &comp_steering);
 	if (_rust_enter_ht_su_bfee_only(sta_bf_cap) == _FALSE)
