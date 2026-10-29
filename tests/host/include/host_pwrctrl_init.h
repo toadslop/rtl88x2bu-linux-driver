@@ -74,7 +74,7 @@ struct pwrctrl_priv_init {
 };
 
 struct adapter_init {
-	u8 is_primary;
+	u8 adapter_type;
 	struct registry_priv_init registrypriv;
 	struct pwrctrl_priv_init pwrctrlpriv;
 };
@@ -83,6 +83,7 @@ typedef struct adapter_init _adapter;
 typedef struct adapter_init *PADAPTER;
 
 #define adapter_to_pwrctl(a) (&(a)->pwrctrlpriv)
+#define is_primary_adapter(a) ((a)->adapter_type == 0)
 
 struct host_pwrctrl_init_trace {
 	u32 set_rpwm_hwreg_calls;
@@ -95,7 +96,6 @@ struct host_pwrctrl_init_trace {
 void host_pwrctrl_init_reset_trace(void);
 struct host_pwrctrl_init_trace *host_pwrctrl_init_get_trace(void);
 void host_pwrctrl_init_set_current_time(systime t);
-void host_pwrctrl_init_set_is_primary(u8 primary);
 
 void rtw_init_pwrctrl_priv_part1(PADAPTER padapter);
 

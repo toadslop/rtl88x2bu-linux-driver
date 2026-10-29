@@ -7,7 +7,6 @@
 
 static struct host_pwrctrl_init_trace g_trace;
 static systime g_current_time;
-static u8 g_is_primary = 1;
 
 void host_pwrctrl_init_reset_trace(void)
 {
@@ -22,11 +21,6 @@ struct host_pwrctrl_init_trace *host_pwrctrl_init_get_trace(void)
 void host_pwrctrl_init_set_current_time(systime t)
 {
 	g_current_time = t;
-}
-
-void host_pwrctrl_init_set_is_primary(u8 primary)
-{
-	g_is_primary = primary ? 1 : 0;
 }
 
 static void _init_pwrlock(_pwrlock *plock)
@@ -72,7 +66,7 @@ void rtw_init_pwrctrl_priv_part1(PADAPTER padapter)
 	struct registry_priv_init *reg = &padapter->registrypriv;
 
 #if defined(CONFIG_CONCURRENT_MODE)
-	if (!padapter->is_primary) {
+	if (!is_primary_adapter(padapter)) {
 		g_trace.skipped_non_primary = 1;
 		return;
 	}
