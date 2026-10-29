@@ -131,7 +131,6 @@ mod host_trace {
         }
         let a = padapter as *mut HostAdapter;
         let p = unsafe { &mut (*a).pwrctrlpriv };
-        let mut hdl: u8;
         if ps_mode > PM_Card_Disable {
             return;
         }
@@ -139,62 +138,74 @@ mod host_trace {
             if ps_mode == PS_MODE_ACTIVE {
                 return;
             }
+            #[cfg(not(config_bt_coexist))]
             if p.smart_ps == smart_ps && p.bcn_ant_mode == bcn_ant_mode {
                 return;
             }
+            #[cfg(config_bt_coexist)]
+            let _ = (smart_ps, bcn_ant_mode);
         }
+        #[cfg(config_fw_multi_port_support)]
         if ps_mode != PS_MODE_ACTIVE {
             unsafe {
                 G_TRACE.rsvd_page_calls += 1;
                 G_TRACE.default_port_calls += 1;
             }
         }
+        #[cfg(config_lps_pg)]
         if ps_mode != PS_MODE_ACTIVE && p.lps_level == LPS_PG && p.wowlan_mode != _TRUE {
             record_hw(HOST_HW_VAR_LPS_PG_HANDLE, LPS_PG_INFO_CFG);
         }
-        if ps_mode == PS_MODE_ACTIVE {
-            p.lps_leave_cnts = p.lps_leave_cnts.saturating_add(1);
-            p.pwr_mode = ps_mode;
-            unsafe {
-                G_TRACE.rpwm_val = PS_STATE_S4;
-            }
-            if p.wowlan_mode == _TRUE {
-                let t0 = unsafe { G_TIME };
-                loop {
-                    let stuck = unsafe { G_SYS_CLKR_IN_32K != 0 };
-                    if !stuck {
-                        break;
-                    }
-                    if unsafe { G_TIME - t0 } > 20 {
-                        unsafe {
-                            G_TRACE.wow_leave_fail_cnt += 1;
+        #[cfg(config_lps_lclk)]
+        {
+            if ps_mode == PS_MODE_ACTIVE {
+                p.lps_leave_cnts = p.lps_leave_cnts.saturating_add(1);
+                p.pwr_mode = ps_mode;
+                unsafe {
+                    G_TRACE.rpwm_val = PS_STATE_S4;
+                }
+                #[cfg(any(config_wowlan, config_ap_wowlan, config_p2p_wowlan))]
+                if p.wowlan_mode == _TRUE {
+                    let t0 = unsafe { G_TIME };
+                    loop {
+                        let stuck = unsafe { G_SYS_CLKR_IN_32K != 0 };
+                        if !stuck {
+                            break;
                         }
-                        break;
-                    }
+                        if unsafe { G_TIME - t0 } > 20 {
+                            unsafe {
+                                G_TRACE.wow_leave_fail_cnt += 1;
+                            }
+                            break;
+                        }
                         unsafe {
                             G_TIME += 1;
                         }
+                    }
                 }
-            }
-            if p.lps_level == LPS_PG {
-                record_hw(HOST_HW_VAR_LPS_PG_HANDLE, LPS_PG_REDLEMEM);
-            }
-            if p.wowlan_mode == _TRUE {
-                record_hw(HOST_HW_VAR_H2C_INACTIVE_IPS, ps_mode);
+                #[cfg(config_lps_pg)]
+                if p.lps_level == LPS_PG {
+                    record_hw(HOST_HW_VAR_LPS_PG_HANDLE, LPS_PG_REDLEMEM);
+                }
+                #[cfg(config_wowlan)]
+                if p.wowlan_mode == _TRUE {
+                    record_hw(HOST_HW_VAR_H2C_INACTIVE_IPS, ps_mode);
+                }
+                unsafe {
+                    G_TRACE.exec_lps_called = 1;
+                    G_TRACE.exec_lps_ps_mode = ps_mode;
+                }
+                #[cfg(config_lps_pg)]
+                if p.lps_level == LPS_PG {
+                    record_hw(HOST_HW_VAR_LPS_PG_HANDLE, LPS_PG_PHYDM_EN);
+                }
+                p.bFwCurrentInPSMode = 0;
             }
             unsafe {
-                G_TRACE.exec_lps_called = 1;
-                G_TRACE.exec_lps_ps_mode = ps_mode;
+                G_TRACE.lps_leave_cnts = p.lps_leave_cnts;
+                G_TRACE.pwr_mode = p.pwr_mode;
+                G_TRACE.b_fw_current_in_ps = p.bFwCurrentInPSMode;
             }
-            if p.lps_level == LPS_PG {
-                record_hw(HOST_HW_VAR_LPS_PG_HANDLE, LPS_PG_PHYDM_EN);
-            }
-            p.bFwCurrentInPSMode = 0;
-        }
-        unsafe {
-            G_TRACE.lps_leave_cnts = p.lps_leave_cnts;
-            G_TRACE.pwr_mode = p.pwr_mode;
-            G_TRACE.b_fw_current_in_ps = p.bFwCurrentInPSMode;
         }
     }
 }

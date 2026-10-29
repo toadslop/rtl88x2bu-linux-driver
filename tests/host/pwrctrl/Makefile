@@ -273,10 +273,13 @@ test-set-ps-rust-pg-wow: test_pwrctrl_set_ps_rust_pg_wow
 
 librust_pwrctrl_set_ps.a: $(RUST_PWRCTRL_SET_PS)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on $(SET_PS_RUSTCFGS) \
+<<<<<<< HEAD
 		--crate-type staticlib $(RUST_PWRCTRL_SET_PS) -o $@
 
 librust_pwrctrl_set_ps_pg_wow.a: $(RUST_PWRCTRL_SET_PS)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on $(SET_PS_PG_WOW_RUSTCFGS) \
+=======
+>>>>>>> a33661a8 (fix(pwrctrl): mirror set_ps host Kconfig guards in Rust L2 port)
 		--crate-type staticlib $(RUST_PWRCTRL_SET_PS) -o $@
 
 test_pwrctrl_set_ps_rust: test_pwrctrl_set_ps.c librust_pwrctrl_set_ps.a $(HOST_JSON)
