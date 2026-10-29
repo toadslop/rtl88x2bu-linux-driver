@@ -240,7 +240,8 @@ unsafe fn c2h_snd_result(buf: *mut U8) -> U8 {
     if buf.is_null() {
         return 0;
     }
-    if (*buf & 1) != 0 {
+    /* C2H_SND_TXBF_GET_SND_RESULT: LE bit 16 of the C2H payload. */
+    if (*buf.add(2) & 1) != 0 {
         1
     } else {
         0
@@ -325,7 +326,13 @@ pub unsafe extern "C" fn o_bf_c2h_handler(
     let mut res = c2h_snd_result(buf);
     bf_host_c2h_tr.cancel_timer += 1;
     bf_host_c2h_tr.end_period_res = res;
-    o_bf_cmd(adapter, BF_HOST_CMD_END_PERIOD as i32, &mut res as *mut U8, 1, 1);
+    o_bf_cmd(
+        adapter,
+        BF_HOST_CMD_END_PERIOD as i32,
+        &mut res as *mut U8,
+        1,
+        1,
+    );
     bf_host_c2h_tr.end_period_cmd += 1;
 }
 
@@ -374,8 +381,11 @@ pub unsafe extern "C" fn o_bf_update_traffic(adapter: BfHostCmdTrafficPadpt) {
         }
     }
 
-    let sounding_idx =
-        bf_host_phydm_get_beamforming_sounding_info(tp.as_mut_ptr(), BF_HOST_MAX_BFEE_ENTRY as U8, tx_rate.as_mut_ptr());
+    let sounding_idx = bf_host_phydm_get_beamforming_sounding_info(
+        tp.as_mut_ptr(),
+        BF_HOST_MAX_BFEE_ENTRY as U8,
+        tx_rate.as_mut_ptr(),
+    );
 
     for i in 0..BF_HOST_MAX_BFEE_ENTRY {
         let bfee = &mut info.bfee_entry[i];
