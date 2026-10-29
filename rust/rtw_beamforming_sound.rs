@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0
 //! W3-192 beamforming sounding enter — host L2 oracle and kernel hook.
 
-#![allow(dead_code, improper_ctypes, missing_docs, non_snake_case, non_camel_case_types)]
+#![allow(
+    dead_code,
+    improper_ctypes,
+    missing_docs,
+    non_snake_case,
+    non_camel_case_types
+)]
 
 #[cfg(host_bf_sound_enter_test)]
 use std::mem::offset_of;
@@ -206,6 +212,9 @@ extern "C" {
 
 #[cfg(not(host_bf_sound_enter_test))]
 #[no_mangle]
-pub extern "C" fn rtw_rust_beamforming_enter(adapter: *mut core::ffi::c_void, p: *mut core::ffi::c_void) {
+pub extern "C" fn rtw_rust_beamforming_enter(
+    adapter: *mut core::ffi::c_void,
+    p: *mut core::ffi::c_void,
+) {
     unsafe { rtw_rust_beamforming_enter_impl(adapter, p) };
 }
