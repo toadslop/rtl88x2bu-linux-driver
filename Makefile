@@ -2586,6 +2586,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_btcoex_wifionly.o \
 		core/rtw_btcoex.o \
 		core/rtw_beamforming.o \
+		core/rtw_beamforming_cmd_rust_shim.o \
 		core/rtw_odm.o \
 		core/rtw_odm_phydm_init.o \
 		core/rtw_odm_adaptivity_leaf.o \
@@ -3113,6 +3114,7 @@ ifeq ($(CONFIG_WOWLAN), y)
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_wow.o
 endif
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ps_rdy.o
+$(MODULE_NAME)-y += rust/rtw_beamforming_cmd.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
 $(MODULE_NAME)-y += rust/rtw_mlme_80211d.o
@@ -5068,6 +5070,19 @@ rust-objects-rtw-pwrctrl-ps-rdy-c:
 rust-check-symbols-rtw-pwrctrl-ps-rdy: rust-objects-rtw-pwrctrl-ps-rdy-c rust-objects-rtw-pwrctrl-ps-rdy
 	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/ps_rdy_c_ref.o NEW=rust/rtw_pwrctrl_ps_rdy.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_ps_rdy.allow ALLOW_VACUOUS=1
+
+# W3-191: host C oracle vs rust/rtw_beamforming_cmd.o (cmd/traffic leaf).
+rust-objects-rtw-beamforming-cmd:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-beamforming-cmd"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_beamforming_cmd.o
+rust-objects-rtw-beamforming-cmd-c:
+	@mkdir -p tests/host/beamforming
+	gcc -c -Wall -Wextra -Werror -O2 -I$(shell pwd)/tests/host/include \
+		-o tests/host/beamforming/bf_cmd_traffic_kern_c_ref.o \
+		tests/host/beamforming/bf_cmd_traffic_kern_c_ref.c
+rust-check-symbols-rtw-beamforming-cmd: rust-objects-rtw-beamforming-cmd-c rust-objects-rtw-beamforming-cmd
+	$(MAKE) rust-check-symbols OLD=tests/host/beamforming/bf_cmd_traffic_kern_c_ref.o NEW=rust/rtw_beamforming_cmd.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_beamforming_cmd.allow ALLOW_VACUOUS=1
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production

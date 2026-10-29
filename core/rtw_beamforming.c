@@ -1916,6 +1916,7 @@ void rtw_bf_cmd_hdl(PADAPTER adapter, u8 type, u8 *pbuf)
 	}
 }
 
+#if !defined(CONFIG_RUST) || defined(HOST_BF_CMD_TRAFFIC_C_REF)
 u8 rtw_bf_cmd(PADAPTER adapter, s32 type, u8 *pbuf, s32 size, u8 enqueue)
 {
 	struct cmd_obj *ph2c;
@@ -2074,6 +2075,15 @@ void rtw_bf_update_traffic(PADAPTER adapter)
 		}
 	}
 }
+
+#endif /* !CONFIG_RUST || HOST_BF_CMD_TRAFFIC_C_REF — W3-191 in rust/rtw_beamforming_cmd.rs */
+
+#if defined(CONFIG_RUST) && !defined(HOST_BF_CMD_TRAFFIC_C_REF)
+u8 rtw_bf_cmd(PADAPTER adapter, s32 type, u8 *pbuf, s32 size, u8 enqueue);
+void rtw_bf_update_attrib(PADAPTER adapter, struct pkt_attrib *attrib, struct sta_info *sta);
+void rtw_bf_c2h_handler(PADAPTER adapter, u8 id, u8 *buf, u8 buf_len);
+void rtw_bf_update_traffic(PADAPTER adapter);
+#endif
 
 #else /* !RTW_BEAMFORMING_VERSION_2 */
 
