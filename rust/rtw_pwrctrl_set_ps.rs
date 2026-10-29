@@ -1,7 +1,16 @@
 // SPDX-License-Identifier: GPL-2.0
 //! W3-186 — rtw_set_ps_mode part 1 (host L2; kernel wiring in W3-187).
 
-#![allow(dead_code, improper_ctypes, missing_docs, non_camel_case_types, non_snake_case, non_upper_case_globals, unreachable_pub, unused_unsafe)]
+#![allow(
+    dead_code,
+    improper_ctypes,
+    missing_docs,
+    non_camel_case_types,
+    non_snake_case,
+    non_upper_case_globals,
+    unreachable_pub,
+    unused_unsafe
+)]
 
 #[cfg(host_pwrctrl_set_ps_test)]
 use std::ffi::c_void;
@@ -222,6 +231,12 @@ pub extern "C" fn _enter_pwrlock(_plock: *mut i32) {}
 pub extern "C" fn _exit_pwrlock(_plock: *mut i32) {}
 #[cfg(host_pwrctrl_set_ps_test)]
 #[no_mangle]
-pub extern "C" fn rtw_set_ps_mode(padapter: Padapter, ps_mode: u8, smart_ps: u8, bcn_ant_mode: u8, _msg: *const u8) {
+pub extern "C" fn rtw_set_ps_mode(
+    padapter: Padapter,
+    ps_mode: u8,
+    smart_ps: u8,
+    bcn_ant_mode: u8,
+    _msg: *const u8,
+) {
     host_trace::set_ps_mode_impl(padapter, ps_mode, smart_ps, bcn_ant_mode);
 }
