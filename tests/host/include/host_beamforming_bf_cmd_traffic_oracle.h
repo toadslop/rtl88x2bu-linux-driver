@@ -102,9 +102,10 @@ static inline struct bf_host_cmd_traffic_info *bf_host_traffic_info(bf_host_cmd_
 
 static inline u8 bf_host_c2h_snd_result(u8 *buf)
 {
+	/* C2H_SND_TXBF_GET_SND_RESULT: LE bit 16 of the C2H payload (halmac). */
 	if (!buf)
 		return 0;
-	return (buf[0] & 1) ? 1 : 0;
+	return (buf[2] & 1) ? 1 : 0;
 }
 
 void bf_host_cancel_sounding_timeout_timer(bf_host_cmd_traffic_padpt a);

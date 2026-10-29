@@ -14,7 +14,7 @@ CMD_TRAFFIC_JSON := bf_cmd_traffic_vectors.json
 HOST_JSON := ../crypto/host_vector_json.c
 
 .PHONY: all test test-c test-rust test-packet test-init-cmd test-init-cmd-rust test-gid \
-	test-cmd-traffic test-cmd-traffic-rust clean
+	test-cmd-traffic clean
 all: test
 
 test: test-c test-rust test-packet test-init-cmd test-init-cmd-rust test-gid test-cmd-traffic

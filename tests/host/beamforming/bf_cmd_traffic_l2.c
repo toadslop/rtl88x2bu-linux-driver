@@ -132,7 +132,8 @@ static int run_vec(struct vector *v)
 
 	if (v->c2h_id) {
 		memset(c2h_buf, 0, sizeof(c2h_buf));
-		c2h_buf[0] = (u8)v->c2h_result;
+		if (v->c2h_result)
+			c2h_buf[2] |= 1;
 		o_bf_c2h_handler(&g_adpt, (u8)v->c2h_id, c2h_buf, 4);
 		if ((int)bf_host_c2h_tr.cancel_timer != v->expect_cancel ||
 		    (int)bf_host_c2h_tr.end_period_cmd != v->expect_end_period ||
