@@ -94,7 +94,7 @@ struct PwrctrlPriv {
 #[cfg(host_pwrctrl_init_test)]
 #[repr(C)]
 struct HostAdapter {
-    is_primary: u8,
+    adapter_type: u8,
     registrypriv: RegistryPriv,
     pwrctrlpriv: PwrctrlPriv,
 }
@@ -121,7 +121,8 @@ fn init_part1_host(padapter: Padapter) {
     #[cfg(host_pwrctrl_init_test)]
     unsafe {
         let ad = padapter as *mut HostAdapter;
-        if (*ad).is_primary == 0 {
+        #[cfg(concurrent_mode)]
+        if (*ad).adapter_type != 0 {
             G_TRACE.skipped_non_primary = 1;
             return;
         }

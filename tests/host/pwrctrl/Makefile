@@ -309,7 +309,7 @@ test-init-rust: test_pwrctrl_init_rust
 
 librust_pwrctrl_init.a: $(RUST_PWRCTRL_INIT)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_pwrctrl_init_test \
-		--cfg lps_lclk --cfg lps_pg --cfg resume_wq \
+		--cfg concurrent_mode --cfg lps_lclk --cfg lps_pg --cfg resume_wq \
 		--crate-type staticlib $(RUST_PWRCTRL_INIT) -o $@
 
 test_pwrctrl_init_rust: test_pwrctrl_init.c librust_pwrctrl_init.a $(HOST_JSON)
