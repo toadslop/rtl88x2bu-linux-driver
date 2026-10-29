@@ -3217,28 +3217,25 @@ void rtw_rust_init_hal_set_rpwm(PADAPTER padapter)
 
 	rtw_hal_set_hwreg(padapter, HW_VAR_SET_RPWM, (u8 *)(&p->rpwm));
 }
+#else
+void rtw_rust_init_hal_set_rpwm(PADAPTER padapter) { (void)padapter; }
+#endif /* CONFIG_LPS_LCLK */
 
 void rtw_rust_init_init_workitem(PADAPTER padapter, u32 which)
 {
 	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
 
+#ifdef CONFIG_LPS_LCLK
 	if (which == 0)
 		_init_workitem(&p->cpwm_event, cpwm_event_callback, NULL);
 	else if (which == 1)
 		_init_workitem(&p->dma_event, dma_event_callback, NULL);
+#endif
 #ifdef CONFIG_RESUME_IN_WORKQUEUE
-	else if (which == 2)
+	if (which == 2)
 		_init_workitem(&p->resume_work, resume_workitem_callback, NULL);
 #endif
 }
-#else
-void rtw_rust_init_hal_set_rpwm(PADAPTER padapter) { (void)padapter; }
-void rtw_rust_init_init_workitem(PADAPTER padapter, u32 which)
-{
-	(void)padapter;
-	(void)which;
-}
-#endif /* CONFIG_LPS_LCLK */
 
 void rtw_rust_init_init_timer(PADAPTER padapter)
 {
@@ -3253,6 +3250,10 @@ void rtw_rust_init_set_lpspg_name(PADAPTER padapter)
 	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
 
 	p->lpspg_info.name = "LPSPG_INFO";
+#ifdef CONFIG_RTL8822C
+	p->lpspg_dpk_info.name = "LPSPG_DPK_INFO";
+	p->lpspg_iqk_info.name = "LPSPG_IQK_INFO";
+#endif
 }
 #else
 void rtw_rust_init_set_lpspg_name(PADAPTER padapter) { (void)padapter; }

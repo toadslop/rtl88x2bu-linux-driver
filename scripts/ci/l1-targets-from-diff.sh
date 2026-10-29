@@ -154,12 +154,18 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-pwrctrl-wow
 		;;
 	rust/rtw_pwrctrl_ps_rdy.rs \
-	rust/rtw_pwrctrl_init.rs \
 	| core/rtw_pwrctrl.c \
 	| tests/host/pwrctrl/host_pwrctrl_ps_rdy_shim.c \
 	| tests/host/pwrctrl/test_pwrctrl_ps_rdy.c \
 	| tests/host/pwrctrl/ps_rdy_vectors.json)
 		add_target rust-check-symbols-rtw-pwrctrl-ps-rdy
+		;;
+	rust/rtw_pwrctrl_init.rs \
+	| core/rtw_pwrctrl.c \
+	| tests/host/pwrctrl/host_pwrctrl_init_shim.c \
+	| tests/host/pwrctrl/test_pwrctrl_init.c \
+	| tests/host/pwrctrl/init_vectors.json)
+		add_target rust-check-symbols-rtw-pwrctrl-init
 		;;
 	rust/rtw_rf_rest.rs \
 	| rust/rtw_rf_op_class_pref.rs \
