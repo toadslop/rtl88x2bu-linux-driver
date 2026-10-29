@@ -18,14 +18,14 @@ use std::ffi::c_void;
 #[cfg(not(host_pwrctrl_init_test))]
 use core::ffi::c_void;
 
-const _TRUE: u8 = 1;
-const _FALSE: u8 = 0;
-const PS_MODE_ACTIVE: u8 = 0;
-const PS_STATE_S4: u8 = (1 << 3) | (1 << 2);
-const rf_on: u8 = 0;
-const RTW_PWR_STATE_CHK_INTERVAL: u32 = 2000;
+pub const _TRUE: u8 = 1;
+pub const _FALSE: u8 = 0;
+pub const PS_MODE_ACTIVE: u8 = 0;
+pub const PS_STATE_S4: u8 = (1 << 3) | (1 << 2);
+pub const rf_on: u8 = 0;
+pub const RTW_PWR_STATE_CHK_INTERVAL: u32 = 2000;
 
-type Padapter = *mut c_void;
+pub type Padapter = *mut c_void;
 
 #[repr(C)]
 pub struct HostInitTrace {
@@ -217,7 +217,14 @@ pub extern "C" fn host_pwrctrl_init_set_current_time(t: u32) {
     }
 }
 
+#[cfg(not(host_pwrctrl_init_test))]
+#[path = "rtw_pwrctrl_init_kernel.rs"]
+mod kernel;
+
 #[no_mangle]
 pub extern "C" fn rtw_init_pwrctrl_priv_part1(padapter: Padapter) {
+    #[cfg(host_pwrctrl_init_test)]
     init_part1_host(padapter);
+    #[cfg(not(host_pwrctrl_init_test))]
+    kernel::init_part1_kernel(padapter);
 }
