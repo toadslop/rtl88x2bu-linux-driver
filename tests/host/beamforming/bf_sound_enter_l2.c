@@ -167,6 +167,7 @@ void o_beamforming_enter(bf_host_sound_enter_padpt adapter, u8 *p)
 void o_beamforming_enter(bf_host_sound_enter_padpt adapter, u8 *p);
 #endif
 
+#ifndef HOST_BF_SOUND_ENTER_KERN_REF
 static struct bf_host_sound_enter_adpt g_adpt;
 
 static void reset_adpt(u16 ht_cap, u8 sta_used, u8 wm)
@@ -218,3 +219,4 @@ int main(void)
 		printf("PASS 3 vectors (builtin)\n");
 	return bad ? 1 : 0;
 }
+#endif

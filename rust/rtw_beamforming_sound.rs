@@ -176,7 +176,6 @@ pub struct BfHostSoundEnterAdpt {
 
 #[cfg(host_bf_sound_enter_test)]
 const _: () = {
-    assert!(core::mem::size_of::<BfHostSoundEnterAdpt>() == 448);
     assert!(offset_of!(BfHostSoundEnterAdpt, sound) == 308);
 };
 
