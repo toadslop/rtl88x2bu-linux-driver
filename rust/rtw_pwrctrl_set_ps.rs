@@ -125,6 +125,11 @@ mod host_trace {
         }
     }
 
+    extern "C" {
+        fn _enter_pwrlock(plock: *mut i32);
+        fn _exit_pwrlock(plock: *mut i32);
+    }
+
     pub fn set_ps_mode_impl(padapter: Padapter, ps_mode: u8, smart_ps: u8, bcn_ant_mode: u8) {
         if padapter.is_null() {
             return;
@@ -158,8 +163,11 @@ mod host_trace {
         }
         #[cfg(config_lps_lclk)]
         {
+            unsafe {
+                _enter_pwrlock(&mut p.lock);
+            }
             if ps_mode == PS_MODE_ACTIVE {
-                p.lps_leave_cnts = p.lps_leave_cnts.saturating_add(1);
+                p.lps_leave_cnts = p.lps_leave_cnts.wrapping_add(1);
                 p.pwr_mode = ps_mode;
                 unsafe {
                     G_TRACE.rpwm_val = PS_STATE_S4;
@@ -205,6 +213,7 @@ mod host_trace {
                 G_TRACE.lps_leave_cnts = p.lps_leave_cnts;
                 G_TRACE.pwr_mode = p.pwr_mode;
                 G_TRACE.b_fw_current_in_ps = p.bFwCurrentInPSMode;
+                _exit_pwrlock(&mut p.lock);
             }
         }
     }
