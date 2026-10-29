@@ -18,6 +18,7 @@
 #define BF_HOST_MAX_NUM_BEAMFORMEE_SU 2u
 
 struct bf_host_sound_sta_cmn {
+	u8 mac_addr[BF_HOST_ETH_ALEN];
 	u16 aid;
 	u16 mac_id;
 	u8 g_id;
@@ -27,7 +28,6 @@ struct bf_host_sound_sta_cmn {
 struct bf_host_sound_sta {
 	u8 used;
 	u8 wireless_mode;
-	u8 mac_addr[BF_HOST_ETH_ALEN];
 	struct bf_host_sound_sta_cmn cmn;
 };
 
@@ -74,13 +74,13 @@ static struct bf_host_sound_sta *get_stainfo(bf_host_sound_enter_padpt a, u8 *ma
 	for (i = 0; i < 4; i++) {
 		if (!a->stapriv.stas[i].used)
 			continue;
-		if (!memcmp(a->stapriv.stas[i].mac_addr, mac, BF_HOST_ETH_ALEN))
+		if (!memcmp(a->stapriv.stas[i].cmn.mac_addr, mac, BF_HOST_ETH_ALEN))
 			return &a->stapriv.stas[i];
 	}
 	return NULL;
 }
 
-static void beamforming_enter(bf_host_sound_enter_padpt adapter, u8 *p)
+static u8 beamforming_enter(bf_host_sound_enter_padpt adapter, u8 *p)
 {
 	struct bf_host_sound_sta *sta_copy, *sta;
 	struct bf_host_sound_enter_info *info;
@@ -90,13 +90,13 @@ static void beamforming_enter(bf_host_sound_enter_padpt adapter, u8 *p)
 	u8 i;
 
 	if (!adapter || !p)
-		return;
+		return 0;
 	sta_copy = (struct bf_host_sound_sta *)p;
-	sta = get_stainfo(adapter, sta_copy->mac_addr);
+	sta = get_stainfo(adapter, sta_copy->cmn.mac_addr);
 	if (!sta || (sta->wireless_mode & BF_HOST_WIRELESS_11_24N) == 0)
-		return;
+		return 0;
 	if (adapter->ht_beamform_cap == 0 && adapter->vht_beamform_cap == 0)
-		return;
+		return 0;
 	info = &adapter->sound;
 	sta_bf_cap = 0;
 	sounding_dim = 0;
@@ -107,7 +107,7 @@ static void beamforming_enter(bf_host_sound_enter_padpt adapter, u8 *p)
 		sounding_dim = (ht_bf_cap & BF_HOST_BEAMFORMING_HT_BEAMFORMEE_CHNL_EST_CAP) >> 6;
 	}
 	if (sta_bf_cap == BF_HOST_CAP_NONE)
-		return;
+		return 0;
 	if (sta_bf_cap & BF_HOST_BEAMFORMEE_CAP_HT_EXPLICIT)
 		sta_bf_cap |= BF_HOST_BEAMFORMEE_CAP;
 	bfee = NULL;
@@ -118,10 +118,10 @@ static void beamforming_enter(bf_host_sound_enter_padpt adapter, u8 *p)
 		}
 	}
 	if (!bfee)
-		return;
+		return 0;
 	bfee->used = 1;
 	bfee->mac_id = sta->cmn.mac_id;
-	memcpy(bfee->mac_addr, sta->mac_addr, BF_HOST_ETH_ALEN);
+	memcpy(bfee->mac_addr, sta->cmn.mac_addr, BF_HOST_ETH_ALEN);
 	bfee->cap = sta_bf_cap;
 	bfee->NumofSoundingDim = sounding_dim;
 	if (sta_bf_cap & BF_HOST_BEAMFORMEE_CAP_HT_EXPLICIT) {
@@ -139,9 +139,10 @@ static void beamforming_enter(bf_host_sound_enter_padpt adapter, u8 *p)
 		info->sounding_info.state = BF_HOST_SOUNDING_STATE_INIT;
 		tr_timer_ms = 2000;
 	}
+	return 1;
 }
 
-void rtw_rust_beamforming_enter(bf_host_sound_enter_padpt adapter, u8 *p)
+u8 rtw_rust_beamforming_enter(bf_host_sound_enter_padpt adapter, u8 *p)
 {
-	beamforming_enter(adapter, p);
+	return beamforming_enter(adapter, p);
 }

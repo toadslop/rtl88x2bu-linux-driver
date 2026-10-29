@@ -22,7 +22,7 @@
 #ifdef RTW_BEAMFORMING_VERSION_2
 
 #if defined(CONFIG_RUST) && !defined(HOST_BF_SOUND_ENTER_C_REF)
-void rtw_rust_beamforming_enter(PADAPTER adapter, void *p);
+u8 rtw_rust_beamforming_enter(PADAPTER adapter, void *p);
 #endif
 
 struct ndpa_sta_info {
@@ -1429,8 +1429,9 @@ static enum beamforming_cap _bfee_get_entry_cap_by_macid(PADAPTER adapter, u8 ma
 static void _beamforming_enter(PADAPTER adapter, void *p)
 {
 #if defined(CONFIG_RUST) && !defined(HOST_BF_SOUND_ENTER_C_REF)
-	rtw_rust_beamforming_enter(adapter, p);
-#else
+	if (rtw_rust_beamforming_enter(adapter, p) == _TRUE)
+		return;
+#endif
 	struct mlme_priv *mlme;
 	struct ht_priv *htpriv;
 #ifdef CONFIG_80211AC_VHT
@@ -1528,7 +1529,6 @@ static void _beamforming_enter(PADAPTER adapter, void *p)
 			_set_timer(&info->sounding_timer, 2000);
 		}
 	}
-#endif /* CONFIG_RUST && !HOST_BF_SOUND_ENTER_C_REF */
 }
 
 static void _beamforming_reset(PADAPTER adapter)
@@ -2094,7 +2094,7 @@ void rtw_bf_update_traffic(PADAPTER adapter);
 #endif
 
 #if defined(CONFIG_RUST) && !defined(HOST_BF_SOUND_ENTER_C_REF)
-void rtw_rust_beamforming_enter(PADAPTER adapter, void *p);
+u8 rtw_rust_beamforming_enter(PADAPTER adapter, void *p);
 #endif
 
 #else /* !RTW_BEAMFORMING_VERSION_2 */
