@@ -15,6 +15,7 @@ use std::mem::offset_of;
 type U8 = u8;
 type U16 = u16;
 type U32 = u32;
+type U64 = u64;
 
 const BF_HOST_ETH_ALEN: usize = 6;
 const BF_HOST_WIRELESS_11_24N: U8 = 8;
@@ -28,11 +29,100 @@ const BF_HOST_SOUNDING_STATE_NONE: U8 = 0;
 const BF_HOST_SOUNDING_STATE_INIT: U8 = 1;
 const BF_HOST_MAX_BEAMFORMEE_ENTRY: usize = 8;
 const BF_HOST_MAX_NUM_BEAMFORMEE_SU: usize = 2;
-const BF_HOST_ADPT_BASE_BYTES: usize = 240;
+
+#[cfg(host_bf_sound_enter_test)]
+#[repr(C)]
+pub struct BfHostSoundingInfo {
+    pub su_sounding_list: [U8; 2],
+    pub mu_sounding_list: [U8; 6],
+    pub state: U8,
+    pub su_bfee_curidx: U8,
+    pub candidate_mu_bfee_cnt: U8,
+    pub min_sounding_period: U16,
+    pub sound_remain_cnt_per_period: U8,
+}
+
+#[cfg(host_bf_sound_enter_test)]
+#[repr(C)]
+pub struct BfHostBfee {
+    pub used: U8,
+    pub mac_id: U16,
+    pub mac_addr: [U8; BF_HOST_ETH_ALEN],
+    pub cap: u32,
+}
+
+#[cfg(host_bf_sound_enter_test)]
+#[repr(C)]
+pub struct BfHostBfer {
+    pub used: U8,
+    pub mac_addr: [U8; BF_HOST_ETH_ALEN],
+}
+
+#[cfg(host_bf_sound_enter_test)]
+#[repr(C)]
+pub struct BfHostCsi {
+    pub Nc: U8,
+    pub Nr: U8,
+    pub Ng: U8,
+    pub CodeBook: U8,
+    pub ChnlWidth: U8,
+    pub bVHT: U8,
+}
+
+#[cfg(host_bf_sound_enter_test)]
+#[repr(C)]
+pub struct BfHostInfo {
+    pub bfee: [BfHostBfee; 8],
+    pub bfer: [BfHostBfer; 3],
+    pub bEnableSUTxBFWorkAround: U8,
+    pub TargetCSIInfo: BfHostCsi,
+    pub TargetSUBFee: *mut BfHostBfee,
+    pub beamforming_cap: U8,
+    pub beamforming_state: U8,
+    pub sounding_sequence: U8,
+    pub beamformee_su_cnt: U8,
+    pub beamformer_su_cnt: U8,
+    pub beamformee_su_reg_maping: U32,
+    pub beamformer_su_reg_maping: U32,
+    pub beamformee_mu_cnt: U8,
+    pub beamformer_mu_cnt: U8,
+    pub beamformee_mu_reg_maping: U32,
+    pub first_mu_bfee_index: U8,
+    pub mu_bfer_curidx: U8,
+    pub cur_csi_rpt_rate: U8,
+    pub sounding_info: BfHostSoundingInfo,
+    pub SetHalBFEnterOnDemandCnt: U8,
+    pub SetHalBFLeaveOnDemandCnt: U8,
+    pub SetHalSoundownOnDemandCnt: U8,
+    pub sounding_running: i8,
+    pub timer_inits: U8,
+}
+
+#[cfg(host_bf_sound_enter_test)]
+#[repr(C)]
+pub struct BfHostHal {
+    pub beamforming_info: BfHostInfo,
+}
+
+#[cfg(host_bf_sound_enter_test)]
+#[repr(C)]
+pub struct BfHostMlme {
+    pub pad: U8,
+    pub mac_addr: [U8; BF_HOST_ETH_ALEN],
+    pub bssid: [U8; BF_HOST_ETH_ALEN],
+}
+
+#[cfg(host_bf_sound_enter_test)]
+#[repr(C)]
+pub struct BfHostAdpt {
+    pub mlmepriv: BfHostMlme,
+    pub hal: BfHostHal,
+}
 
 #[cfg(host_bf_sound_enter_test)]
 #[repr(C)]
 pub struct BfHostSoundStaCmn {
+    pub mac_addr: [U8; BF_HOST_ETH_ALEN],
     pub aid: U16,
     pub mac_id: U16,
     pub g_id: U8,
@@ -44,7 +134,6 @@ pub struct BfHostSoundStaCmn {
 pub struct BfHostSoundSta {
     pub used: U8,
     pub wireless_mode: U8,
-    pub mac_addr: [U8; BF_HOST_ETH_ALEN],
     pub cmn: BfHostSoundStaCmn,
 }
 
@@ -67,18 +156,6 @@ pub struct BfHostSoundBfeeEntry {
 
 #[cfg(host_bf_sound_enter_test)]
 #[repr(C)]
-pub struct BfHostSoundingInfo {
-    pub su_sounding_list: [U8; 2],
-    pub mu_sounding_list: [U8; 6],
-    pub state: U8,
-    pub su_bfee_curidx: U8,
-    pub candidate_mu_bfee_cnt: U8,
-    pub min_sounding_period: U16,
-    pub sound_remain_cnt_per_period: U8,
-}
-
-#[cfg(host_bf_sound_enter_test)]
-#[repr(C)]
 pub struct BfHostSoundEnterInfo {
     pub bfee_entry: [BfHostSoundBfeeEntry; BF_HOST_MAX_BEAMFORMEE_ENTRY],
     pub beamforming_cap: U8,
@@ -90,7 +167,7 @@ pub struct BfHostSoundEnterInfo {
 #[cfg(host_bf_sound_enter_test)]
 #[repr(C)]
 pub struct BfHostSoundEnterAdpt {
-    pub base: [U8; BF_HOST_ADPT_BASE_BYTES],
+    pub base: BfHostAdpt,
     pub ht_beamform_cap: U16,
     pub vht_beamform_cap: U16,
     pub stapriv: BfHostSoundStapriv,
@@ -155,7 +232,7 @@ unsafe fn sound_bfee_add_entry(
     let bfee = &mut info.bfee_entry[i];
     bfee.used = 1;
     bfee.mac_id = (*sta).cmn.mac_id;
-    bfee.mac_addr = (*sta).mac_addr;
+    bfee.mac_addr = (*sta).cmn.mac_addr;
     bfee.cap = bf_cap;
     bfee.NumofSoundingDim = sounding_dim;
     if (bf_cap & BF_HOST_BEAMFORMEE_CAP_HT_EXPLICIT) != 0 {
@@ -178,7 +255,7 @@ pub unsafe extern "C" fn o_beamforming_enter(adapter: BfHostSoundEnterPadpt, p: 
         return;
     }
     let sta_copy = p as *mut BfHostSoundSta;
-    let sta = bf_host_sound_get_stainfo(adapter, (*sta_copy).mac_addr.as_mut_ptr());
+    let sta = bf_host_sound_get_stainfo(adapter, (*sta_copy).cmn.mac_addr.as_mut_ptr());
     if sta.is_null() || ((*sta).wireless_mode & BF_HOST_WIRELESS_11_24N) == 0 {
         return;
     }
