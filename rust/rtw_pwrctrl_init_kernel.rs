@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0
 //! Kernel half of W3-189 init part 1 (C FFI in `core/rtw_pwrctrl.c`).
 
-use super::{Padapter, PS_MODE_ACTIVE, PS_STATE_S4, RTW_PWR_STATE_CHK_INTERVAL, _FALSE, _TRUE, rf_on};
+use super::{
+    rf_on, Padapter, PS_MODE_ACTIVE, PS_STATE_S4, RTW_PWR_STATE_CHK_INTERVAL, _FALSE, _TRUE,
+};
 
 extern "C" {
     fn rtw_rust_init_is_primary(padapter: Padapter) -> u8;
