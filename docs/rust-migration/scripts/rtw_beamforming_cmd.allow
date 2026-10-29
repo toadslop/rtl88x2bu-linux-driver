@@ -1,0 +1,5 @@
+# W3-191: beamforming cmd/traffic leaf — Rust FFI impl helpers (kernel-only).
+drop rtw_rust_bf_cmd_impl
+drop rtw_rust_bf_update_attrib_impl
+drop rtw_rust_bf_c2h_handler_impl
+drop rtw_rust_bf_update_traffic_impl

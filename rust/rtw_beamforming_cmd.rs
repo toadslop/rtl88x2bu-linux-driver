@@ -424,3 +424,65 @@ const _: () = {
     assert!(core::mem::size_of::<BfHostCmdTrafficAdpt>() == 616);
     assert!(core::mem::offset_of!(BfHostCmdTrafficAdpt, traffic) == 336);
 };
+
+#[cfg(not(host_bf_cmd_traffic_test))]
+extern "C" {
+    fn rtw_rust_bf_cmd_impl(
+        adapter: *mut core::ffi::c_void,
+        ty: core::ffi::c_int,
+        pbuf: *mut U8,
+        size: core::ffi::c_int,
+        enqueue: U8,
+    ) -> U8;
+    fn rtw_rust_bf_update_attrib_impl(
+        adapter: *mut core::ffi::c_void,
+        attrib: *mut core::ffi::c_void,
+        sta: *mut core::ffi::c_void,
+    );
+    fn rtw_rust_bf_c2h_handler_impl(
+        adapter: *mut core::ffi::c_void,
+        id: U8,
+        buf: *mut U8,
+        buf_len: U8,
+    );
+    fn rtw_rust_bf_update_traffic_impl(adapter: *mut core::ffi::c_void);
+}
+
+#[cfg(not(host_bf_cmd_traffic_test))]
+#[no_mangle]
+pub extern "C" fn rtw_bf_cmd(
+    adapter: *mut core::ffi::c_void,
+    ty: core::ffi::c_int,
+    pbuf: *mut U8,
+    size: core::ffi::c_int,
+    enqueue: U8,
+) -> U8 {
+    unsafe { rtw_rust_bf_cmd_impl(adapter, ty, pbuf, size, enqueue) }
+}
+
+#[cfg(not(host_bf_cmd_traffic_test))]
+#[no_mangle]
+pub extern "C" fn rtw_bf_update_attrib(
+    adapter: *mut core::ffi::c_void,
+    attrib: *mut core::ffi::c_void,
+    sta: *mut core::ffi::c_void,
+) {
+    unsafe { rtw_rust_bf_update_attrib_impl(adapter, attrib, sta) };
+}
+
+#[cfg(not(host_bf_cmd_traffic_test))]
+#[no_mangle]
+pub extern "C" fn rtw_bf_c2h_handler(
+    adapter: *mut core::ffi::c_void,
+    id: U8,
+    buf: *mut U8,
+    buf_len: U8,
+) {
+    unsafe { rtw_rust_bf_c2h_handler_impl(adapter, id, buf, buf_len) };
+}
+
+#[cfg(not(host_bf_cmd_traffic_test))]
+#[no_mangle]
+pub extern "C" fn rtw_bf_update_traffic(adapter: *mut core::ffi::c_void) {
+    unsafe { rtw_rust_bf_update_traffic_impl(adapter) };
+}
