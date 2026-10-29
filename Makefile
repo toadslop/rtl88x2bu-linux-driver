@@ -5108,7 +5108,6 @@ rust-objects-rtw-beamforming-sound:
 rust-objects-rtw-beamforming-sound-c:
 	@mkdir -p tests/host/beamforming
 	gcc -c -Wall -Wextra -Werror -O2 -I$(shell pwd)/tests/host/include \
-		-DHOST_BF_SOUND_ENTER_KERN_REF \
 		-o tests/host/beamforming/bf_sound_enter_kern_c_ref.o \
 		tests/host/beamforming/bf_sound_enter_kern_c_ref.c
 rust-check-symbols-rtw-beamforming-sound: rust-objects-rtw-beamforming-sound-c rust-objects-rtw-beamforming-sound
