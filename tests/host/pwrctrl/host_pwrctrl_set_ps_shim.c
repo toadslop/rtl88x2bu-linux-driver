@@ -10,7 +10,7 @@ void host_pwrctrl_set_ps_reset_hal(void) { g_sys_clkr_in_32k = 0; g_time = 0; }
 void host_pwrctrl_set_ps_set_sys_clkr_in_32k(u8 v) { g_sys_clkr_in_32k = v ? 1 : 0; }
 void _enter_pwrlock(_pwrlock *plock) { (void)plock; }
 void _exit_pwrlock(_pwrlock *plock) { (void)plock; }
-#ifdef CONFIG_LPS_PG
+#if defined(CONFIG_LPS_PG) || defined(CONFIG_WOWLAN)
 static void record_hw(u8 var, u8 val)
 {
 	u32 n = g_trace.hwreg_count;
@@ -41,7 +41,12 @@ static void rtw_hal_get_hwreg(PADAPTER a, u8 var, u8 *pval)
 	(void)a;
 	*pval = (var == HOST_HW_VAR_SYS_CLKR && g_sys_clkr_in_32k) ? (1U << 4) : 0;
 }
-static void rtw_usleep_os(int us) { (void)us; g_time += 25; }
+static void rtw_usleep_os(int us)
+{
+	(void)us;
+	/* Host mock: advance passing-time ms like rtw_get_passing_time_ms(). */
+	g_time += 1;
+}
 #endif
 void rtw_set_ps_mode(PADAPTER padapter, u8 ps_mode, u8 smart_ps, u8 bcn_ant_mode,
 		     const char *msg)
