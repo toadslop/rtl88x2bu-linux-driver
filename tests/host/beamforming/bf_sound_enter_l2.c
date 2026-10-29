@@ -63,14 +63,10 @@ struct bf_host_sound_enter_adpt {
 
 typedef struct bf_host_sound_enter_adpt *bf_host_sound_enter_padpt;
 
-struct bf_host_sound_enter_tr {
-	u32 hal_sounding_enter;
-	u32 sounding_timer_ms;
-};
+u32 bf_host_sound_enter_tr_hal;
+u32 bf_host_sound_enter_tr_timer_ms;
 
-static struct bf_host_sound_enter_tr bf_host_sound_enter_tr;
-
-static struct bf_host_sound_sta *bf_host_sound_get_stainfo(bf_host_sound_enter_padpt a, u8 *mac)
+struct bf_host_sound_sta *bf_host_sound_get_stainfo(bf_host_sound_enter_padpt a, u8 *mac)
 {
 	unsigned i;
 
@@ -161,12 +157,15 @@ void o_beamforming_enter(bf_host_sound_enter_padpt adapter, u8 *p)
 	bfee = o_sound_bfee_add_entry(adapter, sta, sta_bf_cap, sounding_dim);
 	if (!bfee)
 		return;
-	bf_host_sound_enter_tr.hal_sounding_enter += 1;
+	bf_host_sound_enter_tr_hal += 1;
 	if (info->beamformee_su_cnt && info->sounding_info.state == BF_HOST_SOUNDING_STATE_NONE) {
 		info->sounding_info.state = BF_HOST_SOUNDING_STATE_INIT;
-		bf_host_sound_enter_tr.sounding_timer_ms = 2000;
+		bf_host_sound_enter_tr_timer_ms = 2000;
 	}
 }
+#else
+void o_beamforming_enter(bf_host_sound_enter_padpt adapter, u8 *p);
+#endif
 
 static struct bf_host_sound_enter_adpt g_adpt;
 
@@ -175,7 +174,8 @@ static void reset_adpt(u16 ht_cap, u8 sta_used, u8 wm)
 	u8 mac[6] = {0xaa, 0, 0, 0, 0, 1};
 
 	memset(&g_adpt, 0, sizeof(g_adpt));
-	memset(&bf_host_sound_enter_tr, 0, sizeof(bf_host_sound_enter_tr));
+	bf_host_sound_enter_tr_hal = 0;
+	bf_host_sound_enter_tr_timer_ms = 0;
 	o_bf_init(&g_adpt.base);
 	bf_host_sounding_init(&g_adpt.sound.sounding_info);
 	g_adpt.ht_beamform_cap = ht_cap;
@@ -196,10 +196,10 @@ static int run_enter(u16 ht_cap, u8 sta_used, u8 wm, int x_hal, int x_bfee, int 
 	reset_adpt(ht_cap, sta_used, wm);
 	memcpy(stub.cmn.mac_addr, mac, 6);
 	o_beamforming_enter(&g_adpt, (u8 *)&stub);
-	if ((int)bf_host_sound_enter_tr.hal_sounding_enter != x_hal ||
+	if ((int)bf_host_sound_enter_tr_hal != x_hal ||
 	    (int)g_adpt.sound.beamformee_su_cnt != x_bfee ||
 	    (x_state && (int)g_adpt.sound.sounding_info.state != x_state) ||
-	    (x_ms && (int)bf_host_sound_enter_tr.sounding_timer_ms != x_ms)) {
+	    (x_ms && (int)bf_host_sound_enter_tr_timer_ms != x_ms)) {
 		fprintf(stderr, "FAIL %s\n", name);
 		return 1;
 	}
@@ -218,4 +218,3 @@ int main(void)
 		printf("PASS 3 vectors (builtin)\n");
 	return bad ? 1 : 0;
 }
-#endif

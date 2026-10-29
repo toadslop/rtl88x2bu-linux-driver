@@ -12,14 +12,15 @@ CMD_TRAFFIC_SRC := bf_cmd_traffic_l2.c
 CMD_TRAFFIC_SHIM := host_beamforming_bf_cmd_traffic_shim.c
 CMD_TRAFFIC_JSON := bf_cmd_traffic_vectors.json
 SOUND_ENTER_SRC := bf_sound_enter_l2.c
+RUST_SOUND := $(ROOT)/rust/rtw_beamforming_sound.rs
 HOST_JSON := ../crypto/host_vector_json.c
 
 .PHONY: all test test-c test-rust test-packet test-init-cmd test-init-cmd-rust test-gid \
-	test-cmd-traffic test-sound-enter clean
+	test-cmd-traffic test-sound-enter test-sound-enter-rust clean
 all: test
 
 test: test-c test-rust test-packet test-init-cmd test-init-cmd-rust test-gid test-cmd-traffic \
-	test-cmd-traffic-rust test-sound-enter
+	test-cmd-traffic-rust test-sound-enter test-sound-enter-rust
 
 test-rust: test_bf_entry_packet_rust
 	./test_bf_entry_packet_rust
@@ -48,8 +49,18 @@ test-cmd-traffic-rust: test_bf_cmd_traffic_rust
 test-sound-enter: test_bf_sound_enter
 	./test_bf_sound_enter
 
+test-sound-enter-rust: test_bf_sound_enter_rust
+	./test_bf_sound_enter_rust
+
 test_bf_sound_enter: $(SOUND_ENTER_SRC)
 	$(CC) $(CFLAGS) -o $@ $(SOUND_ENTER_SRC)
+
+test_bf_sound_enter_rust: $(SOUND_ENTER_SRC) librust_bf_sound_enter.a
+	$(CC) $(CFLAGS) -DHOST_BF_SOUND_ENTER_RUST -o $@ $(SOUND_ENTER_SRC) librust_bf_sound_enter.a
+
+librust_bf_sound_enter.a: $(RUST_SOUND)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_bf_sound_enter_test \
+		--crate-type staticlib $(RUST_SOUND) -o $@
 
 test_bf_entry_packet: $(ENTRY_SRC)
 	$(CC) $(CFLAGS) -o $@ $(ENTRY_SRC)
@@ -91,5 +102,5 @@ librust_bf_init_cmd.a: $(RUST_BF)
 clean:
 	rm -f test_bf_entry_packet test_bf_entry_packet_rust test_bf_packet_leaf \
 		test_bf_init_cmd_leaf test_bf_init_cmd_leaf_rust test_bf_gid_leaf \
-		test_bf_cmd_traffic test_bf_cmd_traffic_rust test_bf_sound_enter \
-		librust_bf_entry_packet.a librust_bf_init_cmd.a librust_bf_cmd_traffic.a
+		test_bf_cmd_traffic test_bf_cmd_traffic_rust test_bf_sound_enter test_bf_sound_enter_rust \
+		librust_bf_entry_packet.a librust_bf_init_cmd.a librust_bf_cmd_traffic.a librust_bf_sound_enter.a
