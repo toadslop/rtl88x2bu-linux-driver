@@ -1348,6 +1348,11 @@ u8 rtw_rust_ps_rdy_cfg80211_pwr_mgmt(PADAPTER padapter)
 #endif
 }
 
+void rtw_rust_ps_rdy_log_group_handshake_in_progress(void)
+{
+	RTW_INFO("Group handshake still in progress !!!\n");
+}
+
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_PS_RDY_TEST */
 
 #if defined(CONFIG_FWLPS_IN_IPS)
