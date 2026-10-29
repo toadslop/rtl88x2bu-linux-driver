@@ -19,6 +19,7 @@
 #define BF_HOST_MAX_NUM_BEAMFORMEE_SU 2u
 
 struct bf_host_sound_sta_cmn {
+	u8 mac_addr[BF_HOST_ETH_ALEN];
 	u16 aid;
 	u16 mac_id;
 	u8 g_id;
@@ -28,7 +29,6 @@ struct bf_host_sound_sta_cmn {
 struct bf_host_sound_sta {
 	u8 used;
 	u8 wireless_mode;
-	u8 mac_addr[BF_HOST_ETH_ALEN];
 	struct bf_host_sound_sta_cmn cmn;
 };
 
@@ -79,7 +79,7 @@ static struct bf_host_sound_sta *bf_host_sound_get_stainfo(bf_host_sound_enter_p
 	for (i = 0; i < 4; i++) {
 		if (!a->stapriv.stas[i].used)
 			continue;
-		if (!memcmp(a->stapriv.stas[i].mac_addr, mac, BF_HOST_ETH_ALEN))
+		if (!memcmp(a->stapriv.stas[i].cmn.mac_addr, mac, BF_HOST_ETH_ALEN))
 			return &a->stapriv.stas[i];
 	}
 	return NULL;
@@ -121,7 +121,7 @@ static struct bf_host_sound_bfee_entry *o_sound_bfee_add_entry(
 		return NULL;
 	bfee->used = 1;
 	bfee->mac_id = sta->cmn.mac_id;
-	memcpy(bfee->mac_addr, sta->mac_addr, BF_HOST_ETH_ALEN);
+	memcpy(bfee->mac_addr, sta->cmn.mac_addr, BF_HOST_ETH_ALEN);
 	bfee->cap = bf_cap;
 	bfee->NumofSoundingDim = sounding_dim;
 	if (bf_cap & BF_HOST_BEAMFORMEE_CAP_HT_EXPLICIT) {
@@ -147,7 +147,7 @@ void o_beamforming_enter(bf_host_sound_enter_padpt adapter, u8 *p)
 	if (!adapter || !p)
 		return;
 	sta_copy = (struct bf_host_sound_sta *)p;
-	sta = bf_host_sound_get_stainfo(adapter, sta_copy->mac_addr);
+	sta = bf_host_sound_get_stainfo(adapter, sta_copy->cmn.mac_addr);
 	if (!sta || (sta->wireless_mode & BF_HOST_WIRELESS_11_24N) == 0)
 		return;
 	if (adapter->ht_beamform_cap == 0 && adapter->vht_beamform_cap == 0)
@@ -182,7 +182,7 @@ static void reset_adpt(u16 ht_cap, u8 sta_used, u8 wm)
 	if (sta_used) {
 		g_adpt.stapriv.stas[0].used = 1;
 		g_adpt.stapriv.stas[0].wireless_mode = wm;
-		memcpy(g_adpt.stapriv.stas[0].mac_addr, mac, 6);
+		memcpy(g_adpt.stapriv.stas[0].cmn.mac_addr, mac, 6);
 		g_adpt.stapriv.stas[0].cmn.mac_id = 3;
 	}
 }
@@ -194,7 +194,7 @@ static int run_enter(u16 ht_cap, u8 sta_used, u8 wm, int x_hal, int x_bfee, int 
 	u8 mac[6] = {0xaa, 0, 0, 0, 0, 1};
 
 	reset_adpt(ht_cap, sta_used, wm);
-	memcpy(stub.mac_addr, mac, 6);
+	memcpy(stub.cmn.mac_addr, mac, 6);
 	o_beamforming_enter(&g_adpt, (u8 *)&stub);
 	if ((int)bf_host_sound_enter_tr.hal_sounding_enter != x_hal ||
 	    (int)g_adpt.sound.beamformee_su_cnt != x_bfee ||
