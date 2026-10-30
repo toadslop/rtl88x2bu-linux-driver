@@ -3,6 +3,7 @@ drop rtw_rust_fw_ips_netif_up
 drop rtw_rust_fw_ips_ips_mode_req
 drop rtw_rust_fw_ips_set_tog
 drop rtw_rust_fw_ips_btcoex_ips_notify
+drop rtw_rust_fw_ips_fill_pno_h2c_parms
 drop rtw_rust_fw_ips_hal_fill_h2c
 drop rtw_rust_fw_ips_read8
 drop rtw_rust_fw_ips_hal_get_cpwm

@@ -1510,6 +1510,22 @@ void rtw_rust_fw_ips_btcoex_ips_notify(PADAPTER padapter, u8 mode)
 #endif
 }
 
+void rtw_rust_fw_ips_fill_pno_h2c_parms(PADAPTER padapter, u8 *parm1, u8 *parm2)
+{
+#ifdef CONFIG_PNO_SUPPORT
+	struct pwrctrl_priv *pwr = adapter_to_pwrctl(padapter);
+
+	if (pwr->pno_inited && pwr->pnlo_info) {
+		*parm1 = pwr->pnlo_info->fast_scan_iterations;
+		*parm2 = pwr->pnlo_info->slow_scan_period;
+	}
+#else
+	(void)padapter;
+	(void)parm1;
+	(void)parm2;
+#endif
+}
+
 void rtw_rust_fw_ips_hal_fill_h2c(PADAPTER padapter, u8 cmd, u8 len, u8 *parm)
 {
 	rtw_hal_fill_h2c_cmd(padapter, cmd, len, parm);
