@@ -22,8 +22,16 @@ type Padapter = *mut c_void;
 
 const _TRUE: u8 = 1;
 const _FALSE: u8 = 0;
-const _SUCCESS: c_int = 0;
-const _FAIL: c_int = -1;
+
+#[cfg(host_pwrctrl_pm_test)]
+const PWR_WAKEUP_OK: c_int = 0;
+#[cfg(host_pwrctrl_pm_test)]
+const PWR_WAKEUP_FAIL: c_int = -1;
+
+#[cfg(not(host_pwrctrl_pm_test))]
+const PWR_WAKEUP_OK: c_int = 1;
+#[cfg(not(host_pwrctrl_pm_test))]
+const PWR_WAKEUP_FAIL: c_int = 0;
 
 const PS_MODE_ACTIVE: u8 = 0;
 const PS_MODE_NUM: u8 = 9;
@@ -63,7 +71,7 @@ static mut G_TRACE: HostPmTrace = HostPmTrace {
 };
 
 #[cfg(host_pwrctrl_pm_test)]
-static mut G_PWR_WAKEUP_RESULT: c_int = _SUCCESS;
+static mut G_PWR_WAKEUP_RESULT: c_int = PWR_WAKEUP_OK;
 
 #[cfg(host_pwrctrl_pm_test)]
 #[repr(C)]
@@ -248,7 +256,7 @@ pub extern "C" fn rtw_pm_set_ips(adapter: Padapter, mode: u8) -> c_int {
     }
     if mode == IPS_NONE {
         ips_mode_req(adapter, mode);
-        if is_surprise_removed(adapter) == _FALSE && pwr_wakeup(adapter) == _FAIL {
+        if is_surprise_removed(adapter) == _FALSE && pwr_wakeup(adapter) == PWR_WAKEUP_FAIL {
             return EFAULT;
         }
         return 0;
