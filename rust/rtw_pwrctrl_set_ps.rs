@@ -373,6 +373,7 @@ extern "C" {
     fn rtw_rust_set_ps_lps_pg_phydm_dis(padapter: Padapter);
     fn rtw_rust_set_ps_wowlan_inactive_ips(padapter: Padapter, ps_mode: u8);
     fn rtw_rust_set_ps_wow_leave_wait(padapter: Padapter);
+    fn rtw_rust_set_ps_is_wmmps_mode(padapter: Padapter) -> u8;
     fn rtw_rust_set_ps_btcoex_lps_notify(padapter: Padapter, ps_mode: u8);
     fn rtw_rust_set_ps_wmm_smart_ps(padapter: Padapter);
     fn rtw_rust_set_ps_p2p_ps_enable(padapter: Padapter);
@@ -417,7 +418,12 @@ fn kernel_set_ps_mode_impl(padapter: Padapter, ps_mode: u8, smart_ps: u8, bcn_an
         {
             let s = unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_SMART_PS) };
             let b = unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_BCN_ANT) };
-            if s == smart_ps && b == bcn_ant_mode {
+            #[cfg(config_wmmps_sta)]
+            let skip_early_return =
+                unsafe { rtw_rust_set_ps_is_wmmps_mode(padapter) } != 0;
+            #[cfg(not(config_wmmps_sta))]
+            let skip_early_return = false;
+            if !skip_early_return && s == smart_ps && b == bcn_ant_mode {
                 return;
             }
         }
@@ -479,6 +485,7 @@ fn kernel_set_ps_mode_impl(padapter: Padapter, ps_mode: u8, smart_ps: u8, bcn_an
     } else if unsafe { rtw_rust_set_ps_may_enter(padapter) } != 0 {
         unsafe {
             rtw_rust_set_ps_inc_u32(padapter, SET_PS_U32_LPS_ENTER);
+            rtw_rust_set_ps_btcoex_lps_notify(padapter, ps_mode);
             rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_BFW_PS, _TRUE);
             rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_PWR_MODE, ps_mode);
             rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_SMART_PS, smart_ps);
@@ -503,15 +510,14 @@ fn kernel_set_ps_mode_impl(padapter: Padapter, ps_mode: u8, smart_ps: u8, bcn_an
         unsafe {
             rtw_rust_set_ps_p2p_ps_enable(padapter);
         }
-        let base_pslv = if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_ALIVES) } == 0 {
-            PS_STATE_S0
-        } else {
-            PS_STATE_S2
-        };
+        let mut base_pslv = PS_STATE_S2;
+        #[cfg(config_lps_lclk)]
+        if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_ALIVES) } == 0 {
+            base_pslv = PS_STATE_S0;
+        }
         let pslv = unsafe { rtw_rust_set_ps_rpwm_pslv(padapter, base_pslv) };
         unsafe {
             rtw_set_rpwm(padapter, pslv);
-            rtw_rust_set_ps_btcoex_lps_notify(padapter, ps_mode);
         }
     }
     #[cfg(config_lps_lclk)]

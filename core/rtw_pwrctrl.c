@@ -4266,6 +4266,16 @@ void rtw_rust_set_ps_wow_leave_wait(PADAPTER padapter)
 #endif
 }
 
+u8 rtw_rust_set_ps_is_wmmps_mode(PADAPTER padapter)
+{
+#ifdef CONFIG_WMMPS_STA
+	return rtw_is_wmmps_mode(padapter);
+#else
+	(void)padapter;
+	return 0;
+#endif
+}
+
 void rtw_rust_set_ps_btcoex_lps_notify(PADAPTER padapter, u8 ps_mode)
 {
 #ifdef CONFIG_BT_COEXIST
