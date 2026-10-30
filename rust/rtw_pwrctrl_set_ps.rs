@@ -15,6 +15,9 @@
 #[cfg(host_pwrctrl_set_ps_test)]
 use std::ffi::c_void;
 
+#[cfg(not(host_pwrctrl_set_ps_test))]
+use core::ffi::{c_char, c_void};
+
 const _TRUE: u8 = 1;
 const PS_MODE_ACTIVE: u8 = 0;
 const PM_Card_Disable: u8 = 10;
@@ -351,4 +354,185 @@ pub extern "C" fn rtw_set_ps_mode(
     _msg: *const u8,
 ) {
     host_trace::set_ps_mode_impl(padapter, ps_mode, smart_ps, bcn_ant_mode);
+}
+
+#[cfg(not(host_pwrctrl_set_ps_test))]
+extern "C" {
+    fn rtw_rust_ps_proc_enter_pwrlock(padapter: Padapter);
+    fn rtw_rust_ps_proc_exit_pwrlock(padapter: Padapter);
+    fn rtw_rust_set_ps_get_u8(padapter: Padapter, field: u32) -> u8;
+    fn rtw_rust_set_ps_set_u8(padapter: Padapter, field: u32, val: u8);
+    fn rtw_rust_set_ps_get_u32(padapter: Padapter, field: u32) -> u32;
+    fn rtw_rust_set_ps_inc_u32(padapter: Padapter, field: u32);
+    fn rtw_rust_set_ps_may_enter(padapter: Padapter) -> u8;
+    fn rtw_rust_set_ps_may_leave(padapter: Padapter) -> u8;
+    fn rtw_rust_set_ps_multiport_preamble(padapter: Padapter);
+    fn rtw_rust_set_ps_lps_pg_info_cfg(padapter: Padapter);
+    fn rtw_rust_set_ps_lps_pg_redlemem(padapter: Padapter);
+    fn rtw_rust_set_ps_lps_pg_phydm_en(padapter: Padapter);
+    fn rtw_rust_set_ps_lps_pg_phydm_dis(padapter: Padapter);
+    fn rtw_rust_set_ps_wowlan_inactive_ips(padapter: Padapter, ps_mode: u8);
+    fn rtw_rust_set_ps_wow_leave_wait(padapter: Padapter);
+    fn rtw_rust_set_ps_is_wmmps_mode(padapter: Padapter) -> u8;
+    fn rtw_rust_set_ps_btcoex_lps_notify(padapter: Padapter, ps_mode: u8);
+    fn rtw_rust_set_ps_wmm_smart_ps(padapter: Padapter);
+    fn rtw_rust_set_ps_p2p_ps_enable(padapter: Padapter);
+    fn rtw_rust_set_ps_rpwm_pslv(padapter: Padapter, base_pslv: u8) -> u8;
+    fn rtw_exec_lps(padapter: Padapter, ps_mode: u8);
+    fn rtw_set_rpwm(padapter: Padapter, pslv: u8);
+}
+
+#[cfg(not(host_pwrctrl_set_ps_test))]
+const SET_PS_U8_PWR_MODE: u32 = 0;
+#[cfg(not(host_pwrctrl_set_ps_test))]
+const SET_PS_U8_SMART_PS: u32 = 1;
+#[cfg(not(host_pwrctrl_set_ps_test))]
+const SET_PS_U8_BCN_ANT: u32 = 2;
+#[cfg(not(host_pwrctrl_set_ps_test))]
+const SET_PS_U8_LPS_LEVEL: u32 = 3;
+#[cfg(not(host_pwrctrl_set_ps_test))]
+const SET_PS_U8_WOWLAN: u32 = 4;
+#[cfg(not(host_pwrctrl_set_ps_test))]
+const SET_PS_U8_BFW_PS: u32 = 5;
+#[cfg(not(host_pwrctrl_set_ps_test))]
+const SET_PS_U8_ALIVES: u32 = 6;
+#[cfg(not(host_pwrctrl_set_ps_test))]
+const SET_PS_U32_LPS_LEAVE: u32 = 0;
+#[cfg(not(host_pwrctrl_set_ps_test))]
+const SET_PS_U32_LPS_ENTER: u32 = 1;
+
+#[cfg(not(host_pwrctrl_set_ps_test))]
+fn kernel_set_ps_mode_impl(padapter: Padapter, ps_mode: u8, smart_ps: u8, bcn_ant_mode: u8) {
+    if padapter.is_null() {
+        return;
+    }
+    if ps_mode > PM_Card_Disable {
+        return;
+    }
+    let cur_pwr = unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_PWR_MODE) };
+    if cur_pwr == ps_mode {
+        if ps_mode == PS_MODE_ACTIVE {
+            return;
+        }
+        #[cfg(not(config_bt_coexist))]
+        {
+            let s = unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_SMART_PS) };
+            let b = unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_BCN_ANT) };
+            #[cfg(config_wmmps_sta)]
+            let skip_early_return = unsafe { rtw_rust_set_ps_is_wmmps_mode(padapter) } != 0;
+            #[cfg(not(config_wmmps_sta))]
+            let skip_early_return = false;
+            if !skip_early_return && s == smart_ps && b == bcn_ant_mode {
+                return;
+            }
+        }
+        #[cfg(config_bt_coexist)]
+        let _ = (smart_ps, bcn_ant_mode);
+    }
+    if ps_mode != PS_MODE_ACTIVE {
+        unsafe {
+            rtw_rust_set_ps_multiport_preamble(padapter);
+        }
+        if ps_mode != PS_MODE_ACTIVE {
+            let lvl = unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_LPS_LEVEL) };
+            let wow = unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_WOWLAN) };
+            if lvl == LPS_PG && wow != _TRUE {
+                unsafe {
+                    rtw_rust_set_ps_lps_pg_info_cfg(padapter);
+                }
+            }
+        }
+    }
+    #[cfg(config_lps_lclk)]
+    unsafe {
+        rtw_rust_ps_proc_enter_pwrlock(padapter);
+    }
+    if ps_mode == PS_MODE_ACTIVE {
+        if unsafe { rtw_rust_set_ps_may_leave(padapter) } != 0 {
+            unsafe {
+                rtw_rust_set_ps_inc_u32(padapter, SET_PS_U32_LPS_LEAVE);
+                rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_PWR_MODE, ps_mode);
+                rtw_set_rpwm(padapter, PS_STATE_S4);
+                rtw_rust_set_ps_wow_leave_wait(padapter);
+            }
+            #[cfg(config_lps_pg)]
+            if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_LPS_LEVEL) } == LPS_PG {
+                unsafe {
+                    rtw_rust_set_ps_lps_pg_redlemem(padapter);
+                }
+            }
+            #[cfg(config_wowlan)]
+            if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_WOWLAN) } == _TRUE {
+                unsafe {
+                    rtw_rust_set_ps_wowlan_inactive_ips(padapter, ps_mode);
+                }
+            }
+            unsafe {
+                rtw_exec_lps(padapter, ps_mode);
+            }
+            #[cfg(config_lps_pg)]
+            if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_LPS_LEVEL) } == LPS_PG {
+                unsafe {
+                    rtw_rust_set_ps_lps_pg_phydm_en(padapter);
+                }
+            }
+            unsafe {
+                rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_BFW_PS, 0);
+                rtw_rust_set_ps_btcoex_lps_notify(padapter, ps_mode);
+            }
+        }
+    } else if unsafe { rtw_rust_set_ps_may_enter(padapter) } != 0 {
+        unsafe {
+            rtw_rust_set_ps_inc_u32(padapter, SET_PS_U32_LPS_ENTER);
+            rtw_rust_set_ps_btcoex_lps_notify(padapter, ps_mode);
+            rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_BFW_PS, _TRUE);
+            rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_PWR_MODE, ps_mode);
+            rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_SMART_PS, smart_ps);
+            rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_BCN_ANT, bcn_ant_mode);
+        }
+        #[cfg(config_lps_pg)]
+        if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_LPS_LEVEL) } == LPS_PG {
+            unsafe {
+                rtw_rust_set_ps_lps_pg_phydm_dis(padapter);
+            }
+        }
+        unsafe {
+            rtw_rust_set_ps_wmm_smart_ps(padapter);
+            rtw_exec_lps(padapter, ps_mode);
+        }
+        #[cfg(config_wowlan)]
+        if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_WOWLAN) } == _TRUE {
+            unsafe {
+                rtw_rust_set_ps_wowlan_inactive_ips(padapter, ps_mode);
+            }
+        }
+        unsafe {
+            rtw_rust_set_ps_p2p_ps_enable(padapter);
+        }
+        let mut base_pslv = PS_STATE_S2;
+        #[cfg(config_lps_lclk)]
+        if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_ALIVES) } == 0 {
+            base_pslv = PS_STATE_S0;
+        }
+        let pslv = unsafe { rtw_rust_set_ps_rpwm_pslv(padapter, base_pslv) };
+        unsafe {
+            rtw_set_rpwm(padapter, pslv);
+        }
+    }
+    #[cfg(config_lps_lclk)]
+    unsafe {
+        rtw_rust_ps_proc_exit_pwrlock(padapter);
+    }
+}
+
+#[cfg(not(host_pwrctrl_set_ps_test))]
+#[no_mangle]
+pub extern "C" fn rtw_set_ps_mode(
+    padapter: Padapter,
+    ps_mode: u8,
+    smart_ps: u8,
+    bcn_ant_mode: u8,
+    _msg: *const c_char,
+) {
+    kernel_set_ps_mode_impl(padapter, ps_mode, smart_ps, bcn_ant_mode);
 }

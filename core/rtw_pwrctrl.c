@@ -4051,6 +4051,286 @@ int rtw_pm_set_wow_lps_1t1r(_adapter *padapter, u8 en)
 #endif /* CONFIG_LPS_1T1R */
 #endif /* CONFIG_WOWLAN */
 
+
+#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_SET_PS_TEST)
+#define SET_PS_U8_PWR_MODE 0
+#define SET_PS_U8_SMART_PS 1
+#define SET_PS_U8_BCN_ANT 2
+#define SET_PS_U8_LPS_LEVEL 3
+#define SET_PS_U8_WOWLAN 4
+#define SET_PS_U8_BFW_PS 5
+#define SET_PS_U8_ALIVES 6
+#define SET_PS_U32_LPS_LEAVE 0
+#define SET_PS_U32_LPS_ENTER 1
+
+u8 rtw_rust_set_ps_get_u8(PADAPTER adapter, u32 field)
+{
+	struct pwrctrl_priv *p = adapter_to_pwrctl(adapter);
+
+	switch (field) {
+	case SET_PS_U8_PWR_MODE: return p->pwr_mode;
+	case SET_PS_U8_SMART_PS: return p->smart_ps;
+	case SET_PS_U8_BCN_ANT: return p->bcn_ant_mode;
+	case SET_PS_U8_LPS_LEVEL: return p->lps_level;
+	case SET_PS_U8_WOWLAN: return p->wowlan_mode;
+	case SET_PS_U8_BFW_PS: return p->bFwCurrentInPSMode;
+	case SET_PS_U8_ALIVES: return p->alives;
+	default: return 0;
+	}
+}
+
+void rtw_rust_set_ps_set_u8(PADAPTER adapter, u32 field, u8 val)
+{
+	struct pwrctrl_priv *p = adapter_to_pwrctl(adapter);
+
+	switch (field) {
+	case SET_PS_U8_PWR_MODE: p->pwr_mode = val; break;
+	case SET_PS_U8_SMART_PS: p->smart_ps = val; break;
+	case SET_PS_U8_BCN_ANT: p->bcn_ant_mode = val; break;
+	case SET_PS_U8_BFW_PS: p->bFwCurrentInPSMode = val; break;
+	default: break;
+	}
+}
+
+u32 rtw_rust_set_ps_get_u32(PADAPTER adapter, u32 field)
+{
+	struct pwrctrl_priv *p = adapter_to_pwrctl(adapter);
+
+	switch (field) {
+	case SET_PS_U32_LPS_LEAVE: return p->lps_leave_cnts;
+	case SET_PS_U32_LPS_ENTER: return p->lps_enter_cnts;
+	default: return 0;
+	}
+}
+
+void rtw_rust_set_ps_inc_u32(PADAPTER adapter, u32 field)
+{
+	struct pwrctrl_priv *p = adapter_to_pwrctl(adapter);
+
+	if (field == SET_PS_U32_LPS_LEAVE) {
+		if (p->lps_leave_cnts < UINT_MAX)
+			p->lps_leave_cnts++;
+		else
+			p->lps_leave_cnts = 0;
+	} else if (field == SET_PS_U32_LPS_ENTER) {
+		if (p->lps_enter_cnts < UINT_MAX)
+			p->lps_enter_cnts++;
+		else
+			p->lps_enter_cnts = 0;
+	}
+}
+
+u8 rtw_rust_set_ps_may_enter(PADAPTER padapter)
+{
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
+
+	if ((PS_RDY_CHECK(padapter) &&
+	     check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE))
+#ifdef CONFIG_BT_COEXIST
+	    || ((rtw_btcoex_IsBtControlLps(padapter) == _TRUE)
+		&& (rtw_btcoex_IsLpsOn(padapter) == _TRUE))
+#endif
+#ifdef CONFIG_P2P_WOWLAN
+	    || (_TRUE == pwrpriv->wowlan_p2p_mode)
+#endif /* CONFIG_P2P_WOWLAN */
+#ifdef CONFIG_WOWLAN
+	    || WOWLAN_IS_STA_MIX_MODE(padapter)
+#endif /* CONFIG_WOWLAN */
+	   )
+		return _TRUE;
+	return _FALSE;
+}
+
+u8 rtw_rust_set_ps_may_leave(PADAPTER padapter)
+{
+#ifdef CONFIG_P2P
+	struct wifidirect_info *pwdinfo = &(padapter->wdinfo);
+#endif
+
+	if (1
+#ifdef CONFIG_BT_COEXIST
+	    && (((rtw_btcoex_IsBtControlLps(padapter) == _FALSE)
+#ifdef CONFIG_P2P_PS
+		 && (pwdinfo->opp_ps == 0)
+#endif /* CONFIG_P2P_PS */
+		)
+		|| ((rtw_btcoex_IsBtControlLps(padapter) == _TRUE)
+		    && (rtw_btcoex_IsLpsOn(padapter) == _FALSE))
+	       )
+#else /* !CONFIG_BT_COEXIST */
+#ifdef CONFIG_P2P_PS
+	    && (pwdinfo->opp_ps == 0)
+#endif /* CONFIG_P2P_PS */
+#endif /* !CONFIG_BT_COEXIST */
+	   )
+		return _TRUE;
+	return _FALSE;
+}
+
+void rtw_rust_set_ps_multiport_preamble(PADAPTER padapter)
+{
+#ifdef CONFIG_FW_MULTI_PORT_SUPPORT
+	rtw_set_ps_rsvd_page(padapter);
+	rtw_set_default_port_id(padapter);
+#endif
+	(void)padapter;
+}
+
+void rtw_rust_set_ps_lps_pg_info_cfg(PADAPTER padapter)
+{
+#ifdef CONFIG_LPS_PG
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
+	u8 lps_pg_hdl_id = LPS_PG_INFO_CFG;
+
+	if (pwrpriv->wowlan_mode != _TRUE)
+		rtw_hal_set_hwreg(padapter, HW_VAR_LPS_PG_HANDLE, (u8 *)(&lps_pg_hdl_id));
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_set_ps_lps_pg_redlemem(PADAPTER padapter)
+{
+#ifdef CONFIG_LPS_PG
+	u8 lps_pg_hdl_id = LPS_PG_REDLEMEM;
+
+	rtw_hal_set_hwreg(padapter, HW_VAR_LPS_PG_HANDLE, (u8 *)(&lps_pg_hdl_id));
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_set_ps_lps_pg_phydm_en(PADAPTER padapter)
+{
+#ifdef CONFIG_LPS_PG
+	u8 lps_pg_hdl_id = LPS_PG_PHYDM_EN;
+
+	rtw_hal_set_hwreg(padapter, HW_VAR_LPS_PG_HANDLE, (u8 *)(&lps_pg_hdl_id));
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_set_ps_lps_pg_phydm_dis(PADAPTER padapter)
+{
+#ifdef CONFIG_LPS_PG
+	u8 lps_pg_hdl_id = LPS_PG_PHYDM_DIS;
+
+	rtw_hal_set_hwreg(padapter, HW_VAR_LPS_PG_HANDLE, (u8 *)(&lps_pg_hdl_id));
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_set_ps_wowlan_inactive_ips(PADAPTER padapter, u8 ps_mode)
+{
+#ifdef CONFIG_WOWLAN
+	rtw_hal_set_hwreg(padapter, HW_VAR_H2C_INACTIVE_IPS, (u8 *)(&ps_mode));
+#else
+	(void)padapter;
+	(void)ps_mode;
+#endif
+}
+
+void rtw_rust_set_ps_wow_leave_wait(PADAPTER padapter)
+{
+#if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN) || defined(CONFIG_P2P_WOWLAN)
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
+
+	if (pwrpriv->wowlan_mode == _TRUE ||
+	    pwrpriv->wowlan_ap_mode == _TRUE ||
+	    pwrpriv->wowlan_p2p_mode == _TRUE) {
+		struct dvobj_priv *psdpriv = padapter->dvobj;
+		struct debug_priv *pdbgpriv = &psdpriv->drv_dbg;
+		systime start_time = rtw_get_current_time();
+		u32 delay_ms = 20;
+		u8 val8;
+
+		do {
+			rtw_hal_get_hwreg(padapter, HW_VAR_SYS_CLKR, &val8);
+			if (!(val8 & BIT(4))) {
+				pwrpriv->cpwm = PS_STATE_S4;
+				break;
+			}
+			if (rtw_get_passing_time_ms(start_time) > delay_ms) {
+				RTW_INFO("%s: Wait for FW 32K leave more than %u ms!!!\n",
+					 __func__, delay_ms);
+				pdbgpriv->dbg_wow_leave_ps_fail_cnt++;
+				break;
+			}
+			rtw_usleep_os(100);
+		} while (1);
+	}
+#else
+	(void)padapter;
+#endif
+}
+
+u8 rtw_rust_set_ps_is_wmmps_mode(PADAPTER padapter)
+{
+#ifdef CONFIG_WMMPS_STA
+	return rtw_is_wmmps_mode(padapter);
+#else
+	(void)padapter;
+	return 0;
+#endif
+}
+
+void rtw_rust_set_ps_btcoex_lps_notify(PADAPTER padapter, u8 ps_mode)
+{
+#ifdef CONFIG_BT_COEXIST
+	rtw_btcoex_LpsNotify(padapter, ps_mode);
+#else
+	(void)padapter;
+	(void)ps_mode;
+#endif
+}
+
+void rtw_rust_set_ps_wmm_smart_ps(PADAPTER padapter)
+{
+#ifdef CONFIG_WMMPS_STA
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
+	struct registry_priv *pregistrypriv = &padapter->registrypriv;
+
+	pwrpriv->wmm_smart_ps = pregistrypriv->wmm_smart_ps;
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_set_ps_p2p_ps_enable(PADAPTER padapter)
+{
+#ifdef CONFIG_P2P_PS
+#ifdef CONFIG_P2P
+	struct wifidirect_info *pwdinfo = &(padapter->wdinfo);
+
+	if (pwdinfo->opp_ps == 1)
+		p2p_ps_wk_cmd(padapter, P2P_PS_ENABLE, 0);
+#else
+	(void)padapter;
+#endif
+#else
+	(void)padapter;
+#endif
+}
+
+u8 rtw_rust_set_ps_rpwm_pslv(PADAPTER padapter, u8 base_pslv)
+{
+	u8 pslv = base_pslv;
+
+#ifdef CONFIG_BT_COEXIST
+	if ((rtw_btcoex_IsBtDisabled(padapter) == _FALSE)
+	    && (rtw_btcoex_IsBtControlLps(padapter) == _TRUE)) {
+		u8 val8 = rtw_btcoex_LpsVal(padapter);
+
+		if (val8 & BIT(4))
+			pslv = PS_STATE_S2;
+	}
+#endif
+	return pslv;
+}
+#endif /* CONFIG_RUST && !HOST_PWRCTRL_SET_PS_TEST */
+
 #if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_PM_TEST)
 void rtw_rust_pm_ips_mode_req(PADAPTER adapter, u8 mode)
 {
