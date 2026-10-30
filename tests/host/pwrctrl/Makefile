@@ -336,8 +336,6 @@ librust_pwrctrl_init.a: $(RUST_PWRCTRL_INIT)
 		--cfg concurrent_mode --cfg lps_lclk --cfg lps_pg --cfg resume_wq \
 		--crate-type staticlib $(RUST_PWRCTRL_INIT) -o $@
 
-	test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init test-init-rust test-fw-in-ips test-fw-in-ips-rust
-
 test-fw-in-ips: test_pwrctrl_fw_in_ips
 	./test_pwrctrl_fw_in_ips fw_in_ips_vectors.json
 
