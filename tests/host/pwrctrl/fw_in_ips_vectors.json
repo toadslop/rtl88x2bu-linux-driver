@@ -1,0 +1,45 @@
+{
+  "vectors": [
+    {
+      "name": "netif_down_noop",
+      "netif_up_val": 0,
+      "enable": 1,
+      "ips_mode_req": 1,
+      "expect_h2c_count": 0,
+      "expect_btcoex_calls": 0
+    },
+    {
+      "name": "enter_h2c_and_rpwm",
+      "netif_up_val": 1,
+      "enable": 1,
+      "ips_mode_req": 2,
+      "hmetfr0": 1,
+      "hmetfr1": 1,
+      "hmetfr2": 0,
+      "hmetfr_count": 3,
+      "reg_cr0": 0,
+      "reg_cr1": 0,
+      "reg_cr2": 234,
+      "reg_cr_count": 3,
+      "expect_h2c_count": 1,
+      "expect_h2c_parm0": 1,
+      "expect_btcoex_calls": 1,
+      "expect_btcoex_mode": 2,
+      "expect_min_read8": 3,
+      "expect_hwreg_count_min": 2
+    },
+    {
+      "name": "leave_disable_h2c",
+      "netif_up_val": 1,
+      "enable": 0,
+      "cpwm_orig": 0,
+      "cpwm_after": 128,
+      "cpwm_reads_before_toggle": 2,
+      "expect_h2c_count": 1,
+      "expect_h2c_parm0": 0,
+      "expect_btcoex_calls": 1,
+      "expect_btcoex_mode": 0,
+      "expect_hwreg_count_min": 3
+    }
+  ]
+}

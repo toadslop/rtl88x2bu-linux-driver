@@ -31,5 +31,6 @@ test_pwrctrl_pm_setters_rust
 librust_pwrctrl_pm.a
 librust_pwrctrl_wow.a
 wow_lps_c_ref.o
+fw_ips_c_ref.o
 test_pwrctrl_ps_rdy_systime_width
 librust_pwrctrl_ps_rdy_kern.a

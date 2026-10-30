@@ -19,6 +19,7 @@ PM_SHIM := host_pwrctrl_pm_shim.c
 PS_RDY_SHIM := host_pwrctrl_ps_rdy_shim.c
 SET_PS_SHIM := host_pwrctrl_set_ps_shim.c
 INIT_SHIM := host_pwrctrl_init_shim.c
+FW_IPS_SHIM := host_pwrctrl_fw_ips_shim.c
 
 CC     := gcc
 CFLAGS := -Wall -Wextra -Werror -O2 \
@@ -40,18 +41,21 @@ RUST_PWRCTRL_PS_RDY := $(ROOT)/rust/rtw_pwrctrl_ps_rdy.rs
 RUST_PWRCTRL_PM := $(ROOT)/rust/rtw_pwrctrl_pm.rs
 RUST_PWRCTRL_SET_PS := $(ROOT)/rust/rtw_pwrctrl_set_ps.rs
 RUST_PWRCTRL_INIT := $(ROOT)/rust/rtw_pwrctrl_init.rs
+RUST_PWRCTRL_FW_IPS := $(ROOT)/rust/rtw_pwrctrl_fw_ips.rs
 RUSTC := rustc
 PS_RDY_CFLAGS := $(CFLAGS) -DCONFIG_WOWLAN
 SET_PS_CFLAGS := $(CFLAGS) -DCONFIG_BT_COEXIST -DCONFIG_FW_MULTI_PORT_SUPPORT -DCONFIG_LPS -DCONFIG_LPS_LCLK
 SET_PS_PG_WOW_CFLAGS := $(SET_PS_CFLAGS) -DCONFIG_LPS_PG -DCONFIG_WOWLAN
 INIT_CFLAGS := $(CFLAGS) -DCONFIG_CONCURRENT_MODE -DCONFIG_LPS_LCLK -DCONFIG_LPS_PG -DCONFIG_RESUME_IN_WORKQUEUE
+FW_IPS_CFLAGS := $(CFLAGS) -DCONFIG_FWLPS_IN_IPS -DCONFIG_LPS_LCLK -DCONFIG_BT_COEXIST
 
 .PHONY: all test test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust \
 	test-leave-all test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust \
 	test-lps-tp test-lps-tp-rust test-lps-exec test-lps-exec-rust test-rpwm test-rpwm-rust test-register-alive test-register-alive-rust \
 	test-unregister-alive test-unregister-alive-rust test-wow-lps test-wow-lps-rust \
 	test-pm-setters test-pm-setters-rust \
-	test-ps-rdy test-ps-rdy-rust test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init test-init-rust clean
+	test-ps-rdy test-ps-rdy-rust test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init test-init-rust \
+	test-fw-in-ips test-fw-in-ips-rust clean
 
 all: test test-lps test-lps-enter test-leave-all test-leave-all-rust test-ips test-ips-rust \
 	test-ps-processor test-ps-processor-rust test-lps-tp test-lps-tp-rust test-rpwm test-rpwm-rust \
@@ -332,6 +336,24 @@ librust_pwrctrl_init.a: $(RUST_PWRCTRL_INIT)
 		--cfg concurrent_mode --cfg lps_lclk --cfg lps_pg --cfg resume_wq \
 		--crate-type staticlib $(RUST_PWRCTRL_INIT) -o $@
 
+	test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init test-init-rust test-fw-in-ips test-fw-in-ips-rust
+
+test-fw-in-ips: test_pwrctrl_fw_in_ips
+	./test_pwrctrl_fw_in_ips fw_in_ips_vectors.json
+
+test-fw-in-ips-rust: test_pwrctrl_fw_in_ips_rust
+	./test_pwrctrl_fw_in_ips_rust fw_in_ips_vectors.json
+
+test_pwrctrl_fw_in_ips: test_pwrctrl_fw_in_ips.c $(FW_IPS_SHIM) $(HOST_JSON)
+	$(CC) $(FW_IPS_CFLAGS) -o $@ test_pwrctrl_fw_in_ips.c $(FW_IPS_SHIM) $(HOST_JSON)
+
+librust_pwrctrl_fw_ips.a: $(RUST_PWRCTRL_FW_IPS)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_pwrctrl_fw_ips_test \
+		--crate-type staticlib $(RUST_PWRCTRL_FW_IPS) -o $@
+
+test_pwrctrl_fw_in_ips_rust: test_pwrctrl_fw_in_ips.c librust_pwrctrl_fw_ips.a $(HOST_JSON)
+	$(CC) $(FW_IPS_CFLAGS) -o $@ test_pwrctrl_fw_in_ips.c $(HOST_JSON) librust_pwrctrl_fw_ips.a
+
 test_pwrctrl_init_rust: test_pwrctrl_init.c librust_pwrctrl_init.a $(HOST_JSON)
 	$(CC) $(INIT_CFLAGS) -o $@ test_pwrctrl_init.c $(HOST_JSON) librust_pwrctrl_init.a
 
@@ -353,5 +375,6 @@ clean:
 		test_pwrctrl_set_ps test_pwrctrl_set_ps_pg_wow test_pwrctrl_set_ps_rust \
 		test_pwrctrl_set_ps_rust_pg_wow librust_pwrctrl_set_ps.a librust_pwrctrl_set_ps_pg_wow.a \
 		test_pwrctrl_init test_pwrctrl_init_rust librust_pwrctrl_init.a \
+		test_pwrctrl_fw_in_ips test_pwrctrl_fw_in_ips_rust librust_pwrctrl_fw_ips.a \
 		librust_pwrctrl.a test_pwrctrl_ps_rdy test_pwrctrl_ps_rdy_rust \
 		test_pwrctrl_ps_rdy_systime_width librust_pwrctrl_ps_rdy_kern.a
