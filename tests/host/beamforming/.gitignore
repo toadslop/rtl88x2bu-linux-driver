@@ -6,3 +6,5 @@ test_bf_gid_leaf
 test_bf_entry_packet_rust
 librust_bf_entry_packet.a
 librust_bf_init_cmd.a
+test_bf_sound_enter_rust
+librust_bf_sound_enter.a
