@@ -419,8 +419,7 @@ fn kernel_set_ps_mode_impl(padapter: Padapter, ps_mode: u8, smart_ps: u8, bcn_an
             let s = unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_SMART_PS) };
             let b = unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_BCN_ANT) };
             #[cfg(config_wmmps_sta)]
-            let skip_early_return =
-                unsafe { rtw_rust_set_ps_is_wmmps_mode(padapter) } != 0;
+            let skip_early_return = unsafe { rtw_rust_set_ps_is_wmmps_mode(padapter) } != 0;
             #[cfg(not(config_wmmps_sta))]
             let skip_early_return = false;
             if !skip_early_return && s == smart_ps && b == bcn_ant_mode {
