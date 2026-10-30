@@ -1,0 +1,18 @@
+# W3-187: rtw_set_ps_mode — Rust FFI helpers (kernel-only).
+drop rtw_rust_set_ps_get_u8
+drop rtw_rust_set_ps_set_u8
+drop rtw_rust_set_ps_get_u32
+drop rtw_rust_set_ps_inc_u32
+drop rtw_rust_set_ps_may_enter
+drop rtw_rust_set_ps_multiport_preamble
+drop rtw_rust_set_ps_lps_pg_info_cfg
+drop rtw_rust_set_ps_hal_hwreg
+drop rtw_rust_set_ps_wow_leave_wait
+drop host_pwrctrl_set_ps_reset_trace
+drop host_pwrctrl_set_ps_get_trace
+drop host_pwrctrl_set_ps_reset_hal
+drop host_pwrctrl_set_ps_set_sys_clkr_in_32k
+drop host_pwrctrl_set_ps_set_ps_rdy
+drop host_pwrctrl_set_ps_set_fw_asoc
+drop _enter_pwrlock
+drop _exit_pwrlock

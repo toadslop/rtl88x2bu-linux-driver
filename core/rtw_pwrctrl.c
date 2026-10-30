@@ -1858,6 +1858,7 @@ void rtw_rust_lps_exec_rfon_lclk_rf_off(PADAPTER padapter)
 
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_LPS_EXEC_TEST */
 
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_SET_PS_TEST)
 void rtw_set_ps_mode(PADAPTER padapter, u8 ps_mode, u8 smart_ps, u8 bcn_ant_mode, const char *msg)
 {
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
@@ -2124,6 +2125,7 @@ void rtw_set_ps_mode(PADAPTER padapter, u8 ps_mode, u8 smart_ps, u8 bcn_ant_mode
 #endif
 
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_SET_PS_TEST */
 
 const char * const LPS_CTRL_PHYDM = "LPS_CTRL_PHYDM";
 

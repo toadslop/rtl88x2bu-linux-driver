@@ -3140,6 +3140,7 @@ $(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ips.o
 endif
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ps_rdy.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_pm.o
+$(MODULE_NAME)-y += rust/rtw_pwrctrl_set_ps.o
 $(MODULE_NAME)-y += rust/rtw_beamforming_cmd.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_init.o
 $(MODULE_NAME)-y += rust/rtw_beamforming_sound.o
@@ -5127,6 +5128,23 @@ rust-objects-rtw-pwrctrl-fw-ips-c:
 rust-check-symbols-rtw-pwrctrl-fw-ips: rust-objects-rtw-pwrctrl-fw-ips-c rust-objects-rtw-pwrctrl-fw-ips
 	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/fw_ips_c_ref.o NEW=rust/rtw_pwrctrl_fw_ips.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_fw_ips.allow ALLOW_VACUOUS=1
+
+# W3-187: host C oracle vs rust/rtw_pwrctrl_set_ps.o (rtw_set_ps_mode).
+rust-objects-rtw-pwrctrl-set-ps:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-pwrctrl-set-ps"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_pwrctrl_set_ps.o
+rust-objects-rtw-pwrctrl-set-ps-c:
+	@mkdir -p tests/host/pwrctrl
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-DCONFIG_BT_COEXIST -DCONFIG_FW_MULTI_PORT_SUPPORT -DCONFIG_LPS -DCONFIG_LPS_LCLK \
+		-DCONFIG_LPS_PG -DCONFIG_WOWLAN \
+		-o tests/host/pwrctrl/set_ps_c_ref.o \
+		tests/host/pwrctrl/host_pwrctrl_set_ps_shim.c
+rust-check-symbols-rtw-pwrctrl-set-ps: rust-objects-rtw-pwrctrl-set-ps-c rust-objects-rtw-pwrctrl-set-ps
+	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/set_ps_c_ref.o NEW=rust/rtw_pwrctrl_set_ps.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_set_ps.allow ALLOW_VACUOUS=1
+
 
 # W3-191: host C oracle vs rust/rtw_beamforming_cmd.o (cmd/traffic leaf).
 rust-objects-rtw-beamforming-cmd:
