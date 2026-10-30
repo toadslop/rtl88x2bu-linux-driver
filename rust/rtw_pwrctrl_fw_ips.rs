@@ -18,6 +18,9 @@ use std::ffi::c_void;
 #[cfg(not(host_pwrctrl_fw_ips_test))]
 use core::ffi::c_void;
 
+#[cfg(not(host_pwrctrl_fw_ips_test))]
+use core::ffi::c_ulong;
+
 const _TRUE: u8 = 1;
 const _FALSE: u8 = 0;
 const IPS_NONE: u8 = 0;
@@ -32,7 +35,11 @@ const HOST_HW_VAR_CPWM: u8 = 110;
 const HOST_HW_VAR_RPWM_TOG: u8 = 147;
 
 type Padapter = *mut c_void;
+
+#[cfg(host_pwrctrl_fw_ips_test)]
 type Systime = u32;
+#[cfg(not(host_pwrctrl_fw_ips_test))]
+type Systime = c_ulong;
 
 #[cfg(host_pwrctrl_fw_ips_test)]
 #[repr(C)]
@@ -252,6 +259,7 @@ extern "C" {
     fn rtw_rust_fw_ips_ips_mode_req(padapter: Padapter) -> u8;
     fn rtw_rust_fw_ips_set_tog(padapter: Padapter, tog: u8);
     fn rtw_rust_fw_ips_btcoex_ips_notify(padapter: Padapter, mode: u8);
+    fn rtw_rust_fw_ips_fill_pno_h2c_parms(padapter: Padapter, parm1: *mut u8, parm2: *mut u8);
     fn rtw_rust_fw_ips_hal_fill_h2c(padapter: Padapter, cmd: u8, len: u8, parm: *const u8);
     fn rtw_rust_fw_ips_read8(padapter: Padapter, reg: u16) -> u8;
     fn rtw_rust_fw_ips_hal_get_cpwm(padapter: Padapter, out: *mut u8);
@@ -301,6 +309,10 @@ pub extern "C" fn rtw_set_fw_in_ips_mode(padapter: Padapter, enable: u8) {
         }
 
         parm[0] = 0x1;
+        #[cfg(not(host_pwrctrl_fw_ips_test))]
+        unsafe {
+            rtw_rust_fw_ips_fill_pno_h2c_parms(padapter, &mut parm[1], &mut parm[2]);
+        }
         #[cfg(host_pwrctrl_fw_ips_test)]
         host_hal::hal_fill_h2c(padapter, H2C_INACTIVE_PS_, H2C_INACTIVE_PS_LEN, &parm);
         #[cfg(not(host_pwrctrl_fw_ips_test))]
