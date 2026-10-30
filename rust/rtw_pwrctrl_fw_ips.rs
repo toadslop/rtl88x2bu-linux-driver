@@ -254,8 +254,9 @@ extern "C" {
     fn rtw_rust_fw_ips_btcoex_ips_notify(padapter: Padapter, mode: u8);
     fn rtw_rust_fw_ips_hal_fill_h2c(padapter: Padapter, cmd: u8, len: u8, parm: *const u8);
     fn rtw_rust_fw_ips_read8(padapter: Padapter, reg: u16) -> u8;
-    fn rtw_rust_fw_ips_hal_get_hwreg(padapter: Padapter, var: u8, out: *mut u8);
-    fn rtw_rust_fw_ips_hal_set_hwreg(padapter: Padapter, var: u8, val: *const u8);
+    fn rtw_rust_fw_ips_hal_get_cpwm(padapter: Padapter, out: *mut u8);
+    fn rtw_rust_fw_ips_hal_get_rpwm_tog(padapter: Padapter, out: *mut u8);
+    fn rtw_rust_fw_ips_hal_set_rpwm(padapter: Padapter, rpwm: u8);
     fn rtw_rust_fw_ips_mdelay(ms: u32);
     fn rtw_rust_fw_ips_get_current_time() -> Systime;
     fn rtw_rust_fw_ips_get_passing_time_ms(start: Systime) -> u32;
@@ -341,10 +342,10 @@ pub extern "C" fn rtw_set_fw_in_ips_mode(padapter: Padapter, enable: u8) {
             }
             #[cfg(not(host_pwrctrl_fw_ips_test))]
             unsafe {
-                rtw_rust_fw_ips_hal_get_hwreg(padapter, HOST_HW_VAR_RPWM_TOG, &mut val8);
+                rtw_rust_fw_ips_hal_get_rpwm_tog(padapter, &mut val8);
                 val8 = val8.wrapping_add(0x80);
                 val8 |= 1;
-                rtw_rust_fw_ips_hal_set_hwreg(padapter, HOST_HW_VAR_SET_RPWM, &val8);
+                rtw_rust_fw_ips_hal_set_rpwm(padapter, val8);
                 rtw_rust_fw_ips_set_tog(padapter, (val8.wrapping_add(0x80)) & 0x80);
             }
             cnt = 0;
@@ -382,11 +383,11 @@ pub extern "C" fn rtw_set_fw_in_ips_mode(padapter: Padapter, enable: u8) {
             }
             #[cfg(not(host_pwrctrl_fw_ips_test))]
             unsafe {
-                rtw_rust_fw_ips_hal_get_hwreg(padapter, HOST_HW_VAR_CPWM, &mut cpwm_orig);
-                rtw_rust_fw_ips_hal_get_hwreg(padapter, HOST_HW_VAR_RPWM_TOG, &mut val8);
+                rtw_rust_fw_ips_hal_get_cpwm(padapter, &mut cpwm_orig);
+                rtw_rust_fw_ips_hal_get_rpwm_tog(padapter, &mut val8);
                 val8 = val8.wrapping_add(0x80);
                 val8 |= 1 << 6;
-                rtw_rust_fw_ips_hal_set_hwreg(padapter, HOST_HW_VAR_SET_RPWM, &val8);
+                rtw_rust_fw_ips_hal_set_rpwm(padapter, val8);
                 rtw_rust_fw_ips_set_tog(padapter, (val8.wrapping_add(0x80)) & 0x80);
             }
 
@@ -404,7 +405,7 @@ pub extern "C" fn rtw_set_fw_in_ips_mode(padapter: Padapter, enable: u8) {
                 #[cfg(not(host_pwrctrl_fw_ips_test))]
                 unsafe {
                     rtw_rust_fw_ips_mdelay(1);
-                    rtw_rust_fw_ips_hal_get_hwreg(padapter, HOST_HW_VAR_CPWM, &mut cpwm_now);
+                    rtw_rust_fw_ips_hal_get_cpwm(padapter, &mut cpwm_now);
                 }
                 if (cpwm_orig ^ cpwm_now) & 0x80 != 0 {
                     break;
