@@ -168,12 +168,18 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-pwrctrl-init
 		;;
 	rust/rtw_pwrctrl_pm.rs \
-	rust/rtw_pwrctrl_set_ps.rs \
 	| core/rtw_pwrctrl.c \
 	| tests/host/pwrctrl/host_pwrctrl_pm_shim.c \
 	| tests/host/pwrctrl/test_pwrctrl_pm_setters.c \
 	| tests/host/pwrctrl/pm_setters_vectors.json)
 		add_target rust-check-symbols-rtw-pwrctrl-pm
+		;;
+	rust/rtw_pwrctrl_set_ps.rs \
+	| core/rtw_pwrctrl.c \
+	| tests/host/pwrctrl/host_pwrctrl_set_ps_shim.c \
+	| tests/host/pwrctrl/test_pwrctrl_set_ps.c \
+	| tests/host/pwrctrl/set_ps_vectors.json)
+		add_target rust-check-symbols-rtw-pwrctrl-set-ps
 		;;
 	rust/rtw_rf_rest.rs \
 	| rust/rtw_rf_op_class_pref.rs \
