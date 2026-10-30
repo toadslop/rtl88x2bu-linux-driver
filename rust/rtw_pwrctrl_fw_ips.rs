@@ -476,8 +476,7 @@ mod host_pwrctrl_fw_ips {
 }
 
 #[cfg(host_pwrctrl_fw_ips_test)]
-static mut G_TRACE: host_pwrctrl_fw_ips::host_pwrctrl_fw_ips_trace =
-    unsafe { core::mem::zeroed() };
+static mut G_TRACE: host_pwrctrl_fw_ips::host_pwrctrl_fw_ips_trace = unsafe { core::mem::zeroed() };
 
 #[cfg(host_pwrctrl_fw_ips_test)]
 #[no_mangle]
@@ -487,7 +486,8 @@ pub extern "C" fn host_pwrctrl_fw_ips_reset_trace() {
 
 #[cfg(host_pwrctrl_fw_ips_test)]
 #[no_mangle]
-pub extern "C" fn host_pwrctrl_fw_ips_get_trace() -> *mut host_pwrctrl_fw_ips::host_pwrctrl_fw_ips_trace {
+pub extern "C" fn host_pwrctrl_fw_ips_get_trace(
+) -> *mut host_pwrctrl_fw_ips::host_pwrctrl_fw_ips_trace {
     unsafe {
         G_TRACE.btcoex_ips_notify_calls = host_hal::btcoex_calls();
         G_TRACE.last_btcoex_mode = host_hal::last_btcoex();
