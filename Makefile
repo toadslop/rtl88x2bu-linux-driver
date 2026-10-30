@@ -3115,6 +3115,7 @@ ifeq ($(CONFIG_WOWLAN), y)
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_wow.o
 endif
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ps_rdy.o
+$(MODULE_NAME)-y += rust/rtw_pwrctrl_pm.o
 $(MODULE_NAME)-y += rust/rtw_beamforming_cmd.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_init.o
 $(MODULE_NAME)-y += rust/rtw_beamforming_sound.o
@@ -5073,6 +5074,20 @@ rust-objects-rtw-pwrctrl-ps-rdy-c:
 rust-check-symbols-rtw-pwrctrl-ps-rdy: rust-objects-rtw-pwrctrl-ps-rdy-c rust-objects-rtw-pwrctrl-ps-rdy
 	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/ps_rdy_c_ref.o NEW=rust/rtw_pwrctrl_ps_rdy.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_ps_rdy.allow ALLOW_VACUOUS=1
+
+# W3-184: host C oracle vs rust/rtw_pwrctrl_pm.o (PM ioctl setters).
+rust-objects-rtw-pwrctrl-pm:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-pwrctrl-pm"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_pwrctrl_pm.o
+rust-objects-rtw-pwrctrl-pm-c:
+	@mkdir -p tests/host/pwrctrl
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/pwrctrl/pm_setters_c_ref.o \
+		tests/host/pwrctrl/host_pwrctrl_pm_shim.c
+rust-check-symbols-rtw-pwrctrl-pm: rust-objects-rtw-pwrctrl-pm-c rust-objects-rtw-pwrctrl-pm
+	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/pm_setters_c_ref.o NEW=rust/rtw_pwrctrl_pm.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_pm.allow ALLOW_VACUOUS=1
 
 # W3-191: host C oracle vs rust/rtw_beamforming_cmd.o (cmd/traffic leaf).
 rust-objects-rtw-beamforming-cmd:
