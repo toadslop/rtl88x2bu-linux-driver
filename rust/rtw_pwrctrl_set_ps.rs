@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! W3-186 — rtw_set_ps_mode part 1 (host L2; kernel wiring in W3-187).
+//! W3-186 / W3-187 — `rtw_set_ps_mode` host L2 (kernel wiring in W3-187 PR3).
 
 #![allow(
     dead_code,
@@ -21,8 +21,12 @@ const PM_Card_Disable: u8 = 10;
 const LPS_PG: u8 = 2;
 const LPS_PG_INFO_CFG: u8 = 0;
 const LPS_PG_REDLEMEM: u8 = 1;
+const LPS_PG_PHYDM_DIS: u8 = 2;
 const LPS_PG_PHYDM_EN: u8 = 3;
+const PS_STATE_S0: u8 = 1 << 0;
+const PS_STATE_S2: u8 = 1 << 1;
 const PS_STATE_S4: u8 = (1 << 3) | (1 << 2);
+const WIFI_ASOC_STATE: u32 = 0x0000_0001;
 const HOST_HW_VAR_LPS_PG_HANDLE: u8 = 100;
 const HOST_HW_VAR_H2C_INACTIVE_IPS: u8 = 101;
 
@@ -31,14 +35,22 @@ type Systime = u32;
 
 #[cfg(host_pwrctrl_set_ps_test)]
 #[repr(C)]
+struct MlmePriv {
+    fw_state: u32,
+}
+
+#[cfg(host_pwrctrl_set_ps_test)]
+#[repr(C)]
 struct PwrctrlPriv {
     pwr_mode: u8,
     smart_ps: u8,
     bcn_ant_mode: u8,
     lps_leave_cnts: u32,
+    lps_enter_cnts: u32,
     lps_level: u8,
     wowlan_mode: u8,
     bFwCurrentInPSMode: u8,
+    alives: u8,
     lock: i32,
 }
 
@@ -46,6 +58,7 @@ struct PwrctrlPriv {
 #[repr(C)]
 struct HostAdapter {
     pwrctrlpriv: PwrctrlPriv,
+    mlmepriv: MlmePriv,
 }
 
 #[cfg(host_pwrctrl_set_ps_test)]
@@ -58,7 +71,10 @@ pub struct HostSetPsTrace {
     pub exec_lps_ps_mode: u8,
     pub b_fw_current_in_ps: u8,
     pub pwr_mode: u8,
+    pub smart_ps: u8,
+    pub bcn_ant_mode: u8,
     pub lps_leave_cnts: u32,
+    pub lps_enter_cnts: u32,
     pub hwreg_count: u32,
     pub wow_leave_fail_cnt: u32,
     pub hwreg_var: [u8; 4],
@@ -77,7 +93,10 @@ mod host_trace {
         exec_lps_ps_mode: 0,
         b_fw_current_in_ps: 0,
         pwr_mode: 0,
+        smart_ps: 0,
+        bcn_ant_mode: 0,
         lps_leave_cnts: 0,
+        lps_enter_cnts: 0,
         hwreg_count: 0,
         wow_leave_fail_cnt: 0,
         hwreg_var: [0; 4],
@@ -85,6 +104,8 @@ mod host_trace {
     };
     static mut G_SYS_CLKR_IN_32K: u8 = 0;
     static mut G_TIME: Systime = 0;
+    static mut G_PS_RDY: u8 = 1;
+    static mut G_FW_ASOC: u8 = 1;
 
     pub fn reset_trace() {
         unsafe {
@@ -109,6 +130,18 @@ mod host_trace {
         }
     }
 
+    pub fn set_ps_rdy(v: u8) {
+        unsafe {
+            G_PS_RDY = if v != 0 { 1 } else { 0 };
+        }
+    }
+
+    pub fn set_fw_asoc(v: u8) {
+        unsafe {
+            G_FW_ASOC = if v != 0 { 1 } else { 0 };
+        }
+    }
+
     pub fn trace_ptr() -> *mut HostSetPsTrace {
         unsafe { &mut G_TRACE }
     }
@@ -125,9 +158,42 @@ mod host_trace {
         }
     }
 
+    fn set_rpwm(v: u8) {
+        unsafe {
+            G_TRACE.rpwm_val = v;
+        }
+    }
+
+    fn exec_lps(ps_mode: u8) {
+        unsafe {
+            G_TRACE.exec_lps_called = 1;
+            G_TRACE.exec_lps_ps_mode = ps_mode;
+        }
+    }
+
+    fn enter_lps_allowed(a: &HostAdapter) -> bool {
+        unsafe {
+            if G_PS_RDY == 0 {
+                return false;
+            }
+            G_FW_ASOC != 0 && (a.mlmepriv.fw_state & WIFI_ASOC_STATE) != 0
+        }
+    }
+
     extern "C" {
         fn _enter_pwrlock(plock: *mut i32);
         fn _exit_pwrlock(plock: *mut i32);
+    }
+
+    fn sync_trace(p: &PwrctrlPriv) {
+        unsafe {
+            G_TRACE.lps_leave_cnts = p.lps_leave_cnts;
+            G_TRACE.lps_enter_cnts = p.lps_enter_cnts;
+            G_TRACE.pwr_mode = p.pwr_mode;
+            G_TRACE.smart_ps = p.smart_ps;
+            G_TRACE.bcn_ant_mode = p.bcn_ant_mode;
+            G_TRACE.b_fw_current_in_ps = p.bFwCurrentInPSMode;
+        }
     }
 
     pub fn set_ps_mode_impl(padapter: Padapter, ps_mode: u8, smart_ps: u8, bcn_ant_mode: u8) {
@@ -169,9 +235,7 @@ mod host_trace {
             if ps_mode == PS_MODE_ACTIVE {
                 p.lps_leave_cnts = p.lps_leave_cnts.wrapping_add(1);
                 p.pwr_mode = ps_mode;
-                unsafe {
-                    G_TRACE.rpwm_val = PS_STATE_S4;
-                }
+                set_rpwm(PS_STATE_S4);
                 #[cfg(any(config_wowlan, config_ap_wowlan, config_p2p_wowlan))]
                 if p.wowlan_mode == _TRUE {
                     let t0 = unsafe { G_TIME };
@@ -199,20 +263,36 @@ mod host_trace {
                 if p.wowlan_mode == _TRUE {
                     record_hw(HOST_HW_VAR_H2C_INACTIVE_IPS, ps_mode);
                 }
-                unsafe {
-                    G_TRACE.exec_lps_called = 1;
-                    G_TRACE.exec_lps_ps_mode = ps_mode;
-                }
+                exec_lps(ps_mode);
                 #[cfg(config_lps_pg)]
                 if p.lps_level == LPS_PG {
                     record_hw(HOST_HW_VAR_LPS_PG_HANDLE, LPS_PG_PHYDM_EN);
                 }
                 p.bFwCurrentInPSMode = 0;
+            } else if enter_lps_allowed(unsafe { &*a }) {
+                p.lps_enter_cnts = p.lps_enter_cnts.wrapping_add(1);
+                p.bFwCurrentInPSMode = _TRUE;
+                p.pwr_mode = ps_mode;
+                p.smart_ps = smart_ps;
+                p.bcn_ant_mode = bcn_ant_mode;
+                #[cfg(config_lps_pg)]
+                if p.lps_level == LPS_PG {
+                    record_hw(HOST_HW_VAR_LPS_PG_HANDLE, LPS_PG_PHYDM_DIS);
+                }
+                exec_lps(ps_mode);
+                #[cfg(config_wowlan)]
+                if p.wowlan_mode == _TRUE {
+                    record_hw(HOST_HW_VAR_H2C_INACTIVE_IPS, ps_mode);
+                }
+                let pslv = if p.alives == 0 {
+                    PS_STATE_S0
+                } else {
+                    PS_STATE_S2
+                };
+                set_rpwm(pslv);
             }
+            sync_trace(p);
             unsafe {
-                G_TRACE.lps_leave_cnts = p.lps_leave_cnts;
-                G_TRACE.pwr_mode = p.pwr_mode;
-                G_TRACE.b_fw_current_in_ps = p.bFwCurrentInPSMode;
                 _exit_pwrlock(&mut p.lock);
             }
         }
@@ -241,6 +321,18 @@ pub extern "C" fn host_pwrctrl_set_ps_reset_hal() {
 #[no_mangle]
 pub extern "C" fn host_pwrctrl_set_ps_set_sys_clkr_in_32k(v: u8) {
     host_trace::set_sys_clkr_in_32k(v);
+}
+
+#[cfg(host_pwrctrl_set_ps_test)]
+#[no_mangle]
+pub extern "C" fn host_pwrctrl_set_ps_set_ps_rdy(v: u8) {
+    host_trace::set_ps_rdy(v);
+}
+
+#[cfg(host_pwrctrl_set_ps_test)]
+#[no_mangle]
+pub extern "C" fn host_pwrctrl_set_ps_set_fw_asoc(v: u8) {
+    host_trace::set_fw_asoc(v);
 }
 
 #[cfg(host_pwrctrl_set_ps_test)]
