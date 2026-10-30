@@ -3861,6 +3861,7 @@ exit:
 
 }
 
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_PM_TEST)
 int rtw_pm_set_lps(_adapter *padapter, u8 mode)
 {
 	int	ret = 0;
@@ -3898,6 +3899,7 @@ int rtw_pm_set_lps_level(_adapter *padapter, u8 level)
 
 	return ret;
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_PM_TEST — W3-184 (rtw_pm_set_lps/lps_level) */
 
 #ifdef CONFIG_LPS_1T1R
 int rtw_pm_set_lps_1t1r(_adapter *padapter, u8 en)
@@ -3962,6 +3964,61 @@ int rtw_pm_set_wow_lps_1t1r(_adapter *padapter, u8 en)
 #endif /* CONFIG_LPS_1T1R */
 #endif /* CONFIG_WOWLAN */
 
+#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_PM_TEST)
+void rtw_rust_pm_ips_mode_req(PADAPTER adapter, u8 mode)
+{
+	struct pwrctrl_priv *p = adapter_to_pwrctl(adapter);
+
+	p->ips_mode_req = mode;
+}
+
+u8 rtw_rust_pm_get_power_mgnt(PADAPTER adapter)
+{
+	return adapter_to_pwrctl(adapter)->power_mgnt;
+}
+
+void rtw_rust_pm_set_power_mgnt(PADAPTER adapter, u8 mode)
+{
+	struct pwrctrl_priv *p = adapter_to_pwrctl(adapter);
+
+	p->power_mgnt = mode;
+	p->bLeisurePs = (PS_MODE_ACTIVE != mode) ? _TRUE : _FALSE;
+}
+
+void rtw_rust_pm_set_lps_idle_count(PADAPTER adapter, u8 count)
+{
+	adapter_to_pwrctl(adapter)->LpsIdleCount = count;
+}
+
+u8 rtw_rust_pm_get_lps_level(PADAPTER adapter)
+{
+	return adapter_to_pwrctl(adapter)->lps_level;
+}
+
+void rtw_rust_pm_try_set_lps_level(PADAPTER adapter, u8 level)
+{
+	struct pwrctrl_priv *p = adapter_to_pwrctl(adapter);
+
+	if (p->lps_level == level)
+		return;
+#ifdef CONFIG_LPS
+	if (rtw_lps_ctrl_leave_set_level_cmd(adapter, level, RTW_CMDF_WAIT_ACK) != _SUCCESS)
+#endif
+		p->lps_level = level;
+}
+
+u8 rtw_rust_pm_is_surprise_removed(PADAPTER adapter)
+{
+	return rtw_is_surprise_removed(adapter);
+}
+
+s32 rtw_rust_pm_pwr_wakeup(PADAPTER adapter)
+{
+	return rtw_pwr_wakeup(adapter);
+}
+#endif /* CONFIG_RUST && !HOST_PWRCTRL_PM_TEST */
+
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_PM_TEST)
 int rtw_pm_set_ips(_adapter *padapter, u8 mode)
 {
 	struct pwrctrl_priv *pwrctrlpriv = adapter_to_pwrctl(padapter);
@@ -3979,6 +4036,7 @@ int rtw_pm_set_ips(_adapter *padapter, u8 mode)
 		return -EINVAL;
 	return 0;
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_PM_TEST — W3-184 in rust/rtw_pwrctrl_pm.rs */
 
 #if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_TEST)
 
