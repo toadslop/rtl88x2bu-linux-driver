@@ -51,6 +51,7 @@ static void rtw_usleep_os(int us)
 	g_time += 1;
 }
 #endif
+/* Host L2 slice: PS_RDY + ASOC only (see core/rtw_set_ps_mode WOW/BT/P2P disjuncts). */
 static u8 enter_lps_allowed(PADAPTER padapter)
 {
 	if (!g_ps_rdy)
