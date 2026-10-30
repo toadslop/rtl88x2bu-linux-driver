@@ -131,6 +131,7 @@ CONFIG_PROC_DEBUG = y
 
 ######################## Wake On Lan ##########################
 CONFIG_WOWLAN = n
+CONFIG_FWLPS_IN_IPS = n
 #bit3: ARP enable, bit2: deauth, bit1: unicast, bit0: magic pkt.
 CONFIG_WAKEUP_TYPE = 0xf
 CONFIG_WOW_LPS_MODE = default
@@ -3114,6 +3115,10 @@ $(MODULE_NAME)-y += rust/rtw_pwrctrl_alive.o
 ifeq ($(CONFIG_WOWLAN), y)
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_wow.o
 endif
+ifeq ($(CONFIG_FWLPS_IN_IPS), y)
+ccflags-y += -DCONFIG_FWLPS_IN_IPS
+$(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ips.o
+endif
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ps_rdy.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_pm.o
 $(MODULE_NAME)-y += rust/rtw_beamforming_cmd.o
@@ -5088,6 +5093,21 @@ rust-objects-rtw-pwrctrl-pm-c:
 rust-check-symbols-rtw-pwrctrl-pm: rust-objects-rtw-pwrctrl-pm-c rust-objects-rtw-pwrctrl-pm
 	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/pm_setters_c_ref.o NEW=rust/rtw_pwrctrl_pm.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_pm.allow ALLOW_VACUOUS=1
+
+# W3-185: host C oracle vs rust/rtw_pwrctrl_fw_ips.o (FW LPS in IPS).
+rust-objects-rtw-pwrctrl-fw-ips:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-pwrctrl-fw-ips"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) CONFIG_FWLPS_IN_IPS=y rust/rtw_pwrctrl_fw_ips.o
+rust-objects-rtw-pwrctrl-fw-ips-c:
+	@mkdir -p tests/host/pwrctrl
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-DCONFIG_FWLPS_IN_IPS -DCONFIG_LPS_LCLK -DCONFIG_BT_COEXIST -DFW_IPS_KERN_REF -Wno-unused-function \
+		-o tests/host/pwrctrl/fw_ips_c_ref.o \
+		tests/host/pwrctrl/host_pwrctrl_fw_ips_shim.c
+rust-check-symbols-rtw-pwrctrl-fw-ips: rust-objects-rtw-pwrctrl-fw-ips-c rust-objects-rtw-pwrctrl-fw-ips
+	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/fw_ips_c_ref.o NEW=rust/rtw_pwrctrl_fw_ips.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_fw_ips.allow ALLOW_VACUOUS=1
 
 # W3-191: host C oracle vs rust/rtw_beamforming_cmd.o (cmd/traffic leaf).
 rust-objects-rtw-beamforming-cmd:
