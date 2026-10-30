@@ -2863,6 +2863,25 @@ rustflags-y += --cfg rust_mlme_80211d --cfg config_80211d
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BEAMFORMING' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg config_beamforming
 endif
+# W3-187: kernel rtw_set_ps_mode Rust cfgs (mirror host L2 SET_PS_RUSTCFGS + autoconf).
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BT_COEXIST' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_bt_coexist
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_LPS_LCLK' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_lps_lclk
+endif
+ifeq ($(CONFIG_RTL8822B), y)
+rustflags-y += --cfg config_lps_pg --cfg config_fw_multi_port_support
+endif
+ifeq ($(CONFIG_WOWLAN), y)
+rustflags-y += --cfg config_wowlan
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_WMMPS_STA' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_wmmps_sta
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_P2P_PS' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_p2p_ps
+endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_80211AC_VHT' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg config_80211ac_vht
 endif

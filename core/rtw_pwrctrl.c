@@ -4265,6 +4265,60 @@ void rtw_rust_set_ps_wow_leave_wait(PADAPTER padapter)
 	(void)padapter;
 #endif
 }
+
+void rtw_rust_set_ps_btcoex_lps_notify(PADAPTER padapter, u8 ps_mode)
+{
+#ifdef CONFIG_BT_COEXIST
+	rtw_btcoex_LpsNotify(padapter, ps_mode);
+#else
+	(void)padapter;
+	(void)ps_mode;
+#endif
+}
+
+void rtw_rust_set_ps_wmm_smart_ps(PADAPTER padapter)
+{
+#ifdef CONFIG_WMMPS_STA
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
+	struct registry_priv *pregistrypriv = &padapter->registrypriv;
+
+	pwrpriv->wmm_smart_ps = pregistrypriv->wmm_smart_ps;
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_set_ps_p2p_ps_enable(PADAPTER padapter)
+{
+#ifdef CONFIG_P2P_PS
+#ifdef CONFIG_P2P
+	struct wifidirect_info *pwdinfo = &(padapter->wdinfo);
+
+	if (pwdinfo->opp_ps == 1)
+		p2p_ps_wk_cmd(padapter, P2P_PS_ENABLE, 0);
+#else
+	(void)padapter;
+#endif
+#else
+	(void)padapter;
+#endif
+}
+
+u8 rtw_rust_set_ps_rpwm_pslv(PADAPTER padapter, u8 base_pslv)
+{
+	u8 pslv = base_pslv;
+
+#ifdef CONFIG_BT_COEXIST
+	if ((rtw_btcoex_IsBtDisabled(padapter) == _FALSE)
+	    && (rtw_btcoex_IsBtControlLps(padapter) == _TRUE)) {
+		u8 val8 = rtw_btcoex_LpsVal(padapter);
+
+		if (val8 & BIT(4))
+			pslv = PS_STATE_S2;
+	}
+#endif
+	return pslv;
+}
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_SET_PS_TEST */
 
 #if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_PM_TEST)

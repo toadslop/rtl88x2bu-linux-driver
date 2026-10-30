@@ -373,6 +373,10 @@ extern "C" {
     fn rtw_rust_set_ps_lps_pg_phydm_dis(padapter: Padapter);
     fn rtw_rust_set_ps_wowlan_inactive_ips(padapter: Padapter, ps_mode: u8);
     fn rtw_rust_set_ps_wow_leave_wait(padapter: Padapter);
+    fn rtw_rust_set_ps_btcoex_lps_notify(padapter: Padapter, ps_mode: u8);
+    fn rtw_rust_set_ps_wmm_smart_ps(padapter: Padapter);
+    fn rtw_rust_set_ps_p2p_ps_enable(padapter: Padapter);
+    fn rtw_rust_set_ps_rpwm_pslv(padapter: Padapter, base_pslv: u8) -> u8;
     fn rtw_exec_lps(padapter: Padapter, ps_mode: u8);
     fn rtw_set_rpwm(padapter: Padapter, pslv: u8);
 }
@@ -435,59 +439,22 @@ fn kernel_set_ps_mode_impl(padapter: Padapter, ps_mode: u8, smart_ps: u8, bcn_an
         }
     }
     #[cfg(config_lps_lclk)]
-    {
-        unsafe {
-            rtw_rust_ps_proc_enter_pwrlock(padapter);
-        }
-        if ps_mode == PS_MODE_ACTIVE {
-            if unsafe { rtw_rust_set_ps_may_leave(padapter) } != 0 {
-                unsafe {
-                    rtw_rust_set_ps_inc_u32(padapter, SET_PS_U32_LPS_LEAVE);
-                    rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_PWR_MODE, ps_mode);
-                    rtw_set_rpwm(padapter, PS_STATE_S4);
-                    rtw_rust_set_ps_wow_leave_wait(padapter);
-                }
-                #[cfg(config_lps_pg)]
-                if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_LPS_LEVEL) } == LPS_PG {
-                    unsafe {
-                        rtw_rust_set_ps_lps_pg_redlemem(padapter);
-                    }
-                }
-                #[cfg(config_wowlan)]
-                if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_WOWLAN) } == _TRUE {
-                    unsafe {
-                        rtw_rust_set_ps_wowlan_inactive_ips(padapter, ps_mode);
-                    }
-                }
-                unsafe {
-                    rtw_exec_lps(padapter, ps_mode);
-                }
-                #[cfg(config_lps_pg)]
-                if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_LPS_LEVEL) } == LPS_PG {
-                    unsafe {
-                        rtw_rust_set_ps_lps_pg_phydm_en(padapter);
-                    }
-                }
-                unsafe {
-                    rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_BFW_PS, 0);
-                }
-            }
-        } else if unsafe { rtw_rust_set_ps_may_enter(padapter) } != 0 {
+    unsafe {
+        rtw_rust_ps_proc_enter_pwrlock(padapter);
+    }
+    if ps_mode == PS_MODE_ACTIVE {
+        if unsafe { rtw_rust_set_ps_may_leave(padapter) } != 0 {
             unsafe {
-                rtw_rust_set_ps_inc_u32(padapter, SET_PS_U32_LPS_ENTER);
-                rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_BFW_PS, _TRUE);
+                rtw_rust_set_ps_inc_u32(padapter, SET_PS_U32_LPS_LEAVE);
                 rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_PWR_MODE, ps_mode);
-                rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_SMART_PS, smart_ps);
-                rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_BCN_ANT, bcn_ant_mode);
+                rtw_set_rpwm(padapter, PS_STATE_S4);
+                rtw_rust_set_ps_wow_leave_wait(padapter);
             }
             #[cfg(config_lps_pg)]
             if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_LPS_LEVEL) } == LPS_PG {
                 unsafe {
-                    rtw_rust_set_ps_lps_pg_phydm_dis(padapter);
+                    rtw_rust_set_ps_lps_pg_redlemem(padapter);
                 }
-            }
-            unsafe {
-                rtw_exec_lps(padapter, ps_mode);
             }
             #[cfg(config_wowlan)]
             if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_WOWLAN) } == _TRUE {
@@ -495,18 +462,61 @@ fn kernel_set_ps_mode_impl(padapter: Padapter, ps_mode: u8, smart_ps: u8, bcn_an
                     rtw_rust_set_ps_wowlan_inactive_ips(padapter, ps_mode);
                 }
             }
-            let pslv = if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_ALIVES) } == 0 {
-                PS_STATE_S0
-            } else {
-                PS_STATE_S2
-            };
             unsafe {
-                rtw_set_rpwm(padapter, pslv);
+                rtw_exec_lps(padapter, ps_mode);
+            }
+            #[cfg(config_lps_pg)]
+            if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_LPS_LEVEL) } == LPS_PG {
+                unsafe {
+                    rtw_rust_set_ps_lps_pg_phydm_en(padapter);
+                }
+            }
+            unsafe {
+                rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_BFW_PS, 0);
+                rtw_rust_set_ps_btcoex_lps_notify(padapter, ps_mode);
+            }
+        }
+    } else if unsafe { rtw_rust_set_ps_may_enter(padapter) } != 0 {
+        unsafe {
+            rtw_rust_set_ps_inc_u32(padapter, SET_PS_U32_LPS_ENTER);
+            rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_BFW_PS, _TRUE);
+            rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_PWR_MODE, ps_mode);
+            rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_SMART_PS, smart_ps);
+            rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_BCN_ANT, bcn_ant_mode);
+        }
+        #[cfg(config_lps_pg)]
+        if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_LPS_LEVEL) } == LPS_PG {
+            unsafe {
+                rtw_rust_set_ps_lps_pg_phydm_dis(padapter);
             }
         }
         unsafe {
-            rtw_rust_ps_proc_exit_pwrlock(padapter);
+            rtw_rust_set_ps_wmm_smart_ps(padapter);
+            rtw_exec_lps(padapter, ps_mode);
         }
+        #[cfg(config_wowlan)]
+        if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_WOWLAN) } == _TRUE {
+            unsafe {
+                rtw_rust_set_ps_wowlan_inactive_ips(padapter, ps_mode);
+            }
+        }
+        unsafe {
+            rtw_rust_set_ps_p2p_ps_enable(padapter);
+        }
+        let base_pslv = if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_ALIVES) } == 0 {
+            PS_STATE_S0
+        } else {
+            PS_STATE_S2
+        };
+        let pslv = unsafe { rtw_rust_set_ps_rpwm_pslv(padapter, base_pslv) };
+        unsafe {
+            rtw_set_rpwm(padapter, pslv);
+            rtw_rust_set_ps_btcoex_lps_notify(padapter, ps_mode);
+        }
+    }
+    #[cfg(config_lps_lclk)]
+    unsafe {
+        rtw_rust_ps_proc_exit_pwrlock(padapter);
     }
 }
 
