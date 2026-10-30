@@ -4,10 +4,14 @@
 static struct host_pwrctrl_set_ps_trace g_trace;
 static u8 g_sys_clkr_in_32k;
 static systime g_time;
+static u8 g_ps_rdy = 1;
+static u8 g_fw_asoc = 1;
 void host_pwrctrl_set_ps_reset_trace(void) { memset(&g_trace, 0, sizeof(g_trace)); }
 struct host_pwrctrl_set_ps_trace *host_pwrctrl_set_ps_get_trace(void) { return &g_trace; }
 void host_pwrctrl_set_ps_reset_hal(void) { g_sys_clkr_in_32k = 0; g_time = 0; }
 void host_pwrctrl_set_ps_set_sys_clkr_in_32k(u8 v) { g_sys_clkr_in_32k = v ? 1 : 0; }
+void host_pwrctrl_set_ps_set_ps_rdy(u8 v) { g_ps_rdy = v ? 1 : 0; }
+void host_pwrctrl_set_ps_set_fw_asoc(u8 v) { g_fw_asoc = v ? 1 : 0; }
 void _enter_pwrlock(_pwrlock *plock) { (void)plock; }
 void _exit_pwrlock(_pwrlock *plock) { (void)plock; }
 #if defined(CONFIG_LPS_PG) || defined(CONFIG_WOWLAN)
@@ -44,10 +48,18 @@ static void rtw_hal_get_hwreg(PADAPTER a, u8 var, u8 *pval)
 static void rtw_usleep_os(int us)
 {
 	(void)us;
-	/* Host mock: advance passing-time ms like rtw_get_passing_time_ms(). */
 	g_time += 1;
 }
 #endif
+/* Host L2 slice: PS_RDY + ASOC only (see core/rtw_set_ps_mode WOW/BT/P2P disjuncts). */
+static u8 enter_lps_allowed(PADAPTER padapter)
+{
+	if (!g_ps_rdy)
+		return 0;
+	if (g_fw_asoc && (padapter->mlmepriv.fw_state & WIFI_ASOC_STATE))
+		return 1;
+	return 0;
+}
 void rtw_set_ps_mode(PADAPTER padapter, u8 ps_mode, u8 smart_ps, u8 bcn_ant_mode,
 		     const char *msg)
 {
@@ -125,9 +137,36 @@ void rtw_set_ps_mode(PADAPTER padapter, u8 ps_mode, u8 smart_ps, u8 bcn_ant_mode
 		}
 #endif
 		p->bFwCurrentInPSMode = _FALSE;
+	} else if (enter_lps_allowed(padapter)) {
+		u8 pslv;
+
+		p->lps_enter_cnts++;
+		p->bFwCurrentInPSMode = _TRUE;
+		p->pwr_mode = ps_mode;
+		p->smart_ps = smart_ps;
+		p->bcn_ant_mode = bcn_ant_mode;
+#ifdef CONFIG_LPS_PG
+		if (p->lps_level == LPS_PG) {
+			lps_pg_hdl_id = LPS_PG_PHYDM_DIS;
+			rtw_hal_set_hwreg(padapter, HOST_HW_VAR_LPS_PG_HANDLE,
+					  &lps_pg_hdl_id);
+		}
+#endif
+		rtw_exec_lps(padapter, ps_mode);
+#ifdef CONFIG_WOWLAN
+		if (p->wowlan_mode == _TRUE)
+			rtw_hal_set_hwreg(padapter, HOST_HW_VAR_H2C_INACTIVE_IPS, &ps_mode);
+#endif
+		pslv = PS_STATE_S2;
+		if (p->alives == 0)
+			pslv = PS_STATE_S0;
+		rtw_set_rpwm(padapter, pslv);
 	}
 	g_trace.lps_leave_cnts = p->lps_leave_cnts;
+	g_trace.lps_enter_cnts = p->lps_enter_cnts;
 	g_trace.pwr_mode = p->pwr_mode;
+	g_trace.smart_ps = p->smart_ps;
+	g_trace.bcn_ant_mode = p->bcn_ant_mode;
 	g_trace.b_fw_current_in_ps = p->bFwCurrentInPSMode;
 	_exit_pwrlock(&p->lock);
 #endif

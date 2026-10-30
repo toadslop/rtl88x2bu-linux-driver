@@ -22,21 +22,33 @@
       "initial_bcn_ant_mode": 1,
       "smart_ps": 2,
       "bcn_ant_mode": 1,
+      "alives": 1,
       "expect_rsvd_page": 1,
       "expect_default_port": 1,
-      "expect_lps_leave_cnts": 0,
-      "expect_exec_lps": 0
+      "expect_lps_enter_cnts": 1,
+      "expect_exec_lps": 1,
+      "expect_exec_lps_mode": 1,
+      "expect_pwr_mode": 1,
+      "expect_b_fw_current_in_ps": 1,
+      "expect_rpwm": 2,
+      "expect_lps_leave_cnts": 0
     },
     {
       "name": "multi_port_preamble_min",
       "ps_mode": 1,
       "initial_pwr_mode": 0,
       "lps_level": 2,
+      "alives": 1,
       "expect_rsvd_page": 1,
       "expect_default_port": 1,
       "expect_hwreg_count": 0,
-      "expect_lps_leave_cnts": 0,
-      "expect_exec_lps": 0
+      "expect_lps_enter_cnts": 1,
+      "expect_exec_lps": 1,
+      "expect_exec_lps_mode": 1,
+      "expect_pwr_mode": 1,
+      "expect_b_fw_current_in_ps": 1,
+      "expect_rpwm": 2,
+      "expect_lps_leave_cnts": 0
     },
     {
       "name": "active_leave_basic",
@@ -68,6 +80,47 @@
       "expect_wow_fail": 0,
       "expect_hwreg_count": 0,
       "expect_exec_lps": 1
+    },
+    {
+      "name": "enter_lps_min",
+      "ps_mode": 1,
+      "initial_pwr_mode": 0,
+      "smart_ps": 2,
+      "bcn_ant_mode": 1,
+      "alives": 1,
+      "expect_rsvd_page": 1,
+      "expect_default_port": 1,
+      "expect_lps_enter_cnts": 1,
+      "expect_exec_lps": 1,
+      "expect_exec_lps_mode": 1,
+      "expect_pwr_mode": 1,
+      "expect_b_fw_current_in_ps": 1,
+      "expect_rpwm": 2,
+      "expect_smart_ps": 2,
+      "expect_bcn_ant_mode": 1
+    },
+    {
+      "name": "enter_lps_no_ps_rdy",
+      "ps_mode": 1,
+      "initial_pwr_mode": 0,
+      "ps_rdy": 0,
+      "expect_rsvd_page": 1,
+      "expect_default_port": 1,
+      "expect_lps_enter_cnts": 0,
+      "expect_exec_lps": 0
+    },
+    {
+      "name": "enter_lps_alives_s0",
+      "ps_mode": 1,
+      "initial_pwr_mode": 0,
+      "alives": 0,
+      "expect_rsvd_page": 1,
+      "expect_default_port": 1,
+      "expect_lps_enter_cnts": 1,
+      "expect_exec_lps": 1,
+      "expect_rpwm": 1,
+      "expect_pwr_mode": 1,
+      "expect_b_fw_current_in_ps": 1
     }
   ]
 }
