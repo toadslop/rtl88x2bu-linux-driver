@@ -1520,14 +1520,19 @@ u8 rtw_rust_fw_ips_read8(PADAPTER padapter, u16 reg)
 	return rtw_read8(padapter, reg);
 }
 
-void rtw_rust_fw_ips_hal_get_hwreg(PADAPTER padapter, u8 var, u8 *out)
+void rtw_rust_fw_ips_hal_get_cpwm(PADAPTER padapter, u8 *out)
 {
-	rtw_hal_get_hwreg(padapter, var, out);
+	rtw_hal_get_hwreg(padapter, HW_VAR_CPWM, out);
 }
 
-void rtw_rust_fw_ips_hal_set_hwreg(PADAPTER padapter, u8 var, u8 *val)
+void rtw_rust_fw_ips_hal_get_rpwm_tog(PADAPTER padapter, u8 *out)
 {
-	rtw_hal_set_hwreg(padapter, var, val);
+	rtw_hal_get_hwreg(padapter, HW_VAR_RPWM_TOG, out);
+}
+
+void rtw_rust_fw_ips_hal_set_rpwm(PADAPTER padapter, u8 rpwm)
+{
+	rtw_hal_set_hwreg(padapter, HW_VAR_SET_RPWM, &rpwm);
 }
 
 void rtw_rust_fw_ips_mdelay(u32 ms)
