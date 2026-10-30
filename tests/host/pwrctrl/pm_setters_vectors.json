@@ -1,0 +1,92 @@
+[
+  {
+    "name": "lps_invalid_mode",
+    "fn": "lps",
+    "mode": 99,
+    "expect_ret": -22
+  },
+  {
+    "name": "lps_active_leaves_ps",
+    "fn": "lps",
+    "mode": 0,
+    "initial_power_mgnt": 2,
+    "expect_ret": 0,
+    "expect_power_mgnt": 0,
+    "expect_bLeisurePs": 0,
+    "expect_leave_all_ps": 1
+  },
+  {
+    "name": "lps_ps_mode_sets_idle",
+    "fn": "lps",
+    "mode": 2,
+    "initial_power_mgnt": 0,
+    "expect_ret": 0,
+    "expect_power_mgnt": 2,
+    "expect_bLeisurePs": 1,
+    "expect_LpsIdleCount": 2,
+    "expect_leave_all_ps": 0
+  },
+  {
+    "name": "lps_same_mode_noop",
+    "fn": "lps",
+    "mode": 2,
+    "initial_power_mgnt": 2,
+    "expect_ret": 0,
+    "expect_power_mgnt": 2,
+    "expect_leave_all_ps": 0
+  },
+  {
+    "name": "lps_level_invalid",
+    "fn": "lps_level",
+    "mode": 9,
+    "expect_ret": -22
+  },
+  {
+    "name": "lps_level_updates",
+    "fn": "lps_level",
+    "mode": 2,
+    "initial_lps_level": 0,
+    "expect_ret": 0,
+    "expect_lps_level": 2
+  },
+  {
+    "name": "ips_normal",
+    "fn": "ips",
+    "mode": 1,
+    "expect_ret": 0,
+    "expect_ips_mode_req": 1,
+    "expect_ips_mode_req_calls": 1
+  },
+  {
+    "name": "ips_none_wakeup_ok",
+    "fn": "ips",
+    "mode": 0,
+    "expect_ret": 0,
+    "expect_ips_mode_req": 0,
+    "expect_pwr_wakeup_calls": 1
+  },
+  {
+    "name": "ips_none_surprise_removed",
+    "fn": "ips",
+    "mode": 0,
+    "surprise_removed": 1,
+    "expect_ret": 0,
+    "expect_ips_mode_req": 0,
+    "expect_pwr_wakeup_calls": 0
+  },
+  {
+    "name": "ips_none_wakeup_fail",
+    "fn": "ips",
+    "mode": 0,
+    "pwr_wakeup_fail": 1,
+    "expect_ret": -14,
+    "expect_ips_mode_req": 0,
+    "expect_pwr_wakeup_calls": 1
+  },
+  {
+    "name": "ips_invalid",
+    "fn": "ips",
+    "mode": 5,
+    "expect_ret": -22
+  }
+]
