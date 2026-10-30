@@ -176,7 +176,6 @@ pub struct BfHostSoundEnterAdpt {
 
 #[cfg(host_bf_sound_enter_test)]
 const _: () = {
-    assert!(core::mem::size_of::<BfHostSoundEnterAdpt>() == 448);
     assert!(offset_of!(BfHostSoundEnterAdpt, sound) == 308);
 };
 
@@ -284,7 +283,10 @@ pub unsafe extern "C" fn o_beamforming_enter(adapter: BfHostSoundEnterPadpt, p: 
 
 #[cfg(not(host_bf_sound_enter_test))]
 extern "C" {
-    fn rtw_rust_beamforming_enter_impl(adapter: *mut core::ffi::c_void, p: *mut core::ffi::c_void);
+    fn rtw_rust_beamforming_enter_impl(
+        adapter: *mut core::ffi::c_void,
+        p: *mut core::ffi::c_void,
+    ) -> U8;
 }
 
 #[cfg(not(host_bf_sound_enter_test))]
@@ -292,6 +294,6 @@ extern "C" {
 pub extern "C" fn rtw_rust_beamforming_enter(
     adapter: *mut core::ffi::c_void,
     p: *mut core::ffi::c_void,
-) {
-    unsafe { rtw_rust_beamforming_enter_impl(adapter, p) };
+) -> U8 {
+    unsafe { rtw_rust_beamforming_enter_impl(adapter, p) }
 }

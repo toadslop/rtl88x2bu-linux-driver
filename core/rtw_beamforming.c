@@ -21,6 +21,10 @@
 
 #ifdef RTW_BEAMFORMING_VERSION_2
 
+#if defined(CONFIG_RUST) && !defined(HOST_BF_SOUND_ENTER_C_REF)
+u8 rtw_rust_beamforming_enter(PADAPTER adapter, void *p);
+#endif
+
 struct ndpa_sta_info {
 	u16 aid:12;
 	u16 feedback_type:1;
@@ -1359,6 +1363,102 @@ static struct beamformee_entry *_bfee_add_entry(PADAPTER adapter,
 	return bfee;
 }
 
+#if defined(CONFIG_RUST) && !defined(HOST_BF_SOUND_ENTER_C_REF)
+static void _rust_get_sta_beamform_cap(PADAPTER adapter, struct sta_info *sta,
+				     u8 *sta_bf_cap, u8 *sounding_dim, u8 *comp_steering)
+{
+	struct beamforming_info *info = GET_BEAMFORM_INFO(adapter);
+	struct ht_priv *ht = &adapter->mlmepriv.htpriv;
+	u16 ht_bf_cap;
+
+	*sta_bf_cap = 0;
+	*sounding_dim = 0;
+	*comp_steering = 0;
+	if (is_supported_ht(sta->wireless_mode) == _FALSE)
+		return;
+	ht_bf_cap = ht->beamform_cap;
+	if (TEST_FLAG(ht_bf_cap, BEAMFORMING_HT_BEAMFORMER_ENABLE)) {
+		info->beamforming_cap |= BEAMFORMER_CAP_HT_EXPLICIT;
+		*sta_bf_cap |= BEAMFORMEE_CAP_HT_EXPLICIT;
+		*sounding_dim = (ht_bf_cap & BEAMFORMING_HT_BEAMFORMEE_CHNL_EST_CAP) >> 6;
+		*comp_steering = (ht_bf_cap & BEAMFORMING_HT_BEAMFORMER_STEER_NUM) >> 4;
+	}
+}
+
+static u8 _rust_enter_ht_su_bfee_only(u8 sta_bf_cap)
+{
+	if (sta_bf_cap == BEAMFORMING_CAP_NONE)
+		return _FALSE;
+	if (!TEST_FLAG(sta_bf_cap, BEAMFORMEE_CAP_HT_EXPLICIT))
+		return _FALSE;
+	if (TEST_FLAG(sta_bf_cap, BEAMFORMER_CAP_HT_EXPLICIT)
+	    || TEST_FLAG(sta_bf_cap, BEAMFORMEE_CAP_VHT_SU)
+	    || TEST_FLAG(sta_bf_cap, BEAMFORMEE_CAP_VHT_MU)
+	    || TEST_FLAG(sta_bf_cap, BEAMFORMER_CAP_VHT_SU))
+		return _FALSE;
+	return _TRUE;
+}
+
+u8 rtw_rust_beamforming_enter_impl(PADAPTER adapter, void *p)
+{
+	struct sta_info *sta_copy, *sta;
+	struct beamforming_info *info;
+	u8 sta_bf_cap, sounding_dim = 0, comp_steering = 0;
+	struct beamformee_entry *bfee;
+	u8 wireless_mode;
+
+	if (!adapter || !p)
+		return _FALSE;
+	if (check_fwstate(&adapter->mlmepriv, WIFI_AP_STATE) == _TRUE)
+		return _FALSE;
+
+	sta_copy = (struct sta_info *)p;
+	sta = rtw_get_stainfo(&adapter->stapriv, sta_copy->cmn.mac_addr);
+	if (!sta)
+		return _FALSE;
+
+	wireless_mode = sta->wireless_mode;
+	if ((is_supported_ht(wireless_mode) == _FALSE)
+	    && (is_supported_vht(wireless_mode) == _FALSE))
+		return _FALSE;
+#ifdef CONFIG_80211AC_VHT
+	if (is_supported_vht(wireless_mode) == _TRUE)
+		return _FALSE;
+#endif
+
+	if (adapter->mlmepriv.htpriv.beamform_cap == 0
+#ifdef CONFIG_80211AC_VHT
+	    && adapter->mlmepriv.vhtpriv.beamform_cap == 0
+#endif
+	   )
+		return _FALSE;
+
+	if (TEST_FLAG(adapter->mlmepriv.htpriv.beamform_cap, BEAMFORMING_HT_BEAMFORMEE_ENABLE)
+	    && TEST_FLAG(adapter->mlmepriv.htpriv.beamform_cap, BEAMFORMING_HT_BEAMFORMER_ENABLE))
+		return _FALSE;
+
+	info = GET_BEAMFORM_INFO(adapter);
+	_rust_get_sta_beamform_cap(adapter, sta, &sta_bf_cap, &sounding_dim, &comp_steering);
+	if (_rust_enter_ht_su_bfee_only(sta_bf_cap) == _FALSE)
+		return _FALSE;
+
+	sta_bf_cap |= BEAMFORMEE_CAP;
+
+	bfee = _bfee_add_entry(adapter, sta, sta_bf_cap, sounding_dim, comp_steering);
+	if (!bfee)
+		return _FALSE;
+
+	rtw_hal_set_hwreg(adapter, HW_VAR_SOUNDING_ENTER, (u8 *)sta);
+	if ((info->beamformee_su_cnt != 0) || (info->beamformee_mu_cnt != 0)) {
+		if (SOUNDING_STATE_NONE == info->sounding_info.state) {
+			info->sounding_info.state = SOUNDING_STATE_INIT;
+			_set_timer(&info->sounding_timer, 2000);
+		}
+	}
+	return _TRUE;
+}
+#endif /* CONFIG_RUST && !HOST_BF_SOUND_ENTER_C_REF */
+
 static void _bfee_remove_entry(PADAPTER adapter, struct beamformee_entry *entry)
 {
 	struct beamforming_info *info;
@@ -1424,6 +1524,10 @@ static enum beamforming_cap _bfee_get_entry_cap_by_macid(PADAPTER adapter, u8 ma
 
 static void _beamforming_enter(PADAPTER adapter, void *p)
 {
+#if defined(CONFIG_RUST) && !defined(HOST_BF_SOUND_ENTER_C_REF)
+	if (rtw_rust_beamforming_enter(adapter, p) == _TRUE)
+		return;
+#endif
 	struct mlme_priv *mlme;
 	struct ht_priv *htpriv;
 #ifdef CONFIG_80211AC_VHT
@@ -2083,6 +2187,10 @@ u8 rtw_bf_cmd(PADAPTER adapter, s32 type, u8 *pbuf, s32 size, u8 enqueue);
 void rtw_bf_update_attrib(PADAPTER adapter, struct pkt_attrib *attrib, struct sta_info *sta);
 void rtw_bf_c2h_handler(PADAPTER adapter, u8 id, u8 *buf, u8 buf_len);
 void rtw_bf_update_traffic(PADAPTER adapter);
+#endif
+
+#if defined(CONFIG_RUST) && !defined(HOST_BF_SOUND_ENTER_C_REF)
+u8 rtw_rust_beamforming_enter(PADAPTER adapter, void *p);
 #endif
 
 #else /* !RTW_BEAMFORMING_VERSION_2 */
