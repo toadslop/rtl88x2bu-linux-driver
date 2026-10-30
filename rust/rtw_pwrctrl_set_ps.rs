@@ -477,7 +477,11 @@ fn kernel_set_ps_mode_impl(padapter: Padapter, ps_mode: u8, smart_ps: u8, bcn_an
             #[cfg(config_lps_pg)]
             if unsafe { rtw_rust_set_ps_get_u8(padapter, SET_PS_U8_LPS_LEVEL) } == LPS_PG {
                 unsafe {
-                    rtw_rust_set_ps_hal_hwreg(padapter, HOST_HW_VAR_LPS_PG_HANDLE, LPS_PG_PHYDM_DIS);
+                    rtw_rust_set_ps_hal_hwreg(
+                        padapter,
+                        HOST_HW_VAR_LPS_PG_HANDLE,
+                        LPS_PG_PHYDM_DIS,
+                    );
                 }
             }
             unsafe {
