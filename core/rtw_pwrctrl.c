@@ -1367,6 +1367,7 @@ void rtw_rust_ps_rdy_log_group_handshake_in_progress(void)
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_PS_RDY_TEST */
 
 #if defined(CONFIG_FWLPS_IN_IPS)
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_FW_IPS_TEST)
 void rtw_set_fw_in_ips_mode(PADAPTER padapter, u8 enable)
 {
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
@@ -1480,7 +1481,72 @@ void rtw_set_fw_in_ips_mode(PADAPTER padapter, u8 enable)
 #endif
 	}
 }
-#endif /* CONFIG_PNO_SUPPORT */
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_FW_IPS_TEST — W3-185 in rust/rtw_pwrctrl_fw_ips.rs */
+
+#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_FW_IPS_TEST)
+
+u8 rtw_rust_fw_ips_netif_up(PADAPTER padapter)
+{
+	return padapter->netif_up;
+}
+
+u8 rtw_rust_fw_ips_ips_mode_req(PADAPTER padapter)
+{
+	return adapter_to_pwrctl(padapter)->ips_mode_req;
+}
+
+void rtw_rust_fw_ips_set_tog(PADAPTER padapter, u8 tog)
+{
+	adapter_to_pwrctl(padapter)->tog = tog;
+}
+
+void rtw_rust_fw_ips_btcoex_ips_notify(PADAPTER padapter, u8 mode)
+{
+#ifdef CONFIG_BT_COEXIST
+	rtw_btcoex_IpsNotify(padapter, mode);
+#else
+	(void)padapter;
+	(void)mode;
+#endif
+}
+
+void rtw_rust_fw_ips_hal_fill_h2c(PADAPTER padapter, u8 cmd, u8 len, u8 *parm)
+{
+	rtw_hal_fill_h2c_cmd(padapter, cmd, len, parm);
+}
+
+u8 rtw_rust_fw_ips_read8(PADAPTER padapter, u16 reg)
+{
+	return rtw_read8(padapter, reg);
+}
+
+void rtw_rust_fw_ips_hal_get_hwreg(PADAPTER padapter, u8 var, u8 *out)
+{
+	rtw_hal_get_hwreg(padapter, var, out);
+}
+
+void rtw_rust_fw_ips_hal_set_hwreg(PADAPTER padapter, u8 var, u8 *val)
+{
+	rtw_hal_set_hwreg(padapter, var, val);
+}
+
+void rtw_rust_fw_ips_mdelay(u32 ms)
+{
+	rtw_mdelay_os(ms);
+}
+
+systime rtw_rust_fw_ips_get_current_time(void)
+{
+	return rtw_get_current_time();
+}
+
+u32 rtw_rust_fw_ips_get_passing_time_ms(systime start)
+{
+	return rtw_get_passing_time_ms(start);
+}
+
+#endif /* CONFIG_RUST && !HOST_PWRCTRL_FW_IPS_TEST */
+#endif /* CONFIG_FWLPS_IN_IPS */
 
 #if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_LPS_EXEC_TEST)
 void rtw_exec_lps(_adapter *padapter, u8 ps_mode)

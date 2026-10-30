@@ -1,0 +1,12 @@
+# W3-185: rtw_set_fw_in_ips_mode — Rust FFI helpers (kernel-only).
+drop rtw_rust_fw_ips_netif_up
+drop rtw_rust_fw_ips_ips_mode_req
+drop rtw_rust_fw_ips_set_tog
+drop rtw_rust_fw_ips_btcoex_ips_notify
+drop rtw_rust_fw_ips_hal_fill_h2c
+drop rtw_rust_fw_ips_read8
+drop rtw_rust_fw_ips_hal_get_hwreg
+drop rtw_rust_fw_ips_hal_set_hwreg
+drop rtw_rust_fw_ips_mdelay
+drop rtw_rust_fw_ips_get_current_time
+drop rtw_rust_fw_ips_get_passing_time_ms
