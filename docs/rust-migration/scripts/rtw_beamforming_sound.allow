@@ -1,2 +1,4 @@
 # W3-192: beamforming enter hook — Rust FFI impl helper (kernel-only).
 drop rtw_rust_beamforming_enter_impl
+# W3-193: beamforming leave hook — Rust FFI impl helper (kernel-only).
+drop rtw_rust_beamforming_leave_impl

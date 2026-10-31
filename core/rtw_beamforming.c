@@ -24,6 +24,9 @@
 #if defined(CONFIG_RUST) && !defined(HOST_BF_SOUND_ENTER_C_REF)
 u8 rtw_rust_beamforming_enter(PADAPTER adapter, void *p);
 #endif
+#if defined(CONFIG_RUST) && !defined(HOST_BF_SOUND_LEAVE_C_REF)
+void rtw_rust_beamforming_leave(PADAPTER adapter, u8 *ra);
+#endif
 
 struct ndpa_sta_info {
 	u16 aid:12;
@@ -1632,8 +1635,52 @@ static void _beamforming_reset(PADAPTER adapter)
 	RTW_ERR("%s: Not ready!!\n", __FUNCTION__);
 }
 
+#if defined(CONFIG_RUST) && !defined(HOST_BF_SOUND_LEAVE_C_REF)
+void rtw_rust_beamforming_leave_impl(PADAPTER adapter, u8 *ra)
+{
+	struct beamforming_info *info;
+	struct beamformer_entry *bfer = NULL;
+	struct beamformee_entry *bfee = NULL;
+
+	if (!adapter || !ra)
+		return;
+
+	RTW_INFO("+%s\n", __FUNCTION__);
+
+	info = GET_BEAMFORM_INFO(adapter);
+	bfer = _bfer_get_entry_by_addr(adapter, ra);
+	bfee = _bfee_get_entry_by_addr(adapter, ra);
+
+	if (!bfer && !bfee) {
+		RTW_WARN("%s: " MAC_FMT " is neither beamforming ee or er!!\n",
+			__FUNCTION__, MAC_ARG(ra));
+		return;
+	}
+
+	if (bfer)
+		_bfer_remove_entry(adapter, bfer);
+
+	if (bfee)
+		_bfee_remove_entry(adapter, bfee);
+
+	rtw_hal_set_hwreg(adapter, HW_VAR_SOUNDING_LEAVE, ra);
+
+	if ((info->beamformee_su_cnt == 0)
+	    && (info->beamformee_mu_cnt == 0)) {
+		_cancel_timer_ex(&info->sounding_timer);
+		_sounding_init(&info->sounding_info);
+	}
+
+	RTW_INFO("-%s\n", __FUNCTION__);
+}
+#endif /* CONFIG_RUST && !HOST_BF_SOUND_LEAVE_C_REF */
+
 static void _beamforming_leave(PADAPTER adapter, u8 *ra)
 {
+#if defined(CONFIG_RUST) && !defined(HOST_BF_SOUND_LEAVE_C_REF)
+	rtw_rust_beamforming_leave(adapter, ra);
+	return;
+#endif
 	struct beamforming_info *info;
 	struct beamformer_entry *bfer = NULL;
 	struct beamformee_entry *bfee = NULL;
