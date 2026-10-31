@@ -2434,6 +2434,7 @@ void LeaveAllPowerSaveMode(PADAPTER Adapter)
 }
 
 #ifdef CONFIG_LPS_LCLK
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_CPWM_INT_TEST)
 void LPS_Leave_check(
 	PADAPTER padapter)
 {
@@ -2527,6 +2528,102 @@ void cpwm_int_hdl(
 exit:
 	return;
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_CPWM_INT_TEST — W3-188 in rust/rtw_pwrctrl_cpwm_int.rs */
+
+#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_CPWM_INT_TEST)
+
+void rtw_rust_cpwm_enter_pwrlock(PADAPTER padapter)
+{
+	_enter_pwrlock(&adapter_to_pwrctl(padapter)->lock);
+}
+
+void rtw_rust_cpwm_exit_pwrlock(PADAPTER padapter)
+{
+	_exit_pwrlock(&adapter_to_pwrctl(padapter)->lock);
+}
+
+void rtw_rust_cpwm_yield_os(void)
+{
+	rtw_yield_os();
+}
+
+u32 rtw_rust_cpwm_get_current_time(void)
+{
+	return rtw_get_current_time();
+}
+
+u32 rtw_rust_cpwm_get_passing_time_ms(u32 start)
+{
+	return rtw_get_passing_time_ms(start);
+}
+
+void rtw_rust_cpwm_msleep_os(int ms)
+{
+	rtw_msleep_os(ms);
+}
+
+void rtw_rust_cpwm_leave_timeout_err(void)
+{
+	RTW_ERR("Wait for cpwm event  than 100 ms!!!\n");
+}
+
+u8 rtw_rust_cpwm_leave_ready(PADAPTER padapter)
+{
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
+
+	if (rtw_is_surprise_removed(padapter)
+	    || (!rtw_is_hw_init_completed(padapter))
+#ifdef CONFIG_USB_HCI
+	    || rtw_is_drv_stopped(padapter)
+#endif
+	    || (pwrpriv->pwr_mode == PS_MODE_ACTIVE))
+		return _TRUE;
+	return _FALSE;
+}
+
+u8 rtw_rust_cpwm_cannot_run(PADAPTER padapter)
+{
+	return RTW_CANNOT_RUN(padapter) ? _TRUE : _FALSE;
+}
+
+void rtw_rust_cpwm_set_cpwm_fields(PADAPTER padapter, u8 state)
+{
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
+
+	pwrpriv->cpwm = PS_STATE(state);
+	pwrpriv->cpwm_tog = state & PS_TOGGLE;
+}
+
+u8 rtw_rust_cpwm_get_alives(PADAPTER padapter)
+{
+	return adapter_to_pwrctl(padapter)->alives;
+}
+
+void rtw_rust_cpwm_up_cmd_sema(PADAPTER padapter)
+{
+	_rtw_up_sema(&padapter->cmdpriv.cmd_queue_sema);
+}
+
+void rtw_rust_cpwm_up_xmit_sema(PADAPTER padapter)
+{
+	_rtw_up_sema(&padapter->xmitpriv.xmit_sema);
+}
+
+u8 rtw_rust_cpwm_rpwm_timer_redundant(PADAPTER padapter)
+{
+#ifdef CONFIG_LPS_RPWM_TIMER
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
+
+	if (pwrpriv->rpwm < PS_STATE_S2) {
+		RTW_INFO("%s: Redundant CPWM Int. RPWM=0x%02X CPWM=0x%02x\n", __func__,
+			 pwrpriv->rpwm, pwrpriv->cpwm);
+		return _TRUE;
+	}
+#endif
+	return _FALSE;
+}
+
+#endif /* CONFIG_RUST && !HOST_PWRCTRL_CPWM_INT_TEST */
 
 static void cpwm_event_callback(struct work_struct *work)
 {

@@ -3130,6 +3130,7 @@ $(MODULE_NAME)-y += rust/rtw_pwrctrl_ps.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_lps_tp.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_lps_exec.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_rpwm.o
+$(MODULE_NAME)-y += rust/rtw_pwrctrl_cpwm_int.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_alive.o
 ifeq ($(CONFIG_WOWLAN), y)
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_wow.o
@@ -5058,6 +5059,20 @@ rust-objects-rtw-pwrctrl-rpwm-c:
 rust-check-symbols-rtw-pwrctrl-rpwm: rust-objects-rtw-pwrctrl-rpwm-c rust-objects-rtw-pwrctrl-rpwm
 	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/rpwm_c_ref.o NEW=rust/rtw_pwrctrl_rpwm.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_rpwm.allow ALLOW_VACUOUS=1
+
+# W3-188: host C oracle vs rust/rtw_pwrctrl_cpwm_int.o (CPWM int + leave check).
+rust-objects-rtw-pwrctrl-cpwm-int:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-pwrctrl-cpwm-int"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_pwrctrl_cpwm_int.o
+rust-objects-rtw-pwrctrl-cpwm-int-c:
+	@mkdir -p tests/host/pwrctrl
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 -DHOST_PWRCTRL_CPWM_INT_TEST \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/pwrctrl/cpwm_int_c_ref.o \
+		tests/host/pwrctrl/host_pwrctrl_cpwm_int_shim.c
+rust-check-symbols-rtw-pwrctrl-cpwm-int: rust-objects-rtw-pwrctrl-cpwm-int-c rust-objects-rtw-pwrctrl-cpwm-int
+	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/cpwm_int_c_ref.o NEW=rust/rtw_pwrctrl_cpwm_int.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_cpwm_int.allow ALLOW_VACUOUS=1
 
 # W3-179: host C oracle vs rust/rtw_pwrctrl_alive.o (register task/IO alive).
 rust-objects-rtw-pwrctrl-alive:

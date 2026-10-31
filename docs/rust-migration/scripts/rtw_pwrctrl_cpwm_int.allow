@@ -1,0 +1,21 @@
+# W3-188: LPS_Leave_check + cpwm_int_hdl — Rust FFI helpers (kernel-only).
+drop rtw_rust_cpwm_enter_pwrlock
+drop rtw_rust_cpwm_exit_pwrlock
+drop rtw_rust_cpwm_yield_os
+drop rtw_rust_cpwm_get_current_time
+drop rtw_rust_cpwm_get_passing_time_ms
+drop rtw_rust_cpwm_msleep_os
+drop rtw_rust_cpwm_leave_timeout_err
+drop rtw_rust_cpwm_leave_ready
+drop rtw_rust_cpwm_cannot_run
+drop rtw_rust_cpwm_set_cpwm_fields
+drop rtw_rust_cpwm_get_alives
+drop rtw_rust_cpwm_up_cmd_sema
+drop rtw_rust_cpwm_up_xmit_sema
+drop rtw_rust_cpwm_rpwm_timer_redundant
+drop host_pwrctrl_cpwm_int_reset
+drop host_pwrctrl_cpwm_int_set_time
+drop host_pwrctrl_cpwm_int_get_cpwm
+drop host_pwrctrl_cpwm_int_get_cpwm_tog
+drop host_pwrctrl_cpwm_int_cmd_sem_up
+drop host_pwrctrl_cpwm_int_xmit_sem_up

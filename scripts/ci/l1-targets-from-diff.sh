@@ -137,6 +137,14 @@ for path in "${changed[@]}"; do
 	| tests/host/pwrctrl/rpwm_vectors.json)
 		add_target rust-check-symbols-rtw-pwrctrl-rpwm
 		;;
+	rust/rtw_pwrctrl_cpwm_int.rs \
+	| rust/rtw_pwrctrl_cpwm_int_host.rs \
+	| core/rtw_pwrctrl.c \
+	| tests/host/pwrctrl/host_pwrctrl_cpwm_int_shim.c \
+	| tests/host/pwrctrl/test_pwrctrl_cpwm_int.c \
+	| tests/host/pwrctrl/cpwm_int_vectors.json)
+		add_target rust-check-symbols-rtw-pwrctrl-cpwm-int
+		;;
 	rust/rtw_pwrctrl_alive.rs \
 	| core/rtw_pwrctrl.c \
 	| tests/host/pwrctrl/host_pwrctrl_alive_shim.c \
