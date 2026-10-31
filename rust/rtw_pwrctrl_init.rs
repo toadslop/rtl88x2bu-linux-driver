@@ -47,6 +47,19 @@ pub struct HostInitTrace {
 }
 
 #[cfg(host_pwrctrl_init_test)]
+#[inline]
+unsafe fn trace_bump(field: &mut u32) {
+    // `+=` on static mut with `-C overflow-checks=on` can codegen a bogus G_TRACE-4 store.
+    *field = field.wrapping_add(1);
+}
+
+#[cfg(host_pwrctrl_init_test)]
+#[repr(C)]
+struct LpspgInfoInit {
+    name: *const u8,
+}
+
+#[cfg(host_pwrctrl_init_test)]
 #[repr(C)]
 struct RegistryPriv {
     ips_mode: u8,
@@ -105,7 +118,9 @@ struct PwrctrlPriv {
     dma_event: *mut c_void,
     resume_work: *mut c_void,
     pwr_state_check_timer: *mut c_void,
-    lpspg_info_name: *const u8,
+    #[cfg(lps_pg)]
+    lpspg_info: LpspgInfoInit,
+    #[cfg(lps_ack)]
     lps_ack_mutex: i32,
     rtw_workqueue: *mut c_void,
 }
@@ -196,15 +211,15 @@ fn init_part1_host(padapter: Padapter) {
         p.rpwm_retry = 0;
         #[cfg(lps_lclk)]
         {
-            G_TRACE.set_rpwm_hwreg_calls += 1;
-            G_TRACE.init_workitem_calls += 1;
-            G_TRACE.init_workitem_calls += 1;
+            trace_bump(&mut G_TRACE.set_rpwm_hwreg_calls);
+            trace_bump(&mut G_TRACE.init_workitem_calls);
+            trace_bump(&mut G_TRACE.init_workitem_calls);
         }
         #[cfg(lps_pg)]
         {
-            p.lpspg_info_name = LPSPG_NAME.as_ptr();
+            p.lpspg_info.name = LPSPG_NAME.as_ptr();
         }
-        G_TRACE.init_timer_calls += 1;
+        trace_bump(&mut G_TRACE.init_timer_calls);
         p.wowlan_mode = _FALSE;
         p.wowlan_ap_mode = _FALSE;
         p.wowlan_p2p_mode = _FALSE;
@@ -212,8 +227,8 @@ fn init_part1_host(padapter: Padapter) {
         p.wowlan_last_wake_reason = 0;
         #[cfg(resume_wq)]
         {
-            G_TRACE.init_workitem_calls += 1;
-            G_TRACE.create_wq_calls += 1;
+            trace_bump(&mut G_TRACE.init_workitem_calls);
+            trace_bump(&mut G_TRACE.create_wq_calls);
             p.rtw_workqueue = 1 as *mut c_void;
         }
     }
@@ -241,18 +256,18 @@ fn init_part2_host(padapter: Padapter) {
             } else {
                 _FALSE
             };
-            G_TRACE.wow_pattern_reset += 1;
+            trace_bump(&mut G_TRACE.wow_pattern_reset);
             p.wowlan_aoac_rpt_loc = 0;
         }
         #[cfg(lps_ack)]
         {
             p.lps_ack_mutex = 0;
-            G_TRACE.lps_ack_mutex_init += 1;
+            trace_bump(&mut G_TRACE.lps_ack_mutex_init);
             p.lps_ack_status = -1;
         }
         #[cfg(lps_poff)]
         {
-            G_TRACE.lps_poff_init += 1;
+            trace_bump(&mut G_TRACE.lps_poff_init);
         }
     }
 }
@@ -271,26 +286,28 @@ fn free_pwrctrl_host(padapter: Padapter) {
         let p = &mut (*ad).pwrctrlpriv;
         #[cfg(resume_wq)]
         if !p.rtw_workqueue.is_null() {
-            G_TRACE.flush_wq += 1;
-            G_TRACE.destroy_wq += 1;
+            trace_bump(&mut G_TRACE.flush_wq);
+            trace_bump(&mut G_TRACE.destroy_wq);
             p.rtw_workqueue = core::ptr::null_mut();
         }
         #[cfg(lps_poff)]
         {
-            G_TRACE.lps_poff_deinit += 1;
+            trace_bump(&mut G_TRACE.lps_poff_deinit);
         }
         #[cfg(lps_lclk)]
         {
-            G_TRACE.cancel_workitem += 2;
+            trace_bump(&mut G_TRACE.cancel_workitem);
+            trace_bump(&mut G_TRACE.cancel_workitem);
         }
         #[cfg(lps_pg)]
         {
-            G_TRACE.rsvd_page_free += 1;
+            trace_bump(&mut G_TRACE.rsvd_page_free);
         }
-        G_TRACE.free_pwrlock += 2;
+        trace_bump(&mut G_TRACE.free_pwrlock);
+        trace_bump(&mut G_TRACE.free_pwrlock);
         #[cfg(lps_ack)]
         {
-            G_TRACE.lps_ack_mutex_free += 1;
+            trace_bump(&mut G_TRACE.lps_ack_mutex_free);
         }
     }
 }
@@ -322,7 +339,7 @@ pub extern "C" fn host_pwrctrl_init_reset_trace() {
 #[cfg(host_pwrctrl_init_test)]
 #[no_mangle]
 pub extern "C" fn host_pwrctrl_init_get_trace() -> *mut HostInitTrace {
-    unsafe { &mut G_TRACE }
+    unsafe { core::ptr::addr_of_mut!(G_TRACE) }
 }
 
 #[cfg(host_pwrctrl_init_test)]
