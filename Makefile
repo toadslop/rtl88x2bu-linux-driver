@@ -5197,8 +5197,14 @@ rust-objects-rtw-beamforming-sound-c:
 	gcc -c -Wall -Wextra -Werror -O2 -I$(shell pwd)/tests/host/include \
 		-o tests/host/beamforming/bf_sound_enter_kern_c_ref.o \
 		tests/host/beamforming/bf_sound_enter_kern_c_ref.c
+	gcc -c -Wall -Wextra -Werror -O2 -I$(shell pwd)/tests/host/include \
+		-o tests/host/beamforming/bf_sound_leave_kern_c_ref.o \
+		tests/host/beamforming/bf_sound_leave_kern_c_ref.c
+	ld -r -o tests/host/beamforming/bf_sound_kern_c_ref.o \
+		tests/host/beamforming/bf_sound_enter_kern_c_ref.o \
+		tests/host/beamforming/bf_sound_leave_kern_c_ref.o
 rust-check-symbols-rtw-beamforming-sound: rust-objects-rtw-beamforming-sound-c rust-objects-rtw-beamforming-sound
-	$(MAKE) rust-check-symbols OLD=tests/host/beamforming/bf_sound_enter_kern_c_ref.o NEW=rust/rtw_beamforming_sound.o \
+	$(MAKE) rust-check-symbols OLD=tests/host/beamforming/bf_sound_kern_c_ref.o NEW=rust/rtw_beamforming_sound.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_beamforming_sound.allow ALLOW_VACUOUS=1
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
