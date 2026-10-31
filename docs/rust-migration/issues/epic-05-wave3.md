@@ -308,7 +308,6 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 
 Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:
 
-- `rtw_pwrctrl.c` wakeup/resume (`_rtw_pwr_wakeup`, early suspend) after tranche 19
 - `rtw_debug.c` procfs walkers / register dumps (mostly Rust-wrapped — audit before filing)
 - `rtw_ioctl_query.c` (placeholder TU — no code; skip)
 
