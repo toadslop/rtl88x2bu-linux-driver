@@ -90,8 +90,8 @@ extern "C" {
 #[cfg(not(host_pwrctrl_cpwm_int_test))]
 fn lps_leave_check_kernel(a: Padapter) {
     unsafe {
-        rtw_rust_cpwm_yield_os();
         let start = rtw_rust_cpwm_get_current_time();
+        rtw_rust_cpwm_yield_os();
         loop {
             rtw_rust_cpwm_enter_pwrlock(a);
             let ready = rtw_rust_cpwm_leave_ready(a) == _TRUE;
