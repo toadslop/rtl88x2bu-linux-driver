@@ -5181,10 +5181,18 @@ rust-objects-rtw-pwrctrl-init:
 rust-objects-rtw-pwrctrl-init-c:
 	@mkdir -p tests/host/pwrctrl
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
-		-DCONFIG_LPS_LCLK -DCONFIG_LPS_PG -DCONFIG_RESUME_IN_WORKQUEUE \
+		-DCONFIG_CONCURRENT_MODE -DCONFIG_LPS_LCLK -DCONFIG_LPS_PG -DCONFIG_RESUME_IN_WORKQUEUE \
 		-I$(shell pwd)/tests/host/include \
-		-o tests/host/pwrctrl/init_c_ref.o \
+		-o tests/host/pwrctrl/init_part1_c_ref.o \
 		tests/host/pwrctrl/host_pwrctrl_init_shim.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-DCONFIG_CONCURRENT_MODE -DCONFIG_LPS_LCLK -DCONFIG_LPS_PG -DCONFIG_RESUME_IN_WORKQUEUE \
+		-DCONFIG_WOWLAN -DCONFIG_LPS_ACK -DCONFIG_LPS_POFF \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/pwrctrl/init_part2_c_ref.o \
+		tests/host/pwrctrl/host_pwrctrl_init_p2_shim.c
+	ld -r -o tests/host/pwrctrl/init_c_ref.o \
+		tests/host/pwrctrl/init_part1_c_ref.o tests/host/pwrctrl/init_part2_c_ref.o
 rust-check-symbols-rtw-pwrctrl-init: rust-objects-rtw-pwrctrl-init-c rust-objects-rtw-pwrctrl-init
 	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/init_c_ref.o NEW=rust/rtw_pwrctrl_init.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_init.allow ALLOW_VACUOUS=1
