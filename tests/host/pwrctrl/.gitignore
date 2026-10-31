@@ -24,6 +24,8 @@ test_pwrctrl_rpwm
 test_pwrctrl_rpwm_rust
 librust_pwrctrl_rpwm.a
 rpwm_c_ref.o
+cpwm_int_c_ref.o
+cpwm_int_c_ref.o
 test_pwrctrl_wow_lps_level
 test_pwrctrl_wow_lps_level_rust
 test_pwrctrl_pm_setters
