@@ -355,6 +355,10 @@ files=(
   wave3-191-bf-cmd-traffic-leaf.md
   wave3-192-bf-sounding-enter-p1.md
   wave3-193-bf-sounding-leave-p2.md
+  wave3-194-pwrctrl-early-suspend-resume.md
+  wave3-195-pwrctrl-pwr-wakeup.md
+  wave3-196-pwrctrl-wow-pm-setters.md
+  wave3-197-bf-update-txbf-attrib.md
 )
 
 # draft_id -> github issue number

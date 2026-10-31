@@ -321,6 +321,10 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-191 | #1578 | [W3-191] Translate rtw_beamforming.c — cmd and traffic leaf |
 | W3-192 | #1579 | [W3-192] Translate rtw_beamforming.c — sounding enter (part 1/2) |
 | W3-193 | #1580 | [W3-193] Translate rtw_beamforming.c — sounding leave (part 2/2) |
+| W3-194 | #1632 | [W3-194] Translate rtw_pwrctrl.c — early suspend and resume workqueue |
+| W3-195 | #1633 | [W3-195] Translate rtw_pwrctrl.c — IPS/USB pwr wakeup core |
+| W3-196 | #1634 | [W3-196] Translate rtw_pwrctrl.c — WoWLAN PM ioctl setters |
+| W3-197 | #1635 | [W3-197] Translate rtw_beamforming.c — update_attrib_txbf_info leaf |
 
 ## Superseded issues
 
