@@ -354,6 +354,10 @@ pub extern "C" fn host_pwrctrl_init_set_current_time(t: u32) {
 #[path = "rtw_pwrctrl_init_kernel.rs"]
 mod kernel;
 
+#[cfg(not(host_pwrctrl_init_test))]
+#[path = "rtw_pwrctrl_init_kernel_p2.rs"]
+mod kernel_p2;
+
 #[no_mangle]
 pub extern "C" fn rtw_init_pwrctrl_priv_part1(padapter: Padapter) {
     #[cfg(host_pwrctrl_init_test)]
@@ -362,14 +366,18 @@ pub extern "C" fn rtw_init_pwrctrl_priv_part1(padapter: Padapter) {
     kernel::init_part1_kernel(padapter);
 }
 
-#[cfg(host_pwrctrl_init_test)]
 #[no_mangle]
 pub extern "C" fn rtw_init_pwrctrl_priv_part2(padapter: Padapter) {
+    #[cfg(host_pwrctrl_init_test)]
     init_part2_host(padapter);
+    #[cfg(not(host_pwrctrl_init_test))]
+    kernel_p2::init_part2_kernel(padapter);
 }
 
-#[cfg(host_pwrctrl_init_test)]
 #[no_mangle]
 pub extern "C" fn rtw_free_pwrctrl_priv(padapter: Padapter) {
+    #[cfg(host_pwrctrl_init_test)]
     free_pwrctrl_host(padapter);
+    #[cfg(not(host_pwrctrl_init_test))]
+    kernel_p2::free_pwrctrl_kernel(padapter);
 }
