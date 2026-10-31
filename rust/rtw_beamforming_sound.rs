@@ -30,7 +30,7 @@ const BF_HOST_SOUNDING_STATE_INIT: U8 = 1;
 const BF_HOST_MAX_BEAMFORMEE_ENTRY: usize = 8;
 const BF_HOST_MAX_NUM_BEAMFORMEE_SU: usize = 2;
 
-#[cfg(host_bf_sound_enter_test)]
+#[cfg(any(host_bf_sound_enter_test, host_bf_sound_leave_test))]
 #[repr(C)]
 pub struct BfHostSoundingInfo {
     pub su_sounding_list: [U8; 2],
@@ -112,6 +112,12 @@ pub struct BfHostMlme {
     pub bssid: [U8; BF_HOST_ETH_ALEN],
 }
 
+#[cfg(host_bf_sound_leave_test)]
+#[repr(C)]
+pub struct BfHostAdpt {
+    pub _pad: [u8; 240],
+}
+
 #[cfg(host_bf_sound_enter_test)]
 #[repr(C)]
 pub struct BfHostAdpt {
@@ -173,6 +179,12 @@ pub struct BfHostSoundEnterAdpt {
     pub stapriv: BfHostSoundStapriv,
     pub sound: BfHostSoundEnterInfo,
 }
+
+#[cfg(host_bf_sound_leave_test)]
+const _: () = {
+    assert!(core::mem::size_of::<BfHostAdpt>() == 240);
+    assert!(core::mem::offset_of!(BfHostSoundLeaveAdpt, sound) == 240);
+};
 
 #[cfg(host_bf_sound_enter_test)]
 const _: () = {
@@ -281,7 +293,128 @@ pub unsafe extern "C" fn o_beamforming_enter(adapter: BfHostSoundEnterPadpt, p: 
     }
 }
 
-#[cfg(not(host_bf_sound_enter_test))]
+// --- W3-193 leave (host L2) ---
+
+#[cfg(host_bf_sound_leave_test)]
+const BF_HOST_BEAMFORMEE_CAP_HT_EXPLICIT_LEAVE: U8 = 0x2;
+#[cfg(host_bf_sound_leave_test)]
+const BF_HOST_BEAMFORMEE_CAP_VHT_SU_LEAVE: U8 = 0x8;
+#[cfg(host_bf_sound_leave_test)]
+const BF_HOST_BEAMFORMEE_CAP_LEAVE: U8 = 0x10;
+
+#[cfg(host_bf_sound_leave_test)]
+#[repr(C)]
+pub struct BfHostSoundLeaveBfeeEntry {
+    pub used: U8,
+    pub mac_id: U16,
+    pub mac_addr: [U8; BF_HOST_ETH_ALEN],
+    pub cap: U8,
+    pub NumofSoundingDim: U8,
+    pub su_reg_index: U8,
+}
+
+#[cfg(host_bf_sound_leave_test)]
+#[repr(C)]
+pub struct BfHostSoundLeaveInfo {
+    pub bfee_entry: [BfHostSoundLeaveBfeeEntry; BF_HOST_MAX_BEAMFORMEE_ENTRY],
+    pub beamformee_su_cnt: U8,
+    pub beamformee_mu_cnt: U8,
+    pub sounding_info: BfHostSoundingInfo,
+}
+
+#[cfg(host_bf_sound_leave_test)]
+#[repr(C)]
+pub struct BfHostSoundLeaveAdpt {
+    pub base: BfHostAdpt,
+    pub sound: BfHostSoundLeaveInfo,
+}
+
+#[cfg(host_bf_sound_leave_test)]
+type BfHostSoundLeavePadpt = *mut BfHostSoundLeaveAdpt;
+
+#[cfg(host_bf_sound_leave_test)]
+extern "C" {
+    static mut bf_host_sound_leave_tr_hal: U32;
+    static mut bf_host_sound_leave_tr_cancel_timer: U32;
+}
+
+#[cfg(host_bf_sound_leave_test)]
+unsafe fn sound_leave_init(sounding: *mut BfHostSoundingInfo) {
+    if sounding.is_null() {
+        return;
+    }
+    (*sounding).su_sounding_list = [0xFF; 2];
+    (*sounding).mu_sounding_list = [0xFF; 6];
+    (*sounding).state = BF_HOST_SOUNDING_STATE_NONE;
+    (*sounding).su_bfee_curidx = 0xFF;
+    (*sounding).candidate_mu_bfee_cnt = 0;
+    (*sounding).min_sounding_period = 0;
+    (*sounding).sound_remain_cnt_per_period = 0;
+}
+
+#[cfg(host_bf_sound_leave_test)]
+unsafe fn sound_leave_find_bfee(
+    adapter: BfHostSoundLeavePadpt,
+    ra: *mut U8,
+) -> *mut BfHostSoundLeaveBfeeEntry {
+    if adapter.is_null() || ra.is_null() {
+        return core::ptr::null_mut();
+    }
+    for i in 0..BF_HOST_MAX_BEAMFORMEE_ENTRY {
+        if (*adapter).sound.bfee_entry[i].used == 0 {
+            continue;
+        }
+        let mut eq = true;
+        for j in 0..BF_HOST_ETH_ALEN {
+            if (*adapter).sound.bfee_entry[i].mac_addr[j] != *ra.add(j) {
+                eq = false;
+                break;
+            }
+        }
+        if eq {
+            return &mut (*adapter).sound.bfee_entry[i];
+        }
+    }
+    core::ptr::null_mut()
+}
+
+#[cfg(host_bf_sound_leave_test)]
+unsafe fn sound_leave_bfee_remove(
+    adapter: BfHostSoundLeavePadpt,
+    entry: *mut BfHostSoundLeaveBfeeEntry,
+) {
+    let info = &mut (*adapter).sound;
+    let su_mask = BF_HOST_BEAMFORMEE_CAP_VHT_SU_LEAVE | BF_HOST_BEAMFORMEE_CAP_HT_EXPLICIT_LEAVE;
+    if ((*entry).cap & su_mask) != 0 && info.beamformee_su_cnt > 0 {
+        info.beamformee_su_cnt -= 1;
+    }
+    core::ptr::write_bytes(
+        entry as *mut u8,
+        0,
+        core::mem::size_of::<BfHostSoundLeaveBfeeEntry>(),
+    );
+}
+
+#[cfg(host_bf_sound_leave_test)]
+#[no_mangle]
+pub unsafe extern "C" fn o_beamforming_leave(adapter: BfHostSoundLeavePadpt, ra: *mut U8) {
+    if adapter.is_null() || ra.is_null() {
+        return;
+    }
+    let info = &mut (*adapter).sound;
+    let bfee = sound_leave_find_bfee(adapter, ra);
+    if bfee.is_null() {
+        return;
+    }
+    sound_leave_bfee_remove(adapter, bfee);
+    bf_host_sound_leave_tr_hal += 1;
+    if info.beamformee_su_cnt == 0 && info.beamformee_mu_cnt == 0 {
+        bf_host_sound_leave_tr_cancel_timer += 1;
+        sound_leave_init(&mut info.sounding_info as *mut _);
+    }
+}
+
+#[cfg(all(not(host_bf_sound_enter_test), not(host_bf_sound_leave_test)))]
 extern "C" {
     fn rtw_rust_beamforming_enter_impl(
         adapter: *mut core::ffi::c_void,
@@ -289,7 +422,7 @@ extern "C" {
     ) -> U8;
 }
 
-#[cfg(not(host_bf_sound_enter_test))]
+#[cfg(all(not(host_bf_sound_enter_test), not(host_bf_sound_leave_test)))]
 #[no_mangle]
 pub extern "C" fn rtw_rust_beamforming_enter(
     adapter: *mut core::ffi::c_void,
