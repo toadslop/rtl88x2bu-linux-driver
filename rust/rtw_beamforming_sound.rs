@@ -379,11 +379,7 @@ unsafe fn sound_leave_find_bfee(
             return &mut (*adapter).sound.bfee_entry[i];
         }
     }
-<<<<<<< HEAD
     core::ptr::null_mut()
-=======
-    core::ptr::null_mut::<BfHostSoundLeaveBfeeEntry>()
->>>>>>> 8b870ff5 ([W3-193 PR3] Kernel leave hook + L1 for beamforming sound)
 }
 
 #[cfg(host_bf_sound_leave_test)]
@@ -428,10 +424,7 @@ extern "C" {
         adapter: *mut core::ffi::c_void,
         p: *mut core::ffi::c_void,
     ) -> U8;
-    fn rtw_rust_beamforming_leave_impl(
-        adapter: *mut core::ffi::c_void,
-        ra: *mut U8,
-    );
+    fn rtw_rust_beamforming_leave_impl(adapter: *mut core::ffi::c_void, ra: *mut U8);
 }
 
 #[cfg(all(not(host_bf_sound_enter_test), not(host_bf_sound_leave_test)))]
@@ -445,9 +438,6 @@ pub extern "C" fn rtw_rust_beamforming_enter(
 
 #[cfg(all(not(host_bf_sound_enter_test), not(host_bf_sound_leave_test)))]
 #[no_mangle]
-pub extern "C" fn rtw_rust_beamforming_leave(
-    adapter: *mut core::ffi::c_void,
-    ra: *mut U8,
-) {
+pub extern "C" fn rtw_rust_beamforming_leave(adapter: *mut core::ffi::c_void, ra: *mut U8) {
     unsafe { rtw_rust_beamforming_leave_impl(adapter, ra) }
 }
