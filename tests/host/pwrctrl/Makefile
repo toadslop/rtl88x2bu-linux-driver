@@ -367,14 +367,14 @@ librust_pwrctrl_init.a: $(RUST_PWRCTRL_INIT)
 librust_pwrctrl_init_p2.a: $(RUST_PWRCTRL_INIT)
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_pwrctrl_init_test \
 		--cfg concurrent_mode --cfg lps_lclk --cfg lps_pg --cfg resume_wq \
-		--cfg wowlan --cfg lps_ack \
+		--cfg wowlan --cfg lps_ack --cfg lps_poff \
 		--crate-type staticlib $(RUST_PWRCTRL_INIT) -o $@
 
 test-init-p2-rust: test_pwrctrl_init_p2_rust
 	./test_pwrctrl_init_p2_rust
 
-test_pwrctrl_init_p2_rust: test_pwrctrl_init_p2.c librust_pwrctrl_init_p2.a
-	$(CC) $(INIT_P2_CFLAGS) -o $@ test_pwrctrl_init_p2.c librust_pwrctrl_init_p2.a
+test_pwrctrl_init_p2_rust: test_pwrctrl_init_p2_rust.c librust_pwrctrl_init_p2.a
+	$(CC) $(INIT_P2_CFLAGS) -o $@ test_pwrctrl_init_p2_rust.c librust_pwrctrl_init_p2.a
 
 test-fw-in-ips: test_pwrctrl_fw_in_ips
 	./test_pwrctrl_fw_in_ips fw_in_ips_vectors.json

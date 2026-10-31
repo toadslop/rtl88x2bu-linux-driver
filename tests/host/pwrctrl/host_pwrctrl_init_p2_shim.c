@@ -61,33 +61,36 @@ static void rtw_wow_pattern_sw_reset(PADAPTER padapter)
 }
 #endif
 
-void rtw_init_pwrctrl_priv_part2(adapter_p2 *padapter)
+void host_pwrctrl_init_p2_run_init(PADAPTER padapter)
 {
+	struct pwrctrl_priv_init *pwr = adapter_to_pwrctl(padapter);
+	struct registry_priv_init *reg = &padapter->registrypriv;
+
 #ifdef CONFIG_WOWLAN
-	padapter->wowlan_power_mgmt = padapter->wow_power_mgnt;
-	padapter->wowlan_lps_level = padapter->wow_lps_level;
-	padapter->default_patterns_en =
-		(padapter->wakeup_event & (1U << 1)) ? _TRUE : _FALSE;
-	rtw_wow_pattern_sw_reset(&padapter->core);
-	padapter->wowlan_aoac_rpt_loc = 0;
+	pwr->wowlan_power_mgmt = reg->wow_power_mgnt;
+	pwr->wowlan_lps_level = reg->wow_lps_level;
+	pwr->default_patterns_en =
+		(reg->wakeup_event & (1U << 1)) ? _TRUE : _FALSE;
+	rtw_wow_pattern_sw_reset(padapter);
+	pwr->wowlan_aoac_rpt_loc = 0;
 #endif
 
 #ifdef CONFIG_LPS_POFF
-	rtw_hal_set_hwreg(&padapter->core, HOST_HW_VAR_LPS_POFF_INIT, NULL);
+	rtw_hal_set_hwreg(padapter, HOST_HW_VAR_LPS_POFF_INIT, NULL);
 #endif
 
 #ifdef CONFIG_LPS_ACK
-	_rtw_mutex_init(&padapter->core.pwrctrlpriv.lps_ack_mutex);
-	padapter->lps_ack_status = -1;
+	_rtw_mutex_init(&pwr->lps_ack_mutex);
+	pwr->lps_ack_status = -1;
 #endif
 }
 
-void rtw_free_pwrctrl_priv_p2(adapter_p2 *adapter)
+void host_pwrctrl_init_p2_run_free(PADAPTER padapter)
 {
-	struct pwrctrl_priv_init *pwr = adapter_to_pwrctl(&adapter->core);
+	struct pwrctrl_priv_init *pwr = adapter_to_pwrctl(padapter);
 
 #if defined(CONFIG_CONCURRENT_MODE)
-	if (!is_primary_adapter(&adapter->core))
+	if (!is_primary_adapter(padapter))
 		return;
 #endif
 
@@ -100,7 +103,7 @@ void rtw_free_pwrctrl_priv_p2(adapter_p2 *adapter)
 #endif
 
 #ifdef CONFIG_LPS_POFF
-	rtw_hal_set_hwreg(&adapter->core, HOST_HW_VAR_LPS_POFF_DEINIT, NULL);
+	rtw_hal_set_hwreg(padapter, HOST_HW_VAR_LPS_POFF_DEINIT, NULL);
 #endif
 
 #ifdef CONFIG_LPS_LCLK
