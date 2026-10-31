@@ -20,6 +20,7 @@ PS_RDY_SHIM := host_pwrctrl_ps_rdy_shim.c
 SET_PS_SHIM := host_pwrctrl_set_ps_shim.c
 INIT_SHIM := host_pwrctrl_init_shim.c
 FW_IPS_SHIM := host_pwrctrl_fw_ips_shim.c
+CPWM_INT_SHIM := host_pwrctrl_cpwm_int_shim.c
 
 CC     := gcc
 CFLAGS := -Wall -Wextra -Werror -O2 \
@@ -55,7 +56,7 @@ FW_IPS_CFLAGS := $(CFLAGS) -DCONFIG_FWLPS_IN_IPS -DCONFIG_LPS_LCLK -DCONFIG_BT_C
 	test-unregister-alive test-unregister-alive-rust test-wow-lps test-wow-lps-rust \
 	test-pm-setters test-pm-setters-rust \
 	test-ps-rdy test-ps-rdy-rust test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init test-init-rust \
-	test-fw-in-ips test-fw-in-ips-rust clean
+	test-fw-in-ips test-fw-in-ips-rust test-cpwm-int clean
 
 all: test test-lps test-lps-enter test-leave-all test-leave-all-rust test-ips test-ips-rust \
 	test-ps-processor test-ps-processor-rust test-lps-tp test-lps-tp-rust test-rpwm test-rpwm-rust \
@@ -68,7 +69,13 @@ test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust
 	test-lps-tp-rust test-lps-exec test-rpwm test-rpwm-rust test-register-alive test-register-alive-rust \
 	test-unregister-alive test-unregister-alive-rust test-wow-lps test-wow-lps-rust test-pm-setters test-ps-rdy test-ps-rdy-rust \
 	test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init test-init-rust \
-	test-fw-in-ips test-fw-in-ips-rust
+	test-fw-in-ips test-fw-in-ips-rust test-cpwm-int
+
+test-cpwm-int: test_pwrctrl_cpwm_int
+	./test_pwrctrl_cpwm_int cpwm_int_vectors.json
+
+test_pwrctrl_cpwm_int: test_pwrctrl_cpwm_int.c $(CPWM_INT_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_pwrctrl_cpwm_int.c $(CPWM_INT_SHIM) $(HOST_JSON)
 
 test-c: test_pwrctrl_ps_deny
 	./test_pwrctrl_ps_deny ps_deny_vectors.json
@@ -376,5 +383,6 @@ clean:
 		test_pwrctrl_set_ps_rust_pg_wow librust_pwrctrl_set_ps.a librust_pwrctrl_set_ps_pg_wow.a \
 		test_pwrctrl_init test_pwrctrl_init_rust librust_pwrctrl_init.a \
 		test_pwrctrl_fw_in_ips test_pwrctrl_fw_in_ips_rust librust_pwrctrl_fw_ips.a \
+		test_pwrctrl_cpwm_int \
 		librust_pwrctrl.a test_pwrctrl_ps_rdy test_pwrctrl_ps_rdy_rust \
 		test_pwrctrl_ps_rdy_systime_width librust_pwrctrl_ps_rdy_kern.a
