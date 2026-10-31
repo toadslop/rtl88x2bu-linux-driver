@@ -1,0 +1,37 @@
+{
+  "vectors": [
+    {
+      "name": "cpwm_int_s2_cmd_xmit",
+      "state": 131,
+      "alives": 5,
+      "expect_cpwm": 3,
+      "expect_cpwm_tog": 128,
+      "expect_cmd_sem": 1,
+      "expect_xmit_sem": 1
+    },
+    {
+      "name": "cpwm_int_null_adapter",
+      "null_adapter": 1
+    },
+    {
+      "name": "cpwm_int_cannot_run",
+      "surprise_removed": 1,
+      "state": 3,
+      "expect_cpwm": 0,
+      "expect_cpwm_tog": 0
+    },
+    {
+      "name": "leave_check_active",
+      "leave_only": 1,
+      "pwr_mode": 0
+    },
+    {
+      "name": "leave_check_timeout",
+      "leave_only": 1,
+      "pwr_mode": 2,
+      "hw_init": 1,
+      "start_time": 0,
+      "advance_ms": 101
+    }
+  ]
+}
