@@ -18,11 +18,20 @@ struct adapter_init_p2 {
 
 typedef struct adapter_init_p2 adapter_p2;
 
+#define HOST_HW_VAR_LPS_POFF_INIT 201
+#define HOST_HW_VAR_LPS_POFF_DEINIT 202
+
 struct host_pwrctrl_init_p2_trace {
 	u32 wow_pattern_reset;
+	u32 flush_wq;
 	u32 destroy_wq;
+	u32 lps_poff_deinit;
 	u32 cancel_workitem;
+	u32 rsvd_page_free;
 	u32 free_pwrlock;
+	u32 lps_ack_mutex_free;
+	u32 lps_ack_mutex_init;
+	u32 lps_poff_init;
 };
 
 void host_pwrctrl_init_p2_reset_trace(void);

@@ -24,7 +24,8 @@ static int check_wowlan_defaults(void)
 	tr = host_pwrctrl_init_p2_get_trace();
 	if (g_adapter.wowlan_power_mgmt != 2 || g_adapter.wowlan_lps_level != 1 ||
 	    g_adapter.default_patterns_en != _TRUE || tr->wow_pattern_reset != 1 ||
-	    (int)g_adapter.lps_ack_status != -1) {
+	    (int)g_adapter.lps_ack_status != -1 || tr->lps_ack_mutex_init != 1 ||
+	    tr->lps_poff_init != 1) {
 		fputs("FAIL wowlan_defaults\n", stderr);
 		return 1;
 	}
@@ -43,7 +44,10 @@ static int check_init_free(void)
 	rtw_init_pwrctrl_priv_part2(&g_adapter);
 	rtw_free_pwrctrl_priv_p2(&g_adapter);
 	tr = host_pwrctrl_init_p2_get_trace();
-	if (tr->destroy_wq != 1 || tr->cancel_workitem != 2 || tr->free_pwrlock != 2) {
+	if (tr->flush_wq != 1 || tr->destroy_wq != 1 || tr->lps_poff_deinit != 1 ||
+	    tr->cancel_workitem != 2 || tr->rsvd_page_free != 1 ||
+	    tr->free_pwrlock != 2 || tr->lps_ack_mutex_free != 1 ||
+	    tr->lps_ack_mutex_init != 1 || tr->lps_poff_init != 1) {
 		fputs("FAIL init_free_roundtrip\n", stderr);
 		return 1;
 	}

@@ -50,7 +50,7 @@ PS_RDY_CFLAGS := $(CFLAGS) -DCONFIG_WOWLAN
 SET_PS_CFLAGS := $(CFLAGS) -DCONFIG_BT_COEXIST -DCONFIG_FW_MULTI_PORT_SUPPORT -DCONFIG_LPS -DCONFIG_LPS_LCLK
 SET_PS_PG_WOW_CFLAGS := $(SET_PS_CFLAGS) -DCONFIG_LPS_PG -DCONFIG_WOWLAN
 INIT_CFLAGS := $(CFLAGS) -DCONFIG_CONCURRENT_MODE -DCONFIG_LPS_LCLK -DCONFIG_LPS_PG -DCONFIG_RESUME_IN_WORKQUEUE
-INIT_P2_CFLAGS := $(INIT_CFLAGS) -DCONFIG_WOWLAN -DCONFIG_LPS_ACK
+INIT_P2_CFLAGS := $(INIT_CFLAGS) -DCONFIG_WOWLAN -DCONFIG_LPS_ACK -DCONFIG_LPS_POFF
 FW_IPS_CFLAGS := $(CFLAGS) -DCONFIG_FWLPS_IN_IPS -DCONFIG_LPS_LCLK -DCONFIG_BT_COEXIST
 
 .PHONY: all test test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust \
@@ -72,7 +72,7 @@ test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust
 	test-lps-tp-rust test-lps-exec test-rpwm test-rpwm-rust test-register-alive test-register-alive-rust \
 	test-unregister-alive test-unregister-alive-rust test-wow-lps test-wow-lps-rust test-pm-setters test-ps-rdy test-ps-rdy-rust \
 	test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init test-init-rust \
-	test-fw-in-ips test-fw-in-ips-rust test-cpwm-int test-cpwm-int-rust
+	test-init-p2 test-fw-in-ips test-fw-in-ips-rust test-cpwm-int test-cpwm-int-rust
 
 test-cpwm-int-rust: test_pwrctrl_cpwm_int_rust
 	./test_pwrctrl_cpwm_int_rust cpwm_int_vectors.json

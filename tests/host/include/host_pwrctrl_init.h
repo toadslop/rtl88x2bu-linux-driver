@@ -70,6 +70,9 @@ struct pwrctrl_priv_init {
 		const char *name;
 	} lpspg_info;
 #endif
+#ifdef CONFIG_LPS_ACK
+	int lps_ack_mutex;
+#endif
 	void *rtw_workqueue;
 };
 
