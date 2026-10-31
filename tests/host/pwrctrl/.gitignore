@@ -36,3 +36,9 @@ wow_lps_c_ref.o
 fw_ips_c_ref.o
 test_pwrctrl_ps_rdy_systime_width
 librust_pwrctrl_ps_rdy_kern.a
+test_pwrctrl_init
+test_pwrctrl_init_rust
+test_pwrctrl_init_p2
+test_pwrctrl_init_p2_rust
+librust_pwrctrl_init.a
+librust_pwrctrl_init_p2.a
