@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Host L2 smoke for W3-190 init part 2 + free. */
+/* Host L2 smoke for W3-190 init part 2 + free (C oracle). */
 
 #include <stdio.h>
 #include <string.h>
@@ -7,24 +7,26 @@
 #include "host_pwrctrl_init.h"
 #include "host_pwrctrl_init_p2.h"
 
-static adapter_p2 g_adapter;
+static _adapter g_adapter;
 
 static int check_wowlan_defaults(void)
 {
+	struct pwrctrl_priv_init *p;
 	struct host_pwrctrl_init_p2_trace *tr;
 
 	host_pwrctrl_init_reset_trace();
 	host_pwrctrl_init_p2_reset_trace();
 	memset(&g_adapter, 0, sizeof(g_adapter));
-	g_adapter.wow_power_mgnt = 2;
-	g_adapter.wow_lps_level = 1;
-	g_adapter.wakeup_event = 2U;
-	rtw_init_pwrctrl_priv_part1(&g_adapter.core);
-	rtw_init_pwrctrl_priv_part2(&g_adapter);
+	g_adapter.registrypriv.wow_power_mgnt = 2;
+	g_adapter.registrypriv.wow_lps_level = 1;
+	g_adapter.registrypriv.wakeup_event = 2U;
+	rtw_init_pwrctrl_priv_part1(&g_adapter);
+	host_pwrctrl_init_p2_run_init(&g_adapter);
+	p = adapter_to_pwrctl(&g_adapter);
 	tr = host_pwrctrl_init_p2_get_trace();
-	if (g_adapter.wowlan_power_mgmt != 2 || g_adapter.wowlan_lps_level != 1 ||
-	    g_adapter.default_patterns_en != _TRUE || tr->wow_pattern_reset != 1 ||
-	    (int)g_adapter.lps_ack_status != -1 || tr->lps_ack_mutex_init != 1 ||
+	if (p->wowlan_power_mgmt != 2 || p->wowlan_lps_level != 1 ||
+	    p->default_patterns_en != _TRUE || tr->wow_pattern_reset != 1 ||
+	    p->lps_ack_status != -1 || tr->lps_ack_mutex_init != 1 ||
 	    tr->lps_poff_init != 1) {
 		fputs("FAIL wowlan_defaults\n", stderr);
 		return 1;
@@ -40,9 +42,9 @@ static int check_init_free(void)
 	host_pwrctrl_init_reset_trace();
 	host_pwrctrl_init_p2_reset_trace();
 	memset(&g_adapter, 0, sizeof(g_adapter));
-	rtw_init_pwrctrl_priv_part1(&g_adapter.core);
-	rtw_init_pwrctrl_priv_part2(&g_adapter);
-	rtw_free_pwrctrl_priv_p2(&g_adapter);
+	rtw_init_pwrctrl_priv_part1(&g_adapter);
+	host_pwrctrl_init_p2_run_init(&g_adapter);
+	host_pwrctrl_init_p2_run_free(&g_adapter);
 	tr = host_pwrctrl_init_p2_get_trace();
 	if (tr->flush_wq != 1 || tr->destroy_wq != 1 || tr->lps_poff_deinit != 1 ||
 	    tr->cancel_workitem != 2 || tr->rsvd_page_free != 1 ||
