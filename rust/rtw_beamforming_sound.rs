@@ -9,7 +9,7 @@
     non_camel_case_types
 )]
 
-#[cfg(any(host_bf_sound_enter_test, host_bf_sound_leave_test))]
+#[cfg(host_bf_sound_enter_test)]
 use std::mem::offset_of;
 
 type U8 = u8;
@@ -298,6 +298,8 @@ pub unsafe extern "C" fn o_beamforming_enter(adapter: BfHostSoundEnterPadpt, p: 
 #[cfg(host_bf_sound_leave_test)]
 const BF_HOST_BEAMFORMEE_CAP_HT_EXPLICIT_LEAVE: U8 = 0x2;
 #[cfg(host_bf_sound_leave_test)]
+const BF_HOST_BEAMFORMEE_CAP_VHT_SU_LEAVE: U8 = 0x8;
+#[cfg(host_bf_sound_leave_test)]
 const BF_HOST_BEAMFORMEE_CAP_LEAVE: U8 = 0x10;
 
 #[cfg(host_bf_sound_leave_test)]
@@ -356,7 +358,7 @@ unsafe fn sound_leave_find_bfee(
     ra: *mut U8,
 ) -> *mut BfHostSoundLeaveBfeeEntry {
     if adapter.is_null() || ra.is_null() {
-        return core::ptr::null::<BfHostSoundLeaveBfeeEntry>();
+        return core::ptr::null_mut();
     }
     for i in 0..BF_HOST_MAX_BEAMFORMEE_ENTRY {
         if (*adapter).sound.bfee_entry[i].used == 0 {
@@ -373,7 +375,7 @@ unsafe fn sound_leave_find_bfee(
             return &mut (*adapter).sound.bfee_entry[i];
         }
     }
-    core::ptr::null::<BfHostSoundLeaveBfeeEntry>()
+    core::ptr::null_mut()
 }
 
 #[cfg(host_bf_sound_leave_test)]
@@ -382,11 +384,15 @@ unsafe fn sound_leave_bfee_remove(
     entry: *mut BfHostSoundLeaveBfeeEntry,
 ) {
     let info = &mut (*adapter).sound;
-    if ((*entry).cap & BF_HOST_BEAMFORMEE_CAP_HT_EXPLICIT_LEAVE) != 0 && info.beamformee_su_cnt > 0
-    {
+    let su_mask = BF_HOST_BEAMFORMEE_CAP_VHT_SU_LEAVE | BF_HOST_BEAMFORMEE_CAP_HT_EXPLICIT_LEAVE;
+    if ((*entry).cap & su_mask) != 0 && info.beamformee_su_cnt > 0 {
         info.beamformee_su_cnt -= 1;
     }
-    core::ptr::write_bytes(entry, 0, 1);
+    core::ptr::write_bytes(
+        entry as *mut u8,
+        0,
+        core::mem::size_of::<BfHostSoundLeaveBfeeEntry>(),
+    );
 }
 
 #[cfg(host_bf_sound_leave_test)]
