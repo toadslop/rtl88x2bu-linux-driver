@@ -412,8 +412,8 @@ librust_pwrctrl_resume.a: $(RUST_PWRCTRL_RESUME) $(ROOT)/rust/rtw_pwrctrl_resume
 	$(RUSTC) -C opt-level=2 -C overflow-checks=on $(RESUME_RUSTCFGS) \
 		--crate-type staticlib $(RUST_PWRCTRL_RESUME) -o $@
 
-test_pwrctrl_resume_rust: test_pwrctrl_resume.c librust_pwrctrl_resume.a $(RESUME_SHIM)
-	$(CC) $(RESUME_CFLAGS) -o $@ test_pwrctrl_resume.c $(RESUME_SHIM) librust_pwrctrl_resume.a
+test_pwrctrl_resume_rust: test_pwrctrl_resume.c librust_pwrctrl_resume.a
+	$(CC) $(RESUME_CFLAGS) -o $@ test_pwrctrl_resume.c librust_pwrctrl_resume.a
 
 clean:
 	rm -f test_pwrctrl_ps_deny test_pwrctrl_ps_deny_rust test_pwrctrl_lps \

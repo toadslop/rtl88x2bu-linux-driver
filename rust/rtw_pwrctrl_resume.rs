@@ -77,6 +77,8 @@ extern "C" {
     fn rtw_rust_resume_unlock_suspend();
     fn rtw_rust_resume_process_adapter(padapter: Padapter) -> i32;
     fn rtw_rust_resume_primary_adapter(pwrpriv: PwrctrlPriv) -> Padapter;
+    fn rtw_rust_resume_register_level() -> i32;
+    fn rtw_rust_resume_android_late_hci_ok() -> u8;
 }
 
 #[cfg(not(host_pwrctrl_resume_test))]
@@ -93,11 +95,15 @@ pub extern "C" fn rtw_rust_es_early_suspend(h: *mut c_void) {
 pub extern "C" fn rtw_rust_es_late_resume(h: *mut c_void) {
     unsafe {
         let p = rtw_rust_resume_pwr_from_es(h);
-        if rtw_rust_resume_get_do_late(p) != 0 {
-            rtw_rust_resume_set_do_late(p, _FALSE);
-            let ad = rtw_rust_resume_primary_adapter(p);
-            rtw_rust_resume_process_adapter(ad);
+        if rtw_rust_resume_get_do_late(p) == 0 {
+            return;
         }
+        if rtw_rust_resume_android_late_hci_ok() == 0 {
+            return;
+        }
+        rtw_rust_resume_set_do_late(p, _FALSE);
+        let ad = rtw_rust_resume_primary_adapter(p);
+        rtw_rust_resume_process_adapter(ad);
     }
 }
 
@@ -168,7 +174,7 @@ pub extern "C" fn rtw_register_early_suspend(pwrpriv: PwrctrlPriv) {
     }
     #[cfg(not(host_pwrctrl_resume_test))]
     unsafe {
-        rtw_rust_resume_set_es_level(pwrpriv, 50 - 20);
+        rtw_rust_resume_set_es_level(pwrpriv, rtw_rust_resume_register_level());
         rtw_rust_resume_set_es_suspend(pwrpriv, rtw_rust_es_early_suspend as *mut c_void);
         rtw_rust_resume_set_es_resume(pwrpriv, rtw_rust_es_late_resume as *mut c_void);
         rtw_rust_resume_register_es_has(pwrpriv);
@@ -202,7 +208,7 @@ pub extern "C" fn rtw_register_early_suspend(pwrpriv: PwrctrlPriv) {
     }
     #[cfg(not(host_pwrctrl_resume_test))]
     unsafe {
-        rtw_rust_resume_set_es_level(pwrpriv, 50 - 20);
+        rtw_rust_resume_set_es_level(pwrpriv, rtw_rust_resume_register_level());
         rtw_rust_resume_set_es_suspend(pwrpriv, rtw_rust_es_early_suspend as *mut c_void);
         rtw_rust_resume_set_es_resume(pwrpriv, rtw_rust_es_late_resume as *mut c_void);
         rtw_rust_resume_register_es_android(pwrpriv);

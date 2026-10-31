@@ -4324,6 +4324,30 @@ PADAPTER rtw_rust_resume_primary_adapter(struct pwrctrl_priv *pwrpriv)
 	return dvobj_get_primary_adapter(dvobj);
 }
 
+int rtw_rust_resume_register_level(void)
+{
+#if defined(CONFIG_HAS_EARLYSUSPEND)
+	return EARLY_SUSPEND_LEVEL_BLANK_SCREEN - 20;
+#elif defined(CONFIG_ANDROID_POWER)
+	return ANDROID_EARLY_SUSPEND_LEVEL_BLANK_SCREEN - 20;
+#else
+	return 0;
+#endif
+}
+
+u8 rtw_rust_resume_android_late_hci_ok(void)
+{
+#if defined(CONFIG_ANDROID_POWER) && !defined(CONFIG_HAS_EARLYSUSPEND)
+#if defined(CONFIG_USB_HCI) || defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
+	return _TRUE;
+#else
+	return _FALSE;
+#endif
+#else
+	return _TRUE;
+#endif
+}
+
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_RESUME_TEST */
 
 u8 rtw_interface_ps_func(_adapter *padapter, HAL_INTF_PS_FUNC efunc_id, u8 *val)

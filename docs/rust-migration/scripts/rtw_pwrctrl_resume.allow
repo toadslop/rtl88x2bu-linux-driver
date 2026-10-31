@@ -16,6 +16,8 @@ drop rtw_rust_resume_lock_suspend
 drop rtw_rust_resume_unlock_suspend
 drop rtw_rust_resume_process_adapter
 drop rtw_rust_resume_primary_adapter
+drop rtw_rust_resume_register_level
+drop rtw_rust_resume_android_late_hci_ok
 drop rtw_rust_es_early_suspend
 drop rtw_rust_es_late_resume
 drop resume_workitem_callback

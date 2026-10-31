@@ -8,6 +8,19 @@
 
 static struct adapter_resume g_adapter;
 
+static int invoke_late_resume(struct pwrctrl_priv_resume *p)
+{
+	void (*resume)(void *);
+
+	if (!p->early_suspend.resume) {
+		fputs("FAIL late_resume_cb_missing\n", stderr);
+		return 1;
+	}
+	resume = (void (*)(void *))p->early_suspend.resume;
+	resume(&p->early_suspend);
+	return 0;
+}
+
 static int check_register_and_flags(void)
 {
 	struct pwrctrl_priv_resume *p = adapter_to_pwrctl_resume(&g_adapter);
@@ -30,7 +43,9 @@ static int check_register_and_flags(void)
 		return 1;
 	}
 
-	host_late_resume_cb(&p->early_suspend);
+	if (invoke_late_resume(p)) {
+		return 1;
+	}
 	if (rtw_is_do_late_resume(p) || tr->resume_process_calls != 1) {
 		fputs("FAIL late_resume\n", stderr);
 		return 1;
