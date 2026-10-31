@@ -10,8 +10,4 @@ test_bf_sound_enter_rust
 test_bf_sound_leave
 test_bf_sound_leave_rust
 librust_bf_sound_enter.a
-<<<<<<< HEAD
 librust_bf_sound_leave.a
-=======
-*.a
->>>>>>> 8b870ff5 ([W3-193 PR3] Kernel leave hook + L1 for beamforming sound)

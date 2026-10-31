@@ -358,11 +358,7 @@ unsafe fn sound_leave_find_bfee(
     ra: *mut U8,
 ) -> *mut BfHostSoundLeaveBfeeEntry {
     if adapter.is_null() || ra.is_null() {
-<<<<<<< HEAD
         return core::ptr::null_mut();
-=======
-        return core::ptr::null_mut::<BfHostSoundLeaveBfeeEntry>();
->>>>>>> 8b870ff5 ([W3-193 PR3] Kernel leave hook + L1 for beamforming sound)
     }
     for i in 0..BF_HOST_MAX_BEAMFORMEE_ENTRY {
         if (*adapter).sound.bfee_entry[i].used == 0 {
