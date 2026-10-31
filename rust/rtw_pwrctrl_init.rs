@@ -106,6 +106,7 @@ struct PwrctrlPriv {
     resume_work: *mut c_void,
     pwr_state_check_timer: *mut c_void,
     lpspg_info_name: *const u8,
+    lps_ack_mutex: i32,
     rtw_workqueue: *mut c_void,
 }
 
@@ -225,6 +226,10 @@ fn init_part2_host(padapter: Padapter) {
     #[cfg(host_pwrctrl_init_test)]
     unsafe {
         let ad = padapter as *mut HostAdapter;
+        #[cfg(concurrent_mode)]
+        if (*ad).adapter_type != 0 {
+            return;
+        }
         let reg = &(*ad).registrypriv;
         let p = &mut (*ad).pwrctrlpriv;
         #[cfg(wowlan)]
@@ -241,6 +246,7 @@ fn init_part2_host(padapter: Padapter) {
         }
         #[cfg(lps_ack)]
         {
+            p.lps_ack_mutex = 0;
             G_TRACE.lps_ack_mutex_init += 1;
             p.lps_ack_status = -1;
         }
