@@ -12,15 +12,17 @@ CMD_TRAFFIC_SRC := bf_cmd_traffic_l2.c
 CMD_TRAFFIC_SHIM := host_beamforming_bf_cmd_traffic_shim.c
 CMD_TRAFFIC_JSON := bf_cmd_traffic_vectors.json
 SOUND_ENTER_SRC := bf_sound_enter_l2.c
+SOUND_LEAVE_SRC := bf_sound_leave_l2.c
 RUST_SOUND := $(ROOT)/rust/rtw_beamforming_sound.rs
 HOST_JSON := ../crypto/host_vector_json.c
 
 .PHONY: all test test-c test-rust test-packet test-init-cmd test-init-cmd-rust test-gid \
-	test-cmd-traffic test-sound-enter test-sound-enter-rust clean
+	test-cmd-traffic test-sound-enter test-sound-enter-rust test-sound-leave \
+	test-sound-leave-rust clean
 all: test
 
 test: test-c test-rust test-packet test-init-cmd test-init-cmd-rust test-gid test-cmd-traffic \
-	test-cmd-traffic-rust test-sound-enter test-sound-enter-rust
+	test-cmd-traffic-rust test-sound-enter test-sound-enter-rust test-sound-leave test-sound-leave-rust
 
 test-rust: test_bf_entry_packet_rust
 	./test_bf_entry_packet_rust
@@ -51,6 +53,22 @@ test-sound-enter: test_bf_sound_enter
 
 test-sound-enter-rust: test_bf_sound_enter_rust
 	./test_bf_sound_enter_rust
+
+test-sound-leave: test_bf_sound_leave
+	./test_bf_sound_leave
+
+test-sound-leave-rust: test_bf_sound_leave_rust
+	./test_bf_sound_leave_rust
+
+test_bf_sound_leave: $(SOUND_LEAVE_SRC)
+	$(CC) $(CFLAGS) -o $@ $(SOUND_LEAVE_SRC)
+
+test_bf_sound_leave_rust: $(SOUND_LEAVE_SRC) librust_bf_sound_leave.a
+	$(CC) $(CFLAGS) -DHOST_BF_SOUND_LEAVE_RUST -o $@ $(SOUND_LEAVE_SRC) librust_bf_sound_leave.a
+
+librust_bf_sound_leave.a: $(RUST_SOUND)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_bf_sound_leave_test \
+		--crate-type staticlib $(RUST_SOUND) -o $@
 
 test_bf_sound_enter: $(SOUND_ENTER_SRC)
 	$(CC) $(CFLAGS) -o $@ $(SOUND_ENTER_SRC)
@@ -103,4 +121,6 @@ clean:
 	rm -f test_bf_entry_packet test_bf_entry_packet_rust test_bf_packet_leaf \
 		test_bf_init_cmd_leaf test_bf_init_cmd_leaf_rust test_bf_gid_leaf \
 		test_bf_cmd_traffic test_bf_cmd_traffic_rust test_bf_sound_enter test_bf_sound_enter_rust \
-		librust_bf_entry_packet.a librust_bf_init_cmd.a librust_bf_cmd_traffic.a librust_bf_sound_enter.a
+		test_bf_sound_leave test_bf_sound_leave_rust \
+		librust_bf_entry_packet.a librust_bf_init_cmd.a librust_bf_cmd_traffic.a \
+		librust_bf_sound_enter.a librust_bf_sound_leave.a
