@@ -382,7 +382,8 @@ unsafe fn sound_leave_bfee_remove(
     entry: *mut BfHostSoundLeaveBfeeEntry,
 ) {
     let info = &mut (*adapter).sound;
-    if ( (*entry).cap & BF_HOST_BEAMFORMEE_CAP_HT_EXPLICIT_LEAVE) != 0 && info.beamformee_su_cnt > 0 {
+    if ((*entry).cap & BF_HOST_BEAMFORMEE_CAP_HT_EXPLICIT_LEAVE) != 0 && info.beamformee_su_cnt > 0
+    {
         info.beamformee_su_cnt -= 1;
     }
     core::ptr::write_bytes(entry, 0, 1);
