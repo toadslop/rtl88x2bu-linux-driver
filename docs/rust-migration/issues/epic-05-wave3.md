@@ -297,9 +297,17 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-192 | `wave3-192-bf-sounding-enter-p1.md` | sounding enter (part 1) |
 | W3-193 | `wave3-193-bf-sounding-leave-p2.md` | sounding leave (part 2) |
 
+## Children (tranche 20 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-194 | `wave3-194-pwrctrl-early-suspend-resume.md` | early suspend + resume workqueue |
+| W3-195 | `wave3-195-pwrctrl-pwr-wakeup.md` | `_rtw_pwr_wakeup` / IPS deny bump |
+| W3-196 | `wave3-196-pwrctrl-wow-pm-setters.md` | WoWLAN PM ioctl setters |
+| W3-197 | `wave3-197-bf-update-txbf-attrib.md` | `update_attrib_txbf_info` leaf |
+
 Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:
 
-- `rtw_pwrctrl.c` wakeup/resume (`_rtw_pwr_wakeup`, early suspend) after tranche 19
 - `rtw_debug.c` procfs walkers / register dumps (mostly Rust-wrapped — audit before filing)
 - `rtw_ioctl_query.c` (placeholder TU — no code; skip)
 
