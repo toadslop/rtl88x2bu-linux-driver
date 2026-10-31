@@ -82,3 +82,7 @@ pub fn init_part1_kernel(padapter: Padapter) {
         rtw_rust_init_create_wq(padapter);
     }
 }
+
+pub fn init_part2_kernel(_padapter: Padapter) {}
+
+pub fn free_pwrctrl_kernel(_padapter: Padapter) {}

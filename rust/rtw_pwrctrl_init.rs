@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! W3-189 — `rtw_init_pwrctrl_priv` part 1 from `core/rtw_pwrctrl.c`.
+//! W3-189 / W3-190 — `rtw_init_pwrctrl_priv` from `core/rtw_pwrctrl.c`.
 
 #![allow(
     dead_code,
@@ -34,6 +34,16 @@ pub struct HostInitTrace {
     pub init_timer_calls: u32,
     pub create_wq_calls: u32,
     pub skipped_non_primary: u8,
+    pub wow_pattern_reset: u32,
+    pub flush_wq: u32,
+    pub destroy_wq: u32,
+    pub lps_poff_deinit: u32,
+    pub cancel_workitem: u32,
+    pub rsvd_page_free: u32,
+    pub free_pwrlock: u32,
+    pub lps_ack_mutex_free: u32,
+    pub lps_ack_mutex_init: u32,
+    pub lps_poff_init: u32,
 }
 
 #[cfg(host_pwrctrl_init_test)]
@@ -44,6 +54,9 @@ struct RegistryPriv {
     mp_mode: u8,
     power_mgnt: u8,
     smart_ps: u8,
+    wow_power_mgnt: u8,
+    wow_lps_level: u8,
+    wakeup_event: u32,
 }
 
 #[cfg(host_pwrctrl_init_test)]
@@ -83,6 +96,11 @@ struct PwrctrlPriv {
     wowlan_p2p_mode: u8,
     wowlan_in_resume: u8,
     wowlan_last_wake_reason: u8,
+    wowlan_power_mgmt: u8,
+    wowlan_lps_level: u8,
+    default_patterns_en: u8,
+    wowlan_aoac_rpt_loc: u8,
+    lps_ack_status: i8,
     cpwm_event: *mut c_void,
     dma_event: *mut c_void,
     resume_work: *mut c_void,
@@ -108,6 +126,16 @@ static mut G_TRACE: HostInitTrace = HostInitTrace {
     init_timer_calls: 0,
     create_wq_calls: 0,
     skipped_non_primary: 0,
+    wow_pattern_reset: 0,
+    flush_wq: 0,
+    destroy_wq: 0,
+    lps_poff_deinit: 0,
+    cancel_workitem: 0,
+    rsvd_page_free: 0,
+    free_pwrlock: 0,
+    lps_ack_mutex_free: 0,
+    lps_ack_mutex_init: 0,
+    lps_poff_init: 0,
 };
 
 #[cfg(host_pwrctrl_init_test)]
@@ -185,6 +213,78 @@ fn init_part1_host(padapter: Padapter) {
         {
             G_TRACE.init_workitem_calls += 1;
             G_TRACE.create_wq_calls += 1;
+            p.rtw_workqueue = 1 as *mut c_void;
+        }
+    }
+}
+
+fn init_part2_host(padapter: Padapter) {
+    if padapter.is_null() {
+        return;
+    }
+    #[cfg(host_pwrctrl_init_test)]
+    unsafe {
+        let ad = padapter as *mut HostAdapter;
+        let reg = &(*ad).registrypriv;
+        let p = &mut (*ad).pwrctrlpriv;
+        #[cfg(wowlan)]
+        {
+            p.wowlan_power_mgmt = reg.wow_power_mgnt;
+            p.wowlan_lps_level = reg.wow_lps_level;
+            p.default_patterns_en = if reg.wakeup_event & (1 << 1) != 0 {
+                _TRUE
+            } else {
+                _FALSE
+            };
+            G_TRACE.wow_pattern_reset += 1;
+            p.wowlan_aoac_rpt_loc = 0;
+        }
+        #[cfg(lps_ack)]
+        {
+            G_TRACE.lps_ack_mutex_init += 1;
+            p.lps_ack_status = -1;
+        }
+        #[cfg(lps_poff)]
+        {
+            G_TRACE.lps_poff_init += 1;
+        }
+    }
+}
+
+fn free_pwrctrl_host(padapter: Padapter) {
+    if padapter.is_null() {
+        return;
+    }
+    #[cfg(host_pwrctrl_init_test)]
+    unsafe {
+        let ad = padapter as *mut HostAdapter;
+        #[cfg(concurrent_mode)]
+        if (*ad).adapter_type != 0 {
+            return;
+        }
+        let p = &mut (*ad).pwrctrlpriv;
+        #[cfg(resume_wq)]
+        if !p.rtw_workqueue.is_null() {
+            G_TRACE.flush_wq += 1;
+            G_TRACE.destroy_wq += 1;
+            p.rtw_workqueue = core::ptr::null_mut();
+        }
+        #[cfg(lps_poff)]
+        {
+            G_TRACE.lps_poff_deinit += 1;
+        }
+        #[cfg(lps_lclk)]
+        {
+            G_TRACE.cancel_workitem += 2;
+        }
+        #[cfg(lps_pg)]
+        {
+            G_TRACE.rsvd_page_free += 1;
+        }
+        G_TRACE.free_pwrlock += 2;
+        #[cfg(lps_ack)]
+        {
+            G_TRACE.lps_ack_mutex_free += 1;
         }
     }
 }
@@ -199,6 +299,16 @@ pub extern "C" fn host_pwrctrl_init_reset_trace() {
             init_timer_calls: 0,
             create_wq_calls: 0,
             skipped_non_primary: 0,
+            wow_pattern_reset: 0,
+            flush_wq: 0,
+            destroy_wq: 0,
+            lps_poff_deinit: 0,
+            cancel_workitem: 0,
+            rsvd_page_free: 0,
+            free_pwrlock: 0,
+            lps_ack_mutex_free: 0,
+            lps_ack_mutex_init: 0,
+            lps_poff_init: 0,
         };
     }
 }
@@ -227,4 +337,16 @@ pub extern "C" fn rtw_init_pwrctrl_priv_part1(padapter: Padapter) {
     init_part1_host(padapter);
     #[cfg(not(host_pwrctrl_init_test))]
     kernel::init_part1_kernel(padapter);
+}
+
+#[cfg(host_pwrctrl_init_test)]
+#[no_mangle]
+pub extern "C" fn rtw_init_pwrctrl_priv_part2(padapter: Padapter) {
+    init_part2_host(padapter);
+}
+
+#[cfg(host_pwrctrl_init_test)]
+#[no_mangle]
+pub extern "C" fn rtw_free_pwrctrl_priv(padapter: Padapter) {
+    free_pwrctrl_host(padapter);
 }
