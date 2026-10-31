@@ -25,6 +25,7 @@ drop rtw_rust_init_free_pwrlocks
 drop rtw_rust_init_free_lps_ack_mutex
 drop rtw_rust_init_lps_poff_deinit
 drop rtw_rust_init_wow_hw_cam_mutex_init
+drop rtw_rust_init_wowlan_tail
 drop host_pwrctrl_init_reset_trace
 drop host_pwrctrl_init_get_trace
 drop host_pwrctrl_init_set_current_time

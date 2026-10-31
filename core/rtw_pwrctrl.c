@@ -3462,6 +3462,34 @@ void rtw_rust_init_wow_hw_cam_mutex_init(PADAPTER padapter)
 #endif
 }
 
+void rtw_rust_init_wowlan_tail(PADAPTER padapter)
+{
+#ifdef CONFIG_WOWLAN
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+#ifdef CONFIG_LPS_1T1R
+	p->wowlan_lps_1t1r = padapter->registrypriv.wow_lps_1t1r;
+#endif
+#ifdef CONFIG_PNO_SUPPORT
+	p->pno_inited = _FALSE;
+	p->pnlo_info = NULL;
+	p->pscan_info = NULL;
+	p->pno_ssid_list = NULL;
+#endif /* CONFIG_PNO_SUPPORT */
+#ifdef CONFIG_WOW_KEEP_ALIVE_PATTERN
+	p->wowlan_keep_alive_ack_index = 0xFF;
+	p->wowlan_wake_pattern_index = 0xFF;
+#endif /* CONFIG_WOW_KEEP_ALIVE_PATTERN */
+#ifdef CONFIG_WAR_OFFLOAD
+#if defined(CONFIG_OFFLOAD_MDNS_V4) || defined(CONFIG_OFFLOAD_MDNS_V6)
+	rtw_wow_war_mdns_parms_reset(padapter, _TRUE);
+#endif /* defined(CONFIG_OFFLOAD_MDNS_V4) || defined(CONFIG_OFFLOAD_MDNS_V6) */
+#endif /* CONFIG_WAR_OFFLOAD */
+#else
+	(void)padapter;
+#endif /* CONFIG_WOWLAN */
+}
+
 void rtw_rust_init_register_early_suspend(PADAPTER padapter)
 {
 #if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_ANDROID_POWER)
@@ -3898,6 +3926,7 @@ void rtw_init_pwrctrl_priv(PADAPTER padapter)
 	pwrctrlpriv->lps_ack_status = -1;
 #endif /* CONFIG_LPS_ACK */
 #else /* CONFIG_RUST && !HOST_PWRCTRL_INIT_TEST — W3-190 part2 in rust/rtw_pwrctrl_init.rs */
+	rtw_rust_init_register_early_suspend(padapter);
 #ifdef CONFIG_GPIO_WAKEUP
 	pwrctrlpriv->wowlan_gpio_index = WAKEUP_GPIO_IDX;
 	pwrctrlpriv->wowlan_gpio_output_state = GPIO_OUTPUT_LOW;

@@ -9,8 +9,8 @@ extern "C" {
     fn rtw_rust_init_reg_u32(padapter: Padapter, field: u32) -> u32;
     fn rtw_rust_init_store_u8(padapter: Padapter, field: u32, val: u8);
     fn rtw_rust_init_store_i8(padapter: Padapter, field: u32, val: i8);
-    fn rtw_rust_init_register_early_suspend(padapter: Padapter);
     fn rtw_rust_init_wow_pattern_reset(padapter: Padapter);
+    fn rtw_rust_init_wowlan_tail(padapter: Padapter);
     fn rtw_rust_init_lps_poff_init(padapter: Padapter);
     fn rtw_rust_init_lps_ack_init(padapter: Padapter);
     fn rtw_rust_init_wow_hw_cam_mutex_init(padapter: Padapter);
@@ -32,7 +32,6 @@ pub fn init_part2_kernel(padapter: Padapter) {
         if rtw_rust_init_is_primary(padapter) == _FALSE {
             return;
         }
-        rtw_rust_init_register_early_suspend(padapter);
         #[cfg(config_wowlan)]
         {
             let wow_pwr = rtw_rust_init_reg_u8(padapter, 5);
@@ -45,6 +44,7 @@ pub fn init_part2_kernel(padapter: Padapter) {
             rtw_rust_init_wow_pattern_reset(padapter);
             rtw_rust_init_store_u8(padapter, 26, 0);
             rtw_rust_init_wow_hw_cam_mutex_init(padapter);
+            rtw_rust_init_wowlan_tail(padapter);
         }
         rtw_rust_init_lps_poff_init(padapter);
         rtw_rust_init_lps_ack_init(padapter);
