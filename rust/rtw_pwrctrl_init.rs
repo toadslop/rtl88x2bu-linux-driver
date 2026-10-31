@@ -259,15 +259,15 @@ fn init_part2_host(padapter: Padapter) {
             trace_bump(&mut G_TRACE.wow_pattern_reset);
             p.wowlan_aoac_rpt_loc = 0;
         }
+        #[cfg(lps_poff)]
+        {
+            trace_bump(&mut G_TRACE.lps_poff_init);
+        }
         #[cfg(lps_ack)]
         {
             p.lps_ack_mutex = 0;
             trace_bump(&mut G_TRACE.lps_ack_mutex_init);
             p.lps_ack_status = -1;
-        }
-        #[cfg(lps_poff)]
-        {
-            trace_bump(&mut G_TRACE.lps_poff_init);
         }
     }
 }
