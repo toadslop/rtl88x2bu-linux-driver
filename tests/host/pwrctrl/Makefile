@@ -19,6 +19,7 @@ PM_SHIM := host_pwrctrl_pm_shim.c
 PS_RDY_SHIM := host_pwrctrl_ps_rdy_shim.c
 SET_PS_SHIM := host_pwrctrl_set_ps_shim.c
 INIT_SHIM := host_pwrctrl_init_shim.c
+INIT_P2_SHIM := host_pwrctrl_init_p2_shim.c
 FW_IPS_SHIM := host_pwrctrl_fw_ips_shim.c
 CPWM_INT_SHIM := host_pwrctrl_cpwm_int_shim.c
 
@@ -49,6 +50,7 @@ PS_RDY_CFLAGS := $(CFLAGS) -DCONFIG_WOWLAN
 SET_PS_CFLAGS := $(CFLAGS) -DCONFIG_BT_COEXIST -DCONFIG_FW_MULTI_PORT_SUPPORT -DCONFIG_LPS -DCONFIG_LPS_LCLK
 SET_PS_PG_WOW_CFLAGS := $(SET_PS_CFLAGS) -DCONFIG_LPS_PG -DCONFIG_WOWLAN
 INIT_CFLAGS := $(CFLAGS) -DCONFIG_CONCURRENT_MODE -DCONFIG_LPS_LCLK -DCONFIG_LPS_PG -DCONFIG_RESUME_IN_WORKQUEUE
+INIT_P2_CFLAGS := $(INIT_CFLAGS) -DCONFIG_WOWLAN -DCONFIG_LPS_ACK -DCONFIG_LPS_POFF -DCONFIG_HAS_EARLYSUSPEND
 FW_IPS_CFLAGS := $(CFLAGS) -DCONFIG_FWLPS_IN_IPS -DCONFIG_LPS_LCLK -DCONFIG_BT_COEXIST
 
 .PHONY: all test test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust \
@@ -345,6 +347,12 @@ test_pwrctrl_set_ps_rust_pg_wow: test_pwrctrl_set_ps.c librust_pwrctrl_set_ps_pg
 test-init: test_pwrctrl_init
 	./test_pwrctrl_init init_vectors.json
 
+test-init-p2: test_pwrctrl_init_p2
+	./test_pwrctrl_init_p2
+
+test_pwrctrl_init_p2: test_pwrctrl_init_p2.c $(INIT_SHIM) $(INIT_P2_SHIM)
+	$(CC) $(INIT_P2_CFLAGS) -o $@ test_pwrctrl_init_p2.c $(INIT_SHIM) $(INIT_P2_SHIM)
+
 test_pwrctrl_init: test_pwrctrl_init.c $(INIT_SHIM) $(HOST_JSON)
 	$(CC) $(INIT_CFLAGS) -o $@ test_pwrctrl_init.c $(INIT_SHIM) $(HOST_JSON)
 
@@ -393,6 +401,7 @@ clean:
 		test_pwrctrl_set_ps test_pwrctrl_set_ps_pg_wow test_pwrctrl_set_ps_rust \
 		test_pwrctrl_set_ps_rust_pg_wow librust_pwrctrl_set_ps.a librust_pwrctrl_set_ps_pg_wow.a \
 		test_pwrctrl_init test_pwrctrl_init_rust librust_pwrctrl_init.a \
+		test_pwrctrl_init_p2 \
 		test_pwrctrl_fw_in_ips test_pwrctrl_fw_in_ips_rust librust_pwrctrl_fw_ips.a \
 		test_pwrctrl_cpwm_int test_pwrctrl_cpwm_int_rust librust_pwrctrl_cpwm_int.a \
 		librust_pwrctrl.a test_pwrctrl_ps_rdy test_pwrctrl_ps_rdy_rust \
