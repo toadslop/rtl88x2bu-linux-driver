@@ -110,5 +110,6 @@ clean:
 	rm -f test_bf_entry_packet test_bf_entry_packet_rust test_bf_packet_leaf \
 		test_bf_init_cmd_leaf test_bf_init_cmd_leaf_rust test_bf_gid_leaf \
 		test_bf_cmd_traffic test_bf_cmd_traffic_rust test_bf_sound_enter test_bf_sound_enter_rust \
+		test_bf_sound_leave test_bf_sound_leave_rust \
 		librust_bf_entry_packet.a librust_bf_init_cmd.a librust_bf_cmd_traffic.a \
-		librust_bf_sound_enter.a
+		librust_bf_sound_enter.a librust_bf_sound_leave.a
