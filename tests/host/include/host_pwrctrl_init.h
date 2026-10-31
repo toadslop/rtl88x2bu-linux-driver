@@ -24,9 +24,6 @@ struct registry_priv_init {
 	u8 mp_mode;
 	u8 power_mgnt;
 	u8 smart_ps;
-	u8 wow_power_mgnt;
-	u8 wow_lps_level;
-	u32 wakeup_event;
 };
 
 struct pwrctrl_priv_init {
@@ -64,11 +61,6 @@ struct pwrctrl_priv_init {
 	u8 wowlan_p2p_mode;
 	u8 wowlan_in_resume;
 	u8 wowlan_last_wake_reason;
-	u8 wowlan_power_mgmt;
-	u8 wowlan_lps_level;
-	u8 default_patterns_en;
-	u8 wowlan_aoac_rpt_loc;
-	signed char lps_ack_status;
 	void *cpwm_event;
 	void *dma_event;
 	void *resume_work;
@@ -99,14 +91,6 @@ struct host_pwrctrl_init_trace {
 	u32 init_timer_calls;
 	u32 create_wq_calls;
 	u8 skipped_non_primary;
-	u32 register_early_suspend;
-	u32 wow_pattern_reset;
-	u32 lps_poff_init;
-	u32 lps_ack_mutex_init;
-	u32 flush_wq;
-	u32 destroy_wq;
-	u32 cancel_workitem;
-	u32 free_pwrlock;
 };
 
 void host_pwrctrl_init_reset_trace(void);
@@ -114,7 +98,5 @@ struct host_pwrctrl_init_trace *host_pwrctrl_init_get_trace(void);
 void host_pwrctrl_init_set_current_time(systime t);
 
 void rtw_init_pwrctrl_priv_part1(PADAPTER padapter);
-void rtw_init_pwrctrl_priv_part2(PADAPTER padapter);
-void rtw_free_pwrctrl_priv(PADAPTER padapter);
 
 #endif /* HOST_PWRCTRL_INIT_H */
