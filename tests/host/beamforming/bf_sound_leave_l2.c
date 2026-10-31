@@ -39,6 +39,7 @@ typedef struct bf_host_sound_leave_adpt *bf_host_sound_leave_padpt;
 u32 bf_host_sound_leave_tr_hal;
 u32 bf_host_sound_leave_tr_cancel_timer;
 
+#ifndef HOST_BF_SOUND_LEAVE_RUST
 static struct bf_host_sound_bfee_entry *o_leave_find_bfee(bf_host_sound_leave_padpt a, u8 *ra)
 {
 	u8 i;
@@ -65,7 +66,6 @@ static void o_leave_bfee_remove(bf_host_sound_leave_padpt a, struct bf_host_soun
 	memset(entry, 0, sizeof(*entry));
 }
 
-#ifndef HOST_BF_SOUND_LEAVE_RUST
 void o_beamforming_leave(bf_host_sound_leave_padpt adapter, u8 *ra)
 {
 	struct bf_host_sound_leave_info *info;
