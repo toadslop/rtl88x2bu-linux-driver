@@ -3309,6 +3309,7 @@ void rtw_unregister_evt_alive(PADAPTER padapter)
 #if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_INIT_TEST)
 
 void rtw_init_pwrctrl_priv_part1(PADAPTER padapter);
+void rtw_init_pwrctrl_priv_part2(PADAPTER padapter);
 
 u8 rtw_rust_init_is_primary(PADAPTER padapter)
 {
@@ -3327,8 +3328,26 @@ u8 rtw_rust_init_reg_u8(PADAPTER padapter, u32 field)
 	case 2: return padapter->registrypriv.mp_mode;
 	case 3: return padapter->registrypriv.power_mgnt;
 	case 4: return padapter->registrypriv.smart_ps;
+#ifdef CONFIG_WOWLAN
+	case 5: return padapter->registrypriv.wow_power_mgnt;
+	case 6: return padapter->registrypriv.wow_lps_level;
+#endif
 	default: return 0;
 	}
+}
+
+u32 rtw_rust_init_reg_u32(PADAPTER padapter, u32 field)
+{
+#ifdef CONFIG_WOWLAN
+	switch (field) {
+	case 0: return padapter->registrypriv.wakeup_event;
+	default: return 0;
+	}
+#else
+	(void)padapter;
+	(void)field;
+	return 0;
+#endif
 }
 
 u32 rtw_rust_init_get_current_time(void)
@@ -3374,8 +3393,184 @@ void rtw_rust_init_store_u8(PADAPTER padapter, u32 field, u8 val)
 	case 20: p->wowlan_p2p_mode = val; break;
 	case 21: p->wowlan_in_resume = val; break;
 	case 22: p->wowlan_last_wake_reason = val; break;
+#ifdef CONFIG_WOWLAN
+	case 23: p->wowlan_power_mgmt = val; break;
+	case 24: p->wowlan_lps_level = val; break;
+	case 25: p->default_patterns_en = val; break;
+	case 26: p->wowlan_aoac_rpt_loc = val; break;
+#endif
 	default: break;
 	}
+}
+
+void rtw_rust_init_store_i8(PADAPTER padapter, u32 field, s8 val)
+{
+#ifdef CONFIG_LPS_ACK
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	if (field == 0)
+		p->lps_ack_status = val;
+#else
+	(void)padapter;
+	(void)field;
+	(void)val;
+#endif
+}
+
+void rtw_rust_init_wow_pattern_reset(PADAPTER padapter)
+{
+#ifdef CONFIG_WOWLAN
+	rtw_wow_pattern_sw_reset(padapter);
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_init_lps_poff_init(PADAPTER padapter)
+{
+#ifdef CONFIG_LPS_POFF
+	rtw_hal_set_hwreg(padapter, HW_VAR_LPS_POFF_INIT, 0);
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_init_lps_ack_init(PADAPTER padapter)
+{
+#ifdef CONFIG_LPS_ACK
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	_rtw_mutex_init(&p->lps_ack_mutex);
+	p->lps_ack_status = -1;
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_init_wow_hw_cam_mutex_init(PADAPTER padapter)
+{
+#ifdef CONFIG_WOWLAN
+#ifdef CONFIG_WOW_PATTERN_HW_CAM
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	_rtw_mutex_init(&p->wowlan_pattern_cam_mutex);
+#else
+	(void)padapter;
+#endif
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_init_register_early_suspend(PADAPTER padapter)
+{
+#if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_ANDROID_POWER)
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	p->early_suspend.suspend = NULL;
+	rtw_register_early_suspend(p);
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_init_free_workqueue(PADAPTER padapter)
+{
+#ifdef CONFIG_RESUME_IN_WORKQUEUE
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	if (p->rtw_workqueue) {
+		flush_workqueue(p->rtw_workqueue);
+		destroy_workqueue(p->rtw_workqueue);
+		p->rtw_workqueue = NULL;
+	}
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_init_cancel_lps_workitems(PADAPTER padapter)
+{
+#ifdef CONFIG_LPS_LCLK
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	_cancel_workitem_sync(&p->cpwm_event);
+	_cancel_workitem_sync(&p->dma_event);
+#ifdef CONFIG_LPS_RPWM_TIMER
+	_cancel_workitem_sync(&p->rpwmtimeoutwi);
+#endif
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_init_free_lps_pg(PADAPTER padapter)
+{
+#ifdef CONFIG_LPS_PG
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	rsvd_page_cache_free(&p->lpspg_info);
+#ifdef CONFIG_RTL8822C
+	rsvd_page_cache_free(&p->lpspg_dpk_info);
+	rsvd_page_cache_free(&p->lpspg_iqk_info);
+#endif
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_init_free_wow_mutex(PADAPTER padapter)
+{
+#ifdef CONFIG_WOWLAN
+#ifdef CONFIG_WOW_PATTERN_HW_CAM
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	_rtw_mutex_free(&p->wowlan_pattern_cam_mutex);
+#else
+	(void)padapter;
+#endif
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_init_unregister_early_suspend(PADAPTER padapter)
+{
+#if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_ANDROID_POWER)
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	rtw_unregister_early_suspend(p);
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_init_free_pwrlocks(PADAPTER padapter)
+{
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	_free_pwrlock(&p->lock);
+	_free_pwrlock(&p->check_32k_lock);
+}
+
+void rtw_rust_init_free_lps_ack_mutex(PADAPTER padapter)
+{
+#ifdef CONFIG_LPS_ACK
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	_rtw_mutex_free(&p->lps_ack_mutex);
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_init_lps_poff_deinit(PADAPTER padapter)
+{
+#ifdef CONFIG_LPS_POFF
+	rtw_hal_set_hwreg(padapter, HW_VAR_LPS_POFF_DEINIT, 0);
+#else
+	(void)padapter;
+#endif
 }
 
 void rtw_rust_init_store_u32(PADAPTER padapter, u32 field, u32 val)
@@ -3603,6 +3798,7 @@ void rtw_init_pwrctrl_priv(PADAPTER padapter)
 
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_INIT_TEST — W3-189 part1 in rust/rtw_pwrctrl_init.rs */
 
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_INIT_TEST)
 #if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_ANDROID_POWER)
 	pwrctrlpriv->early_suspend.suspend = NULL;
 	rtw_register_early_suspend(pwrctrlpriv);
@@ -3701,9 +3897,42 @@ void rtw_init_pwrctrl_priv(PADAPTER padapter)
 	_rtw_mutex_init(&pwrctrlpriv->lps_ack_mutex);
 	pwrctrlpriv->lps_ack_status = -1;
 #endif /* CONFIG_LPS_ACK */
+#else /* CONFIG_RUST && !HOST_PWRCTRL_INIT_TEST — W3-190 part2 in rust/rtw_pwrctrl_init.rs */
+#ifdef CONFIG_GPIO_WAKEUP
+	pwrctrlpriv->wowlan_gpio_index = WAKEUP_GPIO_IDX;
+	pwrctrlpriv->wowlan_gpio_output_state = GPIO_OUTPUT_LOW;
+	pwrctrlpriv->is_high_active = HIGH_ACTIVE_DEV2HST;
+	pwrctrlpriv->hst2dev_high_active = HIGH_ACTIVE_HST2DEV;
+
+#if (defined(CONFIG_RTL8192F) && defined(CONFIG_USB_HCI) && defined(CONFIG_BT_COEXIST))
+	if (pHalData->EEPROMBluetoothCoexist == _TRUE) {
+		pwrctrlpriv->wowlan_gpio_index = WAKEUP_GPIO_IDX_8725AU;
+		pwrctrlpriv->is_high_active = HIGH_ACTIVE_DEV2HST_8725AU;
+	}
+#endif
+#ifdef CONFIG_RTW_ONE_PIN_GPIO
+	rtw_hal_switch_gpio_wl_ctrl(padapter, pwrctrlpriv->wowlan_gpio_index, _TRUE);
+	rtw_hal_set_input_gpio(padapter, pwrctrlpriv->wowlan_gpio_index);
+#else
+	#ifdef CONFIG_WAKEUP_GPIO_INPUT_MODE
+	if (pwrctrlpriv->is_high_active == 0)
+		rtw_hal_set_input_gpio(padapter, pwrctrlpriv->wowlan_gpio_index);
+	else
+		rtw_hal_set_output_gpio(padapter, pwrctrlpriv->wowlan_gpio_index,
+			GPIO_OUTPUT_LOW);
+	#else
+	rtw_hal_set_output_gpio(padapter, pwrctrlpriv->wowlan_gpio_index
+		, pwrctrlpriv->wowlan_gpio_output_state);
+	rtw_hal_switch_gpio_wl_ctrl(padapter, pwrctrlpriv->wowlan_gpio_index, _TRUE);
+	#endif /*CONFIG_WAKEUP_GPIO_INPUT_MODE*/
+#endif /* CONFIG_RTW_ONE_PIN_GPIO */
+#endif /* CONFIG_GPIO_WAKEUP */
+	rtw_init_pwrctrl_priv_part2(padapter);
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_INIT_TEST — W3-190 part2 */
 }
 
 
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_INIT_TEST)
 void rtw_free_pwrctrl_priv(PADAPTER adapter)
 {
 	struct pwrctrl_priv *pwrctrlpriv = adapter_to_pwrctl(adapter);
@@ -3772,6 +4001,7 @@ void rtw_free_pwrctrl_priv(PADAPTER adapter)
 	_rtw_mutex_free(&pwrctrlpriv->lps_ack_mutex);
 #endif /* CONFIG_LPS_ACK */
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_INIT_TEST — W3-190 free in rust/rtw_pwrctrl_init.rs */
 
 #ifdef CONFIG_RESUME_IN_WORKQUEUE
 extern int rtw_resume_process(_adapter *padapter);
