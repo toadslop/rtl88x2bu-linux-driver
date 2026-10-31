@@ -3641,8 +3641,12 @@ void rtw_rust_init_init_workitem(PADAPTER padapter, u32 which)
 		_init_workitem(&p->dma_event, dma_event_callback, NULL);
 #endif
 #ifdef CONFIG_RESUME_IN_WORKQUEUE
-	if (which == 2)
+	if (which == 2) {
+#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_INIT_TEST)
+		extern void resume_workitem_callback(struct work_struct *work);
+#endif
 		_init_workitem(&p->resume_work, resume_workitem_callback, NULL);
+	}
 #endif
 }
 
@@ -4032,6 +4036,7 @@ void rtw_free_pwrctrl_priv(PADAPTER adapter)
 }
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_INIT_TEST — W3-190 free in rust/rtw_pwrctrl_init.rs */
 
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_RESUME_TEST)
 #ifdef CONFIG_RESUME_IN_WORKQUEUE
 extern int rtw_resume_process(_adapter *padapter);
 
@@ -4050,9 +4055,6 @@ static void resume_workitem_callback(struct work_struct *work)
 
 void rtw_resume_in_workqueue(struct pwrctrl_priv *pwrpriv)
 {
-	/* accquire system's suspend lock preventing from falliing asleep while resume in workqueue */
-	/* rtw_lock_suspend(); */
-
 	rtw_resume_lock_suspend();
 
 #if 1
@@ -4082,6 +4084,7 @@ inline void rtw_set_do_late_resume(struct pwrctrl_priv *pwrpriv, bool enable)
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 extern int rtw_resume_process(_adapter *padapter);
+
 static void rtw_early_suspend(struct early_suspend *h)
 {
 	struct pwrctrl_priv *pwrpriv = container_of(h, struct pwrctrl_priv, early_suspend);
@@ -4108,13 +4111,10 @@ void rtw_register_early_suspend(struct pwrctrl_priv *pwrpriv)
 {
 	RTW_INFO("%s\n", __FUNCTION__);
 
-	/* jeff: set the early suspend level before blank screen, so we wll do late resume after scree is lit */
 	pwrpriv->early_suspend.level = EARLY_SUSPEND_LEVEL_BLANK_SCREEN - 20;
 	pwrpriv->early_suspend.suspend = rtw_early_suspend;
 	pwrpriv->early_suspend.resume = rtw_late_resume;
 	register_early_suspend(&pwrpriv->early_suspend);
-
-
 }
 
 void rtw_unregister_early_suspend(struct pwrctrl_priv *pwrpriv)
@@ -4132,9 +4132,6 @@ void rtw_unregister_early_suspend(struct pwrctrl_priv *pwrpriv)
 #endif /* CONFIG_HAS_EARLYSUSPEND */
 
 #ifdef CONFIG_ANDROID_POWER
-#if defined(CONFIG_USB_HCI) || defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-	extern int rtw_resume_process(PADAPTER padapter);
-#endif
 static void rtw_early_suspend(android_early_suspend_t *h)
 {
 	struct pwrctrl_priv *pwrpriv = container_of(h, struct pwrctrl_priv, early_suspend);
@@ -4162,7 +4159,6 @@ void rtw_register_early_suspend(struct pwrctrl_priv *pwrpriv)
 {
 	RTW_INFO("%s\n", __FUNCTION__);
 
-	/* jeff: set the early suspend level before blank screen, so we wll do late resume after scree is lit */
 	pwrpriv->early_suspend.level = ANDROID_EARLY_SUSPEND_LEVEL_BLANK_SCREEN - 20;
 	pwrpriv->early_suspend.suspend = rtw_early_suspend;
 	pwrpriv->early_suspend.resume = rtw_late_resume;
@@ -4182,6 +4178,153 @@ void rtw_unregister_early_suspend(struct pwrctrl_priv *pwrpriv)
 	pwrpriv->early_suspend.resume = NULL;
 }
 #endif /* CONFIG_ANDROID_POWER */
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_RESUME_TEST — W3-194 in rust/rtw_pwrctrl_resume.rs */
+
+#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_RESUME_TEST)
+
+extern int rtw_resume_process(_adapter *padapter);
+
+struct pwrctrl_priv *rtw_rust_resume_pwr_from_es(void *h)
+{
+#if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_ANDROID_POWER)
+	struct pwrctrl_priv *pwrpriv;
+
+	pwrpriv = container_of(h, struct pwrctrl_priv, early_suspend);
+	return pwrpriv;
+#else
+	(void)h;
+	return NULL;
+#endif
+}
+
+struct pwrctrl_priv *rtw_rust_resume_pwr_from_work(void *work)
+{
+#ifdef CONFIG_RESUME_IN_WORKQUEUE
+	return container_of(work, struct pwrctrl_priv, resume_work);
+#else
+	(void)work;
+	return NULL;
+#endif
+}
+
+void *rtw_rust_resume_get_es_suspend(struct pwrctrl_priv *pwrpriv)
+{
+#if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_ANDROID_POWER)
+	return (void *)pwrpriv->early_suspend.suspend;
+#else
+	(void)pwrpriv;
+	return NULL;
+#endif
+}
+
+void rtw_rust_resume_set_es_suspend(struct pwrctrl_priv *pwrpriv, void *cb)
+{
+#if defined(CONFIG_HAS_EARLYSUSPEND)
+	pwrpriv->early_suspend.suspend = (typeof(pwrpriv->early_suspend.suspend))cb;
+#elif defined(CONFIG_ANDROID_POWER)
+	pwrpriv->early_suspend.suspend = (typeof(pwrpriv->early_suspend.suspend))cb;
+#else
+	(void)pwrpriv;
+	(void)cb;
+#endif
+}
+
+void rtw_rust_resume_set_es_resume(struct pwrctrl_priv *pwrpriv, void *cb)
+{
+#if defined(CONFIG_HAS_EARLYSUSPEND)
+	pwrpriv->early_suspend.resume = (typeof(pwrpriv->early_suspend.resume))cb;
+#elif defined(CONFIG_ANDROID_POWER)
+	pwrpriv->early_suspend.resume = (typeof(pwrpriv->early_suspend.resume))cb;
+#else
+	(void)pwrpriv;
+	(void)cb;
+#endif
+}
+
+void rtw_rust_resume_set_es_level(struct pwrctrl_priv *pwrpriv, int level)
+{
+#if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_ANDROID_POWER)
+	pwrpriv->early_suspend.level = level;
+#else
+	(void)pwrpriv;
+	(void)level;
+#endif
+}
+
+#ifdef CONFIG_HAS_EARLYSUSPEND
+void rtw_rust_resume_register_es_has(struct pwrctrl_priv *pwrpriv)
+{
+	register_early_suspend(&pwrpriv->early_suspend);
+}
+
+void rtw_rust_resume_unregister_es_has(struct pwrctrl_priv *pwrpriv)
+{
+	unregister_early_suspend(&pwrpriv->early_suspend);
+}
+#endif
+
+#ifdef CONFIG_ANDROID_POWER
+void rtw_rust_resume_register_es_android(struct pwrctrl_priv *pwrpriv)
+{
+	android_register_early_suspend(&pwrpriv->early_suspend);
+}
+
+void rtw_rust_resume_unregister_es_android(struct pwrctrl_priv *pwrpriv)
+{
+	android_unregister_early_suspend(&pwrpriv->early_suspend);
+}
+#endif
+
+u8 rtw_rust_resume_get_do_late(struct pwrctrl_priv *pwrpriv)
+{
+#if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_ANDROID_POWER)
+	return pwrpriv->do_late_resume ? _TRUE : _FALSE;
+#else
+	(void)pwrpriv;
+	return _FALSE;
+#endif
+}
+
+void rtw_rust_resume_set_do_late(struct pwrctrl_priv *pwrpriv, u8 v)
+{
+#if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_ANDROID_POWER)
+	pwrpriv->do_late_resume = v;
+#else
+	(void)pwrpriv;
+	(void)v;
+#endif
+}
+
+#ifdef CONFIG_RESUME_IN_WORKQUEUE
+void rtw_rust_resume_queue_work(struct pwrctrl_priv *pwrpriv)
+{
+	queue_work(pwrpriv->rtw_workqueue, &pwrpriv->resume_work);
+}
+#endif
+
+void rtw_rust_resume_lock_suspend(void)
+{
+	rtw_resume_lock_suspend();
+}
+
+void rtw_rust_resume_unlock_suspend(void)
+{
+	rtw_resume_unlock_suspend();
+}
+
+int rtw_rust_resume_process_adapter(PADAPTER padapter)
+{
+	return rtw_resume_process(padapter);
+}
+
+PADAPTER rtw_rust_resume_primary_adapter(struct pwrctrl_priv *pwrpriv)
+{
+	struct dvobj_priv *dvobj = pwrctl_to_dvobj(pwrpriv);
+
+	return dvobj_get_primary_adapter(dvobj);
+}
+
+#endif /* CONFIG_RUST && !HOST_PWRCTRL_RESUME_TEST */
 
 u8 rtw_interface_ps_func(_adapter *padapter, HAL_INTF_PS_FUNC efunc_id, u8 *val)
 {

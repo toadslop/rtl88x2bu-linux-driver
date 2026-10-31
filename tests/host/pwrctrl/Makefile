@@ -20,6 +20,7 @@ PS_RDY_SHIM := host_pwrctrl_ps_rdy_shim.c
 SET_PS_SHIM := host_pwrctrl_set_ps_shim.c
 INIT_SHIM := host_pwrctrl_init_shim.c
 INIT_P2_SHIM := host_pwrctrl_init_p2_shim.c
+RESUME_SHIM := host_pwrctrl_resume_shim.c
 FW_IPS_SHIM := host_pwrctrl_fw_ips_shim.c
 CPWM_INT_SHIM := host_pwrctrl_cpwm_int_shim.c
 
@@ -43,6 +44,7 @@ RUST_PWRCTRL_PS_RDY := $(ROOT)/rust/rtw_pwrctrl_ps_rdy.rs
 RUST_PWRCTRL_PM := $(ROOT)/rust/rtw_pwrctrl_pm.rs
 RUST_PWRCTRL_SET_PS := $(ROOT)/rust/rtw_pwrctrl_set_ps.rs
 RUST_PWRCTRL_INIT := $(ROOT)/rust/rtw_pwrctrl_init.rs
+RUST_PWRCTRL_RESUME := $(ROOT)/rust/rtw_pwrctrl_resume.rs
 RUST_PWRCTRL_FW_IPS := $(ROOT)/rust/rtw_pwrctrl_fw_ips.rs
 RUST_PWRCTRL_CPWM_INT := $(ROOT)/rust/rtw_pwrctrl_cpwm_int.rs
 RUSTC := rustc
@@ -51,6 +53,8 @@ SET_PS_CFLAGS := $(CFLAGS) -DCONFIG_BT_COEXIST -DCONFIG_FW_MULTI_PORT_SUPPORT -D
 SET_PS_PG_WOW_CFLAGS := $(SET_PS_CFLAGS) -DCONFIG_LPS_PG -DCONFIG_WOWLAN
 INIT_CFLAGS := $(CFLAGS) -DCONFIG_CONCURRENT_MODE -DCONFIG_LPS_LCLK -DCONFIG_LPS_PG -DCONFIG_RESUME_IN_WORKQUEUE
 INIT_P2_CFLAGS := $(INIT_CFLAGS) -DCONFIG_WOWLAN -DCONFIG_LPS_ACK -DCONFIG_LPS_POFF
+RESUME_CFLAGS := $(CFLAGS) -DCONFIG_HAS_EARLYSUSPEND -DCONFIG_RESUME_IN_WORKQUEUE
+RESUME_RUSTCFGS := --cfg host_pwrctrl_resume_test --cfg early_suspend --cfg resume_wq
 FW_IPS_CFLAGS := $(CFLAGS) -DCONFIG_FWLPS_IN_IPS -DCONFIG_LPS_LCLK -DCONFIG_BT_COEXIST
 
 .PHONY: all test test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust \
@@ -72,7 +76,7 @@ test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust
 	test-lps-tp-rust test-lps-exec test-rpwm test-rpwm-rust test-register-alive test-register-alive-rust \
 	test-unregister-alive test-unregister-alive-rust test-wow-lps test-wow-lps-rust test-pm-setters test-ps-rdy test-ps-rdy-rust \
 	test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init test-init-rust \
-	test-init-p2 test-init-p2-rust test-fw-in-ips test-fw-in-ips-rust test-cpwm-int test-cpwm-int-rust
+	test-init-p2 test-init-p2-rust test-fw-in-ips test-fw-in-ips-rust test-cpwm-int test-cpwm-int-rust test-resume test-resume-rust
 
 test-cpwm-int-rust: test_pwrctrl_cpwm_int_rust
 	./test_pwrctrl_cpwm_int_rust cpwm_int_vectors.json
@@ -394,6 +398,22 @@ test_pwrctrl_fw_in_ips_rust: test_pwrctrl_fw_in_ips.c librust_pwrctrl_fw_ips.a $
 
 test_pwrctrl_init_rust: test_pwrctrl_init.c librust_pwrctrl_init.a $(HOST_JSON)
 	$(CC) $(INIT_CFLAGS) -o $@ test_pwrctrl_init.c $(HOST_JSON) librust_pwrctrl_init.a
+
+test-resume: test_pwrctrl_resume
+	./test_pwrctrl_resume
+
+test-resume-rust: test_pwrctrl_resume_rust
+	./test_pwrctrl_resume_rust
+
+test_pwrctrl_resume: test_pwrctrl_resume.c $(RESUME_SHIM)
+	$(CC) $(RESUME_CFLAGS) -o $@ test_pwrctrl_resume.c $(RESUME_SHIM)
+
+librust_pwrctrl_resume.a: $(RUST_PWRCTRL_RESUME) $(ROOT)/rust/rtw_pwrctrl_resume_host.rs
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on $(RESUME_RUSTCFGS) \
+		--crate-type staticlib $(RUST_PWRCTRL_RESUME) -o $@
+
+test_pwrctrl_resume_rust: test_pwrctrl_resume.c librust_pwrctrl_resume.a $(RESUME_SHIM)
+	$(CC) $(RESUME_CFLAGS) -o $@ test_pwrctrl_resume.c $(RESUME_SHIM) librust_pwrctrl_resume.a
 
 clean:
 	rm -f test_pwrctrl_ps_deny test_pwrctrl_ps_deny_rust test_pwrctrl_lps \

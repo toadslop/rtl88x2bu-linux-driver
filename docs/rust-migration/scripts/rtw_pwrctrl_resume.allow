@@ -1,0 +1,25 @@
+# W3-194: early suspend + resume workqueue — Rust FFI helpers (kernel-only).
+drop rtw_rust_resume_pwr_from_es
+drop rtw_rust_resume_pwr_from_work
+drop rtw_rust_resume_get_es_suspend
+drop rtw_rust_resume_set_es_suspend
+drop rtw_rust_resume_set_es_resume
+drop rtw_rust_resume_set_es_level
+drop rtw_rust_resume_register_es_has
+drop rtw_rust_resume_unregister_es_has
+drop rtw_rust_resume_register_es_android
+drop rtw_rust_resume_unregister_es_android
+drop rtw_rust_resume_get_do_late
+drop rtw_rust_resume_set_do_late
+drop rtw_rust_resume_queue_work
+drop rtw_rust_resume_lock_suspend
+drop rtw_rust_resume_unlock_suspend
+drop rtw_rust_resume_process_adapter
+drop rtw_rust_resume_primary_adapter
+drop rtw_rust_es_early_suspend
+drop rtw_rust_es_late_resume
+drop resume_workitem_callback
+drop host_pwrctrl_resume_reset_trace
+drop host_pwrctrl_resume_get_trace
+drop host_early_suspend_cb
+drop host_late_resume_cb
