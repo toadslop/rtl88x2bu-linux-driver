@@ -10,3 +10,4 @@ test_bf_sound_enter_rust
 test_bf_sound_leave
 test_bf_sound_leave_rust
 librust_bf_sound_enter.a
+librust_bf_sound_leave.a
