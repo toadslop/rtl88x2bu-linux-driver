@@ -3192,6 +3192,8 @@ $(MODULE_NAME)-$(CONFIG_WAPI_SUPPORT) += rust/rtw_wapi_sms4.o
 endif
 ccflags-y += -DCONFIG_RUST_MI_NETIF_LEAF
 rustflags-y += --cfg rust_mi_netif_leaf
+ccflags-y += -DCONFIG_RUST_MI_DUMP_LEAF
+rustflags-y += --cfg rust_mi_dump_leaf
 $(MODULE_NAME)-y += rust/rtw_mi.o
 ccflags-y += -DCONFIG_RUST_IOCTL_SET_LEAF
 rustflags-y += --cfg rust_ioctl_set_leaf
@@ -4233,6 +4235,22 @@ rust-objects-rtw-mi-netif-leaf-c:
 rust-check-symbols-rtw-mi-netif-leaf: rust-objects-rtw-mi-netif-leaf-c rust-objects-rtw-mi-netif-leaf
 	$(MAKE) rust-check-symbols OLD=tests/host/mi/mi_netif_buddy_kern_c_ref.o NEW=rust/rtw_mi.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_mi_netif_leaf.allow ALLOW_VACUOUS=1
+
+# W3-198: dump_mi_status leaf L1 (C ref vs rust/rtw_mi.o).
+rust-objects-rtw-mi-dump-leaf:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-rtw-mi-dump-leaf"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_mi.o
+
+rust-objects-rtw-mi-dump-leaf-c:
+	gcc -c -Wall -Wextra -Werror -O2 \
+		-o tests/host/mi/mi_dump_status_kern_c_ref.o \
+		tests/host/mi/mi_dump_status_kern_c_ref.c
+
+rust-check-symbols-rtw-mi-dump-leaf: rust-objects-rtw-mi-dump-leaf-c rust-objects-rtw-mi-dump-leaf
+	$(MAKE) rust-check-symbols OLD=tests/host/mi/mi_dump_status_kern_c_ref.o NEW=rust/rtw_mi.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_mi_dump_leaf.allow ALLOW_VACUOUS=1
 
 rust-objects-rtw-cmd-queue-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
