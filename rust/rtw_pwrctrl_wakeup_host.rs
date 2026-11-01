@@ -3,9 +3,7 @@
 
 use std::ffi::c_int;
 
-use super::{
-    Padapter, PwrctrlPrivPtr, Systime, _SUCCESS, _TRUE, _FALSE,
-};
+use super::{Padapter, PwrctrlPrivPtr, Systime, _FALSE, _SUCCESS, _TRUE};
 
 #[repr(C)]
 struct MlmePriv {
@@ -95,7 +93,9 @@ pub fn primary_adapter(adapter: Padapter) -> Padapter {
 }
 
 pub fn pwrpriv(adapter: Padapter) -> PwrctrlPrivPtr {
-    unsafe { &mut (*(adapter as *mut HostAdapter)).pwrctrlpriv as *mut PwrctrlPriv as PwrctrlPrivPtr }
+    unsafe {
+        &mut (*(adapter as *mut HostAdapter)).pwrctrlpriv as *mut PwrctrlPriv as PwrctrlPrivPtr
+    }
 }
 
 pub fn get_current_time() -> Systime {
