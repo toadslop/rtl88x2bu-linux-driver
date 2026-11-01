@@ -1,0 +1,5 @@
+# L1 allowlist for W3-198: C shims stay in core/rtw_mi.c (not in rust/rtw_mi.o).
+drop rtw_rust_mi_dump_snap
+drop rtw_rust_mi_dump_print_sel
+drop rtw_rust_mi_dump_dvobj_banner
+drop rtw_rust_mi_adapter_to_dvobj

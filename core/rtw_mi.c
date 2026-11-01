@@ -187,6 +187,73 @@ inline int rtw_mi_get_ch_setting_union_no_self(_adapter *adapter, u8 *ch, u8 *bw
 	return rtw_mi_get_ch_setting_union_by_ifbmp(adapter_to_dvobj(adapter), 0xFF & ~BIT(adapter->iface_id), ch, bw, offset);
 }
 
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MI_DUMP_LEAF)
+struct rtw_rust_mi_dump_snap {
+	u8 sta_num;
+	u8 lg_sta_num;
+	u8 ld_sta_num;
+	u8 ld_tdls_num;
+	u8 ap_num;
+	u8 starting_ap_num;
+	u8 ld_ap_num;
+	u8 adhoc_num;
+	u8 ld_adhoc_num;
+	u8 mesh_num;
+	u8 ld_mesh_num;
+	u8 p2p_device_num;
+	u8 p2p_gc;
+	u8 p2p_go;
+	u8 scan_num;
+	u8 uwps_num;
+	u8 roch_num;
+	u8 mgmt_tx_num;
+	u8 union_ch;
+	u8 union_bw;
+	u8 union_offset;
+};
+
+void rtw_rust_mi_dump_snap(struct dvobj_priv *dvobj, struct rtw_rust_mi_dump_snap *out)
+{
+	out->sta_num = DEV_STA_NUM(dvobj);
+	out->lg_sta_num = DEV_STA_LG_NUM(dvobj);
+	out->ld_sta_num = DEV_STA_LD_NUM(dvobj);
+	out->ld_tdls_num = DEV_TDLS_LD_NUM(dvobj);
+	out->ap_num = DEV_AP_NUM(dvobj);
+	out->starting_ap_num = DEV_AP_STARTING_NUM(dvobj);
+	out->ld_ap_num = DEV_AP_LD_NUM(dvobj);
+	out->adhoc_num = DEV_ADHOC_NUM(dvobj);
+	out->ld_adhoc_num = DEV_ADHOC_LD_NUM(dvobj);
+	out->mesh_num = DEV_MESH_NUM(dvobj);
+	out->ld_mesh_num = DEV_MESH_LD_NUM(dvobj);
+	out->p2p_device_num = DEV_P2P_DV_NUM(dvobj);
+	out->p2p_gc = DEV_P2P_GC_NUM(dvobj);
+	out->p2p_go = DEV_P2P_GO_NUM(dvobj);
+	out->scan_num = DEV_SCAN_NUM(dvobj);
+	out->uwps_num = DEV_WPS_NUM(dvobj);
+	out->roch_num = DEV_ROCH_NUM(dvobj);
+	out->mgmt_tx_num = DEV_MGMT_TX_NUM(dvobj);
+	out->union_ch = DEV_U_CH(dvobj);
+	out->union_bw = DEV_U_BW(dvobj);
+	out->union_offset = DEV_U_OFFSET(dvobj);
+}
+
+void rtw_rust_mi_dump_print_sel(void *sel, const char *line)
+{
+	RTW_PRINT_SEL(sel, "%s", line);
+}
+
+void rtw_rust_mi_dump_dvobj_banner(const char *fun_name)
+{
+	RTW_INFO("\n[ %s ] call dump_dvobj_mi_status\n", fun_name);
+}
+
+struct dvobj_priv *rtw_rust_mi_adapter_to_dvobj(_adapter *adapter)
+{
+	return adapter_to_dvobj(adapter);
+}
+#endif /* CONFIG_RUST && CONFIG_RUST_MI_DUMP_LEAF */
+
+#ifndef CONFIG_RUST_MI_DUMP_LEAF
 void dump_mi_status(void *sel, struct dvobj_priv *dvobj)
 {
 	RTW_PRINT_SEL(sel, "== dvobj-iface_state ==\n");
@@ -231,6 +298,7 @@ void dump_dvobj_mi_status(void *sel, const char *fun_name, _adapter *adapter)
 	RTW_INFO("\n[ %s ] call %s\n", fun_name, __func__);
 	dump_mi_status(sel, adapter_to_dvobj(adapter));
 }
+#endif /* !CONFIG_RUST_MI_DUMP_LEAF */
 
 /*
 * return value : 0 is failed or have not interface meet condition
