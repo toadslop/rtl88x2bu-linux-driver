@@ -1,0 +1,2 @@
+# W3-197: legacy beamforming v1 update_attrib_txbf_info — Rust FFI impl (kernel-only).
+drop rtw_rust_update_attrib_txbf_info_impl

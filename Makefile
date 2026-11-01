@@ -2588,6 +2588,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_btcoex.o \
 		core/rtw_beamforming.o \
 		core/rtw_beamforming_cmd_rust_shim.o \
+		core/rtw_beamforming_rust_shim.o \
 		core/rtw_beamforming_sound_rust_shim.o \
 		core/rtw_odm.o \
 		core/rtw_odm_phydm_init.o \
@@ -2862,6 +2863,11 @@ rustflags-y += --cfg rust_mlme_ht_restructure
 rustflags-y += --cfg rust_mlme_80211d --cfg config_80211d
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BEAMFORMING' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg config_beamforming
+ifeq ($(CONFIG_RTL8822B), y)
+ifneq ($(W3_197_LEGACY_L1), 1)
+rustflags-y += --cfg beamforming_version_2
+endif
+endif
 endif
 # W3-187: kernel rtw_set_ps_mode Rust cfgs (mirror host L2 SET_PS_RUSTCFGS + autoconf).
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BT_COEXIST' $(src)/include/autoconf.h 2>/dev/null && echo y),)
@@ -3158,6 +3164,7 @@ $(MODULE_NAME)-y += rust/rtw_pwrctrl_ps_rdy.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_pm.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_set_ps.o
 $(MODULE_NAME)-y += rust/rtw_beamforming_cmd.o
+$(MODULE_NAME)-y += rust/rtw_beamforming.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_init.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_resume.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_wakeup.o
@@ -5266,6 +5273,19 @@ rust-objects-rtw-beamforming-sound-c:
 rust-check-symbols-rtw-beamforming-sound: rust-objects-rtw-beamforming-sound-c rust-objects-rtw-beamforming-sound
 	$(MAKE) rust-check-symbols OLD=tests/host/beamforming/bf_sound_kern_c_ref.o NEW=rust/rtw_beamforming_sound.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_beamforming_sound.allow ALLOW_VACUOUS=1
+
+# W3-197: legacy update_attrib_txbf_info (v1 beamforming path; 8822B v2 uses rtw_bf_update_attrib).
+rust-objects-rtw-beamforming-update-txbf:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-beamforming-update-txbf"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) W3_197_LEGACY_L1=1 -C $(KSRC) M=$(shell pwd) rust/rtw_beamforming.o
+rust-objects-rtw-beamforming-update-txbf-c:
+	@mkdir -p tests/host/beamforming
+	gcc -c -Wall -Wextra -Werror -O2 -I$(shell pwd)/tests/host/include \
+		-o tests/host/beamforming/bf_update_txbf_attrib_kern_c_ref.o \
+		tests/host/beamforming/bf_update_txbf_attrib_kern_c_ref.c
+rust-check-symbols-rtw-beamforming-update-txbf: rust-objects-rtw-beamforming-update-txbf-c rust-objects-rtw-beamforming-update-txbf
+	$(MAKE) rust-check-symbols OLD=tests/host/beamforming/bf_update_txbf_attrib_kern_c_ref.o NEW=rust/rtw_beamforming.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_beamforming.allow ALLOW_VACUOUS=1
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production

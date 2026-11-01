@@ -2347,6 +2347,7 @@ exit:
 	return res;
 }
 
+#ifndef CONFIG_RUST
 void update_attrib_txbf_info(_adapter *padapter, struct pkt_attrib *pattrib, struct sta_info *psta)
 {
 	if (psta) {
@@ -2354,6 +2355,7 @@ void update_attrib_txbf_info(_adapter *padapter, struct pkt_attrib *pattrib, str
 		pattrib->txbf_p_aid = psta->cmn.bf_info.p_aid;
 	}
 }
+#endif /* CONFIG_RUST */
 #endif /* !RTW_BEAMFORMING_VERSION_2 */
 
 #endif /* CONFIG_BEAMFORMING */
