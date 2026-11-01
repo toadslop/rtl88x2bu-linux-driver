@@ -1,0 +1,73 @@
+{
+  "vectors": [
+    {
+      "name": "associated_short_circuit",
+      "time": 100,
+      "passing_ms": 0,
+      "fw_state": 1,
+      "bInSuspend": 0,
+      "rf_pwrstate": 0,
+      "ips_deffer_ms": 2000,
+      "expect_ret": 1,
+      "expect_leave_all": 1,
+      "expect_ips_leave": 0
+    },
+    {
+      "name": "suspend_still_set_fail",
+      "time": 50,
+      "passing_ms": 4000,
+      "fw_state": 0,
+      "bInSuspend": 1,
+      "do_late_resume": 0,
+      "rf_pwrstate": 0,
+      "ips_deffer_ms": 2000,
+      "expect_ret": 0,
+      "expect_leave_all": 1,
+      "expect_ips_leave": 0
+    },
+    {
+      "name": "rf_off_ips_leave_ok",
+      "time": 10,
+      "passing_ms": 0,
+      "fw_state": 0,
+      "bInSuspend": 0,
+      "rf_pwrstate": 2,
+      "ips_deffer_ms": 500,
+      "expect_ret": 1,
+      "expect_leave_all": 1,
+      "expect_ips_leave": 1
+    },
+    {
+      "name": "rf_off_ips_leave_fail",
+      "time": 10,
+      "passing_ms": 0,
+      "fw_state": 0,
+      "bInSuspend": 0,
+      "rf_pwrstate": 2,
+      "ips_leave_fail": 1,
+      "ips_deffer_ms": 500,
+      "expect_ret": 0,
+      "expect_leave_all": 1,
+      "expect_ips_leave": 1
+    },
+    {
+      "name": "not_up_returns_false",
+      "time": 10,
+      "passing_ms": 0,
+      "fw_state": 0,
+      "bInSuspend": 0,
+      "rf_pwrstate": 0,
+      "bup": 0,
+      "ips_deffer_ms": 500,
+      "expect_ret": 0,
+      "expect_leave_all": 1,
+      "expect_ips_leave": 0
+    },
+    {
+      "name": "ips_deny_bump",
+      "time": 1000,
+      "deny_ms": 3000,
+      "expect_deny_time": 4000
+    }
+  ]
+}
