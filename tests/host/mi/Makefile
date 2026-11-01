@@ -18,12 +18,19 @@ MI_STATUS_HOST_OBJS := rtw_mi_status_host.o rtw_mi_status_aux_host.o rtw_mi_stat
 MI_DUMP_CFLAGS := $(CFLAGS) -I$(CORE) -I$(ROOT)/include \
 	-include $(HOST_INC)/host_autoconf.h \
 	-DCONFIG_IOCTL_CFG80211 -DCONFIG_TDLS -DCONFIG_RTW_MESH -DCONFIG_P2P
+RUST_MI_DUMP_SRC := $(ROOT)/rust/rtw_mi_dump_status.rs
 
 .PHONY: all test test-c test-rust test-netif test-netif-c test-netif-rust \
 	test-status test-status-c test-status-rust test-dump test-dump-c test-dump-rust clean
 all: test
 
 test: test-c test-rust test-netif test-status test-status-rust test-dump
+
+ifneq ($(wildcard $(RUST_MI_DUMP_SRC)),)
+test-dump: test-dump-c test-dump-rust
+else
+test-dump: test-dump-c
+endif
 
 test-c: test_mi_ch_union
 	./test_mi_ch_union mi_ch_union_vectors.json
@@ -46,8 +53,6 @@ test-status-c: test_mi_status
 
 test-status-rust: test_mi_status_rust
 	./test_mi_status_rust mi_status_vectors.json
-
-test-dump: test-dump-c test-dump-rust
 
 test-dump-c: test_mi_dump_status
 	./test_mi_dump_status mi_dump_status_vectors.json

@@ -10,7 +10,7 @@
 
 #define MAX_VECTORS 16
 #define MAX_NAME 64
-#define MAX_SUBSTR 512
+#define MAX_EXPECT 1024
 
 struct mi_dump_vector {
 	char name[MAX_NAME];
@@ -18,7 +18,7 @@ struct mi_dump_vector {
 	unsigned int union_ch;
 	unsigned int union_bw;
 	unsigned int union_offset;
-	char expect_substr[MAX_SUBSTR];
+	char expect[MAX_EXPECT];
 };
 
 struct host_sel_capture {
@@ -28,6 +28,22 @@ struct host_sel_capture {
 
 extern void dump_mi_status(void *sel, struct mi_dump_dvobj *dvobj);
 extern void dump_dvobj_mi_status(void *sel, const char *fun_name, _adapter *adapter);
+
+static void unescape_expect(char *s)
+{
+	char *r = s;
+	char *w = s;
+
+	while (*r) {
+		if (r[0] == '\\' && r[1] == 'n') {
+			*w++ = '\n';
+			r += 2;
+		} else {
+			*w++ = *r++;
+		}
+	}
+	*w = '\0';
+}
 
 #ifdef HOST_MI_DUMP_RUST
 struct host_sel_capture host_mi_dump_sel;
@@ -79,9 +95,10 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	if (host_json_parse_int_in(obj, len, "union_offset", &tmp))
 		return -1;
 	v->union_offset = (unsigned int)tmp;
-	if (host_json_parse_string_in(obj, len, "expect_substr", v->expect_substr,
-				      sizeof(v->expect_substr)))
+	if (host_json_parse_string_in(obj, len, "expect", v->expect,
+				      sizeof(v->expect)))
 		return -1;
+	unescape_expect(v->expect);
 	return 0;
 }
 
@@ -110,9 +127,11 @@ static int run_vector(const struct mi_dump_vector *v, int use_dvobj_wrapper)
 		dump_mi_status(&cap, &dv);
 
 	cap.buf[cap.len] = '\0';
-	if (!strstr(cap.buf, v->expect_substr)) {
-		fprintf(stderr, "FAIL %s: missing substring %s\nin:\n%s\n",
-			v->name, v->expect_substr, cap.buf);
+	if (strcmp(cap.buf, v->expect)) {
+		fprintf(stderr, "FAIL %s (%s): output mismatch\nexpected:\n%s\ngot:\n%s\n",
+			v->name, use_dvobj_wrapper ? "dump_dvobj_mi_status" :
+						     "dump_mi_status",
+			v->expect, cap.buf);
 		return 1;
 	}
 	return 0;
