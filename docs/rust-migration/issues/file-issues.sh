@@ -359,6 +359,11 @@ files=(
   wave3-195-pwrctrl-pwr-wakeup.md
   wave3-196-pwrctrl-wow-pm-setters.md
   wave3-197-bf-update-txbf-attrib.md
+  wave3-198-mi-dump-status.md
+  wave3-199-mi-scan-drv-threads.md
+  wave3-200-pwrctrl-wowlan-priv-store.md
+  wave3-201-bf-txvector-cap-leaf.md
+  wave3-202-mi-timer-intf-lifecycle.md
 )
 
 # draft_id -> github issue number
