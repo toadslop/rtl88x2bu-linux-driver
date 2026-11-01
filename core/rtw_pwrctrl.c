@@ -4359,6 +4359,7 @@ u8 rtw_interface_ps_func(_adapter *padapter, HAL_INTF_PS_FUNC efunc_id, u8 *val)
 }
 
 
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_WAKEUP_TEST)
 inline void rtw_set_ips_deny(_adapter *padapter, u32 ms)
 {
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
@@ -4472,6 +4473,111 @@ exit:
 	return ret;
 
 }
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_WAKEUP_TEST — W3-195 in rust/rtw_pwrctrl_wakeup.rs */
+
+#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_WAKEUP_TEST)
+
+void rtw_rust_wakeup_leave_all_ps(PADAPTER padapter)
+{
+	LeaveAllPowerSaveMode(padapter);
+}
+
+PADAPTER rtw_rust_wakeup_get_primary(PADAPTER padapter)
+{
+	return GET_PRIMARY_ADAPTER(padapter);
+}
+
+systime rtw_rust_wakeup_get_current_time(void)
+{
+	return rtw_get_current_time();
+}
+
+systime rtw_rust_wakeup_ms_to_systime(u32 ms)
+{
+	return rtw_ms_to_systime(ms);
+}
+
+u8 rtw_rust_wakeup_time_after(systime a, systime b)
+{
+	return rtw_time_after(a, b) ? _TRUE : _FALSE;
+}
+
+u32 rtw_rust_wakeup_get_passing_time_ms(systime start)
+{
+	return rtw_get_passing_time_ms(start);
+}
+
+void rtw_rust_wakeup_msleep_os(u32 ms)
+{
+	rtw_msleep_os(ms);
+}
+
+struct pwrctrl_priv *rtw_rust_wakeup_pwrpriv(PADAPTER padapter)
+{
+	return dvobj_to_pwrctl(adapter_to_dvobj(padapter));
+}
+
+u8 rtw_rust_wakeup_get_ps_processing(struct pwrctrl_priv *pwr)
+{
+	return pwr->ps_processing;
+}
+
+u8 rtw_rust_wakeup_get_b_in_suspend(struct pwrctrl_priv *pwr)
+{
+	return pwr->bInSuspend;
+}
+
+u8 rtw_rust_wakeup_is_do_late_resume(struct pwrctrl_priv *pwr)
+{
+	return rtw_is_do_late_resume(pwr) ? _TRUE : _FALSE;
+}
+
+systime rtw_rust_wakeup_get_ips_deny_time(struct pwrctrl_priv *pwr)
+{
+	return pwr->ips_deny_time;
+}
+
+void rtw_rust_wakeup_set_ips_deny_time(struct pwrctrl_priv *pwr, systime t)
+{
+	pwr->ips_deny_time = t;
+}
+
+u8 rtw_rust_wakeup_check_fwstate(PADAPTER padapter, u32 state)
+{
+	return check_fwstate(&padapter->mlmepriv, state) ? _TRUE : _FALSE;
+}
+
+u8 rtw_rust_wakeup_get_rf_pwrstate(struct pwrctrl_priv *pwr)
+{
+	return pwr->rf_pwrstate;
+}
+
+int rtw_rust_wakeup_ips_leave(PADAPTER padapter)
+{
+#ifdef CONFIG_IPS
+	return ips_leave(padapter);
+#else
+	(void)padapter;
+	return _SUCCESS;
+#endif
+}
+
+u8 rtw_rust_wakeup_is_drv_stopped(PADAPTER padapter)
+{
+	return rtw_is_drv_stopped(padapter) ? _TRUE : _FALSE;
+}
+
+u8 rtw_rust_wakeup_get_bup(PADAPTER padapter)
+{
+	return padapter->bup;
+}
+
+u8 rtw_rust_wakeup_is_hw_init_completed(PADAPTER padapter)
+{
+	return rtw_is_hw_init_completed(padapter) ? _TRUE : _FALSE;
+}
+
+#endif /* CONFIG_RUST && !HOST_PWRCTRL_WAKEUP_TEST */
 
 #if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_PM_TEST)
 int rtw_pm_set_lps(_adapter *padapter, u8 mode)

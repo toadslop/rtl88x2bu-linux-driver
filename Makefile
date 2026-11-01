@@ -3154,6 +3154,7 @@ $(MODULE_NAME)-y += rust/rtw_pwrctrl_set_ps.o
 $(MODULE_NAME)-y += rust/rtw_beamforming_cmd.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_init.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_resume.o
+$(MODULE_NAME)-y += rust/rtw_pwrctrl_wakeup.o
 $(MODULE_NAME)-y += rust/rtw_beamforming_sound.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
@@ -5225,6 +5226,21 @@ rust-objects-rtw-pwrctrl-resume-c:
 rust-check-symbols-rtw-pwrctrl-resume: rust-objects-rtw-pwrctrl-resume-c rust-objects-rtw-pwrctrl-resume
 	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/resume_c_ref.o NEW=rust/rtw_pwrctrl_resume_l1.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_resume.allow ALLOW_VACUOUS=1
+
+# W3-195: host C oracle vs rust/rtw_pwrctrl_wakeup.o (pwr wakeup + ips_deny).
+rust-objects-rtw-pwrctrl-wakeup:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-pwrctrl-wakeup"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_pwrctrl_wakeup.o
+rust-objects-rtw-pwrctrl-wakeup-c:
+	@mkdir -p tests/host/pwrctrl
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 -DCONFIG_IPS \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/pwrctrl/wakeup_c_ref.o \
+		tests/host/pwrctrl/host_pwrctrl_wakeup_shim.c
+rust-check-symbols-rtw-pwrctrl-wakeup: rust-objects-rtw-pwrctrl-wakeup-c rust-objects-rtw-pwrctrl-wakeup
+	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/wakeup_c_ref.o NEW=rust/rtw_pwrctrl_wakeup.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_wakeup.allow ALLOW_VACUOUS=1
+
 # W3-192: host C oracle vs rust/rtw_beamforming_sound.o (sounding enter hook).
 rust-objects-rtw-beamforming-sound:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-beamforming-sound"; exit 1; }
