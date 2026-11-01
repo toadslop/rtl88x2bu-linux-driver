@@ -80,6 +80,7 @@ void dump_mi_status(void *sel, struct mi_dump_dvobj *dvobj)
 
 void dump_dvobj_mi_status(void *sel, const char *fun_name, _adapter *adapter)
 {
-	RTW_INFO("\n[ %s ] call %s\n", fun_name, __func__);
+	if (0)
+		RTW_INFO("\n[ %s ] call %s\n", fun_name, __func__);
 	dump_mi_status(sel, (struct mi_dump_dvobj *)adapter_to_dvobj(adapter));
 }
