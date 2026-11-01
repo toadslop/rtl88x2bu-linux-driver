@@ -1,0 +1,25 @@
+# W3-195: pwr wakeup + ips_deny — Rust FFI helpers (kernel-only).
+drop rtw_rust_wakeup_leave_all_ps
+drop rtw_rust_wakeup_get_primary
+drop rtw_rust_wakeup_get_current_time
+drop rtw_rust_wakeup_ms_to_systime
+drop rtw_rust_wakeup_time_after
+drop rtw_rust_wakeup_get_passing_time_ms
+drop rtw_rust_wakeup_msleep_os
+drop rtw_rust_wakeup_pwrpriv
+drop rtw_rust_wakeup_get_ps_processing
+drop rtw_rust_wakeup_get_b_in_suspend
+drop rtw_rust_wakeup_is_do_late_resume
+drop rtw_rust_wakeup_get_ips_deny_time
+drop rtw_rust_wakeup_set_ips_deny_time
+drop rtw_rust_wakeup_check_fwstate
+drop rtw_rust_wakeup_get_rf_pwrstate
+drop rtw_rust_wakeup_ips_leave
+drop rtw_rust_wakeup_is_drv_stopped
+drop rtw_rust_wakeup_get_bup
+drop rtw_rust_wakeup_is_hw_init_completed
+drop host_pwrctrl_wakeup_reset_trace
+drop host_pwrctrl_wakeup_get_trace
+drop host_pwrctrl_wakeup_set_ips_leave_result
+drop host_pwrctrl_wakeup_set_passing_ms
+drop host_pwrctrl_wakeup_set_time
