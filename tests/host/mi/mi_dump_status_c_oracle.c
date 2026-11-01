@@ -37,7 +37,7 @@ static void host_print_sel(void *sel, const char *fmt, ...)
 }
 
 #define RTW_PRINT_SEL(sel, fmt, ...) host_print_sel(sel, fmt, ##__VA_ARGS__)
-#define RTW_INFO(fmt, ...) host_print_sel(NULL, fmt, ##__VA_ARGS__)
+#define RTW_INFO(fmt, ...) ((void)0)
 
 void dump_mi_status(void *sel, struct mi_dump_dvobj *dvobj)
 {
@@ -45,21 +45,33 @@ void dump_mi_status(void *sel, struct mi_dump_dvobj *dvobj)
 	RTW_PRINT_SEL(sel, "sta_num:%d\n", DEV_STA_NUM(dvobj));
 	RTW_PRINT_SEL(sel, "linking_sta_num:%d\n", DEV_STA_LG_NUM(dvobj));
 	RTW_PRINT_SEL(sel, "linked_sta_num:%d\n", DEV_STA_LD_NUM(dvobj));
+#ifdef CONFIG_TDLS
 	RTW_PRINT_SEL(sel, "linked_tdls_num:%d\n", DEV_TDLS_LD_NUM(dvobj));
+#endif
+#ifdef CONFIG_AP_MODE
 	RTW_PRINT_SEL(sel, "ap_num:%d\n", DEV_AP_NUM(dvobj));
 	RTW_PRINT_SEL(sel, "starting_ap_num:%d\n", DEV_AP_STARTING_NUM(dvobj));
 	RTW_PRINT_SEL(sel, "linked_ap_num:%d\n", DEV_AP_LD_NUM(dvobj));
+#endif
 	RTW_PRINT_SEL(sel, "adhoc_num:%d\n", DEV_ADHOC_NUM(dvobj));
 	RTW_PRINT_SEL(sel, "linked_adhoc_num:%d\n", DEV_ADHOC_LD_NUM(dvobj));
+#ifdef CONFIG_RTW_MESH
 	RTW_PRINT_SEL(sel, "mesh_num:%d\n", DEV_MESH_NUM(dvobj));
 	RTW_PRINT_SEL(sel, "linked_mesh_num:%d\n", DEV_MESH_LD_NUM(dvobj));
+#endif
+#ifdef CONFIG_P2P
 	RTW_PRINT_SEL(sel, "p2p_device_num:%d\n", DEV_P2P_DV_NUM(dvobj));
 	RTW_PRINT_SEL(sel, "p2p_gc_num:%d\n", DEV_P2P_GC_NUM(dvobj));
 	RTW_PRINT_SEL(sel, "p2p_go_num:%d\n", DEV_P2P_GO_NUM(dvobj));
+#endif
 	RTW_PRINT_SEL(sel, "scan_num:%d\n", DEV_SCAN_NUM(dvobj));
 	RTW_PRINT_SEL(sel, "under_wps_num:%d\n", DEV_WPS_NUM(dvobj));
+#if defined(CONFIG_IOCTL_CFG80211)
+	#if defined(CONFIG_P2P)
 	RTW_PRINT_SEL(sel, "roch_num:%d\n", DEV_ROCH_NUM(dvobj));
+	#endif
 	RTW_PRINT_SEL(sel, "mgmt_tx_num:%d\n", DEV_MGMT_TX_NUM(dvobj));
+#endif
 	RTW_PRINT_SEL(sel, "union_ch:%d\n", DEV_U_CH(dvobj));
 	RTW_PRINT_SEL(sel, "union_bw:%d\n", DEV_U_BW(dvobj));
 	RTW_PRINT_SEL(sel, "union_offset:%d\n", DEV_U_OFFSET(dvobj));
@@ -68,6 +80,6 @@ void dump_mi_status(void *sel, struct mi_dump_dvobj *dvobj)
 
 void dump_dvobj_mi_status(void *sel, const char *fun_name, _adapter *adapter)
 {
-	RTW_PRINT_SEL(sel, "\n[ %s ] call dump_dvobj_mi_status\n", fun_name);
+	RTW_INFO("\n[ %s ] call %s\n", fun_name, __func__);
 	dump_mi_status(sel, (struct mi_dump_dvobj *)adapter_to_dvobj(adapter));
 }
