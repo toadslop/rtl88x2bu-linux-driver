@@ -176,6 +176,7 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-pwrctrl-init
 		;;
 	rust/rtw_pwrctrl_resume.rs \
+	rust/rtw_pwrctrl_wakeup.rs \
 	| tests/host/pwrctrl/host_pwrctrl_resume_shim.c \
 	| tests/host/pwrctrl/test_pwrctrl_resume.c)
 		add_target rust-check-symbols-rtw-pwrctrl-resume
