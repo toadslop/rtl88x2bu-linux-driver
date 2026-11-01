@@ -19,11 +19,11 @@ Port the next buddy-process slice from [`core/rtw_mi.c`](../../../core/rtw_mi.c)
 
 ## Notes
 
-- Continues the **mi** lane after [W3-199](wave3-199-mi-scan-drv-threads.md); still uses `_rtw_mi_process` FFI.
+- Continues the **mi** lane after [W3-199](wave3-199-mi-scan-drv-threads.md). Timer cancel and intf start/stop use `_rtw_mi_process`; `reset_drv_sw` buddies call `_rtw_mi_process_without_schk` (see `core/rtw_mi.c`).
 - Scan-deny / beacon-update buddy exports remain for a follow-on slice.
 
 ## Acceptance
 
 - L0 (`CONFIG_CONCURRENT_MODE`)
 - L1 on listed exports
-- L2: host JSON — each buddy wrapper invokes `_rtw_mi_process` on expected iface bitmap
+- L2: host JSON — timer/intf buddies invoke `_rtw_mi_process` on expected iface bitmap; `reset_drv_sw` buddies invoke `_rtw_mi_process_without_schk`

@@ -14,7 +14,7 @@ Port buddy-process helpers deferred from [W3-123](wave3-123-mi-netif-buddy.md) i
 [`rust/rtw_mi.rs`](../../../rust/rtw_mi.rs):
 
 - `rtw_mi_scan_abort` / `rtw_mi_buddy_scan_abort`
-- `_rtw_mi_start_drv_threads` / `_rtw_mi_stop_drv_threads` and exported `rtw_mi_stop_drv_threads` / `rtw_mi_buddy_stop_drv_threads`
+- `_rtw_mi_start_drv_threads` / `_rtw_mi_stop_drv_threads` and exported `rtw_mi_start_drv_threads` / `rtw_mi_buddy_start_drv_threads`, `rtw_mi_stop_drv_threads` / `rtw_mi_buddy_stop_drv_threads`
 
 ## Notes
 
@@ -24,5 +24,5 @@ Port buddy-process helpers deferred from [W3-123](wave3-123-mi-netif-buddy.md) i
 ## Acceptance
 
 - L0 build (`CONFIG_CONCURRENT_MODE`)
-- L1 on listed exports
+- L1 on listed exports (including start/stop drv thread buddy pairs)
 - L2: host vectors — scan abort propagates to stub iface bitmap; start/stop thread hooks invoked per buddy rules
