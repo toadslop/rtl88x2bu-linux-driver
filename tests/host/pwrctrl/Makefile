@@ -15,7 +15,6 @@ RPWM_SHIM := host_pwrctrl_rpwm_shim.c
 ALIVE_SHIM := host_pwrctrl_alive_shim.c
 WOW_LPS_SHIM := host_pwrctrl_wow_lps_shim.c
 PM_SHIM := host_pwrctrl_pm_shim.c
-PM_SHIM := host_pwrctrl_pm_shim.c
 PS_RDY_SHIM := host_pwrctrl_ps_rdy_shim.c
 SET_PS_SHIM := host_pwrctrl_set_ps_shim.c
 INIT_SHIM := host_pwrctrl_init_shim.c
@@ -57,6 +56,8 @@ INIT_CFLAGS := $(CFLAGS) -DCONFIG_CONCURRENT_MODE -DCONFIG_LPS_LCLK -DCONFIG_LPS
 INIT_P2_CFLAGS := $(INIT_CFLAGS) -DCONFIG_WOWLAN -DCONFIG_LPS_ACK -DCONFIG_LPS_POFF
 RESUME_CFLAGS := $(CFLAGS) -DCONFIG_HAS_EARLYSUSPEND -DCONFIG_RESUME_IN_WORKQUEUE
 WAKEUP_CFLAGS := $(CFLAGS) -DCONFIG_IPS
+PM_CFLAGS := $(CFLAGS) -DCONFIG_WOWLAN -DCONFIG_LPS_1T1R
+PM_RUSTCFGS := --cfg host_pwrctrl_pm_test --cfg config_wowlan --cfg config_lps_1t1r
 RESUME_RUSTCFGS := --cfg host_pwrctrl_resume_test --cfg early_suspend --cfg resume_wq
 WAKEUP_RUSTCFGS := --cfg host_pwrctrl_wakeup_test
 FW_IPS_CFLAGS := $(CFLAGS) -DCONFIG_FWLPS_IN_IPS -DCONFIG_LPS_LCLK -DCONFIG_BT_COEXIST
@@ -245,14 +246,14 @@ test-pm-setters-rust: test_pwrctrl_pm_setters_rust
 	./test_pwrctrl_pm_setters_rust pm_setters_vectors.json
 
 test_pwrctrl_pm_setters: test_pwrctrl_pm_setters.c $(PM_SHIM) $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ test_pwrctrl_pm_setters.c $(PM_SHIM) $(HOST_JSON)
+	$(CC) $(PM_CFLAGS) -o $@ test_pwrctrl_pm_setters.c $(PM_SHIM) $(HOST_JSON)
 
 librust_pwrctrl_pm.a: $(RUST_PWRCTRL_PM)
-	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_pwrctrl_pm_test \
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on $(PM_RUSTCFGS) \
 		--crate-type staticlib $(RUST_PWRCTRL_PM) -o $@
 
 test_pwrctrl_pm_setters_rust: test_pwrctrl_pm_setters.c librust_pwrctrl_pm.a $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ test_pwrctrl_pm_setters.c $(HOST_JSON) librust_pwrctrl_pm.a
+	$(CC) $(PM_CFLAGS) -o $@ test_pwrctrl_pm_setters.c $(HOST_JSON) librust_pwrctrl_pm.a
 
 test_pwrctrl_wow_lps_level: test_pwrctrl_wow_lps_level.c $(WOW_LPS_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_pwrctrl_wow_lps_level.c $(WOW_LPS_SHIM) $(HOST_JSON)
