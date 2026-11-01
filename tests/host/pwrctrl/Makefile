@@ -80,7 +80,7 @@ test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust
 	test-lps-tp-rust test-lps-exec test-rpwm test-rpwm-rust test-register-alive test-register-alive-rust \
 	test-unregister-alive test-unregister-alive-rust test-wow-lps test-wow-lps-rust test-pm-setters test-ps-rdy test-ps-rdy-rust \
 	test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init test-init-rust \
-	test-init-p2 test-init-p2-rust test-fw-in-ips test-fw-in-ips-rust test-cpwm-int test-cpwm-int-rust test-resume test-resume-rust test-wakeup test-wakeup-rust test-wakeup test-wakeup-rust
+	test-init-p2 test-init-p2-rust test-fw-in-ips test-fw-in-ips-rust test-cpwm-int test-cpwm-int-rust test-resume test-resume-rust test-wakeup test-wakeup-rust
 
 test-cpwm-int-rust: test_pwrctrl_cpwm_int_rust
 	./test_pwrctrl_cpwm_int_rust cpwm_int_vectors.json
