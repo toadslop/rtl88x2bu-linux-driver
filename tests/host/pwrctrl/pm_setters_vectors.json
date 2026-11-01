@@ -92,6 +92,50 @@
       "fn": "ips",
       "mode": 5,
       "expect_ret": -22
+    },
+    {
+      "name": "wow_lps_invalid",
+      "fn": "wow_lps",
+      "mode": 99,
+      "expect_ret": -22
+    },
+    {
+      "name": "wow_lps_updates",
+      "fn": "wow_lps",
+      "mode": 2,
+      "initial_wowlan_power_mgmt": 0,
+      "expect_ret": 0,
+      "expect_wowlan_power_mgmt": 2
+    },
+    {
+      "name": "wow_lps_same_noop",
+      "fn": "wow_lps",
+      "mode": 2,
+      "initial_wowlan_power_mgmt": 2,
+      "expect_ret": 0,
+      "expect_wowlan_power_mgmt": 2
+    },
+    {
+      "name": "wow_lps_level_invalid",
+      "fn": "wow_lps_level",
+      "mode": 9,
+      "expect_ret": -22
+    },
+    {
+      "name": "wow_lps_level_sets",
+      "fn": "wow_lps_level",
+      "mode": 1,
+      "initial_wowlan_lps_level": 0,
+      "expect_ret": 0,
+      "expect_wowlan_lps_level": 1
+    },
+    {
+      "name": "wow_lps_1t1r_normalizes",
+      "fn": "wow_lps_1t1r",
+      "mode": 2,
+      "initial_wowlan_lps_1t1r": 0,
+      "expect_ret": 0,
+      "expect_wowlan_lps_1t1r": 1
     }
   ]
 }

@@ -7,7 +7,7 @@
 #include "host_pwrctrl_pm.h"
 #include "host_vector_json.h"
 
-#define MAX_VECTORS 16
+#define MAX_VECTORS 24
 #define MAX_NAME 64
 #define MAX_FN 16
 
@@ -33,6 +33,15 @@ struct vector {
 	int has_expect_LpsIdleCount;
 	int has_expect_lps_level;
 	int has_expect_ips_mode_req;
+	int initial_wowlan_power_mgmt;
+	int initial_wowlan_lps_level;
+	int initial_wowlan_lps_1t1r;
+	int has_expect_wowlan_power_mgmt;
+	int expect_wowlan_power_mgmt;
+	int has_expect_wowlan_lps_level;
+	int expect_wowlan_lps_level;
+	int has_expect_wowlan_lps_1t1r;
+	int expect_wowlan_lps_1t1r;
 };
 
 static _adapter_pm g_adapter;
@@ -67,6 +76,21 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 	host_json_parse_int_in(obj, len, "expect_leave_all_ps", &v->expect_leave_all_ps);
 	host_json_parse_int_in(obj, len, "expect_pwr_wakeup_calls",
 			       &v->expect_pwr_wakeup_calls);
+	host_json_parse_int_in(obj, len, "initial_wowlan_power_mgmt",
+			       &v->initial_wowlan_power_mgmt);
+	host_json_parse_int_in(obj, len, "initial_wowlan_lps_level",
+			       &v->initial_wowlan_lps_level);
+	host_json_parse_int_in(obj, len, "initial_wowlan_lps_1t1r",
+			       &v->initial_wowlan_lps_1t1r);
+	if (!host_json_parse_int_in(obj, len, "expect_wowlan_power_mgmt",
+				    &v->expect_wowlan_power_mgmt))
+		v->has_expect_wowlan_power_mgmt = 1;
+	if (!host_json_parse_int_in(obj, len, "expect_wowlan_lps_level",
+				    &v->expect_wowlan_lps_level))
+		v->has_expect_wowlan_lps_level = 1;
+	if (!host_json_parse_int_in(obj, len, "expect_wowlan_lps_1t1r",
+				    &v->expect_wowlan_lps_1t1r))
+		v->has_expect_wowlan_lps_1t1r = 1;
 	return 0;
 }
 
@@ -80,6 +104,9 @@ static int run_vec(struct vector *v)
 	p = adapter_to_pwrctl_pm(&g_adapter);
 	p->power_mgnt = (u8)v->initial_power_mgnt;
 	p->lps_level = (u8)v->initial_lps_level;
+	p->wowlan_power_mgmt = (u8)v->initial_wowlan_power_mgmt;
+	p->wowlan_lps_level = (u8)v->initial_wowlan_lps_level;
+	p->wowlan_lps_1t1r = (u8)v->initial_wowlan_lps_1t1r;
 	g_adapter.bSurpriseRemoved = (u8)v->surprise_removed;
 
 	host_pwrctrl_pm_reset_trace();
@@ -91,6 +118,12 @@ static int run_vec(struct vector *v)
 		ret = rtw_pm_set_lps_level(&g_adapter, (u8)v->mode);
 	else if (strcmp(v->fn, "ips") == 0)
 		ret = rtw_pm_set_ips(&g_adapter, (u8)v->mode);
+	else if (strcmp(v->fn, "wow_lps") == 0)
+		ret = rtw_pm_set_wow_lps(&g_adapter, (u8)v->mode);
+	else if (strcmp(v->fn, "wow_lps_level") == 0)
+		ret = rtw_pm_set_wow_lps_level(&g_adapter, (u8)v->mode);
+	else if (strcmp(v->fn, "wow_lps_1t1r") == 0)
+		ret = rtw_pm_set_wow_lps_1t1r(&g_adapter, (u8)v->mode);
 	else {
 		fprintf(stderr, "FAIL %s unknown fn %s\n", v->name, v->fn);
 		return 1;
@@ -140,6 +173,24 @@ static int run_vec(struct vector *v)
 	if (v->has_expect_ips_mode_req && (int)p->ips_mode_req != v->expect_ips_mode_req) {
 		fprintf(stderr, "FAIL %s ips_mode_req=%u expect %d\n", v->name, p->ips_mode_req,
 			v->expect_ips_mode_req);
+		return 1;
+	}
+	if (v->has_expect_wowlan_power_mgmt &&
+	    (int)p->wowlan_power_mgmt != v->expect_wowlan_power_mgmt) {
+		fprintf(stderr, "FAIL %s wowlan_power_mgmt=%u expect %d\n", v->name,
+			p->wowlan_power_mgmt, v->expect_wowlan_power_mgmt);
+		return 1;
+	}
+	if (v->has_expect_wowlan_lps_level &&
+	    (int)p->wowlan_lps_level != v->expect_wowlan_lps_level) {
+		fprintf(stderr, "FAIL %s wowlan_lps_level=%u expect %d\n", v->name,
+			p->wowlan_lps_level, v->expect_wowlan_lps_level);
+		return 1;
+	}
+	if (v->has_expect_wowlan_lps_1t1r &&
+	    (int)p->wowlan_lps_1t1r != v->expect_wowlan_lps_1t1r) {
+		fprintf(stderr, "FAIL %s wowlan_lps_1t1r=%u expect %d\n", v->name,
+			p->wowlan_lps_1t1r, v->expect_wowlan_lps_1t1r);
 		return 1;
 	}
 
