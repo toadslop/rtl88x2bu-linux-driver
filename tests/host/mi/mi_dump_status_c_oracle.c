@@ -80,7 +80,7 @@ void dump_mi_status(void *sel, struct mi_dump_dvobj *dvobj)
 
 void dump_dvobj_mi_status(void *sel, const char *fun_name, _adapter *adapter)
 {
-	if (0)
-		RTW_INFO("\n[ %s ] call %s\n", fun_name, __func__);
+	(void)fun_name;
+	/* Kernel logs preamble via RTW_INFO (not sel); host L2 captures sel only. */
 	dump_mi_status(sel, (struct mi_dump_dvobj *)adapter_to_dvobj(adapter));
 }
