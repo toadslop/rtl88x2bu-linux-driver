@@ -23,7 +23,7 @@
       "union_ch": 0,
       "union_bw": 0,
       "union_offset": 0,
-      "expect_substr": "sta_num:0"
+      "expect": "== dvobj-iface_state ==\nsta_num:0\nlinking_sta_num:0\nlinked_sta_num:0\nlinked_tdls_num:0\nap_num:0\nstarting_ap_num:0\nlinked_ap_num:0\nadhoc_num:0\nlinked_adhoc_num:0\nmesh_num:0\nlinked_mesh_num:0\np2p_device_num:0\np2p_gc_num:0\np2p_go_num:0\nscan_num:0\nunder_wps_num:0\nroch_num:0\nmgmt_tx_num:0\nunion_ch:0\nunion_bw:0\nunion_offset:0\n================\n\n"
     },
     {
       "name": "mixed_counts",
@@ -48,7 +48,7 @@
       "union_ch": 36,
       "union_bw": 2,
       "union_offset": 1,
-      "expect_substr": "union_ch:36"
+      "expect": "== dvobj-iface_state ==\nsta_num:2\nlinking_sta_num:1\nlinked_sta_num:1\nlinked_tdls_num:1\nap_num:1\nstarting_ap_num:0\nlinked_ap_num:1\nadhoc_num:0\nlinked_adhoc_num:0\nmesh_num:1\nlinked_mesh_num:1\np2p_device_num:1\np2p_gc_num:1\np2p_go_num:0\nscan_num:1\nunder_wps_num:1\nroch_num:1\nmgmt_tx_num:2\nunion_ch:36\nunion_bw:2\nunion_offset:1\n================\n\n"
     }
   ]
 }

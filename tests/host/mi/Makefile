@@ -15,11 +15,22 @@ MI_STATUS_CFLAGS := $(CFLAGS) -I$(CORE) -I$(ROOT)/include \
 	-DHOST_MI_STATUS_TEST -DCONFIG_IOCTL_CFG80211 -DCONFIG_TDLS -DCONFIG_RTW_MESH
 MI_STATUS_HOST_OBJS := rtw_mi_status_host.o rtw_mi_status_aux_host.o rtw_mi_status_check_host.o
 
+MI_DUMP_CFLAGS := $(CFLAGS) -I$(CORE) -I$(ROOT)/include \
+	-include $(HOST_INC)/host_autoconf.h \
+	-DCONFIG_IOCTL_CFG80211 -DCONFIG_TDLS -DCONFIG_RTW_MESH -DCONFIG_P2P
+RUST_MI_DUMP_SRC := $(ROOT)/rust/rtw_mi_dump_status.rs
+
 .PHONY: all test test-c test-rust test-netif test-netif-c test-netif-rust \
-	test-status test-status-c test-status-rust clean
+	test-status test-status-c test-status-rust test-dump test-dump-c test-dump-rust clean
 all: test
 
-test: test-c test-rust test-netif test-status test-status-rust
+test: test-c test-rust test-netif test-status test-status-rust test-dump
+
+ifneq ($(wildcard $(RUST_MI_DUMP_SRC)),)
+test-dump: test-dump-c test-dump-rust
+else
+test-dump: test-dump-c
+endif
 
 test-c: test_mi_ch_union
 	./test_mi_ch_union mi_ch_union_vectors.json
@@ -42,6 +53,26 @@ test-status-c: test_mi_status
 
 test-status-rust: test_mi_status_rust
 	./test_mi_status_rust mi_status_vectors.json
+
+test-dump-c: test_mi_dump_status
+	./test_mi_dump_status mi_dump_status_vectors.json
+
+test-dump-rust: test_mi_dump_status_rust
+	./test_mi_dump_status_rust mi_dump_status_vectors.json
+
+test_mi_dump_status: mi_dump_status_l2.c mi_dump_status_c_oracle.c $(HOST_JSON)
+	$(CC) $(MI_DUMP_CFLAGS) -I$(HOST_INC) -o $@ mi_dump_status_l2.c \
+		mi_dump_status_c_oracle.c $(HOST_JSON)
+
+librust_mi_dump.a: $(ROOT)/rust/rtw_mi_dump_status.rs
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on \
+		--cfg host_mi_dump_test --cfg config_tdls --cfg config_ap_mode \
+		--cfg config_rtw_mesh --cfg config_p2p --cfg config_ioctl_cfg80211 \
+		--crate-type staticlib $(ROOT)/rust/rtw_mi_dump_status.rs -o $@
+
+test_mi_dump_status_rust: mi_dump_status_l2.c librust_mi_dump.a $(HOST_JSON)
+	$(CC) $(MI_DUMP_CFLAGS) -I$(HOST_INC) -DHOST_MI_DUMP_RUST -o $@ \
+		mi_dump_status_l2.c $(HOST_JSON) librust_mi_dump.a
 
 rtw_mi_status_host.o: $(MI_STATUS_SRC)
 	$(CC) $(MI_STATUS_CFLAGS) -c $(MI_STATUS_SRC) -o $@
@@ -89,4 +120,6 @@ test_mi_ch_union_rust: mi_ch_union_l2.c librust_mi.a $(HOST_JSON)
 clean:
 	rm -f test_mi_ch_union test_mi_ch_union_rust test_mi_netif_buddy \
 		test_mi_netif_buddy_rust test_mi_status test_mi_status_rust \
-		$(MI_STATUS_HOST_OBJS) librust_mi.a librust_mi_netif.a librust_mi_status.a
+		test_mi_dump_status test_mi_dump_status_rust \
+		$(MI_STATUS_HOST_OBJS) librust_mi.a librust_mi_netif.a librust_mi_status.a \
+		librust_mi_dump.a
