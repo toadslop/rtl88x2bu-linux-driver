@@ -2876,6 +2876,12 @@ endif
 ifeq ($(CONFIG_WOWLAN), y)
 rustflags-y += --cfg config_wowlan
 endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_LPS_1T1R' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_lps_1t1r
+endif
+ifeq ($(CONFIG_LPS_1T1R), y)
+rustflags-y += --cfg config_lps_1t1r
+endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RESUME_IN_WORKQUEUE' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg resume_wq
 endif
@@ -5129,11 +5135,12 @@ rust-check-symbols-rtw-pwrctrl-ps-rdy: rust-objects-rtw-pwrctrl-ps-rdy-c rust-ob
 # W3-184: host C oracle vs rust/rtw_pwrctrl_pm.o (PM ioctl setters).
 rust-objects-rtw-pwrctrl-pm:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-pwrctrl-pm"; exit 1; }
-	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_pwrctrl_pm.o
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) CONFIG_WOWLAN=y CONFIG_LPS_1T1R=y rust/rtw_pwrctrl_pm.o
 rust-objects-rtw-pwrctrl-pm-c:
 	@mkdir -p tests/host/pwrctrl
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-I$(shell pwd)/tests/host/include \
+		-DCONFIG_WOWLAN -DCONFIG_LPS_1T1R \
 		-o tests/host/pwrctrl/pm_setters_c_ref.o \
 		tests/host/pwrctrl/host_pwrctrl_pm_shim.c
 rust-check-symbols-rtw-pwrctrl-pm: rust-objects-rtw-pwrctrl-pm-c rust-objects-rtw-pwrctrl-pm

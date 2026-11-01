@@ -30,6 +30,13 @@ struct pwrctrl_priv_pm {
 	u8 bLeisurePs;
 	u8 LpsIdleCount;
 	u8 lps_level;
+#ifdef CONFIG_WOWLAN
+	u8 wowlan_power_mgmt;
+	u8 wowlan_lps_level;
+#ifdef CONFIG_LPS_1T1R
+	u8 wowlan_lps_1t1r;
+#endif
+#endif
 };
 
 struct adapter_pm {
@@ -56,5 +63,13 @@ void host_pwrctrl_pm_set_pwr_wakeup_result(s32 result);
 int rtw_pm_set_ips(PADAPTER_PM padapter, u8 mode);
 int rtw_pm_set_lps(PADAPTER_PM padapter, u8 mode);
 int rtw_pm_set_lps_level(PADAPTER_PM padapter, u8 level);
+
+#ifdef CONFIG_WOWLAN
+int rtw_pm_set_wow_lps(PADAPTER_PM padapter, u8 mode);
+int rtw_pm_set_wow_lps_level(PADAPTER_PM padapter, u8 level);
+#ifdef CONFIG_LPS_1T1R
+int rtw_pm_set_wow_lps_1t1r(PADAPTER_PM padapter, u8 en);
+#endif
+#endif
 
 #endif /* HOST_PWRCTRL_PM_H */

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! W3-184 — `rtw_pm_set_ips` / `rtw_pm_set_lps` / `rtw_pm_set_lps_level` from `core/rtw_pwrctrl.c`.
+//! W3-184 / W3-196 — PM ioctl setters from `core/rtw_pwrctrl.c`.
 
 #![allow(
     dead_code,
@@ -53,6 +53,9 @@ struct PwrctrlPriv {
     bLeisurePs: u8,
     LpsIdleCount: u8,
     lps_level: u8,
+    wowlan_power_mgmt: u8,
+    wowlan_lps_level: u8,
+    wowlan_lps_1t1r: u8,
 }
 
 #[cfg(host_pwrctrl_pm_test)]
@@ -129,6 +132,16 @@ extern "C" {
     fn rtw_rust_pm_try_set_lps_level(adapter: Padapter, level: u8);
     fn rtw_rust_pm_is_surprise_removed(adapter: Padapter) -> u8;
     fn rtw_rust_pm_pwr_wakeup(adapter: Padapter) -> c_int;
+    #[cfg(config_wowlan)]
+    fn rtw_rust_pm_get_wowlan_power_mgmt(adapter: Padapter) -> u8;
+    #[cfg(config_wowlan)]
+    fn rtw_rust_pm_set_wowlan_power_mgmt(adapter: Padapter, mode: u8);
+    #[cfg(config_wowlan)]
+    fn rtw_rust_pm_get_wowlan_lps_level(adapter: Padapter) -> u8;
+    #[cfg(config_wowlan)]
+    fn rtw_rust_pm_set_wowlan_lps_level(adapter: Padapter, level: u8);
+    #[cfg(all(config_wowlan, config_lps_1t1r))]
+    fn rtw_rust_pm_set_wowlan_lps_1t1r(adapter: Padapter, en: u8);
 }
 
 #[cfg(not(host_pwrctrl_pm_test))]
@@ -214,6 +227,58 @@ fn try_set_lps_level(adapter: Padapter, level: u8) {
     }
 }
 
+#[cfg(all(not(host_pwrctrl_pm_test), config_wowlan))]
+fn get_wowlan_power_mgmt(adapter: Padapter) -> u8 {
+    unsafe { rtw_rust_pm_get_wowlan_power_mgmt(adapter) }
+}
+
+#[cfg(all(not(host_pwrctrl_pm_test), config_wowlan))]
+fn set_wowlan_power_mgmt(adapter: Padapter, mode: u8) {
+    unsafe {
+        rtw_rust_pm_set_wowlan_power_mgmt(adapter, mode);
+    }
+}
+
+#[cfg(all(not(host_pwrctrl_pm_test), config_wowlan))]
+fn set_wowlan_lps_level(adapter: Padapter, level: u8) {
+    unsafe {
+        rtw_rust_pm_set_wowlan_lps_level(adapter, level);
+    }
+}
+
+#[cfg(all(not(host_pwrctrl_pm_test), config_wowlan, config_lps_1t1r))]
+fn set_wowlan_lps_1t1r(adapter: Padapter, en: u8) {
+    unsafe {
+        rtw_rust_pm_set_wowlan_lps_1t1r(adapter, en);
+    }
+}
+
+#[cfg(host_pwrctrl_pm_test)]
+fn get_wowlan_power_mgmt(adapter: Padapter) -> u8 {
+    unsafe { (*pwrpriv(adapter)).wowlan_power_mgmt }
+}
+
+#[cfg(host_pwrctrl_pm_test)]
+fn set_wowlan_power_mgmt(adapter: Padapter, mode: u8) {
+    unsafe {
+        (*pwrpriv(adapter)).wowlan_power_mgmt = mode;
+    }
+}
+
+#[cfg(host_pwrctrl_pm_test)]
+fn set_wowlan_lps_level(adapter: Padapter, level: u8) {
+    unsafe {
+        (*pwrpriv(adapter)).wowlan_lps_level = level;
+    }
+}
+
+#[cfg(host_pwrctrl_pm_test)]
+fn set_wowlan_lps_1t1r(adapter: Padapter, en: u8) {
+    unsafe {
+        (*pwrpriv(adapter)).wowlan_lps_1t1r = if en != 0 { 1 } else { 0 };
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn rtw_pm_set_lps(adapter: Padapter, mode: u8) -> c_int {
     if adapter.is_null() {
@@ -262,6 +327,44 @@ pub extern "C" fn rtw_pm_set_ips(adapter: Padapter, mode: u8) -> c_int {
         return 0;
     }
     EINVAL
+}
+
+#[cfg(any(config_wowlan, host_pwrctrl_pm_test))]
+#[no_mangle]
+pub extern "C" fn rtw_pm_set_wow_lps(adapter: Padapter, mode: u8) -> c_int {
+    if adapter.is_null() {
+        return EINVAL;
+    }
+    if mode >= PS_MODE_NUM {
+        return EINVAL;
+    }
+    if get_wowlan_power_mgmt(adapter) != mode {
+        set_wowlan_power_mgmt(adapter, mode);
+    }
+    0
+}
+
+#[cfg(any(config_wowlan, host_pwrctrl_pm_test))]
+#[no_mangle]
+pub extern "C" fn rtw_pm_set_wow_lps_level(adapter: Padapter, level: u8) -> c_int {
+    if adapter.is_null() {
+        return EINVAL;
+    }
+    if level >= LPS_LEVEL_MAX {
+        return EINVAL;
+    }
+    set_wowlan_lps_level(adapter, level);
+    0
+}
+
+#[cfg(any(all(config_wowlan, config_lps_1t1r), host_pwrctrl_pm_test))]
+#[no_mangle]
+pub extern "C" fn rtw_pm_set_wow_lps_1t1r(adapter: Padapter, en: u8) -> c_int {
+    if adapter.is_null() {
+        return EINVAL;
+    }
+    set_wowlan_lps_1t1r(adapter, en);
+    0
 }
 
 #[cfg(host_pwrctrl_pm_test)]

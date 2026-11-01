@@ -7,6 +7,11 @@ drop rtw_rust_pm_get_lps_level
 drop rtw_rust_pm_try_set_lps_level
 drop rtw_rust_pm_is_surprise_removed
 drop rtw_rust_pm_pwr_wakeup
+drop rtw_rust_pm_get_wowlan_power_mgmt
+drop rtw_rust_pm_set_wowlan_power_mgmt
+drop rtw_rust_pm_get_wowlan_lps_level
+drop rtw_rust_pm_set_wowlan_lps_level
+drop rtw_rust_pm_set_wowlan_lps_1t1r
 drop host_pwrctrl_pm_reset_trace
 drop host_pwrctrl_pm_get_trace
 drop host_pwrctrl_pm_set_pwr_wakeup_result

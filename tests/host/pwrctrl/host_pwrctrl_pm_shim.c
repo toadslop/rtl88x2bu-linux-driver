@@ -101,3 +101,42 @@ int rtw_pm_set_ips(PADAPTER_PM padapter, u8 mode)
 		return -22;
 	return 0;
 }
+
+#ifdef CONFIG_WOWLAN
+int rtw_pm_set_wow_lps(PADAPTER_PM padapter, u8 mode)
+{
+	struct pwrctrl_priv_pm *pwrctrlpriv = adapter_to_pwrctl_pm(padapter);
+
+	if (mode < PS_MODE_NUM) {
+		if (pwrctrlpriv->wowlan_power_mgmt != mode)
+			pwrctrlpriv->wowlan_power_mgmt = mode;
+	} else
+		return -22;
+
+	return 0;
+}
+
+int rtw_pm_set_wow_lps_level(PADAPTER_PM padapter, u8 level)
+{
+	struct pwrctrl_priv_pm *pwrctrlpriv = adapter_to_pwrctl_pm(padapter);
+
+	if (level < LPS_LEVEL_MAX)
+		pwrctrlpriv->wowlan_lps_level = level;
+	else
+		return -22;
+
+	return 0;
+}
+
+#ifdef CONFIG_LPS_1T1R
+int rtw_pm_set_wow_lps_1t1r(PADAPTER_PM padapter, u8 en)
+{
+	struct pwrctrl_priv_pm *pwrctrlpriv = adapter_to_pwrctl_pm(padapter);
+
+	en = en ? 1 : 0;
+	pwrctrlpriv->wowlan_lps_1t1r = en;
+
+	return 0;
+}
+#endif /* CONFIG_LPS_1T1R */
+#endif /* CONFIG_WOWLAN */
