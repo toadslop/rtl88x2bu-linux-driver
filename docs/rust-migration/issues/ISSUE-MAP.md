@@ -325,6 +325,11 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-195 | #1633 | [W3-195] Translate rtw_pwrctrl.c — IPS/USB pwr wakeup core |
 | W3-196 | #1634 | [W3-196] Translate rtw_pwrctrl.c — WoWLAN PM ioctl setters |
 | W3-197 | #1635 | [W3-197] Translate rtw_beamforming.c — update_attrib_txbf_info leaf |
+| W3-198 | #1650 | [W3-198] Translate rtw_mi.c — dump_mi_status leaf |
+| W3-199 | #1651 | [W3-199] Translate rtw_mi.c — scan abort and drv thread control |
+| W3-200 | #1652 | [W3-200] Translate rtw_pwrctrl.c — WoWLAN priv field store (debug path) |
+| W3-201 | #1653 | [W3-201] Translate rtw_beamforming.c — txvector and STA BF cap leaf |
+| W3-202 | #1654 | [W3-202] Translate rtw_mi.c — timer cancel and intf lifecycle buddy |
 
 ## Superseded issues
 

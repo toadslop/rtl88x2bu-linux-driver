@@ -306,6 +306,16 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-196 | `wave3-196-pwrctrl-wow-pm-setters.md` | WoWLAN PM ioctl setters |
 | W3-197 | `wave3-197-bf-update-txbf-attrib.md` | `update_attrib_txbf_info` leaf |
 
+## Children (tranche 21 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-198 | `wave3-198-mi-dump-status.md` | `dump_mi_status` / `dump_dvobj_mi_status` |
+| W3-199 | `wave3-199-mi-scan-drv-threads.md` | scan abort + drv thread start/stop buddy |
+| W3-200 | `wave3-200-pwrctrl-wowlan-priv-store.md` | WoWLAN `rtw_rust_init_store_u8` cases |
+| W3-201 | `wave3-201-bf-txvector-cap-leaf.md` | txvector + STA beamform cap leaf |
+| W3-202 | `wave3-202-mi-timer-intf-lifecycle.md` | timer cancel + intf start/stop buddy |
+
 Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:
 
 - `rtw_debug.c` procfs walkers / register dumps (mostly Rust-wrapped — audit before filing)
