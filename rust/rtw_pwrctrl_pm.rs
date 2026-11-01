@@ -53,8 +53,11 @@ struct PwrctrlPriv {
     bLeisurePs: u8,
     LpsIdleCount: u8,
     lps_level: u8,
+    #[cfg(config_wowlan)]
     wowlan_power_mgmt: u8,
+    #[cfg(config_wowlan)]
     wowlan_lps_level: u8,
+    #[cfg(all(config_wowlan, config_lps_1t1r))]
     wowlan_lps_1t1r: u8,
 }
 
@@ -253,26 +256,26 @@ fn set_wowlan_lps_1t1r(adapter: Padapter, en: u8) {
     }
 }
 
-#[cfg(host_pwrctrl_pm_test)]
+#[cfg(all(host_pwrctrl_pm_test, config_wowlan))]
 fn get_wowlan_power_mgmt(adapter: Padapter) -> u8 {
     unsafe { (*pwrpriv(adapter)).wowlan_power_mgmt }
 }
 
-#[cfg(host_pwrctrl_pm_test)]
+#[cfg(all(host_pwrctrl_pm_test, config_wowlan))]
 fn set_wowlan_power_mgmt(adapter: Padapter, mode: u8) {
     unsafe {
         (*pwrpriv(adapter)).wowlan_power_mgmt = mode;
     }
 }
 
-#[cfg(host_pwrctrl_pm_test)]
+#[cfg(all(host_pwrctrl_pm_test, config_wowlan))]
 fn set_wowlan_lps_level(adapter: Padapter, level: u8) {
     unsafe {
         (*pwrpriv(adapter)).wowlan_lps_level = level;
     }
 }
 
-#[cfg(host_pwrctrl_pm_test)]
+#[cfg(all(host_pwrctrl_pm_test, config_wowlan, config_lps_1t1r))]
 fn set_wowlan_lps_1t1r(adapter: Padapter, en: u8) {
     unsafe {
         (*pwrpriv(adapter)).wowlan_lps_1t1r = if en != 0 { 1 } else { 0 };
@@ -329,7 +332,7 @@ pub extern "C" fn rtw_pm_set_ips(adapter: Padapter, mode: u8) -> c_int {
     EINVAL
 }
 
-#[cfg(any(config_wowlan, host_pwrctrl_pm_test))]
+#[cfg(config_wowlan)]
 #[no_mangle]
 pub extern "C" fn rtw_pm_set_wow_lps(adapter: Padapter, mode: u8) -> c_int {
     if adapter.is_null() {
@@ -344,7 +347,7 @@ pub extern "C" fn rtw_pm_set_wow_lps(adapter: Padapter, mode: u8) -> c_int {
     0
 }
 
-#[cfg(any(config_wowlan, host_pwrctrl_pm_test))]
+#[cfg(config_wowlan)]
 #[no_mangle]
 pub extern "C" fn rtw_pm_set_wow_lps_level(adapter: Padapter, level: u8) -> c_int {
     if adapter.is_null() {
@@ -357,7 +360,7 @@ pub extern "C" fn rtw_pm_set_wow_lps_level(adapter: Padapter, level: u8) -> c_in
     0
 }
 
-#[cfg(any(all(config_wowlan, config_lps_1t1r), host_pwrctrl_pm_test))]
+#[cfg(all(config_wowlan, config_lps_1t1r))]
 #[no_mangle]
 pub extern "C" fn rtw_pm_set_wow_lps_1t1r(adapter: Padapter, en: u8) -> c_int {
     if adapter.is_null() {
