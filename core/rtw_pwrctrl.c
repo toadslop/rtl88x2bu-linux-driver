@@ -4651,6 +4651,7 @@ inline void rtw_set_lps_deny(_adapter *adapter, u32 ms)
 	pwrpriv->lps_deny_time = rtw_get_current_time() + rtw_ms_to_systime(ms);
 }
 
+#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_PM_TEST)
 #ifdef CONFIG_WOWLAN
 int rtw_pm_set_wow_lps(_adapter *padapter, u8 mode)
 {
@@ -4691,6 +4692,7 @@ int rtw_pm_set_wow_lps_1t1r(_adapter *padapter, u8 en)
 }
 #endif /* CONFIG_LPS_1T1R */
 #endif /* CONFIG_WOWLAN */
+#endif /* !CONFIG_RUST || HOST_PWRCTRL_PM_TEST — W3-196 wow PM setters in rust/rtw_pwrctrl_pm.rs */
 
 
 #if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_SET_PS_TEST)
@@ -5024,6 +5026,35 @@ s32 rtw_rust_pm_pwr_wakeup(PADAPTER adapter)
 {
 	return rtw_pwr_wakeup(adapter);
 }
+
+#ifdef CONFIG_WOWLAN
+u8 rtw_rust_pm_get_wowlan_power_mgmt(PADAPTER adapter)
+{
+	return adapter_to_pwrctl(adapter)->wowlan_power_mgmt;
+}
+
+void rtw_rust_pm_set_wowlan_power_mgmt(PADAPTER adapter, u8 mode)
+{
+	adapter_to_pwrctl(adapter)->wowlan_power_mgmt = mode;
+}
+
+u8 rtw_rust_pm_get_wowlan_lps_level(PADAPTER adapter)
+{
+	return adapter_to_pwrctl(adapter)->wowlan_lps_level;
+}
+
+void rtw_rust_pm_set_wowlan_lps_level(PADAPTER adapter, u8 level)
+{
+	adapter_to_pwrctl(adapter)->wowlan_lps_level = level;
+}
+
+#ifdef CONFIG_LPS_1T1R
+void rtw_rust_pm_set_wowlan_lps_1t1r(PADAPTER adapter, u8 en)
+{
+	adapter_to_pwrctl(adapter)->wowlan_lps_1t1r = en ? 1 : 0;
+}
+#endif /* CONFIG_LPS_1T1R */
+#endif /* CONFIG_WOWLAN */
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_PM_TEST */
 
 #if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_PM_TEST)
