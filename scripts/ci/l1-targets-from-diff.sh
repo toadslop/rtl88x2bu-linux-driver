@@ -176,10 +176,17 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-pwrctrl-init
 		;;
 	rust/rtw_pwrctrl_resume.rs \
-	rust/rtw_pwrctrl_wakeup.rs \
 	| tests/host/pwrctrl/host_pwrctrl_resume_shim.c \
 	| tests/host/pwrctrl/test_pwrctrl_resume.c)
 		add_target rust-check-symbols-rtw-pwrctrl-resume
+		;;
+	rust/rtw_pwrctrl_wakeup.rs \
+	| rust/rtw_pwrctrl_wakeup_host.rs \
+	| core/rtw_pwrctrl.c \
+	| tests/host/pwrctrl/host_pwrctrl_wakeup_shim.c \
+	| tests/host/pwrctrl/test_pwrctrl_wakeup.c \
+	| tests/host/pwrctrl/wakeup_vectors.json)
+		add_target rust-check-symbols-rtw-pwrctrl-wakeup
 		;;
 	rust/rtw_pwrctrl_pm.rs \
 	| core/rtw_pwrctrl.c \
