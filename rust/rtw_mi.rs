@@ -476,10 +476,16 @@ mi_netif_kern_export!(rtw_mi_buddy_netif_carrier_off, true, op_kern_carrier_off)
 #[path = "rtw_mi_status_host.rs"]
 mod _mi_status_host;
 
+#[cfg(any(host_mi_dump_test, rust_mi_dump_leaf))]
+#[path = "rtw_mi_dump_status.rs"]
+mod _mi_dump_status;
+
 #[cfg(not(any(
     host_mi_ch_union_test,
     host_mi_netif_buddy_test,
     host_mi_status_test,
-    rust_mi_netif_leaf
+    host_mi_dump_test,
+    rust_mi_netif_leaf,
+    rust_mi_dump_leaf
 )))]
 pub fn mi_ch_union_stub() {}
