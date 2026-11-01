@@ -188,17 +188,7 @@ pub unsafe extern "C" fn dump_dvobj_mi_status(
     fun_name: *const c_char,
     adapter: *mut c_void,
 ) {
-    #[cfg(host_mi_dump_test)]
-    {
-        let mut banner = [0i8; 128];
-        snprintf(
-            banner.as_mut_ptr(),
-            banner.len(),
-            b"\n[ %s ] call dump_dvobj_mi_status\n\0".as_ptr() as *const c_char,
-            fun_name,
-        );
-        print_sel(sel, banner.as_ptr());
-    }
+    let _ = fun_name;
     #[cfg(all(rust_mi_dump_leaf, not(host_mi_dump_test)))]
     unsafe {
         kernel::rtw_rust_mi_dump_dvobj_banner(fun_name);
