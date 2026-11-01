@@ -2835,6 +2835,9 @@ endif
 ifneq ($(filter -DCONFIG_CONCURRENT_MODE,$(ccflags-y)),)
 rustflags-y += --cfg config_concurrent_mode
 endif
+ifneq ($(filter -DCONFIG_IOCTL_CFG80211,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+rustflags-y += --cfg config_ioctl_cfg80211
+endif
 # Match drv_conf.h: CONFIG_MI_WITH_MBSSID_CAM when IFACE_NUMBER > 2 and not GEN3.
 _config_iface_gt2 := $(filter -DCONFIG_IFACE_NUMBER=3 -DCONFIG_IFACE_NUMBER=4 -DCONFIG_IFACE_NUMBER=5 -DCONFIG_IFACE_NUMBER=6 -DCONFIG_IFACE_NUMBER=7 -DCONFIG_IFACE_NUMBER=8,$(ccflags-y) $(USER_EXTRA_CFLAGS))
 _rust_cfg_mi_with_mbssid_cam :=

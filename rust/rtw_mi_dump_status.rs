@@ -139,7 +139,7 @@ fn dump_mi_status_body(sel: *mut c_void, s: &MiDumpSnap) {
         print_fmt(sel, b"sta_num:%d\n\0", s.sta_num as c_int);
         print_fmt(sel, b"linking_sta_num:%d\n\0", s.lg_sta_num as c_int);
         print_fmt(sel, b"linked_sta_num:%d\n\0", s.ld_sta_num as c_int);
-        #[cfg(config_tdls)]
+        #[cfg(tdls)]
         print_fmt(sel, b"linked_tdls_num:%d\n\0", s.ld_tdls_num as c_int);
         #[cfg(config_ap_mode)]
         {
