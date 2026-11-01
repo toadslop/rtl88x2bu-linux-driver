@@ -66,6 +66,7 @@ extern "C" {
     fn rtw_rust_wakeup_is_drv_stopped(adapter: Padapter) -> u8;
     fn rtw_rust_wakeup_get_bup(adapter: Padapter) -> u8;
     fn rtw_rust_wakeup_is_hw_init_completed(adapter: Padapter) -> u8;
+    fn rtw_rust_wakeup_sreset_inprogress(adapter: Padapter) -> u8;
 }
 
 #[cfg(host_pwrctrl_wakeup_test)]
@@ -192,6 +193,29 @@ fn rtw_set_ips_deny_impl(padapter: Padapter, ms: u32) {
     set_ips_deny_time(pwr, t);
 }
 
+#[cfg(not(host_pwrctrl_wakeup_test))]
+fn sreset_inprogress(adapter: Padapter) -> bool {
+    unsafe { rtw_rust_wakeup_sreset_inprogress(adapter) != 0 }
+}
+
+#[cfg(host_pwrctrl_wakeup_test)]
+fn sreset_inprogress(_adapter: Padapter) -> bool {
+    false
+}
+
+fn wait_sreset(padapter: Padapter, start: Systime) {
+    if !sreset_inprogress(padapter) {
+        return;
+    }
+    while sreset_inprogress(padapter) && get_passing_time_ms(start) <= 4000 {
+        msleep_os(10);
+    }
+}
+
+fn drv_not_ready(padapter: Padapter) -> bool {
+    is_drv_stopped(padapter) != 0 || get_bup(padapter) == 0 || is_hw_init_completed(padapter) == 0
+}
+
 fn rtw_pwr_wakeup_impl(padapter: Padapter, ips_deffer_ms: u32, _caller: *const c_char) -> c_int {
     if padapter.is_null() {
         return _FAIL;
@@ -210,6 +234,8 @@ fn rtw_pwr_wakeup_impl(padapter: Padapter, ips_deffer_ms: u32, _caller: *const c
         }
     }
 
+    wait_sreset(padapter, start);
+
     if get_b_in_suspend(pwr) == _TRUE {
         while get_b_in_suspend(pwr) == _TRUE
             && ((get_passing_time_ms(start) <= 3000 && is_do_late_resume(pwr) == _FALSE)
@@ -226,13 +252,10 @@ fn rtw_pwr_wakeup_impl(padapter: Padapter, ips_deffer_ms: u32, _caller: *const c
     } else if get_rf_pwrstate(pwr) == RF_OFF {
         if ips_leave(padapter) == _FAIL {
             ret = _FAIL;
+        } else if drv_not_ready(padapter) {
+            ret = 0;
         }
-        bump_ips_deny(pwr, ips_deffer_ms);
-        return ret;
-    } else if is_drv_stopped(padapter) != 0
-        || get_bup(padapter) == 0
-        || is_hw_init_completed(padapter) == 0
-    {
+    } else if drv_not_ready(padapter) {
         ret = 0;
     }
 

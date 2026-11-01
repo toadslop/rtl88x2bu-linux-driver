@@ -4577,6 +4577,16 @@ u8 rtw_rust_wakeup_is_hw_init_completed(PADAPTER padapter)
 	return rtw_is_hw_init_completed(padapter) ? _TRUE : _FALSE;
 }
 
+u8 rtw_rust_wakeup_sreset_inprogress(PADAPTER padapter)
+{
+#ifdef DBG_CONFIG_ERROR_DETECT
+	return rtw_hal_sreset_inprogress(padapter) ? _TRUE : _FALSE;
+#else
+	(void)padapter;
+	return _FALSE;
+#endif
+}
+
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_WAKEUP_TEST */
 
 #if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_PM_TEST)
