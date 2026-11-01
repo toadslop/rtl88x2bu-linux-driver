@@ -244,7 +244,7 @@ void rtw_rust_mi_dump_print_sel(void *sel, const char *line)
 
 void rtw_rust_mi_dump_dvobj_banner(const char *fun_name)
 {
-	RTW_INFO("\n[ %s ] call %s\n", fun_name, __func__);
+	RTW_INFO("\n[ %s ] call dump_dvobj_mi_status\n", fun_name);
 }
 
 struct dvobj_priv *rtw_rust_mi_adapter_to_dvobj(_adapter *adapter)

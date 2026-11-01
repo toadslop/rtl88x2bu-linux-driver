@@ -1327,6 +1327,7 @@ endif
 ifeq ($(CONFIG_TDLS), y)
 ccflags-y += -DCONFIG_TDLS
 rustflags-y += --cfg tdls
+rustflags-y += --cfg config_tdls
 endif
 
 ifeq ($(CONFIG_WIFI_MONITOR), y)
@@ -3194,6 +3195,7 @@ ccflags-y += -DCONFIG_RUST_MI_NETIF_LEAF
 rustflags-y += --cfg rust_mi_netif_leaf
 ccflags-y += -DCONFIG_RUST_MI_DUMP_LEAF
 rustflags-y += --cfg rust_mi_dump_leaf
+rustflags-y += --cfg config_ioctl_cfg80211
 $(MODULE_NAME)-y += rust/rtw_mi.o
 ccflags-y += -DCONFIG_RUST_IOCTL_SET_LEAF
 rustflags-y += --cfg rust_ioctl_set_leaf
