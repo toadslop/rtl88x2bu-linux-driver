@@ -368,3 +368,99 @@ pub unsafe extern "C" fn o_bf_cmd_hdl(adapter: BfHostPadpt, ty: U8, pbuf: *mut U
         _ => {}
     }
 }
+
+// --- W3-197: legacy update_attrib_txbf_info (host L2 + kernel export) ---
+
+#[cfg(host_bf_update_txbf_attrib_test)]
+use std::mem::offset_of;
+
+#[cfg(host_bf_update_txbf_attrib_test)]
+#[repr(C)]
+struct BfUpdateTxbfStaCmn {
+    p_aid: U16,
+    g_id: U8,
+}
+
+#[cfg(host_bf_update_txbf_attrib_test)]
+#[repr(C)]
+struct BfUpdateTxbfSta {
+    used: U8,
+    mac_addr: [U8; 6],
+    _pad: U8,
+    cmn: BfUpdateTxbfStaCmn,
+}
+
+#[cfg(host_bf_update_txbf_attrib_test)]
+#[repr(C)]
+struct BfUpdateTxbfStaPriv {
+    stas: [BfUpdateTxbfSta; 4],
+}
+
+#[cfg(host_bf_update_txbf_attrib_test)]
+#[repr(C)]
+struct BfUpdateTxbfPktAttrib {
+    txbf_p_aid: U16,
+    txbf_g_id: U16,
+}
+
+#[cfg(host_bf_update_txbf_attrib_test)]
+#[repr(C)]
+struct BfUpdateTxbfAdpt {
+    stapriv: BfUpdateTxbfStaPriv,
+}
+
+#[cfg(host_bf_update_txbf_attrib_test)]
+type BfUpdateTxbfPadpt = *mut BfUpdateTxbfAdpt;
+
+#[cfg(host_bf_update_txbf_attrib_test)]
+#[no_mangle]
+pub unsafe extern "C" fn update_attrib_txbf_info(
+    padapter: BfUpdateTxbfPadpt,
+    pattrib: *mut BfUpdateTxbfPktAttrib,
+    psta: *mut BfUpdateTxbfSta,
+) {
+    let _ = padapter;
+    if psta.is_null() {
+        return;
+    }
+    if pattrib.is_null() {
+        return;
+    }
+    let sta = &*psta;
+    let att = &mut *pattrib;
+    att.txbf_g_id = sta.cmn.g_id as U16;
+    att.txbf_p_aid = sta.cmn.p_aid;
+}
+
+#[cfg(host_bf_update_txbf_attrib_test)]
+const _: () = {
+    assert!(core::mem::size_of::<BfUpdateTxbfPktAttrib>() == 4);
+    assert!(offset_of!(BfUpdateTxbfSta, cmn) == 8);
+};
+
+#[cfg(all(
+    config_beamforming,
+    not(beamforming_version_2),
+    not(host_bf_update_txbf_attrib_test)
+))]
+extern "C" {
+    fn rtw_rust_update_attrib_txbf_info_impl(
+        padapter: *mut core::ffi::c_void,
+        pattrib: *mut core::ffi::c_void,
+        psta: *mut core::ffi::c_void,
+    );
+}
+
+#[cfg(all(
+    config_beamforming,
+    not(beamforming_version_2),
+    not(host_bf_update_txbf_attrib_test)
+))]
+#[no_mangle]
+pub extern "C" fn update_attrib_txbf_info(
+    padapter: *mut core::ffi::c_void,
+    pattrib: *mut core::ffi::c_void,
+    psta: *mut core::ffi::c_void,
+) {
+    unsafe { rtw_rust_update_attrib_txbf_info_impl(padapter, pattrib, psta) };
+}
