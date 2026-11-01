@@ -175,6 +175,11 @@ for path in "${changed[@]}"; do
 	| tests/host/pwrctrl/init_vectors.json)
 		add_target rust-check-symbols-rtw-pwrctrl-init
 		;;
+	rust/rtw_pwrctrl_resume.rs \
+	| tests/host/pwrctrl/host_pwrctrl_resume_shim.c \
+	| tests/host/pwrctrl/test_pwrctrl_resume.c)
+		add_target rust-check-symbols-rtw-pwrctrl-resume
+		;;
 	rust/rtw_pwrctrl_pm.rs \
 	| core/rtw_pwrctrl.c \
 	| tests/host/pwrctrl/host_pwrctrl_pm_shim.c \

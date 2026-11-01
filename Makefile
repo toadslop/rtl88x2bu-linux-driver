@@ -2876,6 +2876,15 @@ endif
 ifeq ($(CONFIG_WOWLAN), y)
 rustflags-y += --cfg config_wowlan
 endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RESUME_IN_WORKQUEUE' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg resume_wq
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_HAS_EARLYSUSPEND' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg early_suspend
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_ANDROID_POWER' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg android_power
+endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_WMMPS_STA' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg config_wmmps_sta
 endif
@@ -3144,6 +3153,7 @@ $(MODULE_NAME)-y += rust/rtw_pwrctrl_pm.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_set_ps.o
 $(MODULE_NAME)-y += rust/rtw_beamforming_cmd.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_init.o
+$(MODULE_NAME)-y += rust/rtw_pwrctrl_resume.o
 $(MODULE_NAME)-y += rust/rtw_beamforming_sound.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
@@ -5196,6 +5206,25 @@ rust-objects-rtw-pwrctrl-init-c:
 rust-check-symbols-rtw-pwrctrl-init: rust-objects-rtw-pwrctrl-init-c rust-objects-rtw-pwrctrl-init
 	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/init_c_ref.o NEW=rust/rtw_pwrctrl_init.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_init.allow ALLOW_VACUOUS=1
+
+# W3-194: host C oracle vs rust/rtw_pwrctrl_resume.o (early suspend + resume WQ).
+rust-objects-rtw-pwrctrl-resume:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-pwrctrl-resume"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_pwrctrl_resume.o
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg early_suspend --cfg resume_wq \
+		--emit=obj=rust/rtw_pwrctrl_resume_l1.o \
+		--crate-type rlib rust/rtw_pwrctrl_resume.rs
+rust-objects-rtw-pwrctrl-resume-c:
+	@mkdir -p tests/host/pwrctrl
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-DCONFIG_HAS_EARLYSUSPEND -DCONFIG_RESUME_IN_WORKQUEUE \
+		-o tests/host/pwrctrl/resume_c_ref.o \
+		tests/host/pwrctrl/host_pwrctrl_resume_shim.c
+rust-check-symbols-rtw-pwrctrl-resume: rust-objects-rtw-pwrctrl-resume-c rust-objects-rtw-pwrctrl-resume
+	$(MAKE) rust-check-symbols OLD=tests/host/pwrctrl/resume_c_ref.o NEW=rust/rtw_pwrctrl_resume_l1.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_pwrctrl_resume.allow ALLOW_VACUOUS=1
 # W3-192: host C oracle vs rust/rtw_beamforming_sound.o (sounding enter hook).
 rust-objects-rtw-beamforming-sound:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-beamforming-sound"; exit 1; }
