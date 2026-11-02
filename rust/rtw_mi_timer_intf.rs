@@ -127,10 +127,7 @@ unsafe extern "C" fn op_intf_stop_host(
 
 #[cfg(host_mi_timer_intf_test)]
 #[no_mangle]
-pub unsafe extern "C" fn mi_rust_call_timer_intf(
-    pad: *mut TimerIntfAdapter,
-    fn_id: i32,
-) -> u8 {
+pub unsafe extern "C" fn mi_rust_call_timer_intf(pad: *mut TimerIntfAdapter, fn_id: i32) -> u8 {
     match fn_id {
         0 => mi_process_host(pad, 0, core::ptr::null_mut(), op_cancel_timer_host),
         1 => mi_process_host(pad, 1, core::ptr::null_mut(), op_cancel_timer_host),
@@ -246,12 +243,7 @@ macro_rules! mi_timer_intf_kern_export {
         pub unsafe extern "C" fn $fn(padapter: kernel::Padapter) {
             unsafe {
                 if $noschk {
-                    mi_process_no_schk_kern(
-                        padapter,
-                        $buddy,
-                        core::ptr::null_mut(),
-                        $op,
-                    );
+                    mi_process_no_schk_kern(padapter, $buddy, core::ptr::null_mut(), $op);
                 } else {
                     mi_process_kern(padapter, $buddy, core::ptr::null_mut(), $op);
                 }
@@ -263,7 +255,12 @@ macro_rules! mi_timer_intf_kern_export {
 #[cfg(rust_mi_timer_intf_leaf)]
 mi_timer_intf_kern_export!(rtw_mi_cancel_all_timer, false, false, op_cancel_timer_kern);
 #[cfg(rust_mi_timer_intf_leaf)]
-mi_timer_intf_kern_export!(rtw_mi_buddy_cancel_all_timer, true, false, op_cancel_timer_kern);
+mi_timer_intf_kern_export!(
+    rtw_mi_buddy_cancel_all_timer,
+    true,
+    false,
+    op_cancel_timer_kern
+);
 #[cfg(rust_mi_timer_intf_leaf)]
 mi_timer_intf_kern_export!(rtw_mi_reset_drv_sw, false, true, op_reset_drv_kern);
 #[cfg(rust_mi_timer_intf_leaf)]
