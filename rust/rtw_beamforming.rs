@@ -467,9 +467,12 @@ pub extern "C" fn update_attrib_txbf_info(
 
 // --- W3-201: txvector + STA beamform cap leaf (host L2 + kernel v2) ---
 
-#[cfg(any(host_bf_txvector_cap_test, all(config_beamforming, beamforming_version_2)))]
+#[cfg(any(
+    host_bf_txvector_cap_test,
+    all(config_beamforming, beamforming_version_2)
+))]
 mod txvector_cap {
-    use super::{U8, U16};
+    use super::{U16, U8};
 
     const WIFI_AP: u32 = 0x10;
     const WIFI_ADHOC: u32 = 0x20;
@@ -680,12 +683,7 @@ pub unsafe extern "C" fn o_rtw_bf_get_txvector_parameter(
     }
     let mlme = &(*adapter).mlmepriv;
     let st = &*sta;
-    let (gid, paid) = get_txvector(
-        mlme.fw_state,
-        &mlme.mac_addr,
-        st.cmn.aid,
-        &st.cmn.mac_addr,
-    );
+    let (gid, paid) = get_txvector(mlme.fw_state, &mlme.mac_addr, st.cmn.aid, &st.cmn.mac_addr);
     *g_id = gid;
     *p_aid = paid;
 }
