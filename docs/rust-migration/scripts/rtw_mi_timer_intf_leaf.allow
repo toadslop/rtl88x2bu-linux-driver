@@ -1,0 +1,5 @@
+# L1 allowlist for W3-202: C shims stay in core/rtw_mi.c (not in rust/rtw_mi.o).
+drop rtw_rust_mi_cancel_all_timer
+drop rtw_rust_mi_reset_drv_sw
+drop rtw_rust_mi_intf_start
+drop rtw_rust_mi_intf_stop
