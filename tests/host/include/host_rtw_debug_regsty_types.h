@@ -13,8 +13,14 @@ struct registry_priv {
 };
 
 struct _adapter {
+	u8 fix_rx_ampdu_accept;
+	u8 fix_rx_ampdu_size;
+	u8 host_auto_accept;
+	u8 host_auto_size;
 	struct registry_priv registrypriv;
 };
+
+typedef struct _adapter _adapter;
 
 #define adapter_to_regsty(adapter) (&(adapter)->registrypriv)
 
