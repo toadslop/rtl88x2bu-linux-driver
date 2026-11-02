@@ -69,7 +69,10 @@ unsafe fn mi_process_host(
 }
 
 #[cfg(host_mi_scan_drv_test)]
-unsafe extern "C" fn op_scan_abort_host(a: *mut ScanDrvAdapter, data: *mut core::ffi::c_void) -> u8 {
+unsafe extern "C" fn op_scan_abort_host(
+    a: *mut ScanDrvAdapter,
+    data: *mut core::ffi::c_void,
+) -> u8 {
     let bwait = *(data as *const u8);
     if bwait != 0 {
         rtw_scan_abort(a);
