@@ -272,6 +272,59 @@ fn init_part2_host(padapter: Padapter) {
     }
 }
 
+#[cfg(host_pwrctrl_init_test)]
+fn store_u8_wowlan_impl(padapter: Padapter, field: u32, val: u8) {
+    if padapter.is_null() {
+        return;
+    }
+    unsafe {
+        let p = &mut (*(padapter as *mut HostAdapter)).pwrctrlpriv;
+        match field {
+            18 => p.wowlan_mode = val,
+            19 => p.wowlan_ap_mode = val,
+            20 => p.wowlan_p2p_mode = val,
+            21 => p.wowlan_in_resume = val,
+            22 => p.wowlan_last_wake_reason = val,
+            #[cfg(wowlan)]
+            23 => p.wowlan_power_mgmt = val,
+            #[cfg(wowlan)]
+            24 => p.wowlan_lps_level = val,
+            #[cfg(wowlan)]
+            25 => p.default_patterns_en = val,
+            #[cfg(wowlan)]
+            26 => p.wowlan_aoac_rpt_loc = val,
+            _ => {}
+        }
+    }
+}
+
+#[cfg(not(host_pwrctrl_init_test))]
+extern "C" {
+    fn rtw_rust_init_store_wowlan_apply(padapter: Padapter, slot: u32, val: u8);
+}
+
+#[cfg(not(host_pwrctrl_init_test))]
+fn store_u8_wowlan_impl(padapter: Padapter, field: u32, val: u8) {
+    if padapter.is_null() {
+        return;
+    }
+    if field < 18 || field > 26 {
+        return;
+    }
+    #[cfg(not(config_wowlan))]
+    if field >= 23 {
+        return;
+    }
+    unsafe {
+        rtw_rust_init_store_wowlan_apply(padapter, field - 18, val);
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_init_store_u8_wowlan(padapter: Padapter, field: u32, val: u8) {
+    store_u8_wowlan_impl(padapter, field, val);
+}
+
 fn free_pwrctrl_host(padapter: Padapter) {
     if padapter.is_null() {
         return;
