@@ -421,6 +421,31 @@ test_init_store_wowlan_wow: init_store_wowlan_l2.c $(INIT_STORE_WOWLAN_ORACLE) $
 	$(CC) $(INIT_STORE_WOWLAN_WOW_CFLAGS) -o $@ init_store_wowlan_l2.c \
 		$(INIT_STORE_WOWLAN_ORACLE) $(HOST_JSON)
 
+INIT_STORE_WOWLAN_RUSTCFGS := --cfg host_pwrctrl_init_test
+INIT_STORE_WOWLAN_WOW_RUSTCFGS := $(INIT_STORE_WOWLAN_RUSTCFGS) --cfg wowlan
+
+test-init-store-wowlan-rust: test_init_store_wowlan_rust
+	./test_init_store_wowlan_rust init_store_wowlan_vectors.json
+
+test-init-store-wowlan-wow-rust: test_init_store_wowlan_wow_rust
+	./test_init_store_wowlan_wow_rust init_store_wowlan_wow_vectors.json
+
+librust_pwrctrl_init_store_wowlan.a: $(RUST_PWRCTRL_INIT)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on $(INIT_STORE_WOWLAN_RUSTCFGS) \
+		--crate-type staticlib $(RUST_PWRCTRL_INIT) -o $@
+
+librust_pwrctrl_init_store_wowlan_wow.a: $(RUST_PWRCTRL_INIT)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on $(INIT_STORE_WOWLAN_WOW_RUSTCFGS) \
+		--crate-type staticlib $(RUST_PWRCTRL_INIT) -o $@
+
+test_init_store_wowlan_rust: init_store_wowlan_l2.c $(INIT_STORE_WOWLAN_ORACLE) librust_pwrctrl_init_store_wowlan.a $(HOST_JSON)
+	$(CC) $(INIT_STORE_WOWLAN_CFLAGS) -DHOST_PWRCTRL_INIT_STORE_WOWLAN_RUST -o $@ \
+		init_store_wowlan_l2.c $(INIT_STORE_WOWLAN_ORACLE) $(HOST_JSON) librust_pwrctrl_init_store_wowlan.a
+
+test_init_store_wowlan_wow_rust: init_store_wowlan_l2.c $(INIT_STORE_WOWLAN_ORACLE) librust_pwrctrl_init_store_wowlan_wow.a $(HOST_JSON)
+	$(CC) $(INIT_STORE_WOWLAN_WOW_CFLAGS) -DHOST_PWRCTRL_INIT_STORE_WOWLAN_RUST -o $@ \
+		init_store_wowlan_l2.c $(INIT_STORE_WOWLAN_ORACLE) $(HOST_JSON) librust_pwrctrl_init_store_wowlan_wow.a
+
 test-resume: test_pwrctrl_resume
 	./test_pwrctrl_resume
 
@@ -473,6 +498,8 @@ clean:
 		test_pwrctrl_init test_pwrctrl_init_rust librust_pwrctrl_init.a \
 		test_pwrctrl_init_p2 test_pwrctrl_init_p2_rust librust_pwrctrl_init_p2.a \
 		test_init_store_wowlan test_init_store_wowlan_wow \
+		test_init_store_wowlan_rust test_init_store_wowlan_wow_rust \
+		librust_pwrctrl_init_store_wowlan.a librust_pwrctrl_init_store_wowlan_wow.a \
 		test_pwrctrl_fw_in_ips test_pwrctrl_fw_in_ips_rust librust_pwrctrl_fw_ips.a \
 		test_pwrctrl_cpwm_int test_pwrctrl_cpwm_int_rust librust_pwrctrl_cpwm_int.a \
 		test_pwrctrl_wakeup test_pwrctrl_wakeup_rust librust_pwrctrl_wakeup.a \
