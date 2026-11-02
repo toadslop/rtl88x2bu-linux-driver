@@ -23,10 +23,10 @@ RUST_MI_DUMP_SRC := $(ROOT)/rust/rtw_mi_dump_status.rs
 .PHONY: all test test-c test-rust test-netif test-netif-c test-netif-rust \
 	test-status test-status-c test-status-rust test-dump test-dump-c test-dump-rust \
 	test-scan-drv test-scan-drv-c test-scan-drv-rust \
-	test-timer-intf-c clean
+	test-timer-intf-c test-timer-intf-rust clean
 all: test
 
-test: test-c test-rust test-netif test-status test-status-rust test-dump test-scan-drv test-timer-intf-c
+test: test-c test-rust test-netif test-status test-status-rust test-dump test-scan-drv test-timer-intf
 
 ifneq ($(wildcard $(RUST_MI_DUMP_SRC)),)
 test-dump: test-dump-c test-dump-rust
@@ -73,8 +73,21 @@ test-scan-drv-rust: test_mi_scan_drv_rust
 test-timer-intf-c: test_mi_timer_intf
 	./test_mi_timer_intf mi_timer_intf_vectors.json
 
+test-timer-intf: test-timer-intf-c test-timer-intf-rust
+
+test-timer-intf-rust: test_mi_timer_intf_rust
+	./test_mi_timer_intf_rust mi_timer_intf_vectors.json
+
 test_mi_timer_intf: mi_timer_intf_l2.c mi_timer_intf_c_oracle.c $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ mi_timer_intf_l2.c mi_timer_intf_c_oracle.c $(HOST_JSON)
+
+librust_mi_timer_intf.a: $(RUST_MI)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_mi_timer_intf_test \
+		--crate-type staticlib $(RUST_MI) -o $@
+
+test_mi_timer_intf_rust: mi_timer_intf_l2.c mi_timer_intf_c_oracle.c librust_mi_timer_intf.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DHOST_MI_TIMER_INTF_RUST -o $@ mi_timer_intf_l2.c \
+		mi_timer_intf_c_oracle.c $(HOST_JSON) librust_mi_timer_intf.a
 
 test_mi_scan_drv: mi_scan_drv_l2.c mi_scan_drv_c_oracle.c $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ mi_scan_drv_l2.c mi_scan_drv_c_oracle.c $(HOST_JSON)
@@ -148,6 +161,6 @@ clean:
 	rm -f test_mi_ch_union test_mi_ch_union_rust test_mi_netif_buddy \
 		test_mi_netif_buddy_rust test_mi_status test_mi_status_rust \
 		test_mi_dump_status test_mi_dump_status_rust \
-		test_mi_scan_drv test_mi_scan_drv_rust test_mi_timer_intf \
+		test_mi_scan_drv test_mi_scan_drv_rust test_mi_timer_intf test_mi_timer_intf_rust \
 		$(MI_STATUS_HOST_OBJS) librust_mi.a librust_mi_netif.a librust_mi_status.a \
-		librust_mi_dump.a librust_mi_scan_drv.a
+		librust_mi_dump.a librust_mi_scan_drv.a librust_mi_timer_intf.a
