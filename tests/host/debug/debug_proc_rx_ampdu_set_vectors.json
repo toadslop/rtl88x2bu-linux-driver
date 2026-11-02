@@ -1,0 +1,16 @@
+{
+  "vectors": [
+    {
+      "name": "set_accept_only",
+      "input": "0",
+      "expect_accept": 0,
+      "expect_size": 255
+    },
+    {
+      "name": "set_accept_and_size",
+      "input": "1 127",
+      "expect_accept": 1,
+      "expect_size": 127
+    }
+  ]
+}

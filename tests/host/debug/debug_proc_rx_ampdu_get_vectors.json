@@ -1,0 +1,22 @@
+{
+  "vectors": [
+    {
+      "name": "fixed_accept_size",
+      "fix_accept": 1,
+      "fix_size": 64,
+      "auto_accept": 0,
+      "auto_size": 0,
+      "limits_hex": "0708090a0708090a0708090a0708090a",
+      "expect": "accept: 1(fixed)\nsize: 64(fixed)\n\nfix_rx_ampdu_accept fix_rx_ampdu_size\n1                   64               \n"
+    },
+    {
+      "name": "auto_with_limits",
+      "fix_accept": 255,
+      "fix_size": 255,
+      "auto_accept": 1,
+      "auto_size": 42,
+      "limits_hex": "0708090a0708090a0708090a0708090a",
+      "expect": "accept: 1(auto)\nsize: 42(auto) with conditional limit:\n    20M 40M 80M 160M\n1SS   7   8   9   10\n2SS   7   8   9   10\n3SS   7   8   9   10\n4SS   7   8   9   10\n\nfix_rx_ampdu_accept fix_rx_ampdu_size\n255                 255               \n"
+    }
+  ]
+}
