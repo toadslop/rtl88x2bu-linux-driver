@@ -560,6 +560,16 @@ _adapter *rtw_rust_debug_proc_adapter_from_data(void *data)
 	return (_adapter *)rtw_netdev_priv((struct net_device *)data);
 }
 
+u8 rtw_rust_debug_fix_rx_ampdu_accept(_adapter *adapter)
+{
+	return adapter->fix_rx_ampdu_accept;
+}
+
+u8 rtw_rust_debug_fix_rx_ampdu_size(_adapter *adapter)
+{
+	return adapter->fix_rx_ampdu_size;
+}
+
 void rtw_rust_debug_proc_emit_defs_param(void *sel, _adapter *adapter)
 {
 	struct mlme_priv *mlme = &adapter->mlmepriv;

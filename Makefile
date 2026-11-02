@@ -3146,6 +3146,7 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_ps.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_dbg_logs.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_hw.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_signal.o
+$(MODULE_NAME)-y += rust/rtw_debug_proc_ampdu.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_test.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
