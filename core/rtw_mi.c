@@ -501,6 +501,27 @@ u8 rtw_mi_buddy_netif_carrier_off(_adapter *padapter)
 }
 #endif /* !CONFIG_RUST_MI_NETIF_LEAF */
 
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MI_SCAN_DRV_LEAF)
+void rtw_rust_mi_scan_abort(_adapter *iface, u8 bwait)
+{
+	if (bwait)
+		rtw_scan_abort(iface);
+	else
+		rtw_scan_abort_no_wait(iface);
+}
+
+u32 rtw_rust_mi_start_drv_threads(_adapter *iface)
+{
+	return rtw_start_drv_threads(iface);
+}
+
+void rtw_rust_mi_stop_drv_threads(_adapter *iface)
+{
+	rtw_stop_drv_threads(iface);
+}
+#endif /* CONFIG_RUST && CONFIG_RUST_MI_SCAN_DRV_LEAF */
+
+#ifndef CONFIG_RUST_MI_SCAN_DRV_LEAF
 static u8 _rtw_mi_scan_abort(_adapter *adapter, void *data)
 {
 	bool bwait = *(bool *)data;
@@ -578,6 +599,7 @@ void rtw_mi_buddy_stop_drv_threads(_adapter *adapter)
 {
 	_rtw_mi_stop_drv_threads(adapter, _TRUE);
 }
+#endif /* !CONFIG_RUST_MI_SCAN_DRV_LEAF */
 
 static u8 _rtw_mi_cancel_all_timer(_adapter *adapter, void *data)
 {
