@@ -153,3 +153,4 @@ clean:
 		test_bf_update_txbf_attrib_rust \
 		test_bf_txvector_cap \
 		librust_bf_entry_packet.a librust_bf_init_cmd.a librust_bf_cmd_traffic.a \
+		librust_bf_sound_enter.a librust_bf_sound_leave.a librust_bf_update_txbf_attrib.a
