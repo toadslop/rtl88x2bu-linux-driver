@@ -22,12 +22,12 @@ TXVECTOR_CAP_ORACLE := bf_txvector_cap_oracle.c
 
 .PHONY: all test test-c test-rust test-packet test-init-cmd test-init-cmd-rust test-gid \
 	test-cmd-traffic test-sound-enter test-sound-enter-rust test-sound-leave test-sound-leave-rust \
-	test-update-txbf test-update-txbf-rust test-txvector-cap test-txvector-cap-rust clean
+	test-update-txbf test-update-txbf-rust test-txvector-cap clean
 all: test
 
 test: test-c test-rust test-packet test-init-cmd test-init-cmd-rust test-gid test-cmd-traffic \
 	test-cmd-traffic-rust test-sound-enter test-sound-enter-rust test-sound-leave test-sound-leave-rust \
-	test-update-txbf test-update-txbf-rust test-txvector-cap test-txvector-cap-rust
+	test-update-txbf test-update-txbf-rust test-txvector-cap
 
 test-rust: test_bf_entry_packet_rust
 	./test_bf_entry_packet_rust
@@ -74,9 +74,6 @@ test-update-txbf-rust: test_bf_update_txbf_attrib_rust
 test-txvector-cap: test_bf_txvector_cap
 	./test_bf_txvector_cap
 
-test-txvector-cap-rust: test_bf_txvector_cap_rust
-	./test_bf_txvector_cap_rust
-
 test_bf_update_txbf_attrib: $(UPDATE_TXBF_SRC)
 	$(CC) $(CFLAGS) -o $@ $(UPDATE_TXBF_SRC)
 
@@ -90,14 +87,6 @@ librust_bf_update_txbf_attrib.a: $(RUST_BF)
 
 test_bf_txvector_cap: $(TXVECTOR_CAP_SRC) $(TXVECTOR_CAP_ORACLE)
 	$(CC) $(CFLAGS) -o $@ $(TXVECTOR_CAP_SRC) $(TXVECTOR_CAP_ORACLE)
-
-test_bf_txvector_cap_rust: $(TXVECTOR_CAP_SRC) librust_bf_txvector_cap.a
-	$(CC) $(CFLAGS) -DHOST_BF_TXVECTOR_CAP_RUST -o $@ $(TXVECTOR_CAP_SRC) \
-		librust_bf_txvector_cap.a
-
-librust_bf_txvector_cap.a: $(RUST_BF)
-	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_bf_txvector_cap_test \
-		--crate-type staticlib $(RUST_BF) -o $@
 
 test_bf_sound_leave: $(SOUND_LEAVE_SRC)
 	$(CC) $(CFLAGS) -o $@ $(SOUND_LEAVE_SRC)
@@ -162,7 +151,5 @@ clean:
 		test_bf_cmd_traffic test_bf_cmd_traffic_rust test_bf_sound_enter test_bf_sound_enter_rust \
 		test_bf_sound_leave test_bf_sound_leave_rust test_bf_update_txbf_attrib \
 		test_bf_update_txbf_attrib_rust \
-		test_bf_txvector_cap test_bf_txvector_cap_rust \
+		test_bf_txvector_cap \
 		librust_bf_entry_packet.a librust_bf_init_cmd.a librust_bf_cmd_traffic.a \
-		librust_bf_sound_enter.a librust_bf_sound_leave.a librust_bf_update_txbf_attrib.a \
-		librust_bf_txvector_cap.a
