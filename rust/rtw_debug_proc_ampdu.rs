@@ -97,7 +97,9 @@ fn emit_get_rx_ampdu(sel: *mut c_void, adapter: *mut c_void) {
     print_bytes(sel, b"accept: ");
     pos = 0;
     if fix_accept == RX_AMPDU_ACCEPT_INVALID {
-        push_u8_dec(&mut line, &mut pos, unsafe { rtw_rx_ampdu_is_accept(adapter) });
+        push_u8_dec(&mut line, &mut pos, unsafe {
+            rtw_rx_ampdu_is_accept(adapter)
+        });
         push_str(&mut line, &mut pos, b"(auto)");
     } else {
         push_u8_dec(&mut line, &mut pos, fix_accept);
