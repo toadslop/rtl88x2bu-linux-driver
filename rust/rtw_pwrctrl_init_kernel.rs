@@ -19,6 +19,8 @@ extern "C" {
     fn rtw_rust_init_set_lpspg_name(padapter: Padapter);
 }
 
+use super::rtw_rust_init_store_u8_wowlan;
+
 pub fn init_part1_kernel(padapter: Padapter) {
     if padapter.is_null() {
         return;
@@ -73,11 +75,11 @@ pub fn init_part1_kernel(padapter: Padapter) {
         rtw_rust_init_init_workitem(padapter, 1);
         rtw_rust_init_set_lpspg_name(padapter);
         rtw_rust_init_init_timer(padapter);
-        rtw_rust_init_store_u8(padapter, 18, _FALSE);
-        rtw_rust_init_store_u8(padapter, 19, _FALSE);
-        rtw_rust_init_store_u8(padapter, 20, _FALSE);
-        rtw_rust_init_store_u8(padapter, 21, _FALSE);
-        rtw_rust_init_store_u8(padapter, 22, 0);
+        rtw_rust_init_store_u8_wowlan(padapter, 18, _FALSE);
+        rtw_rust_init_store_u8_wowlan(padapter, 19, _FALSE);
+        rtw_rust_init_store_u8_wowlan(padapter, 20, _FALSE);
+        rtw_rust_init_store_u8_wowlan(padapter, 21, _FALSE);
+        rtw_rust_init_store_u8_wowlan(padapter, 22, 0);
         rtw_rust_init_init_workitem(padapter, 2);
         rtw_rust_init_create_wq(padapter);
     }

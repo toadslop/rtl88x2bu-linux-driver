@@ -4,6 +4,7 @@ drop rtw_rust_init_reg_u8
 drop rtw_rust_init_get_current_time
 drop rtw_rust_init_init_pwrlock
 drop rtw_rust_init_store_u8
+drop rtw_rust_init_store_wowlan_apply
 drop rtw_rust_init_store_u32
 drop rtw_rust_init_hal_set_rpwm
 drop rtw_rust_init_init_workitem

@@ -20,6 +20,7 @@
 
 #if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_PS_RDY_TEST)
 u8 PS_RDY_CHECK(_adapter *padapter);
+void rtw_rust_init_store_u8_wowlan(PADAPTER padapter, u32 field, u8 val);
 #endif
 
 #ifdef DBG_CHECK_FW_PS_STATE
@@ -3365,9 +3366,34 @@ void rtw_rust_init_init_pwrlock(PADAPTER padapter, u32 which)
 		_init_pwrlock(&p->check_32k_lock);
 }
 
+void rtw_rust_init_store_wowlan_apply(PADAPTER padapter, u32 slot, u8 val)
+{
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	switch (slot) {
+	case 0: p->wowlan_mode = val; break;
+	case 1: p->wowlan_ap_mode = val; break;
+	case 2: p->wowlan_p2p_mode = val; break;
+	case 3: p->wowlan_in_resume = val; break;
+	case 4: p->wowlan_last_wake_reason = val; break;
+#ifdef CONFIG_WOWLAN
+	case 5: p->wowlan_power_mgmt = val; break;
+	case 6: p->wowlan_lps_level = val; break;
+	case 7: p->default_patterns_en = val; break;
+	case 8: p->wowlan_aoac_rpt_loc = val; break;
+#endif
+	default: break;
+	}
+}
+
 void rtw_rust_init_store_u8(PADAPTER padapter, u32 field, u8 val)
 {
 	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	if (field >= 18 && field <= 26) {
+		rtw_rust_init_store_u8_wowlan(padapter, field, val);
+		return;
+	}
 
 	switch (field) {
 	case 0: p->rf_pwrstate = val; break;
@@ -3388,17 +3414,6 @@ void rtw_rust_init_store_u8(PADAPTER padapter, u32 field, u8 val)
 	case 15: p->dtim = val; break;
 	case 16: p->tog = val; break;
 	case 17: p->rpwm_retry = val; break;
-	case 18: p->wowlan_mode = val; break;
-	case 19: p->wowlan_ap_mode = val; break;
-	case 20: p->wowlan_p2p_mode = val; break;
-	case 21: p->wowlan_in_resume = val; break;
-	case 22: p->wowlan_last_wake_reason = val; break;
-#ifdef CONFIG_WOWLAN
-	case 23: p->wowlan_power_mgmt = val; break;
-	case 24: p->wowlan_lps_level = val; break;
-	case 25: p->default_patterns_en = val; break;
-	case 26: p->wowlan_aoac_rpt_loc = val; break;
-#endif
 	default: break;
 	}
 }
