@@ -24,6 +24,9 @@ extern "C" {
     fn rtw_rust_init_lps_poff_deinit(padapter: Padapter);
 }
 
+#[cfg(config_wowlan)]
+use super::rtw_rust_init_store_u8_wowlan;
+
 pub fn init_part2_kernel(padapter: Padapter) {
     if padapter.is_null() {
         return;
@@ -37,12 +40,12 @@ pub fn init_part2_kernel(padapter: Padapter) {
             let wow_pwr = rtw_rust_init_reg_u8(padapter, 5);
             let wow_lvl = rtw_rust_init_reg_u8(padapter, 6);
             let wake = rtw_rust_init_reg_u32(padapter, 0);
-            rtw_rust_init_store_u8(padapter, 23, wow_pwr);
-            rtw_rust_init_store_u8(padapter, 24, wow_lvl);
+            rtw_rust_init_store_u8_wowlan(padapter, 23, wow_pwr);
+            rtw_rust_init_store_u8_wowlan(padapter, 24, wow_lvl);
             let def_pat = if wake & (1 << 1) != 0 { 1 } else { 0 };
-            rtw_rust_init_store_u8(padapter, 25, def_pat);
+            rtw_rust_init_store_u8_wowlan(padapter, 25, def_pat);
             rtw_rust_init_wow_pattern_reset(padapter);
-            rtw_rust_init_store_u8(padapter, 26, 0);
+            rtw_rust_init_store_u8_wowlan(padapter, 26, 0);
             rtw_rust_init_wow_hw_cam_mutex_init(padapter);
             rtw_rust_init_wowlan_tail(padapter);
         }
