@@ -1,0 +1,28 @@
+{
+  "vectors": [
+    {
+      "name": "wowlan_power_mgmt",
+      "field": 23,
+      "val": 2,
+      "expect_wowlan_power_mgmt": 2
+    },
+    {
+      "name": "wowlan_lps_level",
+      "field": 24,
+      "val": 1,
+      "expect_wowlan_lps_level": 1
+    },
+    {
+      "name": "default_patterns_en",
+      "field": 25,
+      "val": 1,
+      "expect_default_patterns_en": 1
+    },
+    {
+      "name": "wowlan_aoac_rpt_loc",
+      "field": 26,
+      "val": 3,
+      "expect_wowlan_aoac_rpt_loc": 3
+    }
+  ]
+}
