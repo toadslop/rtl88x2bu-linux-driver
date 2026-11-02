@@ -330,6 +330,12 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-200 | #1652 | [W3-200] Translate rtw_pwrctrl.c — WoWLAN priv field store (debug path) |
 | W3-201 | #1653 | [W3-201] Translate rtw_beamforming.c — txvector and STA BF cap leaf |
 | W3-202 | #1654 | [W3-202] Translate rtw_mi.c — timer cancel and intf lifecycle buddy |
+| W3-203 | #1681 | [W3-203] Translate rtw_debug_rest.c — proc HT registry leaf |
+| W3-204 | #1682 | [W3-204] Translate rtw_debug_rest.c — proc rx_ampdu get/set |
+| W3-205 | #1683 | [W3-205] Translate rtw_debug_rest.c — proc driver AMPDU tuning leaf |
+| W3-206 | #1684 | [W3-206] Translate rtw_debug_rest.c — proc tx AMPDU misc leaf |
+| W3-207 | #1685 | [W3-207] Translate rtw_debug_rest.c — proc tx AMSDU debug leaf |
+| W3-208 | #1686 | [W3-208] Translate rtw_debug_rest.c — proc VHT 24G enable leaf |
 
 ## Superseded issues
 
