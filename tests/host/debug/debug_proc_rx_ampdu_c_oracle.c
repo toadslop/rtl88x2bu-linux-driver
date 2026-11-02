@@ -25,14 +25,23 @@ static u8 oracle_rx_ampdu_size(struct _adapter *adapter)
 	return adapter->host_auto_size;
 }
 
-static void oracle_rx_ampdu_set_accept(struct _adapter *adapter, u8 accept)
+static u8 oracle_rx_ampdu_set_accept(struct _adapter *adapter, u8 accept, u8 reason)
 {
+	(void)reason;
 	adapter->fix_rx_ampdu_accept = accept;
+	return accept;
 }
 
-static void oracle_rx_ampdu_set_size(struct _adapter *adapter, u8 size)
+static u8 oracle_rx_ampdu_set_size(struct _adapter *adapter, u8 size, u8 reason)
 {
+	(void)reason;
 	adapter->fix_rx_ampdu_size = size;
+	return size;
+}
+
+static void oracle_rx_ampdu_apply(struct _adapter *adapter)
+{
+	(void)adapter;
 }
 
 int proc_get_rx_ampdu(struct seq_file *m, void *v)
@@ -86,9 +95,10 @@ long proc_set_rx_ampdu(void *file, const void *buffer, unsigned long count,
 
 	num = sscanf(tmp, "%hhu %hhu", &accept, &size);
 	if (num >= 1)
-		oracle_rx_ampdu_set_accept(padapter, accept);
+		oracle_rx_ampdu_set_accept(padapter, accept, RX_AMPDU_DRV_FIXED);
 	if (num >= 2)
-		oracle_rx_ampdu_set_size(padapter, size);
+		oracle_rx_ampdu_set_size(padapter, size, RX_AMPDU_DRV_FIXED);
+	oracle_rx_ampdu_apply(padapter);
 
 	return (long)count;
 }
