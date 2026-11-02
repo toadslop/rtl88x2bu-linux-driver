@@ -2870,6 +2870,7 @@ rustflags-y += --cfg config_beamforming
 ifeq ($(CONFIG_RTL8822B), y)
 ifneq ($(W3_197_LEGACY_L1), 1)
 rustflags-y += --cfg beamforming_version_2
+rustflags-y += --cfg w3_201_txvector_kernel
 endif
 endif
 endif
