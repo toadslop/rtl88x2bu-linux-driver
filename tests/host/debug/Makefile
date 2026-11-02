@@ -21,24 +21,33 @@ REGSTY_SHIM   := host_rtw_debug_regsty_shim.c
 REGSTY_RUST   := $(ROOT)/rust/rtw_debug_regsty.rs
 REGSTY_L2     := test_dump_regsty_rx_ampdu.c
 
+# W3-204 proc rx_ampdu get/set
+AMPDU_ORACLE := debug_proc_rx_ampdu_c_oracle.c
+AMPDU_SHIM   := host_rtw_debug_proc_ampdu_shim.c
+AMPDU_RUST   := $(ROOT)/rust/rtw_debug_proc_ampdu.rs
+AMPDU_L2     := test_proc_rx_ampdu.c
+
 CC     := gcc
 CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
           -I$(HOST_INC) -I$(ROOT)/include
 
 .PHONY: all test test-all test-c test-rust clean \
 	test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
-	test-regsty-rx-ampdu-c test-regsty-rx-ampdu-rust
+	test-regsty-rx-ampdu-c test-regsty-rx-ampdu-rust \
+	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust
 
 all: test
 
 test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
-	test-regsty-rx-ampdu-c test-regsty-rx-ampdu-rust
+	test-regsty-rx-ampdu-c test-regsty-rx-ampdu-rust \
+	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust
 
 test-all: test
 
-test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c
+test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-rx-ampdu-c
 
-test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust
+test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
+	test-proc-rx-ampdu-rust
 
 test-hooks-c: test_debug_test_hooks_c
 	./test_debug_test_hooks_c
@@ -79,8 +88,8 @@ test_dump_sec_cam_ent_rust: test_dump_sec_cam_ent.c librust_rtw_debug_sec_cam.a 
 test-regsty-rx-ampdu-c: test_dump_regsty_rx_ampdu
 	./test_dump_regsty_rx_ampdu debug_regsty_rx_ampdu_vectors.json
 
-test_dump_regsty_rx_ampdu: $(REGSTY_L2) $(REGSTY_ORACLE) $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ $(REGSTY_L2) $(REGSTY_ORACLE) $(HOST_JSON)
+test_dump_regsty_rx_ampdu: $(REGSTY_L2) $(REGSTY_SHIM) librust_rtw_debug_regsty.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ $(REGSTY_L2) $(REGSTY_SHIM) $(HOST_JSON) librust_rtw_debug_regsty.a
 
 librust_rtw_debug_regsty.a: $(REGSTY_RUST)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
@@ -94,7 +103,30 @@ test_dump_regsty_rx_ampdu_rust: $(REGSTY_L2) librust_rtw_debug_regsty.a $(REGSTY
 	$(CC) $(CFLAGS) -DRUST_RTW_DEBUG_REGSTY_ORACLE -o $@ \
 		$(REGSTY_L2) $(REGSTY_SHIM) $(HOST_JSON) librust_rtw_debug_regsty.a
 
+test-proc-rx-ampdu-c: test_proc_rx_ampdu
+	./test_proc_rx_ampdu debug_proc_rx_ampdu_get_vectors.json debug_proc_rx_ampdu_set_vectors.json
+
+test_proc_rx_ampdu: $(AMPDU_L2) $(AMPDU_ORACLE) $(REGSTY_SHIM) librust_rtw_debug_regsty.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ $(AMPDU_L2) $(AMPDU_ORACLE) $(REGSTY_SHIM) $(HOST_JSON) \
+		librust_rtw_debug_regsty.a
+
+librust_rtw_debug_proc_ampdu.a: $(AMPDU_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_ampdu_test \
+		--cfg config_rtw_debug --cfg config_proc_debug \
+		--crate-type staticlib $(AMPDU_RUST) -o $@
+
+test-proc-rx-ampdu-rust: test_proc_rx_ampdu_rust
+	./test_proc_rx_ampdu_rust debug_proc_rx_ampdu_get_vectors.json debug_proc_rx_ampdu_set_vectors.json
+
+test_proc_rx_ampdu_rust: $(AMPDU_L2) librust_rtw_debug_proc_ampdu.a librust_rtw_debug_regsty.a \
+		$(AMPDU_SHIM) $(REGSTY_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DHOST_RTW_DEBUG_PROC_AMPDU_TEST -DRUST_RTW_DEBUG_PROC_AMPDU_ORACLE -o $@ \
+		$(AMPDU_L2) $(AMPDU_SHIM) $(REGSTY_SHIM) $(HOST_JSON) \
+		librust_rtw_debug_proc_ampdu.a librust_rtw_debug_regsty.a
+
 clean:
 	rm -f test_debug_test_hooks_c test_debug_test_hooks_rust librust_debug_test_hooks.a \
 		test_dump_sec_cam_ent test_dump_sec_cam_ent_rust librust_rtw_debug_sec_cam.a \
-		test_dump_regsty_rx_ampdu test_dump_regsty_rx_ampdu_rust librust_rtw_debug_regsty.a
+		test_dump_regsty_rx_ampdu test_dump_regsty_rx_ampdu_rust librust_rtw_debug_regsty.a \
+		test_proc_rx_ampdu test_proc_rx_ampdu_rust librust_rtw_debug_proc_ampdu.a
