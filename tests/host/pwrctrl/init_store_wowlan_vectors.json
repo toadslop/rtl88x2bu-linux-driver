@@ -1,0 +1,46 @@
+{
+  "vectors": [
+    {
+      "name": "wowlan_mode",
+      "field": 18,
+      "val": 1,
+      "expect_wowlan_mode": 1
+    },
+    {
+      "name": "wowlan_ap_mode",
+      "field": 19,
+      "val": 1,
+      "expect_wowlan_ap_mode": 1
+    },
+    {
+      "name": "wowlan_p2p_mode",
+      "field": 20,
+      "val": 1,
+      "expect_wowlan_p2p_mode": 1
+    },
+    {
+      "name": "wowlan_in_resume",
+      "field": 21,
+      "val": 1,
+      "expect_wowlan_in_resume": 1
+    },
+    {
+      "name": "wowlan_last_wake_reason",
+      "field": 22,
+      "val": 42,
+      "expect_wowlan_last_wake_reason": 42
+    },
+    {
+      "name": "ignore_field_17",
+      "field": 17,
+      "val": 99,
+      "expect_wowlan_mode": 0
+    },
+    {
+      "name": "ignore_unknown_field",
+      "field": 99,
+      "val": 1,
+      "expect_wowlan_mode": 0
+    }
+  ]
+}
