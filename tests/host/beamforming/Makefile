@@ -27,7 +27,7 @@ all: test
 
 test: test-c test-rust test-packet test-init-cmd test-init-cmd-rust test-gid test-cmd-traffic \
 	test-cmd-traffic-rust test-sound-enter test-sound-enter-rust test-sound-leave test-sound-leave-rust \
-	test-update-txbf test-update-txbf-rust test-txvector-cap
+	test-update-txbf test-update-txbf-rust test-txvector-cap test-txvector-cap-rust
 
 test-rust: test_bf_entry_packet_rust
 	./test_bf_entry_packet_rust

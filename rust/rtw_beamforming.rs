@@ -469,7 +469,7 @@ pub extern "C" fn update_attrib_txbf_info(
 
 #[cfg(any(
     host_bf_txvector_cap_test,
-    all(config_beamforming, beamforming_version_2)
+    all(config_beamforming, beamforming_version_2, w3_201_txvector_kernel,),
 ))]
 mod txvector_cap {
     use super::{U16, U8};
@@ -726,6 +726,7 @@ pub unsafe extern "C" fn o_rtw_bf_get_sta_beamform_cap(
 #[cfg(all(
     config_beamforming,
     beamforming_version_2,
+    w3_201_txvector_kernel,
     not(host_bf_txvector_cap_test),
     not(host_bf_update_txbf_attrib_test),
     not(host_bf_entry_packet_test)
@@ -746,6 +747,7 @@ extern "C" {
 #[cfg(all(
     config_beamforming,
     beamforming_version_2,
+    w3_201_txvector_kernel,
     not(host_bf_txvector_cap_test),
     not(host_bf_update_txbf_attrib_test),
     not(host_bf_entry_packet_test)
@@ -779,6 +781,7 @@ pub unsafe extern "C" fn rtw_rust_get_txvector_parameter(
 #[cfg(all(
     config_beamforming,
     beamforming_version_2,
+    w3_201_txvector_kernel,
     not(host_bf_txvector_cap_test),
     not(host_bf_update_txbf_attrib_test),
     not(host_bf_entry_packet_test)
