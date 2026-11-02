@@ -14,3 +14,6 @@ librust_mi_dump.a
 test_mi_scan_drv
 test_mi_scan_drv_rust
 librust_mi_scan_drv.a
+test_mi_timer_intf
+test_mi_timer_intf_rust
+librust_mi_timer_intf.a
