@@ -1,0 +1,11 @@
+# W3-201: txvector + STA beamform cap leaf — Rust shim accessors (kernel-only).
+drop rtw_bf_rust_txvec_fwstate
+drop rtw_bf_rust_txvec_ap_mac
+drop rtw_bf_rust_txvec_mlme_ht
+drop rtw_bf_rust_txvec_mlme_vht
+drop rtw_bf_rust_txvec_sta_aid
+drop rtw_bf_rust_txvec_sta_mac
+drop rtw_bf_rust_txvec_sta_wm
+drop rtw_bf_rust_txvec_sta_ht
+drop rtw_bf_rust_txvec_sta_vht
+drop rtw_bf_rust_txvec_info_cap
