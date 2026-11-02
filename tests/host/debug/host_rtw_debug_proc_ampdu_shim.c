@@ -54,6 +54,11 @@ long rtw_rust_debug_proc_read_user_line(const void *buffer, unsigned long count,
 	return (long)count;
 }
 
+int rtw_rust_debug_proc_sscanf_hhu_pair(const char *tmp, u8 *first, u8 *second)
+{
+	return sscanf(tmp, "%hhu %hhu", first, second);
+}
+
 u8 rtw_rx_ampdu_is_accept(_adapter *adapter)
 {
 	if (adapter->fix_rx_ampdu_accept != RX_AMPDU_ACCEPT_INVALID)
