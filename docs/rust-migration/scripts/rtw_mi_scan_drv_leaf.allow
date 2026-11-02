@@ -1,0 +1,4 @@
+# L1 allowlist for W3-199: C shims stay in core/rtw_mi.c (not in rust/rtw_mi.o).
+drop rtw_rust_mi_scan_abort
+drop rtw_rust_mi_start_drv_threads
+drop rtw_rust_mi_stop_drv_threads

@@ -3194,6 +3194,8 @@ ccflags-y += -DCONFIG_RUST_MI_NETIF_LEAF
 rustflags-y += --cfg rust_mi_netif_leaf
 ccflags-y += -DCONFIG_RUST_MI_DUMP_LEAF
 rustflags-y += --cfg rust_mi_dump_leaf
+ccflags-y += -DCONFIG_RUST_MI_SCAN_DRV_LEAF
+rustflags-y += --cfg rust_mi_scan_drv_leaf
 $(MODULE_NAME)-y += rust/rtw_mi.o
 ccflags-y += -DCONFIG_RUST_IOCTL_SET_LEAF
 rustflags-y += --cfg rust_ioctl_set_leaf
@@ -4251,6 +4253,22 @@ rust-objects-rtw-mi-dump-leaf-c:
 rust-check-symbols-rtw-mi-dump-leaf: rust-objects-rtw-mi-dump-leaf-c rust-objects-rtw-mi-dump-leaf
 	$(MAKE) rust-check-symbols OLD=tests/host/mi/mi_dump_status_kern_c_ref.o NEW=rust/rtw_mi.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_mi_dump_leaf.allow ALLOW_VACUOUS=1
+
+# W3-199: scan abort + drv thread leaf L1 (C ref vs rust/rtw_mi.o).
+rust-objects-rtw-mi-scan-drv-leaf:
+	@test -n "$(KDIR)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-rtw-mi-scan-drv-leaf"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_mi.o
+
+rust-objects-rtw-mi-scan-drv-leaf-c:
+	gcc -c -Wall -Wextra -Werror -O2 \
+		-o tests/host/mi/mi_scan_drv_kern_c_ref.o \
+		tests/host/mi/mi_scan_drv_kern_c_ref.c
+
+rust-check-symbols-rtw-mi-scan-drv-leaf: rust-objects-rtw-mi-scan-drv-leaf-c rust-objects-rtw-mi-scan-drv-leaf
+	$(MAKE) rust-check-symbols OLD=tests/host/mi/mi_scan_drv_kern_c_ref.o NEW=rust/rtw_mi.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_mi_scan_drv_leaf.allow ALLOW_VACUOUS=1
 
 rust-objects-rtw-cmd-queue-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
