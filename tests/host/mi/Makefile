@@ -21,10 +21,11 @@ MI_DUMP_CFLAGS := $(CFLAGS) -I$(CORE) -I$(ROOT)/include \
 RUST_MI_DUMP_SRC := $(ROOT)/rust/rtw_mi_dump_status.rs
 
 .PHONY: all test test-c test-rust test-netif test-netif-c test-netif-rust \
-	test-status test-status-c test-status-rust test-dump test-dump-c test-dump-rust clean
+	test-status test-status-c test-status-rust test-dump test-dump-c test-dump-rust \
+	test-scan-drv test-scan-drv-c test-scan-drv-rust clean
 all: test
 
-test: test-c test-rust test-netif test-status test-status-rust test-dump
+test: test-c test-rust test-netif test-status test-status-rust test-dump test-scan-drv
 
 ifneq ($(wildcard $(RUST_MI_DUMP_SRC)),)
 test-dump: test-dump-c test-dump-rust
@@ -59,6 +60,14 @@ test-dump-c: test_mi_dump_status
 
 test-dump-rust: test_mi_dump_status_rust
 	./test_mi_dump_status_rust mi_dump_status_vectors.json
+
+test-scan-drv: test-scan-drv-c
+
+test-scan-drv-c: test_mi_scan_drv
+	./test_mi_scan_drv mi_scan_drv_vectors.json
+
+test_mi_scan_drv: mi_scan_drv_l2.c mi_scan_drv_c_oracle.c $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ mi_scan_drv_l2.c mi_scan_drv_c_oracle.c $(HOST_JSON)
 
 test_mi_dump_status: mi_dump_status_l2.c mi_dump_status_c_oracle.c $(HOST_JSON)
 	$(CC) $(MI_DUMP_CFLAGS) -I$(HOST_INC) -o $@ mi_dump_status_l2.c \
@@ -121,5 +130,6 @@ clean:
 	rm -f test_mi_ch_union test_mi_ch_union_rust test_mi_netif_buddy \
 		test_mi_netif_buddy_rust test_mi_status test_mi_status_rust \
 		test_mi_dump_status test_mi_dump_status_rust \
+		test_mi_scan_drv \
 		$(MI_STATUS_HOST_OBJS) librust_mi.a librust_mi_netif.a librust_mi_status.a \
 		librust_mi_dump.a
