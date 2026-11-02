@@ -204,9 +204,6 @@ fn parse_set_line(tmp: &[u8], count: usize) -> (Option<U8>, Option<U8>) {
 }
 
 fn apply_set_rx_ampdu(adapter: *mut c_void, tmp: &[u8], count: usize) -> c_long {
-    if adapter.is_null() || count < 1 {
-        return -1;
-    }
     let (accept, size) = parse_set_line(tmp, count);
     if accept.is_some() {
         unsafe {
@@ -218,9 +215,7 @@ fn apply_set_rx_ampdu(adapter: *mut c_void, tmp: &[u8], count: usize) -> c_long 
             rtw_rx_ampdu_set_size(adapter, size.unwrap(), RX_AMPDU_DRV_FIXED);
         }
     }
-    if accept.is_some() || size.is_some() {
-        unsafe { rtw_rx_ampdu_apply(adapter) };
-    }
+    unsafe { rtw_rx_ampdu_apply(adapter) };
     count as c_long
 }
 
@@ -233,16 +228,12 @@ pub extern "C" fn proc_set_rx_ampdu(
     _pos: *mut c_long,
     data: *mut c_void,
 ) -> c_long {
-    if count < 1 {
-        return -1;
-    }
     let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
     let mut tmp = [0i8; 32];
-    let n = unsafe {
-        rtw_rust_debug_proc_read_user_line(buffer, count, tmp.as_mut_ptr(), tmp.len())
-    };
+    let n =
+        unsafe { rtw_rust_debug_proc_read_user_line(buffer, count, tmp.as_mut_ptr(), tmp.len()) };
     if n < 0 {
-        return n;
+        return n as c_long;
     }
     apply_set_rx_ampdu(
         adapter,

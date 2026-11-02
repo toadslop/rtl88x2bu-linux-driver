@@ -3933,7 +3933,6 @@ int proc_get_rx_ampdu(struct seq_file *m, void *v)
 
 	return 0;
 }
-#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-204 in rust/rtw_debug_proc_ampdu.rs */
 
 ssize_t proc_set_rx_ampdu(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
@@ -3965,6 +3964,8 @@ ssize_t proc_set_rx_ampdu(struct file *file, const char __user *buffer, size_t c
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-204 in rust/rtw_debug_proc_ampdu.rs */
+
 #ifdef CONFIG_SDIO_TX_ENABLE_AVAL_INT
 int proc_get_tx_aval_th(struct seq_file *m, void *v)
 {
