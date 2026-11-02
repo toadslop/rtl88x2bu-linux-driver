@@ -1,0 +1,7 @@
+# L1 allowlist for W3-203: Rust owns HT registry proc get/set in rtw_debug_proc_ht.o.
+drop rtw_rust_debug_proc_emit_ht_enable
+drop rtw_rust_debug_proc_set_ht_enable
+drop rtw_rust_debug_proc_emit_bw_mode
+drop rtw_rust_debug_proc_set_bw_mode
+drop rtw_rust_debug_proc_emit_ampdu_enable
+drop rtw_rust_debug_proc_set_ampdu_enable

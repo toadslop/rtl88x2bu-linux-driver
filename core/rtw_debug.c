@@ -3004,6 +3004,120 @@ ssize_t rtw_rust_debug_proc_set_rx_signal(_adapter *padapter,
 	return count;
 }
 
+#ifdef CONFIG_80211N_HT
+void rtw_rust_debug_proc_emit_ht_enable(void *sel, _adapter *adapter)
+{
+	struct registry_priv *pregpriv = adapter_to_regsty(adapter);
+
+	if (pregpriv)
+		RTW_PRINT_SEL(sel, "%d\n", pregpriv->ht_enable);
+}
+
+ssize_t rtw_rust_debug_proc_set_ht_enable(_adapter *adapter,
+					  const char __user *buffer,
+					  size_t count)
+{
+	struct registry_priv *pregpriv = adapter_to_regsty(adapter);
+	char tmp[32];
+	u32 mode;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%d ", &mode);
+
+		if (num == 1 && pregpriv && mode < 2) {
+			pregpriv->ht_enable = mode;
+			RTW_INFO("ht_enable=%d\n", pregpriv->ht_enable);
+		}
+	}
+
+	return count;
+}
+
+void rtw_rust_debug_proc_emit_bw_mode(void *sel, _adapter *adapter)
+{
+	struct registry_priv *pregpriv = adapter_to_regsty(adapter);
+
+	if (pregpriv)
+		RTW_PRINT_SEL(sel, "0x%02x\n", pregpriv->bw_mode);
+}
+
+ssize_t rtw_rust_debug_proc_set_bw_mode(_adapter *adapter,
+					const char __user *buffer,
+					size_t count)
+{
+	struct registry_priv *pregpriv = adapter_to_regsty(adapter);
+	char tmp[32];
+	u32 mode;
+	u8 bw_2g;
+	u8 bw_5g;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%x ", &mode);
+		bw_5g = mode >> 4;
+		bw_2g = mode & 0x0f;
+
+		if (num == 1 && pregpriv && bw_2g <= 4 && bw_5g <= 4) {
+			pregpriv->bw_mode = mode;
+			printk("bw_mode=0x%x\n", mode);
+		}
+	}
+
+	return count;
+}
+
+void rtw_rust_debug_proc_emit_ampdu_enable(void *sel, _adapter *adapter)
+{
+	struct registry_priv *pregpriv = adapter_to_regsty(adapter);
+
+	if (pregpriv)
+		RTW_PRINT_SEL(sel, "%d\n", pregpriv->ampdu_enable);
+}
+
+ssize_t rtw_rust_debug_proc_set_ampdu_enable(_adapter *adapter,
+					     const char __user *buffer,
+					     size_t count)
+{
+	struct registry_priv *pregpriv = adapter_to_regsty(adapter);
+	char tmp[32];
+	u32 mode;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%d ", &mode);
+
+		if (num == 1 && pregpriv && mode < 2) {
+			pregpriv->ampdu_enable = mode;
+			printk("ampdu_enable=%d\n", mode);
+		}
+	}
+
+	return count;
+}
+#endif /* CONFIG_80211N_HT */
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */
