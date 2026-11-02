@@ -304,6 +304,34 @@ pub extern "C" fn rtw_rust_init_store_u8_wowlan(padapter: Padapter, field: u32, 
     store_u8_wowlan_impl(padapter, field, val);
 }
 
+#[cfg(not(host_pwrctrl_init_test))]
+extern "C" {
+    fn rtw_rust_init_store_wowlan_apply(padapter: Padapter, slot: u32, val: u8);
+}
+
+#[cfg(not(host_pwrctrl_init_test))]
+fn store_u8_wowlan_kernel(padapter: Padapter, field: u32, val: u8) {
+    if padapter.is_null() {
+        return;
+    }
+    if field < 18 || field > 26 {
+        return;
+    }
+    #[cfg(not(config_wowlan))]
+    if field >= 23 {
+        return;
+    }
+    unsafe {
+        rtw_rust_init_store_wowlan_apply(padapter, field - 18, val);
+    }
+}
+
+#[cfg(not(host_pwrctrl_init_test))]
+#[no_mangle]
+pub extern "C" fn rtw_rust_init_store_u8_wowlan(padapter: Padapter, field: u32, val: u8) {
+    store_u8_wowlan_kernel(padapter, field, val);
+}
+
 fn free_pwrctrl_host(padapter: Padapter) {
     if padapter.is_null() {
         return;
