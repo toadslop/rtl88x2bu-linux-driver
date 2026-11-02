@@ -5,12 +5,14 @@
 
 #include "host_rtw_debug_regsty_types.h"
 
+#ifndef HOST_RTW_DEBUG_PROC_AMPDU_TEST
 void rtw_rust_debug_print_sel(void *sel, const char *line)
 {
 	if (!sel || !line)
 		return;
 	fputs(line, (FILE *)sel);
 }
+#endif
 
 u8 *rtw_rust_debug_regsty_rx_ampdu_sz_limit_by_nss_bw(void *adapter)
 {
