@@ -316,6 +316,17 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-201 | `wave3-201-bf-txvector-cap-leaf.md` | txvector + STA beamform cap leaf |
 | W3-202 | `wave3-202-mi-timer-intf-lifecycle.md` | timer cancel + intf start/stop buddy |
 
+## Children (tranche 22 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-203 | `wave3-203-debug-proc-ht-registry.md` | HT registry proc (ht_enable, bw_mode, ampdu_enable) |
+| W3-204 | `wave3-204-debug-proc-rx-ampdu.md` | proc rx_ampdu get/set |
+| W3-205 | `wave3-205-debug-proc-driver-ampdu-tuning.md` | driver AMPDU factor/density/max_agg procs |
+| W3-206 | `wave3-206-debug-proc-tx-ampdu-misc.md` | tx_quick_addba + SDIO tx_aval proc |
+| W3-207 | `wave3-207-debug-proc-tx-amsdu.md` | tx AMSDU proc debug leaf |
+| W3-208 | `wave3-208-debug-proc-vht-24g.md` | VHT 24G enable proc leaf |
+
 Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:
 
 - `rtw_debug.c` procfs walkers / register dumps (mostly Rust-wrapped — audit before filing)
