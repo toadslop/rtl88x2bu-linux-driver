@@ -42,3 +42,8 @@ test_pwrctrl_init_p2
 test_pwrctrl_init_p2_rust
 librust_pwrctrl_init.a
 librust_pwrctrl_init_p2.a
+test_init_store_wowlan
+test_init_store_wowlan_wow
+test_init_store_wowlan_rust
+test_init_store_wowlan_wow_rust
+librust_pwrctrl_init_store_wowlan.a

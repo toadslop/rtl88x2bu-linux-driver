@@ -19,6 +19,7 @@ PS_RDY_SHIM := host_pwrctrl_ps_rdy_shim.c
 SET_PS_SHIM := host_pwrctrl_set_ps_shim.c
 INIT_SHIM := host_pwrctrl_init_shim.c
 INIT_P2_SHIM := host_pwrctrl_init_p2_shim.c
+INIT_STORE_WOWLAN_ORACLE := host_pwrctrl_init_store_wowlan_oracle.c
 RESUME_SHIM := host_pwrctrl_resume_shim.c
 WAKEUP_SHIM := host_pwrctrl_wakeup_shim.c
 FW_IPS_SHIM := host_pwrctrl_fw_ips_shim.c
@@ -54,6 +55,8 @@ SET_PS_CFLAGS := $(CFLAGS) -DCONFIG_BT_COEXIST -DCONFIG_FW_MULTI_PORT_SUPPORT -D
 SET_PS_PG_WOW_CFLAGS := $(SET_PS_CFLAGS) -DCONFIG_LPS_PG -DCONFIG_WOWLAN
 INIT_CFLAGS := $(CFLAGS) -DCONFIG_CONCURRENT_MODE -DCONFIG_LPS_LCLK -DCONFIG_LPS_PG -DCONFIG_RESUME_IN_WORKQUEUE
 INIT_P2_CFLAGS := $(INIT_CFLAGS) -DCONFIG_WOWLAN -DCONFIG_LPS_ACK -DCONFIG_LPS_POFF
+INIT_STORE_WOWLAN_CFLAGS := $(INIT_CFLAGS)
+INIT_STORE_WOWLAN_WOW_CFLAGS := $(INIT_P2_CFLAGS)
 RESUME_CFLAGS := $(CFLAGS) -DCONFIG_HAS_EARLYSUSPEND -DCONFIG_RESUME_IN_WORKQUEUE
 WAKEUP_CFLAGS := $(CFLAGS) -DCONFIG_IPS
 PM_CFLAGS := $(CFLAGS) -DCONFIG_WOWLAN -DCONFIG_LPS_1T1R
@@ -68,7 +71,8 @@ FW_IPS_CFLAGS := $(CFLAGS) -DCONFIG_FWLPS_IN_IPS -DCONFIG_LPS_LCLK -DCONFIG_BT_C
 	test-unregister-alive test-unregister-alive-rust test-wow-lps test-wow-lps-rust \
 	test-pm-setters test-pm-setters-rust \
 	test-ps-rdy test-ps-rdy-rust test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init test-init-rust \
-	test-fw-in-ips test-fw-in-ips-rust test-cpwm-int test-cpwm-int-rust clean
+	test-fw-in-ips test-fw-in-ips-rust test-cpwm-int test-cpwm-int-rust \
+	test-init-store-wowlan test-init-store-wowlan-wow clean
 
 all: test test-lps test-lps-enter test-leave-all test-leave-all-rust test-ips test-ips-rust \
 	test-ps-processor test-ps-processor-rust test-lps-tp test-lps-tp-rust test-rpwm test-rpwm-rust \
@@ -81,7 +85,8 @@ test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust
 	test-lps-tp-rust test-lps-exec test-rpwm test-rpwm-rust test-register-alive test-register-alive-rust \
 	test-unregister-alive test-unregister-alive-rust test-wow-lps test-wow-lps-rust test-pm-setters test-ps-rdy test-ps-rdy-rust \
 	test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init test-init-rust \
-	test-init-p2 test-init-p2-rust test-fw-in-ips test-fw-in-ips-rust test-cpwm-int test-cpwm-int-rust test-resume test-resume-rust test-wakeup test-wakeup-rust
+	test-init-p2 test-init-p2-rust test-fw-in-ips test-fw-in-ips-rust test-cpwm-int test-cpwm-int-rust test-resume test-resume-rust test-wakeup test-wakeup-rust \
+	test-init-store-wowlan test-init-store-wowlan-wow
 
 test-cpwm-int-rust: test_pwrctrl_cpwm_int_rust
 	./test_pwrctrl_cpwm_int_rust cpwm_int_vectors.json
@@ -404,6 +409,20 @@ test_pwrctrl_fw_in_ips_rust: test_pwrctrl_fw_in_ips.c librust_pwrctrl_fw_ips.a $
 test_pwrctrl_init_rust: test_pwrctrl_init.c librust_pwrctrl_init.a $(HOST_JSON)
 	$(CC) $(INIT_CFLAGS) -o $@ test_pwrctrl_init.c $(HOST_JSON) librust_pwrctrl_init.a
 
+test-init-store-wowlan: test_init_store_wowlan
+	./test_init_store_wowlan init_store_wowlan_vectors.json
+
+test-init-store-wowlan-wow: test_init_store_wowlan_wow
+	./test_init_store_wowlan_wow init_store_wowlan_wow_vectors.json
+
+test_init_store_wowlan: init_store_wowlan_l2.c $(INIT_STORE_WOWLAN_ORACLE) $(HOST_JSON)
+	$(CC) $(INIT_STORE_WOWLAN_CFLAGS) -o $@ init_store_wowlan_l2.c \
+		$(INIT_STORE_WOWLAN_ORACLE) $(HOST_JSON)
+
+test_init_store_wowlan_wow: init_store_wowlan_l2.c $(INIT_STORE_WOWLAN_ORACLE) $(HOST_JSON)
+	$(CC) $(INIT_STORE_WOWLAN_WOW_CFLAGS) -o $@ init_store_wowlan_l2.c \
+		$(INIT_STORE_WOWLAN_ORACLE) $(HOST_JSON)
+
 test-resume: test_pwrctrl_resume
 	./test_pwrctrl_resume
 
@@ -455,6 +474,7 @@ clean:
 		test_pwrctrl_set_ps_rust_pg_wow librust_pwrctrl_set_ps.a librust_pwrctrl_set_ps_pg_wow.a \
 		test_pwrctrl_init test_pwrctrl_init_rust librust_pwrctrl_init.a \
 		test_pwrctrl_init_p2 test_pwrctrl_init_p2_rust librust_pwrctrl_init_p2.a \
+		test_init_store_wowlan test_init_store_wowlan_wow \
 		test_pwrctrl_fw_in_ips test_pwrctrl_fw_in_ips_rust librust_pwrctrl_fw_ips.a \
 		test_pwrctrl_cpwm_int test_pwrctrl_cpwm_int_rust librust_pwrctrl_cpwm_int.a \
 		test_pwrctrl_wakeup test_pwrctrl_wakeup_rust librust_pwrctrl_wakeup.a \
