@@ -601,6 +601,29 @@ void rtw_mi_buddy_stop_drv_threads(_adapter *adapter)
 }
 #endif /* !CONFIG_RUST_MI_SCAN_DRV_LEAF */
 
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_MI_TIMER_INTF_LEAF)
+void rtw_rust_mi_cancel_all_timer(_adapter *iface)
+{
+	rtw_cancel_all_timer(iface);
+}
+
+void rtw_rust_mi_reset_drv_sw(_adapter *iface)
+{
+	rtw_reset_drv_sw(iface);
+}
+
+void rtw_rust_mi_intf_start(_adapter *iface)
+{
+	rtw_intf_start(iface);
+}
+
+void rtw_rust_mi_intf_stop(_adapter *iface)
+{
+	rtw_intf_stop(iface);
+}
+#endif /* CONFIG_RUST && CONFIG_RUST_MI_TIMER_INTF_LEAF */
+
+#ifndef CONFIG_RUST_MI_TIMER_INTF_LEAF
 static u8 _rtw_mi_cancel_all_timer(_adapter *adapter, void *data)
 {
 	rtw_cancel_all_timer(adapter);
@@ -656,6 +679,7 @@ void rtw_mi_buddy_intf_stop(_adapter *adapter)
 {
 	_rtw_mi_process(adapter, _TRUE, NULL, _rtw_mi_intf_stop);
 }
+#endif /* !CONFIG_RUST_MI_TIMER_INTF_LEAF */
 
 #ifdef CONFIG_NEW_NETDEV_HDL
 u8 rtw_mi_hal_iface_init(_adapter *padapter)
