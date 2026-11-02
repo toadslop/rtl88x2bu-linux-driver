@@ -61,13 +61,24 @@ test-dump-c: test_mi_dump_status
 test-dump-rust: test_mi_dump_status_rust
 	./test_mi_dump_status_rust mi_dump_status_vectors.json
 
-test-scan-drv: test-scan-drv-c
+test-scan-drv: test-scan-drv-c test-scan-drv-rust
 
 test-scan-drv-c: test_mi_scan_drv
 	./test_mi_scan_drv mi_scan_drv_vectors.json
 
+test-scan-drv-rust: test_mi_scan_drv_rust
+	./test_mi_scan_drv_rust mi_scan_drv_vectors.json
+
 test_mi_scan_drv: mi_scan_drv_l2.c mi_scan_drv_c_oracle.c $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ mi_scan_drv_l2.c mi_scan_drv_c_oracle.c $(HOST_JSON)
+
+librust_mi_scan_drv.a: $(RUST_MI)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_mi_scan_drv_test \
+		--crate-type staticlib $(RUST_MI) -o $@
+
+test_mi_scan_drv_rust: mi_scan_drv_l2.c mi_scan_drv_c_oracle.c librust_mi_scan_drv.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DHOST_MI_SCAN_DRV_RUST -o $@ mi_scan_drv_l2.c \
+		mi_scan_drv_c_oracle.c $(HOST_JSON) librust_mi_scan_drv.a
 
 test_mi_dump_status: mi_dump_status_l2.c mi_dump_status_c_oracle.c $(HOST_JSON)
 	$(CC) $(MI_DUMP_CFLAGS) -I$(HOST_INC) -o $@ mi_dump_status_l2.c \
@@ -130,6 +141,6 @@ clean:
 	rm -f test_mi_ch_union test_mi_ch_union_rust test_mi_netif_buddy \
 		test_mi_netif_buddy_rust test_mi_status test_mi_status_rust \
 		test_mi_dump_status test_mi_dump_status_rust \
-		test_mi_scan_drv \
+		test_mi_scan_drv test_mi_scan_drv_rust \
 		$(MI_STATUS_HOST_OBJS) librust_mi.a librust_mi_netif.a librust_mi_status.a \
-		librust_mi_dump.a
+		librust_mi_dump.a librust_mi_scan_drv.a

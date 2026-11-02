@@ -480,12 +480,18 @@ mod _mi_status_host;
 #[path = "rtw_mi_dump_status.rs"]
 mod _mi_dump_status;
 
+#[cfg(any(host_mi_scan_drv_test, rust_mi_scan_drv_leaf))]
+#[path = "rtw_mi_scan_drv.rs"]
+mod _mi_scan_drv;
+
 #[cfg(not(any(
     host_mi_ch_union_test,
     host_mi_netif_buddy_test,
     host_mi_status_test,
     host_mi_dump_test,
+    host_mi_scan_drv_test,
     rust_mi_netif_leaf,
-    rust_mi_dump_leaf
+    rust_mi_dump_leaf,
+    rust_mi_scan_drv_leaf
 )))]
 pub fn mi_ch_union_stub() {}
