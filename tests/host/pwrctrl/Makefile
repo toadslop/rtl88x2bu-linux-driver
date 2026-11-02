@@ -72,7 +72,8 @@ FW_IPS_CFLAGS := $(CFLAGS) -DCONFIG_FWLPS_IN_IPS -DCONFIG_LPS_LCLK -DCONFIG_BT_C
 	test-pm-setters test-pm-setters-rust \
 	test-ps-rdy test-ps-rdy-rust test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init test-init-rust \
 	test-fw-in-ips test-fw-in-ips-rust test-cpwm-int test-cpwm-int-rust \
-	test-init-store-wowlan test-init-store-wowlan-wow clean
+	test-init-store-wowlan test-init-store-wowlan-wow \
+	test-init-store-wowlan-rust test-init-store-wowlan-wow-rust clean
 
 all: test test-lps test-lps-enter test-leave-all test-leave-all-rust test-ips test-ips-rust \
 	test-ps-processor test-ps-processor-rust test-lps-tp test-lps-tp-rust test-rpwm test-rpwm-rust \
@@ -86,7 +87,8 @@ test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust
 	test-unregister-alive test-unregister-alive-rust test-wow-lps test-wow-lps-rust test-pm-setters test-ps-rdy test-ps-rdy-rust \
 	test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init test-init-rust \
 	test-init-p2 test-init-p2-rust test-fw-in-ips test-fw-in-ips-rust test-cpwm-int test-cpwm-int-rust test-resume test-resume-rust test-wakeup test-wakeup-rust \
-	test-init-store-wowlan test-init-store-wowlan-wow
+	test-init-store-wowlan test-init-store-wowlan-wow \
+	test-init-store-wowlan-rust test-init-store-wowlan-wow-rust
 
 test-cpwm-int-rust: test_pwrctrl_cpwm_int_rust
 	./test_pwrctrl_cpwm_int_rust cpwm_int_vectors.json
