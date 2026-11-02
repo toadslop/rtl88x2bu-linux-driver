@@ -38,7 +38,15 @@ extern "C" {
     fn rtw_rx_ampdu_set_size(adapter: *mut c_void, size: U8, reason: U8) -> U8;
     fn rtw_rx_ampdu_apply(adapter: *mut c_void);
     fn dump_regsty_rx_ampdu_size_limit(sel: *mut c_void, adapter: *mut c_void);
+    fn rtw_rust_debug_proc_sscanf_hhu_pair(
+        tmp: *const u8,
+        first: *mut U8,
+        second: *mut U8,
+    ) -> c_int;
 }
+
+const EFAULT: c_long = -14;
+const PROC_SET_TMP: usize = 32;
 
 fn print_bytes(sel: *mut c_void, bytes: &[u8]) {
     let mut buf = [0i8; 128];
@@ -153,70 +161,21 @@ pub extern "C" fn proc_get_rx_ampdu(m: *mut c_void, _v: *mut c_void) -> c_int {
     0
 }
 
-fn parse_u8_field(bytes: &[u8]) -> Option<U8> {
-    if bytes.is_empty() {
-        return None;
-    }
-    let mut val: u32 = 0;
-    for &b in bytes {
-        if b == b' ' || b == b'\t' || b == b'\n' || b == b'\r' {
-            continue;
-        }
-        if b < b'0' || b > b'9' {
-            return None;
-        }
-        val = val * 10 + (b - b'0') as u32;
-        if val > 255 {
-            return None;
-        }
-    }
-    Some(val as U8)
-}
-
-fn parse_set_line(tmp: &[u8], count: usize) -> (Option<U8>, Option<U8>) {
-    let mut n = count;
-    while n > 0 && (tmp[n - 1] == b'\n' || tmp[n - 1] == b'\r' || tmp[n - 1] == b' ') {
-        n -= 1;
-    }
-    let slice = &tmp[..n];
-    let mut parts = 0usize;
-    let mut accept: Option<U8> = None;
-    let mut size: Option<U8> = None;
-    let mut start = 0usize;
-    let mut i = 0usize;
-    while i <= slice.len() {
-        if i == slice.len() || slice[i] == b' ' || slice[i] == b'\t' {
-            if start < i {
-                let field = &slice[start..i];
-                if parts == 0 {
-                    accept = parse_u8_field(field);
-                    parts = 1;
-                } else if parts == 1 {
-                    size = parse_u8_field(field);
-                    parts = 2;
-                }
-            }
-            start = i + 1;
-        }
-        i += 1;
-    }
-    (accept, size)
-}
-
-fn apply_set_rx_ampdu(adapter: *mut c_void, tmp: &[u8], count: usize) -> c_long {
-    let (accept, size) = parse_set_line(tmp, count);
-    if accept.is_some() {
+fn apply_set_rx_ampdu_from_tmp(adapter: *mut c_void, tmp: *const u8) {
+    let mut accept = 0u8;
+    let mut size = 0u8;
+    let num = unsafe { rtw_rust_debug_proc_sscanf_hhu_pair(tmp, &mut accept, &mut size) };
+    if num >= 1 {
         unsafe {
-            rtw_rx_ampdu_set_accept(adapter, accept.unwrap(), RX_AMPDU_DRV_FIXED);
+            rtw_rx_ampdu_set_accept(adapter, accept, RX_AMPDU_DRV_FIXED);
         }
     }
-    if size.is_some() {
+    if num >= 2 {
         unsafe {
-            rtw_rx_ampdu_set_size(adapter, size.unwrap(), RX_AMPDU_DRV_FIXED);
+            rtw_rx_ampdu_set_size(adapter, size, RX_AMPDU_DRV_FIXED);
         }
     }
     unsafe { rtw_rx_ampdu_apply(adapter) };
-    count as c_long
 }
 
 #[cfg(any(config_rtw_debug, config_proc_debug))]
@@ -228,18 +187,23 @@ pub extern "C" fn proc_set_rx_ampdu(
     _pos: *mut c_long,
     data: *mut c_void,
 ) -> c_long {
-    let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
-    let mut tmp = [0i8; 32];
-    let n =
-        unsafe { rtw_rust_debug_proc_read_user_line(buffer, count, tmp.as_mut_ptr(), tmp.len()) };
-    if n < 0 {
-        return n as c_long;
+    if count < 1 {
+        return EFAULT;
     }
-    apply_set_rx_ampdu(
-        adapter,
-        unsafe { core::slice::from_raw_parts(tmp.as_ptr() as *const u8, n as usize) },
-        n as usize,
-    )
+    if count > PROC_SET_TMP {
+        return EFAULT;
+    }
+    let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
+    let mut tmp = [0i8; PROC_SET_TMP];
+    if !buffer.is_null() {
+        let n = unsafe {
+            rtw_rust_debug_proc_read_user_line(buffer, count, tmp.as_mut_ptr(), tmp.len())
+        };
+        if n > 0 {
+            apply_set_rx_ampdu_from_tmp(adapter, tmp.as_ptr() as *const u8);
+        }
+    }
+    count as c_long
 }
 
 #[cfg(host_rtw_debug_proc_ampdu_test)]
@@ -249,9 +213,12 @@ pub extern "C" fn host_proc_set_rx_ampdu_from_buf(
     buffer: *const u8,
     count: usize,
 ) -> c_long {
-    if buffer.is_null() {
-        return -1;
+    if buffer.is_null() || count < 1 {
+        return EFAULT;
     }
-    let slice = unsafe { core::slice::from_raw_parts(buffer, count) };
-    apply_set_rx_ampdu(adapter, slice, count)
+    if count > PROC_SET_TMP {
+        return EFAULT;
+    }
+    apply_set_rx_ampdu_from_tmp(adapter, buffer);
+    count as c_long
 }
