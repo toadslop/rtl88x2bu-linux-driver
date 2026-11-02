@@ -570,6 +570,23 @@ u8 rtw_rust_debug_fix_rx_ampdu_size(_adapter *adapter)
 	return adapter->fix_rx_ampdu_size;
 }
 
+ssize_t rtw_rust_debug_proc_read_user_line(const char __user *buffer, size_t count,
+					   char *tmp, size_t tmp_size)
+{
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > tmp_size) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (!buffer || copy_from_user(tmp, buffer, count))
+		return -EFAULT;
+
+	return count;
+}
+
 void rtw_rust_debug_proc_emit_defs_param(void *sel, _adapter *adapter)
 {
 	struct mlme_priv *mlme = &adapter->mlmepriv;
