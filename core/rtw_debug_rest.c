@@ -3905,6 +3905,7 @@ void dump_regsty_rx_ampdu_size_limit(void *sel, _adapter *adapter)
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-170 in rust/rtw_debug_regsty.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_rx_ampdu(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -3932,6 +3933,7 @@ int proc_get_rx_ampdu(struct seq_file *m, void *v)
 
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-204 in rust/rtw_debug_proc_ampdu.rs */
 
 ssize_t proc_set_rx_ampdu(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {

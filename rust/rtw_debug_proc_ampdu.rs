@@ -92,7 +92,7 @@ fn emit_get_rx_ampdu(sel: *mut c_void, adapter: *mut c_void) {
     let fix_accept = unsafe { rtw_rust_debug_fix_rx_ampdu_accept(adapter) };
     let fix_size = unsafe { rtw_rust_debug_fix_rx_ampdu_size(adapter) };
     let mut line = [0u8; 48];
-    let mut pos = 0usize;
+    let mut pos;
 
     print_bytes(sel, b"accept: ");
     pos = 0;
