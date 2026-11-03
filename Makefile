@@ -1327,6 +1327,8 @@ endif
 ifeq ($(CONFIG_TDLS), y)
 ccflags-y += -DCONFIG_TDLS
 rustflags-y += --cfg tdls
+rustflags-y += --cfg config_tdls
+$(MODULE_NAME)-y += rust/rtw_debug_proc_tdls.o
 endif
 
 ifeq ($(CONFIG_WIFI_MONITOR), y)
