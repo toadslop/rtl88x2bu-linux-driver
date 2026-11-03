@@ -1,0 +1,43 @@
+{
+  "vectors": [
+    {
+      "name": "set_tx_amsdu_clear_counters",
+      "tx_amsdu": 2,
+      "tx_amsdu_rate": 0,
+      "amsdu_debug_set_timer": 11,
+      "amsdu_debug_timeout": 22,
+      "amsdu_debug_coalesce_one": 33,
+      "amsdu_debug_coalesce_two": 44,
+      "set": "tx_amsdu",
+      "set_input": "3 ",
+      "get": "tx_amsdu",
+      "expect": "tx amsdu = 2\namsdu set timer conut = 0\namsdu  time out count = 0\namsdu coalesce one count = 0\namsdu coalesce two count = 0\n"
+    },
+    {
+      "name": "set_tx_amsdu_rate",
+      "tx_amsdu": 0,
+      "tx_amsdu_rate": 0,
+      "amsdu_debug_set_timer": 0,
+      "amsdu_debug_timeout": 0,
+      "amsdu_debug_coalesce_one": 0,
+      "amsdu_debug_coalesce_two": 0,
+      "set": "tx_amsdu_rate",
+      "set_input": "400 ",
+      "get": "tx_amsdu_rate",
+      "expect": "tx amsdu rate = 400 Mbps\n"
+    },
+    {
+      "name": "set_tx_amsdu_over_max",
+      "tx_amsdu": 2,
+      "tx_amsdu_rate": 0,
+      "amsdu_debug_set_timer": 0,
+      "amsdu_debug_timeout": 0,
+      "amsdu_debug_coalesce_one": 0,
+      "amsdu_debug_coalesce_two": 0,
+      "set": "tx_amsdu",
+      "set_input": "9 ",
+      "get": "tx_amsdu",
+      "expect": "tx amsdu = 0\namsdu set timer conut = 0\namsdu  time out count = 0\namsdu coalesce one count = 0\namsdu coalesce two count = 0\n"
+    }
+  ]
+}
