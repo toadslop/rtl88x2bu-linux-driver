@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-// proc rx_ampdu get/set (W3-204); driver AMPDU tuning procs (W3-205).
+// proc rx_ampdu get/set (W3-204); driver AMPDU tuning procs (W3-205); tx AMPDU misc (W3-206).
 
 #![allow(
     dead_code,
@@ -53,6 +53,17 @@ extern "C" {
     fn rtw_rust_debug_set_driver_ampdu_spacing(adapter: *mut c_void, spacing: U8);
     fn rtw_rust_debug_driver_tx_max_agg_num(adapter: *mut c_void) -> U8;
     fn rtw_rust_debug_set_driver_tx_max_agg_num(adapter: *mut c_void, agg_num: U8);
+    fn rtw_rust_debug_proc_sscanf_u32_pair(
+        tmp: *const u8,
+        first: *mut c_uint,
+        second: *mut c_uint,
+    ) -> c_int;
+    fn rtw_rust_debug_tx_quick_addba_req(adapter: *mut c_void) -> U8;
+    fn rtw_rust_debug_set_tx_quick_addba_req(adapter: *mut c_void, enable: U8);
+    fn rtw_rust_debug_tx_aval_int_thr_mode(adapter: *mut c_void) -> U8;
+    fn rtw_rust_debug_tx_aval_int_thr_value(adapter: *mut c_void) -> U8;
+    fn rtw_rust_debug_set_tx_aval_int_thr_mode(adapter: *mut c_void, mode: U8);
+    fn rtw_rust_debug_set_tx_aval_int_thr_value(adapter: *mut c_void, val: U8);
 }
 
 const EFAULT: c_long = -14;
@@ -432,4 +443,165 @@ pub extern "C" fn host_proc_set_rx_ampdu_from_buf(
     }
     apply_set_rx_ampdu_from_tmp(adapter, buffer);
     count as c_long
+}
+
+fn emit_get_tx_quick_addba(sel: *mut c_void, adapter: *mut c_void) {
+    let val = unsafe { rtw_rust_debug_tx_quick_addba_req(adapter) };
+    push_u8_hex_c(sel, b"tx_quick_addba_req = ", val);
+}
+
+#[cfg(config_sdio_tx_enable_aval_int)]
+fn emit_get_tx_aval_th(sel: *mut c_void, adapter: *mut c_void) {
+    let mode = unsafe { rtw_rust_debug_tx_aval_int_thr_mode(adapter) };
+    match mode {
+        0 => {
+            let mut line = [0u8; 64];
+            let mut pos = 0usize;
+            push_str(&mut line, &mut pos, b"tx_aval_int_thr_mode = ");
+            push_u8_dec(&mut line, &mut pos, mode);
+            push_str(&mut line, &mut pos, b" (auto) ");
+            print_line(sel, &line[..pos]);
+        }
+        1 => {
+            let val = unsafe { rtw_rust_debug_tx_aval_int_thr_value(adapter) };
+            let mut line = [0u8; 64];
+            let mut pos = 0usize;
+            push_str(&mut line, &mut pos, b"tx_aval_int_thr_mode = ");
+            push_u8_dec(&mut line, &mut pos, mode);
+            push_str(&mut line, &mut pos, b" (fixed)");
+            print_line(sel, &line[..pos]);
+            pos = 0;
+            push_str(&mut line, &mut pos, b"tx_aval_threshold = 0x");
+            push_u8_hex(&mut line, &mut pos, val);
+            print_line(sel, &line[..pos]);
+        }
+        2 => {
+            let mut line = [0u8; 72];
+            let mut pos = 0usize;
+            push_str(&mut line, &mut pos, b"tx_aval_int_thr_mode = ");
+            push_u8_dec(&mut line, &mut pos, mode);
+            push_str(&mut line, &mut pos, b"(by sdio_tx_max_len)");
+            print_line(sel, &line[..pos]);
+        }
+        _ => {}
+    }
+}
+
+#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[no_mangle]
+pub extern "C" fn proc_get_tx_quick_addba_req(m: *mut c_void, _v: *mut c_void) -> c_int {
+    let adapter = adapter_from_seq(m);
+    if !adapter.is_null() {
+        emit_get_tx_quick_addba(m, adapter);
+    }
+    0
+}
+
+#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[no_mangle]
+pub extern "C" fn proc_set_tx_quick_addba_req(
+    _file: *mut c_void,
+    buffer: *const c_void,
+    count: usize,
+    _pos: *mut c_long,
+    data: *mut c_void,
+) -> c_long {
+    if count < 1 || count > PROC_SET_TMP {
+        return EFAULT;
+    }
+    let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
+    let mut tmp = [0i8; PROC_SET_TMP];
+    if let Some(_) = proc_set_read_tmp(buffer, count, &mut tmp) {
+        if !adapter.is_null() {
+            let mut enable = 0u32;
+            let num =
+                unsafe { rtw_rust_debug_proc_sscanf_u32(tmp.as_ptr() as *const u8, &mut enable) };
+            if num == 1 {
+                unsafe { rtw_rust_debug_set_tx_quick_addba_req(adapter, enable as U8) };
+            }
+        }
+    }
+    count as c_long
+}
+
+#[cfg(all(
+    any(config_rtw_debug, config_proc_debug),
+    config_sdio_tx_enable_aval_int
+))]
+#[no_mangle]
+pub extern "C" fn proc_get_tx_aval_th(m: *mut c_void, _v: *mut c_void) -> c_int {
+    let adapter = adapter_from_seq(m);
+    if !adapter.is_null() {
+        emit_get_tx_aval_th(m, adapter);
+    }
+    0
+}
+
+#[cfg(all(
+    any(config_rtw_debug, config_proc_debug),
+    config_sdio_tx_enable_aval_int
+))]
+#[no_mangle]
+pub extern "C" fn proc_set_tx_aval_th(
+    _file: *mut c_void,
+    buffer: *const c_void,
+    count: usize,
+    _pos: *mut c_long,
+    data: *mut c_void,
+) -> c_long {
+    if count < 1 || count > PROC_SET_TMP {
+        return EFAULT;
+    }
+    let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
+    let mut tmp = [0i8; PROC_SET_TMP];
+    if let Some(_) = proc_set_read_tmp(buffer, count, &mut tmp) {
+        let mut mode = 0u32;
+        let mut threshold = 0u32;
+        let num = unsafe {
+            rtw_rust_debug_proc_sscanf_u32_pair(
+                tmp.as_ptr() as *const u8,
+                &mut mode,
+                &mut threshold,
+            )
+        };
+        if num >= 1 {
+            unsafe { rtw_rust_debug_set_tx_aval_int_thr_mode(adapter, mode as U8) };
+        }
+        if num >= 2 {
+            unsafe { rtw_rust_debug_set_tx_aval_int_thr_value(adapter, threshold as U8) };
+        }
+    }
+    count as c_long
+}
+
+#[cfg(host_rtw_debug_proc_ampdu_test)]
+#[no_mangle]
+pub extern "C" fn host_proc_set_tx_quick_addba_req_from_buf(
+    adapter: *mut c_void,
+    buffer: *const u8,
+    count: usize,
+) -> c_long {
+    proc_set_tx_quick_addba_req(
+        core::ptr::null_mut(),
+        buffer as *const c_void,
+        count,
+        core::ptr::null_mut(),
+        adapter,
+    )
+}
+
+#[cfg(all(host_rtw_debug_proc_ampdu_test, config_sdio_tx_enable_aval_int))]
+#[no_mangle]
+pub extern "C" fn host_proc_set_tx_aval_th_from_buf(
+    adapter: *mut c_void,
+    buffer: *const u8,
+    count: usize,
+) -> c_long {
+    proc_set_tx_aval_th(
+        core::ptr::null_mut(),
+        buffer as *const c_void,
+        count,
+        core::ptr::null_mut(),
+        adapter,
+    )
 }

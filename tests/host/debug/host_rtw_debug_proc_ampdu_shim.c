@@ -109,6 +109,42 @@ void rtw_rust_debug_set_driver_tx_max_agg_num(_adapter *adapter, u8 agg_num)
 	adapter->driver_tx_max_agg_num = agg_num;
 }
 
+int rtw_rust_debug_proc_sscanf_u32_pair(const char *tmp, unsigned int *first,
+					unsigned int *second)
+{
+	return sscanf(tmp, "%u %u", first, second);
+}
+
+u8 rtw_rust_debug_tx_quick_addba_req(_adapter *adapter)
+{
+	return adapter->registrypriv.tx_quick_addba_req;
+}
+
+void rtw_rust_debug_set_tx_quick_addba_req(_adapter *adapter, u8 enable)
+{
+	adapter->registrypriv.tx_quick_addba_req = enable;
+}
+
+u8 rtw_rust_debug_tx_aval_int_thr_mode(_adapter *adapter)
+{
+	return adapter->dvobj.tx_aval_int_thr_mode;
+}
+
+u8 rtw_rust_debug_tx_aval_int_thr_value(_adapter *adapter)
+{
+	return adapter->dvobj.tx_aval_int_thr_value;
+}
+
+void rtw_rust_debug_set_tx_aval_int_thr_mode(_adapter *adapter, u8 mode)
+{
+	adapter->dvobj.tx_aval_int_thr_mode = mode;
+}
+
+void rtw_rust_debug_set_tx_aval_int_thr_value(_adapter *adapter, u8 val)
+{
+	adapter->dvobj.tx_aval_int_thr_value = val;
+}
+
 u8 rtw_rx_ampdu_is_accept(_adapter *adapter)
 {
 	if (adapter->fix_rx_ampdu_accept != RX_AMPDU_ACCEPT_INVALID)
