@@ -3276,6 +3276,44 @@ ssize_t rtw_rust_debug_proc_set_tx_amsdu_rate(_adapter *adapter,
 #endif /* CONFIG_TX_AMSDU */
 #endif /* CONFIG_80211N_HT */
 
+#ifdef CONFIG_80211AC_VHT
+void rtw_rust_debug_proc_emit_vht_24g_enable(void *sel, _adapter *adapter)
+{
+	struct registry_priv *pregpriv = &adapter->registrypriv;
+
+	if (pregpriv)
+		RTW_PRINT_SEL(sel, "%d\n", pregpriv->vht_24g_enable);
+}
+
+ssize_t rtw_rust_debug_proc_set_vht_24g_enable(_adapter *adapter,
+					       const char __user *buffer,
+					       size_t count)
+{
+	struct registry_priv *pregpriv = &adapter->registrypriv;
+	char tmp[32];
+	u32 mode;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%d ", &mode);
+
+		if (num == 1 && pregpriv && mode < 2) {
+			pregpriv->vht_24g_enable = mode;
+			RTW_INFO("vht_24g_enable = %d\n", pregpriv->vht_24g_enable);
+		}
+	}
+
+	return count;
+}
+#endif /* CONFIG_80211AC_VHT */
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */
