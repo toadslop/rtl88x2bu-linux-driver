@@ -517,11 +517,12 @@ pub extern "C" fn proc_set_tx_quick_addba_req(
     let mut tmp = [0i8; PROC_SET_TMP];
     if let Some(_) = proc_set_read_tmp(buffer, count, &mut tmp) {
         if !adapter.is_null() {
-        let mut enable = 0u32;
-        let num = unsafe { rtw_rust_debug_proc_sscanf_u32(tmp.as_ptr() as *const u8, &mut enable) };
-        if num == 1 {
-            unsafe { rtw_rust_debug_set_tx_quick_addba_req(adapter, enable as U8) };
-        }
+            let mut enable = 0u32;
+            let num =
+                unsafe { rtw_rust_debug_proc_sscanf_u32(tmp.as_ptr() as *const u8, &mut enable) };
+            if num == 1 {
+                unsafe { rtw_rust_debug_set_tx_quick_addba_req(adapter, enable as U8) };
+            }
         }
     }
     count as c_long
