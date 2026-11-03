@@ -1,0 +1,26 @@
+{
+  "vectors": [
+    {
+      "name": "get_vht_24g_enable",
+      "vht_24g_enable": 1,
+      "get": "vht_24g_enable",
+      "expect": "1\n"
+    },
+    {
+      "name": "set_vht_24g_enable",
+      "vht_24g_enable": 0,
+      "set": "vht_24g_enable",
+      "set_input": "1 ",
+      "get": "vht_24g_enable",
+      "expect": "1\n"
+    },
+    {
+      "name": "set_vht_24g_over_max",
+      "vht_24g_enable": 0,
+      "set": "vht_24g_enable",
+      "set_input": "2 ",
+      "get": "vht_24g_enable",
+      "expect": "0\n"
+    }
+  ]
+}
