@@ -1,0 +1,35 @@
+{
+  "vectors": [
+    {
+      "name": "quick_zero",
+      "proc": "quick",
+      "tx_quick_addba_req": 0,
+      "expect": "tx_quick_addba_req = 0\n"
+    },
+    {
+      "name": "quick_one",
+      "proc": "quick",
+      "tx_quick_addba_req": 1,
+      "expect": "tx_quick_addba_req = 1\n"
+    },
+    {
+      "name": "aval_auto",
+      "proc": "aval",
+      "tx_aval_int_thr_mode": 0,
+      "expect": "tx_aval_int_thr_mode = 0 (auto)\n"
+    },
+    {
+      "name": "aval_fixed",
+      "proc": "aval",
+      "tx_aval_int_thr_mode": 1,
+      "tx_aval_int_thr_value": 42,
+      "expect": "tx_aval_int_thr_mode = 1 (fixed)\ntx_aval_threshold = 0x2a\n"
+    },
+    {
+      "name": "aval_sdio_len",
+      "proc": "aval",
+      "tx_aval_int_thr_mode": 2,
+      "expect": "tx_aval_int_thr_mode = 2(by sdio_tx_max_len)\n"
+    }
+  ]
+}

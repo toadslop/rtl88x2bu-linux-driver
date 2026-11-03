@@ -8,8 +8,14 @@
 
 typedef uint8_t u8;
 
+struct dvobj_priv {
+	u8 tx_aval_int_thr_mode;
+	u8 tx_aval_int_thr_value;
+};
+
 struct registry_priv {
 	u8 rx_ampdu_sz_limit_by_nss_bw[4][4];
+	u8 tx_quick_addba_req;
 };
 
 struct _adapter {
@@ -22,10 +28,12 @@ struct _adapter {
 	u8 driver_ampdu_spacing;
 	u8 driver_tx_max_agg_num;
 	struct registry_priv registrypriv;
+	struct dvobj_priv dvobj;
 };
 
 typedef struct _adapter _adapter;
 
+#define adapter_to_dvobj(adapter) (&(adapter)->dvobj)
 #define adapter_to_regsty(adapter) (&(adapter)->registrypriv)
 
 #define RTW_PRINT_SEL(sel, fmt, ...) fprintf((FILE *)(sel), fmt, ##__VA_ARGS__)
