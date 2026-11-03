@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Host L2 oracle runner for W3-212 proc TDLS enable get/set. */
+/* Host L2 oracle runner for W3-212 proc TDLS enable + function info. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,7 +12,7 @@
 #define MAX_NAME 64
 #define MAX_INPUT 32
 #define MAX_FIELD 32
-#define MAX_EXPECT 64
+#define MAX_EXPECT 2048
 
 struct vector {
 	char name[MAX_NAME];
@@ -21,6 +21,8 @@ struct vector {
 	char set_input[MAX_INPUT];
 	char get_field[MAX_FIELD];
 	char expect[MAX_EXPECT];
+	struct tdls_info tdlsinfo;
+	int has_tdlsinfo;
 };
 
 static void unescape_expect(char *s)
@@ -49,6 +51,57 @@ static int parse_u8_field(const char *obj, size_t len, const char *key, u8 *out)
 	return 0;
 }
 
+static const char *json_object_end(const char *start)
+{
+	int depth = 0;
+	const char *p = start;
+
+	if (*p != '{')
+		return NULL;
+	for (; *p; p++) {
+		if (*p == '{')
+			depth++;
+		else if (*p == '}') {
+			depth--;
+			if (depth == 0)
+				return p + 1;
+		}
+	}
+	return NULL;
+}
+
+static int parse_tdlsinfo_object(const char *obj, size_t len, struct tdls_info *info)
+{
+	const char *start = host_json_find_key_in(obj, len, "tdlsinfo");
+	const char *end;
+	size_t sub_len;
+
+	if (!start || *start != '{')
+		return -1;
+	end = json_object_end(start);
+	if (!end)
+		return -1;
+	sub_len = (size_t)(end - start);
+
+	memset(info, 0, sizeof(*info));
+	if (parse_u8_field(start, sub_len, "driver_setup", &info->driver_setup))
+		return -1;
+	if (parse_u8_field(start, sub_len, "ap_prohibited", &info->ap_prohibited))
+		return -1;
+	if (parse_u8_field(start, sub_len, "ch_switch_prohibited",
+			    &info->ch_switch_prohibited))
+		return -1;
+	if (parse_u8_field(start, sub_len, "link_established", &info->link_established))
+		return -1;
+	if (parse_u8_field(start, sub_len, "sta_cnt", &info->sta_cnt))
+		return -1;
+	if (parse_u8_field(start, sub_len, "sta_maximum", &info->sta_maximum))
+		return -1;
+	if (parse_u8_field(start, sub_len, "dev_discovered", &info->dev_discovered))
+		return -1;
+	return 0;
+}
+
 static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 {
 	struct vector *v = vec_void;
@@ -58,6 +111,11 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 		return -1;
 	if (parse_u8_field(obj, len, "en_tdls", &v->en_tdls))
 		return -1;
+	if (host_json_find_key_in(obj, len, "tdlsinfo")) {
+		if (parse_tdlsinfo_object(obj, len, &v->tdlsinfo))
+			return -1;
+		v->has_tdlsinfo = 1;
+	}
 	if (host_json_find_key_in(obj, len, "set")) {
 		if (host_json_parse_string_in(obj, len, "set", v->set_field,
 					      sizeof(v->set_field)))
@@ -87,6 +145,8 @@ static int run_vector(const struct vector *v)
 
 	memset(&adapter, 0, sizeof(adapter));
 	adapter.registrypriv.en_tdls = v->en_tdls;
+	if (v->has_tdlsinfo)
+		adapter.tdlsinfo = v->tdlsinfo;
 	dev.priv = &adapter;
 	seq.private = &dev;
 
@@ -111,6 +171,8 @@ static int run_vector(const struct vector *v)
 
 	if (!strcmp(v->get_field, "tdls_enable"))
 		proc_get_tdls_enable(&seq, NULL);
+	else if (!strcmp(v->get_field, "tdlsinfo"))
+		proc_tdls_display_tdls_function_info(&seq);
 	else {
 		fclose(capture);
 		return -1;
@@ -146,6 +208,6 @@ int main(int argc, char **argv)
 			return 1;
 	}
 
-	printf("ok: %zu proc TDLS enable vectors\n", count);
+	printf("ok: %zu proc TDLS vectors\n", count);
 	return 0;
 }

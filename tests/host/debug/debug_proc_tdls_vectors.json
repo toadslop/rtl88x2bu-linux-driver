@@ -19,6 +19,21 @@
       "set_input": "1",
       "get": "tdls_enable",
       "expect": "TDLS is enabled !\n"
+    },
+    {
+      "name": "tdlsinfo_fixture",
+      "en_tdls": 1,
+      "tdlsinfo": {
+        "driver_setup": 1,
+        "ap_prohibited": 0,
+        "ch_switch_prohibited": 1,
+        "link_established": 0,
+        "sta_cnt": 2,
+        "sta_maximum": 0,
+        "dev_discovered": 1
+      },
+      "get": "tdlsinfo",
+      "expect": "============[TDLS Function Info]============\nTDLS Enable                               = _TRUE\nTDLS Driver Setup                         = _TRUE\nTDLS Prohibited                           = _FALSE\nTDLS Channel Switch Prohibited            = _TRUE\nTDLS Link Established                     = _FALSE\nTDLS STA Num (Linked/Allowed)             = 2/4\nTDLS Allowed STA Num Reached              = _FALSE\nTDLS Device Discovered                    = _TRUE\n"
     }
   ]
 }
