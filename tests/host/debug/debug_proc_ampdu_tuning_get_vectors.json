@@ -1,0 +1,28 @@
+{
+  "vectors": [
+    {
+      "name": "factor_two",
+      "field": "rx_factor",
+      "value": 2,
+      "expect": "rx ampdu factor = 2\n"
+    },
+    {
+      "name": "rx_density_five",
+      "field": "rx_density",
+      "value": 5,
+      "expect": "rx ampdu densityg = 5\n"
+    },
+    {
+      "name": "tx_density_three",
+      "field": "tx_density",
+      "value": 3,
+      "expect": "tx ampdu density = 3\n"
+    },
+    {
+      "name": "tx_agg_2a",
+      "field": "tx_agg",
+      "value": 42,
+      "expect": "tx max AMPDU num = 0x2a\n"
+    }
+  ]
+}

@@ -17,6 +17,10 @@ struct _adapter {
 	u8 fix_rx_ampdu_size;
 	u8 host_auto_accept;
 	u8 host_auto_size;
+	u8 driver_rx_ampdu_factor;
+	u8 driver_rx_ampdu_spacing;
+	u8 driver_ampdu_spacing;
+	u8 driver_tx_max_agg_num;
 	struct registry_priv registrypriv;
 };
 

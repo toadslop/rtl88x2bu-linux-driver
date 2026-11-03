@@ -16,4 +16,17 @@ int proc_get_rx_ampdu(struct seq_file *m, void *v);
 long proc_set_rx_ampdu(void *file, const void *buffer, unsigned long count,
 		       long *pos, void *data);
 
+int proc_get_rx_ampdu_factor(struct seq_file *m, void *v);
+long proc_set_rx_ampdu_factor(void *file, const void *buffer, unsigned long count,
+			      long *pos, void *data);
+int proc_get_rx_ampdu_density(struct seq_file *m, void *v);
+long proc_set_rx_ampdu_density(void *file, const void *buffer, unsigned long count,
+			       long *pos, void *data);
+int proc_get_tx_ampdu_density(struct seq_file *m, void *v);
+long proc_set_tx_ampdu_density(void *file, const void *buffer, unsigned long count,
+			       long *pos, void *data);
+int proc_get_tx_max_agg_num(struct seq_file *m, void *v);
+long proc_set_tx_max_agg_num(void *file, const void *buffer, unsigned long count,
+			     long *pos, void *data);
+
 #endif

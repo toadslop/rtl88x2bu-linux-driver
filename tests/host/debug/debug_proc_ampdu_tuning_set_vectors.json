@@ -1,0 +1,40 @@
+{
+  "vectors": [
+    {
+      "name": "rx_factor_clamp",
+      "field": "rx_factor",
+      "input": "4",
+      "expect": 255
+    },
+    {
+      "name": "rx_factor_ok",
+      "field": "rx_factor",
+      "input": "2",
+      "expect": 2
+    },
+    {
+      "name": "rx_density_clamp",
+      "field": "rx_density",
+      "input": "9",
+      "expect": 255
+    },
+    {
+      "name": "rx_density_ok",
+      "field": "rx_density",
+      "input": "3",
+      "expect": 3
+    },
+    {
+      "name": "tx_density_clamp",
+      "field": "tx_density",
+      "input": "8",
+      "expect": 255
+    },
+    {
+      "name": "tx_agg_hex",
+      "field": "tx_agg",
+      "input": "2a",
+      "expect": 42
+    }
+  ]
+}
