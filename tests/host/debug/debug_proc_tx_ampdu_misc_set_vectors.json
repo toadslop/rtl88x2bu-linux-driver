@@ -1,0 +1,24 @@
+{
+  "vectors": [
+    {
+      "name": "set_quick_one",
+      "proc": "quick",
+      "input": "1 ",
+      "expect_tx_quick_addba_req": 1
+    },
+    {
+      "name": "set_aval_mode_only",
+      "proc": "aval",
+      "input": "2 ",
+      "expect_tx_aval_int_thr_mode": 2,
+      "expect_tx_aval_int_thr_value": 0
+    },
+    {
+      "name": "set_aval_fixed_pair",
+      "proc": "aval",
+      "input": "1 200 ",
+      "expect_tx_aval_int_thr_mode": 1,
+      "expect_tx_aval_int_thr_value": 200
+    }
+  ]
+}

@@ -29,4 +29,11 @@ int proc_get_tx_max_agg_num(struct seq_file *m, void *v);
 long proc_set_tx_max_agg_num(void *file, const void *buffer, unsigned long count,
 			     long *pos, void *data);
 
+int proc_get_tx_quick_addba_req(struct seq_file *m, void *v);
+long proc_set_tx_quick_addba_req(void *file, const void *buffer, unsigned long count,
+				 long *pos, void *data);
+int proc_get_tx_aval_th(struct seq_file *m, void *v);
+long proc_set_tx_aval_th(void *file, const void *buffer, unsigned long count,
+			 long *pos, void *data);
+
 #endif
