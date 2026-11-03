@@ -464,3 +464,361 @@ pub extern "C" fn update_attrib_txbf_info(
 ) {
     unsafe { rtw_rust_update_attrib_txbf_info_impl(padapter, pattrib, psta) };
 }
+
+// --- W3-201: txvector + STA beamform cap leaf (host L2 + kernel v2) ---
+
+#[cfg(any(
+    host_bf_txvector_cap_test,
+    all(config_beamforming, beamforming_version_2, w3_201_txvector_kernel,),
+))]
+mod txvector_cap {
+    use super::{U16, U8};
+
+    const WIFI_AP: u32 = 0x10;
+    const WIFI_ADHOC: u32 = 0x20;
+    const WIFI_ADHOC_MASTER: u32 = 0x40;
+    const WIRELESS_11_24N: U8 = 1 << 3;
+    const WIRELESS_11_5N: U8 = 1 << 4;
+    const WIRELESS_11AC: U8 = 1 << 6;
+
+    const HT_BFER: u16 = 1 << 0;
+    const HT_BFEE: u16 = 1 << 1;
+    const HT_STEER: u16 = 0x30;
+    const HT_CHNL: u16 = 0xC0;
+    const VHT_BFER: u16 = 1 << 0;
+    const VHT_BFEE: u16 = 1 << 1;
+    const VHT_MU_STA: u16 = 1 << 3;
+    const VHT_MU_AP: u16 = 1 << 2;
+    const VHT_STS: u16 = 0x700;
+    const VHT_DIM: u16 = 0x7000;
+
+    const BFER_HT: U8 = 0x1;
+    const BFEE_HT: U8 = 0x2;
+    const BFER_VHT_SU: U8 = 0x4;
+    const BFEE_VHT_SU: U8 = 0x8;
+    const BFER_VHT_MU: U8 = 0x10;
+    const BFEE_VHT_MU: U8 = 0x20;
+
+    #[inline]
+    fn chk_fw(st: u32, mask: u32) -> bool {
+        (st & mask) != 0
+    }
+
+    #[inline]
+    fn sup_ht(mode: U8) -> bool {
+        (mode & (WIRELESS_11_24N | WIRELESS_11_5N)) != 0
+    }
+
+    #[inline]
+    fn sup_vht(mode: U8) -> bool {
+        (mode & WIRELESS_11AC) != 0
+    }
+
+    pub(crate) fn get_txvector(
+        fw_state: u32,
+        ap_mac: &[U8; 6],
+        sta_aid: U16,
+        sta_mac: &[U8; 6],
+    ) -> (U8, U16) {
+        if chk_fw(fw_state, WIFI_AP) {
+            let aid = sta_aid & 0x1FF;
+            let val16 = ((ap_mac[5] & 0xF0) >> 4) ^ (ap_mac[5] & 0xF);
+            let paid = (aid + ((val16 as U16) << 5)) & 0x1FF;
+            (63, paid)
+        } else if chk_fw(fw_state, WIFI_ADHOC) || chk_fw(fw_state, WIFI_ADHOC_MASTER) {
+            (63, 0)
+        } else {
+            let paid = ((sta_mac[5] as U16) << 1) | ((sta_mac[4] >> 7) as U16);
+            (0, paid)
+        }
+    }
+
+    pub(crate) fn get_sta_cap(
+        fw_state: u32,
+        sta_wm: U8,
+        mlme_ht: u16,
+        mlme_vht: u16,
+        sta_ht: u16,
+        sta_vht: u16,
+        info_cap: &mut U8,
+    ) -> (U8, U8, U8) {
+        let mut sta_bf_cap = 0u8;
+        let mut sounding_dim = 0u8;
+        let mut comp_steering = 0u8;
+
+        if !sup_ht(sta_wm) {
+            return (sta_bf_cap, sounding_dim, comp_steering);
+        }
+
+        if chk_fw(fw_state, WIFI_AP) {
+            let ht_bf_cap = sta_ht;
+            if (ht_bf_cap & HT_BFEE) != 0 {
+                *info_cap |= BFER_HT;
+                sta_bf_cap |= BFEE_HT;
+                comp_steering = ((ht_bf_cap & HT_STEER) >> 4) as U8;
+            }
+            if (ht_bf_cap & HT_BFER) != 0 {
+                *info_cap |= BFEE_HT;
+                sta_bf_cap |= BFER_HT;
+                sounding_dim = ((ht_bf_cap & HT_CHNL) >> 6) as U8;
+            }
+        } else {
+            let ht_bf_cap = mlme_ht;
+            if (ht_bf_cap & HT_BFEE) != 0 {
+                *info_cap |= BFEE_HT;
+                sta_bf_cap |= BFER_HT;
+                sounding_dim = ((ht_bf_cap & HT_CHNL) >> 6) as U8;
+            }
+            if (ht_bf_cap & HT_BFER) != 0 {
+                *info_cap |= BFER_HT;
+                sta_bf_cap |= BFEE_HT;
+                comp_steering = ((ht_bf_cap & HT_STEER) >> 4) as U8;
+            }
+        }
+
+        if !sup_vht(sta_wm) {
+            return (sta_bf_cap, sounding_dim, comp_steering);
+        }
+
+        if chk_fw(fw_state, WIFI_AP) {
+            let vht_bf_cap = sta_vht;
+            if (vht_bf_cap & VHT_BFEE) != 0 {
+                *info_cap |= BFER_VHT_SU;
+                sta_bf_cap |= BFEE_VHT_SU;
+                if (vht_bf_cap & VHT_MU_STA) != 0 {
+                    *info_cap |= BFER_VHT_MU;
+                    sta_bf_cap |= BFEE_VHT_MU;
+                }
+                comp_steering = ((vht_bf_cap & VHT_STS) >> 8) as U8;
+            }
+            if (vht_bf_cap & VHT_BFER) != 0 {
+                *info_cap |= BFEE_VHT_SU;
+                sta_bf_cap |= BFER_VHT_SU;
+                sounding_dim = ((vht_bf_cap & VHT_DIM) >> 12) as U8;
+            }
+        } else {
+            let vht_bf_cap = mlme_vht;
+            if (vht_bf_cap & VHT_BFEE) != 0 {
+                *info_cap |= BFEE_VHT_SU;
+                sta_bf_cap |= BFER_VHT_SU;
+                if (vht_bf_cap & VHT_MU_STA) != 0 {
+                    *info_cap |= BFEE_VHT_MU;
+                    sta_bf_cap |= BFER_VHT_MU;
+                }
+                sounding_dim = ((vht_bf_cap & VHT_DIM) >> 12) as U8;
+            }
+            if (vht_bf_cap & VHT_BFER) != 0 {
+                *info_cap |= BFER_VHT_SU;
+                sta_bf_cap |= BFEE_VHT_SU;
+                comp_steering = ((vht_bf_cap & VHT_STS) >> 8) as U8;
+            }
+        }
+
+        (sta_bf_cap, sounding_dim, comp_steering)
+    }
+}
+
+#[cfg(host_bf_txvector_cap_test)]
+use txvector_cap::*;
+
+#[cfg(host_bf_txvector_cap_test)]
+#[repr(C)]
+struct BfTxvecStaHt {
+    beamform_cap: U16,
+}
+
+#[cfg(host_bf_txvector_cap_test)]
+#[repr(C)]
+struct BfTxvecStaVht {
+    beamform_cap: U16,
+}
+
+#[cfg(host_bf_txvector_cap_test)]
+#[repr(C)]
+struct BfTxvecStaCmn {
+    mac_addr: [U8; 6],
+    aid: U16,
+}
+
+#[cfg(host_bf_txvector_cap_test)]
+#[repr(C)]
+struct BfTxvecSta {
+    wireless_mode: U8,
+    cmn: BfTxvecStaCmn,
+    htpriv: BfTxvecStaHt,
+    vhtpriv: BfTxvecStaVht,
+}
+
+#[cfg(host_bf_txvector_cap_test)]
+#[repr(C)]
+struct BfTxvecMlme {
+    fw_state: u32,
+    mac_addr: [U8; 6],
+    ht_beamform_cap: U16,
+    vht_beamform_cap: U16,
+}
+
+#[cfg(host_bf_txvector_cap_test)]
+#[repr(C)]
+struct BfTxvecAdpt {
+    mlmepriv: BfTxvecMlme,
+    beamforming_cap: U8,
+    _pad: [U8; 3],
+    sta: BfTxvecSta,
+}
+
+#[cfg(host_bf_txvector_cap_test)]
+type BfTxvecPadpt = *mut BfTxvecAdpt;
+
+#[cfg(host_bf_txvector_cap_test)]
+#[no_mangle]
+pub unsafe extern "C" fn o_rtw_bf_get_txvector_parameter(
+    adapter: BfTxvecPadpt,
+    sta: *mut BfTxvecSta,
+    g_id: *mut U8,
+    p_aid: *mut U16,
+) {
+    if adapter.is_null() || sta.is_null() || g_id.is_null() || p_aid.is_null() {
+        return;
+    }
+    let mlme = &(*adapter).mlmepriv;
+    let st = &*sta;
+    let (gid, paid) = get_txvector(mlme.fw_state, &mlme.mac_addr, st.cmn.aid, &st.cmn.mac_addr);
+    *g_id = gid;
+    *p_aid = paid;
+}
+
+#[cfg(host_bf_txvector_cap_test)]
+#[no_mangle]
+pub unsafe extern "C" fn o_rtw_bf_get_sta_beamform_cap(
+    adapter: BfTxvecPadpt,
+    sta: *mut BfTxvecSta,
+    sta_bf_cap: *mut U8,
+    sounding_dim: *mut U8,
+    comp_steering: *mut U8,
+) {
+    if adapter.is_null() || sta.is_null() {
+        return;
+    }
+    let mlme = &(*adapter).mlmepriv;
+    let st = &*sta;
+    let info = &mut (*adapter).beamforming_cap;
+    let (cap, dim, steer) = get_sta_cap(
+        mlme.fw_state,
+        st.wireless_mode,
+        mlme.ht_beamform_cap,
+        mlme.vht_beamform_cap,
+        st.htpriv.beamform_cap,
+        st.vhtpriv.beamform_cap,
+        info,
+    );
+    if !sta_bf_cap.is_null() {
+        *sta_bf_cap = cap;
+    }
+    if !sounding_dim.is_null() {
+        *sounding_dim = dim;
+    }
+    if !comp_steering.is_null() {
+        *comp_steering = steer;
+    }
+}
+
+#[cfg(all(
+    config_beamforming,
+    beamforming_version_2,
+    w3_201_txvector_kernel,
+    not(host_bf_txvector_cap_test),
+    not(host_bf_update_txbf_attrib_test),
+    not(host_bf_entry_packet_test)
+))]
+extern "C" {
+    fn rtw_bf_rust_txvec_fwstate(adapter: *mut core::ffi::c_void) -> u32;
+    fn rtw_bf_rust_txvec_ap_mac(adapter: *mut core::ffi::c_void, out: *mut U8);
+    fn rtw_bf_rust_txvec_mlme_ht(adapter: *mut core::ffi::c_void) -> U16;
+    fn rtw_bf_rust_txvec_mlme_vht(adapter: *mut core::ffi::c_void) -> U16;
+    fn rtw_bf_rust_txvec_sta_aid(sta: *mut core::ffi::c_void) -> U16;
+    fn rtw_bf_rust_txvec_sta_mac(sta: *mut core::ffi::c_void, out: *mut U8);
+    fn rtw_bf_rust_txvec_sta_wm(sta: *mut core::ffi::c_void) -> U8;
+    fn rtw_bf_rust_txvec_sta_ht(sta: *mut core::ffi::c_void) -> U16;
+    fn rtw_bf_rust_txvec_sta_vht(sta: *mut core::ffi::c_void) -> U16;
+    fn rtw_bf_rust_txvec_info_cap(adapter: *mut core::ffi::c_void) -> *mut U8;
+}
+
+#[cfg(all(
+    config_beamforming,
+    beamforming_version_2,
+    w3_201_txvector_kernel,
+    not(host_bf_txvector_cap_test),
+    not(host_bf_update_txbf_attrib_test),
+    not(host_bf_entry_packet_test)
+))]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_rust_get_txvector_parameter(
+    adapter: *mut core::ffi::c_void,
+    sta: *mut core::ffi::c_void,
+    g_id: *mut U8,
+    p_aid: *mut U16,
+) {
+    unsafe {
+        if adapter.is_null() || sta.is_null() || g_id.is_null() || p_aid.is_null() {
+            return;
+        }
+        let mut ap_mac = [0u8; 6];
+        let mut sta_mac = [0u8; 6];
+        rtw_bf_rust_txvec_ap_mac(adapter, ap_mac.as_mut_ptr());
+        rtw_bf_rust_txvec_sta_mac(sta, sta_mac.as_mut_ptr());
+        let (gid, paid) = txvector_cap::get_txvector(
+            rtw_bf_rust_txvec_fwstate(adapter),
+            &ap_mac,
+            rtw_bf_rust_txvec_sta_aid(sta),
+            &sta_mac,
+        );
+        *g_id = gid;
+        *p_aid = paid;
+    }
+}
+
+#[cfg(all(
+    config_beamforming,
+    beamforming_version_2,
+    w3_201_txvector_kernel,
+    not(host_bf_txvector_cap_test),
+    not(host_bf_update_txbf_attrib_test),
+    not(host_bf_entry_packet_test)
+))]
+#[no_mangle]
+pub unsafe extern "C" fn rtw_rust_get_sta_beamform_cap(
+    adapter: *mut core::ffi::c_void,
+    sta: *mut core::ffi::c_void,
+    sta_bf_cap: *mut U8,
+    sounding_dim: *mut U8,
+    comp_steering: *mut U8,
+) {
+    unsafe {
+        if adapter.is_null() || sta.is_null() {
+            return;
+        }
+        let info_cap = rtw_bf_rust_txvec_info_cap(adapter);
+        if info_cap.is_null() {
+            return;
+        }
+        let (cap, dim, steer) = txvector_cap::get_sta_cap(
+            rtw_bf_rust_txvec_fwstate(adapter),
+            rtw_bf_rust_txvec_sta_wm(sta),
+            rtw_bf_rust_txvec_mlme_ht(adapter),
+            rtw_bf_rust_txvec_mlme_vht(adapter),
+            rtw_bf_rust_txvec_sta_ht(sta),
+            rtw_bf_rust_txvec_sta_vht(sta),
+            &mut *info_cap,
+        );
+        if !sta_bf_cap.is_null() {
+            *sta_bf_cap = cap;
+        }
+        if !sounding_dim.is_null() {
+            *sounding_dim = dim;
+        }
+        if !comp_steering.is_null() {
+            *comp_steering = steer;
+        }
+    }
+}

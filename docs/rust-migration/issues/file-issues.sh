@@ -364,6 +364,12 @@ files=(
   wave3-200-pwrctrl-wowlan-priv-store.md
   wave3-201-bf-txvector-cap-leaf.md
   wave3-202-mi-timer-intf-lifecycle.md
+  wave3-203-debug-proc-ht-registry.md
+  wave3-204-debug-proc-rx-ampdu.md
+  wave3-205-debug-proc-driver-ampdu-tuning.md
+  wave3-206-debug-proc-tx-ampdu-misc.md
+  wave3-207-debug-proc-tx-amsdu.md
+  wave3-208-debug-proc-vht-24g.md
 )
 
 # draft_id -> github issue number

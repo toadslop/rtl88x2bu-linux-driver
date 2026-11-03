@@ -484,14 +484,20 @@ mod _mi_dump_status;
 #[path = "rtw_mi_scan_drv.rs"]
 mod _mi_scan_drv;
 
+#[cfg(any(host_mi_timer_intf_test, rust_mi_timer_intf_leaf))]
+#[path = "rtw_mi_timer_intf.rs"]
+mod _mi_timer_intf;
+
 #[cfg(not(any(
     host_mi_ch_union_test,
     host_mi_netif_buddy_test,
     host_mi_status_test,
     host_mi_dump_test,
     host_mi_scan_drv_test,
+    host_mi_timer_intf_test,
     rust_mi_netif_leaf,
     rust_mi_dump_leaf,
-    rust_mi_scan_drv_leaf
+    rust_mi_scan_drv_leaf,
+    rust_mi_timer_intf_leaf
 )))]
 pub fn mi_ch_union_stub() {}

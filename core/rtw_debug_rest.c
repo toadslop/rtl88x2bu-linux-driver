@@ -3906,6 +3906,7 @@ void dump_regsty_rx_ampdu_size_limit(void *sel, _adapter *adapter)
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-170 in rust/rtw_debug_regsty.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_rx_ampdu(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -3964,6 +3965,8 @@ ssize_t proc_set_rx_ampdu(struct file *file, const char __user *buffer, size_t c
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-204 in rust/rtw_debug_proc_ampdu.rs */
+
 #ifdef CONFIG_SDIO_TX_ENABLE_AVAL_INT
 int proc_get_tx_aval_th(struct seq_file *m, void *v)
 {

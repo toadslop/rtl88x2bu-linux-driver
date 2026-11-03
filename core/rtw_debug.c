@@ -560,6 +560,33 @@ _adapter *rtw_rust_debug_proc_adapter_from_data(void *data)
 	return (_adapter *)rtw_netdev_priv((struct net_device *)data);
 }
 
+u8 rtw_rust_debug_fix_rx_ampdu_accept(_adapter *adapter)
+{
+	return adapter->fix_rx_ampdu_accept;
+}
+
+u8 rtw_rust_debug_fix_rx_ampdu_size(_adapter *adapter)
+{
+	return adapter->fix_rx_ampdu_size;
+}
+
+ssize_t rtw_rust_debug_proc_read_user_line(const char __user *buffer, size_t count,
+					   char *tmp, size_t tmp_size)
+{
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > tmp_size) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (!buffer || copy_from_user(tmp, buffer, count))
+		return -EFAULT;
+
+	return count;
+}
+
 void rtw_rust_debug_proc_emit_defs_param(void *sel, _adapter *adapter)
 {
 	struct mlme_priv *mlme = &adapter->mlmepriv;
@@ -3007,7 +3034,7 @@ ssize_t rtw_rust_debug_proc_set_rx_signal(_adapter *padapter,
 #ifdef CONFIG_80211N_HT
 void rtw_rust_debug_proc_emit_ht_enable(void *sel, _adapter *adapter)
 {
-	struct registry_priv *pregpriv = adapter_to_regsty(adapter);
+	struct registry_priv *pregpriv = &adapter->registrypriv;
 
 	if (pregpriv)
 		RTW_PRINT_SEL(sel, "%d\n", pregpriv->ht_enable);
@@ -3017,7 +3044,7 @@ ssize_t rtw_rust_debug_proc_set_ht_enable(_adapter *adapter,
 					  const char __user *buffer,
 					  size_t count)
 {
-	struct registry_priv *pregpriv = adapter_to_regsty(adapter);
+	struct registry_priv *pregpriv = &adapter->registrypriv;
 	char tmp[32];
 	u32 mode;
 
@@ -3043,7 +3070,7 @@ ssize_t rtw_rust_debug_proc_set_ht_enable(_adapter *adapter,
 
 void rtw_rust_debug_proc_emit_bw_mode(void *sel, _adapter *adapter)
 {
-	struct registry_priv *pregpriv = adapter_to_regsty(adapter);
+	struct registry_priv *pregpriv = &adapter->registrypriv;
 
 	if (pregpriv)
 		RTW_PRINT_SEL(sel, "0x%02x\n", pregpriv->bw_mode);
@@ -3053,7 +3080,7 @@ ssize_t rtw_rust_debug_proc_set_bw_mode(_adapter *adapter,
 					const char __user *buffer,
 					size_t count)
 {
-	struct registry_priv *pregpriv = adapter_to_regsty(adapter);
+	struct registry_priv *pregpriv = &adapter->registrypriv;
 	char tmp[32];
 	u32 mode;
 	u8 bw_2g;
@@ -3083,7 +3110,7 @@ ssize_t rtw_rust_debug_proc_set_bw_mode(_adapter *adapter,
 
 void rtw_rust_debug_proc_emit_ampdu_enable(void *sel, _adapter *adapter)
 {
-	struct registry_priv *pregpriv = adapter_to_regsty(adapter);
+	struct registry_priv *pregpriv = &adapter->registrypriv;
 
 	if (pregpriv)
 		RTW_PRINT_SEL(sel, "%d\n", pregpriv->ampdu_enable);
@@ -3093,7 +3120,7 @@ ssize_t rtw_rust_debug_proc_set_ampdu_enable(_adapter *adapter,
 					     const char __user *buffer,
 					     size_t count)
 {
-	struct registry_priv *pregpriv = adapter_to_regsty(adapter);
+	struct registry_priv *pregpriv = &adapter->registrypriv;
 	char tmp[32];
 	u32 mode;
 

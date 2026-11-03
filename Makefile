@@ -3146,6 +3146,7 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_ps.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_dbg_logs.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_hw.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_signal.o
+$(MODULE_NAME)-y += rust/rtw_debug_proc_ampdu.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_test.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_ht.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
@@ -3197,6 +3198,8 @@ ccflags-y += -DCONFIG_RUST_MI_DUMP_LEAF
 rustflags-y += --cfg rust_mi_dump_leaf
 ccflags-y += -DCONFIG_RUST_MI_SCAN_DRV_LEAF
 rustflags-y += --cfg rust_mi_scan_drv_leaf
+ccflags-y += -DCONFIG_RUST_MI_TIMER_INTF_LEAF
+rustflags-y += --cfg rust_mi_timer_intf_leaf
 $(MODULE_NAME)-y += rust/rtw_mi.o
 ccflags-y += -DCONFIG_RUST_IOCTL_SET_LEAF
 rustflags-y += --cfg rust_ioctl_set_leaf
@@ -4271,6 +4274,21 @@ rust-check-symbols-rtw-mi-scan-drv-leaf: rust-objects-rtw-mi-scan-drv-leaf-c rus
 	$(MAKE) rust-check-symbols OLD=tests/host/mi/mi_scan_drv_kern_c_ref.o NEW=rust/rtw_mi.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_mi_scan_drv_leaf.allow ALLOW_VACUOUS=1
 
+rust-objects-rtw-mi-timer-intf-leaf:
+	@test -n "$(KSRC)" || { \
+		echo "Usage: make KDIR=/path/to/rust-enabled-kernel LLVM=1 rust-objects-rtw-mi-timer-intf-leaf"; \
+		exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_mi.o
+
+rust-objects-rtw-mi-timer-intf-leaf-c:
+	gcc -c -Wall -Wextra -Werror -O2 \
+		-o tests/host/mi/mi_timer_intf_kern_c_ref.o \
+		tests/host/mi/mi_timer_intf_kern_c_ref.c
+
+rust-check-symbols-rtw-mi-timer-intf-leaf: rust-objects-rtw-mi-timer-intf-leaf-c rust-objects-rtw-mi-timer-intf-leaf
+	$(MAKE) rust-check-symbols OLD=tests/host/mi/mi_timer_intf_kern_c_ref.o NEW=rust/rtw_mi.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_mi_timer_intf_leaf.allow ALLOW_VACUOUS=1
+
 rust-objects-rtw-cmd-queue-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-I$(shell pwd)/tests/host/include -I$(shell pwd)/core \
@@ -5041,6 +5059,20 @@ rust-objects-rtw-debug-proc-ht-c:
 rust-check-symbols-rtw-debug-proc-ht: rust-objects-rtw-debug-proc-ht-c rust-objects-rtw-debug-proc-ht
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_ht_c_ref.o NEW=rust/rtw_debug_proc_ht.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_ht.allow ALLOW_VACUOUS=1
+
+# W3-204: host C stub vs rust/rtw_debug_proc_ampdu.o (proc rx_ampdu get/set).
+rust-objects-rtw-debug-proc-ampdu:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-ampdu"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_ampdu.o
+rust-objects-rtw-debug-proc-ampdu-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_ampdu_c_ref.o \
+		tests/host/debug/host_rtw_debug_proc_ampdu_l1_shim.c
+rust-check-symbols-rtw-debug-proc-ampdu: rust-objects-rtw-debug-proc-ampdu-c rust-objects-rtw-debug-proc-ampdu
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_ampdu_c_ref.o NEW=rust/rtw_debug_proc_ampdu.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_ampdu.allow ALLOW_VACUOUS=1
 
 # W3-94 follow-up PR4: host C oracle (ps deny shim) vs rust/rtw_pwrctrl.o.
 rust-objects-rtw-pwrctrl:
