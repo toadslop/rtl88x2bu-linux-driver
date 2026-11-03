@@ -2589,6 +2589,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_beamforming.o \
 		core/rtw_beamforming_cmd_rust_shim.o \
 		core/rtw_beamforming_rust_shim.o \
+		core/rtw_beamforming_txvector_cap_rust_shim.o \
 		core/rtw_beamforming_sound_rust_shim.o \
 		core/rtw_odm.o \
 		core/rtw_odm_phydm_init.o \
@@ -2869,6 +2870,7 @@ rustflags-y += --cfg config_beamforming
 ifeq ($(CONFIG_RTL8822B), y)
 ifneq ($(W3_197_LEGACY_L1), 1)
 rustflags-y += --cfg beamforming_version_2
+rustflags-y += --cfg w3_201_txvector_kernel
 endif
 endif
 endif
@@ -5357,6 +5359,19 @@ rust-objects-rtw-beamforming-update-txbf-c:
 rust-check-symbols-rtw-beamforming-update-txbf: rust-objects-rtw-beamforming-update-txbf-c rust-objects-rtw-beamforming-update-txbf
 	$(MAKE) rust-check-symbols OLD=tests/host/beamforming/bf_update_txbf_attrib_kern_c_ref.o NEW=rust/rtw_beamforming.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_beamforming.allow ALLOW_VACUOUS=1
+
+# W3-201: txvector + STA beamform cap leaf (RTW_BEAMFORMING_VERSION_2).
+rust-objects-rtw-beamforming-txvector-cap:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-beamforming-txvector-cap"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_beamforming.o
+rust-objects-rtw-beamforming-txvector-cap-c:
+	@mkdir -p tests/host/beamforming
+	gcc -c -Wall -Wextra -Werror -O2 -I$(shell pwd)/tests/host/include \
+		-o tests/host/beamforming/bf_txvector_cap_kern_c_ref.o \
+		tests/host/beamforming/bf_txvector_cap_kern_c_ref.c
+rust-check-symbols-rtw-beamforming-txvector-cap: rust-objects-rtw-beamforming-txvector-cap-c rust-objects-rtw-beamforming-txvector-cap
+	$(MAKE) rust-check-symbols OLD=tests/host/beamforming/bf_txvector_cap_kern_c_ref.o NEW=rust/rtw_beamforming.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_beamforming_txvector_cap.allow ALLOW_VACUOUS=1
 
 # Smoke test for check-symbols.sh (T1). Builds only rust/aes_ctr.o via kbuild, not the
 # full module. The C reference uses host gcc + HOST_CRYPTO_TEST for speed; production

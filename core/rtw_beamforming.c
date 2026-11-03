@@ -27,6 +27,11 @@ u8 rtw_rust_beamforming_enter(PADAPTER adapter, void *p);
 #if defined(CONFIG_RUST) && !defined(HOST_BF_SOUND_LEAVE_C_REF)
 void rtw_rust_beamforming_leave(PADAPTER adapter, u8 *ra);
 #endif
+#if defined(CONFIG_RUST) && !defined(HOST_BF_TXVECTOR_CAP_C_REF)
+void rtw_rust_get_txvector_parameter(PADAPTER adapter, struct sta_info *sta, u8 *g_id, u16 *p_aid);
+void rtw_rust_get_sta_beamform_cap(PADAPTER adapter, struct sta_info *sta,
+				   u8 *sta_bf_cap, u8 *sounding_dim, u8 *comp_steering);
+#endif
 
 struct ndpa_sta_info {
 	u16 aid:12;
@@ -36,6 +41,10 @@ struct ndpa_sta_info {
 
 static void _get_txvector_parameter(PADAPTER adapter, struct sta_info *sta, u8 *g_id, u16 *p_aid)
 {
+#if defined(CONFIG_RUST) && !defined(HOST_BF_TXVECTOR_CAP_C_REF)
+	rtw_rust_get_txvector_parameter(adapter, sta, g_id, p_aid);
+	return;
+#endif
 	struct mlme_priv *mlme;
 	u16 aid;
 	u8 *bssid;
@@ -100,6 +109,10 @@ static void _get_txvector_parameter(PADAPTER adapter, struct sta_info *sta, u8 *
 static void _get_sta_beamform_cap(PADAPTER adapter, struct sta_info *sta,
 	u8 *sta_bf_cap, u8 *sounding_dim, u8 *comp_steering)
 {
+#if defined(CONFIG_RUST) && !defined(HOST_BF_TXVECTOR_CAP_C_REF)
+	rtw_rust_get_sta_beamform_cap(adapter, sta, sta_bf_cap, sounding_dim, comp_steering);
+	return;
+#endif
 	struct beamforming_info *info;
 	struct mlme_priv *mlme;
 	struct ht_priv *ht;
