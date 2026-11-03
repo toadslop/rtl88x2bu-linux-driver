@@ -447,11 +447,7 @@ pub extern "C" fn host_proc_set_rx_ampdu_from_buf(
 
 fn emit_get_tx_quick_addba(sel: *mut c_void, adapter: *mut c_void) {
     let val = unsafe { rtw_rust_debug_tx_quick_addba_req(adapter) };
-    let mut line = [0u8; 48];
-    let mut pos = 0usize;
-    push_str(&mut line, &mut pos, b"tx_quick_addba_req = ");
-    push_u8_hex(&mut line, &mut pos, val);
-    print_line(sel, &line[..pos]);
+    push_u8_hex_c(sel, b"tx_quick_addba_req = ", val);
 }
 
 #[cfg(config_sdio_tx_enable_aval_int)]
