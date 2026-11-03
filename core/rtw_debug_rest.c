@@ -3756,6 +3756,7 @@ int proc_get_mac_rptbuf(struct seq_file *m, void *v)
 
 #ifdef CONFIG_80211N_HT
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_ht_enable(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -3886,7 +3887,7 @@ ssize_t proc_set_ampdu_enable(struct file *file, const char __user *buffer, size
 	return count;
 
 }
-
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-203 in rust/rtw_debug_proc_ht.rs */
 
 #if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 void dump_regsty_rx_ampdu_size_limit(void *sel, _adapter *adapter)

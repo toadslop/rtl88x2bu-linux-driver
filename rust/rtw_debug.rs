@@ -15,6 +15,7 @@
 //! W3-166 proc rx_signal handlers live in `rtw_debug_proc_signal.rs`.
 //! W3-204 proc rx_ampdu get/set live in `rtw_debug_proc_ampdu.rs`.
 //! W3-168 proc manufacturing test setters live in `rtw_debug_proc_test.rs`.
+//! W3-203 proc HT registry handlers live in `rtw_debug_proc_ht.rs`.
 
 #![allow(
     dead_code,

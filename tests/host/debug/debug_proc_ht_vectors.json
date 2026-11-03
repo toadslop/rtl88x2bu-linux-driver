@@ -1,0 +1,58 @@
+{
+  "vectors": [
+    {
+      "name": "get_ht_enable",
+      "ht_enable": 1,
+      "bw_mode": 0,
+      "ampdu_enable": 0,
+      "get": "ht_enable",
+      "expect": "1\n"
+    },
+    {
+      "name": "set_ht_enable",
+      "ht_enable": 0,
+      "bw_mode": 0,
+      "ampdu_enable": 0,
+      "set": "ht_enable",
+      "set_input": "1 ",
+      "get": "ht_enable",
+      "expect": "1\n"
+    },
+    {
+      "name": "get_bw_mode",
+      "ht_enable": 0,
+      "bw_mode": 52,
+      "ampdu_enable": 0,
+      "get": "bw_mode",
+      "expect": "0x34\n"
+    },
+    {
+      "name": "set_bw_mode",
+      "ht_enable": 0,
+      "bw_mode": 0,
+      "ampdu_enable": 0,
+      "set": "bw_mode",
+      "set_input": "34 ",
+      "get": "bw_mode",
+      "expect": "0x34\n"
+    },
+    {
+      "name": "get_ampdu_enable",
+      "ht_enable": 0,
+      "bw_mode": 0,
+      "ampdu_enable": 1,
+      "get": "ampdu_enable",
+      "expect": "1\n"
+    },
+    {
+      "name": "set_ampdu_enable",
+      "ht_enable": 0,
+      "bw_mode": 0,
+      "ampdu_enable": 0,
+      "set": "ampdu_enable",
+      "set_input": "1 ",
+      "get": "ampdu_enable",
+      "expect": "1\n"
+    }
+  ]
+}
