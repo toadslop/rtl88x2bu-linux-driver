@@ -3030,9 +3030,9 @@ int rtw_rust_debug_proc_sscanf_u32(const char *tmp, u32 *val)
 	return sscanf(tmp, "%u", val);
 }
 
-int rtw_rust_debug_proc_sscanf_hhx(const char *tmp, u8 *val)
+int rtw_rust_debug_proc_sscanf_u32_pair(const char *tmp, u32 *first, u32 *second)
 {
-	return sscanf(tmp, "%hhx", val);
+	return sscanf(tmp, "%u %u", first, second);
 }
 
 int rtw_rust_debug_proc_sscanf_u32_hhu(const char *tmp, u32 *u, u8 *b)
@@ -3973,6 +3973,7 @@ ssize_t proc_set_rx_ampdu(struct file *file, const char __user *buffer, size_t c
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-204 in rust/rtw_debug_proc_ampdu.rs */
 
 #ifdef CONFIG_SDIO_TX_ENABLE_AVAL_INT
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_tx_aval_th(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -4031,9 +4032,9 @@ ssize_t proc_set_tx_aval_th(struct file *file, const char __user *buffer
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-206 tx_aval in rust/rtw_debug_proc_ampdu.rs */
 #endif /*CONFIG_SDIO_TX_ENABLE_AVAL_INT*/
 
-#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_rx_ampdu_factor(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -4208,8 +4209,8 @@ ssize_t proc_set_tx_ampdu_density(struct file *file, const char __user *buffer, 
 
 	return count;
 }
-#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-205 in rust/rtw_debug_proc_ampdu.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_tx_quick_addba_req(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -4250,6 +4251,7 @@ ssize_t proc_set_tx_quick_addba_req(struct file *file, const char __user *buffer
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-206 tx_quick in rust/rtw_debug_proc_ampdu.rs */
 #ifdef CONFIG_TX_AMSDU
 int proc_get_tx_amsdu(struct seq_file *m, void *v)
 {

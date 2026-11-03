@@ -570,14 +570,37 @@ u8 rtw_rust_debug_fix_rx_ampdu_size(_adapter *adapter)
 	return adapter->fix_rx_ampdu_size;
 }
 
-#define RTW_RUST_DEBUG_ADAPTER_U8(name, field) \
-	u8 rtw_rust_debug_##name(_adapter *adapter) { return adapter->field; } \
-	void rtw_rust_debug_set_##name(_adapter *adapter, u8 v) { adapter->field = v; }
+u8 rtw_rust_debug_tx_quick_addba_req(_adapter *adapter)
+{
+	return adapter->registrypriv.tx_quick_addba_req;
+}
 
-RTW_RUST_DEBUG_ADAPTER_U8(driver_rx_ampdu_factor, driver_rx_ampdu_factor)
-RTW_RUST_DEBUG_ADAPTER_U8(driver_rx_ampdu_spacing, driver_rx_ampdu_spacing)
-RTW_RUST_DEBUG_ADAPTER_U8(driver_ampdu_spacing, driver_ampdu_spacing)
-RTW_RUST_DEBUG_ADAPTER_U8(driver_tx_max_agg_num, driver_tx_max_agg_num)
+void rtw_rust_debug_set_tx_quick_addba_req(_adapter *adapter, u8 enable)
+{
+	adapter->registrypriv.tx_quick_addba_req = enable;
+}
+
+#ifdef CONFIG_SDIO_TX_ENABLE_AVAL_INT
+u8 rtw_rust_debug_tx_aval_int_thr_mode(_adapter *adapter)
+{
+	return adapter_to_dvobj(adapter)->tx_aval_int_thr_mode;
+}
+
+u8 rtw_rust_debug_tx_aval_int_thr_value(_adapter *adapter)
+{
+	return adapter_to_dvobj(adapter)->tx_aval_int_thr_value;
+}
+
+void rtw_rust_debug_set_tx_aval_int_thr_mode(_adapter *adapter, u8 mode)
+{
+	adapter_to_dvobj(adapter)->tx_aval_int_thr_mode = mode;
+}
+
+void rtw_rust_debug_set_tx_aval_int_thr_value(_adapter *adapter, u8 val)
+{
+	adapter_to_dvobj(adapter)->tx_aval_int_thr_value = val;
+}
+#endif /* CONFIG_SDIO_TX_ENABLE_AVAL_INT */
 
 ssize_t rtw_rust_debug_proc_read_user_line(const char __user *buffer, size_t count,
 					   char *tmp, size_t tmp_size)

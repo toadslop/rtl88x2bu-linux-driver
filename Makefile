@@ -2983,6 +2983,9 @@ endif
 ifeq ($(CONFIG_PROC_DEBUG), y)
 rustflags-y += --cfg config_proc_debug
 endif
+ifeq ($(CONFIG_SDIO_TX_ENABLE_AVAL_INT), y)
+rustflags-y += --cfg config_sdio_tx_enable_aval_int
+endif
 _rust_cfg_dbg_rx_counter_dump :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+DBG_RX_COUNTER_DUMP' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 _rust_cfg_dbg_rx_counter_dump := y
