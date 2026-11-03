@@ -4040,6 +4040,7 @@ ssize_t proc_set_tx_aval_th(struct file *file, const char __user *buffer
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-206 tx_aval in rust/rtw_debug_proc_ampdu.rs */
 #endif /*CONFIG_SDIO_TX_ENABLE_AVAL_INT*/
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_rx_ampdu_factor(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -4214,6 +4215,7 @@ ssize_t proc_set_tx_ampdu_density(struct file *file, const char __user *buffer, 
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-205 in rust/rtw_debug_proc_ampdu.rs */
 
 #if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_tx_quick_addba_req(struct seq_file *m, void *v)
