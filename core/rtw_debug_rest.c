@@ -4362,6 +4362,7 @@ ssize_t proc_set_tx_amsdu_rate(struct file *file, const char __user *buffer, siz
 #endif /* CONFIG_80211N_HT */
 
 #ifdef CONFIG_80211AC_VHT
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_vht_24g_enable(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -4403,6 +4404,7 @@ ssize_t proc_set_vht_24g_enable(struct file *file, const char __user *buffer, si
 	return count;
 
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-208 in rust/rtw_debug_proc_vht.rs */
 #endif
 
 ssize_t proc_set_dyn_rrsr(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)

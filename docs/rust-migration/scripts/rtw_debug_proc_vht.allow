@@ -1,0 +1,3 @@
+# L1 allowlist for W3-208: Rust owns vht_24g_enable proc get/set in rtw_debug_proc_vht.o.
+drop rtw_rust_debug_proc_emit_vht_24g_enable
+drop rtw_rust_debug_proc_set_vht_24g_enable
