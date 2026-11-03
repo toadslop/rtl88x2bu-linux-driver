@@ -31,6 +31,12 @@
       "expect": 255
     },
     {
+      "name": "tx_density_ok",
+      "field": "tx_density",
+      "input": "4",
+      "expect": 4
+    },
+    {
       "name": "tx_agg_hex",
       "field": "tx_agg",
       "input": "2a",

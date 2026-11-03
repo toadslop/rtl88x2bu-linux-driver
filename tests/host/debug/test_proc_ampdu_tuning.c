@@ -33,6 +33,22 @@ struct set_vector {
 	u8 expect;
 };
 
+static void unescape_expect(char *s)
+{
+	char *r = s;
+	char *w = s;
+
+	while (*r) {
+		if (r[0] == '\\' && r[1] == 'n') {
+			*w++ = '\n';
+			r += 2;
+		} else {
+			*w++ = *r++;
+		}
+	}
+	*w = '\0';
+}
+
 static int parse_u8_field(const char *obj, size_t len, const char *key, u8 *out)
 {
 	int v;
@@ -46,7 +62,6 @@ static int parse_u8_field(const char *obj, size_t len, const char *key, u8 *out)
 static int parse_get_object(const char *obj, size_t len, void *vec_void)
 {
 	struct get_vector *v = vec_void;
-	char *p;
 
 	memset(v, 0, sizeof(*v));
 	if (host_json_parse_string_in(obj, len, "name", v->name, sizeof(v->name)))
@@ -57,12 +72,7 @@ static int parse_get_object(const char *obj, size_t len, void *vec_void)
 		return -1;
 	if (host_json_parse_string_in(obj, len, "expect", v->expect, sizeof(v->expect)))
 		return -1;
-	for (p = v->expect; *p; p++) {
-		if (p[0] == '\\' && p[1] == 'n') {
-			p[0] = '\n';
-			memmove(p + 1, p + 2, strlen(p + 2) + 1);
-		}
-	}
+	unescape_expect(v->expect);
 	return 0;
 }
 
