@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-// proc rx_ampdu get (W3-204 PR1).
+// proc rx_ampdu get/set (W3-204); driver AMPDU tuning procs (W3-205).
 
 #![allow(
     dead_code,
@@ -12,7 +12,7 @@
     unused_unsafe
 )]
 
-use core::ffi::{c_char, c_int, c_long, c_void};
+use core::ffi::{c_char, c_int, c_long, c_uint, c_void};
 
 type U8 = u8;
 
@@ -43,6 +43,16 @@ extern "C" {
         first: *mut U8,
         second: *mut U8,
     ) -> c_int;
+    fn rtw_rust_debug_proc_sscanf_u32(tmp: *const u8, val: *mut c_uint) -> c_int;
+    fn rtw_rust_debug_proc_sscanf_hhx(tmp: *const u8, val: *mut U8) -> c_int;
+    fn rtw_rust_debug_driver_rx_ampdu_factor(adapter: *mut c_void) -> U8;
+    fn rtw_rust_debug_set_driver_rx_ampdu_factor(adapter: *mut c_void, factor: U8);
+    fn rtw_rust_debug_driver_rx_ampdu_spacing(adapter: *mut c_void) -> U8;
+    fn rtw_rust_debug_set_driver_rx_ampdu_spacing(adapter: *mut c_void, spacing: U8);
+    fn rtw_rust_debug_driver_ampdu_spacing(adapter: *mut c_void) -> U8;
+    fn rtw_rust_debug_set_driver_ampdu_spacing(adapter: *mut c_void, spacing: U8);
+    fn rtw_rust_debug_driver_tx_max_agg_num(adapter: *mut c_void) -> U8;
+    fn rtw_rust_debug_set_driver_tx_max_agg_num(adapter: *mut c_void, agg_num: U8);
 }
 
 const EFAULT: c_long = -14;
@@ -104,6 +114,120 @@ fn push_u8_dec_width_left(out: &mut [u8], pos: &mut usize, v: U8, width: usize) 
     push_u8_dec(out, pos, v);
     while *pos - start < width {
         push_byte(out, pos, b' ');
+    }
+}
+
+fn push_u8_hex_c(sel_fmt: *mut c_void, prefix: &[u8], val: U8) {
+    let mut line = [0u8; 64];
+    let mut pos = 0usize;
+    push_str(&mut line, &mut pos, prefix);
+    if val == 0 {
+        push_byte(&mut line, &mut pos, b'0');
+    } else {
+        const HEX: &[u8; 16] = b"0123456789abcdef";
+        let mut started = false;
+        for shift in [4i32, 0] {
+            let nibble = (val >> shift) & 0x0f;
+            if nibble != 0 || started {
+                push_byte(&mut line, &mut pos, HEX[nibble as usize]);
+                started = true;
+            }
+        }
+    }
+    print_line(sel_fmt, &line[..pos]);
+}
+
+fn push_u8_hex(out: &mut [u8], pos: &mut usize, v: U8) {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    push_byte(out, pos, HEX[(v >> 4) as usize]);
+    push_byte(out, pos, HEX[(v & 0x0f) as usize]);
+}
+
+fn emit_get_hex_line(sel: *mut c_void, prefix: &[u8], val: U8) {
+    push_u8_hex_c(sel, prefix, val);
+}
+
+fn emit_get_tx_max_agg(sel: *mut c_void, val: U8) {
+    let mut line = [0u8; 48];
+    let mut pos = 0usize;
+    push_str(&mut line, &mut pos, b"tx max AMPDU num = 0x");
+    push_u8_hex(&mut line, &mut pos, val);
+    print_line(sel, &line[..pos]);
+}
+
+fn proc_set_read_tmp(
+    buffer: *const c_void,
+    count: usize,
+    tmp: &mut [i8; PROC_SET_TMP],
+) -> Option<usize> {
+    if count < 1 || count > PROC_SET_TMP {
+        return None;
+    }
+    if buffer.is_null() {
+        return None;
+    }
+    let n =
+        unsafe { rtw_rust_debug_proc_read_user_line(buffer, count, tmp.as_mut_ptr(), tmp.len()) };
+    if n > 0 {
+        Some(n as usize)
+    } else {
+        None
+    }
+}
+
+fn proc_set_u32_clamped(
+    adapter: *mut c_void,
+    tmp: *const u8,
+    max_inclusive: u32,
+    set_field: unsafe extern "C" fn(*mut c_void, U8),
+) {
+    let mut val = 0u32;
+    let num = unsafe { rtw_rust_debug_proc_sscanf_u32(tmp, &mut val) };
+    if adapter.is_null() || num != 1 {
+        return;
+    }
+    let stored = if val > max_inclusive {
+        0xffu8
+    } else {
+        val as U8
+    };
+    unsafe { set_field(adapter, stored) };
+}
+
+fn proc_set_tx_max_agg(adapter: *mut c_void, tmp: *const u8) {
+    let mut agg = 0u8;
+    let num = unsafe { rtw_rust_debug_proc_sscanf_hhx(tmp, &mut agg) };
+    if adapter.is_null() || num != 1 {
+        return;
+    }
+    unsafe { rtw_rust_debug_set_driver_tx_max_agg_num(adapter, agg) };
+}
+
+fn generic_proc_set(
+    buffer: *const c_void,
+    count: usize,
+    data: *mut c_void,
+    apply: fn(*mut c_void, *const u8),
+) -> c_long {
+    if count < 1 {
+        return EFAULT;
+    }
+    if count > PROC_SET_TMP {
+        return EFAULT;
+    }
+    let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
+    let mut tmp = [0i8; PROC_SET_TMP];
+    if let Some(_) = proc_set_read_tmp(buffer, count, &mut tmp) {
+        apply(adapter, tmp.as_ptr() as *const u8);
+    }
+    count as c_long
+}
+
+fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
+    if m.is_null() {
+        core::ptr::null_mut()
+    } else {
+        unsafe { rtw_rust_debug_proc_adapter(m) }
     }
 }
 
@@ -204,6 +328,93 @@ pub extern "C" fn proc_set_rx_ampdu(
         }
     }
     count as c_long
+}
+
+macro_rules! proc_get_driver_u8_hex {
+    ($fn:ident, $prefix:expr, $read:ident) => {
+        #[cfg(any(config_rtw_debug, config_proc_debug))]
+        #[no_mangle]
+        pub extern "C" fn $fn(m: *mut c_void, _v: *mut c_void) -> c_int {
+            let adapter = adapter_from_seq(m);
+            if !adapter.is_null() {
+                let val = unsafe { $read(adapter) };
+                emit_get_hex_line(m, $prefix, val);
+            }
+            0
+        }
+    };
+}
+
+macro_rules! proc_set_driver_u32_clamp {
+    ($fn:ident, $max:expr, $set:ident) => {
+        #[cfg(any(config_rtw_debug, config_proc_debug))]
+        #[no_mangle]
+        pub extern "C" fn $fn(
+            _file: *mut c_void,
+            buffer: *const c_void,
+            count: usize,
+            _pos: *mut c_long,
+            data: *mut c_void,
+        ) -> c_long {
+            generic_proc_set(buffer, count, data, |adapter, tmp| {
+                proc_set_u32_clamped(adapter, tmp, $max, $set);
+            })
+        }
+    };
+}
+
+proc_get_driver_u8_hex!(
+    proc_get_rx_ampdu_factor,
+    b"rx ampdu factor = ",
+    rtw_rust_debug_driver_rx_ampdu_factor
+);
+proc_set_driver_u32_clamp!(
+    proc_set_rx_ampdu_factor,
+    0x03,
+    rtw_rust_debug_set_driver_rx_ampdu_factor
+);
+proc_get_driver_u8_hex!(
+    proc_get_rx_ampdu_density,
+    b"rx ampdu densityg = ",
+    rtw_rust_debug_driver_rx_ampdu_spacing
+);
+proc_set_driver_u32_clamp!(
+    proc_set_rx_ampdu_density,
+    0x07,
+    rtw_rust_debug_set_driver_rx_ampdu_spacing
+);
+proc_get_driver_u8_hex!(
+    proc_get_tx_ampdu_density,
+    b"tx ampdu density = ",
+    rtw_rust_debug_driver_ampdu_spacing
+);
+proc_set_driver_u32_clamp!(
+    proc_set_tx_ampdu_density,
+    0x07,
+    rtw_rust_debug_set_driver_ampdu_spacing
+);
+
+#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[no_mangle]
+pub extern "C" fn proc_get_tx_max_agg_num(m: *mut c_void, _v: *mut c_void) -> c_int {
+    let adapter = adapter_from_seq(m);
+    if !adapter.is_null() {
+        let val = unsafe { rtw_rust_debug_driver_tx_max_agg_num(adapter) };
+        emit_get_tx_max_agg(m, val);
+    }
+    0
+}
+
+#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[no_mangle]
+pub extern "C" fn proc_set_tx_max_agg_num(
+    _file: *mut c_void,
+    buffer: *const c_void,
+    count: usize,
+    _pos: *mut c_long,
+    data: *mut c_void,
+) -> c_long {
+    generic_proc_set(buffer, count, data, proc_set_tx_max_agg)
 }
 
 #[cfg(host_rtw_debug_proc_ampdu_test)]
