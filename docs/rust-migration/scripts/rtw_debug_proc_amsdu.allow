@@ -1,0 +1,5 @@
+# L1 allowlist for W3-207: Rust owns tx AMSDU proc get/set in rtw_debug_proc_amsdu.o.
+drop rtw_rust_debug_proc_emit_tx_amsdu
+drop rtw_rust_debug_proc_set_tx_amsdu
+drop rtw_rust_debug_proc_emit_tx_amsdu_rate
+drop rtw_rust_debug_proc_set_tx_amsdu_rate

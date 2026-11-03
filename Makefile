@@ -3154,6 +3154,9 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_signal.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_ampdu.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_test.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_ht.o
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_TX_AMSDU' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+$(MODULE_NAME)-y += rust/rtw_debug_proc_amsdu.o
+endif
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ps.o
@@ -5064,6 +5067,20 @@ rust-objects-rtw-debug-proc-ht-c:
 rust-check-symbols-rtw-debug-proc-ht: rust-objects-rtw-debug-proc-ht-c rust-objects-rtw-debug-proc-ht
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_ht_c_ref.o NEW=rust/rtw_debug_proc_ht.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_ht.allow ALLOW_VACUOUS=1
+
+# W3-207: host C oracle vs rust/rtw_debug_proc_amsdu.o (proc tx AMSDU get/set).
+rust-objects-rtw-debug-proc-amsdu:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-amsdu"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_amsdu.o
+rust-objects-rtw-debug-proc-amsdu-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_tx_amsdu_c_ref.o \
+		tests/host/debug/debug_proc_tx_amsdu_c_oracle.c
+rust-check-symbols-rtw-debug-proc-amsdu: rust-objects-rtw-debug-proc-amsdu-c rust-objects-rtw-debug-proc-amsdu
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_tx_amsdu_c_ref.o NEW=rust/rtw_debug_proc_amsdu.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_amsdu.allow ALLOW_VACUOUS=1
 
 # W3-204: host C stub vs rust/rtw_debug_proc_ampdu.o (proc rx_ampdu get/set).
 rust-objects-rtw-debug-proc-ampdu:

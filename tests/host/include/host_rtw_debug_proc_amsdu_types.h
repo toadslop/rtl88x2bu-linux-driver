@@ -50,4 +50,14 @@ int proc_get_tx_amsdu_rate(struct seq_file *m, void *v);
 ssize_t proc_set_tx_amsdu_rate(void *file, const void *buffer, size_t count,
 			       long *pos, void *data);
 
+void *rtw_rust_debug_proc_adapter(void *m);
+void *rtw_rust_debug_proc_adapter_from_data(void *data);
+void rtw_rust_debug_print_sel(void *sel, const char *line);
+void rtw_rust_debug_proc_emit_tx_amsdu(void *sel, void *adapter);
+long rtw_rust_debug_proc_set_tx_amsdu(void *adapter, const void *buffer,
+				       size_t count);
+void rtw_rust_debug_proc_emit_tx_amsdu_rate(void *sel, void *adapter);
+long rtw_rust_debug_proc_set_tx_amsdu_rate(void *adapter, const void *buffer,
+					     size_t count);
+
 #endif /* HOST_RTW_DEBUG_PROC_AMSDU_TYPES_H */

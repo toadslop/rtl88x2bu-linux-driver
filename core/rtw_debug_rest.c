@@ -4259,6 +4259,7 @@ ssize_t proc_set_tx_quick_addba_req(struct file *file, const char __user *buffer
 	return count;
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-206 tx_quick in rust/rtw_debug_proc_ampdu.rs */
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 #ifdef CONFIG_TX_AMSDU
 int proc_get_tx_amsdu(struct seq_file *m, void *v)
 {
@@ -4357,6 +4358,7 @@ ssize_t proc_set_tx_amsdu_rate(struct file *file, const char __user *buffer, siz
 	return count;
 }
 #endif /* CONFIG_TX_AMSDU */
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-207 in rust/rtw_debug_proc_amsdu.rs */
 #endif /* CONFIG_80211N_HT */
 
 #ifdef CONFIG_80211AC_VHT
