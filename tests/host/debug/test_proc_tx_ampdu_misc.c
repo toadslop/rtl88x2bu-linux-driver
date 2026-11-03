@@ -39,7 +39,18 @@ struct set_vector {
 
 static void unescape_expect(char *s)
 {
-	(void)s;
+	char *r = s;
+	char *w = s;
+
+	while (*r) {
+		if (r[0] == '\\' && r[1] == 'n') {
+			*w++ = '\n';
+			r += 2;
+		} else {
+			*w++ = *r++;
+		}
+	}
+	*w = '\0';
 }
 
 static int parse_u8_field(const char *obj, size_t len, const char *key, u8 *out)
@@ -66,6 +77,7 @@ static int parse_get_object(const char *obj, size_t len, void *vec_void)
 	(void)parse_u8_field(obj, len, "tx_aval_int_thr_value", &v->tx_aval_int_thr_value);
 	if (host_json_parse_string_in(obj, len, "expect", v->expect, sizeof(v->expect)))
 		return -1;
+	unescape_expect(v->expect);
 	return 0;
 }
 
