@@ -1,4 +1,4 @@
-# L1 allowlist for W3-204/W3-206: Rust owns proc rx_ampdu + tx AMPDU misc in rtw_debug_proc_ampdu.o.
+# L1 allowlist for W3-204/W3-205/W3-206: Rust proc rx_ampdu, driver tuning, tx AMPDU misc in rtw_debug_proc_ampdu.o.
 drop rtw_rust_debug_fix_rx_ampdu_accept
 drop rtw_rust_debug_fix_rx_ampdu_size
 drop rtw_rust_debug_proc_read_user_line

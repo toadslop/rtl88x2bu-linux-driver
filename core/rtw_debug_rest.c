@@ -3030,6 +3030,11 @@ int rtw_rust_debug_proc_sscanf_u32(const char *tmp, u32 *val)
 	return sscanf(tmp, "%u", val);
 }
 
+int rtw_rust_debug_proc_sscanf_hhx(const char *tmp, u8 *val)
+{
+	return sscanf(tmp, "%hhx", val);
+}
+
 int rtw_rust_debug_proc_sscanf_u32_pair(const char *tmp, u32 *first, u32 *second)
 {
 	return sscanf(tmp, "%u %u", first, second);

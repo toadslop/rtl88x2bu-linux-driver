@@ -146,6 +146,7 @@ librust_rtw_debug_proc_ampdu.a: $(AMPDU_RUST)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
 		--cfg host_rtw_debug_proc_ampdu_test \
 		--cfg config_rtw_debug --cfg config_proc_debug \
+		--cfg config_sdio_tx_enable_aval_int \
 		--crate-type staticlib $(AMPDU_RUST) -o $@
 
 test-proc-rx-ampdu-rust: test_proc_rx_ampdu_rust

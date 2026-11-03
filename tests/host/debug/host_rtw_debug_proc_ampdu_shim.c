@@ -64,6 +64,51 @@ int rtw_rust_debug_proc_sscanf_u32(const char *tmp, unsigned int *val)
 	return sscanf(tmp, "%u", val);
 }
 
+int rtw_rust_debug_proc_sscanf_hhx(const char *tmp, u8 *val)
+{
+	return sscanf(tmp, "%hhx", val);
+}
+
+unsigned char rtw_rust_debug_driver_rx_ampdu_factor(_adapter *adapter)
+{
+	return adapter->driver_rx_ampdu_factor;
+}
+
+void rtw_rust_debug_set_driver_rx_ampdu_factor(_adapter *adapter, u8 factor)
+{
+	adapter->driver_rx_ampdu_factor = factor;
+}
+
+unsigned char rtw_rust_debug_driver_rx_ampdu_spacing(_adapter *adapter)
+{
+	return adapter->driver_rx_ampdu_spacing;
+}
+
+void rtw_rust_debug_set_driver_rx_ampdu_spacing(_adapter *adapter, u8 spacing)
+{
+	adapter->driver_rx_ampdu_spacing = spacing;
+}
+
+unsigned char rtw_rust_debug_driver_ampdu_spacing(_adapter *adapter)
+{
+	return adapter->driver_ampdu_spacing;
+}
+
+void rtw_rust_debug_set_driver_ampdu_spacing(_adapter *adapter, u8 spacing)
+{
+	adapter->driver_ampdu_spacing = spacing;
+}
+
+unsigned char rtw_rust_debug_driver_tx_max_agg_num(_adapter *adapter)
+{
+	return adapter->driver_tx_max_agg_num;
+}
+
+void rtw_rust_debug_set_driver_tx_max_agg_num(_adapter *adapter, u8 agg_num)
+{
+	adapter->driver_tx_max_agg_num = agg_num;
+}
+
 int rtw_rust_debug_proc_sscanf_u32_pair(const char *tmp, unsigned int *first,
 					unsigned int *second)
 {
