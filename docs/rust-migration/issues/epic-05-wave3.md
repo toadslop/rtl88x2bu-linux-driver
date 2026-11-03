@@ -327,6 +327,17 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-207 | `wave3-207-debug-proc-tx-amsdu.md` | tx AMSDU proc debug leaf |
 | W3-208 | `wave3-208-debug-proc-vht-24g.md` | VHT 24G enable proc leaf |
 
+## Children (tranche 23 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-209 | `wave3-209-debug-proc-en-fwps.md` | proc `check_fw_ps` enable get/set |
+| W3-210 | `wave3-210-debug-phy-cap-dump.md` | default/driver PHY cap dump formatters |
+| W3-211 | `wave3-211-debug-proc-phy-cap-registry.md` | proc STBC/LDPC/TxBF registry get/set |
+| W3-212 | `wave3-212-debug-proc-tdls-enable.md` | TDLS enable + function-info display |
+| W3-213 | `wave3-213-debug-proc-tdls-network-sta.md` | TDLS network + linked STA display |
+| W3-214 | `wave3-214-debug-proc-malloc-best-ch.md` | malloc cnt + best-channel procs |
+
 Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:
 
 - `rtw_debug.c` procfs walkers / register dumps (mostly Rust-wrapped — audit before filing)

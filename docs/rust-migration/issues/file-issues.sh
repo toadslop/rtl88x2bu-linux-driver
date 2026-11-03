@@ -370,6 +370,12 @@ files=(
   wave3-206-debug-proc-tx-ampdu-misc.md
   wave3-207-debug-proc-tx-amsdu.md
   wave3-208-debug-proc-vht-24g.md
+  wave3-209-debug-proc-en-fwps.md
+  wave3-210-debug-phy-cap-dump.md
+  wave3-211-debug-proc-phy-cap-registry.md
+  wave3-212-debug-proc-tdls-enable.md
+  wave3-213-debug-proc-tdls-network-sta.md
+  wave3-214-debug-proc-malloc-best-ch.md
 )
 
 # draft_id -> github issue number

@@ -336,6 +336,12 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-206 | #1684 | [W3-206] Translate rtw_debug_rest.c — proc tx AMPDU misc leaf |
 | W3-207 | #1685 | [W3-207] Translate rtw_debug_rest.c — proc tx AMSDU debug leaf |
 | W3-208 | #1686 | [W3-208] Translate rtw_debug_rest.c — proc VHT 24G enable leaf |
+| W3-209 | #1715 | [W3-209] Translate rtw_debug_rest.c — proc check_fw_ps leaf |
+| W3-210 | #1716 | [W3-210] Translate rtw_debug_rest.c — default/driver PHY cap dump leaf |
+| W3-211 | #1717 | [W3-211] Translate rtw_debug_rest.c — proc PHY cap registry get/set leaf |
+| W3-212 | #1718 | [W3-212] Translate rtw_debug_rest.c — proc TDLS enable + function info |
+| W3-213 | #1719 | [W3-213] Translate rtw_debug_rest.c — proc TDLS network + STA display |
+| W3-214 | #1720 | [W3-214] Translate rtw_debug_rest.c — proc malloc cnt + best channel leaf |
 
 ## Superseded issues
 
