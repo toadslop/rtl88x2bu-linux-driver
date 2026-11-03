@@ -166,9 +166,8 @@ fn proc_set_read_tmp(
     if buffer.is_null() {
         return None;
     }
-    let n = unsafe {
-        rtw_rust_debug_proc_read_user_line(buffer, count, tmp.as_mut_ptr(), tmp.len())
-    };
+    let n =
+        unsafe { rtw_rust_debug_proc_read_user_line(buffer, count, tmp.as_mut_ptr(), tmp.len()) };
     if n > 0 {
         Some(n as usize)
     } else {
