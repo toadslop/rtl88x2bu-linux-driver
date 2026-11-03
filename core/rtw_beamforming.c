@@ -1383,10 +1383,6 @@ static struct beamformee_entry *_bfee_add_entry(PADAPTER adapter,
 static void _rust_get_sta_beamform_cap(PADAPTER adapter, struct sta_info *sta,
 				     u8 *sta_bf_cap, u8 *sounding_dim, u8 *comp_steering)
 {
-#if defined(CONFIG_RUST) && !defined(HOST_BF_TXVECTOR_CAP_C_REF)
-	rtw_rust_get_sta_beamform_cap(adapter, sta, sta_bf_cap, sounding_dim, comp_steering);
-	return;
-#endif
 	struct beamforming_info *info = GET_BEAMFORM_INFO(adapter);
 	struct ht_priv *ht = &adapter->mlmepriv.htpriv;
 	u16 ht_bf_cap;
