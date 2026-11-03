@@ -3314,6 +3314,169 @@ ssize_t rtw_rust_debug_proc_set_vht_24g_enable(_adapter *adapter,
 }
 #endif /* CONFIG_80211AC_VHT */
 
+#ifdef CONFIG_TDLS
+#define TDLS_DBG_INFO_SPACE_BTWN_ITEM_AND_VALUE 41
+
+void rtw_rust_debug_proc_emit_tdls_enable(void *sel, _adapter *adapter)
+{
+	struct registry_priv *pregpriv = &adapter->registrypriv;
+
+	if (pregpriv)
+		RTW_PRINT_SEL(sel, "TDLS is %s !\n",
+			      (rtw_is_tdls_enabled(adapter) == _TRUE) ? "enabled" : "disabled");
+}
+
+ssize_t rtw_rust_debug_proc_set_tdls_enable(_adapter *adapter,
+					    const char __user *buffer,
+					    size_t count)
+{
+	struct registry_priv *pregpriv = &adapter->registrypriv;
+	char tmp[32];
+	u32 en_tdls = 0;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%d ", &en_tdls);
+
+		if (num == 1 && pregpriv) {
+			if (en_tdls > 0)
+				rtw_enable_tdls_func(adapter);
+			else
+				rtw_disable_tdls_func(adapter, _TRUE);
+		}
+	}
+
+	return count;
+}
+
+int rtw_rust_debug_proc_tdls_display_function_info(void *m)
+{
+	struct seq_file *seq = m;
+	struct net_device *dev = seq->private;
+	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
+	struct tdls_info *ptdlsinfo = &padapter->tdlsinfo;
+	u8 SpaceBtwnItemAndValue = TDLS_DBG_INFO_SPACE_BTWN_ITEM_AND_VALUE;
+#ifdef CONFIG_TDLS_CH_SW
+	u8 SpaceBtwnItemAndValueTmp = 0;
+	BOOLEAN FirstMatchFound = _FALSE;
+	int j = 0;
+#endif
+
+	RTW_PRINT_SEL(m, "============[TDLS Function Info]============\n");
+	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue, "TDLS Enable",
+		      (rtw_is_tdls_enabled(padapter) == _TRUE) ? "_TRUE" : "_FALSE");
+	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue, "TDLS Driver Setup",
+		      (ptdlsinfo->driver_setup == _TRUE) ? "_TRUE" : "_FALSE");
+	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue, "TDLS Prohibited",
+		      (ptdlsinfo->ap_prohibited == _TRUE) ? "_TRUE" : "_FALSE");
+	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue,
+		      "TDLS Channel Switch Prohibited",
+		      (ptdlsinfo->ch_switch_prohibited == _TRUE) ? "_TRUE" : "_FALSE");
+	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue, "TDLS Link Established",
+		      (ptdlsinfo->link_established == _TRUE) ? "_TRUE" : "_FALSE");
+	RTW_PRINT_SEL(m, "%-*s = %d/%d\n", SpaceBtwnItemAndValue,
+		      "TDLS STA Num (Linked/Allowed)", ptdlsinfo->sta_cnt,
+		      MAX_ALLOWED_TDLS_STA_NUM);
+	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue,
+		      "TDLS Allowed STA Num Reached",
+		      (ptdlsinfo->sta_maximum == _TRUE) ? "_TRUE" : "_FALSE");
+
+#ifdef CONFIG_TDLS_CH_SW
+	RTW_PRINT_SEL(m, "%-*s =", SpaceBtwnItemAndValue, "TDLS CH SW State");
+	if (ptdlsinfo->chsw_info.ch_sw_state == TDLS_STATE_NONE)
+		RTW_PRINT_SEL(m, "%-*s%s\n", SpaceBtwnItemAndValueTmp, " ",
+			      "TDLS_STATE_NONE");
+	else {
+		for (j = 0; j < 32; j++) {
+			if (ptdlsinfo->chsw_info.ch_sw_state & BIT(j)) {
+				if (FirstMatchFound == _FALSE) {
+					SpaceBtwnItemAndValueTmp = 1;
+					FirstMatchFound = _TRUE;
+				} else
+					SpaceBtwnItemAndValueTmp = SpaceBtwnItemAndValue + 3;
+				switch (BIT(j)) {
+				case TDLS_INITIATOR_STATE:
+					RTW_PRINT_SEL(m, "%-*s%s\n",
+						      SpaceBtwnItemAndValueTmp, " ",
+						      "TDLS_INITIATOR_STATE");
+					break;
+				case TDLS_RESPONDER_STATE:
+					RTW_PRINT_SEL(m, "%-*s%s\n",
+						      SpaceBtwnItemAndValueTmp, " ",
+						      "TDLS_RESPONDER_STATE");
+					break;
+				case TDLS_LINKED_STATE:
+					RTW_PRINT_SEL(m, "%-*s%s\n",
+						      SpaceBtwnItemAndValueTmp, " ",
+						      "TDLS_LINKED_STATE");
+					break;
+				case TDLS_WAIT_PTR_STATE:
+					RTW_PRINT_SEL(m, "%-*s%s\n",
+						      SpaceBtwnItemAndValueTmp, " ",
+						      "TDLS_WAIT_PTR_STATE");
+					break;
+				case TDLS_ALIVE_STATE:
+					RTW_PRINT_SEL(m, "%-*s%s\n",
+						      SpaceBtwnItemAndValueTmp, " ",
+						      "TDLS_ALIVE_STATE");
+					break;
+				case TDLS_CH_SWITCH_ON_STATE:
+					RTW_PRINT_SEL(m, "%-*s%s\n",
+						      SpaceBtwnItemAndValueTmp, " ",
+						      "TDLS_CH_SWITCH_ON_STATE");
+					break;
+				case TDLS_PEER_AT_OFF_STATE:
+					RTW_PRINT_SEL(m, "%-*s%s\n",
+						      SpaceBtwnItemAndValueTmp, " ",
+						      "TDLS_PEER_AT_OFF_STATE");
+					break;
+				case TDLS_CH_SW_INITIATOR_STATE:
+					RTW_PRINT_SEL(m, "%-*s%s\n",
+						      SpaceBtwnItemAndValueTmp, " ",
+						      "TDLS_CH_SW_INITIATOR_STATE");
+					break;
+				case TDLS_WAIT_CH_RSP_STATE:
+					RTW_PRINT_SEL(m, "%-*s%s\n", SpaceBtwnItemAndValue,
+						      " ", "TDLS_WAIT_CH_RSP_STATE");
+					break;
+				default:
+					RTW_PRINT_SEL(m, "%-*sBIT(%d)\n",
+						      SpaceBtwnItemAndValueTmp, " ", j);
+					break;
+				}
+			}
+		}
+	}
+
+	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue, "TDLS CH SW On",
+		      (ATOMIC_READ(&ptdlsinfo->chsw_info.chsw_on) == _TRUE) ? "_TRUE" : "_FALSE");
+	RTW_PRINT_SEL(m, "%-*s = %d\n", SpaceBtwnItemAndValue,
+		      "TDLS CH SW Off-Channel Num", ptdlsinfo->chsw_info.off_ch_num);
+	RTW_PRINT_SEL(m, "%-*s = %d\n", SpaceBtwnItemAndValue,
+		      "TDLS CH SW Channel Offset", ptdlsinfo->chsw_info.ch_offset);
+	RTW_PRINT_SEL(m, "%-*s = %d\n", SpaceBtwnItemAndValue,
+		      "TDLS CH SW Current Time", ptdlsinfo->chsw_info.cur_time);
+	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue,
+		      "TDLS CH SW Delay Switch Back",
+		      (ptdlsinfo->chsw_info.delay_switch_back == _TRUE) ? "_TRUE" : "_FALSE");
+	RTW_PRINT_SEL(m, "%-*s = %d\n", SpaceBtwnItemAndValue, "TDLS CH SW Dump Back",
+		      ptdlsinfo->chsw_info.dump_stack);
+#endif
+
+	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue, "TDLS Device Discovered",
+		      (ptdlsinfo->dev_discovered == _TRUE) ? "_TRUE" : "_FALSE");
+
+	return 0;
+}
+#endif /* CONFIG_TDLS */
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */

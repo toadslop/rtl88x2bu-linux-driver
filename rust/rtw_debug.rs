@@ -18,6 +18,7 @@
 //! W3-203 proc HT registry handlers live in `rtw_debug_proc_ht.rs`.
 //! W3-207 proc tx AMSDU handlers live in `rtw_debug_proc_amsdu.rs`.
 //! W3-208 proc VHT 24G enable handlers live in `rtw_debug_proc_vht.rs`.
+//! W3-212 proc TDLS enable + function info live in `rtw_debug_proc_tdls.rs`.
 
 #![allow(
     dead_code,
