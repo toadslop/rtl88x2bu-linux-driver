@@ -1,0 +1,24 @@
+{
+  "vectors": [
+    {
+      "name": "get_tdls_enable_on",
+      "en_tdls": 1,
+      "get": "tdls_enable",
+      "expect": "TDLS is enabled !\n"
+    },
+    {
+      "name": "get_tdls_enable_off",
+      "en_tdls": 0,
+      "get": "tdls_enable",
+      "expect": "TDLS is disabled !\n"
+    },
+    {
+      "name": "set_tdls_enable_on",
+      "en_tdls": 0,
+      "set": "tdls_enable",
+      "set_input": "1",
+      "get": "tdls_enable",
+      "expect": "TDLS is enabled !\n"
+    }
+  ]
+}
