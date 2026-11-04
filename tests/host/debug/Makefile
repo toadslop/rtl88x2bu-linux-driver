@@ -33,6 +33,12 @@ VHT_SHIM   := host_rtw_debug_proc_vht_shim.c
 VHT_RUST   := $(ROOT)/rust/rtw_debug_proc_vht.rs
 VHT_L2     := test_proc_vht_24g.c
 
+# W3-209 proc en_fwps (check_fw_ps) get/set
+FWPS_ORACLE := debug_proc_fwps_c_oracle.c
+FWPS_SHIM   := host_rtw_debug_proc_fwps_shim.c
+FWPS_RUST   := $(ROOT)/rust/rtw_debug_proc_fwps.rs
+FWPS_L2     := test_proc_en_fwps.c
+
 # W3-204 proc rx_ampdu get/set
 AMPDU_ORACLE := debug_proc_rx_ampdu_c_oracle.c
 AMPDU_SHIM   := host_rtw_debug_proc_ampdu_shim.c
