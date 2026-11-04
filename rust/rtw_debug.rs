@@ -16,6 +16,7 @@
 //! W3-204 proc rx_ampdu get/set; W3-205 driver AMPDU tuning procs in `rtw_debug_proc_ampdu.rs`.
 //! W3-168 proc manufacturing test setters live in `rtw_debug_proc_test.rs`.
 //! W3-203 proc HT registry handlers live in `rtw_debug_proc_ht.rs`.
+//! W3-207 proc tx AMSDU handlers live in `rtw_debug_proc_amsdu.rs`.
 
 #![allow(
     dead_code,

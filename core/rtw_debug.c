@@ -3184,6 +3184,96 @@ ssize_t rtw_rust_debug_proc_set_ampdu_enable(_adapter *adapter,
 
 	return count;
 }
+
+#ifdef CONFIG_TX_AMSDU
+void rtw_rust_debug_proc_emit_tx_amsdu(void *sel, _adapter *adapter)
+{
+	struct xmit_priv *pxmitpriv = &adapter->xmitpriv;
+
+	if (adapter) {
+		RTW_PRINT_SEL(sel, "tx amsdu = %d\n", adapter->tx_amsdu);
+		RTW_PRINT_SEL(sel, "amsdu set timer conut = %u\n",
+			      pxmitpriv->amsdu_debug_set_timer);
+		RTW_PRINT_SEL(sel, "amsdu  time out count = %u\n",
+			      pxmitpriv->amsdu_debug_timeout);
+		RTW_PRINT_SEL(sel, "amsdu coalesce one count = %u\n",
+			      pxmitpriv->amsdu_debug_coalesce_one);
+		RTW_PRINT_SEL(sel, "amsdu coalesce two count = %u\n",
+			      pxmitpriv->amsdu_debug_coalesce_two);
+	}
+}
+
+ssize_t rtw_rust_debug_proc_set_tx_amsdu(_adapter *adapter,
+					 const char __user *buffer,
+					 size_t count)
+{
+	struct xmit_priv *pxmitpriv = &adapter->xmitpriv;
+	char tmp[32];
+	u32 amsdu;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%d ", &amsdu);
+
+		if (adapter && (num == 1)) {
+			RTW_INFO("padapter->tx_amsdu = %x\n", amsdu);
+
+			if (amsdu > 3)
+				adapter->tx_amsdu = 0;
+			else if (amsdu == 3) {
+				pxmitpriv->amsdu_debug_set_timer = 0;
+				pxmitpriv->amsdu_debug_timeout = 0;
+				pxmitpriv->amsdu_debug_coalesce_one = 0;
+				pxmitpriv->amsdu_debug_coalesce_two = 0;
+			} else
+				adapter->tx_amsdu = amsdu;
+		}
+	}
+
+	return count;
+}
+
+void rtw_rust_debug_proc_emit_tx_amsdu_rate(void *sel, _adapter *adapter)
+{
+	if (adapter)
+		RTW_PRINT_SEL(sel, "tx amsdu rate = %d Mbps\n",
+			      adapter->tx_amsdu_rate);
+}
+
+ssize_t rtw_rust_debug_proc_set_tx_amsdu_rate(_adapter *adapter,
+					      const char __user *buffer,
+					      size_t count)
+{
+	char tmp[32];
+	u32 amsdu_rate;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%d ", &amsdu_rate);
+
+		if (adapter && (num == 1)) {
+			RTW_INFO("padapter->tx_amsdu_rate = %x\n", amsdu_rate);
+			adapter->tx_amsdu_rate = amsdu_rate;
+		}
+	}
+
+	return count;
+}
+#endif /* CONFIG_TX_AMSDU */
 #endif /* CONFIG_80211N_HT */
 
 #endif /* CONFIG_PROC_DEBUG */
