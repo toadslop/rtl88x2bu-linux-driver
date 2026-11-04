@@ -197,9 +197,6 @@ int proc_tdls_display_tdls_sta_info(struct seq_file *m)
 				case _SMS4_:
 					RTW_PRINT_SEL(m, "%s\n", "SMS4");
 					break;
-				default:
-					RTW_PRINT_SEL(m, "(%u)\n", psta->dot118021XPrivacy);
-					break;
 				}
 
 				RTW_PRINT_SEL(m, "%-*s = %d sec/%d sec\n",
