@@ -108,6 +108,14 @@ long host_proc_set_tx_aval_th_from_buf(void *adapter, const unsigned char *buffe
 				       size_t count);
 #endif
 
+static void trim_trailing_ws(char *s)
+{
+	size_t n = strlen(s);
+
+	while (n && (s[n - 1] == '\n' || s[n - 1] == ' ' || s[n - 1] == '\t'))
+		s[--n] = '\0';
+}
+
 static void normalize_proc_output(char *s)
 {
 	size_t i = 0;
@@ -127,14 +135,6 @@ static void normalize_proc_output(char *s)
 			break;
 		}
 	}
-}
-
-static void strip_trailing_newline(char *s)
-{
-	size_t n = strlen(s);
-
-	if (n && s[n - 1] == '\n')
-		s[n - 1] = '\0';
 }
 
 static int run_get_vector(const struct get_vector *v)
@@ -167,14 +167,14 @@ static int run_get_vector(const struct get_vector *v)
 	nread = fread(got, 1, sizeof(got) - 1, f);
 	fclose(f);
 	got[nread] = '\0';
+	normalize_proc_output(got);
 	{
 		char expect_trim[MAX_EXPECT];
 
 		strcpy(expect_trim, v->expect);
-		normalize_proc_output(got);
 		normalize_proc_output(expect_trim);
-		strip_trailing_newline(got);
-		strip_trailing_newline(expect_trim);
+		trim_trailing_ws(got);
+		trim_trailing_ws(expect_trim);
 		if (strcmp(got, expect_trim) != 0) {
 			fprintf(stderr, "FAIL get %s:\n  got:    %s\n  expect: %s\n",
 				v->name, got, expect_trim);

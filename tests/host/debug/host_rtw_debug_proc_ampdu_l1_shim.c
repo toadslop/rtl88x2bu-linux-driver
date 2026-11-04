@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Stub linker symbols for W3-204/W3-205 L1. */
+/* Stub linker symbols for W3-204/W3-205/W3-206 L1. */
 
 #include <stddef.h>
 
@@ -35,3 +35,5 @@ STUB_PROC_GET(proc_get_tx_ampdu_density)
 STUB_PROC_SET(proc_set_tx_ampdu_density)
 STUB_PROC_GET(proc_get_tx_max_agg_num)
 STUB_PROC_SET(proc_set_tx_max_agg_num)
+STUB_PROC_GET(proc_get_tx_quick_addba_req)
+STUB_PROC_SET(proc_set_tx_quick_addba_req)
