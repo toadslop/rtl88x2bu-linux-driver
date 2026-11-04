@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-/* Host L2 types for W3-212 proc TDLS enable (PR1); display fields in PR2. */
+/* Host L2 types for W3-212 proc TDLS enable + function info display. */
 #ifndef HOST_RTW_DEBUG_PROC_TDLS_TYPES_H
 #define HOST_RTW_DEBUG_PROC_TDLS_TYPES_H
 
@@ -14,12 +14,26 @@ typedef long ssize_t;
 #define _TRUE 1
 #define _FALSE 0
 
+#define MAX_ALLOWED_TDLS_STA_NUM 4
+#define TDLS_DBG_INFO_SPACE_BTWN_ITEM_AND_VALUE 41
+
 struct registry_priv {
 	u8 en_tdls;
 };
 
+struct tdls_info {
+	u8 ap_prohibited;
+	u8 ch_switch_prohibited;
+	u8 link_established;
+	u8 sta_cnt;
+	u8 sta_maximum;
+	u8 dev_discovered;
+	u8 driver_setup;
+};
+
 struct _adapter {
 	struct registry_priv registrypriv;
+	struct tdls_info tdlsinfo;
 };
 
 struct net_device {
@@ -50,5 +64,6 @@ void rtw_disable_tdls_func(struct _adapter *padapter, u8 enqueue_cmd);
 int proc_get_tdls_enable(struct seq_file *m, void *v);
 ssize_t proc_set_tdls_enable(void *file, const void *buffer, size_t count,
 			     long *pos, void *data);
+int proc_tdls_display_tdls_function_info(struct seq_file *m);
 
 #endif /* HOST_RTW_DEBUG_PROC_TDLS_TYPES_H */

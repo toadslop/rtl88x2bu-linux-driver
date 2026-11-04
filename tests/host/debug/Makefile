@@ -186,8 +186,8 @@ test_proc_vht_24g_rust: $(VHT_L2) librust_rtw_debug_proc_vht.a $(VHT_SHIM) $(HOS
 test-proc-tdls-c: test_proc_tdls_enable
 	./test_proc_tdls_enable debug_proc_tdls_vectors.json
 
-test_proc_tdls_enable: $(TDLS_L2) $(TDLS_ORACLE) $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ $(TDLS_L2) $(TDLS_ORACLE) $(HOST_JSON)
+test_proc_tdls_enable: $(TDLS_L2) $(TDLS_ORACLE) $(TDLS_DISPLAY_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ $(TDLS_L2) $(TDLS_ORACLE) $(TDLS_DISPLAY_ORACLE) $(HOST_JSON)
 
 test-proc-rx-ampdu-c: test_proc_rx_ampdu
 	./test_proc_rx_ampdu debug_proc_rx_ampdu_get_vectors.json debug_proc_rx_ampdu_set_vectors.json
