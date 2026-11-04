@@ -41,6 +41,8 @@ AMPDU_MISC_ORACLE := debug_proc_tx_ampdu_misc_c_oracle.c
 AMPDU_MISC_L2     := test_proc_tx_ampdu_misc.c
 # W3-207 proc tx AMSDU get/set
 AMSDU_ORACLE := debug_proc_tx_amsdu_c_oracle.c
+AMSDU_SHIM    := host_rtw_debug_proc_amsdu_shim.c
+AMSDU_RUST    := $(ROOT)/rust/rtw_debug_proc_amsdu.rs
 AMSDU_L2     := test_proc_tx_amsdu.c
 
 CC     := gcc
@@ -54,7 +56,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust \
-	test-proc-tx-amsdu-c
+	test-proc-tx-amsdu-c test-proc-tx-amsdu-rust
 
 all: test
 
@@ -64,7 +66,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust \
-	test-proc-tx-amsdu-c
+	test-proc-tx-amsdu-c test-proc-tx-amsdu-rust
 
 test-all: test
 
@@ -73,7 +75,7 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
 	test-proc-ht-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
-	test-proc-tx-ampdu-misc-rust
+	test-proc-tx-ampdu-misc-rust test-proc-tx-amsdu-rust
 
 test-hooks-c: test_debug_test_hooks_c
 	./test_debug_test_hooks_c
@@ -209,6 +211,19 @@ test-proc-tx-amsdu-c: test_proc_tx_amsdu
 test_proc_tx_amsdu: $(AMSDU_L2) $(AMSDU_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ $(AMSDU_L2) $(AMSDU_ORACLE) $(HOST_JSON)
 
+librust_rtw_debug_proc_amsdu.a: $(AMSDU_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_amsdu_test \
+		--cfg config_rtw_debug --cfg config_proc_debug \
+		--crate-type staticlib $(AMSDU_RUST) -o $@
+
+test-proc-tx-amsdu-rust: test_proc_tx_amsdu_rust
+	./test_proc_tx_amsdu_rust debug_proc_tx_amsdu_vectors.json
+
+test_proc_tx_amsdu_rust: $(AMSDU_L2) librust_rtw_debug_proc_amsdu.a $(AMSDU_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_RTW_DEBUG_PROC_AMSDU_ORACLE -o $@ \
+		$(AMSDU_L2) $(AMSDU_SHIM) $(HOST_JSON) librust_rtw_debug_proc_amsdu.a
+
 clean:
 	rm -f test_debug_test_hooks_c test_debug_test_hooks_rust librust_debug_test_hooks.a \
 		test_dump_sec_cam_ent test_dump_sec_cam_ent_rust librust_rtw_debug_sec_cam.a \
@@ -217,4 +232,4 @@ clean:
 		test_proc_rx_ampdu test_proc_rx_ampdu_rust librust_rtw_debug_proc_ampdu.a \
 		test_proc_ampdu_tuning test_proc_ampdu_tuning_rust \
 		test_proc_tx_ampdu_misc test_proc_tx_ampdu_misc_rust \
-		test_proc_tx_amsdu
+		test_proc_tx_amsdu test_proc_tx_amsdu_rust librust_rtw_debug_proc_amsdu.a
