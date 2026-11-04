@@ -1,0 +1,26 @@
+{
+  "vectors": [
+    {
+      "name": "get_en_fwps",
+      "check_fw_ps": 1,
+      "get": "en_fwps",
+      "expect": "check_fw_ps = 1 , 1:enable get FW PS state , 0: disable get FW PS state\n"
+    },
+    {
+      "name": "set_en_fwps",
+      "check_fw_ps": 0,
+      "set": "en_fwps",
+      "set_input": "1 ",
+      "get": "en_fwps",
+      "expect": "check_fw_ps = 1 , 1:enable get FW PS state , 0: disable get FW PS state\n"
+    },
+    {
+      "name": "set_en_fwps_over_max",
+      "check_fw_ps": 0,
+      "set": "en_fwps",
+      "set_input": "2 ",
+      "get": "en_fwps",
+      "expect": "check_fw_ps = 0 , 1:enable get FW PS state , 0: disable get FW PS state\n"
+    }
+  ]
+}
