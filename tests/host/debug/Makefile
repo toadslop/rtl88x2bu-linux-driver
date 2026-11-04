@@ -33,6 +33,10 @@ VHT_SHIM   := host_rtw_debug_proc_vht_shim.c
 VHT_RUST   := $(ROOT)/rust/rtw_debug_proc_vht.rs
 VHT_L2     := test_proc_vht_24g.c
 
+# W3-209 proc en_fwps (check_fw_ps) get/set
+FWPS_ORACLE := debug_proc_fwps_c_oracle.c
+FWPS_L2     := test_proc_en_fwps.c
+
 # W3-204 proc rx_ampdu get/set
 AMPDU_ORACLE := debug_proc_rx_ampdu_c_oracle.c
 AMPDU_SHIM   := host_rtw_debug_proc_ampdu_shim.c
@@ -64,7 +68,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-regsty-rx-ampdu-c test-regsty-rx-ampdu-rust \
 	test-proc-ht-c test-proc-ht-rust \
 	test-proc-vht-c test-proc-vht-rust \
-	test-proc-tdls-c \
+	test-proc-fwps-c test-proc-tdls-c \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust \
@@ -76,7 +80,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-regsty-rx-ampdu-c test-regsty-rx-ampdu-rust \
 	test-proc-ht-c test-proc-ht-rust \
 	test-proc-vht-c test-proc-vht-rust \
-	test-proc-tdls-c \
+	test-proc-fwps-c test-proc-tdls-c \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust \
@@ -85,7 +89,8 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 test-all: test
 
 test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
-	test-proc-vht-c test-proc-rx-ampdu-c test-proc-tdls-c test-proc-ampdu-tuning-c test-proc-tx-amsdu-c
+	test-proc-vht-c test-proc-fwps-c test-proc-rx-ampdu-c test-proc-tdls-c \
+	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c
 
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
 	test-proc-ht-rust test-proc-vht-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
@@ -168,6 +173,12 @@ test-proc-vht-c: test_proc_vht_24g
 
 test_proc_vht_24g: $(VHT_L2) $(VHT_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ $(VHT_L2) $(VHT_ORACLE) $(HOST_JSON)
+
+test-proc-fwps-c: test_proc_en_fwps
+	./test_proc_en_fwps debug_proc_fwps_vectors.json
+
+test_proc_en_fwps: $(FWPS_L2) $(FWPS_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ $(FWPS_L2) $(FWPS_ORACLE) $(HOST_JSON)
 
 librust_rtw_debug_proc_vht.a: $(VHT_RUST)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
@@ -270,7 +281,7 @@ clean:
 		test_dump_regsty_rx_ampdu test_dump_regsty_rx_ampdu_rust librust_rtw_debug_regsty.a \
 		test_proc_ht_registry test_proc_ht_registry_rust librust_rtw_debug_proc_ht.a \
 		test_proc_vht_24g test_proc_vht_24g_rust librust_rtw_debug_proc_vht.a \
-		test_proc_tdls_enable \
+		test_proc_en_fwps test_proc_tdls_enable \
 		test_proc_rx_ampdu test_proc_rx_ampdu_rust librust_rtw_debug_proc_ampdu.a \
 		test_proc_ampdu_tuning test_proc_ampdu_tuning_rust \
 		test_proc_tx_ampdu_misc test_proc_tx_ampdu_misc_rust \
