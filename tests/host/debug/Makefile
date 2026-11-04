@@ -97,7 +97,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust \
 	test-proc-tx-amsdu-c test-proc-tx-amsdu-rust \
-	test-phy-cap-dump-c
+	test-phy-cap-dump-c test-phy-cap-dump-rust
 
 test-all: test
 
