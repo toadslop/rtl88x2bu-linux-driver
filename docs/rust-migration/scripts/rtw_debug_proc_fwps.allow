@@ -1,0 +1,3 @@
+# L1 allowlist for W3-209: Rust owns en_fwps proc get/set in rtw_debug_proc_fwps.o.
+drop rtw_rust_debug_proc_emit_en_fwps
+drop rtw_rust_debug_proc_set_en_fwps

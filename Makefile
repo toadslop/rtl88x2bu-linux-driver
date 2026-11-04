@@ -3158,6 +3158,7 @@ ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_TX_AMSDU' $(src)/include/autoco
 $(MODULE_NAME)-y += rust/rtw_debug_proc_amsdu.o
 endif
 $(MODULE_NAME)-y += rust/rtw_debug_proc_vht.o
+$(MODULE_NAME)-y += rust/rtw_debug_proc_fwps.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ps.o
@@ -5096,6 +5097,20 @@ rust-objects-rtw-debug-proc-vht-c:
 rust-check-symbols-rtw-debug-proc-vht: rust-objects-rtw-debug-proc-vht-c rust-objects-rtw-debug-proc-vht
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_vht_c_ref.o NEW=rust/rtw_debug_proc_vht.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_vht.allow ALLOW_VACUOUS=1
+
+# W3-209: host C oracle vs rust/rtw_debug_proc_fwps.o (proc en_fwps get/set).
+rust-objects-rtw-debug-proc-fwps:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-fwps"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_fwps.o
+rust-objects-rtw-debug-proc-fwps-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_fwps_c_ref.o \
+		tests/host/debug/debug_proc_fwps_c_oracle.c
+rust-check-symbols-rtw-debug-proc-fwps: rust-objects-rtw-debug-proc-fwps-c rust-objects-rtw-debug-proc-fwps
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_fwps_c_ref.o NEW=rust/rtw_debug_proc_fwps.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_fwps.allow ALLOW_VACUOUS=1
 
 # W3-204: host C stub vs rust/rtw_debug_proc_ampdu.o (proc rx_ampdu get/set).
 rust-objects-rtw-debug-proc-ampdu:
