@@ -4511,6 +4511,7 @@ int proc_get_two_path_rssi(struct seq_file *m, void *v)
 }
 */
 #ifdef CONFIG_80211N_HT
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 void rtw_dump_dft_phy_cap(void *sel, _adapter *adapter)
 {
 	struct mlme_priv *pmlmepriv = &adapter->mlmepriv;
@@ -4611,6 +4612,7 @@ void rtw_dump_drv_phy_cap(void *sel, _adapter *adapter)
 	RTW_PRINT_SEL(sel, "[DRV CAP] Tx Bfee rf_num : %d\n", pregistry_priv->beamformee_rf_num);
 	#endif
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-210 in rust/rtw_debug_phy_cap.rs */
 
 int proc_get_stbc_cap(struct seq_file *m, void *v)
 {

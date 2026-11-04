@@ -1,0 +1,5 @@
+# W3-210: PHY cap dump helpers — Rust FFI (kernel-only).
+drop rtw_rust_debug_print_sel
+drop rtw_rust_debug_phy_cap_fill
+drop rtw_rust_debug_ht_use_default_setting
+drop rtw_rust_debug_vht_use_default_setting
