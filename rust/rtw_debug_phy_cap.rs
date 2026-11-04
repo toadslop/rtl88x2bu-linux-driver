@@ -104,8 +104,16 @@ fn emit_hex_cap(sel: *mut c_void, label: &[u8], val: U8) {
     let mut line = [0u8; 64];
     let mut pos = 0usize;
     push_s(&mut line, &mut pos, label);
-    push(&mut line, &mut pos, b"0123456789abcdef"[(val >> 4) as usize]);
-    push(&mut line, &mut pos, b"0123456789abcdef"[(val & 0xf) as usize]);
+    push(
+        &mut line,
+        &mut pos,
+        b"0123456789abcdef"[(val >> 4) as usize],
+    );
+    push(
+        &mut line,
+        &mut pos,
+        b"0123456789abcdef"[(val & 0xf) as usize],
+    );
     push_s(&mut line, &mut pos, b"\n");
     emit_line(sel, &line[..pos]);
 }
@@ -127,26 +135,76 @@ pub extern "C" fn rtw_dump_dft_phy_cap(sel: *mut c_void, adapter: *mut c_void) {
     let c = caps(adapter);
     #[cfg(any(config_80211ac_vht, host_rtw_debug_phy_cap_test))]
     {
-        emit_vx(sel, b"[DFT CAP] VHT STBC Tx : ", c.vht_stbc & BIT1 != 0, false);
-        emit_vx(sel, b"[DFT CAP] VHT STBC Rx : ", c.vht_stbc & BIT0 != 0, false);
+        emit_vx(
+            sel,
+            b"[DFT CAP] VHT STBC Tx : ",
+            c.vht_stbc & BIT1 != 0,
+            false,
+        );
+        emit_vx(
+            sel,
+            b"[DFT CAP] VHT STBC Rx : ",
+            c.vht_stbc & BIT0 != 0,
+            false,
+        );
     }
-    emit_vx(sel, b"[DFT CAP] HT STBC Tx : ", c.ht_stbc & BIT1 != 0, false);
+    emit_vx(
+        sel,
+        b"[DFT CAP] HT STBC Tx : ",
+        c.ht_stbc & BIT1 != 0,
+        false,
+    );
     emit_vx(sel, b"[DFT CAP] HT STBC Rx : ", c.ht_stbc & BIT0 != 0, true);
     #[cfg(any(config_80211ac_vht, host_rtw_debug_phy_cap_test))]
     {
-        emit_vx(sel, b"[DFT CAP] VHT LDPC Tx : ", c.vht_ldpc & BIT1 != 0, false);
-        emit_vx(sel, b"[DFT CAP] VHT LDPC Rx : ", c.vht_ldpc & BIT0 != 0, false);
+        emit_vx(
+            sel,
+            b"[DFT CAP] VHT LDPC Tx : ",
+            c.vht_ldpc & BIT1 != 0,
+            false,
+        );
+        emit_vx(
+            sel,
+            b"[DFT CAP] VHT LDPC Rx : ",
+            c.vht_ldpc & BIT0 != 0,
+            false,
+        );
     }
-    emit_vx(sel, b"[DFT CAP] HT LDPC Tx : ", c.ht_ldpc & BIT1 != 0, false);
+    emit_vx(
+        sel,
+        b"[DFT CAP] HT LDPC Tx : ",
+        c.ht_ldpc & BIT1 != 0,
+        false,
+    );
     emit_vx(sel, b"[DFT CAP] HT LDPC Rx : ", c.ht_ldpc & BIT0 != 0, true);
     #[cfg(any(config_beamforming, host_rtw_debug_phy_cap_test))]
     {
         #[cfg(any(config_80211ac_vht, host_rtw_debug_phy_cap_test))]
         {
-            emit_vx(sel, b"[DFT CAP] VHT MU Bfer : ", c.vht_bf & BIT2 as U16 != 0, false);
-            emit_vx(sel, b"[DFT CAP] VHT MU Bfee : ", c.vht_bf & BIT3 as U16 != 0, false);
-            emit_vx(sel, b"[DFT CAP] VHT SU Bfer : ", c.vht_bf & BIT0 as U16 != 0, false);
-            emit_vx(sel, b"[DFT CAP] VHT SU Bfee : ", c.vht_bf & BIT1 as U16 != 0, false);
+            emit_vx(
+                sel,
+                b"[DFT CAP] VHT MU Bfer : ",
+                c.vht_bf & BIT2 as U16 != 0,
+                false,
+            );
+            emit_vx(
+                sel,
+                b"[DFT CAP] VHT MU Bfee : ",
+                c.vht_bf & BIT3 as U16 != 0,
+                false,
+            );
+            emit_vx(
+                sel,
+                b"[DFT CAP] VHT SU Bfer : ",
+                c.vht_bf & BIT0 as U16 != 0,
+                false,
+            );
+            emit_vx(
+                sel,
+                b"[DFT CAP] VHT SU Bfee : ",
+                c.vht_bf & BIT1 as U16 != 0,
+                false,
+            );
         }
         emit_vx(sel, b"[DFT CAP] HT Bfer : ", c.ht_bf & BIT0 != 0, false);
         emit_vx(sel, b"[DFT CAP] HT Bfee : ", c.ht_bf & BIT1 != 0, false);
@@ -169,22 +227,82 @@ pub extern "C" fn rtw_dump_drv_phy_cap(sel: *mut c_void, adapter: *mut c_void) {
     let c = caps(adapter);
     emit_line(sel, b"\n ======== DRV's configuration ========\n");
     emit_hex_cap(sel, b"[DRV CAP] STBC Capability : 0x", c.reg_stbc);
-    emit_vx(sel, b"[DRV CAP] VHT STBC Tx : ", c.reg_stbc & BIT1 != 0, false);
-    emit_vx(sel, b"[DRV CAP] VHT STBC Rx : ", c.reg_stbc & BIT0 != 0, false);
-    emit_vx(sel, b"[DRV CAP] HT STBC Tx : ", c.reg_stbc & BIT5 != 0, false);
-    emit_vx(sel, b"[DRV CAP] HT STBC Rx : ", c.reg_stbc & BIT4 != 0, true);
+    emit_vx(
+        sel,
+        b"[DRV CAP] VHT STBC Tx : ",
+        c.reg_stbc & BIT1 != 0,
+        false,
+    );
+    emit_vx(
+        sel,
+        b"[DRV CAP] VHT STBC Rx : ",
+        c.reg_stbc & BIT0 != 0,
+        false,
+    );
+    emit_vx(
+        sel,
+        b"[DRV CAP] HT STBC Tx : ",
+        c.reg_stbc & BIT5 != 0,
+        false,
+    );
+    emit_vx(
+        sel,
+        b"[DRV CAP] HT STBC Rx : ",
+        c.reg_stbc & BIT4 != 0,
+        true,
+    );
     emit_hex_cap(sel, b"[DRV CAP] LDPC Capability : 0x", c.reg_ldpc);
-    emit_vx(sel, b"[DRV CAP] VHT LDPC Tx : ", c.reg_ldpc & BIT1 != 0, false);
-    emit_vx(sel, b"[DRV CAP] VHT LDPC Rx : ", c.reg_ldpc & BIT0 != 0, false);
-    emit_vx(sel, b"[DRV CAP] HT LDPC Tx : ", c.reg_ldpc & BIT5 != 0, false);
-    emit_vx(sel, b"[DRV CAP] HT LDPC Rx : ", c.reg_ldpc & BIT4 != 0, true);
+    emit_vx(
+        sel,
+        b"[DRV CAP] VHT LDPC Tx : ",
+        c.reg_ldpc & BIT1 != 0,
+        false,
+    );
+    emit_vx(
+        sel,
+        b"[DRV CAP] VHT LDPC Rx : ",
+        c.reg_ldpc & BIT0 != 0,
+        false,
+    );
+    emit_vx(
+        sel,
+        b"[DRV CAP] HT LDPC Tx : ",
+        c.reg_ldpc & BIT5 != 0,
+        false,
+    );
+    emit_vx(
+        sel,
+        b"[DRV CAP] HT LDPC Rx : ",
+        c.reg_ldpc & BIT4 != 0,
+        true,
+    );
     #[cfg(any(config_beamforming, host_rtw_debug_phy_cap_test))]
     {
         emit_hex_cap(sel, b"[DRV CAP] TxBF Capability : 0x", c.reg_bf);
-        emit_vx(sel, b"[DRV CAP] VHT MU Bfer : ", c.reg_bf & BIT2 != 0, false);
-        emit_vx(sel, b"[DRV CAP] VHT MU Bfee : ", c.reg_bf & BIT3 != 0, false);
-        emit_vx(sel, b"[DRV CAP] VHT SU Bfer : ", c.reg_bf & BIT0 != 0, false);
-        emit_vx(sel, b"[DRV CAP] VHT SU Bfee : ", c.reg_bf & BIT1 != 0, false);
+        emit_vx(
+            sel,
+            b"[DRV CAP] VHT MU Bfer : ",
+            c.reg_bf & BIT2 != 0,
+            false,
+        );
+        emit_vx(
+            sel,
+            b"[DRV CAP] VHT MU Bfee : ",
+            c.reg_bf & BIT3 != 0,
+            false,
+        );
+        emit_vx(
+            sel,
+            b"[DRV CAP] VHT SU Bfer : ",
+            c.reg_bf & BIT0 != 0,
+            false,
+        );
+        emit_vx(
+            sel,
+            b"[DRV CAP] VHT SU Bfee : ",
+            c.reg_bf & BIT1 != 0,
+            false,
+        );
         emit_vx(sel, b"[DRV CAP] HT Bfer : ", c.reg_bf & BIT4 != 0, false);
         emit_vx(sel, b"[DRV CAP] HT Bfee : ", c.reg_bf & BIT5 != 0, false);
         emit_dec_line(sel, b"[DRV CAP] Tx Bfer rf_num : ", c.reg_bfer_rf);
