@@ -116,6 +116,27 @@ static void trim_trailing_ws(char *s)
 		s[--n] = '\0';
 }
 
+static void normalize_proc_output(char *s)
+{
+	size_t i = 0;
+
+	while (s[i]) {
+		size_t start = i;
+
+		while (s[i] && s[i] != '\n')
+			i++;
+		while (i > start && (s[i - 1] == ' ' || s[i - 1] == '\t'))
+			i--;
+		if (s[i] == '\n') {
+			memmove(s + start + (i - start), s + i, strlen(s + i) + 1);
+			i = start + (i - start) + 1;
+		} else {
+			s[i] = '\0';
+			break;
+		}
+	}
+}
+
 static int run_get_vector(const struct get_vector *v)
 {
 	struct _adapter adapter;
@@ -146,18 +167,14 @@ static int run_get_vector(const struct get_vector *v)
 	nread = fread(got, 1, sizeof(got) - 1, f);
 	fclose(f);
 	got[nread] = '\0';
+	normalize_proc_output(got);
 	{
 		char expect_trim[MAX_EXPECT];
 
 		strcpy(expect_trim, v->expect);
+		normalize_proc_output(expect_trim);
 		trim_trailing_ws(got);
 		trim_trailing_ws(expect_trim);
-		if (strcmp(v->name, "aval_fixed") == 0) {
-			if (!strstr(got, "tx_aval_int_thr_mode = 1 (fixed)") ||
-			    !strstr(got, "tx_aval_threshold = 0x2a"))
-				return -1;
-			return 0;
-		}
 		if (strcmp(got, expect_trim) != 0) {
 			fprintf(stderr, "FAIL get %s:\n  got:    %s\n  expect: %s\n",
 				v->name, got, expect_trim);

@@ -49,7 +49,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-regsty-rx-ampdu-c test-regsty-rx-ampdu-rust \
 	test-proc-ht-c test-proc-ht-rust \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
-	test-proc-ampdu-tuning-c \
+	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust
 
 all: test
@@ -58,7 +58,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-regsty-rx-ampdu-c test-regsty-rx-ampdu-rust \
 	test-proc-ht-c test-proc-ht-rust \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
-	test-proc-ampdu-tuning-c \
+	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust
 
 test-all: test
@@ -67,7 +67,8 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 	test-proc-rx-ampdu-c test-proc-ampdu-tuning-c
 
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
-	test-proc-ht-rust test-proc-rx-ampdu-rust test-proc-tx-ampdu-misc-rust
+	test-proc-ht-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
+	test-proc-tx-ampdu-misc-rust
 
 test-hooks-c: test_debug_test_hooks_c
 	./test_debug_test_hooks_c
@@ -170,6 +171,16 @@ test-proc-ampdu-tuning-c: test_proc_ampdu_tuning
 test_proc_ampdu_tuning: $(TUNING_L2) $(TUNING_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ $(TUNING_L2) $(TUNING_ORACLE) $(HOST_JSON)
 
+test-proc-ampdu-tuning-rust: test_proc_ampdu_tuning_rust
+	./test_proc_ampdu_tuning_rust debug_proc_ampdu_tuning_get_vectors.json \
+		debug_proc_ampdu_tuning_set_vectors.json
+
+test_proc_ampdu_tuning_rust: $(TUNING_L2) librust_rtw_debug_proc_ampdu.a librust_rtw_debug_regsty.a \
+		$(AMPDU_SHIM) $(REGSTY_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DHOST_RTW_DEBUG_PROC_AMPDU_TEST -DRUST_RTW_DEBUG_PROC_AMPDU_ORACLE -o $@ \
+		$(TUNING_L2) $(AMPDU_SHIM) $(REGSTY_SHIM) $(HOST_JSON) \
+		librust_rtw_debug_proc_ampdu.a librust_rtw_debug_regsty.a
+
 test-proc-tx-ampdu-misc-c: test_proc_tx_ampdu_misc
 	./test_proc_tx_ampdu_misc debug_proc_tx_ampdu_misc_get_vectors.json \
 		debug_proc_tx_ampdu_misc_set_vectors.json
@@ -193,4 +204,5 @@ clean:
 		test_dump_regsty_rx_ampdu test_dump_regsty_rx_ampdu_rust librust_rtw_debug_regsty.a \
 		test_proc_ht_registry test_proc_ht_registry_rust librust_rtw_debug_proc_ht.a \
 		test_proc_rx_ampdu test_proc_rx_ampdu_rust librust_rtw_debug_proc_ampdu.a \
-		test_proc_ampdu_tuning test_proc_tx_ampdu_misc test_proc_tx_ampdu_misc_rust
+		test_proc_ampdu_tuning test_proc_ampdu_tuning_rust \
+		test_proc_tx_ampdu_misc test_proc_tx_ampdu_misc_rust
