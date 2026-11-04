@@ -4452,6 +4452,7 @@ int proc_get_dyn_rrsr(struct seq_file *m, void *v) {
 
 	return 0;
 }
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_en_fwps(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -4494,6 +4495,7 @@ ssize_t proc_set_en_fwps(struct file *file, const char __user *buffer, size_t co
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-209 in rust/rtw_debug_proc_fwps.rs */
 
 /*
 int proc_get_two_path_rssi(struct seq_file *m, void *v)
