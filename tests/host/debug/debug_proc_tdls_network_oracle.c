@@ -47,8 +47,6 @@ int proc_tdls_display_network_info(struct seq_file *m)
 				case WIRELESS_11AC:
 					RTW_PRINT_SEL(m, "%5s", "11AC ");
 					break;
-				default:
-					break;
 				}
 			}
 		}
@@ -77,9 +75,6 @@ int proc_tdls_display_network_info(struct seq_file *m)
 		case _SMS4_:
 			RTW_PRINT_SEL(m, "%s\n", "SMS4");
 			break;
-		default:
-			RTW_PRINT_SEL(m, "(%u)\n", padapter->securitypriv.dot11PrivacyAlgrthm);
-			break;
 		}
 
 		RTW_PRINT_SEL(m, "%-*s = %d\n", SpaceBtwnItemAndValue, "Channel",
@@ -94,9 +89,6 @@ int proc_tdls_display_network_info(struct seq_file *m)
 			break;
 		case HAL_PRIME_CHNL_OFFSET_UPPER:
 			RTW_PRINT_SEL(m, "%s\n", "Upper");
-			break;
-		default:
-			RTW_PRINT_SEL(m, "(%u)\n", pmlmeext->cur_ch_offset);
 			break;
 		}
 
@@ -116,9 +108,6 @@ int proc_tdls_display_network_info(struct seq_file *m)
 			break;
 		case CHANNEL_WIDTH_80_80:
 			RTW_PRINT_SEL(m, "%s\n", "80MHz + 80MHz");
-			break;
-		default:
-			RTW_PRINT_SEL(m, "(%u)\n", pmlmeext->cur_bwmode);
 			break;
 		}
 	} else {

@@ -8,7 +8,7 @@
     {
       "name": "tdls_network_assoc_fixture",
       "get": "tdls_network",
-      "fw_state": 12,
+      "fw_state": 9,
       "ssid": "TestAP",
       "mac": "aa:bb:cc:dd:ee:ff",
       "wireless_mode": 3,
