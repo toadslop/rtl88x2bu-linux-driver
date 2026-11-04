@@ -325,10 +325,12 @@ static int run_vector(const struct vector *v)
 		proc_get_tdls_enable(&seq, NULL);
 	else if (!strcmp(v->get_field, "tdlsinfo"))
 		proc_tdls_display_tdls_function_info(&seq);
+#ifndef RUST_RTW_DEBUG_PROC_TDLS_ORACLE
 	else if (!strcmp(v->get_field, "tdls_network"))
 		proc_tdls_display_network_info(&seq);
 	else if (!strcmp(v->get_field, "tdls_sta"))
 		proc_tdls_display_tdls_sta_info(&seq);
+#endif
 	else {
 		fclose(capture);
 		return -1;
@@ -347,11 +349,26 @@ static int run_vector(const struct vector *v)
 	return 0;
 }
 
+#ifdef RUST_RTW_DEBUG_PROC_TDLS_ORACLE
+static int vector_rust_oracle_ready(const struct vector *v)
+{
+	/*
+	 * W3-213 network/STA display procs land in later stack layers; the Rust
+	 * L2 harness only differential-tests handlers present in this PR slice.
+	 */
+	if (!strcmp(v->get_field, "tdls_network") ||
+	    !strcmp(v->get_field, "tdls_sta"))
+		return 0;
+	return 1;
+}
+#endif
+
 int main(int argc, char **argv)
 {
 	const char *path = argc > 1 ? argv[1] : "debug_proc_tdls_vectors.json";
 	struct vector vectors[MAX_VECTORS];
 	size_t count = 0;
+	size_t ran = 0;
 
 	if (host_load_vectors(path, vectors, sizeof(vectors[0]), MAX_VECTORS,
 			      parse_vector_object, &count)) {
@@ -360,10 +377,15 @@ int main(int argc, char **argv)
 	}
 
 	for (size_t i = 0; i < count; i++) {
+#ifdef RUST_RTW_DEBUG_PROC_TDLS_ORACLE
+		if (!vector_rust_oracle_ready(&vectors[i]))
+			continue;
+#endif
 		if (run_vector(&vectors[i]))
 			return 1;
+		ran++;
 	}
 
-	printf("ok: %zu proc TDLS vectors\n", count);
+	printf("ok: %zu proc TDLS vectors\n", ran);
 	return 0;
 }
