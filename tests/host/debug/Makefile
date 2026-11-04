@@ -232,9 +232,11 @@ librust_rtw_debug_proc_tdls.a: $(TDLS_RUST)
 test-proc-tdls-rust: test_proc_tdls_enable_rust
 	./test_proc_tdls_enable_rust debug_proc_tdls_vectors.json
 
-test_proc_tdls_enable_rust: $(TDLS_L2) librust_rtw_debug_proc_tdls.a $(TDLS_SHIM) $(HOST_JSON)
+test_proc_tdls_enable_rust: $(TDLS_L2) librust_rtw_debug_proc_tdls.a $(TDLS_SHIM) \
+		$(TDLS_ORACLE) $(TDLS_DISPLAY_ORACLE) $(TDLS_NETWORK_ORACLE) $(TDLS_STA_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_RTW_DEBUG_PROC_TDLS_ORACLE -o $@ \
-		$(TDLS_L2) $(TDLS_SHIM) $(HOST_JSON) librust_rtw_debug_proc_tdls.a
+		$(TDLS_L2) $(TDLS_SHIM) $(TDLS_ORACLE) $(TDLS_DISPLAY_ORACLE) \
+		$(TDLS_NETWORK_ORACLE) $(TDLS_STA_ORACLE) $(HOST_JSON) librust_rtw_debug_proc_tdls.a
 
 test-proc-rx-ampdu-c: test_proc_rx_ampdu
 	./test_proc_rx_ampdu debug_proc_rx_ampdu_get_vectors.json debug_proc_rx_ampdu_set_vectors.json
