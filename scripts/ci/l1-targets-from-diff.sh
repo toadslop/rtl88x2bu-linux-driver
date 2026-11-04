@@ -345,6 +345,7 @@ for path in "${changed[@]}"; do
 	| rust/rtw_debug_proc_signal.rs \
 	| rust/rtw_debug_proc_ht.rs \
 	| rust/rtw_debug_proc_amsdu.rs \
+	| rust/rtw_debug_proc_vht.rs \
 	| rust/rtw_debug_proc_ampdu.rs \
 	| rust/rtw_debug_proc_test.rs \
 	| core/rtw_debug_adapters_status_shim.c \
