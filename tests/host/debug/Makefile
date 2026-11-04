@@ -21,6 +21,11 @@ REGSTY_SHIM   := host_rtw_debug_regsty_shim.c
 REGSTY_RUST   := $(ROOT)/rust/rtw_debug_regsty.rs
 REGSTY_L2     := test_dump_regsty_rx_ampdu.c
 
+# W3-210 PHY cap dump helpers (default/driver)
+PHY_CAP_ORACLE := debug_phy_cap_c_oracle.c
+PHY_CAP_L2     := test_debug_phy_cap_dump.c
+PHY_CAP_CFG    := -DCONFIG_80211AC_VHT -DCONFIG_BEAMFORMING
+
 # W3-203 proc HT registry get/set
 HT_ORACLE := debug_proc_ht_c_oracle.c
 HT_SHIM   := host_rtw_debug_proc_ht_shim.c
@@ -70,7 +75,8 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust \
-	test-proc-tx-amsdu-c test-proc-tx-amsdu-rust
+	test-proc-tx-amsdu-c test-proc-tx-amsdu-rust \
+	test-phy-cap-dump-c
 
 all: test
 
@@ -87,7 +93,8 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 test-all: test
 
 test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
-	test-proc-vht-c test-proc-fwps-c test-proc-rx-ampdu-c test-proc-ampdu-tuning-c test-proc-tx-amsdu-c
+	test-proc-vht-c test-proc-fwps-c test-proc-rx-ampdu-c test-proc-ampdu-tuning-c test-proc-tx-amsdu-c \
+	test-phy-cap-dump-c
 
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
 	test-proc-ht-rust test-proc-vht-rust test-proc-fwps-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
@@ -134,6 +141,12 @@ test-regsty-rx-ampdu-c: test_dump_regsty_rx_ampdu
 
 test_dump_regsty_rx_ampdu: $(REGSTY_L2) $(REGSTY_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ $(REGSTY_L2) $(REGSTY_ORACLE) $(HOST_JSON)
+
+test-phy-cap-dump-c: test_debug_phy_cap_dump
+	./test_debug_phy_cap_dump debug_phy_cap_vectors.json
+
+test_debug_phy_cap_dump: $(PHY_CAP_L2) $(PHY_CAP_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(PHY_CAP_CFG) -o $@ $(PHY_CAP_L2) $(PHY_CAP_ORACLE) $(HOST_JSON)
 
 librust_rtw_debug_regsty.a: $(REGSTY_RUST)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
@@ -289,4 +302,5 @@ clean:
 		test_proc_rx_ampdu test_proc_rx_ampdu_rust librust_rtw_debug_proc_ampdu.a \
 		test_proc_ampdu_tuning test_proc_ampdu_tuning_rust \
 		test_proc_tx_ampdu_misc test_proc_tx_ampdu_misc_rust \
-		test_proc_tx_amsdu test_proc_tx_amsdu_rust librust_rtw_debug_proc_amsdu.a
+		test_proc_tx_amsdu test_proc_tx_amsdu_rust librust_rtw_debug_proc_amsdu.a \
+		test_debug_phy_cap_dump
