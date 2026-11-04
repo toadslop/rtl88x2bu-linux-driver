@@ -24,7 +24,7 @@ REGSTY_L2     := test_dump_regsty_rx_ampdu.c
 # W3-210 PHY cap dump helpers (default/driver)
 PHY_CAP_ORACLE := debug_phy_cap_c_oracle.c
 PHY_CAP_L2     := test_debug_phy_cap_dump.c
-PHY_CAP_CFG    := -DCONFIG_80211AC_VHT -DCONFIG_BEAMFORMING
+PHY_CAP_CFG    := -DCONFIG_80211N_HT -DCONFIG_80211AC_VHT -DCONFIG_BEAMFORMING
 
 # W3-203 proc HT registry get/set
 HT_ORACLE := debug_proc_ht_c_oracle.c
@@ -94,7 +94,8 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust \
-	test-proc-tx-amsdu-c test-proc-tx-amsdu-rust
+	test-proc-tx-amsdu-c test-proc-tx-amsdu-rust \
+	test-phy-cap-dump-c
 
 test-all: test
 
