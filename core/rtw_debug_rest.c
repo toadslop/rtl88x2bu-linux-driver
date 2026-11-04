@@ -6623,6 +6623,7 @@ static int proc_tdls_display_network_info(struct seq_file *m)
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — network info in rust/rtw_debug_proc_tdls.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 static int proc_tdls_display_tdls_sta_info(struct seq_file *m)
 {
 	struct net_device *dev = m->private;
@@ -6802,6 +6803,7 @@ static int proc_tdls_display_tdls_sta_info(struct seq_file *m)
 
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — STA info in rust/rtw_debug_proc_tdls.rs */
 
 int proc_get_tdls_info(struct seq_file *m, void *v)
 {
