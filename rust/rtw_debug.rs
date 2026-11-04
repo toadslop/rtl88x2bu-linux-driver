@@ -17,6 +17,7 @@
 //! W3-168 proc manufacturing test setters live in `rtw_debug_proc_test.rs`.
 //! W3-203 proc HT registry handlers live in `rtw_debug_proc_ht.rs`.
 //! W3-207 proc tx AMSDU handlers live in `rtw_debug_proc_amsdu.rs`.
+//! W3-208 proc VHT 24G enable handlers live in `rtw_debug_proc_vht.rs`.
 
 #![allow(
     dead_code,
