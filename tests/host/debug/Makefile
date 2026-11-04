@@ -39,6 +39,9 @@ TUNING_L2     := test_proc_ampdu_tuning.c
 # W3-206 proc tx AMPDU misc (tx_quick_addba + tx_aval)
 AMPDU_MISC_ORACLE := debug_proc_tx_ampdu_misc_c_oracle.c
 AMPDU_MISC_L2     := test_proc_tx_ampdu_misc.c
+# W3-207 proc tx AMSDU get/set
+AMSDU_ORACLE := debug_proc_tx_amsdu_c_oracle.c
+AMSDU_L2     := test_proc_tx_amsdu.c
 
 CC     := gcc
 CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
@@ -50,7 +53,8 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-ht-c test-proc-ht-rust \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
-	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust
+	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust \
+	test-proc-tx-amsdu-c
 
 all: test
 
@@ -59,12 +63,13 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-ht-c test-proc-ht-rust \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
-	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust
+	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust \
+	test-proc-tx-amsdu-c
 
 test-all: test
 
 test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
-	test-proc-rx-ampdu-c test-proc-ampdu-tuning-c
+	test-proc-rx-ampdu-c test-proc-ampdu-tuning-c test-proc-tx-amsdu-c
 
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
 	test-proc-ht-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
@@ -198,6 +203,12 @@ test_proc_tx_ampdu_misc_rust: $(AMPDU_MISC_L2) librust_rtw_debug_proc_ampdu.a \
 		$(AMPDU_MISC_L2) $(AMPDU_SHIM) $(REGSTY_ORACLE) $(REGSTY_SHIM) $(HOST_JSON) \
 		librust_rtw_debug_proc_ampdu.a
 
+test-proc-tx-amsdu-c: test_proc_tx_amsdu
+	./test_proc_tx_amsdu debug_proc_tx_amsdu_vectors.json
+
+test_proc_tx_amsdu: $(AMSDU_L2) $(AMSDU_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ $(AMSDU_L2) $(AMSDU_ORACLE) $(HOST_JSON)
+
 clean:
 	rm -f test_debug_test_hooks_c test_debug_test_hooks_rust librust_debug_test_hooks.a \
 		test_dump_sec_cam_ent test_dump_sec_cam_ent_rust librust_rtw_debug_sec_cam.a \
@@ -205,4 +216,5 @@ clean:
 		test_proc_ht_registry test_proc_ht_registry_rust librust_rtw_debug_proc_ht.a \
 		test_proc_rx_ampdu test_proc_rx_ampdu_rust librust_rtw_debug_proc_ampdu.a \
 		test_proc_ampdu_tuning test_proc_ampdu_tuning_rust \
-		test_proc_tx_ampdu_misc test_proc_tx_ampdu_misc_rust
+		test_proc_tx_ampdu_misc test_proc_tx_ampdu_misc_rust \
+		test_proc_tx_amsdu
