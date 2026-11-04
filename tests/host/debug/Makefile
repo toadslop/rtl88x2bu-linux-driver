@@ -57,6 +57,8 @@ AMSDU_L2     := test_proc_tx_amsdu.c
 # W3-212 proc TDLS enable get/set (+ function info in PR3)
 TDLS_ORACLE := debug_proc_tdls_c_oracle.c
 TDLS_DISPLAY_ORACLE := debug_proc_tdls_display_oracle.c
+TDLS_SHIM   := host_rtw_debug_proc_tdls_shim.c
+TDLS_RUST   := $(ROOT)/rust/rtw_debug_proc_tdls.rs
 TDLS_L2     := test_proc_tdls_enable.c
 
 CC     := gcc
@@ -68,7 +70,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-regsty-rx-ampdu-c test-regsty-rx-ampdu-rust \
 	test-proc-ht-c test-proc-ht-rust \
 	test-proc-vht-c test-proc-vht-rust \
-	test-proc-fwps-c test-proc-tdls-c \
+	test-proc-fwps-c test-proc-tdls-c test-proc-tdls-rust \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust \
@@ -80,7 +82,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-regsty-rx-ampdu-c test-regsty-rx-ampdu-rust \
 	test-proc-ht-c test-proc-ht-rust \
 	test-proc-vht-c test-proc-vht-rust \
-	test-proc-fwps-c test-proc-tdls-c \
+	test-proc-fwps-c test-proc-tdls-c test-proc-tdls-rust \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust \
@@ -93,7 +95,7 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c
 
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
-	test-proc-ht-rust test-proc-vht-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
+	test-proc-ht-rust test-proc-vht-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-rust test-proc-tx-amsdu-rust
 
 test-hooks-c: test_debug_test_hooks_c
@@ -200,6 +202,20 @@ test-proc-tdls-c: test_proc_tdls_enable
 test_proc_tdls_enable: $(TDLS_L2) $(TDLS_ORACLE) $(TDLS_DISPLAY_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ $(TDLS_L2) $(TDLS_ORACLE) $(TDLS_DISPLAY_ORACLE) $(HOST_JSON)
 
+librust_rtw_debug_proc_tdls.a: $(TDLS_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_tdls_test \
+		--cfg config_rtw_debug --cfg config_proc_debug \
+		--cfg config_tdls \
+		--crate-type staticlib $(TDLS_RUST) -o $@
+
+test-proc-tdls-rust: test_proc_tdls_enable_rust
+	./test_proc_tdls_enable_rust debug_proc_tdls_vectors.json
+
+test_proc_tdls_enable_rust: $(TDLS_L2) librust_rtw_debug_proc_tdls.a $(TDLS_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ \
+		$(TDLS_L2) $(TDLS_SHIM) $(HOST_JSON) librust_rtw_debug_proc_tdls.a
+
 test-proc-rx-ampdu-c: test_proc_rx_ampdu
 	./test_proc_rx_ampdu debug_proc_rx_ampdu_get_vectors.json debug_proc_rx_ampdu_set_vectors.json
 
@@ -281,7 +297,7 @@ clean:
 		test_dump_regsty_rx_ampdu test_dump_regsty_rx_ampdu_rust librust_rtw_debug_regsty.a \
 		test_proc_ht_registry test_proc_ht_registry_rust librust_rtw_debug_proc_ht.a \
 		test_proc_vht_24g test_proc_vht_24g_rust librust_rtw_debug_proc_vht.a \
-		test_proc_en_fwps test_proc_tdls_enable \
+		test_proc_en_fwps test_proc_tdls_enable test_proc_tdls_enable_rust librust_rtw_debug_proc_tdls.a \
 		test_proc_rx_ampdu test_proc_rx_ampdu_rust librust_rtw_debug_proc_ampdu.a \
 		test_proc_ampdu_tuning test_proc_ampdu_tuning_rust \
 		test_proc_tx_ampdu_misc test_proc_tx_ampdu_misc_rust \
