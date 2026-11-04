@@ -249,20 +249,6 @@ test_proc_tdls_enable_rust: $(TDLS_L2) librust_rtw_debug_proc_tdls.a $(TDLS_SHIM
 	$(CC) $(CFLAGS) -DRUST_RTW_DEBUG_PROC_TDLS_ORACLE -o $@ \
 		$(TDLS_L2) $(TDLS_SHIM) $(HOST_JSON) librust_rtw_debug_proc_tdls.a
 
-librust_rtw_debug_proc_tdls.a: $(TDLS_RUST)
-	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
-		--cfg host_rtw_debug_proc_tdls_test \
-		--cfg config_rtw_debug --cfg config_proc_debug \
-		--cfg config_tdls \
-		--crate-type staticlib $(TDLS_RUST) -o $@
-
-test-proc-tdls-rust: test_proc_tdls_enable_rust
-	./test_proc_tdls_enable_rust debug_proc_tdls_vectors.json
-
-test_proc_tdls_enable_rust: $(TDLS_L2) librust_rtw_debug_proc_tdls.a $(TDLS_SHIM) $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ \
-		$(TDLS_L2) $(TDLS_SHIM) $(HOST_JSON) librust_rtw_debug_proc_tdls.a
-
 test-proc-rx-ampdu-c: test_proc_rx_ampdu
 	./test_proc_rx_ampdu debug_proc_rx_ampdu_get_vectors.json debug_proc_rx_ampdu_set_vectors.json
 
