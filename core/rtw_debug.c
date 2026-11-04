@@ -410,8 +410,10 @@ struct rtw_rust_phy_cap_view {
 
 void rtw_rust_debug_ht_use_default_setting(_adapter *adapter)
 {
+#ifdef CONFIG_80211N_HT
 	if (adapter)
 		rtw_ht_use_default_setting(adapter);
+#endif
 }
 
 void rtw_rust_debug_vht_use_default_setting(_adapter *adapter)
@@ -426,12 +428,17 @@ void rtw_rust_debug_phy_cap_fill(_adapter *adapter, struct rtw_rust_phy_cap_view
 {
 	if (!adapter || !out)
 		return;
+	_rtw_memset(out, 0, sizeof(*out));
+#ifdef CONFIG_80211N_HT
 	out->ht_stbc = adapter->mlmepriv.htpriv.stbc_cap;
 	out->ht_ldpc = adapter->mlmepriv.htpriv.ldpc_cap;
 	out->ht_bf = adapter->mlmepriv.htpriv.beamform_cap;
+#endif
+#ifdef CONFIG_80211AC_VHT
 	out->vht_stbc = adapter->mlmepriv.vhtpriv.stbc_cap;
 	out->vht_ldpc = adapter->mlmepriv.vhtpriv.ldpc_cap;
 	out->vht_bf = adapter->mlmepriv.vhtpriv.beamform_cap;
+#endif
 	out->reg_stbc = adapter->registrypriv.stbc_cap;
 	out->reg_ldpc = adapter->registrypriv.ldpc_cap;
 	out->reg_bf = adapter->registrypriv.beamform_cap;
