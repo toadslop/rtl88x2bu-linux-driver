@@ -6417,8 +6417,9 @@ ssize_t proc_set_tdls_enable(struct file *file, const char __user *buffer, size_
 
 	return count;
 }
-#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-212 in rust/rtw_debug_proc_tdls.rs */
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-212/W3-213 in rust/rtw_debug_proc_tdls.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 static int proc_tdls_display_tdls_function_info(struct seq_file *m)
 {
 	struct net_device *dev = m->private;
@@ -6498,7 +6499,9 @@ static int proc_tdls_display_tdls_function_info(struct seq_file *m)
 
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — function info in rust/rtw_debug_proc_tdls.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 static int proc_tdls_display_network_info(struct seq_file *m)
 {
 	struct net_device *dev = m->private;
@@ -6618,6 +6621,7 @@ static int proc_tdls_display_network_info(struct seq_file *m)
 
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — network info in rust/rtw_debug_proc_tdls.rs */
 
 static int proc_tdls_display_tdls_sta_info(struct seq_file *m)
 {
