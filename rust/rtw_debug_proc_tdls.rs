@@ -25,7 +25,6 @@ extern "C" {
     ) -> c_long;
     fn rtw_rust_debug_proc_tdls_display_function_info(m: *mut c_void) -> c_int;
     fn rtw_rust_debug_proc_tdls_display_network_info(m: *mut c_void) -> c_int;
-    fn rtw_rust_debug_proc_tdls_display_tdls_sta_info(m: *mut c_void) -> c_int;
 }
 
 fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
@@ -72,11 +71,4 @@ pub extern "C" fn proc_tdls_display_tdls_function_info(m: *mut c_void) -> c_int 
 #[no_mangle]
 pub extern "C" fn proc_tdls_display_network_info(m: *mut c_void) -> c_int {
     unsafe { rtw_rust_debug_proc_tdls_display_network_info(m) }
-}
-
-#[cfg(any(config_tdls, host_rtw_debug_proc_tdls_test))]
-#[cfg(any(config_rtw_debug, config_proc_debug))]
-#[no_mangle]
-pub extern "C" fn proc_tdls_display_tdls_sta_info(m: *mut c_void) -> c_int {
-    unsafe { rtw_rust_debug_proc_tdls_display_tdls_sta_info(m) }
 }
