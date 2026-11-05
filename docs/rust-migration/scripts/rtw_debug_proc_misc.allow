@@ -1,0 +1,4 @@
+# L1 allowlist for W3-214: Rust proc handlers in rtw_debug_proc_misc.o.
+drop proc_get_malloc_cnt
+drop _malloc_cnt
+drop _malloc_size

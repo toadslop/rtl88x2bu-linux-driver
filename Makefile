@@ -3017,6 +3017,13 @@ endif
 ifneq ($(_rust_cfg_rf4ce_coexist),)
 rustflags-y += --cfg config_rf4ce_coexist
 endif
+_rust_cfg_find_best_channel :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_FIND_BEST_CHANNEL' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_find_best_channel := y
+endif
+ifneq ($(_rust_cfg_find_best_channel),)
+rustflags-y += --cfg config_find_best_channel
+endif
 _rust_cfg_dbg_counter :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_DBG_COUNTER' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 _rust_cfg_dbg_counter := y
@@ -3186,6 +3193,7 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_fwps.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_sreset.o
 $(MODULE_NAME)-y += rust/rtw_debug_phy_cap.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_phy_cap.o
+$(MODULE_NAME)-y += rust/rtw_debug_proc_misc.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ps.o
@@ -5124,6 +5132,21 @@ rust-objects-rtw-debug-proc-phy-cap-c:
 rust-check-symbols-rtw-debug-proc-phy-cap: rust-objects-rtw-debug-proc-phy-cap-c rust-objects-rtw-debug-proc-phy-cap
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_phy_cap_registry_c_ref.o NEW=rust/rtw_debug_proc_phy_cap.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_phy_cap.allow ALLOW_VACUOUS=1
+
+# W3-214: host C oracle vs rust/rtw_debug_proc_misc.o (malloc cnt + best channel procs).
+rust-objects-rtw-debug-proc-misc:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-misc"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_misc.o
+rust-objects-rtw-debug-proc-misc-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-DDBG_MEMORY_LEAK -DCONFIG_FIND_BEST_CHANNEL \
+		-o tests/host/debug/debug_proc_misc_c_ref.o \
+		tests/host/debug/debug_proc_misc_c_oracle.c
+rust-check-symbols-rtw-debug-proc-misc: rust-objects-rtw-debug-proc-misc-c rust-objects-rtw-debug-proc-misc
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_misc_c_ref.o NEW=rust/rtw_debug_proc_misc.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_misc.allow ALLOW_VACUOUS=1
 
 # W3-208: host C oracle vs rust/rtw_debug_proc_vht.o (proc vht_24g_enable get/set).
 rust-objects-rtw-debug-proc-vht:
