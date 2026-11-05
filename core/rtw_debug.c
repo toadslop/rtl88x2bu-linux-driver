@@ -394,6 +394,58 @@ u8 *rtw_rust_debug_regsty_rx_ampdu_sz_limit_by_nss_bw(_adapter *adapter)
 	return adapter_to_regsty(adapter)->rx_ampdu_sz_limit_by_nss_bw[0];
 }
 
+struct rtw_rust_phy_cap_view {
+	u8 ht_stbc;
+	u8 ht_ldpc;
+	u8 ht_bf;
+	u8 vht_stbc;
+	u8 vht_ldpc;
+	u16 vht_bf;
+	u8 reg_stbc;
+	u8 reg_ldpc;
+	u8 reg_bf;
+	u8 reg_bfer_rf;
+	u8 reg_bfee_rf;
+};
+
+void rtw_rust_debug_ht_use_default_setting(_adapter *adapter)
+{
+#ifdef CONFIG_80211N_HT
+	if (adapter)
+		rtw_ht_use_default_setting(adapter);
+#endif
+}
+
+void rtw_rust_debug_vht_use_default_setting(_adapter *adapter)
+{
+#ifdef CONFIG_80211AC_VHT
+	if (adapter)
+		rtw_vht_use_default_setting(adapter);
+#endif
+}
+
+void rtw_rust_debug_phy_cap_fill(_adapter *adapter, struct rtw_rust_phy_cap_view *out)
+{
+	if (!adapter || !out)
+		return;
+	_rtw_memset(out, 0, sizeof(*out));
+#ifdef CONFIG_80211N_HT
+	out->ht_stbc = adapter->mlmepriv.htpriv.stbc_cap;
+	out->ht_ldpc = adapter->mlmepriv.htpriv.ldpc_cap;
+	out->ht_bf = adapter->mlmepriv.htpriv.beamform_cap;
+#endif
+#ifdef CONFIG_80211AC_VHT
+	out->vht_stbc = adapter->mlmepriv.vhtpriv.stbc_cap;
+	out->vht_ldpc = adapter->mlmepriv.vhtpriv.ldpc_cap;
+	out->vht_bf = adapter->mlmepriv.vhtpriv.beamform_cap;
+#endif
+	out->reg_stbc = adapter->registrypriv.stbc_cap;
+	out->reg_ldpc = adapter->registrypriv.ldpc_cap;
+	out->reg_bf = adapter->registrypriv.beamform_cap;
+	out->reg_bfer_rf = adapter->registrypriv.beamformer_rf_num;
+	out->reg_bfee_rf = adapter->registrypriv.beamformee_rf_num;
+}
+
 u16 rtw_rust_debug_recv_sink_udpport(_adapter *adapter)
 {
 	return adapter->recvpriv.sink_udpport;

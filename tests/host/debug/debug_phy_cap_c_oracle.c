@@ -3,6 +3,7 @@
 
 #include "host_rtw_debug_phy_cap_types.h"
 
+#ifndef PHY_CAP_C_REF
 void rtw_ht_use_default_setting(_adapter *padapter)
 {
 	(void)padapter;
@@ -12,6 +13,7 @@ void rtw_vht_use_default_setting(_adapter *padapter)
 {
 	(void)padapter;
 }
+#endif
 
 void rtw_dump_dft_phy_cap(void *sel, _adapter *adapter)
 {
@@ -64,9 +66,11 @@ void rtw_dump_dft_phy_cap(void *sel, _adapter *adapter)
 void rtw_get_dft_phy_cap(void *sel, _adapter *adapter)
 {
 	RTW_PRINT_SEL(sel, "\n ======== PHY CAP protocol ========\n");
+#ifndef PHY_CAP_C_REF
 	rtw_ht_use_default_setting(adapter);
 #ifdef CONFIG_80211AC_VHT
 	rtw_vht_use_default_setting(adapter);
+#endif
 #endif
 	rtw_dump_dft_phy_cap(sel, adapter);
 }
