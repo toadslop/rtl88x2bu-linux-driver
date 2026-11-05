@@ -1327,6 +1327,7 @@ endif
 ifeq ($(CONFIG_TDLS), y)
 ccflags-y += -DCONFIG_TDLS
 rustflags-y += --cfg tdls
+rustflags-y += --cfg config_tdls
 endif
 
 ifeq ($(CONFIG_WIFI_MONITOR), y)
@@ -3158,6 +3159,9 @@ ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_TX_AMSDU' $(src)/include/autoco
 $(MODULE_NAME)-y += rust/rtw_debug_proc_amsdu.o
 endif
 $(MODULE_NAME)-y += rust/rtw_debug_proc_vht.o
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_TDLS' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+$(MODULE_NAME)-y += rust/rtw_debug_proc_tdls.o
+endif
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ps.o
@@ -5096,6 +5100,20 @@ rust-objects-rtw-debug-proc-vht-c:
 rust-check-symbols-rtw-debug-proc-vht: rust-objects-rtw-debug-proc-vht-c rust-objects-rtw-debug-proc-vht
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_vht_c_ref.o NEW=rust/rtw_debug_proc_vht.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_vht.allow ALLOW_VACUOUS=1
+
+# W3-212: host C oracle vs rust/rtw_debug_proc_tdls.o (proc TDLS enable get/set + function info).
+rust-objects-rtw-debug-proc-tdls:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-tdls"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) CONFIG_TDLS=y -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_tdls.o
+rust-objects-rtw-debug-proc-tdls-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_tdls_c_ref.o \
+		tests/host/debug/debug_proc_tdls_c_oracle.c
+rust-check-symbols-rtw-debug-proc-tdls: rust-objects-rtw-debug-proc-tdls-c rust-objects-rtw-debug-proc-tdls
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_tdls_c_ref.o NEW=rust/rtw_debug_proc_tdls.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_tdls.allow ALLOW_VACUOUS=1
 
 # W3-204: host C stub vs rust/rtw_debug_proc_ampdu.o (proc rx_ampdu get/set).
 rust-objects-rtw-debug-proc-ampdu:
