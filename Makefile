@@ -3024,6 +3024,13 @@ endif
 ifneq ($(_rust_cfg_find_best_channel),)
 rustflags-y += --cfg config_find_best_channel
 endif
+_rust_cfg_dbg_memory_leak :=
+ifneq ($(filter -DDBG_MEMORY_LEAK,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_dbg_memory_leak := y
+endif
+ifneq ($(_rust_cfg_dbg_memory_leak),)
+rustflags-y += --cfg dbg_memory_leak
+endif
 _rust_cfg_dbg_counter :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_DBG_COUNTER' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 _rust_cfg_dbg_counter := y
@@ -5136,7 +5143,7 @@ rust-check-symbols-rtw-debug-proc-phy-cap: rust-objects-rtw-debug-proc-phy-cap-c
 # W3-214: host C oracle vs rust/rtw_debug_proc_misc.o (malloc cnt + best channel procs).
 rust-objects-rtw-debug-proc-misc:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-misc"; exit 1; }
-	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_misc.o
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) USER_EXTRA_CFLAGS=-DDBG_MEMORY_LEAK rust/rtw_debug_proc_misc.o
 rust-objects-rtw-debug-proc-misc-c:
 	@mkdir -p tests/host/debug
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
