@@ -1,0 +1,52 @@
+{
+  "vectors": [
+    {
+      "name": "dft_mixed_caps",
+      "fn": "dump_dft",
+      "ht_stbc": 3,
+      "ht_ldpc": 2,
+      "ht_bf": 2,
+      "vht_stbc": 1,
+      "vht_ldpc": 3,
+      "vht_bf": 1,
+      "reg_stbc": 0,
+      "reg_ldpc": 0,
+      "reg_bf": 0,
+      "reg_bfer_rf": 0,
+      "reg_bfee_rf": 0,
+      "expect": "[DFT CAP] VHT STBC Tx : X\n[DFT CAP] VHT STBC Rx : V\n[DFT CAP] HT STBC Tx : V\n[DFT CAP] HT STBC Rx : V\n\n[DFT CAP] VHT LDPC Tx : V\n[DFT CAP] VHT LDPC Rx : V\n[DFT CAP] HT LDPC Tx : V\n[DFT CAP] HT LDPC Rx : X\n\n[DFT CAP] VHT MU Bfer : X\n[DFT CAP] VHT MU Bfee : X\n[DFT CAP] VHT SU Bfer : V\n[DFT CAP] VHT SU Bfee : X\n[DFT CAP] HT Bfer : X\n[DFT CAP] HT Bfee : V\n"
+    },
+    {
+      "name": "drv_registry_caps",
+      "fn": "dump_drv",
+      "ht_stbc": 0,
+      "ht_ldpc": 0,
+      "ht_bf": 0,
+      "vht_stbc": 0,
+      "vht_ldpc": 0,
+      "vht_bf": 0,
+      "reg_stbc": 49,
+      "reg_ldpc": 18,
+      "reg_bf": 21,
+      "reg_bfer_rf": 2,
+      "reg_bfee_rf": 3,
+      "expect": "\n ======== DRV's configuration ========\n[DRV CAP] STBC Capability : 0x31\n[DRV CAP] VHT STBC Tx : X\n[DRV CAP] VHT STBC Rx : V\n[DRV CAP] HT STBC Tx : V\n[DRV CAP] HT STBC Rx : V\n\n[DRV CAP] LDPC Capability : 0x12\n[DRV CAP] VHT LDPC Tx : V\n[DRV CAP] VHT LDPC Rx : X\n[DRV CAP] HT LDPC Tx : X\n[DRV CAP] HT LDPC Rx : V\n\n[DRV CAP] TxBF Capability : 0x15\n[DRV CAP] VHT MU Bfer : V\n[DRV CAP] VHT MU Bfee : X\n[DRV CAP] VHT SU Bfer : V\n[DRV CAP] VHT SU Bfee : X\n[DRV CAP] HT Bfer : V\n[DRV CAP] HT Bfee : X\n[DRV CAP] Tx Bfer rf_num : 2\n[DRV CAP] Tx Bfee rf_num : 3\n"
+    },
+    {
+      "name": "get_dft_protocol_banner",
+      "fn": "get_dft",
+      "ht_stbc": 2,
+      "ht_ldpc": 0,
+      "ht_bf": 0,
+      "vht_stbc": 0,
+      "vht_ldpc": 0,
+      "vht_bf": 0,
+      "reg_stbc": 0,
+      "reg_ldpc": 0,
+      "reg_bf": 0,
+      "reg_bfer_rf": 0,
+      "reg_bfee_rf": 0,
+      "expect": "\n ======== PHY CAP protocol ========\n[DFT CAP] VHT STBC Tx : X\n[DFT CAP] VHT STBC Rx : X\n[DFT CAP] HT STBC Tx : V\n[DFT CAP] HT STBC Rx : X\n\n[DFT CAP] VHT LDPC Tx : X\n[DFT CAP] VHT LDPC Rx : X\n[DFT CAP] HT LDPC Tx : X\n[DFT CAP] HT LDPC Rx : X\n\n[DFT CAP] VHT MU Bfer : X\n[DFT CAP] VHT MU Bfee : X\n[DFT CAP] VHT SU Bfer : X\n[DFT CAP] VHT SU Bfee : X\n[DFT CAP] HT Bfer : X\n[DFT CAP] HT Bfee : X\n"
+    }
+  ]
+}
