@@ -376,6 +376,14 @@ files=(
   wave3-212-debug-proc-tdls-enable.md
   wave3-213-debug-proc-tdls-network-sta.md
   wave3-214-debug-proc-malloc-best-ch.md
+  wave3-215-debug-proc-btcoex-dbg.md
+  wave3-216-debug-proc-rf4ce-sreset.md
+  wave3-217-debug-proc-wow-registry.md
+  wave3-218-debug-proc-wow-pattern.md
+  wave3-219-debug-proc-ps-wmm-bcn.md
+  wave3-220-debug-proc-monitor-xmit.md
+  wave3-221-debug-proc-tx-mgmt-test.md
+  wave3-222-debug-proc-mcc-setters.md
 )
 
 # draft_id -> github issue number

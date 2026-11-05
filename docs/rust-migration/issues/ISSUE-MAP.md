@@ -342,6 +342,14 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-212 | #1718 | [W3-212] Translate rtw_debug_rest.c — proc TDLS enable + function info |
 | W3-213 | #1719 | [W3-213] Translate rtw_debug_rest.c — proc TDLS network + STA display |
 | W3-214 | #1720 | [W3-214] Translate rtw_debug_rest.c — proc malloc cnt + best channel leaf |
+| W3-215 | #1760 | [W3-215] Translate rtw_debug_rest.c — proc btcoex debug leaf |
+| W3-216 | #1761 | [W3-216] Translate rtw_debug_rest.c — proc RF4CE + silent reset leaf |
+| W3-217 | #1762 | [W3-217] Translate rtw_debug_rest.c — proc WoWLAN registry leaf |
+| W3-218 | #1763 | [W3-218] Translate rtw_debug_rest.c — proc WoWLAN pattern leaf |
+| W3-219 | #1764 | [W3-219] Translate rtw_debug_rest.c — proc PS/WMM + bcn max leaf |
+| W3-220 | #1765 | [W3-220] Translate rtw_debug_rest.c — proc monitor + xmit block leaf |
+| W3-221 | #1766 | [W3-221] Translate rtw_debug_rest.c — proc TX mgmt inject test leaf |
+| W3-222 | #1767 | [W3-222] Translate rtw_debug_rest.c — proc MCC registry setters (part 1) |
 
 ## Superseded issues
 
