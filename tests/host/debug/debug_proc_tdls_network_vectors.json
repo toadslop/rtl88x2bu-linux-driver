@@ -1,0 +1,22 @@
+{
+  "vectors": [
+    {
+      "name": "tdls_network_no_assoc",
+      "get": "tdls_network",
+      "expect": "============[Associated AP/GO Info]============\nNo association with AP/GO exists!\n"
+    },
+    {
+      "name": "tdls_network_assoc_fixture",
+      "get": "tdls_network",
+      "fw_state": 9,
+      "ssid": "TestAP",
+      "mac": "aa:bb:cc:dd:ee:ff",
+      "wireless_mode": 3,
+      "privacy": 4,
+      "channel": 6,
+      "ch_offset": 1,
+      "bwmode": 0,
+      "expect": "============[Associated AP/GO Info]============\nBSSID                                     = TestAP\nMac Address                               = aa:bb:cc:dd:ee:ff\nWireless Mode                             = 11B 11G \nPrivacy                                   = AES\nChannel                                   = 6\nChannel Offset                            = Lower\nBandwidth Mode                            = 20MHz\n"
+    }
+  ]
+}
