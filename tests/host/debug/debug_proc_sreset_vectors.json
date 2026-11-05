@@ -1,0 +1,64 @@
+{
+  "vectors": [
+    {
+      "name": "rf4ce_disconnect",
+      "rf4ce_state": 0,
+      "get": "rf4ce_state",
+      "expect": "RF4CE Disconnect\n"
+    },
+    {
+      "name": "rf4ce_connected",
+      "rf4ce_state": 1,
+      "get": "rf4ce_state",
+      "expect": "RF4CE Connected\n"
+    },
+    {
+      "name": "rf4ce_set_connected",
+      "set": "rf4ce_state",
+      "set_input": "1",
+      "get": "rf4ce_state",
+      "expect": "RF4CE Connected\n"
+    },
+    {
+      "name": "sreset_get_ctrl_off",
+      "dbg_sreset_ctrl": 0,
+      "get": "sreset"
+    },
+    {
+      "name": "sreset_get_ctrl_on",
+      "dbg_sreset_ctrl": 1,
+      "self_dect_tx_cnt": 10,
+      "self_dect_rx_cnt": 11,
+      "self_dect_fw_cnt": 12,
+      "tx_dma_status_cnt": 13,
+      "rx_dma_status_cnt": 14,
+      "self_dect_case": 2,
+      "dbg_sreset_cnt": 3,
+      "get": "sreset",
+      "expect": "self_dect_tx_cnt:10\nself_dect_rx_cnt:11\nself_dect_fw_cnt:12\ntx_dma_status_cnt:13\nrx_dma_status_cnt:14\nself_dect_case:2\ndbg_sreset_cnt:3\n"
+    },
+    {
+      "name": "sreset_set_info_enables_dump",
+      "dbg_sreset_ctrl": 0,
+      "self_dect_tx_cnt": 1,
+      "dbg_sreset_cnt": 5,
+      "set": "sreset",
+      "set_input": "99",
+      "get": "sreset",
+      "expect": "self_dect_tx_cnt:1\nself_dect_rx_cnt:0\nself_dect_fw_cnt:0\ntx_dma_status_cnt:0\nrx_dma_status_cnt:0\nself_dect_case:0\ndbg_sreset_cnt:5\n"
+    },
+    {
+      "name": "sreset_set_invalid_sscanf",
+      "dbg_sreset_ctrl": 0,
+      "set": "sreset",
+      "set_input": "abc",
+      "get": "sreset"
+    },
+    {
+      "name": "sreset_set_trigger_xmit",
+      "set": "sreset",
+      "set_input": "1",
+      "check_trigger": 1
+    }
+  ]
+}
