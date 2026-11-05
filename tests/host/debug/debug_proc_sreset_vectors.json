@@ -59,6 +59,12 @@
       "set": "sreset",
       "set_input": "1",
       "check_trigger": 1
+    },
+    {
+      "name": "sreset_set_trigger_null",
+      "set": "sreset",
+      "set_input": "0",
+      "check_reset_calls": 1
     }
   ]
 }

@@ -30,6 +30,7 @@ struct vector {
 	char get_field[MAX_FIELD];
 	char expect[MAX_EXPECT];
 	int check_trigger;
+	int check_reset_calls;
 };
 
 static void unescape_expect(char *s)
@@ -105,6 +106,11 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 		if (host_json_parse_int_in(obj, len, "check_trigger", &tmp))
 			return -1;
 		v->check_trigger = tmp;
+	}
+	if (host_json_find_key_in(obj, len, "check_reset_calls")) {
+		if (host_json_parse_int_in(obj, len, "check_reset_calls", &tmp))
+			return -1;
+		v->check_reset_calls = tmp;
 	}
 	if (host_json_find_key_in(obj, len, "set")) {
 		if (host_json_parse_string_in(obj, len, "set", v->set_field,
@@ -193,6 +199,16 @@ static int run_vector(const struct vector *v)
 			fprintf(stderr, "FAIL %s: trigger_point=%d expect %d\n",
 				v->name, (int)host_debug_proc_sreset_last_trigger(),
 				SRESET_TGP_XMIT_STATUS);
+			return -1;
+		}
+		return 0;
+	}
+
+	if (v->check_reset_calls) {
+		if (host_debug_proc_sreset_reset_calls() != v->check_reset_calls) {
+			fprintf(stderr, "FAIL %s: reset_calls=%d expect %d\n",
+				v->name, host_debug_proc_sreset_reset_calls(),
+				v->check_reset_calls);
 			return -1;
 		}
 		return 0;
