@@ -1,0 +1,37 @@
+{
+  "vectors": [
+    {
+      "name": "get_malloc_cnt",
+      "malloc_cnt": 7,
+      "malloc_size": 123,
+      "get": "malloc_cnt",
+      "expect": "_malloc_cnt=7\n_malloc_size=123\n"
+    },
+    {
+      "name": "get_best_channel_fixture",
+      "max_chan_nums": 4,
+      "ch0_num": 1,
+      "ch0_rx": 100,
+      "ch1_num": 6,
+      "ch1_rx": 50,
+      "ch2_num": 36,
+      "ch2_rx": 200,
+      "ch3_num": 44,
+      "ch3_rx": 30,
+      "get": "best_channel",
+      "expect": "The rx cnt of channel   1 = 100\nThe rx cnt of channel   6 = 50\nThe rx cnt of channel  36 = 200\nThe rx cnt of channel  44 = 30\nbest_channel_5G = 44\nbest_channel_24G = 6\n"
+    },
+    {
+      "name": "set_best_channel_clears_rx",
+      "max_chan_nums": 2,
+      "ch0_num": 1,
+      "ch0_rx": 99,
+      "ch1_num": 36,
+      "ch1_rx": 88,
+      "set": "best_channel",
+      "set_input": "1 ",
+      "get": "best_channel",
+      "expect": "The rx cnt of channel   1 = 0\nThe rx cnt of channel  36 = 0\nbest_channel_5G = 36\nbest_channel_24G = 1\n"
+    }
+  ]
+}
