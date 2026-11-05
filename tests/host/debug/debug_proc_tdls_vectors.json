@@ -34,6 +34,45 @@
       },
       "get": "tdlsinfo",
       "expect": "============[TDLS Function Info]============\nTDLS Enable                               = _TRUE\nTDLS Driver Setup                         = _TRUE\nTDLS Prohibited                           = _FALSE\nTDLS Channel Switch Prohibited            = _TRUE\nTDLS Link Established                     = _FALSE\nTDLS STA Num (Linked/Allowed)             = 2/4\nTDLS Allowed STA Num Reached              = _FALSE\nTDLS Device Discovered                    = _TRUE\n"
+    },
+    {
+      "name": "tdls_network_no_assoc",
+      "get": "tdls_network",
+      "expect": "============[Associated AP/GO Info]============\nNo association with AP/GO exists!\n"
+    },
+    {
+      "name": "tdls_network_assoc_fixture",
+      "get": "tdls_network",
+      "fw_state": 9,
+      "ssid": "TestAP",
+      "mac": "aa:bb:cc:dd:ee:ff",
+      "wireless_mode": 3,
+      "privacy": 4,
+      "channel": 6,
+      "ch_offset": 1,
+      "bwmode": 0,
+      "expect": "============[Associated AP/GO Info]============\nBSSID                                     = TestAP\nMac Address                               = aa:bb:cc:dd:ee:ff\nWireless Mode                             = 11B 11G \nPrivacy                                   = AES\nChannel                                   = 6\nChannel Offset                            = Lower\nBandwidth Mode                            = 20MHz\n"
+    },
+    {
+      "name": "tdls_sta_empty",
+      "get": "tdls_sta",
+      "expect": "============[TDLS Peer STA Info]============\nNo TDLS direct link exists!\n"
+    },
+    {
+      "name": "tdls_sta_linked_fixture",
+      "get": "tdls_sta",
+      "sta": {
+        "mac": "11:22:33:44:55:66",
+        "tdls_sta_state": 1073741824,
+        "wireless_mode": 1,
+        "bw_mode": 0,
+        "privacy": 4,
+        "tpk_count": 10,
+        "tpk_lifetime": 3600,
+        "tx_pkts": 42,
+        "rx_pkts": 7
+      },
+      "expect": "============[TDLS Peer STA Info: STA 1]============\nMac Address                               = 11:22:33:44:55:66\nTDLS STA State                            = TDLS_LINKED_STATE\nWireless Mode                             = 11B \nBandwidth Mode                            = 20MHz\nPrivacy                                   = AES\nTPK Lifetime (Current/Expire)             = 10 sec/3600 sec\nTx Packets Over Direct Link               = 42\nRx Packets Over Direct Link               = 7\n"
     }
   ]
 }

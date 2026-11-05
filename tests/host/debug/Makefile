@@ -62,8 +62,11 @@ AMSDU_SHIM    := host_rtw_debug_proc_amsdu_shim.c
 AMSDU_RUST    := $(ROOT)/rust/rtw_debug_proc_amsdu.rs
 AMSDU_L2     := test_proc_tx_amsdu.c
 # W3-212 proc TDLS enable get/set (+ function info in PR3)
+# W3-213 proc TDLS network + STA display (PR4 L2)
 TDLS_ORACLE := debug_proc_tdls_c_oracle.c
 TDLS_DISPLAY_ORACLE := debug_proc_tdls_display_oracle.c
+TDLS_NETWORK_ORACLE := debug_proc_tdls_network_oracle.c
+TDLS_STA_ORACLE := debug_proc_tdls_sta_oracle.c
 TDLS_SHIM   := host_rtw_debug_proc_tdls_shim.c
 TDLS_RUST   := $(ROOT)/rust/rtw_debug_proc_tdls.rs
 TDLS_L2     := test_proc_tdls_enable.c
@@ -227,8 +230,10 @@ test_proc_vht_24g_rust: $(VHT_L2) librust_rtw_debug_proc_vht.a $(VHT_SHIM) $(HOS
 test-proc-tdls-c: test_proc_tdls_enable
 	./test_proc_tdls_enable debug_proc_tdls_vectors.json
 
-test_proc_tdls_enable: $(TDLS_L2) $(TDLS_ORACLE) $(TDLS_DISPLAY_ORACLE) $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ $(TDLS_L2) $(TDLS_ORACLE) $(TDLS_DISPLAY_ORACLE) $(HOST_JSON)
+test_proc_tdls_enable: $(TDLS_L2) $(TDLS_ORACLE) $(TDLS_DISPLAY_ORACLE) \
+		$(TDLS_NETWORK_ORACLE) $(TDLS_STA_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ $(TDLS_L2) $(TDLS_ORACLE) $(TDLS_DISPLAY_ORACLE) \
+		$(TDLS_NETWORK_ORACLE) $(TDLS_STA_ORACLE) $(HOST_JSON)
 
 librust_rtw_debug_proc_tdls.a: $(TDLS_RUST)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
@@ -241,7 +246,7 @@ test-proc-tdls-rust: test_proc_tdls_enable_rust
 	./test_proc_tdls_enable_rust debug_proc_tdls_vectors.json
 
 test_proc_tdls_enable_rust: $(TDLS_L2) librust_rtw_debug_proc_tdls.a $(TDLS_SHIM) $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ \
+	$(CC) $(CFLAGS) -DRUST_RTW_DEBUG_PROC_TDLS_ORACLE -o $@ \
 		$(TDLS_L2) $(TDLS_SHIM) $(HOST_JSON) librust_rtw_debug_proc_tdls.a
 
 test-proc-rx-ampdu-c: test_proc_rx_ampdu
