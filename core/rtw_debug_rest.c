@@ -4614,6 +4614,7 @@ void rtw_dump_drv_phy_cap(void *sel, _adapter *adapter)
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-210 in rust/rtw_debug_phy_cap.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_stbc_cap(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -4777,6 +4778,7 @@ ssize_t proc_set_txbf_cap(struct file *file, const char __user *buffer, size_t c
 	return count;
 }
 #endif
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-211 in rust/rtw_debug_proc_phy_cap.rs */
 #endif /* CONFIG_80211N_HT */
 
 /*int proc_get_rssi_disp(struct seq_file *m, void *v)
