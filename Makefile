@@ -3164,6 +3164,7 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_tdls.o
 endif
 $(MODULE_NAME)-y += rust/rtw_debug_proc_fwps.o
 $(MODULE_NAME)-y += rust/rtw_debug_phy_cap.o
+$(MODULE_NAME)-y += rust/rtw_debug_proc_phy_cap.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ps.o
@@ -5088,6 +5089,20 @@ rust-objects-rtw-debug-proc-amsdu-c:
 rust-check-symbols-rtw-debug-proc-amsdu: rust-objects-rtw-debug-proc-amsdu-c rust-objects-rtw-debug-proc-amsdu
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_tx_amsdu_c_ref.o NEW=rust/rtw_debug_proc_amsdu.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_amsdu.allow ALLOW_VACUOUS=1
+
+# W3-211: host C oracle vs rust/rtw_debug_proc_phy_cap.o (proc PHY cap registry get/set).
+rust-objects-rtw-debug-proc-phy-cap:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-phy-cap"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_phy_cap.o
+rust-objects-rtw-debug-proc-phy-cap-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_phy_cap_registry_c_ref.o \
+		tests/host/debug/debug_proc_phy_cap_registry_c_oracle.c
+rust-check-symbols-rtw-debug-proc-phy-cap: rust-objects-rtw-debug-proc-phy-cap-c rust-objects-rtw-debug-proc-phy-cap
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_phy_cap_registry_c_ref.o NEW=rust/rtw_debug_proc_phy_cap.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_phy_cap.allow ALLOW_VACUOUS=1
 
 # W3-208: host C oracle vs rust/rtw_debug_proc_vht.o (proc vht_24g_enable get/set).
 rust-objects-rtw-debug-proc-vht:

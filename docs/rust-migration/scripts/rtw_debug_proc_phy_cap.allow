@@ -1,0 +1,9 @@
+# L1 allowlist for W3-211: Rust owns PHY cap registry proc get/set in rtw_debug_proc_phy_cap.o.
+drop rtw_rust_debug_proc_emit_stbc_cap
+drop rtw_rust_debug_proc_set_stbc_cap
+drop rtw_rust_debug_proc_emit_rx_stbc
+drop rtw_rust_debug_proc_set_rx_stbc
+drop rtw_rust_debug_proc_emit_ldpc_cap
+drop rtw_rust_debug_proc_set_ldpc_cap
+drop rtw_rust_debug_proc_emit_txbf_cap
+drop rtw_rust_debug_proc_set_txbf_cap
