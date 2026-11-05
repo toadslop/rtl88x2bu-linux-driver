@@ -21,6 +21,7 @@
 //! W3-212 proc TDLS enable + function info live in `rtw_debug_proc_tdls.rs`.
 //! W3-209 proc en_fwps (check_fw_ps) handlers live in `rtw_debug_proc_fwps.rs`.
 //! W3-211 proc PHY cap registry get/set live in `rtw_debug_proc_phy_cap.rs`.
+//! W3-216 proc rf4ce_state + sreset handlers live in `rtw_debug_proc_sreset.rs`.
 //! W3-210 PHY cap dump helpers live in `rtw_debug_phy_cap.rs`.
 
 #![allow(

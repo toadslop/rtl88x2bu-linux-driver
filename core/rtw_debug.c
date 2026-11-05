@@ -4020,6 +4020,102 @@ int rtw_rust_debug_proc_tdls_display_tdls_sta_info(void *m)
 }
 #endif /* CONFIG_TDLS */
 
+#ifdef CONFIG_BT_COEXIST
+#ifdef CONFIG_RF4CE_COEXIST
+void rtw_rust_debug_proc_emit_rf4ce_state(void *sel, _adapter *adapter)
+{
+	u8 state = rtw_btcoex_GetRf4ceLinkState(adapter);
+
+	RTW_PRINT_SEL(sel, "RF4CE %s\n", state ? "Connected" : "Disconnect");
+}
+
+ssize_t rtw_rust_debug_proc_set_rf4ce_state(_adapter *adapter,
+					    const char __user *buffer,
+					    size_t count)
+{
+	char tmp[32];
+	u8 state;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%hhx", &state);
+
+		if (num >= 1)
+			rtw_btcoex_SetRf4ceLinkState(adapter, state);
+	}
+
+	return count;
+}
+#endif /* CONFIG_RF4CE_COEXIST */
+#endif /* CONFIG_BT_COEXIST */
+
+#if defined(DBG_CONFIG_ERROR_DETECT)
+void rtw_rust_debug_proc_emit_sreset(void *sel, _adapter *adapter)
+{
+	struct dvobj_priv *psdpriv = adapter->dvobj;
+	struct debug_priv *pdbgpriv = &psdpriv->drv_dbg;
+	HAL_DATA_TYPE *pHalData = GET_HAL_DATA(adapter);
+	struct sreset_priv *psrtpriv = &pHalData->srestpriv;
+
+	if (psrtpriv->dbg_sreset_ctrl == _TRUE) {
+		RTW_PRINT_SEL(sel, "self_dect_tx_cnt:%llu\n",
+			      psrtpriv->self_dect_tx_cnt);
+		RTW_PRINT_SEL(sel, "self_dect_rx_cnt:%llu\n",
+			      psrtpriv->self_dect_rx_cnt);
+		RTW_PRINT_SEL(sel, "self_dect_fw_cnt:%llu\n",
+			      psrtpriv->self_dect_fw_cnt);
+		RTW_PRINT_SEL(sel, "tx_dma_status_cnt:%llu\n",
+			      psrtpriv->tx_dma_status_cnt);
+		RTW_PRINT_SEL(sel, "rx_dma_status_cnt:%llu\n",
+			      psrtpriv->rx_dma_status_cnt);
+		RTW_PRINT_SEL(sel, "self_dect_case:%d\n",
+			      psrtpriv->self_dect_case);
+		RTW_PRINT_SEL(sel, "dbg_sreset_cnt:%d\n",
+			      pdbgpriv->dbg_sreset_cnt);
+	}
+}
+
+ssize_t rtw_rust_debug_proc_set_sreset(_adapter *adapter,
+				       const char __user *buffer, size_t count)
+{
+	HAL_DATA_TYPE *pHalData = GET_HAL_DATA(adapter);
+	struct sreset_priv *psrtpriv = &pHalData->srestpriv;
+	char tmp[32];
+	s32 trigger_point;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%d", &trigger_point);
+
+		if (num < 1)
+			return count;
+
+		if (trigger_point == SRESET_TGP_NULL)
+			rtw_hal_sreset_reset(adapter);
+		else if (trigger_point == SRESET_TGP_INFO)
+			psrtpriv->dbg_sreset_ctrl = _TRUE;
+		else
+			sreset_set_trigger_point(adapter, trigger_point);
+	}
+
+	return count;
+}
+#endif /* DBG_CONFIG_ERROR_DETECT */
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */

@@ -37,6 +37,8 @@ PHY_REG_CFG    := -DCONFIG_80211N_HT -DCONFIG_BEAMFORMING
 
 # W3-216 proc rf4ce_state + sreset get/set
 SRESET_ORACLE := debug_proc_sreset_c_oracle.c
+SRESET_SHIM   := host_rtw_debug_proc_sreset_shim.c
+SRESET_RUST   := $(ROOT)/rust/rtw_debug_proc_sreset.rs
 SRESET_L2     := test_proc_sreset.c
 SRESET_CFG    := -DCONFIG_BT_COEXIST -DCONFIG_RF4CE_COEXIST -DDBG_CONFIG_ERROR_DETECT
 
@@ -100,7 +102,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust \
 	test-proc-tx-amsdu-c test-proc-tx-amsdu-rust \
 	test-proc-phy-cap-registry-c test-proc-phy-cap-registry-rust \
-	test-proc-sreset-c \
+	test-proc-sreset-c test-proc-sreset-rust \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
 
 all: test
@@ -381,6 +383,21 @@ test-proc-sreset-c: test_proc_sreset
 
 test_proc_sreset: $(SRESET_L2) $(SRESET_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) $(SRESET_CFG) -o $@ $(SRESET_L2) $(SRESET_ORACLE) $(HOST_JSON)
+
+librust_rtw_debug_proc_sreset.a: $(SRESET_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_sreset_test \
+		--cfg config_bt_coexist --cfg config_rf4ce_coexist \
+		--cfg dbg_config_error_detect \
+		--cfg config_rtw_debug --cfg config_proc_debug \
+		--crate-type staticlib $(SRESET_RUST) -o $@
+
+test-proc-sreset-rust: test_proc_sreset_rust
+	./test_proc_sreset_rust debug_proc_sreset_vectors.json
+
+test_proc_sreset_rust: $(SRESET_L2) librust_rtw_debug_proc_sreset.a $(SRESET_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(SRESET_CFG) -DRUST_RTW_DEBUG_PROC_SRESET_ORACLE -o $@ \
+		$(SRESET_L2) $(SRESET_SHIM) $(HOST_JSON) librust_rtw_debug_proc_sreset.a
 
 clean:
 	rm -f test_debug_test_hooks_c test_debug_test_hooks_rust librust_debug_test_hooks.a \
