@@ -3237,6 +3237,153 @@ ssize_t rtw_rust_debug_proc_set_ampdu_enable(_adapter *adapter,
 	return count;
 }
 
+void rtw_rust_debug_proc_emit_stbc_cap(void *sel, _adapter *adapter)
+{
+	struct registry_priv *pregpriv = &adapter->registrypriv;
+
+	if (pregpriv)
+		RTW_PRINT_SEL(sel, "0x%02x\n", pregpriv->stbc_cap);
+}
+
+ssize_t rtw_rust_debug_proc_set_stbc_cap(_adapter *adapter,
+					 const char __user *buffer,
+					 size_t count)
+{
+	struct registry_priv *pregpriv = &adapter->registrypriv;
+	char tmp[32];
+	u32 mode;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%d ", &mode);
+
+		if (num == 1 && pregpriv) {
+			pregpriv->stbc_cap = mode;
+			RTW_INFO("stbc_cap = 0x%02x\n", mode);
+		}
+	}
+
+	return count;
+}
+
+void rtw_rust_debug_proc_emit_rx_stbc(void *sel, _adapter *adapter)
+{
+	struct registry_priv *pregpriv = &adapter->registrypriv;
+
+	if (pregpriv)
+		RTW_PRINT_SEL(sel, "%d\n", pregpriv->rx_stbc);
+}
+
+ssize_t rtw_rust_debug_proc_set_rx_stbc(_adapter *adapter,
+					const char __user *buffer,
+					size_t count)
+{
+	struct registry_priv *pregpriv = &adapter->registrypriv;
+	char tmp[32];
+	u32 mode;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%d ", &mode);
+
+		if (num == 1 && pregpriv &&
+		    (mode == 0 || mode == 1 || mode == 2 || mode == 3)) {
+			pregpriv->rx_stbc = mode;
+			printk("rx_stbc=%d\n", mode);
+		}
+	}
+
+	return count;
+}
+
+void rtw_rust_debug_proc_emit_ldpc_cap(void *sel, _adapter *adapter)
+{
+	struct registry_priv *pregpriv = &adapter->registrypriv;
+
+	if (pregpriv)
+		RTW_PRINT_SEL(sel, "0x%02x\n", pregpriv->ldpc_cap);
+}
+
+ssize_t rtw_rust_debug_proc_set_ldpc_cap(_adapter *adapter,
+					 const char __user *buffer,
+					 size_t count)
+{
+	struct registry_priv *pregpriv = &adapter->registrypriv;
+	char tmp[32];
+	u32 mode;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%d ", &mode);
+
+		if (num == 1 && pregpriv) {
+			pregpriv->ldpc_cap = mode;
+			RTW_INFO("ldpc_cap = 0x%02x\n", mode);
+		}
+	}
+
+	return count;
+}
+
+#ifdef CONFIG_BEAMFORMING
+void rtw_rust_debug_proc_emit_txbf_cap(void *sel, _adapter *adapter)
+{
+	struct registry_priv *pregpriv = &adapter->registrypriv;
+
+	if (pregpriv)
+		RTW_PRINT_SEL(sel, "0x%02x\n", pregpriv->beamform_cap);
+}
+
+ssize_t rtw_rust_debug_proc_set_txbf_cap(_adapter *adapter,
+					 const char __user *buffer,
+					 size_t count)
+{
+	struct registry_priv *pregpriv = &adapter->registrypriv;
+	char tmp[32];
+	u32 mode;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%d ", &mode);
+
+		if (num == 1 && pregpriv) {
+			pregpriv->beamform_cap = mode;
+			RTW_INFO("beamform_cap = 0x%02x\n", mode);
+		}
+	}
+
+	return count;
+}
+#endif
+
 #ifdef CONFIG_TX_AMSDU
 void rtw_rust_debug_proc_emit_tx_amsdu(void *sel, _adapter *adapter)
 {
