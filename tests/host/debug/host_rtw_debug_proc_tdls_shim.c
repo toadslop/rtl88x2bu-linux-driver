@@ -92,16 +92,14 @@ int rtw_rust_debug_proc_tdls_display_function_info(void *m)
 	RTW_PRINT_SEL(m, "============[TDLS Function Info]============\n");
 	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue, "TDLS Enable",
 		      (rtw_is_tdls_enabled(padapter) == _TRUE) ? "_TRUE" : "_FALSE");
-	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue,
-		      "TDLS Driver Setup",
+	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue, "TDLS Driver Setup",
 		      (ptdlsinfo->driver_setup == _TRUE) ? "_TRUE" : "_FALSE");
 	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue, "TDLS Prohibited",
 		      (ptdlsinfo->ap_prohibited == _TRUE) ? "_TRUE" : "_FALSE");
 	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue,
 		      "TDLS Channel Switch Prohibited",
 		      (ptdlsinfo->ch_switch_prohibited == _TRUE) ? "_TRUE" : "_FALSE");
-	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue,
-		      "TDLS Link Established",
+	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue, "TDLS Link Established",
 		      (ptdlsinfo->link_established == _TRUE) ? "_TRUE" : "_FALSE");
 	RTW_PRINT_SEL(m, "%-*s = %d/%d\n", SpaceBtwnItemAndValue,
 		      "TDLS STA Num (Linked/Allowed)", ptdlsinfo->sta_cnt,
@@ -109,9 +107,20 @@ int rtw_rust_debug_proc_tdls_display_function_info(void *m)
 	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue,
 		      "TDLS Allowed STA Num Reached",
 		      (ptdlsinfo->sta_maximum == _TRUE) ? "_TRUE" : "_FALSE");
-	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue,
-		      "TDLS Device Discovered",
+	RTW_PRINT_SEL(m, "%-*s = %s\n", SpaceBtwnItemAndValue, "TDLS Device Discovered",
 		      (ptdlsinfo->dev_discovered == _TRUE) ? "_TRUE" : "_FALSE");
 
+	return 0;
+}
+
+int rtw_rust_debug_proc_tdls_display_network_info(void *m)
+{
+	(void)m;
+	return 0;
+}
+
+int rtw_rust_debug_proc_tdls_display_tdls_sta_info(void *m)
+{
+	(void)m;
 	return 0;
 }

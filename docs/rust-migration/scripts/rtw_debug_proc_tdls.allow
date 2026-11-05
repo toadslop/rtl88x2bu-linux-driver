@@ -5,3 +5,4 @@ drop rtw_is_tdls_enabled
 drop rtw_rust_debug_proc_emit_tdls_enable
 drop rtw_rust_debug_proc_set_tdls_enable
 drop rtw_rust_debug_proc_tdls_display_function_info
+drop rtw_rust_debug_proc_tdls_display_network_info
