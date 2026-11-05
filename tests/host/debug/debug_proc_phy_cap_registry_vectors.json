@@ -1,0 +1,95 @@
+{
+  "vectors": [
+    {
+      "name": "get_stbc_cap",
+      "stbc_cap": 51,
+      "rx_stbc": 0,
+      "ldpc_cap": 0,
+      "beamform_cap": 0,
+      "get": "stbc_cap",
+      "expect": "0x33\n"
+    },
+    {
+      "name": "set_stbc_cap",
+      "stbc_cap": 0,
+      "rx_stbc": 0,
+      "ldpc_cap": 0,
+      "beamform_cap": 0,
+      "set": "stbc_cap",
+      "set_input": "37 ",
+      "get": "stbc_cap",
+      "expect": "0x25\n"
+    },
+    {
+      "name": "get_rx_stbc",
+      "stbc_cap": 0,
+      "rx_stbc": 2,
+      "ldpc_cap": 0,
+      "beamform_cap": 0,
+      "get": "rx_stbc",
+      "expect": "2\n"
+    },
+    {
+      "name": "set_rx_stbc_valid",
+      "stbc_cap": 0,
+      "rx_stbc": 0,
+      "ldpc_cap": 0,
+      "beamform_cap": 0,
+      "set": "rx_stbc",
+      "set_input": "3 ",
+      "get": "rx_stbc",
+      "expect": "3\n"
+    },
+    {
+      "name": "set_rx_stbc_out_of_range",
+      "stbc_cap": 0,
+      "rx_stbc": 1,
+      "ldpc_cap": 0,
+      "beamform_cap": 0,
+      "set": "rx_stbc",
+      "set_input": "9 ",
+      "get": "rx_stbc",
+      "expect": "1\n"
+    },
+    {
+      "name": "get_ldpc_cap",
+      "stbc_cap": 0,
+      "rx_stbc": 0,
+      "ldpc_cap": 15,
+      "beamform_cap": 0,
+      "get": "ldpc_cap",
+      "expect": "0x0f\n"
+    },
+    {
+      "name": "set_ldpc_cap",
+      "stbc_cap": 0,
+      "rx_stbc": 0,
+      "ldpc_cap": 0,
+      "beamform_cap": 0,
+      "set": "ldpc_cap",
+      "set_input": "12 ",
+      "get": "ldpc_cap",
+      "expect": "0x0c\n"
+    },
+    {
+      "name": "get_txbf_cap",
+      "stbc_cap": 0,
+      "rx_stbc": 0,
+      "ldpc_cap": 0,
+      "beamform_cap": 63,
+      "get": "txbf_cap",
+      "expect": "0x3f\n"
+    },
+    {
+      "name": "set_txbf_cap",
+      "stbc_cap": 0,
+      "rx_stbc": 0,
+      "ldpc_cap": 0,
+      "beamform_cap": 0,
+      "set": "txbf_cap",
+      "set_input": "17 ",
+      "get": "txbf_cap",
+      "expect": "0x11\n"
+    }
+  ]
+}

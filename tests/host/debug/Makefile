@@ -28,6 +28,11 @@ PHY_CAP_RUST   := $(ROOT)/rust/rtw_debug_phy_cap.rs
 PHY_CAP_L2     := test_debug_phy_cap_dump.c
 PHY_CAP_CFG    := -DCONFIG_80211N_HT -DCONFIG_80211AC_VHT -DCONFIG_BEAMFORMING
 
+# W3-211 proc PHY cap registry get/set (stbc/rx_stbc/ldpc/txbf)
+PHY_REG_ORACLE := debug_proc_phy_cap_registry_c_oracle.c
+PHY_REG_L2     := test_proc_phy_cap_registry.c
+PHY_REG_CFG    := -DCONFIG_80211N_HT -DCONFIG_BEAMFORMING
+
 # W3-203 proc HT registry get/set
 HT_ORACLE := debug_proc_ht_c_oracle.c
 HT_SHIM   := host_rtw_debug_proc_ht_shim.c
@@ -87,6 +92,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust \
 	test-proc-tx-amsdu-c test-proc-tx-amsdu-rust \
+	test-proc-phy-cap-registry-c test-proc-phy-cap-registry-rust \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
 
 all: test
@@ -100,13 +106,14 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust \
 	test-proc-tx-amsdu-c test-proc-tx-amsdu-rust \
+	test-proc-phy-cap-registry-c test-proc-phy-cap-registry-rust \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
 
 test-all: test
 
 test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 	test-proc-vht-c test-proc-fwps-c test-proc-rx-ampdu-c test-proc-tdls-c \
-	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c test-phy-cap-dump-c
+	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c test-proc-phy-cap-registry-c test-phy-cap-dump-c
 
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
 	test-proc-ht-rust test-proc-vht-rust test-proc-fwps-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
@@ -339,6 +346,12 @@ test_proc_tx_amsdu_rust: $(AMSDU_L2) librust_rtw_debug_proc_amsdu.a $(AMSDU_SHIM
 	$(CC) $(CFLAGS) -DRUST_RTW_DEBUG_PROC_AMSDU_ORACLE -o $@ \
 		$(AMSDU_L2) $(AMSDU_SHIM) $(HOST_JSON) librust_rtw_debug_proc_amsdu.a
 
+test-proc-phy-cap-registry-c: test_proc_phy_cap_registry
+	./test_proc_phy_cap_registry debug_proc_phy_cap_registry_vectors.json
+
+test_proc_phy_cap_registry: $(PHY_REG_L2) $(PHY_REG_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(PHY_REG_CFG) -o $@ $(PHY_REG_L2) $(PHY_REG_ORACLE) $(HOST_JSON)
+
 clean:
 	rm -f test_debug_test_hooks_c test_debug_test_hooks_rust librust_debug_test_hooks.a \
 		test_dump_sec_cam_ent test_dump_sec_cam_ent_rust librust_rtw_debug_sec_cam.a \
@@ -351,4 +364,6 @@ clean:
 		test_proc_ampdu_tuning test_proc_ampdu_tuning_rust \
 		test_proc_tx_ampdu_misc test_proc_tx_ampdu_misc_rust \
 		test_proc_tx_amsdu test_proc_tx_amsdu_rust librust_rtw_debug_proc_amsdu.a \
+		test_proc_phy_cap_registry test_proc_phy_cap_registry_rust \
+		librust_rtw_debug_proc_phy_cap.a \
 		test_debug_phy_cap_dump test_debug_phy_cap_dump_rust librust_rtw_debug_phy_cap.a
