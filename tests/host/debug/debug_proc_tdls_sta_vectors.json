@@ -1,0 +1,25 @@
+{
+  "vectors": [
+    {
+      "name": "tdls_sta_empty",
+      "get": "tdls_sta",
+      "expect": "============[TDLS Peer STA Info]============\nNo TDLS direct link exists!\n"
+    },
+    {
+      "name": "tdls_sta_linked_fixture",
+      "get": "tdls_sta",
+      "sta": {
+        "mac": "11:22:33:44:55:66",
+        "tdls_sta_state": 1073741824,
+        "wireless_mode": 1,
+        "bw_mode": 0,
+        "privacy": 4,
+        "tpk_count": 10,
+        "tpk_lifetime": 3600,
+        "tx_pkts": 42,
+        "rx_pkts": 7
+      },
+      "expect": "============[TDLS Peer STA Info: STA 1]============\nMac Address                               = 11:22:33:44:55:66\nTDLS STA State                            = TDLS_LINKED_STATE\nWireless Mode                             = 11B \nBandwidth Mode                            = 20MHz\nPrivacy                                   = AES\nTPK Lifetime (Current/Expire)             = 10 sec/3600 sec\nTx Packets Over Direct Link               = 42\nRx Packets Over Direct Link               = 7\n"
+    }
+  ]
+}
