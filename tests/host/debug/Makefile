@@ -115,13 +115,15 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust \
 	test-proc-tx-amsdu-c test-proc-tx-amsdu-rust \
 	test-proc-phy-cap-registry-c test-proc-phy-cap-registry-rust \
+	test-proc-sreset-c \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
 
 test-all: test
 
 test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 	test-proc-vht-c test-proc-fwps-c test-proc-rx-ampdu-c test-proc-tdls-c \
-	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c test-proc-phy-cap-registry-c test-phy-cap-dump-c
+	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c test-proc-phy-cap-registry-c \
+	test-proc-sreset-c test-phy-cap-dump-c
 
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
 	test-proc-ht-rust test-proc-vht-rust test-proc-fwps-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
@@ -394,4 +396,5 @@ clean:
 		test_proc_tx_amsdu test_proc_tx_amsdu_rust librust_rtw_debug_proc_amsdu.a \
 		test_proc_phy_cap_registry test_proc_phy_cap_registry_rust \
 		librust_rtw_debug_proc_phy_cap.a \
+		test_proc_sreset \
 		test_debug_phy_cap_dump test_debug_phy_cap_dump_rust librust_rtw_debug_phy_cap.a
