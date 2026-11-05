@@ -38,10 +38,7 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
     unsafe { rtw_rust_debug_proc_adapter(m) }
 }
 
-#[cfg(any(
-    all(config_bt_coexist, config_rf4ce_coexist),
-    host_rtw_debug_proc_sreset_test
-))]
+#[cfg(any(config_rf4ce_coexist, host_rtw_debug_proc_sreset_test))]
 #[no_mangle]
 pub extern "C" fn proc_get_rf4ce_state(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -51,10 +48,7 @@ pub extern "C" fn proc_get_rf4ce_state(m: *mut c_void, _v: *mut c_void) -> c_int
     0
 }
 
-#[cfg(any(
-    all(config_bt_coexist, config_rf4ce_coexist),
-    host_rtw_debug_proc_sreset_test
-))]
+#[cfg(any(config_rf4ce_coexist, host_rtw_debug_proc_sreset_test))]
 #[no_mangle]
 pub extern "C" fn proc_set_rf4ce_state(
     _file: *mut c_void,

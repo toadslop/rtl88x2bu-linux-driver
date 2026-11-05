@@ -5173,6 +5173,7 @@ int proc_get_btcoex_info(struct seq_file *m, void *v)
 }
 
 #ifdef CONFIG_RF4CE_COEXIST
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_rf4ce_state(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -5219,10 +5220,12 @@ ssize_t proc_set_rf4ce_state(struct file *file, const char __user *buffer, size_
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-216 in rust/rtw_debug_proc_sreset.rs */
 #endif /* CONFIG_RF4CE_COEXIST */
 #endif /* CONFIG_BT_COEXIST */
 
 #if defined(DBG_CONFIG_ERROR_DETECT)
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_sreset(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -5279,6 +5282,7 @@ ssize_t proc_set_sreset(struct file *file, const char __user *buffer, size_t cou
 	return count;
 
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-216 in rust/rtw_debug_proc_sreset.rs */
 #endif /* DBG_CONFIG_ERROR_DETECT */
 
 #ifdef CONFIG_PCI_HCI
