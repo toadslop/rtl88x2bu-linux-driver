@@ -13,9 +13,17 @@ estimate_loc: 200
 Port power-saving debug procs from [`core/rtw_debug_rest.c`](../../../core/rtw_debug_rest.c) into
 [`rust/rtw_debug_proc_ps_info.rs`](../../../rust/rtw_debug_proc_ps_info.rs):
 
-- `proc_get_ps_info` / `proc_set_ps_info` (`CONFIG_POWER_SAVING`)
+**`CONFIG_POWER_SAVING`**
+
+- `proc_get_ps_info` / `proc_set_ps_info`
+
+**`CONFIG_WMMPS_STA`** (nested under power saving in C)
+
 - `proc_get_wmmps_info` / `proc_set_wmmps_info`
-- `proc_get_new_bcn_max` / `proc_set_new_bcn_max` (`CONFIG_BCN_CNT_CONFIRM_HDL`)
+
+**`CONFIG_BCN_CNT_CONFIRM_HDL`**
+
+- `proc_get_new_bcn_max` / `proc_set_new_bcn_max`
 
 ## Notes
 
