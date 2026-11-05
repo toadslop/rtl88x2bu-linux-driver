@@ -345,7 +345,7 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-215 | `wave3-215-debug-proc-btcoex-dbg.md` | btcoex dbg get/set + info display |
 | W3-216 | `wave3-216-debug-proc-rf4ce-sreset.md` | RF4CE state + silent reset procs |
 | W3-217 | `wave3-217-debug-proc-wow-registry.md` | WoWLAN enable / wakeup / gpio registry |
-| W3-218 | `wave3-218-debug-proc-wow-pattern.md` | WoWLAN wake-pattern proc get/set |
+| W3-218 | `wave3-218-debug-proc-wow-pattern.md` | WoWLAN wake-pattern proc get/set (parallel root) |
 | W3-219 | `wave3-219-debug-proc-ps-wmm-bcn.md` | ps_info / wmmps / new_bcn_max procs |
 | W3-220 | `wave3-220-debug-proc-monitor-xmit.md` | monitor + simple_config + xmit_block |
 | W3-221 | `wave3-221-debug-proc-tx-mgmt-test.md` | TX sa_query / deauth / auth inject procs |

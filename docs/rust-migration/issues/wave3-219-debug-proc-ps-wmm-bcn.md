@@ -21,7 +21,7 @@ Port power-saving debug procs from [`core/rtw_debug_rest.c`](../../../core/rtw_d
 
 - Large proc_get_ps_info formatter — split Rust helpers under same module; no new HAL entry points.
 - `new_bcn_max` is a global `extern int` — bind via small C shim for L2 host tests.
-- Parallel with existing [W3-163](wave3-163-debug-proc-ps-dbg-counters.md) ps lane (disjoint handlers).
+- Parallel with existing [W3-163](wave3-163-debug-proc-ps-dbg.md) ps lane (disjoint handlers).
 
 ## Acceptance
 
