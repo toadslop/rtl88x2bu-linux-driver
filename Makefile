@@ -2997,6 +2997,26 @@ endif
 ifneq ($(_rust_cfg_dbg_rx_counter_dump),)
 rustflags-y += --cfg config_dbg_rx_counter_dump
 endif
+_rust_cfg_dbg_config_error_detect :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+DBG_CONFIG_ERROR_DETECT' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_dbg_config_error_detect := y
+endif
+ifneq ($(filter -DDBG_CONFIG_ERROR_DETECT,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_dbg_config_error_detect := y
+endif
+ifneq ($(_rust_cfg_dbg_config_error_detect),)
+rustflags-y += --cfg dbg_config_error_detect
+endif
+_rust_cfg_rf4ce_coexist :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RF4CE_COEXIST' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_rf4ce_coexist := y
+endif
+ifneq ($(filter -DCONFIG_RF4CE_COEXIST,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_rf4ce_coexist := y
+endif
+ifneq ($(_rust_cfg_rf4ce_coexist),)
+rustflags-y += --cfg config_rf4ce_coexist
+endif
 _rust_cfg_dbg_counter :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_DBG_COUNTER' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 _rust_cfg_dbg_counter := y
@@ -3163,6 +3183,7 @@ ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_TDLS' $(src)/include/autoconf.h
 $(MODULE_NAME)-y += rust/rtw_debug_proc_tdls.o
 endif
 $(MODULE_NAME)-y += rust/rtw_debug_proc_fwps.o
+$(MODULE_NAME)-y += rust/rtw_debug_proc_sreset.o
 $(MODULE_NAME)-y += rust/rtw_debug_phy_cap.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_phy_cap.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
@@ -5145,6 +5166,23 @@ rust-objects-rtw-debug-proc-fwps-c:
 rust-check-symbols-rtw-debug-proc-fwps: rust-objects-rtw-debug-proc-fwps-c rust-objects-rtw-debug-proc-fwps
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_fwps_c_ref.o NEW=rust/rtw_debug_proc_fwps.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_fwps.allow ALLOW_VACUOUS=1
+
+# W3-216: host C oracle vs rust/rtw_debug_proc_sreset.o (rf4ce_state + sreset procs).
+rust-objects-rtw-debug-proc-sreset:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-sreset"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) \
+		USER_EXTRA_CFLAGS='-DDBG_CONFIG_ERROR_DETECT -DCONFIG_RF4CE_COEXIST' \
+		rust/rtw_debug_proc_sreset.o
+rust-objects-rtw-debug-proc-sreset-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-DCONFIG_BT_COEXIST -DCONFIG_RF4CE_COEXIST -DDBG_CONFIG_ERROR_DETECT \
+		-o tests/host/debug/debug_proc_sreset_c_ref.o \
+		tests/host/debug/debug_proc_sreset_c_oracle.c
+rust-check-symbols-rtw-debug-proc-sreset: rust-objects-rtw-debug-proc-sreset-c rust-objects-rtw-debug-proc-sreset
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_sreset_c_ref.o NEW=rust/rtw_debug_proc_sreset.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_sreset.allow ALLOW_VACUOUS=1
 
 # W3-210: host C oracle vs rust/rtw_debug_phy_cap.o (PHY cap dump helpers).
 rust-objects-rtw-debug-phy-cap:

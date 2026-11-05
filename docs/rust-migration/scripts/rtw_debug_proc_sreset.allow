@@ -1,0 +1,13 @@
+# L1 allowlist for W3-216: Rust proc handlers in rtw_debug_proc_sreset.o.
+drop rtw_rust_debug_proc_emit_rf4ce_state
+drop rtw_rust_debug_proc_set_rf4ce_state
+drop rtw_rust_debug_proc_emit_sreset
+drop rtw_rust_debug_proc_set_sreset
+drop host_debug_proc_sreset_reset_mocks
+drop host_debug_proc_sreset_reset_calls
+drop host_debug_proc_sreset_last_trigger
+drop host_debug_proc_sreset_set_rf4ce
+drop rtw_btcoex_GetRf4ceLinkState
+drop rtw_btcoex_SetRf4ceLinkState
+drop rtw_hal_sreset_reset
+drop sreset_set_trigger_point

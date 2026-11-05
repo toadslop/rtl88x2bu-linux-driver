@@ -349,6 +349,7 @@ for path in "${changed[@]}"; do
 	| rust/rtw_debug_proc_vht.rs \
 	| rust/rtw_debug_proc_tdls.rs \
 	| rust/rtw_debug_proc_fwps.rs \
+	| rust/rtw_debug_proc_sreset.rs \
 	| rust/rtw_debug_proc_ampdu.rs \
 	| rust/rtw_debug_proc_test.rs \
 	| core/rtw_debug_adapters_status_shim.c \
@@ -372,6 +373,7 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-debug-proc-hw
 		add_target rust-check-symbols-rtw-debug-proc-signal
 		add_target rust-check-symbols-rtw-debug-proc-test
+		add_target rust-check-symbols-rtw-debug-proc-sreset
 		;;
 	rust/hal_com.rs \
 	| hal/hal_com_rest.c \
