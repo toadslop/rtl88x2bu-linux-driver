@@ -113,6 +113,8 @@
 	#ifdef CONFIG_LPS
 		#define CONFIG_WMMPS_STA 1
 	#endif /* CONFIG_LPS */
+	/* W3-219: beacon-count confirm (new_bcn_max proc + MLME paths); Makefile mirrors via grep. */
+	#define CONFIG_BCN_CNT_CONFIRM_HDL	1
 #endif /*CONFIG_POWER_SAVING*/
 	/* before link */
 	/* #define CONFIG_ANTENNA_DIVERSITY */

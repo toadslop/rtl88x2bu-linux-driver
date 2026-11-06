@@ -25,7 +25,7 @@ Port power-saving debug procs from [`core/rtw_debug_rest.c`](../../../core/rtw_d
 
 - `proc_get_new_bcn_max` / `proc_set_new_bcn_max`
 
-In this out-of-tree driver, `CONFIG_BCN_CNT_CONFIRM_HDL` is enabled for the default build when **`CONFIG_PROC_DEBUG`** is enabled (Makefile adds `-DCONFIG_BCN_CNT_CONFIRM_HDL` and matching Rust `--cfg`). The same symbols can also appear in `include/autoconf.h` from Kconfig; when they do, the Makefile `grep` probes still add the matching Rust `--cfg` so C and Rust stay aligned.
+In this out-of-tree driver, `CONFIG_BCN_CNT_CONFIRM_HDL` is defined in `include/autoconf.h` under **`CONFIG_POWER_SAVING`** (same area as LPS / WMMPS). The Makefile probes that header (like other features) and adds `-DCONFIG_BCN_CNT_CONFIRM_HDL` plus matching Rust `--cfg` only when the symbol is present, so C and Rust stay aligned without tying the macro to **`CONFIG_PROC_DEBUG`** alone.
 
 ## Notes
 

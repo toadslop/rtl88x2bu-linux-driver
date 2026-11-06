@@ -2993,8 +2993,9 @@ endif
 # W3-131: dump_drv_cfg part 1 in rust/rtw_debug.rs
 ifeq ($(CONFIG_PROC_DEBUG), y)
 rustflags-y += --cfg config_proc_debug
-# Beacon-count confirm (new_bcn_max proc + MLME counters): keep off the global
-# autoconf default; enable only with debug/proc so L0 matches upstream defaults.
+endif
+# W3-219: beacon-count confirm — same probe as CONFIG_WMMPS_STA (autoconf.h is source of truth).
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BCN_CNT_CONFIRM_HDL' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 ccflags-y += -DCONFIG_BCN_CNT_CONFIRM_HDL
 rustflags-y += --cfg config_bcn_cnt_confirm_hdl
 endif
