@@ -4141,6 +4141,67 @@ ssize_t rtw_rust_debug_proc_set_rf4ce_state(_adapter *adapter,
 	return count;
 }
 #endif /* CONFIG_RF4CE_COEXIST */
+
+void rtw_rust_debug_proc_emit_btcoex_dbg(void *sel, _adapter *adapter)
+{
+	char buf[512] = {0};
+
+	rtw_btcoex_GetDBG(adapter, (u8 *)buf, 512);
+	_RTW_PRINT_SEL(sel, "%s", buf);
+}
+
+ssize_t rtw_rust_debug_proc_set_btcoex_dbg(_adapter *adapter,
+					   const char __user *buffer,
+					   size_t count)
+{
+	u8 tmp[80] = {0};
+	u32 module[2] = {0};
+	u32 num;
+
+	if (NULL == buffer)
+		return -EFAULT;
+
+	if (count < 1)
+		return -EFAULT;
+
+	num = count;
+	if (num > (sizeof(tmp) - 1))
+		num = (sizeof(tmp) - 1);
+
+	if (copy_from_user(tmp, buffer, num))
+		return -EFAULT;
+
+	num = sscanf(tmp, "%x %x", module, module + 1);
+	if (num == 1) {
+		if (module[0] == 0)
+			_rtw_memset(module, 0, sizeof(module));
+		else
+			_rtw_memset(module, 0xFF, sizeof(module));
+	} else if (num != 2) {
+		if (num == 0)
+			return -EFAULT;
+	}
+
+	rtw_btcoex_SetDBG(adapter, module);
+
+	return count;
+}
+
+int rtw_rust_debug_proc_emit_btcoex_info(void *sel, _adapter *adapter)
+{
+	const u32 bufsize = 40 * 100;
+	u8 *pbuf = NULL;
+
+	pbuf = rtw_zmalloc(bufsize);
+	if (NULL == pbuf)
+		return -ENOMEM;
+
+	rtw_btcoex_DisplayBtCoexInfo(adapter, pbuf, bufsize);
+	_RTW_PRINT_SEL(sel, "%s\n", pbuf);
+	rtw_mfree(pbuf, bufsize);
+
+	return 0;
+}
 #endif /* CONFIG_BT_COEXIST */
 
 #if defined(DBG_CONFIG_ERROR_DETECT)

@@ -44,6 +44,8 @@ SRESET_CFG    := -DCONFIG_BT_COEXIST -DCONFIG_RF4CE_COEXIST -DDBG_CONFIG_ERROR_D
 
 # W3-215 proc btcoex dbg get/set + info
 BTCOEX_ORACLE := debug_proc_btcoex_c_oracle.c
+BTCOEX_SHIM   := host_rtw_debug_proc_btcoex_shim.c
+BTCOEX_RUST   := $(ROOT)/rust/rtw_debug_proc_btcoex.rs
 BTCOEX_L2     := test_proc_btcoex.c
 BTCOEX_CFG    := -DCONFIG_BT_COEXIST
 
@@ -400,6 +402,21 @@ test-proc-btcoex-c: test_proc_btcoex
 test_proc_btcoex: $(BTCOEX_L2) $(BTCOEX_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) $(BTCOEX_CFG) -o $@ $(BTCOEX_L2) $(BTCOEX_ORACLE) $(HOST_JSON)
 
+librust_rtw_debug_proc_btcoex.a: $(BTCOEX_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_btcoex_test \
+		--cfg config_bt_coexist --cfg config_rtw_debug --cfg config_proc_debug \
+		--crate-type staticlib $(BTCOEX_RUST) -o $@
+
+test-proc-btcoex-rust: test_proc_btcoex_rust
+	./test_proc_btcoex_rust debug_proc_btcoex_vectors.json
+
+test_proc_btcoex_rust: $(BTCOEX_L2) librust_rtw_debug_proc_btcoex.a \
+		$(BTCOEX_SHIM) $(BTCOEX_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(BTCOEX_CFG) -DRUST_RTW_DEBUG_PROC_BTCOEX_ORACLE -o $@ \
+		$(BTCOEX_L2) $(BTCOEX_SHIM) $(BTCOEX_ORACLE) $(HOST_JSON) \
+		librust_rtw_debug_proc_btcoex.a
+
 test-proc-sreset-c: test_proc_sreset
 	./test_proc_sreset debug_proc_sreset_vectors.json
 
@@ -455,6 +472,7 @@ clean:
 		test_proc_tx_amsdu test_proc_tx_amsdu_rust librust_rtw_debug_proc_amsdu.a \
 		test_proc_phy_cap_registry test_proc_phy_cap_registry_rust \
 		librust_rtw_debug_proc_phy_cap.a \
+		test_proc_btcoex test_proc_btcoex_rust librust_rtw_debug_proc_btcoex.a \
 		test_proc_sreset \
 		test_proc_misc test_proc_misc_rust librust_rtw_debug_proc_misc.a \
 		test_debug_phy_cap_dump test_debug_phy_cap_dump_rust librust_rtw_debug_phy_cap.a
