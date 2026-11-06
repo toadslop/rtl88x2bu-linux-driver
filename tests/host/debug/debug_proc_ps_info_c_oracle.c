@@ -74,6 +74,7 @@ int debug_proc_ps_info_c_ref_get_ps_info(struct seq_file *m, void *v)
 	u8 ips_mode = pwrpriv->ips_mode_req;
 	u8 lps_mode = pwrpriv->power_mgnt;
 	u8 lps_level = pwrpriv->lps_level;
+	char lps_mode_buf[12];
 	const char *str;
 
 	(void)v;
@@ -111,11 +112,10 @@ int debug_proc_ps_info_c_ref_get_ps_info(struct seq_file *m, void *v)
 	else if (lps_mode == PS_MODE_DTIM)
 		str = "DTIM";
 	else {
-		RTW_PRINT_SEL(m, " LPS mode: %d\n", lps_mode);
-		str = NULL;
+		snprintf(lps_mode_buf, sizeof(lps_mode_buf), "%d", lps_mode);
+		str = lps_mode_buf;
 	}
-	if (str)
-		RTW_PRINT_SEL(m, " LPS mode: %s\n", str);
+	RTW_PRINT_SEL(m, " LPS mode: %s\n", str);
 
 	if (pwrpriv->dtim != 0)
 		RTW_PRINT_SEL(m, " DTIM: %d\n", pwrpriv->dtim);

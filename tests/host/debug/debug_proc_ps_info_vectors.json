@@ -14,6 +14,19 @@
       "expect": "======Power Saving Info:======\n*IPS:\n IPS mode: FW_LPS_IN_IPS\n IPS enter count:5, IPS leave count:7\n------------------------------\n*LPS:\n LPS mode: NO LPS\n DTIM: 2\n LPS enter count:3, LPS leave count:4\n LPS level: LPS_PG\n=============================\n"
     },
     {
+      "name": "ps_info_unknown_lps_mode_numeric",
+      "ips_mode_req": 1,
+      "ips_enter_cnts": 5,
+      "ips_leave_cnts": 7,
+      "power_mgnt": 7,
+      "dtim": 2,
+      "lps_enter_cnts": 3,
+      "lps_leave_cnts": 4,
+      "lps_level": 2,
+      "get": "ps_info",
+      "expect": "======Power Saving Info:======\n*IPS:\n IPS mode: FW_LPS_IN_IPS\n IPS enter count:5, IPS leave count:7\n------------------------------\n*LPS:\n LPS mode: 7\n DTIM: 2\n LPS enter count:3, LPS leave count:4\n LPS level: LPS_PG\n=============================\n"
+    },
+    {
       "name": "wmmps_info_default",
       "uapsd_max_sp_len": 1,
       "uapsd_ac_enable": 15,
