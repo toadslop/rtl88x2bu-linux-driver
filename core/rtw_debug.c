@@ -4264,6 +4264,188 @@ ssize_t rtw_rust_debug_proc_set_sreset(_adapter *adapter,
 }
 #endif /* DBG_CONFIG_ERROR_DETECT */
 
+#ifdef CONFIG_WOWLAN
+void rtw_rust_debug_proc_emit_wow_enable(void *sel, _adapter *adapter)
+{
+	struct registry_priv *registry_pair = &adapter->registrypriv;
+
+	RTW_PRINT_SEL(sel, "wow - %s\n",
+		      (registry_pair->wowlan_enable) ? "enable" : "disable");
+}
+
+ssize_t rtw_rust_debug_proc_set_wow_enable(_adapter *adapter,
+					   const char __user *buffer,
+					   size_t count)
+{
+	struct registry_priv *registry_pair = &adapter->registrypriv;
+	char tmp[8];
+	int num = 0;
+	int mode = 0;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count))
+		num = sscanf(tmp, "%d", &mode);
+	else
+		return -EFAULT;
+
+	if (num != 1) {
+		RTW_ERR("%s: %s - invalid parameter!\n", __func__, tmp);
+		return -EINVAL;
+	}
+
+	if (mode == 1) {
+		RTW_PRINT("%s: wowlan - enable\n", __func__);
+	} else if (mode == 0) {
+		RTW_PRINT("%s: wowlan - disable\n", __func__);
+	} else {
+		RTW_ERR("%s: %s - invalid parameter!, mode=%d\n",
+			__func__, tmp, mode);
+		return -EINVAL;
+	}
+
+	registry_pair->wowlan_enable = mode;
+
+	return count;
+}
+
+void rtw_rust_debug_proc_emit_wakeup_event(void *sel, _adapter *adapter)
+{
+	struct registry_priv *registry_par = &adapter->registrypriv;
+
+	RTW_PRINT_SEL(sel, "wakeup event: %#02x\n", registry_par->wakeup_event);
+}
+
+ssize_t rtw_rust_debug_proc_set_wakeup_event(_adapter *adapter,
+					     const char __user *buffer,
+					     size_t count)
+{
+	struct pwrctrl_priv *pwrctrlpriv = adapter_to_pwrctl(adapter);
+	struct registry_priv *registry_par = &adapter->registrypriv;
+	u32 wakeup_event = 0;
+
+	u8 tmp[8] = {0};
+	int num = 0;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count))
+		num = sscanf(tmp, "%u", &wakeup_event);
+	else
+		return -EFAULT;
+
+	if (num == 1 && wakeup_event <= 0x0f) {
+		registry_par->wakeup_event = wakeup_event;
+
+		if (wakeup_event & BIT(1))
+			pwrctrlpriv->default_patterns_en = _TRUE;
+		else
+			pwrctrlpriv->default_patterns_en = _FALSE;
+
+		rtw_wow_pattern_sw_reset(adapter);
+
+		RTW_INFO("%s: wakeup_event: %#2x, default pattern: %d\n",
+			 __func__, registry_par->wakeup_event,
+			 pwrctrlpriv->default_patterns_en);
+	} else {
+		return -EINVAL;
+	}
+
+	return count;
+}
+
+void rtw_rust_debug_proc_emit_wakeup_reason(void *sel, _adapter *adapter)
+{
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
+	u8 val = pwrpriv->wowlan_last_wake_reason;
+
+	RTW_PRINT_SEL(sel, "last wake reason: %#02x\n", val);
+}
+
+#ifdef CONFIG_GPIO_WAKEUP
+void rtw_rust_debug_proc_emit_wowlan_gpio_info(void *sel, _adapter *adapter)
+{
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
+	u8 gpio_index = pwrpriv->wowlan_gpio_index;
+	u8 gpio_output_state = pwrpriv->wowlan_gpio_output_state;
+	u8 val = pwrpriv->is_high_active;
+
+	RTW_PRINT_SEL(sel, "wakeup_gpio_idx: %d\n", gpio_index);
+#if (!defined(CONFIG_WAKEUP_GPIO_INPUT_MODE) && !defined(CONFIG_RTW_ONE_PIN_GPIO))
+	RTW_PRINT_SEL(sel, "current_gpio_output_state: %d\n", gpio_output_state);
+#endif
+	RTW_PRINT_SEL(sel, "high_active: %d\n", val);
+}
+
+ssize_t rtw_rust_debug_proc_set_wowlan_gpio_info(_adapter *adapter,
+						 const char __user *buffer,
+						 size_t count)
+{
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
+	char tmp[32] = {0};
+	int num = 0;
+	u32 is_high_active = 0;
+	u8 val8 = 0;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+
+		num = sscanf(tmp, "%u", &is_high_active);
+
+		if (num != 1) {
+			RTW_INFO("Invalid format\n");
+			return count;
+		}
+
+		is_high_active = is_high_active == 0 ? 0 : 1;
+
+		pwrpriv->is_high_active = is_high_active;
+
+		rtw_ps_deny(adapter, PS_DENY_IOCTL);
+		LeaveAllPowerSaveModeDirect(adapter);
+
+#ifdef CONFIG_WAKEUP_GPIO_INPUT_MODE
+		if (pwrpriv->is_high_active == 0)
+			rtw_hal_set_input_gpio(adapter, pwrpriv->wowlan_gpio_index);
+		else
+			rtw_hal_set_output_gpio(adapter, pwrpriv->wowlan_gpio_index,
+						GPIO_OUTPUT_LOW);
+#else
+		val8 = (pwrpriv->is_high_active == 0) ? 1 : 0;
+		rtw_hal_switch_gpio_wl_ctrl(adapter, pwrpriv->wowlan_gpio_index, _TRUE);
+		rtw_hal_set_output_gpio(adapter, pwrpriv->wowlan_gpio_index, val8);
+#endif
+		rtw_ps_deny_cancel(adapter, PS_DENY_IOCTL);
+
+		RTW_INFO("%s set GPIO_%d to %s_ACTIVE\n", __func__,
+			 pwrpriv->wowlan_gpio_index,
+			 pwrpriv->is_high_active ? "HIGH" : "LOW");
+	}
+
+	return count;
+}
+#endif /* CONFIG_GPIO_WAKEUP */
+#endif /* CONFIG_WOWLAN */
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */

@@ -2891,6 +2891,9 @@ endif
 ifeq ($(CONFIG_WOWLAN), y)
 rustflags-y += --cfg config_wowlan
 endif
+ifeq ($(CONFIG_GPIO_WAKEUP), y)
+rustflags-y += --cfg config_gpio_wakeup
+endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_LPS_1T1R' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg config_lps_1t1r
 endif
@@ -3192,6 +3195,9 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_signal.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_ampdu.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_test.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_ht.o
+ifeq ($(CONFIG_WOWLAN), y)
+$(MODULE_NAME)-y += rust/rtw_debug_proc_wow.o
+endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_TX_AMSDU' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_amsdu.o
 endif
@@ -5117,6 +5123,21 @@ rust-objects-rtw-debug-proc-ht-c:
 rust-check-symbols-rtw-debug-proc-ht: rust-objects-rtw-debug-proc-ht-c rust-objects-rtw-debug-proc-ht
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_ht_c_ref.o NEW=rust/rtw_debug_proc_ht.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_ht.allow ALLOW_VACUOUS=1
+
+# W3-217: host C oracle vs rust/rtw_debug_proc_wow.o (proc WoWLAN registry + GPIO get/set).
+rust-objects-rtw-debug-proc-wow:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-wow"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) CONFIG_WOWLAN=y CONFIG_GPIO_WAKEUP=y -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_wow.o
+rust-objects-rtw-debug-proc-wow-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-DCONFIG_WOWLAN -DCONFIG_GPIO_WAKEUP \
+		-o tests/host/debug/debug_proc_wow_c_ref.o \
+		tests/host/debug/debug_proc_wow_c_oracle.c
+rust-check-symbols-rtw-debug-proc-wow: rust-objects-rtw-debug-proc-wow-c rust-objects-rtw-debug-proc-wow
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_wow_c_ref.o NEW=rust/rtw_debug_proc_wow.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_wow.allow ALLOW_VACUOUS=1
 
 # W3-207: host C oracle vs rust/rtw_debug_proc_amsdu.o (proc tx AMSDU get/set).
 rust-objects-rtw-debug-proc-amsdu:

@@ -548,6 +548,21 @@ int proc_get_wakeup_reason(struct seq_file *m, void *v);
 #ifdef CONFIG_WOW_KEEP_ALIVE_PATTERN
 int proc_dump_wow_keep_alive_info(struct seq_file *m, void *v);
 #endif /*CONFIG_WOW_KEEP_ALIVE_PATTERN*/
+
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
+void rtw_rust_debug_proc_emit_wow_enable(void *sel, _adapter *adapter);
+ssize_t rtw_rust_debug_proc_set_wow_enable(_adapter *adapter,
+		const char __user *buffer, size_t count);
+void rtw_rust_debug_proc_emit_wakeup_event(void *sel, _adapter *adapter);
+ssize_t rtw_rust_debug_proc_set_wakeup_event(_adapter *adapter,
+		const char __user *buffer, size_t count);
+void rtw_rust_debug_proc_emit_wakeup_reason(void *sel, _adapter *adapter);
+#ifdef CONFIG_GPIO_WAKEUP
+void rtw_rust_debug_proc_emit_wowlan_gpio_info(void *sel, _adapter *adapter);
+ssize_t rtw_rust_debug_proc_set_wowlan_gpio_info(_adapter *adapter,
+		const char __user *buffer, size_t count);
+#endif /* CONFIG_GPIO_WAKEUP */
+#endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */
 #endif
 
 #ifdef CONFIG_WAR_OFFLOAD
