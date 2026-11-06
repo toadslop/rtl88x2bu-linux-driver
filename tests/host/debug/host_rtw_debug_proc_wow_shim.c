@@ -175,3 +175,23 @@ long rtw_rust_debug_proc_set_wowlan_gpio_info(void *adapter, const void *buffer,
 
 	return (long)count;
 }
+
+/*
+ * Stubs so `rustc … rtw_debug_proc_wow.rs` links before PR2 lands the full
+ * oracle mirror (strong definitions replace these at link time in PR2).
+ */
+__attribute__((weak)) void rtw_rust_debug_proc_emit_pattern_info(void *sel,
+								 void *adapter)
+{
+	(void)sel;
+	(void)adapter;
+}
+
+__attribute__((weak)) long rtw_rust_debug_proc_set_pattern_info(
+	void *adapter, const void *buffer, size_t count)
+{
+	(void)adapter;
+	(void)buffer;
+	(void)count;
+	return -1;
+}
