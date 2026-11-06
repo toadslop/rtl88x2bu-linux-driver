@@ -25,6 +25,8 @@ Port power-saving debug procs from [`core/rtw_debug_rest.c`](../../../core/rtw_d
 
 - `proc_get_new_bcn_max` / `proc_set_new_bcn_max`
 
+In this out-of-tree driver, `CONFIG_BCN_CNT_CONFIRM_HDL` is wired when **`CONFIG_PROC_DEBUG`** is enabled (Makefile adds `-DCONFIG_BCN_CNT_CONFIRM_HDL` and matching Rust `--cfg`), not as an unconditional default in `include/autoconf.h`.
+
 ## Notes
 
 - Large proc_get_ps_info formatter — split Rust helpers under same module; no new HAL entry points.

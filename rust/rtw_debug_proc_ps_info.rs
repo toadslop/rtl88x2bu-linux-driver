@@ -15,6 +15,9 @@
 
 use core::ffi::{c_int, c_long, c_void};
 
+#[cfg(any(config_rtw_debug, config_proc_debug))]
+const PROC_PS_EFAULT: c_long = -(14isize) as c_long;
+
 extern "C" {
     fn rtw_rust_debug_proc_adapter(m: *mut c_void) -> *mut c_void;
     fn rtw_rust_debug_proc_adapter_from_data(data: *mut c_void) -> *mut c_void;
@@ -58,9 +61,7 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
 #[no_mangle]
 pub extern "C" fn proc_get_ps_info(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
-    if !adapter.is_null() {
-        unsafe { rtw_rust_debug_proc_emit_ps_info(m, adapter) };
-    }
+    unsafe { rtw_rust_debug_proc_emit_ps_info(m, adapter) };
     0
 }
 
@@ -75,6 +76,9 @@ pub extern "C" fn proc_set_ps_info(
     data: *mut c_void,
 ) -> c_long {
     let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
+    if adapter.is_null() {
+        return PROC_PS_EFAULT;
+    }
     unsafe { rtw_rust_debug_proc_set_ps_info(adapter, buffer, count) }
 }
 
@@ -83,9 +87,7 @@ pub extern "C" fn proc_set_ps_info(
 #[no_mangle]
 pub extern "C" fn proc_get_wmmps_info(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
-    if !adapter.is_null() {
-        unsafe { rtw_rust_debug_proc_emit_wmmps_info(m, adapter) };
-    }
+    unsafe { rtw_rust_debug_proc_emit_wmmps_info(m, adapter) };
     0
 }
 
@@ -100,6 +102,9 @@ pub extern "C" fn proc_set_wmmps_info(
     data: *mut c_void,
 ) -> c_long {
     let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
+    if adapter.is_null() {
+        return PROC_PS_EFAULT;
+    }
     unsafe { rtw_rust_debug_proc_set_wmmps_info(adapter, buffer, count) }
 }
 

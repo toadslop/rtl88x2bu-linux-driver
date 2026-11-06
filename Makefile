@@ -2707,7 +2707,7 @@ ccflags-y += -DCONFIG_RUST_MLME_ROAMING
 rustflags-y += --cfg rust_mlme_roaming --cfg config_layer2_roaming
 endif
 ccflags-y += -DCONFIG_RUST_MLME_WMM_RSN
-rustflags-y += --cfg rust_mlme_wmm_rsn --cfg config_wmmps_sta
+rustflags-y += --cfg rust_mlme_wmm_rsn
 ccflags-y += -DCONFIG_RUST_MLME_EXT_REST
 ccflags-y += -DCONFIG_RUST_MLME_EXT_MGNT_ATTRIB
 ccflags-y += -DCONFIG_RUST_MLME_EXT_PEER_ALIVE
@@ -2989,12 +2989,13 @@ endif
 # W3-131: dump_drv_cfg part 1 in rust/rtw_debug.rs
 ifeq ($(CONFIG_PROC_DEBUG), y)
 rustflags-y += --cfg config_proc_debug
+# Beacon-count confirm (new_bcn_max proc + MLME counters): keep off the global
+# autoconf default; enable only with debug/proc so L0 matches upstream defaults.
+ccflags-y += -DCONFIG_BCN_CNT_CONFIRM_HDL
+rustflags-y += --cfg config_bcn_cnt_confirm_hdl
 endif
 ifeq ($(CONFIG_POWER_SAVING), y)
 rustflags-y += --cfg config_power_saving
-endif
-ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BCN_CNT_CONFIRM_HDL' $(src)/include/autoconf.h 2>/dev/null && echo y),)
-rustflags-y += --cfg config_bcn_cnt_confirm_hdl
 endif
 ifeq ($(CONFIG_SDIO_TX_ENABLE_AVAL_INT), y)
 rustflags-y += --cfg config_sdio_tx_enable_aval_int

@@ -499,7 +499,8 @@ test-proc-ps-info-c: test_proc_ps_info
 	./test_proc_ps_info debug_proc_ps_info_vectors.json
 
 test_proc_ps_info: $(PS_INFO_L2) $(PS_INFO_ORACLE) $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ $(PS_INFO_L2) $(PS_INFO_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DCONFIG_BCN_CNT_CONFIRM_HDL -o $@ $(PS_INFO_L2) \
+		$(PS_INFO_ORACLE) $(HOST_JSON)
 
 librust_rtw_debug_proc_ps_info.a: $(PS_INFO_RUST)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
@@ -513,7 +514,7 @@ test-proc-ps-info-rust: test_proc_ps_info_rust
 
 test_proc_ps_info_rust: $(PS_INFO_L2) librust_rtw_debug_proc_ps_info.a \
 		$(PS_INFO_SHIM) $(HOST_JSON)
-	$(CC) $(CFLAGS) -DPROC_PS_INFO_RUST_TEST -o $@ \
+	$(CC) $(CFLAGS) -DCONFIG_BCN_CNT_CONFIRM_HDL -DPROC_PS_INFO_RUST_TEST -o $@ \
 		$(PS_INFO_L2) $(PS_INFO_SHIM) $(HOST_JSON) librust_rtw_debug_proc_ps_info.a
 
 clean:

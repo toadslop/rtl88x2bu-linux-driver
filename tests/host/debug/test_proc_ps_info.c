@@ -141,9 +141,11 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 					      sizeof(v->set_input)))
 			return -1;
 	}
-	if (host_json_parse_string_in(obj, len, "get", v->get_field,
-				      sizeof(v->get_field)))
-		return -1;
+	if (host_json_find_key_in(obj, len, "get")) {
+		if (host_json_parse_string_in(obj, len, "get", v->get_field,
+					      sizeof(v->get_field)))
+			return -1;
+	}
 	if (host_json_parse_string_in(obj, len, "expect", v->expect,
 				      sizeof(v->expect)))
 		return -1;
