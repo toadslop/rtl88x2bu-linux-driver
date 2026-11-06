@@ -132,9 +132,6 @@ struct wowlan_ioctl_param {
 	u8 subcode;
 };
 
-int rtw_wowlan_parser_pattern_cmd(u8 *input_in, char *pattern, int *pattern_len,
-				  char *bit_mask);
-
 static inline void rtw_hal_set_hwreg(struct _adapter *a, u32 var, u8 *p)
 {
 	int i;

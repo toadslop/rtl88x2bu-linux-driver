@@ -32,8 +32,8 @@ static int hex2byte_i(const char *hex)
 	return (a << 4) | b;
 }
 
-int rtw_wowlan_parser_pattern_cmd(u8 *input_in, char *pattern, int *pattern_len,
-				  char *bit_mask)
+static int rtw_wowlan_parser_pattern_cmd(u8 *input_in, char *pattern,
+					 int *pattern_len, char *bit_mask)
 {
 	char *cp;
 	int pos = 0, mask_pos = 0;
