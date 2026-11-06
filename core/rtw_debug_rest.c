@@ -5961,7 +5961,9 @@ int proc_get_ps_info(struct seq_file *m, void *v)
 	u8 wow_lps_1t1r = pwrpriv->wowlan_lps_1t1r;
 	#endif
 #endif /* CONFIG_WOWLAN */
-	char *str = "";
+	static char lps_mode_str[12];
+	static char wow_lps_mode_str[12];
+	char *str;
 
 	RTW_PRINT_SEL(m, "======Power Saving Info:======\n");
 	RTW_PRINT_SEL(m, "*IPS:\n");
@@ -5993,8 +5995,10 @@ int proc_get_ps_info(struct seq_file *m, void *v)
 		str = "MAX";
 	else if (lps_mode == PS_MODE_DTIM)
 		str = "DTIM";
-	else
-		sprintf(str, "%d", lps_mode);
+	else {
+		snprintf(lps_mode_str, sizeof(lps_mode_str), "%d", lps_mode);
+		str = lps_mode_str;
+	}
 
 	RTW_PRINT_SEL(m, " LPS mode: %s\n", str);
 
@@ -6027,8 +6031,11 @@ int proc_get_ps_info(struct seq_file *m, void *v)
 		str = "MAX";
 	else if (wow_lps_mode == PS_MODE_DTIM)
 		str = "DTIM";
-	else
-		sprintf(str, "%d", wow_lps_mode);
+	else {
+		snprintf(wow_lps_mode_str, sizeof(wow_lps_mode_str), "%d",
+			 wow_lps_mode);
+		str = wow_lps_mode_str;
+	}
 
 	RTW_PRINT_SEL(m, " WOW LPS mode: %s\n", str);
 
