@@ -23,8 +23,11 @@ extern "C" {
 #[cfg(config_power_saving)]
 extern "C" {
     fn rtw_rust_debug_proc_emit_ps_info(sel: *mut c_void, adapter: *mut c_void);
-    fn rtw_rust_debug_proc_set_ps_info(adapter: *mut c_void, buffer: *const c_void, count: usize)
-        -> c_long;
+    fn rtw_rust_debug_proc_set_ps_info(
+        adapter: *mut c_void,
+        buffer: *const c_void,
+        count: usize,
+    ) -> c_long;
 }
 
 #[cfg(all(config_power_saving, config_wmmps_sta))]

@@ -18,6 +18,7 @@ int new_bcn_max = 3;
 
 struct vector {
 	char name[MAX_NAME];
+	char get_field[MAX_FIELD];
 	char set_field[MAX_FIELD];
 	char set_input[MAX_INPUT];
 	char expect[MAX_EXPECT];
