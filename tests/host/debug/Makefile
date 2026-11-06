@@ -42,6 +42,11 @@ SRESET_RUST   := $(ROOT)/rust/rtw_debug_proc_sreset.rs
 SRESET_L2     := test_proc_sreset.c
 SRESET_CFG    := -DCONFIG_BT_COEXIST -DCONFIG_RF4CE_COEXIST -DDBG_CONFIG_ERROR_DETECT
 
+# W3-214 proc malloc cnt + best channel
+MISC_ORACLE := debug_proc_misc_c_oracle.c
+MISC_L2     := test_proc_misc.c
+MISC_CFG    := -DDBG_MEMORY_LEAK -DCONFIG_FIND_BEST_CHANNEL
+
 # W3-203 proc HT registry get/set
 HT_ORACLE := debug_proc_ht_c_oracle.c
 HT_SHIM   := host_rtw_debug_proc_ht_shim.c
@@ -103,6 +108,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-tx-amsdu-c test-proc-tx-amsdu-rust \
 	test-proc-phy-cap-registry-c test-proc-phy-cap-registry-rust \
 	test-proc-sreset-c test-proc-sreset-rust \
+	test-proc-misc-c \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
 
 all: test
@@ -118,6 +124,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-tx-amsdu-c test-proc-tx-amsdu-rust \
 	test-proc-phy-cap-registry-c test-proc-phy-cap-registry-rust \
 	test-proc-sreset-c \
+	test-proc-misc-c \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
 
 test-all: test
@@ -125,7 +132,7 @@ test-all: test
 test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 	test-proc-vht-c test-proc-fwps-c test-proc-rx-ampdu-c test-proc-tdls-c \
 	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c test-proc-phy-cap-registry-c \
-	test-proc-sreset-c test-phy-cap-dump-c
+	test-proc-sreset-c test-proc-misc-c test-phy-cap-dump-c
 
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
 	test-proc-ht-rust test-proc-vht-rust test-proc-fwps-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
@@ -399,6 +406,12 @@ test_proc_sreset_rust: $(SRESET_L2) librust_rtw_debug_proc_sreset.a $(SRESET_SHI
 	$(CC) $(CFLAGS) $(SRESET_CFG) -DRUST_RTW_DEBUG_PROC_SRESET_ORACLE -o $@ \
 		$(SRESET_L2) $(SRESET_SHIM) $(HOST_JSON) librust_rtw_debug_proc_sreset.a
 
+test-proc-misc-c: test_proc_misc
+	./test_proc_misc debug_proc_misc_vectors.json
+
+test_proc_misc: $(MISC_L2) $(MISC_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(MISC_CFG) -o $@ $(MISC_L2) $(MISC_ORACLE) $(HOST_JSON)
+
 clean:
 	rm -f test_debug_test_hooks_c test_debug_test_hooks_rust librust_debug_test_hooks.a \
 		test_dump_sec_cam_ent test_dump_sec_cam_ent_rust librust_rtw_debug_sec_cam.a \
@@ -414,4 +427,5 @@ clean:
 		test_proc_phy_cap_registry test_proc_phy_cap_registry_rust \
 		librust_rtw_debug_proc_phy_cap.a \
 		test_proc_sreset \
+		test_proc_misc \
 		test_debug_phy_cap_dump test_debug_phy_cap_dump_rust librust_rtw_debug_phy_cap.a
