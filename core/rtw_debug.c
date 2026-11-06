@@ -2693,7 +2693,12 @@ ssize_t rtw_rust_debug_proc_set_new_bcn_max(const char __user *buffer, size_t co
 #ifdef CONFIG_POWER_SAVING
 void rtw_rust_debug_proc_emit_ps_info(void *sel, _adapter *padapter)
 {
-	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
+	struct pwrctrl_priv *pwrpriv;
+
+	if (!padapter)
+		return;
+
+	pwrpriv = adapter_to_pwrctl(padapter);
 	u8 ips_mode = pwrpriv->ips_mode_req;
 	u8 lps_mode = pwrpriv->power_mgnt;
 	u8 lps_level = pwrpriv->lps_level;
@@ -2863,7 +2868,12 @@ exit:
 #ifdef CONFIG_WMMPS_STA
 void rtw_rust_debug_proc_emit_wmmps_info(void *sel, _adapter *padapter)
 {
-	struct registry_priv *pregpriv = &padapter->registrypriv;
+	struct registry_priv *pregpriv;
+
+	if (!padapter)
+		return;
+
+	pregpriv = &padapter->registrypriv;
 	const char *uapsd_max_sp_str;
 
 	if (!pregpriv)

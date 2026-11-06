@@ -23,6 +23,16 @@ int rtw_pm_set_ips(void *adapter, u8 mode)
 	return 0;
 }
 
+#if defined(CONFIG_WOWLAN)
+int rtw_pm_set_wow_lps(void *adapter, u8 mode)
+{
+	struct _adapter *a = adapter;
+
+	a->registrypriv.wow_power_mgnt = mode;
+	return 0;
+}
+#endif
+
 int debug_proc_ps_info_c_ref_get_new_bcn_max(struct seq_file *m, void *v)
 {
 	(void)v;
@@ -71,8 +81,13 @@ int debug_proc_ps_info_c_ref_get_ps_info(struct seq_file *m, void *v)
 	RTW_PRINT_SEL(m, "======Power Saving Info:======\n");
 	RTW_PRINT_SEL(m, "*IPS:\n");
 
-	if (ips_mode == IPS_NORMAL)
+	if (ips_mode == IPS_NORMAL) {
+#ifdef CONFIG_FWLPS_IN_IPS
+		str = "FW_LPS_IN_IPS";
+#else
 		str = "Card Disable";
+#endif
+	}
 	else if (ips_mode == IPS_NONE)
 		str = "NO IPS";
 	else if (ips_mode == IPS_LEVEL_2)
@@ -151,6 +166,9 @@ ssize_t debug_proc_ps_info_c_ref_set_ps_info(void *file,
 	if (num == 1 && mode == 0) {
 		rtw_pm_set_lps(adapter, adapter->registrypriv.power_mgnt);
 		rtw_pm_set_ips(adapter, adapter->registrypriv.ips_mode);
+#if defined(CONFIG_WOWLAN)
+		rtw_pm_set_wow_lps(adapter, adapter->registrypriv.wow_power_mgnt);
+#endif
 		goto exit;
 	}
 

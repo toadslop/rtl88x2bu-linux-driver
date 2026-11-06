@@ -61,9 +61,24 @@ static int rtw_pm_set_ips_shim(void *adapter, u8 mode)
 	return 0;
 }
 
+#if defined(CONFIG_WOWLAN)
+static int rtw_pm_set_wow_lps_shim(void *adapter, u8 mode)
+{
+	struct _adapter *a = adapter;
+
+	a->registrypriv.wow_power_mgnt = mode;
+	return 0;
+}
+#endif
+
 void rtw_rust_debug_proc_emit_ps_info(void *sel, void *padapter)
 {
-	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
+	struct pwrctrl_priv *pwrpriv;
+
+	if (!padapter)
+		return;
+
+	pwrpriv = adapter_to_pwrctl(padapter);
 	u8 ips_mode = pwrpriv->ips_mode_req;
 	u8 lps_mode = pwrpriv->power_mgnt;
 	u8 lps_level = pwrpriv->lps_level;
@@ -72,8 +87,13 @@ void rtw_rust_debug_proc_emit_ps_info(void *sel, void *padapter)
 	RTW_PRINT_SEL(sel, "======Power Saving Info:======\n");
 	RTW_PRINT_SEL(sel, "*IPS:\n");
 
-	if (ips_mode == IPS_NORMAL)
+	if (ips_mode == IPS_NORMAL) {
+#ifdef CONFIG_FWLPS_IN_IPS
+		str = "FW_LPS_IN_IPS";
+#else
 		str = "Card Disable";
+#endif
+	}
 	else if (ips_mode == IPS_NONE)
 		str = "NO IPS";
 	else if (ips_mode == IPS_LEVEL_2)
@@ -149,6 +169,11 @@ ssize_t rtw_rust_debug_proc_set_ps_info(void *adapter, const void *buffer,
 		rtw_pm_set_ips_shim(adapter,
 				   ((struct _adapter *)adapter)->registrypriv
 					   .ips_mode);
+#if defined(CONFIG_WOWLAN)
+		rtw_pm_set_wow_lps_shim(adapter,
+					((struct _adapter *)adapter)->registrypriv
+					    .wow_power_mgnt);
+#endif
 		goto exit;
 	}
 
@@ -167,8 +192,12 @@ exit:
 
 void rtw_rust_debug_proc_emit_wmmps_info(void *sel, void *padapter)
 {
-	struct registry_priv *pregpriv =
-		&((struct _adapter *)padapter)->registrypriv;
+	struct registry_priv *pregpriv;
+
+	if (!padapter)
+		return;
+
+	pregpriv = &((struct _adapter *)padapter)->registrypriv;
 	const char *uapsd_max_sp_str;
 
 	switch (pregpriv->uapsd_max_sp_len) {

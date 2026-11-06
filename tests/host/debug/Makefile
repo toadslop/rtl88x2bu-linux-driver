@@ -61,6 +61,7 @@ PS_INFO_ORACLE := debug_proc_ps_info_c_oracle.c
 PS_INFO_SHIM := host_rtw_debug_proc_ps_info_shim.c
 PS_INFO_RUST := $(ROOT)/rust/rtw_debug_proc_ps_info.rs
 PS_INFO_L2 := test_proc_ps_info.c
+PS_INFO_CFG := -DCONFIG_BCN_CNT_CONFIRM_HDL -DCONFIG_FWLPS_IN_IPS -DCONFIG_WOWLAN
 
 # W3-203 proc HT registry get/set
 HT_ORACLE := debug_proc_ht_c_oracle.c
@@ -499,7 +500,7 @@ test-proc-ps-info-c: test_proc_ps_info
 	./test_proc_ps_info debug_proc_ps_info_vectors.json
 
 test_proc_ps_info: $(PS_INFO_L2) $(PS_INFO_ORACLE) $(HOST_JSON)
-	$(CC) $(CFLAGS) -DCONFIG_BCN_CNT_CONFIRM_HDL -o $@ $(PS_INFO_L2) \
+	$(CC) $(CFLAGS) $(PS_INFO_CFG) -o $@ $(PS_INFO_L2) \
 		$(PS_INFO_ORACLE) $(HOST_JSON)
 
 librust_rtw_debug_proc_ps_info.a: $(PS_INFO_RUST)
@@ -514,7 +515,7 @@ test-proc-ps-info-rust: test_proc_ps_info_rust
 
 test_proc_ps_info_rust: $(PS_INFO_L2) librust_rtw_debug_proc_ps_info.a \
 		$(PS_INFO_SHIM) $(HOST_JSON)
-	$(CC) $(CFLAGS) -DCONFIG_BCN_CNT_CONFIRM_HDL -DPROC_PS_INFO_RUST_TEST -o $@ \
+	$(CC) $(CFLAGS) $(PS_INFO_CFG) -DPROC_PS_INFO_RUST_TEST -o $@ \
 		$(PS_INFO_L2) $(PS_INFO_SHIM) $(HOST_JSON) librust_rtw_debug_proc_ps_info.a
 
 clean:
