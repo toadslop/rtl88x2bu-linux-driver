@@ -557,6 +557,9 @@ void rtw_rust_debug_proc_emit_wakeup_event(void *sel, _adapter *adapter);
 ssize_t rtw_rust_debug_proc_set_wakeup_event(_adapter *adapter,
 		const char __user *buffer, size_t count);
 void rtw_rust_debug_proc_emit_wakeup_reason(void *sel, _adapter *adapter);
+void rtw_rust_debug_proc_emit_pattern_info(void *sel, _adapter *adapter);
+ssize_t rtw_rust_debug_proc_set_pattern_info(_adapter *adapter,
+		const char __user *buffer, size_t count);
 #ifdef CONFIG_GPIO_WAKEUP
 void rtw_rust_debug_proc_emit_wowlan_gpio_info(void *sel, _adapter *adapter);
 ssize_t rtw_rust_debug_proc_set_wowlan_gpio_info(_adapter *adapter,

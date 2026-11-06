@@ -4374,6 +4374,110 @@ void rtw_rust_debug_proc_emit_wakeup_reason(void *sel, _adapter *adapter)
 	RTW_PRINT_SEL(sel, "last wake reason: %#02x\n", val);
 }
 
+void rtw_rust_debug_proc_emit_pattern_info(void *sel, _adapter *adapter)
+{
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
+	u8 val8;
+	char str_1[128];
+	char *p_str;
+	int i = 0, j = 0, k = 0;
+	int len = 0, max_len = 0, total = 0;
+
+	p_str = str_1;
+	max_len = sizeof(str_1);
+
+	total = pwrpriv->wowlan_pattern_idx;
+
+	rtw_set_default_pattern(adapter);
+
+	RTW_PRINT_SEL(sel, "\n======[Pattern Info.]======\n");
+	RTW_PRINT_SEL(sel, "pattern number: %d\n", total);
+	RTW_PRINT_SEL(sel, "support default patterns: %c\n",
+		      (pwrpriv->default_patterns_en) ? 'Y' : 'N');
+
+	for (k = 0; k < total; k++) {
+		RTW_PRINT_SEL(sel, "\npattern idx: %d\n", k);
+		RTW_PRINT_SEL(sel, "pattern content:\n");
+
+		p_str = str_1;
+		max_len = sizeof(str_1);
+		for (i = 0; i < MAX_WKFM_PATTERN_SIZE / 8; i++) {
+			_rtw_memset(p_str, 0, max_len);
+			len = 0;
+			for (j = 0; j < 8; j++) {
+				val8 = pwrpriv->patterns[k].content[i * 8 + j];
+				len += snprintf(p_str + len, max_len - len,
+						"%02x ", val8);
+			}
+			RTW_PRINT_SEL(sel, "%s\n", p_str);
+		}
+		RTW_PRINT_SEL(sel, "\npattern mask:\n");
+		for (i = 0; i < MAX_WKFM_SIZE / 8; i++) {
+			_rtw_memset(p_str, 0, max_len);
+			len = 0;
+			for (j = 0; j < 8; j++) {
+				val8 = pwrpriv->patterns[k].mask[i * 8 + j];
+				len += snprintf(p_str + len, max_len - len,
+						"%02x ", val8);
+			}
+			RTW_PRINT_SEL(sel, "%s\n", p_str);
+		}
+
+		RTW_PRINT_SEL(sel, "\npriv_pattern_len:\n");
+		RTW_PRINT_SEL(sel, "pattern_len: %d\n", pwrpriv->patterns[k].len);
+		RTW_PRINT_SEL(sel, "*****************\n");
+	}
+}
+
+ssize_t rtw_rust_debug_proc_set_pattern_info(_adapter *adapter,
+					     const char __user *buffer,
+					     size_t count)
+{
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
+	struct wowlan_ioctl_param poidparam;
+	u8 tmp[MAX_WKFM_PATTERN_STR_LEN + 1] = {0};
+	int ret = 0;
+	u8 index = 0;
+
+	poidparam.subcode = 0;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count >= sizeof(tmp)) {
+		RTW_ERR("%s: pattern string is too long, count=%zu\n",
+			__func__, count);
+		return -EFAULT;
+	}
+
+	if (pwrpriv->wowlan_pattern_idx >= MAX_WKFM_CAM_NUM) {
+		RTW_ERR("priv-pattern is full(idx: %d)\n",
+			pwrpriv->wowlan_pattern_idx);
+		RTW_ERR("please clean priv-pattern first\n");
+		return -ENOMEM;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		if (strncmp(tmp, "clean", 5) == 0) {
+			poidparam.subcode = WOWLAN_PATTERN_CLEAN;
+			rtw_hal_set_hwreg(adapter, HW_VAR_WOWLAN, (u8 *)&poidparam);
+		} else {
+			index = pwrpriv->wowlan_pattern_idx;
+			ret = rtw_wowlan_parser_pattern_cmd(tmp,
+					    (char *)pwrpriv->patterns[index].content,
+					    &pwrpriv->patterns[index].len,
+					    pwrpriv->patterns[index].mask);
+			if (ret == _TRUE)
+				pwrpriv->wowlan_pattern_idx++;
+		}
+	} else {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	return count;
+}
+
 #ifdef CONFIG_GPIO_WAKEUP
 void rtw_rust_debug_proc_emit_wowlan_gpio_info(void *sel, _adapter *adapter)
 {
