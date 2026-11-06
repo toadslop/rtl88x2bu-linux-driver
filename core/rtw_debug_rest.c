@@ -5912,6 +5912,7 @@ int proc_get_p2p_wowlan_info(struct seq_file *m, void *v)
 }
 #endif /* CONFIG_P2P_WOWLAN */
 #ifdef CONFIG_BCN_CNT_CONFIRM_HDL
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_new_bcn_max(struct seq_file *m, void *v)
 {
 	extern int new_bcn_max;
@@ -5938,8 +5939,10 @@ ssize_t proc_set_new_bcn_max(struct file *file, const char __user *buffer, size_
 
 	return count;
 }
-#endif
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-219 in rust/rtw_debug_proc_ps_info.rs */
+#endif /* CONFIG_BCN_CNT_CONFIRM_HDL */
 #ifdef CONFIG_POWER_SAVING
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_ps_info(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -6190,6 +6193,7 @@ ssize_t proc_set_wmmps_info(struct file *file, const char __user *buffer, size_t
 	return count;
 }
 #endif /* CONFIG_WMMPS_STA */
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-219 in rust/rtw_debug_proc_ps_info.rs */
 #endif /* CONFIG_POWER_SAVING */
 
 #ifdef CONFIG_TDLS

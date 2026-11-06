@@ -198,6 +198,8 @@
 /* #define CONFIG_BACKGROUND_NOISE_MONITOR */
 #endif
 #define RTW_NOTCH_FILTER 0 /* 0:Disable, 1:Enable, */
+
+#define CONFIG_BCN_CNT_CONFIRM_HDL
 #define RTW_FORCE_CTS_TO_SELF_UNDER_LOW_RSSI
 
 /*
