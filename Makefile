@@ -5162,7 +5162,7 @@ rust-check-symbols-rtw-debug-proc-ht: rust-objects-rtw-debug-proc-ht-c rust-obje
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_ht_c_ref.o NEW=rust/rtw_debug_proc_ht.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_ht.allow ALLOW_VACUOUS=1
 
-# W3-217: host C oracle vs rust/rtw_debug_proc_wow.o (proc WoWLAN registry + GPIO get/set).
+# W3-217/W3-218: host C oracle vs rust/rtw_debug_proc_wow.o (WoWLAN registry + GPIO + pattern get/set).
 rust-objects-rtw-debug-proc-wow:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-wow"; exit 1; }
 	$(MAKE) $(KBUILD_OPTS) CONFIG_WOWLAN=y CONFIG_GPIO_WAKEUP=y -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_wow.o
