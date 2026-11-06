@@ -503,21 +503,6 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-debug
 	rust-check-symbols-rtw-debug-sec-cam
 	rust-check-symbols-rtw-debug-tx-rx
-	rust-check-symbols-rtw-debug-reg-dump
-	rust-check-symbols-rtw-debug-regsty
-	rust-check-symbols-rtw-debug-adapters-status
-	rust-check-symbols-rtw-debug-proc
-	rust-check-symbols-rtw-debug-proc-rson
-	rust-check-symbols-rtw-debug-proc-ap
-	rust-check-symbols-rtw-debug-proc-trx
-	rust-check-symbols-rtw-debug-proc-rate
-	rust-check-symbols-rtw-debug-proc-rx-cnt
-	rust-check-symbols-rtw-debug-proc-ps
-	rust-check-symbols-rtw-debug-proc-dbg-logs
-	rust-check-symbols-rtw-debug-proc-hw
-	rust-check-symbols-rtw-debug-proc-signal
-	rust-check-symbols-rtw-debug-proc-test
-	rust-check-symbols-rtw-debug-proc-sreset
 	rust-check-symbols-rtw-debug-proc-misc
 )
 
