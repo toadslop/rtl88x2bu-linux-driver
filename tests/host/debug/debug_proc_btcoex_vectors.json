@@ -1,0 +1,55 @@
+{
+  "vectors": [
+    {
+      "name": "get_dbg_initial",
+      "dbg0": 0,
+      "dbg1": 0,
+      "get": "btcoex_dbg",
+      "expect": "0x00000000 0x00000000\n"
+    },
+    {
+      "name": "set_single_zero_clears",
+      "dbg0": 255,
+      "dbg1": 255,
+      "set": "btcoex_dbg",
+      "set_input": "0",
+      "get": "btcoex_dbg",
+      "expect": "0x00000000 0x00000000\n"
+    },
+    {
+      "name": "set_single_nonzero_fills",
+      "dbg0": 0,
+      "dbg1": 0,
+      "set": "btcoex_dbg",
+      "set_input": "1",
+      "get": "btcoex_dbg",
+      "expect": "0xffffffff 0xffffffff\n"
+    },
+    {
+      "name": "set_two_masks",
+      "dbg0": 0,
+      "dbg1": 0,
+      "set": "btcoex_dbg",
+      "set_input": "a 5",
+      "get": "btcoex_dbg",
+      "expect": "0x0000000a 0x00000005\n"
+    },
+    {
+      "name": "set_bad_format_unchanged",
+      "dbg0": 3,
+      "dbg1": 7,
+      "set": "btcoex_dbg",
+      "set_input": "nothex",
+      "set_expect_fail": 1,
+      "get": "btcoex_dbg",
+      "expect": "0x00000003 0x00000007\n"
+    },
+    {
+      "name": "get_btcoex_info",
+      "dbg0": 0,
+      "dbg1": 0,
+      "get": "btcoex_info",
+      "expect": "BT Coex Info Header fixture\n"
+    }
+  ]
+}
