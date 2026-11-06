@@ -8,11 +8,11 @@
 #include "host_rtw_debug_proc_wow_types.h"
 #include "host_vector_json.h"
 
-#define MAX_VECTORS 24
+#define MAX_VECTORS 32
 #define MAX_NAME 64
-#define MAX_INPUT 32
+#define MAX_INPUT 128
 #define MAX_FIELD 48
-#define MAX_EXPECT 256
+#define MAX_EXPECT 4096
 
 struct vector {
 	char name[MAX_NAME];
@@ -20,6 +20,7 @@ struct vector {
 	u8 wakeup_event;
 	u8 wowlan_last_wake_reason;
 	u8 default_patterns_en;
+	u8 wowlan_pattern_idx;
 	u8 wowlan_gpio_index;
 	u8 wowlan_gpio_output_state;
 	u8 is_high_active;
@@ -78,6 +79,13 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	if (parse_u8_field(obj, len, "default_patterns_en",
 			   &v->default_patterns_en))
 		return -1;
+	if (host_json_find_key_in(obj, len, "wowlan_pattern_idx")) {
+		if (parse_u8_field(obj, len, "wowlan_pattern_idx",
+				    &v->wowlan_pattern_idx))
+			return -1;
+	} else {
+		v->wowlan_pattern_idx = 0;
+	}
 	if (parse_u8_field(obj, len, "wowlan_gpio_index", &v->wowlan_gpio_index))
 		return -1;
 	if (parse_u8_field(obj, len, "wowlan_gpio_output_state",
@@ -129,6 +137,7 @@ static int run_vector(const struct vector *v)
 	adapter.pwrctrlpriv.wowlan_last_wake_reason =
 		v->wowlan_last_wake_reason;
 	adapter.pwrctrlpriv.default_patterns_en = v->default_patterns_en;
+	adapter.pwrctrlpriv.wowlan_pattern_idx = v->wowlan_pattern_idx;
 	adapter.pwrctrlpriv.wowlan_gpio_index = v->wowlan_gpio_index;
 	adapter.pwrctrlpriv.wowlan_gpio_output_state =
 		v->wowlan_gpio_output_state;
@@ -152,6 +161,10 @@ static int run_vector(const struct vector *v)
 				NULL, &dev);
 		} else if (!strcmp(v->set_field, "wowlan_gpio_info")) {
 			ret = proc_set_wowlan_gpio_info(
+				NULL, v->set_input, strlen(v->set_input),
+				NULL, &dev);
+		} else if (!strcmp(v->set_field, "pattern_info")) {
+			ret = proc_set_pattern_info(
 				NULL, v->set_input, strlen(v->set_input),
 				NULL, &dev);
 		} else {
@@ -186,6 +199,8 @@ static int run_vector(const struct vector *v)
 		proc_get_wakeup_reason(&seq, NULL);
 	else if (!strcmp(v->get_field, "wowlan_gpio_info"))
 		proc_get_wowlan_gpio_info(&seq, NULL);
+	else if (!strcmp(v->get_field, "pattern_info"))
+		proc_get_pattern_info(&seq, NULL);
 	else {
 		fclose(capture);
 		return -1;
@@ -221,6 +236,6 @@ int main(int argc, char **argv)
 			return 1;
 	}
 
-	printf("ok: %zu proc wow registry vectors\n", count);
+	printf("ok: %zu proc wow registry + pattern vectors\n", count);
 	return 0;
 }

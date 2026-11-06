@@ -20,6 +20,19 @@ typedef long ssize_t;
 
 #define BIT(x) (1U << (x))
 
+/* Mirror include/rtw_pwrctrl.h (WoWLAN pattern CAM). */
+#define MAX_WKFM_CAM_NUM 10
+#define MAX_WKFM_SIZE 16
+#define MAX_WKFM_PATTERN_SIZE 128
+#define MAX_WKFM_PATTERN_STR_LEN (MAX_WKFM_PATTERN_SIZE * 3)
+#define DEFAULT_PATTERN_NUM 3
+
+typedef struct rtl_priv_pattern {
+	int len;
+	char content[MAX_WKFM_PATTERN_SIZE];
+	char mask[MAX_WKFM_SIZE];
+} rtl_priv_pattern_t;
+
 struct registry_priv {
 	u8 wowlan_enable;
 	u8 wakeup_event;
@@ -31,6 +44,8 @@ struct pwrctrl_priv {
 	u8 wowlan_gpio_index;
 	u8 wowlan_gpio_output_state;
 	u8 is_high_active;
+	u8 wowlan_pattern_idx;
+	struct rtl_priv_pattern patterns[MAX_WKFM_CAM_NUM];
 };
 
 struct _adapter {
@@ -60,9 +75,86 @@ static inline void *rtw_netdev_priv(struct net_device *dev)
 }
 
 /* Stubs for GPIO setter side effects (host L2). */
+static inline void _rtw_memset(void *p, int c, size_t n)
+{
+	memset(p, c, n);
+}
+
 static inline void rtw_wow_pattern_sw_reset(struct _adapter *adapter)
 {
-	(void)adapter;
+	int i;
+	struct pwrctrl_priv *pwrctrlpriv = adapter_to_pwrctl(adapter);
+
+	if (!pwrctrlpriv)
+		return;
+
+	if (pwrctrlpriv->default_patterns_en == _TRUE)
+		pwrctrlpriv->wowlan_pattern_idx = DEFAULT_PATTERN_NUM;
+	else
+		pwrctrlpriv->wowlan_pattern_idx = 0;
+
+	for (i = 0; i < MAX_WKFM_CAM_NUM; i++) {
+		_rtw_memset(pwrctrlpriv->patterns[i].content, '\0',
+			    sizeof(pwrctrlpriv->patterns[i].content));
+		_rtw_memset(pwrctrlpriv->patterns[i].mask, '\0',
+			    sizeof(pwrctrlpriv->patterns[i].mask));
+		pwrctrlpriv->patterns[i].len = 0;
+	}
+}
+
+static inline u8 rtw_set_default_pattern(struct _adapter *adapter)
+{
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
+	int index;
+
+	if (!pwrpriv)
+		return 0;
+
+	if (pwrpriv->default_patterns_en == _FALSE)
+		return 0;
+
+	for (index = 0; index < DEFAULT_PATTERN_NUM; index++) {
+		_rtw_memset(pwrpriv->patterns[index].content, 0,
+			    sizeof(pwrpriv->patterns[index].content));
+		_rtw_memset(pwrpriv->patterns[index].mask, 0,
+			    sizeof(pwrpriv->patterns[index].mask));
+		pwrpriv->patterns[index].len = 0;
+	}
+
+	pwrpriv->wowlan_pattern_idx = DEFAULT_PATTERN_NUM;
+	return (u8)DEFAULT_PATTERN_NUM;
+}
+
+#define HW_VAR_WOWLAN 0U
+#define WOWLAN_PATTERN_CLEAN 4
+
+struct wowlan_ioctl_param {
+	u8 subcode;
+};
+
+int rtw_wowlan_parser_pattern_cmd(u8 *input_in, char *pattern, int *pattern_len,
+				  char *bit_mask);
+
+static inline void rtw_hal_set_hwreg(struct _adapter *a, u32 var, u8 *p)
+{
+	int i;
+	struct pwrctrl_priv *pwrpriv;
+	struct wowlan_ioctl_param *param = (struct wowlan_ioctl_param *)p;
+
+	(void)var;
+	if (!a || !p)
+		return;
+	pwrpriv = adapter_to_pwrctl(a);
+	if (param->subcode != WOWLAN_PATTERN_CLEAN)
+		return;
+	for (i = 0; i < MAX_WKFM_CAM_NUM; i++) {
+		_rtw_memset(pwrpriv->patterns[i].content, 0,
+			    sizeof(pwrpriv->patterns[i].content));
+		_rtw_memset(pwrpriv->patterns[i].mask, 0,
+			    sizeof(pwrpriv->patterns[i].mask));
+		pwrpriv->patterns[i].len = 0;
+	}
+	pwrpriv->wowlan_pattern_idx = 0;
 }
 
 static inline void rtw_ps_deny(struct _adapter *a, unsigned int reason)
@@ -120,6 +212,9 @@ void rtw_rust_debug_proc_emit_wakeup_event(void *sel, void *adapter);
 long rtw_rust_debug_proc_set_wakeup_event(void *adapter, const void *buffer,
 					  size_t count);
 void rtw_rust_debug_proc_emit_wakeup_reason(void *sel, void *adapter);
+void rtw_rust_debug_proc_emit_pattern_info(void *sel, void *adapter);
+long rtw_rust_debug_proc_set_pattern_info(void *adapter, const void *buffer,
+					  size_t count);
 void rtw_rust_debug_proc_emit_wowlan_gpio_info(void *sel, void *adapter);
 long rtw_rust_debug_proc_set_wowlan_gpio_info(void *adapter, const void *buffer,
 					      size_t count);
@@ -131,6 +226,9 @@ int proc_get_wakeup_event(struct seq_file *m, void *v);
 ssize_t proc_set_wakeup_event(void *file, const void *buffer, size_t count,
 			      long *pos, void *data);
 int proc_get_wakeup_reason(struct seq_file *m, void *v);
+int proc_get_pattern_info(struct seq_file *m, void *v);
+ssize_t proc_set_pattern_info(void *file, const void *buffer, size_t count,
+			      long *pos, void *data);
 int proc_get_wowlan_gpio_info(struct seq_file *m, void *v);
 ssize_t proc_set_wowlan_gpio_info(void *file, const void *buffer, size_t count,
 				  long *pos, void *data);
