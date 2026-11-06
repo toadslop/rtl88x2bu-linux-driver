@@ -96,7 +96,7 @@ int debug_proc_ps_info_c_ref_get_ps_info(struct seq_file *m, void *v)
 		str = "invalid ips_mode";
 
 	RTW_PRINT_SEL(m, " IPS mode: %s\n", str);
-	RTW_PRINT_SEL(m, " IPS enter count:%d, IPS leave count:%d\n",
+	RTW_PRINT_SEL(m, " IPS enter count:%d IPS leave count:%d\n",
 		      (int)pwrpriv->ips_enter_cnts,
 		      (int)pwrpriv->ips_leave_cnts);
 	RTW_PRINT_SEL(m, "------------------------------\n");
@@ -119,7 +119,7 @@ int debug_proc_ps_info_c_ref_get_ps_info(struct seq_file *m, void *v)
 
 	if (pwrpriv->dtim != 0)
 		RTW_PRINT_SEL(m, " DTIM: %d\n", pwrpriv->dtim);
-	RTW_PRINT_SEL(m, " LPS enter count:%d, LPS leave count:%d\n",
+	RTW_PRINT_SEL(m, " LPS enter count:%d LPS leave count:%d\n",
 		      (int)pwrpriv->lps_enter_cnts,
 		      (int)pwrpriv->lps_leave_cnts);
 

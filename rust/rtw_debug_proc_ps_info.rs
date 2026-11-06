@@ -15,9 +15,6 @@
 
 use core::ffi::{c_int, c_long, c_void};
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
-const PROC_PS_EFAULT: c_long = -(14isize) as c_long;
-
 extern "C" {
     fn rtw_rust_debug_proc_adapter(m: *mut c_void) -> *mut c_void;
     fn rtw_rust_debug_proc_adapter_from_data(data: *mut c_void) -> *mut c_void;
@@ -76,9 +73,6 @@ pub extern "C" fn proc_set_ps_info(
     data: *mut c_void,
 ) -> c_long {
     let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
-    if adapter.is_null() {
-        return PROC_PS_EFAULT;
-    }
     unsafe { rtw_rust_debug_proc_set_ps_info(adapter, buffer, count) }
 }
 
@@ -102,9 +96,6 @@ pub extern "C" fn proc_set_wmmps_info(
     data: *mut c_void,
 ) -> c_long {
     let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
-    if adapter.is_null() {
-        return PROC_PS_EFAULT;
-    }
     unsafe { rtw_rust_debug_proc_set_wmmps_info(adapter, buffer, count) }
 }
 

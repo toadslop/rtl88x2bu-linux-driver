@@ -2733,7 +2733,7 @@ void rtw_rust_debug_proc_emit_ps_info(void *sel, _adapter *padapter)
 		str = "invalid ips_mode";
 
 	RTW_PRINT_SEL(sel, " IPS mode: %s\n", str);
-	RTW_PRINT_SEL(sel, " IPS enter count:%d, IPS leave count:%d\n",
+	RTW_PRINT_SEL(sel, " IPS enter count:%d IPS leave count:%d\n",
 		      pwrpriv->ips_enter_cnts, pwrpriv->ips_leave_cnts);
 	RTW_PRINT_SEL(sel, "------------------------------\n");
 	RTW_PRINT_SEL(sel, "*LPS:\n");
@@ -2813,6 +2813,9 @@ ssize_t rtw_rust_debug_proc_set_ps_info(_adapter *adapter,
 	int mode = 0;
 	int en = 0;
 
+	if (!adapter)
+		return -EFAULT;
+
 	if (count > sizeof(tmp)) {
 		rtw_warn_on(1);
 		return -EFAULT;
@@ -2876,9 +2879,6 @@ void rtw_rust_debug_proc_emit_wmmps_info(void *sel, _adapter *padapter)
 	pregpriv = &padapter->registrypriv;
 	const char *uapsd_max_sp_str;
 
-	if (!pregpriv)
-		return;
-
 	switch (pregpriv->uapsd_max_sp_len) {
 	case 0:
 		uapsd_max_sp_str = "NO_LIMIT";
@@ -2921,10 +2921,15 @@ ssize_t rtw_rust_debug_proc_set_wmmps_info(_adapter *adapter,
 					   const char __user *buffer,
 					   size_t count)
 {
-	struct registry_priv *pregpriv = &adapter->registrypriv;
+	struct registry_priv *pregpriv;
 	char tmp[32];
 	u8 uapsd_ac_setting;
 	u8 uapsd_max_sp_len_setting;
+
+	if (!adapter)
+		return -EFAULT;
+
+	pregpriv = &adapter->registrypriv;
 
 	if (count < 1)
 		return -EFAULT;

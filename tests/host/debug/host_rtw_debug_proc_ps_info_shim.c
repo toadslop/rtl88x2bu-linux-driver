@@ -102,7 +102,7 @@ void rtw_rust_debug_proc_emit_ps_info(void *sel, void *padapter)
 		str = "invalid ips_mode";
 
 	RTW_PRINT_SEL(sel, " IPS mode: %s\n", str);
-	RTW_PRINT_SEL(sel, " IPS enter count:%d, IPS leave count:%d\n",
+	RTW_PRINT_SEL(sel, " IPS enter count:%d IPS leave count:%d\n",
 		      (int)pwrpriv->ips_enter_cnts,
 		      (int)pwrpriv->ips_leave_cnts);
 	RTW_PRINT_SEL(sel, "------------------------------\n");
@@ -125,7 +125,7 @@ void rtw_rust_debug_proc_emit_ps_info(void *sel, void *padapter)
 
 	if (pwrpriv->dtim != 0)
 		RTW_PRINT_SEL(sel, " DTIM: %d\n", pwrpriv->dtim);
-	RTW_PRINT_SEL(sel, " LPS enter count:%d, LPS leave count:%d\n",
+	RTW_PRINT_SEL(sel, " LPS enter count:%d LPS leave count:%d\n",
 		      (int)pwrpriv->lps_enter_cnts,
 		      (int)pwrpriv->lps_leave_cnts);
 

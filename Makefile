@@ -2708,6 +2708,10 @@ rustflags-y += --cfg rust_mlme_roaming --cfg config_layer2_roaming
 endif
 ccflags-y += -DCONFIG_RUST_MLME_WMM_RSN
 rustflags-y += --cfg rust_mlme_wmm_rsn
+# W3-219: align Rust wmmps proc cfg with C — derive only from autoconf.h probe (same as ~2909).
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_WMMPS_STA' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+ccflags-y += -DCONFIG_WMMPS_STA
+endif
 ccflags-y += -DCONFIG_RUST_MLME_EXT_REST
 ccflags-y += -DCONFIG_RUST_MLME_EXT_MGNT_ATTRIB
 ccflags-y += -DCONFIG_RUST_MLME_EXT_PEER_ALIVE
