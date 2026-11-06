@@ -23,6 +23,7 @@
 //! W3-211 proc PHY cap registry get/set live in `rtw_debug_proc_phy_cap.rs`.
 //! W3-215 proc btcoex debug handlers live in `rtw_debug_proc_btcoex.rs`.
 //! W3-216 proc rf4ce_state + sreset handlers live in `rtw_debug_proc_sreset.rs`.
+//! W3-217 WoWLAN registry + GPIO proc handlers live in `rtw_debug_proc_wow.rs`.
 //! W3-214 proc malloc cnt + best channel live in `rtw_debug_proc_misc.rs`.
 //! W3-210 PHY cap dump helpers live in `rtw_debug_phy_cap.rs`.
 

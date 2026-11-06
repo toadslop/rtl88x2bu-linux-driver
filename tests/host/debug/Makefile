@@ -62,6 +62,13 @@ HT_SHIM   := host_rtw_debug_proc_ht_shim.c
 HT_RUST   := $(ROOT)/rust/rtw_debug_proc_ht.rs
 HT_L2     := test_proc_ht_registry.c
 
+# W3-217 proc WoWLAN registry + GPIO (CONFIG_WOWLAN + optional stubs)
+WOW_ORACLE := debug_proc_wow_c_oracle.c
+WOW_SHIM   := host_rtw_debug_proc_wow_shim.c
+WOW_RUST   := $(ROOT)/rust/rtw_debug_proc_wow.rs
+WOW_L2     := test_proc_wow_registry.c
+WOW_CFG    := -DCONFIG_WOWLAN
+
 # W3-208 proc vht_24g_enable get/set
 VHT_ORACLE := debug_proc_vht_c_oracle.c
 VHT_SHIM   := host_rtw_debug_proc_vht_shim.c
@@ -108,7 +115,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 .PHONY: all test test-all test-c test-rust clean \
 	test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-regsty-rx-ampdu-c test-regsty-rx-ampdu-rust \
-	test-proc-ht-c test-proc-ht-rust \
+	test-proc-ht-c test-proc-ht-rust test-proc-wow-c test-proc-wow-rust \
 	test-proc-vht-c test-proc-vht-rust \
 	test-proc-fwps-c test-proc-fwps-rust test-proc-tdls-c test-proc-tdls-rust \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
@@ -125,7 +132,7 @@ all: test
 
 test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-regsty-rx-ampdu-c test-regsty-rx-ampdu-rust \
-	test-proc-ht-c test-proc-ht-rust \
+	test-proc-ht-c test-proc-ht-rust test-proc-wow-c test-proc-wow-rust \
 	test-proc-vht-c test-proc-vht-rust \
 	test-proc-fwps-c test-proc-fwps-rust test-proc-tdls-c test-proc-tdls-rust \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
@@ -141,12 +148,13 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 test-all: test
 
 test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
+	test-proc-wow-c \
 	test-proc-vht-c test-proc-fwps-c test-proc-rx-ampdu-c test-proc-tdls-c \
 	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c test-proc-phy-cap-registry-c \
 	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-phy-cap-dump-c
 
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
-	test-proc-ht-rust test-proc-vht-rust test-proc-fwps-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
+	test-proc-ht-rust test-proc-wow-rust test-proc-vht-rust test-proc-fwps-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-rust test-proc-tx-amsdu-rust test-proc-phy-cap-registry-rust test-proc-misc-rust test-phy-cap-dump-rust
 
 test-hooks-c: test_debug_test_hooks_c
@@ -239,6 +247,25 @@ test-proc-ht-rust: test_proc_ht_registry_rust
 test_proc_ht_registry_rust: $(HT_L2) librust_rtw_debug_proc_ht.a $(HT_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_RTW_DEBUG_PROC_HT_ORACLE -o $@ \
 		$(HT_L2) $(HT_SHIM) $(HOST_JSON) librust_rtw_debug_proc_ht.a
+
+test-proc-wow-c: test_proc_wow_registry
+	./test_proc_wow_registry debug_proc_wow_vectors.json
+
+test_proc_wow_registry: $(WOW_L2) $(WOW_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(WOW_CFG) -o $@ $(WOW_L2) $(WOW_ORACLE) $(HOST_JSON)
+
+librust_rtw_debug_proc_wow.a: $(WOW_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_wow_test \
+		--cfg config_wowlan --cfg config_gpio_wakeup \
+		--crate-type staticlib $(WOW_RUST) -o $@
+
+test-proc-wow-rust: test_proc_wow_registry_rust
+	./test_proc_wow_registry_rust debug_proc_wow_vectors.json
+
+test_proc_wow_registry_rust: $(WOW_L2) librust_rtw_debug_proc_wow.a $(WOW_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(WOW_CFG) -DRUST_RTW_DEBUG_PROC_WOW_ORACLE -o $@ \
+		$(WOW_L2) $(WOW_SHIM) $(HOST_JSON) librust_rtw_debug_proc_wow.a
 
 test-proc-vht-c: test_proc_vht_24g
 	./test_proc_vht_24g debug_proc_vht_vectors.json
@@ -463,6 +490,7 @@ clean:
 		test_dump_sec_cam_ent test_dump_sec_cam_ent_rust librust_rtw_debug_sec_cam.a \
 		test_dump_regsty_rx_ampdu test_dump_regsty_rx_ampdu_rust librust_rtw_debug_regsty.a \
 		test_proc_ht_registry test_proc_ht_registry_rust librust_rtw_debug_proc_ht.a \
+		test_proc_wow_registry test_proc_wow_registry_rust librust_rtw_debug_proc_wow.a \
 		test_proc_vht_24g test_proc_vht_24g_rust librust_rtw_debug_proc_vht.a \
 		test_proc_en_fwps test_proc_en_fwps_rust librust_rtw_debug_proc_fwps.a \
 		test_proc_tdls_enable test_proc_tdls_enable_rust librust_rtw_debug_proc_tdls.a \
