@@ -42,6 +42,11 @@ SRESET_RUST   := $(ROOT)/rust/rtw_debug_proc_sreset.rs
 SRESET_L2     := test_proc_sreset.c
 SRESET_CFG    := -DCONFIG_BT_COEXIST -DCONFIG_RF4CE_COEXIST -DDBG_CONFIG_ERROR_DETECT
 
+# W3-215 proc btcoex dbg get/set + info
+BTCOEX_ORACLE := debug_proc_btcoex_c_oracle.c
+BTCOEX_L2     := test_proc_btcoex.c
+BTCOEX_CFG    := -DCONFIG_BT_COEXIST
+
 # W3-214 proc malloc cnt + best channel
 MISC_ORACLE := debug_proc_misc_c_oracle.c
 MISC_SHIM   := host_rtw_debug_proc_misc_shim.c
@@ -109,6 +114,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust \
 	test-proc-tx-amsdu-c test-proc-tx-amsdu-rust \
 	test-proc-phy-cap-registry-c test-proc-phy-cap-registry-rust \
+	test-proc-btcoex-c \
 	test-proc-sreset-c test-proc-sreset-rust \
 	test-proc-misc-c test-proc-misc-rust \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
@@ -125,6 +131,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-tx-ampdu-misc-c test-proc-tx-ampdu-misc-rust \
 	test-proc-tx-amsdu-c test-proc-tx-amsdu-rust \
 	test-proc-phy-cap-registry-c test-proc-phy-cap-registry-rust \
+	test-proc-btcoex-c \
 	test-proc-sreset-c \
 	test-proc-misc-c test-proc-misc-rust \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
@@ -134,7 +141,7 @@ test-all: test
 test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 	test-proc-vht-c test-proc-fwps-c test-proc-rx-ampdu-c test-proc-tdls-c \
 	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c test-proc-phy-cap-registry-c \
-	test-proc-sreset-c test-proc-misc-c test-phy-cap-dump-c
+	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-phy-cap-dump-c
 
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
 	test-proc-ht-rust test-proc-vht-rust test-proc-fwps-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
@@ -386,6 +393,12 @@ test_proc_phy_cap_registry_rust: $(PHY_REG_L2) librust_rtw_debug_proc_phy_cap.a 
 		$(PHY_REG_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) $(PHY_REG_CFG) -DRUST_RTW_DEBUG_PROC_PHY_CAP_REGISTRY_ORACLE -o $@ \
 		$(PHY_REG_L2) $(PHY_REG_SHIM) $(HOST_JSON) librust_rtw_debug_proc_phy_cap.a
+
+test-proc-btcoex-c: test_proc_btcoex
+	./test_proc_btcoex debug_proc_btcoex_vectors.json
+
+test_proc_btcoex: $(BTCOEX_L2) $(BTCOEX_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(BTCOEX_CFG) -o $@ $(BTCOEX_L2) $(BTCOEX_ORACLE) $(HOST_JSON)
 
 test-proc-sreset-c: test_proc_sreset
 	./test_proc_sreset debug_proc_sreset_vectors.json
