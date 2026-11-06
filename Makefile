@@ -2876,6 +2876,9 @@ endif
 endif
 endif
 # W3-187: kernel rtw_set_ps_mode Rust cfgs (mirror host L2 SET_PS_RUSTCFGS + autoconf).
+ifeq ($(CONFIG_BT_COEXIST), y)
+rustflags-y += --cfg config_bt_coexist
+endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BT_COEXIST' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg config_bt_coexist
 endif
@@ -3201,6 +3204,9 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_sreset.o
 $(MODULE_NAME)-y += rust/rtw_debug_phy_cap.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_phy_cap.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_misc.o
+ifeq ($(CONFIG_BT_COEXIST), y)
+$(MODULE_NAME)-y += rust/rtw_debug_proc_btcoex.o
+endif
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ps.o
@@ -5154,6 +5160,20 @@ rust-objects-rtw-debug-proc-misc-c:
 rust-check-symbols-rtw-debug-proc-misc: rust-objects-rtw-debug-proc-misc-c rust-objects-rtw-debug-proc-misc
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_misc_c_ref.o NEW=rust/rtw_debug_proc_misc.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_misc.allow ALLOW_VACUOUS=1
+
+# W3-215: host C oracle vs rust/rtw_debug_proc_btcoex.o (proc btcoex dbg get/set + info).
+rust-objects-rtw-debug-proc-btcoex:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-btcoex"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_btcoex.o
+rust-objects-rtw-debug-proc-btcoex-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -DCONFIG_BT_COEXIST \
+		-o tests/host/debug/debug_proc_btcoex_c_ref.o \
+		tests/host/debug/debug_proc_btcoex_l1_ref.c
+rust-check-symbols-rtw-debug-proc-btcoex: rust-objects-rtw-debug-proc-btcoex-c rust-objects-rtw-debug-proc-btcoex
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_btcoex_c_ref.o NEW=rust/rtw_debug_proc_btcoex.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_btcoex.allow ALLOW_VACUOUS=1
 
 # W3-208: host C oracle vs rust/rtw_debug_proc_vht.o (proc vht_24g_enable get/set).
 rust-objects-rtw-debug-proc-vht:
