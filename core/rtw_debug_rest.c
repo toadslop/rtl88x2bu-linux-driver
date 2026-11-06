@@ -5978,8 +5978,10 @@ int proc_get_ps_info(struct seq_file *m, void *v)
 		str = "NO IPS";
 	else if (ips_mode == IPS_LEVEL_2)
 		str = "IPS_LEVEL_2";
-	else
-		str = "invalid ips_mode";
+	else {
+		snprintf(lps_mode_str, sizeof(lps_mode_str), "%d", ips_mode);
+		str = lps_mode_str;
+	}
 
 	RTW_PRINT_SEL(m, " IPS mode: %s\n", str);
 	RTW_PRINT_SEL(m, " IPS enter count:%d, IPS leave count:%d\n",

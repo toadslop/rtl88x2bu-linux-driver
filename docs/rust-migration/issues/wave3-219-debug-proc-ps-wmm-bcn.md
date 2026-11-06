@@ -25,7 +25,7 @@ Port power-saving debug procs from [`core/rtw_debug_rest.c`](../../../core/rtw_d
 
 - `proc_get_new_bcn_max` / `proc_set_new_bcn_max`
 
-In this out-of-tree driver, `CONFIG_BCN_CNT_CONFIRM_HDL` is defined in `include/autoconf.h` under **`CONFIG_POWER_SAVING`** (same area as LPS / WMMPS). The Makefile probes that header (like other features) and adds `-DCONFIG_BCN_CNT_CONFIRM_HDL` plus matching Rust `--cfg` only when the symbol is present, so C and Rust stay aligned without tying the macro to **`CONFIG_PROC_DEBUG`** alone.
+`CONFIG_BCN_CNT_CONFIRM_HDL` is **not** defined in shared `autoconf.h` for this slice — the Kbuild Makefile adds `-DCONFIG_BCN_CNT_CONFIRM_HDL` and Rust `--cfg config_bcn_cnt_confirm_hdl` when **`CONFIG_PROC_DEBUG=y`** (default in this tree), so the `new_bcn_max` proc, Rust handlers, and MLME sites under that ifdef stay in sync without a blanket autoconf define. Disable proc debug if you need a build without beacon-count confirm paths.
 
 ## Notes
 

@@ -2714,6 +2714,7 @@ void rtw_rust_debug_proc_emit_ps_info(void *sel, _adapter *padapter)
 	u8 wow_lps_1t1r = pwrpriv->wowlan_lps_1t1r;
 	#endif
 #endif /* CONFIG_WOWLAN */
+	static char ips_mode_str[12];
 	const char *str;
 
 	RTW_PRINT_SEL(sel, "======Power Saving Info:======\n");
@@ -2729,8 +2730,10 @@ void rtw_rust_debug_proc_emit_ps_info(void *sel, _adapter *padapter)
 		str = "NO IPS";
 	else if (ips_mode == IPS_LEVEL_2)
 		str = "IPS_LEVEL_2";
-	else
-		str = "invalid ips_mode";
+	else {
+		snprintf(ips_mode_str, sizeof(ips_mode_str), "%d", ips_mode);
+		str = ips_mode_str;
+	}
 
 	RTW_PRINT_SEL(sel, " IPS mode: %s\n", str);
 	RTW_PRINT_SEL(sel, " IPS enter count:%d, IPS leave count:%d\n",
@@ -2812,6 +2815,9 @@ ssize_t rtw_rust_debug_proc_set_ps_info(_adapter *adapter,
 	int num = 0;
 	int mode = 0;
 	int en = 0;
+
+	if (!adapter)
+		return -EFAULT;
 
 	if (count > sizeof(tmp)) {
 		rtw_warn_on(1);
@@ -2922,6 +2928,9 @@ ssize_t rtw_rust_debug_proc_set_wmmps_info(_adapter *adapter,
 	char tmp[32];
 	u8 uapsd_ac_setting;
 	u8 uapsd_max_sp_len_setting;
+
+	if (!adapter)
+		return -EFAULT;
 
 	pregpriv = &adapter->registrypriv;
 

@@ -61,7 +61,7 @@ PS_INFO_ORACLE := debug_proc_ps_info_c_oracle.c
 PS_INFO_SHIM := host_rtw_debug_proc_ps_info_shim.c
 PS_INFO_RUST := $(ROOT)/rust/rtw_debug_proc_ps_info.rs
 PS_INFO_L2 := test_proc_ps_info.c
-PS_INFO_CFG := -DCONFIG_BCN_CNT_CONFIRM_HDL -DCONFIG_FWLPS_IN_IPS -DCONFIG_WOWLAN
+PS_INFO_CFG := -DCONFIG_PROC_DEBUG -DCONFIG_BCN_CNT_CONFIRM_HDL -DCONFIG_FWLPS_IN_IPS -DCONFIG_WOWLAN
 
 # W3-203 proc HT registry get/set
 HT_ORACLE := debug_proc_ht_c_oracle.c

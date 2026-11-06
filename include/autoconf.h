@@ -113,8 +113,10 @@
 	#ifdef CONFIG_LPS
 		#define CONFIG_WMMPS_STA 1
 	#endif /* CONFIG_LPS */
-	/* W3-219: beacon-count confirm (new_bcn_max proc + MLME paths); Makefile mirrors via grep. */
-	#define CONFIG_BCN_CNT_CONFIRM_HDL	1
+	/* W3-219: beacon-count confirm is driven from Kbuild when CONFIG_PROC_DEBUG=y
+	 * (-DCONFIG_BCN_CNT_CONFIRM_HDL + Rust --cfg), not a default here — avoids silently
+	 * turning on MLME-wide paths in every build.
+	 */
 #endif /*CONFIG_POWER_SAVING*/
 	/* before link */
 	/* #define CONFIG_ANTENNA_DIVERSITY */

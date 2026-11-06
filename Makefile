@@ -2994,8 +2994,9 @@ endif
 ifeq ($(CONFIG_PROC_DEBUG), y)
 rustflags-y += --cfg config_proc_debug
 endif
-# W3-219: beacon-count confirm — same probe as CONFIG_WMMPS_STA (autoconf.h is source of truth).
-ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BCN_CNT_CONFIRM_HDL' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+# W3-219: beacon-count confirm — tied to proc debug builds only (not a silent
+# autoconf default). Keeps Rust proc cfgs aligned with C registration in rtw_proc.c.
+ifeq ($(CONFIG_PROC_DEBUG), y)
 ccflags-y += -DCONFIG_BCN_CNT_CONFIRM_HDL
 rustflags-y += --cfg config_bcn_cnt_confirm_hdl
 endif

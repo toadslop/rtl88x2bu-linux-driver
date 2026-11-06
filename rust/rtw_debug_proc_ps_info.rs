@@ -15,6 +15,8 @@
 
 use core::ffi::{c_int, c_long, c_void};
 
+const EFAULT: c_long = -14;
+
 extern "C" {
     fn rtw_rust_debug_proc_adapter(m: *mut c_void) -> *mut c_void;
     fn rtw_rust_debug_proc_adapter_from_data(data: *mut c_void) -> *mut c_void;
@@ -73,6 +75,9 @@ pub extern "C" fn proc_set_ps_info(
     data: *mut c_void,
 ) -> c_long {
     let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
+    if adapter.is_null() {
+        return EFAULT;
+    }
     unsafe { rtw_rust_debug_proc_set_ps_info(adapter, buffer, count) }
 }
 
@@ -96,6 +101,9 @@ pub extern "C" fn proc_set_wmmps_info(
     data: *mut c_void,
 ) -> c_long {
     let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
+    if adapter.is_null() {
+        return EFAULT;
+    }
     unsafe { rtw_rust_debug_proc_set_wmmps_info(adapter, buffer, count) }
 }
 

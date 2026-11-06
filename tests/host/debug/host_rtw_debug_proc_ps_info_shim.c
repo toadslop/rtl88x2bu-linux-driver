@@ -82,6 +82,7 @@ void rtw_rust_debug_proc_emit_ps_info(void *sel, void *padapter)
 	u8 ips_mode = pwrpriv->ips_mode_req;
 	u8 lps_mode = pwrpriv->power_mgnt;
 	u8 lps_level = pwrpriv->lps_level;
+	char ips_mode_buf[12];
 	char lps_mode_buf[12];
 	const char *str;
 
@@ -99,8 +100,10 @@ void rtw_rust_debug_proc_emit_ps_info(void *sel, void *padapter)
 		str = "NO IPS";
 	else if (ips_mode == IPS_LEVEL_2)
 		str = "IPS_LEVEL_2";
-	else
-		str = "invalid ips_mode";
+	else {
+		snprintf(ips_mode_buf, sizeof(ips_mode_buf), "%d", ips_mode);
+		str = ips_mode_buf;
+	}
 
 	RTW_PRINT_SEL(sel, " IPS mode: %s\n", str);
 	RTW_PRINT_SEL(sel, " IPS enter count:%d, IPS leave count:%d\n",
