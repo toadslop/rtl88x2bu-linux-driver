@@ -5082,6 +5082,7 @@ ssize_t proc_set_best_channel(struct file *file, const char __user *buffer, size
 #endif /* CONFIG_FIND_BEST_CHANNEL */
 
 #ifdef CONFIG_BT_COEXIST
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_btcoex_dbg(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -5175,6 +5176,7 @@ int proc_get_btcoex_info(struct seq_file *m, void *v)
 
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-215 in rust/rtw_debug_proc_btcoex.rs */
 
 #ifdef CONFIG_RF4CE_COEXIST
 #if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)

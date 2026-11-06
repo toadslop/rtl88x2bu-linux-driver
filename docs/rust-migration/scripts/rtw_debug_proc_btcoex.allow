@@ -1,0 +1,4 @@
+# L1 allowlist for W3-215: Rust owns proc btcoex debug handlers in rtw_debug_proc_btcoex.o.
+drop rtw_rust_debug_proc_emit_btcoex_dbg
+drop rtw_rust_debug_proc_set_btcoex_dbg
+drop rtw_rust_debug_proc_emit_btcoex_info
