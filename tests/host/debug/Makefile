@@ -72,6 +72,7 @@ HT_L2     := test_proc_ht_registry.c
 # W3-217 proc WoWLAN registry + GPIO (CONFIG_WOWLAN + optional stubs)
 WOW_ORACLE := debug_proc_wow_c_oracle.c
 WOW_SHIM   := host_rtw_debug_proc_wow_shim.c
+WOW_PATTERN := host_rtw_wowlan_pattern_cmd.c
 WOW_RUST   := $(ROOT)/rust/rtw_debug_proc_wow.rs
 WOW_L2     := test_proc_wow_registry.c
 WOW_CFG    := -DCONFIG_WOWLAN
@@ -262,8 +263,8 @@ test_proc_ht_registry_rust: $(HT_L2) librust_rtw_debug_proc_ht.a $(HT_SHIM) $(HO
 test-proc-wow-c: test_proc_wow_registry
 	./test_proc_wow_registry debug_proc_wow_vectors.json
 
-test_proc_wow_registry: $(WOW_L2) $(WOW_ORACLE) $(HOST_JSON)
-	$(CC) $(CFLAGS) $(WOW_CFG) -o $@ $(WOW_L2) $(WOW_ORACLE) $(HOST_JSON)
+test_proc_wow_registry: $(WOW_L2) $(WOW_ORACLE) $(WOW_PATTERN) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(WOW_CFG) -o $@ $(WOW_L2) $(WOW_ORACLE) $(WOW_PATTERN) $(HOST_JSON)
 
 librust_rtw_debug_proc_wow.a: $(WOW_RUST)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
@@ -274,9 +275,9 @@ librust_rtw_debug_proc_wow.a: $(WOW_RUST)
 test-proc-wow-rust: test_proc_wow_registry_rust
 	./test_proc_wow_registry_rust debug_proc_wow_vectors.json
 
-test_proc_wow_registry_rust: $(WOW_L2) librust_rtw_debug_proc_wow.a $(WOW_SHIM) $(HOST_JSON)
+test_proc_wow_registry_rust: $(WOW_L2) librust_rtw_debug_proc_wow.a $(WOW_SHIM) $(WOW_PATTERN) $(HOST_JSON)
 	$(CC) $(CFLAGS) $(WOW_CFG) -DRUST_RTW_DEBUG_PROC_WOW_ORACLE -o $@ \
-		$(WOW_L2) $(WOW_SHIM) $(HOST_JSON) librust_rtw_debug_proc_wow.a
+		$(WOW_L2) $(WOW_SHIM) $(WOW_PATTERN) $(HOST_JSON) librust_rtw_debug_proc_wow.a
 
 test-proc-vht-c: test_proc_vht_24g
 	./test_proc_vht_24g debug_proc_vht_vectors.json

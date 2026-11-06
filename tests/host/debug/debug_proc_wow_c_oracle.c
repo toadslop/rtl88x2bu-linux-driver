@@ -8,80 +8,6 @@
 
 #define copy_from_user(dst, src, n) ((void)memcpy((dst), (src), (n)), 0)
 
-static int hex2num_i(char c)
-{
-	if (c >= '0' && c <= '9')
-		return c - '0';
-	if (c >= 'a' && c <= 'f')
-		return c - 'a' + 10;
-	if (c >= 'A' && c <= 'F')
-		return c - 'A' + 10;
-	return -1;
-}
-
-static int hex2byte_i(const char *hex)
-{
-	int a, b;
-
-	a = hex2num_i(*hex++);
-	if (a < 0)
-		return -1;
-	b = hex2num_i(*hex++);
-	if (b < 0)
-		return -1;
-	return (a << 4) | b;
-}
-
-static int rtw_wowlan_parser_pattern_cmd(u8 *input_in, char *pattern,
-					 int *pattern_len, char *bit_mask)
-{
-	char *cp;
-	int pos = 0, mask_pos = 0;
-	int hb;
-	char *input = (char *)input_in;
-
-	cp = strchr(input, '=');
-	if (cp) {
-		*cp = 0;
-		cp++;
-		input = cp;
-	}
-
-	cp = strchr(input, '\n');
-	if (cp)
-		*cp = 0;
-
-	while (input) {
-		cp = strsep(&input, ":");
-		if (!cp)
-			break;
-
-		if (bit_mask &&
-		    (strcmp(cp, "-") == 0 || strcmp(cp, "xx") == 0 ||
-		     strcmp(cp, "--") == 0)) {
-			/* skip byte */
-		} else {
-			if (strlen(cp) != 2)
-				goto error;
-
-			hb = hex2byte_i(cp);
-			if (hb < 0)
-				goto error;
-
-			pattern[pos] = (char)(u8)hb;
-			mask_pos = pos / 8;
-			if (bit_mask)
-				bit_mask[mask_pos] |= (char)(1 << (pos % 8));
-		}
-		pos++;
-	}
-
-	*pattern_len = pos;
-	return _TRUE;
-error:
-	return _FALSE;
-}
-
 void rtw_rust_debug_proc_emit_wow_enable(void *sel, void *adapter)
 {
 	struct registry_priv *registry_pair =
@@ -262,7 +188,7 @@ long rtw_rust_debug_proc_set_pattern_info(void *adapter, const void *buffer,
 					  HW_VAR_WOWLAN, (u8 *)&poidparam);
 		} else {
 			index = pwrpriv->wowlan_pattern_idx;
-			ret = rtw_wowlan_parser_pattern_cmd(
+			ret = host_rtw_wowlan_parser_pattern_cmd(
 				(u8 *)tmp,
 				pwrpriv->patterns[index].content,
 				&pwrpriv->patterns[index].len,

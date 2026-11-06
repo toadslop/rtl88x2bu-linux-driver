@@ -134,25 +134,19 @@ struct wowlan_ioctl_param {
 
 static inline void rtw_hal_set_hwreg(struct _adapter *a, u32 var, u8 *p)
 {
-	int i;
-	struct pwrctrl_priv *pwrpriv;
 	struct wowlan_ioctl_param *param = (struct wowlan_ioctl_param *)p;
 
 	(void)var;
 	if (!a || !p)
 		return;
-	pwrpriv = adapter_to_pwrctl(a);
 	if (param->subcode != WOWLAN_PATTERN_CLEAN)
 		return;
-	for (i = 0; i < MAX_WKFM_CAM_NUM; i++) {
-		_rtw_memset(pwrpriv->patterns[i].content, 0,
-			    sizeof(pwrpriv->patterns[i].content));
-		_rtw_memset(pwrpriv->patterns[i].mask, 0,
-			    sizeof(pwrpriv->patterns[i].mask));
-		pwrpriv->patterns[i].len = 0;
-	}
-	pwrpriv->wowlan_pattern_idx = 0;
+	/* Match hal HAL WOWLAN_PATTERN_CLEAN → rtw_hal_dl_pattern(adapter, 2). */
+	rtw_wow_pattern_sw_reset(a);
 }
+
+int host_rtw_wowlan_parser_pattern_cmd(u8 *input_in, char *pattern,
+				       int *pattern_len, char *bit_mask);
 
 static inline void rtw_ps_deny(struct _adapter *a, unsigned int reason)
 {
