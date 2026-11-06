@@ -375,6 +375,7 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-debug-proc-signal
 		add_target rust-check-symbols-rtw-debug-proc-test
 		add_target rust-check-symbols-rtw-debug-proc-sreset
+		add_target rust-check-symbols-rtw-debug-proc-misc
 		;;
 	rust/hal_com.rs \
 	| hal/hal_com_rest.c \
