@@ -56,6 +56,12 @@ MISC_RUST   := $(ROOT)/rust/rtw_debug_proc_misc.rs
 MISC_L2     := test_proc_misc.c
 MISC_CFG    := -DDBG_MEMORY_LEAK -DCONFIG_FIND_BEST_CHANNEL
 
+# W3-219 proc ps_info / wmmps / new_bcn_max
+PS_INFO_ORACLE := debug_proc_ps_info_c_oracle.c
+PS_INFO_SHIM := host_rtw_debug_proc_ps_info_shim.c
+PS_INFO_RUST := $(ROOT)/rust/rtw_debug_proc_ps_info.rs
+PS_INFO_L2 := test_proc_ps_info.c
+
 # W3-203 proc HT registry get/set
 HT_ORACLE := debug_proc_ht_c_oracle.c
 HT_SHIM   := host_rtw_debug_proc_ht_shim.c
@@ -126,6 +132,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-btcoex-c \
 	test-proc-sreset-c test-proc-sreset-rust \
 	test-proc-misc-c test-proc-misc-rust \
+	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
 
 all: test
@@ -143,6 +150,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-btcoex-c \
 	test-proc-sreset-c \
 	test-proc-misc-c test-proc-misc-rust \
+	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
 
 test-all: test
@@ -151,11 +159,13 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 	test-proc-wow-c \
 	test-proc-vht-c test-proc-fwps-c test-proc-rx-ampdu-c test-proc-tdls-c \
 	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c test-proc-phy-cap-registry-c \
-	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-phy-cap-dump-c
+	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-proc-ps-info-c \
+	test-phy-cap-dump-c
 
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
 	test-proc-ht-rust test-proc-wow-rust test-proc-vht-rust test-proc-fwps-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
-	test-proc-tx-ampdu-misc-rust test-proc-tx-amsdu-rust test-proc-phy-cap-registry-rust test-proc-misc-rust test-phy-cap-dump-rust
+	test-proc-tx-ampdu-misc-rust test-proc-tx-amsdu-rust test-proc-phy-cap-registry-rust test-proc-misc-rust test-proc-ps-info-rust \
+	test-phy-cap-dump-rust
 
 test-hooks-c: test_debug_test_hooks_c
 	./test_debug_test_hooks_c
@@ -485,6 +495,27 @@ test_proc_misc_rust: $(MISC_L2) librust_rtw_debug_proc_misc.a $(MISC_SHIM) $(HOS
 	$(CC) $(CFLAGS) $(MISC_CFG) -DRUST_RTW_DEBUG_PROC_MISC_ORACLE -o $@ \
 		$(MISC_L2) $(MISC_SHIM) $(HOST_JSON) librust_rtw_debug_proc_misc.a
 
+test-proc-ps-info-c: test_proc_ps_info
+	./test_proc_ps_info debug_proc_ps_info_vectors.json
+
+test_proc_ps_info: $(PS_INFO_L2) $(PS_INFO_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ $(PS_INFO_L2) $(PS_INFO_ORACLE) $(HOST_JSON)
+
+librust_rtw_debug_proc_ps_info.a: $(PS_INFO_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg config_rtw_debug --cfg config_proc_debug \
+		--cfg config_power_saving --cfg config_wmmps_sta \
+		--cfg config_bcn_cnt_confirm_hdl \
+		--crate-type staticlib $(PS_INFO_RUST) -o $@
+
+test-proc-ps-info-rust: test_proc_ps_info_rust
+	./test_proc_ps_info_rust debug_proc_ps_info_vectors.json
+
+test_proc_ps_info_rust: $(PS_INFO_L2) librust_rtw_debug_proc_ps_info.a \
+		$(PS_INFO_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DPROC_PS_INFO_RUST_TEST -o $@ \
+		$(PS_INFO_L2) $(PS_INFO_SHIM) $(HOST_JSON) librust_rtw_debug_proc_ps_info.a
+
 clean:
 	rm -f test_debug_test_hooks_c test_debug_test_hooks_rust librust_debug_test_hooks.a \
 		test_dump_sec_cam_ent test_dump_sec_cam_ent_rust librust_rtw_debug_sec_cam.a \
@@ -503,4 +534,5 @@ clean:
 		test_proc_btcoex test_proc_btcoex_rust librust_rtw_debug_proc_btcoex.a \
 		test_proc_sreset \
 		test_proc_misc test_proc_misc_rust librust_rtw_debug_proc_misc.a \
+		test_proc_ps_info test_proc_ps_info_rust librust_rtw_debug_proc_ps_info.a \
 		test_debug_phy_cap_dump test_debug_phy_cap_dump_rust librust_rtw_debug_phy_cap.a
