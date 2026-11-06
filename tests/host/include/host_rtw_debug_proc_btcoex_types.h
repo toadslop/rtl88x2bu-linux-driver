@@ -56,6 +56,13 @@ void host_debug_proc_btcoex_reset_mocks(void);
 void host_debug_proc_btcoex_set_dbg(u32 m0, u32 m1);
 void host_debug_proc_btcoex_get_dbg(u32 *m0, u32 *m1);
 
+void *rtw_rust_debug_proc_adapter(void *m);
+void *rtw_rust_debug_proc_adapter_from_data(void *data);
+void rtw_rust_debug_proc_emit_btcoex_dbg(void *sel, void *adapter);
+long rtw_rust_debug_proc_set_btcoex_dbg(void *adapter, const void *buffer,
+					size_t count);
+int rtw_rust_debug_proc_emit_btcoex_info(void *sel, void *adapter);
+
 int proc_get_btcoex_dbg(struct seq_file *m, void *v);
 ssize_t proc_set_btcoex_dbg(void *file, const void *buffer, size_t count,
 			     long *pos, void *data);

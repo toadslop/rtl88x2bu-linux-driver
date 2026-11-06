@@ -71,6 +71,7 @@ void rtw_mfree(void *p, u32 sz)
 	free(p);
 }
 
+#ifndef RUST_RTW_DEBUG_PROC_BTCOEX_ORACLE
 int proc_get_btcoex_dbg(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -146,3 +147,4 @@ int proc_get_btcoex_info(struct seq_file *m, void *v)
 
 	return 0;
 }
+#endif /* !RUST_RTW_DEBUG_PROC_BTCOEX_ORACLE */
