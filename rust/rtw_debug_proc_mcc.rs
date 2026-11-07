@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-// W3-222: MCC registry debug proc setters (was core/rtw_debug_rest.c).
+// W3-222/223: MCC registry debug proc setters (was core/rtw_debug_rest.c).
 
 #![allow(
     dead_code,
@@ -31,6 +31,36 @@ extern "C" {
         buffer: *const c_void,
         count: usize,
     ) -> c_long;
+    fn rtw_rust_debug_proc_set_mcc_ap_bw20_target_tp(
+        adapter: *mut c_void,
+        buffer: *const c_void,
+        count: usize,
+    ) -> c_long;
+    fn rtw_rust_debug_proc_set_mcc_ap_bw40_target_tp(
+        adapter: *mut c_void,
+        buffer: *const c_void,
+        count: usize,
+    ) -> c_long;
+    fn rtw_rust_debug_proc_set_mcc_ap_bw80_target_tp(
+        adapter: *mut c_void,
+        buffer: *const c_void,
+        count: usize,
+    ) -> c_long;
+    fn rtw_rust_debug_proc_set_mcc_sta_bw20_target_tp(
+        adapter: *mut c_void,
+        buffer: *const c_void,
+        count: usize,
+    ) -> c_long;
+    fn rtw_rust_debug_proc_set_mcc_sta_bw40_target_tp(
+        adapter: *mut c_void,
+        buffer: *const c_void,
+        count: usize,
+    ) -> c_long;
+    fn rtw_rust_debug_proc_set_mcc_sta_bw80_target_tp(
+        adapter: *mut c_void,
+        buffer: *const c_void,
+        count: usize,
+    ) -> c_long;
 }
 
 #[cfg(config_mcc_phydm_offload)]
@@ -42,31 +72,53 @@ extern "C" {
     ) -> c_long;
 }
 
-#[cfg(any(config_mcc_mode, host_rtw_debug_proc_mcc_test))]
-#[no_mangle]
-pub extern "C" fn proc_set_mcc_enable(
-    _file: *mut c_void,
-    buffer: *const c_void,
-    count: usize,
-    _pos: *mut c_long,
-    data: *mut c_void,
-) -> c_long {
-    let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
-    unsafe { rtw_rust_debug_proc_set_mcc_enable(adapter, buffer, count) }
+macro_rules! mcc_proc_setter {
+    ($fn:ident, $kernel:ident) => {
+        #[cfg(any(config_mcc_mode, host_rtw_debug_proc_mcc_test))]
+        #[no_mangle]
+        pub extern "C" fn $fn(
+            _file: *mut c_void,
+            buffer: *const c_void,
+            count: usize,
+            _pos: *mut c_long,
+            data: *mut c_void,
+        ) -> c_long {
+            let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
+            unsafe { $kernel(adapter, buffer, count) }
+        }
+    };
 }
 
-#[cfg(any(config_mcc_mode, host_rtw_debug_proc_mcc_test))]
-#[no_mangle]
-pub extern "C" fn proc_set_mcc_duration(
-    _file: *mut c_void,
-    buffer: *const c_void,
-    count: usize,
-    _pos: *mut c_long,
-    data: *mut c_void,
-) -> c_long {
-    let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
-    unsafe { rtw_rust_debug_proc_set_mcc_duration(adapter, buffer, count) }
-}
+mcc_proc_setter!(proc_set_mcc_enable, rtw_rust_debug_proc_set_mcc_enable);
+mcc_proc_setter!(proc_set_mcc_duration, rtw_rust_debug_proc_set_mcc_duration);
+mcc_proc_setter!(
+    proc_set_mcc_single_tx_criteria,
+    rtw_rust_debug_proc_set_mcc_single_tx_criteria
+);
+mcc_proc_setter!(
+    proc_set_mcc_ap_bw20_target_tp,
+    rtw_rust_debug_proc_set_mcc_ap_bw20_target_tp
+);
+mcc_proc_setter!(
+    proc_set_mcc_ap_bw40_target_tp,
+    rtw_rust_debug_proc_set_mcc_ap_bw40_target_tp
+);
+mcc_proc_setter!(
+    proc_set_mcc_ap_bw80_target_tp,
+    rtw_rust_debug_proc_set_mcc_ap_bw80_target_tp
+);
+mcc_proc_setter!(
+    proc_set_mcc_sta_bw20_target_tp,
+    rtw_rust_debug_proc_set_mcc_sta_bw20_target_tp
+);
+mcc_proc_setter!(
+    proc_set_mcc_sta_bw40_target_tp,
+    rtw_rust_debug_proc_set_mcc_sta_bw40_target_tp
+);
+mcc_proc_setter!(
+    proc_set_mcc_sta_bw80_target_tp,
+    rtw_rust_debug_proc_set_mcc_sta_bw80_target_tp
+);
 
 #[cfg(all(
     any(config_mcc_mode, host_rtw_debug_proc_mcc_test),
@@ -82,17 +134,4 @@ pub extern "C" fn proc_set_mcc_phydm_offload_enable(
 ) -> c_long {
     let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
     unsafe { rtw_rust_debug_proc_set_mcc_phydm_offload_enable(adapter, buffer, count) }
-}
-
-#[cfg(any(config_mcc_mode, host_rtw_debug_proc_mcc_test))]
-#[no_mangle]
-pub extern "C" fn proc_set_mcc_single_tx_criteria(
-    _file: *mut c_void,
-    buffer: *const c_void,
-    count: usize,
-    _pos: *mut c_long,
-    data: *mut c_void,
-) -> c_long {
-    let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
-    unsafe { rtw_rust_debug_proc_set_mcc_single_tx_criteria(adapter, buffer, count) }
 }
