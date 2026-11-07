@@ -30,6 +30,9 @@ Provide hardware-free verification (L0–L3) so each ~200 LOC translation PR can
 - T15 — path-scoped L3 on PRs for init/USB/scaffold changes
 - T16 — `rustfmt --check` on `rust/**` changes
 - T17 — host WAPI SMS4 differential harness (unblocks W3-135/W3-136)
+- T18 — admin: enable branch protection (L0/L1/L2 required checks)
+- T19 — extend required checks (Rust lint, path-scoped L3) after T18
+- T20 — clippy on `rust/**` (warn-only CI job; backlog)
 
 ## Exit criteria
 
