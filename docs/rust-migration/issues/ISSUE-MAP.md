@@ -353,9 +353,6 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-220 | #1765 | [W3-220] Translate rtw_debug_rest.c — proc monitor + xmit block leaf |
 | W3-221 | #1766 | [W3-221] Translate rtw_debug_rest.c — proc TX mgmt inject test leaf |
 | W3-222 | #1767 | [W3-222] Translate rtw_debug_rest.c — proc MCC registry setters (part 1) |
-| T18 | #1795 | [T18] Admin: enable branch protection with L0/L1/L2 required checks |
-| T19 | #1796 | [T19] CI: extend required checks (Rust lint, path-scoped L3) |
-| T20 | #1797 | [T20] CI: clippy on rust/** (warn-only job) |
 
 ## Superseded issues
 
