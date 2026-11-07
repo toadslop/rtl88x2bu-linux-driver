@@ -22,23 +22,25 @@ This repo is an incremental C→Rust migration of the `88x2bu` kernel module. Ev
 
 ## Required CI checks (pull requests)
 
-When branch protection is enabled, require these three **check-run context strings** on `master` merges via pull request (they match each job’s `name:` in the workflow — use them literally in Settings and in `scripts/admin/*`; GitHub’s Checks UI may group them under a workflow title):
+When branch protection is enabled, require these **check-run context strings** on `master` merges via pull request (they match each job’s `name:` in the workflow — use them literally in Settings and in `scripts/admin/*`; GitHub’s Checks UI may group them under a workflow title):
 
 | Check context | Workflow | Runs on PR? | Path-scoped? |
 |---------------|----------|-------------|--------------|
 | `host-l2` | [`.github/workflows/host-l2.yml`](../../.github/workflows/host-l2.yml) | Yes | Yes — skips heavy steps when out of scope |
 | `module-l0` | [`.github/workflows/module-l0.yml`](../../.github/workflows/module-l0.yml) | Yes | Yes — skips heavy steps when out of scope |
 | `module-l1` | [`.github/workflows/module-l1.yml`](../../.github/workflows/module-l1.yml) | Yes | Yes — skips heavy steps when out of scope |
+| `rustfmt` | [`.github/workflows/rust-lint.yml`](../../.github/workflows/rust-lint.yml) | Yes | Yes — `rustfmt` skipped when `rust/**` unchanged; status-constants step always runs |
+| `module-l3` | [`.github/workflows/module-l3.yml`](../../.github/workflows/module-l3.yml) | Yes | Yes — QEMU L3 skipped when init/USB/scaffold paths unchanged |
 
-**Post-merge on `master` (not a PR gate):** `Module L3 load / module-l3` runs after merge when driver/build paths change. See [`.github/workflows/module-l3.yml`](../../.github/workflows/module-l3.yml).
+**Post-merge on `master`:** `module-l3` also runs on `push` when driver/build paths change (backstop after merge).
 
 ### Path-scoped PR checks (T10)
 
-On **pull requests**, all three workflows **always trigger** and report a status check. Job-level [`dorny/paths-filter`](https://github.com/dorny/paths-filter) decides whether to run the full L0/L1/L2 jobs or a no-op skip step. Out-of-scope PRs (e.g. docs-only) show **Success** instead of staying **Waiting for status to be reported**, so branch protection can require these checks without blocking unrelated PRs.
+On **pull requests**, L0/L1/L2, `rustfmt`, and `module-l3` workflows **always trigger** and report a status check. Job-level [`dorny/paths-filter`](https://github.com/dorny/paths-filter) decides whether to run the full gate or a no-op skip step. Out-of-scope PRs (e.g. docs-only) show **Success** on every required context instead of staying **Waiting for status to be reported**.
 
-**Translation PRs** that touch driver/build paths still run the full gate jobs when relevant files change.
+**Translation PRs** that touch driver/build paths still run the full gate jobs when relevant files change. Crypto-only or docs-only PRs skip heavy L3/L0 work but still satisfy required checks.
 
-Repo admins: see [Branch protection](rust-migration/dev-environment.md#branch-protection) in [`dev-environment.md`](rust-migration/dev-environment.md) for Settings steps and `scripts/admin/enable-branch-protection.sh` (issue [T18](rust-migration/issues/test-18-branch-protection-enable.md) / #1795). PR-scoped L3 as a required check is [T19](rust-migration/issues/test-19-branch-protection-extended-checks.md) / #1796.
+Repo admins: see [Branch protection](rust-migration/dev-environment.md#branch-protection) in [`dev-environment.md`](rust-migration/dev-environment.md) for Settings steps and `scripts/admin/enable-branch-protection.sh` ([T18](rust-migration/issues/test-18-branch-protection-enable.md) / #1795 baseline; [T19](rust-migration/issues/test-19-branch-protection-extended-checks.md) / #1796 adds `rustfmt` + `module-l3`).
 
 ## Toolchain and environment
 
