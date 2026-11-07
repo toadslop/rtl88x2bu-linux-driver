@@ -2694,28 +2694,41 @@ ssize_t rtw_rust_debug_proc_set_new_bcn_max(const char __user *buffer, size_t co
 void rtw_rust_debug_proc_emit_ps_info(void *sel, _adapter *padapter)
 {
 	struct pwrctrl_priv *pwrpriv;
+	u8 ips_mode;
+	u8 lps_mode;
+	u8 lps_level;
+	static char lps_mode_str[12];
+	static char wow_lps_mode_str[12];
+	static char ips_mode_str[12];
+#ifdef CONFIG_LPS_1T1R
+	u8 lps_1t1r;
+#endif
+#ifdef CONFIG_WOWLAN
+	u8 wow_lps_mode;
+	u8 wow_lps_level;
+	#ifdef CONFIG_LPS_1T1R
+	u8 wow_lps_1t1r;
+	#endif
+#endif /* CONFIG_WOWLAN */
+	const char *str;
 
 	if (!padapter)
 		return;
 
 	pwrpriv = adapter_to_pwrctl(padapter);
-	u8 ips_mode = pwrpriv->ips_mode_req;
-	u8 lps_mode = pwrpriv->power_mgnt;
-	u8 lps_level = pwrpriv->lps_level;
-	static char lps_mode_str[12];
-	static char wow_lps_mode_str[12];
+	ips_mode = pwrpriv->ips_mode_req;
+	lps_mode = pwrpriv->power_mgnt;
+	lps_level = pwrpriv->lps_level;
 #ifdef CONFIG_LPS_1T1R
-	u8 lps_1t1r = pwrpriv->lps_1t1r;
+	lps_1t1r = pwrpriv->lps_1t1r;
 #endif
 #ifdef CONFIG_WOWLAN
-	u8 wow_lps_mode = pwrpriv->wowlan_power_mgmt;
-	u8 wow_lps_level = pwrpriv->wowlan_lps_level;
+	wow_lps_mode = pwrpriv->wowlan_power_mgmt;
+	wow_lps_level = pwrpriv->wowlan_lps_level;
 	#ifdef CONFIG_LPS_1T1R
-	u8 wow_lps_1t1r = pwrpriv->wowlan_lps_1t1r;
+	wow_lps_1t1r = pwrpriv->wowlan_lps_1t1r;
 	#endif
 #endif /* CONFIG_WOWLAN */
-	static char ips_mode_str[12];
-	const char *str;
 
 	RTW_PRINT_SEL(sel, "======Power Saving Info:======\n");
 	RTW_PRINT_SEL(sel, "*IPS:\n");
@@ -2875,12 +2888,12 @@ exit:
 void rtw_rust_debug_proc_emit_wmmps_info(void *sel, _adapter *padapter)
 {
 	struct registry_priv *pregpriv;
+	const char *uapsd_max_sp_str;
 
 	if (!padapter)
 		return;
 
 	pregpriv = &padapter->registrypriv;
-	const char *uapsd_max_sp_str;
 
 	switch (pregpriv->uapsd_max_sp_len) {
 	case 0:

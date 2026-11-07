@@ -59,6 +59,9 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
 #[cfg(any(config_rtw_debug, config_proc_debug))]
 #[no_mangle]
 pub extern "C" fn proc_get_ps_info(m: *mut c_void, _v: *mut c_void) -> c_int {
+    if m.is_null() {
+        return 0;
+    }
     let adapter = adapter_from_seq(m);
     unsafe { rtw_rust_debug_proc_emit_ps_info(m, adapter) };
     0
@@ -85,6 +88,9 @@ pub extern "C" fn proc_set_ps_info(
 #[cfg(any(config_rtw_debug, config_proc_debug))]
 #[no_mangle]
 pub extern "C" fn proc_get_wmmps_info(m: *mut c_void, _v: *mut c_void) -> c_int {
+    if m.is_null() {
+        return 0;
+    }
     let adapter = adapter_from_seq(m);
     unsafe { rtw_rust_debug_proc_emit_wmmps_info(m, adapter) };
     0
