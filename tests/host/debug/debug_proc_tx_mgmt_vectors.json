@@ -1,0 +1,86 @@
+{
+  "vectors": [
+    {
+      "name": "get_tx_sa_query",
+      "fw_state": 9,
+      "bip_installed": 0,
+      "get": "tx_sa_query",
+      "expect": "proc_get_tx_sa_query\n"
+    },
+    {
+      "name": "set_sa_query_oversize",
+      "fw_state": 9,
+      "bip_installed": 1,
+      "set": "tx_sa_query",
+      "set_input": "0",
+      "set_count": 3,
+      "set_expect_fail": 1
+    },
+    {
+      "name": "set_sa_query_bad_parse",
+      "fw_state": 9,
+      "bip_installed": 1,
+      "set": "tx_sa_query",
+      "set_input": "xy",
+      "set_count": 2,
+      "issue_sa_query": 0
+    },
+    {
+      "name": "set_sa_query_sta_bip",
+      "fw_state": 9,
+      "bip_installed": 1,
+      "bssid": "02:11:22:33:44:55",
+      "set": "tx_sa_query",
+      "set_input": "0",
+      "set_count": 1,
+      "issue_sa_query": 1,
+      "issue_sa_key": 0
+    },
+    {
+      "name": "get_tx_deauth",
+      "fw_state": 9,
+      "get": "tx_deauth",
+      "expect": "proc_get_tx_deauth\n"
+    },
+    {
+      "name": "set_deauth_key_clamp",
+      "fw_state": 9,
+      "set": "tx_deauth",
+      "set_input": "5",
+      "set_count": 1,
+      "issue_deauth": 0
+    },
+    {
+      "name": "set_deauth_sta",
+      "fw_state": 9,
+      "bssid": "aa:bb:cc:dd:ee:ff",
+      "set": "tx_deauth",
+      "set_input": "1",
+      "set_count": 1,
+      "issue_deauth": 1,
+      "issue_deauth_key": 1
+    },
+    {
+      "name": "get_tx_auth",
+      "fw_state": 9,
+      "get": "tx_auth",
+      "expect": "proc_get_tx_auth\n"
+    },
+    {
+      "name": "set_auth_issue",
+      "fw_state": 9,
+      "set": "tx_auth",
+      "set_input": "1",
+      "set_count": 1,
+      "issue_auth": 1
+    },
+    {
+      "name": "set_assocreq_issue",
+      "fw_state": 9,
+      "set": "tx_auth",
+      "set_input": "2",
+      "set_count": 1,
+      "issue_assocreq": 1
+    }
+  ]
+}
