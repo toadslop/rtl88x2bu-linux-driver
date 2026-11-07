@@ -7328,6 +7328,7 @@ ssize_t proc_set_mcc_single_tx_criteria(struct file *file, const char __user *bu
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-222 in rust/rtw_debug_proc_mcc.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 ssize_t proc_set_mcc_ap_bw20_target_tp(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
 	struct net_device *dev = data;
@@ -7573,6 +7574,7 @@ ssize_t proc_set_mcc_sta_bw80_target_tp(struct file *file, const char __user *bu
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-223 in rust/rtw_debug_proc_mcc.rs */
 #endif /* CONFIG_MCC_MODE */
 
 int proc_get_ack_timeout(struct seq_file *m, void *v)
