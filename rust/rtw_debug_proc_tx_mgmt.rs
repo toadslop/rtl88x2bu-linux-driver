@@ -44,14 +44,12 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
     unsafe { rtw_rust_debug_proc_adapter(m) }
 }
 
-#[cfg(any(config_ieee80211w, host_rtw_debug_proc_tx_mgmt_test))]
 #[no_mangle]
 pub extern "C" fn proc_get_tx_sa_query(m: *mut c_void, _v: *mut c_void) -> c_int {
     unsafe { rtw_rust_debug_proc_emit_tx_sa_query(m) };
     0
 }
 
-#[cfg(any(config_ieee80211w, host_rtw_debug_proc_tx_mgmt_test))]
 #[no_mangle]
 pub extern "C" fn proc_set_tx_sa_query(
     _file: *mut c_void,
@@ -64,14 +62,12 @@ pub extern "C" fn proc_set_tx_sa_query(
     unsafe { rtw_rust_debug_proc_set_tx_sa_query(adapter, buffer, count) }
 }
 
-#[cfg(any(config_ieee80211w, host_rtw_debug_proc_tx_mgmt_test))]
 #[no_mangle]
 pub extern "C" fn proc_get_tx_deauth(m: *mut c_void, _v: *mut c_void) -> c_int {
     unsafe { rtw_rust_debug_proc_emit_tx_deauth(m) };
     0
 }
 
-#[cfg(any(config_ieee80211w, host_rtw_debug_proc_tx_mgmt_test))]
 #[no_mangle]
 pub extern "C" fn proc_set_tx_deauth(
     _file: *mut c_void,
@@ -84,14 +80,12 @@ pub extern "C" fn proc_set_tx_deauth(
     unsafe { rtw_rust_debug_proc_set_tx_deauth(adapter, buffer, count) }
 }
 
-#[cfg(any(config_ieee80211w, host_rtw_debug_proc_tx_mgmt_test))]
 #[no_mangle]
 pub extern "C" fn proc_get_tx_auth(m: *mut c_void, _v: *mut c_void) -> c_int {
     unsafe { rtw_rust_debug_proc_emit_tx_auth(m) };
     0
 }
 
-#[cfg(any(config_ieee80211w, host_rtw_debug_proc_tx_mgmt_test))]
 #[no_mangle]
 pub extern "C" fn proc_set_tx_auth(
     _file: *mut c_void,

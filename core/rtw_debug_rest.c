@@ -6817,6 +6817,7 @@ ssize_t proc_set_efuse_map(struct file *file, const char __user *buffer, size_t 
 	return count;
 }
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 #ifdef CONFIG_IEEE80211W
 ssize_t proc_set_tx_sa_query(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
@@ -7066,6 +7067,7 @@ int proc_get_tx_auth(struct seq_file *m, void *v)
 	return 0;
 }
 #endif /* CONFIG_IEEE80211W */
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-221 in rust/rtw_debug_proc_tx_mgmt.rs */
 
 #ifdef CONFIG_CUSTOMER01_SMART_ANTENNA
 static u32 phase_idx;
