@@ -78,6 +78,9 @@ files=(
   test-15-ci-l3-pr-scope.md
   test-16-ci-rustfmt.md
   test-17-host-wapi-sms4-harness.md
+  test-18-branch-protection-enable.md
+  test-19-branch-protection-extended-checks.md
+  test-20-ci-clippy-warn.md
   release-01-github-releases.md
   arch-00-land-doc.md
   arch-01-domain-types-seed.md

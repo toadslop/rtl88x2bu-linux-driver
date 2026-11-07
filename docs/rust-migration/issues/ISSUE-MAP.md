@@ -109,6 +109,9 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | T14 | #308 | [T14] CI: bindgen drift check (generated.rs freshness) |
 | T15 | #309 | [T15] CI: path-scoped L3 on PRs for init/USB/scaffold changes |
 | T16 | #310 | [T16] CI: rustfmt --check on rust/** changes |
+| T18 | #1795 | [T18] Admin: enable branch protection with L0/L1/L2 required checks |
+| T19 | #1796 | [T19] CI: extend required checks (Rust lint, path-scoped L3) |
+| T20 | #1797 | [T20] CI: clippy on rust/** (warn-only job) |
 | W3-41 | #370 | [W3-41] Translate rtw_ieee80211.c — rate-section and ch-offset mapping |
 | W3-42 | #371 | [W3-42] Translate rtw_ieee80211.c — HT MCS bitmap and AMSDU mode |
 | W3-43 | #372 | [W3-43] Translate rtw_ieee80211.c — P2P IE merge and delete |
