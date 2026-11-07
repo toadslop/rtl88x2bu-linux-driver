@@ -56,6 +56,11 @@ MISC_RUST   := $(ROOT)/rust/rtw_debug_proc_misc.rs
 MISC_L2     := test_proc_misc.c
 MISC_CFG    := -DDBG_MEMORY_LEAK -DCONFIG_FIND_BEST_CHANNEL
 
+# W3-220 proc monitor / simple_config / xmit_block (PR2 adds Rust L2)
+MONITOR_ORACLE := debug_proc_monitor_c_oracle.c
+MONITOR_L2     := test_proc_monitor.c
+MONITOR_CFG    := -DRTW_SIMPLE_CONFIG -DDBG_XMIT_BLOCK
+
 # W3-219 proc ps_info / wmmps / new_bcn_max
 PS_INFO_ORACLE := debug_proc_ps_info_c_oracle.c
 PS_INFO_SHIM := host_rtw_debug_proc_ps_info_shim.c
@@ -134,6 +139,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-btcoex-c \
 	test-proc-sreset-c test-proc-sreset-rust \
 	test-proc-misc-c test-proc-misc-rust \
+	test-proc-monitor-c \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
 
@@ -152,6 +158,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-btcoex-c \
 	test-proc-sreset-c \
 	test-proc-misc-c test-proc-misc-rust \
+	test-proc-monitor-c \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
 
@@ -497,6 +504,13 @@ test_proc_misc_rust: $(MISC_L2) librust_rtw_debug_proc_misc.a $(MISC_SHIM) $(HOS
 	$(CC) $(CFLAGS) $(MISC_CFG) -DRUST_RTW_DEBUG_PROC_MISC_ORACLE -o $@ \
 		$(MISC_L2) $(MISC_SHIM) $(HOST_JSON) librust_rtw_debug_proc_misc.a
 
+test-proc-monitor-c: test_proc_monitor
+	./test_proc_monitor debug_proc_monitor_vectors.json
+
+test_proc_monitor: $(MONITOR_L2) $(MONITOR_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(MONITOR_CFG) -o $@ $(MONITOR_L2) $(MONITOR_ORACLE) \
+		$(HOST_JSON)
+
 test-proc-ps-info-c: test_proc_ps_info
 	./test_proc_ps_info debug_proc_ps_info_vectors.json
 
@@ -537,5 +551,6 @@ clean:
 		test_proc_btcoex test_proc_btcoex_rust librust_rtw_debug_proc_btcoex.a \
 		test_proc_sreset \
 		test_proc_misc test_proc_misc_rust librust_rtw_debug_proc_misc.a \
+		test_proc_monitor \
 		test_proc_ps_info test_proc_ps_info_rust librust_rtw_debug_proc_ps_info.a \
 		test_debug_phy_cap_dump test_debug_phy_cap_dump_rust librust_rtw_debug_phy_cap.a

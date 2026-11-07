@@ -1,0 +1,80 @@
+{
+  "vectors": [
+    {
+      "name": "monitor_disable",
+      "fw_state": 0,
+      "dev_type": 803,
+      "oper_ch": 6,
+      "oper_offset": 0,
+      "oper_bw": 20,
+      "rtw_simple_config": 0,
+      "xmit_block": 0,
+      "get": "monitor",
+      "expect": "Monitor mode : Disable\n"
+    },
+    {
+      "name": "monitor_enable",
+      "fw_state": 2147483648,
+      "dev_type": 803,
+      "oper_ch": 36,
+      "oper_offset": 1,
+      "oper_bw": 40,
+      "rtw_simple_config": 0,
+      "xmit_block": 0,
+      "get": "monitor",
+      "expect": "Monitor mode : Enable\nDevice type  : 803\nch=36, ch_offset=1, bw=40\n"
+    },
+    {
+      "name": "simple_config_get_disable",
+      "fw_state": 0,
+      "dev_type": 1,
+      "oper_ch": 1,
+      "oper_offset": 0,
+      "oper_bw": 20,
+      "rtw_simple_config": 0,
+      "xmit_block": 0,
+      "get": "simple_config",
+      "expect": "RTW Simple Config : Disable\n"
+    },
+    {
+      "name": "simple_config_set_enable",
+      "fw_state": 0,
+      "dev_type": 1,
+      "oper_ch": 1,
+      "oper_offset": 0,
+      "oper_bw": 20,
+      "rtw_simple_config": 0,
+      "xmit_block": 0,
+      "set": "simple_config",
+      "set_input": "1",
+      "get": "simple_config",
+      "expect": "RTW Simple Config : Enable\n"
+    },
+    {
+      "name": "xmit_block_none",
+      "fw_state": 0,
+      "dev_type": 1,
+      "oper_ch": 1,
+      "oper_offset": 0,
+      "oper_bw": 20,
+      "rtw_simple_config": 0,
+      "xmit_block": 0,
+      "get": "xmit_block",
+      "expect": "[XMIT-BLOCK] xmit_block :0x00\nReason:XMIT_BLOCK_NONE\n"
+    },
+    {
+      "name": "xmit_block_set_suspend",
+      "fw_state": 0,
+      "dev_type": 1,
+      "oper_ch": 1,
+      "oper_offset": 0,
+      "oper_bw": 20,
+      "rtw_simple_config": 0,
+      "xmit_block": 0,
+      "set": "xmit_block",
+      "set_input": "0 2",
+      "get": "xmit_block",
+      "expect": "[XMIT-BLOCK] xmit_block :0x02\nReason:XMIT_BLOCK_SUSPEND\n"
+    }
+  ]
+}
