@@ -68,7 +68,10 @@ pub extern "C" fn proc_set_mcc_duration(
     unsafe { rtw_rust_debug_proc_set_mcc_duration(adapter, buffer, count) }
 }
 
-#[cfg(all(any(config_mcc_mode, host_rtw_debug_proc_mcc_test), config_mcc_phydm_offload))]
+#[cfg(all(
+    any(config_mcc_mode, host_rtw_debug_proc_mcc_test),
+    config_mcc_phydm_offload
+))]
 #[no_mangle]
 pub extern "C" fn proc_set_mcc_phydm_offload_enable(
     _file: *mut c_void,
