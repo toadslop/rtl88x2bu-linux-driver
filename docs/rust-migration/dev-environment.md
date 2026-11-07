@@ -346,7 +346,27 @@ A clean pass prints `run-l3-qemu: OK` and the serial log contains `=== L3_PASS =
 
 ## Branch protection
 
-CI workflows exist, but merges stay unblocked until a **repo admin** enables branch protection on `master`. This section lists the exact check names to require (issue T9, #154).
+CI workflows exist, but merges stay unblocked until a **repo admin** enables branch protection on `master`. This section lists the exact check names to require (issue T9, #154; enablement tracked in T18, #1795).
+
+### Status
+
+| Field | Value |
+|-------|-------|
+| **Protection on `master`** | **Not enabled** (verified 2026-11-07 via `gh api …/branches/master/protection` → 404) |
+| **Required checks when enabled** | `Host L2 tests / host-l2`, `Module L0 build / module-l0`, `Module L1 symbols / module-l1` |
+| **L3 on pull requests** | Advisory until [T19](issues/test-19-branch-protection-extended-checks.md) lands its workflow prerequisite |
+
+**Repo admin — one-shot enable (preferred):**
+
+```bash
+# Fine-grained or classic PAT with repo **Administration: write** (or full admin).
+export GH_TOKEN=…   # not the read-only automation token
+chmod +x scripts/admin/enable-branch-protection.sh
+./scripts/admin/enable-branch-protection.sh
+./scripts/admin/verify-branch-protection.sh
+```
+
+Then update the **Status** table above (date + “enabled”) and close #1795. Cursor automation tokens cannot call the branch protection API (HTTP 403); the script is for maintainer use only.
 
 ### Settings (repo admin)
 

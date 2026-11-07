@@ -38,7 +38,7 @@ On **pull requests**, all three workflows **always trigger** and report a status
 
 **Translation PRs** that touch driver/build paths still run the full gate jobs when relevant files change.
 
-Repo admins: see [Branch protection](rust-migration/dev-environment.md#branch-protection) in [`dev-environment.md`](rust-migration/dev-environment.md) for Settings steps.
+Repo admins: see [Branch protection](rust-migration/dev-environment.md#branch-protection) in [`dev-environment.md`](rust-migration/dev-environment.md) for Settings steps and `scripts/admin/enable-branch-protection.sh` (issue [T18](rust-migration/issues/test-18-branch-protection-enable.md) / #1795). PR-scoped L3 as a required check is [T19](rust-migration/issues/test-19-branch-protection-extended-checks.md) / #1796.
 
 ## Toolchain and environment
 
