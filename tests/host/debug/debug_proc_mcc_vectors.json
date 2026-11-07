@@ -65,6 +65,27 @@
       "set_input": "42",
       "expect_single_tx_0": 42,
       "expect_single_tx_1": 42
+    },
+    {
+      "name": "mcc_ap_bw20_tp",
+      "iface_nums": 1,
+      "set": "mcc_ap_bw20_tp",
+      "set_input": "120",
+      "expect_target_tp": 120
+    },
+    {
+      "name": "mcc_ap_bw40_tp",
+      "iface_nums": 1,
+      "set": "mcc_ap_bw40_tp",
+      "set_input": "240",
+      "expect_target_tp": 240
+    },
+    {
+      "name": "mcc_sta_bw80_tp_invalid",
+      "iface_nums": 1,
+      "set": "mcc_sta_bw80_tp",
+      "set_input": "bad",
+      "set_expect_ret": -22
     }
   ]
 }

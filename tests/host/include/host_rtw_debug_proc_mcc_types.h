@@ -30,6 +30,12 @@ typedef long ssize_t;
 struct registry_priv {
 	u8 en_mcc;
 	u32 rtw_mcc_single_tx_cri;
+	u32 rtw_mcc_ap_bw20_target_tx_tp;
+	u32 rtw_mcc_ap_bw40_target_tx_tp;
+	u32 rtw_mcc_ap_bw80_target_tx_tp;
+	u32 rtw_mcc_sta_bw20_target_tx_tp;
+	u32 rtw_mcc_sta_bw40_target_tx_tp;
+	u32 rtw_mcc_sta_bw80_target_tx_tp;
 };
 
 struct mcc_obj_priv {
@@ -99,6 +105,18 @@ ssize_t host_proc_set_mcc_duration(struct _adapter *padapter, const void *buffer
 ssize_t host_proc_set_mcc_phydm_offload_enable(struct _adapter *padapter,
 					       const void *buffer, size_t count);
 ssize_t host_proc_set_mcc_single_tx_criteria(struct _adapter *padapter,
+					     const void *buffer, size_t count);
+ssize_t host_proc_set_mcc_ap_bw20_target_tp(struct _adapter *padapter,
+					    const void *buffer, size_t count);
+ssize_t host_proc_set_mcc_ap_bw40_target_tp(struct _adapter *padapter,
+					    const void *buffer, size_t count);
+ssize_t host_proc_set_mcc_ap_bw80_target_tp(struct _adapter *padapter,
+					    const void *buffer, size_t count);
+ssize_t host_proc_set_mcc_sta_bw20_target_tp(struct _adapter *padapter,
+					     const void *buffer, size_t count);
+ssize_t host_proc_set_mcc_sta_bw40_target_tp(struct _adapter *padapter,
+					     const void *buffer, size_t count);
+ssize_t host_proc_set_mcc_sta_bw80_target_tp(struct _adapter *padapter,
 					     const void *buffer, size_t count);
 #endif /* !HOST_MCC_L1_REF */
 
