@@ -7326,9 +7326,6 @@ ssize_t proc_set_mcc_single_tx_criteria(struct file *file, const char __user *bu
 
 	return count;
 }
-
-
-ssize_t proc_set_mcc_ap_bw20_target_tp(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-222 in rust/rtw_debug_proc_mcc.rs */
 
 ssize_t proc_set_mcc_ap_bw20_target_tp(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
