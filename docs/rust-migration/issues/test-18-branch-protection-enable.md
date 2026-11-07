@@ -30,13 +30,15 @@ Turn on **branch protection** on `master` so the three merge gates in [`contribu
      - `Host L2 tests / host-l2`
      - `Module L0 build / module-l0`
      - `Module L1 symbols / module-l1`
-2. Verify with a throwaway PR or docs-only PR: required checks appear and out-of-scope jobs skip cleanly.
-3. Short note in [`dev-environment.md`](../dev-environment.md#branch-protection): mark protection **enabled** (date + which checks).
+2. Verify with a throwaway PR or docs-only PR: required checks appear and out-of-scope jobs skip cleanly (T10 no-op pattern — **do not** add checks that only run on a workflow-level `paths:` filter; docs-only PRs would stay pending forever).
+3. Rewrite [`dev-environment.md`](../dev-environment.md#branch-protection): replace the **“Do not require `module-l3` on pull requests”** row with the enabled rule — date, which checks are required, and that **L3 stays advisory on PRs** until [T19](test-19-branch-protection-extended-checks.md) lands its L3 workflow prerequisite.
+4. If [`contributing.md`](../../contributing.md) still lists L3 as post-merge only, add a one-line cross-link to T19 for PR-scoped L3 (no code change required here beyond docs).
 
 ## Acceptance
 
 - `master` merges require the three L0/L1/L2 checks above (screenshot or internal confirmation in issue comment is fine).
-- [`contributing.md`](../../contributing.md) still matches the enabled check names.
+- [`contributing.md`](../../contributing.md) still matches the enabled check names (L0/L1/L2 only for this issue).
+- A `docs/**`-only PR merges without **Waiting for status to be reported** on any required check.
 
 ## Out of scope
 
