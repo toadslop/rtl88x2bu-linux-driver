@@ -355,20 +355,40 @@ A clean pass prints `run-l3-qemu: OK` and the serial log contains `=== L3_PASS =
 
 ## Branch protection
 
-CI workflows exist, but merges stay unblocked until a **repo admin** enables branch protection on `master`. This section lists the exact check names to require (issue T9, #154).
+CI workflows exist, but merges stay unblocked until a **repo admin** enables branch protection on `master`. This section lists the exact check names to require (issue T9, #154; enablement tracked in T18, #1795).
+
+### Status
+
+| Field | Value |
+|-------|-------|
+| **Protection on `master`** | **Not enabled** (verified 2026-11-07 via `gh api …/branches/master/protection` → 404) |
+| **Required checks when enabled** | `host-l2`, `module-l0`, `module-l1` (check-run contexts; see [`contributing.md`](../contributing.md#required-ci-checks-pull-requests)) |
+| **L3 on pull requests** | Advisory until [T19](issues/test-19-branch-protection-extended-checks.md) lands its workflow prerequisite |
+
+**Repo admin — one-shot enable (preferred):**
+
+```bash
+# Fine-grained or classic PAT with repo **Administration: write** (or full admin).
+export GH_TOKEN=…   # not the read-only automation token
+chmod +x scripts/admin/enable-branch-protection.sh
+./scripts/admin/enable-branch-protection.sh
+./scripts/admin/verify-branch-protection.sh
+```
+
+Then update the **Status** table above (date + “enabled”) and close #1795. Cursor automation tokens cannot call the branch protection API (HTTP 403); the script is for maintainer use only.
 
 ### Settings (repo admin)
 
 1. GitHub → **Settings** → **Branches** → **Add branch protection rule** (or edit existing rule for `master`).
 2. Enable **Require a pull request before merging**.
 3. Enable **Require status checks to pass before merging**.
-4. Search and select these checks (workflow name / job id):
+4. Search and select these **check contexts** (job `name:` — same strings as `gh pr checks` / the Checks API):
 
-| Check name | When it runs |
-|------------|--------------|
-| `Host L2 tests / host-l2` | PRs touching `rust/**`, `core/**`, `tests/host/**`, etc. |
-| `Module L0 build / module-l0` | PRs touching driver/build inputs (`core/`, `hal/`, `Makefile`, …) |
-| `Module L1 symbols / module-l1` | PRs touching `rust/**`, `Makefile`, symbol scripts |
+| Check context | When it runs |
+|---------------|--------------|
+| `host-l2` | PRs touching `rust/**`, `core/**`, `tests/host/**`, etc. |
+| `module-l0` | PRs touching driver/build inputs (`core/`, `hal/`, `Makefile`, …) |
+| `module-l1` | PRs touching `rust/**`, `Makefile`, symbol scripts |
 
 5. **Do not require** `Module L3 load / module-l3` on pull requests — that workflow runs on `push` to `master` only (post-merge health gate).
 6. **Do not require** `Publish L0 CI image / build-and-push` — it runs only when Docker or kernel-pin files change.
@@ -382,7 +402,7 @@ On **pull requests**, L0/L1/L2 workflows always trigger (no workflow-level `path
 
 **Push to `master`** still uses workflow-level `paths:` filters so post-merge CI skips unrelated commits.
 
-Admins can require `Host L2 tests / host-l2`, `Module L0 build / module-l0`, and `Module L1 symbols / module-l1` on pull requests without an admin bypass for docs-only PRs.
+Admins can require `host-l2`, `module-l0`, and `module-l1` on pull requests without an admin bypass for docs-only PRs.
 
 ### Fork pull requests
 
