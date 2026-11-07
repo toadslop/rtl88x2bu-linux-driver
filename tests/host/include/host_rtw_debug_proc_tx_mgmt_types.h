@@ -115,6 +115,13 @@ int issue_deauth_11w(struct _adapter *padapter, u8 *da, unsigned short reason,
 void issue_auth(struct _adapter *padapter, void *psta, unsigned short status);
 void issue_assocreq(struct _adapter *padapter);
 
+ssize_t host_proc_set_tx_sa_query(struct _adapter *padapter, const void *buffer,
+				  size_t count);
+ssize_t host_proc_set_tx_deauth(struct _adapter *padapter, const void *buffer,
+				size_t count);
+ssize_t host_proc_set_tx_auth(struct _adapter *padapter, const void *buffer,
+			      size_t count);
+
 int proc_get_tx_sa_query(struct seq_file *m, void *v);
 ssize_t proc_set_tx_sa_query(void *file, const void *buffer, size_t count,
 			     long *pos, void *data);
@@ -124,5 +131,17 @@ ssize_t proc_set_tx_deauth(void *file, const void *buffer, size_t count,
 int proc_get_tx_auth(struct seq_file *m, void *v);
 ssize_t proc_set_tx_auth(void *file, const void *buffer, size_t count,
 			 long *pos, void *data);
+
+void *rtw_rust_debug_proc_adapter(void *m);
+void *rtw_rust_debug_proc_adapter_from_data(void *data);
+void rtw_rust_debug_proc_emit_tx_sa_query(void *sel);
+long rtw_rust_debug_proc_set_tx_sa_query(void *adapter, const void *buffer,
+					 size_t count);
+void rtw_rust_debug_proc_emit_tx_deauth(void *sel);
+long rtw_rust_debug_proc_set_tx_deauth(void *adapter, const void *buffer,
+				       size_t count);
+void rtw_rust_debug_proc_emit_tx_auth(void *sel);
+long rtw_rust_debug_proc_set_tx_auth(void *adapter, const void *buffer,
+				     size_t count);
 
 #endif /* HOST_RTW_DEBUG_PROC_TX_MGMT_TYPES_H */
