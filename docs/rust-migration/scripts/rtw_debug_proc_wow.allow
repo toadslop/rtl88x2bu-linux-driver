@@ -1,8 +1,10 @@
-# L1 allowlist for W3-217: Rust owns WoWLAN registry / GPIO procs in rtw_debug_proc_wow.o.
+# L1 allowlist for W3-217/W3-218: Rust owns WoWLAN registry / GPIO / pattern procs in rtw_debug_proc_wow.o.
 drop rtw_rust_debug_proc_emit_wow_enable
 drop rtw_rust_debug_proc_set_wow_enable
 drop rtw_rust_debug_proc_emit_wakeup_event
 drop rtw_rust_debug_proc_set_wakeup_event
 drop rtw_rust_debug_proc_emit_wakeup_reason
+drop rtw_rust_debug_proc_emit_pattern_info
+drop rtw_rust_debug_proc_set_pattern_info
 drop rtw_rust_debug_proc_emit_wowlan_gpio_info
 drop rtw_rust_debug_proc_set_wowlan_gpio_info

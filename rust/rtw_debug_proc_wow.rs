@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 // W3-217: WoWLAN registry/GPIO debug proc leaf handlers (was core/rtw_debug_rest.c).
+// W3-218: WoWLAN wake-pattern `/proc` leaf (`wow_pattern_info` get/set).
 
 #![allow(
     dead_code,
@@ -30,6 +31,12 @@ extern "C" {
         count: usize,
     ) -> c_long;
     fn rtw_rust_debug_proc_emit_wakeup_reason(sel: *mut c_void, adapter: *mut c_void);
+    fn rtw_rust_debug_proc_emit_pattern_info(sel: *mut c_void, adapter: *mut c_void);
+    fn rtw_rust_debug_proc_set_pattern_info(
+        adapter: *mut c_void,
+        buffer: *const c_void,
+        count: usize,
+    ) -> c_long;
 }
 
 #[cfg(all(config_wowlan, config_gpio_wakeup))]
@@ -103,6 +110,29 @@ pub extern "C" fn proc_get_wakeup_reason(m: *mut c_void, _v: *mut c_void) -> c_i
         unsafe { rtw_rust_debug_proc_emit_wakeup_reason(m, adapter) };
     }
     0
+}
+
+#[cfg(config_wowlan)]
+#[no_mangle]
+pub extern "C" fn proc_get_pattern_info(m: *mut c_void, _v: *mut c_void) -> c_int {
+    let adapter = adapter_from_seq(m);
+    if !adapter.is_null() {
+        unsafe { rtw_rust_debug_proc_emit_pattern_info(m, adapter) };
+    }
+    0
+}
+
+#[cfg(config_wowlan)]
+#[no_mangle]
+pub extern "C" fn proc_set_pattern_info(
+    _file: *mut c_void,
+    buffer: *const c_void,
+    count: usize,
+    _pos: *mut c_long,
+    data: *mut c_void,
+) -> c_long {
+    let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
+    unsafe { rtw_rust_debug_proc_set_pattern_info(adapter, buffer, count) }
 }
 
 #[cfg(all(config_wowlan, config_gpio_wakeup))]
