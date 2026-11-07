@@ -2662,6 +2662,320 @@ ssize_t rtw_rust_debug_proc_set_rx_cnt_dump(_adapter *adapter,
 }
 #endif /* DBG_RX_COUNTER_DUMP */
 
+#ifdef CONFIG_BCN_CNT_CONFIRM_HDL
+void rtw_rust_debug_proc_emit_new_bcn_max(void *sel)
+{
+	extern int new_bcn_max;
+
+	RTW_PRINT_SEL(sel, "%d", new_bcn_max);
+}
+
+ssize_t rtw_rust_debug_proc_set_new_bcn_max(const char __user *buffer, size_t count)
+{
+	extern int new_bcn_max;
+	char tmp[32];
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count))
+		sscanf(tmp, "%d ", &new_bcn_max);
+
+	return count;
+}
+#endif /* CONFIG_BCN_CNT_CONFIRM_HDL */
+
+#ifdef CONFIG_POWER_SAVING
+void rtw_rust_debug_proc_emit_ps_info(void *sel, _adapter *padapter)
+{
+	struct pwrctrl_priv *pwrpriv;
+	u8 ips_mode;
+	u8 lps_mode;
+	u8 lps_level;
+	static char lps_mode_str[12];
+	static char wow_lps_mode_str[12];
+	static char ips_mode_str[12];
+#ifdef CONFIG_LPS_1T1R
+	u8 lps_1t1r;
+#endif
+#ifdef CONFIG_WOWLAN
+	u8 wow_lps_mode;
+	u8 wow_lps_level;
+	#ifdef CONFIG_LPS_1T1R
+	u8 wow_lps_1t1r;
+	#endif
+#endif /* CONFIG_WOWLAN */
+	const char *str;
+
+	if (!padapter)
+		return;
+
+	pwrpriv = adapter_to_pwrctl(padapter);
+	ips_mode = pwrpriv->ips_mode_req;
+	lps_mode = pwrpriv->power_mgnt;
+	lps_level = pwrpriv->lps_level;
+#ifdef CONFIG_LPS_1T1R
+	lps_1t1r = pwrpriv->lps_1t1r;
+#endif
+#ifdef CONFIG_WOWLAN
+	wow_lps_mode = pwrpriv->wowlan_power_mgmt;
+	wow_lps_level = pwrpriv->wowlan_lps_level;
+	#ifdef CONFIG_LPS_1T1R
+	wow_lps_1t1r = pwrpriv->wowlan_lps_1t1r;
+	#endif
+#endif /* CONFIG_WOWLAN */
+
+	RTW_PRINT_SEL(sel, "======Power Saving Info:======\n");
+	RTW_PRINT_SEL(sel, "*IPS:\n");
+
+	if (ips_mode == IPS_NORMAL) {
+#ifdef CONFIG_FWLPS_IN_IPS
+		str = "FW_LPS_IN_IPS";
+#else
+		str = "Card Disable";
+#endif
+	} else if (ips_mode == IPS_NONE)
+		str = "NO IPS";
+	else if (ips_mode == IPS_LEVEL_2)
+		str = "IPS_LEVEL_2";
+	else {
+		snprintf(ips_mode_str, sizeof(ips_mode_str), "%d", ips_mode);
+		str = ips_mode_str;
+	}
+
+	RTW_PRINT_SEL(sel, " IPS mode: %s\n", str);
+	RTW_PRINT_SEL(sel, " IPS enter count:%d, IPS leave count:%d\n",
+		      pwrpriv->ips_enter_cnts, pwrpriv->ips_leave_cnts);
+	RTW_PRINT_SEL(sel, "------------------------------\n");
+	RTW_PRINT_SEL(sel, "*LPS:\n");
+
+	if (lps_mode == PS_MODE_ACTIVE)
+		str = "NO LPS";
+	else if (lps_mode == PS_MODE_MIN)
+		str = "MIN";
+	else if (lps_mode == PS_MODE_MAX)
+		str = "MAX";
+	else if (lps_mode == PS_MODE_DTIM)
+		str = "DTIM";
+	else {
+		snprintf(lps_mode_str, sizeof(lps_mode_str), "%d", lps_mode);
+		str = lps_mode_str;
+	}
+	RTW_PRINT_SEL(sel, " LPS mode: %s\n", str);
+
+	if (pwrpriv->dtim != 0)
+		RTW_PRINT_SEL(sel, " DTIM: %d\n", pwrpriv->dtim);
+	RTW_PRINT_SEL(sel, " LPS enter count:%d, LPS leave count:%d\n",
+		      pwrpriv->lps_enter_cnts, pwrpriv->lps_leave_cnts);
+
+	if (lps_level == LPS_LCLK)
+		str = "LPS_LCLK";
+	else if (lps_level == LPS_PG)
+		str = "LPS_PG";
+	else
+		str = "LPS_NORMAL";
+	RTW_PRINT_SEL(sel, " LPS level: %s\n", str);
+
+#ifdef CONFIG_LPS_1T1R
+	RTW_PRINT_SEL(sel, " LPS 1T1R: %d\n", lps_1t1r);
+#endif
+
+#ifdef CONFIG_WOWLAN
+	RTW_PRINT_SEL(sel, "------------------------------\n");
+	RTW_PRINT_SEL(sel, "*WOW LPS:\n");
+
+	if (wow_lps_mode == PS_MODE_ACTIVE)
+		str = "NO LPS";
+	else if (wow_lps_mode == PS_MODE_MIN)
+		str = "MIN";
+	else if (wow_lps_mode == PS_MODE_MAX)
+		str = "MAX";
+	else if (wow_lps_mode == PS_MODE_DTIM)
+		str = "DTIM";
+	else {
+		snprintf(wow_lps_mode_str, sizeof(wow_lps_mode_str), "%d",
+			 wow_lps_mode);
+		str = wow_lps_mode_str;
+	}
+	RTW_PRINT_SEL(sel, " WOW LPS mode: %s\n", str);
+
+	if (wow_lps_level == LPS_LCLK)
+		str = "LPS_LCLK";
+	else if (wow_lps_level == LPS_PG)
+		str = "LPS_PG";
+	else
+		str = "LPS_NORMAL";
+	RTW_PRINT_SEL(sel, " WOW LPS level: %s\n", str);
+
+	#ifdef CONFIG_LPS_1T1R
+	RTW_PRINT_SEL(sel, " WOW LPS 1T1R: %d\n", wow_lps_1t1r);
+	#endif
+#endif /* CONFIG_WOWLAN */
+
+	RTW_PRINT_SEL(sel, "=============================\n");
+}
+
+ssize_t rtw_rust_debug_proc_set_ps_info(_adapter *adapter,
+					const char __user *buffer,
+					size_t count)
+{
+	char tmp[8];
+	int num = 0;
+	int mode = 0;
+	int en = 0;
+
+	if (!adapter)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (!buffer || copy_from_user(tmp, buffer, count))
+		goto exit;
+
+	num = sscanf(tmp, "%d %d", &mode, &en);
+	if (num > 2) {
+		RTW_ERR("%s: invalid parameter!\n", __FUNCTION__);
+		goto exit;
+	}
+
+	if (num == 1 && mode == 0) {
+		RTW_INFO("%s: back to original LPS/IPS Mode\n", __FUNCTION__);
+		rtw_pm_set_lps(adapter, adapter->registrypriv.power_mgnt);
+		rtw_pm_set_ips(adapter, adapter->registrypriv.ips_mode);
+#ifdef CONFIG_WOWLAN
+		RTW_INFO("%s: back to original WOW LPS Mode\n", __FUNCTION__);
+		rtw_pm_set_wow_lps(adapter, adapter->registrypriv.wow_power_mgnt);
+#endif /* CONFIG_WOWLAN */
+		goto exit;
+	}
+
+	if (mode == 1) {
+		RTW_INFO("%s: LPS: %s, en=%d\n", __FUNCTION__,
+			 (en == 0) ? "disable" : "enable", en);
+		if (rtw_pm_set_lps(adapter, en) != 0)
+			RTW_ERR("%s: invalid parameter, mode=%d, level=%d\n",
+				__FUNCTION__, mode, en);
+	} else if (mode == 2) {
+		RTW_INFO("%s: IPS: %s, en=%d\n", __FUNCTION__,
+			 (en == 0) ? "disable" : "enable", en);
+		if (rtw_pm_set_ips(adapter, en) != 0)
+			RTW_ERR("%s: invalid parameter, mode=%d, level=%d\n",
+				__FUNCTION__, mode, en);
+#ifdef CONFIG_WOWLAN
+	} else if (mode == 3) {
+		RTW_INFO("%s: WOW LPS: %s, en=%d\n", __FUNCTION__,
+			 (en == 0) ? "disable" : "enable", en);
+		if (rtw_pm_set_wow_lps(adapter, en) != 0)
+			RTW_ERR("%s: invalid parameter, mode=%d, level=%d\n",
+				__FUNCTION__, mode, en);
+#endif /* CONFIG_WOWLAN */
+	} else
+		RTW_ERR("%s: invalid parameter, mode = %d!\n", __FUNCTION__, mode);
+
+exit:
+	return count;
+}
+
+#ifdef CONFIG_WMMPS_STA
+void rtw_rust_debug_proc_emit_wmmps_info(void *sel, _adapter *padapter)
+{
+	struct registry_priv *pregpriv;
+	const char *uapsd_max_sp_str;
+
+	if (!padapter)
+		return;
+
+	pregpriv = &padapter->registrypriv;
+
+	switch (pregpriv->uapsd_max_sp_len) {
+	case 0:
+		uapsd_max_sp_str = "NO_LIMIT";
+		break;
+	case 1:
+		uapsd_max_sp_str = "TWO_MSDU";
+		break;
+	case 2:
+		uapsd_max_sp_str = "FOUR_MSDU";
+		break;
+	case 3:
+		uapsd_max_sp_str = "SIX_MSDU";
+		break;
+	default:
+		uapsd_max_sp_str = "UNSPECIFIED";
+		break;
+	}
+
+	RTW_PRINT_SEL(sel, "====== WMMPS_STA Info:======\n");
+	RTW_PRINT_SEL(sel, "uapsd_max_sp_len=0x%02x (%s)\n",
+		      pregpriv->uapsd_max_sp_len, uapsd_max_sp_str);
+	RTW_PRINT_SEL(sel, "uapsd_ac_enable=0x%02x\n",
+		      pregpriv->uapsd_ac_enable);
+	RTW_PRINT_SEL(sel, "BIT0 - AC_VO UAPSD: %s\n",
+		      (pregpriv->uapsd_ac_enable & DRV_CFG_UAPSD_VO) ? "Enabled" :
+								       "Disabled");
+	RTW_PRINT_SEL(sel, "BIT1 - AC_VI UAPSD: %s\n",
+		      (pregpriv->uapsd_ac_enable & DRV_CFG_UAPSD_VI) ? "Enabled" :
+								       "Disabled");
+	RTW_PRINT_SEL(sel, "BIT2 - AC_BK UAPSD: %s\n",
+		      (pregpriv->uapsd_ac_enable & DRV_CFG_UAPSD_BK) ? "Enabled" :
+								       "Disabled");
+	RTW_PRINT_SEL(sel, "BIT3 - AC_BE UAPSD: %s\n",
+		      (pregpriv->uapsd_ac_enable & DRV_CFG_UAPSD_BE) ? "Enabled" :
+								       "Disabled");
+	RTW_PRINT_SEL(sel, "============================\n");
+}
+
+ssize_t rtw_rust_debug_proc_set_wmmps_info(_adapter *adapter,
+					   const char __user *buffer,
+					   size_t count)
+{
+	struct registry_priv *pregpriv;
+	char tmp[32];
+	u8 uapsd_ac_setting;
+	u8 uapsd_max_sp_len_setting;
+
+	if (!adapter)
+		return -EFAULT;
+
+	pregpriv = &adapter->registrypriv;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%hhu %hhx", &uapsd_max_sp_len_setting,
+				 &uapsd_ac_setting);
+
+		if (num >= 1) {
+			pregpriv->uapsd_max_sp_len = uapsd_max_sp_len_setting;
+			RTW_INFO("uapsd_max_sp_len = %d\n",
+				 pregpriv->uapsd_max_sp_len);
+		}
+		if (num >= 2) {
+			pregpriv->uapsd_ac_enable = uapsd_ac_setting;
+			RTW_INFO("uapsd_ac_enable = 0x%02x\n",
+				 pregpriv->uapsd_ac_enable);
+		}
+	}
+
+	return count;
+}
+#endif /* CONFIG_WMMPS_STA */
+#endif /* CONFIG_POWER_SAVING */
+
 void rtw_rust_debug_proc_emit_ps_dbg_info(void *sel, _adapter *padapter)
 {
 	struct dvobj_priv *dvobj = padapter->dvobj;

@@ -1,0 +1,13 @@
+# L1 allowlist for W3-219: Rust owns proc ps_info / wmmps_info / new_bcn_max in rtw_debug_proc_ps_info.o.
+drop proc_get_new_bcn_max
+drop proc_set_new_bcn_max
+drop proc_get_ps_info
+drop proc_set_ps_info
+drop proc_get_wmmps_info
+drop proc_set_wmmps_info
+drop rtw_rust_debug_proc_emit_new_bcn_max
+drop rtw_rust_debug_proc_set_new_bcn_max
+drop rtw_rust_debug_proc_emit_ps_info
+drop rtw_rust_debug_proc_set_ps_info
+drop rtw_rust_debug_proc_emit_wmmps_info
+drop rtw_rust_debug_proc_set_wmmps_info

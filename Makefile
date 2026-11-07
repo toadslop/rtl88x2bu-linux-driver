@@ -2707,7 +2707,11 @@ ccflags-y += -DCONFIG_RUST_MLME_ROAMING
 rustflags-y += --cfg rust_mlme_roaming --cfg config_layer2_roaming
 endif
 ccflags-y += -DCONFIG_RUST_MLME_WMM_RSN
-rustflags-y += --cfg rust_mlme_wmm_rsn --cfg config_wmmps_sta
+rustflags-y += --cfg rust_mlme_wmm_rsn
+# W3-219: align Rust wmmps proc cfg with C — derive only from autoconf.h probe (same as ~2909).
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_WMMPS_STA' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+ccflags-y += -DCONFIG_WMMPS_STA
+endif
 ccflags-y += -DCONFIG_RUST_MLME_EXT_REST
 ccflags-y += -DCONFIG_RUST_MLME_EXT_MGNT_ATTRIB
 ccflags-y += -DCONFIG_RUST_MLME_EXT_PEER_ALIVE
@@ -2990,6 +2994,25 @@ endif
 ifeq ($(CONFIG_PROC_DEBUG), y)
 rustflags-y += --cfg config_proc_debug
 endif
+# W3-219: beacon-count confirm — keep C -D and Rust --cfg on the same predicate
+# (autoconf define, Kbuild CONFIG_PROC_DEBUG, or -D already on effective ccflags).
+_rust_cfg_bcn_cnt_confirm_hdl :=
+ifeq ($(CONFIG_PROC_DEBUG), y)
+_rust_cfg_bcn_cnt_confirm_hdl := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BCN_CNT_CONFIRM_HDL' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_bcn_cnt_confirm_hdl := y
+endif
+ifneq ($(filter -DCONFIG_BCN_CNT_CONFIRM_HDL,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_bcn_cnt_confirm_hdl := y
+endif
+ifneq ($(_rust_cfg_bcn_cnt_confirm_hdl),)
+ccflags-y += -DCONFIG_BCN_CNT_CONFIRM_HDL
+rustflags-y += --cfg config_bcn_cnt_confirm_hdl
+endif
+ifeq ($(CONFIG_POWER_SAVING), y)
+rustflags-y += --cfg config_power_saving
+endif
 ifeq ($(CONFIG_SDIO_TX_ENABLE_AVAL_INT), y)
 rustflags-y += --cfg config_sdio_tx_enable_aval_int
 endif
@@ -3189,6 +3212,7 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_trx.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_rate.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_rx_cnt.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_ps.o
+$(MODULE_NAME)-y += rust/rtw_debug_proc_ps_info.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_dbg_logs.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_hw.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_signal.o
@@ -5053,6 +5077,20 @@ rust-objects-rtw-debug-proc-ps-c:
 rust-check-symbols-rtw-debug-proc-ps: rust-objects-rtw-debug-proc-ps-c rust-objects-rtw-debug-proc-ps
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_ps_c_ref.o NEW=rust/rtw_debug_proc_ps.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_ps.allow ALLOW_VACUOUS=1
+
+# W3-219: host C stub vs rust/rtw_debug_proc_ps_info.o (proc ps_info / wmmps / new_bcn_max).
+rust-objects-rtw-debug-proc-ps-info:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-ps-info"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_ps_info.o
+rust-objects-rtw-debug-proc-ps-info-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_ps_info_c_ref.o \
+		tests/host/debug/host_rtw_debug_proc_ps_info_c_ref.c
+rust-check-symbols-rtw-debug-proc-ps-info: rust-objects-rtw-debug-proc-ps-info-c rust-objects-rtw-debug-proc-ps-info
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_ps_info_c_ref.o NEW=rust/rtw_debug_proc_ps_info.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_ps_info.allow ALLOW_VACUOUS=1
 
 # W3-164 PR1: host C stub vs rust/rtw_debug_proc_dbg_logs.o (proc rx_logs getter).
 rust-objects-rtw-debug-proc-dbg-logs:

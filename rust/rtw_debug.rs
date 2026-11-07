@@ -10,6 +10,7 @@
 //! W3-160 proc rate_ctl leaf handlers live in `rtw_debug_proc_rate.rs`.
 //! W3-162 proc dump_rx_cnt_mode handlers live in `rtw_debug_proc_rx_cnt.rs`.
 //! W3-163 proc ps_dbg_info handlers live in `rtw_debug_proc_ps.rs`.
+//! W3-219 proc ps_info / wmmps / new_bcn_max handlers live in `rtw_debug_proc_ps_info.rs`.
 //! W3-164 proc dbg counter log dumpers live in `rtw_debug_proc_dbg_logs.rs`.
 //! W3-165 proc hw_info handlers live in `rtw_debug_proc_hw.rs`.
 //! W3-166 proc rx_signal handlers live in `rtw_debug_proc_signal.rs`.

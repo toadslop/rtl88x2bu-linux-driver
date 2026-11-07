@@ -5912,6 +5912,7 @@ int proc_get_p2p_wowlan_info(struct seq_file *m, void *v)
 }
 #endif /* CONFIG_P2P_WOWLAN */
 #ifdef CONFIG_BCN_CNT_CONFIRM_HDL
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_new_bcn_max(struct seq_file *m, void *v)
 {
 	extern int new_bcn_max;
@@ -5938,8 +5939,10 @@ ssize_t proc_set_new_bcn_max(struct file *file, const char __user *buffer, size_
 
 	return count;
 }
-#endif
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-219 in rust/rtw_debug_proc_ps_info.rs */
+#endif /* CONFIG_BCN_CNT_CONFIRM_HDL */
 #ifdef CONFIG_POWER_SAVING
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_ps_info(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -5958,7 +5961,9 @@ int proc_get_ps_info(struct seq_file *m, void *v)
 	u8 wow_lps_1t1r = pwrpriv->wowlan_lps_1t1r;
 	#endif
 #endif /* CONFIG_WOWLAN */
-	char *str = "";
+	static char lps_mode_str[12];
+	static char wow_lps_mode_str[12];
+	char *str;
 
 	RTW_PRINT_SEL(m, "======Power Saving Info:======\n");
 	RTW_PRINT_SEL(m, "*IPS:\n");
@@ -5973,8 +5978,10 @@ int proc_get_ps_info(struct seq_file *m, void *v)
 		str = "NO IPS";
 	else if (ips_mode == IPS_LEVEL_2)
 		str = "IPS_LEVEL_2";
-	else
-		str = "invalid ips_mode";
+	else {
+		snprintf(lps_mode_str, sizeof(lps_mode_str), "%d", ips_mode);
+		str = lps_mode_str;
+	}
 
 	RTW_PRINT_SEL(m, " IPS mode: %s\n", str);
 	RTW_PRINT_SEL(m, " IPS enter count:%d, IPS leave count:%d\n",
@@ -5990,8 +5997,10 @@ int proc_get_ps_info(struct seq_file *m, void *v)
 		str = "MAX";
 	else if (lps_mode == PS_MODE_DTIM)
 		str = "DTIM";
-	else
-		sprintf(str, "%d", lps_mode);
+	else {
+		snprintf(lps_mode_str, sizeof(lps_mode_str), "%d", lps_mode);
+		str = lps_mode_str;
+	}
 
 	RTW_PRINT_SEL(m, " LPS mode: %s\n", str);
 
@@ -6024,8 +6033,11 @@ int proc_get_ps_info(struct seq_file *m, void *v)
 		str = "MAX";
 	else if (wow_lps_mode == PS_MODE_DTIM)
 		str = "DTIM";
-	else
-		sprintf(str, "%d", wow_lps_mode);
+	else {
+		snprintf(wow_lps_mode_str, sizeof(wow_lps_mode_str), "%d",
+			 wow_lps_mode);
+		str = wow_lps_mode_str;
+	}
 
 	RTW_PRINT_SEL(m, " WOW LPS mode: %s\n", str);
 
@@ -6190,6 +6202,7 @@ ssize_t proc_set_wmmps_info(struct file *file, const char __user *buffer, size_t
 	return count;
 }
 #endif /* CONFIG_WMMPS_STA */
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-219 in rust/rtw_debug_proc_ps_info.rs */
 #endif /* CONFIG_POWER_SAVING */
 
 #ifdef CONFIG_TDLS

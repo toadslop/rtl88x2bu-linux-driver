@@ -25,6 +25,8 @@ Port power-saving debug procs from [`core/rtw_debug_rest.c`](../../../core/rtw_d
 
 - `proc_get_new_bcn_max` / `proc_set_new_bcn_max`
 
+`CONFIG_BCN_CNT_CONFIRM_HDL` is **not** a silent default in shared `autoconf.h` for this slice. Kbuild enables **both** `-DCONFIG_BCN_CNT_CONFIRM_HDL` and Rust `--cfg config_bcn_cnt_confirm_hdl` under the same predicate: `CONFIG_PROC_DEBUG=y` (default here), an uncommented `#define CONFIG_BCN_CNT_CONFIRM_HDL` in `autoconf.h`, or `-DCONFIG_BCN_CNT_CONFIRM_HDL` already present on effective ccflags (`ccflags-y` / `USER_EXTRA_CFLAGS` / `EXTRA_CFLAGS`). That keeps `new_bcn_max` proc registration, Rust exports, and MLME helpers from desyncing when flags are tuned outside the default proc-debug path.
+
 ## Notes
 
 - Large proc_get_ps_info formatter — split Rust helpers under same module; no new HAL entry points.

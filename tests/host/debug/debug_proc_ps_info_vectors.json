@@ -1,0 +1,54 @@
+{
+  "vectors": [
+    {
+      "name": "ps_info_fixture_ips_lps",
+      "ips_mode_req": 1,
+      "ips_enter_cnts": 5,
+      "ips_leave_cnts": 7,
+      "power_mgnt": 0,
+      "dtim": 2,
+      "lps_enter_cnts": 3,
+      "lps_leave_cnts": 4,
+      "lps_level": 2,
+      "get": "ps_info",
+      "expect": "======Power Saving Info:======\n*IPS:\n IPS mode: FW_LPS_IN_IPS\n IPS enter count:5, IPS leave count:7\n------------------------------\n*LPS:\n LPS mode: NO LPS\n DTIM: 2\n LPS enter count:3, LPS leave count:4\n LPS level: LPS_PG\n=============================\n"
+    },
+    {
+      "name": "ps_info_unknown_lps_mode_numeric",
+      "ips_mode_req": 1,
+      "ips_enter_cnts": 5,
+      "ips_leave_cnts": 7,
+      "power_mgnt": 7,
+      "dtim": 2,
+      "lps_enter_cnts": 3,
+      "lps_leave_cnts": 4,
+      "lps_level": 2,
+      "get": "ps_info",
+      "expect": "======Power Saving Info:======\n*IPS:\n IPS mode: FW_LPS_IN_IPS\n IPS enter count:5, IPS leave count:7\n------------------------------\n*LPS:\n LPS mode: 7\n DTIM: 2\n LPS enter count:3, LPS leave count:4\n LPS level: LPS_PG\n=============================\n"
+    },
+    {
+      "name": "wmmps_info_default",
+      "uapsd_max_sp_len": 1,
+      "uapsd_ac_enable": 15,
+      "get": "wmmps_info",
+      "expect": "====== WMMPS_STA Info:======\nuapsd_max_sp_len=0x01 (TWO_MSDU)\nuapsd_ac_enable=0x0f\nBIT0 - AC_VO UAPSD: Enabled\nBIT1 - AC_VI UAPSD: Enabled\nBIT2 - AC_BK UAPSD: Enabled\nBIT3 - AC_BE UAPSD: Enabled\n============================\n"
+    },
+    {
+      "name": "new_bcn_round_trip",
+      "new_bcn_before": 3,
+      "set": "new_bcn_max",
+      "set_input": "42 ",
+      "get": "new_bcn_max",
+      "expect": "42"
+    },
+    {
+      "name": "wmmps_set_then_get",
+      "set": "wmmps_info",
+      "set_input": "2 0f",
+      "get": "wmmps_info_after_set",
+      "uapsd_max_sp_len": 0,
+      "uapsd_ac_enable": 0,
+      "expect": "====== WMMPS_STA Info:======\nuapsd_max_sp_len=0x02 (FOUR_MSDU)\nuapsd_ac_enable=0x0f\nBIT0 - AC_VO UAPSD: Enabled\nBIT1 - AC_VI UAPSD: Enabled\nBIT2 - AC_BK UAPSD: Enabled\nBIT3 - AC_BE UAPSD: Enabled\n============================\n"
+    }
+  ]
+}
