@@ -2994,9 +2994,19 @@ endif
 ifeq ($(CONFIG_PROC_DEBUG), y)
 rustflags-y += --cfg config_proc_debug
 endif
-# W3-219: beacon-count confirm — tied to proc debug builds only (not a silent
-# autoconf default). Keeps Rust proc cfgs aligned with C registration in rtw_proc.c.
+# W3-219: beacon-count confirm — keep C -D and Rust --cfg on the same predicate
+# (autoconf define, Kbuild CONFIG_PROC_DEBUG, or -D already on effective ccflags).
+_rust_cfg_bcn_cnt_confirm_hdl :=
 ifeq ($(CONFIG_PROC_DEBUG), y)
+_rust_cfg_bcn_cnt_confirm_hdl := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BCN_CNT_CONFIRM_HDL' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_bcn_cnt_confirm_hdl := y
+endif
+ifneq ($(filter -DCONFIG_BCN_CNT_CONFIRM_HDL,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_bcn_cnt_confirm_hdl := y
+endif
+ifneq ($(_rust_cfg_bcn_cnt_confirm_hdl),)
 ccflags-y += -DCONFIG_BCN_CNT_CONFIRM_HDL
 rustflags-y += --cfg config_bcn_cnt_confirm_hdl
 endif
