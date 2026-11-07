@@ -1,6 +1,7 @@
 # T8: L3 module load/unload gate on master merges (pinned Rust kernel + QEMU TCG).
 # T15: path-scoped pull_request L3 for init/USB/scaffold changes.
 # T19: pull_request always triggers; job-level paths-filter skips out-of-scope PRs.
+# push keeps T8 workflow paths; when fired, always runs QEMU (no in-job narrow skip).
 # See docs/rust-migration/issues/test-08-ci-l3-qemu.md, test-15-ci-l3-pr-scope.md,
 # and test-19-branch-protection-extended-checks.md
 
@@ -62,11 +63,11 @@ jobs:
               - 'scripts/ci/run-l3-qemu.sh'
 
       - name: Out of scope — skip L3
-        if: steps.filter.outputs.l3 != 'true'
+        if: github.event_name == 'pull_request' && steps.filter.outputs.l3 != 'true'
         run: echo "PR does not touch L3 paths — reporting success without QEMU run"
 
       - name: Log in to ghcr.io
-        if: steps.filter.outputs.l3 == 'true'
+        if: github.event_name == 'push' || steps.filter.outputs.l3 == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -75,19 +76,19 @@ jobs:
 
       - name: Pull published L0 image
         id: pull
-        if: steps.filter.outputs.l3 == 'true'
+        if: github.event_name == 'push' || steps.filter.outputs.l3 == 'true'
         continue-on-error: true
         run: docker pull "${L0_IMAGE}"
 
       - name: Probe pulled L0 image for L3 deps
         id: probe
-        if: steps.filter.outputs.l3 == 'true' && steps.pull.outcome == 'success'
+        if: (github.event_name == 'push' || steps.filter.outputs.l3 == 'true') && steps.pull.outcome == 'success'
         continue-on-error: true
         run: |
           docker run --rm "${L0_IMAGE}" bash -c 'command -v qemu-system-x86_64 && command -v busybox'
 
       - name: Build L0 image (fallback when ghcr tag is missing or stale)
-        if: steps.filter.outputs.l3 == 'true' && (steps.pull.outcome != 'success' || steps.probe.outcome == 'failure')
+        if: (github.event_name == 'push' || steps.filter.outputs.l3 == 'true') && (steps.pull.outcome != 'success' || steps.probe.outcome == 'failure')
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -101,7 +102,7 @@ jobs:
 
       - name: L3 build and QEMU insmod/rmmod
         id: l3
-        if: steps.filter.outputs.l3 == 'true'
+        if: github.event_name == 'push' || steps.filter.outputs.l3 == 'true'
         run: |
           if [ "${{ steps.pull.outcome }}" = "success" ] && [ "${{ steps.probe.outcome }}" = "success" ]; then
             IMAGE="${L0_IMAGE}"
@@ -123,7 +124,7 @@ jobs:
               exit "${l3_status}"'
 
       - name: Upload L3 serial log on failure
-        if: failure() && steps.filter.outputs.l3 == 'true'
+        if: failure() && (github.event_name == 'push' || steps.filter.outputs.l3 == 'true')
         uses: actions/upload-artifact@v4
         with:
           name: l3-serial-log
