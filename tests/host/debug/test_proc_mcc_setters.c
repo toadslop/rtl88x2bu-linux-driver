@@ -328,7 +328,7 @@ int main(int argc, char **argv)
 	const char *path = argc > 1 ? argv[1] : "debug_proc_mcc_vectors.json";
 	struct vector vectors[MAX_VECTORS];
 	size_t nvec = 0;
-	int i;
+	size_t i;
 	int failed = 0;
 
 	nvec = 0;
@@ -347,6 +347,6 @@ int main(int argc, char **argv)
 
 	if (failed)
 		return 1;
-	printf("OK %d vectors\n", nvec);
+	printf("OK %zu vectors\n", nvec);
 	return 0;
 }
