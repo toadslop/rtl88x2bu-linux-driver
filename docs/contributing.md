@@ -22,13 +22,13 @@ This repo is an incremental C→Rust migration of the `88x2bu` kernel module. Ev
 
 ## Required CI checks (pull requests)
 
-GitHub shows status checks as **Workflow name / job id**. When branch protection is enabled, require these three on `master` merges via pull request:
+When branch protection is enabled, require these three **check-run context strings** on `master` merges via pull request (they match each job’s `name:` in the workflow — use them literally in Settings and in `scripts/admin/*`; GitHub’s Checks UI may group them under a workflow title):
 
-| Check name | Workflow | Runs on PR? | Path-scoped? |
-|------------|----------|-------------|--------------|
-| `Host L2 tests / host-l2` | [`.github/workflows/host-l2.yml`](../../.github/workflows/host-l2.yml) | Yes | Yes — skips heavy steps when out of scope |
-| `Module L0 build / module-l0` | [`.github/workflows/module-l0.yml`](../../.github/workflows/module-l0.yml) | Yes | Yes — skips heavy steps when out of scope |
-| `Module L1 symbols / module-l1` | [`.github/workflows/module-l1.yml`](../../.github/workflows/module-l1.yml) | Yes | Yes — skips heavy steps when out of scope |
+| Check context | Workflow | Runs on PR? | Path-scoped? |
+|---------------|----------|-------------|--------------|
+| `host-l2` | [`.github/workflows/host-l2.yml`](../../.github/workflows/host-l2.yml) | Yes | Yes — skips heavy steps when out of scope |
+| `module-l0` | [`.github/workflows/module-l0.yml`](../../.github/workflows/module-l0.yml) | Yes | Yes — skips heavy steps when out of scope |
+| `module-l1` | [`.github/workflows/module-l1.yml`](../../.github/workflows/module-l1.yml) | Yes | Yes — skips heavy steps when out of scope |
 
 **Post-merge on `master` (not a PR gate):** `Module L3 load / module-l3` runs after merge when driver/build paths change. See [`.github/workflows/module-l3.yml`](../../.github/workflows/module-l3.yml).
 

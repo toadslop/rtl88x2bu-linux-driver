@@ -7,11 +7,12 @@ set -euo pipefail
 REPO="${GITHUB_REPOSITORY:-toadslop/rtl88x2bu-linux-driver}"
 BRANCH="${BRANCH:-master}"
 
-# Must match workflow `name` / job id (see docs/contributing.md).
+# Literal check-run context strings (job `name:` in workflows). Branch protection
+# matches these — not the "Workflow name / job id" label GitHub may show in the UI.
 REQUIRED_CONTEXTS=(
-	"Host L2 tests / host-l2"
-	"Module L0 build / module-l0"
-	"Module L1 symbols / module-l1"
+	host-l2
+	module-l0
+	module-l1
 )
 
 if ! command -v gh >/dev/null 2>&1; then
@@ -49,7 +50,7 @@ PY
 )"
 
 echo "enable-branch-protection: applying rule on ${REPO} branch ${BRANCH}"
-echo "  required checks:"
+echo "  required check contexts:"
 printf '    - %s\n' "${REQUIRED_CONTEXTS[@]}"
 
 gh api --method PUT "repos/${REPO}/branches/${BRANCH}/protection" --input - <<<"${payload}"

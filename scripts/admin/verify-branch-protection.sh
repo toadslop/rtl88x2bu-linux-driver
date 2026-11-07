@@ -6,9 +6,9 @@ REPO="${GITHUB_REPOSITORY:-toadslop/rtl88x2bu-linux-driver}"
 BRANCH="${BRANCH:-master}"
 
 EXPECTED=(
-	"Host L2 tests / host-l2"
-	"Module L0 build / module-l0"
-	"Module L1 symbols / module-l1"
+	host-l2
+	module-l0
+	module-l1
 )
 
 if ! command -v gh >/dev/null 2>&1; then
@@ -21,16 +21,12 @@ if ! gh api "repos/${REPO}/branches/${BRANCH}/protection" >/tmp/bp.json 2>/dev/n
 	exit 1
 fi
 
-python3 - <<'PY'
+EXPECTED_CONTEXTS="$(printf '%s\n' "${EXPECTED[@]}")" python3 - <<'PY'
 import json
 import os
 import sys
 
-expected = [
-    "Host L2 tests / host-l2",
-    "Module L0 build / module-l0",
-    "Module L1 symbols / module-l1",
-]
+expected = [c for c in os.environ["EXPECTED_CONTEXTS"].split("\n") if c]
 with open("/tmp/bp.json") as f:
     data = json.load(f)
 
@@ -46,7 +42,7 @@ if missing:
 
 print("verify-branch-protection: OK")
 print(f"  branch: {os.environ.get('BRANCH', 'master')}")
-print("  required checks:")
+print("  required check contexts:")
 for c in expected:
     print(f"    - {c}")
 if extra:
