@@ -176,7 +176,8 @@ struct HostWlanAdapter {
 mod kernel_layout {
     use super::U8;
 
-    /// `offsetof(struct _adapter, mlmeextpriv.basicrate)` — re-run L1 after layout changes.
+    /// `offsetof(struct _adapter, mlmeextpriv.basicrate)` with
+    /// `CONFIG_BCN_CNT_CONFIRM_HDL` off. That macro adds 0x48.
     pub const MLMEEXT_BASICRATE_OFFSET: usize = 0x848;
     /// `offsetof(struct _adapter, mlmeextpriv.datarate)`
     pub const MLMEEXT_DATARATE_OFFSET: usize = 0x855;

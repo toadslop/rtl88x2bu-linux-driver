@@ -25,7 +25,7 @@ Port power-saving debug procs from [`core/rtw_debug_rest.c`](../../../core/rtw_d
 
 - `proc_get_new_bcn_max` / `proc_set_new_bcn_max`
 
-`CONFIG_BCN_CNT_CONFIRM_HDL` is **not** a silent default in shared `autoconf.h` for this slice. Kbuild enables **both** `-DCONFIG_BCN_CNT_CONFIRM_HDL` and Rust `--cfg config_bcn_cnt_confirm_hdl` under the same predicate: `CONFIG_PROC_DEBUG=y` (default here), an uncommented `#define CONFIG_BCN_CNT_CONFIRM_HDL` in `autoconf.h`, or `-DCONFIG_BCN_CNT_CONFIRM_HDL` already present on effective ccflags (`ccflags-y` / `USER_EXTRA_CFLAGS` / `EXTRA_CFLAGS`). That keeps `new_bcn_max` proc registration, Rust exports, and MLME helpers from desyncing when flags are tuned outside the default proc-debug path.
+`CONFIG_BCN_CNT_CONFIRM_HDL` is **not** a silent default. Do not turn it on because `CONFIG_PROC_DEBUG=y`. The macro inserts `struct beacon_keys` into `mlme_priv` and shifts every later `_ADAPTER` field by `0x48`, including `mlmeextpriv.datarate` (`0x855`) and `registrypriv.amsdu_mode` (`0x3859`) which Rust reads by those constants. Kbuild passes Rust `--cfg config_bcn_cnt_confirm_hdl` only when `autoconf.h` actually `#define`s the symbol or effective ccflags already contain `-DCONFIG_BCN_CNT_CONFIRM_HDL`. It must not add that `-D` itself. On the default build the `new_bcn_max` proc stays out, matching the C proc table.
 
 ## Notes
 

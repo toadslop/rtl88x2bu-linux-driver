@@ -113,9 +113,10 @@
 	#ifdef CONFIG_LPS
 		#define CONFIG_WMMPS_STA 1
 	#endif /* CONFIG_LPS */
-	/* W3-219: beacon-count confirm — Makefile adds -D + Rust --cfg when
-	 * CONFIG_PROC_DEBUG=y, autoconf defines this symbol, or effective ccflags
-	 * already pass -DCONFIG_BCN_CNT_CONFIRM_HDL (see Makefile _rust_cfg_bcn_cnt_confirm_hdl).
+	/* CONFIG_BCN_CNT_CONFIRM_HDL stays off unless this header or the
+	 * command line defines it. Defining it inserts beacon_keys into
+	 * mlme_priv and moves later _ADAPTER fields by 0x48. Do not enable
+	 * it from CONFIG_PROC_DEBUG.
 	 */
 #endif /*CONFIG_POWER_SAVING*/
 	/* before link */
