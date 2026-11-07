@@ -36,5 +36,6 @@ tests/host/crypto/test_rtw_crypto_wrap_rust
 tests/host/crypto/librust_rtw_crypto_wrap.a
 tests/host/debug/test_proc_ps_info
 tests/host/debug/test_proc_ps_info_rust
+tests/host/debug/test_proc_tx_mgmt
 tests/host/debug/librust_rtw_debug_proc_ps_info.a
 tests/host/domain/test_domain_types
