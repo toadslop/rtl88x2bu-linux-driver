@@ -1338,7 +1338,7 @@ endif
 ifeq ($(CONFIG_MCC_MODE), y)
 ccflags-y += -DCONFIG_MCC_MODE
 rustflags-y += --cfg config_mcc_mode
-$(MODULE_NAME)-y += rust/rtw_debug_proc_mcc.o
+rustflags-y += --cfg config_mcc_phydm_offload
 endif
 
 ifeq ($(CONFIG_RTW_NAPI), y)
@@ -3262,6 +3262,9 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_tx_mgmt.o
 endif
 ifeq ($(CONFIG_BT_COEXIST), y)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_btcoex.o
+endif
+ifeq ($(CONFIG_MCC_MODE), y)
+$(MODULE_NAME)-y += rust/rtw_debug_proc_mcc.o
 endif
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
