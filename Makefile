@@ -2994,12 +2994,13 @@ endif
 ifeq ($(CONFIG_PROC_DEBUG), y)
 rustflags-y += --cfg config_proc_debug
 endif
-# W3-219: beacon-count confirm — keep C -D and Rust --cfg on the same predicate
-# (autoconf define, Kbuild CONFIG_PROC_DEBUG, or -D already on effective ccflags).
+# W3-219: beacon-count confirm is optional. Do not force
+# -DCONFIG_BCN_CNT_CONFIRM_HDL from CONFIG_PROC_DEBUG. The macro inserts
+# struct beacon_keys into mlme_priv (+0x48) and shifts every later
+# _ADAPTER field. rust/rtw_wlan_util.rs and rust/rtw_crypto_wrap.rs still
+# use the offsets measured with the macro off (datarate 0x855, amsdu_mode
+# 0x3859). Rust --cfg follows an explicit define only; it does not invent one.
 _rust_cfg_bcn_cnt_confirm_hdl :=
-ifeq ($(CONFIG_PROC_DEBUG), y)
-_rust_cfg_bcn_cnt_confirm_hdl := y
-endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BCN_CNT_CONFIRM_HDL' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 _rust_cfg_bcn_cnt_confirm_hdl := y
 endif
@@ -3007,7 +3008,6 @@ ifneq ($(filter -DCONFIG_BCN_CNT_CONFIRM_HDL,$(ccflags-y) $(USER_EXTRA_CFLAGS) $
 _rust_cfg_bcn_cnt_confirm_hdl := y
 endif
 ifneq ($(_rust_cfg_bcn_cnt_confirm_hdl),)
-ccflags-y += -DCONFIG_BCN_CNT_CONFIRM_HDL
 rustflags-y += --cfg config_bcn_cnt_confirm_hdl
 endif
 ifeq ($(CONFIG_POWER_SAVING), y)

@@ -16,6 +16,7 @@
 
 #include <drv_types.h>
 #include <hal_data.h>
+#include <linux/build_bug.h>
 
 #if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)
 	#include <linux/inetdevice.h>
@@ -25,6 +26,20 @@
 	#define IPv6_OFFSET	38
 	#define IPv6_PROTOCOL_OFFSET	20
 #endif
+
+/* rust/rtw_wlan_util.rs and rust/rtw_crypto_wrap.rs hardcode these
+ * _ADAPTER offsets. CONFIG_BCN_CNT_CONFIRM_HDL inserts beacon_keys into
+ * mlme_priv and adds 0x48 to every field after cur_beacon_keys.
+ * File scope so the check is not dropped with an unused function.
+ */
+static_assert(offsetof(struct _ADAPTER, mlmeextpriv.cur_channel) == 0x844,
+	      "mlmeextpriv.cur_channel moved; update rust/rtw_wlan_util.rs");
+static_assert(offsetof(struct _ADAPTER, mlmeextpriv.basicrate) == 0x848,
+	      "mlmeextpriv.basicrate moved; update rust/rtw_wlan_util.rs");
+static_assert(offsetof(struct _ADAPTER, mlmeextpriv.datarate) == 0x855,
+	      "mlmeextpriv.datarate moved; update rust/rtw_wlan_util.rs");
+static_assert(offsetof(struct _ADAPTER, registrypriv.amsdu_mode) == 0x3859,
+	      "registrypriv.amsdu_mode moved; update rust/rtw_crypto_wrap.rs");
 
 unsigned char ARTHEROS_OUI1[] = {0x00, 0x03, 0x7f};
 unsigned char ARTHEROS_OUI2[] = {0x00, 0x13, 0x74};

@@ -65,10 +65,9 @@ mod bindings {
         pub fn _rtw_mfree(ptr: *mut c_void, sz: u32);
     }
 
-    /// `offsetof(struct _ADAPTER, registrypriv.amsdu_mode)` for this driver's
-    /// `include/drv_types.h` layout (verified via `llvm-objdump` on the C TU).
-    /// Re-run L1 (`make rust-check-symbols OLD=core/crypto/rtw_crypto_wrap.o
-    /// NEW=rust/rtw_crypto_wrap.o`) after any `_adapter` / `registry_priv` layout change.
+    /// `offsetof(struct _ADAPTER, registrypriv.amsdu_mode)` with
+    /// `CONFIG_BCN_CNT_CONFIRM_HDL` off. That macro adds 0x48 to this offset.
+    /// Re-run L1 after any `_adapter` / `registry_priv` layout change.
     pub const AMSDU_MODE_OFFSET: usize = 0x3859;
 }
 
