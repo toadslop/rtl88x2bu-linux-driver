@@ -5250,6 +5250,7 @@ void rtw_rust_debug_proc_emit_tx_auth(void *sel)
 {
 	RTW_PRINT_SEL(sel, "%s\n", "proc_get_tx_auth");
 }
+#endif /* CONFIG_IEEE80211W */
 
 #ifdef CONFIG_MCC_MODE
 ssize_t rtw_rust_debug_proc_set_mcc_enable(_adapter *padapter,
