@@ -3,3 +3,9 @@ drop proc_set_mcc_enable
 drop proc_set_mcc_duration
 drop proc_set_mcc_phydm_offload_enable
 drop proc_set_mcc_single_tx_criteria
+drop proc_set_mcc_ap_bw20_target_tp
+drop proc_set_mcc_ap_bw40_target_tp
+drop proc_set_mcc_ap_bw80_target_tp
+drop proc_set_mcc_sta_bw20_target_tp
+drop proc_set_mcc_sta_bw40_target_tp
+drop proc_set_mcc_sta_bw80_target_tp
