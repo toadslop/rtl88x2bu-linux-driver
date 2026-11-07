@@ -6558,6 +6558,7 @@ int proc_get_tdls_info(struct seq_file *m, void *v)
 }
 #endif
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_monitor(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -6704,7 +6705,8 @@ ssize_t proc_set_xmit_block(struct file *file, const char __user *buffer, size_t
 
 	return count;
 }
-#endif
+#endif /* DBG_XMIT_BLOCK */
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-220 in rust/rtw_debug_proc_monitor.rs */
 
 #include <hal_data.h>
 int proc_get_efuse_map(struct seq_file *m, void *v)

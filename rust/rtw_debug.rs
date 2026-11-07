@@ -26,6 +26,7 @@
 //! W3-216 proc rf4ce_state + sreset handlers live in `rtw_debug_proc_sreset.rs`.
 //! W3-217/W3-218 WoWLAN registry + GPIO + pattern proc handlers live in `rtw_debug_proc_wow.rs`.
 //! W3-214 proc malloc cnt + best channel live in `rtw_debug_proc_misc.rs`.
+//! W3-220 proc monitor / simple_config / xmit_block live in `rtw_debug_proc_monitor.rs`.
 //! W3-210 PHY cap dump helpers live in `rtw_debug_phy_cap.rs`.
 
 #![allow(

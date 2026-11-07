@@ -3060,6 +3060,26 @@ endif
 ifneq ($(_rust_cfg_dbg_memory_leak),)
 rustflags-y += --cfg dbg_memory_leak
 endif
+_rust_cfg_rtw_simple_config :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+RTW_SIMPLE_CONFIG' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_rtw_simple_config := y
+endif
+ifneq ($(filter -DRTW_SIMPLE_CONFIG,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_rtw_simple_config := y
+endif
+ifneq ($(_rust_cfg_rtw_simple_config),)
+rustflags-y += --cfg rtw_simple_config
+endif
+_rust_cfg_dbg_xmit_block :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+DBG_XMIT_BLOCK' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_dbg_xmit_block := y
+endif
+ifneq ($(filter -DDBG_XMIT_BLOCK,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_dbg_xmit_block := y
+endif
+ifneq ($(_rust_cfg_dbg_xmit_block),)
+rustflags-y += --cfg dbg_xmit_block
+endif
 _rust_cfg_dbg_counter :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_DBG_COUNTER' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 _rust_cfg_dbg_counter := y
@@ -3234,6 +3254,7 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_sreset.o
 $(MODULE_NAME)-y += rust/rtw_debug_phy_cap.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_phy_cap.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_misc.o
+$(MODULE_NAME)-y += rust/rtw_debug_proc_monitor.o
 ifeq ($(CONFIG_BT_COEXIST), y)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_btcoex.o
 endif
@@ -5219,6 +5240,21 @@ rust-objects-rtw-debug-proc-misc-c:
 rust-check-symbols-rtw-debug-proc-misc: rust-objects-rtw-debug-proc-misc-c rust-objects-rtw-debug-proc-misc
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_misc_c_ref.o NEW=rust/rtw_debug_proc_misc.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_misc.allow ALLOW_VACUOUS=1
+
+# W3-220: host C oracle vs rust/rtw_debug_proc_monitor.o (monitor + simple_config + xmit_block).
+rust-objects-rtw-debug-proc-monitor:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-monitor"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) USER_EXTRA_CFLAGS="-DRTW_SIMPLE_CONFIG -DDBG_XMIT_BLOCK" -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_monitor.o
+rust-objects-rtw-debug-proc-monitor-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-DRTW_SIMPLE_CONFIG -DDBG_XMIT_BLOCK \
+		-o tests/host/debug/debug_proc_monitor_c_ref.o \
+		tests/host/debug/debug_proc_monitor_c_oracle.c
+rust-check-symbols-rtw-debug-proc-monitor: rust-objects-rtw-debug-proc-monitor-c rust-objects-rtw-debug-proc-monitor
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_monitor_c_ref.o NEW=rust/rtw_debug_proc_monitor.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_monitor.allow ALLOW_VACUOUS=1
 
 # W3-215: host C oracle vs rust/rtw_debug_proc_btcoex.o (proc btcoex dbg get/set + info).
 rust-objects-rtw-debug-proc-btcoex:
