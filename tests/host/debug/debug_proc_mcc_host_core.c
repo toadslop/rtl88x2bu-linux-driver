@@ -3,19 +3,25 @@
 
 #include "host_rtw_debug_proc_mcc_types.h"
 
-struct host_mcc_cmd_log g_mcc_cmd_log;
+#ifdef HOST_MCC_L1_REF
+#define HOST_MCC_SCOPE static
+#else
+#define HOST_MCC_SCOPE
+#endif
 
-void host_debug_proc_mcc_reset_log(void)
+HOST_MCC_SCOPE struct host_mcc_cmd_log g_mcc_cmd_log;
+
+HOST_MCC_SCOPE void host_debug_proc_mcc_reset_log(void)
 {
 	memset(&g_mcc_cmd_log, 0, sizeof(g_mcc_cmd_log));
 }
 
-const struct host_mcc_cmd_log *host_debug_proc_mcc_get_log(void)
+HOST_MCC_SCOPE const struct host_mcc_cmd_log *host_debug_proc_mcc_get_log(void)
 {
 	return &g_mcc_cmd_log;
 }
 
-u8 host_rtw_set_mcc_duration_cmd(struct _adapter *adapter, u8 type, u8 val)
+HOST_MCC_SCOPE u8 host_rtw_set_mcc_duration_cmd(struct _adapter *adapter, u8 type, u8 val)
 {
 	(void)adapter;
 	g_mcc_cmd_log.duration_cmd++;
@@ -24,8 +30,8 @@ u8 host_rtw_set_mcc_duration_cmd(struct _adapter *adapter, u8 type, u8 val)
 	return 0;
 }
 
-u8 host_rtw_set_mcc_phydm_offload_enable_cmd(struct _adapter *adapter, u8 enable,
-					     u8 enqueue)
+HOST_MCC_SCOPE u8 host_rtw_set_mcc_phydm_offload_enable_cmd(struct _adapter *adapter,
+							  u8 enable, u8 enqueue)
 {
 	(void)adapter;
 	(void)enqueue;
@@ -34,8 +40,8 @@ u8 host_rtw_set_mcc_phydm_offload_enable_cmd(struct _adapter *adapter, u8 enable
 	return 0;
 }
 
-ssize_t host_proc_set_mcc_enable(struct _adapter *padapter, const void *buffer,
-				 size_t count)
+HOST_MCC_SCOPE ssize_t host_proc_set_mcc_enable(struct _adapter *padapter,
+					      const void *buffer, size_t count)
 {
 	char tmp[255];
 	u32 en_mcc = 0;
@@ -73,8 +79,8 @@ ssize_t host_proc_set_mcc_enable(struct _adapter *padapter, const void *buffer,
 	return (ssize_t)count;
 }
 
-ssize_t host_proc_set_mcc_duration(struct _adapter *padapter, const void *buffer,
-				   size_t count)
+HOST_MCC_SCOPE ssize_t host_proc_set_mcc_duration(struct _adapter *padapter,
+						const void *buffer, size_t count)
 {
 	char tmp[255];
 	u32 enable_runtime_duration = 0, mcc_duration = 0, type = 0;
@@ -116,8 +122,8 @@ ssize_t host_proc_set_mcc_duration(struct _adapter *padapter, const void *buffer
 }
 
 #ifdef CONFIG_MCC_PHYDM_OFFLOAD
-ssize_t host_proc_set_mcc_phydm_offload_enable(struct _adapter *padapter,
-					       const void *buffer, size_t count)
+HOST_MCC_SCOPE ssize_t host_proc_set_mcc_phydm_offload_enable(
+	struct _adapter *padapter, const void *buffer, size_t count)
 {
 	char tmp[255];
 	u32 mcc_phydm_enable = 0;
@@ -147,8 +153,8 @@ ssize_t host_proc_set_mcc_phydm_offload_enable(struct _adapter *padapter,
 }
 #endif /* CONFIG_MCC_PHYDM_OFFLOAD */
 
-ssize_t host_proc_set_mcc_single_tx_criteria(struct _adapter *padapter,
-					     const void *buffer, size_t count)
+HOST_MCC_SCOPE ssize_t host_proc_set_mcc_single_tx_criteria(
+	struct _adapter *padapter, const void *buffer, size_t count)
 {
 	char tmp[255];
 	u32 mcc_single_tx_criteria = 0;

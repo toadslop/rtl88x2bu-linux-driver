@@ -1337,6 +1337,8 @@ endif
 
 ifeq ($(CONFIG_MCC_MODE), y)
 ccflags-y += -DCONFIG_MCC_MODE
+rustflags-y += --cfg config_mcc_mode
+$(MODULE_NAME)-y += rust/rtw_debug_proc_mcc.o
 endif
 
 ifeq ($(CONFIG_RTW_NAPI), y)
@@ -5228,6 +5230,22 @@ rust-objects-rtw-debug-proc-phy-cap-c:
 rust-check-symbols-rtw-debug-proc-phy-cap: rust-objects-rtw-debug-proc-phy-cap-c rust-objects-rtw-debug-proc-phy-cap
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_phy_cap_registry_c_ref.o NEW=rust/rtw_debug_proc_phy_cap.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_phy_cap.allow ALLOW_VACUOUS=1
+
+# W3-222: host C oracle vs rust/rtw_debug_proc_mcc.o (MCC registry proc setters).
+rust-objects-rtw-debug-proc-mcc:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-mcc"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) CONFIG_MCC_MODE=y USER_EXTRA_CFLAGS=-DCONFIG_MCC_PHYDM_OFFLOAD \
+		RUSTFLAGS="--cfg config_mcc_phydm_offload" -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_mcc.o
+rust-objects-rtw-debug-proc-mcc-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-DCONFIG_MCC_MODE -DCONFIG_MCC_PHYDM_OFFLOAD -DHOST_MCC_L1_REF \
+		-o tests/host/debug/debug_proc_mcc_c_ref.o \
+		tests/host/debug/debug_proc_mcc_l1_ref.c
+rust-check-symbols-rtw-debug-proc-mcc: rust-objects-rtw-debug-proc-mcc-c rust-objects-rtw-debug-proc-mcc
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_mcc_c_ref.o NEW=rust/rtw_debug_proc_mcc.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_mcc.allow ALLOW_VACUOUS=1
 
 # W3-214: host C oracle vs rust/rtw_debug_proc_misc.o (malloc cnt + best channel procs).
 rust-objects-rtw-debug-proc-misc:
