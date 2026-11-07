@@ -4578,6 +4578,147 @@ ssize_t rtw_rust_debug_proc_set_sreset(_adapter *adapter,
 }
 #endif /* DBG_CONFIG_ERROR_DETECT */
 
+#ifdef CONFIG_PROC_DEBUG
+void rtw_rust_debug_proc_emit_monitor(void *sel, _adapter *adapter)
+{
+	struct seq_file *seq = sel;
+	struct net_device *dev = seq->private;
+
+	if (MLME_IS_MONITOR(adapter)) {
+		RTW_PRINT_SEL(sel, "Monitor mode : Enable\n");
+		RTW_PRINT_SEL(sel, "Device type  : %u\n", dev->type);
+		RTW_PRINT_SEL(sel, "ch=%d, ch_offset=%d, bw=%d\n",
+			      rtw_get_oper_ch(adapter),
+			      rtw_get_oper_choffset(adapter),
+			      rtw_get_oper_bw(adapter));
+	} else {
+		RTW_PRINT_SEL(sel, "Monitor mode : Disable\n");
+	}
+}
+
+ssize_t rtw_rust_debug_proc_set_monitor(_adapter *adapter,
+					struct net_device *dev,
+					const char __user *buffer,
+					size_t count)
+{
+	char tmp[32];
+	u16 target_type;
+	u8 target_ch, target_offset, target_bw;
+	ssize_t rd;
+
+	if (count < 3) {
+		RTW_INFO("argument size is less than 3\n");
+		return -EFAULT;
+	}
+
+	rd = rtw_rust_debug_proc_read_user_line(buffer, count, tmp, sizeof(tmp));
+	if (rd < 0)
+		return rd;
+
+	{
+		int num = sscanf(tmp, "type %hu", &target_type);
+
+		if ((num == 1) &&
+		    ((target_type != ARPHRD_IEEE80211) &&
+		     (target_type != ARPHRD_IEEE80211_RADIOTAP))) {
+			dev->type = ARPHRD_IEEE80211_RADIOTAP;
+			return count;
+		}
+	}
+
+	{
+		int num = sscanf(tmp, "%hhu %hhu %hhu", &target_ch, &target_offset,
+				 &target_bw);
+
+		if (num != 3) {
+			RTW_INFO("invalid write_reg parameter!\n");
+			return count;
+		}
+
+		adapter->mlmeextpriv.cur_channel = target_ch;
+		set_channel_bwmode(adapter, target_ch, target_offset, target_bw);
+	}
+
+	return count;
+}
+
+#ifdef RTW_SIMPLE_CONFIG
+void rtw_rust_debug_proc_emit_simple_config(void *sel, _adapter *adapter)
+{
+	RTW_PRINT_SEL(sel, "RTW Simple Config : %s\n",
+		      adapter->rtw_simple_config ? "Enable" : "Disable");
+}
+
+ssize_t rtw_rust_debug_proc_set_simple_config(_adapter *adapter,
+					      const char __user *buffer,
+					      size_t count)
+{
+	char tmp[32];
+	s8 ret;
+	ssize_t rd;
+
+	if (count < 1) {
+		RTW_INFO("argument size is less than 1\n");
+		return -EFAULT;
+	}
+
+	rd = rtw_rust_debug_proc_read_user_line(buffer, count, tmp, sizeof(tmp));
+	if (rd < 0)
+		return rd;
+
+	{
+		int num = sscanf(tmp, "%hhd", &ret);
+
+		(void)num;
+		adapter->rtw_simple_config = ret ? _TRUE : _FALSE;
+	}
+
+	return count;
+}
+#endif /* RTW_SIMPLE_CONFIG */
+
+#ifdef DBG_XMIT_BLOCK
+void rtw_rust_debug_proc_emit_xmit_block(void *sel, _adapter *adapter)
+{
+	dump_xmit_block(sel, adapter);
+}
+
+ssize_t rtw_rust_debug_proc_set_xmit_block(_adapter *adapter,
+					   const char __user *buffer,
+					   size_t count)
+{
+	char tmp[32];
+	u8 xb_mode, xb_reason;
+	ssize_t rd;
+
+	if (count < 1)
+		return -EFAULT;
+
+	rd = rtw_rust_debug_proc_read_user_line(buffer, count, tmp, sizeof(tmp));
+	if (rd < 0)
+		return rd;
+
+	{
+		int num = sscanf(tmp, "%hhx %hhx", &xb_mode, &xb_reason);
+
+		if (num != 2) {
+			RTW_INFO("invalid parameter!\n");
+			return count;
+		}
+
+		if (xb_mode == 0)
+			rtw_set_xmit_block(adapter, xb_reason);
+		else if (xb_mode == 1)
+			rtw_clr_xmit_block(adapter, xb_reason);
+		else
+			RTW_INFO("invalid parameter!\n");
+	}
+
+	return count;
+}
+#endif /* DBG_XMIT_BLOCK */
+#endif /* CONFIG_PROC_DEBUG */
+
 #ifdef CONFIG_WOWLAN
 void rtw_rust_debug_proc_emit_wow_enable(void *sel, _adapter *adapter)
 {
