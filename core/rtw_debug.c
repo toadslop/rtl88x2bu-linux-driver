@@ -5005,6 +5005,253 @@ ssize_t rtw_rust_debug_proc_set_wowlan_gpio_info(_adapter *adapter,
 #endif /* CONFIG_GPIO_WAKEUP */
 #endif /* CONFIG_WOWLAN */
 
+#ifdef CONFIG_IEEE80211W
+ssize_t rtw_rust_debug_proc_set_tx_sa_query(_adapter *padapter,
+					    const char __user *buffer,
+					    size_t count)
+{
+	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+	struct mlme_ext_info *pmlmeinfo = &pmlmeext->mlmext_info;
+	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+	struct sta_priv *pstapriv = &padapter->stapriv;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
+	struct macid_ctl_t *macid_ctl = dvobj_to_macidctl(dvobj);
+	struct sta_info *psta;
+	_list *plist, *phead;
+	_irqL irqL;
+	char tmp[16];
+	u8 mac_addr[NUM_STA][ETH_ALEN];
+	u32 key_type;
+	u8 index;
+
+	if (count > 2) {
+		RTW_INFO("argument size is more than 2\n");
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, sizeof(tmp))) {
+		int num = sscanf(tmp, "%x", &key_type);
+
+		if (num != 1) {
+			RTW_INFO("invalid read_reg parameter!\n");
+			return count;
+		}
+		RTW_INFO("0: set sa query request , key_type=%d\n", key_type);
+	}
+
+	if (check_fwstate(pmlmepriv, WIFI_STATION_STATE) == _TRUE &&
+	    check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE &&
+	    SEC_IS_BIP_KEY_INSTALLED(&padapter->securitypriv) == _TRUE) {
+		RTW_INFO("STA:" MAC_FMT "\n",
+			 MAC_ARG(get_my_bssid(&pmlmeinfo->network)));
+		issue_action_SA_Query(padapter, get_my_bssid(&pmlmeinfo->network),
+				      0, 0, (u8)key_type);
+	} else if (check_fwstate(pmlmepriv, WIFI_AP_STATE) == _TRUE &&
+		   SEC_IS_BIP_KEY_INSTALLED(&padapter->securitypriv) == _TRUE) {
+		_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+		for (index = 0; index < NUM_STA; index++) {
+			psta = NULL;
+			phead = &pstapriv->sta_hash[index];
+			plist = get_next(phead);
+			while (rtw_end_of_queue_search(phead, plist) == _FALSE) {
+				psta = LIST_CONTAINOR(plist, struct sta_info,
+						      hash_list);
+				plist = get_next(plist);
+				_rtw_memcpy(&mac_addr[psta->cmn.mac_id][0],
+					    psta->cmn.mac_addr, ETH_ALEN);
+			}
+		}
+		_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+
+		for (index = 0; index < macid_ctl->num && index < NUM_STA;
+		     index++) {
+			if (rtw_macid_is_used(macid_ctl, index) &&
+			    !rtw_macid_is_bmc(macid_ctl, index)) {
+				if (!_rtw_memcmp(get_my_bssid(&pmlmeinfo->network),
+						 &mac_addr[index][0], ETH_ALEN) &&
+				    !IS_MCAST(&mac_addr[index][0])) {
+					issue_action_SA_Query(
+						padapter, &mac_addr[index][0], 0,
+						0, (u8)key_type);
+					RTW_INFO("STA[%u]:" MAC_FMT "\n", index,
+						 MAC_ARG(&mac_addr[index][0]));
+				}
+			}
+		}
+	}
+
+	return count;
+}
+
+void rtw_rust_debug_proc_emit_tx_sa_query(void *sel)
+{
+	RTW_PRINT_SEL(sel, "%s\n", "proc_get_tx_sa_query");
+}
+
+ssize_t rtw_rust_debug_proc_set_tx_deauth(_adapter *padapter,
+					  const char __user *buffer, size_t count)
+{
+	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+	struct mlme_ext_info *pmlmeinfo = &pmlmeext->mlmext_info;
+	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+	struct sta_priv *pstapriv = &padapter->stapriv;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
+	struct macid_ctl_t *macid_ctl = dvobj_to_macidctl(dvobj);
+	struct sta_info *psta;
+	_list *plist, *phead;
+	_irqL irqL;
+	char tmp[16];
+	u8 mac_addr[NUM_STA][ETH_ALEN];
+	u8 bc_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+	u32 key_type = 0;
+	u8 index;
+
+	if (count > 2) {
+		RTW_INFO("argument size is more than 2\n");
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, sizeof(tmp))) {
+		int num = sscanf(tmp, "%x", &key_type);
+
+		if (num != 1) {
+			RTW_INFO("invalid read_reg parameter!\n");
+			return count;
+		}
+		RTW_INFO("key_type=%d\n", key_type);
+	}
+	if (key_type > 4)
+		return count;
+
+	if (check_fwstate(pmlmepriv, WIFI_STATION_STATE) == _TRUE &&
+	    check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE) {
+		if (key_type == 3)
+			return count;
+		issue_deauth_11w(padapter, get_my_bssid(&pmlmeinfo->network), 0,
+				 (u8)key_type);
+#ifdef CONFIG_AP_MODE
+	} else if (check_fwstate(pmlmepriv, WIFI_AP_STATE) == _TRUE) {
+		u8 updated = _FALSE;
+
+		if (key_type == 3)
+			issue_deauth_11w(padapter, bc_addr, 0,
+					 IEEE80211W_RIGHT_KEY);
+
+		_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+		for (index = 0; index < NUM_STA; index++) {
+			psta = NULL;
+			phead = &pstapriv->sta_hash[index];
+			plist = get_next(phead);
+			while (rtw_end_of_queue_search(phead, plist) == _FALSE) {
+				psta = LIST_CONTAINOR(plist, struct sta_info,
+						      hash_list);
+				plist = get_next(plist);
+				_rtw_memcpy(&mac_addr[psta->cmn.mac_id][0],
+					    psta->cmn.mac_addr, ETH_ALEN);
+			}
+		}
+		_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+
+		for (index = 0; index < macid_ctl->num && index < NUM_STA;
+		     index++) {
+			if (rtw_macid_is_used(macid_ctl, index) &&
+			    !rtw_macid_is_bmc(macid_ctl, index)) {
+				if (!_rtw_memcmp(get_my_bssid(&pmlmeinfo->network),
+						 &mac_addr[index][0], ETH_ALEN)) {
+					if (key_type != 3)
+						issue_deauth_11w(
+							padapter,
+							&mac_addr[index][0], 0,
+							(u8)key_type);
+
+					psta = rtw_get_stainfo(pstapriv,
+							       &mac_addr[index][0]);
+					if (psta &&
+					    key_type != IEEE80211W_WRONG_KEY &&
+					    key_type != IEEE80211W_NO_KEY) {
+						_enter_critical_bh(
+							&pstapriv->asoc_list_lock,
+							&irqL);
+						if (rtw_is_list_empty(
+							    &psta->asoc_list) ==
+						    _FALSE) {
+							rtw_list_delete(
+								&psta->asoc_list);
+							pstapriv->asoc_list_cnt--;
+#ifdef CONFIG_RTW_TOKEN_BASED_XMIT
+							if (psta->tbtx_enable)
+								pstapriv->tbtx_asoc_list_cnt--;
+#endif
+							updated |= ap_free_sta(
+								padapter, psta,
+								_FALSE,
+								WLAN_REASON_PREV_AUTH_NOT_VALID,
+								_TRUE);
+						}
+						_exit_critical_bh(
+							&pstapriv->asoc_list_lock,
+							&irqL);
+					}
+
+					RTW_INFO("STA[%u]:" MAC_FMT "\n", index,
+						 MAC_ARG(&mac_addr[index][0]));
+				}
+			}
+		}
+
+		associated_clients_update(padapter, updated,
+					  STA_INFO_UPDATE_ALL);
+#endif /* CONFIG_AP_MODE */
+	}
+
+	return count;
+}
+
+void rtw_rust_debug_proc_emit_tx_deauth(void *sel)
+{
+	RTW_PRINT_SEL(sel, "%s\n", "proc_get_tx_deauth");
+}
+
+ssize_t rtw_rust_debug_proc_set_tx_auth(_adapter *padapter,
+					const char __user *buffer, size_t count)
+{
+	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+	char tmp[16];
+	u32 tx_auth;
+
+	if (count > 2) {
+		RTW_INFO("argument size is more than 2\n");
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, sizeof(tmp))) {
+		int num = sscanf(tmp, "%x", &tx_auth);
+
+		if (num != 1) {
+			RTW_INFO("invalid read_reg parameter!\n");
+			return count;
+		}
+		RTW_INFO("1: setnd auth, 2: send assoc request. tx_auth=%d\n",
+			 tx_auth);
+	}
+
+	if (check_fwstate(pmlmepriv, WIFI_STATION_STATE) == _TRUE &&
+	    check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE) {
+		if (tx_auth == 1)
+			issue_auth(padapter, NULL, 0);
+		else if (tx_auth == 2)
+			issue_assocreq(padapter);
+	}
+
+	return count;
+}
+
+void rtw_rust_debug_proc_emit_tx_auth(void *sel)
+{
+	RTW_PRINT_SEL(sel, "%s\n", "proc_get_tx_auth");
+}
+#endif /* CONFIG_IEEE80211W */
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */

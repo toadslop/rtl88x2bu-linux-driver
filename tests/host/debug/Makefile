@@ -115,6 +115,9 @@ AMSDU_RUST    := $(ROOT)/rust/rtw_debug_proc_amsdu.rs
 AMSDU_L2     := test_proc_tx_amsdu.c
 # W3-221 proc 11w TX mgmt inject test get/set (CONFIG_IEEE80211W)
 TX_MGMT_ORACLE := debug_proc_tx_mgmt_c_oracle.c
+TX_MGMT_CORE   := debug_proc_tx_mgmt_host_core.c
+TX_MGMT_SHIM   := host_rtw_debug_proc_tx_mgmt_shim.c
+TX_MGMT_RUST   := $(ROOT)/rust/rtw_debug_proc_tx_mgmt.rs
 TX_MGMT_L2     := test_proc_tx_mgmt.c
 
 # W3-212 proc TDLS enable get/set (+ function info in PR3)
@@ -147,7 +150,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-misc-c test-proc-misc-rust \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
-	test-proc-tx-mgmt-c \
+	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
 
 all: test
@@ -167,7 +170,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-misc-c test-proc-misc-rust \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
-	test-proc-tx-mgmt-c \
+	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
 
 test-all: test
@@ -182,7 +185,8 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
 	test-proc-ht-rust test-proc-wow-rust test-proc-vht-rust test-proc-fwps-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
-	test-proc-tx-ampdu-misc-rust test-proc-tx-amsdu-rust test-proc-phy-cap-registry-rust test-proc-misc-rust test-proc-monitor-rust test-proc-ps-info-rust \
+	test-proc-tx-ampdu-misc-rust test-proc-tx-amsdu-rust test-proc-phy-cap-registry-rust \
+	test-proc-misc-rust test-proc-monitor-rust test-proc-ps-info-rust test-proc-tx-mgmt-rust \
 	test-phy-cap-dump-rust
 
 test-hooks-c: test_debug_test_hooks_c
@@ -561,8 +565,23 @@ test_proc_ps_info_rust: $(PS_INFO_L2) librust_rtw_debug_proc_ps_info.a \
 test-proc-tx-mgmt-c: test_proc_tx_mgmt
 	./test_proc_tx_mgmt debug_proc_tx_mgmt_vectors.json
 
-test_proc_tx_mgmt: $(TX_MGMT_L2) $(TX_MGMT_ORACLE) $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ $(TX_MGMT_L2) $(TX_MGMT_ORACLE) $(HOST_JSON)
+test_proc_tx_mgmt: $(TX_MGMT_L2) $(TX_MGMT_ORACLE) $(TX_MGMT_CORE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ $(TX_MGMT_L2) $(TX_MGMT_ORACLE) \
+		$(TX_MGMT_CORE) $(HOST_JSON)
+
+librust_rtw_debug_proc_tx_mgmt.a: $(TX_MGMT_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_tx_mgmt_test \
+		--crate-type staticlib $(TX_MGMT_RUST) -o $@
+
+test-proc-tx-mgmt-rust: test_proc_tx_mgmt_rust
+	./test_proc_tx_mgmt_rust debug_proc_tx_mgmt_vectors.json
+
+test_proc_tx_mgmt_rust: $(TX_MGMT_L2) librust_rtw_debug_proc_tx_mgmt.a \
+		$(TX_MGMT_SHIM) $(TX_MGMT_CORE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_RTW_DEBUG_PROC_TX_MGMT_ORACLE -o $@ \
+		$(TX_MGMT_L2) $(TX_MGMT_SHIM) $(TX_MGMT_CORE) $(HOST_JSON) \
+		librust_rtw_debug_proc_tx_mgmt.a
 
 clean:
 	rm -f test_debug_test_hooks_c test_debug_test_hooks_rust librust_debug_test_hooks.a \
@@ -585,5 +604,6 @@ clean:
 		test_proc_monitor test_proc_monitor_rust \
 		librust_rtw_debug_proc_monitor.a \
 		test_proc_ps_info test_proc_ps_info_rust librust_rtw_debug_proc_ps_info.a \
-		test_proc_tx_mgmt \
+		test_proc_tx_mgmt test_proc_tx_mgmt_rust \
+		librust_rtw_debug_proc_tx_mgmt.a \
 		test_debug_phy_cap_dump test_debug_phy_cap_dump_rust librust_rtw_debug_phy_cap.a
