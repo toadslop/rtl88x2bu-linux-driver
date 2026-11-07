@@ -5466,6 +5466,101 @@ ssize_t rtw_rust_debug_proc_set_mcc_single_tx_criteria(_adapter *padapter,
 
 	return count;
 }
+
+static ssize_t rtw_rust_debug_proc_set_mcc_u32_tp(
+	_adapter *padapter, const char __user *buffer, size_t count,
+	u32 *field)
+{
+	char tmp[255];
+	u32 val = 0;
+
+	if (NULL == buffer) {
+		RTW_INFO(FUNC_ADPT_FMT ": input buffer is NULL!\n",
+			 FUNC_ADPT_ARG(padapter));
+		return -EFAULT;
+	}
+
+	if (count < 1) {
+		RTW_INFO(FUNC_ADPT_FMT ": input length is 0!\n",
+			 FUNC_ADPT_ARG(padapter));
+		return -EFAULT;
+	}
+
+	if (count > sizeof(tmp)) {
+		RTW_INFO(FUNC_ADPT_FMT ": input length is too large\n",
+			 FUNC_ADPT_ARG(padapter));
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%u", &val);
+
+		if (num < 1) {
+			RTW_INFO(FUNC_ADPT_FMT ": input parameters < 1\n",
+				 FUNC_ADPT_ARG(padapter));
+			return -EINVAL;
+		}
+
+		*field = val;
+	}
+
+	return count;
+}
+
+ssize_t rtw_rust_debug_proc_set_mcc_ap_bw20_target_tp(_adapter *padapter,
+						      const char __user *buffer,
+						      size_t count)
+{
+	return rtw_rust_debug_proc_set_mcc_u32_tp(
+		padapter, buffer, count,
+		&padapter->registrypriv.rtw_mcc_ap_bw20_target_tx_tp);
+}
+
+ssize_t rtw_rust_debug_proc_set_mcc_ap_bw40_target_tp(_adapter *padapter,
+						      const char __user *buffer,
+						      size_t count)
+{
+	return rtw_rust_debug_proc_set_mcc_u32_tp(
+		padapter, buffer, count,
+		&padapter->registrypriv.rtw_mcc_ap_bw40_target_tx_tp);
+}
+
+ssize_t rtw_rust_debug_proc_set_mcc_ap_bw80_target_tp(_adapter *padapter,
+						      const char __user *buffer,
+						      size_t count)
+{
+	return rtw_rust_debug_proc_set_mcc_u32_tp(
+		padapter, buffer, count,
+		&padapter->registrypriv.rtw_mcc_ap_bw80_target_tx_tp);
+}
+
+ssize_t rtw_rust_debug_proc_set_mcc_sta_bw20_target_tp(_adapter *padapter,
+						       const char __user *buffer,
+						       size_t count)
+{
+	return rtw_rust_debug_proc_set_mcc_u32_tp(
+		padapter, buffer, count,
+		&padapter->registrypriv.rtw_mcc_sta_bw20_target_tx_tp);
+}
+
+ssize_t rtw_rust_debug_proc_set_mcc_sta_bw40_target_tp(_adapter *padapter,
+						       const char __user *buffer,
+						       size_t count)
+{
+	return rtw_rust_debug_proc_set_mcc_u32_tp(
+		padapter, buffer, count,
+		&padapter->registrypriv.rtw_mcc_sta_bw40_target_tx_tp);
+}
+
+ssize_t rtw_rust_debug_proc_set_mcc_sta_bw80_target_tp(_adapter *padapter,
+						       const char __user *buffer,
+						       size_t count)
+{
+	return rtw_rust_debug_proc_set_mcc_u32_tp(
+		padapter, buffer, count,
+		&padapter->registrypriv.rtw_mcc_sta_bw80_target_tx_tp);
+}
 #endif /* CONFIG_MCC_MODE */
 
 #endif /* CONFIG_PROC_DEBUG */
