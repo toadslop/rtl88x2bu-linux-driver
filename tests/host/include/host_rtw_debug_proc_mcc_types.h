@@ -82,6 +82,7 @@ struct host_mcc_cmd_log {
 	u8 last_phydm_enable;
 };
 
+#ifndef HOST_MCC_L1_REF
 extern struct host_mcc_cmd_log g_mcc_cmd_log;
 
 void host_debug_proc_mcc_reset_log(void);
@@ -98,6 +99,7 @@ ssize_t host_proc_set_mcc_duration(struct _adapter *padapter, const void *buffer
 ssize_t host_proc_set_mcc_phydm_offload_enable(struct _adapter *padapter,
 					       const void *buffer, size_t count);
 ssize_t host_proc_set_mcc_single_tx_criteria(struct _adapter *padapter,
-					   const void *buffer, size_t count);
+					     const void *buffer, size_t count);
+#endif /* !HOST_MCC_L1_REF */
 
 #endif /* HOST_RTW_DEBUG_PROC_MCC_TYPES_H */
