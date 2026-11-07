@@ -190,3 +190,81 @@ HOST_MCC_SCOPE ssize_t host_proc_set_mcc_single_tx_criteria(
 
 	return (ssize_t)count;
 }
+
+HOST_MCC_SCOPE ssize_t host_proc_set_mcc_registry_u32_tp(
+	struct _adapter *padapter, const void *buffer, size_t count,
+	u32 *field)
+{
+	char tmp[255];
+	u32 val = 0;
+
+	if (!buffer)
+		return -EFAULT;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%u", &val);
+
+		if (num < 1)
+			return -EINVAL;
+
+		*field = val;
+	}
+
+	return (ssize_t)count;
+}
+
+HOST_MCC_SCOPE ssize_t host_proc_set_mcc_ap_bw20_target_tp(
+	struct _adapter *padapter, const void *buffer, size_t count)
+{
+	return host_proc_set_mcc_registry_u32_tp(
+		padapter, buffer, count,
+		&padapter->registrypriv.rtw_mcc_ap_bw20_target_tx_tp);
+}
+
+HOST_MCC_SCOPE ssize_t host_proc_set_mcc_ap_bw40_target_tp(
+	struct _adapter *padapter, const void *buffer, size_t count)
+{
+	return host_proc_set_mcc_registry_u32_tp(
+		padapter, buffer, count,
+		&padapter->registrypriv.rtw_mcc_ap_bw40_target_tx_tp);
+}
+
+HOST_MCC_SCOPE ssize_t host_proc_set_mcc_ap_bw80_target_tp(
+	struct _adapter *padapter, const void *buffer, size_t count)
+{
+	return host_proc_set_mcc_registry_u32_tp(
+		padapter, buffer, count,
+		&padapter->registrypriv.rtw_mcc_ap_bw80_target_tx_tp);
+}
+
+HOST_MCC_SCOPE ssize_t host_proc_set_mcc_sta_bw20_target_tp(
+	struct _adapter *padapter, const void *buffer, size_t count)
+{
+	return host_proc_set_mcc_registry_u32_tp(
+		padapter, buffer, count,
+		&padapter->registrypriv.rtw_mcc_sta_bw20_target_tx_tp);
+}
+
+HOST_MCC_SCOPE ssize_t host_proc_set_mcc_sta_bw40_target_tp(
+	struct _adapter *padapter, const void *buffer, size_t count)
+{
+	return host_proc_set_mcc_registry_u32_tp(
+		padapter, buffer, count,
+		&padapter->registrypriv.rtw_mcc_sta_bw40_target_tx_tp);
+}
+
+HOST_MCC_SCOPE ssize_t host_proc_set_mcc_sta_bw80_target_tp(
+	struct _adapter *padapter, const void *buffer, size_t count)
+{
+	return host_proc_set_mcc_registry_u32_tp(
+		padapter, buffer, count,
+		&padapter->registrypriv.rtw_mcc_sta_bw80_target_tx_tp);
+}
