@@ -1,5 +1,6 @@
 # T16: rustfmt --check on rust/** changes.
-# See docs/rust-migration/issues/test-16-ci-rustfmt.md
+# T20: advisory clippy on rust/** (non-blocking job).
+# See docs/rust-migration/issues/test-16-ci-rustfmt.md, test-20-ci-clippy-warn.md
 
 name: Rust lint
 
@@ -10,6 +11,7 @@ on:
       - 'rust/**'
       - 'include/osdep_service.h'
       - 'scripts/ci/rustfmt-check.sh'
+      - 'scripts/ci/clippy-check.sh'
       - 'scripts/ci/check-status-constants.sh'
       - '.github/workflows/rust-lint.yml'
   pull_request:
@@ -37,6 +39,7 @@ jobs:
             rust:
               - 'rust/**'
               - 'scripts/ci/rustfmt-check.sh'
+              - 'scripts/ci/clippy-check.sh'
               - '.github/workflows/rust-lint.yml'
 
       - name: Out of scope — skip rustfmt
@@ -50,3 +53,33 @@ jobs:
       - name: rustfmt --check (rust/**)
         if: steps.filter.outputs.rust == 'true'
         run: ./scripts/ci/rustfmt-check.sh
+
+  clippy-advisory:
+    name: Rust clippy (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    env:
+      RUSTUP_TOOLCHAIN: 1.83.0
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            rust:
+              - 'rust/**'
+              - 'scripts/ci/clippy-check.sh'
+              - '.github/workflows/rust-lint.yml'
+
+      - name: Out of scope — skip clippy
+        if: steps.filter.outputs.rust != 'true'
+        run: echo "PR does not touch rust/** — reporting success without clippy"
+
+      - name: Install clippy
+        if: steps.filter.outputs.rust == 'true'
+        run: rustup toolchain install 1.83.0 --profile minimal --component clippy
+
+      - name: clippy advisory (rust/**)
+        if: steps.filter.outputs.rust == 'true'
+        run: ./scripts/ci/clippy-check.sh

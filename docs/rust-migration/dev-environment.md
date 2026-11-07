@@ -113,6 +113,15 @@ Before pushing Rust changes, run the T16 formatting gate locally:
 
 (`rtw_sta_mgt.rs` is excluded until W3-38 PR5 #361 lands — formatting it triggers L1 sta_mgt checks for symbols not yet on `master`.)
 
+Optional T20 static analysis (advisory — matches the non-blocking CI job `Rust clippy (advisory)`):
+
+```bash
+rustup toolchain install 1.83.0 --profile minimal --component clippy
+./scripts/ci/clippy-check.sh
+```
+
+Each top-level `rust/*.rs` Kbuild crate is checked with `clippy-driver` and a documented allowlist for FFI-heavy paths. Crates that need kernel `cfg` or parent `super::` modules are skipped with a log line instead of failing the job.
+
 ### Distro LLVM is version-suffixed
 
 Packages often provide `llvm-ar-18`, `ld.lld-18`, not bare `llvm-ar` / `ld.lld`. Kernel `LLVM=1` looks for **unsuffixed** names. If configure fails with `linker 'ld.lld' not found` or `llvm-ar: not found`:
