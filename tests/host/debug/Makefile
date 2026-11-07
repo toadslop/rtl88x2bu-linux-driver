@@ -59,6 +59,8 @@ MISC_CFG    := -DDBG_MEMORY_LEAK -DCONFIG_FIND_BEST_CHANNEL
 # W3-222 proc MCC registry setters (CONFIG_MCC_MODE)
 MCC_ORACLE := debug_proc_mcc_c_oracle.c
 MCC_HOST   := debug_proc_mcc_host_core.c
+MCC_SHIM   := host_rtw_debug_proc_mcc_shim.c
+MCC_RUST   := $(ROOT)/rust/rtw_debug_proc_mcc.rs
 MCC_L2     := test_proc_mcc_setters.c
 MCC_CFG    := -DCONFIG_MCC_MODE -DCONFIG_MCC_PHYDM_OFFLOAD
 
@@ -154,7 +156,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-btcoex-c \
 	test-proc-sreset-c test-proc-sreset-rust \
 	test-proc-misc-c test-proc-misc-rust \
-	test-proc-mcc-c \
+	test-proc-mcc-c test-proc-mcc-rust \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
@@ -175,7 +177,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-btcoex-c \
 	test-proc-sreset-c \
 	test-proc-misc-c test-proc-misc-rust \
-	test-proc-mcc-c \
+	test-proc-mcc-c test-proc-mcc-rust \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
@@ -194,7 +196,7 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
 	test-proc-ht-rust test-proc-wow-rust test-proc-vht-rust test-proc-fwps-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-rust test-proc-tx-amsdu-rust test-proc-phy-cap-registry-rust \
-	test-proc-misc-rust test-proc-monitor-rust test-proc-ps-info-rust test-proc-tx-mgmt-rust \
+	test-proc-misc-rust test-proc-mcc-rust test-proc-monitor-rust test-proc-ps-info-rust test-proc-tx-mgmt-rust \
 	test-phy-cap-dump-rust
 
 test-hooks-c: test_debug_test_hooks_c
@@ -532,6 +534,20 @@ test_proc_mcc_setters: $(MCC_L2) $(MCC_ORACLE) $(MCC_HOST) $(HOST_JSON)
 	$(CC) $(CFLAGS) $(MCC_CFG) -I$(HOST_INC) -o $@ \
 		$(MCC_L2) $(MCC_ORACLE) $(MCC_HOST) $(HOST_JSON)
 
+librust_rtw_debug_proc_mcc.a: $(MCC_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_mcc_test \
+		--cfg config_mcc_mode --cfg config_mcc_phydm_offload \
+		--crate-type staticlib $(MCC_RUST) -o $@
+
+test-proc-mcc-rust: test_proc_mcc_setters_rust
+	./test_proc_mcc_setters_rust debug_proc_mcc_vectors.json
+
+test_proc_mcc_setters_rust: $(MCC_L2) librust_rtw_debug_proc_mcc.a $(MCC_SHIM) \
+		$(MCC_HOST) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(MCC_CFG) -DRUST_RTW_DEBUG_PROC_MCC_ORACLE -I$(HOST_INC) -o $@ \
+		$(MCC_L2) $(MCC_SHIM) $(MCC_HOST) $(HOST_JSON) librust_rtw_debug_proc_mcc.a
+
 test-proc-monitor-c: test_proc_monitor
 	./test_proc_monitor debug_proc_monitor_vectors.json
 
@@ -616,7 +632,8 @@ clean:
 		test_proc_btcoex test_proc_btcoex_rust librust_rtw_debug_proc_btcoex.a \
 		test_proc_sreset \
 		test_proc_misc test_proc_misc_rust librust_rtw_debug_proc_misc.a \
-		test_proc_mcc_setters \
+		test_proc_mcc_setters test_proc_mcc_setters_rust \
+		librust_rtw_debug_proc_mcc.a \
 		test_proc_monitor test_proc_monitor_rust \
 		librust_rtw_debug_proc_monitor.a \
 		test_proc_ps_info test_proc_ps_info_rust librust_rtw_debug_proc_ps_info.a \

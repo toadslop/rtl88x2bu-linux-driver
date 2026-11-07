@@ -51,6 +51,11 @@ struct net_device {
 	void *priv;
 };
 
+struct seq_file {
+	void *private;
+	FILE *out;
+};
+
 #define adapter_to_dvobj(adapter) ((adapter)->dvobj)
 
 #define SET_MCC_RUNTIME_DURATION(adapter, flag)                                \
