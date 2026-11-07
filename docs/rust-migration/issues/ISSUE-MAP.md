@@ -353,6 +353,7 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-220 | #1765 | [W3-220] Translate rtw_debug_rest.c — proc monitor + xmit block leaf |
 | W3-221 | #1766 | [W3-221] Translate rtw_debug_rest.c — proc TX mgmt inject test leaf |
 | W3-222 | #1767 | [W3-222] Translate rtw_debug_rest.c — proc MCC registry setters (part 1) |
+| W3-223 | #1805 | [W3-223] Translate rtw_debug_rest.c — proc MCC target TP setters |
 
 ## Superseded issues
 
