@@ -1,0 +1,42 @@
+{
+  "vectors": [
+    {
+      "name": "get_smps_default",
+      "ssmps_en": 0,
+      "ssmps_tx_tp_th": 10,
+      "ssmps_rx_tp_th": 20,
+      "get": "smps",
+      "expect": "Static SMPS disable\nTx TP TH 10\nRx TP TH 20\n"
+    },
+    {
+      "name": "set_smps_enable_only",
+      "ssmps_en": 0,
+      "ssmps_tx_tp_th": 5,
+      "ssmps_rx_tp_th": 5,
+      "set": "smps",
+      "set_input": "1",
+      "get": "smps",
+      "expect": "Static SMPS enable\nTx TP TH 5\nRx TP TH 5\n"
+    },
+    {
+      "name": "set_smps_tx_threshold",
+      "ssmps_en": 0,
+      "ssmps_tx_tp_th": 0,
+      "ssmps_rx_tp_th": 0,
+      "set": "smps",
+      "set_input": "1 40",
+      "get": "smps",
+      "expect": "Static SMPS enable\nTx TP TH 40\nRx TP TH 40\n"
+    },
+    {
+      "name": "set_smps_rx_threshold",
+      "ssmps_en": 1,
+      "ssmps_tx_tp_th": 30,
+      "ssmps_rx_tp_th": 30,
+      "set": "smps",
+      "set_input": "1 0 15",
+      "get": "smps",
+      "expect": "Static SMPS enable\nTx TP TH 30\nRx TP TH 15\n"
+    }
+  ]
+}
