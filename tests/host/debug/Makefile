@@ -72,6 +72,14 @@ MCC_RUST   := $(ROOT)/rust/rtw_debug_proc_mcc.rs
 MCC_L2     := test_proc_mcc_setters.c
 MCC_CFG    := -DCONFIG_MCC_MODE -DCONFIG_MCC_PHYDM_OFFLOAD
 
+# W3-225 proc LPS check-by-TP (CONFIG_LPS_CHK_BY_TP)
+LPS_TP_ORACLE := debug_proc_lps_tp_c_oracle.c
+LPS_TP_HOST   := debug_proc_lps_tp_host_core.c
+LPS_TP_SHIM   := host_rtw_debug_proc_lps_tp_shim.c
+LPS_TP_RUST   := $(ROOT)/rust/rtw_debug_proc_lps_tp.rs
+LPS_TP_L2     := test_proc_lps_tp.c
+LPS_TP_CFG    := -DCONFIG_LPS_CHK_BY_TP
+
 # W3-220 proc monitor / simple_config / xmit_block
 MONITOR_ORACLE := debug_proc_monitor_c_oracle.c
 MONITOR_SHIM   := host_rtw_debug_proc_monitor_shim.c
@@ -166,6 +174,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-misc-c test-proc-misc-rust \
 	test-proc-mcc-c test-proc-mcc-rust \
 	test-proc-txss-c test-proc-txss-rust \
+	test-proc-lps-tp-c \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
@@ -188,6 +197,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-misc-c test-proc-misc-rust \
 	test-proc-mcc-c test-proc-mcc-rust \
 	test-proc-txss-c test-proc-txss-rust \
+	test-proc-lps-tp-c \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
@@ -199,7 +209,7 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 	test-proc-wow-c \
 	test-proc-vht-c test-proc-fwps-c test-proc-rx-ampdu-c test-proc-tdls-c \
 	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c test-proc-phy-cap-registry-c \
-	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-proc-mcc-c test-proc-txss-c test-proc-monitor-c \
+	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-proc-mcc-c test-proc-txss-c test-proc-lps-tp-c test-proc-monitor-c \
 	test-proc-ps-info-c test-proc-tx-mgmt-c \
 	test-phy-cap-dump-c
 
@@ -582,6 +592,13 @@ test_proc_mcc_setters_rust: $(MCC_L2) librust_rtw_debug_proc_mcc.a $(MCC_SHIM) \
 	$(CC) $(CFLAGS) $(MCC_CFG) -DRUST_RTW_DEBUG_PROC_MCC_ORACLE -I$(HOST_INC) -o $@ \
 		$(MCC_L2) $(MCC_SHIM) $(MCC_HOST) $(HOST_JSON) librust_rtw_debug_proc_mcc.a
 
+test-proc-lps-tp-c: test_proc_lps_tp
+	./test_proc_lps_tp debug_proc_lps_tp_vectors.json
+
+test_proc_lps_tp: $(LPS_TP_L2) $(LPS_TP_ORACLE) $(LPS_TP_HOST) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(LPS_TP_CFG) -I$(HOST_INC) -o $@ \
+		$(LPS_TP_L2) $(LPS_TP_ORACLE) $(LPS_TP_HOST) $(HOST_JSON)
+
 test-proc-monitor-c: test_proc_monitor
 	./test_proc_monitor debug_proc_monitor_vectors.json
 
@@ -669,6 +686,7 @@ clean:
 		test_proc_mcc_setters test_proc_mcc_setters_rust \
 		librust_rtw_debug_proc_mcc.a \
 		test_proc_txss test_proc_txss_rust librust_rtw_debug_proc_txss.a \
+		test_proc_lps_tp \
 		test_proc_monitor test_proc_monitor_rust \
 		librust_rtw_debug_proc_monitor.a \
 		test_proc_ps_info test_proc_ps_info_rust librust_rtw_debug_proc_ps_info.a \
