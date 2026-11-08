@@ -17,12 +17,15 @@ Port static SMPS debug procs from [`core/rtw_debug_rest.c`](../../../core/rtw_de
 
 ## Notes
 
-- Setter updates `mlme_ext_priv` SMPS control flags and thresholds; may call `rtw_smps_wk_cmd` via FFI when enable toggles.
-- Getter prints current enable/TP thresholds from mlme + registry-backed state — format strings unchanged.
+- Setter parses `sscanf` input and updates `mlme_ext_priv` (`ssmps_en`, `ssmps_tx_tp_th`,
+  `ssmps_rx_tp_th`; when `DBG_STATIC_SMPS`, optional `ssmps_test` / `ssmps_test_en`) — no
+  workqueue/FFI side effects in C.
+- Getter prints enable/TP thresholds (and optional DBG test fields) from `mlme_ext_priv` only —
+  format strings unchanged.
 - Parallel lane (disjoint `rust/rtw_debug_proc_smps.rs`).
 
 ## Acceptance
 
 - L0 with `CONFIG_SUPPORT_STATIC_SMPS`
 - L1 on both handlers
-- L2: sscanf vectors for enable/threshold fields; stub `rtw_smps_wk_cmd` in host oracle
+- L2: sscanf vectors for enable/threshold fields (and `DBG_STATIC_SMPS` extras when enabled)
