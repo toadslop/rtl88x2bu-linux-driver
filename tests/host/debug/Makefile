@@ -56,6 +56,14 @@ MISC_RUST   := $(ROOT)/rust/rtw_debug_proc_misc.rs
 MISC_L2     := test_proc_misc.c
 MISC_CFG    := -DDBG_MEMORY_LEAK -DCONFIG_FIND_BEST_CHANNEL
 
+# W3-224 proc TXSS by TP (CONFIG_CTRL_TXSS_BY_TP)
+TXSS_ORACLE := debug_proc_txss_c_oracle.c
+TXSS_HOST   := debug_proc_txss_host_core.c
+TXSS_SHIM   := host_rtw_debug_proc_txss_shim.c
+TXSS_RUST   := $(ROOT)/rust/rtw_debug_proc_txss.rs
+TXSS_L2     := test_proc_txss.c
+TXSS_CFG    := -DCONFIG_CTRL_TXSS_BY_TP -DDBG_CTRL_TXSS
+
 # W3-222 proc MCC registry setters (CONFIG_MCC_MODE)
 MCC_ORACLE := debug_proc_mcc_c_oracle.c
 MCC_HOST   := debug_proc_mcc_host_core.c
@@ -157,6 +165,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-sreset-c test-proc-sreset-rust \
 	test-proc-misc-c test-proc-misc-rust \
 	test-proc-mcc-c test-proc-mcc-rust \
+	test-proc-txss-c \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
@@ -178,6 +187,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-sreset-c \
 	test-proc-misc-c test-proc-misc-rust \
 	test-proc-mcc-c test-proc-mcc-rust \
+	test-proc-txss-c \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
@@ -189,7 +199,7 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 	test-proc-wow-c \
 	test-proc-vht-c test-proc-fwps-c test-proc-rx-ampdu-c test-proc-tdls-c \
 	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c test-proc-phy-cap-registry-c \
-	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-proc-mcc-c test-proc-monitor-c \
+	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-proc-mcc-c test-proc-txss-c test-proc-monitor-c \
 	test-proc-ps-info-c test-proc-tx-mgmt-c \
 	test-phy-cap-dump-c
 
@@ -527,6 +537,29 @@ test_proc_misc_rust: $(MISC_L2) librust_rtw_debug_proc_misc.a $(MISC_SHIM) $(HOS
 	$(CC) $(CFLAGS) $(MISC_CFG) -DRUST_RTW_DEBUG_PROC_MISC_ORACLE -o $@ \
 		$(MISC_L2) $(MISC_SHIM) $(HOST_JSON) librust_rtw_debug_proc_misc.a
 
+test-proc-txss-c: test_proc_txss
+	./test_proc_txss debug_proc_txss_vectors.json
+
+test_proc_txss: $(TXSS_L2) $(TXSS_ORACLE) $(TXSS_HOST) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(TXSS_CFG) -I$(HOST_INC) -o $@ \
+		$(TXSS_L2) $(TXSS_ORACLE) $(TXSS_HOST) $(HOST_JSON)
+
+librust_rtw_debug_proc_txss.a: $(TXSS_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_txss_test \
+		--cfg config_ctrl_txss_by_tp --cfg config_dbg_ctrl_txss \
+		--cfg config_rtw_debug --cfg config_proc_debug \
+		--crate-type staticlib $(TXSS_RUST) -o $@
+
+test-proc-txss-rust: test_proc_txss_rust
+	./test_proc_txss_rust debug_proc_txss_vectors.json
+
+test_proc_txss_rust: $(TXSS_L2) librust_rtw_debug_proc_txss.a $(TXSS_SHIM) \
+		$(TXSS_HOST) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(TXSS_CFG) -DRUST_RTW_DEBUG_PROC_TXSS_ORACLE -I$(HOST_INC) -o $@ \
+		$(TXSS_L2) $(TXSS_SHIM) $(TXSS_HOST) $(HOST_JSON) \
+		librust_rtw_debug_proc_txss.a
+
 test-proc-mcc-c: test_proc_mcc_setters
 	./test_proc_mcc_setters debug_proc_mcc_vectors.json
 
@@ -634,6 +667,7 @@ clean:
 		test_proc_misc test_proc_misc_rust librust_rtw_debug_proc_misc.a \
 		test_proc_mcc_setters test_proc_mcc_setters_rust \
 		librust_rtw_debug_proc_mcc.a \
+		test_proc_txss test_proc_txss_rust librust_rtw_debug_proc_txss.a \
 		test_proc_monitor test_proc_monitor_rust \
 		librust_rtw_debug_proc_monitor.a \
 		test_proc_ps_info test_proc_ps_info_rust librust_rtw_debug_proc_ps_info.a \
