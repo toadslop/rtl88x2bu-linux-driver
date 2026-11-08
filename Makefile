@@ -3012,6 +3012,26 @@ endif
 ifneq ($(_rust_cfg_bcn_cnt_confirm_hdl),)
 rustflags-y += --cfg config_bcn_cnt_confirm_hdl
 endif
+_rust_cfg_ctrl_txss_by_tp :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_CTRL_TXSS_BY_TP' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_ctrl_txss_by_tp := y
+endif
+ifneq ($(filter -DCONFIG_CTRL_TXSS_BY_TP,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_ctrl_txss_by_tp := y
+endif
+ifneq ($(_rust_cfg_ctrl_txss_by_tp),)
+rustflags-y += --cfg config_ctrl_txss_by_tp
+endif
+_rust_cfg_dbg_ctrl_txss :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+DBG_CTRL_TXSS' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_dbg_ctrl_txss := y
+endif
+ifneq ($(filter -DDBG_CTRL_TXSS,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_dbg_ctrl_txss := y
+endif
+ifneq ($(_rust_cfg_dbg_ctrl_txss),)
+rustflags-y += --cfg config_dbg_ctrl_txss
+endif
 ifeq ($(CONFIG_POWER_SAVING), y)
 rustflags-y += --cfg config_power_saving
 endif
@@ -3265,6 +3285,9 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_btcoex.o
 endif
 ifeq ($(CONFIG_MCC_MODE), y)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_mcc.o
+endif
+ifneq ($(_rust_cfg_ctrl_txss_by_tp),)
+$(MODULE_NAME)-y += rust/rtw_debug_proc_txss.o
 endif
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
@@ -5293,6 +5316,23 @@ rust-objects-rtw-debug-proc-tx-mgmt-c:
 rust-check-symbols-rtw-debug-proc-tx-mgmt: rust-objects-rtw-debug-proc-tx-mgmt-c rust-objects-rtw-debug-proc-tx-mgmt
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_tx_mgmt_c_ref.o NEW=rust/rtw_debug_proc_tx_mgmt.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_tx_mgmt.allow ALLOW_VACUOUS=1
+
+# W3-224: host C stub vs rust/rtw_debug_proc_txss.o (TXSS-by-TP debug procs).
+rust-objects-rtw-debug-proc-txss:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-txss"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) \
+		USER_EXTRA_CFLAGS='-DCONFIG_CTRL_TXSS_BY_TP -DDBG_CTRL_TXSS' \
+		RUSTFLAGS="--cfg config_ctrl_txss_by_tp --cfg config_dbg_ctrl_txss" \
+		rust/rtw_debug_proc_txss.o
+rust-objects-rtw-debug-proc-txss-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_txss_c_ref.o \
+		tests/host/debug/host_rtw_debug_proc_txss_c_ref.c
+rust-check-symbols-rtw-debug-proc-txss: rust-objects-rtw-debug-proc-txss-c rust-objects-rtw-debug-proc-txss
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_txss_c_ref.o NEW=rust/rtw_debug_proc_txss.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_txss.allow ALLOW_VACUOUS=1
 
 # W3-215: host C oracle vs rust/rtw_debug_proc_btcoex.o (proc btcoex dbg get/set + info).
 rust-objects-rtw-debug-proc-btcoex:

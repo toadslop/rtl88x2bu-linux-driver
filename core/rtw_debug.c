@@ -5563,6 +5563,122 @@ ssize_t rtw_rust_debug_proc_set_mcc_sta_bw80_target_tp(_adapter *padapter,
 }
 #endif /* CONFIG_MCC_MODE */
 
+#ifdef CONFIG_CTRL_TXSS_BY_TP
+void rtw_rust_debug_proc_emit_txss_tp(void *sel, _adapter *adapter)
+{
+	struct mlme_ext_priv *pmlmeext = &adapter->mlmeextpriv;
+
+	RTW_PRINT_SEL(sel, "TXSS  Control - %s\n",
+		      pmlmeext->txss_ctrl_en ? "enable" : "disable");
+	RTW_PRINT_SEL(sel, "TXSS  Tx TP TH - %d\n", pmlmeext->txss_tp_th);
+	RTW_PRINT_SEL(sel, "TXSS  check cnt - %d\n", pmlmeext->txss_tp_chk_cnt);
+}
+
+ssize_t rtw_rust_debug_proc_set_txss_tp(_adapter *adapter,
+					const char __user *buffer, size_t count)
+{
+	struct mlme_ext_priv *pmlmeext = &adapter->mlmeextpriv;
+	char tmp[32];
+	u32 enable = 0;
+	u32 txss_tx_tp = 0;
+	int txss_chk_cnt = 0;
+
+	if (!adapter)
+		return -EFAULT;
+
+	if (!buffer) {
+		RTW_INFO("input buffer is NULL!\n");
+		return -EFAULT;
+	}
+
+	if (count < 1) {
+		RTW_INFO("input length is 0!\n");
+		return -EFAULT;
+	}
+
+	if (count > sizeof(tmp)) {
+		RTW_INFO("input length is too large\n");
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%u %u %d", &enable, &txss_tx_tp,
+				 &txss_chk_cnt);
+
+		if (num < 1) {
+			RTW_INFO("input parameters < 1\n");
+			return -EINVAL;
+		}
+		pmlmeext->txss_ctrl_en = (u8)enable;
+
+		if (txss_tx_tp)
+			pmlmeext->txss_tp_th = (u16)txss_tx_tp;
+		if (txss_chk_cnt)
+			pmlmeext->txss_tp_chk_cnt = (u8)txss_chk_cnt;
+
+		RTW_INFO("%s txss_ctl_en :%s , txss_tp_th:%d, tp_chk_cnt:%d\n",
+			 __func__, pmlmeext->txss_tp_th ? "Y" : "N",
+			 pmlmeext->txss_tp_th, pmlmeext->txss_tp_chk_cnt);
+	}
+
+	return count;
+}
+
+#ifdef DBG_CTRL_TXSS
+void rtw_rust_debug_proc_emit_txss_ctrl(void *sel, _adapter *adapter)
+{
+	struct mlme_ext_priv *pmlmeext = &adapter->mlmeextpriv;
+
+	RTW_PRINT_SEL(sel, "TXSS  1ss - %s\n", pmlmeext->txss_1ss ? "Y" : "N");
+}
+
+ssize_t rtw_rust_debug_proc_set_txss_ctrl(_adapter *adapter,
+					  const char __user *buffer,
+					  size_t count)
+{
+	struct mlme_ext_priv *pmlmeext = &adapter->mlmeextpriv;
+	char tmp[32];
+	u32 tx_1ss = 0;
+
+	if (!adapter)
+		return -EFAULT;
+
+	if (!buffer) {
+		RTW_INFO("input buffer is NULL!\n");
+		return -EFAULT;
+	}
+
+	if (count < 1) {
+		RTW_INFO("input length is 0!\n");
+		return -EFAULT;
+	}
+
+	if (count > sizeof(tmp)) {
+		RTW_INFO("input length is too large\n");
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%u", &tx_1ss);
+
+		if (num < 1) {
+			RTW_INFO("input parameters < 1\n");
+			return -EINVAL;
+		}
+
+		pmlmeext->txss_ctrl_en = _FALSE;
+		dbg_ctrl_txss(adapter, tx_1ss);
+
+		RTW_INFO("%s set tx to  1ss :%s\n", __func__, tx_1ss ? "Y" : "N");
+	}
+
+	return count;
+}
+#endif /* DBG_CTRL_TXSS */
+#endif /* CONFIG_CTRL_TXSS_BY_TP */
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */
