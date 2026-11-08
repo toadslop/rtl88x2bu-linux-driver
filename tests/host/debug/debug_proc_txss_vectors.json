@@ -1,0 +1,65 @@
+{
+  "vectors": [
+    {
+      "name": "txss_tp_get_fixture",
+      "txss_ctrl_en": 1,
+      "txss_tp_th": 50,
+      "txss_tp_chk_cnt": 3,
+      "get": "txss_tp",
+      "expect": "TXSS  Control - enable\nTXSS  Tx TP TH - 50\nTXSS  check cnt - 3\n"
+    },
+    {
+      "name": "txss_tp_set_enable_only",
+      "set": "txss_tp",
+      "set_input": "1",
+      "expect_txss_ctrl_en": 1
+    },
+    {
+      "name": "txss_tp_set_thresholds",
+      "txss_tp_th": 10,
+      "txss_tp_chk_cnt": 2,
+      "set": "txss_tp",
+      "set_input": "1 100 5",
+      "expect_txss_ctrl_en": 1,
+      "expect_txss_tp_th": 100,
+      "expect_txss_tp_chk_cnt": 5
+    },
+    {
+      "name": "txss_tp_zero_thresholds_preserved",
+      "txss_tp_th": 77,
+      "txss_tp_chk_cnt": 9,
+      "set": "txss_tp",
+      "set_input": "0 0 0",
+      "expect_txss_ctrl_en": 0,
+      "expect_txss_tp_th": 77,
+      "expect_txss_tp_chk_cnt": 9
+    },
+    {
+      "name": "txss_tp_invalid_sscanf",
+      "set": "txss_tp",
+      "set_input": "x",
+      "set_expect_ret": -22
+    },
+    {
+      "name": "txss_tp_count_too_large",
+      "set": "txss_tp",
+      "set_input": "012345678901234567890123456789012345",
+      "set_expect_ret": -14
+    },
+    {
+      "name": "txss_ctrl_get",
+      "txss_1ss": 1,
+      "get": "txss_ctrl",
+      "expect": "TXSS  1ss - Y\n"
+    },
+    {
+      "name": "txss_ctrl_set",
+      "txss_ctrl_en": 1,
+      "set": "txss_ctrl",
+      "set_input": "1",
+      "expect_txss_ctrl_en": 0,
+      "expect_dbg_ctrl_calls": 1,
+      "expect_last_tx_1ss": 1
+    }
+  ]
+}
