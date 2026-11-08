@@ -8039,6 +8039,7 @@ int proc_get_lps_chk_tp(struct seq_file *m, void *v)
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-225 in rust/rtw_debug_proc_lps_tp.rs */
 #endif /*CONFIG_LPS_CHK_BY_TP*/
 #ifdef CONFIG_SUPPORT_STATIC_SMPS
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 ssize_t proc_set_smps(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
 	struct net_device *dev = data;
@@ -8116,6 +8117,7 @@ int proc_get_smps(struct seq_file *m, void *v)
 	#endif
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-226 in rust/rtw_debug_proc_smps.rs */
 #endif /*CONFIG_SUPPORT_STATIC_SMPS*/
 
 #endif /* CONFIG_PROC_DEBUG */

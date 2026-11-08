@@ -1,0 +1,3 @@
+# L1 allowlist for W3-226: Rust owns static SMPS proc get/set in rtw_debug_proc_smps.o.
+drop rtw_rust_debug_proc_emit_smps
+drop rtw_rust_debug_proc_set_smps
