@@ -43,6 +43,24 @@
       "expect_lps_rx_pkts": 20
     },
     {
+      "name": "lps_chk_tp_zero_optional_preserved",
+      "lps_tx_tp_th": 11,
+      "lps_rx_tp_th": 22,
+      "lps_bi_tp_th": 33,
+      "lps_chk_cnt_th": 7,
+      "lps_tx_pkts": 8,
+      "lps_rx_pkts": 9,
+      "set": "lps_chk_tp",
+      "set_input": "0 0 0 0 0 0 0",
+      "expect_lps_chk_by_tp": 0,
+      "expect_lps_tx_tp_th": 11,
+      "expect_lps_rx_tp_th": 22,
+      "expect_lps_bi_tp_th": 33,
+      "expect_lps_chk_cnt_th": 7,
+      "expect_lps_tx_pkts": 8,
+      "expect_lps_rx_pkts": 9
+    },
+    {
       "name": "lps_chk_tp_invalid_sscanf",
       "set": "lps_chk_tp",
       "set_input": "x",
