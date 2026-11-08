@@ -354,6 +354,10 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-221 | #1766 | [W3-221] Translate rtw_debug_rest.c — proc TX mgmt inject test leaf |
 | W3-222 | #1767 | [W3-222] Translate rtw_debug_rest.c — proc MCC registry setters (part 1) |
 | W3-223 | #1805 | [W3-223] Translate rtw_debug_rest.c — proc MCC target TP setters |
+| W3-224 | #1812 | [W3-224] Translate rtw_debug_rest.c — proc TXSS by TP leaf |
+| W3-225 | #1813 | [W3-225] Translate rtw_debug_rest.c — proc LPS check-by-TP leaf |
+| W3-226 | #1814 | [W3-226] Translate rtw_debug_rest.c — proc static SMPS leaf |
+| W3-227 | #1815 | [W3-227] Translate rtw_debug_rest.c — proc ACK timeout leaf |
 
 ## Superseded issues
 

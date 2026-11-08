@@ -351,6 +351,16 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-221 | `wave3-221-debug-proc-tx-mgmt-test.md` | TX sa_query / deauth / auth inject procs |
 | W3-222 | `wave3-222-debug-proc-mcc-setters.md` | MCC registry setters (part 1) |
 
+## Children (tranche 25 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-223 | `wave3-223-debug-proc-mcc-tp-setters.md` | MCC target TP setters (part 2) |
+| W3-224 | `wave3-224-debug-proc-txss-tp.md` | TXSS by TP proc debug leaf |
+| W3-225 | `wave3-225-debug-proc-lps-chk-tp.md` | LPS check-by-TP proc leaf |
+| W3-226 | `wave3-226-debug-proc-static-smps.md` | Static SMPS proc leaf |
+| W3-227 | `wave3-227-debug-proc-ack-timeout.md` | ACK timeout proc get/set |
+
 Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:
 
 - `rtw_debug.c` procfs walkers / register dumps (mostly Rust-wrapped — audit before filing)

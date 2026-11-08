@@ -387,6 +387,11 @@ files=(
   wave3-220-debug-proc-monitor-xmit.md
   wave3-221-debug-proc-tx-mgmt-test.md
   wave3-222-debug-proc-mcc-setters.md
+  wave3-223-debug-proc-mcc-tp-setters.md
+  wave3-224-debug-proc-txss-tp.md
+  wave3-225-debug-proc-lps-chk-tp.md
+  wave3-226-debug-proc-static-smps.md
+  wave3-227-debug-proc-ack-timeout.md
 )
 
 # draft_id -> github issue number
