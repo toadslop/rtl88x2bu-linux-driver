@@ -165,9 +165,12 @@ int main(int argc, char **argv)
 	if (host_load_vectors(argc > 1 ? argv[1] : "debug_proc_txss_vectors.json",
 			      v, sizeof(v[0]), MAX_V, parse_vector, &n))
 		return 1;
-	for (size_t i = 0; i < n; i++)
-		if (run_one(&v[i]))
+	for (size_t i = 0; i < n; i++) {
+		if (run_one(&v[i])) {
+			fprintf(stderr, "fail: %s\n", v[i].name);
 			return 1;
+		}
+	}
 	printf("ok: %zu proc txss vectors\n", n);
 	return 0;
 }
