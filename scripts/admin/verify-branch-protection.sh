@@ -1,5 +1,5 @@
 #!/bin/bash
-# T18: Read-only check that master requires L0/L1/L2 status checks (issue #1795).
+# T18/T19: Read-only check that master requires L0/L1/L2 + rustfmt + module-l3 (#1795, #1796).
 set -euo pipefail
 
 REPO="${GITHUB_REPOSITORY:-toadslop/rtl88x2bu-linux-driver}"
@@ -9,6 +9,8 @@ EXPECTED=(
 	host-l2
 	module-l0
 	module-l1
+	rustfmt
+	module-l3
 )
 
 if ! command -v gh >/dev/null 2>&1; then

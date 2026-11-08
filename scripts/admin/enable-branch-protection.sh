@@ -1,5 +1,5 @@
 #!/bin/bash
-# T18: Enable branch protection on master with L0/L1/L2 required checks.
+# T18/T19: Enable branch protection on master with L0/L1/L2 + rustfmt + module-l3.
 # Requires a token with repo admin rights (Settings → Branches API).
 # Automation PATs without administration scope return HTTP 403 — run locally as maintainer.
 set -euo pipefail
@@ -13,6 +13,8 @@ REQUIRED_CONTEXTS=(
 	host-l2
 	module-l0
 	module-l1
+	rustfmt
+	module-l3
 )
 
 if ! command -v gh >/dev/null 2>&1; then

@@ -339,7 +339,7 @@ GitHub Actions L3 runs inside the L0 container after a full module build (T8, is
 | Item | Value |
 |------|-------|
 | Workflow | [`.github/workflows/module-l3.yml`](../../.github/workflows/module-l3.yml) |
-| Trigger | `push` to `master` (path-filtered driver/build inputs) |
+| Trigger | `push` to `master` (path-filtered); `pull_request` always runs with in-job path filter (T19) |
 | Initramfs | [`scripts/ci/build-l3-initrd.sh`](../../scripts/ci/build-l3-initrd.sh) |
 | QEMU runner | [`scripts/ci/run-l3-qemu.sh`](../../scripts/ci/run-l3-qemu.sh) |
 | Image deps | `qemu-system-x86`, `busybox-static` in [`.github/docker/l0/Dockerfile`](../../.github/docker/l0/Dockerfile) |
@@ -362,8 +362,8 @@ CI workflows exist, but merges stay unblocked until a **repo admin** enables bra
 | Field | Value |
 |-------|-------|
 | **Protection on `master`** | **Not enabled** (verified 2026-11-07 via `gh api …/branches/master/protection` → 404) |
-| **Required checks when enabled** | `host-l2`, `module-l0`, `module-l1` (check-run contexts; see [`contributing.md`](../contributing.md#required-ci-checks-pull-requests)) |
-| **L3 on pull requests** | Advisory until [T19](issues/test-19-branch-protection-extended-checks.md) lands its workflow prerequisite |
+| **Required checks when enabled** | `host-l2`, `module-l0`, `module-l1` ([T18](issues/test-18-branch-protection-enable.md)); add `rustfmt` + `module-l3` after [T19](issues/test-19-branch-protection-extended-checks.md) lands — see `scripts/admin/enable-branch-protection.sh` |
+| **L3 on pull requests** | Path-scoped via in-job skip ([T19](issues/test-19-branch-protection-extended-checks.md)); safe to require `module-l3` once that workflow ships |
 
 **Repo admin — one-shot enable (preferred):**
 
@@ -375,7 +375,7 @@ chmod +x scripts/admin/enable-branch-protection.sh
 ./scripts/admin/verify-branch-protection.sh
 ```
 
-Then update the **Status** table above (date + “enabled”) and close #1795. Cursor automation tokens cannot call the branch protection API (HTTP 403); the script is for maintainer use only.
+After [T18](issues/test-18-branch-protection-enable.md) enablement, update the **Status** table and close #1795. After [T19](issues/test-19-branch-protection-extended-checks.md) merges, re-run the same scripts to add `rustfmt` and `module-l3`, then close #1796. Cursor automation tokens cannot call the branch protection API (HTTP 403); the script is for maintainer use only.
 
 ### Settings (repo admin)
 
@@ -389,20 +389,21 @@ Then update the **Status** table above (date + “enabled”) and close #1795. C
 | `host-l2` | PRs touching `rust/**`, `core/**`, `tests/host/**`, etc. |
 | `module-l0` | PRs touching driver/build inputs (`core/`, `hal/`, `Makefile`, …) |
 | `module-l1` | PRs touching `rust/**`, `Makefile`, symbol scripts |
+| `rustfmt` | Every PR — full rustfmt when `rust/**` changes; status-constants always |
+| `module-l3` | Init/USB/scaffold, `Makefile`, `verify-ko-probes.sh`, `rust/bindings/**` — in-job skip otherwise |
 
-5. **Do not require** `Module L3 load / module-l3` on pull requests — that workflow runs on `push` to `master` only (post-merge health gate).
-6. **Do not require** `Publish L0 CI image / build-and-push` — it runs only when Docker or kernel-pin files change.
-7. **CodeQL** (if enabled via GitHub Advanced Security) is optional; it is not an in-repo required workflow.
+5. **Do not require** `Publish L0 CI image / build-and-push` — it runs only when Docker or kernel-pin files change.
+6. **CodeQL** (if enabled via GitHub Advanced Security) is optional; it is not an in-repo required workflow.
 
 Optional team preferences: dismiss stale pull request approvals, require linear history.
 
 ### Path-scoped PR checks (T10)
 
-On **pull requests**, L0/L1/L2 workflows always trigger (no workflow-level `paths:` on `pull_request`). Each job uses [`dorny/paths-filter`](https://github.com/dorny/paths-filter) to decide whether to run the full gate or a no-op skip step. Out-of-scope PRs (e.g. docs-only) report **Success** on all three required checks instead of staying **Waiting for status to be reported** ([GitHub troubleshooting docs](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/troubleshooting-required-status-checks)).
+On **pull requests**, L0/L1/L2, `rustfmt`, and `module-l3` workflows always trigger (no workflow-level `paths:` on `pull_request` for those jobs). Each job uses [`dorny/paths-filter`](https://github.com/dorny/paths-filter) to decide whether to run the full gate or a no-op skip step. Out-of-scope PRs (e.g. docs-only) report **Success** on every required check context instead of staying **Waiting for status to be reported** ([GitHub troubleshooting docs](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/collaborating-on-repositories-with-code-quality-features/troubleshooting-required-status-checks)).
 
 **Push to `master`** still uses workflow-level `paths:` filters so post-merge CI skips unrelated commits.
 
-Admins can require `host-l2`, `module-l0`, and `module-l1` on pull requests without an admin bypass for docs-only PRs.
+Admins can require all five PR check contexts without an admin bypass for docs-only PRs.
 
 ### Fork pull requests
 
