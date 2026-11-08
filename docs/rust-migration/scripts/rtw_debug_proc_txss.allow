@@ -1,0 +1,9 @@
+# L1 allowlist for W3-224: Rust owns TXSS-by-TP proc handlers in rtw_debug_proc_txss.o.
+drop proc_get_txss_tp
+drop proc_set_txss_tp
+drop proc_get_txss_ctrl
+drop proc_set_txss_ctrl
+drop rtw_rust_debug_proc_emit_txss_tp
+drop rtw_rust_debug_proc_set_txss_tp
+drop rtw_rust_debug_proc_emit_txss_ctrl
+drop rtw_rust_debug_proc_set_txss_ctrl
