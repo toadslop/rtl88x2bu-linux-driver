@@ -556,7 +556,7 @@ test-proc-txss-rust: test_proc_txss_rust
 
 test_proc_txss_rust: $(TXSS_L2) librust_rtw_debug_proc_txss.a $(TXSS_SHIM) \
 		$(TXSS_HOST) $(HOST_JSON)
-	$(CC) $(CFLAGS) $(TXSS_CFG) -DPROC_TXSS_RUST_TEST -I$(HOST_INC) -o $@ \
+	$(CC) $(CFLAGS) $(TXSS_CFG) -DRUST_RTW_DEBUG_PROC_TXSS_ORACLE -I$(HOST_INC) -o $@ \
 		$(TXSS_L2) $(TXSS_SHIM) $(TXSS_HOST) $(HOST_JSON) \
 		librust_rtw_debug_proc_txss.a
 
