@@ -23,6 +23,18 @@ ssize_t proc_set_mcc_phydm_offload_enable(void *file, const void *buffer,
 #endif
 ssize_t proc_set_mcc_single_tx_criteria(void *file, const void *buffer,
 					size_t count, long *pos, void *data);
+ssize_t proc_set_mcc_ap_bw20_target_tp(void *file, const void *buffer,
+				     size_t count, long *pos, void *data);
+ssize_t proc_set_mcc_ap_bw40_target_tp(void *file, const void *buffer,
+				     size_t count, long *pos, void *data);
+ssize_t proc_set_mcc_ap_bw80_target_tp(void *file, const void *buffer,
+				     size_t count, long *pos, void *data);
+ssize_t proc_set_mcc_sta_bw20_target_tp(void *file, const void *buffer,
+				      size_t count, long *pos, void *data);
+ssize_t proc_set_mcc_sta_bw40_target_tp(void *file, const void *buffer,
+				      size_t count, long *pos, void *data);
+ssize_t proc_set_mcc_sta_bw80_target_tp(void *file, const void *buffer,
+				      size_t count, long *pos, void *data);
 
 struct vector {
 	char name[MAX_NAME];
@@ -36,6 +48,9 @@ struct vector {
 	int expect_phydm_cmd;
 	u8 expect_phydm_enable;
 	u32 expect_single_tx[MAX_IFACE];
+	u32 expect_target_tp;
+	int has_expect_target_tp;
+	char expect_tp_field[MAX_FIELD];
 	char set_field[MAX_FIELD];
 	char set_input[MAX_INPUT];
 	int set_expect_ret;
@@ -168,6 +183,14 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 		v->set_expect_ret = tmp;
 		v->has_set_expect_ret = 1;
 	}
+	if (host_json_find_key_in(obj, len, "expect_target_tp")) {
+		int tmp;
+
+		if (host_json_parse_int_in(obj, len, "expect_target_tp", &tmp))
+			return -1;
+		v->expect_target_tp = (u32)tmp;
+		v->has_expect_target_tp = 1;
+	}
 	return 0;
 }
 
@@ -211,7 +234,42 @@ static ssize_t invoke_set(const struct vector *v, const char *input,
 	if (!strcmp(v->set_field, "mcc_single_tx"))
 		return proc_set_mcc_single_tx_criteria(NULL, input, count, &pos,
 						      dev);
+	if (!strcmp(v->set_field, "mcc_ap_bw20_tp"))
+		return proc_set_mcc_ap_bw20_target_tp(NULL, input, count, &pos,
+						      dev);
+	if (!strcmp(v->set_field, "mcc_ap_bw40_tp"))
+		return proc_set_mcc_ap_bw40_target_tp(NULL, input, count, &pos,
+						      dev);
+	if (!strcmp(v->set_field, "mcc_ap_bw80_tp"))
+		return proc_set_mcc_ap_bw80_target_tp(NULL, input, count, &pos,
+						      dev);
+	if (!strcmp(v->set_field, "mcc_sta_bw20_tp"))
+		return proc_set_mcc_sta_bw20_target_tp(NULL, input, count, &pos,
+						       dev);
+	if (!strcmp(v->set_field, "mcc_sta_bw40_tp"))
+		return proc_set_mcc_sta_bw40_target_tp(NULL, input, count, &pos,
+						       dev);
+	if (!strcmp(v->set_field, "mcc_sta_bw80_tp"))
+		return proc_set_mcc_sta_bw80_target_tp(NULL, input, count, &pos,
+						       dev);
 	return -999;
+}
+
+static u32 *target_tp_field(struct _adapter *padapter, const char *set_field)
+{
+	if (!strcmp(set_field, "mcc_ap_bw20_tp"))
+		return &padapter->registrypriv.rtw_mcc_ap_bw20_target_tx_tp;
+	if (!strcmp(set_field, "mcc_ap_bw40_tp"))
+		return &padapter->registrypriv.rtw_mcc_ap_bw40_target_tx_tp;
+	if (!strcmp(set_field, "mcc_ap_bw80_tp"))
+		return &padapter->registrypriv.rtw_mcc_ap_bw80_target_tx_tp;
+	if (!strcmp(set_field, "mcc_sta_bw20_tp"))
+		return &padapter->registrypriv.rtw_mcc_sta_bw20_target_tx_tp;
+	if (!strcmp(set_field, "mcc_sta_bw40_tp"))
+		return &padapter->registrypriv.rtw_mcc_sta_bw40_target_tx_tp;
+	if (!strcmp(set_field, "mcc_sta_bw80_tp"))
+		return &padapter->registrypriv.rtw_mcc_sta_bw80_target_tx_tp;
+	return NULL;
 }
 
 static int check_vector(const struct vector *v)
@@ -317,6 +375,22 @@ static int check_vector(const struct vector *v)
 					v->expect_single_tx[i]);
 				return -1;
 			}
+		}
+	}
+
+	if (v->has_expect_target_tp) {
+		struct _adapter *padapter = rtw_netdev_priv(&dev);
+		u32 *field = target_tp_field(padapter, v->set_field);
+
+		if (!field) {
+			fprintf(stderr, "%s: unknown tp set %s\n", v->name,
+				v->set_field);
+			return -1;
+		}
+		if (*field != v->expect_target_tp) {
+			fprintf(stderr, "%s: target_tp %u != %u\n", v->name,
+				*field, v->expect_target_tp);
+			return -1;
 		}
 	}
 
