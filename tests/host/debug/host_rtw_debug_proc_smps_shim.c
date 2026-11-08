@@ -50,11 +50,12 @@ void rtw_ssmps_wk_cmd_stub(void *adapter, void *sta, u8 smps, u8 enqueue)
 
 void rtw_rust_debug_proc_emit_smps(void *sel, void *adapter)
 {
-	struct mlme_ext_priv *pmlmeext =
-		&((struct _adapter *)adapter)->mlmeextpriv;
+	struct mlme_ext_priv *pmlmeext;
 
 	if (!adapter)
 		return;
+
+	pmlmeext = &((struct _adapter *)adapter)->mlmeextpriv;
 	RTW_PRINT_SEL(sel, "Static SMPS %s\n",
 		      pmlmeext->ssmps_en ? "enable" : "disable");
 	RTW_PRINT_SEL(sel, "Tx TP TH %d\n", pmlmeext->ssmps_tx_tp_th);
@@ -68,8 +69,12 @@ void rtw_rust_debug_proc_emit_smps(void *sel, void *adapter)
 long rtw_rust_debug_proc_set_smps(void *adapter, const void *buffer,
 				  size_t count)
 {
-	struct mlme_ext_priv *pmlmeext =
-		&((struct _adapter *)adapter)->mlmeextpriv;
+	struct mlme_ext_priv *pmlmeext;
+
+	if (!adapter)
+		return -EFAULT;
+
+	pmlmeext = &((struct _adapter *)adapter)->mlmeextpriv;
 	char tmp[32];
 	u32 smps_en, smps_tx_tp = 0, smps_rx_tp = 0;
 #ifdef DBG_STATIC_SMPS
