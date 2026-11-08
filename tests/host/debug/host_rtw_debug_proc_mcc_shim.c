@@ -44,3 +44,45 @@ long rtw_rust_debug_proc_set_mcc_single_tx_criteria(void *adapter,
 {
 	return host_proc_set_mcc_single_tx_criteria(adapter, buffer, count);
 }
+
+long rtw_rust_debug_proc_set_mcc_ap_bw20_target_tp(void *adapter,
+						   const void *buffer,
+						   size_t count)
+{
+	return host_proc_set_mcc_ap_bw20_target_tp(adapter, buffer, count);
+}
+
+long rtw_rust_debug_proc_set_mcc_ap_bw40_target_tp(void *adapter,
+						   const void *buffer,
+						   size_t count)
+{
+	return host_proc_set_mcc_ap_bw40_target_tp(adapter, buffer, count);
+}
+
+long rtw_rust_debug_proc_set_mcc_ap_bw80_target_tp(void *adapter,
+						   const void *buffer,
+						   size_t count)
+{
+	return host_proc_set_mcc_ap_bw80_target_tp(adapter, buffer, count);
+}
+
+long rtw_rust_debug_proc_set_mcc_sta_bw20_target_tp(void *adapter,
+						    const void *buffer,
+						    size_t count)
+{
+	return host_proc_set_mcc_sta_bw20_target_tp(adapter, buffer, count);
+}
+
+long rtw_rust_debug_proc_set_mcc_sta_bw40_target_tp(void *adapter,
+						    const void *buffer,
+						    size_t count)
+{
+	return host_proc_set_mcc_sta_bw40_target_tp(adapter, buffer, count);
+}
+
+long rtw_rust_debug_proc_set_mcc_sta_bw80_target_tp(void *adapter,
+						    const void *buffer,
+						    size_t count)
+{
+	return host_proc_set_mcc_sta_bw80_target_tp(adapter, buffer, count);
+}
