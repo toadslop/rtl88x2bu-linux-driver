@@ -29,6 +29,7 @@
 //! W3-220 proc monitor / simple_config / xmit_block live in `rtw_debug_proc_monitor.rs`.
 //! W3-221 proc 11w TX mgmt inject test leaves live in `rtw_debug_proc_tx_mgmt.rs`.
 //! W3-224 proc TXSS-by-TP handlers live in `rtw_debug_proc_txss.rs`.
+//! W3-225 proc LPS check-by-TP handlers live in `rtw_debug_proc_lps_tp.rs`.
 //! W3-210 PHY cap dump helpers live in `rtw_debug_phy_cap.rs`.
 
 #![allow(
