@@ -1,0 +1,76 @@
+{
+  "vectors": [
+    {
+      "name": "lps_chk_tp_get_fixture",
+      "lps_chk_by_tp": 1,
+      "lps_tx_tp_th": 50,
+      "lps_rx_tp_th": 40,
+      "lps_bi_tp_th": 30,
+      "lps_chk_cnt_th": 5,
+      "lps_tx_pkts": 100,
+      "lps_rx_pkts": 200,
+      "get": "lps_chk_tp",
+      "expect": "LPS chk by tp - enable\nLPS Tx TP TH - 50(Mbps)\nLPS Rx TP TH - 40(Mbps)\nLPS BI TP TH - 30(Mbps)\nLPS CHK CNT - 5\nLPS Tx PKTs - 100\nLPS Rx PKTs - 200\n"
+    },
+    {
+      "name": "lps_chk_tp_set_enable_only",
+      "set": "lps_chk_tp",
+      "set_input": "1",
+      "expect_lps_chk_by_tp": 1
+    },
+    {
+      "name": "lps_chk_tp_set_tx_tp_broadcast",
+      "lps_tx_tp_th": 10,
+      "lps_rx_tp_th": 20,
+      "lps_bi_tp_th": 30,
+      "set": "lps_chk_tp",
+      "set_input": "1 100",
+      "expect_lps_chk_by_tp": 1,
+      "expect_lps_tx_tp_th": 100,
+      "expect_lps_rx_tp_th": 100,
+      "expect_lps_bi_tp_th": 100
+    },
+    {
+      "name": "lps_chk_tp_set_partial_thresholds",
+      "set": "lps_chk_tp",
+      "set_input": "1 50 60 70 4 10 20",
+      "expect_lps_chk_by_tp": 1,
+      "expect_lps_tx_tp_th": 50,
+      "expect_lps_rx_tp_th": 60,
+      "expect_lps_bi_tp_th": 70,
+      "expect_lps_chk_cnt_th": 4,
+      "expect_lps_tx_pkts": 10,
+      "expect_lps_rx_pkts": 20
+    },
+    {
+      "name": "lps_chk_tp_zero_optional_preserved",
+      "lps_tx_tp_th": 11,
+      "lps_rx_tp_th": 22,
+      "lps_bi_tp_th": 33,
+      "lps_chk_cnt_th": 7,
+      "lps_tx_pkts": 8,
+      "lps_rx_pkts": 9,
+      "set": "lps_chk_tp",
+      "set_input": "0 0 0 0 0 0 0",
+      "expect_lps_chk_by_tp": 0,
+      "expect_lps_tx_tp_th": 11,
+      "expect_lps_rx_tp_th": 22,
+      "expect_lps_bi_tp_th": 33,
+      "expect_lps_chk_cnt_th": 7,
+      "expect_lps_tx_pkts": 8,
+      "expect_lps_rx_pkts": 9
+    },
+    {
+      "name": "lps_chk_tp_invalid_sscanf",
+      "set": "lps_chk_tp",
+      "set_input": "x",
+      "set_expect_ret": -22
+    },
+    {
+      "name": "lps_chk_tp_count_too_large",
+      "set": "lps_chk_tp",
+      "set_input": "012345678901234567890123456789012345",
+      "set_expect_ret": -14
+    }
+  ]
+}
