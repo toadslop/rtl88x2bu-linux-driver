@@ -165,7 +165,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-sreset-c test-proc-sreset-rust \
 	test-proc-misc-c test-proc-misc-rust \
 	test-proc-mcc-c test-proc-mcc-rust \
-	test-proc-txss-c test-proc-txss-rust \
+	test-proc-txss-c \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
@@ -187,7 +187,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-sreset-c \
 	test-proc-misc-c test-proc-misc-rust \
 	test-proc-mcc-c test-proc-mcc-rust \
-	test-proc-txss-c test-proc-txss-rust \
+	test-proc-txss-c \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
@@ -199,7 +199,7 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 	test-proc-wow-c \
 	test-proc-vht-c test-proc-fwps-c test-proc-rx-ampdu-c test-proc-tdls-c \
 	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c test-proc-phy-cap-registry-c \
-	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-proc-mcc-c test-proc-monitor-c \
+	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-proc-mcc-c test-proc-txss-c test-proc-monitor-c \
 	test-proc-ps-info-c test-proc-tx-mgmt-c \
 	test-phy-cap-dump-c
 

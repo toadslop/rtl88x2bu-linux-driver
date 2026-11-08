@@ -117,6 +117,8 @@ static int run_one(const struct vector *v)
 			ret = proc_set_txss_ctrl(NULL, v->set_input,
 						 strlen(v->set_input), NULL, &d);
 #endif
+		else
+			return -1;
 		if (v->has_exp_ret && (int)ret != v->exp_ret)
 			return -1;
 		if (v->has_exp_ctrl && (int)m->txss_ctrl_en != v->exp_ctrl)
@@ -144,6 +146,8 @@ static int run_one(const struct vector *v)
 	else if (!strcmp(v->get, "txss_ctrl"))
 		proc_get_txss_ctrl(&s, NULL);
 #endif
+	else
+		return -1;
 	size_t nread;
 
 	rewind(cap);
