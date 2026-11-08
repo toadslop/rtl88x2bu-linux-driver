@@ -120,6 +120,11 @@ FWPS_SHIM   := host_rtw_debug_proc_fwps_shim.c
 FWPS_RUST   := $(ROOT)/rust/rtw_debug_proc_fwps.rs
 FWPS_L2     := test_proc_en_fwps.c
 
+# W3-226 proc static SMPS get/set
+SMPS_ORACLE := debug_proc_smps_c_oracle.c
+SMPS_SHIM   := host_rtw_debug_proc_smps_shim.c
+SMPS_L2     := test_proc_smps.c
+
 # W3-204 proc rx_ampdu get/set
 AMPDU_ORACLE := debug_proc_rx_ampdu_c_oracle.c
 AMPDU_SHIM   := host_rtw_debug_proc_ampdu_shim.c
@@ -178,6 +183,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
+	test-proc-smps-c \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
 
 all: test
@@ -201,6 +207,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
+	test-proc-smps-c \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
 
 test-all: test
@@ -210,7 +217,7 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 	test-proc-vht-c test-proc-fwps-c test-proc-rx-ampdu-c test-proc-tdls-c \
 	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c test-proc-phy-cap-registry-c \
 	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-proc-mcc-c test-proc-txss-c test-proc-lps-tp-c test-proc-monitor-c \
-	test-proc-ps-info-c test-proc-tx-mgmt-c \
+	test-proc-ps-info-c test-proc-tx-mgmt-c test-proc-smps-c \
 	test-phy-cap-dump-c
 
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
@@ -341,6 +348,12 @@ test-proc-fwps-c: test_proc_en_fwps
 
 test_proc_en_fwps: $(FWPS_L2) $(FWPS_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ $(FWPS_L2) $(FWPS_ORACLE) $(HOST_JSON)
+
+test-proc-smps-c: test_proc_smps
+	./test_proc_smps debug_proc_smps_vectors.json
+
+test_proc_smps: $(SMPS_L2) $(SMPS_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ $(SMPS_L2) $(SMPS_ORACLE) $(HOST_JSON)
 
 librust_rtw_debug_proc_fwps.a: $(FWPS_RUST)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
