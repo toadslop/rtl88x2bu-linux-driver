@@ -1,0 +1,5 @@
+# L1 allowlist for W3-225: Rust owns LPS-chk-by-TP proc handlers in rtw_debug_proc_lps_tp.o.
+drop proc_get_lps_chk_tp
+drop proc_set_lps_chk_tp
+drop rtw_rust_debug_proc_emit_lps_chk_tp
+drop rtw_rust_debug_proc_set_lps_chk_tp

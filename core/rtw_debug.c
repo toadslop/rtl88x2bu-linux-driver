@@ -5679,6 +5679,94 @@ ssize_t rtw_rust_debug_proc_set_txss_ctrl(_adapter *adapter,
 #endif /* DBG_CTRL_TXSS */
 #endif /* CONFIG_CTRL_TXSS_BY_TP */
 
+#ifdef CONFIG_LPS_CHK_BY_TP
+void rtw_rust_debug_proc_emit_lps_chk_tp(void *sel, _adapter *adapter)
+{
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
+
+	RTW_PRINT_SEL(sel, "LPS chk by tp - %s\n",
+		      pwrpriv->lps_chk_by_tp ? "enable" : "disable");
+	RTW_PRINT_SEL(sel, "LPS Tx TP TH - %d(Mbps)\n", pwrpriv->lps_tx_tp_th);
+	RTW_PRINT_SEL(sel, "LPS Rx TP TH - %d(Mbps)\n", pwrpriv->lps_rx_tp_th);
+	RTW_PRINT_SEL(sel, "LPS BI TP TH - %d(Mbps)\n", pwrpriv->lps_bi_tp_th);
+	RTW_PRINT_SEL(sel, "LPS CHK CNT - %d\n", pwrpriv->lps_chk_cnt_th);
+	RTW_PRINT_SEL(sel, "LPS Tx PKTs - %d\n", pwrpriv->lps_tx_pkts);
+	RTW_PRINT_SEL(sel, "LPS Rx PKTs - %d\n", pwrpriv->lps_rx_pkts);
+}
+
+ssize_t rtw_rust_debug_proc_set_lps_chk_tp(_adapter *adapter,
+					   const char __user *buffer,
+					   size_t count)
+{
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
+	char tmp[32];
+	u32 enable = 0;
+	u32 lps_tx_tp = 0, lps_rx_tp = 0, lps_bi_tp = 0;
+	int lps_chk_cnt_th = 0;
+	u32 lps_tx_pkts = 0, lps_rx_pkts = 0;
+
+	if (!adapter)
+		return -EFAULT;
+
+	if (!buffer) {
+		RTW_INFO("input buffer is NULL!\n");
+		return -EFAULT;
+	}
+
+	if (count < 1) {
+		RTW_INFO("input length is 0!\n");
+		return -EFAULT;
+	}
+
+	if (count > sizeof(tmp)) {
+		RTW_INFO("input length is too large\n");
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%u %u %u %u %d %u %u",
+				 &enable, &lps_tx_tp, &lps_rx_tp, &lps_bi_tp,
+				 &lps_chk_cnt_th, &lps_tx_pkts, &lps_rx_pkts);
+
+		if (num < 1) {
+			RTW_INFO("input parameters < 1\n");
+			return -EINVAL;
+		}
+		pwrpriv->lps_chk_by_tp = enable;
+
+		if (lps_tx_tp) {
+			pwrpriv->lps_tx_tp_th = lps_tx_tp;
+			pwrpriv->lps_rx_tp_th = lps_tx_tp;
+			pwrpriv->lps_bi_tp_th = lps_tx_tp;
+		}
+		if (lps_rx_tp)
+			pwrpriv->lps_rx_tp_th = lps_rx_tp;
+		if (lps_bi_tp)
+			pwrpriv->lps_bi_tp_th = lps_bi_tp;
+
+		if (lps_chk_cnt_th)
+			pwrpriv->lps_chk_cnt_th = lps_chk_cnt_th;
+
+		if (lps_tx_pkts)
+			pwrpriv->lps_tx_pkts = lps_tx_pkts;
+
+		if (lps_rx_pkts)
+			pwrpriv->lps_rx_pkts = lps_rx_pkts;
+
+		RTW_INFO("%s lps_chk_by_tp:%s , lps_tx_tp_th:%d, lps_tx_tp_th:%d, lps_bi_tp:%d\n",
+			 __func__, pwrpriv->lps_chk_by_tp ? "Y" : "N",
+			 pwrpriv->lps_tx_tp_th, pwrpriv->lps_tx_tp_th,
+			 pwrpriv->lps_bi_tp_th);
+		RTW_INFO("%s lps_chk_cnt_th:%d , lps_tx_pkts:%d, lps_rx_pkts:%d\n",
+			 __func__, pwrpriv->lps_chk_cnt_th, pwrpriv->lps_tx_pkts,
+			 pwrpriv->lps_rx_pkts);
+	}
+
+	return count;
+}
+#endif /* CONFIG_LPS_CHK_BY_TP */
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */
