@@ -350,6 +350,7 @@ for path in "${changed[@]}"; do
 	| rust/rtw_debug_proc_misc.rs \
 	| rust/rtw_debug_proc_monitor.rs \
 	| rust/rtw_debug_proc_tx_mgmt.rs \
+	| rust/rtw_debug_proc_txss.rs \
 	| rust/rtw_debug_proc_mcc.rs \
 	| rust/rtw_debug_proc_btcoex.rs \
 	| rust/rtw_debug_proc_vht.rs \
