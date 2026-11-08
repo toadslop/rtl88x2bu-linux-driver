@@ -51,6 +51,8 @@ HOST_LPS_TP_SCOPE ssize_t rtw_rust_debug_proc_set_lps_chk_tp(
 	}
 
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		if (count < sizeof(tmp))
+			tmp[count] = '\0';
 		int num = sscanf(tmp, "%u %u %u %u %d %u %u",
 				 &enable, &lps_tx_tp, &lps_rx_tp, &lps_bi_tp,
 				 &lps_chk_cnt_th, &lps_tx_pkts, &lps_rx_pkts);
