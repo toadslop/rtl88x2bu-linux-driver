@@ -47,23 +47,17 @@ extern "C" {
 fn log_info(bytes: &[u8]) {
     let mut buf = [0i8; 64];
     let n = core::cmp::min(bytes.len(), buf.len().saturating_sub(1));
-    buf[..n].copy_from_slice(unsafe {
-        core::slice::from_raw_parts(bytes.as_ptr() as *const i8, n)
-    });
+    buf[..n]
+        .copy_from_slice(unsafe { core::slice::from_raw_parts(bytes.as_ptr() as *const i8, n) });
     unsafe { rtw_rust_debug_log_info(buf.as_ptr()) };
 }
 
-fn proc_set_read_tmp(
-    buffer: *const c_void,
-    count: usize,
-    tmp: &mut [i8; PROC_SET_TMP],
-) -> bool {
+fn proc_set_read_tmp(buffer: *const c_void, count: usize, tmp: &mut [i8; PROC_SET_TMP]) -> bool {
     if count < 1 || count > PROC_SET_TMP || buffer.is_null() {
         return false;
     }
-    let n = unsafe {
-        rtw_rust_debug_proc_read_user_line(buffer, count, tmp.as_mut_ptr(), tmp.len())
-    };
+    let n =
+        unsafe { rtw_rust_debug_proc_read_user_line(buffer, count, tmp.as_mut_ptr(), tmp.len()) };
     n > 0
 }
 
@@ -90,11 +84,7 @@ fn apply_pci_conf_set(
     let mut reg = 0u32;
     let mut value = 0u32;
     let num = unsafe {
-        rtw_rust_debug_proc_sscanf_x32_pair(
-            tmp.as_ptr() as *const u8,
-            &mut reg,
-            &mut value,
-        )
+        rtw_rust_debug_proc_sscanf_x32_pair(tmp.as_ptr() as *const u8, &mut reg, &mut value)
     };
     if num != 2 {
         log_info(b"invalid parameter!\n");
