@@ -1,0 +1,53 @@
+{
+  "vectors": [
+    {
+      "name": "ack_timeout_get_default",
+      "reg_ackto": 42,
+      "get": "ack_timeout",
+      "expect": "Current ACK Timeout = 42 us (0x2a).\n"
+    },
+    {
+      "name": "ack_timeout_set_single",
+      "set": "ack_timeout",
+      "set_input": "100",
+      "expect_write_ackto": 100,
+      "set_expect_ret": 3
+    },
+    {
+      "name": "ack_timeout_set_invalid_param",
+      "set": "ack_timeout",
+      "set_input": "x",
+      "set_expect_ret": -22
+    },
+    {
+      "name": "ack_timeout_set_count_too_large",
+      "set": "ack_timeout",
+      "set_input": "012345678901234567890123456789012345",
+      "set_expect_ret": -14
+    },
+    {
+      "name": "ack_timeout_get_8821c",
+      "reg_ackto": 10,
+      "reg_cck": 20,
+      "get": "ack_timeout",
+      "expect": "Current CCK packet ACK Timeout = 20 us (0x14).\nCurrent non-CCK packet ACK Timeout = 10 us (0xa).\n",
+      "cfg_8821c": 1
+    },
+    {
+      "name": "ack_timeout_set_dual",
+      "set": "ack_timeout",
+      "set_input": "55 66",
+      "expect_write_ackto": 55,
+      "expect_write_cck": 66,
+      "set_expect_ret": 5,
+      "cfg_8821c": 1
+    },
+    {
+      "name": "ack_timeout_set_dual_short",
+      "set": "ack_timeout",
+      "set_input": "1",
+      "set_expect_ret": -22,
+      "cfg_8821c": 1
+    }
+  ]
+}
