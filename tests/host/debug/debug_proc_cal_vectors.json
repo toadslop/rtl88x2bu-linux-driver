@@ -1,0 +1,58 @@
+{
+  "vectors": [
+    {
+      "name": "get_iqk_stub",
+      "get": "iqk",
+      "expect_ret": 0
+    },
+    {
+      "name": "get_lck_stub",
+      "get": "lck",
+      "expect_ret": 0
+    },
+    {
+      "name": "set_iqk_valid",
+      "set": "iqk",
+      "set_input": "1 0 1",
+      "set_expect_ret": 5,
+      "expect_iqk_calls": 1,
+      "expect_iqk_recovery": 1,
+      "expect_iqk_clear": 0,
+      "expect_iqk_segment": 1
+    },
+    {
+      "name": "set_iqk_invalid_arity",
+      "set": "iqk",
+      "set_input": "1",
+      "set_expect_ret": 1,
+      "expect_iqk_calls": 0
+    },
+    {
+      "name": "set_lck_valid",
+      "set": "lck",
+      "set_input": "1",
+      "set_expect_ret": 1,
+      "expect_lck_calls": 1
+    },
+    {
+      "name": "set_lck_invalid_arity",
+      "set": "lck",
+      "set_input": "1 2",
+      "set_expect_ret": 3,
+      "expect_lck_calls": 0
+    },
+    {
+      "name": "set_iqk_count_zero",
+      "set": "iqk",
+      "set_input": "",
+      "set_count": 0,
+      "set_expect_ret": -14
+    },
+    {
+      "name": "set_iqk_count_too_large",
+      "set": "iqk",
+      "set_input": "012345678901234567890123456789012345",
+      "set_expect_ret": -14
+    }
+  ]
+}
