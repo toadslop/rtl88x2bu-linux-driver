@@ -3040,6 +3040,11 @@ int rtw_rust_debug_proc_sscanf_u32_pair(const char *tmp, u32 *first, u32 *second
 	return sscanf(tmp, "%u %u", first, second);
 }
 
+int rtw_rust_debug_proc_sscanf_x32_pair(const char *tmp, u32 *first, u32 *second)
+{
+	return sscanf(tmp, "%x %x", first, second);
+}
+
 int rtw_rust_debug_proc_sscanf_u32_hhu(const char *tmp, u32 *u, u8 *b)
 {
 	return sscanf(tmp, "%u %hhu", u, b);
@@ -5292,6 +5297,7 @@ ssize_t proc_set_sreset(struct file *file, const char __user *buffer, size_t cou
 #endif /* DBG_CONFIG_ERROR_DETECT */
 
 #ifdef CONFIG_PCI_HCI
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 
 ssize_t proc_set_pci_bridge_conf_space(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
@@ -5417,6 +5423,8 @@ ssize_t proc_set_pci_conf_space(struct file *file, const char __user *buffer, si
 	}
 	return count;
 }
+
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-231 setters in rust/rtw_debug_proc_pci.rs */
 
 
 int proc_get_pci_conf_space(struct seq_file *m, void *v)

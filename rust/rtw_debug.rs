@@ -33,6 +33,7 @@
 //! W3-224 proc TXSS-by-TP handlers live in `rtw_debug_proc_txss.rs`.
 //! W3-225 proc LPS check-by-TP handlers live in `rtw_debug_proc_lps_tp.rs`.
 //! W3-227 proc ACK timeout handlers live in `rtw_debug_proc_ack.rs`.
+//! W3-231 PCI conf space proc setters live in `rtw_debug_proc_pci.rs`.
 //! W3-210 PHY cap dump helpers live in `rtw_debug_phy_cap.rs`.
 
 #![allow(
