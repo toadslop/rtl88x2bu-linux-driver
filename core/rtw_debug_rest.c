@@ -7952,6 +7952,7 @@ ssize_t proc_set_lck(struct file *file, const char __user *buffer, size_t count,
 #endif /* CONFIG_DBG_RF_CAL */
 
 #ifdef CONFIG_LPS_CHK_BY_TP
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 ssize_t proc_set_lps_chk_tp(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
 	struct net_device *dev = data;
@@ -8035,6 +8036,7 @@ int proc_get_lps_chk_tp(struct seq_file *m, void *v)
 	RTW_PRINT_SEL(m, "LPS Rx PKTs - %d\n", pwrpriv->lps_rx_pkts);
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-225 in rust/rtw_debug_proc_lps_tp.rs */
 #endif /*CONFIG_LPS_CHK_BY_TP*/
 #ifdef CONFIG_SUPPORT_STATIC_SMPS
 ssize_t proc_set_smps(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)

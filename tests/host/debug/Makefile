@@ -174,7 +174,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-misc-c test-proc-misc-rust \
 	test-proc-mcc-c test-proc-mcc-rust \
 	test-proc-txss-c test-proc-txss-rust \
-	test-proc-lps-tp-c \
+	test-proc-lps-tp-c test-proc-lps-tp-rust \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
@@ -197,7 +197,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-misc-c test-proc-misc-rust \
 	test-proc-mcc-c test-proc-mcc-rust \
 	test-proc-txss-c test-proc-txss-rust \
-	test-proc-lps-tp-c \
+	test-proc-lps-tp-c test-proc-lps-tp-rust \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
@@ -216,7 +216,7 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
 	test-proc-ht-rust test-proc-wow-rust test-proc-vht-rust test-proc-fwps-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-rust test-proc-tx-amsdu-rust test-proc-phy-cap-registry-rust \
-	test-proc-misc-rust test-proc-mcc-rust test-proc-monitor-rust test-proc-ps-info-rust test-proc-tx-mgmt-rust \
+	test-proc-misc-rust test-proc-mcc-rust test-proc-lps-tp-rust test-proc-monitor-rust test-proc-ps-info-rust test-proc-tx-mgmt-rust \
 	test-proc-txss-rust \
 	test-phy-cap-dump-rust
 
@@ -599,6 +599,22 @@ test_proc_lps_tp: $(LPS_TP_L2) $(LPS_TP_ORACLE) $(LPS_TP_HOST) $(HOST_JSON)
 	$(CC) $(CFLAGS) $(LPS_TP_CFG) -I$(HOST_INC) -o $@ \
 		$(LPS_TP_L2) $(LPS_TP_ORACLE) $(LPS_TP_HOST) $(HOST_JSON)
 
+librust_rtw_debug_proc_lps_tp.a: $(LPS_TP_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_lps_tp_test \
+		--cfg config_lps_chk_by_tp \
+		--cfg config_rtw_debug --cfg config_proc_debug \
+		--crate-type staticlib $(LPS_TP_RUST) -o $@
+
+test-proc-lps-tp-rust: test_proc_lps_tp_rust
+	./test_proc_lps_tp_rust debug_proc_lps_tp_vectors.json
+
+test_proc_lps_tp_rust: $(LPS_TP_L2) librust_rtw_debug_proc_lps_tp.a $(LPS_TP_SHIM) \
+		$(LPS_TP_HOST) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(LPS_TP_CFG) -DRUST_RTW_DEBUG_PROC_LPS_TP_ORACLE -I$(HOST_INC) -o $@ \
+		$(LPS_TP_L2) $(LPS_TP_SHIM) $(LPS_TP_HOST) $(HOST_JSON) \
+		librust_rtw_debug_proc_lps_tp.a
+
 test-proc-monitor-c: test_proc_monitor
 	./test_proc_monitor debug_proc_monitor_vectors.json
 
@@ -686,7 +702,7 @@ clean:
 		test_proc_mcc_setters test_proc_mcc_setters_rust \
 		librust_rtw_debug_proc_mcc.a \
 		test_proc_txss test_proc_txss_rust librust_rtw_debug_proc_txss.a \
-		test_proc_lps_tp \
+		test_proc_lps_tp test_proc_lps_tp_rust librust_rtw_debug_proc_lps_tp.a \
 		test_proc_monitor test_proc_monitor_rust \
 		librust_rtw_debug_proc_monitor.a \
 		test_proc_ps_info test_proc_ps_info_rust librust_rtw_debug_proc_ps_info.a \

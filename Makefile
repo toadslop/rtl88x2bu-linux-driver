@@ -3032,6 +3032,16 @@ endif
 ifneq ($(_rust_cfg_dbg_ctrl_txss),)
 rustflags-y += --cfg config_dbg_ctrl_txss
 endif
+_rust_cfg_lps_chk_by_tp :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_LPS_CHK_BY_TP' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_lps_chk_by_tp := y
+endif
+ifneq ($(filter -DCONFIG_LPS_CHK_BY_TP,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_lps_chk_by_tp := y
+endif
+ifneq ($(_rust_cfg_lps_chk_by_tp),)
+rustflags-y += --cfg config_lps_chk_by_tp
+endif
 ifeq ($(CONFIG_POWER_SAVING), y)
 rustflags-y += --cfg config_power_saving
 endif
@@ -3288,6 +3298,9 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_mcc.o
 endif
 ifneq ($(_rust_cfg_ctrl_txss_by_tp),)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_txss.o
+endif
+ifneq ($(_rust_cfg_lps_chk_by_tp),)
+$(MODULE_NAME)-y += rust/rtw_debug_proc_lps_tp.o
 endif
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
@@ -5272,6 +5285,22 @@ rust-objects-rtw-debug-proc-mcc-c:
 rust-check-symbols-rtw-debug-proc-mcc: rust-objects-rtw-debug-proc-mcc-c rust-objects-rtw-debug-proc-mcc
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_mcc_c_ref.o NEW=rust/rtw_debug_proc_mcc.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_mcc.allow ALLOW_VACUOUS=1
+
+# W3-225: host C stub vs rust/rtw_debug_proc_lps_tp.o (LPS-chk-by-TP debug procs).
+rust-objects-rtw-debug-proc-lps-tp:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-lps-tp"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) USER_EXTRA_CFLAGS=-DCONFIG_LPS_CHK_BY_TP \
+		RUSTFLAGS="--cfg config_lps_chk_by_tp" -C $(KSRC) M=$(shell pwd) \
+		rust/rtw_debug_proc_lps_tp.o
+rust-objects-rtw-debug-proc-lps-tp-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_lps_tp_c_ref.o \
+		tests/host/debug/host_rtw_debug_proc_lps_tp_c_ref.c
+rust-check-symbols-rtw-debug-proc-lps-tp: rust-objects-rtw-debug-proc-lps-tp-c rust-objects-rtw-debug-proc-lps-tp
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_lps_tp_c_ref.o NEW=rust/rtw_debug_proc_lps_tp.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_lps_tp.allow ALLOW_VACUOUS=1
 
 # W3-214: host C oracle vs rust/rtw_debug_proc_misc.o (malloc cnt + best channel procs).
 rust-objects-rtw-debug-proc-misc:
