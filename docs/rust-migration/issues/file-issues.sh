@@ -392,6 +392,15 @@ files=(
   wave3-225-debug-proc-lps-chk-tp.md
   wave3-226-debug-proc-static-smps.md
   wave3-227-debug-proc-ack-timeout.md
+  wave3-228-debug-proc-fw-offload.md
+  wave3-229-debug-proc-fw-tbtt.md
+  wave3-230-debug-proc-iqk-lck.md
+  wave3-231-debug-proc-pci-setters.md
+  wave3-232-debug-proc-pci-dumps.md
+  wave3-233-debug-proc-ring-dumps.md
+  wave3-234-debug-proc-rtkm-info.md
+  wave3-235-debug-proc-wow-keepalive.md
+  wave3-236-debug-proc-p2p-wowlan.md
 )
 
 # draft_id -> github issue number
