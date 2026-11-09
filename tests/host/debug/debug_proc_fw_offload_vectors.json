@@ -1,0 +1,55 @@
+{
+  "vectors": [
+    {
+      "name": "get_fw_offload_disable",
+      "iqk_offload": 0,
+      "ch_switch_offload": 0,
+      "get": "fw_offload",
+      "expect": "IQK FW offload:disable\nChannel switch FW offload:disable\n"
+    },
+    {
+      "name": "get_fw_offload_mixed",
+      "iqk_offload": 1,
+      "ch_switch_offload": 0,
+      "get": "fw_offload",
+      "expect": "IQK FW offload:enable\nChannel switch FW offload:disable\n"
+    },
+    {
+      "name": "set_fw_offload_dual",
+      "iqk_offload": 0,
+      "ch_switch_offload": 0,
+      "set": "fw_offload",
+      "set_input": "1 1",
+      "get": "fw_offload",
+      "expect": "IQK FW offload:enable\nChannel switch FW offload:enable\n",
+      "expect_thread_cmd": 1
+    },
+    {
+      "name": "set_fw_offload_ch_only",
+      "iqk_offload": 1,
+      "ch_switch_offload": 0,
+      "set": "fw_offload",
+      "set_input": "1 0",
+      "get": "fw_offload",
+      "expect": "IQK FW offload:enable\nChannel switch FW offload:disable\n",
+      "expect_thread_cmd": 0
+    },
+    {
+      "name": "set_fw_offload_invalid_one_int",
+      "iqk_offload": 0,
+      "ch_switch_offload": 0,
+      "set": "fw_offload",
+      "set_input": "1",
+      "set_expect_ret": -22
+    },
+    {
+      "name": "set_fw_offload_count_zero",
+      "iqk_offload": 0,
+      "ch_switch_offload": 0,
+      "set": "fw_offload",
+      "set_input": "",
+      "set_count": 0,
+      "set_expect_ret": -14
+    }
+  ]
+}
