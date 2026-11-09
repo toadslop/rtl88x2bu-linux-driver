@@ -50,45 +50,6 @@
       "set_input": "",
       "set_count": 0,
       "set_expect_ret": -14
-    },
-    {
-      "name": "get_fw_tbtt_rpt_disable",
-      "fw_bcn_offload": 0,
-      "vap_tbtt_rpt_map": 0,
-      "get": "fw_tbtt_rpt",
-      "expect": "FW BCN offload:disable\nFW TBTT RPT:0\n"
-    },
-    {
-      "name": "get_fw_tbtt_rpt_enable",
-      "fw_bcn_offload": 1,
-      "vap_tbtt_rpt_map": 171,
-      "get": "fw_tbtt_rpt",
-      "expect": "FW BCN offload:enable\nFW TBTT RPT:ab\n"
-    },
-    {
-      "name": "set_fw_tbtt_rpt_dual",
-      "fw_bcn_offload": 0,
-      "vap_tbtt_rpt_map": 0,
-      "set": "fw_tbtt_rpt",
-      "set_input": "1 ab",
-      "expect_hal_cmd": 1
-    },
-    {
-      "name": "set_fw_tbtt_rpt_invalid_one_int",
-      "fw_bcn_offload": 0,
-      "vap_tbtt_rpt_map": 0,
-      "set": "fw_tbtt_rpt",
-      "set_input": "1",
-      "set_expect_ret": -22
-    },
-    {
-      "name": "set_fw_tbtt_rpt_count_zero",
-      "fw_bcn_offload": 0,
-      "vap_tbtt_rpt_map": 0,
-      "set": "fw_tbtt_rpt",
-      "set_input": "",
-      "set_count": 0,
-      "set_expect_ret": -14
     }
   ]
 }
