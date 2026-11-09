@@ -5879,6 +5879,65 @@ ssize_t rtw_rust_debug_proc_set_lps_chk_tp(_adapter *adapter,
 }
 #endif /* CONFIG_LPS_CHK_BY_TP */
 
+#ifdef CONFIG_DBG_RF_CAL
+ssize_t rtw_rust_debug_proc_set_iqk(_adapter *padapter,
+				    const char __user *buffer, size_t count)
+{
+	char tmp[32];
+	u32 recovery, clear, segment;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%d %d %d", &recovery, &clear, &segment);
+
+		if (num != 3) {
+			RTW_INFO("Invalid format\n");
+			return count;
+		}
+
+		rtw_hal_iqk_test(padapter, recovery, clear, segment);
+	}
+
+	return count;
+}
+
+ssize_t rtw_rust_debug_proc_set_lck(_adapter *padapter,
+				    const char __user *buffer, size_t count)
+{
+	char tmp[32];
+	u32 trigger;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%d", &trigger);
+
+		if (num != 1) {
+			RTW_INFO("Invalid format\n");
+			return count;
+		}
+
+		(void)trigger;
+		rtw_hal_lck_test(padapter);
+	}
+
+	return count;
+}
+#endif /* CONFIG_DBG_RF_CAL */
+
 #ifdef CONFIG_SUPPORT_STATIC_SMPS
 void rtw_rust_debug_proc_emit_smps(void *sel, _adapter *adapter)
 {

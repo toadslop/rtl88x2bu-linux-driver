@@ -3042,6 +3042,16 @@ endif
 ifneq ($(_rust_cfg_lps_chk_by_tp),)
 rustflags-y += --cfg config_lps_chk_by_tp
 endif
+_rust_cfg_dbg_rf_cal :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_DBG_RF_CAL' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_dbg_rf_cal := y
+endif
+ifneq ($(filter -DCONFIG_DBG_RF_CAL,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_dbg_rf_cal := y
+endif
+ifneq ($(_rust_cfg_dbg_rf_cal),)
+rustflags-y += --cfg config_dbg_rf_cal
+endif
 ifeq ($(CONFIG_POWER_SAVING), y)
 rustflags-y += --cfg config_power_saving
 endif
@@ -3324,6 +3334,9 @@ ifneq ($(_rust_cfg_lps_chk_by_tp),)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_lps_tp.o
 endif
 $(MODULE_NAME)-y += rust/rtw_debug_proc_ack.o
+ifneq ($(_rust_cfg_dbg_rf_cal),)
+$(MODULE_NAME)-y += rust/rtw_debug_proc_cal.o
+endif
 ifeq ($(CONFIG_PCI_HCI), y)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_pci.o
 endif
@@ -5340,6 +5353,22 @@ rust-objects-rtw-debug-proc-ack-c:
 rust-check-symbols-rtw-debug-proc-ack: rust-objects-rtw-debug-proc-ack-c rust-objects-rtw-debug-proc-ack
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_ack_c_ref.o NEW=rust/rtw_debug_proc_ack.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_ack.allow ALLOW_VACUOUS=1
+
+# W3-230: host C stub vs rust/rtw_debug_proc_cal.o (proc IQK/LCK cal test get/set).
+rust-objects-rtw-debug-proc-cal:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-cal"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) USER_EXTRA_CFLAGS=-DCONFIG_DBG_RF_CAL \
+		RUSTFLAGS="--cfg config_dbg_rf_cal" -C $(KSRC) M=$(shell pwd) \
+		rust/rtw_debug_proc_cal.o
+rust-objects-rtw-debug-proc-cal-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_cal_c_ref.o \
+		tests/host/debug/host_rtw_debug_proc_cal_c_ref.c
+rust-check-symbols-rtw-debug-proc-cal: rust-objects-rtw-debug-proc-cal-c rust-objects-rtw-debug-proc-cal
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_cal_c_ref.o NEW=rust/rtw_debug_proc_cal.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_cal.allow ALLOW_VACUOUS=1
 
 # W3-231: host C stub vs rust/rtw_debug_proc_pci.o (PCI conf space proc setters).
 rust-objects-rtw-debug-proc-pci:
