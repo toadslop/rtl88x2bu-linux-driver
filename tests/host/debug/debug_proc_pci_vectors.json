@@ -1,0 +1,50 @@
+{
+  "vectors": [
+    {
+      "name": "pci_conf_bad_sscanf",
+      "set": "pci_conf_space",
+      "set_input": "deadbeef",
+      "expect_writes": 0,
+      "expect_log": "invalid parameter!"
+    },
+    {
+      "name": "pci_conf_reg_oob",
+      "set": "pci_conf_space",
+      "set_input": "1000 5a",
+      "expect_writes": 0,
+      "expect_log": "invalid register!"
+    },
+    {
+      "name": "pci_conf_value_oob",
+      "set": "pci_conf_space",
+      "set_input": "10 1ff",
+      "expect_writes": 0,
+      "expect_log": "invalid value! Only one byte"
+    },
+    {
+      "name": "pci_conf_valid_device",
+      "set": "pci_conf_space",
+      "set_input": "0a 5a",
+      "expect_writes": 1,
+      "expect_reg": 10,
+      "expect_val": 90,
+      "expect_target_id": 1
+    },
+    {
+      "name": "pci_bridge_valid",
+      "set": "pci_bridge_conf_space",
+      "set_input": "04 ff",
+      "expect_writes": 1,
+      "expect_reg": 4,
+      "expect_val": 255,
+      "expect_target_id": 2
+    },
+    {
+      "name": "pci_conf_count_zero",
+      "set": "pci_conf_space",
+      "set_input": "",
+      "set_count": 0,
+      "set_expect_ret": -14
+    }
+  ]
+}
