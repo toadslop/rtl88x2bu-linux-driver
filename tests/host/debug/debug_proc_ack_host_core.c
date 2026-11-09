@@ -5,7 +5,11 @@
 
 #include <stdio.h>
 
+#ifdef HOST_ACK_L1_REF
 #define HOST_ACK_SCOPE static
+#else
+#define HOST_ACK_SCOPE
+#endif
 HOST_ACK_SCOPE struct host_ack_reg_log g_ack_reg_log;
 
 HOST_ACK_SCOPE void host_debug_proc_ack_reset_log(void)
@@ -99,7 +103,11 @@ HOST_ACK_SCOPE ssize_t rtw_rust_debug_proc_set_ack_timeout(
 	}
 
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
-		int num = sscanf(tmp, "%u %u", &ack_timeout_ms, &ack_timeout_ms_cck);
+		int num;
+
+		if (count < sizeof(tmp))
+			tmp[count] = '\0';
+		num = sscanf(tmp, "%u %u", &ack_timeout_ms, &ack_timeout_ms_cck);
 
 #ifdef CONFIG_RTL8821C
 		if (num < 2) {

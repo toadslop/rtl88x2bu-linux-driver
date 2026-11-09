@@ -41,4 +41,9 @@ tests/host/debug/librust_rtw_debug_proc_ps_info.a
 tests/host/debug/librust_rtw_debug_proc_txss.a
 tests/host/debug/test_proc_txss
 tests/host/debug/test_proc_txss_rust
+tests/host/debug/librust_rtw_debug_proc_ack.a
+tests/host/debug/test_proc_ack
+tests/host/debug/test_proc_ack_8821c
+tests/host/debug/test_proc_ack_rust
+tests/host/debug/test_proc_ack_rust_8821c
 tests/host/domain/test_domain_types

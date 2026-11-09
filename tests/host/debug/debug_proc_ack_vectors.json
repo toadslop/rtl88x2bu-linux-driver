@@ -4,26 +4,30 @@
       "name": "ack_timeout_get_default",
       "reg_ackto": 42,
       "get": "ack_timeout",
-      "expect": "Current ACK Timeout = 42 us (0x2a).\n"
+      "expect": "Current ACK Timeout = 42 us (0x2a).\n",
+      "non_8821c_only": 1
     },
     {
       "name": "ack_timeout_set_single",
       "set": "ack_timeout",
       "set_input": "100",
       "expect_write_ackto": 100,
-      "set_expect_ret": 3
+      "set_expect_ret": 3,
+      "non_8821c_only": 1
     },
     {
       "name": "ack_timeout_set_invalid_param",
       "set": "ack_timeout",
       "set_input": "x",
-      "set_expect_ret": -22
+      "set_expect_ret": -22,
+      "non_8821c_only": 1
     },
     {
       "name": "ack_timeout_set_count_too_large",
       "set": "ack_timeout",
-      "set_input": "01234567890123456789012345678901",
-      "set_expect_ret": -14
+      "set_input": "012345678901234567890123456789012",
+      "set_expect_ret": -14,
+      "non_8821c_only": 1
     },
     {
       "name": "ack_timeout_get_8821c",
