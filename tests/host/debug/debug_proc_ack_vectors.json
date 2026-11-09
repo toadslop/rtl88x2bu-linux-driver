@@ -22,7 +22,7 @@
     {
       "name": "ack_timeout_set_count_too_large",
       "set": "ack_timeout",
-      "set_input": "01234567890123456789012345678901",
+      "set_input": "012345678901234567890123456789012345",
       "set_expect_ret": -14
     },
     {
