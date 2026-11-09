@@ -106,7 +106,11 @@ ssize_t proc_set_fw_tbtt_rpt(void *file, const void *buffer, size_t count,
 	}
 
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
-		int num = sscanf(tmp, "%d %x", &fw_bcn_offload, &fw_tbtt_rpt);
+		int num;
+
+		if (count < sizeof(tmp))
+			tmp[count] = '\0';
+		num = sscanf(tmp, "%d %x", &fw_bcn_offload, &fw_tbtt_rpt);
 
 		if (num < 2)
 			return -EINVAL;
