@@ -353,6 +353,7 @@ for path in "${changed[@]}"; do
 	| rust/rtw_debug_proc_txss.rs \
 	| rust/rtw_debug_proc_mcc.rs \
 	| rust/rtw_debug_proc_lps_tp.rs \
+	| rust/rtw_debug_proc_ack.rs \
 	| rust/rtw_debug_proc_btcoex.rs \
 	| rust/rtw_debug_proc_vht.rs \
 	| rust/rtw_debug_proc_tdls.rs \
@@ -389,6 +390,7 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-debug-proc-tx-mgmt
 		add_target rust-check-symbols-rtw-debug-proc-mcc
 		add_target rust-check-symbols-rtw-debug-proc-lps-tp
+		add_target rust-check-symbols-rtw-debug-proc-ack
 		add_target rust-check-symbols-rtw-debug-proc-btcoex
 		;;
 	rust/hal_com.rs \
@@ -522,6 +524,7 @@ ALL_TARGETS=(
 	rust-check-symbols-rtw-debug-proc-tx-mgmt
 	rust-check-symbols-rtw-debug-proc-mcc
 	rust-check-symbols-rtw-debug-proc-lps-tp
+	rust-check-symbols-rtw-debug-proc-ack
 )
 
 emit() {
