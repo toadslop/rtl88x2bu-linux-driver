@@ -56,6 +56,15 @@ MISC_RUST   := $(ROOT)/rust/rtw_debug_proc_misc.rs
 MISC_L2     := test_proc_misc.c
 MISC_CFG    := -DDBG_MEMORY_LEAK -DCONFIG_FIND_BEST_CHANNEL
 
+# W3-227 proc ACK timeout (CONFIG_PROC_DEBUG)
+ACK_ORACLE := debug_proc_ack_c_oracle.c
+ACK_HOST   := debug_proc_ack_host_core.c
+ACK_SHIM   := host_rtw_debug_proc_ack_shim.c
+ACK_RUST   := $(ROOT)/rust/rtw_debug_proc_ack.rs
+ACK_L2     := test_proc_ack.c
+ACK_CFG    := -DCONFIG_PROC_DEBUG
+ACK_CFG_8821C := $(ACK_CFG) -DCONFIG_RTL8821C
+
 # W3-224 proc TXSS by TP (CONFIG_CTRL_TXSS_BY_TP)
 TXSS_ORACLE := debug_proc_txss_c_oracle.c
 TXSS_HOST   := debug_proc_txss_host_core.c
@@ -181,6 +190,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-misc-c test-proc-misc-rust \
 	test-proc-mcc-c test-proc-mcc-rust \
 	test-proc-txss-c test-proc-txss-rust \
+	test-proc-ack-c test-proc-ack-8821c-c \
 	test-proc-lps-tp-c test-proc-lps-tp-rust \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
@@ -205,6 +215,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-misc-c test-proc-misc-rust \
 	test-proc-mcc-c test-proc-mcc-rust \
 	test-proc-txss-c test-proc-txss-rust \
+	test-proc-ack-c test-proc-ack-8821c-c \
 	test-proc-lps-tp-c test-proc-lps-tp-rust \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
@@ -218,7 +229,7 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 	test-proc-wow-c \
 	test-proc-vht-c test-proc-fwps-c test-proc-rx-ampdu-c test-proc-tdls-c \
 	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c test-proc-phy-cap-registry-c \
-	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-proc-mcc-c test-proc-txss-c test-proc-lps-tp-c test-proc-monitor-c \
+	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-proc-mcc-c test-proc-txss-c test-proc-ack-c test-proc-ack-8821c-c test-proc-lps-tp-c test-proc-monitor-c \
 	test-proc-ps-info-c test-proc-tx-mgmt-c test-proc-smps-c \
 	test-phy-cap-dump-c
 
@@ -577,6 +588,20 @@ test_proc_misc_rust: $(MISC_L2) librust_rtw_debug_proc_misc.a $(MISC_SHIM) $(HOS
 	$(CC) $(CFLAGS) $(MISC_CFG) -DRUST_RTW_DEBUG_PROC_MISC_ORACLE -o $@ \
 		$(MISC_L2) $(MISC_SHIM) $(HOST_JSON) librust_rtw_debug_proc_misc.a
 
+test-proc-ack-c: test_proc_ack
+	./test_proc_ack debug_proc_ack_vectors.json
+
+test-proc-ack-8821c-c: test_proc_ack_8821c
+	./test_proc_ack_8821c debug_proc_ack_vectors.json
+
+test_proc_ack: $(ACK_L2) $(ACK_ORACLE) $(ACK_HOST) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(ACK_CFG) -I$(HOST_INC) -o $@ \
+		$(ACK_L2) $(ACK_ORACLE) $(ACK_HOST) $(HOST_JSON)
+
+test_proc_ack_8821c: $(ACK_L2) $(ACK_ORACLE) $(ACK_HOST) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(ACK_CFG_8821C) -I$(HOST_INC) -o $@ \
+		$(ACK_L2) $(ACK_ORACLE) $(ACK_HOST) $(HOST_JSON)
+
 test-proc-txss-c: test_proc_txss
 	./test_proc_txss debug_proc_txss_vectors.json
 
@@ -731,6 +756,7 @@ clean:
 		test_proc_misc test_proc_misc_rust librust_rtw_debug_proc_misc.a \
 		test_proc_mcc_setters test_proc_mcc_setters_rust \
 		librust_rtw_debug_proc_mcc.a \
+		test_proc_ack test_proc_ack_8821c \
 		test_proc_txss test_proc_txss_rust librust_rtw_debug_proc_txss.a \
 		test_proc_lps_tp test_proc_lps_tp_rust librust_rtw_debug_proc_lps_tp.a \
 		test_proc_monitor test_proc_monitor_rust \
