@@ -68,6 +68,8 @@ ACK_CFG_8821C := $(ACK_CFG) -DCONFIG_RTL8821C
 # W3-230 proc IQK/LCK cal test (CONFIG_DBG_RF_CAL)
 CAL_ORACLE := debug_proc_cal_c_oracle.c
 CAL_HOST   := debug_proc_cal_host_core.c
+CAL_SHIM   := host_rtw_debug_proc_cal_shim.c
+CAL_RUST   := $(ROOT)/rust/rtw_debug_proc_cal.rs
 CAL_L2     := test_proc_cal.c
 CAL_CFG    := -DCONFIG_DBG_RF_CAL -DCONFIG_PROC_DEBUG
 
@@ -214,7 +216,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-mcc-c test-proc-mcc-rust \
 	test-proc-txss-c test-proc-txss-rust \
 	test-proc-ack-c test-proc-ack-8821c-c test-proc-ack-rust test-proc-ack-8821c-rust \
-	test-proc-cal-c \
+	test-proc-cal-c test-proc-cal-rust \
 	test-proc-lps-tp-c test-proc-lps-tp-rust \
 	test-proc-pci-c \
 	test-proc-monitor-c test-proc-monitor-rust \
@@ -242,7 +244,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-mcc-c test-proc-mcc-rust \
 	test-proc-txss-c test-proc-txss-rust \
 	test-proc-ack-c test-proc-ack-8821c-c test-proc-ack-rust test-proc-ack-8821c-rust \
-	test-proc-cal-c \
+	test-proc-cal-c test-proc-cal-rust \
 	test-proc-lps-tp-c test-proc-lps-tp-rust \
 	test-proc-pci-c \
 	test-proc-monitor-c test-proc-monitor-rust \
@@ -264,7 +266,7 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
 	test-proc-ht-rust test-proc-wow-rust test-proc-vht-rust test-proc-fwps-rust test-proc-smps-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-rust test-proc-tx-amsdu-rust test-proc-phy-cap-registry-rust \
-	test-proc-misc-rust test-proc-mcc-rust test-proc-lps-tp-rust test-proc-monitor-rust test-proc-ps-info-rust test-proc-tx-mgmt-rust \
+	test-proc-misc-rust test-proc-mcc-rust test-proc-cal-rust test-proc-lps-tp-rust test-proc-monitor-rust test-proc-ps-info-rust test-proc-tx-mgmt-rust \
 	test-proc-txss-rust test-proc-ack-rust test-proc-ack-8821c-rust \
 	test-phy-cap-dump-rust
 
@@ -650,6 +652,22 @@ test-proc-cal-c: test_proc_cal
 test_proc_cal: $(CAL_L2) $(CAL_ORACLE) $(CAL_HOST) $(HOST_JSON)
 	$(CC) $(CFLAGS) $(CAL_CFG) -I$(HOST_INC) -o $@ \
 		$(CAL_L2) $(CAL_ORACLE) $(CAL_HOST) $(HOST_JSON)
+
+librust_rtw_debug_proc_cal.a: $(CAL_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_cal_test \
+		--cfg config_dbg_rf_cal \
+		--cfg config_rtw_debug --cfg config_proc_debug \
+		--crate-type staticlib $(CAL_RUST) -o $@
+
+test-proc-cal-rust: test_proc_cal_rust
+	./test_proc_cal_rust debug_proc_cal_vectors.json
+
+test_proc_cal_rust: $(CAL_L2) librust_rtw_debug_proc_cal.a $(CAL_SHIM) \
+		$(CAL_HOST) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(CAL_CFG) -DRUST_RTW_DEBUG_PROC_CAL_ORACLE -I$(HOST_INC) -o $@ \
+		$(CAL_L2) $(CAL_SHIM) $(CAL_HOST) $(HOST_JSON) \
+		librust_rtw_debug_proc_cal.a
 
 test_proc_ack: $(ACK_L2) $(ACK_ORACLE) $(ACK_HOST) $(HOST_JSON)
 	$(CC) $(CFLAGS) $(ACK_CFG) -I$(HOST_INC) -o $@ \
