@@ -72,6 +72,7 @@ extern struct host_ack_reg_log g_ack_reg_log;
 
 void host_debug_proc_ack_reset_log(void);
 const struct host_ack_reg_log *host_debug_proc_ack_get_log(void);
+void host_debug_proc_ack_seed_regs(u8 ackto, u8 cck);
 
 u8 rtw_read8(struct _adapter *padapter, u32 addr);
 void rtw_write8(struct _adapter *padapter, u32 addr, u8 val);
