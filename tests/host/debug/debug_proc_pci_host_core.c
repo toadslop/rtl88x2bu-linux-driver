@@ -34,7 +34,7 @@ void host_rtw_info_line(const char *fmt, ...)
 #define HOST_PCI_SCOPE
 #endif
 
-HOST_PCI_SCOPE static ssize_t pci_conf_set_common(struct _adapter *padapter,
+HOST_PCI_SCOPE ssize_t pci_conf_set_common(struct _adapter *padapter,
 						  struct pci_dev *target,
 						  const void *buffer,
 						  size_t count)
