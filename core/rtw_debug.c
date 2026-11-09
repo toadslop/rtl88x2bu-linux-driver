@@ -5767,6 +5767,88 @@ ssize_t rtw_rust_debug_proc_set_lps_chk_tp(_adapter *adapter,
 }
 #endif /* CONFIG_LPS_CHK_BY_TP */
 
+#ifdef CONFIG_SUPPORT_STATIC_SMPS
+void rtw_rust_debug_proc_emit_smps(void *sel, _adapter *adapter)
+{
+	struct mlme_ext_priv *pmlmeext = &(adapter->mlmeextpriv);
+
+	RTW_PRINT_SEL(sel, "Static SMPS %s\n",
+		      pmlmeext->ssmps_en ? "enable" : "disable");
+	RTW_PRINT_SEL(sel, "Tx TP TH %d\n", pmlmeext->ssmps_tx_tp_th);
+	RTW_PRINT_SEL(sel, "Rx TP TH %d\n", pmlmeext->ssmps_rx_tp_th);
+#ifdef DBG_STATIC_SMPS
+	RTW_PRINT_SEL(sel, "test %d, test_en:%d\n", pmlmeext->ssmps_test,
+		      pmlmeext->ssmps_test_en);
+#endif
+}
+
+ssize_t rtw_rust_debug_proc_set_smps(_adapter *adapter,
+				     const char __user *buffer, size_t count)
+{
+	struct mlme_ext_priv *pmlmeext = &(adapter->mlmeextpriv);
+	char tmp[32];
+	u32 smps_en, smps_tx_tp = 0, smps_rx_tp = 0;
+#ifdef DBG_STATIC_SMPS
+	u32 smps_test = 0, smps_test_en = 0;
+#endif
+
+	if (!adapter)
+		return -EFAULT;
+
+	if (!buffer) {
+		RTW_INFO("input buffer is NULL!\n");
+		return -EFAULT;
+	}
+	if (count < 1) {
+		RTW_INFO("input length is 0!\n");
+		return -EFAULT;
+	}
+	if (count > sizeof(tmp)) {
+		RTW_INFO("input length is too large\n");
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+#ifdef DBG_STATIC_SMPS
+		int num = sscanf(tmp, "%u %u %u %u %u", &smps_en, &smps_tx_tp,
+				 &smps_rx_tp, &smps_test, &smps_test_en);
+#else
+		int num = sscanf(tmp, "%u %u %u", &smps_en, &smps_tx_tp,
+				 &smps_rx_tp);
+#endif
+
+		if (num < 1) {
+			RTW_INFO("input parameters < 1\n");
+			return -EINVAL;
+		}
+
+		pmlmeext->ssmps_en = smps_en;
+		if (smps_tx_tp) {
+			pmlmeext->ssmps_tx_tp_th = smps_tx_tp;
+			pmlmeext->ssmps_rx_tp_th = smps_tx_tp;
+		}
+		if (smps_rx_tp)
+			pmlmeext->ssmps_rx_tp_th = smps_rx_tp;
+
+#ifdef DBG_STATIC_SMPS
+		if (num > 3) {
+			pmlmeext->ssmps_test = smps_test;
+			pmlmeext->ssmps_test_en = smps_test_en;
+		}
+		RTW_INFO("SM PS : %s ssmps_test_en:%d\n",
+			 (smps_test) ? "Enable" : "Disable",
+			 pmlmeext->ssmps_test_en);
+#endif
+		RTW_INFO("SM PS : %s tx_tp_th:%d, rx_tp_th:%d\n",
+			 (smps_en) ? "Enable" : "Disable",
+			 pmlmeext->ssmps_tx_tp_th, pmlmeext->ssmps_rx_tp_th);
+	}
+
+	return count;
+}
+#endif /* CONFIG_SUPPORT_STATIC_SMPS */
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */

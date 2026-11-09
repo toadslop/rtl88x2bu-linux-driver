@@ -3092,6 +3092,16 @@ endif
 ifneq ($(_rust_cfg_dbg_memory_leak),)
 rustflags-y += --cfg dbg_memory_leak
 endif
+_rust_cfg_support_static_smps :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_SUPPORT_STATIC_SMPS' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_support_static_smps := y
+endif
+ifneq ($(filter -DCONFIG_SUPPORT_STATIC_SMPS,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_support_static_smps := y
+endif
+ifneq ($(_rust_cfg_support_static_smps),)
+rustflags-y += --cfg config_support_static_smps
+endif
 _rust_cfg_rtw_simple_config :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+RTW_SIMPLE_CONFIG' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 _rust_cfg_rtw_simple_config := y
@@ -3282,6 +3292,16 @@ ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_TDLS' $(src)/include/autoconf.h
 $(MODULE_NAME)-y += rust/rtw_debug_proc_tdls.o
 endif
 $(MODULE_NAME)-y += rust/rtw_debug_proc_fwps.o
+_rust_obj_rtw_debug_proc_smps :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_SUPPORT_STATIC_SMPS' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_obj_rtw_debug_proc_smps := y
+endif
+ifneq ($(filter -DCONFIG_SUPPORT_STATIC_SMPS,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_obj_rtw_debug_proc_smps := y
+endif
+ifneq ($(_rust_obj_rtw_debug_proc_smps),)
+$(MODULE_NAME)-y += rust/rtw_debug_proc_smps.o
+endif
 $(MODULE_NAME)-y += rust/rtw_debug_proc_sreset.o
 $(MODULE_NAME)-y += rust/rtw_debug_phy_cap.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_phy_cap.o
@@ -5418,6 +5438,23 @@ rust-objects-rtw-debug-proc-fwps-c:
 rust-check-symbols-rtw-debug-proc-fwps: rust-objects-rtw-debug-proc-fwps-c rust-objects-rtw-debug-proc-fwps
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_fwps_c_ref.o NEW=rust/rtw_debug_proc_fwps.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_fwps.allow ALLOW_VACUOUS=1
+
+# W3-226: host C oracle vs rust/rtw_debug_proc_smps.o (proc static SMPS get/set).
+rust-objects-rtw-debug-proc-smps:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-smps"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) \
+		USER_EXTRA_CFLAGS=-DCONFIG_SUPPORT_STATIC_SMPS \
+		rust/rtw_debug_proc_smps.o
+rust-objects-rtw-debug-proc-smps-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-DCONFIG_SUPPORT_STATIC_SMPS \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_smps_c_ref.o \
+		tests/host/debug/debug_proc_smps_c_oracle.c
+rust-check-symbols-rtw-debug-proc-smps: rust-objects-rtw-debug-proc-smps-c rust-objects-rtw-debug-proc-smps
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_smps_c_ref.o NEW=rust/rtw_debug_proc_smps.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_smps.allow ALLOW_VACUOUS=1
 
 # W3-216: host C oracle vs rust/rtw_debug_proc_sreset.o (rf4ce_state + sreset procs).
 rust-objects-rtw-debug-proc-sreset:

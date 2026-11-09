@@ -123,7 +123,9 @@ FWPS_L2     := test_proc_en_fwps.c
 # W3-226 proc static SMPS get/set
 SMPS_ORACLE := debug_proc_smps_c_oracle.c
 SMPS_SHIM   := host_rtw_debug_proc_smps_shim.c
+SMPS_RUST   := $(ROOT)/rust/rtw_debug_proc_smps.rs
 SMPS_L2     := test_proc_smps.c
+SMPS_CFG    := -DCONFIG_SUPPORT_STATIC_SMPS
 
 # W3-204 proc rx_ampdu get/set
 AMPDU_ORACLE := debug_proc_rx_ampdu_c_oracle.c
@@ -183,7 +185,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
-	test-proc-smps-c \
+	test-proc-smps-c test-proc-smps-rust \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
 
 all: test
@@ -207,7 +209,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
-	test-proc-smps-c \
+	test-proc-smps-c test-proc-smps-rust \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
 
 test-all: test
@@ -221,7 +223,7 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 	test-phy-cap-dump-c
 
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
-	test-proc-ht-rust test-proc-wow-rust test-proc-vht-rust test-proc-fwps-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
+	test-proc-ht-rust test-proc-wow-rust test-proc-vht-rust test-proc-fwps-rust test-proc-smps-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-rust test-proc-tx-amsdu-rust test-proc-phy-cap-registry-rust \
 	test-proc-misc-rust test-proc-mcc-rust test-proc-lps-tp-rust test-proc-monitor-rust test-proc-ps-info-rust test-proc-tx-mgmt-rust \
 	test-proc-txss-rust \
@@ -353,7 +355,21 @@ test-proc-smps-c: test_proc_smps
 	./test_proc_smps debug_proc_smps_vectors.json
 
 test_proc_smps: $(SMPS_L2) $(SMPS_ORACLE) $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ $(SMPS_L2) $(SMPS_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(SMPS_CFG) -o $@ $(SMPS_L2) $(SMPS_ORACLE) $(HOST_JSON)
+
+test-proc-smps-rust: test_proc_smps_rust
+	./test_proc_smps_rust debug_proc_smps_vectors.json
+
+test_proc_smps_rust: $(SMPS_L2) librust_rtw_debug_proc_smps.a $(SMPS_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(SMPS_CFG) -DRUST_RTW_DEBUG_PROC_SMPS_ORACLE -o $@ \
+		$(SMPS_L2) $(SMPS_SHIM) $(HOST_JSON) librust_rtw_debug_proc_smps.a
+
+librust_rtw_debug_proc_smps.a: $(SMPS_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_smps_test \
+		--cfg config_rtw_debug --cfg config_proc_debug \
+		--cfg config_support_static_smps \
+		--crate-type staticlib $(SMPS_RUST) -o $@
 
 librust_rtw_debug_proc_fwps.a: $(FWPS_RUST)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
@@ -702,6 +718,7 @@ clean:
 		test_proc_wow_registry test_proc_wow_registry_rust librust_rtw_debug_proc_wow.a \
 		test_proc_vht_24g test_proc_vht_24g_rust librust_rtw_debug_proc_vht.a \
 		test_proc_en_fwps test_proc_en_fwps_rust librust_rtw_debug_proc_fwps.a \
+		test_proc_smps test_proc_smps_rust librust_rtw_debug_proc_smps.a \
 		test_proc_tdls_enable test_proc_tdls_enable_rust librust_rtw_debug_proc_tdls.a \
 		test_proc_rx_ampdu test_proc_rx_ampdu_rust librust_rtw_debug_proc_ampdu.a \
 		test_proc_ampdu_tuning test_proc_ampdu_tuning_rust \
