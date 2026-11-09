@@ -1,0 +1,5 @@
+# L1 allowlist for W3-227: Rust owns ACK timeout proc handlers in rtw_debug_proc_ack.o.
+drop proc_get_ack_timeout
+drop proc_set_ack_timeout
+drop rtw_rust_debug_proc_emit_ack_timeout
+drop rtw_rust_debug_proc_set_ack_timeout

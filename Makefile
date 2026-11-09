@@ -5323,6 +5323,20 @@ rust-check-symbols-rtw-debug-proc-lps-tp: rust-objects-rtw-debug-proc-lps-tp-c r
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_lps_tp_c_ref.o NEW=rust/rtw_debug_proc_lps_tp.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_lps_tp.allow ALLOW_VACUOUS=1
 
+# W3-227: host C stub vs rust/rtw_debug_proc_ack.o (ACK timeout debug procs).
+rust-objects-rtw-debug-proc-ack:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-ack"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_ack.o
+rust-objects-rtw-debug-proc-ack-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_ack_c_ref.o \
+		tests/host/debug/host_rtw_debug_proc_ack_c_ref.c
+rust-check-symbols-rtw-debug-proc-ack: rust-objects-rtw-debug-proc-ack-c rust-objects-rtw-debug-proc-ack
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_ack_c_ref.o NEW=rust/rtw_debug_proc_ack.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_ack.allow ALLOW_VACUOUS=1
+
 # W3-214: host C oracle vs rust/rtw_debug_proc_misc.o (malloc cnt + best channel procs).
 rust-objects-rtw-debug-proc-misc:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-misc"; exit 1; }
