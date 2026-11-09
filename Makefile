@@ -3322,6 +3322,7 @@ endif
 ifneq ($(_rust_cfg_lps_chk_by_tp),)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_lps_tp.o
 endif
+$(MODULE_NAME)-y += rust/rtw_debug_proc_ack.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ps.o

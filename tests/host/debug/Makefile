@@ -190,7 +190,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-misc-c test-proc-misc-rust \
 	test-proc-mcc-c test-proc-mcc-rust \
 	test-proc-txss-c test-proc-txss-rust \
-	test-proc-ack-c test-proc-ack-8821c-c \
+	test-proc-ack-c test-proc-ack-8821c-c test-proc-ack-rust test-proc-ack-8821c-rust \
 	test-proc-lps-tp-c test-proc-lps-tp-rust \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
@@ -215,7 +215,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-misc-c test-proc-misc-rust \
 	test-proc-mcc-c test-proc-mcc-rust \
 	test-proc-txss-c test-proc-txss-rust \
-	test-proc-ack-c test-proc-ack-8821c-c \
+	test-proc-ack-c test-proc-ack-8821c-c test-proc-ack-rust test-proc-ack-8821c-rust \
 	test-proc-lps-tp-c test-proc-lps-tp-rust \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
@@ -237,7 +237,7 @@ test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
 	test-proc-ht-rust test-proc-wow-rust test-proc-vht-rust test-proc-fwps-rust test-proc-smps-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-rust test-proc-tx-amsdu-rust test-proc-phy-cap-registry-rust \
 	test-proc-misc-rust test-proc-mcc-rust test-proc-lps-tp-rust test-proc-monitor-rust test-proc-ps-info-rust test-proc-tx-mgmt-rust \
-	test-proc-txss-rust \
+	test-proc-txss-rust test-proc-ack-rust test-proc-ack-8821c-rust \
 	test-phy-cap-dump-rust
 
 test-hooks-c: test_debug_test_hooks_c
@@ -616,6 +616,30 @@ librust_rtw_debug_proc_txss.a: $(TXSS_RUST)
 		--cfg config_rtw_debug --cfg config_proc_debug \
 		--crate-type staticlib $(TXSS_RUST) -o $@
 
+librust_rtw_debug_proc_ack.a: $(ACK_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_ack_test \
+		--cfg config_rtw_debug --cfg config_proc_debug \
+		--crate-type staticlib $(ACK_RUST) -o $@
+
+test-proc-ack-rust: test_proc_ack_rust
+	./test_proc_ack_rust debug_proc_ack_vectors.json
+
+test-proc-ack-8821c-rust: test_proc_ack_rust_8821c
+	./test_proc_ack_rust_8821c debug_proc_ack_vectors.json
+
+test_proc_ack_rust: $(ACK_L2) librust_rtw_debug_proc_ack.a $(ACK_SHIM) \
+		$(ACK_HOST) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(ACK_CFG) -DRUST_RTW_DEBUG_PROC_ACK_ORACLE -I$(HOST_INC) -o $@ \
+		$(ACK_L2) $(ACK_SHIM) $(ACK_HOST) $(HOST_JSON) \
+		librust_rtw_debug_proc_ack.a
+
+test_proc_ack_rust_8821c: $(ACK_L2) librust_rtw_debug_proc_ack.a $(ACK_SHIM) \
+		$(ACK_HOST) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(ACK_CFG_8821C) -DRUST_RTW_DEBUG_PROC_ACK_ORACLE -I$(HOST_INC) -o $@ \
+		$(ACK_L2) $(ACK_SHIM) $(ACK_HOST) $(HOST_JSON) \
+		librust_rtw_debug_proc_ack.a
+
 test-proc-txss-rust: test_proc_txss_rust
 	./test_proc_txss_rust debug_proc_txss_vectors.json
 
@@ -756,7 +780,8 @@ clean:
 		test_proc_misc test_proc_misc_rust librust_rtw_debug_proc_misc.a \
 		test_proc_mcc_setters test_proc_mcc_setters_rust \
 		librust_rtw_debug_proc_mcc.a \
-		test_proc_ack test_proc_ack_8821c \
+		test_proc_ack test_proc_ack_8821c test_proc_ack_rust test_proc_ack_rust_8821c \
+		librust_rtw_debug_proc_ack.a \
 		test_proc_txss test_proc_txss_rust librust_rtw_debug_proc_txss.a \
 		test_proc_lps_tp test_proc_lps_tp_rust librust_rtw_debug_proc_lps_tp.a \
 		test_proc_monitor test_proc_monitor_rust \

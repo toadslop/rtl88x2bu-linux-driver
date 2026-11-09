@@ -5849,6 +5849,77 @@ ssize_t rtw_rust_debug_proc_set_smps(_adapter *adapter,
 }
 #endif /* CONFIG_SUPPORT_STATIC_SMPS */
 
+void rtw_rust_debug_proc_emit_ack_timeout(void *sel, _adapter *padapter)
+{
+	u8 ack_timeout_val;
+#ifdef CONFIG_RTL8821C
+	u8 ack_timeout_val_cck;
+#endif
+
+	ack_timeout_val = rtw_read8(padapter, REG_ACKTO);
+
+#ifdef CONFIG_RTL8821C
+	ack_timeout_val_cck = rtw_read8(padapter, REG_ACKTO_CCK_8821C);
+	RTW_PRINT_SEL(sel, "Current CCK packet ACK Timeout = %d us (0x%x).\n",
+		      ack_timeout_val_cck, ack_timeout_val_cck);
+	RTW_PRINT_SEL(sel,
+		      "Current non-CCK packet ACK Timeout = %d us (0x%x).\n",
+		      ack_timeout_val, ack_timeout_val);
+#else
+	RTW_PRINT_SEL(sel, "Current ACK Timeout = %d us (0x%x).\n",
+		      ack_timeout_val, ack_timeout_val);
+#endif
+}
+
+ssize_t rtw_rust_debug_proc_set_ack_timeout(_adapter *padapter,
+					    const char __user *buffer,
+					    size_t count)
+{
+	char tmp[32];
+	u32 ack_timeout_ms, ack_timeout_ms_cck;
+
+	if (!padapter)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%u %u", &ack_timeout_ms,
+				 &ack_timeout_ms_cck);
+
+#ifdef CONFIG_RTL8821C
+		if (num < 2) {
+			RTW_INFO(FUNC_ADPT_FMT ": input parameters < 2\n",
+				 FUNC_ADPT_ARG(padapter));
+			return -EINVAL;
+		}
+#else
+		if (num < 1) {
+			RTW_INFO(FUNC_ADPT_FMT ": input parameters < 1\n",
+				 FUNC_ADPT_ARG(padapter));
+			return -EINVAL;
+		}
+#endif
+		rtw_write8(padapter, REG_ACKTO, (u8)ack_timeout_ms);
+
+#ifdef CONFIG_RTL8821C
+		rtw_write8(padapter, REG_ACKTO_CCK_8821C,
+			   (u8)ack_timeout_ms_cck);
+		RTW_INFO("Set CCK packet ACK Timeout to %d us.\n",
+			 ack_timeout_ms_cck);
+		RTW_INFO("Set non-CCK packet ACK Timeout to %d us.\n",
+			 ack_timeout_ms);
+#else
+		RTW_INFO("Set ACK Timeout to %d us.\n", ack_timeout_ms);
+#endif
+	}
+
+	return count;
+}
+
 #endif /* CONFIG_PROC_DEBUG */
 
 #endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */
