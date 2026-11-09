@@ -186,7 +186,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-regsty-rx-ampdu-c test-regsty-rx-ampdu-rust \
 	test-proc-ht-c test-proc-ht-rust test-proc-wow-c test-proc-wow-rust \
 	test-proc-vht-c test-proc-vht-rust \
-	test-proc-fwps-c test-proc-fwps-rust test-proc-fw-offload-c \
+	test-proc-fwps-c test-proc-fwps-rust test-proc-fw-offload-c test-proc-fw-offload-rust \
 	test-proc-tdls-c test-proc-tdls-rust \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
@@ -212,7 +212,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-regsty-rx-ampdu-c test-regsty-rx-ampdu-rust \
 	test-proc-ht-c test-proc-ht-rust test-proc-wow-c test-proc-wow-rust \
 	test-proc-vht-c test-proc-vht-rust \
-	test-proc-fwps-c test-proc-fwps-rust test-proc-fw-offload-c \
+	test-proc-fwps-c test-proc-fwps-rust test-proc-fw-offload-c test-proc-fw-offload-rust \
 	test-proc-tdls-c test-proc-tdls-rust \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
@@ -376,6 +376,20 @@ test-proc-fw-offload-c: test_proc_fw_offload
 
 test_proc_fw_offload: $(FW_OFFLOAD_L2) $(FW_OFFLOAD_ORACLE) $(FW_OFFLOAD_CORE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ $(FW_OFFLOAD_L2) $(FW_OFFLOAD_ORACLE) $(FW_OFFLOAD_CORE) $(HOST_JSON)
+
+librust_rtw_debug_proc_fw_offload.a: $(FW_OFFLOAD_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_fw_offload_test \
+		--cfg config_rtw_debug --cfg config_proc_debug \
+		--crate-type staticlib $(FW_OFFLOAD_RUST) -o $@
+
+test-proc-fw-offload-rust: test_proc_fw_offload_rust
+	./test_proc_fw_offload_rust debug_proc_fw_offload_vectors.json
+
+test_proc_fw_offload_rust: $(FW_OFFLOAD_L2) librust_rtw_debug_proc_fw_offload.a $(FW_OFFLOAD_SHIM) $(FW_OFFLOAD_CORE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_RTW_DEBUG_PROC_FW_OFFLOAD_ORACLE -o $@ \
+		$(FW_OFFLOAD_L2) $(FW_OFFLOAD_SHIM) $(FW_OFFLOAD_CORE) $(HOST_JSON) \
+		librust_rtw_debug_proc_fw_offload.a
 
 test-proc-smps-c: test_proc_smps
 	./test_proc_smps debug_proc_smps_vectors.json
@@ -782,7 +796,8 @@ clean:
 		test_proc_wow_registry test_proc_wow_registry_rust librust_rtw_debug_proc_wow.a \
 		test_proc_vht_24g test_proc_vht_24g_rust librust_rtw_debug_proc_vht.a \
 		test_proc_en_fwps test_proc_en_fwps_rust librust_rtw_debug_proc_fwps.a \
-		test_proc_fw_offload \
+		test_proc_fw_offload test_proc_fw_offload_rust \
+		librust_rtw_debug_proc_fw_offload.a \
 		test_proc_smps test_proc_smps_rust librust_rtw_debug_proc_smps.a \
 		test_proc_tdls_enable test_proc_tdls_enable_rust librust_rtw_debug_proc_tdls.a \
 		test_proc_rx_ampdu test_proc_rx_ampdu_rust librust_rtw_debug_proc_ampdu.a \

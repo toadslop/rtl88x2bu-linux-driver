@@ -3952,6 +3952,58 @@ ssize_t rtw_rust_debug_proc_set_en_fwps(_adapter *adapter,
 	return count;
 }
 
+void rtw_rust_debug_proc_emit_fw_offload(void *sel, _adapter *adapter)
+{
+	HAL_DATA_TYPE *hal = GET_HAL_DATA(adapter);
+
+	RTW_PRINT_SEL(sel, "IQK FW offload:%s\n",
+		      hal->RegIQKFWOffload ? "enable" : "disable");
+	RTW_PRINT_SEL(sel, "Channel switch FW offload:%s\n",
+		      hal->ch_switch_offload ? "enable" : "disable");
+}
+
+ssize_t rtw_rust_debug_proc_set_fw_offload(_adapter *adapter,
+					   const char __user *buffer,
+					   size_t count)
+{
+	_adapter *pri_adapter = GET_PRIMARY_ADAPTER(adapter);
+	HAL_DATA_TYPE *hal = GET_HAL_DATA(adapter);
+	char tmp[32];
+	u32 iqk_offload_enable = 0, ch_switch_offload_enable = 0;
+
+	if (buffer == NULL)
+		return -EFAULT;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%d %d", &iqk_offload_enable,
+				 &ch_switch_offload_enable);
+
+		if (num < 2)
+			return -EINVAL;
+
+		if (hal->RegIQKFWOffload != iqk_offload_enable) {
+			hal->RegIQKFWOffload = iqk_offload_enable;
+			rtw_run_in_thread_cmd(
+				pri_adapter,
+				((void *)(rtw_hal_update_iqk_fw_offload_cap)),
+				pri_adapter);
+		}
+
+		if (hal->ch_switch_offload != ch_switch_offload_enable)
+			hal->ch_switch_offload = ch_switch_offload_enable;
+	}
+
+	return count;
+}
+
 #ifdef CONFIG_TDLS
 #define TDLS_DBG_INFO_SPACE_BTWN_ITEM_AND_VALUE 41
 
