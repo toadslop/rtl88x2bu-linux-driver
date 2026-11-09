@@ -5473,13 +5473,16 @@ rust-check-symbols-rtw-debug-proc-fwps: rust-objects-rtw-debug-proc-fwps-c rust-
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_fwps_c_ref.o NEW=rust/rtw_debug_proc_fwps.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_fwps.allow ALLOW_VACUOUS=1
 
-# W3-228: host C oracle vs rust/rtw_debug_proc_fw_offload.o (proc fw_offload get/set).
+# W3-228/W3-229: host C oracle vs rust/rtw_debug_proc_fw_offload.o (fw_offload + fw_tbtt_rpt).
 rust-objects-rtw-debug-proc-fw-offload:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-fw-offload"; exit 1; }
-	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_fw_offload.o
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) \
+		USER_EXTRA_CFLAGS=-DCONFIG_FW_HANDLE_TXBCN \
+		rust/rtw_debug_proc_fw_offload.o
 rust-objects-rtw-debug-proc-fw-offload-c:
 	@mkdir -p tests/host/debug
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-DCONFIG_FW_HANDLE_TXBCN \
 		-I$(shell pwd)/tests/host/include \
 		-o tests/host/debug/debug_proc_fw_offload_c_ref.o \
 		tests/host/debug/debug_proc_fw_offload_c_oracle.c

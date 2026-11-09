@@ -4022,6 +4022,48 @@ ssize_t rtw_rust_debug_proc_set_fw_offload(_adapter *adapter,
 	return count;
 }
 
+#ifdef CONFIG_FW_HANDLE_TXBCN
+void rtw_rust_debug_proc_emit_fw_tbtt_rpt(void *sel, _adapter *adapter)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+
+	RTW_PRINT_SEL(sel, "FW BCN offload:%s\n",
+		      dvobj->fw_bcn_offload ? "enable" : "disable");
+	RTW_PRINT_SEL(sel, "FW TBTT RPT:%x\n", dvobj->vap_tbtt_rpt_map);
+}
+
+ssize_t rtw_rust_debug_proc_set_fw_tbtt_rpt(_adapter *adapter,
+					    const char __user *buffer,
+					    size_t count)
+{
+	char tmp[32];
+	u32 fw_tbtt_rpt = 0, fw_bcn_offload = 0;
+
+	if (buffer == NULL)
+		return -EFAULT;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%d %x", &fw_bcn_offload, &fw_tbtt_rpt);
+
+		if (num < 2)
+			return -EINVAL;
+
+		rtw_hal_set_fw_ap_bcn_offload_cmd(adapter, fw_bcn_offload,
+						  (u8)fw_tbtt_rpt);
+	}
+
+	return count;
+}
+#endif /* CONFIG_FW_HANDLE_TXBCN */
+
 #ifdef CONFIG_TDLS
 #define TDLS_DBG_INFO_SPACE_BTWN_ITEM_AND_VALUE 41
 

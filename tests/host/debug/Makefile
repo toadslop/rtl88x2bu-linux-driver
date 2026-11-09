@@ -201,7 +201,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-regsty-rx-ampdu-c test-regsty-rx-ampdu-rust \
 	test-proc-ht-c test-proc-ht-rust test-proc-wow-c test-proc-wow-rust \
 	test-proc-vht-c test-proc-vht-rust \
-	test-proc-fwps-c test-proc-fwps-rust test-proc-fw-offload-c \
+	test-proc-fwps-c test-proc-fwps-rust test-proc-fw-offload-c test-proc-fw-offload-rust \
 	test-proc-tdls-c test-proc-tdls-rust \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
@@ -229,7 +229,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-regsty-rx-ampdu-c test-regsty-rx-ampdu-rust \
 	test-proc-ht-c test-proc-ht-rust test-proc-wow-c test-proc-wow-rust \
 	test-proc-vht-c test-proc-vht-rust \
-	test-proc-fwps-c test-proc-fwps-rust test-proc-fw-offload-c \
+	test-proc-fwps-c test-proc-fwps-rust test-proc-fw-offload-c test-proc-fw-offload-rust \
 	test-proc-tdls-c test-proc-tdls-rust \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
