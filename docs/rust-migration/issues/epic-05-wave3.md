@@ -361,6 +361,20 @@ Supporting: **A2** (channel/rate domain types), **A3** (security domain types), 
 | W3-226 | `wave3-226-debug-proc-static-smps.md` | Static SMPS proc leaf |
 | W3-227 | `wave3-227-debug-proc-ack-timeout.md` | ACK timeout proc get/set |
 
+## Children (tranche 26 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W3-228 | `wave3-228-debug-proc-fw-offload.md` | FW IQK/channel offload proc |
+| W3-229 | `wave3-229-debug-proc-fw-tbtt.md` | FW BCN/TBTT offload proc |
+| W3-230 | `wave3-230-debug-proc-iqk-lck.md` | IQK/LCK cal test procs |
+| W3-231 | `wave3-231-debug-proc-pci-setters.md` | PCI conf space setters |
+| W3-232 | `wave3-232-debug-proc-pci-dumps.md` | PCI conf dumps + ASPM |
+| W3-233 | `wave3-233-debug-proc-ring-dumps.md` | TRX ring debug dumps |
+| W3-234 | `wave3-234-debug-proc-rtkm-info.md` | RTKM prealloc info (USB) |
+| W3-235 | `wave3-235-debug-proc-wow-keepalive.md` | WoWLAN keep-alive dump |
+| W3-236 | `wave3-236-debug-proc-p2p-wowlan.md` | P2P WoWLAN info proc |
+
 Further ~200 LOC slices **not yet covered**; file new `wave3-*.md` issues as needed:
 
 - `rtw_debug.c` procfs walkers / register dumps (mostly Rust-wrapped — audit before filing)

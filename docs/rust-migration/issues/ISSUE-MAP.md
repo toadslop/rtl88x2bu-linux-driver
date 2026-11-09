@@ -358,6 +358,15 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-225 | #1813 | [W3-225] Translate rtw_debug_rest.c — proc LPS check-by-TP leaf |
 | W3-226 | #1814 | [W3-226] Translate rtw_debug_rest.c — proc static SMPS leaf |
 | W3-227 | #1815 | [W3-227] Translate rtw_debug_rest.c — proc ACK timeout leaf |
+| W3-228 | #1843 | [W3-228] Translate rtw_debug_rest.c — proc FW offload leaf |
+| W3-229 | #1844 | [W3-229] Translate rtw_debug_rest.c — proc FW TBTT / BCN offload leaf |
+| W3-230 | #1845 | [W3-230] Translate rtw_debug_rest.c — proc IQK / LCK cal test leaf |
+| W3-231 | #1846 | [W3-231] Translate rtw_debug_rest.c — PCI conf space setters |
+| W3-232 | #1847 | [W3-232] Translate rtw_debug_rest.c — PCI conf dumps + ASPM readout |
+| W3-233 | #1848 | [W3-233] Translate rtw_debug_rest.c — TRX ring debug dumps |
+| W3-234 | #1849 | [W3-234] Translate rtw_debug_rest.c — RTKM prealloc buffer info proc |
+| W3-235 | #1850 | [W3-235] Translate rtw_debug_rest.c — WoWLAN keep-alive pattern dump |
+| W3-236 | #1851 | [W3-236] Translate rtw_debug_rest.c — P2P WoWLAN trigger info proc |
 
 ## Superseded issues
 
