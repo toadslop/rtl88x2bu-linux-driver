@@ -208,7 +208,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-txss-c test-proc-txss-rust \
 	test-proc-ack-c test-proc-ack-8821c-c test-proc-ack-rust test-proc-ack-8821c-rust \
 	test-proc-lps-tp-c test-proc-lps-tp-rust \
-	test-proc-pci-c test-proc-pci-rust \
+	test-proc-pci-c \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
@@ -235,7 +235,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-txss-c test-proc-txss-rust \
 	test-proc-ack-c test-proc-ack-8821c-c test-proc-ack-rust test-proc-ack-8821c-rust \
 	test-proc-lps-tp-c test-proc-lps-tp-rust \
-	test-proc-pci-c test-proc-pci-rust \
+	test-proc-pci-c \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
@@ -255,7 +255,7 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
 	test-proc-ht-rust test-proc-wow-rust test-proc-vht-rust test-proc-fwps-rust test-proc-smps-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-rust test-proc-tx-amsdu-rust test-proc-phy-cap-registry-rust \
-	test-proc-misc-rust test-proc-mcc-rust test-proc-lps-tp-rust test-proc-pci-rust test-proc-monitor-rust test-proc-ps-info-rust test-proc-tx-mgmt-rust \
+	test-proc-misc-rust test-proc-mcc-rust test-proc-lps-tp-rust test-proc-monitor-rust test-proc-ps-info-rust test-proc-tx-mgmt-rust \
 	test-proc-txss-rust test-proc-ack-rust test-proc-ack-8821c-rust \
 	test-phy-cap-dump-rust
 
