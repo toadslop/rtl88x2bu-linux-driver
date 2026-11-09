@@ -2,6 +2,7 @@
 /* C oracle for W3-230 proc IQK/LCK cal test handlers (host L2). */
 
 #include <stdint.h>
+#include <string.h>
 
 #include "host_rtw_debug_proc_cal_types.h"
 
@@ -34,6 +35,7 @@ ssize_t proc_set_iqk(void *file, const void *buffer, size_t count, long *pos,
 		return -EFAULT;
 	}
 
+	memset(tmp, 0, sizeof(tmp));
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
 		/* NUL-terminate for ordered L2 vectors; keep index in-bounds at count == sizeof(tmp). */
 		if (count < sizeof(tmp))
@@ -81,6 +83,7 @@ ssize_t proc_set_lck(void *file, const void *buffer, size_t count, long *pos,
 		return -EFAULT;
 	}
 
+	memset(tmp, 0, sizeof(tmp));
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
 		if (count < sizeof(tmp))
 			tmp[count] = '\0';

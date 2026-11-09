@@ -42,6 +42,13 @@
       "expect_lck_calls": 1
     },
     {
+      "name": "set_lck_non_integer",
+      "set": "lck",
+      "set_input": "x",
+      "set_expect_ret": 1,
+      "expect_lck_calls": 0
+    },
+    {
       "name": "set_iqk_count_zero",
       "set": "iqk",
       "set_input": "",

@@ -65,6 +65,12 @@ ACK_L2     := test_proc_ack.c
 ACK_CFG    := -DCONFIG_PROC_DEBUG
 ACK_CFG_8821C := $(ACK_CFG) -DCONFIG_RTL8821C
 
+# W3-230 proc IQK/LCK cal test (CONFIG_DBG_RF_CAL)
+CAL_ORACLE := debug_proc_cal_c_oracle.c
+CAL_HOST   := debug_proc_cal_host_core.c
+CAL_L2     := test_proc_cal.c
+CAL_CFG    := -DCONFIG_DBG_RF_CAL -DCONFIG_PROC_DEBUG
+
 # W3-224 proc TXSS by TP (CONFIG_CTRL_TXSS_BY_TP)
 TXSS_ORACLE := debug_proc_txss_c_oracle.c
 TXSS_HOST   := debug_proc_txss_host_core.c
@@ -207,6 +213,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-mcc-c test-proc-mcc-rust \
 	test-proc-txss-c test-proc-txss-rust \
 	test-proc-ack-c test-proc-ack-8821c-c test-proc-ack-rust test-proc-ack-8821c-rust \
+	test-proc-cal-c \
 	test-proc-lps-tp-c test-proc-lps-tp-rust \
 	test-proc-pci-c \
 	test-proc-monitor-c test-proc-monitor-rust \
@@ -234,6 +241,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-mcc-c test-proc-mcc-rust \
 	test-proc-txss-c test-proc-txss-rust \
 	test-proc-ack-c test-proc-ack-8821c-c test-proc-ack-rust test-proc-ack-8821c-rust \
+	test-proc-cal-c \
 	test-proc-lps-tp-c test-proc-lps-tp-rust \
 	test-proc-pci-c \
 	test-proc-monitor-c test-proc-monitor-rust \
@@ -248,7 +256,7 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 	test-proc-wow-c \
 	test-proc-vht-c test-proc-fwps-c test-proc-rx-ampdu-c test-proc-tdls-c \
 	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c test-proc-phy-cap-registry-c \
-	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-proc-mcc-c test-proc-txss-c test-proc-ack-c test-proc-ack-8821c-c test-proc-lps-tp-c test-proc-pci-c test-proc-monitor-c \
+	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-proc-mcc-c test-proc-txss-c test-proc-ack-c test-proc-ack-8821c-c test-proc-cal-c test-proc-lps-tp-c test-proc-pci-c test-proc-monitor-c \
 	test-proc-ps-info-c test-proc-tx-mgmt-c test-proc-smps-c \
 	test-phy-cap-dump-c
 
@@ -632,6 +640,13 @@ test-proc-ack-c: test_proc_ack
 
 test-proc-ack-8821c-c: test_proc_ack_8821c
 	./test_proc_ack_8821c debug_proc_ack_vectors.json
+
+test-proc-cal-c: test_proc_cal
+	./test_proc_cal debug_proc_cal_vectors.json
+
+test_proc_cal: $(CAL_L2) $(CAL_ORACLE) $(CAL_HOST) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(CAL_CFG) -I$(HOST_INC) -o $@ \
+		$(CAL_L2) $(CAL_ORACLE) $(CAL_HOST) $(HOST_JSON)
 
 test_proc_ack: $(ACK_L2) $(ACK_ORACLE) $(ACK_HOST) $(HOST_JSON)
 	$(CC) $(CFLAGS) $(ACK_CFG) -I$(HOST_INC) -o $@ \
