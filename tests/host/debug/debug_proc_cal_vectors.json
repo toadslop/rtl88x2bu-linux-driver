@@ -35,11 +35,11 @@
       "expect_lck_calls": 1
     },
     {
-      "name": "set_lck_invalid_arity",
+      "name": "set_lck_extra_tokens_ignored",
       "set": "lck",
       "set_input": "1 2",
       "set_expect_ret": 3,
-      "expect_lck_calls": 0
+      "expect_lck_calls": 1
     },
     {
       "name": "set_iqk_count_zero",

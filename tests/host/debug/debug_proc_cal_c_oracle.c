@@ -35,6 +35,7 @@ ssize_t proc_set_iqk(void *file, const void *buffer, size_t count, long *pos,
 	}
 
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		tmp[count] = '\0';
 		int num = sscanf(tmp, "%d %d %d", &recovery, &clear, &segment);
 
 		if (num != 3) {
@@ -79,6 +80,7 @@ ssize_t proc_set_lck(void *file, const void *buffer, size_t count, long *pos,
 	}
 
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		tmp[count] = '\0';
 		int num = sscanf(tmp, "%d", &trigger);
 
 		if (num != 1) {
