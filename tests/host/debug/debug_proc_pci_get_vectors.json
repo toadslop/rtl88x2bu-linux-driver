@@ -1,0 +1,18 @@
+{
+  "vectors": [
+    {
+      "name": "pci_conf_space_banner",
+      "get": "pci_conf_space",
+      "pci_conf_dword": 67305985,
+      "expect_contains": "PCI Device Configuration Space",
+      "expect_contains2": "000: 01 02 03 04"
+    },
+    {
+      "name": "pci_bridge_conf_banner",
+      "get": "pci_bridge_conf_space",
+      "pci_conf_dword": 67305985,
+      "expect_contains": "PCI Host Device Configuration Space",
+      "expect_contains2": "000: 01 02 03 04"
+    }
+  ]
+}
