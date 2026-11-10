@@ -57,5 +57,5 @@ The `rtw_rust_init_get_current_time` case is benign today (all users go through
 
 ## Notes
 
-- Same-TU lane: FX-04 and FX-14 also edit `core/rtw_pwrctrl.c` and are chained behind this issue.
+- Same-TU lane (`core/rtw_pwrctrl.c`): FX-04 is `blocked_by` this issue; FX-14 is `blocked_by` FX-04.
 - Related width drift outside pwrctrl (`rtw_recv_sta_validate.rs`, `hal_com_c2h_mac_hidden.rs`) is in FX-17.

@@ -75,4 +75,4 @@ Build / CI / test guards (filed under [E10](epic-10-test-infra.md)):
 ## Exit criteria
 
 - All FX children closed; default L0/L1/L2/L3 gates green.
-- T21–T23 checks run in CI so the same classes fail a PR instead of shipping.
+- T21–T24 closed: T21–T23 checks run in CI and the T24 L2 suites exercise the shipped Rust cores against real C oracles, so the same classes fail a PR instead of shipping.
