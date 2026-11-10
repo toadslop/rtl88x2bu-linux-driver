@@ -367,6 +367,30 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W3-234 | #1849 | [W3-234] Translate rtw_debug_rest.c — RTKM prealloc buffer info proc |
 | W3-235 | #1850 | [W3-235] Translate rtw_debug_rest.c — WoWLAN keep-alive pattern dump |
 | W3-236 | #1851 | [W3-236] Translate rtw_debug_rest.c — P2P WoWLAN trigger info proc |
+| E14 | #1879 | [Epic] Rust port regression fixes (2026-11 port review) |
+| FX-01 | #1880 | [FX-01] pwrctrl: rpwm/cpwm/init time shims truncate systime to u32 |
+| FX-02 | #1881 | [FX-02] pwrctrl_pm: PS_MODE_NUM is 9 in Rust, 11 in C (modes 9/10 rejected) |
+| FX-03 | #1882 | [FX-03] debug: dump_adapters_status(RTW_DBGDUMP, …) prints nothing |
+| FX-04 | #1883 | [FX-04] pwrctrl: rtw_set_ps_mode drops TDLS PS null-data notifications |
+| FX-05 | #1884 | [FX-05] Replace hard-coded _ADAPTER byte offsets with C-exported offsetof |
+| FX-06 | #1885 | [FX-06] hal_com: stop force-enabling CONFIG_RTW_CUSTOMER_STR; gate Rust on C config |
+| FX-07 | #1886 | [FX-07] Makefile: rustc --cfg and Rust object-link parity with effective C config |
+| FX-08 | #1887 | [FX-08] debug procs: Rust cfg gates and C guards disagree (link safety) |
+| FX-09 | #1888 | [FX-09] hal: LPS_ACK shim guard, rtw_malloc macro call, usb recv free NULL |
+| FX-10 | #1889 | [FX-10] hal_dm: narrowband else now skips all four phydm hooks |
+| FX-11 | #1890 | [FX-11] Use wrapping arithmetic where C relied on modular wrap (pwrctrl wakeup/lps_tp, recv bh dbg) |
+| FX-12 | #1891 | [FX-12] hal_com: rtw_sec_read_cam_ent writes to NULL+2 when mac is NULL |
+| FX-13 | #1892 | [FX-13] debug procs: setter/print parity (ips_mode string, %d parsing, warn/errno) |
+| FX-14 | #1893 | [FX-14] pwrctrl: restore dbg_ps_insuspend_cnt, LPS_LCLK guards, and dropped PS diagnostics |
+| FX-15 | #1894 | [FX-15] hal_halmac/hal_dm: shift panic, dropped mapper warnings, RTW: RTW: prefix |
+| FX-16 | #1895 | [FX-16] beamforming: enter fast path sets sounding_dim in the beamformer branch |
+| FX-17 | #1896 | [FX-17] Fix hand-written extern C signature drift (narrow args, systime, duplicates) |
+| FX-18 | #1897 | [FX-18] debug procs: input validation in moved setters (pre-existing C bugs) |
+| FX-19 | #1898 | [FX-19] Robustness: c2h_evt_read_88xx length clamp, WapiSMS4Cryption(len=0) |
+| T21 | #1899 | [T21] Build: generate rustc --cfg from the effective C macro set + parity check |
+| T22 | #1900 | [T22] CI: non-default config build matrix + C-only build policy |
+| T23 | #1901 | [T23] CI: extern C signature drift check + panic-site inventory |
+| T24 | #1902 | [T24] L2 fidelity: test the shipped Rust cores against real C oracles |
 
 ## Superseded issues
 
