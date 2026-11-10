@@ -7,17 +7,29 @@
 #include "host_rtw_debug_proc_pci_types.h"
 
 u32 host_pci_conf_dword = 0x04030201;
+struct pci_dev *host_pci_read_dev;
 
 void host_pci_get_test_reset(void)
 {
 	host_pci_conf_dword = 0x04030201;
+	host_pci_read_dev = NULL;
 }
 
 void host_pci_read_config_dword(struct pci_dev *dev, u32 reg, u32 *val)
 {
-	(void)dev;
 	(void)reg;
-	if (val)
+
+	host_pci_read_dev = dev;
+	if (!val)
+		return;
+	if (!dev) {
+		*val = host_pci_conf_dword;
+		return;
+	}
+	/* Vary the first dword by PCI device so bridge vs endpoint is observable. */
+	if (dev->id == 2)
+		*val = 0x06050403U;
+	else
 		*val = host_pci_conf_dword;
 }
 
@@ -30,12 +42,17 @@ void *rtw_rust_debug_proc_adapter(void *m)
 	return rtw_netdev_priv((struct net_device *)s->private);
 }
 
-static void pci_conf_dump(void *sel, struct pci_dev *target, const char *banner)
+static void pci_conf_dump(void *sel, struct pci_dev *target, int use_bridge)
 {
 	u32 tmp[4];
 	u32 i, j;
 
-	RTW_PRINT_SEL(sel, "\n*****  %s*****\n\n", banner);
+	if (use_bridge)
+		RTW_PRINT_SEL(sel,
+			      "\n*****  PCI Host Device Configuration Space*****\n\n");
+	else
+		RTW_PRINT_SEL(sel,
+			      "\n*****  PCI Device Configuration Space *****\n\n");
 
 	for (i = 0; i < 0x1000; i += 0x10) {
 		for (j = 0; j < 4; j++)
@@ -61,11 +78,9 @@ int rtw_rust_debug_proc_get_pci_conf_space(void *sel, void *adapter,
 	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
 	struct pci_dev *pdev = pdvobjpriv->ppcidev;
 	struct pci_dev *target = use_bridge ? pdev->bus->self : pdev;
-	const char *banner = use_bridge ? "PCI Host Device Configuration Space"
-					: "PCI Device Configuration Space";
 
 	if (!padapter || !target)
 		return 0;
-	pci_conf_dump(sel, target, banner);
+	pci_conf_dump(sel, target, use_bridge);
 	return 0;
 }

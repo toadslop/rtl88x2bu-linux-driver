@@ -16,6 +16,7 @@ struct vector {
 	char expect_contains[80];
 	char expect_contains2[80];
 	u32 pci_conf_dword;
+	int expect_target_id, has_expect_target_id;
 };
 
 static int parse_vector(const char *obj, size_t len, void *vv)
@@ -34,6 +35,10 @@ static int parse_vector(const char *obj, size_t len, void *vv)
 				  sizeof(v->expect_contains2));
 	if (host_json_parse_int_in(obj, len, "pci_conf_dword", &t) == 0)
 		v->pci_conf_dword = (u32)t;
+	if (host_json_parse_int_in(obj, len, "expect_target_id", &t) == 0) {
+		v->expect_target_id = t;
+		v->has_expect_target_id = 1;
+	}
 	return 0;
 }
 
@@ -47,6 +52,7 @@ static int run_one(const struct vector *v)
 	char *cap = NULL;
 	size_t cap_len = 0;
 	FILE *mem;
+	struct pci_dev *rdev;
 	int ret;
 
 	memset(&a, 0, sizeof(a));
@@ -85,6 +91,12 @@ static int run_one(const struct vector *v)
 		goto fail;
 	if (v->expect_contains2[0] && !strstr(cap, v->expect_contains2))
 		goto fail;
+	host_pci_read_get(&rdev);
+	if (v->has_expect_target_id &&
+	    (!rdev || (int)rdev->id != v->expect_target_id)) {
+		fprintf(stderr, "%s: pci read target id mismatch\n", v->name);
+		goto fail;
+	}
 	free(cap);
 	return 0;
 

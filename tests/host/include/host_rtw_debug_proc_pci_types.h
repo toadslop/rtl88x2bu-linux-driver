@@ -39,6 +39,7 @@ struct seq_file {
 		fmt, ##__VA_ARGS__)
 
 extern u32 host_pci_conf_dword;
+extern struct pci_dev *host_pci_read_dev;
 
 void host_pci_get_test_reset(void);
 void host_pci_read_config_dword(struct pci_dev *dev, u32 reg, u32 *val);
@@ -86,6 +87,12 @@ static inline void host_pci_write_get(u32 *reg, u8 *val, struct pci_dev **dev)
 		*val = host_pci_write_val;
 	if (dev)
 		*dev = host_pci_write_dev;
+}
+
+static inline void host_pci_read_get(struct pci_dev **dev)
+{
+	if (dev)
+		*dev = host_pci_read_dev;
 }
 
 static inline const char *host_pci_last_log_line(void)
