@@ -9,6 +9,7 @@
     non_snake_case,
     non_upper_case_globals,
     unreachable_pub,
+    unused_imports,
     unused_unsafe
 )]
 
@@ -34,9 +35,7 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
 }
 
 #[cfg(any(
-    config_bt_coexist,
-    config_rtw_debug,
-    config_proc_debug,
+    all(config_bt_coexist, config_proc_debug),
     host_rtw_debug_proc_btcoex_test
 ))]
 #[no_mangle]
@@ -49,9 +48,7 @@ pub extern "C" fn proc_get_btcoex_dbg(m: *mut c_void, _v: *mut c_void) -> c_int 
 }
 
 #[cfg(any(
-    config_bt_coexist,
-    config_rtw_debug,
-    config_proc_debug,
+    all(config_bt_coexist, config_proc_debug),
     host_rtw_debug_proc_btcoex_test
 ))]
 #[no_mangle]
@@ -67,9 +64,7 @@ pub extern "C" fn proc_set_btcoex_dbg(
 }
 
 #[cfg(any(
-    config_bt_coexist,
-    config_rtw_debug,
-    config_proc_debug,
+    all(config_bt_coexist, config_proc_debug),
     host_rtw_debug_proc_btcoex_test
 ))]
 #[no_mangle]

@@ -9,6 +9,7 @@
     non_snake_case,
     non_upper_case_globals,
     unreachable_pub,
+    unused_imports,
     unused_unsafe
 )]
 
@@ -39,7 +40,7 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
 }
 
 #[cfg(any(config_lps_chk_by_tp, host_rtw_debug_proc_lps_tp_test))]
-#[cfg(any(config_rtw_debug, config_proc_debug, host_rtw_debug_proc_lps_tp_test))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_lps_tp_test))]
 #[no_mangle]
 pub extern "C" fn proc_get_lps_chk_tp(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -50,7 +51,7 @@ pub extern "C" fn proc_get_lps_chk_tp(m: *mut c_void, _v: *mut c_void) -> c_int 
 }
 
 #[cfg(any(config_lps_chk_by_tp, host_rtw_debug_proc_lps_tp_test))]
-#[cfg(any(config_rtw_debug, config_proc_debug, host_rtw_debug_proc_lps_tp_test))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_lps_tp_test))]
 #[no_mangle]
 pub extern "C" fn proc_set_lps_chk_tp(
     _file: *mut c_void,

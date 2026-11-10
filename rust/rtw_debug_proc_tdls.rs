@@ -9,6 +9,7 @@
     non_snake_case,
     non_upper_case_globals,
     unreachable_pub,
+    unused_imports,
     unused_unsafe
 )]
 
@@ -36,7 +37,7 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
 }
 
 #[cfg(any(config_tdls, host_rtw_debug_proc_tdls_test))]
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_get_tdls_enable(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -47,7 +48,7 @@ pub extern "C" fn proc_get_tdls_enable(m: *mut c_void, _v: *mut c_void) -> c_int
 }
 
 #[cfg(any(config_tdls, host_rtw_debug_proc_tdls_test))]
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_set_tdls_enable(
     _file: *mut c_void,
@@ -61,21 +62,21 @@ pub extern "C" fn proc_set_tdls_enable(
 }
 
 #[cfg(any(config_tdls, host_rtw_debug_proc_tdls_test))]
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_tdls_display_tdls_function_info(m: *mut c_void) -> c_int {
     unsafe { rtw_rust_debug_proc_tdls_display_function_info(m) }
 }
 
 #[cfg(any(config_tdls, host_rtw_debug_proc_tdls_test))]
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_tdls_display_network_info(m: *mut c_void) -> c_int {
     unsafe { rtw_rust_debug_proc_tdls_display_network_info(m) }
 }
 
 #[cfg(any(config_tdls, host_rtw_debug_proc_tdls_test))]
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_tdls_display_tdls_sta_info(m: *mut c_void) -> c_int {
     unsafe { rtw_rust_debug_proc_tdls_display_tdls_sta_info(m) }

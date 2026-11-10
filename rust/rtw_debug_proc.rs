@@ -9,6 +9,7 @@
     non_snake_case,
     non_upper_case_globals,
     unreachable_pub,
+    unused_imports,
     unused_unsafe
 )]
 
@@ -91,7 +92,7 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
 
 macro_rules! export_proc {
     ($name:ident, $emit:ident) => {
-        #[cfg(any(config_rtw_debug, config_proc_debug))]
+        #[cfg(config_proc_debug)]
         #[no_mangle]
         pub extern "C" fn $name(m: *mut c_void, _v: *mut c_void) -> c_int {
             let adapter = adapter_from_seq(m);
@@ -118,7 +119,7 @@ export_proc!(proc_get_scan_abort, rtw_rust_debug_proc_emit_scan_abort);
 static mut PROC_GET_READ_ADDR: U32 = 0xeeeeeeee;
 static mut PROC_GET_READ_LEN: U32 = 0x4;
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_get_read_reg(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -146,7 +147,7 @@ pub extern "C" fn proc_get_read_reg(m: *mut c_void, _v: *mut c_void) -> c_int {
     0
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_set_scan_param(
     _file: *mut c_void,
@@ -159,7 +160,7 @@ pub extern "C" fn proc_set_scan_param(
     unsafe { rtw_rust_debug_proc_set_scan_param(adapter, buffer, count) }
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_set_defs_param(
     _file: *mut c_void,
@@ -172,7 +173,7 @@ pub extern "C" fn proc_set_defs_param(
     unsafe { rtw_rust_debug_proc_set_defs_param(adapter, buffer, count) }
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_set_write_reg(
     _file: *mut c_void,
@@ -185,7 +186,7 @@ pub extern "C" fn proc_set_write_reg(
     unsafe { rtw_rust_debug_proc_set_write_reg(adapter, buffer, count) }
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_set_read_reg(
     _file: *mut c_void,
@@ -214,7 +215,7 @@ export_proc!(proc_get_roam_flags, rtw_rust_debug_proc_emit_roam_flags);
 #[cfg(config_layer2_roaming)]
 export_proc!(proc_get_roam_param, rtw_rust_debug_proc_emit_roam_param);
 
-#[cfg(all(config_layer2_roaming, any(config_rtw_debug, config_proc_debug)))]
+#[cfg(all(config_layer2_roaming, config_proc_debug))]
 #[no_mangle]
 pub extern "C" fn proc_set_roam_flags(
     _file: *mut c_void,
@@ -227,7 +228,7 @@ pub extern "C" fn proc_set_roam_flags(
     unsafe { rtw_rust_debug_proc_set_roam_flags(adapter, buffer, count) }
 }
 
-#[cfg(all(config_layer2_roaming, any(config_rtw_debug, config_proc_debug)))]
+#[cfg(all(config_layer2_roaming, config_proc_debug))]
 #[no_mangle]
 pub extern "C" fn proc_set_roam_param(
     _file: *mut c_void,
@@ -240,7 +241,7 @@ pub extern "C" fn proc_set_roam_param(
     unsafe { rtw_rust_debug_proc_set_roam_param(adapter, buffer, count) }
 }
 
-#[cfg(all(config_layer2_roaming, any(config_rtw_debug, config_proc_debug)))]
+#[cfg(all(config_layer2_roaming, config_proc_debug))]
 #[no_mangle]
 pub extern "C" fn proc_set_roam_tgt_addr(
     _file: *mut c_void,

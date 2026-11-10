@@ -264,28 +264,6 @@ pub extern "C" fn dump_sec_cam_cache(sel: *mut c_void, adapter: *mut c_void) {
     }
 }
 
-#[cfg(all(
-    not(host_rtw_debug_sec_cam_test),
-    not(any(config_rtw_debug, config_proc_debug))
-))]
-#[no_mangle]
-pub extern "C" fn dump_sec_cam(_sel: *mut c_void, adapter: *mut c_void) {
-    if adapter.is_null() {
-        return;
-    }
-}
-
-#[cfg(all(
-    not(host_rtw_debug_sec_cam_test),
-    not(any(config_rtw_debug, config_proc_debug))
-))]
-#[no_mangle]
-pub extern "C" fn dump_sec_cam_cache(_sel: *mut c_void, adapter: *mut c_void) {
-    if adapter.is_null() {
-        return;
-    }
-}
-
 #[no_mangle]
 pub extern "C" fn dump_sec_cam_ent_title(sel: *mut c_void, has_id: U8) {
     let mut line = [0u8; 120];

@@ -9,6 +9,7 @@
     non_snake_case,
     non_upper_case_globals,
     unreachable_pub,
+    unused_imports,
     unused_unsafe
 )]
 
@@ -32,7 +33,7 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
     unsafe { rtw_rust_debug_proc_adapter(m) }
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[cfg(any(config_80211ac_vht, host_rtw_debug_proc_vht_test))]
 #[no_mangle]
 pub extern "C" fn proc_get_vht_24g_enable(m: *mut c_void, _v: *mut c_void) -> c_int {
@@ -43,7 +44,7 @@ pub extern "C" fn proc_get_vht_24g_enable(m: *mut c_void, _v: *mut c_void) -> c_
     0
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[cfg(any(config_80211ac_vht, host_rtw_debug_proc_vht_test))]
 #[no_mangle]
 pub extern "C" fn proc_set_vht_24g_enable(

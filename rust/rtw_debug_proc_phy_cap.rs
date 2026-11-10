@@ -9,6 +9,7 @@
     non_snake_case,
     non_upper_case_globals,
     unreachable_pub,
+    unused_imports,
     unused_unsafe
 )]
 
@@ -54,11 +55,7 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
 
 macro_rules! proc_get {
     ($name:ident, $emit:ident) => {
-        #[cfg(any(
-            config_rtw_debug,
-            config_proc_debug,
-            host_rtw_debug_proc_phy_cap_registry_test
-        ))]
+        #[cfg(any(config_proc_debug, host_rtw_debug_proc_phy_cap_registry_test))]
         #[no_mangle]
         pub extern "C" fn $name(m: *mut c_void, _v: *mut c_void) -> c_int {
             let adapter = adapter_from_seq(m);
@@ -72,11 +69,7 @@ macro_rules! proc_get {
 
 macro_rules! proc_set {
     ($name:ident, $set:ident) => {
-        #[cfg(any(
-            config_rtw_debug,
-            config_proc_debug,
-            host_rtw_debug_proc_phy_cap_registry_test
-        ))]
+        #[cfg(any(config_proc_debug, host_rtw_debug_proc_phy_cap_registry_test))]
         #[no_mangle]
         pub extern "C" fn $name(
             _file: *mut c_void,

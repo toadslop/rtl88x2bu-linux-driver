@@ -9,6 +9,7 @@
     non_snake_case,
     non_upper_case_globals,
     unreachable_pub,
+    unused_imports,
     unused_unsafe
 )]
 
@@ -38,7 +39,7 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
     unsafe { rtw_rust_debug_proc_adapter(m) }
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug, host_rtw_debug_proc_amsdu_test))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_amsdu_test))]
 #[no_mangle]
 pub extern "C" fn proc_get_tx_amsdu(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -48,7 +49,7 @@ pub extern "C" fn proc_get_tx_amsdu(m: *mut c_void, _v: *mut c_void) -> c_int {
     0
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug, host_rtw_debug_proc_amsdu_test))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_amsdu_test))]
 #[no_mangle]
 pub extern "C" fn proc_set_tx_amsdu(
     _file: *mut c_void,
@@ -61,7 +62,7 @@ pub extern "C" fn proc_set_tx_amsdu(
     unsafe { rtw_rust_debug_proc_set_tx_amsdu(adapter, buffer, count) }
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug, host_rtw_debug_proc_amsdu_test))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_amsdu_test))]
 #[no_mangle]
 pub extern "C" fn proc_get_tx_amsdu_rate(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -71,7 +72,7 @@ pub extern "C" fn proc_get_tx_amsdu_rate(m: *mut c_void, _v: *mut c_void) -> c_i
     0
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug, host_rtw_debug_proc_amsdu_test))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_amsdu_test))]
 #[no_mangle]
 pub extern "C" fn proc_set_tx_amsdu_rate(
     _file: *mut c_void,
