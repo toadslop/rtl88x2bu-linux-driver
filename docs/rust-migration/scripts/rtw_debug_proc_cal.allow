@@ -1,0 +1,7 @@
+# L1 allowlist for W3-230: Rust owns IQK/LCK cal proc handlers in rtw_debug_proc_cal.o.
+drop proc_get_iqk_info
+drop proc_set_iqk
+drop proc_get_lck_info
+drop proc_set_lck
+drop rtw_rust_debug_proc_set_iqk
+drop rtw_rust_debug_proc_set_lck

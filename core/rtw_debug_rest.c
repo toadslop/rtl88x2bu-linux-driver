@@ -7886,6 +7886,7 @@ int proc_get_txss_ctrl(struct seq_file *m, void *v)
 #endif
 
 #ifdef CONFIG_DBG_RF_CAL
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_iqk_info(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -7962,6 +7963,7 @@ ssize_t proc_set_lck(struct file *file, const char __user *buffer, size_t count,
 
 	return count;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-230 in rust/rtw_debug_proc_cal.rs */
 #endif /* CONFIG_DBG_RF_CAL */
 
 #ifdef CONFIG_LPS_CHK_BY_TP
