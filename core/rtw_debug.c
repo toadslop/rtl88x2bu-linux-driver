@@ -455,11 +455,12 @@ void rtw_rust_debug_proc_emit_pci_conf_space(void *sel, _adapter *adapter,
 	struct pci_dev *target = use_bridge ? pdev->bus->self : pdev;
 	u32 tmp[4];
 	u32 i, j;
-	const char *banner = use_bridge ?
-		"PCI Host Device Configuration Space" :
-		"PCI Device Configuration Space";
-
-	RTW_PRINT_SEL(sel, "\n*****  %s*****\n\n", banner);
+	if (use_bridge)
+		RTW_PRINT_SEL(sel,
+			      "\n*****  PCI Host Device Configuration Space*****\n\n");
+	else
+		RTW_PRINT_SEL(sel,
+			      "\n*****  PCI Device Configuration Space *****\n\n");
 
 	for (i = 0; i < 0x1000; i += 0x10) {
 		for (j = 0; j < 4; j++)
@@ -535,6 +536,12 @@ void rtw_rust_debug_proc_emit_pci_aspm(void *sel, _adapter *adapter)
 	RTW_PRINT_SEL(sel, "********* MISC **********\n");
 	RTW_PRINT_SEL(sel, "ASPM L1 Idel Time: 0x%x\n", l1_idle >> 3);
 	RTW_PRINT_SEL(sel, "*************************\n");
+
+#ifdef CONFIG_PCI_DYNAMIC_ASPM
+	RTW_PRINT_SEL(sel, "Dynamic ASPM mode: %d (%s)\n", pcipriv->aspm_mode,
+		      pcipriv->aspm_mode == ASPM_MODE_PERF ? "Perf" :
+		      pcipriv->aspm_mode == ASPM_MODE_PS ? "PS" : "Und");
+#endif
 }
 #endif /* CONFIG_PCI_HCI */
 
