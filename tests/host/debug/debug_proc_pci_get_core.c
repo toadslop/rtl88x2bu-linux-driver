@@ -6,7 +6,7 @@
 
 #include "host_rtw_debug_proc_pci_types.h"
 
-u16 host_pci_pciehdr_offset = 64;
+u16 host_pci_pciehdr_offset;
 u32 host_pci_conf_dword = 0x04030201;
 struct pci_dev *host_pci_read_dev;
 u32 host_pci_linkcap;
@@ -17,7 +17,7 @@ u8 host_pci_dbi_byte[0x800];
 
 void host_pci_get_test_reset(void)
 {
-	host_pci_pciehdr_offset = 64;
+	host_pci_pciehdr_offset = 0;
 	host_pci_conf_dword = 0x04030201;
 	host_pci_read_dev = NULL;
 	host_pci_linkcap = 0;
@@ -133,6 +133,7 @@ int rtw_rust_debug_proc_get_pci_conf_space(void *sel, void *adapter,
 
 	if (!padapter || !target)
 		return 0;
+	host_pci_pciehdr_offset = pdvobjpriv->pcipriv.pciehdr_offset;
 	pci_conf_dump(sel, target, use_bridge);
 	return 0;
 }
@@ -151,23 +152,54 @@ int rtw_rust_debug_proc_get_pci_aspm(void *sel, void *adapter)
 		return 0;
 
 	host_pci_pciehdr_offset = pcipriv->pciehdr_offset;
+
 	RTW_PRINT_SEL(sel, "***** ASPM Capability *****\n");
+
 	host_pci_read_config_dword(pdvobjpriv->ppcidev,
-				  pcipriv->pciehdr_offset + PCI_EXP_LNKCAP,
-				  &tmp32);
+				  pcipriv->pciehdr_offset + PCI_EXP_LNKCAP, &tmp32);
+
 	RTW_PRINT_SEL(sel, "CLK REQ:\t%s\n",
 		      (tmp32 & PCI_EXP_LNKCAP_CLKPM) ? "Enable" : "Disable");
+	RTW_PRINT_SEL(sel, "ASPM L0s:\t%s\n",
+		      (tmp32 & BIT10) ? "Enable" : "Disable");
 	RTW_PRINT_SEL(sel, "ASPM L1:\t%s\n",
 		      (tmp32 & BIT11) ? "Enable" : "Disable");
+
 	tmp8 = rtw_hal_pci_l1off_capability(padapter);
 	RTW_PRINT_SEL(sel, "ASPM L1OFF:\t%s\n", tmp8 ? "Enable" : "Disable");
+
+	RTW_PRINT_SEL(sel, "***** ASPM CTRL Reg *****\n");
+
 	host_pci_read_config_word(pdvobjpriv->ppcidev,
-				  pcipriv->pciehdr_offset + PCI_EXP_LNKCTL,
-				  &tmp16);
+				  pcipriv->pciehdr_offset + PCI_EXP_LNKCTL, &tmp16);
+
+	RTW_PRINT_SEL(sel, "CLK REQ:\t%s\n",
+		      (tmp16 & PCI_EXP_LNKCTL_CLKREQ_EN) ? "Enable" : "Disable");
+	RTW_PRINT_SEL(sel, "ASPM L0s:\t%s\n",
+		      (tmp16 & BIT0) ? "Enable" : "Disable");
 	RTW_PRINT_SEL(sel, "ASPM L1:\t%s\n",
 		      (tmp16 & BIT1) ? "Enable" : "Disable");
+
+	tmp8 = rtw_hal_pci_l1off_nic_support(padapter);
+	RTW_PRINT_SEL(sel, "ASPM L1OFF:\t%s\n", tmp8 ? "Enable" : "Disable");
+
+	RTW_PRINT_SEL(sel, "***** ASPM Backdoor *****\n");
+
+	tmp8 = rtw_hal_pci_dbi_read(padapter, 0x719);
+	RTW_PRINT_SEL(sel, "CLK REQ:\t%s\n", (tmp8 & BIT4) ? "Enable" : "Disable");
+
 	tmp8 = rtw_hal_pci_dbi_read(padapter, 0x70f);
 	l1_idle = tmp8 & 0x38;
+	RTW_PRINT_SEL(sel, "ASPM L0s:\t%s\n", (tmp8 & BIT7) ? "Enable" : "Disable");
+
+	tmp8 = rtw_hal_pci_dbi_read(padapter, 0x719);
+	RTW_PRINT_SEL(sel, "ASPM L1:\t%s\n", (tmp8 & BIT3) ? "Enable" : "Disable");
+
+	tmp8 = rtw_hal_pci_dbi_read(padapter, 0x718);
+	RTW_PRINT_SEL(sel, "ASPM L1OFF:\t%s\n", (tmp8 & BIT5) ? "Enable" : "Disable");
+
+	RTW_PRINT_SEL(sel, "********* MISC **********\n");
 	RTW_PRINT_SEL(sel, "ASPM L1 Idel Time: 0x%x\n", l1_idle >> 3);
+	RTW_PRINT_SEL(sel, "*************************\n");
 	return 0;
 }

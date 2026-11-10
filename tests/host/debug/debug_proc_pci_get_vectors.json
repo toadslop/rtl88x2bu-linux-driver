@@ -24,7 +24,7 @@
       "linkctl": 3,
       "l1off_cap": 1,
       "expect_contains": "ASPM Capability",
-      "expect_contains2": "Enable"
+      "expect_contains2": "ASPM CTRL Reg"
     }
   ]
 }
