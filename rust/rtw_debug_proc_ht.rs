@@ -44,7 +44,7 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
     unsafe { rtw_rust_debug_proc_adapter(m) }
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_get_ht_enable(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -54,7 +54,7 @@ pub extern "C" fn proc_get_ht_enable(m: *mut c_void, _v: *mut c_void) -> c_int {
     0
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_set_ht_enable(
     _file: *mut c_void,
@@ -67,7 +67,7 @@ pub extern "C" fn proc_set_ht_enable(
     unsafe { rtw_rust_debug_proc_set_ht_enable(adapter, buffer, count) }
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_get_bw_mode(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -77,7 +77,7 @@ pub extern "C" fn proc_get_bw_mode(m: *mut c_void, _v: *mut c_void) -> c_int {
     0
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_set_bw_mode(
     _file: *mut c_void,
@@ -90,7 +90,7 @@ pub extern "C" fn proc_set_bw_mode(
     unsafe { rtw_rust_debug_proc_set_bw_mode(adapter, buffer, count) }
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_get_ampdu_enable(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -100,7 +100,7 @@ pub extern "C" fn proc_get_ampdu_enable(m: *mut c_void, _v: *mut c_void) -> c_in
     0
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_set_ampdu_enable(
     _file: *mut c_void,

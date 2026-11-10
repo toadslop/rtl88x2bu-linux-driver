@@ -21,7 +21,7 @@ extern "C" {
     ) -> c_long;
 }
 
-#[cfg(all(config_war_offload, any(config_rtw_debug, config_proc_debug)))]
+#[cfg(all(config_war_offload, config_proc_debug))]
 #[no_mangle]
 pub extern "C" fn proc_get_war_offload_enable(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -31,7 +31,7 @@ pub extern "C" fn proc_get_war_offload_enable(m: *mut c_void, _v: *mut c_void) -
     0
 }
 
-#[cfg(all(config_war_offload, any(config_rtw_debug, config_proc_debug)))]
+#[cfg(all(config_war_offload, config_proc_debug))]
 #[no_mangle]
 pub extern "C" fn proc_set_war_offload_enable(
     _file: *mut c_void,
@@ -44,7 +44,7 @@ pub extern "C" fn proc_set_war_offload_enable(
     unsafe { rtw_rust_debug_proc_set_war_offload_enable(adapter, buffer, count) }
 }
 
-#[cfg(all(config_war_offload, any(config_rtw_debug, config_proc_debug)))]
+#[cfg(all(config_war_offload, config_proc_debug))]
 #[no_mangle]
 pub extern "C" fn proc_set_war_offload_ipv4_addr(
     _file: *mut c_void,
@@ -57,7 +57,7 @@ pub extern "C" fn proc_set_war_offload_ipv4_addr(
     unsafe { rtw_rust_debug_proc_set_war_offload_ipv4_addr(adapter, buffer, count) }
 }
 
-#[cfg(all(config_war_offload, any(config_rtw_debug, config_proc_debug)))]
+#[cfg(all(config_war_offload, config_proc_debug))]
 #[no_mangle]
 pub extern "C" fn proc_set_war_offload_ipv6_addr(
     _file: *mut c_void,
@@ -94,7 +94,7 @@ extern "C" {
 
 #[cfg(all(
     any(config_offload_mdns_v4, config_offload_mdns_v6),
-    any(config_rtw_debug, config_proc_debug),
+    config_proc_debug,
 ))]
 #[no_mangle]
 pub extern "C" fn proc_get_war_offload_mdns_domain_name(m: *mut c_void, _v: *mut c_void) -> c_int {
@@ -107,7 +107,7 @@ pub extern "C" fn proc_get_war_offload_mdns_domain_name(m: *mut c_void, _v: *mut
 
 #[cfg(all(
     any(config_offload_mdns_v4, config_offload_mdns_v6),
-    any(config_rtw_debug, config_proc_debug),
+    config_proc_debug,
 ))]
 #[no_mangle]
 pub extern "C" fn proc_set_war_offload_mdns_domain_name(
@@ -123,7 +123,7 @@ pub extern "C" fn proc_set_war_offload_mdns_domain_name(
 
 #[cfg(all(
     any(config_offload_mdns_v4, config_offload_mdns_v6),
-    any(config_rtw_debug, config_proc_debug),
+    config_proc_debug,
 ))]
 #[no_mangle]
 pub extern "C" fn proc_get_war_offload_mdns_machine_name(m: *mut c_void, _v: *mut c_void) -> c_int {
@@ -136,7 +136,7 @@ pub extern "C" fn proc_get_war_offload_mdns_machine_name(m: *mut c_void, _v: *mu
 
 #[cfg(all(
     any(config_offload_mdns_v4, config_offload_mdns_v6),
-    any(config_rtw_debug, config_proc_debug),
+    config_proc_debug,
 ))]
 #[no_mangle]
 pub extern "C" fn proc_set_war_offload_mdns_machine_name(
@@ -165,7 +165,7 @@ extern "C" {
 
 #[cfg(all(
     any(config_offload_mdns_v4, config_offload_mdns_v6),
-    any(config_rtw_debug, config_proc_debug),
+    config_proc_debug,
 ))]
 #[no_mangle]
 pub extern "C" fn proc_get_war_offload_mdns_service_info(m: *mut c_void, _v: *mut c_void) -> c_int {
@@ -178,7 +178,7 @@ pub extern "C" fn proc_get_war_offload_mdns_service_info(m: *mut c_void, _v: *mu
 
 #[cfg(all(
     any(config_offload_mdns_v4, config_offload_mdns_v6),
-    any(config_rtw_debug, config_proc_debug),
+    config_proc_debug,
 ))]
 #[no_mangle]
 pub extern "C" fn proc_set_war_offload_mdns_service_info(
@@ -204,7 +204,7 @@ extern "C" {
 
 #[cfg(all(
     any(config_offload_mdns_v4, config_offload_mdns_v6),
-    any(config_rtw_debug, config_proc_debug),
+    config_proc_debug,
 ))]
 #[no_mangle]
 pub extern "C" fn proc_get_war_offload_mdns_txt_rsp(m: *mut c_void, _v: *mut c_void) -> c_int {
@@ -217,7 +217,7 @@ pub extern "C" fn proc_get_war_offload_mdns_txt_rsp(m: *mut c_void, _v: *mut c_v
 
 #[cfg(all(
     any(config_offload_mdns_v4, config_offload_mdns_v6),
-    any(config_rtw_debug, config_proc_debug),
+    config_proc_debug,
 ))]
 #[no_mangle]
 pub extern "C" fn proc_set_war_offload_mdns_txt_rsp(

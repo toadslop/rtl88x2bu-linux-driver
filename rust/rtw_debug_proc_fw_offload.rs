@@ -41,7 +41,6 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
 }
 
 #[cfg(any(
-    config_rtw_debug,
     config_proc_debug,
     host_rtw_debug_proc_fw_offload_test
 ))]
@@ -55,7 +54,6 @@ pub extern "C" fn proc_get_fw_offload(m: *mut c_void, _v: *mut c_void) -> c_int 
 }
 
 #[cfg(any(
-    config_rtw_debug,
     config_proc_debug,
     host_rtw_debug_proc_fw_offload_test
 ))]
@@ -73,7 +71,6 @@ pub extern "C" fn proc_set_fw_offload(
 
 #[cfg(fw_handle_txbcn)]
 #[cfg(any(
-    config_rtw_debug,
     config_proc_debug,
     host_rtw_debug_proc_fw_offload_test
 ))]
@@ -88,7 +85,6 @@ pub extern "C" fn proc_get_fw_tbtt_rpt(m: *mut c_void, _v: *mut c_void) -> c_int
 
 #[cfg(fw_handle_txbcn)]
 #[cfg(any(
-    config_rtw_debug,
     config_proc_debug,
     host_rtw_debug_proc_fw_offload_test
 ))]

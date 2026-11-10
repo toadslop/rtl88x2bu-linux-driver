@@ -19,7 +19,7 @@ extern "C" {
     fn rtw_rust_debug_adapters_dump_body(sel: *mut c_void, dvobj: *mut c_void);
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn dump_adapters_status(sel: *mut c_void, dvobj: *mut c_void) {
     if sel.is_null() || dvobj.is_null() {

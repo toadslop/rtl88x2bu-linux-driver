@@ -5183,6 +5183,8 @@ ssize_t rtw_rust_debug_proc_set_pattern_info(_adapter *adapter,
 	return count;
 }
 
+#endif /* CONFIG_WOWLAN */
+
 #ifdef CONFIG_GPIO_WAKEUP
 void rtw_rust_debug_proc_emit_wowlan_gpio_info(void *sel, _adapter *adapter)
 {
@@ -5253,7 +5255,6 @@ ssize_t rtw_rust_debug_proc_set_wowlan_gpio_info(_adapter *adapter,
 	return count;
 }
 #endif /* CONFIG_GPIO_WAKEUP */
-#endif /* CONFIG_WOWLAN */
 
 #ifdef CONFIG_IEEE80211W
 ssize_t rtw_rust_debug_proc_set_tx_sa_query(_adapter *padapter,

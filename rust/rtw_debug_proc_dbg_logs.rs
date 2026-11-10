@@ -30,7 +30,7 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
 }
 
 #[cfg(config_dbg_counter)]
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_get_rx_logs(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -41,7 +41,7 @@ pub extern "C" fn proc_get_rx_logs(m: *mut c_void, _v: *mut c_void) -> c_int {
 }
 
 #[cfg(config_dbg_counter)]
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_get_tx_logs(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -52,7 +52,7 @@ pub extern "C" fn proc_get_tx_logs(m: *mut c_void, _v: *mut c_void) -> c_int {
 }
 
 #[cfg(config_dbg_counter)]
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_get_int_logs(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);

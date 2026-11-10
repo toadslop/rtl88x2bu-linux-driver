@@ -48,7 +48,7 @@
     unused_unsafe
 )]
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 use core::ffi::c_uint;
 use core::ffi::{c_char, c_int, c_void};
 

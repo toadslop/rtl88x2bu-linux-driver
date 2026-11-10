@@ -33,9 +33,7 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
 }
 
 #[cfg(any(
-    config_support_static_smps,
-    config_rtw_debug,
-    config_proc_debug,
+    all(config_support_static_smps, config_proc_debug),
     host_rtw_debug_proc_smps_test
 ))]
 #[no_mangle]
@@ -48,9 +46,7 @@ pub extern "C" fn proc_get_smps(m: *mut c_void, _v: *mut c_void) -> c_int {
 }
 
 #[cfg(any(
-    config_support_static_smps,
-    config_rtw_debug,
-    config_proc_debug,
+    all(config_support_static_smps, config_proc_debug),
     host_rtw_debug_proc_smps_test
 ))]
 #[no_mangle]

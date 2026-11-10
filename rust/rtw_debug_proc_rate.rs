@@ -54,7 +54,7 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
     unsafe { rtw_rust_debug_proc_adapter(m) }
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_get_rate_ctl(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -64,7 +64,7 @@ pub extern "C" fn proc_get_rate_ctl(m: *mut c_void, _v: *mut c_void) -> c_int {
     0
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_set_rate_ctl(
     _file: *mut c_void,
@@ -77,7 +77,7 @@ pub extern "C" fn proc_set_rate_ctl(
     unsafe { rtw_rust_debug_proc_set_rate_ctl(adapter, buffer, count) }
 }
 
-#[cfg(all(config_ap_mode, any(config_rtw_debug, config_proc_debug)))]
+#[cfg(all(config_ap_mode, config_proc_debug))]
 #[no_mangle]
 pub extern "C" fn proc_get_bmc_tx_rate(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -87,7 +87,7 @@ pub extern "C" fn proc_get_bmc_tx_rate(m: *mut c_void, _v: *mut c_void) -> c_int
     0
 }
 
-#[cfg(all(config_ap_mode, any(config_rtw_debug, config_proc_debug)))]
+#[cfg(all(config_ap_mode, config_proc_debug))]
 #[no_mangle]
 pub extern "C" fn proc_set_bmc_tx_rate(
     _file: *mut c_void,
@@ -100,7 +100,7 @@ pub extern "C" fn proc_set_bmc_tx_rate(
     unsafe { rtw_rust_debug_proc_set_bmc_tx_rate(adapter, buffer, count) }
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_get_tx_power_offset(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -110,7 +110,7 @@ pub extern "C" fn proc_get_tx_power_offset(m: *mut c_void, _v: *mut c_void) -> c
     0
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_set_tx_power_offset(
     _file: *mut c_void,
@@ -123,7 +123,7 @@ pub extern "C" fn proc_set_tx_power_offset(
     unsafe { rtw_rust_debug_proc_set_tx_power_offset(adapter, buffer, count) }
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_get_bw_ctl(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -133,7 +133,7 @@ pub extern "C" fn proc_get_bw_ctl(m: *mut c_void, _v: *mut c_void) -> c_int {
     0
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_set_bw_ctl(
     _file: *mut c_void,

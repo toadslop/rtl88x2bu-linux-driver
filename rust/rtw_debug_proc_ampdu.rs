@@ -282,7 +282,7 @@ fn emit_get_rx_ampdu(sel: *mut c_void, adapter: *mut c_void) {
     print_line(sel, &line[..pos]);
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_get_rx_ampdu(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = if m.is_null() {
@@ -313,7 +313,7 @@ fn apply_set_rx_ampdu_from_tmp(adapter: *mut c_void, tmp: *const u8) {
     unsafe { rtw_rx_ampdu_apply(adapter) };
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_set_rx_ampdu(
     _file: *mut c_void,
@@ -343,7 +343,7 @@ pub extern "C" fn proc_set_rx_ampdu(
 
 macro_rules! proc_get_driver_u8_hex {
     ($fn:ident, $prefix:expr, $read:ident) => {
-        #[cfg(any(config_rtw_debug, config_proc_debug))]
+        #[cfg(config_proc_debug)]
         #[no_mangle]
         pub extern "C" fn $fn(m: *mut c_void, _v: *mut c_void) -> c_int {
             let adapter = adapter_from_seq(m);
@@ -358,7 +358,7 @@ macro_rules! proc_get_driver_u8_hex {
 
 macro_rules! proc_set_driver_u32_clamp {
     ($fn:ident, $max:expr, $set:ident) => {
-        #[cfg(any(config_rtw_debug, config_proc_debug))]
+        #[cfg(config_proc_debug)]
         #[no_mangle]
         pub extern "C" fn $fn(
             _file: *mut c_void,
@@ -405,7 +405,7 @@ proc_set_driver_u32_clamp!(
     rtw_rust_debug_set_driver_ampdu_spacing
 );
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_get_tx_max_agg_num(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -416,7 +416,7 @@ pub extern "C" fn proc_get_tx_max_agg_num(m: *mut c_void, _v: *mut c_void) -> c_
     0
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_set_tx_max_agg_num(
     _file: *mut c_void,
@@ -487,7 +487,7 @@ fn emit_get_tx_aval_th(sel: *mut c_void, adapter: *mut c_void) {
     }
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_get_tx_quick_addba_req(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -497,7 +497,7 @@ pub extern "C" fn proc_get_tx_quick_addba_req(m: *mut c_void, _v: *mut c_void) -
     0
 }
 
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_set_tx_quick_addba_req(
     _file: *mut c_void,
@@ -525,7 +525,7 @@ pub extern "C" fn proc_set_tx_quick_addba_req(
 }
 
 #[cfg(all(
-    any(config_rtw_debug, config_proc_debug),
+    config_proc_debug,
     config_sdio_tx_enable_aval_int
 ))]
 #[no_mangle]
@@ -538,7 +538,7 @@ pub extern "C" fn proc_get_tx_aval_th(m: *mut c_void, _v: *mut c_void) -> c_int 
 }
 
 #[cfg(all(
-    any(config_rtw_debug, config_proc_debug),
+    config_proc_debug,
     config_sdio_tx_enable_aval_int
 ))]
 #[no_mangle]

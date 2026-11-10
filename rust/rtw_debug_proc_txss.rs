@@ -52,7 +52,7 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
 }
 
 #[cfg(any(config_ctrl_txss_by_tp, host_rtw_debug_proc_txss_test))]
-#[cfg(any(config_rtw_debug, config_proc_debug, host_rtw_debug_proc_txss_test))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_txss_test))]
 #[no_mangle]
 pub extern "C" fn proc_get_txss_tp(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -63,7 +63,7 @@ pub extern "C" fn proc_get_txss_tp(m: *mut c_void, _v: *mut c_void) -> c_int {
 }
 
 #[cfg(any(config_ctrl_txss_by_tp, host_rtw_debug_proc_txss_test))]
-#[cfg(any(config_rtw_debug, config_proc_debug, host_rtw_debug_proc_txss_test))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_txss_test))]
 #[no_mangle]
 pub extern "C" fn proc_set_txss_tp(
     _file: *mut c_void,
@@ -83,7 +83,7 @@ pub extern "C" fn proc_set_txss_tp(
     any(config_ctrl_txss_by_tp, host_rtw_debug_proc_txss_test),
     any(config_dbg_ctrl_txss, host_rtw_debug_proc_txss_test)
 ))]
-#[cfg(any(config_rtw_debug, config_proc_debug, host_rtw_debug_proc_txss_test))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_txss_test))]
 #[no_mangle]
 pub extern "C" fn proc_get_txss_ctrl(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -97,7 +97,7 @@ pub extern "C" fn proc_get_txss_ctrl(m: *mut c_void, _v: *mut c_void) -> c_int {
     any(config_ctrl_txss_by_tp, host_rtw_debug_proc_txss_test),
     any(config_dbg_ctrl_txss, host_rtw_debug_proc_txss_test)
 ))]
-#[cfg(any(config_rtw_debug, config_proc_debug, host_rtw_debug_proc_txss_test))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_txss_test))]
 #[no_mangle]
 pub extern "C" fn proc_set_txss_ctrl(
     _file: *mut c_void,

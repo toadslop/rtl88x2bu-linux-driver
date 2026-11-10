@@ -57,7 +57,7 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
 }
 
 #[cfg(config_power_saving)]
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_get_ps_info(m: *mut c_void, _v: *mut c_void) -> c_int {
     if m.is_null() {
@@ -69,7 +69,7 @@ pub extern "C" fn proc_get_ps_info(m: *mut c_void, _v: *mut c_void) -> c_int {
 }
 
 #[cfg(config_power_saving)]
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_set_ps_info(
     _file: *mut c_void,
@@ -86,7 +86,7 @@ pub extern "C" fn proc_set_ps_info(
 }
 
 #[cfg(all(config_power_saving, config_wmmps_sta))]
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_get_wmmps_info(m: *mut c_void, _v: *mut c_void) -> c_int {
     if m.is_null() {
@@ -98,7 +98,7 @@ pub extern "C" fn proc_get_wmmps_info(m: *mut c_void, _v: *mut c_void) -> c_int 
 }
 
 #[cfg(all(config_power_saving, config_wmmps_sta))]
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_set_wmmps_info(
     _file: *mut c_void,
@@ -115,7 +115,7 @@ pub extern "C" fn proc_set_wmmps_info(
 }
 
 #[cfg(config_bcn_cnt_confirm_hdl)]
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_get_new_bcn_max(m: *mut c_void, _v: *mut c_void) -> c_int {
     unsafe { rtw_rust_debug_proc_emit_new_bcn_max(m) };
@@ -123,7 +123,7 @@ pub extern "C" fn proc_get_new_bcn_max(m: *mut c_void, _v: *mut c_void) -> c_int
 }
 
 #[cfg(config_bcn_cnt_confirm_hdl)]
-#[cfg(any(config_rtw_debug, config_proc_debug))]
+#[cfg(config_proc_debug)]
 #[no_mangle]
 pub extern "C" fn proc_set_new_bcn_max(
     _file: *mut c_void,

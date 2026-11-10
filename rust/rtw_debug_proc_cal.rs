@@ -36,7 +36,7 @@ extern "C" {
 }
 
 #[cfg(any(config_dbg_rf_cal, host_rtw_debug_proc_cal_test))]
-#[cfg(any(config_rtw_debug, config_proc_debug, host_rtw_debug_proc_cal_test))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_cal_test))]
 #[no_mangle]
 pub extern "C" fn proc_get_iqk_info(m: *mut c_void, _v: *mut c_void) -> c_int {
     let _adapter = unsafe { rtw_rust_debug_proc_adapter(m) };
@@ -44,7 +44,7 @@ pub extern "C" fn proc_get_iqk_info(m: *mut c_void, _v: *mut c_void) -> c_int {
 }
 
 #[cfg(any(config_dbg_rf_cal, host_rtw_debug_proc_cal_test))]
-#[cfg(any(config_rtw_debug, config_proc_debug, host_rtw_debug_proc_cal_test))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_cal_test))]
 #[no_mangle]
 pub extern "C" fn proc_set_iqk(
     _file: *mut c_void,
@@ -61,7 +61,7 @@ pub extern "C" fn proc_set_iqk(
 }
 
 #[cfg(any(config_dbg_rf_cal, host_rtw_debug_proc_cal_test))]
-#[cfg(any(config_rtw_debug, config_proc_debug, host_rtw_debug_proc_cal_test))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_cal_test))]
 #[no_mangle]
 pub extern "C" fn proc_get_lck_info(m: *mut c_void, _v: *mut c_void) -> c_int {
     let _adapter = unsafe { rtw_rust_debug_proc_adapter(m) };
@@ -69,7 +69,7 @@ pub extern "C" fn proc_get_lck_info(m: *mut c_void, _v: *mut c_void) -> c_int {
 }
 
 #[cfg(any(config_dbg_rf_cal, host_rtw_debug_proc_cal_test))]
-#[cfg(any(config_rtw_debug, config_proc_debug, host_rtw_debug_proc_cal_test))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_cal_test))]
 #[no_mangle]
 pub extern "C" fn proc_set_lck(
     _file: *mut c_void,
