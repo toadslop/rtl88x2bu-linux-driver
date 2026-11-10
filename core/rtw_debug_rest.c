@@ -7710,6 +7710,7 @@ int proc_get_fw_offload(struct seq_file *m, void *v)
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-228 in rust/rtw_debug_proc_fw_offload.rs */
 #ifdef CONFIG_FW_HANDLE_TXBCN
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 extern void rtw_hal_set_fw_ap_bcn_offload_cmd(_adapter *adapter, bool fw_bcn_en, u8 tbtt_rpt_map);
 ssize_t proc_set_fw_tbtt_rpt(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
@@ -7758,8 +7759,8 @@ int proc_get_fw_tbtt_rpt(struct seq_file *m, void *v)
 	RTW_PRINT_SEL(m, "FW TBTT RPT:%x\n", dvobj->vap_tbtt_rpt_map);
 	return 0;
 }
-
-#endif
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-229 in rust/rtw_debug_proc_fw_offload.rs */
+#endif /* CONFIG_FW_HANDLE_TXBCN */
 
 #ifdef CONFIG_CTRL_TXSS_BY_TP
 #if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)

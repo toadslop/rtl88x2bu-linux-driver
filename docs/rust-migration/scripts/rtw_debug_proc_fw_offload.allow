@@ -1,3 +1,5 @@
-# L1 allowlist for W3-228: Rust owns fw_offload proc get/set in rtw_debug_proc_fw_offload.o.
+# L1 allowlist for W3-228/W3-229: Rust owns fw_offload/tbtt proc handlers in rtw_debug_proc_fw_offload.o.
 drop rtw_rust_debug_proc_emit_fw_offload
 drop rtw_rust_debug_proc_set_fw_offload
+drop rtw_rust_debug_proc_emit_fw_tbtt_rpt
+drop rtw_rust_debug_proc_set_fw_tbtt_rpt

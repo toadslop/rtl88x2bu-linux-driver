@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Host FFI for W3-228 (kernel + L2 Rust oracle). PR2 fills Rust-backed paths. */
+/* Host FFI for W3-228/W3-229 (kernel + L2 Rust oracle). */
 
 #include <stdint.h>
 
@@ -71,6 +71,36 @@ long rtw_rust_debug_proc_set_fw_offload(void *adapter, const void *buffer,
 		}
 		if (hal->ch_switch_offload != ch_switch_offload_enable)
 			hal->ch_switch_offload = (u8)ch_switch_offload_enable;
+	}
+	return (long)count;
+}
+
+void rtw_rust_debug_proc_emit_fw_tbtt_rpt(void *sel, void *adapter)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+
+	RTW_PRINT_SEL(sel, "FW BCN offload:%s\n",
+		      dvobj->fw_bcn_offload ? "enable" : "disable");
+	RTW_PRINT_SEL(sel, "FW TBTT RPT:%x\n", dvobj->vap_tbtt_rpt_map);
+}
+
+long rtw_rust_debug_proc_set_fw_tbtt_rpt(void *adapter, const void *buffer,
+					size_t count)
+{
+	char tmp[32];
+	u32 fw_tbtt_rpt = 0, fw_bcn_offload = 0;
+
+	if (count < 1)
+		return -EFAULT;
+	if (count > sizeof(tmp))
+		return -EFAULT;
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		if (count < sizeof(tmp))
+			tmp[count] = '\0';
+		if (sscanf(tmp, "%d %x", &fw_bcn_offload, &fw_tbtt_rpt) < 2)
+			return -EINVAL;
+		rtw_hal_set_fw_ap_bcn_offload_cmd(adapter, fw_bcn_offload,
+						(u8)fw_tbtt_rpt);
 	}
 	return (long)count;
 }
