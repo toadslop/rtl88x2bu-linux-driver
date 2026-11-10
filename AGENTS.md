@@ -8,7 +8,8 @@ see `docs/rust-migration/issues/README.md`). There is no web/app server: the
 "application" is the `88x2bu.ko` module. The canonical dev workflow, gates, and
 gotchas already live in `docs/rust-migration/` (especially
 [`dev-environment.md`](docs/rust-migration/dev-environment.md),
-[`test-plan.md`](docs/rust-migration/test-plan.md)) and
+[`test-plan.md`](docs/rust-migration/test-plan.md), and the FFI rules in
+[`porting-guide.md`](docs/rust-migration/porting-guide.md)) and
 [`docs/smoke-test.md`](docs/smoke-test.md). Read those first; notes below only
 capture what is specific to the pre-provisioned cloud VM.
 

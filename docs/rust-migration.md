@@ -6,6 +6,7 @@ Normative companions:
 
 - [`rust-migration/architecture.md`](rust-migration/architecture.md) — layers, domain types, unsafe at edges
 - [`rust-migration/test-plan.md`](rust-migration/test-plan.md) — L0–L4 gates (offline-first)
+- [`rust-migration/porting-guide.md`](rust-migration/porting-guide.md) — FFI rules and known C→Rust pitfalls (bindings, cfg parity, panics, NULL contracts)
 - [`rust-migration/ecosystem.md`](rust-migration/ecosystem.md) — adopt external crates, extract standalone libraries (Phase 2+)
 - [`rust-migration/dev-environment.md`](rust-migration/dev-environment.md) — toolchain, pinned kernel, L0/L3 gotchas (Wave 0 lessons)
 - [`smoke-test.md`](smoke-test.md) — L4 hardware STA checklist only
@@ -144,4 +145,10 @@ Copy into translation PRs. Source of truth: [test-plan.md § Per-PR checklist](r
 - [ ] `unsafe` confined to abi/os shim
 - [ ] `extern "C"` shim only if C still calls this symbol
 - [ ] Behavior change vs C? If yes, tests updated and called out as spec change
+
+## Porting (see docs/rust-migration/porting-guide.md)
+- [ ] `extern "C"` imports match the C definitions (width/sign/return; `systime` = `c_ulong`); no retyped constants or struct offsets
+- [ ] Every new `#[cfg]` maps to the C macro condition C actually sees; Rust object links in every config the cfg allows
+- [ ] No overflow/shift/index/div panics on C-supplied values (`wrapping_*`/`checked_*`/`get()` where C wrapped or trusted input)
+- [ ] NULL handling, log lines, counters, and errno match C (or are called out as spec change)
 ```

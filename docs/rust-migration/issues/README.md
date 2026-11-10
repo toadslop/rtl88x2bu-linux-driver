@@ -17,6 +17,7 @@ Landed implementation docs (not issue tracking):
 - [`../architecture.md`](../architecture.md) — domain types / layering
 - [`../ecosystem.md`](../ecosystem.md) — adopt external crates, extract standalone libraries (Phase 2+)
 - [`../test-plan.md`](../test-plan.md) — L0–L4 gates
+- [`../porting-guide.md`](../porting-guide.md) — FFI rules and known C→Rust pitfalls
 - [`../dev-environment.md`](../dev-environment.md) — toolchain / pinned kernel / L3 QEMU gotchas (Wave 0)
 
 ## Querying the tracker

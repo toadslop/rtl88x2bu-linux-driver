@@ -24,6 +24,7 @@ Ecosystem reuse (Phase 2+ crate adoption / extraction): [`ecosystem.md`](ecosyst
 3. **Every PR proves something without hardware** — at least build + symbol/ABI checks; pure code also gets host/unit tests.
 4. **Hardware is a milestone, not the default CI** — use it when a whole wave lands or before Phase 1 exit.
 5. **Keep tests near ~200 LOC chunks** — grow the harness in small issues too.
+6. **Oracle = original C, subject = shipped Rust.** Build the oracle from `git show <port>^:<file>.c` (never a hand-copied model or retyped constants) and exercise the kernel Rust function, not a `#[cfg(host_*)]` rewrite. Fake clocks use full-width `unsigned long` starting near 2^32. See [`porting-guide.md`](porting-guide.md#testing-the-port-what-l2-must-actually-prove).
 
 ## Characterization workflow (per ported chunk)
 
@@ -206,6 +207,12 @@ Canonical checklist for new pull requests: [`.github/PULL_REQUEST_TEMPLATE.md`](
 - [ ] `unsafe` confined to abi/os shim
 - [ ] `extern "C"` shim only if C still calls this symbol
 - [ ] Behavior change vs C? If yes, tests updated and called out as spec change
+
+## Porting (see docs/rust-migration/porting-guide.md)
+- [ ] `extern "C"` imports match the C definitions (width/sign/return; `systime` = `c_ulong`); no retyped constants or struct offsets
+- [ ] Every new `#[cfg]` maps to the C macro condition C actually sees; Rust object links in every config the cfg allows
+- [ ] No overflow/shift/index/div panics on C-supplied values (`wrapping_*`/`checked_*`/`get()` where C wrapped or trusted input)
+- [ ] NULL handling, log lines, counters, and errno match C (or are called out as spec change)
 ```
 
 **T9 CI status:** PR template and required-check documentation landed in-repo. Branch protection on `master` is a GitHub Settings change for a repo admin — see [`dev-environment.md`](dev-environment.md#branch-protection).

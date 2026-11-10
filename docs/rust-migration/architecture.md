@@ -2,6 +2,8 @@
 
 This document is normative for the Rust rewrite. Phase 1 still preserves **observable behavior** of the C driver, but Rust code must not become an untyped mirror of C (`u8`/`u32`/`*mut` soup). Behavior parity is enforced by tests; structure is enforced by types.
 
+FFI rules and known porting pitfalls (bindings, cfg parity, overflow/panic, NULL contracts) live in [`porting-guide.md`](porting-guide.md).
+
 ## Goals
 
 1. **Behavior parity first** — characterization tests lock current C behavior; ports must match.
@@ -127,6 +129,7 @@ invert (`domain` must not depend on USB details).
 - [ ] New Rust API uses domain types (no new public raw pointers / mystery integers)
 - [ ] `unsafe` confined to abi/os shim
 - [ ] `extern "C"` shim present only if C still calls this symbol
+- [ ] Imports, constants, offsets, and `#[cfg]`s come from C, not retyped ([`porting-guide.md`](porting-guide.md))
 - [ ] L0/L1/(L2) gates from test-plan.md
 ```
 
@@ -147,5 +150,7 @@ Do not describe this as “mixed ownership of one `.c` file” without the extra
 - “We’ll add types later” for ported modules (types land with the port, even if small)
 - Wide `unsafe` blocks around entire files “for convenience”
 - Partial ports that leave duplicate `extern "C"` symbols in C and Rust
+- Hard-coding C struct offsets, enum values, or `#[cfg]` conditions in Rust instead of deriving them from C ([`porting-guide.md`](porting-guide.md))
+- Changing the C configuration so a Rust object links (gate the Rust instead)
 - Swapping in crates.io dependencies or publishing extract crates **before** L2 parity exists for that module ([`ecosystem.md`](ecosystem.md))
 - Building a generic WiFi driver toolkit — extraction targets wire-format and crypto helpers only
