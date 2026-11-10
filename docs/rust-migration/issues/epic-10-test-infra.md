@@ -33,6 +33,10 @@ Provide hardware-free verification (L0–L3) so each ~200 LOC translation PR can
 - T18 — admin: enable branch protection (L0/L1/L2 required checks)
 - T19 — extend required checks (Rust lint, path-scoped L3) after T18
 - T20 — clippy on `rust/**` (warn-only CI job; backlog)
+- T21 — generate rustc `--cfg` from the effective C macro set + parity check (from [E14](epic-14-port-regression-fixes.md))
+- T22 — non-default config build matrix + C-only build policy (from E14)
+- T23 — `extern "C"` signature drift check + panic-site inventory (from E14)
+- T24 — L2 fidelity: test shipped Rust cores against real C oracles (from E14)
 
 ## Exit criteria
 
