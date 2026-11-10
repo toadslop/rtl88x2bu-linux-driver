@@ -7643,6 +7643,7 @@ ssize_t proc_set_ack_timeout(struct file *file, const char __user *buffer, size_
 }
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-227 in rust/rtw_debug_proc_ack.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 ssize_t proc_set_fw_offload(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
 	struct net_device *dev = data;
@@ -7699,6 +7700,7 @@ int proc_get_fw_offload(struct seq_file *m, void *v)
 	RTW_PRINT_SEL(m, "Channel switch FW offload:%s\n", hal->ch_switch_offload?"enable":"disable");
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-228 in rust/rtw_debug_proc_fw_offload.rs */
 #ifdef CONFIG_FW_HANDLE_TXBCN
 extern void rtw_hal_set_fw_ap_bcn_offload_cmd(_adapter *adapter, bool fw_bcn_en, u8 tbtt_rpt_map);
 ssize_t proc_set_fw_tbtt_rpt(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)

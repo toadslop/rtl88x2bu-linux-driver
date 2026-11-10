@@ -21,6 +21,7 @@
 //! W3-208 proc VHT 24G enable handlers live in `rtw_debug_proc_vht.rs`.
 //! W3-212 proc TDLS enable + function info live in `rtw_debug_proc_tdls.rs`.
 //! W3-209 proc en_fwps (check_fw_ps) handlers live in `rtw_debug_proc_fwps.rs`.
+//! W3-228 proc fw_offload handlers live in `rtw_debug_proc_fw_offload.rs`.
 //! W3-226 proc static SMPS handlers live in `rtw_debug_proc_smps.rs`.
 //! W3-211 proc PHY cap registry get/set live in `rtw_debug_proc_phy_cap.rs`.
 //! W3-215 proc btcoex debug handlers live in `rtw_debug_proc_btcoex.rs`.

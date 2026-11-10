@@ -3292,6 +3292,7 @@ ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_TDLS' $(src)/include/autoconf.h
 $(MODULE_NAME)-y += rust/rtw_debug_proc_tdls.o
 endif
 $(MODULE_NAME)-y += rust/rtw_debug_proc_fwps.o
+$(MODULE_NAME)-y += rust/rtw_debug_proc_fw_offload.o
 _rust_obj_rtw_debug_proc_smps :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_SUPPORT_STATIC_SMPS' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 _rust_obj_rtw_debug_proc_smps := y
@@ -5453,6 +5454,20 @@ rust-objects-rtw-debug-proc-fwps-c:
 rust-check-symbols-rtw-debug-proc-fwps: rust-objects-rtw-debug-proc-fwps-c rust-objects-rtw-debug-proc-fwps
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_fwps_c_ref.o NEW=rust/rtw_debug_proc_fwps.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_fwps.allow ALLOW_VACUOUS=1
+
+# W3-228: host C oracle vs rust/rtw_debug_proc_fw_offload.o (proc fw_offload get/set).
+rust-objects-rtw-debug-proc-fw-offload:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-fw-offload"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_fw_offload.o
+rust-objects-rtw-debug-proc-fw-offload-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_fw_offload_c_ref.o \
+		tests/host/debug/debug_proc_fw_offload_c_oracle.c
+rust-check-symbols-rtw-debug-proc-fw-offload: rust-objects-rtw-debug-proc-fw-offload-c rust-objects-rtw-debug-proc-fw-offload
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_fw_offload_c_ref.o NEW=rust/rtw_debug_proc_fw_offload.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_fw_offload.allow ALLOW_VACUOUS=1
 
 # W3-226: host C oracle vs rust/rtw_debug_proc_smps.o (proc static SMPS get/set).
 rust-objects-rtw-debug-proc-smps:

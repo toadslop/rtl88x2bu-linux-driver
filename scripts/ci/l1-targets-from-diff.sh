@@ -358,6 +358,7 @@ for path in "${changed[@]}"; do
 	| rust/rtw_debug_proc_vht.rs \
 	| rust/rtw_debug_proc_tdls.rs \
 	| rust/rtw_debug_proc_fwps.rs \
+	| rust/rtw_debug_proc_fw_offload.rs \
 	| rust/rtw_debug_proc_smps.rs \
 	| rust/rtw_debug_proc_sreset.rs \
 	| rust/rtw_debug_proc_ampdu.rs \
