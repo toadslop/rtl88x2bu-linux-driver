@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* Host L2 oracle runner for W3-228 proc fw_offload get/set. */
+/* Host L2 oracle runner for W3-228 fw_offload + W3-229 fw_tbtt_rpt. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,7 +8,7 @@
 #include "host_rtw_debug_proc_fw_offload_types.h"
 #include "host_vector_json.h"
 
-#define MAX_VECTORS 12
+#define MAX_VECTORS 20
 #define MAX_NAME 64
 #define MAX_INPUT 32
 #define MAX_FIELD 32
@@ -18,6 +18,10 @@ struct vector {
 	char name[MAX_NAME];
 	u8 iqk_offload;
 	u8 ch_switch_offload;
+	u8 fw_bcn_offload;
+	u8 vap_tbtt_rpt_map;
+	unsigned expect_hal_cmd;
+	int has_expect_hal_cmd;
 	char set_field[MAX_FIELD];
 	char set_input[MAX_INPUT];
 	size_t set_count;
@@ -66,10 +70,10 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	memset(v, 0, sizeof(*v));
 	if (host_json_parse_string_in(obj, len, "name", v->name, sizeof(v->name)))
 		return -1;
-	if (parse_u8_field(obj, len, "iqk_offload", &v->iqk_offload))
-		return -1;
-	if (parse_u8_field(obj, len, "ch_switch_offload", &v->ch_switch_offload))
-		return -1;
+	parse_u8_field(obj, len, "iqk_offload", &v->iqk_offload);
+	parse_u8_field(obj, len, "ch_switch_offload", &v->ch_switch_offload);
+	parse_u8_field(obj, len, "fw_bcn_offload", &v->fw_bcn_offload);
+	parse_u8_field(obj, len, "vap_tbtt_rpt_map", &v->vap_tbtt_rpt_map);
 	if (host_json_parse_string_in(obj, len, "set", v->set_field,
 				      sizeof(v->set_field)) == 0) {
 		if (host_json_parse_string_in(obj, len, "set_input", v->set_input,
@@ -86,6 +90,10 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	if (host_json_parse_int_in(obj, len, "expect_thread_cmd", &t) == 0) {
 		v->expect_thread_cmd = (unsigned)t;
 		v->has_expect_thread_cmd = 1;
+	}
+	if (host_json_parse_int_in(obj, len, "expect_hal_cmd", &t) == 0) {
+		v->expect_hal_cmd = (unsigned)t;
+		v->has_expect_hal_cmd = 1;
 	}
 	if (host_json_parse_string_in(obj, len, "get", v->get_field,
 				      sizeof(v->get_field)) == 0) {
@@ -116,9 +124,12 @@ static int run_vector(const struct vector *v)
 	ssize_t set_ret;
 
 	host_fw_offload_reset_thread_cmd_count();
+	host_fw_tbtt_reset_hal_cmd_count();
 	seed_adapter(&adapter);
 	adapter.hal_data.RegIQKFWOffload = v->iqk_offload;
 	adapter.hal_data.ch_switch_offload = v->ch_switch_offload;
+	adapter.dvobj->fw_bcn_offload = v->fw_bcn_offload;
+	adapter.dvobj->vap_tbtt_rpt_map = v->vap_tbtt_rpt_map;
 	dev.priv = &adapter;
 	seq.private = &dev;
 
@@ -152,6 +163,35 @@ static int run_vector(const struct vector *v)
 					v->expect_thread_cmd);
 				return -1;
 			}
+		} else if (!strcmp(v->set_field, "fw_tbtt_rpt")) {
+			set_ret = proc_set_fw_tbtt_rpt(NULL, v->set_input,
+						      v->set_count,
+						      NULL, &dev);
+			if (v->has_set_expect_ret) {
+				if (set_ret != v->set_expect_ret) {
+					fprintf(stderr,
+						"FAIL %s set ret %zd expect %ld\n",
+						v->name, set_ret,
+						v->set_expect_ret);
+					return -1;
+				}
+				if (!v->has_get && !v->has_expect_hal_cmd)
+					return 0;
+			} else if (set_ret < 0) {
+				fprintf(stderr, "FAIL %s set ret %zd\n", v->name,
+					set_ret);
+				return -1;
+			}
+			if (v->has_expect_hal_cmd &&
+			    host_fw_tbtt_hal_cmd_count() != v->expect_hal_cmd) {
+				fprintf(stderr,
+					"FAIL %s hal_cmd %u expect %u\n",
+					v->name, host_fw_tbtt_hal_cmd_count(),
+					v->expect_hal_cmd);
+				return -1;
+			}
+			if (!v->has_get)
+				return 0;
 		} else {
 			return -1;
 		}
@@ -167,6 +207,8 @@ static int run_vector(const struct vector *v)
 
 	if (!strcmp(v->get_field, "fw_offload"))
 		proc_get_fw_offload(&seq, NULL);
+	else if (!strcmp(v->get_field, "fw_tbtt_rpt"))
+		proc_get_fw_tbtt_rpt(&seq, NULL);
 	else {
 		fclose(capture);
 		return -1;
@@ -203,6 +245,6 @@ int main(int argc, char **argv)
 			return 1;
 	}
 
-	printf("ok: %zu proc fw_offload vectors\n", count);
+	printf("ok: %zu proc fw_offload/tbtt vectors\n", count);
 	return 0;
 }

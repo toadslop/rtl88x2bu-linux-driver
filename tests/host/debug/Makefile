@@ -149,6 +149,7 @@ FW_OFFLOAD_CORE   := debug_proc_fw_offload_host_core.c
 FW_OFFLOAD_SHIM   := host_rtw_debug_proc_fw_offload_shim.c
 FW_OFFLOAD_RUST   := $(ROOT)/rust/rtw_debug_proc_fw_offload.rs
 FW_OFFLOAD_L2     := test_proc_fw_offload.c
+FW_OFFLOAD_CFG    := -DCONFIG_FW_HANDLE_TXBCN
 
 # W3-226 proc static SMPS get/set
 SMPS_ORACLE := debug_proc_smps_c_oracle.c
@@ -200,7 +201,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-regsty-rx-ampdu-c test-regsty-rx-ampdu-rust \
 	test-proc-ht-c test-proc-ht-rust test-proc-wow-c test-proc-wow-rust \
 	test-proc-vht-c test-proc-vht-rust \
-	test-proc-fwps-c test-proc-fwps-rust test-proc-fw-offload-c test-proc-fw-offload-rust \
+	test-proc-fwps-c test-proc-fwps-rust test-proc-fw-offload-c \
 	test-proc-tdls-c test-proc-tdls-rust \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
@@ -228,7 +229,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-regsty-rx-ampdu-c test-regsty-rx-ampdu-rust \
 	test-proc-ht-c test-proc-ht-rust test-proc-wow-c test-proc-wow-rust \
 	test-proc-vht-c test-proc-vht-rust \
-	test-proc-fwps-c test-proc-fwps-rust test-proc-fw-offload-c test-proc-fw-offload-rust \
+	test-proc-fwps-c test-proc-fwps-rust test-proc-fw-offload-c \
 	test-proc-tdls-c test-proc-tdls-rust \
 	test-proc-rx-ampdu-c test-proc-rx-ampdu-rust \
 	test-proc-ampdu-tuning-c test-proc-ampdu-tuning-rust \
@@ -393,11 +394,13 @@ test-proc-fw-offload-c: test_proc_fw_offload
 	./test_proc_fw_offload debug_proc_fw_offload_vectors.json
 
 test_proc_fw_offload: $(FW_OFFLOAD_L2) $(FW_OFFLOAD_ORACLE) $(FW_OFFLOAD_CORE) $(HOST_JSON)
-	$(CC) $(CFLAGS) -o $@ $(FW_OFFLOAD_L2) $(FW_OFFLOAD_ORACLE) $(FW_OFFLOAD_CORE) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(FW_OFFLOAD_CFG) -o $@ $(FW_OFFLOAD_L2) \
+		$(FW_OFFLOAD_ORACLE) $(FW_OFFLOAD_CORE) $(HOST_JSON)
 
 librust_rtw_debug_proc_fw_offload.a: $(FW_OFFLOAD_RUST)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
 		--cfg host_rtw_debug_proc_fw_offload_test \
+		--cfg fw_handle_txbcn \
 		--cfg config_rtw_debug --cfg config_proc_debug \
 		--crate-type staticlib $(FW_OFFLOAD_RUST) -o $@
 
@@ -405,7 +408,7 @@ test-proc-fw-offload-rust: test_proc_fw_offload_rust
 	./test_proc_fw_offload_rust debug_proc_fw_offload_vectors.json
 
 test_proc_fw_offload_rust: $(FW_OFFLOAD_L2) librust_rtw_debug_proc_fw_offload.a $(FW_OFFLOAD_SHIM) $(FW_OFFLOAD_CORE) $(HOST_JSON)
-	$(CC) $(CFLAGS) -DRUST_RTW_DEBUG_PROC_FW_OFFLOAD_ORACLE -o $@ \
+	$(CC) $(CFLAGS) $(FW_OFFLOAD_CFG) -DRUST_RTW_DEBUG_PROC_FW_OFFLOAD_ORACLE -o $@ \
 		$(FW_OFFLOAD_L2) $(FW_OFFLOAD_SHIM) $(FW_OFFLOAD_CORE) $(HOST_JSON) \
 		librust_rtw_debug_proc_fw_offload.a
 
