@@ -18,13 +18,19 @@
 #include <hal_data.h>
 #include <hal_com_h2c.h>
 
-#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_PS_RDY_TEST)
+/* FX-07: Rust pwrctrl slice objects are Makefile-gated when power saving is off
+ * (no CONFIG_IPS / CONFIG_LPS). Fall back to C implementations in that build. */
+#if defined(CONFIG_RUST) && defined(CONFIG_POWER_SAVING)
+#define RTW_PWRCTRL_RUST_BODY 1
+#endif
+
+#if defined(RTW_PWRCTRL_RUST_BODY) && !defined(HOST_PWRCTRL_PS_RDY_TEST)
 u8 PS_RDY_CHECK(_adapter *padapter);
 void rtw_rust_init_store_u8_wowlan(PADAPTER padapter, u32 field, u8 val);
 #endif
 
 #ifdef DBG_CHECK_FW_PS_STATE
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_FW_PS_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_FW_PS_TEST)
 int rtw_fw_ps_state(PADAPTER padapter)
 {
 	struct dvobj_priv *psdpriv = padapter->dvobj;
@@ -82,7 +88,7 @@ exit_fw_ps_state:
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_FW_PS_TEST — W3-172 in rust/rtw_pwrctrl_fw_ps.rs */
 #endif /*DBG_CHECK_FW_PS_STATE*/
 #ifdef CONFIG_IPS
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_IPS_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_IPS_TEST)
 void _ips_enter(_adapter *padapter)
 {
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
@@ -132,7 +138,7 @@ void ips_enter(_adapter *padapter)
 }
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_IPS_TEST — W3-167 PR1 enter in rust/rtw_pwrctrl_ips.rs */
 
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_IPS_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_IPS_TEST)
 int _ips_leave(_adapter *padapter)
 {
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
@@ -202,7 +208,7 @@ int ips_leave(_adapter *padapter)
 }
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_IPS_TEST — W3-167 PR2 leave in rust/rtw_pwrctrl_ips.rs */
 
-#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_IPS_TEST)
+#if defined(RTW_PWRCTRL_RUST_BODY) && !defined(HOST_PWRCTRL_IPS_TEST)
 
 struct pwrctrl_priv *rtw_rust_ips_pwrpriv(_adapter *padapter)
 {
@@ -443,7 +449,7 @@ exit:
  * ATTENTION:
  *	rtw_ps_processor() doesn't handle LPS.
  */
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_PS_PROCESSOR_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_PS_PROCESSOR_TEST)
 void rtw_ps_processor(_adapter *padapter)
 {
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
@@ -524,7 +530,7 @@ exit:
 }
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_PS_PROCESSOR_TEST — W3-173 in rust/rtw_pwrctrl_ps.rs */
 
-#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_PS_PROCESSOR_TEST)
+#if defined(RTW_PWRCTRL_RUST_BODY) && !defined(HOST_PWRCTRL_PS_PROCESSOR_TEST)
 
 void rtw_rust_ps_proc_enter_pwrlock(PADAPTER padapter)
 {
@@ -591,7 +597,7 @@ void pwr_state_check_handler(void *ctx)
 #ifdef CONFIG_LPS
 #ifdef CONFIG_CHECK_LEAVE_LPS
 #ifdef CONFIG_LPS_CHK_BY_TP
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_LPS_TP_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_LPS_TP_TEST)
 void traffic_check_for_leave_lps_by_tp(PADAPTER padapter, u8 tx, struct sta_info *sta)
 {
 	struct stainfo_stats *pstats = &sta->sta_stats;
@@ -706,7 +712,7 @@ void	traffic_check_for_leave_lps(PADAPTER padapter, u8 tx, u32 tx_packets)
 }
 #endif /* CONFIG_CHECK_LEAVE_LPS */
 
-#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_LPS_TP_TEST)
+#if defined(RTW_PWRCTRL_RUST_BODY) && !defined(HOST_PWRCTRL_LPS_TP_TEST)
 #if defined(CONFIG_LPS_CHK_BY_TP) && defined(CONFIG_CHECK_LEAVE_LPS)
 
 u64 rtw_rust_lps_tp_sta_tx_bytes(struct sta_info *sta)
@@ -901,7 +907,7 @@ void rtw_rust_lps_tp_lps_ctrl_wk_cmd(PADAPTER padapter, u8 lps_ctrl_type, u8 fla
 #define LPS_CPWM_TIMEOUT_MS	10 /*ms*/
 #define LPS_RPWM_RETRY_CNT		3
 
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_RPWM_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_RPWM_TEST)
 u8 rtw_cpwm_polling(_adapter *adapter, u8 rpwm, u8 cpwm_orig)
 {
 	u8 rst = _FAIL;
@@ -969,7 +975,7 @@ u8 rtw_cpwm_polling(_adapter *adapter, u8 rpwm, u8 cpwm_orig)
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_RPWM_TEST — W3-175 rtw_cpwm_polling in rust/rtw_pwrctrl_rpwm.rs */
 #endif /* CONFIG_LPS_LCLK */
 
-#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_RPWM_TEST)
+#if defined(RTW_PWRCTRL_RUST_BODY) && !defined(HOST_PWRCTRL_RPWM_TEST)
 #ifdef CONFIG_LPS_LCLK
 
 void rtw_rust_rpwm_msleep_os(int ms)
@@ -1052,7 +1058,7 @@ u8 rtw_rust_rpwm_bump_rpwm_retry(PADAPTER padapter)
 #endif /* CONFIG_LPS_LCLK */
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_RPWM_TEST */
 
-#if defined(CONFIG_RUST) && defined(CONFIG_LPS_LCLK) && !defined(HOST_PWRCTRL_RPWM_TEST)
+#if defined(RTW_PWRCTRL_RUST_BODY) && defined(CONFIG_LPS_LCLK) && !defined(HOST_PWRCTRL_RPWM_TEST)
 u8 rtw_cpwm_polling(_adapter *adapter, u8 rpwm, u8 cpwm_orig);
 
 void rtw_rust_rpwm_poll_complete(PADAPTER adapter, u8 rst, u8 cpwm_orig, u8 cpwm_now)
@@ -1187,7 +1193,7 @@ u8 rtw_set_rpwm(PADAPTER padapter, u8 pslv)
 	return rpwm;
 }
 
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_PS_RDY_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_PS_RDY_TEST)
 u8 PS_RDY_CHECK(_adapter *padapter)
 {
 	struct pwrctrl_priv	*pwrpriv = adapter_to_pwrctl(padapter);
@@ -1242,7 +1248,7 @@ u8 PS_RDY_CHECK(_adapter *padapter)
 }
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_PS_RDY_TEST — W3-183 in rust/rtw_pwrctrl_ps_rdy.rs */
 
-#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_PS_RDY_TEST)
+#if defined(RTW_PWRCTRL_RUST_BODY) && !defined(HOST_PWRCTRL_PS_RDY_TEST)
 
 /*
  * systime is unsigned long (jiffies). Do not narrow these to u32.
@@ -1368,7 +1374,7 @@ void rtw_rust_ps_rdy_log_group_handshake_in_progress(void)
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_PS_RDY_TEST */
 
 #if defined(CONFIG_FWLPS_IN_IPS)
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_FW_IPS_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_FW_IPS_TEST)
 void rtw_set_fw_in_ips_mode(PADAPTER padapter, u8 enable)
 {
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
@@ -1484,7 +1490,7 @@ void rtw_set_fw_in_ips_mode(PADAPTER padapter, u8 enable)
 }
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_FW_IPS_TEST — W3-185 in rust/rtw_pwrctrl_fw_ips.rs */
 
-#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_FW_IPS_TEST)
+#if defined(RTW_PWRCTRL_RUST_BODY) && !defined(HOST_PWRCTRL_FW_IPS_TEST)
 
 u8 rtw_rust_fw_ips_netif_up(PADAPTER padapter)
 {
@@ -1570,7 +1576,7 @@ u32 rtw_rust_fw_ips_get_passing_time_ms(systime start)
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_FW_IPS_TEST */
 #endif /* CONFIG_FWLPS_IN_IPS */
 
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_LPS_EXEC_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_LPS_EXEC_TEST)
 void rtw_exec_lps(_adapter *padapter, u8 ps_mode)
 {
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
@@ -1694,7 +1700,7 @@ void rtw_lps_rfon_ctrl(_adapter *padapter, u8 rfon_ctrl)
 }
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_LPS_EXEC_TEST — W3-181 in rust/rtw_pwrctrl_lps_exec.rs */
 
-#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_LPS_EXEC_TEST)
+#if defined(RTW_PWRCTRL_RUST_BODY) && !defined(HOST_PWRCTRL_LPS_EXEC_TEST)
 
 u8 rtw_rust_lps_exec_mlme_is_asoc(PADAPTER padapter)
 {
@@ -1859,7 +1865,7 @@ void rtw_rust_lps_exec_rfon_lclk_rf_off(PADAPTER padapter)
 
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_LPS_EXEC_TEST */
 
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_SET_PS_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_SET_PS_TEST)
 void rtw_set_ps_mode(PADAPTER padapter, u8 ps_mode, u8 smart_ps, u8 bcn_ant_mode, const char *msg)
 {
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
@@ -2275,7 +2281,7 @@ void LPS_Leave(PADAPTER padapter, const char *msg)
 }
 
 #ifdef CONFIG_WOWLAN
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_WOW_LPS_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_WOW_LPS_TEST)
 void rtw_wow_lps_level_decide(_adapter *adapter, u8 wow_en)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
@@ -2435,7 +2441,7 @@ void LeaveAllPowerSaveMode(PADAPTER Adapter)
 }
 
 #ifdef CONFIG_LPS_LCLK
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_CPWM_INT_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_CPWM_INT_TEST)
 void LPS_Leave_check(
 	PADAPTER padapter)
 {
@@ -2531,7 +2537,7 @@ exit:
 }
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_CPWM_INT_TEST — W3-188 in rust/rtw_pwrctrl_cpwm_int.rs */
 
-#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_CPWM_INT_TEST)
+#if defined(RTW_PWRCTRL_RUST_BODY) && !defined(HOST_PWRCTRL_CPWM_INT_TEST)
 
 void rtw_rust_cpwm_enter_pwrlock(PADAPTER padapter)
 {
@@ -2783,7 +2789,7 @@ static void pwr_rpwm_timeout_handler(void *FunctionContext)
 }
 #endif /* CONFIG_LPS_RPWM_TIMER */
 
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_ALIVE_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_ALIVE_TEST)
 __inline static void register_task_alive(struct pwrctrl_priv *pwrctrl, u32 tag)
 {
 	pwrctrl->alives |= tag;
@@ -2796,7 +2802,7 @@ __inline static void unregister_task_alive(struct pwrctrl_priv *pwrctrl, u32 tag
 }
 
 
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_ALIVE_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_ALIVE_TEST)
 /*
  * Description:
  *	Check if the fw_pwrstate is okay for I/O.
@@ -2861,7 +2867,7 @@ s32 rtw_register_task_alive(PADAPTER padapter, u32 task)
  * Return Value:
  *	none
  */
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_ALIVE_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_ALIVE_TEST)
 void rtw_unregister_task_alive(PADAPTER padapter, u32 task)
 {
 	struct pwrctrl_priv *pwrctrl;
@@ -2915,7 +2921,7 @@ void rtw_unregister_task_alive(PADAPTER padapter, u32 task)
  *	 _SUCCESS	rtw_xmit_thread can write fifo/txcmd afterwards.
  *	 _FAIL		rtw_xmit_thread can not do anything.
  */
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_ALIVE_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_ALIVE_TEST)
 s32 rtw_register_tx_alive(PADAPTER padapter)
 {
 	s32 res;
@@ -3058,7 +3064,7 @@ s32 rtw_register_evt_alive(PADAPTER padapter)
 }
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_ALIVE_TEST — W3-179 register I/O alive */
 
-#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_ALIVE_TEST)
+#if defined(RTW_PWRCTRL_RUST_BODY) && !defined(HOST_PWRCTRL_ALIVE_TEST)
 void rtw_rust_alive_enter_pwrlock(PADAPTER padapter)
 {
 	_enter_pwrlock(&adapter_to_pwrctl(padapter)->lock);
@@ -3155,7 +3161,7 @@ u8 rtw_rust_alive_unregister_pslv_io(PADAPTER padapter)
  * No more pkts for TX,
  * Then driver shall call this fun. to power down firmware again.
  */
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_ALIVE_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_ALIVE_TEST)
 void rtw_unregister_tx_alive(PADAPTER padapter)
 {
 	struct pwrctrl_priv *pwrctrl;
@@ -3307,7 +3313,7 @@ void rtw_unregister_evt_alive(PADAPTER padapter)
 	static void resume_workitem_callback(struct work_struct *work);
 #endif /* CONFIG_RESUME_IN_WORKQUEUE */
 
-#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_INIT_TEST)
+#if defined(RTW_PWRCTRL_RUST_BODY) && !defined(HOST_PWRCTRL_INIT_TEST)
 
 void rtw_init_pwrctrl_priv_part1(PADAPTER padapter);
 void rtw_init_pwrctrl_priv_part2(PADAPTER padapter);
@@ -3657,7 +3663,7 @@ void rtw_rust_init_init_workitem(PADAPTER padapter, u32 which)
 #endif
 #ifdef CONFIG_RESUME_IN_WORKQUEUE
 	if (which == 2) {
-#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_INIT_TEST)
+#if defined(RTW_PWRCTRL_RUST_BODY) && !defined(HOST_PWRCTRL_INIT_TEST)
 		extern void resume_workitem_callback(struct work_struct *work);
 #endif
 		_init_workitem(&p->resume_work, resume_workitem_callback, NULL);
@@ -3723,7 +3729,7 @@ void rtw_init_pwrctrl_priv(PADAPTER padapter)
 		return;
 #endif
 
-#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_INIT_TEST)
+#if defined(RTW_PWRCTRL_RUST_BODY) && !defined(HOST_PWRCTRL_INIT_TEST)
 	rtw_init_pwrctrl_priv_part1(padapter);
 #ifdef CONFIG_LPS_CHK_BY_TP
 	pwrctrlpriv->lps_chk_by_tp = padapter->registrypriv.lps_chk_by_tp;
@@ -3845,7 +3851,7 @@ void rtw_init_pwrctrl_priv(PADAPTER padapter)
 
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_INIT_TEST — W3-189 part1 in rust/rtw_pwrctrl_init.rs */
 
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_INIT_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_INIT_TEST)
 #if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_ANDROID_POWER)
 	pwrctrlpriv->early_suspend.suspend = NULL;
 	rtw_register_early_suspend(pwrctrlpriv);
@@ -3980,7 +3986,7 @@ void rtw_init_pwrctrl_priv(PADAPTER padapter)
 }
 
 
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_INIT_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_INIT_TEST)
 void rtw_free_pwrctrl_priv(PADAPTER adapter)
 {
 	struct pwrctrl_priv *pwrctrlpriv = adapter_to_pwrctl(adapter);
@@ -4051,7 +4057,7 @@ void rtw_free_pwrctrl_priv(PADAPTER adapter)
 }
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_INIT_TEST — W3-190 free in rust/rtw_pwrctrl_init.rs */
 
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_RESUME_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_RESUME_TEST)
 #ifdef CONFIG_RESUME_IN_WORKQUEUE
 extern int rtw_resume_process(_adapter *padapter);
 
@@ -4195,7 +4201,7 @@ void rtw_unregister_early_suspend(struct pwrctrl_priv *pwrpriv)
 #endif /* CONFIG_ANDROID_POWER */
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_RESUME_TEST — W3-194 in rust/rtw_pwrctrl_resume.rs */
 
-#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_RESUME_TEST)
+#if defined(RTW_PWRCTRL_RUST_BODY) && !defined(HOST_PWRCTRL_RESUME_TEST)
 
 extern int rtw_resume_process(_adapter *padapter);
 
@@ -4374,7 +4380,7 @@ u8 rtw_interface_ps_func(_adapter *padapter, HAL_INTF_PS_FUNC efunc_id, u8 *val)
 }
 
 
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_WAKEUP_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_WAKEUP_TEST)
 inline void rtw_set_ips_deny(_adapter *padapter, u32 ms)
 {
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
@@ -4490,7 +4496,7 @@ exit:
 }
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_WAKEUP_TEST — W3-195 in rust/rtw_pwrctrl_wakeup.rs */
 
-#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_WAKEUP_TEST)
+#if defined(RTW_PWRCTRL_RUST_BODY) && !defined(HOST_PWRCTRL_WAKEUP_TEST)
 
 void rtw_rust_wakeup_leave_all_ps(PADAPTER padapter)
 {
@@ -4604,7 +4610,7 @@ u8 rtw_rust_wakeup_sreset_inprogress(PADAPTER padapter)
 
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_WAKEUP_TEST */
 
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_PM_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_PM_TEST)
 int rtw_pm_set_lps(_adapter *padapter, u8 mode)
 {
 	int	ret = 0;
@@ -4666,7 +4672,7 @@ inline void rtw_set_lps_deny(_adapter *adapter, u32 ms)
 	pwrpriv->lps_deny_time = rtw_get_current_time() + rtw_ms_to_systime(ms);
 }
 
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_PM_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_PM_TEST)
 #ifdef CONFIG_WOWLAN
 int rtw_pm_set_wow_lps(_adapter *padapter, u8 mode)
 {
@@ -4710,7 +4716,7 @@ int rtw_pm_set_wow_lps_1t1r(_adapter *padapter, u8 en)
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_PM_TEST — W3-196 wow PM setters in rust/rtw_pwrctrl_pm.rs */
 
 
-#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_SET_PS_TEST)
+#if defined(RTW_PWRCTRL_RUST_BODY) && !defined(HOST_PWRCTRL_SET_PS_TEST)
 #define SET_PS_U8_PWR_MODE 0
 #define SET_PS_U8_SMART_PS 1
 #define SET_PS_U8_BCN_ANT 2
@@ -4989,7 +4995,7 @@ u8 rtw_rust_set_ps_rpwm_pslv(PADAPTER padapter, u8 base_pslv)
 }
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_SET_PS_TEST */
 
-#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_PM_TEST)
+#if defined(RTW_PWRCTRL_RUST_BODY) && !defined(HOST_PWRCTRL_PM_TEST)
 void rtw_rust_pm_ips_mode_req(PADAPTER adapter, u8 mode)
 {
 	struct pwrctrl_priv *p = adapter_to_pwrctl(adapter);
@@ -5072,7 +5078,7 @@ void rtw_rust_pm_set_wowlan_lps_1t1r(PADAPTER adapter, u8 en)
 #endif /* CONFIG_WOWLAN */
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_PM_TEST */
 
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_PM_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_PM_TEST)
 int rtw_pm_set_ips(_adapter *padapter, u8 mode)
 {
 	struct pwrctrl_priv *pwrctrlpriv = adapter_to_pwrctl(padapter);
@@ -5092,7 +5098,7 @@ int rtw_pm_set_ips(_adapter *padapter, u8 mode)
 }
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_PM_TEST — W3-184 in rust/rtw_pwrctrl_pm.rs */
 
-#if !defined(CONFIG_RUST) || defined(HOST_PWRCTRL_TEST)
+#if !defined(CONFIG_RUST) || !defined(RTW_PWRCTRL_RUST_BODY) || defined(HOST_PWRCTRL_TEST)
 
 /*
  * ATTENTION:
@@ -5162,7 +5168,7 @@ u32 rtw_ps_deny_get(PADAPTER padapter)
 
 #endif /* !CONFIG_RUST || HOST_PWRCTRL_TEST */
 
-#if defined(CONFIG_RUST) && !defined(HOST_PWRCTRL_TEST)
+#if defined(RTW_PWRCTRL_RUST_BODY) && !defined(HOST_PWRCTRL_TEST)
 
 void rtw_rust_pwrctrl_enter_lock(PADAPTER padapter)
 {

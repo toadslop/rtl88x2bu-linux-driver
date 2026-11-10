@@ -2915,10 +2915,17 @@ endif
 ifeq ($(CONFIG_WOWLAN), y)
 rustflags-y += --cfg config_wowlan
 endif
+_rust_cfg_gpio_wakeup :=
 ifeq ($(CONFIG_GPIO_WAKEUP), y)
-rustflags-y += --cfg config_gpio_wakeup
+_rust_cfg_gpio_wakeup := y
 endif
-ifneq ($(filter -DCONFIG_GPIO_WAKEUP,$(ccflags-y)),)
+ifneq ($(filter -DCONFIG_GPIO_WAKEUP,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_gpio_wakeup := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_GPIO_WAKEUP\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_gpio_wakeup := y
+endif
+ifneq ($(_rust_cfg_gpio_wakeup),)
 rustflags-y += --cfg config_gpio_wakeup
 endif
 _rust_cfg_lps_1t1r :=
@@ -2950,20 +2957,26 @@ ifneq ($(_rust_cfg_resume_wq),)
 rustflags-y += --cfg resume_wq
 endif
 _rust_cfg_early_suspend :=
-ifneq ($(filter -DCONFIG_HAS_EARLYSUSPEND,$(ccflags-y)),)
+ifneq ($(filter -DCONFIG_HAS_EARLYSUSPEND,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 _rust_cfg_early_suspend := y
 endif
 ifeq ($(CONFIG_HAS_EARLYSUSPEND), y)
+_rust_cfg_early_suspend := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_HAS_EARLYSUSPEND\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 _rust_cfg_early_suspend := y
 endif
 ifneq ($(_rust_cfg_early_suspend),)
 rustflags-y += --cfg early_suspend
 endif
 _rust_cfg_android_power :=
-ifneq ($(filter -DCONFIG_ANDROID_POWER,$(ccflags-y)),)
+ifneq ($(filter -DCONFIG_ANDROID_POWER,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 _rust_cfg_android_power := y
 endif
 ifeq ($(CONFIG_ANDROID_POWER), y)
+_rust_cfg_android_power := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_ANDROID_POWER\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 _rust_cfg_android_power := y
 endif
 ifneq ($(_rust_cfg_android_power),)
@@ -3123,7 +3136,10 @@ _rust_cfg_power_saving :=
 ifeq ($(CONFIG_POWER_SAVING), y)
 _rust_cfg_power_saving := y
 endif
-ifneq ($(filter -DCONFIG_POWER_SAVING,$(ccflags-y)),)
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_POWER_SAVING\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_power_saving := y
+endif
+ifneq ($(filter -DCONFIG_POWER_SAVING,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 _rust_cfg_power_saving := y
 endif
 ifneq ($(_rust_cfg_power_saving),)
@@ -3516,15 +3532,18 @@ endif
 ifeq ($(CONFIG_PCI_HCI), y)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_pci.o
 endif
+ifneq ($(_rust_cfg_power_saving),)
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
-$(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ps.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ps.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_lps_tp.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_lps_exec.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_rpwm.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_cpwm_int.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_alive.o
+$(MODULE_NAME)-y += rust/rtw_pwrctrl_set_ps.o
+endif
+$(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ps.o
 ifeq ($(CONFIG_WOWLAN), y)
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_wow.o
 endif
@@ -3532,12 +3551,15 @@ ifeq ($(CONFIG_FWLPS_IN_IPS), y)
 ccflags-y += -DCONFIG_FWLPS_IN_IPS
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ips.o
 endif
+ifneq ($(_rust_cfg_power_saving),)
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ps_rdy.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_pm.o
-$(MODULE_NAME)-y += rust/rtw_pwrctrl_set_ps.o
+endif
+ifneq ($(_rust_cfg_power_saving),)
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_init.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_resume.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_wakeup.o
+endif
 $(MODULE_NAME)-y += rust/rtw_beamforming_cmd.o
 $(MODULE_NAME)-y += rust/rtw_beamforming.o
 $(MODULE_NAME)-y += rust/rtw_beamforming_sound.o
