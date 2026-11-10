@@ -389,6 +389,24 @@ void rtw_rust_debug_log_info(const char *line)
 	RTW_INFO("%s", line);
 }
 
+#ifdef CONFIG_PCI_HCI
+void rtw_rust_pci_write_config_byte(_adapter *adapter, int use_bridge, u32 reg,
+				    u8 val)
+{
+	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(adapter);
+	struct pci_dev *pdev = pdvobjpriv->ppcidev;
+	struct pci_dev *target = use_bridge ? pdev->bus->self : pdev;
+
+	pci_write_config_byte(target, reg, val);
+}
+
+void rtw_rust_debug_proc_log_pci_reg_set(_adapter *adapter, u32 reg, u32 val)
+{
+	RTW_INFO(FUNC_ADPT_FMT ": register 0x%x value 0x%x\n",
+		 FUNC_ADPT_ARG(adapter), reg, val);
+}
+#endif /* CONFIG_PCI_HCI */
+
 u8 *rtw_rust_debug_regsty_rx_ampdu_sz_limit_by_nss_bw(_adapter *adapter)
 {
 	return adapter_to_regsty(adapter)->rx_ampdu_sz_limit_by_nss_bw[0];

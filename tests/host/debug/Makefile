@@ -716,6 +716,22 @@ test_proc_pci: $(PCI_L2) $(PCI_ORACLE) $(PCI_HOST) $(HOST_JSON)
 	$(CC) $(CFLAGS) $(PCI_CFG) -I$(HOST_INC) -o $@ \
 		$(PCI_L2) $(PCI_ORACLE) $(PCI_HOST) $(HOST_JSON)
 
+test-proc-pci-rust: test_proc_pci_rust
+	./test_proc_pci_rust debug_proc_pci_vectors.json
+
+test_proc_pci_rust: $(PCI_L2) librust_rtw_debug_proc_pci.a $(PCI_SHIM) $(PCI_HOST) \
+		$(HOST_JSON)
+	$(CC) $(CFLAGS) $(PCI_CFG) -DRUST_RTW_DEBUG_PROC_PCI_ORACLE -I$(HOST_INC) -o $@ \
+		$(PCI_L2) $(PCI_SHIM) $(PCI_HOST) $(HOST_JSON) \
+		librust_rtw_debug_proc_pci.a
+
+librust_rtw_debug_proc_pci.a: $(PCI_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_pci_test \
+		--cfg config_pci_hci \
+		--cfg config_rtw_debug --cfg config_proc_debug \
+		--crate-type staticlib $(PCI_RUST) -o $@
+
 test-proc-lps-tp-c: test_proc_lps_tp
 	./test_proc_lps_tp debug_proc_lps_tp_vectors.json
 
