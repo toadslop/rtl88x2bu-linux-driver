@@ -15,6 +15,16 @@
       "expect_contains": "PCI Host Device Configuration Space*****",
       "expect_contains2": "000: 03 04 05 06",
       "expect_target_id": 2
+    },
+    {
+      "name": "pci_aspm_smoke",
+      "get": "pci_aspm",
+      "pciehdr_offset": 64,
+      "linkcap": 265216,
+      "linkctl": 3,
+      "l1off_cap": 1,
+      "expect_contains": "ASPM Capability",
+      "expect_contains2": "ASPM CTRL Reg"
     }
   ]
 }

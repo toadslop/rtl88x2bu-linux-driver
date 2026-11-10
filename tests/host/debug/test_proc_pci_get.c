@@ -17,6 +17,11 @@ struct vector {
 	char expect_contains2[80];
 	u32 pci_conf_dword;
 	int expect_target_id, has_expect_target_id;
+	int has_pciehdr;
+	u16 pciehdr_offset;
+	u32 linkcap;
+	u16 linkctl;
+	int l1off_cap;
 };
 
 static int parse_vector(const char *obj, size_t len, void *vv)
@@ -39,6 +44,16 @@ static int parse_vector(const char *obj, size_t len, void *vv)
 		v->expect_target_id = t;
 		v->has_expect_target_id = 1;
 	}
+	if (host_json_parse_int_in(obj, len, "pciehdr_offset", &t) == 0) {
+		v->pciehdr_offset = (u16)t;
+		v->has_pciehdr = 1;
+	}
+	if (host_json_parse_int_in(obj, len, "linkcap", &t) == 0)
+		v->linkcap = (u32)t;
+	if (host_json_parse_int_in(obj, len, "linkctl", &t) == 0)
+		v->linkctl = (u16)t;
+	if (host_json_parse_int_in(obj, len, "l1off_cap", &t) == 0)
+		v->l1off_cap = t;
 	return 0;
 }
 
@@ -63,6 +78,11 @@ static int run_one(const struct vector *v)
 
 	host_pci_get_test_reset();
 	host_pci_conf_dword = v->pci_conf_dword ? v->pci_conf_dword : host_pci_conf_dword;
+	if (v->has_pciehdr)
+		a.dvobjpriv.pcipriv.pciehdr_offset = v->pciehdr_offset;
+	host_pci_linkcap = v->linkcap;
+	host_pci_linkctl = v->linkctl;
+	host_pci_l1off_cap = (u8)v->l1off_cap;
 
 	bridge.id = 2;
 	pdev.id = 1;
@@ -81,6 +101,8 @@ static int run_one(const struct vector *v)
 		ret = proc_get_pci_conf_space(&s, NULL);
 	else if (!strcmp(v->get, "pci_bridge_conf_space"))
 		ret = proc_get_pci_bridge_conf_space(&s, NULL);
+	else if (!strcmp(v->get, "pci_aspm"))
+		ret = proc_get_pci_aspm(&s, NULL);
 	else
 		ret = -1;
 	fclose(mem);

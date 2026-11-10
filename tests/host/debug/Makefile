@@ -778,6 +778,15 @@ test_proc_pci_get: $(PCI_GET_L2) $(PCI_GET_ORACLE) $(PCI_GET) $(PCI_HOST) $(HOST
 	$(CC) $(CFLAGS) $(PCI_CFG) -I$(HOST_INC) -o $@ \
 		$(PCI_GET_L2) $(PCI_GET_ORACLE) $(PCI_GET) $(PCI_HOST) $(HOST_JSON)
 
+test-proc-pci-get-rust: test_proc_pci_get_rust
+	./test_proc_pci_get_rust debug_proc_pci_get_vectors.json
+
+test_proc_pci_get_rust: $(PCI_GET_L2) librust_rtw_debug_proc_pci.a $(PCI_SHIM) \
+		$(PCI_GET) $(PCI_HOST) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(PCI_CFG) -DRUST_RTW_DEBUG_PROC_PCI_ORACLE -I$(HOST_INC) -o $@ \
+		$(PCI_GET_L2) $(PCI_SHIM) $(PCI_GET) $(PCI_HOST) $(HOST_JSON) \
+		librust_rtw_debug_proc_pci.a
+
 test-proc-lps-tp-c: test_proc_lps_tp
 	./test_proc_lps_tp debug_proc_lps_tp_vectors.json
 

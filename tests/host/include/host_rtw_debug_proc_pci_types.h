@@ -8,6 +8,7 @@
 #include <string.h>
 
 typedef uint8_t u8;
+typedef uint16_t u16;
 typedef uint32_t u32;
 typedef long ssize_t;
 
@@ -24,9 +25,36 @@ struct pci_dev {
 	u8 id;
 };
 
+struct _adapter;
+
+struct pci_priv {
+	u16 pciehdr_offset;
+};
+
 struct dvobj_priv {
 	struct pci_dev *ppcidev;
+	struct pci_priv pcipriv;
 };
+
+#define BIT0 0x01
+#define BIT1 0x02
+#define BIT3 0x08
+#define BIT4 0x10
+#define BIT5 0x20
+#define BIT7 0x80
+#define BIT10 0x400
+#define BIT11 0x800
+#define PCI_EXP_LNKCAP 0x0c
+#define PCI_EXP_LNKCTL 0x10
+#define PCI_EXP_LNKCAP_CLKPM 0x00040000
+#define PCI_EXP_LNKCTL_CLKREQ_EN 0x100
+
+extern u16 host_pci_pciehdr_offset;
+extern u32 host_pci_linkcap;
+extern u16 host_pci_linkctl;
+extern u8 host_pci_l1off_cap;
+extern u8 host_pci_l1off_nic;
+extern u8 host_pci_dbi_byte[0x800];
 
 struct seq_file {
 	void *private;
@@ -43,13 +71,20 @@ extern struct pci_dev *host_pci_read_dev;
 
 void host_pci_get_test_reset(void);
 void host_pci_read_config_dword(struct pci_dev *dev, u32 reg, u32 *val);
+void host_pci_read_config_word(struct pci_dev *dev, u32 reg, u16 *val);
+
+u8 rtw_hal_pci_l1off_capability(struct _adapter *padapter);
+u8 rtw_hal_pci_l1off_nic_support(struct _adapter *padapter);
+u8 rtw_hal_pci_dbi_read(struct _adapter *padapter, u16 addr);
 
 void *rtw_rust_debug_proc_adapter(void *m);
 int rtw_rust_debug_proc_get_pci_conf_space(void *sel, void *adapter,
 					   int use_bridge);
+int rtw_rust_debug_proc_get_pci_aspm(void *sel, void *adapter);
 
 int proc_get_pci_conf_space(struct seq_file *m, void *v);
 int proc_get_pci_bridge_conf_space(struct seq_file *m, void *v);
+int proc_get_pci_aspm(struct seq_file *m, void *v);
 
 struct _adapter {
 	struct dvobj_priv dvobjpriv;

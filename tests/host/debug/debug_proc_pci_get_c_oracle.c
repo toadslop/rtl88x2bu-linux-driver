@@ -18,3 +18,11 @@ int proc_get_pci_conf_space(struct seq_file *m, void *v)
 	(void)v;
 	return rtw_rust_debug_proc_get_pci_conf_space(m, padapter, 0);
 }
+
+int proc_get_pci_aspm(struct seq_file *m, void *v)
+{
+	struct _adapter *padapter = rtw_rust_debug_proc_adapter(m);
+
+	(void)v;
+	return rtw_rust_debug_proc_get_pci_aspm(m, padapter);
+}
