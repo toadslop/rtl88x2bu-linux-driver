@@ -69,7 +69,10 @@ pub extern "C" fn proc_set_monitor(
     unsafe { rtw_rust_debug_proc_set_monitor(adapter, data, buffer, count) }
 }
 
-#[cfg(any(all(rtw_simple_config, config_proc_debug), host_rtw_debug_proc_monitor_test))]
+#[cfg(any(
+    all(rtw_simple_config, config_proc_debug),
+    host_rtw_debug_proc_monitor_test
+))]
 #[no_mangle]
 pub extern "C" fn proc_get_simple_config(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -79,7 +82,10 @@ pub extern "C" fn proc_get_simple_config(m: *mut c_void, _v: *mut c_void) -> c_i
     0
 }
 
-#[cfg(any(all(rtw_simple_config, config_proc_debug), host_rtw_debug_proc_monitor_test))]
+#[cfg(any(
+    all(rtw_simple_config, config_proc_debug),
+    host_rtw_debug_proc_monitor_test
+))]
 #[no_mangle]
 pub extern "C" fn proc_set_simple_config(
     _file: *mut c_void,
@@ -92,7 +98,10 @@ pub extern "C" fn proc_set_simple_config(
     unsafe { rtw_rust_debug_proc_set_simple_config(adapter, buffer, count) }
 }
 
-#[cfg(any(all(dbg_xmit_block, config_proc_debug), host_rtw_debug_proc_monitor_test))]
+#[cfg(any(
+    all(dbg_xmit_block, config_proc_debug),
+    host_rtw_debug_proc_monitor_test
+))]
 #[no_mangle]
 pub extern "C" fn proc_get_xmit_block(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -102,7 +111,10 @@ pub extern "C" fn proc_get_xmit_block(m: *mut c_void, _v: *mut c_void) -> c_int 
     0
 }
 
-#[cfg(any(all(dbg_xmit_block, config_proc_debug), host_rtw_debug_proc_monitor_test))]
+#[cfg(any(
+    all(dbg_xmit_block, config_proc_debug),
+    host_rtw_debug_proc_monitor_test
+))]
 #[no_mangle]
 pub extern "C" fn proc_set_xmit_block(
     _file: *mut c_void,
