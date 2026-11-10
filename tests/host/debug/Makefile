@@ -758,10 +758,10 @@ test_proc_pci: $(PCI_L2) $(PCI_ORACLE) $(PCI_HOST) $(HOST_JSON)
 test-proc-pci-rust: test_proc_pci_rust
 	./test_proc_pci_rust debug_proc_pci_vectors.json
 
-test_proc_pci_rust: $(PCI_L2) librust_rtw_debug_proc_pci.a $(PCI_SHIM) $(PCI_HOST) \
-		$(HOST_JSON)
+test_proc_pci_rust: $(PCI_L2) librust_rtw_debug_proc_pci.a $(PCI_SHIM) $(PCI_GET) \
+		$(PCI_HOST) $(HOST_JSON)
 	$(CC) $(CFLAGS) $(PCI_CFG) -DRUST_RTW_DEBUG_PROC_PCI_ORACLE -I$(HOST_INC) -o $@ \
-		$(PCI_L2) $(PCI_SHIM) $(PCI_HOST) $(HOST_JSON) \
+		$(PCI_L2) $(PCI_SHIM) $(PCI_GET) $(PCI_HOST) $(HOST_JSON) \
 		librust_rtw_debug_proc_pci.a
 
 librust_rtw_debug_proc_pci.a: $(PCI_RUST)

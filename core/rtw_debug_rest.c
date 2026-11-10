@@ -5346,34 +5346,6 @@ ssize_t proc_set_pci_bridge_conf_space(struct file *file, const char __user *buf
 	return count;
 }
 
-
-int proc_get_pci_bridge_conf_space(struct seq_file *m, void *v)
-{
-	struct net_device *dev = m->private;
-	_adapter *padapter = (_adapter *) rtw_netdev_priv(dev);
-	struct dvobj_priv       *pdvobjpriv = adapter_to_dvobj(padapter);
-	struct pci_dev  *pdev = pdvobjpriv->ppcidev;
-	struct pci_dev  *bridge_pdev = pdev->bus->self;
-
-	u32 tmp[4] = { 0 };
-	u32 i, j;
-
-	RTW_PRINT_SEL(m, "\n*****  PCI Host Device Configuration Space*****\n\n");
-
-	for (i = 0; i < 0x1000; i += 0x10) {
-		for (j = 0 ; j < 4 ; j++)
-			pci_read_config_dword(bridge_pdev, i + j * 4, tmp+j);
-
-		RTW_PRINT_SEL(m, "%03x: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
-			i, tmp[0] & 0xFF, (tmp[0] >> 8) & 0xFF, (tmp[0] >> 16) & 0xFF, (tmp[0] >> 24) & 0xFF,
-			tmp[1] & 0xFF, (tmp[1] >> 8) & 0xFF, (tmp[1] >> 16) & 0xFF, (tmp[1] >> 24) & 0xFF,
-			tmp[2] & 0xFF, (tmp[2] >> 8) & 0xFF, (tmp[2] >> 16) & 0xFF, (tmp[2] >> 24) & 0xFF,
-			tmp[3] & 0xFF, (tmp[3] >> 8) & 0xFF, (tmp[3] >> 16) & 0xFF, (tmp[3] >> 24) & 0xFF);
-	}
-	return 0;
-}
-
-
 ssize_t proc_set_pci_conf_space(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
 	struct net_device *dev = data;
@@ -5426,6 +5398,33 @@ ssize_t proc_set_pci_conf_space(struct file *file, const char __user *buffer, si
 
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-231 setters in rust/rtw_debug_proc_pci.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
+
+int proc_get_pci_bridge_conf_space(struct seq_file *m, void *v)
+{
+	struct net_device *dev = m->private;
+	_adapter *padapter = (_adapter *) rtw_netdev_priv(dev);
+	struct dvobj_priv       *pdvobjpriv = adapter_to_dvobj(padapter);
+	struct pci_dev  *pdev = pdvobjpriv->ppcidev;
+	struct pci_dev  *bridge_pdev = pdev->bus->self;
+
+	u32 tmp[4] = { 0 };
+	u32 i, j;
+
+	RTW_PRINT_SEL(m, "\n*****  PCI Host Device Configuration Space*****\n\n");
+
+	for (i = 0; i < 0x1000; i += 0x10) {
+		for (j = 0 ; j < 4 ; j++)
+			pci_read_config_dword(bridge_pdev, i + j * 4, tmp+j);
+
+		RTW_PRINT_SEL(m, "%03x: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
+			i, tmp[0] & 0xFF, (tmp[0] >> 8) & 0xFF, (tmp[0] >> 16) & 0xFF, (tmp[0] >> 24) & 0xFF,
+			tmp[1] & 0xFF, (tmp[1] >> 8) & 0xFF, (tmp[1] >> 16) & 0xFF, (tmp[1] >> 24) & 0xFF,
+			tmp[2] & 0xFF, (tmp[2] >> 8) & 0xFF, (tmp[2] >> 16) & 0xFF, (tmp[2] >> 24) & 0xFF,
+			tmp[3] & 0xFF, (tmp[3] >> 8) & 0xFF, (tmp[3] >> 16) & 0xFF, (tmp[3] >> 24) & 0xFF);
+	}
+	return 0;
+}
 
 int proc_get_pci_conf_space(struct seq_file *m, void *v)
 {
@@ -5517,6 +5516,8 @@ int proc_get_pci_aspm(struct seq_file *m, void *v)
 
 	return 0;
 }
+
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-232 getters in rust/rtw_debug_proc_pci.rs */
 
 int proc_get_rx_ring(struct seq_file *m, void *v)
 {

@@ -53,3 +53,25 @@ void rtw_rust_debug_log_info(const char *line)
 	if (line)
 		host_rtw_info_line("%s", line);
 }
+
+void rtw_rust_debug_proc_emit_pci_conf_space(void *sel, void *adapter,
+					     int use_bridge)
+{
+	rtw_rust_debug_proc_get_pci_conf_space(sel, adapter, use_bridge);
+}
+
+int rtw_rust_debug_proc_get_pci_aspm(void *sel, void *adapter)
+{
+	/*
+	 * Host L2 setter target does not link the full get oracle; PR3 adds
+	 * the real implementation for get/ASPM vectors.
+	 */
+	(void)sel;
+	(void)adapter;
+	return 0;
+}
+
+void rtw_rust_debug_proc_emit_pci_aspm(void *sel, void *adapter)
+{
+	rtw_rust_debug_proc_get_pci_aspm(sel, adapter);
+}

@@ -405,6 +405,144 @@ void rtw_rust_debug_proc_log_pci_reg_set(_adapter *adapter, u32 reg, u32 val)
 	RTW_INFO(FUNC_ADPT_FMT ": register 0x%x value 0x%x\n",
 		 FUNC_ADPT_ARG(adapter), reg, val);
 }
+
+u16 rtw_rust_pci_pciehdr_offset(_adapter *adapter)
+{
+	return adapter_to_dvobj(adapter)->pcipriv.pciehdr_offset;
+}
+
+int rtw_rust_pci_read_config_dword(_adapter *adapter, int use_bridge,
+				   u32 reg, u32 *out)
+{
+	struct dvobj_priv *dv = adapter_to_dvobj(adapter);
+	struct pci_dev *pdev = dv->ppcidev;
+	struct pci_dev *dev = use_bridge ? pdev->bus->self : pdev;
+
+	if (!out)
+		return -EINVAL;
+	return pci_read_config_dword(dev, reg, out);
+}
+
+int rtw_rust_pci_read_config_word(_adapter *adapter, u32 reg, u16 *out)
+{
+	struct pci_dev *pdev = adapter_to_dvobj(adapter)->ppcidev;
+
+	if (!out)
+		return -EINVAL;
+	return pci_read_config_word(pdev, reg, out);
+}
+
+u8 rtw_rust_hal_pci_l1off_capability(_adapter *adapter)
+{
+	return rtw_hal_pci_l1off_capability(adapter);
+}
+
+u8 rtw_rust_hal_pci_l1off_nic_support(_adapter *adapter)
+{
+	return rtw_hal_pci_l1off_nic_support(adapter);
+}
+
+u8 rtw_rust_hal_pci_dbi_read(_adapter *adapter, u16 addr)
+{
+	return rtw_hal_pci_dbi_read(adapter, addr);
+}
+
+void rtw_rust_debug_proc_emit_pci_conf_space(void *sel, _adapter *adapter,
+					     int use_bridge)
+{
+	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(adapter);
+	struct pci_dev *pdev = pdvobjpriv->ppcidev;
+	struct pci_dev *target = use_bridge ? pdev->bus->self : pdev;
+	u32 tmp[4];
+	u32 i, j;
+	if (use_bridge)
+		RTW_PRINT_SEL(sel,
+			      "\n*****  PCI Host Device Configuration Space*****\n\n");
+	else
+		RTW_PRINT_SEL(sel,
+			      "\n*****  PCI Device Configuration Space *****\n\n");
+
+	for (i = 0; i < 0x1000; i += 0x10) {
+		for (j = 0; j < 4; j++)
+			pci_read_config_dword(target, i + j * 4, tmp + j);
+
+		RTW_PRINT_SEL(sel,
+			      "%03x: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n",
+			      i, tmp[0] & 0xff, (tmp[0] >> 8) & 0xff,
+			      (tmp[0] >> 16) & 0xff, (tmp[0] >> 24) & 0xff,
+			      tmp[1] & 0xff, (tmp[1] >> 8) & 0xff,
+			      (tmp[1] >> 16) & 0xff, (tmp[1] >> 24) & 0xff,
+			      tmp[2] & 0xff, (tmp[2] >> 8) & 0xff,
+			      (tmp[2] >> 16) & 0xff, (tmp[2] >> 24) & 0xff,
+			      tmp[3] & 0xff, (tmp[3] >> 8) & 0xff,
+			      (tmp[3] >> 16) & 0xff, (tmp[3] >> 24) & 0xff);
+	}
+}
+
+void rtw_rust_debug_proc_emit_pci_aspm(void *sel, _adapter *adapter)
+{
+	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(adapter);
+	struct pci_priv *pcipriv = &pdvobjpriv->pcipriv;
+	u8 tmp8 = 0;
+	u16 tmp16 = 0;
+	u32 tmp32 = 0;
+	u8 l1_idle = 0;
+
+	RTW_PRINT_SEL(sel, "***** ASPM Capability *****\n");
+
+	pci_read_config_dword(pdvobjpriv->ppcidev,
+			      pcipriv->pciehdr_offset + PCI_EXP_LNKCAP, &tmp32);
+
+	RTW_PRINT_SEL(sel, "CLK REQ:\t%s\n",
+		      (tmp32 & PCI_EXP_LNKCAP_CLKPM) ? "Enable" : "Disable");
+	RTW_PRINT_SEL(sel, "ASPM L0s:\t%s\n",
+		      (tmp32 & BIT10) ? "Enable" : "Disable");
+	RTW_PRINT_SEL(sel, "ASPM L1:\t%s\n",
+		      (tmp32 & BIT11) ? "Enable" : "Disable");
+
+	tmp8 = rtw_hal_pci_l1off_capability(adapter);
+	RTW_PRINT_SEL(sel, "ASPM L1OFF:\t%s\n", tmp8 ? "Enable" : "Disable");
+
+	RTW_PRINT_SEL(sel, "***** ASPM CTRL Reg *****\n");
+
+	pci_read_config_word(pdvobjpriv->ppcidev,
+			     pcipriv->pciehdr_offset + PCI_EXP_LNKCTL, &tmp16);
+
+	RTW_PRINT_SEL(sel, "CLK REQ:\t%s\n",
+		      (tmp16 & PCI_EXP_LNKCTL_CLKREQ_EN) ? "Enable" : "Disable");
+	RTW_PRINT_SEL(sel, "ASPM L0s:\t%s\n",
+		      (tmp16 & BIT0) ? "Enable" : "Disable");
+	RTW_PRINT_SEL(sel, "ASPM L1:\t%s\n",
+		      (tmp16 & BIT1) ? "Enable" : "Disable");
+
+	tmp8 = rtw_hal_pci_l1off_nic_support(adapter);
+	RTW_PRINT_SEL(sel, "ASPM L1OFF:\t%s\n", tmp8 ? "Enable" : "Disable");
+
+	RTW_PRINT_SEL(sel, "***** ASPM Backdoor *****\n");
+
+	tmp8 = rtw_hal_pci_dbi_read(adapter, 0x719);
+	RTW_PRINT_SEL(sel, "CLK REQ:\t%s\n", (tmp8 & BIT4) ? "Enable" : "Disable");
+
+	tmp8 = rtw_hal_pci_dbi_read(adapter, 0x70f);
+	l1_idle = tmp8 & 0x38;
+	RTW_PRINT_SEL(sel, "ASPM L0s:\t%s\n", (tmp8 & BIT7) ? "Enable" : "Disable");
+
+	tmp8 = rtw_hal_pci_dbi_read(adapter, 0x719);
+	RTW_PRINT_SEL(sel, "ASPM L1:\t%s\n", (tmp8 & BIT3) ? "Enable" : "Disable");
+
+	tmp8 = rtw_hal_pci_dbi_read(adapter, 0x718);
+	RTW_PRINT_SEL(sel, "ASPM L1OFF:\t%s\n", (tmp8 & BIT5) ? "Enable" : "Disable");
+
+	RTW_PRINT_SEL(sel, "********* MISC **********\n");
+	RTW_PRINT_SEL(sel, "ASPM L1 Idel Time: 0x%x\n", l1_idle >> 3);
+	RTW_PRINT_SEL(sel, "*************************\n");
+
+#ifdef CONFIG_PCI_DYNAMIC_ASPM
+	RTW_PRINT_SEL(sel, "Dynamic ASPM mode: %d (%s)\n", pcipriv->aspm_mode,
+		      pcipriv->aspm_mode == ASPM_MODE_PERF ? "Perf" :
+		      pcipriv->aspm_mode == ASPM_MODE_PS ? "PS" : "Und");
+#endif
+}
 #endif /* CONFIG_PCI_HCI */
 
 u8 *rtw_rust_debug_regsty_rx_ampdu_sz_limit_by_nss_bw(_adapter *adapter)

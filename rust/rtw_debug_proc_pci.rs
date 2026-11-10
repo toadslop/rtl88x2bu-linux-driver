@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-// W3-231: PCI conf space proc setters (was core/rtw_debug_rest.c, CONFIG_PCI_HCI).
+// W3-231/W3-232: PCI conf space proc handlers (was core/rtw_debug_rest.c, CONFIG_PCI_HCI).
 
 #![allow(
     dead_code,
@@ -18,6 +18,7 @@ const EFAULT: c_long = -14;
 const PROC_SET_TMP: usize = 32;
 
 extern "C" {
+    fn rtw_rust_debug_proc_adapter(m: *mut c_void) -> *mut c_void;
     fn rtw_rust_debug_proc_adapter_from_data(data: *mut c_void) -> *mut c_void;
     fn rtw_rust_debug_proc_read_user_line(
         buffer: *const c_void,
@@ -42,6 +43,19 @@ extern "C" {
     );
     fn rtw_rust_debug_proc_log_pci_reg_set(adapter: *mut c_void, reg: c_uint, val: c_uint);
     fn rtw_rust_debug_log_info(line: *const c_char);
+    fn rtw_rust_debug_proc_emit_pci_conf_space(
+        sel: *mut c_void,
+        adapter: *mut c_void,
+        use_bridge: c_int,
+    );
+    fn rtw_rust_debug_proc_emit_pci_aspm(sel: *mut c_void, adapter: *mut c_void);
+}
+
+fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
+    if m.is_null() {
+        return core::ptr::null_mut();
+    }
+    unsafe { rtw_rust_debug_proc_adapter(m) }
 }
 
 fn log_info(bytes: &[u8]) {
@@ -131,4 +145,37 @@ pub extern "C" fn proc_set_pci_conf_space(
 ) -> c_long {
     let adapter = unsafe { rtw_rust_debug_proc_adapter_from_data(data) };
     apply_pci_conf_set(adapter, buffer, count, false)
+}
+
+#[cfg(any(config_pci_hci, host_rtw_debug_proc_pci_test))]
+#[cfg(any(config_rtw_debug, config_proc_debug, host_rtw_debug_proc_pci_test))]
+#[no_mangle]
+pub extern "C" fn proc_get_pci_bridge_conf_space(m: *mut c_void, _v: *mut c_void) -> c_int {
+    let adapter = adapter_from_seq(m);
+    if !adapter.is_null() {
+        unsafe { rtw_rust_debug_proc_emit_pci_conf_space(m, adapter, 1) };
+    }
+    0
+}
+
+#[cfg(any(config_pci_hci, host_rtw_debug_proc_pci_test))]
+#[cfg(any(config_rtw_debug, config_proc_debug, host_rtw_debug_proc_pci_test))]
+#[no_mangle]
+pub extern "C" fn proc_get_pci_conf_space(m: *mut c_void, _v: *mut c_void) -> c_int {
+    let adapter = adapter_from_seq(m);
+    if !adapter.is_null() {
+        unsafe { rtw_rust_debug_proc_emit_pci_conf_space(m, adapter, 0) };
+    }
+    0
+}
+
+#[cfg(any(config_pci_hci, host_rtw_debug_proc_pci_test))]
+#[cfg(any(config_rtw_debug, config_proc_debug, host_rtw_debug_proc_pci_test))]
+#[no_mangle]
+pub extern "C" fn proc_get_pci_aspm(m: *mut c_void, _v: *mut c_void) -> c_int {
+    let adapter = adapter_from_seq(m);
+    if !adapter.is_null() {
+        unsafe { rtw_rust_debug_proc_emit_pci_aspm(m, adapter) };
+    }
+    0
 }
