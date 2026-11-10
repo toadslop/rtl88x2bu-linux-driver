@@ -50,3 +50,5 @@ tests/host/domain/test_domain_types
 tests/host/debug/test_proc_cal
 tests/host/debug/test_proc_cal_rust
 tests/host/debug/librust_rtw_debug_proc_cal.a
+tests/host/debug/test_proc_*
+tests/host/debug/librust_*.a

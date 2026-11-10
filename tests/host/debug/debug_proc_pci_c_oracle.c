@@ -24,3 +24,4 @@ ssize_t proc_set_pci_conf_space(void *file, const void *buffer, size_t count,
 	(void)pos;
 	return rtw_rust_debug_proc_set_pci_conf_space(padapter, buffer, count);
 }
+

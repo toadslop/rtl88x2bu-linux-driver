@@ -28,6 +28,29 @@ struct dvobj_priv {
 	struct pci_dev *ppcidev;
 };
 
+struct seq_file {
+	void *private;
+	FILE *out;
+};
+
+#define RTW_PRINT_SEL(sel, fmt, ...)                                           \
+	fprintf(((struct seq_file *)(sel))->out ? ((struct seq_file *)(sel))->out \
+					       : stdout,                           \
+		fmt, ##__VA_ARGS__)
+
+extern u32 host_pci_conf_dword;
+extern struct pci_dev *host_pci_read_dev;
+
+void host_pci_get_test_reset(void);
+void host_pci_read_config_dword(struct pci_dev *dev, u32 reg, u32 *val);
+
+void *rtw_rust_debug_proc_adapter(void *m);
+int rtw_rust_debug_proc_get_pci_conf_space(void *sel, void *adapter,
+					   int use_bridge);
+
+int proc_get_pci_conf_space(struct seq_file *m, void *v);
+int proc_get_pci_bridge_conf_space(struct seq_file *m, void *v);
+
 struct _adapter {
 	struct dvobj_priv dvobjpriv;
 };
@@ -64,6 +87,12 @@ static inline void host_pci_write_get(u32 *reg, u8 *val, struct pci_dev **dev)
 		*val = host_pci_write_val;
 	if (dev)
 		*dev = host_pci_write_dev;
+}
+
+static inline void host_pci_read_get(struct pci_dev **dev)
+{
+	if (dev)
+		*dev = host_pci_read_dev;
 }
 
 static inline const char *host_pci_last_log_line(void)
