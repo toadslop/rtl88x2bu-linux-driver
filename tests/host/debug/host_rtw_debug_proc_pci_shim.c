@@ -53,3 +53,14 @@ void rtw_rust_debug_log_info(const char *line)
 	if (line)
 		host_rtw_info_line("%s", line);
 }
+
+void rtw_rust_debug_proc_emit_pci_conf_space(void *sel, void *adapter,
+					     int use_bridge)
+{
+	rtw_rust_debug_proc_get_pci_conf_space(sel, adapter, use_bridge);
+}
+
+void rtw_rust_debug_proc_emit_pci_aspm(void *sel, void *adapter)
+{
+	rtw_rust_debug_proc_get_pci_aspm(sel, adapter);
+}

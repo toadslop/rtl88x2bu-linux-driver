@@ -34,7 +34,7 @@
 //! W3-225 proc LPS check-by-TP handlers live in `rtw_debug_proc_lps_tp.rs`.
 //! W3-227 proc ACK timeout handlers live in `rtw_debug_proc_ack.rs`.
 //! W3-230 proc IQK/LCK cal test handlers live in `rtw_debug_proc_cal.rs`.
-//! W3-231 PCI conf space proc setters live in `rtw_debug_proc_pci.rs`.
+//! W3-231/W3-232 PCI conf space proc handlers live in `rtw_debug_proc_pci.rs`.
 //! W3-210 PHY cap dump helpers live in `rtw_debug_phy_cap.rs`.
 
 #![allow(
