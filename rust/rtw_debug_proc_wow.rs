@@ -39,7 +39,7 @@ extern "C" {
     ) -> c_long;
 }
 
-#[cfg(all(config_wowlan, config_gpio_wakeup))]
+#[cfg(config_gpio_wakeup)]
 extern "C" {
     fn rtw_rust_debug_proc_emit_wowlan_gpio_info(sel: *mut c_void, adapter: *mut c_void);
     fn rtw_rust_debug_proc_set_wowlan_gpio_info(
@@ -135,7 +135,7 @@ pub extern "C" fn proc_set_pattern_info(
     unsafe { rtw_rust_debug_proc_set_pattern_info(adapter, buffer, count) }
 }
 
-#[cfg(all(config_wowlan, config_gpio_wakeup))]
+#[cfg(config_gpio_wakeup)]
 #[no_mangle]
 pub extern "C" fn proc_get_wowlan_gpio_info(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -145,7 +145,7 @@ pub extern "C" fn proc_get_wowlan_gpio_info(m: *mut c_void, _v: *mut c_void) -> 
     0
 }
 
-#[cfg(all(config_wowlan, config_gpio_wakeup))]
+#[cfg(config_gpio_wakeup)]
 #[no_mangle]
 pub extern "C" fn proc_set_wowlan_gpio_info(
     _file: *mut c_void,
