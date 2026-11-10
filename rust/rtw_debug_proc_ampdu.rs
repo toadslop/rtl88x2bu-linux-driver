@@ -524,10 +524,7 @@ pub extern "C" fn proc_set_tx_quick_addba_req(
     count as c_long
 }
 
-#[cfg(all(
-    config_proc_debug,
-    config_sdio_tx_enable_aval_int
-))]
+#[cfg(all(config_proc_debug, config_sdio_tx_enable_aval_int))]
 #[no_mangle]
 pub extern "C" fn proc_get_tx_aval_th(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -537,10 +534,7 @@ pub extern "C" fn proc_get_tx_aval_th(m: *mut c_void, _v: *mut c_void) -> c_int 
     0
 }
 
-#[cfg(all(
-    config_proc_debug,
-    config_sdio_tx_enable_aval_int
-))]
+#[cfg(all(config_proc_debug, config_sdio_tx_enable_aval_int))]
 #[no_mangle]
 pub extern "C" fn proc_set_tx_aval_th(
     _file: *mut c_void,

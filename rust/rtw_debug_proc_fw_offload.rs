@@ -40,10 +40,7 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
     unsafe { rtw_rust_debug_proc_adapter(m) }
 }
 
-#[cfg(any(
-    config_proc_debug,
-    host_rtw_debug_proc_fw_offload_test
-))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_fw_offload_test))]
 #[no_mangle]
 pub extern "C" fn proc_get_fw_offload(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -53,10 +50,7 @@ pub extern "C" fn proc_get_fw_offload(m: *mut c_void, _v: *mut c_void) -> c_int 
     0
 }
 
-#[cfg(any(
-    config_proc_debug,
-    host_rtw_debug_proc_fw_offload_test
-))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_fw_offload_test))]
 #[no_mangle]
 pub extern "C" fn proc_set_fw_offload(
     _file: *mut c_void,
@@ -70,10 +64,7 @@ pub extern "C" fn proc_set_fw_offload(
 }
 
 #[cfg(fw_handle_txbcn)]
-#[cfg(any(
-    config_proc_debug,
-    host_rtw_debug_proc_fw_offload_test
-))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_fw_offload_test))]
 #[no_mangle]
 pub extern "C" fn proc_get_fw_tbtt_rpt(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -84,10 +75,7 @@ pub extern "C" fn proc_get_fw_tbtt_rpt(m: *mut c_void, _v: *mut c_void) -> c_int
 }
 
 #[cfg(fw_handle_txbcn)]
-#[cfg(any(
-    config_proc_debug,
-    host_rtw_debug_proc_fw_offload_test
-))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_fw_offload_test))]
 #[no_mangle]
 pub extern "C" fn proc_set_fw_tbtt_rpt(
     _file: *mut c_void,
