@@ -1,4 +1,4 @@
-Before opening a translation PR, read [`docs/rust-migration/test-plan.md`](/toadslop/rtl88x2bu-linux-driver/blob/master/docs/rust-migration/test-plan.md) and [`docs/rust-migration/architecture.md`](/toadslop/rtl88x2bu-linux-driver/blob/master/docs/rust-migration/architecture.md).
+Before opening a translation PR, read [`docs/rust-migration/test-plan.md`](/toadslop/rtl88x2bu-linux-driver/blob/master/docs/rust-migration/test-plan.md) and [`docs/rust-migration/architecture.md`](/toadslop/rtl88x2bu-linux-driver/blob/master/docs/rust-migration/architecture.md), and the FFI rules in [`docs/rust-migration/porting-guide.md`](/toadslop/rtl88x2bu-linux-driver/blob/master/docs/rust-migration/porting-guide.md).
 
 Check only the items that apply to this PR's scope. L1, L2, and L3 are required when the change touches a C→Rust swap, pure/leaf code, or init/USB registration respectively (see the merge rule in the test plan).
 
@@ -19,3 +19,9 @@ Check only the items that apply to this PR's scope. L1, L2, and L3 are required 
 - [ ] `unsafe` confined to abi/os shim
 - [ ] `extern "C"` shim only if C still calls this symbol
 - [ ] Behavior change vs C? If yes, tests updated and called out as spec change
+
+## Porting (see docs/rust-migration/porting-guide.md)
+- [ ] `extern "C"` imports match the C definitions (width/sign/return; `systime` = `c_ulong`); no retyped constants or struct offsets
+- [ ] Every new `#[cfg]` maps to the C macro condition C actually sees; Rust object links in every config the cfg allows
+- [ ] No overflow/shift/index/div panics on C-supplied values (`wrapping_*`/`checked_*`/`get()` where C wrapped or trusted input)
+- [ ] NULL handling, log lines, counters, and errno match C (or are called out as spec change)

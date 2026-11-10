@@ -31,6 +31,7 @@ labels=(
   phase-1
   phase-2
   wave-0 wave-1 wave-2 wave-3 wave-4 wave-5 wave-6
+  regression
   "size/~100"
   "size/~200"
 )
@@ -43,6 +44,7 @@ for label in "${labels[@]}"; do
     wave-*) color=1D76DB ;;
     size/*) color=FBCA04 ;;
     rust-migration) color=B60205 ;;
+    regression) color=D93F0B ;;
   esac
   gh label create "$label" --repo "$REPO" --color "$color" --force >/dev/null
 done
@@ -401,6 +403,31 @@ files=(
   wave3-234-debug-proc-rtkm-info.md
   wave3-235-debug-proc-wow-keepalive.md
   wave3-236-debug-proc-p2p-wowlan.md
+  # E14: 2026-11 C→Rust port review regression fixes (+ T21–T24 guards under E10)
+  epic-14-port-regression-fixes.md
+  fix-01-pwrctrl-systime-width.md
+  fix-02-pwrctrl-ps-mode-num.md
+  fix-03-debug-adapters-status-dbgdump.md
+  fix-04-pwrctrl-set-ps-tdls-nulldata.md
+  fix-05-adapter-offsets-exported.md
+  fix-06-hal-com-customer-str-gating.md
+  fix-07-makefile-cfg-parity.md
+  fix-08-debug-proc-cfg-gates.md
+  fix-09-hal-shim-guards.md
+  fix-10-hal-dm-narrowband-hooks.md
+  fix-11-wrapping-arithmetic.md
+  fix-12-sec-read-cam-ent-null.md
+  fix-13-debug-proc-setter-parity.md
+  fix-14-pwrctrl-dropped-diagnostics.md
+  fix-15-halmac-dm-print-shift.md
+  fix-16-beamforming-sounding-dim.md
+  fix-17-extern-signature-drift.md
+  fix-18-debug-proc-input-validation.md
+  fix-19-c2h-evt-wapi-robustness.md
+  test-21-generated-rust-cfgs.md
+  test-22-ci-config-matrix.md
+  test-23-ci-ffi-drift-panic-inventory.md
+  test-24-l2-fidelity.md
 )
 
 # draft_id -> github issue number

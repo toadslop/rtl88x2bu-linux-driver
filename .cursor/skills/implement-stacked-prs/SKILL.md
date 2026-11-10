@@ -113,6 +113,7 @@ suffix is configured for the run.
 - Follow the draft spec and per-PR plan scope
 - Match existing code style in `rust/` and C shims
 - **Characterize C → freeze tests → port** (per [`architecture.md`](../../../docs/rust-migration/architecture.md))
+- Apply the FFI rules in [`porting-guide.md`](../../../docs/rust-migration/porting-guide.md): imports/constants/offsets/`#[cfg]`s come from C, `wrapping_*` where C wrapped, NULL handling and log lines identical to C
 - Minimal diff — no drive-by refactors
 
 ### 3. PR size gate (mandatory — before commit)
