@@ -16,7 +16,7 @@
 use std::ffi::c_void;
 
 #[cfg(not(host_pwrctrl_cpwm_int_test))]
-use core::ffi::c_void;
+use core::ffi::{c_ulong, c_void};
 
 const _TRUE: u8 = 1;
 const PS_MODE_ACTIVE: u8 = 0;
@@ -27,7 +27,12 @@ const CMD_ALIVE: u8 = 1 << 2;
 const XMIT_ALIVE: u8 = 1 << 0;
 
 type Padapter = *mut c_void;
+
+#[cfg(host_pwrctrl_cpwm_int_test)]
 type Systime = u32;
+
+#[cfg(not(host_pwrctrl_cpwm_int_test))]
+type Systime = c_ulong;
 
 #[repr(C)]
 pub struct ReportPwrStateParm {
