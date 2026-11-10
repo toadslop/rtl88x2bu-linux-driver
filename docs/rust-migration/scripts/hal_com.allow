@@ -1,3 +1,7 @@
+# FX-06: C2H customer-string handlers only when CONFIG_RTW_CUSTOMER_STR (Rust cfg).
+drop c2h_customer_str_rpt_hdl
+drop c2h_customer_str_rpt_2_hdl
+drop rtw_hal_h2c_customer_str_req
 # L1 allowlist for W4-01: dump_hw_rate_map_test only when CONFIG_RTW_DEBUG (Rust cfg).
 drop dump_hw_rate_map_test
 # W4-17: C oracle table is in .data (D); Rust exports pointer table in .rodata (R).

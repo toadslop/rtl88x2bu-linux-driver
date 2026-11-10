@@ -2090,6 +2090,7 @@ mod c2h_debug_leaf {
 }
 
 #[cfg(all(
+    config_rtw_customer_str,
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
@@ -2109,6 +2110,7 @@ mod c2h_customer_str {
 }
 
 #[cfg(all(
+    config_rtw_mac_hidden_rpt,
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),

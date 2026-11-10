@@ -3329,7 +3329,7 @@ endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTW_CUSTOMER_STR\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 _rust_cfg_rtw_customer_str := y
 endif
-ifneq ($(filter y,$(CONFIG_RTL8723D) $(CONFIG_RTL8188F) $(CONFIG_RTL8188GTV) $(CONFIG_RTL8822B)),)
+ifneq ($(filter y,$(CONFIG_RTL8723D) $(CONFIG_RTL8188F) $(CONFIG_RTL8188GTV)),)
 _rust_cfg_rtw_customer_str := y
 endif
 ifneq ($(_rust_cfg_rtw_customer_str),)
