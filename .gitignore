@@ -47,3 +47,4 @@ tests/host/debug/test_proc_ack_8821c
 tests/host/debug/test_proc_ack_rust
 tests/host/debug/test_proc_ack_rust_8821c
 tests/host/domain/test_domain_types
+tests/host/debug/test_proc_cal
