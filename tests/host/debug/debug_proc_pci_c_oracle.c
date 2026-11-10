@@ -25,19 +25,3 @@ ssize_t proc_set_pci_conf_space(void *file, const void *buffer, size_t count,
 	return rtw_rust_debug_proc_set_pci_conf_space(padapter, buffer, count);
 }
 
-int proc_get_pci_bridge_conf_space(struct seq_file *m, void *v)
-{
-	struct _adapter *padapter = rtw_rust_debug_proc_adapter(m);
-
-	(void)v;
-	return rtw_rust_debug_proc_get_pci_conf_space(m, padapter, 1);
-}
-
-int proc_get_pci_conf_space(struct seq_file *m, void *v)
-{
-	struct _adapter *padapter = rtw_rust_debug_proc_adapter(m);
-
-	(void)v;
-	return rtw_rust_debug_proc_get_pci_conf_space(m, padapter, 0);
-}
-

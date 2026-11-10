@@ -103,8 +103,9 @@ PCI_HOST   := debug_proc_pci_host_core.c
 PCI_RUST   := $(ROOT)/rust/rtw_debug_proc_pci.rs
 PCI_SHIM   := host_rtw_debug_proc_pci_shim.c
 PCI_L2     := test_proc_pci.c
-PCI_GET    := debug_proc_pci_get_core.c
-PCI_GET_L2 := test_proc_pci_get.c
+PCI_GET        := debug_proc_pci_get_core.c
+PCI_GET_ORACLE := debug_proc_pci_get_c_oracle.c
+PCI_GET_L2     := test_proc_pci_get.c
 PCI_CFG    := -DCONFIG_PCI_HCI
 
 # W3-220 proc monitor / simple_config / xmit_block
@@ -773,9 +774,9 @@ librust_rtw_debug_proc_pci.a: $(PCI_RUST)
 test-proc-pci-get-c: test_proc_pci_get
 	./test_proc_pci_get debug_proc_pci_get_vectors.json
 
-test_proc_pci_get: $(PCI_GET_L2) $(PCI_ORACLE) $(PCI_GET) $(PCI_HOST) $(HOST_JSON)
+test_proc_pci_get: $(PCI_GET_L2) $(PCI_GET_ORACLE) $(PCI_GET) $(PCI_HOST) $(HOST_JSON)
 	$(CC) $(CFLAGS) $(PCI_CFG) -I$(HOST_INC) -o $@ \
-		$(PCI_GET_L2) $(PCI_ORACLE) $(PCI_GET) $(PCI_HOST) $(HOST_JSON)
+		$(PCI_GET_L2) $(PCI_GET_ORACLE) $(PCI_GET) $(PCI_HOST) $(HOST_JSON)
 
 test-proc-lps-tp-c: test_proc_lps_tp
 	./test_proc_lps_tp debug_proc_lps_tp_vectors.json
