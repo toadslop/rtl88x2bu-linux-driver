@@ -1338,7 +1338,6 @@ endif
 ifeq ($(CONFIG_MCC_MODE), y)
 ccflags-y += -DCONFIG_MCC_MODE
 rustflags-y += --cfg config_mcc_mode
-rustflags-y += --cfg config_mcc_phydm_offload
 endif
 
 ifeq ($(CONFIG_RTW_NAPI), y)
@@ -2783,7 +2782,15 @@ ifeq ($(CONFIG_OFFLOAD_MDNS_V6), y)
 rustflags-y += --cfg config_offload_mdns_v6
 endif
 rustflags-y += --cfg config_rust_rtw_debug_test_hooks
+# FX-07: match effective C AP_MODE (CONFIG_AP_WOWLAN can force -DCONFIG_AP_MODE).
+_rust_cfg_ap_mode :=
 ifeq ($(CONFIG_AP_MODE), y)
+_rust_cfg_ap_mode := y
+endif
+ifneq ($(filter -DCONFIG_AP_MODE,$(ccflags-y)),)
+_rust_cfg_ap_mode := y
+endif
+ifneq ($(_rust_cfg_ap_mode),)
 rustflags-y += --cfg config_ap_mode
 endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_EVENT_THREAD_MODE' $(src)/include/autoconf.h 2>/dev/null && echo y),)
@@ -2891,29 +2898,102 @@ endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_LPS_LCLK' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg config_lps_lclk
 endif
-ifeq ($(CONFIG_RTL8822B), y)
-rustflags-y += --cfg config_lps_pg --cfg config_fw_multi_port_support
+_rust_cfg_lps_pg :=
+ifneq ($(filter -DCONFIG_LPS_PG,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_lps_pg := y
+endif
+ifneq ($(_rust_cfg_lps_pg),)
+rustflags-y += --cfg config_lps_pg
+endif
+_rust_cfg_fw_multi_port :=
+ifneq ($(filter -DCONFIG_FW_MULTI_PORT_SUPPORT,$(ccflags-y)),)
+_rust_cfg_fw_multi_port := y
+endif
+ifneq ($(_rust_cfg_fw_multi_port),)
+rustflags-y += --cfg config_fw_multi_port_support
 endif
 ifeq ($(CONFIG_WOWLAN), y)
 rustflags-y += --cfg config_wowlan
 endif
+_rust_cfg_gpio_wakeup :=
 ifeq ($(CONFIG_GPIO_WAKEUP), y)
+_rust_cfg_gpio_wakeup := y
+endif
+ifneq ($(filter -DCONFIG_GPIO_WAKEUP,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_gpio_wakeup := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_GPIO_WAKEUP\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_gpio_wakeup := y
+endif
+ifneq ($(_rust_cfg_gpio_wakeup),)
 rustflags-y += --cfg config_gpio_wakeup
 endif
-ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_LPS_1T1R' $(src)/include/autoconf.h 2>/dev/null && echo y),)
-rustflags-y += --cfg config_lps_1t1r
+_rust_cfg_lps_1t1r :=
+ifneq ($(filter -DCONFIG_LPS_1T1R,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_lps_1t1r := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_LPS_1T1R\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_lps_1t1r := y
 endif
 ifeq ($(CONFIG_LPS_1T1R), y)
+_rust_cfg_lps_1t1r := y
+endif
+ifeq ($(CONFIG_RTL8822C), y)
+ifneq ($(filter -DCONFIG_LPS,$(ccflags-y)),)
+_rust_cfg_lps_1t1r := y
+endif
+endif
+ifneq ($(_rust_cfg_lps_1t1r),)
 rustflags-y += --cfg config_lps_1t1r
 endif
-ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RESUME_IN_WORKQUEUE' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_resume_wq :=
+ifneq ($(filter -DCONFIG_RESUME_IN_WORKQUEUE,$(ccflags-y)),)
+_rust_cfg_resume_wq := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RESUME_IN_WORKQUEUE\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_resume_wq := y
+endif
+ifneq ($(_rust_cfg_resume_wq),)
 rustflags-y += --cfg resume_wq
 endif
-ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_HAS_EARLYSUSPEND' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_early_suspend :=
+ifneq ($(filter -DCONFIG_HAS_EARLYSUSPEND,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_early_suspend := y
+endif
+ifeq ($(CONFIG_HAS_EARLYSUSPEND), y)
+_rust_cfg_early_suspend := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_HAS_EARLYSUSPEND\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_early_suspend := y
+endif
+ifneq ($(_rust_cfg_early_suspend),)
 rustflags-y += --cfg early_suspend
 endif
-ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_ANDROID_POWER' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_android_power :=
+ifneq ($(filter -DCONFIG_ANDROID_POWER,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_android_power := y
+endif
+ifeq ($(CONFIG_ANDROID_POWER), y)
+_rust_cfg_android_power := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_ANDROID_POWER\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_android_power := y
+endif
+ifneq ($(_rust_cfg_android_power),)
 rustflags-y += --cfg android_power
+endif
+# FX-07: MCC phydm offload follows chip blocks in hal_ic_cfg.h (not all MCC_MODE builds).
+_rust_cfg_mcc_phydm_offload :=
+ifeq ($(CONFIG_MCC_MODE), y)
+ifneq ($(filter y,$(CONFIG_RTL8822B) $(CONFIG_RTL8822C) $(CONFIG_RTL8814B) $(CONFIG_RTL8723F)),)
+_rust_cfg_mcc_phydm_offload := y
+endif
+endif
+ifneq ($(filter -DCONFIG_MCC_PHYDM_OFFLOAD,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_mcc_phydm_offload := y
+endif
+ifneq ($(_rust_cfg_mcc_phydm_offload),)
+rustflags-y += --cfg config_mcc_phydm_offload
 endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_WMMPS_STA' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg config_wmmps_sta
@@ -3052,7 +3132,17 @@ endif
 ifneq ($(_rust_cfg_dbg_rf_cal),)
 rustflags-y += --cfg config_dbg_rf_cal
 endif
+_rust_cfg_power_saving :=
 ifeq ($(CONFIG_POWER_SAVING), y)
+_rust_cfg_power_saving := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_POWER_SAVING\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_power_saving := y
+endif
+ifneq ($(filter -DCONFIG_POWER_SAVING,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_power_saving := y
+endif
+ifneq ($(_rust_cfg_power_saving),)
 rustflags-y += --cfg config_power_saving
 endif
 ifeq ($(CONFIG_SDIO_TX_ENABLE_AVAL_INT), y)
@@ -3085,8 +3175,17 @@ endif
 ifneq ($(filter -DCONFIG_RF4CE_COEXIST,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 _rust_cfg_rf4ce_coexist := y
 endif
+_rust_cfg_bt_coexist :=
+ifeq ($(CONFIG_BT_COEXIST), y)
+_rust_cfg_bt_coexist := y
+endif
+ifneq ($(filter -DCONFIG_BT_COEXIST,$(ccflags-y)),)
+_rust_cfg_bt_coexist := y
+endif
 ifneq ($(_rust_cfg_rf4ce_coexist),)
+ifneq ($(_rust_cfg_bt_coexist),)
 rustflags-y += --cfg config_rf4ce_coexist
+endif
 endif
 _rust_cfg_find_best_channel :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_FIND_BEST_CHANNEL' $(src)/include/autoconf.h 2>/dev/null && echo y),)
@@ -3209,7 +3308,87 @@ endif
 $(MODULE_NAME)-y += rust/hal_com.o
 $(MODULE_NAME)-y += rust/hal_halmac.o
 $(MODULE_NAME)-y += rust/hal_intf.o
+_rust_cfg_rf_shadow_rw :=
+ifneq ($(filter -DCONFIG_RF_SHADOW_RW,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_rf_shadow_rw := y
+endif
+ifneq ($(_rust_cfg_rf_shadow_rw),)
 rustflags-y += --cfg config_rf_shadow_rw
+endif
+ifeq ($(CONFIG_RTL8192F), y)
+rustflags-y += --cfg CONFIG_RTL8192F
+endif
+ifneq ($(filter -DCONFIG_RTL8192F,$(ccflags-y)),)
+rustflags-y += --cfg CONFIG_RTL8192F
+endif
+# FX-07: hal_com C2H leaf cfgs (see fix-06).
+_rust_cfg_rtw_customer_str :=
+ifneq ($(filter -DCONFIG_RTW_CUSTOMER_STR,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_rtw_customer_str := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTW_CUSTOMER_STR\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_rtw_customer_str := y
+endif
+ifneq ($(filter y,$(CONFIG_RTL8723D) $(CONFIG_RTL8188F) $(CONFIG_RTL8188GTV) $(CONFIG_RTL8822B)),)
+_rust_cfg_rtw_customer_str := y
+endif
+ifneq ($(_rust_cfg_rtw_customer_str),)
+rustflags-y += --cfg config_rtw_customer_str
+endif
+_rust_cfg_rtw_mac_hidden_rpt :=
+ifneq ($(filter -DCONFIG_RTW_MAC_HIDDEN_RPT,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_rtw_mac_hidden_rpt := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTW_MAC_HIDDEN_RPT\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_rtw_mac_hidden_rpt := y
+endif
+ifneq ($(filter y,$(CONFIG_RTL8192F) $(CONFIG_RTL8723D) $(CONFIG_RTL8703B) $(CONFIG_RTL8188F) $(CONFIG_RTL8188GTV) $(CONFIG_RTL8822B) $(CONFIG_RTL8822C) $(CONFIG_RTL8723F)),)
+_rust_cfg_rtw_mac_hidden_rpt := y
+endif
+ifneq ($(_rust_cfg_rtw_mac_hidden_rpt),)
+rustflags-y += --cfg config_rtw_mac_hidden_rpt
+endif
+# FX-07: USB HAL cfgs mirror ccflags/autoconf (hal_usb.rs).
+_rust_cfg_usb_int_in_pipe :=
+ifneq ($(filter -DCONFIG_USB_INTERRUPT_IN_PIPE,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_usb_int_in_pipe := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_USB_INTERRUPT_IN_PIPE\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_usb_int_in_pipe := y
+endif
+ifneq ($(_rust_cfg_usb_int_in_pipe),)
+rustflags-y += --cfg CONFIG_USB_INTERRUPT_IN_PIPE
+endif
+_rust_cfg_prealloc_recv_skb :=
+ifneq ($(filter -DCONFIG_PREALLOC_RECV_SKB,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_prealloc_recv_skb := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_PREALLOC_RECV_SKB\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_prealloc_recv_skb := y
+endif
+ifneq ($(_rust_cfg_prealloc_recv_skb),)
+rustflags-y += --cfg CONFIG_PREALLOC_RECV_SKB
+endif
+_rust_cfg_prealloc_rx_skb_buffer :=
+ifneq ($(filter -DCONFIG_PREALLOC_RX_SKB_BUFFER,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_prealloc_rx_skb_buffer := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_PREALLOC_RX_SKB_BUFFER\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_prealloc_rx_skb_buffer := y
+endif
+ifneq ($(_rust_cfg_prealloc_rx_skb_buffer),)
+rustflags-y += --cfg CONFIG_PREALLOC_RX_SKB_BUFFER
+endif
+_rust_cfg_usb_buffer_alloc_rx :=
+ifneq ($(filter -DCONFIG_USE_USB_BUFFER_ALLOC_RX,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_usb_buffer_alloc_rx := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_USE_USB_BUFFER_ALLOC_RX\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_usb_buffer_alloc_rx := y
+endif
+ifneq ($(_rust_cfg_usb_buffer_alloc_rx),)
+rustflags-y += --cfg CONFIG_USE_USB_BUFFER_ALLOC_RX
+endif
 $(MODULE_NAME)-y += rust/hal_phy.o
 ifeq ($(CONFIG_USB_HCI), y)
 $(MODULE_NAME)-y += rust/hal_usb.o
@@ -3284,7 +3463,11 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_trx.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_rate.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_rx_cnt.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_ps.o
+ifneq ($(_rust_cfg_power_saving),)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_ps_info.o
+else ifneq ($(_rust_cfg_bcn_cnt_confirm_hdl),)
+$(MODULE_NAME)-y += rust/rtw_debug_proc_ps_info.o
+endif
 $(MODULE_NAME)-y += rust/rtw_debug_proc_dbg_logs.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_hw.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_signal.o
@@ -3293,12 +3476,21 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_test.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_ht.o
 ifeq ($(CONFIG_WOWLAN), y)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_wow.o
+else ifeq ($(CONFIG_GPIO_WAKEUP), y)
+$(MODULE_NAME)-y += rust/rtw_debug_proc_wow.o
 endif
-ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_TX_AMSDU' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_obj_debug_proc_amsdu :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_TX_AMSDU\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_obj_debug_proc_amsdu := y
+endif
+ifneq ($(filter -DCONFIG_TX_AMSDU,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_obj_debug_proc_amsdu := y
+endif
+ifneq ($(_rust_obj_debug_proc_amsdu),)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_amsdu.o
 endif
 $(MODULE_NAME)-y += rust/rtw_debug_proc_vht.o
-ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_TDLS' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_TDLS\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_tdls.o
 endif
 $(MODULE_NAME)-y += rust/rtw_debug_proc_fwps.o
@@ -3340,15 +3532,18 @@ endif
 ifeq ($(CONFIG_PCI_HCI), y)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_pci.o
 endif
+ifneq ($(_rust_cfg_power_saving),)
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
-$(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ps.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ps.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_lps_tp.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_lps_exec.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_rpwm.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_cpwm_int.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_alive.o
+$(MODULE_NAME)-y += rust/rtw_pwrctrl_set_ps.o
+endif
+$(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ps.o
 ifeq ($(CONFIG_WOWLAN), y)
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_wow.o
 endif
@@ -3356,14 +3551,17 @@ ifeq ($(CONFIG_FWLPS_IN_IPS), y)
 ccflags-y += -DCONFIG_FWLPS_IN_IPS
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ips.o
 endif
+ifneq ($(_rust_cfg_power_saving),)
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ps_rdy.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_pm.o
-$(MODULE_NAME)-y += rust/rtw_pwrctrl_set_ps.o
-$(MODULE_NAME)-y += rust/rtw_beamforming_cmd.o
-$(MODULE_NAME)-y += rust/rtw_beamforming.o
+endif
+ifneq ($(_rust_cfg_power_saving),)
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_init.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_resume.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_wakeup.o
+endif
+$(MODULE_NAME)-y += rust/rtw_beamforming_cmd.o
+$(MODULE_NAME)-y += rust/rtw_beamforming.o
 $(MODULE_NAME)-y += rust/rtw_beamforming_sound.o
 $(MODULE_NAME)-y += rust/rtw_mlme_rest.o
 $(MODULE_NAME)-y += rust/rtw_mlme_ht_restructure.o
