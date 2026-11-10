@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: GPL-2.0
 //! Kernel half of W3-189 init part 1 (C FFI in `core/rtw_pwrctrl.c`).
 
+use core::ffi::c_ulong;
+
 use super::{
     rf_on, Padapter, PS_MODE_ACTIVE, PS_STATE_S4, RTW_PWR_STATE_CHK_INTERVAL, _FALSE, _TRUE,
 };
 
+type Systime = c_ulong;
+
 extern "C" {
     fn rtw_rust_init_is_primary(padapter: Padapter) -> u8;
     fn rtw_rust_init_reg_u8(padapter: Padapter, field: u32) -> u8;
-    fn rtw_rust_init_get_current_time() -> u32;
+    fn rtw_rust_init_get_current_time() -> Systime;
+    fn rtw_rust_init_store_systime(padapter: Padapter, field: u32, val: Systime);
     fn rtw_rust_init_init_pwrlock(padapter: Padapter, which: u32);
     fn rtw_rust_init_store_u8(padapter: Padapter, field: u32, val: u8);
     fn rtw_rust_init_store_u32(padapter: Padapter, field: u32, val: u32);
@@ -41,7 +46,7 @@ pub fn init_part1_kernel(padapter: Padapter) {
         rtw_rust_init_store_u8(padapter, 1, ips);
         rtw_rust_init_store_u8(padapter, 2, ips);
         let now = rtw_rust_init_get_current_time();
-        rtw_rust_init_store_u32(padapter, 5, now);
+        rtw_rust_init_store_systime(padapter, 5, now);
         rtw_rust_init_store_u8(padapter, 3, rtw_rust_init_reg_u8(padapter, 1));
         rtw_rust_init_store_u32(padapter, 6, RTW_PWR_STATE_CHK_INTERVAL);
         rtw_rust_init_store_u32(padapter, 7, 0);
@@ -61,7 +66,7 @@ pub fn init_part1_kernel(padapter: Padapter) {
             if pwr != PS_MODE_ACTIVE { _TRUE } else { _FALSE },
         );
         rtw_rust_init_store_u8(padapter, 9, _FALSE);
-        rtw_rust_init_store_u32(padapter, 8, now);
+        rtw_rust_init_store_systime(padapter, 8, now);
         rtw_rust_init_store_u8(padapter, 10, 0);
         rtw_rust_init_store_u8(padapter, 11, PS_STATE_S4);
         rtw_rust_init_store_u8(padapter, 12, PS_MODE_ACTIVE);

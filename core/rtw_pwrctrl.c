@@ -983,15 +983,18 @@ void rtw_rust_rpwm_msleep_os(int ms)
 	rtw_msleep_os(ms);
 }
 
-u32 rtw_rust_rpwm_get_current_time(void)
+systime rtw_rust_rpwm_get_current_time(void)
 {
 	return rtw_get_current_time();
 }
 
-u32 rtw_rust_rpwm_get_passing_time_ms(u32 start)
+u32 rtw_rust_rpwm_get_passing_time_ms(systime start)
 {
 	return rtw_get_passing_time_ms(start);
 }
+
+_Static_assert(sizeof(rtw_rust_rpwm_get_current_time()) == sizeof(systime),
+	       "rpwm current time must keep full systime width");
 
 void rtw_rust_rpwm_hal_get_cpwm(PADAPTER padapter, u8 *out)
 {
@@ -2554,15 +2557,18 @@ void rtw_rust_cpwm_yield_os(void)
 	rtw_yield_os();
 }
 
-u32 rtw_rust_cpwm_get_current_time(void)
+systime rtw_rust_cpwm_get_current_time(void)
 {
 	return rtw_get_current_time();
 }
 
-u32 rtw_rust_cpwm_get_passing_time_ms(u32 start)
+u32 rtw_rust_cpwm_get_passing_time_ms(systime start)
 {
 	return rtw_get_passing_time_ms(start);
 }
+
+_Static_assert(sizeof(rtw_rust_cpwm_get_current_time()) == sizeof(systime),
+	       "cpwm current time must keep full systime width");
 
 void rtw_rust_cpwm_msleep_os(int ms)
 {
@@ -3357,10 +3363,13 @@ u32 rtw_rust_init_reg_u32(PADAPTER padapter, u32 field)
 #endif
 }
 
-u32 rtw_rust_init_get_current_time(void)
+systime rtw_rust_init_get_current_time(void)
 {
 	return rtw_get_current_time();
 }
+
+_Static_assert(sizeof(rtw_rust_init_get_current_time()) == sizeof(systime),
+	       "init current time must keep full systime width");
 
 void rtw_rust_init_init_pwrlock(PADAPTER padapter, u32 which)
 {
@@ -3632,9 +3641,18 @@ void rtw_rust_init_store_u32(PADAPTER padapter, u32 field, u32 val)
 	case 2: p->lps_enter_cnts = val; break;
 	case 3: p->lps_leave_cnts = val; break;
 	case 4: p->bips_processing = val; break;
-	case 5: p->ips_deny_time = val; break;
 	case 6: p->pwr_state_check_interval = val; break;
 	case 7: p->pwr_state_check_cnts = val; break;
+	default: break;
+	}
+}
+
+void rtw_rust_init_store_systime(PADAPTER padapter, u32 field, systime val)
+{
+	struct pwrctrl_priv *p = adapter_to_pwrctl(padapter);
+
+	switch (field) {
+	case 5: p->ips_deny_time = val; break;
 	case 8: p->lps_deny_time = val; break;
 	default: break;
 	}

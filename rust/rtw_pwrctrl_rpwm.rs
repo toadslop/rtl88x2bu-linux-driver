@@ -16,7 +16,7 @@
 use std::ffi::c_void;
 
 #[cfg(not(host_pwrctrl_rpwm_test))]
-use core::ffi::c_void;
+use core::ffi::{c_ulong, c_void};
 
 const _SUCCESS: i32 = 1;
 const _FAIL: i32 = 0;
@@ -26,6 +26,12 @@ const LPS_CPWM_TIMEOUT_MS: u32 = 10;
 const LPS_RPWM_RETRY_CNT: u32 = 3;
 
 type Padapter = *mut c_void;
+
+#[cfg(host_pwrctrl_rpwm_test)]
+pub(crate) type Systime = u32;
+
+#[cfg(not(host_pwrctrl_rpwm_test))]
+pub(crate) type Systime = c_ulong;
 
 #[cfg(host_pwrctrl_rpwm_test)]
 #[repr(C)]
@@ -160,8 +166,8 @@ mod host_hal {
 #[cfg(not(host_pwrctrl_rpwm_test))]
 extern "C" {
     fn rtw_rust_rpwm_msleep_os(ms: i32);
-    fn rtw_rust_rpwm_get_current_time() -> u32;
-    fn rtw_rust_rpwm_get_passing_time_ms(start: u32) -> u32;
+    fn rtw_rust_rpwm_get_current_time() -> Systime;
+    fn rtw_rust_rpwm_get_passing_time_ms(start: Systime) -> u32;
     fn rtw_rust_rpwm_hal_get_cpwm(padapter: Padapter, out: *mut u8);
     fn rtw_rust_rpwm_hal_set_rpwm(padapter: Padapter, rpwm: u8);
     fn rtw_rust_rpwm_cannot_run(padapter: Padapter) -> u8;
@@ -175,8 +181,8 @@ extern "C" {
 fn cpwm_polling_core(
     cannot_run: fn(Padapter) -> bool,
     msleep: fn(i32),
-    now: fn(Padapter) -> u32,
-    passing_ms: fn(u32) -> u32,
+    now: fn(Padapter) -> Systime,
+    passing_ms: fn(Systime) -> u32,
     hal_get: fn(Padapter, *mut u8),
     hal_set: fn(Padapter, u8),
     get_u8: fn(Padapter, u32) -> u8,

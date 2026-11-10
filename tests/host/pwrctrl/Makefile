@@ -70,7 +70,7 @@ FW_IPS_CFLAGS := $(CFLAGS) -DCONFIG_FWLPS_IN_IPS -DCONFIG_LPS_LCLK -DCONFIG_BT_C
 	test-lps-tp test-lps-tp-rust test-lps-exec test-lps-exec-rust test-rpwm test-rpwm-rust test-register-alive test-register-alive-rust \
 	test-unregister-alive test-unregister-alive-rust test-wow-lps test-wow-lps-rust \
 	test-pm-setters test-pm-setters-rust \
-	test-ps-rdy test-ps-rdy-rust test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init test-init-rust \
+	test-ps-rdy test-ps-rdy-rust test-ps-rdy-systime-width test-fx01-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init test-init-rust \
 	test-fw-in-ips test-fw-in-ips-rust test-cpwm-int test-cpwm-int-rust \
 	test-init-store-wowlan test-init-store-wowlan-wow \
 	test-init-store-wowlan-rust test-init-store-wowlan-wow-rust clean
@@ -78,14 +78,14 @@ FW_IPS_CFLAGS := $(CFLAGS) -DCONFIG_FWLPS_IN_IPS -DCONFIG_LPS_LCLK -DCONFIG_BT_C
 all: test test-lps test-lps-enter test-leave-all test-leave-all-rust test-ips test-ips-rust \
 	test-ps-processor test-ps-processor-rust test-lps-tp test-lps-tp-rust test-rpwm test-rpwm-rust \
 	test-register-alive test-register-alive-rust test-unregister-alive test-unregister-alive-rust \
-	test-wow-lps test-wow-lps-rust test-pm-setters test-ps-rdy test-ps-rdy-rust test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow
+	test-wow-lps test-wow-lps-rust test-pm-setters test-ps-rdy test-ps-rdy-rust test-ps-rdy-systime-width test-fx01-systime-width test-set-ps test-set-ps-pg-wow
 
 # W3-187 PR1: C oracle only — Rust differential runners need PR2 enter-LPS hooks.
 test: test-c test-rust test-lps test-lps-rust test-lps-enter test-lps-enter-rust test-leave-all \
 	test-leave-all-rust test-ips test-ips-rust test-ps-processor test-ps-processor-rust test-lps-tp \
 	test-lps-tp-rust test-lps-exec test-rpwm test-rpwm-rust test-register-alive test-register-alive-rust \
 	test-unregister-alive test-unregister-alive-rust test-wow-lps test-wow-lps-rust test-pm-setters test-ps-rdy test-ps-rdy-rust \
-	test-ps-rdy-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init test-init-rust \
+	test-ps-rdy-systime-width test-fx01-systime-width test-set-ps test-set-ps-pg-wow test-set-ps-rust test-set-ps-rust-pg-wow test-init test-init-rust \
 	test-init-p2 test-init-p2-rust test-fw-in-ips test-fw-in-ips-rust test-cpwm-int test-cpwm-int-rust test-resume test-resume-rust test-wakeup test-wakeup-rust \
 	test-init-store-wowlan test-init-store-wowlan-wow \
 	test-init-store-wowlan-rust test-init-store-wowlan-wow-rust
@@ -321,6 +321,25 @@ librust_pwrctrl_ps_rdy_kern.a: $(RUST_PWRCTRL_PS_RDY)
 test_pwrctrl_ps_rdy_systime_width: test_ps_rdy_systime_width.c librust_pwrctrl_ps_rdy_kern.a
 	$(CC) $(CFLAGS) -o $@ test_ps_rdy_systime_width.c librust_pwrctrl_ps_rdy_kern.a
 
+test-fx01-systime-width: test_pwrctrl_fx01_systime_width
+	./test_pwrctrl_fx01_systime_width
+
+librust_pwrctrl_rpwm_kern.a: $(RUST_PWRCTRL_RPWM)
+	$(RUSTC) --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--crate-type staticlib $(RUST_PWRCTRL_RPWM) -o $@
+
+librust_pwrctrl_cpwm_int_kern.a: $(RUST_PWRCTRL_CPWM_INT)
+	$(RUSTC) --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--crate-type staticlib $(RUST_PWRCTRL_CPWM_INT) -o $@
+
+librust_pwrctrl_fx01_kern.a: librust_pwrctrl_rpwm_kern.a librust_pwrctrl_cpwm_int_kern.a
+	@true
+
+test_pwrctrl_fx01_systime_width: test_pwrctrl_fx01_systime_width.c \
+		librust_pwrctrl_rpwm_kern.a librust_pwrctrl_cpwm_int_kern.a
+	$(CC) $(CFLAGS) -o $@ test_pwrctrl_fx01_systime_width.c \
+		librust_pwrctrl_rpwm_kern.a librust_pwrctrl_cpwm_int_kern.a
+
 test_pwrctrl_ps_rdy_rust: test_pwrctrl_ps_rdy.c librust_pwrctrl_ps_rdy.a $(HOST_JSON)
 	$(CC) $(PS_RDY_CFLAGS) -o $@ test_pwrctrl_ps_rdy.c $(HOST_JSON) librust_pwrctrl_ps_rdy.a
 
@@ -508,4 +527,6 @@ clean:
 		test_pwrctrl_cpwm_int test_pwrctrl_cpwm_int_rust librust_pwrctrl_cpwm_int.a \
 		test_pwrctrl_wakeup test_pwrctrl_wakeup_rust librust_pwrctrl_wakeup.a \
 		librust_pwrctrl.a test_pwrctrl_ps_rdy test_pwrctrl_ps_rdy_rust \
-		test_pwrctrl_ps_rdy_systime_width librust_pwrctrl_ps_rdy_kern.a
+		test_pwrctrl_ps_rdy_systime_width librust_pwrctrl_ps_rdy_kern.a \
+		test_pwrctrl_fx01_systime_width librust_pwrctrl_rpwm_kern.a \
+		librust_pwrctrl_cpwm_int_kern.a librust_pwrctrl_fx01_kern.a
