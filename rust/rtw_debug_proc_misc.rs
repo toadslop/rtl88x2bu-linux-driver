@@ -34,14 +34,17 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
     unsafe { rtw_rust_debug_proc_adapter(m) }
 }
 
-#[cfg(any(dbg_memory_leak, host_rtw_debug_proc_misc_test))]
+#[cfg(any(all(dbg_memory_leak, config_proc_debug), host_rtw_debug_proc_misc_test))]
 #[no_mangle]
 pub extern "C" fn proc_get_malloc_cnt(m: *mut c_void, _v: *mut c_void) -> c_int {
     unsafe { rtw_rust_debug_proc_emit_malloc_cnt(m) };
     0
 }
 
-#[cfg(any(config_find_best_channel, host_rtw_debug_proc_misc_test))]
+#[cfg(any(
+    all(config_find_best_channel, config_proc_debug),
+    host_rtw_debug_proc_misc_test
+))]
 #[no_mangle]
 pub extern "C" fn proc_get_best_channel(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
@@ -51,7 +54,10 @@ pub extern "C" fn proc_get_best_channel(m: *mut c_void, _v: *mut c_void) -> c_in
     0
 }
 
-#[cfg(any(config_find_best_channel, host_rtw_debug_proc_misc_test))]
+#[cfg(any(
+    all(config_find_best_channel, config_proc_debug),
+    host_rtw_debug_proc_misc_test
+))]
 #[no_mangle]
 pub extern "C" fn proc_set_best_channel(
     _file: *mut c_void,
