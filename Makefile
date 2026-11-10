@@ -3324,6 +3324,9 @@ ifneq ($(_rust_cfg_lps_chk_by_tp),)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_lps_tp.o
 endif
 $(MODULE_NAME)-y += rust/rtw_debug_proc_ack.o
+ifeq ($(CONFIG_PCI_HCI), y)
+$(MODULE_NAME)-y += rust/rtw_debug_proc_pci.o
+endif
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_fw_ps.o
@@ -5337,6 +5340,21 @@ rust-objects-rtw-debug-proc-ack-c:
 rust-check-symbols-rtw-debug-proc-ack: rust-objects-rtw-debug-proc-ack-c rust-objects-rtw-debug-proc-ack
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_ack_c_ref.o NEW=rust/rtw_debug_proc_ack.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_ack.allow ALLOW_VACUOUS=1
+
+# W3-231: host C stub vs rust/rtw_debug_proc_pci.o (PCI conf space proc setters).
+rust-objects-rtw-debug-proc-pci:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 CONFIG_PCI_HCI=y rust-objects-rtw-debug-proc-pci"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) CONFIG_PCI_HCI=y -C $(KSRC) M=$(shell pwd) \
+		rust/rtw_debug_proc_pci.o
+rust-objects-rtw-debug-proc-pci-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_pci_c_ref.o \
+		tests/host/debug/host_rtw_debug_proc_pci_c_ref.c
+rust-check-symbols-rtw-debug-proc-pci: rust-objects-rtw-debug-proc-pci-c rust-objects-rtw-debug-proc-pci
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_pci_c_ref.o NEW=rust/rtw_debug_proc_pci.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_pci.allow ALLOW_VACUOUS=1
 
 # W3-214: host C oracle vs rust/rtw_debug_proc_misc.o (malloc cnt + best channel procs).
 rust-objects-rtw-debug-proc-misc:

@@ -354,6 +354,7 @@ for path in "${changed[@]}"; do
 	| rust/rtw_debug_proc_mcc.rs \
 	| rust/rtw_debug_proc_lps_tp.rs \
 	| rust/rtw_debug_proc_ack.rs \
+	| rust/rtw_debug_proc_pci.rs \
 	| rust/rtw_debug_proc_btcoex.rs \
 	| rust/rtw_debug_proc_vht.rs \
 	| rust/rtw_debug_proc_tdls.rs \

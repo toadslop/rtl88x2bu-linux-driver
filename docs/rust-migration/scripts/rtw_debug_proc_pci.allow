@@ -1,0 +1,5 @@
+# L1 allowlist for W3-231: Rust owns PCI conf space proc setters in rtw_debug_proc_pci.o.
+drop proc_set_pci_conf_space
+drop proc_set_pci_bridge_conf_space
+drop rtw_rust_pci_write_config_byte
+drop rtw_rust_debug_proc_log_pci_reg_set
