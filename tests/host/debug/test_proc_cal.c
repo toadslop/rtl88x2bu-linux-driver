@@ -20,6 +20,8 @@ struct vector {
 	char set_input[MAX_INPUT];
 	size_t set_count;
 	int has_set_count;
+	long set_expect_ret;
+	int has_set_expect_ret;
 	int expect_ret;
 	int has_expect_ret;
 	int expect_iqk_calls;
@@ -67,6 +69,10 @@ static int parse_vector(const char *obj, size_t len, void *vec_void)
 			v->set_count = (size_t)tmp;
 			v->has_set_count = 1;
 		}
+		if (host_json_parse_int_in(obj, len, "set_expect_ret", &tmp) == 0) {
+			v->set_expect_ret = tmp;
+			v->has_set_expect_ret = 1;
+		}
 	}
 	parse_int_opt(obj, len, "expect_ret", &v->expect_ret, &v->has_expect_ret);
 	parse_int_opt(obj, len, "expect_iqk_calls", &v->expect_iqk_calls,
@@ -108,7 +114,7 @@ static int run_one(const struct vector *v)
 					   NULL, &d);
 		else
 			return -1;
-		if (v->has_expect_ret && (int)ret != v->expect_ret)
+		if (v->has_set_expect_ret && ret != v->set_expect_ret)
 			return -1;
 		if (v->has_expect_iqk_calls &&
 		    (int)host_debug_proc_cal_iqk_calls() != v->expect_iqk_calls)
