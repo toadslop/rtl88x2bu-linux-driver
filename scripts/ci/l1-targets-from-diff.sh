@@ -341,6 +341,7 @@ for path in "${changed[@]}"; do
 	| rust/rtw_debug_proc_rx_cnt.rs \
 	| rust/rtw_debug_proc_ps.rs \
 	| rust/rtw_debug_proc_ps_info.rs \
+	| rust/rtw_debug_proc_wow_keepalive.rs \
 	| rust/rtw_debug_proc_dbg_logs.rs \
 	| rust/rtw_debug_proc_hw.rs \
 	| rust/rtw_debug_proc_signal.rs \
@@ -384,6 +385,7 @@ for path in "${changed[@]}"; do
 		add_target rust-check-symbols-rtw-debug-proc-rx-cnt
 		add_target rust-check-symbols-rtw-debug-proc-ps
 		add_target rust-check-symbols-rtw-debug-proc-ps-info
+		add_target rust-check-symbols-rtw-debug-proc-wow-keepalive
 		add_target rust-check-symbols-rtw-debug-proc-dbg-logs
 		add_target rust-check-symbols-rtw-debug-proc-hw
 		add_target rust-check-symbols-rtw-debug-proc-signal

@@ -5437,6 +5437,33 @@ ssize_t rtw_rust_debug_proc_set_pattern_info(_adapter *adapter,
 	return count;
 }
 
+#ifdef CONFIG_WOW_KEEP_ALIVE_PATTERN
+void rtw_rust_debug_proc_emit_wow_keep_alive_info(void *sel, _adapter *adapter)
+{
+	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
+	int i;
+
+	RTW_PRINT_SEL(sel, "wowlan_keep_alive_mode: %d\n",
+		      pwrpriv->wowlan_keep_alive_mode);
+	RTW_PRINT_SEL(sel, "LocKeepAlive: %d\n", pwrpriv->keep_alive_pattern_loc);
+	RTW_PRINT_SEL(sel, "keep_alive_pattern_len: %d\n",
+		      pwrpriv->keep_alive_pattern_len);
+	RTW_PRINT_SEL(sel, "keep_alive_pattern= \n");
+	for (i = 0; i < pwrpriv->keep_alive_pattern_len; i++) {
+		RTW_PRINT_SEL(sel, "[0x%x] ", pwrpriv->keep_alive_pattern[i]);
+		if (i % 8 == 7)
+			RTW_PRINT_SEL(sel, "\n");
+	}
+	RTW_PRINT_SEL(sel, "\n");
+	RTW_PRINT_SEL(sel, " wowlan_keep_alive_period= %d ms\n",
+		      pwrpriv->wowlan_keep_alive_period * 100);
+	RTW_PRINT_SEL(sel, " wowlan_keep_alive_retry_counter= %d\n",
+		      pwrpriv->wowlan_keep_alive_retry_counter);
+	RTW_PRINT_SEL(sel, " wowlan_keep_alive_retry_interval= %d ms\n",
+		      pwrpriv->wowlan_keep_alive_retry_interval * 100);
+}
+#endif /* CONFIG_WOW_KEEP_ALIVE_PATTERN */
+
 #endif /* CONFIG_WOWLAN */
 
 #ifdef CONFIG_GPIO_WAKEUP
