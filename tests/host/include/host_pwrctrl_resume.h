@@ -2,11 +2,11 @@
 #ifndef HOST_PWRCTRL_RESUME_H
 #define HOST_PWRCTRL_RESUME_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 typedef uint8_t u8;
 typedef uint32_t u32;
-typedef int32_t bool;
 
 #define _TRUE 1
 #define _FALSE 0
