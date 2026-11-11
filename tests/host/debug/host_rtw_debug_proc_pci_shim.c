@@ -15,8 +15,14 @@ void *rtw_rust_debug_proc_adapter_from_data(void *data)
 long rtw_rust_debug_proc_read_user_line(const void *buffer, unsigned long count,
 					char *tmp, unsigned long tmp_len)
 {
-	if (!buffer || !tmp || count < 1 || count > tmp_len)
-		return 0;
+	if (count < 1)
+		return -14;
+	if (count > tmp_len) {
+		rtw_warn_on(1);
+		return -14;
+	}
+	if (!buffer || !tmp)
+		return -14;
 	memcpy(tmp, buffer, count);
 	if (count < tmp_len)
 		tmp[count] = '\0';

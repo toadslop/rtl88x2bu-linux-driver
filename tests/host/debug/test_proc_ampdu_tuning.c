@@ -31,6 +31,12 @@ struct set_vector {
 	char field[MAX_FIELD];
 	char input[MAX_INPUT];
 	u8 expect;
+	size_t set_count;
+	int has_set_count;
+	long set_expect_ret;
+	int has_set_expect_ret;
+	int expect_warn_on;
+	int has_expect_warn_on;
 };
 
 static void unescape_expect(char *s)
@@ -79,6 +85,7 @@ static int parse_get_object(const char *obj, size_t len, void *vec_void)
 static int parse_set_object(const char *obj, size_t len, void *vec_void)
 {
 	struct set_vector *v = vec_void;
+	int t;
 
 	memset(v, 0, sizeof(*v));
 	if (host_json_parse_string_in(obj, len, "name", v->name, sizeof(v->name)))
@@ -87,8 +94,21 @@ static int parse_set_object(const char *obj, size_t len, void *vec_void)
 		return -1;
 	if (host_json_parse_string_in(obj, len, "input", v->input, sizeof(v->input)))
 		return -1;
-	if (parse_u8_field(obj, len, "expect", &v->expect))
+	if (host_json_find_key_in(obj, len, "expect") &&
+	    parse_u8_field(obj, len, "expect", &v->expect))
 		return -1;
+	if (host_json_parse_int_in(obj, len, "set_count", &t) == 0) {
+		v->set_count = (size_t)t;
+		v->has_set_count = 1;
+	}
+	if (host_json_parse_int_in(obj, len, "set_expect_ret", &t) == 0) {
+		v->set_expect_ret = t;
+		v->has_set_expect_ret = 1;
+	}
+	if (host_json_parse_int_in(obj, len, "expect_warn_on", &t) == 0) {
+		v->expect_warn_on = t;
+		v->has_expect_warn_on = 1;
+	}
 	return 0;
 }
 
@@ -154,21 +174,36 @@ static int run_set(const struct set_vector *v)
 {
 	struct _adapter adapter;
 	long ret;
-	size_t in_len = strlen(v->input);
+	size_t count = v->has_set_count ? v->set_count : strlen(v->input);
 
+	host_rtw_debug_proc_reset_warn_on_count();
 	memset(&adapter, 0, sizeof(adapter));
 	if (!strcmp(v->field, "rx_factor"))
-		ret = proc_set_rx_ampdu_factor(NULL, v->input, in_len, NULL, &adapter);
+		ret = proc_set_rx_ampdu_factor(NULL, v->input, count, NULL, &adapter);
 	else if (!strcmp(v->field, "rx_density"))
-		ret = proc_set_rx_ampdu_density(NULL, v->input, in_len, NULL, &adapter);
+		ret = proc_set_rx_ampdu_density(NULL, v->input, count, NULL, &adapter);
 	else if (!strcmp(v->field, "tx_density"))
-		ret = proc_set_tx_ampdu_density(NULL, v->input, in_len, NULL, &adapter);
+		ret = proc_set_tx_ampdu_density(NULL, v->input, count, NULL, &adapter);
 	else
-		ret = proc_set_tx_max_agg_num(NULL, v->input, in_len, NULL, &adapter);
+		ret = proc_set_tx_max_agg_num(NULL, v->input, count, NULL, &adapter);
 
-	if (ret != (long)in_len)
+	if (v->has_set_expect_ret) {
+		if (ret != v->set_expect_ret) {
+			fprintf(stderr, "FAIL set %s: ret %ld expect %ld\n", v->name,
+				ret, v->set_expect_ret);
+			return -1;
+		}
+	} else if (ret != (long)count) {
 		return -1;
-	if (read_field(&adapter, v->field) != v->expect) {
+	}
+	if (v->has_expect_warn_on &&
+	    host_rtw_debug_proc_warn_on_count() != v->expect_warn_on) {
+		fprintf(stderr, "FAIL set %s: warn_on %d expect %d\n", v->name,
+			host_rtw_debug_proc_warn_on_count(), v->expect_warn_on);
+		return -1;
+	}
+	if (!v->has_set_expect_ret &&
+	    read_field(&adapter, v->field) != v->expect) {
 		fprintf(stderr, "FAIL set %s: field %s got %u expect %u\n", v->name,
 			v->field, read_field(&adapter, v->field), v->expect);
 		return -1;

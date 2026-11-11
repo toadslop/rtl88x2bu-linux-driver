@@ -13,6 +13,18 @@
       "expect": 2
     },
     {
+      "name": "rx_factor_auto_minus_one",
+      "field": "rx_factor",
+      "input": "-1",
+      "expect": 255
+    },
+    {
+      "name": "rx_density_auto_minus_one",
+      "field": "rx_density",
+      "input": "-1 ",
+      "expect": 255
+    },
+    {
       "name": "rx_density_clamp",
       "field": "rx_density",
       "input": "9",
@@ -41,6 +53,14 @@
       "field": "tx_agg",
       "input": "2a",
       "expect": 42
+    },
+    {
+      "name": "rx_factor_oversize",
+      "field": "rx_factor",
+      "input": "2",
+      "set_count": 33,
+      "set_expect_ret": -14,
+      "expect_warn_on": 1
     }
   ]
 }

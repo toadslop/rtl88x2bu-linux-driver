@@ -45,11 +45,35 @@ unsigned char rtw_rust_debug_fix_rx_ampdu_size(void *adapter)
 	return ((_adapter *)adapter)->fix_rx_ampdu_size;
 }
 
+static int g_warn_on_count;
+
+int host_rtw_debug_proc_warn_on_count(void)
+{
+	return g_warn_on_count;
+}
+
+void host_rtw_debug_proc_reset_warn_on_count(void)
+{
+	g_warn_on_count = 0;
+}
+
+static inline void rtw_warn_on(int cond)
+{
+	if (cond)
+		g_warn_on_count++;
+}
+
 long rtw_rust_debug_proc_read_user_line(const void *buffer, unsigned long count,
 					char *tmp, unsigned long tmp_size)
 {
-	if (count < 1 || count > tmp_size || !buffer)
-		return -1;
+	if (count < 1)
+		return -14;
+	if (count > tmp_size) {
+		rtw_warn_on(1);
+		return -14;
+	}
+	if (!buffer)
+		return -14;
 	memcpy(tmp, buffer, count);
 	return (long)count;
 }

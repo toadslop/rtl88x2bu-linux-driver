@@ -1,6 +1,19 @@
 {
   "vectors": [
     {
+      "name": "ps_info_invalid_ips_mode",
+      "ips_mode_req": 5,
+      "ips_enter_cnts": 1,
+      "ips_leave_cnts": 2,
+      "power_mgnt": 0,
+      "dtim": 0,
+      "lps_enter_cnts": 0,
+      "lps_leave_cnts": 0,
+      "lps_level": 2,
+      "get": "ps_info",
+      "expect": "======Power Saving Info:======\n*IPS:\n IPS mode: invalid ips_mode\n IPS enter count:1, IPS leave count:2\n------------------------------\n*LPS:\n LPS mode: NO LPS\n LPS enter count:0, LPS leave count:0\n LPS level: LPS_PG\n=============================\n"
+    },
+    {
       "name": "ps_info_fixture_ips_lps",
       "ips_mode_req": 1,
       "ips_enter_cnts": 5,
