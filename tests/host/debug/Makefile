@@ -151,6 +151,13 @@ WOW_RUST   := $(ROOT)/rust/rtw_debug_proc_wow.rs
 WOW_L2     := test_proc_wow_registry.c
 WOW_CFG    := -DCONFIG_WOWLAN
 
+# W3-235 proc wow_keep_alive_info dump (CONFIG_WOWLAN + CONFIG_WOW_KEEP_ALIVE_PATTERN)
+WOW_KA_ORACLE := debug_proc_wow_keepalive_c_oracle.c
+WOW_KA_SHIM   := host_rtw_debug_proc_wow_keepalive_shim.c
+WOW_KA_RUST   := $(ROOT)/rust/rtw_debug_proc_wow_keepalive.rs
+WOW_KA_L2     := test_proc_wow_keepalive.c
+WOW_KA_CFG    := -DCONFIG_WOWLAN -DCONFIG_WOW_KEEP_ALIVE_PATTERN
+
 # W3-208 proc vht_24g_enable get/set
 VHT_ORACLE := debug_proc_vht_c_oracle.c
 VHT_SHIM   := host_rtw_debug_proc_vht_shim.c
@@ -240,6 +247,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-rings-c test-proc-rings-rust \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
+	test-proc-wow-keepalive-c test-proc-wow-keepalive-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
 	test-proc-smps-c test-proc-smps-rust \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
@@ -269,6 +277,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-rings-c test-proc-rings-rust \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
+	test-proc-wow-keepalive-c test-proc-wow-keepalive-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
 	test-proc-smps-c test-proc-smps-rust \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
@@ -399,6 +408,28 @@ test-proc-wow-rust: test_proc_wow_registry_rust
 test_proc_wow_registry_rust: $(WOW_L2) librust_rtw_debug_proc_wow.a $(WOW_SHIM) $(WOW_PATTERN) $(HOST_JSON)
 	$(CC) $(CFLAGS) $(WOW_CFG) -DRUST_RTW_DEBUG_PROC_WOW_ORACLE -o $@ \
 		$(WOW_L2) $(WOW_SHIM) $(WOW_PATTERN) $(HOST_JSON) librust_rtw_debug_proc_wow.a
+
+test-proc-wow-keepalive-c: test_proc_wow_keepalive
+	./test_proc_wow_keepalive debug_proc_wow_keepalive_vectors.json
+
+test_proc_wow_keepalive: $(WOW_KA_L2) $(WOW_KA_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(WOW_KA_CFG) -o $@ $(WOW_KA_L2) $(WOW_KA_ORACLE) $(HOST_JSON)
+
+librust_rtw_debug_proc_wow_keepalive.a: $(WOW_KA_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_wow_keepalive_test \
+		--cfg config_wowlan --cfg config_wow_keep_alive_pattern \
+		--cfg config_proc_debug \
+		--crate-type staticlib $(WOW_KA_RUST) -o $@
+
+test-proc-wow-keepalive-rust: test_proc_wow_keepalive_rust
+	./test_proc_wow_keepalive_rust debug_proc_wow_keepalive_vectors.json
+
+test_proc_wow_keepalive_rust: $(WOW_KA_L2) librust_rtw_debug_proc_wow_keepalive.a \
+		$(WOW_KA_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(WOW_KA_CFG) -DRUST_RTW_DEBUG_PROC_WOW_KEEPALIVE_ORACLE -o $@ \
+		$(WOW_KA_L2) $(WOW_KA_SHIM) $(HOST_JSON) \
+		librust_rtw_debug_proc_wow_keepalive.a
 
 test-proc-vht-c: test_proc_vht_24g
 	./test_proc_vht_24g debug_proc_vht_vectors.json
@@ -944,6 +975,8 @@ clean:
 		test_dump_regsty_rx_ampdu test_dump_regsty_rx_ampdu_rust librust_rtw_debug_regsty.a \
 		test_proc_ht_registry test_proc_ht_registry_rust librust_rtw_debug_proc_ht.a \
 		test_proc_wow_registry test_proc_wow_registry_rust librust_rtw_debug_proc_wow.a \
+		test_proc_wow_keepalive test_proc_wow_keepalive_rust \
+		librust_rtw_debug_proc_wow_keepalive.a \
 		test_proc_vht_24g test_proc_vht_24g_rust librust_rtw_debug_proc_vht.a \
 		test_proc_en_fwps test_proc_en_fwps_rust librust_rtw_debug_proc_fwps.a \
 		test_proc_fw_offload test_proc_fw_offload_rust \
