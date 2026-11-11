@@ -108,6 +108,14 @@ PCI_GET_ORACLE := debug_proc_pci_get_c_oracle.c
 PCI_GET_L2     := test_proc_pci_get.c
 PCI_CFG    := -DCONFIG_PCI_HCI
 
+# W3-233 TRX ring proc getters (CONFIG_PCI_HCI)
+RINGS_ORACLE := debug_proc_rings_c_oracle.c
+RINGS_HOST   := debug_proc_rings_host_core.c
+RINGS_RUST   := $(ROOT)/rust/rtw_debug_proc_rings.rs
+RINGS_SHIM   := host_rtw_debug_proc_rings_shim.c
+RINGS_L2     := test_proc_rings.c
+RINGS_CFG    := -DCONFIG_PCI_HCI -DCONFIG_PROC_DEBUG -DDBG_TXBD_DESC_DUMP
+
 # W3-220 proc monitor / simple_config / xmit_block
 MONITOR_ORACLE := debug_proc_monitor_c_oracle.c
 MONITOR_SHIM   := host_rtw_debug_proc_monitor_shim.c
@@ -222,6 +230,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-cal-c test-proc-cal-rust \
 	test-proc-lps-tp-c test-proc-lps-tp-rust \
 	test-proc-pci-c \
+	test-proc-rings-c test-proc-rings-rust \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
@@ -250,6 +259,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-cal-c test-proc-cal-rust \
 	test-proc-lps-tp-c test-proc-lps-tp-rust \
 	test-proc-pci-c \
+	test-proc-rings-c test-proc-rings-rust \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
@@ -262,14 +272,14 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 	test-proc-wow-c \
 	test-proc-vht-c test-proc-fwps-c test-proc-rx-ampdu-c test-proc-tdls-c \
 	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c test-proc-phy-cap-registry-c \
-	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-proc-mcc-c test-proc-txss-c test-proc-ack-c test-proc-ack-8821c-c test-proc-cal-c test-proc-lps-tp-c test-proc-pci-c test-proc-monitor-c \
+	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-proc-mcc-c test-proc-txss-c test-proc-ack-c test-proc-ack-8821c-c test-proc-cal-c test-proc-lps-tp-c test-proc-pci-c test-proc-rings-c test-proc-monitor-c \
 	test-proc-ps-info-c test-proc-tx-mgmt-c test-proc-smps-c \
 	test-phy-cap-dump-c
 
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
 	test-proc-ht-rust test-proc-wow-rust test-proc-vht-rust test-proc-fwps-rust test-proc-smps-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-rust test-proc-tx-amsdu-rust test-proc-phy-cap-registry-rust \
-	test-proc-misc-rust test-proc-mcc-rust test-proc-cal-rust test-proc-lps-tp-rust test-proc-monitor-rust test-proc-ps-info-rust test-proc-tx-mgmt-rust \
+	test-proc-misc-rust test-proc-mcc-rust test-proc-cal-rust test-proc-lps-tp-rust test-proc-rings-rust test-proc-monitor-rust test-proc-ps-info-rust test-proc-tx-mgmt-rust \
 	test-proc-txss-rust test-proc-ack-rust test-proc-ack-8821c-rust \
 	test-phy-cap-dump-rust
 
@@ -786,6 +796,28 @@ test_proc_pci_get_rust: $(PCI_GET_L2) librust_rtw_debug_proc_pci.a $(PCI_SHIM) \
 	$(CC) $(CFLAGS) $(PCI_CFG) -DRUST_RTW_DEBUG_PROC_PCI_ORACLE -I$(HOST_INC) -o $@ \
 		$(PCI_GET_L2) $(PCI_SHIM) $(PCI_GET) $(PCI_HOST) $(HOST_JSON) \
 		librust_rtw_debug_proc_pci.a
+
+test-proc-rings-c: test_proc_rings
+	./test_proc_rings debug_proc_rings_vectors.json
+
+test_proc_rings: $(RINGS_L2) $(RINGS_ORACLE) $(RINGS_HOST) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(RINGS_CFG) -I$(HOST_INC) -o $@ \
+		$(RINGS_L2) $(RINGS_ORACLE) $(RINGS_HOST) $(HOST_JSON)
+
+test-proc-rings-rust: test_proc_rings_rust
+	./test_proc_rings_rust debug_proc_rings_vectors.json
+
+test_proc_rings_rust: $(RINGS_L2) librust_rtw_debug_proc_rings.a $(RINGS_SHIM) \
+		$(RINGS_HOST) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(RINGS_CFG) -DRUST_RTW_DEBUG_PROC_RINGS_ORACLE -I$(HOST_INC) -o $@ \
+		$(RINGS_L2) $(RINGS_SHIM) $(RINGS_HOST) $(HOST_JSON) \
+		librust_rtw_debug_proc_rings.a
+
+librust_rtw_debug_proc_rings.a: $(RINGS_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_rings_test \
+		--cfg config_pci_hci --cfg config_proc_debug --cfg dbg_txbd_desc_dump \
+		--crate-type staticlib $(RINGS_RUST) -o $@
 
 test-proc-lps-tp-c: test_proc_lps_tp
 	./test_proc_lps_tp debug_proc_lps_tp_vectors.json
