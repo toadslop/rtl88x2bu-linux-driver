@@ -5403,6 +5403,8 @@ ssize_t proc_set_pci_conf_space(struct file *file, const char __user *buffer, si
 
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-231 setters in rust/rtw_debug_proc_pci.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
+
 int proc_get_pci_bridge_conf_space(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -5428,8 +5430,6 @@ int proc_get_pci_bridge_conf_space(struct seq_file *m, void *v)
 	}
 	return 0;
 }
-
-#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 
 int proc_get_pci_conf_space(struct seq_file *m, void *v)
 {
