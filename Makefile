@@ -3502,7 +3502,7 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_wow.o
 else ifeq ($(CONFIG_GPIO_WAKEUP), y)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_wow.o
 endif
-ifeq ($(CONFIG_WOWLAN), y)
+ifneq ($(_rust_cfg_wow_keep_alive_pattern),)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_wow_keepalive.o
 endif
 _rust_obj_debug_proc_amsdu :=
