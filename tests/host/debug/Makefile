@@ -116,6 +116,13 @@ RINGS_SHIM   := host_rtw_debug_proc_rings_shim.c
 RINGS_L2     := test_proc_rings.c
 RINGS_CFG    := -DCONFIG_PCI_HCI -DCONFIG_PROC_DEBUG -DDBG_TXBD_DESC_DUMP
 
+# W3-234 RTKM info proc getter (CONFIG_PREALLOC_RX_SKB_BUFFER + USB)
+RTKM_ORACLE := debug_proc_rtkm_c_oracle.c
+RTKM_HOST   := debug_proc_rtkm_host_core.c
+RTKM_RUST   := $(ROOT)/rust/rtw_debug_proc_rtkm.rs
+RTKM_L2     := test_proc_rtkm.c
+RTKM_CFG    := -DCONFIG_PREALLOC_RX_SKB_BUFFER -DCONFIG_USB_HCI -DCONFIG_PROC_DEBUG
+
 # W3-220 proc monitor / simple_config / xmit_block
 MONITOR_ORACLE := debug_proc_monitor_c_oracle.c
 MONITOR_SHIM   := host_rtw_debug_proc_monitor_shim.c
@@ -272,14 +279,14 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 	test-proc-wow-c \
 	test-proc-vht-c test-proc-fwps-c test-proc-rx-ampdu-c test-proc-tdls-c \
 	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c test-proc-phy-cap-registry-c \
-	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-proc-mcc-c test-proc-txss-c test-proc-ack-c test-proc-ack-8821c-c test-proc-cal-c test-proc-lps-tp-c test-proc-pci-c test-proc-rings-c test-proc-monitor-c \
+	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-proc-mcc-c test-proc-txss-c test-proc-ack-c test-proc-ack-8821c-c test-proc-cal-c test-proc-lps-tp-c test-proc-pci-c test-proc-rings-c test-proc-rtkm-c test-proc-monitor-c \
 	test-proc-ps-info-c test-proc-tx-mgmt-c test-proc-smps-c \
 	test-phy-cap-dump-c
 
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
 	test-proc-ht-rust test-proc-wow-rust test-proc-vht-rust test-proc-fwps-rust test-proc-smps-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \
 	test-proc-tx-ampdu-misc-rust test-proc-tx-amsdu-rust test-proc-phy-cap-registry-rust \
-	test-proc-misc-rust test-proc-mcc-rust test-proc-cal-rust test-proc-lps-tp-rust test-proc-rings-rust test-proc-monitor-rust test-proc-ps-info-rust test-proc-tx-mgmt-rust \
+	test-proc-misc-rust test-proc-mcc-rust test-proc-cal-rust test-proc-lps-tp-rust test-proc-rings-rust test-proc-rtkm-rust test-proc-monitor-rust test-proc-ps-info-rust test-proc-tx-mgmt-rust \
 	test-proc-txss-rust test-proc-ack-rust test-proc-ack-8821c-rust \
 	test-phy-cap-dump-rust
 
@@ -818,6 +825,29 @@ librust_rtw_debug_proc_rings.a: $(RINGS_RUST)
 		--cfg host_rtw_debug_proc_rings_test \
 		--cfg config_pci_hci --cfg config_proc_debug --cfg dbg_txbd_desc_dump \
 		--crate-type staticlib $(RINGS_RUST) -o $@
+
+test-proc-rtkm-c: test_proc_rtkm
+	./test_proc_rtkm debug_proc_rtkm_vectors.json
+
+test_proc_rtkm: $(RTKM_L2) $(RTKM_ORACLE) $(RTKM_HOST) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(RTKM_CFG) -I$(HOST_INC) -o $@ \
+		$(RTKM_L2) $(RTKM_ORACLE) $(RTKM_HOST) $(HOST_JSON)
+
+test-proc-rtkm-rust: test_proc_rtkm_rust
+	./test_proc_rtkm_rust debug_proc_rtkm_vectors.json
+
+test_proc_rtkm_rust: $(RTKM_L2) librust_rtw_debug_proc_rtkm.a \
+		$(RTKM_HOST) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(RTKM_CFG) -DRUST_RTW_DEBUG_PROC_RTKM_ORACLE -I$(HOST_INC) -o $@ \
+		$(RTKM_L2) $(RTKM_HOST) $(HOST_JSON) \
+		librust_rtw_debug_proc_rtkm.a
+
+librust_rtw_debug_proc_rtkm.a: $(RTKM_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_rtkm_test \
+		--cfg CONFIG_PREALLOC_RX_SKB_BUFFER --cfg config_usb_hci \
+		--cfg config_rtw_debug --cfg config_proc_debug \
+		--crate-type staticlib $(RTKM_RUST) -o $@
 
 test-proc-lps-tp-c: test_proc_lps_tp
 	./test_proc_lps_tp debug_proc_lps_tp_vectors.json

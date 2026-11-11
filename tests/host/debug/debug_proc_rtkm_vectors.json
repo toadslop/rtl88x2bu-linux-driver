@@ -1,0 +1,16 @@
+{
+  "vectors": [
+    {
+      "name": "rtkm_banner_lines",
+      "alloc_sz": 15360,
+      "expect_contains": "============[RTKM Info]============",
+      "expect_contains2": "MAX_RTKM_NR_PREALLOC_RECV_SKB: 16"
+    },
+    {
+      "name": "driver_buffer_constants",
+      "alloc_sz": 15360,
+      "expect_contains": "============[Driver Info]============",
+      "expect_contains2": "NR_PREALLOC_RECV_SKB: 8"
+    }
+  ]
+}
