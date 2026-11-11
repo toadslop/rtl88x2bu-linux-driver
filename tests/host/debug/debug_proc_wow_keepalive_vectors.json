@@ -21,6 +21,17 @@
       "wowlan_keep_alive_retry_counter": 0,
       "wowlan_keep_alive_retry_interval": 0,
       "expect": "wowlan_keep_alive_mode: 0\nLocKeepAlive: 0\nkeep_alive_pattern_len: 0\nkeep_alive_pattern= \n\n wowlan_keep_alive_period= 100 ms\n wowlan_keep_alive_retry_counter= 0\n wowlan_keep_alive_retry_interval= 0 ms\n"
+    },
+    {
+      "name": "keepalive_pattern_wrap_nine",
+      "wowlan_keep_alive_mode": 1,
+      "keep_alive_pattern_loc": 1,
+      "keep_alive_pattern_len": 9,
+      "pattern_hex": "000102030405060708",
+      "wowlan_keep_alive_period": 2,
+      "wowlan_keep_alive_retry_counter": 1,
+      "wowlan_keep_alive_retry_interval": 1,
+      "expect": "wowlan_keep_alive_mode: 1\nLocKeepAlive: 1\nkeep_alive_pattern_len: 9\nkeep_alive_pattern= \n[0x0] [0x1] [0x2] [0x3] [0x4] [0x5] [0x6] [0x7] \n[0x8] \n wowlan_keep_alive_period= 200 ms\n wowlan_keep_alive_retry_counter= 1\n wowlan_keep_alive_retry_interval= 100 ms\n"
     }
   ]
 }
