@@ -6,6 +6,11 @@
 
 #include "host_rtw_debug_proc_ampdu_types.h"
 
+static inline void rtw_warn_on(int cond)
+{
+	(void)cond;
+}
+
 struct host_proc_seq {
 	struct _adapter *adapter;
 	FILE *out;
@@ -27,17 +32,21 @@ long proc_set_rx_ampdu_factor(void *file, const void *buffer, unsigned long coun
 {
 	struct _adapter *padapter = data;
 	char tmp[32];
-	unsigned int factor;
+	int factor;
 
 	(void)file;
 	(void)pos;
-	if (count < 1 || count > sizeof(tmp))
+	if (count < 1)
 		return -14;
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -14;
+	}
 	if (!buffer)
 		return (long)count;
 	memcpy(tmp, buffer, count);
 	tmp[count] = '\0';
-	if (sscanf(tmp, "%u", &factor) == 1 && padapter) {
+	if (sscanf(tmp, "%d ", &factor) == 1 && padapter) {
 		if (factor > 0x03)
 			padapter->driver_rx_ampdu_factor = 0xFF;
 		else
@@ -62,17 +71,21 @@ long proc_set_rx_ampdu_density(void *file, const void *buffer, unsigned long cou
 {
 	struct _adapter *padapter = data;
 	char tmp[32];
-	unsigned int density;
+	int density;
 
 	(void)file;
 	(void)pos;
-	if (count < 1 || count > sizeof(tmp))
+	if (count < 1)
 		return -14;
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -14;
+	}
 	if (!buffer)
 		return (long)count;
 	memcpy(tmp, buffer, count);
 	tmp[count] = '\0';
-	if (sscanf(tmp, "%u", &density) == 1 && padapter) {
+	if (sscanf(tmp, "%d ", &density) == 1 && padapter) {
 		if (density > 0x07)
 			padapter->driver_rx_ampdu_spacing = 0xFF;
 		else
@@ -97,17 +110,21 @@ long proc_set_tx_ampdu_density(void *file, const void *buffer, unsigned long cou
 {
 	struct _adapter *padapter = data;
 	char tmp[32];
-	unsigned int density;
+	int density;
 
 	(void)file;
 	(void)pos;
-	if (count < 1 || count > sizeof(tmp))
+	if (count < 1)
 		return -14;
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -14;
+	}
 	if (!buffer)
 		return (long)count;
 	memcpy(tmp, buffer, count);
 	tmp[count] = '\0';
-	if (sscanf(tmp, "%u", &density) == 1 && padapter) {
+	if (sscanf(tmp, "%d ", &density) == 1 && padapter) {
 		if (density > 0x07)
 			padapter->driver_ampdu_spacing = 0xFF;
 		else

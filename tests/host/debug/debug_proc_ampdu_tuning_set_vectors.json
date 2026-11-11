@@ -13,6 +13,18 @@
       "expect": 2
     },
     {
+      "name": "rx_factor_auto_minus_one",
+      "field": "rx_factor",
+      "input": "-1",
+      "expect": 255
+    },
+    {
+      "name": "rx_density_auto_minus_one",
+      "field": "rx_density",
+      "input": "-1 ",
+      "expect": 255
+    },
+    {
       "name": "rx_density_clamp",
       "field": "rx_density",
       "input": "9",

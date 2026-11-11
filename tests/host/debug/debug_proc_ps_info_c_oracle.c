@@ -74,7 +74,6 @@ int debug_proc_ps_info_c_ref_get_ps_info(struct seq_file *m, void *v)
 	u8 ips_mode = pwrpriv->ips_mode_req;
 	u8 lps_mode = pwrpriv->power_mgnt;
 	u8 lps_level = pwrpriv->lps_level;
-	char ips_mode_buf[12];
 	char lps_mode_buf[12];
 	const char *str;
 
@@ -94,10 +93,8 @@ int debug_proc_ps_info_c_ref_get_ps_info(struct seq_file *m, void *v)
 		str = "NO IPS";
 	else if (ips_mode == IPS_LEVEL_2)
 		str = "IPS_LEVEL_2";
-	else {
-		snprintf(ips_mode_buf, sizeof(ips_mode_buf), "%d", ips_mode);
-		str = ips_mode_buf;
-	}
+	else
+		str = "invalid ips_mode";
 
 	RTW_PRINT_SEL(m, " IPS mode: %s\n", str);
 	RTW_PRINT_SEL(m, " IPS enter count:%d, IPS leave count:%d\n",
