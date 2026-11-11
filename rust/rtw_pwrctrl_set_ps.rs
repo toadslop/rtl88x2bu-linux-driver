@@ -378,6 +378,8 @@ extern "C" {
     fn rtw_rust_set_ps_wmm_smart_ps(padapter: Padapter);
     fn rtw_rust_set_ps_p2p_ps_enable(padapter: Padapter);
     fn rtw_rust_set_ps_rpwm_pslv(padapter: Padapter, base_pslv: u8) -> u8;
+    #[cfg(config_tdls)]
+    fn rtw_rust_set_ps_tdls_nulldata(padapter: Padapter, pwr_bit: u8);
     fn rtw_exec_lps(padapter: Padapter, ps_mode: u8);
     fn rtw_set_rpwm(padapter: Padapter, pslv: u8);
 }
@@ -451,6 +453,8 @@ fn kernel_set_ps_mode_impl(padapter: Padapter, ps_mode: u8, smart_ps: u8, bcn_an
         if unsafe { rtw_rust_set_ps_may_leave(padapter) } != 0 {
             unsafe {
                 rtw_rust_set_ps_inc_u32(padapter, SET_PS_U32_LPS_LEAVE);
+                #[cfg(config_tdls)]
+                rtw_rust_set_ps_tdls_nulldata(padapter, 0);
                 rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_PWR_MODE, ps_mode);
                 rtw_set_rpwm(padapter, PS_STATE_S4);
                 rtw_rust_set_ps_wow_leave_wait(padapter);
@@ -484,6 +488,8 @@ fn kernel_set_ps_mode_impl(padapter: Padapter, ps_mode: u8, smart_ps: u8, bcn_an
     } else if unsafe { rtw_rust_set_ps_may_enter(padapter) } != 0 {
         unsafe {
             rtw_rust_set_ps_inc_u32(padapter, SET_PS_U32_LPS_ENTER);
+            #[cfg(config_tdls)]
+            rtw_rust_set_ps_tdls_nulldata(padapter, 1);
             rtw_rust_set_ps_btcoex_lps_notify(padapter, ps_mode);
             rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_BFW_PS, _TRUE);
             rtw_rust_set_ps_set_u8(padapter, SET_PS_U8_PWR_MODE, ps_mode);
