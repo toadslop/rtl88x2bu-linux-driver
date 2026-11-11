@@ -20,11 +20,7 @@ extern "C" {
 }
 
 #[cfg(any(
-    all(
-        config_wowlan,
-        config_wow_keep_alive_pattern,
-        config_proc_debug
-    ),
+    all(config_wowlan, config_wow_keep_alive_pattern, config_proc_debug),
     host_rtw_debug_proc_wow_keepalive_test
 ))]
 extern "C" {
@@ -39,11 +35,7 @@ fn adapter_from_seq(m: *mut c_void) -> *mut c_void {
 }
 
 #[cfg(any(
-    all(
-        config_wowlan,
-        config_wow_keep_alive_pattern,
-        config_proc_debug
-    ),
+    all(config_wowlan, config_wow_keep_alive_pattern, config_proc_debug),
     host_rtw_debug_proc_wow_keepalive_test
 ))]
 #[no_mangle]
