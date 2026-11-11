@@ -46,10 +46,15 @@ pub extern "C" fn rtw_sec_read_cam_ent(
         match i {
             0 => {
                 unsafe { cp(ctrl, r.as_ptr(), 2) };
-                unsafe { cp(mac, r.as_ptr().add(2), 2) };
+                if !mac.is_null() {
+                    unsafe { cp(mac, r.as_ptr().add(2), 2) };
+                }
             }
-            1 => unsafe { cp(mac.add(2), r.as_ptr(), 4) },
-            _ => unsafe { cp(key.add(((i - 2) * 4) as usize), r.as_ptr(), 4) },
+            1 if !mac.is_null() => unsafe { cp(mac.add(2), r.as_ptr(), 4) },
+            n if !key.is_null() && n >= 2 => {
+                unsafe { cp(key.add(((n - 2) * 4) as usize), r.as_ptr(), 4) };
+            }
+            _ => {}
         }
     }
 }
