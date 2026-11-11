@@ -7,6 +7,45 @@
       "expect_ret": -22
     },
     {
+      "name": "lps_mode_11_rejected",
+      "fn": "lps",
+      "mode": 11,
+      "expect_ret": -22
+    },
+    {
+      "name": "lps_mode_10_radio_off",
+      "fn": "lps",
+      "mode": 10,
+      "initial_power_mgnt": 0,
+      "expect_ret": 0,
+      "expect_power_mgnt": 10,
+      "expect_bLeisurePs": 1,
+      "expect_LpsIdleCount": 2,
+      "expect_leave_all_ps": 0
+    },
+    {
+      "name": "lps_mode_9_pm_radio_off",
+      "fn": "lps",
+      "mode": 9,
+      "initial_power_mgnt": 0,
+      "expect_ret": 0,
+      "expect_power_mgnt": 9,
+      "expect_bLeisurePs": 1,
+      "expect_LpsIdleCount": 2,
+      "expect_leave_all_ps": 0
+    },
+    {
+      "name": "lps_mode_8_wwlan",
+      "fn": "lps",
+      "mode": 8,
+      "initial_power_mgnt": 0,
+      "expect_ret": 0,
+      "expect_power_mgnt": 8,
+      "expect_bLeisurePs": 1,
+      "expect_LpsIdleCount": 2,
+      "expect_leave_all_ps": 0
+    },
+    {
       "name": "lps_active_leaves_ps",
       "fn": "lps",
       "mode": 0,
@@ -98,6 +137,36 @@
       "fn": "wow_lps",
       "mode": 99,
       "expect_ret": -22
+    },
+    {
+      "name": "wow_lps_mode_11_rejected",
+      "fn": "wow_lps",
+      "mode": 11,
+      "expect_ret": -22
+    },
+    {
+      "name": "wow_lps_mode_10",
+      "fn": "wow_lps",
+      "mode": 10,
+      "initial_wowlan_power_mgmt": 0,
+      "expect_ret": 0,
+      "expect_wowlan_power_mgmt": 10
+    },
+    {
+      "name": "wow_lps_mode_9",
+      "fn": "wow_lps",
+      "mode": 9,
+      "initial_wowlan_power_mgmt": 0,
+      "expect_ret": 0,
+      "expect_wowlan_power_mgmt": 9
+    },
+    {
+      "name": "wow_lps_mode_8",
+      "fn": "wow_lps",
+      "mode": 8,
+      "initial_wowlan_power_mgmt": 0,
+      "expect_ret": 0,
+      "expect_wowlan_power_mgmt": 8
     },
     {
       "name": "wow_lps_updates",

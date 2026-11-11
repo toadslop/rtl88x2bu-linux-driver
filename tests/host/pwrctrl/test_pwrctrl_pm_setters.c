@@ -7,7 +7,7 @@
 #include "host_pwrctrl_pm.h"
 #include "host_vector_json.h"
 
-#define MAX_VECTORS 24
+#define MAX_VECTORS 32
 #define MAX_NAME 64
 #define MAX_FN 16
 
