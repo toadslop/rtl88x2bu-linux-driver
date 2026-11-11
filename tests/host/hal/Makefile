@@ -36,6 +36,9 @@ RUST_HAL_DM := $(ROOT)/rust/hal_dm.rs
 RUST_HAL_PHY := $(ROOT)/rust/hal_phy.rs
 RUST_HAL_INTF := $(ROOT)/rust/hal_intf.rs
 RUST_HAL_HALMAC := $(ROOT)/rust/hal_halmac.rs
+SEC_CAM_ENT_ORACLE := hal_com_sec_cam_ent_c_oracle.c
+SEC_CAM_ENT_SHIM := hal_com_sec_cam_ent_shim.c
+RUST_SEC_CAM_ENT := $(ROOT)/rust/hal_com_sec_cam_ent_host.rs
 
 CC     := gcc
 CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
@@ -56,7 +59,8 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust \
 	test-usb-sync-read test-usb-sync-read-rust test-usb-sync-write \
-	test-usb-async-write test-usb-async-write-rust test-chip-odm test-chip-odm-rust clean
+	test-usb-async-write test-usb-async-write-rust test-chip-odm test-chip-odm-rust \
+	test-sec-read-cam-ent test-sec-read-cam-ent-rust clean
 
 all: test
 
@@ -72,7 +76,8 @@ test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust test-usb-sync-read \
 	test-usb-sync-read-rust test-usb-sync-write test-usb-async-write \
-	test-usb-async-write-rust test-chip-odm test-chip-odm-rust
+	test-usb-async-write-rust test-chip-odm test-chip-odm-rust \
+	test-sec-read-cam-ent test-sec-read-cam-ent-rust
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -747,6 +752,27 @@ test_hal_usb_async_write_rust: test_hal_usb_async_write.c librust_hal_usb_async_
 		-DCONFIG_USB_SUPPORT_ASYNC_VDN_REQ -o $@ test_hal_usb_async_write.c \
 		$(HOST_JSON) librust_hal_usb_async_write.a
 
+test-sec-read-cam-ent: test_sec_read_cam_ent_null_mac
+	./test_sec_read_cam_ent_null_mac
+
+test_sec_read_cam_ent_null_mac: test_sec_read_cam_ent_null_mac.c \
+		$(SEC_CAM_ENT_ORACLE) $(SEC_CAM_ENT_SHIM)
+	$(CC) $(CFLAGS) -o $@ test_sec_read_cam_ent_null_mac.c \
+		$(SEC_CAM_ENT_ORACLE) $(SEC_CAM_ENT_SHIM)
+
+librust_hal_com_sec_cam_ent.a: $(RUST_SEC_CAM_ENT)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--crate-type staticlib $(RUST_SEC_CAM_ENT) -o $@
+
+test-sec-read-cam-ent-rust: test_sec_read_cam_ent_null_mac_rust
+	./test_sec_read_cam_ent_null_mac_rust
+
+test_sec_read_cam_ent_null_mac_rust: test_sec_read_cam_ent_null_mac.c \
+		$(SEC_CAM_ENT_ORACLE) $(SEC_CAM_ENT_SHIM) librust_hal_com_sec_cam_ent.a
+	$(CC) $(CFLAGS) -DRUST_HAL_COM_SEC_CAM_ENT_ORACLE -o $@ \
+		test_sec_read_cam_ent_null_mac.c $(SEC_CAM_ENT_ORACLE) $(SEC_CAM_ENT_SHIM) \
+		librust_hal_com_sec_cam_ent.a
+
 clean:
 	rm -f test_hw_rate_map test_hw_rate_map_rust librust_hal_com.a \
 		test_rsvd_page_cache test_rsvd_page_cache_rust librust_hal_com_rsvd.a \
@@ -789,4 +815,6 @@ clean:
 		test_hal_usb_vendor_wvalue test_hal_usb_vendor_wvalue_rust librust_hal_usb_wvalue.a \
 		test_hal_usb_sync_read test_hal_usb_sync_write test_hal_usb_async_write \
 		test_hal_usb_async_write_rust librust_hal_usb_async_write.a \
-		test_chip_odm_map test_chip_odm_map_rust librust_hal_intf_chip_odm.a
+		test_chip_odm_map test_chip_odm_map_rust librust_hal_intf_chip_odm.a \
+		test_sec_read_cam_ent_null_mac test_sec_read_cam_ent_null_mac_rust \
+		librust_hal_com_sec_cam_ent.a
