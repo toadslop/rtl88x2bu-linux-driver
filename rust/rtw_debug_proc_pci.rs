@@ -86,14 +86,19 @@ fn apply_pci_conf_set(
     if count < 1 {
         return EFAULT;
     }
-    if count > PROC_SET_TMP {
-        return EFAULT;
-    }
     if adapter.is_null() {
         return EFAULT;
     }
     let mut tmp = [0i8; PROC_SET_TMP];
-    if !proc_set_read_tmp(buffer, count, &mut tmp) {
+    if buffer.is_null() {
+        return count as c_long;
+    }
+    let n =
+        unsafe { rtw_rust_debug_proc_read_user_line(buffer, count, tmp.as_mut_ptr(), tmp.len()) };
+    if n <= 0 {
+        if count > PROC_SET_TMP {
+            return n;
+        }
         return count as c_long;
     }
     let mut reg = 0u32;
