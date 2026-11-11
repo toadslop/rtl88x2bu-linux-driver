@@ -175,26 +175,6 @@ fn emit_get_tx_max_agg(sel: *mut c_void, val: U8) {
     print_line(sel, &line[..pos]);
 }
 
-fn proc_set_read_tmp(
-    buffer: *const c_void,
-    count: usize,
-    tmp: &mut [i8; PROC_SET_TMP],
-) -> Option<usize> {
-    if count < 1 || count > PROC_SET_TMP {
-        return None;
-    }
-    if buffer.is_null() {
-        return None;
-    }
-    let n =
-        unsafe { rtw_rust_debug_proc_read_user_line(buffer, count, tmp.as_mut_ptr(), tmp.len()) };
-    if n > 0 {
-        Some(n as usize)
-    } else {
-        None
-    }
-}
-
 fn proc_set_i32_clamped(
     adapter: *mut c_void,
     tmp: *const u8,

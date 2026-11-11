@@ -64,6 +64,36 @@ int rtw_rust_debug_proc_sscanf_u32(const char *tmp, unsigned int *val)
 	return sscanf(tmp, "%u", val);
 }
 
+int rtw_rust_debug_proc_sscanf_i32(const char *tmp, int *val)
+{
+	return sscanf(tmp, "%d ", val);
+}
+
+void rtw_rust_debug_log_rx_ampdu_factor(unsigned int x)
+{
+	(void)x;
+}
+
+void rtw_rust_debug_log_rx_ampdu_spacing(unsigned int x)
+{
+	(void)x;
+}
+
+void rtw_rust_debug_log_tx_ampdu_spacing(unsigned int x)
+{
+	(void)x;
+}
+
+void rtw_rust_debug_log_tx_max_agg_num(u8 x)
+{
+	(void)x;
+}
+
+void rtw_rust_debug_log_tx_quick_addba_req(unsigned int x)
+{
+	(void)x;
+}
+
 int rtw_rust_debug_proc_sscanf_hhx(const char *tmp, u8 *val)
 {
 	return sscanf(tmp, "%hhx", val);
