@@ -34,7 +34,8 @@ const PWR_WAKEUP_OK: c_int = 1;
 const PWR_WAKEUP_FAIL: c_int = 0;
 
 const PS_MODE_ACTIVE: u8 = 0;
-const PS_MODE_NUM: u8 = 9;
+/// Upper bound of `enum Power_Mgnt` in `include/rtw_pwrctrl.h` (`PS_MODE_NUM` sentinel).
+const PS_MODE_NUM: u8 = 11;
 
 const IPS_NONE: u8 = 0;
 const IPS_NORMAL: u8 = 1;

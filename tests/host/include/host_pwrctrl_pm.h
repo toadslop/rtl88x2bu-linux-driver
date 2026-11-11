@@ -15,7 +15,8 @@ typedef int32_t s32;
 
 #define PS_MODE_ACTIVE 0
 #define PS_MODE_MAX 8
-#define PS_MODE_NUM 9
+/* Matches enum Power_Mgnt PS_MODE_NUM in include/rtw_pwrctrl.h (11). */
+#define PS_MODE_NUM 11
 
 #define IPS_NONE 0
 #define IPS_NORMAL 1
