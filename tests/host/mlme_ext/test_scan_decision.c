@@ -150,10 +150,11 @@ static int test_ch_decision_filter(void)
 	struct rtw_ieee80211_channel in[2], out[RTW_CHANNEL_SCAN_AMOUNT];
 	int n;
 
-	memset(&ad, 0, sizeof(ad));
-	ad.dvobj.regsty = &ad.registrypriv;
+	reset();
 	ad.setband = WIFI_FREQUENCY_BAND_AUTO;
-	ad.rfctl.max_chan_nums = MAX_CHANNEL_NUM;
+	/* Only two chset entries are populated; max_chan_nums must match so the
+	 * j==0 fallback does not walk zeroed slots (CI gcc can yield n=8). */
+	ad.rfctl.max_chan_nums = 2;
 	ad.rfctl.channel_set[0].ChannelNum = 1;
 	ad.rfctl.channel_set[1].ChannelNum = 6;
 	in[0].hw_value = 1;

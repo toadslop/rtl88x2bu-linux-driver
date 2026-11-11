@@ -4963,6 +4963,7 @@ int proc_get_all_sta_info(struct seq_file *m, void *v)
 #endif
 
 #ifdef CONFIG_PREALLOC_RX_SKB_BUFFER
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_rtkm_info(struct seq_file *m, void *v)
 {
 #ifdef CONFIG_USB_HCI
@@ -4988,6 +4989,7 @@ int proc_get_rtkm_info(struct seq_file *m, void *v)
 
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-234 in rust/rtw_debug_proc_rtkm.rs */
 #endif /* CONFIG_PREALLOC_RX_SKB_BUFFER */
 
 #ifdef DBG_MEMORY_LEAK

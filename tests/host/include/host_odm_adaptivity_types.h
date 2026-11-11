@@ -4,9 +4,8 @@
 
 #include "host_types.h"
 
+#include <stdbool.h>
 #include <stdio.h>
-
-typedef int bool;
 #define _TRUE 1
 #define _FALSE 0
 
