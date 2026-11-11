@@ -5615,6 +5615,7 @@ int proc_get_tx_ring(struct seq_file *m, void *v)
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-233 PR1 rx/tx in rust/rtw_debug_proc_rings.rs */
 
 #ifdef DBG_TXBD_DESC_DUMP
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_tx_ring_ext(struct seq_file *m, void *v)
 {
 	_irqL irqL;
@@ -5757,6 +5758,7 @@ ssize_t proc_set_tx_ring_ext(struct file *file, const char __user *buffer, size_
 	return count;
 }
 
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-233 PR2 tx_ring_ext in rust/rtw_debug_proc_rings.rs */
 #endif
 
 #endif

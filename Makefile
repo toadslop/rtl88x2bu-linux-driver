@@ -5597,7 +5597,7 @@ rust-check-symbols-rtw-debug-proc-pci: rust-objects-rtw-debug-proc-pci-c rust-ob
 # W3-233: host C stub vs rust/rtw_debug_proc_rings.o (TRX ring proc dumps).
 rust-objects-rtw-debug-proc-rings:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 CONFIG_PCI_HCI=y rust-objects-rtw-debug-proc-rings"; exit 1; }
-	$(MAKE) $(KBUILD_OPTS) CONFIG_PCI_HCI=y -C $(KSRC) M=$(shell pwd) \
+	$(MAKE) $(KBUILD_OPTS) CONFIG_PCI_HCI=y USER_EXTRA_CFLAGS=-DDBG_TXBD_DESC_DUMP -C $(KSRC) M=$(shell pwd) \
 		rust/rtw_debug_proc_rings.o
 rust-objects-rtw-debug-proc-rings-c:
 	@mkdir -p tests/host/debug
