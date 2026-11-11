@@ -621,6 +621,142 @@ void rtw_rust_debug_proc_emit_tx_ring(void *sel, _adapter *adapter)
 	_exit_critical(&pdvobjpriv->irq_th_lock, &irqL);
 }
 
+#ifdef DBG_TXBD_DESC_DUMP
+void rtw_rust_debug_proc_emit_tx_ring_ext(void *sel, _adapter *adapter)
+{
+	_irqL irqL;
+	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(adapter);
+	struct xmit_priv *pxmitpriv = &adapter->xmitpriv;
+	struct rtw_tx_desc_backup *pbuf;
+	int i, j, k, idx;
+
+	RTW_PRINT_SEL(sel, "<<<< tx ring ext dump settings >>>>\n");
+	RTW_PRINT_SEL(sel, " - backup frame num: %d\n", TX_BAK_FRMAE_CNT);
+	RTW_PRINT_SEL(sel, " - backup max. desc size: %d bytes\n", TX_BAK_DESC_LEN);
+	RTW_PRINT_SEL(sel, " - backup data size: %d bytes\n\n", TX_BAK_DATA_LEN);
+
+	if (!pxmitpriv->dump_txbd_desc) {
+		RTW_PRINT_SEL(sel, "Dump function is disabled.\n");
+		return;
+	}
+
+	_enter_critical(&pdvobjpriv->irq_th_lock, &irqL);
+	for (i = 0; i < HW_QUEUE_ENTRY; i++) {
+		struct rtw_tx_ring *tx_ring = &pxmitpriv->tx_ring[i];
+
+		idx = rtw_get_tx_desc_backup(adapter, i, &pbuf);
+
+		RTW_PRINT_SEL(sel, "Tx ring[%d]", i);
+		switch (i) {
+		case 0:
+			RTW_PRINT_SEL(sel, " (VO)\n");
+			break;
+		case 1:
+			RTW_PRINT_SEL(sel, " (VI)\n");
+			break;
+		case 2:
+			RTW_PRINT_SEL(sel, " (BE)\n");
+			break;
+		case 3:
+			RTW_PRINT_SEL(sel, " (BK)\n");
+			break;
+		case 4:
+			RTW_PRINT_SEL(sel, " (BCN)\n");
+			break;
+		case 5:
+			RTW_PRINT_SEL(sel, " (MGT)\n");
+			break;
+		case 6:
+			RTW_PRINT_SEL(sel, " (HIGH)\n");
+			break;
+		case 7:
+			RTW_PRINT_SEL(sel, " (TXCMD)\n");
+			break;
+		default:
+			RTW_PRINT_SEL(sel, " (?)\n");
+			break;
+		}
+
+		RTW_PRINT_SEL(sel, "  Entries: %d\n", TX_BAK_FRMAE_CNT);
+		RTW_PRINT_SEL(sel, "  Last idx: %d\n", idx);
+
+		for (j = 0; j < TX_BAK_FRMAE_CNT; j++) {
+			RTW_PRINT_SEL(sel, "  desc[%03d]:\n", j);
+
+			for (k = 0; k < (pbuf->tx_desc_size) / 4; k++) {
+				if ((k % 4) == 0)
+					RTW_PRINT_SEL(sel, "  0x%03x", k);
+
+				RTW_PRINT_SEL(sel, " 0x%08x ", ((int *)pbuf->tx_bak_desc)[k]);
+
+				if ((k % 4) == 3)
+					RTW_PRINT_SEL(sel, "\n");
+			}
+
+#if 1 /* data dump */
+			if (pbuf->tx_desc_size) {
+				RTW_PRINT_SEL(sel, "  data[%03d]:\n", j);
+
+				for (k = 0; k < (TX_BAK_DATA_LEN) / 4; k++) {
+					if ((k % 4) == 0)
+						RTW_PRINT_SEL(sel, "  0x%03x", k);
+
+					RTW_PRINT_SEL(sel, " 0x%08x ", ((int *)pbuf->tx_bak_data_hdr)[k]);
+
+					if ((k % 4) == 3)
+						RTW_PRINT_SEL(sel, "\n");
+				}
+				RTW_PRINT_SEL(sel, "\n");
+			}
+#endif
+
+			RTW_PRINT_SEL(sel, "  R/W pointer: %d/%d\n", pbuf->tx_bak_rp, pbuf->tx_bak_wp);
+
+			pbuf = pbuf + 1;
+		}
+		RTW_PRINT_SEL(sel, "\n");
+	}
+	_exit_critical(&pdvobjpriv->irq_th_lock, &irqL);
+}
+
+ssize_t rtw_rust_debug_proc_set_tx_ring_ext(_adapter *adapter,
+					    const char __user *buffer, size_t count)
+{
+	_irqL irqL;
+	struct xmit_priv *pxmitpriv = &adapter->xmitpriv;
+	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(adapter);
+	char tmp[32];
+	u32 reset = 0;
+	u32 dump = 0;
+
+	if (count < 1)
+		return -EFAULT;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		int num = sscanf(tmp, "%u %u", &dump, &reset);
+
+		if (num != 2) {
+			RTW_INFO("invalid parameter!\n");
+			return count;
+		}
+
+		_enter_critical(&pdvobjpriv->irq_th_lock, &irqL);
+		pxmitpriv->dump_txbd_desc = (BOOLEAN) dump;
+
+		if (reset == 1)
+			rtw_tx_desc_backup_reset();
+
+		_exit_critical(&pdvobjpriv->irq_th_lock, &irqL);
+	}
+
+	return count;
+}
+#endif /* DBG_TXBD_DESC_DUMP */
 #endif /* CONFIG_PCI_HCI */
 
 u8 *rtw_rust_debug_regsty_rx_ampdu_sz_limit_by_nss_bw(_adapter *adapter)
