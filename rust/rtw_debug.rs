@@ -36,6 +36,7 @@
 //! W3-230 proc IQK/LCK cal test handlers live in `rtw_debug_proc_cal.rs`.
 //! W3-231/W3-232 PCI conf space proc handlers live in `rtw_debug_proc_pci.rs`.
 //! W3-233 TRX ring debug proc handlers live in `rtw_debug_proc_rings.rs`.
+//! W3-234 RTKM prealloc buffer info proc lives in `rtw_debug_proc_rtkm.rs`.
 //! W3-210 PHY cap dump helpers live in `rtw_debug_phy_cap.rs`.
 
 #![allow(

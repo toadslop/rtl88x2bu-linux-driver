@@ -3543,6 +3543,9 @@ ifeq ($(CONFIG_PCI_HCI), y)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_pci.o
 $(MODULE_NAME)-y += rust/rtw_debug_proc_rings.o
 endif
+ifneq ($(_rust_cfg_prealloc_rx_skb_buffer),)
+$(MODULE_NAME)-y += rust/rtw_debug_proc_rtkm.o
+endif
 ifneq ($(_rust_cfg_power_saving),)
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
 $(MODULE_NAME)-y += rust/rtw_pwrctrl_ips.o
@@ -5608,6 +5611,21 @@ rust-objects-rtw-debug-proc-rings-c:
 rust-check-symbols-rtw-debug-proc-rings: rust-objects-rtw-debug-proc-rings-c rust-objects-rtw-debug-proc-rings
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_rings_c_ref.o NEW=rust/rtw_debug_proc_rings.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_rings.allow ALLOW_VACUOUS=1
+
+# W3-234: host C stub vs rust/rtw_debug_proc_rtkm.o (RTKM prealloc buffer info proc).
+rust-objects-rtw-debug-proc-rtkm:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-rtkm"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) USER_EXTRA_CFLAGS=-DCONFIG_PREALLOC_RX_SKB_BUFFER -C $(KSRC) M=$(shell pwd) \
+		rust/rtw_debug_proc_rtkm.o
+rust-objects-rtw-debug-proc-rtkm-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_rtkm_c_ref.o \
+		tests/host/debug/host_rtw_debug_proc_rtkm_c_ref.c
+rust-check-symbols-rtw-debug-proc-rtkm: rust-objects-rtw-debug-proc-rtkm-c rust-objects-rtw-debug-proc-rtkm
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_rtkm_c_ref.o NEW=rust/rtw_debug_proc_rtkm.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_rtkm.allow ALLOW_VACUOUS=1
 
 # W3-214: host C oracle vs rust/rtw_debug_proc_misc.o (malloc cnt + best channel procs).
 rust-objects-rtw-debug-proc-misc:

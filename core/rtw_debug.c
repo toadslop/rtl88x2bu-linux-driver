@@ -759,6 +759,30 @@ ssize_t rtw_rust_debug_proc_set_tx_ring_ext(_adapter *adapter,
 #endif /* DBG_TXBD_DESC_DUMP */
 #endif /* CONFIG_PCI_HCI */
 
+#ifdef CONFIG_PREALLOC_RX_SKB_BUFFER
+void rtw_rust_debug_proc_emit_rtkm_info(void *sel, _adapter *adapter)
+{
+#ifdef CONFIG_USB_HCI
+	struct recv_priv *precvpriv = &adapter->recvpriv;
+	struct recv_buf *precvbuf;
+
+	precvbuf = (struct recv_buf *)precvpriv->precv_buf;
+#endif /* CONFIG_USB_HCI */
+
+	RTW_PRINT_SEL(sel, "============[RTKM Info]============\n");
+	RTW_PRINT_SEL(sel, "MAX_RTKM_NR_PREALLOC_RECV_SKB: %d\n", rtw_rtkm_get_nr_recv_skb());
+	RTW_PRINT_SEL(sel, "MAX_RTKM_RECVBUF_SZ: %d\n", rtw_rtkm_get_buff_size());
+
+	RTW_PRINT_SEL(sel, "============[Driver Info]============\n");
+	RTW_PRINT_SEL(sel, "NR_PREALLOC_RECV_SKB: %d\n", NR_PREALLOC_RECV_SKB);
+#ifdef CONFIG_USB_HCI
+	RTW_PRINT_SEL(sel, "MAX_RECVBUF_SZ: %d\n", precvbuf->alloc_sz);
+#else /* !CONFIG_USB_HCI */
+	RTW_PRINT_SEL(sel, "MAX_RECVBUF_SZ: %d\n", MAX_RECVBUF_SZ);
+#endif /* !CONFIG_USB_HCI */
+}
+#endif /* CONFIG_PREALLOC_RX_SKB_BUFFER */
+
 u8 *rtw_rust_debug_regsty_rx_ampdu_sz_limit_by_nss_bw(_adapter *adapter)
 {
 	return adapter_to_regsty(adapter)->rx_ampdu_sz_limit_by_nss_bw[0];

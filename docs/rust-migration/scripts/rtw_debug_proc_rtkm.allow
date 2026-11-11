@@ -1,0 +1,3 @@
+# L1 allowlist for W3-234: Rust owns proc_get_rtkm_info in rtw_debug_proc_rtkm.o.
+drop proc_get_rtkm_info
+drop rtw_rust_debug_proc_emit_rtkm_info
