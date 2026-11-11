@@ -787,6 +787,31 @@ RTW_RUST_DEBUG_ADAPTER_U8(driver_rx_ampdu_spacing, driver_rx_ampdu_spacing)
 RTW_RUST_DEBUG_ADAPTER_U8(driver_ampdu_spacing, driver_ampdu_spacing)
 RTW_RUST_DEBUG_ADAPTER_U8(driver_tx_max_agg_num, driver_tx_max_agg_num)
 
+void rtw_rust_debug_log_rx_ampdu_factor(u32 factor)
+{
+	RTW_INFO("padapter->driver_rx_ampdu_factor = %x\n", factor);
+}
+
+void rtw_rust_debug_log_rx_ampdu_spacing(u32 spacing)
+{
+	RTW_INFO("padapter->driver_rx_ampdu_spacing = %x\n", spacing);
+}
+
+void rtw_rust_debug_log_tx_ampdu_spacing(u32 spacing)
+{
+	RTW_INFO("padapter->driver_ampdu_spacing = %x\n", spacing);
+}
+
+void rtw_rust_debug_log_tx_max_agg_num(u8 agg_num)
+{
+	RTW_INFO("padapter->driver_tx_max_agg_num = 0x%02x\n", agg_num);
+}
+
+void rtw_rust_debug_log_tx_quick_addba_req(u32 enable)
+{
+	RTW_INFO("tx_quick_addba_req = %d\n", enable);
+}
+
 u8 rtw_rust_debug_tx_quick_addba_req(_adapter *adapter)
 {
 	return adapter->registrypriv.tx_quick_addba_req;
@@ -2855,7 +2880,6 @@ void rtw_rust_debug_proc_emit_ps_info(void *sel, _adapter *padapter)
 	u8 lps_level;
 	static char lps_mode_str[12];
 	static char wow_lps_mode_str[12];
-	static char ips_mode_str[12];
 #ifdef CONFIG_LPS_1T1R
 	u8 lps_1t1r;
 #endif
@@ -2899,10 +2923,8 @@ void rtw_rust_debug_proc_emit_ps_info(void *sel, _adapter *padapter)
 		str = "NO IPS";
 	else if (ips_mode == IPS_LEVEL_2)
 		str = "IPS_LEVEL_2";
-	else {
-		snprintf(ips_mode_str, sizeof(ips_mode_str), "%d", ips_mode);
-		str = ips_mode_str;
-	}
+	else
+		str = "invalid ips_mode";
 
 	RTW_PRINT_SEL(sel, " IPS mode: %s\n", str);
 	RTW_PRINT_SEL(sel, " IPS enter count:%d, IPS leave count:%d\n",
@@ -4854,16 +4876,22 @@ ssize_t rtw_rust_debug_proc_set_monitor(_adapter *adapter,
 	char tmp[32];
 	u16 target_type;
 	u8 target_ch, target_offset, target_bw;
-	ssize_t rd;
 
 	if (count < 3) {
 		RTW_INFO("argument size is less than 3\n");
 		return -EFAULT;
 	}
 
-	rd = rtw_rust_debug_proc_read_user_line(buffer, count, tmp, sizeof(tmp));
-	if (rd < 0)
-		return rd;
+	if (!buffer)
+		return count;
+
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (copy_from_user(tmp, buffer, count))
+		return count;
 
 	{
 		int num = sscanf(tmp, "type %hu", &target_type);
@@ -4905,16 +4933,22 @@ ssize_t rtw_rust_debug_proc_set_simple_config(_adapter *adapter,
 {
 	char tmp[32];
 	s8 ret;
-	ssize_t rd;
 
 	if (count < 1) {
 		RTW_INFO("argument size is less than 1\n");
 		return -EFAULT;
 	}
 
-	rd = rtw_rust_debug_proc_read_user_line(buffer, count, tmp, sizeof(tmp));
-	if (rd < 0)
-		return rd;
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (!buffer)
+		return count;
+
+	if (copy_from_user(tmp, buffer, count))
+		return count;
 
 	{
 		int num = sscanf(tmp, "%hhd", &ret);
@@ -4939,14 +4973,20 @@ ssize_t rtw_rust_debug_proc_set_xmit_block(_adapter *adapter,
 {
 	char tmp[32];
 	u8 xb_mode, xb_reason;
-	ssize_t rd;
 
 	if (count < 1)
 		return -EFAULT;
 
-	rd = rtw_rust_debug_proc_read_user_line(buffer, count, tmp, sizeof(tmp));
-	if (rd < 0)
-		return rd;
+	if (count > sizeof(tmp)) {
+		rtw_warn_on(1);
+		return -EFAULT;
+	}
+
+	if (!buffer)
+		return count;
+
+	if (copy_from_user(tmp, buffer, count))
+		return count;
 
 	{
 		int num = sscanf(tmp, "%hhx %hhx", &xb_mode, &xb_reason);
