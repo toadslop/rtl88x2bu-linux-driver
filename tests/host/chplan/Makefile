@@ -8,7 +8,8 @@ RUST_CHPLAN := $(ROOT)/rust/rtw_chplan.rs
 
 CC      := gcc
 RUSTC   := rustc
-CFLAGS  := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable -O2 \
+CFLAGS  := -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-const-variable \
+           -Wno-unterminated-string-initialization -O2 \
            -I$(HOST_INC) -I$(CORE) \
            -include $(HOST_INC)/host_autoconf.h \
            -DHOST_CHPLAN_TEST
