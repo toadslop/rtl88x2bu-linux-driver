@@ -4996,6 +4996,32 @@ void rtw_rust_set_ps_p2p_ps_enable(PADAPTER padapter)
 #endif
 }
 
+void rtw_rust_set_ps_tdls_nulldata(PADAPTER padapter, u8 pwr_bit)
+{
+#ifdef CONFIG_TDLS
+	struct sta_priv *pstapriv = &padapter->stapriv;
+	int i;
+	_list	*plist, *phead;
+	struct sta_info *ptdls_sta;
+
+	for (i = 0; i < NUM_STA; i++) {
+		phead = &(pstapriv->sta_hash[i]);
+		plist = get_next(phead);
+
+		while ((rtw_end_of_queue_search(phead, plist)) == _FALSE) {
+			ptdls_sta = LIST_CONTAINOR(plist, struct sta_info, hash_list);
+
+			if (ptdls_sta->tdls_sta_state & TDLS_LINKED_STATE)
+				issue_nulldata_to_TDLS_peer_STA(padapter, ptdls_sta->cmn.mac_addr, pwr_bit, 0, 0);
+			plist = get_next(plist);
+		}
+	}
+#else
+	(void)padapter;
+	(void)pwr_bit;
+#endif
+}
+
 u8 rtw_rust_set_ps_rpwm_pslv(PADAPTER padapter, u8 base_pslv)
 {
 	u8 pslv = base_pslv;
