@@ -158,6 +158,13 @@ WOW_KA_RUST   := $(ROOT)/rust/rtw_debug_proc_wow_keepalive.rs
 WOW_KA_L2     := test_proc_wow_keepalive.c
 WOW_KA_CFG    := -DCONFIG_WOWLAN -DCONFIG_WOW_KEEP_ALIVE_PATTERN
 
+# W3-236 proc p2p_wowlan_info dump (CONFIG_P2P_WOWLAN)
+WOW_P2P_ORACLE := debug_proc_wow_p2p_c_oracle.c
+WOW_P2P_SHIM   := host_rtw_debug_proc_wow_p2p_shim.c
+WOW_P2P_RUST   := $(ROOT)/rust/rtw_debug_proc_wow_p2p.rs
+WOW_P2P_L2     := test_proc_wow_p2p.c
+WOW_P2P_CFG    := -DCONFIG_P2P_WOWLAN
+
 # W3-208 proc vht_24g_enable get/set
 VHT_ORACLE := debug_proc_vht_c_oracle.c
 VHT_SHIM   := host_rtw_debug_proc_vht_shim.c
@@ -248,6 +255,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-wow-keepalive-c test-proc-wow-keepalive-rust \
+	test-proc-wow-p2p-c test-proc-wow-p2p-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
 	test-proc-smps-c test-proc-smps-rust \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
@@ -278,6 +286,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-monitor-c test-proc-monitor-rust \
 	test-proc-ps-info-c test-proc-ps-info-rust \
 	test-proc-wow-keepalive-c test-proc-wow-keepalive-rust \
+	test-proc-wow-p2p-c test-proc-wow-p2p-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
 	test-proc-smps-c test-proc-smps-rust \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
@@ -430,6 +439,27 @@ test_proc_wow_keepalive_rust: $(WOW_KA_L2) librust_rtw_debug_proc_wow_keepalive.
 	$(CC) $(CFLAGS) $(WOW_KA_CFG) -DRUST_RTW_DEBUG_PROC_WOW_KEEPALIVE_ORACLE -o $@ \
 		$(WOW_KA_L2) $(WOW_KA_SHIM) $(HOST_JSON) \
 		librust_rtw_debug_proc_wow_keepalive.a
+
+test-proc-wow-p2p-c: test_proc_wow_p2p
+	./test_proc_wow_p2p debug_proc_wow_p2p_vectors.json
+
+test_proc_wow_p2p: $(WOW_P2P_L2) $(WOW_P2P_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(WOW_P2P_CFG) -o $@ $(WOW_P2P_L2) $(WOW_P2P_ORACLE) $(HOST_JSON)
+
+librust_rtw_debug_proc_wow_p2p.a: $(WOW_P2P_RUST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_rtw_debug_proc_wow_p2p_test \
+		--cfg config_p2p_wowlan --cfg config_proc_debug \
+		--crate-type staticlib $(WOW_P2P_RUST) -o $@
+
+test-proc-wow-p2p-rust: test_proc_wow_p2p_rust
+	./test_proc_wow_p2p_rust debug_proc_wow_p2p_vectors.json
+
+test_proc_wow_p2p_rust: $(WOW_P2P_L2) librust_rtw_debug_proc_wow_p2p.a \
+		$(WOW_P2P_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(WOW_P2P_CFG) -DRUST_RTW_DEBUG_PROC_WOW_P2P_ORACLE -o $@ \
+		$(WOW_P2P_L2) $(WOW_P2P_SHIM) $(HOST_JSON) \
+		librust_rtw_debug_proc_wow_p2p.a
 
 test-proc-vht-c: test_proc_vht_24g
 	./test_proc_vht_24g debug_proc_vht_vectors.json
@@ -977,6 +1007,8 @@ clean:
 		test_proc_wow_registry test_proc_wow_registry_rust librust_rtw_debug_proc_wow.a \
 		test_proc_wow_keepalive test_proc_wow_keepalive_rust \
 		librust_rtw_debug_proc_wow_keepalive.a \
+		test_proc_wow_p2p test_proc_wow_p2p_rust \
+		librust_rtw_debug_proc_wow_p2p.a \
 		test_proc_vht_24g test_proc_vht_24g_rust librust_rtw_debug_proc_vht.a \
 		test_proc_en_fwps test_proc_en_fwps_rust librust_rtw_debug_proc_fwps.a \
 		test_proc_fw_offload test_proc_fw_offload_rust \

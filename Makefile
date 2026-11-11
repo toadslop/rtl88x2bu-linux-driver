@@ -5544,6 +5544,21 @@ rust-check-symbols-rtw-debug-proc-wow-keepalive: rust-objects-rtw-debug-proc-wow
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_wow_keepalive_c_ref.o NEW=rust/rtw_debug_proc_wow_keepalive.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_wow_keepalive.allow ALLOW_VACUOUS=1
 
+# W3-236: host C oracle vs rust/rtw_debug_proc_wow_p2p.o (P2P WoWLAN trigger info proc).
+rust-objects-rtw-debug-proc-wow-p2p:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-wow-p2p"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) CONFIG_P2P_WOWLAN=y -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_wow_p2p.o
+rust-objects-rtw-debug-proc-wow-p2p-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-DCONFIG_P2P_WOWLAN \
+		-o tests/host/debug/debug_proc_wow_p2p_c_ref.o \
+		tests/host/debug/debug_proc_wow_p2p_c_oracle.c
+rust-check-symbols-rtw-debug-proc-wow-p2p: rust-objects-rtw-debug-proc-wow-p2p-c rust-objects-rtw-debug-proc-wow-p2p
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_wow_p2p_c_ref.o NEW=rust/rtw_debug_proc_wow_p2p.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_wow_p2p.allow ALLOW_VACUOUS=1
+
 # W3-207: host C oracle vs rust/rtw_debug_proc_amsdu.o (proc tx AMSDU get/set).
 rust-objects-rtw-debug-proc-amsdu:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-amsdu"; exit 1; }
