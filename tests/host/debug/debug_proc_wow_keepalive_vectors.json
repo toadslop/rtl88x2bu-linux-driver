@@ -1,0 +1,26 @@
+{
+  "vectors": [
+    {
+      "name": "keepalive_pattern_len_and_period",
+      "wowlan_keep_alive_mode": 2,
+      "keep_alive_pattern_loc": 3,
+      "keep_alive_pattern_len": 4,
+      "pattern_hex": "01020304",
+      "wowlan_keep_alive_period": 5,
+      "wowlan_keep_alive_retry_counter": 3,
+      "wowlan_keep_alive_retry_interval": 2,
+      "expect": "wowlan_keep_alive_mode: 2\nLocKeepAlive: 3\nkeep_alive_pattern_len: 4\nkeep_alive_pattern= \n[0x1] [0x2] [0x3] [0x4] \n wowlan_keep_alive_period= 500 ms\n wowlan_keep_alive_retry_counter= 3\n wowlan_keep_alive_retry_interval= 200 ms\n"
+    },
+    {
+      "name": "keepalive_zero_len",
+      "wowlan_keep_alive_mode": 0,
+      "keep_alive_pattern_loc": 0,
+      "keep_alive_pattern_len": 0,
+      "pattern_hex": "",
+      "wowlan_keep_alive_period": 1,
+      "wowlan_keep_alive_retry_counter": 0,
+      "wowlan_keep_alive_retry_interval": 0,
+      "expect": "wowlan_keep_alive_mode: 0\nLocKeepAlive: 0\nkeep_alive_pattern_len: 0\nkeep_alive_pattern= \n\n wowlan_keep_alive_period= 100 ms\n wowlan_keep_alive_retry_counter= 0\n wowlan_keep_alive_retry_interval= 0 ms\n"
+    }
+  ]
+}
