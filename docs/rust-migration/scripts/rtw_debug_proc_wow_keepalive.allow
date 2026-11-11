@@ -1,0 +1,3 @@
+# L1 allowlist for W3-235: Rust owns proc_dump_wow_keep_alive_info in rtw_debug_proc_wow_keepalive.o.
+drop proc_dump_wow_keep_alive_info
+drop rtw_rust_debug_proc_emit_wow_keep_alive_info

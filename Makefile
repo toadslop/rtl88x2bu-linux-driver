@@ -2915,6 +2915,19 @@ endif
 ifeq ($(CONFIG_WOWLAN), y)
 rustflags-y += --cfg config_wowlan
 endif
+_rust_cfg_wow_keep_alive_pattern :=
+ifneq ($(filter -DCONFIG_WOW_KEEP_ALIVE_PATTERN,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_wow_keep_alive_pattern := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_WOW_KEEP_ALIVE_PATTERN\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_wow_keep_alive_pattern := y
+endif
+ifeq ($(CONFIG_WOW_KEEP_ALIVE_PATTERN), y)
+_rust_cfg_wow_keep_alive_pattern := y
+endif
+ifneq ($(_rust_cfg_wow_keep_alive_pattern),)
+rustflags-y += --cfg config_wow_keep_alive_pattern
+endif
 _rust_cfg_gpio_wakeup :=
 ifeq ($(CONFIG_GPIO_WAKEUP), y)
 _rust_cfg_gpio_wakeup := y
@@ -3488,6 +3501,9 @@ ifeq ($(CONFIG_WOWLAN), y)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_wow.o
 else ifeq ($(CONFIG_GPIO_WAKEUP), y)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_wow.o
+endif
+ifneq ($(_rust_cfg_wow_keep_alive_pattern),)
+$(MODULE_NAME)-y += rust/rtw_debug_proc_wow_keepalive.o
 endif
 _rust_obj_debug_proc_amsdu :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_TX_AMSDU\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
@@ -5491,6 +5507,21 @@ rust-objects-rtw-debug-proc-wow-c:
 rust-check-symbols-rtw-debug-proc-wow: rust-objects-rtw-debug-proc-wow-c rust-objects-rtw-debug-proc-wow
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_wow_c_ref.o NEW=rust/rtw_debug_proc_wow.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_wow.allow ALLOW_VACUOUS=1
+
+# W3-235: host C oracle vs rust/rtw_debug_proc_wow_keepalive.o (keep-alive pattern dump).
+rust-objects-rtw-debug-proc-wow-keepalive:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug-proc-wow-keepalive"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) CONFIG_WOWLAN=y CONFIG_WOW_KEEP_ALIVE_PATTERN=y -C $(KSRC) M=$(shell pwd) rust/rtw_debug_proc_wow_keepalive.o
+rust-objects-rtw-debug-proc-wow-keepalive-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-DCONFIG_WOWLAN -DCONFIG_WOW_KEEP_ALIVE_PATTERN \
+		-o tests/host/debug/debug_proc_wow_keepalive_c_ref.o \
+		tests/host/debug/debug_proc_wow_keepalive_c_oracle.c
+rust-check-symbols-rtw-debug-proc-wow-keepalive: rust-objects-rtw-debug-proc-wow-keepalive-c rust-objects-rtw-debug-proc-wow-keepalive
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_wow_keepalive_c_ref.o NEW=rust/rtw_debug_proc_wow_keepalive.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_wow_keepalive.allow ALLOW_VACUOUS=1
 
 # W3-207: host C oracle vs rust/rtw_debug_proc_amsdu.o (proc tx AMSDU get/set).
 rust-objects-rtw-debug-proc-amsdu:

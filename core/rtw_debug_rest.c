@@ -5767,6 +5767,7 @@ ssize_t proc_set_tx_ring_ext(struct file *file, const char __user *buffer, size_
 
 #ifdef CONFIG_WOWLAN
 #ifdef CONFIG_WOW_KEEP_ALIVE_PATTERN
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_dump_wow_keep_alive_info(struct seq_file *m, void *v) {
 	struct net_device *dev = m->private;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
@@ -5788,6 +5789,7 @@ int proc_dump_wow_keep_alive_info(struct seq_file *m, void *v) {
 	RTW_PRINT_SEL(m," wowlan_keep_alive_retry_interval= %d ms\n", pwrpriv->wowlan_keep_alive_retry_interval*100);
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-235 in rust/rtw_debug_proc_wow_keepalive.rs */
 #endif /* CONFIG_WOW_KEEP_ALIVE_PATTERN*/
 
 #endif /*CONFIG_WOWLAN*/
