@@ -36,8 +36,7 @@ RUST_HAL_DM := $(ROOT)/rust/hal_dm.rs
 RUST_HAL_PHY := $(ROOT)/rust/hal_phy.rs
 RUST_HAL_INTF := $(ROOT)/rust/hal_intf.rs
 RUST_HAL_HALMAC := $(ROOT)/rust/hal_halmac.rs
-SEC_CAM_ENT_ORACLE := hal_com_sec_cam_ent_c_oracle.c
-SEC_CAM_ENT_SHIM := hal_com_sec_cam_ent_shim.c
+SEC_CAM_ENT_L2 := hal_com_sec_cam_ent_l2.c
 RUST_SEC_CAM_ENT := $(ROOT)/rust/hal_com_sec_cam_ent_host.rs
 
 CC     := gcc
@@ -755,10 +754,8 @@ test_hal_usb_async_write_rust: test_hal_usb_async_write.c librust_hal_usb_async_
 test-sec-read-cam-ent: test_sec_read_cam_ent_null_mac
 	./test_sec_read_cam_ent_null_mac
 
-test_sec_read_cam_ent_null_mac: test_sec_read_cam_ent_null_mac.c \
-		$(SEC_CAM_ENT_ORACLE) $(SEC_CAM_ENT_SHIM)
-	$(CC) $(CFLAGS) -o $@ test_sec_read_cam_ent_null_mac.c \
-		$(SEC_CAM_ENT_ORACLE) $(SEC_CAM_ENT_SHIM)
+test_sec_read_cam_ent_null_mac: test_sec_read_cam_ent_null_mac.c $(SEC_CAM_ENT_L2)
+	$(CC) $(CFLAGS) -o $@ test_sec_read_cam_ent_null_mac.c $(SEC_CAM_ENT_L2)
 
 librust_hal_com_sec_cam_ent.a: $(RUST_SEC_CAM_ENT)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
@@ -768,10 +765,9 @@ test-sec-read-cam-ent-rust: test_sec_read_cam_ent_null_mac_rust
 	./test_sec_read_cam_ent_null_mac_rust
 
 test_sec_read_cam_ent_null_mac_rust: test_sec_read_cam_ent_null_mac.c \
-		$(SEC_CAM_ENT_ORACLE) $(SEC_CAM_ENT_SHIM) librust_hal_com_sec_cam_ent.a
+		$(SEC_CAM_ENT_L2) librust_hal_com_sec_cam_ent.a
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_SEC_CAM_ENT_ORACLE -o $@ \
-		test_sec_read_cam_ent_null_mac.c $(SEC_CAM_ENT_ORACLE) $(SEC_CAM_ENT_SHIM) \
-		librust_hal_com_sec_cam_ent.a
+		test_sec_read_cam_ent_null_mac.c $(SEC_CAM_ENT_L2) librust_hal_com_sec_cam_ent.a
 
 clean:
 	rm -f test_hw_rate_map test_hw_rate_map_rust librust_hal_com.a \
