@@ -28,6 +28,7 @@
 //! W3-216 proc rf4ce_state + sreset handlers live in `rtw_debug_proc_sreset.rs`.
 //! W3-217/W3-218 WoWLAN registry + GPIO + pattern proc handlers live in `rtw_debug_proc_wow.rs`.
 //! W3-235 WoWLAN keep-alive pattern dump proc lives in `rtw_debug_proc_wow_keepalive.rs`.
+//! W3-236 P2P WoWLAN trigger info proc lives in `rtw_debug_proc_wow_p2p.rs`.
 //! W3-214 proc malloc cnt + best channel live in `rtw_debug_proc_misc.rs`.
 //! W3-220 proc monitor / simple_config / xmit_block live in `rtw_debug_proc_monitor.rs`.
 //! W3-221 proc 11w TX mgmt inject test leaves live in `rtw_debug_proc_tx_mgmt.rs`.

@@ -597,6 +597,9 @@ ssize_t proc_set_wowlan_gpio_info(struct file *file, const char __user *buffer,
 
 #ifdef CONFIG_P2P_WOWLAN
 int proc_get_p2p_wowlan_info(struct seq_file *m, void *v);
+#if defined(CONFIG_RUST) && defined(CONFIG_RUST_RTW_DEBUG)
+void rtw_rust_debug_proc_emit_p2p_wowlan_info(void *sel, _adapter *adapter);
+#endif /* CONFIG_RUST && CONFIG_RUST_RTW_DEBUG */
 #endif /* CONFIG_P2P_WOWLAN */
 
 int proc_get_new_bcn_max(struct seq_file *m, void *v);
