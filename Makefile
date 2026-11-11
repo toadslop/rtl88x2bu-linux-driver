@@ -3158,6 +3158,16 @@ endif
 ifneq ($(_rust_cfg_dbg_rx_counter_dump),)
 rustflags-y += --cfg config_dbg_rx_counter_dump
 endif
+_rust_cfg_dbg_txbd_desc_dump :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+DBG_TXBD_DESC_DUMP' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_dbg_txbd_desc_dump := y
+endif
+ifneq ($(filter -DDBG_TXBD_DESC_DUMP,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_dbg_txbd_desc_dump := y
+endif
+ifneq ($(_rust_cfg_dbg_txbd_desc_dump),)
+rustflags-y += --cfg dbg_txbd_desc_dump
+endif
 _rust_cfg_dbg_config_error_detect :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+DBG_CONFIG_ERROR_DETECT' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 _rust_cfg_dbg_config_error_detect := y
@@ -3531,6 +3541,7 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_cal.o
 endif
 ifeq ($(CONFIG_PCI_HCI), y)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_pci.o
+$(MODULE_NAME)-y += rust/rtw_debug_proc_rings.o
 endif
 ifneq ($(_rust_cfg_power_saving),)
 $(MODULE_NAME)-y += rust/rtw_pwrctrl.o
@@ -5582,6 +5593,21 @@ rust-objects-rtw-debug-proc-pci-c:
 rust-check-symbols-rtw-debug-proc-pci: rust-objects-rtw-debug-proc-pci-c rust-objects-rtw-debug-proc-pci
 	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_pci_c_ref.o NEW=rust/rtw_debug_proc_pci.o \
 		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_pci.allow ALLOW_VACUOUS=1
+
+# W3-233: host C stub vs rust/rtw_debug_proc_rings.o (TRX ring proc dumps).
+rust-objects-rtw-debug-proc-rings:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 CONFIG_PCI_HCI=y rust-objects-rtw-debug-proc-rings"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) CONFIG_PCI_HCI=y -C $(KSRC) M=$(shell pwd) \
+		rust/rtw_debug_proc_rings.o
+rust-objects-rtw-debug-proc-rings-c:
+	@mkdir -p tests/host/debug
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/debug/debug_proc_rings_c_ref.o \
+		tests/host/debug/host_rtw_debug_proc_rings_c_ref.c
+rust-check-symbols-rtw-debug-proc-rings: rust-objects-rtw-debug-proc-rings-c rust-objects-rtw-debug-proc-rings
+	$(MAKE) rust-check-symbols OLD=tests/host/debug/debug_proc_rings_c_ref.o NEW=rust/rtw_debug_proc_rings.o \
+		ALLOWLIST=docs/rust-migration/scripts/rtw_debug_proc_rings.allow ALLOW_VACUOUS=1
 
 # W3-214: host C oracle vs rust/rtw_debug_proc_misc.o (malloc cnt + best channel procs).
 rust-objects-rtw-debug-proc-misc:

@@ -1,0 +1,5 @@
+# L1 allowlist for W3-233 PR1: Rust owns rx/tx ring proc getters in rtw_debug_proc_rings.o.
+drop proc_get_rx_ring
+drop proc_get_tx_ring
+drop rtw_rust_debug_proc_emit_rx_ring
+drop rtw_rust_debug_proc_emit_tx_ring

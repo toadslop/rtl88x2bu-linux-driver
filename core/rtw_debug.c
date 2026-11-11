@@ -543,6 +543,84 @@ void rtw_rust_debug_proc_emit_pci_aspm(void *sel, _adapter *adapter)
 		      pcipriv->aspm_mode == ASPM_MODE_PS ? "PS" : "Und");
 #endif
 }
+
+void rtw_rust_debug_proc_emit_rx_ring(void *sel, _adapter *adapter)
+{
+	_irqL irqL;
+	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(adapter);
+	struct recv_priv *precvpriv = &adapter->recvpriv;
+	struct rtw_rx_ring *rx_ring = &precvpriv->rx_ring[RX_MPDU_QUEUE];
+	int i, j;
+
+	RTW_PRINT_SEL(sel, "rx ring (%p)\n", rx_ring);
+	RTW_PRINT_SEL(sel, "  dma: 0x%08x\n", (int) rx_ring->dma);
+	RTW_PRINT_SEL(sel, "  idx: %d\n", rx_ring->idx);
+
+	_enter_critical(&pdvobjpriv->irq_th_lock, &irqL);
+	for (i = 0; i < precvpriv->rxringcount; i++) {
+#ifdef CONFIG_TRX_BD_ARCH
+		struct rx_buf_desc *entry = &rx_ring->buf_desc[i];
+#else
+		struct recv_stat *entry = &rx_ring->desc[i];
+#endif
+		struct sk_buff *skb = rx_ring->rx_buf[i];
+
+		RTW_PRINT_SEL(sel, "  desc[%03d]: %p, rx_buf[%03d]: 0x%08x\n",
+			      i, entry, i, cpu_to_le32(*((dma_addr_t *)skb->cb)));
+
+		for (j = 0; j < sizeof(*entry) / 4; j++) {
+			if ((j % 4) == 0)
+				RTW_PRINT_SEL(sel, "  0x%03x", j);
+
+			RTW_PRINT_SEL(sel, " 0x%08x ", ((int *) entry)[j]);
+
+			if ((j % 4) == 3)
+				RTW_PRINT_SEL(sel, "\n");
+		}
+	}
+	_exit_critical(&pdvobjpriv->irq_th_lock, &irqL);
+}
+
+void rtw_rust_debug_proc_emit_tx_ring(void *sel, _adapter *adapter)
+{
+	_irqL irqL;
+	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(adapter);
+	struct xmit_priv *pxmitpriv = &adapter->xmitpriv;
+	int i, j, k;
+
+	_enter_critical(&pdvobjpriv->irq_th_lock, &irqL);
+	for (i = 0; i < PCI_MAX_TX_QUEUE_COUNT; i++) {
+		struct rtw_tx_ring *tx_ring = &pxmitpriv->tx_ring[i];
+
+		RTW_PRINT_SEL(sel, "tx ring[%d] (%p)\n", i, tx_ring);
+		RTW_PRINT_SEL(sel, "  dma: 0x%08x\n", (int) tx_ring->dma);
+		RTW_PRINT_SEL(sel, "  idx: %d\n", tx_ring->idx);
+		RTW_PRINT_SEL(sel, "  entries: %d\n", tx_ring->entries);
+		RTW_PRINT_SEL(sel, "  qlen: %d\n", tx_ring->qlen);
+
+		for (j = 0; j < pxmitpriv->txringcount[i]; j++) {
+#ifdef CONFIG_TRX_BD_ARCH
+			struct tx_buf_desc *entry = &tx_ring->buf_desc[j];
+			RTW_PRINT_SEL(sel, "  buf_desc[%03d]: %p\n", j, entry);
+#else
+			struct tx_desc *entry = &tx_ring->desc[j];
+			RTW_PRINT_SEL(sel, "  desc[%03d]: %p\n", j, entry);
+#endif
+
+			for (k = 0; k < sizeof(*entry) / 4; k++) {
+				if ((k % 4) == 0)
+					RTW_PRINT_SEL(sel, "  0x%03x", k);
+
+				RTW_PRINT_SEL(sel, " 0x%08x ", ((int *) entry)[k]);
+
+				if ((k % 4) == 3)
+					RTW_PRINT_SEL(sel, "\n");
+			}
+		}
+	}
+	_exit_critical(&pdvobjpriv->irq_th_lock, &irqL);
+}
+
 #endif /* CONFIG_PCI_HCI */
 
 u8 *rtw_rust_debug_regsty_rx_ampdu_sz_limit_by_nss_bw(_adapter *adapter)

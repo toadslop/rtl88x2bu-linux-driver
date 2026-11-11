@@ -5524,6 +5524,8 @@ int proc_get_pci_aspm(struct seq_file *m, void *v)
 
 #endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-232 getters in rust/rtw_debug_proc_pci.rs */
 
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
+
 int proc_get_rx_ring(struct seq_file *m, void *v)
 {
 	_irqL irqL;
@@ -5609,6 +5611,8 @@ int proc_get_tx_ring(struct seq_file *m, void *v)
 
 	return 0;
 }
+
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-233 PR1 rx/tx in rust/rtw_debug_proc_rings.rs */
 
 #ifdef DBG_TXBD_DESC_DUMP
 int proc_get_tx_ring_ext(struct seq_file *m, void *v)
