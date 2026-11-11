@@ -1,0 +1,25 @@
+{
+  "vectors": [
+    {
+      "name": "rx_ring_empty_header",
+      "get": "rx_ring",
+      "rx_dma": 4096,
+      "rx_idx": 3,
+      "expect_contains": "rx ring",
+      "expect_contains2": "dma: 0x00001000"
+    },
+    {
+      "name": "tx_ring_empty_header",
+      "get": "tx_ring",
+      "tx_dma": 8192,
+      "expect_contains": "tx ring[0]",
+      "expect_contains2": "dma: 0x00002000"
+    },
+    {
+      "name": "tx_ring_ext_disabled",
+      "get": "tx_ring_ext",
+      "expect_contains": "tx ring ext dump settings",
+      "expect_contains2": "Dump function is disabled"
+    }
+  ]
+}
