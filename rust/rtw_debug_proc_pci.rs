@@ -156,6 +156,17 @@ pub extern "C" fn proc_set_pci_conf_space(
 #[cfg(any(config_pci_hci, host_rtw_debug_proc_pci_test))]
 #[cfg(any(config_proc_debug, host_rtw_debug_proc_pci_test))]
 #[no_mangle]
+pub extern "C" fn proc_get_pci_bridge_conf_space(m: *mut c_void, _v: *mut c_void) -> c_int {
+    let adapter = adapter_from_seq(m);
+    if !adapter.is_null() {
+        unsafe { rtw_rust_debug_proc_emit_pci_conf_space(m, adapter, 1) };
+    }
+    0
+}
+
+#[cfg(any(config_pci_hci, host_rtw_debug_proc_pci_test))]
+#[cfg(any(config_proc_debug, host_rtw_debug_proc_pci_test))]
+#[no_mangle]
 pub extern "C" fn proc_get_pci_conf_space(m: *mut c_void, _v: *mut c_void) -> c_int {
     let adapter = adapter_from_seq(m);
     if !adapter.is_null() {
