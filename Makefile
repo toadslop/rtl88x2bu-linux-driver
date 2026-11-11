@@ -149,6 +149,7 @@ CONFIG_HIGH_ACTIVE_HST2DEV = n
 CONFIG_PNO_SUPPORT = n
 CONFIG_PNO_SET_DEBUG = n
 CONFIG_AP_WOWLAN = n
+CONFIG_P2P_WOWLAN = n
 # Part of WoWLAN. Off unless the build asks for them. Do not force these from
 # the Rust block: CONFIG_WOWLAN changes struct _ADAPTER layout.
 CONFIG_WAR_OFFLOAD = n
@@ -1272,6 +1273,10 @@ endif
 ifeq ($(CONFIG_SDIO_HCI), y)
 ccflags-y += -DCONFIG_RTW_SDIO_PM_KEEP_POWER
 endif
+endif
+
+ifeq ($(CONFIG_P2P_WOWLAN), y)
+ccflags-y += -DCONFIG_P2P_WOWLAN
 endif
 
 ifeq ($(CONFIG_LAYER2_ROAMING), y)
@@ -2928,6 +2933,19 @@ endif
 ifneq ($(_rust_cfg_wow_keep_alive_pattern),)
 rustflags-y += --cfg config_wow_keep_alive_pattern
 endif
+_rust_cfg_p2p_wowlan :=
+ifneq ($(filter -DCONFIG_P2P_WOWLAN,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_p2p_wowlan := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_P2P_WOWLAN\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_p2p_wowlan := y
+endif
+ifeq ($(CONFIG_P2P_WOWLAN), y)
+_rust_cfg_p2p_wowlan := y
+endif
+ifneq ($(_rust_cfg_p2p_wowlan),)
+rustflags-y += --cfg config_p2p_wowlan
+endif
 _rust_cfg_gpio_wakeup :=
 ifeq ($(CONFIG_GPIO_WAKEUP), y)
 _rust_cfg_gpio_wakeup := y
@@ -3504,6 +3522,9 @@ $(MODULE_NAME)-y += rust/rtw_debug_proc_wow.o
 endif
 ifneq ($(_rust_cfg_wow_keep_alive_pattern),)
 $(MODULE_NAME)-y += rust/rtw_debug_proc_wow_keepalive.o
+endif
+ifneq ($(_rust_cfg_p2p_wowlan),)
+$(MODULE_NAME)-y += rust/rtw_debug_proc_wow_p2p.o
 endif
 _rust_obj_debug_proc_amsdu :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_TX_AMSDU\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)

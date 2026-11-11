@@ -5490,6 +5490,41 @@ void rtw_rust_debug_proc_emit_wow_keep_alive_info(void *sel, _adapter *adapter)
 
 #endif /* CONFIG_WOWLAN */
 
+#ifdef CONFIG_P2P_WOWLAN
+void rtw_rust_debug_proc_emit_p2p_wowlan_info(void *sel, _adapter *adapter)
+{
+	struct wifidirect_info *pwdinfo = &(adapter->wdinfo);
+	struct p2p_wowlan_info peerinfo = pwdinfo->p2p_wow_info;
+
+	if (_TRUE == peerinfo.is_trigger) {
+		RTW_PRINT_SEL(sel, "is_trigger: TRUE\n");
+		switch (peerinfo.wowlan_recv_frame_type) {
+		case P2P_WOWLAN_RECV_NEGO_REQ:
+			RTW_PRINT_SEL(sel, "Frame Type: Nego Request\n");
+			break;
+		case P2P_WOWLAN_RECV_INVITE_REQ:
+			RTW_PRINT_SEL(sel, "Frame Type: Invitation Request\n");
+			break;
+		case P2P_WOWLAN_RECV_PROVISION_REQ:
+			RTW_PRINT_SEL(sel, "Frame Type: Provision Request\n");
+			break;
+		default:
+			break;
+		}
+		RTW_PRINT_SEL(sel, "Peer Addr: " MAC_FMT "\n",
+			      MAC_ARG(peerinfo.wowlan_peer_addr));
+		RTW_PRINT_SEL(sel, "Peer WPS Config: %x\n",
+			      peerinfo.wowlan_peer_wpsconfig);
+		RTW_PRINT_SEL(sel, "Persistent Group: %d\n",
+			      peerinfo.wowlan_peer_is_persistent);
+		RTW_PRINT_SEL(sel, "Intivation Type: %d\n",
+			      peerinfo.wowlan_peer_invitation_type);
+	} else {
+		RTW_PRINT_SEL(sel, "is_trigger: False\n");
+	}
+}
+#endif /* CONFIG_P2P_WOWLAN */
+
 #ifdef CONFIG_GPIO_WAKEUP
 void rtw_rust_debug_proc_emit_wowlan_gpio_info(void *sel, _adapter *adapter)
 {

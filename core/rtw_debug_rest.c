@@ -5795,6 +5795,7 @@ int proc_dump_wow_keep_alive_info(struct seq_file *m, void *v) {
 #endif /*CONFIG_WOWLAN*/
 
 #ifdef CONFIG_P2P_WOWLAN
+#if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
 int proc_get_p2p_wowlan_info(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -5824,6 +5825,7 @@ int proc_get_p2p_wowlan_info(struct seq_file *m, void *v)
 		RTW_PRINT_SEL(m, "is_trigger: False\n");
 	return 0;
 }
+#endif /* !CONFIG_RUST || !CONFIG_RUST_RTW_DEBUG — W3-236 in rust/rtw_debug_proc_wow_p2p.rs */
 #endif /* CONFIG_P2P_WOWLAN */
 #ifdef CONFIG_BCN_CNT_CONFIRM_HDL
 #if !defined(CONFIG_RUST) || !defined(CONFIG_RUST_RTW_DEBUG)
