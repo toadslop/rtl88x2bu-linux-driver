@@ -6,9 +6,22 @@
 
 #include "host_rtw_debug_proc_ampdu_types.h"
 
+static int g_warn_on_count;
+
+int host_rtw_debug_proc_warn_on_count(void)
+{
+	return g_warn_on_count;
+}
+
+void host_rtw_debug_proc_reset_warn_on_count(void)
+{
+	g_warn_on_count = 0;
+}
+
 static inline void rtw_warn_on(int cond)
 {
-	(void)cond;
+	if (cond)
+		g_warn_on_count++;
 }
 
 struct host_proc_seq {

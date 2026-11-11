@@ -53,6 +53,14 @@
       "field": "tx_agg",
       "input": "2a",
       "expect": 42
+    },
+    {
+      "name": "rx_factor_oversize",
+      "field": "rx_factor",
+      "input": "2",
+      "set_count": 33,
+      "set_expect_ret": -14,
+      "expect_warn_on": 1
     }
   ]
 }

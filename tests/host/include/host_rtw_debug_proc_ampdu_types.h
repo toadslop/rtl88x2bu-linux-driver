@@ -36,4 +36,7 @@ int proc_get_tx_aval_th(struct seq_file *m, void *v);
 long proc_set_tx_aval_th(void *file, const void *buffer, unsigned long count,
 			 long *pos, void *data);
 
+int host_rtw_debug_proc_warn_on_count(void);
+void host_rtw_debug_proc_reset_warn_on_count(void);
+
 #endif
