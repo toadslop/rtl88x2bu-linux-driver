@@ -240,9 +240,8 @@ fn generic_proc_set(
     if buffer.is_null() {
         return count as c_long;
     }
-    let n = unsafe {
-        rtw_rust_debug_proc_read_user_line(buffer, count, tmp.as_mut_ptr(), tmp.len())
-    };
+    let n =
+        unsafe { rtw_rust_debug_proc_read_user_line(buffer, count, tmp.as_mut_ptr(), tmp.len()) };
     if n < 0 {
         return n;
     }
@@ -346,9 +345,8 @@ pub extern "C" fn proc_set_rx_ampdu(
     if buffer.is_null() {
         return count as c_long;
     }
-    let n = unsafe {
-        rtw_rust_debug_proc_read_user_line(buffer, count, tmp.as_mut_ptr(), tmp.len())
-    };
+    let n =
+        unsafe { rtw_rust_debug_proc_read_user_line(buffer, count, tmp.as_mut_ptr(), tmp.len()) };
     if n > 0 {
         apply_set_rx_ampdu_from_tmp(adapter, tmp.as_ptr() as *const u8);
     } else if n < 0 {
@@ -560,9 +558,7 @@ pub extern "C" fn proc_set_tx_aval_th(
     generic_proc_set(buffer, count, data, |adapter, tmp| {
         let mut mode = 0u32;
         let mut threshold = 0u32;
-        let num = unsafe {
-            rtw_rust_debug_proc_sscanf_u32_pair(tmp, &mut mode, &mut threshold)
-        };
+        let num = unsafe { rtw_rust_debug_proc_sscanf_u32_pair(tmp, &mut mode, &mut threshold) };
         if num >= 1 {
             unsafe { rtw_rust_debug_set_tx_aval_int_thr_mode(adapter, mode as U8) };
         }
