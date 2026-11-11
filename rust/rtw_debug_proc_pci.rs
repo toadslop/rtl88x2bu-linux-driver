@@ -96,6 +96,9 @@ fn apply_pci_conf_set(
     let n =
         unsafe { rtw_rust_debug_proc_read_user_line(buffer, count, tmp.as_mut_ptr(), tmp.len()) };
     if n <= 0 {
+        if count > PROC_SET_TMP {
+            return n;
+        }
         return count as c_long;
     }
     let mut reg = 0u32;

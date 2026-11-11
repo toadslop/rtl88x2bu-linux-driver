@@ -224,6 +224,10 @@ fn generic_proc_set(
         unsafe { rtw_rust_debug_proc_read_user_line(buffer, count, tmp.as_mut_ptr(), tmp.len()) };
     if n > 0 {
         apply(adapter, tmp.as_ptr() as *const u8);
+        return count as c_long;
+    }
+    if count > PROC_SET_TMP {
+        return n;
     }
     count as c_long
 }
@@ -328,6 +332,10 @@ pub extern "C" fn proc_set_rx_ampdu(
         unsafe { rtw_rust_debug_proc_read_user_line(buffer, count, tmp.as_mut_ptr(), tmp.len()) };
     if n > 0 {
         apply_set_rx_ampdu_from_tmp(adapter, tmp.as_ptr() as *const u8);
+        return count as c_long;
+    }
+    if count > PROC_SET_TMP {
+        return n;
     }
     count as c_long
 }
