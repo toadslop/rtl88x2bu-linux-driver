@@ -1,0 +1,19 @@
+{
+  "vectors": [
+    {
+      "name": "not_triggered",
+      "is_trigger": 0,
+      "expect": "is_trigger: False\n"
+    },
+    {
+      "name": "nego_request_triggered",
+      "is_trigger": 1,
+      "wowlan_recv_frame_type": 0,
+      "peer_mac": "001122334455",
+      "wowlan_peer_wpsconfig": 4660,
+      "wowlan_peer_is_persistent": 1,
+      "wowlan_peer_invitation_type": 2,
+      "expect": "is_trigger: TRUE\nFrame Type: Nego Request\nPeer Addr: 00:11:22:33:44:55\nPeer WPS Config: 1234\nPersistent Group: 1\nIntivation Type: 2\n"
+    }
+  ]
+}
