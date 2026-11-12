@@ -104,7 +104,6 @@ static u8 beamforming_enter(bf_host_sound_enter_padpt adapter, u8 *p)
 	if (ht_bf_cap & BF_HOST_BEAMFORMING_HT_BEAMFORMER_ENABLE) {
 		info->beamforming_cap |= BF_HOST_BEAMFORMER_CAP_HT_EXPLICIT;
 		sta_bf_cap |= BF_HOST_BEAMFORMEE_CAP_HT_EXPLICIT;
-		sounding_dim = (ht_bf_cap & BF_HOST_BEAMFORMING_HT_BEAMFORMEE_CHNL_EST_CAP) >> 6;
 	}
 	if (sta_bf_cap == BF_HOST_CAP_NONE)
 		return 0;
