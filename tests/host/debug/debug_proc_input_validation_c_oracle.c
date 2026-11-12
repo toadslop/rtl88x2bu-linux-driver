@@ -29,14 +29,14 @@ ssize_t rtw_rust_debug_proc_copy_user_input(const void *buffer, size_t count,
 	return (ssize_t)count;
 }
 
-int host_fx18_validate_war_ipv4_index(s32 index)
+int host_fx18_validate_war_ipv4_index(int32_t index)
 {
 	if (index < 1 || index > 4)
 		return -EINVAL;
 	return 0;
 }
 
-int host_fx18_validate_war_ipv6_index(u32 index)
+int host_fx18_validate_war_ipv6_index(uint32_t index)
 {
 	if (index < 1 || index > 8)
 		return -EINVAL;
