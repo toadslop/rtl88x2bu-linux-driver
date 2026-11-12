@@ -146,6 +146,16 @@ fn beacon_ctrl_halmac2drv_impl(ctrl: &HalmacBcnCtrl, drv_ctrl: &mut RtwHalmacBcn
 }
 
 fn rsvd_page_num_drv2halmac_impl(num: U16) -> u32 {
+    if num > 256 {
+        #[cfg(not(host_hal_halmac_enum_test))]
+        extern "C" {
+            fn rtw_rust_hal_halmac_log_rsvd_page_num(num: U16);
+        }
+        #[cfg(not(host_hal_halmac_enum_test))]
+        unsafe {
+            rtw_rust_hal_halmac_log_rsvd_page_num(num);
+        }
+    }
     if num <= 8 {
         return HALMAC_RSVD_PG_NUM8;
     }
@@ -226,6 +236,14 @@ fn rf_type_drv2halmac_impl(rf_drv: u32) -> u32 {
     if rf_drv < 8 {
         return RF_DRV_TO_HALMAC[rf_drv as usize];
     }
+    #[cfg(not(host_hal_halmac_enum_test))]
+    extern "C" {
+        fn rtw_rust_hal_halmac_log_invalid_rf_drv(rf_drv: u32);
+    }
+    #[cfg(not(host_hal_halmac_enum_test))]
+    unsafe {
+        rtw_rust_hal_halmac_log_invalid_rf_drv(rf_drv);
+    }
     HALMAC_RF_MAX_TYPE
 }
 
@@ -239,7 +257,19 @@ fn rf_type_halmac2drv_impl(rf_mac: u32) -> u32 {
         HALMAC_RF_3T3R => RF_3T3R,
         HALMAC_RF_3T4R => RF_3T4R,
         HALMAC_RF_4T4R => RF_4T4R,
-        _ => RF_TYPE_MAX,
+        #[allow(unused_variables)]
+        rf_mac => {
+            #[cfg(not(host_hal_halmac_enum_test))]
+            {
+                extern "C" {
+                    fn rtw_rust_hal_halmac_log_invalid_rf_halmac(rf_mac: u32);
+                }
+                unsafe {
+                    rtw_rust_hal_halmac_log_invalid_rf_halmac(rf_mac);
+                }
+            }
+            RF_TYPE_MAX
+        }
     }
 }
 
@@ -492,10 +522,10 @@ fn led_mode_drv2halmac_impl(drv_mode: U8) -> u32 {
 }
 
 fn phy_parameter_val_drv2halmac_impl(val: u32, msk_en: U8, msk: u32) -> u32 {
-    if msk_en == 0 {
+    if msk_en == 0 || msk == 0 {
         return val;
     }
-    val << bitshift(msk)
+    val.wrapping_shl(bitshift(msk))
 }
 
 const HALMAC_PARAMETER_CMD_MAC_W8: u32 = 0x4;
