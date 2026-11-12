@@ -4,8 +4,8 @@
 #![allow(non_snake_case, non_camel_case_types)]
 
 use crate::{
-    F_BIPS_PROCESSING, F_BKEEPFWALIVE, F_BPOWER_SAVING, F_CHANGE_RFPWRSTATE, F_IPS_MODE,
-    F_IPS_MODE_REQ, F_RF_PWRSTATE, Padapter, _FALSE, _SUCCESS, _TRUE,
+    Padapter, F_BIPS_PROCESSING, F_BKEEPFWALIVE, F_BPOWER_SAVING, F_CHANGE_RFPWRSTATE, F_IPS_MODE,
+    F_IPS_MODE_REQ, F_RF_PWRSTATE, _FALSE, _SUCCESS, _TRUE,
 };
 use std::ffi::c_void;
 
