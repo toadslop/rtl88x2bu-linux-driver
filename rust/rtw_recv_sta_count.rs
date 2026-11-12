@@ -19,6 +19,9 @@ use std::ffi::c_void;
 type U8 = u8;
 type U32 = u32;
 type U64 = u64;
+#[cfg(not(host_recv_sta_test))]
+type Systime = core::ffi::c_ulong;
+#[cfg(host_recv_sta_test)]
 type Systime = U32;
 
 const ETH_ALEN: usize = 6;

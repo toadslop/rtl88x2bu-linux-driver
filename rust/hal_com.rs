@@ -87,7 +87,7 @@ struct RateSectionEnt {
     not(host_hal_com_hal_spec_test),
 ))]
 extern "C" {
-    fn MGN_RATE_STR(rate: U8) -> *const c_char;
+    fn MGN_RATE_STR(rate: u32) -> *const c_char;
     static mut rates_by_sections: [RateSectionEnt; RATE_SECTION_NUM as usize];
     fn rtw_rust_hal_com_print_line(sel: *mut c_void, line: *const c_char);
     fn rtw_rust_hal_com_warn_invalid_hw_rate(hw_rate: U8);
@@ -696,7 +696,7 @@ fn push_decimal(mut n: u32, out: &mut [u8], pos: &mut usize) {
 fn format_m_to_hw_line(m_rate: U8, hw_rate: U8) -> (usize, [u8; 256]) {
     let mut line = [0u8; 256];
     let mut pos = 0usize;
-    let m_str = c_str_bytes(unsafe { MGN_RATE_STR(m_rate) });
+    let m_str = c_str_bytes(unsafe { MGN_RATE_STR(m_rate as u32) });
     let h_str = c_str_bytes(unsafe { hdata_rate_strings::rtw_rust_hal_com_hdata_rate(hw_rate) });
     for &b in b"m_rate:" {
         if pos < line.len() {
@@ -752,7 +752,7 @@ fn format_hw_to_m_line(hw_rate: U8, m_rate: U8) -> (usize, [u8; 256]) {
     let mut line = [0u8; 256];
     let mut pos = 0usize;
     let h_str = c_str_bytes(unsafe { hdata_rate_strings::rtw_rust_hal_com_hdata_rate(hw_rate) });
-    let m_str = c_str_bytes(unsafe { MGN_RATE_STR(m_rate) });
+    let m_str = c_str_bytes(unsafe { MGN_RATE_STR(m_rate as u32) });
     for &b in b"hw_rate:" {
         if pos < line.len() {
             line[pos] = b;

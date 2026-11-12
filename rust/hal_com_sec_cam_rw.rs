@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: GPL-2.0
 // Security CAM MMIO read/write (W4-52). Included from hal_com_reqtxrpt_mi_mac.rs.
 
-type Systime = core::ffi::c_ulong;
+#[path = "ffi_hal_com_systime.rs"]
+mod ffi_hal_com_systime;
+use ffi_hal_com_systime::{
+    rtw_rust_hal_com_get_current_time, rtw_rust_hal_com_get_passing_time_ms, Systime,
+};
 
 const REG_CAMCMD: u32 = 0x0670;
 const REG_CAMWRITE: u32 = 0x0674;
@@ -17,8 +21,6 @@ extern "C" {
     fn rtw_rust_hal_com_read32(adapter: *mut core::ffi::c_void, addr: u32) -> u32;
     fn rtw_rust_hal_com_write32(adapter: *mut core::ffi::c_void, addr: u32, val: u32);
     fn rtw_rust_hal_com_is_surprise_removed(adapter: *mut core::ffi::c_void) -> u8;
-    fn rtw_rust_hal_com_get_current_time() -> Systime;
-    fn rtw_rust_hal_com_get_passing_time_ms(start: Systime) -> u32;
     fn rtw_rust_hal_com_log_sec_cam(
         adapter: *mut core::ffi::c_void,
         is_write: u8,

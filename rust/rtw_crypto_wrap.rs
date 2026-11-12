@@ -59,8 +59,8 @@ mod bindings {
 
     extern "C" {
         pub fn _rtw_memcmp2(dst: *const c_void, src: *const c_void, sz: u32) -> c_int;
-        pub fn _rtw_memset(s: *mut c_void, c: c_int, n: usize) -> *mut c_void;
-        pub fn _rtw_memcpy(dest: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
+        pub fn _rtw_memset(s: *mut c_void, c: c_int, n: u32);
+        pub fn _rtw_memcpy(dest: *mut c_void, src: *const c_void, n: u32);
         pub fn _rtw_malloc(sz: u32) -> *mut c_void;
         pub fn _rtw_mfree(ptr: *mut c_void, sz: u32);
         pub static rtw_rust_off_adapter_amsdu_mode: usize;
@@ -101,7 +101,7 @@ fn wrap_memcpy(dest: *mut c_void, src: *const c_void, n: usize) {
 #[cfg(not(host_crypto_test))]
 fn wrap_memcpy(dest: *mut c_void, src: *const c_void, n: usize) {
     unsafe {
-        bindings::_rtw_memcpy(dest, src, n);
+        bindings::_rtw_memcpy(dest, src, n as u32);
     }
 }
 
@@ -113,7 +113,7 @@ fn wrap_memset(ptr: *mut c_void, len: usize) {
 #[cfg(not(host_crypto_test))]
 fn wrap_memset(ptr: *mut c_void, len: usize) {
     unsafe {
-        bindings::_rtw_memset(ptr, 0, len);
+        bindings::_rtw_memset(ptr, 0, len as u32);
     }
 }
 

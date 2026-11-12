@@ -125,7 +125,7 @@ extern "C" {
     fn rtw_hal_set_hwreg(a: *mut Adapter, id: c_int, val: *mut U8);
     fn rtw_hal_macid_sleep_all_used(a: *mut Adapter);
     fn rtw_hal_macid_wakeup_all_used(a: *mut Adapter);
-    fn rtw_rx_ampdu_apply(a: *mut Adapter);
+    fn rtw_rx_ampdu_apply(a: *mut Adapter) -> u16;
     fn sitesurvey_pick_ch_behavior(a: *mut Adapter, ch: *mut U8, scan_type: *mut ScanType) -> U8;
     fn set_channel_bwmode(a: *mut Adapter, ch: U8, offset: U8, bw: U8);
     fn rtw_mi_get_ch_setting_union(
@@ -313,7 +313,7 @@ extern "C" {
     fn rtw_hal_set_hwreg(a: Adapter, id: c_int, val: *mut U8);
     fn rtw_hal_macid_sleep_all_used(a: Adapter);
     fn rtw_hal_macid_wakeup_all_used(a: Adapter);
-    fn rtw_rx_ampdu_apply(a: Adapter);
+    fn rtw_rx_ampdu_apply(a: Adapter) -> u16;
     fn sitesurvey_pick_ch_behavior(a: Adapter, ch: *mut U8, scan_type: *mut ScanType) -> U8;
     fn set_channel_bwmode(a: Adapter, ch: U8, offset: U8, bw: U8);
     fn rtw_mi_get_ch_setting_union(a: Adapter, ch: *mut U8, bw: *mut U8, offset: *mut U8) -> c_int;

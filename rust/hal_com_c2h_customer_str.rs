@@ -15,9 +15,15 @@ const CUSTOMER_STR_RPT_2_LEN: usize = 8;
 const RTW_SCTX_SUBMITTED: i32 = -1;
 const RTX_SCTX_CSTR_WAIT_RPT2: i32 = 13;
 
+#[path = "ffi_hal_com_c2h.rs"]
+mod ffi_hal_com_c2h;
+use ffi_hal_com_c2h::rtw_rust_hal_com_warn_c2h_short_len;
+#[path = "ffi_osdep_memcpy.rs"]
+mod ffi_osdep_memcpy;
+use ffi_osdep_memcpy::_rtw_memcpy;
+
 extern "C" {
     fn rtw_rust_hal_com_adapter_to_dvobj(adapter: *mut c_void) -> *mut c_void;
-    fn rtw_rust_hal_com_warn_c2h_short_len(func: *const u8, len: U8, expect: i32);
     fn rtw_rust_hal_com_customer_str_mutex(dvobj: *mut c_void) -> *mut c_void;
     fn rtw_rust_hal_com_enter_critical_mutex(mutex: *mut c_void);
     fn rtw_rust_hal_com_exit_critical_mutex(mutex: *mut c_void);
@@ -30,7 +36,6 @@ extern "C" {
     fn rtw_rust_hal_com_warn_customer_str_sctx_not_set();
     fn rtw_rust_hal_com_warn_customer_str_rpt_not_ready();
     fn rtw_rust_hal_com_h2c_customer_str_req(adapter: *mut c_void) -> S32;
-    fn _rtw_memcpy(dst: *mut c_void, src: *const c_void, sz: u32);
 }
 
 static FN_C2H_CSTR_RPT: &[u8] = b"c2h_customer_str_rpt_hdl\0";
@@ -47,7 +52,7 @@ pub extern "C" fn c2h_customer_str_rpt_hdl(adapter: *mut c_void, data: *mut U8, 
         unsafe {
             rtw_rust_hal_com_warn_c2h_short_len(
                 FN_C2H_CSTR_RPT.as_ptr(),
-                len,
+                len as u32,
                 CUSTOMER_STR_RPT_LEN as i32,
             );
         }
@@ -89,7 +94,7 @@ pub extern "C" fn c2h_customer_str_rpt_2_hdl(adapter: *mut c_void, data: *mut U8
         unsafe {
             rtw_rust_hal_com_warn_c2h_short_len(
                 FN_C2H_CSTR_RPT2.as_ptr(),
-                len,
+                len as u32,
                 CUSTOMER_STR_RPT_2_LEN as i32,
             );
         }
