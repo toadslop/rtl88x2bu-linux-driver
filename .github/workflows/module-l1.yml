@@ -106,3 +106,10 @@ jobs:
           TARGETS="${{ steps.l1_scope.outputs.targets }}"
           docker run --rm -v "$PWD:/driver" -w /driver "${IMAGE}" \
             bash -c "make KDIR=/opt/linux LLVM=1 rust-check-symbols-selftest && ./scripts/ci/run-l1-unit-checks.sh ${TARGETS}"
+
+      # T23 advisory: FX-17 canonical shims only; rtw_rust_* duplicate reporting
+      # stays behind FFI_DRIFT_REPORT_DUPES=1 until FX-17 conflicts are cleared.
+      - name: FFI drift check (advisory)
+        if: steps.filter.outputs.l1 == 'true'
+        continue-on-error: true
+        run: python3 scripts/ci/check-ffi-drift.py
