@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: GPL-2.0
 // CONFIG_FW_C2H_REG helpers c2h_evt_clear / c2h_evt_read_88xx (W4-47).
 
+#[cfg(host_hal_com_c2h_evt_test)]
+use std::os::raw::c_void;
+
+#[cfg(not(host_hal_com_c2h_evt_test))]
 use core::ffi::c_void;
 
 type U8 = u8;
 type S32 = i32;
 
 const C2H_REG_LEN: usize = 16;
+/// 88XX payload sits at buf+2; only 12 bytes fit before PLEN at offset 14.
+const C2H_PAYLOAD_MAX: u8 = (C2H_REG_LEN - 4) as u8;
 const REG_C2HEVT_MSG_NORMAL: u32 = 0x01a0;
 const REG_C2HEVT_CMD_SEQ_88XX: u32 = 0x01a1;
 const REG_C2HEVT_CMD_LEN_88XX: u32 = 0x01ae;
@@ -89,7 +95,10 @@ pub extern "C" fn c2h_evt_read_88xx(adapter: *mut c_void, buf: *mut U8) -> S32 {
     set_c2h_seq_88xx(buf, seq);
     set_c2h_plen_88xx(buf, plen);
 
-    let plen_val = c2h_plen_88xx(buf);
+    let mut plen_val = c2h_plen_88xx(buf);
+    if plen_val > C2H_PAYLOAD_MAX {
+        plen_val = C2H_PAYLOAD_MAX;
+    }
     let payload = c2h_payload_88xx(buf);
     for i in 0..plen_val {
         let byte = unsafe { rtw_rust_hal_com_read8(adapter, REG_C2HEVT_MSG_NORMAL + 2 + i as u32) };

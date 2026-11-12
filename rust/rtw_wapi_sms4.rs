@@ -308,6 +308,12 @@ fn wapi_sms4_cryption(
     {
         return;
     }
+    if input_length == 0 {
+        unsafe {
+            *output_length = 0;
+        }
+        return;
+    }
     let input_length = input_length;
     let mut remainder = input_length & 0x0f;
     let mut block_num: u32 = u32::from(input_length >> 4);

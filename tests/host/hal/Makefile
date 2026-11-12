@@ -59,7 +59,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust \
 	test-usb-sync-read test-usb-sync-read-rust test-usb-sync-write \
 	test-usb-async-write test-usb-async-write-rust test-chip-odm test-chip-odm-rust \
-	test-sec-read-cam-ent test-sec-read-cam-ent-rust clean
+	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-c2h-evt-robustness clean
 
 all: test
 
@@ -76,7 +76,7 @@ test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust test-usb-sync-read \
 	test-usb-sync-read-rust test-usb-sync-write test-usb-async-write \
 	test-usb-async-write-rust test-chip-odm test-chip-odm-rust \
-	test-sec-read-cam-ent test-sec-read-cam-ent-rust
+	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-c2h-evt-robustness
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -769,6 +769,18 @@ test_sec_read_cam_ent_null_mac_rust: test_sec_read_cam_ent_null_mac.c \
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_SEC_CAM_ENT_ORACLE -o $@ \
 		test_sec_read_cam_ent_null_mac.c $(SEC_CAM_ENT_L2) librust_hal_com_sec_cam_ent.a
 
+RUST_C2H_EVT := $(ROOT)/rust/hal_com_c2h_evt.rs
+
+test-c2h-evt-robustness: test_hal_com_c2h_evt_fx19
+	./test_hal_com_c2h_evt_fx19
+
+test_hal_com_c2h_evt_fx19: test_hal_com_c2h_evt_fx19.c librust_hal_com_c2h_evt.a
+	$(CC) $(CFLAGS) -o $@ test_hal_com_c2h_evt_fx19.c librust_hal_com_c2h_evt.a
+
+librust_hal_com_c2h_evt.a: $(RUST_C2H_EVT)
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_com_c2h_evt_test \
+		--crate-type staticlib $(RUST_C2H_EVT) -o $@
+
 clean:
 	rm -f test_hw_rate_map test_hw_rate_map_rust librust_hal_com.a \
 		test_rsvd_page_cache test_rsvd_page_cache_rust librust_hal_com_rsvd.a \
@@ -813,4 +825,5 @@ clean:
 		test_hal_usb_async_write_rust librust_hal_usb_async_write.a \
 		test_chip_odm_map test_chip_odm_map_rust librust_hal_intf_chip_odm.a \
 		test_sec_read_cam_ent_null_mac test_sec_read_cam_ent_null_mac_rust \
-		librust_hal_com_sec_cam_ent.a
+		librust_hal_com_sec_cam_ent.a \
+		test_hal_com_c2h_evt_fx19 librust_hal_com_c2h_evt.a

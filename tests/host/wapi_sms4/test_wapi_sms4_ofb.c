@@ -70,8 +70,24 @@ static int run_case(const struct ofb_case *c)
 	return 0;
 }
 
+static int test_ofb_zero_length(void)
+{
+	u8 out[16];
+	u16 out_len = 0xffff;
+
+	host_wapi_sms4_encryption(k_key, k_iv, k_plain32, 0, out, &out_len);
+	if (out_len != 0) {
+		fprintf(stderr, "ofb-zero-length: out_len %u\n", out_len);
+		return -1;
+	}
+	return 0;
+}
+
 int main(void)
 {
+	if (test_ofb_zero_length() != 0)
+		return 1;
+
 	static const struct ofb_case k_cases[] = {
 		{ "ofb-one-block", 16, k_cipher16, 16, 1 },
 		{ "ofb-two-blocks", 32, k_cipher32, 32, 1 },
