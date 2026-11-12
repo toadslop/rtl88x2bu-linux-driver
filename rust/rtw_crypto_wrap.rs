@@ -63,12 +63,8 @@ mod bindings {
         pub fn _rtw_memcpy(dest: *mut c_void, src: *const c_void, n: usize) -> *mut c_void;
         pub fn _rtw_malloc(sz: u32) -> *mut c_void;
         pub fn _rtw_mfree(ptr: *mut c_void, sz: u32);
+        pub static rtw_rust_off_adapter_amsdu_mode: usize;
     }
-
-    /// `offsetof(struct _ADAPTER, registrypriv.amsdu_mode)` with
-    /// `CONFIG_BCN_CNT_CONFIRM_HDL` off. That macro adds 0x48 to this offset.
-    /// Re-run L1 after any `_adapter` / `registry_priv` layout change.
-    pub const AMSDU_MODE_OFFSET: usize = 0x3859;
 }
 
 const RTW_AMSDU_MODE_NON_SPP: u8 = 0;
@@ -195,7 +191,8 @@ pub extern "C" fn rtw_registrypriv_amsdu_mode(padapter: *const c_void) -> u8 {
     }
     #[cfg(not(host_crypto_test))]
     {
-        let field = unsafe { (padapter as *const u8).add(bindings::AMSDU_MODE_OFFSET) };
+        let field =
+            unsafe { (padapter as *const u8).add(bindings::rtw_rust_off_adapter_amsdu_mode) };
         unsafe { *field }
     }
 }
