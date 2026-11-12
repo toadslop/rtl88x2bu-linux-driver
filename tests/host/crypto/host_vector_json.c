@@ -116,6 +116,22 @@ int host_json_parse_int_in(const char *obj, size_t obj_len, const char *key,
 	return 0;
 }
 
+int host_json_parse_ulong_in(const char *obj, size_t obj_len, const char *key,
+			     unsigned long *out)
+{
+	const char *p = host_json_find_key_in(obj, obj_len, key);
+	char *end = NULL;
+	unsigned long v;
+
+	if (!p || p >= obj + obj_len)
+		return -1;
+	v = strtoul(p, &end, 10);
+	if (end == p)
+		return -1;
+	*out = v;
+	return 0;
+}
+
 int host_json_parse_bool_in(const char *obj, size_t obj_len, const char *key,
 			    int *out)
 {

@@ -2,6 +2,7 @@
 #ifndef HOST_PWRCTRL_WAKEUP_H
 #define HOST_PWRCTRL_WAKEUP_H
 
+#include "host_systime.h"
 #include "host_types.h"
 
 #define _TRUE 1
@@ -10,8 +11,6 @@
 #define _FAIL 0
 
 #define WIFI_ASOC_STATE 0x00000001
-
-typedef u32 systime;
 
 struct mlme_priv_wakeup {
 	u32 fw_state;
@@ -52,7 +51,7 @@ void host_pwrctrl_wakeup_reset_trace(void);
 struct host_pwrctrl_wakeup_trace *host_pwrctrl_wakeup_get_trace(void);
 void host_pwrctrl_wakeup_set_ips_leave_result(s32 result);
 void host_pwrctrl_wakeup_set_passing_ms(u32 ms);
-void host_pwrctrl_wakeup_set_time(u32 t);
+void host_pwrctrl_wakeup_set_time(systime t);
 
 void rtw_set_ips_deny(PADAPTER_WAKEUP padapter, u32 ms);
 int _rtw_pwr_wakeup(PADAPTER_WAKEUP padapter, u32 ips_deffer_ms, const char *caller);

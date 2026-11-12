@@ -19,6 +19,8 @@ int host_json_parse_string_in(const char *obj, size_t obj_len, const char *key,
 			      char *out, size_t out_cap);
 int host_json_parse_int_in(const char *obj, size_t obj_len, const char *key,
 			   int *out);
+int host_json_parse_ulong_in(const char *obj, size_t obj_len, const char *key,
+			     unsigned long *out);
 int host_json_parse_bool_in(const char *obj, size_t obj_len, const char *key,
 			    int *out);
 

@@ -34,7 +34,7 @@ void host_pwrctrl_wakeup_set_passing_ms(u32 ms)
 	g_passing_ms = ms;
 }
 
-void host_pwrctrl_wakeup_set_time(u32 t)
+void host_pwrctrl_wakeup_set_time(systime t)
 {
 	g_time = t;
 }
@@ -46,12 +46,12 @@ static systime rtw_get_current_time(void)
 
 static systime rtw_ms_to_systime(u32 ms)
 {
-	return ms;
+	return host_ms_to_systime(ms);
 }
 
 static int rtw_time_after(systime a, systime b)
 {
-	return (s32)(a - b) > 0;
+	return host_time_after(a, b);
 }
 
 static u32 rtw_get_passing_time_ms(systime start)
