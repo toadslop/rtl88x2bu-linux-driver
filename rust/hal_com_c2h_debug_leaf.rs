@@ -11,9 +11,12 @@ const FAIL: S32 = 0;
 
 const DEFEATURE_DBG_LEN: usize = 1;
 
+#[path = "ffi_hal_com_c2h.rs"]
+mod ffi_hal_com_c2h;
+use ffi_hal_com_c2h::rtw_rust_hal_com_warn_c2h_short_len;
+
 extern "C" {
     fn rtw_rust_hal_com_log_defeature_bytes(data: *mut U8, len: U8);
-    fn rtw_rust_hal_com_warn_c2h_short_len(func: *const u8, len: U8, expect: i32);
 }
 
 static FN_C2H_DEFEATURE: &[u8] = b"c2h_defeature_dbg_hdl\0";
@@ -25,7 +28,7 @@ pub extern "C" fn c2h_defeature_dbg_hdl(adapter: *mut c_void, data: *mut U8, len
         unsafe {
             rtw_rust_hal_com_warn_c2h_short_len(
                 FN_C2H_DEFEATURE.as_ptr(),
-                len,
+                len as u32,
                 DEFEATURE_DBG_LEN as i32,
             );
         }

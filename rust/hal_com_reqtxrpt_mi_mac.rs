@@ -8,7 +8,7 @@ type U8 = u8;
 extern "C" {
     fn rtw_rust_hal_com_call_reqtxrpt(adapter: *mut c_void, macid: U8);
     fn rtw_rust_hal_com_hw_var_mac_addr() -> i32;
-    fn rtw_rust_hal_com_set_hwreg(adapter: *mut c_void, variable: i32, val: *mut U8);
+    fn rtw_rust_hal_com_set_hwreg(adapter: *mut c_void, variable: u32, val: *mut U8);
     fn rtw_rust_hal_com_adapter_to_dvobj(adapter: *mut c_void) -> *mut c_void;
     fn rtw_rust_hal_com_dvobj_iface_nums(dvobj: *mut c_void) -> U8;
     fn rtw_rust_hal_com_dvobj_adapter_at(dvobj: *mut c_void, idx: i32) -> *mut c_void;
@@ -43,7 +43,7 @@ pub extern "C" fn rtw_mi_set_mac_addr(adapter: *mut c_void) {
             let iface = unsafe { rtw_rust_hal_com_dvobj_adapter_at(dvobj, i as i32) };
             if !iface.is_null() {
                 let mac = unsafe { rtw_rust_hal_com_adapter_mac_addr(iface) };
-                unsafe { rtw_rust_hal_com_set_hwreg(iface, hw_var, mac) };
+                unsafe { rtw_rust_hal_com_set_hwreg(iface, hw_var as u32, mac) };
             }
         }
     }

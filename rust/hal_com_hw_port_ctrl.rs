@@ -10,7 +10,7 @@ const FALSE: U8 = 0;
 
 extern "C" {
     fn rtw_rust_hal_com_hw_var_port_cfg() -> i32;
-    fn rtw_rust_hal_com_set_hwreg(adapter: *mut c_void, variable: i32, val: *mut U8);
+    fn rtw_rust_hal_com_set_hwreg(adapter: *mut c_void, variable: u32, val: *mut U8);
     fn rtw_rust_hal_com_adapter_to_dvobj(adapter: *mut c_void) -> *mut c_void;
     fn rtw_rust_hal_com_dvobj_iface_nums(dvobj: *mut c_void) -> U8;
     fn rtw_rust_hal_com_dvobj_adapter_at(dvobj: *mut c_void, idx: i32) -> *mut c_void;
@@ -22,7 +22,7 @@ fn hw_port_set_enable(adapter: *mut c_void, enable: U8) {
     }
     let mut val = enable;
     unsafe {
-        rtw_rust_hal_com_set_hwreg(adapter, rtw_rust_hal_com_hw_var_port_cfg(), &mut val);
+        rtw_rust_hal_com_set_hwreg(adapter, rtw_rust_hal_com_hw_var_port_cfg() as u32, &mut val);
     }
 }
 

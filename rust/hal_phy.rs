@@ -151,8 +151,8 @@ mod rf_shadow {
 
     #[cfg(any(config_rf_shadow_rw, host_hal_phy_rf_shadow_compare_test))]
     extern "C" {
-        fn rtw_hal_read_rfreg(adapter: Adapter, path: i32, offset: U32, mask: U32) -> U32;
-        fn rtw_hal_write_rfreg(adapter: Adapter, path: i32, offset: U32, mask: U32, data: U32);
+        fn rtw_hal_read_rfreg(adapter: Adapter, path: u32, offset: U32, mask: U32) -> U32;
+        fn rtw_hal_write_rfreg(adapter: Adapter, path: u32, offset: U32, mask: U32, data: U32);
     }
 
     #[no_mangle]

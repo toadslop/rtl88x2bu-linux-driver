@@ -17,8 +17,16 @@ const RTW_PCIE: U8 = 1 << 0;
 const SUCCESS: S32 = 1;
 const FAIL: S32 = 0;
 
+#[path = "ffi_hal_com_c2h.rs"]
+mod ffi_hal_com_c2h;
+use ffi_hal_com_c2h::rtw_rust_hal_com_warn_c2h_short_len;
+#[path = "ffi_hal_com_systime.rs"]
+mod ffi_hal_com_systime;
+use ffi_hal_com_systime::{
+    rtw_rust_hal_com_get_current_time, rtw_rust_hal_com_get_passing_time_ms,
+};
+
 extern "C" {
-    fn rtw_rust_hal_com_warn_c2h_short_len(func: *const U8, len: U8, expect: i32);
     fn rtw_rust_hal_com_mac_hidden_rpt1_apply(
         adapter: *mut c_void,
         data: *mut U8,
@@ -41,8 +49,6 @@ extern "C" {
     fn rtw_rust_hal_com_hal_power_off(adapter: *mut c_void);
     fn rtw_rust_hal_com_cannot_io(adapter: *mut c_void) -> U8;
     fn rtw_rust_hal_com_msleep_os(ms: i32);
-    fn rtw_rust_hal_com_get_current_time() -> u64;
-    fn rtw_rust_hal_com_get_passing_time_ms(start: u64) -> U32;
     fn rtw_rust_hal_com_log_mac_hidden_read(ok: U8, cnt: U32, ms: i32, fwdl: S32, id: U8);
 }
 
@@ -59,7 +65,7 @@ pub extern "C" fn c2h_mac_hidden_rpt_hdl(adapter: *mut c_void, data: *mut U8, le
         unsafe {
             rtw_rust_hal_com_warn_c2h_short_len(
                 FN_C2H_MAC_HIDDEN.as_ptr(),
-                len,
+                len as u32,
                 MAC_HIDDEN_RPT_LEN as i32,
             );
         }
@@ -93,7 +99,7 @@ pub extern "C" fn c2h_mac_hidden_rpt_2_hdl(adapter: *mut c_void, data: *mut U8, 
         unsafe {
             rtw_rust_hal_com_warn_c2h_short_len(
                 FN_C2H_MAC_HIDDEN_2.as_ptr(),
-                len,
+                len as u32,
                 MAC_HIDDEN_RPT_2_LEN as i32,
             );
         }

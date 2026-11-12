@@ -35,11 +35,11 @@ extern "C" {
         tmp: *mut c_char,
         tmp_size: usize,
     ) -> c_long;
-    fn rtw_rx_ampdu_is_accept(adapter: *mut c_void) -> U8;
+    fn rtw_rx_ampdu_is_accept(adapter: *mut c_void) -> bool;
     fn rtw_rx_ampdu_size(adapter: *mut c_void) -> U8;
-    fn rtw_rx_ampdu_set_accept(adapter: *mut c_void, accept: U8, reason: U8) -> U8;
-    fn rtw_rx_ampdu_set_size(adapter: *mut c_void, size: U8, reason: U8) -> U8;
-    fn rtw_rx_ampdu_apply(adapter: *mut c_void);
+    fn rtw_rx_ampdu_set_accept(adapter: *mut c_void, accept: U8, reason: U8) -> bool;
+    fn rtw_rx_ampdu_set_size(adapter: *mut c_void, size: U8, reason: U8) -> bool;
+    fn rtw_rx_ampdu_apply(adapter: *mut c_void) -> u16;
     fn dump_regsty_rx_ampdu_size_limit(sel: *mut c_void, adapter: *mut c_void);
     fn rtw_rust_debug_proc_sscanf_hhu_pair(
         tmp: *const u8,
@@ -250,7 +250,7 @@ fn emit_get_rx_ampdu(sel: *mut c_void, adapter: *mut c_void) {
     pos = 0;
     if fix_accept == RX_AMPDU_ACCEPT_INVALID {
         push_u8_dec(&mut line, &mut pos, unsafe {
-            rtw_rx_ampdu_is_accept(adapter)
+            u8::from(rtw_rx_ampdu_is_accept(adapter))
         });
         push_str(&mut line, &mut pos, b"(auto)");
     } else {

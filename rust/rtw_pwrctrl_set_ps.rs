@@ -381,7 +381,7 @@ extern "C" {
     #[cfg(config_tdls)]
     fn rtw_rust_set_ps_tdls_nulldata(padapter: Padapter, pwr_bit: u8);
     fn rtw_exec_lps(padapter: Padapter, ps_mode: u8);
-    fn rtw_set_rpwm(padapter: Padapter, pslv: u8);
+    fn rtw_set_rpwm(padapter: Padapter, pslv: u8) -> u8;
 }
 
 #[cfg(not(host_pwrctrl_set_ps_test))]

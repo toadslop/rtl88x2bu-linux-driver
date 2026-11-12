@@ -101,7 +101,7 @@ mod kernel {
             len: u16,
             requesttype: u8,
         ) -> i32;
-        fn _rtw_memcpy(dst: *mut c_void, src: *const c_void, sz: usize) -> *mut c_void;
+        fn _rtw_memcpy(dst: *mut c_void, src: *const c_void, sz: u32);
         fn usb_read_mem(pintfhdl: Hdl, addr: u32, cnt: u32, pmem: *mut u8);
         fn usb_read_port(pintfhdl: Hdl, addr: u32, cnt: u32, pmem: *mut u8) -> u32;
         fn usb_write_mem(pintfhdl: Hdl, addr: u32, cnt: u32, pmem: *mut u8);
@@ -200,7 +200,7 @@ mod kernel {
             _rtw_memcpy(
                 buf.as_mut_ptr() as *mut c_void,
                 pdata as *const c_void,
-                len as usize,
+                len as u32,
             );
             usbctrl_vendorreq(
                 pintfhdl,
@@ -544,7 +544,7 @@ mod kernel {
             payload: *mut u8,
         ) -> i32;
         fn rtw_hal_c2h_handler(adapter: Hdl, id: u8, seq: u8, plen: u8, payload: *mut u8) -> i32;
-        fn rtw_cbuf_push(cbuf: *mut c_void, buf: *mut c_void) -> u8;
+        fn rtw_cbuf_push(cbuf: *mut c_void, buf: *mut c_void) -> bool;
         fn _rtw_malloc(sz: u32) -> *mut c_void;
         fn _set_workitem(pwork: *mut c_void);
         fn rtw_rust_hal_usb_err_c2h_cbuf_push_fail();
@@ -588,17 +588,17 @@ mod kernel {
             if rtw_hal_c2h_id_handle_directly(adapter, id, seq, plen, payload) != 0 {
                 rtw_hal_c2h_handler(adapter, id, seq, plen, payload);
                 let pevtpriv = evtpriv_base(adapter);
-                if rtw_cbuf_push(c2h_queue, pevtpriv as *mut c_void) != C2H_SUCCESS as u8 {
+                if !rtw_cbuf_push(c2h_queue, pevtpriv as *mut c_void) {
                     c2h_push_fail();
                 }
             } else {
                 let c2h_evt = _rtw_malloc(C2H_REG_LEN as u32);
                 if !c2h_evt.is_null() {
-                    _rtw_memcpy(c2h_evt, buf as *const c_void, C2H_REG_LEN);
-                    if rtw_cbuf_push(c2h_queue, c2h_evt) != C2H_SUCCESS as u8 {
+                    _rtw_memcpy(c2h_evt, buf as *const c_void, C2H_REG_LEN as u32);
+                    if !rtw_cbuf_push(c2h_queue, c2h_evt) {
                         c2h_push_fail();
                     }
-                } else if rtw_cbuf_push(c2h_queue, core::ptr::null_mut()) != C2H_SUCCESS as u8 {
+                } else if !rtw_cbuf_push(c2h_queue, core::ptr::null_mut()) {
                     c2h_push_fail();
                 }
             }

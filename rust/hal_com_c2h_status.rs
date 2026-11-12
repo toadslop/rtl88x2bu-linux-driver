@@ -9,8 +9,11 @@ const SUCCESS: S32 = 1;
 const FAIL: S32 = 0;
 const LPS_STATUS_RPT_LEN: usize = 2;
 
+#[path = "ffi_hal_com_c2h.rs"]
+mod ffi_hal_com_c2h;
+use ffi_hal_com_c2h::rtw_rust_hal_com_warn_c2h_short_len;
+
 extern "C" {
-    fn rtw_rust_hal_com_warn_c2h_short_len(func: *const u8, len: u8, expect: i32);
     fn rtw_rust_hal_com_warn_per_rate_len(len: u8);
     fn rtw_rust_hal_com_warn_per_rate_format();
     fn rtw_rust_hal_com_per_rate_type0_apply(
@@ -94,7 +97,7 @@ pub extern "C" fn c2h_lps_status_rpt(adapter: *mut c_void, data: *mut u8, len: u
         unsafe {
             rtw_rust_hal_com_warn_c2h_short_len(
                 FN_C2H_LPS_STATUS.as_ptr(),
-                len,
+                len as u32,
                 LPS_STATUS_RPT_LEN as i32,
             );
         }

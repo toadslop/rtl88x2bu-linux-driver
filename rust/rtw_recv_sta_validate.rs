@@ -12,6 +12,8 @@
 )]
 
 #[cfg(not(host_recv_sta_test))]
+use core::ffi::c_ulong;
+#[cfg(not(host_recv_sta_test))]
 use core::ffi::c_void;
 #[cfg(host_recv_sta_test)]
 use std::ffi::c_void;
@@ -20,6 +22,10 @@ type U8 = u8;
 type U16 = u16;
 type U32 = u32;
 type Sint = i32;
+#[cfg(not(host_recv_sta_test))]
+type Systime = c_ulong;
+#[cfg(host_recv_sta_test)]
+type Systime = U32;
 
 const ETH_ALEN: usize = 6;
 const _SUCCESS: Sint = 1;
@@ -230,8 +236,8 @@ mod kernel {
 
     extern "C" {
         fn rtw_get_stainfo(stapriv: StaPriv, hwaddr: *mut U8) -> StaInfo;
-        fn rtw_rust_recv_sta_get_current_time() -> U32;
-        fn rtw_rust_recv_sta_get_passing_time_ms(start: U32) -> i32;
+        fn rtw_rust_recv_sta_get_current_time() -> Systime;
+        fn rtw_rust_recv_sta_get_passing_time_ms(start: Systime) -> i32;
         fn issue_deauth(adapter: Adapter, mac: *mut U8, reason: U16);
         fn count_rx_stats(adapter: Adapter, rframe: RecvFrame, sta: StaInfo);
         fn rtw_rust_recv_sta_frame_rx_data(rframe: RecvFrame) -> *mut U8;
@@ -295,7 +301,7 @@ mod kernel {
         let fw = unsafe { rtw_rust_recv_sta_mlme_fw_state(adapter) };
         if (fw & (WIFI_ASOC_STATE | WIFI_UNDER_LINKING)) == 0 {
             if !bmc {
-                static mut TS: U32 = 0;
+                static mut TS: Systime = 0;
                 let now = unsafe { rtw_rust_recv_sta_get_current_time() };
                 if unsafe { rtw_rust_recv_sta_get_passing_time_ms(TS) > 10000 || TS == 0 } {
                     unsafe {
