@@ -355,11 +355,7 @@ pub extern "C" fn rtw_set_fw_in_ips_mode(padapter: Padapter, enable: u8) {
                 val8 = unsafe { rtw_rust_fw_ips_read8(padapter, REG_HMETFR) };
                 cnt += 1;
                 unsafe {
-                    rtw_rust_fw_ips_log_poll_hmetfr(
-                        FW_IPS_FN.as_ptr() as *const c_char,
-                        val8,
-                        cnt,
-                    );
+                    rtw_rust_fw_ips_log_poll_hmetfr(FW_IPS_FN.as_ptr() as *const c_char, val8, cnt);
                     rtw_rust_fw_ips_mdelay(10);
                 }
             }
