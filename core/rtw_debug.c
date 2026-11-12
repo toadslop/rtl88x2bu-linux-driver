@@ -1758,10 +1758,12 @@ ssize_t rtw_rust_debug_proc_set_war_offload_ipv4_addr(_adapter *adapter,
 	}
 
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
-		int num = sscanf(tmp, "%d %x %x %x", &index, &ip_addr,
-				 &ip_subnet, &ip_gateway);
+		int num;
 
 		rtw_debug_proc_nul_terminate(tmp, sizeof(tmp), count);
+
+		num = sscanf(tmp, "%d %x %x %x", &index, &ip_addr, &ip_subnet,
+			     &ip_gateway);
 
 		if (num == 4) {
 			if (index < 1 || index > 4) {
@@ -2107,13 +2109,14 @@ ssize_t rtw_rust_debug_proc_set_war_offload_mdns_service_info(
 	}
 
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
-		int num = sscanf(tmp, "%15s %4s %5s %63s %x %x %u %d", srv,
-				 trans, domain, target, &port0, &port1, &ttl,
-				 &txt_idx);
+		int num;
 		int idx = pwrpriv->wowlan_war_offload_mdns_service_info_num;
 
 		if (count <= max_input_size)
 			tmp[count] = '\0';
+
+		num = sscanf(tmp, "%15s %4s %5s %63s %x %x %u %d", srv, trans,
+			     domain, target, &port0, &port1, &ttl, &txt_idx);
 
 		if (strncmp(srv, "clean", 5) == 0) {
 			_rtw_memset(pwrpriv->wowlan_war_offload_mdns_service, 0,
@@ -2534,9 +2537,11 @@ ssize_t rtw_rust_debug_proc_set_survey_info(_adapter *padapter,
 	}
 
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
-		int num = sscanf(tmp, "%s", cmd);
+		int num;
 
 		rtw_debug_proc_nul_terminate(tmp, sizeof(tmp), count);
+
+		num = sscanf(tmp, "%s", cmd);
 
 		if (num < 1)
 			return -EINVAL;

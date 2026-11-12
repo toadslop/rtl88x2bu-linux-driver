@@ -15,6 +15,8 @@
 ssize_t rtw_rust_debug_proc_copy_user_input(const void *buffer, size_t count,
 					    char *tmp, size_t tmp_size);
 
+void host_fx18_nul_terminate(char *buf, size_t buf_sz, size_t count);
+
 int host_fx18_validate_war_ipv4_index(int32_t index);
 int host_fx18_validate_war_ipv6_index(uint32_t index);
 int host_fx18_validate_mdns_service_slot(int idx, int txt_idx);

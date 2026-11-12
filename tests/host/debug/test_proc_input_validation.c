@@ -18,6 +18,20 @@ static void expect_int(const char *name, int got, int want)
 	}
 }
 
+static void test_nul_terminate_before_sscanf_ipv4_pattern(void)
+{
+	char tmp[128];
+	const char input[] = "1 a b c d e f";
+	int index, ip, subnet, gw, num;
+
+	memset(tmp, 0xab, sizeof(tmp));
+	memcpy(tmp, input, strlen(input));
+	host_fx18_nul_terminate(tmp, sizeof(tmp), strlen(input));
+	num = sscanf(tmp, "%d %x %x %x", &index, &ip, &subnet, &gw);
+	expect_int("ipv4_pattern_sscanf_fields", num, 4);
+	expect_int("ipv4_pattern_index", index, 1);
+}
+
 static void test_copy_user_nul_terminates(void)
 {
 	char tmp[16];
@@ -85,6 +99,7 @@ static void test_txt_rsp_count_and_empty_str(void)
 
 int main(void)
 {
+	test_nul_terminate_before_sscanf_ipv4_pattern();
 	test_copy_user_nul_terminates();
 	test_copy_user_oversize();
 	test_ipv4_index();

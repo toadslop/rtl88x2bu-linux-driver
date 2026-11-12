@@ -10,6 +10,13 @@
 
 #define EFAULT_NEG ((ssize_t)-EFAULT)
 
+/* Mirrors rtw_debug_proc_nul_terminate() in core/rtw_debug.c — must run before sscanf. */
+void host_fx18_nul_terminate(char *buf, size_t buf_sz, size_t count)
+{
+	if (count < buf_sz)
+		buf[count] = '\0';
+}
+
 ssize_t rtw_rust_debug_proc_copy_user_input(const void *buffer, size_t count,
 					    char *tmp, size_t tmp_size)
 {
