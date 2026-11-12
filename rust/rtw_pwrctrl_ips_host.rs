@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0
-//! Host L2 build of W3-167 IPS helpers (pairs with tests/host/pwrctrl).
+//! Host L2 stubs for `rtw_pwrctrl_ips.rs` (shared IPS cores).
 
 #![allow(non_snake_case, non_camel_case_types)]
 
+use crate::{
+    Padapter, F_BIPS_PROCESSING, F_BKEEPFWALIVE, F_BPOWER_SAVING, F_CHANGE_RFPWRSTATE, F_IPS_MODE,
+    F_IPS_MODE_REQ, F_RF_PWRSTATE, _FALSE, _SUCCESS, _TRUE,
+};
 use std::ffi::c_void;
-
-const _TRUE: u8 = 1;
-const _FALSE: u8 = 0;
-const _SUCCESS: i32 = 1;
-const RF_OFF: u8 = 2;
-const RF_ON: u8 = 0;
-const IPS_LEVEL_2: u8 = 2;
-const IPS_NONE: u8 = 0;
 
 #[repr(C)]
 pub struct PwrctrlPriv {
@@ -52,14 +48,7 @@ static mut G_TRACE: HostIpsTrace = HostIpsTrace {
     is_primary: 1,
 };
 
-type Padapter = *mut HostAdapter;
-
-fn pwr(a: Padapter) -> *mut PwrctrlPriv {
-    unsafe { &mut (*a).pwrctrlpriv }
-}
-
-#[no_mangle]
-pub extern "C" fn host_pwrctrl_ips_reset_trace() {
+pub fn reset_trace() {
     unsafe {
         G_TRACE = HostIpsTrace {
             ips_pwr_down: 0,
@@ -72,83 +61,145 @@ pub extern "C" fn host_pwrctrl_ips_reset_trace() {
     }
 }
 
-#[no_mangle]
-pub extern "C" fn host_pwrctrl_ips_set_pwr_up_result(r: i32) {
+pub fn set_pwr_up_result(r: i32) {
     unsafe {
         G_TRACE.ips_pwr_up_result = r;
     }
 }
 
-#[no_mangle]
-pub extern "C" fn host_pwrctrl_ips_get_trace() -> *mut HostIpsTrace {
-    std::ptr::addr_of_mut!(G_TRACE)
+pub fn trace_ptr() -> *mut HostIpsTrace {
+    unsafe { std::ptr::addr_of_mut!(G_TRACE) }
+}
+
+fn adapter(padapter: Padapter) -> *mut HostAdapter {
+    padapter as *mut HostAdapter
+}
+
+fn pwr(padapter: Padapter) -> *mut PwrctrlPriv {
+    unsafe { &mut (*adapter(padapter)).pwrctrlpriv }
 }
 
 #[no_mangle]
-pub extern "C" fn _ips_enter(padapter: Padapter) {
-    if padapter.is_null() {
-        return;
-    }
+pub extern "C" fn rtw_rust_pwrctrl_enter_lock(_padapter: Padapter) {}
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_pwrctrl_exit_lock(_padapter: Padapter) {}
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_ips_pwrpriv(padapter: Padapter) -> *mut c_void {
+    pwr(padapter) as *mut c_void
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_ips_get_u8(pwr: *mut c_void, field: u32) -> u8 {
+    let p = pwr as *mut PwrctrlPriv;
     unsafe {
-        let p = pwr(padapter);
-        (*p).bips_processing = _TRUE as u32;
-        (*p).ips_mode = (*p).ips_mode_req;
-        (*p).ips_enter_cnts += 1;
-        if (*p).change_rfpwrstate == RF_OFF {
-            (*p).bpower_saving = _TRUE;
-            if (*p).ips_mode == IPS_LEVEL_2 {
-                (*p).bkeepfwalive = _TRUE;
-            }
-            G_TRACE.ips_pwr_down += 1;
-            (*p).rf_pwrstate = RF_OFF;
+        match field {
+            F_RF_PWRSTATE => (*p).rf_pwrstate,
+            F_CHANGE_RFPWRSTATE => (*p).change_rfpwrstate,
+            F_BIPS_PROCESSING => (*p).bips_processing as u8,
+            F_IPS_MODE => (*p).ips_mode,
+            F_IPS_MODE_REQ => (*p).ips_mode_req,
+            F_BPOWER_SAVING => (*p).bpower_saving,
+            F_BKEEPFWALIVE => (*p).bkeepfwalive,
+            _ => 0,
         }
-        (*p).bips_processing = _FALSE as u32;
     }
 }
 
 #[no_mangle]
-pub extern "C" fn ips_enter(padapter: Padapter) {
-    if padapter.is_null() {
-        return;
-    }
+pub extern "C" fn rtw_rust_ips_set_u8(pwr: *mut c_void, field: u32, v: u8) {
+    let p = pwr as *mut PwrctrlPriv;
     unsafe {
-        let mode = (*pwr(padapter)).ips_mode_req;
+        match field {
+            F_RF_PWRSTATE => (*p).rf_pwrstate = v,
+            F_CHANGE_RFPWRSTATE => (*p).change_rfpwrstate = v,
+            F_BIPS_PROCESSING => (*p).bips_processing = v as u32,
+            F_IPS_MODE => (*p).ips_mode = v,
+            F_IPS_MODE_REQ => (*p).ips_mode_req = v,
+            F_BPOWER_SAVING => (*p).bpower_saving = v,
+            F_BKEEPFWALIVE => (*p).bkeepfwalive = v,
+            _ => {}
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_ips_inc_enter_cnt(pwr: *mut c_void) {
+    let p = pwr as *mut PwrctrlPriv;
+    unsafe {
+        (*p).ips_enter_cnts += 1;
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_ips_inc_leave_cnt(pwr: *mut c_void) {
+    let p = pwr as *mut PwrctrlPriv;
+    unsafe {
+        (*p).ips_leave_cnts += 1;
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_ips_pwr_down(_padapter: Padapter) {
+    unsafe {
+        G_TRACE.ips_pwr_down += 1;
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_ips_pwr_up(_padapter: Padapter) -> i32 {
+    unsafe {
+        G_TRACE.ips_pwr_up += 1;
+        G_TRACE.ips_pwr_up_result
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_ips_is_primary(padapter: Padapter) -> u8 {
+    unsafe {
+        if (*adapter(padapter)).adapter_type == 0 {
+            _TRUE
+        } else {
+            _FALSE
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_ips_btcoex_notify(_padapter: Padapter, mode: u8) {
+    unsafe {
         G_TRACE.btcoex_notify += 1;
         G_TRACE.last_btcoex_mode = mode;
-        _ips_enter(padapter);
     }
 }
 
 #[no_mangle]
-pub extern "C" fn _ips_leave(padapter: Padapter) -> i32 {
-    if padapter.is_null() {
-        return _SUCCESS;
-    }
-    unsafe {
-        let p = pwr(padapter);
-        if (*p).rf_pwrstate == RF_OFF && (*p).bips_processing == 0 {
-            (*p).bips_processing = _TRUE as u32;
-            (*p).change_rfpwrstate = RF_ON;
-            (*p).ips_leave_cnts += 1;
-            G_TRACE.ips_pwr_up += 1;
-            let result = G_TRACE.ips_pwr_up_result;
-            if result == _SUCCESS {
-                (*p).rf_pwrstate = RF_ON;
-            }
-            (*p).bips_processing = _FALSE as u32;
-            (*p).bkeepfwalive = _FALSE;
-            (*p).bpower_saving = _FALSE;
-            result
-        } else {
-            _SUCCESS
-        }
-    }
+pub extern "C" fn rtw_rust_ips_pci_aspm_ps(_padapter: Padapter) {
+    let _ = _padapter;
 }
 
 #[no_mangle]
-pub extern "C" fn ips_leave(padapter: Padapter) -> i32 {
-    if padapter.is_null() || unsafe { (*padapter).adapter_type != 0 } {
-        return _SUCCESS;
-    }
-    _ips_leave(padapter)
+pub extern "C" fn rtw_rust_ips_pci_aspm_perf(_padapter: Padapter) {
+    let _ = _padapter;
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_ips_odm_reset(_padapter: Padapter) {
+    let _ = _padapter;
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_ips_dbg_leave_fail(_padapter: Padapter) {
+    let _ = _padapter;
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_ips_llstats_on_enter(_pwr: *mut c_void) {
+    let _ = _pwr;
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_ips_llstats_on_leave(_pwr: *mut c_void) {
+    let _ = _pwr;
 }
