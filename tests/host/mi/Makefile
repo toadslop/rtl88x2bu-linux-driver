@@ -26,7 +26,8 @@ RUST_MI_DUMP_SRC := $(ROOT)/rust/rtw_mi_dump_status.rs
 	test-timer-intf-c test-timer-intf-rust clean
 all: test
 
-test: test-c test-rust test-netif test-status test-status-rust test-dump test-scan-drv test-timer-intf
+test: test-c test-rust test-netif test-netif-rust test-status test-status-rust test-dump test-dump-rust \
+	test-scan-drv test-scan-drv-rust test-timer-intf test-timer-intf-rust
 
 ifneq ($(wildcard $(RUST_MI_DUMP_SRC)),)
 test-dump: test-dump-c test-dump-rust

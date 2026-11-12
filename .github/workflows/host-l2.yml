@@ -131,6 +131,7 @@ jobs:
               - 'core/rtw_wapi_sms4_rest.c'
               - 'rust/**'
               - 'tests/host/**'
+              - 'scripts/ci/check-l2-rust-test-targets.py'
               - 'Makefile'
               - '.github/workflows/host-l2.yml'
 
@@ -152,6 +153,10 @@ jobs:
             sudo apt-get install -y gcc make
           fi
           rustup toolchain install 1.83.0 --profile minimal
+
+      - name: L2 paired rust targets in default test (T24)
+        if: steps.filter.outputs.l2 == 'true'
+        run: python3 scripts/ci/check-l2-rust-test-targets.py
 
       - name: Domain type unit tests (A1)
         if: steps.filter.outputs.l2 == 'true'
