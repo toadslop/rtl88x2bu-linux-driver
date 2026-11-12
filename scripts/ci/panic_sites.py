@@ -287,6 +287,9 @@ def main() -> int:
     blocking = sorted(new_sites)
     if not args.strict and touched:
         blocking = sorted(s for s in new_sites if s.split(":", 1)[0] in touched)
+    elif not args.strict and args.base_ref and not touched:
+        # Inventory-only PRs (scripts/baseline) should not fail on baseline drift alone.
+        blocking = []
 
     if not blocking:
         print(
