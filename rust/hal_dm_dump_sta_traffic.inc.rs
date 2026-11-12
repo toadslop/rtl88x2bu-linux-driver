@@ -264,8 +264,7 @@ fn format_dump_sta_traffic(
         return -1;
     }
     #[cfg(host_hal_dm_dump_sta_traffic_test)]
-    let (tp_label, smooth_label): (&[u8], &[u8]) =
-        (b"RTW: [TP] ", b"RTW: [Smooth TP] ");
+    let (tp_label, smooth_label): (&[u8], &[u8]) = (b"RTW: [TP] ", b"RTW: [Smooth TP] ");
     #[cfg(not(host_hal_dm_dump_sta_traffic_test))]
     let (tp_label, smooth_label): (&[u8], &[u8]) = (b"[TP] ", b"[Smooth TP] ");
     if !format_tp_section(

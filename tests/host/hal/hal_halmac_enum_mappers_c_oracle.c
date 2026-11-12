@@ -371,7 +371,7 @@ unsigned led_mode_drv2halmac(unsigned drv_mode)
 
 unsigned phy_parameter_val_drv2halmac(unsigned val, unsigned msk_en, unsigned msk)
 {
-	if (!msk_en)
+	if (!msk_en || !msk)
 		return val;
 
 	return val << bitshift(msk);
