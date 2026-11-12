@@ -26,6 +26,8 @@ static void wapi_sms4_cryption(const u8 *key, const u8 *iv, const u8 *input,
 	u8 block_in[16], block_out[16], temp_iv[16], k;
 
 	*output_length = 0;
+	if (input_length == 0)
+		return;
 	remainder = input_length & 0x0f;
 	block_num = input_length >> 4;
 	if (remainder != 0)

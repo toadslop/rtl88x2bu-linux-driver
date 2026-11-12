@@ -15,3 +15,5 @@ test_hal_usb_async_write*
 test_hal_usb_async_write
 test_hal_usb_async_write_rust
 librust_hal_usb_async_write.a
+test_hal_com_c2h_evt_fx19
+librust_hal_com_c2h_evt.a
