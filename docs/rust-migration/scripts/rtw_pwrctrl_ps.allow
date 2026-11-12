@@ -15,3 +15,5 @@ drop rtw_rust_ps_proc_set_change_rfpwrstate
 drop rtw_rust_ps_proc_get_pwr_state_check_cnts
 drop rtw_rust_ps_proc_unassociated_idle
 drop rtw_rust_ps_proc_set_pwr_timer
+drop rtw_rust_ps_proc_report_ps_deny
+drop rtw_rust_ps_proc_b_in_suspend

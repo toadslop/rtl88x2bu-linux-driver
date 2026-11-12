@@ -169,6 +169,8 @@ extern "C" {
     fn rtw_rust_ps_proc_get_rf_pwrstate(padapter: Padapter) -> u8;
     fn rtw_rust_ps_proc_set_change_rfpwrstate(padapter: Padapter, v: u8);
     fn rtw_rust_ps_proc_get_pwr_state_check_cnts(padapter: Padapter) -> u32;
+    fn rtw_rust_ps_proc_report_ps_deny(padapter: Padapter, ps_deny: u32);
+    fn rtw_rust_ps_proc_b_in_suspend(padapter: Padapter);
 }
 
 #[no_mangle]
@@ -233,10 +235,12 @@ pub extern "C" fn rtw_ps_processor(padapter: Padapter) {
         let ps_deny = rtw_ps_deny_get(padapter);
         rtw_rust_ps_proc_exit_pwrlock(padapter);
         if ps_deny != 0 {
+            rtw_rust_ps_proc_report_ps_deny(padapter, ps_deny);
             goto_exit(padapter);
             return;
         }
         if rtw_rust_ps_proc_get_b_in_suspend(padapter) == _TRUE {
+            rtw_rust_ps_proc_b_in_suspend(padapter);
             return;
         }
         rtw_rust_ps_proc_set_ps_processing(padapter, _TRUE);

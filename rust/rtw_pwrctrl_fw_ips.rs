@@ -16,10 +16,13 @@
 use std::ffi::c_void;
 
 #[cfg(not(host_pwrctrl_fw_ips_test))]
-use core::ffi::c_void;
+use core::ffi::{c_char, c_void};
 
 #[cfg(not(host_pwrctrl_fw_ips_test))]
 use core::ffi::c_ulong;
+
+#[cfg(not(host_pwrctrl_fw_ips_test))]
+const FW_IPS_FN: &[u8] = b"rtw_set_fw_in_ips_mode\0";
 
 const _TRUE: u8 = 1;
 const _FALSE: u8 = 0;
@@ -268,6 +271,14 @@ extern "C" {
     fn rtw_rust_fw_ips_mdelay(ms: u32);
     fn rtw_rust_fw_ips_get_current_time() -> Systime;
     fn rtw_rust_fw_ips_get_passing_time_ms(start: Systime) -> u32;
+    fn rtw_rust_fw_ips_log_netif_down();
+    fn rtw_rust_fw_ips_log_issue_h2c_enter();
+    fn rtw_rust_fw_ips_log_poll_hmetfr(caller: *const c_char, val8: u8, cnt: i32);
+    fn rtw_rust_fw_ips_log_rpwm_read(func: *const c_char, val8: u8);
+    fn rtw_rust_fw_ips_log_rpwm_write(func: *const c_char, val8: u8);
+    fn rtw_rust_fw_ips_log_poll_cr(padapter: Padapter, caller: *const c_char, val8: u8, cnt: i32);
+    fn rtw_rust_fw_ips_log_leave_fwlps();
+    fn rtw_rust_fw_ips_log_cpwm_timeout(func: *const c_char);
 }
 
 #[no_mangle]
@@ -285,6 +296,9 @@ pub extern "C" fn rtw_set_fw_in_ips_mode(padapter: Padapter, enable: u8) {
     #[cfg(not(host_pwrctrl_fw_ips_test))]
     {
         if unsafe { rtw_rust_fw_ips_netif_up(padapter) } == _FALSE {
+            unsafe {
+                rtw_rust_fw_ips_log_netif_down();
+            }
             return;
         }
     }
@@ -313,6 +327,10 @@ pub extern "C" fn rtw_set_fw_in_ips_mode(padapter: Padapter, enable: u8) {
         unsafe {
             rtw_rust_fw_ips_fill_pno_h2c_parms(padapter, &mut parm[1], &mut parm[2]);
         }
+        #[cfg(not(host_pwrctrl_fw_ips_test))]
+        unsafe {
+            rtw_rust_fw_ips_log_issue_h2c_enter();
+        }
         #[cfg(host_pwrctrl_fw_ips_test)]
         host_hal::hal_fill_h2c(padapter, H2C_INACTIVE_PS_, H2C_INACTIVE_PS_LEN, &parm);
         #[cfg(not(host_pwrctrl_fw_ips_test))]
@@ -335,14 +353,22 @@ pub extern "C" fn rtw_set_fw_in_ips_mode(padapter: Padapter, enable: u8) {
             #[cfg(not(host_pwrctrl_fw_ips_test))]
             {
                 val8 = unsafe { rtw_rust_fw_ips_read8(padapter, REG_HMETFR) };
-                unsafe { rtw_rust_fw_ips_mdelay(10) };
+                cnt += 1;
+                unsafe {
+                    rtw_rust_fw_ips_log_poll_hmetfr(FW_IPS_FN.as_ptr() as *const c_char, val8, cnt);
+                    rtw_rust_fw_ips_mdelay(10);
+                }
             }
-            cnt += 1;
+            #[cfg(host_pwrctrl_fw_ips_test)]
+            {
+                cnt += 1;
+            }
             if cnt >= 100 || val8 == 0 {
                 break;
             }
         }
 
+        #[cfg(any(config_lps_lclk, host_pwrctrl_fw_ips_test))]
         if val8 == 0 {
             #[cfg(host_pwrctrl_fw_ips_test)]
             {
@@ -355,9 +381,11 @@ pub extern "C" fn rtw_set_fw_in_ips_mode(padapter: Padapter, enable: u8) {
             #[cfg(not(host_pwrctrl_fw_ips_test))]
             unsafe {
                 rtw_rust_fw_ips_hal_get_rpwm_tog(padapter, &mut val8);
+                rtw_rust_fw_ips_log_rpwm_read(FW_IPS_FN.as_ptr() as *const c_char, val8);
                 val8 = val8.wrapping_add(0x80);
                 val8 |= 1;
                 rtw_rust_fw_ips_hal_set_rpwm(padapter, val8);
+                rtw_rust_fw_ips_log_rpwm_write(FW_IPS_FN.as_ptr() as *const c_char, val8);
                 rtw_rust_fw_ips_set_tog(padapter, (val8.wrapping_add(0x80)) & 0x80);
             }
             cnt = 0;
@@ -371,9 +399,21 @@ pub extern "C" fn rtw_set_fw_in_ips_mode(padapter: Padapter, enable: u8) {
                     #[cfg(not(host_pwrctrl_fw_ips_test))]
                     {
                         val8 = unsafe { rtw_rust_fw_ips_read8(padapter, REG_CR) };
-                        unsafe { rtw_rust_fw_ips_mdelay(10) };
+                        cnt += 1;
+                        unsafe {
+                            rtw_rust_fw_ips_log_poll_cr(
+                                padapter,
+                                FW_IPS_FN.as_ptr() as *const c_char,
+                                val8,
+                                cnt,
+                            );
+                            rtw_rust_fw_ips_mdelay(10);
+                        }
                     }
-                    cnt += 1;
+                    #[cfg(host_pwrctrl_fw_ips_test)]
+                    {
+                        cnt += 1;
+                    }
                     if cnt >= 20 || val8 == 0xEA {
                         break;
                     }
@@ -382,6 +422,11 @@ pub extern "C" fn rtw_set_fw_in_ips_mode(padapter: Padapter, enable: u8) {
             }
         }
     } else {
+        #[cfg(not(host_pwrctrl_fw_ips_test))]
+        unsafe {
+            rtw_rust_fw_ips_log_leave_fwlps();
+        }
+        #[cfg(any(config_lps_lclk, host_pwrctrl_fw_ips_test))]
         {
             cpwm_orig = 0;
             #[cfg(host_pwrctrl_fw_ips_test)]
@@ -400,6 +445,7 @@ pub extern "C" fn rtw_set_fw_in_ips_mode(padapter: Padapter, enable: u8) {
                 val8 = val8.wrapping_add(0x80);
                 val8 |= 1 << 6;
                 rtw_rust_fw_ips_hal_set_rpwm(padapter, val8);
+                rtw_rust_fw_ips_log_rpwm_write(FW_IPS_FN.as_ptr() as *const c_char, val8);
                 rtw_rust_fw_ips_set_tog(padapter, (val8.wrapping_add(0x80)) & 0x80);
             }
 
@@ -427,6 +473,10 @@ pub extern "C" fn rtw_set_fw_in_ips_mode(padapter: Padapter, enable: u8) {
                 #[cfg(not(host_pwrctrl_fw_ips_test))]
                 let elapsed = unsafe { rtw_rust_fw_ips_get_passing_time_ms(start) };
                 if elapsed > 100 {
+                    #[cfg(not(host_pwrctrl_fw_ips_test))]
+                    unsafe {
+                        rtw_rust_fw_ips_log_cpwm_timeout(FW_IPS_FN.as_ptr() as *const c_char);
+                    }
                     break;
                 }
             }
