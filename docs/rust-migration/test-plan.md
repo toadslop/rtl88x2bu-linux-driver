@@ -162,6 +162,7 @@ Rules:
 - Prefer **one harness per crypto family**, extended as files translate.
 - Do not require kernel headers for L2.
 - If a function is too entangled with kernel types, extract only the pure core for L2 and leave the thin wrapper to L0/L1.
+- **Fidelity (T24):** the C oracle for a ported unit is the **pre-port C** at `git show <port-commit>^:<path>.c` when the harness exercises a pure algorithm. When the **shipped** kernel/Rust path is intentionally stubbed or early-returns, the host C oracle and `#[cfg(host_*)]` helpers must **mirror that shipped behaviour** — not a hand-written “ideal” implementation. The Rust under test is always the **same object/crate the kernel links** (or `cpwm_polling_core` / equivalent shared core), not a parallel `*_host.rs` rewrite of the algorithm.
 
 ## L3 — Module load without device
 
