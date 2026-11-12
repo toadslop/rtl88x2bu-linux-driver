@@ -24,72 +24,11 @@ const IPS_NONE: u8 = 0;
 const RF_ON: u8 = 0;
 const RF_OFF: u8 = 2;
 
-#[cfg(host_pwrctrl_ps_processor_test)]
-type Padapter = *mut HostAdapter;
-
-#[cfg(not(host_pwrctrl_ps_processor_test))]
-type Padapter = *mut c_void;
-
-#[cfg(host_pwrctrl_ps_processor_test)]
-#[repr(C)]
-pub struct PwrctrlPriv {
-    pub lock: i32,
-    pub ps_deny: u32,
-    pub bInSuspend: u8,
-    pub ps_processing: u8,
-    pub ips_mode_req: u8,
-    pub rf_pwrstate: u8,
-    pub change_rfpwrstate: u8,
-    pub pwr_state_check_cnts: u32,
-}
-
-#[cfg(host_pwrctrl_ps_processor_test)]
-#[repr(C)]
-pub struct MlmePriv {
-    pub fw_state: u32,
-}
-
-#[cfg(host_pwrctrl_ps_processor_test)]
-#[repr(C)]
-pub struct HostAdapter {
-    pub pwrctrlpriv: PwrctrlPriv,
-    pub mlmepriv: MlmePriv,
-}
+pub(crate) type Padapter = *mut c_void;
 
 #[cfg(host_pwrctrl_ps_processor_test)]
 #[path = "rtw_pwrctrl_ps_host.rs"]
 mod host;
-
-#[cfg(host_pwrctrl_ps_processor_test)]
-fn adapter_to_pwrctl(a: Padapter) -> *mut PwrctrlPriv {
-    unsafe { &mut (*a).pwrctrlpriv }
-}
-
-#[cfg(host_pwrctrl_ps_processor_test)]
-fn enter_pwrlock(_pwr: *mut PwrctrlPriv) {}
-
-#[cfg(host_pwrctrl_ps_processor_test)]
-fn exit_pwrlock(_pwr: *mut PwrctrlPriv) {}
-
-#[cfg(host_pwrctrl_ps_processor_test)]
-fn ps_deny_get_locked(pwr: *mut PwrctrlPriv) -> u32 {
-    unsafe { (*pwr).ps_deny }
-}
-
-#[cfg(host_pwrctrl_ps_processor_test)]
-fn ips_enter_local(_padapter: Padapter) {
-    host::ips_enter_trace();
-}
-
-#[cfg(host_pwrctrl_ps_processor_test)]
-fn unassociated_idle(_padapter: Padapter) -> u8 {
-    host::unassoc_idle_flag()
-}
-
-#[cfg(host_pwrctrl_ps_processor_test)]
-fn set_pwr_state_check_timer(_pwr: *mut PwrctrlPriv) {
-    host::pwr_timer_tick();
-}
 
 extern "C" {
     fn rtw_ps_deny_get(padapter: Padapter) -> u32;
@@ -154,55 +93,5 @@ pub extern "C" fn rtw_ps_processor(padapter: Padapter) {
     if padapter.is_null() {
         return;
     }
-
-    #[cfg(host_pwrctrl_ps_processor_test)]
-    {
-        let pwr = adapter_to_pwrctl(padapter);
-        enter_pwrlock(pwr);
-        let ps_deny = ps_deny_get_locked(pwr);
-        exit_pwrlock(pwr);
-        if ps_deny != 0 {
-            set_pwr_state_check_timer(pwr);
-            unsafe {
-                (*pwr).ps_processing = _FALSE;
-            }
-            return;
-        }
-        if unsafe { (*pwr).bInSuspend } == _TRUE {
-            return;
-        }
-        unsafe {
-            (*pwr).ps_processing = _TRUE;
-        }
-        if unsafe { (*pwr).ips_mode_req } == IPS_NONE {
-            set_pwr_state_check_timer(pwr);
-            unsafe {
-                (*pwr).ps_processing = _FALSE;
-            }
-            return;
-        }
-        if unassociated_idle(padapter) == _FALSE {
-            set_pwr_state_check_timer(pwr);
-            unsafe {
-                (*pwr).ps_processing = _FALSE;
-            }
-            return;
-        }
-        let cnt = unsafe { (*pwr).pwr_state_check_cnts };
-        let rf = unsafe { (*pwr).rf_pwrstate };
-        if rf == RF_ON && (cnt % 4) == 0 {
-            unsafe {
-                (*pwr).change_rfpwrstate = RF_OFF;
-            }
-            ips_enter_local(padapter);
-        }
-        set_pwr_state_check_timer(pwr);
-        unsafe {
-            (*pwr).ps_processing = _FALSE;
-        }
-        return;
-    }
-
-    #[cfg(not(host_pwrctrl_ps_processor_test))]
     ps_processor_core(padapter);
 }
