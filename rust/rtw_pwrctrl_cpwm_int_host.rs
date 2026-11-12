@@ -12,10 +12,14 @@ use std::ffi::c_ulong;
 static mut G_TIME: Systime = 0;
 
 pub fn reset() {
-    unsafe { G_TIME = 0; }
+    unsafe {
+        G_TIME = 0;
+    }
 }
 pub fn set_time(t: Systime) {
-    unsafe { G_TIME = t; }
+    unsafe {
+        G_TIME = t;
+    }
 }
 
 fn adapter(a: Padapter) -> *mut HostAdapter {
