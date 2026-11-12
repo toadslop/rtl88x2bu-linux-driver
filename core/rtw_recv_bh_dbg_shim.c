@@ -88,6 +88,20 @@ void rtw_rust_recv_bh_print_sel(void *sel, const char *line)
 #endif
 }
 
+size_t rtw_rust_recv_bh_append_ptr(char *buf, size_t buflen, size_t pos, void *p)
+{
+	int n;
+
+	if (!buf || pos >= buflen)
+		return pos;
+	n = snprintf(buf + pos, buflen - pos, "%p", p);
+	if (n <= 0)
+		return pos;
+	if ((size_t)n >= buflen - pos)
+		return buflen;
+	return pos + (size_t)n;
+}
+
 void rtw_rust_recv_bh_set_stage(struct recv_priv *recv, u32 s)
 {
 #if DBG_RX_BH_TRACKING

@@ -45,6 +45,22 @@
       "name": "pos_no_buf",
       "pos": "1000",
       "expect": "[RXBHTK]s:0, buf_dqc:0, lbuf:(nil), cbuf:(nil), dlen:0, pos:0, cframe:(nil)\n"
+    },
+    {
+      "name": "dq_cnt_u32_max_wrap",
+      "initial_buf_dq_cnt": 4294967295,
+      "buf": "2000",
+      "data": "2100",
+      "dlen": 4,
+      "expect": "[RXBHTK]s:0, buf_dqc:0, lbuf:(nil), cbuf:0x2000, dlen:4, pos:0, cframe:(nil)\n"
+    },
+    {
+      "name": "pos_before_data_base_wrap",
+      "buf": "3000",
+      "data": "3100",
+      "dlen": 16,
+      "pos": "3008",
+      "expect": "[RXBHTK]s:0, buf_dqc:1, lbuf:(nil), cbuf:0x3000, dlen:16, pos:4294967048, cframe:(nil)\n"
     }
   ]
 }

@@ -65,51 +65,18 @@ fn push_u32(out: &mut [u8], pos: &mut usize, v: U32) {
     }
 }
 
-/// Glibc `fprintf` / host L2 oracle style (`(nil)` / `0x` unpadded hex).
-#[cfg(host_recv_bh_dbg_test)]
-fn push_ptr(out: &mut [u8], pos: &mut usize, p: usize) {
-    if p == 0 {
-        push_str(out, pos, b"(nil)");
-        return;
-    }
-    push_str(out, pos, b"0x");
-    let mut tmp = [0u8; 16];
-    let mut n = 0usize;
-    let mut x = p;
-    while x > 0 {
-        let nib = (x & 0xf) as u8;
-        tmp[n] = if nib < 10 {
-            b'0' + nib
-        } else {
-            b'a' + (nib - 10)
-        };
-        x >>= 4;
-        n += 1;
-    }
-    while n > 0 {
-        n -= 1;
-        push_byte(out, pos, tmp[n]);
-    }
+extern "C" {
+    fn rtw_rust_recv_bh_append_ptr(
+        buf: *mut u8,
+        buflen: usize,
+        pos: usize,
+        p: *mut c_void,
+    ) -> usize;
 }
 
-/// Kernel `RTW_PRINT_SEL(..., %p, ...)` on 6.12 (`(null)` / zero-padded hex, no `0x`).
-#[cfg(not(host_recv_bh_dbg_test))]
-fn push_ptr(out: &mut [u8], pos: &mut usize, p: usize) {
-    if p == 0 {
-        push_str(out, pos, b"(null)");
-        return;
-    }
-    for shift in (0..16).rev() {
-        let nib = ((p >> (shift * 4)) & 0xf) as u8;
-        push_byte(
-            out,
-            pos,
-            if nib < 10 {
-                b'0' + nib
-            } else {
-                b'a' + (nib - 10)
-            },
-        );
+fn append_ptr(out: &mut [u8], pos: &mut usize, p: *mut c_void) {
+    unsafe {
+        *pos = rtw_rust_recv_bh_append_ptr(out.as_mut_ptr(), out.len(), *pos, p);
     }
 }
 
@@ -161,11 +128,11 @@ pub extern "C" fn dump_rx_bh_tk(sel: *mut c_void, recv: *mut c_void) {
             (
                 r.rx_bh_stage,
                 r.rx_bh_buf_dq_cnt,
-                r.rx_bh_lbuf as usize,
-                r.rx_bh_cbuf as usize,
+                r.rx_bh_lbuf,
+                r.rx_bh_cbuf,
                 r.rx_bh_cbuf_dlen,
                 r.rx_bh_cbuf_pos,
-                r.rx_bh_cframe as usize,
+                r.rx_bh_cframe,
             )
         }
         #[cfg(not(host_recv_bh_dbg_test))]
@@ -174,11 +141,11 @@ pub extern "C" fn dump_rx_bh_tk(sel: *mut c_void, recv: *mut c_void) {
                 (
                     kernel::rtw_rust_recv_bh_stage(recv),
                     kernel::rtw_rust_recv_bh_buf_dq_cnt(recv),
-                    kernel::rtw_rust_recv_bh_lbuf(recv) as usize,
-                    kernel::rtw_rust_recv_bh_cbuf(recv) as usize,
+                    kernel::rtw_rust_recv_bh_lbuf(recv),
+                    kernel::rtw_rust_recv_bh_cbuf(recv),
                     kernel::rtw_rust_recv_bh_cbuf_dlen(recv),
                     kernel::rtw_rust_recv_bh_cbuf_pos(recv),
-                    kernel::rtw_rust_recv_bh_cframe(recv) as usize,
+                    kernel::rtw_rust_recv_bh_cframe(recv),
                 )
             }
         }
@@ -190,15 +157,15 @@ pub extern "C" fn dump_rx_bh_tk(sel: *mut c_void, recv: *mut c_void) {
     push_str(&mut line, &mut p, b", buf_dqc:");
     push_u32(&mut line, &mut p, dq);
     push_str(&mut line, &mut p, b", lbuf:");
-    push_ptr(&mut line, &mut p, lbuf);
+    append_ptr(&mut line, &mut p, lbuf);
     push_str(&mut line, &mut p, b", cbuf:");
-    push_ptr(&mut line, &mut p, cbuf);
+    append_ptr(&mut line, &mut p, cbuf);
     push_str(&mut line, &mut p, b", dlen:");
     push_u32(&mut line, &mut p, dlen);
     push_str(&mut line, &mut p, b", pos:");
     push_u32(&mut line, &mut p, pos);
     push_str(&mut line, &mut p, b", cframe:");
-    push_ptr(&mut line, &mut p, cframe);
+    append_ptr(&mut line, &mut p, cframe);
     push_byte(&mut line, &mut p, b'\n');
     emit(sel, &line[..p]);
 }
@@ -236,7 +203,7 @@ pub extern "C" fn rx_bh_tk_set_buf(
     if !buf.is_null() {
         r.rx_bh_cbuf_data = data;
         r.rx_bh_cbuf_dlen = dlen;
-        r.rx_bh_buf_dq_cnt += 1;
+        r.rx_bh_buf_dq_cnt = r.rx_bh_buf_dq_cnt.wrapping_add(1);
     } else {
         r.rx_bh_cbuf_data = core::ptr::null_mut();
         r.rx_bh_cbuf_dlen = 0;
@@ -253,7 +220,7 @@ pub extern "C" fn rx_bh_tk_set_buf_pos(recv: *mut c_void, pos: *mut c_void) {
     if !r.rx_bh_cbuf.is_null() {
         let base = r.rx_bh_cbuf_data as usize;
         let p = pos as usize;
-        r.rx_bh_cbuf_pos = (p - base) as U32;
+        r.rx_bh_cbuf_pos = p.wrapping_sub(base) as U32;
     } else {
         extern "C" {
             fn rtw_warn_on(cond: i32);
@@ -323,7 +290,7 @@ pub extern "C" fn rx_bh_tk_set_buf(
             kernel_set::rtw_rust_recv_bh_set_cbuf_dlen(recv, dlen);
             kernel_set::rtw_rust_recv_bh_set_buf_dq_cnt(
                 recv,
-                kernel::rtw_rust_recv_bh_buf_dq_cnt(recv) + 1,
+                kernel::rtw_rust_recv_bh_buf_dq_cnt(recv).wrapping_add(1),
             );
         } else {
             kernel_set::rtw_rust_recv_bh_set_cbuf_data(recv, core::ptr::null_mut());
@@ -342,7 +309,7 @@ pub extern "C" fn rx_bh_tk_set_buf_pos(recv: *mut c_void, pos: *mut c_void) {
         if !kernel::rtw_rust_recv_bh_cbuf(recv).is_null() {
             let base = kernel::rtw_rust_recv_bh_cbuf_data(recv) as usize;
             let p = pos as usize;
-            kernel_set::rtw_rust_recv_bh_set_cbuf_pos(recv, (p - base) as U32);
+            kernel_set::rtw_rust_recv_bh_set_cbuf_pos(recv, p.wrapping_sub(base) as U32);
         } else {
             kernel_set::rtw_rust_warn_on(1);
             kernel_set::rtw_rust_recv_bh_set_cbuf_pos(recv, 0);

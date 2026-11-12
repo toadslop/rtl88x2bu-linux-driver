@@ -178,7 +178,7 @@ fn get_ips_deny_time(pwr: PwrctrlPrivPtr) -> Systime {
 
 fn bump_ips_deny(pwr: PwrctrlPrivPtr, ips_deffer_ms: u32) {
     let now = get_current_time();
-    let candidate = now + ms_to_systime(ips_deffer_ms);
+    let candidate = now.wrapping_add(ms_to_systime(ips_deffer_ms));
     if time_after(candidate, get_ips_deny_time(pwr)) {
         set_ips_deny_time(pwr, candidate);
     }
@@ -189,7 +189,7 @@ fn rtw_set_ips_deny_impl(padapter: Padapter, ms: u32) {
         return;
     }
     let pwr = pwrpriv(padapter);
-    let t = get_current_time() + ms_to_systime(ms);
+    let t = get_current_time().wrapping_add(ms_to_systime(ms));
     set_ips_deny_time(pwr, t);
 }
 
