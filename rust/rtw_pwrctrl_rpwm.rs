@@ -13,7 +13,7 @@
 )]
 
 #[cfg(host_pwrctrl_rpwm_test)]
-use std::ffi::c_void;
+use std::ffi::{c_ulong, c_void};
 
 #[cfg(not(host_pwrctrl_rpwm_test))]
 use core::ffi::{c_ulong, c_void};
@@ -27,10 +27,6 @@ const LPS_RPWM_RETRY_CNT: u32 = 3;
 
 type Padapter = *mut c_void;
 
-#[cfg(host_pwrctrl_rpwm_test)]
-pub(crate) type Systime = u32;
-
-#[cfg(not(host_pwrctrl_rpwm_test))]
 pub(crate) type Systime = c_ulong;
 
 #[cfg(host_pwrctrl_rpwm_test)]
@@ -54,7 +50,7 @@ struct HostAdapter {
 mod host_hal {
     use super::*;
 
-    static mut G_TIME: u32 = 0;
+    static mut G_TIME: Systime = 0;
     static mut G_CPWM_ORIG: u8 = 0;
     static mut G_POLL_READS_BEFORE_TOGGLE: u32 = 0;
     static mut G_CPWM_READ_COUNT: u32 = 0;
@@ -68,7 +64,7 @@ mod host_hal {
         }
     }
 
-    pub fn set_time(t: u32) {
+    pub fn set_time(t: Systime) {
         unsafe {
             G_TIME = t;
         }
@@ -92,19 +88,66 @@ mod host_hal {
         unsafe { (*a).pwrctrlpriv.cpwm_tog }
     }
 
-    fn current_time() -> u32 {
+    pub fn current_time() -> Systime {
         unsafe { G_TIME }
     }
 
-    fn passing_time_ms(start: u32) -> u32 {
-        unsafe { G_TIME - start }
-    }
-
-    fn msleep_os(ms: i32) {
+    pub fn passing_time_ms(start: Systime) -> u32 {
         unsafe {
-            G_TIME += ms as u32;
+            let delta = G_TIME.wrapping_sub(start);
+            if delta > c_ulong::from(u32::MAX) {
+                u32::MAX
+            } else {
+                delta as u32
+            }
         }
     }
+
+    pub fn msleep_os(ms: i32) {
+        unsafe {
+            G_TIME = G_TIME.wrapping_add(ms as c_ulong);
+        }
+    }
+
+    pub fn get_u8_field(adapter: Padapter, field: u32) -> u8 {
+        let a = adapter as *mut HostAdapter;
+        let p = unsafe { &(*a).pwrctrlpriv };
+        match field {
+            0 => p.cpwm,
+            1 => p.cpwm_tog,
+            2 => p.tog,
+            _ => 0,
+        }
+    }
+
+    pub fn set_u8_field(adapter: Padapter, field: u32, v: u8) {
+        let a = adapter as *mut HostAdapter;
+        let p = unsafe { &mut (*a).pwrctrlpriv };
+        match field {
+            0 => p.cpwm = v,
+            1 => p.cpwm_tog = v,
+            2 => p.tog = v,
+            _ => {}
+        }
+    }
+
+    pub fn reset_retry(adapter: Padapter) {
+        let a = adapter as *mut HostAdapter;
+        unsafe {
+            (*a).pwrctrlpriv.rpwm_retry = 0;
+        }
+    }
+
+    pub fn bump_retry(adapter: Padapter) -> u8 {
+        let a = adapter as *mut HostAdapter;
+        unsafe {
+            let r = (*a).pwrctrlpriv.rpwm_retry;
+            (*a).pwrctrlpriv.rpwm_retry = r.wrapping_add(1);
+            r
+        }
+    }
+
+    pub fn poll_complete(_adapter: Padapter, _rst: i32, _cpwm_orig: u8, _cpwm_now: u8) {}
 
     pub fn hal_get_cpwm(_adapter: Padapter, out: *mut u8) {
         unsafe {
@@ -122,44 +165,6 @@ mod host_hal {
     pub fn cannot_run(adapter: Padapter) -> bool {
         let a = adapter as *mut HostAdapter;
         unsafe { (*a).b_surprise_removed != 0 || (*a).b_driver_stopped != 0 }
-    }
-
-    pub fn cpwm_polling_loop(adapter: Padapter, mut rpwm: u8, mut cpwm_orig: u8) -> i32 {
-        let a = adapter as *mut HostAdapter;
-        let pwr = unsafe { &mut (*a).pwrctrlpriv };
-        let mut rst = _FAIL;
-        let mut cpwm_now = 0u8;
-
-        pwr.rpwm_retry = 0;
-        loop {
-            let start_time = current_time();
-            while {
-                msleep_os(1);
-                hal_get_cpwm(adapter, &mut cpwm_now);
-                if (cpwm_orig ^ cpwm_now) & 0x80 != 0 {
-                    pwr.cpwm = PS_STATE_S4;
-                    pwr.cpwm_tog = cpwm_now & PS_TOGGLE;
-                    rst = _SUCCESS;
-                    false
-                } else {
-                    passing_time_ms(start_time) < LPS_CPWM_TIMEOUT_MS && !cannot_run(adapter)
-                }
-            } {}
-            if rst == _SUCCESS {
-                break;
-            }
-            cpwm_orig = cpwm_now;
-            rpwm &= !PS_TOGGLE;
-            rpwm |= pwr.tog;
-            hal_set_rpwm(adapter, rpwm);
-            pwr.tog = pwr.tog.wrapping_add(0x80);
-            let retry = pwr.rpwm_retry as u32;
-            pwr.rpwm_retry = (retry + 1) as u8;
-            if retry >= LPS_RPWM_RETRY_CNT || cannot_run(adapter) {
-                break;
-            }
-        }
-        rst
     }
 }
 
@@ -250,7 +255,26 @@ fn kernel_cannot_run(a: Padapter) -> bool {
 pub extern "C" fn rtw_cpwm_polling(adapter: Padapter, rpwm: u8, cpwm_orig_in: u8) -> u8 {
     #[cfg(host_pwrctrl_rpwm_test)]
     {
-        return host_hal::cpwm_polling_loop(adapter, rpwm, cpwm_orig_in) as u8;
+        let mut cpwm_now = 0u8;
+        let mut cpwm_orig = cpwm_orig_in;
+        let rst = cpwm_polling_core(
+            host_hal::cannot_run,
+            |ms| host_hal::msleep_os(ms),
+            |_a| host_hal::current_time(),
+            host_hal::passing_time_ms,
+            |a, o| host_hal::hal_get_cpwm(a, o),
+            |a, r| host_hal::hal_set_rpwm(a, r),
+            host_hal::get_u8_field,
+            host_hal::set_u8_field,
+            host_hal::reset_retry,
+            host_hal::bump_retry,
+            adapter,
+            rpwm,
+            &mut cpwm_orig,
+            &mut cpwm_now,
+        );
+        host_hal::poll_complete(adapter, rst, cpwm_orig, cpwm_now);
+        return rst as u8;
     }
     #[cfg(not(host_pwrctrl_rpwm_test))]
     {
@@ -287,7 +311,7 @@ pub extern "C" fn host_pwrctrl_rpwm_reset_hal() {
 
 #[cfg(host_pwrctrl_rpwm_test)]
 #[no_mangle]
-pub extern "C" fn host_pwrctrl_rpwm_set_time(t: u32) {
+pub extern "C" fn host_pwrctrl_rpwm_set_time(t: Systime) {
     host_hal::set_time(t);
 }
 
