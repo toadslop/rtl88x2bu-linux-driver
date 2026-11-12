@@ -20,6 +20,13 @@ PANIC_RE = re.compile(
 SYM_LINE = re.compile(
     r"^([0-9a-f]+)\s+([gl])\s+.*?F\s+\.text\s+([0-9a-f]+)\s+(.+)$"
 )
+# Trailing rustc PLT32 tweak (e.g. panic_const_add_overflow-0x4).
+RELOC_SUFFIX = re.compile(r"-0x[0-9a-f]+$")
+# Logical Rust item name at end of legacy v0 mangling (_RNv…_22ccmp_encrypt_pv1_inner).
+# Rust legacy length-prefix item at EOL: …18ccmp_decrypt_inner
+# Exported Rust item names are snake_case (no embedded decimal length digits).
+MANGLED_ITEM_TAIL = re.compile(r"([a-z][a-z_]*)$")
+MANGLED_LEN_PREFIX = re.compile(r"(\d+)$")
 RELOC_LINE = re.compile(r"^\s*([0-9a-f]+):\s+R_\S+\s+(\S+)")
 
 
@@ -29,45 +36,100 @@ def run_objdump(args: list[str], path: Path) -> str:
     )
 
 
-def panic_kind(symbol: str) -> str:
+PANIC_KIND_MARKERS = (
+    "panic_const_add_overflow",
+    "panic_const_sub_overflow",
+    "panic_const_mul_overflow",
+    "panic_const_shl_overflow",
+    "panic_const_shr_overflow",
+    "panic_const_div_by_zero",
+    "panic_bounds_check",
+    "slice_end_index_len_fail",
+    "slice_start_index_len_fail",
+    "slice_index_len_fail",
+    "slice_index_order_fail",
+    "panic_cannot_unwind",
+)
+
+
+def normalize_reloc_target(symbol: str) -> str:
     sym = symbol.lstrip("_")
-    for marker in (
-        "panic_const_add_overflow",
-        "panic_const_sub_overflow",
-        "panic_const_mul_overflow",
-        "panic_const_shl_overflow",
-        "panic_const_shr_overflow",
-        "panic_bounds_check",
-        "slice_end_index_len_fail",
-        "slice_start_index_len_fail",
-        "slice_index_len_fail",
-    ):
+    sym = RELOC_SUFFIX.sub("", sym)
+    return sym
+
+
+def panic_kind(symbol: str) -> str:
+    sym = normalize_reloc_target(symbol)
+    for marker in PANIC_KIND_MARKERS:
         if marker in sym:
             return marker
     if "panicking" in sym:
-        return sym.split("panicking")[-1].split("::")[-1][:64]
+        tail = sym.split("panicking", 1)[-1]
+        for part in reversed(tail.split("panic_")):
+            if part.startswith("const_") or part.startswith("bounds"):
+                return f"panic_{part.split('-')[0].split('::')[-1]}"[:64]
     return sym[:80]
 
 
-def functions(path: Path) -> list[tuple[int, int, str]]:
-    out: list[tuple[int, int, str]] = []
+def demangle_rust_item(symbol: str) -> str | None:
+    for i in range(len(symbol) - 1, 0, -1):
+        ch = symbol[i]
+        if not ("a" <= ch <= "z"):
+            continue
+        name = symbol[i:]
+        if not re.fullmatch(r"[a-z][a-z0-9_]*", name):
+            continue
+        prefix = symbol[:i]
+        lm = MANGLED_LEN_PREFIX.search(prefix)
+        if lm and int(lm.group(1)) == len(name):
+            return name
+    return None
+
+
+def logical_rust_owner(symbol: str, kernel_exports: set[str]) -> str:
+    """Map objdump function symbol to export-oriented owner name."""
+    if not symbol.startswith("_R"):
+        return symbol.lstrip("_")
+    logical = demangle_rust_item(symbol)
+    if not logical:
+        return symbol[:80]
+    if logical.endswith("_inner"):
+        stem = logical[: -len("_inner")]
+        if stem in kernel_exports:
+            return stem
+    if logical in kernel_exports:
+        return logical
+    return logical
+
+
+def functions(path: Path) -> list[tuple[int, int, str, str]]:
+    out: list[tuple[int, int, str, str]] = []
     for line in run_objdump(["-t"], path).splitlines():
         m = SYM_LINE.match(line.strip())
         if not m:
             continue
         addr = int(m.group(1), 16)
+        bind = m.group(2)
         size = int(m.group(3), 16)
         name = m.group(4).strip()
         if size == 0:
             continue
-        out.append((addr, addr + size, name))
+        out.append((addr, addr + size, name, bind))
     out.sort(key=lambda t: t[0])
     return out
 
 
-def enclosing(funcs: list[tuple[int, int, str]], offset: int) -> str:
+def kernel_export_names(funcs: list[tuple[int, int, str, str]]) -> set[str]:
+    return {
+        name
+        for _s, _e, name, bind in funcs
+        if bind == "g" and not name.startswith("_R")
+    }
+
+
+def enclosing(funcs: list[tuple[int, int, str, str]], offset: int) -> str:
     best = "?"
-    for start, end, name in funcs:
+    for start, end, name, _bind in funcs:
         if start <= offset < end:
             best = name
         elif start > offset:
@@ -75,23 +137,22 @@ def enclosing(funcs: list[tuple[int, int, str]], offset: int) -> str:
     return best
 
 
-def export_label(funcs: list[tuple[int, int, str]], offset: int) -> str:
-    """Prefer the nearest global export (unmangled C name) enclosing offset."""
+def export_label(
+    funcs: list[tuple[int, int, str, str]], offset: int, exports: set[str]
+) -> str:
+    """Prefer kernel export symbol for panics in rustc ``*_inner`` helpers."""
     chosen = enclosing(funcs, offset)
-    globals = [(s, e, n) for s, e, n in funcs if not n.startswith("_")]
-    for start, end, name in reversed(globals):
-        if start <= offset < end:
+    for start, end, name, bind in reversed(funcs):
+        if start <= offset < end and bind == "g" and not name.startswith("_R"):
             return name
     if chosen != "?":
-        return chosen
-    for start, end, name in reversed(funcs):
-        if start <= offset < end:
-            return name
+        return logical_rust_owner(chosen, exports)
     return "?"
 
 
 def collect_sites(obj: Path) -> set[str]:
     funcs = functions(obj)
+    exports = kernel_export_names(funcs)
     sites: set[str] = set()
     stem = obj.stem
     for line in run_objdump(["-dr"], obj).splitlines():
@@ -102,7 +163,7 @@ def collect_sites(obj: Path) -> set[str]:
         target = rm.group(2)
         if not PANIC_RE.search(target):
             continue
-        owner = export_label(funcs, off)
+        owner = export_label(funcs, off, exports)
         kind = panic_kind(target)
         sites.add(f"{stem}:{owner}:{kind}")
     return sites
