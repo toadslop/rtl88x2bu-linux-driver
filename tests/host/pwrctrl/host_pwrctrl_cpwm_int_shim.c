@@ -6,7 +6,7 @@
 
 typedef uint8_t u8;
 typedef uint32_t u32;
-typedef u32 systime;
+typedef unsigned long systime;
 
 #define _TRUE 1
 #define _FALSE 0
@@ -84,14 +84,14 @@ static systime rtw_get_current_time(void)
 
 static u32 rtw_get_passing_time_ms(systime start)
 {
-	return g_time - start;
+	return (u32)(g_time - start);
 }
 
 static void rtw_yield_os(void) {}
 
 static void rtw_msleep_os(int ms)
 {
-	g_time += (u32)ms;
+	g_time += (systime)ms;
 }
 
 static void _enter_pwrlock(int *lock)
