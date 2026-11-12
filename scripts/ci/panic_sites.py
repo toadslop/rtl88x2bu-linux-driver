@@ -24,8 +24,6 @@ SYM_LINE = re.compile(
 RELOC_SUFFIX = re.compile(r"-0x[0-9a-f]+$")
 # Logical Rust item name at end of legacy v0 mangling (_RNv…_22ccmp_encrypt_pv1_inner).
 # Rust legacy length-prefix item at EOL: …18ccmp_decrypt_inner
-# Exported Rust item names are snake_case (no embedded decimal length digits).
-MANGLED_ITEM_TAIL = re.compile(r"([a-z][a-z_]*)$")
 MANGLED_LEN_PREFIX = re.compile(r"(\d+)$")
 RELOC_LINE = re.compile(r"^\s*([0-9a-f]+):\s+R_\S+\s+(\S+)")
 
