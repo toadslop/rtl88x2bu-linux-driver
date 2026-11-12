@@ -22,7 +22,8 @@ extern "C" {
 #[cfg(any(config_rtw_debug, config_proc_debug))]
 #[no_mangle]
 pub extern "C" fn dump_adapters_status(sel: *mut c_void, dvobj: *mut c_void) {
-    if sel.is_null() || dvobj.is_null() {
+    // NULL sel == RTW_DBGDUMP (kernel log); only dvobj must be valid (matches C).
+    if dvobj.is_null() {
         return;
     }
     unsafe {
