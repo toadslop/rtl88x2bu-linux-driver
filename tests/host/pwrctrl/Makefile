@@ -34,7 +34,7 @@ LPS_CFLAGS := $(CFLAGS)
 LPS_ENTER_CFLAGS := $(CFLAGS)
 
 RUST_PWRCTRL := $(ROOT)/rust/rtw_pwrctrl.rs
-RUST_PWRCTRL_IPS_HOST := $(ROOT)/rust/rtw_pwrctrl_ips_host.rs
+RUST_PWRCTRL_IPS := $(ROOT)/rust/rtw_pwrctrl_ips.rs
 RUST_PWRCTRL_PS := $(ROOT)/rust/rtw_pwrctrl_ps.rs
 RUST_PWRCTRL_LPS_TP := $(ROOT)/rust/rtw_pwrctrl_lps_tp.rs
 RUST_PWRCTRL_LPS_EXEC := $(ROOT)/rust/rtw_pwrctrl_lps_exec.rs
@@ -280,9 +280,9 @@ test_pwrctrl_ps_deny: test_pwrctrl_ps_deny.c $(SHIM) $(HOST_JSON)
 test_pwrctrl_ips: test_pwrctrl_ips.c $(IPS_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_pwrctrl_ips.c $(IPS_SHIM) $(HOST_JSON)
 
-librust_pwrctrl_ips.a: $(RUST_PWRCTRL_IPS_HOST)
-	$(RUSTC) -C opt-level=2 -C overflow-checks=on \
-		--crate-type staticlib $(RUST_PWRCTRL_IPS_HOST) -o $@
+librust_pwrctrl_ips.a: $(RUST_PWRCTRL_IPS)
+	$(RUSTC) -C opt-level=2 -C overflow-checks=on --cfg host_pwrctrl_ips_test \
+		--crate-type staticlib $(RUST_PWRCTRL_IPS) -o $@
 
 test_pwrctrl_ips_rust: test_pwrctrl_ips.c librust_pwrctrl_ips.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -o $@ test_pwrctrl_ips.c $(HOST_JSON) librust_pwrctrl_ips.a

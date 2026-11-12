@@ -12,25 +12,33 @@
     unused_unsafe
 )]
 
+#[cfg(host_pwrctrl_ips_test)]
+use std::ffi::c_void;
+
+#[cfg(not(host_pwrctrl_ips_test))]
 use core::ffi::c_void;
 
-const _TRUE: u8 = 1;
-const _FALSE: u8 = 0;
+pub(crate) const _TRUE: u8 = 1;
+pub(crate) const _FALSE: u8 = 0;
 const _SUCCESS: i32 = 1;
-const RF_OFF: u8 = 2;
-const RF_ON: u8 = 0;
-const IPS_LEVEL_2: u8 = 2;
-const IPS_NONE: u8 = 0;
+pub(crate) const RF_OFF: u8 = 2;
+pub(crate) const RF_ON: u8 = 0;
+pub(crate) const IPS_LEVEL_2: u8 = 2;
+pub(crate) const IPS_NONE: u8 = 0;
 
-const F_RF_PWRSTATE: u32 = 0;
-const F_CHANGE_RFPWRSTATE: u32 = 1;
-const F_BIPS_PROCESSING: u32 = 2;
-const F_IPS_MODE: u32 = 3;
-const F_IPS_MODE_REQ: u32 = 4;
-const F_BPOWER_SAVING: u32 = 5;
-const F_BKEEPFWALIVE: u32 = 6;
+pub(crate) const F_RF_PWRSTATE: u32 = 0;
+pub(crate) const F_CHANGE_RFPWRSTATE: u32 = 1;
+pub(crate) const F_BIPS_PROCESSING: u32 = 2;
+pub(crate) const F_IPS_MODE: u32 = 3;
+pub(crate) const F_IPS_MODE_REQ: u32 = 4;
+pub(crate) const F_BPOWER_SAVING: u32 = 5;
+pub(crate) const F_BKEEPFWALIVE: u32 = 6;
 
-type Padapter = *mut c_void;
+pub(crate) type Padapter = *mut c_void;
+
+#[cfg(host_pwrctrl_ips_test)]
+#[path = "rtw_pwrctrl_ips_host.rs"]
+mod host;
 
 extern "C" {
     fn rtw_rust_pwrctrl_enter_lock(padapter: Padapter);
@@ -52,7 +60,7 @@ extern "C" {
     fn rtw_rust_ips_llstats_on_leave(pwr: *mut c_void);
 }
 
-fn ips_enter_core(padapter: Padapter) {
+pub(crate) fn ips_enter_core(padapter: Padapter) {
     let pwr = unsafe { rtw_rust_ips_pwrpriv(padapter) };
     if pwr.is_null() {
         return;
@@ -100,7 +108,7 @@ pub extern "C" fn ips_enter(padapter: Padapter) {
     }
 }
 
-fn ips_leave_core(padapter: Padapter) -> i32 {
+pub(crate) fn ips_leave_core(padapter: Padapter) -> i32 {
     let pwr = unsafe { rtw_rust_ips_pwrpriv(padapter) };
     if pwr.is_null() {
         return _SUCCESS;
@@ -157,4 +165,22 @@ pub extern "C" fn ips_leave(padapter: Padapter) -> i32 {
         }
     }
     ret
+}
+
+#[cfg(host_pwrctrl_ips_test)]
+#[no_mangle]
+pub extern "C" fn host_pwrctrl_ips_reset_trace() {
+    host::reset_trace();
+}
+
+#[cfg(host_pwrctrl_ips_test)]
+#[no_mangle]
+pub extern "C" fn host_pwrctrl_ips_set_pwr_up_result(r: i32) {
+    host::set_pwr_up_result(r);
+}
+
+#[cfg(host_pwrctrl_ips_test)]
+#[no_mangle]
+pub extern "C" fn host_pwrctrl_ips_get_trace() -> *mut host::HostIpsTrace {
+    host::trace_ptr()
 }
