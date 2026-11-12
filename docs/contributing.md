@@ -8,7 +8,7 @@ This repo is an incremental C→Rust migration of the `88x2bu` kernel module. Ev
 2. Read [`docs/rust-migration.md`](rust-migration.md) and [`docs/rust-migration/architecture.md`](rust-migration/architecture.md).
 3. **Characterize C behavior → freeze tests → port** (do not port first and add tests later).
 4. Use domain types at Rust APIs; confine `unsafe` and raw pointers to ABI/OS shims.
-5. Open a pull request against `master`. GitHub auto-loads the checklist from [`.github/PULL_REQUEST_TEMPLATE.md`](../../.github/PULL_REQUEST_TEMPLATE.md).
+5. Open a pull request against `master`. Lead with a plain-English summary of what changed and why (**max 200 words**); GitHub auto-loads the rest of the checklist from [`.github/PULL_REQUEST_TEMPLATE.md`](../../.github/PULL_REQUEST_TEMPLATE.md). Agents follow [pick-up-work-item § PR descriptions](../.cursor/skills/pick-up-work-item/SKILL.md#pr-descriptions-mandatory).
 
 ## Verification gates
 
