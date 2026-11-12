@@ -4,6 +4,10 @@ ROOT      := ../../..
 HOST_INC  := ../include
 HOST_JSON := ../crypto/host_vector_json.c
 
+# FX-18 debug proc input validation (copy_user + war offload bounds)
+INPUT_VAL_ORACLE := debug_proc_input_validation_c_oracle.c
+INPUT_VAL_L2     := test_proc_input_validation.c
+
 # W3-138 test hooks (proc/debug)
 RUST_HOOKS := $(ROOT)/rust/rtw_debug_test_hooks.rs
 HOOKS_ORACLE := rtw_debug_test_hooks_c_leaf.c
@@ -258,6 +262,7 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 	test-proc-wow-p2p-c test-proc-wow-p2p-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
 	test-proc-smps-c test-proc-smps-rust \
+	test-proc-input-validation-c \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
 
 all: test
@@ -289,6 +294,7 @@ test: test-hooks-c test-hooks-rust test-sec-cam-c test-sec-cam-rust \
 	test-proc-wow-p2p-c test-proc-wow-p2p-rust \
 	test-proc-tx-mgmt-c test-proc-tx-mgmt-rust \
 	test-proc-smps-c test-proc-smps-rust \
+	test-proc-input-validation-c \
 	test-phy-cap-dump-c test-phy-cap-dump-rust
 
 test-all: test
@@ -299,7 +305,14 @@ test-c: test-hooks-c test-sec-cam-c test-regsty-rx-ampdu-c test-proc-ht-c \
 	test-proc-ampdu-tuning-c test-proc-tx-amsdu-c test-proc-phy-cap-registry-c \
 	test-proc-btcoex-c test-proc-sreset-c test-proc-misc-c test-proc-mcc-c test-proc-txss-c test-proc-ack-c test-proc-ack-8821c-c test-proc-cal-c test-proc-lps-tp-c test-proc-pci-c test-proc-rings-c test-proc-rtkm-c test-proc-monitor-c \
 	test-proc-ps-info-c test-proc-tx-mgmt-c test-proc-smps-c \
+	test-proc-input-validation-c \
 	test-phy-cap-dump-c
+
+test-proc-input-validation-c: test_proc_input_validation
+	./test_proc_input_validation
+
+test_proc_input_validation: $(INPUT_VAL_L2) $(INPUT_VAL_ORACLE)
+	$(CC) $(CFLAGS) -o $@ $(INPUT_VAL_L2) $(INPUT_VAL_ORACLE)
 
 test-rust: test-hooks-rust test-sec-cam-rust test-regsty-rx-ampdu-rust \
 	test-proc-ht-rust test-proc-wow-rust test-proc-vht-rust test-proc-fwps-rust test-proc-smps-rust test-proc-tdls-rust test-proc-rx-ampdu-rust test-proc-ampdu-tuning-rust \

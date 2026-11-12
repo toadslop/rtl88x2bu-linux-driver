@@ -3012,6 +3012,9 @@ ssize_t rtw_rust_debug_proc_copy_user_input(const char __user *buffer, size_t co
 	if (buffer && copy_from_user(tmp, buffer, count))
 		return 0;
 
+	if (count < tmp_size)
+		tmp[count] = '\0';
+
 	return count;
 }
 
