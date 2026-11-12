@@ -62,7 +62,7 @@ pub extern "C" fn host_pwrctrl_wakeup_set_passing_ms(ms: u32) {
 }
 
 #[no_mangle]
-pub extern "C" fn host_pwrctrl_wakeup_set_time(t: u32) {
+pub extern "C" fn host_pwrctrl_wakeup_set_time(t: Systime) {
     unsafe {
         G_TIME = t;
     }
@@ -103,11 +103,11 @@ pub fn get_current_time() -> Systime {
 }
 
 pub fn ms_to_systime(ms: u32) -> Systime {
-    ms
+    ms as Systime
 }
 
 pub fn time_after(a: Systime, b: Systime) -> bool {
-    (a as i32).wrapping_sub(b as i32) > 0
+    (b as i64).wrapping_sub(a as i64) < 0
 }
 
 pub fn get_passing_time_ms(_start: Systime) -> u32 {

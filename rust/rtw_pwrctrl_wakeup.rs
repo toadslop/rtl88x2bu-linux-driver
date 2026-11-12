@@ -13,16 +13,12 @@
 )]
 
 #[cfg(host_pwrctrl_wakeup_test)]
-use std::ffi::{c_char, c_int, c_void};
+use std::ffi::{c_char, c_int, c_ulong, c_void};
 
 #[cfg(not(host_pwrctrl_wakeup_test))]
 use core::ffi::{c_char, c_int, c_ulong, c_void};
 
-#[cfg(not(host_pwrctrl_wakeup_test))]
 pub(crate) type Systime = c_ulong;
-
-#[cfg(host_pwrctrl_wakeup_test)]
-pub(crate) type Systime = u32;
 
 pub(crate) type Padapter = *mut c_void;
 

@@ -12,7 +12,7 @@
 
 struct vector {
 	char name[MAX_NAME];
-	int time;
+	unsigned long time;
 	int passing_ms;
 	int fw_state;
 	int bInSuspend;
@@ -25,7 +25,7 @@ struct vector {
 	int expect_ret;
 	int expect_leave_all;
 	int expect_ips_leave;
-	int expect_deny_time;
+	unsigned long expect_deny_time;
 };
 
 static _adapter_wakeup g_adapter;
@@ -39,7 +39,13 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 	v->bup = 1;
 	if (host_json_parse_string_in(obj, len, "name", v->name, sizeof(v->name)))
 		return -1;
-	host_json_parse_int_in(obj, len, "time", &v->time);
+	{
+		int tmp;
+
+		if (host_json_parse_ulong_in(obj, len, "time", &v->time) &&
+		    !host_json_parse_int_in(obj, len, "time", &tmp))
+			v->time = (unsigned long)tmp;
+	}
 	host_json_parse_int_in(obj, len, "passing_ms", &v->passing_ms);
 	host_json_parse_int_in(obj, len, "fw_state", &v->fw_state);
 	host_json_parse_int_in(obj, len, "bInSuspend", &v->bInSuspend);
@@ -52,7 +58,14 @@ static int parse_vec(const char *obj, size_t len, void *vv)
 	host_json_parse_int_in(obj, len, "expect_ret", &v->expect_ret);
 	host_json_parse_int_in(obj, len, "expect_leave_all", &v->expect_leave_all);
 	host_json_parse_int_in(obj, len, "expect_ips_leave", &v->expect_ips_leave);
-	host_json_parse_int_in(obj, len, "expect_deny_time", &v->expect_deny_time);
+	{
+		int tmp;
+
+		if (host_json_parse_ulong_in(obj, len, "expect_deny_time",
+					     &v->expect_deny_time) &&
+		    !host_json_parse_int_in(obj, len, "expect_deny_time", &tmp))
+			v->expect_deny_time = (unsigned long)tmp;
+	}
 	return 0;
 }
 
@@ -80,15 +93,15 @@ static int run_vec(struct vector *v)
 		host_pwrctrl_wakeup_set_ips_leave_result(_FAIL);
 
 	setup_adapter(v);
-	host_pwrctrl_wakeup_set_time((u32)v->time);
+	host_pwrctrl_wakeup_set_time(v->time);
 
 	if (v->deny_ms > 0) {
 		g_adapter.pwrctrlpriv.ips_deny_time = 0;
 		host_pwrctrl_wakeup_set_passing_ms(0);
-		host_pwrctrl_wakeup_set_time((u32)v->time);
+		host_pwrctrl_wakeup_set_time(v->time);
 		rtw_set_ips_deny(&g_adapter, (u32)v->deny_ms);
-		if ((s32)g_adapter.pwrctrlpriv.ips_deny_time != v->expect_deny_time) {
-			fprintf(stderr, "FAIL %s deny_time=%u expect=%d\n", v->name,
+		if (g_adapter.pwrctrlpriv.ips_deny_time != v->expect_deny_time) {
+			fprintf(stderr, "FAIL %s deny_time=%lu expect=%lu\n", v->name,
 				g_adapter.pwrctrlpriv.ips_deny_time, v->expect_deny_time);
 			return 1;
 		}
