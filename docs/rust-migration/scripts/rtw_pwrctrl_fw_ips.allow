@@ -12,3 +12,11 @@ drop rtw_rust_fw_ips_hal_set_rpwm
 drop rtw_rust_fw_ips_mdelay
 drop rtw_rust_fw_ips_get_current_time
 drop rtw_rust_fw_ips_get_passing_time_ms
+drop rtw_rust_fw_ips_log_netif_down
+drop rtw_rust_fw_ips_log_issue_h2c_enter
+drop rtw_rust_fw_ips_log_poll_hmetfr
+drop rtw_rust_fw_ips_log_rpwm_read
+drop rtw_rust_fw_ips_log_rpwm_write
+drop rtw_rust_fw_ips_log_poll_cr
+drop rtw_rust_fw_ips_log_leave_fwlps
+drop rtw_rust_fw_ips_log_cpwm_timeout

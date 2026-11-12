@@ -586,6 +586,23 @@ void rtw_rust_ps_proc_set_pwr_timer(PADAPTER padapter)
 #endif
 }
 
+void rtw_rust_ps_proc_report_ps_deny(PADAPTER padapter, u32 ps_deny)
+{
+	if (!MLME_IS_MONITOR(padapter))
+		RTW_INFO(FUNC_ADPT_FMT ": ps_deny=0x%08X, skip power save!\n",
+			 FUNC_ADPT_ARG(padapter), ps_deny);
+}
+
+void rtw_rust_ps_proc_b_in_suspend(PADAPTER padapter)
+{
+	struct dvobj_priv *psdpriv = padapter->dvobj;
+	struct debug_priv *pdbgpriv = &psdpriv->drv_dbg;
+
+	pdbgpriv->dbg_ps_insuspend_cnt++;
+	RTW_INFO("%s, pwrpriv->bInSuspend == _TRUE ignore this process\n",
+		 __FUNCTION__);
+}
+
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_PS_PROCESSOR_TEST */
 
 void pwr_state_check_handler(void *ctx)
@@ -1574,6 +1591,50 @@ systime rtw_rust_fw_ips_get_current_time(void)
 u32 rtw_rust_fw_ips_get_passing_time_ms(systime start)
 {
 	return rtw_get_passing_time_ms(start);
+}
+
+void rtw_rust_fw_ips_log_netif_down(void)
+{
+	RTW_INFO("%s: ERROR, netif is down\n", __func__);
+}
+
+void rtw_rust_fw_ips_log_issue_h2c_enter(void)
+{
+	RTW_INFO("%s: issue H2C to FW when entering IPS\n", __func__);
+}
+
+void rtw_rust_fw_ips_log_poll_hmetfr(const char *caller, u8 val8, int cnt)
+{
+	RTW_INFO("%s  polling REG_HMETFR=0x%x, cnt=%d\n", caller, val8, cnt);
+}
+
+void rtw_rust_fw_ips_log_rpwm_read(const char *func, u8 val8)
+{
+	RTW_INFO("%s: read rpwm=%02x\n", func, val8);
+}
+
+void rtw_rust_fw_ips_log_rpwm_write(const char *func, u8 val8)
+{
+	RTW_INFO("%s: write rpwm=%02x\n", func, val8);
+}
+
+void rtw_rust_fw_ips_log_poll_cr(PADAPTER padapter, const char *caller, u8 val8,
+				 int cnt)
+{
+	RTW_INFO("%s  polling 0x100=0x%x, cnt=%d\n", caller, val8, cnt);
+	RTW_INFO("%s 0x08:%02x, 0x03:%02x\n", caller,
+		 rtw_read8(padapter, 0x08), rtw_read8(padapter, 0x03));
+}
+
+void rtw_rust_fw_ips_log_leave_fwlps(void)
+{
+	RTW_INFO("%s: Leaving IPS in FWLPS state\n", __func__);
+}
+
+void rtw_rust_fw_ips_log_cpwm_timeout(const char *func)
+{
+	RTW_INFO("%s: polling cpwm timeout when leaving IPS in FWLPS state\n",
+		 func);
 }
 
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_FW_IPS_TEST */
