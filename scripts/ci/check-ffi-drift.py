@@ -17,7 +17,7 @@ FN = re.compile(
 )
 EXTERN_BLOCK = re.compile(r'extern\s+"C"\s*\{([^}]*)\}', re.DOTALL)
 EXPORT_FN = re.compile(
-    r"#\[no_mangle\]\s+pub\s+extern\s+\"C\"\s+fn\s+([a-zA-Z0-9_]+)\s*\(([^)]*)\)"
+    r"#\[no_mangle\]\s+pub\s+(?:unsafe\s+)?extern\s+\"C\"\s+fn\s+([a-zA-Z0-9_]+)\s*\(([^)]*)\)"
     r"\s*(?:->\s*([^{]+))?\s*\{",
     re.MULTILINE,
 )
