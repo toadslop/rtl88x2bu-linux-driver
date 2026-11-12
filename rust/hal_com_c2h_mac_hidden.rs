@@ -22,7 +22,9 @@ mod ffi_hal_com_c2h;
 use ffi_hal_com_c2h::rtw_rust_hal_com_warn_c2h_short_len;
 #[path = "ffi_hal_com_systime.rs"]
 mod ffi_hal_com_systime;
-use ffi_hal_com_systime::{rtw_rust_hal_com_get_current_time, rtw_rust_hal_com_get_passing_time_ms};
+use ffi_hal_com_systime::{
+    rtw_rust_hal_com_get_current_time, rtw_rust_hal_com_get_passing_time_ms,
+};
 
 extern "C" {
     fn rtw_rust_hal_com_mac_hidden_rpt1_apply(

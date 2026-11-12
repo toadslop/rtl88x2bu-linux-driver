@@ -12,9 +12,9 @@
 )]
 
 #[cfg(not(host_recv_sta_test))]
-use core::ffi::c_void;
-#[cfg(not(host_recv_sta_test))]
 use core::ffi::c_ulong;
+#[cfg(not(host_recv_sta_test))]
+use core::ffi::c_void;
 #[cfg(host_recv_sta_test)]
 use std::ffi::c_void;
 
