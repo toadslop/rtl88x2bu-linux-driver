@@ -53,21 +53,34 @@ Oversized PRs (400–600 lines) are a recurring failure mode. Path B **must**:
 Details: [`plan-stacked-prs`](../plan-stacked-prs/SKILL.md#pr-size-limit-mandatory--read-first)
 and [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md#3-pr-size-gate-mandatory--before-commit).
 
-## PR descriptions — tag @toadslop (mandatory)
+## PR descriptions (mandatory)
 
-Every pull request opened or materially updated during this workflow must
-**tag `@toadslop`** in the description so the maintainer is notified for review.
+Every pull request opened or materially updated must lead with a **short
+plain-English summary** and **tag `@toadslop`** so the maintainer is notified.
+
+### Summary — what and why (max 200 words)
+
+In the opening lines of the description, say **what changed** and **why** in
+plain language a reviewer can understand without reading the diff first. Use
+complete sentences; avoid identifier-only bullet dumps or gate jargon with no
+context.
+
+**Cap the summary at 200 words.** (GitHub checklist blocks from
+[`.github/PULL_REQUEST_TEMPLATE.md`](../../../.github/PULL_REQUEST_TEMPLATE.md)
+may follow; they do not count toward the limit.) Include **`@toadslop`** in the
+summary or on the line immediately after it.
+
+### When to update
 
 | When | Requirement |
 |------|-------------|
-| `ManagePullRequest` `create_pr` | Include `@toadslop` in `body` (first paragraph or a `**Reviewer:** @toadslop` line) |
-| `gh pr create` | Same — `@toadslop` in `--body` |
-| `ManagePullRequest` `update_pr` | If the existing body lacks `@toadslop`, add it in the same update |
+| `ManagePullRequest` `create_pr` | Summary (≤200 words) + `@toadslop` in `body` |
+| `gh pr create` | Same in `--body` |
+| `ManagePullRequest` `update_pr` | Add `@toadslop` if missing; refresh summary when the change is material |
 | Knit follow-up PRs (Path A via `prepare-pr-for-merge`) | Same rule |
 
-This applies to Path B implementation PRs, Path C docs PRs, and any follow-up
-PRs opened while preparing existing work. Do not omit the tag on stacked PRs
-(PR2+).
+This applies to Path B implementation PRs, Path C docs PRs, stacked layers
+(PR2+), and any follow-up PRs opened while preparing existing work.
 
 ## Path selection (mandatory — run first)
 
@@ -294,8 +307,9 @@ New PRs from this path must land in **open** (ready-for-review) state — not
 draft:
 
 - Publish with **`gh stack submit --auto --open`** (or `gh stack link … --open`);
-  **`body` must include `@toadslop`** on every layer (see **PR descriptions**
-  above) — use `ManagePullRequest` `update_pr` / `gh pr edit` after submit.
+  Every layer's **`body`** must meet **PR descriptions** above (plain-English
+  summary + `@toadslop`) — use `ManagePullRequest` `update_pr` / `gh pr edit`
+  after submit.
 - Single-PR plans may use `ManagePullRequest` `create_pr` with `draft: false`.
 - If a layer was created as draft by mistake: `gh pr ready <number>`.
 
@@ -363,7 +377,7 @@ implement one immediately. Wait for an explicit follow-up or a new pick-up run
 | Report `human action required` when eligible PRs stay blocked | Imply the next pick-up will fix blocked PRs automatically |
 | Honor explicit user override to skip PR prep | Ignore a clear "start new work" instruction |
 | Open new PRs ready for review (Path B) | Open implementation PRs as drafts |
-| Tag `@toadslop` in every PR description | Omit maintainer notification on new/updated PRs |
+| Plain-English PR summary (what/why, ≤200 words) + `@toadslop` | Wall-of-bullets descriptions or omitting maintainer notification |
 | Babysit new PRs until CI is green (Path B) | Skip babysit after opening a stack |
 | Complete every planned row in one session (≤7 PRs) (Path B) | Stop after PR1 and file a "continue stack" issue without §10 blocker |
 | File follow-up issue(s) only for §10 blockers (Path B) | Use follow-up issues to defer PR2…PRn for convenience |

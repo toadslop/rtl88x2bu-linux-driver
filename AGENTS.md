@@ -85,3 +85,10 @@ Path A uses **`prepQueue`** (lowest PR number first). Do not classify work from
 
 See [`scripts/workflow/README.md`](scripts/workflow/README.md) and
 `.cursor/skills/pick-up-work-item/SKILL.md`.
+
+### Pull request descriptions
+
+Open and update PRs with a **plain-English summary** of what changed and why
+(**max 200 words**) and tag **`@toadslop`**. Checklist sections from
+[`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md) may follow
+the summary. Full rules: [pick-up-work-item § PR descriptions](.cursor/skills/pick-up-work-item/SKILL.md#pr-descriptions-mandatory).

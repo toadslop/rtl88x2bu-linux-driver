@@ -220,7 +220,9 @@ set the final title/body (cloud: `ManagePullRequest` `update_pr` with
 
 PR body must include:
 
-- **`@toadslop`** — maintainer notification (required; near the top)
+- **Plain-English summary** — what changed and why (**max 200 words**; see
+  [`pick-up-work-item`](../pick-up-work-item/SKILL.md#pr-descriptions-mandatory))
+- **`@toadslop`** — maintainer notification (in or right after the summary)
 - `Closes #N` or `Part of #N` (use **Closes** only on the **top** PR of the stack)
 - Gates executed per layer
 - Stack position (e.g. "PR 2 of 3 — base: `cursor/...`")
