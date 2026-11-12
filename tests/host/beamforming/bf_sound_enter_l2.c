@@ -96,7 +96,6 @@ static void o_sound_get_sta_beamform_cap(bf_host_sound_enter_padpt adapter, stru
 	if (ht_bf_cap & BF_HOST_BEAMFORMING_HT_BEAMFORMER_ENABLE) {
 		info->beamforming_cap |= BF_HOST_BEAMFORMER_CAP_HT_EXPLICIT;
 		*sta_bf_cap |= BF_HOST_BEAMFORMEE_CAP_HT_EXPLICIT;
-		*sounding_dim = (ht_bf_cap & BF_HOST_BEAMFORMING_HT_BEAMFORMEE_CHNL_EST_CAP) >> 6;
 	}
 }
 

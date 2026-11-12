@@ -218,7 +218,6 @@ unsafe fn sound_get_sta_beamform_cap(
     if (ht_bf_cap & BF_HOST_BEAMFORMING_HT_BEAMFORMER_ENABLE) != 0 {
         info.beamforming_cap |= BF_HOST_BEAMFORMER_CAP_HT_EXPLICIT;
         *sta_bf_cap |= BF_HOST_BEAMFORMEE_CAP_HT_EXPLICIT;
-        *sounding_dim = ((ht_bf_cap & BF_HOST_BEAMFORMING_HT_BEAMFORMEE_CHNL_EST_CAP) >> 6) as U8;
     }
 }
 

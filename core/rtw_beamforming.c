@@ -1396,7 +1396,6 @@ static void _rust_get_sta_beamform_cap(PADAPTER adapter, struct sta_info *sta,
 	if (TEST_FLAG(ht_bf_cap, BEAMFORMING_HT_BEAMFORMER_ENABLE)) {
 		info->beamforming_cap |= BEAMFORMER_CAP_HT_EXPLICIT;
 		*sta_bf_cap |= BEAMFORMEE_CAP_HT_EXPLICIT;
-		*sounding_dim = (ht_bf_cap & BEAMFORMING_HT_BEAMFORMEE_CHNL_EST_CAP) >> 6;
 		*comp_steering = (ht_bf_cap & BEAMFORMING_HT_BEAMFORMER_STEER_NUM) >> 4;
 	}
 }
