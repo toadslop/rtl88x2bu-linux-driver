@@ -68,6 +68,12 @@
       "time": 1000,
       "deny_ms": 3000,
       "expect_deny_time": 4000
+    },
+    {
+      "name": "ips_deny_systime_wrap",
+      "time": 4294967290,
+      "deny_ms": 32,
+      "expect_deny_time": 26
     }
   ]
 }

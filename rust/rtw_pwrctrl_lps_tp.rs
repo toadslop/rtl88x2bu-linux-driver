@@ -216,7 +216,7 @@ fn read_tx_inputs(padapter: Padapter, sta: Psta) -> (u64, u32, u32, u32) {
         let adapter = padapter as *mut HostAdapter;
         let pstats = unsafe { &mut (*(sta as *mut StaInfo)).sta_stats };
         let pwr = unsafe { &(*adapter).pwrctrlpriv };
-        let cur = pstats.tx_bytes - pstats.acc_tx_bytes;
+        let cur = pstats.tx_bytes.wrapping_sub(pstats.acc_tx_bytes);
         let th = tp_threshold_kbytes(pwr.lps_tx_tp_th);
         let num_tx = unsafe { (*adapter).mlmepriv.LinkDetectInfo.NumTxOkInPeriod };
         (cur, th, num_tx, pwr.lps_tx_pkts)
@@ -225,7 +225,7 @@ fn read_tx_inputs(padapter: Padapter, sta: Psta) -> (u64, u32, u32, u32) {
     {
         let tx_bytes = unsafe { rtw_rust_lps_tp_sta_tx_bytes(sta) };
         let acc = unsafe { rtw_rust_lps_tp_sta_acc_tx_bytes(sta) };
-        let cur = tx_bytes - acc;
+        let cur = tx_bytes.wrapping_sub(acc);
         let th = tp_threshold_kbytes(unsafe { rtw_rust_lps_tp_get_u16(padapter, 0) });
         let num_tx = unsafe { rtw_rust_lps_tp_num_tx_ok(padapter) };
         let pkts = unsafe { rtw_rust_lps_tp_get_u32(padapter, 0) };
@@ -239,7 +239,7 @@ fn read_rx_inputs(padapter: Padapter, sta: Psta) -> (u64, u32, u32, u32) {
         let adapter = padapter as *mut HostAdapter;
         let pstats = unsafe { &mut (*(sta as *mut StaInfo)).sta_stats };
         let pwr = unsafe { &(*adapter).pwrctrlpriv };
-        let cur = pstats.rx_bytes - pstats.acc_rx_bytes;
+        let cur = pstats.rx_bytes.wrapping_sub(pstats.acc_rx_bytes);
         let th = tp_threshold_kbytes(pwr.lps_rx_tp_th);
         let num_rx = unsafe { (*adapter).mlmepriv.LinkDetectInfo.NumRxUnicastOkInPeriod };
         (cur, th, num_rx, pwr.lps_rx_pkts)
@@ -248,7 +248,7 @@ fn read_rx_inputs(padapter: Padapter, sta: Psta) -> (u64, u32, u32, u32) {
     {
         let rx_bytes = unsafe { rtw_rust_lps_tp_sta_rx_bytes(sta) };
         let acc = unsafe { rtw_rust_lps_tp_sta_acc_rx_bytes(sta) };
-        let cur = rx_bytes - acc;
+        let cur = rx_bytes.wrapping_sub(acc);
         let th = tp_threshold_kbytes(unsafe { rtw_rust_lps_tp_get_u16(padapter, 1) });
         let num_rx = unsafe { rtw_rust_lps_tp_num_rx_unicast_ok(padapter) };
         let pkts = unsafe { rtw_rust_lps_tp_get_u32(padapter, 1) };

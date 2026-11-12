@@ -29,6 +29,8 @@ struct vector {
 	int has_frame;
 	unsigned long frame;
 	int clear_buf;
+	int has_initial_dq_cnt;
+	u32 initial_buf_dq_cnt;
 	char expect[MAX_EXPECT];
 };
 
@@ -120,6 +122,9 @@ static int parse_vector_object(const char *obj, size_t len, void *vec_void)
 	parse_optional_ptr(obj, len, "frame", &v->frame, &v->has_frame);
 	if (!host_json_parse_int_in(obj, len, "clear_buf", &dummy))
 		v->clear_buf = dummy;
+	if (host_json_parse_int_in(obj, len, "initial_buf_dq_cnt",
+				   (int *)&v->initial_buf_dq_cnt) == 0)
+		v->has_initial_dq_cnt = 1;
 	if (host_json_parse_string_in(obj, len, "expect", v->expect, sizeof(v->expect)))
 		return -1;
 	unescape_expect(v->expect);
@@ -134,6 +139,8 @@ static int run_vector(const struct vector *v)
 	size_t nread;
 
 	memset(&recv, 0, sizeof(recv));
+	if (v->has_initial_dq_cnt)
+		recv.rx_bh_buf_dq_cnt = v->initial_buf_dq_cnt;
 	if (v->has_stage)
 		rx_bh_tk_set_stage(&recv, v->stage);
 	if (v->has_buf)
