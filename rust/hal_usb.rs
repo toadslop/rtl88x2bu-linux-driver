@@ -452,6 +452,9 @@ mod kernel {
             let mut precvbuf =
                 *(precvpriv.add(rtw_rust_hal_usb_off_recvpriv_precv_buf) as *mut *mut u8);
             for _ in 0..recvbuf_nr {
+                if precvbuf.is_null() {
+                    break;
+                }
                 rtw_os_recvbuf_resource_free(padapter, precvbuf as Hdl);
                 precvbuf = precvbuf.add(rtw_rust_hal_usb_size_recv_buf);
             }
@@ -542,7 +545,7 @@ mod kernel {
         ) -> i32;
         fn rtw_hal_c2h_handler(adapter: Hdl, id: u8, seq: u8, plen: u8, payload: *mut u8) -> i32;
         fn rtw_cbuf_push(cbuf: *mut c_void, buf: *mut c_void) -> u8;
-        fn rtw_malloc(sz: u32) -> *mut c_void;
+        fn _rtw_malloc(sz: u32) -> *mut c_void;
         fn _set_workitem(pwork: *mut c_void);
         fn rtw_rust_hal_usb_err_c2h_cbuf_push_fail();
     }
@@ -589,7 +592,7 @@ mod kernel {
                     c2h_push_fail();
                 }
             } else {
-                let c2h_evt = rtw_malloc(C2H_REG_LEN as u32);
+                let c2h_evt = _rtw_malloc(C2H_REG_LEN as u32);
                 if !c2h_evt.is_null() {
                     _rtw_memcpy(c2h_evt, buf as *const c_void, C2H_REG_LEN);
                     if rtw_cbuf_push(c2h_queue, c2h_evt) != C2H_SUCCESS as u8 {
