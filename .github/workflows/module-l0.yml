@@ -18,6 +18,9 @@ on:
       - 'dkms.conf'
       - '.github/workflows/module-l0.yml'
       - 'scripts/ci/verify-ko-probes.sh'
+      - 'scripts/ci/panic-sites.sh'
+      - 'scripts/ci/panic_sites.py'
+      - 'scripts/ci/panic-sites-baseline.txt'
       - 'scripts/bindgen_rtw.sh'
   pull_request:
 
@@ -49,6 +52,9 @@ jobs:
               - 'dkms.conf'
               - '.github/workflows/module-l0.yml'
               - 'scripts/ci/verify-ko-probes.sh'
+              - 'scripts/ci/panic-sites.sh'
+              - 'scripts/ci/panic_sites.py'
+              - 'scripts/ci/panic-sites-baseline.txt'
               - 'scripts/bindgen_rtw.sh'
 
       - name: Out of scope — skip L0
@@ -90,5 +96,10 @@ jobs:
           else
             IMAGE="rtl88x2bu-l0:ci"
           fi
+          BASE_REF=""
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git fetch origin "${{ github.base_ref }}"
+            BASE_REF="origin/${{ github.base_ref }}"
+          fi
           docker run --rm -v "$PWD:/driver" -w /driver "${IMAGE}" \
-            bash -c 'KDIR=/opt/linux ./scripts/bindgen_rtw.sh --check && make clean && make KDIR=/opt/linux LLVM=1 -j"$(nproc)" && ./scripts/ci/verify-ko-probes.sh 88x2bu.ko'
+            bash -c "KDIR=/opt/linux ./scripts/bindgen_rtw.sh --check && make clean && make KDIR=/opt/linux LLVM=1 -j\"\$(nproc)\" && ./scripts/ci/verify-ko-probes.sh 88x2bu.ko && (./scripts/ci/panic-sites.sh --base-ref \"${BASE_REF}\" || echo 'panic-sites: advisory failure (T23)')"

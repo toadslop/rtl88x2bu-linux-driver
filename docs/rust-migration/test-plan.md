@@ -113,6 +113,17 @@ speed; **production L1 on a swap should use a kbuild-produced `OLD.o` from `mast
 make KDIR=/opt/linux LLVM=1 rust-check-symbols-selftest
 ```
 
+**Supplemental L1 checks (T23, advisory → required):**
+
+| Check | Script | What it catches |
+|-------|--------|-----------------|
+| FFI signature drift | [`scripts/ci/check-ffi-drift.py`](../../scripts/ci/check-ffi-drift.py) | Hand-written `extern "C"` shims diverging from C / duplicate declarations |
+| Panic-site inventory | [`scripts/ci/panic-sites.sh`](../../scripts/ci/panic-sites.sh) | New `core::panicking::*` / slice guard calls inside touched `#[no_mangle]` exports |
+
+`module-l0.yml` runs `panic-sites.sh` after the L0 build (baseline:
+[`panic-sites-baseline.txt`](../../scripts/ci/panic-sites-baseline.txt)). `check-ffi-drift.py`
+runs on L1 paths when Rust FFI changes (see `module-l1.yml`).
+
 **CI status:** automated selftest via [`.github/workflows/module-l1.yml`](../../.github/workflows/module-l1.yml) inside the same L0 container image as the build gate (issue T7, #152). Per-unit aggregate targets run via [`scripts/ci/run-l1-unit-checks.sh`](../../scripts/ci/run-l1-unit-checks.sh); scope is narrowed by [`scripts/ci/l1-targets-from-diff.sh`](../../scripts/ci/l1-targets-from-diff.sh):
 
 | Changed paths | L1 unit target |
