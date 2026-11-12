@@ -18,7 +18,8 @@ void rtw_rust_hal_dm_init_odm_endian_hooks_le(
 	if (!pdm_odm)
 		return;
 
-	odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BAND, band);
+	if (band)
+		odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BAND, band);
 	odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_SEC_MODE, sec_mode);
 	odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BW, bw);
 	odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_NET_CLOSED, net_closed);
@@ -34,8 +35,9 @@ void rtw_rust_hal_dm_init_odm_endian_hooks_be(
 	if (!pdm_odm)
 		return;
 
-	odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BAND,
-		convert_to_big_endian(band, (int)sizeof(BAND_TYPE)));
+	if (band)
+		odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BAND,
+			convert_to_big_endian(band, (int)sizeof(BAND_TYPE)));
 	odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_SEC_MODE,
 		convert_to_big_endian(sec_mode, (int)sizeof(u32)));
 	odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BW,
