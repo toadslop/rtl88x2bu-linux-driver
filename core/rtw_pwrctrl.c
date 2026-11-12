@@ -600,7 +600,7 @@ void rtw_rust_ps_proc_b_in_suspend(PADAPTER padapter)
 
 	pdbgpriv->dbg_ps_insuspend_cnt++;
 	RTW_INFO("%s, pwrpriv->bInSuspend == _TRUE ignore this process\n",
-		 __FUNCTION__);
+		 "rtw_ps_processor");
 }
 
 #endif /* CONFIG_RUST && !HOST_PWRCTRL_PS_PROCESSOR_TEST */
@@ -1595,12 +1595,12 @@ u32 rtw_rust_fw_ips_get_passing_time_ms(systime start)
 
 void rtw_rust_fw_ips_log_netif_down(void)
 {
-	RTW_INFO("%s: ERROR, netif is down\n", __func__);
+	RTW_INFO("%s: ERROR, netif is down\n", "rtw_set_fw_in_ips_mode");
 }
 
 void rtw_rust_fw_ips_log_issue_h2c_enter(void)
 {
-	RTW_INFO("%s: issue H2C to FW when entering IPS\n", __func__);
+	RTW_INFO("%s: issue H2C to FW when entering IPS\n", "rtw_set_fw_in_ips_mode");
 }
 
 void rtw_rust_fw_ips_log_poll_hmetfr(const char *caller, u8 val8, int cnt)
@@ -1628,7 +1628,7 @@ void rtw_rust_fw_ips_log_poll_cr(PADAPTER padapter, const char *caller, u8 val8,
 
 void rtw_rust_fw_ips_log_leave_fwlps(void)
 {
-	RTW_INFO("%s: Leaving IPS in FWLPS state\n", __func__);
+	RTW_INFO("%s: Leaving IPS in FWLPS state\n", "rtw_set_fw_in_ips_mode");
 }
 
 void rtw_rust_fw_ips_log_cpwm_timeout(const char *func)
