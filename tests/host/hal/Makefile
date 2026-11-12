@@ -63,11 +63,11 @@ CFLAGS := -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 
 all: test
 
-test: test-c test-rust test-rsvd test-chip test-chip-rust test-trx test-trx-rust \
+test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-trx test-trx-rust \
 	test-fw test-fw-rust test-tx-aclt-force test-tx-aclt-force-rust \
 	test-tx-aclt-confs test-tx-aclt-confs-rust test-hal-spec test-hal-spec-rust \
 	test-mrate test-mrate-rust test-rf-nss test-rf-nss-rust \
-	test-halmac test-halmac-rust test-halmac-rsvd test-brate test-brate-rust \
+	test-halmac test-halmac-rust test-halmac-rsvd test-halmac-rsvd-rust test-brate test-brate-rust \
 	test-legal-channel test-legal-channel-rust test-mapping-out-pipe test-mapping-out-pipe-rust \
 	test-mgntframe-raid test-mgntframe-raid-rust test-hdata-rate test-hdata-rate-rust \
 	test-phy-bit-shift test-phy-bit-shift-rust test-dm-board-type test-dm-board-type-rust \

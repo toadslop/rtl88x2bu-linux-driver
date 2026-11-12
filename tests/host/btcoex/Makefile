@@ -11,7 +11,7 @@ HP_SRC := btcoex_handler_policy_l2.c
 .PHONY: all test test-c test-rust test-handler test-handler-c test-handler-rust clean
 all: test
 
-test: test-c test-rust test-handler
+test: test-c test-rust test-handler test-handler-rust
 
 test-c: test_btcoex_init_notify
 	./test_btcoex_init_notify btcoex_init_notify_vectors.json
