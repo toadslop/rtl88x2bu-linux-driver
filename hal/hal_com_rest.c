@@ -15203,6 +15203,7 @@ void rtw_rust_hal_com_per_rate_type0_apply(_adapter *adapter, int idx, u8 mac_id
 
 void rtw_rust_hal_com_lps_status_apply(_adapter *adapter, u8 action, s8 status_code)
 {
+#ifdef CONFIG_LPS_ACK
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
 
 	switch (action) {
@@ -15213,14 +15214,17 @@ void rtw_rust_hal_com_lps_status_apply(_adapter *adapter, u8 action, s8 status_c
 	default:
 		break;
 	}
+#endif
 }
 
 void rtw_rust_hal_com_lps_sctx_done(_adapter *adapter)
 {
+#ifdef CONFIG_LPS_ACK
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
 	struct submit_ctx *lps_sctx = &pwrpriv->lps_ack_sctx;
 
 	rtw_sctx_done(&lps_sctx);
+#endif
 }
 
 void rtw_rust_hal_com_log_unknown_lps_action(u8 action)
