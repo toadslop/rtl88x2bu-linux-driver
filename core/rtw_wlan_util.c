@@ -16,7 +16,6 @@
 
 #include <drv_types.h>
 #include <hal_data.h>
-#include <linux/build_bug.h>
 
 #if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)
 	#include <linux/inetdevice.h>
@@ -27,19 +26,21 @@
 	#define IPv6_PROTOCOL_OFFSET	20
 #endif
 
-/* rust/rtw_wlan_util.rs and rust/rtw_crypto_wrap.rs hardcode these
- * _ADAPTER offsets. CONFIG_BCN_CNT_CONFIRM_HDL inserts beacon_keys into
- * mlme_priv and adds 0x48 to every field after cur_beacon_keys.
- * File scope so the check is not dropped with an unused function.
- */
-static_assert(offsetof(struct _ADAPTER, mlmeextpriv.cur_channel) == 0x844,
-	      "mlmeextpriv.cur_channel moved; update rust/rtw_wlan_util.rs");
-static_assert(offsetof(struct _ADAPTER, mlmeextpriv.basicrate) == 0x848,
-	      "mlmeextpriv.basicrate moved; update rust/rtw_wlan_util.rs");
-static_assert(offsetof(struct _ADAPTER, mlmeextpriv.datarate) == 0x855,
-	      "mlmeextpriv.datarate moved; update rust/rtw_wlan_util.rs");
-static_assert(offsetof(struct _ADAPTER, registrypriv.amsdu_mode) == 0x3859,
-	      "registrypriv.amsdu_mode moved; update rust/rtw_crypto_wrap.rs");
+#if defined(CONFIG_RUST)
+/* Kernel _ADAPTER layout for rust/rtw_wlan_util.rs and rust/rtw_crypto_wrap.rs */
+const size_t rtw_rust_off_adapter_basicrate =
+	offsetof(struct _ADAPTER, mlmeextpriv.basicrate);
+const size_t rtw_rust_off_adapter_datarate =
+	offsetof(struct _ADAPTER, mlmeextpriv.datarate);
+const size_t rtw_rust_off_adapter_cur_channel =
+	offsetof(struct _ADAPTER, mlmeextpriv.cur_channel);
+const size_t rtw_rust_off_adapter_ht_enable =
+	offsetof(struct _ADAPTER, mlmeextpriv.mlmext_info.HT_enable);
+const size_t rtw_rust_off_adapter_vht_enable =
+	offsetof(struct _ADAPTER, mlmeextpriv.mlmext_info.VHT_enable);
+const size_t rtw_rust_off_adapter_amsdu_mode =
+	offsetof(struct _ADAPTER, registrypriv.amsdu_mode);
+#endif /* CONFIG_RUST */
 
 unsigned char ARTHEROS_OUI1[] = {0x00, 0x03, 0x7f};
 unsigned char ARTHEROS_OUI2[] = {0x00, 0x13, 0x74};

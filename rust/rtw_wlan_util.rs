@@ -176,13 +176,12 @@ struct HostWlanAdapter {
 mod kernel_layout {
     use super::U8;
 
-    /// `offsetof(struct _adapter, mlmeextpriv.basicrate)` with
-    /// `CONFIG_BCN_CNT_CONFIRM_HDL` off. That macro adds 0x48.
-    pub const MLMEEXT_BASICRATE_OFFSET: usize = 0x848;
-    /// `offsetof(struct _adapter, mlmeextpriv.datarate)`
-    pub const MLMEEXT_DATARATE_OFFSET: usize = 0x855;
-
     extern "C" {
+        pub static rtw_rust_off_adapter_basicrate: usize;
+        pub static rtw_rust_off_adapter_datarate: usize;
+        pub static rtw_rust_off_adapter_cur_channel: usize;
+        pub static rtw_rust_off_adapter_ht_enable: usize;
+        pub static rtw_rust_off_adapter_vht_enable: usize;
         pub fn rtw_get_oper_ch(adapter: *mut core::ffi::c_void) -> U8;
     }
 }
@@ -228,7 +227,7 @@ unsafe fn basicrate_slot(padapter: *mut U8, i: usize) -> U8 {
     }
     #[cfg(not(host_wlan_util_test))]
     {
-        unsafe { *padapter.add(kernel_layout::MLMEEXT_BASICRATE_OFFSET + i) }
+        unsafe { *padapter.add(kernel_layout::rtw_rust_off_adapter_basicrate + i) }
     }
 }
 
@@ -239,7 +238,7 @@ unsafe fn datarate_slot(padapter: *mut U8, i: usize) -> U8 {
     }
     #[cfg(not(host_wlan_util_test))]
     {
-        unsafe { *padapter.add(kernel_layout::MLMEEXT_DATARATE_OFFSET + i) }
+        unsafe { *padapter.add(kernel_layout::rtw_rust_off_adapter_datarate + i) }
     }
 }
 
@@ -314,13 +313,6 @@ struct HostNetworkAdapter {
     vht_enable: U8,
 }
 
-#[cfg(not(host_wlan_util_test))]
-mod network_layout {
-    pub const CUR_CHANNEL_OFFSET: usize = 0x844;
-    pub const HT_ENABLE_OFFSET: usize = 0xc58;
-    pub const VHT_ENABLE_OFFSET: usize = 0xc66;
-}
-
 unsafe fn cur_channel(padapter: *mut U8) -> U8 {
     #[cfg(host_wlan_util_test)]
     {
@@ -328,7 +320,7 @@ unsafe fn cur_channel(padapter: *mut U8) -> U8 {
     }
     #[cfg(not(host_wlan_util_test))]
     {
-        unsafe { *padapter.add(network_layout::CUR_CHANNEL_OFFSET) }
+        unsafe { *padapter.add(kernel_layout::rtw_rust_off_adapter_cur_channel) }
     }
 }
 
@@ -339,7 +331,7 @@ unsafe fn ht_enable(padapter: *mut U8) -> U8 {
     }
     #[cfg(not(host_wlan_util_test))]
     {
-        unsafe { *padapter.add(network_layout::HT_ENABLE_OFFSET) }
+        unsafe { *padapter.add(kernel_layout::rtw_rust_off_adapter_ht_enable) }
     }
 }
 
@@ -350,7 +342,7 @@ unsafe fn vht_enable(padapter: *mut U8) -> U8 {
     }
     #[cfg(not(host_wlan_util_test))]
     {
-        unsafe { *padapter.add(network_layout::VHT_ENABLE_OFFSET) }
+        unsafe { *padapter.add(kernel_layout::rtw_rust_off_adapter_vht_enable) }
     }
 }
 
