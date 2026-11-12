@@ -34,7 +34,7 @@ void odm_cmn_info_hook(struct dm_struct *dm, u32 cmn_info, void *ptr)
 
 struct vector {
 	char name[48];
-	int big_endian, band, sec_mode, bw, net_closed;
+	int big_endian, band, sec_mode, bw, net_closed, skip_band;
 };
 
 static void *expect_ptr(void *field, size_t sz, int be)
@@ -54,20 +54,27 @@ static int run_vector(struct vector *v)
 	fx.net_closed = (s32)v->net_closed;
 	host_hal_dm_odm_endian_reset();
 	if (v->big_endian)
-		rtw_rust_hal_dm_init_odm_endian_hooks_be(&dm, &fx.band, &fx.sec_mode, &fx.bw,
-			&fx.net_closed);
+		rtw_rust_hal_dm_init_odm_endian_hooks_be(&dm, v->skip_band ? NULL : &fx.band,
+			&fx.sec_mode, &fx.bw, &fx.net_closed);
 	else
-		rtw_rust_hal_dm_init_odm_endian_hooks_le(&dm, &fx.band, &fx.sec_mode, &fx.bw,
-			&fx.net_closed);
-	return host_hal_dm_odm_endian_trace.band !=
-		       expect_ptr(&fx.band, sizeof(BAND_TYPE), v->big_endian) ||
-	       host_hal_dm_odm_endian_trace.sec_mode !=
-		       expect_ptr(&fx.sec_mode, sizeof(u32), v->big_endian) ||
-	       host_hal_dm_odm_endian_trace.bw !=
-		       expect_ptr(&fx.bw, sizeof(enum host_hal_odm_channel_width),
-				  v->big_endian) ||
-	       host_hal_dm_odm_endian_trace.net_closed !=
-		       expect_ptr(&fx.net_closed, sizeof(s32), v->big_endian);
+		rtw_rust_hal_dm_init_odm_endian_hooks_le(&dm, v->skip_band ? NULL : &fx.band,
+			&fx.sec_mode, &fx.bw, &fx.net_closed);
+	if (v->skip_band) {
+		if (host_hal_dm_odm_endian_trace.band != NULL)
+			return 1;
+	} else if (host_hal_dm_odm_endian_trace.band !=
+		   expect_ptr(&fx.band, sizeof(BAND_TYPE), v->big_endian)) {
+		return 1;
+	}
+	return host_hal_dm_odm_endian_trace.sec_mode ==
+			       expect_ptr(&fx.sec_mode, sizeof(u32), v->big_endian) &&
+	       host_hal_dm_odm_endian_trace.bw ==
+			       expect_ptr(&fx.bw, sizeof(enum host_hal_odm_channel_width),
+					  v->big_endian) &&
+	       host_hal_dm_odm_endian_trace.net_closed ==
+			       expect_ptr(&fx.net_closed, sizeof(s32), v->big_endian)
+		       ? 0
+		       : 1;
 }
 
 static int parse_vector_object(const char *obj, size_t len, void *vv)
@@ -83,6 +90,7 @@ static int parse_vector_object(const char *obj, size_t len, void *vv)
 	for (i = 0; i < 5; i++)
 		if (host_json_parse_int_in(obj, len, keys[i], dst[i]))
 			return -1;
+	(void)host_json_parse_int_in(obj, len, "skip_band", &v->skip_band);
 	return 0;
 }
 

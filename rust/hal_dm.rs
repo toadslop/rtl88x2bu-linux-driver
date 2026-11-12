@@ -118,7 +118,9 @@ mod odm_endian_hooks {
             return;
         }
         unsafe {
-            odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BAND, band as *mut u8);
+            if !band.is_null() {
+                odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BAND, band as *mut u8);
+            }
             odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_SEC_MODE, sec_mode as *mut u8);
             odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BW, bw as *mut u8);
             odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_NET_CLOSED, net_closed as *mut u8);
@@ -137,7 +139,9 @@ mod odm_endian_hooks {
             return;
         }
         unsafe {
-            odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BAND, convert_to_big_endian(band));
+            if !band.is_null() {
+                odm_cmn_info_hook(pdm_odm, ODM_CMNINFO_BAND, convert_to_big_endian(band));
+            }
             odm_cmn_info_hook(
                 pdm_odm,
                 ODM_CMNINFO_SEC_MODE,
