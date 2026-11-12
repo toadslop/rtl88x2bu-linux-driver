@@ -80,8 +80,8 @@ pub(crate) fn lps_leave_check_core(
     leave_timeout_err: fn(),
     adapter: Padapter,
 ) {
-    yield_os();
     let start = now();
+    yield_os();
     loop {
         enter_lock(adapter);
         let ready = leave_ready(adapter);
