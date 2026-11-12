@@ -1096,7 +1096,17 @@ ssize_t rtw_rust_debug_proc_read_user_line(const char __user *buffer, size_t cou
 	if (!buffer || copy_from_user(tmp, buffer, count))
 		return -EFAULT;
 
+	if (count < tmp_size)
+		tmp[count] = '\0';
+
 	return count;
+}
+
+static inline void rtw_debug_proc_nul_terminate(char *buf, size_t buf_sz,
+						size_t count)
+{
+	if (count < buf_sz)
+		buf[count] = '\0';
 }
 
 void rtw_rust_debug_proc_emit_defs_param(void *sel, _adapter *adapter)
@@ -1751,7 +1761,15 @@ ssize_t rtw_rust_debug_proc_set_war_offload_ipv4_addr(_adapter *adapter,
 		int num = sscanf(tmp, "%d %x %x %x", &index, &ip_addr,
 				 &ip_subnet, &ip_gateway);
 
+		rtw_debug_proc_nul_terminate(tmp, sizeof(tmp), count);
+
 		if (num == 4) {
+			if (index < 1 || index > 4) {
+				RTW_INFO(FUNC_ADPT_FMT
+					 ": IPv4 index %d out of range (1~4)\n",
+					 FUNC_ADPT_ARG(adapter), index);
+				return -EINVAL;
+			}
 			pip_info->ip_addr[index - 1] = ip_addr;
 			pip_info->ip_subnet[index - 1] = ip_subnet;
 			pip_info->ip_gateway[index - 1] = ip_gateway;
@@ -1805,21 +1823,28 @@ ssize_t rtw_rust_debug_proc_set_war_offload_ipv6_addr(_adapter *adapter,
 		u16 val[8];
 		u16 big_endian_val[8];
 
+		rtw_debug_proc_nul_terminate(tmp, sizeof(tmp), count);
+
 		num = sscanf(tmp, "%d %hx:%hx:%hx:%hx:%hx:%hx:%hx:%hx",
 			     &index, &val[0], &val[1], &val[2], &val[3],
 			     &val[4], &val[5], &val[6], &val[7]);
+
+		if (num != 9) {
+			RTW_INFO("Wrong input count (%d)\n", num);
+			return -EINVAL;
+		}
+		if (index < 1 || index > 8) {
+			RTW_INFO(FUNC_ADPT_FMT
+				 ": IPv6 index %u out of range (1~8)\n",
+				 FUNC_ADPT_ARG(adapter), index);
+			return -EINVAL;
+		}
 		for (i = 0; i < 8; i++)
 			big_endian_val[i] = htons(val[i]);
 		_rtw_memcpy(pip_info->ipv6_addr[index - 1], big_endian_val,
 			     RTW_IPv6_ADDR_LEN);
-
-		if (num == 9) {
-			RTW_INFO(FUNC_ADPT_FMT "Setup IPv6 address\n",
-				 FUNC_ADPT_ARG(adapter));
-		} else {
-			RTW_INFO("Wrong input count (%d)\n", num);
-			return -EFAULT;
-		}
+		RTW_INFO(FUNC_ADPT_FMT "Setup IPv6 address\n",
+			 FUNC_ADPT_ARG(adapter));
 	}
 
 	return count;
@@ -1877,7 +1902,10 @@ ssize_t rtw_rust_debug_proc_set_war_offload_mdns_domain_name(
 	}
 
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
-		int num = sscanf(tmp, "%s", domain_name);
+		int num;
+
+		rtw_debug_proc_nul_terminate(tmp, sizeof(tmp), count);
+		num = sscanf(tmp, "%s", domain_name);
 
 		if (1 == num) {
 			pwrpriv->wowlan_war_offload_mdns_domain_name_len =
@@ -2070,7 +2098,7 @@ ssize_t rtw_rust_debug_proc_set_war_offload_mdns_service_info(
 		return -EFAULT;
 	}
 
-	tmp = rtw_zvmalloc(sizeof(char) * (max_input_size));
+	tmp = rtw_zvmalloc(sizeof(char) * (max_input_size + 1));
 	if (NULL == tmp) {
 		RTW_INFO(FUNC_ADPT_FMT ": tmp buffer allocate fail!!\n",
 			 FUNC_ADPT_ARG(adapter));
@@ -2084,6 +2112,9 @@ ssize_t rtw_rust_debug_proc_set_war_offload_mdns_service_info(
 				 &txt_idx);
 		int idx = pwrpriv->wowlan_war_offload_mdns_service_info_num;
 
+		if (count <= max_input_size)
+			tmp[count] = '\0';
+
 		if (strncmp(srv, "clean", 5) == 0) {
 			_rtw_memset(pwrpriv->wowlan_war_offload_mdns_service, 0,
 				    sizeof(pwrpriv->wowlan_war_offload_mdns_service));
@@ -2092,12 +2123,21 @@ ssize_t rtw_rust_debug_proc_set_war_offload_mdns_service_info(
 			port[0] = (u8)port0;
 			port[1] = (u8)port1;
 
-			if (txt_idx >= MAX_MDNS_TXT_NUM) {
+			if (idx >= MAX_MDNS_SERVICE_NUM) {
+				RTW_INFO(FUNC_ADPT_FMT
+					 ": service info slot %d is full (max %d)\n",
+					 FUNC_ADPT_ARG(adapter), idx,
+					 MAX_MDNS_SERVICE_NUM);
+				count = -EINVAL;
+				goto exit;
+			}
+
+			if (txt_idx < 0 || txt_idx >= MAX_MDNS_TXT_NUM) {
 				RTW_INFO(FUNC_ADPT_FMT
 					 ": input txt idx, %d, is out of range (0~%d)!\n",
 					 FUNC_ADPT_ARG(adapter), txt_idx,
 					 MAX_MDNS_TXT_NUM - 1);
-				count = -EFAULT;
+				count = -EINVAL;
 				goto exit;
 			}
 
@@ -2132,7 +2172,7 @@ ssize_t rtw_rust_debug_proc_set_war_offload_mdns_service_info(
 
 exit:
 	if (tmp)
-		rtw_vmfree(tmp, sizeof(char) * (max_input_size));
+		rtw_vmfree(tmp, sizeof(char) * (max_input_size + 1));
 	return count;
 }
 
@@ -2198,7 +2238,13 @@ ssize_t rtw_rust_debug_proc_set_war_offload_mdns_txt_rsp(
 		return -EFAULT;
 	}
 
-	tmp = rtw_zvmalloc(sizeof(char) * (max_input_size));
+	if (count > max_input_size) {
+		RTW_INFO(FUNC_ADPT_FMT ": input length is too large\n",
+			 FUNC_ADPT_ARG(adapter));
+		return -EINVAL;
+	}
+
+	tmp = rtw_zvmalloc(sizeof(char) * (max_input_size + 1));
 	if (NULL == tmp) {
 		RTW_INFO(FUNC_ADPT_FMT ": tmp buffer allocate fail!!\n",
 			 FUNC_ADPT_ARG(adapter));
@@ -2207,6 +2253,7 @@ ssize_t rtw_rust_debug_proc_set_war_offload_mdns_txt_rsp(
 	}
 
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		tmp[count] = '\0';
 		if (strncmp(tmp, "clean", 5) == 0) {
 			if (pwrpriv->wowlan_war_offload_mdns_service_info_num == 0) {
 				_rtw_memset(pwrpriv->wowlan_war_offload_mdns_txt_rsp,
@@ -2224,9 +2271,9 @@ ssize_t rtw_rust_debug_proc_set_war_offload_mdns_txt_rsp(
 			int num = sscanf(tmp, "%d %6s %256c", &idx, op, txt_str);
 			u16 sscanf_parameter_length = 0, txt_len = 0;
 
-			txt_len = (strlen(txt_str) > MAX_MDNS_TXT_SINGLE_LEN) ?
-					  MAX_MDNS_TXT_SINGLE_LEN :
-					  (strlen(txt_str) - 1);
+			txt_len = strlen(txt_str);
+			if (txt_len > MAX_MDNS_TXT_SINGLE_LEN)
+				txt_len = MAX_MDNS_TXT_SINGLE_LEN;
 			txt_str[txt_len] = '\0';
 			sscanf_parameter_length =
 				1 + strlen(op) + txt_len + num;
@@ -2309,7 +2356,7 @@ ssize_t rtw_rust_debug_proc_set_war_offload_mdns_txt_rsp(
 
 exit:
 	if (tmp)
-		rtw_vmfree(tmp, sizeof(char) * (max_input_size));
+		rtw_vmfree(tmp, sizeof(char) * (max_input_size + 1));
 	return count;
 }
 #endif /* CONFIG_OFFLOAD_MDNS_V4 || CONFIG_OFFLOAD_MDNS_V6 */
@@ -2341,10 +2388,11 @@ ssize_t rtw_rust_debug_proc_set_rson_data(_adapter *adapter,
 	}
 
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		rtw_debug_proc_nul_terminate(tmp, sizeof(tmp), count);
 		num = sscanf(tmp, "%s %s", field, value);
 		if (num != 2) {
 			RTW_INFO("Invalid format : echo <field> <value> > son_data\n");
-			return count;
+			return -EINVAL;
 		}
 		RTW_INFO("field=%s  value=%s\n", field, value);
 		num = rtw_rson_set_property(adapter, field, value);
@@ -2488,8 +2536,10 @@ ssize_t rtw_rust_debug_proc_set_survey_info(_adapter *padapter,
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
 		int num = sscanf(tmp, "%s", cmd);
 
+		rtw_debug_proc_nul_terminate(tmp, sizeof(tmp), count);
+
 		if (num < 1)
-			return count;
+			return -EINVAL;
 
 		if (strcmp("acs", cmd) == 0)
 			acs = 1;
