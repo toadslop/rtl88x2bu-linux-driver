@@ -37,6 +37,7 @@ fw_ips_c_ref.o
 test_pwrctrl_ps_rdy_systime_width
 librust_pwrctrl_ps_rdy_kern.a
 test_pwrctrl_fx01_systime_width
+test_pwrctrl_rpwm_systime_width
 librust_pwrctrl_fx01_kern.a
 librust_pwrctrl_rpwm_kern.a
 librust_pwrctrl_cpwm_int_kern.a

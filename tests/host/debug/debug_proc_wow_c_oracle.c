@@ -22,7 +22,7 @@ long rtw_rust_debug_proc_set_wow_enable(void *adapter, const void *buffer,
 {
 	struct registry_priv *registry_pair =
 		&((struct _adapter *)adapter)->registrypriv;
-	char tmp[8];
+	char tmp[8] = {0};
 	int num = 0;
 	int mode = 0;
 
@@ -32,9 +32,11 @@ long rtw_rust_debug_proc_set_wow_enable(void *adapter, const void *buffer,
 	if (count > sizeof(tmp))
 		return -1;
 
-	if (buffer && !copy_from_user(tmp, buffer, count))
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		if (count < sizeof(tmp))
+			tmp[count] = '\0';
 		num = sscanf(tmp, "%d", &mode);
-	else
+	} else
 		return -1;
 
 	if (num != 1)
@@ -262,7 +264,7 @@ ssize_t proc_set_wow_enable(void *file, const void *buffer, size_t count,
 	struct net_device *dev = data;
 	struct _adapter *padapter = rtw_netdev_priv(dev);
 	struct registry_priv *registry_pair = &padapter->registrypriv;
-	char tmp[8];
+	char tmp[8] = {0};
 	int num = 0;
 	int mode = 0;
 
@@ -275,9 +277,11 @@ ssize_t proc_set_wow_enable(void *file, const void *buffer, size_t count,
 	if (count > sizeof(tmp))
 		return -1;
 
-	if (buffer && !copy_from_user(tmp, buffer, count))
+	if (buffer && !copy_from_user(tmp, buffer, count)) {
+		if (count < sizeof(tmp))
+			tmp[count] = '\0';
 		num = sscanf(tmp, "%d", &mode);
-	else
+	} else
 		return -1;
 
 	if (num != 1)

@@ -1,12 +1,13 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /* Host C oracle for W3-175 rtw_cpwm_polling (CONFIG_LPS_LCLK). */
 
+#include <limits.h>
 #include <stdint.h>
 #include <string.h>
 
 typedef uint8_t u8;
 typedef uint32_t u32;
-typedef u32 systime;
+typedef unsigned long systime;
 
 #define _SUCCESS 1
 #define _FAIL 0
@@ -75,12 +76,16 @@ static systime rtw_get_current_time(void)
 
 static u32 rtw_get_passing_time_ms(systime start)
 {
-	return g_time - start;
+	unsigned long delta = g_time - start;
+
+	if (delta > UINT32_MAX)
+		return UINT32_MAX;
+	return (u32)delta;
 }
 
 static void rtw_msleep_os(int ms)
 {
-	g_time += (u32)ms;
+	g_time += (unsigned long)ms;
 }
 
 static void rtw_hal_get_hwreg(struct adapter *a, int variable, u8 *val)

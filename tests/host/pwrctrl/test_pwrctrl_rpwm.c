@@ -9,7 +9,7 @@
 #define MAX_NAME 64
 typedef unsigned char u8;
 void host_pwrctrl_rpwm_reset_hal(void);
-void host_pwrctrl_rpwm_set_time(unsigned int t);
+void host_pwrctrl_rpwm_set_time(unsigned long t);
 void host_pwrctrl_rpwm_set_cpwm_behavior(u8, unsigned int);
 u8 host_pwrctrl_rpwm_get_cpwm(void *);
 u8 host_pwrctrl_rpwm_get_cpwm_tog(void *);
