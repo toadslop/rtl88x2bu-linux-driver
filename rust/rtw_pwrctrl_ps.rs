@@ -12,6 +12,9 @@
     unused_unsafe
 )]
 
+#[cfg(host_pwrctrl_ps_processor_test)]
+use std::ffi::c_void;
+
 #[cfg(not(host_pwrctrl_ps_processor_test))]
 use core::ffi::c_void;
 
@@ -54,79 +57,12 @@ pub struct HostAdapter {
 }
 
 #[cfg(host_pwrctrl_ps_processor_test)]
+#[path = "rtw_pwrctrl_ps_host.rs"]
+mod host;
+
+#[cfg(host_pwrctrl_ps_processor_test)]
 fn adapter_to_pwrctl(a: Padapter) -> *mut PwrctrlPriv {
     unsafe { &mut (*a).pwrctrlpriv }
-}
-
-#[cfg(host_pwrctrl_ps_processor_test)]
-mod host_trace {
-    use super::*;
-
-    #[repr(C)]
-    pub struct HostPsProcTrace {
-        pub ips_enter: u32,
-        pub pwr_timer_set: u32,
-    }
-
-    static mut G_TRACE: HostPsProcTrace = HostPsProcTrace {
-        ips_enter: 0,
-        pwr_timer_set: 0,
-    };
-    static mut G_UNASSOC_IDLE: u8 = _TRUE;
-
-    pub fn reset() {
-        unsafe {
-            G_TRACE = HostPsProcTrace {
-                ips_enter: 0,
-                pwr_timer_set: 0,
-            };
-            G_UNASSOC_IDLE = _TRUE;
-        }
-    }
-
-    pub fn set_unassoc_idle(v: u8) {
-        unsafe {
-            G_UNASSOC_IDLE = v;
-        }
-    }
-
-    pub fn ips_enter() {
-        unsafe {
-            G_TRACE.ips_enter += 1;
-        }
-    }
-
-    pub fn set_pwr_timer() {
-        unsafe {
-            G_TRACE.pwr_timer_set += 1;
-        }
-    }
-
-    pub fn unassoc_idle() -> u8 {
-        unsafe { G_UNASSOC_IDLE }
-    }
-
-    pub fn trace_ptr() -> *mut HostPsProcTrace {
-        unsafe { &mut G_TRACE }
-    }
-}
-
-#[cfg(host_pwrctrl_ps_processor_test)]
-#[no_mangle]
-pub extern "C" fn host_pwrctrl_ps_proc_reset_trace() {
-    host_trace::reset();
-}
-
-#[cfg(host_pwrctrl_ps_processor_test)]
-#[no_mangle]
-pub extern "C" fn host_pwrctrl_ps_proc_set_unassoc_idle(idle: u8) {
-    host_trace::set_unassoc_idle(idle);
-}
-
-#[cfg(host_pwrctrl_ps_processor_test)]
-#[no_mangle]
-pub extern "C" fn host_pwrctrl_ps_proc_get_trace() -> *mut host_trace::HostPsProcTrace {
-    host_trace::trace_ptr()
 }
 
 #[cfg(host_pwrctrl_ps_processor_test)]
@@ -141,21 +77,20 @@ fn ps_deny_get_locked(pwr: *mut PwrctrlPriv) -> u32 {
 }
 
 #[cfg(host_pwrctrl_ps_processor_test)]
-fn ips_enter(_padapter: Padapter) {
-    host_trace::ips_enter();
+fn ips_enter_local(_padapter: Padapter) {
+    host::ips_enter_trace();
 }
 
 #[cfg(host_pwrctrl_ps_processor_test)]
 fn unassociated_idle(_padapter: Padapter) -> u8 {
-    host_trace::unassoc_idle()
+    host::unassoc_idle_flag()
 }
 
 #[cfg(host_pwrctrl_ps_processor_test)]
 fn set_pwr_state_check_timer(_pwr: *mut PwrctrlPriv) {
-    host_trace::set_pwr_timer();
+    host::pwr_timer_tick();
 }
 
-#[cfg(not(host_pwrctrl_ps_processor_test))]
 extern "C" {
     fn rtw_ps_deny_get(padapter: Padapter) -> u32;
     fn ips_enter(padapter: Padapter);
@@ -173,6 +108,47 @@ extern "C" {
     fn rtw_rust_ps_proc_b_in_suspend(padapter: Padapter);
 }
 
+fn ps_processor_core(padapter: Padapter) {
+    unsafe {
+        rtw_rust_ps_proc_enter_pwrlock(padapter);
+        let ps_deny = rtw_ps_deny_get(padapter);
+        rtw_rust_ps_proc_exit_pwrlock(padapter);
+        if ps_deny != 0 {
+            rtw_rust_ps_proc_report_ps_deny(padapter, ps_deny);
+            goto_exit(padapter);
+            return;
+        }
+        if rtw_rust_ps_proc_get_b_in_suspend(padapter) == _TRUE {
+            rtw_rust_ps_proc_b_in_suspend(padapter);
+            return;
+        }
+        rtw_rust_ps_proc_set_ps_processing(padapter, _TRUE);
+
+        if rtw_rust_ps_proc_get_ips_mode_req(padapter) == IPS_NONE {
+            goto_exit(padapter);
+            return;
+        }
+        if rtw_rust_ps_proc_unassociated_idle(padapter) == _FALSE {
+            goto_exit(padapter);
+            return;
+        }
+        let rf = rtw_rust_ps_proc_get_rf_pwrstate(padapter);
+        let cnt = rtw_rust_ps_proc_get_pwr_state_check_cnts(padapter);
+        if rf == RF_ON && (cnt % 4) == 0 {
+            rtw_rust_ps_proc_set_change_rfpwrstate(padapter, RF_OFF);
+            ips_enter(padapter);
+        }
+        goto_exit(padapter);
+    }
+}
+
+fn goto_exit(padapter: Padapter) {
+    unsafe {
+        rtw_rust_ps_proc_set_pwr_timer(padapter);
+        rtw_rust_ps_proc_set_ps_processing(padapter, _FALSE);
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn rtw_ps_processor(padapter: Padapter) {
     if padapter.is_null() {
@@ -180,10 +156,8 @@ pub extern "C" fn rtw_ps_processor(padapter: Padapter) {
     }
 
     #[cfg(host_pwrctrl_ps_processor_test)]
-    let pwr = adapter_to_pwrctl(padapter);
-
-    #[cfg(host_pwrctrl_ps_processor_test)]
     {
+        let pwr = adapter_to_pwrctl(padapter);
         enter_pwrlock(pwr);
         let ps_deny = ps_deny_get_locked(pwr);
         exit_pwrlock(pwr);
@@ -220,7 +194,7 @@ pub extern "C" fn rtw_ps_processor(padapter: Padapter) {
             unsafe {
                 (*pwr).change_rfpwrstate = RF_OFF;
             }
-            ips_enter(padapter);
+            ips_enter_local(padapter);
         }
         set_pwr_state_check_timer(pwr);
         unsafe {
@@ -230,43 +204,5 @@ pub extern "C" fn rtw_ps_processor(padapter: Padapter) {
     }
 
     #[cfg(not(host_pwrctrl_ps_processor_test))]
-    unsafe {
-        rtw_rust_ps_proc_enter_pwrlock(padapter);
-        let ps_deny = rtw_ps_deny_get(padapter);
-        rtw_rust_ps_proc_exit_pwrlock(padapter);
-        if ps_deny != 0 {
-            rtw_rust_ps_proc_report_ps_deny(padapter, ps_deny);
-            goto_exit(padapter);
-            return;
-        }
-        if rtw_rust_ps_proc_get_b_in_suspend(padapter) == _TRUE {
-            rtw_rust_ps_proc_b_in_suspend(padapter);
-            return;
-        }
-        rtw_rust_ps_proc_set_ps_processing(padapter, _TRUE);
-
-        if rtw_rust_ps_proc_get_ips_mode_req(padapter) == IPS_NONE {
-            goto_exit(padapter);
-            return;
-        }
-        if rtw_rust_ps_proc_unassociated_idle(padapter) == _FALSE {
-            goto_exit(padapter);
-            return;
-        }
-        let rf = rtw_rust_ps_proc_get_rf_pwrstate(padapter);
-        let cnt = rtw_rust_ps_proc_get_pwr_state_check_cnts(padapter);
-        if rf == RF_ON && (cnt % 4) == 0 {
-            rtw_rust_ps_proc_set_change_rfpwrstate(padapter, RF_OFF);
-            ips_enter(padapter);
-        }
-        goto_exit(padapter);
-    }
-}
-
-#[cfg(not(host_pwrctrl_ps_processor_test))]
-fn goto_exit(padapter: Padapter) {
-    unsafe {
-        rtw_rust_ps_proc_set_pwr_timer(padapter);
-        rtw_rust_ps_proc_set_ps_processing(padapter, _FALSE);
-    }
+    ps_processor_core(padapter);
 }
