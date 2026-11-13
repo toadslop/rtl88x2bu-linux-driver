@@ -210,5 +210,35 @@ class DecidePathTests(unittest.TestCase):
         self.assertIsNone(report["selected"])
 
 
+class DepSatisfactionTests(unittest.TestCase):
+    def test_open_pr_without_issue_map_row(self) -> None:
+        """Title draft IDs satisfy deps when ISSUE-MAP has not caught up."""
+        dep = fw.Issue(
+            number=1982,
+            title="[W4-64] Translate hal_intf.c — chip_rftype",
+            state="OPEN",
+            body="",
+            draft_id="W4-64",
+            blocked_by=[],
+            lane="hal_intf",
+            spec_path=None,
+        )
+        pr = fw.PullRequest(
+            number=1988,
+            title="[W4-64 PR1] Port rtw_chip_rftype_to_hal_rftype to Rust",
+            url="http://example/pr/1988",
+            is_draft=False,
+            base_ref=fw.DEFAULT_BRANCH,
+            head_ref="cursor/w4-64-chip-rftype-a9932ac3",
+        )
+        pr.enrich({}, "")
+        issues_by_num = {1982: dep}
+        prs = [pr]
+        info = fw.dep_satisfaction(1982, issues_by_num, prs, {})
+        self.assertTrue(info["satisfied"])
+        self.assertEqual(info["via"], "open_pr")
+        self.assertEqual(info["draftId"], "W4-64")
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -336,6 +336,11 @@ files=(
   wave4-65-hal-intf-rfpath-init.md
   wave4-66-hal-intf-trxnss-init.md
   wave4-67-hal-intf-power-on-off.md
+  wave4-68-hal-intf-sw-led.md
+  wave4-69-hal-intf-init-opmode.md
+  wave4-70-hal-intf-interrupt-ips.md
+  wave4-71-hal-intf-fw-dl.md
+  wave4-72-hal-intf-inirp.md
   wave3-161-debug-proc-rate-setter.md
   wave3-162-debug-proc-rx-cnt-dump.md
   wave3-163-debug-proc-ps-dbg.md

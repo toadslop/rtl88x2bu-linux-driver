@@ -400,6 +400,11 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-65 | #1983 | [W4-65] Translate hal_intf.c — hal_rfpath_init |
 | W4-66 | #1984 | [W4-66] Translate hal_intf.c — hal_trxnss_init |
 | W4-67 | #1985 | [W4-67] Translate hal_intf.c — hal_power_on + hal_power_off |
+| W4-68 | #2002 | [W4-68] Translate hal_intf.c — sw_led init/deinit |
+| W4-69 | #2003 | [W4-69] Translate hal_intf.c — hal_init_opmode |
+| W4-70 | #2004 | [W4-70] Translate hal_intf.c — interrupt + IPS check wrappers |
+| W4-71 | #2005 | [W4-71] Translate hal_intf.c — hal_fw_dl |
+| W4-72 | #2006 | [W4-72] Translate hal_intf.c — inirp init/deinit |
 
 ## Superseded issues
 

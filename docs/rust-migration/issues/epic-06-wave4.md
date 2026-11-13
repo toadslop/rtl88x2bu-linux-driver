@@ -147,4 +147,14 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-66 | `wave4-66-hal-intf-trxnss-init.md` | `rtw_hal_trxnss_init` |
 | W4-67 | `wave4-67-hal-intf-power-on-off.md` | `rtw_hal_power_on` + `rtw_hal_power_off` |
 
-Further slices: deeper PHYDM / bulk USB RX path — file as `wave4-*.md` when tranche 15 is needed.
+## Children (tranche 15 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-68 | `wave4-68-hal-intf-sw-led.md` | SW LED init/deinit |
+| W4-69 | `wave4-69-hal-intf-init-opmode.md` | `rtw_hal_init_opmode` |
+| W4-70 | `wave4-70-hal-intf-interrupt-ips.md` | Interrupt enable/disable + IPS check |
+| W4-71 | `wave4-71-hal-intf-fw-dl.md` | `rtw_hal_fw_dl` |
+| W4-72 | `wave4-72-hal-intf-inirp.md` | `rtw_hal_inirp_init` / `deinit` |
+
+Further slices: deeper PHYDM / bulk USB RX path — file as `wave4-*.md` when tranche 15 clears.
