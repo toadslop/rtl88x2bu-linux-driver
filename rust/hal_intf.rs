@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 //! HAL interface helpers — Rust port of `hal/hal_intf.c` (W4-07 TRX mode dumps, W4-08 RF/NSS dumps,
 //! W4-36 chip ODM map, W4-59 chip configure + read_chip_info, W4-60 chip version + def_value_init,
-//! W4-61 hal_data_init, W4-62 hal_data_deinit + hal_free_data).
+//! W4-61 hal_data_init, W4-62 hal_data_deinit + hal_free_data, W4-64 chip_rftype_to_hal_rftype).
 
 #![allow(
     dead_code,
@@ -539,6 +539,65 @@ pub extern "C" fn chip_type_to_odm_ic_type(chip_type: U8) -> U32 {
     chip_type_to_odm_ic_type_impl(chip_type)
 }
 
+const RF_TYPE_1T1R: U8 = 0;
+const RF_TYPE_1T2R: U8 = 1;
+const RF_TYPE_2T2R: U8 = 2;
+const RF_TYPE_2T3R: U8 = 3;
+const RF_TYPE_2T4R: U8 = 4;
+const RF_TYPE_3T3R: U8 = 5;
+const RF_TYPE_3T4R: U8 = 6;
+const RF_TYPE_4T4R: U8 = 7;
+
+fn rtw_min_u8(a: U8, b: U8) -> U8 {
+    if a > b {
+        b
+    } else {
+        a
+    }
+}
+
+fn chip_rftype_to_hal_rftype_impl(cv_rf_type: U8, limit: U8) -> i32 {
+    let mut tx_num = 0u8;
+    let mut rx_num = 0u8;
+
+    if cv_rf_type == RF_TYPE_1T1R {
+        tx_num = 1;
+        rx_num = 1;
+    } else if cv_rf_type == RF_TYPE_1T2R {
+        tx_num = 1;
+        rx_num = 2;
+    } else if cv_rf_type == RF_TYPE_2T2R {
+        tx_num = 2;
+        rx_num = 2;
+    } else if cv_rf_type == RF_TYPE_2T3R {
+        tx_num = 2;
+        rx_num = 3;
+    } else if cv_rf_type == RF_TYPE_2T4R {
+        tx_num = 2;
+        rx_num = 4;
+    } else if cv_rf_type == RF_TYPE_3T3R {
+        tx_num = 3;
+        rx_num = 3;
+    } else if cv_rf_type == RF_TYPE_3T4R {
+        tx_num = 3;
+        rx_num = 4;
+    } else if cv_rf_type == RF_TYPE_4T4R {
+        tx_num = 4;
+        rx_num = 4;
+    }
+
+    let (tx_num, rx_num) = if limit != 0 {
+        (rtw_min_u8(tx_num, limit), rtw_min_u8(rx_num, limit))
+    } else {
+        (tx_num, rx_num)
+    };
+
+    extern "C" {
+        fn trx_num_to_rf_type(tx_num: U8, rx_num: U8) -> i32;
+    }
+    unsafe { trx_num_to_rf_type(tx_num, rx_num) }
+}
+
 #[cfg(not(any(
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
@@ -590,6 +649,7 @@ mod kernel {
         fn rtw_rust_hal_intf_call_dm_deinit(adapter: *mut c_void);
         fn rtw_rust_hal_intf_dm_init_tail(adapter: *mut c_void);
         fn rtw_rust_hal_intf_dm_deinit_tail(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_hal_data_version_rf_type(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_intf_hal_spec_proto_cap(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_intf_hal_spec_band_cap(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_intf_get_wireless_mode(adapter: *mut c_void) -> U8;
@@ -773,6 +833,12 @@ mod kernel {
             rtw_rust_hal_intf_call_dm_deinit(adapter);
             rtw_rust_hal_intf_dm_deinit_tail(adapter);
         }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_chip_rftype_to_hal_rftype(adapter: *mut c_void, limit: U8) -> i32 {
+        let cv_rf = unsafe { rtw_rust_hal_intf_hal_data_version_rf_type(adapter) };
+        chip_rftype_to_hal_rftype_impl(cv_rf, limit)
     }
 
     #[no_mangle]
