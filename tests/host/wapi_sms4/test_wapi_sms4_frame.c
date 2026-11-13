@@ -3,7 +3,23 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef RUST_WAPI_SMS4_FRAME_ORACLE
 #include "host_wapi_sms4_frame_oracle.h"
+
+u32 rtw_sms4_encrypt(void *padapter, u8 *pxmitframe);
+u32 rtw_sms4_decrypt(void *padapter, u8 *precvframe);
+
+static void frame_adapter_init(struct host_wapi_adapter *a)
+{
+	memset(a, 0, sizeof(*a));
+	a->wapi_support = 1;
+	a->wapi_info.b_wapi_enable = 1;
+	a->wapi_info.extra_prefix_len = HOST_WAPI_EXT_LEN;
+	a->wapi_info.extra_postfix_len = HOST_WAPI_SMS4_MIC_LEN;
+}
+#else
+#include "host_wapi_sms4_frame_oracle.h"
+#endif
 
 static void setup_sta(struct host_wapi_adapter *adapter,
 		      struct host_wapi_sta_info *sta, const u8 *peer_mac)
@@ -38,7 +54,11 @@ static int run_shipped_semantics(void)
 	u16 iv_len = HOST_WAPI_EXT_LEN;
 	int i;
 
+#ifdef RUST_WAPI_SMS4_FRAME_ORACLE
+	frame_adapter_init(&adapter);
+#else
 	host_wapi_sms4_frame_adapter_init(&adapter);
+#endif
 	setup_sta(&adapter, &sta, peer);
 	memset(&xmit, 0, sizeof(xmit));
 	wire = tx_buf + HOST_WAPI_TXDESC_SIZE;
@@ -54,7 +74,11 @@ static int run_shipped_semantics(void)
 	xmit.attrib.iv_len = (u8)iv_len;
 	xmit.attrib.icv_len = HOST_WAPI_SMS4_MIC_LEN;
 	xmit.attrib.pktlen = (u16)(sizeof(plain) + HOST_WAPI_SMS4_MIC_LEN);
+#ifdef RUST_WAPI_SMS4_FRAME_ORACLE
+	if (rtw_sms4_encrypt(&adapter, (u8 *)&xmit) != 1)
+#else
 	if (host_rtw_sms4_encrypt(&adapter, &xmit) != 1)
+#endif
 		return -1;
 	if (memcmp(wire + hdrlen + iv_len, plain_copy, sizeof(plain)) != 0)
 		return -2;
@@ -63,6 +87,16 @@ static int run_shipped_semantics(void)
 	skb.data = rx_buf;
 	skb.len = hdrlen + iv_len + xmit.attrib.pktlen;
 	recv.hdr.rx_skb = &skb;
+#ifdef RUST_WAPI_SMS4_FRAME_ORACLE
+	if (rtw_sms4_decrypt(&adapter, (u8 *)&recv) != 0)
+		return -3;
+
+	adapter.wapi_support = 0;
+	if (rtw_sms4_encrypt(&adapter, (u8 *)&xmit) == 1)
+		return -4;
+	if (rtw_sms4_decrypt(&adapter, (u8 *)&recv) == 1)
+		return -5;
+#else
 	if (host_rtw_sms4_decrypt(&adapter, &recv) != 0)
 		return -3;
 
@@ -71,6 +105,7 @@ static int run_shipped_semantics(void)
 		return -4;
 	if (host_rtw_sms4_decrypt(&adapter, &recv) == 1)
 		return -5;
+#endif
 
 	return 0;
 }
