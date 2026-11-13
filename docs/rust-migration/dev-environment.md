@@ -411,6 +411,22 @@ Fork PRs may fail to pull the published L0 image from ghcr.io; workflows fall ba
 
 Contributor overview: [`docs/contributing.md`](../contributing.md).
 
+## Rust `#[cfg]` names vs C macros (T21)
+
+Kernel Rust objects take `--cfg` values from two places:
+
+1. **Generated** — `scripts/rust_cfgs.sh` preprocesses the same `ccflags-y`, `include/autoconf.h`, `include/drv_conf.h`, and `include/hal_ic_cfg.h` the C build uses, then writes `rust/generated_cfgs` (loaded via `rustflags-y += @…/rust/generated_cfgs`).
+2. **Explicit** — `rustflags-y` lines for Rust-only feature gates (`rust_*`, `beamforming_version_2`, …) and Makefile logic that cannot be expressed as a single C macro.
+
+When a port needs a new **C-backed** cfg:
+
+1. Add `#[cfg(config_foo)]` (or an existing spelling) in `rust/*.rs`.
+2. Ensure C defines the macro (`ccflags-y`, `autoconf.h`, or `drv_conf.h`).
+3. If the Rust spelling does not follow `CONFIG_FOO` → `config_foo`, add a row to `scripts/rust_cfgs.d/aliases.txt` or `keep-case.txt`.
+4. Rebuild L0 (`make KDIR=… LLVM=1`) and run `./scripts/ci/check-rust-cfg-parity.sh` (allowlist is derived from `rust/**/*.rs` inside `rust_cfgs.sh`).
+
+Do not add hand-derived `rustflags-y += --cfg config_*` for macros the generator already covers.
+
 ## When to extend this doc
 
 Add a short bullet when a new Wave hits a **recurring** environment failure (bindgen skew, RfL API break on kernel bump, CI image gap). Keep recipes copy-pasteable; link relevant GitHub issue IDs (see [`issues/ISSUE-MAP.md`](issues/ISSUE-MAP.md)).
