@@ -3,6 +3,10 @@
 
 #![allow(non_snake_case, unreachable_code)]
 
+#[cfg(host_wapi_sms4_test)]
+use std::ffi::c_void;
+
+#[cfg(not(host_wapi_sms4_test))]
 use core::ffi::c_void;
 
 use super::{U32, U8};

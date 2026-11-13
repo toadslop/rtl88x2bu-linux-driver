@@ -8,12 +8,15 @@ OFB_ORACLE := wapi_sms4_ofb_c_oracle.c
 MIC_ORACLE := wapi_sms4_mic_c_oracle.c
 QOS_PN_ORACLE := wapi_sms4_qos_pn_c_oracle.c
 FRAME_ORACLE := wapi_sms4_frame_c_oracle.c
+FRAME_LAYOUT := wapi_sms4_frame_host_layout.c
 RUST_SMS4 := $(ROOT)/rust/rtw_wapi_sms4.rs
 
 CC := gcc
 RUSTC := rustc
 CFLAGS := -Wall -Wextra -Werror -O2 -I$(HOST_INC) -DWAPI_SMS4_FULL_VECTORS
 RUSTFLAGS := -C opt-level=2 -C overflow-checks=on
+RUST_LINK_LAYOUT := $(FRAME_LAYOUT)
+RUST_LAYOUT_CFLAGS := -I.
 
 .PHONY: all test test-c test-rust test-pn-iv test-pn-iv-c test-pn-iv-rust \
 	test-ofb test-ofb-c test-ofb-rust test-mic test-mic-c test-mic-rust \
@@ -47,8 +50,8 @@ librust_wapi_sms4.a: $(RUST_SMS4)
 	$(RUSTC) $(RUSTFLAGS) --cfg host_wapi_sms4_test --crate-type staticlib \
 		$(RUST_SMS4) -o $@
 
-test_wapi_sms4_rust: test_wapi_sms4.c librust_wapi_sms4.a
-	$(CC) $(CFLAGS) -DRUST_WAPI_SMS4_ORACLE -o $@ test_wapi_sms4.c librust_wapi_sms4.a
+test_wapi_sms4_rust: test_wapi_sms4.c librust_wapi_sms4.a $(RUST_LINK_LAYOUT)
+	$(CC) $(CFLAGS) $(RUST_LAYOUT_CFLAGS) -DRUST_WAPI_SMS4_ORACLE -o $@ test_wapi_sms4.c $(RUST_LINK_LAYOUT) librust_wapi_sms4.a
 
 test_wapi_sms4_pn_iv: test_wapi_sms4_pn_iv.c $(PN_IV_ORACLE)
 	$(CC) $(CFLAGS) -o $@ test_wapi_sms4_pn_iv.c $(PN_IV_ORACLE)
@@ -56,8 +59,8 @@ test_wapi_sms4_pn_iv: test_wapi_sms4_pn_iv.c $(PN_IV_ORACLE)
 test-pn-iv-c: test_wapi_sms4_pn_iv
 	./test_wapi_sms4_pn_iv
 
-test_wapi_sms4_pn_iv_rust: test_wapi_sms4_pn_iv.c librust_wapi_sms4.a
-	$(CC) $(CFLAGS) -DRUST_WAPI_PN_IV_ORACLE -o $@ test_wapi_sms4_pn_iv.c librust_wapi_sms4.a
+test_wapi_sms4_pn_iv_rust: test_wapi_sms4_pn_iv.c librust_wapi_sms4.a $(RUST_LINK_LAYOUT)
+	$(CC) $(CFLAGS) $(RUST_LAYOUT_CFLAGS) -DRUST_WAPI_PN_IV_ORACLE -o $@ test_wapi_sms4_pn_iv.c $(RUST_LINK_LAYOUT) librust_wapi_sms4.a
 
 test-pn-iv-rust: test_wapi_sms4_pn_iv_rust
 	./test_wapi_sms4_pn_iv_rust
@@ -68,8 +71,8 @@ test_wapi_sms4_ofb: test_wapi_sms4_ofb.c $(ORACLE) $(OFB_ORACLE)
 test-ofb-c: test_wapi_sms4_ofb
 	./test_wapi_sms4_ofb
 
-test_wapi_sms4_ofb_rust: test_wapi_sms4_ofb.c librust_wapi_sms4.a
-	$(CC) $(CFLAGS) -I. -DRUST_WAPI_SMS4_ORACLE -o $@ test_wapi_sms4_ofb.c librust_wapi_sms4.a
+test_wapi_sms4_ofb_rust: test_wapi_sms4_ofb.c librust_wapi_sms4.a $(RUST_LINK_LAYOUT)
+	$(CC) $(CFLAGS) -I. -DRUST_WAPI_SMS4_ORACLE -o $@ test_wapi_sms4_ofb.c $(RUST_LINK_LAYOUT) librust_wapi_sms4.a
 
 test-ofb-rust: test_wapi_sms4_ofb_rust
 	./test_wapi_sms4_ofb_rust
@@ -80,8 +83,8 @@ test_wapi_sms4_mic: test_wapi_sms4_mic.c $(ORACLE) $(MIC_ORACLE)
 test-mic-c: test_wapi_sms4_mic
 	./test_wapi_sms4_mic
 
-test_wapi_sms4_mic_rust: test_wapi_sms4_mic.c librust_wapi_sms4.a
-	$(CC) $(CFLAGS) -I. -DRUST_WAPI_SMS4_ORACLE -o $@ test_wapi_sms4_mic.c librust_wapi_sms4.a
+test_wapi_sms4_mic_rust: test_wapi_sms4_mic.c librust_wapi_sms4.a $(RUST_LINK_LAYOUT)
+	$(CC) $(CFLAGS) -I. -DRUST_WAPI_SMS4_ORACLE -o $@ test_wapi_sms4_mic.c $(RUST_LINK_LAYOUT) librust_wapi_sms4.a
 
 test-mic-rust: test_wapi_sms4_mic_rust
 	./test_wapi_sms4_mic_rust
@@ -92,8 +95,8 @@ test_wapi_sms4_qos_pn: test_wapi_sms4_qos_pn.c $(QOS_PN_ORACLE)
 test-qos-pn-c: test_wapi_sms4_qos_pn
 	./test_wapi_sms4_qos_pn
 
-test_wapi_sms4_qos_pn_rust: test_wapi_sms4_qos_pn.c librust_wapi_sms4.a
-	$(CC) $(CFLAGS) -I. -DRUST_WAPI_QOS_PN_ORACLE -o $@ test_wapi_sms4_qos_pn.c librust_wapi_sms4.a
+test_wapi_sms4_qos_pn_rust: test_wapi_sms4_qos_pn.c librust_wapi_sms4.a $(RUST_LINK_LAYOUT)
+	$(CC) $(CFLAGS) -I. -DRUST_WAPI_QOS_PN_ORACLE -o $@ test_wapi_sms4_qos_pn.c $(RUST_LINK_LAYOUT) librust_wapi_sms4.a
 
 test-qos-pn-rust: test_wapi_sms4_qos_pn_rust
 	./test_wapi_sms4_qos_pn_rust
@@ -104,8 +107,8 @@ test_wapi_sms4_frame: test_wapi_sms4_frame.c $(ORACLE) $(OFB_ORACLE) $(FRAME_ORA
 test-frame-c: test_wapi_sms4_frame
 	./test_wapi_sms4_frame
 
-test_wapi_sms4_frame_rust: test_wapi_sms4_frame.c librust_wapi_sms4.a
-	$(CC) $(CFLAGS) -I. -DRUST_WAPI_SMS4_FRAME_ORACLE -o $@ test_wapi_sms4_frame.c librust_wapi_sms4.a
+test_wapi_sms4_frame_rust: test_wapi_sms4_frame.c librust_wapi_sms4.a $(RUST_LINK_LAYOUT)
+	$(CC) $(CFLAGS) -I. -DRUST_WAPI_SMS4_FRAME_ORACLE -o $@ test_wapi_sms4_frame.c $(RUST_LINK_LAYOUT) librust_wapi_sms4.a
 
 test-frame-rust: test_wapi_sms4_frame_rust
 	./test_wapi_sms4_frame_rust
