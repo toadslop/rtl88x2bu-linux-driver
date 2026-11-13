@@ -29,78 +29,7 @@ keep_case="$cfg_dir/keep-case.txt"
 aliases="$cfg_dir/aliases.txt"
 allowlist="$(mktemp)"
 trap 'rm -f "$allowlist"' EXIT
-python3 - "$srcdir/rust" >"$allowlist" <<'PY'
-import re, sys, pathlib
-root = pathlib.Path(sys.argv[1])
-wants = set()
-
-def unwrap(expr: str) -> str:
-	expr = expr.strip()
-	for _ in range(32):
-		m = re.match(r"^(all|any)\((.*)\)$", expr, re.DOTALL)
-		if not m:
-			break
-		expr = m.group(2).strip()
-	return expr
-
-def cfg_attr_inners(text: str):
-	i = 0
-	needle = "#[cfg("
-	while True:
-		idx = text.find(needle, i)
-		if idx < 0:
-			break
-		start = idx + len(needle)
-		depth = 1
-		j = start
-		while j < len(text) and depth:
-			ch = text[j]
-			if ch == "(":
-				depth += 1
-			elif ch == ")":
-				depth -= 1
-			j += 1
-		if depth != 0:
-			break
-		yield text[start : j - 1]
-		i = j
-
-
-def collect_from_expr(expr: str, depth: int = 0) -> None:
-	if depth > 32:
-		return
-	expr = unwrap(expr.strip())
-	for part in re.split(r"\s*,\s*", expr):
-		part = part.strip()
-		if re.match(r"^(all|any)\(", part):
-			collect_from_expr(part, depth + 1)
-			continue
-		part = unwrap(part)
-		if part.startswith("not(") and part.endswith(")"):
-			part = part[4:-1].strip()
-		if part.startswith("not "):
-			part = part[4:].strip()
-		if part.startswith("host_") or part == "test":
-			continue
-		if re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", part):
-			wants.add(part)
-
-
-for path in root.rglob("*.rs"):
-	for inner in cfg_attr_inners(path.read_text()):
-		collect_from_expr(inner)
-for extra in (
-	"config_80211d",
-	"config_usb_hci",
-	"CONFIG_USE_USB_BUFFER_ALLOC_RX",
-	"config_find_best_channel",
-	"config_p2p_ps",
-	"dbg_config_error_detect",
-):
-	wants.add(extra)
-for name in sorted(wants):
-	print(name)
-PY
+python3 "$(cd "$(dirname "$0")" && pwd)/rust_cfg_allowlist.py" "$srcdir/rust" >"$allowlist"
 
 includes=(
 	"-include" "${srcdir}/include/autoconf.h"

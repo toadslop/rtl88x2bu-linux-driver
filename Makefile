@@ -6286,3 +6286,8 @@ clean:
 	rm -fr *.mod.c *.mod *.o .*.cmd *.ko *~
 	rm -fr .tmp_versions
 endif
+
+# T21: expose ccflags-y for scripts/ci/check-rust-cfg-parity.sh (kbuild or standalone).
+.PHONY: print-ccflags-y
+print-ccflags-y:
+	@echo '$(ccflags-y)'

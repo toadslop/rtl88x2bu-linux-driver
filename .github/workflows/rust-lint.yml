@@ -57,10 +57,9 @@ jobs:
         if: steps.filter.outputs.rust == 'true'
         run: ./scripts/ci/rustfmt-check.sh
 
-  rust-cfg-parity-advisory:
-    name: Rust cfg parity (advisory)
+  rust-cfg-parity:
+    name: Rust cfg parity
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
