@@ -719,8 +719,9 @@ def dep_satisfaction(
     prs: list[PullRequest],
     num_to_id: dict[int, str],
 ) -> dict[str, Any]:
-    draft_id = num_to_id.get(dep_num)
     dep = issues_by_num.get(dep_num)
+    # ISSUE-MAP lags newly filed GitHub issues; parse draft ID from the issue title.
+    draft_id = num_to_id.get(dep_num) or (dep.draft_id if dep else None)
     if dep is None:
         # Open-issue fetch only returns still-open children; absent deps are closed.
         return {
