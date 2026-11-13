@@ -24,32 +24,7 @@
 /* W4-62 teardown shims follow rtw_rust_hal_intf_alloc_hal_data below. */
 
 /* rtw_hal_data_deinit / rtw_hal_free_data — ported to rust/hal_intf.rs (W4-62) */
-void rtw_hal_dm_init(_adapter *padapter)
-{
-	if (is_primary_adapter(padapter)) {
-		PHAL_DATA_TYPE	pHalData = GET_HAL_DATA(padapter);
-
-		padapter->hal_func.dm_init(padapter);
-
-		_rtw_spinlock_init(&pHalData->IQKSpinLock);
-
-		#ifdef CONFIG_TXPWR_PG_WITH_PWR_IDX
-		if (pHalData->txpwr_pg_mode == TXPWR_PG_WITH_PWR_IDX)
-			hal_load_txpwr_info(padapter);
-		#endif
-		phy_load_tx_power_ext_info(padapter, 1);
-	}
-}
-void rtw_hal_dm_deinit(_adapter *padapter)
-{
-	if (is_primary_adapter(padapter)) {
-		PHAL_DATA_TYPE	pHalData = GET_HAL_DATA(padapter);
-
-		padapter->hal_func.dm_deinit(padapter);
-
-		_rtw_spinlock_free(&pHalData->IQKSpinLock);
-	}
-}
+/* rtw_hal_dm_init / rtw_hal_dm_deinit — ported to rust/hal_intf.rs (W4-63) */
 
 enum rf_type rtw_chip_rftype_to_hal_rftype(_adapter *adapter, u8 limit)
 {
@@ -2213,6 +2188,36 @@ void rtw_rust_hal_intf_vmfree_hal_data(void *ptr, u32 sz)
 void rtw_rust_hal_intf_call_phydm_priv_init(_adapter *padapter)
 {
 	rtw_phydm_priv_init(padapter);
+}
+
+void rtw_rust_hal_intf_call_dm_init(_adapter *padapter)
+{
+	padapter->hal_func.dm_init(padapter);
+}
+
+void rtw_rust_hal_intf_call_dm_deinit(_adapter *padapter)
+{
+	padapter->hal_func.dm_deinit(padapter);
+}
+
+void rtw_rust_hal_intf_dm_init_tail(_adapter *padapter)
+{
+	PHAL_DATA_TYPE pHalData = GET_HAL_DATA(padapter);
+
+	_rtw_spinlock_init(&pHalData->IQKSpinLock);
+
+	#ifdef CONFIG_TXPWR_PG_WITH_PWR_IDX
+	if (pHalData->txpwr_pg_mode == TXPWR_PG_WITH_PWR_IDX)
+		hal_load_txpwr_info(padapter);
+	#endif
+	phy_load_tx_power_ext_info(padapter, 1);
+}
+
+void rtw_rust_hal_intf_dm_deinit_tail(_adapter *padapter)
+{
+	PHAL_DATA_TYPE pHalData = GET_HAL_DATA(padapter);
+
+	_rtw_spinlock_free(&pHalData->IQKSpinLock);
 }
 
 u8 rtw_rust_hal_intf_hal_spec_proto_cap(_adapter *adapter)
