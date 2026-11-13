@@ -20,20 +20,7 @@
 
 /* rtw_hal_chip_configure / rtw_hal_read_chip_info — ported to rust/hal_intf.rs (W4-59) */
 /* rtw_hal_read_chip_version / rtw_hal_def_value_init — ported to rust/hal_intf.rs (W4-60) */
-
-u8 rtw_hal_data_init(_adapter *padapter)
-{
-	if (is_primary_adapter(padapter)) {
-		padapter->hal_data_sz = sizeof(HAL_DATA_TYPE);
-		padapter->HalData = rtw_zvmalloc(padapter->hal_data_sz);
-		if (padapter->HalData == NULL) {
-			RTW_INFO("cant not alloc memory for HAL DATA\n");
-			return _FAIL;
-		}
-		rtw_phydm_priv_init(padapter);
-	}
-	return _SUCCESS;
-}
+/* rtw_hal_data_init — ported to rust/hal_intf.rs (W4-61) */
 
 void rtw_hal_data_deinit(_adapter *padapter)
 {
@@ -2197,6 +2184,22 @@ void rtw_rust_hal_intf_intf_chip_configure(_adapter *adapter)
 void rtw_rust_hal_intf_call_read_chip_version(_adapter *adapter)
 {
 	adapter->hal_func.read_chip_version(adapter);
+}
+
+u8 rtw_rust_hal_intf_alloc_hal_data(_adapter *padapter)
+{
+	padapter->hal_data_sz = sizeof(HAL_DATA_TYPE);
+	padapter->HalData = rtw_zvmalloc(padapter->hal_data_sz);
+	if (padapter->HalData == NULL) {
+		RTW_INFO("cant not alloc memory for HAL DATA\n");
+		return _FAIL;
+	}
+	return _SUCCESS;
+}
+
+void rtw_rust_hal_intf_call_phydm_priv_init(_adapter *padapter)
+{
+	rtw_phydm_priv_init(padapter);
 }
 
 u8 rtw_rust_hal_intf_hal_spec_proto_cap(_adapter *adapter)

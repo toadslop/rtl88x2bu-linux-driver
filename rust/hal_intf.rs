@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 //! HAL interface helpers — Rust port of `hal/hal_intf.c` (W4-07 TRX mode dumps, W4-08 RF/NSS dumps,
-//! W4-36 chip ODM map, W4-59 chip configure + read_chip_info, W4-60 chip version + def_value_init).
+//! W4-36 chip ODM map, W4-59 chip configure + read_chip_info, W4-60 chip version + def_value_init,
+//! W4-61 hal_data_init).
 
 #![allow(
     dead_code,
@@ -578,6 +579,8 @@ mod kernel {
         fn rtw_rust_hal_intf_read_adapter_info(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_intf_log_read_chip_info_ms(ms: i32);
         fn rtw_rust_hal_intf_call_read_chip_version(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_alloc_hal_data(adapter: *mut c_void) -> U8;
+        fn rtw_rust_hal_intf_call_phydm_priv_init(adapter: *mut c_void);
         fn rtw_rust_hal_intf_hal_spec_proto_cap(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_intf_hal_spec_band_cap(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_intf_get_wireless_mode(adapter: *mut c_void) -> U8;
@@ -684,6 +687,26 @@ mod kernel {
         unsafe {
             rtw_rust_hal_intf_set_rx_tsf_addr_filter_config(adapter, 0);
         }
+    }
+
+    const SUCCESS: U8 = 1;
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_data_init(adapter: *mut c_void) -> U8 {
+        if adapter.is_null() {
+            return SUCCESS;
+        }
+        if unsafe { rtw_rust_init_is_primary(adapter) } == 0 {
+            return SUCCESS;
+        }
+        let rtn = unsafe { rtw_rust_hal_intf_alloc_hal_data(adapter) };
+        if rtn != SUCCESS {
+            return rtn;
+        }
+        unsafe {
+            rtw_rust_hal_intf_call_phydm_priv_init(adapter);
+        }
+        SUCCESS
     }
 
     #[no_mangle]
