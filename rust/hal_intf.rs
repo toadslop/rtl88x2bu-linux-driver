@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
 //! HAL interface helpers — Rust port of `hal/hal_intf.c` (W4-07 TRX mode dumps, W4-08 RF/NSS dumps,
-//! W4-36 chip ODM map, W4-59 chip configure + read_chip_info).
+//! W4-36 chip ODM map, W4-59 chip configure + read_chip_info, W4-60 chip version + def_value_init).
 
 #![allow(
     dead_code,
@@ -559,10 +559,35 @@ mod kernel {
     const RTW_SDIO: U8 = 4;
     const RTW_GSPI: U8 = 8;
 
+    const PROTO_CAP_11B: U8 = 1 << 0;
+    const PROTO_CAP_11G: U8 = 1 << 1;
+    const PROTO_CAP_11N: U8 = 1 << 2;
+    const PROTO_CAP_11AC: U8 = 1 << 3;
+    const BAND_CAP_2G: U8 = 1 << 0;
+    const BAND_CAP_5G: U8 = 1 << 1;
+
+    const WIRELESS_11B: U8 = 1 << 0;
+    const WIRELESS_11G: U8 = 1 << 1;
+    const WIRELESS_11A: U8 = 1 << 2;
+    const WIRELESS_11_24N: U8 = 1 << 3;
+    const WIRELESS_11_5N: U8 = 1 << 4;
+    const WIRELESS_11AC: U8 = 1 << 6;
+
     extern "C" {
         fn rtw_rust_hal_intf_intf_chip_configure(adapter: *mut c_void);
         fn rtw_rust_hal_intf_read_adapter_info(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_intf_log_read_chip_info_ms(ms: i32);
+        fn rtw_rust_hal_intf_call_read_chip_version(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_hal_spec_proto_cap(adapter: *mut c_void) -> U8;
+        fn rtw_rust_hal_intf_hal_spec_band_cap(adapter: *mut c_void) -> U8;
+        fn rtw_rust_hal_intf_get_wireless_mode(adapter: *mut c_void) -> U8;
+        fn rtw_rust_hal_intf_set_wireless_mode(adapter: *mut c_void, mode: U8);
+        fn rtw_rust_hal_intf_set_fw_psmode_iface_id(adapter: *mut c_void, id: U8);
+        fn rtw_rust_hal_intf_call_init_default_value(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_set_rx_tsf_addr_filter_config(adapter: *mut c_void, v: U8);
+        fn rtw_rust_init_is_primary(adapter: *mut c_void) -> U8;
+        fn rtw_odm_init_ic_type(adapter: *mut c_void);
+        fn rtw_init_hal_com_default_value(adapter: *mut c_void);
         fn rtw_rust_hal_com_get_intf_type(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_com_is_hw_init_completed(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_com_hal_power_on(adapter: *mut c_void);
@@ -573,12 +598,91 @@ mod kernel {
         fn rtw_rust_hal_intf_trx_fields(adapter: *mut c_void, out: *mut RtwHalIntfTrxFields);
         fn rtw_rust_hal_intf_rf_path_fields(adapter: *mut c_void, out: *mut RtwHalIntfRfPathFields);
         fn rtw_rust_hal_intf_trx_nss_fields(adapter: *mut c_void, out: *mut RtwHalIntfTrxNssFields);
+        #[cfg(config_fw_multi_port_support)]
+        fn rtw_rust_hal_intf_dft_defaults(adapter: *mut c_void);
+        #[cfg(config_hw_p0_tsf_sync)]
+        fn rtw_rust_hal_intf_p0_tsf_defaults(adapter: *mut c_void);
     }
 
     #[no_mangle]
     pub extern "C" fn rtw_hal_chip_configure(adapter: *mut c_void) {
         unsafe {
             rtw_rust_hal_intf_intf_chip_configure(adapter);
+        }
+    }
+
+    fn init_wireless_mode(adapter: *mut c_void) {
+        let mut proto_wireless_mode: U8 = 0;
+        let proto_cap = unsafe { rtw_rust_hal_intf_hal_spec_proto_cap(adapter) };
+        let band_cap = unsafe { rtw_rust_hal_intf_hal_spec_band_cap(adapter) };
+
+        if proto_cap & PROTO_CAP_11B != 0 {
+            proto_wireless_mode |= WIRELESS_11B;
+        }
+        if proto_cap & PROTO_CAP_11G != 0 {
+            proto_wireless_mode |= WIRELESS_11G;
+        }
+        if band_cap & BAND_CAP_5G != 0 {
+            proto_wireless_mode |= WIRELESS_11A;
+        }
+        #[cfg(config_80211n_ht)]
+        {
+            if proto_cap & PROTO_CAP_11N != 0 {
+                if band_cap & BAND_CAP_2G != 0 {
+                    proto_wireless_mode |= WIRELESS_11_24N;
+                }
+                if band_cap & BAND_CAP_5G != 0 {
+                    proto_wireless_mode |= WIRELESS_11_5N;
+                }
+            }
+        }
+        #[cfg(config_80211ac_vht)]
+        {
+            if proto_cap & PROTO_CAP_11AC != 0 {
+                proto_wireless_mode |= WIRELESS_11AC;
+            }
+        }
+
+        let mode = unsafe { rtw_rust_hal_intf_get_wireless_mode(adapter) };
+        unsafe {
+            rtw_rust_hal_intf_set_wireless_mode(adapter, mode & proto_wireless_mode);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_read_chip_version(adapter: *mut c_void) {
+        unsafe {
+            rtw_rust_hal_intf_call_read_chip_version(adapter);
+            rtw_odm_init_ic_type(adapter);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_def_value_init(adapter: *mut c_void) {
+        if adapter.is_null() {
+            return;
+        }
+        if unsafe { rtw_rust_init_is_primary(adapter) } == 0 {
+            return;
+        }
+        unsafe {
+            rtw_rust_hal_intf_set_fw_psmode_iface_id(adapter, 0xff);
+        }
+        init_wireless_mode(adapter);
+        unsafe {
+            rtw_rust_hal_intf_call_init_default_value(adapter);
+            rtw_init_hal_com_default_value(adapter);
+        }
+        #[cfg(config_fw_multi_port_support)]
+        unsafe {
+            rtw_rust_hal_intf_dft_defaults(adapter);
+        }
+        #[cfg(config_hw_p0_tsf_sync)]
+        unsafe {
+            rtw_rust_hal_intf_p0_tsf_defaults(adapter);
+        }
+        unsafe {
+            rtw_rust_hal_intf_set_rx_tsf_addr_filter_config(adapter, 0);
         }
     }
 
