@@ -19,66 +19,7 @@
 #include <hal_data.h>
 
 /* rtw_hal_chip_configure / rtw_hal_read_chip_info — ported to rust/hal_intf.rs (W4-59) */
-
-void rtw_hal_read_chip_version(_adapter *padapter)
-{
-	padapter->hal_func.read_chip_version(padapter);
-	rtw_odm_init_ic_type(padapter);
-}
-
-static void rtw_init_wireless_mode(_adapter *padapter)
-{
-	u8 proto_wireless_mode = 0;
-	struct hal_spec_t *hal_spec = GET_HAL_SPEC(padapter);
-	if(hal_spec->proto_cap & PROTO_CAP_11B)
-		proto_wireless_mode |= WIRELESS_11B;
-
-	if(hal_spec->proto_cap & PROTO_CAP_11G)
-		proto_wireless_mode |= WIRELESS_11G;
-
-	if(hal_spec->band_cap & BAND_CAP_5G)
-		proto_wireless_mode |= WIRELESS_11A;
-
-#ifdef CONFIG_80211N_HT
-	if(hal_spec->proto_cap & PROTO_CAP_11N) {
-
-		if(hal_spec->band_cap & BAND_CAP_2G)
-			proto_wireless_mode |= WIRELESS_11_24N;
-		if(hal_spec->band_cap & BAND_CAP_5G)
-			proto_wireless_mode |= WIRELESS_11_5N;
-	}
-#endif
-
-#ifdef CONFIG_80211AC_VHT
-	if(hal_spec->proto_cap & PROTO_CAP_11AC) 
-		proto_wireless_mode |= WIRELESS_11AC;
-#endif
-	padapter->registrypriv.wireless_mode &= proto_wireless_mode;
-}
-
-void rtw_hal_def_value_init(_adapter *padapter)
-{
-	if (is_primary_adapter(padapter)) {
-		/*init fw_psmode_iface_id*/
-		adapter_to_pwrctl(padapter)->fw_psmode_iface_id = 0xff;
-		/*wireless_mode*/
-		rtw_init_wireless_mode(padapter);
-		padapter->hal_func.init_default_value(padapter);
-
-		rtw_init_hal_com_default_value(padapter);
-		
-		#ifdef CONFIG_FW_MULTI_PORT_SUPPORT
-		adapter_to_dvobj(padapter)->dft.port_id = 0xFF;
-		adapter_to_dvobj(padapter)->dft.mac_id = 0xFF;
-		#endif
-		#ifdef CONFIG_HW_P0_TSF_SYNC
-		adapter_to_dvobj(padapter)->p0_tsf.sync_port = MAX_HW_PORT;
-		adapter_to_dvobj(padapter)->p0_tsf.offset = 0;
-		#endif
-
-		GET_HAL_DATA(padapter)->rx_tsf_addr_filter_config = 0;
-	}
-}
+/* rtw_hal_read_chip_version / rtw_hal_def_value_init — ported to rust/hal_intf.rs (W4-60) */
 
 u8 rtw_hal_data_init(_adapter *padapter)
 {
@@ -2252,6 +2193,62 @@ void rtw_rust_hal_intf_intf_chip_configure(_adapter *adapter)
 {
 	adapter->hal_func.intf_chip_configure(adapter);
 }
+
+void rtw_rust_hal_intf_call_read_chip_version(_adapter *adapter)
+{
+	adapter->hal_func.read_chip_version(adapter);
+}
+
+u8 rtw_rust_hal_intf_hal_spec_proto_cap(_adapter *adapter)
+{
+	return GET_HAL_SPEC(adapter)->proto_cap;
+}
+
+u8 rtw_rust_hal_intf_hal_spec_band_cap(_adapter *adapter)
+{
+	return GET_HAL_SPEC(adapter)->band_cap;
+}
+
+u8 rtw_rust_hal_intf_get_wireless_mode(_adapter *adapter)
+{
+	return adapter->registrypriv.wireless_mode;
+}
+
+void rtw_rust_hal_intf_set_wireless_mode(_adapter *adapter, u8 mode)
+{
+	adapter->registrypriv.wireless_mode = mode;
+}
+
+void rtw_rust_hal_intf_set_fw_psmode_iface_id(_adapter *adapter, u8 id)
+{
+	adapter_to_pwrctl(adapter)->fw_psmode_iface_id = id;
+}
+
+void rtw_rust_hal_intf_call_init_default_value(_adapter *adapter)
+{
+	adapter->hal_func.init_default_value(adapter);
+}
+
+void rtw_rust_hal_intf_set_rx_tsf_addr_filter_config(_adapter *adapter, u8 v)
+{
+	GET_HAL_DATA(adapter)->rx_tsf_addr_filter_config = v;
+}
+
+#ifdef CONFIG_FW_MULTI_PORT_SUPPORT
+void rtw_rust_hal_intf_dft_defaults(_adapter *adapter)
+{
+	adapter_to_dvobj(adapter)->dft.port_id = 0xFF;
+	adapter_to_dvobj(adapter)->dft.mac_id = 0xFF;
+}
+#endif /* CONFIG_FW_MULTI_PORT_SUPPORT */
+
+#ifdef CONFIG_HW_P0_TSF_SYNC
+void rtw_rust_hal_intf_p0_tsf_defaults(_adapter *adapter)
+{
+	adapter_to_dvobj(adapter)->p0_tsf.sync_port = MAX_HW_PORT;
+	adapter_to_dvobj(adapter)->p0_tsf.offset = 0;
+}
+#endif /* CONFIG_HW_P0_TSF_SYNC */
 
 u8 rtw_rust_hal_intf_read_adapter_info(_adapter *adapter)
 {
