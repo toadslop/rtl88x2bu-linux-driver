@@ -586,6 +586,10 @@ mod kernel {
         fn rtw_rust_hal_intf_phy_free_filebuf(adapter: *mut c_void);
         fn rtw_rust_hal_intf_vmfree_hal_data(ptr: *mut c_void, sz: U32);
         fn rtw_rust_hal_intf_call_phydm_priv_init(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_call_dm_init(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_call_dm_deinit(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_dm_init_tail(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_dm_deinit_tail(adapter: *mut c_void);
         fn rtw_rust_hal_intf_hal_spec_proto_cap(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_intf_hal_spec_band_cap(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_intf_get_wireless_mode(adapter: *mut c_void) -> U8;
@@ -741,6 +745,34 @@ mod kernel {
     #[no_mangle]
     pub extern "C" fn rtw_hal_free_data(adapter: *mut c_void) {
         hal_data_deinit_inner(adapter);
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_dm_init(adapter: *mut c_void) {
+        if adapter.is_null() {
+            return;
+        }
+        if unsafe { rtw_rust_init_is_primary(adapter) } == 0 {
+            return;
+        }
+        unsafe {
+            rtw_rust_hal_intf_call_dm_init(adapter);
+            rtw_rust_hal_intf_dm_init_tail(adapter);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_dm_deinit(adapter: *mut c_void) {
+        if adapter.is_null() {
+            return;
+        }
+        if unsafe { rtw_rust_init_is_primary(adapter) } == 0 {
+            return;
+        }
+        unsafe {
+            rtw_rust_hal_intf_call_dm_deinit(adapter);
+            rtw_rust_hal_intf_dm_deinit_tail(adapter);
+        }
     }
 
     #[no_mangle]
