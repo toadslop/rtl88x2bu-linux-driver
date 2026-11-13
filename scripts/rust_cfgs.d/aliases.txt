@@ -1,0 +1,13 @@
+# Extra --cfg names for a C macro (whitespace-separated cfgs after the macro name).
+CONFIG_DFS	dfs dfs_master
+CONFIG_IEEE80211_BAND_5GHZ	ieee80211_band_5ghz
+CONFIG_TDLS	tdls config_tdls
+CONFIG_USB_HCI	config_usb_hci CONFIG_USB_HCI
+DBG_CONFIG_ERROR_DETECT	dbg_config_error_detect
+RTW_SCAN_SPARSE_MIRACAST	config_scan_sparse_miracast
+CONFIG_80211D	config_80211d
+CONFIG_RTW_MGMT_QUEUE	config_rtw_mgmt_queue
+CONFIG_RTW_MAC_HIDDEN_RPT	config_rtw_mac_hidden_rpt
+CONFIG_DETECT_CPWM_BY_POLLING	detect_cpwm_by_polling
+CONFIG_DFS_MASTER	dfs_master
+CONFIG_RTL8822B	CONFIG_RTL8822B

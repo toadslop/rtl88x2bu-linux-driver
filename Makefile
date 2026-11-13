@@ -1103,7 +1103,6 @@ endif
 
 ifeq ($(CONFIG_P2P), y)
 ccflags-y += -DCONFIG_P2P
-rustflags-y += --cfg config_p2p
 ifneq ($(CONFIG_AP_MODE), y)
 $(error "CONFIG_AP_MODE is required for CONFIG_P2P")
 endif
@@ -1337,7 +1336,6 @@ endif
 
 ifeq ($(CONFIG_WIFI_MONITOR), y)
 ccflags-y += -DCONFIG_WIFI_MONITOR
-rustflags-y += --cfg config_wifi_monitor
 endif
 
 ifeq ($(CONFIG_MCC_MODE), y)
@@ -2710,7 +2708,7 @@ rustflags-y += --cfg rust_mlme_unassoc --cfg config_rtw_multi_ap
 endif
 ifeq ($(CONFIG_LAYER2_ROAMING), y)
 ccflags-y += -DCONFIG_RUST_MLME_ROAMING
-rustflags-y += --cfg rust_mlme_roaming --cfg config_layer2_roaming
+rustflags-y += --cfg rust_mlme_roaming
 endif
 ccflags-y += -DCONFIG_RUST_MLME_WMM_RSN
 rustflags-y += --cfg rust_mlme_wmm_rsn
@@ -2796,7 +2794,6 @@ ifneq ($(filter -DCONFIG_AP_MODE,$(ccflags-y)),)
 _rust_cfg_ap_mode := y
 endif
 ifneq ($(_rust_cfg_ap_mode),)
-rustflags-y += --cfg config_ap_mode
 endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_EVENT_THREAD_MODE' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg event_thread_mode
@@ -2807,7 +2804,7 @@ endif
 rustflags-y += --cfg rust_mlme_ext_rest
 rustflags-y += --cfg rust_mlme_ext_mgnt_attrib
 rustflags-y += --cfg rust_mlme_ext_peer_alive
-rustflags-y += --cfg rust_mlme_ext_scan --cfg rust_mlme_ext_scan_ch --cfg config_scan_sparse_miracast
+rustflags-y += --cfg rust_mlme_ext_scan --cfg rust_mlme_ext_scan_ch
 rustflags-y += --cfg rust_mlme_ext_pick_ch
 rustflags-y += --cfg rust_mlme_ext_sitesurvey_cmd
 rustflags-y += --cfg rust_mlme_ext_band_ie
@@ -2847,16 +2844,12 @@ endif
 ifneq ($(_rust_cfg_rtw_acs_dbg),)
 rustflags-y += --cfg config_rtw_acs_dbg
 endif
-rustflags-y += --cfg config_rtw_mgmt_queue
-rustflags-y += --cfg config_p2p_ps_noa_use_macid_sleep
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_DETECT_CPWM_BY_POLLING' $(src)/include/autoconf.h 2>/dev/null && echo y),)
-rustflags-y += --cfg detect_cpwm_by_polling
 endif
 ifneq ($(filter -DCONFIG_CONCURRENT_MODE,$(ccflags-y)),)
 rustflags-y += --cfg config_concurrent_mode
 endif
 ifneq ($(filter -DCONFIG_IOCTL_CFG80211,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
-rustflags-y += --cfg config_ioctl_cfg80211
 endif
 # Match drv_conf.h: CONFIG_MI_WITH_MBSSID_CAM when IFACE_NUMBER > 2 and not GEN3.
 _config_iface_gt2 := $(filter -DCONFIG_IFACE_NUMBER=3 -DCONFIG_IFACE_NUMBER=4 -DCONFIG_IFACE_NUMBER=5 -DCONFIG_IFACE_NUMBER=6 -DCONFIG_IFACE_NUMBER=7 -DCONFIG_IFACE_NUMBER=8,$(ccflags-y) $(USER_EXTRA_CFLAGS))
@@ -2883,9 +2876,8 @@ ifneq ($(_rust_cfg_mi_with_mbssid_cam),)
 rustflags-y += --cfg config_mi_with_mbssid_cam
 endif
 rustflags-y += --cfg rust_mlme_ht_restructure
-rustflags-y += --cfg rust_mlme_80211d --cfg config_80211d
+rustflags-y += --cfg rust_mlme_80211d
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BEAMFORMING' $(src)/include/autoconf.h 2>/dev/null && echo y),)
-rustflags-y += --cfg config_beamforming
 ifeq ($(CONFIG_RTL8822B), y)
 ifneq ($(W3_197_LEGACY_L1), 1)
 rustflags-y += --cfg beamforming_version_2
@@ -2895,13 +2887,10 @@ endif
 endif
 # W3-187: kernel rtw_set_ps_mode Rust cfgs (mirror host L2 SET_PS_RUSTCFGS + autoconf).
 ifeq ($(CONFIG_BT_COEXIST), y)
-rustflags-y += --cfg config_bt_coexist
 endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BT_COEXIST' $(src)/include/autoconf.h 2>/dev/null && echo y),)
-rustflags-y += --cfg config_bt_coexist
 endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_LPS_LCLK' $(src)/include/autoconf.h 2>/dev/null && echo y),)
-rustflags-y += --cfg config_lps_lclk
 endif
 _rust_cfg_lps_pg :=
 ifneq ($(filter -DCONFIG_LPS_PG,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
@@ -3027,13 +3016,10 @@ ifneq ($(_rust_cfg_mcc_phydm_offload),)
 rustflags-y += --cfg config_mcc_phydm_offload
 endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_WMMPS_STA' $(src)/include/autoconf.h 2>/dev/null && echo y),)
-rustflags-y += --cfg config_wmmps_sta
 endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_P2P_PS' $(src)/include/autoconf.h 2>/dev/null && echo y),)
-rustflags-y += --cfg config_p2p_ps
 endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_80211AC_VHT' $(src)/include/autoconf.h 2>/dev/null && echo y),)
-rustflags-y += --cfg config_80211ac_vht
 endif
 rustflags-y += --cfg rust_sta_mgt_stctl
 rustflags-y += --cfg rust_sta_mgt_lookup
@@ -3071,7 +3057,6 @@ ifeq ($(CONFIG_PCI_HCI), y)
 rustflags-y += --cfg config_pci_hci
 endif
 ifeq ($(CONFIG_USB_HCI), y)
-rustflags-y += --cfg config_usb_hci
 endif
 ifneq ($(filter -DCONFIG_PCI_HCI,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 rustflags-y += --cfg config_pci_hci
@@ -3101,11 +3086,9 @@ ifneq ($(filter -DCONFIG_RTW_DEBUG,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFL
 _rust_cfg_rtw_debug := y
 endif
 ifneq ($(_rust_cfg_rtw_debug),)
-rustflags-y += --cfg config_rtw_debug
 endif
 # W3-131: dump_drv_cfg part 1 in rust/rtw_debug.rs
 ifeq ($(CONFIG_PROC_DEBUG), y)
-rustflags-y += --cfg config_proc_debug
 endif
 # W3-219 / FX-05: beacon-count confirm is optional. Do not force
 # -DCONFIG_BCN_CNT_CONFIRM_HDL from CONFIG_PROC_DEBUG. Rust reads _ADAPTER
@@ -3172,7 +3155,6 @@ ifneq ($(filter -DCONFIG_POWER_SAVING,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_
 _rust_cfg_power_saving := y
 endif
 ifneq ($(_rust_cfg_power_saving),)
-rustflags-y += --cfg config_power_saving
 endif
 ifeq ($(CONFIG_SDIO_TX_ENABLE_AVAL_INT), y)
 rustflags-y += --cfg config_sdio_tx_enable_aval_int
@@ -3205,7 +3187,6 @@ ifneq ($(filter -DDBG_CONFIG_ERROR_DETECT,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EX
 _rust_cfg_dbg_config_error_detect := y
 endif
 ifneq ($(_rust_cfg_dbg_config_error_detect),)
-rustflags-y += --cfg dbg_config_error_detect
 endif
 _rust_cfg_rf4ce_coexist :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RF4CE_COEXIST' $(src)/include/autoconf.h 2>/dev/null && echo y),)
@@ -3231,7 +3212,6 @@ ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_FIND_BEST_CHANNEL' $(src)/inclu
 _rust_cfg_find_best_channel := y
 endif
 ifneq ($(_rust_cfg_find_best_channel),)
-rustflags-y += --cfg config_find_best_channel
 endif
 _rust_cfg_dbg_memory_leak :=
 ifneq ($(filter -DDBG_MEMORY_LEAK,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
@@ -3280,10 +3260,7 @@ endif
 ifneq ($(_rust_cfg_dbg_counter),)
 rustflags-y += --cfg config_dbg_counter
 endif
-rustflags-y += --cfg dfs_master
-rustflags-y += --cfg ieee80211_band_5ghz
 # CONFIG_DFS defaults to 1 in include/drv_conf.h (#define), not a Makefile y var.
-rustflags-y += --cfg dfs
 ifneq ($(filter -DCONFIG_REGD_SRC_FROM_OS,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg regd_src_from_os
 endif
@@ -3297,7 +3274,6 @@ endif
 # W4-39: tx_aclt_force Rust port matches hal_com_rest.c #if CONFIG_TX_AC_LIFETIME
 ifneq ($(filter -DCONFIG_TX_AC_LIFETIME=0,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 else
-rustflags-y += --cfg config_tx_ac_lifetime
 endif
 ifneq ($(filter -DCONFIG_PLATFORM_INTEL_BYT,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg CONFIG_PLATFORM_INTEL_BYT
@@ -3334,7 +3310,6 @@ ifneq ($(filter -DCONFIG_SUPPORT_TRX_SHARED,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(
 rustflags-y += --cfg CONFIG_SUPPORT_TRX_SHARED
 endif
 ifeq ($(CONFIG_USB_HCI), y)
-rustflags-y += --cfg CONFIG_USB_HCI
 endif
 # Optional: enable via make CONFIG_USB_SUPPORT_ASYNC_VDN_REQ=y or uncomment in autoconf.h (W4-37).
 ifeq ($(CONFIG_USB_SUPPORT_ASYNC_VDN_REQ), y)
@@ -3385,7 +3360,6 @@ ifneq ($(filter y,$(CONFIG_RTL8192F) $(CONFIG_RTL8723D) $(CONFIG_RTL8703B) $(CON
 _rust_cfg_rtw_mac_hidden_rpt := y
 endif
 ifneq ($(_rust_cfg_rtw_mac_hidden_rpt),)
-rustflags-y += --cfg config_rtw_mac_hidden_rpt
 endif
 # FX-07: USB HAL cfgs mirror ccflags/autoconf (hal_usb.rs).
 _rust_cfg_usb_int_in_pipe :=
@@ -3406,7 +3380,6 @@ ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_PREALLOC_RECV_SKB\b' $(src)/inc
 _rust_cfg_prealloc_recv_skb := y
 endif
 ifneq ($(_rust_cfg_prealloc_recv_skb),)
-rustflags-y += --cfg CONFIG_PREALLOC_RECV_SKB
 endif
 _rust_cfg_prealloc_rx_skb_buffer :=
 ifneq ($(filter -DCONFIG_PREALLOC_RX_SKB_BUFFER,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
@@ -3426,7 +3399,6 @@ ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_USE_USB_BUFFER_ALLOC_RX\b' $(sr
 _rust_cfg_usb_buffer_alloc_rx := y
 endif
 ifneq ($(_rust_cfg_usb_buffer_alloc_rx),)
-rustflags-y += --cfg CONFIG_USE_USB_BUFFER_ALLOC_RX
 endif
 $(MODULE_NAME)-y += rust/hal_phy.o
 ifeq ($(CONFIG_USB_HCI), y)
@@ -3642,6 +3614,23 @@ $(MODULE_NAME)-y += rust/rtw_mi.o
 ccflags-y += -DCONFIG_RUST_IOCTL_SET_LEAF
 rustflags-y += --cfg rust_ioctl_set_leaf
 $(MODULE_NAME)-y += rust/rtw_ioctl_set.o
+
+# T21 (#1899): derive C-visible --cfg values from the effective preprocessor macro set.
+RUST_GENERATED_CFGS := $(abspath $(src)/rust/generated_cfgs)
+quiet_cmd_rust_generated_cfgs = RUSTCFG $(RUST_GENERATED_CFGS)
+      cmd_rust_generated_cfgs = mkdir -p $(dir $(RUST_GENERATED_CFGS)) && $(src)/scripts/rust_cfgs.sh --out $(RUST_GENERATED_CFGS) --srcdir $(src) --cc $(CC) -- $(ccflags-y)
+
+$(RUST_GENERATED_CFGS): $(src)/scripts/rust_cfgs.sh \
+		$(src)/scripts/rust_cfgs.d/aliases.txt \
+		$(src)/scripts/rust_cfgs.d/keep-case.txt FORCE
+	$(call cmd,rust_generated_cfgs)
+
+$(shell mkdir -p $(dir $(RUST_GENERATED_CFGS)) && \
+	$(src)/scripts/rust_cfgs.sh --out $(RUST_GENERATED_CFGS) --srcdir $(src) --cc $(CC) -- $(ccflags-y))
+
+$(obj)/rust/%.o: $(RUST_GENERATED_CFGS)
+
+rustflags-y += @$(RUST_GENERATED_CFGS)
 endif
 
 obj-$(CONFIG_RTL8822BU) := $(MODULE_NAME).o
