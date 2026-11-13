@@ -14,6 +14,7 @@ on:
       - 'scripts/ci/clippy-check.sh'
       - 'scripts/ci/check-status-constants.sh'
       - 'scripts/ci/check-rust-cfg-parity.sh'
+      - 'scripts/ci/rust-cfg-default.golden'
       - 'scripts/rust_cfgs.sh'
       - 'scripts/rust_cfgs.d/**'
       - '.github/workflows/rust-lint.yml'
@@ -73,6 +74,7 @@ jobs:
               - 'scripts/rust_cfgs.sh'
               - 'scripts/rust_cfgs.d/**'
               - 'scripts/ci/check-rust-cfg-parity.sh'
+      - 'scripts/ci/rust-cfg-default.golden'
               - '.github/workflows/rust-lint.yml'
 
       - name: Out of scope — skip cfg parity

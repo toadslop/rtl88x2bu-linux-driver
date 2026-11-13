@@ -1330,8 +1330,6 @@ endif
 
 ifeq ($(CONFIG_TDLS), y)
 ccflags-y += -DCONFIG_TDLS
-rustflags-y += --cfg tdls
-rustflags-y += --cfg config_tdls
 endif
 
 ifeq ($(CONFIG_WIFI_MONITOR), y)
@@ -1340,7 +1338,6 @@ endif
 
 ifeq ($(CONFIG_MCC_MODE), y)
 ccflags-y += -DCONFIG_MCC_MODE
-rustflags-y += --cfg config_mcc_mode
 endif
 
 ifeq ($(CONFIG_RTW_NAPI), y)
@@ -1353,7 +1350,6 @@ endif
 
 ifeq ($(CONFIG_RTW_REPEATER_SON), y)
 ccflags-y += -DCONFIG_RTW_REPEATER_SON
-rustflags-y += --cfg config_rtw_repeater_son
 endif
 
 ifeq ($(CONFIG_RTW_IPCAM_APPLICATION), y)
@@ -2771,30 +2767,7 @@ ccflags-y += -DCONFIG_RUST_RTW_DEBUG
 # Forcing -DCONFIG_WOWLAN here used to override CONFIG_WOWLAN=n, enable
 # suspend WoWLAN (rtw_wow_enable defaults to 1), and shift registrypriv
 # so rtw_registrypriv_amsdu_mode read the wrong byte.
-ifeq ($(CONFIG_WAR_OFFLOAD), y)
-rustflags-y += --cfg config_war_offload
-else ifeq ($(CONFIG_OFFLOAD_MDNS_V4), y)
-rustflags-y += --cfg config_war_offload
-else ifeq ($(CONFIG_OFFLOAD_MDNS_V6), y)
-rustflags-y += --cfg config_war_offload
-endif
-ifeq ($(CONFIG_OFFLOAD_MDNS_V4), y)
-rustflags-y += --cfg config_offload_mdns_v4
-endif
-ifeq ($(CONFIG_OFFLOAD_MDNS_V6), y)
-rustflags-y += --cfg config_offload_mdns_v6
-endif
 rustflags-y += --cfg config_rust_rtw_debug_test_hooks
-# FX-07: match effective C AP_MODE (CONFIG_AP_WOWLAN can force -DCONFIG_AP_MODE).
-_rust_cfg_ap_mode :=
-ifeq ($(CONFIG_AP_MODE), y)
-_rust_cfg_ap_mode := y
-endif
-ifneq ($(filter -DCONFIG_AP_MODE,$(ccflags-y)),)
-_rust_cfg_ap_mode := y
-endif
-ifneq ($(_rust_cfg_ap_mode),)
-endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_EVENT_THREAD_MODE' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg event_thread_mode
 endif
@@ -2905,9 +2878,6 @@ _rust_cfg_fw_multi_port := y
 endif
 ifneq ($(_rust_cfg_fw_multi_port),)
 rustflags-y += --cfg config_fw_multi_port_support
-endif
-ifeq ($(CONFIG_WOWLAN), y)
-rustflags-y += --cfg config_wowlan
 endif
 _rust_cfg_wow_keep_alive_pattern :=
 ifneq ($(filter -DCONFIG_WOW_KEEP_ALIVE_PATTERN,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)

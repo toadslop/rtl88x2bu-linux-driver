@@ -424,6 +424,7 @@ When a port needs a new **C-backed** cfg:
 2. Ensure C defines the macro (`ccflags-y`, `autoconf.h`, or `drv_conf.h`).
 3. If the Rust spelling does not follow `CONFIG_FOO` → `config_foo`, add a row to `scripts/rust_cfgs.d/aliases.txt` or `keep-case.txt`.
 4. Rebuild L0 (`make KDIR=… LLVM=1`) and run `./scripts/ci/check-rust-cfg-parity.sh` (allowlist is derived from `rust/**/*.rs` inside `rust_cfgs.sh`).
+5. If the default 8822BU cfg set changes intentionally, refresh `scripts/ci/rust-cfg-default.golden` (the check compares explicit Makefile cfgs plus `generated_cfgs`).
 
 Do not add hand-derived `rustflags-y += --cfg config_*` for macros the generator already covers.
 
