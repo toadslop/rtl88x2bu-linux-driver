@@ -331,6 +331,11 @@ files=(
   wave4-60-hal-intf-chip-version-defaults.md
   wave4-61-hal-intf-data-init.md
   wave4-62-hal-intf-data-teardown.md
+  wave4-63-hal-intf-dm-init.md
+  wave4-64-hal-intf-chip-rftype.md
+  wave4-65-hal-intf-rfpath-init.md
+  wave4-66-hal-intf-trxnss-init.md
+  wave4-67-hal-intf-power-on-off.md
   wave3-161-debug-proc-rate-setter.md
   wave3-162-debug-proc-rx-cnt-dump.md
   wave3-163-debug-proc-ps-dbg.md

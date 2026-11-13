@@ -137,4 +137,14 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-61 | `wave4-61-hal-intf-data-init.md` | `rtw_hal_data_init` part 1 |
 | W4-62 | `wave4-62-hal-intf-data-teardown.md` | `rtw_hal_data_deinit` + `rtw_hal_free_data` |
 
-Further slices: deeper PHYDM / bulk USB RX path — file as `wave4-*.md` when tranche 14 is needed.
+## Children (tranche 14 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-63 | `wave4-63-hal-intf-dm-init.md` | `rtw_hal_dm_init` + `rtw_hal_dm_deinit` |
+| W4-64 | `wave4-64-hal-intf-chip-rftype.md` | `rtw_chip_rftype_to_hal_rftype` |
+| W4-65 | `wave4-65-hal-intf-rfpath-init.md` | `rtw_hal_rfpath_init` |
+| W4-66 | `wave4-66-hal-intf-trxnss-init.md` | `rtw_hal_trxnss_init` |
+| W4-67 | `wave4-67-hal-intf-power-on-off.md` | `rtw_hal_power_on` + `rtw_hal_power_off` |
+
+Further slices: deeper PHYDM / bulk USB RX path — file as `wave4-*.md` when tranche 15 is needed.
