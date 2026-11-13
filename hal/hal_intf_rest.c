@@ -26,6 +26,7 @@
 /* rtw_hal_data_deinit / rtw_hal_free_data — ported to rust/hal_intf.rs (W4-62) */
 /* rtw_hal_dm_init / rtw_hal_dm_deinit — ported to rust/hal_intf.rs (W4-63) */
 /* rtw_chip_rftype_to_hal_rftype — ported to rust/hal_intf.rs (W4-64) */
+/* rtw_hal_rfpath_init — ported to rust/hal_intf.rs (W4-65) */
 /* rtw_hal_power_on / rtw_hal_power_off — ported to rust/hal_intf.rs (W4-67) */
 /* rtw_hal_sw_led_init / rtw_hal_sw_led_deinit — ported to rust/hal_intf.rs (W4-68) */
 
@@ -38,80 +39,6 @@ void _dump_trx_nss(void *sel, _adapter *adapter);
 #ifdef CONFIG_RTL8814A
 extern enum rf_type rtl8814a_rfpath_decision(_adapter *adapter);
 #endif
-
-u8 rtw_hal_rfpath_init(_adapter *adapter)
-{
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
-	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
-
-#ifdef CONFIG_RTL8814A
-if (IS_HARDWARE_TYPE_8814A(adapter)) {
-	enum bb_path tx_bmp, rx_bmp;
-	hal_data->rf_type = rtl8814a_rfpath_decision(adapter);
-	rf_type_to_default_trx_bmp(hal_data->rf_type, &tx_bmp, &rx_bmp);
-	hal_data->trx_path_bmp = (tx_bmp << 4) | rx_bmp;
-	hal_data->NumTotalRFPath = 4;
-	hal_data->max_tx_cnt = hal_spec->max_tx_cnt;
-	hal_data->max_tx_cnt = rtw_min(hal_data->max_tx_cnt, rf_type_to_rf_tx_cnt(hal_data->rf_type));
-} else
-#endif
-{
-	struct registry_priv *regsty = adapter_to_regsty(adapter);
-	u8 trx_path_bmp;
-	u8 tx_path_num;
-	u8 rx_path_num;
-	int i;
-
-	trx_path_bmp = hal_spec->rf_reg_trx_path_bmp;
-	
-	if (regsty->trx_path_bmp != 0x00) {
-		/* restrict trx_path_bmp with regsty.trx_path_bmp */
-		trx_path_bmp &= regsty->trx_path_bmp;
-		if (!trx_path_bmp) {
-			RTW_ERR("%s hal_spec.rf_reg_trx_path_bmp:0x%02x, regsty->trx_path_bmp:0x%02x no intersection\n"
-				, __func__, hal_spec->rf_reg_trx_path_bmp, regsty->trx_path_bmp);
-			return _FAIL;
-		}
-	} else if (hal_data->eeprom_trx_path_bmp != 0x00) {
-		/* restrict trx_path_bmp with eeprom_trx_path_bmp */
-		trx_path_bmp &= hal_data->eeprom_trx_path_bmp;
-		if (!trx_path_bmp) {
-			RTW_ERR("%s hal_spec.rf_reg_trx_path_bmp:0x%02x, hal_data->eeprom_trx_path_bmp:0x%02x no intersection\n"
-				, __func__, hal_spec->rf_reg_trx_path_bmp, hal_data->eeprom_trx_path_bmp);
-			return _FAIL;
-		}
-	}
-
-	/* restrict trx_path_bmp with TX and RX num limit */
-	trx_path_bmp = rtw_restrict_trx_path_bmp_by_trx_num_lmt(trx_path_bmp
-		, regsty->tx_path_lmt, regsty->rx_path_lmt, &tx_path_num, &rx_path_num);
-	if (!trx_path_bmp) {
-		RTW_ERR("%s rtw_restrict_trx_path_bmp_by_trx_num_lmt(0x%02x, %u, %u) failed\n"
-			, __func__, trx_path_bmp, regsty->tx_path_lmt, regsty->rx_path_lmt);
-		return _FAIL;
-	}
-	hal_data->trx_path_bmp = trx_path_bmp;
-	hal_data->rf_type = trx_bmp_to_rf_type((trx_path_bmp & 0xF0) >> 4, trx_path_bmp & 0x0F);
-	hal_data->NumTotalRFPath = rtw_max(tx_path_num, rx_path_num);
-
-	hal_data->max_tx_cnt = hal_spec->max_tx_cnt;
-	hal_data->max_tx_cnt = rtw_min(hal_data->max_tx_cnt, tx_path_num);
-	if (hal_data->eeprom_max_tx_cnt)
-		hal_data->max_tx_cnt = rtw_min(hal_data->max_tx_cnt, hal_data->eeprom_max_tx_cnt);
-
-	if (1)
-		_dump_rf_path(RTW_DBGDUMP, adapter);
-}
-
-	RTW_INFO("%s trx_path_bmp:0x%02x(%s), NumTotalRFPath:%u, max_tx_cnt:%u\n"
-		, __func__
-		, hal_data->trx_path_bmp
-		, rf_type_to_rfpath_str(hal_data->rf_type)
-		, hal_data->NumTotalRFPath
-		, hal_data->max_tx_cnt);
-
-	return _SUCCESS;
-}
 
 #define NSS_VALID(nss) (nss > 0)
 
