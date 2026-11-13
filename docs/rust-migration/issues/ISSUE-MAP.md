@@ -395,6 +395,11 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-60 | #1972 | [W4-60] Translate hal_intf.c — chip version + def_value_init |
 | W4-61 | #1973 | [W4-61] Translate hal_intf.c — hal_data_init (part 1) |
 | W4-62 | #1974 | [W4-62] Translate hal_intf.c — hal_data_deinit + hal_free_data |
+| W4-63 | #1981 | [W4-63] Translate hal_intf.c — dm_init + dm_deinit |
+| W4-64 | #1982 | [W4-64] Translate hal_intf.c — chip_rftype_to_hal_rftype |
+| W4-65 | #1983 | [W4-65] Translate hal_intf.c — hal_rfpath_init |
+| W4-66 | #1984 | [W4-66] Translate hal_intf.c — hal_trxnss_init |
+| W4-67 | #1985 | [W4-67] Translate hal_intf.c — hal_power_on + hal_power_off |
 
 ## Superseded issues
 
