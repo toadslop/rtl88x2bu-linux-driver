@@ -29,6 +29,7 @@ USB_WVALUE_ORACLE := hal_usb_vendor_wvalue_c_oracle.c
 USB_SYNC_READ_ORACLE := hal_usb_sync_read_c_oracle.c
 USB_SYNC_WRITE_ORACLE := hal_usb_sync_write_c_oracle.c
 CHIP_ODM_ORACLE := hal_intf_chip_odm_c_oracle.c
+CHIP_RFTYPE_ORACLE := hal_intf_chip_rftype_c_oracle.c
 USB_ASYNC_WRITE_ORACLE := hal_usb_async_write_c_oracle.c
 RUST_HAL := $(ROOT)/rust/hal_com.rs
 RUST_HAL_USB := $(ROOT)/rust/hal_usb.rs
@@ -88,7 +89,7 @@ librust_hal_com.a: $(RUST_HAL)
 	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_com_hw_rate_test \
 		--crate-type staticlib $(RUST_HAL) -o $@
 
-test-rust: test_hw_rate_map_rust test-chip-odm-rust
+test-rust: test_hw_rate_map_rust test-chip-odm-rust test-chip-rftype-rust
 	./test_hw_rate_map_rust hal_hw_rate_vectors.json
 
 test_hw_rate_map_rust: test_hw_rate_map.c librust_hal_com.a $(HOST_JSON)
@@ -725,6 +726,18 @@ test_chip_odm_map_rust: test_chip_odm_map.c librust_hal_intf_chip_odm.a $(HOST_J
 	$(CC) $(CFLAGS) -DRUST_HAL_INTF_CHIP_ODM_ORACLE -o $@ test_chip_odm_map.c \
 		$(HOST_JSON) librust_hal_intf_chip_odm.a
 
+librust_hal_intf_chip_rftype.a: $(RUST_HAL_INTF)
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_intf_chip_rftype_test \
+		--crate-type staticlib $(RUST_HAL_INTF) -o $@
+
+test-chip-rftype-rust: test_chip_rftype_rust
+	./test_chip_rftype_rust hal_intf_chip_rftype_vectors.json
+
+test_chip_rftype_rust: test_chip_rftype.c librust_hal_intf_chip_rftype.a \
+		$(CHIP_RFTYPE_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_INTF_CHIP_RFTYPE_ORACLE -o $@ test_chip_rftype.c \
+		$(CHIP_RFTYPE_ORACLE) $(HOST_JSON) librust_hal_intf_chip_rftype.a
+
 test-usb-sync-write: test_hal_usb_sync_write
 	./test_hal_usb_sync_write hal_usb_sync_write_vectors.json
 
@@ -824,6 +837,7 @@ clean:
 		test_hal_usb_sync_read test_hal_usb_sync_write test_hal_usb_async_write \
 		test_hal_usb_async_write_rust librust_hal_usb_async_write.a \
 		test_chip_odm_map test_chip_odm_map_rust librust_hal_intf_chip_odm.a \
+		test_chip_rftype_rust librust_hal_intf_chip_rftype.a \
 		test_sec_read_cam_ent_null_mac test_sec_read_cam_ent_null_mac_rust \
 		librust_hal_com_sec_cam_ent.a \
 		test_hal_com_c2h_evt_fx19 librust_hal_com_c2h_evt.a
