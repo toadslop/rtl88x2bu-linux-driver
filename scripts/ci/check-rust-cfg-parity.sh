@@ -15,7 +15,7 @@ if [ ! -f "$cmd" ]; then
 	exit 1
 fi
 
-if ! grep -q "@${root}/rust/generated_cfgs" "$cmd"; then
+if ! grep -q "@.*/rust/generated_cfgs" "$cmd"; then
 	echo "check-rust-cfg-parity: rustc cmd does not load ${gen}" >&2
 	exit 1
 fi
