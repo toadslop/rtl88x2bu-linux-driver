@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 //! HAL interface helpers — Rust port of `hal/hal_intf.c` (W4-07 TRX mode dumps, W4-08 RF/NSS dumps,
 //! W4-36 chip ODM map, W4-59 chip configure + read_chip_info, W4-60 chip version + def_value_init,
-//! W4-61 hal_data_init).
+//! W4-61 hal_data_init, W4-62 hal_data_deinit + hal_free_data).
 
 #![allow(
     dead_code,
@@ -580,6 +580,11 @@ mod kernel {
         fn rtw_rust_hal_intf_log_read_chip_info_ms(ms: i32);
         fn rtw_rust_hal_intf_call_read_chip_version(adapter: *mut c_void);
         fn rtw_rust_hal_intf_alloc_hal_data(adapter: *mut c_void) -> U8;
+        fn rtw_rust_hal_intf_get_hal_data_ptr(adapter: *mut c_void) -> *mut c_void;
+        fn rtw_rust_hal_intf_get_hal_data_sz(adapter: *mut c_void) -> U32;
+        fn rtw_rust_hal_intf_clear_hal_data_fields(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_phy_free_filebuf(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_vmfree_hal_data(ptr: *mut c_void, sz: U32);
         fn rtw_rust_hal_intf_call_phydm_priv_init(adapter: *mut c_void);
         fn rtw_rust_hal_intf_hal_spec_proto_cap(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_intf_hal_spec_band_cap(adapter: *mut c_void) -> U8;
@@ -707,6 +712,35 @@ mod kernel {
             rtw_rust_hal_intf_call_phydm_priv_init(adapter);
         }
         SUCCESS
+    }
+
+    fn hal_data_deinit_inner(adapter: *mut c_void) {
+        if adapter.is_null() {
+            return;
+        }
+        if unsafe { rtw_rust_init_is_primary(adapter) } == 0 {
+            return;
+        }
+        let hal = unsafe { rtw_rust_hal_intf_get_hal_data_ptr(adapter) };
+        if hal.is_null() {
+            return;
+        }
+        unsafe {
+            rtw_rust_hal_intf_phy_free_filebuf(adapter);
+            let sz = rtw_rust_hal_intf_get_hal_data_sz(adapter);
+            rtw_rust_hal_intf_vmfree_hal_data(hal, sz);
+            rtw_rust_hal_intf_clear_hal_data_fields(adapter);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_data_deinit(adapter: *mut c_void) {
+        hal_data_deinit_inner(adapter);
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_free_data(adapter: *mut c_void) {
+        hal_data_deinit_inner(adapter);
     }
 
     #[no_mangle]

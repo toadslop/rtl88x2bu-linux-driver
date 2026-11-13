@@ -21,26 +21,9 @@
 /* rtw_hal_chip_configure / rtw_hal_read_chip_info — ported to rust/hal_intf.rs (W4-59) */
 /* rtw_hal_read_chip_version / rtw_hal_def_value_init — ported to rust/hal_intf.rs (W4-60) */
 /* rtw_hal_data_init — ported to rust/hal_intf.rs (W4-61) */
+/* W4-62 teardown shims follow rtw_rust_hal_intf_alloc_hal_data below. */
 
-void rtw_hal_data_deinit(_adapter *padapter)
-{
-	if (is_primary_adapter(padapter)) {
-		if (padapter->HalData) {
-#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
-			phy_free_filebuf(padapter);
-#endif
-			rtw_vmfree(padapter->HalData, padapter->hal_data_sz);
-			padapter->HalData = NULL;
-			padapter->hal_data_sz = 0;
-		}
-	}
-}
-
-void	rtw_hal_free_data(_adapter *padapter)
-{
-	/* free HAL Data	 */
-	rtw_hal_data_deinit(padapter);
-}
+/* rtw_hal_data_deinit / rtw_hal_free_data — ported to rust/hal_intf.rs (W4-62) */
 void rtw_hal_dm_init(_adapter *padapter)
 {
 	if (is_primary_adapter(padapter)) {
@@ -2195,6 +2178,36 @@ u8 rtw_rust_hal_intf_alloc_hal_data(_adapter *padapter)
 		return _FAIL;
 	}
 	return _SUCCESS;
+}
+
+void *rtw_rust_hal_intf_get_hal_data_ptr(_adapter *padapter)
+{
+	return padapter->HalData;
+}
+
+u32 rtw_rust_hal_intf_get_hal_data_sz(_adapter *padapter)
+{
+	return padapter->hal_data_sz;
+}
+
+void rtw_rust_hal_intf_clear_hal_data_fields(_adapter *padapter)
+{
+	padapter->HalData = NULL;
+	padapter->hal_data_sz = 0;
+}
+
+void rtw_rust_hal_intf_phy_free_filebuf(_adapter *padapter)
+{
+#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
+	phy_free_filebuf(padapter);
+#else
+	(void)padapter;
+#endif
+}
+
+void rtw_rust_hal_intf_vmfree_hal_data(void *ptr, u32 sz)
+{
+	rtw_vmfree(ptr, sz);
 }
 
 void rtw_rust_hal_intf_call_phydm_priv_init(_adapter *padapter)
