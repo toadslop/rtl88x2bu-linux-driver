@@ -128,4 +128,13 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-57 | `wave4-57-hal-com-c2h-mac-hidden.md` | C2H mac hidden report |
 | W4-58 | `wave4-58-hal-com-c2h-per-rate-lps.md` | C2H per-rate + LPS status |
 
-Further slices: deeper PHYDM / bulk USB RX path — file as `wave4-*.md` when tranche 13 is needed.
+## Children (tranche 13 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-59 | `wave4-59-hal-intf-chip-configure.md` | `rtw_hal_chip_configure` + `rtw_hal_read_chip_info` |
+| W4-60 | `wave4-60-hal-intf-chip-version-defaults.md` | `rtw_hal_read_chip_version` + `rtw_hal_def_value_init` |
+| W4-61 | `wave4-61-hal-intf-data-init.md` | `rtw_hal_data_init` part 1 |
+| W4-62 | `wave4-62-hal-intf-data-teardown.md` | `rtw_hal_data_deinit` + `rtw_hal_free_data` |
+
+Further slices: deeper PHYDM / bulk USB RX path — file as `wave4-*.md` when tranche 14 is needed.
