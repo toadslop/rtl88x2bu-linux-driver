@@ -2,7 +2,7 @@
 //! HAL interface helpers — Rust port of `hal/hal_intf.c` (W4-07 TRX mode dumps, W4-08 RF/NSS dumps,
 //! W4-36 chip ODM map, W4-59 chip configure + read_chip_info, W4-60 chip version + def_value_init,
 //! W4-61 hal_data_init, W4-62 hal_data_deinit + hal_free_data, W4-64 chip_rftype_to_hal_rftype,
-//! W4-67 hal_power_on/off).
+//! W4-65 hal_rfpath_init, W4-67 hal_power_on/off).
 
 #![allow(
     dead_code,
@@ -19,7 +19,7 @@
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
     host_hal_intf_chip_odm_test,
-    host_hal_intf_chip_rftype_test
+    host_hal_intf_chip_rftype_test, host_hal_intf_rfpath_test
 )))]
 use core::ffi::{c_char, c_void};
 
@@ -27,7 +27,7 @@ use core::ffi::{c_char, c_void};
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
     host_hal_intf_chip_odm_test,
-    host_hal_intf_chip_rftype_test
+    host_hal_intf_chip_rftype_test, host_hal_intf_rfpath_test
 ))]
 use std::os::raw::c_char;
 
@@ -71,7 +71,7 @@ struct RtwHalIntfTrxFields {
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
     host_hal_intf_chip_odm_test,
-    host_hal_intf_chip_rftype_test
+    host_hal_intf_chip_rftype_test, host_hal_intf_rfpath_test
 ))]
 fn rf_type_to_rfpath_str_local(rf_type: U8) -> &'static [u8] {
     static RF_TBL: [&[u8]; RF_TYPE_MAX] = [
@@ -89,7 +89,7 @@ fn rf_type_to_rfpath_str_local(rf_type: U8) -> &'static [u8] {
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
     host_hal_intf_chip_odm_test,
-    host_hal_intf_chip_rftype_test
+    host_hal_intf_chip_rftype_test, host_hal_intf_rfpath_test
 )))]
 fn rf_type_to_rfpath_str_local(rf_type: U8) -> &'static [u8] {
     extern "C" {
@@ -561,6 +561,109 @@ fn rtw_min_u8(a: U8, b: U8) -> U8 {
     }
 }
 
+fn rtw_max_u8(a: U8, b: U8) -> U8 {
+    if a > b {
+        a
+    } else {
+        b
+    }
+}
+
+const RTW_FAIL: U8 = 0;
+const RTW_SUCCESS: U8 = 1;
+const RFPATH_FAIL_NONE: U8 = 0;
+const RFPATH_FAIL_REG_INTERSECT: U8 = 1;
+const RFPATH_FAIL_EEPROM_INTERSECT: U8 = 2;
+const RFPATH_FAIL_RESTRICT: U8 = 3;
+
+#[repr(C)]
+pub struct HostHalRfpathInitIn {
+    pub rf_reg_trx_path_bmp: U8,
+    pub reg_trx_path_bmp: U8,
+    pub eeprom_trx_path_bmp: U8,
+    pub eeprom_max_tx_cnt: U8,
+    pub hal_spec_max_tx_cnt: U8,
+    pub tx_path_lmt: U8,
+    pub rx_path_lmt: U8,
+}
+
+#[repr(C)]
+pub struct HostHalRfpathInitOut {
+    pub status: U8,
+    pub hal_trx_path_bmp: U8,
+    pub hal_rf_type: U8,
+    pub NumTotalRFPath: U8,
+    pub hal_max_tx_cnt: U8,
+    pub fail_reason: U8,
+}
+
+extern "C" {
+    fn rtw_restrict_trx_path_bmp_by_trx_num_lmt(
+        trx_path_bmp: U8,
+        tx_num_lmt: U8,
+        rx_num_lmt: U8,
+        tx_num: *mut U8,
+        rx_num: *mut U8,
+    ) -> U8;
+    fn trx_bmp_to_rf_type(tx_bmp: U8, rx_bmp: U8) -> i32;
+}
+
+fn rfpath_init_common_from_in(in_: &HostHalRfpathInitIn, out: &mut HostHalRfpathInitOut) -> U8 {
+    out.fail_reason = RFPATH_FAIL_NONE;
+    let mut trx_path_bmp = in_.rf_reg_trx_path_bmp;
+    let mut tx_path_num: U8 = 0;
+    let mut rx_path_num: U8 = 0;
+
+    if in_.reg_trx_path_bmp != 0 {
+        trx_path_bmp &= in_.reg_trx_path_bmp;
+        if trx_path_bmp == 0 {
+            out.fail_reason = RFPATH_FAIL_REG_INTERSECT;
+            out.status = RTW_FAIL;
+            return RTW_FAIL;
+        }
+    } else if in_.eeprom_trx_path_bmp != 0 {
+        trx_path_bmp &= in_.eeprom_trx_path_bmp;
+        if trx_path_bmp == 0 {
+            out.fail_reason = RFPATH_FAIL_EEPROM_INTERSECT;
+            out.status = RTW_FAIL;
+            return RTW_FAIL;
+        }
+    }
+
+    let restricted = unsafe {
+        rtw_restrict_trx_path_bmp_by_trx_num_lmt(
+            trx_path_bmp,
+            in_.tx_path_lmt,
+            in_.rx_path_lmt,
+            &mut tx_path_num,
+            &mut rx_path_num,
+        )
+    };
+    if restricted == 0 {
+        out.fail_reason = RFPATH_FAIL_RESTRICT;
+        out.status = RTW_FAIL;
+        return RTW_FAIL;
+    }
+    trx_path_bmp = restricted;
+
+    let rf_type = unsafe {
+        trx_bmp_to_rf_type((trx_path_bmp & 0xF0) >> 4, trx_path_bmp & 0x0F) as U8
+    };
+    let num_paths = rtw_max_u8(tx_path_num, rx_path_num);
+    let mut max_tx_cnt = in_.hal_spec_max_tx_cnt;
+    max_tx_cnt = rtw_min_u8(max_tx_cnt, tx_path_num);
+    if in_.eeprom_max_tx_cnt != 0 {
+        max_tx_cnt = rtw_min_u8(max_tx_cnt, in_.eeprom_max_tx_cnt);
+    }
+
+    out.hal_trx_path_bmp = trx_path_bmp;
+    out.hal_rf_type = rf_type;
+    out.NumTotalRFPath = num_paths;
+    out.hal_max_tx_cnt = max_tx_cnt;
+    out.status = RTW_SUCCESS;
+    RTW_SUCCESS
+}
+
 fn chip_rftype_to_hal_rftype_impl(cv_rf_type: U8, limit: U8) -> i32 {
     let mut tx_num = 0u8;
     let mut rx_num = 0u8;
@@ -613,7 +716,7 @@ pub extern "C" fn host_chip_rftype_to_hal_rftype(cv_rf_type: U8, limit: U8) -> i
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
     host_hal_intf_chip_odm_test,
-    host_hal_intf_chip_rftype_test
+    host_hal_intf_chip_rftype_test, host_hal_intf_rfpath_test
 )))]
 #[no_mangle]
 pub static _chip_type_to_odm_ic_type: [U32; MAX_CHIP_TYPE + 1] = CHIP_TYPE_TO_ODM_IC_TYPE;
@@ -622,7 +725,7 @@ pub static _chip_type_to_odm_ic_type: [U32; MAX_CHIP_TYPE + 1] = CHIP_TYPE_TO_OD
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
     host_hal_intf_chip_odm_test,
-    host_hal_intf_chip_rftype_test
+    host_hal_intf_chip_rftype_test, host_hal_intf_rfpath_test
 )))]
 mod kernel {
     use super::*;
@@ -703,6 +806,41 @@ mod kernel {
         fn rtw_rust_hal_intf_trx_fields(adapter: *mut c_void, out: *mut RtwHalIntfTrxFields);
         fn rtw_rust_hal_intf_rf_path_fields(adapter: *mut c_void, out: *mut RtwHalIntfRfPathFields);
         fn rtw_rust_hal_intf_trx_nss_fields(adapter: *mut c_void, out: *mut RtwHalIntfTrxNssFields);
+        fn rtw_rust_hal_intf_rfpath_store(
+            adapter: *mut c_void,
+            trx_path_bmp: U8,
+            rf_type: U8,
+            num_total_rf_path: U8,
+            max_tx_cnt: U8,
+        );
+        fn rtw_rust_hal_intf_is_hw_8814a(adapter: *mut c_void) -> U8;
+        fn rtw_rust_hal_intf_rfpath_8814a(
+            adapter: *mut c_void,
+            trx_path_bmp: *mut U8,
+            rf_type: *mut U8,
+            num_total_rf_path: *mut U8,
+            max_tx_cnt: *mut U8,
+        ) -> U8;
+        fn rtw_rust_hal_intf_rfpath_dump(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_rfpath_info(
+            adapter: *mut c_void,
+            trx_path_bmp: U8,
+            rf_type: U8,
+            num_total_rf_path: U8,
+            max_tx_cnt: U8,
+        );
+        fn rtw_rust_hal_intf_rfpath_err_reg(adapter: *mut c_void, spec_bmp: U8, reg_bmp: U8);
+        fn rtw_rust_hal_intf_rfpath_err_eeprom(
+            adapter: *mut c_void,
+            spec_bmp: U8,
+            eeprom_bmp: U8,
+        );
+        fn rtw_rust_hal_intf_rfpath_err_restrict(
+            adapter: *mut c_void,
+            trx_path_bmp: U8,
+            tx_lmt: U8,
+            rx_lmt: U8,
+        );
         #[cfg(config_fw_multi_port_support)]
         fn rtw_rust_hal_intf_dft_defaults(adapter: *mut c_void);
         #[cfg(config_hw_p0_tsf_sync)]
@@ -947,6 +1085,103 @@ mod kernel {
     pub extern "C" fn rtw_chip_rftype_to_hal_rftype(adapter: *mut c_void, limit: U8) -> i32 {
         let cv_rf = unsafe { rtw_rust_hal_intf_hal_data_version_rf_type(adapter) };
         chip_rftype_to_hal_rftype_impl(cv_rf, limit)
+    }
+
+    fn rfpath_init_from_adapter(adapter: *mut c_void) -> U8 {
+        if adapter.is_null() {
+            return RTW_FAIL;
+        }
+        unsafe {
+            if rtw_rust_hal_intf_is_hw_8814a(adapter) != 0 {
+                let mut trx_path_bmp = 0u8;
+                let mut rf_type = 0u8;
+                let mut num_paths = 0u8;
+                let mut max_tx_cnt = 0u8;
+                if rtw_rust_hal_intf_rfpath_8814a(
+                    adapter,
+                    &mut trx_path_bmp,
+                    &mut rf_type,
+                    &mut num_paths,
+                    &mut max_tx_cnt,
+                ) != 0
+                {
+                    rtw_rust_hal_intf_rfpath_dump(adapter);
+                    rtw_rust_hal_intf_rfpath_info(
+                        adapter,
+                        trx_path_bmp,
+                        rf_type,
+                        num_paths,
+                        max_tx_cnt,
+                    );
+                    return RTW_SUCCESS;
+                }
+            }
+
+            let mut fields = core::mem::MaybeUninit::<RtwHalIntfRfPathFields>::uninit();
+            rtw_rust_hal_intf_rf_path_fields(adapter, fields.as_mut_ptr());
+            let fields = fields.assume_init();
+            let in_ = HostHalRfpathInitIn {
+                rf_reg_trx_path_bmp: fields.rf_reg_trx_path_bmp,
+                reg_trx_path_bmp: fields.reg_trx_path_bmp,
+                eeprom_trx_path_bmp: fields.eeprom_trx_path_bmp,
+                eeprom_max_tx_cnt: fields.eeprom_max_tx_cnt,
+                hal_spec_max_tx_cnt: fields.hal_spec_max_tx_cnt,
+                tx_path_lmt: fields.tx_path_lmt,
+                rx_path_lmt: fields.rx_path_lmt,
+            };
+            let mut out = HostHalRfpathInitOut {
+                status: RTW_FAIL,
+                hal_trx_path_bmp: 0,
+                hal_rf_type: 0,
+                NumTotalRFPath: 0,
+                hal_max_tx_cnt: 0,
+                fail_reason: RFPATH_FAIL_NONE,
+            };
+            let rtn = rfpath_init_common_from_in(&in_, &mut out);
+            if rtn == RTW_FAIL {
+                match out.fail_reason {
+                    RFPATH_FAIL_REG_INTERSECT => rtw_rust_hal_intf_rfpath_err_reg(
+                        adapter,
+                        in_.rf_reg_trx_path_bmp,
+                        in_.reg_trx_path_bmp,
+                    ),
+                    RFPATH_FAIL_EEPROM_INTERSECT => rtw_rust_hal_intf_rfpath_err_eeprom(
+                        adapter,
+                        in_.rf_reg_trx_path_bmp,
+                        in_.eeprom_trx_path_bmp,
+                    ),
+                    _ => rtw_rust_hal_intf_rfpath_err_restrict(
+                        adapter,
+                        0,
+                        in_.tx_path_lmt,
+                        in_.rx_path_lmt,
+                    ),
+                }
+                return RTW_FAIL;
+            }
+
+            rtw_rust_hal_intf_rfpath_store(
+                adapter,
+                out.hal_trx_path_bmp,
+                out.hal_rf_type,
+                out.NumTotalRFPath,
+                out.hal_max_tx_cnt,
+            );
+            rtw_rust_hal_intf_rfpath_dump(adapter);
+            rtw_rust_hal_intf_rfpath_info(
+                adapter,
+                out.hal_trx_path_bmp,
+                out.hal_rf_type,
+                out.NumTotalRFPath,
+                out.hal_max_tx_cnt,
+            );
+            RTW_SUCCESS
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_rfpath_init(adapter: *mut c_void) -> U8 {
+        rfpath_init_from_adapter(adapter)
     }
 
     #[no_mangle]
