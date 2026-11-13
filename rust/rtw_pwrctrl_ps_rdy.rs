@@ -13,13 +13,12 @@
 )]
 
 #[cfg(host_pwrctrl_ps_rdy_test)]
-use std::ffi::c_void;
+use std::ffi::{c_ulong, c_void};
 
 #[cfg(not(host_pwrctrl_ps_rdy_test))]
 use core::ffi::{c_ulong, c_void};
 
 /// Kernel `systime` (`unsigned long` jiffies). Must stay full width.
-#[cfg(not(host_pwrctrl_ps_rdy_test))]
 type Systime = c_ulong;
 
 const _TRUE: u8 = 1;
@@ -82,45 +81,8 @@ struct HostAdapter {
 }
 
 #[cfg(host_pwrctrl_ps_rdy_test)]
-static mut G_TIME: u32 = 0;
-#[cfg(host_pwrctrl_ps_rdy_test)]
-static mut G_SCAN_DENY: u8 = 0;
-#[cfg(host_pwrctrl_ps_rdy_test)]
-static mut G_ROCH: u8 = 0;
-#[cfg(host_pwrctrl_ps_rdy_test)]
-static mut G_PWR_MGMT: u8 = _TRUE;
-
-#[cfg(host_pwrctrl_ps_rdy_test)]
-#[no_mangle]
-pub extern "C" fn host_pwrctrl_ps_rdy_set_time(t: u32) {
-    unsafe {
-        G_TIME = t;
-    }
-}
-
-#[cfg(host_pwrctrl_ps_rdy_test)]
-#[no_mangle]
-pub extern "C" fn host_pwrctrl_ps_rdy_set_scan_deny(v: u8) {
-    unsafe {
-        G_SCAN_DENY = v;
-    }
-}
-
-#[cfg(host_pwrctrl_ps_rdy_test)]
-#[no_mangle]
-pub extern "C" fn host_pwrctrl_ps_rdy_set_roch(v: u8) {
-    unsafe {
-        G_ROCH = v;
-    }
-}
-
-#[cfg(host_pwrctrl_ps_rdy_test)]
-#[no_mangle]
-pub extern "C" fn host_pwrctrl_ps_rdy_set_pwr_mgmt(v: u8) {
-    unsafe {
-        G_PWR_MGMT = v;
-    }
-}
+#[path = "rtw_pwrctrl_ps_rdy_host.rs"]
+mod host;
 
 #[cfg(host_pwrctrl_ps_rdy_test)]
 fn check_fwstate(m: &MlmePriv, s: u32) -> bool {
@@ -145,7 +107,6 @@ fn mlme_is_monitor(a: &HostAdapter) -> bool {
     (a.mlmepriv.fw_state & WIFI_MONITOR_STATE) != 0
 }
 
-#[cfg(not(host_pwrctrl_ps_rdy_test))]
 extern "C" {
     fn rtw_rust_ps_rdy_get_current_time() -> Systime;
     fn rtw_rust_ps_rdy_time_after(a: Systime, b: Systime) -> u8;
@@ -167,56 +128,7 @@ extern "C" {
     fn rtw_rust_ps_rdy_log_group_handshake_in_progress();
 }
 
-fn ps_rdy_check_impl(adapter: Padapter) -> u8 {
-    #[cfg(host_pwrctrl_ps_rdy_test)]
-    {
-        let a = unsafe { &*(adapter as *mut HostAdapter) };
-        let p = &a.pwrctrlpriv;
-        let m = &a.mlmepriv;
-
-        if p.bInSuspend == _TRUE && p.wowlan_mode == _TRUE {
-            return _TRUE;
-        }
-        if p.bInSuspend == _TRUE && p.wowlan_ap_mode == _TRUE {
-            return _TRUE;
-        }
-        if p.bInSuspend == _TRUE {
-            return _FALSE;
-        }
-
-        let now = unsafe { G_TIME };
-        if (p.lps_deny_time as i32).wrapping_sub(now as i32) > 0 {
-            return _FALSE;
-        }
-
-        if check_fwstate(m, WIFI_UNDER_SURVEY)
-            || check_fwstate(m, WIFI_UNDER_LINKING | WIFI_UNDER_WPS)
-            || mlme_is_ap(a)
-            || mlme_is_mesh(a)
-            || mlme_is_monitor(a)
-            || check_fwstate(m, WIFI_ADHOC_MASTER_STATE | WIFI_ADHOC_STATE)
-            || unsafe { G_ROCH } == _TRUE
-            || unsafe { G_SCAN_DENY } == _TRUE
-            || a.tdlsinfo.link_established == _TRUE
-            || (!a.rfctl.is_null() && unsafe { (*a.rfctl).radar_detect_enabled } == _TRUE)
-        {
-            return _FALSE;
-        }
-
-        if a.securitypriv.dot11AuthAlgrthm == dot11AuthAlgrthm_8021X
-            && a.securitypriv.binstallGrpkey == _FALSE
-        {
-            return _FALSE;
-        }
-
-        if unsafe { G_PWR_MGMT } == _FALSE {
-            return _FALSE;
-        }
-
-        return _TRUE;
-    }
-
-    #[cfg(not(host_pwrctrl_ps_rdy_test))]
+fn ps_rdy_check_core(adapter: Padapter) -> u8 {
     unsafe {
         if rtw_rust_ps_rdy_get_b_in_suspend(adapter) == _TRUE
             && rtw_rust_ps_rdy_get_wowlan_mode(adapter) == _TRUE
@@ -266,6 +178,59 @@ fn ps_rdy_check_impl(adapter: Padapter) -> u8 {
 
         _TRUE
     }
+}
+
+fn ps_rdy_check_impl(adapter: Padapter) -> u8 {
+    #[cfg(host_pwrctrl_ps_rdy_test)]
+    {
+        let a = unsafe { &*(adapter as *mut HostAdapter) };
+        let p = &a.pwrctrlpriv;
+        let m = &a.mlmepriv;
+
+        if p.bInSuspend == _TRUE && p.wowlan_mode == _TRUE {
+            return _TRUE;
+        }
+        if p.bInSuspend == _TRUE && p.wowlan_ap_mode == _TRUE {
+            return _TRUE;
+        }
+        if p.bInSuspend == _TRUE {
+            return _FALSE;
+        }
+
+        let now = host::host_time();
+        if (p.lps_deny_time as i32).wrapping_sub(now as i32) > 0 {
+            return _FALSE;
+        }
+
+        if check_fwstate(m, WIFI_UNDER_SURVEY)
+            || check_fwstate(m, WIFI_UNDER_LINKING | WIFI_UNDER_WPS)
+            || mlme_is_ap(a)
+            || mlme_is_mesh(a)
+            || mlme_is_monitor(a)
+            || check_fwstate(m, WIFI_ADHOC_MASTER_STATE | WIFI_ADHOC_STATE)
+            || host::host_roch() == _TRUE
+            || host::host_scan_deny() == _TRUE
+            || a.tdlsinfo.link_established == _TRUE
+            || (!a.rfctl.is_null() && unsafe { (*a.rfctl).radar_detect_enabled } == _TRUE)
+        {
+            return _FALSE;
+        }
+
+        if a.securitypriv.dot11AuthAlgrthm == dot11AuthAlgrthm_8021X
+            && a.securitypriv.binstallGrpkey == _FALSE
+        {
+            return _FALSE;
+        }
+
+        if host::host_pwr_mgmt() == _FALSE {
+            return _FALSE;
+        }
+
+        return _TRUE;
+    }
+
+    #[cfg(not(host_pwrctrl_ps_rdy_test))]
+    ps_rdy_check_core(adapter)
 }
 
 #[no_mangle]
