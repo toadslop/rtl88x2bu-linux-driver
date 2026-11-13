@@ -49,6 +49,22 @@ static mut G_SCAN_DENY: u8 = 0;
 static mut G_ROCH: u8 = 0;
 static mut G_PWR_MGMT: u8 = _TRUE;
 
+pub(crate) fn host_time() -> c_ulong {
+    unsafe { G_TIME }
+}
+
+pub(crate) fn host_scan_deny() -> u8 {
+    unsafe { G_SCAN_DENY }
+}
+
+pub(crate) fn host_roch() -> u8 {
+    unsafe { G_ROCH }
+}
+
+pub(crate) fn host_pwr_mgmt() -> u8 {
+    unsafe { G_PWR_MGMT }
+}
+
 fn adapter(padapter: Padapter) -> *mut HostAdapter {
     padapter as *mut HostAdapter
 }
