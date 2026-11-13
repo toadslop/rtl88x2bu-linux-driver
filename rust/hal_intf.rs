@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
 //! HAL interface helpers — Rust port of `hal/hal_intf.c` (W4-07 TRX mode dumps, W4-08 RF/NSS dumps,
 //! W4-36 chip ODM map, W4-59 chip configure + read_chip_info, W4-60 chip version + def_value_init,
-//! W4-61 hal_data_init, W4-62 hal_data_deinit + hal_free_data, W4-64 chip_rftype_to_hal_rftype).
+//! W4-61 hal_data_init, W4-62 hal_data_deinit + hal_free_data, W4-64 chip_rftype_to_hal_rftype,
+//! W4-67 hal_power_on/off).
 
 #![allow(
     dead_code,
@@ -662,6 +663,16 @@ mod kernel {
         fn rtw_rust_hal_intf_dm_init_tail(adapter: *mut c_void);
         fn rtw_rust_hal_intf_dm_deinit_tail(adapter: *mut c_void);
         fn rtw_rust_hal_intf_hal_data_version_rf_type(adapter: *mut c_void) -> U8;
+        fn rtw_rust_hal_intf_call_hal_power_on(adapter: *mut c_void) -> U32;
+        fn rtw_rust_hal_intf_call_hal_power_off(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_eeprom_bt_coexist(adapter: *mut c_void) -> U8;
+        #[cfg(config_bt_coexist)]
+        fn rtw_rust_hal_intf_btcoex_power_on(adapter: *mut c_void);
+        #[cfg(config_bt_coexist)]
+        fn rtw_rust_hal_intf_btcoex_power_off(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_power_off_clear_macid(adapter: *mut c_void);
+        #[cfg(config_lps_1t1r)]
+        fn rtw_rust_hal_intf_clear_lps_1t1r(adapter: *mut c_void);
         fn rtw_rust_hal_intf_hal_spec_proto_cap(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_intf_hal_spec_band_cap(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_intf_get_wireless_mode(adapter: *mut c_void) -> U8;
@@ -844,6 +855,40 @@ mod kernel {
         unsafe {
             rtw_rust_hal_intf_call_dm_deinit(adapter);
             rtw_rust_hal_intf_dm_deinit_tail(adapter);
+        }
+    }
+
+    const TRUE: U8 = 1;
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_power_on(adapter: *mut c_void) -> U32 {
+        let ret = unsafe { rtw_rust_hal_intf_call_hal_power_on(adapter) };
+        #[cfg(config_bt_coexist)]
+        {
+            if ret == SUCCESS as U32
+                && unsafe { rtw_rust_hal_intf_eeprom_bt_coexist(adapter) } == TRUE
+            {
+                unsafe { rtw_rust_hal_intf_btcoex_power_on(adapter) };
+            }
+        }
+        ret
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_power_off(adapter: *mut c_void) {
+        unsafe {
+            rtw_rust_hal_intf_power_off_clear_macid(adapter);
+        }
+        #[cfg(config_lps_1t1r)]
+        unsafe {
+            rtw_rust_hal_intf_clear_lps_1t1r(adapter);
+        }
+        #[cfg(config_bt_coexist)]
+        unsafe {
+            rtw_rust_hal_intf_btcoex_power_off(adapter);
+        }
+        unsafe {
+            rtw_rust_hal_intf_call_hal_power_off(adapter);
         }
     }
 

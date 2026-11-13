@@ -26,6 +26,7 @@
 /* rtw_hal_data_deinit / rtw_hal_free_data — ported to rust/hal_intf.rs (W4-62) */
 /* rtw_hal_dm_init / rtw_hal_dm_deinit — ported to rust/hal_intf.rs (W4-63) */
 /* rtw_chip_rftype_to_hal_rftype — ported to rust/hal_intf.rs (W4-64) */
+/* rtw_hal_power_on / rtw_hal_power_off — ported to rust/hal_intf.rs (W4-67) */
 
 /* dump_hal_runtime_trx_mode / dump_hal_trx_mode — ported to rust/hal_intf.rs (W4-07) */
 
@@ -189,39 +190,6 @@ void rtw_hal_sw_led_deinit(_adapter *padapter)
 		padapter->hal_func.DeInitSwLeds(padapter);
 }
 #endif
-
-u32 rtw_hal_power_on(_adapter *padapter)
-{
-	u32 ret = 0;
-	PHAL_DATA_TYPE pHalData = GET_HAL_DATA(padapter);
-
-	ret = padapter->hal_func.hal_power_on(padapter);
-
-#ifdef CONFIG_BT_COEXIST
-	if ((ret == _SUCCESS) && (pHalData->EEPROMBluetoothCoexist == _TRUE))
-		rtw_btcoex_PowerOnSetting(padapter);
-#endif
-
-	return ret;
-}
-void rtw_hal_power_off(_adapter *padapter)
-{
-	struct macid_ctl_t *macid_ctl = &padapter->dvobj->macid_ctl;
-
-	_rtw_memset(macid_ctl->h2c_msr, 0, MACID_NUM_SW_LIMIT);
-	_rtw_memset(macid_ctl->op_num, 0, H2C_MSR_ROLE_MAX);
-
-#ifdef CONFIG_LPS_1T1R
-	GET_HAL_DATA(padapter)->lps_1t1r = 0;
-#endif
-
-#ifdef CONFIG_BT_COEXIST
-	rtw_btcoex_PowerOffSetting(padapter);
-#endif
-
-	padapter->hal_func.hal_power_off(padapter);
-}
-
 
 void rtw_hal_init_opmode(_adapter *padapter)
 {
@@ -2185,6 +2153,48 @@ u8 rtw_rust_hal_intf_hal_data_version_rf_type(_adapter *adapter)
 {
 	return GET_HAL_DATA(adapter)->version_id.RFType;
 }
+
+u32 rtw_rust_hal_intf_call_hal_power_on(_adapter *padapter)
+{
+	return padapter->hal_func.hal_power_on(padapter);
+}
+
+void rtw_rust_hal_intf_call_hal_power_off(_adapter *padapter)
+{
+	padapter->hal_func.hal_power_off(padapter);
+}
+
+u8 rtw_rust_hal_intf_eeprom_bt_coexist(_adapter *padapter)
+{
+	return GET_HAL_DATA(padapter)->EEPROMBluetoothCoexist;
+}
+
+#ifdef CONFIG_BT_COEXIST
+void rtw_rust_hal_intf_btcoex_power_on(_adapter *padapter)
+{
+	rtw_btcoex_PowerOnSetting(padapter);
+}
+
+void rtw_rust_hal_intf_btcoex_power_off(_adapter *padapter)
+{
+	rtw_btcoex_PowerOffSetting(padapter);
+}
+#endif /* CONFIG_BT_COEXIST */
+
+void rtw_rust_hal_intf_power_off_clear_macid(_adapter *padapter)
+{
+	struct macid_ctl_t *macid_ctl = &padapter->dvobj->macid_ctl;
+
+	_rtw_memset(macid_ctl->h2c_msr, 0, MACID_NUM_SW_LIMIT);
+	_rtw_memset(macid_ctl->op_num, 0, H2C_MSR_ROLE_MAX);
+}
+
+#ifdef CONFIG_LPS_1T1R
+void rtw_rust_hal_intf_clear_lps_1t1r(_adapter *padapter)
+{
+	GET_HAL_DATA(padapter)->lps_1t1r = 0;
+}
+#endif /* CONFIG_LPS_1T1R */
 
 u8 rtw_rust_hal_intf_hal_spec_proto_cap(_adapter *adapter)
 {
