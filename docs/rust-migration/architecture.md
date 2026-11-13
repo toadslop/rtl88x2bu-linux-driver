@@ -144,6 +144,27 @@ Splitting a large `.c` across PRs is allowed only with an explicit link-safe mec
 
 Do not describe this as “mixed ownership of one `.c` file” without the extract/remove step.
 
+## Phase 1 build policy (T22)
+
+**Rust-enabled kernels are required for migration work.** Phase 1 builds with
+`KDIR=<rust-enabled tree>` and `LLVM=1` (pinned `v6.12.9` in CI). Migrated units
+link Rust objects under `ifdef CONFIG_RUST`; there is **no** supported path that
+re-links the deleted C bodies for those TUs.
+
+| Target | Supported in Phase 1? | Notes |
+|--------|----------------------|--------|
+| Default `88x2bu` (8822BU USB) + non-default **Makefile** toggles | **Yes** (matrix) | [`scripts/ci/l0-config-matrix.sh`](../../scripts/ci/l0-config-matrix.sh) in the L0 image |
+| `CONFIG_RUST=n` distro headers only | **No** | Crypto and ported symbols are gone from `rtk_core`; DKMS without Rust will not load |
+| Alternate HCI (PCI, …) on other chips | **Not in matrix yet** | Product exit remains 8822BU USB; add entries when those platforms are in scope |
+
+`#if !defined(CONFIG_RUST)` fallbacks left in C are **legacy debt** — remove them
+when the Rust TU owns the symbol, do not rely on them for CI or new ports. Fix
+cfg/object parity (FX-07, T21) instead of forcing `-D` flags so Rust links when C
+does not.
+
+PR authors: note non-default configs you touched; the matrix job is **advisory**
+today but fails on unexpected regressions in pass-listed entries.
+
 ## Anti-goals
 
 - Translating C to Rust line-for-line while keeping `*mut u8` and `u32` flags as the primary API
