@@ -67,6 +67,8 @@ CI (when added) should run this on the pinned kernel tree or a cached build cont
 
 **CI status:** automated via [`.github/workflows/module-l0.yml`](../../.github/workflows/module-l0.yml) using the pre-built image documented in [`dev-environment.md`](dev-environment.md#ci-l0-image). Probe verification: [`scripts/ci/verify-ko-probes.sh`](../../scripts/ci/verify-ko-probes.sh).
 
+**Non-default configs (T22, advisory):** [`.github/workflows/module-l0-matrix.yml`](../../.github/workflows/module-l0-matrix.yml) runs [`scripts/ci/l0-config-matrix.sh`](../../scripts/ci/l0-config-matrix.sh) for alternate Makefile toggles on the default 8822BU USB product. Expected failures cite FX issues until parity fixes land. Build policy: [`architecture.md` — Phase 1 build policy](architecture.md#phase-1-build-policy-t22).
+
 Host toolchain, kernel pin recipe, and Clang/`LLVM=1` pitfalls: [`dev-environment.md`](dev-environment.md).
 
 ## L1 — Symbol / ABI gate

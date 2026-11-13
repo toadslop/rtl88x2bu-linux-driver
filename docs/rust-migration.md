@@ -101,7 +101,7 @@ When Rust takes over symbols that C used to define, swap objects in the Makefile
 4. Run L0 (build), L1 (`make rust-check-symbols OLD=… NEW=…` or `check-symbols.sh`), and L2 (`make -C tests/host/crypto test` — C oracle + Rust staticlib both green against `aes_ctr_vectors.json`).
 5. Leave the C source file in-tree for reference until the wave is done; only the **object** is dropped from the link.
 
-**C-only builds:** Distro-header builds without `CONFIG_RUST=y` lose the migrated symbols (no `ifndef CONFIG_RUST` fallback to the old C objects). This is intentional for Phase 1 — use a Rust-enabled `KDIR` for migration work.
+**C-only builds:** Distro-header builds without `CONFIG_RUST=y` lose the migrated symbols (no `ifndef CONFIG_RUST` fallback to the old C objects). This is intentional for Phase 1 — use a Rust-enabled `KDIR` for migration work. The normative policy and CI matrix scope live in [architecture.md — Phase 1 build policy](rust-migration/architecture.md#phase-1-build-policy-t22).
 
 Repeat this pattern for each Wave 2 crypto unit. For large `.c` files, extract remaining C to `foo_rest.c` rather than linking the full TU alongside Rust (see [architecture.md](rust-migration/architecture.md) “Multi-part file ports”).
 
