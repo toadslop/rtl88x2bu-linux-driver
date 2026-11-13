@@ -12,9 +12,6 @@
     unused_unsafe
 )]
 
-#[cfg(host_pwrctrl_ps_processor_test)]
-use std::ffi::c_void;
-
 #[cfg(not(host_pwrctrl_ps_processor_test))]
 use core::ffi::c_void;
 
