@@ -119,15 +119,33 @@ while IFS=' ' read -r name rest; do
 	done <"$aliases"
 done < <(printf '%s\n' "${raw[@]}")
 
-# Match Makefile FX-07 probes: autoconf.h may define macros without going through -dM.
+# Match Makefile FX-07 probes: autoconf.h may define macros without -dM visibility.
 autoconf="${srcdir}/include/autoconf.h"
+cfg_macro_from_rust_name() {
+	local name="$1"
+	case "$name" in
+	CONFIG_*) printf '%s' "$name" ;;
+	config_*)
+		local suffix="${name#config_}"
+		printf 'CONFIG_%s' "$(printf '%s' "$suffix" | tr '[:lower:]' '[:upper:]')"
+		;;
+	*) return 1 ;;
+	esac
+}
 if [ -f "$autoconf" ]; then
 	while IFS= read -r want; do
 		[ -n "$want" ] || continue
-		[[ "$want" != CONFIG_* ]] && continue
-		grep -Eq "^[[:space:]]*#[[:space:]]*define[[:space:]]+${want}\\b" "$autoconf" \
+		macro=""
+		if [[ "$want" == CONFIG_* ]]; then
+			macro="$want"
+		elif macro="$(cfg_macro_from_rust_name "$want")"; then
+			:
+		else
+			continue
+		fi
+		grep -Eq "^[[:space:]]*#[[:space:]]*define[[:space:]]+${macro}\\b" "$autoconf" \
 			|| continue
-		apply_macro "$want"
+		apply_macro "$macro"
 	done < <(cat "$allowlist" "$keep_case" | LC_ALL=C sort -u)
 fi
 

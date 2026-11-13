@@ -13,6 +13,7 @@ EXTRA_WANTS = (
     "config_find_best_channel",
     "config_p2p_ps",
     "dbg_config_error_detect",
+    "config_dbg_ctrl_txss",
 )
 
 

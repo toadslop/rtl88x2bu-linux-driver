@@ -11,3 +11,7 @@ CONFIG_RTW_MAC_HIDDEN_RPT	config_rtw_mac_hidden_rpt
 CONFIG_DETECT_CPWM_BY_POLLING	detect_cpwm_by_polling
 CONFIG_DFS_MASTER	dfs_master
 CONFIG_RTL8822B	CONFIG_RTL8822B
+CONFIG_RESUME_IN_WORKQUEUE	resume_wq
+CONFIG_HAS_EARLYSUSPEND	early_suspend
+CONFIG_ANDROID_POWER	android_power
+DBG_CTRL_TXSS	config_dbg_ctrl_txss
