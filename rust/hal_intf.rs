@@ -737,6 +737,20 @@ fn trxnss_init_common_from_in(in_: &HostHalTrxnssInitIn, out: &mut HostHalTrxnss
     out.rx_nss = rx_nss;
 }
 
+#[cfg(host_hal_intf_trxnss_test)]
+#[no_mangle]
+pub extern "C" fn host_hal_trxnss_init_common(
+    in_: *const HostHalTrxnssInitIn,
+    out: *mut HostHalTrxnssInitOut,
+) {
+    if in_.is_null() || out.is_null() {
+        return;
+    }
+    unsafe {
+        trxnss_init_common_from_in(&*in_, &mut *out);
+    }
+}
+
 fn chip_rftype_to_hal_rftype_impl(cv_rf_type: U8, limit: U8) -> i32 {
     let mut tx_num = 0u8;
     let mut rx_num = 0u8;

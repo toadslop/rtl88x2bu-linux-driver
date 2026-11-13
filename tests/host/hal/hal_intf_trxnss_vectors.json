@@ -1,0 +1,94 @@
+{
+  "vectors": [
+    {
+      "name": "spec_only_2t2r",
+      "hal_spec_tx_nss": 2,
+      "hal_spec_rx_nss": 2,
+      "reg_tx_nss": 0,
+      "reg_rx_nss": 0,
+      "max_tx_cnt": 2,
+      "rf_path": 2,
+      "hw_full_tx": 1,
+      "expect_tx_nss": 2,
+      "expect_rx_nss": 2,
+      "expect_txpath_cap_num_nss": [
+        2,
+        2,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "reg_clamp_tx",
+      "hal_spec_tx_nss": 2,
+      "hal_spec_rx_nss": 2,
+      "reg_tx_nss": 1,
+      "reg_rx_nss": 0,
+      "max_tx_cnt": 2,
+      "rf_path": 2,
+      "hw_full_tx": 1,
+      "expect_tx_nss": 1,
+      "expect_rx_nss": 2,
+      "expect_txpath_cap_num_nss": [
+        2,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "max_tx_clamp",
+      "hal_spec_tx_nss": 3,
+      "hal_spec_rx_nss": 3,
+      "reg_tx_nss": 0,
+      "reg_rx_nss": 0,
+      "max_tx_cnt": 2,
+      "rf_path": 5,
+      "hw_full_tx": 0,
+      "expect_tx_nss": 2,
+      "expect_rx_nss": 3,
+      "expect_txpath_cap_num_nss": [
+        1,
+        2,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "rx_rf_cap_1t2r",
+      "hal_spec_tx_nss": 2,
+      "hal_spec_rx_nss": 2,
+      "reg_tx_nss": 0,
+      "reg_rx_nss": 2,
+      "max_tx_cnt": 2,
+      "rf_path": 1,
+      "hw_full_tx": 0,
+      "expect_tx_nss": 2,
+      "expect_rx_nss": 2,
+      "expect_txpath_cap_num_nss": [
+        1,
+        2,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "incremental_txpath_std",
+      "hal_spec_tx_nss": 3,
+      "hal_spec_rx_nss": 3,
+      "reg_tx_nss": 0,
+      "reg_rx_nss": 0,
+      "max_tx_cnt": 3,
+      "rf_path": 5,
+      "hw_full_tx": 0,
+      "expect_tx_nss": 3,
+      "expect_rx_nss": 3,
+      "expect_txpath_cap_num_nss": [
+        1,
+        2,
+        3,
+        0
+      ]
+    }
+  ]
+}
