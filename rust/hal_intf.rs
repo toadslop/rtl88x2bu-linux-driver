@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HAL interface helpers — Rust port of `hal/hal_intf.c` (W4-07 TRX mode dumps, W4-08 RF/NSS dumps, W4-36 chip ODM map).
+//! HAL interface helpers — Rust port of `hal/hal_intf.c` (W4-07 TRX mode dumps, W4-08 RF/NSS dumps,
+//! W4-36 chip ODM map, W4-59 chip configure + read_chip_info).
 
 #![allow(
     dead_code,
@@ -553,11 +554,60 @@ pub static _chip_type_to_odm_ic_type: [U32; MAX_CHIP_TYPE + 1] = CHIP_TYPE_TO_OD
 mod kernel {
     use super::*;
 
+    type Systime = core::ffi::c_ulong;
+
+    const RTW_SDIO: U8 = 4;
+    const RTW_GSPI: U8 = 8;
+
     extern "C" {
+        fn rtw_rust_hal_intf_intf_chip_configure(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_read_adapter_info(adapter: *mut c_void) -> U8;
+        fn rtw_rust_hal_intf_log_read_chip_info_ms(ms: i32);
+        fn rtw_rust_hal_com_get_intf_type(adapter: *mut c_void) -> U8;
+        fn rtw_rust_hal_com_is_hw_init_completed(adapter: *mut c_void) -> U8;
+        fn rtw_rust_hal_com_hal_power_on(adapter: *mut c_void);
+        fn rtw_rust_hal_com_hal_power_off(adapter: *mut c_void);
+        fn rtw_rust_hal_com_get_current_time() -> Systime;
+        fn rtw_rust_hal_com_get_passing_time_ms(start: Systime) -> u32;
         fn rtw_rust_hal_intf_print_sel(sel: *mut c_void, line: *const c_char);
         fn rtw_rust_hal_intf_trx_fields(adapter: *mut c_void, out: *mut RtwHalIntfTrxFields);
         fn rtw_rust_hal_intf_rf_path_fields(adapter: *mut c_void, out: *mut RtwHalIntfRfPathFields);
         fn rtw_rust_hal_intf_trx_nss_fields(adapter: *mut c_void, out: *mut RtwHalIntfTrxNssFields);
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_chip_configure(adapter: *mut c_void) {
+        unsafe {
+            rtw_rust_hal_intf_intf_chip_configure(adapter);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_read_chip_info(adapter: *mut c_void) -> U8 {
+        let hci_type = unsafe { rtw_rust_hal_com_get_intf_type(adapter) };
+        let start = unsafe { rtw_rust_hal_com_get_current_time() };
+
+        /*  before access eFuse, make sure card enable has been called */
+        if (hci_type == RTW_SDIO || hci_type == RTW_GSPI)
+            && unsafe { rtw_rust_hal_com_is_hw_init_completed(adapter) } == 0
+        {
+            unsafe { rtw_rust_hal_com_hal_power_on(adapter) };
+        }
+
+        let rtn = unsafe { rtw_rust_hal_intf_read_adapter_info(adapter) };
+
+        if (hci_type == RTW_SDIO || hci_type == RTW_GSPI)
+            && unsafe { rtw_rust_hal_com_is_hw_init_completed(adapter) } == 0
+        {
+            unsafe { rtw_rust_hal_com_hal_power_off(adapter) };
+        }
+
+        let ms = unsafe { rtw_rust_hal_com_get_passing_time_ms(start) } as i32;
+        unsafe {
+            rtw_rust_hal_intf_log_read_chip_info_ms(ms);
+        }
+
+        rtn
     }
 
     fn print_line(sel: *mut c_void, line: &[u8]) {
