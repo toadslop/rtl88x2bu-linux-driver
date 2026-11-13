@@ -665,6 +665,16 @@ mod kernel {
         fn rtw_rust_hal_intf_hal_data_version_rf_type(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_intf_call_hal_power_on(adapter: *mut c_void) -> U32;
         fn rtw_rust_hal_intf_call_hal_power_off(adapter: *mut c_void);
+        #[cfg(config_rtw_sw_led)]
+        fn rtw_rust_hal_intf_led_b_reg_use_led(adapter: *mut c_void) -> U8;
+        #[cfg(config_rtw_sw_led)]
+        fn rtw_rust_hal_intf_call_init_sw_leds(adapter: *mut c_void);
+        #[cfg(config_rtw_sw_led)]
+        fn rtw_rust_hal_intf_call_deinit_sw_leds(adapter: *mut c_void);
+        #[cfg(config_rtw_sw_led)]
+        fn rtw_rust_hal_intf_led_set_ctl_en_mask_primary(adapter: *mut c_void);
+        #[cfg(config_rtw_sw_led)]
+        fn rtw_rust_hal_intf_led_set_iface_en(adapter: *mut c_void, en: U8);
         fn rtw_rust_hal_intf_eeprom_bt_coexist(adapter: *mut c_void) -> U8;
         #[cfg(config_bt_coexist)]
         fn rtw_rust_hal_intf_btcoex_power_on(adapter: *mut c_void);
@@ -872,6 +882,47 @@ mod kernel {
             }
         }
         ret
+    }
+
+    #[cfg(config_rtw_sw_led)]
+    const LED_FALSE: U8 = 0;
+
+    #[cfg(config_rtw_sw_led)]
+    fn sw_led_guard(adapter: *mut c_void) -> bool {
+        if adapter.is_null() {
+            return false;
+        }
+        if unsafe { rtw_rust_hal_intf_led_b_reg_use_led(adapter) } == LED_FALSE {
+            return false;
+        }
+        if unsafe { rtw_rust_init_is_primary(adapter) } == 0 {
+            return false;
+        }
+        true
+    }
+
+    #[cfg(config_rtw_sw_led)]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_sw_led_init(adapter: *mut c_void) {
+        if !sw_led_guard(adapter) {
+            return;
+        }
+        unsafe {
+            rtw_rust_hal_intf_call_init_sw_leds(adapter);
+            rtw_rust_hal_intf_led_set_ctl_en_mask_primary(adapter);
+            rtw_rust_hal_intf_led_set_iface_en(adapter, 1);
+        }
+    }
+
+    #[cfg(config_rtw_sw_led)]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_sw_led_deinit(adapter: *mut c_void) {
+        if !sw_led_guard(adapter) {
+            return;
+        }
+        unsafe {
+            rtw_rust_hal_intf_call_deinit_sw_leds(adapter);
+        }
     }
 
     #[no_mangle]

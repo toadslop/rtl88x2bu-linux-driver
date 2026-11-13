@@ -27,6 +27,7 @@
 /* rtw_hal_dm_init / rtw_hal_dm_deinit — ported to rust/hal_intf.rs (W4-63) */
 /* rtw_chip_rftype_to_hal_rftype — ported to rust/hal_intf.rs (W4-64) */
 /* rtw_hal_power_on / rtw_hal_power_off — ported to rust/hal_intf.rs (W4-67) */
+/* rtw_hal_sw_led_init / rtw_hal_sw_led_deinit — ported to rust/hal_intf.rs (W4-68) */
 
 /* dump_hal_runtime_trx_mode / dump_hal_trx_mode — ported to rust/hal_intf.rs (W4-07) */
 
@@ -159,37 +160,33 @@ u8 rtw_hal_trxnss_init(_adapter *adapter)
 }
 
 #ifdef CONFIG_RTW_SW_LED
-void rtw_hal_sw_led_init(_adapter *padapter)
+u8 rtw_rust_hal_intf_led_b_reg_use_led(_adapter *padapter)
 {
-	struct led_priv *ledpriv = adapter_to_led(padapter);
-
-	if (ledpriv->bRegUseLed == _FALSE)
-		return;
-
-	if (!is_primary_adapter(padapter))
-		return;
-
-	if (padapter->hal_func.InitSwLeds) {
-		padapter->hal_func.InitSwLeds(padapter);
-		rtw_led_set_ctl_en_mask_primary(padapter);
-		rtw_led_set_iface_en(padapter, 1);
-	}
+	return adapter_to_led(padapter)->bRegUseLed;
 }
 
-void rtw_hal_sw_led_deinit(_adapter *padapter)
+void rtw_rust_hal_intf_call_init_sw_leds(_adapter *padapter)
 {
-	struct led_priv *ledpriv = adapter_to_led(padapter);
+	if (padapter->hal_func.InitSwLeds)
+		padapter->hal_func.InitSwLeds(padapter);
+}
 
-	if (ledpriv->bRegUseLed == _FALSE)
-		return;
-
-	if (!is_primary_adapter(padapter))
-		return;
-
+void rtw_rust_hal_intf_call_deinit_sw_leds(_adapter *padapter)
+{
 	if (padapter->hal_func.DeInitSwLeds)
 		padapter->hal_func.DeInitSwLeds(padapter);
 }
-#endif
+
+void rtw_rust_hal_intf_led_set_ctl_en_mask_primary(_adapter *padapter)
+{
+	rtw_led_set_ctl_en_mask_primary(padapter);
+}
+
+void rtw_rust_hal_intf_led_set_iface_en(_adapter *padapter, u8 en)
+{
+	rtw_led_set_iface_en(padapter, en);
+}
+#endif /* CONFIG_RTW_SW_LED */
 
 void rtw_hal_init_opmode(_adapter *padapter)
 {
