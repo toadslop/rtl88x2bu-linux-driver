@@ -391,6 +391,10 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | T22 | #1900 | [T22] CI: non-default config build matrix + C-only build policy |
 | T23 | #1901 | [T23] CI: extern C signature drift check + panic-site inventory |
 | T24 | #1902 | [T24] L2 fidelity: test the shipped Rust cores against real C oracles |
+| W4-59 | #1971 | [W4-59] Translate hal_intf.c — chip configure + read_chip_info |
+| W4-60 | #1972 | [W4-60] Translate hal_intf.c — chip version + def_value_init |
+| W4-61 | #1973 | [W4-61] Translate hal_intf.c — hal_data_init (part 1) |
+| W4-62 | #1974 | [W4-62] Translate hal_intf.c — hal_data_deinit + hal_free_data |
 
 ## Superseded issues
 

@@ -327,6 +327,10 @@ files=(
   wave3-160-debug-proc-rate-leaf.md
   wave4-57-hal-com-c2h-mac-hidden.md
   wave4-58-hal-com-c2h-per-rate-lps.md
+  wave4-59-hal-intf-chip-configure.md
+  wave4-60-hal-intf-chip-version-defaults.md
+  wave4-61-hal-intf-data-init.md
+  wave4-62-hal-intf-data-teardown.md
   wave3-161-debug-proc-rate-setter.md
   wave3-162-debug-proc-rx-cnt-dump.md
   wave3-163-debug-proc-ps-dbg.md

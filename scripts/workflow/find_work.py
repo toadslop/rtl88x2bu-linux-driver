@@ -41,7 +41,8 @@ PR_LIST_FIELDS = (
     "mergeStateStatus,reviewDecision"
 )
 
-DRAFT_ID_RE = re.compile(r"\[([A-Z][A-Z0-9]*-\d+)\]")
+# W3-04, FX-07 (hyphenated) and T21, A2 (compact numeric suffix).
+DRAFT_ID_RE = re.compile(r"\[([A-Z][A-Z0-9]*(?:-\d+|\d+))\]")
 BLOCKED_BY_RE = re.compile(
     r"^\s*-\s*\*\*Blocked by:\*\*\s*(.+)$", re.MULTILINE | re.IGNORECASE
 )

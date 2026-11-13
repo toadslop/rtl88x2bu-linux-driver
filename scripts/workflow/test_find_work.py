@@ -60,6 +60,17 @@ class ClassifyPrepTests(unittest.TestCase):
         self.assertEqual(pr.classify_prep(), "needs_prep")
 
 
+class ParseDraftIdTests(unittest.TestCase):
+    def test_compact_test_infra_id(self) -> None:
+        self.assertEqual(fw.parse_draft_id("[T21] Build cfg"), "T21")
+
+    def test_hyphenated_wave_id(self) -> None:
+        self.assertEqual(fw.parse_draft_id("[W3-04] security"), "W3-04")
+
+    def test_epic_title_not_parsed(self) -> None:
+        self.assertIsNone(fw.parse_draft_id("[Epic] Wave 3"))
+
+
 class ImplementsIssueTests(unittest.TestCase):
     def test_docs_paren_filing_pr_does_not_implement_body_issue_refs(self) -> None:
         pr = fw.PullRequest(
@@ -86,6 +97,19 @@ class ImplementsIssueTests(unittest.TestCase):
         pr.enrich({}, "Filing #1261 and #1265 for W4-14 / W4-18.")
         self.assertFalse(pr.implements_issue(1261, "W4-14"))
         self.assertFalse(pr.implements_issue(1265, "W4-18"))
+
+    def test_open_pr_title_bracket_compact_id(self) -> None:
+        pr = fw.PullRequest(
+            number=1970,
+            title="[T21 PR3] Share Rust cfg allowlist",
+            url="http://example",
+            is_draft=False,
+            base_ref=fw.DEFAULT_BRANCH,
+            head_ref="cursor/t21-pr3-rust-cfg-parity-required",
+        )
+        pr.enrich({}, "")
+        self.assertIn("T21", pr.draft_ids)
+        self.assertTrue(pr.implements_issue(1899, "T21"))
 
     def test_docs_filing_pr_matches_title_bracket_id(self) -> None:
         pr = fw.PullRequest(
@@ -152,6 +176,34 @@ class DecidePathTests(unittest.TestCase):
         pr.mergeable = "MERGEABLE"
         pr.merge_state = "CLEAN"
         report = fw.analyze_issues([issue], [pr], {}, None)
+        self.assertTrue(report["pathCGap"])
+        self.assertEqual(report["pathCReason"], "no_ready_issue")
+        self.assertIsNotNone(report["chainHeadInFlight"])
+        self.assertIsNone(report["selected"])
+
+    def test_t21_inflight_selects_path_c_not_path_b(self) -> None:
+        issue = fw.Issue(
+            number=1899,
+            title="[T21] Build: generate rustc --cfg",
+            state="OPEN",
+            body="",
+            draft_id="T21",
+            blocked_by=[],
+            lane=None,
+            spec_path=None,
+        )
+        pr = fw.PullRequest(
+            number=1970,
+            title="[T21 PR3] Share Rust cfg allowlist",
+            url="http://example/pr/1970",
+            is_draft=False,
+            base_ref=fw.DEFAULT_BRANCH,
+            head_ref="cursor/t21-pr3-rust-cfg-parity-required",
+        )
+        pr.enrichment_ok = True
+        pr.mergeable = "MERGEABLE"
+        pr.merge_state = "CLEAN"
+        report = fw.analyze_issues([issue], [pr], {1899: "T21"}, None)
         self.assertTrue(report["pathCGap"])
         self.assertEqual(report["pathCReason"], "no_ready_issue")
         self.assertIsNotNone(report["chainHeadInFlight"])
