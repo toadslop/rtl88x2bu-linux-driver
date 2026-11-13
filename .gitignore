@@ -1,4 +1,5 @@
 *.cmd
+rust/generated_cfgs
 *.o
 *.ko
 *.mod

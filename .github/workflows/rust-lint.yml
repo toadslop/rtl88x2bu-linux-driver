@@ -13,6 +13,9 @@ on:
       - 'scripts/ci/rustfmt-check.sh'
       - 'scripts/ci/clippy-check.sh'
       - 'scripts/ci/check-status-constants.sh'
+      - 'scripts/ci/check-rust-cfg-parity.sh'
+      - 'scripts/rust_cfgs.sh'
+      - 'scripts/rust_cfgs.d/**'
       - '.github/workflows/rust-lint.yml'
   pull_request:
 
@@ -53,6 +56,43 @@ jobs:
       - name: rustfmt --check (rust/**)
         if: steps.filter.outputs.rust == 'true'
         run: ./scripts/ci/rustfmt-check.sh
+
+  rust-cfg-parity-advisory:
+    name: Rust cfg parity (advisory)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            driver_build:
+              - 'Makefile'
+              - 'rust/**'
+              - 'scripts/rust_cfgs.sh'
+              - 'scripts/rust_cfgs.d/**'
+              - 'scripts/ci/check-rust-cfg-parity.sh'
+              - '.github/workflows/rust-lint.yml'
+
+      - name: Out of scope — skip cfg parity
+        if: steps.filter.outputs.driver_build != 'true'
+        run: echo "PR does not touch Rust cfg wiring — reporting success without cfg parity"
+
+      - name: Build L0 module for cfg extraction
+        if: steps.filter.outputs.driver_build == 'true'
+        env:
+          KDIR: /opt/linux
+          LLVM: 1
+          LIBCLANG_PATH: /usr/lib/llvm-18/lib
+        run: |
+          make clean
+          make KDIR="$KDIR" LLVM="$LLVM" -j"$(nproc)"
+
+      - name: check-rust-cfg-parity.sh
+        if: steps.filter.outputs.driver_build == 'true'
+        run: ./scripts/ci/check-rust-cfg-parity.sh
 
   clippy-advisory:
     name: Rust clippy (advisory)
