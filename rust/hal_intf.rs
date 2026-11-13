@@ -2,7 +2,7 @@
 //! HAL interface helpers — Rust port of `hal/hal_intf.c` (W4-07 TRX mode dumps, W4-08 RF/NSS dumps,
 //! W4-36 chip ODM map, W4-59 chip configure + read_chip_info, W4-60 chip version + def_value_init,
 //! W4-61 hal_data_init, W4-62 hal_data_deinit + hal_free_data, W4-64 chip_rftype_to_hal_rftype,
-//! W4-65 hal_rfpath_init, W4-67 hal_power_on/off, W4-68 sw_led init/deinit,
+//! W4-65 hal_rfpath_init, W4-66 hal_trxnss_init, W4-67 hal_power_on/off, W4-68 sw_led init/deinit,
 //! W4-69 hal_init_opmode).
 
 #![allow(
@@ -20,7 +20,7 @@
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
     host_hal_intf_chip_odm_test,
-    host_hal_intf_chip_rftype_test, host_hal_intf_rfpath_test
+    host_hal_intf_chip_rftype_test, host_hal_intf_rfpath_test, host_hal_intf_trxnss_test
 )))]
 use core::ffi::{c_char, c_void};
 
@@ -28,7 +28,7 @@ use core::ffi::{c_char, c_void};
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
     host_hal_intf_chip_odm_test,
-    host_hal_intf_chip_rftype_test, host_hal_intf_rfpath_test
+    host_hal_intf_chip_rftype_test, host_hal_intf_rfpath_test, host_hal_intf_trxnss_test
 ))]
 use std::os::raw::c_char;
 
@@ -72,7 +72,7 @@ struct RtwHalIntfTrxFields {
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
     host_hal_intf_chip_odm_test,
-    host_hal_intf_chip_rftype_test, host_hal_intf_rfpath_test
+    host_hal_intf_chip_rftype_test, host_hal_intf_rfpath_test, host_hal_intf_trxnss_test
 ))]
 fn rf_type_to_rfpath_str_local(rf_type: U8) -> &'static [u8] {
     static RF_TBL: [&[u8]; RF_TYPE_MAX] = [
@@ -90,7 +90,7 @@ fn rf_type_to_rfpath_str_local(rf_type: U8) -> &'static [u8] {
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
     host_hal_intf_chip_odm_test,
-    host_hal_intf_chip_rftype_test, host_hal_intf_rfpath_test
+    host_hal_intf_chip_rftype_test, host_hal_intf_rfpath_test, host_hal_intf_trxnss_test
 )))]
 fn rf_type_to_rfpath_str_local(rf_type: U8) -> &'static [u8] {
     extern "C" {
@@ -677,6 +677,66 @@ pub extern "C" fn host_hal_rfpath_init_common(
     unsafe { rfpath_init_common_from_in(&*in_, &mut *out) }
 }
 
+// Keep in sync with `core/rtw_rf_rest.c` `_rf_type_to_rf_rx_cnt`.
+const _RF_TYPE_TO_RF_RX_CNT: [U8; RF_TYPE_MAX] = [
+    1, 2, 2, 3, 4, 3, 4, 4, 3, 2, 1, 2, 1, 1, 4, 3,
+];
+
+fn rf_type_to_rf_rx_cnt_local(rf_type: U8) -> U8 {
+    if (rf_type as usize) < RF_TYPE_MAX {
+        _RF_TYPE_TO_RF_RX_CNT[rf_type as usize]
+    } else {
+        0
+    }
+}
+
+#[repr(C)]
+pub struct HostHalTrxnssInitIn {
+    pub hal_spec_tx_nss: i8,
+    pub hal_spec_rx_nss: i8,
+    pub reg_tx_nss: i8,
+    pub reg_rx_nss: i8,
+    pub max_tx_cnt: U8,
+    pub rf_path: U8,
+    pub hw_full_tx: U8,
+}
+
+#[repr(C)]
+pub struct HostHalTrxnssInitOut {
+    pub tx_nss: U8,
+    pub rx_nss: U8,
+    pub txpath_cap_num_nss: [U8; 4],
+}
+
+fn trxnss_init_common_from_in(in_: &HostHalTrxnssInitIn, out: &mut HostHalTrxnssInitOut) {
+    let mut tx_nss = in_.hal_spec_tx_nss as U8;
+    let mut rx_nss = in_.hal_spec_rx_nss as U8;
+
+    if in_.reg_tx_nss > 0 {
+        tx_nss = rtw_min_u8(tx_nss, in_.reg_tx_nss as U8);
+    }
+    tx_nss = rtw_min_u8(tx_nss, in_.max_tx_cnt);
+    if in_.reg_rx_nss > 0 {
+        rx_nss = rtw_min_u8(rx_nss, in_.reg_rx_nss as U8);
+    }
+    rx_nss = rtw_min_u8(rx_nss, rf_type_to_rf_rx_cnt_local(in_.rf_path));
+
+    out.txpath_cap_num_nss = [0; 4];
+    for i in 0..4usize {
+        let idx = i as U8;
+        if tx_nss < idx.wrapping_add(1) {
+            break;
+        }
+        out.txpath_cap_num_nss[i] = if in_.hw_full_tx != 0 {
+            in_.max_tx_cnt
+        } else {
+            idx.wrapping_add(1)
+        };
+    }
+    out.tx_nss = tx_nss;
+    out.rx_nss = rx_nss;
+}
+
 fn chip_rftype_to_hal_rftype_impl(cv_rf_type: U8, limit: U8) -> i32 {
     let mut tx_num = 0u8;
     let mut rx_num = 0u8;
@@ -729,7 +789,7 @@ pub extern "C" fn host_chip_rftype_to_hal_rftype(cv_rf_type: U8, limit: U8) -> i
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
     host_hal_intf_chip_odm_test,
-    host_hal_intf_chip_rftype_test, host_hal_intf_rfpath_test
+    host_hal_intf_chip_rftype_test, host_hal_intf_rfpath_test, host_hal_intf_trxnss_test
 )))]
 #[no_mangle]
 pub static _chip_type_to_odm_ic_type: [U32; MAX_CHIP_TYPE + 1] = CHIP_TYPE_TO_ODM_IC_TYPE;
@@ -738,7 +798,7 @@ pub static _chip_type_to_odm_ic_type: [U32; MAX_CHIP_TYPE + 1] = CHIP_TYPE_TO_OD
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
     host_hal_intf_chip_odm_test,
-    host_hal_intf_chip_rftype_test, host_hal_intf_rfpath_test
+    host_hal_intf_chip_rftype_test, host_hal_intf_rfpath_test, host_hal_intf_trxnss_test
 )))]
 mod kernel {
     use super::*;
@@ -860,6 +920,15 @@ mod kernel {
             tx_lmt: U8,
             rx_lmt: U8,
         );
+        fn rtw_rust_hal_intf_trxnss_init_read(adapter: *mut c_void, out: *mut HostHalTrxnssInitIn);
+        fn rtw_rust_hal_intf_trxnss_init_store(
+            adapter: *mut c_void,
+            tx_nss: U8,
+            rx_nss: U8,
+            txpath_cap: *const U8,
+        );
+        fn rtw_rust_hal_intf_trxnss_dump(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_trxnss_info(adapter: *mut c_void, tx_nss: U8, rx_nss: U8);
         #[cfg(config_fw_multi_port_support)]
         fn rtw_rust_hal_intf_dft_defaults(adapter: *mut c_void);
         #[cfg(config_hw_p0_tsf_sync)]
@@ -1259,6 +1328,37 @@ mod kernel {
     #[no_mangle]
     pub extern "C" fn rtw_hal_rfpath_init(adapter: *mut c_void) -> U8 {
         rfpath_init_from_adapter(adapter)
+    }
+
+    fn trxnss_init_from_adapter(adapter: *mut c_void) -> U8 {
+        if adapter.is_null() {
+            return RTW_FAIL;
+        }
+        unsafe {
+            let mut in_ = core::mem::MaybeUninit::<HostHalTrxnssInitIn>::uninit();
+            rtw_rust_hal_intf_trxnss_init_read(adapter, in_.as_mut_ptr());
+            let in_ = in_.assume_init();
+            let mut out = HostHalTrxnssInitOut {
+                tx_nss: 0,
+                rx_nss: 0,
+                txpath_cap_num_nss: [0; 4],
+            };
+            trxnss_init_common_from_in(&in_, &mut out);
+            rtw_rust_hal_intf_trxnss_init_store(
+                adapter,
+                out.tx_nss,
+                out.rx_nss,
+                out.txpath_cap_num_nss.as_ptr(),
+            );
+            rtw_rust_hal_intf_trxnss_dump(adapter);
+            rtw_rust_hal_intf_trxnss_info(adapter, out.tx_nss, out.rx_nss);
+        }
+        RTW_SUCCESS
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_trxnss_init(adapter: *mut c_void) -> U8 {
+        trxnss_init_from_adapter(adapter)
     }
 
     #[no_mangle]

@@ -42,51 +42,7 @@ void _dump_trx_nss(void *sel, _adapter *adapter);
 extern enum rf_type rtl8814a_rfpath_decision(_adapter *adapter);
 #endif
 
-#define NSS_VALID(nss) (nss > 0)
-
-u8 rtw_hal_trxnss_init(_adapter *adapter)
-{
-	struct registry_priv *regpriv = &adapter->registrypriv;
-	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
-	PHAL_DATA_TYPE hal_data = GET_HAL_DATA(adapter);
-	enum rf_type rf_path = GET_HAL_RFPATH(adapter);
-	int i;
-
-	hal_data->tx_nss = hal_spec->tx_nss_num;
-	hal_data->rx_nss = hal_spec->rx_nss_num;
-
-	if (NSS_VALID(regpriv->tx_nss))
-		hal_data->tx_nss = rtw_min(hal_data->tx_nss, regpriv->tx_nss);
-	hal_data->tx_nss = rtw_min(hal_data->tx_nss, hal_data->max_tx_cnt);
-	if (NSS_VALID(regpriv->rx_nss))
-		hal_data->rx_nss = rtw_min(hal_data->rx_nss, regpriv->rx_nss);
-	hal_data->rx_nss = rtw_min(hal_data->rx_nss, rf_type_to_rf_rx_cnt(rf_path));
-
-	for (i = 0; i < 4; i++) {
-		if (hal_data->tx_nss < i + 1)
-			break;
-
-		if (IS_HARDWARE_TYPE_8814B(adapter) /* 8814B is always full-TX */
-			#ifdef CONFIG_RTW_TX_NPATH_EN
-			/* these IC is capable of full-TX when macro defined */
-			|| IS_HARDWARE_TYPE_8192E(adapter) || IS_HARDWARE_TYPE_8192F(adapter)
-			|| IS_HARDWARE_TYPE_8812(adapter) || IS_HARDWARE_TYPE_8822B(adapter)
-			|| IS_HARDWARE_TYPE_8822C(adapter)
-			#endif
-		)
-			hal_data->txpath_cap_num_nss[i] = hal_data->max_tx_cnt;
-		else
-			hal_data->txpath_cap_num_nss[i] = i + 1;
-	}
-
-	if (1)
-		_dump_trx_nss(RTW_DBGDUMP, adapter);
-
-	RTW_INFO("%s tx_nss:%u, rx_nss:%u\n", __func__
-		, hal_data->tx_nss, hal_data->rx_nss);
-
-	return _SUCCESS;
-}
+/* rtw_hal_trxnss_init — ported to rust/hal_intf.rs (W4-66) */
 
 #ifdef CONFIG_RTW_SW_LED
 u8 rtw_rust_hal_intf_led_b_reg_use_led(_adapter *padapter)
@@ -2366,4 +2322,76 @@ void rtw_rust_hal_intf_trx_nss_fields(_adapter *adapter,
 	out->reg_rx_nss = (s8)regpriv->rx_nss;
 	out->hal_tx_nss = (s8)GET_HAL_TX_NSS(adapter);
 	out->hal_rx_nss = (s8)GET_HAL_RX_NSS(adapter);
+}
+
+struct rtw_hal_intf_trxnss_init_in {
+	s8 hal_spec_tx_nss;
+	s8 hal_spec_rx_nss;
+	s8 reg_tx_nss;
+	s8 reg_rx_nss;
+	u8 max_tx_cnt;
+	u8 rf_path;
+	u8 hw_full_tx;
+};
+
+u8 rtw_rust_hal_intf_trxnss_hw_full_tx(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+
+	if (IS_HARDWARE_TYPE_8814B(adapter)
+#ifdef CONFIG_RTW_TX_NPATH_EN
+		|| IS_HARDWARE_TYPE_8192E(adapter) || IS_HARDWARE_TYPE_8192F(adapter)
+		|| IS_HARDWARE_TYPE_8812(adapter) || IS_HARDWARE_TYPE_8822B(adapter)
+		|| IS_HARDWARE_TYPE_8822C(adapter)
+#endif
+	)
+		return 1;
+	return 0;
+}
+
+void rtw_rust_hal_intf_trxnss_init_read(_adapter *adapter,
+					struct rtw_hal_intf_trxnss_init_in *out)
+{
+	struct registry_priv *regpriv = &adapter->registrypriv;
+	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
+	PHAL_DATA_TYPE hal_data = GET_HAL_DATA(adapter);
+
+	if (!adapter || !out)
+		return;
+
+	out->hal_spec_tx_nss = (s8)hal_spec->tx_nss_num;
+	out->hal_spec_rx_nss = (s8)hal_spec->rx_nss_num;
+	out->reg_tx_nss = (s8)regpriv->tx_nss;
+	out->reg_rx_nss = (s8)regpriv->rx_nss;
+	out->max_tx_cnt = hal_data->max_tx_cnt;
+	out->rf_path = GET_HAL_RFPATH(adapter);
+	out->hw_full_tx = rtw_rust_hal_intf_trxnss_hw_full_tx(adapter);
+}
+
+void rtw_rust_hal_intf_trxnss_init_store(_adapter *adapter, u8 tx_nss, u8 rx_nss,
+					 const u8 txpath_cap[4])
+{
+	PHAL_DATA_TYPE hal_data = GET_HAL_DATA(adapter);
+	int i;
+
+	if (!adapter)
+		return;
+
+	hal_data->tx_nss = tx_nss;
+	hal_data->rx_nss = rx_nss;
+	for (i = 0; i < 4; i++)
+		hal_data->txpath_cap_num_nss[i] = txpath_cap[i];
+}
+
+void rtw_rust_hal_intf_trxnss_dump(_adapter *adapter)
+{
+	if (adapter)
+		_dump_trx_nss(RTW_DBGDUMP, adapter);
+}
+
+void rtw_rust_hal_intf_trxnss_info(_adapter *adapter, u8 tx_nss, u8 rx_nss)
+{
+	RTW_INFO("%s tx_nss:%u, rx_nss:%u\n", "rtw_hal_trxnss_init", tx_nss, rx_nss);
+	(void)adapter;
 }
