@@ -17,14 +17,16 @@
 #[cfg(not(any(
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
-    host_hal_intf_chip_odm_test
+    host_hal_intf_chip_odm_test,
+    host_hal_intf_chip_rftype_test
 )))]
 use core::ffi::{c_char, c_void};
 
 #[cfg(any(
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
-    host_hal_intf_chip_odm_test
+    host_hal_intf_chip_odm_test,
+    host_hal_intf_chip_rftype_test
 ))]
 use std::os::raw::c_char;
 
@@ -67,7 +69,8 @@ struct RtwHalIntfTrxFields {
 #[cfg(any(
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
-    host_hal_intf_chip_odm_test
+    host_hal_intf_chip_odm_test,
+    host_hal_intf_chip_rftype_test
 ))]
 fn rf_type_to_rfpath_str_local(rf_type: U8) -> &'static [u8] {
     static RF_TBL: [&[u8]; RF_TYPE_MAX] = [
@@ -84,7 +87,8 @@ fn rf_type_to_rfpath_str_local(rf_type: U8) -> &'static [u8] {
 #[cfg(not(any(
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
-    host_hal_intf_chip_odm_test
+    host_hal_intf_chip_odm_test,
+    host_hal_intf_chip_rftype_test
 )))]
 fn rf_type_to_rfpath_str_local(rf_type: U8) -> &'static [u8] {
     extern "C" {
@@ -598,10 +602,17 @@ fn chip_rftype_to_hal_rftype_impl(cv_rf_type: U8, limit: U8) -> i32 {
     unsafe { trx_num_to_rf_type(tx_num, rx_num) }
 }
 
+#[cfg(host_hal_intf_chip_rftype_test)]
+#[no_mangle]
+pub extern "C" fn host_chip_rftype_to_hal_rftype(cv_rf_type: U8, limit: U8) -> i32 {
+    chip_rftype_to_hal_rftype_impl(cv_rf_type, limit)
+}
+
 #[cfg(not(any(
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
-    host_hal_intf_chip_odm_test
+    host_hal_intf_chip_odm_test,
+    host_hal_intf_chip_rftype_test
 )))]
 #[no_mangle]
 pub static _chip_type_to_odm_ic_type: [U32; MAX_CHIP_TYPE + 1] = CHIP_TYPE_TO_ODM_IC_TYPE;
@@ -609,7 +620,8 @@ pub static _chip_type_to_odm_ic_type: [U32; MAX_CHIP_TYPE + 1] = CHIP_TYPE_TO_OD
 #[cfg(not(any(
     host_hal_intf_trx_test,
     host_hal_intf_rf_nss_test,
-    host_hal_intf_chip_odm_test
+    host_hal_intf_chip_odm_test,
+    host_hal_intf_chip_rftype_test
 )))]
 mod kernel {
     use super::*;
