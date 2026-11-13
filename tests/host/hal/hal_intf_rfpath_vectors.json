@@ -1,0 +1,69 @@
+{
+  "oracle": "hal/hal_intf_rest.c rtw_hal_rfpath_init (common path)",
+  "vectors": [
+    {
+      "name": "spec_only_2t2r",
+      "rf_reg_trx_path_bmp": 51,
+      "reg_trx_path_bmp": 0,
+      "eeprom_trx_path_bmp": 0,
+      "eeprom_max_tx_cnt": 0,
+      "hal_spec_max_tx_cnt": 2,
+      "tx_path_lmt": 0,
+      "rx_path_lmt": 0,
+      "expect_status": 1,
+      "expect_fail_reason": 0,
+      "expect_hal_trx_path_bmp": 51,
+      "expect_hal_rf_type": 2,
+      "expect_NumTotalRFPath": 2,
+      "expect_hal_max_tx_cnt": 2
+    },
+    {
+      "name": "reg_intersection_fail",
+      "rf_reg_trx_path_bmp": 51,
+      "reg_trx_path_bmp": 4,
+      "eeprom_trx_path_bmp": 0,
+      "eeprom_max_tx_cnt": 0,
+      "hal_spec_max_tx_cnt": 2,
+      "tx_path_lmt": 0,
+      "rx_path_lmt": 0,
+      "expect_status": 0,
+      "expect_fail_reason": 1,
+      "expect_hal_trx_path_bmp": 0,
+      "expect_hal_rf_type": 0,
+      "expect_NumTotalRFPath": 0,
+      "expect_hal_max_tx_cnt": 0
+    },
+    {
+      "name": "eeprom_mask_2t2r",
+      "rf_reg_trx_path_bmp": 51,
+      "reg_trx_path_bmp": 0,
+      "eeprom_trx_path_bmp": 51,
+      "eeprom_max_tx_cnt": 2,
+      "hal_spec_max_tx_cnt": 2,
+      "tx_path_lmt": 0,
+      "rx_path_lmt": 0,
+      "expect_status": 1,
+      "expect_fail_reason": 0,
+      "expect_hal_trx_path_bmp": 51,
+      "expect_hal_rf_type": 2,
+      "expect_NumTotalRFPath": 2,
+      "expect_hal_max_tx_cnt": 2
+    },
+    {
+      "name": "restrict_tx_rx_lmt_fail",
+      "rf_reg_trx_path_bmp": 240,
+      "reg_trx_path_bmp": 0,
+      "eeprom_trx_path_bmp": 0,
+      "eeprom_max_tx_cnt": 0,
+      "hal_spec_max_tx_cnt": 4,
+      "tx_path_lmt": 1,
+      "rx_path_lmt": 4,
+      "expect_status": 0,
+      "expect_fail_reason": 3,
+      "expect_hal_trx_path_bmp": 0,
+      "expect_hal_rf_type": 0,
+      "expect_NumTotalRFPath": 0,
+      "expect_hal_max_tx_cnt": 0
+    }
+  ]
+}
