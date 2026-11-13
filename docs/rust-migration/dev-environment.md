@@ -415,7 +415,7 @@ Contributor overview: [`docs/contributing.md`](../contributing.md).
 
 Kernel Rust objects take `--cfg` values from two places:
 
-1. **Generated** — `scripts/rust_cfgs.sh` preprocesses the same `ccflags-y`, `include/autoconf.h`, `include/drv_conf.h`, and `include/hal_ic_cfg.h` the C build uses, then writes `rust/generated_cfgs` (loaded via `rustflags-y += @…/rust/generated_cfgs`).
+1. **Generated** — `scripts/rust_cfgs.sh` preprocesses the same `ccflags-y`, `include/autoconf.h`, `include/drv_conf.h`, and `include/hal_ic_cfg.h` the C build uses, then writes `rust/generated_cfgs` (loaded via `rustflags-y += @…/rust/generated_cfgs`). The set of `#[cfg]` names scanned from `rust/` lives in `scripts/rust_cfg_allowlist.py` (shared with `scripts/ci/check-rust-cfg-parity.sh`).
 2. **Explicit** — `rustflags-y` lines for Rust-only feature gates (`rust_*`, `beamforming_version_2`, …) and Makefile logic that cannot be expressed as a single C macro.
 
 When a port needs a new **C-backed** cfg:
