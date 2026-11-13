@@ -5109,6 +5109,9 @@ rust-objects-hal-intf-c:
 		-o tests/host/hal/hal_intf_chip_rftype_l1_ref.o \
 		tests/host/hal/hal_intf_chip_rftype_l1_ref.c
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_intf_rfpath_l1_ref.o \
+		tests/host/hal/hal_intf_rfpath_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_intf_power_l1_ref.o \
 		tests/host/hal/hal_intf_power_l1_ref.c
 	$(CC) $(EXTRA_CFLAGS) -DCONFIG_RTW_SW_LED -c \
@@ -5122,6 +5125,7 @@ rust-objects-hal-intf-c:
 		tests/host/hal/hal_intf_data_teardown_l1_ref.o \
 		tests/host/hal/hal_intf_dm_l1_ref.o \
 		tests/host/hal/hal_intf_chip_rftype_l1_ref.o \
+		tests/host/hal/hal_intf_rfpath_l1_ref.o \
 		tests/host/hal/hal_intf_power_l1_ref.o \
 		tests/host/hal/hal_intf_sw_led_l1_ref.o
 rust-check-symbols-hal-intf: rust-objects-hal-intf-c rust-objects-hal-intf
