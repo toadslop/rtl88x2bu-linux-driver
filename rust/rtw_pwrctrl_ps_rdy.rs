@@ -24,88 +24,21 @@ type Systime = c_ulong;
 const _TRUE: u8 = 1;
 const _FALSE: u8 = 0;
 
-const WIFI_UNDER_SURVEY: u32 = 0x0000_0800;
-const WIFI_UNDER_LINKING: u32 = 0x0000_0080;
-const WIFI_UNDER_WPS: u32 = 0x0000_0100;
-const WIFI_AP_STATE: u32 = 0x0000_0010;
-const WIFI_MESH_STATE: u32 = 0x0000_0200;
-const WIFI_MONITOR_STATE: u32 = 0x8000_0000;
-const WIFI_ADHOC_MASTER_STATE: u32 = 0x0000_0020;
-const WIFI_ADHOC_STATE: u32 = 0x0000_0040;
-const dot11AuthAlgrthm_8021X: u32 = 2;
+pub(crate) const WIFI_UNDER_SURVEY: u32 = 0x0000_0800;
+pub(crate) const WIFI_UNDER_LINKING: u32 = 0x0000_0080;
+pub(crate) const WIFI_UNDER_WPS: u32 = 0x0000_0100;
+pub(crate) const WIFI_AP_STATE: u32 = 0x0000_0010;
+pub(crate) const WIFI_MESH_STATE: u32 = 0x0000_0200;
+pub(crate) const WIFI_MONITOR_STATE: u32 = 0x8000_0000;
+pub(crate) const WIFI_ADHOC_MASTER_STATE: u32 = 0x0000_0020;
+pub(crate) const WIFI_ADHOC_STATE: u32 = 0x0000_0040;
+pub(crate) const dot11AuthAlgrthm_8021X: u32 = 2;
 
-type Padapter = *mut c_void;
-
-#[cfg(host_pwrctrl_ps_rdy_test)]
-#[repr(C)]
-struct MlmePriv {
-    fw_state: u32,
-}
-
-#[cfg(host_pwrctrl_ps_rdy_test)]
-#[repr(C)]
-struct SecurityPriv {
-    dot11AuthAlgrthm: u32,
-    binstallGrpkey: u8,
-}
-
-#[cfg(host_pwrctrl_ps_rdy_test)]
-#[repr(C)]
-struct TdlsInfo {
-    link_established: u8,
-}
-
-#[cfg(host_pwrctrl_ps_rdy_test)]
-#[repr(C)]
-struct RfCtl {
-    radar_detect_enabled: u8,
-}
-
-#[cfg(host_pwrctrl_ps_rdy_test)]
-#[repr(C)]
-struct PwrctrlPriv {
-    bInSuspend: u8,
-    lps_deny_time: u32,
-    wowlan_mode: u8,
-    wowlan_ap_mode: u8,
-}
-
-#[cfg(host_pwrctrl_ps_rdy_test)]
-#[repr(C)]
-struct HostAdapter {
-    mlmepriv: MlmePriv,
-    pwrctrlpriv: PwrctrlPriv,
-    securitypriv: SecurityPriv,
-    tdlsinfo: TdlsInfo,
-    rfctl: *mut RfCtl,
-}
+pub(crate) type Padapter = *mut c_void;
 
 #[cfg(host_pwrctrl_ps_rdy_test)]
 #[path = "rtw_pwrctrl_ps_rdy_host.rs"]
 mod host;
-
-#[cfg(host_pwrctrl_ps_rdy_test)]
-fn check_fwstate(m: &MlmePriv, s: u32) -> bool {
-    if s == 0 && m.fw_state == 0 {
-        return true;
-    }
-    (m.fw_state & s) != 0
-}
-
-#[cfg(host_pwrctrl_ps_rdy_test)]
-fn mlme_is_ap(a: &HostAdapter) -> bool {
-    (a.mlmepriv.fw_state & WIFI_AP_STATE) != 0
-}
-
-#[cfg(host_pwrctrl_ps_rdy_test)]
-fn mlme_is_mesh(a: &HostAdapter) -> bool {
-    (a.mlmepriv.fw_state & WIFI_MESH_STATE) != 0
-}
-
-#[cfg(host_pwrctrl_ps_rdy_test)]
-fn mlme_is_monitor(a: &HostAdapter) -> bool {
-    (a.mlmepriv.fw_state & WIFI_MONITOR_STATE) != 0
-}
 
 extern "C" {
     fn rtw_rust_ps_rdy_get_current_time() -> Systime;
@@ -180,60 +113,7 @@ fn ps_rdy_check_core(adapter: Padapter) -> u8 {
     }
 }
 
-fn ps_rdy_check_impl(adapter: Padapter) -> u8 {
-    #[cfg(host_pwrctrl_ps_rdy_test)]
-    {
-        let a = unsafe { &*(adapter as *mut HostAdapter) };
-        let p = &a.pwrctrlpriv;
-        let m = &a.mlmepriv;
-
-        if p.bInSuspend == _TRUE && p.wowlan_mode == _TRUE {
-            return _TRUE;
-        }
-        if p.bInSuspend == _TRUE && p.wowlan_ap_mode == _TRUE {
-            return _TRUE;
-        }
-        if p.bInSuspend == _TRUE {
-            return _FALSE;
-        }
-
-        let now = host::host_time();
-        if (p.lps_deny_time as i32).wrapping_sub(now as i32) > 0 {
-            return _FALSE;
-        }
-
-        if check_fwstate(m, WIFI_UNDER_SURVEY)
-            || check_fwstate(m, WIFI_UNDER_LINKING | WIFI_UNDER_WPS)
-            || mlme_is_ap(a)
-            || mlme_is_mesh(a)
-            || mlme_is_monitor(a)
-            || check_fwstate(m, WIFI_ADHOC_MASTER_STATE | WIFI_ADHOC_STATE)
-            || host::host_roch() == _TRUE
-            || host::host_scan_deny() == _TRUE
-            || a.tdlsinfo.link_established == _TRUE
-            || (!a.rfctl.is_null() && unsafe { (*a.rfctl).radar_detect_enabled } == _TRUE)
-        {
-            return _FALSE;
-        }
-
-        if a.securitypriv.dot11AuthAlgrthm == dot11AuthAlgrthm_8021X
-            && a.securitypriv.binstallGrpkey == _FALSE
-        {
-            return _FALSE;
-        }
-
-        if host::host_pwr_mgmt() == _FALSE {
-            return _FALSE;
-        }
-
-        return _TRUE;
-    }
-
-    #[cfg(not(host_pwrctrl_ps_rdy_test))]
-    ps_rdy_check_core(adapter)
-}
-
 #[no_mangle]
 pub extern "C" fn PS_RDY_CHECK(padapter: Padapter) -> u8 {
-    ps_rdy_check_impl(padapter)
+    ps_rdy_check_core(padapter)
 }
