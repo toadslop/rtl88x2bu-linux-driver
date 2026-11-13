@@ -25,46 +25,7 @@
 
 /* rtw_hal_data_deinit / rtw_hal_free_data — ported to rust/hal_intf.rs (W4-62) */
 /* rtw_hal_dm_init / rtw_hal_dm_deinit — ported to rust/hal_intf.rs (W4-63) */
-
-enum rf_type rtw_chip_rftype_to_hal_rftype(_adapter *adapter, u8 limit)
-{
-	PHAL_DATA_TYPE hal_data = GET_HAL_DATA(adapter);
-	u8 tx_num = 0, rx_num = 0;
-
-	/*get RF PATH from version_id.RF_TYPE */
-	if (IS_1T1R(hal_data->version_id)) {
-		tx_num = 1;
-		rx_num = 1;
-	} else if (IS_1T2R(hal_data->version_id)) {
-		tx_num = 1;
-		rx_num = 2;
-	} else if (IS_2T2R(hal_data->version_id)) {
-		tx_num = 2;
-		rx_num = 2;
-	} else if (IS_2T3R(hal_data->version_id)) {
-		tx_num = 2;
-		rx_num = 3;
-	} else if (IS_2T4R(hal_data->version_id)) {
-		tx_num = 2;
-		rx_num = 4;
-	} else if (IS_3T3R(hal_data->version_id)) {
-		tx_num = 3;
-		rx_num = 3;
-	} else if (IS_3T4R(hal_data->version_id)) {
-		tx_num = 3;
-		rx_num = 4;
-	} else if (IS_4T4R(hal_data->version_id)) {
-		tx_num = 4;
-		rx_num = 4;
-	}
-
-	if (limit) {
-		tx_num = rtw_min(tx_num, limit);
-		rx_num = rtw_min(rx_num, limit);
-	}
-
-	return trx_num_to_rf_type(tx_num, rx_num);
-}
+/* rtw_chip_rftype_to_hal_rftype — ported to rust/hal_intf.rs (W4-64) */
 
 /* dump_hal_runtime_trx_mode / dump_hal_trx_mode — ported to rust/hal_intf.rs (W4-07) */
 
@@ -2218,6 +2179,11 @@ void rtw_rust_hal_intf_dm_deinit_tail(_adapter *padapter)
 	PHAL_DATA_TYPE pHalData = GET_HAL_DATA(padapter);
 
 	_rtw_spinlock_free(&pHalData->IQKSpinLock);
+}
+
+u8 rtw_rust_hal_intf_hal_data_version_rf_type(_adapter *adapter)
+{
+	return GET_HAL_DATA(adapter)->version_id.RFType;
 }
 
 u8 rtw_rust_hal_intf_hal_spec_proto_cap(_adapter *adapter)
