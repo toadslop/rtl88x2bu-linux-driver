@@ -85,6 +85,7 @@ pub extern "C" fn rtw_rust_hal_dm_init_odm_board_type(
         host_hal_dm_board_type_test,
         host_hal_dm_dump_sta_info_test,
         host_hal_dm_dump_sta_traffic_test,
+        host_hal_dm_odm_iface_test,
     ))
 ))]
 mod odm_endian_hooks {
@@ -164,7 +165,8 @@ mod odm_endian_hooks {
         host_hal_dm_board_type_test,
         host_hal_dm_odm_endian_hooks_test,
         host_hal_dm_dump_sta_info_test,
-        host_hal_dm_dump_sta_traffic_test
+        host_hal_dm_dump_sta_traffic_test,
+        host_hal_dm_odm_iface_test,
     ))
 ))]
 mod dump_sta_info {
@@ -622,9 +624,24 @@ mod dump_sta_info {
         host_hal_dm_board_type_test,
         host_hal_dm_odm_endian_hooks_test,
         host_hal_dm_dump_sta_info_test,
-        host_hal_dm_dump_sta_traffic_test
+        host_hal_dm_dump_sta_traffic_test,
+        host_hal_dm_odm_iface_test,
     ))
 ))]
 mod dump_sta_traffic {
     include!("hal_dm_dump_sta_traffic.inc.rs");
+}
+
+#[cfg(any(
+    host_hal_dm_odm_iface_test,
+    not(any(
+        host_hal_dm_board_type_test,
+        host_hal_dm_odm_endian_hooks_test,
+        host_hal_dm_dump_sta_info_test,
+        host_hal_dm_dump_sta_traffic_test,
+        host_hal_dm_odm_iface_test,
+    ))
+))]
+mod phydm_priv_odm_iface {
+    include!("hal_dm_phydm_priv_odm_iface.inc.rs");
 }
