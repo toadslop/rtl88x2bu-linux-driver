@@ -2,7 +2,8 @@
 //! HAL interface helpers — Rust port of `hal/hal_intf.c` (W4-07 TRX mode dumps, W4-08 RF/NSS dumps,
 //! W4-36 chip ODM map, W4-59 chip configure + read_chip_info, W4-60 chip version + def_value_init,
 //! W4-61 hal_data_init, W4-62 hal_data_deinit + hal_free_data, W4-64 chip_rftype_to_hal_rftype,
-//! W4-65 hal_rfpath_init, W4-67 hal_power_on/off).
+//! W4-65 hal_rfpath_init, W4-67 hal_power_on/off, W4-68 sw_led init/deinit,
+//! W4-69 hal_init_opmode).
 
 #![allow(
     dead_code,
@@ -806,6 +807,12 @@ mod kernel {
         fn rtw_rust_hal_intf_call_init_default_value(adapter: *mut c_void);
         fn rtw_rust_hal_intf_set_rx_tsf_addr_filter_config(adapter: *mut c_void, v: U8);
         fn rtw_rust_init_is_primary(adapter: *mut c_void) -> U8;
+        fn rtw_rust_hal_intf_get_fwstate(adapter: *mut c_void) -> i32;
+        fn rtw_rust_hal_intf_setopmode_cmd(
+            adapter: *mut c_void,
+            networktype: i32,
+            flags: U8,
+        ) -> U8;
         fn rtw_odm_init_ic_type(adapter: *mut c_void);
         fn rtw_init_hal_com_default_value(adapter: *mut c_void);
         fn rtw_rust_hal_com_get_intf_type(adapter: *mut c_void) -> U8;
@@ -1073,6 +1080,64 @@ mod kernel {
         unsafe {
             rtw_rust_hal_intf_call_deinit_sw_leds(adapter);
         }
+    }
+
+    const WIFI_ADHOC_STATE: i32 = 0x00000020;
+    const WIFI_STATION_STATE: i32 = 0x00000008;
+    #[cfg(config_ap_mode)]
+    const WIFI_AP_STATE: i32 = 0x00000010;
+    #[cfg(config_rtw_mesh)]
+    const WIFI_MESH_STATE: i32 = 0x00000200;
+
+    const NDIS802_11_IBSS: i32 = 0;
+    const NDIS802_11_INFRASTRUCTURE: i32 = 1;
+    const NDIS802_11_AP_MODE: i32 = 4;
+    const NDIS802_11_MESH: i32 = 6;
+
+    const RTW_CMDF_DIRECTLY: U8 = 1;
+
+    fn hal_init_opmode_impl(adapter: *mut c_void) {
+        if adapter.is_null() {
+            return;
+        }
+        let fw_state = unsafe { rtw_rust_hal_intf_get_fwstate(adapter) };
+        let network_type = if (fw_state & WIFI_ADHOC_STATE) != 0 {
+            NDIS802_11_IBSS
+        } else if (fw_state & WIFI_STATION_STATE) != 0 {
+            NDIS802_11_INFRASTRUCTURE
+        } else if {
+            #[cfg(config_ap_mode)]
+            {
+                (fw_state & WIFI_AP_STATE) != 0
+            }
+            #[cfg(not(config_ap_mode))]
+            {
+                false
+            }
+        } {
+            NDIS802_11_AP_MODE
+        } else if {
+            #[cfg(config_rtw_mesh)]
+            {
+                (fw_state & WIFI_MESH_STATE) != 0
+            }
+            #[cfg(not(config_rtw_mesh))]
+            {
+                false
+            }
+        } {
+            NDIS802_11_MESH
+        } else {
+            return;
+        };
+        unsafe {
+            rtw_rust_hal_intf_setopmode_cmd(adapter, network_type, RTW_CMDF_DIRECTLY);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_init_opmode(adapter: *mut c_void) {
+        hal_init_opmode_impl(adapter);
     }
 
     #[no_mangle]
