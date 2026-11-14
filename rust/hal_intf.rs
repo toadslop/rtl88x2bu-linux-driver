@@ -895,6 +895,10 @@ mod kernel {
         ) -> U8;
         fn rtw_rust_hal_intf_log_check_ips_status_null();
         fn rtw_rust_hal_intf_call_fw_dl(adapter: *mut c_void, wowlan: U8) -> i32;
+        #[cfg(any(config_usb_hci, config_pci_hci))]
+        fn rtw_rust_hal_intf_call_inirp_init(adapter: *mut c_void) -> U32;
+        #[cfg(any(config_usb_hci, config_pci_hci))]
+        fn rtw_rust_hal_intf_call_inirp_deinit(adapter: *mut c_void) -> U32;
         fn rtw_odm_init_ic_type(adapter: *mut c_void);
         fn rtw_init_hal_com_default_value(adapter: *mut c_void);
         fn rtw_rust_hal_com_get_intf_type(adapter: *mut c_void) -> U8;
@@ -1267,6 +1271,27 @@ mod kernel {
             rtw_rust_hal_intf_clear_lps_1t1r(adapter);
         }
         ret
+    }
+
+    #[cfg(any(config_usb_hci, config_pci_hci))]
+    const HAL_INIRP_SUCCESS: U32 = 1;
+
+    #[cfg(any(config_usb_hci, config_pci_hci))]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_inirp_init(adapter: *mut c_void) -> U32 {
+        if unsafe { rtw_rust_init_is_primary(adapter) } == 0 {
+            return HAL_INIRP_SUCCESS;
+        }
+        unsafe { rtw_rust_hal_intf_call_inirp_init(adapter) }
+    }
+
+    #[cfg(any(config_usb_hci, config_pci_hci))]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_inirp_deinit(adapter: *mut c_void) -> U32 {
+        if unsafe { rtw_rust_init_is_primary(adapter) } == 0 {
+            return HAL_INIRP_SUCCESS;
+        }
+        unsafe { rtw_rust_hal_intf_call_inirp_deinit(adapter) }
     }
 
     #[no_mangle]
