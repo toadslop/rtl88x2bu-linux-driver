@@ -6,7 +6,8 @@
 //! W4-69 hal_init_opmode, W4-70 interrupt enable/disable + IPS check, W4-71 hal_fw_dl,
 //! W4-72 inirp init/deinit, W4-73 hwreg/def/odm dispatch + notch_filter,
 //! W4-74 silent reset dispatch, W4-75 hal_deinit teardown, W4-76 fw_mem_dl +
-//! clear_interrupt, W4-80 iface_init, W4-81 hal_init orchestration).
+//! clear_interrupt, W4-78 IOL + thread-mode dispatch, W4-80 iface_init,
+//! W4-81 hal_init orchestration, W4-82 BB/RF (and optional syson) register dispatch).
 
 #![allow(
     dead_code,
@@ -988,6 +989,43 @@ mod kernel {
         fn rtw_hal_start_thread(adapter: *mut c_void);
         fn rtw_sec_restore_wep_key(adapter: *mut c_void);
         fn rtw_hal_hw_port_enable(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_call_read_bbreg(
+            adapter: *mut c_void,
+            reg_addr: U32,
+            bit_mask: U32,
+        ) -> U32;
+        fn rtw_rust_hal_intf_call_write_bbreg(
+            adapter: *mut c_void,
+            reg_addr: U32,
+            bit_mask: U32,
+            data: U32,
+        );
+        fn rtw_rust_hal_intf_read_rfreg(
+            adapter: *mut c_void,
+            e_rf_path: U8,
+            reg_addr: U32,
+            bit_mask: U32,
+        ) -> U32;
+        fn rtw_rust_hal_intf_write_rfreg(
+            adapter: *mut c_void,
+            e_rf_path: U8,
+            reg_addr: U32,
+            bit_mask: U32,
+            data: U32,
+        );
+        #[cfg(config_syson_indirect_access)]
+        fn rtw_rust_hal_intf_call_read_syson_reg(
+            adapter: *mut c_void,
+            reg_addr: U32,
+            bit_mask: U32,
+        ) -> U32;
+        #[cfg(config_syson_indirect_access)]
+        fn rtw_rust_hal_intf_call_write_syson_reg(
+            adapter: *mut c_void,
+            reg_addr: U32,
+            bit_mask: U32,
+            data: U32,
+        );
         fn rtw_odm_init_ic_type(adapter: *mut c_void);
         fn rtw_init_hal_com_default_value(adapter: *mut c_void);
         fn rtw_rust_hal_com_get_intf_type(adapter: *mut c_void) -> U8;
@@ -1592,6 +1630,75 @@ mod kernel {
             rtw_hal_start_thread(adapter);
         }
         IFACE_INIT_SUCCESS
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_read_bbreg(
+        adapter: *mut c_void,
+        reg_addr: U32,
+        bit_mask: U32,
+    ) -> U32 {
+        unsafe { rtw_rust_hal_intf_call_read_bbreg(adapter, reg_addr, bit_mask) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_write_bbreg(
+        adapter: *mut c_void,
+        reg_addr: U32,
+        bit_mask: U32,
+        data: U32,
+    ) {
+        unsafe {
+            rtw_rust_hal_intf_call_write_bbreg(adapter, reg_addr, bit_mask, data);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_read_rfreg(
+        adapter: *mut c_void,
+        e_rf_path: U32,
+        reg_addr: U32,
+        bit_mask: U32,
+    ) -> U32 {
+        unsafe {
+            rtw_rust_hal_intf_read_rfreg(adapter, e_rf_path as U8, reg_addr, bit_mask)
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_write_rfreg(
+        adapter: *mut c_void,
+        e_rf_path: U32,
+        reg_addr: U32,
+        bit_mask: U32,
+        data: U32,
+    ) {
+        unsafe {
+            rtw_rust_hal_intf_write_rfreg(adapter, e_rf_path as U8, reg_addr, bit_mask, data);
+        }
+    }
+
+    #[cfg(config_syson_indirect_access)]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_read_syson_reg(
+        adapter: *mut c_void,
+        reg_addr: U32,
+        bit_mask: U32,
+    ) -> U32 {
+        unsafe { rtw_rust_hal_intf_call_read_syson_reg(adapter, reg_addr, bit_mask) }
+    }
+
+    #[cfg(config_syson_indirect_access)]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_write_syson_reg(
+        adapter: *mut c_void,
+        reg_addr: U32,
+        bit_mask: U32,
+        data: U32,
+    ) {
+        unsafe {
+            rtw_rust_hal_intf_call_write_syson_reg(adapter, reg_addr, bit_mask, data);
+        }
     }
 
     #[no_mangle]
