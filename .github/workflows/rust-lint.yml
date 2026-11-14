@@ -13,6 +13,7 @@ on:
       - 'scripts/ci/rustfmt-check.sh'
       - 'scripts/ci/clippy-check.sh'
       - 'scripts/ci/check-status-constants.sh'
+      - 'scripts/ci/test-rust-cfgs-active-macros.sh'
       - 'scripts/ci/check-rust-cfg-parity.sh'
       - 'scripts/ci/rust-cfg-default.golden'
       - 'scripts/rust_cfgs.sh'
@@ -35,6 +36,10 @@ jobs:
       # Rust port are ABI shared with the remaining C call sites.
       - name: Status constants match osdep_service.h
         run: ./scripts/ci/check-status-constants.sh
+
+      # Inactive #define lines in autoconf.h must not become Rust cfgs.
+      - name: Rust cfgs follow the preprocessor
+        run: ./scripts/ci/test-rust-cfgs-active-macros.sh
 
       - uses: dorny/paths-filter@v3
         id: filter

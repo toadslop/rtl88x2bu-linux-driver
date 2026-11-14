@@ -1,7 +1,6 @@
 CONFIG_PREALLOC_RECV_SKB
 CONFIG_RTL8822B
 CONFIG_USB_HCI
-CONFIG_USE_USB_BUFFER_ALLOC_RX
 beamforming_version_2
 config_80211ac_vht
 config_80211d
@@ -22,6 +21,7 @@ config_proc_debug
 config_rtw_debug
 config_rtw_mac_hidden_rpt
 config_rtw_mgmt_queue
+config_rtw_sw_led
 config_rust_rtw_debug_test_hooks
 config_scan_sparse_miracast
 config_tx_ac_lifetime
