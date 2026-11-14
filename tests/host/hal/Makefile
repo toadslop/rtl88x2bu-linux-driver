@@ -31,6 +31,7 @@ USB_SYNC_WRITE_ORACLE := hal_usb_sync_write_c_oracle.c
 CHIP_ODM_ORACLE := hal_intf_chip_odm_c_oracle.c
 CHIP_RFTYPE_ORACLE := hal_intf_chip_rftype_c_oracle.c
 RFPATH_ORACLE := hal_intf_rfpath_c_oracle.c
+TRXNSS_ORACLE := hal_intf_trxnss_c_oracle.c
 RF_REST_SRC := $(ROOT)/core/rtw_rf_rest.c
 RUST_RF_REST := ../rf/librust_rf_rest.a
 RF_REST_SHIMS := ../rf/host_rf_regd_exc_shim.c ../rf/host_rf_txpwr_lmt_shim.c
@@ -84,6 +85,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust test-usb-sync-read \
 	test-usb-sync-read-rust test-usb-sync-write test-usb-async-write \
 	test-usb-async-write-rust test-chip-odm test-chip-odm-rust \
+	test-hal-trxnss test-hal-trxnss-rust \
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-c2h-evt-robustness
 
 test-c: test_hw_rate_map
@@ -96,7 +98,8 @@ librust_hal_com.a: $(RUST_HAL)
 	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_com_hw_rate_test \
 		--crate-type staticlib $(RUST_HAL) -o $@
 
-test-rust: test_hw_rate_map_rust test-chip-odm-rust test-chip-rftype-rust test-hal-rfpath-rust
+test-rust: test_hw_rate_map_rust test-chip-odm-rust test-chip-rftype-rust test-hal-rfpath-rust \
+	test-hal-trxnss-rust
 	./test_hw_rate_map_rust hal_hw_rate_vectors.json
 
 test_hw_rate_map_rust: test_hw_rate_map.c librust_hal_com.a $(HOST_JSON)
@@ -744,6 +747,23 @@ test_chip_rftype_rust: test_chip_rftype.c librust_hal_intf_chip_rftype.a \
 		$(CHIP_RFTYPE_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_HAL_INTF_CHIP_RFTYPE_ORACLE -o $@ test_chip_rftype.c \
 		$(CHIP_RFTYPE_ORACLE) $(HOST_JSON) librust_hal_intf_chip_rftype.a
+
+librust_hal_intf_trxnss.a: $(RUST_HAL_INTF)
+	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_intf_trxnss_test \
+		--crate-type staticlib $(RUST_HAL_INTF) -o $@
+
+test-hal-trxnss: test_hal_trxnss
+	./test_hal_trxnss hal_intf_trxnss_vectors.json
+
+test_hal_trxnss: test_hal_trxnss.c $(TRXNSS_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -o $@ test_hal_trxnss.c $(TRXNSS_ORACLE) $(HOST_JSON)
+
+test-hal-trxnss-rust: test_hal_trxnss_rust
+	./test_hal_trxnss_rust hal_intf_trxnss_vectors.json
+
+test_hal_trxnss_rust: test_hal_trxnss.c librust_hal_intf_trxnss.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_INTF_TRXNSS_ORACLE -o $@ test_hal_trxnss.c \
+		$(HOST_JSON) librust_hal_intf_trxnss.a
 
 librust_hal_intf_rfpath.a: $(RUST_HAL_INTF)
 	rustc -C opt-level=2 -C overflow-checks=on --cfg host_hal_intf_rfpath_test \
