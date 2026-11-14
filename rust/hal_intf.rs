@@ -4,7 +4,8 @@
 //! W4-61 hal_data_init, W4-62 hal_data_deinit + hal_free_data, W4-64 chip_rftype_to_hal_rftype,
 //! W4-65 hal_rfpath_init, W4-66 hal_trxnss_init, W4-67 hal_power_on/off, W4-68 sw_led init/deinit,
 //! W4-69 hal_init_opmode, W4-70 interrupt enable/disable + IPS check, W4-71 hal_fw_dl,
-//! W4-72 inirp init/deinit, W4-73 hwreg/def/odm dispatch + notch_filter).
+//! W4-72 inirp init/deinit, W4-73 hwreg/def/odm dispatch + notch_filter,
+//! W4-82 BB/RF (and optional syson) register dispatch).
 
 #![allow(
     dead_code,
@@ -929,6 +930,43 @@ mod kernel {
             p_value2: *mut c_void,
         );
         fn rtw_rust_hal_intf_call_notch_filter(adapter: *mut c_void, enable: bool);
+        fn rtw_rust_hal_intf_call_read_bbreg(
+            adapter: *mut c_void,
+            reg_addr: U32,
+            bit_mask: U32,
+        ) -> U32;
+        fn rtw_rust_hal_intf_call_write_bbreg(
+            adapter: *mut c_void,
+            reg_addr: U32,
+            bit_mask: U32,
+            data: U32,
+        );
+        fn rtw_rust_hal_intf_read_rfreg(
+            adapter: *mut c_void,
+            e_rf_path: U8,
+            reg_addr: U32,
+            bit_mask: U32,
+        ) -> U32;
+        fn rtw_rust_hal_intf_write_rfreg(
+            adapter: *mut c_void,
+            e_rf_path: U8,
+            reg_addr: U32,
+            bit_mask: U32,
+            data: U32,
+        );
+        #[cfg(config_syson_indirect_access)]
+        fn rtw_rust_hal_intf_call_read_syson_reg(
+            adapter: *mut c_void,
+            reg_addr: U32,
+            bit_mask: U32,
+        ) -> U32;
+        #[cfg(config_syson_indirect_access)]
+        fn rtw_rust_hal_intf_call_write_syson_reg(
+            adapter: *mut c_void,
+            reg_addr: U32,
+            bit_mask: U32,
+            data: U32,
+        );
         fn rtw_odm_init_ic_type(adapter: *mut c_void);
         fn rtw_init_hal_com_default_value(adapter: *mut c_void);
         fn rtw_rust_hal_com_get_intf_type(adapter: *mut c_void) -> U8;
@@ -1375,6 +1413,75 @@ mod kernel {
     #[no_mangle]
     pub extern "C" fn rtw_hal_notch_filter(adapter: *mut c_void, enable: bool) {
         unsafe { rtw_rust_hal_intf_call_notch_filter(adapter, enable) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_read_bbreg(
+        adapter: *mut c_void,
+        reg_addr: U32,
+        bit_mask: U32,
+    ) -> U32 {
+        unsafe { rtw_rust_hal_intf_call_read_bbreg(adapter, reg_addr, bit_mask) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_write_bbreg(
+        adapter: *mut c_void,
+        reg_addr: U32,
+        bit_mask: U32,
+        data: U32,
+    ) {
+        unsafe {
+            rtw_rust_hal_intf_call_write_bbreg(adapter, reg_addr, bit_mask, data);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_read_rfreg(
+        adapter: *mut c_void,
+        e_rf_path: U32,
+        reg_addr: U32,
+        bit_mask: U32,
+    ) -> U32 {
+        unsafe {
+            rtw_rust_hal_intf_read_rfreg(adapter, e_rf_path as U8, reg_addr, bit_mask)
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_write_rfreg(
+        adapter: *mut c_void,
+        e_rf_path: U32,
+        reg_addr: U32,
+        bit_mask: U32,
+        data: U32,
+    ) {
+        unsafe {
+            rtw_rust_hal_intf_write_rfreg(adapter, e_rf_path as U8, reg_addr, bit_mask, data);
+        }
+    }
+
+    #[cfg(config_syson_indirect_access)]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_read_syson_reg(
+        adapter: *mut c_void,
+        reg_addr: U32,
+        bit_mask: U32,
+    ) -> U32 {
+        unsafe { rtw_rust_hal_intf_call_read_syson_reg(adapter, reg_addr, bit_mask) }
+    }
+
+    #[cfg(config_syson_indirect_access)]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_write_syson_reg(
+        adapter: *mut c_void,
+        reg_addr: U32,
+        bit_mask: U32,
+        data: U32,
+    ) {
+        unsafe {
+            rtw_rust_hal_intf_call_write_syson_reg(adapter, reg_addr, bit_mask, data);
+        }
     }
 
     #[no_mangle]
