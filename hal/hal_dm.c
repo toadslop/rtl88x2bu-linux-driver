@@ -26,6 +26,8 @@ void rtw_rust_hal_dm_init_odm_endian_hooks_be(struct dm_struct *pDM_Odm,
 	BAND_TYPE *band, u32 *sec_mode, enum channel_width *bw, int *net_closed);
 void dump_sta_info(void *sel, struct sta_info *psta);
 void dump_sta_traffic(void *sel, _adapter *adapter, struct sta_info *psta);
+void rtw_rust_hal_dm_init_odm_cominfo_head(_adapter *adapter);
+void rtw_rust_hal_dm_init_odm_cominfo_regulation_dfs(_adapter *adapter);
 #endif
 
 /* A mapping from HalData to ODM. */
@@ -353,6 +355,7 @@ void rtw_phydm_ops_func_init(struct dm_struct *p_phydm)
 	p_phydm->fill_desc_dyntxpwr = rtw_phydm_fill_desc_dpt;
 	#endif
 }
+#ifndef CONFIG_RUST
 void rtw_phydm_priv_init(_adapter *adapter)
 {
 	PHAL_DATA_TYPE hal = GET_HAL_DATA(adapter);
@@ -361,6 +364,7 @@ void rtw_phydm_priv_init(_adapter *adapter)
 	phydm->adapter = adapter;
 	odm_cmn_info_init(phydm, ODM_CMNINFO_PLATFORM, ODM_CE);
 }
+#endif /* !CONFIG_RUST */
 
 #ifndef CONFIG_LITTLE_ENDIAN
 static u8 *convert_to_big_endian(void *value, int size)
@@ -379,6 +383,9 @@ void Init_ODM_ComInfo(_adapter *adapter)
 	struct pwrctrl_priv *pwrctl = adapter_to_pwrctl(adapter);
 	int i;
 
+#ifdef CONFIG_RUST
+	rtw_rust_hal_dm_init_odm_cominfo_head(adapter);
+#else
 	/*phydm_op_mode could be change for different scenarios: ex: SoftAP - PHYDM_BALANCE_MODE*/
 	pHalData->phydm_op_mode = PHYDM_PERFORMANCE_MODE;/*Service one device*/
 	rtw_odm_init_ic_type(adapter);
@@ -398,6 +405,7 @@ void Init_ODM_ComInfo(_adapter *adapter)
 	odm_cmn_info_init(pDM_Odm, ODM_CMNINFO_ADVANCE_OTA, adapter->registrypriv.adv_ota);
 #endif
 	odm_cmn_info_init(pDM_Odm, ODM_CMNINFO_RF_TYPE, pHalData->rf_type);
+#endif /* CONFIG_RUST */
 
 	{
 		/* 1 ======= BoardType: ODM_CMNINFO_BOARD_TYPE ======= */
@@ -432,12 +440,16 @@ void Init_ODM_ComInfo(_adapter *adapter)
 		/* 1 ============== End of BoardType ============== */
 	}
 
+#ifdef CONFIG_RUST
+	rtw_rust_hal_dm_init_odm_cominfo_regulation_dfs(adapter);
+#else
 	rtw_hal_set_odm_var(adapter, HAL_ODM_REGULATION, NULL, _TRUE);
 
 #ifdef CONFIG_DFS_MASTER
 	rtw_odm_update_dfs_region(dvobj);
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_DFS_MASTER_ENABLE, &(adapter_to_rfctl(adapter)->radar_detect_enabled));
 #endif
+#endif /* CONFIG_RUST */
 
 	odm_cmn_info_init(pDM_Odm, ODM_CMNINFO_GPA, pHalData->TypeGPA);
 	odm_cmn_info_init(pDM_Odm, ODM_CMNINFO_APA, pHalData->TypeAPA);

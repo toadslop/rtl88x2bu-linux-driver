@@ -146,4 +146,86 @@ u8 rtw_rust_hal_dm_get_bcn_dtim_period(_adapter *adapter)
 {
 	return rtw_get_bcn_dtim_period(adapter);
 }
+
+struct dm_struct *rtw_rust_hal_dm_adapter_to_phydm(_adapter *adapter)
+{
+	if (!adapter)
+		return NULL;
+	return adapter_to_phydm(adapter);
+}
+
+void rtw_rust_hal_dm_phydm_set_adapter(struct dm_struct *phydm, _adapter *adapter)
+{
+	if (phydm)
+		phydm->adapter = adapter;
+}
+
+void rtw_rust_hal_dm_set_phydm_op_mode(_adapter *adapter, u8 mode)
+{
+	if (adapter)
+		GET_HAL_DATA(adapter)->phydm_op_mode = mode;
+}
+
+u8 rtw_rust_hal_dm_mp_test_chip_value(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return IS_NORMAL_CHIP(GET_HAL_DATA(adapter)->version_id);
+}
+
+u32 rtw_rust_hal_dm_patch_id(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return GET_HAL_DATA(adapter)->CustomerID;
+}
+
+u8 rtw_rust_hal_dm_wifi_spec(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return adapter->registrypriv.wifi_spec;
+}
+
+u8 rtw_rust_hal_dm_rf_type(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return GET_HAL_DATA(adapter)->rf_type;
+}
+
+u8 rtw_rust_hal_dm_get_intf_type(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return rtw_get_intf_type(adapter);
+}
+
+void rtw_rust_hal_dm_init_advance_ota_if_enabled(_adapter *adapter, struct dm_struct *phydm)
+{
+#ifdef CONFIG_ADVANCE_OTA
+	if (adapter && phydm)
+		odm_cmn_info_init(phydm, ODM_CMNINFO_ADVANCE_OTA, adapter->registrypriv.adv_ota);
+#else
+	(void)adapter;
+	(void)phydm;
+#endif
+}
+
+void rtw_rust_hal_dm_hook_dfs_master(_adapter *adapter, struct dm_struct *phydm)
+{
+#ifdef CONFIG_DFS_MASTER
+	struct dvobj_priv *dvobj;
+
+	if (!adapter || !phydm)
+		return;
+	dvobj = adapter_to_dvobj(adapter);
+	rtw_odm_update_dfs_region(dvobj);
+	odm_cmn_info_hook(phydm, ODM_CMNINFO_DFS_MASTER_ENABLE,
+		&(adapter_to_rfctl(adapter)->radar_detect_enabled));
+#else
+	(void)adapter;
+	(void)phydm;
+#endif
+}
 #endif /* CONFIG_RUST */
