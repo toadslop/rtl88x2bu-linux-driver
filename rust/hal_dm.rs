@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HAL DM — board-type (`W4-30`), ODM endian hooks (`W4-38`), `dump_sta_info` (`W4-31`), `dump_sta_traffic` (`W4-32`) from `hal/hal_dm.c`.
+//! HAL DM — board-type (`W4-30`), ODM endian hooks (`W4-38`), `dump_sta_info` (`W4-31`),
+//! `dump_sta_traffic` (`W4-32`), FW offload caps (`W4-79`) from `hal/hal_dm.c`.
 
 #![allow(
     dead_code,
@@ -627,4 +628,14 @@ mod dump_sta_info {
 ))]
 mod dump_sta_traffic {
     include!("hal_dm_dump_sta_traffic.inc.rs");
+}
+
+#[cfg(not(any(
+    host_hal_dm_board_type_test,
+    host_hal_dm_odm_endian_hooks_test,
+    host_hal_dm_dump_sta_info_test,
+    host_hal_dm_dump_sta_traffic_test
+)))]
+mod fw_offload_caps {
+    include!("hal_dm_fw_offload_caps.inc.rs");
 }
