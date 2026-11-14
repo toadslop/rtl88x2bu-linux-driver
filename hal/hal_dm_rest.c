@@ -228,4 +228,62 @@ void rtw_rust_hal_dm_hook_dfs_master(_adapter *adapter, struct dm_struct *phydm)
 	(void)phydm;
 #endif
 }
+
+u8 rtw_rust_hal_dm_reg_iqk_fw_offload(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return GET_HAL_DATA(adapter)->RegIQKFWOffload;
+}
+
+void *rtw_rust_hal_dm_iqk_sctx_ptr(_adapter *adapter)
+{
+	if (!adapter)
+		return NULL;
+	return &GET_HAL_DATA(adapter)->iqk_sctx;
+}
+
+#ifdef CONFIG_FW_OFFLOAD_PARAM_INIT
+u8 rtw_rust_hal_dm_fw_param_init(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return adapter->registrypriv.fw_param_init;
+}
+#endif
+
+u8 rtw_rust_hal_dm_mi_linked(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return rtw_mi_check_status(adapter, MI_LINKED);
+}
+
+void rtw_rust_hal_dm_lps_leave_iqk_switch(_adapter *adapter)
+{
+#ifdef CONFIG_LPS
+	if (adapter)
+		LPS_Leave(adapter, "SWITCH_IQK_OFFLOAD");
+#endif
+}
+
+void rtw_rust_hal_dm_log_iqk_fw_offload(u8 enable)
+{
+	RTW_INFO("IQK FW offload:%s\n", enable ? "enable" : "disable");
+}
+
+void rtw_rust_hal_dm_log_param_init_fw_offload(u8 enable)
+{
+	RTW_INFO("Init-Parameter FW offload:%s\n", enable ? "enable" : "disable");
+}
+
+u16 rtw_rust_hal_dm_phydm_rf_iqk_offload(void)
+{
+	return PHYDM_RF_IQK_OFFLOAD;
+}
+
+u16 rtw_rust_hal_dm_phydm_phy_param_offload(void)
+{
+	return PHYDM_PHY_PARAM_OFFLOAD;
+}
 #endif /* CONFIG_RUST */
