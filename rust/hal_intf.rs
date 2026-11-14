@@ -664,6 +664,18 @@ fn rfpath_init_common_from_in(in_: &HostHalRfpathInitIn, out: &mut HostHalRfpath
     RTW_SUCCESS
 }
 
+#[cfg(host_hal_intf_rfpath_test)]
+#[no_mangle]
+pub extern "C" fn host_hal_rfpath_init_common(
+    in_: *const HostHalRfpathInitIn,
+    out: *mut HostHalRfpathInitOut,
+) -> U8 {
+    if in_.is_null() || out.is_null() {
+        return RTW_FAIL;
+    }
+    unsafe { rfpath_init_common_from_in(&*in_, &mut *out) }
+}
+
 fn chip_rftype_to_hal_rftype_impl(cv_rf_type: U8, limit: U8) -> i32 {
     let mut tx_num = 0u8;
     let mut rx_num = 0u8;
