@@ -60,6 +60,11 @@ void rtw_hal_sreset_linked_status_check(_adapter *padapter);
 u8 rtw_hal_sreset_get_wifi_status(_adapter *padapter);
 bool rtw_hal_sreset_inprogress(_adapter *padapter);
 #endif
+/* rtw_hal_iol_cmd / thread-mode recv+xmit handlers — W4-78 */
+int rtw_hal_iol_cmd(ADAPTER *adapter, struct xmit_frame *xmit_frame, u32 max_waiting_ms,
+		    u32 bndy_cnt);
+s32 rtw_hal_xmit_thread_handler(_adapter *padapter);
+s32 rtw_hal_recv_hdl(_adapter *adapter);
 
 /* dump_hal_runtime_trx_mode / dump_hal_trx_mode — ported to rust/hal_intf.rs (W4-07) */
 
@@ -398,6 +403,31 @@ u32 rtw_rust_hal_intf_call_inirp_deinit(_adapter *padapter)
 	return padapter->hal_func.inirp_deinit(padapter);
 }
 #endif /* CONFIG_USB_HCI || CONFIG_PCI_HCI */
+
+#ifdef CONFIG_IOL
+int rtw_rust_hal_intf_call_iol_cmd(ADAPTER *adapter, struct xmit_frame *xmit_frame,
+				 u32 max_waiting_ms, u32 bndy_cnt)
+{
+	if (adapter->hal_func.IOL_exec_cmds_sync)
+		return adapter->hal_func.IOL_exec_cmds_sync(adapter, xmit_frame, max_waiting_ms,
+							      bndy_cnt);
+	return _FAIL;
+}
+#endif
+
+#ifdef CONFIG_XMIT_THREAD_MODE
+s32 rtw_rust_hal_intf_call_xmit_thread_handler(_adapter *padapter)
+{
+	return padapter->hal_func.xmit_thread_handler(padapter);
+}
+#endif
+
+#ifdef CONFIG_RECV_THREAD_MODE
+s32 rtw_rust_hal_intf_call_recv_hdl(_adapter *adapter)
+{
+	return adapter->hal_func.recv_hdl(adapter);
+}
+#endif
 
 #ifdef RTW_HALMAC
 s32 rtw_hal_fw_mem_dl(_adapter *padapter, enum fw_mem mem)
@@ -796,29 +826,6 @@ s32	rtw_hal_hostap_mgnt_xmit_entry(_adapter *padapter, _pkt *pkt)
 	return _FAIL;
 }
 #endif /* CONFIG_HOSTAPD_MLME */
-
-#ifdef CONFIG_IOL
-int rtw_hal_iol_cmd(ADAPTER *adapter, struct xmit_frame *xmit_frame, u32 max_waiting_ms, u32 bndy_cnt)
-{
-	if (adapter->hal_func.IOL_exec_cmds_sync)
-		return adapter->hal_func.IOL_exec_cmds_sync(adapter, xmit_frame, max_waiting_ms, bndy_cnt);
-	return _FAIL;
-}
-#endif
-
-#ifdef CONFIG_XMIT_THREAD_MODE
-s32 rtw_hal_xmit_thread_handler(_adapter *padapter)
-{
-	return padapter->hal_func.xmit_thread_handler(padapter);
-}
-#endif
-
-#ifdef CONFIG_RECV_THREAD_MODE
-s32 rtw_hal_recv_hdl(_adapter *adapter)
-{
-	return adapter->hal_func.recv_hdl(adapter);
-}
-#endif
 
 #ifdef CONFIG_FW_C2H_REG
 inline bool rtw_hal_c2h_valid(_adapter *adapter, u8 *buf)
