@@ -40,6 +40,8 @@ s32 rtw_hal_fw_dl(_adapter *padapter, u8 wowlan);
 /* rtw_hal_inirp_init / rtw_hal_inirp_deinit — ported to rust/hal_intf.rs (W4-72) */
 u32 rtw_hal_inirp_init(_adapter *padapter);
 u32 rtw_hal_inirp_deinit(_adapter *padapter);
+/* rtw_hal_deinit — ported to rust/hal_intf.rs (W4-75) */
+uint rtw_hal_deinit(_adapter *padapter);
 /* rtw_hal_set_hwreg / get_hwreg / def_var / odm_var / notch_filter — W4-73 */
 u8 rtw_hal_set_hwreg(_adapter *padapter, u8 variable, u8 *val);
 void rtw_hal_get_hwreg(_adapter *padapter, u8 variable, u8 *val);
@@ -251,20 +253,24 @@ uint	 rtw_hal_init(_adapter *padapter)
 }
 #endif
 
-uint rtw_hal_deinit(_adapter *padapter)
+u32 rtw_rust_hal_intf_call_hal_deinit(_adapter *padapter)
 {
-	uint	status = _SUCCESS;
+	return padapter->hal_func.hal_deinit(padapter);
+}
 
-	status = padapter->hal_func.hal_deinit(padapter);
+void rtw_rust_hal_intf_led_control_power_off(_adapter *padapter)
+{
+	rtw_led_control(padapter, LED_CTL_POWER_OFF);
+}
 
-	if (status == _SUCCESS) {
-		rtw_led_control(padapter, LED_CTL_POWER_OFF);
-		rtw_set_hw_init_completed(padapter, _FALSE);
-	} else
-		RTW_INFO("\n rtw_hal_deinit: hal_init fail\n");
+void rtw_rust_hal_intf_set_hw_init_completed_false(_adapter *padapter)
+{
+	rtw_set_hw_init_completed(padapter, _FALSE);
+}
 
-
-	return status;
+void rtw_rust_hal_intf_log_hal_deinit_fail(void)
+{
+	RTW_INFO("\n rtw_hal_deinit: hal_init fail\n");
 }
 
 u8 rtw_rust_hal_intf_call_set_hwreg(_adapter *padapter, u8 variable, u8 *val)

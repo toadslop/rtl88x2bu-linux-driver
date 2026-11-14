@@ -5142,6 +5142,9 @@ rust-objects-hal-intf-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_intf_sreset_dispatch_l1_ref.o \
 		tests/host/hal/hal_intf_sreset_dispatch_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_intf_hal_deinit_l1_ref.o \
+		tests/host/hal/hal_intf_hal_deinit_l1_ref.c
 	ld -r -o tests/host/hal/hal_intf_l1_ref.o \
 		tests/host/hal/hal_intf_trx_l1_ref.o tests/host/hal/hal_intf_rf_nss_l1_ref.o \
 		tests/host/hal/hal_intf_chip_odm_l1_ref.o tests/host/hal/hal_intf_chip_info_l1_ref.o \
@@ -5159,7 +5162,8 @@ rust-objects-hal-intf-c:
 		tests/host/hal/hal_intf_fw_dl_l1_ref.o \
 		tests/host/hal/hal_intf_inirp_l1_ref.o \
 		tests/host/hal/hal_intf_hwreg_dispatch_l1_ref.o \
-		tests/host/hal/hal_intf_sreset_dispatch_l1_ref.o
+		tests/host/hal/hal_intf_sreset_dispatch_l1_ref.o \
+		tests/host/hal/hal_intf_hal_deinit_l1_ref.o
 rust-check-symbols-hal-intf: rust-objects-hal-intf-c rust-objects-hal-intf
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_intf_l1_ref.o NEW=rust/hal_intf.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_intf.allow ALLOW_VACUOUS=1

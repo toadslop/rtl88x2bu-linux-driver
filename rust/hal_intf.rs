@@ -5,7 +5,7 @@
 //! W4-65 hal_rfpath_init, W4-66 hal_trxnss_init, W4-67 hal_power_on/off, W4-68 sw_led init/deinit,
 //! W4-69 hal_init_opmode, W4-70 interrupt enable/disable + IPS check, W4-71 hal_fw_dl,
 //! W4-72 inirp init/deinit, W4-73 hwreg/def/odm dispatch + notch_filter,
-//! W4-74 silent reset dispatch).
+//! W4-74 silent reset dispatch, W4-75 hal_deinit teardown).
 
 #![allow(
     dead_code,
@@ -901,6 +901,10 @@ mod kernel {
         fn rtw_rust_hal_intf_call_inirp_init(adapter: *mut c_void) -> U32;
         #[cfg(any(config_usb_hci, config_pci_hci))]
         fn rtw_rust_hal_intf_call_inirp_deinit(adapter: *mut c_void) -> U32;
+        fn rtw_rust_hal_intf_call_hal_deinit(adapter: *mut c_void) -> U32;
+        fn rtw_rust_hal_intf_led_control_power_off(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_set_hw_init_completed_false(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_log_hal_deinit_fail();
         fn rtw_rust_hal_intf_call_set_hwreg(
             adapter: *mut c_void,
             variable: U8,
@@ -1318,6 +1322,22 @@ mod kernel {
             rtw_rust_hal_intf_clear_lps_1t1r(adapter);
         }
         ret
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_deinit(adapter: *mut c_void) -> U32 {
+        let status = unsafe { rtw_rust_hal_intf_call_hal_deinit(adapter) };
+        if status == SUCCESS as U32 {
+            unsafe {
+                rtw_rust_hal_intf_led_control_power_off(adapter);
+                rtw_rust_hal_intf_set_hw_init_completed_false(adapter);
+            }
+        } else {
+            unsafe {
+                rtw_rust_hal_intf_log_hal_deinit_fail();
+            }
+        }
+        status
     }
 
     #[cfg(any(config_usb_hci, config_pci_hci))]
