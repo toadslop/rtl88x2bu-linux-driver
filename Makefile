@@ -3305,6 +3305,10 @@ endif
 ifneq ($(filter -DCONFIG_RTL8192F,$(ccflags-y)),)
 rustflags-y += --cfg CONFIG_RTL8192F
 endif
+# W4-77: match C #ifdef RTW_HALMAC from include/autoconf.h
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+RTW_HALMAC' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_rtw_halmac
+endif
 # FX-07: hal_com C2H leaf cfgs (see fix-06).
 _rust_cfg_rtw_customer_str :=
 ifneq ($(filter -DCONFIG_RTW_CUSTOMER_STR,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)

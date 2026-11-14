@@ -77,3 +77,19 @@ int c2h_lps_status_rpt(struct _adapter *adapter, unsigned char *data,
 	(void)len;
 	return 0;
 }
+
+void rtw_hal_c2h_pkt_pre_hdl(struct _adapter *adapter, unsigned char *buf,
+			     unsigned short len)
+{
+	(void)adapter;
+	(void)buf;
+	(void)len;
+}
+
+void rtw_hal_c2h_pkt_hdl(struct _adapter *adapter, unsigned char *buf,
+			 unsigned short len)
+{
+	(void)adapter;
+	(void)buf;
+	(void)len;
+}
