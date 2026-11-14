@@ -4,7 +4,7 @@
 //! W4-61 hal_data_init, W4-62 hal_data_deinit + hal_free_data, W4-64 chip_rftype_to_hal_rftype,
 //! W4-65 hal_rfpath_init, W4-66 hal_trxnss_init, W4-67 hal_power_on/off, W4-68 sw_led init/deinit,
 //! W4-69 hal_init_opmode, W4-70 interrupt enable/disable + IPS check, W4-71 hal_fw_dl,
-//! W4-72 inirp init/deinit, W4-73 hwreg/def/odm dispatch + notch_filter).
+//! W4-72 inirp init/deinit, W4-73 hwreg/def/odm dispatch + notch_filter, W4-80 iface_init).
 
 #![allow(
     dead_code,
@@ -929,6 +929,10 @@ mod kernel {
             p_value2: *mut c_void,
         );
         fn rtw_rust_hal_intf_call_notch_filter(adapter: *mut c_void, enable: bool);
+        fn rtw_rust_hal_com_adapter_mac_addr(adapter: *mut c_void) -> *mut U8;
+        fn rtw_hal_start_thread(adapter: *mut c_void);
+        fn rtw_sec_restore_wep_key(adapter: *mut c_void);
+        fn rtw_hal_hw_port_enable(adapter: *mut c_void);
         fn rtw_odm_init_ic_type(adapter: *mut c_void);
         fn rtw_init_hal_com_default_value(adapter: *mut c_void);
         fn rtw_rust_hal_com_get_intf_type(adapter: *mut c_void) -> U8;
@@ -1375,6 +1379,22 @@ mod kernel {
     #[no_mangle]
     pub extern "C" fn rtw_hal_notch_filter(adapter: *mut c_void, enable: bool) {
         unsafe { rtw_rust_hal_intf_call_notch_filter(adapter, enable) }
+    }
+
+    const HW_VAR_MAC_ADDR: U8 = 2;
+    const IFACE_INIT_SUCCESS: U32 = 1;
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_iface_init(adapter: *mut c_void) -> U32 {
+        unsafe {
+            let mac = rtw_rust_hal_com_adapter_mac_addr(adapter);
+            rtw_hal_set_hwreg(adapter, HW_VAR_MAC_ADDR, mac);
+            rtw_hal_hw_port_enable(adapter);
+            rtw_sec_restore_wep_key(adapter);
+            rtw_hal_init_opmode(adapter);
+            rtw_hal_start_thread(adapter);
+        }
+        IFACE_INIT_SUCCESS
     }
 
     #[no_mangle]
