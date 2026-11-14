@@ -4,7 +4,8 @@
 //! W4-61 hal_data_init, W4-62 hal_data_deinit + hal_free_data, W4-64 chip_rftype_to_hal_rftype,
 //! W4-65 hal_rfpath_init, W4-66 hal_trxnss_init, W4-67 hal_power_on/off, W4-68 sw_led init/deinit,
 //! W4-69 hal_init_opmode, W4-70 interrupt enable/disable + IPS check, W4-71 hal_fw_dl,
-//! W4-72 inirp init/deinit, W4-73 hwreg/def/odm dispatch + notch_filter).
+//! W4-72 inirp init/deinit, W4-73 hwreg/def/odm dispatch + notch_filter,
+//! W4-83 xmit/recv priv + SDIO thread dispatch).
 
 #![allow(
     dead_code,
@@ -929,6 +930,12 @@ mod kernel {
             p_value2: *mut c_void,
         );
         fn rtw_rust_hal_intf_call_notch_filter(adapter: *mut c_void, enable: bool);
+        fn rtw_rust_hal_intf_call_init_xmit_priv(adapter: *mut c_void) -> i32;
+        fn rtw_rust_hal_intf_call_free_xmit_priv(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_call_init_recv_priv(adapter: *mut c_void) -> i32;
+        fn rtw_rust_hal_intf_call_free_recv_priv(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_call_start_thread(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_call_stop_thread(adapter: *mut c_void);
         fn rtw_odm_init_ic_type(adapter: *mut c_void);
         fn rtw_init_hal_com_default_value(adapter: *mut c_void);
         fn rtw_rust_hal_com_get_intf_type(adapter: *mut c_void) -> U8;
@@ -1375,6 +1382,44 @@ mod kernel {
     #[no_mangle]
     pub extern "C" fn rtw_hal_notch_filter(adapter: *mut c_void, enable: bool) {
         unsafe { rtw_rust_hal_intf_call_notch_filter(adapter, enable) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_init_xmit_priv(adapter: *mut c_void) -> i32 {
+        unsafe { rtw_rust_hal_intf_call_init_xmit_priv(adapter) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_free_xmit_priv(adapter: *mut c_void) {
+        unsafe {
+            rtw_rust_hal_intf_call_free_xmit_priv(adapter);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_init_recv_priv(adapter: *mut c_void) -> i32 {
+        unsafe { rtw_rust_hal_intf_call_init_recv_priv(adapter) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_free_recv_priv(adapter: *mut c_void) {
+        unsafe {
+            rtw_rust_hal_intf_call_free_recv_priv(adapter);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_start_thread(adapter: *mut c_void) {
+        unsafe {
+            rtw_rust_hal_intf_call_start_thread(adapter);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_stop_thread(adapter: *mut c_void) {
+        unsafe {
+            rtw_rust_hal_intf_call_stop_thread(adapter);
+        }
     }
 
     #[no_mangle]
