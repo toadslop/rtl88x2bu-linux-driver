@@ -33,6 +33,7 @@ detect_cpwm_by_polling
 dfs
 dfs_master
 ieee80211_band_5ghz
+rtw_halmac
 rust_ap_aka_chk
 rust_ap_bcn_ie
 rust_ap_bcn_update
