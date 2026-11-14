@@ -102,19 +102,7 @@ u8 rtw_rust_hal_intf_setopmode_cmd(_adapter *adapter,
 }
 
 #ifdef CONFIG_NEW_NETDEV_HDL
-uint rtw_hal_iface_init(_adapter *adapter)
-{
-	uint status = _SUCCESS;
-
-	rtw_hal_set_hwreg(adapter, HW_VAR_MAC_ADDR, adapter_mac_addr(adapter));
-	#ifdef RTW_HALMAC
-	rtw_hal_hw_port_enable(adapter);
-	#endif
-	rtw_sec_restore_wep_key(adapter);
-	rtw_hal_init_opmode(adapter);
-	rtw_hal_start_thread(adapter);
-	return status;
-}
+/* rtw_hal_iface_init — ported to rust/hal_intf.rs (W4-80) */
 uint rtw_hal_init(_adapter *padapter)
 {
 	uint status = _SUCCESS;
