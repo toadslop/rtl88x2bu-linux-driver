@@ -37,6 +37,9 @@ void rtw_hal_disable_interrupt(_adapter *padapter);
 u8 rtw_hal_check_ips_status(_adapter *padapter);
 /* rtw_hal_fw_dl — ported to rust/hal_intf.rs (W4-71) */
 s32 rtw_hal_fw_dl(_adapter *padapter, u8 wowlan);
+/* rtw_hal_inirp_init / rtw_hal_inirp_deinit — ported to rust/hal_intf.rs (W4-72) */
+u32 rtw_hal_inirp_init(_adapter *padapter);
+u32 rtw_hal_inirp_deinit(_adapter *padapter);
 
 /* dump_hal_runtime_trx_mode / dump_hal_trx_mode — ported to rust/hal_intf.rs (W4-07) */
 
@@ -308,6 +311,18 @@ s32 rtw_rust_hal_intf_call_fw_dl(_adapter *padapter, u8 wowlan)
 	return padapter->hal_func.fw_dl(padapter, wowlan);
 }
 
+#if defined(CONFIG_USB_HCI) || defined(CONFIG_PCI_HCI)
+u32 rtw_rust_hal_intf_call_inirp_init(_adapter *padapter)
+{
+	return padapter->hal_func.inirp_init(padapter);
+}
+
+u32 rtw_rust_hal_intf_call_inirp_deinit(_adapter *padapter)
+{
+	return padapter->hal_func.inirp_deinit(padapter);
+}
+#endif /* CONFIG_USB_HCI || CONFIG_PCI_HCI */
+
 #ifdef RTW_HALMAC
 s32 rtw_hal_fw_mem_dl(_adapter *padapter, enum fw_mem mem)
 {
@@ -335,23 +350,6 @@ void rtw_hal_clear_interrupt(_adapter *padapter)
 #endif
 }
 #endif
-
-#if defined(CONFIG_USB_HCI) || defined(CONFIG_PCI_HCI)
-u32	rtw_hal_inirp_init(_adapter *padapter)
-{
-	if (is_primary_adapter(padapter))
-		return padapter->hal_func.inirp_init(padapter);
-	return _SUCCESS;
-}
-u32	rtw_hal_inirp_deinit(_adapter *padapter)
-{
-
-	if (is_primary_adapter(padapter))
-		return padapter->hal_func.inirp_deinit(padapter);
-
-	return _SUCCESS;
-}
-#endif /* #if defined(CONFIG_USB_HCI) || defined (CONFIG_PCI_HCI) */
 
 #if defined(CONFIG_PCI_HCI)
 void	rtw_hal_irp_reset(_adapter *padapter)
