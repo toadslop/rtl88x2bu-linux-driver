@@ -48,6 +48,16 @@ u8 rtw_hal_get_def_var(_adapter *padapter, HAL_DEF_VARIABLE eVariable, void *pVa
 void rtw_hal_set_odm_var(_adapter *padapter, HAL_ODM_VARIABLE eVariable, void *pValue1, BOOLEAN bSet);
 void rtw_hal_get_odm_var(_adapter *padapter, HAL_ODM_VARIABLE eVariable, void *pValue1, void *pValue2);
 void rtw_hal_notch_filter(_adapter *adapter, bool enable);
+/* rtw_hal_sreset_* — ported to rust/hal_intf.rs (W4-74) */
+#ifdef DBG_CONFIG_ERROR_DETECT
+void rtw_hal_sreset_init(_adapter *padapter);
+void rtw_hal_sreset_reset(_adapter *padapter);
+void rtw_hal_sreset_reset_value(_adapter *padapter);
+void rtw_hal_sreset_xmit_status_check(_adapter *padapter);
+void rtw_hal_sreset_linked_status_check(_adapter *padapter);
+u8 rtw_hal_sreset_get_wifi_status(_adapter *padapter);
+bool rtw_hal_sreset_inprogress(_adapter *padapter);
+#endif
 
 /* dump_hal_runtime_trx_mode / dump_hal_trx_mode — ported to rust/hal_intf.rs (W4-07) */
 
@@ -294,6 +304,48 @@ void rtw_rust_hal_intf_call_notch_filter(_adapter *adapter, bool enable)
 	if (adapter->hal_func.hal_notch_filter)
 		adapter->hal_func.hal_notch_filter(adapter, enable);
 }
+
+#ifdef DBG_CONFIG_ERROR_DETECT
+_adapter *rtw_rust_hal_intf_get_primary_adapter(_adapter *padapter)
+{
+	return GET_PRIMARY_ADAPTER(padapter);
+}
+
+void rtw_rust_hal_intf_call_sreset_init(_adapter *padapter)
+{
+	padapter->hal_func.sreset_init_value(padapter);
+}
+
+void rtw_rust_hal_intf_call_sreset_reset(_adapter *padapter)
+{
+	padapter->hal_func.silentreset(padapter);
+}
+
+void rtw_rust_hal_intf_call_sreset_reset_value(_adapter *padapter)
+{
+	padapter->hal_func.sreset_reset_value(padapter);
+}
+
+void rtw_rust_hal_intf_call_sreset_xmit_status_check(_adapter *padapter)
+{
+	padapter->hal_func.sreset_xmit_status_check(padapter);
+}
+
+void rtw_rust_hal_intf_call_sreset_linked_status_check(_adapter *padapter)
+{
+	padapter->hal_func.sreset_linked_status_check(padapter);
+}
+
+u8 rtw_rust_hal_intf_call_sreset_get_wifi_status(_adapter *padapter)
+{
+	return padapter->hal_func.sreset_get_wifi_status(padapter);
+}
+
+bool rtw_rust_hal_intf_call_sreset_inprogress(_adapter *padapter)
+{
+	return padapter->hal_func.sreset_inprogress(padapter);
+}
+#endif /* DBG_CONFIG_ERROR_DETECT */
 
 void rtw_rust_hal_intf_call_enable_interrupt(_adapter *padapter)
 {
@@ -738,42 +790,6 @@ s32	rtw_hal_hostap_mgnt_xmit_entry(_adapter *padapter, _pkt *pkt)
 	return _FAIL;
 }
 #endif /* CONFIG_HOSTAPD_MLME */
-
-#ifdef DBG_CONFIG_ERROR_DETECT
-void	rtw_hal_sreset_init(_adapter *padapter)
-{
-	padapter->hal_func.sreset_init_value(padapter);
-}
-void rtw_hal_sreset_reset(_adapter *padapter)
-{
-	padapter = GET_PRIMARY_ADAPTER(padapter);
-	padapter->hal_func.silentreset(padapter);
-}
-
-void rtw_hal_sreset_reset_value(_adapter *padapter)
-{
-	padapter->hal_func.sreset_reset_value(padapter);
-}
-
-void rtw_hal_sreset_xmit_status_check(_adapter *padapter)
-{
-	padapter->hal_func.sreset_xmit_status_check(padapter);
-}
-void rtw_hal_sreset_linked_status_check(_adapter *padapter)
-{
-	padapter->hal_func.sreset_linked_status_check(padapter);
-}
-u8   rtw_hal_sreset_get_wifi_status(_adapter *padapter)
-{
-	return padapter->hal_func.sreset_get_wifi_status(padapter);
-}
-
-bool rtw_hal_sreset_inprogress(_adapter *padapter)
-{
-	padapter = GET_PRIMARY_ADAPTER(padapter);
-	return padapter->hal_func.sreset_inprogress(padapter);
-}
-#endif /* DBG_CONFIG_ERROR_DETECT */
 
 #ifdef CONFIG_IOL
 int rtw_hal_iol_cmd(ADAPTER *adapter, struct xmit_frame *xmit_frame, u32 max_waiting_ms, u32 bndy_cnt)
