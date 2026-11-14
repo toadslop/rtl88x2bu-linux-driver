@@ -413,6 +413,13 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-78 | #2024 | [W4-78] Translate hal_intf.c — IOL + thread-mode dispatch |
 | W4-79 | #2025 | [W4-79] Translate hal_dm.c — FW offload capability hooks |
 | W4-80 | #2026 | [W4-80] Translate hal_intf.c — netdev iface init |
+| W4-81 | #2039 | [W4-81] Translate hal_intf.c — rtw_hal_init orchestration |
+| W4-82 | #2040 | [W4-82] Translate hal_intf.c — BB/RF register dispatch |
+| W4-83 | #2041 | [W4-83] Translate hal_intf.c — xmit/recv priv + SDIO thread dispatch |
+| W4-84 | #2042 | [W4-84] Translate hal_dm.c — phydm_priv_init + Init_ODM iface block |
+| W4-85 | #2043 | [W4-85] Translate hal_dm.c — Init_ODM adaptivity + traffic hooks |
+| W4-86 | #2044 | [W4-86] Translate hal_com_rest.c — customer string read/write API |
+| W4-87 | #2045 | [W4-87] Translate hal_intf.c — xmit enqueue + mgnt xmit dispatch |
 
 ## Superseded issues
 
