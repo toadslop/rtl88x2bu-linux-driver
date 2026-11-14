@@ -157,4 +157,17 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-71 | `wave4-71-hal-intf-fw-dl.md` | `rtw_hal_fw_dl` |
 | W4-72 | `wave4-72-hal-intf-inirp.md` | `rtw_hal_inirp_init` / `deinit` |
 
-Further slices: deeper PHYDM / bulk USB RX path — file as `wave4-*.md` when tranche 15 clears.
+## Children (tranche 16 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-73 | `wave4-73-hal-intf-hwreg-odm.md` | hwreg / def / ODM + notch dispatch |
+| W4-74 | `wave4-74-hal-intf-sreset-dispatch.md` | Silent-reset `hal_func` wrappers |
+| W4-75 | `wave4-75-hal-intf-hal-deinit.md` | `rtw_hal_deinit` |
+| W4-76 | `wave4-76-hal-intf-fw-mem-clear-int.md` | `fw_mem_dl` + `clear_interrupt` |
+| W4-77 | `wave4-77-hal-com-c2h-pkt-dispatch.md` | C2H packet pre/handle (`hal_com_c2h_pkt.rs`) |
+| W4-78 | `wave4-78-hal-intf-thread-iol-dispatch.md` | IOL + xmit/recv thread dispatch |
+| W4-79 | `wave4-79-hal-dm-fw-offload-caps.md` | IQK/param FW offload caps |
+| W4-80 | `wave4-80-hal-intf-iface-init.md` | `rtw_hal_iface_init` (new netdev path) |
+
+Further slices: deeper PHYDM init / bulk USB port I/O — file as `wave4-*.md` when tranche 16 backlog thins.
