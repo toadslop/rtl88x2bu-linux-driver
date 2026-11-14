@@ -28,7 +28,8 @@ cfg_dir="$(cd "$(dirname "$0")" && pwd)/rust_cfgs.d"
 keep_case="$cfg_dir/keep-case.txt"
 aliases="$cfg_dir/aliases.txt"
 allowlist="$(mktemp)"
-trap 'rm -f "$allowlist"' EXIT
+dM="$(mktemp)"
+trap 'rm -f "$allowlist" "$dM"' EXIT
 python3 "$(cd "$(dirname "$0")" && pwd)/rust_cfg_allowlist.py" "$srcdir/rust" >"$allowlist"
 
 includes=(
@@ -37,9 +38,20 @@ includes=(
 	"-include" "${srcdir}/include/hal_ic_cfg.h"
 )
 
+"$cc" -dM -E "$@" "${includes[@]}" -I"${srcdir}/include" -x c /dev/null >"$dM" 2>/dev/null
+
+# Full preprocessor set, including values the sed filter below drops.
+# The autoconf.h backstop must not light a cfg from a #define the
+# preprocessor did not actually accept (inactive #if, block comment).
+declare -A pp_rest=()
+while IFS= read -r line; do
+	if [[ "$line" =~ ^#define[[:space:]]+([A-Za-z_][A-Za-z0-9_]*)(.*)$ ]]; then
+		pp_rest["${BASH_REMATCH[1]}"]="${BASH_REMATCH[2]}"
+	fi
+done <"$dM"
+
 mapfile -t raw < <(
-	"$cc" -dM -E "$@" "${includes[@]}" -I"${srcdir}/include" -x c /dev/null 2>/dev/null \
-		| sed -nE 's/^#define ([A-Za-z_][A-Za-z0-9_]*)([[:space:]]+(-?[0-9]+|".*"))?/\1 \2/p'
+	sed -nE 's/^#define ([A-Za-z_][A-Za-z0-9_]*)([[:space:]]+(-?[0-9]+|".*"))?/\1 \2/p' "$dM"
 )
 
 declare -A skip_prefix=(
@@ -119,7 +131,9 @@ while IFS=' ' read -r name rest; do
 	done <"$aliases"
 done < <(printf '%s\n' "${raw[@]}")
 
-# Match Makefile FX-07 probes: autoconf.h may define macros without -dM visibility.
+# Backstop for allowlisted names whose -dM value the sed filter dropped.
+# Still requires the preprocessor to have defined the macro. A #define that
+# only appears inside an inactive #if or a block comment is not a C macro.
 autoconf="${srcdir}/include/autoconf.h"
 cfg_macro_from_rust_name() {
 	local name="$1"
@@ -145,6 +159,12 @@ if [ -f "$autoconf" ]; then
 		fi
 		grep -Eq "^[[:space:]]*#[[:space:]]*define[[:space:]]+${macro}\\b" "$autoconf" \
 			|| continue
+		# autoconf.h contains #define lines inside false #if blocks and
+		# block comments (for example CONFIG_USE_USB_BUFFER_ALLOC_RX under
+		# CONFIG_PLATFORM_ACTIONS_ATM702X). Those are not C macros. Require
+		# the preprocessor to have defined the name, and honor "defined as 0".
+		[ -n "${pp_rest[$macro]+x}" ] || continue
+		macro_is_active "${pp_rest[$macro]}" || continue
 		apply_macro "$macro"
 	done < <(cat "$allowlist" "$keep_case" | LC_ALL=C sort -u)
 fi
