@@ -3,7 +3,7 @@
 //! W4-36 chip ODM map, W4-59 chip configure + read_chip_info, W4-60 chip version + def_value_init,
 //! W4-61 hal_data_init, W4-62 hal_data_deinit + hal_free_data, W4-64 chip_rftype_to_hal_rftype,
 //! W4-65 hal_rfpath_init, W4-66 hal_trxnss_init, W4-67 hal_power_on/off, W4-68 sw_led init/deinit,
-//! W4-69 hal_init_opmode, W4-70 interrupt enable/disable + IPS check).
+//! W4-69 hal_init_opmode, W4-70 interrupt enable/disable + IPS check, W4-71 hal_fw_dl).
 
 #![allow(
     dead_code,
@@ -894,6 +894,7 @@ mod kernel {
             handler_missing: *mut U8,
         ) -> U8;
         fn rtw_rust_hal_intf_log_check_ips_status_null();
+        fn rtw_rust_hal_intf_call_fw_dl(adapter: *mut c_void, wowlan: U8) -> i32;
         fn rtw_odm_init_ic_type(adapter: *mut c_void);
         fn rtw_init_hal_com_default_value(adapter: *mut c_void);
         fn rtw_rust_hal_com_get_intf_type(adapter: *mut c_void) -> U8;
@@ -1256,6 +1257,16 @@ mod kernel {
             }
         }
         val
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_fw_dl(adapter: *mut c_void, wowlan: U8) -> i32 {
+        let ret = unsafe { rtw_rust_hal_intf_call_fw_dl(adapter, wowlan) };
+        #[cfg(config_lps_1t1r)]
+        unsafe {
+            rtw_rust_hal_intf_clear_lps_1t1r(adapter);
+        }
+        ret
     }
 
     #[no_mangle]
