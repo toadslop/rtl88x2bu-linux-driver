@@ -264,87 +264,7 @@ static void _FourOutPipeMapping(
 /* c2h_evt_clear / c2h_evt_read_88xx — ported to rust/hal_com.rs (W4-47) */
 
 #ifdef CONFIG_FW_C2H_PKT
-#ifndef DBG_C2H_PKT_PRE_HDL
-#define DBG_C2H_PKT_PRE_HDL 0
-#endif
-#ifndef DBG_C2H_PKT_HDL
-#define DBG_C2H_PKT_HDL 0
-#endif
-void rtw_hal_c2h_pkt_pre_hdl(_adapter *adapter, u8 *buf, u16 len)
-{
-#ifdef RTW_HALMAC
-	/* TODO: extract hal_mac IC's code here*/
-#else
-	u8 parse_fail = 0;
-	u8 hdl_here = 0;
-	s32 ret = _FAIL;
-	u8 id, seq, plen;
-	u8 *payload;
-
-	if (rtw_hal_c2h_pkt_hdr_parse(adapter, buf, len, &id, &seq, &plen, &payload) != _SUCCESS) {
-		parse_fail = 1;
-		goto exit;
-	}
-
-	hdl_here = rtw_hal_c2h_id_handle_directly(adapter, id, seq, plen, payload) == _TRUE ? 1 : 0;
-	if (hdl_here) 
-		ret = rtw_hal_c2h_handler(adapter, id, seq, plen, payload);
-	else
-		ret = rtw_c2h_packet_wk_cmd(adapter, buf, len);
-
-exit:
-	if (parse_fail)
-		RTW_ERR("%s parse fail, buf=%p, len=:%u\n", __func__, buf, len);
-	else if (ret != _SUCCESS || DBG_C2H_PKT_PRE_HDL > 0) {
-		RTW_PRINT("%s: id=0x%02x, seq=%u, plen=%u, %s %s\n", __func__, id, seq, plen
-			, hdl_here ? "handle" : "enqueue"
-			, ret == _SUCCESS ? "ok" : "fail"
-		);
-		if (DBG_C2H_PKT_PRE_HDL >= 2)
-			RTW_PRINT_DUMP("dump: ", buf, len);
-	}
-#endif
-}
-
-void rtw_hal_c2h_pkt_hdl(_adapter *adapter, u8 *buf, u16 len)
-{
-#ifdef RTW_HALMAC
-	adapter->hal_func.hal_mac_c2h_handler(adapter, buf, len);
-#else
-	u8 parse_fail = 0;
-	u8 bypass = 0;
-	s32 ret = _FAIL;
-	u8 id, seq, plen;
-	u8 *payload;
-
-	if (rtw_hal_c2h_pkt_hdr_parse(adapter, buf, len, &id, &seq, &plen, &payload) != _SUCCESS) {
-		parse_fail = 1;
-		goto exit;
-	}
-
-#ifdef CONFIG_WOWLAN
-	if (adapter_to_pwrctl(adapter)->wowlan_mode == _TRUE) {
-		bypass = 1;
-		ret = _SUCCESS;
-		goto exit;
-	}
-#endif
-
-	ret = rtw_hal_c2h_handler(adapter, id, seq, plen, payload);
-
-exit:
-	if (parse_fail)
-		RTW_ERR("%s parse fail, buf=%p, len=:%u\n", __func__, buf, len);
-	else if (ret != _SUCCESS || bypass || DBG_C2H_PKT_HDL > 0) {
-		RTW_PRINT("%s: id=0x%02x, seq=%u, plen=%u, %s %s\n", __func__, id, seq, plen
-			, !bypass ? "handle" : "bypass"
-			, ret == _SUCCESS ? "ok" : "fail"
-		);
-		if (DBG_C2H_PKT_HDL >= 2)
-			RTW_PRINT_DUMP("dump: ", buf, len);
-	}
-#endif
-}
+/* rtw_hal_c2h_pkt_pre_hdl / rtw_hal_c2h_pkt_hdl — ported to rust/hal_com_c2h_pkt.rs (W4-77) */
 #endif /* CONFIG_FW_C2H_PKT */
 
 /* c2h_iqk_offload / c2h_iqk_offload_wait / c2h_txpwr_idx_offload_* — ported to rust/hal_com.rs (W4-50) */
@@ -15178,6 +15098,44 @@ void rtw_rust_hal_com_warn_c2h_short_len(const char *func, u32 len, int expect)
 {
 	RTW_WARN("%s len(%u) < %d\n", func, len, expect);
 }
+
+#ifndef DBG_C2H_PKT_PRE_HDL
+#define DBG_C2H_PKT_PRE_HDL 0
+#endif
+#ifndef DBG_C2H_PKT_HDL
+#define DBG_C2H_PKT_HDL 0
+#endif
+
+int rtw_rust_hal_com_dbg_c2h_pkt(u8 is_pre)
+{
+	return is_pre ? DBG_C2H_PKT_PRE_HDL : DBG_C2H_PKT_HDL;
+}
+
+void rtw_rust_hal_com_err_c2h_pkt_parse(const char *func, void *buf, u16 len)
+{
+	RTW_ERR("%s parse fail, buf=%p, len=:%u\n", func, buf, len);
+}
+
+void rtw_rust_hal_com_log_c2h_pkt_status(const char *func, u8 id, u8 seq, u8 plen,
+					 const char *action, const char *result)
+{
+	RTW_PRINT("%s: id=0x%02x, seq=%u, plen=%u, %s %s\n",
+		  func, id, seq, plen, action, result);
+}
+
+void rtw_rust_hal_com_dump_c2h_pkt_buf(u8 *buf, u16 len)
+{
+	RTW_PRINT_DUMP("dump: ", buf, len);
+}
+
+#ifdef CONFIG_FW_C2H_PKT
+#ifdef RTW_HALMAC
+void rtw_rust_hal_com_hal_mac_c2h_handler(_adapter *adapter, u8 *buf, u16 len)
+{
+	adapter->hal_func.hal_mac_c2h_handler(adapter, buf, len);
+}
+#endif /* RTW_HALMAC */
+#endif /* CONFIG_FW_C2H_PKT */
 
 void rtw_rust_hal_com_warn_per_rate_len(u8 len)
 {
