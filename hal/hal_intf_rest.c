@@ -35,6 +35,8 @@ void rtw_hal_init_opmode(_adapter *padapter);
 void rtw_hal_enable_interrupt(_adapter *padapter);
 void rtw_hal_disable_interrupt(_adapter *padapter);
 u8 rtw_hal_check_ips_status(_adapter *padapter);
+/* rtw_hal_fw_dl — ported to rust/hal_intf.rs (W4-71) */
+s32 rtw_hal_fw_dl(_adapter *padapter, u8 wowlan);
 
 /* dump_hal_runtime_trx_mode / dump_hal_trx_mode — ported to rust/hal_intf.rs (W4-07) */
 
@@ -301,17 +303,9 @@ void rtw_rust_hal_intf_log_check_ips_status_null(void)
 	RTW_INFO("%s: hal_func.check_ips_status is NULL!\n", "rtw_hal_check_ips_status");
 }
 
-s32 rtw_hal_fw_dl(_adapter *padapter, u8 wowlan)
+s32 rtw_rust_hal_intf_call_fw_dl(_adapter *padapter, u8 wowlan)
 {
-	s32 ret;
-
-	ret = padapter->hal_func.fw_dl(padapter, wowlan);
-
-#ifdef CONFIG_LPS_1T1R
-	GET_HAL_DATA(padapter)->lps_1t1r = 0;
-#endif
-
-	return ret;
+	return padapter->hal_func.fw_dl(padapter, wowlan);
 }
 
 #ifdef RTW_HALMAC
