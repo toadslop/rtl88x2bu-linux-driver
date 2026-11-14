@@ -31,6 +31,10 @@
 /* rtw_hal_sw_led_init / rtw_hal_sw_led_deinit — ported to rust/hal_intf.rs (W4-68) */
 /* rtw_hal_init_opmode — ported to rust/hal_intf.rs (W4-69) */
 void rtw_hal_init_opmode(_adapter *padapter);
+/* rtw_hal_enable_interrupt / rtw_hal_disable_interrupt / rtw_hal_check_ips_status — W4-70 */
+void rtw_hal_enable_interrupt(_adapter *padapter);
+void rtw_hal_disable_interrupt(_adapter *padapter);
+u8 rtw_hal_check_ips_status(_adapter *padapter);
 
 /* dump_hal_runtime_trx_mode / dump_hal_trx_mode — ported to rust/hal_intf.rs (W4-07) */
 
@@ -268,32 +272,33 @@ void	rtw_hal_get_odm_var(_adapter *padapter, HAL_ODM_VARIABLE eVariable, void *p
 	padapter->hal_func.GetHalODMVarHandler(padapter, eVariable, pValue1, pValue2);
 }
 
-/* FOR SDIO & PCIE */
-void rtw_hal_enable_interrupt(_adapter *padapter)
+void rtw_rust_hal_intf_call_enable_interrupt(_adapter *padapter)
 {
 #if defined(CONFIG_PCI_HCI) || defined(CONFIG_SDIO_HCI) || defined (CONFIG_GSPI_HCI)
 	padapter->hal_func.enable_interrupt(padapter);
-#endif /* #if defined(CONFIG_PCI_HCI) || defined (CONFIG_SDIO_HCI) || defined (CONFIG_GSPI_HCI) */
+#endif
 }
 
-/* FOR SDIO & PCIE */
-void rtw_hal_disable_interrupt(_adapter *padapter)
+void rtw_rust_hal_intf_call_disable_interrupt(_adapter *padapter)
 {
 #if defined(CONFIG_PCI_HCI) || defined(CONFIG_SDIO_HCI) || defined (CONFIG_GSPI_HCI)
 	padapter->hal_func.disable_interrupt(padapter);
-#endif /* #if defined(CONFIG_PCI_HCI) || defined (CONFIG_SDIO_HCI) || defined (CONFIG_GSPI_HCI) */
+#endif
 }
 
-
-u8 rtw_hal_check_ips_status(_adapter *padapter)
+u8 rtw_rust_hal_intf_call_check_ips_status(_adapter *padapter, u8 *handler_missing)
 {
-	u8 val = _FALSE;
-	if (padapter->hal_func.check_ips_status)
-		val = padapter->hal_func.check_ips_status(padapter);
-	else
-		RTW_INFO("%s: hal_func.check_ips_status is NULL!\n", __FUNCTION__);
+	if (padapter->hal_func.check_ips_status) {
+		*handler_missing = _FALSE;
+		return padapter->hal_func.check_ips_status(padapter);
+	}
+	*handler_missing = _TRUE;
+	return _FALSE;
+}
 
-	return val;
+void rtw_rust_hal_intf_log_check_ips_status_null(void)
+{
+	RTW_INFO("%s: hal_func.check_ips_status is NULL!\n", "rtw_hal_check_ips_status");
 }
 
 s32 rtw_hal_fw_dl(_adapter *padapter, u8 wowlan)

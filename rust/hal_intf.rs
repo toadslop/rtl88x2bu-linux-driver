@@ -3,7 +3,7 @@
 //! W4-36 chip ODM map, W4-59 chip configure + read_chip_info, W4-60 chip version + def_value_init,
 //! W4-61 hal_data_init, W4-62 hal_data_deinit + hal_free_data, W4-64 chip_rftype_to_hal_rftype,
 //! W4-65 hal_rfpath_init, W4-66 hal_trxnss_init, W4-67 hal_power_on/off, W4-68 sw_led init/deinit,
-//! W4-69 hal_init_opmode).
+//! W4-69 hal_init_opmode, W4-70 interrupt enable/disable + IPS check).
 
 #![allow(
     dead_code,
@@ -887,6 +887,13 @@ mod kernel {
             networktype: i32,
             flags: U8,
         ) -> U8;
+        fn rtw_rust_hal_intf_call_enable_interrupt(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_call_disable_interrupt(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_call_check_ips_status(
+            adapter: *mut c_void,
+            handler_missing: *mut U8,
+        ) -> U8;
+        fn rtw_rust_hal_intf_log_check_ips_status_null();
         fn rtw_odm_init_ic_type(adapter: *mut c_void);
         fn rtw_init_hal_com_default_value(adapter: *mut c_void);
         fn rtw_rust_hal_com_get_intf_type(adapter: *mut c_void) -> U8;
@@ -1221,6 +1228,34 @@ mod kernel {
     #[no_mangle]
     pub extern "C" fn rtw_hal_init_opmode(adapter: *mut c_void) {
         hal_init_opmode_impl(adapter);
+    }
+
+    const RTW_TRUE: U8 = 1;
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_enable_interrupt(adapter: *mut c_void) {
+        unsafe {
+            rtw_rust_hal_intf_call_enable_interrupt(adapter);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_disable_interrupt(adapter: *mut c_void) {
+        unsafe {
+            rtw_rust_hal_intf_call_disable_interrupt(adapter);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_check_ips_status(adapter: *mut c_void) -> U8 {
+        let mut handler_missing: U8 = 0;
+        let val = unsafe { rtw_rust_hal_intf_call_check_ips_status(adapter, &mut handler_missing) };
+        if handler_missing == RTW_TRUE {
+            unsafe {
+                rtw_rust_hal_intf_log_check_ips_status_null();
+            }
+        }
+        val
     }
 
     #[no_mangle]
