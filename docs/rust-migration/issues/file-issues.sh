@@ -341,6 +341,14 @@ files=(
   wave4-70-hal-intf-interrupt-ips.md
   wave4-71-hal-intf-fw-dl.md
   wave4-72-hal-intf-inirp.md
+  wave4-73-hal-intf-hwreg-odm.md
+  wave4-74-hal-intf-sreset-dispatch.md
+  wave4-75-hal-intf-hal-deinit.md
+  wave4-76-hal-intf-fw-mem-clear-int.md
+  wave4-77-hal-com-c2h-pkt-dispatch.md
+  wave4-78-hal-intf-thread-iol-dispatch.md
+  wave4-79-hal-dm-fw-offload-caps.md
+  wave4-80-hal-intf-iface-init.md
   wave3-161-debug-proc-rate-setter.md
   wave3-162-debug-proc-rx-cnt-dump.md
   wave3-163-debug-proc-ps-dbg.md

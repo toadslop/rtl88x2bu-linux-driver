@@ -405,6 +405,14 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-70 | #2004 | [W4-70] Translate hal_intf.c — interrupt + IPS check wrappers |
 | W4-71 | #2005 | [W4-71] Translate hal_intf.c — hal_fw_dl |
 | W4-72 | #2006 | [W4-72] Translate hal_intf.c — inirp init/deinit |
+| W4-73 | #2019 | [W4-73] Translate hal_intf.c — hwreg/def/odm dispatch |
+| W4-74 | #2020 | [W4-74] Translate hal_intf.c — silent reset dispatch |
+| W4-75 | #2021 | [W4-75] Translate hal_intf.c — hal_deinit teardown |
+| W4-76 | #2022 | [W4-76] Translate hal_intf.c — fw_mem_dl + clear_interrupt |
+| W4-77 | #2023 | [W4-77] Translate hal_com_rest.c — C2H packet pre/handle |
+| W4-78 | #2024 | [W4-78] Translate hal_intf.c — IOL + thread-mode dispatch |
+| W4-79 | #2025 | [W4-79] Translate hal_dm.c — FW offload capability hooks |
+| W4-80 | #2026 | [W4-80] Translate hal_intf.c — netdev iface init |
 
 ## Superseded issues
 
