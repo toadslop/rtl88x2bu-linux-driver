@@ -25,6 +25,8 @@ DM_BOARD_ORACLE := hal_dm_board_type_c_oracle.c
 DM_ODM_ENDIAN_ORACLE := hal_dm_odm_endian_hooks_c_oracle.c
 DM_DUMP_STA_SHIM := hal_dm_dump_sta_info_shim.c
 DM_DUMP_STA_TRAFFIC_SHIM := hal_dm_dump_sta_traffic_shim.c
+DM_ODM_IFACE_ORACLE := hal_dm_odm_iface_c_oracle.c
+DM_ODM_IFACE_SHIM := hal_dm_odm_iface_host_shim.c
 USB_WVALUE_ORACLE := hal_usb_vendor_wvalue_c_oracle.c
 USB_SYNC_READ_ORACLE := hal_usb_sync_read_c_oracle.c
 USB_SYNC_WRITE_ORACLE := hal_usb_sync_write_c_oracle.c
@@ -683,6 +685,25 @@ test_hal_dm_dump_sta_traffic_rust: test_hal_dm_dump_sta_traffic.c librust_hal_dm
 		$(DM_DUMP_STA_TRAFFIC_SHIM) $(HDATA_RATE_ORACLE) $(HOST_JSON) \
 		librust_hal_dm_dump_sta_traffic.a
 
+test-dm-odm-iface: test_hal_dm_odm_iface
+	./test_hal_dm_odm_iface hal_dm_odm_iface_vectors.json
+
+test_hal_dm_odm_iface: test_hal_dm_odm_iface.c $(DM_ODM_IFACE_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -I$(ROOT)/tests/host/include -o $@ test_hal_dm_odm_iface.c \
+		$(DM_ODM_IFACE_ORACLE) $(HOST_JSON)
+
+librust_hal_dm_odm_iface.a: $(RUST_HAL_DM)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_dm_odm_iface_test --crate-type staticlib $(RUST_HAL_DM) -o $@
+
+test-dm-odm-iface-rust: test_hal_dm_odm_iface_rust
+	./test_hal_dm_odm_iface_rust hal_dm_odm_iface_vectors.json
+
+test_hal_dm_odm_iface_rust: test_hal_dm_odm_iface.c librust_hal_dm_odm_iface.a \
+		$(DM_ODM_IFACE_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_DM_ODM_IFACE_ORACLE -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_odm_iface.c $(DM_ODM_IFACE_SHIM) $(HOST_JSON) librust_hal_dm_odm_iface.a
+
 test-usb-vendor-wvalue: test_hal_usb_vendor_wvalue
 	./test_hal_usb_vendor_wvalue hal_usb_vendor_wvalue_vectors.json
 
@@ -882,6 +903,7 @@ clean:
 		librust_hal_dm_dump_sta.a \
 		test_hal_dm_dump_sta_traffic test_hal_dm_dump_sta_traffic_rust \
 		librust_hal_dm_dump_sta_traffic.a \
+		test_hal_dm_odm_iface test_hal_dm_odm_iface_rust librust_hal_dm_odm_iface.a \
 		test_hal_usb_vendor_wvalue test_hal_usb_vendor_wvalue_rust librust_hal_usb_wvalue.a \
 		test_hal_usb_sync_read test_hal_usb_sync_write test_hal_usb_async_write \
 		test_hal_usb_async_write_rust librust_hal_usb_async_write.a \
