@@ -5156,6 +5156,22 @@ rust-check-symbols-hal-intf: rust-objects-hal-intf-c rust-objects-hal-intf
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_intf_l1_ref.o NEW=rust/hal_intf.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_intf.allow ALLOW_VACUOUS=1
 
+# W4-78: IOL + xmit/recv thread dispatch (off in default autoconf — build both sides with flags).
+HAL_INTF_THREAD_IOL_CFLAGS := -DCONFIG_IOL -DCONFIG_XMIT_THREAD_MODE -DCONFIG_RECV_THREAD_MODE
+rust-objects-hal-intf-thread-iol:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-hal-intf-thread-iol"; exit 1; }
+	rm -f rust/hal_intf.o rust/.hal_intf.o.cmd
+	$(MAKE) $(KBUILD_OPTS) ccflags-y+="$(HAL_INTF_THREAD_IOL_CFLAGS)" \
+		-C $(KSRC) M=$(shell pwd) rust/hal_intf.o
+rust-objects-hal-intf-thread-iol-c:
+	@mkdir -p tests/host/hal
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 $(HAL_INTF_THREAD_IOL_CFLAGS) \
+		-o tests/host/hal/hal_intf_thread_iol_l1_ref.o \
+		tests/host/hal/hal_intf_thread_iol_l1_ref.c
+rust-check-symbols-hal-intf-thread-iol: rust-objects-hal-intf-thread-iol-c rust-objects-hal-intf-thread-iol
+	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_intf_thread_iol_l1_ref.o \
+		NEW=rust/hal_intf.o ALLOW_VACUOUS=1
+
 # W4-09: host C oracle (PHY_CalculateBitShift) vs rust/hal_phy.o.
 rust-objects-hal-phy:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-hal-phy"; exit 1; }

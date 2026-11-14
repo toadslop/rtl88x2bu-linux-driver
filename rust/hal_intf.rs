@@ -900,6 +900,17 @@ mod kernel {
         fn rtw_rust_hal_intf_call_inirp_init(adapter: *mut c_void) -> U32;
         #[cfg(any(config_usb_hci, config_pci_hci))]
         fn rtw_rust_hal_intf_call_inirp_deinit(adapter: *mut c_void) -> U32;
+        #[cfg(config_iol)]
+        fn rtw_rust_hal_intf_call_iol_cmd(
+            adapter: *mut c_void,
+            xmit_frame: *mut c_void,
+            max_waiting_ms: U32,
+            bndy_cnt: U32,
+        ) -> i32;
+        #[cfg(config_xmit_thread_mode)]
+        fn rtw_rust_hal_intf_call_xmit_thread_handler(adapter: *mut c_void) -> i32;
+        #[cfg(config_recv_thread_mode)]
+        fn rtw_rust_hal_intf_call_recv_hdl(adapter: *mut c_void) -> i32;
         fn rtw_rust_hal_intf_call_set_hwreg(
             adapter: *mut c_void,
             variable: U8,
@@ -1322,6 +1333,31 @@ mod kernel {
             return HAL_INIRP_SUCCESS;
         }
         unsafe { rtw_rust_hal_intf_call_inirp_deinit(adapter) }
+    }
+
+    #[cfg(config_iol)]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_iol_cmd(
+        adapter: *mut c_void,
+        xmit_frame: *mut c_void,
+        max_waiting_ms: U32,
+        bndy_cnt: U32,
+    ) -> i32 {
+        unsafe {
+            rtw_rust_hal_intf_call_iol_cmd(adapter, xmit_frame, max_waiting_ms, bndy_cnt)
+        }
+    }
+
+    #[cfg(config_xmit_thread_mode)]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_xmit_thread_handler(adapter: *mut c_void) -> i32 {
+        unsafe { rtw_rust_hal_intf_call_xmit_thread_handler(adapter) }
+    }
+
+    #[cfg(config_recv_thread_mode)]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_recv_hdl(adapter: *mut c_void) -> i32 {
+        unsafe { rtw_rust_hal_intf_call_recv_hdl(adapter) }
     }
 
     #[no_mangle]
