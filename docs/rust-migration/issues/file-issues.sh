@@ -349,6 +349,13 @@ files=(
   wave4-78-hal-intf-thread-iol-dispatch.md
   wave4-79-hal-dm-fw-offload-caps.md
   wave4-80-hal-intf-iface-init.md
+  wave4-81-hal-intf-hal-init.md
+  wave4-82-hal-intf-bb-rf-reg.md
+  wave4-83-hal-intf-xmit-recv-thread.md
+  wave4-84-hal-dm-phydm-priv-odm-iface.md
+  wave4-85-hal-dm-init-odm-adaptivity-hooks.md
+  wave4-86-hal-com-customer-str-sync.md
+  wave4-87-hal-intf-xmit-dispatch.md
   wave3-161-debug-proc-rate-setter.md
   wave3-162-debug-proc-rx-cnt-dump.md
   wave3-163-debug-proc-ps-dbg.md

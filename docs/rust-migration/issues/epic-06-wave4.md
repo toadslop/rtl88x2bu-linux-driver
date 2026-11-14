@@ -170,4 +170,16 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-79 | `wave4-79-hal-dm-fw-offload-caps.md` | IQK/param FW offload caps |
 | W4-80 | `wave4-80-hal-intf-iface-init.md` | `rtw_hal_iface_init` (new netdev path) |
 
-Further slices: deeper PHYDM init / bulk USB port I/O — file as `wave4-*.md` when tranche 16 backlog thins.
+## Children (tranche 17 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-81 | `wave4-81-hal-intf-hal-init.md` | `rtw_hal_init` orchestration |
+| W4-82 | `wave4-82-hal-intf-bb-rf-reg.md` | BB/RF (and optional syson) register dispatch |
+| W4-83 | `wave4-83-hal-intf-xmit-recv-thread.md` | xmit/recv priv + SDIO thread wrappers |
+| W4-84 | `wave4-84-hal-dm-phydm-priv-odm-iface.md` | `phydm_priv_init` + early `Init_ODM` |
+| W4-85 | `wave4-85-hal-dm-init-odm-adaptivity-hooks.md` | `Init_ODM` adaptivity + traffic hooks |
+| W4-86 | `wave4-86-hal-com-customer-str-sync.md` | customer string read/write API |
+| W4-87 | `wave4-87-hal-intf-xmit-dispatch.md` | xmit enqueue + mgnt xmit dispatch |
+
+Further slices: deeper PHYDM tail / USB bulk port I/O — file as `wave4-*.md` when tranche 17 backlog thins.
