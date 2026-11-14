@@ -2879,6 +2879,16 @@ endif
 ifneq ($(_rust_cfg_fw_multi_port),)
 rustflags-y += --cfg config_fw_multi_port_support
 endif
+_rust_cfg_fw_offload_param_init :=
+ifneq ($(filter -DCONFIG_FW_OFFLOAD_PARAM_INIT,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_fw_offload_param_init := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_FW_OFFLOAD_PARAM_INIT\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_fw_offload_param_init := y
+endif
+ifneq ($(_rust_cfg_fw_offload_param_init),)
+rustflags-y += --cfg config_fw_offload_param_init
+endif
 _rust_cfg_wow_keep_alive_pattern :=
 ifneq ($(filter -DCONFIG_WOW_KEEP_ALIVE_PATTERN,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 _rust_cfg_wow_keep_alive_pattern := y
@@ -5236,11 +5246,15 @@ rust-objects-hal-dm-c:
 		-I$(shell pwd)/tests/host/include \
 		-o tests/host/hal/hal_dm_odm_endian_hooks_l1_ref.o \
 		tests/host/hal/hal_dm_odm_endian_hooks_c_oracle.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_dm_fw_offload_caps_l1_ref.o \
+		tests/host/hal/hal_dm_fw_offload_caps_l1_ref.c
 	ld -r -o tests/host/hal/hal_dm_l1_ref.o \
 		tests/host/hal/hal_dm_board_type_l1_ref.o \
 		tests/host/hal/hal_dm_dump_sta_l1_ref.o \
 		tests/host/hal/hal_dm_dump_sta_traffic_l1_ref.o \
-		tests/host/hal/hal_dm_odm_endian_hooks_l1_ref.o
+		tests/host/hal/hal_dm_odm_endian_hooks_l1_ref.o \
+		tests/host/hal/hal_dm_fw_offload_caps_l1_ref.o
 rust-check-symbols-hal-dm: rust-objects-hal-dm-c rust-objects-hal-dm
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_dm_l1_ref.o NEW=rust/hal_dm.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_dm.allow ALLOW_VACUOUS=1
