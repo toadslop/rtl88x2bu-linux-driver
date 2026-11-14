@@ -4,7 +4,8 @@
 //! W4-61 hal_data_init, W4-62 hal_data_deinit + hal_free_data, W4-64 chip_rftype_to_hal_rftype,
 //! W4-65 hal_rfpath_init, W4-66 hal_trxnss_init, W4-67 hal_power_on/off, W4-68 sw_led init/deinit,
 //! W4-69 hal_init_opmode, W4-70 interrupt enable/disable + IPS check, W4-71 hal_fw_dl,
-//! W4-72 inirp init/deinit, W4-73 hwreg/def/odm dispatch + notch_filter).
+//! W4-72 inirp init/deinit, W4-73 hwreg/def/odm dispatch + notch_filter,
+//! W4-74 silent reset dispatch).
 
 #![allow(
     dead_code,
@@ -929,6 +930,22 @@ mod kernel {
             p_value2: *mut c_void,
         );
         fn rtw_rust_hal_intf_call_notch_filter(adapter: *mut c_void, enable: bool);
+        #[cfg(dbg_config_error_detect)]
+        fn rtw_rust_hal_intf_get_primary_adapter(adapter: *mut c_void) -> *mut c_void;
+        #[cfg(dbg_config_error_detect)]
+        fn rtw_rust_hal_intf_call_sreset_init(adapter: *mut c_void);
+        #[cfg(dbg_config_error_detect)]
+        fn rtw_rust_hal_intf_call_sreset_reset(adapter: *mut c_void);
+        #[cfg(dbg_config_error_detect)]
+        fn rtw_rust_hal_intf_call_sreset_reset_value(adapter: *mut c_void);
+        #[cfg(dbg_config_error_detect)]
+        fn rtw_rust_hal_intf_call_sreset_xmit_status_check(adapter: *mut c_void);
+        #[cfg(dbg_config_error_detect)]
+        fn rtw_rust_hal_intf_call_sreset_linked_status_check(adapter: *mut c_void);
+        #[cfg(dbg_config_error_detect)]
+        fn rtw_rust_hal_intf_call_sreset_get_wifi_status(adapter: *mut c_void) -> U8;
+        #[cfg(dbg_config_error_detect)]
+        fn rtw_rust_hal_intf_call_sreset_inprogress(adapter: *mut c_void) -> bool;
         fn rtw_odm_init_ic_type(adapter: *mut c_void);
         fn rtw_init_hal_com_default_value(adapter: *mut c_void);
         fn rtw_rust_hal_com_get_intf_type(adapter: *mut c_void) -> U8;
@@ -1375,6 +1392,50 @@ mod kernel {
     #[no_mangle]
     pub extern "C" fn rtw_hal_notch_filter(adapter: *mut c_void, enable: bool) {
         unsafe { rtw_rust_hal_intf_call_notch_filter(adapter, enable) }
+    }
+
+    #[cfg(dbg_config_error_detect)]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_sreset_init(adapter: *mut c_void) {
+        unsafe { rtw_rust_hal_intf_call_sreset_init(adapter) }
+    }
+
+    #[cfg(dbg_config_error_detect)]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_sreset_reset(adapter: *mut c_void) {
+        let padapter = unsafe { rtw_rust_hal_intf_get_primary_adapter(adapter) };
+        unsafe { rtw_rust_hal_intf_call_sreset_reset(padapter) }
+    }
+
+    #[cfg(dbg_config_error_detect)]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_sreset_reset_value(adapter: *mut c_void) {
+        unsafe { rtw_rust_hal_intf_call_sreset_reset_value(adapter) }
+    }
+
+    #[cfg(dbg_config_error_detect)]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_sreset_xmit_status_check(adapter: *mut c_void) {
+        unsafe { rtw_rust_hal_intf_call_sreset_xmit_status_check(adapter) }
+    }
+
+    #[cfg(dbg_config_error_detect)]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_sreset_linked_status_check(adapter: *mut c_void) {
+        unsafe { rtw_rust_hal_intf_call_sreset_linked_status_check(adapter) }
+    }
+
+    #[cfg(dbg_config_error_detect)]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_sreset_get_wifi_status(adapter: *mut c_void) -> U8 {
+        unsafe { rtw_rust_hal_intf_call_sreset_get_wifi_status(adapter) }
+    }
+
+    #[cfg(dbg_config_error_detect)]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_sreset_inprogress(adapter: *mut c_void) -> bool {
+        let padapter = unsafe { rtw_rust_hal_intf_get_primary_adapter(adapter) };
+        unsafe { rtw_rust_hal_intf_call_sreset_inprogress(padapter) }
     }
 
     #[no_mangle]
