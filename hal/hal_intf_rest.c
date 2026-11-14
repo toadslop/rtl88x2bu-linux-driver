@@ -2303,6 +2303,106 @@ struct rtw_hal_intf_rf_path_fields {
 	s8 NumTotalRFPath;
 };
 
+void rtw_rust_hal_intf_rfpath_store(_adapter *adapter, u8 trx_path_bmp, u8 rf_type,
+				    u8 num_total_rf_path, u8 max_tx_cnt)
+{
+	PHAL_DATA_TYPE hal_data = GET_HAL_DATA(adapter);
+
+	if (!adapter)
+		return;
+
+	hal_data->trx_path_bmp = trx_path_bmp;
+	hal_data->rf_type = rf_type;
+	hal_data->NumTotalRFPath = num_total_rf_path;
+	hal_data->max_tx_cnt = max_tx_cnt;
+}
+
+u8 rtw_rust_hal_intf_is_hw_8814a(_adapter *adapter)
+{
+#ifdef CONFIG_RTL8814A
+	return IS_HARDWARE_TYPE_8814A(adapter) ? 1 : 0;
+#else
+	(void)adapter;
+	return 0;
+#endif
+}
+
+u8 rtw_rust_hal_intf_rfpath_8814a(_adapter *adapter, u8 *trx_path_bmp, u8 *rf_type,
+				  u8 *num_total_rf_path, u8 *max_tx_cnt)
+{
+#ifdef CONFIG_RTL8814A
+	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
+	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
+	enum bb_path tx_bmp, rx_bmp;
+
+	if (!adapter || !IS_HARDWARE_TYPE_8814A(adapter))
+		return 0;
+
+	hal_data->rf_type = rtl8814a_rfpath_decision(adapter);
+	rf_type_to_default_trx_bmp(hal_data->rf_type, &tx_bmp, &rx_bmp);
+	hal_data->trx_path_bmp = (tx_bmp << 4) | rx_bmp;
+	hal_data->NumTotalRFPath = 4;
+	hal_data->max_tx_cnt = hal_spec->max_tx_cnt;
+	hal_data->max_tx_cnt = rtw_min(hal_data->max_tx_cnt,
+				       rf_type_to_rf_tx_cnt(hal_data->rf_type));
+
+	if (trx_path_bmp)
+		*trx_path_bmp = hal_data->trx_path_bmp;
+	if (rf_type)
+		*rf_type = hal_data->rf_type;
+	if (num_total_rf_path)
+		*num_total_rf_path = hal_data->NumTotalRFPath;
+	if (max_tx_cnt)
+		*max_tx_cnt = hal_data->max_tx_cnt;
+	return 1;
+#else
+	(void)adapter;
+	(void)trx_path_bmp;
+	(void)rf_type;
+	(void)num_total_rf_path;
+	(void)max_tx_cnt;
+	return 0;
+#endif
+}
+
+void rtw_rust_hal_intf_rfpath_dump(_adapter *adapter)
+{
+	if (adapter)
+		_dump_rf_path(RTW_DBGDUMP, adapter);
+}
+
+void rtw_rust_hal_intf_rfpath_info(_adapter *adapter, u8 trx_path_bmp, u8 rf_type,
+				   u8 num_total_rf_path, u8 max_tx_cnt)
+{
+	RTW_INFO("%s trx_path_bmp:0x%02x(%s), NumTotalRFPath:%u, max_tx_cnt:%u\n"
+		 , "rtw_hal_rfpath_init"
+		 , trx_path_bmp, rf_type_to_rfpath_str(rf_type)
+		 , num_total_rf_path, max_tx_cnt);
+}
+
+void rtw_rust_hal_intf_rfpath_err_reg(_adapter *adapter, u8 spec_bmp, u8 reg_bmp)
+{
+	RTW_ERR("%s hal_spec.rf_reg_trx_path_bmp:0x%02x, regsty->trx_path_bmp:0x%02x no intersection\n"
+		, "rtw_hal_rfpath_init", spec_bmp, reg_bmp);
+	(void)adapter;
+}
+
+void rtw_rust_hal_intf_rfpath_err_eeprom(_adapter *adapter, u8 spec_bmp,
+					 u8 eeprom_bmp)
+{
+	RTW_ERR("%s hal_spec.rf_reg_trx_path_bmp:0x%02x, hal_data->eeprom_trx_path_bmp:0x%02x no intersection\n"
+		, "rtw_hal_rfpath_init", spec_bmp, eeprom_bmp);
+	(void)adapter;
+}
+
+void rtw_rust_hal_intf_rfpath_err_restrict(_adapter *adapter, u8 trx_path_bmp,
+					    u8 tx_lmt, u8 rx_lmt)
+{
+	RTW_ERR("%s rtw_restrict_trx_path_bmp_by_trx_num_lmt(0x%02x, %u, %u) failed\n"
+		, "rtw_hal_rfpath_init", trx_path_bmp, tx_lmt, rx_lmt);
+	(void)adapter;
+}
+
 void rtw_rust_hal_intf_rf_path_fields(_adapter *adapter,
 				      struct rtw_hal_intf_rf_path_fields *out)
 {
