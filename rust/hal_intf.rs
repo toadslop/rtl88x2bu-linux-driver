@@ -4,7 +4,8 @@
 //! W4-61 hal_data_init, W4-62 hal_data_deinit + hal_free_data, W4-64 chip_rftype_to_hal_rftype,
 //! W4-65 hal_rfpath_init, W4-66 hal_trxnss_init, W4-67 hal_power_on/off, W4-68 sw_led init/deinit,
 //! W4-69 hal_init_opmode, W4-70 interrupt enable/disable + IPS check, W4-71 hal_fw_dl,
-//! W4-72 inirp init/deinit, W4-73 hwreg/def/odm dispatch + notch_filter).
+//! W4-72 inirp init/deinit, W4-73 hwreg/def/odm dispatch + notch_filter, W4-76 fw_mem_dl +
+//! clear_interrupt).
 
 #![allow(
     dead_code,
@@ -896,6 +897,22 @@ mod kernel {
         ) -> U8;
         fn rtw_rust_hal_intf_log_check_ips_status_null();
         fn rtw_rust_hal_intf_call_fw_dl(adapter: *mut c_void, wowlan: U8) -> i32;
+        #[cfg(any(rtw_halmac, host_hal_intf_fw_mem_clear_int_test))]
+        fn rtw_rust_hal_intf_call_fw_mem_dl(adapter: *mut c_void, mem: i32) -> i32;
+        #[cfg(any(rtw_halmac, host_hal_intf_fw_mem_clear_int_test))]
+        fn rtw_rust_hal_intf_inc_dbg_fw_mem_dl_error_cnt(adapter: *mut c_void);
+        #[cfg(any(rtw_halmac, host_hal_intf_fw_mem_clear_int_test))]
+        fn rtw_rust_hal_intf_get_dbg_fw_mem_dl_error_cnt(adapter: *mut c_void) -> U32;
+        #[cfg(any(rtw_halmac, host_hal_intf_fw_mem_clear_int_test))]
+        fn rtw_rust_hal_intf_log_fw_mem_dl_ms(ms: i32);
+        #[cfg(any(rtw_halmac, host_hal_intf_fw_mem_clear_int_test))]
+        fn rtw_rust_hal_intf_log_fw_mem_dl_dbg_cnt(cnt: U32);
+        #[cfg(any(
+            host_hal_intf_fw_mem_clear_int_test,
+            all(config_wowlan, any(config_sdio_hci, config_gspi_hci)),
+            all(config_ap_wowlan, any(config_sdio_hci, config_gspi_hci))
+        ))]
+        fn rtw_rust_hal_intf_call_clear_interrupt(adapter: *mut c_void);
         #[cfg(any(config_usb_hci, config_pci_hci))]
         fn rtw_rust_hal_intf_call_inirp_init(adapter: *mut c_void) -> U32;
         #[cfg(any(config_usb_hci, config_pci_hci))]
@@ -1301,6 +1318,42 @@ mod kernel {
             rtw_rust_hal_intf_clear_lps_1t1r(adapter);
         }
         ret
+    }
+
+    const FW_MEM_DL_FAIL: i32 = 0;
+
+    #[cfg(any(rtw_halmac, host_hal_intf_fw_mem_clear_int_test))]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_fw_mem_dl(adapter: *mut c_void, mem: i32) -> i32 {
+        let dlfw_start_time = unsafe { rtw_rust_hal_com_get_current_time() };
+        let rst = unsafe { rtw_rust_hal_intf_call_fw_mem_dl(adapter, mem) };
+        let ms = unsafe { rtw_rust_hal_com_get_passing_time_ms(dlfw_start_time) } as i32;
+        unsafe {
+            rtw_rust_hal_intf_log_fw_mem_dl_ms(ms);
+        }
+        if rst == FW_MEM_DL_FAIL {
+            unsafe {
+                rtw_rust_hal_intf_inc_dbg_fw_mem_dl_error_cnt(adapter);
+            }
+        }
+        let cnt = unsafe { rtw_rust_hal_intf_get_dbg_fw_mem_dl_error_cnt(adapter) };
+        unsafe {
+            rtw_rust_hal_intf_log_fw_mem_dl_dbg_cnt(cnt);
+        }
+        rst
+    }
+
+    #[cfg(any(
+        host_hal_intf_fw_mem_clear_int_test,
+        config_wowlan,
+        config_ap_wowlan
+    ))]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_clear_interrupt(adapter: *mut c_void) {
+        #[cfg(any(config_sdio_hci, config_gspi_hci))]
+        unsafe {
+            rtw_rust_hal_intf_call_clear_interrupt(adapter);
+        }
     }
 
     #[cfg(any(config_usb_hci, config_pci_hci))]

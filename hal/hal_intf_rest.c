@@ -37,6 +37,13 @@ void rtw_hal_disable_interrupt(_adapter *padapter);
 u8 rtw_hal_check_ips_status(_adapter *padapter);
 /* rtw_hal_fw_dl — ported to rust/hal_intf.rs (W4-71) */
 s32 rtw_hal_fw_dl(_adapter *padapter, u8 wowlan);
+/* rtw_hal_fw_mem_dl / rtw_hal_clear_interrupt — ported to rust/hal_intf.rs (W4-76) */
+#ifdef RTW_HALMAC
+s32 rtw_hal_fw_mem_dl(_adapter *padapter, enum fw_mem mem);
+#endif
+#if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)
+void rtw_hal_clear_interrupt(_adapter *padapter);
+#endif
 /* rtw_hal_inirp_init / rtw_hal_inirp_deinit — ported to rust/hal_intf.rs (W4-72) */
 u32 rtw_hal_inirp_init(_adapter *padapter);
 u32 rtw_hal_inirp_deinit(_adapter *padapter);
@@ -342,32 +349,42 @@ u32 rtw_rust_hal_intf_call_inirp_deinit(_adapter *padapter)
 #endif /* CONFIG_USB_HCI || CONFIG_PCI_HCI */
 
 #ifdef RTW_HALMAC
-s32 rtw_hal_fw_mem_dl(_adapter *padapter, enum fw_mem mem)
+s32 rtw_rust_hal_intf_call_fw_mem_dl(_adapter *padapter, enum fw_mem mem)
 {
-	systime dlfw_start_time = rtw_get_current_time();
-	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
-	struct debug_priv *pdbgpriv = &dvobj->drv_dbg;
-	s32 rst = _FALSE;
-
-	rst = padapter->hal_func.fw_mem_dl(padapter, mem);
-	RTW_INFO("%s in %dms\n", __func__, rtw_get_passing_time_ms(dlfw_start_time));
-
-	if (rst == _FALSE)
-		pdbgpriv->dbg_fw_mem_dl_error_cnt++;
-	if (1)
-		RTW_INFO("%s dbg_fw_mem_dl_error_cnt:%d\n", __func__, pdbgpriv->dbg_fw_mem_dl_error_cnt);
-	return rst;
+	return padapter->hal_func.fw_mem_dl(padapter, mem);
 }
-#endif
+
+void rtw_rust_hal_intf_inc_dbg_fw_mem_dl_error_cnt(_adapter *padapter)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
+
+	dvobj->drv_dbg.dbg_fw_mem_dl_error_cnt++;
+}
+
+u32 rtw_rust_hal_intf_get_dbg_fw_mem_dl_error_cnt(_adapter *padapter)
+{
+	return adapter_to_dvobj(padapter)->drv_dbg.dbg_fw_mem_dl_error_cnt;
+}
+
+void rtw_rust_hal_intf_log_fw_mem_dl_ms(int ms)
+{
+	RTW_INFO("%s in %dms\n", "rtw_hal_fw_mem_dl", ms);
+}
+
+void rtw_rust_hal_intf_log_fw_mem_dl_dbg_cnt(u32 cnt)
+{
+	RTW_INFO("%s dbg_fw_mem_dl_error_cnt:%u\n", "rtw_hal_fw_mem_dl", cnt);
+}
+#endif /* RTW_HALMAC */
 
 #if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)
-void rtw_hal_clear_interrupt(_adapter *padapter)
+void rtw_rust_hal_intf_call_clear_interrupt(_adapter *padapter)
 {
 #if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
 	padapter->hal_func.clear_interrupt(padapter);
 #endif
 }
-#endif
+#endif /* CONFIG_WOWLAN || CONFIG_AP_WOWLAN */
 
 #if defined(CONFIG_PCI_HCI)
 void	rtw_hal_irp_reset(_adapter *padapter)

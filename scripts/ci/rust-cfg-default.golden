@@ -22,6 +22,7 @@ config_proc_debug
 config_rtw_debug
 config_rtw_mac_hidden_rpt
 config_rtw_mgmt_queue
+config_rtw_sw_led
 config_rust_rtw_debug_test_hooks
 config_scan_sparse_miracast
 config_tx_ac_lifetime
@@ -33,6 +34,7 @@ detect_cpwm_by_polling
 dfs
 dfs_master
 ieee80211_band_5ghz
+rtw_halmac
 rust_ap_aka_chk
 rust_ap_bcn_ie
 rust_ap_bcn_update
