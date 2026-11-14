@@ -40,6 +40,14 @@ s32 rtw_hal_fw_dl(_adapter *padapter, u8 wowlan);
 /* rtw_hal_inirp_init / rtw_hal_inirp_deinit — ported to rust/hal_intf.rs (W4-72) */
 u32 rtw_hal_inirp_init(_adapter *padapter);
 u32 rtw_hal_inirp_deinit(_adapter *padapter);
+/* rtw_hal_set_hwreg / get_hwreg / def_var / odm_var / notch_filter — W4-73 */
+u8 rtw_hal_set_hwreg(_adapter *padapter, u8 variable, u8 *val);
+void rtw_hal_get_hwreg(_adapter *padapter, u8 variable, u8 *val);
+u8 rtw_hal_set_def_var(_adapter *padapter, HAL_DEF_VARIABLE eVariable, void *pValue);
+u8 rtw_hal_get_def_var(_adapter *padapter, HAL_DEF_VARIABLE eVariable, void *pValue);
+void rtw_hal_set_odm_var(_adapter *padapter, HAL_ODM_VARIABLE eVariable, void *pValue1, BOOLEAN bSet);
+void rtw_hal_get_odm_var(_adapter *padapter, HAL_ODM_VARIABLE eVariable, void *pValue1, void *pValue2);
+void rtw_hal_notch_filter(_adapter *adapter, bool enable);
 
 /* dump_hal_runtime_trx_mode / dump_hal_trx_mode — ported to rust/hal_intf.rs (W4-07) */
 
@@ -249,32 +257,42 @@ uint rtw_hal_deinit(_adapter *padapter)
 	return status;
 }
 
-u8 rtw_hal_set_hwreg(_adapter *padapter, u8 variable, u8 *val)
+u8 rtw_rust_hal_intf_call_set_hwreg(_adapter *padapter, u8 variable, u8 *val)
 {
 	return padapter->hal_func.set_hw_reg_handler(padapter, variable, val);
 }
 
-void rtw_hal_get_hwreg(_adapter *padapter, u8 variable, u8 *val)
+void rtw_rust_hal_intf_call_get_hwreg(_adapter *padapter, u8 variable, u8 *val)
 {
 	padapter->hal_func.GetHwRegHandler(padapter, variable, val);
 }
 
-u8 rtw_hal_set_def_var(_adapter *padapter, HAL_DEF_VARIABLE eVariable, void *pValue)
+u8 rtw_rust_hal_intf_call_set_def_var(_adapter *padapter, HAL_DEF_VARIABLE eVariable, void *pValue)
 {
 	return padapter->hal_func.SetHalDefVarHandler(padapter, eVariable, pValue);
 }
-u8 rtw_hal_get_def_var(_adapter *padapter, HAL_DEF_VARIABLE eVariable, void *pValue)
+
+u8 rtw_rust_hal_intf_call_get_def_var(_adapter *padapter, HAL_DEF_VARIABLE eVariable, void *pValue)
 {
 	return padapter->hal_func.get_hal_def_var_handler(padapter, eVariable, pValue);
 }
 
-void rtw_hal_set_odm_var(_adapter *padapter, HAL_ODM_VARIABLE eVariable, void *pValue1, BOOLEAN bSet)
+void rtw_rust_hal_intf_call_set_odm_var(_adapter *padapter, HAL_ODM_VARIABLE eVariable,
+				      void *pValue1, BOOLEAN bSet)
 {
 	padapter->hal_func.SetHalODMVarHandler(padapter, eVariable, pValue1, bSet);
 }
-void	rtw_hal_get_odm_var(_adapter *padapter, HAL_ODM_VARIABLE eVariable, void *pValue1, void *pValue2)
+
+void rtw_rust_hal_intf_call_get_odm_var(_adapter *padapter, HAL_ODM_VARIABLE eVariable,
+					void *pValue1, void *pValue2)
 {
 	padapter->hal_func.GetHalODMVarHandler(padapter, eVariable, pValue1, pValue2);
+}
+
+void rtw_rust_hal_intf_call_notch_filter(_adapter *adapter, bool enable)
+{
+	if (adapter->hal_func.hal_notch_filter)
+		adapter->hal_func.hal_notch_filter(adapter, enable);
 }
 
 void rtw_rust_hal_intf_call_enable_interrupt(_adapter *padapter)
@@ -779,12 +797,6 @@ s32 rtw_hal_recv_hdl(_adapter *adapter)
 	return adapter->hal_func.recv_hdl(adapter);
 }
 #endif
-
-void rtw_hal_notch_filter(_adapter *adapter, bool enable)
-{
-	if (adapter->hal_func.hal_notch_filter)
-		adapter->hal_func.hal_notch_filter(adapter, enable);
-}
 
 #ifdef CONFIG_FW_C2H_REG
 inline bool rtw_hal_c2h_valid(_adapter *adapter, u8 *buf)

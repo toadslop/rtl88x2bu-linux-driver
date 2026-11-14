@@ -3,7 +3,8 @@
 //! W4-36 chip ODM map, W4-59 chip configure + read_chip_info, W4-60 chip version + def_value_init,
 //! W4-61 hal_data_init, W4-62 hal_data_deinit + hal_free_data, W4-64 chip_rftype_to_hal_rftype,
 //! W4-65 hal_rfpath_init, W4-66 hal_trxnss_init, W4-67 hal_power_on/off, W4-68 sw_led init/deinit,
-//! W4-69 hal_init_opmode, W4-70 interrupt enable/disable + IPS check, W4-71 hal_fw_dl).
+//! W4-69 hal_init_opmode, W4-70 interrupt enable/disable + IPS check, W4-71 hal_fw_dl,
+//! W4-72 inirp init/deinit, W4-73 hwreg/def/odm dispatch + notch_filter).
 
 #![allow(
     dead_code,
@@ -899,6 +900,35 @@ mod kernel {
         fn rtw_rust_hal_intf_call_inirp_init(adapter: *mut c_void) -> U32;
         #[cfg(any(config_usb_hci, config_pci_hci))]
         fn rtw_rust_hal_intf_call_inirp_deinit(adapter: *mut c_void) -> U32;
+        fn rtw_rust_hal_intf_call_set_hwreg(
+            adapter: *mut c_void,
+            variable: U8,
+            val: *mut U8,
+        ) -> U8;
+        fn rtw_rust_hal_intf_call_get_hwreg(adapter: *mut c_void, variable: U8, val: *mut U8);
+        fn rtw_rust_hal_intf_call_set_def_var(
+            adapter: *mut c_void,
+            e_variable: i32,
+            p_value: *mut c_void,
+        ) -> U8;
+        fn rtw_rust_hal_intf_call_get_def_var(
+            adapter: *mut c_void,
+            e_variable: i32,
+            p_value: *mut c_void,
+        ) -> U8;
+        fn rtw_rust_hal_intf_call_set_odm_var(
+            adapter: *mut c_void,
+            e_variable: i32,
+            p_value1: *mut c_void,
+            b_set: U8,
+        );
+        fn rtw_rust_hal_intf_call_get_odm_var(
+            adapter: *mut c_void,
+            e_variable: i32,
+            p_value1: *mut c_void,
+            p_value2: *mut c_void,
+        );
+        fn rtw_rust_hal_intf_call_notch_filter(adapter: *mut c_void, enable: bool);
         fn rtw_odm_init_ic_type(adapter: *mut c_void);
         fn rtw_init_hal_com_default_value(adapter: *mut c_void);
         fn rtw_rust_hal_com_get_intf_type(adapter: *mut c_void) -> U8;
@@ -1292,6 +1322,59 @@ mod kernel {
             return HAL_INIRP_SUCCESS;
         }
         unsafe { rtw_rust_hal_intf_call_inirp_deinit(adapter) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_set_hwreg(adapter: *mut c_void, variable: U8, val: *mut U8) -> U8 {
+        unsafe { rtw_rust_hal_intf_call_set_hwreg(adapter, variable, val) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_get_hwreg(adapter: *mut c_void, variable: U8, val: *mut U8) {
+        unsafe { rtw_rust_hal_intf_call_get_hwreg(adapter, variable, val) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_set_def_var(
+        adapter: *mut c_void,
+        e_variable: i32,
+        p_value: *mut c_void,
+    ) -> U8 {
+        unsafe { rtw_rust_hal_intf_call_set_def_var(adapter, e_variable, p_value) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_get_def_var(
+        adapter: *mut c_void,
+        e_variable: i32,
+        p_value: *mut c_void,
+    ) -> U8 {
+        unsafe { rtw_rust_hal_intf_call_get_def_var(adapter, e_variable, p_value) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_set_odm_var(
+        adapter: *mut c_void,
+        e_variable: i32,
+        p_value1: *mut c_void,
+        b_set: U8,
+    ) {
+        unsafe { rtw_rust_hal_intf_call_set_odm_var(adapter, e_variable, p_value1, b_set) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_get_odm_var(
+        adapter: *mut c_void,
+        e_variable: i32,
+        p_value1: *mut c_void,
+        p_value2: *mut c_void,
+    ) {
+        unsafe { rtw_rust_hal_intf_call_get_odm_var(adapter, e_variable, p_value1, p_value2) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_notch_filter(adapter: *mut c_void, enable: bool) {
+        unsafe { rtw_rust_hal_intf_call_notch_filter(adapter, enable) }
     }
 
     #[no_mangle]
