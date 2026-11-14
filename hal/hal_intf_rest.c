@@ -29,6 +29,8 @@
 /* rtw_hal_rfpath_init — ported to rust/hal_intf.rs (W4-65) */
 /* rtw_hal_power_on / rtw_hal_power_off — ported to rust/hal_intf.rs (W4-67) */
 /* rtw_hal_sw_led_init / rtw_hal_sw_led_deinit — ported to rust/hal_intf.rs (W4-68) */
+/* rtw_hal_init_opmode — ported to rust/hal_intf.rs (W4-69) */
+void rtw_hal_init_opmode(_adapter *padapter);
 
 /* dump_hal_runtime_trx_mode / dump_hal_trx_mode — ported to rust/hal_intf.rs (W4-07) */
 
@@ -115,30 +117,15 @@ void rtw_rust_hal_intf_led_set_iface_en(_adapter *padapter, u8 en)
 }
 #endif /* CONFIG_RTW_SW_LED */
 
-void rtw_hal_init_opmode(_adapter *padapter)
+sint rtw_rust_hal_intf_get_fwstate(_adapter *adapter)
 {
-	NDIS_802_11_NETWORK_INFRASTRUCTURE networkType = Ndis802_11InfrastructureMax;
-	struct  mlme_priv *pmlmepriv = &(padapter->mlmepriv);
-	sint fw_state;
+	return get_fwstate(&(adapter->mlmepriv));
+}
 
-	fw_state = get_fwstate(pmlmepriv);
-
-	if (fw_state & WIFI_ADHOC_STATE)
-		networkType = Ndis802_11IBSS;
-	else if (fw_state & WIFI_STATION_STATE)
-		networkType = Ndis802_11Infrastructure;
-#ifdef CONFIG_AP_MODE
-	else if (fw_state & WIFI_AP_STATE)
-		networkType = Ndis802_11APMode;
-#endif
-#ifdef CONFIG_RTW_MESH
-	else if (fw_state & WIFI_MESH_STATE)
-		networkType = Ndis802_11_mesh;
-#endif
-	else
-		return;
-
-	rtw_setopmode_cmd(padapter, networkType, RTW_CMDF_DIRECTLY);
+u8 rtw_rust_hal_intf_setopmode_cmd(_adapter *adapter,
+	NDIS_802_11_NETWORK_INFRASTRUCTURE networktype, u8 flags)
+{
+	return rtw_setopmode_cmd(adapter, networktype, flags);
 }
 
 #ifdef CONFIG_NEW_NETDEV_HDL
