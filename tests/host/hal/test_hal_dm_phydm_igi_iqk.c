@@ -35,7 +35,8 @@ void odm_acquire_spin_lock(struct dm_struct *dm, u32 lock_type)
 void odm_release_spin_lock(struct dm_struct *dm, u32 lock_type)
 {
 	(void)dm;
-	(void)lock_type;
+	if (lock_type == RT_IQK_SPINLOCK)
+		host_hal_dm_phydm_igi_iqk_trace.iqk_lock_released = 1;
 }
 
 struct vector {
@@ -46,6 +47,7 @@ struct vector {
 	int fixture_iqk;
 	int expect_iqk;
 	int expect_iqk_lock;
+	int expect_iqk_lock_release;
 	int expect_iqk_err;
 };
 
@@ -54,11 +56,11 @@ static int parse_vector_object(const char *obj, size_t len, void *vv)
 	struct vector *v = vv;
 	const char *keys[] = {
 		"fixture_igi", "expect_igi", "fixture_iqk", "expect_iqk",
-		"expect_iqk_lock", "expect_iqk_err",
+		"expect_iqk_lock", "expect_iqk_lock_release", "expect_iqk_err",
 	};
 	int *dst[] = {
 		&v->fixture_igi, &v->expect_igi, &v->fixture_iqk, &v->expect_iqk,
-		&v->expect_iqk_lock, &v->expect_iqk_err,
+		&v->expect_iqk_lock, &v->expect_iqk_lock_release, &v->expect_iqk_err,
 	};
 	size_t i;
 
@@ -100,6 +102,9 @@ static int run_vector(struct vector *v)
 			return -1;
 		if (!!host_hal_dm_phydm_igi_iqk_trace.iqk_lock_acquired !=
 		    !!v->expect_iqk_lock)
+			return -1;
+		if (!!host_hal_dm_phydm_igi_iqk_trace.iqk_lock_released !=
+		    !!v->expect_iqk_lock_release)
 			return -1;
 		if (!!host_hal_dm_phydm_igi_iqk_trace.err_logged != !!v->expect_iqk_err)
 			return -1;

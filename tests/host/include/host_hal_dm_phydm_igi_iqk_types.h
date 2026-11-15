@@ -8,7 +8,7 @@ typedef uint8_t u8;
 typedef uint32_t u32;
 typedef uint8_t boolean;
 
-#define PHYDM_INFO_CURR_IGI 25u /* phydm.h PHYDM_INFO_CURR_IGI */
+#define PHYDM_INFO_CURR_IGI 20u /* phydm.h enum phydm_info_query */
 #define RT_IQK_SPINLOCK 38u
 
 #define _TRUE 1u
@@ -37,6 +37,7 @@ struct host_hal_dm_phydm_igi_iqk_trace {
 	u32 phydm_cmn_query_last;
 	u32 phydm_cmn_query_ret;
 	u8 iqk_lock_acquired;
+	u8 iqk_lock_released;
 	u8 err_logged;
 };
 

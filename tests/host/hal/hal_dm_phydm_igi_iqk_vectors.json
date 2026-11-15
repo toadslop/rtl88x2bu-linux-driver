@@ -8,6 +8,7 @@
       "fixture_iqk": 0,
       "expect_iqk": 0,
       "expect_iqk_lock": 0,
+      "expect_iqk_lock_release": 0,
       "expect_iqk_err": 0
     },
     {
@@ -18,6 +19,7 @@
       "fixture_iqk": 0,
       "expect_iqk": 0,
       "expect_iqk_lock": 1,
+      "expect_iqk_lock_release": 1,
       "expect_iqk_err": 0
     },
     {
@@ -28,6 +30,7 @@
       "fixture_iqk": 1,
       "expect_iqk": 1,
       "expect_iqk_lock": 1,
+      "expect_iqk_lock_release": 1,
       "expect_iqk_err": 1
     }
   ]
