@@ -134,8 +134,8 @@ int parse_vec(const char *obj, size_t len, void *v)
 		x->sw_chplan = 0xff;
 	else
 		x->sw_chplan = (uint8_t)t;
-	host_json_parse_int_in(obj, len, "autoload_fail", &t);
-	x->autoload_fail = (uint8_t)t;
+	if (!host_json_parse_int_in(obj, len, "autoload_fail", &t))
+		x->autoload_fail = (uint8_t)t;
 	host_json_parse_int_in(obj, len, "expect_channel_plan", &t);
 	x->exp_plan = (uint8_t)t;
 	host_json_parse_int_in(obj, len, "expect_disable_sw", &t);
@@ -159,21 +159,44 @@ int main(int argc, char **argv)
 		return 1;
 	for (size_t i = 0; i < n; i++) {
 		struct host_config_chplan_adapter a;
+		const struct country_chplan *ctry = NULL;
+		uint8_t ctry_plan = 0;
 
 		host_hal_com_config_channel_plan(
 			&a, vecs[i].hw_alpha2[0] ? vecs[i].hw_alpha2 : NULL,
 			vecs[i].hw_chplan,
 			vecs[i].sw_alpha2[0] ? vecs[i].sw_alpha2 : NULL,
 			vecs[i].sw_chplan, vecs[i].autoload_fail);
+		if (a.rfctl.country_ent) {
+			ctry = a.rfctl.country_ent;
+			ctry_plan = ctry->chplan;
+		}
 		if (a.rfctl.channel_plan != vecs[i].exp_plan ||
-		    a.hal_data.b_disable_sw_channel_plan != vecs[i].exp_force)
+		    a.hal_data.b_disable_sw_channel_plan != vecs[i].exp_force) {
+			fprintf(stderr,
+				"FAIL %s: channel_plan got 0x%02x expect 0x%02x; "
+				"disable_sw got %u expect %u\n",
+				vecs[i].name, a.rfctl.channel_plan,
+				vecs[i].exp_plan,
+				a.hal_data.b_disable_sw_channel_plan,
+				vecs[i].exp_force);
 			return 1;
+		}
 		if (vecs[i].exp_has_ctry) {
-			if (!a.rfctl.country_ent ||
-			    a.rfctl.country_ent->chplan != vecs[i].exp_ctry_plan)
+			if (!ctry || ctry_plan != vecs[i].exp_ctry_plan) {
+				fprintf(stderr,
+					"FAIL %s: country chplan got 0x%02x "
+					"expect 0x%02x (has_ent=%d)\n",
+					vecs[i].name, ctry_plan,
+					vecs[i].exp_ctry_plan, ctry != NULL);
 				return 1;
-		} else if (a.rfctl.country_ent)
+			}
+		} else if (ctry) {
+			fprintf(stderr,
+				"FAIL %s: unexpected country_ent chplan 0x%02x\n",
+				vecs[i].name, ctry_plan);
 			return 1;
+		}
 	}
 	printf("PASS: %zu vectors from %s\n", n, path);
 	return 0;
