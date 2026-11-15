@@ -979,6 +979,7 @@ s8 rtw_phydm_get_min_rssi(_adapter *adapter)
 	return rssi_min;
 }
 
+#ifndef CONFIG_RUST
 u8 rtw_phydm_get_cur_igi(_adapter *adapter)
 {
 	struct dm_struct *phydm = adapter_to_phydm(adapter);
@@ -987,6 +988,7 @@ u8 rtw_phydm_get_cur_igi(_adapter *adapter)
 	cur_igi = phydm_cmn_info_query(phydm, (enum phydm_info_query) PHYDM_INFO_CURR_IGI);
 	return cur_igi;
 }
+#endif /* !CONFIG_RUST */
 
 bool rtw_phydm_get_edcca_flag(_adapter *adapter)
 {
@@ -1033,6 +1035,7 @@ u32 rtw_phydm_get_phy_cnt(_adapter *adapter, enum phy_cnt cnt)
 		return 0;
 }
 
+#ifndef CONFIG_RUST
 u8 rtw_phydm_is_iqk_in_progress(_adapter *adapter)
 {
 	u8 rts = _FALSE;
@@ -1047,6 +1050,7 @@ u8 rtw_phydm_is_iqk_in_progress(_adapter *adapter)
 
 	return rts;
 }
+#endif /* !CONFIG_RUST */
 
 void SetHalODMVar(
 	PADAPTER				Adapter,

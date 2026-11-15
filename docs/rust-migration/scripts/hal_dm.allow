@@ -1,5 +1,6 @@
 # L1 allowlist for rust/hal_dm.o (W4-30 board type, W4-38 ODM endian hooks, W4-31 dump_sta_info,
 # W4-32 dump_sta_traffic, W4-79 FW offload caps, W4-84 phydm_priv / Init_ODM iface block,
-# W4-85 Init_ODM mid block, W4-88 Init_ODM ComInfo tail, W4-89 phydm ops init).
+# W4-85 Init_ODM mid block, W4-88 Init_ODM ComInfo tail, W4-89 phydm ops init,
+# W4-92 PHYDM IGI / IQK queries).
 drop dump_sta_info_format
 drop dump_sta_traffic_format
