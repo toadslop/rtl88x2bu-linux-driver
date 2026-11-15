@@ -3209,6 +3209,19 @@ endif
 ifneq ($(_rust_cfg_recv_thread_mode),)
 rustflags-y += --cfg config_recv_thread_mode
 endif
+# W4-87: CONFIG_RTW_MGMT_QUEUE is enabled by default in include/drv_conf.h (#ifndef … #define).
+# T21 (rust/generated_cfgs) tracks the effective preprocessor set; this block mirrors
+# xmit/recv thread_mode for explicit rustflags-y and matches -U/-D overrides on ccflags.
+_rust_cfg_rtw_mgmt_queue := y
+ifneq ($(filter -UCONFIG_RTW_MGMT_QUEUE,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_rtw_mgmt_queue :=
+endif
+ifneq ($(filter -DCONFIG_RTW_MGMT_QUEUE,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_rtw_mgmt_queue := y
+endif
+ifneq ($(_rust_cfg_rtw_mgmt_queue),)
+rustflags-y += --cfg config_rtw_mgmt_queue
+endif
 _rust_cfg_rf4ce_coexist :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RF4CE_COEXIST' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 _rust_cfg_rf4ce_coexist := y
@@ -5261,7 +5274,8 @@ rust-check-symbols-hal-intf-thread-iol: rust-objects-hal-intf-thread-iol-c rust-
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_intf_thread_iol_l1_ref.o \
 		NEW=rust/hal_intf.o
 
-# W4-87: USB PS + xmit/mgnt dispatch (mgmt-queue symbol requires CONFIG_RTW_MGMT_QUEUE).
+# W4-87: L1 harness only — default module builds already get config_rtw_mgmt_queue
+# from drv_conf.h via rustflags-y above and T21 rust/generated_cfgs.
 HAL_INTF_XMIT_DISPATCH_CFLAGS := -DCONFIG_RTW_MGMT_QUEUE
 HAL_INTF_XMIT_DISPATCH_RUSTFLAGS := --cfg config_rtw_mgmt_queue
 rust-objects-hal-intf-xmit-dispatch:
