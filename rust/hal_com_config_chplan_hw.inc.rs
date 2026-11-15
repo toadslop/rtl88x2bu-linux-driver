@@ -137,6 +137,7 @@ fn config_chplan_hw_full(
         return;
     }
 
+    #[cfg(not(CONFIG_FORCE_SW_CHANNEL_PLAN))]
     if hw_chplan & EEPROM_CHANNEL_PLAN_BY_HW_MASK != 0 {
         force_hw_chplan = 1;
     }
