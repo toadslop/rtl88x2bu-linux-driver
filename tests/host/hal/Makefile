@@ -91,6 +91,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-phy-bit-shift test-phy-bit-shift-rust test-dm-board-type test-dm-board-type-rust \
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
 	test-dm-init-odm-cominfo-tail test-dm-init-odm-cominfo-tail-rust \
+	test-dm-phydm-ops \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust test-usb-sync-read \
 	test-usb-sync-read-rust test-usb-sync-write test-usb-async-write \
