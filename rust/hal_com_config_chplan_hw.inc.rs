@@ -29,7 +29,10 @@ extern "C" {
     fn rtw_is_channel_plan_valid(id: U8) -> bool;
 }
 
-#[cfg(not(host_hal_com_config_chplan_hw_test))]
+#[cfg(not(any(
+    host_hal_com_config_chplan_hw_test,
+    host_hal_com_config_chplan_full_test
+)))]
 extern "C" {
     fn rtw_rust_hal_com_log_unsupported_hw_alpha2(func: *const c_char, a: c_char, b: c_char);
     fn rtw_rust_hal_com_log_unsupported_hw_chplan(func: *const c_char, plan: U8);
@@ -71,7 +74,10 @@ fn config_chplan_hw_after_preamble(
             out.force_hw_chplan = force_hw_chplan;
             return;
         }
-        #[cfg(not(host_hal_com_config_chplan_hw_test))]
+        #[cfg(not(any(
+            host_hal_com_config_chplan_hw_test,
+            host_hal_com_config_chplan_full_test
+        )))]
         unsafe {
             static FN: &[u8] = b"hal_com_config_channel_plan\0";
             let a = *hw_alpha2;
@@ -83,7 +89,10 @@ fn config_chplan_hw_after_preamble(
     if unsafe { rtw_is_channel_plan_valid(hw_chplan) } {
         chplan = hw_chplan as i32;
     } else if force_hw_chplan != 0 {
-        #[cfg(not(host_hal_com_config_chplan_hw_test))]
+        #[cfg(not(any(
+            host_hal_com_config_chplan_hw_test,
+            host_hal_com_config_chplan_full_test
+        )))]
         unsafe {
             static FN: &[u8] = b"hal_com_config_channel_plan\0";
             rtw_rust_hal_com_log_unsupported_hw_chplan(FN.as_ptr() as *const c_char, hw_chplan);
@@ -144,7 +153,10 @@ pub struct RustConfigChplanHwState {
     pub goto_sw_config: U8,
 }
 
-#[cfg(not(host_hal_com_config_chplan_hw_test))]
+#[cfg(not(any(
+    host_hal_com_config_chplan_hw_test,
+    host_hal_com_config_chplan_full_test
+)))]
 #[no_mangle]
 pub unsafe extern "C" fn rtw_rust_hal_com_config_chplan_hw_branch(
     hw_alpha2: *mut c_char,
@@ -195,3 +207,5 @@ pub unsafe extern "C" fn hal_com_config_chplan_hw_branch(
     };
     config_chplan_hw_full(hw_alpha2, hw_chplan, autoload_fail, &mut *out, &mut scratch);
 }
+
+include!("hal_com_config_chplan_sw.inc.rs");

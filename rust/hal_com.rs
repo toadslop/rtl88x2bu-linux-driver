@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-//! HAL common helpers — Rust port of `hal/hal_com.c` (W4-01 rate map, W4-02 rsvd page cache, W4-03 chip info, W4-04 macaddr dump, W4-05 MRateToHwRate, W4-06 fw info dump, W4-13 HalSetBrateCfg, W4-14 HAL_IsLegalChannel, W4-15 Hal_MappingOutPipe, W4-16 rtw_get_mgntframe_raid, W4-17 _HDATA_RATE strings, W4-39 dump_tx_aclt_force_val, W4-40 dump_tx_aclt_confs, W4-41 dump_hal_spec, W4-42 dump_TX_FIFO, W4-47 c2h_evt read/clear, W4-48 get_port + HalData defaults, W4-49 hw port enable/disable, W4-50 C2H IQK / txpwr offload wait, W4-90 config channel plan HW branch).
+//! HAL common helpers — Rust port of `hal/hal_com.c` (W4-01 rate map, W4-02 rsvd page cache, W4-03 chip info, W4-04 macaddr dump, W4-05 MRateToHwRate, W4-06 fw info dump, W4-13 HalSetBrateCfg, W4-14 HAL_IsLegalChannel, W4-15 Hal_MappingOutPipe, W4-16 rtw_get_mgntframe_raid, W4-17 _HDATA_RATE strings, W4-39 dump_tx_aclt_force_val, W4-40 dump_tx_aclt_confs, W4-41 dump_hal_spec, W4-42 dump_TX_FIFO, W4-47 c2h_evt read/clear, W4-48 get_port + HalData defaults, W4-49 hw port enable/disable, W4-50 C2H IQK / txpwr offload wait, W4-90/91 config channel plan HW + SW/done).
 
 #![allow(
     dead_code,
