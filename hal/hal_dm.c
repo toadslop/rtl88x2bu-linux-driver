@@ -236,6 +236,7 @@ void rtw_hal_update_param_init_fw_offload_cap(_adapter *adapter)
 #endif /* !CONFIG_RUST */
 #endif
 
+#ifndef CONFIG_RUST
 void record_ra_info(void *p_dm_void, u8 macid, struct cmn_sta_info *p_sta, u64 ra_mask)
 {
 	struct dm_struct *p_dm = (struct dm_struct *)p_dm_void;
@@ -252,6 +253,7 @@ void record_ra_info(void *p_dm_void, u8 macid, struct cmn_sta_info *p_sta, u64 r
 		rtw_update_tx_rate_bmp(adapter_to_dvobj(adapter));
 	}
 }
+#endif /* !CONFIG_RUST */
 
 #ifdef CONFIG_SUPPORT_DYNAMIC_TXPWR
 void rtw_phydm_fill_desc_dpt(void *dm, u8 *desc, u8 dpt_lv)
@@ -356,6 +358,7 @@ void rtw_phydm_tdmadig(_adapter *adapter, u8 state)
 	}
 }
 #endif/*CONFIG_TDMADIG*/
+#ifndef CONFIG_RUST
 void rtw_phydm_ops_func_init(struct dm_struct *p_phydm)
 {
 	struct ra_table *p_ra_t = &p_phydm->dm_ra_table;
@@ -365,6 +368,7 @@ void rtw_phydm_ops_func_init(struct dm_struct *p_phydm)
 	p_phydm->fill_desc_dyntxpwr = rtw_phydm_fill_desc_dpt;
 	#endif
 }
+#endif /* !CONFIG_RUST */
 #ifndef CONFIG_RUST
 void rtw_phydm_priv_init(_adapter *adapter)
 {

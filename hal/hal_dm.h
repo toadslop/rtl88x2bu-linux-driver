@@ -17,10 +17,13 @@
 
 #define adapter_to_phydm(adapter) (&(GET_HAL_DATA(adapter)->odmpriv))
 #define dvobj_to_phydm(dvobj) adapter_to_phydm(dvobj_get_primary_adapter(dvobj))
+struct dm_struct;
+
 #ifdef CONFIG_TDMADIG
 void rtw_phydm_tdmadig(_adapter *adapter, u8 state);
 #endif
 void rtw_phydm_priv_init(_adapter *adapter);
+void rtw_phydm_ops_func_init(struct dm_struct *p_phydm);
 void Init_ODM_ComInfo(_adapter *adapter);
 void rtw_phydm_init(_adapter *adapter);
 

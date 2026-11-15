@@ -450,6 +450,58 @@ void rtw_rust_hal_dm_init_odm_tail_sta_hooks(struct dm_struct *phydm)
 		phydm_cmn_sta_info_hook(phydm, i, NULL);
 }
 
+struct rtw_hal_dm_sta_ra_fields {
+	u8 ra_bw_mode;
+	u8 is_vht_enable;
+};
+
+_Static_assert(sizeof(struct rtw_hal_dm_sta_ra_fields) == 2,
+	"rtw_hal_dm_sta_ra_fields layout must match Rust RtwHalDmStaRaFields");
+
+void *rtw_rust_hal_dm_phydm_adapter(struct dm_struct *dm)
+{
+	return dm ? dm->adapter : NULL;
+}
+
+void *rtw_rust_hal_dm_ra_table(struct dm_struct *dm)
+{
+	return dm ? &dm->dm_ra_table : NULL;
+}
+
+void rtw_rust_hal_dm_ra_table_set_record_ra(struct ra_table *ra,
+	void (*fn)(void *, u8, struct cmn_sta_info *, u64))
+{
+	if (ra)
+		ra->record_ra_info = fn;
+}
+
+void rtw_rust_hal_dm_set_fill_desc_dyntxpwr(struct dm_struct *dm,
+	void (*fn)(void *, u8 *, u8))
+{
+	if (dm)
+		dm->fill_desc_dyntxpwr = fn;
+}
+
+void rtw_rust_hal_dm_sta_ra_fields(struct cmn_sta_info *sta,
+	struct rtw_hal_dm_sta_ra_fields *out)
+{
+	if (!sta || !out)
+		return;
+
+	out->ra_bw_mode = (u8)sta->ra_info.ra_bw_mode;
+	out->is_vht_enable = sta->ra_info.is_vht_enable;
+}
+
+struct dvobj_priv *rtw_rust_hal_dm_adapter_to_dvobj(_adapter *adapter)
+{
+	return adapter_to_dvobj(adapter);
+}
+
+struct macid_ctl_t *rtw_rust_hal_dm_dvobj_to_macidctl(struct dvobj_priv *dvobj)
+{
+	return dvobj_to_macidctl(dvobj);
+}
+
 void rtw_rust_hal_dm_init_odm_tail_finish(struct dm_struct *phydm)
 {
 	if (!phydm)
