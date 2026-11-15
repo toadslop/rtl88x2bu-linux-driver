@@ -4,7 +4,7 @@ labels: [rust-migration, phase-1, wave-4, size/~200]
 type: child
 id: W4-96
 epic: E06
-blocked_by: [W4-92, W4-93]
+blocked_by: [W4-92, W4-93, W4-94]
 estimate_loc: 120
 ---
 
@@ -30,4 +30,4 @@ Keeps optional `DBG_RX_*` dump calls on C FFI when Kconfig enables them.
 ## Tracking
 
 - **Epic:** #69 (`E06`)
-- **Blocked by:** W4-92, W4-93
+- **Blocked by:** W4-92, W4-93, W4-94

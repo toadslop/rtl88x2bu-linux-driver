@@ -22,7 +22,7 @@ Leave `HAL_ODM_RX_INFO_DUMP`, debug dump, and antenna-diversity cases in C until
 
 ## Notes
 
-- **Parallel lane:** same Rust module as other hal_dm slices but disjoint from in-flight W4-88…92 touch sets (new `set_hal_odm_var` helper + thin C stub).
+- **Parallel lane:** same Rust module as other hal_dm slices but disjoint from in-flight W4-88…92 touch sets. Export `SetHalODMVar` from Rust for the cases above; unported switch arms delegate to a C `set_hal_odm_var_rest` FFI until [W4-96](wave4-96-hal-dm-set-odm-var-rx-dump.md) merges the full `switch` into one Rust fn.
 - Preserve `RTW_INFO` logging strings for STA set/clean.
 
 ## Acceptance
