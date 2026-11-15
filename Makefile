@@ -3211,12 +3211,10 @@ rustflags-y += --cfg config_recv_thread_mode
 endif
 # W4-87: CONFIG_RTW_MGMT_QUEUE is enabled by default in include/drv_conf.h (#ifndef … #define).
 # T21 (rust/generated_cfgs) tracks the effective preprocessor set; this block mirrors
-# xmit/recv thread_mode for explicit rustflags-y and matches -U/-D overrides on ccflags.
+# explicit -D on ccflags. Do not mirror -U: drv_conf.h re-defines the macro after -U,
+# which would clear the Rust cfg while C still sees CONFIG_RTW_MGMT_QUEUE.
 _rust_cfg_rtw_mgmt_queue := y
-ifneq ($(filter -UCONFIG_RTW_MGMT_QUEUE,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
-_rust_cfg_rtw_mgmt_queue :=
-endif
-ifneq ($(filter -DCONFIG_RTW_MGMT_QUEUE,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+ifneq ($(filter -DCONFIG_RTW_MGMT_QUEUE%,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 _rust_cfg_rtw_mgmt_queue := y
 endif
 ifneq ($(_rust_cfg_rtw_mgmt_queue),)
