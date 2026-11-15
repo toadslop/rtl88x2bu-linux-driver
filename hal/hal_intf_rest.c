@@ -90,6 +90,12 @@ s32 rtw_hal_init_recv_priv(_adapter *padapter);
 void rtw_hal_free_recv_priv(_adapter *padapter);
 void rtw_hal_start_thread(_adapter *padapter);
 void rtw_hal_stop_thread(_adapter *padapter);
+/* rtw_hal_intf_ps_func / xmit dispatch — W4-87 */
+u8 rtw_hal_intf_ps_func(_adapter *padapter, HAL_INTF_PS_FUNC efunc_id, u8 *val);
+s32 rtw_hal_mgmt_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitframe);
+s32 rtw_hal_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitframe);
+s32 rtw_hal_xmit(_adapter *padapter, struct xmit_frame *pxmitframe);
+s32 rtw_hal_mgnt_xmit(_adapter *padapter, struct xmit_frame *pmgntframe);
 
 /* dump_hal_runtime_trx_mode / dump_hal_trx_mode — ported to rust/hal_intf.rs (W4-07) */
 
@@ -541,6 +547,74 @@ s32 rtw_rust_hal_intf_call_recv_hdl(_adapter *adapter)
 }
 #endif
 
+u8 rtw_rust_hal_intf_call_intf_ps_func(_adapter *padapter, HAL_INTF_PS_FUNC efunc_id, u8 *val)
+{
+	if (padapter->hal_func.interface_ps_func)
+		return padapter->hal_func.interface_ps_func(padapter, efunc_id, val);
+	return _FAIL;
+}
+
+#ifdef CONFIG_RTW_MGMT_QUEUE
+s32 rtw_rust_hal_intf_call_mgmt_xmitframe_enqueue(_adapter *padapter,
+						  struct xmit_frame *pxmitframe)
+{
+	return padapter->hal_func.hal_mgmt_xmitframe_enqueue(padapter, pxmitframe);
+}
+#endif
+
+s32 rtw_rust_hal_intf_call_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitframe)
+{
+	return padapter->hal_func.hal_xmitframe_enqueue(padapter, pxmitframe);
+}
+
+s32 rtw_rust_hal_intf_call_xmit(_adapter *padapter, struct xmit_frame *pxmitframe)
+{
+	return padapter->hal_func.hal_xmit(padapter, pxmitframe);
+}
+
+s32 rtw_rust_hal_intf_mgnt_xmit(_adapter *padapter, struct xmit_frame *pmgntframe)
+{
+#ifdef CONFIG_RTW_MGMT_QUEUE
+	_irqL irqL;
+	struct xmit_priv *pxmitpriv = &(padapter->xmitpriv);
+#endif
+	s32 ret = _FAIL;
+
+	update_mgntframe_attrib_addr(padapter, pmgntframe);
+#ifdef CONFIG_RTW_MGMT_QUEUE
+	update_mgntframe_subtype(padapter, pmgntframe);
+#endif
+
+#if defined(CONFIG_IEEE80211W) || defined(CONFIG_RTW_MESH)
+	if ((!MLME_IS_MESH(padapter) && SEC_IS_BIP_KEY_INSTALLED(&padapter->securitypriv) == _TRUE)
+		#ifdef CONFIG_RTW_MESH
+		|| (MLME_IS_MESH(padapter) && padapter->mesh_info.mesh_auth_id)
+		#endif
+	)
+		rtw_mgmt_xmitframe_coalesce(padapter, pmgntframe->pkt, pmgntframe);
+#endif
+
+#ifdef CONFIG_RTW_MGMT_QUEUE
+	if (MLME_IS_AP(padapter) || MLME_IS_MESH(padapter)) {
+		_enter_critical_bh(&pxmitpriv->lock, &irqL);
+		ret = mgmt_xmitframe_enqueue_for_sleeping_sta(padapter, pmgntframe);
+		_exit_critical_bh(&pxmitpriv->lock, &irqL);
+
+		#ifdef DBG_MGMT_QUEUE
+		if (ret == _TRUE)
+			RTW_INFO("%s doesn't be queued, dattrib->ra:"MAC_FMT" seq_num = %u, subtype = 0x%x\n",
+			__func__, MAC_ARG(pmgntframe->attrib.ra), pmgntframe->attrib.seqnum, pmgntframe->attrib.subtype);
+		#endif
+
+		if (ret == RTW_QUEUE_MGMT)
+			return ret;
+	}
+#endif
+
+	ret = padapter->hal_func.mgnt_xmit(padapter, pmgntframe);
+	return ret;
+}
+
 #ifdef RTW_HALMAC
 s32 rtw_rust_hal_intf_call_fw_mem_dl(_adapter *padapter, enum fw_mem mem)
 {
@@ -637,77 +711,6 @@ u8 rtw_hal_pci_l1off_capability(_adapter *padapter)
 
 
 #endif /* #if defined(CONFIG_PCI_HCI) */
-
-/* for USB Auto-suspend */
-u8	rtw_hal_intf_ps_func(_adapter *padapter, HAL_INTF_PS_FUNC efunc_id, u8 *val)
-{
-	if (padapter->hal_func.interface_ps_func)
-		return padapter->hal_func.interface_ps_func(padapter, efunc_id, val);
-	return _FAIL;
-}
-
-#ifdef CONFIG_RTW_MGMT_QUEUE
-s32	rtw_hal_mgmt_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitframe)
-{
-	return padapter->hal_func.hal_mgmt_xmitframe_enqueue(padapter, pxmitframe);
-}
-#endif
-
-s32	rtw_hal_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitframe)
-{
-	return padapter->hal_func.hal_xmitframe_enqueue(padapter, pxmitframe);
-}
-
-s32	rtw_hal_xmit(_adapter *padapter, struct xmit_frame *pxmitframe)
-{
-	return padapter->hal_func.hal_xmit(padapter, pxmitframe);
-}
-
-/*
- * [IMPORTANT] This function would be run in interrupt context.
- */
-s32	rtw_hal_mgnt_xmit(_adapter *padapter, struct xmit_frame *pmgntframe)
-{
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	_irqL irqL;
-	struct xmit_priv *pxmitpriv = &(padapter->xmitpriv);
-#endif
-	s32 ret = _FAIL;
-
-	update_mgntframe_attrib_addr(padapter, pmgntframe);
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	update_mgntframe_subtype(padapter, pmgntframe);
-#endif
-
-#if defined(CONFIG_IEEE80211W) || defined(CONFIG_RTW_MESH)
-	if ((!MLME_IS_MESH(padapter) && SEC_IS_BIP_KEY_INSTALLED(&padapter->securitypriv) == _TRUE)
-		#ifdef CONFIG_RTW_MESH
-		|| (MLME_IS_MESH(padapter) && padapter->mesh_info.mesh_auth_id)
-		#endif
-	)
-		rtw_mgmt_xmitframe_coalesce(padapter, pmgntframe->pkt, pmgntframe);
-#endif
-
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	if (MLME_IS_AP(padapter) || MLME_IS_MESH(padapter)) {
-		_enter_critical_bh(&pxmitpriv->lock, &irqL);
-		ret = mgmt_xmitframe_enqueue_for_sleeping_sta(padapter, pmgntframe);
-		_exit_critical_bh(&pxmitpriv->lock, &irqL);
-
-		#ifdef DBG_MGMT_QUEUE
-		if (ret == _TRUE)
-			RTW_INFO("%s doesn't be queued, dattrib->ra:"MAC_FMT" seq_num = %u, subtype = 0x%x\n",
-			__func__, MAC_ARG(pmgntframe->attrib.ra), pmgntframe->attrib.seqnum, pmgntframe->attrib.subtype);
-		#endif
-
-		if (ret == RTW_QUEUE_MGMT)
-			return ret;
-	}
-#endif
-
-	ret = padapter->hal_func.mgnt_xmit(padapter, pmgntframe);
-	return ret;
-}
 
 void rtw_sta_ra_registed(_adapter *padapter, struct sta_info *psta)
 {

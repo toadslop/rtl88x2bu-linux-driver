@@ -8,7 +8,7 @@
 //! W4-74 silent reset dispatch, W4-75 hal_deinit teardown, W4-76 fw_mem_dl +
 //! clear_interrupt, W4-78 IOL + thread-mode dispatch, W4-80 iface_init,
 //! W4-81 hal_init orchestration, W4-82 BB/RF (and optional syson) register dispatch,
-//! W4-83 xmit/recv priv + SDIO thread dispatch).
+//! W4-83 xmit/recv priv + SDIO thread dispatch, W4-87 intf PS + xmit/mgnt dispatch).
 
 #![allow(
     dead_code,
@@ -941,6 +941,22 @@ mod kernel {
         fn rtw_rust_hal_intf_log_hal_init_phydm_fail(reason: U8);
         fn rtw_rust_hal_intf_hal_init_success(adapter: *mut c_void);
         fn rtw_rust_hal_intf_hal_init_fail(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_call_intf_ps_func(
+            adapter: *mut c_void,
+            efunc_id: i32,
+            val: *mut U8,
+        ) -> U8;
+        #[cfg(config_rtw_mgmt_queue)]
+        fn rtw_rust_hal_intf_call_mgmt_xmitframe_enqueue(
+            adapter: *mut c_void,
+            pxmitframe: *mut c_void,
+        ) -> i32;
+        fn rtw_rust_hal_intf_call_xmitframe_enqueue(
+            adapter: *mut c_void,
+            pxmitframe: *mut c_void,
+        ) -> i32;
+        fn rtw_rust_hal_intf_call_xmit(adapter: *mut c_void, pxmitframe: *mut c_void) -> i32;
+        fn rtw_rust_hal_intf_mgnt_xmit(adapter: *mut c_void, pmgntframe: *mut c_void) -> i32;
         fn rtw_rust_hal_intf_call_set_hwreg(
             adapter: *mut c_void,
             variable: U8,
@@ -1705,6 +1721,37 @@ mod kernel {
         unsafe {
             rtw_rust_hal_intf_call_write_syson_reg(adapter, reg_addr, bit_mask, data);
         }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_intf_ps_func(
+        adapter: *mut c_void,
+        efunc_id: i32,
+        val: *mut U8,
+    ) -> U8 {
+        unsafe { rtw_rust_hal_intf_call_intf_ps_func(adapter, efunc_id, val) }
+    }
+
+    #[cfg(config_rtw_mgmt_queue)]
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_mgmt_xmitframe_enqueue(
+        adapter: *mut c_void,
+        pxmitframe: *mut c_void,
+    ) -> i32 {
+        unsafe { rtw_rust_hal_intf_call_mgmt_xmitframe_enqueue(adapter, pxmitframe) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_xmitframe_enqueue(a: *mut c_void, f: *mut c_void) -> i32 {
+        unsafe { rtw_rust_hal_intf_call_xmitframe_enqueue(a, f) }
+    }
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_xmit(a: *mut c_void, f: *mut c_void) -> i32 {
+        unsafe { rtw_rust_hal_intf_call_xmit(a, f) }
+    }
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_mgnt_xmit(a: *mut c_void, f: *mut c_void) -> i32 {
+        unsafe { rtw_rust_hal_intf_mgnt_xmit(a, f) }
     }
 
     #[no_mangle]

@@ -3209,6 +3209,17 @@ endif
 ifneq ($(_rust_cfg_recv_thread_mode),)
 rustflags-y += --cfg config_recv_thread_mode
 endif
+# W4-87: CONFIG_RTW_MGMT_QUEUE is enabled by default in include/drv_conf.h (#ifndef … #define).
+# T21 (rust/generated_cfgs) tracks the effective preprocessor set; this block mirrors
+# explicit -D on ccflags. Do not mirror -U: drv_conf.h re-defines the macro after -U,
+# which would clear the Rust cfg while C still sees CONFIG_RTW_MGMT_QUEUE.
+_rust_cfg_rtw_mgmt_queue := y
+ifneq ($(filter -DCONFIG_RTW_MGMT_QUEUE%,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_rtw_mgmt_queue := y
+endif
+ifneq ($(_rust_cfg_rtw_mgmt_queue),)
+rustflags-y += --cfg config_rtw_mgmt_queue
+endif
 _rust_cfg_rf4ce_coexist :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RF4CE_COEXIST' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 _rust_cfg_rf4ce_coexist := y
@@ -5259,6 +5270,25 @@ rust-objects-hal-intf-thread-iol-c:
 		tests/host/hal/hal_intf_thread_iol_l1_ref.c
 rust-check-symbols-hal-intf-thread-iol: rust-objects-hal-intf-thread-iol-c rust-objects-hal-intf-thread-iol
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_intf_thread_iol_l1_ref.o \
+		NEW=rust/hal_intf.o
+
+# W4-87: L1 harness only — default module builds already get config_rtw_mgmt_queue
+# from drv_conf.h via rustflags-y above and T21 rust/generated_cfgs.
+HAL_INTF_XMIT_DISPATCH_CFLAGS := -DCONFIG_RTW_MGMT_QUEUE
+HAL_INTF_XMIT_DISPATCH_RUSTFLAGS := --cfg config_rtw_mgmt_queue
+rust-objects-hal-intf-xmit-dispatch:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-hal-intf-xmit-dispatch"; exit 1; }
+	rm -f rust/hal_intf.o rust/.hal_intf.o.cmd
+	$(MAKE) $(KBUILD_OPTS) ccflags-y+="$(HAL_INTF_XMIT_DISPATCH_CFLAGS)" \
+		rustflags-y+="$(HAL_INTF_XMIT_DISPATCH_RUSTFLAGS)" \
+		-C $(KSRC) M=$(shell pwd) rust/hal_intf.o
+rust-objects-hal-intf-xmit-dispatch-c:
+	@mkdir -p tests/host/hal
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 $(HAL_INTF_XMIT_DISPATCH_CFLAGS) \
+		-o tests/host/hal/hal_intf_xmit_dispatch_l1_ref.o \
+		tests/host/hal/hal_intf_xmit_dispatch_l1_ref.c
+rust-check-symbols-hal-intf-xmit-dispatch: rust-objects-hal-intf-xmit-dispatch-c rust-objects-hal-intf-xmit-dispatch
+	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_intf_xmit_dispatch_l1_ref.o \
 		NEW=rust/hal_intf.o
 
 # W4-09: host C oracle (PHY_CalculateBitShift) vs rust/hal_phy.o.
