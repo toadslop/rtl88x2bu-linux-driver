@@ -2110,6 +2110,26 @@ mod c2h_customer_str {
 }
 
 #[cfg(all(
+    config_rtw_customer_str,
+    not(host_hal_com_hw_rate_test),
+    not(host_hal_com_rsvd_page_test),
+    not(host_hal_com_chip_info_test),
+    not(host_hal_com_mrate_test),
+    not(host_hal_com_fw_info_test),
+    not(host_hal_com_brate_test),
+    not(host_hal_com_legal_channel_test),
+    not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
+    not(host_hal_com_tx_aclt_force_test),
+    not(host_hal_com_tx_aclt_confs_test),
+    not(host_hal_com_hal_spec_test),
+))]
+mod customer_str_sync {
+    include!("hal_com_customer_str.rs");
+}
+
+#[cfg(all(
     config_rtw_mac_hidden_rpt,
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),

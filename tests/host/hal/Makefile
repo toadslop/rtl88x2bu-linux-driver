@@ -70,7 +70,8 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust \
 	test-usb-sync-read test-usb-sync-read-rust test-usb-sync-write \
 	test-usb-async-write test-usb-async-write-rust test-chip-odm test-chip-odm-rust \
-	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-c2h-evt-robustness clean
+	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
+	test-c2h-evt-robustness clean
 
 all: test
 
@@ -88,7 +89,8 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-usb-sync-read-rust test-usb-sync-write test-usb-async-write \
 	test-usb-async-write-rust test-chip-odm test-chip-odm-rust \
 	test-hal-trxnss test-hal-trxnss-rust \
-	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-c2h-evt-robustness
+	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
+	test-c2h-evt-robustness
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -853,6 +855,28 @@ test_sec_read_cam_ent_null_mac_rust: test_sec_read_cam_ent_null_mac.c \
 		test_sec_read_cam_ent_null_mac.c $(SEC_CAM_ENT_L2) librust_hal_com_sec_cam_ent.a
 
 RUST_C2H_EVT := $(ROOT)/rust/hal_com_c2h_evt.rs
+CUSTOMER_STR_SHIM := hal_com_customer_str_shim.c
+CUSTOMER_STR_ORACLE := hal_com_customer_str_c_oracle.c
+RUST_CUSTOMER_STR := $(ROOT)/rust/hal_com_customer_str_host.rs
+
+test-customer-str: test_hal_com_customer_str
+	./test_hal_com_customer_str
+
+test-customer-str-rust: test_hal_com_customer_str_rust
+	./test_hal_com_customer_str_rust
+
+test_hal_com_customer_str: test_hal_com_customer_str.c $(CUSTOMER_STR_SHIM) $(CUSTOMER_STR_ORACLE)
+	$(CC) $(CFLAGS) -o $@ test_hal_com_customer_str.c $(CUSTOMER_STR_SHIM) \
+		$(CUSTOMER_STR_ORACLE)
+
+librust_hal_com_customer_str.a: $(RUST_CUSTOMER_STR)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--crate-type staticlib $(RUST_CUSTOMER_STR) -o $@
+
+test_hal_com_customer_str_rust: test_hal_com_customer_str.c $(CUSTOMER_STR_SHIM) \
+		$(CUSTOMER_STR_ORACLE) librust_hal_com_customer_str.a
+	$(CC) $(CFLAGS) -DRUST_HAL_COM_CUSTOMER_STR_ORACLE -o $@ test_hal_com_customer_str.c \
+		$(CUSTOMER_STR_SHIM) $(CUSTOMER_STR_ORACLE) librust_hal_com_customer_str.a
 
 test-c2h-evt-robustness: test_hal_com_c2h_evt_fx19
 	./test_hal_com_c2h_evt_fx19
