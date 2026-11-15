@@ -28,6 +28,10 @@ void dump_sta_info(void *sel, struct sta_info *psta);
 void dump_sta_traffic(void *sel, _adapter *adapter, struct sta_info *psta);
 void rtw_rust_hal_dm_init_odm_cominfo_head(_adapter *adapter);
 void rtw_rust_hal_dm_init_odm_cominfo_regulation_dfs(_adapter *adapter);
+void rtw_hal_update_iqk_fw_offload_cap(_adapter *adapter);
+#ifdef CONFIG_FW_OFFLOAD_PARAM_INIT
+void rtw_hal_update_param_init_fw_offload_cap(_adapter *adapter);
+#endif
 #endif
 
 /* A mapping from HalData to ODM. */
@@ -79,6 +83,7 @@ enum odm_board_type boardType(u8 InterfaceSel)
 	return board;
 }
 
+#ifndef CONFIG_RUST
 void rtw_hal_update_iqk_fw_offload_cap(_adapter *adapter)
 {
 	PHAL_DATA_TYPE hal = GET_HAL_DATA(adapter);
@@ -99,6 +104,7 @@ void rtw_hal_update_iqk_fw_offload_cap(_adapter *adapter)
 		halrf_iqk_trigger(p_dm_odm, _FALSE);
 	}
 }
+#endif /* !CONFIG_RUST */
 
 #if ((RTL8822B_SUPPORT == 1) || (RTL8821C_SUPPORT == 1) || (RTL8814B_SUPPORT == 1) || (RTL8822C_SUPPORT == 1) \
 	|| (RTL8723F_SUPPORT == 1))
@@ -213,6 +219,7 @@ void rtw_hal_lck_test(_adapter *adapter)
 #endif
 
 #ifdef CONFIG_FW_OFFLOAD_PARAM_INIT
+#ifndef CONFIG_RUST
 void rtw_hal_update_param_init_fw_offload_cap(_adapter *adapter)
 {
 	struct dm_struct *p_dm_odm = adapter_to_phydm(adapter);
@@ -224,6 +231,7 @@ void rtw_hal_update_param_init_fw_offload_cap(_adapter *adapter)
 
 	RTW_INFO("Init-Parameter FW offload:%s\n", adapter->registrypriv.fw_param_init ? "enable" : "disable");
 }
+#endif /* !CONFIG_RUST */
 #endif
 
 void record_ra_info(void *p_dm_void, u8 macid, struct cmn_sta_info *p_sta, u64 ra_mask)
