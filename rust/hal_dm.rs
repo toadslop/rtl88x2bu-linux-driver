@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 //! HAL DM — board-type (`W4-30`), ODM endian hooks (`W4-38`), `dump_sta_info` (`W4-31`),
-//! `dump_sta_traffic` (`W4-32`), FW offload caps (`W4-79`) from `hal/hal_dm.c`.
+//! `dump_sta_traffic` (`W4-32`), FW offload caps (`W4-79`), Init_ODM mid block (`W4-85`)
+//! from `hal/hal_dm.c`.
 
 #![allow(
     dead_code,
@@ -87,6 +88,7 @@ pub extern "C" fn rtw_rust_hal_dm_init_odm_board_type(
         host_hal_dm_dump_sta_info_test,
         host_hal_dm_dump_sta_traffic_test,
         host_hal_dm_odm_iface_test,
+        host_hal_dm_init_odm_mid_test,
     ))
 ))]
 mod odm_endian_hooks {
@@ -168,6 +170,7 @@ mod odm_endian_hooks {
         host_hal_dm_dump_sta_info_test,
         host_hal_dm_dump_sta_traffic_test,
         host_hal_dm_odm_iface_test,
+        host_hal_dm_init_odm_mid_test,
     ))
 ))]
 mod dump_sta_info {
@@ -627,6 +630,7 @@ mod dump_sta_info {
         host_hal_dm_dump_sta_info_test,
         host_hal_dm_dump_sta_traffic_test,
         host_hal_dm_odm_iface_test,
+        host_hal_dm_init_odm_mid_test,
     ))
 ))]
 mod dump_sta_traffic {
@@ -641,6 +645,7 @@ mod dump_sta_traffic {
         host_hal_dm_dump_sta_info_test,
         host_hal_dm_dump_sta_traffic_test,
         host_hal_dm_odm_iface_test,
+        host_hal_dm_init_odm_mid_test,
     ))
 ))]
 mod phydm_priv_odm_iface {
@@ -653,7 +658,23 @@ mod phydm_priv_odm_iface {
     host_hal_dm_dump_sta_info_test,
     host_hal_dm_dump_sta_traffic_test,
     host_hal_dm_odm_iface_test,
+    host_hal_dm_init_odm_mid_test,
 )))]
 mod fw_offload_caps {
     include!("hal_dm_fw_offload_caps.inc.rs");
+}
+
+#[cfg(any(
+    host_hal_dm_init_odm_mid_test,
+    not(any(
+        host_hal_dm_board_type_test,
+        host_hal_dm_odm_endian_hooks_test,
+        host_hal_dm_dump_sta_info_test,
+        host_hal_dm_dump_sta_traffic_test,
+        host_hal_dm_odm_iface_test,
+        host_hal_dm_init_odm_mid_test,
+    ))
+))]
+mod init_odm_mid {
+    include!("hal_dm_init_odm_mid.inc.rs");
 }
