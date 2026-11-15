@@ -293,149 +293,7 @@ static void _FourOutPipeMapping(
 /* c2h_defeature_dbg_hdl — rust/hal_com.rs (W4-56 PR1) */
 /* customer-string C2H (partial) — rust/hal_com.rs (W4-56 PR2/PR3) */
 
-#ifdef CONFIG_RTW_CUSTOMER_STR
-/* read customer str */
-s32 rtw_hal_customer_str_read(_adapter *adapter, u8 *cs)
-{
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct submit_ctx sctx;
-	s32 ret = _SUCCESS;
-
-	_enter_critical_mutex(&dvobj->customer_str_mutex, NULL);
-	if (dvobj->customer_str_sctx != NULL)
-		ret = _FAIL;
-	else {
-		rtw_sctx_init(&sctx, 2 * 1000);
-		dvobj->customer_str_sctx = &sctx;
-	}
-	_exit_critical_mutex(&dvobj->customer_str_mutex, NULL);
-
-	if (ret == _FAIL) {
-		RTW_WARN("%s another handle ongoing\n", __func__);
-		goto exit;
-	}
-
-	ret = rtw_customer_str_req_cmd(adapter);
-	if (ret != _SUCCESS) {
-		RTW_WARN("%s read cmd fail\n", __func__);
-		_enter_critical_mutex(&dvobj->customer_str_mutex, NULL);
-		dvobj->customer_str_sctx = NULL;
-		_exit_critical_mutex(&dvobj->customer_str_mutex, NULL);
-		goto exit;
-	}
-
-	/* wait till rpt done or timeout */
-	rtw_sctx_wait(&sctx, __func__);
-
-	_enter_critical_mutex(&dvobj->customer_str_mutex, NULL);
-	dvobj->customer_str_sctx = NULL;
-	if (sctx.status == RTW_SCTX_DONE_SUCCESS)
-		_rtw_memcpy(cs, dvobj->customer_str, RTW_CUSTOMER_STR_LEN);
-	else
-		ret = _FAIL;
-	_exit_critical_mutex(&dvobj->customer_str_mutex, NULL);
-
-exit:
-	return ret;
-}
-
-s32 rtw_hal_h2c_customer_str_write(_adapter *adapter, const u8 *cs)
-{
-	u8 h2c_data_w1[H2C_CUSTOMER_STR_W1_LEN] = {0};
-	u8 h2c_data_w2[H2C_CUSTOMER_STR_W2_LEN] = {0};
-	u8 h2c_data_w3[H2C_CUSTOMER_STR_W3_LEN] = {0};
-	s32 ret;
-
-	SET_H2CCMD_CUSTOMER_STR_W1_EN(h2c_data_w1, 1);
-	_rtw_memcpy(H2CCMD_CUSTOMER_STR_W1_BYTE0(h2c_data_w1), cs, 6);
-
-	SET_H2CCMD_CUSTOMER_STR_W2_EN(h2c_data_w2, 1);
-	_rtw_memcpy(H2CCMD_CUSTOMER_STR_W2_BYTE6(h2c_data_w2), cs + 6, 6);
-
-	SET_H2CCMD_CUSTOMER_STR_W3_EN(h2c_data_w3, 1);
-	_rtw_memcpy(H2CCMD_CUSTOMER_STR_W3_BYTE12(h2c_data_w3), cs + 6 + 6, 4);
-
-	ret = rtw_hal_fill_h2c_cmd(adapter, H2C_CUSTOMER_STR_W1, H2C_CUSTOMER_STR_W1_LEN, h2c_data_w1);
-	if (ret != _SUCCESS) {
-		RTW_WARN("%s w1 fail\n", __func__);
-		goto exit;
-	}
-
-	ret = rtw_hal_fill_h2c_cmd(adapter, H2C_CUSTOMER_STR_W2, H2C_CUSTOMER_STR_W2_LEN, h2c_data_w2);
-	if (ret != _SUCCESS) {
-		RTW_WARN("%s w2 fail\n", __func__);
-		goto exit;
-	}
-
-	ret = rtw_hal_fill_h2c_cmd(adapter, H2C_CUSTOMER_STR_W3, H2C_CUSTOMER_STR_W3_LEN, h2c_data_w3);
-	if (ret != _SUCCESS) {
-		RTW_WARN("%s w3 fail\n", __func__);
-		goto exit;
-	}
-
-exit:
-	return ret;
-}
-
-/* write customer str and check if value reported is the same as requested */
-s32 rtw_hal_customer_str_write(_adapter *adapter, const u8 *cs)
-{
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct submit_ctx sctx;
-	s32 ret = _SUCCESS;
-
-	_enter_critical_mutex(&dvobj->customer_str_mutex, NULL);
-	if (dvobj->customer_str_sctx != NULL)
-		ret = _FAIL;
-	else {
-		rtw_sctx_init(&sctx, 2 * 1000);
-		dvobj->customer_str_sctx = &sctx;
-	}
-	_exit_critical_mutex(&dvobj->customer_str_mutex, NULL);
-
-	if (ret == _FAIL) {
-		RTW_WARN("%s another handle ongoing\n", __func__);
-		goto exit;
-	}
-
-	ret = rtw_customer_str_write_cmd(adapter, cs);
-	if (ret != _SUCCESS) {
-		RTW_WARN("%s write cmd fail\n", __func__);
-		_enter_critical_mutex(&dvobj->customer_str_mutex, NULL);
-		dvobj->customer_str_sctx = NULL;
-		_exit_critical_mutex(&dvobj->customer_str_mutex, NULL);
-		goto exit;
-	}
-
-	ret = rtw_customer_str_req_cmd(adapter);
-	if (ret != _SUCCESS) {
-		RTW_WARN("%s read cmd fail\n", __func__);
-		_enter_critical_mutex(&dvobj->customer_str_mutex, NULL);
-		dvobj->customer_str_sctx = NULL;
-		_exit_critical_mutex(&dvobj->customer_str_mutex, NULL);
-		goto exit;
-	}
-
-	/* wait till rpt done or timeout */
-	rtw_sctx_wait(&sctx, __func__);
-
-	_enter_critical_mutex(&dvobj->customer_str_mutex, NULL);
-	dvobj->customer_str_sctx = NULL;
-	if (sctx.status == RTW_SCTX_DONE_SUCCESS) {
-		if (_rtw_memcmp(cs, dvobj->customer_str, RTW_CUSTOMER_STR_LEN) != _TRUE) {
-			RTW_WARN("%s read back check fail\n", __func__);
-			RTW_INFO_DUMP("write req: ", cs, RTW_CUSTOMER_STR_LEN);
-			RTW_INFO_DUMP("read back: ", dvobj->customer_str, RTW_CUSTOMER_STR_LEN);
-			ret = _FAIL;
-		}
-	} else
-		ret = _FAIL;
-	_exit_critical_mutex(&dvobj->customer_str_mutex, NULL);
-
-exit:
-	return ret;
-}
-#endif /* CONFIG_RTW_CUSTOMER_STR */
+/* customer string sync read/write — rust/hal_com_customer_str.rs (W4-86) */
 
 #ifdef RTW_PER_CMD_SUPPORT_FW
 #define H2C_REQ_PER_RPT_LEN 5
@@ -15220,6 +15078,37 @@ u8 *rtw_rust_hal_com_customer_str_buf(struct dvobj_priv *dvobj)
 void rtw_rust_hal_com_customer_str_sctx_done(struct dvobj_priv *dvobj)
 {
 	rtw_sctx_done(&dvobj->customer_str_sctx);
+}
+
+void rtw_rust_hal_com_customer_str_sctx_set(struct dvobj_priv *dvobj,
+	struct submit_ctx *sctx)
+{
+	dvobj->customer_str_sctx = sctx;
+}
+
+void rtw_rust_hal_com_warn_customer_str_sync_ongoing(const char *func)
+{
+	RTW_WARN("%s another handle ongoing\n", func);
+}
+
+void rtw_rust_hal_com_warn_customer_str_cmd_fail(const char *func, const char *msg)
+{
+	RTW_WARN("%s %s\n", func, msg);
+}
+
+void rtw_rust_hal_com_warn_customer_str_h2c_w_fail(const char *func, const char *part)
+{
+	RTW_WARN("%s %s fail\n", func, part);
+}
+
+void rtw_rust_hal_com_warn_customer_str_write_check_fail(const char *func)
+{
+	RTW_WARN("%s read back check fail\n", func);
+}
+
+void rtw_rust_hal_com_info_dump_customer_str(const char *title, const u8 *buf)
+{
+	RTW_INFO_DUMP((u8 *)title, (u8 *)buf, RTW_CUSTOMER_STR_LEN);
 }
 
 void rtw_rust_hal_com_warn_customer_str_invalid_sctx_status(int status)
