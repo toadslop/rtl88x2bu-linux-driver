@@ -192,4 +192,15 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-91 | `wave4-91-hal-com-config-channel-plan-p2.md` | `hal_com_config_channel_plan` SW/done tail |
 | W4-92 | `wave4-92-hal-dm-phydm-igi-iqk-queries.md` | `rtw_phydm_get_cur_igi` + IQK-in-progress |
 
+## Children (tranche 19 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-93 | `wave4-93-hal-dm-min-rssi-phy-cnt-queries.md` | min RSSI + PHY FA/CCA counters |
+| W4-94 | `wave4-94-hal-dm-set-odm-var-core.md` | `SetHalODMVar` core switch cases |
+| W4-95 | `wave4-95-hal-dm-get-odm-var.md` | `GetHalODMVar` |
+| W4-96 | `wave4-96-hal-dm-set-odm-var-rx-dump.md` | `SetHalODMVar` RX info dump |
+| W4-97 | `wave4-97-hal-com-update-sta-wset-mimo.md` | STA wireless set + MIMO type |
+| W4-98 | `wave4-98-hal-dm-iqk-lck-trigger.md` | IQK/LCK `halrf` trigger wrappers |
+
 Further slices: USB bulk port bodies stay under Wave 5 `os_dep`; file new `wave4-*.md` parallel lanes as hal_dm / hal_com tails thin.
