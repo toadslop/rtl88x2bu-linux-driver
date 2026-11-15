@@ -425,6 +425,12 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-90 | #2061 | [W4-90] Translate hal_com.c — hal_com_config_channel_plan (part 1/2) |
 | W4-91 | #2062 | [W4-91] Translate hal_com.c — hal_com_config_channel_plan (part 2/2) |
 | W4-92 | #2063 | [W4-92] Translate hal_dm.c — PHYDM IGI and IQK status queries |
+| W4-93 | #2081 | [W4-93] Translate hal_dm.c — min RSSI and PHY counter queries |
+| W4-94 | #2082 | [W4-94] Translate hal_dm.c — SetHalODMVar core cases |
+| W4-95 | #2083 | [W4-95] Translate hal_dm.c — GetHalODMVar |
+| W4-96 | #2084 | [W4-96] Translate hal_dm.c — SetHalODMVar RX info dump |
+| W4-97 | #2085 | [W4-97] Translate hal_com_rest.c — STA wireless set and MIMO type |
+| W4-98 | #2086 | [W4-98] Translate hal_dm.c — IQK and LCK RFK triggers |
 
 ## Superseded issues
 

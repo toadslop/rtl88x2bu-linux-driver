@@ -361,6 +361,12 @@ files=(
   wave4-90-hal-com-config-channel-plan-p1.md
   wave4-91-hal-com-config-channel-plan-p2.md
   wave4-92-hal-dm-phydm-igi-iqk-queries.md
+  wave4-93-hal-dm-min-rssi-phy-cnt-queries.md
+  wave4-94-hal-dm-set-odm-var-core.md
+  wave4-95-hal-dm-get-odm-var.md
+  wave4-96-hal-dm-set-odm-var-rx-dump.md
+  wave4-97-hal-com-update-sta-wset-mimo.md
+  wave4-98-hal-dm-iqk-lck-trigger.md
   wave3-161-debug-proc-rate-setter.md
   wave3-162-debug-proc-rx-cnt-dump.md
   wave3-163-debug-proc-ps-dbg.md
