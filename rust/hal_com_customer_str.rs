@@ -2,6 +2,7 @@
 // CONFIG_RTW_CUSTOMER_STR sync read/write API (W4-86).
 
 use core::ffi::c_void;
+use core::sync::atomic::{AtomicBool, Ordering};
 
 #[path = "ffi_osdep_memcpy.rs"]
 mod ffi_osdep_memcpy;
@@ -55,10 +56,50 @@ extern "C" {
         cmd_buf: *mut U8,
     ) -> S32;
     fn _rtw_memcmp(a: *const c_void, b: *const c_void, sz: U32) -> i32;
+    static rtw_rust_hal_com_submit_ctx_slot_size: U32;
+    static rtw_rust_hal_com_submit_ctx_align: U32;
 }
 
-/// Stack slot large enough for `struct submit_ctx` (opaque to Rust).
-type SctxSlot = [u8; 64];
+/// Must match `RTW_RUST_HAL_COM_SUBMIT_CTX_SLOT_SIZE` in `hal_com_rest.c`.
+const RTW_RUST_HAL_COM_SUBMIT_CTX_SLOT_SIZE: usize = 256;
+
+/// Opaque stack backing for `struct submit_ctx` (layout lives in C only).
+#[repr(C, align(16))]
+struct SubmitCtxSlot {
+    bytes: [u8; RTW_RUST_HAL_COM_SUBMIT_CTX_SLOT_SIZE],
+}
+
+#[inline]
+fn submit_ctx_slot_ptr(slot: &mut SubmitCtxSlot) -> *mut c_void {
+    slot.bytes.as_mut_ptr().cast()
+}
+
+static SUBMIT_CTX_SLOT_VERIFIED: AtomicBool = AtomicBool::new(false);
+
+#[cold]
+#[inline(never)]
+fn customer_str_submit_ctx_slot_mismatch() -> ! {
+    // Link-time slot size is asserted in C; this catches drift at first use.
+    panic!("customer_str submit_ctx slot layout mismatch");
+}
+
+#[inline]
+fn verify_customer_str_submit_ctx_slot_once() {
+    if SUBMIT_CTX_SLOT_VERIFIED.load(Ordering::Relaxed) {
+        return;
+    }
+    // SAFETY: immutable C exports; called before any sctx access.
+    let (size_ok, align_ok) = unsafe {
+        (
+            rtw_rust_hal_com_submit_ctx_slot_size as usize == RTW_RUST_HAL_COM_SUBMIT_CTX_SLOT_SIZE,
+            rtw_rust_hal_com_submit_ctx_align as usize <= core::mem::align_of::<SubmitCtxSlot>(),
+        )
+    };
+    if !size_ok || !align_ok {
+        customer_str_submit_ctx_slot_mismatch();
+    }
+    SUBMIT_CTX_SLOT_VERIFIED.store(true, Ordering::Relaxed);
+}
 
 #[inline]
 fn h2c_en_byte() -> U8 {
@@ -67,19 +108,19 @@ fn h2c_en_byte() -> U8 {
 
 #[no_mangle]
 pub extern "C" fn rtw_hal_customer_str_read(adapter: *mut c_void, cs: *mut U8) -> S32 {
+    verify_customer_str_submit_ctx_slot_once();
     let dvobj = unsafe { rtw_rust_hal_com_adapter_to_dvobj(adapter) };
     let mutex = unsafe { rtw_rust_hal_com_customer_str_mutex(dvobj) };
-    let mut sctx: SctxSlot = [0; 64];
+    let mut sctx = SubmitCtxSlot { bytes: [0; RTW_RUST_HAL_COM_SUBMIT_CTX_SLOT_SIZE] };
     let mut ret = SUCCESS;
 
     unsafe { rtw_rust_hal_com_enter_critical_mutex(mutex) };
     if !unsafe { rtw_rust_hal_com_customer_str_sctx(dvobj) }.is_null() {
         ret = FAIL;
     } else {
-        unsafe { rtw_sctx_init(sctx.as_mut_ptr() as *mut c_void, SCTX_WAIT_MS) };
-        unsafe {
-            rtw_rust_hal_com_customer_str_sctx_set(dvobj, sctx.as_mut_ptr() as *mut c_void);
-        }
+        let sctx_ptr = submit_ctx_slot_ptr(&mut sctx);
+        unsafe { rtw_sctx_init(sctx_ptr, SCTX_WAIT_MS) };
+        unsafe { rtw_rust_hal_com_customer_str_sctx_set(dvobj, sctx_ptr) };
     }
     unsafe { rtw_rust_hal_com_exit_critical_mutex(mutex) };
 
@@ -102,11 +143,15 @@ pub extern "C" fn rtw_hal_customer_str_read(adapter: *mut c_void, cs: *mut U8) -
         return ret;
     }
 
-    unsafe { rtw_sctx_wait(sctx.as_mut_ptr() as *mut c_void, FN_READ.as_ptr()) };
+    // SAFETY: `sctx_ptr` stays valid until cleared under `customer_str_mutex`
+    // below; the C2H handler may call `rtw_sctx_done` on it only while the
+    // pointer is still published (same mutex ordering as the original C).
+    let sctx_ptr = submit_ctx_slot_ptr(&mut sctx);
+    unsafe { rtw_sctx_wait(sctx_ptr, FN_READ.as_ptr()) };
 
     unsafe { rtw_rust_hal_com_enter_critical_mutex(mutex) };
     unsafe { rtw_rust_hal_com_customer_str_sctx_set(dvobj, core::ptr::null_mut()) };
-    if unsafe { rtw_rust_hal_com_sctx_status(sctx.as_mut_ptr() as *mut c_void) }
+    if unsafe { rtw_rust_hal_com_sctx_status(sctx_ptr) }
         == RTW_SCTX_DONE_SUCCESS
     {
         unsafe {
@@ -204,19 +249,19 @@ pub extern "C" fn rtw_hal_h2c_customer_str_write(adapter: *mut c_void, cs: *cons
 
 #[no_mangle]
 pub extern "C" fn rtw_hal_customer_str_write(adapter: *mut c_void, cs: *const U8) -> S32 {
+    verify_customer_str_submit_ctx_slot_once();
     let dvobj = unsafe { rtw_rust_hal_com_adapter_to_dvobj(adapter) };
     let mutex = unsafe { rtw_rust_hal_com_customer_str_mutex(dvobj) };
-    let mut sctx: SctxSlot = [0; 64];
+    let mut sctx = SubmitCtxSlot { bytes: [0; RTW_RUST_HAL_COM_SUBMIT_CTX_SLOT_SIZE] };
     let mut ret = SUCCESS;
 
     unsafe { rtw_rust_hal_com_enter_critical_mutex(mutex) };
     if !unsafe { rtw_rust_hal_com_customer_str_sctx(dvobj) }.is_null() {
         ret = FAIL;
     } else {
-        unsafe { rtw_sctx_init(sctx.as_mut_ptr() as *mut c_void, SCTX_WAIT_MS) };
-        unsafe {
-            rtw_rust_hal_com_customer_str_sctx_set(dvobj, sctx.as_mut_ptr() as *mut c_void);
-        }
+        let sctx_ptr = submit_ctx_slot_ptr(&mut sctx);
+        unsafe { rtw_sctx_init(sctx_ptr, SCTX_WAIT_MS) };
+        unsafe { rtw_rust_hal_com_customer_str_sctx_set(dvobj, sctx_ptr) };
     }
     unsafe { rtw_rust_hal_com_exit_critical_mutex(mutex) };
 
@@ -253,11 +298,13 @@ pub extern "C" fn rtw_hal_customer_str_write(adapter: *mut c_void, cs: *const U8
         return ret;
     }
 
-    unsafe { rtw_sctx_wait(sctx.as_mut_ptr() as *mut c_void, FN_WRITE.as_ptr()) };
+    // SAFETY: same stack sctx lifetime / mutex invariant as `rtw_hal_customer_str_read`.
+    let sctx_ptr = submit_ctx_slot_ptr(&mut sctx);
+    unsafe { rtw_sctx_wait(sctx_ptr, FN_WRITE.as_ptr()) };
 
     unsafe { rtw_rust_hal_com_enter_critical_mutex(mutex) };
     unsafe { rtw_rust_hal_com_customer_str_sctx_set(dvobj, core::ptr::null_mut()) };
-    if unsafe { rtw_rust_hal_com_sctx_status(sctx.as_mut_ptr() as *mut c_void) }
+    if unsafe { rtw_rust_hal_com_sctx_status(sctx_ptr) }
         == RTW_SCTX_DONE_SUCCESS
     {
         if unsafe {

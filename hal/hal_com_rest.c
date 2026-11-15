@@ -15060,6 +15060,21 @@ int rtw_rust_hal_com_sctx_status(struct submit_ctx *sctx)
 }
 
 #ifdef CONFIG_RTW_CUSTOMER_STR
+
+/*
+ * Stack slot in rust/hal_com_customer_str.rs; must fit struct submit_ctx for
+ * every module build (incl. module-l0-matrix lockdep / RT variants).
+ */
+#define RTW_RUST_HAL_COM_SUBMIT_CTX_SLOT_SIZE 256
+
+_Static_assert(sizeof(struct submit_ctx) <= RTW_RUST_HAL_COM_SUBMIT_CTX_SLOT_SIZE,
+	"struct submit_ctx exceeds Rust customer_str stack slot");
+_Static_assert(_Alignof(struct submit_ctx) <= 16,
+	"struct submit_ctx alignment exceeds Rust customer_str slot");
+
+const u32 rtw_rust_hal_com_submit_ctx_slot_size = RTW_RUST_HAL_COM_SUBMIT_CTX_SLOT_SIZE;
+const u32 rtw_rust_hal_com_submit_ctx_align = _Alignof(struct submit_ctx);
+
 _mutex *rtw_rust_hal_com_customer_str_mutex(struct dvobj_priv *dvobj)
 {
 	return &dvobj->customer_str_mutex;

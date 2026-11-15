@@ -239,3 +239,7 @@ int rtw_sctx_wait(struct submit_ctx *sctx, const char *msg)
 		return _SUCCESS;
 	return _FAIL;
 }
+
+/* Layout exports for rust/hal_com_customer_str.rs (matches hal_com_rest.c). */
+const unsigned int rtw_rust_hal_com_submit_ctx_slot_size = 256;
+const unsigned int rtw_rust_hal_com_submit_ctx_align = _Alignof(struct submit_ctx);
