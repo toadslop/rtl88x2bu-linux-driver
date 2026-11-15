@@ -12,15 +12,15 @@ struct hal_config_chplan_hw_out {
 	int chplan;
 	uint8_t country_chplan;
 	uint8_t force_hw_chplan;
-	uint8_t goto_sw_config;
+	uint8_t early_goto_sw_config;
 };
 
 struct country_chplan;
 
 void hal_com_config_chplan_hw_branch(
 	const char *hw_alpha2,
-	uint8_t hw_chplan,
-	uint8_t force_hw_chplan_in,
+	uint8_t hw_chplan_raw,
+	uint8_t autoload_fail,
 	struct hal_config_chplan_hw_out *out);
 
 #endif /* HOST_HAL_CONFIG_CHPLAN_HW_TYPES_H */
