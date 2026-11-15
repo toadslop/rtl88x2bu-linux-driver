@@ -84,6 +84,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-mgntframe-raid test-mgntframe-raid-rust test-hdata-rate test-hdata-rate-rust \
 	test-phy-bit-shift test-phy-bit-shift-rust test-dm-board-type test-dm-board-type-rust \
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
+	test-dm-init-odm-cominfo-tail test-dm-init-odm-cominfo-tail-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust test-usb-sync-read \
 	test-usb-sync-read-rust test-usb-sync-write test-usb-async-write \
@@ -705,6 +706,30 @@ test_hal_dm_odm_iface_rust: test_hal_dm_odm_iface.c librust_hal_dm_odm_iface.a \
 		$(DM_ODM_IFACE_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_HAL_DM_ODM_IFACE_ORACLE -I$(ROOT)/tests/host/include -o $@ \
 		test_hal_dm_odm_iface.c $(DM_ODM_IFACE_SHIM) $(HOST_JSON) librust_hal_dm_odm_iface.a
+
+DM_INIT_ODM_TAIL_SHIM := hal_dm_init_odm_cominfo_tail_shim.c
+DM_INIT_ODM_TAIL_ORACLE := hal_dm_init_odm_cominfo_tail_c_oracle.c
+
+test-dm-init-odm-cominfo-tail-rust: test_hal_dm_init_odm_cominfo_tail_rust
+	./test_hal_dm_init_odm_cominfo_tail_rust
+
+RUST_INIT_ODM_COMINFO_TAIL := $(ROOT)/rust/hal_dm_init_odm_cominfo_tail_host.rs
+
+librust_hal_dm_init_odm_cominfo_tail.a: $(RUST_INIT_ODM_COMINFO_TAIL)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--crate-type staticlib $(RUST_INIT_ODM_COMINFO_TAIL) -o $@
+
+test_hal_dm_init_odm_cominfo_tail_rust: test_hal_dm_init_odm_cominfo_tail.c \
+		$(DM_INIT_ODM_TAIL_SHIM) librust_hal_dm_init_odm_cominfo_tail.a
+	$(CC) $(CFLAGS) -DCONFIG_USB_HCI -I$(ROOT)/tests/host/include -o $@ test_hal_dm_init_odm_cominfo_tail.c \
+		$(DM_INIT_ODM_TAIL_SHIM) librust_hal_dm_init_odm_cominfo_tail.a
+
+test-dm-init-odm-cominfo-tail: test_hal_dm_init_odm_cominfo_tail
+	./test_hal_dm_init_odm_cominfo_tail
+
+test_hal_dm_init_odm_cominfo_tail: test_hal_dm_init_odm_cominfo_tail.c $(DM_INIT_ODM_TAIL_ORACLE)
+	$(CC) $(CFLAGS) -DCONFIG_USB_HCI -I$(ROOT)/tests/host/include -o $@ test_hal_dm_init_odm_cominfo_tail.c \
+		$(DM_INIT_ODM_TAIL_ORACLE)
 
 test-usb-vendor-wvalue: test_hal_usb_vendor_wvalue
 	./test_hal_usb_vendor_wvalue hal_usb_vendor_wvalue_vectors.json
