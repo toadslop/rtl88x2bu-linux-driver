@@ -1,0 +1,34 @@
+{
+  "vectors": [
+    {
+      "name": "sw_only_alpha2_us",
+      "hw_chplan": 255,
+      "sw_alpha2": "US",
+      "sw_chplan": 255,
+      "expect_channel_plan": 118,
+      "expect_disable_sw": 0,
+      "expect_has_country": 1,
+      "expect_country_chplan": 118
+    },
+    {
+      "name": "hw_sw_conflict_sw_wins",
+      "hw_chplan": 0,
+      "sw_alpha2": "JP",
+      "sw_chplan": 255,
+      "expect_channel_plan": 39,
+      "expect_disable_sw": 0,
+      "expect_has_country": 1,
+      "expect_country_chplan": 39
+    },
+    {
+      "name": "default_fallback_both_invalid",
+      "hw_alpha2": "ZZ",
+      "hw_chplan": 133,
+      "sw_alpha2": "ZZ",
+      "sw_chplan": 133,
+      "expect_channel_plan": 127,
+      "expect_disable_sw": 0,
+      "expect_has_country": 0
+    }
+  ]
+}
