@@ -356,6 +356,11 @@ files=(
   wave4-85-hal-dm-init-odm-adaptivity-hooks.md
   wave4-86-hal-com-customer-str-sync.md
   wave4-87-hal-intf-xmit-dispatch.md
+  wave4-88-hal-dm-init-odm-hook-tail.md
+  wave4-89-hal-dm-phydm-ops-init.md
+  wave4-90-hal-com-config-channel-plan-p1.md
+  wave4-91-hal-com-config-channel-plan-p2.md
+  wave4-92-hal-dm-phydm-igi-iqk-queries.md
   wave3-161-debug-proc-rate-setter.md
   wave3-162-debug-proc-rx-cnt-dump.md
   wave3-163-debug-proc-ps-dbg.md

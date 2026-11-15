@@ -182,4 +182,14 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-86 | `wave4-86-hal-com-customer-str-sync.md` | customer string read/write API |
 | W4-87 | `wave4-87-hal-intf-xmit-dispatch.md` | xmit enqueue + mgnt xmit dispatch |
 
-Further slices: deeper PHYDM tail / USB bulk port I/O — file as `wave4-*.md` when tranche 17 backlog thins.
+## Children (tranche 18 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-88 | `wave4-88-hal-dm-init-odm-hook-tail.md` | Init_ODM ComInfo pointer-hook tail |
+| W4-89 | `wave4-89-hal-dm-phydm-ops-init.md` | `rtw_phydm_ops_func_init` + `record_ra_info` |
+| W4-90 | `wave4-90-hal-com-config-channel-plan-p1.md` | `hal_com_config_channel_plan` HW branch |
+| W4-91 | `wave4-91-hal-com-config-channel-plan-p2.md` | `hal_com_config_channel_plan` SW/done tail |
+| W4-92 | `wave4-92-hal-dm-phydm-igi-iqk-queries.md` | `rtw_phydm_get_cur_igi` + IQK-in-progress |
+
+Further slices: USB bulk port bodies stay under Wave 5 `os_dep`; file new `wave4-*.md` parallel lanes as hal_dm / hal_com tails thin.
