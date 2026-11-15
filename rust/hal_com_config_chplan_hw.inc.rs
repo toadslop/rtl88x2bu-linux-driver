@@ -21,7 +21,7 @@ pub struct HalConfigChplanHwOut {
     pub chplan: i32,
     pub country_chplan: U8,
     pub force_hw_chplan: U8,
-    pub goto_sw_config: U8,
+    pub early_goto_sw_config: U8,
 }
 
 extern "C" {
@@ -37,11 +37,12 @@ extern "C" {
 
 fn is_alpha2_no_specified(alpha2: *const c_char) -> bool {
     if alpha2.is_null() {
-        return true;
+        return false;
     }
     unsafe {
-        let raw = alpha2 as *const u16;
-        core::ptr::read_unaligned(raw) == 0xffff
+        let mut v: u16 = 0;
+        core::ptr::copy_nonoverlapping(alpha2 as *const u8, &mut v as *mut u16 as *mut u8, 2);
+        v == 0xffff
     }
 }
 
@@ -49,21 +50,15 @@ struct HwBranchScratch {
     country_ent: *const CountryChplan,
 }
 
-fn config_chplan_hw_branch_impl(
+fn config_chplan_hw_after_preamble(
     hw_alpha2: *const c_char,
     hw_chplan: U8,
-    force_hw_chplan_in: U8,
+    mut force_hw_chplan: U8,
     out: &mut HalConfigChplanHwOut,
     scratch: &mut HwBranchScratch,
 ) {
-    let mut force_hw_chplan = force_hw_chplan_in;
     let mut chplan = CHPLAN_UNSET;
     scratch.country_ent = core::ptr::null();
-
-    out.chplan = CHPLAN_UNSET;
-    out.country_chplan = NO_COUNTRY;
-    out.force_hw_chplan = force_hw_chplan;
-    out.goto_sw_config = 0;
 
     if !hw_alpha2.is_null() && !is_alpha2_no_specified(hw_alpha2) {
         let ent = unsafe { rtw_get_chplan_from_country(hw_alpha2) };
@@ -72,7 +67,8 @@ fn config_chplan_hw_branch_impl(
             chplan = unsafe { (*ent).chplan as i32 };
             out.chplan = chplan;
             out.country_chplan = unsafe { (*ent).chplan };
-            out.goto_sw_config = 1;
+            out.early_goto_sw_config = 1;
+            out.force_hw_chplan = force_hw_chplan;
             return;
         }
         #[cfg(not(host_hal_com_config_chplan_hw_test))]
@@ -97,9 +93,47 @@ fn config_chplan_hw_branch_impl(
 
     out.chplan = chplan;
     out.force_hw_chplan = force_hw_chplan;
+    out.early_goto_sw_config = 0;
     if !scratch.country_ent.is_null() {
         out.country_chplan = unsafe { (*scratch.country_ent).chplan };
+    } else {
+        out.country_chplan = NO_COUNTRY;
     }
+}
+
+fn config_chplan_hw_full(
+    hw_alpha2: *const c_char,
+    hw_chplan_raw: U8,
+    autoload_fail: U8,
+    out: &mut HalConfigChplanHwOut,
+    scratch: &mut HwBranchScratch,
+) {
+    let mut force_hw_chplan = 0u8;
+    let mut hw_chplan = hw_chplan_raw;
+
+    out.chplan = CHPLAN_UNSET;
+    out.country_chplan = NO_COUNTRY;
+    out.force_hw_chplan = 0;
+    out.early_goto_sw_config = 0;
+
+    if hw_chplan == 0xff {
+        config_chplan_hw_after_preamble(hw_alpha2, hw_chplan, force_hw_chplan, out, scratch);
+        return;
+    }
+
+    if autoload_fail != 0 {
+        out.early_goto_sw_config = 1;
+        out.chplan = CHPLAN_UNSET;
+        out.force_hw_chplan = 0;
+        return;
+    }
+
+    if hw_chplan & EEPROM_CHANNEL_PLAN_BY_HW_MASK != 0 {
+        force_hw_chplan = 1;
+    }
+    hw_chplan &= !EEPROM_CHANNEL_PLAN_BY_HW_MASK;
+
+    config_chplan_hw_after_preamble(hw_alpha2, hw_chplan, force_hw_chplan, out, scratch);
 }
 
 #[repr(C)]
@@ -124,17 +158,23 @@ pub unsafe extern "C" fn rtw_rust_hal_com_config_chplan_hw_branch(
     let mut out = HalConfigChplanHwOut {
         chplan: CHPLAN_UNSET,
         country_chplan: NO_COUNTRY,
-        force_hw_chplan: force_hw_chplan_in,
-        goto_sw_config: 0,
+        force_hw_chplan: 0,
+        early_goto_sw_config: 0,
     };
     let mut scratch = HwBranchScratch {
         country_ent: core::ptr::null(),
     };
-    config_chplan_hw_branch_impl(hw_alpha2, hw_chplan, force_hw_chplan_in, &mut out, &mut scratch);
+    config_chplan_hw_after_preamble(
+        hw_alpha2 as *const c_char,
+        hw_chplan,
+        force_hw_chplan_in,
+        &mut out,
+        &mut scratch,
+    );
     unsafe {
         (*st).chplan = out.chplan;
         (*st).force_hw_chplan = out.force_hw_chplan;
-        (*st).goto_sw_config = out.goto_sw_config;
+        (*st).goto_sw_config = out.early_goto_sw_config;
         (*st).country_ent = scratch.country_ent;
     }
 }
@@ -144,7 +184,7 @@ pub unsafe extern "C" fn rtw_rust_hal_com_config_chplan_hw_branch(
 pub unsafe extern "C" fn hal_com_config_chplan_hw_branch(
     hw_alpha2: *const c_char,
     hw_chplan: U8,
-    force_hw_chplan_in: U8,
+    autoload_fail: U8,
     out: *mut HalConfigChplanHwOut,
 ) {
     if out.is_null() {
@@ -153,5 +193,5 @@ pub unsafe extern "C" fn hal_com_config_chplan_hw_branch(
     let mut scratch = HwBranchScratch {
         country_ent: core::ptr::null(),
     };
-    config_chplan_hw_branch_impl(hw_alpha2, hw_chplan, force_hw_chplan_in, &mut *out, &mut scratch);
+    config_chplan_hw_full(hw_alpha2, hw_chplan, autoload_fail, &mut *out, &mut scratch);
 }
