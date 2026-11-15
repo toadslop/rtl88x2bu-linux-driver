@@ -42,6 +42,8 @@ static int run_fixture(void)
 #ifdef CONFIG_SUPPORT_DYNAMIC_TXPWR
 	if (phydm.fill_desc_dyntxpwr == NULL)
 		return 3;
+	if (phydm.fill_desc_dyntxpwr != rtw_phydm_fill_desc_dpt)
+		return 3;
 #endif
 #endif
 
