@@ -1,0 +1,77 @@
+{
+  "vectors": [
+    {
+      "name": "hw_alpha2_us",
+      "hw_alpha2": "US",
+      "hw_chplan": 0,
+      "expect_chplan": 118,
+      "expect_country_chplan": 118,
+      "expect_force_hw": 0,
+      "expect_goto_sw": 1
+    },
+    {
+      "name": "valid_hw_chplan",
+      "hw_alpha2": "",
+      "hw_chplan": 0,
+      "expect_chplan": 0,
+      "expect_country_chplan": 255,
+      "expect_force_hw": 0,
+      "expect_goto_sw": 0
+    },
+    {
+      "name": "force_hw_invalid_fallback",
+      "hw_alpha2": "",
+      "hw_chplan": 133,
+      "expect_chplan": -1,
+      "expect_country_chplan": 255,
+      "expect_force_hw": 0,
+      "expect_goto_sw": 0
+    },
+    {
+      "name": "hw_chplan_ff_bypass_mask",
+      "hw_alpha2": "",
+      "hw_chplan": 255,
+      "expect_chplan": -1,
+      "expect_country_chplan": 255,
+      "expect_force_hw": 0,
+      "expect_goto_sw": 0
+    },
+    {
+      "name": "hw_chplan_bit7_valid_plan",
+      "hw_alpha2": "",
+      "hw_chplan": 128,
+      "expect_chplan": 0,
+      "expect_country_chplan": 255,
+      "expect_force_hw": 1,
+      "expect_goto_sw": 0
+    },
+    {
+      "name": "autoload_fail_skip_hw",
+      "hw_alpha2": "US",
+      "hw_chplan": 0,
+      "autoload_fail": 1,
+      "expect_chplan": -1,
+      "expect_country_chplan": 255,
+      "expect_force_hw": 0,
+      "expect_goto_sw": 1
+    },
+    {
+      "name": "hw_alpha2_no_specified",
+      "hw_alpha2": "\u00ff\u00ff",
+      "hw_chplan": 0,
+      "expect_chplan": 0,
+      "expect_country_chplan": 255,
+      "expect_force_hw": 0,
+      "expect_goto_sw": 0
+    },
+    {
+      "name": "hw_alpha2_unsupported_zz",
+      "hw_alpha2": "ZZ",
+      "hw_chplan": 0,
+      "expect_chplan": 0,
+      "expect_country_chplan": 255,
+      "expect_force_hw": 0,
+      "expect_goto_sw": 0
+    }
+  ]
+}
