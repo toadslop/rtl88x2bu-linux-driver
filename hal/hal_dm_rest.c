@@ -374,4 +374,88 @@ void rtw_rust_hal_dm_init_odm_param_offload_cap(_adapter *adapter)
 	(void)adapter;
 #endif
 }
+
+struct rtw_hal_dm_init_odm_tail_hooks {
+	u8 *current_channel;
+	u8 *b_scan_in_process;
+	u8 *bpower_saving;
+	u32 *cur_tx_tp;
+	u32 *cur_rx_tp;
+	u8 *antenna_test;
+	u8 *multi_ch_switch_mode;
+	u32 *halrf_ability;
+};
+
+_Static_assert(sizeof(struct rtw_hal_dm_init_odm_tail_hooks) == 8 * sizeof(void *),
+	"rtw_hal_dm_init_odm_tail_hooks layout must match Rust RtwHalDmInitOdmTailHooks");
+
+void rtw_rust_hal_dm_init_odm_tail_fill_hooks(_adapter *adapter,
+	struct rtw_hal_dm_init_odm_tail_hooks *out)
+{
+	struct dvobj_priv *dvobj;
+	PHAL_DATA_TYPE hal;
+	struct pwrctrl_priv *pwrctl;
+
+	if (!adapter || !out)
+		return;
+	dvobj = adapter_to_dvobj(adapter);
+	hal = GET_HAL_DATA(adapter);
+	pwrctl = adapter_to_pwrctl(adapter);
+	out->current_channel = &(hal->current_channel);
+	out->b_scan_in_process = &(hal->bScanInProcess);
+	out->bpower_saving = &(pwrctl->bpower_saving);
+	out->cur_tx_tp = &(dvobj->traffic_stat.cur_tx_tp);
+	out->cur_rx_tp = &(dvobj->traffic_stat.cur_rx_tp);
+	out->antenna_test = &(hal->antenna_test);
+	out->multi_ch_switch_mode = &(hal->multi_ch_switch_mode);
+	out->halrf_ability = &(adapter->registrypriv.halrf_ability);
+}
+
+void rtw_rust_hal_dm_init_odm_tail_optional_hooks(_adapter *adapter, struct dm_struct *phydm)
+{
+	struct dvobj_priv *dvobj;
+	PHAL_DATA_TYPE hal;
+
+	if (!adapter || !phydm)
+		return;
+	dvobj = adapter_to_dvobj(adapter);
+	hal = GET_HAL_DATA(adapter);
+#ifdef CONFIG_RTL8723B
+	odm_cmn_info_hook(phydm, ODM_CMNINFO_IS1ANTENNA, &hal->EEPROMBluetoothAntNum);
+	odm_cmn_info_hook(phydm, ODM_CMNINFO_RFDEFAULTPATH, &hal->ant_path);
+#endif
+#ifdef CONFIG_USB_HCI
+	odm_cmn_info_hook(phydm, ODM_CMNINFO_HUBUSBMODE, &(dvobj->usb_speed));
+#endif
+#ifdef CONFIG_DYNAMIC_SOML
+	odm_cmn_info_hook(phydm, ODM_CMNINFO_ADAPTIVE_SOML, &(adapter->registrypriv.dyn_soml_en));
+#endif
+#ifdef CONFIG_RTW_PATH_DIV
+	odm_cmn_info_hook(phydm, ODM_CMNINFO_PATH_DIV, &(adapter->registrypriv.path_div));
+#endif
+#ifdef CONFIG_MP_INCLUDED
+	halrf_cmn_info_hook(phydm, HALRF_CMNINFO_CON_TX, &(adapter->mppriv.mpt_ctx.is_start_cont_tx));
+	halrf_cmn_info_hook(phydm, HALRF_CMNINFO_SINGLE_TONE, &(adapter->mppriv.mpt_ctx.is_single_tone));
+	halrf_cmn_info_hook(phydm, HALRF_CMNINFO_CARRIER_SUPPRESSION, &(adapter->mppriv.mpt_ctx.is_carrier_suppression));
+	halrf_cmn_info_hook(phydm, HALRF_CMNINFO_MP_RATE_INDEX, &(adapter->mppriv.mpt_ctx.mpt_rate_index));
+#endif
+}
+
+void rtw_rust_hal_dm_init_odm_tail_sta_hooks(struct dm_struct *phydm)
+{
+	int i;
+
+	if (!phydm)
+		return;
+	for (i = 0; i < ODM_ASSOCIATE_ENTRY_NUM; i++)
+		phydm_cmn_sta_info_hook(phydm, i, NULL);
+}
+
+void rtw_rust_hal_dm_init_odm_tail_finish(struct dm_struct *phydm)
+{
+	if (!phydm)
+		return;
+	rtw_phydm_ops_func_init(phydm);
+	phydm_dm_early_init(phydm);
+}
 #endif /* CONFIG_RUST */

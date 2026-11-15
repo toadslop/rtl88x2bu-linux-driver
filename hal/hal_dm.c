@@ -33,6 +33,7 @@ void rtw_hal_update_iqk_fw_offload_cap(_adapter *adapter);
 void rtw_hal_update_param_init_fw_offload_cap(_adapter *adapter);
 #endif
 void rtw_rust_hal_dm_init_odm_cominfo_mid(_adapter *adapter);
+void rtw_rust_hal_dm_init_odm_cominfo_tail(_adapter *adapter);
 #endif
 
 /* A mapping from HalData to ODM. */
@@ -582,6 +583,9 @@ void Init_ODM_ComInfo(_adapter *adapter)
 #endif
 #endif /* CONFIG_RUST */
 	}
+#ifdef CONFIG_RUST
+	rtw_rust_hal_dm_init_odm_cominfo_tail(adapter);
+#else
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_CHNL, &(pHalData->current_channel));
 
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_SCAN, &(pHalData->bScanInProcess));
@@ -620,6 +624,7 @@ void Init_ODM_ComInfo(_adapter *adapter)
 
 	rtw_phydm_ops_func_init(pDM_Odm);
 	phydm_dm_early_init(pDM_Odm);
+#endif /* CONFIG_RUST */
 	/* TODO */
 	/* odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_BT_OPERATION, _FALSE); */
 	/* odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_BT_DISABLE_EDCA, _FALSE); */
