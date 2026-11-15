@@ -5261,6 +5261,24 @@ rust-check-symbols-hal-intf-thread-iol: rust-objects-hal-intf-thread-iol-c rust-
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_intf_thread_iol_l1_ref.o \
 		NEW=rust/hal_intf.o
 
+# W4-87: USB PS + xmit/mgnt dispatch (mgmt-queue symbol requires CONFIG_RTW_MGMT_QUEUE).
+HAL_INTF_XMIT_DISPATCH_CFLAGS := -DCONFIG_RTW_MGMT_QUEUE
+HAL_INTF_XMIT_DISPATCH_RUSTFLAGS := --cfg config_rtw_mgmt_queue
+rust-objects-hal-intf-xmit-dispatch:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-hal-intf-xmit-dispatch"; exit 1; }
+	rm -f rust/hal_intf.o rust/.hal_intf.o.cmd
+	$(MAKE) $(KBUILD_OPTS) ccflags-y+="$(HAL_INTF_XMIT_DISPATCH_CFLAGS)" \
+		rustflags-y+="$(HAL_INTF_XMIT_DISPATCH_RUSTFLAGS)" \
+		-C $(KSRC) M=$(shell pwd) rust/hal_intf.o
+rust-objects-hal-intf-xmit-dispatch-c:
+	@mkdir -p tests/host/hal
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 $(HAL_INTF_XMIT_DISPATCH_CFLAGS) \
+		-o tests/host/hal/hal_intf_xmit_dispatch_l1_ref.o \
+		tests/host/hal/hal_intf_xmit_dispatch_l1_ref.c
+rust-check-symbols-hal-intf-xmit-dispatch: rust-objects-hal-intf-xmit-dispatch-c rust-objects-hal-intf-xmit-dispatch
+	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_intf_xmit_dispatch_l1_ref.o \
+		NEW=rust/hal_intf.o
+
 # W4-09: host C oracle (PHY_CalculateBitShift) vs rust/hal_phy.o.
 rust-objects-hal-phy:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-hal-phy"; exit 1; }
