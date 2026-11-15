@@ -6,7 +6,7 @@ type DmStruct = u8;
 type U8 = u8;
 type U32 = u32;
 
-const PHYDM_INFO_CURR_IGI: U32 = 25;
+const PHYDM_INFO_CURR_IGI: U32 = 20;
 const RT_IQK_SPINLOCK: U32 = 38;
 const _TRUE: U8 = 1;
 const _FALSE: U8 = 0;
