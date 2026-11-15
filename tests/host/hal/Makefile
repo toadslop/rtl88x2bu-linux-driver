@@ -62,6 +62,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-halmac-rsvd-rust test-halmac-drv2halmac test-halmac-drv2halmac-rust \
 	test-brate test-brate-rust \
 	test-legal-channel test-legal-channel-rust \
+	test-config-chplan-hw \
 	test-mapping-out-pipe test-mapping-out-pipe-rust test-mgntframe-raid test-mgntframe-raid-rust \
 	test-hdata-rate test-hdata-rate-rust test-phy-bit-shift test-phy-bit-shift-rust \
 	test-dm-board-type test-dm-board-type-rust \
@@ -80,7 +81,9 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-tx-aclt-confs test-tx-aclt-confs-rust test-hal-spec test-hal-spec-rust \
 	test-mrate test-mrate-rust test-rf-nss test-rf-nss-rust \
 	test-halmac test-halmac-rust test-halmac-rsvd test-halmac-rsvd-rust test-brate test-brate-rust \
-	test-legal-channel test-legal-channel-rust test-mapping-out-pipe test-mapping-out-pipe-rust \
+	test-legal-channel test-legal-channel-rust \
+	test-config-chplan-hw \
+	test-mapping-out-pipe test-mapping-out-pipe-rust \
 	test-mgntframe-raid test-mgntframe-raid-rust test-hdata-rate test-hdata-rate-rust \
 	test-phy-bit-shift test-phy-bit-shift-rust test-dm-board-type test-dm-board-type-rust \
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
@@ -423,6 +426,13 @@ test_hal_halmac_trx_share_rust: test_hal_halmac_trx_share.c librust_hal_halmac.a
 		$(HOST_JSON) librust_hal_halmac.a
 
 LEGAL_CH_ORACLE := hal_is_legal_channel_c_oracle.c
+CHPLAN_HW_ORACLE := hal_config_chplan_hw_c_oracle.c
+CHPLAN_CORE := $(ROOT)/core/rtw_chplan.c
+CHPLAN_DATA := chplan_hw_data.o
+CHPLAN_SHIM := ../shim/host_chplan_rf.c ../shim/host_chplan_hal.c
+CHPLAN_CFLAGS := $(CFLAGS) -I$(ROOT)/core -I$(ROOT)/include \
+	-include $(HOST_INC)/host_autoconf.h -DHOST_CHPLAN_TEST \
+	-Wno-unterminated-string-initialization -Wno-unused-const-variable
 
 test-legal-channel: test_hal_is_legal_channel
 	./test_hal_is_legal_channel hal_is_legal_channel_vectors.json
@@ -440,6 +450,17 @@ test-legal-channel-rust: test_hal_is_legal_channel_rust
 test_hal_is_legal_channel_rust: test_hal_is_legal_channel.c librust_hal_com_legal.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_LEGAL_CHANNEL_ORACLE -o $@ test_hal_is_legal_channel.c \
 		$(HOST_JSON) librust_hal_com_legal.a
+
+test-config-chplan-hw: test_hal_config_chplan_hw
+	./test_hal_config_chplan_hw hal_config_chplan_hw_vectors.json
+
+chplan_hw_data.o: $(ROOT)/core/rtw_chplan_rest.c
+	$(CC) $(CHPLAN_CFLAGS) -DHOST_CHPLAN_DATA_ONLY -c -o $@ $(ROOT)/core/rtw_chplan_rest.c
+
+test_hal_config_chplan_hw: test_hal_config_chplan_hw.c $(CHPLAN_HW_ORACLE) \
+		$(CHPLAN_CORE) $(CHPLAN_DATA) $(CHPLAN_SHIM) $(HOST_JSON)
+	$(CC) $(CHPLAN_CFLAGS) -o $@ test_hal_config_chplan_hw.c $(CHPLAN_HW_ORACLE) \
+		$(CHPLAN_CORE) $(CHPLAN_DATA) $(CHPLAN_SHIM) $(HOST_JSON)
 
 MAPPING_ORACLE := hal_mapping_out_pipe_c_oracle.c
 
