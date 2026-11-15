@@ -3169,6 +3169,16 @@ endif
 ifneq ($(_rust_cfg_dbg_config_error_detect),)
 rustflags-y += --cfg dbg_config_error_detect
 endif
+_rust_cfg_config_syson_indirect_access :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_SYSON_INDIRECT_ACCESS' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_config_syson_indirect_access := y
+endif
+ifneq ($(filter -DCONFIG_SYSON_INDIRECT_ACCESS,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_config_syson_indirect_access := y
+endif
+ifneq ($(_rust_cfg_config_syson_indirect_access),)
+rustflags-y += --cfg config_syson_indirect_access
+endif
 _rust_cfg_config_iol :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_IOL' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 _rust_cfg_config_iol := y
@@ -5195,6 +5205,9 @@ rust-objects-hal-intf-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_intf_hal_init_l1_ref.o \
 		tests/host/hal/hal_intf_hal_init_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_intf_bb_rf_reg_l1_ref.o \
+		tests/host/hal/hal_intf_bb_rf_reg_l1_ref.c
 	ld -r -o tests/host/hal/hal_intf_l1_ref.o \
 		tests/host/hal/hal_intf_trx_l1_ref.o tests/host/hal/hal_intf_rf_nss_l1_ref.o \
 		tests/host/hal/hal_intf_chip_odm_l1_ref.o tests/host/hal/hal_intf_chip_info_l1_ref.o \
@@ -5216,7 +5229,8 @@ rust-objects-hal-intf-c:
 		tests/host/hal/hal_intf_hal_deinit_l1_ref.o \
 		tests/host/hal/hal_intf_fw_mem_clear_int_l1_ref.o \
 		tests/host/hal/hal_intf_iface_init_l1_ref.o \
-		tests/host/hal/hal_intf_hal_init_l1_ref.o
+		tests/host/hal/hal_intf_hal_init_l1_ref.o \
+		tests/host/hal/hal_intf_bb_rf_reg_l1_ref.o
 rust-check-symbols-hal-intf: rust-objects-hal-intf-c rust-objects-hal-intf
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_intf_l1_ref.o NEW=rust/hal_intf.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_intf.allow ALLOW_VACUOUS=1

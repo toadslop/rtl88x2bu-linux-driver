@@ -74,6 +74,15 @@ int rtw_hal_iol_cmd(ADAPTER *adapter, struct xmit_frame *xmit_frame, u32 max_wai
 		    u32 bndy_cnt);
 s32 rtw_hal_xmit_thread_handler(_adapter *padapter);
 s32 rtw_hal_recv_hdl(_adapter *adapter);
+/* rtw_hal_read/write_bbreg, rfreg, syson — ported to rust/hal_intf.rs (W4-82) */
+u32 rtw_hal_read_bbreg(_adapter *padapter, u32 RegAddr, u32 BitMask);
+void rtw_hal_write_bbreg(_adapter *padapter, u32 RegAddr, u32 BitMask, u32 Data);
+u32 rtw_hal_read_rfreg(_adapter *padapter, enum rf_path eRFPath, u32 RegAddr, u32 BitMask);
+void rtw_hal_write_rfreg(_adapter *padapter, enum rf_path eRFPath, u32 RegAddr, u32 BitMask, u32 Data);
+#ifdef CONFIG_SYSON_INDIRECT_ACCESS
+u32 rtw_hal_read_syson_reg(PADAPTER padapter, u32 RegAddr, u32 BitMask);
+void rtw_hal_write_syson_reg(_adapter *padapter, u32 RegAddr, u32 BitMask, u32 Data);
+#endif /* CONFIG_SYSON_INDIRECT_ACCESS */
 
 /* dump_hal_runtime_trx_mode / dump_hal_trx_mode — ported to rust/hal_intf.rs (W4-07) */
 
@@ -346,6 +355,76 @@ bool rtw_rust_hal_intf_call_sreset_inprogress(_adapter *padapter)
 	return padapter->hal_func.sreset_inprogress(padapter);
 }
 #endif /* DBG_CONFIG_ERROR_DETECT */
+
+u32 rtw_rust_hal_intf_call_read_bbreg(_adapter *padapter, u32 RegAddr, u32 BitMask)
+{
+	u32 data = 0;
+
+	if (padapter->hal_func.read_bbreg)
+		data = padapter->hal_func.read_bbreg(padapter, RegAddr, BitMask);
+	return data;
+}
+
+void rtw_rust_hal_intf_call_write_bbreg(_adapter *padapter, u32 RegAddr, u32 BitMask, u32 Data)
+{
+	if (padapter->hal_func.write_bbreg)
+		padapter->hal_func.write_bbreg(padapter, RegAddr, BitMask, Data);
+}
+
+u32 rtw_rust_hal_intf_read_rfreg(_adapter *padapter, u8 eRFPath, u32 RegAddr, u32 BitMask)
+{
+	u32 data = 0;
+
+	if (padapter->hal_func.read_rfreg) {
+		data = padapter->hal_func.read_rfreg(padapter, eRFPath, RegAddr, BitMask);
+
+		#ifdef DBG_IO
+		if (match_rf_read_sniff_ranges(padapter, eRFPath, RegAddr, BitMask)) {
+			RTW_INFO("DBG_IO rtw_hal_read_rfreg(%u, 0x%04x, 0x%08x) read:0x%08x(0x%08x)\n"
+				, eRFPath, RegAddr, BitMask, (data << PHY_CalculateBitShift(BitMask)), data);
+		}
+		#endif
+	}
+
+	return data;
+}
+
+void rtw_rust_hal_intf_write_rfreg(_adapter *padapter, u8 eRFPath, u32 RegAddr, u32 BitMask, u32 Data)
+{
+	if (padapter->hal_func.write_rfreg) {
+
+		#ifdef DBG_IO
+		if (match_rf_write_sniff_ranges(padapter, eRFPath, RegAddr, BitMask)) {
+			RTW_INFO("DBG_IO rtw_hal_write_rfreg(%u, 0x%04x, 0x%08x) write:0x%08x(0x%08x)\n"
+				, eRFPath, RegAddr, BitMask, (Data << PHY_CalculateBitShift(BitMask)), Data);
+		}
+		#endif
+
+		padapter->hal_func.write_rfreg(padapter, eRFPath, RegAddr, BitMask, Data);
+
+#ifdef CONFIG_PCI_HCI
+		if (!IS_HARDWARE_TYPE_JAGUAR_AND_JAGUAR2(padapter)) /*For N-Series IC, suggest by Jenyu*/
+			rtw_udelay_os(2);
+#endif
+	}
+}
+
+#ifdef CONFIG_SYSON_INDIRECT_ACCESS
+u32 rtw_rust_hal_intf_call_read_syson_reg(_adapter *padapter, u32 RegAddr, u32 BitMask)
+{
+	u32 data = 0;
+
+	if (padapter->hal_func.read_syson_reg)
+		data = padapter->hal_func.read_syson_reg(padapter, RegAddr, BitMask);
+	return data;
+}
+
+void rtw_rust_hal_intf_call_write_syson_reg(_adapter *padapter, u32 RegAddr, u32 BitMask, u32 Data)
+{
+	if (padapter->hal_func.write_syson_reg)
+		padapter->hal_func.write_syson_reg(padapter, RegAddr, BitMask, Data);
+}
+#endif /* CONFIG_SYSON_INDIRECT_ACCESS */
 
 void rtw_rust_hal_intf_call_enable_interrupt(_adapter *padapter)
 {
@@ -663,74 +742,6 @@ void	rtw_hal_stop_thread(_adapter *padapter)
 #endif
 #endif
 }
-
-u32	rtw_hal_read_bbreg(_adapter *padapter, u32 RegAddr, u32 BitMask)
-{
-	u32 data = 0;
-	if (padapter->hal_func.read_bbreg)
-		data = padapter->hal_func.read_bbreg(padapter, RegAddr, BitMask);
-	return data;
-}
-void	rtw_hal_write_bbreg(_adapter *padapter, u32 RegAddr, u32 BitMask, u32 Data)
-{
-	if (padapter->hal_func.write_bbreg)
-		padapter->hal_func.write_bbreg(padapter, RegAddr, BitMask, Data);
-}
-
-u32 rtw_hal_read_rfreg(_adapter *padapter, enum rf_path eRFPath, u32 RegAddr, u32 BitMask)
-{
-	u32 data = 0;
-
-	if (padapter->hal_func.read_rfreg) {
-		data = padapter->hal_func.read_rfreg(padapter, eRFPath, RegAddr, BitMask);
-
-		#ifdef DBG_IO
-		if (match_rf_read_sniff_ranges(padapter, eRFPath, RegAddr, BitMask)) {
-			RTW_INFO("DBG_IO rtw_hal_read_rfreg(%u, 0x%04x, 0x%08x) read:0x%08x(0x%08x)\n"
-				, eRFPath, RegAddr, BitMask, (data << PHY_CalculateBitShift(BitMask)), data);
-		}
-		#endif
-	}
-
-	return data;
-}
-
-void rtw_hal_write_rfreg(_adapter *padapter, enum rf_path eRFPath, u32 RegAddr, u32 BitMask, u32 Data)
-{
-	if (padapter->hal_func.write_rfreg) {
-
-		#ifdef DBG_IO
-		if (match_rf_write_sniff_ranges(padapter, eRFPath, RegAddr, BitMask)) {
-			RTW_INFO("DBG_IO rtw_hal_write_rfreg(%u, 0x%04x, 0x%08x) write:0x%08x(0x%08x)\n"
-				, eRFPath, RegAddr, BitMask, (Data << PHY_CalculateBitShift(BitMask)), Data);
-		}
-		#endif
-
-		padapter->hal_func.write_rfreg(padapter, eRFPath, RegAddr, BitMask, Data);
-
-#ifdef CONFIG_PCI_HCI
-		if (!IS_HARDWARE_TYPE_JAGUAR_AND_JAGUAR2(padapter)) /*For N-Series IC, suggest by Jenyu*/
-			rtw_udelay_os(2);
-#endif
-	}
-}
-
-#ifdef CONFIG_SYSON_INDIRECT_ACCESS
-u32 rtw_hal_read_syson_reg(PADAPTER padapter, u32 RegAddr, u32 BitMask)
-{
-	u32 data = 0;
-	if (padapter->hal_func.read_syson_reg)
-		data = padapter->hal_func.read_syson_reg(padapter, RegAddr, BitMask);
-
-	return data;
-}
-
-void rtw_hal_write_syson_reg(_adapter *padapter, u32 RegAddr, u32 BitMask, u32 Data)
-{
-	if (padapter->hal_func.write_syson_reg)
-		padapter->hal_func.write_syson_reg(padapter, RegAddr, BitMask, Data);
-}
-#endif
 
 #if defined(CONFIG_PCI_HCI)
 s32	rtw_hal_interrupt_handler(_adapter *padapter)
