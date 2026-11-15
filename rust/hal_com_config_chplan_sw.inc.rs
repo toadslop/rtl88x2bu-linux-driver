@@ -117,7 +117,10 @@ fn config_chplan_full(
     )
 }
 
-#[cfg(not(host_hal_com_config_chplan_full_test))]
+#[cfg(not(any(
+    host_hal_com_config_chplan_full_test,
+    host_hal_com_config_chplan_hw_test
+)))]
 #[no_mangle]
 pub unsafe extern "C" fn hal_com_config_channel_plan(
     padapter: *mut c_void,
