@@ -7,7 +7,8 @@
 //! W4-72 inirp init/deinit, W4-73 hwreg/def/odm dispatch + notch_filter,
 //! W4-74 silent reset dispatch, W4-75 hal_deinit teardown, W4-76 fw_mem_dl +
 //! clear_interrupt, W4-78 IOL + thread-mode dispatch, W4-80 iface_init,
-//! W4-81 hal_init orchestration, W4-82 BB/RF (and optional syson) register dispatch).
+//! W4-81 hal_init orchestration, W4-82 BB/RF (and optional syson) register dispatch,
+//! W4-83 xmit/recv priv + SDIO thread dispatch).
 
 #![allow(
     dead_code,
@@ -986,7 +987,6 @@ mod kernel {
         #[cfg(dbg_config_error_detect)]
         fn rtw_rust_hal_intf_call_sreset_inprogress(adapter: *mut c_void) -> bool;
         fn rtw_rust_hal_com_adapter_mac_addr(adapter: *mut c_void) -> *mut U8;
-        fn rtw_hal_start_thread(adapter: *mut c_void);
         fn rtw_sec_restore_wep_key(adapter: *mut c_void);
         fn rtw_hal_hw_port_enable(adapter: *mut c_void);
         fn rtw_rust_hal_intf_call_read_bbreg(
@@ -1026,6 +1026,12 @@ mod kernel {
             bit_mask: U32,
             data: U32,
         );
+        fn rtw_rust_hal_intf_call_init_xmit_priv(adapter: *mut c_void) -> i32;
+        fn rtw_rust_hal_intf_call_free_xmit_priv(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_call_init_recv_priv(adapter: *mut c_void) -> i32;
+        fn rtw_rust_hal_intf_call_free_recv_priv(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_call_start_thread(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_call_stop_thread(adapter: *mut c_void);
         fn rtw_odm_init_ic_type(adapter: *mut c_void);
         fn rtw_init_hal_com_default_value(adapter: *mut c_void);
         fn rtw_rust_hal_com_get_intf_type(adapter: *mut c_void) -> U8;
@@ -1698,6 +1704,44 @@ mod kernel {
     ) {
         unsafe {
             rtw_rust_hal_intf_call_write_syson_reg(adapter, reg_addr, bit_mask, data);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_init_xmit_priv(adapter: *mut c_void) -> i32 {
+        unsafe { rtw_rust_hal_intf_call_init_xmit_priv(adapter) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_free_xmit_priv(adapter: *mut c_void) {
+        unsafe {
+            rtw_rust_hal_intf_call_free_xmit_priv(adapter);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_init_recv_priv(adapter: *mut c_void) -> i32 {
+        unsafe { rtw_rust_hal_intf_call_init_recv_priv(adapter) }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_free_recv_priv(adapter: *mut c_void) {
+        unsafe {
+            rtw_rust_hal_intf_call_free_recv_priv(adapter);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_start_thread(adapter: *mut c_void) {
+        unsafe {
+            rtw_rust_hal_intf_call_start_thread(adapter);
+        }
+    }
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_stop_thread(adapter: *mut c_void) {
+        unsafe {
+            rtw_rust_hal_intf_call_stop_thread(adapter);
         }
     }
 

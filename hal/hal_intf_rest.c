@@ -83,6 +83,13 @@ void rtw_hal_write_rfreg(_adapter *padapter, enum rf_path eRFPath, u32 RegAddr, 
 u32 rtw_hal_read_syson_reg(PADAPTER padapter, u32 RegAddr, u32 BitMask);
 void rtw_hal_write_syson_reg(_adapter *padapter, u32 RegAddr, u32 BitMask, u32 Data);
 #endif /* CONFIG_SYSON_INDIRECT_ACCESS */
+/* rtw_hal_init_xmit_priv / free_xmit / init_recv / free_recv / start_thread / stop_thread — W4-83 */
+s32 rtw_hal_init_xmit_priv(_adapter *padapter);
+void rtw_hal_free_xmit_priv(_adapter *padapter);
+s32 rtw_hal_init_recv_priv(_adapter *padapter);
+void rtw_hal_free_recv_priv(_adapter *padapter);
+void rtw_hal_start_thread(_adapter *padapter);
+void rtw_hal_stop_thread(_adapter *padapter);
 
 /* dump_hal_runtime_trx_mode / dump_hal_trx_mode — ported to rust/hal_intf.rs (W4-07) */
 
@@ -426,6 +433,43 @@ void rtw_rust_hal_intf_call_write_syson_reg(_adapter *padapter, u32 RegAddr, u32
 }
 #endif /* CONFIG_SYSON_INDIRECT_ACCESS */
 
+s32 rtw_rust_hal_intf_call_init_xmit_priv(_adapter *padapter)
+{
+	return padapter->hal_func.init_xmit_priv(padapter);
+}
+
+void rtw_rust_hal_intf_call_free_xmit_priv(_adapter *padapter)
+{
+	padapter->hal_func.free_xmit_priv(padapter);
+}
+
+s32 rtw_rust_hal_intf_call_init_recv_priv(_adapter *padapter)
+{
+	return padapter->hal_func.init_recv_priv(padapter);
+}
+
+void rtw_rust_hal_intf_call_free_recv_priv(_adapter *padapter)
+{
+	padapter->hal_func.free_recv_priv(padapter);
+}
+
+void rtw_rust_hal_intf_call_start_thread(_adapter *padapter)
+{
+#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
+#ifndef CONFIG_SDIO_TX_TASKLET
+	padapter->hal_func.run_thread(padapter);
+#endif
+#endif
+}
+
+void rtw_rust_hal_intf_call_stop_thread(_adapter *padapter)
+{
+#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
+#ifndef CONFIG_SDIO_TX_TASKLET
+	padapter->hal_func.cancel_thread(padapter);
+#endif
+#endif
+}
 void rtw_rust_hal_intf_call_enable_interrupt(_adapter *padapter)
 {
 #if defined(CONFIG_PCI_HCI) || defined(CONFIG_SDIO_HCI) || defined (CONFIG_GSPI_HCI)
@@ -665,24 +709,6 @@ s32	rtw_hal_mgnt_xmit(_adapter *padapter, struct xmit_frame *pmgntframe)
 	return ret;
 }
 
-s32	rtw_hal_init_xmit_priv(_adapter *padapter)
-{
-	return padapter->hal_func.init_xmit_priv(padapter);
-}
-void	rtw_hal_free_xmit_priv(_adapter *padapter)
-{
-	padapter->hal_func.free_xmit_priv(padapter);
-}
-
-s32	rtw_hal_init_recv_priv(_adapter *padapter)
-{
-	return padapter->hal_func.init_recv_priv(padapter);
-}
-void	rtw_hal_free_recv_priv(_adapter *padapter)
-{
-	padapter->hal_func.free_recv_priv(padapter);
-}
-
 void rtw_sta_ra_registed(_adapter *padapter, struct sta_info *psta)
 {
 	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(padapter);
@@ -720,27 +746,6 @@ void rtw_hal_update_ra_mask(struct sta_info *psta)
 
 	padapter = psta->padapter;
 	rtw_sta_ra_registed(padapter, psta);
-}
-
-/*	Start specifical interface thread		*/
-void	rtw_hal_start_thread(_adapter *padapter)
-{
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-#ifndef CONFIG_SDIO_TX_TASKLET
-	padapter->hal_func.run_thread(padapter);
-#endif
-#endif
-}
-/*	Start specifical interface thread		*/
-void	rtw_hal_stop_thread(_adapter *padapter)
-{
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-#ifndef CONFIG_SDIO_TX_TASKLET
-
-	padapter->hal_func.cancel_thread(padapter);
-
-#endif
-#endif
 }
 
 #if defined(CONFIG_PCI_HCI)
