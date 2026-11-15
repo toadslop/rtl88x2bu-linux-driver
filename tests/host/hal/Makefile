@@ -27,6 +27,8 @@ DM_DUMP_STA_SHIM := hal_dm_dump_sta_info_shim.c
 DM_DUMP_STA_TRAFFIC_SHIM := hal_dm_dump_sta_traffic_shim.c
 DM_ODM_IFACE_ORACLE := hal_dm_odm_iface_c_oracle.c
 DM_ODM_IFACE_SHIM := hal_dm_odm_iface_host_shim.c
+DM_PHYDM_OPS_SHIM := hal_dm_phydm_ops_shim.c
+DM_PHYDM_OPS_ORACLE := hal_dm_phydm_ops_c_oracle.c
 USB_WVALUE_ORACLE := hal_usb_vendor_wvalue_c_oracle.c
 USB_SYNC_READ_ORACLE := hal_usb_sync_read_c_oracle.c
 USB_SYNC_WRITE_ORACLE := hal_usb_sync_write_c_oracle.c
@@ -67,6 +69,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-hdata-rate test-hdata-rate-rust test-phy-bit-shift test-phy-bit-shift-rust \
 	test-dm-board-type test-dm-board-type-rust \
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
+	test-dm-phydm-ops \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust \
 	test-usb-sync-read test-usb-sync-read-rust test-usb-sync-write \
@@ -751,6 +754,13 @@ test-dm-init-odm-cominfo-tail: test_hal_dm_init_odm_cominfo_tail
 test_hal_dm_init_odm_cominfo_tail: test_hal_dm_init_odm_cominfo_tail.c $(DM_INIT_ODM_TAIL_ORACLE)
 	$(CC) $(CFLAGS) -DCONFIG_USB_HCI -I$(ROOT)/tests/host/include -o $@ test_hal_dm_init_odm_cominfo_tail.c \
 		$(DM_INIT_ODM_TAIL_ORACLE)
+
+test-dm-phydm-ops: test_hal_dm_phydm_ops
+	./test_hal_dm_phydm_ops
+
+test_hal_dm_phydm_ops: test_hal_dm_phydm_ops.c $(DM_PHYDM_OPS_ORACLE) $(DM_PHYDM_OPS_SHIM)
+	$(CC) $(CFLAGS) -DCONFIG_SUPPORT_DYNAMIC_TXPWR -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_phydm_ops.c $(DM_PHYDM_OPS_ORACLE) $(DM_PHYDM_OPS_SHIM)
 
 test-usb-vendor-wvalue: test_hal_usb_vendor_wvalue
 	./test_hal_usb_vendor_wvalue hal_usb_vendor_wvalue_vectors.json

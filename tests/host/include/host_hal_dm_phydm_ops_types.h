@@ -96,4 +96,8 @@ void rtw_macid_ctl_set_rate_bmp0(struct macid_ctl_t *macid_ctl, u8 id, u32 bmp);
 void rtw_macid_ctl_set_rate_bmp1(struct macid_ctl_t *macid_ctl, u8 id, u32 bmp);
 void rtw_update_tx_rate_bmp(struct dvobj_priv *dvobj);
 
+#ifdef CONFIG_SUPPORT_DYNAMIC_TXPWR
+void rtw_phydm_fill_desc_dpt(void *dm, u8 *desc, u8 dpt_lv);
+#endif
+
 #endif /* HOST_HAL_DM_PHYDM_OPS_TYPES_H */

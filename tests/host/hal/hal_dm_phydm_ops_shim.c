@@ -26,6 +26,7 @@ void rtw_macid_ctl_set_bw(struct macid_ctl_t *macid_ctl, u8 id, u8 bw)
 	if (!macid_ctl || id >= macid_ctl->num)
 		return;
 	macid_ctl->bw[id] = bw;
+	host_hal_dm_phydm_ops_trace.last_macid = id;
 	host_hal_dm_phydm_ops_trace.last_bw = bw;
 }
 
