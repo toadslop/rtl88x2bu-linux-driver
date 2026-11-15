@@ -84,6 +84,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-mgntframe-raid test-mgntframe-raid-rust test-hdata-rate test-hdata-rate-rust \
 	test-phy-bit-shift test-phy-bit-shift-rust test-dm-board-type test-dm-board-type-rust \
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
+	test-dm-init-odm-cominfo-tail test-dm-init-odm-cominfo-tail-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust test-usb-sync-read \
 	test-usb-sync-read-rust test-usb-sync-write test-usb-async-write \
@@ -720,14 +721,14 @@ librust_hal_dm_init_odm_cominfo_tail.a: $(RUST_INIT_ODM_COMINFO_TAIL)
 
 test_hal_dm_init_odm_cominfo_tail_rust: test_hal_dm_init_odm_cominfo_tail.c \
 		$(DM_INIT_ODM_TAIL_SHIM) librust_hal_dm_init_odm_cominfo_tail.a
-	$(CC) $(CFLAGS) -I$(ROOT)/tests/host/include -o $@ test_hal_dm_init_odm_cominfo_tail.c \
+	$(CC) $(CFLAGS) -DCONFIG_USB_HCI -I$(ROOT)/tests/host/include -o $@ test_hal_dm_init_odm_cominfo_tail.c \
 		$(DM_INIT_ODM_TAIL_SHIM) librust_hal_dm_init_odm_cominfo_tail.a
 
 test-dm-init-odm-cominfo-tail: test_hal_dm_init_odm_cominfo_tail
 	./test_hal_dm_init_odm_cominfo_tail
 
 test_hal_dm_init_odm_cominfo_tail: test_hal_dm_init_odm_cominfo_tail.c $(DM_INIT_ODM_TAIL_ORACLE)
-	$(CC) $(CFLAGS) -I$(ROOT)/tests/host/include -o $@ test_hal_dm_init_odm_cominfo_tail.c \
+	$(CC) $(CFLAGS) -DCONFIG_USB_HCI -I$(ROOT)/tests/host/include -o $@ test_hal_dm_init_odm_cominfo_tail.c \
 		$(DM_INIT_ODM_TAIL_ORACLE)
 
 test-usb-vendor-wvalue: test_hal_usb_vendor_wvalue

@@ -5,6 +5,7 @@ use core::ffi::c_void;
 type DmStruct = u8;
 type U32 = u32;
 
+const ODM_CMNINFO_HUBUSBMODE: U32 = 31;
 const ODM_CMNINFO_CHNL: U32 = 58;
 const ODM_CMNINFO_SCAN: U32 = 64;
 const ODM_CMNINFO_POWER_SAVING: U32 = 65;
@@ -22,6 +23,7 @@ pub struct RtwHalDmInitOdmTailHooks {
     pub cur_tx_tp: *mut U32,
     pub cur_rx_tp: *mut U32,
     pub antenna_test: *mut u8,
+    pub usb_speed: *mut u8,
     pub multi_ch_switch_mode: *mut u8,
     pub halrf_ability: *mut U32,
 }
@@ -56,6 +58,7 @@ pub extern "C" fn rtw_rust_hal_dm_init_odm_cominfo_tail(adapter: *mut c_void) {
             cur_tx_tp: core::ptr::null_mut(),
             cur_rx_tp: core::ptr::null_mut(),
             antenna_test: core::ptr::null_mut(),
+            usb_speed: core::ptr::null_mut(),
             multi_ch_switch_mode: core::ptr::null_mut(),
             halrf_ability: core::ptr::null_mut(),
         };
@@ -66,6 +69,7 @@ pub extern "C" fn rtw_rust_hal_dm_init_odm_cominfo_tail(adapter: *mut c_void) {
         odm_cmn_info_hook(phydm, ODM_CMNINFO_TX_TP, hooks.cur_tx_tp as *mut u8);
         odm_cmn_info_hook(phydm, ODM_CMNINFO_RX_TP, hooks.cur_rx_tp as *mut u8);
         odm_cmn_info_hook(phydm, ODM_CMNINFO_ANT_TEST, hooks.antenna_test);
+        odm_cmn_info_hook(phydm, ODM_CMNINFO_HUBUSBMODE, hooks.usb_speed);
         odm_cmn_info_hook(phydm, ODM_CMNINFO_FCS_MODE, hooks.multi_ch_switch_mode);
         halrf_cmn_info_hook(
             phydm,

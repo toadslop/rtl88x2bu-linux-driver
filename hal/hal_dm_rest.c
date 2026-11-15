@@ -382,11 +382,12 @@ struct rtw_hal_dm_init_odm_tail_hooks {
 	u32 *cur_tx_tp;
 	u32 *cur_rx_tp;
 	u8 *antenna_test;
+	u8 *usb_speed;
 	u8 *multi_ch_switch_mode;
 	u32 *halrf_ability;
 };
 
-_Static_assert(sizeof(struct rtw_hal_dm_init_odm_tail_hooks) == 8 * sizeof(void *),
+_Static_assert(sizeof(struct rtw_hal_dm_init_odm_tail_hooks) == 9 * sizeof(void *),
 	"rtw_hal_dm_init_odm_tail_hooks layout must match Rust RtwHalDmInitOdmTailHooks");
 
 void rtw_rust_hal_dm_init_odm_tail_fill_hooks(_adapter *adapter,
@@ -407,6 +408,7 @@ void rtw_rust_hal_dm_init_odm_tail_fill_hooks(_adapter *adapter,
 	out->cur_tx_tp = &(dvobj->traffic_stat.cur_tx_tp);
 	out->cur_rx_tp = &(dvobj->traffic_stat.cur_rx_tp);
 	out->antenna_test = &(hal->antenna_test);
+	out->usb_speed = &(dvobj->usb_speed);
 	out->multi_ch_switch_mode = &(hal->multi_ch_switch_mode);
 	out->halrf_ability = &(adapter->registrypriv.halrf_ability);
 }
@@ -423,9 +425,6 @@ void rtw_rust_hal_dm_init_odm_tail_optional_hooks(_adapter *adapter, struct dm_s
 #ifdef CONFIG_RTL8723B
 	odm_cmn_info_hook(phydm, ODM_CMNINFO_IS1ANTENNA, &hal->EEPROMBluetoothAntNum);
 	odm_cmn_info_hook(phydm, ODM_CMNINFO_RFDEFAULTPATH, &hal->ant_path);
-#endif
-#ifdef CONFIG_USB_HCI
-	odm_cmn_info_hook(phydm, ODM_CMNINFO_HUBUSBMODE, &(dvobj->usb_speed));
 #endif
 #ifdef CONFIG_DYNAMIC_SOML
 	odm_cmn_info_hook(phydm, ODM_CMNINFO_ADAPTIVE_SOML, &(adapter->registrypriv.dyn_soml_en));
