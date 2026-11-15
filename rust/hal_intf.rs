@@ -6,7 +6,7 @@
 //! W4-69 hal_init_opmode, W4-70 interrupt enable/disable + IPS check, W4-71 hal_fw_dl,
 //! W4-72 inirp init/deinit, W4-73 hwreg/def/odm dispatch + notch_filter,
 //! W4-74 silent reset dispatch, W4-75 hal_deinit teardown, W4-76 fw_mem_dl +
-//! clear_interrupt, W4-80 iface_init).
+//! clear_interrupt, W4-80 iface_init, W4-81 hal_init orchestration).
 
 #![allow(
     dead_code,
@@ -933,6 +933,12 @@ mod kernel {
         fn rtw_rust_hal_intf_call_xmit_thread_handler(adapter: *mut c_void) -> i32;
         #[cfg(config_recv_thread_mode)]
         fn rtw_rust_hal_intf_call_recv_hdl(adapter: *mut c_void) -> i32;
+        fn rtw_rust_hal_intf_hal_init_set_rfsupportability(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_call_hal_init(adapter: *mut c_void) -> U32;
+        fn rtw_rust_hal_intf_get_phydm_init_result(adapter: *mut c_void) -> U8;
+        fn rtw_rust_hal_intf_log_hal_init_phydm_fail(reason: U8);
+        fn rtw_rust_hal_intf_hal_init_success(adapter: *mut c_void);
+        fn rtw_rust_hal_intf_hal_init_fail(adapter: *mut c_void);
         fn rtw_rust_hal_intf_call_set_hwreg(
             adapter: *mut c_void,
             variable: U8,
@@ -1553,6 +1559,27 @@ mod kernel {
 
     const HW_VAR_MAC_ADDR: U8 = 2;
     const IFACE_INIT_SUCCESS: U32 = 1;
+    const HAL_INIT_SUCCESS: U32 = 1;
+    const HAL_INIT_FAIL: U32 = 0;
+
+    #[no_mangle]
+    pub extern "C" fn rtw_hal_init(adapter: *mut c_void) -> U32 {
+        unsafe {
+            rtw_rust_hal_intf_hal_init_set_rfsupportability(adapter);
+            let mut status = rtw_rust_hal_intf_call_hal_init(adapter);
+            let phydm = rtw_rust_hal_intf_get_phydm_init_result(adapter);
+            if phydm != 0 {
+                status = HAL_INIT_FAIL;
+                rtw_rust_hal_intf_log_hal_init_phydm_fail(phydm);
+            }
+            if status == HAL_INIT_SUCCESS {
+                rtw_rust_hal_intf_hal_init_success(adapter);
+            } else {
+                rtw_rust_hal_intf_hal_init_fail(adapter);
+            }
+            status
+        }
+    }
 
     #[no_mangle]
     pub extern "C" fn rtw_hal_iface_init(adapter: *mut c_void) -> U32 {
