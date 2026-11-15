@@ -3169,6 +3169,16 @@ endif
 ifneq ($(_rust_cfg_dbg_config_error_detect),)
 rustflags-y += --cfg dbg_config_error_detect
 endif
+_rust_cfg_config_syson_indirect_access :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_SYSON_INDIRECT_ACCESS' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_config_syson_indirect_access := y
+endif
+ifneq ($(filter -DCONFIG_SYSON_INDIRECT_ACCESS,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_config_syson_indirect_access := y
+endif
+ifneq ($(_rust_cfg_config_syson_indirect_access),)
+rustflags-y += --cfg config_syson_indirect_access
+endif
 _rust_cfg_config_iol :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_IOL' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 _rust_cfg_config_iol := y
