@@ -3157,6 +3157,37 @@ ifneq ($(filter -DDBG_CONFIG_ERROR_DETECT,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EX
 _rust_cfg_dbg_config_error_detect := y
 endif
 ifneq ($(_rust_cfg_dbg_config_error_detect),)
+rustflags-y += --cfg dbg_config_error_detect
+endif
+_rust_cfg_config_iol :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_IOL' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_config_iol := y
+endif
+ifneq ($(filter -DCONFIG_IOL,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_config_iol := y
+endif
+ifneq ($(_rust_cfg_config_iol),)
+rustflags-y += --cfg config_iol
+endif
+_rust_cfg_xmit_thread_mode :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_XMIT_THREAD_MODE' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_xmit_thread_mode := y
+endif
+ifneq ($(filter -DCONFIG_XMIT_THREAD_MODE,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_xmit_thread_mode := y
+endif
+ifneq ($(_rust_cfg_xmit_thread_mode),)
+rustflags-y += --cfg config_xmit_thread_mode
+endif
+_rust_cfg_recv_thread_mode :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RECV_THREAD_MODE' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_recv_thread_mode := y
+endif
+ifneq ($(filter -DCONFIG_RECV_THREAD_MODE,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_recv_thread_mode := y
+endif
+ifneq ($(_rust_cfg_recv_thread_mode),)
+rustflags-y += --cfg config_recv_thread_mode
 endif
 _rust_cfg_rf4ce_coexist :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RF4CE_COEXIST' $(src)/include/autoconf.h 2>/dev/null && echo y),)
@@ -5171,6 +5202,24 @@ rust-objects-hal-intf-c:
 rust-check-symbols-hal-intf: rust-objects-hal-intf-c rust-objects-hal-intf
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_intf_l1_ref.o NEW=rust/hal_intf.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_intf.allow ALLOW_VACUOUS=1
+
+# W4-78: IOL + xmit/recv thread dispatch (off in default autoconf — build both sides with flags).
+HAL_INTF_THREAD_IOL_CFLAGS := -DCONFIG_IOL -DCONFIG_XMIT_THREAD_MODE -DCONFIG_RECV_THREAD_MODE
+HAL_INTF_THREAD_IOL_RUSTFLAGS := --cfg config_iol --cfg config_xmit_thread_mode --cfg config_recv_thread_mode
+rust-objects-hal-intf-thread-iol:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-hal-intf-thread-iol"; exit 1; }
+	rm -f rust/hal_intf.o rust/.hal_intf.o.cmd
+	$(MAKE) $(KBUILD_OPTS) ccflags-y+="$(HAL_INTF_THREAD_IOL_CFLAGS)" \
+		rustflags-y+="$(HAL_INTF_THREAD_IOL_RUSTFLAGS)" \
+		-C $(KSRC) M=$(shell pwd) rust/hal_intf.o
+rust-objects-hal-intf-thread-iol-c:
+	@mkdir -p tests/host/hal
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 $(HAL_INTF_THREAD_IOL_CFLAGS) \
+		-o tests/host/hal/hal_intf_thread_iol_l1_ref.o \
+		tests/host/hal/hal_intf_thread_iol_l1_ref.c
+rust-check-symbols-hal-intf-thread-iol: rust-objects-hal-intf-thread-iol-c rust-objects-hal-intf-thread-iol
+	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_intf_thread_iol_l1_ref.o \
+		NEW=rust/hal_intf.o
 
 # W4-09: host C oracle (PHY_CalculateBitShift) vs rust/hal_phy.o.
 rust-objects-hal-phy:
