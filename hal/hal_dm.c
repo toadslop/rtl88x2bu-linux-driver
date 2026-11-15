@@ -32,6 +32,7 @@ void rtw_hal_update_iqk_fw_offload_cap(_adapter *adapter);
 #ifdef CONFIG_FW_OFFLOAD_PARAM_INIT
 void rtw_hal_update_param_init_fw_offload_cap(_adapter *adapter);
 #endif
+void rtw_rust_hal_dm_init_odm_cominfo_mid(_adapter *adapter);
 #endif
 
 /* A mapping from HalData to ODM. */
@@ -459,6 +460,9 @@ void Init_ODM_ComInfo(_adapter *adapter)
 #endif
 #endif /* CONFIG_RUST */
 
+#ifdef CONFIG_RUST
+	rtw_rust_hal_dm_init_odm_cominfo_mid(adapter);
+#else
 	odm_cmn_info_init(pDM_Odm, ODM_CMNINFO_GPA, pHalData->TypeGPA);
 	odm_cmn_info_init(pDM_Odm, ODM_CMNINFO_APA, pHalData->TypeAPA);
 	odm_cmn_info_init(pDM_Odm, ODM_CMNINFO_GLNA, pHalData->TypeGLNA);
@@ -482,7 +486,7 @@ void Init_ODM_ComInfo(_adapter *adapter)
 	odm_cmn_info_init(pDM_Odm, ODM_CMNINFO_EFUSE0X3D8, pHalData->efuse0x3d8);
 
 	/* waiting for PhyDMV034 support*/
-	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_MANUAL_SUPPORTABILITY, &(adapter->registrypriv.phydm_ability)); 
+	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_MANUAL_SUPPORTABILITY, &(adapter->registrypriv.phydm_ability));
 	/*Add by YuChen for adaptivity init*/
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_ADAPTIVITY, &(adapter->registrypriv.adaptivity_en));
 	phydm_adaptivity_info_init(pDM_Odm, PHYDM_ADAPINFO_CARRIER_SENSE_ENABLE, (adapter->registrypriv.adaptivity_mode != 0) ? TRUE : FALSE);
@@ -504,6 +508,7 @@ void Init_ODM_ComInfo(_adapter *adapter)
 	#ifdef CONFIG_FW_OFFLOAD_PARAM_INIT
 	rtw_hal_update_param_init_fw_offload_cap(adapter);
 	#endif
+#endif /* CONFIG_RUST */
 
 	/* Pointer reference */
 	/*Antenna diversity relative parameters*/

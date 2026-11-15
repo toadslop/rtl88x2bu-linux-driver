@@ -286,4 +286,92 @@ u16 rtw_rust_hal_dm_phydm_phy_param_offload(void)
 {
 	return PHYDM_PHY_PARAM_OFFLOAD;
 }
+
+struct rtw_hal_dm_init_odm_mid_init {
+	u16 type_gpa;
+	u16 type_apa;
+	u16 type_glna;
+	u16 type_alna;
+	u16 rfe_type;
+	u8 crystal_cap;
+	u8 reg_pwr_trim_enable;
+	u8 rf_kfree_enable;
+	u8 trx_ant_div_type;
+	u8 b_fix_tx_ant;
+	u8 with_ext_ant_switch;
+	u8 efuse0x3d7;
+	u8 efuse0x3d8;
+	u8 eeprom_thermal_meter;
+	u8 txpwr_pg_mode;
+	u8 adaptivity_mode;
+	s8 adaptivity_th_l2h_ini;
+	s8 adaptivity_th_edcca_hl_diff;
+};
+
+_Static_assert(sizeof(struct rtw_hal_dm_init_odm_mid_init) == 24,
+	"rtw_hal_dm_init_odm_mid_init must match Rust RtwHalDmInitOdmMidInit layout");
+_Static_assert(sizeof_field(struct rtw_hal_dm_init_odm_mid_init, type_gpa) == 2,
+	"type_gpa must be u16");
+
+void rtw_rust_hal_dm_init_odm_mid_init_vals(_adapter *adapter,
+	struct rtw_hal_dm_init_odm_mid_init *out)
+{
+	PHAL_DATA_TYPE hal;
+
+	if (!adapter || !out)
+		return;
+	hal = GET_HAL_DATA(adapter);
+	out->type_gpa = hal->TypeGPA;
+	out->type_apa = hal->TypeAPA;
+	out->type_glna = hal->TypeGLNA;
+	out->type_alna = hal->TypeALNA;
+	out->rfe_type = hal->rfe_type;
+	out->crystal_cap = hal->crystal_cap;
+	out->reg_pwr_trim_enable = adapter->registrypriv.RegPwrTrimEnable;
+	out->rf_kfree_enable = hal->RfKFreeEnable;
+	out->trx_ant_div_type = hal->TRxAntDivType;
+	out->b_fix_tx_ant = hal->b_fix_tx_ant;
+	out->with_ext_ant_switch = hal->with_extenal_ant_switch;
+	out->efuse0x3d7 = hal->efuse0x3d7;
+	out->efuse0x3d8 = hal->efuse0x3d8;
+	out->eeprom_thermal_meter = hal->eeprom_thermal_meter;
+	out->txpwr_pg_mode = hal->txpwr_pg_mode;
+	out->adaptivity_mode = adapter->registrypriv.adaptivity_mode;
+	out->adaptivity_th_l2h_ini = adapter->registrypriv.adaptivity_th_l2h_ini;
+	out->adaptivity_th_edcca_hl_diff = adapter->registrypriv.adaptivity_th_edcca_hl_diff;
+}
+
+u32 *rtw_rust_hal_dm_init_odm_mid_hook_phydm_ability(_adapter *adapter)
+{
+	if (!adapter)
+		return NULL;
+	return &(adapter->registrypriv.phydm_ability);
+}
+
+u8 *rtw_rust_hal_dm_init_odm_mid_hook_adaptivity_en(_adapter *adapter)
+{
+	if (!adapter)
+		return NULL;
+	return &(adapter->registrypriv.adaptivity_en);
+}
+
+void rtw_rust_hal_dm_init_odm_iqk_pa_off(struct dm_struct *phydm)
+{
+#ifdef CONFIG_IQK_PA_OFF
+	if (phydm)
+		odm_cmn_info_init(phydm, ODM_CMNINFO_IQKPAOFF, 1);
+#else
+	(void)phydm;
+#endif
+}
+
+void rtw_rust_hal_dm_init_odm_param_offload_cap(_adapter *adapter)
+{
+#ifdef CONFIG_FW_OFFLOAD_PARAM_INIT
+	if (adapter)
+		rtw_hal_update_param_init_fw_offload_cap(adapter);
+#else
+	(void)adapter;
+#endif
+}
 #endif /* CONFIG_RUST */
