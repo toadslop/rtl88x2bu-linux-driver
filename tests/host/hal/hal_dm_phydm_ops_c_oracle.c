@@ -43,8 +43,6 @@ void rtw_phydm_ops_func_init(struct dm_struct *p_phydm)
 	p_phydm->fill_desc_dyntxpwr = rtw_phydm_fill_desc_dpt;
 	host_hal_dm_phydm_ops_trace.fill_desc_ptr_set =
 		(p_phydm->fill_desc_dyntxpwr == rtw_phydm_fill_desc_dpt);
-#else
-	host_hal_dm_phydm_ops_trace.fill_desc_ptr_set = 1;
 #endif
 	host_hal_dm_phydm_ops_trace.record_ptr_set =
 		(p_ra_t->record_ra_info == record_ra_info);

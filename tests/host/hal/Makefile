@@ -760,7 +760,7 @@ test-dm-phydm-ops: test_hal_dm_phydm_ops
 	./test_hal_dm_phydm_ops
 
 test_hal_dm_phydm_ops: test_hal_dm_phydm_ops.c $(DM_PHYDM_OPS_ORACLE) $(DM_PHYDM_OPS_SHIM)
-	$(CC) $(CFLAGS) -DCONFIG_SUPPORT_DYNAMIC_TXPWR -I$(ROOT)/tests/host/include -o $@ \
+	$(CC) $(CFLAGS) -I$(ROOT)/tests/host/include -o $@ \
 		test_hal_dm_phydm_ops.c $(DM_PHYDM_OPS_ORACLE) $(DM_PHYDM_OPS_SHIM)
 
 test-usb-vendor-wvalue: test_hal_usb_vendor_wvalue
