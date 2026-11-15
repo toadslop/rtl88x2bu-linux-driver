@@ -420,6 +420,11 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-85 | #2043 | [W4-85] Translate hal_dm.c — Init_ODM adaptivity + traffic hooks |
 | W4-86 | #2044 | [W4-86] Translate hal_com_rest.c — customer string read/write API |
 | W4-87 | #2045 | [W4-87] Translate hal_intf.c — xmit enqueue + mgnt xmit dispatch |
+| W4-88 | #2059 | [W4-88] Translate hal_dm.c — Init_ODM ComInfo hook tail |
+| W4-89 | #2060 | [W4-89] Translate hal_dm.c — phydm ops init + record_ra_info |
+| W4-90 | #2061 | [W4-90] Translate hal_com.c — hal_com_config_channel_plan (part 1/2) |
+| W4-91 | #2062 | [W4-91] Translate hal_com.c — hal_com_config_channel_plan (part 2/2) |
+| W4-92 | #2063 | [W4-92] Translate hal_dm.c — PHYDM IGI and IQK status queries |
 
 ## Superseded issues
 
