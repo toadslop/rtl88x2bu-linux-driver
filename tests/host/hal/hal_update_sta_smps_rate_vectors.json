@@ -1,0 +1,14 @@
+{
+  "oracle": "hal_update_sta_smps_rate_c_oracle.c",
+  "vectors": [
+    {"name": "smps", "kind": 0, "mac_id": 1, "expect_sm_ps": 3},
+    {"name": "legacy", "kind": 1, "ht_enable": 0, "wireless_mode": 3, "hal_tx_nss": 2, "ap_state": 0,
+      "bssrateset": "0c", "expect_ramask": "10", "expect_init_rate": 4},
+    {"name": "ht2ss", "kind": 1, "ht_enable": 1, "wireless_mode": 8, "hal_tx_nss": 2, "ap_state": 0,
+      "ht_option": 1, "supp_mcs_set": "ff000000000000000000000000000000", "bssrateset": "0c",
+      "expect_ramask": "ff010", "expect_init_rate": 19},
+    {"name": "vht2ss", "kind": 1, "ht_enable": 1, "wireless_mode": 72, "hal_tx_nss": 2, "ap_state": 0,
+      "vht_option": 1, "vht_mcs_map": "aaaa", "bssrateset": "0c",
+      "expect_ramask": "fffff010", "expect_init_rate": 31}
+  ]
+}
