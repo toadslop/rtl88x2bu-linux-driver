@@ -1,0 +1,11 @@
+{
+  "oracle": "hal_update_sta_wset_mimo_c_oracle.c",
+  "vectors": [
+    {"name": "wset_11b", "kind": 0, "wireless_mode": 1, "tx_nss": 1, "rx_nss": 1, "expect_wset": 1, "expect_mimo": 0},
+    {"name": "wset_11bg_n_ac", "kind": 0, "wireless_mode": 75, "tx_nss": 1, "rx_nss": 1, "expect_wset": 15, "expect_mimo": 0},
+    {"name": "wset_11ac", "kind": 0, "wireless_mode": 64, "tx_nss": 1, "rx_nss": 1, "expect_wset": 8, "expect_mimo": 0},
+    {"name": "mimo_1t1r", "kind": 1, "wireless_mode": 0, "tx_nss": 1, "rx_nss": 1, "expect_wset": 0, "expect_mimo": 0},
+    {"name": "mimo_2t2r", "kind": 1, "wireless_mode": 0, "tx_nss": 2, "rx_nss": 2, "expect_wset": 0, "expect_mimo": 2},
+    {"name": "mimo_1t2r", "kind": 1, "wireless_mode": 0, "tx_nss": 1, "rx_nss": 2, "expect_wset": 0, "expect_mimo": 1}
+  ]
+}
