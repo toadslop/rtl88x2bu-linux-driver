@@ -6,7 +6,7 @@ typedef uint8_t u8;
 typedef int8_t s8;
 typedef uint32_t u32;
 typedef uint64_t u64;
-#define BSS_RATES_LEN 12
+#define BSS_RATES_LEN 16
 #define HT_MCS_SET_LEN 16
 #define VHT_MCS_MAP_LEN 2
 #define WIRELESS_11_24N (1U << 3)

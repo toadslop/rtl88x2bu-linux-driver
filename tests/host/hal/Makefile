@@ -88,6 +88,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-config-chplan-full test-config-chplan-full-rust \
 	test-mapping-out-pipe test-mapping-out-pipe-rust test-mgntframe-raid test-mgntframe-raid-rust \
 	test-update-sta-wset-mimo \
+	test-update-sta-smps-rate test-update-sta-smps-rate-rust \
 	test-hdata-rate test-hdata-rate-rust test-phy-bit-shift test-phy-bit-shift-rust \
 	test-dm-board-type test-dm-board-type-rust \
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
@@ -604,6 +605,29 @@ test_hal_update_sta_wset_mimo_rust: test_hal_update_sta_wset_mimo.c \
 		librust_hal_com_update_sta_wset_mimo.a $(HOST_JSON)
 	$(CC) $(CFLAGS) -I../include -o $@ test_hal_update_sta_wset_mimo.c \
 		$(HOST_JSON) librust_hal_com_update_sta_wset_mimo.a
+
+UPDATE_STA_SMPS_RATE_ORACLE := hal_update_sta_smps_rate_c_oracle.c
+
+test-update-sta-smps-rate: test_hal_update_sta_smps_rate
+	./test_hal_update_sta_smps_rate hal_update_sta_smps_rate_vectors.json
+
+test_hal_update_sta_smps_rate: test_hal_update_sta_smps_rate.c \
+		$(UPDATE_STA_SMPS_RATE_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -I../include -o $@ test_hal_update_sta_smps_rate.c \
+		$(UPDATE_STA_SMPS_RATE_ORACLE) $(HOST_JSON)
+
+librust_hal_com_update_sta_smps_rate.a: ../../../rust/hal_com_update_sta_smps_rate.rs
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_update_sta_smps_rate_test \
+		--crate-type staticlib ../../../rust/hal_com_update_sta_smps_rate.rs -o $@
+
+test-update-sta-smps-rate-rust: test_hal_update_sta_smps_rate_rust
+	./test_hal_update_sta_smps_rate_rust hal_update_sta_smps_rate_vectors.json
+
+test_hal_update_sta_smps_rate_rust: test_hal_update_sta_smps_rate.c \
+		librust_hal_com_update_sta_smps_rate.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -I../include -o $@ test_hal_update_sta_smps_rate.c \
+		$(HOST_JSON) librust_hal_com_update_sta_smps_rate.a
 
 HDATA_RATE_ORACLE := hal_hdata_rate_c_oracle.c
 
@@ -1272,6 +1296,8 @@ clean:
 		test_hal_mgntframe_raid test_hal_mgntframe_raid_rust librust_hal_com_mgntframe_raid.a \
 		test_hal_update_sta_wset_mimo test_hal_update_sta_wset_mimo_rust \
 		librust_hal_com_update_sta_wset_mimo.a \
+		test_hal_update_sta_smps_rate test_hal_update_sta_smps_rate_rust \
+		librust_hal_com_update_sta_smps_rate.a \
 		test_hal_hdata_rate test_hal_hdata_rate_rust librust_hal_com_hdata_rate.a \
 		test_hal_phy_rf_max_reg test_hal_phy_rf_max_reg_rust librust_hal_phy_rf_max_reg.a \
 		test_hal_phy_bit_shift test_hal_phy_bit_shift_rust librust_hal_phy.a \
