@@ -14,9 +14,11 @@ const HAL_ODM_WIFI_DISPLAY_STATE: U32 = 2;
 const HAL_ODM_REGULATION: U32 = 3;
 const HAL_ODM_INITIAL_GAIN: U32 = 4;
 
+#[cfg(not(host_hal_dm_set_odm_var_core_test))]
 mod set_odm_var_rx {
     include!("hal_dm_set_odm_var_rx.inc.rs");
 }
+#[cfg(not(host_hal_dm_set_odm_var_core_test))]
 use set_odm_var_rx::set_odm_var_rx_cases;
 
 const STA_DM_CTRL_ACTIVE: U8 = 1;
@@ -123,7 +125,16 @@ pub extern "C" fn SetHalODMVar(
                     );
                 }
             }
-            5 | 6 => set_odm_var_rx_cases(adapter, e_variable, p_value1),
+            5 | 6 => {
+                #[cfg(not(host_hal_dm_set_odm_var_core_test))]
+                {
+                    set_odm_var_rx_cases(adapter, e_variable, p_value1);
+                }
+                #[cfg(host_hal_dm_set_odm_var_core_test)]
+                {
+                    rtw_rust_hal_dm_set_odm_var_rest(adapter, e_variable, p_value1, b_set);
+                }
+            }
             _ => rtw_rust_hal_dm_set_odm_var_rest(adapter, e_variable, p_value1, b_set),
         }
     }

@@ -897,6 +897,7 @@ RUST_HAL_DM_SET_ODM_VAR_CORE := $(ROOT)/rust/hal_dm_set_odm_var_core_host.rs
 
 librust_hal_dm_set_odm_var_core.a: $(RUST_HAL_DM_SET_ODM_VAR_CORE)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_dm_set_odm_var_core_test \
 		--crate-type staticlib $(RUST_HAL_DM_SET_ODM_VAR_CORE) -o $@
 
 test-dm-set-odm-var-core-rust: test_hal_dm_set_odm_var_core_rust
