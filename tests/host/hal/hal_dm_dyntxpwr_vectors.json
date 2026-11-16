@@ -1,0 +1,56 @@
+{
+  "vectors": [
+    {
+      "name": "fill_8822b_offset_3",
+      "op": "fill_desc",
+      "chip_type": 10,
+      "dpt_lv": 3,
+      "expect_offset": 3,
+      "expect_err": 0,
+      "mac_id": 0,
+      "dyn_tx_power": 0,
+      "support_ability": 0,
+      "sta_active": 0,
+      "expect_odm_calls": 0
+    },
+    {
+      "name": "fill_8822b_offset_7",
+      "op": "fill_desc",
+      "chip_type": 10,
+      "dpt_lv": 7,
+      "expect_offset": 7,
+      "expect_err": 0,
+      "mac_id": 0,
+      "dyn_tx_power": 0,
+      "support_ability": 0,
+      "sta_active": 0,
+      "expect_odm_calls": 0
+    },
+    {
+      "name": "fill_unsupported_chip",
+      "op": "fill_desc",
+      "chip_type": 0,
+      "dpt_lv": 2,
+      "expect_offset": 0,
+      "expect_err": 1,
+      "mac_id": 0,
+      "dyn_tx_power": 0,
+      "support_ability": 0,
+      "sta_active": 0,
+      "expect_odm_calls": 0
+    },
+    {
+      "name": "set_dyntxpwr_via_odm",
+      "op": "set_dyntxpwr",
+      "chip_type": 10,
+      "dpt_lv": 0,
+      "expect_offset": 5,
+      "expect_err": 0,
+      "mac_id": 1,
+      "dyn_tx_power": 5,
+      "support_ability": 4,
+      "sta_active": 1,
+      "expect_odm_calls": 1
+    }
+  ]
+}
