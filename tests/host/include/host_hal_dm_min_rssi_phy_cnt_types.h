@@ -14,8 +14,22 @@ typedef uint8_t boolean;
 #define _TRUE 1u
 #define _FALSE 0u
 
-#define PHYDM_INFO_RSSI_MIN 21u
+#define PHYDM_INFO_FA_OFDM 0u
+#define PHYDM_INFO_FA_CCK 1u
+#define PHYDM_INFO_FA_TOTAL 2u
+#define PHYDM_INFO_CCA_OFDM 3u
+#define PHYDM_INFO_CCA_CCK 4u
+#define PHYDM_INFO_CCA_ALL 5u
+#define PHYDM_INFO_CRC32_OK_VHT 6u
+#define PHYDM_INFO_CRC32_OK_HT 7u
+#define PHYDM_INFO_CRC32_OK_LEGACY 8u
+#define PHYDM_INFO_CRC32_OK_CCK 9u
+#define PHYDM_INFO_CRC32_ERROR_VHT 10u
+#define PHYDM_INFO_CRC32_ERROR_HT 11u
+#define PHYDM_INFO_CRC32_ERROR_LEGACY 12u
+#define PHYDM_INFO_CRC32_ERROR_CCK 13u
 #define PHYDM_INFO_EDCCA_FLAG 14u
+#define PHYDM_INFO_RSSI_MIN 21u
 
 #define LE_BITS_TO_1BYTE(__ptr, __start, __len) \
 	((u8)(((*(u8 *)(__ptr)) >> (__start)) & (((u8)0xff) >> (8 - (__len)))))

@@ -43,6 +43,7 @@ struct vector {
 	int expect_u8;
 	int expect_u32;
 	int expect_query_type;
+	int check_query_type;
 	int phy_cnt;
 };
 
@@ -73,14 +74,14 @@ static int parse_vector_object(const char *obj, size_t len, void *vv)
 		"sta1_present", "sta1_rssi", "sta1_opmode", "sta1_bcast",
 		"sta2_present", "sta2_rssi", "sta2_opmode", "sta2_bcast",
 		"fixture_query_ret", "expect_s8", "expect_u8", "expect_u32",
-		"expect_query_type", "phy_cnt",
+		"expect_query_type", "check_query_type", "phy_cnt",
 	};
 	int *dst[] = {
 		&v->sta0_present, &v->sta0_rssi, &v->sta0_opmode, &v->sta0_bcast,
 		&v->sta1_present, &v->sta1_rssi, &v->sta1_opmode, &v->sta1_bcast,
 		&v->sta2_present, &v->sta2_rssi, &v->sta2_opmode, &v->sta2_bcast,
 		&v->fixture_query_ret, &v->expect_s8, &v->expect_u8, &v->expect_u32,
-		&v->expect_query_type, &v->phy_cnt,
+		&v->expect_query_type, &v->check_query_type, &v->phy_cnt,
 	};
 	size_t i;
 
@@ -128,11 +129,11 @@ static int run_vector(struct vector *v)
 		if (host_hal_dm_min_rssi_phy_cnt_trace.phydm_cmn_query_last !=
 		    (u32)v->expect_query_type)
 			return -1;
-	} else if (!strcmp(v->op, "phy_cnt")) {
+	} else if (!strcmp(v->op, "get_phy_cnt")) {
 		u32 got = rtw_phydm_get_phy_cnt(&adapter, (enum phy_cnt)v->phy_cnt);
 		if (got != (u32)v->expect_u32)
 			return -1;
-		if (v->expect_query_type &&
+		if (v->check_query_type &&
 		    host_hal_dm_min_rssi_phy_cnt_trace.phydm_cmn_query_last !=
 			    (u32)v->expect_query_type)
 			return -1;
@@ -146,12 +147,12 @@ static int run_vector(struct vector *v)
 
 int main(int argc, char **argv)
 {
-	struct vector vectors[12];
+	struct vector vectors[32];
 	size_t count = 0;
 	const char *path =
 		argc > 1 ? argv[1] : "hal_dm_min_rssi_phy_cnt_vectors.json";
 
-	if (host_load_vectors(path, vectors, sizeof(vectors[0]), 12,
+	if (host_load_vectors(path, vectors, sizeof(vectors[0]), 32,
 			      parse_vector_object, &count))
 		return fprintf(stderr, "failed to load %s\n", path), 1;
 	for (size_t i = 0; i < count; i++)
