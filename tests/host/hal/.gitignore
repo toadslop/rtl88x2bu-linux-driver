@@ -28,3 +28,4 @@ test_hal_dm_min_rssi_phy_cnt*
 test_hal_dm_set_odm_var_core
 test_hal_dm_set_odm_var_core_rust
 librust_hal_dm_set_odm_var_core.a
+test_hal_dm_set_odm_var_rx
