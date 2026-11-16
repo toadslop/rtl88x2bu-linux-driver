@@ -5400,6 +5400,10 @@ rust-objects-hal-dm-c:
 		-o tests/host/hal/hal_dm_phydm_igi_iqk_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_igi_iqk_c_oracle.c
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -DRTL8822B_SUPPORT=1 \
+		-o tests/host/hal/hal_dm_phydm_iqk_lck_l1_ref.o \
+		tests/host/hal/hal_dm_phydm_iqk_lck_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-I$(shell pwd)/tests/host/include \
 		-o tests/host/hal/hal_dm_min_rssi_phy_cnt_l1_ref.o \
 		tests/host/hal/hal_dm_min_rssi_phy_cnt_c_oracle.c
@@ -5418,6 +5422,7 @@ rust-objects-hal-dm-c:
 		tests/host/hal/hal_dm_init_odm_cominfo_tail_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_ops_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_igi_iqk_l1_ref.o \
+		tests/host/hal/hal_dm_phydm_iqk_lck_l1_ref.o \
 		tests/host/hal/hal_dm_min_rssi_phy_cnt_l1_ref.o \
 		tests/host/hal/hal_dm_set_odm_var_core_l1_ref.o
 rust-check-symbols-hal-dm: rust-objects-hal-dm-c rust-objects-hal-dm
