@@ -10,6 +10,7 @@ type U64 = u64;
 const _TRUE: U8 = 1;
 const _FALSE: U8 = 0;
 
+// Ordinal values of `HALRF_CMNINFO` in hal/phydm/halrf/halrf.h (keep in sync).
 const HALRF_CMNINFO_RFK_FORBIDDEN: U32 = 3;
 const HALRF_CMNINFO_IQK_SEGMENT: U32 = 4;
 

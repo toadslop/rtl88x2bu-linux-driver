@@ -2459,26 +2459,32 @@ include $(src)/hal/phydm/phydm.mk
 
 ########### HAL_RTL8822B #################################
 ifeq ($(CONFIG_RTL8822B), y)
+# Chip cfgs for Rust `#[cfg(CONFIG_RTL8822B)]` (see rust/hal_dm_phydm_iqk_lck.inc.rs).
+rustflags-y += --cfg CONFIG_RTL8822B
 include $(src)/rtl8822b.mk
 endif
 
 ########### HAL_RTL8821C #################################
 ifeq ($(CONFIG_RTL8821C), y)
+rustflags-y += --cfg CONFIG_RTL8821C
 include $(src)/rtl8821c.mk
 endif
 
 ########### HAL_RTL8822C #################################
 ifeq ($(CONFIG_RTL8822C), y)
+rustflags-y += --cfg CONFIG_RTL8822C
 include $(src)/rtl8822c.mk
 endif
 
 ########### HAL_RTL8814B #################################
 ifeq ($(CONFIG_RTL8814B), y)
+rustflags-y += --cfg CONFIG_RTL8814B
 include $(src)/rtl8814b.mk
 endif
 
 ########### HAL_RTL8723F #################################
 ifeq ($(CONFIG_RTL8723F), y)
+rustflags-y += --cfg CONFIG_RTL8723F
 include $(src)/rtl8723f.mk
 endif
 
