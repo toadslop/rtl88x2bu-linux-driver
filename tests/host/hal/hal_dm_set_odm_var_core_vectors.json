@@ -26,14 +26,14 @@
       "name": "p2p_on",
       "case": "p2p",
       "bset": 1,
-      "expect_cmn_info": 81,
+      "expect_cmn_info": 86,
       "expect_cmn_value": 1
     },
     {
       "name": "wfd_off",
       "case": "wfd",
       "bset": 0,
-      "expect_cmn_info": 82,
+      "expect_cmn_info": 87,
       "expect_cmn_value": 0
     },
     {

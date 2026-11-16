@@ -18,8 +18,9 @@ typedef uint8_t BOOLEAN;
 #define HAL_ODM_REGULATION 3u
 #define HAL_ODM_INITIAL_GAIN 4u
 
-#define ODM_CMNINFO_WIFI_DIRECT 81u
-#define ODM_CMNINFO_WIFI_DISPLAY 82u
+/* Indices match enum odm_cmninfo in hal/phydm/phydm.h (ODM_CMNINFO_PLATFORM = 0). */
+#define ODM_CMNINFO_WIFI_DIRECT 86u
+#define ODM_CMNINFO_WIFI_DISPLAY 87u
 
 #define PHYDM_ADAPINFO_DOMAIN_CODE_2G 4u
 #define PHYDM_ADAPINFO_DOMAIN_CODE_5G 5u

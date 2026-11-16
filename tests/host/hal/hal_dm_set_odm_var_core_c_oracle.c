@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0
-/* C oracle for W4-94 SetHalODMVar core switch cases (hal/hal_dm.c). */
+/* C oracle for W4-94 SetHalODMVar core switch cases (hal/hal_dm.c).
+ *
+ * Scope: STA_INFO, P2P/WFD, REGULATION, INITIAL_GAIN only. RX info dump,
+ * Dframe info, default fall-through, and NULL pValue1 for INITIAL_GAIN are
+ * deferred to later slices (W4-96 / rest).
+ */
 
 #include <string.h>
 
