@@ -59,3 +59,61 @@ void rtw_update_tx_rate_bmp(struct dvobj_priv *dvobj)
 	(void)dvobj;
 	host_hal_dm_phydm_ops_trace.update_tx_rate_bmp_calls++;
 }
+
+#if defined(CONFIG_SUPPORT_DYNAMIC_TXPWR) && defined(RUST_HAL_DM_PHYDM_OPS_ORACLE)
+void rtw_phydm_fill_desc_dpt(void *dm, u8 *desc, u8 dpt_lv)
+{
+	(void)dm;
+	(void)desc;
+	(void)dpt_lv;
+}
+#endif
+
+struct rtw_hal_dm_sta_ra_fields {
+	u8 ra_bw_mode;
+	u8 is_vht_enable;
+};
+
+void *rtw_rust_hal_dm_phydm_adapter(struct dm_struct *dm)
+{
+	return dm ? dm->adapter : NULL;
+}
+
+void *rtw_rust_hal_dm_ra_table(struct dm_struct *dm)
+{
+	return dm ? &dm->dm_ra_table : NULL;
+}
+
+void rtw_rust_hal_dm_ra_table_set_record_ra(struct host_ra_table *ra,
+	void (*fn)(void *, u8, struct cmn_sta_info *, u64))
+{
+	if (ra)
+		ra->record_ra_info = fn;
+}
+
+void rtw_rust_hal_dm_set_fill_desc_dyntxpwr(struct dm_struct *dm,
+	void (*fn)(void *, u8 *, u8))
+{
+	if (dm)
+		dm->fill_desc_dyntxpwr = fn;
+}
+
+void rtw_rust_hal_dm_sta_ra_fields(struct cmn_sta_info *sta,
+	struct rtw_hal_dm_sta_ra_fields *out)
+{
+	if (!sta || !out)
+		return;
+
+	out->ra_bw_mode = (u8)sta->ra_info.ra_bw_mode;
+	out->is_vht_enable = sta->ra_info.is_vht_enable;
+}
+
+struct dvobj_priv *rtw_rust_hal_dm_adapter_to_dvobj(host_adapter *adapter)
+{
+	return adapter_to_dvobj(adapter);
+}
+
+struct macid_ctl_t *rtw_rust_hal_dm_dvobj_to_macidctl(struct dvobj_priv *dvobj)
+{
+	return dvobj_to_macidctl(dvobj);
+}
