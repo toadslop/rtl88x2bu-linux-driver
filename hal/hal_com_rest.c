@@ -315,58 +315,6 @@ u8 rtw_hal_set_req_per_rpt_cmd(_adapter *adapter, u8 group_macid,
 
 #endif /* RTW_PER_CMD_SUPPORT_FW */
 
-void rtw_hal_update_sta_wset(_adapter *adapter, struct sta_info *psta)
-{
-	u8 w_set = 0;
-
-	if (psta->wireless_mode & WIRELESS_11B)
-		w_set |= WIRELESS_CCK;
-
-	if ((psta->wireless_mode & WIRELESS_11G) || (psta->wireless_mode & WIRELESS_11A))
-		w_set |= WIRELESS_OFDM;
-
-	if ((psta->wireless_mode & WIRELESS_11_24N) || (psta->wireless_mode & WIRELESS_11_5N))
-		w_set |= WIRELESS_HT;
-
-	if (psta->wireless_mode & WIRELESS_11AC)
-		w_set |= WIRELESS_VHT;
-
-	psta->cmn.support_wireless_set = w_set;
-}
-
-void rtw_hal_update_sta_mimo_type(_adapter *adapter, struct sta_info *psta)
-{
-	s8 tx_nss, rx_nss;
-
-	tx_nss = rtw_get_sta_tx_nss(adapter, psta);
-	rx_nss =  rtw_get_sta_rx_nss(adapter, psta);
-	if ((tx_nss == 1) && (rx_nss == 1))
-		psta->cmn.mimo_type = RF_1T1R;
-	else if ((tx_nss == 1) && (rx_nss == 2))
-		psta->cmn.mimo_type = RF_1T2R;
-	else if ((tx_nss == 2) && (rx_nss == 2))
-		psta->cmn.mimo_type = RF_2T2R;
-	else if ((tx_nss == 2) && (rx_nss == 3))
-		psta->cmn.mimo_type = RF_2T3R;
-	else if ((tx_nss == 2) && (rx_nss == 4))
-		psta->cmn.mimo_type = RF_2T4R;
-	else if ((tx_nss == 3) && (rx_nss == 3))
-		psta->cmn.mimo_type = RF_3T3R;
-	else if ((tx_nss == 3) && (rx_nss == 4))
-		psta->cmn.mimo_type = RF_3T4R;
-	else if ((tx_nss == 4) && (rx_nss == 4))
-		psta->cmn.mimo_type = RF_4T4R;
-	else
-		rtw_warn_on(1);
-
-#ifdef CONFIG_CTRL_TXSS_BY_TP
-	rtw_ctrl_txss_update_mimo_type(adapter, psta);
-#endif
-
-	RTW_INFO("STA - MAC_ID:%d, Tx - %d SS, Rx - %d SS\n",
-			psta->cmn.mac_id, tx_nss, rx_nss);
-}
-
 void rtw_hal_update_sta_smps_cap(_adapter *adapter, struct sta_info *psta)
 {
 	/*Spatial Multiplexing Power Save*/
@@ -14735,6 +14683,39 @@ void rtw_rust_hal_com_warn_invalid_mrate(u8 rate)
 void rtw_rust_hal_com_warn_on(int condition)
 {
 	rtw_warn_on(condition);
+}
+
+u8 rtw_rust_hal_com_sta_wireless_mode(struct sta_info *psta)
+{
+	if (!psta)
+		return 0;
+	return psta->wireless_mode;
+}
+
+void rtw_rust_hal_com_sta_set_support_wireless_set(struct sta_info *psta, u8 wset)
+{
+	if (!psta)
+		return;
+	psta->cmn.support_wireless_set = wset;
+}
+
+void rtw_rust_hal_com_sta_set_mimo_type(struct sta_info *psta, u8 mimo)
+{
+	if (!psta)
+		return;
+	psta->cmn.mimo_type = mimo;
+}
+
+u8 rtw_rust_hal_com_sta_mac_id(struct sta_info *psta)
+{
+	if (!psta)
+		return 0;
+	return psta->cmn.mac_id;
+}
+
+void rtw_rust_hal_com_log_sta_mimo_ss(u8 mac_id, s8 tx_nss, s8 rx_nss)
+{
+	RTW_INFO("STA - MAC_ID:%d, Tx - %d SS, Rx - %d SS\n", mac_id, tx_nss, rx_nss);
 }
 
 void rtw_rust_hal_com_log_info(const char *line)
