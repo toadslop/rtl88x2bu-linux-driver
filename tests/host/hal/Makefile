@@ -31,6 +31,7 @@ DM_PHYDM_OPS_SHIM := hal_dm_phydm_ops_shim.c
 DM_PHYDM_OPS_ORACLE := hal_dm_phydm_ops_c_oracle.c
 DM_PHYDM_IGI_IQK_ORACLE := hal_dm_phydm_igi_iqk_c_oracle.c
 DM_PHYDM_IGI_IQK_SHIM := hal_dm_phydm_igi_iqk_host_shim.c
+DM_MIN_RSSI_PHY_CNT_ORACLE := hal_dm_min_rssi_phy_cnt_c_oracle.c
 USB_WVALUE_ORACLE := hal_usb_vendor_wvalue_c_oracle.c
 USB_SYNC_READ_ORACLE := hal_usb_sync_read_c_oracle.c
 USB_SYNC_WRITE_ORACLE := hal_usb_sync_write_c_oracle.c
@@ -75,6 +76,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-dm-phydm-ops test-dm-phydm-ops-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
+	test-dm-min-rssi-phy-cnt \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust \
 	test-usb-sync-read test-usb-sync-read-rust test-usb-sync-write \
 	test-usb-async-write test-usb-async-write-rust test-chip-odm test-chip-odm-rust \
@@ -99,6 +101,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-dm-phydm-ops test-dm-phydm-ops-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
+	test-dm-min-rssi-phy-cnt \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust test-usb-sync-read \
 	test-usb-sync-read-rust test-usb-sync-write test-usb-async-write \
 	test-usb-async-write-rust test-chip-odm test-chip-odm-rust \
@@ -780,6 +783,14 @@ test_hal_dm_odm_iface_rust: test_hal_dm_odm_iface.c librust_hal_dm_odm_iface.a \
 	$(CC) $(CFLAGS) -DRUST_HAL_DM_ODM_IFACE_ORACLE -I$(ROOT)/tests/host/include -o $@ \
 		test_hal_dm_odm_iface.c $(DM_ODM_IFACE_SHIM) $(HOST_JSON) librust_hal_dm_odm_iface.a
 
+test-dm-min-rssi-phy-cnt: test_hal_dm_min_rssi_phy_cnt
+	./test_hal_dm_min_rssi_phy_cnt hal_dm_min_rssi_phy_cnt_vectors.json
+
+test_hal_dm_min_rssi_phy_cnt: test_hal_dm_min_rssi_phy_cnt.c \
+		$(DM_MIN_RSSI_PHY_CNT_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -I$(ROOT)/tests/host/include -o $@ test_hal_dm_min_rssi_phy_cnt.c \
+		$(DM_MIN_RSSI_PHY_CNT_ORACLE) $(HOST_JSON)
+
 DM_INIT_ODM_TAIL_SHIM := hal_dm_init_odm_cominfo_tail_shim.c
 DM_INIT_ODM_TAIL_ORACLE := hal_dm_init_odm_cominfo_tail_c_oracle.c
 
@@ -1074,6 +1085,7 @@ clean:
 		test_hal_dm_odm_iface test_hal_dm_odm_iface_rust librust_hal_dm_odm_iface.a \
 		test_hal_dm_phydm_igi_iqk test_hal_dm_phydm_igi_iqk_rust \
 		librust_hal_dm_phydm_igi_iqk.a \
+		test_hal_dm_min_rssi_phy_cnt \
 		test_hal_usb_vendor_wvalue test_hal_usb_vendor_wvalue_rust librust_hal_usb_wvalue.a \
 		test_hal_usb_sync_read test_hal_usb_sync_write test_hal_usb_async_write \
 		test_hal_usb_async_write_rust librust_hal_usb_async_write.a \

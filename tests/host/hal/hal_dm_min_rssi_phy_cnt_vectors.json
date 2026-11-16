@@ -1,0 +1,185 @@
+{
+  "vectors": [
+    {
+      "name": "dm_min_rssi_empty",
+      "op": "dm_min_rssi",
+      "sta0_present": 0,
+      "expect_s8": 0,
+      "fixture_query_ret": 0,
+      "expect_query_type": 0,
+      "phy_cnt": 0
+    },
+    {
+      "name": "dm_min_rssi_two_stas",
+      "op": "dm_min_rssi",
+      "sta0_present": 1,
+      "sta0_rssi": 40,
+      "sta0_opmode": 1,
+      "sta1_present": 1,
+      "sta1_rssi": 25,
+      "sta1_opmode": 1,
+      "expect_s8": 25
+    },
+    {
+      "name": "dm_min_skips_bcast_and_negative",
+      "op": "dm_min_rssi",
+      "sta0_present": 1,
+      "sta0_rssi": 10,
+      "sta0_opmode": 1,
+      "sta0_bcast": 1,
+      "sta1_present": 1,
+      "sta1_rssi": -5,
+      "sta1_opmode": 1,
+      "sta2_present": 1,
+      "sta2_rssi": 30,
+      "sta2_opmode": 1,
+      "expect_s8": 30
+    },
+    {
+      "name": "phydm_min_rssi",
+      "op": "phydm_min_rssi",
+      "fixture_query_ret": 55,
+      "expect_s8": 55,
+      "expect_query_type": 21
+    },
+    {
+      "name": "phydm_edcca",
+      "op": "edcca",
+      "fixture_query_ret": 1,
+      "expect_u8": 1,
+      "expect_query_type": 14
+    },
+    {
+      "name": "phy_cnt_fa_ofdm",
+      "op": "get_phy_cnt",
+      "phy_cnt": 0,
+      "fixture_query_ret": 100,
+      "expect_u32": 100,
+      "expect_query_type": 0,
+      "check_query_type": 1
+    },
+    {
+      "name": "phy_cnt_fa_cck",
+      "op": "get_phy_cnt",
+      "phy_cnt": 1,
+      "fixture_query_ret": 101,
+      "expect_u32": 101,
+      "expect_query_type": 1,
+      "check_query_type": 1
+    },
+    {
+      "name": "phy_cnt_fa_total",
+      "op": "get_phy_cnt",
+      "phy_cnt": 2,
+      "fixture_query_ret": 102,
+      "expect_u32": 102,
+      "expect_query_type": 2,
+      "check_query_type": 1
+    },
+    {
+      "name": "phy_cnt_cca_ofdm",
+      "op": "get_phy_cnt",
+      "phy_cnt": 3,
+      "fixture_query_ret": 103,
+      "expect_u32": 103,
+      "expect_query_type": 3,
+      "check_query_type": 1
+    },
+    {
+      "name": "phy_cnt_cca_cck",
+      "op": "get_phy_cnt",
+      "phy_cnt": 4,
+      "fixture_query_ret": 104,
+      "expect_u32": 104,
+      "expect_query_type": 4,
+      "check_query_type": 1
+    },
+    {
+      "name": "phy_cnt_cca_all",
+      "op": "get_phy_cnt",
+      "phy_cnt": 5,
+      "fixture_query_ret": 105,
+      "expect_u32": 105,
+      "expect_query_type": 5,
+      "check_query_type": 1
+    },
+    {
+      "name": "phy_cnt_crc32_ok_vht",
+      "op": "get_phy_cnt",
+      "phy_cnt": 6,
+      "fixture_query_ret": 106,
+      "expect_u32": 106,
+      "expect_query_type": 6,
+      "check_query_type": 1
+    },
+    {
+      "name": "phy_cnt_crc32_ok_ht",
+      "op": "get_phy_cnt",
+      "phy_cnt": 7,
+      "fixture_query_ret": 107,
+      "expect_u32": 107,
+      "expect_query_type": 7,
+      "check_query_type": 1
+    },
+    {
+      "name": "phy_cnt_crc32_ok_legacy",
+      "op": "get_phy_cnt",
+      "phy_cnt": 8,
+      "fixture_query_ret": 108,
+      "expect_u32": 108,
+      "expect_query_type": 8,
+      "check_query_type": 1
+    },
+    {
+      "name": "phy_cnt_crc32_ok_cck",
+      "op": "get_phy_cnt",
+      "phy_cnt": 9,
+      "fixture_query_ret": 109,
+      "expect_u32": 109,
+      "expect_query_type": 9,
+      "check_query_type": 1
+    },
+    {
+      "name": "phy_cnt_crc32_err_vht",
+      "op": "get_phy_cnt",
+      "phy_cnt": 10,
+      "fixture_query_ret": 110,
+      "expect_u32": 110,
+      "expect_query_type": 10,
+      "check_query_type": 1
+    },
+    {
+      "name": "phy_cnt_crc32_err_ht",
+      "op": "get_phy_cnt",
+      "phy_cnt": 11,
+      "fixture_query_ret": 111,
+      "expect_u32": 111,
+      "expect_query_type": 11,
+      "check_query_type": 1
+    },
+    {
+      "name": "phy_cnt_crc32_err_legacy",
+      "op": "get_phy_cnt",
+      "phy_cnt": 12,
+      "fixture_query_ret": 112,
+      "expect_u32": 112,
+      "expect_query_type": 12,
+      "check_query_type": 1
+    },
+    {
+      "name": "phy_cnt_crc32_err_cck",
+      "op": "get_phy_cnt",
+      "phy_cnt": 13,
+      "fixture_query_ret": 113,
+      "expect_u32": 113,
+      "expect_query_type": 13,
+      "check_query_type": 1
+    },
+    {
+      "name": "phy_cnt_invalid",
+      "op": "get_phy_cnt",
+      "phy_cnt": 99,
+      "expect_u32": 0
+    }
+  ]
+}
