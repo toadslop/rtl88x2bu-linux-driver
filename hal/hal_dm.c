@@ -950,6 +950,7 @@ void rtw_hal_turbo_edca(_adapter *adapter)
 
 }
 
+#ifndef CONFIG_RUST
 s8 rtw_dm_get_min_rssi(_adapter *adapter)
 {
 	struct macid_ctl_t *macid_ctl = adapter_to_macidctl(adapter);
@@ -978,6 +979,7 @@ s8 rtw_phydm_get_min_rssi(_adapter *adapter)
 	rssi_min = phydm_cmn_info_query(phydm, (enum phydm_info_query) PHYDM_INFO_RSSI_MIN);
 	return rssi_min;
 }
+#endif /* !CONFIG_RUST */
 
 #ifndef CONFIG_RUST
 u8 rtw_phydm_get_cur_igi(_adapter *adapter)
@@ -990,6 +992,7 @@ u8 rtw_phydm_get_cur_igi(_adapter *adapter)
 }
 #endif /* !CONFIG_RUST */
 
+#ifndef CONFIG_RUST
 bool rtw_phydm_get_edcca_flag(_adapter *adapter)
 {
 	struct dm_struct *phydm = adapter_to_phydm(adapter);
@@ -998,7 +1001,9 @@ bool rtw_phydm_get_edcca_flag(_adapter *adapter)
 	cur_edcca_flag = phydm_cmn_info_query(phydm, (enum phydm_info_query) PHYDM_INFO_EDCCA_FLAG);
 	return cur_edcca_flag;
 }
+#endif /* !CONFIG_RUST */
 
+#ifndef CONFIG_RUST
 u32 rtw_phydm_get_phy_cnt(_adapter *adapter, enum phy_cnt cnt)
 {
 	struct dm_struct *phydm = adapter_to_phydm(adapter);
@@ -1034,6 +1039,7 @@ u32 rtw_phydm_get_phy_cnt(_adapter *adapter, enum phy_cnt cnt)
 	else
 		return 0;
 }
+#endif /* !CONFIG_RUST */
 
 #ifndef CONFIG_RUST
 u8 rtw_phydm_is_iqk_in_progress(_adapter *adapter)

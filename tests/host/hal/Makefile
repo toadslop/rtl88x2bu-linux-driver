@@ -32,6 +32,7 @@ DM_PHYDM_OPS_ORACLE := hal_dm_phydm_ops_c_oracle.c
 DM_PHYDM_IGI_IQK_ORACLE := hal_dm_phydm_igi_iqk_c_oracle.c
 DM_PHYDM_IGI_IQK_SHIM := hal_dm_phydm_igi_iqk_host_shim.c
 DM_MIN_RSSI_PHY_CNT_ORACLE := hal_dm_min_rssi_phy_cnt_c_oracle.c
+DM_MIN_RSSI_PHY_CNT_SHIM := hal_dm_min_rssi_phy_cnt_host_shim.c
 USB_WVALUE_ORACLE := hal_usb_vendor_wvalue_c_oracle.c
 USB_SYNC_READ_ORACLE := hal_usb_sync_read_c_oracle.c
 USB_SYNC_WRITE_ORACLE := hal_usb_sync_write_c_oracle.c
@@ -76,7 +77,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-dm-phydm-ops test-dm-phydm-ops-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
-	test-dm-min-rssi-phy-cnt \
+	test-dm-min-rssi-phy-cnt test-dm-min-rssi-phy-cnt-rust \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust \
 	test-usb-sync-read test-usb-sync-read-rust test-usb-sync-write \
 	test-usb-async-write test-usb-async-write-rust test-chip-odm test-chip-odm-rust \
@@ -101,7 +102,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-dm-phydm-ops test-dm-phydm-ops-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
-	test-dm-min-rssi-phy-cnt \
+	test-dm-min-rssi-phy-cnt test-dm-min-rssi-phy-cnt-rust \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust test-usb-sync-read \
 	test-usb-sync-read-rust test-usb-sync-write test-usb-async-write \
 	test-usb-async-write-rust test-chip-odm test-chip-odm-rust \
@@ -791,6 +792,21 @@ test_hal_dm_min_rssi_phy_cnt: test_hal_dm_min_rssi_phy_cnt.c \
 	$(CC) $(CFLAGS) -I$(ROOT)/tests/host/include -o $@ test_hal_dm_min_rssi_phy_cnt.c \
 		$(DM_MIN_RSSI_PHY_CNT_ORACLE) $(HOST_JSON)
 
+test-dm-min-rssi-phy-cnt-rust: test_hal_dm_min_rssi_phy_cnt_rust
+	./test_hal_dm_min_rssi_phy_cnt_rust hal_dm_min_rssi_phy_cnt_vectors.json
+
+RUST_HAL_DM_MIN_RSSI_PHY_CNT := $(ROOT)/rust/hal_dm_min_rssi_phy_cnt_host.rs
+
+librust_hal_dm_min_rssi_phy_cnt.a: $(RUST_HAL_DM_MIN_RSSI_PHY_CNT)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--crate-type staticlib $(RUST_HAL_DM_MIN_RSSI_PHY_CNT) -o $@
+
+test_hal_dm_min_rssi_phy_cnt_rust: test_hal_dm_min_rssi_phy_cnt.c \
+		librust_hal_dm_min_rssi_phy_cnt.a $(DM_MIN_RSSI_PHY_CNT_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_DM_MIN_RSSI_PHY_CNT_ORACLE -I$(ROOT)/tests/host/include \
+		-o $@ test_hal_dm_min_rssi_phy_cnt.c $(DM_MIN_RSSI_PHY_CNT_SHIM) \
+		$(HOST_JSON) librust_hal_dm_min_rssi_phy_cnt.a
+
 DM_INIT_ODM_TAIL_SHIM := hal_dm_init_odm_cominfo_tail_shim.c
 DM_INIT_ODM_TAIL_ORACLE := hal_dm_init_odm_cominfo_tail_c_oracle.c
 
@@ -1085,7 +1101,8 @@ clean:
 		test_hal_dm_odm_iface test_hal_dm_odm_iface_rust librust_hal_dm_odm_iface.a \
 		test_hal_dm_phydm_igi_iqk test_hal_dm_phydm_igi_iqk_rust \
 		librust_hal_dm_phydm_igi_iqk.a \
-		test_hal_dm_min_rssi_phy_cnt \
+		test_hal_dm_min_rssi_phy_cnt test_hal_dm_min_rssi_phy_cnt_rust \
+		librust_hal_dm_min_rssi_phy_cnt.a \
 		test_hal_usb_vendor_wvalue test_hal_usb_vendor_wvalue_rust librust_hal_usb_wvalue.a \
 		test_hal_usb_sync_read test_hal_usb_sync_write test_hal_usb_async_write \
 		test_hal_usb_async_write_rust librust_hal_usb_async_write.a \

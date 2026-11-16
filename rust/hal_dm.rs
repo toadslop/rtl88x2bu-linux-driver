@@ -671,6 +671,7 @@ mod phydm_priv_odm_iface {
     host_hal_dm_init_odm_mid_test,
     host_hal_dm_init_odm_cominfo_tail_test,
     host_hal_dm_phydm_igi_iqk_test,
+    host_hal_dm_min_rssi_phy_cnt_test,
 )))]
 mod fw_offload_caps {
     include!("hal_dm_fw_offload_caps.inc.rs");
@@ -719,6 +720,7 @@ mod init_odm_cominfo_tail {
     host_hal_dm_init_odm_mid_test,
     host_hal_dm_init_odm_cominfo_tail_test,
     host_hal_dm_phydm_igi_iqk_test,
+    host_hal_dm_min_rssi_phy_cnt_test,
 )))]
 mod phydm_ops {
     include!("hal_dm_phydm_ops.inc.rs");
@@ -735,8 +737,27 @@ mod phydm_ops {
         host_hal_dm_init_odm_mid_test,
         host_hal_dm_init_odm_cominfo_tail_test,
         host_hal_dm_phydm_igi_iqk_test,
+        host_hal_dm_min_rssi_phy_cnt_test,
     ))
 ))]
 mod phydm_igi_iqk {
     include!("hal_dm_phydm_igi_iqk.inc.rs");
+}
+
+#[cfg(any(
+    host_hal_dm_min_rssi_phy_cnt_test,
+    not(any(
+        host_hal_dm_board_type_test,
+        host_hal_dm_odm_endian_hooks_test,
+        host_hal_dm_dump_sta_info_test,
+        host_hal_dm_dump_sta_traffic_test,
+        host_hal_dm_odm_iface_test,
+        host_hal_dm_init_odm_mid_test,
+        host_hal_dm_init_odm_cominfo_tail_test,
+        host_hal_dm_phydm_igi_iqk_test,
+        host_hal_dm_min_rssi_phy_cnt_test,
+    ))
+))]
+mod min_rssi_phy_cnt {
+    include!("hal_dm_min_rssi_phy_cnt.inc.rs");
 }
