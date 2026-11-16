@@ -431,6 +431,12 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-96 | #2084 | [W4-96] Translate hal_dm.c — SetHalODMVar RX info dump |
 | W4-97 | #2085 | [W4-97] Translate hal_com_rest.c — STA wireless set and MIMO type |
 | W4-98 | #2086 | [W4-98] Translate hal_dm.c — IQK and LCK RFK triggers |
+| W4-99 | #2112 | [W4-99] Translate hal_com_rest.c — STA SMPS cap and rate mask |
+| W4-100 | #2113 | [W4-100] Translate hal_dm.c — dynamic TX power desc helpers |
+| W4-101 | #2114 | [W4-101] Translate hal_dm.c — PHYDM calibration trigger orchestration |
+| W4-102 | #2115 | [W4-102] Translate hal_dm.c — RRSR set and dynamic enable |
+| W4-103 | #2116 | [W4-103] Translate hal_dm.c — runtime TRX path decision (8822B) |
+| W4-104 | #2117 | [W4-104] Translate hal_dm.c — crystal cap register setter |
 
 ## Superseded issues
 
