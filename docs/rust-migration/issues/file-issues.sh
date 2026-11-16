@@ -367,6 +367,12 @@ files=(
   wave4-96-hal-dm-set-odm-var-rx-dump.md
   wave4-97-hal-com-update-sta-wset-mimo.md
   wave4-98-hal-dm-iqk-lck-trigger.md
+  wave4-99-hal-com-sta-smps-rate-mask.md
+  wave4-100-hal-dm-dynamic-txpwr.md
+  wave4-101-hal-dm-phydm-cal-trigger.md
+  wave4-102-hal-dm-rrsr-ctrl.md
+  wave4-103-hal-dm-runtime-trx-path.md
+  wave4-104-hal-dm-crystal-cap.md
   wave3-161-debug-proc-rate-setter.md
   wave3-162-debug-proc-rx-cnt-dump.md
   wave3-163-debug-proc-ps-dbg.md

@@ -203,4 +203,15 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-97 | `wave4-97-hal-com-update-sta-wset-mimo.md` | STA wireless set + MIMO type |
 | W4-98 | `wave4-98-hal-dm-iqk-lck-trigger.md` | IQK/LCK `halrf` trigger wrappers |
 
+## Children (tranche 20 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-99 | `wave4-99-hal-com-sta-smps-rate-mask.md` | STA SMPS cap + rate mask |
+| W4-100 | `wave4-100-hal-dm-dynamic-txpwr.md` | Dynamic TX power desc helpers |
+| W4-101 | `wave4-101-hal-dm-phydm-cal-trigger.md` | `rtw_hal_phydm_cal_trigger` |
+| W4-102 | `wave4-102-hal-dm-rrsr-ctrl.md` | RRSR set + dynamic enable |
+| W4-103 | `wave4-103-hal-dm-runtime-trx-path.md` | Runtime TRX path decision (8822B) |
+| W4-104 | `wave4-104-hal-dm-crystal-cap.md` | Crystal cap register setter |
+
 Further slices: USB bulk port bodies stay under Wave 5 `os_dep`; file new `wave4-*.md` parallel lanes as hal_dm / hal_com tails thin.
