@@ -5414,6 +5414,9 @@ rust-objects-hal-dm-c:
 		-o tests/host/hal/hal_dm_phydm_iqk_lck_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_iqk_lck_l1_ref.c
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_dm_phydm_cal_trigger_l1_ref.o \
+		tests/host/hal/hal_dm_phydm_cal_trigger_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-I$(shell pwd)/tests/host/include \
 		-o tests/host/hal/hal_dm_min_rssi_phy_cnt_l1_ref.o \
 		tests/host/hal/hal_dm_min_rssi_phy_cnt_c_oracle.c
@@ -5441,6 +5444,7 @@ rust-objects-hal-dm-c:
 		tests/host/hal/hal_dm_phydm_ops_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_igi_iqk_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_iqk_lck_l1_ref.o \
+		tests/host/hal/hal_dm_phydm_cal_trigger_l1_ref.o \
 		tests/host/hal/hal_dm_min_rssi_phy_cnt_l1_ref.o \
 		tests/host/hal/hal_dm_set_odm_var_core_l1_ref.o \
 		tests/host/hal/hal_dm_get_odm_var_l1_ref.o \
