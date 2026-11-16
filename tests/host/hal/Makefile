@@ -88,6 +88,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-dm-board-type test-dm-board-type-rust \
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
 	test-dm-phydm-ops test-dm-phydm-ops-rust \
+	test-dm-dyntxpwr \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
 	test-dm-set-odm-var-core test-dm-set-odm-var-core-rust \
@@ -116,6 +117,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
 	test-dm-init-odm-cominfo-tail test-dm-init-odm-cominfo-tail-rust \
 	test-dm-phydm-ops test-dm-phydm-ops-rust \
+	test-dm-dyntxpwr \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
 	test-dm-set-odm-var-core test-dm-set-odm-var-core-rust \
@@ -1002,7 +1004,8 @@ DYNTPWR_CFLAGS := $(CFLAGS) -DCONFIG_SUPPORT_DYNAMIC_TXPWR -DCONFIG_RTL8822B \
 test-dm-dyntxpwr: test_hal_dm_dyntxpwr
 	./test_hal_dm_dyntxpwr hal_dm_dyntxpwr_vectors.json
 
-test_hal_dm_dyntxpwr: test_hal_dm_dyntxpwr.c $(DM_DYNTPWR_ORACLE) $(HOST_JSON)
+test_hal_dm_dyntxpwr: test_hal_dm_dyntxpwr.c $(DM_DYNTPWR_ORACLE) $(DM_DYNTPWR_SHIM) \
+		$(HOST_JSON) $(ROOT)/tests/host/include/host_hal_dm_dyntxpwr_types.h
 	$(CC) $(DYNTPWR_CFLAGS) -o $@ test_hal_dm_dyntxpwr.c $(DM_DYNTPWR_ORACLE) \
 		$(DM_DYNTPWR_SHIM) $(HOST_JSON)
 
