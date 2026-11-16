@@ -5398,6 +5398,10 @@ rust-objects-hal-dm-c:
 		-I$(shell pwd)/tests/host/include \
 		-o tests/host/hal/hal_dm_min_rssi_phy_cnt_l1_ref.o \
 		tests/host/hal/hal_dm_min_rssi_phy_cnt_c_oracle.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/hal/hal_dm_set_odm_var_core_l1_ref.o \
+		tests/host/hal/hal_dm_set_odm_var_core_c_oracle.c
 	ld -r -o tests/host/hal/hal_dm_l1_ref.o \
 		tests/host/hal/hal_dm_board_type_l1_ref.o \
 		tests/host/hal/hal_dm_dump_sta_l1_ref.o \
@@ -5409,7 +5413,8 @@ rust-objects-hal-dm-c:
 		tests/host/hal/hal_dm_init_odm_cominfo_tail_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_ops_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_igi_iqk_l1_ref.o \
-		tests/host/hal/hal_dm_min_rssi_phy_cnt_l1_ref.o
+		tests/host/hal/hal_dm_min_rssi_phy_cnt_l1_ref.o \
+		tests/host/hal/hal_dm_set_odm_var_core_l1_ref.o
 rust-check-symbols-hal-dm: rust-objects-hal-dm-c rust-objects-hal-dm
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_dm_l1_ref.o NEW=rust/hal_dm.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_dm.allow ALLOW_VACUOUS=1

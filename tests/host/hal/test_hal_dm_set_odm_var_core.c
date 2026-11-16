@@ -6,6 +6,7 @@
 #include "host_hal_dm_set_odm_var_core_types.h"
 #include "host_vector_json.h"
 
+
 struct host_hal_dm_set_odm_var_core_trace host_hal_dm_set_odm_var_core_trace;
 
 void host_hal_dm_set_odm_var_core_reset(void)

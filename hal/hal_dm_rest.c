@@ -324,6 +324,102 @@ u8 rtw_rust_hal_dm_phydm_iqk_in_progress_flag(struct dm_struct *phydm)
 	return phydm->rf_calibrate_info.is_iqk_in_progress == _TRUE ? _TRUE : _FALSE;
 }
 
+#ifdef CONFIG_RUST
+u8 rtw_rust_hal_dm_sta_mac_id(struct sta_info *psta)
+{
+	if (!psta)
+		return 0;
+	return psta->cmn.mac_id;
+}
+
+void rtw_rust_hal_dm_sta_set_dm_ctrl(struct sta_info *psta, u8 dm_ctrl)
+{
+	if (psta)
+		psta->cmn.dm_ctrl = dm_ctrl;
+}
+
+void *rtw_rust_hal_dm_sta_cmn_ptr(struct sta_info *psta)
+{
+	return psta ? &(psta->cmn) : NULL;
+}
+
+void rtw_rust_hal_dm_log_set_sta(u8 mac_id)
+{
+	RTW_INFO("### Set STA_(%d) info ###\n", mac_id);
+}
+
+void rtw_rust_hal_dm_log_clean_sta(u8 mac_id)
+{
+	RTW_INFO("### Clean STA_(%d) info ###\n", mac_id);
+}
+
+void rtw_rust_hal_dm_set_odm_var_rest(
+	PADAPTER Adapter,
+	HAL_ODM_VARIABLE eVariable,
+	void *pValue1,
+	BOOLEAN bSet)
+{
+	struct dm_struct *podmpriv = adapter_to_phydm(Adapter);
+
+	(void)bSet;
+	switch (eVariable) {
+	case HAL_ODM_RX_INFO_DUMP: {
+		u8 cur_igi = 0;
+		s8 rssi_min;
+		void *sel;
+
+		sel = pValue1;
+		cur_igi = rtw_phydm_get_cur_igi(Adapter);
+		rssi_min = rtw_phydm_get_min_rssi(Adapter);
+
+		_RTW_PRINT_SEL(sel, "============ Rx Info dump ===================\n");
+		_RTW_PRINT_SEL(sel, "is_linked = %d, rssi_min = %d(%%)(%d(%%)), current_igi = 0x%x\n"
+			, podmpriv->is_linked, rssi_min, rtw_dm_get_min_rssi(Adapter), cur_igi);
+		_RTW_PRINT_SEL(sel, "cnt_cck_fail = %d, cnt_ofdm_fail = %d, Total False Alarm = %d\n",
+			rtw_phydm_get_phy_cnt(Adapter, FA_CCK),
+			rtw_phydm_get_phy_cnt(Adapter, FA_OFDM),
+			rtw_phydm_get_phy_cnt(Adapter, FA_TOTAL));
+
+		if (podmpriv->is_linked) {
+			_RTW_PRINT_SEL(sel, "rx_rate = %s", HDATA_RATE(podmpriv->rx_rate));
+			if (IS_HARDWARE_TYPE_8814A(Adapter))
+				_RTW_PRINT_SEL(sel, " rssi_a = %d(%%), rssi_b = %d(%%), rssi_c = %d(%%), rssi_d = %d(%%)\n",
+					podmpriv->rssi_a, podmpriv->rssi_b, podmpriv->rssi_c, podmpriv->rssi_d);
+			else
+				_RTW_PRINT_SEL(sel, " rssi_a = %d(%%), rssi_b = %d(%%)\n", podmpriv->rssi_a, podmpriv->rssi_b);
+#ifdef DBG_RX_SIGNAL_DISPLAY_RAW_DATA
+			rtw_dump_raw_rssi_info(Adapter, sel);
+#endif
+		}
+	}
+		break;
+	case HAL_ODM_RX_Dframe_INFO: {
+		void *sel;
+
+		sel = pValue1;
+
+#ifdef DBG_RX_DFRAME_RAW_DATA
+		rtw_dump_rx_dframe_info(Adapter, sel);
+#endif
+	}
+		break;
+
+#ifdef CONFIG_ANTENNA_DIVERSITY
+	case HAL_ODM_ANTDIV_SELECT: {
+		u8 antenna = (*(u8 *)pValue1);
+		HAL_DATA_TYPE *pHalData = GET_HAL_DATA(Adapter);
+
+		odm_update_rx_idle_ant(&pHalData->odmpriv, antenna);
+	}
+		break;
+#endif
+
+	default:
+		break;
+	}
+}
+#endif /* CONFIG_RUST */
+
 u16 rtw_rust_hal_dm_phydm_rf_iqk_offload(void)
 {
 	return PHYDM_RF_IQK_OFFLOAD;
