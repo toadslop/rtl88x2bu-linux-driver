@@ -35,6 +35,8 @@ DM_SET_ODM_VAR_CORE_ORACLE := hal_dm_set_odm_var_core_c_oracle.c
 DM_SET_ODM_VAR_CORE_SHIM := hal_dm_set_odm_var_core_host_shim.c
 DM_PHYDM_IQK_LCK_ORACLE := hal_dm_phydm_iqk_lck_c_oracle.c
 DM_PHYDM_IQK_LCK_SHIM := hal_dm_phydm_iqk_lck_host_shim.c
+DM_PHYDM_CAL_TRIGGER_ORACLE := hal_dm_phydm_cal_trigger_c_oracle.c
+DM_PHYDM_CAL_TRIGGER_SHIM := hal_dm_phydm_cal_trigger_host_shim.c
 DM_PHYDM_IQK_LCK_CFLAGS := -DRTL8822B_SUPPORT=1
 DM_SET_ODM_VAR_RX_ORACLE := hal_dm_set_odm_var_rx_c_oracle.c
 DM_SET_ODM_VAR_RX_SHIM := hal_dm_set_odm_var_rx_host_shim.c
@@ -1019,6 +1021,31 @@ test_hal_dm_dyntxpwr: test_hal_dm_dyntxpwr.c $(DM_DYNTPWR_ORACLE) $(DM_DYNTPWR_S
 	$(CC) $(DYNTPWR_CFLAGS) -o $@ test_hal_dm_dyntxpwr.c $(DM_DYNTPWR_ORACLE) \
 		$(DM_DYNTPWR_SHIM) $(HOST_JSON)
 
+test-dm-phydm-cal-trigger: test_hal_dm_phydm_cal_trigger
+	./test_hal_dm_phydm_cal_trigger hal_dm_phydm_cal_trigger_vectors.json
+
+test_hal_dm_phydm_cal_trigger: test_hal_dm_phydm_cal_trigger.c \
+		$(DM_PHYDM_CAL_TRIGGER_ORACLE) $(DM_PHYDM_CAL_TRIGGER_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_phydm_cal_trigger.c $(DM_PHYDM_CAL_TRIGGER_ORACLE) \
+		$(DM_PHYDM_CAL_TRIGGER_SHIM) $(HOST_JSON)
+
+RUST_HAL_DM_PHYDM_CAL_TRIGGER := $(ROOT)/rust/hal_dm_phydm_cal_trigger_host.rs
+RUST_HAL_DM_CAL_TRIGGER_CFG := --cfg host_hal_dm_phydm_cal_trigger_test
+
+librust_hal_dm_phydm_cal_trigger.a: $(RUST_HAL_DM_PHYDM_CAL_TRIGGER)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on $(RUST_HAL_DM_CAL_TRIGGER_CFG) \
+		--crate-type staticlib $(RUST_HAL_DM_PHYDM_CAL_TRIGGER) -o $@
+
+test-dm-phydm-cal-trigger-rust: test_hal_dm_phydm_cal_trigger_rust
+	./test_hal_dm_phydm_cal_trigger_rust hal_dm_phydm_cal_trigger_vectors.json
+
+test_hal_dm_phydm_cal_trigger_rust: test_hal_dm_phydm_cal_trigger.c \
+		librust_hal_dm_phydm_cal_trigger.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_DM_PHYDM_CAL_TRIGGER_ORACLE -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_phydm_cal_trigger.c $(DM_PHYDM_CAL_TRIGGER_SHIM) $(HOST_JSON) \
+		librust_hal_dm_phydm_cal_trigger.a
+
 test-usb-vendor-wvalue: test_hal_usb_vendor_wvalue
 	./test_hal_usb_vendor_wvalue hal_usb_vendor_wvalue_vectors.json
 
@@ -1251,6 +1278,8 @@ clean:
 		librust_hal_dm_phydm_iqk_lck.a \
 		test_hal_dm_set_odm_var_rx \
 		test_hal_dm_dyntxpwr \
+		test_hal_dm_phydm_cal_trigger test_hal_dm_phydm_cal_trigger_rust \
+		librust_hal_dm_phydm_cal_trigger.a \
 		test_hal_dm_min_rssi_phy_cnt test_hal_dm_min_rssi_phy_cnt_rust \
 		librust_hal_dm_min_rssi_phy_cnt.a \
 		test_hal_usb_vendor_wvalue test_hal_usb_vendor_wvalue_rust librust_hal_usb_wvalue.a \

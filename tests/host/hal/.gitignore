@@ -32,3 +32,4 @@ test_hal_dm_get_odm_var*
 test_hal_dm_phydm_rrsr
 test_hal_dm_set_odm_var_rx
 test_hal_update_sta_smps_rate*
+test_hal_dm_phydm_cal_trigger*
