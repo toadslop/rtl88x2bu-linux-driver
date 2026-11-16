@@ -99,7 +99,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-config-chplan-hw test-config-chplan-hw-rust \
 	test-config-chplan-full test-config-chplan-full-rust \
 	test-mapping-out-pipe test-mapping-out-pipe-rust \
-	test-mgntframe-raid test-mgntframe-raid-rust 	test-update-sta-wset-mimo test-hdata-rate test-hdata-rate-rust \
+	test-mgntframe-raid test-mgntframe-raid-rust 	test-update-sta-wset-mimo test-update-sta-wset-mimo-rust test-hdata-rate test-hdata-rate-rust \
 	test-phy-bit-shift test-phy-bit-shift-rust test-dm-board-type test-dm-board-type-rust \
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
 	test-dm-init-odm-cominfo-tail test-dm-init-odm-cominfo-tail-rust \
@@ -571,6 +571,19 @@ test_hal_update_sta_wset_mimo: test_hal_update_sta_wset_mimo.c \
 		$(UPDATE_STA_WSET_MIMO_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -I../include -o $@ test_hal_update_sta_wset_mimo.c \
 		$(UPDATE_STA_WSET_MIMO_ORACLE) $(HOST_JSON)
+
+librust_hal_com_update_sta_wset_mimo.a: ../../../rust/hal_com_update_sta_wset_mimo.rs
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_update_sta_wset_mimo_test \
+		--crate-type staticlib ../../../rust/hal_com_update_sta_wset_mimo.rs -o $@
+
+test-update-sta-wset-mimo-rust: test_hal_update_sta_wset_mimo_rust
+	./test_hal_update_sta_wset_mimo_rust hal_update_sta_wset_mimo_vectors.json
+
+test_hal_update_sta_wset_mimo_rust: test_hal_update_sta_wset_mimo.c \
+		librust_hal_com_update_sta_wset_mimo.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -I../include -o $@ test_hal_update_sta_wset_mimo.c \
+		$(HOST_JSON) librust_hal_com_update_sta_wset_mimo.a
 
 HDATA_RATE_ORACLE := hal_hdata_rate_c_oracle.c
 
@@ -1122,7 +1135,8 @@ clean:
 		test_hal_is_legal_channel test_hal_is_legal_channel_rust librust_hal_com_legal.a \
 		test_hal_mapping_out_pipe test_hal_mapping_out_pipe_rust librust_hal_com_mapping.a \
 		test_hal_mgntframe_raid test_hal_mgntframe_raid_rust librust_hal_com_mgntframe_raid.a \
-		test_hal_update_sta_wset_mimo \
+		test_hal_update_sta_wset_mimo test_hal_update_sta_wset_mimo_rust \
+		librust_hal_com_update_sta_wset_mimo.a \
 		test_hal_hdata_rate test_hal_hdata_rate_rust librust_hal_com_hdata_rate.a \
 		test_hal_phy_rf_max_reg test_hal_phy_rf_max_reg_rust librust_hal_phy_rf_max_reg.a \
 		test_hal_phy_bit_shift test_hal_phy_bit_shift_rust librust_hal_phy.a \
