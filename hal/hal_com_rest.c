@@ -101,6 +101,21 @@ void rtw_hal_read_sta_dk_key(_adapter *adapter, u8 key_id)
 
 #define	EEPROM_CHANNEL_PLAN_BY_HW_MASK	0x80
 
+#if defined(CONFIG_RUST)
+struct rtw_rust_config_chplan_hw_state {
+	s32 chplan;
+	const struct country_chplan *country_ent;
+	u8 force_hw_chplan;
+	u8 goto_sw_config;
+};
+
+void rtw_rust_hal_com_config_chplan_hw_branch(
+		char *hw_alpha2,
+		u8 hw_chplan,
+		u8 force_hw_chplan,
+		struct rtw_rust_config_chplan_hw_state *st);
+#endif
+
 /*
  * Description:
  *	Use hardware(efuse), driver parameter(registry) and default channel plan
@@ -150,6 +165,19 @@ void hal_com_config_channel_plan(
 	hw_chplan &= (~EEPROM_CHANNEL_PLAN_BY_HW_MASK);
 
 chk_hw_country_code:
+#if defined(CONFIG_RUST)
+	{
+		struct rtw_rust_config_chplan_hw_state st;
+
+		rtw_rust_hal_com_config_chplan_hw_branch(hw_alpha2, hw_chplan,
+				force_hw_chplan, &st);
+		chplan = st.chplan;
+		country_ent = st.country_ent;
+		force_hw_chplan = st.force_hw_chplan;
+		if (st.goto_sw_config)
+			goto chk_sw_config;
+	}
+#else
 	if (hw_alpha2 && !IS_ALPHA2_NO_SPECIFIED(hw_alpha2)) {
 		ent = rtw_get_chplan_from_country(hw_alpha2);
 		if (ent) {
@@ -168,6 +196,7 @@ chk_hw_country_code:
 		/* hw infomaton invalid, refer to sw information */
 		force_hw_chplan = _FALSE;
 	}
+#endif /* CONFIG_RUST */
 
 chk_sw_config:
 	if (force_hw_chplan == _TRUE)
@@ -14681,6 +14710,16 @@ void rtw_rust_hal_com_tx_aclt_confs_fields(struct dvobj_priv *dvobj, u8 *unit_fa
 void rtw_rust_hal_com_print_line(void *sel, const char *line)
 {
 	RTW_PRINT_SEL(sel, "%s", line);
+}
+
+void rtw_rust_hal_com_log_unsupported_hw_alpha2(const char *func, char a, char b)
+{
+	RTW_PRINT("%s unsupported hw_alpha2:\"%c%c\"\n", func, a, b);
+}
+
+void rtw_rust_hal_com_log_unsupported_hw_chplan(const char *func, u8 plan)
+{
+	RTW_PRINT("%s unsupported hw_chplan:0x%02X\n", func, plan);
 }
 
 void rtw_rust_hal_com_warn_invalid_hw_rate(u8 hw_rate)
