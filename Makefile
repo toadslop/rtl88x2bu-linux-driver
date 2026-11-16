@@ -2948,7 +2948,9 @@ ifeq ($(CONFIG_RTL8822C), y)
 ifneq ($(filter -DCONFIG_LPS,$(ccflags-y)),)
 _rust_cfg_lps_1t1r := y
 endif
-# Mirror include/hal_ic_cfg.h CONFIG_SUPPORT_DYNAMIC_TXPWR for Rust hal_dm hooks.
+endif
+ifeq ($(CONFIG_RTL8822B), y)
+# Mirror hal_dm dynamic TX power hooks for Rust (C paths use hal_ic_cfg / xmit ifdefs).
 rustflags-y += --cfg CONFIG_SUPPORT_DYNAMIC_TXPWR
 endif
 ifneq ($(_rust_cfg_lps_1t1r),)
@@ -5434,6 +5436,11 @@ rust-objects-hal-dm-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_dm_phydm_rrsr_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_rrsr_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-DCONFIG_SUPPORT_DYNAMIC_TXPWR -DCONFIG_RTL8822B \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/hal/hal_dm_dyntxpwr_l1_ref.o \
+		tests/host/hal/hal_dm_dyntxpwr_c_oracle.c
 	ld -r -o tests/host/hal/hal_dm_l1_ref.o \
 		tests/host/hal/hal_dm_board_type_l1_ref.o \
 		tests/host/hal/hal_dm_dump_sta_l1_ref.o \
@@ -5449,7 +5456,8 @@ rust-objects-hal-dm-c:
 		tests/host/hal/hal_dm_min_rssi_phy_cnt_l1_ref.o \
 		tests/host/hal/hal_dm_set_odm_var_core_l1_ref.o \
 		tests/host/hal/hal_dm_get_odm_var_l1_ref.o \
-		tests/host/hal/hal_dm_phydm_rrsr_l1_ref.o
+		tests/host/hal/hal_dm_phydm_rrsr_l1_ref.o \
+		tests/host/hal/hal_dm_dyntxpwr_l1_ref.o
 rust-check-symbols-hal-dm: rust-objects-hal-dm-c rust-objects-hal-dm
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_dm_l1_ref.o NEW=rust/hal_dm.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_dm.allow ALLOW_VACUOUS=1
