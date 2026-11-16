@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
 //! HAL DM — board-type (`W4-30`), ODM endian hooks (`W4-38`), `dump_sta_info` (`W4-31`),
 //! `dump_sta_traffic` (`W4-32`), FW offload caps (`W4-79`), Init_ODM mid block (`W4-85`),
-//! Init_ODM ComInfo tail hooks (`W4-88`), PHYDM IGI / IQK queries (`W4-92`)
+//! Init_ODM ComInfo tail hooks (`W4-88`), PHYDM IGI / IQK queries (`W4-92`),
+//! SetHalODMVar core cases (`W4-94`)
 //! from `hal/hal_dm.c`.
 
 #![allow(
@@ -721,6 +722,7 @@ mod init_odm_cominfo_tail {
     host_hal_dm_init_odm_cominfo_tail_test,
     host_hal_dm_phydm_igi_iqk_test,
     host_hal_dm_min_rssi_phy_cnt_test,
+    host_hal_dm_set_odm_var_core_test,
 )))]
 mod phydm_ops {
     include!("hal_dm_phydm_ops.inc.rs");
@@ -738,6 +740,7 @@ mod phydm_ops {
         host_hal_dm_init_odm_cominfo_tail_test,
         host_hal_dm_phydm_igi_iqk_test,
         host_hal_dm_min_rssi_phy_cnt_test,
+        host_hal_dm_set_odm_var_core_test,
     ))
 ))]
 mod phydm_igi_iqk {
@@ -756,8 +759,28 @@ mod phydm_igi_iqk {
         host_hal_dm_init_odm_cominfo_tail_test,
         host_hal_dm_phydm_igi_iqk_test,
         host_hal_dm_min_rssi_phy_cnt_test,
+        host_hal_dm_set_odm_var_core_test,
     ))
 ))]
 mod min_rssi_phy_cnt {
     include!("hal_dm_min_rssi_phy_cnt.inc.rs");
+}
+
+#[cfg(any(
+    host_hal_dm_set_odm_var_core_test,
+    not(any(
+        host_hal_dm_board_type_test,
+        host_hal_dm_odm_endian_hooks_test,
+        host_hal_dm_dump_sta_info_test,
+        host_hal_dm_dump_sta_traffic_test,
+        host_hal_dm_odm_iface_test,
+        host_hal_dm_init_odm_mid_test,
+        host_hal_dm_init_odm_cominfo_tail_test,
+        host_hal_dm_phydm_igi_iqk_test,
+        host_hal_dm_min_rssi_phy_cnt_test,
+        host_hal_dm_set_odm_var_core_test,
+    ))
+))]
+mod set_odm_var_core {
+    include!("hal_dm_set_odm_var_core.inc.rs");
 }

@@ -324,6 +324,48 @@ u8 rtw_rust_hal_dm_phydm_iqk_in_progress_flag(struct dm_struct *phydm)
 	return phydm->rf_calibrate_info.is_iqk_in_progress == _TRUE ? _TRUE : _FALSE;
 }
 
+#ifdef CONFIG_RUST
+u8 rtw_rust_hal_dm_sta_mac_id(struct sta_info *psta)
+{
+	if (!psta)
+		return 0;
+	return psta->cmn.mac_id;
+}
+
+void rtw_rust_hal_dm_sta_set_dm_ctrl(struct sta_info *psta, u8 dm_ctrl)
+{
+	if (psta)
+		psta->cmn.dm_ctrl = dm_ctrl;
+}
+
+void *rtw_rust_hal_dm_sta_cmn_ptr(struct sta_info *psta)
+{
+	return psta ? &(psta->cmn) : NULL;
+}
+
+void rtw_rust_hal_dm_log_set_sta(u8 mac_id)
+{
+	RTW_INFO("### Set STA_(%d) info ###\n", mac_id);
+}
+
+void rtw_rust_hal_dm_log_clean_sta(u8 mac_id)
+{
+	RTW_INFO("### Clean STA_(%d) info ###\n", mac_id);
+}
+
+void rtw_rust_hal_dm_set_odm_var_rest(
+	PADAPTER Adapter,
+	HAL_ODM_VARIABLE eVariable,
+	void *pValue1,
+	BOOLEAN bSet)
+{
+	(void)Adapter;
+	(void)eVariable;
+	(void)pValue1;
+	(void)bSet;
+}
+#endif /* CONFIG_RUST */
+
 u16 rtw_rust_hal_dm_phydm_rf_iqk_offload(void)
 {
 	return PHYDM_RF_IQK_OFFLOAD;

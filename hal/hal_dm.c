@@ -1058,6 +1058,7 @@ u8 rtw_phydm_is_iqk_in_progress(_adapter *adapter)
 }
 #endif /* !CONFIG_RUST */
 
+#ifndef CONFIG_RUST
 void SetHalODMVar(
 	PADAPTER				Adapter,
 	HAL_ODM_VARIABLE		eVariable,
@@ -1166,6 +1167,7 @@ void SetHalODMVar(
 		break;
 	}
 }
+#endif /* !CONFIG_RUST */
 
 void GetHalODMVar(
 	PADAPTER				Adapter,
