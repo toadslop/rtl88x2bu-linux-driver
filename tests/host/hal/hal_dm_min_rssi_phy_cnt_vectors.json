@@ -1,0 +1,67 @@
+{
+  "vectors": [
+    {
+      "name": "dm_min_rssi_empty",
+      "op": "dm_min_rssi",
+      "sta0_present": 0,
+      "expect_s8": 0,
+      "fixture_query_ret": 0,
+      "expect_query_type": 0,
+      "phy_cnt": 0
+    },
+    {
+      "name": "dm_min_rssi_two_stas",
+      "op": "dm_min_rssi",
+      "sta0_present": 1,
+      "sta0_rssi": 40,
+      "sta0_opmode": 1,
+      "sta1_present": 1,
+      "sta1_rssi": 25,
+      "sta1_opmode": 1,
+      "expect_s8": 25
+    },
+    {
+      "name": "dm_min_skips_bcast_and_negative",
+      "op": "dm_min_rssi",
+      "sta0_present": 1,
+      "sta0_rssi": 10,
+      "sta0_opmode": 1,
+      "sta0_bcast": 1,
+      "sta1_present": 1,
+      "sta1_rssi": -5,
+      "sta1_opmode": 1,
+      "sta2_present": 1,
+      "sta2_rssi": 30,
+      "sta2_opmode": 1,
+      "expect_s8": 30
+    },
+    {
+      "name": "phydm_min_rssi",
+      "op": "phydm_min_rssi",
+      "fixture_query_ret": 55,
+      "expect_s8": 55,
+      "expect_query_type": 21
+    },
+    {
+      "name": "phydm_edcca",
+      "op": "edcca",
+      "fixture_query_ret": 1,
+      "expect_u8": 1,
+      "expect_query_type": 14
+    },
+    {
+      "name": "phy_cnt_fa_ofdm",
+      "op": "phy_cnt",
+      "phy_cnt": 0,
+      "fixture_query_ret": 1234,
+      "expect_u32": 1234,
+      "expect_query_type": 0
+    },
+    {
+      "name": "phy_cnt_invalid",
+      "op": "phy_cnt",
+      "phy_cnt": 99,
+      "expect_u32": 0
+    }
+  ]
+}
