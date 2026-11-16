@@ -1,0 +1,36 @@
+{
+  "vectors": [
+    {
+      "name": "initial_gain_mid",
+      "op": "igi",
+      "fixture_igi": 52,
+      "expect_out": 52,
+      "fixture_antdiv": 0,
+      "expect_query": 20
+    },
+    {
+      "name": "initial_gain_zero",
+      "op": "igi",
+      "fixture_igi": 0,
+      "expect_out": 0,
+      "fixture_antdiv": 0,
+      "expect_query": 20
+    },
+    {
+      "name": "antdiv_aux",
+      "op": "antdiv",
+      "fixture_igi": 0,
+      "expect_out": 2,
+      "fixture_antdiv": 2,
+      "expect_query": 0
+    },
+    {
+      "name": "unknown_var",
+      "op": "noop",
+      "fixture_igi": 99,
+      "expect_out": 111,
+      "fixture_antdiv": 0,
+      "expect_query": 0
+    }
+  ]
+}

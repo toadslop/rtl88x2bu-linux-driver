@@ -35,6 +35,8 @@ DM_SET_ODM_VAR_CORE_ORACLE := hal_dm_set_odm_var_core_c_oracle.c
 DM_SET_ODM_VAR_CORE_SHIM := hal_dm_set_odm_var_core_host_shim.c
 DM_MIN_RSSI_PHY_CNT_ORACLE := hal_dm_min_rssi_phy_cnt_c_oracle.c
 DM_MIN_RSSI_PHY_CNT_SHIM := hal_dm_min_rssi_phy_cnt_host_shim.c
+DM_GET_ODM_VAR_ORACLE := hal_dm_get_odm_var_c_oracle.c
+DM_GET_ODM_VAR_CFLAGS := -DCONFIG_ANTENNA_DIVERSITY
 USB_WVALUE_ORACLE := hal_usb_vendor_wvalue_c_oracle.c
 USB_SYNC_READ_ORACLE := hal_usb_sync_read_c_oracle.c
 USB_SYNC_WRITE_ORACLE := hal_usb_sync_write_c_oracle.c
@@ -82,6 +84,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
 	test-dm-set-odm-var-core test-dm-set-odm-var-core-rust \
 	test-dm-min-rssi-phy-cnt test-dm-min-rssi-phy-cnt-rust \
+	test-dm-get-odm-var \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust \
 	test-usb-sync-read test-usb-sync-read-rust test-usb-sync-write \
 	test-usb-async-write test-usb-async-write-rust test-chip-odm test-chip-odm-rust \
@@ -108,6 +111,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
 	test-dm-set-odm-var-core test-dm-set-odm-var-core-rust \
 	test-dm-min-rssi-phy-cnt test-dm-min-rssi-phy-cnt-rust \
+	test-dm-get-odm-var \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust test-usb-sync-read \
 	test-usb-sync-read-rust test-usb-sync-write test-usb-async-write \
 	test-usb-async-write-rust test-chip-odm test-chip-odm-rust \
@@ -834,6 +838,13 @@ test_hal_dm_min_rssi_phy_cnt_rust: test_hal_dm_min_rssi_phy_cnt.c \
 	$(CC) $(CFLAGS) -DRUST_HAL_DM_MIN_RSSI_PHY_CNT_ORACLE -I$(ROOT)/tests/host/include \
 		-o $@ test_hal_dm_min_rssi_phy_cnt.c $(DM_MIN_RSSI_PHY_CNT_SHIM) \
 		$(HOST_JSON) librust_hal_dm_min_rssi_phy_cnt.a
+
+test-dm-get-odm-var: test_hal_dm_get_odm_var
+	./test_hal_dm_get_odm_var hal_dm_get_odm_var_vectors.json
+
+test_hal_dm_get_odm_var: test_hal_dm_get_odm_var.c $(DM_GET_ODM_VAR_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(DM_GET_ODM_VAR_CFLAGS) -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_get_odm_var.c $(DM_GET_ODM_VAR_ORACLE) $(HOST_JSON)
 
 DM_INIT_ODM_TAIL_SHIM := hal_dm_init_odm_cominfo_tail_shim.c
 DM_INIT_ODM_TAIL_ORACLE := hal_dm_init_odm_cominfo_tail_c_oracle.c
