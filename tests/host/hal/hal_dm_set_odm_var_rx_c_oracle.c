@@ -41,7 +41,8 @@ void SetHalODMVar(
 			if (host_is_hardware_type_8814a(Adapter))
 				_RTW_PRINT_SEL(sel,
 					       " rssi_a = %d(%%), rssi_b = %d(%%), rssi_c = %d(%%), rssi_d = %d(%%)\n",
-					       podmpriv->rssi_a, podmpriv->rssi_b, 0, 0);
+					       podmpriv->rssi_a, podmpriv->rssi_b,
+					       podmpriv->rssi_c, podmpriv->rssi_d);
 			else
 				_RTW_PRINT_SEL(sel, " rssi_a = %d(%%), rssi_b = %d(%%)\n",
 					       podmpriv->rssi_a, podmpriv->rssi_b);

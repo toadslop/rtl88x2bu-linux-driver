@@ -31,6 +31,21 @@
       "expect": "============ Rx Info dump ===================\nis_linked = 1, rssi_min = 70(%)(65(%)), current_igi = 0x34\ncnt_cck_fail = 1, cnt_ofdm_fail = 2, Total False Alarm = 3\nrx_rate = OFDM54 rssi_a = 72(%), rssi_b = 68(%)\n"
     },
     {
+      "name": "T04_rx_unlinked_low_igi",
+      "case": "RX_INFO_DUMP",
+      "is_linked": 0,
+      "rx_rate": 0,
+      "rssi_a": 0,
+      "rssi_b": 0,
+      "cur_igi": 5,
+      "phydm_min_rssi": 40,
+      "dm_min_rssi": 38,
+      "fa_cck": 0,
+      "fa_ofdm": 0,
+      "fa_total": 0,
+      "expect": "============ Rx Info dump ===================\nis_linked = 0, rssi_min = 40(%)(38(%)), current_igi = 0x5\ncnt_cck_fail = 0, cnt_ofdm_fail = 0, Total False Alarm = 0\n"
+    },
+    {
       "name": "T03_rx_dframe_no_dbg",
       "case": "RX_DFRAME_INFO",
       "is_linked": 0,

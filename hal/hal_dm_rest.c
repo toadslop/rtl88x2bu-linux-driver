@@ -46,11 +46,38 @@ void rtw_rust_hal_dm_print_sel(void *sel, const char *line)
 	RTW_PRINT_SEL(sel, "%s", line);
 }
 
+void rtw_rust_hal_dm_raw_print_sel(void *sel, const char *line)
+{
+	_RTW_PRINT_SEL(sel, "%s", line);
+}
+
+void rtw_rust_hal_dm_dump_rx_dframe_info(_adapter *adapter, void *sel)
+{
+#ifdef DBG_RX_DFRAME_RAW_DATA
+	rtw_dump_rx_dframe_info(adapter, sel);
+#else
+	(void)adapter;
+	(void)sel;
+#endif
+}
+
+void rtw_rust_hal_dm_dump_raw_rssi_info(_adapter *adapter, void *sel)
+{
+#ifdef DBG_RX_SIGNAL_DISPLAY_RAW_DATA
+	rtw_dump_raw_rssi_info(adapter, sel);
+#else
+	(void)adapter;
+	(void)sel;
+#endif
+}
+
 struct rtw_hal_dm_dm_rx_fields {
 	u8 is_linked;
 	u8 rx_rate;
 	s8 rssi_a;
 	s8 rssi_b;
+	s8 rssi_c;
+	s8 rssi_d;
 };
 
 struct rtw_hal_dm_dm_rx_fields rtw_rust_hal_dm_dm_rx_fields(struct dm_struct *podm)
@@ -61,10 +88,12 @@ struct rtw_hal_dm_dm_rx_fields rtw_rust_hal_dm_dm_rx_fields(struct dm_struct *po
 	out.rx_rate = podm->rx_rate;
 	out.rssi_a = podm->rssi_a;
 	out.rssi_b = podm->rssi_b;
+	out.rssi_c = podm->rssi_c;
+	out.rssi_d = podm->rssi_d;
 	return out;
 }
 
-_Static_assert(sizeof(struct rtw_hal_dm_dm_rx_fields) == 4,
+_Static_assert(sizeof(struct rtw_hal_dm_dm_rx_fields) == 6,
 	"rtw_hal_dm_dm_rx_fields layout must match Rust");
 
 u8 rtw_rust_hal_dm_is_hw_8814a(_adapter *adapter)

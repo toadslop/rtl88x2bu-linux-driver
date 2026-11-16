@@ -22,6 +22,8 @@ struct dm_struct {
 	u8 rx_rate;
 	u8 rssi_a;
 	u8 rssi_b;
+	u8 rssi_c;
+	u8 rssi_d;
 };
 
 struct hal_data_host {
