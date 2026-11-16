@@ -73,7 +73,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-hdata-rate test-hdata-rate-rust test-phy-bit-shift test-phy-bit-shift-rust \
 	test-dm-board-type test-dm-board-type-rust \
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
-	test-dm-phydm-ops \
+	test-dm-phydm-ops test-dm-phydm-ops-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
 	test-dm-min-rssi-phy-cnt \
@@ -98,7 +98,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-phy-bit-shift test-phy-bit-shift-rust test-dm-board-type test-dm-board-type-rust \
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
 	test-dm-init-odm-cominfo-tail test-dm-init-odm-cominfo-tail-rust \
-	test-dm-phydm-ops \
+	test-dm-phydm-ops test-dm-phydm-ops-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
 	test-dm-min-rssi-phy-cnt \
@@ -821,6 +821,23 @@ test-dm-phydm-ops: test_hal_dm_phydm_ops
 test_hal_dm_phydm_ops: test_hal_dm_phydm_ops.c $(DM_PHYDM_OPS_ORACLE) $(DM_PHYDM_OPS_SHIM)
 	$(CC) $(CFLAGS) -I$(ROOT)/tests/host/include -o $@ \
 		test_hal_dm_phydm_ops.c $(DM_PHYDM_OPS_ORACLE) $(DM_PHYDM_OPS_SHIM)
+
+.PHONY: test-dm-phydm-ops-rust
+test-dm-phydm-ops-rust: test_hal_dm_phydm_ops_rust
+	./test_hal_dm_phydm_ops_rust
+
+RUST_PHYDM_OPS := $(ROOT)/rust/hal_dm_phydm_ops_host.rs
+
+librust_hal_dm_phydm_ops.a: $(RUST_PHYDM_OPS)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_dm_phydm_ops_test --cfg CONFIG_SUPPORT_DYNAMIC_TXPWR \
+		--crate-type staticlib $(RUST_PHYDM_OPS) -o $@
+
+test_hal_dm_phydm_ops_rust: test_hal_dm_phydm_ops.c librust_hal_dm_phydm_ops.a \
+		$(DM_PHYDM_OPS_SHIM)
+	$(CC) $(CFLAGS) -DRUST_HAL_DM_PHYDM_OPS_ORACLE -DCONFIG_SUPPORT_DYNAMIC_TXPWR \
+		-I$(ROOT)/tests/host/include -o $@ test_hal_dm_phydm_ops.c \
+		$(DM_PHYDM_OPS_SHIM) librust_hal_dm_phydm_ops.a
 
 test-dm-phydm-igi-iqk: test_hal_dm_phydm_igi_iqk
 	./test_hal_dm_phydm_igi_iqk hal_dm_phydm_igi_iqk_vectors.json
