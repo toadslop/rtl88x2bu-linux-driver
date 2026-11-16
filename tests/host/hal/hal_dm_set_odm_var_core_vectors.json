@@ -1,0 +1,59 @@
+{
+  "vectors": [
+    {
+      "name": "sta_info_set",
+      "case": "sta",
+      "sta_mac_id": 7,
+      "bset": 1,
+      "expect_dm_ctrl": 1,
+      "expect_sta_hook_macid": 7,
+      "expect_sta_hook_null": 0,
+      "expect_sta_log_set": 1,
+      "expect_sta_log_clean": 0
+    },
+    {
+      "name": "sta_info_clear",
+      "case": "sta",
+      "sta_mac_id": 3,
+      "bset": 0,
+      "expect_dm_ctrl": 0,
+      "expect_sta_hook_macid": 3,
+      "expect_sta_hook_null": 1,
+      "expect_sta_log_set": 0,
+      "expect_sta_log_clean": 1
+    },
+    {
+      "name": "p2p_on",
+      "case": "p2p",
+      "bset": 1,
+      "expect_cmn_info": 81,
+      "expect_cmn_value": 1
+    },
+    {
+      "name": "wfd_off",
+      "case": "wfd",
+      "bset": 0,
+      "expect_cmn_info": 82,
+      "expect_cmn_value": 0
+    },
+    {
+      "name": "regulation_refresh",
+      "case": "regulation",
+      "expect_adapt_count": 2
+    },
+    {
+      "name": "initial_gain_pause",
+      "case": "initial_gain",
+      "rx_gain": 32,
+      "expect_pause_type": 1,
+      "expect_pause_igi": 32
+    },
+    {
+      "name": "initial_gain_resume",
+      "case": "initial_gain",
+      "rx_gain": 255,
+      "expect_pause_type": 3,
+      "expect_pause_igi": 255
+    }
+  ]
+}
