@@ -2280,6 +2280,26 @@ mod update_sta_wset_mimo {
     not(host_hal_com_tx_aclt_confs_test),
     not(host_hal_com_hal_spec_test),
 ))]
+mod update_sta_smps_rate {
+    #![allow(dead_code, non_snake_case, non_upper_case_globals)]
+    include!("hal_com_update_sta_smps_rate.rs");
+}
+
+#[cfg(all(
+    not(host_hal_com_hw_rate_test),
+    not(host_hal_com_rsvd_page_test),
+    not(host_hal_com_chip_info_test),
+    not(host_hal_com_mrate_test),
+    not(host_hal_com_fw_info_test),
+    not(host_hal_com_brate_test),
+    not(host_hal_com_legal_channel_test),
+    not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
+    not(host_hal_com_tx_aclt_force_test),
+    not(host_hal_com_tx_aclt_confs_test),
+    not(host_hal_com_hal_spec_test),
+))]
 #[no_mangle]
 pub extern "C" fn rtw_hal_dump_macaddr(sel: *mut c_void, adapter: *mut c_void) {
     #[cfg(config_mi_with_mbssid_cam)]

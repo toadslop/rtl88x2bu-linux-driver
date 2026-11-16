@@ -315,72 +315,7 @@ u8 rtw_hal_set_req_per_rpt_cmd(_adapter *adapter, u8 group_macid,
 
 #endif /* RTW_PER_CMD_SUPPORT_FW */
 
-void rtw_hal_update_sta_smps_cap(_adapter *adapter, struct sta_info *psta)
-{
-	/*Spatial Multiplexing Power Save*/
-#if 0
-	if (check_fwstate(&adapter->mlmepriv, WIFI_AP_STATE) == _TRUE) {
-		#ifdef CONFIG_80211N_HT
-		if (psta->htpriv.ht_option) {
-			if (psta->htpriv.smps_cap == 0)
-				psta->cmn.sm_ps = SM_PS_STATIC;
-			else if (psta->htpriv.smps_cap == 1)
-				psta->cmn.sm_ps = SM_PS_DYNAMIC;
-			else
-				psta->cmn.sm_ps = SM_PS_DISABLE;
-		}
-		#endif /* CONFIG_80211N_HT */
-	} else
-#endif
-		psta->cmn.sm_ps = SM_PS_DISABLE;
-
-	RTW_INFO("STA - MAC_ID:%d, SM_PS %d\n",
-			psta->cmn.mac_id, psta->cmn.sm_ps);
-}
-
-void rtw_hal_update_sta_rate_mask(PADAPTER padapter, struct sta_info *psta)
-{
-	u8 i, tx_nss;
-	u64 tx_ra_bitmap = 0, tmp64=0;
-
-	if (psta == NULL)
-		return;
-
-	/* b/g mode ra_bitmap  */
-	for (i = 0; i < sizeof(psta->bssrateset); i++) {
-		if (psta->bssrateset[i])
-			tx_ra_bitmap |= rtw_get_bit_value_from_ieee_value(psta->bssrateset[i] & 0x7f);
-	}
-
-#ifdef CONFIG_80211N_HT
-if (padapter->registrypriv.ht_enable && is_supported_ht(padapter->registrypriv.wireless_mode)) {
-	tx_nss = GET_HAL_TX_NSS(padapter);
-#ifdef CONFIG_80211AC_VHT
-	if (psta->vhtpriv.vht_option) {
-		/* AC mode ra_bitmap */
-		tx_ra_bitmap |= (rtw_vht_mcs_map_to_bitmap(psta->vhtpriv.vht_mcs_map, tx_nss) << 12);
-	} else
-#endif /* CONFIG_80211AC_VHT */
-	if (psta->htpriv.ht_option) {
-		/* n mode ra_bitmap */
-
-		/* Handling SMPS mode for AP MODE only*/
-		if (check_fwstate(&padapter->mlmepriv, WIFI_AP_STATE) == _TRUE) {
-			/*0:static SMPS, 1:dynamic SMPS, 3:SMPS disabled, 2:reserved*/
-			if (psta->htpriv.smps_cap == 0 || psta->htpriv.smps_cap == 1) {
-				/*operate with only one active receive chain // 11n-MCS rate <= MSC7*/
-				tx_nss = rtw_min(tx_nss, 1);
-			}
-		}
-
-		tmp64 = rtw_ht_mcs_set_to_bitmap(psta->htpriv.ht_cap.supp_mcs_set, tx_nss);
-		tx_ra_bitmap |= (tmp64 << 12);
-	}
-}
-#endif /* CONFIG_80211N_HT */
-	psta->cmn.ra_info.ramask = tx_ra_bitmap;
-	psta->init_rate = get_highest_rate_idx(tx_ra_bitmap) & 0x3f;
-}
+/* rtw_hal_update_sta_smps_cap / rtw_hal_update_sta_rate_mask — rust/hal_com.rs (W4-99) */
 
 void rtw_hal_update_sta_ra_info(PADAPTER padapter, struct sta_info *psta)
 {
@@ -14716,6 +14651,102 @@ u8 rtw_rust_hal_com_sta_mac_id(struct sta_info *psta)
 void rtw_rust_hal_com_log_sta_mimo_ss(u8 mac_id, s8 tx_nss, s8 rx_nss)
 {
 	RTW_INFO("STA - MAC_ID:%d, Tx - %d SS, Rx - %d SS\n", mac_id, tx_nss, rx_nss);
+}
+
+void rtw_rust_hal_com_sta_set_sm_ps(struct sta_info *psta, u8 sm)
+{
+	if (!psta)
+		return;
+	psta->cmn.sm_ps = sm;
+}
+
+void rtw_rust_hal_com_log_sta_sm_ps(u8 mac_id, u8 sm)
+{
+	RTW_INFO("STA - MAC_ID:%d, SM_PS %d\n", mac_id, sm);
+}
+
+u8 rtw_rust_hal_com_adapter_ht_enabled(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return adapter->registrypriv.ht_enable;
+}
+
+u8 rtw_rust_hal_com_adapter_wireless_mode(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return adapter->registrypriv.wireless_mode;
+}
+
+u8 rtw_rust_hal_com_get_hal_tx_nss(_adapter *adapter)
+{
+	if (!adapter)
+		return 1;
+	return GET_HAL_TX_NSS(adapter);
+}
+
+u8 rtw_rust_hal_com_mlmepriv_is_ap(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return check_fwstate(&adapter->mlmepriv, WIFI_AP_STATE) == _TRUE;
+}
+
+u8 rtw_rust_hal_com_sta_bssrate(struct sta_info *psta, unsigned int i)
+{
+	if (!psta || i >= sizeof(psta->bssrateset))
+		return 0;
+	return psta->bssrateset[i];
+}
+
+u8 rtw_rust_hal_com_sta_ht_option(struct sta_info *psta)
+{
+	if (!psta)
+		return 0;
+	return psta->htpriv.ht_option;
+}
+
+u8 rtw_rust_hal_com_sta_ht_smps_cap(struct sta_info *psta)
+{
+	if (!psta)
+		return 0;
+	return psta->htpriv.smps_cap;
+}
+
+u8 rtw_rust_hal_com_sta_ht_supp_mcs(struct sta_info *psta, unsigned int i)
+{
+	if (!psta || i >= sizeof(psta->htpriv.ht_cap.supp_mcs_set))
+		return 0;
+	return psta->htpriv.ht_cap.supp_mcs_set[i];
+}
+
+u8 rtw_rust_hal_com_sta_vht_option(struct sta_info *psta)
+{
+	if (!psta)
+		return 0;
+	return psta->vhtpriv.vht_option;
+}
+
+u8 rtw_rust_hal_com_sta_vht_mcs_map(struct sta_info *psta, unsigned int i)
+{
+	if (!psta || i >= sizeof(psta->vhtpriv.vht_mcs_map))
+		return 0;
+	return psta->vhtpriv.vht_mcs_map[i];
+}
+
+void rtw_rust_hal_com_sta_set_ramask(struct sta_info *psta, u64 mask)
+{
+	if (!psta)
+		return;
+	psta->cmn.ra_info.ramask = mask;
+}
+
+void rtw_rust_hal_com_sta_set_init_rate(struct sta_info *psta, u8 rate)
+{
+	if (!psta)
+		return;
+	psta->init_rate = rate;
 }
 
 void rtw_rust_hal_com_log_info(const char *line)
