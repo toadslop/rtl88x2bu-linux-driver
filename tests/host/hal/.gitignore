@@ -23,3 +23,4 @@ test_hal_dm_init_odm_cominfo_tail*
 test_hal_dm_phydm_ops
 test_hal_dm_phydm_ops_rust
 librust_hal_dm_phydm_ops.a
+test_hal_dm_min_rssi_phy_cnt*
