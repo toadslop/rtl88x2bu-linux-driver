@@ -801,12 +801,12 @@ RUST_PHYDM_OPS := $(ROOT)/rust/hal_dm_phydm_ops_host.rs
 
 librust_hal_dm_phydm_ops.a: $(RUST_PHYDM_OPS)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
-		--cfg host_hal_dm_phydm_ops_test \
+		--cfg host_hal_dm_phydm_ops_test --cfg CONFIG_SUPPORT_DYNAMIC_TXPWR \
 		--crate-type staticlib $(RUST_PHYDM_OPS) -o $@
 
 test_hal_dm_phydm_ops_rust: test_hal_dm_phydm_ops.c librust_hal_dm_phydm_ops.a \
 		$(DM_PHYDM_OPS_SHIM)
-	$(CC) $(CFLAGS) -DRUST_HAL_DM_PHYDM_OPS_ORACLE \
+	$(CC) $(CFLAGS) -DRUST_HAL_DM_PHYDM_OPS_ORACLE -DCONFIG_SUPPORT_DYNAMIC_TXPWR \
 		-I$(ROOT)/tests/host/include -o $@ test_hal_dm_phydm_ops.c \
 		$(DM_PHYDM_OPS_SHIM) librust_hal_dm_phydm_ops.a
 
