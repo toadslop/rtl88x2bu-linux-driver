@@ -92,7 +92,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-dm-board-type test-dm-board-type-rust \
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
 	test-dm-phydm-ops test-dm-phydm-ops-rust \
-	test-dm-dyntxpwr \
+	test-dm-dyntxpwr test-dm-dyntxpwr-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
 	test-dm-set-odm-var-core test-dm-set-odm-var-core-rust \
@@ -121,7 +121,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
 	test-dm-init-odm-cominfo-tail test-dm-init-odm-cominfo-tail-rust \
 	test-dm-phydm-ops test-dm-phydm-ops-rust \
-	test-dm-dyntxpwr \
+	test-dm-dyntxpwr test-dm-dyntxpwr-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
 	test-dm-set-odm-var-core test-dm-set-odm-var-core-rust \
