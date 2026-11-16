@@ -2942,6 +2942,8 @@ ifeq ($(CONFIG_RTL8822C), y)
 ifneq ($(filter -DCONFIG_LPS,$(ccflags-y)),)
 _rust_cfg_lps_1t1r := y
 endif
+# Mirror include/hal_ic_cfg.h CONFIG_SUPPORT_DYNAMIC_TXPWR for Rust hal_dm hooks.
+rustflags-y += --cfg CONFIG_SUPPORT_DYNAMIC_TXPWR
 endif
 ifneq ($(_rust_cfg_lps_1t1r),)
 rustflags-y += --cfg config_lps_1t1r

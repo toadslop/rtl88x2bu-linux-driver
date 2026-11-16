@@ -44,6 +44,8 @@ pub unsafe extern "C" fn record_ra_info(
         return;
     }
 
+    // SAFETY: C passes valid `p_dm_void`, `p_sta`, and `ra_mask`; adapter/macid_ctl
+    // are validated before use (NULL returns early, matching harmless C divergence).
     unsafe {
         let p_dm = p_dm_void as *mut DmStruct;
         let adapter = rtw_rust_hal_dm_phydm_adapter(p_dm);
@@ -80,6 +82,7 @@ pub unsafe extern "C" fn rtw_phydm_ops_func_init(p_phydm: *mut DmStruct) {
         return;
     }
 
+    // SAFETY: `p_phydm` is non-NULL; hook tables are written via C layout helpers.
     unsafe {
         let p_ra = rtw_rust_hal_dm_ra_table(p_phydm);
         if !p_ra.is_null() {
