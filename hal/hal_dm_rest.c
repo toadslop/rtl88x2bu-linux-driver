@@ -359,10 +359,64 @@ void rtw_rust_hal_dm_set_odm_var_rest(
 	void *pValue1,
 	BOOLEAN bSet)
 {
-	(void)Adapter;
-	(void)eVariable;
-	(void)pValue1;
+	struct dm_struct *podmpriv = adapter_to_phydm(Adapter);
+
 	(void)bSet;
+	switch (eVariable) {
+	case HAL_ODM_RX_INFO_DUMP: {
+		u8 cur_igi = 0;
+		s8 rssi_min;
+		void *sel;
+
+		sel = pValue1;
+		cur_igi = rtw_phydm_get_cur_igi(Adapter);
+		rssi_min = rtw_phydm_get_min_rssi(Adapter);
+
+		_RTW_PRINT_SEL(sel, "============ Rx Info dump ===================\n");
+		_RTW_PRINT_SEL(sel, "is_linked = %d, rssi_min = %d(%%)(%d(%%)), current_igi = 0x%x\n"
+			, podmpriv->is_linked, rssi_min, rtw_dm_get_min_rssi(Adapter), cur_igi);
+		_RTW_PRINT_SEL(sel, "cnt_cck_fail = %d, cnt_ofdm_fail = %d, Total False Alarm = %d\n",
+			rtw_phydm_get_phy_cnt(Adapter, FA_CCK),
+			rtw_phydm_get_phy_cnt(Adapter, FA_OFDM),
+			rtw_phydm_get_phy_cnt(Adapter, FA_TOTAL));
+
+		if (podmpriv->is_linked) {
+			_RTW_PRINT_SEL(sel, "rx_rate = %s", HDATA_RATE(podmpriv->rx_rate));
+			if (IS_HARDWARE_TYPE_8814A(Adapter))
+				_RTW_PRINT_SEL(sel, " rssi_a = %d(%%), rssi_b = %d(%%), rssi_c = %d(%%), rssi_d = %d(%%)\n",
+					podmpriv->rssi_a, podmpriv->rssi_b, podmpriv->rssi_c, podmpriv->rssi_d);
+			else
+				_RTW_PRINT_SEL(sel, " rssi_a = %d(%%), rssi_b = %d(%%)\n", podmpriv->rssi_a, podmpriv->rssi_b);
+#ifdef DBG_RX_SIGNAL_DISPLAY_RAW_DATA
+			rtw_dump_raw_rssi_info(Adapter, sel);
+#endif
+		}
+	}
+		break;
+	case HAL_ODM_RX_Dframe_INFO: {
+		void *sel;
+
+		sel = pValue1;
+
+#ifdef DBG_RX_DFRAME_RAW_DATA
+		rtw_dump_rx_dframe_info(Adapter, sel);
+#endif
+	}
+		break;
+
+#ifdef CONFIG_ANTENNA_DIVERSITY
+	case HAL_ODM_ANTDIV_SELECT: {
+		u8 antenna = (*(u8 *)pValue1);
+		HAL_DATA_TYPE *pHalData = GET_HAL_DATA(Adapter);
+
+		odm_update_rx_idle_ant(&pHalData->odmpriv, antenna);
+	}
+		break;
+#endif
+
+	default:
+		break;
+	}
 }
 #endif /* CONFIG_RUST */
 
