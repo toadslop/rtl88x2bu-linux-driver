@@ -1,0 +1,40 @@
+{
+  "vectors": [
+    {
+      "name": "iqk_trigger_8822b",
+      "op": "iqk_trigger",
+      "expect_cmn_sets": 2,
+      "expect_rfk_forbidden": 0,
+      "expect_iqk_segment": 0,
+      "expect_segment": 1,
+      "expect_segment_clear": 1,
+      "expect_segment_flag": 0,
+      "expect_lck": 0,
+      "expect_plain_iqk": 0
+    },
+    {
+      "name": "iqk_trigger_all_8822b",
+      "op": "iqk_trigger_all",
+      "expect_cmn_sets": 2,
+      "expect_rfk_forbidden": 0,
+      "expect_iqk_segment": 0,
+      "expect_segment": 1,
+      "expect_segment_clear": 1,
+      "expect_segment_flag": 0,
+      "expect_lck": 0,
+      "expect_plain_iqk": 0
+    },
+    {
+      "name": "lck_trigger",
+      "op": "lck_trigger",
+      "expect_cmn_sets": 0,
+      "expect_rfk_forbidden": 0,
+      "expect_iqk_segment": 0,
+      "expect_segment": 0,
+      "expect_segment_clear": 0,
+      "expect_segment_flag": 0,
+      "expect_lck": 1,
+      "expect_plain_iqk": 0
+    }
+  ]
+}
