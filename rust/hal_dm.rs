@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 //! HAL DM — board-type (`W4-30`), ODM endian hooks (`W4-38`), `dump_sta_info` (`W4-31`),
 //! `dump_sta_traffic` (`W4-32`), FW offload caps (`W4-79`), Init_ODM mid block (`W4-85`),
-//! Init_ODM ComInfo tail hooks (`W4-88`)
+//! Init_ODM ComInfo tail hooks (`W4-88`), PHYDM IGI / IQK queries (`W4-92`)
 //! from `hal/hal_dm.c`.
 
 #![allow(
@@ -670,6 +670,7 @@ mod phydm_priv_odm_iface {
     host_hal_dm_odm_iface_test,
     host_hal_dm_init_odm_mid_test,
     host_hal_dm_init_odm_cominfo_tail_test,
+    host_hal_dm_phydm_igi_iqk_test,
 )))]
 mod fw_offload_caps {
     include!("hal_dm_fw_offload_caps.inc.rs");
@@ -717,7 +718,25 @@ mod init_odm_cominfo_tail {
     host_hal_dm_odm_iface_test,
     host_hal_dm_init_odm_mid_test,
     host_hal_dm_init_odm_cominfo_tail_test,
+    host_hal_dm_phydm_igi_iqk_test,
 )))]
 mod phydm_ops {
     include!("hal_dm_phydm_ops.inc.rs");
+}
+
+#[cfg(any(
+    host_hal_dm_phydm_igi_iqk_test,
+    not(any(
+        host_hal_dm_board_type_test,
+        host_hal_dm_odm_endian_hooks_test,
+        host_hal_dm_dump_sta_info_test,
+        host_hal_dm_dump_sta_traffic_test,
+        host_hal_dm_odm_iface_test,
+        host_hal_dm_init_odm_mid_test,
+        host_hal_dm_init_odm_cominfo_tail_test,
+        host_hal_dm_phydm_igi_iqk_test,
+    ))
+))]
+mod phydm_igi_iqk {
+    include!("hal_dm_phydm_igi_iqk.inc.rs");
 }

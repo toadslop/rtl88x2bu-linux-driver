@@ -277,6 +277,18 @@ void rtw_rust_hal_dm_log_param_init_fw_offload(u8 enable)
 	RTW_INFO("Init-Parameter FW offload:%s\n", enable ? "enable" : "disable");
 }
 
+void rtw_rust_hal_dm_err_iqk_in_progress(void)
+{
+	RTW_ERR("IQK InProgress\n");
+}
+
+u8 rtw_rust_hal_dm_phydm_iqk_in_progress_flag(struct dm_struct *phydm)
+{
+	if (!phydm)
+		return _FALSE;
+	return phydm->rf_calibrate_info.is_iqk_in_progress == _TRUE ? _TRUE : _FALSE;
+}
+
 u16 rtw_rust_hal_dm_phydm_rf_iqk_offload(void)
 {
 	return PHYDM_RF_IQK_OFFLOAD;

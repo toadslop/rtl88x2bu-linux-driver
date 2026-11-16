@@ -126,6 +126,5 @@ int main(int argc, char **argv)
 	for (size_t i = 0; i < count; i++)
 		if (run_vector(&vectors[i]))
 			return fprintf(stderr, "FAIL %s\n", vectors[i].name), 1;
-	printf("OK %zu vectors\n", count);
 	return 0;
 }
