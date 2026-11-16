@@ -380,6 +380,7 @@ void rtw_hal_c2h_pkt_hdl(_adapter *adapter, u8 *buf, u16 len);
 u8 rtw_get_mgntframe_raid(_adapter *adapter, unsigned char network_type);
 
 void rtw_hal_update_sta_wset(_adapter *adapter, struct sta_info *psta);
+void rtw_hal_update_sta_mimo_type(_adapter *adapter, struct sta_info *psta);
 s8 rtw_get_sta_rx_nss(_adapter *adapter, struct sta_info *psta);
 s8 rtw_get_sta_tx_nss(_adapter *adapter, struct sta_info *psta);
 void rtw_hal_update_sta_ra_info(PADAPTER padapter, struct sta_info *psta);
