@@ -26,7 +26,7 @@ const char *host_hdata_rate_str(u8 rate)
 int host_is_hardware_type_8814a(_adapter *adapter)
 {
 	(void)adapter;
-	return _FALSE;
+	return 0;
 }
 
 void host_hal_dm_set_odm_var_rx_fixture(
