@@ -681,4 +681,42 @@ void rtw_rust_hal_dm_init_odm_tail_finish(struct dm_struct *phydm)
 	rtw_phydm_ops_func_init(phydm);
 	phydm_dm_early_init(phydm);
 }
+
+u8 rtw_rust_hal_dm_get_chip_type(_adapter *adapter)
+{
+	return rtw_get_chip_type(adapter);
+}
+
+void rtw_rust_hal_dm_set_tx_desc_txpwr_ofset_8822b(u8 *desc, u8 dpt_lv)
+{
+	SET_TX_DESC_TXPWR_OFSET_8822B(desc, dpt_lv);
+}
+
+void rtw_rust_hal_dm_log_dyntxpwr_unsupported(void)
+{
+	RTW_ERR("%s IC not support dynamic tx power\n", __func__);
+}
+
+void rtw_rust_hal_dm_odm_set_dyntxpwr(void *dm_void, u8 *desc, u8 sta_id)
+{
+	struct dm_struct *dm = (struct dm_struct *)dm_void;
+	struct cmn_sta_info *sta = dm->phydm_sta_info[sta_id];
+	struct dtp_info *dtp;
+
+	if (!is_sta_active(sta))
+		return;
+	dtp = &sta->dtp_stat;
+
+	if (!(dm->support_ability & ODM_BB_DYNAMIC_TXPWR))
+		return;
+
+	if (dm->fill_desc_dyntxpwr)
+		dm->fill_desc_dyntxpwr(dm, desc, dtp->dyn_tx_power);
+	else
+		PHYDM_DBG(dm, DBG_DYN_TXPWR,
+			  "%s: fill_desc_dyntxpwr is null!\n", __func__);
+
+	if (dtp->last_tx_power != dtp->dyn_tx_power)
+		dtp->last_tx_power = dtp->dyn_tx_power;
+}
 #endif /* CONFIG_RUST */

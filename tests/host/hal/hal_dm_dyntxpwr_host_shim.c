@@ -82,3 +82,33 @@ void odm_set_dyntxpwr(void *dm_void, u8 *desc, u8 sta_id)
 	if (dtp->last_tx_power != dtp->dyn_tx_power)
 		dtp->last_tx_power = dtp->dyn_tx_power;
 }
+
+host_dyntxpwr_adapter *rtw_rust_hal_dm_phydm_adapter(struct host_dm_dyntxpwr *dm)
+{
+	return dm ? dm->adapter : NULL;
+}
+
+u8 rtw_rust_hal_dm_get_chip_type(host_dyntxpwr_adapter *adapter)
+{
+	return host_get_chip_type(adapter);
+}
+
+struct host_dm_dyntxpwr *rtw_rust_hal_dm_adapter_to_phydm(host_dyntxpwr_adapter *adapter)
+{
+	return adapter_to_phydm_dyntxpwr(adapter);
+}
+
+void rtw_rust_hal_dm_set_tx_desc_txpwr_ofset_8822b(u8 *desc, u8 value)
+{
+	host_set_tx_desc_txpwr_ofset_8822b(desc, value);
+}
+
+void rtw_rust_hal_dm_log_dyntxpwr_unsupported(void)
+{
+	host_hal_dm_dyntxpwr_log_unsupported();
+}
+
+void rtw_rust_hal_dm_odm_set_dyntxpwr(void *dm, u8 *desc, u8 mac_id)
+{
+	odm_set_dyntxpwr(dm, desc, mac_id);
+}
