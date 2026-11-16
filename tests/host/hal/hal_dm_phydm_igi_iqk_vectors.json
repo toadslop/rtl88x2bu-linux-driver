@@ -1,0 +1,37 @@
+{
+  "vectors": [
+    {
+      "name": "cur_igi_mid",
+      "op": "igi",
+      "fixture_igi": 42,
+      "expect_igi": 42,
+      "fixture_iqk": 0,
+      "expect_iqk": 0,
+      "expect_iqk_lock": 0,
+      "expect_iqk_lock_release": 0,
+      "expect_iqk_err": 0
+    },
+    {
+      "name": "iqk_idle",
+      "op": "iqk",
+      "fixture_igi": 30,
+      "expect_igi": 0,
+      "fixture_iqk": 0,
+      "expect_iqk": 0,
+      "expect_iqk_lock": 1,
+      "expect_iqk_lock_release": 1,
+      "expect_iqk_err": 0
+    },
+    {
+      "name": "iqk_in_progress",
+      "op": "iqk",
+      "fixture_igi": 0,
+      "expect_igi": 0,
+      "fixture_iqk": 1,
+      "expect_iqk": 1,
+      "expect_iqk_lock": 1,
+      "expect_iqk_lock_release": 1,
+      "expect_iqk_err": 1
+    }
+  ]
+}
