@@ -1169,6 +1169,7 @@ void SetHalODMVar(
 }
 #endif /* !CONFIG_RUST */
 
+#ifndef CONFIG_RUST
 void GetHalODMVar(
 	PADAPTER				Adapter,
 	HAL_ODM_VARIABLE		eVariable,
@@ -1192,6 +1193,7 @@ void GetHalODMVar(
 		break;
 	}
 }
+#endif /* !CONFIG_RUST */
 
 #ifdef RTW_HALMAC
 #include "../hal_halmac.h"
