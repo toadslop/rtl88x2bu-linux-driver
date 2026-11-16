@@ -102,35 +102,19 @@ void rtw_hal_read_sta_dk_key(_adapter *adapter, u8 key_id)
 #define	EEPROM_CHANNEL_PLAN_BY_HW_MASK	0x80
 
 #if defined(CONFIG_RUST)
-struct rtw_rust_config_chplan_hw_state {
-	s32 chplan;
-	const struct country_chplan *country_ent;
-	u8 force_hw_chplan;
-	u8 goto_sw_config;
-};
-
-void rtw_rust_hal_com_config_chplan_hw_branch(
-		char *hw_alpha2,
-		u8 hw_chplan,
-		u8 force_hw_chplan,
-		struct rtw_rust_config_chplan_hw_state *st);
-#endif
-
+void rtw_rust_hal_com_log_unsupported_sw_alpha2(const char *func, char a, char b);
+void rtw_rust_hal_com_log_unsupported_sw_chplan(const char *func, u8 plan);
+void rtw_rust_hal_com_apply_chplan_fields(
+		PADAPTER padapter,
+		const struct country_chplan *country_ent,
+		s32 chplan,
+		u8 force_hw_chplan);
+/* hal_com_config_channel_plan — rust/hal_com.rs (W4-90 + W4-91) */
+#else
 /*
  * Description:
  *	Use hardware(efuse), driver parameter(registry) and default channel plan
  *	to decide which one should be used.
- *
- * Parameters:
- *	padapter			pointer of adapter
- *	hw_alpha2		country code from HW (efuse/eeprom/mapfile)
- *	hw_chplan		channel plan from HW (efuse/eeprom/mapfile)
- *						BIT[7] software configure mode; 0:Enable, 1:disable
- *						BIT[6:0] Channel Plan
- *	sw_alpha2		country code from HW (registry/module param)
- *	sw_chplan		channel plan from SW (registry/module param)
- *	AutoLoadFail		efuse autoload fail or not
- *
  */
 void hal_com_config_channel_plan(
 		PADAPTER padapter,
@@ -146,11 +130,10 @@ void hal_com_config_channel_plan(
 	u8 force_hw_chplan = _FALSE;
 	int chplan = -1;
 	const struct country_chplan *country_ent = NULL, *ent;
-	u8 def_chplan = 0x7F; /* Realtek define,  used when HW, SW both invalid */
+	u8 def_chplan = 0x7F;
 
 	pHalData = GET_HAL_DATA(padapter);
 
-	/* treat 0xFF as invalid value, bypass hw_chplan & force_hw_chplan parsing */
 	if (hw_chplan == 0xFF)
 		goto chk_hw_country_code;
 
@@ -165,23 +148,9 @@ void hal_com_config_channel_plan(
 	hw_chplan &= (~EEPROM_CHANNEL_PLAN_BY_HW_MASK);
 
 chk_hw_country_code:
-#if defined(CONFIG_RUST)
-	{
-		struct rtw_rust_config_chplan_hw_state st;
-
-		rtw_rust_hal_com_config_chplan_hw_branch(hw_alpha2, hw_chplan,
-				force_hw_chplan, &st);
-		chplan = st.chplan;
-		country_ent = st.country_ent;
-		force_hw_chplan = st.force_hw_chplan;
-		if (st.goto_sw_config)
-			goto chk_sw_config;
-	}
-#else
 	if (hw_alpha2 && !IS_ALPHA2_NO_SPECIFIED(hw_alpha2)) {
 		ent = rtw_get_chplan_from_country(hw_alpha2);
 		if (ent) {
-			/* get chplan from hw country code, by pass hw chplan setting */
 			country_ent = ent;
 			chplan = ent->chplan;
 			goto chk_sw_config;
@@ -193,10 +162,8 @@ chk_hw_country_code:
 		chplan = hw_chplan;
 	else if (force_hw_chplan == _TRUE) {
 		RTW_PRINT("%s unsupported hw_chplan:0x%02X\n", __func__, hw_chplan);
-		/* hw infomaton invalid, refer to sw information */
 		force_hw_chplan = _FALSE;
 	}
-#endif /* CONFIG_RUST */
 
 chk_sw_config:
 	if (force_hw_chplan == _TRUE)
@@ -205,7 +172,6 @@ chk_sw_config:
 	if (sw_alpha2 && !IS_ALPHA2_NO_SPECIFIED(sw_alpha2)) {
 		ent = rtw_get_chplan_from_country(sw_alpha2);
 		if (ent) {
-			/* get chplan from sw country code, by pass sw chplan setting */
 			country_ent = ent;
 			chplan = ent->chplan;
 			goto done;
@@ -214,7 +180,6 @@ chk_sw_config:
 	}
 
 	if (rtw_is_channel_plan_valid(sw_chplan)) {
-		/* cancel hw_alpha2 because chplan is specified by sw_chplan*/
 		country_ent = NULL;
 		chplan = sw_chplan;
 	} else if (sw_chplan != RTW_CHPLAN_UNSPECIFIED)
@@ -234,6 +199,7 @@ done:
 	rfctl->ChannelPlan = chplan;
 	pHalData->bDisableSWChannelPlan = force_hw_chplan;
 }
+#endif /* CONFIG_RUST */
 
 #if 0
 static void _FourOutPipeMapping(
@@ -14720,6 +14686,40 @@ void rtw_rust_hal_com_log_unsupported_hw_alpha2(const char *func, char a, char b
 void rtw_rust_hal_com_log_unsupported_hw_chplan(const char *func, u8 plan)
 {
 	RTW_PRINT("%s unsupported hw_chplan:0x%02X\n", func, plan);
+}
+
+void rtw_rust_hal_com_log_unsupported_sw_alpha2(const char *func, char a, char b)
+{
+	RTW_PRINT("%s unsupported sw_alpha2:\"%c%c\"\n", func, a, b);
+}
+
+void rtw_rust_hal_com_log_unsupported_sw_chplan(const char *func, u8 plan)
+{
+	RTW_PRINT("%s unsupported sw_chplan:0x%02X\n", func, plan);
+}
+
+void rtw_rust_hal_com_apply_chplan_fields(
+		PADAPTER padapter,
+		const struct country_chplan *country_ent,
+		s32 chplan,
+		u8 force_hw_chplan)
+{
+	struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
+	PHAL_DATA_TYPE pHalData = GET_HAL_DATA(padapter);
+	u8 def_chplan = 0x7F;
+
+	if (chplan == -1) {
+		RTW_PRINT("%s use def_chplan:0x%02X\n", __func__, def_chplan);
+		chplan = def_chplan;
+	} else if (country_ent) {
+		RTW_PRINT("%s country code:\"%c%c\" with chplan:0x%02X\n", __func__,
+			 country_ent->alpha2[0], country_ent->alpha2[1], country_ent->chplan);
+	} else
+		RTW_PRINT("%s chplan:0x%02X\n", __func__, chplan);
+
+	rfctl->country_ent = country_ent;
+	rfctl->ChannelPlan = (u8)chplan;
+	pHalData->bDisableSWChannelPlan = force_hw_chplan;
 }
 
 void rtw_rust_hal_com_warn_invalid_hw_rate(u8 hw_rate)

@@ -29,6 +29,7 @@ struct host_config_chplan_adapter {
 extern const struct country_chplan *rtw_get_chplan_from_country(const char *cc);
 extern uint8_t rtw_is_channel_plan_valid(uint8_t id);
 
+#ifndef RUST_HAL_COM_CONFIG_CHPLAN_FULL_ORACLE
 static int is_alpha2_no_specified(const char *alpha2)
 {
 	uint16_t v;
@@ -38,7 +39,9 @@ static int is_alpha2_no_specified(const char *alpha2)
 	memcpy(&v, alpha2, sizeof(v));
 	return v == 0xffff;
 }
+#endif
 
+#ifndef RUST_HAL_COM_CONFIG_CHPLAN_FULL_ORACLE
 static void host_hal_com_config_channel_plan(
 	struct host_config_chplan_adapter *padapter,
 	const char *hw_alpha2, uint8_t hw_chplan,
@@ -92,9 +95,12 @@ done:
 	padapter->rfctl.channel_plan = (uint8_t)chplan;
 	padapter->hal_data.b_disable_sw_channel_plan = force_hw;
 }
+#endif /* !RUST_HAL_COM_CONFIG_CHPLAN_FULL_ORACLE */
 
 #ifdef RUST_HAL_COM_CONFIG_CHPLAN_FULL_ORACLE
-extern void host_hal_com_config_channel_plan(
+struct host_config_chplan_adapter;
+
+void host_hal_com_config_channel_plan(
 	struct host_config_chplan_adapter *, const char *, uint8_t,
 	const char *, uint8_t, uint8_t);
 #endif
@@ -147,7 +153,6 @@ int parse_vec(const char *obj, size_t len, void *v)
 	return 0;
 }
 
-#ifndef RUST_HAL_COM_CONFIG_CHPLAN_FULL_ORACLE
 int main(int argc, char **argv)
 {
 	struct vector vecs[12];
@@ -201,4 +206,3 @@ int main(int argc, char **argv)
 	printf("PASS: %zu vectors from %s\n", n, path);
 	return 0;
 }
-#endif

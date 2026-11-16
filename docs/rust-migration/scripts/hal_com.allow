@@ -1,3 +1,5 @@
+# W4-91: full hal_com_config_channel_plan in rust/hal_com.rs (W4-90 HW + W4-91 SW/done).
+drop hal_com_config_channel_plan
 # FX-06: C2H customer-string handlers only when CONFIG_RTW_CUSTOMER_STR (Rust cfg).
 drop c2h_customer_str_rpt_hdl
 drop c2h_customer_str_rpt_2_hdl

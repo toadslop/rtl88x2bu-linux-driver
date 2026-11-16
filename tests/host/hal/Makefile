@@ -66,7 +66,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-brate test-brate-rust \
 	test-legal-channel test-legal-channel-rust \
 	test-config-chplan-hw test-config-chplan-hw-rust \
-	test-config-chplan-full \
+	test-config-chplan-full test-config-chplan-full-rust \
 	test-mapping-out-pipe test-mapping-out-pipe-rust test-mgntframe-raid test-mgntframe-raid-rust \
 	test-hdata-rate test-hdata-rate-rust test-phy-bit-shift test-phy-bit-shift-rust \
 	test-dm-board-type test-dm-board-type-rust \
@@ -89,7 +89,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-halmac test-halmac-rust test-halmac-rsvd test-halmac-rsvd-rust test-brate test-brate-rust \
 	test-legal-channel test-legal-channel-rust \
 	test-config-chplan-hw test-config-chplan-hw-rust \
-	test-config-chplan-full \
+	test-config-chplan-full test-config-chplan-full-rust \
 	test-mapping-out-pipe test-mapping-out-pipe-rust \
 	test-mgntframe-raid test-mgntframe-raid-rust test-hdata-rate test-hdata-rate-rust \
 	test-phy-bit-shift test-phy-bit-shift-rust test-dm-board-type test-dm-board-type-rust \
@@ -496,6 +496,23 @@ test_hal_config_chplan_full: hal_config_chplan_full_l2.c \
 		$(CHPLAN_CORE) $(CHPLAN_DATA) $(CHPLAN_SHIM) $(HOST_JSON)
 	$(CC) $(CHPLAN_CFLAGS) -o $@ hal_config_chplan_full_l2.c \
 		$(CHPLAN_CORE) $(CHPLAN_DATA) $(CHPLAN_SHIM) $(HOST_JSON)
+
+RUST_CHPLAN_FULL_HOST := $(ROOT)/rust/hal_com_config_chplan_full_host.rs
+
+librust_hal_com_config_chplan_full.a: $(RUST_CHPLAN_FULL_HOST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_config_chplan_full_test \
+		--crate-type staticlib $(RUST_CHPLAN_FULL_HOST) -o $@
+
+test-config-chplan-full-rust: test_hal_config_chplan_full_rust
+	./test_hal_config_chplan_full_rust hal_config_chplan_full_vectors.json
+
+test_hal_config_chplan_full_rust: hal_config_chplan_full_l2.c \
+		librust_hal_com_config_chplan_full.a $(CHPLAN_CORE) $(CHPLAN_DATA) \
+		$(CHPLAN_SHIM) $(HOST_JSON)
+	$(CC) $(CHPLAN_CFLAGS) -DRUST_HAL_COM_CONFIG_CHPLAN_FULL_ORACLE -o $@ \
+		hal_config_chplan_full_l2.c $(CHPLAN_CORE) $(CHPLAN_DATA) \
+		$(CHPLAN_SHIM) $(HOST_JSON) librust_hal_com_config_chplan_full.a
 
 MAPPING_ORACLE := hal_mapping_out_pipe_c_oracle.c
 
