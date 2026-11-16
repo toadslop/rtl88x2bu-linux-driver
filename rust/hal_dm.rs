@@ -2,7 +2,7 @@
 //! HAL DM — board-type (`W4-30`), ODM endian hooks (`W4-38`), `dump_sta_info` (`W4-31`),
 //! `dump_sta_traffic` (`W4-32`), FW offload caps (`W4-79`), Init_ODM mid block (`W4-85`),
 //! Init_ODM ComInfo tail hooks (`W4-88`), PHYDM IGI / IQK queries (`W4-92`),
-//! SetHalODMVar core cases (`W4-94`), IQK/LCK RFK triggers (`W4-98`)
+//! SetHalODMVar core cases (`W4-94`), RX info dump (`W4-96`), IQK/LCK RFK triggers (`W4-98`)
 //! from `hal/hal_dm.c`.
 
 #![allow(

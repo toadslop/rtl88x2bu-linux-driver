@@ -14,6 +14,11 @@ const HAL_ODM_WIFI_DISPLAY_STATE: U32 = 2;
 const HAL_ODM_REGULATION: U32 = 3;
 const HAL_ODM_INITIAL_GAIN: U32 = 4;
 
+mod set_odm_var_rx {
+    include!("hal_dm_set_odm_var_rx.inc.rs");
+}
+use set_odm_var_rx::set_odm_var_rx_cases;
+
 const STA_DM_CTRL_ACTIVE: U8 = 1;
 
 /* Match enum odm_cmninfo in hal/phydm/phydm.h (ODM_CMNINFO_PLATFORM = 0). */
@@ -118,6 +123,7 @@ pub extern "C" fn SetHalODMVar(
                     );
                 }
             }
+            5 | 6 => set_odm_var_rx_cases(adapter, e_variable, p_value1),
             _ => rtw_rust_hal_dm_set_odm_var_rest(adapter, e_variable, p_value1, b_set),
         }
     }
