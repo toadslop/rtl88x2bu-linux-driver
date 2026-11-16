@@ -20,13 +20,18 @@ struct _adapter { u8 _unused; };
 #define WIRELESS_HT 0x04U
 #define WIRELESS_VHT 0x08U
 
-enum host_rf_type {
-	RF_1T1R, RF_1T2R, RF_2T2R, RF_2T3R, RF_2T4R, RF_3T3R, RF_3T4R, RF_4T4R,
-};
+#define RF_1T1R 0U
+#define RF_1T2R 1U
+#define RF_2T2R 2U
+#define RF_2T3R 3U
+#define RF_2T4R 4U
+#define RF_3T3R 5U
+#define RF_3T4R 6U
+#define RF_4T4R 7U
 
 struct host_cmn_sta_info {
 	u8 mac_id;
-	enum host_rf_type mimo_type;
+	u8 mimo_type;
 	u8 support_wireless_set;
 };
 
