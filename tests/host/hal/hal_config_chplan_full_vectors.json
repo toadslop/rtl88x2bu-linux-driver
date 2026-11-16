@@ -1,0 +1,93 @@
+{
+  "vectors": [
+    {
+      "name": "sw_only_alpha2_us",
+      "hw_chplan": 255,
+      "sw_alpha2": "US",
+      "sw_chplan": 255,
+      "expect_channel_plan": 118,
+      "expect_disable_sw": 0,
+      "expect_has_country": 1,
+      "expect_country_chplan": 118
+    },
+    {
+      "name": "hw_sw_conflict_sw_wins",
+      "hw_chplan": 0,
+      "sw_alpha2": "JP",
+      "sw_chplan": 255,
+      "expect_channel_plan": 39,
+      "expect_disable_sw": 0,
+      "expect_has_country": 1,
+      "expect_country_chplan": 39
+    },
+    {
+      "name": "default_fallback_both_invalid",
+      "hw_alpha2": "ZZ",
+      "hw_chplan": 133,
+      "sw_alpha2": "ZZ",
+      "sw_chplan": 133,
+      "expect_channel_plan": 127,
+      "expect_disable_sw": 0,
+      "expect_has_country": 0
+    },
+    {
+      "name": "force_hw_valid_blocks_sw",
+      "hw_chplan": 128,
+      "sw_alpha2": "US",
+      "sw_chplan": 255,
+      "expect_channel_plan": 0,
+      "expect_disable_sw": 1,
+      "expect_has_country": 0
+    },
+    {
+      "name": "force_hw_invalid_sw_wins",
+      "hw_chplan": 133,
+      "sw_alpha2": "JP",
+      "sw_chplan": 255,
+      "expect_channel_plan": 39,
+      "expect_disable_sw": 0,
+      "expect_has_country": 1,
+      "expect_country_chplan": 39
+    },
+    {
+      "name": "autoload_fail_skips_hw",
+      "hw_alpha2": "US",
+      "hw_chplan": 0,
+      "autoload_fail": 1,
+      "sw_alpha2": "JP",
+      "sw_chplan": 255,
+      "expect_channel_plan": 39,
+      "expect_disable_sw": 0,
+      "expect_has_country": 1,
+      "expect_country_chplan": 39
+    },
+    {
+      "name": "hw_alpha2_us_bypass_hw_chplan",
+      "hw_alpha2": "US",
+      "hw_chplan": 133,
+      "sw_chplan": 255,
+      "expect_channel_plan": 118,
+      "expect_disable_sw": 1,
+      "expect_has_country": 1,
+      "expect_country_chplan": 118
+    },
+    {
+      "name": "valid_sw_chplan_cancels_hw_country",
+      "hw_alpha2": "US",
+      "hw_chplan": 0,
+      "sw_chplan": 0,
+      "expect_channel_plan": 0,
+      "expect_disable_sw": 0,
+      "expect_has_country": 0
+    },
+    {
+      "name": "hw_alpha2_unsupported_valid_hw_chplan",
+      "hw_alpha2": "ZZ",
+      "hw_chplan": 0,
+      "sw_chplan": 255,
+      "expect_channel_plan": 0,
+      "expect_disable_sw": 0,
+      "expect_has_country": 0
+    }
+  ]
+}

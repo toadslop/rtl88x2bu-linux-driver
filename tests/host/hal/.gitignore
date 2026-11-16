@@ -1,4 +1,5 @@
 *.a
+test_hal_config_chplan_full
 test_hal_phy_rf_shadow*
 test_hal_dm_dump_sta_info
 test_hal_dm_dump_sta_info_rust
