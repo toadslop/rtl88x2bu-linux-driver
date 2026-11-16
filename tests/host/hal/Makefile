@@ -38,6 +38,8 @@ DM_PHYDM_IQK_LCK_SHIM := hal_dm_phydm_iqk_lck_host_shim.c
 DM_PHYDM_IQK_LCK_CFLAGS := -DRTL8822B_SUPPORT=1
 DM_SET_ODM_VAR_RX_ORACLE := hal_dm_set_odm_var_rx_c_oracle.c
 DM_SET_ODM_VAR_RX_SHIM := hal_dm_set_odm_var_rx_host_shim.c
+DM_DYNTPWR_ORACLE := hal_dm_dyntxpwr_c_oracle.c
+DM_DYNTPWR_SHIM := hal_dm_dyntxpwr_host_shim.c
 DM_MIN_RSSI_PHY_CNT_ORACLE := hal_dm_min_rssi_phy_cnt_c_oracle.c
 DM_MIN_RSSI_PHY_CNT_SHIM := hal_dm_min_rssi_phy_cnt_host_shim.c
 DM_GET_ODM_VAR_ORACLE := hal_dm_get_odm_var_c_oracle.c
@@ -994,6 +996,16 @@ test_hal_dm_set_odm_var_rx: test_hal_dm_set_odm_var_rx.c \
 	$(CC) $(CFLAGS) -I$(ROOT)/tests/host/include -o $@ test_hal_dm_set_odm_var_rx.c \
 		$(DM_SET_ODM_VAR_RX_ORACLE) $(DM_SET_ODM_VAR_RX_SHIM) $(HOST_JSON)
 
+DYNTPWR_CFLAGS := $(CFLAGS) -DCONFIG_SUPPORT_DYNAMIC_TXPWR -DCONFIG_RTL8822B \
+	-I$(ROOT)/tests/host/include
+
+test-dm-dyntxpwr: test_hal_dm_dyntxpwr
+	./test_hal_dm_dyntxpwr hal_dm_dyntxpwr_vectors.json
+
+test_hal_dm_dyntxpwr: test_hal_dm_dyntxpwr.c $(DM_DYNTPWR_ORACLE) $(HOST_JSON)
+	$(CC) $(DYNTPWR_CFLAGS) -o $@ test_hal_dm_dyntxpwr.c $(DM_DYNTPWR_ORACLE) \
+		$(DM_DYNTPWR_SHIM) $(HOST_JSON)
+
 test-usb-vendor-wvalue: test_hal_usb_vendor_wvalue
 	./test_hal_usb_vendor_wvalue hal_usb_vendor_wvalue_vectors.json
 
@@ -1225,6 +1237,7 @@ clean:
 		test_hal_dm_phydm_iqk_lck test_hal_dm_phydm_iqk_lck_rust \
 		librust_hal_dm_phydm_iqk_lck.a \
 		test_hal_dm_set_odm_var_rx \
+		test_hal_dm_dyntxpwr \
 		test_hal_dm_min_rssi_phy_cnt test_hal_dm_min_rssi_phy_cnt_rust \
 		librust_hal_dm_min_rssi_phy_cnt.a \
 		test_hal_usb_vendor_wvalue test_hal_usb_vendor_wvalue_rust librust_hal_usb_wvalue.a \
