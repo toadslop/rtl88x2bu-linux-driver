@@ -708,3 +708,16 @@ mod init_odm_mid {
 mod init_odm_cominfo_tail {
     include!("hal_dm_init_odm_cominfo_tail.inc.rs");
 }
+
+#[cfg(not(any(
+    host_hal_dm_board_type_test,
+    host_hal_dm_odm_endian_hooks_test,
+    host_hal_dm_dump_sta_info_test,
+    host_hal_dm_dump_sta_traffic_test,
+    host_hal_dm_odm_iface_test,
+    host_hal_dm_init_odm_mid_test,
+    host_hal_dm_init_odm_cominfo_tail_test,
+)))]
+mod phydm_ops {
+    include!("hal_dm_phydm_ops.inc.rs");
+}

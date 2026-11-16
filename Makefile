@@ -2942,6 +2942,8 @@ ifeq ($(CONFIG_RTL8822C), y)
 ifneq ($(filter -DCONFIG_LPS,$(ccflags-y)),)
 _rust_cfg_lps_1t1r := y
 endif
+# Mirror include/hal_ic_cfg.h CONFIG_SUPPORT_DYNAMIC_TXPWR for Rust hal_dm hooks.
+rustflags-y += --cfg CONFIG_SUPPORT_DYNAMIC_TXPWR
 endif
 ifneq ($(_rust_cfg_lps_1t1r),)
 rustflags-y += --cfg config_lps_1t1r
@@ -5384,6 +5386,10 @@ rust-objects-hal-dm-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_dm_init_odm_cominfo_tail_l1_ref.o \
 		tests/host/hal/hal_dm_init_odm_cominfo_tail_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/include \
+		-o tests/host/hal/hal_dm_phydm_ops_l1_ref.o \
+		tests/host/hal/hal_dm_phydm_ops_l1_ref.c
 	ld -r -o tests/host/hal/hal_dm_l1_ref.o \
 		tests/host/hal/hal_dm_board_type_l1_ref.o \
 		tests/host/hal/hal_dm_dump_sta_l1_ref.o \
@@ -5392,7 +5398,8 @@ rust-objects-hal-dm-c:
 		tests/host/hal/hal_dm_odm_iface_l1_ref.o \
 		tests/host/hal/hal_dm_fw_offload_caps_l1_ref.o \
 		tests/host/hal/hal_dm_init_odm_mid_l1_ref.o \
-		tests/host/hal/hal_dm_init_odm_cominfo_tail_l1_ref.o
+		tests/host/hal/hal_dm_init_odm_cominfo_tail_l1_ref.o \
+		tests/host/hal/hal_dm_phydm_ops_l1_ref.o
 rust-check-symbols-hal-dm: rust-objects-hal-dm-c rust-objects-hal-dm
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_dm_l1_ref.o NEW=rust/hal_dm.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_dm.allow ALLOW_VACUOUS=1
