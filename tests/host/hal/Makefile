@@ -36,6 +36,8 @@ DM_SET_ODM_VAR_CORE_SHIM := hal_dm_set_odm_var_core_host_shim.c
 DM_PHYDM_IQK_LCK_ORACLE := hal_dm_phydm_iqk_lck_c_oracle.c
 DM_PHYDM_IQK_LCK_SHIM := hal_dm_phydm_iqk_lck_host_shim.c
 DM_PHYDM_IQK_LCK_CFLAGS := -DRTL8822B_SUPPORT=1
+DM_SET_ODM_VAR_RX_ORACLE := hal_dm_set_odm_var_rx_c_oracle.c
+DM_SET_ODM_VAR_RX_SHIM := hal_dm_set_odm_var_rx_host_shim.c
 DM_MIN_RSSI_PHY_CNT_ORACLE := hal_dm_min_rssi_phy_cnt_c_oracle.c
 DM_MIN_RSSI_PHY_CNT_SHIM := hal_dm_min_rssi_phy_cnt_host_shim.c
 DM_GET_ODM_VAR_ORACLE := hal_dm_get_odm_var_c_oracle.c
@@ -86,6 +88,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
 	test-dm-set-odm-var-core test-dm-set-odm-var-core-rust \
+	test-dm-set-odm-var-rx \
 	test-dm-min-rssi-phy-cnt test-dm-min-rssi-phy-cnt-rust \
 	test-dm-get-odm-var \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust \
@@ -113,6 +116,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
 	test-dm-set-odm-var-core test-dm-set-odm-var-core-rust \
+	test-dm-set-odm-var-rx \
 	test-dm-min-rssi-phy-cnt test-dm-min-rssi-phy-cnt-rust \
 	test-dm-get-odm-var \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust test-usb-sync-read \
@@ -965,6 +969,14 @@ test_hal_dm_phydm_iqk_lck_rust: test_hal_dm_phydm_iqk_lck.c librust_hal_dm_phydm
 		test_hal_dm_phydm_iqk_lck.c $(DM_PHYDM_IQK_LCK_SHIM) $(HOST_JSON) \
 		librust_hal_dm_phydm_iqk_lck.a
 
+test-dm-set-odm-var-rx: test_hal_dm_set_odm_var_rx
+	./test_hal_dm_set_odm_var_rx hal_dm_set_odm_var_rx_vectors.json
+
+test_hal_dm_set_odm_var_rx: test_hal_dm_set_odm_var_rx.c \
+		$(DM_SET_ODM_VAR_RX_ORACLE) $(DM_SET_ODM_VAR_RX_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -I$(ROOT)/tests/host/include -o $@ test_hal_dm_set_odm_var_rx.c \
+		$(DM_SET_ODM_VAR_RX_ORACLE) $(DM_SET_ODM_VAR_RX_SHIM) $(HOST_JSON)
+
 test-usb-vendor-wvalue: test_hal_usb_vendor_wvalue
 	./test_hal_usb_vendor_wvalue hal_usb_vendor_wvalue_vectors.json
 
@@ -1195,6 +1207,7 @@ clean:
 		librust_hal_dm_set_odm_var_core.a \
 		test_hal_dm_phydm_iqk_lck test_hal_dm_phydm_iqk_lck_rust \
 		librust_hal_dm_phydm_iqk_lck.a \
+		test_hal_dm_set_odm_var_rx \
 		test_hal_dm_min_rssi_phy_cnt test_hal_dm_min_rssi_phy_cnt_rust \
 		librust_hal_dm_min_rssi_phy_cnt.a \
 		test_hal_usb_vendor_wvalue test_hal_usb_vendor_wvalue_rust librust_hal_usb_wvalue.a \
