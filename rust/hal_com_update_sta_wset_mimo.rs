@@ -69,7 +69,7 @@ extern "C" {
     fn rtw_get_sta_rx_nss(a: *mut Adapter, p: *mut StaInfo) -> S8;
     fn rtw_rust_hal_com_warn_on(c: i32);
     fn rtw_rust_hal_com_log_sta_mimo_ss(mac: U8, tx: S8, rx: S8);
-    #[cfg(CONFIG_CTRL_TXSS_BY_TP)]
+    #[cfg(config_ctrl_txss_by_tp)]
     fn rtw_ctrl_txss_update_mimo_type(a: *mut Adapter, p: *mut StaInfo);
 }
 
@@ -163,7 +163,7 @@ pub extern "C" fn rtw_hal_update_sta_mimo_type(adapter: *mut Adapter, psta: *mut
             rtw_rust_hal_com_warn_on(1);
         }
     }
-    #[cfg(CONFIG_CTRL_TXSS_BY_TP)]
+    #[cfg(config_ctrl_txss_by_tp)]
     unsafe {
         rtw_ctrl_txss_update_mimo_type(adapter, psta);
     }
