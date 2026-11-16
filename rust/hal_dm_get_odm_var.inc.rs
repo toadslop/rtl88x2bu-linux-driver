@@ -46,8 +46,10 @@ pub extern "C" fn GetHalODMVar(
                     #[cfg(host_hal_dm_get_odm_var_test)]
                     {
                         let phydm = rtw_rust_hal_dm_adapter_to_phydm(adapter);
-                        *(p_value1 as *mut U8) =
-                            phydm_cmn_info_query(phydm, PHYDM_INFO_CURR_IGI) as U8;
+                        *(p_value1 as *mut U8) = phydm_cmn_info_query(
+                            phydm as *mut c_void,
+                            PHYDM_INFO_CURR_IGI,
+                        ) as U8;
                     }
                     #[cfg(not(host_hal_dm_get_odm_var_test))]
                     {
