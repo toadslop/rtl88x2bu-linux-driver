@@ -8,6 +8,10 @@
 #include "host_hal_dm_set_odm_var_rx_types.h"
 #include "host_vector_json.h"
 
+#ifdef RUST_HAL_DM_SET_ODM_VAR_RX_ORACLE
+/* SetHalODMVar from librust_hal_dm_set_odm_var_rx.a */
+#endif
+
 struct vector {
 	char name[48];
 	char case_name[24];

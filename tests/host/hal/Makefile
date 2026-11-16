@@ -82,7 +82,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
 	test-dm-set-odm-var-core test-dm-set-odm-var-core-rust \
-	test-dm-set-odm-var-rx \
+	test-dm-set-odm-var-rx test-dm-set-odm-var-rx-rust \
 	test-dm-min-rssi-phy-cnt test-dm-min-rssi-phy-cnt-rust \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust \
 	test-usb-sync-read test-usb-sync-read-rust test-usb-sync-write \
@@ -109,7 +109,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
 	test-dm-set-odm-var-core test-dm-set-odm-var-core-rust \
-	test-dm-set-odm-var-rx \
+	test-dm-set-odm-var-rx test-dm-set-odm-var-rx-rust \
 	test-dm-min-rssi-phy-cnt test-dm-min-rssi-phy-cnt-rust \
 	test-usb-vendor-wvalue test-usb-vendor-wvalue-rust test-usb-sync-read \
 	test-usb-sync-read-rust test-usb-sync-write test-usb-async-write \
@@ -915,6 +915,22 @@ test_hal_dm_set_odm_var_rx: test_hal_dm_set_odm_var_rx.c \
 		$(DM_SET_ODM_VAR_RX_ORACLE) $(DM_SET_ODM_VAR_RX_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -I$(ROOT)/tests/host/include -o $@ test_hal_dm_set_odm_var_rx.c \
 		$(DM_SET_ODM_VAR_RX_ORACLE) $(DM_SET_ODM_VAR_RX_SHIM) $(HOST_JSON)
+
+RUST_HAL_DM_SET_ODM_VAR_RX := $(ROOT)/rust/hal_dm_set_odm_var_rx_host.rs
+
+librust_hal_dm_set_odm_var_rx.a: $(RUST_HAL_DM_SET_ODM_VAR_RX)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_dm_set_odm_var_rx_test \
+		--crate-type staticlib $(RUST_HAL_DM_SET_ODM_VAR_RX) -o $@
+
+test-dm-set-odm-var-rx-rust: test_hal_dm_set_odm_var_rx_rust
+	./test_hal_dm_set_odm_var_rx_rust hal_dm_set_odm_var_rx_vectors.json
+
+test_hal_dm_set_odm_var_rx_rust: test_hal_dm_set_odm_var_rx.c \
+		librust_hal_dm_set_odm_var_rx.a $(DM_SET_ODM_VAR_RX_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_DM_SET_ODM_VAR_RX_ORACLE -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_set_odm_var_rx.c $(DM_SET_ODM_VAR_RX_SHIM) $(HOST_JSON) \
+		librust_hal_dm_set_odm_var_rx.a
 
 test-usb-vendor-wvalue: test_hal_usb_vendor_wvalue
 	./test_hal_usb_vendor_wvalue hal_usb_vendor_wvalue_vectors.json

@@ -43,6 +43,8 @@ struct host_hal_dm_print_capture {
 void host_hal_dm_print_capture_reset(struct host_hal_dm_print_capture *cap);
 const char *host_hal_dm_print_capture_text(const struct host_hal_dm_print_capture *cap);
 
+void host_hal_dm_apply_rx_fixture_to_dm(_adapter *adapter);
+
 void host_hal_dm_set_odm_var_rx_fixture(
 	u8 is_linked, u8 rx_rate, s8 rssi_a, s8 rssi_b,
 	u8 cur_igi, s8 phydm_min_rssi, s8 dm_min_rssi,
