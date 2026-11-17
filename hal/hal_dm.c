@@ -40,6 +40,8 @@ void rtw_phydm_iqk_trigger(_adapter *adapter);
 #endif
 void rtw_phydm_iqk_trigger_all(_adapter *adapter);
 void rtw_phydm_lck_trigger(_adapter *adapter);
+void rtw_phydm_iqk_trigger_dbg(_adapter *adapter, bool recovery, bool clear,
+	bool segment);
 #endif
 
 /* A mapping from HalData to ODM. */
@@ -161,6 +163,7 @@ void rtw_phydm_iqk_trigger_all(_adapter *adapter)
 }
 #endif /* !CONFIG_RUST */
 
+#ifndef CONFIG_RUST
 void rtw_phydm_iqk_trigger_dbg(_adapter *adapter, bool recovery, bool clear, bool segment)
 {
 	struct dm_struct *p_dm_odm = adapter_to_phydm(adapter);
@@ -171,6 +174,7 @@ void rtw_phydm_iqk_trigger_dbg(_adapter *adapter, bool recovery, bool clear, boo
 		halrf_iqk_trigger(p_dm_odm, recovery);
 #endif
 }
+#endif /* !CONFIG_RUST */
 #ifndef CONFIG_RUST
 void rtw_phydm_lck_trigger(_adapter *adapter)
 {
