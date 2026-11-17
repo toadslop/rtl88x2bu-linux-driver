@@ -1,0 +1,39 @@
+{
+  "vectors": [
+    {
+      "name": "null_sta",
+      "sta_null": 1,
+      "macid_ctl_num": 4,
+      "mac_id": 0,
+      "rssi": 0,
+      "expect_warn_on": 1,
+      "expect_err": 1,
+      "expect_phydm_calls": 0,
+      "expect_dump": 0
+    },
+    {
+      "name": "mac_id_oob",
+      "sta_null": 0,
+      "macid_ctl_num": 4,
+      "mac_id": 8,
+      "rssi": 40,
+      "expect_warn_on": 0,
+      "expect_err": 0,
+      "expect_phydm_calls": 0,
+      "expect_dump": 0
+    },
+    {
+      "name": "valid_sta",
+      "sta_null": 0,
+      "macid_ctl_num": 4,
+      "mac_id": 2,
+      "rssi": 55,
+      "expect_warn_on": 0,
+      "expect_err": 0,
+      "expect_phydm_calls": 1,
+      "expect_mac_id": 2,
+      "expect_rssi": 55,
+      "expect_dump": 1
+    }
+  ]
+}
