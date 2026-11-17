@@ -2963,7 +2963,6 @@ ifneq ($(_rust_cfg_support_dynamic_txpwr),)
 rustflags-y += --cfg CONFIG_SUPPORT_DYNAMIC_TXPWR
 endif
 HAL_DM_L1_DYNTPWR_REF := $(if $(_rust_cfg_support_dynamic_txpwr),tests/host/hal/hal_dm_dyntxpwr_l1_ref.o,)
-HAL_DM_L1_TRX_CFG_REF := $(if $(_rust_cfg_ctrl_txss_by_tp),tests/host/hal/hal_dm_phydm_trx_cfg_l1_ref.o,)
 ifneq ($(_rust_cfg_lps_1t1r),)
 rustflags-y += --cfg config_lps_1t1r
 endif
@@ -3119,6 +3118,7 @@ endif
 ifneq ($(_rust_cfg_ctrl_txss_by_tp),)
 rustflags-y += --cfg config_ctrl_txss_by_tp
 endif
+HAL_DM_L1_TRX_CFG_REF := $(if $(_rust_cfg_ctrl_txss_by_tp),tests/host/hal/hal_dm_phydm_trx_cfg_l1_ref.o,)
 _rust_cfg_dbg_ctrl_txss :=
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+DBG_CTRL_TXSS' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 _rust_cfg_dbg_ctrl_txss := y
