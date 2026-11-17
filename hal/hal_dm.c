@@ -1746,6 +1746,7 @@ void rtw_phydm_init(_adapter *adapter)
 #endif
 }
 
+#ifndef CONFIG_RUST
 bool rtw_phydm_set_crystal_cap(_adapter *adapter, u8 crystal_cap)
 {
 	PHAL_DATA_TYPE	hal_data = GET_HAL_DATA(adapter);
@@ -1753,6 +1754,7 @@ bool rtw_phydm_set_crystal_cap(_adapter *adapter, u8 crystal_cap)
 
 	return phydm_set_crystal_cap_reg(phydm, crystal_cap);
 }
+#endif /* !CONFIG_RUST */
 
 #ifdef CONFIG_LPS_PG
 /*

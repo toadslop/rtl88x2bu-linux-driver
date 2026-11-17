@@ -951,6 +951,24 @@ test_hal_dm_phydm_crystal_cap: test_hal_dm_phydm_crystal_cap.c \
 	$(CC) $(CFLAGS) -I$(ROOT)/tests/host/include -o $@ \
 		test_hal_dm_phydm_crystal_cap.c $(DM_PHYDM_CRYSTAL_CAP_ORACLE) $(HOST_JSON)
 
+RUST_HAL_DM_PHYDM_CRYSTAL_CAP := $(ROOT)/rust/hal_dm_phydm_crystal_cap_host.rs
+RUST_HAL_DM_CRYSTAL_CAP_CFG := --cfg host_hal_dm_phydm_crystal_cap_test
+
+librust_hal_dm_phydm_crystal_cap.a: $(RUST_HAL_DM_PHYDM_CRYSTAL_CAP)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		$(RUST_HAL_DM_CRYSTAL_CAP_CFG) --crate-type staticlib \
+		$(RUST_HAL_DM_PHYDM_CRYSTAL_CAP) -o $@
+
+test-dm-phydm-crystal-cap-rust: test_hal_dm_phydm_crystal_cap_rust
+	./test_hal_dm_phydm_crystal_cap_rust hal_dm_phydm_crystal_cap_vectors.json
+
+test_hal_dm_phydm_crystal_cap_rust: test_hal_dm_phydm_crystal_cap.c \
+		librust_hal_dm_phydm_crystal_cap.a $(DM_PHYDM_CRYSTAL_CAP_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_DM_PHYDM_CRYSTAL_CAP_ORACLE \
+		-I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_phydm_crystal_cap.c $(DM_PHYDM_CRYSTAL_CAP_SHIM) $(HOST_JSON) \
+		librust_hal_dm_phydm_crystal_cap.a
+
 DM_INIT_ODM_TAIL_SHIM := hal_dm_init_odm_cominfo_tail_shim.c
 DM_INIT_ODM_TAIL_ORACLE := hal_dm_init_odm_cominfo_tail_c_oracle.c
 

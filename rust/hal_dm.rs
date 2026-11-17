@@ -3,7 +3,7 @@
 //! `dump_sta_traffic` (`W4-32`), FW offload caps (`W4-79`), Init_ODM mid block (`W4-85`),
 //! Init_ODM ComInfo tail hooks (`W4-88`), PHYDM IGI / IQK queries (`W4-92`),
 //! SetHalODMVar core cases (`W4-94`), RX info dump (`W4-96`), IQK/LCK RFK triggers (`W4-98`),
-//! PHYDM cal trigger orchestration (`W4-101`)
+//! PHYDM cal trigger orchestration (`W4-101`), crystal cap setter (`W4-104`)
 //! from `hal/hal_dm.c`.
 
 #![allow(
@@ -730,6 +730,7 @@ mod init_odm_cominfo_tail {
     host_hal_dm_set_odm_var_core_test,
     host_hal_dm_get_odm_var_test,
         host_hal_dm_phydm_rrsr_test,
+        host_hal_dm_phydm_crystal_cap_test,
 )))]
 mod phydm_ops {
     include!("hal_dm_phydm_ops.inc.rs");
@@ -752,6 +753,7 @@ mod phydm_ops {
         host_hal_dm_set_odm_var_core_test,
         host_hal_dm_get_odm_var_test,
         host_hal_dm_phydm_rrsr_test,
+        host_hal_dm_phydm_crystal_cap_test,
     ))
 ))]
 mod phydm_igi_iqk {
@@ -815,6 +817,7 @@ mod phydm_cal_trigger {
         host_hal_dm_set_odm_var_core_test,
         host_hal_dm_get_odm_var_test,
         host_hal_dm_phydm_rrsr_test,
+        host_hal_dm_phydm_crystal_cap_test,
     ))
 ))]
 mod min_rssi_phy_cnt {
@@ -836,6 +839,7 @@ mod min_rssi_phy_cnt {
         host_hal_dm_set_odm_var_core_test,
         host_hal_dm_get_odm_var_test,
         host_hal_dm_phydm_rrsr_test,
+        host_hal_dm_phydm_crystal_cap_test,
     ))
 ))]
 mod set_odm_var_core {
@@ -845,6 +849,7 @@ mod set_odm_var_core {
 #[cfg(any(
     host_hal_dm_get_odm_var_test,
         host_hal_dm_phydm_rrsr_test,
+        host_hal_dm_phydm_crystal_cap_test,
     not(any(
         host_hal_dm_board_type_test,
         host_hal_dm_odm_endian_hooks_test,
@@ -858,6 +863,7 @@ mod set_odm_var_core {
         host_hal_dm_set_odm_var_core_test,
         host_hal_dm_get_odm_var_test,
         host_hal_dm_phydm_rrsr_test,
+        host_hal_dm_phydm_crystal_cap_test,
     ))
 ))]
 mod get_odm_var {
@@ -880,8 +886,32 @@ mod get_odm_var {
         host_hal_dm_set_odm_var_core_test,
         host_hal_dm_get_odm_var_test,
         host_hal_dm_phydm_rrsr_test,
+        host_hal_dm_phydm_crystal_cap_test,
     ))
 ))]
 mod phydm_rrsr {
     include!("hal_dm_phydm_rrsr.inc.rs");
+}
+
+#[cfg(any(
+    host_hal_dm_phydm_crystal_cap_test,
+    not(any(
+        host_hal_dm_board_type_test,
+        host_hal_dm_odm_endian_hooks_test,
+        host_hal_dm_dump_sta_info_test,
+        host_hal_dm_dump_sta_traffic_test,
+        host_hal_dm_odm_iface_test,
+        host_hal_dm_init_odm_mid_test,
+        host_hal_dm_init_odm_cominfo_tail_test,
+        host_hal_dm_phydm_igi_iqk_test,
+        host_hal_dm_phydm_iqk_lck_test,
+        host_hal_dm_min_rssi_phy_cnt_test,
+        host_hal_dm_set_odm_var_core_test,
+        host_hal_dm_get_odm_var_test,
+        host_hal_dm_phydm_rrsr_test,
+        host_hal_dm_phydm_crystal_cap_test,
+    ))
+))]
+mod phydm_crystal_cap {
+    include!("hal_dm_phydm_crystal_cap.inc.rs");
 }
