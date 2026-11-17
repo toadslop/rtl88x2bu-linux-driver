@@ -66,6 +66,8 @@ DM_PHYDM_TRX_CFG_SHIM := hal_dm_phydm_trx_cfg_host_shim.c
 DM_PHYDM_TRX_CFG_CFLAGS := -DCONFIG_CTRL_TXSS_BY_TP
 DM_CFG_PHY_PARA_ORACLE := hal_dm_cfg_phy_para_c_oracle.c
 DM_CFG_PHY_PARA_SHIM := hal_dm_cfg_phy_para_host_shim.c
+DM_HALMAC_DM_LEAF_ORACLE := hal_dm_halmac_dm_leaf_c_oracle.c
+DM_HALMAC_DM_LEAF_SHIM := hal_dm_halmac_dm_leaf_host_shim.c
 USB_WVALUE_ORACLE := hal_usb_vendor_wvalue_c_oracle.c
 USB_SYNC_READ_ORACLE := hal_usb_sync_read_c_oracle.c
 USB_SYNC_WRITE_ORACLE := hal_usb_sync_write_c_oracle.c
@@ -1120,6 +1122,33 @@ test_hal_dm_cfg_phy_para_rust: test_hal_dm_cfg_phy_para.c \
 		-I$(ROOT)/tests/host/include -o $@ \
 		test_hal_dm_cfg_phy_para.c $(DM_CFG_PHY_PARA_SHIM) $(HOST_JSON) \
 		librust_hal_dm_cfg_phy_para.a
+
+test-dm-halmac-dm-leaf: test_hal_dm_halmac_dm_leaf
+	./test_hal_dm_halmac_dm_leaf hal_dm_halmac_dm_leaf_vectors.json
+
+test_hal_dm_halmac_dm_leaf: test_hal_dm_halmac_dm_leaf.c \
+		$(DM_HALMAC_DM_LEAF_ORACLE) $(DM_HALMAC_DM_LEAF_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_halmac_dm_leaf.c $(DM_HALMAC_DM_LEAF_ORACLE) \
+		$(DM_HALMAC_DM_LEAF_SHIM) $(HOST_JSON)
+
+RUST_HAL_DM_HALMAC_DM_LEAF := $(ROOT)/rust/hal_dm_halmac_dm_leaf_host.rs
+RUST_HAL_DM_HALMAC_DM_LEAF_CFG := --cfg host_hal_dm_halmac_dm_leaf_test --cfg config_rtw_halmac
+
+librust_hal_dm_halmac_dm_leaf.a: $(RUST_HAL_DM_HALMAC_DM_LEAF)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		$(RUST_HAL_DM_HALMAC_DM_LEAF_CFG) --crate-type staticlib \
+		$(RUST_HAL_DM_HALMAC_DM_LEAF) -o $@
+
+test-dm-halmac-dm-leaf-rust: test_hal_dm_halmac_dm_leaf_rust
+	./test_hal_dm_halmac_dm_leaf_rust hal_dm_halmac_dm_leaf_vectors.json
+
+test_hal_dm_halmac_dm_leaf_rust: test_hal_dm_halmac_dm_leaf.c \
+		librust_hal_dm_halmac_dm_leaf.a $(DM_HALMAC_DM_LEAF_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_DM_HALMAC_DM_LEAF_ORACLE \
+		-I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_halmac_dm_leaf.c $(DM_HALMAC_DM_LEAF_SHIM) $(HOST_JSON) \
+		librust_hal_dm_halmac_dm_leaf.a
 
 DM_INIT_ODM_TAIL_SHIM := hal_dm_init_odm_cominfo_tail_shim.c
 DM_INIT_ODM_TAIL_ORACLE := hal_dm_init_odm_cominfo_tail_c_oracle.c
