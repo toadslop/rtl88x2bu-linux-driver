@@ -2459,26 +2459,32 @@ include $(src)/hal/phydm/phydm.mk
 
 ########### HAL_RTL8822B #################################
 ifeq ($(CONFIG_RTL8822B), y)
+# Chip cfgs for Rust `#[cfg(CONFIG_RTL8822B)]` (see rust/hal_dm_phydm_iqk_lck.inc.rs).
+rustflags-y += --cfg CONFIG_RTL8822B
 include $(src)/rtl8822b.mk
 endif
 
 ########### HAL_RTL8821C #################################
 ifeq ($(CONFIG_RTL8821C), y)
+rustflags-y += --cfg CONFIG_RTL8821C
 include $(src)/rtl8821c.mk
 endif
 
 ########### HAL_RTL8822C #################################
 ifeq ($(CONFIG_RTL8822C), y)
+rustflags-y += --cfg CONFIG_RTL8822C
 include $(src)/rtl8822c.mk
 endif
 
 ########### HAL_RTL8814B #################################
 ifeq ($(CONFIG_RTL8814B), y)
+rustflags-y += --cfg CONFIG_RTL8814B
 include $(src)/rtl8814b.mk
 endif
 
 ########### HAL_RTL8723F #################################
 ifeq ($(CONFIG_RTL8723F), y)
+rustflags-y += --cfg CONFIG_RTL8723F
 include $(src)/rtl8723f.mk
 endif
 
@@ -5400,6 +5406,10 @@ rust-objects-hal-dm-c:
 		-o tests/host/hal/hal_dm_phydm_igi_iqk_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_igi_iqk_c_oracle.c
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -DRTL8822B_SUPPORT=1 \
+		-o tests/host/hal/hal_dm_phydm_iqk_lck_l1_ref.o \
+		tests/host/hal/hal_dm_phydm_iqk_lck_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-I$(shell pwd)/tests/host/include \
 		-o tests/host/hal/hal_dm_min_rssi_phy_cnt_l1_ref.o \
 		tests/host/hal/hal_dm_min_rssi_phy_cnt_c_oracle.c
@@ -5423,6 +5433,7 @@ rust-objects-hal-dm-c:
 		tests/host/hal/hal_dm_init_odm_cominfo_tail_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_ops_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_igi_iqk_l1_ref.o \
+		tests/host/hal/hal_dm_phydm_iqk_lck_l1_ref.o \
 		tests/host/hal/hal_dm_min_rssi_phy_cnt_l1_ref.o \
 		tests/host/hal/hal_dm_set_odm_var_core_l1_ref.o \
 		tests/host/hal/hal_dm_get_odm_var_l1_ref.o
