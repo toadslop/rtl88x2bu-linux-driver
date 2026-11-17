@@ -373,6 +373,15 @@ files=(
   wave4-102-hal-dm-rrsr-ctrl.md
   wave4-103-hal-dm-runtime-trx-path.md
   wave4-104-hal-dm-crystal-cap.md
+  wave4-105-hal-dm-iqk-trigger-dbg.md
+  wave4-106-hal-dm-dbg-rf-cal-test.md
+  wave4-107-hal-dm-ra-registed.md
+  wave4-108-hal-dm-trx-cfg-txss.md
+  wave4-109-hal-dm-halmac-dm-leaf.md
+  wave4-110-hal-dm-cfg-phy-para.md
+  wave4-111-hal-dm-dyn-soml.md
+  wave4-112-hal-dm-read-efuse-trim.md
+  wave4-113-hal-dm-phydm-init.md
   wave3-161-debug-proc-rate-setter.md
   wave3-162-debug-proc-rx-cnt-dump.md
   wave3-163-debug-proc-ps-dbg.md

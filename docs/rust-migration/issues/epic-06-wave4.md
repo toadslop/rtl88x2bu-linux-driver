@@ -214,4 +214,18 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-103 | `wave4-103-hal-dm-runtime-trx-path.md` | Runtime TRX path decision (8822B) |
 | W4-104 | `wave4-104-hal-dm-crystal-cap.md` | Crystal cap register setter |
 
+## Children (tranche 21 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-105 | `wave4-105-hal-dm-iqk-trigger-dbg.md` | IQK trigger debug wrapper |
+| W4-106 | `wave4-106-hal-dm-dbg-rf-cal-test.md` | DBG RF cal test wrappers |
+| W4-107 | `wave4-107-hal-dm-ra-registed.md` | PHYDM RA registered hook |
+| W4-108 | `wave4-108-hal-dm-trx-cfg-txss.md` | TRX cfg for TX SS by throughput |
+| W4-109 | `wave4-109-hal-dm-halmac-dm-leaf.md` | HALMAC DM leaf delegates |
+| W4-110 | `wave4-110-hal-dm-cfg-phy-para.md` | PHYDM HALMAC cfg_phy_para mapper |
+| W4-111 | `wave4-111-hal-dm-dyn-soml.md` | Dynamic SOML helpers |
+| W4-112 | `wave4-112-hal-dm-read-efuse-trim.md` | PHYDM efuse trim read hooks |
+| W4-113 | `wave4-113-hal-dm-phydm-init.md` | PHYDM init orchestration |
+
 Further slices: USB bulk port bodies stay under Wave 5 `os_dep`; file new `wave4-*.md` parallel lanes as hal_dm / hal_com tails thin.
