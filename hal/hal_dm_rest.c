@@ -674,6 +674,21 @@ struct macid_ctl_t *rtw_rust_hal_dm_dvobj_to_macidctl(struct dvobj_priv *dvobj)
 	return dvobj_to_macidctl(dvobj);
 }
 
+u8 rtw_rust_hal_dm_macidctl_num(struct macid_ctl_t *ctl)
+{
+	return ctl ? ctl->num : 0;
+}
+
+void rtw_rust_hal_dm_err_ra_null_sta(_adapter *adapter)
+{
+	RTW_ERR(FUNC_ADPT_FMT " sta is NULL\n", FUNC_ADPT_ARG(adapter));
+}
+
+void rtw_rust_hal_dm_warn_on(int cond)
+{
+	rtw_warn_on(cond);
+}
+
 void rtw_rust_hal_dm_init_odm_tail_finish(struct dm_struct *phydm)
 {
 	if (!phydm)
