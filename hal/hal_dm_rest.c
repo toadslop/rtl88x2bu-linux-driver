@@ -735,19 +735,23 @@ u8 rtw_rust_hal_dm_runtime_trx_max_tx_cnt(_adapter *adapter)
 	return GET_HAL_DATA(adapter)->max_tx_cnt;
 }
 
-#ifdef CONFIG_RTW_PATH_DIV
 u8 rtw_rust_hal_dm_runtime_trx_path_div(_adapter *adapter)
 {
+#ifdef CONFIG_RTW_PATH_DIV
 	return adapter->registrypriv.path_div;
-}
+#else
+	return 0;
 #endif
+}
 
-#ifdef CONFIG_RTW_TX_NPATH_EN
 u8 rtw_rust_hal_dm_runtime_trx_tx_npath(_adapter *adapter)
 {
+#ifdef CONFIG_RTW_TX_NPATH_EN
 	return adapter->registrypriv.tx_npath;
-}
+#else
+	return 0;
 #endif
+}
 
 u32 rtw_rust_hal_dm_runtime_trx_get_txpath_nss0(_adapter *adapter)
 {

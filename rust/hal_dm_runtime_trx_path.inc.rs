@@ -22,9 +22,7 @@ unsafe extern "C" {
     );
     fn rtw_rust_hal_dm_runtime_trx_nss_default(adapter: *mut c_void);
     fn rtw_rust_hal_dm_runtime_trx_max_tx_cnt(adapter: *mut c_void) -> U8;
-    #[cfg(CONFIG_RTW_PATH_DIV)]
     fn rtw_rust_hal_dm_runtime_trx_path_div(adapter: *mut c_void) -> U8;
-    #[cfg(CONFIG_RTW_TX_NPATH_EN)]
     fn rtw_rust_hal_dm_runtime_trx_tx_npath(adapter: *mut c_void) -> U8;
     fn rtw_rust_hal_dm_runtime_trx_get_txpath_nss0(adapter: *mut c_void) -> U32;
     fn rtw_rust_hal_dm_runtime_trx_set_txpath_nss0(
@@ -54,6 +52,8 @@ fn count_path_bits(txpath_1ss: U32) -> U8 {
 
 #[cfg(any(CONFIG_RTL8192F, CONFIG_RTL8822B, CONFIG_RTL8822C))]
 unsafe fn apply_8822_family_paths(adapter: *mut c_void, txpath: &mut U32) -> Option<U32> {
+    // SAFETY: caller holds a valid adapter matching kernel entry expectations.
+    unsafe {
     let max_tx_cnt = rtw_rust_hal_dm_runtime_trx_max_tx_cnt(adapter);
     let txpath_1ss;
 
@@ -98,6 +98,7 @@ unsafe fn apply_8822_family_paths(adapter: *mut c_void, txpath: &mut U32) -> Opt
         rtw_rust_hal_dm_runtime_trx_set_txpath_nss0(adapter, txpath_1ss, num);
     }
     Some(txpath_1ss)
+    }
 }
 
 #[no_mangle]
