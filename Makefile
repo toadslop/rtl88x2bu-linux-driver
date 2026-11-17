@@ -2963,6 +2963,7 @@ ifneq ($(_rust_cfg_support_dynamic_txpwr),)
 rustflags-y += --cfg CONFIG_SUPPORT_DYNAMIC_TXPWR
 endif
 HAL_DM_L1_DYNTPWR_REF := $(if $(_rust_cfg_support_dynamic_txpwr),tests/host/hal/hal_dm_dyntxpwr_l1_ref.o,)
+HAL_DM_L1_TRX_CFG_REF := $(if $(_rust_cfg_ctrl_txss_by_tp),tests/host/hal/hal_dm_phydm_trx_cfg_l1_ref.o,)
 ifneq ($(_rust_cfg_lps_1t1r),)
 rustflags-y += --cfg config_lps_1t1r
 endif
@@ -5473,6 +5474,12 @@ rust-objects-hal-dm-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_dm_runtime_trx_path_l1_ref.o \
 		tests/host/hal/hal_dm_runtime_trx_path_l1_ref.c
+ifneq ($(_rust_cfg_ctrl_txss_by_tp),)
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-DCONFIG_CTRL_TXSS_BY_TP \
+		-o tests/host/hal/hal_dm_phydm_trx_cfg_l1_ref.o \
+		tests/host/hal/hal_dm_phydm_trx_cfg_l1_ref.c
+endif
 	$(MAKE) rust-objects-hal-dm-c-dyntxpwr
 	ld -r -o tests/host/hal/hal_dm_l1_ref.o \
 		tests/host/hal/hal_dm_board_type_l1_ref.o \
@@ -5495,7 +5502,8 @@ rust-objects-hal-dm-c:
 		tests/host/hal/hal_dm_phydm_iqk_trigger_dbg_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_ra_registed_l1_ref.o \
 		tests/host/hal/hal_dm_runtime_trx_path_l1_ref.o \
-		$(HAL_DM_L1_DYNTPWR_REF)
+		$(HAL_DM_L1_DYNTPWR_REF) \
+		$(HAL_DM_L1_TRX_CFG_REF)
 rust-check-symbols-hal-dm: rust-objects-hal-dm-c rust-objects-hal-dm
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_dm_l1_ref.o NEW=rust/hal_dm.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_dm.allow ALLOW_VACUOUS=1
