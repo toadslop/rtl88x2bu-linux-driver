@@ -1,0 +1,64 @@
+{
+  "vectors": [
+    {
+      "name": "arg_value_write_reg",
+      "op": "set_rrsr",
+      "reg_set_rrsr": 4294967295,
+      "rrsr_arg": 65809,
+      "write_rrsr": 1,
+      "en_rrsr": 0,
+      "expect_rrsr": 65809,
+      "expect_cmn_update": 1,
+      "expect_reg_set": 1,
+      "expect_rrsr_en": 0
+    },
+    {
+      "name": "registry_override",
+      "op": "set_rrsr",
+      "reg_set_rrsr": 12345,
+      "rrsr_arg": 65809,
+      "write_rrsr": 1,
+      "en_rrsr": 0,
+      "expect_rrsr": 12345,
+      "expect_cmn_update": 1,
+      "expect_reg_set": 1,
+      "expect_rrsr_en": 0
+    },
+    {
+      "name": "cmn_only_no_hw_write",
+      "op": "set_rrsr",
+      "reg_set_rrsr": 4294967295,
+      "rrsr_arg": 15,
+      "write_rrsr": 0,
+      "en_rrsr": 0,
+      "expect_rrsr": 15,
+      "expect_cmn_update": 1,
+      "expect_reg_set": 0,
+      "expect_rrsr_en": 0
+    },
+    {
+      "name": "dyn_rrsr_on",
+      "op": "dyn_en",
+      "reg_set_rrsr": 4294967295,
+      "rrsr_arg": 0,
+      "write_rrsr": 0,
+      "en_rrsr": 1,
+      "expect_rrsr": 0,
+      "expect_cmn_update": 0,
+      "expect_reg_set": 0,
+      "expect_rrsr_en": 1
+    },
+    {
+      "name": "dyn_rrsr_off",
+      "op": "dyn_en",
+      "reg_set_rrsr": 4294967295,
+      "rrsr_arg": 0,
+      "write_rrsr": 0,
+      "en_rrsr": 0,
+      "expect_rrsr": 0,
+      "expect_cmn_update": 0,
+      "expect_reg_set": 0,
+      "expect_rrsr_en": 0
+    }
+  ]
+}
