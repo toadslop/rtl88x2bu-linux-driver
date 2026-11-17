@@ -719,4 +719,84 @@ void rtw_rust_hal_dm_odm_set_dyntxpwr(void *dm_void, u8 *desc, u8 sta_id)
 	if (dtp->last_tx_power != dtp->dyn_tx_power)
 		dtp->last_tx_power = dtp->dyn_tx_power;
 }
+
+/* W4-103 — runtime TRX path decision shims for rust/hal_dm_runtime_trx_path.inc.rs */
+
+void rtw_rust_hal_dm_runtime_trx_nss_default(_adapter *adapter)
+{
+	PHAL_DATA_TYPE hal = GET_HAL_DATA(adapter);
+
+	tx_path_nss_set_default(hal->txpath_nss, hal->txpath_num_nss,
+				GET_HAL_TX_PATH_BMP(adapter));
+}
+
+u8 rtw_rust_hal_dm_runtime_trx_max_tx_cnt(_adapter *adapter)
+{
+	return GET_HAL_DATA(adapter)->max_tx_cnt;
+}
+
+u8 rtw_rust_hal_dm_runtime_trx_path_div(_adapter *adapter)
+{
+#ifdef CONFIG_RTW_PATH_DIV
+	return adapter->registrypriv.path_div;
+#else
+	return 0;
+#endif
+}
+
+u8 rtw_rust_hal_dm_runtime_trx_tx_npath(_adapter *adapter)
+{
+#ifdef CONFIG_RTW_TX_NPATH_EN
+	return adapter->registrypriv.tx_npath;
+#else
+	return 0;
+#endif
+}
+
+u32 rtw_rust_hal_dm_runtime_trx_get_txpath_nss0(_adapter *adapter)
+{
+	return GET_HAL_DATA(adapter)->txpath_nss[0];
+}
+
+void rtw_rust_hal_dm_runtime_trx_set_txpath_nss0(_adapter *adapter,
+					       u32 txpath_1ss, u8 num)
+{
+	PHAL_DATA_TYPE hal = GET_HAL_DATA(adapter);
+
+	hal->txpath_nss[0] = txpath_1ss;
+	hal->txpath_num_nss[0] = num;
+}
+
+void rtw_rust_hal_dm_runtime_trx_set_paths(_adapter *adapter,
+					 u32 txpath, u32 rxpath)
+{
+	PHAL_DATA_TYPE hal = GET_HAL_DATA(adapter);
+
+	hal->txpath = txpath;
+	hal->rxpath = rxpath;
+}
+
+void rtw_rust_hal_dm_runtime_trx_dump(void *sel, _adapter *adapter)
+{
+	dump_hal_runtime_trx_mode(sel, adapter);
+}
+
+void rtw_rust_hal_dm_runtime_trx_log_empty_tx(void)
+{
+	RTW_ERR("%s tx_path_bmp is empty\n", "rtw_hal_runtime_trx_path_decision");
+	rtw_warn_on(1);
+}
+
+void rtw_rust_hal_dm_runtime_trx_log_empty_rx(void)
+{
+	RTW_ERR("%s rx_path_bmp is empty\n", "rtw_hal_runtime_trx_path_decision");
+	rtw_warn_on(1);
+}
+
+void rtw_rust_hal_dm_runtime_trx_log_invalid_max_tx_cnt(u8 max_tx_cnt)
+{
+	RTW_ERR("%s invalid max_tx_cnt:%u\n", "rtw_hal_runtime_trx_path_decision",
+		max_tx_cnt);
+	rtw_warn_on(1);
+}
 #endif /* CONFIG_RUST */

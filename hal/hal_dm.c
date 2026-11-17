@@ -1586,6 +1586,7 @@ void rtw_phydm_trx_cfg(_adapter *adapter, bool tx_1ss)
 }
 #endif
 
+#ifndef CONFIG_RUST
 u8 rtw_hal_runtime_trx_path_decision(_adapter *adapter)
 {
 	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
@@ -1680,6 +1681,7 @@ u8 rtw_hal_runtime_trx_path_decision(_adapter *adapter)
 exit:
 	return rst;
 }
+#endif /* !CONFIG_RUST */
 
 /*
 * trx_mode init - 8822B / 8822C / 8192F
