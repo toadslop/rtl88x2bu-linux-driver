@@ -51,6 +51,10 @@ DM_PHYDM_RRSR_ORACLE := hal_dm_phydm_rrsr_c_oracle.c
 DM_PHYDM_RRSR_SHIM := hal_dm_phydm_rrsr_host_shim.c
 DM_PHYDM_CRYSTAL_CAP_ORACLE := hal_dm_phydm_crystal_cap_c_oracle.c
 DM_PHYDM_CRYSTAL_CAP_SHIM := hal_dm_phydm_crystal_cap_host_shim.c
+DM_RUNTIME_TRX_ORACLE := hal_dm_runtime_trx_path_c_oracle.c
+DM_RUNTIME_TRX_SHIM := hal_dm_runtime_trx_path_host_shim.c
+RUNTIME_TRX_CFLAGS := $(CFLAGS) -DCONFIG_RTL8822B -DCONFIG_RTW_PATH_DIV \
+	-DCONFIG_RTW_TX_NPATH_EN
 USB_WVALUE_ORACLE := hal_usb_vendor_wvalue_c_oracle.c
 USB_SYNC_READ_ORACLE := hal_usb_sync_read_c_oracle.c
 USB_SYNC_WRITE_ORACLE := hal_usb_sync_write_c_oracle.c
@@ -968,6 +972,15 @@ test_hal_dm_phydm_crystal_cap_rust: test_hal_dm_phydm_crystal_cap.c \
 		-I$(ROOT)/tests/host/include -o $@ \
 		test_hal_dm_phydm_crystal_cap.c $(DM_PHYDM_CRYSTAL_CAP_SHIM) $(HOST_JSON) \
 		librust_hal_dm_phydm_crystal_cap.a
+
+test-dm-runtime-trx-path: test_hal_dm_runtime_trx_path
+	./test_hal_dm_runtime_trx_path hal_dm_runtime_trx_path_vectors.json
+
+test_hal_dm_runtime_trx_path: test_hal_dm_runtime_trx_path.c \
+		$(DM_RUNTIME_TRX_ORACLE) $(DM_RUNTIME_TRX_SHIM) $(HOST_JSON)
+	$(CC) $(RUNTIME_TRX_CFLAGS) -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_runtime_trx_path.c $(DM_RUNTIME_TRX_ORACLE) \
+		$(DM_RUNTIME_TRX_SHIM) $(HOST_JSON)
 
 DM_INIT_ODM_TAIL_SHIM := hal_dm_init_odm_cominfo_tail_shim.c
 DM_INIT_ODM_TAIL_ORACLE := hal_dm_init_odm_cominfo_tail_c_oracle.c
