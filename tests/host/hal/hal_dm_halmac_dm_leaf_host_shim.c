@@ -40,5 +40,5 @@ struct dvobj_host *rtw_rust_hal_dm_adapter_to_dvobj(_adapter *adapter)
 
 void *rtw_rust_hal_dm_phydm_adapter(struct dm_struct *dm)
 {
-	return dm->adapter;
+	return dm ? (void *)dm->adapter : NULL;
 }

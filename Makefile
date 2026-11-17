@@ -5480,6 +5480,9 @@ ifneq ($(_rust_cfg_ctrl_txss_by_tp),)
 		-o tests/host/hal/hal_dm_phydm_trx_cfg_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_trx_cfg_l1_ref.c
 endif
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_dm_halmac_dm_leaf_l1_ref.o \
+		tests/host/hal/hal_dm_halmac_dm_leaf_l1_ref.c
 	$(MAKE) rust-objects-hal-dm-c-dyntxpwr
 	ld -r -o tests/host/hal/hal_dm_l1_ref.o \
 		tests/host/hal/hal_dm_board_type_l1_ref.o \
@@ -5503,7 +5506,8 @@ endif
 		tests/host/hal/hal_dm_phydm_ra_registed_l1_ref.o \
 		tests/host/hal/hal_dm_runtime_trx_path_l1_ref.o \
 		$(HAL_DM_L1_DYNTPWR_REF) \
-		$(HAL_DM_L1_TRX_CFG_REF)
+		$(HAL_DM_L1_TRX_CFG_REF) \
+		tests/host/hal/hal_dm_halmac_dm_leaf_l1_ref.o
 rust-check-symbols-hal-dm: rust-objects-hal-dm-c rust-objects-hal-dm
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_dm_l1_ref.o NEW=rust/hal_dm.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_dm.allow ALLOW_VACUOUS=1
