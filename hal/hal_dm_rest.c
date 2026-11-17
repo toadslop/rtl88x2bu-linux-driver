@@ -792,4 +792,11 @@ void rtw_rust_hal_dm_runtime_trx_log_empty_rx(void)
 	RTW_ERR("%s rx_path_bmp is empty\n", "rtw_hal_runtime_trx_path_decision");
 	rtw_warn_on(1);
 }
+
+void rtw_rust_hal_dm_runtime_trx_log_invalid_max_tx_cnt(u8 max_tx_cnt)
+{
+	RTW_ERR("%s invalid max_tx_cnt:%u\n", "rtw_hal_runtime_trx_path_decision",
+		max_tx_cnt);
+	rtw_warn_on(1);
+}
 #endif /* CONFIG_RUST */

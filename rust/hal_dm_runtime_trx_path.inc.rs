@@ -38,6 +38,7 @@ unsafe extern "C" {
     fn rtw_rust_hal_dm_runtime_trx_dump(sel: *mut c_void, adapter: *mut c_void);
     fn rtw_rust_hal_dm_runtime_trx_log_empty_tx();
     fn rtw_rust_hal_dm_runtime_trx_log_empty_rx();
+    fn rtw_rust_hal_dm_runtime_trx_log_invalid_max_tx_cnt(max_tx_cnt: U8);
 }
 
 fn count_path_bits(txpath_1ss: U32) -> U8 {
@@ -62,22 +63,17 @@ unsafe fn apply_8822_family_paths(adapter: *mut c_void, txpath: &mut U32) -> Opt
     } else {
         match max_tx_cnt {
             2 => {
-                txpath_1ss = if cfg!(CONFIG_RTW_TX_NPATH_EN)
-                    && rtw_rust_hal_dm_runtime_trx_tx_npath(adapter) == 1
-                {
+                // C shims return 0 when CONFIG_RTW_TX_NPATH_EN / CONFIG_RTW_PATH_DIV are unset.
+                txpath_1ss = if rtw_rust_hal_dm_runtime_trx_tx_npath(adapter) == 1 {
                     BB_PATH_AB
-                } else if cfg!(CONFIG_RTW_PATH_DIV)
-                    && rtw_rust_hal_dm_runtime_trx_path_div(adapter) == 1
-                {
+                } else if rtw_rust_hal_dm_runtime_trx_path_div(adapter) == 1 {
                     BB_PATH_AUTO
                 } else {
                     BB_PATH_A
                 };
             }
             1 => {
-                if cfg!(CONFIG_RTW_PATH_DIV)
-                    && rtw_rust_hal_dm_runtime_trx_path_div(adapter) == 1
-                {
+                if rtw_rust_hal_dm_runtime_trx_path_div(adapter) == 1 {
                     *txpath = BB_PATH_AUTO;
                     txpath_1ss = BB_PATH_AUTO;
                 } else {
@@ -85,7 +81,10 @@ unsafe fn apply_8822_family_paths(adapter: *mut c_void, txpath: &mut U32) -> Opt
                     txpath_1ss = BB_PATH_A;
                 }
             }
-            _ => return None,
+            _ => {
+                rtw_rust_hal_dm_runtime_trx_log_invalid_max_tx_cnt(max_tx_cnt);
+                return None;
+            }
         }
     }
 
