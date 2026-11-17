@@ -190,35 +190,32 @@ pub extern "C" fn rtw_hal_update_sta_rate_mask(adapter: *mut Adapter, psta: *mut
             mask |= unsafe { rtw_get_bit_value_from_ieee_value(r & 0x7f) as u64 };
         }
     }
-    #[cfg(any(config_80211n_ht, host_hal_com_update_sta_smps_rate_test))]
-    {
-        let ht_en = unsafe { rtw_rust_hal_com_adapter_ht_enabled(adapter) };
-        let mode = unsafe { rtw_rust_hal_com_adapter_wireless_mode(adapter) };
-        if ht_en != 0 && is_supported_ht(mode) {
-            let mut tx = unsafe { rtw_rust_hal_com_get_hal_tx_nss(adapter) };
-            let vht = unsafe { rtw_rust_hal_com_sta_vht_option(psta) };
-            if vht != 0 {
-                #[cfg(config_80211ac_vht)]
-                {
-                    let mut map = [0u8; 2];
-                    map[0] = unsafe { rtw_rust_hal_com_sta_vht_mcs_map(psta, 0) };
-                    map[1] = unsafe { rtw_rust_hal_com_sta_vht_mcs_map(psta, 1) };
-                    mask |= unsafe { rtw_vht_mcs_map_to_bitmap(map.as_mut_ptr(), tx) << 12 };
-                }
-            } else if unsafe { rtw_rust_hal_com_sta_ht_option(psta) } != 0 {
-                let mut mcs = [0u8; 16];
-                for i in 0..16 {
-                    mcs[i] = unsafe { rtw_rust_hal_com_sta_ht_supp_mcs(psta, i) };
-                }
-                if unsafe { rtw_rust_hal_com_mlmepriv_is_ap(adapter) } != 0 {
-                    let sm = unsafe { rtw_rust_hal_com_sta_ht_smps_cap(psta) };
-                    if (sm == 0 || sm == 1) && tx > 1 {
-                        tx = 1;
-                    }
-                }
-                let ht = unsafe { rtw_ht_mcs_set_to_bitmap(mcs.as_mut_ptr(), tx) as u64 };
-                mask |= ht << 12;
+    // Kernel path: always fold HT/VHT MCS into ramask (matches C with CONFIG_80211N_HT
+    // and CONFIG_80211AC_VHT from autoconf.h). Module rustc also sees config_80211*
+    // via rust/generated_cfgs (T21); do not gate this block on those cfgs.
+    let ht_en = unsafe { rtw_rust_hal_com_adapter_ht_enabled(adapter) };
+    let mode = unsafe { rtw_rust_hal_com_adapter_wireless_mode(adapter) };
+    if ht_en != 0 && is_supported_ht(mode) {
+        let mut tx = unsafe { rtw_rust_hal_com_get_hal_tx_nss(adapter) };
+        let vht = unsafe { rtw_rust_hal_com_sta_vht_option(psta) };
+        if vht != 0 {
+            let mut map = [0u8; 2];
+            map[0] = unsafe { rtw_rust_hal_com_sta_vht_mcs_map(psta, 0) };
+            map[1] = unsafe { rtw_rust_hal_com_sta_vht_mcs_map(psta, 1) };
+            mask |= unsafe { rtw_vht_mcs_map_to_bitmap(map.as_mut_ptr(), tx) << 12 };
+        } else if unsafe { rtw_rust_hal_com_sta_ht_option(psta) } != 0 {
+            let mut mcs = [0u8; 16];
+            for i in 0..16 {
+                mcs[i] = unsafe { rtw_rust_hal_com_sta_ht_supp_mcs(psta, i) };
             }
+            if unsafe { rtw_rust_hal_com_mlmepriv_is_ap(adapter) } != 0 {
+                let sm = unsafe { rtw_rust_hal_com_sta_ht_smps_cap(psta) };
+                if (sm == 0 || sm == 1) && tx > 1 {
+                    tx = 1;
+                }
+            }
+            let ht = unsafe { rtw_ht_mcs_set_to_bitmap(mcs.as_mut_ptr(), tx) as u64 };
+            mask |= ht << 12;
         }
     }
     let ir = unsafe { get_highest_rate_idx(mask) & 0x3f };
