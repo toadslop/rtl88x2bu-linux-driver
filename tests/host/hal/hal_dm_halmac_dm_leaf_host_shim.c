@@ -27,3 +27,18 @@ int rtw_halmac_iqk(struct dvobj_host *d, u8 clear, u8 segment)
 	host_hal_dm_halmac_dm_leaf_trace.last_segment = segment;
 	return (int)host_hal_dm_halmac_dm_leaf_trace.iqk_stub_return;
 }
+
+struct dm_struct *rtw_rust_hal_dm_adapter_to_phydm(_adapter *adapter)
+{
+	return adapter_to_phydm(adapter);
+}
+
+struct dvobj_host *rtw_rust_hal_dm_adapter_to_dvobj(_adapter *adapter)
+{
+	return adapter_to_dvobj(adapter);
+}
+
+void *rtw_rust_hal_dm_phydm_adapter(struct dm_struct *dm)
+{
+	return dm->adapter;
+}

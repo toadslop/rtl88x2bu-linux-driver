@@ -7,6 +7,7 @@
 #include <string.h>
 
 typedef uint8_t u8;
+typedef int8_t s8;
 typedef u8 boolean;
 
 #ifndef RTW_HALMAC
@@ -45,7 +46,7 @@ typedef struct _adapter {
 struct host_hal_dm_halmac_dm_leaf_trace {
 	u8 rfe_calls;
 	u8 last_gpio;
-	u8 rfe_stub_return;
+	s8 rfe_stub_return;
 	u8 iqk_calls;
 	u8 last_clear;
 	u8 last_segment;

@@ -1,23 +1,32 @@
 {
-  "oracle": "hal/hal_dm.c rtw_phydm_rfe_ctrl_gpio + rtw_phydm_fw_iqk",
+  "oracle": "hal/hal_dm.c rtw_phydm_rfe_ctrl_gpio + rtw_phydm_fw_iqk (rfe: halmac 0 => phydm _FALSE, nonzero incl. -1 => _TRUE)",
   "vectors": [
     {
-      "name": "rfe_gpio_halmac_ok",
+      "name": "rfe_gpio_halmac_returns_zero_phydm_false",
       "op": "rfe_gpio",
       "gpio": 7,
-      "rfe_stub_return": 1,
-      "expect_bool": 1,
+      "rfe_stub_return": 0,
+      "expect_bool": 0,
       "expect_rfe_calls": 1,
       "expect_gpio": 7
     },
     {
-      "name": "rfe_gpio_halmac_fail",
+      "name": "rfe_gpio_halmac_returns_neg_one_phydm_true",
       "op": "rfe_gpio",
       "gpio": 2,
-      "rfe_stub_return": 0,
-      "expect_bool": 0,
+      "rfe_stub_return": -1,
+      "expect_bool": 1,
       "expect_rfe_calls": 1,
       "expect_gpio": 2
+    },
+    {
+      "name": "rfe_gpio_halmac_returns_one_phydm_true",
+      "op": "rfe_gpio",
+      "gpio": 3,
+      "rfe_stub_return": 1,
+      "expect_bool": 1,
+      "expect_rfe_calls": 1,
+      "expect_gpio": 3
     },
     {
       "name": "fw_iqk_halmac_success",
