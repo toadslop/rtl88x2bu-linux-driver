@@ -46,6 +46,7 @@ DM_GET_ODM_VAR_ORACLE := hal_dm_get_odm_var_c_oracle.c
 DM_GET_ODM_VAR_SHIM := hal_dm_get_odm_var_host_shim.c
 DM_GET_ODM_VAR_CFLAGS := -DCONFIG_ANTENNA_DIVERSITY
 DM_PHYDM_RRSR_ORACLE := hal_dm_phydm_rrsr_c_oracle.c
+DM_PHYDM_RRSR_SHIM := hal_dm_phydm_rrsr_host_shim.c
 USB_WVALUE_ORACLE := hal_usb_vendor_wvalue_c_oracle.c
 USB_SYNC_READ_ORACLE := hal_usb_sync_read_c_oracle.c
 USB_SYNC_WRITE_ORACLE := hal_usb_sync_write_c_oracle.c
@@ -881,6 +882,22 @@ test-dm-phydm-rrsr: test_hal_dm_phydm_rrsr
 test_hal_dm_phydm_rrsr: test_hal_dm_phydm_rrsr.c $(DM_PHYDM_RRSR_ORACLE) $(HOST_JSON)
 	$(CC) $(CFLAGS) -I$(ROOT)/tests/host/include -o $@ test_hal_dm_phydm_rrsr.c \
 		$(DM_PHYDM_RRSR_ORACLE) $(HOST_JSON)
+
+RUST_HAL_DM_PHYDM_RRSR := $(ROOT)/rust/hal_dm_phydm_rrsr_host.rs
+
+librust_hal_dm_phydm_rrsr.a: $(RUST_HAL_DM_PHYDM_RRSR)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_dm_phydm_rrsr_test --crate-type staticlib \
+		$(RUST_HAL_DM_PHYDM_RRSR) -o $@
+
+test-dm-phydm-rrsr-rust: test_hal_dm_phydm_rrsr_rust
+	./test_hal_dm_phydm_rrsr_rust hal_dm_phydm_rrsr_vectors.json
+
+test_hal_dm_phydm_rrsr_rust: test_hal_dm_phydm_rrsr.c librust_hal_dm_phydm_rrsr.a \
+		$(DM_PHYDM_RRSR_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_DM_PHYDM_RRSR_ORACLE -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_phydm_rrsr.c $(DM_PHYDM_RRSR_SHIM) $(HOST_JSON) \
+		librust_hal_dm_phydm_rrsr.a
 
 DM_INIT_ODM_TAIL_SHIM := hal_dm_init_odm_cominfo_tail_shim.c
 DM_INIT_ODM_TAIL_ORACLE := hal_dm_init_odm_cominfo_tail_c_oracle.c

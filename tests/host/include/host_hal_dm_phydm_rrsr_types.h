@@ -49,6 +49,9 @@ void odm_cmn_info_update(struct dm_struct *dm, u32 cmn_info, u64 value);
 void phydm_rrsr_set_register(void *dm_void, u32 rrsr_val);
 void phydm_rrsr_en(void *dm_void, boolean en_rrsr);
 
+struct dm_struct *rtw_rust_hal_dm_adapter_to_phydm(_adapter *adapter);
+u32 rtw_rust_hal_dm_registry_set_rrsr_value(_adapter *adapter);
+
 void rtw_phydm_set_rrsr(_adapter *adapter, u32 rrsr_value, boolean write_rrsr);
 void rtw_phydm_dyn_rrsr_en(_adapter *adapter, boolean en_rrsr);
 
