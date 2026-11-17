@@ -31,6 +31,9 @@ librust_hal_dm_set_odm_var_core.a
 test_hal_dm_get_odm_var*
 test_hal_dm_phydm_rrsr*
 librust_hal_dm_phydm_rrsr.a
+test_hal_dm_phydm_crystal_cap
+test_hal_dm_phydm_crystal_cap_rust
+librust_hal_dm_phydm_crystal_cap.a
 test_hal_dm_set_odm_var_rx
 test_hal_update_sta_smps_rate*
 test_hal_dm_phydm_cal_trigger*
