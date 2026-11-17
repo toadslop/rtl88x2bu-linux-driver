@@ -1,0 +1,18 @@
+{
+  "vectors": [
+    {
+      "name": "cap_ok",
+      "crystal_cap": 42,
+      "stub_ok": 1,
+      "expect_cap": 42,
+      "expect_result": 1
+    },
+    {
+      "name": "cap_fail",
+      "crystal_cap": 127,
+      "stub_ok": 0,
+      "expect_cap": 127,
+      "expect_result": 0
+    }
+  ]
+}
