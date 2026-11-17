@@ -65,7 +65,7 @@ void rtw_hal_update_sta_rate_mask(struct host_adapter_smps_rate *a,
 
 	if (!p)
 		return;
-	for (i = 0; i < BSS_RATES_LEN; i++)
+	for (i = 0; i < (int)BSS_RATES_LEN; i++)
 		if (p->bssrateset[i])
 			mask |= (u64)ieee_to_bit(p->bssrateset[i] & 0x7f);
 	if (!a->ht_enable || !is_supported_ht(a->wireless_mode))
