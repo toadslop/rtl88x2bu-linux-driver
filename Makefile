@@ -2948,9 +2948,21 @@ ifeq ($(CONFIG_RTL8822C), y)
 ifneq ($(filter -DCONFIG_LPS,$(ccflags-y)),)
 _rust_cfg_lps_1t1r := y
 endif
-# Mirror include/hal_ic_cfg.h CONFIG_SUPPORT_DYNAMIC_TXPWR for Rust hal_dm hooks.
+endif
+_rust_cfg_support_dynamic_txpwr :=
+ifneq ($(filter -DCONFIG_SUPPORT_DYNAMIC_TXPWR,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_support_dynamic_txpwr := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_SUPPORT_DYNAMIC_TXPWR\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_support_dynamic_txpwr := y
+endif
+ifeq ($(CONFIG_RTL8822C), y)
+_rust_cfg_support_dynamic_txpwr := y
+endif
+ifneq ($(_rust_cfg_support_dynamic_txpwr),)
 rustflags-y += --cfg CONFIG_SUPPORT_DYNAMIC_TXPWR
 endif
+HAL_DM_L1_DYNTPWR_REF := $(if $(_rust_cfg_support_dynamic_txpwr),tests/host/hal/hal_dm_dyntxpwr_l1_ref.o,)
 ifneq ($(_rust_cfg_lps_1t1r),)
 rustflags-y += --cfg config_lps_1t1r
 endif
@@ -5373,6 +5385,18 @@ rust-check-symbols-hal-usb: rust-objects-hal-usb-c rust-objects-hal-usb
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_usb_l1_ref.o NEW=rust/hal_usb.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_usb.allow ALLOW_VACUOUS=1
 
+ifneq ($(_rust_cfg_support_dynamic_txpwr),)
+rust-objects-hal-dm-c-dyntxpwr:
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-DCONFIG_SUPPORT_DYNAMIC_TXPWR -DCONFIG_RTL8822B \
+		-I$(shell pwd)/tests/host/include \
+		-o tests/host/hal/hal_dm_dyntxpwr_l1_ref.o \
+		tests/host/hal/hal_dm_dyntxpwr_c_oracle.c
+else
+rust-objects-hal-dm-c-dyntxpwr:
+	@:
+endif
+
 # W4-29: rtw_rust_hal_dm_kbuild_probe vs rust/hal_dm.o.
 rust-objects-hal-dm:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-hal-dm"; exit 1; }
@@ -5437,6 +5461,7 @@ rust-objects-hal-dm-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_dm_phydm_rrsr_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_rrsr_l1_ref.c
+	$(MAKE) rust-objects-hal-dm-c-dyntxpwr
 	ld -r -o tests/host/hal/hal_dm_l1_ref.o \
 		tests/host/hal/hal_dm_board_type_l1_ref.o \
 		tests/host/hal/hal_dm_dump_sta_l1_ref.o \
@@ -5453,7 +5478,8 @@ rust-objects-hal-dm-c:
 		tests/host/hal/hal_dm_min_rssi_phy_cnt_l1_ref.o \
 		tests/host/hal/hal_dm_set_odm_var_core_l1_ref.o \
 		tests/host/hal/hal_dm_get_odm_var_l1_ref.o \
-		tests/host/hal/hal_dm_phydm_rrsr_l1_ref.o
+		tests/host/hal/hal_dm_phydm_rrsr_l1_ref.o \
+		$(HAL_DM_L1_DYNTPWR_REF)
 rust-check-symbols-hal-dm: rust-objects-hal-dm-c rust-objects-hal-dm
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_dm_l1_ref.o NEW=rust/hal_dm.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_dm.allow ALLOW_VACUOUS=1
