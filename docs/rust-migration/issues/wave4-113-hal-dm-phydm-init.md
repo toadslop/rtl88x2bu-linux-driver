@@ -13,11 +13,13 @@ estimate_loc: 100
 Port from [`hal/hal_dm.c`](../../../hal/hal_dm.c) into [`rust/hal_dm.rs`](../../../rust/hal_dm.rs):
 
 - `init_phydm_info` (static helper)
-- `rtw_phydm_init` — `rtw_phydm_config_trx_path`, firmware version cmn_info init, `odm_dm_init`, optional smart-antenna hook
+- `rtw_phydm_config_trx_path` (static — `phydm_api_trx_mode` on current `HalData` tx/rx paths)
+- `rtw_phydm_init` — calls the helper above, firmware version `cmn_info` init, `odm_dm_init`, optional smart-antenna hook
 
 ## Notes
 
-- **Dependency rationale:** `rtw_phydm_init` calls static `rtw_phydm_config_trx_path` bundled with [W4-103](wave4-103-hal-dm-runtime-trx-path.md) runtime TRX work — port or share FFI after that slice lands.
+- **Scope boundary:** [W4-103](wave4-103-hal-dm-runtime-trx-path.md) ports only `rtw_hal_runtime_trx_path_decision`; **`rtw_phydm_config_trx_path` lives in this slice.**
+- **Dependency rationale:** `blocked_by` W4-103 is merge-order only (same `hal_dm` hot zone), not a functional sub-port of W4-103.
 - Does not port watchdog / turbo-EDCA tails.
 
 ## Acceptance

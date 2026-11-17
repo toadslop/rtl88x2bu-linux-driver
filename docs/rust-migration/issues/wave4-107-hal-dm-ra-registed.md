@@ -11,8 +11,9 @@ estimate_loc: 70
 ## Goal
 
 Port `rtw_phydm_ra_registed` from [`hal/hal_dm.c`](../../../hal/hal_dm.c) into
-[`rust/hal_dm.rs`](../../../rust/hal_dm.rs) — validate `sta_info` / `mac_id`, call
-`phydm_ra_registed`, optionally dump STA info in debug builds.
+[`rust/hal_dm.rs`](../../../rust/hal_dm.rs) — NULL `psta` logs `RTW_ERR` + `rtw_warn_on(1)`
+and returns; `mac_id >= macid_ctl->num` returns without PHYDM call; otherwise
+`phydm_ra_registed` and unconditional `dump_sta_info(RTW_DBGDUMP, psta)` (same as C).
 
 ## Notes
 
