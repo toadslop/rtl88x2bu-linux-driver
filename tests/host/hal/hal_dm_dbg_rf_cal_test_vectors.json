@@ -1,0 +1,38 @@
+{
+  "vectors": [
+    {
+      "name": "iqk_test_defaults",
+      "op": "iqk_test",
+      "recovery": 0,
+      "clear": 1,
+      "segment": 0,
+      "expect_step_count": 8,
+      "expect_step_0": 1,
+      "expect_step_1": 2,
+      "expect_step_2": 3,
+      "expect_step_3": 4,
+      "expect_step_4": 5,
+      "expect_step_5": 6,
+      "expect_step_6": 8,
+      "expect_step_7": 9,
+      "expect_ability_mask": 2,
+      "expect_iqk_dbg": 1,
+      "expect_lck_trigger": 0
+    }, {
+      "name": "lck_test",
+      "op": "lck_test",
+      "expect_step_count": 8,
+      "expect_step_0": 1,
+      "expect_step_1": 2,
+      "expect_step_2": 3,
+      "expect_step_3": 4,
+      "expect_step_4": 5,
+      "expect_step_5": 7,
+      "expect_step_6": 8,
+      "expect_step_7": 9,
+      "expect_ability_mask": 4,
+      "expect_iqk_dbg": 0,
+      "expect_lck_trigger": 1
+    }
+  ]
+}
