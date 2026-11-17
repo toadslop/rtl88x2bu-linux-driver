@@ -20,7 +20,8 @@ struct host_hal_dm_cal_adapter {
 	} odmpriv;
 };
 
-#define HOST_PS_DENY_IOCTL 8u
+/* PS_DENY_REASON in include/rtw_pwrctrl.h — IOCTL is 5, not a bitmask. */
+#define HOST_PS_DENY_IOCTL 5u
 
 #define HOST_CAL_STEP_PS_DENY 1u
 #define HOST_CAL_STEP_LEAVE_PS 2u
