@@ -132,3 +132,9 @@ void rtw_rust_hal_dm_runtime_trx_log_empty_rx(void)
 {
 	rtw_warn_on(1);
 }
+
+void rtw_rust_hal_dm_runtime_trx_log_invalid_max_tx_cnt(u8 max_tx_cnt)
+{
+	(void)max_tx_cnt;
+	rtw_warn_on(1);
+}
