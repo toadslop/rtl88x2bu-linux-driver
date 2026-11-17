@@ -18,13 +18,11 @@ void GetHalODMVar(_adapter *adapter, int e_variable, void *p_value1, void *p_val
 	switch (e_variable) {
 #ifdef CONFIG_ANTENNA_DIVERSITY
 	case HAL_ODM_ANTDIV_SELECT:
-		if (p_value1)
-			*(u8 *)p_value1 = podmpriv->dm_fat_table.rx_idle_ant;
+		*(u8 *)p_value1 = podmpriv->dm_fat_table.rx_idle_ant;
 		break;
 #endif
 	case HAL_ODM_INITIAL_GAIN:
-		if (p_value1)
-			*(u8 *)p_value1 = rtw_phydm_get_cur_igi(adapter);
+		*(u8 *)p_value1 = rtw_phydm_get_cur_igi(adapter);
 		break;
 	default:
 		break;
