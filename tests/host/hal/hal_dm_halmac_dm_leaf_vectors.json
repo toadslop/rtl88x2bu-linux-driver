@@ -1,0 +1,45 @@
+{
+  "oracle": "hal/hal_dm.c rtw_phydm_rfe_ctrl_gpio + rtw_phydm_fw_iqk",
+  "vectors": [
+    {
+      "name": "rfe_gpio_halmac_ok",
+      "op": "rfe_gpio",
+      "gpio": 7,
+      "rfe_stub_return": 1,
+      "expect_bool": 1,
+      "expect_rfe_calls": 1,
+      "expect_gpio": 7
+    },
+    {
+      "name": "rfe_gpio_halmac_fail",
+      "op": "rfe_gpio",
+      "gpio": 2,
+      "rfe_stub_return": 0,
+      "expect_bool": 0,
+      "expect_rfe_calls": 1,
+      "expect_gpio": 2
+    },
+    {
+      "name": "fw_iqk_halmac_success",
+      "op": "fw_iqk",
+      "clear": 1,
+      "segment": 0,
+      "iqk_stub_return": 0,
+      "expect_status": 0,
+      "expect_iqk_calls": 1,
+      "expect_clear": 1,
+      "expect_segment": 0
+    },
+    {
+      "name": "fw_iqk_halmac_failure",
+      "op": "fw_iqk",
+      "clear": 0,
+      "segment": 1,
+      "iqk_stub_return": -1,
+      "expect_status": 1,
+      "expect_iqk_calls": 1,
+      "expect_clear": 0,
+      "expect_segment": 1
+    }
+  ]
+}
