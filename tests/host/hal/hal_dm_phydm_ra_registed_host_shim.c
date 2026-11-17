@@ -35,3 +35,50 @@ void dump_sta_info(void *sel, struct sta_info *psta)
 	(void)psta;
 	host_hal_dm_phydm_ra_registed_trace.dump_sta_calls++;
 }
+
+struct dm_struct *rtw_rust_hal_dm_adapter_to_phydm(_adapter *adapter)
+{
+	return adapter ? &GET_HAL_DATA(adapter)->odmpriv : NULL;
+}
+
+struct dvobj_priv *rtw_rust_hal_dm_adapter_to_dvobj(_adapter *adapter)
+{
+	return adapter_to_dvobj(adapter);
+}
+
+struct macid_ctl_t *rtw_rust_hal_dm_dvobj_to_macidctl(struct dvobj_priv *dvobj)
+{
+	return dvobj_to_macidctl(dvobj);
+}
+
+u8 rtw_rust_hal_dm_macidctl_num(struct macid_ctl_t *ctl)
+{
+	return ctl ? ctl->num : 0;
+}
+
+u8 rtw_rust_hal_dm_sta_mac_id(struct sta_info *psta)
+{
+	return psta ? psta->cmn.mac_id : 0;
+}
+
+s8 rtw_rust_hal_dm_sta_rssi(struct sta_info *psta)
+{
+	return psta ? psta->cmn.rssi_stat.rssi : 0;
+}
+
+void rtw_rust_hal_dm_err_ra_null_sta(_adapter *adapter)
+{
+	(void)adapter;
+	host_hal_dm_phydm_ra_registed_trace.err_logged = 1;
+}
+
+void rtw_rust_hal_dm_warn_on(int c)
+{
+	rtw_warn_on(c);
+}
+
+void rtw_warn_on(int c)
+{
+	if (c)
+		host_hal_dm_phydm_ra_registed_trace.warn_on_calls++;
+}

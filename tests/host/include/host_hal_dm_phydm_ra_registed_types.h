@@ -66,12 +66,8 @@ void rtw_phydm_ra_registed(_adapter *adapter, struct sta_info *psta);
 #define RTW_ERR(...) host_hal_dm_phydm_ra_registed_trace.err_logged = 1
 #define FUNC_ADPT_FMT "%p"
 #define FUNC_ADPT_ARG(adapter) (adapter)
-#define rtw_warn_on(c) \
-	do { \
-		if (c) \
-			host_hal_dm_phydm_ra_registed_trace.warn_on_calls++; \
-	} while (0)
 
+void rtw_warn_on(int c);
 void phydm_ra_registed(void *dm_void, u8 macid, u8 rssi_from_assoc);
 void dump_sta_info(void *sel, struct sta_info *psta);
 

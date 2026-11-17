@@ -1541,6 +1541,7 @@ void dump_sta_info(void *sel, struct sta_info *psta)
 }
 #endif /* CONFIG_RUST */
 
+#ifndef CONFIG_RUST
 void rtw_phydm_ra_registed(_adapter *adapter, struct sta_info *psta)
 {
 	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
@@ -1559,6 +1560,7 @@ void rtw_phydm_ra_registed(_adapter *adapter, struct sta_info *psta)
 	phydm_ra_registed(&hal_data->odmpriv, psta->cmn.mac_id, psta->cmn.rssi_stat.rssi);
 	dump_sta_info(RTW_DBGDUMP, psta);
 }
+#endif /* !CONFIG_RUST */
 
 static void init_phydm_info(_adapter *adapter)
 {
