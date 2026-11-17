@@ -5464,6 +5464,9 @@ rust-objects-hal-dm-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_dm_phydm_crystal_cap_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_crystal_cap_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_dm_phydm_iqk_trigger_dbg_l1_ref.o \
+		tests/host/hal/hal_dm_phydm_iqk_trigger_dbg_l1_ref.c
 	$(MAKE) rust-objects-hal-dm-c-dyntxpwr
 	ld -r -o tests/host/hal/hal_dm_l1_ref.o \
 		tests/host/hal/hal_dm_board_type_l1_ref.o \
@@ -5483,6 +5486,7 @@ rust-objects-hal-dm-c:
 		tests/host/hal/hal_dm_get_odm_var_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_rrsr_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_crystal_cap_l1_ref.o \
+		tests/host/hal/hal_dm_phydm_iqk_trigger_dbg_l1_ref.o \
 		$(HAL_DM_L1_DYNTPWR_REF)
 rust-check-symbols-hal-dm: rust-objects-hal-dm-c rust-objects-hal-dm
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_dm_l1_ref.o NEW=rust/hal_dm.o \
