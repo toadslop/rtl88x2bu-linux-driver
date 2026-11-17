@@ -132,16 +132,11 @@ void host_hal_dm_apply_rx_fixture_to_dm(_adapter *a)
 struct rtw_hal_dm_dm_rx_fields {
 	u8 is_linked;
 	u8 rx_rate;
-	s8 rssi_a;
-	s8 rssi_b;
-	s8 rssi_c;
-	s8 rssi_d;
+	u8 rssi_a;
+	u8 rssi_b;
+	u8 rssi_c;
+	u8 rssi_d;
 };
-
-struct dm_struct *rtw_rust_hal_dm_adapter_to_phydm(_adapter *adapter)
-{
-	return adapter_to_phydm(adapter);
-}
 
 struct rtw_hal_dm_dm_rx_fields rtw_rust_hal_dm_dm_rx_fields(struct dm_struct *podm)
 {

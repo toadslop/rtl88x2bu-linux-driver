@@ -74,10 +74,10 @@ void rtw_rust_hal_dm_dump_raw_rssi_info(_adapter *adapter, void *sel)
 struct rtw_hal_dm_dm_rx_fields {
 	u8 is_linked;
 	u8 rx_rate;
-	s8 rssi_a;
-	s8 rssi_b;
-	s8 rssi_c;
-	s8 rssi_d;
+	u8 rssi_a;
+	u8 rssi_b;
+	u8 rssi_c;
+	u8 rssi_d;
 };
 
 struct rtw_hal_dm_dm_rx_fields rtw_rust_hal_dm_dm_rx_fields(struct dm_struct *podm)

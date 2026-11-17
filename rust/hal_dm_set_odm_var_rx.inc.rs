@@ -18,10 +18,10 @@ const FA_TOTAL: U32 = 2;
 struct RtwHalDmDmRxFields {
     is_linked: U8,
     rx_rate: U8,
-    rssi_a: S8,
-    rssi_b: S8,
-    rssi_c: S8,
-    rssi_d: S8,
+    rssi_a: U8,
+    rssi_b: U8,
+    rssi_c: U8,
+    rssi_d: U8,
 }
 
 unsafe extern "C" {
@@ -34,35 +34,35 @@ unsafe extern "C" {
     fn rtw_rust_hal_dm_is_hw_8814a(adapter: *mut c_void) -> U8;
     fn rtw_rust_hal_dm_dump_rx_dframe_info(adapter: *mut c_void, sel: *mut c_void);
     fn rtw_rust_hal_dm_dump_raw_rssi_info(adapter: *mut c_void, sel: *mut c_void);
-    #[cfg(host_hal_dm_set_odm_var_rx_test)]
+    #[cfg(any(host_hal_dm_set_odm_var_rx_test, host_hal_dm_set_odm_var_core_with_rx))]
     fn host_hdata_rate_str(rate: U8) -> *const c_char;
-    #[cfg(host_hal_dm_set_odm_var_rx_test)]
+    #[cfg(any(host_hal_dm_set_odm_var_rx_test, host_hal_dm_set_odm_var_core_with_rx))]
     fn host_is_hardware_type_8814a(adapter: *mut c_void) -> i32;
-    #[cfg(host_hal_dm_set_odm_var_rx_test)]
+    #[cfg(any(host_hal_dm_set_odm_var_rx_test, host_hal_dm_set_odm_var_core_with_rx))]
     fn host_hal_dm_apply_rx_fixture_to_dm(adapter: *mut c_void);
     fn rtw_rust_hal_dm_dm_rx_fields(podm: *mut c_void) -> RtwHalDmDmRxFields;
     fn rtw_rust_hal_dm_adapter_to_phydm(adapter: *mut c_void) -> *mut DmStruct;
-    #[cfg(host_hal_dm_set_odm_var_rx_test)]
+    #[cfg(any(host_hal_dm_set_odm_var_rx_test, host_hal_dm_set_odm_var_core_with_rx))]
     fn rtw_rust_hal_dm_print_sel(sel: *mut c_void, line: *const c_char);
 }
 
 fn rate_str(rate: U8) -> *const c_char {
-    #[cfg(host_hal_dm_set_odm_var_rx_test)]
+    #[cfg(any(host_hal_dm_set_odm_var_rx_test, host_hal_dm_set_odm_var_core_with_rx))]
     unsafe {
         return host_hdata_rate_str(rate);
     }
-    #[cfg(not(host_hal_dm_set_odm_var_rx_test))]
+    #[cfg(not(any(host_hal_dm_set_odm_var_rx_test, host_hal_dm_set_odm_var_core_with_rx)))]
     unsafe {
         return rtw_rust_hal_dm_hdata_rate(rate);
     }
 }
 
 fn is_8814a(adapter: *mut c_void) -> bool {
-    #[cfg(host_hal_dm_set_odm_var_rx_test)]
+    #[cfg(any(host_hal_dm_set_odm_var_rx_test, host_hal_dm_set_odm_var_core_with_rx))]
     unsafe {
         return host_is_hardware_type_8814a(adapter) != 0;
     }
-    #[cfg(not(host_hal_dm_set_odm_var_rx_test))]
+    #[cfg(not(any(host_hal_dm_set_odm_var_rx_test, host_hal_dm_set_odm_var_core_with_rx)))]
     unsafe {
         return rtw_rust_hal_dm_is_hw_8814a(adapter) != 0;
     }
@@ -75,9 +75,9 @@ fn print_line(sel: *mut c_void, line: &[u8]) {
         buf[i] = b as i8;
     }
     unsafe {
-        #[cfg(host_hal_dm_set_odm_var_rx_test)]
+        #[cfg(any(host_hal_dm_set_odm_var_rx_test, host_hal_dm_set_odm_var_core_with_rx))]
         rtw_rust_hal_dm_print_sel(sel, buf.as_ptr());
-        #[cfg(not(host_hal_dm_set_odm_var_rx_test))]
+        #[cfg(not(any(host_hal_dm_set_odm_var_rx_test, host_hal_dm_set_odm_var_core_with_rx)))]
         rtw_rust_hal_dm_raw_print_sel(sel, buf.as_ptr());
     }
 }
@@ -150,7 +150,7 @@ pub unsafe fn set_odm_var_rx_cases(
 ) {
     // SAFETY: callers pass a valid `adapter`; `adapter_to_phydm` is non-NULL for live adapters.
     unsafe {
-        #[cfg(host_hal_dm_set_odm_var_rx_test)]
+        #[cfg(any(host_hal_dm_set_odm_var_rx_test, host_hal_dm_set_odm_var_core_with_rx))]
         host_hal_dm_apply_rx_fixture_to_dm(adapter);
 
         match e_variable {
