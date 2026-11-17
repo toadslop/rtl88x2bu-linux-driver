@@ -29,3 +29,4 @@ test_hal_dm_set_odm_var_core
 test_hal_dm_set_odm_var_core_rust
 librust_hal_dm_set_odm_var_core.a
 test_hal_dm_get_odm_var*
+test_hal_dm_set_odm_var_rx

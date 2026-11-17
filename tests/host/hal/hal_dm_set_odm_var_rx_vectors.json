@@ -1,0 +1,49 @@
+{
+  "vectors": [
+    {
+      "name": "T01_rx_unlinked",
+      "case": "RX_INFO_DUMP",
+      "is_linked": 0,
+      "rx_rate": 24,
+      "rssi_a": 0,
+      "rssi_b": 0,
+      "cur_igi": 48,
+      "phydm_min_rssi": 55,
+      "dm_min_rssi": 60,
+      "fa_cck": 3,
+      "fa_ofdm": 7,
+      "fa_total": 10,
+      "expect": "============ Rx Info dump ===================\nis_linked = 0, rssi_min = 55(%)(60(%)), current_igi = 0x30\ncnt_cck_fail = 3, cnt_ofdm_fail = 7, Total False Alarm = 10\n"
+    },
+    {
+      "name": "T02_rx_linked_ofdm54",
+      "case": "RX_INFO_DUMP",
+      "is_linked": 1,
+      "rx_rate": 31,
+      "rssi_a": 72,
+      "rssi_b": 68,
+      "cur_igi": 52,
+      "phydm_min_rssi": 70,
+      "dm_min_rssi": 65,
+      "fa_cck": 1,
+      "fa_ofdm": 2,
+      "fa_total": 3,
+      "expect": "============ Rx Info dump ===================\nis_linked = 1, rssi_min = 70(%)(65(%)), current_igi = 0x34\ncnt_cck_fail = 1, cnt_ofdm_fail = 2, Total False Alarm = 3\nrx_rate = OFDM54 rssi_a = 72(%), rssi_b = 68(%)\n"
+    },
+    {
+      "name": "T03_rx_dframe_no_dbg",
+      "case": "RX_DFRAME_INFO",
+      "is_linked": 0,
+      "rx_rate": 0,
+      "rssi_a": 0,
+      "rssi_b": 0,
+      "cur_igi": 0,
+      "phydm_min_rssi": 0,
+      "dm_min_rssi": 0,
+      "fa_cck": 0,
+      "fa_ofdm": 0,
+      "fa_total": 0,
+      "expect": ""
+    }
+  ]
+}
