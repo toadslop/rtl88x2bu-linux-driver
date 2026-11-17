@@ -1946,6 +1946,7 @@ void rtw_dyn_soml_config(_adapter *adapter)
 }
 #endif
 
+#ifndef CONFIG_RUST
 void rtw_phydm_set_rrsr(_adapter *adapter, u32 rrsr_value, bool write_rrsr)
 {
 	struct dm_struct *phydm = adapter_to_phydm(adapter);
@@ -1966,6 +1967,7 @@ void rtw_phydm_dyn_rrsr_en(_adapter *adapter, bool en_rrsr)
 
 	phydm_rrsr_en(phydm, en_rrsr);
 }
+#endif /* !CONFIG_RUST */
 void rtw_phydm_read_efuse(_adapter *adapter)
 {
 	PHAL_DATA_TYPE hal_data = GET_HAL_DATA(adapter);
