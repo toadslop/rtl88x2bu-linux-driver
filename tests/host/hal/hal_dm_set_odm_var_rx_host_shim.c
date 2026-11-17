@@ -7,8 +7,8 @@
 
 static u8 host_stub_is_linked;
 static u8 host_stub_rx_rate;
-static s8 host_stub_rssi_a;
-static s8 host_stub_rssi_b;
+static u8 host_stub_rssi_a;
+static u8 host_stub_rssi_b;
 static u8 host_stub_cur_igi;
 static s8 host_stub_phydm_min_rssi;
 static s8 host_stub_dm_min_rssi;
@@ -30,7 +30,7 @@ int host_is_hardware_type_8814a(_adapter *adapter)
 }
 
 void host_hal_dm_set_odm_var_rx_fixture(
-	u8 is_linked, u8 rx_rate, s8 rssi_a, s8 rssi_b,
+	u8 is_linked, u8 rx_rate, u8 rssi_a, u8 rssi_b,
 	u8 cur_igi, s8 phydm_min_rssi, s8 dm_min_rssi,
 	u32 fa_cck, u32 fa_ofdm, u32 fa_total)
 {

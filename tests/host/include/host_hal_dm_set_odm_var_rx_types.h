@@ -20,8 +20,8 @@ typedef uint8_t BOOLEAN;
 struct dm_struct {
 	u8 is_linked;
 	u8 rx_rate;
-	s8 rssi_a;
-	s8 rssi_b;
+	u8 rssi_a;
+	u8 rssi_b;
 };
 
 struct hal_data_host {
@@ -44,7 +44,7 @@ void host_hal_dm_print_capture_reset(struct host_hal_dm_print_capture *cap);
 const char *host_hal_dm_print_capture_text(const struct host_hal_dm_print_capture *cap);
 
 void host_hal_dm_set_odm_var_rx_fixture(
-	u8 is_linked, u8 rx_rate, s8 rssi_a, s8 rssi_b,
+	u8 is_linked, u8 rx_rate, u8 rssi_a, u8 rssi_b,
 	u8 cur_igi, s8 phydm_min_rssi, s8 dm_min_rssi,
 	u32 fa_cck, u32 fa_ofdm, u32 fa_total);
 
