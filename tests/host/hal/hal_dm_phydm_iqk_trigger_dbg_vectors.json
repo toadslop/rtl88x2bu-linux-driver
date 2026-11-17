@@ -1,0 +1,24 @@
+{
+  "vectors": [
+    {
+      "name": "dbg_segment_defaults",
+      "recovery": 1,
+      "clear": 1,
+      "segment": 0,
+      "expect_segment": 1,
+      "expect_segment_clear": 1,
+      "expect_segment_flag": 0,
+      "expect_plain_iqk": 0
+    },
+    {
+      "name": "dbg_segment_clear0_flag1",
+      "recovery": 0,
+      "clear": 0,
+      "segment": 1,
+      "expect_segment": 1,
+      "expect_segment_clear": 0,
+      "expect_segment_flag": 1,
+      "expect_plain_iqk": 0
+    }
+  ]
+}

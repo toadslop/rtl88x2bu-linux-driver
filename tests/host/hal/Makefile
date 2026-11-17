@@ -55,6 +55,8 @@ DM_RUNTIME_TRX_ORACLE := hal_dm_runtime_trx_path_c_oracle.c
 DM_RUNTIME_TRX_SHIM := hal_dm_runtime_trx_path_host_shim.c
 RUNTIME_TRX_CFLAGS := $(CFLAGS) -DCONFIG_RTL8822B -DCONFIG_RTW_PATH_DIV \
 	-DCONFIG_RTW_TX_NPATH_EN
+DM_PHYDM_IQK_TRIGGER_DBG_ORACLE := hal_dm_phydm_iqk_trigger_dbg_c_oracle.c
+DM_PHYDM_IQK_TRIGGER_DBG_SHIM := hal_dm_phydm_iqk_trigger_dbg_host_shim.c
 USB_WVALUE_ORACLE := hal_usb_vendor_wvalue_c_oracle.c
 USB_SYNC_READ_ORACLE := hal_usb_sync_read_c_oracle.c
 USB_SYNC_WRITE_ORACLE := hal_usb_sync_write_c_oracle.c
@@ -981,6 +983,34 @@ test_hal_dm_runtime_trx_path: test_hal_dm_runtime_trx_path.c \
 	$(CC) $(RUNTIME_TRX_CFLAGS) -I$(ROOT)/tests/host/include -o $@ \
 		test_hal_dm_runtime_trx_path.c $(DM_RUNTIME_TRX_ORACLE) \
 		$(DM_RUNTIME_TRX_SHIM) $(HOST_JSON)
+
+test-dm-phydm-iqk-trigger-dbg: test_hal_dm_phydm_iqk_trigger_dbg
+	./test_hal_dm_phydm_iqk_trigger_dbg hal_dm_phydm_iqk_trigger_dbg_vectors.json
+
+test_hal_dm_phydm_iqk_trigger_dbg: test_hal_dm_phydm_iqk_trigger_dbg.c \
+		$(DM_PHYDM_IQK_TRIGGER_DBG_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRTL8822B_SUPPORT=1 -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_phydm_iqk_trigger_dbg.c $(DM_PHYDM_IQK_TRIGGER_DBG_ORACLE) $(HOST_JSON)
+
+RUST_HAL_DM_PHYDM_IQK_TRIGGER_DBG := $(ROOT)/rust/hal_dm_phydm_iqk_trigger_dbg_host.rs
+RUST_HAL_DM_IQK_TRIGGER_DBG_CFG := --cfg host_hal_dm_phydm_iqk_trigger_dbg_test \
+	--cfg CONFIG_RTL8822B
+
+librust_hal_dm_phydm_iqk_trigger_dbg.a: $(RUST_HAL_DM_PHYDM_IQK_TRIGGER_DBG)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		$(RUST_HAL_DM_IQK_TRIGGER_DBG_CFG) --crate-type staticlib \
+		$(RUST_HAL_DM_PHYDM_IQK_TRIGGER_DBG) -o $@
+
+test-dm-phydm-iqk-trigger-dbg-rust: test_hal_dm_phydm_iqk_trigger_dbg_rust
+	./test_hal_dm_phydm_iqk_trigger_dbg_rust hal_dm_phydm_iqk_trigger_dbg_vectors.json
+
+test_hal_dm_phydm_iqk_trigger_dbg_rust: test_hal_dm_phydm_iqk_trigger_dbg.c \
+		librust_hal_dm_phydm_iqk_trigger_dbg.a \
+		$(DM_PHYDM_IQK_TRIGGER_DBG_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_DM_PHYDM_IQK_TRIGGER_DBG_ORACLE \
+		-DRTL8822B_SUPPORT=1 -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_phydm_iqk_trigger_dbg.c $(DM_PHYDM_IQK_TRIGGER_DBG_SHIM) \
+		$(HOST_JSON) librust_hal_dm_phydm_iqk_trigger_dbg.a
 
 DM_INIT_ODM_TAIL_SHIM := hal_dm_init_odm_cominfo_tail_shim.c
 DM_INIT_ODM_TAIL_ORACLE := hal_dm_init_odm_cominfo_tail_c_oracle.c
