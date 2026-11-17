@@ -381,6 +381,8 @@ u8 rtw_get_mgntframe_raid(_adapter *adapter, unsigned char network_type);
 
 void rtw_hal_update_sta_wset(_adapter *adapter, struct sta_info *psta);
 void rtw_hal_update_sta_mimo_type(_adapter *adapter, struct sta_info *psta);
+void rtw_hal_update_sta_smps_cap(_adapter *adapter, struct sta_info *psta);
+void rtw_hal_update_sta_rate_mask(PADAPTER padapter, struct sta_info *psta);
 s8 rtw_get_sta_rx_nss(_adapter *adapter, struct sta_info *psta);
 s8 rtw_get_sta_tx_nss(_adapter *adapter, struct sta_info *psta);
 void rtw_hal_update_sta_ra_info(PADAPTER padapter, struct sta_info *psta);

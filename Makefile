@@ -3008,6 +3008,10 @@ endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_P2P_PS' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_80211AC_VHT' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_80211ac_vht
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_80211N_HT' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_80211n_ht
 endif
 rustflags-y += --cfg rust_sta_mgt_stctl
 rustflags-y += --cfg rust_sta_mgt_lookup
