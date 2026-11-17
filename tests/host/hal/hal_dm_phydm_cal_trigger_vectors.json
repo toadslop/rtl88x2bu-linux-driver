@@ -1,0 +1,13 @@
+{
+  "vectors": [
+    {
+      "name": "ioctl_iqk_orchestration",
+      "expect_steps": [1, 2, 3, 4],
+      "expect_step_count": 4,
+      "expect_ps_deny_ioctl_set": 1,
+      "expect_leave_ps": 1,
+      "expect_iqk_all": 1,
+      "expect_ps_deny_clear": 1
+    }
+  ]
+}

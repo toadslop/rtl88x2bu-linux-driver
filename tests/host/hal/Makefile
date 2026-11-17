@@ -969,7 +969,6 @@ test_hal_dm_set_odm_var_core_rust: test_hal_dm_set_odm_var_core.c \
 		test_hal_dm_set_odm_var_core.c $(DM_SET_ODM_VAR_CORE_SHIM) \
 		$(DM_SET_ODM_VAR_RX_SHIM) $(HOST_JSON) \
 		librust_hal_dm_set_odm_var_core.a
-
 test-dm-phydm-iqk-lck: test_hal_dm_phydm_iqk_lck
 	./test_hal_dm_phydm_iqk_lck hal_dm_phydm_iqk_lck_vectors.json
 
