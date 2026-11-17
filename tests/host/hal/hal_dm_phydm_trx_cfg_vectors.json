@@ -1,0 +1,37 @@
+{
+  "vectors": [
+    {
+      "name": "dual_ss_tx_path",
+      "tx_1ss": 0,
+      "stub_tx": 3,
+      "stub_rx": 3,
+      "api_ok": 1,
+      "expect_tx": 3,
+      "expect_rx": 3,
+      "expect_tx_1ss": 1,
+      "expect_err": 0
+    },
+    {
+      "name": "force_1ss_tx",
+      "tx_1ss": 1,
+      "stub_tx": 3,
+      "stub_rx": 3,
+      "api_ok": 1,
+      "expect_tx": 1,
+      "expect_rx": 3,
+      "expect_tx_1ss": 1,
+      "expect_err": 0
+    },
+    {
+      "name": "api_failure",
+      "tx_1ss": 0,
+      "stub_tx": 3,
+      "stub_rx": 3,
+      "api_ok": 0,
+      "expect_tx": 3,
+      "expect_rx": 3,
+      "expect_tx_1ss": 1,
+      "expect_err": 1
+    }
+  ]
+}
