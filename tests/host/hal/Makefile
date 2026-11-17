@@ -33,6 +33,9 @@ DM_PHYDM_IGI_IQK_ORACLE := hal_dm_phydm_igi_iqk_c_oracle.c
 DM_PHYDM_IGI_IQK_SHIM := hal_dm_phydm_igi_iqk_host_shim.c
 DM_SET_ODM_VAR_CORE_ORACLE := hal_dm_set_odm_var_core_c_oracle.c
 DM_SET_ODM_VAR_CORE_SHIM := hal_dm_set_odm_var_core_host_shim.c
+DM_PHYDM_IQK_LCK_ORACLE := hal_dm_phydm_iqk_lck_c_oracle.c
+DM_PHYDM_IQK_LCK_SHIM := hal_dm_phydm_iqk_lck_host_shim.c
+DM_PHYDM_IQK_LCK_CFLAGS := -DRTL8822B_SUPPORT=1
 DM_MIN_RSSI_PHY_CNT_ORACLE := hal_dm_min_rssi_phy_cnt_c_oracle.c
 DM_MIN_RSSI_PHY_CNT_SHIM := hal_dm_min_rssi_phy_cnt_host_shim.c
 DM_GET_ODM_VAR_ORACLE := hal_dm_get_odm_var_c_oracle.c
@@ -939,6 +942,29 @@ test_hal_dm_set_odm_var_core_rust: test_hal_dm_set_odm_var_core.c \
 		test_hal_dm_set_odm_var_core.c $(DM_SET_ODM_VAR_CORE_SHIM) $(HOST_JSON) \
 		librust_hal_dm_set_odm_var_core.a
 
+test-dm-phydm-iqk-lck: test_hal_dm_phydm_iqk_lck
+	./test_hal_dm_phydm_iqk_lck hal_dm_phydm_iqk_lck_vectors.json
+
+test_hal_dm_phydm_iqk_lck: test_hal_dm_phydm_iqk_lck.c $(DM_PHYDM_IQK_LCK_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(DM_PHYDM_IQK_LCK_CFLAGS) -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_phydm_iqk_lck.c $(DM_PHYDM_IQK_LCK_ORACLE) $(HOST_JSON)
+
+RUST_HAL_DM_PHYDM_IQK_LCK := $(ROOT)/rust/hal_dm_phydm_iqk_lck_host.rs
+RUST_HAL_DM_IQK_LCK_CFG := --cfg CONFIG_RTL8822B --cfg host_hal_dm_phydm_iqk_lck_test
+
+librust_hal_dm_phydm_iqk_lck.a: $(RUST_HAL_DM_PHYDM_IQK_LCK)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on $(RUST_HAL_DM_IQK_LCK_CFG) \
+		--crate-type staticlib $(RUST_HAL_DM_PHYDM_IQK_LCK) -o $@
+
+test-dm-phydm-iqk-lck-rust: test_hal_dm_phydm_iqk_lck_rust
+	./test_hal_dm_phydm_iqk_lck_rust hal_dm_phydm_iqk_lck_vectors.json
+
+test_hal_dm_phydm_iqk_lck_rust: test_hal_dm_phydm_iqk_lck.c librust_hal_dm_phydm_iqk_lck.a \
+		$(DM_PHYDM_IQK_LCK_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_DM_PHYDM_IQK_LCK_ORACLE -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_phydm_iqk_lck.c $(DM_PHYDM_IQK_LCK_SHIM) $(HOST_JSON) \
+		librust_hal_dm_phydm_iqk_lck.a
+
 test-usb-vendor-wvalue: test_hal_usb_vendor_wvalue
 	./test_hal_usb_vendor_wvalue hal_usb_vendor_wvalue_vectors.json
 
@@ -1167,6 +1193,8 @@ clean:
 		librust_hal_dm_phydm_igi_iqk.a \
 		test_hal_dm_set_odm_var_core test_hal_dm_set_odm_var_core_rust \
 		librust_hal_dm_set_odm_var_core.a \
+		test_hal_dm_phydm_iqk_lck test_hal_dm_phydm_iqk_lck_rust \
+		librust_hal_dm_phydm_iqk_lck.a \
 		test_hal_dm_min_rssi_phy_cnt test_hal_dm_min_rssi_phy_cnt_rust \
 		librust_hal_dm_min_rssi_phy_cnt.a \
 		test_hal_usb_vendor_wvalue test_hal_usb_vendor_wvalue_rust librust_hal_usb_wvalue.a \
