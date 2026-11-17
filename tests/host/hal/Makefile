@@ -57,6 +57,8 @@ RUNTIME_TRX_CFLAGS := $(CFLAGS) -DCONFIG_RTL8822B -DCONFIG_RTW_PATH_DIV \
 	-DCONFIG_RTW_TX_NPATH_EN
 DM_PHYDM_IQK_TRIGGER_DBG_ORACLE := hal_dm_phydm_iqk_trigger_dbg_c_oracle.c
 DM_PHYDM_IQK_TRIGGER_DBG_SHIM := hal_dm_phydm_iqk_trigger_dbg_host_shim.c
+DM_PHYDM_RA_REGISTED_ORACLE := hal_dm_phydm_ra_registed_c_oracle.c
+DM_PHYDM_RA_REGISTED_SHIM := hal_dm_phydm_ra_registed_host_shim.c
 USB_WVALUE_ORACLE := hal_usb_vendor_wvalue_c_oracle.c
 USB_SYNC_READ_ORACLE := hal_usb_sync_read_c_oracle.c
 USB_SYNC_WRITE_ORACLE := hal_usb_sync_write_c_oracle.c
@@ -1030,6 +1032,33 @@ test_hal_dm_phydm_iqk_trigger_dbg_rust: test_hal_dm_phydm_iqk_trigger_dbg.c \
 		-DRTL8822B_SUPPORT=1 -I$(ROOT)/tests/host/include -o $@ \
 		test_hal_dm_phydm_iqk_trigger_dbg.c $(DM_PHYDM_IQK_TRIGGER_DBG_SHIM) \
 		$(HOST_JSON) librust_hal_dm_phydm_iqk_trigger_dbg.a
+
+test-dm-phydm-ra-registed: test_hal_dm_phydm_ra_registed
+	./test_hal_dm_phydm_ra_registed hal_dm_phydm_ra_registed_vectors.json
+
+test_hal_dm_phydm_ra_registed: test_hal_dm_phydm_ra_registed.c \
+		$(DM_PHYDM_RA_REGISTED_ORACLE) $(DM_PHYDM_RA_REGISTED_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_phydm_ra_registed.c $(DM_PHYDM_RA_REGISTED_ORACLE) \
+		$(DM_PHYDM_RA_REGISTED_SHIM) $(HOST_JSON)
+
+RUST_HAL_DM_PHYDM_RA_REGISTED := $(ROOT)/rust/hal_dm_phydm_ra_registed_host.rs
+RUST_HAL_DM_RA_REGISTED_CFG := --cfg host_hal_dm_phydm_ra_registed_test
+
+librust_hal_dm_phydm_ra_registed.a: $(RUST_HAL_DM_PHYDM_RA_REGISTED)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		$(RUST_HAL_DM_RA_REGISTED_CFG) --crate-type staticlib \
+		$(RUST_HAL_DM_PHYDM_RA_REGISTED) -o $@
+
+test-dm-phydm-ra-registed-rust: test_hal_dm_phydm_ra_registed_rust
+	./test_hal_dm_phydm_ra_registed_rust hal_dm_phydm_ra_registed_vectors.json
+
+test_hal_dm_phydm_ra_registed_rust: test_hal_dm_phydm_ra_registed.c \
+		librust_hal_dm_phydm_ra_registed.a $(DM_PHYDM_RA_REGISTED_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_DM_PHYDM_RA_REGISTED_ORACLE \
+		-I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_phydm_ra_registed.c $(DM_PHYDM_RA_REGISTED_SHIM) $(HOST_JSON) \
+		librust_hal_dm_phydm_ra_registed.a
 
 DM_INIT_ODM_TAIL_SHIM := hal_dm_init_odm_cominfo_tail_shim.c
 DM_INIT_ODM_TAIL_ORACLE := hal_dm_init_odm_cominfo_tail_c_oracle.c

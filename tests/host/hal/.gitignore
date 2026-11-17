@@ -39,6 +39,9 @@ test_hal_dm_runtime_trx_path_rust
 librust_hal_dm_runtime_trx_path.a
 test_hal_dm_phydm_iqk_trigger_dbg*
 librust_hal_dm_phydm_iqk_trigger_dbg.a
+test_hal_dm_phydm_ra_registed
+test_hal_dm_phydm_ra_registed_rust
+librust_hal_dm_phydm_ra_registed.a
 test_hal_dm_set_odm_var_rx
 test_hal_update_sta_smps_rate*
 test_hal_dm_phydm_cal_trigger*
