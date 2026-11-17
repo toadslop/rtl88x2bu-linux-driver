@@ -1,0 +1,102 @@
+{
+  "vectors": [
+    {
+      "name": "ab_max2_default",
+      "stub_txpath": 3,
+      "stub_rxpath": 3,
+      "trx_path_bmp": 51,
+      "max_tx_cnt": 2,
+      "path_div": 0,
+      "tx_npath": 0,
+      "expect_result": 1,
+      "expect_txpath": 3,
+      "expect_txpath_nss0": 1,
+      "expect_txpath_num_nss0": 1,
+      "expect_dump_calls": 1
+    },
+    {
+      "name": "ab_max2_path_div",
+      "stub_txpath": 3,
+      "stub_rxpath": 3,
+      "trx_path_bmp": 51,
+      "max_tx_cnt": 2,
+      "path_div": 1,
+      "tx_npath": 0,
+      "expect_result": 1,
+      "expect_txpath": 3,
+      "expect_txpath_nss0": 255,
+      "expect_txpath_num_nss0": 1,
+      "expect_dump_calls": 1
+    },
+    {
+      "name": "ab_max2_tx_npath",
+      "stub_txpath": 3,
+      "stub_rxpath": 3,
+      "trx_path_bmp": 51,
+      "max_tx_cnt": 2,
+      "path_div": 0,
+      "tx_npath": 1,
+      "expect_result": 1,
+      "expect_txpath": 3,
+      "expect_txpath_nss0": 3,
+      "expect_txpath_num_nss0": 2,
+      "expect_dump_calls": 1
+    },
+    {
+      "name": "ab_max1_default",
+      "stub_txpath": 3,
+      "stub_rxpath": 3,
+      "trx_path_bmp": 51,
+      "max_tx_cnt": 1,
+      "path_div": 0,
+      "tx_npath": 0,
+      "expect_result": 1,
+      "expect_txpath": 1,
+      "expect_txpath_nss0": 1,
+      "expect_txpath_num_nss0": 1,
+      "expect_dump_calls": 1
+    },
+    {
+      "name": "ab_max1_path_div",
+      "stub_txpath": 3,
+      "stub_rxpath": 3,
+      "trx_path_bmp": 51,
+      "max_tx_cnt": 1,
+      "path_div": 1,
+      "tx_npath": 0,
+      "expect_result": 1,
+      "expect_txpath": 255,
+      "expect_txpath_nss0": 255,
+      "expect_txpath_num_nss0": 1,
+      "expect_dump_calls": 1
+    },
+    {
+      "name": "path_a_only",
+      "stub_txpath": 1,
+      "stub_rxpath": 1,
+      "trx_path_bmp": 17,
+      "max_tx_cnt": 2,
+      "path_div": 0,
+      "tx_npath": 0,
+      "expect_result": 1,
+      "expect_txpath": 1,
+      "expect_txpath_nss0": 1,
+      "expect_txpath_num_nss0": 1,
+      "expect_dump_calls": 1
+    },
+    {
+      "name": "empty_txpath_fail",
+      "stub_txpath": 0,
+      "stub_rxpath": 3,
+      "trx_path_bmp": 51,
+      "max_tx_cnt": 2,
+      "path_div": 0,
+      "tx_npath": 0,
+      "expect_result": 0,
+      "expect_txpath": 0,
+      "expect_txpath_nss0": 0,
+      "expect_txpath_num_nss0": 0,
+      "expect_dump_calls": 0
+    }
+  ]
+}
