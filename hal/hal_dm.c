@@ -180,6 +180,7 @@ void rtw_phydm_lck_trigger(_adapter *adapter)
 }
 #endif /* !CONFIG_RUST */
 
+#ifndef CONFIG_RUST
 void rtw_hal_phydm_cal_trigger(_adapter *adapter)
 {
 	struct dm_struct *p_dm_odm = adapter_to_phydm(adapter);
@@ -191,6 +192,7 @@ void rtw_hal_phydm_cal_trigger(_adapter *adapter)
 
 	rtw_ps_deny_cancel(adapter, PS_DENY_IOCTL);
 }
+#endif /* !CONFIG_RUST */
 
 #ifdef CONFIG_DBG_RF_CAL
 void rtw_hal_iqk_test(_adapter *adapter, bool recovery, bool clear, bool segment)

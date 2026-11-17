@@ -3,6 +3,11 @@
 
 #include "host_hal_dm_phydm_cal_trigger_types.h"
 
+void *rtw_rust_hal_dm_adapter_to_phydm(host_hal_dm_cal_adapter *adapter)
+{
+	return adapter ? (void *)&adapter->odmpriv : (void *)0;
+}
+
 void rtw_ps_deny(host_hal_dm_cal_adapter *adapter, u32 reason)
 {
 	if (!adapter)
