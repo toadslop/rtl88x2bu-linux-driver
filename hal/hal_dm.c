@@ -42,6 +42,9 @@ void rtw_phydm_iqk_trigger_all(_adapter *adapter);
 void rtw_phydm_lck_trigger(_adapter *adapter);
 void rtw_phydm_iqk_trigger_dbg(_adapter *adapter, bool recovery, bool clear,
 	bool segment);
+#ifdef CONFIG_CTRL_TXSS_BY_TP
+void rtw_phydm_trx_cfg(_adapter *adapter, bool tx_1ss);
+#endif
 #endif
 
 /* A mapping from HalData to ODM. */
@@ -1574,6 +1577,7 @@ static void init_phydm_info(_adapter *adapter)
 }
 
 #ifdef CONFIG_CTRL_TXSS_BY_TP
+#ifndef CONFIG_RUST
 void rtw_phydm_trx_cfg(_adapter *adapter, bool tx_1ss)
 {
 	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
@@ -1588,6 +1592,7 @@ void rtw_phydm_trx_cfg(_adapter *adapter, bool tx_1ss)
 	if (phydm_api_trx_mode(adapter_to_phydm(adapter), txpath, rxpath, txpath_1ss) == FALSE)
 		RTW_ERR("%s failed\n", __func__);
 }
+#endif /* !CONFIG_RUST */
 #endif
 
 #ifndef CONFIG_RUST
