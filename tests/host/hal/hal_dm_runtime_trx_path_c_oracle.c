@@ -14,10 +14,14 @@ u8 rtw_hal_runtime_trx_path_decision(_adapter *adapter)
 	u8 rst = _FAIL;
 
 	rtw_hal_get_trx_path(adapter_to_dvobj(adapter), NULL, &txpath, &rxpath);
-	if (!txpath)
+	if (!txpath) {
+		rtw_warn_on(1);
 		goto exit;
-	if (!rxpath)
+	}
+	if (!rxpath) {
+		rtw_warn_on(1);
 		goto exit;
+	}
 
 	tx_path_nss_set_default(hal_data->txpath_nss, hal_data->txpath_num_nss,
 			      GET_HAL_TX_PATH_BMP(adapter));
@@ -50,6 +54,7 @@ u8 rtw_hal_runtime_trx_path_decision(_adapter *adapter)
 				txpath = txpath_1ss = HOST_BB_PATH_A;
 			break;
 		default:
+			rtw_warn_on(1);
 			goto exit;
 		}
 	} else

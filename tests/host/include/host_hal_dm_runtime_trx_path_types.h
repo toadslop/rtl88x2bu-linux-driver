@@ -4,6 +4,15 @@
 
 #include <stdint.h>
 
+/*
+ * Default 8822BU module build (Makefile CONFIG_RTL8822B = y). Optional
+ * CONFIG_RTW_TX_NPATH_EN / CONFIG_RTW_PATH_DIV match drv_conf.h — undefined on
+ * the stock 8822BU path unless a host Makefile passes -D flags.
+ */
+#ifndef CONFIG_RTL8822B
+#define CONFIG_RTL8822B 1
+#endif
+
 typedef uint8_t u8;
 typedef uint32_t u32;
 
