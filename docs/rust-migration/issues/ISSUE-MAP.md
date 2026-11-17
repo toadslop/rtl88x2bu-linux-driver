@@ -437,6 +437,15 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-102 | #2115 | [W4-102] Translate hal_dm.c — RRSR set and dynamic enable |
 | W4-103 | #2116 | [W4-103] Translate hal_dm.c — runtime TRX path decision (8822B) |
 | W4-104 | #2117 | [W4-104] Translate hal_dm.c — crystal cap register setter |
+| W4-105 | #2154 | [W4-105] Translate hal_dm.c — IQK trigger debug wrapper |
+| W4-106 | #2155 | [W4-106] Translate hal_dm.c — DBG RF cal test wrappers |
+| W4-107 | #2156 | [W4-107] Translate hal_dm.c — PHYDM RA registered hook |
+| W4-108 | #2157 | [W4-108] Translate hal_dm.c — TRX cfg for TX SS by throughput |
+| W4-109 | #2158 | [W4-109] Translate hal_dm.c — HALMAC DM leaf delegates |
+| W4-110 | #2159 | [W4-110] Translate hal_dm.c — PHYDM HALMAC cfg_phy_para mapper |
+| W4-111 | #2160 | [W4-111] Translate hal_dm.c — dynamic SOML helpers |
+| W4-112 | #2161 | [W4-112] Translate hal_dm.c — PHYDM efuse trim read hooks |
+| W4-113 | #2162 | [W4-113] Translate hal_dm.c — PHYDM init orchestration |
 
 ## Superseded issues
 
