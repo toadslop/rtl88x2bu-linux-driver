@@ -128,3 +128,57 @@ void host_hal_dm_apply_rx_fixture_to_dm(_adapter *a)
 	dm->rssi_a = host_stub_rssi_a;
 	dm->rssi_b = host_stub_rssi_b;
 }
+
+struct rtw_hal_dm_dm_rx_fields {
+	u8 is_linked;
+	u8 rx_rate;
+	u8 rssi_a;
+	u8 rssi_b;
+	u8 rssi_c;
+	u8 rssi_d;
+};
+
+struct rtw_hal_dm_dm_rx_fields rtw_rust_hal_dm_dm_rx_fields(struct dm_struct *podm)
+{
+	struct rtw_hal_dm_dm_rx_fields out;
+
+	out.is_linked = podm->is_linked;
+	out.rx_rate = podm->rx_rate;
+	out.rssi_a = podm->rssi_a;
+	out.rssi_b = podm->rssi_b;
+	out.rssi_c = podm->rssi_c;
+	out.rssi_d = podm->rssi_d;
+	return out;
+}
+
+void rtw_rust_hal_dm_print_sel(void *sel, const char *line)
+{
+	size_t n;
+
+	if (!sel || !line)
+		return;
+	n = strlen(line);
+	host_append_capture((struct host_hal_dm_print_capture *)sel, line, n);
+}
+
+const char *rtw_rust_hal_dm_hdata_rate(u8 rate)
+{
+	return host_hdata_rate_str(rate);
+}
+
+u8 rtw_rust_hal_dm_is_hw_8814a(_adapter *adapter)
+{
+	return host_is_hardware_type_8814a(adapter) ? 1 : 0;
+}
+
+void rtw_rust_hal_dm_dump_rx_dframe_info(_adapter *adapter, void *sel)
+{
+	(void)adapter;
+	(void)sel;
+}
+
+void rtw_rust_hal_dm_dump_raw_rssi_info(_adapter *adapter, void *sel)
+{
+	(void)adapter;
+	(void)sel;
+}
