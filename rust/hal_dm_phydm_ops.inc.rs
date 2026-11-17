@@ -30,8 +30,19 @@ unsafe extern "C" {
     fn rtw_macid_ctl_set_rate_bmp1(macid_ctl: *mut c_void, id: u8, bmp: u32);
     fn rtw_update_tx_rate_bmp(dvobj: *mut c_void);
     #[cfg(CONFIG_SUPPORT_DYNAMIC_TXPWR)]
-    fn rtw_phydm_fill_desc_dpt(dm: *mut c_void, desc: *mut u8, dpt_lv: u8);
+    fn rtw_rust_hal_dm_get_chip_type(adapter: *mut c_void) -> u8;
+    #[cfg(CONFIG_SUPPORT_DYNAMIC_TXPWR)]
+    fn rtw_rust_hal_dm_set_tx_desc_txpwr_ofset_8822b(desc: *mut u8, value: u8);
+    #[cfg(CONFIG_SUPPORT_DYNAMIC_TXPWR)]
+    fn rtw_rust_hal_dm_log_dyntxpwr_unsupported();
+    #[cfg(CONFIG_SUPPORT_DYNAMIC_TXPWR)]
+    fn rtw_rust_hal_dm_adapter_to_phydm(adapter: *mut c_void) -> *mut DmStruct;
+    #[cfg(CONFIG_SUPPORT_DYNAMIC_TXPWR)]
+    fn rtw_rust_hal_dm_odm_set_dyntxpwr(dm: *mut c_void, desc: *mut u8, mac_id: u8);
 }
+
+#[cfg(CONFIG_SUPPORT_DYNAMIC_TXPWR)]
+include!("hal_dm_dyntxpwr_body.inc.rs");
 
 #[no_mangle]
 pub unsafe extern "C" fn record_ra_info(

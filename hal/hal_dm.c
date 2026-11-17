@@ -268,6 +268,7 @@ void record_ra_info(void *p_dm_void, u8 macid, struct cmn_sta_info *p_sta, u64 r
 #endif /* !CONFIG_RUST */
 
 #ifdef CONFIG_SUPPORT_DYNAMIC_TXPWR
+#ifndef CONFIG_RUST
 void rtw_phydm_fill_desc_dpt(void *dm, u8 *desc, u8 dpt_lv)
 {
 	struct dm_struct *p_dm = (struct dm_struct *)dm;
@@ -340,6 +341,7 @@ void rtw_phydm_set_dyntxpwr(_adapter *adapter, u8 *desc, u8 mac_id)
 
 	odm_set_dyntxpwr(dm, desc, mac_id);
 }
+#endif /* !CONFIG_RUST */
 #endif
 
 #ifdef CONFIG_TDMADIG

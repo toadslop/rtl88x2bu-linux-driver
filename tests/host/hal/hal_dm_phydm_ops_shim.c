@@ -61,11 +61,35 @@ void rtw_update_tx_rate_bmp(struct dvobj_priv *dvobj)
 }
 
 #if defined(CONFIG_SUPPORT_DYNAMIC_TXPWR) && defined(RUST_HAL_DM_PHYDM_OPS_ORACLE)
-void rtw_phydm_fill_desc_dpt(void *dm, u8 *desc, u8 dpt_lv)
+u8 rtw_rust_hal_dm_get_chip_type(host_adapter *adapter)
+{
+	(void)adapter;
+	return 0;
+}
+
+void rtw_rust_hal_dm_set_tx_desc_txpwr_ofset_8822b(u8 *desc, u8 value)
+{
+	(void)desc;
+	(void)value;
+}
+
+void rtw_rust_hal_dm_log_dyntxpwr_unsupported(void)
+{
+}
+
+struct dm_struct;
+
+struct dm_struct *rtw_rust_hal_dm_adapter_to_phydm(host_adapter *adapter)
+{
+	(void)adapter;
+	return NULL;
+}
+
+void rtw_rust_hal_dm_odm_set_dyntxpwr(void *dm, u8 *desc, u8 mac_id)
 {
 	(void)dm;
 	(void)desc;
-	(void)dpt_lv;
+	(void)mac_id;
 }
 #endif
 

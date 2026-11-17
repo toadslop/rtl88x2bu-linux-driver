@@ -94,7 +94,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-dm-board-type test-dm-board-type-rust \
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
 	test-dm-phydm-ops test-dm-phydm-ops-rust \
-	test-dm-dyntxpwr \
+	test-dm-dyntxpwr test-dm-dyntxpwr-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
 	test-dm-set-odm-var-core test-dm-set-odm-var-core-rust \
@@ -123,7 +123,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
 	test-dm-init-odm-cominfo-tail test-dm-init-odm-cominfo-tail-rust \
 	test-dm-phydm-ops test-dm-phydm-ops-rust \
-	test-dm-dyntxpwr \
+	test-dm-dyntxpwr test-dm-dyntxpwr-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
 	test-dm-set-odm-var-core test-dm-set-odm-var-core-rust \
@@ -1103,6 +1103,23 @@ test_hal_dm_phydm_cal_trigger_rust: test_hal_dm_phydm_cal_trigger.c \
 		test_hal_dm_phydm_cal_trigger.c $(DM_PHYDM_CAL_TRIGGER_SHIM) $(HOST_JSON) \
 		librust_hal_dm_phydm_cal_trigger.a
 
+RUST_HAL_DM_DYNTPWR := $(ROOT)/rust/hal_dm_dyntxpwr_host.rs
+
+librust_hal_dm_dyntxpwr.a: $(RUST_HAL_DM_DYNTPWR)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg CONFIG_SUPPORT_DYNAMIC_TXPWR --cfg CONFIG_RTL8822B \
+		--cfg host_hal_dm_dyntxpwr_test --crate-type staticlib \
+		$(RUST_HAL_DM_DYNTPWR) -o $@
+
+test-dm-dyntxpwr-rust: test_hal_dm_dyntxpwr_rust
+	./test_hal_dm_dyntxpwr_rust hal_dm_dyntxpwr_vectors.json
+
+test_hal_dm_dyntxpwr_rust: test_hal_dm_dyntxpwr.c librust_hal_dm_dyntxpwr.a \
+		$(DM_DYNTPWR_SHIM) $(HOST_JSON)
+	$(CC) $(DYNTPWR_CFLAGS) -DRUST_HAL_DM_DYNTPWR_ORACLE -o $@ \
+		test_hal_dm_dyntxpwr.c $(DM_DYNTPWR_SHIM) $(HOST_JSON) \
+		librust_hal_dm_dyntxpwr.a
+
 test-usb-vendor-wvalue: test_hal_usb_vendor_wvalue
 	./test_hal_usb_vendor_wvalue hal_usb_vendor_wvalue_vectors.json
 
@@ -1337,7 +1354,7 @@ clean:
 		test_hal_dm_phydm_iqk_lck test_hal_dm_phydm_iqk_lck_rust \
 		librust_hal_dm_phydm_iqk_lck.a \
 		test_hal_dm_set_odm_var_rx \
-		test_hal_dm_dyntxpwr \
+		test_hal_dm_dyntxpwr test_hal_dm_dyntxpwr_rust librust_hal_dm_dyntxpwr.a \
 		test_hal_dm_phydm_cal_trigger test_hal_dm_phydm_cal_trigger_rust \
 		librust_hal_dm_phydm_cal_trigger.a \
 		test_hal_dm_min_rssi_phy_cnt test_hal_dm_min_rssi_phy_cnt_rust \
