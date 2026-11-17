@@ -984,6 +984,25 @@ test_hal_dm_runtime_trx_path: test_hal_dm_runtime_trx_path.c \
 		test_hal_dm_runtime_trx_path.c $(DM_RUNTIME_TRX_ORACLE) \
 		$(DM_RUNTIME_TRX_SHIM) $(HOST_JSON)
 
+RUST_HAL_DM_RUNTIME_TRX := $(ROOT)/rust/hal_dm_runtime_trx_path_host.rs
+
+librust_hal_dm_runtime_trx_path.a: $(RUST_HAL_DM_RUNTIME_TRX)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_dm_runtime_trx_path_test \
+		--cfg CONFIG_RTL8822B --cfg CONFIG_RTW_PATH_DIV \
+		--cfg CONFIG_RTW_TX_NPATH_EN --crate-type staticlib \
+		$(RUST_HAL_DM_RUNTIME_TRX) -o $@
+
+test-dm-runtime-trx-path-rust: test_hal_dm_runtime_trx_path_rust
+	./test_hal_dm_runtime_trx_path_rust hal_dm_runtime_trx_path_vectors.json
+
+test_hal_dm_runtime_trx_path_rust: test_hal_dm_runtime_trx_path.c \
+		librust_hal_dm_runtime_trx_path.a $(DM_RUNTIME_TRX_SHIM) $(HOST_JSON)
+	$(CC) $(RUNTIME_TRX_CFLAGS) -DRUST_HAL_DM_RUNTIME_TRX_ORACLE \
+		-I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_runtime_trx_path.c $(DM_RUNTIME_TRX_SHIM) $(HOST_JSON) \
+		librust_hal_dm_runtime_trx_path.a
+
 test-dm-phydm-iqk-trigger-dbg: test_hal_dm_phydm_iqk_trigger_dbg
 	./test_hal_dm_phydm_iqk_trigger_dbg hal_dm_phydm_iqk_trigger_dbg_vectors.json
 
