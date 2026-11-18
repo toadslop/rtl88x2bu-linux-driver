@@ -8,9 +8,10 @@ static void init_phydm_info(_adapter *adapter)
 	struct hal_data_host *hal_data = GET_HAL_DATA(adapter);
 	struct dm_struct *phydm = &(hal_data->odmpriv);
 
-	odm_cmn_info_init(phydm, ODM_CMNINFO_FW_VER, hal_data->firmware_version);
+	odm_cmn_info_init(phydm, ODM_CMNINFO_FW_VER,
+			  (u64)hal_data->firmware_version);
 	odm_cmn_info_init(phydm, ODM_CMNINFO_FW_SUB_VER,
-			  hal_data->firmware_sub_version);
+			  (u64)hal_data->firmware_sub_version);
 }
 
 static u8 rtw_phydm_config_trx_path(_adapter *adapter)

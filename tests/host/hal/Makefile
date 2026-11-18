@@ -1223,6 +1223,37 @@ test_hal_dm_halmac_dm_leaf_rust: test_hal_dm_halmac_dm_leaf.c \
 		test_hal_dm_halmac_dm_leaf.c $(DM_HALMAC_DM_LEAF_SHIM) $(HOST_JSON) \
 		librust_hal_dm_halmac_dm_leaf.a
 
+DM_PHYDM_INIT_ORACLE := hal_dm_phydm_init_c_oracle.c
+DM_PHYDM_INIT_SHIM := hal_dm_phydm_init_host_shim.c
+PHYDM_INIT_CFLAGS := $(CFLAGS) -DCONFIG_RTL8822B
+
+test-dm-phydm-init: test_hal_dm_phydm_init
+	./test_hal_dm_phydm_init hal_dm_phydm_init_vectors.json
+
+test_hal_dm_phydm_init: test_hal_dm_phydm_init.c \
+		$(DM_PHYDM_INIT_ORACLE) $(DM_PHYDM_INIT_SHIM) $(HOST_JSON)
+	$(CC) $(PHYDM_INIT_CFLAGS) -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_phydm_init.c $(DM_PHYDM_INIT_ORACLE) \
+		$(DM_PHYDM_INIT_SHIM) $(HOST_JSON)
+
+RUST_HAL_DM_PHYDM_INIT := $(ROOT)/rust/hal_dm_phydm_init_host.rs
+RUST_HAL_DM_PHYDM_INIT_CFG := --cfg host_hal_dm_phydm_init_test --cfg CONFIG_RTL8822B
+
+librust_hal_dm_phydm_init.a: $(RUST_HAL_DM_PHYDM_INIT)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		$(RUST_HAL_DM_PHYDM_INIT_CFG) --crate-type staticlib \
+		$(RUST_HAL_DM_PHYDM_INIT) -o $@
+
+test-dm-phydm-init-rust: test_hal_dm_phydm_init_rust
+	./test_hal_dm_phydm_init_rust hal_dm_phydm_init_vectors.json
+
+test_hal_dm_phydm_init_rust: test_hal_dm_phydm_init.c \
+		librust_hal_dm_phydm_init.a $(DM_PHYDM_INIT_SHIM) $(HOST_JSON)
+	$(CC) $(PHYDM_INIT_CFLAGS) -DRUST_HAL_DM_PHYDM_INIT_ORACLE \
+		-I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_phydm_init.c $(DM_PHYDM_INIT_SHIM) $(HOST_JSON) \
+		librust_hal_dm_phydm_init.a
+
 DM_INIT_ODM_TAIL_SHIM := hal_dm_init_odm_cominfo_tail_shim.c
 DM_INIT_ODM_TAIL_ORACLE := hal_dm_init_odm_cominfo_tail_c_oracle.c
 

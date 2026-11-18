@@ -8,6 +8,7 @@
 
 typedef uint8_t u8;
 typedef uint32_t u32;
+typedef uint64_t u64;
 typedef u8 boolean;
 
 #define _FALSE 0
@@ -86,6 +87,7 @@ enum phydm_init_result_host odm_dm_init(struct dm_struct *dm);
 void rtw_phydm_init(_adapter *adapter);
 
 void rtw_warn_on(int cond);
+void rtw_rust_hal_dm_phydm_init_warn_on(int cond);
 #define RTW_ERR(...) host_hal_dm_phydm_init_trace.trx_warn = 1
 
 struct dm_struct *rtw_rust_hal_dm_adapter_to_phydm(_adapter *adapter);

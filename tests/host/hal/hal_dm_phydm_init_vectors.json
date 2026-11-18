@@ -19,7 +19,8 @@
       "expect_fw_ver": 42,
       "expect_fw_sub": 7,
       "expect_odm_dm_init_calls": 1,
-      "expect_phydm_init_result": 0
+      "expect_phydm_init_result": 0,
+      "expect_trx_warn": 0
     },
     {
       "name": "init_dm_init_failure_stored",
@@ -31,12 +32,16 @@
       "trx_stub_ok": 1,
       "odm_dm_init_stub": 1,
       "expect_trx_calls": 1,
+      "expect_tx": 1,
+      "expect_rx": 3,
+      "expect_tx_1ss": 1,
       "expect_cmn_fw_ver": 1,
       "expect_cmn_fw_sub": 1,
       "expect_fw_ver": 10,
       "expect_fw_sub": 2,
       "expect_odm_dm_init_calls": 1,
-      "expect_phydm_init_result": 1
+      "expect_phydm_init_result": 1,
+      "expect_trx_warn": 0
     },
     {
       "name": "trx_mode_fail_still_inits_cmn_info",
@@ -48,11 +53,16 @@
       "trx_stub_ok": 0,
       "odm_dm_init_stub": 0,
       "expect_trx_calls": 1,
-      "expect_trx_warn": 1,
+      "expect_tx": 3,
+      "expect_rx": 3,
+      "expect_tx_1ss": 1,
       "expect_cmn_fw_ver": 1,
       "expect_cmn_fw_sub": 1,
+      "expect_fw_ver": 5,
+      "expect_fw_sub": 1,
       "expect_odm_dm_init_calls": 1,
-      "expect_phydm_init_result": 0
+      "expect_phydm_init_result": 0,
+      "expect_trx_warn": 1
     }
   ]
 }

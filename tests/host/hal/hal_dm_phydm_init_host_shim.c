@@ -47,6 +47,11 @@ void rtw_warn_on(int cond)
 	(void)cond;
 }
 
+void rtw_rust_hal_dm_phydm_init_warn_on(int cond)
+{
+	rtw_warn_on(cond);
+}
+
 struct dm_struct *rtw_rust_hal_dm_adapter_to_phydm(_adapter *adapter)
 {
 	return adapter ? adapter_to_phydm(adapter) : NULL;
