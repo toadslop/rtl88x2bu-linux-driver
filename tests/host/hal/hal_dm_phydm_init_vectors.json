@@ -1,0 +1,58 @@
+{
+  "oracle": "hal/hal_dm.c rtw_phydm_init (8822B-family trx_mode + init_phydm_info + odm_dm_init)",
+  "vectors": [
+    {
+      "name": "init_success_records_fw_and_trx",
+      "txpath": 3,
+      "rxpath": 3,
+      "txpath_1ss": 1,
+      "firmware_version": 42,
+      "firmware_sub_version": 7,
+      "trx_stub_ok": 1,
+      "odm_dm_init_stub": 0,
+      "expect_trx_calls": 1,
+      "expect_tx": 3,
+      "expect_rx": 3,
+      "expect_tx_1ss": 1,
+      "expect_cmn_fw_ver": 1,
+      "expect_cmn_fw_sub": 1,
+      "expect_fw_ver": 42,
+      "expect_fw_sub": 7,
+      "expect_odm_dm_init_calls": 1,
+      "expect_phydm_init_result": 0
+    },
+    {
+      "name": "init_dm_init_failure_stored",
+      "txpath": 1,
+      "rxpath": 3,
+      "txpath_1ss": 1,
+      "firmware_version": 10,
+      "firmware_sub_version": 2,
+      "trx_stub_ok": 1,
+      "odm_dm_init_stub": 1,
+      "expect_trx_calls": 1,
+      "expect_cmn_fw_ver": 1,
+      "expect_cmn_fw_sub": 1,
+      "expect_fw_ver": 10,
+      "expect_fw_sub": 2,
+      "expect_odm_dm_init_calls": 1,
+      "expect_phydm_init_result": 1
+    },
+    {
+      "name": "trx_mode_fail_still_inits_cmn_info",
+      "txpath": 3,
+      "rxpath": 3,
+      "txpath_1ss": 1,
+      "firmware_version": 5,
+      "firmware_sub_version": 1,
+      "trx_stub_ok": 0,
+      "odm_dm_init_stub": 0,
+      "expect_trx_calls": 1,
+      "expect_trx_warn": 1,
+      "expect_cmn_fw_ver": 1,
+      "expect_cmn_fw_sub": 1,
+      "expect_odm_dm_init_calls": 1,
+      "expect_phydm_init_result": 0
+    }
+  ]
+}
