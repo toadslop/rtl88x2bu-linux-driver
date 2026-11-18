@@ -429,36 +429,8 @@ static void rtw_hal_set_msr(_adapter *adapter, u8 net_type)
 
 /* rtw_sec_clr_cam_ent / rtw_sec_read_cam_is_gk — ported to rust/hal_com.rs (W4-54) */
 #ifdef CONFIG_MBSSID_CAM
-void rtw_mbid_cam_init(struct dvobj_priv *dvobj)
-{
-	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
+/* rtw_mbid_cam_init/deinit/reset and search/max helpers — rust/hal_com_mbid_cam.rs (W4-119) */
 
-	_rtw_spinlock_init(&mbid_cam_ctl->lock);
-	mbid_cam_ctl->bitmap = 0;
-	ATOMIC_SET(&mbid_cam_ctl->mbid_entry_num, 0);
-	_rtw_memset(&dvobj->mbid_cam_cache, 0, sizeof(dvobj->mbid_cam_cache));
-}
-
-void rtw_mbid_cam_deinit(struct dvobj_priv *dvobj)
-{
-	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
-
-	_rtw_spinlock_free(&mbid_cam_ctl->lock);
-}
-
-void rtw_mbid_cam_reset(_adapter *adapter)
-{
-	_irqL irqL;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
-
-	_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);
-	mbid_cam_ctl->bitmap = 0;
-	_rtw_memset(&dvobj->mbid_cam_cache, 0, sizeof(dvobj->mbid_cam_cache));
-	_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);
-
-	ATOMIC_SET(&mbid_cam_ctl->mbid_entry_num, 0);
-}
 static u8 _rtw_mbid_cam_search_by_macaddr(_adapter *adapter, u8 *mac_addr)
 {
 	u8 i;
@@ -476,20 +448,6 @@ static u8 _rtw_mbid_cam_search_by_macaddr(_adapter *adapter, u8 *mac_addr)
 	return cam_id;
 }
 
-u8 rtw_mbid_cam_search_by_macaddr(_adapter *adapter, u8 *mac_addr)
-{
-	_irqL irqL;
-
-	u8 cam_id = INVALID_CAM_ID;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
-
-	_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);
-	cam_id = _rtw_mbid_cam_search_by_macaddr(adapter, mac_addr);
-	_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);
-
-	return cam_id;
-}
 static u8 _rtw_mbid_cam_search_by_ifaceid(_adapter *adapter, u8 iface_id)
 {
 	u8 i;
@@ -507,47 +465,6 @@ static u8 _rtw_mbid_cam_search_by_ifaceid(_adapter *adapter, u8 iface_id)
 			__func__, iface_id, MAC_ARG(dvobj->mbid_cam_cache[cam_id].mac_addr), cam_id);
 
 	return cam_id;
-}
-
-u8 rtw_mbid_cam_search_by_ifaceid(_adapter *adapter, u8 iface_id)
-{
-	_irqL irqL;
-	u8 cam_id = INVALID_CAM_ID;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
-
-	_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);
-	cam_id = _rtw_mbid_cam_search_by_ifaceid(adapter, iface_id);
-	_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);
-
-	return cam_id;
-}
-u8 rtw_get_max_mbid_cam_id(_adapter *adapter)
-{
-	_irqL irqL;
-	s8 i;
-	u8 cam_id = INVALID_CAM_ID;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
-
-	_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);
-	for (i = (TOTAL_MBID_CAM_NUM - 1); i >= 0; i--) {
-		if (mbid_cam_ctl->bitmap & BIT(i)) {
-			cam_id = i;
-			break;
-		}
-	}
-	_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);
-	/*RTW_INFO("%s max cam_id:%d\n", __func__, cam_id);*/
-	return cam_id;
-}
-
-inline u8 rtw_get_mbid_cam_entry_num(_adapter *adapter)
-{
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
-
-	return ATOMIC_READ(&mbid_cam_ctl->mbid_entry_num);
 }
 
 static inline void mbid_cam_cache_init(_adapter *adapter, struct mbid_cam_cache *pmbid_cam, u8 *mac_addr)
@@ -14882,6 +14799,101 @@ struct dvobj_priv *rtw_rust_hal_com_adapter_to_dvobj(_adapter *adapter)
 		return NULL;
 	return adapter_to_dvobj(adapter);
 }
+
+#ifdef CONFIG_MBSSID_CAM
+struct mbid_cam_ctl_t *rtw_rust_hal_com_mbid_cam_ctl(struct dvobj_priv *dvobj)
+{
+	return dvobj ? &dvobj->mbid_cam_ctl : NULL;
+}
+
+_lock *rtw_rust_hal_com_mbid_ctl_lock(struct mbid_cam_ctl_t *ctl)
+{
+	return ctl ? &ctl->lock : NULL;
+}
+
+u8 rtw_rust_hal_com_mbid_ctl_bitmap(struct mbid_cam_ctl_t *ctl)
+{
+	return ctl ? ctl->bitmap : 0;
+}
+
+void rtw_rust_hal_com_mbid_ctl_set_bitmap(struct mbid_cam_ctl_t *ctl, u8 bitmap)
+{
+	if (ctl)
+		ctl->bitmap = bitmap;
+}
+
+ATOMIC_T *rtw_rust_hal_com_mbid_ctl_entry_num(struct mbid_cam_ctl_t *ctl)
+{
+	return ctl ? &ctl->mbid_entry_num : NULL;
+}
+
+void rtw_rust_hal_com_mbid_cam_cache_zero(struct dvobj_priv *dvobj)
+{
+	if (dvobj)
+		_rtw_memset(dvobj->mbid_cam_cache, 0, sizeof(dvobj->mbid_cam_cache));
+}
+
+u8 rtw_rust_hal_com_mbid_cache_iface_id(struct dvobj_priv *dvobj, u8 idx)
+{
+	if (!dvobj || idx >= TOTAL_MBID_CAM_NUM)
+		return CONFIG_IFACE_NUMBER;
+	return dvobj->mbid_cam_cache[idx].iface_id;
+}
+
+u8 *rtw_rust_hal_com_mbid_cache_mac(struct dvobj_priv *dvobj, u8 idx)
+{
+	if (!dvobj || idx >= TOTAL_MBID_CAM_NUM)
+		return NULL;
+	return dvobj->mbid_cam_cache[idx].mac_addr;
+}
+
+void rtw_rust_hal_com_mbid_log_mac_search(const char *func, u8 *mac_addr, u8 cam_id)
+{
+	RTW_INFO("%s mac:"MAC_FMT" - cam_id:%d\n", func, MAC_ARG(mac_addr), cam_id);
+}
+
+void rtw_rust_hal_com_mbid_log_iface_search(const char *func, u8 iface_id,
+					    const u8 *mac_addr, u8 cam_id)
+{
+	RTW_INFO("%s iface_id:%d mac:"MAC_FMT" - cam_id:%d\n",
+		 func, iface_id, MAC_ARG(mac_addr), cam_id);
+}
+
+void rtw_rust_hal_com_spinlock_init(_lock *lock)
+{
+	if (lock)
+		_rtw_spinlock_init(lock);
+}
+
+void rtw_rust_hal_com_spinlock_free(_lock *lock)
+{
+	if (lock)
+		_rtw_spinlock_free(lock);
+}
+
+void rtw_rust_hal_com_enter_critical_bh(_lock *lock, _irqL *irqL)
+{
+	if (lock && irqL)
+		_enter_critical_bh(lock, irqL);
+}
+
+void rtw_rust_hal_com_exit_critical_bh(_lock *lock, _irqL *irqL)
+{
+	if (lock && irqL)
+		_exit_critical_bh(lock, irqL);
+}
+
+s32 rtw_rust_hal_com_atomic_read(ATOMIC_T *v)
+{
+	return v ? ATOMIC_READ(v) : 0;
+}
+
+void rtw_rust_hal_com_atomic_set(ATOMIC_T *v, s32 x)
+{
+	if (v)
+		ATOMIC_SET(v, x);
+}
+#endif /* CONFIG_MBSSID_CAM */
 
 u8 rtw_rust_hal_com_dvobj_iface_nums(struct dvobj_priv *dvobj)
 {
