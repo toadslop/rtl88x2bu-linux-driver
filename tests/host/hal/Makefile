@@ -1655,7 +1655,6 @@ librust_hal_com_mbid_cam.a: $(RUST_MBID_CAM)
 
 test-mbid-cam-rust: test_hal_com_mbid_cam_rust
 	./test_hal_com_mbid_cam_rust
-
 test_hal_com_mbid_cam_rust: test_hal_com_mbid_cam.c $(MBID_CAM_SHIM) $(MBID_CAM_ORACLE) \
 		librust_hal_com_mbid_cam.a
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_MBID_CAM_ORACLE -o $@ test_hal_com_mbid_cam.c \
