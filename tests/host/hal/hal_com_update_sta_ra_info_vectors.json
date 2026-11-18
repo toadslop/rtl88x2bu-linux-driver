@@ -1,0 +1,14 @@
+{
+  "vectors": [
+    {
+      "name": "sta_ra_child_order",
+      "expect_step_count": 3,
+      "expect_step_0": 1,
+      "expect_step_1": 2,
+      "expect_step_2": 3,
+      "expect_mimo": 1,
+      "expect_smps": 1,
+      "expect_rate_mask": 1
+    }
+  ]
+}
