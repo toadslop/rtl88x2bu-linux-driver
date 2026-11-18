@@ -1557,27 +1557,7 @@ exit:
 #endif /* CONFIG_RTW_CUSTOMER_STR */
 
 #ifdef RTW_PER_CMD_SUPPORT_FW
-#define H2C_REQ_PER_RPT_LEN 5
-#define SET_H2CCMD_REQ_PER_RPT_GROUP_MACID(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 0, 4, __Value)
-#define SET_H2CCMD_REQ_PER_RPT_RPT_TYPE(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 4, 4, __Value)
-#define SET_H2CCMD_REQ_PER_RPT_MACID_BMAP(__pH2CCmd, __Value)	SET_BITS_TO_LE_4BYTE(__pH2CCmd + 1, 0, 32, __Value)
-
-u8 rtw_hal_set_req_per_rpt_cmd(_adapter *adapter, u8 group_macid,
-				      u8 rpt_type, u32 macid_bitmap)
-{
-	u8 ret = _FAIL;
-	u8 cmd_buf[H2C_REQ_PER_RPT_LEN] = {0};
-
-	SET_H2CCMD_REQ_PER_RPT_GROUP_MACID(cmd_buf, group_macid);
-	SET_H2CCMD_REQ_PER_RPT_RPT_TYPE(cmd_buf, rpt_type);
-	SET_H2CCMD_REQ_PER_RPT_MACID_BMAP(cmd_buf, macid_bitmap);
-
-	ret = rtw_hal_fill_h2c_cmd(adapter, 
-				   H2C_REQ_PER_RPT, 
-				   H2C_REQ_PER_RPT_LEN, 
-				   cmd_buf);
-	return ret;
-}
+/* rtw_hal_set_req_per_rpt_cmd — rust/hal_com_req_per_rpt.rs (W4-118) */
 
 #define	GET_C2H_PER_RATE_RPT_TYPE0_MACID0(_data)	LE_BITS_TO_1BYTE(((u8 *)(_data)), 0, 8)
 #define	GET_C2H_PER_RATE_RPT_TYPE0_PER0(_data)		LE_BITS_TO_1BYTE(((u8 *)(_data)) + 1, 0, 8)
