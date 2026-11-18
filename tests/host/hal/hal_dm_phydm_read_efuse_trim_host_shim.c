@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0
 /* Host shims for Rust W4-112 efuse trim read hooks L2. */
 
+#include <stddef.h>
+#include <string.h>
+
 #include "host_hal_dm_phydm_read_efuse_trim_types.h"
 
 struct host_hal_dm_phydm_read_efuse_trim_trace host_hal_dm_phydm_read_efuse_trim_trace;

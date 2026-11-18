@@ -1996,6 +1996,7 @@ void rtw_phydm_dyn_rrsr_en(_adapter *adapter, bool en_rrsr)
 	phydm_rrsr_en(phydm, en_rrsr);
 }
 #endif /* !CONFIG_RUST */
+#ifndef CONFIG_RUST
 void rtw_phydm_read_efuse(_adapter *adapter)
 {
 	PHAL_DATA_TYPE hal_data = GET_HAL_DATA(adapter);
@@ -2006,6 +2007,7 @@ void rtw_phydm_read_efuse(_adapter *adapter)
 	/*PHYDM API - power trim*/
 	phydm_get_power_trim_offset(phydm);
 }
+#endif /* !CONFIG_RUST */
 
 #ifdef CONFIG_LPS_PWR_TRACKING
 void rtw_phydm_pwr_tracking_directly(_adapter *adapter)
