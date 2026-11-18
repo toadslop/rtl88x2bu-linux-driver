@@ -61,6 +61,9 @@ DM_PHYDM_IQK_TRIGGER_DBG_ORACLE := hal_dm_phydm_iqk_trigger_dbg_c_oracle.c
 DM_PHYDM_IQK_TRIGGER_DBG_SHIM := hal_dm_phydm_iqk_trigger_dbg_host_shim.c
 DM_PHYDM_RA_REGISTED_ORACLE := hal_dm_phydm_ra_registed_c_oracle.c
 DM_PHYDM_RA_REGISTED_SHIM := hal_dm_phydm_ra_registed_host_shim.c
+DM_PHYDM_TRX_CFG_ORACLE := hal_dm_phydm_trx_cfg_c_oracle.c
+DM_PHYDM_TRX_CFG_SHIM := hal_dm_phydm_trx_cfg_host_shim.c
+DM_PHYDM_TRX_CFG_CFLAGS := -DCONFIG_CTRL_TXSS_BY_TP
 USB_WVALUE_ORACLE := hal_usb_vendor_wvalue_c_oracle.c
 USB_SYNC_READ_ORACLE := hal_usb_sync_read_c_oracle.c
 USB_SYNC_WRITE_ORACLE := hal_usb_sync_write_c_oracle.c
@@ -1061,6 +1064,32 @@ test_hal_dm_phydm_ra_registed_rust: test_hal_dm_phydm_ra_registed.c \
 		-I$(ROOT)/tests/host/include -o $@ \
 		test_hal_dm_phydm_ra_registed.c $(DM_PHYDM_RA_REGISTED_SHIM) $(HOST_JSON) \
 		librust_hal_dm_phydm_ra_registed.a
+
+test-dm-phydm-trx-cfg: test_hal_dm_phydm_trx_cfg
+	./test_hal_dm_phydm_trx_cfg hal_dm_phydm_trx_cfg_vectors.json
+
+test_hal_dm_phydm_trx_cfg: test_hal_dm_phydm_trx_cfg.c \
+		$(DM_PHYDM_TRX_CFG_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(DM_PHYDM_TRX_CFG_CFLAGS) -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_phydm_trx_cfg.c $(DM_PHYDM_TRX_CFG_ORACLE) $(HOST_JSON)
+
+RUST_HAL_DM_PHYDM_TRX_CFG := $(ROOT)/rust/hal_dm_phydm_trx_cfg_host.rs
+RUST_HAL_DM_TRX_CFG_CFG := --cfg CONFIG_CTRL_TXSS_BY_TP --cfg host_hal_dm_phydm_trx_cfg_test
+
+librust_hal_dm_phydm_trx_cfg.a: $(RUST_HAL_DM_PHYDM_TRX_CFG)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		$(RUST_HAL_DM_TRX_CFG_CFG) --crate-type staticlib \
+		$(RUST_HAL_DM_PHYDM_TRX_CFG) -o $@
+
+test-dm-phydm-trx-cfg-rust: test_hal_dm_phydm_trx_cfg_rust
+	./test_hal_dm_phydm_trx_cfg_rust hal_dm_phydm_trx_cfg_vectors.json
+
+test_hal_dm_phydm_trx_cfg_rust: test_hal_dm_phydm_trx_cfg.c \
+		librust_hal_dm_phydm_trx_cfg.a $(DM_PHYDM_TRX_CFG_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(DM_PHYDM_TRX_CFG_CFLAGS) -DRUST_HAL_DM_PHYDM_TRX_CFG_ORACLE \
+		-I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_phydm_trx_cfg.c $(DM_PHYDM_TRX_CFG_SHIM) $(HOST_JSON) \
+		librust_hal_dm_phydm_trx_cfg.a
 
 DM_INIT_ODM_TAIL_SHIM := hal_dm_init_odm_cominfo_tail_shim.c
 DM_INIT_ODM_TAIL_ORACLE := hal_dm_init_odm_cominfo_tail_c_oracle.c
