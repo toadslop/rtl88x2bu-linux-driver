@@ -430,152 +430,7 @@ static void rtw_hal_set_msr(_adapter *adapter, u8 net_type)
 /* rtw_sec_clr_cam_ent / rtw_sec_read_cam_is_gk — ported to rust/hal_com.rs (W4-54) */
 #ifdef CONFIG_MBSSID_CAM
 /* rtw_mbid_cam_init/deinit/reset and search/max helpers — rust/hal_com_mbid_cam.rs (W4-119) */
-
-static u8 _rtw_mbid_cam_search_by_ifaceid(_adapter *adapter, u8 iface_id)
-{
-	u8 i;
-	u8 cam_id = INVALID_CAM_ID;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-
-	for (i = 0; i < TOTAL_MBID_CAM_NUM; i++) {
-		if (iface_id == dvobj->mbid_cam_cache[i].iface_id) {
-			cam_id = i;
-			break;
-		}
-	}
-	if (cam_id != INVALID_CAM_ID)
-		RTW_INFO("%s iface_id:%d mac:"MAC_FMT" - cam_id:%d\n",
-			__func__, iface_id, MAC_ARG(dvobj->mbid_cam_cache[cam_id].mac_addr), cam_id);
-
-	return cam_id;
-}
-
-static inline void mbid_cam_cache_init(_adapter *adapter, struct mbid_cam_cache *pmbid_cam, u8 *mac_addr)
-{
-	if (adapter && pmbid_cam && mac_addr) {
-		_rtw_memcpy(pmbid_cam->mac_addr, mac_addr, ETH_ALEN);
-		pmbid_cam->iface_id = adapter->iface_id;
-	}
-}
-static inline void mbid_cam_cache_clr(struct mbid_cam_cache *pmbid_cam)
-{
-	if (pmbid_cam) {
-		_rtw_memset(pmbid_cam->mac_addr, 0, ETH_ALEN);
-		pmbid_cam->iface_id = CONFIG_IFACE_NUMBER;
-	}
-}
-
-u8 rtw_mbid_camid_alloc(_adapter *adapter, u8 *mac_addr)
-{
-	_irqL irqL;
-	u8 cam_id = INVALID_CAM_ID, i;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
-	u8 entry_num = ATOMIC_READ(&mbid_cam_ctl->mbid_entry_num);
-
-	if (INVALID_CAM_ID != rtw_mbid_cam_search_by_macaddr(adapter, mac_addr))
-		goto exit;
-
-	if (entry_num >= TOTAL_MBID_CAM_NUM) {
-		RTW_INFO(FUNC_ADPT_FMT" failed !! MBSSID number :%d over TOTAL_CAM_ENTRY(8)\n", FUNC_ADPT_ARG(adapter), entry_num);
-		rtw_warn_on(1);
-	}
-
-	_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);
-	for (i = 0; i < TOTAL_MBID_CAM_NUM; i++) {
-		if (!(mbid_cam_ctl->bitmap & BIT(i))) {
-			mbid_cam_ctl->bitmap |= BIT(i);
-			cam_id = i;
-			break;
-		}
-	}
-	if ((cam_id != INVALID_CAM_ID) && (mac_addr))
-		mbid_cam_cache_init(adapter, &dvobj->mbid_cam_cache[cam_id], mac_addr);
-	_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);
-
-	if (cam_id != INVALID_CAM_ID) {
-		ATOMIC_INC(&mbid_cam_ctl->mbid_entry_num);
-		RTW_INFO("%s mac:"MAC_FMT" - cam_id:%d\n", __func__, MAC_ARG(mac_addr), cam_id);
-#ifdef DBG_MBID_CAM_DUMP
-		rtw_mbid_cam_cache_dump(RTW_DBGDUMP, __func__, adapter);
-#endif
-	} else
-		RTW_INFO("%s [WARN] "MAC_FMT" - invalid cam_id:%d\n", __func__, MAC_ARG(mac_addr), cam_id);
-exit:
-	return cam_id;
-}
-
-u8 rtw_mbid_cam_info_change(_adapter *adapter, u8 *mac_addr)
-{
-	_irqL irqL;
-	u8 entry_id = INVALID_CAM_ID;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
-
-	_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);
-	entry_id = _rtw_mbid_cam_search_by_ifaceid(adapter, adapter->iface_id);
-	if (entry_id != INVALID_CAM_ID)
-		mbid_cam_cache_init(adapter, &dvobj->mbid_cam_cache[entry_id], mac_addr);
-
-	_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);
-
-	return entry_id;
-}
-
-u8 rtw_mbid_cam_assign(_adapter *adapter, u8 *mac_addr, u8 camid)
-{
-	_irqL irqL;
-	u8 ret = _FALSE;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
-
-	if ((camid >= TOTAL_MBID_CAM_NUM) || (camid == INVALID_CAM_ID)) {
-		RTW_INFO(FUNC_ADPT_FMT" failed !! invlaid mbid_canid :%d\n", FUNC_ADPT_ARG(adapter), camid);
-		rtw_warn_on(1);
-	}
-	if (INVALID_CAM_ID != rtw_mbid_cam_search_by_macaddr(adapter, mac_addr))
-		goto exit;
-
-	_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);
-	if (!(mbid_cam_ctl->bitmap & BIT(camid))) {
-		if (mac_addr) {
-			mbid_cam_ctl->bitmap |= BIT(camid);
-			mbid_cam_cache_init(adapter, &dvobj->mbid_cam_cache[camid], mac_addr);
-			ret = _TRUE;
-		}
-	}
-	_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);
-
-	if (ret == _TRUE) {
-		ATOMIC_INC(&mbid_cam_ctl->mbid_entry_num);
-		RTW_INFO("%s mac:"MAC_FMT" - cam_id:%d\n", __func__, MAC_ARG(mac_addr), camid);
-#ifdef DBG_MBID_CAM_DUMP
-		rtw_mbid_cam_cache_dump(RTW_DBGDUMP, __func__, adapter);
-#endif
-	} else
-		RTW_INFO("%s  [WARN] mac:"MAC_FMT" - cam_id:%d assigned failed\n", __func__, MAC_ARG(mac_addr), camid);
-
-exit:
-	return ret;
-}
-
-void rtw_mbid_camid_clean(_adapter *adapter, u8 mbss_canid)
-{
-	_irqL irqL;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
-
-	if ((mbss_canid >= TOTAL_MBID_CAM_NUM) || (mbss_canid == INVALID_CAM_ID)) {
-		RTW_INFO(FUNC_ADPT_FMT" failed !! invlaid mbid_canid :%d\n", FUNC_ADPT_ARG(adapter), mbss_canid);
-		rtw_warn_on(1);
-	}
-	_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);
-	mbid_cam_cache_clr(&dvobj->mbid_cam_cache[mbss_canid]);
-	mbid_cam_ctl->bitmap &= (~BIT(mbss_canid));
-	_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);
-	ATOMIC_DEC(&mbid_cam_ctl->mbid_entry_num);
-	RTW_INFO("%s - cam_id:%d\n", __func__, mbss_canid);
-}
+/* rtw_mbid_camid_alloc / info_change / assign / clean — rust/hal_com_mbid_cam.rs (W4-120) */
 int rtw_mbid_cam_cache_dump(void *sel, const char *fun_name, _adapter *adapter)
 {
 	_irqL irqL;
@@ -14875,6 +14730,59 @@ void rtw_rust_hal_com_atomic_set(ATOMIC_T *v, s32 x)
 {
 	if (v)
 		ATOMIC_SET(v, x);
+}
+
+void rtw_rust_hal_com_atomic_inc(ATOMIC_T *v)
+{
+	if (v)
+		ATOMIC_INC(v);
+}
+
+void rtw_rust_hal_com_atomic_dec(ATOMIC_T *v)
+{
+	if (v)
+		ATOMIC_DEC(v);
+}
+
+u8 rtw_rust_hal_com_adapter_iface_id(_adapter *adapter)
+{
+	return adapter ? adapter->iface_id : CONFIG_IFACE_NUMBER;
+}
+
+u8 rtw_rust_hal_com_mbid_ctl_bitmap_test(struct mbid_cam_ctl_t *ctl, u8 idx)
+{
+	if (!ctl || idx >= TOTAL_MBID_CAM_NUM)
+		return 0;
+	return !!(ctl->bitmap & BIT(idx));
+}
+
+void rtw_rust_hal_com_mbid_ctl_bitmap_set_bit(struct mbid_cam_ctl_t *ctl, u8 idx)
+{
+	if (ctl && idx < TOTAL_MBID_CAM_NUM)
+		ctl->bitmap |= BIT(idx);
+}
+
+void rtw_rust_hal_com_mbid_ctl_bitmap_clr_bit(struct mbid_cam_ctl_t *ctl, u8 idx)
+{
+	if (ctl && idx < TOTAL_MBID_CAM_NUM)
+		ctl->bitmap &= ~BIT(idx);
+}
+
+void rtw_rust_hal_com_mbid_cache_init(_adapter *adapter, struct dvobj_priv *dvobj,
+				      u8 idx, u8 *mac)
+{
+	if (adapter && dvobj && mac && idx < TOTAL_MBID_CAM_NUM) {
+		_rtw_memcpy(dvobj->mbid_cam_cache[idx].mac_addr, mac, ETH_ALEN);
+		dvobj->mbid_cam_cache[idx].iface_id = adapter->iface_id;
+	}
+}
+
+void rtw_rust_hal_com_mbid_cache_clr(struct dvobj_priv *dvobj, u8 idx)
+{
+	if (dvobj && idx < TOTAL_MBID_CAM_NUM) {
+		_rtw_memset(dvobj->mbid_cam_cache[idx].mac_addr, 0, ETH_ALEN);
+		dvobj->mbid_cam_cache[idx].iface_id = CONFIG_IFACE_NUMBER;
+	}
 }
 #endif /* CONFIG_MBSSID_CAM */
 

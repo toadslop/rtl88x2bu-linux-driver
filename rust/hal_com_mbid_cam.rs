@@ -250,7 +250,6 @@ pub extern "C" fn rtw_get_mbid_cam_entry_num(adapter: *mut c_void) -> U8 {
     unsafe { rtw_rust_hal_com_atomic_read(rtw_rust_hal_com_mbid_ctl_entry_num(ctl)) as U8 }
 }
 
-#[cfg(host_hal_com_mbid_cam_test)]
 #[no_mangle]
 pub extern "C" fn rtw_mbid_camid_alloc(adapter: *mut c_void, mac_addr: *mut U8) -> U8 {
     if adapter.is_null() {
@@ -291,7 +290,6 @@ pub extern "C" fn rtw_mbid_camid_alloc(adapter: *mut c_void, mac_addr: *mut U8) 
     cam_id
 }
 
-#[cfg(host_hal_com_mbid_cam_test)]
 #[no_mangle]
 pub extern "C" fn rtw_mbid_cam_info_change(adapter: *mut c_void, mac_addr: *mut U8) -> U8 {
     if adapter.is_null() {
@@ -315,7 +313,6 @@ pub extern "C" fn rtw_mbid_cam_info_change(adapter: *mut c_void, mac_addr: *mut 
     entry_id
 }
 
-#[cfg(host_hal_com_mbid_cam_test)]
 #[no_mangle]
 pub extern "C" fn rtw_mbid_cam_assign(adapter: *mut c_void, mac_addr: *mut U8, camid: U8) -> U8 {
     if adapter.is_null() {
@@ -350,7 +347,6 @@ pub extern "C" fn rtw_mbid_cam_assign(adapter: *mut c_void, mac_addr: *mut U8, c
     ret
 }
 
-#[cfg(host_hal_com_mbid_cam_test)]
 #[no_mangle]
 pub extern "C" fn rtw_mbid_camid_clean(adapter: *mut c_void, mbss_camid: U8) {
     if adapter.is_null() {
