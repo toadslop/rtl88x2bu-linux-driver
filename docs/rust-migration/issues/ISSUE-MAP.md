@@ -446,6 +446,8 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-111 | #2160 | [W4-111] Translate hal_dm.c — dynamic SOML helpers |
 | W4-112 | #2161 | [W4-112] Translate hal_dm.c — PHYDM efuse trim read hooks |
 | W4-113 | #2162 | [W4-113] Translate hal_dm.c — PHYDM init orchestration |
+| W4-117 | #2203 | [W4-117] Translate hal_com_rest.c — STA RA info orchestrator |
+| W4-118 | #2204 | [W4-118] Translate hal_com_rest.c — H2C request PER report cmd |
 
 ## Superseded issues
 
