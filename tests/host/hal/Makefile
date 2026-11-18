@@ -213,6 +213,20 @@ test_hal_com_get_rsvd_page: test_hal_com_get_rsvd_page.c \
 	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_get_rsvd_page.c \
 		$(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE)
 
+librust_hal_com_get_rsvd_page.a: ../../../rust/hal_com_rsvd_page.rs
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_get_rsvd_page_test --cfg config_rtw_halmac \
+		--crate-type staticlib ../../../rust/hal_com_rsvd_page.rs -o $@
+
+test-get-rsvd-page-rust: test_hal_com_get_rsvd_page_rust
+	./test_hal_com_get_rsvd_page_rust
+
+test_hal_com_get_rsvd_page_rust: test_hal_com_get_rsvd_page.c \
+		librust_hal_com_get_rsvd_page.a $(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE)
+	$(CC) $(CFLAGS) -I../include -DRUST_HAL_COM_GET_RSVD_PAGE_ORACLE -o $@ \
+		test_hal_com_get_rsvd_page.c $(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE) \
+		librust_hal_com_get_rsvd_page.a
+
 test-chip: test_dump_chip_info
 	./test_dump_chip_info hal_dump_chip_info_vectors.json
 
