@@ -44,6 +44,10 @@ struct host_hal_dm_dyn_soml_trace {
 extern struct host_hal_dm_dyn_soml_trace host_hal_dm_dyn_soml_trace;
 
 void host_hal_dm_dyn_soml_reset(void);
+void phydm_soml_bytes_acq(void *dm_void, u8 rate_id, u32 length);
+void phydm_adaptive_soml_para_set(void *dm_void, u8 train_num, u8 intvl,
+				  u8 period, u8 delay);
+void rtw_hal_set_hwreg(_adapter *adapter, enum host_hw_var variable, u8 *val);
 void rtw_dyn_soml_byte_update(_adapter *a, u8 rate, u32 size);
 void rtw_dyn_soml_para_set(_adapter *a, u8 tr, u8 iv, u8 pe, u8 de);
 void rtw_dyn_soml_config(_adapter *a);

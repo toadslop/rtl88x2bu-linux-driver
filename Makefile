@@ -2963,6 +2963,21 @@ ifneq ($(_rust_cfg_support_dynamic_txpwr),)
 rustflags-y += --cfg CONFIG_SUPPORT_DYNAMIC_TXPWR
 endif
 HAL_DM_L1_DYNTPWR_REF := $(if $(_rust_cfg_support_dynamic_txpwr),tests/host/hal/hal_dm_dyntxpwr_l1_ref.o,)
+_rust_cfg_dynamic_soml :=
+ifneq ($(filter -DCONFIG_DYNAMIC_SOML,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_dynamic_soml := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_DYNAMIC_SOML\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_dynamic_soml := y
+endif
+ifeq ($(CONFIG_RTL8822B), y)
+_rust_cfg_dynamic_soml := y
+ccflags-y += -DCONFIG_DYNAMIC_SOML
+endif
+ifneq ($(_rust_cfg_dynamic_soml),)
+rustflags-y += --cfg config_dynamic_soml
+endif
+HAL_DM_L1_DYN_SOML_REF := tests/host/hal/hal_dm_dyn_soml_l1_ref.o
 ifneq ($(_rust_cfg_lps_1t1r),)
 rustflags-y += --cfg config_lps_1t1r
 endif
@@ -5475,6 +5490,10 @@ rust-objects-hal-dm-c:
 		-o tests/host/hal/hal_dm_cfg_phy_para_l1_ref.o \
 		tests/host/hal/hal_dm_cfg_phy_para_l1_ref.c
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-DCONFIG_DYNAMIC_SOML \
+		-o tests/host/hal/hal_dm_dyn_soml_l1_ref.o \
+		tests/host/hal/hal_dm_dyn_soml_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_dm_runtime_trx_path_l1_ref.o \
 		tests/host/hal/hal_dm_runtime_trx_path_l1_ref.c
 ifneq ($(_rust_cfg_ctrl_txss_by_tp),)
@@ -5508,6 +5527,7 @@ endif
 		tests/host/hal/hal_dm_phydm_iqk_trigger_dbg_l1_ref.o \
 		tests/host/hal/hal_dm_phydm_ra_registed_l1_ref.o \
 		tests/host/hal/hal_dm_cfg_phy_para_l1_ref.o \
+		$(HAL_DM_L1_DYN_SOML_REF) \
 		tests/host/hal/hal_dm_runtime_trx_path_l1_ref.o \
 		$(HAL_DM_L1_DYNTPWR_REF) \
 		$(HAL_DM_L1_TRX_CFG_REF) \
