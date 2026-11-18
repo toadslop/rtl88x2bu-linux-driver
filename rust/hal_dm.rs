@@ -868,6 +868,11 @@ mod set_odm_var_core {
 
 #[cfg(any(
     host_hal_dm_get_odm_var_test,
+        host_hal_dm_phydm_rrsr_test,
+        host_hal_dm_phydm_crystal_cap_test,
+        host_hal_dm_phydm_iqk_trigger_dbg_test,
+        host_hal_dm_runtime_trx_path_test,
+        host_hal_dm_dbg_rf_cal_test,
     not(any(
         host_hal_dm_board_type_test,
         host_hal_dm_odm_endian_hooks_test,
@@ -919,6 +924,8 @@ mod phydm_rrsr {
 
 #[cfg(any(
     host_hal_dm_phydm_crystal_cap_test,
+        host_hal_dm_runtime_trx_path_test,
+        host_hal_dm_dbg_rf_cal_test,
     not(any(
         host_hal_dm_board_type_test,
         host_hal_dm_odm_endian_hooks_test,
