@@ -5109,6 +5109,10 @@ rust-objects-hal-com-c:
 		tests/host/hal/hal_update_sta_smps_rate_l1_ref.c
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-I$(shell pwd)/tests/host/include -I$(shell pwd)/include \
+		-o tests/host/hal/hal_com_update_sta_ra_info_c_ref.o \
+		tests/host/hal/hal_com_update_sta_ra_info_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-I$(shell pwd)/tests/host/include -I$(shell pwd)/include \
 		-o tests/host/hal/hal_hdata_rate_c_ref.o \
 		tests/host/hal/hal_hdata_rate_c_oracle.c
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
@@ -5158,6 +5162,7 @@ rust-objects-hal-com-c:
 		tests/host/hal/hal_mgntframe_raid_c_ref.o \
 		tests/host/hal/hal_update_sta_wset_mimo_c_ref.o \
 		tests/host/hal/hal_update_sta_smps_rate_c_ref.o \
+		tests/host/hal/hal_com_update_sta_ra_info_c_ref.o \
 		tests/host/hal/hal_hdata_rate_c_ref.o \
 		tests/host/hal/hal_dump_fw_info_l1_ref.o \
 		tests/host/hal/hal_dump_tx_aclt_force_val_l1_ref.o \

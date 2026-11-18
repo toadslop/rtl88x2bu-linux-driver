@@ -316,13 +316,7 @@ u8 rtw_hal_set_req_per_rpt_cmd(_adapter *adapter, u8 group_macid,
 #endif /* RTW_PER_CMD_SUPPORT_FW */
 
 /* rtw_hal_update_sta_smps_cap / rtw_hal_update_sta_rate_mask — rust/hal_com.rs (W4-99) */
-
-void rtw_hal_update_sta_ra_info(PADAPTER padapter, struct sta_info *psta)
-{
-	rtw_hal_update_sta_mimo_type(padapter, psta);
-	rtw_hal_update_sta_smps_cap(padapter, psta);
-	rtw_hal_update_sta_rate_mask(padapter, psta);
-}
+/* rtw_hal_update_sta_ra_info — rust/hal_com.rs (W4-117) */
 
 #ifndef CONFIG_HAS_HW_VAR_BCN_CTRL_ADDR
 static u32 hw_bcn_ctrl_addr(_adapter *adapter, u8 hw_port)
