@@ -1102,6 +1102,25 @@ test_hal_dm_cfg_phy_para: test_hal_dm_cfg_phy_para.c \
 		test_hal_dm_cfg_phy_para.c $(DM_CFG_PHY_PARA_ORACLE) \
 		$(DM_CFG_PHY_PARA_SHIM) $(HOST_JSON)
 
+RUST_HAL_DM_CFG_PHY_PARA := $(ROOT)/rust/hal_dm_cfg_phy_para_host.rs
+RUST_HAL_DM_CFG_PHY_PARA_CFG := --cfg host_hal_dm_cfg_phy_para_test \
+	--cfg config_rtw_halmac
+
+librust_hal_dm_cfg_phy_para.a: $(RUST_HAL_DM_CFG_PHY_PARA)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		$(RUST_HAL_DM_CFG_PHY_PARA_CFG) --crate-type staticlib \
+		$(RUST_HAL_DM_CFG_PHY_PARA) -o $@
+
+test-dm-cfg-phy-para-rust: test_hal_dm_cfg_phy_para_rust
+	./test_hal_dm_cfg_phy_para_rust hal_dm_cfg_phy_para_vectors.json
+
+test_hal_dm_cfg_phy_para_rust: test_hal_dm_cfg_phy_para.c \
+		librust_hal_dm_cfg_phy_para.a $(DM_CFG_PHY_PARA_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_DM_CFG_PHY_PARA_ORACLE \
+		-I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_cfg_phy_para.c $(DM_CFG_PHY_PARA_SHIM) $(HOST_JSON) \
+		librust_hal_dm_cfg_phy_para.a
+
 DM_INIT_ODM_TAIL_SHIM := hal_dm_init_odm_cominfo_tail_shim.c
 DM_INIT_ODM_TAIL_ORACLE := hal_dm_init_odm_cominfo_tail_c_oracle.c
 

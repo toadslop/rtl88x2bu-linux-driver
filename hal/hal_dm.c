@@ -1250,6 +1250,7 @@ rtw_phydm_fw_iqk(
 	return HAL_STATUS_FAILURE;
 }
 
+#ifndef CONFIG_RUST
 enum hal_status
 rtw_phydm_cfg_phy_para(
 	struct dm_struct	*p_dm_odm,
@@ -1352,6 +1353,7 @@ rtw_phydm_cfg_phy_para(
 	#endif /*RTW_HALMAC*/
 	return HAL_STATUS_SUCCESS;
 }
+#endif /* !CONFIG_RUST */
 
 
 #ifdef CONFIG_LPS_LCLK_WD_TIMER
