@@ -669,6 +669,11 @@ struct dvobj_priv *rtw_rust_hal_dm_adapter_to_dvobj(_adapter *adapter)
 	return adapter_to_dvobj(adapter);
 }
 
+void rtw_rust_hal_dm_err_phydm_trx_cfg(void)
+{
+	RTW_ERR("rtw_phydm_trx_cfg failed\n");
+}
+
 struct macid_ctl_t *rtw_rust_hal_dm_dvobj_to_macidctl(struct dvobj_priv *dvobj)
 {
 	return dvobj_to_macidctl(dvobj);
