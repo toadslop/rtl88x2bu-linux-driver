@@ -1926,6 +1926,7 @@ static u8 _rtw_phydm_pwr_tracking_rate_check(_adapter *adapter)
 }
 
 #ifdef CONFIG_DYNAMIC_SOML
+#ifndef CONFIG_RUST
 void rtw_dyn_soml_byte_update(_adapter *adapter, u8 data_rate, u32 size)
 {
 	struct dm_struct *phydm = adapter_to_phydm(adapter);
@@ -1970,6 +1971,7 @@ void rtw_dyn_soml_config(_adapter *adapter)
 				adapter->registrypriv.dyn_soml_en);
 	}
 }
+#endif /* !CONFIG_RUST */
 #endif
 
 #ifndef CONFIG_RUST

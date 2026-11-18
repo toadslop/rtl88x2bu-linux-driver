@@ -740,6 +740,77 @@ void rtw_rust_hal_dm_odm_set_dyntxpwr(void *dm_void, u8 *desc, u8 sta_id)
 		dtp->last_tx_power = dtp->dyn_tx_power;
 }
 
+/* W4-111 — dynamic SOML helpers for rust/hal_dm_dyn_soml.inc.rs */
+#ifdef CONFIG_DYNAMIC_SOML
+void rtw_rust_hal_dm_dyn_soml_set_hwreg(_adapter *adapter)
+{
+	if (!adapter)
+		return;
+	rtw_hal_set_hwreg(adapter, HW_VAR_SET_SOML_PARAM, NULL);
+}
+
+u8 rtw_rust_hal_dm_registry_dyn_soml_en(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return adapter->registrypriv.dyn_soml_en;
+}
+
+u8 rtw_rust_hal_dm_registry_dyn_soml_train_num(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return adapter->registrypriv.dyn_soml_train_num;
+}
+
+u8 rtw_rust_hal_dm_registry_dyn_soml_interval(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return adapter->registrypriv.dyn_soml_interval;
+}
+
+u8 rtw_rust_hal_dm_registry_dyn_soml_period(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return adapter->registrypriv.dyn_soml_period;
+}
+
+u8 rtw_rust_hal_dm_registry_dyn_soml_delay(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return adapter->registrypriv.dyn_soml_delay;
+}
+
+void rtw_rust_hal_dm_log_dyn_soml_config(void)
+{
+	RTW_INFO("%s.\n", __func__);
+}
+
+void rtw_rust_hal_dm_log_dyn_soml_para_set(void)
+{
+	RTW_INFO("%s.\n", __func__);
+}
+
+void rtw_rust_hal_dm_log_dyn_soml_en(u8 en)
+{
+	RTW_INFO("dyn_soml_en = %d\n", en);
+}
+
+void rtw_rust_hal_dm_log_dyn_soml_en2_params(u8 train, u8 intvl, u8 period, u8 delay)
+{
+	RTW_INFO("dyn_soml_en, param = %d, %d, %d, %d\n", train, intvl, period, delay);
+}
+
+void rtw_rust_hal_dm_err_dyn_soml_bad_en(_adapter *adapter, u8 en)
+{
+	RTW_ERR("%s, wrong setting: dyn_soml_en = %d\n", __func__, en);
+	(void)adapter;
+}
+#endif /* CONFIG_DYNAMIC_SOML */
+
 /* W4-103 — runtime TRX path decision shims for rust/hal_dm_runtime_trx_path.inc.rs */
 
 void rtw_rust_hal_dm_runtime_trx_nss_default(_adapter *adapter)
