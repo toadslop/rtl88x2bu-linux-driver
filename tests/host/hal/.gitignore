@@ -57,6 +57,8 @@ librust_hal_dm_dyn_soml.a
 test_hal_dm_set_odm_var_rx
 test_hal_update_sta_smps_rate*
 test_hal_com_update_sta_ra_info
+test_hal_com_update_sta_ra_info_rust
+librust_hal_com_update_sta_ra_info.a
 test_hal_dm_phydm_cal_trigger*
 /test_hal_dm_dbg_rf_cal_test
 /test_hal_dm_dbg_rf_cal_test_rust
