@@ -61,6 +61,8 @@ DM_PHYDM_IQK_TRIGGER_DBG_ORACLE := hal_dm_phydm_iqk_trigger_dbg_c_oracle.c
 DM_PHYDM_IQK_TRIGGER_DBG_SHIM := hal_dm_phydm_iqk_trigger_dbg_host_shim.c
 DM_PHYDM_RA_REGISTED_ORACLE := hal_dm_phydm_ra_registed_c_oracle.c
 DM_PHYDM_RA_REGISTED_SHIM := hal_dm_phydm_ra_registed_host_shim.c
+DM_PHYDM_READ_EFUSE_TRIM_ORACLE := hal_dm_phydm_read_efuse_trim_c_oracle.c
+DM_PHYDM_READ_EFUSE_TRIM_SHIM := hal_dm_phydm_read_efuse_trim_host_shim.c
 DM_PHYDM_TRX_CFG_ORACLE := hal_dm_phydm_trx_cfg_c_oracle.c
 DM_PHYDM_TRX_CFG_SHIM := hal_dm_phydm_trx_cfg_host_shim.c
 DM_PHYDM_TRX_CFG_CFLAGS := -DCONFIG_CTRL_TXSS_BY_TP
@@ -1066,6 +1068,34 @@ test_hal_dm_phydm_ra_registed_rust: test_hal_dm_phydm_ra_registed.c \
 		-I$(ROOT)/tests/host/include -o $@ \
 		test_hal_dm_phydm_ra_registed.c $(DM_PHYDM_RA_REGISTED_SHIM) $(HOST_JSON) \
 		librust_hal_dm_phydm_ra_registed.a
+
+test-dm-phydm-read-efuse-trim: test_hal_dm_phydm_read_efuse_trim
+	./test_hal_dm_phydm_read_efuse_trim hal_dm_phydm_read_efuse_trim_vectors.json
+
+test_hal_dm_phydm_read_efuse_trim: test_hal_dm_phydm_read_efuse_trim.c \
+		$(DM_PHYDM_READ_EFUSE_TRIM_ORACLE) $(HOST_JSON)
+	$(CC) $(CFLAGS) -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_phydm_read_efuse_trim.c \
+		$(DM_PHYDM_READ_EFUSE_TRIM_ORACLE) $(HOST_JSON)
+
+RUST_HAL_DM_PHYDM_READ_EFUSE_TRIM := $(ROOT)/rust/hal_dm_phydm_read_efuse_trim_host.rs
+RUST_HAL_DM_READ_EFUSE_TRIM_CFG := --cfg host_hal_dm_phydm_read_efuse_trim_test
+
+librust_hal_dm_phydm_read_efuse_trim.a: $(RUST_HAL_DM_PHYDM_READ_EFUSE_TRIM)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		$(RUST_HAL_DM_READ_EFUSE_TRIM_CFG) --crate-type staticlib \
+		$(RUST_HAL_DM_PHYDM_READ_EFUSE_TRIM) -o $@
+
+test-dm-phydm-read-efuse-trim-rust: test_hal_dm_phydm_read_efuse_trim_rust
+	./test_hal_dm_phydm_read_efuse_trim_rust hal_dm_phydm_read_efuse_trim_vectors.json
+
+test_hal_dm_phydm_read_efuse_trim_rust: test_hal_dm_phydm_read_efuse_trim.c \
+		librust_hal_dm_phydm_read_efuse_trim.a \
+		$(DM_PHYDM_READ_EFUSE_TRIM_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_DM_PHYDM_READ_EFUSE_TRIM_ORACLE \
+		-I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_phydm_read_efuse_trim.c $(DM_PHYDM_READ_EFUSE_TRIM_SHIM) \
+		$(HOST_JSON) librust_hal_dm_phydm_read_efuse_trim.a
 
 test-dm-phydm-trx-cfg: test_hal_dm_phydm_trx_cfg
 	./test_hal_dm_phydm_trx_cfg hal_dm_phydm_trx_cfg_vectors.json

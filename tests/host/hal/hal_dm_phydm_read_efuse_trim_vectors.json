@@ -1,0 +1,9 @@
+{
+  "vectors": [
+    {
+      "name": "read_efuse_trim_defaults",
+      "expect_thermal": 1,
+      "expect_power": 1
+    }
+  ]
+}
