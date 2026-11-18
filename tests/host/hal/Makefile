@@ -37,6 +37,8 @@ DM_PHYDM_IQK_LCK_ORACLE := hal_dm_phydm_iqk_lck_c_oracle.c
 DM_PHYDM_IQK_LCK_SHIM := hal_dm_phydm_iqk_lck_host_shim.c
 DM_PHYDM_CAL_TRIGGER_ORACLE := hal_dm_phydm_cal_trigger_c_oracle.c
 DM_PHYDM_CAL_TRIGGER_SHIM := hal_dm_phydm_cal_trigger_host_shim.c
+DM_DBG_RF_CAL_TEST_ORACLE := hal_dm_dbg_rf_cal_test_c_oracle.c
+DM_DBG_RF_CAL_TEST_SHIM := hal_dm_dbg_rf_cal_test_host_shim.c
 DM_PHYDM_IQK_LCK_CFLAGS := -DRTL8822B_SUPPORT=1
 DM_SET_ODM_VAR_RX_ORACLE := hal_dm_set_odm_var_rx_c_oracle.c
 DM_SET_ODM_VAR_RX_SHIM := hal_dm_set_odm_var_rx_host_shim.c
@@ -1176,6 +1178,15 @@ test_hal_dm_phydm_cal_trigger: test_hal_dm_phydm_cal_trigger.c \
 	$(CC) $(CFLAGS) -I$(ROOT)/tests/host/include -o $@ \
 		test_hal_dm_phydm_cal_trigger.c $(DM_PHYDM_CAL_TRIGGER_ORACLE) \
 		$(DM_PHYDM_CAL_TRIGGER_SHIM) $(HOST_JSON)
+
+test-dm-dbg-rf-cal-test: test_hal_dm_dbg_rf_cal_test
+	./test_hal_dm_dbg_rf_cal_test hal_dm_dbg_rf_cal_test_vectors.json
+
+test_hal_dm_dbg_rf_cal_test: test_hal_dm_dbg_rf_cal_test.c \
+		$(DM_DBG_RF_CAL_TEST_ORACLE) $(DM_DBG_RF_CAL_TEST_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_dbg_rf_cal_test.c $(DM_DBG_RF_CAL_TEST_ORACLE) \
+		$(DM_DBG_RF_CAL_TEST_SHIM) $(HOST_JSON)
 
 RUST_HAL_DM_PHYDM_CAL_TRIGGER := $(ROOT)/rust/hal_dm_phydm_cal_trigger_host.rs
 RUST_HAL_DM_CAL_TRIGGER_CFG := --cfg host_hal_dm_phydm_cal_trigger_test
