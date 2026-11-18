@@ -4,7 +4,15 @@
 # W4-92 PHYDM IGI / IQK queries, W4-93 min RSSI / PHY cnt queries,
 # W4-94 SetHalODMVar core cases, W4-95 GetHalODMVar, W4-102 RRSR control, W4-103 runtime TRX,
 # W4-104 crystal cap, W4-105 IQK debug trigger wrapper, W4-106 dbg RF cal test wrappers,
+<<<<<<< HEAD
 # W4-107 PHYDM RA registered hook, W4-108 PHYDM TRX cfg when CONFIG_CTRL_TXSS_BY_TP,
 # W4-109 HALMAC DM leaf delegates).
+=======
+<<<<<<< HEAD
+# W4-107 PHYDM RA registered hook, W4-108 PHYDM TRX cfg when CONFIG_CTRL_TXSS_BY_TP).
+=======
+# W4-107 PHYDM RA registered hook, W4-110 PHYDM HALMAC cfg_phy_para mapper).
+>>>>>>> d8a55108 (test(hal_dm): W4-110 L1 ref and kernel Makefile bundle (PR3))
+>>>>>>> 96ebae6d (test(hal_dm): W4-110 L1 ref and kernel Makefile bundle (PR3))
 drop dump_sta_info_format
 drop dump_sta_traffic_format
