@@ -2691,6 +2691,7 @@ void rtw_hal_set_fw_dbg_msg_pkt_rsvd_page_cmd(PADAPTER padapter, PRSVDPAGE_LOC r
 #endif /*DBG_FW_DEBUG_MSG_PKT*/
 
 /*#define DBG_GET_RSVD_PAGE*/
+#if !defined(CONFIG_RUST)
 int rtw_hal_get_rsvd_page(_adapter *adapter, u32 page_offset,
 	u32 page_num, u8 *buffer, u32 buffer_size)
 {
@@ -2752,6 +2753,7 @@ int rtw_hal_get_rsvd_page(_adapter *adapter, u32 page_offset,
 #endif
 	return rst;
 }
+#endif /* !CONFIG_RUST */
 
 void rtw_dump_rsvd_page(void *sel, _adapter *adapter, u8 page_offset, u8 page_num)
 {
