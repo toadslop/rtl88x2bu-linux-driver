@@ -70,6 +70,7 @@ DM_CFG_PHY_PARA_ORACLE := hal_dm_cfg_phy_para_c_oracle.c
 DM_CFG_PHY_PARA_SHIM := hal_dm_cfg_phy_para_host_shim.c
 DM_HALMAC_DM_LEAF_ORACLE := hal_dm_halmac_dm_leaf_c_oracle.c
 DM_HALMAC_DM_LEAF_SHIM := hal_dm_halmac_dm_leaf_host_shim.c
+DM_DYN_SOML_ORACLE := hal_dm_dyn_soml_c_oracle.c
 USB_WVALUE_ORACLE := hal_usb_vendor_wvalue_c_oracle.c
 USB_SYNC_READ_ORACLE := hal_usb_sync_read_c_oracle.c
 USB_SYNC_WRITE_ORACLE := hal_usb_sync_write_c_oracle.c
@@ -115,7 +116,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-dm-board-type test-dm-board-type-rust \
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
 	test-dm-phydm-ops test-dm-phydm-ops-rust \
-	test-dm-dyntxpwr test-dm-dyntxpwr-rust \
+	test-dm-dyntxpwr test-dm-dyntxpwr-rust test-dm-dyn-soml \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
 	test-dm-set-odm-var-core test-dm-set-odm-var-core-rust \
@@ -144,7 +145,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
 	test-dm-init-odm-cominfo-tail test-dm-init-odm-cominfo-tail-rust \
 	test-dm-phydm-ops test-dm-phydm-ops-rust \
-	test-dm-dyntxpwr test-dm-dyntxpwr-rust \
+	test-dm-dyntxpwr test-dm-dyntxpwr-rust test-dm-dyn-soml \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
 	test-dm-set-odm-var-core test-dm-set-odm-var-core-rust \
@@ -1308,6 +1309,15 @@ test_hal_dm_set_odm_var_rx: test_hal_dm_set_odm_var_rx.c \
 
 DYNTPWR_CFLAGS := $(CFLAGS) -DCONFIG_SUPPORT_DYNAMIC_TXPWR -DCONFIG_RTL8822B \
 	-I$(ROOT)/tests/host/include
+
+DYN_SOML_CFLAGS := $(CFLAGS) -DCONFIG_DYNAMIC_SOML -I$(ROOT)/tests/host/include
+
+test-dm-dyn-soml: test_hal_dm_dyn_soml
+	./test_hal_dm_dyn_soml
+
+test_hal_dm_dyn_soml: test_hal_dm_dyn_soml.c $(DM_DYN_SOML_ORACLE) \
+		$(ROOT)/tests/host/include/host_hal_dm_dyn_soml_types.h
+	$(CC) $(DYN_SOML_CFLAGS) -o $@ test_hal_dm_dyn_soml.c $(DM_DYN_SOML_ORACLE)
 
 test-dm-dyntxpwr: test_hal_dm_dyntxpwr
 	./test_hal_dm_dyntxpwr hal_dm_dyntxpwr_vectors.json
