@@ -5,6 +5,10 @@
 # W4-94 SetHalODMVar core cases, W4-95 GetHalODMVar, W4-102 RRSR control, W4-103 runtime TRX,
 # W4-104 crystal cap, W4-105 IQK debug trigger wrapper, W4-106 dbg RF cal test wrappers,
 # W4-107 PHYDM RA registered hook, W4-108 PHYDM TRX cfg when CONFIG_CTRL_TXSS_BY_TP,
-# W4-109 HALMAC DM leaf delegates, W4-110 PHYDM HALMAC cfg_phy_para mapper).
+# W4-109 HALMAC DM leaf delegates, W4-110 PHYDM HALMAC cfg_phy_para mapper,
+# W4-111 dynamic SOML helpers).
 drop dump_sta_info_format
 drop dump_sta_traffic_format
+drop rtw_dyn_soml_byte_update
+drop rtw_dyn_soml_para_set
+drop rtw_dyn_soml_config

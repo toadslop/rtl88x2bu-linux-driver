@@ -1076,6 +1076,7 @@ mod phydm_ra_registed {
             host_hal_dm_runtime_trx_path_test,
             host_hal_dm_phydm_ra_registed_test,
             host_hal_dm_dbg_rf_cal_test,
+            host_hal_dm_dyn_soml_test,
             host_hal_dm_phydm_trx_cfg_test,
             host_hal_dm_cfg_phy_para_test,
         )),
@@ -1108,6 +1109,7 @@ mod dbg_rf_cal_test {
             host_hal_dm_runtime_trx_path_test,
             host_hal_dm_phydm_ra_registed_test,
             host_hal_dm_dbg_rf_cal_test,
+            host_hal_dm_dyn_soml_test,
             host_hal_dm_phydm_trx_cfg_test,
             host_hal_dm_cfg_phy_para_test,
         )),
@@ -1172,6 +1174,7 @@ mod cfg_phy_para {
         host_hal_dm_phydm_trx_cfg_test,
         host_hal_dm_cfg_phy_para_test,
         host_hal_dm_halmac_dm_leaf_test,
+        host_hal_dm_dyn_soml_test,
     ))
 ))]
 mod halmac_dm_leaf {
