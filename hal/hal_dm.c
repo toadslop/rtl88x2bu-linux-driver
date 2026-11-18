@@ -1221,6 +1221,8 @@ void GetHalODMVar(
 #ifdef RTW_HALMAC
 #include "../hal_halmac.h"
 #endif
+
+#ifndef CONFIG_RUST
 bool rtw_phydm_rfe_ctrl_gpio(
 	_adapter *adapter,
 	u8 gpio_num
@@ -1249,6 +1251,7 @@ rtw_phydm_fw_iqk(
 	#endif
 	return HAL_STATUS_FAILURE;
 }
+#endif /* !CONFIG_RUST */
 
 #ifndef CONFIG_RUST
 enum hal_status
