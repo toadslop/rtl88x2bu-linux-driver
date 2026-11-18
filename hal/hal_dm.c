@@ -1697,6 +1697,7 @@ exit:
 }
 #endif /* !CONFIG_RUST */
 
+#ifndef CONFIG_RUST
 /*
 * trx_mode init - 8822B / 8822C / 8192F
 * 1ssNTx - 8192E / 8812A / 8822B / 8822C / 8192F
@@ -1765,6 +1766,7 @@ void rtw_phydm_init(_adapter *adapter)
 	phydm_pathb_q_matrix_rotate_en(phydm);
 #endif
 }
+#endif /* !CONFIG_RUST */
 
 #ifndef CONFIG_RUST
 bool rtw_phydm_set_crystal_cap(_adapter *adapter, u8 crystal_cap)

@@ -8,7 +8,7 @@
 //! dbg RF cal test wrappers (`W4-106`), PHYDM RA registered hook (`W4-107`),
 //! PHYDM TRX cfg by throughput (`W4-108`), HALMAC DM leaf delegates (`W4-109`),
 //! HALMAC cfg_phy_para mapper (`W4-110`), dynamic SOML helpers (`W4-111`),
-//! PHYDM efuse trim read hooks (`W4-112`)
+//! PHYDM efuse trim read hooks (`W4-112`), PHYDM init orchestration (`W4-113`)
 //! from `hal/hal_dm.c`.
 
 #![allow(
@@ -1031,7 +1031,7 @@ mod phydm_iqk_trigger_dbg {
         host_hal_dm_dyn_soml_test,
         host_hal_dm_phydm_read_efuse_trim_test,
         host_hal_dm_phydm_trx_cfg_test,
-        host_hal_dm_phydm_read_efuse_trim_test,
+        host_hal_dm_phydm_init_test,
     ))
 ))]
 mod runtime_trx_path {
@@ -1064,7 +1064,7 @@ mod runtime_trx_path {
         host_hal_dm_phydm_trx_cfg_test,
         host_hal_dm_cfg_phy_para_test,
         host_hal_dm_halmac_dm_leaf_test,
-        host_hal_dm_phydm_read_efuse_trim_test,
+        host_hal_dm_phydm_init_test,
     ))
 ))]
 mod phydm_ra_registed {
@@ -1198,6 +1198,7 @@ mod phydm_read_efuse_trim {
         host_hal_dm_cfg_phy_para_test,
         host_hal_dm_halmac_dm_leaf_test,
         host_hal_dm_dyn_soml_test,
+        host_hal_dm_phydm_init_test,
     ))
 ))]
 mod cfg_phy_para {
@@ -1230,6 +1231,7 @@ mod cfg_phy_para {
         host_hal_dm_cfg_phy_para_test,
         host_hal_dm_halmac_dm_leaf_test,
         host_hal_dm_dyn_soml_test,
+        host_hal_dm_phydm_init_test,
     ))
 ))]
 mod halmac_dm_leaf {
@@ -1261,8 +1263,41 @@ mod halmac_dm_leaf {
         host_hal_dm_cfg_phy_para_test,
         host_hal_dm_halmac_dm_leaf_test,
         host_hal_dm_phydm_read_efuse_trim_test,
+        host_hal_dm_phydm_init_test,
     ))
 ))]
 mod dyn_soml {
     include!("hal_dm_dyn_soml.inc.rs");
+}
+
+#[cfg(any(
+    host_hal_dm_phydm_init_test,
+    not(any(
+        host_hal_dm_board_type_test,
+        host_hal_dm_odm_endian_hooks_test,
+        host_hal_dm_dump_sta_info_test,
+        host_hal_dm_dump_sta_traffic_test,
+        host_hal_dm_odm_iface_test,
+        host_hal_dm_init_odm_mid_test,
+        host_hal_dm_init_odm_cominfo_tail_test,
+        host_hal_dm_phydm_igi_iqk_test,
+        host_hal_dm_phydm_iqk_lck_test,
+        host_hal_dm_min_rssi_phy_cnt_test,
+        host_hal_dm_set_odm_var_core_test,
+        host_hal_dm_get_odm_var_test,
+        host_hal_dm_phydm_rrsr_test,
+        host_hal_dm_phydm_crystal_cap_test,
+        host_hal_dm_phydm_iqk_trigger_dbg_test,
+        host_hal_dm_runtime_trx_path_test,
+        host_hal_dm_phydm_ra_registed_test,
+        host_hal_dm_dbg_rf_cal_test,
+        host_hal_dm_phydm_trx_cfg_test,
+        host_hal_dm_cfg_phy_para_test,
+        host_hal_dm_halmac_dm_leaf_test,
+        host_hal_dm_dyn_soml_test,
+        host_hal_dm_phydm_init_test,
+    ))
+))]
+mod phydm_init {
+    include!("hal_dm_phydm_init.inc.rs");
 }
