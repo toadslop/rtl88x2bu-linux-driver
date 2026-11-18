@@ -114,6 +114,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-update-sta-wset-mimo \
 	test-update-sta-smps-rate test-update-sta-smps-rate-rust \
 	test-update-sta-smps-rate-rust-kern \
+	test-update-sta-ra-info \
 	test-hdata-rate test-hdata-rate-rust test-phy-bit-shift test-phy-bit-shift-rust \
 	test-dm-board-type test-dm-board-type-rust \
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
@@ -142,7 +143,8 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-config-chplan-hw test-config-chplan-hw-rust \
 	test-config-chplan-full test-config-chplan-full-rust \
 	test-mapping-out-pipe test-mapping-out-pipe-rust \
-	test-mgntframe-raid test-mgntframe-raid-rust 	test-update-sta-wset-mimo test-update-sta-wset-mimo-rust test-hdata-rate test-hdata-rate-rust \
+	test-mgntframe-raid test-mgntframe-raid-rust 	test-update-sta-wset-mimo test-update-sta-wset-mimo-rust \
+	test-update-sta-ra-info test-hdata-rate test-hdata-rate-rust \
 	test-phy-bit-shift test-phy-bit-shift-rust test-dm-board-type test-dm-board-type-rust \
 	test-dm-odm-endian-hooks test-dm-odm-endian-hooks-rust \
 	test-dm-init-odm-cominfo-tail test-dm-init-odm-cominfo-tail-rust \
@@ -668,6 +670,17 @@ test_hal_update_sta_smps_rate_rust_kern: test_hal_update_sta_smps_rate.c \
 		librust_hal_com_update_sta_smps_rate_kern.a $(UPDATE_STA_SMPS_RATE_SHIM) $(HOST_JSON)
 	$(CC) $(CFLAGS) -I../include -o $@ test_hal_update_sta_smps_rate.c \
 		$(UPDATE_STA_SMPS_RATE_SHIM) $(HOST_JSON) librust_hal_com_update_sta_smps_rate_kern.a
+
+UPDATE_STA_RA_INFO_ORACLE := hal_com_update_sta_ra_info_c_oracle.c
+UPDATE_STA_RA_INFO_SHIM := hal_com_update_sta_ra_info_host_shim.c
+
+test-update-sta-ra-info: test_hal_com_update_sta_ra_info
+	./test_hal_com_update_sta_ra_info hal_com_update_sta_ra_info_vectors.json
+
+test_hal_com_update_sta_ra_info: test_hal_com_update_sta_ra_info.c \
+		$(UPDATE_STA_RA_INFO_ORACLE) $(UPDATE_STA_RA_INFO_SHIM) $(HOST_JSON)
+	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_update_sta_ra_info.c \
+		$(UPDATE_STA_RA_INFO_ORACLE) $(UPDATE_STA_RA_INFO_SHIM) $(HOST_JSON)
 
 HDATA_RATE_ORACLE := hal_hdata_rate_c_oracle.c
 
@@ -1626,6 +1639,7 @@ clean:
 		test_hal_update_sta_smps_rate test_hal_update_sta_smps_rate_rust \
 		test_hal_update_sta_smps_rate_rust_kern \
 		librust_hal_com_update_sta_smps_rate.a librust_hal_com_update_sta_smps_rate_kern.a \
+		test_hal_com_update_sta_ra_info \
 		test_hal_hdata_rate test_hal_hdata_rate_rust librust_hal_com_hdata_rate.a \
 		test_hal_phy_rf_max_reg test_hal_phy_rf_max_reg_rust librust_hal_phy_rf_max_reg.a \
 		test_hal_phy_bit_shift test_hal_phy_bit_shift_rust librust_hal_phy.a \
