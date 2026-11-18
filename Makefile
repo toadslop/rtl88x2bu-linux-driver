@@ -5500,6 +5500,23 @@ rust-check-symbols-hal-dm: rust-objects-hal-dm-c rust-objects-hal-dm
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_dm_l1_ref.o NEW=rust/hal_dm.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_dm.allow ALLOW_VACUOUS=1
 
+# W4-106: dbg RF cal test wrappers — L1 under CONFIG_DBG_RF_CAL.
+rust-objects-hal-dm-dbg-rf-cal:
+	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-hal-dm-dbg-rf-cal"; exit 1; }
+	$(MAKE) $(KBUILD_OPTS) USER_EXTRA_CFLAGS=-DCONFIG_DBG_RF_CAL \
+		RUSTFLAGS="--cfg config_dbg_rf_cal" -C $(KSRC) M=$(shell pwd) rust/hal_dm.o
+rust-objects-hal-dm-dbg-rf-cal-c:
+	@mkdir -p tests/host/hal
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-DCONFIG_DBG_RF_CAL \
+		-o tests/host/hal/hal_dm_dbg_rf_cal_test_l1_ref.o \
+		tests/host/hal/hal_dm_dbg_rf_cal_test_l1_ref.c
+	ld -r -o tests/host/hal/hal_dm_dbg_rf_cal_l1_ref.o \
+		tests/host/hal/hal_dm_dbg_rf_cal_test_l1_ref.o
+rust-check-symbols-hal-dm-dbg-rf-cal: rust-objects-hal-dm-dbg-rf-cal-c rust-objects-hal-dm-dbg-rf-cal
+	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_dm_dbg_rf_cal_l1_ref.o NEW=rust/hal_dm.o \
+		ALLOWLIST=docs/rust-migration/scripts/hal_dm_dbg_rf_cal_test.allow
+
 # W3-130: host C oracle (debug version/log leaf) vs rust/rtw_debug.o.
 rust-objects-rtw-debug:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-rtw-debug"; exit 1; }

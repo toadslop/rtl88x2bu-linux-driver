@@ -3,6 +3,7 @@
 # W4-85 Init_ODM mid block, W4-88 Init_ODM ComInfo tail, W4-89 phydm ops init,
 # W4-92 PHYDM IGI / IQK queries, W4-93 min RSSI / PHY cnt queries,
 # W4-94 SetHalODMVar core cases, W4-95 GetHalODMVar, W4-102 RRSR control, W4-103 runtime TRX,
-# W4-104 crystal cap, W4-105 IQK debug trigger wrapper, W4-107 PHYDM RA registered hook).
+# W4-104 crystal cap, W4-105 IQK debug trigger wrapper, W4-106 dbg RF cal test wrappers,
+# W4-107 PHYDM RA registered hook).
 drop dump_sta_info_format
 drop dump_sta_traffic_format
