@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-// CONFIG_MBSSID_CAM init/search helpers (W4-119).
+// CONFIG_MBSSID_CAM init/search (W4-119) + alloc/assign/clean (W4-120).
 
 use core::ffi::{c_char, c_ulong, c_void};
 
@@ -9,10 +9,13 @@ const INVALID_CAM_ID: U8 = 0xFF;
 const TOTAL_MBID_CAM_NUM: u8 = 8;
 const ETH_ALEN: u32 = 6;
 const TRUE: i32 = 1;
+const C_FALSE: U8 = 0;
+const C_TRUE: U8 = 1;
 
 #[cfg(not(host_hal_com_mbid_cam_test))]
 extern "C" {
     fn rtw_rust_hal_com_adapter_to_dvobj(adapter: *mut c_void) -> *mut c_void;
+    fn rtw_rust_hal_com_adapter_iface_id(adapter: *mut c_void) -> U8;
     fn rtw_rust_hal_com_mbid_cam_ctl(dvobj: *mut c_void) -> *mut c_void;
     fn rtw_rust_hal_com_spinlock_init(lock: *mut c_void);
     fn rtw_rust_hal_com_spinlock_free(lock: *mut c_void);
@@ -21,10 +24,15 @@ extern "C" {
     fn rtw_rust_hal_com_mbid_cam_cache_zero(dvobj: *mut c_void);
     fn rtw_rust_hal_com_mbid_ctl_bitmap(ctl: *mut c_void) -> U8;
     fn rtw_rust_hal_com_mbid_ctl_set_bitmap(ctl: *mut c_void, bitmap: U8);
+    fn rtw_rust_hal_com_mbid_ctl_bitmap_set_bit(ctl: *mut c_void, idx: U8);
+    fn rtw_rust_hal_com_mbid_ctl_bitmap_clr_bit(ctl: *mut c_void, idx: U8);
+    fn rtw_rust_hal_com_mbid_ctl_bitmap_test(ctl: *mut c_void, idx: U8) -> U8;
     fn rtw_rust_hal_com_mbid_ctl_lock(ctl: *mut c_void) -> *mut c_void;
     fn rtw_rust_hal_com_mbid_ctl_entry_num(ctl: *mut c_void) -> *mut c_void;
     fn rtw_rust_hal_com_atomic_read(v: *mut c_void) -> i32;
     fn rtw_rust_hal_com_atomic_set(v: *mut c_void, x: i32);
+    fn rtw_rust_hal_com_atomic_inc(v: *mut c_void);
+    fn rtw_rust_hal_com_atomic_dec(v: *mut c_void);
     fn rtw_rust_hal_com_mbid_cache_iface_id(dvobj: *mut c_void, idx: U8) -> U8;
     fn rtw_rust_hal_com_mbid_cache_mac(dvobj: *mut c_void, idx: U8) -> *mut U8;
     fn rtw_rust_hal_com_mbid_log_mac_search(func: *const c_char, mac_addr: *mut U8, cam_id: U8);
@@ -34,6 +42,9 @@ extern "C" {
         mac_addr: *const U8,
         cam_id: U8,
     );
+    fn rtw_rust_hal_com_mbid_cache_init(adapter: *mut c_void, dvobj: *mut c_void, idx: U8, mac: *mut U8);
+    fn rtw_rust_hal_com_mbid_cache_clr(dvobj: *mut c_void, idx: U8);
+    fn rtw_rust_hal_com_warn_on(condition: i32);
     fn _rtw_memcmp(dst: *const c_void, src: *const c_void, sz: u32) -> i32;
 }
 
@@ -228,4 +239,127 @@ pub extern "C" fn rtw_get_mbid_cam_entry_num(adapter: *mut c_void) -> U8 {
     let dvobj = unsafe { dvobj_of(adapter) };
     let ctl = unsafe { ctl_of_dvobj(dvobj) };
     unsafe { rtw_rust_hal_com_atomic_read(rtw_rust_hal_com_mbid_ctl_entry_num(ctl)) as U8 }
+}
+
+#[cfg(host_hal_com_mbid_cam_test)]
+#[no_mangle]
+pub extern "C" fn rtw_mbid_camid_alloc(adapter: *mut c_void, mac_addr: *mut U8) -> U8 {
+    if adapter.is_null() {
+        return INVALID_CAM_ID;
+    }
+    let dvobj = unsafe { dvobj_of(adapter) };
+    let ctl = unsafe { ctl_of_dvobj(dvobj) };
+    if ctl.is_null() {
+        return INVALID_CAM_ID;
+    }
+    if unsafe { rtw_mbid_cam_search_by_macaddr(adapter, mac_addr) } != INVALID_CAM_ID {
+        return INVALID_CAM_ID;
+    }
+    let entry_num =
+        unsafe { rtw_rust_hal_com_atomic_read(rtw_rust_hal_com_mbid_ctl_entry_num(ctl)) as U8 };
+    if entry_num >= TOTAL_MBID_CAM_NUM {
+        unsafe { rtw_rust_hal_com_warn_on(1) };
+    }
+
+    let mut cam_id = INVALID_CAM_ID;
+    unsafe {
+        with_mbid_lock(ctl, || {
+            for i in 0..TOTAL_MBID_CAM_NUM {
+                if rtw_rust_hal_com_mbid_ctl_bitmap_test(ctl, i) == 0 {
+                    rtw_rust_hal_com_mbid_ctl_bitmap_set_bit(ctl, i);
+                    cam_id = i;
+                    break;
+                }
+            }
+            if cam_id != INVALID_CAM_ID && !mac_addr.is_null() {
+                rtw_rust_hal_com_mbid_cache_init(adapter, dvobj, cam_id, mac_addr);
+            }
+        });
+    }
+    if cam_id != INVALID_CAM_ID {
+        unsafe { rtw_rust_hal_com_atomic_inc(rtw_rust_hal_com_mbid_ctl_entry_num(ctl)) };
+    }
+    cam_id
+}
+
+#[cfg(host_hal_com_mbid_cam_test)]
+#[no_mangle]
+pub extern "C" fn rtw_mbid_cam_info_change(adapter: *mut c_void, mac_addr: *mut U8) -> U8 {
+    if adapter.is_null() {
+        return INVALID_CAM_ID;
+    }
+    let dvobj = unsafe { dvobj_of(adapter) };
+    let ctl = unsafe { ctl_of_dvobj(dvobj) };
+    if ctl.is_null() {
+        return INVALID_CAM_ID;
+    }
+    let iface_id = unsafe { rtw_rust_hal_com_adapter_iface_id(adapter) };
+    let mut entry_id = INVALID_CAM_ID;
+    unsafe {
+        with_mbid_lock(ctl, || {
+            entry_id = search_by_iface(adapter, iface_id);
+            if entry_id != INVALID_CAM_ID {
+                rtw_rust_hal_com_mbid_cache_init(adapter, dvobj, entry_id, mac_addr);
+            }
+        });
+    }
+    entry_id
+}
+
+#[cfg(host_hal_com_mbid_cam_test)]
+#[no_mangle]
+pub extern "C" fn rtw_mbid_cam_assign(adapter: *mut c_void, mac_addr: *mut U8, camid: U8) -> U8 {
+    if adapter.is_null() {
+        return C_FALSE;
+    }
+    if camid >= TOTAL_MBID_CAM_NUM || camid == INVALID_CAM_ID {
+        unsafe { rtw_rust_hal_com_warn_on(1) };
+        return C_FALSE;
+    }
+    if unsafe { rtw_mbid_cam_search_by_macaddr(adapter, mac_addr) } != INVALID_CAM_ID {
+        return C_FALSE;
+    }
+    let dvobj = unsafe { dvobj_of(adapter) };
+    let ctl = unsafe { ctl_of_dvobj(dvobj) };
+    if ctl.is_null() {
+        return C_FALSE;
+    }
+    let mut ret = C_FALSE;
+    unsafe {
+        with_mbid_lock(ctl, || {
+            if rtw_rust_hal_com_mbid_ctl_bitmap_test(ctl, camid) == 0 && !mac_addr.is_null() {
+                rtw_rust_hal_com_mbid_ctl_bitmap_set_bit(ctl, camid);
+                rtw_rust_hal_com_mbid_cache_init(adapter, dvobj, camid, mac_addr);
+                ret = C_TRUE;
+            }
+        });
+    }
+    if ret == C_TRUE {
+        unsafe { rtw_rust_hal_com_atomic_inc(rtw_rust_hal_com_mbid_ctl_entry_num(ctl)) };
+    }
+    ret
+}
+
+#[cfg(host_hal_com_mbid_cam_test)]
+#[no_mangle]
+pub extern "C" fn rtw_mbid_camid_clean(adapter: *mut c_void, mbss_camid: U8) {
+    if adapter.is_null() {
+        return;
+    }
+    if mbss_camid >= TOTAL_MBID_CAM_NUM || mbss_camid == INVALID_CAM_ID {
+        unsafe { rtw_rust_hal_com_warn_on(1) };
+        return;
+    }
+    let dvobj = unsafe { dvobj_of(adapter) };
+    let ctl = unsafe { ctl_of_dvobj(dvobj) };
+    if ctl.is_null() {
+        return;
+    }
+    unsafe {
+        with_mbid_lock(ctl, || {
+            rtw_rust_hal_com_mbid_cache_clr(dvobj, mbss_camid);
+            rtw_rust_hal_com_mbid_ctl_bitmap_clr_bit(ctl, mbss_camid);
+        });
+        rtw_rust_hal_com_atomic_dec(rtw_rust_hal_com_mbid_ctl_entry_num(ctl));
+    }
 }
