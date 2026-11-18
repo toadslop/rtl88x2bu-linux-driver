@@ -10,6 +10,10 @@
 #define CONFIG_IFACE_NUMBER 4
 #define BIT(x) (1U << (x))
 #define _TRUE 1
+#define _FALSE 0
+
+#define ATOMIC_INC(v) (*(v) += 1)
+#define ATOMIC_DEC(v) (*(v) -= 1)
 
 typedef unsigned char u8;
 typedef int ATOMIC_T, _lock;
