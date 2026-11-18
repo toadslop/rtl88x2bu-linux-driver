@@ -196,6 +196,17 @@ test-rsvd-rust: test_rsvd_page_cache_rust
 test_rsvd_page_cache_rust: test_rsvd_page_cache.c librust_hal_com_rsvd.a $(RSVD_SHIM)
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_RSVD_ORACLE -o $@ test_rsvd_page_cache.c $(RSVD_SHIM) librust_hal_com_rsvd.a
 
+GET_RSVD_PAGE_SHIM := hal_com_get_rsvd_page_shim.c
+GET_RSVD_PAGE_ORACLE := hal_com_get_rsvd_page_c_oracle.c
+
+test-get-rsvd-page: test_hal_com_get_rsvd_page
+	./test_hal_com_get_rsvd_page
+
+test_hal_com_get_rsvd_page: test_hal_com_get_rsvd_page.c \
+		$(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE)
+	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_get_rsvd_page.c \
+		$(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE)
+
 test-chip: test_dump_chip_info
 	./test_dump_chip_info hal_dump_chip_info_vectors.json
 
