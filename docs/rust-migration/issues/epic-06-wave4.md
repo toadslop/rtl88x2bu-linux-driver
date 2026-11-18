@@ -228,4 +228,11 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-112 | `wave4-112-hal-dm-read-efuse-trim.md` | PHYDM efuse trim read hooks |
 | W4-113 | `wave4-113-hal-dm-phydm-init.md` | PHYDM init orchestration |
 
-Further slices: USB bulk port bodies stay under Wave 5 `os_dep`; file new `wave4-*.md` parallel lanes as hal_dm / hal_com tails thin.
+## Children (tranche 22 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-117 | `wave4-117-hal-com-update-sta-ra-info.md` | `rtw_hal_update_sta_ra_info` orchestrator |
+| W4-118 | `wave4-118-hal-com-req-per-rpt-cmd.md` | `rtw_hal_set_req_per_rpt_cmd` H2C packer |
+
+Further slices: USB bulk port bodies stay under Wave 5 `os_dep`; file new `wave4-*.md` parallel lanes as hal_dm / hal_com tails thin (defer new `hal_dm.rs` slices while W4-111–113 PR stack is in flight).

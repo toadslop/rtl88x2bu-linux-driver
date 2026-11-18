@@ -382,6 +382,8 @@ files=(
   wave4-111-hal-dm-dyn-soml.md
   wave4-112-hal-dm-read-efuse-trim.md
   wave4-113-hal-dm-phydm-init.md
+  wave4-117-hal-com-update-sta-ra-info.md
+  wave4-118-hal-com-req-per-rpt-cmd.md
   wave3-161-debug-proc-rate-setter.md
   wave3-162-debug-proc-rx-cnt-dump.md
   wave3-163-debug-proc-ps-dbg.md
