@@ -1575,6 +1575,15 @@ test_sec_read_cam_ent_null_mac_rust: test_sec_read_cam_ent_null_mac.c \
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_SEC_CAM_ENT_ORACLE -o $@ \
 		test_sec_read_cam_ent_null_mac.c $(SEC_CAM_ENT_L2) librust_hal_com_sec_cam_ent.a
 
+MBID_CAM_SHIM := hal_com_mbid_cam_shim.c
+MBID_CAM_ORACLE := hal_com_mbid_cam_c_oracle.c
+
+test-mbid-cam: test_hal_com_mbid_cam
+	./test_hal_com_mbid_cam
+
+test_hal_com_mbid_cam: test_hal_com_mbid_cam.c $(MBID_CAM_SHIM) $(MBID_CAM_ORACLE)
+	$(CC) $(CFLAGS) -o $@ test_hal_com_mbid_cam.c $(MBID_CAM_SHIM) $(MBID_CAM_ORACLE)
+
 RUST_C2H_EVT := $(ROOT)/rust/hal_com_c2h_evt.rs
 CUSTOMER_STR_SHIM := hal_com_customer_str_shim.c
 CUSTOMER_STR_ORACLE := hal_com_customer_str_c_oracle.c
