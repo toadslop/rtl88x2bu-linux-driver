@@ -5515,7 +5515,7 @@ rust-objects-hal-dm-dbg-rf-cal-c:
 		tests/host/hal/hal_dm_dbg_rf_cal_test_l1_ref.o
 rust-check-symbols-hal-dm-dbg-rf-cal: rust-objects-hal-dm-dbg-rf-cal-c rust-objects-hal-dm-dbg-rf-cal
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_dm_dbg_rf_cal_l1_ref.o NEW=rust/hal_dm.o \
-		ALLOWLIST=docs/rust-migration/scripts/hal_dm_dbg_rf_cal_test.allow ALLOW_VACUOUS=1
+		ALLOWLIST=docs/rust-migration/scripts/hal_dm_dbg_rf_cal_test.allow
 
 # W3-130: host C oracle (debug version/log leaf) vs rust/rtw_debug.o.
 rust-objects-rtw-debug:

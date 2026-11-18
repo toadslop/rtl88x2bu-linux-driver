@@ -988,6 +988,7 @@ mod phydm_iqk_trigger_dbg {
         host_hal_dm_phydm_crystal_cap_test,
         host_hal_dm_phydm_iqk_trigger_dbg_test,
         host_hal_dm_runtime_trx_path_test,
+        host_hal_dm_dbg_rf_cal_test,
     ))
 ))]
 mod runtime_trx_path {
@@ -1013,8 +1014,41 @@ mod runtime_trx_path {
         host_hal_dm_phydm_crystal_cap_test,
         host_hal_dm_phydm_iqk_trigger_dbg_test,
         host_hal_dm_runtime_trx_path_test,
+        host_hal_dm_dbg_rf_cal_test,
         host_hal_dm_phydm_ra_registed_test,
     ))
 ))]
 mod phydm_ra_registed {
-    include!("hal_dm_phydm_ra_registed.inc.rs");}
+    include!("hal_dm_phydm_ra_registed.inc.rs");
+}
+
+#[cfg(any(
+    host_hal_dm_dbg_rf_cal_test,
+    all(
+        config_dbg_rf_cal,
+        not(any(
+            host_hal_dm_board_type_test,
+            host_hal_dm_odm_endian_hooks_test,
+            host_hal_dm_dump_sta_info_test,
+            host_hal_dm_dump_sta_traffic_test,
+            host_hal_dm_odm_iface_test,
+            host_hal_dm_init_odm_mid_test,
+            host_hal_dm_init_odm_cominfo_tail_test,
+            host_hal_dm_phydm_igi_iqk_test,
+            host_hal_dm_phydm_iqk_lck_test,
+            host_hal_dm_phydm_cal_trigger_test,
+            host_hal_dm_min_rssi_phy_cnt_test,
+            host_hal_dm_set_odm_var_core_test,
+            host_hal_dm_get_odm_var_test,
+            host_hal_dm_phydm_rrsr_test,
+            host_hal_dm_phydm_crystal_cap_test,
+            host_hal_dm_phydm_iqk_trigger_dbg_test,
+            host_hal_dm_runtime_trx_path_test,
+            host_hal_dm_phydm_ra_registed_test,
+            host_hal_dm_dbg_rf_cal_test,
+        )),
+    ),
+))]
+mod dbg_rf_cal_test {
+    include!("hal_dm_dbg_rf_cal_test.inc.rs");
+}
