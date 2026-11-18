@@ -75,9 +75,9 @@ void rtw_phydm_iqk_trigger_dbg(host_hal_dm_dbg_rf_cal_adapter *adapter, bool rec
 	(void)adapter;
 	host_hal_dm_dbg_rf_cal_record_step(HOST_DBG_RF_STEP_IQK_DBG);
 	host_hal_dm_dbg_rf_cal_trace.iqk_dbg_calls++;
-	host_hal_dm_dbg_rf_cal_trace.last_iqk_recovery = recovery ? 1u : 0u;
-	host_hal_dm_dbg_rf_cal_trace.last_iqk_clear = clear ? 1u : 0u;
-	host_hal_dm_dbg_rf_cal_trace.last_iqk_segment = segment ? 1u : 0u;
+	(void)recovery;
+	(void)clear;
+	(void)segment;
 }
 
 void rtw_phydm_lck_trigger(host_hal_dm_dbg_rf_cal_adapter *adapter)
