@@ -5494,6 +5494,9 @@ rust-objects-hal-dm-c:
 		-o tests/host/hal/hal_dm_dyn_soml_l1_ref.o \
 		tests/host/hal/hal_dm_dyn_soml_l1_ref.c
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_dm_phydm_read_efuse_trim_l1_ref.o \
+		tests/host/hal/hal_dm_phydm_read_efuse_trim_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_dm_runtime_trx_path_l1_ref.o \
 		tests/host/hal/hal_dm_runtime_trx_path_l1_ref.c
 ifneq ($(_rust_cfg_ctrl_txss_by_tp),)
@@ -5528,6 +5531,7 @@ endif
 		tests/host/hal/hal_dm_phydm_ra_registed_l1_ref.o \
 		tests/host/hal/hal_dm_cfg_phy_para_l1_ref.o \
 		$(HAL_DM_L1_DYN_SOML_REF) \
+		tests/host/hal/hal_dm_phydm_read_efuse_trim_l1_ref.o \
 		tests/host/hal/hal_dm_runtime_trx_path_l1_ref.o \
 		$(HAL_DM_L1_DYNTPWR_REF) \
 		$(HAL_DM_L1_TRX_CFG_REF) \
