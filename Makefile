@@ -5186,6 +5186,9 @@ rust-objects-hal-com-c:
 		-o tests/host/hal/hal_dump_tx_fifo_l1_ref.o \
 		tests/host/hal/hal_dump_tx_fifo_l1_ref.c
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_com_get_rsvd_page_l1_ref.o \
+		tests/host/hal/hal_com_get_rsvd_page_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_com_c2h_evt_l1_ref.o \
 		tests/host/hal/hal_com_c2h_evt_l1_ref.c
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
@@ -5234,6 +5237,7 @@ endif
 		tests/host/hal/hal_dump_tx_aclt_confs_l1_ref.o \
 		tests/host/hal/hal_dump_hal_spec_l1_ref.o \
 		tests/host/hal/hal_dump_tx_fifo_l1_ref.o \
+		tests/host/hal/hal_com_get_rsvd_page_l1_ref.o \
 		tests/host/hal/hal_com_c2h_evt_l1_ref.o \
 		tests/host/hal/hal_com_get_port_defaults_l1_ref.o \
 		tests/host/hal/hal_com_hw_port_ctrl_l1_ref.o \
