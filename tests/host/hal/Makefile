@@ -1246,6 +1246,22 @@ test_hal_dm_dbg_rf_cal_test: test_hal_dm_dbg_rf_cal_test.c \
 		test_hal_dm_dbg_rf_cal_test.c $(DM_DBG_RF_CAL_TEST_ORACLE) \
 		$(DM_DBG_RF_CAL_TEST_SHIM) $(HOST_JSON)
 
+RUST_HAL_DM_DBG_RF_CAL_TEST := $(ROOT)/rust/hal_dm_dbg_rf_cal_test_host.rs
+RUST_HAL_DM_DBG_RF_CAL_CFG := --cfg host_hal_dm_dbg_rf_cal_test
+
+librust_hal_dm_dbg_rf_cal_test.a: $(RUST_HAL_DM_DBG_RF_CAL_TEST)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on $(RUST_HAL_DM_DBG_RF_CAL_CFG) \
+		--crate-type staticlib $(RUST_HAL_DM_DBG_RF_CAL_TEST) -o $@
+
+test-dm-dbg-rf-cal-test-rust: test_hal_dm_dbg_rf_cal_test_rust
+	./test_hal_dm_dbg_rf_cal_test_rust hal_dm_dbg_rf_cal_test_vectors.json
+
+test_hal_dm_dbg_rf_cal_test_rust: test_hal_dm_dbg_rf_cal_test.c \
+		librust_hal_dm_dbg_rf_cal_test.a $(HOST_JSON)
+	$(CC) $(CFLAGS) -DRUST_HAL_DM_DBG_RF_CAL_TEST_ORACLE -I$(ROOT)/tests/host/include -o $@ \
+		test_hal_dm_dbg_rf_cal_test.c $(DM_DBG_RF_CAL_TEST_SHIM) $(HOST_JSON) \
+		librust_hal_dm_dbg_rf_cal_test.a
+
 RUST_HAL_DM_PHYDM_CAL_TRIGGER := $(ROOT)/rust/hal_dm_phydm_cal_trigger_host.rs
 RUST_HAL_DM_CAL_TRIGGER_CFG := --cfg host_hal_dm_phydm_cal_trigger_test
 
@@ -1516,6 +1532,8 @@ clean:
 		test_hal_dm_dyntxpwr test_hal_dm_dyntxpwr_rust librust_hal_dm_dyntxpwr.a \
 		test_hal_dm_phydm_cal_trigger test_hal_dm_phydm_cal_trigger_rust \
 		librust_hal_dm_phydm_cal_trigger.a \
+		test_hal_dm_dbg_rf_cal_test test_hal_dm_dbg_rf_cal_test_rust \
+		librust_hal_dm_dbg_rf_cal_test.a \
 		test_hal_dm_min_rssi_phy_cnt test_hal_dm_min_rssi_phy_cnt_rust \
 		librust_hal_dm_min_rssi_phy_cnt.a \
 		test_hal_usb_vendor_wvalue test_hal_usb_vendor_wvalue_rust librust_hal_usb_wvalue.a \
