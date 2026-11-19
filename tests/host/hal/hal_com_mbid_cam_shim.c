@@ -47,7 +47,7 @@ struct dvobj_priv *_adapter_to_dvobj(struct _adapter *adapter)
 
 void *rtw_rust_hal_com_adapter_to_dvobj(void *adapter)
 {
-	return host_mbid_cam_dvobj();
+	return _adapter_to_dvobj(adapter);
 }
 
 void *rtw_rust_hal_com_mbid_cam_ctl(void *dvobj)
@@ -115,11 +115,15 @@ void rtw_rust_hal_com_mbid_cam_cache_zero(void *dvobj)
 
 u8 rtw_rust_hal_com_mbid_cache_iface_id(void *dvobj, u8 idx)
 {
+	if (idx >= TOTAL_MBID_CAM_NUM)
+		return CONFIG_IFACE_NUMBER;
 	return ((struct dvobj_priv *)dvobj)->mbid_cam_cache[idx].iface_id;
 }
 
 u8 *rtw_rust_hal_com_mbid_cache_mac(void *dvobj, u8 idx)
 {
+	if (idx >= TOTAL_MBID_CAM_NUM)
+		return NULL;
 	return ((struct dvobj_priv *)dvobj)->mbid_cam_cache[idx].mac_addr;
 }
 
@@ -141,5 +145,5 @@ void rtw_rust_hal_com_mbid_log_iface_search(const char *func, u8 iface_id,
 
 int _rtw_memcmp(const void *dst, const void *src, unsigned int sz)
 {
-	return memcmp(dst, src, sz) == 0;
+	return memcmp(dst, src, sz) == 0 ? 1 : 0;
 }

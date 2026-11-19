@@ -132,6 +132,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-usb-async-write test-usb-async-write-rust test-chip-odm test-chip-odm-rust \
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
 	test-req-per-rpt test-req-per-rpt-rust \
+	test-mbid-cam test-mbid-cam-rust \
 	test-c2h-evt-robustness clean
 
 all: test
@@ -165,6 +166,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-hal-trxnss test-hal-trxnss-rust \
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
 	test-req-per-rpt-rust \
+	test-mbid-cam test-mbid-cam-rust \
 	test-c2h-evt-robustness
 
 test-c: test_hw_rate_map
@@ -1655,7 +1657,6 @@ librust_hal_com_mbid_cam.a: $(RUST_MBID_CAM)
 
 test-mbid-cam-rust: test_hal_com_mbid_cam_rust
 	./test_hal_com_mbid_cam_rust
-
 test_hal_com_mbid_cam_rust: test_hal_com_mbid_cam.c $(MBID_CAM_SHIM) $(MBID_CAM_ORACLE) \
 		librust_hal_com_mbid_cam.a
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_MBID_CAM_ORACLE -o $@ test_hal_com_mbid_cam.c \

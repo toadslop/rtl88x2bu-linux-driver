@@ -9,6 +9,7 @@
 #define INVALID_CAM_ID 0xFF
 #define CONFIG_IFACE_NUMBER 4
 #define BIT(x) (1U << (x))
+#define _TRUE 1
 
 typedef unsigned char u8;
 typedef int ATOMIC_T, _lock;
