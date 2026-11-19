@@ -66,6 +66,7 @@ struct host_hal_dm_phydm_init_trace {
 	u32 last_rx;
 	u32 last_tx_1ss;
 	u8 trx_warn;
+	u8 warn_on_calls;
 	u8 cmn_fw_ver_calls;
 	u8 cmn_fw_sub_calls;
 	u64 last_fw_ver;

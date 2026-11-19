@@ -26,6 +26,7 @@ struct vector {
 	int expect_odm_dm_init_calls;
 	int expect_phydm_init_result;
 	int expect_trx_warn;
+	int expect_warn_on;
 };
 
 static int parse_vector_object(const char *obj, size_t len, void *vv)
@@ -84,6 +85,8 @@ static int parse_vector_object(const char *obj, size_t len, void *vv)
 		return -1;
 	if (host_json_parse_int_in(obj, len, "expect_trx_warn", &v->expect_trx_warn))
 		return -1;
+	if (host_json_parse_int_in(obj, len, "expect_warn_on", &v->expect_warn_on))
+		return -1;
 	return 0;
 }
 
@@ -125,6 +128,8 @@ static int run_vector(struct vector *v)
 	if (adapter.HalData.phydm_init_result != (u8)v->expect_phydm_init_result)
 		return -1;
 	if (t->trx_warn != (u8)v->expect_trx_warn)
+		return -1;
+	if (t->warn_on_calls != (u8)v->expect_warn_on)
 		return -1;
 
 	printf("PASS %s\n", v->name);

@@ -44,7 +44,8 @@ enum phydm_init_result_host odm_dm_init(struct dm_struct *dm)
 
 void rtw_warn_on(int cond)
 {
-	(void)cond;
+	if (cond)
+		host_hal_dm_phydm_init_trace.warn_on_calls++;
 }
 
 void rtw_rust_hal_dm_phydm_init_warn_on(int cond)

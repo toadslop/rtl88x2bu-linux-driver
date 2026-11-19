@@ -122,6 +122,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-dm-dyntxpwr test-dm-dyntxpwr-rust test-dm-dyn-soml test-dm-dyn-soml-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
+	test-dm-phydm-init test-dm-phydm-init-rust \
 	test-dm-set-odm-var-core test-dm-set-odm-var-core-rust \
 	test-dm-set-odm-var-rx \
 	test-dm-min-rssi-phy-cnt test-dm-min-rssi-phy-cnt-rust \
@@ -152,6 +153,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-dm-dyntxpwr test-dm-dyntxpwr-rust test-dm-dyn-soml test-dm-dyn-soml-rust \
 	test-dm-dump-sta-traffic test-dm-dump-sta-traffic-rust \
 	test-dm-phydm-igi-iqk test-dm-phydm-igi-iqk-rust \
+	test-dm-phydm-init test-dm-phydm-init-rust \
 	test-dm-set-odm-var-core test-dm-set-odm-var-core-rust \
 	test-dm-set-odm-var-rx \
 	test-dm-min-rssi-phy-cnt test-dm-min-rssi-phy-cnt-rust \

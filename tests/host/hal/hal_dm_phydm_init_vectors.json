@@ -20,7 +20,8 @@
       "expect_fw_sub": 7,
       "expect_odm_dm_init_calls": 1,
       "expect_phydm_init_result": 0,
-      "expect_trx_warn": 0
+      "expect_trx_warn": 0,
+      "expect_warn_on": 0
     },
     {
       "name": "init_dm_init_failure_stored",
@@ -41,7 +42,8 @@
       "expect_fw_sub": 2,
       "expect_odm_dm_init_calls": 1,
       "expect_phydm_init_result": 1,
-      "expect_trx_warn": 0
+      "expect_trx_warn": 0,
+      "expect_warn_on": 0
     },
     {
       "name": "trx_mode_fail_still_inits_cmn_info",
@@ -62,7 +64,8 @@
       "expect_fw_sub": 1,
       "expect_odm_dm_init_calls": 1,
       "expect_phydm_init_result": 0,
-      "expect_trx_warn": 1
+      "expect_trx_warn": 1,
+      "expect_warn_on": 1
     }
   ]
 }
