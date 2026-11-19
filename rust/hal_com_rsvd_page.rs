@@ -101,7 +101,7 @@ fn get_rsvd_page_legacy(
             rtw_rust_hal_com_write32(
                 adapter,
                 REG_PKTBUF_DBG_CTRL,
-                u32::from(offset.wrapping_add(i as u16)),
+                u32::from(offset).wrapping_add(u32::from(i)),
             );
             let data_low = rtw_rust_hal_com_read32(adapter, REG_PKTBUF_DBG_DATA_L);
             let data_high = rtw_rust_hal_com_read32(adapter, REG_PKTBUF_DBG_DATA_H);
