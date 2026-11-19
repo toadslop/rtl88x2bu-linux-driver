@@ -14657,6 +14657,12 @@ void rtw_rust_hal_com_write32(_adapter *adapter, u32 addr, u32 val)
 	rtw_write32(adapter, addr, val);
 }
 
+void rtw_rust_hal_com_err_get_rsvd_page_buf_short(u32 buffer_size, u32 size)
+{
+	RTW_ERR("%s buffer_size(%d) < get page total size(%d)\n",
+		"rtw_hal_get_rsvd_page", buffer_size, size);
+}
+
 void rtw_rust_hal_com_printk_reg_pair(u32 a, u32 b)
 {
 	printk(" %08x %08x ", a, b);

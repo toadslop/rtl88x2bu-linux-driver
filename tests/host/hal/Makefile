@@ -133,6 +133,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
 	test-req-per-rpt test-req-per-rpt-rust \
 	test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
+	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-c2h-evt-robustness clean
 
 all: test
@@ -167,6 +168,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
 	test-req-per-rpt-rust \
 	test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
+	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-c2h-evt-robustness
 
 test-c: test_hw_rate_map

@@ -11,6 +11,12 @@ const HAL_FIFO_SEL_RSVD_PAGE: U8 = 2;
 const _FALSE: i32 = 0;
 const _TRUE: i32 = 1;
 
+const REG_PKT_BUFF_ACCESS_CTRL: U32 = 0x0106;
+const REG_TDECTRL: U32 = 0x0208;
+const REG_PKTBUF_DBG_CTRL: U32 = 0x0140;
+const REG_PKTBUF_DBG_DATA_L: U32 = 0x0144;
+const REG_PKTBUF_DBG_DATA_H: U32 = 0x0148;
+
 #[cfg(host_hal_com_get_rsvd_page_test)]
 #[repr(C)]
 struct Adapter {
@@ -40,6 +46,12 @@ extern "C" {
         size: U32,
         buffer: *mut U8,
     ) -> i32;
+    fn rtw_rust_hal_com_read8(adapter: *mut c_void, addr: U32) -> U8;
+    fn rtw_rust_hal_com_write8(adapter: *mut c_void, addr: U32, val: U8);
+    fn rtw_rust_hal_com_read32(adapter: *mut c_void, addr: U32) -> U32;
+    fn rtw_rust_hal_com_write32(adapter: *mut c_void, addr: U32, val: U32);
+    fn rtw_rust_hal_com_err_get_rsvd_page_buf_short(buffer_size: U32, size: U32);
+    fn _rtw_memcpy(dst: *mut c_void, src: *const c_void, sz: U32);
 }
 
 #[cfg(host_hal_com_get_rsvd_page_test)]
@@ -67,6 +79,43 @@ fn get_tx_page_size(adapter: *mut c_void) -> U32 {
     page_size
 }
 
+#[cfg(all(not(config_rtw_halmac), not(host_hal_com_get_rsvd_page_test)))]
+fn get_rsvd_page_legacy(
+    adapter: *mut c_void,
+    page_offset: U32,
+    buffer_size: U32,
+    buffer: *mut U8,
+) -> i32 {
+    if buffer.is_null() {
+        return _FALSE;
+    }
+    let page_size = get_tx_page_size(adapter);
+    let txbndy = unsafe { rtw_rust_hal_com_read8(adapter, REG_TDECTRL + 1) };
+    let offset = (txbndy as U32 + page_offset).wrapping_mul(page_size) / 8;
+    let count = (buffer_size / 8).wrapping_add(1);
+    unsafe {
+        rtw_rust_hal_com_write8(adapter, REG_PKT_BUFF_ACCESS_CTRL, 0x69);
+    }
+    for i in 0..count {
+        unsafe {
+            rtw_rust_hal_com_write32(adapter, REG_PKTBUF_DBG_CTRL, offset.wrapping_add(i));
+            let data_low = rtw_rust_hal_com_read32(adapter, REG_PKTBUF_DBG_DATA_L);
+            let data_high = rtw_rust_hal_com_read32(adapter, REG_PKTBUF_DBG_DATA_H);
+            let dst = buffer.add((i.wrapping_mul(8)) as usize);
+            _rtw_memcpy(dst.cast(), &data_low as *const U32 as *const c_void, 4);
+            _rtw_memcpy(
+                dst.add(4).cast(),
+                &data_high as *const U32 as *const c_void,
+                4,
+            );
+        }
+    }
+    unsafe {
+        rtw_rust_hal_com_write8(adapter, REG_PKT_BUFF_ACCESS_CTRL, 0);
+    }
+    _TRUE
+}
+
 #[no_mangle]
 pub extern "C" fn rtw_hal_get_rsvd_page(
     adapter: *mut c_void,
@@ -81,6 +130,10 @@ pub extern "C" fn rtw_hal_get_rsvd_page(
     let mut rst = _FALSE;
 
     if buffer_size < size {
+        #[cfg(not(host_hal_com_get_rsvd_page_test))]
+        unsafe {
+            rtw_rust_hal_com_err_get_rsvd_page_buf_short(buffer_size, size);
+        }
         return rst;
     }
 
@@ -99,8 +152,8 @@ pub extern "C" fn rtw_hal_get_rsvd_page(
 
     #[cfg(all(not(config_rtw_halmac), not(host_hal_com_get_rsvd_page_test)))]
     {
-        let _ = (adapter, page_offset, page_num, buffer, addr, size);
-        rst = _TRUE;
+        let _ = (page_num, addr);
+        rst = get_rsvd_page_legacy(adapter, page_offset, buffer_size, buffer);
     }
 
     rst
