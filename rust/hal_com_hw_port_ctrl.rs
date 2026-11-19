@@ -40,6 +40,7 @@ pub extern "C" fn rtw_hal_hw_port_disable(adapter: *mut c_void) {
 pub extern "C" fn rtw_restore_hw_port_cfg(adapter: *mut c_void) {
     #[cfg(config_mi_with_mbssid_cam)]
     {
+        let _ = adapter;
         return;
     }
     #[cfg(not(config_mi_with_mbssid_cam))]

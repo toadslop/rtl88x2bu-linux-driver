@@ -241,6 +241,8 @@ u8 rtw_hal_get_port(_adapter *adapter);
 	void rtw_mbid_cam_init(struct dvobj_priv *dvobj);
 	void rtw_mbid_cam_deinit(struct dvobj_priv *dvobj);
 	void rtw_mbid_cam_reset(_adapter *adapter);
+	u8 rtw_mbid_cam_search_by_macaddr(_adapter *adapter, u8 *mac_addr);
+	u8 rtw_mbid_cam_search_by_ifaceid(_adapter *adapter, u8 iface_id);
 	u8 rtw_get_max_mbid_cam_id(_adapter *adapter);
 	u8 rtw_get_mbid_cam_entry_num(_adapter *adapter);
 	int rtw_mbid_cam_cache_dump(void *sel, const char *fun_name , _adapter *adapter);
