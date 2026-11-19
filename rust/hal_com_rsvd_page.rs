@@ -6,7 +6,7 @@ use core::ffi::c_void;
 type U8 = u8;
 type U32 = u32;
 
-const HAL_DEF_TX_PAGE_SIZE: i32 = 26;
+const HAL_DEF_TX_PAGE_SIZE: i32 = 25;
 const HAL_FIFO_SEL_RSVD_PAGE: U8 = 2;
 const _FALSE: i32 = 0;
 const _TRUE: i32 = 1;
