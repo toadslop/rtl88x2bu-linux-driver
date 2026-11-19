@@ -18,9 +18,14 @@ void host_mbid_cam_oracle_reset_warn(void)
 	oracle_warn_count = 0;
 }
 
-static void oracle_warn(void)
+void host_mbid_cam_record_warn(void)
 {
 	oracle_warn_count++;
+}
+
+static void oracle_warn(void)
+{
+	host_mbid_cam_record_warn();
 }
 
 static u8 search_mac(struct _adapter *a, u8 *mac)

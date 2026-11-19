@@ -150,3 +150,11 @@ int _rtw_memcmp(const void *dst, const void *src, unsigned int sz)
 {
 	return memcmp(dst, src, sz) == 0 ? 1 : 0;
 }
+
+void host_mbid_cam_record_warn(void);
+
+void rtw_rust_hal_com_warn_on(int condition)
+{
+	if (condition)
+		host_mbid_cam_record_warn();
+}
