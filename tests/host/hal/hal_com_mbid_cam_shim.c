@@ -7,8 +7,11 @@
 static struct dvobj_priv g_dvobj;
 static struct _adapter g_adapter;
 
+void host_mbid_cam_oracle_reset_warn(void);
+
 void host_mbid_cam_reset_fixture(void)
 {
+	host_mbid_cam_oracle_reset_warn();
 	memset(&g_dvobj, 0, sizeof(g_dvobj));
 	memset(&g_adapter, 0, sizeof(g_adapter));
 }

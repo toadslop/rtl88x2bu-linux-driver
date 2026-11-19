@@ -3,6 +3,26 @@
 
 struct dvobj_priv *_adapter_to_dvobj(struct _adapter *adapter);
 
+static unsigned oracle_warn_count;
+
+unsigned host_mbid_cam_oracle_warn_count(void);
+void host_mbid_cam_oracle_reset_warn(void);
+
+unsigned host_mbid_cam_oracle_warn_count(void)
+{
+	return oracle_warn_count;
+}
+
+void host_mbid_cam_oracle_reset_warn(void)
+{
+	oracle_warn_count = 0;
+}
+
+static void oracle_warn(void)
+{
+	oracle_warn_count++;
+}
+
 static u8 search_mac(struct _adapter *a, u8 *mac)
 {
 	struct dvobj_priv *d = _adapter_to_dvobj(a);
@@ -95,7 +115,7 @@ u8 rtw_mbid_camid_alloc_c_oracle(struct _adapter *adapter, u8 *mac_addr)
 		return INVALID_CAM_ID;
 
 	if (entry_num >= TOTAL_MBID_CAM_NUM)
-		return INVALID_CAM_ID;
+		oracle_warn();
 
 	for (i = 0; i < TOTAL_MBID_CAM_NUM; i++) {
 		if (!(ctl->bitmap & BIT(i))) {
@@ -129,13 +149,15 @@ u8 rtw_mbid_cam_assign_c_oracle(struct _adapter *adapter, u8 *mac_addr, u8 camid
 	u8 ret = _FALSE;
 
 	if (camid >= TOTAL_MBID_CAM_NUM || camid == INVALID_CAM_ID)
-		return _FALSE;
+		oracle_warn();
 	if (search_mac(adapter, mac_addr) != INVALID_CAM_ID)
 		return _FALSE;
 
 	if (!(ctl->bitmap & BIT(camid)) && mac_addr) {
 		ctl->bitmap |= BIT(camid);
-		cache_init(adapter, &dvobj->mbid_cam_cache[camid], mac_addr);
+		/* Driver indexes cache even for invalid camid; guard on host. */
+		if (camid < TOTAL_MBID_CAM_NUM)
+			cache_init(adapter, &dvobj->mbid_cam_cache[camid], mac_addr);
 		ret = _TRUE;
 	}
 
@@ -150,8 +172,9 @@ void rtw_mbid_camid_clean_c_oracle(struct _adapter *adapter, u8 mbss_camid)
 	struct mbid_cam_ctl_t *ctl = &dvobj->mbid_cam_ctl;
 
 	if (mbss_camid >= TOTAL_MBID_CAM_NUM || mbss_camid == INVALID_CAM_ID)
-		return;
-	cache_clr(&dvobj->mbid_cam_cache[mbss_camid]);
-	ctl->bitmap &= ~BIT(mbss_camid);
+		oracle_warn();
+	if (mbss_camid < TOTAL_MBID_CAM_NUM)
+		cache_clr(&dvobj->mbid_cam_cache[mbss_camid]);
+	ctl->bitmap &= (u8)(~BIT(mbss_camid));
 	ATOMIC_DEC(&ctl->mbid_entry_num);
 }
