@@ -91,4 +91,13 @@ void rtw_warn_on(int cond);
 struct dm_struct *rtw_rust_hal_dm_adapter_to_phydm(_adapter *adapter);
 struct dvobj_host *rtw_rust_hal_dm_adapter_to_dvobj(_adapter *adapter);
 
+u32 rtw_rust_hal_dm_phydm_init_txpath(_adapter *adapter);
+u32 rtw_rust_hal_dm_phydm_init_rxpath(_adapter *adapter);
+u32 rtw_rust_hal_dm_phydm_init_txpath_1ss(_adapter *adapter);
+u8 rtw_rust_hal_dm_phydm_init_fw_ver(_adapter *adapter);
+u8 rtw_rust_hal_dm_phydm_init_fw_sub_ver(_adapter *adapter);
+void rtw_rust_hal_dm_phydm_init_set_result(_adapter *adapter, u8 result);
+void rtw_rust_hal_dm_phydm_init_err_trx_config(const char *func, u32 txpath,
+					       u32 rxpath, u32 txpath_1ss);
+
 #endif /* HOST_HAL_DM_PHYDM_INIT_TYPES_H */

@@ -890,4 +890,53 @@ void rtw_rust_hal_dm_runtime_trx_log_invalid_max_tx_cnt(u8 max_tx_cnt)
 		max_tx_cnt);
 	rtw_warn_on(1);
 }
+
+/* W4-113 — PHYDM init orchestration shims for rust/hal_dm_phydm_init.inc.rs */
+
+u32 rtw_rust_hal_dm_phydm_init_txpath(_adapter *adapter)
+{
+	return GET_HAL_DATA(adapter)->txpath;
+}
+
+u32 rtw_rust_hal_dm_phydm_init_rxpath(_adapter *adapter)
+{
+	return GET_HAL_DATA(adapter)->rxpath;
+}
+
+u32 rtw_rust_hal_dm_phydm_init_txpath_1ss(_adapter *adapter)
+{
+	return GET_HAL_DATA(adapter)->txpath_nss[0];
+}
+
+u8 rtw_rust_hal_dm_phydm_init_txpath_num_nss0(_adapter *adapter)
+{
+	return GET_HAL_DATA(adapter)->txpath_num_nss[0];
+}
+
+u8 rtw_rust_hal_dm_phydm_init_fw_ver(_adapter *adapter)
+{
+	return GET_HAL_DATA(adapter)->firmware_version;
+}
+
+u8 rtw_rust_hal_dm_phydm_init_fw_sub_ver(_adapter *adapter)
+{
+	return GET_HAL_DATA(adapter)->firmware_sub_version;
+}
+
+void rtw_rust_hal_dm_phydm_init_set_result(_adapter *adapter, u8 result)
+{
+	GET_HAL_DATA(adapter)->phydm_init_result = result;
+}
+
+void rtw_rust_hal_dm_phydm_init_err_trx_config(const char *func, u32 txpath,
+					       u32 rxpath, u32 txpath_1ss)
+{
+	RTW_ERR("%s txpath=0x%x, rxpath=0x%x, txpath_1ss=0x%x fail\n", func,
+		txpath, rxpath, txpath_1ss);
+}
+
+void rtw_rust_hal_dm_phydm_init_warn_on(int cond)
+{
+	rtw_warn_on(cond);
+}
 #endif /* CONFIG_RUST */
