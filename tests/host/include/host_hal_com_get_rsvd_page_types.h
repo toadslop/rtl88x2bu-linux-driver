@@ -29,4 +29,14 @@ u32 host_get_rsvd_last_addr(void);
 u32 host_get_rsvd_last_size(void);
 int host_get_rsvd_last_fifo_sel_is_rsvd(void);
 
+struct host_sel_capture {
+	char buf[2048];
+	size_t len;
+};
+
+void host_sel_reset(struct host_sel_capture *cap);
+int host_sel_string(struct host_sel_capture *cap, char *out, size_t outlen);
+void *rtw_zvmalloc(u32 sz);
+void rtw_vmfree(void *p, u32 sz);
+
 #endif
