@@ -23,6 +23,7 @@ struct _adapter {
 void host_get_rsvd_page_reset(void);
 struct _adapter *host_get_rsvd_page_adapter(void);
 void host_get_rsvd_page_set_page_size(u32 psz);
+void host_get_rsvd_page_set_zvmalloc_fail(int fail);
 u32 host_get_rsvd_page_fixture_page_size(void);
 u32 host_get_rsvd_last_fifo_sel(void);
 u32 host_get_rsvd_last_addr(void);

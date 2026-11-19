@@ -17,6 +17,7 @@ struct vector {
 	int page_offset;
 	int page_num;
 	int page_size;
+	int zvmalloc_fail;
 	char expect[2048];
 };
 
@@ -36,6 +37,10 @@ static int parse_vector_object(const char *obj, size_t len, void *vv)
 		v->page_size = tmp;
 	else
 		v->page_size = -1;
+	if (!host_json_parse_int_in(obj, len, "zvmalloc_fail", &tmp))
+		v->zvmalloc_fail = tmp;
+	else
+		v->zvmalloc_fail = 0;
 	return host_json_parse_string_in(obj, len, "expect", v->expect,
 				       sizeof(v->expect));
 }
@@ -76,6 +81,7 @@ int main(int argc, char **argv)
 		adap = host_get_rsvd_page_adapter();
 		if (vectors[i].page_size >= 0)
 			host_get_rsvd_page_set_page_size((u32)vectors[i].page_size);
+		host_get_rsvd_page_set_zvmalloc_fail(vectors[i].zvmalloc_fail);
 		host_sel_reset(&cap);
 		rtw_dump_rsvd_page(&cap, adap, (u8)vectors[i].page_offset,
 				 (u8)vectors[i].page_num);

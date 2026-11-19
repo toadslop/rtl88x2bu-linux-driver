@@ -14,6 +14,7 @@ static u32 g_page_size = 128;
 static u32 g_last_fifo_sel;
 static u32 g_last_addr;
 static u32 g_last_size;
+static int g_zvmalloc_fail;
 
 void host_get_rsvd_page_reset(void)
 {
@@ -24,6 +25,12 @@ void host_get_rsvd_page_reset(void)
 	g_last_fifo_sel = 0;
 	g_last_addr = 0;
 	g_last_size = 0;
+	g_zvmalloc_fail = 0;
+}
+
+void host_get_rsvd_page_set_zvmalloc_fail(int fail)
+{
+	g_zvmalloc_fail = fail;
 }
 
 struct _adapter *host_get_rsvd_page_adapter(void)
@@ -107,6 +114,8 @@ int host_sel_string(struct host_sel_capture *cap, char *out, size_t outlen)
 
 void *rtw_zvmalloc(u32 sz)
 {
+	if (g_zvmalloc_fail)
+		return NULL;
 	return calloc(1, sz);
 }
 
@@ -114,14 +123,4 @@ void rtw_vmfree(void *p, u32 sz)
 {
 	(void)sz;
 	free(p);
-}
-
-int rtw_hal_get_rsvd_page_c_oracle(struct _adapter *adapter, u32 page_offset,
-				   u32 page_num, u8 *buffer, u32 buffer_size);
-
-int rtw_hal_get_rsvd_page(struct _adapter *adapter, u32 page_offset,
-			  u32 page_num, u8 *buffer, u32 buffer_size)
-{
-	return rtw_hal_get_rsvd_page_c_oracle(adapter, page_offset, page_num,
-					      buffer, buffer_size);
 }

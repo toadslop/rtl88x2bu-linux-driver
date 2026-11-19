@@ -6,6 +6,8 @@
 
 #define CONFIG_RTW_DEBUG 1
 
+#define RTW_BUFDUMP_BSIZE 16
+
 struct dvobj_priv *adapter_to_dvobj(struct _adapter *adapter);
 void rtw_hal_get_def_var(struct _adapter *adapter, int def, u8 *val);
 int rtw_hal_get_rsvd_page(struct _adapter *adapter, u32 page_offset, u32 page_num,
@@ -28,17 +30,21 @@ static void print_sel(void *sel, const char *fmt, ...)
 }
 
 #define RTW_PRINT_SEL(sel, fmt, ...) print_sel(sel, fmt, ##__VA_ARGS__)
-#define RTW_DUMP_SEL(sel, d, n)                                        \
-	do {                                                           \
-		u32 _i;                                                \
-		for (_i = 0; _i < (n); _i++) {                         \
-			RTW_PRINT_SEL(sel, "%02x ", (d)[_i]);          \
-			if ((_i & 15) == 15)                           \
-				RTW_PRINT_SEL(sel, "\n");              \
-		}                                                      \
-		if ((n) & 15)                                          \
-			RTW_PRINT_SEL(sel, "\n");                      \
-	} while (0)
+
+/* Match RTW_BUF_DUMP_SEL (_DRV_ALWAYS_ / no title / no index) in rtw_debug_rest.c */
+static void host_rtw_dump_sel(void *sel, const u8 *hexdata, int hexdatalen)
+{
+	int i;
+
+	for (i = 0; i < hexdatalen; i++) {
+		RTW_PRINT_SEL(sel, "%02X%s", hexdata[i],
+			      (((i + 1) % 4) == 0) ? "  " : " ");
+		if ((i + 1 < hexdatalen) &&
+		    ((i + 1) % RTW_BUFDUMP_BSIZE) == 0)
+			RTW_PRINT_SEL(sel, "\n");
+	}
+	RTW_PRINT_SEL(sel, "\n");
+}
 
 void rtw_dump_rsvd_page_c_oracle(void *sel, struct _adapter *adapter,
 				 u8 page_offset, u8 page_num)
@@ -63,7 +69,7 @@ void rtw_dump_rsvd_page_c_oracle(void *sel, struct _adapter *adapter,
 		goto done;
 	}
 	rtw_hal_get_rsvd_page(adapter, page_offset, page_num, buffer, buf_size);
-	RTW_DUMP_SEL(sel, buffer, buf_size);
+	host_rtw_dump_sel(sel, buffer, (int)buf_size);
 	rtw_vmfree(buffer, buf_size);
 done:
 	RTW_PRINT_SEL(sel, "==========================\n");

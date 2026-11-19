@@ -210,6 +210,7 @@ test_rsvd_page_cache_rust: test_rsvd_page_cache.c librust_hal_com_rsvd.a $(RSVD_
 
 GET_RSVD_PAGE_SHIM := hal_com_get_rsvd_page_shim.c
 GET_RSVD_PAGE_ORACLE := hal_com_get_rsvd_page_c_oracle.c
+GET_RSVD_PAGE_DUMP_LINK := hal_com_get_rsvd_page_dump_link.c
 
 test-get-rsvd-page: test_hal_com_get_rsvd_page
 	./test_hal_com_get_rsvd_page
@@ -241,10 +242,11 @@ test-dump-rsvd-fifo: test_hal_com_dump_rsvd_fifo
 
 test_hal_com_dump_rsvd_fifo: test_hal_com_dump_rsvd_fifo.c \
 		$(DUMP_RSVD_FIFO_ORACLE) $(GET_RSVD_PAGE_SHIM) \
-		$(GET_RSVD_PAGE_ORACLE) $(HOST_JSON)
+		$(GET_RSVD_PAGE_ORACLE) $(GET_RSVD_PAGE_DUMP_LINK) $(HOST_JSON)
 	$(CC) $(CFLAGS) $(DUMP_RSVD_FIFO_CFLAGS) -o $@ \
 		test_hal_com_dump_rsvd_fifo.c $(DUMP_RSVD_FIFO_ORACLE) \
-		$(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE) $(HOST_JSON)
+		$(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE) \
+		$(GET_RSVD_PAGE_DUMP_LINK) $(HOST_JSON)
 
 test-chip: test_dump_chip_info
 	./test_dump_chip_info hal_dump_chip_info_vectors.json
