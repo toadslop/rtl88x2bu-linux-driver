@@ -2854,6 +2854,16 @@ endif
 ifneq ($(_rust_cfg_mi_with_mbssid_cam),)
 rustflags-y += --cfg config_mi_with_mbssid_cam
 endif
+_rust_cfg_mbssid_cam :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_MBSSID_CAM' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_mbssid_cam := y
+endif
+ifneq ($(filter -DCONFIG_MBSSID_CAM,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
+_rust_cfg_mbssid_cam := y
+endif
+ifneq ($(_rust_cfg_mbssid_cam),)
+rustflags-y += --cfg config_mbssid_cam
+endif
 rustflags-y += --cfg rust_mlme_ht_restructure
 rustflags-y += --cfg rust_mlme_80211d
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BEAMFORMING' $(src)/include/autoconf.h 2>/dev/null && echo y),)

@@ -2052,7 +2052,7 @@ mod hw_port_ctrl {
 }
 
 #[cfg(all(
-    config_mi_with_mbssid_cam,
+    config_mbssid_cam,
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
