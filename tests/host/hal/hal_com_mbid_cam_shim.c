@@ -44,3 +44,102 @@ struct dvobj_priv *_adapter_to_dvobj(struct _adapter *adapter)
 	(void)adapter;
 	return &g_dvobj;
 }
+
+void *rtw_rust_hal_com_adapter_to_dvobj(void *adapter)
+{
+	return host_mbid_cam_dvobj();
+}
+
+void *rtw_rust_hal_com_mbid_cam_ctl(void *dvobj)
+{
+	return &((struct dvobj_priv *)dvobj)->mbid_cam_ctl;
+}
+
+void rtw_rust_hal_com_spinlock_init(void *lock)
+{
+	(void)lock;
+}
+
+void rtw_rust_hal_com_spinlock_free(void *lock)
+{
+	(void)lock;
+}
+
+void rtw_rust_hal_com_enter_critical_bh(void *lock, void *irqL)
+{
+	(void)lock;
+	(void)irqL;
+}
+
+void rtw_rust_hal_com_exit_critical_bh(void *lock, void *irqL)
+{
+	(void)lock;
+	(void)irqL;
+}
+
+void *rtw_rust_hal_com_mbid_ctl_lock(void *ctl)
+{
+	return &((struct mbid_cam_ctl_t *)ctl)->lock;
+}
+
+u8 rtw_rust_hal_com_mbid_ctl_bitmap(void *ctl)
+{
+	return ((struct mbid_cam_ctl_t *)ctl)->bitmap;
+}
+
+void rtw_rust_hal_com_mbid_ctl_set_bitmap(void *ctl, u8 bitmap)
+{
+	((struct mbid_cam_ctl_t *)ctl)->bitmap = bitmap;
+}
+
+void *rtw_rust_hal_com_mbid_ctl_entry_num(void *ctl)
+{
+	return &((struct mbid_cam_ctl_t *)ctl)->mbid_entry_num;
+}
+
+int rtw_rust_hal_com_atomic_read(void *v)
+{
+	return ATOMIC_READ((ATOMIC_T *)v);
+}
+
+void rtw_rust_hal_com_atomic_set(void *v, int x)
+{
+	ATOMIC_SET((ATOMIC_T *)v, x);
+}
+
+void rtw_rust_hal_com_mbid_cam_cache_zero(void *dvobj)
+{
+	memset(((struct dvobj_priv *)dvobj)->mbid_cam_cache, 0,
+	       sizeof(((struct dvobj_priv *)dvobj)->mbid_cam_cache));
+}
+
+u8 rtw_rust_hal_com_mbid_cache_iface_id(void *dvobj, u8 idx)
+{
+	return ((struct dvobj_priv *)dvobj)->mbid_cam_cache[idx].iface_id;
+}
+
+u8 *rtw_rust_hal_com_mbid_cache_mac(void *dvobj, u8 idx)
+{
+	return ((struct dvobj_priv *)dvobj)->mbid_cam_cache[idx].mac_addr;
+}
+
+void rtw_rust_hal_com_mbid_log_mac_search(const char *func, u8 *mac_addr, u8 cam_id)
+{
+	(void)func;
+	(void)mac_addr;
+	(void)cam_id;
+}
+
+void rtw_rust_hal_com_mbid_log_iface_search(const char *func, u8 iface_id,
+					    const u8 *mac_addr, u8 cam_id)
+{
+	(void)func;
+	(void)iface_id;
+	(void)mac_addr;
+	(void)cam_id;
+}
+
+int _rtw_memcmp(const void *dst, const void *src, unsigned int sz)
+{
+	return memcmp(dst, src, sz) == 0;
+}
