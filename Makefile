@@ -5213,13 +5213,11 @@ ifneq ($(_rust_cfg_rtw_per_cmd_fw),)
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_com_req_per_rpt_l1_ref.o \
 		tests/host/hal/hal_com_req_per_rpt_l1_ref.c
-<<<<<<< HEAD
+endif
 ifneq ($(_rust_cfg_mbssid_cam),)
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_com_mbid_cam_l1_ref.o \
 		tests/host/hal/hal_com_mbid_cam_l1_ref.c
-=======
->>>>>>> 2b14357b (fix: stop forcing SOML and PER-cmd macros on RTL8822B)
 endif
 	ld -r -o tests/host/hal/hal_com_c_ref.o \
 		tests/host/hal/hal_hw_rate_c_ref.o tests/host/hal/hal_rsvd_page_c_ref.o \
@@ -5244,12 +5242,8 @@ endif
 		tests/host/hal/hal_com_reqtxrpt_mi_mac_l1_ref.o \
 		tests/host/hal/hal_com_sec_cam_rw_l1_ref.o \
 		tests/host/hal/hal_com_customer_str_l1_ref.o \
-<<<<<<< HEAD
-		tests/host/hal/hal_com_req_per_rpt_l1_ref.o \
+		$(HAL_COM_L1_REQ_PER_RPT) \
 		$(HAL_COM_L1_MBID_CAM_REF)
-=======
-		$(HAL_COM_L1_REQ_PER_RPT)
->>>>>>> 2b14357b (fix: stop forcing SOML and PER-cmd macros on RTL8822B)
 
 rust-check-symbols-hal-com: rust-objects-hal-com-c rust-objects-hal-com
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_com_c_ref.o NEW=rust/hal_com.o \
