@@ -131,6 +131,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-usb-sync-read test-usb-sync-read-rust test-usb-sync-write \
 	test-usb-async-write test-usb-async-write-rust test-chip-odm test-chip-odm-rust \
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
+	test-req-per-rpt test-req-per-rpt-rust \
 	test-c2h-evt-robustness clean
 
 all: test
@@ -163,6 +164,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-usb-async-write-rust test-chip-odm test-chip-odm-rust \
 	test-hal-trxnss test-hal-trxnss-rust \
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
+	test-req-per-rpt-rust \
 	test-c2h-evt-robustness
 
 test-c: test_hw_rate_map
@@ -1668,6 +1670,32 @@ test_hal_com_customer_str_rust: test_hal_com_customer_str.c $(CUSTOMER_STR_SHIM)
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_CUSTOMER_STR_ORACLE -o $@ test_hal_com_customer_str.c \
 		$(CUSTOMER_STR_SHIM) $(CUSTOMER_STR_ORACLE) librust_hal_com_customer_str.a
 
+REQ_PER_RPT_SHIM := hal_com_req_per_rpt_shim.c
+REQ_PER_RPT_ORACLE := hal_com_req_per_rpt_c_oracle.c
+RUST_REQ_PER_RPT := $(ROOT)/rust/hal_com_req_per_rpt_host.rs
+REQ_PER_RPT_CFLAGS := $(CFLAGS) -DRTW_PER_CMD_SUPPORT_FW
+
+test-req-per-rpt: test_hal_com_req_per_rpt
+	./test_hal_com_req_per_rpt
+
+test-req-per-rpt-rust: test_hal_com_req_per_rpt_rust
+	./test_hal_com_req_per_rpt_rust
+
+test_hal_com_req_per_rpt: test_hal_com_req_per_rpt.c $(REQ_PER_RPT_SHIM) $(REQ_PER_RPT_ORACLE)
+	$(CC) $(REQ_PER_RPT_CFLAGS) -o $@ test_hal_com_req_per_rpt.c \
+		$(REQ_PER_RPT_SHIM) $(REQ_PER_RPT_ORACLE)
+
+librust_hal_com_req_per_rpt.a: $(RUST_REQ_PER_RPT)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg rtw_per_cmd_support_fw \
+		--crate-type staticlib $(RUST_REQ_PER_RPT) -o $@
+
+test_hal_com_req_per_rpt_rust: test_hal_com_req_per_rpt.c $(REQ_PER_RPT_SHIM) \
+		$(REQ_PER_RPT_ORACLE) librust_hal_com_req_per_rpt.a
+	$(CC) $(REQ_PER_RPT_CFLAGS) -DRUST_HAL_COM_REQ_PER_RPT_ORACLE -o $@ \
+		test_hal_com_req_per_rpt.c $(REQ_PER_RPT_SHIM) $(REQ_PER_RPT_ORACLE) \
+		librust_hal_com_req_per_rpt.a
+
 test-c2h-evt-robustness: test_hal_com_c2h_evt_fx19
 	./test_hal_com_c2h_evt_fx19
 
@@ -1746,4 +1774,6 @@ clean:
 		test_chip_rftype_rust librust_hal_intf_chip_rftype.a \
 		test_sec_read_cam_ent_null_mac test_sec_read_cam_ent_null_mac_rust \
 		librust_hal_com_sec_cam_ent.a \
-		test_hal_com_c2h_evt_fx19 librust_hal_com_c2h_evt.a
+		test_hal_com_c2h_evt_fx19 librust_hal_com_c2h_evt.a \
+		test_hal_com_req_per_rpt test_hal_com_req_per_rpt_rust \
+		librust_hal_com_req_per_rpt.a
