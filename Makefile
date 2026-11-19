@@ -2985,10 +2985,11 @@ endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_DYNAMIC_SOML\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 _rust_cfg_dynamic_soml := y
 endif
-ifeq ($(CONFIG_RTL8822B), y)
-_rust_cfg_dynamic_soml := y
-ccflags-y += -DCONFIG_DYNAMIC_SOML
-endif
+# Do not force -DCONFIG_DYNAMIC_SOML for RTL8822B. hal_ic_cfg.h never defines
+# it. Injecting it grows embedded registry_priv (and therefore _ADAPTER) by 8
+# bytes and turns adaptive SOML on: rtw_dynamic_soml_en defaults to 1, so
+# hal init hooks ODM_CMNINFO_ADAPTIVE_SOML and the watchdog calls
+# phydm_somlrxhp_setting. Opt in with -DCONFIG_DYNAMIC_SOML or autoconf.h.
 ifneq ($(_rust_cfg_dynamic_soml),)
 rustflags-y += --cfg config_dynamic_soml
 endif
@@ -3452,18 +3453,33 @@ endif
 ifneq ($(_rust_cfg_rtw_customer_str),)
 rustflags-y += --cfg config_rtw_customer_str
 endif
-# W4-118: REQ PER report H2C when mesh/fw PER cmd is enabled (8822BU profile).
+# W4-118: REQ PER report H2C. hal_ic_cfg.h defines RTW_PER_CMD_SUPPORT_FW only
+# under CONFIG_RTW_MESH for 8822B/8822C/8814B/8723F. Do not add
+# -DRTW_PER_CMD_SUPPORT_FW to ccflags-y: that compiles the C2H 0x2c handler
+# into every non-mesh 8822BU build.
 _rust_cfg_rtw_per_cmd_fw :=
 ifneq ($(filter -DRTW_PER_CMD_SUPPORT_FW,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 _rust_cfg_rtw_per_cmd_fw := y
 endif
-ifeq ($(CONFIG_RTL8822B), y)
+_rust_cfg_mesh_for_per :=
+ifneq ($(filter -DCONFIG_RTW_MESH,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_mesh_for_per := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTW_MESH\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_mesh_for_per := y
+endif
+ifeq ($(CONFIG_RTW_MESH), y)
+_rust_cfg_mesh_for_per := y
+endif
+ifneq ($(_rust_cfg_mesh_for_per),)
+ifneq ($(filter y,$(CONFIG_RTL8822B) $(CONFIG_RTL8822C) $(CONFIG_RTL8814B) $(CONFIG_RTL8723F)),)
 _rust_cfg_rtw_per_cmd_fw := y
-ccflags-y += -DRTW_PER_CMD_SUPPORT_FW
+endif
 endif
 ifneq ($(_rust_cfg_rtw_per_cmd_fw),)
 rustflags-y += --cfg rtw_per_cmd_support_fw
 endif
+HAL_COM_L1_REQ_PER_RPT := $(if $(_rust_cfg_rtw_per_cmd_fw),tests/host/hal/hal_com_req_per_rpt_l1_ref.o,)
 _rust_cfg_rtw_mac_hidden_rpt :=
 ifneq ($(filter -DCONFIG_RTW_MAC_HIDDEN_RPT,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 _rust_cfg_rtw_mac_hidden_rpt := y
@@ -5193,9 +5209,11 @@ rust-objects-hal-com-c:
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_com_customer_str_l1_ref.o \
 		tests/host/hal/hal_com_customer_str_l1_ref.c
+ifneq ($(_rust_cfg_rtw_per_cmd_fw),)
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_com_req_per_rpt_l1_ref.o \
 		tests/host/hal/hal_com_req_per_rpt_l1_ref.c
+endif
 ifneq ($(_rust_cfg_mbssid_cam),)
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_com_mbid_cam_l1_ref.o \
@@ -5224,7 +5242,7 @@ endif
 		tests/host/hal/hal_com_reqtxrpt_mi_mac_l1_ref.o \
 		tests/host/hal/hal_com_sec_cam_rw_l1_ref.o \
 		tests/host/hal/hal_com_customer_str_l1_ref.o \
-		tests/host/hal/hal_com_req_per_rpt_l1_ref.o \
+		$(HAL_COM_L1_REQ_PER_RPT) \
 		$(HAL_COM_L1_MBID_CAM_REF)
 
 rust-check-symbols-hal-com: rust-objects-hal-com-c rust-objects-hal-com

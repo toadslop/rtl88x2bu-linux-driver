@@ -14,6 +14,7 @@ on:
       - 'scripts/ci/clippy-check.sh'
       - 'scripts/ci/check-status-constants.sh'
       - 'scripts/ci/test-rust-cfgs-active-macros.sh'
+      - 'scripts/ci/test-no-forced-hal-defines.sh'
       - 'scripts/ci/check-rust-cfg-parity.sh'
       - 'scripts/ci/rust-cfg-default.golden'
       - 'scripts/rust_cfgs.sh'
@@ -40,6 +41,10 @@ jobs:
       # Inactive #define lines in autoconf.h must not become Rust cfgs.
       - name: Rust cfgs follow the preprocessor
         run: ./scripts/ci/test-rust-cfgs-active-macros.sh
+
+      # Do not inject CONFIG_DYNAMIC_SOML / RTW_PER_CMD_SUPPORT_FW on 8822B.
+      - name: Default build does not force optional HAL defines
+        run: ./scripts/ci/test-no-forced-hal-defines.sh
 
       - uses: dorny/paths-filter@v3
         id: filter
