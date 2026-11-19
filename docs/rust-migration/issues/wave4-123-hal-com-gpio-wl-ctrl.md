@@ -13,18 +13,19 @@ estimate_loc: 90
 Port `rtw_hal_switch_gpio_wl_ctrl` from [`hal/hal_com_rest.c`](../../../hal/hal_com_rest.c)
 into `rust/hal_com_gpio_wakeup.rs` under `CONFIG_GPIO_WAKEUP`:
 
-- 8822B series branch and GPIO 13/14 special case call `rtw_hal_set_hwreg(HW_SET_GPIO_WL_CTRL, …)` like C.
+- Series check (`IS_8723D/8192F/8822B/8821C/8822C`) and index 13/14 checks are **separate** `if`s; both may call `rtw_hal_set_hwreg(HW_SET_GPIO_WL_CTRL, &enable)` (8822BU can program the same enable twice for GPIO 13/14).
 
 ## Notes
 
 - **Parallel lane:** GPIO wakeup — separate Rust submodule from MBSSID / rsvd-page / in-flight RA-PER slices.
 - Does not port `rtw_hal_set_output_gpio` / `set_input_gpio` (defer — larger MMIO surface).
+- `CONFIG_GPIO_WAKEUP` defaults to off in the Makefile (`CONFIG_GPIO_WAKEUP=y` required for the symbol).
 
 ## Acceptance
 
-- L0 with `CONFIG_GPIO_WAKEUP` enabled on profile
+- L0 with `CONFIG_GPIO_WAKEUP=y` on profile
 - L1 symbol parity
-- L2: trace `rtw_hal_set_hwreg` enable bytes for index/series matrix
+- L2: count `rtw_hal_set_hwreg(HW_SET_GPIO_WL_CTRL)` invocations (not only enable bytes); include a non-8822B chip so 8822B-only shortcuts fail
 
 ## Tracking
 
