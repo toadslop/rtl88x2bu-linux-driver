@@ -431,23 +431,6 @@ static void rtw_hal_set_msr(_adapter *adapter, u8 net_type)
 #ifdef CONFIG_MBSSID_CAM
 /* rtw_mbid_cam_init/deinit/reset and search/max helpers — rust/hal_com_mbid_cam.rs (W4-119) */
 
-static u8 _rtw_mbid_cam_search_by_macaddr(_adapter *adapter, u8 *mac_addr)
-{
-	u8 i;
-	u8 cam_id = INVALID_CAM_ID;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-
-	for (i = 0; i < TOTAL_MBID_CAM_NUM; i++) {
-		if (mac_addr && _rtw_memcmp(dvobj->mbid_cam_cache[i].mac_addr, mac_addr, ETH_ALEN) == _TRUE) {
-			cam_id = i;
-			break;
-		}
-	}
-
-	RTW_INFO("%s mac:"MAC_FMT" - cam_id:%d\n", __func__, MAC_ARG(mac_addr), cam_id);
-	return cam_id;
-}
-
 static u8 _rtw_mbid_cam_search_by_ifaceid(_adapter *adapter, u8 iface_id)
 {
 	u8 i;

@@ -67,68 +67,78 @@ extern "C" {
 static MBID_MAC_SEARCH: &[u8] = b"_rtw_mbid_cam_search_by_macaddr\0";
 static MBID_IFACE_SEARCH: &[u8] = b"_rtw_mbid_cam_search_by_ifaceid\0";
 
-unsafe fn dvobj_of(adapter: *mut c_void) -> *mut c_void {
-    rtw_rust_hal_com_adapter_to_dvobj(adapter)
+fn dvobj_of(adapter: *mut c_void) -> *mut c_void {
+    unsafe { rtw_rust_hal_com_adapter_to_dvobj(adapter) }
 }
 
-unsafe fn ctl_of_dvobj(dvobj: *mut c_void) -> *mut c_void {
-    rtw_rust_hal_com_mbid_cam_ctl(dvobj)
+fn ctl_of_dvobj(dvobj: *mut c_void) -> *mut c_void {
+    unsafe { rtw_rust_hal_com_mbid_cam_ctl(dvobj) }
 }
 
 // SAFETY: `lock` comes from mbid_cam_ctl; matches C `_enter_critical_bh` pairing.
-unsafe fn with_mbid_lock(ctl: *mut c_void, f: impl FnOnce()) {
-    let lock = rtw_rust_hal_com_mbid_ctl_lock(ctl);
+fn with_mbid_lock(ctl: *mut c_void, f: impl FnOnce()) {
+    let lock = unsafe { rtw_rust_hal_com_mbid_ctl_lock(ctl) };
     let mut irqL: c_ulong = 0;
-    rtw_rust_hal_com_enter_critical_bh(lock, &mut irqL as *mut _ as *mut c_void);
+    unsafe {
+        rtw_rust_hal_com_enter_critical_bh(lock, &mut irqL as *mut _ as *mut c_void);
+    }
     f();
-    rtw_rust_hal_com_exit_critical_bh(lock, &mut irqL as *mut _ as *mut c_void);
+    unsafe {
+        rtw_rust_hal_com_exit_critical_bh(lock, &mut irqL as *mut _ as *mut c_void);
+    }
 }
 
-unsafe fn search_by_mac(adapter: *mut c_void, mac_addr: *mut U8) -> U8 {
+fn search_by_mac(adapter: *mut c_void, mac_addr: *mut U8) -> U8 {
     let dvobj = dvobj_of(adapter);
     let mut cam_id = INVALID_CAM_ID;
     for i in 0..TOTAL_MBID_CAM_NUM {
         if !mac_addr.is_null()
-            && _rtw_memcmp(
-                rtw_rust_hal_com_mbid_cache_mac(dvobj, i).cast(),
-                mac_addr.cast(),
-                ETH_ALEN,
-            ) == TRUE
+            && unsafe {
+                _rtw_memcmp(
+                    rtw_rust_hal_com_mbid_cache_mac(dvobj, i).cast(),
+                    mac_addr.cast(),
+                    ETH_ALEN,
+                )
+            } == TRUE
         {
             cam_id = i;
             break;
         }
     }
-    rtw_rust_hal_com_mbid_log_mac_search(
-        MBID_MAC_SEARCH.as_ptr().cast(),
-        mac_addr,
-        cam_id,
-    );
-    cam_id
-}
-
-unsafe fn search_by_iface(adapter: *mut c_void, iface_id: U8) -> U8 {
-    let dvobj = dvobj_of(adapter);
-    let mut cam_id = INVALID_CAM_ID;
-    for i in 0..TOTAL_MBID_CAM_NUM {
-        if iface_id == rtw_rust_hal_com_mbid_cache_iface_id(dvobj, i) {
-            cam_id = i;
-            break;
-        }
-    }
-    if cam_id != INVALID_CAM_ID {
-        let mac = rtw_rust_hal_com_mbid_cache_mac(dvobj, cam_id);
-        rtw_rust_hal_com_mbid_log_iface_search(
-            MBID_IFACE_SEARCH.as_ptr().cast(),
-            iface_id,
-            mac,
+    unsafe {
+        rtw_rust_hal_com_mbid_log_mac_search(
+            MBID_MAC_SEARCH.as_ptr().cast(),
+            mac_addr,
             cam_id,
         );
     }
     cam_id
 }
 
-#[cfg(any(config_mi_with_mbssid_cam, host_hal_com_mbid_cam_test))]
+fn search_by_iface(adapter: *mut c_void, iface_id: U8) -> U8 {
+    let dvobj = dvobj_of(adapter);
+    let mut cam_id = INVALID_CAM_ID;
+    for i in 0..TOTAL_MBID_CAM_NUM {
+        if iface_id == unsafe { rtw_rust_hal_com_mbid_cache_iface_id(dvobj, i) } {
+            cam_id = i;
+            break;
+        }
+    }
+    if cam_id != INVALID_CAM_ID {
+        let mac = unsafe { rtw_rust_hal_com_mbid_cache_mac(dvobj, cam_id) };
+        unsafe {
+            rtw_rust_hal_com_mbid_log_iface_search(
+                MBID_IFACE_SEARCH.as_ptr().cast(),
+                iface_id,
+                mac,
+                cam_id,
+            );
+        }
+    }
+    cam_id
+}
+
+#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
 #[no_mangle]
 pub extern "C" fn rtw_mbid_cam_init(dvobj: *mut c_void) {
     let ctl = unsafe { ctl_of_dvobj(dvobj) };
@@ -140,14 +150,14 @@ pub extern "C" fn rtw_mbid_cam_init(dvobj: *mut c_void) {
     }
 }
 
-#[cfg(any(config_mi_with_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
 #[no_mangle]
 pub extern "C" fn rtw_mbid_cam_deinit(dvobj: *mut c_void) {
     let ctl = unsafe { ctl_of_dvobj(dvobj) };
     unsafe { rtw_rust_hal_com_spinlock_free(rtw_rust_hal_com_mbid_ctl_lock(ctl)) };
 }
 
-#[cfg(any(config_mi_with_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
 #[no_mangle]
 pub extern "C" fn rtw_mbid_cam_reset(adapter: *mut c_void) {
     let dvobj = unsafe { dvobj_of(adapter) };
@@ -161,7 +171,7 @@ pub extern "C" fn rtw_mbid_cam_reset(adapter: *mut c_void) {
     }
 }
 
-#[cfg(any(config_mi_with_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
 #[no_mangle]
 pub extern "C" fn rtw_mbid_cam_search_by_macaddr(adapter: *mut c_void, mac_addr: *mut U8) -> U8 {
     let dvobj = unsafe { dvobj_of(adapter) };
@@ -175,7 +185,7 @@ pub extern "C" fn rtw_mbid_cam_search_by_macaddr(adapter: *mut c_void, mac_addr:
     cam_id
 }
 
-#[cfg(any(config_mi_with_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
 #[no_mangle]
 pub extern "C" fn rtw_mbid_cam_search_by_ifaceid(adapter: *mut c_void, iface_id: U8) -> U8 {
     let dvobj = unsafe { dvobj_of(adapter) };
@@ -189,7 +199,7 @@ pub extern "C" fn rtw_mbid_cam_search_by_ifaceid(adapter: *mut c_void, iface_id:
     cam_id
 }
 
-#[cfg(any(config_mi_with_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
 #[no_mangle]
 pub extern "C" fn rtw_get_max_mbid_cam_id(adapter: *mut c_void) -> U8 {
     let dvobj = unsafe { dvobj_of(adapter) };
@@ -212,7 +222,7 @@ pub extern "C" fn rtw_get_max_mbid_cam_id(adapter: *mut c_void) -> U8 {
     cam_id
 }
 
-#[cfg(any(config_mi_with_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
 #[no_mangle]
 pub extern "C" fn rtw_get_mbid_cam_entry_num(adapter: *mut c_void) -> U8 {
     let dvobj = unsafe { dvobj_of(adapter) };
