@@ -42,39 +42,57 @@ static void buf_eq(const char *tag, u8 *a, u8 *b, u32 n)
 	}
 }
 
+static void run_halmac_case(struct _adapter *adap, u32 page_offset, u32 page_num,
+			    u8 *buf, u32 buf_sz, u8 *ref, const char *tag)
+{
+	int ret_subj;
+	int ret_orc;
+	u32 fifo_subj;
+	u32 size_subj;
+	u32 addr_subj;
+	u32 fifo_orc;
+	u32 size_orc;
+	u32 addr_orc;
+
+	memset(buf, 0, buf_sz);
+	memset(ref, 0, buf_sz);
+	ret_subj = rtw_hal_get_rsvd_page(adap, page_offset, page_num, buf, buf_sz);
+	fifo_subj = host_get_rsvd_last_fifo_sel_is_rsvd();
+	size_subj = host_get_rsvd_last_size();
+	addr_subj = host_get_rsvd_last_addr();
+
+	ret_orc = rtw_hal_get_rsvd_page_c_oracle(adap, page_offset, page_num, ref, buf_sz);
+	fifo_orc = host_get_rsvd_last_fifo_sel_is_rsvd();
+	size_orc = host_get_rsvd_last_size();
+	addr_orc = host_get_rsvd_last_addr();
+
+	eq_i(tag, ret_subj, ret_orc);
+	eq_u32("fifo_rsvd", fifo_subj, 1);
+	eq_u32("fifo", fifo_subj, fifo_orc);
+	eq_u32("dump_size", size_subj, size_orc);
+	eq_u32("dump_addr", addr_subj, addr_orc);
+	if (ret_subj == _TRUE)
+		buf_eq(tag, buf, ref, size_subj);
+}
+
 int main(void)
 {
 	u8 buf[512];
 	u8 ref[512];
 	struct _adapter *adap;
-	u32 psz;
 	int ret;
-	u32 want_size;
 
 	host_get_rsvd_page_reset();
 	adap = host_get_rsvd_page_adapter();
 	host_get_rsvd_page_set_page_size(128);
 
-	memset(buf, 0, sizeof(buf));
-	memset(ref, 0, sizeof(ref));
-	ret = rtw_hal_get_rsvd_page(adap, 2, 1, buf, 128);
-	eq_i("single_page_ok", ret, rtw_hal_get_rsvd_page_c_oracle(adap, 2, 1, ref, 128));
-	eq_u32("fifo_rsvd", host_get_rsvd_last_fifo_sel_is_rsvd(), 1);
-	psz = host_get_rsvd_page_fixture_page_size();
-	want_size = 1 * psz;
-	eq_u32("dump_size", host_get_rsvd_last_size(), want_size);
-	eq_u32("dump_addr", host_get_rsvd_last_addr(), 2 * psz);
-	buf_eq("fill", buf, ref, want_size);
+	run_halmac_case(adap, 2, 1, buf, 128, ref, "single_page_ok");
 
 	ret = rtw_hal_get_rsvd_page(adap, 0, 2, buf, 64);
 	eq_i("buf_too_small", ret, _FALSE);
 
 	host_get_rsvd_page_set_page_size(256);
-	memset(buf, 0, sizeof(buf));
-	memset(ref, 0, sizeof(ref));
-	ret = rtw_hal_get_rsvd_page(adap, 1, 2, buf, 512);
-	eq_i("two_pages", ret, rtw_hal_get_rsvd_page_c_oracle(adap, 1, 2, ref, 512));
-	eq_u32("dump_addr2", host_get_rsvd_last_addr(), 256);
+	run_halmac_case(adap, 1, 2, buf, 512, ref, "two_pages");
 
 	if (failures)
 		return 1;

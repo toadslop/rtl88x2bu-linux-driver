@@ -91,14 +91,18 @@ fn get_rsvd_page_legacy(
     }
     let page_size = get_tx_page_size(adapter);
     let txbndy = unsafe { rtw_rust_hal_com_read8(adapter, REG_TDECTRL + 1) };
-    let offset = (txbndy as U32 + page_offset).wrapping_mul(page_size) / 8;
+    let offset = ((txbndy as U32 + page_offset).wrapping_mul(page_size) / 8) as u16;
     let count = (buffer_size / 8).wrapping_add(1);
     unsafe {
         rtw_rust_hal_com_write8(adapter, REG_PKT_BUFF_ACCESS_CTRL, 0x69);
     }
     for i in 0..count {
         unsafe {
-            rtw_rust_hal_com_write32(adapter, REG_PKTBUF_DBG_CTRL, offset.wrapping_add(i));
+            rtw_rust_hal_com_write32(
+                adapter,
+                REG_PKTBUF_DBG_CTRL,
+                u32::from(offset.wrapping_add(i as u16)),
+            );
             let data_low = rtw_rust_hal_com_read32(adapter, REG_PKTBUF_DBG_DATA_L);
             let data_high = rtw_rust_hal_com_read32(adapter, REG_PKTBUF_DBG_DATA_H);
             let dst = buffer.add((i.wrapping_mul(8)) as usize);
