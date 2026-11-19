@@ -201,6 +201,19 @@ int main(void)
 	snap_fixture(&orc_snap);
 	run_pair("assign_invalid", subj, orc, &subj_snap, &orc_snap);
 
+	/* Invalid clean id: warn path still decrements entry count. */
+	host_mbid_cam_reset_fixture();
+	host_mbid_cam_set_entry_num(1);
+	rtw_mbid_camid_clean(adap, 10);
+	subj = rtw_get_mbid_cam_entry_num(adap);
+	snap_fixture(&subj_snap);
+	host_mbid_cam_reset_fixture();
+	host_mbid_cam_set_entry_num(1);
+	rtw_mbid_camid_clean_c_oracle(adap, 10);
+	orc = rtw_get_mbid_cam_entry_num_c_oracle(adap);
+	snap_fixture(&orc_snap);
+	run_pair("clean_invalid", subj, orc, &subj_snap, &orc_snap);
+
 	if (failures)
 		return 1;
 	puts("OK hal_com_mbid_cam alloc L2");
