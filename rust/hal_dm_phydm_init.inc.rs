@@ -13,9 +13,15 @@ const SUCCESS: U8 = 1;
 const FAIL: U8 = 0;
 const FALSE: U8 = 0;
 
+#[repr(i32)]
+enum PhydmInitResult {
+    PhyDmInitSuccess = 0,
+    PhyDmInitFailBbRfRegInvalid = 1,
+}
+
 unsafe extern "C" {
     fn odm_cmn_info_init(dm: *mut DmStruct, cmn_info: U32, value: u64);
-    fn odm_dm_init(dm: *mut DmStruct) -> U8;
+    fn odm_dm_init(dm: *mut DmStruct) -> PhydmInitResult;
     fn phydm_api_trx_mode(
         dm_void: *mut DmStruct,
         tx_path: U32,
@@ -152,7 +158,7 @@ pub extern "C" fn rtw_phydm_init(adapter: *mut c_void) {
         let _ = rtw_phydm_config_trx_path(adapter);
         init_phydm_info(adapter);
         let result = odm_dm_init(phydm);
-        rtw_rust_hal_dm_phydm_init_set_result(adapter, result);
+        rtw_rust_hal_dm_phydm_init_set_result(adapter, result as u8);
     }
     #[cfg(config_customer01_smart_antenna)]
     unsafe {

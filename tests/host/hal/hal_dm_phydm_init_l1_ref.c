@@ -5,4 +5,7 @@
 
 struct _adapter;
 
-void rtw_phydm_init(struct _adapter *adapter);
+void rtw_phydm_init(struct _adapter *adapter)
+{
+	(void)adapter;
+}

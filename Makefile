@@ -3407,6 +3407,18 @@ endif
 ifneq ($(filter -DCONFIG_RTL8192F,$(ccflags-y)),)
 rustflags-y += --cfg CONFIG_RTL8192F
 endif
+ifeq ($(CONFIG_RTL8812A), y)
+rustflags-y += --cfg CONFIG_RTL8812A
+endif
+ifneq ($(filter -DCONFIG_RTL8812A,$(ccflags-y)),)
+rustflags-y += --cfg CONFIG_RTL8812A
+endif
+ifeq ($(CONFIG_RTL8192E), y)
+rustflags-y += --cfg CONFIG_RTL8192E
+endif
+ifneq ($(filter -DCONFIG_RTL8192E,$(ccflags-y)),)
+rustflags-y += --cfg CONFIG_RTL8192E
+endif
 # W4-77: match C #ifdef RTW_HALMAC from include/autoconf.h
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+RTW_HALMAC' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg config_rtw_halmac
