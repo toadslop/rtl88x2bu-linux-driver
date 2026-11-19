@@ -43,6 +43,21 @@ static void eq_u8(const char *tag, u8 a, u8 b)
 	}
 }
 
+static void expect_cam_cleared(const char *tag, struct dvobj_priv *d)
+{
+	u8 i;
+
+	eq_u8(tag, d->mbid_cam_ctl.bitmap, 0);
+	eq_u8(tag, (u8)ATOMIC_READ(&d->mbid_cam_ctl.mbid_entry_num), 0);
+	for (i = 0; i < TOTAL_MBID_CAM_NUM; i++) {
+		if (d->mbid_cam_cache[i].iface_id != 0 ||
+		    memcmp(d->mbid_cam_cache[i].mac_addr, "\0\0\0\0\0\0", ETH_ALEN)) {
+			fprintf(stderr, "FAIL %s cache slot %u not zero\n", tag, i);
+			failures++;
+		}
+	}
+}
+
 int main(void)
 {
 	static const u8 mac2[ETH_ALEN] = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
@@ -51,9 +66,9 @@ int main(void)
 	host_mbid_cam_reset_fixture();
 	host_mbid_cam_dvobj()->mbid_cam_ctl.bitmap = 0x55;
 	host_mbid_cam_set_entry_num(3);
+	host_mbid_cam_prime_entry(1, 5, mac2, 0);
 	rtw_mbid_cam_init(host_mbid_cam_dvobj());
-	eq_u8("init", rtw_get_mbid_cam_entry_num(adap),
-	      rtw_get_mbid_cam_entry_num_c_oracle(adap));
+	expect_cam_cleared("init", host_mbid_cam_dvobj());
 
 	host_mbid_cam_reset_fixture();
 	host_mbid_cam_dvobj()->mbid_cam_ctl.bitmap = 0x05;
@@ -65,8 +80,7 @@ int main(void)
 	      rtw_mbid_cam_search_by_ifaceid_c_oracle(adap, 3));
 	eq_u8("max", rtw_get_max_mbid_cam_id(adap), rtw_get_max_mbid_cam_id_c_oracle(adap));
 	rtw_mbid_cam_reset(adap);
-	eq_u8("reset", rtw_get_mbid_cam_entry_num(adap),
-	      rtw_get_mbid_cam_entry_num_c_oracle(adap));
+	expect_cam_cleared("reset", host_mbid_cam_dvobj());
 
 	if (failures)
 		return 1;

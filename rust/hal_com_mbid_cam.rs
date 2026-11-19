@@ -128,7 +128,7 @@ unsafe fn search_by_iface(adapter: *mut c_void, iface_id: U8) -> U8 {
     cam_id
 }
 
-#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[cfg(any(config_mi_with_mbssid_cam, host_hal_com_mbid_cam_test))]
 #[no_mangle]
 pub extern "C" fn rtw_mbid_cam_init(dvobj: *mut c_void) {
     let ctl = unsafe { ctl_of_dvobj(dvobj) };
@@ -140,14 +140,14 @@ pub extern "C" fn rtw_mbid_cam_init(dvobj: *mut c_void) {
     }
 }
 
-#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[cfg(any(config_mi_with_mbssid_cam, host_hal_com_mbid_cam_test))]
 #[no_mangle]
 pub extern "C" fn rtw_mbid_cam_deinit(dvobj: *mut c_void) {
     let ctl = unsafe { ctl_of_dvobj(dvobj) };
     unsafe { rtw_rust_hal_com_spinlock_free(rtw_rust_hal_com_mbid_ctl_lock(ctl)) };
 }
 
-#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[cfg(any(config_mi_with_mbssid_cam, host_hal_com_mbid_cam_test))]
 #[no_mangle]
 pub extern "C" fn rtw_mbid_cam_reset(adapter: *mut c_void) {
     let dvobj = unsafe { dvobj_of(adapter) };
@@ -161,7 +161,7 @@ pub extern "C" fn rtw_mbid_cam_reset(adapter: *mut c_void) {
     }
 }
 
-#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[cfg(any(config_mi_with_mbssid_cam, host_hal_com_mbid_cam_test))]
 #[no_mangle]
 pub extern "C" fn rtw_mbid_cam_search_by_macaddr(adapter: *mut c_void, mac_addr: *mut U8) -> U8 {
     let dvobj = unsafe { dvobj_of(adapter) };
@@ -175,7 +175,7 @@ pub extern "C" fn rtw_mbid_cam_search_by_macaddr(adapter: *mut c_void, mac_addr:
     cam_id
 }
 
-#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[cfg(any(config_mi_with_mbssid_cam, host_hal_com_mbid_cam_test))]
 #[no_mangle]
 pub extern "C" fn rtw_mbid_cam_search_by_ifaceid(adapter: *mut c_void, iface_id: U8) -> U8 {
     let dvobj = unsafe { dvobj_of(adapter) };
@@ -189,7 +189,7 @@ pub extern "C" fn rtw_mbid_cam_search_by_ifaceid(adapter: *mut c_void, iface_id:
     cam_id
 }
 
-#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[cfg(any(config_mi_with_mbssid_cam, host_hal_com_mbid_cam_test))]
 #[no_mangle]
 pub extern "C" fn rtw_get_max_mbid_cam_id(adapter: *mut c_void) -> U8 {
     let dvobj = unsafe { dvobj_of(adapter) };
@@ -212,7 +212,7 @@ pub extern "C" fn rtw_get_max_mbid_cam_id(adapter: *mut c_void) -> U8 {
     cam_id
 }
 
-#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[cfg(any(config_mi_with_mbssid_cam, host_hal_com_mbid_cam_test))]
 #[no_mangle]
 pub extern "C" fn rtw_get_mbid_cam_entry_num(adapter: *mut c_void) -> U8 {
     let dvobj = unsafe { dvobj_of(adapter) };
