@@ -235,4 +235,14 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-117 | `wave4-117-hal-com-update-sta-ra-info.md` | `rtw_hal_update_sta_ra_info` orchestrator |
 | W4-118 | `wave4-118-hal-com-req-per-rpt-cmd.md` | `rtw_hal_set_req_per_rpt_cmd` H2C packer |
 
+## Children (tranche 23 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-119 | `wave4-119-hal-com-mbid-cam-search.md` | MBSSID CAM init/search |
+| W4-120 | `wave4-120-hal-com-mbid-cam-alloc.md` | MBSSID CAM alloc/clean |
+| W4-121 | `wave4-121-hal-com-get-rsvd-page.md` | HALMAC rsvd page fetch |
+| W4-122 | `wave4-122-hal-com-dump-rsvd-fifo.md` | RSVD/FIFO debug dumps |
+| W4-123 | `wave4-123-hal-com-gpio-wl-ctrl.md` | GPIO WL control switch |
+| W4-124 | `wave4-124-hal-com-tx-aclt-setters.md` | TX AC lifetime setters |
 Further slices: USB bulk port bodies stay under Wave 5 `os_dep`; file new `wave4-*.md` parallel lanes as hal_dm / hal_com tails thin (defer new `hal_dm.rs` slices while W4-111–113 PR stack is in flight).

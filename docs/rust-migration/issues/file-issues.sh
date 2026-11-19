@@ -384,6 +384,12 @@ files=(
   wave4-113-hal-dm-phydm-init.md
   wave4-117-hal-com-update-sta-ra-info.md
   wave4-118-hal-com-req-per-rpt-cmd.md
+  wave4-119-hal-com-mbid-cam-search.md
+  wave4-120-hal-com-mbid-cam-alloc.md
+  wave4-121-hal-com-get-rsvd-page.md
+  wave4-122-hal-com-dump-rsvd-fifo.md
+  wave4-123-hal-com-gpio-wl-ctrl.md
+  wave4-124-hal-com-tx-aclt-setters.md
   wave3-161-debug-proc-rate-setter.md
   wave3-162-debug-proc-rx-cnt-dump.md
   wave3-163-debug-proc-ps-dbg.md

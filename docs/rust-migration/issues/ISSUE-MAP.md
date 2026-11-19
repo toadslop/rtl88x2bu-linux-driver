@@ -448,6 +448,12 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-113 | #2162 | [W4-113] Translate hal_dm.c — PHYDM init orchestration |
 | W4-117 | #2203 | [W4-117] Translate hal_com_rest.c — STA RA info orchestrator |
 | W4-118 | #2204 | [W4-118] Translate hal_com_rest.c — H2C request PER report cmd |
+| W4-119 | #2213 | [W4-119] Translate hal_com_rest.c — MBSSID CAM init and search |
+| W4-120 | #2214 | [W4-120] Translate hal_com_rest.c — MBSSID CAM alloc and clean |
+| W4-121 | #2215 | [W4-121] Translate hal_com_rest.c — HALMAC reserved page fetch |
+| W4-122 | #2216 | [W4-122] Translate hal_com_rest.c — RSVD page and FIFO debug dumps |
+| W4-123 | #2217 | [W4-123] Translate hal_com_rest.c — GPIO WL control switch |
+| W4-124 | #2218 | [W4-124] Translate hal_com_rest.c — TX AC lifetime setters |
 
 ## Superseded issues
 
