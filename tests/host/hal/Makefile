@@ -1646,6 +1646,21 @@ test-mbid-cam: test_hal_com_mbid_cam
 test_hal_com_mbid_cam: test_hal_com_mbid_cam.c $(MBID_CAM_SHIM) $(MBID_CAM_ORACLE)
 	$(CC) $(CFLAGS) -o $@ test_hal_com_mbid_cam.c $(MBID_CAM_SHIM) $(MBID_CAM_ORACLE)
 
+RUST_MBID_CAM := $(ROOT)/rust/hal_com_mbid_cam_host.rs
+
+librust_hal_com_mbid_cam.a: $(RUST_MBID_CAM)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_mbid_cam_test --crate-type staticlib \
+		$(RUST_MBID_CAM) -o $@
+
+test-mbid-cam-rust: test_hal_com_mbid_cam_rust
+	./test_hal_com_mbid_cam_rust
+
+test_hal_com_mbid_cam_rust: test_hal_com_mbid_cam.c $(MBID_CAM_SHIM) $(MBID_CAM_ORACLE) \
+		librust_hal_com_mbid_cam.a
+	$(CC) $(CFLAGS) -DRUST_HAL_COM_MBID_CAM_ORACLE -o $@ test_hal_com_mbid_cam.c \
+		$(MBID_CAM_SHIM) $(MBID_CAM_ORACLE) librust_hal_com_mbid_cam.a
+
 RUST_C2H_EVT := $(ROOT)/rust/hal_com_c2h_evt.rs
 CUSTOMER_STR_SHIM := hal_com_customer_str_shim.c
 CUSTOMER_STR_ORACLE := hal_com_customer_str_c_oracle.c
@@ -1776,4 +1791,5 @@ clean:
 		librust_hal_com_sec_cam_ent.a \
 		test_hal_com_c2h_evt_fx19 librust_hal_com_c2h_evt.a \
 		test_hal_com_req_per_rpt test_hal_com_req_per_rpt_rust \
-		librust_hal_com_req_per_rpt.a
+		librust_hal_com_req_per_rpt.a \
+		test_hal_com_mbid_cam_rust librust_hal_com_mbid_cam.a
