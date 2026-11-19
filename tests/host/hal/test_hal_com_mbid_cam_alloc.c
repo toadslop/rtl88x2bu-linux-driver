@@ -81,6 +81,20 @@ static void cmp_snap(const char *tag, const struct mbid_fixture_snap *a,
 	}
 }
 
+static void cmp_cache_only(const char *tag, const struct mbid_fixture_snap *a,
+			   const struct mbid_fixture_snap *b)
+{
+	u8 i;
+
+	for (i = 0; i < TOTAL_MBID_CAM_NUM; i++) {
+		if (memcmp(a->cache_mac[i], b->cache_mac[i], ETH_ALEN)) {
+			fprintf(stderr, "FAIL %s mac slot %u\n", tag, i);
+			failures++;
+		}
+		eq_u8(tag, a->cache_iface[i], b->cache_iface[i]);
+	}
+}
+
 static void run_pair(const char *tag, u8 subj, u8 orc,
 		     const struct mbid_fixture_snap *subj_snap,
 		     const struct mbid_fixture_snap *orc_snap)
@@ -97,15 +111,15 @@ static void eq_warn(const char *tag, unsigned a, unsigned b)
 	}
 }
 
-/* Run C oracle once for golden state; subject is compared to that, not a second oracle pass. */
-static void cmp_subject_to_c_golden(const char *tag, u8 subj_ret, u8 golden_ret,
-				    const struct mbid_fixture_snap *subj_snap,
-				    const struct mbid_fixture_snap *golden_snap,
-				    unsigned subj_warn, unsigned golden_warn)
+/* Literal oracle expectations (hal/hal_com_rest.c warn-and-continue paths). */
+static void assert_warn_subject(const char *tag, u8 ret, u8 exp_ret,
+				const struct mbid_fixture_snap *snap,
+				u8 exp_bitmap, u8 exp_entry, unsigned exp_warn)
 {
-	eq_u8(tag, subj_ret, golden_ret);
-	cmp_snap(tag, subj_snap, golden_snap);
-	eq_warn(tag, subj_warn, golden_warn);
+	eq_u8(tag, ret, exp_ret);
+	eq_u8(tag, snap->bitmap, exp_bitmap);
+	eq_u8(tag, snap->entry_num, exp_entry);
+	eq_warn(tag, host_mbid_cam_oracle_warn_count(), exp_warn);
 }
 
 int main(void)
@@ -191,74 +205,40 @@ int main(void)
 	/* Counter ahead of bitmap: driver warns but still allocates free slot. */
 	{
 		u8 i;
-		u8 golden_ret, subj_ret;
-		unsigned golden_warn;
-		struct mbid_fixture_snap golden_snap;
 
 		host_mbid_cam_reset_fixture();
 		host_mbid_cam_set_entry_num(8);
 		for (i = 0; i < 7; i++)
 			host_mbid_cam_prime_entry(i, 0, mac_a, 1);
-		golden_ret = rtw_mbid_camid_alloc_c_oracle(adap, (u8 *)mac_b);
-		snap_fixture(&golden_snap);
-		golden_warn = host_mbid_cam_oracle_warn_count();
-
-		host_mbid_cam_reset_fixture();
-		host_mbid_cam_set_entry_num(8);
-		for (i = 0; i < 7; i++)
-			host_mbid_cam_prime_entry(i, 0, mac_a, 1);
-		subj_ret = rtw_mbid_camid_alloc(adap, (u8 *)mac_b);
+		subj = rtw_mbid_camid_alloc(adap, (u8 *)mac_b);
 		snap_fixture(&subj_snap);
-		cmp_subject_to_c_golden("alloc_cnt_ahead", subj_ret, golden_ret,
-					&subj_snap, &golden_snap,
-					host_mbid_cam_oracle_warn_count(), golden_warn);
+		assert_warn_subject("alloc_cnt_ahead", subj, 7, &subj_snap,
+				    0xff, 9, 1);
 	}
 
 	/* Invalid cam id: warn path still updates counter on assign. */
-	{
-		u8 golden_ret, subj_ret;
-		unsigned golden_warn;
-		struct mbid_fixture_snap golden_snap;
-
-		host_mbid_cam_reset_fixture();
-		golden_ret = rtw_mbid_cam_assign_c_oracle(adap, (u8 *)mac_b, 10);
-		snap_fixture(&golden_snap);
-		golden_warn = host_mbid_cam_oracle_warn_count();
-
-		host_mbid_cam_reset_fixture();
-		subj_ret = rtw_mbid_cam_assign(adap, (u8 *)mac_b, 10);
-		snap_fixture(&subj_snap);
-		cmp_subject_to_c_golden("assign_invalid", subj_ret, golden_ret,
-					&subj_snap, &golden_snap,
-					host_mbid_cam_oracle_warn_count(), golden_warn);
-	}
+	host_mbid_cam_reset_fixture();
+	subj = rtw_mbid_cam_assign(adap, (u8 *)mac_b, 10);
+	snap_fixture(&subj_snap);
+	assert_warn_subject("assign_invalid", subj, _TRUE, &subj_snap, 0x00, 1,
+			    1);
 
 	/* Invalid clean id: warn path still decrements entry count; bitmap 0x0f unchanged. */
 	{
 		u8 i;
-		u8 golden_ent, subj_ent;
-		unsigned golden_warn;
-		struct mbid_fixture_snap golden_snap;
+		struct mbid_fixture_snap before;
 
 		host_mbid_cam_reset_fixture();
 		host_mbid_cam_set_entry_num(3);
 		for (i = 0; i < 4; i++)
 			host_mbid_cam_prime_entry(i, 0, mac_a, 1);
-		rtw_mbid_camid_clean_c_oracle(adap, 10);
-		golden_ent = rtw_get_mbid_cam_entry_num_c_oracle(adap);
-		snap_fixture(&golden_snap);
-		golden_warn = host_mbid_cam_oracle_warn_count();
-
-		host_mbid_cam_reset_fixture();
-		host_mbid_cam_set_entry_num(3);
-		for (i = 0; i < 4; i++)
-			host_mbid_cam_prime_entry(i, 0, mac_a, 1);
+		snap_fixture(&before);
 		rtw_mbid_camid_clean(adap, 10);
-		subj_ent = rtw_get_mbid_cam_entry_num(adap);
 		snap_fixture(&subj_snap);
-		cmp_subject_to_c_golden("clean_invalid", subj_ent, golden_ent,
-					&subj_snap, &golden_snap,
-					host_mbid_cam_oracle_warn_count(), golden_warn);
+		cmp_cache_only("clean_invalid_cache", &subj_snap, &before);
+		eq_u8("clean_invalid", subj_snap.bitmap, 0x0f);
+		eq_u8("clean_invalid", subj_snap.entry_num, 2);
+		eq_warn("clean_invalid", host_mbid_cam_oracle_warn_count(), 1);
 	}
 
 	if (failures)

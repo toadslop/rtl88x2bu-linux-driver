@@ -178,6 +178,7 @@ void rtw_mbid_camid_clean_c_oracle(struct _adapter *adapter, u8 mbss_camid)
 
 	if (mbss_camid >= TOTAL_MBID_CAM_NUM || mbss_camid == INVALID_CAM_ID)
 		oracle_warn();
+	/* Driver clears cache even for invalid camid; guard on host. */
 	if (mbss_camid < TOTAL_MBID_CAM_NUM)
 		cache_clr(&dvobj->mbid_cam_cache[mbss_camid]);
 	ctl->bitmap &= (u8)(~BIT(mbss_camid));
