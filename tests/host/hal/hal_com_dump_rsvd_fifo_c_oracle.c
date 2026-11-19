@@ -20,11 +20,24 @@ static void print_sel(void *sel, const char *fmt, ...)
 	struct host_sel_capture *cap = (struct host_sel_capture *)sel;
 	va_list ap;
 	int n;
+	size_t room;
 
+	if (cap->len >= sizeof(cap->buf) - 1) {
+		host_sel_mark_overflow();
+		return;
+	}
+	room = sizeof(cap->buf) - cap->len - 1;
 	va_start(ap, fmt);
-	n = vsnprintf(cap->buf + cap->len,
-		      sizeof(cap->buf) - cap->len - 1, fmt, ap);
+	n = vsnprintf(cap->buf + cap->len, room + 1, fmt, ap);
 	va_end(ap);
+	if (n < 0)
+		return;
+	if ((size_t)n > room) {
+		cap->len = sizeof(cap->buf) - 1;
+		cap->buf[cap->len] = '\0';
+		host_sel_mark_overflow();
+		return;
+	}
 	if (n > 0)
 		cap->len += (size_t)n;
 }

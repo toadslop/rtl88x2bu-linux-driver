@@ -36,6 +36,8 @@ struct host_sel_capture {
 };
 
 void host_sel_reset(struct host_sel_capture *cap);
+void host_sel_mark_overflow(void);
+int host_sel_had_overflow(void);
 int host_sel_string(struct host_sel_capture *cap, char *out, size_t outlen);
 void *rtw_zvmalloc(u32 sz);
 void rtw_vmfree(void *p, u32 sz);

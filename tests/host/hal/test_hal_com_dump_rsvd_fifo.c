@@ -85,7 +85,8 @@ int main(int argc, char **argv)
 		host_sel_reset(&cap);
 		rtw_dump_rsvd_page(&cap, adap, (u8)vectors[i].page_offset,
 				 (u8)vectors[i].page_num);
-		if (host_sel_string(&cap, got, sizeof(got)) < 0 ||
+		if (host_sel_had_overflow() ||
+		    host_sel_string(&cap, got, sizeof(got)) < 0 ||
 		    strcmp(got, vectors[i].expect)) {
 			fprintf(stderr, "FAIL %s\n", vectors[i].name);
 			return 1;

@@ -15,6 +15,7 @@ static u32 g_last_fifo_sel;
 static u32 g_last_addr;
 static u32 g_last_size;
 static int g_zvmalloc_fail;
+static int g_sel_overflow;
 
 void host_get_rsvd_page_reset(void)
 {
@@ -102,11 +103,22 @@ void host_sel_reset(struct host_sel_capture *cap)
 {
 	cap->len = 0;
 	cap->buf[0] = '\0';
+	g_sel_overflow = 0;
+}
+
+void host_sel_mark_overflow(void)
+{
+	g_sel_overflow = 1;
+}
+
+int host_sel_had_overflow(void)
+{
+	return g_sel_overflow;
 }
 
 int host_sel_string(struct host_sel_capture *cap, char *out, size_t outlen)
 {
-	if (cap->len >= outlen)
+	if (g_sel_overflow || cap->len >= outlen)
 		return -1;
 	memcpy(out, cap->buf, cap->len + 1);
 	return (int)cap->len;
