@@ -50,6 +50,9 @@ test_hal_dm_cfg_phy_para_rust
 librust_hal_dm_cfg_phy_para.a
 test_hal_dm_halmac_dm_leaf
 test_hal_dm_halmac_dm_leaf_rust
+test_hal_dm_phydm_init
+test_hal_dm_phydm_init_rust
+librust_hal_dm_phydm_init.a
 librust_hal_dm_halmac_dm_leaf.a
 test_hal_dm_dyn_soml
 test_hal_dm_dyn_soml_rust
