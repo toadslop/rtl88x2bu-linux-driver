@@ -2458,6 +2458,7 @@ mod get_rsvd_page {
     not(host_hal_com_hdata_rate_test),
     not(host_hal_com_tx_aclt_force_test),
     not(host_hal_com_tx_aclt_confs_test),
+    not(host_hal_com_hal_spec_test),
 ))]
 mod tx_aclt_set {
     #![allow(dead_code, non_snake_case, non_upper_case_globals)]
