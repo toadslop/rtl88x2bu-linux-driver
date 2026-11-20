@@ -47,8 +47,8 @@ fn scale_lifetime(unit_factor: U8, input: U32) -> U32 {
 
 fn fold_lifetime(adapter: *mut c_void) -> (U8, U16, U16) {
     let mut lt_en: U8 = 0;
-    let mut lt_vo_vi: U32 = 0xFFFF;
-    let mut lt_be_bk: U32 = 0xFFFF;
+    let mut lt_vo_vi: U16 = 0xFFFF;
+    let mut lt_be_bk: U16 = 0xFFFF;
     let flags = unsafe { rtw_rust_hal_com_tx_aclt_flags(adapter) };
     let ap_m2u = unsafe { rtw_rust_hal_com_tx_aclt_ap_m2u_num(adapter) };
     let sta_op = unsafe { rtw_rust_hal_com_tx_aclt_sta_op_num(adapter) };
@@ -65,22 +65,22 @@ fn fold_lifetime(adapter: *mut c_void) -> (U8, U16, U16) {
         if i == TX_ACLT_CONF_DEFAULT {
             lt_en = conf.en;
             if conf.vo_vi != 0 {
-                lt_vo_vi = conf.vo_vi;
+                lt_vo_vi = conf.vo_vi as U16;
             }
             if conf.be_bk != 0 {
-                lt_be_bk = conf.be_bk;
+                lt_be_bk = conf.be_bk as U16;
             }
         } else if i == TX_ACLT_CONF_AP_M2U && ap_m2u != 0 && sta_op != 0 {
             lt_en |= conf.en;
-            if conf.vo_vi != 0 && lt_vo_vi > conf.vo_vi {
-                lt_vo_vi = conf.vo_vi;
+            if conf.vo_vi != 0 && (lt_vo_vi as U32) > conf.vo_vi {
+                lt_vo_vi = conf.vo_vi as U16;
             }
-            if conf.be_bk != 0 && lt_be_bk > conf.be_bk {
-                lt_be_bk = conf.be_bk;
+            if conf.be_bk != 0 && (lt_be_bk as U32) > conf.be_bk {
+                lt_be_bk = conf.be_bk as U16;
             }
         }
     }
-    (lt_en, lt_vo_vi as U16, lt_be_bk as U16)
+    (lt_en, lt_vo_vi, lt_be_bk)
 }
 
 #[no_mangle]

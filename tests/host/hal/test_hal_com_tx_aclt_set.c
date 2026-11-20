@@ -574,6 +574,27 @@ int main(void)
 	eq8("ap_m2u_en_oracle", host_tx_aclt_reg_trace.last_lt_en, 0x8F);
 	eq32("ap_m2u_lt_oracle", host_tx_aclt_reg_trace.last_lt, 0x0014000Au);
 
+	ds.tx_aclt_confs[0].vo_vi = 0x10000u;
+	ds.tx_aclt_confs[0].be_bk = 0x10000u;
+	ds.tx_aclt_confs[1].vo_vi = 1;
+	ds.tx_aclt_confs[1].be_bk = 1;
+	s.dvobj = ds;
+	o.dvobj = ds;
+	host_tx_aclt_reg_trace.reg_lt_en = 0x80;
+	host_tx_aclt_reg_trace.reg_lt = 0xFFFFFFFFu;
+	host_tx_aclt_reg_trace.write8_count = host_tx_aclt_reg_trace.write32_count = 0;
+	rtw_hal_update_tx_aclt(&s);
+	eq32("u16_min_lt", host_tx_aclt_reg_trace.last_lt, 0u);
+	host_tx_aclt_reg_trace.write8_count = host_tx_aclt_reg_trace.write32_count = 0;
+	host_tx_aclt_reg_trace.reg_lt_en = 0x80;
+	host_tx_aclt_reg_trace.reg_lt = 0xFFFFFFFFu;
+	rtw_hal_update_tx_aclt_c_oracle(&o);
+	eq32("u16_min_lt_oracle", host_tx_aclt_reg_trace.last_lt, 0u);
+
+	ds.tx_aclt_confs[0].vo_vi = 50;
+	ds.tx_aclt_confs[0].be_bk = 60;
+	ds.tx_aclt_confs[1].vo_vi = 10;
+	ds.tx_aclt_confs[1].be_bk = 20;
 	ds.host_ap_m2u_num = 0;
 	s.dvobj = ds;
 	host_tx_aclt_reg_trace.reg_lt_en = 0x80;
