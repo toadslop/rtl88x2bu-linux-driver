@@ -520,6 +520,13 @@ int main(void)
 	s.dvobj = ds;
 	do_ = ds;
 	o.dvobj = do_;
+	host_tx_aclt_reg_trace.reg_lt_en = 0xA3;
+	host_tx_aclt_reg_trace.reg_lt = 0x003C0032u;
+	host_tx_aclt_reg_trace.write8_count = host_tx_aclt_reg_trace.write32_count = 0;
+	rtw_hal_update_tx_aclt(&s);
+	eq8("upd_no_wr_en", host_tx_aclt_reg_trace.write8_count, 0);
+	eq8("upd_no_wr_lt", host_tx_aclt_reg_trace.write32_count, 0);
+
 	host_tx_aclt_reg_trace.reg_lt_en = 0xA0;
 	host_tx_aclt_reg_trace.reg_lt = 0x11112222u;
 	host_tx_aclt_reg_trace.write8_count = host_tx_aclt_reg_trace.write32_count = 0;
@@ -575,6 +582,25 @@ int main(void)
 	rtw_hal_update_tx_aclt(&s);
 	eq8("no_ap_m2u_en", host_tx_aclt_reg_trace.last_lt_en, 0x83);
 	eq32("no_ap_m2u_lt", host_tx_aclt_reg_trace.last_lt, 0x003C0032u);
+
+	ds.host_ap_m2u_num = 1;
+	ds.host_sta_op_num = 0;
+	s.dvobj = ds;
+	host_tx_aclt_reg_trace.reg_lt_en = 0x80;
+	host_tx_aclt_reg_trace.reg_lt = 0xFFFFFFFFu;
+	host_tx_aclt_reg_trace.write8_count = host_tx_aclt_reg_trace.write32_count = 0;
+	rtw_hal_update_tx_aclt(&s);
+	eq8("no_sta_en", host_tx_aclt_reg_trace.last_lt_en, 0x83);
+	eq32("no_sta_lt", host_tx_aclt_reg_trace.last_lt, 0x003C0032u);
+
+	ds.tx_aclt_force_val.vo_vi = 5;
+	ds.tx_aclt_force_val.be_bk = 0;
+	s.dvobj = ds;
+	host_tx_aclt_reg_trace.reg_lt_en = 0xA0;
+	host_tx_aclt_reg_trace.reg_lt = 0x11112222u;
+	host_tx_aclt_reg_trace.write32_count = 0;
+	rtw_hal_update_tx_aclt(&s);
+	eq32("force_lt_vo", host_tx_aclt_reg_trace.last_lt, 0x003C0005u);
 
 	if (failures)
 		return 1;

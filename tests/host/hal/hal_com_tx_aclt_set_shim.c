@@ -73,11 +73,16 @@ void rtw_rust_hal_com_tx_aclt_compute_lt(void *p, u8 *lt_en, u16 *lt_vo_vi, u16 
 				*lt_be_bk = (u16)conf->be_bk;
 		} else if (i == TX_ACLT_CONF_AP_M2U && dv->host_ap_m2u_num &&
 			   dv->host_sta_op_num) {
+			u32 vo = *lt_vo_vi;
+			u32 be = *lt_be_bk;
+
 			*lt_en |= conf->en;
-			if (conf->vo_vi && *lt_vo_vi > conf->vo_vi)
-				*lt_vo_vi = (u16)conf->vo_vi;
-			if (conf->be_bk && *lt_be_bk > conf->be_bk)
-				*lt_be_bk = (u16)conf->be_bk;
+			if (conf->vo_vi && vo > conf->vo_vi)
+				vo = conf->vo_vi;
+			if (conf->be_bk && be > conf->be_bk)
+				be = conf->be_bk;
+			*lt_vo_vi = (u16)vo;
+			*lt_be_bk = (u16)be;
 		}
 	}
 }
