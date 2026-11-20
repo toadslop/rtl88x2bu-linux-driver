@@ -2869,6 +2869,7 @@ ifneq ($(_rust_cfg_mbssid_cam),)
 rustflags-y += --cfg config_mbssid_cam
 endif
 HAL_COM_L1_MBID_CAM_REF := $(if $(_rust_cfg_mbssid_cam),tests/host/hal/hal_com_mbid_cam_l1_ref.o,)
+HAL_COM_L1_GPIO_WAKEUP_REF := $(if $(_rust_cfg_gpio_wakeup),tests/host/hal/hal_com_gpio_wakeup_l1_ref.o,)
 rustflags-y += --cfg rust_mlme_ht_restructure
 rustflags-y += --cfg rust_mlme_80211d
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BEAMFORMING' $(src)/include/autoconf.h 2>/dev/null && echo y),)
@@ -5222,6 +5223,11 @@ ifneq ($(_rust_cfg_mbssid_cam),)
 		-o tests/host/hal/hal_com_mbid_cam_l1_ref.o \
 		tests/host/hal/hal_com_mbid_cam_l1_ref.c
 endif
+ifneq ($(_rust_cfg_gpio_wakeup),)
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_com_gpio_wakeup_l1_ref.o \
+		tests/host/hal/hal_com_gpio_wakeup_l1_ref.c
+endif
 	ld -r -o tests/host/hal/hal_com_c_ref.o \
 		tests/host/hal/hal_hw_rate_c_ref.o tests/host/hal/hal_rsvd_page_c_ref.o \
 		tests/host/hal/hal_dump_chip_info_c_ref.o tests/host/hal/hal_mrate_to_hw_rate_c_ref.o \
@@ -5247,7 +5253,8 @@ endif
 		tests/host/hal/hal_com_sec_cam_rw_l1_ref.o \
 		tests/host/hal/hal_com_customer_str_l1_ref.o \
 		$(HAL_COM_L1_REQ_PER_RPT) \
-		$(HAL_COM_L1_MBID_CAM_REF)
+		$(HAL_COM_L1_MBID_CAM_REF) \
+		$(HAL_COM_L1_GPIO_WAKEUP_REF)
 
 rust-check-symbols-hal-com: rust-objects-hal-com-c rust-objects-hal-com
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_com_c_ref.o NEW=rust/hal_com.o \

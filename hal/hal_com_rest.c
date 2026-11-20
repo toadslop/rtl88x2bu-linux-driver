@@ -2343,29 +2343,7 @@ void rtw_hal_set_FwRsvdPage_cmd(PADAPTER padapter, PRSVDPAGE_LOC rsvdpageloc)
 }
 
 #ifdef CONFIG_GPIO_WAKEUP
-void rtw_hal_switch_gpio_wl_ctrl(_adapter *padapter, u8 index, u8 enable)
-{
-	PHAL_DATA_TYPE pHalData = GET_HAL_DATA(padapter);
-
-	if (IS_8723D_SERIES(pHalData->version_id) || IS_8192F_SERIES(pHalData->version_id)
-		|| IS_8822B_SERIES(pHalData->version_id) || IS_8821C_SERIES(pHalData->version_id)
-		|| IS_8822C_SERIES(pHalData->version_id))
-		rtw_hal_set_hwreg(padapter, HW_SET_GPIO_WL_CTRL, (u8 *)(&enable));
-	/*
-	* Switch GPIO_13, GPIO_14 to wlan control, or pull GPIO_13,14 MUST fail.
-	* It happended at 8723B/8192E/8821A. New IC will check multi function GPIO,
-	* and implement HAL function.
-	* TODO: GPIO_8 multi function?
-	*/
-
-	if ((index == 13 || index == 14)
-		#if defined(CONFIG_RTL8821A) && defined(CONFIG_SDIO_HCI)
-		/* 8821A's LED2 circuit(used by HW_LED strategy) needs enable WL GPIO control of GPIO[14:13], can't disable */
-		&& (!IS_HW_LED_STRATEGY(rtw_led_get_strategy(padapter)) || enable)
-		#endif
-	)
-		rtw_hal_set_hwreg(padapter, HW_SET_GPIO_WL_CTRL, (u8 *)(&enable));
-}
+/* rtw_hal_switch_gpio_wl_ctrl — rust/hal_com_gpio_wakeup.rs (W4-123) */
 
 void rtw_hal_set_output_gpio(_adapter *padapter, u8 index, u8 outputval)
 {
