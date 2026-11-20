@@ -13,12 +13,17 @@ typedef unsigned int u32;
 /* HAL_IC_TYPE_E — subset for L2 fixtures */
 enum {
 	CHIP_8188E = 5,
+	CHIP_8821 = 7,
 	CHIP_8822B = 13,
 	CHIP_8723D = 14,
 	CHIP_8821C = 15,
 	CHIP_8192F = 17,
 	CHIP_8822C = 19,
 };
+
+/* Matches rtw_led.h host stub values when CONFIG_RTL8821A + CONFIG_SDIO_HCI. */
+#define HOST_HW_LED 1
+#define HOST_NO_LED 0
 
 typedef struct {
 	u8 ICType;

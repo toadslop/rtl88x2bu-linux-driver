@@ -7,10 +7,30 @@
 static struct _adapter g_adapter;
 struct host_gpio_wl_trace host_gpio_wl_trace; /* shared with L2 oracle */
 
+#if defined(CONFIG_RTL8821A) && defined(CONFIG_SDIO_HCI)
+static u8 g_led_strategy = HOST_NO_LED;
+
+void host_gpio_wl_set_led_strategy(u8 strategy)
+{
+	g_led_strategy = strategy;
+}
+
+u8 rtw_led_get_strategy(void *adapter)
+{
+	(void)adapter;
+	return g_led_strategy;
+}
+
+#define IS_HW_LED_STRATEGY(s) ((s) == HOST_HW_LED)
+#endif
+
 void host_gpio_wl_reset(void)
 {
 	memset(&g_adapter, 0, sizeof(g_adapter));
 	memset(&host_gpio_wl_trace, 0, sizeof(host_gpio_wl_trace));
+#if defined(CONFIG_RTL8821A) && defined(CONFIG_SDIO_HCI)
+	g_led_strategy = HOST_NO_LED;
+#endif
 }
 
 struct _adapter *host_gpio_wl_adapter(void)
@@ -58,9 +78,8 @@ u8 rtw_rust_hal_com_gpio_wl_series_match(void *adapter)
 #if defined(CONFIG_RTL8821A) && defined(CONFIG_SDIO_HCI)
 u8 rtw_rust_hal_com_gpio_wl_led_allow_disable(void *adapter, u8 enable)
 {
-	(void)adapter;
-	(void)enable;
-	return _TRUE;
+	return (!IS_HW_LED_STRATEGY(rtw_led_get_strategy(adapter)) || enable) ?
+	       _TRUE : _FALSE;
 }
 #else
 u8 rtw_rust_hal_com_gpio_wl_led_allow_disable(void *adapter, u8 enable)
@@ -70,3 +89,22 @@ u8 rtw_rust_hal_com_gpio_wl_led_allow_disable(void *adapter, u8 enable)
 	return _TRUE;
 }
 #endif
+
+void rtw_hal_switch_gpio_wl_ctrl(struct _adapter *padapter, u8 index, u8 enable)
+{
+	struct hal_data *pHalData = GET_HAL_DATA(padapter);
+
+	if (IS_8723D_SERIES(pHalData->version_id) ||
+	    IS_8192F_SERIES(pHalData->version_id) ||
+	    IS_8822B_SERIES(pHalData->version_id) ||
+	    IS_8821C_SERIES(pHalData->version_id) ||
+	    IS_8822C_SERIES(pHalData->version_id))
+		rtw_hal_set_hwreg(padapter, HW_SET_GPIO_WL_CTRL, (u8 *)(&enable));
+
+	if ((index == 13 || index == 14)
+#if defined(CONFIG_RTL8821A) && defined(CONFIG_SDIO_HCI)
+	    && rtw_rust_hal_com_gpio_wl_led_allow_disable(padapter, enable)
+#endif
+	)
+		rtw_hal_set_hwreg(padapter, HW_SET_GPIO_WL_CTRL, (u8 *)(&enable));
+}

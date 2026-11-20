@@ -3,6 +3,7 @@
 
 extern struct host_gpio_wl_trace host_gpio_wl_trace;
 void rtw_hal_set_hwreg(struct _adapter *padapter, u32 variable, u8 *val);
+u8 rtw_rust_hal_com_gpio_wl_led_allow_disable(void *adapter, u8 enable);
 
 void rtw_hal_switch_gpio_wl_ctrl_c_oracle(struct _adapter *padapter, u8 index, u8 enable)
 {
@@ -13,6 +14,10 @@ void rtw_hal_switch_gpio_wl_ctrl_c_oracle(struct _adapter *padapter, u8 index, u
 	    IS_8822C_SERIES(pHalData->version_id))
 		rtw_hal_set_hwreg(padapter, HW_SET_GPIO_WL_CTRL, (u8 *)(&enable));
 
-	if (index == 13 || index == 14)
+	if ((index == 13 || index == 14)
+#if defined(CONFIG_RTL8821A) && defined(CONFIG_SDIO_HCI)
+	    && rtw_rust_hal_com_gpio_wl_led_allow_disable(padapter, enable)
+#endif
+	)
 		rtw_hal_set_hwreg(padapter, HW_SET_GPIO_WL_CTRL, (u8 *)(&enable));
 }
