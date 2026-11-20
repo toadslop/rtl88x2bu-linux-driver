@@ -1908,4 +1908,6 @@ clean:
 		test_hal_com_mbid_cam_rust librust_hal_com_mbid_cam.a \
 		test_hal_com_gpio_wakeup test_hal_com_gpio_wakeup_rust \
 		test_hal_com_gpio_wakeup_8821asdio test_hal_com_gpio_wakeup_rust_8821asdio \
-		librust_hal_com_gpio_wakeup.a librust_hal_com_gpio_wakeup_8821as.a
+		librust_hal_com_gpio_wakeup.a librust_hal_com_gpio_wakeup_8821as.a \
+		test_hal_com_tx_aclt_set test_hal_com_tx_aclt_set_rust \
+		librust_hal_com_tx_aclt_set.a

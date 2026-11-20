@@ -29,12 +29,22 @@ static void eq8(const char *t, u8 a, u8 b)
 	}
 }
 
+static void eq32(const char *t, u32 a, u32 b)
+{
+	if (a != b) {
+		fprintf(stderr, "FAIL %s a=%u b=%u\n", t, a, b);
+		failures++;
+	}
+}
+
 int main(void)
 {
 	struct dvobj_priv ds, do_;
 	struct _adapter s, o;
 	struct tx_aclt_conf_t in;
 
+	memset(&ds, 0, sizeof(ds));
+	memset(&do_, 0, sizeof(do_));
 	host_tx_aclt_reset();
 	s = mkadap(&ds);
 	o = mkadap(&do_);
@@ -63,12 +73,18 @@ int main(void)
 	rtw_hal_set_tx_aclt_conf(&s, 0, &in, 1);
 	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 0, &in, 1);
 	eq8("conf_mask", s.dvobj.tx_aclt_confs[0].en, o.dvobj.tx_aclt_confs[0].en);
+	eq8("conf_mask_exp", s.dvobj.tx_aclt_confs[0].en, 0x07);
 
 	in.vo_vi = 128;
 	in.be_bk = 256;
 	rtw_hal_set_tx_aclt_force_val(&s, &in, 3);
 	rtw_hal_set_tx_aclt_force_val_c_oracle(&o, &in, 3);
-	eq8("scale", s.dvobj.tx_aclt_force_val.vo_vi, o.dvobj.tx_aclt_force_val.vo_vi);
+	eq32("scale_vo_vi", s.dvobj.tx_aclt_force_val.vo_vi,
+	     o.dvobj.tx_aclt_force_val.vo_vi);
+	eq32("scale_be_bk", s.dvobj.tx_aclt_force_val.be_bk,
+	     o.dvobj.tx_aclt_force_val.be_bk);
+	eq32("scale_vo_vi_exp", s.dvobj.tx_aclt_force_val.vo_vi, 2u);
+	eq32("scale_be_bk_exp", s.dvobj.tx_aclt_force_val.be_bk, 4u);
 
 	if (failures)
 		return 1;
