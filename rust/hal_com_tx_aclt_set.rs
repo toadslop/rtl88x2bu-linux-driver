@@ -8,7 +8,6 @@ type U16 = u16;
 type U32 = u32;
 
 const TX_ACLT_CONF_NUM: usize = 3;
-const TX_ACLT_CONF_DEFAULT: usize = 0;
 const REG_LIFETIME_EN: U32 = 0x0426;
 const REG_PKT_LIFE_TIME: U32 = 0x04C0;
 
@@ -23,7 +22,12 @@ extern "C" {
     fn rtw_rust_hal_com_tx_aclt_unit_factor(adapter: *mut c_void) -> U8;
     fn rtw_rust_hal_com_tx_aclt_force_conf(adapter: *mut c_void) -> *mut TxAcltConf;
     fn rtw_rust_hal_com_tx_aclt_conf_at(adapter: *mut c_void, idx: U8) -> *mut TxAcltConf;
-    fn rtw_rust_hal_com_tx_aclt_flags(adapter: *mut c_void) -> U8;
+    fn rtw_rust_hal_com_tx_aclt_compute_lt(
+        adapter: *mut c_void,
+        lt_en: *mut U8,
+        lt_vo_vi: *mut U16,
+        lt_be_bk: *mut U16,
+    );
     fn rtw_rust_hal_com_tx_aclt_read8(adapter: *mut c_void, addr: U32) -> U8;
     fn rtw_rust_hal_com_tx_aclt_read32(adapter: *mut c_void, addr: U32) -> U32;
     fn rtw_rust_hal_com_tx_aclt_write8(adapter: *mut c_void, addr: U32, val: U8);
@@ -46,7 +50,7 @@ fn scale_lifetime(unit_factor: U8, input: U32) -> U32 {
 pub extern "C" fn rtw_hal_set_tx_aclt_force_val(
     adapter: *mut c_void,
     input: *mut TxAcltConf,
-    arg_num: U8,
+    arg_num: u8,
 ) {
     if adapter.is_null() || input.is_null() {
         return;
@@ -109,29 +113,12 @@ pub extern "C" fn rtw_hal_update_tx_aclt(adapter: *mut c_void) {
     let mut lt_en: U8 = 0;
     let mut lt_vo_vi: U16 = 0xFFFF;
     let mut lt_be_bk: U16 = 0xFFFF;
-    let flags = unsafe { rtw_rust_hal_com_tx_aclt_flags(adapter) };
 
     let lt_en_ori = unsafe { rtw_rust_hal_com_tx_aclt_read8(adapter, REG_LIFETIME_EN) };
     let lt_ori = unsafe { rtw_rust_hal_com_tx_aclt_read32(adapter, REG_PKT_LIFE_TIME) };
 
-    for i in 0..TX_ACLT_CONF_NUM {
-        if flags & (1u8 << i) == 0 {
-            continue;
-        }
-        let conf = unsafe { rtw_rust_hal_com_tx_aclt_conf_at(adapter, i as U8) };
-        if conf.is_null() {
-            continue;
-        }
-        let conf = unsafe { &*conf };
-        if i == TX_ACLT_CONF_DEFAULT {
-            lt_en = conf.en;
-            if conf.vo_vi != 0 {
-                lt_vo_vi = conf.vo_vi as U16;
-            }
-            if conf.be_bk != 0 {
-                lt_be_bk = conf.be_bk as U16;
-            }
-        }
+    unsafe {
+        rtw_rust_hal_com_tx_aclt_compute_lt(adapter, &mut lt_en, &mut lt_vo_vi, &mut lt_be_bk);
     }
 
     let force = unsafe { rtw_rust_hal_com_tx_aclt_force_conf(adapter) };

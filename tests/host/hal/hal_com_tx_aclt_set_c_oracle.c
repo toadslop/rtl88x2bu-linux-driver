@@ -58,4 +58,31 @@ void rtw_hal_set_tx_aclt_conf_c_oracle(struct _adapter *adapter, u8 conf_idx,
 	}
 }
 
+void rtw_hal_update_tx_aclt_c_oracle(struct _adapter *adapter)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	u8 lt_en, lt_en_ori;
+	u16 lt_vo_vi, lt_be_bk;
+	u32 lt, lt_ori;
+
+	lt_en_ori = rtw_rust_hal_com_tx_aclt_read8(adapter, REG_LIFETIME_EN);
+	lt_ori = rtw_rust_hal_com_tx_aclt_read32(adapter, REG_PKT_LIFE_TIME);
+	rtw_rust_hal_com_tx_aclt_compute_lt(adapter, &lt_en, &lt_vo_vi, &lt_be_bk);
+
+	if (dvobj->tx_aclt_force_val.en != 0xFF)
+		lt_en = dvobj->tx_aclt_force_val.en;
+	if (dvobj->tx_aclt_force_val.vo_vi)
+		lt_vo_vi = (u16)dvobj->tx_aclt_force_val.vo_vi;
+	if (dvobj->tx_aclt_force_val.be_bk)
+		lt_be_bk = (u16)dvobj->tx_aclt_force_val.be_bk;
+
+	lt_en = (lt_en_ori & 0xF0) | (lt_en & 0x0F);
+	lt = ((u32)lt_be_bk << 16) | lt_vo_vi;
+
+	if (lt_en != lt_en_ori)
+		rtw_rust_hal_com_tx_aclt_write8(adapter, REG_LIFETIME_EN, lt_en);
+	if (lt != lt_ori)
+		rtw_rust_hal_com_tx_aclt_write32(adapter, REG_PKT_LIFE_TIME, lt);
+}
+
 #endif /* CONFIG_TX_AC_LIFETIME */
