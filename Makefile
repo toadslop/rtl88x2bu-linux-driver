@@ -2869,7 +2869,7 @@ ifneq ($(_rust_cfg_mbssid_cam),)
 rustflags-y += --cfg config_mbssid_cam
 endif
 HAL_COM_L1_MBID_CAM_REF := $(if $(_rust_cfg_mbssid_cam),tests/host/hal/hal_com_mbid_cam_l1_ref.o,)
-HAL_COM_L1_GPIO_WAKEUP_REF := $(if $(_rust_cfg_gpio_wakeup),tests/host/hal/hal_com_gpio_wakeup_l1_ref.o,)
+HAL_COM_L1_GPIO_WAKEUP_REF := tests/host/hal/hal_com_gpio_wakeup_l1_ref.o
 rustflags-y += --cfg rust_mlme_ht_restructure
 rustflags-y += --cfg rust_mlme_80211d
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_BEAMFORMING' $(src)/include/autoconf.h 2>/dev/null && echo y),)
@@ -5147,7 +5147,7 @@ rust-check-symbols-rtw-sreset: rust-objects-rtw-sreset-c rust-objects-rtw-sreset
 # W4-01: host C oracle (hw_rate_to_m_rate) vs rust/hal_com.o.
 rust-objects-hal-com:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-hal-com"; exit 1; }
-	$(MAKE) $(KBUILD_OPTS) -C $(KSRC) M=$(shell pwd) rust/hal_com.o
+	$(MAKE) $(KBUILD_OPTS) CONFIG_GPIO_WAKEUP=y -C $(KSRC) M=$(shell pwd) rust/hal_com.o
 
 rust-objects-hal-com-c:
 	@mkdir -p tests/host/hal
@@ -5249,11 +5249,9 @@ ifneq ($(_rust_cfg_mbssid_cam),)
 		-o tests/host/hal/hal_com_mbid_cam_l1_ref.o \
 		tests/host/hal/hal_com_mbid_cam_l1_ref.c
 endif
-ifneq ($(_rust_cfg_gpio_wakeup),)
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_com_gpio_wakeup_l1_ref.o \
 		tests/host/hal/hal_com_gpio_wakeup_l1_ref.c
-endif
 	ld -r -o tests/host/hal/hal_com_c_ref.o \
 		tests/host/hal/hal_hw_rate_c_ref.o tests/host/hal/hal_rsvd_page_c_ref.o \
 		tests/host/hal/hal_dump_chip_info_c_ref.o tests/host/hal/hal_mrate_to_hw_rate_c_ref.o \
