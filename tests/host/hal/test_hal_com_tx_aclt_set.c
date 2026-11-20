@@ -160,6 +160,25 @@ int main(void)
 	eq32("conf_scale_factor8_be", s.dvobj.tx_aclt_confs[0].be_bk, 1u);
 
 	memset(&in, 0, sizeof(in));
+	in.vo_vi = 400;
+	rtw_hal_set_tx_aclt_force_val(&s, &in, 2);
+	rtw_hal_set_tx_aclt_force_val_c_oracle(&o, &in, 2);
+	eq32("trunc_force_vo", s.dvobj.tx_aclt_force_val.vo_vi, 1u);
+	in.be_bk = 400;
+	rtw_hal_set_tx_aclt_force_val(&s, &in, 3);
+	rtw_hal_set_tx_aclt_force_val_c_oracle(&o, &in, 3);
+	eq32("trunc_force_be", s.dvobj.tx_aclt_force_val.be_bk, 1u);
+	memset(&in, 0, sizeof(in));
+	in.vo_vi = 400;
+	rtw_hal_set_tx_aclt_conf(&s, 0, &in, 2);
+	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 0, &in, 2);
+	eq32("trunc_conf_vo", s.dvobj.tx_aclt_confs[0].vo_vi, 1u);
+	in.be_bk = 400;
+	rtw_hal_set_tx_aclt_conf(&s, 0, &in, 3);
+	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 0, &in, 3);
+	eq32("trunc_conf_be", s.dvobj.tx_aclt_confs[0].be_bk, 1u);
+
+	memset(&in, 0, sizeof(in));
 	in.en = 0xFF;
 	in.vo_vi = 256;
 	in.be_bk = 512;
