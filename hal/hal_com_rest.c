@@ -2545,70 +2545,7 @@ void rtw_hal_set_fw_dbg_msg_pkt_rsvd_page_cmd(PADAPTER padapter, PRSVDPAGE_LOC r
 }
 #endif /*DBG_FW_DEBUG_MSG_PKT*/
 
-/*#define DBG_GET_RSVD_PAGE*/
-#if !defined(CONFIG_RUST)
-int rtw_hal_get_rsvd_page(_adapter *adapter, u32 page_offset,
-	u32 page_num, u8 *buffer, u32 buffer_size)
-{
-	u32 addr = 0, size = 0, count = 0;
-	u32 page_size = 0, data_low = 0, data_high = 0;
-	u16 txbndy = 0, offset = 0;
-	u8 i = 0;
-	bool rst = _FALSE;
-
-#ifdef DBG_LA_MODE
-	struct registry_priv *registry_par = &adapter->registrypriv;
-
-	if(registry_par->la_mode_en == 1) {
-		RTW_INFO("%s LA debug mode can't dump rsvd pg \n", __func__);
-		return rst;
-	}
-#endif
-	rtw_hal_get_def_var(adapter, HAL_DEF_TX_PAGE_SIZE, &page_size);
-
-	addr = page_offset * page_size;
-	size = page_num * page_size;
-
-	if (buffer_size < size) {
-		RTW_ERR("%s buffer_size(%d) < get page total size(%d)\n",
-			__func__, buffer_size, size);
-		return rst;
-	}
-#ifdef RTW_HALMAC
-	if (rtw_halmac_dump_fifo(adapter_to_dvobj(adapter), 2, addr, size, buffer) < 0)
-		rst = _FALSE;
-	else
-		rst = _TRUE;
-#else
-	txbndy = rtw_read8(adapter, REG_TDECTRL + 1);
-
-	offset = (txbndy + page_offset) * page_size / 8;
-	count = (buffer_size / 8) + 1;
-
-	rtw_write8(adapter, REG_PKT_BUFF_ACCESS_CTRL, 0x69);
-
-	for (i = 0 ; i < count ; i++) {
-		rtw_write32(adapter, REG_PKTBUF_DBG_CTRL, offset + i);
-		data_low = rtw_read32(adapter, REG_PKTBUF_DBG_DATA_L);
-		data_high = rtw_read32(adapter, REG_PKTBUF_DBG_DATA_H);
-		_rtw_memcpy(buffer + (i * 8),
-			&data_low, sizeof(data_low));
-		_rtw_memcpy(buffer + ((i * 8) + 4),
-			&data_high, sizeof(data_high));
-	}
-	rtw_write8(adapter, REG_PKT_BUFF_ACCESS_CTRL, 0x0);
-	rst = _TRUE;
-#endif /*RTW_HALMAC*/
-
-#ifdef DBG_GET_RSVD_PAGE
-	RTW_INFO("%s [page_offset:%d , page_num:%d][start_addr:0x%04x , size:%d]\n",
-		 __func__, page_offset, page_num, addr, size);
-	RTW_INFO_DUMP("\n", buffer, size);
-	RTW_INFO(" ==================================================\n");
-#endif
-	return rst;
-}
-#endif /* !CONFIG_RUST */
+/* rtw_hal_get_rsvd_page — rust/hal_com_rsvd_page.rs (W4-121); non-HALMAC bit-bang remains in hal_com.c */
 
 void rtw_dump_rsvd_page(void *sel, _adapter *adapter, u8 page_offset, u8 page_num)
 {
