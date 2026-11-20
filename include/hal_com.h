@@ -249,6 +249,9 @@ u8 rtw_hal_get_port(_adapter *adapter);
 	int rtw_mbid_cam_dump(void *sel, const char *fun_name, _adapter *adapter);
 	void rtw_mi_set_mbid_cam(_adapter *adapter);
 	u8 rtw_mbid_camid_alloc(_adapter *adapter, u8 *mac_addr);
+	u8 rtw_mbid_cam_info_change(_adapter *adapter, u8 *mac_addr);
+	u8 rtw_mbid_cam_assign(_adapter *adapter, u8 *mac_addr, u8 camid);
+	void rtw_mbid_camid_clean(_adapter *adapter, u8 mbss_camid);
 	void rtw_ap_set_mbid_num(_adapter *adapter, u8 ap_num);
 	void rtw_mbid_cam_enable(_adapter *adapter);
 #endif
