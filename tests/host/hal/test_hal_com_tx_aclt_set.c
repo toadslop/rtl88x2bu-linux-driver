@@ -61,6 +61,19 @@ int main(void)
 	rtw_hal_set_tx_aclt_force_val_c_oracle(&o, &in, 1);
 	eq8("force_mask", s.dvobj.tx_aclt_force_val.en, 0x0A);
 
+	ds.tx_aclt_force_val.vo_vi = 77;
+	ds.tx_aclt_force_val.be_bk = 88;
+	do_.tx_aclt_force_val = ds.tx_aclt_force_val;
+	s.dvobj = ds;
+	o.dvobj = do_;
+	memset(&in, 0, sizeof(in));
+	in.vo_vi = 128;
+	in.be_bk = 256;
+	rtw_hal_set_tx_aclt_force_val(&s, &in, 1);
+	rtw_hal_set_tx_aclt_force_val_c_oracle(&o, &in, 1);
+	eq32("force_arg1_no_vo", s.dvobj.tx_aclt_force_val.vo_vi, 77u);
+	eq32("force_arg1_no_be", s.dvobj.tx_aclt_force_val.be_bk, 88u);
+
 	ds.tx_aclt_confs[0].en = 0x5;
 	do_.tx_aclt_confs[0].en = 0x5;
 	s.dvobj = ds;
@@ -75,6 +88,19 @@ int main(void)
 	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 0, &in, 1);
 	eq8("conf_mask", s.dvobj.tx_aclt_confs[0].en, o.dvobj.tx_aclt_confs[0].en);
 	eq8("conf_mask_exp", s.dvobj.tx_aclt_confs[0].en, 0x07);
+
+	ds.tx_aclt_confs[0].vo_vi = 55;
+	ds.tx_aclt_confs[0].be_bk = 66;
+	do_.tx_aclt_confs[0] = ds.tx_aclt_confs[0];
+	s.dvobj = ds;
+	o.dvobj = do_;
+	memset(&in, 0, sizeof(in));
+	in.vo_vi = 128;
+	in.be_bk = 256;
+	rtw_hal_set_tx_aclt_conf(&s, 0, &in, 1);
+	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 0, &in, 1);
+	eq32("conf_arg1_no_vo", s.dvobj.tx_aclt_confs[0].vo_vi, 55u);
+	eq32("conf_arg1_no_be", s.dvobj.tx_aclt_confs[0].be_bk, 66u);
 
 	in.vo_vi = 128;
 	in.be_bk = 256;
