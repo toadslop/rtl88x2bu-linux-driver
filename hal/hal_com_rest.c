@@ -14576,6 +14576,42 @@ void rtw_rust_hal_com_set_hwreg(_adapter *adapter, u32 variable, u8 *val)
 	rtw_hal_set_hwreg(adapter, variable, val);
 }
 
+#ifdef CONFIG_GPIO_WAKEUP
+int rtw_rust_hal_com_hw_set_gpio_wl_ctrl_var(void)
+{
+	return HW_SET_GPIO_WL_CTRL;
+}
+
+u8 rtw_rust_hal_com_gpio_wl_series_match(_adapter *adapter)
+{
+	PHAL_DATA_TYPE pHalData;
+
+	if (!adapter)
+		return _FALSE;
+	pHalData = GET_HAL_DATA(adapter);
+	if (IS_8723D_SERIES(pHalData->version_id) || IS_8192F_SERIES(pHalData->version_id) ||
+	    IS_8822B_SERIES(pHalData->version_id) || IS_8821C_SERIES(pHalData->version_id) ||
+	    IS_8822C_SERIES(pHalData->version_id))
+		return _TRUE;
+	return _FALSE;
+}
+
+#if defined(CONFIG_RTL8821A) && defined(CONFIG_SDIO_HCI)
+u8 rtw_rust_hal_com_gpio_wl_led_allow_disable(_adapter *adapter, u8 enable)
+{
+	return (!IS_HW_LED_STRATEGY(rtw_led_get_strategy(adapter)) || enable) ?
+	       _TRUE : _FALSE;
+}
+#else
+u8 rtw_rust_hal_com_gpio_wl_led_allow_disable(_adapter *adapter, u8 enable)
+{
+	(void)adapter;
+	(void)enable;
+	return _TRUE;
+}
+#endif
+#endif /* CONFIG_GPIO_WAKEUP */
+
 struct dvobj_priv *rtw_rust_hal_com_adapter_to_dvobj(_adapter *adapter)
 {
 	if (!adapter)
