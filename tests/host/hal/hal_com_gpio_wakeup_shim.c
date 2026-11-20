@@ -90,6 +90,7 @@ u8 rtw_rust_hal_com_gpio_wl_led_allow_disable(void *adapter, u8 enable)
 }
 #endif
 
+#ifndef RUST_HAL_COM_GPIO_WAKEUP_ORACLE
 void rtw_hal_switch_gpio_wl_ctrl(struct _adapter *padapter, u8 index, u8 enable)
 {
 	struct hal_data *pHalData = GET_HAL_DATA(padapter);
@@ -108,3 +109,4 @@ void rtw_hal_switch_gpio_wl_ctrl(struct _adapter *padapter, u8 index, u8 enable)
 	)
 		rtw_hal_set_hwreg(padapter, HW_SET_GPIO_WL_CTRL, (u8 *)(&enable));
 }
+#endif /* !RUST_HAL_COM_GPIO_WAKEUP_ORACLE */
