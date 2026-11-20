@@ -23,6 +23,7 @@ struct dvobj_priv {
 	struct tx_aclt_conf_t tx_aclt_confs[TX_ACLT_CONF_NUM];
 	u8 oob_trap_3[sizeof(struct tx_aclt_conf_t)];
 	u8 oob_trap_4[sizeof(struct tx_aclt_conf_t)];
+	u8 oob_trap_5[sizeof(struct tx_aclt_conf_t)];
 };
 
 struct hal_data {
