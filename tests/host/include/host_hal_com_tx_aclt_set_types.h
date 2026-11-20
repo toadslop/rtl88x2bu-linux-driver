@@ -21,6 +21,7 @@ struct hal_spec_t {
 struct dvobj_priv {
 	struct tx_aclt_conf_t tx_aclt_force_val;
 	struct tx_aclt_conf_t tx_aclt_confs[TX_ACLT_CONF_NUM];
+	u8 oob_canary;
 };
 
 struct hal_data {

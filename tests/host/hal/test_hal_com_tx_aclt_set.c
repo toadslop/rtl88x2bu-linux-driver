@@ -114,6 +114,8 @@ int main(void)
 		ds.tx_aclt_confs[i].be_bk = 200u + i;
 		do_.tx_aclt_confs[i] = ds.tx_aclt_confs[i];
 	}
+	ds.oob_canary = 0xA5;
+	do_.oob_canary = 0xA5;
 	s.dvobj = ds;
 	o.dvobj = do_;
 	memset(&in, 0, sizeof(in));
@@ -121,6 +123,8 @@ int main(void)
 	in.vo_vi = 0x01000000u;
 	rtw_hal_set_tx_aclt_conf(&s, TX_ACLT_CONF_NUM, &in, 3);
 	rtw_hal_set_tx_aclt_conf_c_oracle(&o, TX_ACLT_CONF_NUM, &in, 3);
+	eq8("conf_oob_canary", s.dvobj.oob_canary, 0xA5);
+	eq8("conf_oob_canary_o", o.dvobj.oob_canary, 0xA5);
 	for (i = 0; i < TX_ACLT_CONF_NUM; i++) {
 		char tag[48];
 
