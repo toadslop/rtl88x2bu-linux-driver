@@ -42,6 +42,7 @@ int main(void)
 	struct dvobj_priv ds, do_;
 	struct _adapter s, o;
 	struct tx_aclt_conf_t in;
+	int i;
 
 	memset(&ds, 0, sizeof(ds));
 	memset(&do_, 0, sizeof(do_));
@@ -107,12 +108,43 @@ int main(void)
 	rtw_hal_set_tx_aclt_force_val_c_oracle(&o, &in, 2);
 	eq32("clamp_vo_vi", s.dvobj.tx_aclt_force_val.vo_vi, 0xFFFFu);
 
+	for (i = 0; i < TX_ACLT_CONF_NUM; i++) {
+		ds.tx_aclt_confs[i].en = (u8)(0x11 + i);
+		ds.tx_aclt_confs[i].vo_vi = 100u + i;
+		ds.tx_aclt_confs[i].be_bk = 200u + i;
+		do_.tx_aclt_confs[i] = ds.tx_aclt_confs[i];
+	}
+	s.dvobj = ds;
+	o.dvobj = do_;
 	memset(&in, 0, sizeof(in));
 	in.en = 0x0F;
 	in.vo_vi = 0x01000000u;
 	rtw_hal_set_tx_aclt_conf(&s, TX_ACLT_CONF_NUM, &in, 3);
 	rtw_hal_set_tx_aclt_conf_c_oracle(&o, TX_ACLT_CONF_NUM, &in, 3);
-	eq8("conf_oob_noop", s.dvobj.tx_aclt_confs[0].en, 0);
+	for (i = 0; i < TX_ACLT_CONF_NUM; i++) {
+		char tag[48];
+
+		snprintf(tag, sizeof(tag), "conf_oob_%d", i);
+		eq8(tag, s.dvobj.tx_aclt_confs[i].en, ds.tx_aclt_confs[i].en);
+		snprintf(tag, sizeof(tag), "conf_oob_vo_%d", i);
+		eq32(tag, s.dvobj.tx_aclt_confs[i].vo_vi, ds.tx_aclt_confs[i].vo_vi);
+		snprintf(tag, sizeof(tag), "conf_oob_be_%d", i);
+		eq32(tag, s.dvobj.tx_aclt_confs[i].be_bk, ds.tx_aclt_confs[i].be_bk);
+	}
+
+	memset(&ds, 0, sizeof(ds));
+	memset(&do_, 0, sizeof(do_));
+	s = mkadap(&ds);
+	o = mkadap(&do_);
+	ds.tx_aclt_confs[0].be_bk = 99;
+	s.dvobj = ds;
+	o.dvobj = do_;
+	memset(&in, 0, sizeof(in));
+	in.vo_vi = 128;
+	rtw_hal_set_tx_aclt_conf(&s, 0, &in, 2);
+	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 0, &in, 2);
+	eq32("conf_arg2_vo", s.dvobj.tx_aclt_confs[0].vo_vi, 2u);
+	eq32("conf_arg2_be", s.dvobj.tx_aclt_confs[0].be_bk, 99u);
 
 	memset(&in, 0, sizeof(in));
 	in.en = 0x0A;
