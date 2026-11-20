@@ -134,7 +134,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-req-per-rpt test-req-per-rpt-rust \
 	test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-get-rsvd-page test-get-rsvd-page-rust \
-	test-c2h-evt-robustness clean
+	test-gpio-wakeup test-gpio-wakeup-8821asdio test-c2h-evt-robustness clean
 
 all: test
 
@@ -169,7 +169,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-req-per-rpt-rust \
 	test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-get-rsvd-page test-get-rsvd-page-rust \
-	test-c2h-evt-robustness
+	test-gpio-wakeup test-gpio-wakeup-8821asdio test-c2h-evt-robustness
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -1692,6 +1692,26 @@ test_hal_com_mbid_cam_alloc_rust: test_hal_com_mbid_cam_alloc.c $(MBID_CAM_SHIM)
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_MBID_CAM_ORACLE -o $@ test_hal_com_mbid_cam_alloc.c \
 		$(MBID_CAM_SHIM) $(MBID_CAM_ORACLE) librust_hal_com_mbid_cam.a
 
+GPIO_WAKEUP_SHIM := hal_com_gpio_wakeup_shim.c
+GPIO_WAKEUP_ORACLE := hal_com_gpio_wakeup_c_oracle.c
+
+test-gpio-wakeup: test_hal_com_gpio_wakeup
+	./test_hal_com_gpio_wakeup
+
+test_hal_com_gpio_wakeup: test_hal_com_gpio_wakeup.c $(GPIO_WAKEUP_SHIM) $(GPIO_WAKEUP_ORACLE)
+	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_gpio_wakeup.c \
+		$(GPIO_WAKEUP_SHIM) $(GPIO_WAKEUP_ORACLE)
+
+GPIO_WAKEUP_8821AS_CFLAGS := $(CFLAGS) -DCONFIG_RTL8821A -DCONFIG_SDIO_HCI
+
+test-gpio-wakeup-8821asdio: test_hal_com_gpio_wakeup_8821asdio
+	./test_hal_com_gpio_wakeup_8821asdio
+
+test_hal_com_gpio_wakeup_8821asdio: test_hal_com_gpio_wakeup.c $(GPIO_WAKEUP_SHIM) \
+		$(GPIO_WAKEUP_ORACLE)
+	$(CC) $(GPIO_WAKEUP_8821AS_CFLAGS) -I../include -o $@ test_hal_com_gpio_wakeup.c \
+		$(GPIO_WAKEUP_SHIM) $(GPIO_WAKEUP_ORACLE)
+
 RUST_C2H_EVT := $(ROOT)/rust/hal_com_c2h_evt.rs
 CUSTOMER_STR_SHIM := hal_com_customer_str_shim.c
 CUSTOMER_STR_ORACLE := hal_com_customer_str_c_oracle.c
@@ -1823,4 +1843,5 @@ clean:
 		test_hal_com_c2h_evt_fx19 librust_hal_com_c2h_evt.a \
 		test_hal_com_req_per_rpt test_hal_com_req_per_rpt_rust \
 		librust_hal_com_req_per_rpt.a \
-		test_hal_com_mbid_cam_rust librust_hal_com_mbid_cam.a
+		test_hal_com_mbid_cam_rust librust_hal_com_mbid_cam.a \
+		test_hal_com_gpio_wakeup
