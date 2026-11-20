@@ -14697,6 +14697,40 @@ void rtw_rust_hal_com_mbid_log_iface_search(const char *func, u8 iface_id,
 		 func, iface_id, MAC_ARG(mac_addr), cam_id);
 }
 
+void rtw_rust_hal_com_mbid_log_alloc_over_limit(_adapter *adapter, u8 entry_num)
+{
+	RTW_INFO(FUNC_ADPT_FMT" failed !! MBSSID number :%d over TOTAL_CAM_ENTRY(8)\n",
+		 FUNC_ADPT_ARG(adapter), entry_num);
+}
+
+void rtw_rust_hal_com_mbid_log_alloc_result(const char *func, u8 *mac_addr, u8 cam_id)
+{
+	if (cam_id != INVALID_CAM_ID)
+		RTW_INFO("%s mac:"MAC_FMT" - cam_id:%d\n", func, MAC_ARG(mac_addr), cam_id);
+	else
+		RTW_INFO("%s [WARN] "MAC_FMT" - invalid cam_id:%d\n", func, MAC_ARG(mac_addr), cam_id);
+}
+
+void rtw_rust_hal_com_mbid_log_invalid_camid(_adapter *adapter, u8 camid)
+{
+	RTW_INFO(FUNC_ADPT_FMT" failed !! invlaid mbid_canid :%d\n",
+		 FUNC_ADPT_ARG(adapter), camid);
+}
+
+void rtw_rust_hal_com_mbid_log_assign_result(const char *func, u8 *mac_addr, u8 camid, u8 success)
+{
+	if (success)
+		RTW_INFO("%s mac:"MAC_FMT" - cam_id:%d\n", func, MAC_ARG(mac_addr), camid);
+	else
+		RTW_INFO("%s  [WARN] mac:"MAC_FMT" - cam_id:%d assigned failed\n",
+			 func, MAC_ARG(mac_addr), camid);
+}
+
+void rtw_rust_hal_com_mbid_log_clean(const char *func, u8 camid)
+{
+	RTW_INFO("%s - cam_id:%d\n", func, camid);
+}
+
 void rtw_rust_hal_com_spinlock_init(_lock *lock)
 {
 	if (lock)
