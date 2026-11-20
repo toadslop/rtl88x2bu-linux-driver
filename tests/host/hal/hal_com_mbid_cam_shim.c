@@ -146,6 +146,40 @@ void rtw_rust_hal_com_mbid_log_iface_search(const char *func, u8 iface_id,
 	(void)cam_id;
 }
 
+void rtw_rust_hal_com_mbid_log_alloc_over_limit(void *adapter, u8 entry_num)
+{
+	(void)adapter;
+	(void)entry_num;
+}
+
+void rtw_rust_hal_com_mbid_log_alloc_result(const char *func, u8 *mac_addr, u8 cam_id)
+{
+	(void)func;
+	(void)mac_addr;
+	(void)cam_id;
+}
+
+void rtw_rust_hal_com_mbid_log_invalid_camid(void *adapter, u8 camid)
+{
+	(void)adapter;
+	(void)camid;
+}
+
+void rtw_rust_hal_com_mbid_log_assign_result(const char *func, u8 *mac_addr,
+					     u8 camid, u8 success)
+{
+	(void)func;
+	(void)mac_addr;
+	(void)camid;
+	(void)success;
+}
+
+void rtw_rust_hal_com_mbid_log_clean(const char *func, u8 camid)
+{
+	(void)func;
+	(void)camid;
+}
+
 int _rtw_memcmp(const void *dst, const void *src, unsigned int sz)
 {
 	return memcmp(dst, src, sz) == 0 ? 1 : 0;

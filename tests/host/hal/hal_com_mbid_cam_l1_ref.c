@@ -33,3 +33,31 @@ unsigned char rtw_get_mbid_cam_entry_num(struct _adapter *a)
 	(void)a;
 	return 0;
 }
+
+unsigned char rtw_mbid_camid_alloc(struct _adapter *a, unsigned char *mac)
+{
+	(void)a;
+	(void)mac;
+	return 0xFF;
+}
+
+unsigned char rtw_mbid_cam_info_change(struct _adapter *a, unsigned char *mac)
+{
+	(void)a;
+	(void)mac;
+	return 0xFF;
+}
+
+unsigned char rtw_mbid_cam_assign(struct _adapter *a, unsigned char *mac, unsigned char camid)
+{
+	(void)a;
+	(void)mac;
+	(void)camid;
+	return 0;
+}
+
+void rtw_mbid_camid_clean(struct _adapter *a, unsigned char camid)
+{
+	(void)a;
+	(void)camid;
+}
