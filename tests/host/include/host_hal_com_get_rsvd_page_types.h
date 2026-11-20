@@ -10,7 +10,7 @@ typedef uint32_t u32;
 #define _FALSE 0
 #define _TRUE 1
 #define RTW_HALMAC 1
-#define HAL_DEF_TX_PAGE_SIZE 26
+#define HAL_DEF_TX_PAGE_SIZE 25
 
 struct dvobj_priv {
 	u8 pad;

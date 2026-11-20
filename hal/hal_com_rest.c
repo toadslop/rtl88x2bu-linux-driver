@@ -2546,6 +2546,7 @@ void rtw_hal_set_fw_dbg_msg_pkt_rsvd_page_cmd(PADAPTER padapter, PRSVDPAGE_LOC r
 #endif /*DBG_FW_DEBUG_MSG_PKT*/
 
 /*#define DBG_GET_RSVD_PAGE*/
+#if !defined(CONFIG_RUST)
 int rtw_hal_get_rsvd_page(_adapter *adapter, u32 page_offset,
 	u32 page_num, u8 *buffer, u32 buffer_size)
 {
@@ -2607,6 +2608,7 @@ int rtw_hal_get_rsvd_page(_adapter *adapter, u32 page_offset,
 #endif
 	return rst;
 }
+#endif /* !CONFIG_RUST */
 
 void rtw_dump_rsvd_page(void *sel, _adapter *adapter, u8 page_offset, u8 page_num)
 {
@@ -14508,6 +14510,12 @@ void rtw_rust_hal_com_write32(_adapter *adapter, u32 addr, u32 val)
 	if (!adapter)
 		return;
 	rtw_write32(adapter, addr, val);
+}
+
+void rtw_rust_hal_com_err_get_rsvd_page_buf_short(u32 buffer_size, u32 size)
+{
+	RTW_ERR("%s buffer_size(%d) < get page total size(%d)\n",
+		"rtw_hal_get_rsvd_page", buffer_size, size);
 }
 
 void rtw_rust_hal_com_printk_reg_pair(u32 a, u32 b)

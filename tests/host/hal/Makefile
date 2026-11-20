@@ -133,6 +133,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
 	test-req-per-rpt test-req-per-rpt-rust \
 	test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
+	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-c2h-evt-robustness clean
 
 all: test
@@ -167,6 +168,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
 	test-req-per-rpt-rust \
 	test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
+	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-c2h-evt-robustness
 
 test-c: test_hw_rate_map
@@ -212,6 +214,20 @@ test_hal_com_get_rsvd_page: test_hal_com_get_rsvd_page.c \
 		$(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE)
 	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_get_rsvd_page.c \
 		$(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE)
+
+librust_hal_com_get_rsvd_page.a: ../../../rust/hal_com_rsvd_page.rs
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_get_rsvd_page_test --cfg config_rtw_halmac \
+		--crate-type staticlib ../../../rust/hal_com_rsvd_page.rs -o $@
+
+test-get-rsvd-page-rust: test_hal_com_get_rsvd_page_rust
+	./test_hal_com_get_rsvd_page_rust
+
+test_hal_com_get_rsvd_page_rust: test_hal_com_get_rsvd_page.c \
+		librust_hal_com_get_rsvd_page.a $(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE)
+	$(CC) $(CFLAGS) -I../include -DRUST_HAL_COM_GET_RSVD_PAGE_ORACLE -o $@ \
+		test_hal_com_get_rsvd_page.c $(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE) \
+		librust_hal_com_get_rsvd_page.a
 
 test-chip: test_dump_chip_info
 	./test_dump_chip_info hal_dump_chip_info_vectors.json
