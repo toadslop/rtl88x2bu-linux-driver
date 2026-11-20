@@ -86,6 +86,41 @@ int main(void)
 	eq32("scale_vo_vi_exp", s.dvobj.tx_aclt_force_val.vo_vi, 2u);
 	eq32("scale_be_bk_exp", s.dvobj.tx_aclt_force_val.be_bk, 4u);
 
+	memset(&ds, 0, sizeof(ds));
+	memset(&do_, 0, sizeof(do_));
+	s = mkadap(&ds);
+	o = mkadap(&do_);
+	ds.tx_aclt_force_val.be_bk = 42;
+	s.dvobj = ds;
+	o.dvobj = do_;
+	memset(&in, 0, sizeof(in));
+	in.vo_vi = 64;
+	rtw_hal_set_tx_aclt_force_val(&s, &in, 2);
+	rtw_hal_set_tx_aclt_force_val_c_oracle(&o, &in, 2);
+	eq32("arg2_vo_vi", s.dvobj.tx_aclt_force_val.vo_vi,
+	     o.dvobj.tx_aclt_force_val.vo_vi);
+	eq32("arg2_be_bk_unchanged", s.dvobj.tx_aclt_force_val.be_bk, 42u);
+
+	memset(&in, 0, sizeof(in));
+	in.vo_vi = 0x01000000u;
+	rtw_hal_set_tx_aclt_force_val(&s, &in, 2);
+	rtw_hal_set_tx_aclt_force_val_c_oracle(&o, &in, 2);
+	eq32("clamp_vo_vi", s.dvobj.tx_aclt_force_val.vo_vi, 0xFFFFu);
+
+	memset(&in, 0, sizeof(in));
+	in.en = 0x0F;
+	in.vo_vi = 0x01000000u;
+	rtw_hal_set_tx_aclt_conf(&s, TX_ACLT_CONF_NUM, &in, 3);
+	rtw_hal_set_tx_aclt_conf_c_oracle(&o, TX_ACLT_CONF_NUM, &in, 3);
+	eq8("conf_oob_noop", s.dvobj.tx_aclt_confs[0].en, 0);
+
+	memset(&in, 0, sizeof(in));
+	in.en = 0x0A;
+	in.be_bk = 0x01000000u;
+	rtw_hal_set_tx_aclt_conf(&s, 0, &in, 3);
+	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 0, &in, 3);
+	eq32("conf_clamp_be", s.dvobj.tx_aclt_confs[0].be_bk, 0xFFFFu);
+
 	if (failures)
 		return 1;
 	puts("OK hal_com_tx_aclt_set L2");
