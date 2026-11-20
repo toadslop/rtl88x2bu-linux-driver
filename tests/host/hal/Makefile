@@ -1692,6 +1692,16 @@ test_hal_com_mbid_cam_alloc_rust: test_hal_com_mbid_cam_alloc.c $(MBID_CAM_SHIM)
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_MBID_CAM_ORACLE -o $@ test_hal_com_mbid_cam_alloc.c \
 		$(MBID_CAM_SHIM) $(MBID_CAM_ORACLE) librust_hal_com_mbid_cam.a
 
+GPIO_WAKEUP_SHIM := hal_com_gpio_wakeup_shim.c
+GPIO_WAKEUP_ORACLE := hal_com_gpio_wakeup_c_oracle.c
+
+test-gpio-wakeup: test_hal_com_gpio_wakeup
+	./test_hal_com_gpio_wakeup
+
+test_hal_com_gpio_wakeup: test_hal_com_gpio_wakeup.c $(GPIO_WAKEUP_SHIM) $(GPIO_WAKEUP_ORACLE)
+	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_gpio_wakeup.c \
+		$(GPIO_WAKEUP_SHIM) $(GPIO_WAKEUP_ORACLE)
+
 RUST_C2H_EVT := $(ROOT)/rust/hal_com_c2h_evt.rs
 CUSTOMER_STR_SHIM := hal_com_customer_str_shim.c
 CUSTOMER_STR_ORACLE := hal_com_customer_str_c_oracle.c
@@ -1823,4 +1833,5 @@ clean:
 		test_hal_com_c2h_evt_fx19 librust_hal_com_c2h_evt.a \
 		test_hal_com_req_per_rpt test_hal_com_req_per_rpt_rust \
 		librust_hal_com_req_per_rpt.a \
-		test_hal_com_mbid_cam_rust librust_hal_com_mbid_cam.a
+		test_hal_com_mbid_cam_rust librust_hal_com_mbid_cam.a \
+		test_hal_com_gpio_wakeup
