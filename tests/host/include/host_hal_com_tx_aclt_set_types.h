@@ -4,6 +4,8 @@
 
 #define CONFIG_TX_AC_LIFETIME 1
 #define TX_ACLT_CONF_NUM 3
+/* Host fixture backing store (HAL still gates on TX_ACLT_CONF_NUM). */
+#define TX_ACLT_CONF_STORE 256
 
 typedef unsigned char u8;
 typedef unsigned int u32;
@@ -20,10 +22,7 @@ struct hal_spec_t {
 
 struct dvobj_priv {
 	struct tx_aclt_conf_t tx_aclt_force_val;
-	struct tx_aclt_conf_t tx_aclt_confs[TX_ACLT_CONF_NUM];
-	u8 oob_trap_3[sizeof(struct tx_aclt_conf_t)];
-	u8 oob_trap_4[sizeof(struct tx_aclt_conf_t)];
-	u8 oob_trap_5[sizeof(struct tx_aclt_conf_t)];
+	struct tx_aclt_conf_t tx_aclt_confs[TX_ACLT_CONF_STORE];
 };
 
 struct hal_data {

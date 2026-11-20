@@ -75,6 +75,14 @@ int main(void)
 	rtw_hal_set_tx_aclt_force_val_c_oracle(&o, &in, 1);
 	eq8("force_mask", s.dvobj.tx_aclt_force_val.en, 0x0A);
 
+	memset(&in, 0, sizeof(in));
+	in.en = 0x1A;
+	in.vo_vi = 128;
+	in.be_bk = 256;
+	rtw_hal_set_tx_aclt_force_val(&s, &in, 3);
+	rtw_hal_set_tx_aclt_force_val_c_oracle(&o, &in, 3);
+	eq8("force_mask_arg3", s.dvobj.tx_aclt_force_val.en, 0x0A);
+
 	ds.tx_aclt_force_val.en = 0x0B;
 	do_.tx_aclt_force_val.en = ds.tx_aclt_force_val.en;
 	s.dvobj = ds;
@@ -118,6 +126,14 @@ int main(void)
 	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 0, &in, 1);
 	eq8("conf_mask", s.dvobj.tx_aclt_confs[0].en, o.dvobj.tx_aclt_confs[0].en);
 	eq8("conf_mask_exp", s.dvobj.tx_aclt_confs[0].en, 0x07);
+
+	memset(&in, 0, sizeof(in));
+	in.en = 0x17;
+	in.vo_vi = 128;
+	in.be_bk = 256;
+	rtw_hal_set_tx_aclt_conf(&s, 0, &in, 3);
+	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 0, &in, 3);
+	eq8("conf_mask_arg3", s.dvobj.tx_aclt_confs[0].en, 0x07);
 
 	ds.tx_aclt_confs[0].en = 0x0B;
 	do_.tx_aclt_confs[0].en = ds.tx_aclt_confs[0].en;
@@ -294,12 +310,26 @@ int main(void)
 		ds.tx_aclt_confs[i].be_bk = 200u + i;
 		do_.tx_aclt_confs[i] = ds.tx_aclt_confs[i];
 	}
-	memset(ds.oob_trap_3, 0xA5, sizeof(ds.oob_trap_3));
-	memset(ds.oob_trap_4, 0xB6, sizeof(ds.oob_trap_4));
-	memset(ds.oob_trap_5, 0xC7, sizeof(ds.oob_trap_5));
-	memset(do_.oob_trap_3, 0xA5, sizeof(do_.oob_trap_3));
-	memset(do_.oob_trap_4, 0xB6, sizeof(do_.oob_trap_4));
-	memset(do_.oob_trap_5, 0xC7, sizeof(do_.oob_trap_5));
+	ds.tx_aclt_confs[3].en = 0xA5;
+	ds.tx_aclt_confs[3].vo_vi = 303;
+	ds.tx_aclt_confs[3].be_bk = 403;
+	ds.tx_aclt_confs[4].en = 0xB6;
+	ds.tx_aclt_confs[4].vo_vi = 304;
+	ds.tx_aclt_confs[4].be_bk = 404;
+	ds.tx_aclt_confs[5].en = 0xC7;
+	ds.tx_aclt_confs[5].vo_vi = 305;
+	ds.tx_aclt_confs[5].be_bk = 405;
+	ds.tx_aclt_confs[6].en = 0xD8;
+	ds.tx_aclt_confs[6].vo_vi = 306;
+	ds.tx_aclt_confs[6].be_bk = 406;
+	ds.tx_aclt_confs[255].en = 0xE9;
+	ds.tx_aclt_confs[255].vo_vi = 355;
+	ds.tx_aclt_confs[255].be_bk = 455;
+	do_.tx_aclt_confs[3] = ds.tx_aclt_confs[3];
+	do_.tx_aclt_confs[4] = ds.tx_aclt_confs[4];
+	do_.tx_aclt_confs[5] = ds.tx_aclt_confs[5];
+	do_.tx_aclt_confs[6] = ds.tx_aclt_confs[6];
+	do_.tx_aclt_confs[255] = ds.tx_aclt_confs[255];
 	s.dvobj = ds;
 	o.dvobj = do_;
 	memset(&in, 0, sizeof(in));
@@ -309,34 +339,12 @@ int main(void)
 	rtw_hal_set_tx_aclt_conf_c_oracle(&o, TX_ACLT_CONF_NUM, &in, 3);
 	rtw_hal_set_tx_aclt_conf(&s, 4, &in, 3);
 	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 4, &in, 3);
-	rtw_hal_set_tx_aclt_conf(&s, 255, &in, 3);
-	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 255, &in, 3);
 	rtw_hal_set_tx_aclt_conf(&s, 5, &in, 3);
 	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 5, &in, 3);
-	eq8("conf_oob_slot1", s.dvobj.tx_aclt_confs[1].en, ds.tx_aclt_confs[1].en);
-	eq32("conf_oob_slot1_vo", s.dvobj.tx_aclt_confs[1].vo_vi,
-	     ds.tx_aclt_confs[1].vo_vi);
-	eq8("conf_oob_slot2", s.dvobj.tx_aclt_confs[2].en, ds.tx_aclt_confs[2].en);
-	eq32("conf_oob_slot2_be", s.dvobj.tx_aclt_confs[2].be_bk,
-	     ds.tx_aclt_confs[2].be_bk);
-	for (i = 0; i < (int)sizeof(ds.oob_trap_3); i++) {
-		char tag[48];
-
-		snprintf(tag, sizeof(tag), "conf_oob_trap3_%d", i);
-		eq8(tag, s.dvobj.oob_trap_3[i], 0xA5);
-	}
-	for (i = 0; i < (int)sizeof(ds.oob_trap_4); i++) {
-		char tag[48];
-
-		snprintf(tag, sizeof(tag), "conf_oob_trap4_%d", i);
-		eq8(tag, s.dvobj.oob_trap_4[i], 0xB6);
-	}
-	for (i = 0; i < (int)sizeof(ds.oob_trap_5); i++) {
-		char tag[48];
-
-		snprintf(tag, sizeof(tag), "conf_oob_trap5_%d", i);
-		eq8(tag, s.dvobj.oob_trap_5[i], 0xC7);
-	}
+	rtw_hal_set_tx_aclt_conf(&s, 6, &in, 3);
+	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 6, &in, 3);
+	rtw_hal_set_tx_aclt_conf(&s, 255, &in, 3);
+	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 255, &in, 3);
 	for (i = 0; i < TX_ACLT_CONF_NUM; i++) {
 		char tag[48];
 
@@ -347,6 +355,18 @@ int main(void)
 		snprintf(tag, sizeof(tag), "conf_oob_be_%d", i);
 		eq32(tag, s.dvobj.tx_aclt_confs[i].be_bk, ds.tx_aclt_confs[i].be_bk);
 	}
+	eq8("conf_oob_3", s.dvobj.tx_aclt_confs[3].en, ds.tx_aclt_confs[3].en);
+	eq32("conf_oob_3_vo", s.dvobj.tx_aclt_confs[3].vo_vi, ds.tx_aclt_confs[3].vo_vi);
+	eq32("conf_oob_3_be", s.dvobj.tx_aclt_confs[3].be_bk, ds.tx_aclt_confs[3].be_bk);
+	eq8("conf_oob_4", s.dvobj.tx_aclt_confs[4].en, ds.tx_aclt_confs[4].en);
+	eq8("conf_oob_5", s.dvobj.tx_aclt_confs[5].en, ds.tx_aclt_confs[5].en);
+	eq8("conf_oob_6", s.dvobj.tx_aclt_confs[6].en, ds.tx_aclt_confs[6].en);
+	eq32("conf_oob_6_vo", s.dvobj.tx_aclt_confs[6].vo_vi, ds.tx_aclt_confs[6].vo_vi);
+	eq8("conf_oob_255", s.dvobj.tx_aclt_confs[255].en, ds.tx_aclt_confs[255].en);
+	eq32("conf_oob_255_vo", s.dvobj.tx_aclt_confs[255].vo_vi,
+	     ds.tx_aclt_confs[255].vo_vi);
+	eq32("conf_oob_255_be", s.dvobj.tx_aclt_confs[255].be_bk,
+	     ds.tx_aclt_confs[255].be_bk);
 
 	memset(&ds, 0, sizeof(ds));
 	memset(&do_, 0, sizeof(do_));
@@ -399,6 +419,20 @@ int main(void)
 	memset(&do_, 0, sizeof(do_));
 	s = mkadap(&ds);
 	o = mkadap(&do_);
+	ds.tx_aclt_confs[0].en = 0x01;
+	ds.tx_aclt_confs[0].vo_vi = 10;
+	ds.tx_aclt_confs[0].be_bk = 20;
+	ds.tx_aclt_confs[1].en = 0x02;
+	ds.tx_aclt_confs[1].vo_vi = 11;
+	ds.tx_aclt_confs[1].be_bk = 21;
+	ds.tx_aclt_confs[2].en = 0x03;
+	ds.tx_aclt_confs[2].vo_vi = 12;
+	ds.tx_aclt_confs[2].be_bk = 22;
+	do_.tx_aclt_confs[0] = ds.tx_aclt_confs[0];
+	do_.tx_aclt_confs[1] = ds.tx_aclt_confs[1];
+	do_.tx_aclt_confs[2] = ds.tx_aclt_confs[2];
+	s.dvobj = ds;
+	o.dvobj = do_;
 	memset(&in, 0, sizeof(in));
 	in.en = 0x0C;
 	in.vo_vi = 64;
@@ -406,6 +440,12 @@ int main(void)
 	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 1, &in, 3);
 	eq8("conf_idx1_en", s.dvobj.tx_aclt_confs[1].en, 0x0C);
 	eq32("conf_idx1_vo", s.dvobj.tx_aclt_confs[1].vo_vi, 1u);
+	eq8("conf_idx1_slot0", s.dvobj.tx_aclt_confs[0].en, ds.tx_aclt_confs[0].en);
+	eq32("conf_idx1_slot0_vo", s.dvobj.tx_aclt_confs[0].vo_vi,
+	     ds.tx_aclt_confs[0].vo_vi);
+	eq8("conf_idx1_slot2", s.dvobj.tx_aclt_confs[2].en, ds.tx_aclt_confs[2].en);
+	eq32("conf_idx1_slot2_be", s.dvobj.tx_aclt_confs[2].be_bk,
+	     ds.tx_aclt_confs[2].be_bk);
 
 	memset(&in, 0, sizeof(in));
 	in.en = 0x0D;
@@ -414,6 +454,9 @@ int main(void)
 	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 2, &in, 3);
 	eq8("conf_idx2_en", s.dvobj.tx_aclt_confs[2].en, 0x0D);
 	eq32("conf_idx2_be", s.dvobj.tx_aclt_confs[2].be_bk, 2u);
+	eq8("conf_idx2_slot0", s.dvobj.tx_aclt_confs[0].en, ds.tx_aclt_confs[0].en);
+	eq8("conf_idx2_slot1", s.dvobj.tx_aclt_confs[1].en, 0x0C);
+	eq32("conf_idx2_slot1_vo", s.dvobj.tx_aclt_confs[1].vo_vi, 1u);
 
 	if (failures)
 		return 1;
