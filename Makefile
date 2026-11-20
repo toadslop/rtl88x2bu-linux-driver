@@ -2950,6 +2950,32 @@ endif
 ifneq ($(_rust_cfg_gpio_wakeup),)
 rustflags-y += --cfg config_gpio_wakeup
 endif
+_rust_cfg_rtl8821a :=
+ifeq ($(CONFIG_RTL8821A), y)
+_rust_cfg_rtl8821a := y
+endif
+ifneq ($(filter -DCONFIG_RTL8821A,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_rtl8821a := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTL8821A\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_rtl8821a := y
+endif
+ifneq ($(_rust_cfg_rtl8821a),)
+rustflags-y += --cfg config_rtl8821a
+endif
+_rust_cfg_sdio_hci :=
+ifeq ($(CONFIG_SDIO_HCI), y)
+_rust_cfg_sdio_hci := y
+endif
+ifneq ($(filter -DCONFIG_SDIO_HCI,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_sdio_hci := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_SDIO_HCI\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_sdio_hci := y
+endif
+ifneq ($(_rust_cfg_sdio_hci),)
+rustflags-y += --cfg config_sdio_hci
+endif
 _rust_cfg_lps_1t1r :=
 ifneq ($(filter -DCONFIG_LPS_1T1R,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 _rust_cfg_lps_1t1r := y
