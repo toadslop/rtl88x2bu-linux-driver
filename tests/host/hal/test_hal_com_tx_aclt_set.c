@@ -123,6 +123,10 @@ int main(void)
 	in.vo_vi = 0x01000000u;
 	rtw_hal_set_tx_aclt_conf(&s, TX_ACLT_CONF_NUM, &in, 3);
 	rtw_hal_set_tx_aclt_conf_c_oracle(&o, TX_ACLT_CONF_NUM, &in, 3);
+	rtw_hal_set_tx_aclt_conf(&s, 4, &in, 3);
+	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 4, &in, 3);
+	rtw_hal_set_tx_aclt_conf(&s, 255, &in, 3);
+	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 255, &in, 3);
 	eq8("conf_oob_canary", s.dvobj.oob_canary, 0xA5);
 	eq8("conf_oob_canary_o", o.dvobj.oob_canary, 0xA5);
 	for (i = 0; i < TX_ACLT_CONF_NUM; i++) {
@@ -149,6 +153,12 @@ int main(void)
 	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 0, &in, 2);
 	eq32("conf_arg2_vo", s.dvobj.tx_aclt_confs[0].vo_vi, 2u);
 	eq32("conf_arg2_be", s.dvobj.tx_aclt_confs[0].be_bk, 99u);
+
+	memset(&in, 0, sizeof(in));
+	in.vo_vi = 0x01000000u;
+	rtw_hal_set_tx_aclt_conf(&s, 0, &in, 2);
+	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 0, &in, 2);
+	eq32("conf_clamp_vo", s.dvobj.tx_aclt_confs[0].vo_vi, 0xFFFFu);
 
 	memset(&in, 0, sizeof(in));
 	in.en = 0x0A;
