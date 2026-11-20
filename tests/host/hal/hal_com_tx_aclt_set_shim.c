@@ -10,9 +10,57 @@ void host_tx_aclt_reset(void)
 	g_adapter.hal.hal_spec.tx_aclt_unit_factor = 1;
 }
 
-struct _adapter *host_tx_aclt_adapter(void)
+static struct _adapter *to_adap(void *p)
 {
-	return &g_adapter;
+	return (struct _adapter *)p;
+}
+
+u8 rtw_rust_hal_com_tx_aclt_unit_factor(void *p)
+{
+	return GET_HAL_SPEC(to_adap(p))->tx_aclt_unit_factor;
+}
+
+struct tx_aclt_conf_t *rtw_rust_hal_com_tx_aclt_force_conf(void *p)
+{
+	return &adapter_to_dvobj(to_adap(p))->tx_aclt_force_val;
+}
+
+struct tx_aclt_conf_t *rtw_rust_hal_com_tx_aclt_conf_at(void *p, u8 idx)
+{
+	return idx >= TX_ACLT_CONF_NUM ? 0 : &adapter_to_dvobj(to_adap(p))->tx_aclt_confs[idx];
+}
+
+u8 rtw_rust_hal_com_tx_aclt_flags(void *p)
+{
+	return adapter_to_dvobj(to_adap(p))->tx_aclt_flags;
+}
+
+u8 rtw_rust_hal_com_tx_aclt_read8(void *p, u32 addr)
+{
+	(void)p;
+	(void)addr;
+	return 0;
+}
+
+u32 rtw_rust_hal_com_tx_aclt_read32(void *p, u32 addr)
+{
+	(void)p;
+	(void)addr;
+	return 0;
+}
+
+void rtw_rust_hal_com_tx_aclt_write8(void *p, u32 addr, u8 val)
+{
+	(void)p;
+	(void)addr;
+	(void)val;
+}
+
+void rtw_rust_hal_com_tx_aclt_write32(void *p, u32 addr, u32 val)
+{
+	(void)p;
+	(void)addr;
+	(void)val;
 }
 
 #ifndef RUST_HAL_COM_TX_ACLT_SET_ORACLE

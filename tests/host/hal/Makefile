@@ -135,7 +135,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo \
-	test-tx-aclt-set \
+	test-tx-aclt-set test-tx-aclt-set-rust \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-c2h-evt-robustness clean
 
@@ -173,7 +173,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo \
-	test-tx-aclt-set \
+	test-tx-aclt-set test-tx-aclt-set-rust \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-c2h-evt-robustness
 
@@ -260,6 +260,20 @@ test_hal_com_tx_aclt_set: test_hal_com_tx_aclt_set.c \
 		$(TX_ACLT_SET_SHIM) $(TX_ACLT_SET_ORACLE)
 	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_tx_aclt_set.c \
 		$(TX_ACLT_SET_SHIM) $(TX_ACLT_SET_ORACLE)
+
+librust_hal_com_tx_aclt_set.a: ../../../rust/hal_com_tx_aclt_set.rs
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_tx_aclt_set_test --cfg config_tx_ac_lifetime \
+		--crate-type staticlib ../../../rust/hal_com_tx_aclt_set.rs -o $@
+
+test-tx-aclt-set-rust: test_hal_com_tx_aclt_set_rust
+	./test_hal_com_tx_aclt_set_rust
+
+test_hal_com_tx_aclt_set_rust: test_hal_com_tx_aclt_set.c librust_hal_com_tx_aclt_set.a \
+		$(TX_ACLT_SET_SHIM) $(TX_ACLT_SET_ORACLE)
+	$(CC) $(CFLAGS) -I../include -DRUST_HAL_COM_TX_ACLT_SET_ORACLE -o $@ \
+		test_hal_com_tx_aclt_set.c $(TX_ACLT_SET_SHIM) $(TX_ACLT_SET_ORACLE) \
+		librust_hal_com_tx_aclt_set.a
 
 test-chip: test_dump_chip_info
 	./test_dump_chip_info hal_dump_chip_info_vectors.json
