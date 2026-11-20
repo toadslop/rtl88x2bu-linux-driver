@@ -151,6 +151,57 @@ int _rtw_memcmp(const void *dst, const void *src, unsigned int sz)
 	return memcmp(dst, src, sz) == 0 ? 1 : 0;
 }
 
+u8 rtw_rust_hal_com_adapter_iface_id(void *adapter)
+{
+	return ((struct _adapter *)adapter)->iface_id;
+}
+
+u8 rtw_rust_hal_com_mbid_ctl_bitmap_test(void *ctl, u8 idx)
+{
+	return (((struct mbid_cam_ctl_t *)ctl)->bitmap & BIT(idx)) != 0;
+}
+
+void rtw_rust_hal_com_mbid_ctl_bitmap_set_bit(void *ctl, u8 idx)
+{
+	((struct mbid_cam_ctl_t *)ctl)->bitmap |= BIT(idx);
+}
+
+void rtw_rust_hal_com_mbid_ctl_bitmap_clr_bit(void *ctl, u8 idx)
+{
+	((struct mbid_cam_ctl_t *)ctl)->bitmap &= ~BIT(idx);
+}
+
+void rtw_rust_hal_com_atomic_inc(ATOMIC_T *v)
+{
+	ATOMIC_INC(v);
+}
+
+void rtw_rust_hal_com_atomic_dec(ATOMIC_T *v)
+{
+	ATOMIC_DEC(v);
+}
+
+void rtw_rust_hal_com_mbid_cache_init(void *adapter, void *dvobj, u8 idx, u8 *mac)
+{
+	struct _adapter *a = adapter;
+	struct dvobj_priv *d = dvobj;
+
+	if (!a || !d || !mac || idx >= TOTAL_MBID_CAM_NUM)
+		return;
+	memcpy(d->mbid_cam_cache[idx].mac_addr, mac, ETH_ALEN);
+	d->mbid_cam_cache[idx].iface_id = a->iface_id;
+}
+
+void rtw_rust_hal_com_mbid_cache_clr(void *dvobj, u8 idx)
+{
+	struct dvobj_priv *d = dvobj;
+
+	if (!d || idx >= TOTAL_MBID_CAM_NUM)
+		return;
+	memset(d->mbid_cam_cache[idx].mac_addr, 0, ETH_ALEN);
+	d->mbid_cam_cache[idx].iface_id = CONFIG_IFACE_NUMBER;
+}
+
 void host_mbid_cam_record_warn(void);
 
 void rtw_rust_hal_com_warn_on(int condition)
