@@ -38,6 +38,16 @@ u8 rtw_rust_hal_com_tx_aclt_flags(void *p)
 	return adapter_to_dvobj(to_adap(p))->tx_aclt_flags;
 }
 
+u8 rtw_rust_hal_com_tx_aclt_ap_m2u_num(void *p)
+{
+	return adapter_to_dvobj(to_adap(p))->host_ap_m2u_num;
+}
+
+u8 rtw_rust_hal_com_tx_aclt_sta_op_num(void *p)
+{
+	return adapter_to_dvobj(to_adap(p))->host_sta_op_num;
+}
+
 void rtw_rust_hal_com_tx_aclt_compute_lt(void *p, u8 *lt_en, u16 *lt_vo_vi, u16 *lt_be_bk)
 {
 	struct dvobj_priv *dv = adapter_to_dvobj(to_adap(p));

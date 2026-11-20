@@ -48,6 +48,8 @@ u8 rtw_rust_hal_com_tx_aclt_unit_factor(void *adapter);
 struct tx_aclt_conf_t *rtw_rust_hal_com_tx_aclt_force_conf(void *adapter);
 struct tx_aclt_conf_t *rtw_rust_hal_com_tx_aclt_conf_at(void *adapter, u8 idx);
 u8 rtw_rust_hal_com_tx_aclt_flags(void *adapter);
+u8 rtw_rust_hal_com_tx_aclt_ap_m2u_num(void *adapter);
+u8 rtw_rust_hal_com_tx_aclt_sta_op_num(void *adapter);
 u8 rtw_rust_hal_com_tx_aclt_read8(void *adapter, u32 addr);
 u32 rtw_rust_hal_com_tx_aclt_read32(void *adapter, u32 addr);
 void rtw_rust_hal_com_tx_aclt_write8(void *adapter, u32 addr, u8 val);
