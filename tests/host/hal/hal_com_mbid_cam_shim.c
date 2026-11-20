@@ -7,8 +7,11 @@
 static struct dvobj_priv g_dvobj;
 static struct _adapter g_adapter;
 
+void host_mbid_cam_oracle_reset_warn(void);
+
 void host_mbid_cam_reset_fixture(void)
 {
+	host_mbid_cam_oracle_reset_warn();
 	memset(&g_dvobj, 0, sizeof(g_dvobj));
 	memset(&g_adapter, 0, sizeof(g_adapter));
 }
@@ -146,4 +149,12 @@ void rtw_rust_hal_com_mbid_log_iface_search(const char *func, u8 iface_id,
 int _rtw_memcmp(const void *dst, const void *src, unsigned int sz)
 {
 	return memcmp(dst, src, sz) == 0 ? 1 : 0;
+}
+
+void host_mbid_cam_record_warn(void);
+
+void rtw_rust_hal_com_warn_on(int condition)
+{
+	if (condition)
+		host_mbid_cam_record_warn();
 }
