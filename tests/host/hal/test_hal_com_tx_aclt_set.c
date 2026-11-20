@@ -83,6 +83,29 @@ int main(void)
 	eq8("force_mask_arg2", s.dvobj.tx_aclt_force_val.en, 0x0A);
 	eq32("force_mask_arg2_vo", s.dvobj.tx_aclt_force_val.vo_vi, 2u);
 
+	ds.tx_aclt_force_val.en = 0xFF;
+	do_.tx_aclt_force_val.en = 0xFF;
+	s.dvobj = ds;
+	o.dvobj = do_;
+	memset(&in, 0, sizeof(in));
+	in.en = 0x1A;
+	in.vo_vi = 128;
+	rtw_hal_set_tx_aclt_force_val(&s, &in, 2);
+	rtw_hal_set_tx_aclt_force_val_c_oracle(&o, &in, 2);
+	eq8("force_mask_ff_arg2", s.dvobj.tx_aclt_force_val.en, 0x0A);
+
+	ds.tx_aclt_force_val.en = 0xFF;
+	do_.tx_aclt_force_val.en = 0xFF;
+	s.dvobj = ds;
+	o.dvobj = do_;
+	memset(&in, 0, sizeof(in));
+	in.en = 0x1A;
+	in.vo_vi = 128;
+	in.be_bk = 256;
+	rtw_hal_set_tx_aclt_force_val(&s, &in, 3);
+	rtw_hal_set_tx_aclt_force_val_c_oracle(&o, &in, 3);
+	eq8("force_mask_ff_arg3", s.dvobj.tx_aclt_force_val.en, 0x0A);
+
 	memset(&in, 0, sizeof(in));
 	in.en = 0x1A;
 	in.vo_vi = 128;
@@ -142,6 +165,17 @@ int main(void)
 	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 0, &in, 2);
 	eq8("conf_mask_arg2", s.dvobj.tx_aclt_confs[0].en, 0x07);
 	eq32("conf_mask_arg2_vo", s.dvobj.tx_aclt_confs[0].vo_vi, 2u);
+
+	ds.tx_aclt_confs[0].en = 0xFF;
+	do_.tx_aclt_confs[0].en = 0xFF;
+	s.dvobj = ds;
+	o.dvobj = do_;
+	memset(&in, 0, sizeof(in));
+	in.en = 0x17;
+	in.vo_vi = 128;
+	rtw_hal_set_tx_aclt_conf(&s, 0, &in, 2);
+	rtw_hal_set_tx_aclt_conf_c_oracle(&o, 0, &in, 2);
+	eq8("conf_mask_ff_arg2", s.dvobj.tx_aclt_confs[0].en, 0x07);
 
 	memset(&in, 0, sizeof(in));
 	in.en = 0x17;
