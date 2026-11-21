@@ -253,6 +253,25 @@ test_hal_com_dump_rsvd_fifo: test_hal_com_dump_rsvd_fifo.c \
 		$(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE) \
 		$(GET_RSVD_PAGE_DUMP_LINK) $(HOST_JSON)
 
+DUMP_RSVD_PAGE_RUST_SRC := $(ROOT)/rust/hal_com_dump_rsvd_page.rs
+
+librust_hal_com_dump_rsvd_page.a: $(DUMP_RSVD_PAGE_RUST_SRC)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_dump_rsvd_fifo_test \
+		--cfg config_rtw_debug \
+		--crate-type staticlib $(DUMP_RSVD_PAGE_RUST_SRC) -o $@
+
+test-dump-rsvd-fifo-rust: test_hal_com_dump_rsvd_fifo_rust
+	./test_hal_com_dump_rsvd_fifo_rust hal_com_dump_rsvd_fifo_vectors.json
+
+test_hal_com_dump_rsvd_fifo_rust: test_hal_com_dump_rsvd_fifo.c \
+		$(DUMP_RSVD_FIFO_ORACLE) $(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE) \
+		$(GET_RSVD_PAGE_DUMP_LINK) $(HOST_JSON) librust_hal_com_dump_rsvd_page.a
+	$(CC) $(CFLAGS) $(DUMP_RSVD_FIFO_CFLAGS) -DRUST_HAL_COM_DUMP_RSVD_FIFO_ORACLE -o $@ \
+		test_hal_com_dump_rsvd_fifo.c $(DUMP_RSVD_FIFO_ORACLE) \
+		$(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE) \
+		$(GET_RSVD_PAGE_DUMP_LINK) $(HOST_JSON) librust_hal_com_dump_rsvd_page.a
+
 test-tx-aclt-set: test_hal_com_tx_aclt_set
 	./test_hal_com_tx_aclt_set
 

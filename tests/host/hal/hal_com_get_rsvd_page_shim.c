@@ -136,3 +136,28 @@ void rtw_vmfree(void *p, u32 sz)
 	(void)sz;
 	free(p);
 }
+
+void rtw_rust_hal_com_print_line(void *sel, const char *line)
+{
+	struct host_sel_capture *cap = (struct host_sel_capture *)sel;
+	size_t room;
+	size_t n;
+
+	if (!cap || !line)
+		return;
+	if (cap->len >= sizeof(cap->buf) - 1) {
+		host_sel_mark_overflow();
+		return;
+	}
+	room = sizeof(cap->buf) - cap->len - 1;
+	n = strnlen(line, room + 1);
+	if (n > room) {
+		cap->len = sizeof(cap->buf) - 1;
+		cap->buf[cap->len] = '\0';
+		host_sel_mark_overflow();
+		return;
+	}
+	memcpy(cap->buf + cap->len, line, n);
+	cap->len += n;
+	cap->buf[cap->len] = '\0';
+}
