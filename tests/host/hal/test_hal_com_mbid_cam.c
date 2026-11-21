@@ -91,21 +91,26 @@ int main(void)
 
 	host_mbid_cam_reset_fixture();
 	{
-		static const u8 mac_sta[ETH_ALEN] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66};
+		static const u8 mac_sta[ETH_ALEN] = {0x0a, 0x22, 0x33, 0x44, 0x55, 0x66};
 		static const u8 mac_ap[ETH_ALEN] = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
+		static const u8 mac_none[ETH_ALEN] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
+		static const u8 mac_null_if[ETH_ALEN] = {0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54};
 		struct host_sel_capture cap_rust;
 		struct host_sel_capture cap_c;
 		char got[4096];
 		char expect[4096];
 
-		host_mbid_cam_set_entry_num(3);
-		host_mbid_cam_dvobj()->mbid_cam_ctl.bitmap = 0x25;
+		/* entry_num (6) intentionally differs from bitmap popcount (4). */
+		host_mbid_cam_set_entry_num(6);
+		host_mbid_cam_dvobj()->mbid_cam_ctl.bitmap = 0x2d;
 		host_mbid_cam_prime_entry(0, 0, mac_sta, 0);
 		host_mbid_cam_prime_entry(2, 1, mac_ap, 0);
-		host_mbid_cam_prime_entry(5, 2, mac_ap, 0);
+		host_mbid_cam_prime_entry(3, 2, mac_none, 0);
+		host_mbid_cam_prime_entry(5, 3, mac_null_if, 0);
 		host_mbid_cam_set_iface_role(0, WIFI_STATION_STATE);
 		host_mbid_cam_set_iface_role(1, WIFI_AP_STATE);
-		host_mbid_cam_set_iface_role(2, WIFI_MESH_STATE);
+		host_mbid_cam_set_iface_role(2, 0);
+		host_mbid_cam_dvobj()->padapters[3] = NULL;
 
 		host_sel_reset(&cap_rust);
 		rtw_mbid_cam_cache_dump(&cap_rust, "host_l2", adap);
