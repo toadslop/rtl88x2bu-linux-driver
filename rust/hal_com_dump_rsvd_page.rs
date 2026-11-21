@@ -117,7 +117,7 @@ fn push_hex_lower(n: u32, out: &mut [u8], pos: &mut usize) {
     let mut nd = 0usize;
     let mut v = n;
     if v == 0 {
-        digits[nd] = b'0';
+        digits[0] = b'0';
         nd = 1;
     } else {
         while v > 0 && nd < digits.len() {
@@ -126,18 +126,12 @@ fn push_hex_lower(n: u32, out: &mut [u8], pos: &mut usize) {
             v >>= 4;
         }
     }
-    while nd < 4 {
-        for i in (1..=nd).rev() {
-            digits[i] = digits[i - 1];
-        }
-        digits[0] = b'0';
-        nd += 1;
+    let width = core::cmp::max(4, nd);
+    for _ in 0..(width - nd) {
+        let _ = push_byte(out, pos, b'0');
     }
     for i in (0..nd).rev() {
-        if *pos < out.len() {
-            out[*pos] = digits[i];
-            *pos += 1;
-        }
+        let _ = push_byte(out, pos, digits[i]);
     }
 }
 

@@ -261,6 +261,7 @@ librust_hal_com_dump_rsvd_page.a: $(DUMP_RSVD_PAGE_RUST_SRC)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
 		--cfg host_hal_com_dump_rsvd_fifo_test \
 		--cfg config_rtw_debug \
+		--cfg config_support_fifo_dump \
 		--crate-type staticlib $(DUMP_RSVD_PAGE_RUST_SRC) -o $@
 
 test-dump-rsvd-fifo-rust: test_hal_com_dump_rsvd_fifo_rust
