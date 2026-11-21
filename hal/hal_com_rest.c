@@ -14320,6 +14320,11 @@ void rtw_rust_hal_com_log_info(const char *line)
 	RTW_INFO("%s", line);
 }
 
+void rtw_rust_hal_com_log_invalid_fifo_sel(u8 fifo_sel)
+{
+	RTW_ERR("fifo_sel:%d invalid\n", fifo_sel);
+}
+
 u8 rtw_rust_hal_com_read8(_adapter *adapter, u32 addr)
 {
 	if (!adapter)
