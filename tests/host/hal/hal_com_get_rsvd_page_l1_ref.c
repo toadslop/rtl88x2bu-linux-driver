@@ -26,14 +26,4 @@ void rtw_dump_rsvd_page(void *sel, struct _adapter *adapter,
 }
 #endif
 
-#ifdef CONFIG_SUPPORT_FIFO_DUMP
-void rtw_dump_fifo(void *sel, struct _adapter *adapter, unsigned char fifo_sel,
-		   unsigned int fifo_addr, unsigned int fifo_size)
-{
-	(void)sel;
-	(void)adapter;
-	(void)fifo_sel;
-	(void)fifo_addr;
-	(void)fifo_size;
-}
-#endif
+/* rtw_dump_fifo — PR4 / rust/hal_com_dump_rsvd_page.rs (leave out of this L1 leaf). */
