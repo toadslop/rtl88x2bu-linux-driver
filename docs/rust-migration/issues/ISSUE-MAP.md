@@ -454,6 +454,14 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-122 | #2216 | [W4-122] Translate hal_com_rest.c — RSVD page and FIFO debug dumps |
 | W4-123 | #2217 | [W4-123] Translate hal_com_rest.c — GPIO WL control switch |
 | W4-124 | #2218 | [W4-124] Translate hal_com_rest.c — TX AC lifetime setters |
+| W4-125 | #2249 | [W4-125] Translate hal_com_rest.c — MBSSID CAM cache dump |
+| W4-126 | #2250 | [W4-126] Translate hal_com_rest.c — MBSSID CAM HW push and enable |
+| W4-127 | #2251 | [W4-127] Translate hal_com_rest.c — RCR add/clear/check leaf |
+| W4-128 | #2252 | [W4-128] Translate hal_com_rest.c — RCR check-BSSID policy |
+| W4-129 | #2253 | [W4-129] Translate hal_com_rest.c — TSF iface enable/disable |
+| W4-130 | #2254 | [W4-130] Translate hal_com_rest.c — TSF periodic update check |
+| W4-131 | #2255 | [W4-131] Translate hal_com_rest.c — default port H2C cmd |
+| W4-132 | #2256 | [W4-132] SW TXBCN interval adjust (cancelled — issue closed) |
 
 ## Superseded issues
 
