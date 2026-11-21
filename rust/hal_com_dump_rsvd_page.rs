@@ -14,8 +14,6 @@ const _DRV_ALWAYS_: u32 = 1;
 extern "C" {
     fn rtw_rust_hal_com_print_line(sel: *mut c_void, line: *const c_char);
     fn rtw_hal_get_def_var(adapter: *mut c_void, def: i32, val: *mut c_void);
-    fn rtw_zvmalloc(sz: U32) -> *mut U8;
-    fn rtw_vmfree(p: *mut c_void, sz: U32);
     #[cfg(config_rtw_debug)]
     static mut rtw_drv_log_level: U32;
     fn rtw_hal_get_rsvd_page(
@@ -25,6 +23,40 @@ extern "C" {
         buffer: *mut U8,
         buffer_size: U32,
     ) -> i32;
+}
+
+#[cfg(not(host_hal_com_dump_rsvd_fifo_test))]
+extern "C" {
+    fn rtw_rust_hal_com_zvmalloc(sz: U32) -> *mut U8;
+    fn rtw_rust_hal_com_vmfree(p: *mut c_void, sz: U32);
+}
+
+#[cfg(host_hal_com_dump_rsvd_fifo_test)]
+extern "C" {
+    fn rtw_zvmalloc(sz: U32) -> *mut U8;
+    fn rtw_vmfree(p: *mut c_void, sz: U32);
+}
+
+fn alloc_buf(sz: U32) -> *mut U8 {
+    #[cfg(not(host_hal_com_dump_rsvd_fifo_test))]
+    {
+        return unsafe { rtw_rust_hal_com_zvmalloc(sz) };
+    }
+    #[cfg(host_hal_com_dump_rsvd_fifo_test)]
+    {
+        return unsafe { rtw_zvmalloc(sz) };
+    }
+}
+
+fn free_buf(p: *mut c_void, sz: U32) {
+    #[cfg(not(host_hal_com_dump_rsvd_fifo_test))]
+    unsafe {
+        rtw_rust_hal_com_vmfree(p, sz);
+    }
+    #[cfg(host_hal_com_dump_rsvd_fifo_test)]
+    unsafe {
+        rtw_vmfree(p, sz);
+    }
 }
 
 fn print_line(sel: *mut c_void, line: &[u8]) {
@@ -193,7 +225,7 @@ pub extern "C" fn rtw_dump_rsvd_page(
         return;
     }
     let buf_size = page_size.wrapping_mul(page_num as U32);
-    let buffer = unsafe { rtw_zvmalloc(buf_size) };
+    let buffer = alloc_buf(buf_size);
     if buffer.is_null() {
         print_line(sel, b"ERROR - rsvd_buf mem allocate failed\n");
         print_line(sel, b"==========================\n");
@@ -202,7 +234,8 @@ pub extern "C" fn rtw_dump_rsvd_page(
     unsafe {
         rtw_hal_get_rsvd_page(adapter, page_offset as U32, page_num as U32, buffer, buf_size);
         dump_sel(sel, buffer, buf_size as i32);
-        rtw_vmfree(buffer.cast(), buf_size);
+        free_buf(buffer.cast(), buf_size);
     }
     print_line(sel, b"==========================\n");
 }
+
