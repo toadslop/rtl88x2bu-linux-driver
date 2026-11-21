@@ -135,6 +135,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo \
+	test-tx-aclt-set \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-c2h-evt-robustness clean
 
@@ -172,6 +173,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo \
+	test-tx-aclt-set \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-c2h-evt-robustness
 
@@ -212,6 +214,9 @@ GET_RSVD_PAGE_SHIM := hal_com_get_rsvd_page_shim.c
 GET_RSVD_PAGE_ORACLE := hal_com_get_rsvd_page_c_oracle.c
 GET_RSVD_PAGE_DUMP_LINK := hal_com_get_rsvd_page_dump_link.c
 
+TX_ACLT_SET_SHIM := hal_com_tx_aclt_set_shim.c
+TX_ACLT_SET_ORACLE := hal_com_tx_aclt_set_c_oracle.c
+
 test-get-rsvd-page: test_hal_com_get_rsvd_page
 	./test_hal_com_get_rsvd_page
 
@@ -247,6 +252,14 @@ test_hal_com_dump_rsvd_fifo: test_hal_com_dump_rsvd_fifo.c \
 		test_hal_com_dump_rsvd_fifo.c $(DUMP_RSVD_FIFO_ORACLE) \
 		$(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE) \
 		$(GET_RSVD_PAGE_DUMP_LINK) $(HOST_JSON)
+
+test-tx-aclt-set: test_hal_com_tx_aclt_set
+	./test_hal_com_tx_aclt_set
+
+test_hal_com_tx_aclt_set: test_hal_com_tx_aclt_set.c \
+		$(TX_ACLT_SET_SHIM) $(TX_ACLT_SET_ORACLE)
+	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_tx_aclt_set.c \
+		$(TX_ACLT_SET_SHIM) $(TX_ACLT_SET_ORACLE)
 
 test-chip: test_dump_chip_info
 	./test_dump_chip_info hal_dump_chip_info_vectors.json
@@ -1895,4 +1908,6 @@ clean:
 		test_hal_com_mbid_cam_rust librust_hal_com_mbid_cam.a \
 		test_hal_com_gpio_wakeup test_hal_com_gpio_wakeup_rust \
 		test_hal_com_gpio_wakeup_8821asdio test_hal_com_gpio_wakeup_rust_8821asdio \
-		librust_hal_com_gpio_wakeup.a librust_hal_com_gpio_wakeup_8821as.a
+		librust_hal_com_gpio_wakeup.a librust_hal_com_gpio_wakeup_8821as.a \
+		test_hal_com_tx_aclt_set test_hal_com_tx_aclt_set_rust \
+		librust_hal_com_tx_aclt_set.a
