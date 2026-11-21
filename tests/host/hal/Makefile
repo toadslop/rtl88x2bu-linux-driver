@@ -134,6 +134,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-req-per-rpt test-req-per-rpt-rust \
 	test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-get-rsvd-page test-get-rsvd-page-rust \
+	test-dump-rsvd-fifo \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-c2h-evt-robustness clean
 
@@ -170,6 +171,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-req-per-rpt-rust \
 	test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-get-rsvd-page test-get-rsvd-page-rust \
+	test-dump-rsvd-fifo \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-c2h-evt-robustness
 
@@ -208,6 +210,7 @@ test_rsvd_page_cache_rust: test_rsvd_page_cache.c librust_hal_com_rsvd.a $(RSVD_
 
 GET_RSVD_PAGE_SHIM := hal_com_get_rsvd_page_shim.c
 GET_RSVD_PAGE_ORACLE := hal_com_get_rsvd_page_c_oracle.c
+GET_RSVD_PAGE_DUMP_LINK := hal_com_get_rsvd_page_dump_link.c
 
 test-get-rsvd-page: test_hal_com_get_rsvd_page
 	./test_hal_com_get_rsvd_page
@@ -230,6 +233,20 @@ test_hal_com_get_rsvd_page_rust: test_hal_com_get_rsvd_page.c \
 	$(CC) $(CFLAGS) -I../include -DRUST_HAL_COM_GET_RSVD_PAGE_ORACLE -o $@ \
 		test_hal_com_get_rsvd_page.c $(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE) \
 		librust_hal_com_get_rsvd_page.a
+
+DUMP_RSVD_FIFO_CFLAGS := -I../include -DCONFIG_RTW_DEBUG -DCONFIG_PROC_DEBUG
+DUMP_RSVD_FIFO_ORACLE := hal_com_dump_rsvd_fifo_c_oracle.c
+
+test-dump-rsvd-fifo: test_hal_com_dump_rsvd_fifo
+	./test_hal_com_dump_rsvd_fifo hal_com_dump_rsvd_fifo_vectors.json
+
+test_hal_com_dump_rsvd_fifo: test_hal_com_dump_rsvd_fifo.c \
+		$(DUMP_RSVD_FIFO_ORACLE) $(GET_RSVD_PAGE_SHIM) \
+		$(GET_RSVD_PAGE_ORACLE) $(GET_RSVD_PAGE_DUMP_LINK) $(HOST_JSON)
+	$(CC) $(CFLAGS) $(DUMP_RSVD_FIFO_CFLAGS) -o $@ \
+		test_hal_com_dump_rsvd_fifo.c $(DUMP_RSVD_FIFO_ORACLE) \
+		$(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE) \
+		$(GET_RSVD_PAGE_DUMP_LINK) $(HOST_JSON)
 
 test-chip: test_dump_chip_info
 	./test_dump_chip_info hal_dump_chip_info_vectors.json

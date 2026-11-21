@@ -23,10 +23,23 @@ struct _adapter {
 void host_get_rsvd_page_reset(void);
 struct _adapter *host_get_rsvd_page_adapter(void);
 void host_get_rsvd_page_set_page_size(u32 psz);
+void host_get_rsvd_page_set_zvmalloc_fail(int fail);
 u32 host_get_rsvd_page_fixture_page_size(void);
 u32 host_get_rsvd_last_fifo_sel(void);
 u32 host_get_rsvd_last_addr(void);
 u32 host_get_rsvd_last_size(void);
 int host_get_rsvd_last_fifo_sel_is_rsvd(void);
+
+struct host_sel_capture {
+	char buf[2048];
+	size_t len;
+};
+
+void host_sel_reset(struct host_sel_capture *cap);
+void host_sel_mark_overflow(void);
+int host_sel_had_overflow(void);
+int host_sel_string(struct host_sel_capture *cap, char *out, size_t outlen);
+void *rtw_zvmalloc(u32 sz);
+void rtw_vmfree(void *p, u32 sz);
 
 #endif
