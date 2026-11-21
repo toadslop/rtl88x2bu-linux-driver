@@ -69,3 +69,26 @@ int rtw_mbid_cam_cache_dump(void *sel, const char *fn, struct _adapter *a)
 	(void)a;
 	return 0;
 }
+
+void write_mbssid_cam(struct _adapter *a, unsigned char cam, unsigned char *mac)
+{
+	(void)a;
+	(void)cam;
+	(void)mac;
+}
+
+void rtw_ap_set_mbid_num(struct _adapter *a, unsigned char ap_num)
+{
+	(void)a;
+	(void)ap_num;
+}
+
+void rtw_mbid_cam_enable(struct _adapter *a)
+{
+	(void)a;
+}
+
+void rtw_mi_set_mbid_cam(struct _adapter *a)
+{
+	(void)a;
+}
