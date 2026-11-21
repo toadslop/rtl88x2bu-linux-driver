@@ -538,7 +538,7 @@ pub extern "C" fn rtw_mbid_cam_cache_dump(
                     mbid_print(sel, b"\t");
                     let iface = rtw_rust_hal_com_dvobj_padapter(dvobj, iface_id);
                     if !iface.is_null() {
-                        let role = if rtw_rust_hal_com_mlme_is_sta(iface) != 0 {
+                        let role: &[u8] = if rtw_rust_hal_com_mlme_is_sta(iface) != 0 {
                             b"ROLE:STA\n"
                         } else if rtw_rust_hal_com_mlme_is_ap(iface) != 0 {
                             b"ROLE:AP\n"
