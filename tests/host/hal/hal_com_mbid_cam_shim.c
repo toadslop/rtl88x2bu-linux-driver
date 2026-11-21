@@ -276,6 +276,50 @@ void rtw_rust_hal_com_warn_on(int condition)
 		host_mbid_cam_record_warn();
 }
 
+u8 rtw_rust_hal_com_read8(void *adapter, unsigned int addr)
+{
+	(void)adapter;
+	(void)addr;
+	return 0;
+}
+
+void rtw_rust_hal_com_write8(void *adapter, unsigned int addr, u8 val)
+{
+	(void)adapter;
+	(void)addr;
+	(void)val;
+}
+
+int rtw_rust_hal_com_hw_var_mbssid_cam_write(void)
+{
+	return 0;
+}
+
+void rtw_hal_set_hwreg(struct _adapter *padapter, unsigned int variable, u8 *val)
+{
+	(void)padapter;
+	(void)variable;
+	(void)val;
+}
+
+void rtw_rust_hal_com_set_hwreg(void *adapter, unsigned int variable, u8 *val)
+{
+	rtw_hal_set_hwreg(adapter, variable, val);
+}
+
+u8 rtw_hal_rcr_add(void *adapter, unsigned int add)
+{
+	(void)adapter;
+	(void)add;
+	return 0;
+}
+
+void rtw_rust_hal_com_mbid_log_mi_set_cam(const char *func, u8 cam_id, u8 *mac)
+{
+	(void)func;
+	(void)cam_id;
+	(void)mac;
+}
 void *rtw_rust_hal_com_dvobj_padapter(void *dvobj, u8 iface_id)
 {
 	if (!dvobj || iface_id >= CONFIG_IFACE_NUMBER)
