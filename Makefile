@@ -5170,6 +5170,7 @@ ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_GPIO_WAKEUP\b' include/autoconf
 _rust_cfg_gpio_wakeup_l1 := y
 endif
 HAL_COM_L1_GPIO_WAKEUP_REF := $(if $(_rust_cfg_gpio_wakeup_l1),tests/host/hal/hal_com_gpio_wakeup_l1_ref.o,)
+HAL_COM_L1_RCR_REF := tests/host/hal/hal_com_rcr_l1_ref.o
 
 rust-objects-hal-com-c:
 	@mkdir -p tests/host/hal
@@ -5282,6 +5283,9 @@ ifneq ($(_rust_cfg_tx_aclt_set_l1),)
 		-o tests/host/hal/hal_com_tx_aclt_set_l1_ref.o \
 		tests/host/hal/hal_com_tx_aclt_set_l1_ref.c
 endif
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_com_rcr_l1_ref.o \
+		tests/host/hal/hal_com_rcr_l1_ref.c
 	ld -r -o tests/host/hal/hal_com_c_ref.o \
 		tests/host/hal/hal_hw_rate_c_ref.o tests/host/hal/hal_rsvd_page_c_ref.o \
 		tests/host/hal/hal_dump_chip_info_c_ref.o tests/host/hal/hal_mrate_to_hw_rate_c_ref.o \
@@ -5309,7 +5313,8 @@ endif
 		$(HAL_COM_L1_REQ_PER_RPT) \
 		$(HAL_COM_L1_MBID_CAM_REF) \
 		$(HAL_COM_L1_GPIO_WAKEUP_REF) \
-		$(HAL_COM_L1_TX_ACLT_SET_REF)
+		$(HAL_COM_L1_TX_ACLT_SET_REF) \
+		$(HAL_COM_L1_RCR_REF)
 
 rust-check-symbols-hal-com: rust-objects-hal-com
 	$(MAKE) CONFIG_GPIO_WAKEUP=y rust-objects-hal-com-c
