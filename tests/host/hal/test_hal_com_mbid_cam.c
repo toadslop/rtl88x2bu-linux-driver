@@ -5,6 +5,13 @@
 #include <stdio.h>
 #include <string.h>
 
+void rtw_mbid_cam_cache_dump_c_oracle(void *sel, const char *fn, struct _adapter *a);
+#ifdef RUST_HAL_COM_MBID_CAM_ORACLE
+int rtw_mbid_cam_cache_dump(void *sel, const char *fn, struct _adapter *a);
+#else
+#define rtw_mbid_cam_cache_dump rtw_mbid_cam_cache_dump_c_oracle
+#endif
+
 void host_mbid_cam_reset_fixture(void);
 struct _adapter *host_mbid_cam_adapter(void);
 struct dvobj_priv *host_mbid_cam_dvobj(void);
@@ -81,6 +88,37 @@ int main(void)
 	eq_u8("max", rtw_get_max_mbid_cam_id(adap), rtw_get_max_mbid_cam_id_c_oracle(adap));
 	rtw_mbid_cam_reset(adap);
 	expect_cam_cleared("reset", host_mbid_cam_dvobj());
+
+	host_mbid_cam_reset_fixture();
+	{
+		static const u8 mac_sta[ETH_ALEN] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66};
+		static const u8 mac_ap[ETH_ALEN] = {0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff};
+		struct host_sel_capture cap_rust;
+		struct host_sel_capture cap_c;
+		char got[4096];
+		char expect[4096];
+
+		host_mbid_cam_set_entry_num(3);
+		host_mbid_cam_dvobj()->mbid_cam_ctl.bitmap = 0x25;
+		host_mbid_cam_prime_entry(0, 0, mac_sta, 0);
+		host_mbid_cam_prime_entry(2, 1, mac_ap, 0);
+		host_mbid_cam_prime_entry(5, 2, mac_ap, 0);
+		host_mbid_cam_set_iface_role(0, WIFI_STATION_STATE);
+		host_mbid_cam_set_iface_role(1, WIFI_AP_STATE);
+		host_mbid_cam_set_iface_role(2, WIFI_MESH_STATE);
+
+		host_sel_reset(&cap_rust);
+		rtw_mbid_cam_cache_dump(&cap_rust, "host_l2", adap);
+		host_sel_reset(&cap_c);
+		rtw_mbid_cam_cache_dump_c_oracle(&cap_c, "host_l2", adap);
+		if (host_sel_string(&cap_rust, got, sizeof(got)) < 0 ||
+		    host_sel_string(&cap_c, expect, sizeof(expect)) < 0 ||
+		    strcmp(got, expect)) {
+			fprintf(stderr, "FAIL mbid_cam_cache_dump\n--- got ---\n%s--- expect ---\n%s",
+				got, expect);
+			failures++;
+		}
+	}
 
 	if (failures)
 		return 1;
