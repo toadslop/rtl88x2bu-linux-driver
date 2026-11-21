@@ -10,13 +10,22 @@ static struct _adapter g_adapter;
 static struct _adapter g_adapters[CONFIG_IFACE_NUMBER];
 static int g_sel_overflow;
 
+struct host_mbid_cam_hw_trace host_mbid_cam_hw_trace;
+
 void host_mbid_cam_oracle_reset_warn(void);
+
+void host_mbid_cam_hw_reset(void)
+{
+	memset(&host_mbid_cam_hw_trace, 0, sizeof(host_mbid_cam_hw_trace));
+	host_mbid_cam_hw_trace.reg_mbid_num = 0;
+}
 
 void host_mbid_cam_reset_fixture(void)
 {
 	unsigned int i;
 
 	host_mbid_cam_oracle_reset_warn();
+	host_mbid_cam_hw_reset();
 	memset(&g_dvobj, 0, sizeof(g_dvobj));
 	memset(&g_adapter, 0, sizeof(g_adapter));
 	memset(g_adapters, 0, sizeof(g_adapters));
@@ -279,27 +288,43 @@ void rtw_rust_hal_com_warn_on(int condition)
 u8 rtw_rust_hal_com_read8(void *adapter, unsigned int addr)
 {
 	(void)adapter;
-	(void)addr;
+	if (addr == HOST_REG_MBID_NUM)
+		return host_mbid_cam_hw_trace.reg_mbid_num;
 	return 0;
 }
 
 void rtw_rust_hal_com_write8(void *adapter, unsigned int addr, u8 val)
 {
 	(void)adapter;
-	(void)addr;
-	(void)val;
+	if (addr == HOST_REG_MBID_NUM)
+		host_mbid_cam_hw_trace.reg_mbid_num = val;
 }
 
 int rtw_rust_hal_com_hw_var_mbssid_cam_write(void)
 {
-	return 0;
+	return HOST_HW_VAR_MBSSID_CAM_WRITE;
 }
 
 void rtw_hal_set_hwreg(struct _adapter *padapter, unsigned int variable, u8 *val)
 {
+	unsigned idx;
+
 	(void)padapter;
-	(void)variable;
-	(void)val;
+	if (variable != HOST_HW_VAR_MBSSID_CAM_WRITE || !val)
+		return;
+	idx = host_mbid_cam_hw_trace.hwreg_count;
+	if (idx >= TOTAL_MBID_CAM_NUM)
+		return;
+	host_mbid_cam_hw_trace.writes[idx].cam_val[0] =
+		(u32)val[0] | ((u32)val[1] << 8) | ((u32)val[2] << 16) |
+		((u32)val[3] << 24);
+	host_mbid_cam_hw_trace.writes[idx].cam_val[1] =
+		(u32)val[4] | ((u32)val[5] << 8) | ((u32)val[6] << 16) |
+		((u32)val[7] << 24);
+	host_mbid_cam_hw_trace.writes[idx].cam_id =
+		(u8)((host_mbid_cam_hw_trace.writes[idx].cam_val[1] >> 24) &
+		     0x1f);
+	host_mbid_cam_hw_trace.hwreg_count++;
 }
 
 void rtw_rust_hal_com_set_hwreg(void *adapter, unsigned int variable, u8 *val)
@@ -310,7 +335,8 @@ void rtw_rust_hal_com_set_hwreg(void *adapter, unsigned int variable, u8 *val)
 u8 rtw_hal_rcr_add(void *adapter, unsigned int add)
 {
 	(void)adapter;
-	(void)add;
+	host_mbid_cam_hw_trace.rcr_add_count++;
+	host_mbid_cam_hw_trace.last_rcr_add = add;
 	return 0;
 }
 
