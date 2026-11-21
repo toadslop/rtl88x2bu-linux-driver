@@ -9,11 +9,15 @@ type U32 = u32;
 const HAL_DEF_TX_PAGE_SIZE: i32 = 25;
 const RTW_BUFDUMP_BSIZE: usize = 16;
 
+const _DRV_ALWAYS_: u32 = 1;
+
 extern "C" {
     fn rtw_rust_hal_com_print_line(sel: *mut c_void, line: *const c_char);
     fn rtw_hal_get_def_var(adapter: *mut c_void, def: i32, val: *mut c_void);
     fn rtw_zvmalloc(sz: U32) -> *mut U8;
     fn rtw_vmfree(p: *mut c_void, sz: U32);
+    #[cfg(config_rtw_debug)]
+    static mut rtw_drv_log_level: U32;
     fn rtw_hal_get_rsvd_page(
         adapter: *mut c_void,
         page_offset: U32,
@@ -112,28 +116,45 @@ fn push_hex_u8(out: &mut [u8], pos: &mut usize, val: U8) -> bool {
     true
 }
 
-fn dump_sel(sel: *mut c_void, hexdata: *const U8, hexdatalen: i32) {
-    if hexdata.is_null() || hexdatalen <= 0 {
+#[cfg(host_hal_com_dump_rsvd_fifo_test)]
+fn dump_log_enabled() -> bool {
+    true
+}
+
+#[cfg(all(config_rtw_debug, not(host_hal_com_dump_rsvd_fifo_test)))]
+fn dump_log_enabled() -> bool {
+    unsafe { _DRV_ALWAYS_ <= rtw_drv_log_level }
+}
+
+#[cfg(not(any(host_hal_com_dump_rsvd_fifo_test, config_rtw_debug)))]
+fn dump_log_enabled() -> bool {
+    false
+}
+
+fn print_hex_token(sel: *mut c_void, val: U8, tail: &[u8]) {
+    let mut line = [0u8; 16];
+    let mut pos = 0usize;
+    if !push_hex_u8(&mut line, &mut pos, val) {
         return;
     }
-    let mut line = [0u8; 512];
-    let mut pos = 0usize;
+    let _ = push_str(&mut line, &mut pos, tail);
+    print_line(sel, &line[..pos]);
+}
+
+/// Match `RTW_BUF_DUMP_SEL` (per-byte `_RTW_PRINT_SEL`, no bulk buffer caps).
+fn dump_sel(sel: *mut c_void, hexdata: *const U8, hexdatalen: i32) {
+    if hexdata.is_null() || hexdatalen <= 0 || !dump_log_enabled() {
+        return;
+    }
     for i in 0..hexdatalen {
         let val = unsafe { *hexdata.add(i as usize) };
-        if !push_hex_u8(&mut line, &mut pos, val) {
-            break;
-        }
-        if ((i + 1) % 4) == 0 {
-            let _ = push_str(&mut line, &mut pos, b"  ");
-        } else {
-            let _ = push_byte(&mut line, &mut pos, b' ');
-        }
+        let tail = if ((i + 1) % 4) == 0 { b"  " as &[u8] } else { b" " };
+        print_hex_token(sel, val, tail);
         if (i + 1 < hexdatalen) && ((i + 1) % RTW_BUFDUMP_BSIZE as i32) == 0 {
-            let _ = push_byte(&mut line, &mut pos, b'\n');
+            print_line(sel, b"\n");
         }
     }
-    let _ = push_byte(&mut line, &mut pos, b'\n');
-    print_line(sel, &line[..pos]);
+    print_line(sel, b"\n");
 }
 
 #[cfg(any(

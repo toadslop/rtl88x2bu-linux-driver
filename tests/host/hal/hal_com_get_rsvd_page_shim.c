@@ -17,6 +17,8 @@ static u32 g_last_size;
 static int g_zvmalloc_fail;
 static int g_sel_overflow;
 
+unsigned int rtw_drv_log_level = 4;
+
 void host_get_rsvd_page_reset(void)
 {
 	memset(&g_dvobj, 0, sizeof(g_dvobj));
