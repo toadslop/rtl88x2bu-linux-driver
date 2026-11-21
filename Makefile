@@ -3147,9 +3147,11 @@ ifneq ($(filter -DCONFIG_RTW_DEBUG,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFL
 _rust_cfg_rtw_debug := y
 endif
 ifneq ($(_rust_cfg_rtw_debug),)
+rustflags-y += --cfg config_rtw_debug
 endif
 # W3-131: dump_drv_cfg part 1 in rust/rtw_debug.rs
-ifeq ($(CONFIG_PROC_DEBUG), y)
+ifneq ($(filter y,$(CONFIG_PROC_DEBUG) $(shell grep -Eq '^\s*#\s*define\s+CONFIG_PROC_DEBUG' $(src)/include/autoconf.h 2>/dev/null && echo y)),)
+rustflags-y += --cfg config_proc_debug
 endif
 # W3-219 / FX-05: beacon-count confirm is optional. Do not force
 # -DCONFIG_BCN_CNT_CONFIRM_HDL from CONFIG_PROC_DEBUG. Rust reads _ADAPTER
@@ -5233,6 +5235,7 @@ rust-objects-hal-com-c:
 		-o tests/host/hal/hal_dump_tx_fifo_l1_ref.o \
 		tests/host/hal/hal_dump_tx_fifo_l1_ref.c
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-DCONFIG_RTW_DEBUG -DCONFIG_PROC_DEBUG -DCONFIG_SUPPORT_FIFO_DUMP \
 		-o tests/host/hal/hal_com_get_rsvd_page_l1_ref.o \
 		tests/host/hal/hal_com_get_rsvd_page_l1_ref.c
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \

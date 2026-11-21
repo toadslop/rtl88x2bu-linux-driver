@@ -2538,36 +2538,7 @@ void rtw_hal_set_fw_dbg_msg_pkt_rsvd_page_cmd(PADAPTER padapter, PRSVDPAGE_LOC r
 
 /* rtw_hal_get_rsvd_page — rust/hal_com_rsvd_page.rs (W4-121); non-HALMAC bit-bang remains in hal_com.c */
 
-void rtw_dump_rsvd_page(void *sel, _adapter *adapter, u8 page_offset, u8 page_num)
-{
-#if defined(CONFIG_RTW_DEBUG) || defined(CONFIG_PROC_DEBUG)
-	u32 page_size = 0;
-	u8 *buffer = NULL;
-	u32 buf_size = 0;
-
-	if (page_num == 0)
-		return;
-
-	RTW_PRINT_SEL(sel, "======= RSVD PAGE DUMP =======\n");
-	RTW_PRINT_SEL(sel, "page_offset:%d, page_num:%d\n", page_offset, page_num);
-
-	rtw_hal_get_def_var(adapter, HAL_DEF_TX_PAGE_SIZE, &page_size);
-	if (page_size) {
-		buf_size = page_size * page_num;
-		buffer = rtw_zvmalloc(buf_size);
-
-		if (buffer) {
-			rtw_hal_get_rsvd_page(adapter, page_offset, page_num, buffer, buf_size);
-			RTW_DUMP_SEL(sel, buffer, buf_size);
-			rtw_vmfree(buffer, buf_size);
-		} else
-			RTW_PRINT_SEL(sel, "ERROR - rsvd_buf mem allocate failed\n");
-	} else
-			RTW_PRINT_SEL(sel, "ERROR - Tx page size is zero ??\n");
-
-	RTW_PRINT_SEL(sel, "==========================\n");
-#endif
-}
+/* rtw_dump_rsvd_page — rust/hal_com_dump_rsvd_page.rs (W4-122) */
 
 #ifdef CONFIG_SUPPORT_FIFO_DUMP
 void rtw_dump_fifo(void *sel, _adapter *adapter, u8 fifo_sel, u32 fifo_addr, u32 fifo_size)
@@ -14217,6 +14188,16 @@ void rtw_rust_hal_com_tx_aclt_confs_fields(struct dvobj_priv *dvobj, u8 *unit_fa
 void rtw_rust_hal_com_print_line(void *sel, const char *line)
 {
 	RTW_PRINT_SEL(sel, "%s", line);
+}
+
+void *rtw_rust_hal_com_zvmalloc(u32 sz)
+{
+	return rtw_zvmalloc(sz);
+}
+
+void rtw_rust_hal_com_vmfree(void *p, u32 sz)
+{
+	rtw_vmfree(p, sz);
 }
 
 void rtw_rust_hal_com_log_unsupported_hw_alpha2(const char *func, char a, char b)
