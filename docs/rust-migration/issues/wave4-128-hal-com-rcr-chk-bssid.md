@@ -18,7 +18,7 @@ Extend [`rust/hal_com_rcr.rs`](../../../rust/hal_com_rcr.rs) with
 
 - **RCR lane part 2** — uses `rtw_mi_status_*` / `rtw_mi_status_merge` via existing FFI; preserve `CONFIG_TDLS`, `CONFIG_AP_MODE`, `CONFIG_RTW_MESH`, `CONFIG_RTW_MULTI_AP`, and `CONFIG_CLIENT_PORT_CFG` branches.
 - Pinned concurrent 8822B sets both `CONFIG_MI_WITH_MBSSID_CAM` and `CONFIG_CLIENT_PORT_CFG`, so the `#if defined(CONFIG_MI_WITH_MBSSID_CAM) && !defined(CONFIG_CLIENT_PORT_CFG)` shortcut is **not** taken — implement the full `mi_state` decision tree.
-- Port static `rtw_hal_tsf_update_pause`/`restore` for the `!hal_spec->rx_tsf_filter` transitions around `RCR_CBSSID_BCN`; on pinned profile their bodies are empty under `CONFIG_MI_WITH_MBSSID_CAM` (calls become no-ops but must remain structurally correct).
+- Port static `rtw_hal_tsf_update_pause`/`restore` and call only when `!hal_spec->rx_tsf_filter`: **pause** before `HW_VAR_RCR` write when old `rcr` had `RCR_CBSSID_BCN` and `rcr_new` clears it; **restore** after the write when old lacked `RCR_CBSSID_BCN` and `rcr_new` sets it **unless** `self_action == MLME_STA_CONNECTING`. Under `CONFIG_MI_WITH_MBSSID_CAM` the helper bodies are empty (no-op on pinned profile).
 - Early return when computed `rcr_new == rcr` before `rtw_hal_set_hwreg(adapter, HW_VAR_RCR, …)`.
 
 ## Acceptance
