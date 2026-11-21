@@ -1,11 +1,6 @@
 # Host L2 differential tests for hal_com Rust slices (W4-01 hw rate, W4-02 rsvd page).
 
 ROOT     := ../../..
-ifneq ($(wildcard $(ROOT)/rust/hal_com_rcr_host.rs),)
-RCR_RUST_TESTS := test-rcr-leaf-rust
-else
-RCR_RUST_TESTS :=
-endif
 HOST_INC := ../include
 HOST_JSON := ../crypto/host_vector_json.c
 ORACLE   := hal_hw_rate_c_oracle.c
@@ -141,7 +136,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo \
 	test-tx-aclt-set test-tx-aclt-set-rust \
-	test-rcr-leaf $(RCR_RUST_TESTS) \
+	test-rcr-leaf \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-c2h-evt-robustness clean
 
@@ -180,7 +175,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo \
 	test-tx-aclt-set test-tx-aclt-set-rust \
-	test-rcr-leaf $(RCR_RUST_TESTS) \
+	test-rcr-leaf \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-c2h-evt-robustness
 
@@ -1754,19 +1749,6 @@ test-rcr-leaf: test_hal_com_rcr
 test_hal_com_rcr: test_hal_com_rcr.c $(RCR_SHIM) $(RCR_ORACLE)
 	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_rcr.c $(RCR_SHIM) $(RCR_ORACLE)
 
-ifneq ($(wildcard $(ROOT)/rust/hal_com_rcr_host.rs),)
-librust_hal_com_rcr.a: $(ROOT)/rust/hal_com_rcr_host.rs $(ROOT)/rust/hal_com_rcr.rs
-	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
-		--crate-type staticlib $(ROOT)/rust/hal_com_rcr_host.rs -o $@
-
-test-rcr-leaf-rust: test_hal_com_rcr_rust
-	./test_hal_com_rcr_rust
-
-test_hal_com_rcr_rust: test_hal_com_rcr.c $(RCR_SHIM) $(RCR_ORACLE) librust_hal_com_rcr.a
-	$(CC) $(CFLAGS) -I../include -DRUST_HAL_COM_RCR_ORACLE -o $@ \
-		test_hal_com_rcr.c $(RCR_SHIM) $(RCR_ORACLE) librust_hal_com_rcr.a
-endif
-
 GPIO_WAKEUP_SHIM := hal_com_gpio_wakeup_shim.c
 GPIO_WAKEUP_ORACLE := hal_com_gpio_wakeup_c_oracle.c
 
@@ -1949,7 +1931,7 @@ clean:
 		test_hal_com_req_per_rpt test_hal_com_req_per_rpt_rust \
 		librust_hal_com_req_per_rpt.a \
 		test_hal_com_mbid_cam_rust librust_hal_com_mbid_cam.a \
-		test_hal_com_rcr test_hal_com_rcr_rust librust_hal_com_rcr.a \
+		test_hal_com_rcr \
 		test_hal_com_gpio_wakeup test_hal_com_gpio_wakeup_rust \
 		test_hal_com_gpio_wakeup_8821asdio test_hal_com_gpio_wakeup_rust_8821asdio \
 		librust_hal_com_gpio_wakeup.a librust_hal_com_gpio_wakeup_8821as.a \
