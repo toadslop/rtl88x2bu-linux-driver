@@ -431,47 +431,7 @@ static void rtw_hal_set_msr(_adapter *adapter, u8 net_type)
 #ifdef CONFIG_MBSSID_CAM
 /* rtw_mbid_cam_init/deinit/reset and search/max helpers — rust/hal_com_mbid_cam.rs (W4-119) */
 /* rtw_mbid_camid_alloc / info_change / assign / clean — rust/hal_com_mbid_cam.rs (W4-120) */
-int rtw_mbid_cam_cache_dump(void *sel, const char *fun_name, _adapter *adapter)
-{
-	_irqL irqL;
-	u8 i;
-	_adapter *iface;
-	u8 iface_id;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
-	u8 entry_num = ATOMIC_READ(&mbid_cam_ctl->mbid_entry_num);
-	u8 max_cam_id = rtw_get_max_mbid_cam_id(adapter);
-
-	RTW_PRINT_SEL(sel, "== MBSSID CAM DUMP (%s)==\n", fun_name);
-
-	_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);
-	RTW_PRINT_SEL(sel, "Entry numbers:%d, max_camid:%d, bitmap:0x%08x\n", entry_num, max_cam_id, mbid_cam_ctl->bitmap);
-	for (i = 0; i < TOTAL_MBID_CAM_NUM; i++) {
-		RTW_PRINT_SEL(sel, "CAM_ID = %d\t", i);
-
-		if (mbid_cam_ctl->bitmap & BIT(i)) {
-			iface_id = dvobj->mbid_cam_cache[i].iface_id;
-			_RTW_PRINT_SEL(sel, "IF_ID:%d\t", iface_id);
-			_RTW_PRINT_SEL(sel, "MAC Addr:"MAC_FMT"\t", MAC_ARG(dvobj->mbid_cam_cache[i].mac_addr));
-
-			iface = dvobj->padapters[iface_id];
-			if (iface) {
-				if (MLME_IS_STA(iface))
-					_RTW_PRINT_SEL(sel, "ROLE:%s\n", "STA");
-				else if (MLME_IS_AP(iface))
-					_RTW_PRINT_SEL(sel, "ROLE:%s\n", "AP");
-				else if (MLME_IS_MESH(iface))
-					_RTW_PRINT_SEL(sel, "ROLE:%s\n", "MESH");
-				else
-					_RTW_PRINT_SEL(sel, "ROLE:%s\n", "NONE");
-			}
-
-		} else
-			_RTW_PRINT_SEL(sel, "N/A\n");
-	}
-	_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);
-	return 0;
-}
+/* rtw_mbid_cam_cache_dump — rust/hal_com_mbid_cam.rs (W4-125) */
 
 static void read_mbssid_cam(_adapter *padapter, u8 cam_addr, u8 *mac)
 {
@@ -14740,6 +14700,34 @@ void rtw_rust_hal_com_atomic_dec(ATOMIC_T *v)
 u8 rtw_rust_hal_com_adapter_iface_id(_adapter *adapter)
 {
 	return adapter ? adapter->iface_id : CONFIG_IFACE_NUMBER;
+}
+
+_adapter *rtw_rust_hal_com_dvobj_padapter(struct dvobj_priv *dvobj, u8 iface_id)
+{
+	if (!dvobj || iface_id >= CONFIG_IFACE_NUMBER)
+		return NULL;
+	return dvobj->padapters[iface_id];
+}
+
+u8 rtw_rust_hal_com_mlme_is_sta(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return MLME_IS_STA(adapter) ? 1 : 0;
+}
+
+u8 rtw_rust_hal_com_mlme_is_ap(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return MLME_IS_AP(adapter) ? 1 : 0;
+}
+
+u8 rtw_rust_hal_com_mlme_is_mesh(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return MLME_IS_MESH(adapter) ? 1 : 0;
 }
 
 u8 rtw_rust_hal_com_mbid_ctl_bitmap_test(struct mbid_cam_ctl_t *ctl, u8 idx)

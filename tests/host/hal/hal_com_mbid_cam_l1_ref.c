@@ -61,3 +61,11 @@ void rtw_mbid_camid_clean(struct _adapter *a, unsigned char camid)
 	(void)a;
 	(void)camid;
 }
+
+int rtw_mbid_cam_cache_dump(void *sel, const char *fn, struct _adapter *a)
+{
+	(void)sel;
+	(void)fn;
+	(void)a;
+	return 0;
+}
