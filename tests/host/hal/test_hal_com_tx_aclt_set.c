@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
-/* L2 tests for W4-124 TX AC lifetime setters (force/conf; update in PR2). */
+/* L2 differential tests for W4-124 TX AC lifetime setters. */
 
 #include "host_hal_com_tx_aclt_set_types.h"
 #include <stdio.h>
@@ -7,8 +7,10 @@
 
 void rtw_hal_set_tx_aclt_force_val_c_oracle(struct _adapter *, struct tx_aclt_conf_t *, u8);
 void rtw_hal_set_tx_aclt_conf_c_oracle(struct _adapter *, u8, struct tx_aclt_conf_t *, u8);
+void rtw_hal_update_tx_aclt_c_oracle(struct _adapter *);
 void rtw_hal_set_tx_aclt_force_val(struct _adapter *, struct tx_aclt_conf_t *, u8);
 void rtw_hal_set_tx_aclt_conf(struct _adapter *, u8, struct tx_aclt_conf_t *, u8);
+void rtw_hal_update_tx_aclt(struct _adapter *);
 
 static int failures;
 
@@ -507,6 +509,119 @@ int main(void)
 	eq8("conf_idx2_slot0", s.dvobj.tx_aclt_confs[0].en, ds.tx_aclt_confs[0].en);
 	eq8("conf_idx2_slot1", s.dvobj.tx_aclt_confs[1].en, 0x0C);
 	eq32("conf_idx2_slot1_vo", s.dvobj.tx_aclt_confs[1].vo_vi, 1u);
+
+	ds.tx_aclt_flags = 1;
+	ds.tx_aclt_confs[0].en = 3;
+	ds.tx_aclt_confs[0].vo_vi = 50;
+	ds.tx_aclt_confs[0].be_bk = 60;
+	ds.tx_aclt_force_val.en = 0xFF;
+	ds.tx_aclt_force_val.vo_vi = 0;
+	ds.tx_aclt_force_val.be_bk = 0;
+	s.dvobj = ds;
+	do_ = ds;
+	o.dvobj = do_;
+	host_tx_aclt_reg_trace.reg_lt_en = 0xA3;
+	host_tx_aclt_reg_trace.reg_lt = 0x003C0032u;
+	host_tx_aclt_reg_trace.write8_count = host_tx_aclt_reg_trace.write32_count = 0;
+	rtw_hal_update_tx_aclt(&s);
+	eq8("upd_no_wr_en", host_tx_aclt_reg_trace.write8_count, 0);
+	eq8("upd_no_wr_lt", host_tx_aclt_reg_trace.write32_count, 0);
+
+	host_tx_aclt_reg_trace.reg_lt_en = 0xA0;
+	host_tx_aclt_reg_trace.reg_lt = 0x11112222u;
+	host_tx_aclt_reg_trace.write8_count = host_tx_aclt_reg_trace.write32_count = 0;
+	rtw_hal_update_tx_aclt(&s);
+	eq8("upd_en", host_tx_aclt_reg_trace.last_lt_en, 0xA3);
+	eq32("upd_lt", host_tx_aclt_reg_trace.last_lt, 0x003C0032u);
+
+	host_tx_aclt_reg_trace.write8_count = host_tx_aclt_reg_trace.write32_count = 0;
+	host_tx_aclt_reg_trace.reg_lt_en = 0xA0;
+	host_tx_aclt_reg_trace.reg_lt = 0x11112222u;
+	rtw_hal_update_tx_aclt_c_oracle(&o);
+	eq8("upd_en_oracle", host_tx_aclt_reg_trace.last_lt_en, 0xA3);
+	eq32("upd_lt_oracle", host_tx_aclt_reg_trace.last_lt, 0x003C0032u);
+
+	ds.tx_aclt_force_val.en = 7;
+	s.dvobj = ds;
+	host_tx_aclt_reg_trace.reg_lt_en = 0xB0;
+	host_tx_aclt_reg_trace.write8_count = 0;
+	rtw_hal_update_tx_aclt(&s);
+	eq8("force_ov", host_tx_aclt_reg_trace.last_lt_en, 0xB7);
+
+	ds = do_;
+	ds.tx_aclt_flags = 0x3;
+	ds.tx_aclt_confs[0].en = 3;
+	ds.tx_aclt_confs[0].vo_vi = 50;
+	ds.tx_aclt_confs[0].be_bk = 60;
+	ds.tx_aclt_confs[1].en = 0xF;
+	ds.tx_aclt_confs[1].vo_vi = 10;
+	ds.tx_aclt_confs[1].be_bk = 20;
+	ds.host_ap_m2u_num = 1;
+	ds.host_sta_op_num = 1;
+	ds.tx_aclt_force_val.en = 0xFF;
+	s.dvobj = ds;
+	o.dvobj = ds;
+	host_tx_aclt_reg_trace.reg_lt_en = 0x80;
+	host_tx_aclt_reg_trace.reg_lt = 0xFFFFFFFFu;
+	host_tx_aclt_reg_trace.write8_count = host_tx_aclt_reg_trace.write32_count = 0;
+	rtw_hal_update_tx_aclt(&s);
+	eq8("ap_m2u_en", host_tx_aclt_reg_trace.last_lt_en, 0x8F);
+	eq32("ap_m2u_lt", host_tx_aclt_reg_trace.last_lt, 0x0014000Au);
+	host_tx_aclt_reg_trace.write8_count = host_tx_aclt_reg_trace.write32_count = 0;
+	host_tx_aclt_reg_trace.reg_lt_en = 0x80;
+	host_tx_aclt_reg_trace.reg_lt = 0xFFFFFFFFu;
+	rtw_hal_update_tx_aclt_c_oracle(&o);
+	eq8("ap_m2u_en_oracle", host_tx_aclt_reg_trace.last_lt_en, 0x8F);
+	eq32("ap_m2u_lt_oracle", host_tx_aclt_reg_trace.last_lt, 0x0014000Au);
+
+	ds.tx_aclt_confs[0].vo_vi = 0x10000u;
+	ds.tx_aclt_confs[0].be_bk = 0x10000u;
+	ds.tx_aclt_confs[1].vo_vi = 1;
+	ds.tx_aclt_confs[1].be_bk = 1;
+	s.dvobj = ds;
+	o.dvobj = ds;
+	host_tx_aclt_reg_trace.reg_lt_en = 0x80;
+	host_tx_aclt_reg_trace.reg_lt = 0xFFFFFFFFu;
+	host_tx_aclt_reg_trace.write8_count = host_tx_aclt_reg_trace.write32_count = 0;
+	rtw_hal_update_tx_aclt(&s);
+	eq32("u16_min_lt", host_tx_aclt_reg_trace.last_lt, 0u);
+	host_tx_aclt_reg_trace.write8_count = host_tx_aclt_reg_trace.write32_count = 0;
+	host_tx_aclt_reg_trace.reg_lt_en = 0x80;
+	host_tx_aclt_reg_trace.reg_lt = 0xFFFFFFFFu;
+	rtw_hal_update_tx_aclt_c_oracle(&o);
+	eq32("u16_min_lt_oracle", host_tx_aclt_reg_trace.last_lt, 0u);
+
+	ds.tx_aclt_confs[0].vo_vi = 50;
+	ds.tx_aclt_confs[0].be_bk = 60;
+	ds.tx_aclt_confs[1].vo_vi = 10;
+	ds.tx_aclt_confs[1].be_bk = 20;
+	ds.host_ap_m2u_num = 0;
+	s.dvobj = ds;
+	host_tx_aclt_reg_trace.reg_lt_en = 0x80;
+	host_tx_aclt_reg_trace.reg_lt = 0xFFFFFFFFu;
+	host_tx_aclt_reg_trace.write8_count = host_tx_aclt_reg_trace.write32_count = 0;
+	rtw_hal_update_tx_aclt(&s);
+	eq8("no_ap_m2u_en", host_tx_aclt_reg_trace.last_lt_en, 0x83);
+	eq32("no_ap_m2u_lt", host_tx_aclt_reg_trace.last_lt, 0x003C0032u);
+
+	ds.host_ap_m2u_num = 1;
+	ds.host_sta_op_num = 0;
+	s.dvobj = ds;
+	host_tx_aclt_reg_trace.reg_lt_en = 0x80;
+	host_tx_aclt_reg_trace.reg_lt = 0xFFFFFFFFu;
+	host_tx_aclt_reg_trace.write8_count = host_tx_aclt_reg_trace.write32_count = 0;
+	rtw_hal_update_tx_aclt(&s);
+	eq8("no_sta_en", host_tx_aclt_reg_trace.last_lt_en, 0x83);
+	eq32("no_sta_lt", host_tx_aclt_reg_trace.last_lt, 0x003C0032u);
+
+	ds.tx_aclt_force_val.vo_vi = 5;
+	ds.tx_aclt_force_val.be_bk = 0;
+	s.dvobj = ds;
+	host_tx_aclt_reg_trace.reg_lt_en = 0xA0;
+	host_tx_aclt_reg_trace.reg_lt = 0x11112222u;
+	host_tx_aclt_reg_trace.write32_count = 0;
+	rtw_hal_update_tx_aclt(&s);
+	eq32("force_lt_vo", host_tx_aclt_reg_trace.last_lt, 0x003C0005u);
 
 	if (failures)
 		return 1;
