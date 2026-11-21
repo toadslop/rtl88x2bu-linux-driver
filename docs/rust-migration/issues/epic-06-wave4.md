@@ -257,6 +257,6 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-129 | `wave4-129-hal-com-tsf-iface-ctrl.md` | TSF iface enable/disable |
 | W4-130 | `wave4-130-hal-com-tsf-periodic-chk.md` | TSF periodic update check |
 | W4-131 | `wave4-131-hal-com-dft-port-h2c.md` | Default port H2C cmd |
-| W4-132 | `wave4-132-hal-com-bcn-interval-adjust.md` | SW TXBCN interval adjust |
+| ~~W4-132~~ | `wave4-132-hal-com-bcn-interval-adjust.md` | ~~SW TXBCN interval adjust~~ (cancelled — not in 8822B profile) |
 
 Further slices: USB bulk port bodies stay under Wave 5 `os_dep`; continue parallel `hal_com_rest.c` tails (MBSSID HW dump, FW BCN offload, WOW) in new `wave4-*.md` batches.

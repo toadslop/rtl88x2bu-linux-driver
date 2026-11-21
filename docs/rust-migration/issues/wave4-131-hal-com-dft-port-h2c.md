@@ -21,6 +21,7 @@ into `rust/hal_com_dft_port.rs`:
 - **Parallel lane:** H2C packer only — uses `rtw_hal_get_port`, `rtw_hal_fill_h2c_cmd`, and assoc STA lookup; no register MMIO in this slice.
 - Early-out when `(dvobj->dft.port_id, mac_id)` unchanged.
 - AP-state branch in `rtw_set_default_port_id` is intentionally empty in C — preserve.
+- **Side effect:** `dvobj->dft.port_id` / `mac_id` are updated after `rtw_hal_fill_h2c_cmd` regardless of return code — match C (do not gate cache update on H2C success).
 
 ## Acceptance
 

@@ -16,13 +16,12 @@ new `rust/hal_com_rcr.rs` (included from `hal_com.rs`):
 - `rtw_hal_rcr_check`
 - `rtw_hal_rcr_add`
 - `rtw_hal_rcr_clear`
-- `hw_var_rcr_config` / `hw_var_rcr_get` (static helpers used by add/clear path)
 
 ## Notes
 
-- **Parallel lane:** disjoint Rust file from MBSSID/TSF — only touches `ReceiveConfig` cache + `HW_VAR_RCR` set/get.
+- **Parallel lane:** disjoint Rust file from MBSSID/TSF — `rtw_hal_rcr_add`/`clear` use `rtw_hal_get_hwreg`/`set_hwreg` with `HW_VAR_RCR`, not the static `hw_var_rcr_*` helpers (those serve the `HW_VAR_RCR` case in `rtw_hal_set_hwreg` only — defer to a follow-up slice).
 - Does not port `rtw_hal_rcr_set_chk_bssid` ([W4-128](wave4-128-hal-com-rcr-chk-bssid.md)).
-- `CONFIG_CUSTOMER_ALIBAMA_GENERAL` RCR mask in `hw_var_rcr_config` must match C `#ifdef`.
+- When porting `hw_var_rcr_config` later, `CONFIG_CUSTOMER_ALIBABA_GENERAL` full RCR mask replacement must match C `#ifdef`.
 
 ## Acceptance
 

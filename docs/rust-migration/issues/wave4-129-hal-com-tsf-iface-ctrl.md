@@ -18,9 +18,10 @@ Port TSF pause bookkeeping from [`hal/hal_com_rest.c`](../../../hal/hal_com_rest
 
 ## Notes
 
-- **Parallel lane:** separate submodule from RCR/MBSSID; toggles `mlmeextpriv` fields and (when not `CONFIG_MI_WITH_MBSSID_CAM`) calls `rtw_hal_set_tsf_update`.
+- **Parallel lane:** separate submodule from RCR/MBSSID; toggles `mlmeextpriv` fields.
+- When `CONFIG_MI_WITH_MBSSID_CAM` is unset, enable/disable call `rtw_hal_set_tsf_update` (static in C today) — wire via FFI or port in the same PR as W4-128 pause/restore.
+- Under `CONFIG_MI_WITH_MBSSID_CAM` (pinned `CONFIG_IFACE_NUMBER=3` + `CONFIG_HWMPCAP_GEN2`), bodies are empty no-ops like C.
 - Defer `rtw_hal_periodic_tsf_update_*` and timer handler to [W4-130](wave4-130-hal-com-tsf-periodic-chk.md).
-- Empty `#ifdef CONFIG_MI_WITH_MBSSID_CAM` bodies must remain no-ops like C.
 
 ## Acceptance
 

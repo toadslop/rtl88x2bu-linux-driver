@@ -461,7 +461,10 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-129 | #2253 | [W4-129] Translate hal_com_rest.c — TSF iface enable/disable |
 | W4-130 | #2254 | [W4-130] Translate hal_com_rest.c — TSF periodic update check |
 | W4-131 | #2255 | [W4-131] Translate hal_com_rest.c — default port H2C cmd |
-| W4-132 | #2256 | [W4-132] Translate hal_com_rest.c — SW TXBCN interval adjust |
+
+## Superseded / cancelled issues
+
+| W4-132 | #2256 | [W4-132] SW TXBCN interval adjust — **cancelled** (not compiled on pinned 8822B concurrent profile; see `wave4-132-hal-com-bcn-interval-adjust.md`) |
 
 ## Superseded issues
 

@@ -20,6 +20,7 @@ sync helpers from [`hal/hal_com_rest.c`](../../../hal/hal_com_rest.c):
 
 ## Notes
 
+- **C callers remain:** `write_mbssid_cam` is still invoked from `rtw_hal_change_macaddr_mbid`, `HW_VAR_MAC_ADDR` / MBSSID mac paths this slice does not move — export the Rust symbol (or a thin C shim) so those call sites keep linking until their slices land.
 - **Same lane as W4-125** — shares submodule and Makefile swap.
 - `rtw_mbid_cam_enable` calls `rtw_hal_rcr_add(RCR_ENMBID)`; RCR helpers may stay C stubs until [W4-127](wave4-127-hal-com-rcr-leaf.md) lands (thin `extern "C"` delegate OK).
 - `DBG_MBID_CAM_DUMP` path may call W4-125 dump — keep cfg parity.

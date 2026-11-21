@@ -17,7 +17,7 @@ Extend [`rust/hal_com_rcr.rs`](../../../rust/hal_com_rcr.rs) with
 ## Notes
 
 - **RCR lane part 2** — uses `rtw_mi_status_*` / `rtw_mi_status_merge` via existing FFI; preserve `CONFIG_MI_WITH_MBSSID_CAM`, `CONFIG_TDLS`, `CONFIG_AP_MODE`, `CONFIG_RTW_MESH`, `CONFIG_RTW_MULTI_AP` cfg branches.
-- May call static `rtw_hal_tsf_update_pause` / `restore` while those remain C (TSF slice W4-129/130).
+- **Same slice:** port static `rtw_hal_tsf_update_pause` and `rtw_hal_tsf_update_restore` into `rust/hal_com_tsf.rs` (or co-located `hal_com_rcr.rs` helpers) — they are file-static in C today and are called from this function when TSF filter bits change; do not leave them as unresolved C-only symbols.
 - Early return when computed `rcr_new == rcr` before `hw_var_set_hwreg`.
 
 ## Acceptance
