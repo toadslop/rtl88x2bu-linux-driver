@@ -56,6 +56,11 @@ extern "C" {
     fn rtw_rust_hal_com_mbid_cache_clr(dvobj: *mut c_void, idx: U8);
     fn rtw_rust_hal_com_warn_on(condition: i32);
     fn _rtw_memcmp(dst: *const c_void, src: *const c_void, sz: u32) -> i32;
+    fn rtw_rust_hal_com_print_line(sel: *mut c_void, line: *const c_char);
+    fn rtw_rust_hal_com_dvobj_padapter(dvobj: *mut c_void, iface_id: U8) -> *mut c_void;
+    fn rtw_rust_hal_com_mlme_is_sta(iface: *mut c_void) -> U8;
+    fn rtw_rust_hal_com_mlme_is_ap(iface: *mut c_void) -> U8;
+    fn rtw_rust_hal_com_mlme_is_mesh(iface: *mut c_void) -> U8;
 }
 
 #[cfg(host_hal_com_mbid_cam_test)]
@@ -102,6 +107,11 @@ extern "C" {
     fn rtw_rust_hal_com_mbid_cache_clr(dvobj: *mut c_void, idx: U8);
     fn rtw_rust_hal_com_warn_on(condition: i32);
     fn _rtw_memcmp(dst: *const c_void, src: *const c_void, sz: u32) -> i32;
+    fn rtw_rust_hal_com_print_line(sel: *mut c_void, line: *const c_char);
+    fn rtw_rust_hal_com_dvobj_padapter(dvobj: *mut c_void, iface_id: U8) -> *mut c_void;
+    fn rtw_rust_hal_com_mlme_is_sta(iface: *mut c_void) -> U8;
+    fn rtw_rust_hal_com_mlme_is_ap(iface: *mut c_void) -> U8;
+    fn rtw_rust_hal_com_mlme_is_mesh(iface: *mut c_void) -> U8;
 }
 
 static MBID_MAC_SEARCH: &[u8] = b"_rtw_mbid_cam_search_by_macaddr\0";
@@ -415,4 +425,135 @@ pub extern "C" fn rtw_mbid_camid_clean(adapter: *mut c_void, mbss_camid: U8) {
     unsafe {
         rtw_rust_hal_com_mbid_log_clean(FN_CAMID_CLEAN.as_ptr().cast(), mbss_camid);
     }
+}
+
+fn mbid_print(sel: *mut c_void, line: &[u8]) {
+    let mut buf = [0i8; 128];
+    let n = core::cmp::min(line.len(), buf.len().saturating_sub(1));
+    for i in 0..n {
+        buf[i] = line[i] as i8;
+    }
+    unsafe {
+        rtw_rust_hal_com_print_line(sel, buf.as_ptr());
+    }
+}
+
+fn mbid_print_u8(sel: *mut c_void, mut n: U8) {
+    let mut tmp = [0u8; 3];
+    let mut len = 0usize;
+    if n == 0 {
+        mbid_print(sel, b"0");
+        return;
+    }
+    while n > 0 {
+        tmp[len] = b'0' + (n % 10);
+        len += 1;
+        n /= 10;
+    }
+    let mut line = [0u8; 4];
+    for i in 0..len {
+        line[i] = tmp[len - 1 - i];
+    }
+    mbid_print(sel, &line[..len]);
+}
+
+fn mbid_print_hex32(sel: *mut c_void, n: U8) {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let v = n as u32;
+    let mut line = [0u8; 8];
+    for (i, shift) in (0..=28).rev().step_by(4).enumerate() {
+        line[i] = HEX[((v >> shift) & 0xf) as usize];
+    }
+    mbid_print(sel, &line);
+}
+
+fn mbid_print_hex8(sel: *mut c_void, n: U8) {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let line = [HEX[(n >> 4) as usize], HEX[(n & 0xf) as usize]];
+    mbid_print(sel, &line);
+}
+
+fn mbid_print_cstr(sel: *mut c_void, p: *const c_char) {
+    if p.is_null() {
+        return;
+    }
+    unsafe {
+        let mut cur = p;
+        while *cur != 0 {
+            let byte = [*cur as u8];
+            mbid_print(sel, &byte);
+            cur = cur.add(1);
+        }
+    }
+}
+
+#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[no_mangle]
+pub extern "C" fn rtw_mbid_cam_cache_dump(
+    sel: *mut c_void,
+    fun_name: *const c_char,
+    adapter: *mut c_void,
+) -> i32 {
+    if adapter.is_null() {
+        return 0;
+    }
+    let dvobj = unsafe { dvobj_of(adapter) };
+    let ctl = unsafe { ctl_of_dvobj(dvobj) };
+
+    mbid_print(sel, b"== MBSSID CAM DUMP (");
+    mbid_print_cstr(sel, fun_name);
+    mbid_print(sel, b")==\n");
+
+    unsafe {
+        let entry_num =
+            rtw_rust_hal_com_atomic_read(rtw_rust_hal_com_mbid_ctl_entry_num(ctl)) as U8;
+        let max_cam_id = rtw_get_max_mbid_cam_id(adapter);
+        with_mbid_lock(ctl, || {
+            let bitmap = rtw_rust_hal_com_mbid_ctl_bitmap(ctl);
+            mbid_print(sel, b"Entry numbers:");
+            mbid_print_u8(sel, entry_num);
+            mbid_print(sel, b", max_camid:");
+            mbid_print_u8(sel, max_cam_id);
+            mbid_print(sel, b", bitmap:0x");
+            mbid_print_hex32(sel, bitmap);
+            mbid_print(sel, b"\n");
+            for i in 0..TOTAL_MBID_CAM_NUM {
+                mbid_print(sel, b"CAM_ID = ");
+                mbid_print_u8(sel, i);
+                mbid_print(sel, b"\t");
+                if bitmap & (1u8.wrapping_shl(i as u32)) != 0 {
+                    let iface_id = rtw_rust_hal_com_mbid_cache_iface_id(dvobj, i);
+                    let mac = rtw_rust_hal_com_mbid_cache_mac(dvobj, i);
+                    mbid_print(sel, b"IF_ID:");
+                    mbid_print_u8(sel, iface_id);
+                    mbid_print(sel, b"\tMAC Addr:");
+                    if !mac.is_null() {
+                        for b in 0..ETH_ALEN as usize {
+                            if b > 0 {
+                                mbid_print(sel, b":");
+                            }
+                            mbid_print_hex8(sel, *mac.add(b));
+                        }
+                    }
+                    mbid_print(sel, b"\t");
+                    let iface = rtw_rust_hal_com_dvobj_padapter(dvobj, iface_id);
+                    if !iface.is_null() {
+                        let role = if rtw_rust_hal_com_mlme_is_sta(iface) != 0 {
+                            b"ROLE:STA\n"
+                        } else if rtw_rust_hal_com_mlme_is_ap(iface) != 0 {
+                            b"ROLE:AP\n"
+                        } else if rtw_rust_hal_com_mlme_is_mesh(iface) != 0 {
+                            b"ROLE:MESH\n"
+                        } else {
+                            b"ROLE:NONE\n"
+                        };
+                        mbid_print(sel, role);
+                    }
+                } else {
+                    mbid_print(sel, b"N/A\n");
+                }
+            }
+        });
+    }
+    0
 }
