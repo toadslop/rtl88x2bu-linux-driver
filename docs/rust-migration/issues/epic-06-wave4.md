@@ -245,4 +245,18 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-122 | `wave4-122-hal-com-dump-rsvd-fifo.md` | RSVD/FIFO debug dumps |
 | W4-123 | `wave4-123-hal-com-gpio-wl-ctrl.md` | GPIO WL control switch |
 | W4-124 | `wave4-124-hal-com-tx-aclt-setters.md` | TX AC lifetime setters |
-Further slices: USB bulk port bodies stay under Wave 5 `os_dep`; file new `wave4-*.md` parallel lanes as hal_dm / hal_com tails thin (defer new `hal_dm.rs` slices while W4-111–113 PR stack is in flight).
+
+## Children (tranche 24 — filed)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-125 | `wave4-125-hal-com-mbid-cam-cache-dump.md` | MBSSID CAM cache debug dump |
+| W4-126 | `wave4-126-hal-com-mbid-cam-hw-push.md` | MBSSID CAM HW push + enable |
+| W4-127 | `wave4-127-hal-com-rcr-leaf.md` | RCR add/clear/check leaf |
+| W4-128 | `wave4-128-hal-com-rcr-chk-bssid.md` | RCR check-BSSID policy |
+| W4-129 | `wave4-129-hal-com-tsf-iface-ctrl.md` | TSF iface enable/disable |
+| W4-130 | `wave4-130-hal-com-tsf-periodic-chk.md` | TSF periodic update check |
+| W4-131 | `wave4-131-hal-com-dft-port-h2c.md` | Default port H2C cmd |
+| W4-132 | `wave4-132-hal-com-bcn-interval-adjust.md` | SW TXBCN interval adjust |
+
+Further slices: USB bulk port bodies stay under Wave 5 `os_dep`; continue parallel `hal_com_rest.c` tails (MBSSID HW dump, FW BCN offload, WOW) in new `wave4-*.md` batches.
