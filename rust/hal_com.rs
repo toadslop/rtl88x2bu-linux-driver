@@ -2052,6 +2052,27 @@ mod hw_port_ctrl {
 }
 
 #[cfg(all(
+    config_gpio_wakeup,
+    not(host_hal_com_hw_rate_test),
+    not(host_hal_com_rsvd_page_test),
+    not(host_hal_com_chip_info_test),
+    not(host_hal_com_mrate_test),
+    not(host_hal_com_fw_info_test),
+    not(host_hal_com_brate_test),
+    not(host_hal_com_legal_channel_test),
+    not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
+    not(host_hal_com_tx_aclt_force_test),
+    not(host_hal_com_tx_aclt_confs_test),
+    not(host_hal_com_hal_spec_test),
+    not(host_hal_com_gpio_wakeup_test),
+))]
+mod gpio_wakeup {
+    include!("hal_com_gpio_wakeup.rs");
+}
+
+#[cfg(all(
     config_mbssid_cam,
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
