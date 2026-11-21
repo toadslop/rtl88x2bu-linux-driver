@@ -131,30 +131,40 @@ fn dump_log_enabled() -> bool {
     false
 }
 
-fn print_hex_token(sel: *mut c_void, val: U8, tail: &[u8]) {
-    let mut line = [0u8; 16];
-    let mut pos = 0usize;
-    if !push_hex_u8(&mut line, &mut pos, val) {
-        return;
-    }
-    let _ = push_str(&mut line, &mut pos, tail);
-    print_line(sel, &line[..pos]);
-}
-
-/// Match `RTW_BUF_DUMP_SEL` (per-byte `_RTW_PRINT_SEL`, no bulk buffer caps).
+/// Match `RTW_BUF_DUMP_SEL` byte layout; one `print_line` per 16-byte row so
+/// `RTW_DBGDUMP` (`printk`) gets one `RTW: ` prefix per row like `KERN_CONT`.
 fn dump_sel(sel: *mut c_void, hexdata: *const U8, hexdatalen: i32) {
     if hexdata.is_null() || hexdatalen <= 0 || !dump_log_enabled() {
         return;
     }
+    let mut row = [0u8; 64];
+    let mut row_pos = 0usize;
+    let mut row_bytes = 0usize;
+
     for i in 0..hexdatalen {
         let val = unsafe { *hexdata.add(i as usize) };
-        let tail = if ((i + 1) % 4) == 0 { b"  " as &[u8] } else { b" " };
-        print_hex_token(sel, val, tail);
-        if (i + 1 < hexdatalen) && ((i + 1) % RTW_BUFDUMP_BSIZE as i32) == 0 {
-            print_line(sel, b"\n");
+        let tail = if ((i + 1) % 4) == 0 {
+            b"  " as &[u8]
+        } else {
+            b" "
+        };
+        if !push_hex_u8(&mut row, &mut row_pos, val) {
+            return;
+        }
+        let _ = push_str(&mut row, &mut row_pos, tail);
+        row_bytes += 1;
+
+        if row_bytes == RTW_BUFDUMP_BSIZE && (i + 1) < hexdatalen {
+            let _ = push_byte(&mut row, &mut row_pos, b'\n');
+            print_line(sel, &row[..row_pos]);
+            row_pos = 0;
+            row_bytes = 0;
         }
     }
-    print_line(sel, b"\n");
+    if row_bytes > 0 {
+        let _ = push_byte(&mut row, &mut row_pos, b'\n');
+        print_line(sel, &row[..row_pos]);
+    }
 }
 
 #[cfg(any(
