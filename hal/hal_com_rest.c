@@ -1461,67 +1461,15 @@ const char *const _tx_aclt_conf_str[] = {
 };
 
 /* dump_tx_aclt_force_val — ported to rust/hal_com.rs (W4-39) */
-
-void rtw_hal_set_tx_aclt_force_val(_adapter *adapter, struct tx_aclt_conf_t *input, u8 arg_num)
-{
-	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct tx_aclt_conf_t *conf = &dvobj->tx_aclt_force_val;
-
-	if (arg_num >= 1) {
-		if (input->en == 0xFF)
-			conf->en = input->en;
-		else
-			conf->en = input->en & 0xF;
-	}
-	if (arg_num >= 2) {
-		conf->vo_vi = input->vo_vi / (hal_spec->tx_aclt_unit_factor * 32);
-		if (conf->vo_vi > 0xFFFF)
-			conf->vo_vi = 0xFFFF;
-	}
-	if (arg_num >= 3) {
-		conf->be_bk = input->be_bk / (hal_spec->tx_aclt_unit_factor * 32);
-		if (conf->be_bk > 0xFFFF)
-			conf->be_bk = 0xFFFF;
-	}
-}
-
 /* dump_tx_aclt_confs — ported to rust/hal_com.rs (W4-40) */
+/* rtw_hal_set_tx_aclt_* / rtw_hal_update_tx_aclt — rust/hal_com_tx_aclt_set.rs (W4-124) */
 
-void rtw_hal_set_tx_aclt_conf(_adapter *adapter, u8 conf_idx, struct tx_aclt_conf_t *input, u8 arg_num)
-{
-	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct tx_aclt_conf_t *conf;
-
-	if (conf_idx >= TX_ACLT_CONF_NUM)
-		return;
-
-	conf = &dvobj->tx_aclt_confs[conf_idx];
-
-	if (arg_num >= 1) {
-		if (input->en != 0xFF)
-			conf->en = input->en & 0xF;
-	}
-	if (arg_num >= 2) {
-		conf->vo_vi = input->vo_vi / (hal_spec->tx_aclt_unit_factor * 32);
-		if (conf->vo_vi > 0xFFFF)
-			conf->vo_vi = 0xFFFF;
-	}
-	if (arg_num >= 3) {
-		conf->be_bk = input->be_bk / (hal_spec->tx_aclt_unit_factor * 32);
-		if (conf->be_bk > 0xFFFF)
-			conf->be_bk = 0xFFFF;
-	}
-}
-
-void rtw_hal_update_tx_aclt(_adapter *adapter)
+#ifndef HOST_HAL_COM_TX_ACLT_SET_TEST
+void rtw_rust_hal_com_tx_aclt_compute_lt(_adapter *adapter, u8 *lt_en, u16 *lt_vo_vi,
+					 u16 *lt_be_bk)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct macid_ctl_t *macid_ctl = adapter_to_macidctl(adapter);
-	u8 lt_en = 0, lt_en_ori;
-	u16 lt_vo_vi = 0xFFFF, lt_be_bk = 0xFFFF;
-	u32 lt, lt_ori;
 	struct tx_aclt_conf_t *conf;
 	int i;
 #ifdef CONFIG_AP_MODE
@@ -1533,18 +1481,21 @@ void rtw_hal_update_tx_aclt(_adapter *adapter)
 		iface = dvobj->padapters[i];
 		if (!iface)
 			continue;
-		
+
 		if (MLME_IS_AP(iface)
-			&& ((iface->b2u_flags_ap_src & RTW_AP_B2U_IP_MCAST)
-				|| (iface->b2u_flags_ap_fwd & RTW_AP_B2U_IP_MCAST))
-		)
+		    && ((iface->b2u_flags_ap_src & RTW_AP_B2U_IP_MCAST)
+			|| (iface->b2u_flags_ap_fwd & RTW_AP_B2U_IP_MCAST)))
 			ap_m2u_num++;
 	}
 #endif
-#endif /* CONFIG_AP_MODE */
+#endif
 
-	lt_en_ori = rtw_read8(adapter, REG_LIFETIME_EN);
-	lt_ori = rtw_read32(adapter, REG_PKT_LIFE_TIME);
+	if (!lt_en || !lt_vo_vi || !lt_be_bk)
+		return;
+
+	*lt_en = 0;
+	*lt_vo_vi = 0xFFFF;
+	*lt_be_bk = 0xFFFF;
 
 	for (i = 0; i < TX_ACLT_CONF_NUM; i++) {
 		if (!(dvobj->tx_aclt_flags & BIT(i)))
@@ -1553,55 +1504,117 @@ void rtw_hal_update_tx_aclt(_adapter *adapter)
 		conf = &dvobj->tx_aclt_confs[i];
 
 		if (i == TX_ACLT_CONF_DEFAULT) {
-			/* first and default status, assign directly */
-			lt_en = conf->en;
+			*lt_en = conf->en;
 			if (conf->vo_vi)
-				lt_vo_vi = conf->vo_vi;
+				*lt_vo_vi = conf->vo_vi;
 			if (conf->be_bk)
-				lt_be_bk = conf->be_bk;
+				*lt_be_bk = conf->be_bk;
 		}
-		#ifdef CONFIG_AP_MODE
-		#if CONFIG_RTW_AP_DATA_BMC_TO_UC || defined(CONFIG_RTW_MESH)
+#ifdef CONFIG_AP_MODE
+#if CONFIG_RTW_AP_DATA_BMC_TO_UC || defined(CONFIG_RTW_MESH)
 		else if (0
-			#if CONFIG_RTW_AP_DATA_BMC_TO_UC
-			|| (i == TX_ACLT_CONF_AP_M2U
-				&& ap_m2u_num
-				&& macid_ctl->op_num[H2C_MSR_ROLE_STA] /* having AP mode with STA connected */)
-			#endif
-			#ifdef CONFIG_RTW_MESH
-			|| (i == TX_ACLT_CONF_MESH
-				&& macid_ctl->op_num[H2C_MSR_ROLE_MESH] > 1 /* implies only 1 MESH mode supported */)
-			#endif
+#if CONFIG_RTW_AP_DATA_BMC_TO_UC
+			 || (i == TX_ACLT_CONF_AP_M2U
+			     && ap_m2u_num
+			     && macid_ctl->op_num[H2C_MSR_ROLE_STA])
+#endif
+#ifdef CONFIG_RTW_MESH
+			 || (i == TX_ACLT_CONF_MESH
+			     && macid_ctl->op_num[H2C_MSR_ROLE_MESH] > 1)
+#endif
 		) {
-			/* long term status, OR en and MIN lifetime */
-			lt_en |= conf->en;
-			if (conf->vo_vi && lt_vo_vi > conf->vo_vi)
-				lt_vo_vi = conf->vo_vi;
-			if (conf->be_bk && lt_be_bk > conf->be_bk)
-				lt_be_bk = conf->be_bk;
+			*lt_en |= conf->en;
+			if (conf->vo_vi && *lt_vo_vi > conf->vo_vi)
+				*lt_vo_vi = conf->vo_vi;
+			if (conf->be_bk && *lt_be_bk > conf->be_bk)
+				*lt_be_bk = conf->be_bk;
 		}
-		#endif
-		#endif /* CONFIG_AP_MODE */
+#endif
+#endif
 	}
-
-	if (dvobj->tx_aclt_force_val.en != 0xFF)
-		lt_en = dvobj->tx_aclt_force_val.en;
-	if (dvobj->tx_aclt_force_val.vo_vi)
-		lt_vo_vi = dvobj->tx_aclt_force_val.vo_vi;
-	if (dvobj->tx_aclt_force_val.be_bk)
-		lt_be_bk = dvobj->tx_aclt_force_val.be_bk;
-
-	lt_en = (lt_en_ori & 0xF0) | (lt_en & 0x0F);
-	lt = (lt_be_bk << 16) | lt_vo_vi;
-
-	if (0)
-		RTW_INFO("lt_en:0x%x(0x%x), lt:0x%08x(0x%08x)\n", lt_en, lt_en_ori, lt, lt_ori);
-
-	if (lt_en != lt_en_ori)
-		rtw_write8(adapter, REG_LIFETIME_EN, lt_en);
-	if (lt != lt_ori)
-		rtw_write32(adapter, REG_PKT_LIFE_TIME, lt);
 }
+
+u8 rtw_rust_hal_com_tx_aclt_unit_factor(_adapter *adapter)
+{
+	return GET_HAL_SPEC(adapter)->tx_aclt_unit_factor;
+}
+
+struct tx_aclt_conf_t *rtw_rust_hal_com_tx_aclt_force_conf(_adapter *adapter)
+{
+	return &adapter_to_dvobj(adapter)->tx_aclt_force_val;
+}
+
+struct tx_aclt_conf_t *rtw_rust_hal_com_tx_aclt_conf_at(_adapter *adapter, u8 idx)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+
+	if (idx >= TX_ACLT_CONF_NUM)
+		return NULL;
+	return &dvobj->tx_aclt_confs[idx];
+}
+
+u8 rtw_rust_hal_com_tx_aclt_flags(_adapter *adapter)
+{
+	return adapter_to_dvobj(adapter)->tx_aclt_flags;
+}
+
+u8 rtw_rust_hal_com_tx_aclt_ap_m2u_num(_adapter *adapter)
+{
+#ifdef CONFIG_AP_MODE
+#if CONFIG_RTW_AP_DATA_BMC_TO_UC
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	_adapter *iface;
+	u8 ap_m2u_num = 0;
+	int i;
+
+	for (i = 0; i < dvobj->iface_nums; i++) {
+		iface = dvobj->padapters[i];
+		if (!iface)
+			continue;
+
+		if (MLME_IS_AP(iface)
+		    && ((iface->b2u_flags_ap_src & RTW_AP_B2U_IP_MCAST)
+			|| (iface->b2u_flags_ap_fwd & RTW_AP_B2U_IP_MCAST)))
+			ap_m2u_num++;
+	}
+	return ap_m2u_num;
+#else
+	return 0;
+#endif
+#else
+	return 0;
+#endif
+}
+
+u8 rtw_rust_hal_com_tx_aclt_sta_op_num(_adapter *adapter)
+{
+#ifdef CONFIG_AP_MODE
+	return adapter_to_macidctl(adapter)->op_num[H2C_MSR_ROLE_STA];
+#else
+	return 0;
+#endif
+}
+
+u8 rtw_rust_hal_com_tx_aclt_read8(_adapter *adapter, u32 addr)
+{
+	return rtw_read8(adapter, addr);
+}
+
+u32 rtw_rust_hal_com_tx_aclt_read32(_adapter *adapter, u32 addr)
+{
+	return rtw_read32(adapter, addr);
+}
+
+void rtw_rust_hal_com_tx_aclt_write8(_adapter *adapter, u32 addr, u8 val)
+{
+	rtw_write8(adapter, addr, val);
+}
+
+void rtw_rust_hal_com_tx_aclt_write32(_adapter *adapter, u32 addr, u32 val)
+{
+	rtw_write32(adapter, addr, val);
+}
+#endif /* !HOST_HAL_COM_TX_ACLT_SET_TEST */
 #endif /* CONFIG_TX_AC_LIFETIME */
 
 void hw_var_port_switch(_adapter *adapter)

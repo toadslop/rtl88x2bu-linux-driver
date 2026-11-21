@@ -81,3 +81,4 @@ test_hal_dm_phydm_cal_trigger*
 /test_hal_dm_dbg_rf_cal_test
 /test_hal_dm_dbg_rf_cal_test_rust
 librust_hal_dm_dbg_rf_cal_test.a
+test_hal_com_tx_aclt_set
