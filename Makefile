@@ -3153,6 +3153,9 @@ endif
 ifneq ($(filter y,$(CONFIG_PROC_DEBUG) $(shell grep -Eq '^\s*#\s*define\s+CONFIG_PROC_DEBUG' $(src)/include/autoconf.h 2>/dev/null && echo y)),)
 rustflags-y += --cfg config_proc_debug
 endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_SUPPORT_FIFO_DUMP' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+rustflags-y += --cfg config_support_fifo_dump
+endif
 # W3-219 / FX-05: beacon-count confirm is optional. Do not force
 # -DCONFIG_BCN_CNT_CONFIRM_HDL from CONFIG_PROC_DEBUG. Rust reads _ADAPTER
 # fields via C-exported offsetof (core/rtw_wlan_util.c), so layout tracks
