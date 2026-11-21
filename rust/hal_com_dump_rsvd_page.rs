@@ -30,6 +30,7 @@ extern "C" {
     fn rtw_rust_hal_com_zvmalloc(sz: U32) -> *mut U8;
     fn rtw_rust_hal_com_vmfree(p: *mut c_void, sz: U32);
     fn rtw_rust_hal_com_adapter_to_dvobj(adapter: *mut c_void) -> *mut c_void;
+    fn rtw_rust_hal_com_log_invalid_fifo_sel(fifo_sel: U8);
     fn rtw_halmac_dump_fifo(
         d: *mut c_void,
         fifo_sel: U8,
@@ -109,11 +110,32 @@ fn push_decimal(mut n: u32, out: &mut [u8], pos: &mut usize) {
     }
 }
 
-fn push_hex4(n: u32, out: &mut [u8], pos: &mut usize) {
-    const HEX: &[u8; 16] = b"0123456789ABCDEF";
-    for shift in (0..4).rev() {
+/// Lowercase hex, minimum four digits (matches `%04x` for typical FIFO addresses).
+fn push_hex_lower(n: u32, out: &mut [u8], pos: &mut usize) {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut digits = [0u8; 8];
+    let mut nd = 0usize;
+    let mut v = n;
+    if v == 0 {
+        digits[nd] = b'0';
+        nd = 1;
+    } else {
+        while v > 0 && nd < digits.len() {
+            digits[nd] = HEX[(v & 0xf) as usize];
+            nd += 1;
+            v >>= 4;
+        }
+    }
+    while nd < 4 {
+        for i in (1..=nd).rev() {
+            digits[i] = digits[i - 1];
+        }
+        digits[0] = b'0';
+        nd += 1;
+    }
+    for i in (0..nd).rev() {
         if *pos < out.len() {
-            out[*pos] = HEX[((n >> (shift * 4)) & 0xf) as usize];
+            out[*pos] = digits[i];
             *pos += 1;
         }
     }
@@ -287,6 +309,10 @@ pub extern "C" fn rtw_dump_fifo(
     fifo_size: U32,
 ) {
     if fifo_sel > 5 {
+        #[cfg(not(host_hal_com_dump_rsvd_fifo_test))]
+        unsafe {
+            rtw_rust_hal_com_log_invalid_fifo_sel(fifo_sel);
+        }
         return;
     }
     print_line(sel, b"========= FIFO DUMP =========\n");
@@ -294,7 +320,7 @@ pub extern "C" fn rtw_dump_fifo(
     let mut pos = 0usize;
     let _ = push_str(&mut line, &mut pos, FIFO_SEL_STR[fifo_sel as usize]);
     let _ = push_str(&mut line, &mut pos, b" FIFO DUMP [start_addr:0x");
-    push_hex4(fifo_addr, &mut line, &mut pos);
+    push_hex_lower(fifo_addr, &mut line, &mut pos);
     let _ = push_str(&mut line, &mut pos, b" , size:");
     push_decimal(fifo_size, &mut line, &mut pos);
     let _ = push_str(&mut line, &mut pos, b"]\n");
