@@ -18,14 +18,16 @@ Port TSF pause bookkeeping from [`hal/hal_com_rest.c`](../../../hal/hal_com_rest
 
 ## Notes
 
-- **Parallel lane:** separate submodule from RCR/MBSSID; always updates `mlmeextpriv` pause/required/en_hw fields (outside any cfg).
-- Only the trailing `rtw_hal_set_tsf_update` call sits in `#ifdef CONFIG_MI_WITH_MBSSID_CAM` / `#else` — omitted on pinned concurrent profile, present when that macro is unset; wire via FFI or port with W4-128 pause/restore helpers.
+- **Parallel lane:** separate submodule from RCR/MBSSID.
+- **Enable:** clears `tsf_update_pause_stime`, sets `tsf_update_required=1` — does **not** touch `en_hw_update_tsf`.
+- **Disable:** clears `tsf_update_required`, `tsf_update_pause_stime`, and `en_hw_update_tsf`.
+- Trailing `rtw_hal_set_tsf_update` is cfg-gated like C (`#else` of `CONFIG_MI_WITH_MBSSID_CAM` only).
 - Defer `rtw_hal_periodic_tsf_update_*` and timer handler to [W4-130](wave4-130-hal-com-tsf-periodic-chk.md).
 
 ## Acceptance
 
 - L0 + L1
-- L2: host shim records `tsf_update_required`, `en_hw_update_tsf`, and `rtw_hal_set_tsf_update` calls for enable/disable pairs
+- L2: host shim records field deltas per enable/disable (enable leaves `en_hw_update_tsf` unchanged; disable clears it) plus optional `rtw_hal_set_tsf_update` when cfg allows
 
 ## Tracking
 
