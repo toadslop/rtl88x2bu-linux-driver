@@ -20,14 +20,14 @@ Extend `rust/hal_com_tsf.rs` with periodic TSF restore logic from
 
 - Calls `rtw_hal_rcr_set_chk_bssid(adapter, MLME_ACTION_NONE)` — needs W4-128 RCR policy on stack or `master`.
 - Uses `dvobj->periodic_tsf_update_etime` and `_set_timer` for restore window; wire FFI for timer/set_timer as in other HAL ports.
-- When `periodic_tsf_update_etime != 0`, run the **expiry branch** (clear `etime`, call `rtw_hal_rcr_set_chk_bssid`, return) — not a silent skip.
-- Skip main restore loop only when `offch_state != OFFCHS_NONE`.
+- When `periodic_tsf_update_etime != 0`, only enter the expiry branch if `rtw_time_after(now, etime)` (then clear `etime`, call `rtw_hal_rcr_set_chk_bssid`, return); a future `etime` falls through to the main loop.
+- Skip main restore loop when `offch_state != OFFCHS_NONE`.
 - Entire function body is empty under `CONFIG_MI_WITH_MBSSID_CAM` (default concurrent 8822B profile) — L2 may noop-gate like C.
 
 ## Acceptance
 
 - L0 + L1
-- L2: synthetic `mi_state` + pause timestamps → expected `restore_ms`, timer arm, and single RCR chk_bssid invocation
+- L2: synthetic iface pause timestamps + `bcn_interval`/`tsf_update_*_factor` → expected `restore_ms`, timer arm, and `rtw_hal_rcr_set_chk_bssid(NONE)` (no `mi_state` input — function does not read MI status)
 
 ## Tracking
 
