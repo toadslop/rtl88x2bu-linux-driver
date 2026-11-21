@@ -28,7 +28,7 @@ sync helpers from [`hal/hal_com_rest.c`](../../../hal/hal_com_rest.c):
 ## Acceptance
 
 - L0/L1 with same MBSSID CAM profile as W4-119
-- L2: host fixture — bitmap with two slots → `rtw_mi_set_mbid_cam` records `HW_VAR_MBSSID_CAM_WRITE` payloads vs C oracle
+- L2: host fixture — bitmap with two slots → `rtw_mi_set_mbid_cam` records `HW_VAR_MBSSID_CAM_WRITE` payloads; include `rtw_ap_set_mbid_num` `REG_MBID_NUM` RMW oracle `((read & 0xF8) | ((ap_num - 1) & 0x07))`
 
 ## Tracking
 
