@@ -29,12 +29,28 @@ extern "C" {
 extern "C" {
     fn rtw_rust_hal_com_zvmalloc(sz: U32) -> *mut U8;
     fn rtw_rust_hal_com_vmfree(p: *mut c_void, sz: U32);
+    fn rtw_rust_hal_com_adapter_to_dvobj(adapter: *mut c_void) -> *mut c_void;
+    fn rtw_rust_hal_com_log_invalid_fifo_sel(fifo_sel: U8);
+    fn rtw_halmac_dump_fifo(
+        d: *mut c_void,
+        fifo_sel: U8,
+        addr: U32,
+        size: U32,
+        buffer: *mut U8,
+    ) -> i32;
 }
 
 #[cfg(host_hal_com_dump_rsvd_fifo_test)]
 extern "C" {
     fn rtw_zvmalloc(sz: U32) -> *mut U8;
     fn rtw_vmfree(p: *mut c_void, sz: U32);
+    fn rtw_halmac_dump_fifo(
+        d: *mut c_void,
+        fifo_sel: U8,
+        addr: U32,
+        size: U32,
+        buffer: *mut U8,
+    ) -> i32;
 }
 
 fn alloc_buf(sz: U32) -> *mut U8 {
@@ -91,6 +107,31 @@ fn push_decimal(mut n: u32, out: &mut [u8], pos: &mut usize) {
             out[*pos] = digits[nd];
             *pos += 1;
         }
+    }
+}
+
+/// Lowercase hex, minimum four digits (matches `%04x` for typical FIFO addresses).
+fn push_hex_lower(n: u32, out: &mut [u8], pos: &mut usize) {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut digits = [0u8; 8];
+    let mut nd = 0usize;
+    let mut v = n;
+    if v == 0 {
+        digits[0] = b'0';
+        nd = 1;
+    } else {
+        while v > 0 && nd < digits.len() {
+            digits[nd] = HEX[(v & 0xf) as usize];
+            nd += 1;
+            v >>= 4;
+        }
+    }
+    let width = core::cmp::max(4, nd);
+    for _ in 0..(width - nd) {
+        let _ = push_byte(out, pos, b'0');
+    }
+    for i in (0..nd).rev() {
+        let _ = push_byte(out, pos, digits[i]);
     }
 }
 
@@ -235,6 +276,85 @@ pub extern "C" fn rtw_dump_rsvd_page(
         rtw_hal_get_rsvd_page(adapter, page_offset as U32, page_num as U32, buffer, buf_size);
         dump_sel(sel, buffer, buf_size as i32);
         free_buf(buffer.cast(), buf_size);
+    }
+    print_line(sel, b"==========================\n");
+}
+
+fn rnd4(x: U32) -> U32 {
+    ((x >> 2) + if x & 3 == 0 { 0 } else { 1 }) << 2
+}
+
+const FIFO_SEL_STR: &[&[u8]; 6] = &[
+    b"TX",
+    b"RX",
+    b"RSVD_PAGE",
+    b"REPORT",
+    b"LLT",
+    b"RXBUF_FW",
+];
+
+#[cfg(any(config_support_fifo_dump, host_hal_com_dump_rsvd_fifo_test))]
+#[no_mangle]
+pub extern "C" fn rtw_dump_fifo(
+    sel: *mut c_void,
+    adapter: *mut c_void,
+    fifo_sel: U8,
+    fifo_addr: U32,
+    fifo_size: U32,
+) {
+    if fifo_sel > 5 {
+        #[cfg(not(host_hal_com_dump_rsvd_fifo_test))]
+        unsafe {
+            rtw_rust_hal_com_log_invalid_fifo_sel(fifo_sel);
+        }
+        return;
+    }
+    print_line(sel, b"========= FIFO DUMP =========\n");
+    let mut line = [0u8; 96];
+    let mut pos = 0usize;
+    let _ = push_str(&mut line, &mut pos, FIFO_SEL_STR[fifo_sel as usize]);
+    let _ = push_str(&mut line, &mut pos, b" FIFO DUMP [start_addr:0x");
+    push_hex_lower(fifo_addr, &mut line, &mut pos);
+    let _ = push_str(&mut line, &mut pos, b" , size:");
+    push_decimal(fifo_size, &mut line, &mut pos);
+    let _ = push_str(&mut line, &mut pos, b"]\n");
+    print_line(sel, &line[..pos]);
+
+    let mut buff_size = 0u32;
+    let buffer = if fifo_size != 0 {
+        buff_size = rnd4(fifo_size);
+        alloc_buf(buff_size)
+    } else {
+        core::ptr::null_mut()
+    };
+    if fifo_size != 0 && buffer.is_null() {
+        buff_size = 0;
+    }
+
+    #[cfg(not(host_hal_com_dump_rsvd_fifo_test))]
+    {
+        let dvobj = unsafe { rtw_rust_hal_com_adapter_to_dvobj(adapter) };
+        unsafe {
+            rtw_halmac_dump_fifo(dvobj, fifo_sel, fifo_addr, buff_size, buffer);
+        }
+    }
+
+    #[cfg(host_hal_com_dump_rsvd_fifo_test)]
+    unsafe {
+        rtw_halmac_dump_fifo(
+            core::ptr::null_mut(),
+            fifo_sel,
+            fifo_addr,
+            buff_size,
+            buffer,
+        );
+    }
+
+    if !buffer.is_null() {
+        unsafe {
+            dump_sel(sel, buffer, fifo_size as i32);
+            free_buf(buffer.cast(), buff_size);
+        }
     }
     print_line(sel, b"==========================\n");
 }

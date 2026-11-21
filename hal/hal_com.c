@@ -4663,6 +4663,7 @@ int rtw_hal_get_rsvd_page(_adapter *adapter, u32 page_offset,
 	return rst;
 }
 
+#if !defined(CONFIG_RUST)
 void rtw_dump_rsvd_page(void *sel, _adapter *adapter, u8 page_offset, u8 page_num)
 {
 #if defined(CONFIG_RTW_DEBUG) || defined(CONFIG_PROC_DEBUG)
@@ -4728,6 +4729,9 @@ void rtw_dump_fifo(void *sel, _adapter *adapter, u8 fifo_sel, u32 fifo_addr, u32
 	RTW_PRINT_SEL(sel, "==========================\n");
 }
 #endif
+#else
+/* rtw_dump_rsvd_page / rtw_dump_fifo — rust/hal_com_dump_rsvd_page.rs (W4-122) */
+#endif /* !CONFIG_RUST */
 
 #if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)
 static void rtw_hal_force_enable_rxdma(_adapter *adapter)
