@@ -134,7 +134,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-req-per-rpt test-req-per-rpt-rust \
 	test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-get-rsvd-page test-get-rsvd-page-rust \
-	test-dump-rsvd-fifo \
+	test-dump-rsvd-fifo test-dump-rsvd-fifo-rust \
 	test-tx-aclt-set test-tx-aclt-set-rust \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-c2h-evt-robustness clean
@@ -172,7 +172,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-req-per-rpt-rust \
 	test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-get-rsvd-page test-get-rsvd-page-rust \
-	test-dump-rsvd-fifo \
+	test-dump-rsvd-fifo test-dump-rsvd-fifo-rust \
 	test-tx-aclt-set test-tx-aclt-set-rust \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-c2h-evt-robustness
@@ -252,6 +252,25 @@ test_hal_com_dump_rsvd_fifo: test_hal_com_dump_rsvd_fifo.c \
 		test_hal_com_dump_rsvd_fifo.c $(DUMP_RSVD_FIFO_ORACLE) \
 		$(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE) \
 		$(GET_RSVD_PAGE_DUMP_LINK) $(HOST_JSON)
+
+DUMP_RSVD_PAGE_RUST_SRC := $(ROOT)/rust/hal_com_dump_rsvd_page.rs
+
+librust_hal_com_dump_rsvd_page.a: $(DUMP_RSVD_PAGE_RUST_SRC)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_dump_rsvd_fifo_test \
+		--cfg config_rtw_debug \
+		--crate-type staticlib $(DUMP_RSVD_PAGE_RUST_SRC) -o $@
+
+test-dump-rsvd-fifo-rust: test_hal_com_dump_rsvd_fifo_rust
+	./test_hal_com_dump_rsvd_fifo_rust hal_com_dump_rsvd_fifo_vectors.json
+
+test_hal_com_dump_rsvd_fifo_rust: test_hal_com_dump_rsvd_fifo.c \
+		$(DUMP_RSVD_FIFO_ORACLE) $(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE) \
+		$(GET_RSVD_PAGE_DUMP_LINK) $(HOST_JSON) librust_hal_com_dump_rsvd_page.a
+	$(CC) $(CFLAGS) $(DUMP_RSVD_FIFO_CFLAGS) -DRUST_HAL_COM_DUMP_RSVD_FIFO_ORACLE -o $@ \
+		test_hal_com_dump_rsvd_fifo.c $(DUMP_RSVD_FIFO_ORACLE) \
+		$(GET_RSVD_PAGE_SHIM) $(GET_RSVD_PAGE_ORACLE) \
+		$(GET_RSVD_PAGE_DUMP_LINK) $(HOST_JSON) librust_hal_com_dump_rsvd_page.a
 
 test-tx-aclt-set: test_hal_com_tx_aclt_set
 	./test_hal_com_tx_aclt_set
