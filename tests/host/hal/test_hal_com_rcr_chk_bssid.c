@@ -93,13 +93,13 @@ int main(void)
 		struct _adapter *a = host_hal_rcr_chk_adapter();
 
 		host_hal_rcr_chk_reset();
-		host_hal_rcr_chk_set_mi_no_self(&ap_self, &zero);
-		host_hal_rcr_chk_set_mi_no_others(&zero, &zero);
+		host_hal_rcr_chk_set_mi_no_self(&ap_self);
+		host_hal_rcr_chk_set_mi_no_others(&zero);
 		host_hal_rcr_chk_set_wifi_spec(1);
-		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_BCN | RCR_CBSSID_DATA);
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_DATA);
 		rtw_hal_rcr_set_chk_bssid(a, MLME_STA_CONNECTING);
 		expect_rcr_bssid_bits("ap_wifi_connecting", host_hal_rcr_chk_last_set_rcr(),
-				      1, 1);
+				      0, 1);
 	}
 
 	/* Periodic TSF etime keeps beacon filter on. */
@@ -107,8 +107,8 @@ int main(void)
 		struct _adapter *a = host_hal_rcr_chk_adapter();
 
 		host_hal_rcr_chk_reset();
-		host_hal_rcr_chk_set_mi_no_self(&zero, &zero);
-		host_hal_rcr_chk_set_mi_no_others(&zero, &zero);
+		host_hal_rcr_chk_set_mi_no_self(&zero);
+		host_hal_rcr_chk_set_mi_no_others(&zero);
 		host_hal_rcr_chk_set_periodic_tsf(1UL << 32);
 		host_hal_rcr_chk_set_initial_rcr(0);
 		rtw_hal_rcr_set_chk_bssid(a, MLME_ACTION_NONE);
@@ -146,8 +146,8 @@ int main(void)
 		struct _adapter *a = host_hal_rcr_chk_adapter();
 
 		host_hal_rcr_chk_reset();
-		host_hal_rcr_chk_set_mi_no_self(&ap_self, &zero);
-		host_hal_rcr_chk_set_mi_no_others(&zero, &zero);
+		host_hal_rcr_chk_set_mi_no_self(&ap_self);
+		host_hal_rcr_chk_set_mi_no_others(&zero);
 		host_hal_rcr_chk_set_unassoc_nmy_uc(1);
 		host_hal_rcr_chk_set_initial_rcr(0);
 		rtw_hal_rcr_set_chk_bssid(a, MLME_ACTION_NONE);

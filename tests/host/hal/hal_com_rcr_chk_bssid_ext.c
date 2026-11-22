@@ -232,10 +232,10 @@ u8 rtw_rust_hal_com_rx_tsf_filter(void *adapter)
 	return GET_HAL_SPEC(adapter)->rx_tsf_filter;
 }
 
-u32 rtw_rust_hal_com_periodic_tsf_update_etime(void *adapter)
+u8 rtw_rust_hal_com_periodic_tsf_active(void *adapter)
 {
 	(void)adapter;
-	return adapter_to_dvobj(adapter)->periodic_tsf_update_etime;
+	return adapter_to_dvobj(adapter)->periodic_tsf_update_etime != 0;
 }
 
 u8 rtw_rust_hal_com_wifi_spec(void *adapter)
