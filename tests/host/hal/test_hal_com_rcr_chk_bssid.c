@@ -58,8 +58,12 @@ int main(void)
 {
 	struct mi_state zero = {0};
 	struct mi_state ap_self = {0};
+	struct mi_state mesh_self = {0};
+	struct mi_state tdls_self = {0};
 
 	ap_self.ap_num = 1;
+	mesh_self.mesh_num = 1;
+	tdls_self.ld_tdls_num = 1;
 
 	/* Idle STA: both BSSID filter bits on. */
 	run_case("idle", RCR_CBSSID_BCN | RCR_CBSSID_DATA, &zero, &zero,
@@ -175,7 +179,25 @@ int main(void)
 		got = host_hal_rcr_chk_last_set_rcr();
 		if ((got & RCR_AAP) != 0)
 			fail("multi_ap_aap_clear");
+
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_mi_no_self(&zero);
+		host_hal_rcr_chk_set_mi_no_others(&zero);
+		host_hal_rcr_chk_set_unassoc_nmy_uc(1);
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_BCN | RCR_CBSSID_DATA);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_ACTION_NONE);
+		got = host_hal_rcr_chk_last_set_rcr();
+		if ((got & RCR_AAP) != 0)
+			fail("multi_ap_no_ap_iface");
 	}
+
+	/* Mesh present: clear both CBSSID filter bits on idle. */
+	run_case("mesh_idle", RCR_CBSSID_BCN | RCR_CBSSID_DATA, &mesh_self, &zero,
+		 MLME_ACTION_NONE, 0, 0, 1);
+
+	/* TDLS linked: clear DATA; beacon follows default-on path. */
+	run_case("tdls_idle", RCR_CBSSID_BCN | RCR_CBSSID_DATA, &tdls_self, &zero,
+		 MLME_ACTION_NONE, 0, 1, 1);
 
 	/* Client-port overload clears the beacon filter bit. */
 	{
