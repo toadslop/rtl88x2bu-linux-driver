@@ -71,8 +71,11 @@ int rtw_time_after(systime a, systime b)
 
 u32 rtw_get_passing_time_ms(systime start)
 {
-	(void)start;
-	return host_passing_ms;
+	if (host_passing_ms)
+		return host_passing_ms;
+	if (host_current_time >= start)
+		return (u32)(host_current_time - start);
+	return 0;
 }
 
 void _set_timer(struct _timer *t, u32 ms)
