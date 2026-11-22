@@ -3,10 +3,12 @@
 
 #include "host_hal_com_tsf_types.h"
 
+#ifndef CONFIG_MI_WITH_MBSSID_CAM
 static void hal_set_tsf_update_oracle(struct _adapter *adapter, u8 en)
 {
 	rtw_rust_hal_com_tsf_hal_set_tsf_update(adapter, en);
 }
+#endif
 
 void rtw_iface_enable_tsf_update_c_oracle(struct _adapter *adapter)
 {

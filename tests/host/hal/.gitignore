@@ -35,6 +35,7 @@ test_hal_com_rcr
 test_hal_com_rcr_rust
 librust_hal_com_rcr.a
 test_hal_com_tsf_iface
+test_hal_com_tsf_iface_mbssid
 test_hal_com_tsf_iface_rust
 librust_hal_com_tsf.a
 test_hal_dm_init_odm_cominfo_tail*

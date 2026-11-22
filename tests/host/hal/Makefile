@@ -138,7 +138,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-tx-aclt-set test-tx-aclt-set-rust \
 	test-rcr-leaf \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
-	test-gpio-wakeup-rust-8821asdio test-tsf-iface \
+	test-gpio-wakeup-rust-8821asdio test-tsf-iface test-tsf-iface-mbssid \
 	test-c2h-evt-robustness clean
 
 all: test
@@ -178,7 +178,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-tx-aclt-set test-tx-aclt-set-rust \
 	test-rcr-leaf \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
-	test-gpio-wakeup-rust-8821asdio test-tsf-iface \
+	test-gpio-wakeup-rust-8821asdio test-tsf-iface test-tsf-iface-mbssid \
 	test-c2h-evt-robustness
 
 test-c: test_hw_rate_map
@@ -1822,13 +1822,24 @@ test_hal_com_gpio_wakeup_rust_8821asdio: test_hal_com_gpio_wakeup.c $(GPIO_WAKEU
 
 TSF_IFACE_SHIM := hal_com_tsf_shim.c
 TSF_IFACE_ORACLE := hal_com_tsf_c_oracle.c
+TSF_IFACE_PROD := hal_com_tsf_prod.c
+TSF_IFACE_MBSSID_CFLAGS := $(CFLAGS) -DCONFIG_MI_WITH_MBSSID_CAM
 
 test-tsf-iface: test_hal_com_tsf_iface
 	./test_hal_com_tsf_iface
 
-test_hal_com_tsf_iface: test_hal_com_tsf_iface.c $(TSF_IFACE_SHIM) $(TSF_IFACE_ORACLE)
+test-tsf-iface-mbssid: test_hal_com_tsf_iface_mbssid
+	./test_hal_com_tsf_iface_mbssid
+
+test_hal_com_tsf_iface: test_hal_com_tsf_iface.c $(TSF_IFACE_SHIM) \
+		$(TSF_IFACE_ORACLE) $(TSF_IFACE_PROD)
 	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_tsf_iface.c \
-		$(TSF_IFACE_SHIM) $(TSF_IFACE_ORACLE)
+		$(TSF_IFACE_SHIM) $(TSF_IFACE_ORACLE) $(TSF_IFACE_PROD)
+
+test_hal_com_tsf_iface_mbssid: test_hal_com_tsf_iface.c $(TSF_IFACE_SHIM) \
+		$(TSF_IFACE_ORACLE) $(TSF_IFACE_PROD)
+	$(CC) $(TSF_IFACE_MBSSID_CFLAGS) -I../include -o $@ test_hal_com_tsf_iface.c \
+		$(TSF_IFACE_SHIM) $(TSF_IFACE_ORACLE) $(TSF_IFACE_PROD)
 
 RUST_C2H_EVT := $(ROOT)/rust/hal_com_c2h_evt.rs
 CUSTOMER_STR_SHIM := hal_com_customer_str_shim.c
@@ -1966,6 +1977,6 @@ clean:
 		test_hal_com_gpio_wakeup test_hal_com_gpio_wakeup_rust \
 		test_hal_com_gpio_wakeup_8821asdio test_hal_com_gpio_wakeup_rust_8821asdio \
 		librust_hal_com_gpio_wakeup.a librust_hal_com_gpio_wakeup_8821as.a \
-		test_hal_com_tsf_iface \
+		test_hal_com_tsf_iface test_hal_com_tsf_iface_mbssid \
 		test_hal_com_tx_aclt_set test_hal_com_tx_aclt_set_rust \
 		librust_hal_com_tx_aclt_set.a
