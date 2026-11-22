@@ -13,11 +13,17 @@ typedef unsigned int u32;
 /* HW_VAR_RCR in include/hal_intf.h (_HW_VARIABLES; HW_VAR_BCN_CTRL_ADDR is 8). */
 #define HW_VAR_RCR 10
 
+struct hal_spec_t {
+	u8 rx_tsf_filter;
+};
+
 struct hal_data {
 	u32 ReceiveConfig;
 	u8 in_cta_test;
-	u8 rx_tsf_filter;
+	struct hal_spec_t hal_spec;
 };
+
+#define GET_HAL_SPEC(adapter) (&GET_HAL_DATA(adapter)->hal_spec)
 
 struct _adapter;
 
