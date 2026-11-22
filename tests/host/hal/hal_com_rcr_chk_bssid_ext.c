@@ -14,6 +14,7 @@ static struct dvobj_priv g_dvobj;
 static struct mi_state g_mi_no_self;
 static struct mi_state g_mi_no_others;
 static u8 g_clt_num;
+static u8 g_unassoc_nmy_uc;
 
 struct _adapter;
 
@@ -32,6 +33,7 @@ void host_hal_rcr_chk_reset(void)
 	memset(&g_mi_no_others, 0, sizeof(g_mi_no_others));
 	g_ext.dvobj = &g_dvobj;
 	g_clt_num = 0;
+	g_unassoc_nmy_uc = 0;
 	host_hal_rcr_reset();
 	GET_HAL_SPEC(host_hal_rcr_chk_adapter())->rx_tsf_filter = 1;
 }
@@ -50,8 +52,19 @@ void host_hal_rcr_chk_set_in_cta_test(u8 v)
 }
 
 void host_hal_rcr_chk_set_wifi_spec(u8 v) { g_ext.registrypriv.wifi_spec = v; }
-void host_hal_rcr_chk_set_periodic_tsf(u32 v) { g_dvobj.periodic_tsf_update_etime = v; }
+void host_hal_rcr_chk_set_periodic_tsf(unsigned long v)
+{
+	g_dvobj.periodic_tsf_update_etime = v;
+}
+
 void host_hal_rcr_chk_set_clt_num(u8 v) { g_clt_num = v; }
+
+void host_hal_rcr_chk_set_rx_tsf_filter(u8 v)
+{
+	GET_HAL_SPEC(host_hal_rcr_chk_adapter())->rx_tsf_filter = v;
+}
+
+void host_hal_rcr_chk_set_unassoc_nmy_uc(u8 v) { g_unassoc_nmy_uc = v; }
 
 void host_hal_rcr_chk_set_initial_rcr(u32 rcr)
 {
@@ -105,8 +118,25 @@ struct dvobj_priv *adapter_to_dvobj(struct _adapter *a)
 	return g_ext.dvobj;
 }
 
-void rtw_hal_tsf_update_pause(struct _adapter *a) { (void)a; }
-void rtw_hal_tsf_update_restore(struct _adapter *a) { (void)a; }
+void rtw_hal_tsf_update_pause(struct _adapter *a)
+{
+	(void)a;
+	host_hal_rcr_trace.tsf_pause_count++;
+}
+
+void rtw_hal_tsf_update_restore(struct _adapter *a)
+{
+	(void)a;
+	host_hal_rcr_trace.tsf_restore_count++;
+}
+
+u8 rtw_unassoc_sta_src_chk(struct _adapter *a, u8 stype)
+{
+	(void)a;
+	if (stype == UNASOC_STA_SRC_RX_NMY_UC)
+		return g_unassoc_nmy_uc;
+	return 0;
+}
 
 int rtw_rust_hal_com_rcr_use_mbssid_shortcut(void)
 {
