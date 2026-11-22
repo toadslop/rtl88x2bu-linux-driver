@@ -7,7 +7,6 @@
 static struct dvobj_priv g_dvobj;
 static struct _adapter g_adapters[2];
 static systime host_current_time;
-static u32 host_passing_ms;
 
 struct host_hal_com_tsf_periodic_trace host_hal_com_tsf_periodic_trace;
 
@@ -17,7 +16,6 @@ void host_hal_com_tsf_periodic_reset(void)
 	memset(g_adapters, 0, sizeof(g_adapters));
 	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
 	host_current_time = 1000;
-	host_passing_ms = 0;
 	g_dvobj.iface_nums = 2;
 	g_dvobj.padapters[0] = &g_adapters[0];
 	g_dvobj.padapters[1] = &g_adapters[1];
@@ -36,11 +34,6 @@ struct dvobj_priv *host_hal_com_tsf_periodic_dvobj(void)
 void host_hal_com_tsf_periodic_set_current_time(systime t)
 {
 	host_current_time = t;
-}
-
-void host_hal_com_tsf_periodic_set_passing_ms(u32 ms)
-{
-	host_passing_ms = ms;
 }
 
 struct dvobj_priv *adapter_to_dvobj(struct _adapter *adapter)
@@ -71,8 +64,6 @@ int rtw_time_after(systime a, systime b)
 
 u32 rtw_get_passing_time_ms(systime start)
 {
-	if (host_passing_ms)
-		return host_passing_ms;
 	if (host_current_time >= start)
 		return (u32)(host_current_time - start);
 	return 0;
@@ -94,8 +85,8 @@ void rtw_hal_rcr_set_chk_bssid(struct _adapter *adapter, u8 self_action)
 
 u8 rtw_periodic_tsf_update_end_cmd(struct _adapter *adapter)
 {
-	(void)adapter;
 	host_hal_com_tsf_periodic_trace.periodic_end_cmd_count++;
+	host_hal_com_tsf_periodic_trace.last_end_cmd_adapter = adapter;
 	return 0;
 }
 

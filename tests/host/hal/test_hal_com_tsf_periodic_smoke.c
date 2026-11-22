@@ -26,6 +26,11 @@ int main(void)
 {
 	if (expect_cmd_count(1, "hdl_cmd"))
 		return 1;
+	if (host_hal_com_tsf_periodic_trace.last_end_cmd_adapter !=
+	    host_hal_com_tsf_periodic_dvobj()->padapters[0]) {
+		fprintf(stderr, "FAIL hdl_primary\n");
+		return 1;
+	}
 
 	host_hal_com_tsf_periodic_reset();
 	host_hal_com_tsf_periodic_dvobj()->surprise_removed = 1;

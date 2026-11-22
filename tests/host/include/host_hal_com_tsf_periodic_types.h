@@ -31,6 +31,7 @@ struct host_hal_com_tsf_periodic_trace {
 	unsigned set_timer_count;
 	u32 last_timer_ms;
 	unsigned periodic_end_cmd_count;
+	struct _adapter *last_end_cmd_adapter;
 };
 
 extern struct host_hal_com_tsf_periodic_trace host_hal_com_tsf_periodic_trace;
@@ -39,7 +40,6 @@ void host_hal_com_tsf_periodic_reset(void);
 struct _adapter *host_hal_com_tsf_periodic_adapter(void);
 struct dvobj_priv *host_hal_com_tsf_periodic_dvobj(void);
 void host_hal_com_tsf_periodic_set_current_time(systime t);
-void host_hal_com_tsf_periodic_set_passing_ms(u32 ms);
 
 void rtw_hal_periodic_tsf_update_end_timer_hdl(void *ctx);
 
