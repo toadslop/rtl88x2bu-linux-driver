@@ -4,10 +4,6 @@
 #include "host_hal_com_rcr_types.h"
 #include <string.h>
 
-struct hal_data {
-	u32 ReceiveConfig;
-};
-
 struct _adapter {
 	struct hal_data hal;
 };
