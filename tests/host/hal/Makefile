@@ -1792,6 +1792,18 @@ test_hal_com_mbid_cam_hw_rust: test_hal_com_mbid_cam_hw.c $(MBID_CAM_SHIM) \
 
 include hal_com_rcr_rust.mk
 
+RCR_CHK_BSSID_CFLAGS := $(CFLAGS) -DCONFIG_AP_MODE -DCONFIG_RTW_MESH -DCONFIG_TDLS \
+	-DCONFIG_MI_WITH_MBSSID_CAM -DCONFIG_CLIENT_PORT_CFG
+RCR_CHK_BSSID_SHIM := hal_com_rcr_shim.c hal_com_rcr_chk_bssid_ext.c
+RCR_CHK_BSSID_ORACLE := hal_com_rcr_chk_bssid_c_oracle.c
+
+test-rcr-chk-bssid: test_hal_com_rcr_chk_bssid
+	./test_hal_com_rcr_chk_bssid
+
+test_hal_com_rcr_chk_bssid: test_hal_com_rcr_chk_bssid.c $(RCR_CHK_BSSID_SHIM) $(RCR_CHK_BSSID_ORACLE)
+	$(CC) $(RCR_CHK_BSSID_CFLAGS) -I../include -o $@ test_hal_com_rcr_chk_bssid.c \
+		$(RCR_CHK_BSSID_SHIM) $(RCR_CHK_BSSID_ORACLE)
+
 GPIO_WAKEUP_SHIM := hal_com_gpio_wakeup_shim.c
 GPIO_WAKEUP_ORACLE := hal_com_gpio_wakeup_c_oracle.c
 
@@ -2054,6 +2066,7 @@ clean:
 		$(if $(wildcard $(ROOT)/rust/hal_com_dft_port_host.rs),librust_hal_com_dft_port.a,) \
 		test_hal_com_mbid_cam_rust librust_hal_com_mbid_cam.a \
 		test_hal_com_rcr test_hal_com_rcr_rust librust_hal_com_rcr.a \
+		test_hal_com_rcr_chk_bssid test_hal_com_rcr_chk_bssid_rust librust_hal_com_rcr_chk.a \
 		test_hal_com_gpio_wakeup test_hal_com_gpio_wakeup_rust \
 		test_hal_com_gpio_wakeup_8821asdio test_hal_com_gpio_wakeup_rust_8821asdio \
 		librust_hal_com_gpio_wakeup.a librust_hal_com_gpio_wakeup_8821as.a \
