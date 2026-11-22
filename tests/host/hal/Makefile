@@ -1940,14 +1940,25 @@ test_hal_com_tsf_iface_rust_mbssid: test_hal_com_tsf_iface.c $(TSF_IFACE_SHIM) \
 TSF_PERIODIC_HOST := hal_com_tsf_periodic_host.c
 TSF_PERIODIC_ORACLE := hal_com_tsf_periodic_c_oracle.c
 TSF_PERIODIC_TIMER_PROD := hal_com_tsf_periodic_timer_prod.c
+TSF_PERIODIC_CHK_PROD := hal_com_tsf_periodic_chk_prod.c
 
-test-tsf-periodic: test_hal_com_tsf_periodic_smoke
+test-tsf-periodic: test_hal_com_tsf_periodic
+	./test_hal_com_tsf_periodic
+
+test-tsf-periodic-smoke: test_hal_com_tsf_periodic_smoke
 	./test_hal_com_tsf_periodic_smoke
 
 test_hal_com_tsf_periodic_smoke: test_hal_com_tsf_periodic_smoke.c $(TSF_PERIODIC_HOST) \
 		$(TSF_PERIODIC_TIMER_PROD)
 	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_tsf_periodic_smoke.c \
 		$(TSF_PERIODIC_HOST) $(TSF_PERIODIC_TIMER_PROD)
+
+test_hal_com_tsf_periodic: test_hal_com_tsf_periodic.c $(TSF_PERIODIC_HOST) \
+		$(TSF_PERIODIC_CHK_PROD) $(TSF_PERIODIC_TIMER_PROD) \
+		$(TSF_PERIODIC_ORACLE)
+	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_tsf_periodic.c \
+		$(TSF_PERIODIC_HOST) $(TSF_PERIODIC_CHK_PROD) $(TSF_PERIODIC_TIMER_PROD) \
+		$(TSF_PERIODIC_ORACLE)
 
 RUST_C2H_EVT := $(ROOT)/rust/hal_com_c2h_evt.rs
 CUSTOMER_STR_SHIM := hal_com_customer_str_shim.c
@@ -2118,6 +2129,6 @@ clean:
 		test_hal_com_tsf_iface test_hal_com_tsf_iface_mbssid \
 		test_hal_com_tsf_iface_rust test_hal_com_tsf_iface_rust_mbssid \
 		librust_hal_com_tsf.a librust_hal_com_tsf_mbssid.a \
-		test_hal_com_tsf_periodic_smoke \
+		test_hal_com_tsf_periodic_smoke test_hal_com_tsf_periodic \
 		test_hal_com_tx_aclt_set test_hal_com_tx_aclt_set_rust \
 		librust_hal_com_tx_aclt_set.a
