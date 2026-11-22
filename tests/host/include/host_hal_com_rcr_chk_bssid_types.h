@@ -6,6 +6,9 @@
 
 #define RCR_CBSSID_BCN  (1u << 7)
 #define RCR_CBSSID_DATA (1u << 6)
+#define RCR_AAP         (1u << 0)
+
+#define UNASOC_STA_SRC_RX_NMY_UC 1
 
 #define MAX_CLIENT_PORT_NUM 4
 
@@ -53,7 +56,7 @@ struct registry_priv {
 };
 
 struct dvobj_priv {
-	u32 periodic_tsf_update_etime;
+	unsigned long periodic_tsf_update_etime;
 };
 
 struct _adapter;
@@ -75,8 +78,12 @@ void host_hal_rcr_chk_set_mi_no_self(const struct mi_state *s);
 void host_hal_rcr_chk_set_mi_no_others(const struct mi_state *s);
 void host_hal_rcr_chk_set_in_cta_test(u8 v);
 void host_hal_rcr_chk_set_wifi_spec(u8 v);
-void host_hal_rcr_chk_set_periodic_tsf(u32 v);
+void host_hal_rcr_chk_set_periodic_tsf(unsigned long v);
 void host_hal_rcr_chk_set_clt_num(u8 v);
+void host_hal_rcr_chk_set_rx_tsf_filter(u8 v);
+void host_hal_rcr_chk_set_unassoc_nmy_uc(u8 v);
+
+u8 rtw_unassoc_sta_src_chk(struct _adapter *adapter, u8 stype);
 u8 host_hal_rcr_chk_wifi_spec(struct _adapter *adapter);
 
 u32 host_hal_rcr_chk_last_set_rcr(void);

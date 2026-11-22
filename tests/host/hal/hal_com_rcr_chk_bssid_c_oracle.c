@@ -2,6 +2,7 @@
 /* C oracle for W4-128 — mirrored from hal/hal_com_rest.c. */
 
 #include "host_hal_com_rcr_chk_bssid_types.h"
+#include <string.h>
 
 void rtw_hal_get_hwreg(struct _adapter *padapter, u32 variable, u8 *val);
 u8 rtw_hal_set_hwreg(struct _adapter *padapter, u32 variable, u8 *val);
@@ -29,8 +30,12 @@ static void set_chk_bssid_oracle(struct _adapter *adapter, u8 self_action)
 {
 	struct hal_data *hal_data = GET_HAL_DATA(adapter);
 	u32 rcr, rcr_new;
-	struct mi_state mstate, mstate_s;
+	struct mi_state mstate;
+	struct mi_state mstate_s;
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+
+	memset(&mstate, 0, sizeof(mstate));
+	memset(&mstate_s, 0, sizeof(mstate_s));
 
 	rtw_hal_get_hwreg(adapter, HW_VAR_RCR, (u8 *)&rcr);
 	rcr_new = rcr;
@@ -118,6 +123,14 @@ static void set_chk_bssid_oracle(struct _adapter *adapter, u8 self_action)
 
 	if (get_clt_num(adapter) > MAX_CLIENT_PORT_NUM)
 		rcr_new &= ~RCR_CBSSID_BCN;
+#endif
+
+#ifdef CONFIG_RTW_MULTI_AP
+	if (MSTATE_AP_NUM(&mstate) &&
+	    rtw_unassoc_sta_src_chk(adapter, UNASOC_STA_SRC_RX_NMY_UC))
+		rcr_new |= RCR_AAP;
+	else
+		rcr_new &= ~RCR_AAP;
 #endif
 
 	if (rcr == rcr_new)

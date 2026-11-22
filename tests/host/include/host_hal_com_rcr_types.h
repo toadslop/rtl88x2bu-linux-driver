@@ -35,6 +35,8 @@ u32 host_hal_rcr_receive_config(struct _adapter *adapter);
 struct host_hal_rcr_trace {
 	unsigned int get_count;
 	unsigned int set_count;
+	unsigned int tsf_pause_count;
+	unsigned int tsf_restore_count;
 	u32 last_get_rcr;
 	u32 last_set_rcr;
 };
