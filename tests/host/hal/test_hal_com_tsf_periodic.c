@@ -56,8 +56,17 @@ static void setup_iface(struct _adapter *a, u8 required, systime pause_stime,
 	a->mlmeextpriv.mlmext_info.bcn_interval = bcn_interval;
 }
 
+struct chk_pair_out {
+	systime etime;
+	u32 last_timer_ms;
+	unsigned set_timer_count;
+	u8 last_rcr_action;
+	u32 rcr_chk_bssid_count;
+};
+
 static void run_chk_pair(void (*under_test)(struct _adapter *),
-			 void (*oracle)(struct _adapter *))
+			 void (*oracle)(struct _adapter *),
+			 struct chk_pair_out *prod_out)
 {
 	struct dvobj_priv snap_dv;
 	struct _adapter snap_a[2];
@@ -74,6 +83,13 @@ static void run_chk_pair(void (*under_test)(struct _adapter *),
 	etime_u = host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime;
 	timer_u = host_hal_com_tsf_periodic_trace.last_timer_ms;
 	rcr_u = host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count;
+	if (prod_out) {
+		prod_out->etime = etime_u;
+		prod_out->last_timer_ms = timer_u;
+		prod_out->set_timer_count = host_hal_com_tsf_periodic_trace.set_timer_count;
+		prod_out->last_rcr_action = host_hal_com_tsf_periodic_trace.last_rcr_chk_action;
+		prod_out->rcr_chk_bssid_count = rcr_u;
+	}
 
 	*host_hal_com_tsf_periodic_dvobj() = snap_dv;
 	*snap_dv.padapters[0] = snap_a[0];
@@ -106,12 +122,14 @@ static void test_offchannel_skip(void)
 static void test_etime_future_returns(void)
 {
 	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 1, 2, 100);
 	host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime = 5000;
 	host_hal_com_tsf_periodic_set_current_time(1000);
 
 	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
 	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
 	eq_u32("future_rcr", host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count, 0);
+	eq_u32("future_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
 	eq_stime("future_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 5000);
 }
 
@@ -133,15 +151,18 @@ static void test_restore_arm_timer(void)
 	struct _adapter *a1 = host_hal_com_tsf_periodic_adapter();
 	struct _adapter *a2 = host_hal_com_tsf_periodic_dvobj()->padapters[1];
 
+	struct chk_pair_out prod;
+
 	host_hal_com_tsf_periodic_reset();
 	setup_iface(a1, 1, 10, 2, 3, 100);
 	setup_iface(a2, 1, 10, 2, 5, 100);
-	host_hal_com_tsf_periodic_set_passing_ms(250);
+	host_hal_com_tsf_periodic_set_current_time(260);
 
-	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle);
-	eq_u32("restore_ms", host_hal_com_tsf_periodic_trace.last_timer_ms, 500);
-	eq_u32("restore_timer_once", host_hal_com_tsf_periodic_trace.set_timer_count, 1);
-	eq_u8("restore_rcr", host_hal_com_tsf_periodic_trace.last_rcr_chk_action, MLME_ACTION_NONE);
+	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,
+		     &prod);
+	eq_u32("restore_ms", prod.last_timer_ms, 500);
+	eq_u32("restore_timer_once", prod.set_timer_count, 1);
+	eq_u8("restore_rcr", prod.last_rcr_action, MLME_ACTION_NONE);
 }
 
 static void test_timer_hdl(void)
@@ -161,6 +182,15 @@ static void test_timer_hdl_stopped(void)
 	eq_u32("hdl_stopped", host_hal_com_tsf_periodic_trace.periodic_end_cmd_count, 0);
 }
 
+static void test_timer_hdl_surprise(void)
+{
+	host_hal_com_tsf_periodic_reset();
+	host_hal_com_tsf_periodic_dvobj()->surprise_removed = 1;
+	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
+	rtw_hal_periodic_tsf_update_end_timer_hdl(host_hal_com_tsf_periodic_dvobj());
+	eq_u32("hdl_surprise", host_hal_com_tsf_periodic_trace.periodic_end_cmd_count, 0);
+}
+
 int main(void)
 {
 #ifndef CONFIG_MI_WITH_MBSSID_CAM
@@ -171,6 +201,7 @@ int main(void)
 #endif
 	test_timer_hdl();
 	test_timer_hdl_stopped();
+	test_timer_hdl_surprise();
 
 	if (failures) {
 		fprintf(stderr, "%d failures\n", failures);
