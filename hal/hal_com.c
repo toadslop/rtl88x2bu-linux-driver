@@ -3119,73 +3119,7 @@ static void rtw_hal_tsf_update_restore(_adapter *adapter)
 #endif
 }
 
-void rtw_hal_periodic_tsf_update_chk(_adapter *adapter)
-{
-#ifdef CONFIG_MI_WITH_MBSSID_CAM
-
-#else
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	_adapter *iface;
-	struct mlme_ext_priv *mlmeext;
-	int i;
-	u32 restore_ms = 0;
-
-	if (dvobj->periodic_tsf_update_etime) {
-		if (rtw_time_after(rtw_get_current_time(), dvobj->periodic_tsf_update_etime)) {
-			/* end for restore status */
-			dvobj->periodic_tsf_update_etime = 0;
-			rtw_hal_rcr_set_chk_bssid(adapter, MLME_ACTION_NONE);
-		}
-		return;
-	}
-
-	if (dvobj->rf_ctl.offch_state != OFFCHS_NONE)
-		return;
-
-	/*
-	* all required ifaces can switch to restore status together
-	* loop all pause iface to get largest restore time required
-	*/
-	for (i = 0; i < dvobj->iface_nums; i++) {
-		iface = dvobj->padapters[i];
-		if (!iface)
-			continue;
-
-		mlmeext = &iface->mlmeextpriv;
-
-		if (mlmeext->tsf_update_required
-			&& mlmeext->tsf_update_pause_stime
-			&& rtw_get_passing_time_ms(mlmeext->tsf_update_pause_stime)
-				> mlmeext->mlmext_info.bcn_interval * mlmeext->tsf_update_pause_factor
-		) {
-			if (restore_ms < mlmeext->mlmext_info.bcn_interval * mlmeext->tsf_update_restore_factor)
-				restore_ms = mlmeext->mlmext_info.bcn_interval * mlmeext->tsf_update_restore_factor;
-		}
-	}
-
-	if (!restore_ms)
-		return;
-
-	dvobj->periodic_tsf_update_etime = rtw_get_current_time() + rtw_ms_to_systime(restore_ms);
-	if (!dvobj->periodic_tsf_update_etime)
-		dvobj->periodic_tsf_update_etime++;
-
-	rtw_hal_rcr_set_chk_bssid(adapter, MLME_ACTION_NONE);
-
-	/* set timer to end restore status */
-	_set_timer(&dvobj->periodic_tsf_update_end_timer, restore_ms);
-#endif
-}
-
-void rtw_hal_periodic_tsf_update_end_timer_hdl(void *ctx)
-{
-	struct dvobj_priv *dvobj = (struct dvobj_priv *)ctx;
-
-	if (dev_is_surprise_removed(dvobj) || dev_is_drv_stopped(dvobj))
-		return;
-
-	rtw_periodic_tsf_update_end_cmd(dvobj_get_primary_adapter(dvobj));
-}
+/* rtw_hal_periodic_tsf_update_chk / rtw_hal_periodic_tsf_update_end_timer_hdl — rust/hal_com_tsf_periodic.inc.rs (W4-130) */
 
 static inline u8 hw_var_rcr_config(_adapter *adapter, u32 rcr)
 {

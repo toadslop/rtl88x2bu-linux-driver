@@ -43,5 +43,3 @@ pub extern "C" fn rtw_iface_disable_tsf_update(adapter: *mut c_void) {
         rtw_rust_hal_com_tsf_hal_set_tsf_update(adapter, 0);
     }
 }
-
-include!("hal_com_tsf_periodic.inc.rs");
