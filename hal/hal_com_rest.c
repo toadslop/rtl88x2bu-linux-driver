@@ -14526,11 +14526,11 @@ u8 rtw_rust_hal_com_rx_tsf_filter(_adapter *adapter)
 	return GET_HAL_SPEC(adapter)->rx_tsf_filter;
 }
 
-u32 rtw_rust_hal_com_periodic_tsf_update_etime(_adapter *adapter)
+u8 rtw_rust_hal_com_periodic_tsf_active(_adapter *adapter)
 {
 	if (!adapter)
 		return 0;
-	return adapter_to_dvobj(adapter)->periodic_tsf_update_etime;
+	return adapter_to_dvobj(adapter)->periodic_tsf_update_etime != 0;
 }
 
 u8 rtw_rust_hal_com_wifi_spec(_adapter *adapter)

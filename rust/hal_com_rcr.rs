@@ -141,7 +141,7 @@ mod chk_bssid {
         fn rtw_rust_hal_com_chk_bssid_apply_action(m: *mut MiState, self_action: U8);
         fn rtw_rust_hal_com_in_cta_test(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_com_rx_tsf_filter(adapter: *mut c_void) -> U8;
-        fn rtw_rust_hal_com_periodic_tsf_update_etime(adapter: *mut c_void) -> U32;
+        fn rtw_rust_hal_com_periodic_tsf_active(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_com_wifi_spec(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_com_get_clt_num(adapter: *mut c_void) -> U8;
         fn rtw_rust_hal_com_rcr_use_mbssid_shortcut() -> i32;
@@ -255,10 +255,11 @@ mod chk_bssid {
                 rcr_new |= RCR_CBSSID_DATA;
             }
 
-            let periodic = unsafe { rtw_rust_hal_com_periodic_tsf_update_etime(adapter) };
+            let periodic_active =
+                unsafe { rtw_rust_hal_com_periodic_tsf_active(adapter) } != 0;
             if scan_enter_num(&mstate) != 0 || in_cta != 0 {
                 rcr_new &= !RCR_CBSSID_BCN;
-            } else if sta_lg_num(&mstate) != 0 || periodic != 0 {
+            } else if sta_lg_num(&mstate) != 0 || periodic_active {
                 rcr_new |= RCR_CBSSID_BCN;
             } else if (ap_num(&mstate) != 0 && unsafe { rtw_rust_hal_com_wifi_spec(adapter) } != 0)
                 || mesh_num(&mstate) != 0
