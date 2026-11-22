@@ -86,8 +86,9 @@ pub extern "C" fn rtw_hal_periodic_tsf_update_chk(adapter: *mut c_void) {
             return;
         }
 
-        let mut new_etime =
-            rtw_rust_hal_com_get_current_time() + rtw_rust_hal_com_ms_to_systime(restore_ms as i32);
+        let mut new_etime = rtw_rust_hal_com_get_current_time().wrapping_add(
+            rtw_rust_hal_com_ms_to_systime(restore_ms as i32),
+        );
         if new_etime == 0 {
             new_etime = 1;
         }
