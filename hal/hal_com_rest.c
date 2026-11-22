@@ -14427,6 +14427,91 @@ void rtw_rust_hal_com_mi_status_merge(struct mi_state *d, struct mi_state *a)
 	rtw_mi_status_merge(d, a);
 }
 
+void rtw_rust_hal_com_chk_bssid_apply_action(struct mi_state *mstate_s, u8 self_action)
+{
+	if (!mstate_s)
+		return;
+
+	switch (self_action) {
+	case MLME_SCAN_ENTER:
+		mstate_s->scan_num = 1;
+		mstate_s->scan_enter_num = 1;
+		break;
+	case MLME_SCAN_DONE:
+		mstate_s->scan_enter_num = 0;
+		break;
+	case MLME_STA_CONNECTING:
+		mstate_s->lg_sta_num = 1;
+		mstate_s->ld_sta_num = 0;
+		break;
+	case MLME_STA_CONNECTED:
+		mstate_s->lg_sta_num = 0;
+		mstate_s->ld_sta_num = 1;
+		break;
+	case MLME_STA_DISCONNECTED:
+		mstate_s->lg_sta_num = 0;
+		mstate_s->ld_sta_num = 0;
+		break;
+#ifdef CONFIG_TDLS
+	case MLME_TDLS_LINKED:
+		mstate_s->ld_tdls_num = 1;
+		break;
+	case MLME_TDLS_NOLINK:
+		mstate_s->ld_tdls_num = 0;
+		break;
+#endif
+#ifdef CONFIG_AP_MODE
+	case MLME_AP_STARTED:
+		mstate_s->ap_num = 1;
+		break;
+	case MLME_AP_STOPPED:
+		mstate_s->ap_num = 0;
+		mstate_s->ld_ap_num = 0;
+		break;
+#endif
+#ifdef CONFIG_RTW_MESH
+	case MLME_MESH_STARTED:
+		mstate_s->mesh_num = 1;
+		break;
+	case MLME_MESH_STOPPED:
+		mstate_s->mesh_num = 0;
+		mstate_s->ld_mesh_num = 0;
+		break;
+#endif
+	case MLME_ACTION_NONE:
+	case MLME_ADHOC_STARTED:
+		break;
+	default:
+		rtw_warn_on(1);
+		break;
+	}
+}
+
+u8 rtw_rust_mstate_ap_num(struct mi_state *m)
+{
+	return MSTATE_AP_NUM(m);
+}
+
+u8 rtw_rust_mstate_mesh_num(struct mi_state *m)
+{
+	return MSTATE_MESH_NUM(m);
+}
+
+u8 rtw_rust_mstate_tdls_ld_num(struct mi_state *m)
+{
+	return MSTATE_TDLS_LD_NUM(m);
+}
+
+u8 rtw_rust_mstate_scan_enter_num(struct mi_state *m)
+{
+	return MSTATE_SCAN_ENTER_NUM(m);
+}
+
+u8 rtw_rust_mstate_sta_lg_num(struct mi_state *m)
+{
+	return MSTATE_STA_LG_NUM(m);
+}
+
 u8 rtw_rust_hal_com_in_cta_test(_adapter *adapter)
 {
 	if (!adapter)
