@@ -139,6 +139,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-rcr-leaf test-rcr-leaf-rust \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-tsf-iface test-tsf-iface-mbssid \
+	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
 	test-c2h-evt-robustness clean
 
 all: test
@@ -179,6 +180,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-rcr-leaf test-rcr-leaf-rust \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-tsf-iface test-tsf-iface-mbssid \
+	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
 	test-c2h-evt-robustness
 
 test-c: test_hw_rate_map
@@ -1844,6 +1846,36 @@ test_hal_com_tsf_iface_mbssid: test_hal_com_tsf_iface.c $(TSF_IFACE_SHIM) \
 	$(CC) $(TSF_IFACE_MBSSID_CFLAGS) -I../include -o $@ test_hal_com_tsf_iface.c \
 		$(TSF_IFACE_SHIM) $(TSF_IFACE_ORACLE) $(TSF_IFACE_PROD)
 
+RUST_TSF_IFACE := $(ROOT)/rust/hal_com_tsf_host.rs
+
+librust_hal_com_tsf.a: $(RUST_TSF_IFACE)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_tsf_test --crate-type staticlib \
+		$(RUST_TSF_IFACE) -o $@
+
+librust_hal_com_tsf_mbssid.a: $(RUST_TSF_IFACE)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_tsf_test --cfg config_mi_with_mbssid_cam \
+		--crate-type staticlib $(RUST_TSF_IFACE) -o $@
+
+test-tsf-iface-rust: test_hal_com_tsf_iface_rust
+	./test_hal_com_tsf_iface_rust
+
+test-tsf-iface-rust-mbssid: test_hal_com_tsf_iface_rust_mbssid
+	./test_hal_com_tsf_iface_rust_mbssid
+
+test_hal_com_tsf_iface_rust: test_hal_com_tsf_iface.c $(TSF_IFACE_SHIM) \
+		$(TSF_IFACE_ORACLE) librust_hal_com_tsf.a
+	$(CC) $(CFLAGS) -I../include -DRUST_HAL_COM_TSF_ORACLE -o $@ \
+		test_hal_com_tsf_iface.c $(TSF_IFACE_SHIM) $(TSF_IFACE_ORACLE) \
+		librust_hal_com_tsf.a
+
+test_hal_com_tsf_iface_rust_mbssid: test_hal_com_tsf_iface.c $(TSF_IFACE_SHIM) \
+		$(TSF_IFACE_ORACLE) librust_hal_com_tsf_mbssid.a
+	$(CC) $(TSF_IFACE_MBSSID_CFLAGS) -I../include -DRUST_HAL_COM_TSF_ORACLE -o $@ \
+		test_hal_com_tsf_iface.c $(TSF_IFACE_SHIM) $(TSF_IFACE_ORACLE) \
+		librust_hal_com_tsf_mbssid.a
+
 RUST_C2H_EVT := $(ROOT)/rust/hal_com_c2h_evt.rs
 CUSTOMER_STR_SHIM := hal_com_customer_str_shim.c
 CUSTOMER_STR_ORACLE := hal_com_customer_str_c_oracle.c
@@ -1981,5 +2013,7 @@ clean:
 		test_hal_com_gpio_wakeup_8821asdio test_hal_com_gpio_wakeup_rust_8821asdio \
 		librust_hal_com_gpio_wakeup.a librust_hal_com_gpio_wakeup_8821as.a \
 		test_hal_com_tsf_iface test_hal_com_tsf_iface_mbssid \
+		test_hal_com_tsf_iface_rust test_hal_com_tsf_iface_rust_mbssid \
+		librust_hal_com_tsf.a librust_hal_com_tsf_mbssid.a \
 		test_hal_com_tx_aclt_set test_hal_com_tx_aclt_set_rust \
 		librust_hal_com_tx_aclt_set.a

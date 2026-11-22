@@ -4,7 +4,7 @@
 
 typedef unsigned char u8;
 typedef unsigned int u32;
-typedef u32 systime;
+typedef unsigned long systime;
 
 struct mlme_ext_priv {
 	u8 tsf_update_required;
