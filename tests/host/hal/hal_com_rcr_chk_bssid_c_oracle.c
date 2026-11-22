@@ -22,7 +22,7 @@ void rtw_hal_tsf_update_restore(struct _adapter *adapter);
 
 static u8 hal_rx_tsf_filter(struct _adapter *adapter)
 {
-	return GET_HAL_DATA(adapter)->rx_tsf_filter;
+	return GET_HAL_SPEC(adapter)->rx_tsf_filter;
 }
 
 static void set_chk_bssid_oracle(struct _adapter *adapter, u8 self_action)
@@ -61,7 +61,34 @@ static void set_chk_bssid_oracle(struct _adapter *adapter, u8 self_action)
 		mstate_s.lg_sta_num = 0;
 		mstate_s.ld_sta_num = 0;
 		break;
+#ifdef CONFIG_TDLS
+	case MLME_TDLS_LINKED:
+		mstate_s.ld_tdls_num = 1;
+		break;
+	case MLME_TDLS_NOLINK:
+		mstate_s.ld_tdls_num = 0;
+		break;
+#endif
+#ifdef CONFIG_AP_MODE
+	case MLME_AP_STARTED:
+		mstate_s.ap_num = 1;
+		break;
+	case MLME_AP_STOPPED:
+		mstate_s.ap_num = 0;
+		mstate_s.ld_ap_num = 0;
+		break;
+#endif
+#ifdef CONFIG_RTW_MESH
+	case MLME_MESH_STARTED:
+		mstate_s.mesh_num = 1;
+		break;
+	case MLME_MESH_STOPPED:
+		mstate_s.mesh_num = 0;
+		mstate_s.ld_mesh_num = 0;
+		break;
+#endif
 	case MLME_ACTION_NONE:
+	case MLME_ADHOC_STARTED:
 		break;
 	default:
 		rtw_warn_on(1);
