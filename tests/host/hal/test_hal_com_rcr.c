@@ -49,6 +49,17 @@ int main(void)
 	expect_u8("check0", rtw_hal_rcr_check(a, 1u), 0);
 	/* C requires every bit in check_bit: partial overlap is false. */
 	expect_u8("check_partial", rtw_hal_rcr_check(a, 0x0F01u), 0);
+	/* Subset mask with other RCR bits set (not exact equality). */
+	expect_u8("check_subset", rtw_hal_rcr_check(a, 0x0300u), 1);
+
+	host_hal_rcr_reset();
+	host_hal_rcr_set_cached(0x1u);
+	host_hal_rcr_set_register(0u);
+	host_hal_rcr_trace.get_count = 0;
+	/* check reads ReceiveConfig only — not REG_RCR and not get_hwreg. */
+	expect_u8("check_sw", rtw_hal_rcr_check(a, 0x1u), 1);
+	expect_u32("check_sw_cache", host_hal_rcr_receive_config(a), 0x1u);
+	expect_u32("check_sw_no_get", host_hal_rcr_trace.get_count, 0u);
 
 	host_hal_rcr_reset();
 	host_hal_rcr_set_cached(0x10u);
@@ -91,6 +102,20 @@ int main(void)
 	expect_u32("fail_cache", host_hal_rcr_receive_config(a), 0x7u);
 
 #ifdef RUST_HAL_COM_RCR_ORACLE
+	{
+		u8 got;
+		u8 want;
+
+		host_hal_rcr_reset();
+		host_hal_rcr_set_cached(0x1u);
+		host_hal_rcr_set_register(0u);
+		got = rtw_hal_rcr_check(a, 0x1u);
+		host_hal_rcr_reset();
+		host_hal_rcr_set_cached(0x1u);
+		host_hal_rcr_set_register(0u);
+		want = rtw_hal_rcr_check_c_oracle(a, 0x1u);
+		expect_u8("check_eq", got, want);
+	}
 	{
 		u8 got;
 		u8 want;
