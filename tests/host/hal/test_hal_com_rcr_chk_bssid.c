@@ -213,6 +213,53 @@ int main(void)
 				      host_hal_rcr_chk_last_set_rcr(), 1, 0);
 	}
 
+	/* Client port overrides STA_LG BCN set on connect. */
+	{
+		struct _adapter *a = host_hal_rcr_chk_adapter();
+
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_mi_no_self(&zero);
+		host_hal_rcr_chk_set_mi_no_others(&zero);
+		host_hal_rcr_chk_set_clt_num(MAX_CLIENT_PORT_NUM + 1);
+		host_hal_rcr_chk_set_initial_rcr(0);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_STA_CONNECTING);
+		expect_u32("client_port_vs_connecting",
+			     host_hal_rcr_trace.set_count, 1u);
+		expect_rcr_bssid_bits("client_port_vs_connecting",
+				      host_hal_rcr_chk_last_set_rcr(), 1, 0);
+	}
+
+	/* STA_LG arm wins over AP+wifi_spec beacon clear. */
+	{
+		struct _adapter *a = host_hal_rcr_chk_adapter();
+
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_mi_no_self(&ap_self);
+		host_hal_rcr_chk_set_mi_no_others(&zero);
+		host_hal_rcr_chk_set_wifi_spec(1);
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_DATA);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_STA_CONNECTING);
+		expect_rcr_bssid_bits("lg_sta_beats_ap_wifi",
+				      host_hal_rcr_chk_last_set_rcr(), 0, 1);
+	}
+
+	/* CONNECTED clears pre-set lg_sta; AP+wifi beacon clear wins. */
+	{
+		struct mi_state lg_ap = {0};
+		struct _adapter *a = host_hal_rcr_chk_adapter();
+
+		lg_ap.lg_sta_num = 1;
+		lg_ap.ap_num = 1;
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_mi_no_self(&lg_ap);
+		host_hal_rcr_chk_set_mi_no_others(&zero);
+		host_hal_rcr_chk_set_wifi_spec(1);
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_BCN);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_STA_CONNECTED);
+		expect_rcr_bssid_bits("connected_clears_lg",
+				      host_hal_rcr_chk_last_set_rcr(), 0, 0);
+	}
+
 	/* STA connecting: BCN on (lg_sta), DATA on. */
 	run_case("sta_connecting", RCR_CBSSID_DATA, &zero, &zero,
 		 MLME_STA_CONNECTING, 1, 1, 1);
