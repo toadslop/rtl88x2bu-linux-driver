@@ -136,7 +136,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo \
 	test-tx-aclt-set test-tx-aclt-set-rust \
-	test-rcr-leaf test-rcr-leaf-rust \
+	test-rcr-leaf test-rcr-leaf-rust test-rcr-chk-bssid-oracle \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-c2h-evt-robustness clean
 
@@ -175,7 +175,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo \
 	test-tx-aclt-set test-tx-aclt-set-rust \
-	test-rcr-leaf test-rcr-leaf-rust \
+	test-rcr-leaf test-rcr-leaf-rust test-rcr-chk-bssid-oracle \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-c2h-evt-robustness
 
