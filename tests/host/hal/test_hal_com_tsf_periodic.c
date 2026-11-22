@@ -116,6 +116,7 @@ static void test_offchannel_skip(void)
 	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
 	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
 	eq_u32("offch_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
+	eq_u32("offch_rcr", host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count, 0);
 	eq_stime("offch_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 0);
 }
 
@@ -156,7 +157,84 @@ static void test_pause_at_threshold_no_arm(void)
 	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
 	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
 	eq_u32("thresh_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
+	eq_u32("thresh_rcr", host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count, 0);
 	eq_stime("thresh_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 0);
+}
+
+static void test_pause_past_threshold_arms(void)
+{
+	struct chk_pair_out prod;
+
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 2, 3, 100);
+	host_hal_com_tsf_periodic_set_current_time(211);
+
+	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,
+		     &prod);
+	eq_u32("past_ms", prod.last_timer_ms, 300);
+}
+
+static void test_not_required_skips(void)
+{
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 0, 10, 1, 2, 100);
+	host_hal_com_tsf_periodic_set_current_time(5000);
+
+	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
+	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
+	eq_u32("noreq_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
+}
+
+static void test_zero_pause_skips(void)
+{
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 0, 1, 2, 100);
+	host_hal_com_tsf_periodic_set_current_time(5000);
+
+	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
+	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
+	eq_u32("nopause_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
+}
+
+static void test_etime_expired_next_tick(void)
+{
+	host_hal_com_tsf_periodic_reset();
+	host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime = 1000;
+	host_hal_com_tsf_periodic_set_current_time(1001);
+
+	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
+	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
+	eq_stime("next_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 0);
+	eq_u32("next_rcr", host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count, 1);
+}
+
+static void test_etime_wrap_bump(void)
+{
+	struct chk_pair_out prod;
+
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 1, 5, 100);
+	host_hal_com_tsf_periodic_set_current_time((systime)-500);
+
+	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,
+		     &prod);
+	eq_stime("wrap_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 1);
+}
+
+static void test_restore_max_not_last(void)
+{
+	struct chk_pair_out prod;
+	struct _adapter *a1 = host_hal_com_tsf_periodic_adapter();
+	struct _adapter *a2 = host_hal_com_tsf_periodic_dvobj()->padapters[1];
+
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(a1, 1, 10, 1, 5, 100);
+	setup_iface(a2, 1, 10, 1, 2, 100);
+	host_hal_com_tsf_periodic_set_current_time(500);
+
+	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,
+		     &prod);
+	eq_u32("max_ms", prod.last_timer_ms, 500);
 }
 
 static void test_etime_expired_clears(void)
@@ -197,6 +275,9 @@ static void test_timer_hdl(void)
 	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
 	rtw_hal_periodic_tsf_update_end_timer_hdl(host_hal_com_tsf_periodic_dvobj());
 	eq_u32("hdl_cmd", host_hal_com_tsf_periodic_trace.periodic_end_cmd_count, 1);
+	if (host_hal_com_tsf_periodic_trace.last_end_cmd_adapter !=
+	    host_hal_com_tsf_periodic_adapter())
+		fail("hdl_primary");
 }
 
 static void test_timer_hdl_stopped(void)
@@ -224,7 +305,13 @@ int main(void)
 	test_etime_future_returns();
 	test_etime_at_equality();
 	test_pause_at_threshold_no_arm();
+	test_pause_past_threshold_arms();
+	test_not_required_skips();
+	test_zero_pause_skips();
+	test_etime_expired_next_tick();
+	test_etime_wrap_bump();
 	test_etime_expired_clears();
+	test_restore_max_not_last();
 	test_restore_arm_timer();
 #endif
 	test_timer_hdl();
