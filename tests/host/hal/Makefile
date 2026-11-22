@@ -138,7 +138,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo test-dump-rsvd-fifo-rust \
 	test-tx-aclt-set test-tx-aclt-set-rust \
-	test-rcr-leaf test-rcr-leaf-rust test-rcr-chk-bssid test-rcr-chk-bssid-rust \
+	test-rcr-leaf test-rcr-leaf-rust test-rcr-chk-bssid \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-tsf-iface test-tsf-iface-mbssid \
 	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
@@ -180,7 +180,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo test-dump-rsvd-fifo-rust \
 	test-tx-aclt-set test-tx-aclt-set-rust \
-	test-rcr-leaf test-rcr-leaf-rust test-rcr-chk-bssid test-rcr-chk-bssid-rust \
+	test-rcr-leaf test-rcr-leaf-rust test-rcr-chk-bssid \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-tsf-iface test-tsf-iface-mbssid \
 	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
@@ -2068,7 +2068,7 @@ clean:
 		$(if $(wildcard $(ROOT)/rust/hal_com_dft_port_host.rs),librust_hal_com_dft_port.a,) \
 		test_hal_com_mbid_cam_rust librust_hal_com_mbid_cam.a \
 		test_hal_com_rcr test_hal_com_rcr_rust librust_hal_com_rcr.a \
-		test_hal_com_rcr_chk_bssid test_hal_com_rcr_chk_bssid_rust librust_hal_com_rcr_chk.a \
+		test_hal_com_rcr_chk_bssid \
 		test_hal_com_gpio_wakeup test_hal_com_gpio_wakeup_rust \
 		test_hal_com_gpio_wakeup_8821asdio test_hal_com_gpio_wakeup_rust_8821asdio \
 		librust_hal_com_gpio_wakeup.a librust_hal_com_gpio_wakeup_8821as.a \
