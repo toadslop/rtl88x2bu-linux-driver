@@ -71,7 +71,9 @@ pub extern "C" fn rtw_hal_periodic_tsf_update_chk(adapter: *mut c_void) {
             }
             let bcn = u32::from(rtw_rust_hal_com_tsf_ext_bcn_interval(iface));
             let pause_factor = u32::from(rtw_rust_hal_com_tsf_ext_pause_factor(iface));
-            if rtw_rust_hal_com_get_passing_time_ms(pause_stime) <= bcn * pause_factor {
+            let elapsed = rtw_rust_hal_com_get_passing_time_ms(pause_stime) as i32;
+            let threshold = (bcn * pause_factor) as i32;
+            if elapsed <= threshold {
                 continue;
             }
             let cand = bcn * u32::from(rtw_rust_hal_com_tsf_ext_restore_factor(iface));
@@ -87,7 +89,7 @@ pub extern "C" fn rtw_hal_periodic_tsf_update_chk(adapter: *mut c_void) {
         let mut new_etime =
             rtw_rust_hal_com_get_current_time() + rtw_rust_hal_com_ms_to_systime(restore_ms as i32);
         if new_etime == 0 {
-            new_etime = new_etime.wrapping_add(1);
+            new_etime = 1;
         }
         rtw_rust_hal_com_tsf_periodic_set_etime(dvobj, new_etime);
         rtw_hal_rcr_set_chk_bssid(adapter, MLME_ACTION_NONE);
