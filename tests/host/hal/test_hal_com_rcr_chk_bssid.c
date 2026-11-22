@@ -88,6 +88,20 @@ int main(void)
 		expect_rcr_bssid_bits("scan_buddy_idle", host_hal_rcr_chk_last_set_rcr(), 0, 0);
 	}
 
+	/* SCAN_DONE clears only the others snapshot; self scan_enter keeps filters off. */
+	{
+		struct mi_state scan_self = {0};
+		struct _adapter *a = host_hal_rcr_chk_adapter();
+
+		scan_self.scan_enter_num = 1;
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_mi_no_self(&scan_self);
+		host_hal_rcr_chk_set_mi_no_others(&zero);
+		host_hal_rcr_chk_set_initial_rcr(0);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_SCAN_DONE);
+		expect_u32("scan_done_self_survey_skip", host_hal_rcr_trace.set_count, 0u);
+	}
+
 	/* SCAN_DONE clears scan_enter_num contributed by others (must restore filters). */
 	{
 		struct mi_state scan_other = {0};
