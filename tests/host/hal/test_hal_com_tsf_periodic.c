@@ -111,7 +111,7 @@ static void test_offchannel_skip(void)
 	host_hal_com_tsf_periodic_reset();
 	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 1, 1, 2, 100);
 	host_hal_com_tsf_periodic_dvobj()->rf_ctl.offch_state = 1;
-	host_hal_com_tsf_periodic_set_passing_ms(500);
+	host_hal_com_tsf_periodic_set_current_time(600);
 
 	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
 	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
@@ -131,6 +131,32 @@ static void test_etime_future_returns(void)
 	eq_u32("future_rcr", host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count, 0);
 	eq_u32("future_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
 	eq_stime("future_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 5000);
+}
+
+static void test_etime_at_equality(void)
+{
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 1, 2, 100);
+	host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime = 1000;
+	host_hal_com_tsf_periodic_set_current_time(1000);
+
+	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
+	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
+	eq_u32("eq_etime_rcr", host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count, 0);
+	eq_u32("eq_etime_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
+	eq_stime("eq_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 1000);
+}
+
+static void test_pause_at_threshold_no_arm(void)
+{
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 2, 3, 100);
+	host_hal_com_tsf_periodic_set_current_time(210);
+
+	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
+	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
+	eq_u32("thresh_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
+	eq_stime("thresh_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 0);
 }
 
 static void test_etime_expired_clears(void)
@@ -196,6 +222,8 @@ int main(void)
 #ifndef CONFIG_MI_WITH_MBSSID_CAM
 	test_offchannel_skip();
 	test_etime_future_returns();
+	test_etime_at_equality();
+	test_pause_at_threshold_no_arm();
 	test_etime_expired_clears();
 	test_restore_arm_timer();
 #endif
