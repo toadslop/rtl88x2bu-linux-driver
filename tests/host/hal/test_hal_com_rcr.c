@@ -89,21 +89,48 @@ int main(void)
 	expect_u32("fail_cache", host_hal_rcr_receive_config(a), 0x7u);
 
 #ifdef RUST_HAL_COM_RCR_ORACLE
-	host_hal_rcr_reset();
-	host_hal_rcr_set_cached(0x55u);
-	host_hal_rcr_set_register(0x55u);
-	expect_u8("add_eq", rtw_hal_rcr_add(a, 0x2u),
-		  rtw_hal_rcr_add_c_oracle(a, 0x2u));
-	expect_u32("add_eq_cache", host_hal_rcr_receive_config(a),
-		   0x57u);
+	{
+		u8 got;
+		u8 want;
+		u32 got_cache;
+		u32 want_cache;
 
-	host_hal_rcr_reset();
-	host_hal_rcr_set_cached(0x55u);
-	host_hal_rcr_set_register(0x55u);
-	expect_u8("clr_eq", rtw_hal_rcr_clear(a, 5u),
-		  rtw_hal_rcr_clear_c_oracle(a, 5u));
-	expect_u32("clr_eq_cache", host_hal_rcr_receive_config(a),
-		   0x50u);
+		host_hal_rcr_reset();
+		host_hal_rcr_set_cached(0x55u);
+		host_hal_rcr_set_register(0x55u);
+		got = rtw_hal_rcr_add(a, 0x2u);
+		got_cache = host_hal_rcr_receive_config(a);
+
+		host_hal_rcr_reset();
+		host_hal_rcr_set_cached(0x55u);
+		host_hal_rcr_set_register(0x55u);
+		want = rtw_hal_rcr_add_c_oracle(a, 0x2u);
+		want_cache = host_hal_rcr_receive_config(a);
+
+		expect_u8("add_eq", got, want);
+		expect_u32("add_eq_cache", got_cache, want_cache);
+	}
+	{
+		u8 got;
+		u8 want;
+		u32 got_cache;
+		u32 want_cache;
+
+		host_hal_rcr_reset();
+		host_hal_rcr_set_cached(0x55u);
+		host_hal_rcr_set_register(0x55u);
+		got = rtw_hal_rcr_clear(a, 5u);
+		got_cache = host_hal_rcr_receive_config(a);
+
+		host_hal_rcr_reset();
+		host_hal_rcr_set_cached(0x55u);
+		host_hal_rcr_set_register(0x55u);
+		want = rtw_hal_rcr_clear_c_oracle(a, 5u);
+		want_cache = host_hal_rcr_receive_config(a);
+
+		expect_u8("clr_eq", got, want);
+		expect_u32("clr_eq_cache", got_cache, want_cache);
+	}
 #endif
 
 	if (failures)
