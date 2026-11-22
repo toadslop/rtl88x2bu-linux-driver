@@ -243,21 +243,30 @@ int main(void)
 				      host_hal_rcr_chk_last_set_rcr(), 0, 1);
 	}
 
-	/* CONNECTED clears pre-set lg_sta; AP+wifi beacon clear wins. */
+	/* CONNECTED clears lg_sta on self snapshot; AP+wifi idle would keep lg. */
 	{
-		struct mi_state lg_ap = {0};
+		struct mi_state lg_other = {0};
 		struct _adapter *a = host_hal_rcr_chk_adapter();
 
-		lg_ap.lg_sta_num = 1;
-		lg_ap.ap_num = 1;
+		lg_other.lg_sta_num = 1;
 		host_hal_rcr_chk_reset();
-		host_hal_rcr_chk_set_mi_no_self(&lg_ap);
-		host_hal_rcr_chk_set_mi_no_others(&zero);
+		host_hal_rcr_chk_set_mi_no_self(&ap_self);
+		host_hal_rcr_chk_set_mi_no_others(&lg_other);
 		host_hal_rcr_chk_set_wifi_spec(1);
-		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_BCN);
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_BCN | RCR_CBSSID_DATA);
 		rtw_hal_rcr_set_chk_bssid(a, MLME_STA_CONNECTED);
+		expect_u32("connected_clears_lg", host_hal_rcr_trace.set_count, 1u);
 		expect_rcr_bssid_bits("connected_clears_lg",
 				      host_hal_rcr_chk_last_set_rcr(), 0, 0);
+
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_mi_no_self(&ap_self);
+		host_hal_rcr_chk_set_mi_no_others(&lg_other);
+		host_hal_rcr_chk_set_wifi_spec(1);
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_BCN | RCR_CBSSID_DATA);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_ACTION_NONE);
+		expect_rcr_bssid_bits("connected_clears_lg_idle_keep",
+				      host_hal_rcr_chk_last_set_rcr(), 0, 1);
 	}
 
 	/* STA connecting: BCN on (lg_sta), DATA on. */
