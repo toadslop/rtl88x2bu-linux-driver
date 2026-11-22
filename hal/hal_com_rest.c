@@ -967,6 +967,29 @@ static void rtw_hal_set_tsf_update(_adapter *adapter, u8 en)
 	}
 }
 #endif /*CONFIG_MI_WITH_MBSSID_CAM*/
+
+void rtw_rust_hal_com_tsf_set_pause_stime(_adapter *adapter, systime stime)
+{
+	adapter->mlmeextpriv.tsf_update_pause_stime = stime;
+}
+
+void rtw_rust_hal_com_tsf_set_update_required(_adapter *adapter, u8 v)
+{
+	adapter->mlmeextpriv.tsf_update_required = v;
+}
+
+void rtw_rust_hal_com_tsf_set_en_hw_update(_adapter *adapter, u8 v)
+{
+	adapter->mlmeextpriv.en_hw_update_tsf = v;
+}
+
+#ifndef CONFIG_MI_WITH_MBSSID_CAM
+void rtw_rust_hal_com_tsf_hal_set_tsf_update(_adapter *adapter, u8 en)
+{
+	rtw_hal_set_tsf_update(adapter, en);
+}
+#endif /* CONFIG_MI_WITH_MBSSID_CAM */
+
 static void rtw_hal_set_hw_update_tsf(PADAPTER padapter)
 {
 #ifdef CONFIG_MI_WITH_MBSSID_CAM
@@ -990,28 +1013,7 @@ static void rtw_hal_set_hw_update_tsf(PADAPTER padapter)
 #endif
 }
 
-void rtw_iface_enable_tsf_update(_adapter *adapter)
-{
-	adapter->mlmeextpriv.tsf_update_pause_stime = 0;
-	adapter->mlmeextpriv.tsf_update_required = 1;
-#ifdef CONFIG_MI_WITH_MBSSID_CAM
-
-#else
-	rtw_hal_set_tsf_update(adapter, 1);
-#endif
-}
-
-void rtw_iface_disable_tsf_update(_adapter *adapter)
-{
-	adapter->mlmeextpriv.tsf_update_required = 0;
-	adapter->mlmeextpriv.tsf_update_pause_stime = 0;
-	adapter->mlmeextpriv.en_hw_update_tsf = 0;
-#ifdef CONFIG_MI_WITH_MBSSID_CAM
-
-#else
-	rtw_hal_set_tsf_update(adapter, 0);
-#endif
-}
+/* rtw_iface_enable_tsf_update / rtw_iface_disable_tsf_update — rust/hal_com_tsf.rs (W4-129) */
 
 static void rtw_hal_tsf_update_pause(_adapter *adapter)
 {
