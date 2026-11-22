@@ -3326,6 +3326,7 @@ ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_FIND_BEST_CHANNEL' $(src)/inclu
 _rust_cfg_find_best_channel := y
 endif
 ifneq ($(_rust_cfg_find_best_channel),)
+rustflags-y += --cfg config_find_best_channel
 endif
 _rust_cfg_dbg_memory_leak :=
 ifneq ($(filter -DDBG_MEMORY_LEAK,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
