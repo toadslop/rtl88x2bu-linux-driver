@@ -227,12 +227,13 @@ mod chk_bssid {
         let hw_var = unsafe { rtw_rust_hal_com_hw_var_rcr() as U32 };
         unsafe { rtw_rust_hal_com_get_hwreg(adapter, hw_var, &mut rcr as *mut U32 as *mut U8) };
         let mut rcr_new = rcr;
+        let mut mstate = MiState::zeroed();
+        let mut mstate_s = MiState::zeroed();
+        let use_shortcut = unsafe { rtw_rust_hal_com_rcr_use_mbssid_shortcut() } != 0;
 
-        if unsafe { rtw_rust_hal_com_rcr_use_mbssid_shortcut() } != 0 {
+        if use_shortcut {
             rcr_new &= !(RCR_CBSSID_BCN | RCR_CBSSID_DATA);
         } else {
-            let mut mstate = MiState::zeroed();
-            let mut mstate_s = MiState::zeroed();
             unsafe {
                 rtw_rust_hal_com_mi_status_no_self(adapter, mi_ptr(&mut mstate));
                 rtw_rust_hal_com_mi_status_no_others(adapter, mi_ptr(&mut mstate_s));
@@ -276,15 +277,7 @@ mod chk_bssid {
         }
 
         #[cfg(config_rtw_multi_ap)]
-        {
-            let mut mstate = MiState::zeroed();
-            let mut mstate_s = MiState::zeroed();
-            unsafe {
-                rtw_rust_hal_com_mi_status_no_self(adapter, mi_ptr(&mut mstate));
-                rtw_rust_hal_com_mi_status_no_others(adapter, mi_ptr(&mut mstate_s));
-                rtw_rust_hal_com_chk_bssid_apply_action(mi_ptr(&mut mstate_s), self_action);
-                rtw_rust_hal_com_mi_status_merge(mi_ptr(&mut mstate), mi_ptr(&mut mstate_s));
-            }
+        if !use_shortcut {
             if ap_num(&mstate) != 0
                 && unsafe { rtw_rust_hal_com_unassoc_sta_src_chk(adapter, 1) } != 0
             {

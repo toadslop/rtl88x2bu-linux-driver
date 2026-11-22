@@ -1764,7 +1764,7 @@ test_hal_com_rcr_chk_bssid: test_hal_com_rcr_chk_bssid.c $(RCR_CHK_BSSID_SHIM) $
 	$(CC) $(RCR_CHK_BSSID_CFLAGS) -I../include -o $@ test_hal_com_rcr_chk_bssid.c \
 		$(RCR_CHK_BSSID_SHIM) $(RCR_CHK_BSSID_ORACLE)
 
-# Rust chk_bssid L2 is wired in PR4 (hal_com_rcr_chk_bssid_rust.mk).
+include hal_com_rcr_chk_bssid_rust.mk
 
 GPIO_WAKEUP_SHIM := hal_com_gpio_wakeup_shim.c
 GPIO_WAKEUP_ORACLE := hal_com_gpio_wakeup_c_oracle.c

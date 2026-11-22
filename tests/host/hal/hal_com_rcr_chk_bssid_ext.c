@@ -263,3 +263,8 @@ void rtw_rust_hal_com_tsf_update_restore_for_rcr(void *adapter)
 {
 	rtw_hal_tsf_update_restore(adapter);
 }
+
+u8 rtw_rust_hal_com_unassoc_sta_src_chk(void *adapter, u8 stype)
+{
+	return rtw_unassoc_sta_src_chk(adapter, stype);
+}
