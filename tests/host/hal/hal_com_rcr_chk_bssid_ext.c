@@ -146,3 +146,60 @@ int rtw_rust_hal_com_rcr_use_mbssid_shortcut(void)
 	return 0;
 #endif
 }
+
+void rtw_rust_hal_com_mi_status_no_self(void *adapter, struct mi_state *m)
+{
+	rtw_mi_status_no_self(adapter, m);
+}
+
+void rtw_rust_hal_com_mi_status_no_others(void *adapter, struct mi_state *m)
+{
+	rtw_mi_status_no_others(adapter, m);
+}
+
+void rtw_rust_hal_com_mi_status_merge(struct mi_state *d, struct mi_state *a)
+{
+	rtw_mi_status_merge(d, a);
+}
+
+u8 rtw_rust_hal_com_in_cta_test(void *adapter)
+{
+	return GET_HAL_DATA(adapter)->in_cta_test;
+}
+
+u8 rtw_rust_hal_com_rx_tsf_filter(void *adapter)
+{
+	return GET_HAL_DATA(adapter)->rx_tsf_filter;
+}
+
+u32 rtw_rust_hal_com_periodic_tsf_update_etime(void *adapter)
+{
+	(void)adapter;
+	return adapter_to_dvobj(adapter)->periodic_tsf_update_etime;
+}
+
+u8 rtw_rust_hal_com_wifi_spec(void *adapter)
+{
+	(void)adapter;
+	return host_hal_rcr_chk_wifi_spec(adapter);
+}
+
+u8 rtw_rust_hal_com_get_clt_num(void *adapter)
+{
+	return get_clt_num(adapter);
+}
+
+void rtw_rust_hal_com_warn_on(int c)
+{
+	rtw_warn_on(c);
+}
+
+void rtw_rust_hal_com_tsf_update_pause_for_rcr(void *adapter)
+{
+	rtw_hal_tsf_update_pause(adapter);
+}
+
+void rtw_rust_hal_com_tsf_update_restore_for_rcr(void *adapter)
+{
+	rtw_hal_tsf_update_restore(adapter);
+}

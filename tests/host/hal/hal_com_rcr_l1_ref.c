@@ -23,3 +23,14 @@ unsigned char rtw_hal_rcr_clear(struct _adapter *adapter, unsigned int clear)
 	(void)clear;
 	return 1;
 }
+
+void rtw_hal_rcr_set_chk_bssid(struct _adapter *adapter, unsigned char self_action)
+{
+	(void)adapter;
+	(void)self_action;
+}
+
+void rtw_hal_rcr_set_chk_bssid_act_non(struct _adapter *adapter)
+{
+	(void)adapter;
+}
