@@ -47,6 +47,8 @@ int main(void)
 	host_hal_rcr_set_register(0x0F00u);
 	expect_u8("check", rtw_hal_rcr_check(a, 0x0F00u), 1);
 	expect_u8("check0", rtw_hal_rcr_check(a, 1u), 0);
+	/* C requires every bit in check_bit: partial overlap is false. */
+	expect_u8("check_partial", rtw_hal_rcr_check(a, 0x0F01u), 0);
 
 	host_hal_rcr_reset();
 	host_hal_rcr_set_cached(0x10u);
@@ -94,42 +96,52 @@ int main(void)
 		u8 want;
 		u32 got_cache;
 		u32 want_cache;
+		unsigned int got_set_count;
+		unsigned int want_set_count;
 
 		host_hal_rcr_reset();
 		host_hal_rcr_set_cached(0x55u);
 		host_hal_rcr_set_register(0x55u);
 		got = rtw_hal_rcr_add(a, 0x2u);
 		got_cache = host_hal_rcr_receive_config(a);
+		got_set_count = host_hal_rcr_trace.set_count;
 
 		host_hal_rcr_reset();
 		host_hal_rcr_set_cached(0x55u);
 		host_hal_rcr_set_register(0x55u);
 		want = rtw_hal_rcr_add_c_oracle(a, 0x2u);
 		want_cache = host_hal_rcr_receive_config(a);
+		want_set_count = host_hal_rcr_trace.set_count;
 
 		expect_u8("add_eq", got, want);
 		expect_u32("add_eq_cache", got_cache, want_cache);
+		expect_u32("add_eq_set", got_set_count, want_set_count);
 	}
 	{
 		u8 got;
 		u8 want;
 		u32 got_cache;
 		u32 want_cache;
+		unsigned int got_set_count;
+		unsigned int want_set_count;
 
 		host_hal_rcr_reset();
 		host_hal_rcr_set_cached(0x55u);
 		host_hal_rcr_set_register(0x55u);
 		got = rtw_hal_rcr_clear(a, 5u);
 		got_cache = host_hal_rcr_receive_config(a);
+		got_set_count = host_hal_rcr_trace.set_count;
 
 		host_hal_rcr_reset();
 		host_hal_rcr_set_cached(0x55u);
 		host_hal_rcr_set_register(0x55u);
 		want = rtw_hal_rcr_clear_c_oracle(a, 5u);
 		want_cache = host_hal_rcr_receive_config(a);
+		want_set_count = host_hal_rcr_trace.set_count;
 
 		expect_u8("clr_eq", got, want);
 		expect_u32("clr_eq_cache", got_cache, want_cache);
+		expect_u32("clr_eq_set", got_set_count, want_set_count);
 	}
 #endif
 
