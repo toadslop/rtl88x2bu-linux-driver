@@ -143,7 +143,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-tsf-iface test-tsf-iface-mbssid \
 	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
-	test-tsf-periodic \
+	test-tsf-periodic test-tsf-periodic-rust \
 	test-halmac-identity test-halmac-identity-rust \
 	test-c2h-evt-robustness clean
 
@@ -188,7 +188,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-tsf-iface test-tsf-iface-mbssid \
 	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
-	test-tsf-periodic \
+	test-tsf-periodic test-tsf-periodic-rust \
 	test-halmac-identity test-halmac-identity-rust \
 	test-c2h-evt-robustness
 
@@ -1978,6 +1978,22 @@ test_hal_com_tsf_periodic: test_hal_com_tsf_periodic.c $(TSF_PERIODIC_HOST) \
 		$(TSF_PERIODIC_HOST) $(TSF_PERIODIC_CHK_PROD) $(TSF_PERIODIC_TIMER_PROD) \
 		$(TSF_PERIODIC_ORACLE)
 
+test-tsf-periodic-rust: test_hal_com_tsf_periodic_rust
+	./test_hal_com_tsf_periodic_rust
+
+RUST_TSF_PERIODIC := $(ROOT)/rust/hal_com_tsf_periodic_host.rs
+
+librust_hal_com_tsf_periodic.a: $(RUST_TSF_PERIODIC)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_tsf_test --crate-type staticlib \
+		$(RUST_TSF_PERIODIC) -o $@
+
+test_hal_com_tsf_periodic_rust: test_hal_com_tsf_periodic.c $(TSF_PERIODIC_HOST) \
+		$(TSF_PERIODIC_ORACLE) librust_hal_com_tsf_periodic.a
+	$(CC) $(CFLAGS) -I../include -DRUST_HAL_COM_TSF_PERIODIC_ORACLE -o $@ \
+		test_hal_com_tsf_periodic.c $(TSF_PERIODIC_HOST) $(TSF_PERIODIC_ORACLE) \
+		librust_hal_com_tsf_periodic.a
+
 RUST_C2H_EVT := $(ROOT)/rust/hal_com_c2h_evt.rs
 CUSTOMER_STR_SHIM := hal_com_customer_str_shim.c
 CUSTOMER_STR_ORACLE := hal_com_customer_str_c_oracle.c
@@ -2149,5 +2165,6 @@ clean:
 		test_hal_com_tsf_iface_rust test_hal_com_tsf_iface_rust_mbssid \
 		librust_hal_com_tsf.a librust_hal_com_tsf_mbssid.a \
 		test_hal_com_tsf_periodic_smoke test_hal_com_tsf_periodic \
+		test_hal_com_tsf_periodic_rust librust_hal_com_tsf_periodic.a \
 		test_hal_com_tx_aclt_set test_hal_com_tx_aclt_set_rust \
 		librust_hal_com_tx_aclt_set.a

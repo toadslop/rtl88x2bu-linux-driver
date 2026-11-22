@@ -20,6 +20,10 @@ int dev_is_drv_stopped(struct dvobj_priv *dvobj);
 void rtw_hal_periodic_tsf_update_chk_c_oracle(struct _adapter *adapter);
 void rtw_hal_periodic_tsf_update_end_timer_hdl_c_oracle(void *ctx);
 
+#ifdef RUST_HAL_COM_TSF_PERIODIC_ORACLE
+/* Production slice comes from librust_hal_com_tsf.a */
+#endif
+
 static int failures;
 
 static void fail(const char *tag)
