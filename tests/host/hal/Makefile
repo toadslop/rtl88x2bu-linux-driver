@@ -136,7 +136,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo \
 	test-tx-aclt-set test-tx-aclt-set-rust \
-	test-rcr-leaf test-rcr-leaf-rust test-rcr-chk-bssid-oracle \
+	test-rcr-leaf test-rcr-leaf-rust test-rcr-chk-bssid test-rcr-chk-bssid-rust \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-c2h-evt-robustness clean
 
@@ -175,7 +175,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo \
 	test-tx-aclt-set test-tx-aclt-set-rust \
-	test-rcr-leaf test-rcr-leaf-rust test-rcr-chk-bssid-oracle \
+	test-rcr-leaf test-rcr-leaf-rust test-rcr-chk-bssid test-rcr-chk-bssid-rust \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-c2h-evt-robustness
 
@@ -1756,11 +1756,14 @@ RCR_CHK_BSSID_CFLAGS := $(CFLAGS) -DCONFIG_AP_MODE -DCONFIG_RTW_MESH -DCONFIG_TD
 RCR_CHK_BSSID_SHIM := hal_com_rcr_shim.c hal_com_rcr_chk_bssid_ext.c
 RCR_CHK_BSSID_ORACLE := hal_com_rcr_chk_bssid_c_oracle.c
 
-# PR3 adds test_hal_com_rcr_chk_bssid.c and the runnable test-rcr-chk-bssid target.
-test-rcr-chk-bssid-oracle: $(RCR_CHK_BSSID_SHIM) $(RCR_CHK_BSSID_ORACLE)
-	@set -e; for f in $(RCR_CHK_BSSID_SHIM) $(RCR_CHK_BSSID_ORACLE); do \
-		$(CC) $(RCR_CHK_BSSID_CFLAGS) -I../include -c -o /dev/null "$$f"; \
-	done
+test-rcr-chk-bssid: test_hal_com_rcr_chk_bssid
+	./test_hal_com_rcr_chk_bssid
+
+test_hal_com_rcr_chk_bssid: test_hal_com_rcr_chk_bssid.c $(RCR_CHK_BSSID_SHIM) $(RCR_CHK_BSSID_ORACLE)
+	$(CC) $(RCR_CHK_BSSID_CFLAGS) -I../include -o $@ test_hal_com_rcr_chk_bssid.c \
+		$(RCR_CHK_BSSID_SHIM) $(RCR_CHK_BSSID_ORACLE)
+
+# Rust chk_bssid L2 is wired in PR4 (hal_com_rcr_chk_bssid_rust.mk).
 
 GPIO_WAKEUP_SHIM := hal_com_gpio_wakeup_shim.c
 GPIO_WAKEUP_ORACLE := hal_com_gpio_wakeup_c_oracle.c
@@ -1945,7 +1948,7 @@ clean:
 		librust_hal_com_req_per_rpt.a \
 		test_hal_com_mbid_cam_rust librust_hal_com_mbid_cam.a \
 		test_hal_com_rcr test_hal_com_rcr_rust librust_hal_com_rcr.a \
-		test_hal_com_rcr_chk_bssid \
+		test_hal_com_rcr_chk_bssid test_hal_com_rcr_chk_bssid_rust librust_hal_com_rcr_chk.a \
 		test_hal_com_gpio_wakeup test_hal_com_gpio_wakeup_rust \
 		test_hal_com_gpio_wakeup_8821asdio test_hal_com_gpio_wakeup_rust_8821asdio \
 		librust_hal_com_gpio_wakeup.a librust_hal_com_gpio_wakeup_8821as.a \

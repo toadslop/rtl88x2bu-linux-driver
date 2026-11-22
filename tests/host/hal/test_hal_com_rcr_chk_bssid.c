@@ -28,6 +28,14 @@ static void expect_rcr_bssid_bits(const char *tag, u32 rcr, u32 want_data,
 		fail(tag);
 }
 
+static void expect_rcr_aap(const char *tag, u32 rcr, u32 want)
+{
+	u32 aap = (rcr & RCR_AAP) ? 1u : 0u;
+
+	if (aap != want)
+		fail(tag);
+}
+
 static void run_case(const char *tag, u32 initial_rcr,
 		   const struct mi_state *no_self,
 		   const struct mi_state *no_others, u8 self_action,
@@ -57,14 +65,94 @@ static void run_case(const char *tag, u32 initial_rcr,
 int main(void)
 {
 	struct mi_state zero = {0};
+	struct mi_state ap_self = {0};
+
+	ap_self.ap_num = 1;
 
 	/* Idle STA: both BSSID filter bits on. */
 	run_case("idle", RCR_CBSSID_BCN | RCR_CBSSID_DATA, &zero, &zero,
 		 MLME_ACTION_NONE, 1, 1, 0);
 
-	/* Scan enter clears BCN; DATA stays on unless FIND_BEST_CHANNEL. */
+	/* Scan enter clears BCN; DATA clears when CONFIG_FIND_BEST_CHANNEL is on. */
 	run_case("scan_enter", RCR_CBSSID_BCN | RCR_CBSSID_DATA, &zero, &zero,
-		 MLME_SCAN_ENTER, 1, 0, 1);
+		 MLME_SCAN_ENTER, 0, 0, 1);
+
+	/* CTA clears both BSSID filter bits. */
+	{
+		struct _adapter *a = host_hal_rcr_chk_adapter();
+
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_in_cta_test(1);
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_BCN | RCR_CBSSID_DATA);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_ACTION_NONE);
+		expect_rcr_bssid_bits("cta", host_hal_rcr_chk_last_set_rcr(), 0, 0);
+	}
+
+	/* AP + wifi_spec clears beacon bit unless connecting sets lg_sta. */
+	{
+		struct _adapter *a = host_hal_rcr_chk_adapter();
+
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_mi_no_self(&ap_self, &zero);
+		host_hal_rcr_chk_set_mi_no_others(&zero, &zero);
+		host_hal_rcr_chk_set_wifi_spec(1);
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_BCN | RCR_CBSSID_DATA);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_STA_CONNECTING);
+		expect_rcr_bssid_bits("ap_wifi_connecting", host_hal_rcr_chk_last_set_rcr(),
+				      1, 1);
+	}
+
+	/* Periodic TSF etime keeps beacon filter on. */
+	{
+		struct _adapter *a = host_hal_rcr_chk_adapter();
+
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_mi_no_self(&zero, &zero);
+		host_hal_rcr_chk_set_mi_no_others(&zero, &zero);
+		host_hal_rcr_chk_set_periodic_tsf(1UL << 32);
+		host_hal_rcr_chk_set_initial_rcr(0);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_ACTION_NONE);
+		expect_rcr_bssid_bits("periodic_tsf_hi", host_hal_rcr_chk_last_set_rcr(),
+				      1, 1);
+	}
+
+	/* TSF pause when beacon bit falls and rx_tsf_filter is clear. */
+	{
+		struct _adapter *a = host_hal_rcr_chk_adapter();
+
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_rx_tsf_filter(0);
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_BCN | RCR_CBSSID_DATA);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_SCAN_ENTER);
+		expect_u32("tsf_pause_on_scan", host_hal_rcr_trace.tsf_pause_count, 1u);
+		expect_u32("tsf_restore_skip_scan", host_hal_rcr_trace.tsf_restore_count,
+			   0u);
+	}
+
+	/* TSF restore when beacon bit rises (not on MLME_STA_CONNECTING). */
+	{
+		struct _adapter *a = host_hal_rcr_chk_adapter();
+
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_rx_tsf_filter(0);
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_DATA);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_STA_CONNECTED);
+		expect_u32("tsf_restore_connected", host_hal_rcr_trace.tsf_restore_count,
+			   1u);
+	}
+
+	/* MULTI_AP sets RCR_AAP when AP is up and unassoc NMY UC is enabled. */
+	{
+		struct _adapter *a = host_hal_rcr_chk_adapter();
+
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_mi_no_self(&ap_self, &zero);
+		host_hal_rcr_chk_set_mi_no_others(&zero, &zero);
+		host_hal_rcr_chk_set_unassoc_nmy_uc(1);
+		host_hal_rcr_chk_set_initial_rcr(0);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_ACTION_NONE);
+		expect_rcr_aap("multi_ap_on", host_hal_rcr_chk_last_set_rcr(), 1);
+	}
 
 	/* STA connecting: BCN on (lg_sta), DATA on. */
 	run_case("sta_connecting", RCR_CBSSID_DATA, &zero, &zero,
