@@ -1241,136 +1241,7 @@ static inline u8 hw_var_rcr_get(_adapter *adapter, u32 *rcr)
 
 /* rtw_hal_rcr_check/add/clear — rust/hal_com_rcr.rs (W4-127) */
 
-void rtw_hal_rcr_set_chk_bssid(_adapter *adapter, u8 self_action)
-{
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
-	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
-	u32 rcr, rcr_new;
-	struct mi_state mstate, mstate_s;
-
-	rtw_hal_get_hwreg(adapter, HW_VAR_RCR, (u8 *)&rcr);
-	rcr_new = rcr;
-
-#if defined(CONFIG_MI_WITH_MBSSID_CAM) && !defined(CONFIG_CLIENT_PORT_CFG)
-	rcr_new &= ~(RCR_CBSSID_BCN | RCR_CBSSID_DATA);
-#else
-	rtw_mi_status_no_self(adapter, &mstate);
-	rtw_mi_status_no_others(adapter, &mstate_s);
-
-	/* only adjust parameters interested */
-	switch (self_action) {
-	case MLME_SCAN_ENTER:
-		mstate_s.scan_num = 1;
-		mstate_s.scan_enter_num = 1;
-		break;
-	case MLME_SCAN_DONE:
-		mstate_s.scan_enter_num = 0;
-		break;
-	case MLME_STA_CONNECTING:
-		mstate_s.lg_sta_num = 1;
-		mstate_s.ld_sta_num = 0;
-		break;
-	case MLME_STA_CONNECTED:
-		mstate_s.lg_sta_num = 0;
-		mstate_s.ld_sta_num = 1;
-		break;
-	case MLME_STA_DISCONNECTED:
-		mstate_s.lg_sta_num = 0;
-		mstate_s.ld_sta_num = 0;
-		break;
-#ifdef CONFIG_TDLS
-	case MLME_TDLS_LINKED:
-		mstate_s.ld_tdls_num = 1;
-		break;
-	case MLME_TDLS_NOLINK:
-		mstate_s.ld_tdls_num = 0;
-		break;
-#endif
-#ifdef CONFIG_AP_MODE
-	case MLME_AP_STARTED:
-		mstate_s.ap_num = 1;
-		break;
-	case MLME_AP_STOPPED:
-		mstate_s.ap_num = 0;
-		mstate_s.ld_ap_num = 0;
-		break;
-#endif
-#ifdef CONFIG_RTW_MESH
-	case MLME_MESH_STARTED:
-		mstate_s.mesh_num = 1;
-		break;
-	case MLME_MESH_STOPPED:
-		mstate_s.mesh_num = 0;
-		mstate_s.ld_mesh_num = 0;
-		break;
-#endif
-	case MLME_ACTION_NONE:
-	case MLME_ADHOC_STARTED:
-		/* caller without effect of decision */
-		break;
-	default:
-		rtw_warn_on(1);
-	};
-
-	rtw_mi_status_merge(&mstate, &mstate_s);
-
-	if (MSTATE_AP_NUM(&mstate) || MSTATE_MESH_NUM(&mstate) || MSTATE_TDLS_LD_NUM(&mstate)
-		#ifdef CONFIG_FIND_BEST_CHANNEL
-		|| MSTATE_SCAN_ENTER_NUM(&mstate)
-		#endif
-		|| hal_data->in_cta_test
-	)
-		rcr_new &= ~RCR_CBSSID_DATA;
-	else
-		rcr_new |= RCR_CBSSID_DATA;
-
-	if (MSTATE_SCAN_ENTER_NUM(&mstate) || hal_data->in_cta_test)
-		rcr_new &= ~RCR_CBSSID_BCN;
-	else if (MSTATE_STA_LG_NUM(&mstate)
-		|| adapter_to_dvobj(adapter)->periodic_tsf_update_etime
-	)
-		rcr_new |= RCR_CBSSID_BCN;
-	else if ((MSTATE_AP_NUM(&mstate) && adapter->registrypriv.wifi_spec) /* for 11n Logo 4.2.31/4.2.32 */
-		|| MSTATE_MESH_NUM(&mstate)
-	)
-		rcr_new &= ~RCR_CBSSID_BCN;	
-	else
-		rcr_new |= RCR_CBSSID_BCN;
-
-	#ifdef CONFIG_CLIENT_PORT_CFG
-	if (get_clt_num(adapter) > MAX_CLIENT_PORT_NUM)
-		rcr_new &= ~RCR_CBSSID_BCN;
-	#endif
-#endif /* CONFIG_MI_WITH_MBSSID_CAM */
-
-#ifdef CONFIG_RTW_MULTI_AP
-	if (MSTATE_AP_NUM(&mstate)
-		&& rtw_unassoc_sta_src_chk(adapter, UNASOC_STA_SRC_RX_NMY_UC)
-	) {
-		rcr_new |= RCR_AAP;
-	} else
-		rcr_new &= ~RCR_AAP;
-#endif
-
-	if (rcr == rcr_new)
-		return;
-
-	if (!hal_spec->rx_tsf_filter
-		&& (rcr & RCR_CBSSID_BCN) && !(rcr_new & RCR_CBSSID_BCN))
-		rtw_hal_tsf_update_pause(adapter);
-
-	rtw_hal_set_hwreg(adapter, HW_VAR_RCR, (u8 *)&rcr_new);
-
-	if (!hal_spec->rx_tsf_filter
-		&& !(rcr & RCR_CBSSID_BCN) && (rcr_new & RCR_CBSSID_BCN)
-		&& self_action != MLME_STA_CONNECTING)
-		rtw_hal_tsf_update_restore(adapter);
-}
-
-void rtw_hal_rcr_set_chk_bssid_act_non(_adapter *adapter)
-{
-	rtw_hal_rcr_set_chk_bssid(adapter, MLME_ACTION_NONE);
-}
+/* rtw_hal_rcr_set_chk_bssid(_act_non) — rust/hal_com_rcr.rs (W4-128) */
 
 static void hw_var_set_rcr_am(_adapter *adapter, u8 enable)
 {
@@ -14534,6 +14405,93 @@ u32 rtw_rust_hal_com_receive_config(_adapter *adapter)
 		return 0;
 	return GET_HAL_DATA(adapter)->ReceiveConfig;
 }
+
+void rtw_rust_hal_com_mi_status_no_self(_adapter *adapter, struct mi_state *mstate)
+{
+	if (!adapter || !mstate)
+		return;
+	rtw_mi_status_no_self(adapter, mstate);
+}
+
+void rtw_rust_hal_com_mi_status_no_others(_adapter *adapter, struct mi_state *mstate)
+{
+	if (!adapter || !mstate)
+		return;
+	rtw_mi_status_no_others(adapter, mstate);
+}
+
+void rtw_rust_hal_com_mi_status_merge(struct mi_state *d, struct mi_state *a)
+{
+	if (!d || !a)
+		return;
+	rtw_mi_status_merge(d, a);
+}
+
+u8 rtw_rust_hal_com_in_cta_test(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return GET_HAL_DATA(adapter)->in_cta_test;
+}
+
+u8 rtw_rust_hal_com_rx_tsf_filter(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return GET_HAL_SPEC(adapter)->rx_tsf_filter;
+}
+
+u32 rtw_rust_hal_com_periodic_tsf_update_etime(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return adapter_to_dvobj(adapter)->periodic_tsf_update_etime;
+}
+
+u8 rtw_rust_hal_com_wifi_spec(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return adapter->registrypriv.wifi_spec;
+}
+
+u8 rtw_rust_hal_com_get_clt_num(_adapter *adapter)
+{
+#ifdef CONFIG_CLIENT_PORT_CFG
+	return get_clt_num(adapter);
+#else
+	(void)adapter;
+	return 0;
+#endif
+}
+
+int rtw_rust_hal_com_rcr_use_mbssid_shortcut(void)
+{
+#if defined(CONFIG_MI_WITH_MBSSID_CAM) && !defined(CONFIG_CLIENT_PORT_CFG)
+	return 1;
+#else
+	return 0;
+#endif
+}
+
+void rtw_rust_hal_com_tsf_update_pause_for_rcr(_adapter *adapter)
+{
+	rtw_hal_tsf_update_pause(adapter);
+}
+
+void rtw_rust_hal_com_tsf_update_restore_for_rcr(_adapter *adapter)
+{
+	rtw_hal_tsf_update_restore(adapter);
+}
+
+#ifdef CONFIG_RTW_MULTI_AP
+u8 rtw_rust_hal_com_unassoc_sta_src_chk(_adapter *adapter, u8 src)
+{
+	if (!adapter)
+		return 0;
+	return rtw_unassoc_sta_src_chk(adapter, src);
+}
+#endif
 
 #ifdef CONFIG_GPIO_WAKEUP
 int rtw_rust_hal_com_hw_set_gpio_wl_ctrl_var(void)
