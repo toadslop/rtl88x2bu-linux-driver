@@ -33,7 +33,7 @@ void host_hal_rcr_chk_reset(void)
 	g_ext.dvobj = &g_dvobj;
 	g_clt_num = 0;
 	host_hal_rcr_reset();
-	host_hal_rcr_chk_hal(host_hal_rcr_chk_adapter())->rx_tsf_filter = 1;
+	GET_HAL_SPEC(host_hal_rcr_chk_adapter())->rx_tsf_filter = 1;
 }
 
 struct _adapter *host_hal_rcr_chk_adapter(void)
