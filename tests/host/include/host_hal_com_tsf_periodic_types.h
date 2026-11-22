@@ -41,6 +41,7 @@ struct _adapter *host_hal_com_tsf_periodic_adapter(void);
 struct dvobj_priv *host_hal_com_tsf_periodic_dvobj(void);
 void host_hal_com_tsf_periodic_set_current_time(systime t);
 
+void rtw_hal_periodic_tsf_update_chk(struct _adapter *adapter);
 void rtw_hal_periodic_tsf_update_end_timer_hdl(void *ctx);
 
 #endif
