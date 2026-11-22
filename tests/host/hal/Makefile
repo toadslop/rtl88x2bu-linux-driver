@@ -1793,16 +1793,15 @@ test_hal_com_mbid_cam_hw_rust: test_hal_com_mbid_cam_hw.c $(MBID_CAM_SHIM) \
 include hal_com_rcr_rust.mk
 
 RCR_CHK_BSSID_CFLAGS := $(CFLAGS) -DCONFIG_AP_MODE -DCONFIG_RTW_MESH -DCONFIG_TDLS \
-	-DCONFIG_MI_WITH_MBSSID_CAM -DCONFIG_CLIENT_PORT_CFG
+	-DCONFIG_FIND_BEST_CHANNEL -DCONFIG_MI_WITH_MBSSID_CAM -DCONFIG_CLIENT_PORT_CFG
 RCR_CHK_BSSID_SHIM := hal_com_rcr_shim.c hal_com_rcr_chk_bssid_ext.c
 RCR_CHK_BSSID_ORACLE := hal_com_rcr_chk_bssid_c_oracle.c
 
-test-rcr-chk-bssid: test_hal_com_rcr_chk_bssid
-	./test_hal_com_rcr_chk_bssid
-
-test_hal_com_rcr_chk_bssid: test_hal_com_rcr_chk_bssid.c $(RCR_CHK_BSSID_SHIM) $(RCR_CHK_BSSID_ORACLE)
-	$(CC) $(RCR_CHK_BSSID_CFLAGS) -I../include -o $@ test_hal_com_rcr_chk_bssid.c \
-		$(RCR_CHK_BSSID_SHIM) $(RCR_CHK_BSSID_ORACLE)
+# PR3 adds test_hal_com_rcr_chk_bssid.c and the runnable test-rcr-chk-bssid target.
+test-rcr-chk-bssid-oracle: $(RCR_CHK_BSSID_SHIM) $(RCR_CHK_BSSID_ORACLE)
+	@set -e; for f in $(RCR_CHK_BSSID_SHIM) $(RCR_CHK_BSSID_ORACLE); do \
+		$(CC) $(RCR_CHK_BSSID_CFLAGS) -I../include -c -o /dev/null "$$f"; \
+	done
 
 GPIO_WAKEUP_SHIM := hal_com_gpio_wakeup_shim.c
 GPIO_WAKEUP_ORACLE := hal_com_gpio_wakeup_c_oracle.c
