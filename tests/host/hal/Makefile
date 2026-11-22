@@ -1946,7 +1946,7 @@ clean:
 		librust_hal_com_req_per_rpt.a \
 		test_hal_com_mbid_cam_rust librust_hal_com_mbid_cam.a \
 		test_hal_com_rcr test_hal_com_rcr_rust librust_hal_com_rcr.a \
-		test_hal_com_rcr_chk_bssid test_hal_com_rcr_chk_bssid_rust librust_hal_com_rcr_chk.a \
+		test_hal_com_rcr_chk_bssid \
 		test_hal_com_gpio_wakeup test_hal_com_gpio_wakeup_rust \
 		test_hal_com_gpio_wakeup_8821asdio test_hal_com_gpio_wakeup_rust_8821asdio \
 		librust_hal_com_gpio_wakeup.a librust_hal_com_gpio_wakeup_8821as.a \
