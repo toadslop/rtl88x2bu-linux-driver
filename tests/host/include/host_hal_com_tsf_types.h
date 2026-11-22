@@ -4,12 +4,20 @@
 
 typedef unsigned char u8;
 typedef unsigned int u32;
+typedef unsigned short u16;
 typedef unsigned long systime;
+
+struct mlme_ext_info {
+	u16 bcn_interval;
+};
 
 struct mlme_ext_priv {
 	u8 tsf_update_required;
 	u8 en_hw_update_tsf;
 	systime tsf_update_pause_stime;
+	u8 tsf_update_pause_factor;
+	u8 tsf_update_restore_factor;
+	struct mlme_ext_info mlmext_info;
 };
 
 struct _adapter {
