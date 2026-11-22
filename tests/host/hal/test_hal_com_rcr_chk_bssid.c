@@ -73,6 +73,22 @@ int main(void)
 	run_case("scan_enter", RCR_CBSSID_BCN | RCR_CBSSID_DATA, &zero, &zero,
 		 MLME_SCAN_ENTER, 0, 0, 1);
 
+	/* SCAN_DONE clears scan_enter_num contributed by others (must restore filters). */
+	{
+		struct mi_state scan_other = {0};
+		struct _adapter *a = host_hal_rcr_chk_adapter();
+
+		scan_other.scan_enter_num = 1;
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_mi_no_self(&zero);
+		host_hal_rcr_chk_set_mi_no_others(&scan_other);
+		host_hal_rcr_chk_set_initial_rcr(0);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_SCAN_DONE);
+		expect_u32("scan_done_set_count", host_hal_rcr_trace.set_count, 1u);
+		expect_rcr_bssid_bits("scan_done_clears_scan_enter",
+				      host_hal_rcr_chk_last_set_rcr(), 1, 1);
+	}
+
 	/* CTA clears both BSSID filter bits (must write HW reg). */
 	{
 		struct _adapter *a = host_hal_rcr_chk_adapter();
@@ -128,6 +144,16 @@ int main(void)
 			   0u);
 	}
 
+	/* rx_tsf_filter set: beacon fall must not call TSF pause. */
+	{
+		struct _adapter *a = host_hal_rcr_chk_adapter();
+
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_BCN | RCR_CBSSID_DATA);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_SCAN_ENTER);
+		expect_u32("tsf_no_pause_filter_on", host_hal_rcr_trace.tsf_pause_count, 0u);
+	}
+
 	/* TSF restore when beacon bit rises on connect complete. */
 	{
 		struct _adapter *a = host_hal_rcr_chk_adapter();
@@ -138,6 +164,17 @@ int main(void)
 		rtw_hal_rcr_set_chk_bssid(a, MLME_STA_CONNECTED);
 		expect_u32("tsf_restore_connected", host_hal_rcr_trace.tsf_restore_count,
 			   1u);
+	}
+
+	/* rx_tsf_filter set: beacon rise must not call TSF restore. */
+	{
+		struct _adapter *a = host_hal_rcr_chk_adapter();
+
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_DATA);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_STA_CONNECTED);
+		expect_u32("tsf_no_restore_filter_on",
+			   host_hal_rcr_trace.tsf_restore_count, 0u);
 	}
 
 	/* Connecting raises the beacon bit but must not call restore. */
@@ -266,6 +303,32 @@ int main(void)
 		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_BCN | RCR_CBSSID_DATA);
 		rtw_hal_rcr_set_chk_bssid(a, MLME_ACTION_NONE);
 		expect_rcr_bssid_bits("connected_clears_lg_idle_keep",
+				      host_hal_rcr_chk_last_set_rcr(), 0, 1);
+	}
+
+	/* DISCONNECTED clears lg on others; AP+wifi idle path clears both bits. */
+	{
+		struct mi_state lg_other = {0};
+		struct _adapter *a = host_hal_rcr_chk_adapter();
+
+		lg_other.lg_sta_num = 1;
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_mi_no_self(&ap_self);
+		host_hal_rcr_chk_set_mi_no_others(&lg_other);
+		host_hal_rcr_chk_set_wifi_spec(1);
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_BCN | RCR_CBSSID_DATA);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_STA_DISCONNECTED);
+		expect_u32("disconnected_clears_lg", host_hal_rcr_trace.set_count, 1u);
+		expect_rcr_bssid_bits("disconnected_clears_lg",
+				      host_hal_rcr_chk_last_set_rcr(), 0, 0);
+
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_mi_no_self(&ap_self);
+		host_hal_rcr_chk_set_mi_no_others(&lg_other);
+		host_hal_rcr_chk_set_wifi_spec(1);
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_BCN | RCR_CBSSID_DATA);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_ACTION_NONE);
+		expect_rcr_bssid_bits("disconnected_clears_lg_idle_keep",
 				      host_hal_rcr_chk_last_set_rcr(), 0, 1);
 	}
 
