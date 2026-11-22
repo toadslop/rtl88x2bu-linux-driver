@@ -5,12 +5,13 @@
 #define _TRUE 1
 #define _FALSE 0
 #define _SUCCESS 1
+#define _FAIL 0
 
 typedef unsigned char u8;
 typedef unsigned int u32;
 
-/* HW_VAR_RCR in hal_intf.h (_HW_VARIABLES). */
-#define HW_VAR_RCR 8
+/* HW_VAR_RCR in include/hal_intf.h (_HW_VARIABLES; HW_VAR_BCN_CTRL_ADDR is 8). */
+#define HW_VAR_RCR 10
 
 struct _adapter;
 struct hal_data;
