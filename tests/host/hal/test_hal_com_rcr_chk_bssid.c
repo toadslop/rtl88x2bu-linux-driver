@@ -73,6 +73,21 @@ int main(void)
 	run_case("scan_enter", RCR_CBSSID_BCN | RCR_CBSSID_DATA, &zero, &zero,
 		 MLME_SCAN_ENTER, 0, 0, 1);
 
+	/* Buddy still in sitesurvey: idle update must keep both filter bits off. */
+	{
+		struct mi_state scan_other = {0};
+		struct _adapter *a = host_hal_rcr_chk_adapter();
+
+		scan_other.scan_enter_num = 1;
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_mi_no_self(&zero);
+		host_hal_rcr_chk_set_mi_no_others(&scan_other);
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_BCN | RCR_CBSSID_DATA);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_ACTION_NONE);
+		expect_u32("scan_buddy_idle_set_count", host_hal_rcr_trace.set_count, 1u);
+		expect_rcr_bssid_bits("scan_buddy_idle", host_hal_rcr_chk_last_set_rcr(), 0, 0);
+	}
+
 	/* SCAN_DONE clears scan_enter_num contributed by others (must restore filters). */
 	{
 		struct mi_state scan_other = {0};
