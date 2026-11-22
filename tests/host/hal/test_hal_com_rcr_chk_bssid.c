@@ -69,7 +69,7 @@ int main(void)
 	run_case("scan_enter", RCR_CBSSID_BCN | RCR_CBSSID_DATA, &zero, &zero,
 		 MLME_SCAN_ENTER, 0, 0, 1);
 
-	/* CTA clears both BSSID filter bits. */
+	/* CTA clears both BSSID filter bits (must write HW reg). */
 	{
 		struct _adapter *a = host_hal_rcr_chk_adapter();
 
@@ -77,6 +77,7 @@ int main(void)
 		host_hal_rcr_chk_set_in_cta_test(1);
 		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_BCN | RCR_CBSSID_DATA);
 		rtw_hal_rcr_set_chk_bssid(a, MLME_ACTION_NONE);
+		expect_u32("cta_set_count", host_hal_rcr_trace.set_count, 1u);
 		expect_rcr_bssid_bits("cta", host_hal_rcr_chk_last_set_rcr(), 0, 0);
 	}
 
@@ -94,18 +95,20 @@ int main(void)
 				      0, 0);
 	}
 
-	/* Periodic TSF etime keeps beacon filter on. */
+	/* Periodic TSF etime (high half only) beats AP+wifi_spec BCN clear. */
 	{
 		struct _adapter *a = host_hal_rcr_chk_adapter();
 
 		host_hal_rcr_chk_reset();
-		host_hal_rcr_chk_set_mi_no_self(&zero);
+		host_hal_rcr_chk_set_mi_no_self(&ap_self);
 		host_hal_rcr_chk_set_mi_no_others(&zero);
+		host_hal_rcr_chk_set_wifi_spec(1);
 		host_hal_rcr_chk_set_periodic_tsf(1UL << 32);
-		host_hal_rcr_chk_set_initial_rcr(0);
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_DATA);
 		rtw_hal_rcr_set_chk_bssid(a, MLME_ACTION_NONE);
+		expect_u32("periodic_tsf_hi_set_count", host_hal_rcr_trace.set_count, 1u);
 		expect_rcr_bssid_bits("periodic_tsf_hi", host_hal_rcr_chk_last_set_rcr(),
-				      1, 1);
+				      0, 1);
 	}
 
 	/* TSF pause when beacon bit falls and rx_tsf_filter is clear. */
@@ -145,6 +148,33 @@ int main(void)
 				      host_hal_rcr_chk_last_set_rcr(), 1, 1);
 		expect_u32("tsf_restore_connecting",
 			   host_hal_rcr_trace.tsf_restore_count, 0u);
+	}
+
+	/* CONFIG_RTW_MULTI_AP: RCR_AAP from merged AP count + unassoc NMY UC source. */
+	{
+		struct _adapter *a = host_hal_rcr_chk_adapter();
+		u32 got;
+
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_mi_no_self(&ap_self);
+		host_hal_rcr_chk_set_mi_no_others(&zero);
+		host_hal_rcr_chk_set_unassoc_nmy_uc(1);
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_BCN | RCR_CBSSID_DATA);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_ACTION_NONE);
+		got = host_hal_rcr_chk_last_set_rcr();
+		if ((got & RCR_AAP) == 0)
+			fail("multi_ap_aap_set");
+		expect_rcr_bssid_bits("multi_ap_bits", got, 0, 1);
+
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_mi_no_self(&ap_self);
+		host_hal_rcr_chk_set_mi_no_others(&zero);
+		host_hal_rcr_chk_set_unassoc_nmy_uc(0);
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_BCN | RCR_CBSSID_DATA | RCR_AAP);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_ACTION_NONE);
+		got = host_hal_rcr_chk_last_set_rcr();
+		if ((got & RCR_AAP) != 0)
+			fail("multi_ap_aap_clear");
 	}
 
 	/* Client-port overload clears the beacon filter bit. */
