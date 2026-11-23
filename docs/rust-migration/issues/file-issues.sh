@@ -390,6 +390,14 @@ files=(
   wave4-122-hal-com-dump-rsvd-fifo.md
   wave4-123-hal-com-gpio-wl-ctrl.md
   wave4-124-hal-com-tx-aclt-setters.md
+  wave4-125-hal-com-mbid-cam-cache-dump.md
+  wave4-126-hal-com-mbid-cam-hw-push.md
+  wave4-127-hal-com-rcr-leaf.md
+  wave4-128-hal-com-rcr-chk-bssid.md
+  wave4-129-hal-com-tsf-iface-ctrl.md
+  wave4-130-hal-com-tsf-periodic-chk.md
+  wave4-131-hal-com-dft-port-h2c.md
+  wave4-132-hal-com-bcn-interval-adjust.md
   wave3-161-debug-proc-rate-setter.md
   wave3-162-debug-proc-rx-cnt-dump.md
   wave3-163-debug-proc-ps-dbg.md
