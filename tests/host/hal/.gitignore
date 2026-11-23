@@ -63,6 +63,9 @@ test_hal_com_halmac_identity_rust
 librust_hal_com_halmac_identity.a
 test_hal_com_tsf_periodic_rust
 librust_hal_com_tsf_periodic.a
+test_hal_com_msr
+test_hal_com_msr_rust
+librust_hal_com_msr.a
 test_hal_dm_init_odm_cominfo_tail*
 test_hal_dm_phydm_ops
 test_hal_dm_phydm_ops_rust
