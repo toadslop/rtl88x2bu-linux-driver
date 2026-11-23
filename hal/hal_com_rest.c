@@ -21,6 +21,8 @@
 
 #ifdef RTW_HALMAC
 #include "../hal/hal_halmac.h"
+void rtw_hal_get_msr(_adapter *adapter, u8 *net_type);
+void rtw_hal_set_msr(_adapter *adapter, u8 net_type);
 #endif
 
 /* rtw_dump_fw_info — ported to rust/hal_com.rs (W4-06) */
@@ -319,109 +321,7 @@ static u32 hw_bcn_ctrl_addr(_adapter *adapter, u8 hw_port)
 }
 #endif
 
-static void rtw_hal_get_msr(_adapter *adapter, u8 *net_type)
-{
-#ifdef RTW_HALMAC
-	rtw_halmac_get_network_type(adapter_to_dvobj(adapter),
-				adapter->hw_port, net_type);
-#else /* !RTW_HALMAC */
-	switch (adapter->hw_port) {
-	case HW_PORT0:
-		/*REG_CR - BIT[17:16]-Network Type for port 1*/
-		*net_type = rtw_read8(adapter, MSR) & 0x03;
-		break;
-	case HW_PORT1:
-		/*REG_CR - BIT[19:18]-Network Type for port 1*/
-		*net_type = (rtw_read8(adapter, MSR) & 0x0C) >> 2;
-		break;
-#if defined(CONFIG_RTL8814A)
-	case HW_PORT2:
-		/*REG_CR_EXT- BIT[1:0]-Network Type for port 2*/
-		*net_type = rtw_read8(adapter, MSR1) & 0x03;
-		break;
-	case HW_PORT3:
-		/*REG_CR_EXT- BIT[3:2]-Network Type for port 3*/
-		*net_type = (rtw_read8(adapter, MSR1) & 0x0C) >> 2;
-		break;
-	case HW_PORT4:
-		/*REG_CR_EXT- BIT[5:4]-Network Type for port 4*/
-		*net_type = (rtw_read8(adapter, MSR1) & 0x30) >> 4;
-		break;
-#endif /*#if defined(CONFIG_RTL8814A)*/
-	default:
-		RTW_INFO("[WARN] "ADPT_FMT"- invalid hw port -%d\n",
-			 ADPT_ARG(adapter), adapter->hw_port);
-		rtw_warn_on(1);
-		break;
-	}
-#endif /* !RTW_HALMAC */
-}
-
-#if defined(CONFIG_MI_WITH_MBSSID_CAM) && defined(CONFIG_MBSSID_CAM) /*For 2 hw ports - 88E/92E/8812/8821/8723B*/
-static u8 rtw_hal_net_type_decision(_adapter *adapter, u8 net_type)
-{
-	if ((adapter->hw_port == HW_PORT0) && (rtw_get_mbid_cam_entry_num(adapter))) {
-		if (net_type != _HW_STATE_NOLINK_)
-			return _HW_STATE_AP_;
-	}
-	return net_type;
-}
-#endif
-static void rtw_hal_set_msr(_adapter *adapter, u8 net_type)
-{
-#ifdef RTW_HALMAC
-	#if defined(CONFIG_MI_WITH_MBSSID_CAM) && defined(CONFIG_MBSSID_CAM)
-	net_type = rtw_hal_net_type_decision(adapter, net_type);
-	#endif
-	rtw_halmac_set_network_type(adapter_to_dvobj(adapter),
-				adapter->hw_port, net_type);
-#else /* !RTW_HALMAC */
-	u8 val8 = 0;
-
-	switch (adapter->hw_port) {
-	case HW_PORT0:
-		#if defined(CONFIG_MI_WITH_MBSSID_CAM) && defined(CONFIG_MBSSID_CAM)
-		net_type = rtw_hal_net_type_decision(adapter, net_type);
-		#endif
-		/*REG_CR - BIT[17:16]-Network Type for port 0*/
-		val8 = rtw_read8(adapter, MSR) & 0x0C;
-		val8 |= net_type;
-		rtw_write8(adapter, MSR, val8);
-		break;
-	case HW_PORT1:
-		/*REG_CR - BIT[19:18]-Network Type for port 1*/
-		val8 = rtw_read8(adapter, MSR) & 0x03;
-		val8 |= net_type << 2;
-		rtw_write8(adapter, MSR, val8);
-		break;
-#if defined(CONFIG_RTL8814A)
-	case HW_PORT2:
-		/*REG_CR_EXT- BIT[1:0]-Network Type for port 2*/
-		val8 = rtw_read8(adapter, MSR1) & 0xFC;
-		val8 |= net_type;
-		rtw_write8(adapter, MSR1, val8);
-		break;
-	case HW_PORT3:
-		/*REG_CR_EXT- BIT[3:2]-Network Type for port 3*/
-		val8 = rtw_read8(adapter, MSR1) & 0xF3;
-		val8 |= net_type << 2;
-		rtw_write8(adapter, MSR1, val8);
-		break;
-	case HW_PORT4:
-		/*REG_CR_EXT- BIT[5:4]-Network Type for port 4*/
-		val8 = rtw_read8(adapter, MSR1) & 0xCF;
-		val8 |= net_type << 4;
-		rtw_write8(adapter, MSR1, val8);
-		break;
-#endif /* CONFIG_RTL8814A */
-	default:
-		RTW_INFO("[WARN] "ADPT_FMT"- invalid hw port -%d\n",
-			 ADPT_ARG(adapter), adapter->hw_port);
-		rtw_warn_on(1);
-		break;
-	}
-#endif /* !RTW_HALMAC */
-}
+/* rtw_hal_get_msr / rtw_hal_set_msr — rust/hal_com_msr.rs (W4-134); non-HALMAC bitbang remains in hal_com.c */
 
 /* rtw_sec_read_cam / rtw_sec_write_cam — ported to rust/hal_com.rs (W4-52) */
 
@@ -14460,6 +14360,10 @@ u8 rtw_rust_hal_com_assoc_sta_mac_id(_adapter *adapter, u8 *found)
 }
 #endif /* CONFIG_FW_MULTI_PORT_SUPPORT */
 
+u8 rtw_rust_hal_com_msr_hw_port(_adapter *adapter)
+{
+	return adapter ? adapter->hw_port : 0;
+}
 #ifdef CONFIG_MBSSID_CAM
 struct mbid_cam_ctl_t *rtw_rust_hal_com_mbid_cam_ctl(struct dvobj_priv *dvobj)
 {

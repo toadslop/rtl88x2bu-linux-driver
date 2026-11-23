@@ -22,6 +22,11 @@ void host_msr_reset_trace(void)
 void host_msr_set_hw_port(u8 port) { g_adapter.hw_port = port; }
 void host_msr_set_mbid_entry_num(u8 n) { g_mbid_entries = n; }
 struct _adapter *host_msr_adapter(void) { return &g_adapter; }
+
+struct dvobj_priv *host_msr_adapter_to_dvobj(struct _adapter *adapter)
+{
+	return adapter->dvobj;
+}
 u8 host_msr_last_get_port(void) { return g_last_get_port; }
 u8 host_msr_last_set_port(void) { return g_last_set_port; }
 u8 host_msr_last_get_type(void) { return g_stored_type; }

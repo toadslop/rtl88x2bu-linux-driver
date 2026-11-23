@@ -3488,6 +3488,12 @@ endif
 ifneq ($(shell grep -Eq '^\s*#\s*define\s+RTW_HALMAC' $(src)/include/autoconf.h 2>/dev/null && echo y),)
 rustflags-y += --cfg config_rtw_halmac
 endif
+# W4-134: MSR get/set kernel swap (HALMAC profile).
+_rust_cfg_hal_com_msr_l1 :=
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+RTW_HALMAC' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_hal_com_msr_l1 := y
+endif
+HAL_COM_L1_MSR_REF := $(if $(_rust_cfg_hal_com_msr_l1),tests/host/hal/hal_com_msr_l1_ref.o,)
 # FX-07: hal_com C2H leaf cfgs (see fix-06).
 _rust_cfg_rtw_customer_str :=
 ifneq ($(filter -DCONFIG_RTW_CUSTOMER_STR,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
@@ -5320,6 +5326,11 @@ ifneq ($(_rust_cfg_hal_com_halmac_identity_l1),)
 		-o tests/host/hal/hal_com_halmac_identity_l1_ref.o \
 		tests/host/hal/hal_com_halmac_identity_l1_ref.c
 endif
+ifneq ($(_rust_cfg_hal_com_msr_l1),)
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_com_msr_l1_ref.o \
+		tests/host/hal/hal_com_msr_l1_ref.c
+endif
 	ld -r -o tests/host/hal/hal_com_c_ref.o \
 		tests/host/hal/hal_hw_rate_c_ref.o tests/host/hal/hal_rsvd_page_c_ref.o \
 		tests/host/hal/hal_dump_chip_info_c_ref.o tests/host/hal/hal_mrate_to_hw_rate_c_ref.o \
@@ -5351,7 +5362,8 @@ endif
 		$(HAL_COM_L1_TX_ACLT_SET_REF) \
 		$(HAL_COM_L1_RCR_REF) \
 		$(HAL_COM_L1_TSF_IFACE_REF) \
-		$(HAL_COM_L1_HALMAC_IDENTITY_REF)
+		$(HAL_COM_L1_HALMAC_IDENTITY_REF) \
+		$(HAL_COM_L1_MSR_REF)
 
 rust-check-symbols-hal-com: rust-objects-hal-com
 	$(MAKE) CONFIG_GPIO_WAKEUP=y rust-objects-hal-com-c
