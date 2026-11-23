@@ -18,7 +18,7 @@ into `rust/hal_com_fw_bcn.rs`:
 
 ## Notes
 
-- **Parallel lane:** updates `dvobj->fw_bcn_offload` / `vap_tbtt_rpt_map` and `vap_map`-driven rsvd page indices; uses `rtw_hal_get_def_var(HAL_DEF_TX_PAGE_SIZE)` + `rtw_hal_fill_h2c_cmd`.
+- **Parallel lane:** `rtw_hal_set_fw_ap_bcn_offload_cmd` writes `dvobj->fw_bcn_offload` and `vap_tbtt_rpt_map` **before** `rtw_hal_fill_h2c_cmd`; return value is ignored. H2C packs `tbtt_rpt_map` bits 0–3 only (ROOT/VAP1–3 TBTT rpt flags). `rtw_hal_set_bcn_rsvdpage_loc_cmd` uses `rtw_hal_get_def_var(HAL_DEF_TX_PAGE_SIZE)` + `vap_map`-driven indices.
 - Does not port `rtw_ap_multi_bcn_cfg` (register storm — separate slice).
 - `CONFIG_LIMITED_AP_NUM` loop bounds must match C.
 

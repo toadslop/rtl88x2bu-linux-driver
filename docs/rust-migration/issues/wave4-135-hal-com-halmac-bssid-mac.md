@@ -20,13 +20,13 @@ into `rust/hal_com_halmac_identity.rs`:
 
 - **Parallel lane:** HALMAC `set/get_mac_address` and `set_bssid` shims — no MBSSID CAM overlap on pinned profile.
 - Port MAC helpers use `get_hw_port(adapter)`, not `rtw_hal_get_port`; only `rtw_hal_set_bssid` uses the W4-48 port helper.
-- `rtw_hal_get_macaddr_port` is called from `HW_VAR_GET_MAC_ADDR` only when `!CONFIG_MI_WITH_MBSSID_CAM`.
+- Getter path is `GetHwReg(HW_VAR_MAC_ADDR)` → `rtw_hal_get_macaddr_port` when `!CONFIG_MI_WITH_MBSSID_CAM` (there is no `HW_VAR_GET_MAC_ADDR`).
 - Register fallback for `!RTW_HALMAC` may stay in C.
 
 ## Acceptance
 
-- L0 + L1 on 8822B HALMAC build
-- L2: trace HALMAC shim calls for port + BSSID/MAC six-byte payloads
+- L0 + L1 on 8822B HALMAC build for `rtw_hal_set_bssid` (always present)
+- L2: BSSID H2C/HALMAC trace on pinned MBSSID profile; port MAC get/set L2 only on a `!CONFIG_MI_WITH_MBSSID_CAM` matrix row (absent on default pinned build)
 
 ## Tracking
 

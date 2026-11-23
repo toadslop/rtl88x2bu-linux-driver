@@ -19,8 +19,8 @@ new `rust/hal_com_msr.rs`:
 
 ## Notes
 
-- **Parallel lane:** HALMAC `rtw_halmac_get/set_network_type` on pinned 8822B profile (`RTW_HALMAC`).
-- Non-HALMAC register bitbang may remain in C behind `!RTW_HALMAC` for this slice.
+- **Parallel lane:** HALMAC `rtw_halmac_get/set_network_type` on pinned 8822B profile (`RTW_HALMAC`); both get/set use `adapter->hw_port` (not `rtw_hal_get_port`).
+- Non-HALMAC `set_msr` is a switch on `adapter->hw_port` (MSR / MSR1 RMW per port); it does not call `rtw_halmac_set_network_type` and may remain in C for this slice.
 - `rtw_hal_net_type_decision` (MBSSID CAM): on HW_PORT0 when MBID CAM entries exist, any `net_type` other than `_HW_STATE_NOLINK_` is rewritten to `_HW_STATE_AP_` before `rtw_halmac_set_network_type` (both HALMAC and non-HALMAC `set_msr` paths on port 0).
 
 ## Acceptance
