@@ -9,6 +9,7 @@ type S32 = i32;
 const H2C_DEFAULT_PORT_ID: U8 = 0x2c;
 const H2C_DEFAULT_PORT_ID_LEN: u32 = 2;
 const _SUCCESS: S32 = 1;
+const _FAIL: S32 = 0;
 
 extern "C" {
     fn rtw_hal_get_port(adapter: *mut c_void) -> U8;
@@ -25,6 +26,12 @@ extern "C" {
     fn rtw_rust_hal_com_is_client_associated_to_ap(adapter: *mut c_void) -> S32;
     fn rtw_rust_hal_com_mlmepriv_is_ap(adapter: *mut c_void) -> U8;
     fn rtw_rust_hal_com_assoc_sta_mac_id(adapter: *mut c_void, found: *mut U8) -> U8;
+    fn rtw_rust_hal_com_log_dft_port_h2c(
+        adapter: *mut c_void,
+        parm: *mut U8,
+        port_id: U8,
+        mac_id: U8,
+    );
 }
 
 #[cfg(config_fw_multi_port_support)]
@@ -34,7 +41,7 @@ pub extern "C" fn rtw_hal_set_default_port_id_cmd(adapter: *mut c_void, mac_id: 
     let mut parm = [0u8; H2C_DEFAULT_PORT_ID_LEN as usize];
     let dvobj = unsafe { rtw_rust_hal_com_adapter_to_dvobj(adapter) };
     if dvobj.is_null() {
-        return ret;
+        return _FAIL;
     }
     let port_id = unsafe { rtw_hal_get_port(adapter) };
     let cached_port = unsafe { rtw_rust_hal_com_dft_port_id(dvobj) };
@@ -44,6 +51,9 @@ pub extern "C" fn rtw_hal_set_default_port_id_cmd(adapter: *mut c_void, mac_id: 
     }
     parm[0] = port_id;
     parm[1] = mac_id;
+    unsafe {
+        rtw_rust_hal_com_log_dft_port_h2c(adapter, parm.as_mut_ptr(), port_id, mac_id);
+    }
     ret = unsafe {
         rtw_hal_fill_h2c_cmd(
             adapter,

@@ -2897,9 +2897,19 @@ _rust_cfg_fw_multi_port :=
 ifneq ($(filter -DCONFIG_FW_MULTI_PORT_SUPPORT,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 _rust_cfg_fw_multi_port := y
 endif
-# drv_conf.h sets CONFIG_CONCURRENT_MODE → hal_ic_cfg.h enables CONFIG_FW_MULTI_PORT_SUPPORT.
+# hal_ic_cfg.h only defines CONFIG_FW_MULTI_PORT_SUPPORT under concurrent mode on these chips.
+_rust_hw_fw_multi_port :=
+ifneq ($(filter y,$(CONFIG_RTL8822B) $(CONFIG_RTL8822C) $(CONFIG_RTL8821C) $(CONFIG_RTL8814B) $(CONFIG_RTL8723F)),)
+_rust_hw_fw_multi_port := y
+endif
+ifeq ($(_rust_hw_fw_multi_port),y)
 ifneq ($(filter -DCONFIG_CONCURRENT_MODE,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 _rust_cfg_fw_multi_port := y
+endif
+# drv_conf.h forces CONFIG_CONCURRENT_MODE when repeater SON is enabled (no -D on ccflags-y).
+ifeq ($(CONFIG_RTW_REPEATER_SON), y)
+_rust_cfg_fw_multi_port := y
+endif
 endif
 ifneq ($(_rust_cfg_fw_multi_port),)
 rustflags-y += --cfg config_fw_multi_port_support

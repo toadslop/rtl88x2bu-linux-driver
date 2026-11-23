@@ -14466,6 +14466,13 @@ struct dvobj_priv *rtw_rust_hal_com_adapter_to_dvobj(_adapter *adapter)
 }
 
 #ifdef CONFIG_FW_MULTI_PORT_SUPPORT
+void rtw_rust_hal_com_log_dft_port_h2c(_adapter *adapter, u8 *parm, u8 port_id, u8 mac_id)
+{
+	RTW_DBG_DUMP("DFT port id parm:", parm, H2C_DEFAULT_PORT_ID_LEN);
+	RTW_INFO("%s (" ADPT_FMT ") port_id :%d, mad_id:%d\n",
+		 __func__, ADPT_ARG(adapter), port_id, mac_id);
+}
+
 u8 rtw_rust_hal_com_dft_port_id(struct dvobj_priv *dvobj)
 {
 	return dvobj ? dvobj->dft.port_id : 0;
