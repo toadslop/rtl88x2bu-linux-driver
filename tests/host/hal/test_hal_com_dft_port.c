@@ -107,7 +107,8 @@ static void run_cmd_case(u8 hal_port, u8 cached_port, u8 cached_mac, u8 mac_id, 
 }
 
 static void run_set_case(u8 client_assoc, u8 assoc_sta_found, u8 ap_state, u8 assoc_mac,
-			 u8 hal_port, const char *tag)
+			 u8 hal_port, u8 cached_port, u8 cached_mac, s32 fill_ret,
+			 const char *tag)
 {
 	s32 dut_rc, oracle_rc;
 	int dut_cnt, oracle_cnt;
@@ -118,6 +119,8 @@ static void run_set_case(u8 client_assoc, u8 assoc_sta_found, u8 ap_state, u8 as
 
 	host_dft_port_reset();
 	host_dft_port_set_hal_port(hal_port);
+	host_dft_port_set_cached(cached_port, cached_mac);
+	host_dft_port_set_fill_ret(fill_ret);
 	host_dft_port_set_client_assoc(client_assoc, assoc_mac);
 	host_dft_port_set_assoc_sta_found(assoc_sta_found);
 	host_dft_port_set_ap_state(ap_state);
@@ -138,6 +141,8 @@ static void run_set_case(u8 client_assoc, u8 assoc_sta_found, u8 ap_state, u8 as
 
 	host_dft_port_reset();
 	host_dft_port_set_hal_port(hal_port);
+	host_dft_port_set_cached(cached_port, cached_mac);
+	host_dft_port_set_fill_ret(fill_ret);
 	host_dft_port_set_client_assoc(client_assoc, assoc_mac);
 	host_dft_port_set_assoc_sta_found(assoc_sta_found);
 	host_dft_port_set_ap_state(ap_state);
@@ -182,10 +187,12 @@ int main(void)
 	run_cmd_case(3, 1, 4, 7, _SUCCESS, "pack_ok");
 	run_cmd_case(1, 0, 0, 9, 0, "h2c_fail_still_cache");
 
-	run_set_case(1, 1, 0, 11, 2, "sta_assoc");
-	run_set_case(1, 0, 0, 11, 2, "assoc_no_sta");
-	run_set_case(0, 0, 0, 0, 0, "idle");
-	run_set_case(0, 0, 1, 0, 0, "ap_empty");
+	run_set_case(1, 1, 0, 11, 2, 0, 0, _SUCCESS, "sta_assoc");
+	run_set_case(1, 1, 0, 11, 2, 0, 0, 0, "sta_assoc_h2c_fail");
+	run_set_case(1, 0, 0, 11, 2, 0, 0, _SUCCESS, "assoc_no_sta");
+	run_set_case(1, 1, 1, 11, 2, 0, 0, _SUCCESS, "sta_over_ap");
+	run_set_case(0, 0, 0, 0, 5, 3, 4, _SUCCESS, "idle");
+	run_set_case(0, 0, 1, 0, 6, 3, 4, _SUCCESS, "ap_empty");
 
 	if (fail_line)
 		return fprintf(stderr, "tests failed at line %d\n", fail_line), 1;
