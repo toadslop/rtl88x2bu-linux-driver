@@ -61,6 +61,7 @@ struct chk_pair_out {
 	u32 last_timer_ms;
 	unsigned set_timer_count;
 	u8 last_rcr_action;
+	struct _adapter *last_rcr_adapter;
 	u32 rcr_chk_bssid_count;
 };
 
@@ -88,6 +89,7 @@ static void run_chk_pair(void (*under_test)(struct _adapter *),
 		prod_out->last_timer_ms = timer_u;
 		prod_out->set_timer_count = host_hal_com_tsf_periodic_trace.set_timer_count;
 		prod_out->last_rcr_action = host_hal_com_tsf_periodic_trace.last_rcr_chk_action;
+		prod_out->last_rcr_adapter = host_hal_com_tsf_periodic_trace.last_rcr_adapter;
 		prod_out->rcr_chk_bssid_count = rcr_u;
 	}
 
@@ -338,6 +340,18 @@ static void test_offch_leave_op_skips_restore(void)
 	eq_u32("leave_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
 }
 
+static void test_offch_backing_op_skips_restore(void)
+{
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 1, 2, 100);
+	host_hal_com_tsf_periodic_dvobj()->rf_ctl.offch_state = OFFCHS_BACKING_OP;
+	host_hal_com_tsf_periodic_set_current_time(5000);
+
+	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
+	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
+	eq_u32("backing_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
+}
+
 static void test_restore_max_only_past_pause(void)
 {
 	struct chk_pair_out prod;
@@ -364,8 +378,7 @@ static void test_restore_rcr_primary(void)
 
 	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,
 		     &prod);
-	if (host_hal_com_tsf_periodic_trace.last_rcr_adapter !=
-	    host_hal_com_tsf_periodic_adapter())
+	if (prod.last_rcr_adapter != host_hal_com_tsf_periodic_adapter())
 		fail("restore_rcr_primary");
 }
 
@@ -402,6 +415,7 @@ int main(void)
 	test_etime_expired_no_iface_scan();
 	test_offch_after_etime_block();
 	test_offch_leave_op_skips_restore();
+	test_offch_backing_op_skips_restore();
 	test_restore_max_only_past_pause();
 	test_restore_rcr_primary();
 	test_restore_end_timer_field();
