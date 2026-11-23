@@ -13,13 +13,14 @@ estimate_loc: 150
 Port HALMAC identity setters from [`hal/hal_com_rest.c`](../../../hal/hal_com_rest.c)
 into `rust/hal_com_halmac_identity.rs`:
 
-- `rtw_hal_set_bssid` (exported)
-- `rtw_hal_set_macaddr_port` and `rtw_hal_get_macaddr_port` (export if currently static under `!CONFIG_MI_WITH_MBSSID_CAM`; thin C wrappers OK until HW_VAR callers move)
+- `rtw_hal_set_bssid` (exported; `HW_VAR_BSSID` — uses `rtw_hal_get_port`, W4-48)
+- `rtw_hal_set_macaddr_port` and `rtw_hal_get_macaddr_port` (compiled only when `!CONFIG_MI_WITH_MBSSID_CAM`; absent on pinned 8822B MBSSID profile where `HW_VAR_MAC_ADDR` uses `rtw_hal_set_macaddr_mbid` instead)
 
 ## Notes
 
-- **Parallel lane:** uses `rtw_hal_get_port` (W4-48) and `rtw_halmac_set/get_mac_address` / `set_bssid` — no MBSSID CAM overlap.
-- Scope is the `#else` branch of `CONFIG_MI_WITH_MBSSID_CAM` and the shared `rtw_hal_set_bssid` body.
+- **Parallel lane:** HALMAC `set/get_mac_address` and `set_bssid` shims — no MBSSID CAM overlap on pinned profile.
+- Port MAC helpers use `get_hw_port(adapter)`, not `rtw_hal_get_port`; only `rtw_hal_set_bssid` uses the W4-48 port helper.
+- `rtw_hal_get_macaddr_port` is called from `HW_VAR_GET_MAC_ADDR` only when `!CONFIG_MI_WITH_MBSSID_CAM`.
 - Register fallback for `!RTW_HALMAC` may stay in C.
 
 ## Acceptance

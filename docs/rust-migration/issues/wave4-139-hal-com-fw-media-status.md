@@ -19,7 +19,9 @@ into `rust/hal_com_fw_media.rs`:
 
 ## Notes
 
-- **Parallel lane:** H2C + `macid_ctl` updates on disconnect (`bw`, `vht_en`, rate bmp clears).
+- **Parallel lane:** H2C first; `macid_ctl` side effects run only when `rtw_hal_fill_h2c_cmd` returns `_SUCCESS`.
+- After success, `SET_H2CCMD_MSRRPT_PARM_MACID_IND(parm, 0)` clears the cached MSR byte’s MACID_IND bit before the `macid`…`macid_end` loop (`rtw_macid_ctl_set_h2c_msr`, and on disconnect `bw` / `vht_en` / rate-bmp clears).
+- `rtw_hal_update_tx_aclt` (W4-124) runs only when `op_num_change_bmp` is non-zero; `rtw_update_tx_rate_bmp` on disconnect only after H2C success.
 - Chip-specific post-H2C blocks (`RTL8188E`, `RTL8812A`, `Hal_PatchwithJaguar_8812`) remain in C behind existing `#if defined` gates — 8822B path only in Rust.
 - `CONFIG_FW_MULTI_PORT_SUPPORT` adds port num to parm; `CONFIG_TX_AC_LIFETIME` may call `rtw_hal_update_tx_aclt` when `op_num_change_bmp` set (delegate to W4-124 Rust/C).
 - `CONFIG_RTL8822C` DTP hook stays C unless a separate slice lands.

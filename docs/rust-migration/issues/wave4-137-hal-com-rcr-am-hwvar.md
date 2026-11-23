@@ -11,7 +11,7 @@ estimate_loc: 60
 ## Goal
 
 Port `hw_var_set_rcr_am` from [`hal/hal_com_rest.c`](../../../hal/hal_com_rest.c) into
-[`rust/hal_com_rcr.rs`](../../../rust/hal_com_rcr.rs) and wire `HW_VAR_AC_PARAM` / `HW_VAR_AMPDU` caller path only as needed for the RCR_AM enable bit (match C `hw_var_set_rcr_am` export).
+[`rust/hal_com_rcr.rs`](../../../rust/hal_com_rcr.rs). Callers are only `HW_VAR_ON_RCR_AM` and `HW_VAR_OFF_RCR_AM` in `rtw_hal_set_hwreg` (not `HW_VAR_AC_PARAM` / `HW_VAR_AMPDU`).
 
 ## Notes
 
