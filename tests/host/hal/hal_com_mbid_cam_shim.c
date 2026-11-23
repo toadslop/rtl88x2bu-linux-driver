@@ -243,3 +243,35 @@ void rtw_rust_hal_com_warn_on(int condition)
 	if (condition)
 		host_mbid_cam_record_warn();
 }
+
+/* Stubs so test-mbid-cam-rust links after PR1 adds rtw_mbid_cam_cache_dump (L2 in PR2). */
+void rtw_rust_hal_com_print_line(void *sel, const char *line)
+{
+	(void)sel;
+	(void)line;
+}
+
+void *rtw_rust_hal_com_dvobj_padapter(void *dvobj, u8 iface_id)
+{
+	(void)dvobj;
+	(void)iface_id;
+	return NULL;
+}
+
+u8 rtw_rust_hal_com_mlme_is_sta(void *adapter)
+{
+	(void)adapter;
+	return 0;
+}
+
+u8 rtw_rust_hal_com_mlme_is_ap(void *adapter)
+{
+	(void)adapter;
+	return 0;
+}
+
+u8 rtw_rust_hal_com_mlme_is_mesh(void *adapter)
+{
+	(void)adapter;
+	return 0;
+}
