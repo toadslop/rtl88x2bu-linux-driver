@@ -147,7 +147,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
 	test-tsf-periodic test-tsf-periodic-rust \
 	test-halmac-identity test-halmac-identity-rust \
-	test-msr test-msr-rust \
+	test-msr $(if $(wildcard $(ROOT)/rust/hal_com_msr_host.rs),test-msr-rust,) \
 	test-c2h-evt-robustness clean
 
 all: test
@@ -195,7 +195,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
 	test-tsf-periodic test-tsf-periodic-rust \
 	test-halmac-identity test-halmac-identity-rust \
-	test-msr test-msr-rust \
+	test-msr $(if $(wildcard $(ROOT)/rust/hal_com_msr_host.rs),test-msr-rust,) \
 	test-c2h-evt-robustness
 
 test-c: test_hw_rate_map
