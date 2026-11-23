@@ -132,7 +132,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-usb-async-write test-usb-async-write-rust test-chip-odm test-chip-odm-rust \
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
 	test-req-per-rpt test-req-per-rpt-rust \
-	test-dft-port test-dft-port-rust \
+	test-dft-port $(if $(wildcard $(ROOT)/rust/hal_com_dft_port_host.rs),test-dft-port-rust,) \
 	test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo test-dump-rsvd-fifo-rust \
@@ -171,7 +171,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-usb-async-write-rust test-chip-odm test-chip-odm-rust \
 	test-hal-trxnss test-hal-trxnss-rust \
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
-	test-req-per-rpt-rust test-dft-port-rust \
+	test-req-per-rpt-rust test-dft-port $(if $(wildcard $(ROOT)/rust/hal_com_dft_port_host.rs),test-dft-port-rust,) \
 	test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo test-dump-rsvd-fifo-rust \
@@ -1882,6 +1882,7 @@ test-dft-port-rust: test_hal_com_dft_port_rust
 test_hal_com_dft_port: test_hal_com_dft_port.c $(DFT_PORT_SHIM) $(DFT_PORT_ORACLE)
 	$(CC) $(CFLAGS) -o $@ test_hal_com_dft_port.c $(DFT_PORT_SHIM) $(DFT_PORT_ORACLE)
 
+ifneq ($(wildcard $(RUST_DFT_PORT)),)
 librust_hal_com_dft_port.a: $(RUST_DFT_PORT)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
 		--cfg config_fw_multi_port_support \
@@ -1892,6 +1893,7 @@ test_hal_com_dft_port_rust: test_hal_com_dft_port.c $(DFT_PORT_SHIM) \
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_DFT_PORT_ORACLE -o $@ \
 		test_hal_com_dft_port.c $(DFT_PORT_SHIM) $(DFT_PORT_ORACLE) \
 		librust_hal_com_dft_port.a
+endif
 
 test-c2h-evt-robustness: test_hal_com_c2h_evt_fx19
 	./test_hal_com_c2h_evt_fx19
@@ -1974,8 +1976,8 @@ clean:
 		test_hal_com_c2h_evt_fx19 librust_hal_com_c2h_evt.a \
 		test_hal_com_req_per_rpt test_hal_com_req_per_rpt_rust \
 		librust_hal_com_req_per_rpt.a \
-		test_hal_com_dft_port test_hal_com_dft_port_rust \
-		librust_hal_com_dft_port.a \
+		test_hal_com_dft_port $(if $(wildcard $(ROOT)/rust/hal_com_dft_port_host.rs),test_hal_com_dft_port_rust,) \
+		$(if $(wildcard $(ROOT)/rust/hal_com_dft_port_host.rs),librust_hal_com_dft_port.a,) \
 		test_hal_com_mbid_cam_rust librust_hal_com_mbid_cam.a \
 		test_hal_com_rcr \
 		test_hal_com_gpio_wakeup test_hal_com_gpio_wakeup_rust \
