@@ -466,6 +466,18 @@ static void test_offch_backing_op_skips_restore(void)
 	eq_stime("backing_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 0);
 }
 
+static void test_offch_backing_op_skips_restore(void)
+{
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 1, 2, 100);
+	host_hal_com_tsf_periodic_dvobj()->rf_ctl.offch_state = OFFCHS_BACKING_OP;
+	host_hal_com_tsf_periodic_set_current_time(5000);
+
+	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
+	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
+	eq_u32("backing_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
+}
+
 static void test_restore_max_only_past_pause(void)
 {
 	struct chk_pair_out prod;
