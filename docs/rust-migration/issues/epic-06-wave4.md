@@ -259,4 +259,16 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-131 | `wave4-131-hal-com-dft-port-h2c.md` | Default port H2C cmd |
 | ~~W4-132~~ | `wave4-132-hal-com-bcn-interval-adjust.md` | ~~SW TXBCN interval adjust~~ (cancelled — not in 8822B profile) |
 
-Further slices: USB bulk port bodies stay under Wave 5 `os_dep`; continue parallel `hal_com_rest.c` tails (MBSSID HW dump, FW BCN offload, WOW) in new `wave4-*.md` batches.
+## Children (tranche 25 — drafted)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-133 | `wave4-133-hal-com-mbid-macaddr.md` | MBSSID MAC address set/change |
+| W4-134 | `wave4-134-hal-com-msr-nettype.md` | MSR network type get/set (HALMAC) |
+| W4-135 | `wave4-135-hal-com-halmac-bssid-mac.md` | HALMAC BSSID + port MAC set/get |
+| W4-136 | `wave4-136-hal-com-fw-rsvdpage-h2c.md` | RSVD page location H2C packer |
+| W4-137 | `wave4-137-hal-com-rcr-am-hwvar.md` | `hw_var_set_rcr_am` delegate |
+| W4-138 | `wave4-138-hal-com-fw-bcn-offload.md` | FW beacon offload + BCN rsvd page H2C |
+| W4-139 | `wave4-139-hal-com-fw-media-status.md` | Media status report H2C |
+
+Further slices: USB bulk port bodies stay under Wave 5 `os_dep`; continue parallel `hal_com_rest.c` tails (WOW, P2P construct, `hw_bcn_ctrl_addr`) in new `wave4-*.md` batches.
