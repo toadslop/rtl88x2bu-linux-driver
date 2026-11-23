@@ -3385,10 +3385,18 @@ endif
 ifneq ($(filter -DCONFIG_RF_POWER_TRIM,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg rf_power_trim
 endif
-# W4-39: tx_aclt_force Rust port matches hal_com_rest.c #if CONFIG_TX_AC_LIFETIME
+# W4-39/W4-124: tx_aclt Rust cfg matches hal_com_rest.c #if CONFIG_TX_AC_LIFETIME
 ifneq ($(filter -DCONFIG_TX_AC_LIFETIME=0,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 else
+rustflags-y += --cfg config_tx_ac_lifetime
 endif
+_rust_cfg_tx_aclt_set_l1 :=
+ifneq ($(filter -DCONFIG_TX_AC_LIFETIME=0,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+else ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_TX_AC_LIFETIME\s+0' $(src)/include/drv_conf.h 2>/dev/null && echo y),)
+else
+_rust_cfg_tx_aclt_set_l1 := y
+endif
+HAL_COM_L1_TX_ACLT_SET_REF := $(if $(_rust_cfg_tx_aclt_set_l1),tests/host/hal/hal_com_tx_aclt_set_l1_ref.o,)
 ifneq ($(filter -DCONFIG_PLATFORM_INTEL_BYT,$(ccflags-y) $(USER_EXTRA_CFLAGS)),)
 rustflags-y += --cfg CONFIG_PLATFORM_INTEL_BYT
 endif
@@ -5266,6 +5274,11 @@ ifneq ($(_rust_cfg_gpio_wakeup_l1),)
 		-o tests/host/hal/hal_com_gpio_wakeup_l1_ref.o \
 		tests/host/hal/hal_com_gpio_wakeup_l1_ref.c
 endif
+ifneq ($(_rust_cfg_tx_aclt_set_l1),)
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_com_tx_aclt_set_l1_ref.o \
+		tests/host/hal/hal_com_tx_aclt_set_l1_ref.c
+endif
 	ld -r -o tests/host/hal/hal_com_c_ref.o \
 		tests/host/hal/hal_hw_rate_c_ref.o tests/host/hal/hal_rsvd_page_c_ref.o \
 		tests/host/hal/hal_dump_chip_info_c_ref.o tests/host/hal/hal_mrate_to_hw_rate_c_ref.o \
@@ -5292,7 +5305,8 @@ endif
 		tests/host/hal/hal_com_customer_str_l1_ref.o \
 		$(HAL_COM_L1_REQ_PER_RPT) \
 		$(HAL_COM_L1_MBID_CAM_REF) \
-		$(HAL_COM_L1_GPIO_WAKEUP_REF)
+		$(HAL_COM_L1_GPIO_WAKEUP_REF) \
+		$(HAL_COM_L1_TX_ACLT_SET_REF)
 
 rust-check-symbols-hal-com: rust-objects-hal-com
 	$(MAKE) CONFIG_GPIO_WAKEUP=y rust-objects-hal-com-c
