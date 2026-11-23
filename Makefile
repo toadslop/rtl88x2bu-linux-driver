@@ -2894,7 +2894,11 @@ ifneq ($(_rust_cfg_lps_pg),)
 rustflags-y += --cfg config_lps_pg
 endif
 _rust_cfg_fw_multi_port :=
-ifneq ($(filter -DCONFIG_FW_MULTI_PORT_SUPPORT,$(ccflags-y)),)
+ifneq ($(filter -DCONFIG_FW_MULTI_PORT_SUPPORT,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_fw_multi_port := y
+endif
+# drv_conf.h sets CONFIG_CONCURRENT_MODE → hal_ic_cfg.h enables CONFIG_FW_MULTI_PORT_SUPPORT.
+ifneq ($(filter -DCONFIG_CONCURRENT_MODE,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 _rust_cfg_fw_multi_port := y
 endif
 ifneq ($(_rust_cfg_fw_multi_port),)
@@ -3519,6 +3523,7 @@ ifneq ($(_rust_cfg_rtw_per_cmd_fw),)
 rustflags-y += --cfg rtw_per_cmd_support_fw
 endif
 HAL_COM_L1_REQ_PER_RPT := $(if $(_rust_cfg_rtw_per_cmd_fw),tests/host/hal/hal_com_req_per_rpt_l1_ref.o,)
+HAL_COM_L1_DFT_PORT := $(if $(_rust_cfg_fw_multi_port),tests/host/hal/hal_com_dft_port_l1_ref.o,)
 _rust_cfg_rtw_mac_hidden_rpt :=
 ifneq ($(filter -DCONFIG_RTW_MAC_HIDDEN_RPT,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 _rust_cfg_rtw_mac_hidden_rpt := y
@@ -5271,6 +5276,11 @@ ifneq ($(_rust_cfg_rtw_per_cmd_fw),)
 		-o tests/host/hal/hal_com_req_per_rpt_l1_ref.o \
 		tests/host/hal/hal_com_req_per_rpt_l1_ref.c
 endif
+ifneq ($(_rust_cfg_fw_multi_port),)
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_com_dft_port_l1_ref.o \
+		tests/host/hal/hal_com_dft_port_l1_ref.c
+endif
 ifneq ($(_rust_cfg_mbssid_cam),)
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_com_mbid_cam_l1_ref.o \
@@ -5314,6 +5324,7 @@ endif
 		tests/host/hal/hal_com_sec_cam_rw_l1_ref.o \
 		tests/host/hal/hal_com_customer_str_l1_ref.o \
 		$(HAL_COM_L1_REQ_PER_RPT) \
+		$(HAL_COM_L1_DFT_PORT) \
 		$(HAL_COM_L1_MBID_CAM_REF) \
 		$(HAL_COM_L1_GPIO_WAKEUP_REF) \
 		$(HAL_COM_L1_TX_ACLT_SET_REF) \
