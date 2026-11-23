@@ -2906,13 +2906,6 @@ ifeq ($(_rust_hw_fw_multi_port),y)
 ifneq ($(filter -DCONFIG_CONCURRENT_MODE,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 _rust_cfg_fw_multi_port := y
 endif
-# drv_conf.h enables CONFIG_CONCURRENT_MODE when CONFIG_RTW_REPEATER_SON is set (header-only).
-ifeq ($(CONFIG_RTW_REPEATER_SON), y)
-_rust_cfg_fw_multi_port := y
-endif
-ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_RTW_REPEATER_SON\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
-_rust_cfg_fw_multi_port := y
-endif
 endif
 ifneq ($(_rust_cfg_fw_multi_port),)
 rustflags-y += --cfg config_fw_multi_port_support
