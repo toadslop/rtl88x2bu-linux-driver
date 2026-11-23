@@ -41,6 +41,7 @@ pub extern "C" fn rtw_hal_set_default_port_id_cmd(adapter: *mut c_void, mac_id: 
     let mut ret = _SUCCESS;
     let mut parm = [0u8; H2C_DEFAULT_PORT_ID_LEN as usize];
     let dvobj = unsafe { rtw_rust_hal_com_adapter_to_dvobj(adapter) };
+    // Intentional: original C oopsed on NULL dvobj; callers ignore this return.
     if dvobj.is_null() {
         return _FAIL;
     }
