@@ -71,13 +71,18 @@ static void run_chk_pair(void (*under_test)(struct _adapter *),
 {
 	struct dvobj_priv snap_dv;
 	struct _adapter snap_a[2];
+	struct _adapter *snap_p0, *snap_p1;
 	struct host_hal_com_tsf_periodic_trace snap_t;
 	systime etime_u, etime_o;
 	u32 timer_u, timer_o, rcr_u, rcr_o;
 
 	snap_dv = *host_hal_com_tsf_periodic_dvobj();
-	snap_a[0] = *snap_dv.padapters[0];
-	snap_a[1] = *snap_dv.padapters[1];
+	snap_p0 = snap_dv.padapters[0];
+	snap_p1 = snap_dv.padapters[1];
+	if (snap_p0)
+		snap_a[0] = *snap_p0;
+	if (snap_p1)
+		snap_a[1] = *snap_p1;
 	snap_t = host_hal_com_tsf_periodic_trace;
 
 	under_test(snap_dv.padapters[0]);
@@ -94,8 +99,12 @@ static void run_chk_pair(void (*under_test)(struct _adapter *),
 	}
 
 	*host_hal_com_tsf_periodic_dvobj() = snap_dv;
-	*snap_dv.padapters[0] = snap_a[0];
-	*snap_dv.padapters[1] = snap_a[1];
+	host_hal_com_tsf_periodic_dvobj()->padapters[0] = snap_p0;
+	host_hal_com_tsf_periodic_dvobj()->padapters[1] = snap_p1;
+	if (snap_p0)
+		*snap_p0 = snap_a[0];
+	if (snap_p1)
+		*snap_p1 = snap_a[1];
 	host_hal_com_tsf_periodic_trace = snap_t;
 
 	oracle(snap_dv.padapters[0]);
@@ -223,13 +232,71 @@ static void test_etime_wrap_bump(void)
 	eq_stime("wrap_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 1);
 }
 
+static void test_etime_wrap_idle_second_chk(void)
+{
+	struct chk_pair_out prod;
+
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 1, 5, 100);
+	host_hal_com_tsf_periodic_set_current_time((systime)-500);
+
+	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,
+		     &prod);
+	eq_stime("wrap_idle_setup", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 1);
+
+	host_hal_com_tsf_periodic_set_current_time(1);
+	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
+	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,
+		     NULL);
+	eq_stime("wrap_idle_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 1);
+	eq_u32("wrap_idle_rcr", host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count, 0);
+	eq_u32("wrap_idle_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
+}
+
+static void test_iface_nums_respected(void)
+{
+	struct dvobj_priv *dv = host_hal_com_tsf_periodic_dvobj();
+	struct chk_pair_out prod;
+
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 2, 3, 100);
+	setup_iface(dv->padapters[1], 0, 0, 0, 0, 100);
+	setup_iface(dv->padapters[2], 1, 10, 2, 10, 100);
+	setup_iface(dv->padapters[3], 1, 10, 2, 10, 100);
+	dv->iface_nums = 2;
+	host_hal_com_tsf_periodic_set_current_time(211);
+
+	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,
+		     &prod);
+	eq_u32("ifaces_ms", prod.last_timer_ms, 300);
+}
+
+static void test_null_iface_skipped(void)
+{
+	struct dvobj_priv *dv = host_hal_com_tsf_periodic_dvobj();
+	struct chk_pair_out prod;
+
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 2, 3, 100);
+	setup_iface(dv->padapters[1], 1, 10, 2, 10, 100);
+	dv->padapters[1] = NULL;
+	dv->iface_nums = 2;
+	host_hal_com_tsf_periodic_set_current_time(211);
+
+	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,
+		     &prod);
+	eq_u32("null_ms", prod.last_timer_ms, 300);
+}
+
 static void test_restore_max_not_last(void)
 {
 	struct chk_pair_out prod;
-	struct _adapter *a1 = host_hal_com_tsf_periodic_adapter();
-	struct _adapter *a2 = host_hal_com_tsf_periodic_dvobj()->padapters[1];
+	struct _adapter *a1;
+	struct _adapter *a2;
 
 	host_hal_com_tsf_periodic_reset();
+	a1 = host_hal_com_tsf_periodic_adapter();
+	a2 = host_hal_com_tsf_periodic_dvobj()->padapters[1];
 	setup_iface(a1, 1, 10, 1, 5, 100);
 	setup_iface(a2, 1, 10, 1, 2, 100);
 	host_hal_com_tsf_periodic_set_current_time(500);
@@ -257,12 +324,13 @@ static void test_etime_expired_clears(void)
 
 static void test_restore_arm_timer(void)
 {
-	struct _adapter *a1 = host_hal_com_tsf_periodic_adapter();
-	struct _adapter *a2 = host_hal_com_tsf_periodic_dvobj()->padapters[1];
-
+	struct _adapter *a1;
+	struct _adapter *a2;
 	struct chk_pair_out prod;
 
 	host_hal_com_tsf_periodic_reset();
+	a1 = host_hal_com_tsf_periodic_adapter();
+	a2 = host_hal_com_tsf_periodic_dvobj()->padapters[1];
 	setup_iface(a1, 1, 10, 2, 3, 100);
 	setup_iface(a2, 1, 10, 2, 5, 100);
 	host_hal_com_tsf_periodic_set_current_time(260);
@@ -362,10 +430,12 @@ static void test_offch_backing_op_skips_restore(void)
 static void test_restore_max_only_past_pause(void)
 {
 	struct chk_pair_out prod;
-	struct _adapter *a1 = host_hal_com_tsf_periodic_adapter();
-	struct _adapter *a2 = host_hal_com_tsf_periodic_dvobj()->padapters[1];
+	struct _adapter *a1;
+	struct _adapter *a2;
 
 	host_hal_com_tsf_periodic_reset();
+	a1 = host_hal_com_tsf_periodic_adapter();
+	a2 = host_hal_com_tsf_periodic_dvobj()->padapters[1];
 	setup_iface(a1, 1, 10, 2, 3, 100);
 	setup_iface(a2, 1, 1000, 1, 10, 100);
 	host_hal_com_tsf_periodic_set_current_time(211);
@@ -416,7 +486,10 @@ int main(void)
 	test_zero_pause_skips();
 	test_etime_expired_next_tick();
 	test_etime_wrap_bump();
+	test_etime_wrap_idle_second_chk();
 	test_etime_expired_clears();
+	test_iface_nums_respected();
+	test_null_iface_skipped();
 	test_restore_max_not_last();
 	test_restore_arm_timer();
 	test_etime_expired_no_iface_scan();

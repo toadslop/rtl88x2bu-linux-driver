@@ -5,7 +5,7 @@
 #include <string.h>
 
 static struct dvobj_priv g_dvobj;
-static struct _adapter g_adapters[2];
+static struct _adapter g_adapters[4];
 static systime host_current_time;
 
 struct host_hal_com_tsf_periodic_trace host_hal_com_tsf_periodic_trace;
@@ -19,6 +19,8 @@ void host_hal_com_tsf_periodic_reset(void)
 	g_dvobj.iface_nums = 2;
 	g_dvobj.padapters[0] = &g_adapters[0];
 	g_dvobj.padapters[1] = &g_adapters[1];
+	g_dvobj.padapters[2] = &g_adapters[2];
+	g_dvobj.padapters[3] = &g_adapters[3];
 }
 
 struct _adapter *host_hal_com_tsf_periodic_adapter(void)
