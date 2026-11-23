@@ -12,6 +12,7 @@ void host_dft_port_set_fill_ret(s32 v);
 void host_dft_port_set_hal_port(u8 v);
 void host_dft_port_set_cached(u8 port_id, u8 mac_id);
 void host_dft_port_set_client_assoc(u8 v, u8 mac_id);
+void host_dft_port_set_assoc_sta_found(u8 v);
 void host_dft_port_set_ap_state(u8 v);
 int host_dft_port_h2c_count(void);
 u8 host_dft_port_h2c_cmd(int idx);
@@ -82,6 +83,8 @@ static void run_cmd_case(u8 hal_port, u8 cached_port, u8 cached_mac, u8 mac_id, 
 	expect_u32("cmd_rc", (unsigned int)dut_rc, (unsigned int)oracle_rc);
 	expect_u32("cmd_h2c_count", (unsigned int)dut_cnt, (unsigned int)oracle_cnt);
 	if (dut_cnt > 0) {
+		expect_u32("cmd_h2c_cmd", host_dft_port_h2c_cmd(0), H2C_DEFAULT_PORT_ID);
+		expect_u32("cmd_h2c_len", host_dft_port_h2c_len(0), H2C_DEFAULT_PORT_ID_LEN);
 		expect_u32("cmd_buf0", dut_buf[0], oracle_buf[0]);
 		expect_u32("cmd_buf1", dut_buf[1], oracle_buf[1]);
 	}
@@ -89,29 +92,44 @@ static void run_cmd_case(u8 hal_port, u8 cached_port, u8 cached_mac, u8 mac_id, 
 	expect_u32("cmd_dft_mac", dut_dft_mac, oracle_dft_mac);
 }
 
-static void run_set_case(u8 client_assoc, u8 ap_state, u8 assoc_mac, u8 hal_port,
-			 const char *tag)
+static void run_set_case(u8 client_assoc, u8 assoc_sta_found, u8 ap_state, u8 assoc_mac,
+			 u8 hal_port, const char *tag)
 {
+	s32 dut_rc, oracle_rc;
 	int dut_cnt, oracle_cnt;
+	u8 dut_dft_port, dut_dft_mac, oracle_dft_port, oracle_dft_mac;
 
 	host_dft_port_reset();
 	host_dft_port_set_hal_port(hal_port);
 	host_dft_port_set_client_assoc(client_assoc, assoc_mac);
+	host_dft_port_set_assoc_sta_found(assoc_sta_found);
 	host_dft_port_set_ap_state(ap_state);
 
-	(void)rtw_set_default_port_id(host_dft_port_adapter());
+	dut_rc = rtw_set_default_port_id(host_dft_port_adapter());
 	dut_cnt = host_dft_port_h2c_count();
+	dut_dft_port = host_dft_port_dft_port();
+	dut_dft_mac = host_dft_port_dft_mac();
 
 	host_dft_port_reset();
 	host_dft_port_set_hal_port(hal_port);
 	host_dft_port_set_client_assoc(client_assoc, assoc_mac);
+	host_dft_port_set_assoc_sta_found(assoc_sta_found);
 	host_dft_port_set_ap_state(ap_state);
 
-	(void)rtw_set_default_port_id_c_oracle(host_dft_port_adapter());
+	oracle_rc = rtw_set_default_port_id_c_oracle(host_dft_port_adapter());
 	oracle_cnt = host_dft_port_h2c_count();
+	oracle_dft_port = host_dft_port_dft_port();
+	oracle_dft_mac = host_dft_port_dft_mac();
 
 	(void)tag;
+	expect_u32("set_rc", (unsigned int)dut_rc, (unsigned int)oracle_rc);
 	expect_u32("set_h2c_count", (unsigned int)dut_cnt, (unsigned int)oracle_cnt);
+	if (dut_cnt > 0) {
+		expect_u32("set_h2c_cmd", host_dft_port_h2c_cmd(0), H2C_DEFAULT_PORT_ID);
+		expect_u32("set_h2c_len", host_dft_port_h2c_len(0), H2C_DEFAULT_PORT_ID_LEN);
+	}
+	expect_u32("set_dft_port", dut_dft_port, oracle_dft_port);
+	expect_u32("set_dft_mac", dut_dft_mac, oracle_dft_mac);
 }
 
 int main(void)
@@ -123,9 +141,10 @@ int main(void)
 	run_cmd_case(3, 1, 4, 7, _SUCCESS, "pack_ok");
 	run_cmd_case(1, 0, 0, 9, 0, "h2c_fail_still_cache");
 
-	run_set_case(1, 0, 11, 2, "sta_assoc");
-	run_set_case(0, 0, 0, 0, "idle");
-	run_set_case(0, 1, 0, 0, "ap_empty");
+	run_set_case(1, 1, 0, 11, 2, "sta_assoc");
+	run_set_case(1, 0, 0, 11, 2, "assoc_no_sta");
+	run_set_case(0, 0, 0, 0, 0, "idle");
+	run_set_case(0, 0, 1, 0, 0, "ap_empty");
 
 	if (fail_line)
 		return fprintf(stderr, "tests failed at line %d\n", fail_line), 1;

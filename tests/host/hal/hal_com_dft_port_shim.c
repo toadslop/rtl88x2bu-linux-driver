@@ -57,6 +57,10 @@ void host_dft_port_set_client_assoc(u8 v, u8 mac_id)
 {
 	g_state.client_assoc = v;
 	g_state.assoc_mac_id = mac_id;
+}
+
+void host_dft_port_set_assoc_sta_found(u8 v)
+{
 	g_state.assoc_sta_found = v;
 }
 

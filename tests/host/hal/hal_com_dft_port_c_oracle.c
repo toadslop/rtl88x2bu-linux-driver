@@ -24,8 +24,6 @@ s32 rtw_hal_set_default_port_id_cmd_c_oracle(struct _adapter *adapter, u8 mac_id
 	struct dvobj_priv *dvobj = rtw_rust_hal_com_adapter_to_dvobj(adapter);
 	u8 port_id;
 
-	if (!dvobj)
-		return ret;
 	port_id = rtw_hal_get_port(adapter);
 	if ((rtw_rust_hal_com_dft_port_id(dvobj) == port_id) &&
 	    (rtw_rust_hal_com_dft_mac_id(dvobj) == mac_id))
