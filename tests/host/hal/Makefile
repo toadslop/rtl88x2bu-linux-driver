@@ -136,6 +136,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo test-dump-rsvd-fifo-rust \
 	test-tx-aclt-set test-tx-aclt-set-rust \
+	test-rcr-leaf \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-c2h-evt-robustness clean
 
@@ -174,6 +175,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo test-dump-rsvd-fifo-rust \
 	test-tx-aclt-set test-tx-aclt-set-rust \
+	test-rcr-leaf \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-c2h-evt-robustness
 
@@ -1757,6 +1759,15 @@ test_hal_com_mbid_cam_alloc_rust: test_hal_com_mbid_cam_alloc.c $(MBID_CAM_SHIM)
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_MBID_CAM_ORACLE -o $@ test_hal_com_mbid_cam_alloc.c \
 		$(MBID_CAM_SHIM) $(MBID_CAM_ORACLE) librust_hal_com_mbid_cam.a
 
+RCR_SHIM := hal_com_rcr_shim.c
+RCR_ORACLE := hal_com_rcr_c_oracle.c
+
+test-rcr-leaf: test_hal_com_rcr
+	./test_hal_com_rcr
+
+test_hal_com_rcr: test_hal_com_rcr.c $(RCR_SHIM) $(RCR_ORACLE)
+	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_rcr.c $(RCR_SHIM) $(RCR_ORACLE)
+
 GPIO_WAKEUP_SHIM := hal_com_gpio_wakeup_shim.c
 GPIO_WAKEUP_ORACLE := hal_com_gpio_wakeup_c_oracle.c
 
@@ -1939,6 +1950,7 @@ clean:
 		test_hal_com_req_per_rpt test_hal_com_req_per_rpt_rust \
 		librust_hal_com_req_per_rpt.a \
 		test_hal_com_mbid_cam_rust librust_hal_com_mbid_cam.a \
+		test_hal_com_rcr \
 		test_hal_com_gpio_wakeup test_hal_com_gpio_wakeup_rust \
 		test_hal_com_gpio_wakeup_8821asdio test_hal_com_gpio_wakeup_rust_8821asdio \
 		librust_hal_com_gpio_wakeup.a librust_hal_com_gpio_wakeup_8821as.a \
