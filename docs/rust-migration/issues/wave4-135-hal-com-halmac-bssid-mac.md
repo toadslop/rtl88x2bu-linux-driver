@@ -26,7 +26,7 @@ into `rust/hal_com_halmac_identity.rs`:
 ## Acceptance
 
 - L0 + L1 on 8822B HALMAC build for `rtw_hal_set_bssid` (always present)
-- L2: BSSID H2C/HALMAC trace on pinned MBSSID profile; port MAC get/set L2 only on a `!CONFIG_MI_WITH_MBSSID_CAM` matrix row (absent on default pinned build)
+- L2: `rtw_halmac_set_bssid` shim trace on pinned profile; port MAC get/set L2 only on `!CONFIG_MI_WITH_MBSSID_CAM` matrix row. Port MAC helpers early-return when `mac_addr` is NULL; `rtw_hal_set_bssid` does not.
 
 ## Tracking
 
