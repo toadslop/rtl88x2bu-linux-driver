@@ -433,6 +433,7 @@ static void rtw_hal_set_msr(_adapter *adapter, u8 net_type)
 /* rtw_mbid_camid_alloc / info_change / assign / clean — rust/hal_com_mbid_cam.rs (W4-120) */
 /* rtw_mbid_cam_cache_dump — rust/hal_com_mbid_cam.rs (W4-125) */
 /* rtw_ap_set_mbid_num / rtw_mbid_cam_enable / rtw_mi_set_mbid_cam / write_mbssid_cam — rust/hal_com_mbid_cam.rs (W4-126) */
+/* rtw_hal_set_macaddr_mbid / rtw_hal_change_macaddr_mbid — rust/hal_com_mbid_cam.rs (W4-133) */
 
 void write_mbssid_cam(_adapter *padapter, u8 cam_addr, u8 *mac);
 
@@ -752,67 +753,7 @@ void rtw_ap_multi_bcn_cfg(_adapter *adapter)
 #endif
 
 #ifdef CONFIG_MI_WITH_MBSSID_CAM
-void rtw_hal_set_macaddr_mbid(_adapter *adapter, u8 *mac_addr)
-{
-
-#if 0 /*TODO - modify for more flexible*/
-	u8 idx = 0;
-
-	if ((check_fwstate(&adapter->mlmepriv, WIFI_STATION_STATE) == _TRUE) &&
-	    (DEV_STA_NUM(adapter_to_dvobj(adapter)) == 1)) {
-		for (idx = 0; idx < 6; idx++)
-			rtw_write8(GET_PRIMARY_ADAPTER(adapter), (REG_MACID + idx), val[idx]);
-	}  else {
-		/*MBID entry_id = 0~7 ,0 for root AP, 1~7 for VAP*/
-		u8 entry_id;
-
-		if ((check_fwstate(&adapter->mlmepriv, WIFI_AP_STATE) == _TRUE) &&
-		    (DEV_AP_NUM(adapter_to_dvobj(adapter)) == 1)) {
-			entry_id = 0;
-			if (rtw_mbid_cam_assign(adapter, val, entry_id)) {
-				RTW_INFO(FUNC_ADPT_FMT" Root AP assigned success\n", FUNC_ADPT_ARG(adapter));
-				write_mbssid_cam(adapter, entry_id, val);
-			}
-		} else {
-			entry_id = rtw_mbid_camid_alloc(adapter, val);
-			if (entry_id != INVALID_CAM_ID)
-				write_mbssid_cam(adapter, entry_id, val);
-		}
-	}
-#else
-	{
-		/*
-			MBID entry_id = 0~7 ,for IFACE_ID0 ~ IFACE_IDx
-		*/
-		u8 entry_id = rtw_mbid_camid_alloc(adapter, mac_addr);
-
-
-		if (entry_id != INVALID_CAM_ID) {
-			write_mbssid_cam(adapter, entry_id, mac_addr);
-			RTW_INFO("%s "ADPT_FMT"- mbid(%d) mac_addr ="MAC_FMT"\n", __func__,
-				ADPT_ARG(adapter), entry_id, MAC_ARG(mac_addr));
-		}
-	}
-#endif
-}
-
-void rtw_hal_change_macaddr_mbid(_adapter *adapter, u8 *mac_addr)
-{
-	u8 idx = 0;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	u8 entry_id;
-
-	if (!mac_addr) {
-		rtw_warn_on(1);
-		return;
-	}
-
-
-	entry_id = rtw_mbid_cam_info_change(adapter, mac_addr);
-
-	if (entry_id != INVALID_CAM_ID)
-		write_mbssid_cam(adapter, entry_id, mac_addr);
-}
+/* rtw_hal_set_macaddr_mbid / rtw_hal_change_macaddr_mbid — rust/hal_com_mbid_cam.rs (W4-133) */
 
 #ifdef CONFIG_SWTIMER_BASED_TXBCN
 u16 rtw_hal_bcn_interval_adjust(_adapter *adapter, u16 bcn_interval)
@@ -14576,6 +14517,13 @@ void rtw_rust_hal_com_mbid_log_clean(const char *func, u8 camid)
 void rtw_rust_hal_com_mbid_log_mi_set_cam(const char *func, u8 cam_id, u8 *mac)
 {
 	RTW_INFO("%s - cam_id:%d => mac:"MAC_FMT"\n", func, cam_id, MAC_ARG(mac));
+}
+
+void rtw_rust_hal_com_mbid_log_set_macaddr(const char *func, _adapter *adapter,
+					   u8 entry_id, u8 *mac_addr)
+{
+	RTW_INFO("%s "ADPT_FMT"- mbid(%d) mac_addr ="MAC_FMT"\n", func,
+		 ADPT_ARG(adapter), entry_id, MAC_ARG(mac_addr));
 }
 
 void rtw_rust_hal_com_spinlock_init(_lock *lock)
