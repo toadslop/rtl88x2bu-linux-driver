@@ -178,6 +178,7 @@ int main(void)
 
 	run_cmd_case(2, 2, 5, 5, _SUCCESS, "early_out");
 	run_cmd_case(2, 2, 5, 7, _SUCCESS, "mac_only_mismatch");
+	run_cmd_case(3, 1, 7, 7, _SUCCESS, "port_only_mismatch");
 	run_cmd_case(3, 1, 4, 7, _SUCCESS, "pack_ok");
 	run_cmd_case(1, 0, 0, 9, 0, "h2c_fail_still_cache");
 
