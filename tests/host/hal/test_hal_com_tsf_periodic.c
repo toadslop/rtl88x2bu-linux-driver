@@ -250,6 +250,9 @@ static void test_etime_expired_clears(void)
 	eq_stime("expired_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 0);
 	eq_u32("expired_rcr", host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count, 1);
 	eq_u8("expired_action", host_hal_com_tsf_periodic_trace.last_rcr_chk_action, MLME_ACTION_NONE);
+	if (host_hal_com_tsf_periodic_trace.last_rcr_adapter !=
+	    host_hal_com_tsf_periodic_adapter())
+		fail("expired_rcr_primary");
 }
 
 static void test_restore_arm_timer(void)
@@ -338,6 +341,8 @@ static void test_offch_leave_op_skips_restore(void)
 	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
 	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
 	eq_u32("leave_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
+	eq_u32("leave_rcr", host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count, 0);
+	eq_stime("leave_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 0);
 }
 
 static void test_offch_backing_op_skips_restore(void)
@@ -350,6 +355,8 @@ static void test_offch_backing_op_skips_restore(void)
 	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
 	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
 	eq_u32("backing_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
+	eq_u32("backing_rcr", host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count, 0);
+	eq_stime("backing_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 0);
 }
 
 static void test_restore_max_only_past_pause(void)
