@@ -173,9 +173,11 @@ u8 rtw_rust_hal_com_assoc_sta_mac_id(struct _adapter *adapter, u8 *found)
 	return g_state.assoc_mac_id;
 }
 
-void rtw_rust_hal_com_log_dft_port_h2c(struct _adapter *adapter, u8 *parm, u8 port_id, u8 mac_id)
+void rtw_rust_hal_com_log_dft_port_h2c(struct _adapter *adapter, const char *func, u8 *parm,
+				     u8 port_id, u8 mac_id)
 {
 	(void)adapter;
+	(void)func;
 	(void)parm;
 	(void)port_id;
 	(void)mac_id;

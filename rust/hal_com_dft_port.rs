@@ -28,6 +28,7 @@ extern "C" {
     fn rtw_rust_hal_com_assoc_sta_mac_id(adapter: *mut c_void, found: *mut U8) -> U8;
     fn rtw_rust_hal_com_log_dft_port_h2c(
         adapter: *mut c_void,
+        func: *const u8,
         parm: *mut U8,
         port_id: U8,
         mac_id: U8,
@@ -52,7 +53,13 @@ pub extern "C" fn rtw_hal_set_default_port_id_cmd(adapter: *mut c_void, mac_id: 
     parm[0] = port_id;
     parm[1] = mac_id;
     unsafe {
-        rtw_rust_hal_com_log_dft_port_h2c(adapter, parm.as_mut_ptr(), port_id, mac_id);
+        rtw_rust_hal_com_log_dft_port_h2c(
+            adapter,
+            b"rtw_hal_set_default_port_id_cmd\0".as_ptr(),
+            parm.as_mut_ptr(),
+            port_id,
+            mac_id,
+        );
     }
     ret = unsafe {
         rtw_hal_fill_h2c_cmd(

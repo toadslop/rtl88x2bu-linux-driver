@@ -1350,6 +1350,7 @@ endif
 
 ifeq ($(CONFIG_RTW_REPEATER_SON), y)
 ccflags-y += -DCONFIG_RTW_REPEATER_SON
+ccflags-y += -DCONFIG_CONCURRENT_MODE
 endif
 
 ifeq ($(CONFIG_RTW_IPCAM_APPLICATION), y)
@@ -2904,10 +2905,6 @@ _rust_hw_fw_multi_port := y
 endif
 ifeq ($(_rust_hw_fw_multi_port),y)
 ifneq ($(filter -DCONFIG_CONCURRENT_MODE,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
-_rust_cfg_fw_multi_port := y
-endif
-# drv_conf.h forces CONFIG_CONCURRENT_MODE when repeater SON is enabled (no -D on ccflags-y).
-ifeq ($(CONFIG_RTW_REPEATER_SON), y)
 _rust_cfg_fw_multi_port := y
 endif
 endif
