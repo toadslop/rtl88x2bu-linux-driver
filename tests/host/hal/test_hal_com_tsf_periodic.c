@@ -232,6 +232,14 @@ static void test_etime_wrap_bump(void)
 	eq_stime("wrap_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 1);
 }
 
+static void test_time_after_jiffies_shape(void)
+{
+	if (rtw_time_after((systime)-500, 1))
+		fail("jiffies_wrap_future");
+	if (!rtw_time_after(2, 1))
+		fail("jiffies_wrap_expired");
+}
+
 static void test_etime_wrap_prod_bump(void)
 {
 	host_hal_com_tsf_periodic_reset();
@@ -243,38 +251,27 @@ static void test_etime_wrap_prod_bump(void)
 	eq_stime("wrap_prod_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 1);
 }
 
-static void test_etime_one_blocks_scan(void)
+static void test_etime_wrap_deadline_sequence(void)
 {
-	host_hal_com_tsf_periodic_reset();
-	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 0, 0, 5, 100);
-	host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime = 1;
-	host_hal_com_tsf_periodic_set_current_time(1);
-
-	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
-	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
-	eq_stime("etime_one", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 1);
-	eq_u32("etime_one_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
-}
-
-static void test_etime_wrap_idle_second_chk(void)
-{
-	struct chk_pair_out prod;
-
 	host_hal_com_tsf_periodic_reset();
 	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 1, 5, 100);
 	host_hal_com_tsf_periodic_set_current_time((systime)-500);
 
-	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,
-		     &prod);
-	eq_stime("wrap_idle_setup", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 1);
-
-	host_hal_com_tsf_periodic_set_current_time(1);
 	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
-	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,
-		     NULL);
-	eq_stime("wrap_idle_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 1);
-	eq_u32("wrap_idle_rcr", host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count, 0);
-	eq_u32("wrap_idle_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
+	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
+	eq_stime("wrap_seq_arm", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 1);
+
+	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
+	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
+	eq_stime("wrap_seq_hold", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 1);
+	eq_u32("wrap_seq_hold_rcr", host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count, 0);
+	eq_u32("wrap_seq_hold_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
+
+	host_hal_com_tsf_periodic_set_current_time(2);
+	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
+	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
+	eq_stime("wrap_seq_clear", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 0);
+	eq_u32("wrap_seq_clear_rcr", host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count, 1);
 }
 
 static void test_iface_nums_respected(void)
@@ -509,10 +506,10 @@ int main(void)
 	test_not_required_skips();
 	test_zero_pause_skips();
 	test_etime_expired_next_tick();
+	test_time_after_jiffies_shape();
 	test_etime_wrap_bump();
 	test_etime_wrap_prod_bump();
-	test_etime_one_blocks_scan();
-	test_etime_wrap_idle_second_chk();
+	test_etime_wrap_deadline_sequence();
 	test_etime_expired_clears();
 	test_iface_nums_respected();
 	test_null_iface_skipped();
