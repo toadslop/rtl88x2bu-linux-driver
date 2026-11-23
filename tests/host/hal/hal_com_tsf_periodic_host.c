@@ -71,16 +71,16 @@ u32 rtw_get_passing_time_ms(systime start)
 
 void _set_timer(struct _timer *t, u32 ms)
 {
-	(void)t;
 	host_hal_com_tsf_periodic_trace.set_timer_count++;
 	host_hal_com_tsf_periodic_trace.last_timer_ms = ms;
+	host_hal_com_tsf_periodic_trace.last_timer_target = t;
 }
 
 void rtw_hal_rcr_set_chk_bssid(struct _adapter *adapter, u8 self_action)
 {
-	(void)adapter;
 	host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count++;
 	host_hal_com_tsf_periodic_trace.last_rcr_chk_action = self_action;
+	host_hal_com_tsf_periodic_trace.last_rcr_adapter = adapter;
 }
 
 u8 rtw_periodic_tsf_update_end_cmd(struct _adapter *adapter)

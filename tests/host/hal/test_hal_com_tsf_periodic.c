@@ -298,6 +298,92 @@ static void test_timer_hdl_surprise(void)
 	eq_u32("hdl_surprise", host_hal_com_tsf_periodic_trace.periodic_end_cmd_count, 0);
 }
 
+static void test_etime_expired_no_iface_scan(void)
+{
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 1, 2, 100);
+	host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime = 500;
+	host_hal_com_tsf_periodic_set_current_time(1000);
+
+	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
+	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
+	eq_stime("exp_noscan_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 0);
+	eq_u32("exp_noscan_rcr", host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count, 1);
+	eq_u32("exp_noscan_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
+}
+
+static void test_offch_after_etime_block(void)
+{
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 1, 2, 100);
+	host_hal_com_tsf_periodic_dvobj()->rf_ctl.offch_state = OFFCHS_LEAVE_OP;
+	host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime = 500;
+	host_hal_com_tsf_periodic_set_current_time(1000);
+
+	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
+	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
+	eq_stime("offch_etime_first", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 0);
+	eq_u32("offch_etime_rcr", host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count, 1);
+}
+
+static void test_offch_leave_op_skips_restore(void)
+{
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 1, 2, 100);
+	host_hal_com_tsf_periodic_dvobj()->rf_ctl.offch_state = OFFCHS_LEAVE_OP;
+	host_hal_com_tsf_periodic_set_current_time(5000);
+
+	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
+	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
+	eq_u32("leave_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
+}
+
+static void test_restore_max_only_past_pause(void)
+{
+	struct chk_pair_out prod;
+	struct _adapter *a1 = host_hal_com_tsf_periodic_adapter();
+	struct _adapter *a2 = host_hal_com_tsf_periodic_dvobj()->padapters[1];
+
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(a1, 1, 10, 2, 3, 100);
+	setup_iface(a2, 1, 1000, 1, 10, 100);
+	host_hal_com_tsf_periodic_set_current_time(211);
+
+	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,
+		     &prod);
+	eq_u32("past_only_ms", prod.last_timer_ms, 300);
+}
+
+static void test_restore_rcr_primary(void)
+{
+	struct chk_pair_out prod;
+
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 2, 3, 100);
+	host_hal_com_tsf_periodic_set_current_time(211);
+
+	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,
+		     &prod);
+	if (host_hal_com_tsf_periodic_trace.last_rcr_adapter !=
+	    host_hal_com_tsf_periodic_adapter())
+		fail("restore_rcr_primary");
+}
+
+static void test_restore_end_timer_field(void)
+{
+	struct dvobj_priv *dv = host_hal_com_tsf_periodic_dvobj();
+
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 2, 3, 100);
+	host_hal_com_tsf_periodic_set_current_time(211);
+
+	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
+	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
+	if (host_hal_com_tsf_periodic_trace.last_timer_target !=
+	    &dv->periodic_tsf_update_end_timer)
+		fail("restore_end_timer");
+}
+
 int main(void)
 {
 #ifndef CONFIG_MI_WITH_MBSSID_CAM
@@ -313,6 +399,12 @@ int main(void)
 	test_etime_expired_clears();
 	test_restore_max_not_last();
 	test_restore_arm_timer();
+	test_etime_expired_no_iface_scan();
+	test_offch_after_etime_block();
+	test_offch_leave_op_skips_restore();
+	test_restore_max_only_past_pause();
+	test_restore_rcr_primary();
+	test_restore_end_timer_field();
 #endif
 	test_timer_hdl();
 	test_timer_hdl_stopped();
