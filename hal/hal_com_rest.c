@@ -14362,7 +14362,7 @@ u8 rtw_rust_hal_com_assoc_sta_mac_id(_adapter *adapter, u8 *found)
 
 u8 rtw_rust_hal_com_msr_hw_port(_adapter *adapter)
 {
-	return adapter ? adapter->hw_port : 0;
+	return adapter->hw_port;
 }
 #ifdef CONFIG_MBSSID_CAM
 struct mbid_cam_ctl_t *rtw_rust_hal_com_mbid_cam_ctl(struct dvobj_priv *dvobj)
