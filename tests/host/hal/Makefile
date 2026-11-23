@@ -1898,9 +1898,6 @@ RUST_MSR := $(ROOT)/rust/hal_com_msr_host.rs
 test-msr: test_hal_com_msr
 	./test_hal_com_msr
 
-test-msr-rust: test_hal_com_msr_rust
-	./test_hal_com_msr_rust
-
 test_hal_com_msr: test_hal_com_msr.c $(MSR_SHIM) $(MSR_ORACLE)
 	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_msr.c $(MSR_SHIM) $(MSR_ORACLE)
 
@@ -1915,6 +1912,12 @@ test_hal_com_msr_rust: test_hal_com_msr.c $(MSR_SHIM) $(MSR_ORACLE) \
 		librust_hal_com_msr.a
 	$(CC) $(CFLAGS) -I../include -DRUST_HAL_COM_MSR_ORACLE -o $@ \
 		test_hal_com_msr.c $(MSR_SHIM) $(MSR_ORACLE) librust_hal_com_msr.a
+
+test-msr-rust: test_hal_com_msr_rust
+	./test_hal_com_msr_rust
+else
+test-msr-rust:
+	@echo "skip test-msr-rust (no rust/hal_com_msr_host.rs)"
 endif
 
 RUST_GPIO_WAKEUP := $(ROOT)/rust/hal_com_gpio_wakeup_host.rs
