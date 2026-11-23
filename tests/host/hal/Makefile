@@ -143,7 +143,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-gpio-wakeup-rust-8821asdio test-tsf-iface test-tsf-iface-mbssid \
 	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
 	test-tsf-periodic \
-	test-c2h-evt-robustness clean
+	test-halmac-identity test-c2h-evt-robustness clean
 
 all: test
 
@@ -186,7 +186,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-gpio-wakeup-rust-8821asdio test-tsf-iface test-tsf-iface-mbssid \
 	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
 	test-tsf-periodic \
-	test-c2h-evt-robustness
+	test-halmac-identity test-c2h-evt-robustness
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -1825,6 +1825,15 @@ test_hal_com_mbid_cam_macaddr_rust: test_hal_com_mbid_cam_macaddr.c $(MBID_CAM_S
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_MBID_CAM_ORACLE -o $@ test_hal_com_mbid_cam_macaddr.c \
 		$(MBID_CAM_SHIM) $(MBID_CAM_ORACLE) librust_hal_com_mbid_cam.a
 
+HALMAC_IDENTITY_SUPPORT := hal_com_halmac_identity_support.c
+
+test-halmac-identity: test_hal_com_halmac_identity
+	./test_hal_com_halmac_identity
+
+test_hal_com_halmac_identity: test_hal_com_halmac_identity.c $(HALMAC_IDENTITY_SUPPORT)
+	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_halmac_identity.c \
+		$(HALMAC_IDENTITY_SUPPORT)
+
 GPIO_WAKEUP_SHIM := hal_com_gpio_wakeup_shim.c
 GPIO_WAKEUP_ORACLE := hal_com_gpio_wakeup_c_oracle.c
 
@@ -2102,6 +2111,7 @@ clean:
 		test_hal_com_rcr_chk_bssid \
 		test_hal_com_gpio_wakeup test_hal_com_gpio_wakeup_rust \
 		test_hal_com_gpio_wakeup_8821asdio test_hal_com_gpio_wakeup_rust_8821asdio \
+		test_hal_com_halmac_identity \
 		librust_hal_com_gpio_wakeup.a librust_hal_com_gpio_wakeup_8821as.a \
 		test_hal_com_tsf_iface test_hal_com_tsf_iface_mbssid \
 		test_hal_com_tsf_iface_rust test_hal_com_tsf_iface_rust_mbssid \
