@@ -33,6 +33,8 @@ test_hal_com_mbid_cam
 test_hal_com_mbid_cam_rust
 test_hal_com_mbid_cam_hw
 test_hal_com_mbid_cam_hw_rust
+test_hal_com_mbid_cam_macaddr
+test_hal_com_mbid_cam_macaddr_rust
 test_hal_com_mbid_cam_alloc
 test_hal_com_mbid_cam_alloc_rust
 librust_hal_com_mbid_cam.a
