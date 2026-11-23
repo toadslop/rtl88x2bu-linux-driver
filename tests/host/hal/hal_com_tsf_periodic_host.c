@@ -61,7 +61,7 @@ systime rtw_ms_to_systime(int ms)
 
 int rtw_time_after(systime a, systime b)
 {
-	return (a > b) ? 1 : 0;
+	return ((long)(b - a)) < 0;
 }
 
 u32 rtw_get_passing_time_ms(systime start)

@@ -232,6 +232,30 @@ static void test_etime_wrap_bump(void)
 	eq_stime("wrap_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 1);
 }
 
+static void test_etime_wrap_prod_bump(void)
+{
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 1, 5, 100);
+	host_hal_com_tsf_periodic_set_current_time((systime)-500);
+
+	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
+	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
+	eq_stime("wrap_prod_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 1);
+}
+
+static void test_etime_one_blocks_scan(void)
+{
+	host_hal_com_tsf_periodic_reset();
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 0, 0, 5, 100);
+	host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime = 1;
+	host_hal_com_tsf_periodic_set_current_time(1);
+
+	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
+	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
+	eq_stime("etime_one", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 1);
+	eq_u32("etime_one_timer", host_hal_com_tsf_periodic_trace.set_timer_count, 0);
+}
+
 static void test_etime_wrap_idle_second_chk(void)
 {
 	struct chk_pair_out prod;
@@ -260,10 +284,9 @@ static void test_iface_nums_respected(void)
 
 	host_hal_com_tsf_periodic_reset();
 	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 2, 3, 100);
-	setup_iface(dv->padapters[1], 0, 0, 0, 0, 100);
+	setup_iface(dv->padapters[1], 1, 10, 2, 10, 100);
 	setup_iface(dv->padapters[2], 1, 10, 2, 10, 100);
-	setup_iface(dv->padapters[3], 1, 10, 2, 10, 100);
-	dv->iface_nums = 2;
+	dv->iface_nums = 1;
 	host_hal_com_tsf_periodic_set_current_time(211);
 
 	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,
@@ -275,11 +298,12 @@ static void test_null_iface_skipped(void)
 {
 	struct dvobj_priv *dv = host_hal_com_tsf_periodic_dvobj();
 	struct chk_pair_out prod;
+	struct _adapter *a2;
 
 	host_hal_com_tsf_periodic_reset();
-	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 2, 3, 100);
-	setup_iface(dv->padapters[1], 1, 10, 2, 10, 100);
-	dv->padapters[1] = NULL;
+	a2 = dv->padapters[1];
+	dv->padapters[0] = NULL;
+	setup_iface(a2, 1, 10, 2, 3, 100);
 	dv->iface_nums = 2;
 	host_hal_com_tsf_periodic_set_current_time(211);
 
@@ -486,6 +510,8 @@ int main(void)
 	test_zero_pause_skips();
 	test_etime_expired_next_tick();
 	test_etime_wrap_bump();
+	test_etime_wrap_prod_bump();
+	test_etime_one_blocks_scan();
 	test_etime_wrap_idle_second_chk();
 	test_etime_expired_clears();
 	test_iface_nums_respected();
