@@ -14,3 +14,16 @@ int rtw_hal_get_rsvd_page(struct _adapter *adapter, unsigned int page_offset,
 	(void)buffer_size;
 	return 0;
 }
+
+#if defined(CONFIG_RTW_DEBUG) || defined(CONFIG_PROC_DEBUG)
+void rtw_dump_rsvd_page(void *sel, struct _adapter *adapter,
+			unsigned char page_offset, unsigned char page_num)
+{
+	(void)sel;
+	(void)adapter;
+	(void)page_offset;
+	(void)page_num;
+}
+#endif
+
+/* rtw_dump_fifo — PR4 / rust/hal_com_dump_rsvd_page.rs (leave out of this L1 leaf). */
