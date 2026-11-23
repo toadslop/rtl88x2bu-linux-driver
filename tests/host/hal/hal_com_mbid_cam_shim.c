@@ -2,18 +2,50 @@
 /* Host fixture for W4-119 MBSSID CAM L2. */
 
 #include "host_hal_com_mbid_cam_types.h"
+#include <stdint.h>
 #include <string.h>
 
 static struct dvobj_priv g_dvobj;
 static struct _adapter g_adapter;
+static struct _adapter g_adapters[CONFIG_IFACE_NUMBER];
+static int g_sel_overflow;
 
 void host_mbid_cam_oracle_reset_warn(void);
 
 void host_mbid_cam_reset_fixture(void)
 {
+	unsigned int i;
+
 	host_mbid_cam_oracle_reset_warn();
 	memset(&g_dvobj, 0, sizeof(g_dvobj));
 	memset(&g_adapter, 0, sizeof(g_adapter));
+	memset(g_adapters, 0, sizeof(g_adapters));
+	g_sel_overflow = 0;
+	for (i = 0; i < CONFIG_IFACE_NUMBER; i++) {
+		g_adapters[i].iface_id = (u8)i;
+		g_dvobj.padapters[i] = &g_adapters[i];
+	}
+}
+
+void host_mbid_cam_set_iface_role(u8 iface_id, unsigned int fw_state)
+{
+	if (iface_id < CONFIG_IFACE_NUMBER)
+		g_adapters[iface_id].fw_state = fw_state;
+}
+
+void host_sel_reset(struct host_sel_capture *cap)
+{
+	cap->len = 0;
+	cap->buf[0] = '\0';
+	g_sel_overflow = 0;
+}
+
+int host_sel_string(struct host_sel_capture *cap, char *out, size_t outlen)
+{
+	if (g_sel_overflow || cap->len >= outlen)
+		return -1;
+	memcpy(out, cap->buf, cap->len + 1);
+	return (int)cap->len;
 }
 
 struct _adapter *host_mbid_cam_adapter(void)
@@ -244,34 +276,52 @@ void rtw_rust_hal_com_warn_on(int condition)
 		host_mbid_cam_record_warn();
 }
 
-/* Stubs so test-mbid-cam-rust links after PR1 adds rtw_mbid_cam_cache_dump (L2 in PR2). */
-void rtw_rust_hal_com_print_line(void *sel, const char *line)
-{
-	(void)sel;
-	(void)line;
-}
-
 void *rtw_rust_hal_com_dvobj_padapter(void *dvobj, u8 iface_id)
 {
-	(void)dvobj;
-	(void)iface_id;
-	return NULL;
+	if (!dvobj || iface_id >= CONFIG_IFACE_NUMBER)
+		return NULL;
+	return ((struct dvobj_priv *)dvobj)->padapters[iface_id];
+}
+
+static int host_check_fw(uint32_t fw, uint32_t state)
+{
+	return (fw & state) == state;
 }
 
 u8 rtw_rust_hal_com_mlme_is_sta(void *adapter)
 {
-	(void)adapter;
-	return 0;
+	if (!adapter)
+		return 0;
+	return host_check_fw(((struct _adapter *)adapter)->fw_state, WIFI_STATION_STATE);
 }
 
 u8 rtw_rust_hal_com_mlme_is_ap(void *adapter)
 {
-	(void)adapter;
-	return 0;
+	if (!adapter)
+		return 0;
+	return host_check_fw(((struct _adapter *)adapter)->fw_state, WIFI_AP_STATE);
 }
 
 u8 rtw_rust_hal_com_mlme_is_mesh(void *adapter)
 {
-	(void)adapter;
-	return 0;
+	if (!adapter)
+		return 0;
+	return host_check_fw(((struct _adapter *)adapter)->fw_state, WIFI_MESH_STATE);
+}
+
+void rtw_rust_hal_com_print_line(void *sel, const char *line)
+{
+	struct host_sel_capture *cap = sel;
+	size_t n;
+
+	if (!cap || !line)
+		return;
+	n = strlen(line);
+	if (cap->len + n >= sizeof(cap->buf)) {
+		g_sel_overflow = 1;
+		return;
+	}
+	memcpy(cap->buf + cap->len, line, n);
+	cap->len += n;
+	cap->buf[cap->len] = '\0';
 }

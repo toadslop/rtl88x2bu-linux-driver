@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 #include "host_hal_com_mbid_cam_types.h"
+#include <stdarg.h>
+#include <stdio.h>
 
 struct dvobj_priv *_adapter_to_dvobj(struct _adapter *adapter);
 
@@ -169,6 +171,90 @@ u8 rtw_mbid_cam_assign_c_oracle(struct _adapter *adapter, u8 *mac_addr, u8 camid
 	if (ret == _TRUE)
 		ATOMIC_INC(&ctl->mbid_entry_num);
 	return ret;
+}
+
+static int mlme_is_sta(struct _adapter *iface)
+{
+	return (iface->fw_state & WIFI_STATION_STATE) == WIFI_STATION_STATE;
+}
+
+static int mlme_is_ap(struct _adapter *iface)
+{
+	return (iface->fw_state & WIFI_AP_STATE) == WIFI_AP_STATE;
+}
+
+static int mlme_is_mesh(struct _adapter *iface)
+{
+	return (iface->fw_state & WIFI_MESH_STATE) == WIFI_MESH_STATE;
+}
+
+static void oracle_print_line(void *sel, const char *line)
+{
+	struct host_sel_capture *cap = sel;
+	size_t n;
+
+	if (!cap || !line)
+		return;
+	n = strlen(line);
+	if (cap->len + n >= sizeof(cap->buf))
+		return;
+	memcpy(cap->buf + cap->len, line, n);
+	cap->len += n;
+	cap->buf[cap->len] = '\0';
+}
+
+static void oracle_printf(void *sel, const char *fmt, ...)
+{
+	char line[256];
+	va_list ap;
+
+	va_start(ap, fmt);
+	vsnprintf(line, sizeof(line), fmt, ap);
+	va_end(ap);
+	oracle_print_line(sel, line);
+}
+
+void rtw_mbid_cam_cache_dump_c_oracle(void *sel, const char *fun_name,
+				      struct _adapter *adapter)
+{
+	struct dvobj_priv *dvobj = _adapter_to_dvobj(adapter);
+	struct mbid_cam_ctl_t *ctl = &dvobj->mbid_cam_ctl;
+	u8 entry_num = (u8)ATOMIC_READ(&ctl->mbid_entry_num);
+	u8 max_cam_id = rtw_get_max_mbid_cam_id_c_oracle(adapter);
+	u8 i;
+
+	oracle_printf(sel, "== MBSSID CAM DUMP (%s)==\n", fun_name);
+	oracle_printf(sel, "Entry numbers:%u, max_camid:%u, bitmap:0x%08x\n",
+		      entry_num, max_cam_id, ctl->bitmap);
+	for (i = 0; i < TOTAL_MBID_CAM_NUM; i++) {
+		oracle_printf(sel, "CAM_ID = %u\t", i);
+		if (ctl->bitmap & BIT(i)) {
+			u8 iface_id = dvobj->mbid_cam_cache[i].iface_id;
+			struct _adapter *iface = dvobj->padapters[iface_id];
+
+			oracle_printf(sel, "IF_ID:%u\t", iface_id);
+			oracle_printf(sel,
+				      "MAC Addr:%02x:%02x:%02x:%02x:%02x:%02x\t",
+				      dvobj->mbid_cam_cache[i].mac_addr[0],
+				      dvobj->mbid_cam_cache[i].mac_addr[1],
+				      dvobj->mbid_cam_cache[i].mac_addr[2],
+				      dvobj->mbid_cam_cache[i].mac_addr[3],
+				      dvobj->mbid_cam_cache[i].mac_addr[4],
+				      dvobj->mbid_cam_cache[i].mac_addr[5]);
+			if (iface) {
+				if (mlme_is_sta(iface))
+					oracle_printf(sel, "ROLE:%s\n", "STA");
+				else if (mlme_is_ap(iface))
+					oracle_printf(sel, "ROLE:%s\n", "AP");
+				else if (mlme_is_mesh(iface))
+					oracle_printf(sel, "ROLE:%s\n", "MESH");
+				else
+					oracle_printf(sel, "ROLE:%s\n", "NONE");
+			}
+		} else {
+			oracle_printf(sel, "N/A\n");
+		}
+	}
 }
 
 void rtw_mbid_camid_clean_c_oracle(struct _adapter *adapter, u8 mbss_camid)
