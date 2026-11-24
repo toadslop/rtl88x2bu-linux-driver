@@ -4336,28 +4336,7 @@ inline s32 rtw_hal_set_FwMediaStatusRpt_range_cmd(_adapter *adapter, bool opmode
 	return rtw_hal_set_FwMediaStatusRpt_cmd(adapter, opmode, miracast, miracast_sink, role, macid, 1, macid_end);
 }
 
-void rtw_hal_set_FwRsvdPage_cmd(PADAPTER padapter, PRSVDPAGE_LOC rsvdpageloc)
-{
-	u8	u1H2CRsvdPageParm[H2C_RSVDPAGE_LOC_LEN] = {0};
-	u8	ret = 0;
-
-	RTW_INFO("RsvdPageLoc: ProbeRsp=%d PsPoll=%d Null=%d QoSNull=%d BTNull=%d\n",
-		 rsvdpageloc->LocProbeRsp, rsvdpageloc->LocPsPoll,
-		 rsvdpageloc->LocNullData, rsvdpageloc->LocQosNull,
-		 rsvdpageloc->LocBTQosNull);
-
-	SET_H2CCMD_RSVDPAGE_LOC_PROBE_RSP(u1H2CRsvdPageParm, rsvdpageloc->LocProbeRsp);
-	SET_H2CCMD_RSVDPAGE_LOC_PSPOLL(u1H2CRsvdPageParm, rsvdpageloc->LocPsPoll);
-	SET_H2CCMD_RSVDPAGE_LOC_NULL_DATA(u1H2CRsvdPageParm, rsvdpageloc->LocNullData);
-	SET_H2CCMD_RSVDPAGE_LOC_QOS_NULL_DATA(u1H2CRsvdPageParm, rsvdpageloc->LocQosNull);
-	SET_H2CCMD_RSVDPAGE_LOC_BT_QOS_NULL_DATA(u1H2CRsvdPageParm, rsvdpageloc->LocBTQosNull);
-
-	ret = rtw_hal_fill_h2c_cmd(padapter,
-				   H2C_RSVD_PAGE,
-				   H2C_RSVDPAGE_LOC_LEN,
-				   u1H2CRsvdPageParm);
-
-}
+/* rtw_hal_set_FwRsvdPage_cmd — rust/hal_com_rsvd_page.rs (W4-136) */
 
 #ifdef CONFIG_GPIO_WAKEUP
 /* rtw_hal_switch_gpio_wl_ctrl — rust/hal_com_gpio_wakeup.rs (W4-123) */
