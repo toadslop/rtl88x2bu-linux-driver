@@ -31,7 +31,7 @@ static void eq_u8(const char *tag, u8 got, u8 want)
 		fail(tag);
 }
 
-static void eq_u32(const char *tag, u32 got, u32 want)
+static void eq_systime(const char *tag, systime got, systime want)
 {
 	if (got != want)
 		fail(tag);
@@ -47,7 +47,7 @@ static void expect_trace(const char *tag, u8 want_count, u8 want_last_en)
 static void expect_state(const char *tag, const struct _adapter *a, systime pause,
 			 u8 required, u8 en_hw)
 {
-	eq_u32(tag, a->mlmeextpriv.tsf_update_pause_stime, pause);
+	eq_systime(tag, a->mlmeextpriv.tsf_update_pause_stime, pause);
 	eq_u8(tag, a->mlmeextpriv.tsf_update_required, required);
 	eq_u8(tag, a->mlmeextpriv.en_hw_update_tsf, en_hw);
 }
