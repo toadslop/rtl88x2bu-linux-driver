@@ -27,6 +27,7 @@ test_hal_com_req_per_rpt_rust
 librust_hal_com_req_per_rpt.a
 test_hal_com_dft_port
 test_hal_com_dft_port_rust
+test_hal_com_fw_rsvdpage_h2c
 librust_hal_com_dft_port.a
 !test_hal_com_mbid_cam*.c
 test_hal_com_mbid_cam
