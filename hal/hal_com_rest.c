@@ -432,6 +432,9 @@ static void rtw_hal_set_msr(_adapter *adapter, u8 net_type)
 /* rtw_mbid_cam_init/deinit/reset and search/max helpers — rust/hal_com_mbid_cam.rs (W4-119) */
 /* rtw_mbid_camid_alloc / info_change / assign / clean — rust/hal_com_mbid_cam.rs (W4-120) */
 /* rtw_mbid_cam_cache_dump — rust/hal_com_mbid_cam.rs (W4-125) */
+/* rtw_ap_set_mbid_num / rtw_mbid_cam_enable / rtw_mi_set_mbid_cam / write_mbssid_cam — rust/hal_com_mbid_cam.rs (W4-126) */
+
+void write_mbssid_cam(_adapter *padapter, u8 cam_addr, u8 *mac);
 
 static void read_mbssid_cam(_adapter *padapter, u8 cam_addr, u8 *mac)
 {
@@ -488,52 +491,6 @@ int rtw_mbid_cam_dump(void *sel, const char *fun_name, _adapter *adapter)
 	return 0;
 }
 
-static void write_mbssid_cam(_adapter *padapter, u8 cam_addr, u8 *mac)
-{
-	u32	cam_val[2] = {0};
-
-	cam_val[0] = (mac[3] << 24) | (mac[2] << 16) | (mac[1] << 8) | mac[0];
-	cam_val[1] = ((cam_addr & MBIDCAM_ADDR_MASK) << MBIDCAM_ADDR_SHIFT)  | (mac[5] << 8) | mac[4];
-
-	rtw_hal_set_hwreg(padapter, HW_VAR_MBSSID_CAM_WRITE, (u8 *)cam_val);
-}
-
-/*
-static void clear_mbssid_cam(_adapter *padapter, u8 cam_addr)
-{
-	rtw_hal_set_hwreg(padapter, HW_VAR_MBSSID_CAM_CLEAR, &cam_addr);
-}
-*/
-
-void rtw_ap_set_mbid_num(_adapter *adapter, u8 ap_num)
-{
-	rtw_write8(adapter, REG_MBID_NUM,
-		((rtw_read8(adapter, REG_MBID_NUM) & 0xF8) | ((ap_num -1) & 0x07)));
-
-}
-void rtw_mbid_cam_enable(_adapter *adapter)
-{
-	/*enable MBSSID*/
-	rtw_hal_rcr_add(adapter, RCR_ENMBID);
-}
-void rtw_mi_set_mbid_cam(_adapter *adapter)
-{
-	u8 i;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
-
-#ifdef DBG_MBID_CAM_DUMP
-	rtw_mbid_cam_cache_dump(RTW_DBGDUMP, __func__, adapter);
-#endif
-
-	for (i = 0; i < TOTAL_MBID_CAM_NUM; i++) {
-		if (mbid_cam_ctl->bitmap & BIT(i)) {
-			write_mbssid_cam(adapter, i, dvobj->mbid_cam_cache[i].mac_addr);
-			RTW_INFO("%s - cam_id:%d => mac:"MAC_FMT"\n", __func__, i, MAC_ARG(dvobj->mbid_cam_cache[i].mac_addr));
-		}
-	}
-	rtw_mbid_cam_enable(adapter);
-}
 #endif /*CONFIG_MBSSID_CAM*/
 
 #ifdef CONFIG_FW_HANDLE_TXBCN
@@ -14428,6 +14385,13 @@ int rtw_rust_hal_com_hw_var_port_cfg(void)
 	return HW_VAR_PORT_CFG;
 }
 
+#ifdef CONFIG_MBSSID_CAM
+int rtw_rust_hal_com_hw_var_mbssid_cam_write(void)
+{
+	return HW_VAR_MBSSID_CAM_WRITE;
+}
+#endif
+
 void rtw_rust_hal_com_set_hwreg(_adapter *adapter, u32 variable, u8 *val)
 {
 	if (!adapter)
@@ -14595,6 +14559,11 @@ void rtw_rust_hal_com_mbid_log_assign_result(const char *func, u8 *mac_addr, u8 
 void rtw_rust_hal_com_mbid_log_clean(const char *func, u8 camid)
 {
 	RTW_INFO("%s - cam_id:%d\n", func, camid);
+}
+
+void rtw_rust_hal_com_mbid_log_mi_set_cam(const char *func, u8 cam_id, u8 *mac)
+{
+	RTW_INFO("%s - cam_id:%d => mac:"MAC_FMT"\n", func, cam_id, MAC_ARG(mac));
 }
 
 void rtw_rust_hal_com_spinlock_init(_lock *lock)

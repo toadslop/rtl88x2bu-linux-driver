@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: GPL-2.0
-// CONFIG_MBSSID_CAM init/search (W4-119) + alloc/assign/clean (W4-120).
+// CONFIG_MBSSID_CAM init/search (W4-119) + alloc/assign/clean (W4-120) + HW push (W4-126).
 
 use core::ffi::{c_char, c_ulong, c_void};
 
 type U8 = u8;
+type U32 = u32;
+
+const REG_MBID_NUM: U32 = 0x0552;
+const MBIDCAM_ADDR_MASK: U32 = 0x1F;
+const MBIDCAM_ADDR_SHIFT: U32 = 24;
+const RCR_ENMBID: U32 = 1 << 24;
 
 const INVALID_CAM_ID: U8 = 0xFF;
 const TOTAL_MBID_CAM_NUM: u8 = 8;
@@ -61,6 +67,12 @@ extern "C" {
     fn rtw_rust_hal_com_mlme_is_sta(iface: *mut c_void) -> U8;
     fn rtw_rust_hal_com_mlme_is_ap(iface: *mut c_void) -> U8;
     fn rtw_rust_hal_com_mlme_is_mesh(iface: *mut c_void) -> U8;
+    fn rtw_rust_hal_com_read8(adapter: *mut c_void, addr: U32) -> U8;
+    fn rtw_rust_hal_com_write8(adapter: *mut c_void, addr: U32, val: U8);
+    fn rtw_rust_hal_com_set_hwreg(adapter: *mut c_void, variable: U32, val: *mut U8);
+    fn rtw_rust_hal_com_hw_var_mbssid_cam_write() -> i32;
+    fn rtw_hal_rcr_add(adapter: *mut c_void, add: U32) -> U8;
+    fn rtw_rust_hal_com_mbid_log_mi_set_cam(func: *const c_char, cam_id: U8, mac: *mut U8);
 }
 
 #[cfg(host_hal_com_mbid_cam_test)]
@@ -112,9 +124,16 @@ extern "C" {
     fn rtw_rust_hal_com_mlme_is_sta(iface: *mut c_void) -> U8;
     fn rtw_rust_hal_com_mlme_is_ap(iface: *mut c_void) -> U8;
     fn rtw_rust_hal_com_mlme_is_mesh(iface: *mut c_void) -> U8;
+    fn rtw_rust_hal_com_read8(adapter: *mut c_void, addr: U32) -> U8;
+    fn rtw_rust_hal_com_write8(adapter: *mut c_void, addr: U32, val: U8);
+    fn rtw_rust_hal_com_set_hwreg(adapter: *mut c_void, variable: U32, val: *mut U8);
+    fn rtw_rust_hal_com_hw_var_mbssid_cam_write() -> i32;
+    fn rtw_hal_rcr_add(adapter: *mut c_void, add: U32) -> U8;
+    fn rtw_rust_hal_com_mbid_log_mi_set_cam(func: *const c_char, cam_id: U8, mac: *mut U8);
 }
 
 static MBID_MAC_SEARCH: &[u8] = b"_rtw_mbid_cam_search_by_macaddr\0";
+static FN_MI_SET_MBID_CAM: &[u8] = b"rtw_mi_set_mbid_cam\0";
 static MBID_IFACE_SEARCH: &[u8] = b"_rtw_mbid_cam_search_by_ifaceid\0";
 static FN_CAMID_ALLOC: &[u8] = b"rtw_mbid_camid_alloc\0";
 static FN_CAM_ASSIGN: &[u8] = b"rtw_mbid_cam_assign\0";
@@ -556,4 +575,85 @@ pub extern "C" fn rtw_mbid_cam_cache_dump(
         });
     }
     0
+}
+
+#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
+fn write_mbssid_cam_inner(adapter: *mut c_void, cam_addr: U8, mac: *mut U8) {
+    if adapter.is_null() || mac.is_null() {
+        return;
+    }
+    let mut cam_val: [U32; 2] = [0, 0];
+    unsafe {
+        let m0 = *mac;
+        let m1 = *mac.add(1);
+        let m2 = *mac.add(2);
+        let m3 = *mac.add(3);
+        let m4 = *mac.add(4);
+        let m5 = *mac.add(5);
+        cam_val[0] = (u32::from(m3) << 24)
+            | (u32::from(m2) << 16)
+            | (u32::from(m1) << 8)
+            | u32::from(m0);
+        cam_val[1] = ((u32::from(cam_addr) & MBIDCAM_ADDR_MASK) << MBIDCAM_ADDR_SHIFT)
+            | (u32::from(m5) << 8)
+            | u32::from(m4);
+        let hw_var = rtw_rust_hal_com_hw_var_mbssid_cam_write() as U32;
+        rtw_rust_hal_com_set_hwreg(adapter, hw_var, cam_val.as_mut_ptr().cast());
+    }
+}
+
+#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[no_mangle]
+pub extern "C" fn write_mbssid_cam(adapter: *mut c_void, cam_addr: U8, mac: *mut U8) {
+    write_mbssid_cam_inner(adapter, cam_addr, mac);
+}
+
+#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[no_mangle]
+pub extern "C" fn rtw_ap_set_mbid_num(adapter: *mut c_void, ap_num: U8) {
+    if adapter.is_null() {
+        return;
+    }
+    unsafe {
+        let cur = rtw_rust_hal_com_read8(adapter, REG_MBID_NUM);
+        let val = (cur & 0xF8) | ap_num.wrapping_sub(1) & 0x07;
+        rtw_rust_hal_com_write8(adapter, REG_MBID_NUM, val);
+    }
+}
+
+#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[no_mangle]
+pub extern "C" fn rtw_mbid_cam_enable(adapter: *mut c_void) {
+    if adapter.is_null() {
+        return;
+    }
+    unsafe {
+        rtw_hal_rcr_add(adapter, RCR_ENMBID);
+    }
+}
+
+#[cfg(any(config_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[no_mangle]
+pub extern "C" fn rtw_mi_set_mbid_cam(adapter: *mut c_void) {
+    if adapter.is_null() {
+        return;
+    }
+    let dvobj = dvobj_of(adapter);
+    let ctl = unsafe { ctl_of_dvobj(dvobj) };
+    if dvobj.is_null() || ctl.is_null() {
+        return;
+    }
+    let bitmap = unsafe { rtw_rust_hal_com_mbid_ctl_bitmap(ctl) };
+    for i in 0..TOTAL_MBID_CAM_NUM {
+        if bitmap & (1u8.wrapping_shl(i as u32)) != 0 {
+            let mac = unsafe { rtw_rust_hal_com_mbid_cache_mac(dvobj, i) };
+            write_mbssid_cam_inner(adapter, i, mac);
+            unsafe {
+                rtw_rust_hal_com_mbid_log_mi_set_cam(FN_MI_SET_MBID_CAM.as_ptr().cast(), i, mac);
+            }
+        }
+    }
+    unsafe {
+        rtw_hal_rcr_add(adapter, RCR_ENMBID);
+    }
 }
