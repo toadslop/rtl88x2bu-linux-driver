@@ -480,6 +480,26 @@ static void test_restore_rcr_primary(void)
 		fail("restore_rcr_primary");
 }
 
+static void test_restore_rcr_caller_not_max_iface(void)
+{
+	struct chk_pair_out prod;
+	struct _adapter *a1;
+	struct _adapter *a2;
+
+	host_hal_com_tsf_periodic_reset();
+	a1 = host_hal_com_tsf_periodic_adapter();
+	a2 = host_hal_com_tsf_periodic_dvobj()->padapters[1];
+	setup_iface(a1, 1, 10, 2, 3, 100);
+	setup_iface(a2, 1, 10, 2, 5, 100);
+	host_hal_com_tsf_periodic_set_current_time(260);
+
+	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,
+		     &prod);
+	eq_u32("caller_rcr_ms", prod.last_timer_ms, 500);
+	if (prod.last_rcr_adapter != a1)
+		fail("restore_rcr_caller_not_max_iface");
+}
+
 static void test_restore_end_timer_field(void)
 {
 	struct dvobj_priv *dv = host_hal_com_tsf_periodic_dvobj();
@@ -521,6 +541,7 @@ int main(void)
 	test_offch_backing_op_skips_restore();
 	test_restore_max_only_past_pause();
 	test_restore_rcr_primary();
+	test_restore_rcr_caller_not_max_iface();
 	test_restore_end_timer_field();
 #endif
 	test_timer_hdl();
