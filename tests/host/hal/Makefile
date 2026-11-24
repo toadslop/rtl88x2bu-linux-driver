@@ -1843,7 +1843,6 @@ RUST_HALMAC_IDENTITY := $(ROOT)/rust/hal_com_halmac_identity_host.rs
 librust_hal_com_halmac_identity.a: $(RUST_HALMAC_IDENTITY)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
 		--cfg host_hal_com_halmac_identity_test --cfg config_rtw_halmac \
-		--cfg config_mi_with_mbssid_cam \
 		--crate-type staticlib $(RUST_HALMAC_IDENTITY) -o $@
 
 test_hal_com_halmac_identity_rust: test_hal_com_halmac_identity.c $(HALMAC_IDENTITY_SUPPORT) \

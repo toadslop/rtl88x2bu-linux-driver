@@ -14231,28 +14231,31 @@ u8 rtw_rust_hal_com_get_hw_port(_adapter *adapter)
 }
 
 #if defined(CONFIG_RUST) && defined(RTW_HALMAC)
-void rtw_rust_hal_com_log_set_macaddr_port(_adapter *adapter, u8 hwport, u8 *mac_addr)
+void rtw_rust_hal_com_log_set_macaddr_port(_adapter *adapter, const char *func,
+					 u8 hwport, u8 *mac_addr)
 {
 	if (!adapter || !mac_addr)
 		return;
-	RTW_INFO("%s "ADPT_FMT"- hw port(%d) mac_addr ="MAC_FMT"\n", __func__,
+	RTW_INFO("%s "ADPT_FMT"- hw port(%d) mac_addr ="MAC_FMT"\n", func,
 		 ADPT_ARG(adapter), hwport, MAC_ARG(mac_addr));
 }
 
-void rtw_rust_hal_com_log_get_macaddr_port(_adapter *adapter, u8 hwport, u8 *mac_addr)
+void rtw_rust_hal_com_log_get_macaddr_port(_adapter *adapter, const char *func,
+					 u8 hwport, u8 *mac_addr)
 {
 	if (!adapter || !mac_addr)
 		return;
-	RTW_DBG("%s "ADPT_FMT"- hw port(%d) mac_addr ="MAC_FMT"\n", __func__,
+	RTW_DBG("%s "ADPT_FMT"- hw port(%d) mac_addr ="MAC_FMT"\n", func,
 		 ADPT_ARG(adapter), hwport, MAC_ARG(mac_addr));
 }
 
-void rtw_rust_hal_com_log_set_bssid(_adapter *adapter, u8 hw_port, u8 *val)
+void rtw_rust_hal_com_log_set_bssid(_adapter *adapter, const char *func,
+				    u8 hw_port, u8 *val)
 {
 	if (!adapter || !val)
 		return;
 	RTW_INFO("%s "ADPT_FMT"- hw port -%d BSSID: "MAC_FMT"\n",
-		__func__, ADPT_ARG(adapter), hw_port, MAC_ARG(val));
+		func, ADPT_ARG(adapter), hw_port, MAC_ARG(val));
 }
 #endif /* CONFIG_RUST && RTW_HALMAC */
 
