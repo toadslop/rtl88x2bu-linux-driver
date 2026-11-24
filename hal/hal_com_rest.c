@@ -1199,52 +1199,7 @@ static inline u8 hw_var_rcr_get(_adapter *adapter, u32 *rcr)
 	return _SUCCESS;
 }
 
-/* only check SW RCR variable */
-inline u8 rtw_hal_rcr_check(_adapter *adapter, u32 check_bit)
-{
-	PHAL_DATA_TYPE hal;
-	u32 rcr;
-
-	hal = GET_HAL_DATA(adapter);
-
-	rcr = hal->ReceiveConfig;
-	if ((rcr & check_bit) == check_bit)
-		return 1;
-
-	return 0;
-}
-
-inline u8 rtw_hal_rcr_add(_adapter *adapter, u32 add)
-{
-	PHAL_DATA_TYPE hal;
-	u32 rcr;
-	u8 ret = _SUCCESS;
-
-	hal = GET_HAL_DATA(adapter);
-
-	rtw_hal_get_hwreg(adapter, HW_VAR_RCR, (u8 *)&rcr);
-	rcr |= add;
-	if (rcr != hal->ReceiveConfig)
-		ret = rtw_hal_set_hwreg(adapter, HW_VAR_RCR, (u8 *)&rcr);
-
-	return ret;
-}
-
-inline u8 rtw_hal_rcr_clear(_adapter *adapter, u32 clear)
-{
-	PHAL_DATA_TYPE hal;
-	u32 rcr;
-	u8 ret = _SUCCESS;
-
-	hal = GET_HAL_DATA(adapter);
-
-	rtw_hal_get_hwreg(adapter, HW_VAR_RCR, (u8 *)&rcr);
-	rcr &= ~clear;
-	if (rcr != hal->ReceiveConfig)
-		ret = rtw_hal_set_hwreg(adapter, HW_VAR_RCR, (u8 *)&rcr);
-
-	return ret;
-}
+/* rtw_hal_rcr_check/add/clear — rust/hal_com_rcr.rs (W4-127) */
 
 void rtw_hal_rcr_set_chk_bssid(_adapter *adapter, u8 self_action)
 {
@@ -14478,6 +14433,32 @@ void rtw_rust_hal_com_set_hwreg(_adapter *adapter, u32 variable, u8 *val)
 	if (!adapter)
 		return;
 	rtw_hal_set_hwreg(adapter, variable, val);
+}
+
+void rtw_rust_hal_com_get_hwreg(_adapter *adapter, u32 variable, u8 *val)
+{
+	if (!adapter || !val)
+		return;
+	rtw_hal_get_hwreg(adapter, variable, val);
+}
+
+u8 rtw_rust_hal_com_set_hwreg_u8(_adapter *adapter, u32 variable, u8 *val)
+{
+	if (!adapter)
+		return _FAIL;
+	return rtw_hal_set_hwreg(adapter, variable, val);
+}
+
+int rtw_rust_hal_com_hw_var_rcr(void)
+{
+	return HW_VAR_RCR;
+}
+
+u32 rtw_rust_hal_com_receive_config(_adapter *adapter)
+{
+	if (!adapter)
+		return 0;
+	return GET_HAL_DATA(adapter)->ReceiveConfig;
 }
 
 #ifdef CONFIG_GPIO_WAKEUP
