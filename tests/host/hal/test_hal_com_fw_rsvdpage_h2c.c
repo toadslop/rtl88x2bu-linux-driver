@@ -22,40 +22,109 @@ void rtw_hal_set_FwRsvdPage_cmd(struct _adapter *adapter, RSVDPAGE_LOC *loc);
 
 void rtw_hal_set_FwRsvdPage_cmd_c_oracle(struct _adapter *a, RSVDPAGE_LOC *loc);
 
-static int fail;
+static int fail_line;
 
-static void run_case(RSVDPAGE_LOC *loc)
+static void expect_u8(const char *name, unsigned int got, unsigned int expect)
 {
-	u8 dut[H2C_RSVDPAGE_LOC_LEN], oracle[H2C_RSVDPAGE_LOC_LEN];
-	int dut_n, oracle_n;
+	if (got != expect) {
+		fprintf(stderr, "FAIL %s got=%u expect=%u\n", name, got, expect);
+		fail_line = __LINE__;
+	}
+}
+
+struct fw_rsvdpage_h2c_snap {
+	int count;
+	u8 cmd;
+	unsigned int len;
+	u8 buf[H2C_RSVDPAGE_LOC_LEN];
+};
+
+static void snap_dut(RSVDPAGE_LOC *loc, struct fw_rsvdpage_h2c_snap *s)
+{
+	const u8 *buf;
 
 	host_fw_rsvdpage_h2c_reset();
 	rtw_hal_set_FwRsvdPage_cmd(host_fw_rsvdpage_h2c_adapter(), loc);
-	dut_n = host_fw_rsvdpage_h2c_count();
-	memcpy(dut, host_fw_rsvdpage_h2c_buf(0), H2C_RSVDPAGE_LOC_LEN);
+	s->count = host_fw_rsvdpage_h2c_count();
+	s->cmd = host_fw_rsvdpage_h2c_cmd(0);
+	s->len = host_fw_rsvdpage_h2c_len(0);
+	buf = host_fw_rsvdpage_h2c_buf(0);
+	memset(s->buf, 0, sizeof(s->buf));
+	if (buf)
+		memcpy(s->buf, buf, H2C_RSVDPAGE_LOC_LEN);
+}
+
+static void snap_oracle(RSVDPAGE_LOC *loc, struct fw_rsvdpage_h2c_snap *s)
+{
+	const u8 *buf;
 
 	host_fw_rsvdpage_h2c_reset();
 	rtw_hal_set_FwRsvdPage_cmd_c_oracle(host_fw_rsvdpage_h2c_adapter(), loc);
-	oracle_n = host_fw_rsvdpage_h2c_count();
-	memcpy(oracle, host_fw_rsvdpage_h2c_buf(0), H2C_RSVDPAGE_LOC_LEN);
+	s->count = host_fw_rsvdpage_h2c_count();
+	s->cmd = host_fw_rsvdpage_h2c_cmd(0);
+	s->len = host_fw_rsvdpage_h2c_len(0);
+	buf = host_fw_rsvdpage_h2c_buf(0);
+	memset(s->buf, 0, sizeof(s->buf));
+	if (buf)
+		memcpy(s->buf, buf, H2C_RSVDPAGE_LOC_LEN);
+}
 
-	if (dut_n != oracle_n || dut_n != 1 ||
-	    host_fw_rsvdpage_h2c_cmd(0) != H2C_RSVD_PAGE ||
-	    host_fw_rsvdpage_h2c_len(0) != H2C_RSVDPAGE_LOC_LEN ||
-	    memcmp(dut, oracle, H2C_RSVDPAGE_LOC_LEN))
-		fail = 1;
+static void assert_loc_in_payload(const struct fw_rsvdpage_h2c_snap *s,
+				  const RSVDPAGE_LOC *loc, const char *tag)
+{
+	char label[80];
+
+	snprintf(label, sizeof(label), "%s_probe", tag);
+	expect_u8(label, s->buf[0], loc->LocProbeRsp);
+	snprintf(label, sizeof(label), "%s_pspoll", tag);
+	expect_u8(label, s->buf[1], loc->LocPsPoll);
+	snprintf(label, sizeof(label), "%s_null", tag);
+	expect_u8(label, s->buf[2], loc->LocNullData);
+	snprintf(label, sizeof(label), "%s_qosnull", tag);
+	expect_u8(label, s->buf[3], loc->LocQosNull);
+	snprintf(label, sizeof(label), "%s_btnull", tag);
+	expect_u8(label, s->buf[4], loc->LocBTQosNull);
+}
+
+static void run_case(RSVDPAGE_LOC *loc, const char *tag)
+{
+	struct fw_rsvdpage_h2c_snap dut, oracle;
+	char label[64];
+
+	snap_dut(loc, &dut);
+
+	snprintf(label, sizeof(label), "%s_h2c_count", tag);
+	expect_u8(label, (unsigned int)dut.count, 1u);
+	snprintf(label, sizeof(label), "%s_cmd", tag);
+	expect_u8(label, dut.cmd, H2C_RSVD_PAGE);
+	snprintf(label, sizeof(label), "%s_len", tag);
+	expect_u8(label, dut.len, H2C_RSVDPAGE_LOC_LEN);
+	assert_loc_in_payload(&dut, loc, tag);
+
+	snap_oracle(loc, &oracle);
+
+	snprintf(label, sizeof(label), "%s_oracle_count", tag);
+	expect_u8(label, (unsigned int)dut.count, (unsigned int)oracle.count);
+	snprintf(label, sizeof(label), "%s_oracle_cmd", tag);
+	expect_u8(label, dut.cmd, oracle.cmd);
+	snprintf(label, sizeof(label), "%s_oracle_len", tag);
+	expect_u8(label, dut.len, oracle.len);
+	if (memcmp(dut.buf, oracle.buf, H2C_RSVDPAGE_LOC_LEN) != 0) {
+		fprintf(stderr, "FAIL %s payload mismatch vs oracle\n", tag);
+		fail_line = __LINE__;
+	}
 }
 
 int main(void)
 {
 	RSVDPAGE_LOC loc;
 
-	fail = 0;
+	fail_line = 0;
 	memset(&loc, 0, sizeof(loc));
-	run_case(&loc);
+	run_case(&loc, "zero");
 	loc = (RSVDPAGE_LOC){1, 2, 3, 4, 5};
-	run_case(&loc);
-	if (fail) {
+	run_case(&loc, "seeded");
+	if (fail_line) {
 		fprintf(stderr, "hal_com_fw_rsvdpage_h2c L2 failed\n");
 		return 1;
 	}

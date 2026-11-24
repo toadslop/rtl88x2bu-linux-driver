@@ -40,8 +40,6 @@ void rtw_hal_set_FwRsvdPage_cmd_c_oracle(struct _adapter *adapter, RSVDPAGE_LOC 
 	u8 u1H2CRsvdPageParm[H2C_RSVDPAGE_LOC_LEN] = {0};
 
 	(void)adapter;
-	if (!rsvdpageloc)
-		return;
 
 	SET_H2CCMD_RSVDPAGE_LOC_PROBE_RSP(u1H2CRsvdPageParm, rsvdpageloc->LocProbeRsp);
 	SET_H2CCMD_RSVDPAGE_LOC_PSPOLL(u1H2CRsvdPageParm, rsvdpageloc->LocPsPoll);
