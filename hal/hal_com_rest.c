@@ -2500,40 +2500,7 @@ void rtw_hal_set_fw_dbg_msg_pkt_rsvd_page_cmd(PADAPTER padapter, PRSVDPAGE_LOC r
 
 /* rtw_dump_rsvd_page — rust/hal_com_dump_rsvd_page.rs (W4-122) */
 
-#ifdef CONFIG_SUPPORT_FIFO_DUMP
-void rtw_dump_fifo(void *sel, _adapter *adapter, u8 fifo_sel, u32 fifo_addr, u32 fifo_size)
-{
-	u8 *buffer = NULL;
-	u32 buff_size = 0;
-	static const char * const fifo_sel_str[] = {
-		"TX", "RX", "RSVD_PAGE", "REPORT", "LLT", "RXBUF_FW"
-	};
-
-	if (fifo_sel > 5) {
-		RTW_ERR("fifo_sel:%d invalid\n", fifo_sel);
-		return;
-	}
-
-	RTW_PRINT_SEL(sel, "========= FIFO DUMP =========\n");
-	RTW_PRINT_SEL(sel, "%s FIFO DUMP [start_addr:0x%04x , size:%d]\n", fifo_sel_str[fifo_sel], fifo_addr, fifo_size);
-
-	if (fifo_size) {
-		buff_size = RND4(fifo_size);
-		buffer = rtw_zvmalloc(buff_size);
-		if (buffer == NULL)
-			buff_size = 0;
-	}
-
-	rtw_halmac_dump_fifo(adapter_to_dvobj(adapter), fifo_sel, fifo_addr, buff_size, buffer);
-
-	if (buffer) {
-		RTW_DUMP_SEL(sel, buffer, fifo_size);
-		rtw_vmfree(buffer, buff_size);
-	}
-
-	RTW_PRINT_SEL(sel, "==========================\n");
-}
-#endif
+/* rtw_dump_fifo — rust/hal_com_dump_rsvd_page.rs (W4-122 PR4) */
 
 #if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)
 static void rtw_hal_force_enable_rxdma(_adapter *adapter)
@@ -14351,6 +14318,11 @@ void rtw_rust_hal_com_sta_set_init_rate(struct sta_info *psta, u8 rate)
 void rtw_rust_hal_com_log_info(const char *line)
 {
 	RTW_INFO("%s", line);
+}
+
+void rtw_rust_hal_com_log_invalid_fifo_sel(u8 fifo_sel)
+{
+	RTW_ERR("fifo_sel:%d invalid\n", fifo_sel);
 }
 
 u8 rtw_rust_hal_com_read8(_adapter *adapter, u32 addr)

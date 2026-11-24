@@ -14,6 +14,8 @@ int rtw_hal_get_rsvd_page(struct _adapter *adapter, u32 page_offset, u32 page_nu
 			  u8 *buffer, u32 buffer_size);
 void *rtw_zvmalloc(u32 sz);
 void rtw_vmfree(void *p, u32 sz);
+int rtw_halmac_dump_fifo(struct dvobj_priv *d, u8 fifo_sel, u32 addr,
+			 u32 size, u8 *buffer);
 
 static void print_sel(void *sel, const char *fmt, ...)
 {
@@ -85,5 +87,39 @@ void rtw_dump_rsvd_page_c_oracle(void *sel, struct _adapter *adapter,
 	host_rtw_dump_sel(sel, buffer, (int)buf_size);
 	rtw_vmfree(buffer, buf_size);
 done:
+	RTW_PRINT_SEL(sel, "==========================\n");
+}
+
+void rtw_dump_fifo_c_oracle(void *sel, struct _adapter *adapter, u8 fifo_sel,
+			    u32 fifo_addr, u32 fifo_size)
+{
+	u32 buff_size = 0;
+	u8 *buffer = NULL;
+	static const char *const fifo_sel_str[] = {
+		"TX", "RX", "RSVD_PAGE", "REPORT", "LLT", "RXBUF_FW"
+	};
+
+	if (fifo_sel > 5)
+		return;
+
+	RTW_PRINT_SEL(sel, "========= FIFO DUMP =========\n");
+	RTW_PRINT_SEL(sel, "%s FIFO DUMP [start_addr:0x%04x , size:%d]\n",
+		      fifo_sel_str[fifo_sel], fifo_addr, fifo_size);
+
+	if (fifo_size) {
+		buff_size = ((fifo_size >> 2) + ((fifo_size & 3) ? 1 : 0)) << 2;
+		buffer = rtw_zvmalloc(buff_size);
+		if (!buffer)
+			buff_size = 0;
+	}
+
+	rtw_halmac_dump_fifo(adapter_to_dvobj(adapter), fifo_sel, fifo_addr,
+			     buff_size, buffer);
+
+	if (buffer) {
+		host_rtw_dump_sel(sel, buffer, (int)fifo_size);
+		rtw_vmfree(buffer, buff_size);
+	}
+
 	RTW_PRINT_SEL(sel, "==========================\n");
 }
