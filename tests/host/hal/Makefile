@@ -134,7 +134,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-req-per-rpt test-req-per-rpt-rust \
 	test-dft-port $(if $(wildcard $(ROOT)/rust/hal_com_dft_port_host.rs),test-dft-port-rust,) \
 	test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
-	test-mbid-cam-hw test-mbid-cam-hw-rust \
+	test-mbid-cam-hw test-mbid-cam-hw-rust test-mbid-cam-macaddr \
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo test-dump-rsvd-fifo-rust \
 	test-tx-aclt-set test-tx-aclt-set-rust \
@@ -176,7 +176,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
 	test-req-per-rpt-rust test-dft-port $(if $(wildcard $(ROOT)/rust/hal_com_dft_port_host.rs),test-dft-port-rust,) \
 	test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
-	test-mbid-cam-hw test-mbid-cam-hw-rust \
+	test-mbid-cam-hw test-mbid-cam-hw-rust test-mbid-cam-macaddr \
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo test-dump-rsvd-fifo-rust \
 	test-tx-aclt-set test-tx-aclt-set-rust \

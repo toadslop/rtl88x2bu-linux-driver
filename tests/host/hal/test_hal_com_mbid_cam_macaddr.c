@@ -13,6 +13,7 @@ struct _adapter *host_mbid_cam_adapter(void);
 struct dvobj_priv *host_mbid_cam_dvobj(void);
 void host_mbid_cam_reset_fixture(void);
 void host_mbid_cam_set_entry_num(u8 n);
+void host_mbid_cam_prime_entry(u8 slot, u8 iface_id, const u8 *mac, u8 set_bitmap);
 
 void rtw_hal_set_macaddr_mbid_c_oracle(struct _adapter *adapter, u8 *mac_addr);
 void rtw_hal_change_macaddr_mbid_c_oracle(struct _adapter *adapter, u8 *mac_addr);
@@ -34,7 +35,6 @@ static void eq_u8(const char *tag, u8 a, u8 b)
 	}
 }
 
-#ifdef RUST_HAL_COM_MBID_CAM_ORACLE
 static void eq_u32(const char *tag, u32 a, u32 b)
 {
 	if (a != b) {
@@ -42,7 +42,6 @@ static void eq_u32(const char *tag, u32 a, u32 b)
 		failures++;
 	}
 }
-#endif
 
 #ifdef RUST_HAL_COM_MBID_CAM_ORACLE
 static void eq_trace(const char *tag, const struct host_mbid_cam_hw_trace *r,
@@ -78,6 +77,8 @@ static void test_set_macaddr_mbid_rust(void)
 	memcpy(&oracle_snapshot, host_mbid_cam_hw_oracle_trace(),
 	       sizeof(oracle_snapshot));
 
+	host_mbid_cam_reset_fixture();
+	host_mbid_cam_dvobj()->mbid_cam_ctl.bitmap = 0;
 	memset(&host_mbid_cam_hw_trace, 0, sizeof(host_mbid_cam_hw_trace));
 	rtw_hal_set_macaddr_mbid(adap, mac);
 	eq_trace("set_macaddr_mbid", &host_mbid_cam_hw_trace, &oracle_snapshot);
@@ -99,6 +100,9 @@ static void test_change_macaddr_mbid_rust(void)
 	memcpy(&oracle_snapshot, host_mbid_cam_hw_oracle_trace(),
 	       sizeof(oracle_snapshot));
 
+	host_mbid_cam_reset_fixture();
+	host_mbid_cam_prime_entry(0, 0, mac0, 1);
+	host_mbid_cam_set_entry_num(1);
 	memset(&host_mbid_cam_hw_trace, 0, sizeof(host_mbid_cam_hw_trace));
 	rtw_hal_change_macaddr_mbid(adap, mac1);
 	eq_trace("change_macaddr_mbid", &host_mbid_cam_hw_trace, &oracle_snapshot);
@@ -110,15 +114,16 @@ static void test_change_macaddr_null_rust(void)
 	unsigned warns_before = host_mbid_cam_oracle_warn_count();
 
 	host_mbid_cam_reset_fixture();
+	host_mbid_cam_hw_oracle_reset();
+	memset(&host_mbid_cam_hw_trace, 0, sizeof(host_mbid_cam_hw_trace));
 	rtw_hal_change_macaddr_mbid(adap, NULL);
 	eq_u8("change_null_warn", (u8)(host_mbid_cam_oracle_warn_count() - warns_before),
-	      0);
+	      1);
+	eq_u8("change_null_hwreg", (u8)host_mbid_cam_hw_trace.hwreg_count, 0);
 }
 #endif
 
 #ifndef RUST_HAL_COM_MBID_CAM_ORACLE
-void host_mbid_cam_prime_entry(u8 slot, u8 iface_id, const u8 *mac, u8 set_bitmap);
-
 static void test_set_macaddr_mbid_oracle(void)
 {
 	static u8 mac[ETH_ALEN] = {0x02, 0x11, 0x22, 0x33, 0x44, 0x55};
@@ -132,6 +137,10 @@ static void test_set_macaddr_mbid_oracle(void)
 	eq_u8("set_hwreg_count",
 	      (u8)host_mbid_cam_hw_oracle_trace()->hwreg_count, 1);
 	eq_u8("set_cam_id", host_mbid_cam_hw_oracle_trace()->writes[0].cam_id, 0);
+	eq_u32("set_cam0", host_mbid_cam_hw_oracle_trace()->writes[0].cam_val[0],
+	       0x33221102U);
+	eq_u32("set_cam1", host_mbid_cam_hw_oracle_trace()->writes[0].cam_val[1],
+	       0x00005544U);
 }
 
 static void test_change_macaddr_mbid_oracle(void)
@@ -149,6 +158,10 @@ static void test_change_macaddr_mbid_oracle(void)
 	eq_u8("change_hwreg_count",
 	      (u8)host_mbid_cam_hw_oracle_trace()->hwreg_count, 1);
 	eq_u8("change_cam_id", host_mbid_cam_hw_oracle_trace()->writes[0].cam_id, 0);
+	eq_u32("change_cam0", host_mbid_cam_hw_oracle_trace()->writes[0].cam_val[0],
+	       0x44332211U);
+	eq_u32("change_cam1", host_mbid_cam_hw_oracle_trace()->writes[0].cam_val[1],
+	       0x00006655U);
 }
 
 static void test_change_macaddr_null_oracle(void)
@@ -157,9 +170,12 @@ static void test_change_macaddr_null_oracle(void)
 	unsigned warns_before = host_mbid_cam_oracle_warn_count();
 
 	host_mbid_cam_reset_fixture();
+	host_mbid_cam_hw_oracle_reset();
 	rtw_hal_change_macaddr_mbid_c_oracle(adap, NULL);
 	eq_u8("change_null_warn", (u8)(host_mbid_cam_oracle_warn_count() - warns_before),
 	      1);
+	eq_u8("change_null_hwreg",
+	      (u8)host_mbid_cam_hw_oracle_trace()->hwreg_count, 0);
 }
 #endif /* !RUST_HAL_COM_MBID_CAM_ORACLE */
 
