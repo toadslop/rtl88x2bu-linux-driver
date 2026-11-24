@@ -270,3 +270,66 @@ void rtw_mbid_camid_clean_c_oracle(struct _adapter *adapter, u8 mbss_camid)
 	ctl->bitmap &= (u8)(~BIT(mbss_camid));
 	ATOMIC_DEC(&ctl->mbid_entry_num);
 }
+
+#define MBIDCAM_ADDR_MASK 0x1Fu
+#define MBIDCAM_ADDR_SHIFT 24u
+
+static u8 oracle_reg_mbid_num;
+static struct host_mbid_cam_hw_trace oracle_hw;
+
+void host_mbid_cam_hw_oracle_reset(void)
+{
+	oracle_reg_mbid_num = 0;
+	memset(&oracle_hw, 0, sizeof(oracle_hw));
+}
+
+void host_mbid_cam_hw_oracle_set_reg(u8 val)
+{
+	oracle_reg_mbid_num = val;
+}
+
+static void oracle_record_hwreg(u8 cam_addr, u8 *mac)
+{
+	unsigned idx = oracle_hw.hwreg_count;
+	u32 cam_val[2] = { 0 };
+	unsigned i;
+
+	if (idx >= TOTAL_MBID_CAM_NUM || !mac)
+		return;
+	cam_val[0] = ((u32)mac[3] << 24) | ((u32)mac[2] << 16) |
+		     ((u32)mac[1] << 8) | mac[0];
+	cam_val[1] = ((cam_addr & MBIDCAM_ADDR_MASK) << MBIDCAM_ADDR_SHIFT) |
+		     ((u32)mac[5] << 8) | mac[4];
+	oracle_hw.writes[idx].cam_val[0] = cam_val[0];
+	oracle_hw.writes[idx].cam_val[1] = cam_val[1];
+	oracle_hw.writes[idx].cam_id = cam_addr;
+	oracle_hw.hwreg_count++;
+	(void)i;
+}
+
+void rtw_ap_set_mbid_num_c_oracle(struct _adapter *adapter, u8 ap_num)
+{
+	(void)adapter;
+	oracle_reg_mbid_num =
+		(oracle_reg_mbid_num & 0xF8) | ((ap_num - 1) & 0x07);
+}
+
+void rtw_mi_set_mbid_cam_c_oracle(struct _adapter *adapter)
+{
+	struct dvobj_priv *dvobj = _adapter_to_dvobj(adapter);
+	struct mbid_cam_ctl_t *ctl = &dvobj->mbid_cam_ctl;
+	u8 i;
+
+	for (i = 0; i < TOTAL_MBID_CAM_NUM; i++) {
+		if (ctl->bitmap & BIT(i))
+			oracle_record_hwreg(i, dvobj->mbid_cam_cache[i].mac_addr);
+	}
+	oracle_hw.rcr_add_count++;
+	oracle_hw.last_rcr_add = HOST_RCR_ENMBID;
+}
+
+struct host_mbid_cam_hw_trace *host_mbid_cam_hw_oracle_trace(void)
+{
+	oracle_hw.reg_mbid_num = oracle_reg_mbid_num;
+	return &oracle_hw;
+}

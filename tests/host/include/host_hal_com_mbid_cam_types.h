@@ -20,6 +20,7 @@
 #define ATOMIC_DEC(v) (*(v) -= 1)
 
 typedef unsigned char u8;
+typedef unsigned int u32;
 typedef int ATOMIC_T, _lock;
 
 #define ATOMIC_SET(v, x) (*(v) = (x))
@@ -52,6 +53,26 @@ struct _adapter {
 	unsigned int fw_state;
 };
 
+#define HOST_REG_MBID_NUM 0x0552u
+#define HOST_HW_VAR_MBSSID_CAM_WRITE 100
+#define HOST_RCR_ENMBID (1u << 24)
+
+struct host_mbid_cam_hw_write {
+	u8 cam_id;
+	u32 cam_val[2];
+};
+
+struct host_mbid_cam_hw_trace {
+	u8 reg_mbid_num;
+	unsigned hwreg_count;
+	unsigned rcr_add_count;
+	u32 last_rcr_add;
+	struct host_mbid_cam_hw_write writes[TOTAL_MBID_CAM_NUM];
+};
+
+extern struct host_mbid_cam_hw_trace host_mbid_cam_hw_trace;
+
+void host_mbid_cam_hw_reset(void);
 void host_sel_reset(struct host_sel_capture *cap);
 int host_sel_string(struct host_sel_capture *cap, char *out, size_t outlen);
 void host_mbid_cam_set_iface_role(u8 iface_id, unsigned int fw_state);
