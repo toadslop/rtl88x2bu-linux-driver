@@ -30,9 +30,6 @@ extern "C" {
 
 #[no_mangle]
 pub extern "C" fn rtw_hal_periodic_tsf_update_chk(adapter: *mut c_void) {
-    if adapter.is_null() {
-        return;
-    }
     #[cfg(not(config_mi_with_mbssid_cam))]
     unsafe {
         let dvobj = rtw_rust_hal_com_adapter_to_dvobj(adapter);
