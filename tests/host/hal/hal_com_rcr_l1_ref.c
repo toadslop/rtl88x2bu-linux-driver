@@ -23,3 +23,9 @@ unsigned char rtw_hal_rcr_clear(struct _adapter *adapter, unsigned int clear)
 	(void)clear;
 	return 1;
 }
+
+void rtw_rust_hw_var_set_rcr_am(struct _adapter *adapter, unsigned char enable)
+{
+	(void)adapter;
+	(void)enable;
+}

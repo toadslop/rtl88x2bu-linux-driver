@@ -7,6 +7,8 @@ type U8 = u8;
 type U32 = u32;
 
 const SUCCESS: U8 = 1;
+/* include/hal_com_reg.h BIT(2) */
+const RCR_AM: U32 = 4;
 
 extern "C" {
     fn rtw_rust_hal_com_hw_var_rcr() -> i32;
@@ -57,4 +59,13 @@ pub extern "C" fn rtw_hal_rcr_clear(adapter: *mut c_void, clear: U32) -> U8 {
         };
     }
     SUCCESS
+}
+
+#[no_mangle]
+pub extern "C" fn rtw_rust_hw_var_set_rcr_am(adapter: *mut c_void, enable: U8) {
+    if enable != 0 {
+        rtw_hal_rcr_add(adapter, RCR_AM);
+    } else {
+        rtw_hal_rcr_clear(adapter, RCR_AM);
+    }
 }
