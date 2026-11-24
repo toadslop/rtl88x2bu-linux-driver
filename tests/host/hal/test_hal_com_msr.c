@@ -42,6 +42,29 @@ static void run_get(u8 hw_port, u8 stored)
 	eq_u8("get_hw_port_oracle", oracle_port, hw_port);
 }
 
+static void run_get_station_then_raise_mbid(void)
+{
+	u8 dut, oracle;
+	u8 dut_port, oracle_port;
+
+	host_msr_reset_trace();
+	host_msr_set_hw_port(HW_PORT0);
+	host_msr_set_mbid_entry_num(0);
+	host_msr_clear_calls();
+	rtw_hal_set_msr_c_oracle(host_msr_adapter(), _HW_STATE_STATION_);
+	host_msr_set_mbid_entry_num(2);
+	host_msr_clear_calls();
+	rtw_hal_get_msr(host_msr_adapter(), &dut);
+	dut_port = host_msr_last_get_port();
+	host_msr_clear_calls();
+	rtw_hal_get_msr_c_oracle(host_msr_adapter(), &oracle);
+	oracle_port = host_msr_last_get_port();
+	eq_u8("get_raise_mbid_type", dut, _HW_STATE_STATION_);
+	eq_u8("get_raise_mbid_oracle", oracle, _HW_STATE_STATION_);
+	eq_u8("get_raise_mbid_hw_port", dut_port, HW_PORT0);
+	eq_u8("get_raise_mbid_hw_port_oracle", oracle_port, HW_PORT0);
+}
+
 static void run_get_after_promoted_set(u8 hw_port, u8 mbid, u8 in_type, u8 expect_type)
 {
 	u8 dut, oracle;
@@ -84,6 +107,7 @@ int main(void)
 
 	run_get(HW_PORT0, _HW_STATE_STATION_);
 	run_get(HW_PORT1, _HW_STATE_AP_);
+	run_get_station_then_raise_mbid();
 	run_get_after_promoted_set(HW_PORT0, 2, _HW_STATE_STATION_, _HW_STATE_AP_);
 	run_get_after_promoted_set(HW_PORT1, 2, _HW_STATE_STATION_, _HW_STATE_STATION_);
 	run_set(HW_PORT0, 0, _HW_STATE_STATION_, _HW_STATE_STATION_);
