@@ -19,11 +19,13 @@ config_p2p_ps_noa_use_macid_sleep
 config_power_saving
 config_proc_debug
 config_rtw_debug
+config_rtw_halmac
 config_rtw_mac_hidden_rpt
 config_rtw_mgmt_queue
 config_rtw_sw_led
 config_rust_rtw_debug_test_hooks
 config_scan_sparse_miracast
+config_support_fifo_dump
 config_tx_ac_lifetime
 config_usb_hci
 config_wifi_monitor
