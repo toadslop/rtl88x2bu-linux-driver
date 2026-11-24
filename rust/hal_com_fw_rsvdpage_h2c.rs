@@ -44,9 +44,6 @@ pub extern "C" fn rtw_hal_set_FwRsvdPage_cmd(
     adapter: *mut c_void,
     rsvdpageloc: *const RsvdPageLoc,
 ) {
-    if rsvdpageloc.is_null() {
-        return;
-    }
     let loc = unsafe { &*rsvdpageloc };
     let mut parm = [0u8; H2C_RSVDPAGE_LOC_LEN as usize];
 

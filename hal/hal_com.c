@@ -4336,7 +4336,7 @@ inline s32 rtw_hal_set_FwMediaStatusRpt_range_cmd(_adapter *adapter, bool opmode
 	return rtw_hal_set_FwMediaStatusRpt_cmd(adapter, opmode, miracast, miracast_sink, role, macid, 1, macid_end);
 }
 
-/* rtw_hal_set_FwRsvdPage_cmd — rust/hal_com_rsvd_page.rs (W4-136) */
+/* rtw_hal_set_FwRsvdPage_cmd — rust/hal_com_fw_rsvdpage_h2c.rs (W4-136) */
 
 #ifdef CONFIG_GPIO_WAKEUP
 /* rtw_hal_switch_gpio_wl_ctrl — rust/hal_com_gpio_wakeup.rs (W4-123) */

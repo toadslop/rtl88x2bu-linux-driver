@@ -2118,7 +2118,7 @@ inline s32 rtw_hal_set_FwMediaStatusRpt_range_cmd(_adapter *adapter, bool opmode
 	return rtw_hal_set_FwMediaStatusRpt_cmd(adapter, opmode, miracast, miracast_sink, role, macid, 1, macid_end);
 }
 
-/* rtw_hal_set_FwRsvdPage_cmd — rust/hal_com_rsvd_page.rs (W4-136) */
+/* rtw_hal_set_FwRsvdPage_cmd — rust/hal_com_fw_rsvdpage_h2c.rs (W4-136) */
 
 #ifndef HOST_HAL_COM_FW_RSVDPAGE_H2C_TEST
 void rtw_rust_hal_com_log_fw_rsvdpage_loc(u8 probe, u8 ps_poll, u8 null_data,
