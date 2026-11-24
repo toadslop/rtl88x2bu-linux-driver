@@ -462,6 +462,13 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-130 | #2254 | [W4-130] Translate hal_com_rest.c — TSF periodic update check |
 | W4-131 | #2255 | [W4-131] Translate hal_com_rest.c — default port H2C cmd |
 | W4-132 | #2256 | [W4-132] SW TXBCN interval adjust (cancelled — issue closed) |
+| W4-133 | #2286 | [W4-133] Translate hal_com_rest.c — MBSSID MAC address set and change |
+| W4-134 | #2287 | [W4-134] Translate hal_com_rest.c — MSR network type get and set |
+| W4-135 | #2288 | [W4-135] Translate hal_com_rest.c — HALMAC BSSID and port MAC accessors |
+| W4-136 | #2289 | [W4-136] Translate hal_com_rest.c — reserved page location H2C |
+| W4-137 | #2290 | [W4-137] Translate hal_com_rest.c — RCR address-match HW_VAR delegate |
+| W4-138 | #2291 | [W4-138] Translate hal_com_rest.c — FW beacon offload H2C pair |
+| W4-139 | #2292 | [W4-139] Translate hal_com_rest.c — FW media status report H2C |
 
 ## Superseded issues
 

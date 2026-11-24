@@ -398,6 +398,13 @@ files=(
   wave4-130-hal-com-tsf-periodic-chk.md
   wave4-131-hal-com-dft-port-h2c.md
   wave4-132-hal-com-bcn-interval-adjust.md
+  wave4-133-hal-com-mbid-macaddr.md
+  wave4-134-hal-com-msr-nettype.md
+  wave4-135-hal-com-halmac-bssid-mac.md
+  wave4-136-hal-com-fw-rsvdpage-h2c.md
+  wave4-137-hal-com-rcr-am-hwvar.md
+  wave4-138-hal-com-fw-bcn-offload.md
+  wave4-139-hal-com-fw-media-status.md
   wave3-161-debug-proc-rate-setter.md
   wave3-162-debug-proc-rx-cnt-dump.md
   wave3-163-debug-proc-ps-dbg.md
