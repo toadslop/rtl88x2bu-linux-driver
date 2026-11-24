@@ -458,7 +458,8 @@ static void test_restore_max_only_past_pause(void)
 	a1 = host_hal_com_tsf_periodic_adapter();
 	a2 = host_hal_com_tsf_periodic_dvobj()->padapters[1];
 	setup_iface(a1, 1, 10, 2, 3, 100);
-	setup_iface(a2, 1, 1000, 1, 10, 100);
+	/* a2 pause still in the future under jiffies wrap (211 - 200 = 11 ms < 100). */
+	setup_iface(a2, 1, 200, 1, 10, 100);
 	host_hal_com_tsf_periodic_set_current_time(211);
 
 	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,

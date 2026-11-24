@@ -66,9 +66,8 @@ int rtw_time_after(systime a, systime b)
 
 u32 rtw_get_passing_time_ms(systime start)
 {
-	if (host_current_time >= start)
-		return (u32)(host_current_time - start);
-	return 0;
+	/* Match Linux jiffies_to_msecs(now - start): unsigned wrap, no clamp. */
+	return (u32)(host_current_time - start);
 }
 
 void _set_timer(struct _timer *t, u32 ms)
