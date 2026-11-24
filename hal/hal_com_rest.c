@@ -1744,46 +1744,7 @@ const char *const _h2c_msr_role_str[] = {
 };
 
 #ifdef CONFIG_FW_MULTI_PORT_SUPPORT
-s32 rtw_hal_set_default_port_id_cmd(_adapter *adapter, u8 mac_id)
-{
-	s32 ret = _SUCCESS;
-	u8 parm[H2C_DEFAULT_PORT_ID_LEN] = {0};
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	u8 port_id = rtw_hal_get_port(adapter);
-
-	if ((dvobj->dft.port_id == port_id) && (dvobj->dft.mac_id == mac_id))
-		return ret;
-
-	SET_H2CCMD_DFTPID_PORT_ID(parm, port_id);
-	SET_H2CCMD_DFTPID_MAC_ID(parm, mac_id);
-
-	RTW_DBG_DUMP("DFT port id parm:", parm, H2C_DEFAULT_PORT_ID_LEN);
-	RTW_INFO("%s ("ADPT_FMT") port_id :%d, mad_id:%d\n",
-		__func__, ADPT_ARG(adapter), port_id, mac_id);
-
-	ret = rtw_hal_fill_h2c_cmd(adapter, H2C_DEFAULT_PORT_ID, H2C_DEFAULT_PORT_ID_LEN, parm);
-	dvobj->dft.port_id = port_id;
-	dvobj->dft.mac_id = mac_id;
-
-	return ret;
-}
-s32 rtw_set_default_port_id(_adapter *adapter)
-{
-	s32 ret = _SUCCESS;
-	struct sta_info		*psta;
-	struct mlme_priv *pmlmepriv = &adapter->mlmepriv;
-
-	if (is_client_associated_to_ap(adapter)) {
-		psta = rtw_get_stainfo(&adapter->stapriv, get_bssid(pmlmepriv));
-		if (psta)
-			ret = rtw_hal_set_default_port_id_cmd(adapter, psta->cmn.mac_id);
-	} else if (check_fwstate(pmlmepriv, WIFI_AP_STATE) == _TRUE) {
-
-	} else {
-	}
-
-	return ret;
-}
+/* rtw_hal_set_default_port_id_cmd / rtw_set_default_port_id — rust/hal_com_dft_port.rs (W4-131) */
 s32 rtw_set_ps_rsvd_page(_adapter *adapter)
 {
 	s32 ret = _SUCCESS;
@@ -14467,6 +14428,55 @@ struct dvobj_priv *rtw_rust_hal_com_adapter_to_dvobj(_adapter *adapter)
 		return NULL;
 	return adapter_to_dvobj(adapter);
 }
+
+#ifdef CONFIG_FW_MULTI_PORT_SUPPORT
+void rtw_rust_hal_com_log_dft_port_h2c(_adapter *adapter, const char *func, u8 *parm,
+				       u8 port_id, u8 mac_id)
+{
+	RTW_DBG_DUMP("DFT port id parm:", parm, H2C_DEFAULT_PORT_ID_LEN);
+	RTW_INFO("%s (" ADPT_FMT ") port_id :%d, mad_id:%d\n",
+		 func, ADPT_ARG(adapter), port_id, mac_id);
+}
+
+u8 rtw_rust_hal_com_dft_port_id(struct dvobj_priv *dvobj)
+{
+	return dvobj ? dvobj->dft.port_id : 0;
+}
+
+u8 rtw_rust_hal_com_dft_mac_id(struct dvobj_priv *dvobj)
+{
+	return dvobj ? dvobj->dft.mac_id : 0;
+}
+
+void rtw_rust_hal_com_dft_set(struct dvobj_priv *dvobj, u8 port_id, u8 mac_id)
+{
+	if (!dvobj)
+		return;
+	dvobj->dft.port_id = port_id;
+	dvobj->dft.mac_id = mac_id;
+}
+
+int rtw_rust_hal_com_is_client_associated_to_ap(_adapter *adapter)
+{
+	return is_client_associated_to_ap(adapter);
+}
+
+u8 rtw_rust_hal_com_assoc_sta_mac_id(_adapter *adapter, u8 *found)
+{
+	struct sta_info *psta;
+	struct mlme_priv *pmlmepriv;
+
+	*found = 0;
+	if (!adapter)
+		return 0;
+	pmlmepriv = &adapter->mlmepriv;
+	psta = rtw_get_stainfo(&adapter->stapriv, get_bssid(pmlmepriv));
+	if (!psta)
+		return 0;
+	*found = 1;
+	return psta->cmn.mac_id;
+}
+#endif /* CONFIG_FW_MULTI_PORT_SUPPORT */
 
 #ifdef CONFIG_MBSSID_CAM
 struct mbid_cam_ctl_t *rtw_rust_hal_com_mbid_cam_ctl(struct dvobj_priv *dvobj)

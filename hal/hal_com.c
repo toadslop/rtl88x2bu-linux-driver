@@ -3936,46 +3936,7 @@ const char *const _h2c_msr_role_str[] = {
 };
 
 #ifdef CONFIG_FW_MULTI_PORT_SUPPORT
-s32 rtw_hal_set_default_port_id_cmd(_adapter *adapter, u8 mac_id)
-{
-	s32 ret = _SUCCESS;
-	u8 parm[H2C_DEFAULT_PORT_ID_LEN] = {0};
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	u8 port_id = rtw_hal_get_port(adapter);
-
-	if ((dvobj->dft.port_id == port_id) && (dvobj->dft.mac_id == mac_id))
-		return ret;
-
-	SET_H2CCMD_DFTPID_PORT_ID(parm, port_id);
-	SET_H2CCMD_DFTPID_MAC_ID(parm, mac_id);
-
-	RTW_DBG_DUMP("DFT port id parm:", parm, H2C_DEFAULT_PORT_ID_LEN);
-	RTW_INFO("%s ("ADPT_FMT") port_id :%d, mad_id:%d\n",
-		__func__, ADPT_ARG(adapter), port_id, mac_id);
-
-	ret = rtw_hal_fill_h2c_cmd(adapter, H2C_DEFAULT_PORT_ID, H2C_DEFAULT_PORT_ID_LEN, parm);
-	dvobj->dft.port_id = port_id;
-	dvobj->dft.mac_id = mac_id;
-
-	return ret;
-}
-s32 rtw_set_default_port_id(_adapter *adapter)
-{
-	s32 ret = _SUCCESS;
-	struct sta_info		*psta;
-	struct mlme_priv *pmlmepriv = &adapter->mlmepriv;
-
-	if (is_client_associated_to_ap(adapter)) {
-		psta = rtw_get_stainfo(&adapter->stapriv, get_bssid(pmlmepriv));
-		if (psta)
-			ret = rtw_hal_set_default_port_id_cmd(adapter, psta->cmn.mac_id);
-	} else if (check_fwstate(pmlmepriv, WIFI_AP_STATE) == _TRUE) {
-
-	} else {
-	}
-
-	return ret;
-}
+/* rtw_hal_set_default_port_id_cmd / rtw_set_default_port_id — rust/hal_com_dft_port.rs (W4-131) */
 s32 rtw_set_ps_rsvd_page(_adapter *adapter)
 {
 	s32 ret = _SUCCESS;
