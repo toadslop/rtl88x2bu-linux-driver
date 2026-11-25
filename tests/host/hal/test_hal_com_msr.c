@@ -114,6 +114,8 @@ int main(void)
 	run_set(HW_PORT1, 0, _HW_STATE_AP_, _HW_STATE_AP_);
 	run_set(HW_PORT1, 2, _HW_STATE_STATION_, _HW_STATE_STATION_);
 	run_set(HW_PORT0, 2, _HW_STATE_STATION_, _HW_STATE_AP_);
+	run_set(HW_PORT0, 2, _HW_STATE_ADHOC_, _HW_STATE_AP_);
+	run_set(HW_PORT0, 2, _HW_STATE_MONITOR_, _HW_STATE_AP_);
 	run_set(HW_PORT0, 2, _HW_STATE_NOLINK_, _HW_STATE_NOLINK_);
 	host_msr_reset_trace();
 	host_msr_set_hw_port(HW_PORT0);

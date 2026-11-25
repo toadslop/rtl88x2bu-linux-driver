@@ -10,8 +10,10 @@
 #define HW_PORT1 1
 
 #define _HW_STATE_NOLINK_ 0x00
+#define _HW_STATE_ADHOC_ 0x01
 #define _HW_STATE_STATION_ 0x02
 #define _HW_STATE_AP_ 0x03
+#define _HW_STATE_MONITOR_ 0x04
 
 typedef unsigned char u8;
 
