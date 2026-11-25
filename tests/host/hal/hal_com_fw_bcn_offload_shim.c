@@ -12,6 +12,7 @@ static struct h2c_record g_h2c[8];
 static int g_h2c_count;
 static s32 g_fill_ret = 1;
 static struct dvobj_priv g_dvobj;
+static u32 g_page_size = 128;
 static char g_adapter_blob[1];
 
 void host_fw_bcn_offload_reset(void)
@@ -19,7 +20,13 @@ void host_fw_bcn_offload_reset(void)
 	memset(g_h2c, 0, sizeof(g_h2c));
 	g_h2c_count = 0;
 	g_fill_ret = 1;
+	g_page_size = 128;
 	memset(&g_dvobj, 0, sizeof(g_dvobj));
+}
+
+void host_fw_bcn_offload_set_vap_map(u8 vap_map)
+{
+	g_dvobj.vap_map = vap_map;
 }
 
 int host_fw_bcn_offload_h2c_count(void)
@@ -88,6 +95,31 @@ void rtw_rust_hal_com_log_fw_bcn_offload(u8 en, u8 map)
 {
 	(void)en;
 	(void)map;
+}
+
+u8 rtw_rust_hal_com_dvobj_get_vap_map(void *dvobj)
+{
+	return ((struct dvobj_priv *)dvobj)->vap_map;
+}
+
+void rtw_rust_hal_com_log_bcn_rsvdpage_loc(u8 vap_map, u32 page_size, u8 b0, u8 b1,
+					   u8 b2, u8 b3, u8 b4)
+{
+	(void)vap_map;
+	(void)page_size;
+	(void)b0;
+	(void)b1;
+	(void)b2;
+	(void)b3;
+	(void)b4;
+}
+
+void rtw_hal_get_def_var(struct _adapter *adapter, int def, u8 *val)
+{
+	(void)adapter;
+
+	if (def == HAL_DEF_TX_PAGE_SIZE && val)
+		memcpy(val, &g_page_size, sizeof(g_page_size));
 }
 
 s32 rtw_hal_fill_h2c_cmd(struct _adapter *adapter, u8 cmd, unsigned int len, u8 *buf)

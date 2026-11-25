@@ -395,89 +395,45 @@ int rtw_mbid_cam_dump(void *sel, const char *fun_name, _adapter *adapter)
 #endif /*CONFIG_MBSSID_CAM*/
 
 #ifdef CONFIG_FW_HANDLE_TXBCN
-#define H2C_BCN_OFFLOAD_LEN	1
+/* rtw_hal_set_fw_ap_bcn_offload_cmd / rtw_hal_set_bcn_rsvdpage_loc_cmd — rust/hal_com_fw_bcn_offload.rs (W4-138) */
 
-#define SET_H2CCMD_BCN_OFFLOAD_EN(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 0, 1, __Value)
-#define SET_H2CCMD_BCN_ROOT_TBTT_RPT(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 1, 1, __Value)
-#define SET_H2CCMD_BCN_VAP1_TBTT_RPT(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 2, 1, __Value)
-#define SET_H2CCMD_BCN_VAP2_TBTT_RPT(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 3, 1, __Value)
-#define SET_H2CCMD_BCN_VAP3_TBTT_RPT(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 4, 1, __Value)
-#define SET_H2CCMD_BCN_VAP4_TBTT_RPT(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 5, 1, __Value)
-
-void rtw_hal_set_fw_ap_bcn_offload_cmd(_adapter *adapter, bool fw_bcn_en, u8 tbtt_rpt_map)
+#ifndef HOST_HAL_COM_FW_BCN_OFFLOAD_TEST
+void rtw_rust_hal_com_dvobj_set_fw_bcn_offload(struct dvobj_priv *dvobj, u8 v)
 {
-	u8 fw_bcn_offload[1] = {0};
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-
-	if (fw_bcn_en)
-		SET_H2CCMD_BCN_OFFLOAD_EN(fw_bcn_offload, 1);
-
-	if (tbtt_rpt_map & BIT(0))
-		SET_H2CCMD_BCN_ROOT_TBTT_RPT(fw_bcn_offload, 1);
-	if (tbtt_rpt_map & BIT(1))
-		SET_H2CCMD_BCN_VAP1_TBTT_RPT(fw_bcn_offload, 1);
-	if (tbtt_rpt_map & BIT(2))
-		SET_H2CCMD_BCN_VAP2_TBTT_RPT(fw_bcn_offload, 1);
-	if (tbtt_rpt_map & BIT(3))
-			SET_H2CCMD_BCN_VAP3_TBTT_RPT(fw_bcn_offload, 1);
-
-	dvobj->vap_tbtt_rpt_map = tbtt_rpt_map;
-	dvobj->fw_bcn_offload = fw_bcn_en;
-	RTW_INFO("[FW BCN] Offload : %s\n", (dvobj->fw_bcn_offload) ? "EN" : "DIS");
-	RTW_INFO("[FW BCN] TBTT RPT map : 0x%02x\n", dvobj->vap_tbtt_rpt_map);
-
-	rtw_hal_fill_h2c_cmd(adapter, H2C_FW_BCN_OFFLOAD,
-					H2C_BCN_OFFLOAD_LEN, fw_bcn_offload);
+	if (dvobj)
+		dvobj->fw_bcn_offload = v;
 }
 
-void rtw_hal_set_bcn_rsvdpage_loc_cmd(_adapter *adapter)
+void rtw_rust_hal_com_dvobj_set_vap_tbtt_rpt_map(struct dvobj_priv *dvobj, u8 v)
 {
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	u8 ret, vap_id;
-	u32 page_size = 0;
-	u8 bcn_rsvdpage[H2C_BCN_RSVDPAGE_LEN] = {0};
-
-	rtw_hal_get_def_var(adapter, HAL_DEF_TX_PAGE_SIZE, (u8 *)&page_size);
-	#if 1
-	for (vap_id = 0; vap_id < CONFIG_LIMITED_AP_NUM; vap_id++) {
-		if (dvobj->vap_map & BIT(vap_id))
-			bcn_rsvdpage[vap_id] = vap_id * (MAX_BEACON_LEN / page_size);
-	}
-	#else
-#define SET_H2CCMD_BCN_RSVDPAGE_LOC_ROOT(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 0, 8, __Value)
-#define SET_H2CCMD_BCN_RSVDPAGE_LOC_VAP1(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 1, 8, __Value)
-#define SET_H2CCMD_BCN_RSVDPAGE_LOC_VAP2(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 2, 8, __Value)
-#define SET_H2CCMD_BCN_RSVDPAGE_LOC_VAP3(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 3, 8, __Value)
-#define SET_H2CCMD_BCN_RSVDPAGE_LOC_VAP4(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 4, 8, __Value)
-
-	if (dvobj->vap_map & BIT(0))
- 		SET_H2CCMD_BCN_RSVDPAGE_LOC_ROOT(bcn_rsvdpage, 0);
-	if (dvobj->vap_map & BIT(1))
-		SET_H2CCMD_BCN_RSVDPAGE_LOC_VAP1(bcn_rsvdpage,
-					1 * (MAX_BEACON_LEN / page_size));
-	if (dvobj->vap_map & BIT(2))
-		SET_H2CCMD_BCN_RSVDPAGE_LOC_VAP2(bcn_rsvdpage,
-					2 * (MAX_BEACON_LEN / page_size));
-	if (dvobj->vap_map & BIT(3))
-		SET_H2CCMD_BCN_RSVDPAGE_LOC_VAP3(bcn_rsvdpage,
-					3 * (MAX_BEACON_LEN / page_size));
-	if (dvobj->vap_map & BIT(4))
-		SET_H2CCMD_BCN_RSVDPAGE_LOC_VAP4(bcn_rsvdpage,
-					4 * (MAX_BEACON_LEN / page_size));
-	#endif
-	if (1) {
-		RTW_INFO("[BCN_LOC] vap_map : 0x%02x\n", dvobj->vap_map);
-		RTW_INFO("[BCN_LOC] page_size :%d, @bcn_page_num :%d\n"
-			, page_size, (MAX_BEACON_LEN / page_size));
-		RTW_INFO("[BCN_LOC] root ap : 0x%02x\n", *bcn_rsvdpage);
-		RTW_INFO("[BCN_LOC] vap_1 : 0x%02x\n", *(bcn_rsvdpage + 1));
-		RTW_INFO("[BCN_LOC] vap_2 : 0x%02x\n", *(bcn_rsvdpage + 2));
-		RTW_INFO("[BCN_LOC] vap_3 : 0x%02x\n", *(bcn_rsvdpage + 3));
-		RTW_INFO("[BCN_LOC] vap_4 : 0x%02x\n", *(bcn_rsvdpage + 4));
-	}
-	ret = rtw_hal_fill_h2c_cmd(adapter, H2C_BCN_RSVDPAGE,
-					H2C_BCN_RSVDPAGE_LEN, bcn_rsvdpage);
+	if (dvobj)
+		dvobj->vap_tbtt_rpt_map = v;
 }
+
+u8 rtw_rust_hal_com_dvobj_get_vap_map(struct dvobj_priv *dvobj)
+{
+	return dvobj ? dvobj->vap_map : 0;
+}
+
+void rtw_rust_hal_com_log_fw_bcn_offload(u8 en, u8 map)
+{
+	RTW_INFO("[FW BCN] Offload : %s\n", en ? "EN" : "DIS");
+	RTW_INFO("[FW BCN] TBTT RPT map : 0x%02x\n", map);
+}
+
+void rtw_rust_hal_com_log_bcn_rsvdpage_loc(u8 vap_map, u32 page_size, u8 b0, u8 b1,
+					   u8 b2, u8 b3, u8 b4)
+{
+	RTW_INFO("[BCN_LOC] vap_map : 0x%02x\n", vap_map);
+	RTW_INFO("[BCN_LOC] page_size :%d, @bcn_page_num :%d\n", page_size,
+		 (int)(MAX_BEACON_LEN / page_size));
+	RTW_INFO("[BCN_LOC] root ap : 0x%02x\n", b0);
+	RTW_INFO("[BCN_LOC] vap_1 : 0x%02x\n", b1);
+	RTW_INFO("[BCN_LOC] vap_2 : 0x%02x\n", b2);
+	RTW_INFO("[BCN_LOC] vap_3 : 0x%02x\n", b3);
+	RTW_INFO("[BCN_LOC] vap_4 : 0x%02x\n", b4);
+}
+#endif /* !HOST_HAL_COM_FW_BCN_OFFLOAD_TEST */
 
 void rtw_ap_multi_bcn_cfg(_adapter *adapter)
 {
