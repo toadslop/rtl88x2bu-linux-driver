@@ -133,7 +133,8 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
 	test-req-per-rpt test-req-per-rpt-rust \
 	test-dft-port $(if $(wildcard $(ROOT)/rust/hal_com_dft_port_host.rs),test-dft-port-rust,) \
-	test-fw-rsvdpage-h2c test-fw-rsvdpage-h2c-rust test-mbid-cam test-mbid-cam-rust \
+	test-fw-rsvdpage-h2c test-fw-rsvdpage-h2c-rust \
+	test-fw-bcn-offload test-mbid-cam test-mbid-cam-rust \
 	test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-mbid-cam-hw test-mbid-cam-hw-rust test-mbid-cam-macaddr \
 	test-mbid-cam-macaddr-rust \
@@ -180,7 +181,8 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-hal-trxnss test-hal-trxnss-rust \
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
 	test-req-per-rpt-rust test-dft-port $(if $(wildcard $(ROOT)/rust/hal_com_dft_port_host.rs),test-dft-port-rust,) \
-	test-fw-rsvdpage-h2c test-fw-rsvdpage-h2c-rust test-mbid-cam test-mbid-cam-rust \
+	test-fw-rsvdpage-h2c test-fw-rsvdpage-h2c-rust \
+	test-fw-bcn-offload test-mbid-cam test-mbid-cam-rust \
 	test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-mbid-cam-hw test-mbid-cam-hw-rust test-mbid-cam-macaddr \
 	test-mbid-cam-macaddr-rust \
@@ -2109,6 +2111,14 @@ test_hal_com_fw_rsvdpage_h2c_rust: test_hal_com_fw_rsvdpage_h2c.c \
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_FW_RSVDPAGE_H2C_ORACLE -o $@ \
 		test_hal_com_fw_rsvdpage_h2c.c hal_com_fw_rsvdpage_h2c_shim.c \
 		hal_com_fw_rsvdpage_h2c_c_oracle.c librust_hal_com_fw_rsvdpage_h2c.a
+
+test-fw-bcn-offload: test_hal_com_fw_bcn_offload
+	./test_hal_com_fw_bcn_offload
+
+test_hal_com_fw_bcn_offload: test_hal_com_fw_bcn_offload.c hal_com_fw_bcn_offload_shim.c \
+		hal_com_fw_bcn_offload_c_oracle.c
+	$(CC) $(CFLAGS) -DCONFIG_LIMITED_AP_NUM=4 -o $@ test_hal_com_fw_bcn_offload.c \
+		hal_com_fw_bcn_offload_shim.c hal_com_fw_bcn_offload_c_oracle.c
 
 test-c2h-evt-robustness: test_hal_com_c2h_evt_fx19
 	./test_hal_com_c2h_evt_fx19
