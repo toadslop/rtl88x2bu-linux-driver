@@ -146,3 +146,120 @@ int rtw_rust_hal_com_rcr_use_mbssid_shortcut(void)
 	return 0;
 #endif
 }
+
+void rtw_rust_hal_com_mi_status_no_self(void *adapter, struct mi_state *m)
+{
+	rtw_mi_status_no_self(adapter, m);
+}
+
+void rtw_rust_hal_com_mi_status_no_others(void *adapter, struct mi_state *m)
+{
+	rtw_mi_status_no_others(adapter, m);
+}
+
+void rtw_rust_hal_com_mi_status_merge(struct mi_state *d, struct mi_state *a)
+{
+	rtw_mi_status_merge(d, a);
+}
+
+void rtw_rust_hal_com_chk_bssid_apply_action(struct mi_state *mstate_s, u8 self_action)
+{
+	if (!mstate_s)
+		return;
+
+	switch (self_action) {
+	case MLME_SCAN_ENTER:
+		mstate_s->scan_num = 1;
+		mstate_s->scan_enter_num = 1;
+		break;
+	case MLME_SCAN_DONE:
+		mstate_s->scan_enter_num = 0;
+		break;
+	case MLME_STA_CONNECTING:
+		mstate_s->lg_sta_num = 1;
+		mstate_s->ld_sta_num = 0;
+		break;
+	case MLME_STA_CONNECTED:
+		mstate_s->lg_sta_num = 0;
+		mstate_s->ld_sta_num = 1;
+		break;
+	case MLME_STA_DISCONNECTED:
+		mstate_s->lg_sta_num = 0;
+		mstate_s->ld_sta_num = 0;
+		break;
+#ifdef CONFIG_TDLS
+	case MLME_TDLS_LINKED:
+		mstate_s->ld_tdls_num = 1;
+		break;
+	case MLME_TDLS_NOLINK:
+		mstate_s->ld_tdls_num = 0;
+		break;
+#endif
+#ifdef CONFIG_AP_MODE
+	case MLME_AP_STARTED:
+		mstate_s->ap_num = 1;
+		break;
+	case MLME_AP_STOPPED:
+		mstate_s->ap_num = 0;
+		mstate_s->ld_ap_num = 0;
+		break;
+#endif
+#ifdef CONFIG_RTW_MESH
+	case MLME_MESH_STARTED:
+		mstate_s->mesh_num = 1;
+		break;
+	case MLME_MESH_STOPPED:
+		mstate_s->mesh_num = 0;
+		mstate_s->ld_mesh_num = 0;
+		break;
+#endif
+	case MLME_ACTION_NONE:
+	case MLME_ADHOC_STARTED:
+		break;
+	default:
+		rtw_warn_on(1);
+		break;
+	}
+}
+
+u8 rtw_rust_hal_com_in_cta_test(void *adapter)
+{
+	return GET_HAL_DATA(adapter)->in_cta_test;
+}
+
+u8 rtw_rust_hal_com_rx_tsf_filter(void *adapter)
+{
+	return GET_HAL_SPEC(adapter)->rx_tsf_filter;
+}
+
+u8 rtw_rust_hal_com_periodic_tsf_active(void *adapter)
+{
+	(void)adapter;
+	return adapter_to_dvobj(adapter)->periodic_tsf_update_etime != 0;
+}
+
+u8 rtw_rust_hal_com_wifi_spec(void *adapter)
+{
+	(void)adapter;
+	return host_hal_rcr_chk_wifi_spec(adapter);
+}
+
+u8 rtw_rust_hal_com_get_clt_num(void *adapter)
+{
+	return get_clt_num(adapter);
+}
+
+void rtw_rust_hal_com_warn_on(int c)
+{
+	rtw_warn_on(c);
+}
+
+void rtw_rust_hal_com_tsf_update_pause_for_rcr(void *adapter)
+{
+	rtw_hal_tsf_update_pause(adapter);
+}
+
+void rtw_rust_hal_com_tsf_update_restore_for_rcr(void *adapter)
+{
+	rtw_hal_tsf_update_restore(adapter);
+}
