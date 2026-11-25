@@ -28,6 +28,12 @@ struct host_halmac_identity_trace {
 	unsigned set_bssid_calls;
 	u8 set_bssid_addr[ETH_ALEN];
 	u8 set_bssid_addr_null;
+	u8 set_mac_port;
+	unsigned set_mac_calls;
+	u8 set_mac_addr[ETH_ALEN];
+	u8 get_mac_port;
+	unsigned get_mac_calls;
+	u8 get_mac_addr[ETH_ALEN];
 };
 
 extern struct host_halmac_identity_trace host_halmac_identity_trace;
@@ -39,9 +45,14 @@ struct _adapter *host_halmac_identity_adapter(void);
 void host_halmac_identity_clear_trace(void);
 
 int rtw_halmac_set_bssid(struct dvobj_priv *d, int hwport, u8 *addr);
+int rtw_halmac_set_mac_address(struct dvobj_priv *d, int hwport, u8 *addr);
+int rtw_halmac_get_mac_address(struct dvobj_priv *d, int hwport, u8 *addr);
+void *_rtw_memset(void *s, int c, unsigned long n);
 
 u8 rtw_hal_get_port(struct _adapter *adapter);
 
 void rtw_hal_set_bssid_c_oracle(struct _adapter *adapter, u8 *val);
+void rtw_hal_set_macaddr_port_c_oracle(struct _adapter *adapter, u8 *mac_addr);
+void rtw_hal_get_macaddr_port_c_oracle(struct _adapter *adapter, u8 *mac_addr);
 
 #endif

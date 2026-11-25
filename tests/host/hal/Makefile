@@ -144,7 +144,8 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-gpio-wakeup-rust-8821asdio test-tsf-iface test-tsf-iface-mbssid \
 	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
 	test-tsf-periodic \
-	test-halmac-identity test-c2h-evt-robustness clean
+	test-halmac-identity test-halmac-identity-rust \
+	test-c2h-evt-robustness clean
 
 all: test
 
@@ -188,7 +189,8 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-gpio-wakeup-rust-8821asdio test-tsf-iface test-tsf-iface-mbssid \
 	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
 	test-tsf-periodic \
-	test-halmac-identity test-c2h-evt-robustness
+	test-halmac-identity test-halmac-identity-rust \
+	test-c2h-evt-robustness
 
 test-c: test_hw_rate_map
 	./test_hw_rate_map hal_hw_rate_vectors.json
@@ -1836,6 +1838,22 @@ test_hal_com_halmac_identity: test_hal_com_halmac_identity.c $(HALMAC_IDENTITY_S
 	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_halmac_identity.c \
 		$(HALMAC_IDENTITY_SUPPORT)
 
+RUST_HALMAC_IDENTITY := $(ROOT)/rust/hal_com_halmac_identity_host.rs
+
+librust_hal_com_halmac_identity.a: $(RUST_HALMAC_IDENTITY)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_halmac_identity_test --cfg config_rtw_halmac \
+		--crate-type staticlib $(RUST_HALMAC_IDENTITY) -o $@
+
+test_hal_com_halmac_identity_rust: test_hal_com_halmac_identity.c $(HALMAC_IDENTITY_SUPPORT) \
+		librust_hal_com_halmac_identity.a
+	$(CC) $(CFLAGS) -I../include -DRUST_HAL_COM_HALMAC_IDENTITY_ORACLE -o $@ \
+		test_hal_com_halmac_identity.c $(HALMAC_IDENTITY_SUPPORT) \
+		librust_hal_com_halmac_identity.a
+
+test-halmac-identity-rust: test_hal_com_halmac_identity_rust
+	./test_hal_com_halmac_identity_rust
+
 GPIO_WAKEUP_SHIM := hal_com_gpio_wakeup_shim.c
 GPIO_WAKEUP_ORACLE := hal_com_gpio_wakeup_c_oracle.c
 
@@ -2124,7 +2142,8 @@ clean:
 		test_hal_com_rcr_chk_bssid \
 		test_hal_com_gpio_wakeup test_hal_com_gpio_wakeup_rust \
 		test_hal_com_gpio_wakeup_8821asdio test_hal_com_gpio_wakeup_rust_8821asdio \
-		test_hal_com_halmac_identity \
+		test_hal_com_halmac_identity test_hal_com_halmac_identity_rust \
+		librust_hal_com_halmac_identity.a \
 		librust_hal_com_gpio_wakeup.a librust_hal_com_gpio_wakeup_8821as.a \
 		test_hal_com_tsf_iface test_hal_com_tsf_iface_mbssid \
 		test_hal_com_tsf_iface_rust test_hal_com_tsf_iface_rust_mbssid \
