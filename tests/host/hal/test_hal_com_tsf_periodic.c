@@ -10,7 +10,7 @@ struct _adapter *dvobj_get_primary_adapter(struct dvobj_priv *dvobj);
 systime rtw_get_current_time(void);
 systime rtw_ms_to_systime(int ms);
 int rtw_time_after(systime a, systime b);
-u32 rtw_get_passing_time_ms(systime start);
+s32 rtw_get_passing_time_ms(systime start);
 void _set_timer(struct _timer *t, u32 ms);
 void rtw_hal_rcr_set_chk_bssid(struct _adapter *adapter, u8 self_action);
 u8 rtw_periodic_tsf_update_end_cmd(struct _adapter *adapter);
@@ -75,6 +75,8 @@ static void run_chk_pair(void (*under_test)(struct _adapter *),
 	struct host_hal_com_tsf_periodic_trace snap_t;
 	systime etime_u, etime_o;
 	u32 timer_u, timer_o, rcr_u, rcr_o;
+	unsigned timer_cnt_u, timer_cnt_o;
+	u8 rcr_act_u, rcr_act_o;
 
 	snap_dv = *host_hal_com_tsf_periodic_dvobj();
 	snap_p0 = snap_dv.padapters[0];
@@ -89,11 +91,13 @@ static void run_chk_pair(void (*under_test)(struct _adapter *),
 	etime_u = host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime;
 	timer_u = host_hal_com_tsf_periodic_trace.last_timer_ms;
 	rcr_u = host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count;
+	timer_cnt_u = host_hal_com_tsf_periodic_trace.set_timer_count;
+	rcr_act_u = host_hal_com_tsf_periodic_trace.last_rcr_chk_action;
 	if (prod_out) {
 		prod_out->etime = etime_u;
 		prod_out->last_timer_ms = timer_u;
-		prod_out->set_timer_count = host_hal_com_tsf_periodic_trace.set_timer_count;
-		prod_out->last_rcr_action = host_hal_com_tsf_periodic_trace.last_rcr_chk_action;
+		prod_out->set_timer_count = timer_cnt_u;
+		prod_out->last_rcr_action = rcr_act_u;
 		prod_out->last_rcr_adapter = host_hal_com_tsf_periodic_trace.last_rcr_adapter;
 		prod_out->rcr_chk_bssid_count = rcr_u;
 	}
@@ -111,10 +115,14 @@ static void run_chk_pair(void (*under_test)(struct _adapter *),
 	etime_o = host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime;
 	timer_o = host_hal_com_tsf_periodic_trace.last_timer_ms;
 	rcr_o = host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count;
+	timer_cnt_o = host_hal_com_tsf_periodic_trace.set_timer_count;
+	rcr_act_o = host_hal_com_tsf_periodic_trace.last_rcr_chk_action;
 
 	eq_stime("chk_etime", etime_u, etime_o);
 	eq_u32("chk_timer", timer_u, timer_o);
 	eq_u32("chk_rcr", rcr_u, rcr_o);
+	eq_u32("chk_timer_cnt", timer_cnt_u, timer_cnt_o);
+	eq_u8("chk_rcr_action", rcr_act_u, rcr_act_o);
 }
 
 static void test_offchannel_skip(void)
@@ -219,17 +227,25 @@ static void test_etime_expired_next_tick(void)
 	eq_u32("next_rcr", host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count, 1);
 }
 
+static void setup_wrap_arm_jiffies(void)
+{
+	struct _adapter *a1 = host_hal_com_tsf_periodic_adapter();
+	/* Signed elapsed 201 ms (past pause threshold 200); now+restore_ms wraps to 0. */
+	setup_iface(a1, 1, (systime)-701, 2, 5, 100);
+	host_hal_com_tsf_periodic_set_current_time((systime)-500);
+}
+
 static void test_etime_wrap_bump(void)
 {
 	struct chk_pair_out prod;
 
 	host_hal_com_tsf_periodic_reset();
-	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 1, 5, 100);
-	host_hal_com_tsf_periodic_set_current_time((systime)-500);
+	setup_wrap_arm_jiffies();
 
 	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,
 		     &prod);
-	eq_stime("wrap_etime", host_hal_com_tsf_periodic_dvobj()->periodic_tsf_update_etime, 1);
+	eq_stime("wrap_etime", prod.etime, 1);
+	eq_u32("wrap_timer_once", prod.set_timer_count, 1);
 }
 
 static void test_time_after_jiffies_shape(void)
@@ -243,8 +259,7 @@ static void test_time_after_jiffies_shape(void)
 static void test_etime_wrap_prod_bump(void)
 {
 	host_hal_com_tsf_periodic_reset();
-	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 1, 5, 100);
-	host_hal_com_tsf_periodic_set_current_time((systime)-500);
+	setup_wrap_arm_jiffies();
 
 	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
 	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
@@ -254,8 +269,7 @@ static void test_etime_wrap_prod_bump(void)
 static void test_etime_wrap_deadline_sequence(void)
 {
 	host_hal_com_tsf_periodic_reset();
-	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, 10, 1, 5, 100);
-	host_hal_com_tsf_periodic_set_current_time((systime)-500);
+	setup_wrap_arm_jiffies();
 
 	memset(&host_hal_com_tsf_periodic_trace, 0, sizeof(host_hal_com_tsf_periodic_trace));
 	rtw_hal_periodic_tsf_update_chk(host_hal_com_tsf_periodic_adapter());
@@ -458,8 +472,8 @@ static void test_restore_max_only_past_pause(void)
 	a1 = host_hal_com_tsf_periodic_adapter();
 	a2 = host_hal_com_tsf_periodic_dvobj()->padapters[1];
 	setup_iface(a1, 1, 10, 2, 3, 100);
-	/* a2 pause still in the future under jiffies wrap (211 - 200 = 11 ms < 100). */
-	setup_iface(a2, 1, 200, 1, 10, 100);
+	/* a2: pause_stime ahead of now → negative signed elapsed, must not affect max. */
+	setup_iface(a2, 1, 300, 1, 10, 100);
 	host_hal_com_tsf_periodic_set_current_time(211);
 
 	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,

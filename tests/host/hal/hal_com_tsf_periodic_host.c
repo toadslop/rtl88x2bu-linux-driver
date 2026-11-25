@@ -64,10 +64,10 @@ int rtw_time_after(systime a, systime b)
 	return ((long)(b - a)) < 0;
 }
 
-u32 rtw_get_passing_time_ms(systime start)
+s32 rtw_get_passing_time_ms(systime start)
 {
-	/* Match Linux jiffies_to_msecs(now - start): unsigned wrap, no clamp. */
-	return (u32)(host_current_time - start);
+	/* Match _rtw_get_passing_time_ms: signed elapsed via jiffies subtraction. */
+	return (s32)(host_current_time - start);
 }
 
 void _set_timer(struct _timer *t, u32 ms)
