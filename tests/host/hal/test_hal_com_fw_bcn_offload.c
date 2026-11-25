@@ -75,7 +75,7 @@ static void case_dut_matches_oracle(bool en, u8 map)
 	expect_u8("dut_vs_oracle_payload", p_dut, p_orc);
 }
 
-static void case_rsvdpage_matches_oracle(u8 vap_map)
+static void case_rsvdpage_matches_oracle_page(u8 vap_map, u32 page_size)
 {
 	u8 dut_payload[H2C_BCN_RSVDPAGE_LEN];
 	u8 orc_payload[H2C_BCN_RSVDPAGE_LEN];
@@ -83,6 +83,7 @@ static void case_rsvdpage_matches_oracle(u8 vap_map)
 	unsigned i;
 
 	host_fw_bcn_offload_reset();
+	host_fw_bcn_offload_set_page_size(page_size);
 	host_fw_bcn_offload_set_vap_map(vap_map);
 	rtw_hal_set_bcn_rsvdpage_loc_cmd(host_fw_bcn_offload_adapter());
 
@@ -98,6 +99,7 @@ static void case_rsvdpage_matches_oracle(u8 vap_map)
 	memcpy(dut_payload, buf, H2C_BCN_RSVDPAGE_LEN);
 
 	host_fw_bcn_offload_reset();
+	host_fw_bcn_offload_set_page_size(page_size);
 	host_fw_bcn_offload_set_vap_map(vap_map);
 	rtw_hal_set_bcn_rsvdpage_loc_cmd_c_oracle(host_fw_bcn_offload_adapter());
 	buf = host_fw_bcn_offload_h2c_buf(0);
@@ -110,6 +112,11 @@ static void case_rsvdpage_matches_oracle(u8 vap_map)
 
 	for (i = 0; i < H2C_BCN_RSVDPAGE_LEN; i++)
 		expect_u8("rsvd_payload", dut_payload[i], orc_payload[i]);
+}
+
+static void case_rsvdpage_matches_oracle(u8 vap_map)
+{
+	case_rsvdpage_matches_oracle_page(vap_map, 128);
 }
 
 int main(void)
@@ -136,8 +143,7 @@ int main(void)
 	case_rsvdpage_matches_oracle(0x1f);
 	case_rsvdpage_matches_oracle(0xaa); /* VAP4 bit set; byte 4 stays 0 */
 
-	host_fw_bcn_offload_set_page_size(256);
-	case_rsvdpage_matches_oracle(0x0f);
+	case_rsvdpage_matches_oracle_page(0x0f, 256);
 
 	if (fail) {
 		fprintf(stderr, "hal_com_fw_bcn_offload L2 failed\n");
