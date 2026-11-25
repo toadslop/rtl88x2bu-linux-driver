@@ -27,3 +27,17 @@ void rtw_dump_rsvd_page(void *sel, struct _adapter *adapter,
 #endif
 
 /* rtw_dump_fifo — PR4 / rust/hal_com_dump_rsvd_page.rs (leave out of this L1 leaf). */
+
+typedef struct {
+	unsigned char LocProbeRsp;
+	unsigned char LocPsPoll;
+	unsigned char LocNullData;
+	unsigned char LocQosNull;
+	unsigned char LocBTQosNull;
+} RSVDPAGE_LOC;
+
+void rtw_hal_set_FwRsvdPage_cmd(void *adapter, RSVDPAGE_LOC *rsvdpageloc)
+{
+	(void)adapter;
+	(void)rsvdpageloc;
+}

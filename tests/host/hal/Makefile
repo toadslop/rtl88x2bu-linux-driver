@@ -133,7 +133,8 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
 	test-req-per-rpt test-req-per-rpt-rust \
 	test-dft-port $(if $(wildcard $(ROOT)/rust/hal_com_dft_port_host.rs),test-dft-port-rust,) \
-	test-fw-rsvdpage-h2c test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
+	test-fw-rsvdpage-h2c test-fw-rsvdpage-h2c-rust test-mbid-cam test-mbid-cam-rust \
+	test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-mbid-cam-hw test-mbid-cam-hw-rust test-mbid-cam-macaddr \
 	test-mbid-cam-macaddr-rust \
 	test-get-rsvd-page test-get-rsvd-page-rust \
@@ -178,7 +179,8 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-hal-trxnss test-hal-trxnss-rust \
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
 	test-req-per-rpt-rust test-dft-port $(if $(wildcard $(ROOT)/rust/hal_com_dft_port_host.rs),test-dft-port-rust,) \
-	test-fw-rsvdpage-h2c test-mbid-cam test-mbid-cam-rust test-mbid-cam-alloc test-mbid-cam-alloc-rust \
+	test-fw-rsvdpage-h2c test-fw-rsvdpage-h2c-rust test-mbid-cam test-mbid-cam-rust \
+	test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-mbid-cam-hw test-mbid-cam-hw-rust test-mbid-cam-macaddr \
 	test-mbid-cam-macaddr-rust \
 	test-get-rsvd-page test-get-rsvd-page-rust \
@@ -2086,6 +2088,23 @@ test_hal_com_fw_rsvdpage_h2c: test_hal_com_fw_rsvdpage_h2c.c hal_com_fw_rsvdpage
 		hal_com_fw_rsvdpage_h2c_c_oracle.c
 	$(CC) $(CFLAGS) -o $@ test_hal_com_fw_rsvdpage_h2c.c hal_com_fw_rsvdpage_h2c_shim.c \
 		hal_com_fw_rsvdpage_h2c_c_oracle.c
+
+RUST_FW_RSVDPAGE_H2C := $(ROOT)/rust/hal_com_fw_rsvdpage_h2c_host.rs
+
+librust_hal_com_fw_rsvdpage_h2c.a: $(RUST_FW_RSVDPAGE_H2C)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_fw_rsvdpage_h2c_test \
+		--crate-type staticlib $(RUST_FW_RSVDPAGE_H2C) -o $@
+
+test-fw-rsvdpage-h2c-rust: test_hal_com_fw_rsvdpage_h2c_rust
+	./test_hal_com_fw_rsvdpage_h2c_rust
+
+test_hal_com_fw_rsvdpage_h2c_rust: test_hal_com_fw_rsvdpage_h2c.c \
+		hal_com_fw_rsvdpage_h2c_shim.c hal_com_fw_rsvdpage_h2c_c_oracle.c \
+		librust_hal_com_fw_rsvdpage_h2c.a
+	$(CC) $(CFLAGS) -DRUST_HAL_COM_FW_RSVDPAGE_H2C_ORACLE -o $@ \
+		test_hal_com_fw_rsvdpage_h2c.c hal_com_fw_rsvdpage_h2c_shim.c \
+		hal_com_fw_rsvdpage_h2c_c_oracle.c librust_hal_com_fw_rsvdpage_h2c.a
 
 test-c2h-evt-robustness: test_hal_com_c2h_evt_fx19
 	./test_hal_com_c2h_evt_fx19
