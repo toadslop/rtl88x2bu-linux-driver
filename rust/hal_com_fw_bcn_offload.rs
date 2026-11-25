@@ -80,7 +80,6 @@ pub extern "C" fn rtw_hal_set_fw_ap_bcn_offload_cmd(
     }
 }
 
-#[cfg(any(not(host_hal_com_fw_bcn_offload_test), host_hal_com_fw_bcn_rsvdpage_test))]
 #[no_mangle]
 pub extern "C" fn rtw_hal_set_bcn_rsvdpage_loc_cmd(adapter: *mut c_void) {
     let dvobj = unsafe { rtw_rust_hal_com_adapter_to_dvobj(adapter) };
