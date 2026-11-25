@@ -140,7 +140,8 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo test-dump-rsvd-fifo-rust \
 	test-tx-aclt-set test-tx-aclt-set-rust \
-	test-rcr-leaf test-rcr-leaf-rust test-rcr-chk-bssid test-rcr-am-hwvar \
+	test-rcr-leaf test-rcr-leaf-rust test-rcr-chk-bssid \
+	test-rcr-am-hwvar test-rcr-am-hwvar-rust \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-tsf-iface test-tsf-iface-mbssid \
 	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
@@ -186,7 +187,8 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo test-dump-rsvd-fifo-rust \
 	test-tx-aclt-set test-tx-aclt-set-rust \
-	test-rcr-leaf test-rcr-leaf-rust test-rcr-chk-bssid test-rcr-am-hwvar \
+	test-rcr-leaf test-rcr-leaf-rust test-rcr-chk-bssid \
+	test-rcr-am-hwvar test-rcr-am-hwvar-rust \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
 	test-gpio-wakeup-rust-8821asdio test-tsf-iface test-tsf-iface-mbssid \
 	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
@@ -1865,6 +1867,8 @@ test-rcr-am-hwvar: test_hal_com_rcr_am
 test_hal_com_rcr_am: test_hal_com_rcr_am.c $(RCR_AM_SHIM) $(RCR_AM_ORACLE)
 	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_rcr_am.c $(RCR_AM_SHIM) $(RCR_AM_ORACLE)
 
+include hal_com_rcr_am_rust.mk
+
 GPIO_WAKEUP_SHIM := hal_com_gpio_wakeup_shim.c
 GPIO_WAKEUP_ORACLE := hal_com_gpio_wakeup_c_oracle.c
 
@@ -2192,7 +2196,7 @@ clean:
 		test_hal_com_mbid_cam_rust librust_hal_com_mbid_cam.a \
 		test_hal_com_rcr test_hal_com_rcr_rust librust_hal_com_rcr.a \
 		test_hal_com_rcr_chk_bssid test_hal_com_rcr_chk_bssid_rust librust_hal_com_rcr_chk.a \
-		test_hal_com_rcr_am \
+		test_hal_com_rcr_am test_hal_com_rcr_am_rust librust_hal_com_rcr_am.a \
 		test_hal_com_gpio_wakeup test_hal_com_gpio_wakeup_rust \
 		test_hal_com_gpio_wakeup_8821asdio test_hal_com_gpio_wakeup_rust_8821asdio \
 		test_hal_com_halmac_identity test_hal_com_halmac_identity_rust \

@@ -49,6 +49,7 @@ test_hal_com_rcr_rust
 librust_hal_com_rcr.a
 test_hal_com_rcr_am
 test_hal_com_rcr_am_rust
+librust_hal_com_rcr_am.a
 test_hal_com_tsf_iface
 test_hal_com_tsf_iface_mbssid
 test_hal_com_tsf_iface_rust

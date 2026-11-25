@@ -1261,15 +1261,8 @@ void rtw_hal_rcr_set_chk_bssid_act_non(_adapter *adapter)
 	rtw_hal_rcr_set_chk_bssid(adapter, MLME_ACTION_NONE);
 }
 
-static void hw_var_set_rcr_am(_adapter *adapter, u8 enable)
-{
-	u32 rcr = RCR_AM;
-
-	if (enable)
-		rtw_hal_rcr_add(adapter, rcr);
-	else
-		rtw_hal_rcr_clear(adapter, rcr);
-}
+/* hw_var_set_rcr_am — rust/hal_com_rcr.rs (W4-137) */
+void rtw_rust_hw_var_set_rcr_am(_adapter *adapter, u8 enable);
 
 static void hw_var_set_bcn_interval(_adapter *adapter, u16 interval)
 {
@@ -10701,10 +10694,10 @@ u8 SetHwReg(_adapter *adapter, u8 variable, u8 *val)
 		ret = hw_var_rcr_config(adapter, *((u32 *)val));
 		break;
 	case HW_VAR_ON_RCR_AM:
-		hw_var_set_rcr_am(adapter, 1);
+		rtw_rust_hw_var_set_rcr_am(adapter, 1);
 		break;
 	case HW_VAR_OFF_RCR_AM:
-		hw_var_set_rcr_am(adapter, 0);
+		rtw_rust_hw_var_set_rcr_am(adapter, 0);
 		break;
 	case HW_VAR_BEACON_INTERVAL:
 		hw_var_set_bcn_interval(adapter, *(u16 *)val);
