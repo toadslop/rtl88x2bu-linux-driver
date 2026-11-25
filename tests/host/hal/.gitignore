@@ -48,6 +48,8 @@ test_hal_com_tsf_iface_rust
 test_hal_com_tsf_iface_rust_mbssid
 librust_hal_com_tsf.a
 librust_hal_com_tsf_mbssid.a
+test_hal_com_tsf_periodic
+test_hal_com_tsf_periodic_smoke
 test_hal_dm_init_odm_cominfo_tail*
 test_hal_dm_phydm_ops
 test_hal_dm_phydm_ops_rust
