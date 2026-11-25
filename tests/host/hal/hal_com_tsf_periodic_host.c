@@ -100,3 +100,103 @@ int dev_is_drv_stopped(struct dvobj_priv *dvobj)
 {
 	return dvobj->drv_stopped ? 1 : 0;
 }
+
+void *rtw_rust_hal_com_adapter_to_dvobj(void *adapter)
+{
+	return adapter_to_dvobj(adapter);
+}
+
+systime rtw_rust_hal_com_get_current_time(void)
+{
+	return rtw_get_current_time();
+}
+
+u32 rtw_rust_hal_com_get_passing_time_ms(systime start)
+{
+	return rtw_get_passing_time_ms(start);
+}
+
+int rtw_rust_hal_com_time_after(systime a, systime b)
+{
+	return rtw_time_after(a, b);
+}
+
+systime rtw_rust_hal_com_ms_to_systime(int ms)
+{
+	return rtw_ms_to_systime(ms);
+}
+
+systime rtw_rust_hal_com_tsf_periodic_etime(struct dvobj_priv *dvobj)
+{
+	return dvobj->periodic_tsf_update_etime;
+}
+
+void rtw_rust_hal_com_tsf_periodic_set_etime(struct dvobj_priv *dvobj, systime etime)
+{
+	dvobj->periodic_tsf_update_etime = etime;
+}
+
+u8 rtw_rust_hal_com_tsf_rf_offch_state(struct dvobj_priv *dvobj)
+{
+	return dvobj->rf_ctl.offch_state;
+}
+
+int rtw_rust_hal_com_tsf_iface_nums(struct dvobj_priv *dvobj)
+{
+	return dvobj->iface_nums;
+}
+
+struct _adapter *rtw_rust_hal_com_tsf_iface_at(struct dvobj_priv *dvobj, int i)
+{
+	return dvobj->padapters[i];
+}
+
+u8 rtw_rust_hal_com_tsf_ext_required(void *adapter)
+{
+	return ((struct _adapter *)adapter)->mlmeextpriv.tsf_update_required;
+}
+
+systime rtw_rust_hal_com_tsf_ext_pause_stime(void *adapter)
+{
+	return ((struct _adapter *)adapter)->mlmeextpriv.tsf_update_pause_stime;
+}
+
+u8 rtw_rust_hal_com_tsf_ext_pause_factor(void *adapter)
+{
+	return ((struct _adapter *)adapter)->mlmeextpriv.tsf_update_pause_factor;
+}
+
+u8 rtw_rust_hal_com_tsf_ext_restore_factor(void *adapter)
+{
+	return ((struct _adapter *)adapter)->mlmeextpriv.tsf_update_restore_factor;
+}
+
+u16 rtw_rust_hal_com_tsf_ext_bcn_interval(void *adapter)
+{
+	return ((struct _adapter *)adapter)->mlmeextpriv.mlmext_info.bcn_interval;
+}
+
+void rtw_rust_hal_com_tsf_periodic_arm_timer(struct dvobj_priv *dvobj, u32 ms)
+{
+	_set_timer(&dvobj->periodic_tsf_update_end_timer, ms);
+}
+
+struct _adapter *rtw_rust_hal_com_dvobj_primary(struct dvobj_priv *dvobj)
+{
+	return dvobj_get_primary_adapter(dvobj);
+}
+
+int rtw_rust_hal_com_dev_surprise(struct dvobj_priv *dvobj)
+{
+	return dev_is_surprise_removed(dvobj);
+}
+
+int rtw_rust_hal_com_dev_stopped(struct dvobj_priv *dvobj)
+{
+	return dev_is_drv_stopped(dvobj);
+}
+
+u8 rtw_rust_hal_com_periodic_tsf_end_cmd(struct _adapter *adapter)
+{
+	return rtw_periodic_tsf_update_end_cmd(adapter);
+}
