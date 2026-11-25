@@ -12,3 +12,13 @@ void rtw_iface_disable_tsf_update(struct _adapter *adapter)
 {
 	(void)adapter;
 }
+
+void rtw_hal_periodic_tsf_update_chk(struct _adapter *adapter)
+{
+	(void)adapter;
+}
+
+void rtw_hal_periodic_tsf_update_end_timer_hdl(void *ctx)
+{
+	(void)ctx;
+}

@@ -941,6 +941,91 @@ void rtw_rust_hal_com_tsf_hal_set_tsf_update(_adapter *adapter, u8 en)
 }
 #endif /* CONFIG_MI_WITH_MBSSID_CAM */
 
+systime rtw_rust_hal_com_ms_to_systime(int ms)
+{
+	return rtw_ms_to_systime(ms);
+}
+
+int rtw_rust_hal_com_time_after(systime a, systime b)
+{
+	return rtw_time_after(a, b) ? 1 : 0;
+}
+
+systime rtw_rust_hal_com_tsf_periodic_etime(struct dvobj_priv *dvobj)
+{
+	return dvobj->periodic_tsf_update_etime;
+}
+
+void rtw_rust_hal_com_tsf_periodic_set_etime(struct dvobj_priv *dvobj, systime etime)
+{
+	dvobj->periodic_tsf_update_etime = etime;
+}
+
+u8 rtw_rust_hal_com_tsf_rf_offch_state(struct dvobj_priv *dvobj)
+{
+	return dvobj->rf_ctl.offch_state;
+}
+
+int rtw_rust_hal_com_tsf_iface_nums(struct dvobj_priv *dvobj)
+{
+	return dvobj->iface_nums;
+}
+
+_adapter *rtw_rust_hal_com_tsf_iface_at(struct dvobj_priv *dvobj, int i)
+{
+	return dvobj->padapters[i];
+}
+
+u8 rtw_rust_hal_com_tsf_ext_required(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.tsf_update_required;
+}
+
+systime rtw_rust_hal_com_tsf_ext_pause_stime(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.tsf_update_pause_stime;
+}
+
+u8 rtw_rust_hal_com_tsf_ext_pause_factor(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.tsf_update_pause_factor;
+}
+
+u8 rtw_rust_hal_com_tsf_ext_restore_factor(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.tsf_update_restore_factor;
+}
+
+u16 rtw_rust_hal_com_tsf_ext_bcn_interval(_adapter *adapter)
+{
+	return adapter->mlmeextpriv.mlmext_info.bcn_interval;
+}
+
+void rtw_rust_hal_com_tsf_periodic_arm_timer(struct dvobj_priv *dvobj, u32 ms)
+{
+	_set_timer(&dvobj->periodic_tsf_update_end_timer, ms);
+}
+
+_adapter *rtw_rust_hal_com_dvobj_primary(struct dvobj_priv *dvobj)
+{
+	return dvobj_get_primary_adapter(dvobj);
+}
+
+int rtw_rust_hal_com_dev_surprise(struct dvobj_priv *dvobj)
+{
+	return dev_is_surprise_removed(dvobj) ? 1 : 0;
+}
+
+int rtw_rust_hal_com_dev_stopped(struct dvobj_priv *dvobj)
+{
+	return dev_is_drv_stopped(dvobj) ? 1 : 0;
+}
+
+u8 rtw_rust_hal_com_periodic_tsf_end_cmd(_adapter *adapter)
+{
+	return rtw_periodic_tsf_update_end_cmd(adapter);
+}
+
 static void rtw_hal_set_hw_update_tsf(PADAPTER padapter)
 {
 #ifdef CONFIG_MI_WITH_MBSSID_CAM
@@ -1017,73 +1102,7 @@ static void rtw_hal_tsf_update_restore(_adapter *adapter)
 #endif
 }
 
-void rtw_hal_periodic_tsf_update_chk(_adapter *adapter)
-{
-#ifdef CONFIG_MI_WITH_MBSSID_CAM
-
-#else
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	_adapter *iface;
-	struct mlme_ext_priv *mlmeext;
-	int i;
-	u32 restore_ms = 0;
-
-	if (dvobj->periodic_tsf_update_etime) {
-		if (rtw_time_after(rtw_get_current_time(), dvobj->periodic_tsf_update_etime)) {
-			/* end for restore status */
-			dvobj->periodic_tsf_update_etime = 0;
-			rtw_hal_rcr_set_chk_bssid(adapter, MLME_ACTION_NONE);
-		}
-		return;
-	}
-
-	if (dvobj->rf_ctl.offch_state != OFFCHS_NONE)
-		return;
-
-	/*
-	* all required ifaces can switch to restore status together
-	* loop all pause iface to get largest restore time required
-	*/
-	for (i = 0; i < dvobj->iface_nums; i++) {
-		iface = dvobj->padapters[i];
-		if (!iface)
-			continue;
-
-		mlmeext = &iface->mlmeextpriv;
-
-		if (mlmeext->tsf_update_required
-			&& mlmeext->tsf_update_pause_stime
-			&& rtw_get_passing_time_ms(mlmeext->tsf_update_pause_stime)
-				> mlmeext->mlmext_info.bcn_interval * mlmeext->tsf_update_pause_factor
-		) {
-			if (restore_ms < mlmeext->mlmext_info.bcn_interval * mlmeext->tsf_update_restore_factor)
-				restore_ms = mlmeext->mlmext_info.bcn_interval * mlmeext->tsf_update_restore_factor;
-		}
-	}
-
-	if (!restore_ms)
-		return;
-
-	dvobj->periodic_tsf_update_etime = rtw_get_current_time() + rtw_ms_to_systime(restore_ms);
-	if (!dvobj->periodic_tsf_update_etime)
-		dvobj->periodic_tsf_update_etime++;
-
-	rtw_hal_rcr_set_chk_bssid(adapter, MLME_ACTION_NONE);
-
-	/* set timer to end restore status */
-	_set_timer(&dvobj->periodic_tsf_update_end_timer, restore_ms);
-#endif
-}
-
-void rtw_hal_periodic_tsf_update_end_timer_hdl(void *ctx)
-{
-	struct dvobj_priv *dvobj = (struct dvobj_priv *)ctx;
-
-	if (dev_is_surprise_removed(dvobj) || dev_is_drv_stopped(dvobj))
-		return;
-
-	rtw_periodic_tsf_update_end_cmd(dvobj_get_primary_adapter(dvobj));
-}
+/* rtw_hal_periodic_tsf_update_chk / rtw_hal_periodic_tsf_update_end_timer_hdl — rust/hal_com_tsf_periodic.inc.rs (W4-130) */
 
 static inline u8 hw_var_rcr_config(_adapter *adapter, u32 rcr)
 {
