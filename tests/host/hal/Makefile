@@ -2155,7 +2155,6 @@ RUST_FW_BCN_OFFLOAD := $(ROOT)/rust/hal_com_fw_bcn_offload_host.rs
 
 librust_hal_com_fw_bcn_offload.a: $(RUST_FW_BCN_OFFLOAD)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
-		--cfg host_hal_com_fw_bcn_offload_test \
 		--crate-type staticlib $(RUST_FW_BCN_OFFLOAD) -o $@
 
 test-fw-bcn-offload-rust: test_hal_com_fw_bcn_offload_rust

@@ -69,6 +69,27 @@ struct dvobj_priv *adapter_to_dvobj(struct _adapter *adapter)
 	return &g_dvobj;
 }
 
+void *rtw_rust_hal_com_adapter_to_dvobj(void *adapter)
+{
+	return adapter_to_dvobj((struct _adapter *)adapter);
+}
+
+void rtw_rust_hal_com_dvobj_set_vap_tbtt_rpt_map(void *dvobj, u8 v)
+{
+	((struct dvobj_priv *)dvobj)->vap_tbtt_rpt_map = v;
+}
+
+void rtw_rust_hal_com_dvobj_set_fw_bcn_offload(void *dvobj, u8 v)
+{
+	((struct dvobj_priv *)dvobj)->fw_bcn_offload = v ? 1 : 0;
+}
+
+void rtw_rust_hal_com_log_fw_bcn_offload(u8 en, u8 map)
+{
+	(void)en;
+	(void)map;
+}
+
 s32 rtw_hal_fill_h2c_cmd(struct _adapter *adapter, u8 cmd, unsigned int len, u8 *buf)
 {
 	(void)adapter;
