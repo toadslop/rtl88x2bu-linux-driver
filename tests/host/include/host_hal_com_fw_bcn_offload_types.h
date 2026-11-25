@@ -3,6 +3,7 @@
 #define HOST_HAL_COM_FW_BCN_OFFLOAD_TYPES_H
 
 typedef unsigned char u8;
+typedef unsigned int u32;
 typedef int s32;
 typedef int bool;
 
