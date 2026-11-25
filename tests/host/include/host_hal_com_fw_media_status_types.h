@@ -77,4 +77,15 @@ void rtw_macid_ctl_set_rate_bmp1(struct macid_ctl_t *ctl, u8 id, u32 bmp);
 void rtw_hal_update_tx_aclt(struct _adapter *adapter);
 void rtw_update_tx_rate_bmp(struct dvobj_priv *dvobj);
 
+s32 rtw_hal_set_FwMediaStatusRpt_single_cmd(struct _adapter *adapter,
+					    bool opmode, bool miracast,
+					    bool miracast_sink, u8 role,
+					    u8 macid);
+
+void rtw_hal_set_FwMediaStatusRpt_cmd_c_oracle(struct _adapter *adapter,
+					       bool opmode, bool miracast,
+					       bool miracast_sink, u8 role,
+					       u8 macid, bool macid_ind,
+					       u8 macid_end);
+
 #endif
