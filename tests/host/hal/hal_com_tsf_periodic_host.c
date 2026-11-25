@@ -5,7 +5,7 @@
 #include <string.h>
 
 static struct dvobj_priv g_dvobj;
-static struct _adapter g_adapters[2];
+static struct _adapter g_adapters[4];
 static systime host_current_time;
 
 struct host_hal_com_tsf_periodic_trace host_hal_com_tsf_periodic_trace;
@@ -19,6 +19,8 @@ void host_hal_com_tsf_periodic_reset(void)
 	g_dvobj.iface_nums = 2;
 	g_dvobj.padapters[0] = &g_adapters[0];
 	g_dvobj.padapters[1] = &g_adapters[1];
+	g_dvobj.padapters[2] = &g_adapters[2];
+	g_dvobj.padapters[3] = &g_adapters[3];
 }
 
 struct _adapter *host_hal_com_tsf_periodic_adapter(void)
@@ -59,28 +61,27 @@ systime rtw_ms_to_systime(int ms)
 
 int rtw_time_after(systime a, systime b)
 {
-	return (a > b) ? 1 : 0;
+	return ((long)(b - a)) < 0;
 }
 
-u32 rtw_get_passing_time_ms(systime start)
+s32 rtw_get_passing_time_ms(systime start)
 {
-	if (host_current_time >= start)
-		return (u32)(host_current_time - start);
-	return 0;
+	/* Match _rtw_get_passing_time_ms: signed elapsed via jiffies subtraction. */
+	return (s32)(host_current_time - start);
 }
 
 void _set_timer(struct _timer *t, u32 ms)
 {
-	(void)t;
 	host_hal_com_tsf_periodic_trace.set_timer_count++;
 	host_hal_com_tsf_periodic_trace.last_timer_ms = ms;
+	host_hal_com_tsf_periodic_trace.last_timer_target = t;
 }
 
 void rtw_hal_rcr_set_chk_bssid(struct _adapter *adapter, u8 self_action)
 {
-	(void)adapter;
 	host_hal_com_tsf_periodic_trace.rcr_chk_bssid_count++;
 	host_hal_com_tsf_periodic_trace.last_rcr_chk_action = self_action;
+	host_hal_com_tsf_periodic_trace.last_rcr_adapter = adapter;
 }
 
 u8 rtw_periodic_tsf_update_end_cmd(struct _adapter *adapter)

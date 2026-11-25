@@ -7,7 +7,7 @@ struct dvobj_priv *adapter_to_dvobj(struct _adapter *adapter);
 systime rtw_get_current_time(void);
 systime rtw_ms_to_systime(int ms);
 int rtw_time_after(systime a, systime b);
-u32 rtw_get_passing_time_ms(systime start);
+s32 rtw_get_passing_time_ms(systime start);
 void _set_timer(struct _timer *t, u32 ms);
 void rtw_hal_rcr_set_chk_bssid(struct _adapter *adapter, u8 self_action);
 

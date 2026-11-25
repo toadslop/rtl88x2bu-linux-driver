@@ -5,6 +5,9 @@
 #include "host_hal_com_tsf_types.h"
 
 #define OFFCHS_NONE 0
+#define OFFCHS_LEAVING_OP 1
+#define OFFCHS_LEAVE_OP 2
+#define OFFCHS_BACKING_OP 3
 #define MLME_ACTION_NONE 1
 
 struct rf_ctl_t {
@@ -28,8 +31,10 @@ struct dvobj_priv {
 struct host_hal_com_tsf_periodic_trace {
 	unsigned rcr_chk_bssid_count;
 	u8 last_rcr_chk_action;
+	struct _adapter *last_rcr_adapter;
 	unsigned set_timer_count;
 	u32 last_timer_ms;
+	struct _timer *last_timer_target;
 	unsigned periodic_end_cmd_count;
 	struct _adapter *last_end_cmd_adapter;
 };
