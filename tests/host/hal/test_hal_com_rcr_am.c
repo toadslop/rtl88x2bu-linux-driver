@@ -33,17 +33,18 @@ static void expect_count(const char *tag, unsigned int a, unsigned int b)
 int main(void)
 {
 	struct _adapter *a = host_hal_rcr_am_adapter();
-	u8 dummy;
+	u8 on_val = 0xff;
+	u8 off_val = 0xff;
 
 	host_hal_rcr_am_reset();
-	if (rtw_hal_set_hwreg(a, HW_VAR_ON_RCR_AM, &dummy) != _SUCCESS)
+	if (rtw_hal_set_hwreg(a, HW_VAR_ON_RCR_AM, &on_val) != _SUCCESS)
 		fail("on_ret");
 	expect_count("on_add", host_hal_rcr_am_trace.add_count, 1u);
 	expect_count("on_clear", host_hal_rcr_am_trace.clear_count, 0u);
 	expect_u32("on_mask", host_hal_rcr_am_trace.last_add_mask, RCR_AM);
 
 	host_hal_rcr_am_reset();
-	if (rtw_hal_set_hwreg(a, HW_VAR_OFF_RCR_AM, &dummy) != _SUCCESS)
+	if (rtw_hal_set_hwreg(a, HW_VAR_OFF_RCR_AM, &off_val) != _SUCCESS)
 		fail("off_ret");
 	expect_count("off_add", host_hal_rcr_am_trace.add_count, 0u);
 	expect_count("off_clear", host_hal_rcr_am_trace.clear_count, 1u);
@@ -51,8 +52,9 @@ int main(void)
 
 	/* Repeated enable must invoke add each time (no idempotency guard in C). */
 	host_hal_rcr_am_reset();
-	rtw_hal_set_hwreg(a, HW_VAR_ON_RCR_AM, &dummy);
-	rtw_hal_set_hwreg(a, HW_VAR_ON_RCR_AM, &dummy);
+	on_val = 0x00;
+	rtw_hal_set_hwreg(a, HW_VAR_ON_RCR_AM, &on_val);
+	rtw_hal_set_hwreg(a, HW_VAR_ON_RCR_AM, &on_val);
 	expect_count("twice_add", host_hal_rcr_am_trace.add_count, 2u);
 	expect_u32("twice_mask", host_hal_rcr_am_trace.last_add_mask, RCR_AM);
 
