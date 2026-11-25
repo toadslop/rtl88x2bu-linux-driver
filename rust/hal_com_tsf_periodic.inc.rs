@@ -68,13 +68,10 @@ pub extern "C" fn rtw_hal_periodic_tsf_update_chk(adapter: *mut c_void) {
             }
             let bcn = u32::from(rtw_rust_hal_com_tsf_ext_bcn_interval(iface));
             let pause_factor = u32::from(rtw_rust_hal_com_tsf_ext_pause_factor(iface));
-            let elapsed = rtw_rust_hal_com_get_passing_time_ms(pause_stime);
-            let threshold = bcn * pause_factor;
-            let past = if elapsed <= i32::MAX as u32 && threshold <= i32::MAX as u32 {
-                (elapsed as i32) > (threshold as i32)
-            } else {
-                elapsed > threshold
-            };
+            let elapsed =
+                rtw_rust_hal_com_get_passing_time_ms(pause_stime) as i32;
+            let threshold = (bcn * pause_factor) as i32;
+            let past = elapsed > threshold;
             if !past {
                 continue;
             }
