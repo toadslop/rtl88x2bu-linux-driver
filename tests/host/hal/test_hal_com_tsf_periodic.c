@@ -481,6 +481,25 @@ static void test_restore_max_only_past_pause(void)
 	eq_u32("past_only_ms", prod.last_timer_ms, 300);
 }
 
+static void test_restore_wrap_pause_unsigned_ahead(void)
+{
+	struct chk_pair_out prod;
+
+	host_hal_com_tsf_periodic_reset();
+	/*
+	 * pause_stime is numerically above now as systime, but the signed jiffy
+	 * delta is already past the pause threshold (wrap). A now >= start clamp
+	 * in rtw_get_passing_time_ms would return 0 and skip restore.
+	 */
+	setup_iface(host_hal_com_tsf_periodic_adapter(), 1, (systime)-50, 1, 2, 100);
+	host_hal_com_tsf_periodic_set_current_time(100);
+
+	run_chk_pair(rtw_hal_periodic_tsf_update_chk, rtw_hal_periodic_tsf_update_chk_c_oracle,
+		     &prod);
+	eq_u32("wrap_unsigned_arm_ms", prod.last_timer_ms, 200);
+	eq_u32("wrap_unsigned_timer", prod.set_timer_count, 1);
+}
+
 static void test_restore_rcr_primary(void)
 {
 	struct chk_pair_out prod;
@@ -555,6 +574,7 @@ int main(void)
 	test_offch_leave_op_skips_restore();
 	test_offch_backing_op_skips_restore();
 	test_restore_max_only_past_pause();
+	test_restore_wrap_pause_unsigned_ahead();
 	test_restore_rcr_primary();
 	test_restore_rcr_caller_not_max_iface();
 	test_restore_end_timer_field();
