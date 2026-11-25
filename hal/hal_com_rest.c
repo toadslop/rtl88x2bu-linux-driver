@@ -1875,116 +1875,7 @@ static void rtw_hal_dtp_macid_set(_adapter *padapter, u8 opmode,
 }
 #endif
 
-/*
-* rtw_hal_set_FwMediaStatusRpt_cmd -
-*
-* @adapter:
-* @opmode:  0:disconnect, 1:connect
-* @miracast: 0:it's not in miracast scenario. 1:it's in miracast scenario
-* @miracast_sink: 0:source. 1:sink
-* @role: The role of this macid. 0:rsvd. 1:STA. 2:AP. 3:GC. 4:GO. 5:TDLS
-* @macid:
-* @macid_ind:  0:update Media Status to macid.  1:update Media Status from macid to macid_end
-* @macid_end:
-*/
-s32 rtw_hal_set_FwMediaStatusRpt_cmd(_adapter *adapter, bool opmode, bool miracast, bool miracast_sink, u8 role, u8 macid, bool macid_ind, u8 macid_end)
-{
-	struct macid_ctl_t *macid_ctl = &adapter->dvobj->macid_ctl;
-	u8 parm[H2C_MEDIA_STATUS_RPT_LEN] = {0};
-	int i;
-	s32 ret;
-#ifdef CONFIG_FW_MULTI_PORT_SUPPORT
-	u8 hw_port = rtw_hal_get_port(adapter);
-#endif
-	u8 op_num_change_bmp = 0;
-
-#if defined(CONFIG_RTL8822C) && defined(CONFIG_SUPPORT_DYNAMIC_TXPWR)
-	rtw_hal_dtp_macid_set(adapter, opmode, macid_ind, macid, macid_end);
-#endif
-
-	SET_H2CCMD_MSRRPT_PARM_OPMODE(parm, opmode);
-	SET_H2CCMD_MSRRPT_PARM_MACID_IND(parm, macid_ind);
-	SET_H2CCMD_MSRRPT_PARM_MIRACAST(parm, miracast);
-	SET_H2CCMD_MSRRPT_PARM_MIRACAST_SINK(parm, miracast_sink);
-	SET_H2CCMD_MSRRPT_PARM_ROLE(parm, role);
-	SET_H2CCMD_MSRRPT_PARM_MACID(parm, macid);
-	SET_H2CCMD_MSRRPT_PARM_MACID_END(parm, macid_end);
-#ifdef CONFIG_FW_MULTI_PORT_SUPPORT
-	SET_H2CCMD_MSRRPT_PARM_PORT_NUM(parm, hw_port);
-#endif
-	RTW_DBG_DUMP("MediaStatusRpt parm:", parm, H2C_MEDIA_STATUS_RPT_LEN);
-
-	ret = rtw_hal_fill_h2c_cmd(adapter, H2C_MEDIA_STATUS_RPT, H2C_MEDIA_STATUS_RPT_LEN, parm);
-	if (ret != _SUCCESS)
-		goto exit;
-
-#if defined(CONFIG_RTL8188E)
-	if (rtw_get_chip_type(adapter) == RTL8188E) {
-		HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
-
-		/* 8188E FW doesn't set macid no link, driver does it by self */
-		if (opmode)
-			rtw_hal_set_hwreg(adapter, HW_VAR_MACID_LINK, &macid);
-		else
-			rtw_hal_set_hwreg(adapter, HW_VAR_MACID_NOLINK, &macid);
-
-		/* for 8188E RA */
-#if (RATE_ADAPTIVE_SUPPORT == 1)
-		if (hal_data->fw_ractrl == _FALSE) {
-			u8 max_macid;
-
-			max_macid = rtw_search_max_mac_id(adapter);
-			rtw_hal_set_hwreg(adapter, HW_VAR_TX_RPT_MAX_MACID, &max_macid);
-		}
-#endif
-	}
-#endif
-
-#if defined(CONFIG_RTL8812A) || defined(CONFIG_RTL8821A)
-	/* TODO: this should move to IOT issue area */
-	if (rtw_get_chip_type(adapter) == RTL8812
-		|| rtw_get_chip_type(adapter) == RTL8821
-	) {
-		if (MLME_IS_STA(adapter))
-			Hal_PatchwithJaguar_8812(adapter, opmode);
-	}
-#endif
-
-	SET_H2CCMD_MSRRPT_PARM_MACID_IND(parm, 0);
-	if (macid_ind == 0)
-		macid_end = macid;
-
-	for (i = macid; macid <= macid_end; macid++) {
-		op_num_change_bmp |= rtw_macid_ctl_set_h2c_msr(macid_ctl, macid, parm[0]);
-		if (!opmode) {
-			rtw_macid_ctl_set_bw(macid_ctl, macid, CHANNEL_WIDTH_20);
-			rtw_macid_ctl_set_vht_en(macid_ctl, macid, 0);
-			rtw_macid_ctl_set_rate_bmp0(macid_ctl, macid, 0);
-			rtw_macid_ctl_set_rate_bmp1(macid_ctl, macid, 0);
-		}
-	}
-
-#if CONFIG_TX_AC_LIFETIME
-	if (op_num_change_bmp)
-		rtw_hal_update_tx_aclt(adapter);
-#endif
-
-	if (!opmode)
-		rtw_update_tx_rate_bmp(adapter_to_dvobj(adapter));
-
-exit:
-	return ret;
-}
-
-inline s32 rtw_hal_set_FwMediaStatusRpt_single_cmd(_adapter *adapter, bool opmode, bool miracast, bool miracast_sink, u8 role, u8 macid)
-{
-	return rtw_hal_set_FwMediaStatusRpt_cmd(adapter, opmode, miracast, miracast_sink, role, macid, 0, 0);
-}
-
-inline s32 rtw_hal_set_FwMediaStatusRpt_range_cmd(_adapter *adapter, bool opmode, bool miracast, bool miracast_sink, u8 role, u8 macid, u8 macid_end)
-{
-	return rtw_hal_set_FwMediaStatusRpt_cmd(adapter, opmode, miracast, miracast_sink, role, macid, 1, macid_end);
-}
+/* rtw_hal_set_FwMediaStatusRpt_* — rust/hal_com_fw_media.rs (W4-139) */
 
 /* rtw_hal_set_FwRsvdPage_cmd — rust/hal_com_fw_rsvdpage_h2c.rs (W4-136) */
 
@@ -14265,6 +14156,11 @@ struct dvobj_priv *rtw_rust_hal_com_adapter_to_dvobj(_adapter *adapter)
 	if (!adapter)
 		return NULL;
 	return adapter_to_dvobj(adapter);
+}
+
+struct macid_ctl_t *rtw_rust_hal_com_dvobj_macid_ctl(struct dvobj_priv *dvobj)
+{
+	return dvobj ? &dvobj->macid_ctl : NULL;
 }
 
 #ifdef CONFIG_FW_MULTI_PORT_SUPPORT

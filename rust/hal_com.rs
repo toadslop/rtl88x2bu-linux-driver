@@ -2646,6 +2646,30 @@ mod fw_bcn_offload {
 }
 
 #[cfg(all(
+    not(host_hal_com_hw_rate_test),
+    not(host_hal_com_chip_info_test),
+    not(host_hal_com_mrate_test),
+    not(host_hal_com_fw_info_test),
+    not(host_hal_com_brate_test),
+    not(host_hal_com_legal_channel_test),
+    not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
+    not(host_hal_com_tx_aclt_force_test),
+    not(host_hal_com_tx_aclt_confs_test),
+    not(host_hal_com_tx_aclt_set_test),
+    not(host_hal_com_hal_spec_test),
+    not(host_hal_com_rsvd_page_test),
+    not(host_hal_com_get_rsvd_page_test),
+    not(host_hal_com_fw_rsvdpage_h2c_test),
+    not(host_hal_com_fw_media_status_test),
+))]
+mod fw_media {
+    #![allow(dead_code, non_snake_case, non_upper_case_globals)]
+    include!("hal_com_fw_media.rs");
+}
+
+#[cfg(all(
     config_tx_ac_lifetime,
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
