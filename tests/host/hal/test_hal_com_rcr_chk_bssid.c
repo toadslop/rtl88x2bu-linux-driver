@@ -173,6 +173,20 @@ int main(void)
 			   0u);
 	}
 
+	/* TSF pause when beacon falls on CTA (pause is not SCAN_ENTER-only). */
+	{
+		struct _adapter *a = host_hal_rcr_chk_adapter();
+
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_rx_tsf_filter(0);
+		host_hal_rcr_chk_set_in_cta_test(1);
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_BCN | RCR_CBSSID_DATA);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_ACTION_NONE);
+		expect_u32("tsf_pause_cta", host_hal_rcr_trace.tsf_pause_count, 1u);
+		expect_u32("tsf_restore_skip_cta", host_hal_rcr_trace.tsf_restore_count,
+			   0u);
+	}
+
 	/* rx_tsf_filter set: beacon fall must not call TSF pause. */
 	{
 		struct _adapter *a = host_hal_rcr_chk_adapter();
@@ -193,6 +207,18 @@ int main(void)
 		rtw_hal_rcr_set_chk_bssid(a, MLME_STA_CONNECTED);
 		expect_u32("tsf_restore_connected", host_hal_rcr_trace.tsf_restore_count,
 			   1u);
+	}
+
+	/* TSF restore when beacon rises on disconnect (not CONNECTED-only). */
+	{
+		struct _adapter *a = host_hal_rcr_chk_adapter();
+
+		host_hal_rcr_chk_reset();
+		host_hal_rcr_chk_set_rx_tsf_filter(0);
+		host_hal_rcr_chk_set_initial_rcr(RCR_CBSSID_DATA);
+		rtw_hal_rcr_set_chk_bssid(a, MLME_STA_DISCONNECTED);
+		expect_u32("tsf_restore_disconnected",
+			   host_hal_rcr_trace.tsf_restore_count, 1u);
 	}
 
 	/* rx_tsf_filter set: beacon rise must not call TSF restore. */
