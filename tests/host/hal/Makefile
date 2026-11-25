@@ -1809,6 +1809,22 @@ test_hal_com_rcr_chk_bssid: test_hal_com_rcr_chk_bssid.c $(RCR_CHK_BSSID_SHIM) $
 
 # Rust chk_bssid L2 is wired in PR4 (hal_com_rcr_chk_bssid_rust.mk).
 
+test-mbid-cam-macaddr: test_hal_com_mbid_cam_macaddr
+	./test_hal_com_mbid_cam_macaddr
+
+test_hal_com_mbid_cam_macaddr: test_hal_com_mbid_cam_macaddr.c $(MBID_CAM_SHIM) \
+		$(MBID_CAM_ORACLE)
+	$(CC) $(CFLAGS) -o $@ test_hal_com_mbid_cam_macaddr.c \
+		$(MBID_CAM_SHIM) $(MBID_CAM_ORACLE)
+
+test-mbid-cam-macaddr-rust: test_hal_com_mbid_cam_macaddr_rust
+	./test_hal_com_mbid_cam_macaddr_rust
+
+test_hal_com_mbid_cam_macaddr_rust: test_hal_com_mbid_cam_macaddr.c $(MBID_CAM_SHIM) \
+		$(MBID_CAM_ORACLE) librust_hal_com_mbid_cam.a
+	$(CC) $(CFLAGS) -DRUST_HAL_COM_MBID_CAM_ORACLE -o $@ test_hal_com_mbid_cam_macaddr.c \
+		$(MBID_CAM_SHIM) $(MBID_CAM_ORACLE) librust_hal_com_mbid_cam.a
+
 GPIO_WAKEUP_SHIM := hal_com_gpio_wakeup_shim.c
 GPIO_WAKEUP_ORACLE := hal_com_gpio_wakeup_c_oracle.c
 

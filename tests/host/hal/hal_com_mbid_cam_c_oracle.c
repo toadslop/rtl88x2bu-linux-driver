@@ -333,3 +333,25 @@ struct host_mbid_cam_hw_trace *host_mbid_cam_hw_oracle_trace(void)
 	oracle_hw.reg_mbid_num = oracle_reg_mbid_num;
 	return &oracle_hw;
 }
+
+void rtw_hal_set_macaddr_mbid_c_oracle(struct _adapter *adapter, u8 *mac_addr)
+{
+	u8 entry_id = rtw_mbid_camid_alloc_c_oracle(adapter, mac_addr);
+
+	if (entry_id != INVALID_CAM_ID)
+		oracle_record_hwreg(entry_id, mac_addr);
+}
+
+void rtw_hal_change_macaddr_mbid_c_oracle(struct _adapter *adapter, u8 *mac_addr)
+{
+	u8 entry_id;
+
+	if (!mac_addr) {
+		oracle_warn();
+		return;
+	}
+
+	entry_id = rtw_mbid_cam_info_change_c_oracle(adapter, mac_addr);
+	if (entry_id != INVALID_CAM_ID)
+		oracle_record_hwreg(entry_id, mac_addr);
+}
