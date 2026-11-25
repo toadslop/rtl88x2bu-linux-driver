@@ -346,6 +346,16 @@ void rtw_rust_hal_com_mbid_log_mi_set_cam(const char *func, u8 cam_id, u8 *mac)
 	(void)cam_id;
 	(void)mac;
 }
+
+void rtw_rust_hal_com_mbid_log_set_macaddr(const char *func, void *adapter,
+					   u8 entry_id, u8 *mac)
+{
+	(void)func;
+	(void)adapter;
+	(void)entry_id;
+	(void)mac;
+}
+
 void *rtw_rust_hal_com_dvobj_padapter(void *dvobj, u8 iface_id)
 {
 	if (!dvobj || iface_id >= CONFIG_IFACE_NUMBER)

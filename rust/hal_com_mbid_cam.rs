@@ -58,6 +58,12 @@ extern "C" {
         success: U8,
     );
     fn rtw_rust_hal_com_mbid_log_clean(func: *const c_char, camid: U8);
+    fn rtw_rust_hal_com_mbid_log_set_macaddr(
+        func: *const c_char,
+        adapter: *mut c_void,
+        entry_id: U8,
+        mac_addr: *mut U8,
+    );
     fn rtw_rust_hal_com_mbid_cache_init(adapter: *mut c_void, dvobj: *mut c_void, idx: U8, mac: *mut U8);
     fn rtw_rust_hal_com_mbid_cache_clr(dvobj: *mut c_void, idx: U8);
     fn rtw_rust_hal_com_warn_on(condition: i32);
@@ -115,6 +121,12 @@ extern "C" {
         success: U8,
     );
     fn rtw_rust_hal_com_mbid_log_clean(func: *const c_char, camid: U8);
+    fn rtw_rust_hal_com_mbid_log_set_macaddr(
+        func: *const c_char,
+        adapter: *mut c_void,
+        entry_id: U8,
+        mac_addr: *mut U8,
+    );
     fn rtw_rust_hal_com_mbid_cache_init(adapter: *mut c_void, dvobj: *mut c_void, idx: U8, mac: *mut U8);
     fn rtw_rust_hal_com_mbid_cache_clr(dvobj: *mut c_void, idx: U8);
     fn rtw_rust_hal_com_warn_on(condition: i32);
@@ -655,5 +667,43 @@ pub extern "C" fn rtw_mi_set_mbid_cam(adapter: *mut c_void) {
     }
     unsafe {
         rtw_hal_rcr_add(adapter, RCR_ENMBID);
+    }
+}
+
+#[cfg(any(config_mi_with_mbssid_cam, host_hal_com_mbid_cam_test))]
+static FN_SET_MACADDR_MBID: &[u8] = b"rtw_hal_set_macaddr_mbid\0";
+
+#[cfg(any(config_mi_with_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[no_mangle]
+pub extern "C" fn rtw_hal_set_macaddr_mbid(adapter: *mut c_void, mac_addr: *mut U8) {
+    if adapter.is_null() || mac_addr.is_null() {
+        return;
+    }
+    let entry_id = rtw_mbid_camid_alloc(adapter, mac_addr);
+    if entry_id != INVALID_CAM_ID {
+        write_mbssid_cam_inner(adapter, entry_id, mac_addr);
+        unsafe {
+            rtw_rust_hal_com_mbid_log_set_macaddr(
+                FN_SET_MACADDR_MBID.as_ptr().cast(),
+                adapter,
+                entry_id,
+                mac_addr,
+            );
+        }
+    }
+}
+
+#[cfg(any(config_mi_with_mbssid_cam, host_hal_com_mbid_cam_test))]
+#[no_mangle]
+pub extern "C" fn rtw_hal_change_macaddr_mbid(adapter: *mut c_void, mac_addr: *mut U8) {
+    if mac_addr.is_null() {
+        unsafe {
+            rtw_rust_hal_com_warn_on(1);
+        }
+        return;
+    }
+    let entry_id = rtw_mbid_cam_info_change(adapter, mac_addr);
+    if entry_id != INVALID_CAM_ID {
+        write_mbssid_cam_inner(adapter, entry_id, mac_addr);
     }
 }

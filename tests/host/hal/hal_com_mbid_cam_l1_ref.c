@@ -92,3 +92,15 @@ void rtw_mi_set_mbid_cam(struct _adapter *a)
 {
 	(void)a;
 }
+
+void rtw_hal_set_macaddr_mbid(struct _adapter *a, unsigned char *mac)
+{
+	(void)a;
+	(void)mac;
+}
+
+void rtw_hal_change_macaddr_mbid(struct _adapter *a, unsigned char *mac)
+{
+	(void)a;
+	(void)mac;
+}
