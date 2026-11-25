@@ -29,6 +29,11 @@ void host_fw_bcn_offload_set_vap_map(u8 vap_map)
 	g_dvobj.vap_map = vap_map;
 }
 
+void host_fw_bcn_offload_set_page_size(u32 page_size)
+{
+	g_page_size = page_size;
+}
+
 int host_fw_bcn_offload_h2c_count(void)
 {
 	return g_h2c_count;
