@@ -75,6 +75,8 @@ int main(void)
 	fail = 0;
 
 	/* Pin C bit layout (cmd 0xBA, len 1) — sparse map, disable path, VAP4 map bit. */
+	case_absolute_layout(_TRUE, 0x01, 0x03, 1); /* ROOT only → H2C bit 1 */
+	case_absolute_layout(_TRUE, 0x02, 0x05, 1); /* VAP1 only → H2C bit 2 */
 	case_absolute_layout(_TRUE, 0x04, 0x09, 1);
 	case_absolute_layout(_FALSE, 0x0f, 0x1e, 0);
 	case_absolute_layout(_TRUE, 0x1f, 0x1f, 1);
