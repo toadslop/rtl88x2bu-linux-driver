@@ -21,6 +21,16 @@ struct dvobj_priv *adapter_to_dvobj(struct _adapter *a)
 	return a ? &a->dvobj : NULL;
 }
 
+void *rtw_rust_hal_com_adapter_to_dvobj(void *adapter)
+{
+	return adapter_to_dvobj((struct _adapter *)adapter);
+}
+
+void *rtw_rust_hal_com_dvobj_macid_ctl(void *dvobj)
+{
+	return dvobj ? (void *)&((struct dvobj_priv *)dvobj)->macid_ctl : NULL;
+}
+
 struct macid_ctl_t *dvobj_to_macidctl(struct dvobj_priv *d)
 {
 	return d ? &d->macid_ctl : NULL;
