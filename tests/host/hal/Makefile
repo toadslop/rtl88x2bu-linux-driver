@@ -140,7 +140,8 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-mbid-cam test-mbid-cam-rust \
 	test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-mbid-cam-hw test-mbid-cam-hw-rust test-mbid-cam-macaddr \
-	test-mbid-cam-macaddr-rust \
+	test-mbid-cam-macaddr-rust test-mbid-cam-read \
+	$(if $(wildcard $(ROOT)/rust/hal_com_mbid_cam_read_host.rs),test-mbid-cam-read-rust,) \
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo test-dump-rsvd-fifo-rust \
 	test-tx-aclt-set test-tx-aclt-set-rust \
@@ -194,7 +195,8 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-mbid-cam test-mbid-cam-rust \
 	test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-mbid-cam-hw test-mbid-cam-hw-rust test-mbid-cam-macaddr \
-	test-mbid-cam-macaddr-rust \
+	test-mbid-cam-macaddr-rust test-mbid-cam-read \
+	$(if $(wildcard $(ROOT)/rust/hal_com_mbid_cam_read_host.rs),test-mbid-cam-read-rust,) \
 	test-get-rsvd-page test-get-rsvd-page-rust \
 	test-dump-rsvd-fifo test-dump-rsvd-fifo-rust \
 	test-tx-aclt-set test-tx-aclt-set-rust \
@@ -1846,6 +1848,34 @@ test_hal_com_mbid_cam_macaddr_rust: test_hal_com_mbid_cam_macaddr.c $(MBID_CAM_S
 		$(MBID_CAM_ORACLE) librust_hal_com_mbid_cam.a
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_MBID_CAM_ORACLE -o $@ test_hal_com_mbid_cam_macaddr.c \
 		$(MBID_CAM_SHIM) $(MBID_CAM_ORACLE) librust_hal_com_mbid_cam.a
+
+MBID_CAM_READ_ORACLE := hal_com_mbid_cam_read_c_oracle.c
+
+test-mbid-cam-read: test_hal_com_mbid_cam_read
+	./test_hal_com_mbid_cam_read
+
+test_hal_com_mbid_cam_read: test_hal_com_mbid_cam_read.c $(MBID_CAM_SHIM) \
+		$(MBID_CAM_ORACLE) $(MBID_CAM_READ_ORACLE)
+	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_mbid_cam_read.c \
+		$(MBID_CAM_SHIM) $(MBID_CAM_ORACLE) $(MBID_CAM_READ_ORACLE)
+
+ifneq ($(wildcard $(ROOT)/rust/hal_com_mbid_cam_read_host.rs),)
+RUST_MBID_CAM_READ := $(ROOT)/rust/hal_com_mbid_cam_read_host.rs
+
+librust_hal_com_mbid_cam_read.a: $(RUST_MBID_CAM_READ)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_mbid_cam_read_test --crate-type staticlib \
+		$(RUST_MBID_CAM_READ) -o $@
+
+test-mbid-cam-read-rust: test_hal_com_mbid_cam_read_rust
+	./test_hal_com_mbid_cam_read_rust
+
+test_hal_com_mbid_cam_read_rust: test_hal_com_mbid_cam_read.c $(MBID_CAM_SHIM) \
+		$(MBID_CAM_ORACLE) $(MBID_CAM_READ_ORACLE) librust_hal_com_mbid_cam_read.a
+	$(CC) $(CFLAGS) -I../include -DRUST_HAL_COM_MBID_CAM_READ_ORACLE -o $@ \
+		test_hal_com_mbid_cam_read.c $(MBID_CAM_SHIM) $(MBID_CAM_ORACLE) \
+		$(MBID_CAM_READ_ORACLE) librust_hal_com_mbid_cam_read.a
+endif
 
 HALMAC_IDENTITY_SUPPORT := hal_com_halmac_identity_support.c
 
