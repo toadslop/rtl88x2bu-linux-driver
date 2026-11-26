@@ -5321,6 +5321,9 @@ endif
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_com_tsf_l1_ref.o \
 		tests/host/hal/hal_com_tsf_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_com_fw_media_status_l1_ref.o \
+		tests/host/hal/hal_com_fw_media_status_l1_ref.c
 ifneq ($(_rust_cfg_hal_com_halmac_identity_l1),)
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_com_halmac_identity_l1_ref.o \
@@ -5363,7 +5366,8 @@ endif
 		$(HAL_COM_L1_RCR_REF) \
 		$(HAL_COM_L1_TSF_IFACE_REF) \
 		$(HAL_COM_L1_HALMAC_IDENTITY_REF) \
-		$(HAL_COM_L1_MSR_REF)
+		$(HAL_COM_L1_MSR_REF) \
+		tests/host/hal/hal_com_fw_media_status_l1_ref.o
 
 rust-check-symbols-hal-com: rust-objects-hal-com
 	$(MAKE) CONFIG_GPIO_WAKEUP=y rust-objects-hal-com-c
