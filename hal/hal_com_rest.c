@@ -1937,102 +1937,33 @@ void rtw_rust_hal_com_log_fw_rsvdpage_loc(u8 probe, u8 ps_poll, u8 null_data,
 
 #ifdef CONFIG_GPIO_WAKEUP
 /* rtw_hal_switch_gpio_wl_ctrl — rust/hal_com_gpio_wakeup.rs (W4-123) */
+/* rtw_hal_set_{output,input}_gpio — rust/hal_com_gpio_pin.rs (W4-140) */
 
-void rtw_hal_set_output_gpio(_adapter *padapter, u8 index, u8 outputval)
+void rtw_rust_hal_com_gpio_pin_invalid_output(_adapter *padapter, u8 index,
+					      u8 outputval)
 {
-#if defined(CONFIG_RTL8192F)
-	rtw_hal_set_hwreg(padapter, HW_VAR_WOW_OUTPUT_GPIO, (u8 *)(&outputval));
-#else
-	if (index <= 7) {
-		/* config GPIO mode */
-		rtw_write8(padapter, REG_GPIO_PIN_CTRL + 3,
-			rtw_read8(padapter, REG_GPIO_PIN_CTRL + 3) & ~BIT(index));
-
-		/* config GPIO Sel */
-		/* 0: input */
-		/* 1: output */
-		rtw_write8(padapter, REG_GPIO_PIN_CTRL + 2,
-			rtw_read8(padapter, REG_GPIO_PIN_CTRL + 2) | BIT(index));
-
-		/* set output value */
-		if (outputval) {
-			rtw_write8(padapter, REG_GPIO_PIN_CTRL + 1,
-				rtw_read8(padapter, REG_GPIO_PIN_CTRL + 1) | BIT(index));
-		} else {
-			rtw_write8(padapter, REG_GPIO_PIN_CTRL + 1,
-				rtw_read8(padapter, REG_GPIO_PIN_CTRL + 1) & ~BIT(index));
-		}
-	} else if (index <= 15) {
-		/* 88C Series: */
-		/* index: 11~8 transform to 3~0 */
-		/* 8723 Series: */
-		/* index: 12~8 transform to 4~0 */
-
-		index -= 8;
-
-		/* config GPIO mode */
-		rtw_write8(padapter, REG_GPIO_PIN_CTRL_2 + 3,
-			rtw_read8(padapter, REG_GPIO_PIN_CTRL_2 + 3) & ~BIT(index));
-
-		/* config GPIO Sel */
-		/* 0: input */
-		/* 1: output */
-		rtw_write8(padapter, REG_GPIO_PIN_CTRL_2 + 2,
-			rtw_read8(padapter, REG_GPIO_PIN_CTRL_2 + 2) | BIT(index));
-
-		/* set output value */
-		if (outputval) {
-			rtw_write8(padapter, REG_GPIO_PIN_CTRL_2 + 1,
-				rtw_read8(padapter, REG_GPIO_PIN_CTRL_2 + 1) | BIT(index));
-		} else {
-			rtw_write8(padapter, REG_GPIO_PIN_CTRL_2 + 1,
-				rtw_read8(padapter, REG_GPIO_PIN_CTRL_2 + 1) & ~BIT(index));
-		}
-	} else {
-		RTW_INFO("%s: invalid GPIO%d=%d\n",
-			 __FUNCTION__, index, outputval);
-	}
-#endif
-}
-void rtw_hal_set_input_gpio(_adapter *padapter, u8 index)
-{
-#if defined(CONFIG_RTL8192F)
-	rtw_hal_set_hwreg(padapter, HW_VAR_WOW_INPUT_GPIO, (u8 *)(&index));
-#else
-	if (index <= 7) {
-		/* config GPIO mode */
-		rtw_write8(padapter, REG_GPIO_PIN_CTRL + 3,
-			rtw_read8(padapter, REG_GPIO_PIN_CTRL + 3) & ~BIT(index));
-
-		/* config GPIO Sel */
-		/* 0: input */
-		/* 1: output */
-		rtw_write8(padapter, REG_GPIO_PIN_CTRL + 2,
-			rtw_read8(padapter, REG_GPIO_PIN_CTRL + 2) & ~BIT(index));
-
-	} else if (index <= 15) {
-		/* 88C Series: */
-		/* index: 11~8 transform to 3~0 */
-		/* 8723 Series: */
-		/* index: 12~8 transform to 4~0 */
-
-		index -= 8;
-
-		/* config GPIO mode */
-		rtw_write8(padapter, REG_GPIO_PIN_CTRL_2 + 3,
-			rtw_read8(padapter, REG_GPIO_PIN_CTRL_2 + 3) & ~BIT(index));
-
-		/* config GPIO Sel */
-		/* 0: input */
-		/* 1: output */
-		rtw_write8(padapter, REG_GPIO_PIN_CTRL_2 + 2,
-			rtw_read8(padapter, REG_GPIO_PIN_CTRL_2 + 2) & ~BIT(index));
-	} else
-		RTW_INFO("%s: invalid GPIO%d\n", __func__, index);
-#endif
+	RTW_INFO("%s: invalid GPIO%d=%d\n", "rtw_hal_set_output_gpio", index, outputval);
+	(void)padapter;
 }
 
+void rtw_rust_hal_com_gpio_pin_invalid_input(_adapter *padapter, u8 index)
+{
+	RTW_INFO("%s: invalid GPIO%d\n", "rtw_hal_set_input_gpio", index);
+	(void)padapter;
+}
+
+#if defined(CONFIG_RTL8192F)
+void rtw_rust_hal_com_gpio_pin_output_8192f(_adapter *padapter, u8 *outputval)
+{
+	rtw_hal_set_hwreg(padapter, HW_VAR_WOW_OUTPUT_GPIO, outputval);
+}
+
+void rtw_rust_hal_com_gpio_pin_input_8192f(_adapter *padapter, u8 *index)
+{
+	rtw_hal_set_hwreg(padapter, HW_VAR_WOW_INPUT_GPIO, index);
+}
 #endif
+#endif /* CONFIG_GPIO_WAKEUP */
 
 void rtw_hal_set_FwAoacRsvdPage_cmd(PADAPTER padapter, PRSVDPAGE_LOC rsvdpageloc)
 {
