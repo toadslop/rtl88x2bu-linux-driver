@@ -54,10 +54,31 @@ void rtw_hal_set_fw_ap_bcn_offload_cmd_c_oracle(struct _adapter *adapter,
 			     fw_bcn_offload);
 }
 
+void rtw_hal_set_bcn_rsvdpage_loc_cmd_c_oracle(struct _adapter *adapter)
+{
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	u8 vap_id;
+	u32 page_size = 0;
+	u8 bcn_rsvdpage[H2C_BCN_RSVDPAGE_LEN] = {0};
+
+	rtw_hal_get_def_var(adapter, HAL_DEF_TX_PAGE_SIZE, (u8 *)&page_size);
+	for (vap_id = 0; vap_id < (u8)CONFIG_LIMITED_AP_NUM; vap_id++) {
+		if (dvobj->vap_map & (1u << vap_id))
+			bcn_rsvdpage[vap_id] = (u8)(vap_id * (MAX_BEACON_LEN / page_size));
+	}
+	rtw_hal_fill_h2c_cmd(adapter, H2C_BCN_RSVDPAGE, H2C_BCN_RSVDPAGE_LEN,
+			     bcn_rsvdpage);
+}
+
 #ifndef RUST_HAL_COM_FW_BCN_OFFLOAD_ORACLE
 void rtw_hal_set_fw_ap_bcn_offload_cmd(struct _adapter *adapter, bool fw_bcn_en,
 				       u8 tbtt_rpt_map)
 {
 	rtw_hal_set_fw_ap_bcn_offload_cmd_c_oracle(adapter, fw_bcn_en, tbtt_rpt_map);
+}
+
+void rtw_hal_set_bcn_rsvdpage_loc_cmd(struct _adapter *adapter)
+{
+	rtw_hal_set_bcn_rsvdpage_loc_cmd_c_oracle(adapter);
 }
 #endif

@@ -14,11 +14,16 @@ struct _adapter *host_fw_bcn_offload_adapter(void);
 
 #ifdef RUST_HAL_COM_FW_BCN_OFFLOAD_ORACLE
 void rtw_hal_set_fw_ap_bcn_offload_cmd(struct _adapter *, bool, u8);
+void rtw_hal_set_bcn_rsvdpage_loc_cmd(struct _adapter *adapter);
 #else
 #define rtw_hal_set_fw_ap_bcn_offload_cmd rtw_hal_set_fw_ap_bcn_offload_cmd_c_oracle
+#define rtw_hal_set_bcn_rsvdpage_loc_cmd rtw_hal_set_bcn_rsvdpage_loc_cmd_c_oracle
 #endif
 
 void rtw_hal_set_fw_ap_bcn_offload_cmd_c_oracle(struct _adapter *, bool, u8);
+void rtw_hal_set_bcn_rsvdpage_loc_cmd_c_oracle(struct _adapter *adapter);
+void host_fw_bcn_offload_set_vap_map(u8 vap_map);
+void host_fw_bcn_offload_set_page_size(u32 page_size);
 
 static int fail;
 
@@ -70,6 +75,50 @@ static void case_dut_matches_oracle(bool en, u8 map)
 	expect_u8("dut_vs_oracle_payload", p_dut, p_orc);
 }
 
+static void case_rsvdpage_matches_oracle_page(u8 vap_map, u32 page_size)
+{
+	u8 dut_payload[H2C_BCN_RSVDPAGE_LEN];
+	u8 orc_payload[H2C_BCN_RSVDPAGE_LEN];
+	const u8 *buf;
+	unsigned i;
+
+	host_fw_bcn_offload_reset();
+	host_fw_bcn_offload_set_page_size(page_size);
+	host_fw_bcn_offload_set_vap_map(vap_map);
+	rtw_hal_set_bcn_rsvdpage_loc_cmd(host_fw_bcn_offload_adapter());
+
+	expect_u8("rsvd_h2c_count", host_fw_bcn_offload_h2c_count(), 1);
+	expect_u8("rsvd_h2c_cmd", host_fw_bcn_offload_h2c_cmd(0), H2C_BCN_RSVDPAGE);
+	expect_u8("rsvd_h2c_len", host_fw_bcn_offload_h2c_len(0), H2C_BCN_RSVDPAGE_LEN);
+	buf = host_fw_bcn_offload_h2c_buf(0);
+	if (!buf) {
+		fprintf(stderr, "FAIL rsvdpage null dut h2c buffer\n");
+		fail = 1;
+		return;
+	}
+	memcpy(dut_payload, buf, H2C_BCN_RSVDPAGE_LEN);
+
+	host_fw_bcn_offload_reset();
+	host_fw_bcn_offload_set_page_size(page_size);
+	host_fw_bcn_offload_set_vap_map(vap_map);
+	rtw_hal_set_bcn_rsvdpage_loc_cmd_c_oracle(host_fw_bcn_offload_adapter());
+	buf = host_fw_bcn_offload_h2c_buf(0);
+	if (!buf) {
+		fprintf(stderr, "FAIL rsvdpage null oracle h2c buffer\n");
+		fail = 1;
+		return;
+	}
+	memcpy(orc_payload, buf, H2C_BCN_RSVDPAGE_LEN);
+
+	for (i = 0; i < H2C_BCN_RSVDPAGE_LEN; i++)
+		expect_u8("rsvd_payload", dut_payload[i], orc_payload[i]);
+}
+
+static void case_rsvdpage_matches_oracle(u8 vap_map)
+{
+	case_rsvdpage_matches_oracle_page(vap_map, 128);
+}
+
 int main(void)
 {
 	fail = 0;
@@ -81,6 +130,20 @@ int main(void)
 	case_absolute_layout(_FALSE, 0x0f, 0x1e, 0);
 	case_absolute_layout(_TRUE, 0x1f, 0x1f, 1);
 	case_dut_matches_oracle(_TRUE, 0x0f);
+
+	/* H2C 0x09 vs C oracle — sparse maps at default page_size 128 */
+	case_rsvdpage_matches_oracle(0x00);
+	case_rsvdpage_matches_oracle(0x01);
+	case_rsvdpage_matches_oracle(0x02);
+	case_rsvdpage_matches_oracle(0x04);
+	case_rsvdpage_matches_oracle(0x05);
+	case_rsvdpage_matches_oracle(0x08);
+	case_rsvdpage_matches_oracle(0x0f);
+	case_rsvdpage_matches_oracle(0x10);
+	case_rsvdpage_matches_oracle(0x1f);
+	case_rsvdpage_matches_oracle(0xaa); /* VAP4 bit set; byte 4 stays 0 */
+
+	case_rsvdpage_matches_oracle_page(0x0f, 256);
 
 	if (fail) {
 		fprintf(stderr, "hal_com_fw_bcn_offload L2 failed\n");
