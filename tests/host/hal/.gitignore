@@ -31,6 +31,9 @@ test_hal_com_fw_rsvdpage_h2c
 test_hal_com_fw_rsvdpage_h2c_rust
 librust_hal_com_fw_rsvdpage_h2c.a
 test_hal_com_fw_bcn_offload*
+test_hal_com_fw_media_status
+test_hal_com_fw_media_status_rust
+librust_hal_com_fw_media_status.a
 librust_hal_com_dft_port.a
 !test_hal_com_mbid_cam*.c
 test_hal_com_mbid_cam

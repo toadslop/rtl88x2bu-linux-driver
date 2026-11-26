@@ -134,7 +134,10 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-req-per-rpt test-req-per-rpt-rust \
 	test-dft-port $(if $(wildcard $(ROOT)/rust/hal_com_dft_port_host.rs),test-dft-port-rust,) \
 	test-fw-rsvdpage-h2c test-fw-rsvdpage-h2c-rust \
-	test-fw-bcn-offload test-fw-bcn-offload-rust test-mbid-cam test-mbid-cam-rust \
+	test-fw-bcn-offload test-fw-bcn-offload-rust \
+	test-fw-media-status \
+	$(if $(wildcard $(ROOT)/rust/hal_com_fw_media_host.rs),test-fw-media-status-rust,) \
+	test-mbid-cam test-mbid-cam-rust \
 	test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-mbid-cam-hw test-mbid-cam-hw-rust test-mbid-cam-macaddr \
 	test-mbid-cam-macaddr-rust \
@@ -183,7 +186,10 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
 	test-req-per-rpt-rust test-dft-port $(if $(wildcard $(ROOT)/rust/hal_com_dft_port_host.rs),test-dft-port-rust,) \
 	test-fw-rsvdpage-h2c test-fw-rsvdpage-h2c-rust \
-	test-fw-bcn-offload test-fw-bcn-offload-rust test-mbid-cam test-mbid-cam-rust \
+	test-fw-bcn-offload test-fw-bcn-offload-rust \
+	test-fw-media-status \
+	$(if $(wildcard $(ROOT)/rust/hal_com_fw_media_host.rs),test-fw-media-status-rust,) \
+	test-mbid-cam test-mbid-cam-rust \
 	test-mbid-cam-alloc test-mbid-cam-alloc-rust \
 	test-mbid-cam-hw test-mbid-cam-hw-rust test-mbid-cam-macaddr \
 	test-mbid-cam-macaddr-rust \
@@ -2166,6 +2172,33 @@ test_hal_com_fw_bcn_offload_rust: test_hal_com_fw_bcn_offload.c \
 	$(CC) $(CFLAGS) -DCONFIG_LIMITED_AP_NUM=4 -DRUST_HAL_COM_FW_BCN_OFFLOAD_ORACLE -o $@ \
 		test_hal_com_fw_bcn_offload.c hal_com_fw_bcn_offload_shim.c \
 		hal_com_fw_bcn_offload_c_oracle.c librust_hal_com_fw_bcn_offload.a
+
+test-fw-media-status: test_hal_com_fw_media_status
+	./test_hal_com_fw_media_status
+
+test_hal_com_fw_media_status: test_hal_com_fw_media_status.c \
+		hal_com_fw_media_status_shim.c hal_com_fw_media_status_c_oracle.c
+	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_fw_media_status.c \
+		hal_com_fw_media_status_shim.c hal_com_fw_media_status_c_oracle.c
+
+ifneq ($(wildcard $(ROOT)/rust/hal_com_fw_media_host.rs),)
+RUST_FW_MEDIA_STATUS := $(ROOT)/rust/hal_com_fw_media_host.rs
+
+librust_hal_com_fw_media_status.a: $(RUST_FW_MEDIA_STATUS)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_fw_media_status_test \
+		--crate-type staticlib $(RUST_FW_MEDIA_STATUS) -o $@
+
+test-fw-media-status-rust: test_hal_com_fw_media_status_rust
+	./test_hal_com_fw_media_status_rust
+
+test_hal_com_fw_media_status_rust: test_hal_com_fw_media_status.c \
+		hal_com_fw_media_status_shim.c hal_com_fw_media_status_c_oracle.c \
+		librust_hal_com_fw_media_status.a
+	$(CC) $(CFLAGS) -I../include -DRUST_HAL_COM_FW_MEDIA_STATUS_ORACLE -o $@ \
+		test_hal_com_fw_media_status.c hal_com_fw_media_status_shim.c \
+		hal_com_fw_media_status_c_oracle.c librust_hal_com_fw_media_status.a
+endif
 
 test-c2h-evt-robustness: test_hal_com_c2h_evt_fx19
 	./test_hal_com_c2h_evt_fx19
