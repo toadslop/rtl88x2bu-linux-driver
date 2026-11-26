@@ -16,6 +16,7 @@ int rtw_mbid_cam_dump_c_oracle(void *sel, const char *fun_name, void *adapter);
 
 #ifdef RUST_HAL_COM_MBID_CAM_READ_ORACLE
 void read_mbssid_cam_probe(void *adapter, u8 cam_addr, u8 *mac);
+int rtw_mbid_cam_dump(void *sel, const char *fun_name, void *adapter);
 #endif
 
 static int failures;
@@ -180,32 +181,51 @@ static void test_cannot_run_mid_poll(void)
 	expect_mac_zero("mid_cannot_mac", got);
 }
 
-static void test_dump_entry_lines(void)
+static int run_dump_dut(struct host_sel_capture *sel, const char *fun, void *adap)
 {
-	static const u8 mac[ETH_ALEN] = {0x48, 0x89, 0x4a, 0x2b, 0x10, 0x99};
-	struct host_sel_capture sel;
-	char out[sizeof(sel.buf)];
+#ifdef RUST_HAL_COM_MBID_CAM_READ_ORACLE
+	return rtw_mbid_cam_dump(sel, fun, adap);
+#else
+	return rtw_mbid_cam_dump_c_oracle(sel, fun, adap);
+#endif
+}
+
+static void test_dump_full_capture(void)
+{
+	static const u8 mac1[ETH_ALEN] = {0x48, 0x89, 0x4a, 0x2b, 0x10, 0x99};
+	static const u8 mac3[ETH_ALEN] = {0x00, 0x11, 0x22, 0x33, 0x44, 0x55};
+	struct host_sel_capture got;
+	struct host_sel_capture oracle;
+	char got_buf[sizeof(got.buf)];
+	char oracle_buf[sizeof(oracle.buf)];
 	struct _adapter *adap = host_mbid_cam_adapter();
 
 	host_mbid_cam_reset_fixture();
-	host_sel_reset(&sel);
-	host_mbid_cam_read_seed(1, mac, 1);
-	rtw_mbid_cam_dump_c_oracle(&sel, "test_dump", adap);
-	if (host_sel_string(&sel, out, sizeof(out)) < 0) {
-		fprintf(stderr, "FAIL dump capture overflow\n");
+	host_mbid_cam_read_seed(1, mac1, 1);
+	host_mbid_cam_read_seed(3, mac3, 1);
+	host_mbid_cam_read_seed(4, mac3, 10);
+
+	host_sel_reset(&got);
+	run_dump_dut(&got, "test_dump", adap);
+	if (host_sel_string(&got, got_buf, sizeof(got_buf)) < 0) {
+		fprintf(stderr, "FAIL dump got overflow\n");
 		failures++;
 		return;
 	}
-	if (!strstr(out, "CAM_ID = 1")) {
-		fprintf(stderr, "FAIL dump missing CAM_ID line\n");
+
+	host_mbid_cam_reset_fixture();
+	host_mbid_cam_read_seed(1, mac1, 1);
+	host_mbid_cam_read_seed(3, mac3, 1);
+	host_mbid_cam_read_seed(4, mac3, 10);
+	host_sel_reset(&oracle);
+	rtw_mbid_cam_dump_c_oracle(&oracle, "test_dump", adap);
+	if (host_sel_string(&oracle, oracle_buf, sizeof(oracle_buf)) < 0) {
+		fprintf(stderr, "FAIL dump oracle overflow\n");
 		failures++;
+		return;
 	}
-	if (!strstr(out, "MAC Addr:48:89:4a:2b:10:99")) {
-		fprintf(stderr, "FAIL dump missing MAC line for seeded slot\n");
-		failures++;
-	}
-	if (!strstr(out, "CAM_ID = 7")) {
-		fprintf(stderr, "FAIL dump missing CAM_ID for unseeded slot\n");
+	if (strcmp(got_buf, oracle_buf) != 0) {
+		fprintf(stderr, "FAIL dump capture mismatch\n");
 		failures++;
 	}
 }
@@ -217,7 +237,7 @@ int main(void)
 	test_read_poll_budget_timeout();
 	test_cannot_run_before_poll_write();
 	test_cannot_run_mid_poll();
-	test_dump_entry_lines();
+	test_dump_full_capture();
 	if (failures)
 		return 1;
 	puts("OK hal_com_mbid_cam_read L2");

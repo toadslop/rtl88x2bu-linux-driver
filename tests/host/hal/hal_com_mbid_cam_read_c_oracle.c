@@ -66,21 +66,18 @@ int rtw_mbid_cam_dump_c_oracle(void *sel, const char *fun_name, void *adapter)
 {
 	u8 i;
 	u8 mac_addr[ETH_ALEN];
+	char line[128];
 
 	(void)rtw_rust_hal_com_adapter_to_dvobj(adapter);
 
-	rtw_rust_hal_com_print_line(sel, "\n== MBSSID HW-CAM DUMP (");
-	rtw_rust_hal_com_print_line(sel, fun_name);
-	rtw_rust_hal_com_print_line(sel, ")==\n");
+	snprintf(line, sizeof(line), "\n== MBSSID HW-CAM DUMP (%s)==\n", fun_name);
+	rtw_rust_hal_com_print_line(sel, line);
 
 	for (i = 0; i < TOTAL_MBID_CAM_NUM; i++) {
-		char line[80];
-
 		oracle_memset(mac_addr, 0, ETH_ALEN);
 		read_mbssid_cam_c_oracle(adapter, i, mac_addr);
-		snprintf(line, sizeof(line), "CAM_ID = %u\t", i);
-		rtw_rust_hal_com_print_line(sel, line);
-		snprintf(line, sizeof(line), "MAC Addr:" MAC_FMT "\n", MAC_ARG(mac_addr));
+		snprintf(line, sizeof(line), "CAM_ID = %u\tMAC Addr:" MAC_FMT "\n",
+			 i, MAC_ARG(mac_addr));
 		rtw_rust_hal_com_print_line(sel, line);
 	}
 	return 0;
