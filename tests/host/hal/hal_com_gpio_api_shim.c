@@ -73,6 +73,17 @@ void host_gpio_api_reg_set(u32 base, unsigned int off, u8 val)
 		g_bank1[off] = val;
 }
 
+static unsigned int count_mmio_writes(void)
+{
+	unsigned int i, n = 0;
+
+	for (i = 0; i < host_gpio_api_trace.op_count; i++) {
+		if (host_gpio_api_trace.ops[i].is_write)
+			n++;
+	}
+	return n;
+}
+
 static void trace_mmio(u32 addr, u8 val, u8 is_write)
 {
 	if (host_gpio_api_trace.op_count >= HOST_GPIO_API_MMIO_MAX) {
@@ -123,33 +134,51 @@ int rtw_hal_gpio_func_check(struct _adapter *padapter, u8 gpio_num)
 	return _SUCCESS;
 }
 
+void host_gpio_api_record_ps_step(u8 step)
+{
+	if (host_gpio_api_trace.ps_step_count >= HOST_GPIO_API_PS_MAX_STEPS)
+		return;
+	host_gpio_api_trace.ps_steps[host_gpio_api_trace.ps_step_count++] = step;
+}
+
+void host_gpio_api_note_rf_pwrstate(u8 rf_pwrstate)
+{
+	host_gpio_api_trace.rf_pwrstate_log_count++;
+	host_gpio_api_trace.rf_pwrstate_logged = rf_pwrstate;
+	host_gpio_api_record_ps_step(HOST_GPIO_API_PS_STEP_RF_PWRSTATE_LOG);
+}
+
 void rtw_hal_gpio_multi_func_reset(struct _adapter *padapter, u8 gpio_num)
 {
 	(void)padapter;
-	(void)gpio_num;
+	host_gpio_api_trace.multi_func_reset_mmio_writes_at_call = count_mmio_writes();
+	host_gpio_api_trace.multi_func_reset_last_gpio = gpio_num;
 	host_gpio_api_trace.multi_func_reset_count++;
 }
 
 void rtw_ps_deny(struct _adapter *adapter, u32 reason)
 {
-	(void)reason;
 	if (!adapter)
 		return;
 	host_gpio_api_trace.ps_deny_count++;
+	host_gpio_api_trace.ps_deny_reason = reason;
+	host_gpio_api_record_ps_step(HOST_GPIO_API_PS_STEP_DENY);
 }
 
 void rtw_ps_deny_cancel(struct _adapter *adapter, u32 reason)
 {
-	(void)reason;
 	if (!adapter)
 		return;
 	host_gpio_api_trace.ps_deny_cancel_count++;
+	host_gpio_api_trace.ps_deny_cancel_reason = reason;
+	host_gpio_api_record_ps_step(HOST_GPIO_API_PS_STEP_DENY_CANCEL);
 }
 
 void LeaveAllPowerSaveModeDirect(struct _adapter *adapter)
 {
 	(void)adapter;
 	host_gpio_api_trace.leave_ps_count++;
+	host_gpio_api_record_ps_step(HOST_GPIO_API_PS_STEP_LEAVE_PS);
 }
 
 unsigned int host_gpio_api_mmio_read_count(void)

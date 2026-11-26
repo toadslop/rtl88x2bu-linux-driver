@@ -18,8 +18,7 @@ u8 rtw_hal_get_gpio_c_oracle(struct _adapter *adapter, u8 gpio_num)
 
 	rtw_ps_deny(adapter, PS_DENY_IOCTL);
 
-	(void)pwrpriv;
-	host_gpio_api_trace.rf_pwrstate_log_count++;
+	host_gpio_api_note_rf_pwrstate(pwrpriv->rf_pwrstate);
 	LeaveAllPowerSaveModeDirect(adapter);
 
 	if (gpio_num > 7) {

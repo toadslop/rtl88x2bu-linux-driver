@@ -8,7 +8,8 @@ typedef unsigned int u32;
 #define _SUCCESS 1
 #define _FAIL 0
 
-#define PS_DENY_IOCTL 0
+/* PS_DENY_IOCTL in include/rtw_pwrctrl.h (enum value 5). */
+#define PS_DENY_IOCTL 5u
 
 #define REG_GPIO_PIN_CTRL 0x0044
 #define REG_GPIO_PIN_CTRL_2 0x0060
@@ -32,6 +33,12 @@ struct host_gpio_api_mmio_op {
 	u8 is_write;
 };
 
+#define HOST_GPIO_API_PS_STEP_DENY 1u
+#define HOST_GPIO_API_PS_STEP_RF_PWRSTATE_LOG 2u
+#define HOST_GPIO_API_PS_STEP_LEAVE_PS 3u
+#define HOST_GPIO_API_PS_STEP_DENY_CANCEL 4u
+#define HOST_GPIO_API_PS_MAX_STEPS 16u
+
 struct host_gpio_api_trace {
 	struct host_gpio_api_mmio_op ops[HOST_GPIO_API_MMIO_MAX];
 	unsigned int op_count;
@@ -42,6 +49,13 @@ struct host_gpio_api_trace {
 	unsigned int func_check_calls;
 	unsigned int multi_func_reset_count;
 	unsigned int rf_pwrstate_log_count;
+	u32 ps_deny_reason;
+	u32 ps_deny_cancel_reason;
+	u8 rf_pwrstate_logged;
+	u8 multi_func_reset_last_gpio;
+	unsigned int multi_func_reset_mmio_writes_at_call;
+	u8 ps_steps[HOST_GPIO_API_PS_MAX_STEPS];
+	unsigned int ps_step_count;
 };
 
 extern struct host_gpio_api_trace host_gpio_api_trace;
@@ -49,6 +63,8 @@ extern struct host_gpio_api_trace host_gpio_api_trace;
 struct _adapter *host_gpio_api_adapter(void);
 void host_gpio_api_reset(void);
 void host_gpio_api_set_func_check_fail(u8 gpio_num, int fail);
+void host_gpio_api_record_ps_step(u8 step);
+void host_gpio_api_note_rf_pwrstate(u8 rf_pwrstate);
 u8 host_gpio_api_reg_get(u32 base, unsigned int off);
 void host_gpio_api_reg_set(u32 base, unsigned int off, u8 val);
 
