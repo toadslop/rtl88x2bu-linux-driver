@@ -2187,7 +2187,6 @@ RUST_FW_MEDIA_STATUS := $(ROOT)/rust/hal_com_fw_media_host.rs
 librust_hal_com_fw_media_status.a: $(RUST_FW_MEDIA_STATUS)
 	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
 		--cfg host_hal_com_fw_media_status_test \
-		--cfg config_fw_multi_port_support \
 		--cfg config_tx_ac_lifetime \
 		--crate-type staticlib $(RUST_FW_MEDIA_STATUS) -o $@
 
