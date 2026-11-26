@@ -24,13 +24,15 @@ into `rust/hal_com_tsf_reset.rs` under `CONFIG_TSF_RESET_OFFLOAD`:
   with the same port-0 vs non-port-0 split. Callers pass `iface->hw_port` (port 2+ on 8822B).
 - Calls `rtw_mi_buddy_scan_abort(adapter, _FALSE)` before reset (same as C).
 - If `rtw_hal_fill_h2c_cmd` returns other than `_SUCCESS`, return immediately — **no** sleep/poll.
-- Poll runs only after successful H2C: `rtw_msleep_os(100)` up to 10 iterations;
-  `_FAIL` when `loop_cnt >= 10` and counter unchanged.
+- Poll runs only after successful H2C: `rtw_msleep_os(100)` up to 10 iterations.
+  Return is `(loop_cnt >= 10) ? _FAIL : _SUCCESS` — **even if** the counter changed on the
+  10th read (the while exits at 10 iterations; return does not re-check equality).
 
 ## Acceptance
 
 - L0 + L1 on profile with `CONFIG_TSF_RESET_OFFLOAD=y`
-- L2: H2C bytes for port 0 vs port ≥2; stub counter poll; vector where H2C fill fails (no poll)
+- L2: H2C bytes for port 0 vs port ≥2; H2C fill failure (no poll); stub counter unchanged
+  through iteration 9 → `_SUCCESS`, changes only on 10th read → `_FAIL`
 
 ## Tracking
 

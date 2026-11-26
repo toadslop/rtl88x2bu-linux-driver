@@ -26,9 +26,12 @@ Do not swap the ops helper for the rest.c copy.
 - **Parallel lane:** disjoint from `hal_com_gpio_wakeup.rs` (W4-123) — new Rust file.
 - `CONFIG_RTL8192F` branches delegate to `rtw_hal_set_hwreg` for WOW GPIO; 8822B
   uses the direct `REG_GPIO_PIN_CTRL*` MMIO path in the `#else` block.
+- Index 0–7: masks use `BIT(index)` on `REG_GPIO_PIN_CTRL` (+1 level, +2 direction, +3 mode).
+- Index 8–15: both functions subtract 8, then use `REG_GPIO_PIN_CTRL_2` with **`BIT(index - 8)`**
+  (not `BIT(original index)`). Sequence: clear mode byte (`+ 3`, `& ~BIT(adjusted)`); input
+  clears direction at `+ 2`; output sets direction at `+ 2` and level at `+ 1` (`|` / `& ~` from `outputval`).
 - Index > 15: log only, no MMIO (both functions).
-- Input path clears direction at `REG_GPIO_PIN_CTRL[+_2] + 2` with `& ~BIT(index)`
-  (output sets with `|`). L2 must cover both banks and the invalid index.
+- L2 must cover low bank, high bank (mode + direction + output level), and invalid index.
 - Does not port `CONFIG_GPIO_API` accessors (W4-142).
 
 ## Acceptance
