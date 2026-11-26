@@ -281,6 +281,11 @@ int _rtw_memcmp(const void *dst, const void *src, unsigned int sz)
 	return memcmp(dst, src, sz) == 0 ? 1 : 0;
 }
 
+void *_rtw_memset(void *dst, int val, unsigned int sz)
+{
+	return memset(dst, val, sz);
+}
+
 u8 rtw_rust_hal_com_adapter_iface_id(void *adapter)
 {
 	return ((struct _adapter *)adapter)->iface_id;

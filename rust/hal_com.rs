@@ -2304,9 +2304,34 @@ mod msr {
     not(host_hal_com_tx_aclt_set_test),
     not(host_hal_com_hal_spec_test),
     not(host_hal_com_mbid_cam_test),
+    not(host_hal_com_mbid_cam_read_test),
 ))]
 mod mbid_cam {
     include!("hal_com_mbid_cam.rs");
+}
+
+#[cfg(all(
+    config_mbssid_cam,
+    not(host_hal_com_hw_rate_test),
+    not(host_hal_com_rsvd_page_test),
+    not(host_hal_com_chip_info_test),
+    not(host_hal_com_mrate_test),
+    not(host_hal_com_fw_info_test),
+    not(host_hal_com_brate_test),
+    not(host_hal_com_legal_channel_test),
+    not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
+    not(host_hal_com_tx_aclt_force_test),
+    not(host_hal_com_tx_aclt_confs_test),
+    not(host_hal_com_tx_aclt_set_test),
+    not(host_hal_com_hal_spec_test),
+    not(host_hal_com_mbid_cam_test),
+    not(host_hal_com_mbid_cam_read_test),
+))]
+mod mbid_cam_read {
+    #![allow(dead_code, non_snake_case, non_upper_case_globals)]
+    include!("hal_com_mbid_cam_read.rs");
 }
 
 #[cfg(all(

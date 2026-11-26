@@ -104,3 +104,11 @@ void rtw_hal_change_macaddr_mbid(struct _adapter *a, unsigned char *mac)
 	(void)a;
 	(void)mac;
 }
+
+int rtw_mbid_cam_dump(void *sel, const char *fn, struct _adapter *a)
+{
+	(void)sel;
+	(void)fn;
+	(void)a;
+	return 0;
+}

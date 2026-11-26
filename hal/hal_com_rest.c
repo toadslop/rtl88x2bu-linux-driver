@@ -334,63 +334,9 @@ static u32 hw_bcn_ctrl_addr(_adapter *adapter, u8 hw_port)
 /* rtw_mbid_cam_cache_dump — rust/hal_com_mbid_cam.rs (W4-125) */
 /* rtw_ap_set_mbid_num / rtw_mbid_cam_enable / rtw_mi_set_mbid_cam / write_mbssid_cam — rust/hal_com_mbid_cam.rs (W4-126) */
 /* rtw_hal_set_macaddr_mbid / rtw_hal_change_macaddr_mbid — rust/hal_com_mbid_cam.rs (W4-133) */
+/* read_mbssid_cam / rtw_mbid_cam_dump — rust/hal_com_mbid_cam_read.rs (W4-141) */
 
 void write_mbssid_cam(_adapter *padapter, u8 cam_addr, u8 *mac);
-
-static void read_mbssid_cam(_adapter *padapter, u8 cam_addr, u8 *mac)
-{
-	u8 poll = 1;
-	u8 cam_ready = _FALSE;
-	u32 cam_data1 = 0;
-	u16 cam_data2 = 0;
-
-	if (RTW_CANNOT_RUN(padapter))
-		return;
-
-	rtw_write32(padapter, REG_MBIDCAMCFG_2, BIT_MBIDCAM_POLL | ((cam_addr & MBIDCAM_ADDR_MASK) << MBIDCAM_ADDR_SHIFT));
-
-	do {
-		if (0 == (rtw_read32(padapter, REG_MBIDCAMCFG_2) & BIT_MBIDCAM_POLL)) {
-			cam_ready = _TRUE;
-			break;
-		}
-		poll++;
-	} while ((poll % 10) != 0 && !RTW_CANNOT_RUN(padapter));
-
-	if (cam_ready) {
-		cam_data1 = rtw_read32(padapter, REG_MBIDCAMCFG_1);
-		mac[0] = cam_data1 & 0xFF;
-		mac[1] = (cam_data1 >> 8) & 0xFF;
-		mac[2] = (cam_data1 >> 16) & 0xFF;
-		mac[3] = (cam_data1 >> 24) & 0xFF;
-
-		cam_data2 = rtw_read16(padapter, REG_MBIDCAMCFG_2);
-		mac[4] = cam_data2 & 0xFF;
-		mac[5] = (cam_data2 >> 8) & 0xFF;
-	}
-
-}
-int rtw_mbid_cam_dump(void *sel, const char *fun_name, _adapter *adapter)
-{
-	/*_irqL irqL;*/
-	u8 i;
-	u8 mac_addr[ETH_ALEN];
-
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
-
-	RTW_PRINT_SEL(sel, "\n== MBSSID HW-CAM DUMP (%s)==\n", fun_name);
-
-	/*_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);*/
-	for (i = 0; i < TOTAL_MBID_CAM_NUM; i++) {
-		RTW_PRINT_SEL(sel, "CAM_ID = %d\t", i);
-		_rtw_memset(mac_addr, 0, ETH_ALEN);
-		read_mbssid_cam(adapter, i, mac_addr);
-		_RTW_PRINT_SEL(sel, "MAC Addr:"MAC_FMT"\n", MAC_ARG(mac_addr));
-	}
-	/*_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);*/
-	return 0;
-}
 
 #endif /*CONFIG_MBSSID_CAM*/
 
@@ -13895,6 +13841,18 @@ u32 rtw_rust_hal_com_read32(_adapter *adapter, u32 addr)
 	if (!adapter)
 		return 0;
 	return rtw_read32(adapter, addr);
+}
+
+u16 rtw_rust_hal_com_read16(_adapter *adapter, u32 addr)
+{
+	if (!adapter)
+		return 0;
+	return rtw_read16(adapter, addr);
+}
+
+u8 rtw_rust_hal_com_cannot_run(_adapter *adapter)
+{
+	return RTW_CANNOT_RUN(adapter) ? 1 : 0;
 }
 
 void rtw_rust_hal_com_write32(_adapter *adapter, u32 addr, u32 val)
