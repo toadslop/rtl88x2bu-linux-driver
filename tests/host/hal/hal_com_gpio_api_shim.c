@@ -86,6 +86,8 @@ static void trace_mmio(u32 addr, u8 val, u8 is_write)
 	host_gpio_api_trace.ops[host_gpio_api_trace.op_count].val = val;
 	host_gpio_api_trace.ops[host_gpio_api_trace.op_count].is_write = is_write;
 	host_gpio_api_trace.op_count++;
+	if (host_gpio_api_trace.ps_deny_count == 0)
+		host_gpio_api_trace.mmio_before_deny_count++;
 	if (host_gpio_api_trace.ps_deny_count > 0 &&
 	    host_gpio_api_trace.leave_ps_count == 0)
 		host_gpio_api_trace.mmio_before_leave_count++;

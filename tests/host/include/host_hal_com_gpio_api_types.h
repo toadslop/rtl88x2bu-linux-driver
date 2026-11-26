@@ -57,6 +57,7 @@ struct host_gpio_api_trace {
 	unsigned int multi_func_reset_mmio_writes_at_call;
 	u8 ps_steps[HOST_GPIO_API_PS_MAX_STEPS];
 	unsigned int ps_step_count;
+	unsigned int mmio_before_deny_count;
 	unsigned int mmio_before_leave_count;
 	unsigned int deny_cancel_before_leave_count;
 	unsigned int mmio_after_deny_cancel_count;
