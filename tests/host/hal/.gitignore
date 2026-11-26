@@ -54,6 +54,9 @@ librust_hal_com_gpio_wakeup.a
 test_hal_com_gpio_pin
 test_hal_com_gpio_pin_rust
 librust_hal_com_gpio_pin.a
+test_hal_com_gpio_api
+test_hal_com_gpio_api_rust
+librust_hal_com_gpio_api.a
 test_hal_com_rcr
 test_hal_com_rcr_rust
 librust_hal_com_rcr.a
