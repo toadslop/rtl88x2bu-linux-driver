@@ -31,7 +31,7 @@
 #define SET_H2CCMD_MSRRPT_PARM_MACID_END(__p, __v) SET_BITS_TO_LE_1BYTE((__p) + 2, 0, 8, __v)
 #define SET_H2CCMD_MSRRPT_PARM_PORT_NUM(__p, __v) SET_BITS_TO_LE_1BYTE((__p) + 3, 0, 3, __v)
 
-void rtw_hal_set_FwMediaStatusRpt_cmd_c_oracle(struct _adapter *adapter,
+s32 rtw_hal_set_FwMediaStatusRpt_cmd_c_oracle(struct _adapter *adapter,
 					       bool opmode, bool miracast,
 					       bool miracast_sink, u8 role,
 					       u8 macid, bool macid_ind,
@@ -41,7 +41,6 @@ void rtw_hal_set_FwMediaStatusRpt_cmd_c_oracle(struct _adapter *adapter,
 	u8 parm[H2C_MEDIA_STATUS_RPT_LEN] = {0};
 	int i;
 	s32 ret;
-	u8 hw_port = rtw_hal_get_port(adapter);
 	u8 op_num_change_bmp = 0;
 
 	SET_H2CCMD_MSRRPT_PARM_OPMODE(parm, opmode);
@@ -51,12 +50,18 @@ void rtw_hal_set_FwMediaStatusRpt_cmd_c_oracle(struct _adapter *adapter,
 	SET_H2CCMD_MSRRPT_PARM_ROLE(parm, role);
 	SET_H2CCMD_MSRRPT_PARM_MACID(parm, macid);
 	SET_H2CCMD_MSRRPT_PARM_MACID_END(parm, macid_end);
-	SET_H2CCMD_MSRRPT_PARM_PORT_NUM(parm, hw_port);
+#ifdef CONFIG_FW_MULTI_PORT_SUPPORT
+	{
+		u8 hw_port = rtw_hal_get_port(adapter);
+
+		SET_H2CCMD_MSRRPT_PARM_PORT_NUM(parm, hw_port);
+	}
+#endif
 
 	ret = rtw_hal_fill_h2c_cmd(adapter, H2C_MEDIA_STATUS_RPT,
 				   H2C_MEDIA_STATUS_RPT_LEN, parm);
 	if (ret != _SUCCESS)
-		return;
+		return ret;
 
 	SET_H2CCMD_MSRRPT_PARM_MACID_IND(parm, 0);
 	if (macid_ind == 0)
@@ -79,6 +84,8 @@ void rtw_hal_set_FwMediaStatusRpt_cmd_c_oracle(struct _adapter *adapter,
 
 	if (!opmode)
 		rtw_update_tx_rate_bmp(adapter_to_dvobj(adapter));
+
+	return ret;
 }
 
 #ifndef RUST_HAL_COM_FW_MEDIA_STATUS_ORACLE
@@ -86,10 +93,9 @@ s32 rtw_hal_set_FwMediaStatusRpt_cmd(struct _adapter *adapter, bool opmode,
 				     bool miracast, bool miracast_sink, u8 role,
 				     u8 macid, bool macid_ind, u8 macid_end)
 {
-	rtw_hal_set_FwMediaStatusRpt_cmd_c_oracle(adapter, opmode, miracast,
-						  miracast_sink, role, macid,
-						  macid_ind, macid_end);
-	return _SUCCESS;
+	return rtw_hal_set_FwMediaStatusRpt_cmd_c_oracle(
+		adapter, opmode, miracast, miracast_sink, role, macid, macid_ind,
+		macid_end);
 }
 
 s32 rtw_hal_set_FwMediaStatusRpt_single_cmd(struct _adapter *adapter,
