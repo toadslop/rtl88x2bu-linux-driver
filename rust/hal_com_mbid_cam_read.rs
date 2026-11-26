@@ -130,9 +130,9 @@ pub extern "C" fn rtw_mbid_cam_dump(
     if adapter.is_null() {
         return 0;
     }
-    read_line(sel, b"\n== MBSSID HW-CAM DUMP (");
-    read_print_cstr(sel, fun_name);
-    read_line(sel, b")==\n");
+    let mut hdr = [0u8; 96];
+    let hdr_len = format_dump_hdr(&mut hdr, fun_name);
+    read_line(sel, &hdr[..hdr_len]);
 
     let mut mac_addr = [0u8; ETH_ALEN];
     let mut line = [0u8; 96];
@@ -145,6 +145,37 @@ pub extern "C" fn rtw_mbid_cam_dump(
         read_line(sel, &line[..n]);
     }
     0
+}
+
+fn format_dump_hdr(out: &mut [u8], fun_name: *const c_char) -> usize {
+    const PREFIX: &[u8] = b"\n== MBSSID HW-CAM DUMP (";
+    const SUFFIX: &[u8] = b")==\n";
+    let mut pos = 0usize;
+    for &b in PREFIX {
+        if pos >= out.len() {
+            return pos;
+        }
+        out[pos] = b;
+        pos += 1;
+    }
+    if !fun_name.is_null() {
+        unsafe {
+            let mut cur = fun_name;
+            while *cur != 0 && pos < out.len() {
+                out[pos] = *cur as u8;
+                pos += 1;
+                cur = cur.add(1);
+            }
+        }
+    }
+    for &b in SUFFIX {
+        if pos >= out.len() {
+            return pos;
+        }
+        out[pos] = b;
+        pos += 1;
+    }
+    pos
 }
 
 fn format_cam_dump_line(out: &mut [u8], cam_id: U8, mac: &[u8; ETH_ALEN]) -> usize {
