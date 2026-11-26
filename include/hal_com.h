@@ -697,6 +697,9 @@ u8 rtw_ap_bcn_queue_empty_check(_adapter *padapter, u32 txbcn_timer_ms);
 #ifdef CONFIG_FW_HANDLE_TXBCN
 void rtw_ap_mbid_bcn_en(_adapter *adapter, u8 mbcn_id);
 void rtw_ap_mbid_bcn_dis(_adapter *adapter, u8 mbcn_id);
+void rtw_hal_set_fw_ap_bcn_offload_cmd(_adapter *adapter, bool fw_bcn_en,
+				       u8 tbtt_rpt_map);
+void rtw_hal_set_bcn_rsvdpage_loc_cmd(_adapter *adapter);
 #endif
 
 void rtw_hal_get_trx_path(struct dvobj_priv *d, enum rf_type *type,
