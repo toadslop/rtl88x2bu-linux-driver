@@ -47,6 +47,8 @@ void host_gpio_api_reset(void)
 	seed_gpio_banks();
 	memset(&host_gpio_api_trace, 0, sizeof(host_gpio_api_trace));
 	host_gpio_api_trace.first_write_mfr_snapshot = 0xff;
+	host_gpio_api_trace.first_read_leave_snapshot = 0xff;
+	host_gpio_api_trace.first_read_cancel_snapshot = 0xff;
 	g_func_check_fail_enable = 0;
 	g_func_check_fail_gpio = 0xff;
 }
@@ -74,17 +76,6 @@ void host_gpio_api_reg_set(u32 base, unsigned int off, u8 val)
 		g_bank1[off] = val;
 }
 
-static unsigned int count_mmio_writes(void)
-{
-	unsigned int i, n = 0;
-
-	for (i = 0; i < host_gpio_api_trace.op_count; i++) {
-		if (host_gpio_api_trace.ops[i].is_write)
-			n++;
-	}
-	return n;
-}
-
 static void trace_mmio(u32 addr, u8 val, u8 is_write)
 {
 	if (host_gpio_api_trace.op_count >= HOST_GPIO_API_MMIO_MAX) {
@@ -98,6 +89,14 @@ static void trace_mmio(u32 addr, u8 val, u8 is_write)
 	if (host_gpio_api_trace.ps_deny_count > 0 &&
 	    host_gpio_api_trace.leave_ps_count == 0)
 		host_gpio_api_trace.mmio_before_leave_count++;
+	if (host_gpio_api_trace.ps_deny_cancel_count > 0)
+		host_gpio_api_trace.mmio_after_deny_cancel_count++;
+	if (!is_write && host_gpio_api_trace.first_read_leave_snapshot == 0xff) {
+		host_gpio_api_trace.first_read_leave_snapshot =
+			(u8)host_gpio_api_trace.leave_ps_count;
+		host_gpio_api_trace.first_read_cancel_snapshot =
+			(u8)host_gpio_api_trace.ps_deny_cancel_count;
+	}
 	if (is_write && host_gpio_api_trace.first_write_mfr_snapshot == 0xff)
 		host_gpio_api_trace.first_write_mfr_snapshot =
 			(u8)host_gpio_api_trace.multi_func_reset_count;
@@ -155,10 +154,18 @@ void host_gpio_api_note_rf_pwrstate(u8 rf_pwrstate)
 	host_gpio_api_record_ps_step(HOST_GPIO_API_PS_STEP_RF_PWRSTATE_LOG);
 }
 
+void host_gpio_api_log_get_rf_pwrstate(struct _adapter *adapter)
+{
+	if (!adapter)
+		return;
+	host_gpio_api_note_rf_pwrstate(adapter->pwrctrlpriv.rf_pwrstate);
+}
+
 void rtw_hal_gpio_multi_func_reset(struct _adapter *padapter, u8 gpio_num)
 {
 	(void)padapter;
-	host_gpio_api_trace.multi_func_reset_mmio_writes_at_call = count_mmio_writes();
+	host_gpio_api_trace.multi_func_reset_mmio_writes_at_call =
+		host_gpio_api_trace.op_count;
 	host_gpio_api_trace.multi_func_reset_last_gpio = gpio_num;
 	host_gpio_api_trace.multi_func_reset_count++;
 	host_gpio_api_record_ps_step(HOST_GPIO_API_PS_STEP_MULTI_FUNC_RESET);

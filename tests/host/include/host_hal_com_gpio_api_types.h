@@ -59,8 +59,11 @@ struct host_gpio_api_trace {
 	unsigned int ps_step_count;
 	unsigned int mmio_before_leave_count;
 	unsigned int deny_cancel_before_leave_count;
+	unsigned int mmio_after_deny_cancel_count;
 	unsigned int mmio_before_mfr_count;
 	u8 first_write_mfr_snapshot;
+	u8 first_read_leave_snapshot;
+	u8 first_read_cancel_snapshot;
 };
 
 extern struct host_gpio_api_trace host_gpio_api_trace;
