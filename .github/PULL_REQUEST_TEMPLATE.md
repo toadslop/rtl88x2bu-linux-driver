@@ -1,6 +1,6 @@
 ## Summary
 
-What changed and why, in plain English (**max 200 words**). Tag **`@toadslop`** for review. Agents: see [`.cursor/skills/pick-up-work-item/SKILL.md`](.cursor/skills/pick-up-work-item/SKILL.md#pr-descriptions-mandatory).
+What changed and why, in plain English (**max 200 words**). Agents: see [`.cursor/skills/pick-up-work-item/SKILL.md`](.cursor/skills/pick-up-work-item/SKILL.md#pr-descriptions-mandatory).
 
 Before opening a translation PR, read [`docs/rust-migration/test-plan.md`](/toadslop/rtl88x2bu-linux-driver/blob/master/docs/rust-migration/test-plan.md) and [`docs/rust-migration/architecture.md`](/toadslop/rtl88x2bu-linux-driver/blob/master/docs/rust-migration/architecture.md) (including [Phase 1 build policy — Rust required](docs/rust-migration/architecture.md#phase-1-build-policy-t22)), and the FFI rules in [`docs/rust-migration/porting-guide.md`](/toadslop/rtl88x2bu-linux-driver/blob/master/docs/rust-migration/porting-guide.md).
 

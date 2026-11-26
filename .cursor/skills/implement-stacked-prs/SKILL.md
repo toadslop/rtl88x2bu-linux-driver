@@ -55,7 +55,7 @@ Docs: [Stacked PRs CLI commands](https://docs.github.com/en/pull-requests/refere
 **Linkage (multi-PR plan):** however you publish, the session must end with
 **all** plan layers on GitHub in **one** stack (`gh stack view`). Avoid orphan
 PRs that never get `link`ed. Enrich bodies with `ManagePullRequest` `update_pr`
-(or `gh pr edit`) so each layer has `@toadslop`, gates, and measured Δ.
+(or `gh pr edit`) so each layer has the summary, gates, and measured Δ.
 
 **Single-PR plan (one table row):** `gh stack submit` still works; or
 `ManagePullRequest` `create_pr` with `draft: false` — no `link` needed.
@@ -222,7 +222,6 @@ PR body must include:
 
 - **Plain-English summary** — what changed and why (**max 200 words**; see
   [`pick-up-work-item`](../pick-up-work-item/SKILL.md#pr-descriptions-mandatory))
-- **`@toadslop`** — maintainer notification (in or right after the summary)
 - `Closes #N` or `Part of #N` (use **Closes** only on the **top** PR of the stack)
 - Gates executed per layer
 - Stack position (e.g. "PR 2 of 3 — base: `cursor/...`")

@@ -191,7 +191,6 @@ a follow-up PR** for any unresolved knit feedback.
    `ManagePullRequest` `create_pr`. In the body:
    - **Plain-English summary** — what changed and why (**max 200 words**; see
      [`pick-up-work-item`](../pick-up-work-item/SKILL.md#pr-descriptions-mandatory)).
-   - **`@toadslop`** — maintainer notification (in or right after the summary).
    - Link the parent PR (e.g. "Follow-up to #N — addresses reviewer nits").
    - List each knit addressed (with thread links or short quotes).
    - Note that it should merge **after** the parent PR lands (or rebase onto
