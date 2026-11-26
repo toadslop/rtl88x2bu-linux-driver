@@ -99,6 +99,15 @@ static void run_disconnect_sta(u8 macid)
 
 	DUT_CMD(a, 0, 0, 0, H2C_MSR_ROLE_STA, macid);
 
+	{
+		const u8 *buf = host_fw_media_status_h2c_buf(0);
+
+		expect_u8("disc_opmode", GET_H2CCMD_MSRRPT_PARM_OPMODE(buf), 0);
+		expect_u8("disc_macid_ind", GET_H2CCMD_MSRRPT_PARM_MACID_IND(buf), 0);
+		expect_u8("disc_role", GET_H2CCMD_MSRRPT_PARM_ROLE(buf),
+			  H2C_MSR_ROLE_STA);
+		expect_u8("disc_h2c_macid", GET_H2CCMD_MSRRPT_PARM_MACID(buf), macid);
+	}
 	expect_u8("disconnect_bw", ctl->bw[macid], CHANNEL_WIDTH_20);
 	expect_u8("disconnect_vht", ctl->vht_en[macid], 0);
 	expect_u32("disconnect_bmp0", ctl->rate_bmp0[macid], 0);
@@ -113,15 +122,43 @@ static void run_disconnect_sta(u8 macid)
 static void run_h2c_fail_skips_sidefx(void)
 {
 	struct _adapter *a = host_fw_media_status_adapter();
+	struct macid_ctl_t *ctl = &a->dvobj.macid_ctl;
 	s32 rc;
 
 	host_fw_media_status_reset();
+	ctl->bw[2] = 3;
+	ctl->vht_en[2] = 1;
+	ctl->rate_bmp0[2] = 0x55;
 	host_fw_media_status_set_fill_ret(_FAIL);
 	rc = rtw_hal_set_FwMediaStatusRpt_single_cmd(a, 1, 0, 0, H2C_MSR_ROLE_STA, 2);
 	expect_u8("fail_rc", (unsigned int)rc, _FAIL);
 	expect_u8("fail_h2c", host_fw_media_status_h2c_count(), 1);
-	expect_u8("fail_no_msr", a->dvobj.macid_ctl.h2c_msr[2], 0);
+	expect_u8("fail_no_msr", ctl->h2c_msr[2], 0);
+	expect_u8("fail_bw_kept", ctl->bw[2], 3);
 	expect_u8("fail_no_aclt", host_fw_media_status_trace.tx_aclt_calls, 0);
+}
+
+static void run_disconnect_h2c_fail_skips_sidefx(void)
+{
+	struct _adapter *a = host_fw_media_status_adapter();
+	struct macid_ctl_t *ctl = &a->dvobj.macid_ctl;
+	s32 rc;
+
+	host_fw_media_status_reset();
+	ctl->h2c_msr[3] = 0x11;
+	ctl->bw[3] = 3;
+	ctl->vht_en[3] = 1;
+	ctl->rate_bmp0[3] = 0x44;
+	ctl->op_num[H2C_MSR_ROLE_STA] = 1;
+	host_fw_media_status_set_fill_ret(_FAIL);
+	rc = rtw_hal_set_FwMediaStatusRpt_single_cmd(a, 0, 0, 0, H2C_MSR_ROLE_STA, 3);
+	expect_u8("disc_fail_rc", (unsigned int)rc, _FAIL);
+	expect_u8("disc_fail_bw", ctl->bw[3], 3);
+	expect_u8("disc_fail_vht", ctl->vht_en[3], 1);
+	expect_u32("disc_fail_bmp0", ctl->rate_bmp0[3], 0x44);
+	expect_u8("disc_fail_msr", ctl->h2c_msr[3], 0x11);
+	expect_u8("disc_fail_no_rate_bmp",
+		  host_fw_media_status_trace.update_tx_rate_bmp_calls, 0);
 }
 
 static void run_high_macid_connect(void)
@@ -142,6 +179,7 @@ int main(void)
 	run_connect_sta(1);
 	run_disconnect_sta(1);
 	run_h2c_fail_skips_sidefx();
+	run_disconnect_h2c_fail_skips_sidefx();
 	run_high_macid_connect();
 	if (fail_line) {
 		fprintf(stderr, "hal_com_fw_media_status L2 failed\n");
