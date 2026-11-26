@@ -46,6 +46,7 @@ void host_gpio_api_reset(void)
 	g_adapter.pwrctrlpriv.rf_pwrstate = 0x2a;
 	seed_gpio_banks();
 	memset(&host_gpio_api_trace, 0, sizeof(host_gpio_api_trace));
+	host_gpio_api_trace.first_write_mfr_snapshot = 0xff;
 	g_func_check_fail_enable = 0;
 	g_func_check_fail_gpio = 0xff;
 }
@@ -94,6 +95,12 @@ static void trace_mmio(u32 addr, u8 val, u8 is_write)
 	host_gpio_api_trace.ops[host_gpio_api_trace.op_count].val = val;
 	host_gpio_api_trace.ops[host_gpio_api_trace.op_count].is_write = is_write;
 	host_gpio_api_trace.op_count++;
+	if (host_gpio_api_trace.ps_deny_count > 0 &&
+	    host_gpio_api_trace.leave_ps_count == 0)
+		host_gpio_api_trace.mmio_before_leave_count++;
+	if (is_write && host_gpio_api_trace.first_write_mfr_snapshot == 0xff)
+		host_gpio_api_trace.first_write_mfr_snapshot =
+			(u8)host_gpio_api_trace.multi_func_reset_count;
 }
 
 u8 rtw_read8(struct _adapter *padapter, u32 addr)
@@ -154,6 +161,7 @@ void rtw_hal_gpio_multi_func_reset(struct _adapter *padapter, u8 gpio_num)
 	host_gpio_api_trace.multi_func_reset_mmio_writes_at_call = count_mmio_writes();
 	host_gpio_api_trace.multi_func_reset_last_gpio = gpio_num;
 	host_gpio_api_trace.multi_func_reset_count++;
+	host_gpio_api_record_ps_step(HOST_GPIO_API_PS_STEP_MULTI_FUNC_RESET);
 }
 
 void rtw_ps_deny(struct _adapter *adapter, u32 reason)
@@ -169,6 +177,8 @@ void rtw_ps_deny_cancel(struct _adapter *adapter, u32 reason)
 {
 	if (!adapter)
 		return;
+	if (host_gpio_api_trace.ps_deny_count > host_gpio_api_trace.leave_ps_count)
+		host_gpio_api_trace.deny_cancel_before_leave_count++;
 	host_gpio_api_trace.ps_deny_cancel_count++;
 	host_gpio_api_trace.ps_deny_cancel_reason = reason;
 	host_gpio_api_record_ps_step(HOST_GPIO_API_PS_STEP_DENY_CANCEL);
