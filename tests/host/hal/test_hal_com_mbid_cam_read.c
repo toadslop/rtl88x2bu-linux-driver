@@ -9,8 +9,10 @@ struct _adapter *host_mbid_cam_adapter(void);
 void host_mbid_cam_reset_fixture(void);
 void host_mbid_cam_read_reset(void);
 void host_mbid_cam_read_seed(u8 cam_addr, const u8 *mac, u8 poll_reads_before_clear);
+void host_sel_reset(struct host_sel_capture *cap);
 
 void read_mbssid_cam_probe_c_oracle(void *adapter, u8 cam_addr, u8 *mac);
+int rtw_mbid_cam_dump_c_oracle(void *sel, const char *fun_name, void *adapter);
 
 #ifdef RUST_HAL_COM_MBID_CAM_READ_ORACLE
 void read_mbssid_cam_probe(void *adapter, u8 cam_addr, u8 *mac);
@@ -19,6 +21,14 @@ void read_mbssid_cam_probe(void *adapter, u8 cam_addr, u8 *mac);
 static int failures;
 
 static void eq_u8(const char *tag, u8 a, u8 b)
+{
+	if (a != b) {
+		fprintf(stderr, "FAIL %s a=%u b=%u\n", tag, a, b);
+		failures++;
+	}
+}
+
+static void eq_u32(const char *tag, unsigned a, unsigned b)
 {
 	if (a != b) {
 		fprintf(stderr, "FAIL %s a=%u b=%u\n", tag, a, b);
@@ -39,7 +49,14 @@ static void eq_mac(const char *tag, const u8 *a, const u8 *b)
 	}
 }
 
-static void eq_trace_slot(const char *tag, u8 cam)
+static void expect_mac_zero(const char *tag, const u8 *mac)
+{
+	static const u8 zero[ETH_ALEN];
+
+	eq_mac(tag, mac, zero);
+}
+
+static void eq_trace_slot(const char *tag, u8 cam, unsigned cfg2_reads)
 {
 	struct host_mbid_cam_read_trace *tr = host_mbid_cam_read_trace_ptr();
 
@@ -49,6 +66,11 @@ static void eq_trace_slot(const char *tag, u8 cam)
 		return;
 	}
 	eq_u8(tag, tr->last_cam_addr, cam);
+	if (tr->cfg2_read32_count != cfg2_reads) {
+		fprintf(stderr, "FAIL %s cfg2_read32 want %u got %u\n",
+			tag, cfg2_reads, tr->cfg2_read32_count);
+		failures++;
+	}
 	if (!tr->cfg1_read32_count) {
 		fprintf(stderr, "FAIL %s no cfg1 read\n", tag);
 		failures++;
@@ -75,14 +97,16 @@ static void test_read_slot3_immediate(void)
 	u8 oracle[ETH_ALEN];
 	struct _adapter *adap = host_mbid_cam_adapter();
 
+	memset(got, 0xcc, sizeof(got));
 	host_mbid_cam_reset_fixture();
 	host_mbid_cam_read_seed(3, mac, 1);
 	run_probe_dut(adap, 3, got);
-	eq_trace_slot("slot3", 3);
+	eq_trace_slot("slot3", 3, 1);
 	eq_mac("slot3_mac", got, mac);
 
 	host_mbid_cam_read_reset();
 	host_mbid_cam_read_seed(3, mac, 1);
+	memset(oracle, 0xcc, sizeof(oracle));
 	read_mbssid_cam_probe_c_oracle(adap, 3, oracle);
 	eq_mac("slot3_oracle", got, oracle);
 }
@@ -94,21 +118,106 @@ static void test_read_slot5_delayed_poll(void)
 	u8 oracle[ETH_ALEN];
 	struct _adapter *adap = host_mbid_cam_adapter();
 
+	memset(got, 0xcc, sizeof(got));
 	host_mbid_cam_reset_fixture();
 	host_mbid_cam_read_seed(5, mac, 3);
 	run_probe_dut(adap, 5, got);
-	eq_trace_slot("slot5", 5);
+	eq_trace_slot("slot5", 5, 3);
+	eq_mac("slot5_mac", got, mac);
 
 	host_mbid_cam_read_reset();
 	host_mbid_cam_read_seed(5, mac, 3);
+	memset(oracle, 0xcc, sizeof(oracle));
 	read_mbssid_cam_probe_c_oracle(adap, 5, oracle);
 	eq_mac("slot5_oracle", got, oracle);
+}
+
+static void test_read_poll_budget_timeout(void)
+{
+	static const u8 mac[ETH_ALEN] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66};
+	u8 got[ETH_ALEN];
+	struct _adapter *adap = host_mbid_cam_adapter();
+
+	memset(got, 0, sizeof(got));
+	host_mbid_cam_reset_fixture();
+	host_mbid_cam_read_seed(2, mac, 10);
+	run_probe_dut(adap, 2, got);
+	eq_u32("timeout_cfg2_reads", host_mbid_cam_read_trace_ptr()->cfg2_read32_count, 9);
+	expect_mac_zero("timeout_mac", got);
+}
+
+static void test_cannot_run_before_poll_write(void)
+{
+	static const u8 mac[ETH_ALEN] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06};
+	u8 got[ETH_ALEN];
+	struct _adapter *adap = host_mbid_cam_adapter();
+
+	memset(got, 0xab, sizeof(got));
+	host_mbid_cam_reset_fixture();
+	host_mbid_cam_read_seed(4, mac, 1);
+	host_mbid_cam_set_force_cannot_run(1);
+	run_probe_dut(adap, 4, got);
+	eq_u32("cannot_run_writes", host_mbid_cam_read_trace_ptr()->cfg2_write_count, 0);
+	{
+		static const u8 unchanged[ETH_ALEN] = {0xab, 0xab, 0xab, 0xab, 0xab, 0xab};
+
+		eq_mac("cannot_run_mac", got, unchanged);
+	}
+}
+
+static void test_cannot_run_mid_poll(void)
+{
+	static const u8 mac[ETH_ALEN] = {0xde, 0xad, 0xbe, 0xef, 0x00, 0x01};
+	u8 got[ETH_ALEN];
+	struct _adapter *adap = host_mbid_cam_adapter();
+
+	memset(got, 0, sizeof(got));
+	host_mbid_cam_reset_fixture();
+	host_mbid_cam_read_seed(6, mac, 5);
+	host_mbid_cam_set_cannot_run_after_poll_reads(2);
+	run_probe_dut(adap, 6, got);
+	eq_u32("mid_cannot_cfg2_reads", host_mbid_cam_read_trace_ptr()->cfg2_read32_count, 2);
+	expect_mac_zero("mid_cannot_mac", got);
+}
+
+static void test_dump_entry_lines(void)
+{
+	static const u8 mac[ETH_ALEN] = {0x48, 0x89, 0x4a, 0x2b, 0x10, 0x99};
+	struct host_sel_capture sel;
+	char out[sizeof(sel.buf)];
+	struct _adapter *adap = host_mbid_cam_adapter();
+
+	host_mbid_cam_reset_fixture();
+	host_sel_reset(&sel);
+	host_mbid_cam_read_seed(1, mac, 1);
+	rtw_mbid_cam_dump_c_oracle(&sel, "test_dump", adap);
+	if (host_sel_string(&sel, out, sizeof(out)) < 0) {
+		fprintf(stderr, "FAIL dump capture overflow\n");
+		failures++;
+		return;
+	}
+	if (!strstr(out, "CAM_ID = 1")) {
+		fprintf(stderr, "FAIL dump missing CAM_ID line\n");
+		failures++;
+	}
+	if (!strstr(out, "MAC Addr:48:89:4a:2b:10:99")) {
+		fprintf(stderr, "FAIL dump missing MAC line for seeded slot\n");
+		failures++;
+	}
+	if (!strstr(out, "CAM_ID = 7")) {
+		fprintf(stderr, "FAIL dump missing CAM_ID for unseeded slot\n");
+		failures++;
+	}
 }
 
 int main(void)
 {
 	test_read_slot3_immediate();
 	test_read_slot5_delayed_poll();
+	test_read_poll_budget_timeout();
+	test_cannot_run_before_poll_write();
+	test_cannot_run_mid_poll();
+	test_dump_entry_lines();
 	if (failures)
 		return 1;
 	puts("OK hal_com_mbid_cam_read L2");

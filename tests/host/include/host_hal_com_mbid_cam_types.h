@@ -88,12 +88,19 @@ struct host_mbid_cam_read_trace {
 	u8 mac_out[ETH_ALEN];
 };
 
+struct host_mbid_cam_read_slot_seed {
+	u8 mac[ETH_ALEN];
+	u8 poll_reads_before_clear;
+	u8 valid;
+};
+
 struct host_mbid_cam_read_mmio {
 	u32 reg_cfg1;
 	u32 reg_cfg2;
 	u8 poll_reads_left;
-	u8 seeded_cam;
-	u8 mac[ETH_ALEN];
+	u8 active_cam;
+	u8 poll_read_count;
+	struct host_mbid_cam_read_slot_seed slots[TOTAL_MBID_CAM_NUM];
 };
 
 extern struct host_mbid_cam_read_trace host_mbid_cam_read_trace;
@@ -103,6 +110,8 @@ void host_mbid_cam_read_reset(void);
 void host_mbid_cam_read_seed(u8 cam_addr, const u8 *mac, u8 poll_reads_before_clear);
 struct host_mbid_cam_read_trace *host_mbid_cam_read_trace_ptr(void);
 void host_mbid_cam_read_mmio_apply_cam(u8 cam_addr);
+void host_mbid_cam_set_force_cannot_run(u8 v);
+void host_mbid_cam_set_cannot_run_after_poll_reads(u8 n);
 
 void host_mbid_cam_hw_reset(void);
 void host_sel_reset(struct host_sel_capture *cap);

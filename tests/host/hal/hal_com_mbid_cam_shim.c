@@ -9,6 +9,8 @@ static struct dvobj_priv g_dvobj;
 static struct _adapter g_adapter;
 static struct _adapter g_adapters[CONFIG_IFACE_NUMBER];
 static int g_sel_overflow;
+static u8 g_force_cannot_run;
+static u8 g_cannot_run_after_n_poll_reads;
 
 struct host_mbid_cam_hw_trace host_mbid_cam_hw_trace;
 struct host_mbid_cam_read_trace host_mbid_cam_read_trace;
@@ -27,25 +29,41 @@ struct host_mbid_cam_read_trace *host_mbid_cam_read_trace_ptr(void)
 	return &host_mbid_cam_read_trace;
 }
 
+void host_mbid_cam_set_force_cannot_run(u8 v)
+{
+	g_force_cannot_run = v;
+}
+
+void host_mbid_cam_set_cannot_run_after_poll_reads(u8 n)
+{
+	g_cannot_run_after_n_poll_reads = n;
+}
+
 void host_mbid_cam_read_seed(u8 cam_addr, const u8 *mac, u8 poll_reads_before_clear)
 {
-	host_mbid_cam_read_reset();
-	host_mbid_cam_read_mmio.seeded_cam = cam_addr;
+	if (cam_addr >= TOTAL_MBID_CAM_NUM)
+		return;
 	if (mac)
-		memcpy(host_mbid_cam_read_mmio.mac, mac, ETH_ALEN);
-	host_mbid_cam_read_mmio.poll_reads_left = poll_reads_before_clear ? poll_reads_before_clear : 1;
+		memcpy(host_mbid_cam_read_mmio.slots[cam_addr].mac, mac, ETH_ALEN);
+	host_mbid_cam_read_mmio.slots[cam_addr].poll_reads_before_clear =
+		poll_reads_before_clear ? poll_reads_before_clear : 1;
+	host_mbid_cam_read_mmio.slots[cam_addr].valid = 1;
 }
 
 void host_mbid_cam_read_mmio_apply_cam(u8 cam_addr)
 {
-	const u8 *mac = host_mbid_cam_read_mmio.mac;
+	const u8 *mac;
 
-	(void)cam_addr;
+	if (cam_addr >= TOTAL_MBID_CAM_NUM ||
+	    !host_mbid_cam_read_mmio.slots[cam_addr].valid)
+		return;
+	mac = host_mbid_cam_read_mmio.slots[cam_addr].mac;
 	host_mbid_cam_read_mmio.reg_cfg1 =
 		(u32)mac[0] | ((u32)mac[1] << 8) | ((u32)mac[2] << 16) |
 		((u32)mac[3] << 24);
 	host_mbid_cam_read_mmio.reg_cfg2 =
-		((u32)mac[5] << 8) | (u32)mac[4];
+		(host_mbid_cam_read_mmio.reg_cfg2 & ~0xffffu) |
+		(((u32)mac[5] << 8) | (u32)mac[4]);
 }
 
 void host_mbid_cam_hw_reset(void)
@@ -61,6 +79,8 @@ void host_mbid_cam_reset_fixture(void)
 	host_mbid_cam_oracle_reset_warn();
 	host_mbid_cam_hw_reset();
 	host_mbid_cam_read_reset();
+	g_force_cannot_run = 0;
+	g_cannot_run_after_n_poll_reads = 0;
 	memset(&g_dvobj, 0, sizeof(g_dvobj));
 	memset(&g_adapter, 0, sizeof(g_adapter));
 	memset(g_adapters, 0, sizeof(g_adapters));
@@ -444,7 +464,7 @@ void rtw_rust_hal_com_print_line(void *sel, const char *line)
 u8 rtw_rust_hal_com_cannot_run(void *adapter)
 {
 	(void)adapter;
-	return 0;
+	return g_force_cannot_run;
 }
 
 u32 rtw_rust_hal_com_read32(void *adapter, u32 addr)
@@ -452,10 +472,21 @@ u32 rtw_rust_hal_com_read32(void *adapter, u32 addr)
 	(void)adapter;
 	if (addr == HOST_REG_MBIDCAMCFG_2) {
 		host_mbid_cam_read_trace.cfg2_read32_count++;
-		if (host_mbid_cam_read_mmio.poll_reads_left) {
-			host_mbid_cam_read_mmio.poll_reads_left--;
-			if (!host_mbid_cam_read_mmio.poll_reads_left)
-				host_mbid_cam_read_mmio.reg_cfg2 &= ~HOST_BIT_MBIDCAM_POLL;
+		if (host_mbid_cam_read_mmio.reg_cfg2 & HOST_BIT_MBIDCAM_POLL) {
+			host_mbid_cam_read_mmio.poll_read_count++;
+			if (g_cannot_run_after_n_poll_reads &&
+			    host_mbid_cam_read_mmio.poll_read_count >=
+			    g_cannot_run_after_n_poll_reads)
+				g_force_cannot_run = 1;
+			if (host_mbid_cam_read_mmio.poll_reads_left) {
+				host_mbid_cam_read_mmio.poll_reads_left--;
+				if (!host_mbid_cam_read_mmio.poll_reads_left) {
+					host_mbid_cam_read_mmio.reg_cfg2 &=
+						~HOST_BIT_MBIDCAM_POLL;
+					host_mbid_cam_read_mmio_apply_cam(
+						host_mbid_cam_read_mmio.active_cam);
+				}
+			}
 		}
 		return host_mbid_cam_read_mmio.reg_cfg2;
 	}
@@ -489,7 +520,14 @@ void rtw_rust_hal_com_write32(void *adapter, u32 addr, u32 val)
 		return;
 	cam_addr = (u8)((val >> HOST_MBIDCAM_ADDR_SHIFT) & HOST_MBIDCAM_ADDR_MASK);
 	host_mbid_cam_read_trace.last_cam_addr = cam_addr;
-	host_mbid_cam_read_mmio_apply_cam(cam_addr);
-	host_mbid_cam_read_mmio.reg_cfg2 =
-		val | (host_mbid_cam_read_mmio.reg_cfg2 & 0xffffu);
+	host_mbid_cam_read_mmio.active_cam = cam_addr;
+	host_mbid_cam_read_mmio.poll_read_count = 0;
+	host_mbid_cam_read_mmio.reg_cfg1 = 0;
+	if (cam_addr < TOTAL_MBID_CAM_NUM &&
+	    host_mbid_cam_read_mmio.slots[cam_addr].valid)
+		host_mbid_cam_read_mmio.poll_reads_left =
+			host_mbid_cam_read_mmio.slots[cam_addr].poll_reads_before_clear;
+	else
+		host_mbid_cam_read_mmio.poll_reads_left = 1;
+	host_mbid_cam_read_mmio.reg_cfg2 = val;
 }

@@ -2,7 +2,12 @@
 /* C oracle for W4-141 MBSSID CAM HW read + dump (hal_com_rest.c). */
 
 #include "host_hal_com_mbid_cam_types.h"
+#include <stdio.h>
 #include <string.h>
+
+#define MAC_FMT "%02x:%02x:%02x:%02x:%02x:%02x"
+#define MAC_ARG(mac) \
+	(mac)[0], (mac)[1], (mac)[2], (mac)[3], (mac)[4], (mac)[5]
 
 extern u32 rtw_rust_hal_com_read32(void *adapter, u32 addr);
 extern u16 rtw_rust_hal_com_read16(void *adapter, u32 addr);
@@ -69,10 +74,14 @@ int rtw_mbid_cam_dump_c_oracle(void *sel, const char *fun_name, void *adapter)
 	rtw_rust_hal_com_print_line(sel, ")==\n");
 
 	for (i = 0; i < TOTAL_MBID_CAM_NUM; i++) {
+		char line[80];
+
 		oracle_memset(mac_addr, 0, ETH_ALEN);
 		read_mbssid_cam_c_oracle(adapter, i, mac_addr);
-		(void)sel;
-		(void)i;
+		snprintf(line, sizeof(line), "CAM_ID = %u\t", i);
+		rtw_rust_hal_com_print_line(sel, line);
+		snprintf(line, sizeof(line), "MAC Addr:" MAC_FMT "\n", MAC_ARG(mac_addr));
+		rtw_rust_hal_com_print_line(sel, line);
 	}
 	return 0;
 }
