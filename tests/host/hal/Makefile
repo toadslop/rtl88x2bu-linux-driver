@@ -147,6 +147,7 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
 	test-tsf-periodic test-tsf-periodic-rust \
 	test-halmac-identity test-halmac-identity-rust \
+	test-msr $(if $(wildcard $(ROOT)/rust/hal_com_msr_host.rs),test-msr-rust,) \
 	test-c2h-evt-robustness clean
 
 all: test
@@ -194,6 +195,7 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
 	test-tsf-periodic test-tsf-periodic-rust \
 	test-halmac-identity test-halmac-identity-rust \
+	test-msr $(if $(wildcard $(ROOT)/rust/hal_com_msr_host.rs),test-msr-rust,) \
 	test-c2h-evt-robustness
 
 test-c: test_hw_rate_map
@@ -1889,6 +1891,35 @@ test_hal_com_gpio_wakeup_8821asdio: test_hal_com_gpio_wakeup.c $(GPIO_WAKEUP_SHI
 	$(CC) $(GPIO_WAKEUP_8821AS_CFLAGS) -I../include -o $@ test_hal_com_gpio_wakeup.c \
 		$(GPIO_WAKEUP_SHIM) $(GPIO_WAKEUP_ORACLE)
 
+MSR_SHIM := hal_com_msr_shim.c
+MSR_ORACLE := hal_com_msr_c_oracle.c
+RUST_MSR := $(ROOT)/rust/hal_com_msr_host.rs
+
+test-msr: test_hal_com_msr
+	./test_hal_com_msr
+
+test_hal_com_msr: test_hal_com_msr.c $(MSR_SHIM) $(MSR_ORACLE)
+	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_msr.c $(MSR_SHIM) $(MSR_ORACLE)
+
+ifneq ($(wildcard $(RUST_MSR)),)
+librust_hal_com_msr.a: $(RUST_MSR)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_msr_test --cfg config_rtw_halmac \
+		--cfg config_mi_with_mbssid_cam --cfg config_mbssid_cam \
+		--crate-type staticlib $(RUST_MSR) -o $@
+
+test_hal_com_msr_rust: test_hal_com_msr.c $(MSR_SHIM) $(MSR_ORACLE) \
+		librust_hal_com_msr.a
+	$(CC) $(CFLAGS) -I../include -DRUST_HAL_COM_MSR_ORACLE -o $@ \
+		test_hal_com_msr.c $(MSR_SHIM) $(MSR_ORACLE) librust_hal_com_msr.a
+
+test-msr-rust: test_hal_com_msr_rust
+	./test_hal_com_msr_rust
+else
+test-msr-rust:
+	@echo "skip test-msr-rust (no rust/hal_com_msr_host.rs)"
+endif
+
 RUST_GPIO_WAKEUP := $(ROOT)/rust/hal_com_gpio_wakeup_host.rs
 
 librust_hal_com_gpio_wakeup.a: $(RUST_GPIO_WAKEUP)
@@ -2207,5 +2238,6 @@ clean:
 		librust_hal_com_tsf.a librust_hal_com_tsf_mbssid.a \
 		test_hal_com_tsf_periodic_smoke test_hal_com_tsf_periodic \
 		test_hal_com_tsf_periodic_rust librust_hal_com_tsf_periodic.a \
+		test_hal_com_msr test_hal_com_msr_rust librust_hal_com_msr.a \
 		test_hal_com_tx_aclt_set test_hal_com_tx_aclt_set_rust \
 		librust_hal_com_tx_aclt_set.a
