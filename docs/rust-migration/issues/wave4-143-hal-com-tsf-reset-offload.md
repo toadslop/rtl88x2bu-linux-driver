@@ -31,8 +31,9 @@ into `rust/hal_com_tsf_reset.rs` under `CONFIG_TSF_RESET_OFFLOAD`:
 ## Acceptance
 
 - L0 + L1 on profile with `CONFIG_TSF_RESET_OFFLOAD=y`
-- L2: H2C bytes for port 0 vs port ≥2; H2C fill failure (no poll); stub counter unchanged
-  through iteration 9 → `_SUCCESS`, changes only on 10th read → `_FAIL`
+- L2: H2C bytes for port 0 vs port ≥2; H2C fill failure (no poll); counter **changes** on a
+  read while `loop_cnt` is 1–9 → `_SUCCESS`; still equal through the read that sets
+  `loop_cnt` to 10, or change **only** on that 10th read → `_FAIL`
 
 ## Tracking
 
