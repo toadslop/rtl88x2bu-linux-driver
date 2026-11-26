@@ -14,8 +14,8 @@ fn bit(index: U8) -> U8 {
 }
 
 extern "C" {
-    fn rtw_read8(adapter: *mut c_void, addr: U32) -> U8;
-    fn rtw_write8(adapter: *mut c_void, addr: U32, val: U8);
+    fn rtw_rust_hal_com_read8(adapter: *mut c_void, addr: U32) -> U8;
+    fn rtw_rust_hal_com_write8(adapter: *mut c_void, addr: U32, val: U8);
     #[cfg(CONFIG_RTL8192F)]
     fn rtw_rust_hal_com_gpio_pin_output_8192f(adapter: *mut c_void, outputval: *mut U8);
     #[cfg(CONFIG_RTL8192F)]
@@ -33,27 +33,27 @@ extern "C" {
 fn mmio_output_low(adapter: *mut c_void, index: U8, outputval: U8) {
     unsafe {
         let reg_base = REG_GPIO_PIN_CTRL;
-        rtw_write8(
+        rtw_rust_hal_com_write8(
             adapter,
             reg_base + 3,
-            rtw_read8(adapter, reg_base + 3) & !bit(index),
+            rtw_rust_hal_com_read8(adapter, reg_base + 3) & !bit(index),
         );
-        rtw_write8(
+        rtw_rust_hal_com_write8(
             adapter,
             reg_base + 2,
-            rtw_read8(adapter, reg_base + 2) | bit(index),
+            rtw_rust_hal_com_read8(adapter, reg_base + 2) | bit(index),
         );
         if outputval != 0 {
-            rtw_write8(
+            rtw_rust_hal_com_write8(
                 adapter,
                 reg_base + 1,
-                rtw_read8(adapter, reg_base + 1) | bit(index),
+                rtw_rust_hal_com_read8(adapter, reg_base + 1) | bit(index),
             );
         } else {
-            rtw_write8(
+            rtw_rust_hal_com_write8(
                 adapter,
                 reg_base + 1,
-                rtw_read8(adapter, reg_base + 1) & !bit(index),
+                rtw_rust_hal_com_read8(adapter, reg_base + 1) & !bit(index),
             );
         }
     }
@@ -63,27 +63,27 @@ fn mmio_output_high(adapter: *mut c_void, mut index: U8, outputval: U8) {
     index = index.saturating_sub(8);
     unsafe {
         let reg_base = REG_GPIO_PIN_CTRL_2;
-        rtw_write8(
+        rtw_rust_hal_com_write8(
             adapter,
             reg_base + 3,
-            rtw_read8(adapter, reg_base + 3) & !bit(index),
+            rtw_rust_hal_com_read8(adapter, reg_base + 3) & !bit(index),
         );
-        rtw_write8(
+        rtw_rust_hal_com_write8(
             adapter,
             reg_base + 2,
-            rtw_read8(adapter, reg_base + 2) | bit(index),
+            rtw_rust_hal_com_read8(adapter, reg_base + 2) | bit(index),
         );
         if outputval != 0 {
-            rtw_write8(
+            rtw_rust_hal_com_write8(
                 adapter,
                 reg_base + 1,
-                rtw_read8(adapter, reg_base + 1) | bit(index),
+                rtw_rust_hal_com_read8(adapter, reg_base + 1) | bit(index),
             );
         } else {
-            rtw_write8(
+            rtw_rust_hal_com_write8(
                 adapter,
                 reg_base + 1,
-                rtw_read8(adapter, reg_base + 1) & !bit(index),
+                rtw_rust_hal_com_read8(adapter, reg_base + 1) & !bit(index),
             );
         }
     }
@@ -92,15 +92,15 @@ fn mmio_output_high(adapter: *mut c_void, mut index: U8, outputval: U8) {
 fn mmio_input_low(adapter: *mut c_void, index: U8) {
     unsafe {
         let reg_base = REG_GPIO_PIN_CTRL;
-        rtw_write8(
+        rtw_rust_hal_com_write8(
             adapter,
             reg_base + 3,
-            rtw_read8(adapter, reg_base + 3) & !bit(index),
+            rtw_rust_hal_com_read8(adapter, reg_base + 3) & !bit(index),
         );
-        rtw_write8(
+        rtw_rust_hal_com_write8(
             adapter,
             reg_base + 2,
-            rtw_read8(adapter, reg_base + 2) & !bit(index),
+            rtw_rust_hal_com_read8(adapter, reg_base + 2) & !bit(index),
         );
     }
 }
@@ -109,15 +109,15 @@ fn mmio_input_high(adapter: *mut c_void, mut index: U8) {
     index = index.saturating_sub(8);
     unsafe {
         let reg_base = REG_GPIO_PIN_CTRL_2;
-        rtw_write8(
+        rtw_rust_hal_com_write8(
             adapter,
             reg_base + 3,
-            rtw_read8(adapter, reg_base + 3) & !bit(index),
+            rtw_rust_hal_com_read8(adapter, reg_base + 3) & !bit(index),
         );
-        rtw_write8(
+        rtw_rust_hal_com_write8(
             adapter,
             reg_base + 2,
-            rtw_read8(adapter, reg_base + 2) & !bit(index),
+            rtw_rust_hal_com_read8(adapter, reg_base + 2) & !bit(index),
         );
     }
 }
