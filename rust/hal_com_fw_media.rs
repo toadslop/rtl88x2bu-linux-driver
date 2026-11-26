@@ -89,8 +89,10 @@ pub extern "C" fn rtw_hal_set_FwMediaStatusRpt_cmd(
         macid_end = macid;
     }
 
-    let mut id = macid;
-    while id <= macid_end {
+    let mut i = macid as i32;
+    let end = macid_end as i32;
+    while i <= end {
+        let id = i as U8;
         op_num_change_bmp |= unsafe { rtw_macid_ctl_set_h2c_msr(macid_ctl, id, parm[0]) };
         if opmode == 0 {
             unsafe {
@@ -100,7 +102,7 @@ pub extern "C" fn rtw_hal_set_FwMediaStatusRpt_cmd(
                 rtw_macid_ctl_set_rate_bmp1(macid_ctl, id, 0);
             }
         }
-        id = id.wrapping_add(1);
+        i += 1;
     }
 
     #[cfg(config_tx_ac_lifetime)]
