@@ -5309,6 +5309,9 @@ ifneq ($(_rust_cfg_gpio_wakeup_l1),)
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_com_gpio_wakeup_l1_ref.o \
 		tests/host/hal/hal_com_gpio_wakeup_l1_ref.c
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_com_gpio_pin_l1_ref.o \
+		tests/host/hal/hal_com_gpio_pin_l1_ref.c
 endif
 ifneq ($(_rust_cfg_tx_aclt_set_l1),)
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
@@ -5362,6 +5365,7 @@ endif
 		$(HAL_COM_L1_DFT_PORT) \
 		$(HAL_COM_L1_MBID_CAM_REF) \
 		$(HAL_COM_L1_GPIO_WAKEUP_REF) \
+		$(if $(_rust_cfg_gpio_wakeup_l1),tests/host/hal/hal_com_gpio_pin_l1_ref.o,) \
 		$(HAL_COM_L1_TX_ACLT_SET_REF) \
 		$(HAL_COM_L1_RCR_REF) \
 		$(HAL_COM_L1_TSF_IFACE_REF) \
