@@ -41,6 +41,20 @@ extern "C" {
     fn rtw_update_tx_rate_bmp(dvobj: *mut c_void);
     #[cfg(config_fw_multi_port_support)]
     fn rtw_hal_get_port(adapter: *mut c_void) -> U8;
+    #[cfg(not(host_hal_com_fw_media_status_test))]
+    fn rtw_rust_hal_com_fw_media_status_dtp_pre(
+        adapter: *mut c_void,
+        opmode: Bool,
+        macid_ind: Bool,
+        macid: U8,
+        macid_end: U8,
+    );
+    #[cfg(not(host_hal_com_fw_media_status_test))]
+    fn rtw_rust_hal_com_fw_media_status_chip_post(
+        adapter: *mut c_void,
+        opmode: Bool,
+        macid: U8,
+    );
 }
 
 #[no_mangle]
@@ -72,6 +86,13 @@ pub extern "C" fn rtw_hal_set_FwMediaStatusRpt_cmd(
         set_bits_to_le_1byte(&mut parm[3], 0, 3, hw_port);
     }
 
+    #[cfg(not(host_hal_com_fw_media_status_test))]
+    unsafe {
+        rtw_rust_hal_com_fw_media_status_dtp_pre(
+            adapter, opmode, macid_ind, macid, macid_end,
+        );
+    }
+
     let ret = unsafe {
         rtw_hal_fill_h2c_cmd(
             adapter,
@@ -82,6 +103,11 @@ pub extern "C" fn rtw_hal_set_FwMediaStatusRpt_cmd(
     };
     if ret != SUCCESS {
         return ret;
+    }
+
+    #[cfg(not(host_hal_com_fw_media_status_test))]
+    unsafe {
+        rtw_rust_hal_com_fw_media_status_chip_post(adapter, opmode, macid);
     }
 
     set_bits_to_le_1byte(&mut parm[0], 1, 1, 0);

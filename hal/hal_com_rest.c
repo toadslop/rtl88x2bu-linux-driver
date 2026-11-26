@@ -1877,6 +1877,53 @@ static void rtw_hal_dtp_macid_set(_adapter *padapter, u8 opmode,
 
 /* rtw_hal_set_FwMediaStatusRpt_* — rust/hal_com_fw_media.rs (W4-139) */
 
+void rtw_rust_hal_com_fw_media_status_dtp_pre(_adapter *adapter, bool opmode,
+					      bool macid_ind, u8 macid, u8 macid_end)
+{
+#if defined(CONFIG_RTL8822C) && defined(CONFIG_SUPPORT_DYNAMIC_TXPWR)
+	rtw_hal_dtp_macid_set(adapter, opmode, macid_ind, macid, macid_end);
+#else
+	(void)adapter;
+	(void)opmode;
+	(void)macid_ind;
+	(void)macid;
+	(void)macid_end;
+#endif
+}
+
+void rtw_rust_hal_com_fw_media_status_chip_post(_adapter *adapter, bool opmode,
+						u8 macid)
+{
+#if defined(CONFIG_RTL8188E)
+	if (rtw_get_chip_type(adapter) == RTL8188E) {
+		HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
+
+		if (opmode)
+			rtw_hal_set_hwreg(adapter, HW_VAR_MACID_LINK, &macid);
+		else
+			rtw_hal_set_hwreg(adapter, HW_VAR_MACID_NOLINK, &macid);
+
+#if (RATE_ADAPTIVE_SUPPORT == 1)
+		if (hal_data->fw_ractrl == _FALSE) {
+			u8 max_macid;
+
+			max_macid = rtw_search_max_mac_id(adapter);
+			rtw_hal_set_hwreg(adapter, HW_VAR_TX_RPT_MAX_MACID, &max_macid);
+		}
+#endif
+	}
+#endif
+
+#if defined(CONFIG_RTL8812A) || defined(CONFIG_RTL8821A)
+	if (rtw_get_chip_type(adapter) == RTL8812
+	    || rtw_get_chip_type(adapter) == RTL8821
+	) {
+		if (MLME_IS_STA(adapter))
+			Hal_PatchwithJaguar_8812(adapter, opmode);
+	}
+#endif
+}
+
 /* rtw_hal_set_FwRsvdPage_cmd — rust/hal_com_fw_rsvdpage_h2c.rs (W4-136) */
 
 #ifndef HOST_HAL_COM_FW_RSVDPAGE_H2C_TEST
