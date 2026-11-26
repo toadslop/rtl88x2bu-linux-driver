@@ -51,10 +51,7 @@ jobs:
 
       - name: Compute progress report
         id: report
-        env:
-          BASE_REF: origin/${{ github.event.pull_request.base.ref }}
         run: |
-          git fetch origin "${{ github.event.pull_request.base.ref }}"
           if [ "${{ steps.pull.outcome }}" = "success" ]; then
             IMAGE="${L0_IMAGE}"
           else
@@ -69,8 +66,7 @@ jobs:
           docker run --rm -v "${PWD}:/driver" -w /driver "${IMAGE}" \
             bash -c "./scripts/ci/build-module-objects.sh /driver/.ci-migration-objects-head.txt && cat /driver/.ci-migration-objects-head.txt && rm -f /driver/.ci-migration-objects-head.txt" \
             > "$HEAD_OBJECTS"
-          ARGS=(--module-objects "$HEAD_OBJECTS" --compare-ref "$BASE_REF")
-          BODY="$(python3 ./scripts/ci/compute-migration-progress.py "${ARGS[@]}")"
+          BODY="$(python3 ./scripts/ci/compute-migration-progress.py --module-objects "$HEAD_OBJECTS")"
           {
             echo 'body<<EOF'
             echo "${BODY}"
