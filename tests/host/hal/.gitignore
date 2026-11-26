@@ -45,6 +45,9 @@ test_hal_com_mbid_cam_macaddr_rust
 test_hal_com_mbid_cam_alloc
 test_hal_com_mbid_cam_alloc_rust
 librust_hal_com_mbid_cam.a
+test_hal_com_mbid_cam_read
+test_hal_com_mbid_cam_read_rust
+librust_hal_com_mbid_cam_read.a
 test_hal_com_gpio_wakeup
 test_hal_com_gpio_wakeup_rust
 librust_hal_com_gpio_wakeup.a
