@@ -101,14 +101,10 @@ u8 rtw_rust_hal_com_read8(struct _adapter *padapter, u32 addr)
 {
 	unsigned int off;
 	u8 *bank = bank_bytes(addr, &off);
-	u8 val;
 
 	if (!padapter || !bank || off >= 4)
-		val = 0;
-	else
-		val = bank[off];
-	trace_mmio(addr, val);
-	return val;
+		return 0;
+	return bank[off];
 }
 
 void rtw_rust_hal_com_write8(struct _adapter *padapter, u32 addr, u8 val)
