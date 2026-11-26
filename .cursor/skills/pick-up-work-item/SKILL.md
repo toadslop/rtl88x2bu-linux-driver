@@ -56,7 +56,7 @@ and [`implement-stacked-prs`](../implement-stacked-prs/SKILL.md#3-pr-size-gate-m
 ## PR descriptions (mandatory)
 
 Every pull request opened or materially updated must lead with a **short
-plain-English summary** and **tag `@toadslop`** so the maintainer is notified.
+plain-English summary** of what changed and why.
 
 ### Summary — what and why (max 200 words)
 
@@ -67,16 +67,15 @@ context.
 
 **Cap the summary at 200 words.** (GitHub checklist blocks from
 [`.github/PULL_REQUEST_TEMPLATE.md`](../../../.github/PULL_REQUEST_TEMPLATE.md)
-may follow; they do not count toward the limit.) Include **`@toadslop`** in the
-summary or on the line immediately after it.
+may follow; they do not count toward the limit.)
 
 ### When to update
 
 | When | Requirement |
 |------|-------------|
-| `ManagePullRequest` `create_pr` | Summary (≤200 words) + `@toadslop` in `body` |
+| `ManagePullRequest` `create_pr` | Summary (≤200 words) in `body` |
 | `gh pr create` | Same in `--body` |
-| `ManagePullRequest` `update_pr` | Add `@toadslop` if missing; refresh summary when the change is material |
+| `ManagePullRequest` `update_pr` | Refresh summary when the change is material |
 | Knit follow-up PRs (Path A via `prepare-pr-for-merge`) | Same rule |
 
 This applies to Path B implementation PRs, Path C docs PRs, stacked layers
@@ -308,7 +307,7 @@ draft:
 
 - Publish with **`gh stack submit --auto --open`** (or `gh stack link … --open`);
   Every layer's **`body`** must meet **PR descriptions** above (plain-English
-  summary + `@toadslop`) — use `ManagePullRequest` `update_pr` / `gh pr edit`
+  summary) — use `ManagePullRequest` `update_pr` / `gh pr edit`
   after submit.
 - Single-PR plans may use `ManagePullRequest` `create_pr` with `draft: false`.
 - If a layer was created as draft by mistake: `gh pr ready <number>`.
@@ -377,7 +376,7 @@ implement one immediately. Wait for an explicit follow-up or a new pick-up run
 | Report `human action required` when eligible PRs stay blocked | Imply the next pick-up will fix blocked PRs automatically |
 | Honor explicit user override to skip PR prep | Ignore a clear "start new work" instruction |
 | Open new PRs ready for review (Path B) | Open implementation PRs as drafts |
-| Plain-English PR summary (what/why, ≤200 words) + `@toadslop` | Wall-of-bullets descriptions or omitting maintainer notification |
+| Plain-English PR summary (what/why, ≤200 words) | Wall-of-bullets descriptions with no what/why context |
 | Babysit new PRs until CI is green (Path B) | Skip babysit after opening a stack |
 | Complete every planned row in one session (≤7 PRs) (Path B) | Stop after PR1 and file a "continue stack" issue without §10 blocker |
 | File follow-up issue(s) only for §10 blockers (Path B) | Use follow-up issues to defer PR2…PRn for convenience |
