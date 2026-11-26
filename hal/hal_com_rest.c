@@ -12064,6 +12064,7 @@ inline u8 rtw_hal_busagg_qsel_check(_adapter *padapter, u8 pre_qsel, u8 next_qse
 /* dump_TX_FIFO — ported to rust/hal_com.rs (W4-42) */
 
 #ifdef CONFIG_GPIO_API
+/* rtw_hal_get_gpio / rtw_hal_set_gpio_output_value / rtw_hal_config_gpio — rust/hal_com_gpio_api.rs (W4-142) */
 
 void rtw_rust_hal_com_gpio_api_log_get_rf_pwrstate(_adapter *adapter)
 {
@@ -12092,118 +12093,6 @@ void rtw_rust_hal_com_gpio_api_log_config(const char *func, u8 gpio_num, u8 is_o
 	RTW_INFO("%s gpio_num =%d direction=%d\n", func, gpio_num, is_output);
 }
 
-u8 rtw_hal_get_gpio(_adapter *adapter, u8 gpio_num)
-{
-	u8 value = 0;
-	u8 direction = 0;
-	u32 gpio_pin_input_val = REG_GPIO_PIN_CTRL;
-	u32 gpio_pin_output_val = REG_GPIO_PIN_CTRL + 1;
-	u32 gpio_pin_output_en = REG_GPIO_PIN_CTRL + 2;
-	u8 gpio_num_to_set = gpio_num;
-	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
-
-	if (rtw_hal_gpio_func_check(adapter, gpio_num) == _FAIL)
-		return value;
-
-	rtw_ps_deny(adapter, PS_DENY_IOCTL);
-
-	RTW_INFO("rf_pwrstate=0x%02x\n", pwrpriv->rf_pwrstate);
-	LeaveAllPowerSaveModeDirect(adapter);
-
-	if (gpio_num > 7) {
-		gpio_pin_input_val = REG_GPIO_PIN_CTRL_2;
-		gpio_pin_output_val = REG_GPIO_PIN_CTRL_2 + 1;
-		gpio_pin_output_en = REG_GPIO_PIN_CTRL_2 + 2;
-		gpio_num_to_set = gpio_num - 8;
-	}
-
-	/* Read GPIO Direction */
-	direction = (rtw_read8(adapter, gpio_pin_output_en) & BIT(gpio_num_to_set)) >> gpio_num_to_set;
-
-	/* According the direction to read register value */
-	if (direction)
-		value =  (rtw_read8(adapter, gpio_pin_output_val) & BIT(gpio_num_to_set)) >> gpio_num_to_set;
-	else
-		value =  (rtw_read8(adapter, gpio_pin_input_val) & BIT(gpio_num_to_set)) >> gpio_num_to_set;
-
-	rtw_ps_deny_cancel(adapter, PS_DENY_IOCTL);
-	RTW_INFO("%s direction=%d value=%d\n", __FUNCTION__, direction, value);
-
-	return value;
-}
-
-int  rtw_hal_set_gpio_output_value(_adapter *adapter, u8 gpio_num, bool isHigh)
-{
-	u8 direction = 0;
-	u8 res = -1;
-	u32 gpio_pin_output_val = REG_GPIO_PIN_CTRL + 1;
-	u32 gpio_pin_output_en = REG_GPIO_PIN_CTRL + 2;
-	u8 gpio_num_to_set = gpio_num;
-
-	if (rtw_hal_gpio_func_check(adapter, gpio_num) == _FAIL)
-		return -1;
-
-	rtw_ps_deny(adapter, PS_DENY_IOCTL);
-
-	LeaveAllPowerSaveModeDirect(adapter);
-
-	if (gpio_num > 7) {
-		gpio_pin_output_val = REG_GPIO_PIN_CTRL_2 + 1;
-		gpio_pin_output_en = REG_GPIO_PIN_CTRL_2 + 2;
-		gpio_num_to_set = gpio_num - 8;
-	}
-
-	/* Read GPIO direction */
-	direction = (rtw_read8(adapter, gpio_pin_output_en) & BIT(gpio_num_to_set)) >> gpio_num_to_set;
-
-	/* If GPIO is output direction, setting value. */
-	if (direction) {
-		if (isHigh)
-			rtw_write8(adapter, gpio_pin_output_val, rtw_read8(adapter, gpio_pin_output_val) | BIT(gpio_num_to_set));
-		else
-			rtw_write8(adapter, gpio_pin_output_val, rtw_read8(adapter, gpio_pin_output_val) & ~BIT(gpio_num_to_set));
-
-		RTW_INFO("%s Set gpio %x[%d]=%d\n", __FUNCTION__, REG_GPIO_PIN_CTRL + 1, gpio_num, isHigh);
-		res = 0;
-	} else {
-		RTW_INFO("%s The gpio is input,not be set!\n", __FUNCTION__);
-		res = -1;
-	}
-
-	rtw_ps_deny_cancel(adapter, PS_DENY_IOCTL);
-	return res;
-}
-
-int rtw_hal_config_gpio(_adapter *adapter, u8 gpio_num, bool isOutput)
-{
-	u32 gpio_ctrl_reg_to_set = REG_GPIO_PIN_CTRL + 2;
-	u8 gpio_num_to_set = gpio_num;
-
-	if (rtw_hal_gpio_func_check(adapter, gpio_num) == _FAIL)
-		return -1;
-
-	RTW_INFO("%s gpio_num =%d direction=%d\n", __FUNCTION__, gpio_num, isOutput);
-
-	rtw_ps_deny(adapter, PS_DENY_IOCTL);
-
-	LeaveAllPowerSaveModeDirect(adapter);
-
-	rtw_hal_gpio_multi_func_reset(adapter, gpio_num);
-
-	if (gpio_num > 7) {
-		gpio_ctrl_reg_to_set = REG_GPIO_PIN_CTRL_2 + 2;
-		gpio_num_to_set = gpio_num - 8;
-	}
-
-	if (isOutput)
-		rtw_write8(adapter, gpio_ctrl_reg_to_set, rtw_read8(adapter, gpio_ctrl_reg_to_set) | BIT(gpio_num_to_set));
-	else
-		rtw_write8(adapter, gpio_ctrl_reg_to_set, rtw_read8(adapter, gpio_ctrl_reg_to_set) & ~BIT(gpio_num_to_set));
-
-	rtw_ps_deny_cancel(adapter, PS_DENY_IOCTL);
-
-	return 0;
-}
 int rtw_hal_register_gpio_interrupt(_adapter *adapter, int gpio_num, void(*callback)(u8 level))
 {
 	u8 value;

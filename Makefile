@@ -139,6 +139,7 @@ CONFIG_WOW_LPS_MODE = default
 CONFIG_SUSPEND_TYPE = 0
 CONFIG_WOW_STA_MIX = n
 CONFIG_GPIO_WAKEUP = n
+CONFIG_GPIO_API = n
 # Please contact with RTK support team first. After getting the agreement from RTK support team, 
 # you are just able to modify the CONFIG_WAKEUP_GPIO_IDX with customized requirement.
 CONFIG_WAKEUP_GPIO_IDX = default
@@ -1289,6 +1290,9 @@ ccflags-y += -DCONFIG_PNO_SET_DEBUG
 endif
 endif
 
+ifeq ($(CONFIG_GPIO_API), y)
+ccflags-y += -DCONFIG_GPIO_API
+endif
 ifeq ($(CONFIG_GPIO_WAKEUP), y)
 ccflags-y += -DCONFIG_GPIO_WAKEUP
 ifeq ($(CONFIG_ONE_PIN_GPIO), y)
@@ -2958,6 +2962,19 @@ _rust_cfg_gpio_wakeup := y
 endif
 ifneq ($(_rust_cfg_gpio_wakeup),)
 rustflags-y += --cfg config_gpio_wakeup
+endif
+_rust_cfg_gpio_api :=
+ifeq ($(CONFIG_GPIO_API), y)
+_rust_cfg_gpio_api := y
+endif
+ifneq ($(filter -DCONFIG_GPIO_API,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_gpio_api := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_GPIO_API\b' $(src)/include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_gpio_api := y
+endif
+ifneq ($(_rust_cfg_gpio_api),)
+rustflags-y += --cfg config_gpio_api
 endif
 _rust_cfg_rtl8821a :=
 ifeq ($(CONFIG_RTL8821A), y)
@@ -5176,7 +5193,7 @@ rust-check-symbols-rtw-sreset: rust-objects-rtw-sreset-c rust-objects-rtw-sreset
 # W4-01: host C oracle (hw_rate_to_m_rate) vs rust/hal_com.o.
 rust-objects-hal-com:
 	@test -n "$(KDIR)" || { echo "Usage: make KDIR=… LLVM=1 rust-objects-hal-com"; exit 1; }
-	$(MAKE) $(KBUILD_OPTS) CONFIG_GPIO_WAKEUP=y -C $(KSRC) M=$(shell pwd) rust/hal_com.o
+	$(MAKE) $(KBUILD_OPTS) CONFIG_GPIO_WAKEUP=y CONFIG_GPIO_API=y -C $(KSRC) M=$(shell pwd) rust/hal_com.o
 
 # W4-123: L1 OLD ref for rtw_hal_switch_gpio_wl_ctrl (rust-objects-hal-com-c runs outside KERNELRELEASE).
 _rust_cfg_gpio_wakeup_l1 :=
@@ -5190,6 +5207,17 @@ ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_GPIO_WAKEUP\b' include/autoconf
 _rust_cfg_gpio_wakeup_l1 := y
 endif
 HAL_COM_L1_GPIO_WAKEUP_REF := $(if $(_rust_cfg_gpio_wakeup_l1),tests/host/hal/hal_com_gpio_wakeup_l1_ref.o,)
+_rust_cfg_gpio_api_l1 :=
+ifeq ($(CONFIG_GPIO_API), y)
+_rust_cfg_gpio_api_l1 := y
+endif
+ifneq ($(filter -DCONFIG_GPIO_API,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_gpio_api_l1 := y
+endif
+ifneq ($(shell grep -Eq '^\s*#\s*define\s+CONFIG_GPIO_API\b' include/autoconf.h 2>/dev/null && echo y),)
+_rust_cfg_gpio_api_l1 := y
+endif
+HAL_COM_L1_GPIO_API_REF := $(if $(_rust_cfg_gpio_api_l1),tests/host/hal/hal_com_gpio_api_l1_ref.o,)
 HAL_COM_L1_RCR_REF := tests/host/hal/hal_com_rcr_l1_ref.o
 HAL_COM_L1_TSF_IFACE_REF := tests/host/hal/hal_com_tsf_l1_ref.o
 # W4-135: HALMAC BSSID setter kernel swap (HALMAC profile).
@@ -5313,6 +5341,11 @@ ifneq ($(_rust_cfg_gpio_wakeup_l1),)
 		-o tests/host/hal/hal_com_gpio_pin_l1_ref.o \
 		tests/host/hal/hal_com_gpio_pin_l1_ref.c
 endif
+ifneq ($(_rust_cfg_gpio_api_l1),)
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_com_gpio_api_l1_ref.o \
+		tests/host/hal/hal_com_gpio_api_l1_ref.c
+endif
 ifneq ($(_rust_cfg_tx_aclt_set_l1),)
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_com_tx_aclt_set_l1_ref.o \
@@ -5366,6 +5399,7 @@ endif
 		$(HAL_COM_L1_MBID_CAM_REF) \
 		$(HAL_COM_L1_GPIO_WAKEUP_REF) \
 		$(if $(_rust_cfg_gpio_wakeup_l1),tests/host/hal/hal_com_gpio_pin_l1_ref.o,) \
+		$(HAL_COM_L1_GPIO_API_REF) \
 		$(HAL_COM_L1_TX_ACLT_SET_REF) \
 		$(HAL_COM_L1_RCR_REF) \
 		$(HAL_COM_L1_TSF_IFACE_REF) \
@@ -5374,7 +5408,7 @@ endif
 		tests/host/hal/hal_com_fw_media_status_l1_ref.o
 
 rust-check-symbols-hal-com: rust-objects-hal-com
-	$(MAKE) CONFIG_GPIO_WAKEUP=y rust-objects-hal-com-c
+	$(MAKE) CONFIG_GPIO_WAKEUP=y CONFIG_GPIO_API=y rust-objects-hal-com-c
 	$(MAKE) rust-check-symbols OLD=tests/host/hal/hal_com_c_ref.o NEW=rust/hal_com.o \
 		ALLOWLIST=docs/rust-migration/scripts/hal_com.allow ALLOW_VACUOUS=1
 
