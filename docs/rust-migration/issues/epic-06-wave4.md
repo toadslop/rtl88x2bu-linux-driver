@@ -271,4 +271,15 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-138 | `wave4-138-hal-com-fw-bcn-offload.md` | FW beacon offload + BCN rsvd page H2C |
 | W4-139 | `wave4-139-hal-com-fw-media-status.md` | Media status report H2C |
 
-Further slices: USB bulk port bodies stay under Wave 5 `os_dep`; continue parallel `hal_com_rest.c` tails (WOW, P2P construct, `hw_bcn_ctrl_addr`) in new `wave4-*.md` batches.
+## Children (tranche 26 — drafted)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-140 | `wave4-140-hal-com-gpio-pin-mmio.md` | GPIO output/input MMIO |
+| W4-141 | `wave4-141-hal-com-mbid-cam-read.md` | MBSSID CAM read + dump |
+| W4-142 | `wave4-142-hal-com-gpio-api.md` | `CONFIG_GPIO_API` get/config/set |
+| W4-143 | `wave4-143-hal-com-tsf-reset-offload.md` | TSF reset H2C offload |
+| W4-144 | `wave4-144-hal-com-btc-port-h2c.md` | BT coexist WLAN port H2C |
+| W4-145 | `wave4-145-hal-com-fw-aoac-rsvd.md` | WOW AOAC rsvd-page H2C |
+
+Further slices: USB bulk port bodies stay under Wave 5 `os_dep`; continue parallel `hal_com_rest.c` tails (P2P construct, LPS PG, beamforming helpers) in new `wave4-*.md` batches.

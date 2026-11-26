@@ -469,6 +469,12 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-137 | #2290 | [W4-137] Translate hal_com_rest.c — RCR address-match HW_VAR delegate |
 | W4-138 | #2291 | [W4-138] Translate hal_com_rest.c — FW beacon offload H2C pair |
 | W4-139 | #2292 | [W4-139] Translate hal_com_rest.c — FW media status report H2C |
+| W4-140 | #2325 | [W4-140] Translate hal_com_rest.c — GPIO pin output/input MMIO |
+| W4-141 | #2326 | [W4-141] Translate hal_com_rest.c — MBSSID CAM read and dump |
+| W4-142 | #2327 | [W4-142] Translate hal_com_rest.c — CONFIG_GPIO_API accessors |
+| W4-143 | #2328 | [W4-143] Translate hal_com_rest.c — TSF reset H2C offload |
+| W4-144 | #2329 | [W4-144] Translate hal_com_rest.c — BT coexist WLAN port H2C |
+| W4-145 | #2330 | [W4-145] Translate hal_com_rest.c — WOW AOAC reserved-page H2C |
 
 ## Superseded issues
 

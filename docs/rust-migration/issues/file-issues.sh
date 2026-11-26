@@ -405,6 +405,12 @@ files=(
   wave4-137-hal-com-rcr-am-hwvar.md
   wave4-138-hal-com-fw-bcn-offload.md
   wave4-139-hal-com-fw-media-status.md
+  wave4-140-hal-com-gpio-pin-mmio.md
+  wave4-141-hal-com-mbid-cam-read.md
+  wave4-142-hal-com-gpio-api.md
+  wave4-143-hal-com-tsf-reset-offload.md
+  wave4-144-hal-com-btc-port-h2c.md
+  wave4-145-hal-com-fw-aoac-rsvd.md
   wave3-161-debug-proc-rate-setter.md
   wave3-162-debug-proc-rx-cnt-dump.md
   wave3-163-debug-proc-ps-dbg.md
