@@ -26,7 +26,10 @@ typedef int s32;
 	((u8)(((*(u8 *)(__ptr)) >> (__start)) & (((u8)0xff) >> (8 - (__len)))))
 
 #define GET_H2CCMD_MSRRPT_PARM_OPMODE(__p) LE_BITS_TO_1BYTE((__p), 0, 1)
+#define GET_H2CCMD_MSRRPT_PARM_MACID_IND(__p) LE_BITS_TO_1BYTE((__p), 1, 1)
 #define GET_H2CCMD_MSRRPT_PARM_ROLE(__p) LE_BITS_TO_1BYTE((__p), 4, 4)
+#define GET_H2CCMD_MSRRPT_PARM_MACID(__p) ((__p)[1])
+#define GET_H2CCMD_MSRRPT_PARM_MACID_END(__p) ((__p)[2])
 
 struct macid_ctl_t {
 	u8 num;
@@ -82,7 +85,7 @@ s32 rtw_hal_set_FwMediaStatusRpt_single_cmd(struct _adapter *adapter,
 					    bool miracast_sink, u8 role,
 					    u8 macid);
 
-void rtw_hal_set_FwMediaStatusRpt_cmd_c_oracle(struct _adapter *adapter,
+s32 rtw_hal_set_FwMediaStatusRpt_cmd_c_oracle(struct _adapter *adapter,
 					       bool opmode, bool miracast,
 					       bool miracast_sink, u8 role,
 					       u8 macid, bool macid_ind,
