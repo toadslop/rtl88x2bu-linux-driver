@@ -1942,13 +1942,13 @@ void rtw_rust_hal_com_log_fw_rsvdpage_loc(u8 probe, u8 ps_poll, u8 null_data,
 void rtw_rust_hal_com_gpio_pin_invalid_output(_adapter *padapter, u8 index,
 					      u8 outputval)
 {
-	RTW_INFO("%s: invalid GPIO%d=%d\n", __FUNCTION__, index, outputval);
+	RTW_INFO("%s: invalid GPIO%d=%d\n", "rtw_hal_set_output_gpio", index, outputval);
 	(void)padapter;
 }
 
 void rtw_rust_hal_com_gpio_pin_invalid_input(_adapter *padapter, u8 index)
 {
-	RTW_INFO("%s: invalid GPIO%d\n", __func__, index);
+	RTW_INFO("%s: invalid GPIO%d\n", "rtw_hal_set_input_gpio", index);
 	(void)padapter;
 }
 
