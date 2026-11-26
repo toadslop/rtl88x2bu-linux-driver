@@ -2322,6 +2322,7 @@ clean:
 		test_hal_com_rcr_am test_hal_com_rcr_am_rust librust_hal_com_rcr_am.a \
 		test_hal_com_gpio_wakeup test_hal_com_gpio_wakeup_rust \
 		test_hal_com_gpio_wakeup_8821asdio test_hal_com_gpio_wakeup_rust_8821asdio \
+		test_hal_com_gpio_pin test_hal_com_gpio_pin_rust librust_hal_com_gpio_pin.a \
 		test_hal_com_halmac_identity test_hal_com_halmac_identity_rust \
 		librust_hal_com_halmac_identity.a \
 		librust_hal_com_gpio_wakeup.a librust_hal_com_gpio_wakeup_8821as.a \

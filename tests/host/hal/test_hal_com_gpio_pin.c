@@ -34,82 +34,70 @@ static void expect_mmio(unsigned int idx, u32 addr, u8 val)
 	expect_u8(tag, host_gpio_pin_mmio_val(idx), val);
 }
 
-static void run_output_low(u8 index, u8 outputval)
+static void run_output_at(u8 pin, u8 outputval)
 {
 	struct _adapter *a = host_gpio_pin_adapter();
-	u8 idx_bit = index;
+	u32 base;
+	u8 idx_bit;
 	u8 mod_before;
 	u8 sel_before;
 	u8 out_before;
+	char tag[32];
+
+	if (pin <= 7) {
+		base = REG_GPIO_PIN_CTRL;
+		idx_bit = pin;
+	} else if (pin <= 15) {
+		base = REG_GPIO_PIN_CTRL_2;
+		idx_bit = pin - 8;
+	} else {
+		return;
+	}
 
 	host_gpio_pin_reset();
-	mod_before = host_gpio_pin_reg_get(REG_GPIO_PIN_CTRL, 3);
-	sel_before = host_gpio_pin_reg_get(REG_GPIO_PIN_CTRL, 2);
-	out_before = host_gpio_pin_reg_get(REG_GPIO_PIN_CTRL, 1);
-	rtw_hal_set_output_gpio(a, index, outputval);
+	mod_before = host_gpio_pin_reg_get(base, 3);
+	sel_before = host_gpio_pin_reg_get(base, 2);
+	out_before = host_gpio_pin_reg_get(base, 1);
+	rtw_hal_set_output_gpio(a, pin, outputval);
 
-	expect_u32("out_low_count", host_gpio_pin_mmio_count(), 3);
-	expect_mmio(0, REG_GPIO_PIN_CTRL + 3, mod_before & ~BIT(idx_bit));
-	expect_mmio(1, REG_GPIO_PIN_CTRL + 2, sel_before | BIT(idx_bit));
+	snprintf(tag, sizeof(tag), "out%u_count", pin);
+	expect_u32(tag, host_gpio_pin_mmio_count(), 3);
+	expect_mmio(0, base + 3, mod_before & ~BIT(idx_bit));
+	expect_mmio(1, base + 2, sel_before | BIT(idx_bit));
 	if (outputval)
-		expect_mmio(2, REG_GPIO_PIN_CTRL + 1, out_before | BIT(idx_bit));
+		expect_mmio(2, base + 1, out_before | BIT(idx_bit));
 	else
-		expect_mmio(2, REG_GPIO_PIN_CTRL + 1, out_before & ~BIT(idx_bit));
+		expect_mmio(2, base + 1, out_before & ~BIT(idx_bit));
 }
 
-static void run_output_high_bank(void)
+static void run_input_at(u8 pin)
 {
 	struct _adapter *a = host_gpio_pin_adapter();
-	u8 pin = 10;
-	u8 adj = pin - 8;
+	u32 base;
+	u8 idx_bit;
 	u8 mod_before;
 	u8 sel_before;
-	u8 out_before;
+	char tag[32];
+
+	if (pin <= 7) {
+		base = REG_GPIO_PIN_CTRL;
+		idx_bit = pin;
+	} else if (pin <= 15) {
+		base = REG_GPIO_PIN_CTRL_2;
+		idx_bit = pin - 8;
+	} else {
+		return;
+	}
 
 	host_gpio_pin_reset();
-	mod_before = host_gpio_pin_reg_get(REG_GPIO_PIN_CTRL_2, 3);
-	sel_before = host_gpio_pin_reg_get(REG_GPIO_PIN_CTRL_2, 2);
-	out_before = host_gpio_pin_reg_get(REG_GPIO_PIN_CTRL_2, 1);
-	rtw_hal_set_output_gpio(a, pin, 0);
-
-	expect_u32("out_high_count", host_gpio_pin_mmio_count(), 3);
-	expect_mmio(0, REG_GPIO_PIN_CTRL_2 + 3, mod_before & ~BIT(adj));
-	expect_mmio(1, REG_GPIO_PIN_CTRL_2 + 2, sel_before | BIT(adj));
-	expect_mmio(2, REG_GPIO_PIN_CTRL_2 + 1, out_before & ~BIT(adj));
-}
-
-static void run_input_low(u8 index)
-{
-	struct _adapter *a = host_gpio_pin_adapter();
-	u8 mod_before;
-	u8 sel_before;
-
-	host_gpio_pin_reset();
-	mod_before = host_gpio_pin_reg_get(REG_GPIO_PIN_CTRL, 3);
-	sel_before = host_gpio_pin_reg_get(REG_GPIO_PIN_CTRL, 2);
-	rtw_hal_set_input_gpio(a, index);
-
-	expect_u32("in_low_count", host_gpio_pin_mmio_count(), 2);
-	expect_mmio(0, REG_GPIO_PIN_CTRL + 3, mod_before & ~BIT(index));
-	expect_mmio(1, REG_GPIO_PIN_CTRL + 2, sel_before & ~BIT(index));
-}
-
-static void run_input_high_bank(void)
-{
-	struct _adapter *a = host_gpio_pin_adapter();
-	u8 pin = 12;
-	u8 adj = pin - 8;
-	u8 mod_before;
-	u8 sel_before;
-
-	host_gpio_pin_reset();
-	mod_before = host_gpio_pin_reg_get(REG_GPIO_PIN_CTRL_2, 3);
-	sel_before = host_gpio_pin_reg_get(REG_GPIO_PIN_CTRL_2, 2);
+	mod_before = host_gpio_pin_reg_get(base, 3);
+	sel_before = host_gpio_pin_reg_get(base, 2);
 	rtw_hal_set_input_gpio(a, pin);
 
-	expect_u32("in_high_count", host_gpio_pin_mmio_count(), 2);
-	expect_mmio(0, REG_GPIO_PIN_CTRL_2 + 3, mod_before & ~BIT(adj));
-	expect_mmio(1, REG_GPIO_PIN_CTRL_2 + 2, sel_before & ~BIT(adj));
+	snprintf(tag, sizeof(tag), "in%u_count", pin);
+	expect_u32(tag, host_gpio_pin_mmio_count(), 2);
+	expect_mmio(0, base + 3, mod_before & ~BIT(idx_bit));
+	expect_mmio(1, base + 2, sel_before & ~BIT(idx_bit));
 }
 
 static void run_invalid(void)
@@ -117,23 +105,32 @@ static void run_invalid(void)
 	struct _adapter *a = host_gpio_pin_adapter();
 
 	host_gpio_pin_reset();
+	rtw_hal_set_output_gpio(a, 16, 1);
+	rtw_hal_set_input_gpio(a, 16);
 	rtw_hal_set_output_gpio(a, 20, 1);
 	rtw_hal_set_input_gpio(a, 21);
 
 	expect_u32("invalid_mmio", host_gpio_pin_mmio_count(), 0);
-	expect_u32("invalid_out_log", host_gpio_pin_trace.invalid_output_logs, 1);
-	expect_u32("invalid_in_log", host_gpio_pin_trace.invalid_input_logs, 1);
+	expect_u32("invalid_out_log", host_gpio_pin_trace.invalid_output_logs, 2);
+	expect_u32("invalid_in_log", host_gpio_pin_trace.invalid_input_logs, 2);
 }
 
 int main(void)
 {
 	fail_line = 0;
 
-	run_output_low(3, 1);
-	run_output_low(5, 0);
-	run_output_high_bank();
-	run_input_low(4);
-	run_input_high_bank();
+	run_output_at(3, 1);
+	run_output_at(5, 0);
+	run_output_at(7, 1);
+	run_output_at(8, 0);
+	run_output_at(10, 0);
+	run_output_at(10, 1);
+	run_output_at(15, 1);
+	run_input_at(4);
+	run_input_at(7);
+	run_input_at(8);
+	run_input_at(12);
+	run_input_at(15);
 	run_invalid();
 
 	if (fail_line) {
