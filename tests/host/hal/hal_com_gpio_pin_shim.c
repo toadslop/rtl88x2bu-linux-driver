@@ -28,11 +28,20 @@ struct _adapter *host_gpio_pin_adapter(void)
 	return &g_adapter;
 }
 
+static void seed_gpio_banks(void)
+{
+	unsigned int i;
+
+	for (i = 0; i < 4; i++) {
+		g_bank0[i] = (u8)(0xa0 + i);
+		g_bank1[i] = (u8)(0xb0 + i);
+	}
+}
+
 void host_gpio_pin_reset(void)
 {
 	memset(&g_adapter, 0, sizeof(g_adapter));
-	memset(g_bank0, 0xff, sizeof(g_bank0));
-	memset(g_bank1, 0xff, sizeof(g_bank1));
+	seed_gpio_banks();
 	memset(&host_gpio_pin_trace, 0, sizeof(host_gpio_pin_trace));
 }
 
@@ -58,6 +67,11 @@ unsigned int host_gpio_pin_mmio_count(void)
 	return host_gpio_pin_trace.op_count;
 }
 
+unsigned int host_gpio_pin_mmio_dropped(void)
+{
+	return host_gpio_pin_trace.mmio_dropped;
+}
+
 u32 host_gpio_pin_mmio_addr(unsigned int idx)
 {
 	if (idx >= host_gpio_pin_trace.op_count)
@@ -74,31 +88,35 @@ u8 host_gpio_pin_mmio_val(unsigned int idx)
 
 static void trace_mmio(u32 addr, u8 val)
 {
-	if (host_gpio_pin_trace.op_count >= HOST_GPIO_PIN_MMIO_MAX)
+	if (host_gpio_pin_trace.op_count >= HOST_GPIO_PIN_MMIO_MAX) {
+		host_gpio_pin_trace.mmio_dropped++;
 		return;
+	}
 	host_gpio_pin_trace.ops[host_gpio_pin_trace.op_count].addr = addr;
 	host_gpio_pin_trace.ops[host_gpio_pin_trace.op_count].val = val;
 	host_gpio_pin_trace.op_count++;
 }
 
-u8 rtw_read8(struct _adapter *padapter, u32 addr)
+u8 rtw_rust_hal_com_read8(struct _adapter *padapter, u32 addr)
 {
 	unsigned int off;
 	u8 *bank = bank_bytes(addr, &off);
+	u8 val;
 
-	(void)padapter;
-	if (!bank || off >= 4)
-		return 0;
-	return bank[off];
+	if (!padapter || !bank || off >= 4)
+		val = 0;
+	else
+		val = bank[off];
+	trace_mmio(addr, val);
+	return val;
 }
 
-void rtw_write8(struct _adapter *padapter, u32 addr, u8 val)
+void rtw_rust_hal_com_write8(struct _adapter *padapter, u32 addr, u8 val)
 {
 	unsigned int off;
 	u8 *bank = bank_bytes(addr, &off);
 
-	(void)padapter;
-	if (!bank || off >= 4)
+	if (!padapter || !bank || off >= 4)
 		return;
 	bank[off] = val;
 	trace_mmio(addr, val);
