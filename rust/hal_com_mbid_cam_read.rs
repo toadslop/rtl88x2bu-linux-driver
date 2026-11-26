@@ -135,22 +135,75 @@ pub extern "C" fn rtw_mbid_cam_dump(
     read_line(sel, b")==\n");
 
     let mut mac_addr = [0u8; ETH_ALEN];
+    let mut line = [0u8; 96];
     for i in 0..TOTAL_MBID_CAM_NUM {
-        read_line(sel, b"CAM_ID = ");
-        read_print_u8(sel, i);
-        read_line(sel, b"\t");
         unsafe {
             _rtw_memset(mac_addr.as_mut_ptr().cast(), 0, ETH_ALEN);
         }
         read_mbssid_cam_inner(adapter, i, mac_addr.as_mut_ptr());
-        read_line(sel, b"MAC Addr:");
-        for (j, byte) in mac_addr.iter().enumerate() {
-            if j > 0 {
-                read_line(sel, b":");
-            }
-            read_print_hex8(sel, *byte);
-        }
-        read_line(sel, b"\n");
+        let n = format_cam_dump_line(&mut line, i, &mac_addr);
+        read_line(sel, &line[..n]);
     }
     0
+}
+
+fn format_cam_dump_line(out: &mut [u8], cam_id: U8, mac: &[u8; ETH_ALEN]) -> usize {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut pos = 0usize;
+    let prefix = b"CAM_ID = ";
+    for &b in prefix {
+        if pos >= out.len() {
+            return pos;
+        }
+        out[pos] = b;
+        pos += 1;
+    }
+    let mut id = cam_id;
+    let mut digits = [0u8; 3];
+    let mut dlen = 0usize;
+    if id == 0 {
+        digits[0] = b'0';
+        dlen = 1;
+    } else {
+        while id > 0 {
+            digits[dlen] = b'0' + (id % 10);
+            dlen += 1;
+            id /= 10;
+        }
+    }
+    for j in (0..dlen).rev() {
+        if pos >= out.len() {
+            return pos;
+        }
+        out[pos] = digits[j];
+        pos += 1;
+    }
+    let mid = b"\tMAC Addr:";
+    for &b in mid {
+        if pos >= out.len() {
+            return pos;
+        }
+        out[pos] = b;
+        pos += 1;
+    }
+    for (idx, byte) in mac.iter().enumerate() {
+        if idx > 0 {
+            if pos >= out.len() {
+                return pos;
+            }
+            out[pos] = b':';
+            pos += 1;
+        }
+        if pos + 2 > out.len() {
+            return pos;
+        }
+        out[pos] = HEX[(byte >> 4) as usize];
+        out[pos + 1] = HEX[(byte & 0xf) as usize];
+        pos += 2;
+    }
+    if pos < out.len() {
+        out[pos] = b'\n';
+        pos += 1;
+    }
+    pos
 }
