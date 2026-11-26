@@ -8,7 +8,7 @@ type U32 = u32;
 
 const REG_GPIO_PIN_CTRL: U32 = 0x0044;
 const REG_GPIO_PIN_CTRL_2: U32 = 0x0060;
-const PS_DENY_IOCTL: U32 = 0;
+const PS_DENY_IOCTL: U32 = 5;
 const _FAIL: i32 = 0;
 
 fn bit(index: U8) -> U8 {
@@ -37,6 +37,7 @@ extern "C" {
     fn LeaveAllPowerSaveModeDirect(adapter: *mut c_void);
     fn rtw_read8(adapter: *mut c_void, addr: U32) -> U8;
     fn rtw_write8(adapter: *mut c_void, addr: U32, val: U8);
+    fn host_gpio_api_log_get_rf_pwrstate(adapter: *mut c_void);
 }
 
 fn gpio_regs(gpio_num: U8) -> (U32, U32, U32, U8) {
@@ -76,6 +77,10 @@ pub extern "C" fn rtw_hal_get_gpio(adapter: *mut c_void, gpio_num: U8) -> U8 {
         {
             let pwr = adapter_to_pwrctl(adapter);
             rtw_rust_hal_com_gpio_api_log_get_rf_pwrstate(pwr);
+        }
+        #[cfg(host_hal_com_gpio_api_test)]
+        {
+            host_gpio_api_log_get_rf_pwrstate(adapter);
         }
         LeaveAllPowerSaveModeDirect(adapter);
 
