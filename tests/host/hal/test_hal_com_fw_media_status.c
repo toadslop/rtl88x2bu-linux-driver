@@ -74,7 +74,14 @@ static void run_connect_sta(u8 macid)
 		expect_u8("h2c_macid", GET_H2CCMD_MSRRPT_PARM_MACID(buf), macid);
 		expect_u8("h2c_macid_end", GET_H2CCMD_MSRRPT_PARM_MACID_END(buf),
 			  0);
+		expect_u8("miracast", GET_H2CCMD_MSRRPT_PARM_MIRACAST(buf), 0);
+		expect_u8("miracast_sink", GET_H2CCMD_MSRRPT_PARM_MIRACAST_SINK(buf),
+			  0);
 	}
+	expect_u8("connect_bw", ctl->bw[macid], 3);
+	expect_u8("connect_vht", ctl->vht_en[macid], 1);
+	expect_u32("connect_bmp0", ctl->rate_bmp0[macid], 0xaa);
+	expect_u32("connect_bmp1", ctl->rate_bmp1[macid], 0xbb);
 	expect_msr_byte("ctl", ctl->h2c_msr[macid], 1, H2C_MSR_ROLE_STA);
 	expect_u8("op_num_sta", ctl->op_num[H2C_MSR_ROLE_STA], 1);
 	expect_u8("tx_aclt", host_fw_media_status_trace.tx_aclt_calls, 1);
@@ -107,6 +114,11 @@ static void run_disconnect_sta(u8 macid)
 		expect_u8("disc_role", GET_H2CCMD_MSRRPT_PARM_ROLE(buf),
 			  H2C_MSR_ROLE_STA);
 		expect_u8("disc_h2c_macid", GET_H2CCMD_MSRRPT_PARM_MACID(buf), macid);
+		expect_u8("disc_h2c_macid_end",
+			  GET_H2CCMD_MSRRPT_PARM_MACID_END(buf), 0);
+		expect_u8("disc_miracast", GET_H2CCMD_MSRRPT_PARM_MIRACAST(buf), 0);
+		expect_u8("disc_miracast_sink",
+			  GET_H2CCMD_MSRRPT_PARM_MIRACAST_SINK(buf), 0);
 	}
 	expect_u8("disconnect_bw", ctl->bw[macid], CHANNEL_WIDTH_20);
 	expect_u8("disconnect_vht", ctl->vht_en[macid], 0);
@@ -129,12 +141,16 @@ static void run_h2c_fail_skips_sidefx(void)
 	ctl->bw[2] = 3;
 	ctl->vht_en[2] = 1;
 	ctl->rate_bmp0[2] = 0x55;
+	ctl->rate_bmp1[2] = 0x66;
 	host_fw_media_status_set_fill_ret(_FAIL);
 	rc = rtw_hal_set_FwMediaStatusRpt_single_cmd(a, 1, 0, 0, H2C_MSR_ROLE_STA, 2);
 	expect_u8("fail_rc", (unsigned int)rc, _FAIL);
 	expect_u8("fail_h2c", host_fw_media_status_h2c_count(), 1);
 	expect_u8("fail_no_msr", ctl->h2c_msr[2], 0);
 	expect_u8("fail_bw_kept", ctl->bw[2], 3);
+	expect_u8("fail_vht_kept", ctl->vht_en[2], 1);
+	expect_u32("fail_bmp0_kept", ctl->rate_bmp0[2], 0x55);
+	expect_u32("fail_bmp1_kept", ctl->rate_bmp1[2], 0x66);
 	expect_u8("fail_no_aclt", host_fw_media_status_trace.tx_aclt_calls, 0);
 }
 
@@ -149,14 +165,19 @@ static void run_disconnect_h2c_fail_skips_sidefx(void)
 	ctl->bw[3] = 3;
 	ctl->vht_en[3] = 1;
 	ctl->rate_bmp0[3] = 0x44;
+	ctl->rate_bmp1[3] = 0x77;
 	ctl->op_num[H2C_MSR_ROLE_STA] = 1;
 	host_fw_media_status_set_fill_ret(_FAIL);
 	rc = rtw_hal_set_FwMediaStatusRpt_single_cmd(a, 0, 0, 0, H2C_MSR_ROLE_STA, 3);
 	expect_u8("disc_fail_rc", (unsigned int)rc, _FAIL);
+	expect_u8("disc_fail_h2c", host_fw_media_status_h2c_count(), 1);
 	expect_u8("disc_fail_bw", ctl->bw[3], 3);
 	expect_u8("disc_fail_vht", ctl->vht_en[3], 1);
 	expect_u32("disc_fail_bmp0", ctl->rate_bmp0[3], 0x44);
+	expect_u32("disc_fail_bmp1", ctl->rate_bmp1[3], 0x77);
 	expect_u8("disc_fail_msr", ctl->h2c_msr[3], 0x11);
+	expect_u8("disc_fail_op_num", ctl->op_num[H2C_MSR_ROLE_STA], 1);
+	expect_u8("disc_fail_no_aclt", host_fw_media_status_trace.tx_aclt_calls, 0);
 	expect_u8("disc_fail_no_rate_bmp",
 		  host_fw_media_status_trace.update_tx_rate_bmp_calls, 0);
 }
