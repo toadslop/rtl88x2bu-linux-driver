@@ -20,8 +20,9 @@ into `rust/hal_com_mbid_cam_read.rs` under `CONFIG_MBSSID_CAM`:
 
 - **Parallel lane:** new Rust module — does not extend `hal_com_mbid_cam.rs` (W4-119…126).
 - Poll loop on `REG_MBIDCAMCFG_2` must match C timeout behavior (`poll % 10`).
-- `write_mbssid_cam` stays in C until a follow-up slice; Rust calls it only if needed
-  for future symmetry (dump is read-only).
+- **`write_mbssid_cam` is already Rust** (`rust/hal_com_mbid_cam.rs`, W4-126). `hal_com_rest.c`
+  only forward-declares it; this read/dump slice must **not** redefine or duplicate that symbol.
+  Dump is read-only and does not call the write path.
 
 ## Acceptance
 
