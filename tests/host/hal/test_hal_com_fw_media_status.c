@@ -106,6 +106,11 @@ static void run_disconnect_sta(u8 macid)
 
 	DUT_CMD(a, 0, 0, 0, H2C_MSR_ROLE_STA, macid);
 
+	expect_u8("disc_h2c_count", host_fw_media_status_h2c_count(), 1);
+	expect_u8("disc_h2c_cmd", host_fw_media_status_h2c_cmd(0),
+		  H2C_MEDIA_STATUS_RPT);
+	expect_u8("disc_h2c_len", host_fw_media_status_h2c_len(0),
+		  H2C_MEDIA_STATUS_RPT_LEN);
 	{
 		const u8 *buf = host_fw_media_status_h2c_buf(0);
 
