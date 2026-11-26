@@ -49,6 +49,9 @@ void rtw_rust_hal_com_write8(struct _adapter *adapter, u32 addr, u8 val);
 u8 host_gpio_pin_reg_get(u32 base, unsigned int off);
 void host_gpio_pin_reg_set(u32 base, unsigned int off, u8 val);
 
+u8 rtw_read8(struct _adapter *padapter, u32 addr);
+void rtw_write8(struct _adapter *padapter, u32 addr, u8 val);
+
 void rtw_hal_set_output_gpio(struct _adapter *padapter, u8 index, u8 outputval);
 void rtw_hal_set_input_gpio(struct _adapter *padapter, u8 index);
 

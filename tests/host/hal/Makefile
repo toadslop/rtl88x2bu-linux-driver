@@ -147,7 +147,9 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-rcr-leaf test-rcr-leaf-rust test-rcr-chk-bssid \
 	test-rcr-am-hwvar test-rcr-am-hwvar-rust \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
-	test-gpio-wakeup-rust-8821asdio test-tsf-iface test-tsf-iface-mbssid \
+	test-gpio-wakeup-rust-8821asdio test-gpio-pin \
+	$(if $(wildcard $(ROOT)/rust/hal_com_gpio_pin_host.rs),test-gpio-pin-rust,) \
+	test-tsf-iface test-tsf-iface-mbssid \
 	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
 	test-tsf-periodic test-tsf-periodic-rust \
 	test-halmac-identity test-halmac-identity-rust \
@@ -199,7 +201,9 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-rcr-leaf test-rcr-leaf-rust test-rcr-chk-bssid \
 	test-rcr-am-hwvar test-rcr-am-hwvar-rust \
 	test-gpio-wakeup test-gpio-wakeup-rust test-gpio-wakeup-8821asdio \
-	test-gpio-wakeup-rust-8821asdio test-tsf-iface test-tsf-iface-mbssid \
+	test-gpio-wakeup-rust-8821asdio test-gpio-pin \
+	$(if $(wildcard $(ROOT)/rust/hal_com_gpio_pin_host.rs),test-gpio-pin-rust,) \
+	test-tsf-iface test-tsf-iface-mbssid \
 	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
 	test-tsf-periodic test-tsf-periodic-rust \
 	test-halmac-identity test-halmac-identity-rust \
@@ -2201,6 +2205,34 @@ test_hal_com_fw_media_status_rust: test_hal_com_fw_media_status.c \
 		hal_com_fw_media_status_c_oracle.c librust_hal_com_fw_media_status.a
 endif
 
+GPIO_PIN_SHIM := hal_com_gpio_pin_shim.c
+GPIO_PIN_ORACLE := hal_com_gpio_pin_c_oracle.c
+
+test-gpio-pin: test_hal_com_gpio_pin
+	./test_hal_com_gpio_pin
+
+test_hal_com_gpio_pin: test_hal_com_gpio_pin.c $(GPIO_PIN_SHIM) $(GPIO_PIN_ORACLE)
+	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_gpio_pin.c \
+		$(GPIO_PIN_SHIM) $(GPIO_PIN_ORACLE)
+
+ifneq ($(wildcard $(ROOT)/rust/hal_com_gpio_pin_host.rs),)
+RUST_GPIO_PIN := $(ROOT)/rust/hal_com_gpio_pin_host.rs
+
+librust_hal_com_gpio_pin.a: $(RUST_GPIO_PIN)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_gpio_pin_test \
+		--crate-type staticlib $(RUST_GPIO_PIN) -o $@
+
+test-gpio-pin-rust: test_hal_com_gpio_pin_rust
+	./test_hal_com_gpio_pin_rust
+
+test_hal_com_gpio_pin_rust: test_hal_com_gpio_pin.c $(GPIO_PIN_SHIM) $(GPIO_PIN_ORACLE) \
+		librust_hal_com_gpio_pin.a
+	$(CC) $(CFLAGS) -I../include -DRUST_HAL_COM_GPIO_PIN_ORACLE -o $@ \
+		test_hal_com_gpio_pin.c $(GPIO_PIN_SHIM) $(GPIO_PIN_ORACLE) \
+		librust_hal_com_gpio_pin.a
+endif
+
 test-c2h-evt-robustness: test_hal_com_c2h_evt_fx19
 	./test_hal_com_c2h_evt_fx19
 
@@ -2290,6 +2322,7 @@ clean:
 		test_hal_com_rcr_am test_hal_com_rcr_am_rust librust_hal_com_rcr_am.a \
 		test_hal_com_gpio_wakeup test_hal_com_gpio_wakeup_rust \
 		test_hal_com_gpio_wakeup_8821asdio test_hal_com_gpio_wakeup_rust_8821asdio \
+		test_hal_com_gpio_pin test_hal_com_gpio_pin_rust librust_hal_com_gpio_pin.a \
 		test_hal_com_halmac_identity test_hal_com_halmac_identity_rust \
 		librust_hal_com_halmac_identity.a \
 		librust_hal_com_gpio_wakeup.a librust_hal_com_gpio_wakeup_8821as.a \
