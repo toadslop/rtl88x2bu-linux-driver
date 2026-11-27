@@ -133,6 +133,8 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
 	test-req-per-rpt test-req-per-rpt-rust \
 	test-dft-port $(if $(wildcard $(ROOT)/rust/hal_com_dft_port_host.rs),test-dft-port-rust,) \
+	test-tsf-reset \
+	$(if $(wildcard $(ROOT)/rust/hal_com_tsf_reset_host.rs),test-tsf-reset-rust,) \
 	test-fw-rsvdpage-h2c test-fw-rsvdpage-h2c-rust \
 	test-fw-bcn-offload test-fw-bcn-offload-rust \
 	test-fw-media-status \
@@ -190,6 +192,8 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-hal-trxnss test-hal-trxnss-rust \
 	test-sec-read-cam-ent test-sec-read-cam-ent-rust test-customer-str test-customer-str-rust \
 	test-req-per-rpt-rust test-dft-port $(if $(wildcard $(ROOT)/rust/hal_com_dft_port_host.rs),test-dft-port-rust,) \
+	test-tsf-reset \
+	$(if $(wildcard $(ROOT)/rust/hal_com_tsf_reset_host.rs),test-tsf-reset-rust,) \
 	test-fw-rsvdpage-h2c test-fw-rsvdpage-h2c-rust \
 	test-fw-bcn-offload test-fw-bcn-offload-rust \
 	test-fw-media-status \
@@ -2160,6 +2164,35 @@ test_hal_com_dft_port_rust: test_hal_com_dft_port.c $(DFT_PORT_SHIM) \
 	$(CC) $(CFLAGS) -DRUST_HAL_COM_DFT_PORT_ORACLE -o $@ \
 		test_hal_com_dft_port.c $(DFT_PORT_SHIM) $(DFT_PORT_ORACLE) \
 		librust_hal_com_dft_port.a
+endif
+
+TSF_RESET_SHIM := hal_com_tsf_reset_shim.c
+TSF_RESET_ORACLE := hal_com_tsf_reset_c_oracle.c
+
+test-tsf-reset: test_hal_com_tsf_reset
+	./test_hal_com_tsf_reset
+
+test_hal_com_tsf_reset: test_hal_com_tsf_reset.c $(TSF_RESET_SHIM) \
+		$(TSF_RESET_ORACLE)
+	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_tsf_reset.c \
+		$(TSF_RESET_SHIM) $(TSF_RESET_ORACLE)
+
+ifneq ($(wildcard $(ROOT)/rust/hal_com_tsf_reset_host.rs),)
+RUST_TSF_RESET := $(ROOT)/rust/hal_com_tsf_reset_host.rs
+
+librust_hal_com_tsf_reset.a: $(RUST_TSF_RESET)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_tsf_reset_test --crate-type staticlib \
+		$(RUST_TSF_RESET) -o $@
+
+test-tsf-reset-rust: test_hal_com_tsf_reset_rust
+	./test_hal_com_tsf_reset_rust
+
+test_hal_com_tsf_reset_rust: test_hal_com_tsf_reset.c $(TSF_RESET_SHIM) \
+		$(TSF_RESET_ORACLE) librust_hal_com_tsf_reset.a
+	$(CC) $(CFLAGS) -I../include -DRUST_HAL_COM_TSF_RESET_ORACLE -o $@ \
+		test_hal_com_tsf_reset.c $(TSF_RESET_SHIM) $(TSF_RESET_ORACLE) \
+		librust_hal_com_tsf_reset.a
 endif
 
 test-fw-rsvdpage-h2c: test_hal_com_fw_rsvdpage_h2c
