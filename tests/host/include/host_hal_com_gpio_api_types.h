@@ -75,6 +75,7 @@ void host_gpio_api_reset(void);
 void host_gpio_api_set_func_check_fail(u8 gpio_num, int fail);
 void host_gpio_api_record_ps_step(u8 step);
 void host_gpio_api_note_rf_pwrstate(u8 rf_pwrstate);
+void host_gpio_api_log_get_rf_pwrstate(struct _adapter *adapter);
 u8 host_gpio_api_reg_get(u32 base, unsigned int off);
 void host_gpio_api_reg_set(u32 base, unsigned int off, u8 val);
 
