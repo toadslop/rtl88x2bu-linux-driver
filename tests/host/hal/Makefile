@@ -154,6 +154,8 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	$(if $(wildcard $(ROOT)/rust/hal_com_gpio_pin_host.rs),test-gpio-pin-rust,) \
 	test-gpio-api \
 	$(if $(wildcard $(ROOT)/rust/hal_com_gpio_api_host.rs),test-gpio-api-rust,) \
+	test-btc-port \
+	$(if $(wildcard $(ROOT)/rust/hal_com_btc_port_host.rs),test-btc-port-rust,) \
 	test-tsf-iface test-tsf-iface-mbssid \
 	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
 	test-tsf-periodic test-tsf-periodic-rust \
@@ -213,6 +215,8 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	$(if $(wildcard $(ROOT)/rust/hal_com_gpio_pin_host.rs),test-gpio-pin-rust,) \
 	test-gpio-api \
 	$(if $(wildcard $(ROOT)/rust/hal_com_gpio_api_host.rs),test-gpio-api-rust,) \
+	test-btc-port \
+	$(if $(wildcard $(ROOT)/rust/hal_com_btc_port_host.rs),test-btc-port-rust,) \
 	test-tsf-iface test-tsf-iface-mbssid \
 	test-tsf-iface-rust test-tsf-iface-rust-mbssid \
 	test-tsf-periodic test-tsf-periodic-rust \
@@ -2326,6 +2330,35 @@ test_hal_com_gpio_api_rust: test_hal_com_gpio_api.c $(GPIO_API_SHIM) $(GPIO_API_
 	$(CC) $(CFLAGS) -I../include -DRUST_HAL_COM_GPIO_API_ORACLE -o $@ \
 		test_hal_com_gpio_api.c $(GPIO_API_SHIM) $(GPIO_API_ORACLE) \
 		librust_hal_com_gpio_api.a
+endif
+
+BTC_PORT_SHIM := hal_com_btc_port_shim.c
+BTC_PORT_ORACLE := hal_com_btc_port_c_oracle.c
+
+test-btc-port: test_hal_com_btc_port
+	./test_hal_com_btc_port
+
+test_hal_com_btc_port: test_hal_com_btc_port.c $(BTC_PORT_SHIM) $(BTC_PORT_ORACLE)
+	$(CC) $(CFLAGS) -I../include -o $@ test_hal_com_btc_port.c \
+		$(BTC_PORT_SHIM) $(BTC_PORT_ORACLE)
+
+ifneq ($(wildcard $(ROOT)/rust/hal_com_btc_port_host.rs),)
+RUST_BTC_PORT := $(ROOT)/rust/hal_com_btc_port_host.rs
+
+librust_hal_com_btc_port.a: $(RUST_BTC_PORT)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_btc_port_test --cfg config_bt_coexist \
+		--cfg config_fw_multi_port_support \
+		--crate-type staticlib $(RUST_BTC_PORT) -o $@
+
+test-btc-port-rust: test_hal_com_btc_port_rust
+	./test_hal_com_btc_port_rust
+
+test_hal_com_btc_port_rust: test_hal_com_btc_port.c $(BTC_PORT_SHIM) \
+		$(BTC_PORT_ORACLE) librust_hal_com_btc_port.a
+	$(CC) $(CFLAGS) -I../include -DRUST_HAL_COM_BTC_PORT_ORACLE -o $@ \
+		test_hal_com_btc_port.c $(BTC_PORT_SHIM) $(BTC_PORT_ORACLE) \
+		librust_hal_com_btc_port.a
 endif
 
 test-c2h-evt-robustness: test_hal_com_c2h_evt_fx19
