@@ -166,6 +166,8 @@ void host_gpio_api_log_get_rf_pwrstate(struct _adapter *adapter)
 void rtw_hal_gpio_multi_func_reset(struct _adapter *padapter, u8 gpio_num)
 {
 	(void)padapter;
+	if (host_gpio_api_trace.leave_ps_count == 0)
+		host_gpio_api_trace.multi_func_reset_before_leave_count++;
 	host_gpio_api_trace.multi_func_reset_mmio_writes_at_call =
 		host_gpio_api_trace.op_count;
 	host_gpio_api_trace.multi_func_reset_last_gpio = gpio_num;

@@ -134,13 +134,13 @@ static void test_get_gpio3_output(void)
 	u8 c, r;
 
 	host_gpio_api_reset();
-	setup_pin_output(3, 1);
+	setup_pin_output(3, 0);
 	c = rtw_hal_get_gpio_c_oracle(a, 3);
 	host_gpio_api_reset();
-	setup_pin_output(3, 1);
+	setup_pin_output(3, 0);
 	r = DUT_GET(a, 3);
 	expect_u8("get3_out", r, c);
-	expect_u8("get3_val", r, 1);
+	expect_u8("get3_val", r, 0);
 	expect_u32("get3_deny", host_gpio_api_trace.ps_deny_count, 1);
 	expect_u32("get3_leave", host_gpio_api_trace.leave_ps_count, 1);
 	expect_u32("get3_cancel", host_gpio_api_trace.ps_deny_cancel_count, 1);
@@ -162,13 +162,13 @@ static void test_get_gpio10_input(void)
 	u8 c, r;
 
 	host_gpio_api_reset();
-	setup_pin_input(10, 1);
+	setup_pin_input(10, 0);
 	c = rtw_hal_get_gpio_c_oracle(a, 10);
 	host_gpio_api_reset();
-	setup_pin_input(10, 1);
+	setup_pin_input(10, 0);
 	r = DUT_GET(a, 10);
 	expect_u8("get10_in", r, c);
-	expect_u8("get10_val", r, 1);
+	expect_u8("get10_val", r, 0);
 	expect_u32("get10_cancel", host_gpio_api_trace.ps_deny_cancel_count, 1);
 	expect_u32("get10_mmio_early", host_gpio_api_trace.mmio_before_leave_count, 0);
 	expect_u32("get10_mmio_after_cancel", host_gpio_api_trace.mmio_after_deny_cancel_count, 0);
@@ -231,7 +231,19 @@ static void test_set_gpio3_output_low(void)
 	expect_i32("set3_lo_res", r, c);
 	expect_u8("set3_lo_byte", out_after_r, out_after_c);
 	expect_u8("set3_lo_rm", out_after_r, 0xc1);
+	expect_u32("set3_lo_reason", host_gpio_api_trace.ps_deny_reason, PS_DENY_IOCTL);
 	expect_u32("set3_lo_cancel", host_gpio_api_trace.ps_deny_cancel_count, 1);
+	expect_u32("set3_lo_cancel_reason", host_gpio_api_trace.ps_deny_cancel_reason,
+		   PS_DENY_IOCTL);
+	expect_u32("set3_lo_leave", host_gpio_api_trace.leave_ps_count, 1);
+	expect_u32("set3_lo_mmio_early", host_gpio_api_trace.mmio_before_leave_count, 0);
+	expect_u32("set3_lo_cancel_early", host_gpio_api_trace.deny_cancel_before_leave_count, 0);
+	expect_u32("set3_lo_mmio_after_cancel", host_gpio_api_trace.mmio_after_deny_cancel_count, 0);
+	expect_u32("set3_lo_mmio_before_deny", host_gpio_api_trace.mmio_before_deny_count, 0);
+	expect_u8("set3_lo_first_rd_leave", host_gpio_api_trace.first_read_leave_snapshot, 1);
+	expect_u8("set3_lo_first_rd_cancel", host_gpio_api_trace.first_read_cancel_snapshot, 0);
+	expect_u8("set3_lo_ps0", host_gpio_api_trace.ps_steps[0], HOST_GPIO_API_PS_STEP_DENY);
+	expect_u8("set3_lo_ps1", host_gpio_api_trace.ps_steps[1], HOST_GPIO_API_PS_STEP_LEAVE_PS);
 }
 
 static void test_set_gpio10_output_high(void)
@@ -281,6 +293,12 @@ static void test_set_gpio10_output_low(void)
 	expect_u8("set10_lo_byte", out_after_r, out_after_c);
 	expect_u8("set10_lo_rm", out_after_r, 0xd1);
 	expect_u32("set10_lo_cancel", host_gpio_api_trace.ps_deny_cancel_count, 1);
+	expect_u32("set10_lo_leave", host_gpio_api_trace.leave_ps_count, 1);
+	expect_u32("set10_lo_mmio_before_deny", host_gpio_api_trace.mmio_before_deny_count, 0);
+	expect_u8("set10_lo_first_rd_leave", host_gpio_api_trace.first_read_leave_snapshot, 1);
+	expect_u8("set10_lo_first_rd_cancel", host_gpio_api_trace.first_read_cancel_snapshot, 0);
+	expect_u8("set10_lo_ps0", host_gpio_api_trace.ps_steps[0], HOST_GPIO_API_PS_STEP_DENY);
+	expect_u8("set10_lo_ps1", host_gpio_api_trace.ps_steps[1], HOST_GPIO_API_PS_STEP_LEAVE_PS);
 }
 
 static void test_set_gpio3_input_dir_returns_255(void)
@@ -326,6 +344,8 @@ static void test_config_gpio10_output(void)
 	expect_u8("cfg10_mfr_pin", host_gpio_api_trace.multi_func_reset_last_gpio, 10);
 	expect_u32("cfg10_mfr_pre_mmio",
 		   host_gpio_api_trace.multi_func_reset_mmio_writes_at_call, 0);
+	expect_u32("cfg10_mfr_before_leave",
+		   host_gpio_api_trace.multi_func_reset_before_leave_count, 0);
 	expect_u32("cfg10_deny_reason", host_gpio_api_trace.ps_deny_reason, PS_DENY_IOCTL);
 	expect_u32("cfg10_cancel", host_gpio_api_trace.ps_deny_cancel_count, 1);
 	expect_u32("cfg10_cancel_reason", host_gpio_api_trace.ps_deny_cancel_reason,
@@ -367,10 +387,16 @@ static void test_config_gpio3_input(void)
 	expect_u32("cfg3_cancel", host_gpio_api_trace.ps_deny_cancel_count, 1);
 	expect_u32("cfg3_leave", host_gpio_api_trace.leave_ps_count, 1);
 	expect_u32("cfg3_mfr_pre_mmio", host_gpio_api_trace.multi_func_reset_mmio_writes_at_call, 0);
+	expect_u32("cfg3_mfr_before_leave",
+		   host_gpio_api_trace.multi_func_reset_before_leave_count, 0);
 	expect_u32("cfg3_mmio_early", host_gpio_api_trace.mmio_before_leave_count, 0);
 	expect_u32("cfg3_cancel_early", host_gpio_api_trace.deny_cancel_before_leave_count, 0);
 	expect_u32("cfg3_mmio_after_cancel", host_gpio_api_trace.mmio_after_deny_cancel_count, 0);
 	expect_u8("cfg3_first_wr_mfr", host_gpio_api_trace.first_write_mfr_snapshot, 1);
+	expect_u8("cfg3_ps0", host_gpio_api_trace.ps_steps[0], HOST_GPIO_API_PS_STEP_DENY);
+	expect_u8("cfg3_ps1", host_gpio_api_trace.ps_steps[1], HOST_GPIO_API_PS_STEP_LEAVE_PS);
+	expect_u8("cfg3_ps2", host_gpio_api_trace.ps_steps[2],
+		  HOST_GPIO_API_PS_STEP_MULTI_FUNC_RESET);
 }
 
 int main(void)
