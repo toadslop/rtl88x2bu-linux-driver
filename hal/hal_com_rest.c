@@ -12092,7 +12092,6 @@ void rtw_rust_hal_com_gpio_api_log_config(const char *func, u8 gpio_num, u8 is_o
 	RTW_INFO("%s gpio_num =%d direction=%d\n", func, gpio_num, is_output);
 }
 
-#ifdef CONFIG_GPIO_API
 u8 rtw_hal_get_gpio(_adapter *adapter, u8 gpio_num)
 {
 	u8 value = 0;
