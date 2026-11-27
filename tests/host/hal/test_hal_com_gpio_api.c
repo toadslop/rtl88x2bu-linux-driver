@@ -34,6 +34,28 @@ static void snapshot_gpio_banks(u8 bank0[4], u8 bank1[4])
 	}
 }
 
+static void snapshot_bank(u32 base, u8 snap[4])
+{
+	unsigned int i;
+
+	for (i = 0; i < 4; i++)
+		snap[i] = host_gpio_api_reg_get(base, i);
+}
+
+static void expect_bank_unchanged_except(u32 base, const u8 before[4],
+					 unsigned int change_off, const char *pfx)
+{
+	unsigned int i;
+	char tag[48];
+
+	for (i = 0; i < 4; i++) {
+		if (i == change_off)
+			continue;
+		snprintf(tag, sizeof(tag), "%s_b%u", pfx, i);
+		expect_u8(tag, host_gpio_api_reg_get(base, i), before[i]);
+	}
+}
+
 static void expect_other_bank_unchanged(u8 gpio_num, const u8 bank0[4],
 					const u8 bank1[4])
 {
@@ -262,6 +284,7 @@ static void test_get_gpio3_output_high(void)
 	r = DUT_GET(a, 3);
 	expect_u8("get3_hi_out", r, c);
 	expect_u8("get3_hi_val", r, 1);
+	expect_u32("get3_hi_writes", host_gpio_api_mmio_write_count(), 0);
 	expect_get_ps_success_trace();
 }
 
@@ -343,10 +366,12 @@ static void test_set_gpio3_output_high(void)
 	int c, r;
 	u8 out_before, out_after_c, out_after_r;
 	u8 snap0[4], snap1[4];
+	u8 sel_before[4];
 
 	host_gpio_api_reset();
 	snapshot_gpio_banks(snap0, snap1);
 	setup_pin_output(3, 0);
+	snapshot_bank(REG_GPIO_PIN_CTRL, sel_before);
 	out_before = host_gpio_api_reg_get(REG_GPIO_PIN_CTRL, 1);
 	c = rtw_hal_set_gpio_output_value_c_oracle(a, 3, 1);
 	out_after_c = host_gpio_api_reg_get(REG_GPIO_PIN_CTRL, 1);
@@ -373,6 +398,7 @@ static void test_set_gpio3_output_high(void)
 	expect_u8("set3_hi_first_rd_cancel", host_gpio_api_trace.first_read_cancel_snapshot, 0);
 	expect_u8("set3_hi_ps0", host_gpio_api_trace.ps_steps[0], HOST_GPIO_API_PS_STEP_DENY);
 	expect_u8("set3_hi_ps1", host_gpio_api_trace.ps_steps[1], HOST_GPIO_API_PS_STEP_LEAVE_PS);
+	expect_bank_unchanged_except(REG_GPIO_PIN_CTRL, sel_before, 1, "set3_hi");
 	expect_other_bank_unchanged(3, snap0, snap1);
 }
 
@@ -381,9 +407,11 @@ static void test_set_gpio3_output_low(void)
 	struct _adapter *a = host_gpio_api_adapter();
 	int c, r;
 	u8 out_after_c, out_after_r;
+	u8 sel_before[4];
 
 	host_gpio_api_reset();
 	setup_pin_output(3, 1);
+	snapshot_bank(REG_GPIO_PIN_CTRL, sel_before);
 	c = rtw_hal_set_gpio_output_value_c_oracle(a, 3, 0);
 	out_after_c = host_gpio_api_reg_get(REG_GPIO_PIN_CTRL, 1);
 
@@ -408,6 +436,7 @@ static void test_set_gpio3_output_low(void)
 	expect_u8("set3_lo_first_rd_cancel", host_gpio_api_trace.first_read_cancel_snapshot, 0);
 	expect_u8("set3_lo_ps0", host_gpio_api_trace.ps_steps[0], HOST_GPIO_API_PS_STEP_DENY);
 	expect_u8("set3_lo_ps1", host_gpio_api_trace.ps_steps[1], HOST_GPIO_API_PS_STEP_LEAVE_PS);
+	expect_bank_unchanged_except(REG_GPIO_PIN_CTRL, sel_before, 1, "set3_lo");
 }
 
 static void test_set_gpio10_output_high(void)
@@ -416,10 +445,12 @@ static void test_set_gpio10_output_high(void)
 	int c, r;
 	u8 out_before, out_after_c, out_after_r;
 	u8 snap0[4], snap1[4];
+	u8 sel_before[4];
 
 	host_gpio_api_reset();
 	snapshot_gpio_banks(snap0, snap1);
 	setup_pin_output(10, 0);
+	snapshot_bank(REG_GPIO_PIN_CTRL_2, sel_before);
 	out_before = host_gpio_api_reg_get(REG_GPIO_PIN_CTRL_2, 1);
 	c = rtw_hal_set_gpio_output_value_c_oracle(a, 10, 1);
 	out_after_c = host_gpio_api_reg_get(REG_GPIO_PIN_CTRL_2, 1);
@@ -441,6 +472,7 @@ static void test_set_gpio10_output_high(void)
 	expect_u8("set10_hi_first_rd_leave", host_gpio_api_trace.first_read_leave_snapshot, 1);
 	expect_u8("set10_hi_first_rd_cancel", host_gpio_api_trace.first_read_cancel_snapshot, 0);
 	expect_u32("set10_hi_mmio_after_cancel", host_gpio_api_trace.mmio_after_deny_cancel_count, 0);
+	expect_bank_unchanged_except(REG_GPIO_PIN_CTRL_2, sel_before, 1, "set10_hi");
 	expect_other_bank_unchanged(10, snap0, snap1);
 }
 
@@ -449,9 +481,11 @@ static void test_set_gpio10_output_low(void)
 	struct _adapter *a = host_gpio_api_adapter();
 	int c, r;
 	u8 out_after_c, out_after_r;
+	u8 sel_before[4];
 
 	host_gpio_api_reset();
 	setup_pin_output(10, 1);
+	snapshot_bank(REG_GPIO_PIN_CTRL_2, sel_before);
 	c = rtw_hal_set_gpio_output_value_c_oracle(a, 10, 0);
 	out_after_c = host_gpio_api_reg_get(REG_GPIO_PIN_CTRL_2, 1);
 
@@ -474,22 +508,27 @@ static void test_set_gpio10_output_low(void)
 	expect_u8("set10_lo_ps0", host_gpio_api_trace.ps_steps[0], HOST_GPIO_API_PS_STEP_DENY);
 	expect_u8("set10_lo_ps1", host_gpio_api_trace.ps_steps[1], HOST_GPIO_API_PS_STEP_LEAVE_PS);
 	expect_u32("set10_lo_mmio_after_cancel", host_gpio_api_trace.mmio_after_deny_cancel_count, 0);
+	expect_bank_unchanged_except(REG_GPIO_PIN_CTRL_2, sel_before, 1, "set10_lo");
 }
 
 static void test_set_gpio3_input_dir_returns_255(void)
 {
 	struct _adapter *a = host_gpio_api_adapter();
 	int c, r;
+	u8 sel_before[4];
 
 	host_gpio_api_reset();
 	setup_pin_input(3, 0);
+	snapshot_bank(REG_GPIO_PIN_CTRL, sel_before);
 	c = rtw_hal_set_gpio_output_value_c_oracle(a, 3, 1);
 	host_gpio_api_reset();
 	setup_pin_input(3, 0);
+	snapshot_bank(REG_GPIO_PIN_CTRL, sel_before);
 	r = DUT_SET(a, 3, 1);
 	expect_i32("set3_in_res", r, c);
 	expect_i32("set3_in_255", r, 255);
 	expect_u32("set3_in_writes", host_gpio_api_mmio_write_count(), 0);
+	expect_bank_unchanged_except(REG_GPIO_PIN_CTRL, sel_before, 4, "set3_in");
 	expect_u32("set3_in_deny_cancel", host_gpio_api_trace.ps_deny_cancel_count, 1);
 	expect_u32("set3_in_deny_reason", host_gpio_api_trace.ps_deny_reason, PS_DENY_IOCTL);
 	expect_u32("set3_in_cancel_reason", host_gpio_api_trace.ps_deny_cancel_reason,
@@ -500,16 +539,20 @@ static void test_set_gpio10_input_dir_returns_255(void)
 {
 	struct _adapter *a = host_gpio_api_adapter();
 	int c, r;
+	u8 sel_before[4];
 
 	host_gpio_api_reset();
 	setup_pin_input(10, 0);
+	snapshot_bank(REG_GPIO_PIN_CTRL_2, sel_before);
 	c = rtw_hal_set_gpio_output_value_c_oracle(a, 10, 1);
 	host_gpio_api_reset();
 	setup_pin_input(10, 0);
+	snapshot_bank(REG_GPIO_PIN_CTRL_2, sel_before);
 	r = DUT_SET(a, 10, 1);
 	expect_i32("set10_in_res", r, c);
 	expect_i32("set10_in_255", r, 255);
 	expect_u32("set10_in_writes", host_gpio_api_mmio_write_count(), 0);
+	expect_bank_unchanged_except(REG_GPIO_PIN_CTRL_2, sel_before, 4, "set10_in");
 	expect_u32("set10_in_deny_cancel", host_gpio_api_trace.ps_deny_cancel_count, 1);
 	expect_u32("set10_in_deny_reason", host_gpio_api_trace.ps_deny_reason, PS_DENY_IOCTL);
 	expect_u32("set10_in_cancel_reason", host_gpio_api_trace.ps_deny_cancel_reason,
@@ -522,10 +565,12 @@ static void test_config_gpio10_output(void)
 	u8 before, after_oracle, after_dut;
 	int rc, rd;
 	u8 snap0[4], snap1[4];
+	u8 sel_before[4];
 
 	host_gpio_api_reset();
 	snapshot_gpio_banks(snap0, snap1);
 	before = host_gpio_api_reg_get(REG_GPIO_PIN_CTRL_2, 2);
+	snapshot_bank(REG_GPIO_PIN_CTRL_2, sel_before);
 	expect_u32("cfg10_reset_mfr", host_gpio_api_trace.multi_func_reset_count, 0);
 	rc = rtw_hal_config_gpio_c_oracle(a, 10, 1);
 	after_oracle = host_gpio_api_reg_get(REG_GPIO_PIN_CTRL_2, 2);
@@ -559,6 +604,7 @@ static void test_config_gpio10_output(void)
 	expect_u8("cfg10_ps2", host_gpio_api_trace.ps_steps[2],
 		  HOST_GPIO_API_PS_STEP_MULTI_FUNC_RESET);
 	expect_u8("cfg10_first_wr_mfr", host_gpio_api_trace.first_write_mfr_snapshot, 1);
+	expect_bank_unchanged_except(REG_GPIO_PIN_CTRL_2, sel_before, 2, "cfg10_out");
 	expect_other_bank_unchanged(10, snap0, snap1);
 }
 
@@ -568,10 +614,12 @@ static void test_config_gpio3_output(void)
 	u8 before, after_oracle, after_dut;
 	int rc, rd;
 	u8 snap0[4], snap1[4];
+	u8 sel_before[4];
 
 	host_gpio_api_reset();
 	snapshot_gpio_banks(snap0, snap1);
 	before = host_gpio_api_reg_get(REG_GPIO_PIN_CTRL, 2);
+	snapshot_bank(REG_GPIO_PIN_CTRL, sel_before);
 	rc = rtw_hal_config_gpio_c_oracle(a, 3, 1);
 	after_oracle = host_gpio_api_reg_get(REG_GPIO_PIN_CTRL, 2);
 
@@ -587,6 +635,7 @@ static void test_config_gpio3_output(void)
 	expect_u32("cfg3_out_deny_reason", host_gpio_api_trace.ps_deny_reason, PS_DENY_IOCTL);
 	expect_u32("cfg3_out_cancel_reason", host_gpio_api_trace.ps_deny_cancel_reason,
 		   PS_DENY_IOCTL);
+	expect_bank_unchanged_except(REG_GPIO_PIN_CTRL, sel_before, 2, "cfg3_out");
 	expect_other_bank_unchanged(3, snap0, snap1);
 }
 
@@ -596,10 +645,12 @@ static void test_config_gpio10_input(void)
 	u8 after_oracle, after_dut;
 	int rc, rd;
 	u8 snap0[4], snap1[4];
+	u8 sel_before[4];
 
 	host_gpio_api_reset();
 	snapshot_gpio_banks(snap0, snap1);
 	host_gpio_api_reg_set(REG_GPIO_PIN_CTRL_2, 2, 0xd6);
+	snapshot_bank(REG_GPIO_PIN_CTRL_2, sel_before);
 	rc = rtw_hal_config_gpio_c_oracle(a, 10, 0);
 	after_oracle = host_gpio_api_reg_get(REG_GPIO_PIN_CTRL_2, 2);
 
@@ -615,6 +666,7 @@ static void test_config_gpio10_input(void)
 	expect_u32("cfg10_in_deny_reason", host_gpio_api_trace.ps_deny_reason, PS_DENY_IOCTL);
 	expect_u32("cfg10_in_cancel_reason", host_gpio_api_trace.ps_deny_cancel_reason,
 		   PS_DENY_IOCTL);
+	expect_bank_unchanged_except(REG_GPIO_PIN_CTRL_2, sel_before, 2, "cfg10_in");
 	expect_other_bank_unchanged(10, snap0, snap1);
 }
 
@@ -624,10 +676,12 @@ static void test_config_gpio3_input(void)
 	u8 after_oracle, after_dut;
 	int rc, rd;
 	u8 snap0[4], snap1[4];
+	u8 sel_before[4];
 
 	host_gpio_api_reset();
 	snapshot_gpio_banks(snap0, snap1);
 	host_gpio_api_reg_set(REG_GPIO_PIN_CTRL, 2, 0xeb);
+	snapshot_bank(REG_GPIO_PIN_CTRL, sel_before);
 	rc = rtw_hal_config_gpio_c_oracle(a, 3, 0);
 	after_oracle = host_gpio_api_reg_get(REG_GPIO_PIN_CTRL, 2);
 
@@ -659,6 +713,7 @@ static void test_config_gpio3_input(void)
 	expect_u8("cfg3_ps1", host_gpio_api_trace.ps_steps[1], HOST_GPIO_API_PS_STEP_LEAVE_PS);
 	expect_u8("cfg3_ps2", host_gpio_api_trace.ps_steps[2],
 		  HOST_GPIO_API_PS_STEP_MULTI_FUNC_RESET);
+	expect_bank_unchanged_except(REG_GPIO_PIN_CTRL, sel_before, 2, "cfg3_in");
 	expect_other_bank_unchanged(3, snap0, snap1);
 }
 
