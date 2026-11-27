@@ -42,7 +42,7 @@ void host_tsf_reset_reset(void)
 	g_reg0_read_count = 0;
 	g_reg1_read_count = 0;
 	g_msleep_arg_sum = 0;
-	g_last_bwait = 0;
+	g_last_bwait = HOST_TSF_RESET_BWAIT_UNCALLED;
 }
 
 void host_tsf_reset_set_fill_ret(s32 v)

@@ -19,6 +19,7 @@ struct _adapter;
 #define _SUCCESS 1
 #define _FAIL 0
 #define _FALSE 0
+#define HOST_TSF_RESET_BWAIT_UNCALLED 0xFF
 
 s32 rtw_hal_reset_tsf(struct _adapter *adapter, u8 reset_port);
 

@@ -121,6 +121,7 @@ static void run_reset_case(u8 port, s32 fill_ret, const u8 *cnt_reads, unsigned 
 			    &dut_sleep, &dut_h2c, &dut_cmd, &dut_len, &dut_b0, &dut_b1,
 			    &dut_reg0, &dut_reg1);
 	expect_u32_tag(tag, "msleep_ms", host_tsf_reset_msleep_arg_sum(), exp->sleep * 100U);
+	expect_u32_tag(tag, "buddy_abort", host_tsf_reset_buddy_abort_count(), 1);
 	expect_u32_tag(tag, "buddy_bwait", host_tsf_reset_last_bwait(), _FALSE);
 	expect_case(tag, dut_rc, dut_sleep, dut_h2c, dut_cmd, dut_len, dut_b0, dut_b1,
 		    dut_reg0, dut_reg1, exp);
