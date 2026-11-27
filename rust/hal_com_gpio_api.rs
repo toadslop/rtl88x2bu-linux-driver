@@ -11,25 +11,29 @@ const REG_GPIO_PIN_CTRL_2: U32 = 0x0060;
 const PS_DENY_IOCTL: U32 = 5;
 const _FAIL: i32 = 0;
 
-/// Match kernel `BIT(x)` on `int` masked through `u8` MMIO (no shift panic for index ≥ 8).
-#[inline]
-fn reg_bit_mask(index: U8) -> u32 {
-    1u32 << (index as u32)
-}
-
+/// Match kernel `BIT(x)` on `int` masked through a single MMIO `u8` (no shift panic).
 #[inline]
 fn byte_bit(byte: U8, index: U8) -> U8 {
-    ((byte as u32 & reg_bit_mask(index)) >> index) as u8
+    if index >= 8 {
+        return 0;
+    }
+    ((byte as u32 >> index) & 1) as u8
 }
 
 #[inline]
 fn set_byte_bit(byte: U8, index: U8) -> U8 {
-    byte | (reg_bit_mask(index) as u8)
+    if index >= 8 {
+        return byte;
+    }
+    byte | (1u8 << index)
 }
 
 #[inline]
 fn clear_byte_bit(byte: U8, index: U8) -> U8 {
-    byte & !(reg_bit_mask(index) as u8)
+    if index >= 8 {
+        return byte;
+    }
+    byte & !(1u8 << index)
 }
 
 #[cfg(not(host_hal_com_gpio_api_test))]
@@ -169,15 +173,6 @@ pub extern "C" fn rtw_hal_set_gpio_output_value(adapter: *mut c_void, gpio_num: 
 
     if unsafe { rtw_hal_gpio_func_check(adapter, gpio_num) } == _FAIL {
         return -1;
-    }
-
-    #[cfg(not(host_hal_com_gpio_api_test))]
-    unsafe {
-        rtw_rust_hal_com_gpio_api_log_config(
-            b"rtw_hal_config_gpio\0".as_ptr(),
-            gpio_num,
-            is_output,
-        );
     }
 
     unsafe {

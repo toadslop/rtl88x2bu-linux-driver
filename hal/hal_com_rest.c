@@ -12064,6 +12064,35 @@ inline u8 rtw_hal_busagg_qsel_check(_adapter *padapter, u8 pre_qsel, u8 next_qse
 /* dump_TX_FIFO — ported to rust/hal_com.rs (W4-42) */
 
 #ifdef CONFIG_GPIO_API
+
+void rtw_rust_hal_com_gpio_api_log_get_rf_pwrstate(_adapter *adapter)
+{
+	struct pwrctrl_priv *pwr = adapter_to_pwrctl(adapter);
+
+	RTW_INFO("rf_pwrstate=0x%02x\n", pwr->rf_pwrstate);
+}
+
+void rtw_rust_hal_com_gpio_api_log_get_done(const char *func, u8 direction, u8 value)
+{
+	RTW_INFO("%s direction=%d value=%d\n", func, direction, value);
+}
+
+void rtw_rust_hal_com_gpio_api_log_set_output(const char *func, u8 gpio_num, u8 is_high)
+{
+	RTW_INFO("%s Set gpio %x[%d]=%d\n", func, REG_GPIO_PIN_CTRL + 1, gpio_num, is_high);
+}
+
+void rtw_rust_hal_com_gpio_api_log_set_input(const char *func)
+{
+	RTW_INFO("%s The gpio is input,not be set!\n", func);
+}
+
+void rtw_rust_hal_com_gpio_api_log_config(const char *func, u8 gpio_num, u8 is_output)
+{
+	RTW_INFO("%s gpio_num =%d direction=%d\n", func, gpio_num, is_output);
+}
+
+#ifdef CONFIG_GPIO_API
 u8 rtw_hal_get_gpio(_adapter *adapter, u8 gpio_num)
 {
 	u8 value = 0;
