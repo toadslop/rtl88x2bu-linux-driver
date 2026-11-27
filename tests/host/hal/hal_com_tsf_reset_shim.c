@@ -141,6 +141,8 @@ struct _adapter *host_tsf_reset_adapter(void)
 	return (struct _adapter *)g_adapter_blob;
 }
 
+static u8 shim_read8(void *adapter, u32 addr);
+
 static u8 next_cnt(u32 reg, u8 fallback)
 {
 	if (reg == REG_FW_RESET_TSF_CNT_0) {
@@ -156,7 +158,17 @@ static u8 next_cnt(u32 reg, u8 fallback)
 	return 0;
 }
 
+u8 rtw_rust_hal_com_read8(void *adapter, u32 addr)
+{
+	return shim_read8(adapter, addr);
+}
+
 u8 rtw_read8(void *adapter, u32 addr)
+{
+	return shim_read8(adapter, addr);
+}
+
+static u8 shim_read8(void *adapter, u32 addr)
 {
 	(void)adapter;
 	if (addr == REG_FW_RESET_TSF_CNT_0) {
