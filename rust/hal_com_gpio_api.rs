@@ -11,8 +11,25 @@ const REG_GPIO_PIN_CTRL_2: U32 = 0x0060;
 const PS_DENY_IOCTL: U32 = 5;
 const _FAIL: i32 = 0;
 
-fn bit(index: U8) -> U8 {
-    1u8 << index
+/// Match kernel `BIT(x)` on `int` masked through `u8` MMIO (no shift panic for index ≥ 8).
+#[inline]
+fn reg_bit_mask(index: U8) -> u32 {
+    1u32 << (index as u32)
+}
+
+#[inline]
+fn byte_bit(byte: U8, index: U8) -> U8 {
+    ((byte as u32 & reg_bit_mask(index)) >> index) as u8
+}
+
+#[inline]
+fn set_byte_bit(byte: U8, index: U8) -> U8 {
+    byte | (reg_bit_mask(index) as u8)
+}
+
+#[inline]
+fn clear_byte_bit(byte: U8, index: U8) -> U8 {
+    byte & !(reg_bit_mask(index) as u8)
 }
 
 #[cfg(not(host_hal_com_gpio_api_test))]
@@ -22,10 +39,25 @@ extern "C" {
     fn rtw_ps_deny(adapter: *mut c_void, reason: U32);
     fn rtw_ps_deny_cancel(adapter: *mut c_void, reason: U32);
     fn LeaveAllPowerSaveModeDirect(adapter: *mut c_void);
-    fn rtw_read8(adapter: *mut c_void, addr: U32) -> U8;
-    fn rtw_write8(adapter: *mut c_void, addr: U32, val: U8);
-    fn adapter_to_pwrctl(adapter: *mut c_void) -> *mut c_void;
-    fn rtw_rust_hal_com_gpio_api_log_get_rf_pwrstate(pwr: *mut c_void);
+    fn rtw_rust_hal_com_read8(adapter: *mut c_void, addr: U32) -> U8;
+    fn rtw_rust_hal_com_write8(adapter: *mut c_void, addr: U32, val: U8);
+    fn rtw_rust_hal_com_gpio_api_log_get_rf_pwrstate(adapter: *mut c_void);
+    fn rtw_rust_hal_com_gpio_api_log_get_done(
+        func: *const u8,
+        direction: U8,
+        value: U8,
+    );
+    fn rtw_rust_hal_com_gpio_api_log_set_output(
+        func: *const u8,
+        gpio_num: U8,
+        is_high: U8,
+    );
+    fn rtw_rust_hal_com_gpio_api_log_set_input(func: *const u8);
+    fn rtw_rust_hal_com_gpio_api_log_config(
+        func: *const u8,
+        gpio_num: U8,
+        is_output: U8,
+    );
 }
 
 #[cfg(host_hal_com_gpio_api_test)]
@@ -38,6 +70,30 @@ extern "C" {
     fn rtw_read8(adapter: *mut c_void, addr: U32) -> U8;
     fn rtw_write8(adapter: *mut c_void, addr: U32, val: U8);
     fn host_gpio_api_log_get_rf_pwrstate(adapter: *mut c_void);
+}
+
+#[inline]
+unsafe fn hal_read8(adapter: *mut c_void, addr: U32) -> U8 {
+    #[cfg(host_hal_com_gpio_api_test)]
+    {
+        unsafe { rtw_read8(adapter, addr) }
+    }
+    #[cfg(not(host_hal_com_gpio_api_test))]
+    {
+        unsafe { rtw_rust_hal_com_read8(adapter, addr) }
+    }
+}
+
+#[inline]
+unsafe fn hal_write8(adapter: *mut c_void, addr: U32, val: U8) {
+    #[cfg(host_hal_com_gpio_api_test)]
+    {
+        unsafe { rtw_write8(adapter, addr, val) };
+    }
+    #[cfg(not(host_hal_com_gpio_api_test))]
+    {
+        unsafe { rtw_rust_hal_com_write8(adapter, addr, val) };
+    }
 }
 
 fn gpio_regs(gpio_num: U8) -> (U32, U32, U32, U8) {
@@ -75,8 +131,7 @@ pub extern "C" fn rtw_hal_get_gpio(adapter: *mut c_void, gpio_num: U8) -> U8 {
         rtw_ps_deny(adapter, PS_DENY_IOCTL);
         #[cfg(not(host_hal_com_gpio_api_test))]
         {
-            let pwr = adapter_to_pwrctl(adapter);
-            rtw_rust_hal_com_gpio_api_log_get_rf_pwrstate(pwr);
+            rtw_rust_hal_com_gpio_api_log_get_rf_pwrstate(adapter);
         }
         #[cfg(host_hal_com_gpio_api_test)]
         {
@@ -84,16 +139,23 @@ pub extern "C" fn rtw_hal_get_gpio(adapter: *mut c_void, gpio_num: U8) -> U8 {
         }
         LeaveAllPowerSaveModeDirect(adapter);
 
-        let direction = (rtw_read8(adapter, gpio_pin_output_en) & bit(gpio_num_to_set))
-            >> gpio_num_to_set;
+        let direction = byte_bit(hal_read8(adapter, gpio_pin_output_en), gpio_num_to_set);
 
         value = if direction != 0 {
-            (rtw_read8(adapter, gpio_pin_output_val) & bit(gpio_num_to_set)) >> gpio_num_to_set
+            byte_bit(hal_read8(adapter, gpio_pin_output_val), gpio_num_to_set)
         } else {
-            (rtw_read8(adapter, gpio_pin_input_val) & bit(gpio_num_to_set)) >> gpio_num_to_set
+            byte_bit(hal_read8(adapter, gpio_pin_input_val), gpio_num_to_set)
         };
 
         rtw_ps_deny_cancel(adapter, PS_DENY_IOCTL);
+        #[cfg(not(host_hal_com_gpio_api_test))]
+        unsafe {
+            rtw_rust_hal_com_gpio_api_log_get_done(
+                b"rtw_hal_get_gpio\0".as_ptr(),
+                direction,
+                value,
+            );
+        }
     }
 
     value
@@ -109,28 +171,51 @@ pub extern "C" fn rtw_hal_set_gpio_output_value(adapter: *mut c_void, gpio_num: 
         return -1;
     }
 
+    #[cfg(not(host_hal_com_gpio_api_test))]
+    unsafe {
+        rtw_rust_hal_com_gpio_api_log_config(
+            b"rtw_hal_config_gpio\0".as_ptr(),
+            gpio_num,
+            is_output,
+        );
+    }
+
     unsafe {
         rtw_ps_deny(adapter, PS_DENY_IOCTL);
         LeaveAllPowerSaveModeDirect(adapter);
 
-        let direction = (rtw_read8(adapter, gpio_pin_output_en) & bit(gpio_num_to_set))
-            >> gpio_num_to_set;
+        let direction = byte_bit(hal_read8(adapter, gpio_pin_output_en), gpio_num_to_set);
 
         if direction != 0 {
             if is_high != 0 {
-                rtw_write8(
+                hal_write8(
                     adapter,
                     gpio_pin_output_val,
-                    rtw_read8(adapter, gpio_pin_output_val) | bit(gpio_num_to_set),
+                    set_byte_bit(hal_read8(adapter, gpio_pin_output_val), gpio_num_to_set),
                 );
             } else {
-                rtw_write8(
+                hal_write8(
                     adapter,
                     gpio_pin_output_val,
-                    rtw_read8(adapter, gpio_pin_output_val) & !bit(gpio_num_to_set),
+                    clear_byte_bit(hal_read8(adapter, gpio_pin_output_val), gpio_num_to_set),
                 );
             }
             res = 0;
+            #[cfg(not(host_hal_com_gpio_api_test))]
+            unsafe {
+                rtw_rust_hal_com_gpio_api_log_set_output(
+                    b"rtw_hal_set_gpio_output_value\0".as_ptr(),
+                    gpio_num,
+                    is_high,
+                );
+            }
+        } else {
+            #[cfg(not(host_hal_com_gpio_api_test))]
+            unsafe {
+                rtw_rust_hal_com_gpio_api_log_set_input(
+                    b"rtw_hal_set_gpio_output_value\0".as_ptr(),
+                );
+            }
         }
 
         rtw_ps_deny_cancel(adapter, PS_DENY_IOCTL);
@@ -142,8 +227,17 @@ pub extern "C" fn rtw_hal_set_gpio_output_value(adapter: *mut c_void, gpio_num: 
 #[cfg(any(config_gpio_api, host_hal_com_gpio_api_test))]
 #[no_mangle]
 pub extern "C" fn rtw_hal_config_gpio(adapter: *mut c_void, gpio_num: U8, is_output: U8) -> i32 {
-  if unsafe { rtw_hal_gpio_func_check(adapter, gpio_num) } == _FAIL {
+    if unsafe { rtw_hal_gpio_func_check(adapter, gpio_num) } == _FAIL {
         return -1;
+    }
+
+    #[cfg(not(host_hal_com_gpio_api_test))]
+    unsafe {
+        rtw_rust_hal_com_gpio_api_log_config(
+            b"rtw_hal_config_gpio\0".as_ptr(),
+            gpio_num,
+            is_output,
+        );
     }
 
     unsafe {
@@ -161,16 +255,16 @@ pub extern "C" fn rtw_hal_config_gpio(adapter: *mut c_void, gpio_num: U8, is_out
 
     unsafe {
         if is_output != 0 {
-            rtw_write8(
+            hal_write8(
                 adapter,
                 gpio_ctrl_reg_to_set,
-                rtw_read8(adapter, gpio_ctrl_reg_to_set) | bit(gpio_num_to_set),
+                set_byte_bit(hal_read8(adapter, gpio_ctrl_reg_to_set), gpio_num_to_set),
             );
         } else {
-            rtw_write8(
+            hal_write8(
                 adapter,
                 gpio_ctrl_reg_to_set,
-                rtw_read8(adapter, gpio_ctrl_reg_to_set) & !bit(gpio_num_to_set),
+                clear_byte_bit(hal_read8(adapter, gpio_ctrl_reg_to_set), gpio_num_to_set),
             );
         }
         rtw_ps_deny_cancel(adapter, PS_DENY_IOCTL);
