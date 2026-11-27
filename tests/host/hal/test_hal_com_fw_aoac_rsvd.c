@@ -32,13 +32,19 @@ static void expect_u32(const char *tag, const char *name, unsigned got, unsigned
 			failures++;
 }
 
+static void assert_h2c_len(const char *tag, const char *which, unsigned len)
+{
+	expect_u32(tag, which, len, H2C_AOAC_RSVDPAGE_LOC_LEN);
+}
+
 static void assert_assoc_h2c0(const char *tag, const RSVDPAGE_LOC *loc, u8 cmd,
-			      const u8 *buf)
+			      unsigned len, const u8 *buf)
 {
 	unsigned i;
 	u8 expect[7] = {0, 0, 0, 0, 0, 0, 0};
 
 	expect_u32(tag, "h2c0_cmd", cmd, H2C_AOAC_RSVD_PAGE);
+	assert_h2c_len(tag, "h2c0_len", len);
 	expect[0] = loc->LocRemoteCtrlInfo;
 	expect[1] = loc->LocArpRsp;
 	expect[2] = loc->LocNbrAdv;
@@ -51,11 +57,12 @@ static void assert_assoc_h2c0(const char *tag, const RSVDPAGE_LOC *loc, u8 cmd,
 }
 
 static void assert_assoc_h2c1(const char *tag, const RSVDPAGE_LOC *loc, u8 cmd,
-			    const u8 *buf)
+			    unsigned len, const u8 *buf)
 {
 	unsigned i;
 
 	expect_u32(tag, "h2c1_cmd", cmd, H2C_AOAC_RSVDPAGE3);
+	assert_h2c_len(tag, "h2c1_len", len);
 	for (i = 0; i < H2C_AOAC_RSVDPAGE_LOC_LEN; i++) {
 		u8 expect = (i == 1) ? loc->LocAOACReport : 0;
 
@@ -64,11 +71,12 @@ static void assert_assoc_h2c1(const char *tag, const RSVDPAGE_LOC *loc, u8 cmd,
 }
 
 static void assert_pno_h2c0(const char *tag, const RSVDPAGE_LOC *loc, u8 cmd,
-			    const u8 *buf)
+			    unsigned len, const u8 *buf)
 {
 	unsigned i;
 
 	expect_u32(tag, "pno_cmd", cmd, H2C_AOAC_RSVDPAGE3);
+	assert_h2c_len(tag, "pno_len", len);
 	for (i = 0; i < H2C_AOAC_RSVDPAGE_LOC_LEN; i++) {
 		u8 expect = (i == 0) ? loc->LocPNOInfo : 0;
 
@@ -80,31 +88,35 @@ static void compare_run(const char *tag, int asoc, u8 in_resume, const RSVDPAGE_
 			unsigned expect_h2c, u8 expect_rpt)
 {
 	unsigned i, len;
-	u8 dut_cmd[2], dut_buf[2][8];
+	u8 dut_cmd[2], dut_buf[2][8], dut_len[2];
 	unsigned dut_cnt;
+	u8 dut_aoac_rpt;
 
 	host_fw_aoac_rsvd_reset();
 	host_fw_aoac_rsvd_set_asoc(asoc);
 	host_fw_aoac_rsvd_set_wowlan_in_resume(in_resume);
 	rtw_hal_set_FwAoacRsvdPage_cmd(host_fw_aoac_rsvd_adapter(), (PRSVDPAGE_LOC)loc);
 	dut_cnt = (unsigned)host_fw_aoac_rsvd_h2c_count();
+	dut_aoac_rpt = host_fw_aoac_rsvd_wowlan_aoac_rpt_loc();
 	for (i = 0; i < dut_cnt; i++) {
 		dut_cmd[i] = host_fw_aoac_rsvd_h2c_cmd((int)i);
 		len = host_fw_aoac_rsvd_h2c_len((int)i);
+		dut_len[i] = (u8)len;
 		if (host_fw_aoac_rsvd_h2c_buf((int)i) && len <= sizeof(dut_buf[i]))
 			memcpy(dut_buf[i], host_fw_aoac_rsvd_h2c_buf((int)i), len);
 	}
+	expect_u32(tag, "aoac_rpt", dut_aoac_rpt, expect_rpt);
 
 	if (asoc) {
 		expect_u32(tag, "h2c_count", dut_cnt, 2u);
 		if (dut_cnt >= 1)
-			assert_assoc_h2c0(tag, loc, dut_cmd[0], dut_buf[0]);
+			assert_assoc_h2c0(tag, loc, dut_cmd[0], dut_len[0], dut_buf[0]);
 		if (dut_cnt >= 2)
-			assert_assoc_h2c1(tag, loc, dut_cmd[1], dut_buf[1]);
+			assert_assoc_h2c1(tag, loc, dut_cmd[1], dut_len[1], dut_buf[1]);
 	} else if (!in_resume) {
 		expect_u32(tag, "h2c_count", dut_cnt, 1u);
 		if (dut_cnt >= 1)
-			assert_pno_h2c0(tag, loc, dut_cmd[0], dut_buf[0]);
+			assert_pno_h2c0(tag, loc, dut_cmd[0], dut_len[0], dut_buf[0]);
 	} else {
 		expect_u32(tag, "h2c_count", dut_cnt, 0u);
 	}
@@ -122,11 +134,10 @@ static void compare_run(const char *tag, int asoc, u8 in_resume, const RSVDPAGE_
 		const u8 *ob = host_fw_aoac_rsvd_h2c_buf((int)i);
 
 		expect_u32(tag, "h2c_cmd", dut_cmd[i], host_fw_aoac_rsvd_h2c_cmd((int)i));
+		expect_u32(tag, "h2c_len", dut_len[i], host_fw_aoac_rsvd_h2c_len((int)i));
 		for (j = 0; j < H2C_AOAC_RSVDPAGE_LOC_LEN && ob; j++)
 			expect_u32(tag, "pay", dut_buf[i][j], ob[j]);
 	}
-	if (expect_rpt)
-		expect_u32(tag, "aoac_rpt", host_fw_aoac_rsvd_wowlan_aoac_rpt_loc(), expect_rpt);
 }
 
 int main(void)
@@ -147,6 +158,10 @@ int main(void)
 	memset(&loc, 0, sizeof(loc));
 	loc.LocPNOInfo = 0x55;
 	compare_run("pno", 0, 0, &loc, 1, 0);
+
+	memset(&loc, 0, sizeof(loc));
+	loc.LocPNOInfo = 0x55;
+	compare_run("pno_resume", 0, 1, &loc, 0, 0);
 
 	if (failures) {
 		fprintf(stderr, "hal_com_fw_aoac_rsvd L2 failed (%d)\n", failures);
