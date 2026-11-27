@@ -30,12 +30,20 @@ struct _adapter {
 #define H2C_AOAC_RSVDPAGE3 0x88
 #define H2C_AOAC_RSVDPAGE_LOC_LEN 7
 
+/* Matches include/hal_com_h2c.h RSVDPAGE_LOC for WOW+GTK_OL+PNO (8822B profile). */
 typedef struct rsvdpage_loc_host {
+	u8 LocProbeRsp;
+	u8 LocPsPoll;
+	u8 LocNullData;
+	u8 LocQosNull;
+	u8 LocBTQosNull;
 	u8 LocRemoteCtrlInfo;
 	u8 LocArpRsp;
 	u8 LocNbrAdv;
 	u8 LocGTKRsp;
 	u8 LocGTKInfo;
+	u8 LocProbeReq;
+	u8 LocNetList;
 	u8 LocGTKEXTMEM;
 	u8 LocNDPInfo;
 	u8 LocAOACReport;
