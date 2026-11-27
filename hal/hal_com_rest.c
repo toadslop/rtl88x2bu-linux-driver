@@ -1940,6 +1940,8 @@ struct rtw_rust_fw_aoac_loc {
 	u8 nbr;
 	u8 gtk_rsp;
 	u8 gtk_info;
+	u8 probe;
+	u8 netlist;
 	u8 gtk_ext;
 	u8 ndp;
 	u8 aoac;
@@ -1954,6 +1956,8 @@ void rtw_rust_hal_com_fw_aoac_unpack_loc(PRSVDPAGE_LOC in,
 	out->nbr = in->LocNbrAdv;
 	out->gtk_rsp = in->LocGTKRsp;
 	out->gtk_info = in->LocGTKInfo;
+	out->probe = in->LocProbeReq;
+	out->netlist = in->LocNetList;
 #ifdef CONFIG_GTK_OL
 	out->gtk_ext = in->LocGTKEXTMEM;
 #else

@@ -2973,6 +2973,7 @@ _rust_cfg_wowlan := y
 endif
 ifneq ($(_rust_cfg_wowlan),)
 rustflags-y += --cfg config_wowlan
+rustflags-y += --cfg config_gtk_ol
 endif
 ifneq ($(filter -DCONFIG_GTK_OL,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 rustflags-y += --cfg config_gtk_ol
