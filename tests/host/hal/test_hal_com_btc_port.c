@@ -79,7 +79,7 @@ static void run_case(u8 hw_port, s32 fill_ret, const char *tag)
 		expect_u32(tag, "h2c_len", dut_len, oracle_len);
 		expect_u32(tag, "h2c_len", dut_len, H2C_BTC_WL_PORT_ID_LEN);
 		if (dut_buf && oracle_buf) {
-			expect_u32(tag, "payload_low4", dut_buf[0] & 0x0f, hw_port & 0x0f);
+			expect_u32(tag, "payload_low4", dut_buf[0], hw_port & 0x0f);
 			expect_u32(tag, "payload_match", dut_buf[0], oracle_buf[0]);
 		}
 	}
@@ -89,7 +89,9 @@ int main(void)
 {
 	run_case(0, _SUCCESS, "port0");
 	run_case(3, _SUCCESS, "port3");
+	run_case(4, _SUCCESS, "port4");
 	run_case(10, _SUCCESS, "port10");
+	run_case(0x1a, _SUCCESS, "port_hi_nibble");
 	run_case(7, -1, "fill_fail");
 
 	if (failures) {

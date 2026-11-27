@@ -2452,6 +2452,7 @@ clean:
 		test_hal_com_gpio_wakeup_8821asdio test_hal_com_gpio_wakeup_rust_8821asdio \
 		test_hal_com_gpio_pin test_hal_com_gpio_pin_rust librust_hal_com_gpio_pin.a \
 		test_hal_com_gpio_api test_hal_com_gpio_api_rust librust_hal_com_gpio_api.a \
+		test_hal_com_btc_port test_hal_com_btc_port_rust librust_hal_com_btc_port.a \
 		test_hal_com_halmac_identity test_hal_com_halmac_identity_rust \
 		librust_hal_com_halmac_identity.a \
 		librust_hal_com_gpio_wakeup.a librust_hal_com_gpio_wakeup_8821as.a \
