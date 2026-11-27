@@ -2964,6 +2964,23 @@ endif
 ifneq ($(_rust_cfg_p2p_wowlan),)
 rustflags-y += --cfg config_p2p_wowlan
 endif
+_rust_cfg_wowlan :=
+ifeq ($(CONFIG_WOWLAN), y)
+_rust_cfg_wowlan := y
+endif
+ifneq ($(filter -DCONFIG_WOWLAN,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_wowlan := y
+endif
+ifneq ($(_rust_cfg_wowlan),)
+rustflags-y += --cfg config_wowlan
+endif
+ifneq ($(filter -DCONFIG_GTK_OL,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+rustflags-y += --cfg config_gtk_ol
+endif
+ifeq ($(CONFIG_PNO_SUPPORT), y)
+rustflags-y += --cfg config_pno_support
+endif
+HAL_COM_L1_FW_AOAC_RSVD_REF := tests/host/hal/hal_com_fw_aoac_rsvd_l1_ref.o
 _rust_cfg_gpio_wakeup :=
 ifeq ($(CONFIG_GPIO_WAKEUP), y)
 _rust_cfg_gpio_wakeup := y
@@ -5370,6 +5387,9 @@ ifneq ($(_rust_cfg_tsf_reset_offload_l1),)
 		-o tests/host/hal/hal_com_tsf_reset_l1_ref.o \
 		tests/host/hal/hal_com_tsf_reset_l1_ref.c
 endif
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_com_fw_aoac_rsvd_l1_ref.o \
+		tests/host/hal/hal_com_fw_aoac_rsvd_l1_ref.c
 ifneq ($(_rust_cfg_gpio_wakeup_l1),)
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_com_gpio_wakeup_l1_ref.o \
@@ -5444,6 +5464,7 @@ endif
 		$(HAL_COM_L1_GPIO_API_REF) \
 		$(HAL_COM_L1_BTC_WL_PORT) \
 		$(HAL_COM_L1_TSF_RESET_REF) \
+		$(HAL_COM_L1_FW_AOAC_RSVD_REF) \
 		$(HAL_COM_L1_TX_ACLT_SET_REF) \
 		$(HAL_COM_L1_RCR_REF) \
 		$(HAL_COM_L1_TSF_IFACE_REF) \

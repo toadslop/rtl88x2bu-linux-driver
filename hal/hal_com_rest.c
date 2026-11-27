@@ -1911,67 +1911,80 @@ void rtw_rust_hal_com_gpio_pin_input_8192f(_adapter *padapter, u8 *index)
 #endif
 #endif /* CONFIG_GPIO_WAKEUP */
 
-void rtw_hal_set_FwAoacRsvdPage_cmd(PADAPTER padapter, PRSVDPAGE_LOC rsvdpageloc)
-{
-	struct	pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
-	struct	mlme_priv *pmlmepriv = &padapter->mlmepriv;
-	u8 ret = 0;
+/* rtw_hal_set_FwAoacRsvdPage_cmd — rust/hal_com_fw_aoac_rsvd.rs (W4-145) */
+
 #ifdef CONFIG_WOWLAN
-	u8 u1H2CAoacRsvdPageParm[H2C_AOAC_RSVDPAGE_LOC_LEN] = {0};
-
-	RTW_INFO("%s: RWC: %d ArpRsp: %d NbrAdv: %d LocNDPInfo: %d\n",
-		 __func__, rsvdpageloc->LocRemoteCtrlInfo,
-		 rsvdpageloc->LocArpRsp, rsvdpageloc->LocNbrAdv,
-		 rsvdpageloc->LocNDPInfo);
-	RTW_INFO("%s:GtkRsp: %d GtkInfo: %d ProbeReq: %d NetworkList: %d\n",
-		 __func__, rsvdpageloc->LocGTKRsp, rsvdpageloc->LocGTKInfo,
-		 rsvdpageloc->LocProbeReq, rsvdpageloc->LocNetList);
-
-	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE)) {
-		SET_H2CCMD_AOAC_RSVDPAGE_LOC_REMOTE_WAKE_CTRL_INFO(u1H2CAoacRsvdPageParm, rsvdpageloc->LocRemoteCtrlInfo);
-		SET_H2CCMD_AOAC_RSVDPAGE_LOC_ARP_RSP(u1H2CAoacRsvdPageParm, rsvdpageloc->LocArpRsp);
-		SET_H2CCMD_AOAC_RSVDPAGE_LOC_NEIGHBOR_ADV(u1H2CAoacRsvdPageParm,
-							rsvdpageloc->LocNbrAdv);
-		SET_H2CCMD_AOAC_RSVDPAGE_LOC_NDP_INFO(u1H2CAoacRsvdPageParm,
-						      rsvdpageloc->LocNDPInfo);
-#ifdef CONFIG_GTK_OL
-		SET_H2CCMD_AOAC_RSVDPAGE_LOC_GTK_RSP(u1H2CAoacRsvdPageParm, rsvdpageloc->LocGTKRsp);
-		SET_H2CCMD_AOAC_RSVDPAGE_LOC_GTK_INFO(u1H2CAoacRsvdPageParm, rsvdpageloc->LocGTKInfo);
-		SET_H2CCMD_AOAC_RSVDPAGE_LOC_GTK_EXT_MEM(u1H2CAoacRsvdPageParm, rsvdpageloc->LocGTKEXTMEM);
-#endif /* CONFIG_GTK_OL */
-		ret = rtw_hal_fill_h2c_cmd(padapter,
-					   H2C_AOAC_RSVD_PAGE,
-					   H2C_AOAC_RSVDPAGE_LOC_LEN,
-					   u1H2CAoacRsvdPageParm);
-
-		RTW_INFO("AOAC Report=%d\n", rsvdpageloc->LocAOACReport);
-		_rtw_memset(&u1H2CAoacRsvdPageParm, 0, sizeof(u1H2CAoacRsvdPageParm));
-		SET_H2CCMD_AOAC_RSVDPAGE_LOC_AOAC_REPORT(u1H2CAoacRsvdPageParm,
-					 rsvdpageloc->LocAOACReport);
-		ret = rtw_hal_fill_h2c_cmd(padapter,
-				   H2C_AOAC_RSVDPAGE3,
-				   H2C_AOAC_RSVDPAGE_LOC_LEN,
-				   u1H2CAoacRsvdPageParm);
-		pwrpriv->wowlan_aoac_rpt_loc = rsvdpageloc->LocAOACReport;
-	}
-#ifdef CONFIG_PNO_SUPPORT
-	else {
-
-		if (!pwrpriv->wowlan_in_resume) {
-			RTW_INFO("NLO_INFO=%d\n", rsvdpageloc->LocPNOInfo);
-			_rtw_memset(&u1H2CAoacRsvdPageParm, 0,
-				    sizeof(u1H2CAoacRsvdPageParm));
-			SET_H2CCMD_AOAC_RSVDPAGE_LOC_NLO_INFO(u1H2CAoacRsvdPageParm,
-						      rsvdpageloc->LocPNOInfo);
-			ret = rtw_hal_fill_h2c_cmd(padapter,
-						   H2C_AOAC_RSVDPAGE3,
-						   H2C_AOAC_RSVDPAGE_LOC_LEN,
-						   u1H2CAoacRsvdPageParm);
-		}
-	}
-#endif /* CONFIG_PNO_SUPPORT */
-#endif /* CONFIG_WOWLAN */
+void rtw_rust_hal_com_log_fw_aoac_rsvd_assoc(u8 rwc, u8 arp, u8 nbr, u8 ndp,
+					     u8 gtk_rsp, u8 gtk_info, u8 probe,
+					     u8 netlist)
+{
+	RTW_INFO("rtw_hal_set_FwAoacRsvdPage_cmd: RWC: %d ArpRsp: %d NbrAdv: %d LocNDPInfo: %d\n",
+		 rwc, arp, nbr, ndp);
+	RTW_INFO("rtw_hal_set_FwAoacRsvdPage_cmd: GtkRsp: %d GtkInfo: %d ProbeReq: %d NetworkList: %d\n",
+		 gtk_rsp, gtk_info, probe, netlist);
 }
+
+void rtw_rust_hal_com_log_fw_aoac_rsvd_aoac_report(u8 aoac)
+{
+	RTW_INFO("AOAC Report=%d\n", aoac);
+}
+
+void rtw_rust_hal_com_log_fw_aoac_rsvd_nlo(u8 nlo)
+{
+	RTW_INFO("NLO_INFO=%d\n", nlo);
+}
+
+struct rtw_rust_fw_aoac_loc {
+	u8 remote;
+	u8 arp;
+	u8 nbr;
+	u8 gtk_rsp;
+	u8 gtk_info;
+	u8 gtk_ext;
+	u8 ndp;
+	u8 aoac;
+	u8 pno;
+};
+
+void rtw_rust_hal_com_fw_aoac_unpack_loc(PRSVDPAGE_LOC in,
+					 struct rtw_rust_fw_aoac_loc *out)
+{
+	out->remote = in->LocRemoteCtrlInfo;
+	out->arp = in->LocArpRsp;
+	out->nbr = in->LocNbrAdv;
+	out->gtk_rsp = in->LocGTKRsp;
+	out->gtk_info = in->LocGTKInfo;
+#ifdef CONFIG_GTK_OL
+	out->gtk_ext = in->LocGTKEXTMEM;
+#else
+	out->gtk_ext = 0;
+#endif
+	out->ndp = in->LocNDPInfo;
+	out->aoac = in->LocAOACReport;
+#ifdef CONFIG_PNO_SUPPORT
+	out->pno = in->LocPNOInfo;
+#else
+	out->pno = 0;
+#endif
+}
+#endif /* CONFIG_WOWLAN */
+
+struct mlme_priv *rtw_rust_hal_com_fw_aoac_mlmepriv(_adapter *adapter)
+{
+	return &adapter->mlmepriv;
+}
+
+#ifdef CONFIG_WOWLAN
+u8 rtw_rust_hal_com_fw_aoac_wowlan_in_resume(_adapter *adapter)
+{
+	return adapter_to_pwrctl(adapter)->wowlan_in_resume;
+}
+
+void rtw_rust_hal_com_fw_aoac_store_aoac_rpt(_adapter *adapter, u8 v)
+{
+	adapter_to_pwrctl(adapter)->wowlan_aoac_rpt_loc = v;
+}
+#endif /* CONFIG_WOWLAN */
 
 #ifdef DBG_FW_DEBUG_MSG_PKT
 void rtw_hal_set_fw_dbg_msg_pkt_rsvd_page_cmd(PADAPTER padapter, PRSVDPAGE_LOC rsvdpageloc)
