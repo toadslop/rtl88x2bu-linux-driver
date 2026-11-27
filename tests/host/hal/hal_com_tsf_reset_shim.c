@@ -27,6 +27,8 @@ static unsigned g_msleep_count;
 static unsigned g_buddy_abort_count;
 static unsigned g_reg0_read_count;
 static unsigned g_reg1_read_count;
+static unsigned g_msleep_arg_sum;
+static u8 g_last_bwait;
 static char g_adapter_blob[1];
 
 void host_tsf_reset_reset(void)
@@ -39,6 +41,8 @@ void host_tsf_reset_reset(void)
 	g_buddy_abort_count = 0;
 	g_reg0_read_count = 0;
 	g_reg1_read_count = 0;
+	g_msleep_arg_sum = 0;
+	g_last_bwait = 0;
 }
 
 void host_tsf_reset_set_fill_ret(s32 v)
@@ -94,6 +98,16 @@ unsigned host_tsf_reset_reg0_read_count(void)
 unsigned host_tsf_reset_reg1_read_count(void)
 {
 	return g_reg1_read_count;
+}
+
+unsigned host_tsf_reset_msleep_arg_sum(void)
+{
+	return g_msleep_arg_sum;
+}
+
+u8 host_tsf_reset_last_bwait(void)
+{
+	return g_last_bwait;
 }
 
 int host_tsf_reset_h2c_count(void)
@@ -172,13 +186,13 @@ s32 rtw_hal_fill_h2c_cmd(void *adapter, u8 id, u32 len, u8 *buf)
 
 void rtw_msleep_os(unsigned int ms)
 {
-	(void)ms;
+	g_msleep_arg_sum += ms;
 	g_msleep_count++;
 }
 
 void rtw_mi_buddy_scan_abort(void *adapter, u8 bwait)
 {
 	(void)adapter;
-	(void)bwait;
+	g_last_bwait = bwait;
 	g_buddy_abort_count++;
 }

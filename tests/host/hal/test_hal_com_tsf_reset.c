@@ -16,6 +16,8 @@ unsigned host_tsf_reset_msleep_count(void);
 unsigned host_tsf_reset_buddy_abort_count(void);
 unsigned host_tsf_reset_reg0_read_count(void);
 unsigned host_tsf_reset_reg1_read_count(void);
+unsigned host_tsf_reset_msleep_arg_sum(void);
+u8 host_tsf_reset_last_bwait(void);
 int host_tsf_reset_h2c_count(void);
 u8 host_tsf_reset_h2c_cmd(int idx);
 unsigned int host_tsf_reset_h2c_len(int idx);
@@ -29,6 +31,8 @@ s32 rtw_hal_reset_tsf(struct _adapter *adapter, u8 reset_port);
 #endif
 
 s32 rtw_hal_reset_tsf_c_oracle(struct _adapter *adapter, u8 reset_port);
+
+typedef s32 (*tsf_reset_fn)(struct _adapter *adapter, u8 reset_port);
 
 static int failures;
 
@@ -71,9 +75,9 @@ static void expect_case(const char *tag, s32 dut_rc, unsigned dut_sleep, int dut
 }
 
 static void capture_after_reset(u8 port, s32 fill_ret, const u8 *cnt_reads,
-				unsigned read_len, s32 *rc, unsigned *sleep, int *h2c,
-				u8 *cmd, unsigned *len, u8 *b0, u8 *b1,
-				unsigned *reg0, unsigned *reg1)
+				unsigned read_len, tsf_reset_fn fn, s32 *rc,
+				unsigned *sleep, int *h2c, u8 *cmd, unsigned *len,
+				u8 *b0, u8 *b1, unsigned *reg0, unsigned *reg1)
 {
 	const u8 *buf;
 
@@ -84,7 +88,7 @@ static void capture_after_reset(u8 port, s32 fill_ret, const u8 *cnt_reads,
 	else
 		host_tsf_reset_set_cnt1_reads(cnt_reads, read_len);
 
-	*rc = rtw_hal_reset_tsf(host_tsf_reset_adapter(), port);
+	*rc = fn(host_tsf_reset_adapter(), port);
 	*sleep = host_tsf_reset_msleep_count();
 	*h2c = host_tsf_reset_h2c_count();
 	*reg0 = host_tsf_reset_reg0_read_count();
@@ -113,15 +117,19 @@ static void run_reset_case(u8 port, s32 fill_ret, const u8 *cnt_reads, unsigned 
 	u8 oracle_cmd, oracle_b0, oracle_b1;
 	unsigned dut_len, oracle_len;
 
-	capture_after_reset(port, fill_ret, cnt_reads, read_len, &dut_rc, &dut_sleep,
-			    &dut_h2c, &dut_cmd, &dut_len, &dut_b0, &dut_b1, &dut_reg0,
-			    &dut_reg1);
+	capture_after_reset(port, fill_ret, cnt_reads, read_len, rtw_hal_reset_tsf, &dut_rc,
+			    &dut_sleep, &dut_h2c, &dut_cmd, &dut_len, &dut_b0, &dut_b1,
+			    &dut_reg0, &dut_reg1);
+	expect_u32_tag(tag, "msleep_ms", host_tsf_reset_msleep_arg_sum(), exp->sleep * 100U);
+	expect_u32_tag(tag, "buddy_bwait", host_tsf_reset_last_bwait(), _FALSE);
 	expect_case(tag, dut_rc, dut_sleep, dut_h2c, dut_cmd, dut_len, dut_b0, dut_b1,
 		    dut_reg0, dut_reg1, exp);
 
-	capture_after_reset(port, fill_ret, cnt_reads, read_len, &oracle_rc, &oracle_sleep,
-			    &oracle_h2c, &oracle_cmd, &oracle_len, &oracle_b0, &oracle_b1,
-			    &oracle_reg0, &oracle_reg1);
+	capture_after_reset(port, fill_ret, cnt_reads, read_len, rtw_hal_reset_tsf_c_oracle,
+			    &oracle_rc, &oracle_sleep, &oracle_h2c, &oracle_cmd, &oracle_len,
+			    &oracle_b0, &oracle_b1, &oracle_reg0, &oracle_reg1);
+	expect_u32_tag(tag, "oracle_msleep_ms", host_tsf_reset_msleep_arg_sum(),
+		       exp->sleep * 100U);
 
 	expect_u32_tag(tag, "oracle_rc", (unsigned)oracle_rc, (unsigned)exp->rc);
 	expect_u32_tag(tag, "dut_vs_oracle_rc", (unsigned)dut_rc, (unsigned)oracle_rc);
