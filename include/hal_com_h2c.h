@@ -800,7 +800,7 @@ void rsvd_page_cache_free(struct rsvd_page_cache_t *cache);
 void dump_TX_FIFO(PADAPTER padapter, u8 page_num, u16 page_size);
 #endif
 void rtw_hal_set_FwRsvdPage_cmd(_adapter *adapter, PRSVDPAGE_LOC rsvdpageloc);
-#ifdef CONFIG_WOWLAN
+#if defined(CONFIG_WOWLAN) || defined(CONFIG_PNO_SUPPORT)
 void rtw_hal_set_FwAoacRsvdPage_cmd(PADAPTER padapter, PRSVDPAGE_LOC rsvdpageloc);
 #endif
 u8 rtw_hal_set_fw_media_status_cmd(_adapter *adapter, u8 mstatus, u8 macid);
