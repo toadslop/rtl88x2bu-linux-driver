@@ -10175,7 +10175,8 @@ void rtw_hal_update_uapsd_tid(_adapter *adapter)
 
 void rtw_rust_hal_com_log_wifi_btc_port_h2c(_adapter *adapter, u8 hw_port)
 {
-	RTW_INFO("%s ("ADPT_FMT") - hw_port :%d\n", __func__, ADPT_ARG(adapter), hw_port);
+	RTW_INFO("rtw_hal_set_wifi_btc_port_id_cmd ("ADPT_FMT") - hw_port :%d\n",
+		 ADPT_ARG(adapter), hw_port);
 }
 #endif
 
