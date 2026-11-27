@@ -10171,15 +10171,11 @@ void rtw_hal_update_uapsd_tid(_adapter *adapter)
 #endif /* CONFIG_WMMPS_STA */
 
 #if defined(CONFIG_BT_COEXIST) && defined(CONFIG_FW_MULTI_PORT_SUPPORT)
-/* For multi-port support, driver needs to inform the port ID to FW for btc operations */
-s32 rtw_hal_set_wifi_btc_port_id_cmd(_adapter *adapter)
-{
-	u8 h2c_buf[H2C_BTC_WL_PORT_ID_LEN] = {0};
-	u8 hw_port = rtw_hal_get_port(adapter);
+/* rtw_hal_set_wifi_btc_port_id_cmd — rust/hal_com_btc_port.rs (W4-144) */
 
-	SET_H2CCMD_BTC_WL_PORT_ID(h2c_buf, hw_port);
+void rtw_rust_hal_com_log_wifi_btc_port_h2c(_adapter *adapter, u8 hw_port)
+{
 	RTW_INFO("%s ("ADPT_FMT") - hw_port :%d\n", __func__, ADPT_ARG(adapter), hw_port);
-	return rtw_hal_fill_h2c_cmd(adapter, H2C_BTC_WL_PORT_ID, H2C_BTC_WL_PORT_ID_LEN, h2c_buf);
 }
 #endif
 
