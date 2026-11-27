@@ -32,6 +32,50 @@ static void expect_u32(const char *tag, const char *name, unsigned got, unsigned
 			failures++;
 }
 
+static void assert_assoc_h2c0(const char *tag, const RSVDPAGE_LOC *loc, u8 cmd,
+			      const u8 *buf)
+{
+	unsigned i;
+	u8 expect[7] = {0, 0, 0, 0, 0, 0, 0};
+
+	expect_u32(tag, "h2c0_cmd", cmd, H2C_AOAC_RSVD_PAGE);
+	expect[0] = loc->LocRemoteCtrlInfo;
+	expect[1] = loc->LocArpRsp;
+	expect[2] = loc->LocNbrAdv;
+	expect[3] = loc->LocGTKRsp;
+	expect[4] = loc->LocGTKInfo;
+	expect[5] = loc->LocGTKEXTMEM;
+	expect[6] = loc->LocNDPInfo;
+	for (i = 0; i < H2C_AOAC_RSVDPAGE_LOC_LEN; i++)
+		expect_u32(tag, "h2c0_pay", buf[i], expect[i]);
+}
+
+static void assert_assoc_h2c1(const char *tag, const RSVDPAGE_LOC *loc, u8 cmd,
+			    const u8 *buf)
+{
+	unsigned i;
+
+	expect_u32(tag, "h2c1_cmd", cmd, H2C_AOAC_RSVDPAGE3);
+	for (i = 0; i < H2C_AOAC_RSVDPAGE_LOC_LEN; i++) {
+		u8 expect = (i == 1) ? loc->LocAOACReport : 0;
+
+		expect_u32(tag, "h2c1_pay", buf[i], expect);
+	}
+}
+
+static void assert_pno_h2c0(const char *tag, const RSVDPAGE_LOC *loc, u8 cmd,
+			    const u8 *buf)
+{
+	unsigned i;
+
+	expect_u32(tag, "pno_cmd", cmd, H2C_AOAC_RSVDPAGE3);
+	for (i = 0; i < H2C_AOAC_RSVDPAGE_LOC_LEN; i++) {
+		u8 expect = (i == 0) ? loc->LocPNOInfo : 0;
+
+		expect_u32(tag, "pno_pay", buf[i], expect);
+	}
+}
+
 static void compare_run(const char *tag, int asoc, u8 in_resume, const RSVDPAGE_LOC *loc,
 			unsigned expect_h2c, u8 expect_rpt)
 {
@@ -49,6 +93,20 @@ static void compare_run(const char *tag, int asoc, u8 in_resume, const RSVDPAGE_
 		len = host_fw_aoac_rsvd_h2c_len((int)i);
 		if (host_fw_aoac_rsvd_h2c_buf((int)i) && len <= sizeof(dut_buf[i]))
 			memcpy(dut_buf[i], host_fw_aoac_rsvd_h2c_buf((int)i), len);
+	}
+
+	if (asoc) {
+		expect_u32(tag, "h2c_count", dut_cnt, 2u);
+		if (dut_cnt >= 1)
+			assert_assoc_h2c0(tag, loc, dut_cmd[0], dut_buf[0]);
+		if (dut_cnt >= 2)
+			assert_assoc_h2c1(tag, loc, dut_cmd[1], dut_buf[1]);
+	} else if (!in_resume) {
+		expect_u32(tag, "h2c_count", dut_cnt, 1u);
+		if (dut_cnt >= 1)
+			assert_pno_h2c0(tag, loc, dut_cmd[0], dut_buf[0]);
+	} else {
+		expect_u32(tag, "h2c_count", dut_cnt, 0u);
 	}
 
 	host_fw_aoac_rsvd_reset();
