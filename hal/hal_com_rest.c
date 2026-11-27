@@ -1979,6 +1979,11 @@ struct mlme_priv *rtw_rust_hal_com_fw_aoac_mlmepriv(_adapter *adapter)
 }
 
 #ifdef CONFIG_WOWLAN
+s32 rtw_rust_hal_com_fw_aoac_check_fwstate(_adapter *adapter, s32 state)
+{
+	return check_fwstate(&adapter->mlmepriv, state);
+}
+
 u8 rtw_rust_hal_com_fw_aoac_wowlan_in_resume(_adapter *adapter)
 {
 	return adapter_to_pwrctl(adapter)->wowlan_in_resume;
