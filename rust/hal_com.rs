@@ -2166,6 +2166,7 @@ mod rcr {
     not(host_hal_com_tx_aclt_confs_test),
     not(host_hal_com_hal_spec_test),
     not(host_hal_com_gpio_wakeup_test),
+    not(host_hal_com_gpio_api_test),
 ))]
 mod gpio_wakeup {
     include!("hal_com_gpio_wakeup.rs");
@@ -2195,6 +2196,7 @@ mod gpio_pin {
 }
 
 #[cfg(all(
+    config_gpio_api,
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),
@@ -2209,6 +2211,28 @@ mod gpio_pin {
     not(host_hal_com_tx_aclt_confs_test),
     not(host_hal_com_hal_spec_test),
     not(host_hal_com_gpio_wakeup_test),
+    not(host_hal_com_gpio_api_test),
+))]
+mod gpio_api {
+    include!("hal_com_gpio_api.rs");
+}
+
+#[cfg(all(
+    not(host_hal_com_hw_rate_test),
+    not(host_hal_com_rsvd_page_test),
+    not(host_hal_com_chip_info_test),
+    not(host_hal_com_mrate_test),
+    not(host_hal_com_fw_info_test),
+    not(host_hal_com_brate_test),
+    not(host_hal_com_legal_channel_test),
+    not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
+    not(host_hal_com_tx_aclt_force_test),
+    not(host_hal_com_tx_aclt_confs_test),
+    not(host_hal_com_hal_spec_test),
+    not(host_hal_com_gpio_wakeup_test),
+    not(host_hal_com_gpio_api_test),
     not(host_hal_com_tsf_test),
 ))]
 mod tsf_iface {
@@ -2232,6 +2256,7 @@ mod tsf_iface {
     not(host_hal_com_tx_aclt_confs_test),
     not(host_hal_com_hal_spec_test),
     not(host_hal_com_gpio_wakeup_test),
+    not(host_hal_com_gpio_api_test),
     not(host_hal_com_tsf_test),
     not(host_hal_com_halmac_identity_test),
 ))]
@@ -2254,6 +2279,7 @@ mod halmac_identity {
     not(host_hal_com_tx_aclt_confs_test),
     not(host_hal_com_hal_spec_test),
     not(host_hal_com_gpio_wakeup_test),
+    not(host_hal_com_gpio_api_test),
     not(host_hal_com_tsf_test),
 ))]
 mod tsf_periodic {
@@ -2281,6 +2307,7 @@ mod tsf_periodic {
     not(host_hal_com_tx_aclt_confs_test),
     not(host_hal_com_hal_spec_test),
     not(host_hal_com_gpio_wakeup_test),
+    not(host_hal_com_gpio_api_test),
     not(host_hal_com_tsf_test),
 ))]
 mod msr {
