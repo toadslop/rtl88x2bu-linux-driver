@@ -1920,7 +1920,7 @@ void rtw_rust_hal_com_log_fw_aoac_rsvd_assoc(u8 rwc, u8 arp, u8 nbr, u8 ndp,
 {
 	RTW_INFO("rtw_hal_set_FwAoacRsvdPage_cmd: RWC: %d ArpRsp: %d NbrAdv: %d LocNDPInfo: %d\n",
 		 rwc, arp, nbr, ndp);
-	RTW_INFO("rtw_hal_set_FwAoacRsvdPage_cmd: GtkRsp: %d GtkInfo: %d ProbeReq: %d NetworkList: %d\n",
+	RTW_INFO("rtw_hal_set_FwAoacRsvdPage_cmd:GtkRsp: %d GtkInfo: %d ProbeReq: %d NetworkList: %d\n",
 		 gtk_rsp, gtk_info, probe, netlist);
 }
 

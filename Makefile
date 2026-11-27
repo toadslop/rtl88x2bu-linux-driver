@@ -2973,9 +2973,21 @@ _rust_cfg_wowlan := y
 endif
 ifneq ($(_rust_cfg_wowlan),)
 rustflags-y += --cfg config_wowlan
-rustflags-y += --cfg config_gtk_ol
 endif
+_rust_hw_gtk_ol :=
+ifneq ($(filter y,$(CONFIG_RTL8822B) $(CONFIG_RTL8822C) $(CONFIG_RTL8814B) $(CONFIG_RTL8723F)),)
+_rust_hw_gtk_ol := y
+endif
+_rust_cfg_gtk_ol :=
 ifneq ($(filter -DCONFIG_GTK_OL,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
+_rust_cfg_gtk_ol := y
+endif
+ifeq ($(_rust_hw_gtk_ol),y)
+ifneq ($(_rust_cfg_wowlan),)
+_rust_cfg_gtk_ol := y
+endif
+endif
+ifneq ($(_rust_cfg_gtk_ol),)
 rustflags-y += --cfg config_gtk_ol
 endif
 ifeq ($(CONFIG_PNO_SUPPORT), y)
