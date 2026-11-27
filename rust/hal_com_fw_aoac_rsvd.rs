@@ -88,9 +88,7 @@ extern "C" {
     #[cfg(not(host_hal_com_fw_aoac_rsvd_test))]
     fn rtw_rust_hal_com_fw_aoac_unpack_loc(loc: *mut c_void, out: *mut AoacLocFields);
     #[cfg(not(host_hal_com_fw_aoac_rsvd_test))]
-    fn rtw_rust_hal_com_fw_aoac_mlmepriv(adapter: *mut c_void) -> *mut c_void;
-    #[cfg(not(host_hal_com_fw_aoac_rsvd_test))]
-    fn check_fwstate(pmlmepriv: *mut c_void, state: S32) -> S32;
+    fn rtw_rust_hal_com_fw_aoac_check_fwstate(adapter: *mut c_void, state: S32) -> S32;
     #[cfg(not(host_hal_com_fw_aoac_rsvd_test))]
     fn rtw_rust_hal_com_fw_aoac_wowlan_in_resume(adapter: *mut c_void) -> U8;
     #[cfg(not(host_hal_com_fw_aoac_rsvd_test))]
@@ -153,20 +151,6 @@ fn read_loc(loc: *mut c_void) -> AoacLocFields {
 fn aoac_assoc_path(adapter: *mut c_void, loc: AoacLocFields) {
     let mut parm = [0u8; H2C_AOAC_RSVDPAGE_LOC_LEN as usize];
 
-    #[cfg(not(host_hal_com_fw_aoac_rsvd_test))]
-    unsafe {
-        rtw_rust_hal_com_log_fw_aoac_rsvd_assoc(
-            loc.remote,
-            loc.arp,
-            loc.nbr,
-            loc.ndp,
-            loc.gtk_rsp,
-            loc.gtk_info,
-            loc.probe,
-            loc.netlist,
-        );
-    }
-
     set_bits_to_le_1byte(&mut parm[0], 0, 8, loc.remote);
     set_bits_to_le_1byte(&mut parm[1], 0, 8, loc.arp);
     set_bits_to_le_1byte(&mut parm[2], 0, 8, loc.nbr);
@@ -224,6 +208,21 @@ pub extern "C" fn rtw_hal_set_FwAoacRsvdPage_cmd(
     rsvdpageloc: *mut c_void,
 ) {
     let loc = read_loc(rsvdpageloc);
+
+    #[cfg(all(not(host_hal_com_fw_aoac_rsvd_test), config_wowlan))]
+    unsafe {
+        rtw_rust_hal_com_log_fw_aoac_rsvd_assoc(
+            loc.remote,
+            loc.arp,
+            loc.nbr,
+            loc.ndp,
+            loc.gtk_rsp,
+            loc.gtk_info,
+            loc.probe,
+            loc.netlist,
+        );
+    }
+
     let asoc = unsafe {
         #[cfg(host_hal_com_fw_aoac_rsvd_test)]
         {
@@ -232,8 +231,7 @@ pub extern "C" fn rtw_hal_set_FwAoacRsvdPage_cmd(
         }
         #[cfg(not(host_hal_com_fw_aoac_rsvd_test))]
         {
-            let pmlmepriv = rtw_rust_hal_com_fw_aoac_mlmepriv(padapter);
-            check_fwstate(pmlmepriv, WIFI_ASOC_STATE)
+            rtw_rust_hal_com_fw_aoac_check_fwstate(padapter, WIFI_ASOC_STATE)
         }
     };
 
