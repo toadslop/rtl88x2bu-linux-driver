@@ -88,7 +88,8 @@ static void compare_run(const char *tag, int asoc, u8 in_resume, const RSVDPAGE_
 			unsigned expect_h2c, u8 expect_rpt)
 {
 	unsigned i, len;
-	u8 dut_cmd[4], dut_buf[4][8], dut_len[4];
+	u8 dut_cmd[4], dut_buf[4][8];
+	unsigned dut_len[4];
 	unsigned dut_cnt;
 	u8 dut_aoac_rpt;
 
@@ -105,10 +106,12 @@ static void compare_run(const char *tag, int asoc, u8 in_resume, const RSVDPAGE_
 	}
 	dut_aoac_rpt = host_fw_aoac_rsvd_wowlan_aoac_rpt_loc();
 	for (i = 0; i < dut_cnt; i++) {
+		memset(dut_buf[i], 0, sizeof(dut_buf[i]));
 		dut_cmd[i] = host_fw_aoac_rsvd_h2c_cmd((int)i);
 		len = host_fw_aoac_rsvd_h2c_len((int)i);
-		dut_len[i] = (u8)len;
-		if (host_fw_aoac_rsvd_h2c_buf((int)i) && len <= sizeof(dut_buf[i]))
+		dut_len[i] = len;
+		if (len == H2C_AOAC_RSVDPAGE_LOC_LEN &&
+		    host_fw_aoac_rsvd_h2c_buf((int)i))
 			memcpy(dut_buf[i], host_fw_aoac_rsvd_h2c_buf((int)i), len);
 	}
 	expect_u32(tag, "aoac_rpt", dut_aoac_rpt, expect_rpt);
