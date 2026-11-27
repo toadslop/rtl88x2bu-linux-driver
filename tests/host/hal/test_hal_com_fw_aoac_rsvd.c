@@ -88,7 +88,7 @@ static void compare_run(const char *tag, int asoc, u8 in_resume, const RSVDPAGE_
 			unsigned expect_h2c, u8 expect_rpt)
 {
 	unsigned i, len;
-	u8 dut_cmd[2], dut_buf[2][8], dut_len[2];
+	u8 dut_cmd[4], dut_buf[4][8], dut_len[4];
 	unsigned dut_cnt;
 	u8 dut_aoac_rpt;
 
@@ -97,6 +97,12 @@ static void compare_run(const char *tag, int asoc, u8 in_resume, const RSVDPAGE_
 	host_fw_aoac_rsvd_set_wowlan_in_resume(in_resume);
 	rtw_hal_set_FwAoacRsvdPage_cmd(host_fw_aoac_rsvd_adapter(), (PRSVDPAGE_LOC)loc);
 	dut_cnt = (unsigned)host_fw_aoac_rsvd_h2c_count();
+	expect_u32(tag, "h2c_slots", dut_cnt, expect_h2c);
+	if (dut_cnt > 4) {
+		fprintf(stderr, "FAIL %s h2c_count overflow %u\n", tag, dut_cnt);
+		failures++;
+		return;
+	}
 	dut_aoac_rpt = host_fw_aoac_rsvd_wowlan_aoac_rpt_loc();
 	for (i = 0; i < dut_cnt; i++) {
 		dut_cmd[i] = host_fw_aoac_rsvd_h2c_cmd((int)i);
@@ -154,6 +160,17 @@ int main(void)
 	loc.LocGTKEXTMEM = 6;
 	loc.LocAOACReport = 7;
 	compare_run("assoc", 1, 0, &loc, 2, loc.LocAOACReport);
+
+	memset(&loc, 0, sizeof(loc));
+	loc.LocRemoteCtrlInfo = 1;
+	loc.LocArpRsp = 2;
+	loc.LocNbrAdv = 3;
+	loc.LocNDPInfo = 9;
+	loc.LocGTKRsp = 4;
+	loc.LocGTKInfo = 5;
+	loc.LocGTKEXTMEM = 6;
+	loc.LocAOACReport = 8;
+	compare_run("assoc_resume", 1, 1, &loc, 2, loc.LocAOACReport);
 
 	memset(&loc, 0, sizeof(loc));
 	loc.LocPNOInfo = 0x55;
