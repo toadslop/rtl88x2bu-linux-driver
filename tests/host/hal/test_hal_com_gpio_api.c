@@ -114,6 +114,44 @@ static void test_func_check_early_set(void)
 	expect_u32("fc_set_mmio_early", host_gpio_api_trace.mmio_before_leave_count, 0);
 }
 
+static void test_func_check_early_get_gpio10(void)
+{
+	struct _adapter *a = host_gpio_api_adapter();
+
+	host_gpio_api_reset();
+	host_gpio_api_set_func_check_fail(10, 1);
+	expect_u8("fc_get10", DUT_GET(a, 10), 0);
+	expect_u32("fc_get10_deny", host_gpio_api_trace.ps_deny_count, 0);
+	expect_u32("fc_get10_leave", host_gpio_api_trace.leave_ps_count, 0);
+	expect_u32("fc_get10_cancel", host_gpio_api_trace.ps_deny_cancel_count, 0);
+}
+
+static void test_func_check_early_set_gpio10(void)
+{
+	struct _adapter *a = host_gpio_api_adapter();
+
+	host_gpio_api_reset();
+	setup_pin_output(10, 1);
+	host_gpio_api_set_func_check_fail(10, 1);
+	expect_i32("fc_set10", DUT_SET(a, 10, 1), -1);
+	expect_u32("fc_set10_deny", host_gpio_api_trace.ps_deny_count, 0);
+	expect_u32("fc_set10_leave", host_gpio_api_trace.leave_ps_count, 0);
+	expect_u32("fc_set10_cancel", host_gpio_api_trace.ps_deny_cancel_count, 0);
+}
+
+static void test_func_check_early_config_gpio3(void)
+{
+	struct _adapter *a = host_gpio_api_adapter();
+
+	host_gpio_api_reset();
+	host_gpio_api_set_func_check_fail(3, 1);
+	expect_i32("fc_cfg3", DUT_CFG(a, 3, 0), -1);
+	expect_u32("fc_cfg3_deny", host_gpio_api_trace.ps_deny_count, 0);
+	expect_u32("fc_cfg3_mfr", host_gpio_api_trace.multi_func_reset_count, 0);
+	expect_u32("fc_cfg3_leave", host_gpio_api_trace.leave_ps_count, 0);
+	expect_u32("fc_cfg3_cancel", host_gpio_api_trace.ps_deny_cancel_count, 0);
+}
+
 static void test_func_check_early_config(void)
 {
 	struct _adapter *a = host_gpio_api_adapter();
@@ -152,9 +190,13 @@ static void test_get_gpio3_output_low(void)
 
 	host_gpio_api_reset();
 	setup_pin_output(3, 0);
+	host_gpio_api_reg_set(REG_GPIO_PIN_CTRL, 0,
+			      host_gpio_api_reg_get(REG_GPIO_PIN_CTRL, 0) | BIT(3));
 	c = rtw_hal_get_gpio_c_oracle(a, 3);
 	host_gpio_api_reset();
 	setup_pin_output(3, 0);
+	host_gpio_api_reg_set(REG_GPIO_PIN_CTRL, 0,
+			      host_gpio_api_reg_get(REG_GPIO_PIN_CTRL, 0) | BIT(3));
 	r = DUT_GET(a, 3);
 	expect_u8("get3_lo_out", r, c);
 	expect_u8("get3_lo_val", r, 0);
@@ -184,9 +226,13 @@ static void test_get_gpio10_input_low(void)
 
 	host_gpio_api_reset();
 	setup_pin_input(10, 0);
+	host_gpio_api_reg_set(REG_GPIO_PIN_CTRL_2, 1,
+			      host_gpio_api_reg_get(REG_GPIO_PIN_CTRL_2, 1) | BIT(2));
 	c = rtw_hal_get_gpio_c_oracle(a, 10);
 	host_gpio_api_reset();
 	setup_pin_input(10, 0);
+	host_gpio_api_reg_set(REG_GPIO_PIN_CTRL_2, 1,
+			      host_gpio_api_reg_get(REG_GPIO_PIN_CTRL_2, 1) | BIT(2));
 	r = DUT_GET(a, 10);
 	expect_u8("get10_lo_in", r, c);
 	expect_u8("get10_lo_val", r, 0);
@@ -343,6 +389,7 @@ static void test_set_gpio10_output_high(void)
 	expect_u32("set10_hi_mmio_before_deny", host_gpio_api_trace.mmio_before_deny_count, 0);
 	expect_u8("set10_hi_first_rd_leave", host_gpio_api_trace.first_read_leave_snapshot, 1);
 	expect_u8("set10_hi_first_rd_cancel", host_gpio_api_trace.first_read_cancel_snapshot, 0);
+	expect_u32("set10_hi_mmio_after_cancel", host_gpio_api_trace.mmio_after_deny_cancel_count, 0);
 }
 
 static void test_set_gpio10_output_low(void)
@@ -374,6 +421,7 @@ static void test_set_gpio10_output_low(void)
 	expect_u8("set10_lo_first_rd_cancel", host_gpio_api_trace.first_read_cancel_snapshot, 0);
 	expect_u8("set10_lo_ps0", host_gpio_api_trace.ps_steps[0], HOST_GPIO_API_PS_STEP_DENY);
 	expect_u8("set10_lo_ps1", host_gpio_api_trace.ps_steps[1], HOST_GPIO_API_PS_STEP_LEAVE_PS);
+	expect_u32("set10_lo_mmio_after_cancel", host_gpio_api_trace.mmio_after_deny_cancel_count, 0);
 }
 
 static void test_set_gpio3_input_dir_returns_255(void)
@@ -555,8 +603,11 @@ int main(void)
 	failures = 0;
 
 	test_func_check_early_get();
+	test_func_check_early_get_gpio10();
 	test_func_check_early_set();
+	test_func_check_early_set_gpio10();
 	test_func_check_early_config();
+	test_func_check_early_config_gpio3();
 	test_get_gpio3_output_low();
 	test_get_gpio3_output_high();
 	test_get_gpio3_input_high();
