@@ -5428,7 +5428,6 @@ endif
 		$(HAL_COM_L1_REQ_PER_RPT) \
 		$(HAL_COM_L1_DFT_PORT) \
 		$(HAL_COM_L1_MBID_CAM_REF) \
-		$(HAL_COM_L1_TSF_RESET_REF) \
 		$(HAL_COM_L1_GPIO_WAKEUP_REF) \
 		$(if $(_rust_cfg_gpio_wakeup_l1),tests/host/hal/hal_com_gpio_pin_l1_ref.o,) \
 		$(HAL_COM_L1_GPIO_API_REF) \
