@@ -11,29 +11,26 @@ const REG_GPIO_PIN_CTRL_2: U32 = 0x0060;
 const PS_DENY_IOCTL: U32 = 5;
 const _FAIL: i32 = 0;
 
-/// Match kernel `BIT(x)` on `int` masked through a single MMIO `u8` (no shift panic).
+/// Mask for `BIT(index)` on kernel `int`, reduced to the low byte (matches x86-64/AArch64 codegen).
+#[inline]
+fn reg_bit_mask(index: U8) -> U8 {
+    (1u32.wrapping_shl((index & 31) as u32)) as u8
+}
+
+/// Extract bit `index` from a single MMIO byte (shift count masked like C `BIT`).
 #[inline]
 fn byte_bit(byte: U8, index: U8) -> U8 {
-    if index >= 8 {
-        return 0;
-    }
-    ((byte as u32 >> index) & 1) as u8
+    (((byte as u32) >> ((index & 31) as u32)) & 1) as u8
 }
 
 #[inline]
 fn set_byte_bit(byte: U8, index: U8) -> U8 {
-    if index >= 8 {
-        return byte;
-    }
-    byte | (1u8 << index)
+    byte | reg_bit_mask(index)
 }
 
 #[inline]
 fn clear_byte_bit(byte: U8, index: U8) -> U8 {
-    if index >= 8 {
-        return byte;
-    }
-    byte & !(1u8 << index)
+    byte & !reg_bit_mask(index)
 }
 
 #[cfg(not(host_hal_com_gpio_api_test))]
