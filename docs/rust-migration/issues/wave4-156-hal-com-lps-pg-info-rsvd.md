@@ -21,12 +21,16 @@ into `rust/hal_com_lps_pg_info.rs`:
 - **Parallel lane:** 16-byte `LPSPG` info block (macid, MBSSID CAM, pattern cam, sec CAM
   ids, drv rsvd page count) + `rsvd_page_cache_update_data` / `rtw_halmac_download_rsvd_page`.
 - Optional `CONFIG_MBSSID_CAM` / `CONFIG_WOWLAN` / `CONFIG_BEAMFORMING` byte slots — preserve guards.
-- When `CONFIG_LPS_PG` is off, compile stub exports for L0 link parity.
+- Both functions are **`static`** inside `#ifdef CONFIG_LPS_PG`; default Makefile does
+  not set `CONFIG_LPS_PG`, so stock `hal_com_rest.o` has **neither** symbol. When the
+  Kconfig is off, emit **no** Rust exports or stub globals (only caller is
+  `rtw_lps_pg_set_rsvd_page` in the same TU).
 
 ## Acceptance
 
-- L0 + L1
-- L2: golden 16-byte buffer for STA iface with seeded macid and sec CAM list
+- L0 on stock profile; L0 when `CONFIG_LPS_PG` is enabled (functions stay TU-local —
+  no new linker globals vs stock L1)
+- L2 (`CONFIG_LPS_PG`): golden 16-byte buffer for STA iface with seeded macid and sec CAM list
 
 ## Tracking
 

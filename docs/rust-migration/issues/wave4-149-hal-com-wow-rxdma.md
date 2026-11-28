@@ -21,13 +21,22 @@ Under `CONFIG_WOWLAN` or `CONFIG_AP_WOWLAN`, port WOW RX-DMA helpers from
 
 - **Parallel lane:** MMIO on `REG_WOW_CTRL`, `REG_RXPKT_NUM`, optional USB
   `rtw_intf_stop` / `rtw_intf_start` when `CONFIG_USB_HCI`.
-- `rtw_hal_pause_rx_dma` polls `RXDMA_IDLE` up to 100 tries — preserve failure log path.
-- Export stubs when neither WOWLAN Kconfig is set (same pattern as W4-145).
+- All three helpers are **`static`** under
+  `#if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)`; callers stay in
+  `hal_com_rest.c`. Stock profile has `CONFIG_WOWLAN=n` and `CONFIG_AP_WOWLAN=n`,
+  so there are **no** globals to match L1 — do **not** add stub exports (contrast
+  W4-145, where the C function is always linked).
+- Port as **TU-local** Rust (or `#[no_mangle]` only inside the same cfg guard with no
+  extra linker-visible symbols on stock).
+- `rtw_hal_pause_rx_dma` uses `s8 trycnt = 100; do { … } while (trycnt--);` — the
+  loop body runs for trycnt 100…0 (**101** MMIO polls) before the failure path.
 
 ## Acceptance
 
-- L0 + L1 on stock and WOW-enabled profiles
-- L2: stub MMIO trace for pause success vs timeout paths on USB HCI
+- L0 on stock profile; L0 when `CONFIG_WOWLAN` or `CONFIG_AP_WOWLAN` is enabled
+  (no new global symbols vs stock `hal_com_rest.o` on default L1)
+- L2 (WOW profile): stub MMIO trace for pause success vs timeout paths on USB HCI;
+  timeout oracle must expect **101** idle polls
 
 ## Tracking
 
