@@ -51,6 +51,9 @@ librust_hal_com_mbid_cam_read.a
 test_hal_com_tsf_reset
 test_hal_com_tsf_reset_rust
 librust_hal_com_tsf_reset.a
+test_hal_com_fw_aoac_rsvd
+test_hal_com_fw_aoac_rsvd_rust
+librust_hal_com_fw_aoac_rsvd.a
 test_hal_com_gpio_wakeup
 test_hal_com_gpio_wakeup_rust
 librust_hal_com_gpio_wakeup.a

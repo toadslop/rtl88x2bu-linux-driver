@@ -136,6 +136,8 @@ RFPATH_CFLAGS := $(CFLAGS) -I$(ROOT)/include -I$(ROOT)/core \
 	test-tsf-reset \
 	$(if $(wildcard $(ROOT)/rust/hal_com_tsf_reset_host.rs),test-tsf-reset-rust,) \
 	test-fw-rsvdpage-h2c test-fw-rsvdpage-h2c-rust \
+	test-fw-aoac-rsvd \
+	$(if $(wildcard $(ROOT)/rust/hal_com_fw_aoac_rsvd_host.rs),test-fw-aoac-rsvd-rust,) \
 	test-fw-bcn-offload test-fw-bcn-offload-rust \
 	test-fw-media-status \
 	$(if $(wildcard $(ROOT)/rust/hal_com_fw_media_host.rs),test-fw-media-status-rust,) \
@@ -197,6 +199,8 @@ test: test-c test-rust test-rsvd test-rsvd-rust test-chip test-chip-rust test-tr
 	test-tsf-reset \
 	$(if $(wildcard $(ROOT)/rust/hal_com_tsf_reset_host.rs),test-tsf-reset-rust,) \
 	test-fw-rsvdpage-h2c test-fw-rsvdpage-h2c-rust \
+	test-fw-aoac-rsvd \
+	$(if $(wildcard $(ROOT)/rust/hal_com_fw_aoac_rsvd_host.rs),test-fw-aoac-rsvd-rust,) \
 	test-fw-bcn-offload test-fw-bcn-offload-rust \
 	test-fw-media-status \
 	$(if $(wildcard $(ROOT)/rust/hal_com_fw_media_host.rs),test-fw-media-status-rust,) \
@@ -2216,6 +2220,37 @@ librust_hal_com_fw_rsvdpage_h2c.a: $(RUST_FW_RSVDPAGE_H2C)
 
 test-fw-rsvdpage-h2c-rust: test_hal_com_fw_rsvdpage_h2c_rust
 	./test_hal_com_fw_rsvdpage_h2c_rust
+
+FW_AOAC_RSVD_CFLAGS := -DCONFIG_WOWLAN -DCONFIG_GTK_OL -DCONFIG_PNO_SUPPORT
+FW_AOAC_RSVD_SHIM := hal_com_fw_aoac_rsvd_shim.c
+FW_AOAC_RSVD_ORACLE := hal_com_fw_aoac_rsvd_c_oracle.c
+
+test-fw-aoac-rsvd: test_hal_com_fw_aoac_rsvd
+	./test_hal_com_fw_aoac_rsvd
+
+test_hal_com_fw_aoac_rsvd: test_hal_com_fw_aoac_rsvd.c $(FW_AOAC_RSVD_SHIM) $(FW_AOAC_RSVD_ORACLE)
+	$(CC) $(CFLAGS) -I../include $(FW_AOAC_RSVD_CFLAGS) -o $@ \
+		test_hal_com_fw_aoac_rsvd.c $(FW_AOAC_RSVD_SHIM) $(FW_AOAC_RSVD_ORACLE)
+
+ifneq ($(wildcard $(ROOT)/rust/hal_com_fw_aoac_rsvd_host.rs),)
+RUST_FW_AOAC_RSVD := $(ROOT)/rust/hal_com_fw_aoac_rsvd_host.rs
+
+librust_hal_com_fw_aoac_rsvd.a: $(RUST_FW_AOAC_RSVD)
+	rustc --edition 2021 -C opt-level=2 -C overflow-checks=on \
+		--cfg host_hal_com_fw_aoac_rsvd_test --cfg config_wowlan \
+		--cfg config_gtk_ol --cfg config_pno_support \
+		--crate-type staticlib $(RUST_FW_AOAC_RSVD) -o $@
+
+test-fw-aoac-rsvd-rust: test_hal_com_fw_aoac_rsvd_rust
+	./test_hal_com_fw_aoac_rsvd_rust
+
+test_hal_com_fw_aoac_rsvd_rust: test_hal_com_fw_aoac_rsvd.c $(FW_AOAC_RSVD_SHIM) \
+		$(FW_AOAC_RSVD_ORACLE) librust_hal_com_fw_aoac_rsvd.a
+	$(CC) $(CFLAGS) -I../include $(FW_AOAC_RSVD_CFLAGS) \
+		-DRUST_HAL_COM_FW_AOAC_RSVD_ORACLE -o $@ \
+		test_hal_com_fw_aoac_rsvd.c $(FW_AOAC_RSVD_SHIM) $(FW_AOAC_RSVD_ORACLE) \
+		librust_hal_com_fw_aoac_rsvd.a
+endif
 
 test_hal_com_fw_rsvdpage_h2c_rust: test_hal_com_fw_rsvdpage_h2c.c \
 		hal_com_fw_rsvdpage_h2c_shim.c hal_com_fw_rsvdpage_h2c_c_oracle.c \
