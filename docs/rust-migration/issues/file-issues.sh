@@ -411,6 +411,17 @@ files=(
   wave4-143-hal-com-tsf-reset-offload.md
   wave4-144-hal-com-btc-port-h2c.md
   wave4-145-hal-com-fw-aoac-rsvd.md
+  wave4-146-hal-com-ps-rsvd-page.md
+  wave4-147-hal-com-p2p-ps-offload.md
+  wave4-148-hal-com-fw-dbg-msg-h2c.md
+  wave4-149-hal-com-wow-rxdma.md
+  wave4-150-hal-com-wow-ctrl-chk.md
+  wave4-151-hal-com-bf-rf-num.md
+  wave4-152-hal-com-bf-csi-rate.md
+  wave4-153-hal-com-p2p-rsvd-h2c.md
+  wave4-154-hal-com-p2p-wow-offload-h2c.md
+  wave4-155-hal-com-lps-frame-construct.md
+  wave4-156-hal-com-lps-pg-info-rsvd.md
   wave3-161-debug-proc-rate-setter.md
   wave3-162-debug-proc-rx-cnt-dump.md
   wave3-163-debug-proc-ps-dbg.md

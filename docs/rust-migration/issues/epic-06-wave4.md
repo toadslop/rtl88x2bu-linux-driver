@@ -282,4 +282,20 @@ Translate hardware-facing HAL, HALMAC, PHYDM, BTC, and USB HCI paths with identi
 | W4-144 | `wave4-144-hal-com-btc-port-h2c.md` | BT coexist WLAN port H2C |
 | W4-145 | `wave4-145-hal-com-fw-aoac-rsvd.md` | WOW AOAC rsvd-page H2C |
 
-Further slices: USB bulk port bodies stay under Wave 5 `os_dep`; continue parallel `hal_com_rest.c` tails (P2P construct, LPS PG, beamforming helpers) in new `wave4-*.md` batches.
+## Children (tranche 27 — drafted)
+
+| ID | File | Focus |
+|----|------|--------|
+| W4-146 | `wave4-146-hal-com-ps-rsvd-page.md` | PS join rsvd-page report |
+| W4-147 | `wave4-147-hal-com-p2p-ps-offload.md` | P2P PS HALMAC offload |
+| W4-148 | `wave4-148-hal-com-fw-dbg-msg-h2c.md` | FW debug msg rsvd-page H2C |
+| W4-149 | `wave4-149-hal-com-wow-rxdma.md` | WOW RX DMA pause/release |
+| W4-150 | `wave4-150-hal-com-wow-ctrl-chk.md` | WOW ctrl check |
+| W4-151 | `wave4-151-hal-com-bf-rf-num.md` | BF txbfer/txbfee RF counts |
+| W4-152 | `wave4-152-hal-com-bf-csi-rate.md` | BF CSI rate cfg |
+| W4-153 | `wave4-153-hal-com-p2p-rsvd-h2c.md` | P2P rsvd-page H2C |
+| W4-154 | `wave4-154-hal-com-p2p-wow-offload-h2c.md` | P2P WoWLAN offload H2C |
+| W4-155 | `wave4-155-hal-com-lps-frame-construct.md` | LPS PSPoll/beacon/null frames |
+| W4-156 | `wave4-156-hal-com-lps-pg-info-rsvd.md` | LPS PG info rsvd page |
+
+Further slices: USB bulk port bodies stay under Wave 5 `os_dep`; continue `hal_com_rest.c` tails (P2P construct bodies, WOW cmd orch., LPS PG orchestration) in new `wave4-*.md` batches.

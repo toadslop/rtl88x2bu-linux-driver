@@ -475,6 +475,17 @@ hand except to fix filing mistakes, then prefer re-running the script.
 | W4-143 | #2328 | [W4-143] Translate hal_com_rest.c — TSF reset H2C offload |
 | W4-144 | #2329 | [W4-144] Translate hal_com_rest.c — BT coexist WLAN port H2C |
 | W4-145 | #2330 | [W4-145] Translate hal_com_rest.c — WOW AOAC reserved-page H2C |
+| W4-146 | #2360 | [W4-146] Translate hal_com_rest.c — PS reserved-page join report |
+| W4-147 | #2361 | [W4-147] Translate hal_com_rest.c — P2P PS HALMAC offload |
+| W4-148 | #2362 | [W4-148] Translate hal_com_rest.c — FW debug message rsvd-page H2C |
+| W4-149 | #2363 | [W4-149] Translate hal_com_rest.c — WOW RX DMA pause/release helpers |
+| W4-150 | #2364 | [W4-150] Translate hal_com_rest.c — WOW enable/disable control check |
+| W4-151 | #2365 | [W4-151] Translate hal_com_rest.c — beamforming RF chain count queries |
+| W4-152 | #2366 | [W4-152] Translate hal_com_rest.c — beamforming CSI rate cfg |
+| W4-153 | #2367 | [W4-153] Translate hal_com_rest.c — P2P offload rsvd-page H2C |
+| W4-154 | #2368 | [W4-154] Translate hal_com_rest.c — P2P WoWLAN offload H2C |
+| W4-155 | #2369 | [W4-155] Translate hal_com_rest.c — LPS frame constructors (PSPoll/beacon/null) |
+| W4-156 | #2370 | [W4-156] Translate hal_com_rest.c — LPS PG info rsvd page build/download |
 
 ## Superseded issues
 
