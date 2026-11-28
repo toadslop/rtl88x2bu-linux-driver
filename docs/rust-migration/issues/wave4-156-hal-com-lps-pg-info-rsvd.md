@@ -23,8 +23,8 @@ into `rust/hal_com_lps_pg_info.rs`:
 - Optional `CONFIG_MBSSID_CAM` / `CONFIG_WOWLAN` / `CONFIG_BEAMFORMING` byte slots — preserve guards.
 - Both functions are **`static`** inside `#ifdef CONFIG_LPS_PG`; default Makefile does
   not set `CONFIG_LPS_PG`, so stock `hal_com_rest.o` has **neither** symbol. When the
-  Kconfig is off, emit **no** Rust exports or stub globals (only caller is
-  `rtw_lps_pg_set_rsvd_page` in the same TU).
+  Kconfig is off, emit **no** Rust exports or stub globals (callers are
+  `rtw_hal_set_lps_pg_info` and `rtw_lps_pg_set_rsvd_page` in the same TU).
 
 ## Acceptance
 
