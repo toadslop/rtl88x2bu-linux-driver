@@ -2590,6 +2590,30 @@ mod tsf_reset {
 }
 
 #[cfg(all(
+    config_bt_coexist,
+    config_fw_multi_port_support,
+    not(host_hal_com_hw_rate_test),
+    not(host_hal_com_rsvd_page_test),
+    not(host_hal_com_chip_info_test),
+    not(host_hal_com_mrate_test),
+    not(host_hal_com_fw_info_test),
+    not(host_hal_com_brate_test),
+    not(host_hal_com_legal_channel_test),
+    not(host_hal_com_mapping_out_pipe_test),
+    not(host_hal_com_mgntframe_raid_test),
+    not(host_hal_com_hdata_rate_test),
+    not(host_hal_com_tx_aclt_force_test),
+    not(host_hal_com_tx_aclt_confs_test),
+    not(host_hal_com_hal_spec_test),
+    not(host_hal_com_tsf_reset_test),
+    not(host_hal_com_btc_port_test),
+))]
+mod btc_port {
+    #![allow(dead_code, non_snake_case, non_upper_case_globals)]
+    include!("hal_com_btc_port.rs");
+}
+
+#[cfg(all(
     not(host_hal_com_hw_rate_test),
     not(host_hal_com_rsvd_page_test),
     not(host_hal_com_chip_info_test),

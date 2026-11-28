@@ -3567,6 +3567,12 @@ rustflags-y += --cfg rtw_per_cmd_support_fw
 endif
 HAL_COM_L1_REQ_PER_RPT := $(if $(_rust_cfg_rtw_per_cmd_fw),tests/host/hal/hal_com_req_per_rpt_l1_ref.o,)
 HAL_COM_L1_DFT_PORT := $(if $(_rust_cfg_fw_multi_port),tests/host/hal/hal_com_dft_port_l1_ref.o,)
+HAL_COM_L1_BTC_WL_PORT :=
+ifeq ($(_rust_cfg_fw_multi_port),y)
+ifeq ($(_rust_cfg_bt_coexist),y)
+HAL_COM_L1_BTC_WL_PORT := tests/host/hal/hal_com_btc_port_l1_ref.o
+endif
+endif
 _rust_cfg_rtw_mac_hidden_rpt :=
 ifneq ($(filter -DCONFIG_RTW_MAC_HIDDEN_RPT,$(ccflags-y) $(USER_EXTRA_CFLAGS) $(EXTRA_CFLAGS)),)
 _rust_cfg_rtw_mac_hidden_rpt := y
@@ -5377,6 +5383,11 @@ ifneq ($(_rust_cfg_gpio_api_l1),)
 		-o tests/host/hal/hal_com_gpio_api_l1_ref.o \
 		tests/host/hal/hal_com_gpio_api_l1_ref.c
 endif
+ifneq ($(HAL_COM_L1_BTC_WL_PORT),)
+	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
+		-o tests/host/hal/hal_com_btc_port_l1_ref.o \
+		tests/host/hal/hal_com_btc_port_l1_ref.c
+endif
 ifneq ($(_rust_cfg_tx_aclt_set_l1),)
 	gcc -c -Wall -Wextra -Werror -Wno-unused-parameter -O2 \
 		-o tests/host/hal/hal_com_tx_aclt_set_l1_ref.o \
@@ -5431,6 +5442,7 @@ endif
 		$(HAL_COM_L1_GPIO_WAKEUP_REF) \
 		$(if $(_rust_cfg_gpio_wakeup_l1),tests/host/hal/hal_com_gpio_pin_l1_ref.o,) \
 		$(HAL_COM_L1_GPIO_API_REF) \
+		$(HAL_COM_L1_BTC_WL_PORT) \
 		$(HAL_COM_L1_TSF_RESET_REF) \
 		$(HAL_COM_L1_TX_ACLT_SET_REF) \
 		$(HAL_COM_L1_RCR_REF) \
